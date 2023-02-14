@@ -1,0 +1,164 @@
+@charset "UTF-8";
+
+#plotContainer
+{
+	top: 80px; 
+	left: 20px; 
+	width: 500px; 
+	height: 400px; 
+	position: fixed; 
+	border: 1px solid black; 
+	box-shadow: 10px 5px 5px black; 
+	visibility: hidden;
+}
+
+#printContainer
+{
+	top: 500px; 
+	left: 20px; 
+	width: 480px; 
+	height: 180px; 
+	position: fixed; 
+	border: 1px solid black; 
+	box-shadow: 10px 5px 5px black; 
+	background: white;
+	visibility: visible;
+	
+	font: small;
+	font-family: Monospace;
+	
+	padding: 10px;
+	overflow-y: scroll;
+}
+
+#logo {
+    position: fixed;
+    bottom:  60px;
+    right: 20px;
+    z-index: 1000;
+    width: 150px;
+}
+
+body, html
+{
+	margin: 0px;
+	height: 100%;
+	
+}
+
+#cesiumContainer {
+	width: 100%;
+	height: 100%;
+}
+
+#canvasScalerDiv {
+	width: 100%;
+	height: 100%;
+}
+
+.uiButton {
+	background-color: white;
+	border: 0px solid black; 
+
+	font-family: sans-serif;
+	text-align: middle;
+	padding: 5px;
+	margin: 5px;
+	
+	float: left;
+	
+	text-decoration: underline;
+}
+
+.uiButton:hover {
+	color: rgb(150,150,150);
+}
+
+.label {
+	background-color: white;
+	border: 0px solid black; 
+
+	font-family: sans-serif;
+	text-align: middle;
+	
+	text-decoration: none;
+	font-size: small;
+}
+
+#UIContainer {
+	top: 20px; 
+	left: 20px; 
+
+	position: fixed; 
+	border: 1px solid black; 
+	box-shadow: 10px 5px 5px black; 
+	visibility: visible;
+	
+	background: white;
+	padding: 5px;
+	
+	min-height: 30px;
+}
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
