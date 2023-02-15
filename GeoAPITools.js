@@ -23,7 +23,7 @@ function reset() {
 	autoZoom = true;
   	showPlot = true;
 	plotDaily = true;
-	show3DCM = false;
+	showNature = false;
 	plotEnergy = true;
 	print = true;
 	
@@ -33,8 +33,8 @@ function reset() {
 	document.getElementById("showPlotToggle").checked = true;
 	document.getElementById("autoZoomToggle").checked = true;
 	document.getElementById("plotDailyToggle").checked = true;
+	document.getElementById("showNatureToggle").checked = false;
 	document.getElementById("show3DCMToggle").checked = false;
-	document.getElementById("plotEnergyToggle").checked = true;
 	document.getElementById("printToggle").checked = true;
 	
 	document.getElementById('printContainer').innerHTML =  "<i>Please click on a postcode area to load building and lot polygons from the WFS server...</i>";
@@ -75,7 +75,33 @@ function loadHKIWFSLots(postcode) {
     });
 }
 
-function loadHKIWFSBuildings(postcode) {
+function loadWFSNatureAreas( postcode ) {
+	//postcode is expexted to be string!
+
+	let url;
+	
+	url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=10000&postinumeroalue=" + postcode ;
+
+	console.log("Loading: " + url );
+	
+	var promiseFeaturesAPI = Cesium.GeoJsonDataSource.load( url, {
+  		stroke: Cesium.Color.BLACK,
+  		fill: Cesium.Color.DARKGREEN,
+  		strokeWidth: 3,
+		clampToGround: true
+	})
+	.then(function (dataSource) {
+		viewer.dataSources.add(dataSource);
+		dataSource.name = "NatureAreas";
+		var entities = dataSource.entities.values;
+	})	
+	.otherwise(function (error) {
+      //Display any errrors encountered while loading.
+      console.log(error);
+    });
+}
+
+function loadWFSBuildings( postcode ) {
 	//postcode is expexted to be string!
 
 	var HKIBuildingURL;
@@ -89,6 +115,14 @@ function loadHKIWFSBuildings(postcode) {
 	} else {
 
 		HKIBuildingURL = "https://geo.fvh.fi/r4c/collections/uusimaa_building/items?f=json&limit=10000&postinumeroalue=" + postcode ;
+
+	}
+
+	console.log("shownature", showNature)
+
+	if ( showNature ) {
+
+		loadWFSNatureAreas( postcode );
 
 	}
 	

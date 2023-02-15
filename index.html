@@ -40,6 +40,13 @@
 
   <!-- showPlotSwitch-->
 <label class="switch">
+	<input type="checkbox" id="showNatureToggle" value="showNature" >
+	<span class="slider round"></span>
+</label>
+<label for="showNatureToggle" class="label">Show nature areas</label>
+
+  <!-- showPlotSwitch-->
+<label class="switch">
   <input type="checkbox" id="plotDailyToggle" value="plotDaily" checked>
   <span class="slider round"></span>
 </label>
@@ -74,9 +81,11 @@
   	var plotEnergy = true;
   	var plotDaily = true; //Alternatively, wil plot hourly
   	var lastEnergyPlotRATU = 0; //Will store the previous energy data point accessed..
+	var showNature = false;
   	var show3DCM = false;
   	var tilesets = []; //Will store reference to loaded tilesets
   	var print = true; //show object details..
+	var postalcode = "02100";
     
 	// OS version, operating without Cesium Ion services...
     Cesium.Ion.defaultAccessToken = null;
@@ -247,21 +256,31 @@
 			if (picked.id.properties != null) {
 			
 			//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
-			if (picked.id.properties.postinumeroalue != null) {
+			if ( picked.id.properties.postinumeroalue != null ) {
+
 				console.log("Postal code area found!");
-				
+
+				postalcode = picked.id.properties.postinumeroalue;
 			    viewer.dataSources.removeAll();
 			    viewer.entities.removeAll();
 			    
-			    if(show3DCM == false) {
-					console.log(picked.id.properties.postinumeroalue)
-			    	loadHKIWFSBuildings(picked.id.properties.postinumeroalue);
-			    }
+			    if ( show3DCM == false ) {
+
+					if ( showNature ) {
+
+						loadWFSNatureAreas( picked.id.properties.postinumeroalue );
+
+					}
+
+					console.log( picked.id.properties.postinumeroalue )
+			    	loadWFSBuildings( picked.id.properties.postinumeroalue );
+
+ 			    }
 			    
-			    loadHKIWFSLots(picked.id.properties.postinumeroalue);
+			    loadHKIWFSLots( picked.id.properties.postinumeroalue );
 		//	    loadEnergyAvailabilityAPI(picked.id.properties.posno._value);
 			    
-			    loadPostCodeZones(0.0);
+			    loadPostCodeZones( 0.0 );
 			}
 			
 			//See if we can find a Helsinki Lot polygon with information on usable building floor area
@@ -429,6 +448,35 @@
 					tileset.show = true;
 				});
 			}
+		}
+
+		if ( event.target.value == 'showNature' ) {
+
+			showNature = document.getElementById( "showNatureToggle" ).checked;
+
+			if ( showNature ) {
+
+				loadWFSNatureAreas( postalcode );
+				
+				viewer.dataSources._dataSources.forEach( function( dataSource ) {
+
+					dataSource.show = true;
+
+				});
+
+			} else {
+
+				viewer.dataSources._dataSources.forEach( function( dataSource ) {
+
+					if( dataSource.name == "NatureAreas" ) {
+
+						dataSource.show = false;	
+						
+					}
+				});
+
+			}
+
 		}
 	}
   </script>

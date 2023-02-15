@@ -1,0 +1,21 @@
+{
+  "name": "R4C-Cesium-Viewer",
+  "version": "1.0.0",
+  "description": "just exping",
+  "main": "index.html",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer.git"
+  },
+  "author": "Andreas Andra",
+  "bugs": {
+    "url": "https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues"
+  },
+  "homepage": "https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer#readme",
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}
