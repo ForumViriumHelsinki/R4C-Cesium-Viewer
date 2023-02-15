@@ -90,10 +90,125 @@ function loadWFSNatureAreas( postcode ) {
   		strokeWidth: 3,
 		clampToGround: true
 	})
-	.then(function (dataSource) {
-		viewer.dataSources.add(dataSource);
+	.then(function ( dataSource ) {
+
+		viewer.dataSources.add( dataSource );
 		dataSource.name = "NatureAreas";
 		var entities = dataSource.entities.values;
+
+		for (var i = 0; i < entities.length; i++) {
+
+			var entity = entities[ i ];
+
+			if ( entity.properties._category._value == "jarvi" ) {
+
+				entity.polygon.material = Cesium.Color.DEEPSKYBLUE;
+
+            } 	
+
+			if ( entity.properties._category._value == "suo" ) {
+
+				entity.polygon.material = new Cesium.Color( 116, 133, 0, 1 ); //swamp green
+
+            } 
+
+			if ( entity.properties._category._value == "matalikko" ) {
+
+				entity.polygon.material = new Cesium.Color( 138, 241, 254, 1 ); //swallow water
+
+            } 
+			
+			if ( entity.properties._category._value == "puisto" ) {
+
+				entity.polygon.material = Cesium.Color.LIGHTGREEN;
+
+            } 	
+			
+			if ( entity.properties._category._value == "vesikivikko" ) {
+
+				entity.polygon.material = Cesium.Color.LIGHTSTEELBLUE;
+
+            } 	
+			
+			if ( entity.properties._category._value == "niitty" ) {
+
+				entity.polygon.material = Cesium.Color.YELLOWGREEN;
+
+            } 	
+			
+			if ( entity.properties._category._value == "luonnonsuojelualue" ) {
+
+				entity.polygon.material = Cesium.Color.DARKGREEN;
+
+            } 	
+			
+			if ( entity.properties._category._value == "hietikko" ) {
+
+				entity.polygon.material = Cesium.Color.BURLYWOOD;
+
+            } 	
+			
+			if ( entity.properties._category._value == "kallioalue" ) {
+
+				entity.polygon.material = Cesium.Color.DARKGREY;
+
+            } 
+			
+			if ( entity.properties._category._value == "maatuvavesialue" ) {
+
+				entity.polygon.material = Cesium.Color.DARKKHAKI;
+
+            }
+			
+			if ( entity.properties._category._value == "kivikko" ) {
+
+				entity.polygon.material = Cesium.Color.GREY;
+
+            } 	
+			
+			if ( entity.properties._category._value == "suojaalue" ) {
+
+				entity.polygon.material =  new Cesium.Color( 0, 100, 0, 0.2 ); // dark green with 0.2 a
+
+            } 			
+			
+			if ( entity.properties._category._value == "soistuma" ) {
+
+				entity.polygon.material =  new Cesium.Color( 116, 133, 0, 0.5 ); // swamp green with 0.5 a
+				
+            } 
+
+			if ( entity.properties._category._value == "meri" ) {
+
+				entity.polygon.material = Cesium.Color.DODGERBLUE;
+
+            } 		
+
+			if ( entity.properties._category._value == "luonnonpuisto" ) {
+
+				entity.polygon.material = Cesium.Color.LIMEGREEN;
+
+            } 
+
+			if ( entity.properties._category._value == "kansallispuisto" ) {
+
+				entity.polygon.material = Cesium.Color.FORESTGREEN;
+
+            } 
+
+			if ( entity.properties._category._value == "tulvaalue" ) {
+
+				entity.polygon.material = Cesium.Color.PURPLE;
+
+            } 
+	
+			if ( entity.properties._category._value == "virtavesialue" ) {
+
+				entity.polygon.material = Cesium.Color.CYAN;
+
+            } 	
+
+		}
 	})	
 	.otherwise(function (error) {
       //Display any errrors encountered while loading.
