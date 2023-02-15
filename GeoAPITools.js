@@ -108,7 +108,7 @@ function loadWFSNatureAreas( postcode ) {
 
 			if ( entity.properties._category._value == "suo" ) {
 
-				entity.polygon.material = new Cesium.Color( 116, 133, 0, 1 ); //swamp green
+				entity.polygon.material = Cesium.Color.DARKOLIVEGREEN; //swamp green
 
             } 
 
@@ -174,7 +174,7 @@ function loadWFSNatureAreas( postcode ) {
 			
 			if ( entity.properties._category._value == "soistuma" ) {
 
-				entity.polygon.material =  new Cesium.Color( 116, 133, 0, 0.5 ); // swamp green with 0.5 a
+				entity.polygon.material =  Cesium.Color.DARKSEAGREEN;
 				
             } 
 
@@ -207,7 +207,6 @@ function loadWFSNatureAreas( postcode ) {
 				entity.polygon.material = Cesium.Color.CYAN;
 
             } 	
-
 		}
 	})	
 	.otherwise(function (error) {
@@ -221,23 +220,15 @@ function loadWFSBuildings( postcode ) {
 
 	var HKIBuildingURL;
 
-	console.log("postal code", Number(postcode))
+	console.log( "postal code", Number( postcode ) )
 
-	if ( Number(postcode) < 1000) {
+	if ( Number(postcode) < 1000 ) {
 		
 		HKIBuildingURL = "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27" + postcode + "%27";
 
 	} else {
 
-		HKIBuildingURL = "https://geo.fvh.fi/r4c/collections/uusimaa_building/items?f=json&limit=10000&postinumeroalue=" + postcode ;
-
-	}
-
-	console.log("shownature", showNature)
-
-	if ( showNature ) {
-
-		loadWFSNatureAreas( postcode );
+		HKIBuildingURL = "https://geo.fvh.fi/r4c/collections/uusimaa_building/items?f=json&limit=10000&postinumeroalue=" + postcode;
 
 	}
 	
@@ -249,13 +240,62 @@ function loadWFSBuildings( postcode ) {
   		strokeWidth: 3,
 		clampToGround: true
 	})
-	.then(function (dataSource) {
-		viewer.dataSources.add(dataSource);
+	.then(function ( dataSource ) {
+		viewer.dataSources.add( dataSource );
 		var entities = dataSource.entities.values;
+
+		if ( Number( postcode ) > 1000 ) {
+			for (var i = 0; i < entities.length; i++) {
+
+				var entity = entities[ i ];
+	
+				if ( entity.properties._kayttotarkoitus._value == Number( 1 ) ) {
+	
+					entity.polygon.material = Cesium.Color.MIDNIGHTBLUE; // residential
+	
+				} 
+
+				if ( entity.properties._kayttotarkoitus._value == Number( 2 ) ) {
+	
+					entity.polygon.material = Cesium.Color.TOMATO; // business
+	
+				} 
+
+				if ( entity.properties._kayttotarkoitus._value == Number( 3 ) ) {
+	
+					entity.polygon.material = Cesium.Color.YELLOW; // holiday/cottage
+	
+				} 
+
+				if ( entity.properties._kayttotarkoitus._value == Number( 4 ) ) {
+	
+					entity.polygon.material = Cesium.Color.BLACK; // factory/production
+	
+				} 	
+
+				if ( entity.properties._kayttotarkoitus._value == Number( 5 ) ) {
+	
+					entity.polygon.material = Cesium.Color.MEDIUMPURPLE; // religous buildings
+	
+				} 
+
+				if ( entity.properties._kayttotarkoitus._value == Number( 6 ) ) {
+	
+					entity.polygon.material = Cesium.Color.ALICEBLUE; // open areas with roof, for example for parking cars and trash
+	
+				} 
+
+				if ( entity.properties._kayttotarkoitus._value == Number( 8 ) ) {
+	
+					entity.polygon.material = Cesium.Color.HOTPINK; // churchs
+	
+				} 				
+			}
+		}	
 	})	
-	.otherwise(function (error) {
+	.otherwise(function ( error ) {
       //Display any errrors encountered while loading.
-      console.log(error);
+      console.log( error );
     });
 }
 
