@@ -84,7 +84,7 @@ function loadWFSNatureAreas( postcode ) {
 
 	console.log("Loading: " + url );
 	
-	var promiseFeaturesAPI = Cesium.GeoJsonDataSource.load( url, {
+	let promiseFeaturesAPI = Cesium.GeoJsonDataSource.load( url, {
   		stroke: Cesium.Color.BLACK,
   		fill: Cesium.Color.DARKGREEN,
   		strokeWidth: 3,
@@ -94,125 +94,135 @@ function loadWFSNatureAreas( postcode ) {
 
 		viewer.dataSources.add( dataSource );
 		dataSource.name = "NatureAreas";
-		var entities = dataSource.entities.values;
+		let entities = dataSource.entities.values;
 
-		for (var i = 0; i < entities.length; i++) {
+		for ( let i = 0; i < entities.length; i++ ) {
 
-			var entity = entities[ i ];
+			let entity = entities[ i ];
+			const category = entity.properties._category._value;
 
-			if ( entity.properties._category._value == "jarvi" ) {
+			if ( category ) {
 
-				entity.polygon.material = Cesium.Color.DEEPSKYBLUE;
+				setNatureAreaPolygonMaterialColor( entity, category )
+			}
 
-            } 	
-
-			if ( entity.properties._category._value == "suo" ) {
-
-				entity.polygon.material = Cesium.Color.DARKOLIVEGREEN; //swamp green
-
-            } 
-
-			if ( entity.properties._category._value == "matalikko" ) {
-
-				entity.polygon.material = new Cesium.Color( 138, 241, 254, 1 ); //swallow water
-
-            } 
-			
-			if ( entity.properties._category._value == "puisto" ) {
-
-				entity.polygon.material = Cesium.Color.LIGHTGREEN;
-
-            } 	
-			
-			if ( entity.properties._category._value == "vesikivikko" ) {
-
-				entity.polygon.material = Cesium.Color.LIGHTSTEELBLUE;
-
-            } 	
-			
-			if ( entity.properties._category._value == "niitty" ) {
-
-				entity.polygon.material = Cesium.Color.YELLOWGREEN;
-
-            } 	
-			
-			if ( entity.properties._category._value == "luonnonsuojelualue" ) {
-
-				entity.polygon.material = Cesium.Color.DARKGREEN;
-
-            } 	
-			
-			if ( entity.properties._category._value == "hietikko" ) {
-
-				entity.polygon.material = Cesium.Color.BURLYWOOD;
-
-            } 	
-			
-			if ( entity.properties._category._value == "kallioalue" ) {
-
-				entity.polygon.material = Cesium.Color.DARKGREY;
-
-            } 
-			
-			if ( entity.properties._category._value == "maatuvavesialue" ) {
-
-				entity.polygon.material = Cesium.Color.DARKKHAKI;
-
-            }
-			
-			if ( entity.properties._category._value == "kivikko" ) {
-
-				entity.polygon.material = Cesium.Color.GREY;
-
-            } 	
-			
-			if ( entity.properties._category._value == "suojaalue" ) {
-
-				entity.polygon.material =  new Cesium.Color( 0, 100, 0, 0.2 ); // dark green with 0.2 a
-
-            } 			
-			
-			if ( entity.properties._category._value == "soistuma" ) {
-
-				entity.polygon.material =  Cesium.Color.DARKSEAGREEN;
-				
-            } 
-
-			if ( entity.properties._category._value == "meri" ) {
-
-				entity.polygon.material = Cesium.Color.DODGERBLUE;
-
-            } 		
-
-			if ( entity.properties._category._value == "luonnonpuisto" ) {
-
-				entity.polygon.material = Cesium.Color.LIMEGREEN;
-
-            } 
-
-			if ( entity.properties._category._value == "kansallispuisto" ) {
-
-				entity.polygon.material = Cesium.Color.FORESTGREEN;
-
-            } 
-
-			if ( entity.properties._category._value == "tulvaalue" ) {
-
-				entity.polygon.material = Cesium.Color.PURPLE;
-
-            } 
-	
-			if ( entity.properties._category._value == "virtavesialue" ) {
-
-				entity.polygon.material = Cesium.Color.CYAN;
-
-            } 	
 		}
 	})	
 	.otherwise(function (error) {
       //Display any errrors encountered while loading.
       console.log(error);
     });
+}
+
+function setNatureAreaPolygonMaterialColor( entity, category ) {
+			 						
+	switch ( category ){
+		case "jarvi":
+			entity.polygon.material = Cesium.Color.DEEPSKYBLUE;
+			break;
+		case "suo":
+			entity.polygon.material = Cesium.Color.DARKOLIVEGREEN;
+			break;
+		case "matalikko":
+			entity.polygon.material = new Cesium.Color( 138, 241, 254, 1 ); 
+			break;
+		case "puisto":
+			entity.polygon.material = Cesium.Color.LIGHTGREEN;
+			break;
+		case "vesikivikko":
+			entity.polygon.material = Cesium.Color.LIGHTSTEELBLUE;
+			break;
+		case "niitty":
+			entity.polygon.material = Cesium.Color.YELLOWGREEN;
+			break;
+		case "luonnonsuojelualue": 
+			entity.polygon.material = Cesium.Color.DARKGREEN;
+			break;	
+		case "hietikko":
+			entity.polygon.material = Cesium.Color.BURLYWOOD;
+			break;
+		case "kallioalue": 
+			entity.polygon.material = Cesium.Color.DARKGREY;
+			break;	
+		case "maatuvavesialue": 
+			entity.polygon.material = Cesium.Color.DARKKHAKI;
+			break;	
+		case "kivikko": 
+			entity.polygon.material = Cesium.Color.GREY;
+			break;	
+		case "suojaalue": 
+			entity.polygon.material = new Cesium.Color( 0, 100, 0, 0.2 );
+			break;
+		case "soistuma": 
+			entity.polygon.material = Cesium.Color.DARKSEAGREEN;
+			break;	
+		case "meri": 
+			entity.polygon.material = Cesium.Color.DODGERBLUE;
+			break;
+		case "luonnonpuisto": 
+			entity.polygon.material = Cesium.Color.LIMEGREEN;
+			break;
+		case "kansallispuisto": 
+			entity.polygon.material = Cesium.Color.FORESTGREEN;
+			break;
+		case "tulvaalue": 
+			entity.polygon.material = Cesium.Color.PURPLE;
+			break;	
+		case "virtavesialue": 
+			entity.polygon.material = Cesium.Color.CYAN;
+			break;																																			
+		default:
+			entity.polygon.material = Cesium.Color.DARKGREEN;
+		}	
+
+}
+
+function setBuildingPolygonMaterialColor( entity, kayttotarkoitus ) {
+
+	switch ( kayttotarkoitus ){
+		case 2: // business
+			entity.polygon.material = Cesium.Color.TOMATO;
+			break;
+		case 3: // holiday/cottage
+			entity.polygon.material = Cesium.Color.YELLOW;
+			break;
+		case 4: // factory/production
+			entity.polygon.material = Cesium.Color.BLACK; 
+			break;
+		case 5: // religous buildings
+			entity.polygon.material = Cesium.Color.MEDIUMPURPLE;
+			break;
+		case 6: // open areas with roof, for example for parking cars and trash
+			entity.polygon.material = Cesium.Color.MEDIUMAQUAMARINE;
+			break;
+		case 8: // // churches
+			entity.polygon.material = Cesium.Color.HOTPINK;
+			break;
+		default: // residential
+			entity.polygon.material = Cesium.Color.MIDNIGHTBLUE;
+		}
+
+}
+
+function findMultiplierForFloorCount( kayttotarkoitus ) {
+
+	switch ( kayttotarkoitus ){
+		case 2: // business
+			return 4.0;
+		case 3: // holiday/cottage
+			return 2.0;
+		case 4: // factory/production
+			return 5.4;
+		case 5: // religous buildings
+			return 4.0;
+		case 6: // open areas with roof, for example for parking cars and trash
+			return 3.0;
+		case 8: // // churches
+			return 8.1;
+		default: // residential
+			return 2.7 
+		}
+
 }
 
 function loadWFSBuildings( postcode ) {
@@ -222,9 +232,12 @@ function loadWFSBuildings( postcode ) {
 
 	console.log( "postal code", Number( postcode ) )
 
+	let inhelsinki = false;
+
 	if ( Number(postcode) < 1000 ) {
 		
 		HKIBuildingURL = "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27" + postcode + "%27";
+		inhelsinki = true;
 
 	} else {
 
@@ -244,52 +257,26 @@ function loadWFSBuildings( postcode ) {
 		viewer.dataSources.add( dataSource );
 		var entities = dataSource.entities.values;
 
-		if ( Number( postcode ) > 1000 ) {
-			for (var i = 0; i < entities.length; i++) {
+		if ( !inhelsinki ) {
 
-				var entity = entities[ i ];
-	
-				if ( entity.properties._kayttotarkoitus._value == Number( 1 ) ) {
-	
-					entity.polygon.material = Cesium.Color.MIDNIGHTBLUE; // residential
-	
-				} 
+			for ( let i = 0; i < entities.length; i++ ) {
 
-				if ( entity.properties._kayttotarkoitus._value == Number( 2 ) ) {
-	
-					entity.polygon.material = Cesium.Color.TOMATO; // business
-	
-				} 
+				let entity = entities[ i ];
+				const kayttotarkoitus = Number( entity.properties._kayttotarkoitus._value );
+				const multiplier = findMultiplierForFloorCount( kayttotarkoitus )
 
-				if ( entity.properties._kayttotarkoitus._value == Number( 3 ) ) {
-	
-					entity.polygon.material = Cesium.Color.YELLOW; // holiday/cottage
-	
-				} 
+				if ( entity.properties.kerrosluku != null ) {
 
-				if ( entity.properties._kayttotarkoitus._value == Number( 4 ) ) {
-	
-					entity.polygon.material = Cesium.Color.BLACK; // factory/production
-	
-				} 	
+					entity.polygon.extrudedHeight = entity.properties.kerrosluku._value * multiplier;
 
-				if ( entity.properties._kayttotarkoitus._value == Number( 5 ) ) {
-	
-					entity.polygon.material = Cesium.Color.MEDIUMPURPLE; // religous buildings
-	
-				} 
+				}
 
-				if ( entity.properties._kayttotarkoitus._value == Number( 6 ) ) {
-	
-					entity.polygon.material = Cesium.Color.ALICEBLUE; // open areas with roof, for example for parking cars and trash
-	
-				} 
+				if ( kayttotarkoitus ) {
 
-				if ( entity.properties._kayttotarkoitus._value == Number( 8 ) ) {
-	
-					entity.polygon.material = Cesium.Color.HOTPINK; // churchs
-	
-				} 				
+					setBuildingPolygonMaterialColor( entity, kayttotarkoitus );
+
+				}	
+				
 			}
 		}	
 	})	

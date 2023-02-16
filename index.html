@@ -85,7 +85,7 @@
   	var show3DCM = false;
   	var tilesets = []; //Will store reference to loaded tilesets
   	var print = true; //show object details..
-	var postalcode = "02100";
+	var postalcode = null;
     
 	// OS version, operating without Cesium Ion services...
     Cesium.Ion.defaultAccessToken = null;
@@ -456,7 +456,11 @@
 
 			if ( showNature ) {
 
-				loadWFSNatureAreas( postalcode );
+				if ( postalcode ) {
+
+					loadWFSNatureAreas( postalcode );
+
+				}
 				
 				viewer.dataSources._dataSources.forEach( function( dataSource ) {
 
