@@ -289,7 +289,7 @@ function loadWFSBuildings( postcode ) {
 // Loads postal code zone polygons, opacity given as float from 0 - 1
 function loadPostCodeZones(opacity) {
     // Load postal code zones
-    const HKIPostCodesURL = 'uusimaa_po.json';
+    const HKIPostCodesURL = 'uusimaa_po_intersect.json';
 	console.log("Loading: " + HKIPostCodesURL);
 	
 	var promisePostCodes = Cesium.GeoJsonDataSource.load(HKIPostCodesURL, {
