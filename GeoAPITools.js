@@ -11,9 +11,8 @@ function reset() {
       }
     });
 
-	// viewer.dataSources.removeAll();
-	// viewer.entities.removeAll();
-
+	viewer.dataSources.removeAll();
+	viewer.entities.removeAll();
 
     // Load post code zones & energy availability tags
 	loadPostCodeZones(0.2);
@@ -76,54 +75,55 @@ function loadHKIWFSLots(postcode) {
     });
 }
 
-async function loadWFSNatureAreas( postcode ) {
-	let url;
+function addNatureDataSource( data ) {
 	
-	url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=10000&postinumeroalue=" + postcode ;
+	viewer.dataSources.add( Cesium.GeoJsonDataSource.load( data, {
+		stroke: Cesium.Color.BLACK,
+		fill: Cesium.Color.DARKGREEN,
+		strokeWidth: 3,
+		clampToGround: true
+	}) )
+	.then(function ( dataSource ) {
+		
+		dataSource.name = "NatureAreas";
+		let entities = dataSource.entities.values;
+		
+		for ( let i = 0; i < entities.length; i++ ) {
+			
+			let entity = entities[ i ];
+			const category = entity.properties._category._value;
+			
+			if ( category ) {
+				//colors of nature area enity are set based on it's category
+				setNatureAreaPolygonMaterialColor( entity, category )
+			}
+		}
+	})	
+	.otherwise(function ( error ) {
+		//Display any errrors encountered while loading.
+		console.log( error );
+	});
+
+}
+
+async function loadWFSNatureAreas( postcode ) {
+
+	let url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=10000&postinumeroalue=" + postcode ;
 
 	try {
 		const value = await localforage.getItem( url );
 		// This code runs once the value has been loaded
 		// from the offline store.
-		console.log(value);
 
 		if ( value ) {
 			console.log("found from cache");
 
 			let datasource = JSON.parse( value )
-
-			viewer.dataSources.add( Cesium.GeoJsonDataSource.load( datasource, {
-				stroke: Cesium.Color.BLACK,
-				fill: Cesium.Color.DARKGREEN,
-				strokeWidth: 3,
-			  clampToGround: true
-		  }) )
-		  .then(function ( dataSource ) {
-
-			viewer.dataSources.add( dataSource );
-			dataSource.name = "NatureAreas";
-			let entities = dataSource.entities.values;
-	
-			for ( let i = 0; i < entities.length; i++ ) {
-	
-				let entity = entities[ i ];
-				const category = entity.properties._category._value;
-	
-				if ( category ) {
-	
-					setNatureAreaPolygonMaterialColor( entity, category )
-				}
-	
-			}
-		})	
-		.otherwise(function (error) {
-		  //Display any errrors encountered while loading.
-		  console.log(error);
-		});
+			addNatureDataSource( datasource );
 
 		} else {
 
-			loadWFSNatureAreasWithoutCache( postcode );
+			loadWFSNatureAreasWithoutCache( url );
 
 		}
 	  	
@@ -133,52 +133,17 @@ async function loadWFSNatureAreas( postcode ) {
 	}
 }
 
-function loadWFSNatureAreasWithoutCache( postcode ) {
-	//postcode is expexted to be string!
-	console.log("not in cache!");
-
-	let url;
+function loadWFSNatureAreasWithoutCache( url ) {
 	
-	url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=10000&postinumeroalue=" + postcode ;
-
-	console.log("Loading: " + url );
+	console.log("Not in cache! Loading: " + url );
 
 	const response = fetch( url )
-	.then(function(response) {
-	  // The response is a Response instance.
-	  // You parse the data into a useable format using `.json()`
+	.then( function( response ) {
 	  return response.json();
-	}).then(function(data) {
-	localforage.setItem( url, JSON.stringify( data ) );
-		// Do other things once the value has been saved.
-		viewer.dataSources.add( 	Cesium.GeoJsonDataSource.load( data, {
-			stroke: Cesium.Color.BLACK,
-			fill: Cesium.Color.DARKGREEN,
-			strokeWidth: 3,
-		  clampToGround: true
-	  }) )
-	  .then(function ( dataSource ) {
-
-		viewer.dataSources.add( dataSource );
-		dataSource.name = "NatureAreas";
-		let entities = dataSource.entities.values;
-
-		for ( let i = 0; i < entities.length; i++ ) {
-
-			let entity = entities[ i ];
-			const category = entity.properties._category._value;
-
-			if ( category ) {
-
-				setNatureAreaPolygonMaterialColor( entity, category )
-			}
-
-		}
-	})	
-	.otherwise(function (error) {
-	  //Display any errrors encountered while loading.
-	  console.log(error);
-	});
+	})
+	.then( function( data ) {
+		localforage.setItem( url, JSON.stringify( data ) );
+		addNatureDataSource( data );
 	})
 	
 }
@@ -294,36 +259,16 @@ function findMultiplierForFloorCount( kayttotarkoitus ) {
 
 }
 
-function loadWFSBuildings( postcode ) {
-	//postcode is expexted to be string!
-
-	var HKIBuildingURL;
-
-	console.log( "postal code", Number( postcode ) )
-
-	let inhelsinki = false;
-
-	if ( Number(postcode) < 1000 ) {
-		
-		HKIBuildingURL = "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27" + postcode + "%27";
-		inhelsinki = true;
-
-	} else {
-
-		HKIBuildingURL = "https://geo.fvh.fi/r4c/collections/uusimaa_building/items?f=json&limit=10000&postinumeroalue=" + postcode;
-
-	}
+function addBuildingsDataSource( data, inhelsinki ) {
 	
-	console.log("Loading: " + HKIBuildingURL );
-	
-	var promiseFeaturesAPI = Cesium.GeoJsonDataSource.load( HKIBuildingURL, {
-  		stroke: Cesium.Color.BLACK,
-  		fill: Cesium.Color.CRIMSON,
-  		strokeWidth: 3,
+	viewer.dataSources.add( Cesium.GeoJsonDataSource.load( data, {
+		stroke: Cesium.Color.BLACK,
+		fill: Cesium.Color.CRIMSON,
+		strokeWidth: 3,
 		clampToGround: true
-	})
+	}) )
 	.then(function ( dataSource ) {
-		viewer.dataSources.add( dataSource );
+		
 		var entities = dataSource.entities.values;
 
 		if ( !inhelsinki ) {
@@ -350,9 +295,67 @@ function loadWFSBuildings( postcode ) {
 		}	
 	})	
 	.otherwise(function ( error ) {
-      //Display any errrors encountered while loading.
-      console.log( error );
-    });
+		//Display any errrors encountered while loading.
+		console.log( error );
+	});
+
+}
+
+async function loadWFSBuildings( postcode ) {
+
+	let HKIBuildingURL;
+
+	console.log( "postal code", Number( postcode ) )
+
+	let inhelsinki = false;
+
+	if ( Number(postcode) < 1000 ) {
+		
+		HKIBuildingURL = "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27" + postcode + "%27";
+		inhelsinki = true;
+
+	} else {
+
+		HKIBuildingURL = "https://geo.fvh.fi/r4c/collections/uusimaa_building/items?f=json&limit=10000&postinumeroalue=" + postcode;
+
+	}
+
+	try {
+		const value = await localforage.getItem( HKIBuildingURL );
+		// This code runs once the value has been loaded
+		// from the offline store.
+
+		if ( value ) {
+			console.log("found from cache");
+
+			let datasource = JSON.parse( value )
+			addBuildingsDataSource( datasource, inhelsinki );
+
+		} else {
+
+			loadWFSBuildingsWithoutCache( HKIBuildingURL, inhelsinki );
+
+		}
+	  	
+	} catch (err) {
+		// This code runs if there were any errors.
+		console.log(err);
+	}
+}
+
+function loadWFSBuildingsWithoutCache( url, inhelsinki ) {
+	
+	console.log("Not in cache! Loading: " + url );
+
+	const response = fetch( url )
+	.then( function( response ) {
+	  return response.json();
+	})
+	.then( function( data ) {
+		localforage.setItem( url, JSON.stringify( data ) );
+		addBuildingsDataSource( data, inhelsinki );
+	})
+	
 }
 
 // Loads postal code zone polygons, opacity given as float from 0 - 1

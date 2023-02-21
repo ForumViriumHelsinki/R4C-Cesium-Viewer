@@ -263,8 +263,8 @@
 
 				postalcode = picked.id.properties.postinumeroalue;
 
-				// viewer.dataSources.removeAll();
-				// viewer.entities.removeAll();
+				viewer.dataSources.removeAll();
+				viewer.entities.removeAll();
 			    
 			    if ( show3DCM == false ) {
 
@@ -458,7 +458,7 @@
 
 			if ( showNature ) {
 
-				if ( postalcode ) {
+				if ( postalcode && viewer.dataSources._dataSources.length > 2 ) {
 
 					loadWFSNatureAreas( postalcode );
 
