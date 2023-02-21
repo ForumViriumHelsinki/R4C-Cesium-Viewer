@@ -11,8 +11,9 @@ function reset() {
       }
     });
 
-	viewer.dataSources.removeAll();
-	viewer.entities.removeAll();
+	// viewer.dataSources.removeAll();
+	// viewer.entities.removeAll();
+
 
     // Load post code zones & energy availability tags
 	loadPostCodeZones(0.2);
@@ -75,22 +76,88 @@ function loadHKIWFSLots(postcode) {
     });
 }
 
-function loadWFSNatureAreas( postcode ) {
+async function loadWFSNatureAreas( postcode ) {
+	let url;
+	
+	url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=10000&postinumeroalue=" + postcode ;
+
+	try {
+		const value = await localforage.getItem( url );
+		// This code runs once the value has been loaded
+		// from the offline store.
+		console.log(value);
+
+		if ( value ) {
+			console.log("found from cache");
+
+			let datasource = JSON.parse( value )
+
+			viewer.dataSources.add( Cesium.GeoJsonDataSource.load( datasource, {
+				stroke: Cesium.Color.BLACK,
+				fill: Cesium.Color.DARKGREEN,
+				strokeWidth: 3,
+			  clampToGround: true
+		  }) )
+		  .then(function ( dataSource ) {
+
+			viewer.dataSources.add( dataSource );
+			dataSource.name = "NatureAreas";
+			let entities = dataSource.entities.values;
+	
+			for ( let i = 0; i < entities.length; i++ ) {
+	
+				let entity = entities[ i ];
+				const category = entity.properties._category._value;
+	
+				if ( category ) {
+	
+					setNatureAreaPolygonMaterialColor( entity, category )
+				}
+	
+			}
+		})	
+		.otherwise(function (error) {
+		  //Display any errrors encountered while loading.
+		  console.log(error);
+		});
+
+		} else {
+
+			loadWFSNatureAreasWithoutCache( postcode );
+
+		}
+	  	
+	} catch (err) {
+		// This code runs if there were any errors.
+		console.log(err);
+	}
+}
+
+function loadWFSNatureAreasWithoutCache( postcode ) {
 	//postcode is expexted to be string!
+	console.log("not in cache!");
 
 	let url;
 	
 	url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=10000&postinumeroalue=" + postcode ;
 
 	console.log("Loading: " + url );
-	
-	let promiseFeaturesAPI = Cesium.GeoJsonDataSource.load( url, {
-  		stroke: Cesium.Color.BLACK,
-  		fill: Cesium.Color.DARKGREEN,
-  		strokeWidth: 3,
-		clampToGround: true
-	})
-	.then(function ( dataSource ) {
+
+	const response = fetch( url )
+	.then(function(response) {
+	  // The response is a Response instance.
+	  // You parse the data into a useable format using `.json()`
+	  return response.json();
+	}).then(function(data) {
+	localforage.setItem( url, JSON.stringify( data ) );
+		// Do other things once the value has been saved.
+		viewer.dataSources.add( 	Cesium.GeoJsonDataSource.load( data, {
+			stroke: Cesium.Color.BLACK,
+			fill: Cesium.Color.DARKGREEN,
+			strokeWidth: 3,
+		  clampToGround: true
+	  }) )
+	  .then(function ( dataSource ) {
 
 		viewer.dataSources.add( dataSource );
 		dataSource.name = "NatureAreas";
@@ -109,9 +176,11 @@ function loadWFSNatureAreas( postcode ) {
 		}
 	})	
 	.otherwise(function (error) {
-      //Display any errrors encountered while loading.
-      console.log(error);
-    });
+	  //Display any errrors encountered while loading.
+	  console.log(error);
+	});
+	})
+	
 }
 
 function setNatureAreaPolygonMaterialColor( entity, category ) {

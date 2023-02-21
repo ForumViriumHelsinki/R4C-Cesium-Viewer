@@ -6,6 +6,7 @@
   <!-- Include the CesiumJS JavaScript and CSS files -->
   <script src="Cesium/Cesium.js"></script>
   <script type="text/javascript" src="GeoAPITools.js"></script>
+  <script src="localforage/dist/localforage.js"></script>
   <script src="plotly-2.12.1.min.js"></script>
   <link href="Cesium/Widgets/widgets.css" rel="stylesheet">
   <link href="DemoApp.css" rel="stylesheet">
@@ -261,8 +262,9 @@
 				console.log("Postal code area found!");
 
 				postalcode = picked.id.properties.postinumeroalue;
-			    viewer.dataSources.removeAll();
-			    viewer.entities.removeAll();
+
+				// viewer.dataSources.removeAll();
+				// viewer.entities.removeAll();
 			    
 			    if ( show3DCM == false ) {
 

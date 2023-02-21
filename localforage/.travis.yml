@@ -1,0 +1,19 @@
+before_install:
+- npm install -g bower
+- bower install
+language: node_js
+node_js:
+- '10'
+env:
+  global:
+    secure: LSmHs32nmcjgp3/5hQASgIPUDF/zexvwV/XASRYCDkwJRllDZ8n8wIvHx+D1QVcotx7jSAVEKM2tcfMq/JLXVHUmNNpeG9maUMfZAHA7xFlAo5GNAG3p/rqYe3tan9Xum+Is6A71kXTVnaVyOTG5ApEyj8QUwPfHpv1ziGJu72Y=
+deploy:
+  skip_cleanup: true
+  provider: npm
+  email: hi@tofumatt.com
+  api_key:
+    secure: UxsPVxhtshu3a7t6ExgC5f1Gbs70DyeSHiEY4OOkAXAOd8z9LALcY0uAgNzYrPssX5eEeT99ac19IAk3h2qmbrRTfYR+/fpxtblFJdsllorx1k0OnBWUktWGn2erMwF9O0T0fvC06DEzYehiXRrftN/qUfRBSbUNDZyj7ySEkF0=
+  on:
+    tags: true
+    repo: localForage/localForage
+    branch: master
