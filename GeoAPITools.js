@@ -417,7 +417,7 @@ function loadWFSBuildingsWithoutCache( url, inhelsinki, postcode ) {
 	})
 	.then( function( data ) {
 		localforage.setItem( url, JSON.stringify( data ) );
-		addBuildingsDataSource( data, inhelsinki, postcode );
+		findUrbanHeatData( data, inhelsinki, postcode );
 	})
 	
 }
