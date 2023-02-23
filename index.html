@@ -47,6 +47,13 @@
 <label for="showNatureToggle" class="label">Show nature areas</label>
 
   <!-- showPlotSwitch-->
+  <label class="switch">
+	<input type="checkbox" id="hideNonSoteToggle" value="hideNonSote" >
+	<span class="slider round"></span>
+</label>
+<label for="hideNonSote" class="label">Hide non sote buildings</label>
+
+  <!-- showPlotSwitch-->
 <label class="switch">
   <input type="checkbox" id="plotDailyToggle" value="plotDaily" checked>
   <span class="slider round"></span>
@@ -141,7 +148,8 @@
 			
 			if (picked instanceof Cesium.Cesium3DTileFeature) {
 				console.log("3D Tiles clicked!");
-				
+				console.log( "picked", picked );
+
 				var propertyNames = picked.getPropertyNames();
 		        
 				document.getElementById('printContainer').scroll({
@@ -484,6 +492,46 @@
 			}
 
 		}
+
+		if ( event.target.value == 'hideNonSote' ) {
+			
+			hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
+
+			if ( hideNonSote ) {
+				
+				viewer.dataSources._dataSources.forEach( function( dataSource ) {
+					
+					if ( dataSource.name == "Buildings" ) {
+
+						for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+
+							let entity = dataSource._entityCollection._entities._array[ i ];
+
+							if ( !entity._properties._avgheatexposuretobuilding ) {
+
+								dataSource._entityCollection._entities._array[ i ].show = false;
+
+							}
+						}						
+					}
+				});
+
+			} else {
+
+				viewer.dataSources._dataSources.forEach( function( dataSource ) {
+					
+					if ( dataSource.name == "Buildings" ) {
+
+						for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+
+							dataSource._entityCollection._entities._array[ i ].show = true;
+
+						}						
+					}
+				});
+			}
+		}			
+
 	}
   </script>
 </body>

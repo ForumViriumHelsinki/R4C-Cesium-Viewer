@@ -25,6 +25,7 @@ function reset() {
 	plotDaily = true;
 	showNature = false;
 	plotEnergy = true;
+	hideNonSote = false;
 	print = true;
 	
 	lastEnergyPlotRATU = 0;
@@ -36,6 +37,7 @@ function reset() {
 	document.getElementById("showNatureToggle").checked = false;
 	document.getElementById("show3DCMToggle").checked = false;
 	document.getElementById("printToggle").checked = true;
+	document.getElementById("hideNonSoteToggle").checked = false;
 	
 	document.getElementById('printContainer').innerHTML =  "<i>Please click on a postcode area to load building and lot polygons from the WFS server...</i>";
 	
@@ -108,7 +110,7 @@ function addNatureDataSource( data ) {
 
 async function loadWFSNatureAreas( postcode ) {
 
-	let url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=10000&postinumeroalue=" + postcode ;
+	let url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=100000&postinumeroalue=" + postcode ;
 
 	try {
 		const value = await localforage.getItem( url );
@@ -213,6 +215,8 @@ function setNatureAreaPolygonMaterialColor( entity, category ) {
 
 function setBuildingPolygonMaterialColor( entity, kayttotarkoitus ) {
 
+	console.log("entity", entity);
+
 	switch ( kayttotarkoitus ){
 		case 2: // business
 			entity.polygon.material = Cesium.Color.TOMATO;
@@ -259,8 +263,52 @@ function findMultiplierForFloorCount( kayttotarkoitus ) {
 
 }
 
-function addBuildingsDataSource( data, inhelsinki ) {
+async function findUrbanHeatData( data, inhelsinki, postcode ) {
+
+	if ( inhelsinki ) {
+
+		const urbanheatdata = fetch( "https://geo.fvh.fi/r4c/collections/urban_heat_building/items?f=json&limit=100&postinumero=" + postcode )
+		.then( function( response ) {
+			return response.json();
+		  })
+		.then( function( urbanheat ) {
 	
+			for ( let i = 0; i < data.features.length; i++ ) {
+	
+				let feature = data.features[ i ];
+	
+	
+				for ( let j = 0; j < urbanheat.features.length; j++ ) {
+	
+					if ( feature.properties.ratu == urbanheat.features[ j ].properties.ratu ) {
+		
+						feature.properties.avgheatexposuretobuilding = urbanheat.features[ j ].properties.avgheatexposuretobuilding;
+	
+					}
+				}
+			}
+			
+			addBuildingsDataSource( data, inhelsinki );
+
+		//	return response.json();
+		  }).catch(
+			( e ) => {
+	
+				console.log( 'something went wrong', e );
+	
+			}
+		);
+
+	} else {
+
+		addBuildingsDataSource( data, inhelsinki );
+
+	}
+
+}
+
+async function addBuildingsDataSource( data, inhelsinki  ) {
+
 	viewer.dataSources.add( Cesium.GeoJsonDataSource.load( data, {
 		stroke: Cesium.Color.BLACK,
 		fill: Cesium.Color.CRIMSON,
@@ -268,7 +316,8 @@ function addBuildingsDataSource( data, inhelsinki ) {
 		clampToGround: true
 	}) )
 	.then(function ( dataSource ) {
-		
+
+		dataSource.name = "Buildings";
 		var entities = dataSource.entities.values;
 
 		if ( !inhelsinki ) {
@@ -292,6 +341,21 @@ function addBuildingsDataSource( data, inhelsinki ) {
 				}	
 				
 			}
+
+		} else {
+
+			for ( let i = 0; i < entities.length; i++ ) {
+
+				let entity = entities[ i ];
+
+				if ( entity.properties.avgheatexposuretobuilding ) {
+
+					entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.avgheatexposuretobuilding._value, 0, 1 );
+
+				}
+
+			}
+
 		}	
 	})	
 	.otherwise(function ( error ) {
@@ -316,7 +380,7 @@ async function loadWFSBuildings( postcode ) {
 
 	} else {
 
-		HKIBuildingURL = "https://geo.fvh.fi/r4c/collections/uusimaa_building/items?f=json&limit=10000&postinumeroalue=" + postcode;
+		HKIBuildingURL = "https://geo.fvh.fi/r4c/collections/uusimaa_building/items?f=json&limit=100000&postinumeroalue=" + postcode;
 
 	}
 
@@ -329,11 +393,11 @@ async function loadWFSBuildings( postcode ) {
 			console.log("found from cache");
 
 			let datasource = JSON.parse( value )
-			addBuildingsDataSource( datasource, inhelsinki );
+			findUrbanHeatData( datasource, inhelsinki, postcode );
 
 		} else {
 
-			loadWFSBuildingsWithoutCache( HKIBuildingURL, inhelsinki );
+			loadWFSBuildingsWithoutCache( HKIBuildingURL, inhelsinki, postcode );
 
 		}
 	  	
@@ -343,7 +407,7 @@ async function loadWFSBuildings( postcode ) {
 	}
 }
 
-function loadWFSBuildingsWithoutCache( url, inhelsinki ) {
+function loadWFSBuildingsWithoutCache( url, inhelsinki, postcode ) {
 	
 	console.log("Not in cache! Loading: " + url );
 
@@ -353,7 +417,7 @@ function loadWFSBuildingsWithoutCache( url, inhelsinki ) {
 	})
 	.then( function( data ) {
 		localforage.setItem( url, JSON.stringify( data ) );
-		addBuildingsDataSource( data, inhelsinki );
+		addBuildingsDataSource( data, inhelsinki, postcode );
 	})
 	
 }
@@ -684,7 +748,6 @@ function loadHKIBuildings(postcode) {
 			}
 			
 			// Color according to facade material
-			
 			switch (entity.properties.c_julkisivu._value){
 			case '1':
 				entity.polygon.material = new Cesium.Color(0.7, 0.7, 0.7, 1);
