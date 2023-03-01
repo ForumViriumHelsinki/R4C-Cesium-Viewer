@@ -246,6 +246,9 @@
 				id.polygon.material = new Cesium.Color(1, 0.5, 0.5, 0.8);
 				setTimeout(() => {id.polygon.material = oldMaterial}, 500);
 				
+				console.log( "properties ", picked.id.properties );
+				console.log( "picked ", picked );
+
 				var length = picked.id.properties.propertyNames.length;
 				for (var i = 0; i < length; ++i) {
 					toPrint = toPrint + picked.id.properties.propertyNames[i] + ": " + picked.id.properties[picked.id.properties.propertyNames[i]] + "<br/>";
@@ -283,11 +286,16 @@
 					}
 
 					console.log( picked.id.properties.postinumeroalue )
-			    	loadWFSBuildings( picked.id.properties.postinumeroalue );
+			    	loadWFSBuildings( picked.id.properties.postinumeroalue, hideNonSote );
 
  			    }
 			    
-			    loadHKIWFSLots( picked.id.properties.postinumeroalue );
+
+				if ( !hideNonSote ) {
+
+					loadHKIWFSLots( picked.id.properties.postinumeroalue );
+
+				}
 		//	    loadEnergyAvailabilityAPI(picked.id.properties.posno._value);
 			    
 			    loadPostCodeZones( 0.0 );
