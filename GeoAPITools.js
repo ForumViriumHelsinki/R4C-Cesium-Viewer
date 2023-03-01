@@ -26,6 +26,7 @@ function reset() {
 	showNature = false;
 	plotEnergy = true;
 	hideNonSote = false;
+	showUrbanHeat = true;
 	print = true;
 	
 	lastEnergyPlotRATU = 0;
@@ -38,6 +39,8 @@ function reset() {
 	document.getElementById("show3DCMToggle").checked = false;
 	document.getElementById("printToggle").checked = true;
 	document.getElementById("hideNonSoteToggle").checked = false;
+	document.getElementById("showUrbanHeatToggle").checked = true;
+
 	
 	document.getElementById('printContainer').innerHTML =  "<i>Please click on a postcode area to load building and lot polygons from the WFS server...</i>";
 	
@@ -263,7 +266,41 @@ function findMultiplierForFloorCount( kayttotarkoitus ) {
 
 }
 
-async function findUrbanHeatData( data, inhelsinki, postcode, hideNonSote) {
+function findKayttotarkoitusHKI( kayttotarkoitus ) {
+
+	switch ( kayttotarkoitus ){
+		case '211': 
+			return 'Keskussairaalat';
+		case '213': 
+			return 'Muut sairaalat';
+		case '214': 
+			return 'Terveyskeskukset';
+		case '215': 
+			return 'Terveydenhoidon erityislaitokset (mm. kuntoutuslaitokset)';
+		case '219': 
+			return 'Muut terveydenhoitorakennukset';
+		case '221': 
+			return 'Vanhainkodit';
+		case '222': 
+			return 'Lastenkodit, koulukodit';
+		case '223': 
+			return 'Kehitysvammaisten hoitolaitokset';
+		case '229': 
+			return 'Muut huoltolaitosrakennukset';
+		case '231': 
+			return 'Lasten päiväkodit';
+		case '239': 
+			return 'Muut sosiaalitoimen rakennukset';		
+		case '511': 
+			return 'Peruskoulut, lukiot ja muut';
+		case '521': 
+			return 'Ammatilliset oppilaitokset';					
+		default:
+			return 'n/a' 
+		}
+}
+
+async function findUrbanHeatData( data, inhelsinki, postcode ) {
 
 	if ( inhelsinki ) {
 
@@ -283,12 +320,13 @@ async function findUrbanHeatData( data, inhelsinki, postcode, hideNonSote) {
 					if ( feature.properties.ratu == urbanheat.features[ j ].properties.ratu ) {
 		
 						feature.properties.avgheatexposuretobuilding = urbanheat.features[ j ].properties.avgheatexposuretobuilding;
+						feature.properties.kayttotarkoitus = findKayttotarkoitusHKI( urbanheat.features[ j ].properties.c_kayttark );
 	
 					}
 				}
 			}
 			
-			addBuildingsDataSource( data, inhelsinki, hideNonSote );
+			addBuildingsDataSource( data, inhelsinki );
 
 		//	return response.json();
 		  }).catch(
@@ -307,8 +345,7 @@ async function findUrbanHeatData( data, inhelsinki, postcode, hideNonSote) {
 
 }
 
-async function addBuildingsDataSource( data, inhelsinki, hideNonSote ) {
-	console.log("data", data );
+async function addBuildingsDataSource( data, inhelsinki ) {
 
 	viewer.dataSources.add( Cesium.GeoJsonDataSource.load( data, {
 		stroke: Cesium.Color.BLACK,
@@ -349,12 +386,6 @@ async function addBuildingsDataSource( data, inhelsinki, hideNonSote ) {
 
 				let entity = entities[ i ];
 
-				if ( hideNonSote && !entity.properties.avgheatexposuretobuilding ) {
-
-					entity.show = false;
-					
-				}
-
 				if ( entity.properties.avgheatexposuretobuilding ) {
 
 					entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.avgheatexposuretobuilding._value, 0, entity.properties.avgheatexposuretobuilding._value );
@@ -372,7 +403,7 @@ async function addBuildingsDataSource( data, inhelsinki, hideNonSote ) {
 
 }
 
-async function loadWFSBuildings( postcode, hideNonSote ) {
+async function loadWFSBuildings( postcode ) {
 
 	let HKIBuildingURL;
 
@@ -400,11 +431,11 @@ async function loadWFSBuildings( postcode, hideNonSote ) {
 			console.log("found from cache");
 
 			let datasource = JSON.parse( value )
-			await findUrbanHeatData( datasource, inhelsinki, postcode, hideNonSote );
+			await findUrbanHeatData( datasource, inhelsinki, postcode );
 
 		} else {
 
-			loadWFSBuildingsWithoutCache( HKIBuildingURL, inhelsinki, postcode, hideNonSote );
+			loadWFSBuildingsWithoutCache( HKIBuildingURL, inhelsinki, postcode );
 
 		}
 	  	
@@ -414,7 +445,7 @@ async function loadWFSBuildings( postcode, hideNonSote ) {
 	}
 }
 
-async function loadWFSBuildingsWithoutCache( url, inhelsinki, postcode, hideNonSote ) {
+async function loadWFSBuildingsWithoutCache( url, inhelsinki, postcode ) {
 	
 	console.log("Not in cache! Loading: " + url );
 
@@ -424,7 +455,7 @@ async function loadWFSBuildingsWithoutCache( url, inhelsinki, postcode, hideNonS
 	})
 	.then( function( data ) {
 		localforage.setItem( url, JSON.stringify( data ) );
-		findUrbanHeatData( data, inhelsinki, postcode, hideNonSote );
+		findUrbanHeatData( data, inhelsinki, postcode );
 	})
 	
 }

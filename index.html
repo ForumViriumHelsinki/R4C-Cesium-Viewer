@@ -39,14 +39,14 @@
 </label>
 <label for="printToggle" class="label">Object details</label>
 
-  <!-- showPlotSwitch-->
+  <!-- showNatureSwitch-->
 <label class="switch">
 	<input type="checkbox" id="showNatureToggle" value="showNature" >
 	<span class="slider round"></span>
 </label>
 <label for="showNatureToggle" class="label">Show nature areas</label>
 
-  <!-- showPlotSwitch-->
+  <!-- hideNonSoteSwitch-->
   <label class="switch">
 	<input type="checkbox" id="hideNonSoteToggle" value="hideNonSote" >
 	<span class="slider round"></span>
@@ -67,6 +67,12 @@
 </label>
 <label for="show3DCMToggle" class="label">Display 3D city model</label>
 
+  <!-- showUrbanHeatSwitch-->
+<label class="switch">
+  <input type="checkbox" id="showUrbanHeatToggle" value="showUrbanHeat" checked>
+  <span class="slider round"></span>
+</label>
+<label for="showUrbanHeatToggle" class="label">Show Urban Heat Exposure</label>
 
 
   </div>
@@ -94,6 +100,7 @@
   	var tilesets = []; //Will store reference to loaded tilesets
   	var print = true; //show object details..
 	var postalcode = null;
+	var showUrbanHeat = true;
     
 	// OS version, operating without Cesium Ion services...
     Cesium.Ion.defaultAccessToken = null;
@@ -286,12 +293,12 @@
 					}
 
 					console.log( picked.id.properties.postinumeroalue )
-			    	loadWFSBuildings( picked.id.properties.postinumeroalue, hideNonSote );
+			    	loadWFSBuildings( picked.id.properties.postinumeroalue );
 
  			    }
 			    
 
-				if ( !hideNonSote ) {
+				if ( !showUrbanHeat ) {
 
 					loadHKIWFSLots( picked.id.properties.postinumeroalue );
 
@@ -538,7 +545,31 @@
 					}
 				});
 			}
-		}			
+		}	
+		
+		if ( event.target.value == 'showUrbanHeat' ) {
+			
+			showUrbanHeat = document.getElementById( "showUrbanHeatToggle" ).checked;
+
+			if ( showUrbanHeat ) {
+				viewer.dataSources._dataSources.forEach( function( dataSource ) {
+
+					if( dataSource.name == "HKI Lots" ) {
+						
+						dataSource.show = false;	
+					}});
+				
+			} else {
+
+				if ( postalcode && viewer.dataSources._dataSources.length > 2 ) {
+					
+					loadHKIWFSLots( postalcode );
+				
+				}
+
+			}
+
+		}		
 
 	}
   </script>
