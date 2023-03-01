@@ -72,7 +72,7 @@
   <input type="checkbox" id="showUrbanHeatToggle" value="showUrbanHeat" checked>
   <span class="slider round"></span>
 </label>
-<label for="showUrbanHeatToggle" class="label">Show Urban Heat Exposure</label>
+<label for="showUrbanHeatToggle" class="label">Switch between Urban Heat and HKI Lots data</label>
 
 
   </div>
@@ -293,16 +293,11 @@
 					}
 
 					console.log( picked.id.properties.postinumeroalue )
+					loadHKIWFSLots( picked.id.properties.postinumeroalue, showUrbanHeat );
 			    	loadWFSBuildings( picked.id.properties.postinumeroalue );
 
  			    }
 			    
-
-				if ( !showUrbanHeat ) {
-
-					loadHKIWFSLots( picked.id.properties.postinumeroalue );
-
-				}
 		//	    loadEnergyAvailabilityAPI(picked.id.properties.posno._value);
 			    
 			    loadPostCodeZones( 0.0 );
@@ -561,11 +556,13 @@
 				
 			} else {
 
-				if ( postalcode && viewer.dataSources._dataSources.length > 2 ) {
+				viewer.dataSources._dataSources.forEach( function( dataSource ) {
 					
-					loadHKIWFSLots( postalcode );
-				
-				}
+					if( dataSource.name == "HKI Lots" ) {
+						
+						dataSource.show = true;	
+					
+					}});
 
 			}
 

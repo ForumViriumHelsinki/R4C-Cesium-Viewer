@@ -50,7 +50,7 @@ function reset() {
 
 }
 
-function loadHKIWFSLots(postcode) {
+function loadHKIWFSLots( postcode, showUrbanHeat ) {
 	const HKILotURL = "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata:Kaavayksikot&outputFormat=application/json&srsName=urn:ogc:def:crs:EPSG::4326&CQL_FILTER=osoite%20LIKE%20%27%25" + postcode + "%25%27"
 	console.log("Loading: " + HKILotURL);
 	
@@ -72,6 +72,17 @@ function loadHKIWFSLots(postcode) {
             } else {
             	entity.polygon.material = new Cesium.Color(0.2, 0.6, 0.2, 0.5);
             }	
+		}
+
+		if ( showUrbanHeat ) {
+
+			viewer.dataSources._dataSources.forEach( function( dataSource ) {
+				
+				if( dataSource.name == "HKI Lots" ) {
+					
+					dataSource.show = false;	
+				}});
+
 		}
 	})	
 	.otherwise(function (error) {
