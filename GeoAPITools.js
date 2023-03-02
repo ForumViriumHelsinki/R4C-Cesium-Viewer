@@ -315,7 +315,7 @@ async function findUrbanHeatData( data, inhelsinki, postcode ) {
 
 	if ( inhelsinki ) {
 
-		const urbanheatdata = fetch( "https://geo.fvh.fi/r4c/collections/urban_heat_building/items?f=json&limit=100&postinumero=" + postcode )
+		const urbanheatdata = fetch( "https://geo.fvh.fi/r4c/collections/urban_heat_building/items?f=json&limit=2000&postinumero=" + postcode )
 		.then( function( response ) {
 			return response.json();
 		  })
