@@ -72,7 +72,9 @@ function showNatureEvent( ) {
 
     if ( showNature ) {
 
-        if ( postalcode && viewer.dataSources._dataSources.length > 1 ) {
+        console.log( postalcode )
+
+        if ( postalcode ) {
 
             loadNatureAreas( postalcode );
 
