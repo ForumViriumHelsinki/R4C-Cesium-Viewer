@@ -5,7 +5,10 @@
   <meta charset="utf-8">
   <!-- Include the CesiumJS JavaScript and CSS files -->
   <script src="Cesium/Cesium.js"></script>
-  <script type="text/javascript" src="GeoAPITools.js"></script>
+  <script type="text/javascript" src="scripts/geoapitools.js"></script>
+  <script type="text/javascript" src="scripts/buildings.js"></script>
+  <script type="text/javascript" src="scripts/natureareas.js"></script>
+  <script type="text/javascript" src="scripts/sliderevents.js"></script>
   <script src="localforage/dist/localforage.js"></script>
   <script src="plotly-2.12.1.min.js"></script>
   <link href="Cesium/Widgets/widgets.css" rel="stylesheet">
@@ -182,7 +185,7 @@
 						
 						if ( showNature ) {
 							
-							loadWFSNatureAreas( picked.id.properties.postinumeroalue );
+							loadNatureAreas( picked.id.properties.postinumeroalue );
 						
 						}
 
@@ -216,108 +219,6 @@
 				}
 			}
 		}
-	}
-	
-	function sliderEvents( event ) {
-		
-		if ( event.target.value == 'print' ) {
-			console.log( "Set the print to: " + String( document.getElementById( "printToggle" ).checked ) );
-			print = document.getElementById( "printToggle" ).checked;
-		
-			if ( !print ) {
-				document.getElementById( 'printContainer' ).style.visibility = 'hidden';
-			} else {
-				document.getElementById( 'printContainer' ).style.visibility = 'visible';
-			}
-		}
-			
-		if ( event.target.value == 'showPlot' ) {
-			console.log("Set the showplot to: " + String(document.getElementById("showPlotToggle").checked));
-			showPlot = document.getElementById( "showPlotToggle" ).checked;
-			
-			if ( !showPlot ) {
-				document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
-			}
-			
-			if ( showPlot ) {
-				if ( document.getElementById( 'plotContainer' ).textContent.includes( "plotly" ) ) { //This is a bit dirty...
-					document.getElementById( 'plotContainer' ).style.visibility = 'visible';
-				}
-			}
-		}	
-
-		if ( event.target.value == 'showNature' ) {
-
-			showNature = document.getElementById( "showNatureToggle" ).checked;
-
-			if ( showNature ) {
-
-				if ( postalcode && viewer.dataSources._dataSources.length > 1 ) {
-
-					loadWFSNatureAreas( postalcode );
-
-				}
-				
-				viewer.dataSources._dataSources.forEach( function( dataSource ) {
-
-					dataSource.show = true;
-
-				});
-
-			} else {
-
-				viewer.dataSources._dataSources.forEach( function( dataSource ) {
-
-					if( dataSource.name == "NatureAreas" ) {
-
-						dataSource.show = false;	
-						
-					}
-				});
-
-			}
-
-		}
-
-		if ( event.target.value == 'hideNonSote' ) {
-			
-			hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
-
-			if ( hideNonSote ) {
-				
-				viewer.dataSources._dataSources.forEach( function( dataSource ) {
-					
-					if ( dataSource.name == "Buildings" ) {
-
-						for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
-
-							let entity = dataSource._entityCollection._entities._array[ i ];
-
-							if ( !entity._properties._avgheatexposuretobuilding || entity._properties._kayttotarkoitus == 'n/a') {
-
-								dataSource._entityCollection._entities._array[ i ].show = false;
-
-							}
-						}						
-					}
-				});
-
-			} else {
-
-				viewer.dataSources._dataSources.forEach( function( dataSource ) {
-					
-					if ( dataSource.name == "Buildings" ) {
-
-						for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
-
-							dataSource._entityCollection._entities._array[ i ].show = true;
-
-						}						
-					}
-				});
-			}
-		}	
-				
 	}
   </script>
 </body>
