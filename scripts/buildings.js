@@ -47,83 +47,54 @@ function findMultiplierForFloorCount( kayttotarkoitus ) {
 
 }
 
-function findKayttotarkoitusHKI( kayttotarkoitus ) {
+function findAndSetOutsideHelsinkiBuildingsColor( entities ) {
 
-	switch ( kayttotarkoitus ){
-		case '211': 
-			return 'Keskussairaalat';
-		case '213': 
-			return 'Muut sairaalat';
-		case '214': 
-			return 'Terveyskeskukset';
-		case '215': 
-			return 'Terveydenhoidon erityislaitokset (mm. kuntoutuslaitokset)';
-		case '219': 
-			return 'Muut terveydenhoitorakennukset';
-		case '221': 
-			return 'Vanhainkodit';
-		case '222': 
-			return 'Lastenkodit, koulukodit';
-		case '223': 
-			return 'Kehitysvammaisten hoitolaitokset';
-		case '229': 
-			return 'Muut huoltolaitosrakennukset';
-		case '231': 
-			return 'Lasten päiväkodit';
-		case '239': 
-			return 'Muut sosiaalitoimen rakennukset';		
-		case '511': 
-			return 'Peruskoulut, lukiot ja muut';
-		case '521': 
-			return 'Ammatilliset oppilaitokset';					
-		default:
-			return 'n/a' 
+	for ( let i = 0; i < entities.length; i++ ) {
+
+		let entity = entities[ i ];
+		const kayttotarkoitus = Number( entity.properties._kayttotarkoitus._value );
+		const multiplier = findMultiplierForFloorCount( kayttotarkoitus )
+
+		if ( entity.properties.kerrosluku != null ) {
+
+			entity.polygon.extrudedHeight = entity.properties.kerrosluku._value * multiplier;
+
 		}
+
+		if ( kayttotarkoitus ) {
+
+			setBuildingPolygonMaterialColor( entity, kayttotarkoitus );
+
+		}	
+		
+	}
 }
 
-async function findUrbanHeatData( data, inhelsinki, postcode ) {
+function setHeatExposureToBuildings( entities ) {
 
-	if ( inhelsinki ) {
+	let hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
 
-		const urbanheatdata = fetch( "https://geo.fvh.fi/r4c/collections/urban_heat_building/items?f=json&limit=2000&postinumero=" + postcode )
-		.then( function( response ) {
-			return response.json();
-		  })
-		.then( function( urbanheat ) {
+	for ( let i = 0; i < entities.length; i++ ) {
+
+		let entity = entities[ i ];
+
+		if ( entity.properties.avgheatexposuretobuilding ) {
+
+			entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.avgheatexposuretobuilding._value, 0, entity.properties.avgheatexposuretobuilding._value );
+
+		}
+
+		if ( hideNonSote ) {
+			   
+			if ( entity._properties._kayttotarkoitus == 'n/a' ) {
 	
-			for ( let i = 0; i < data.features.length; i++ ) {
+				entity.show = false;
 	
-				let feature = data.features[ i ];
-	
-	
-				for ( let j = 0; j < urbanheat.features.length; j++ ) {
-	
-					if ( feature.properties.ratu == urbanheat.features[ j ].properties.ratu ) {
+			}
 		
-						feature.properties.avgheatexposuretobuilding = urbanheat.features[ j ].properties.avgheatexposuretobuilding;
-						feature.properties.kayttotarkoitus = findKayttotarkoitusHKI( urbanheat.features[ j ].properties.c_kayttark );
-	
-					}
-				}
-			}
-			
-			addBuildingsDataSource( data, inhelsinki );
-
-		//	return response.json();
-		  }).catch(
-			( e ) => {
-	
-				console.log( 'something went wrong', e );
-	
-			}
-		);
-
-	} else {
-
-		addBuildingsDataSource( data, inhelsinki );
+		}
 
 	}
-
 }
 
 async function addBuildingsDataSource( data, inhelsinki ) {
@@ -141,51 +112,11 @@ async function addBuildingsDataSource( data, inhelsinki ) {
 
 		if ( !inhelsinki ) {
 
-			for ( let i = 0; i < entities.length; i++ ) {
-
-				let entity = entities[ i ];
-				const kayttotarkoitus = Number( entity.properties._kayttotarkoitus._value );
-				const multiplier = findMultiplierForFloorCount( kayttotarkoitus )
-
-				if ( entity.properties.kerrosluku != null ) {
-
-					entity.polygon.extrudedHeight = entity.properties.kerrosluku._value * multiplier;
-
-				}
-
-				if ( kayttotarkoitus ) {
-
-					setBuildingPolygonMaterialColor( entity, kayttotarkoitus );
-
-				}	
-				
-			}
+			findAndSetOutsideHelsinkiBuildingsColor( entities );
 
 		} else {
 
-            hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
-
-			for ( let i = 0; i < entities.length; i++ ) {
-
-				let entity = entities[ i ];
-
-				if ( entity.properties.avgheatexposuretobuilding ) {
-
-					entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.avgheatexposuretobuilding._value, 0, entity.properties.avgheatexposuretobuilding._value );
-
-				}
-
-                if ( hideNonSote ) {
-                       
-                    if ( entity._properties._kayttotarkoitus == 'n/a' ) {
-            
-                        entity.show = false;
-            
-                    }
-                
-                }
-
-			}
+			setHeatExposureToBuildings( entities );
 
 		}	
 	})	

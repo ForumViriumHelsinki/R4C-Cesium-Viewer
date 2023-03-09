@@ -1,4 +1,3 @@
-
 async function loadNatureAreas( postcode ) {
 
 	let url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=100000&postinumeroalue=" + postcode ;
@@ -20,9 +19,9 @@ async function loadNatureAreas( postcode ) {
 
 		}
 	  	
-	} catch (err) {
+	} catch ( err ) {
 		// This code runs if there were any errors.
-		console.log(err);
+		console.log( err );
 	}
 }
 

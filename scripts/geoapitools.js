@@ -1,35 +1,44 @@
-console.log("GeoAPITools.js loaded!");
-
 // Resets the objects displayed and camera orientation
-function reset() {
-	    // Fly the camera to Helsinki at the given longitude, latitude, and height.
-    viewer.camera.flyTo({
-      destination : Cesium.Cartesian3.fromDegrees( 24.941745, 60.165464, 35000 ), 
-      orientation : {
-        heading : Cesium.Math.toRadians( 0.0 ),
-        pitch : Cesium.Math.toRadians( -85.0 ),
-      }
-    });
+function reset( ) {
 
-	viewer.dataSources.removeAll();
-	viewer.entities.removeAll();
-
+    resetViewer( );
+    resetSwitches( );
     // Load post code zones & energy availability tags
 	loadPostCodeZones(0.2);
 	
+	document.getElementById( 'printContainer' ).innerHTML =  "<i>Please click on a postcode area to load building and lot polygons from the WFS server...</i>";
+
+}
+
+// Resets the switches
+function resetSwitches( ) {
+
 	document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
-	
+	document.getElementById( "showPlotToggle" ).checked = true;
+	document.getElementById( "showNatureToggle" ).checked = false;
+	document.getElementById( "printToggle" ).checked = true;
+	document.getElementById( "hideNonSoteToggle" ).checked = false;	
+
   	showPlot = true;
 	showNature = false;
 	hideNonSote = false;
 	print = true;
 
-	document.getElementById( "showPlotToggle" ).checked = true;
-	document.getElementById( "showNatureToggle" ).checked = false;
-	document.getElementById( "printToggle" ).checked = true;
-	document.getElementById( "hideNonSoteToggle" ).checked = false;
-	
-	document.getElementById( 'printContainer' ).innerHTML =  "<i>Please click on a postcode area to load building and lot polygons from the WFS server...</i>";
+}
+
+// Resets the objects displayed and camera orientation
+function resetViewer( ) {
+    // Fly the camera to Helsinki at the given longitude, latitude, and height.
+    viewer.camera.flyTo({
+        destination : Cesium.Cartesian3.fromDegrees( 24.941745, 60.165464, 35000 ), 
+        orientation : {
+            heading : Cesium.Math.toRadians( 0.0 ),
+            pitch : Cesium.Math.toRadians( -85.0 ),
+        }
+    });
+
+    viewer.dataSources.removeAll( );
+    viewer.entities.removeAll( );
 
 }
 

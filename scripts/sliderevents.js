@@ -99,42 +99,53 @@ function showNatureEvent( ) {
 
 }
 
+function hideNonSoteBuildings( ) {
+
+    viewer.dataSources._dataSources.forEach( function( dataSource ) {
+            
+        if ( dataSource.name == "Buildings" ) {
+
+            for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+
+                let entity = dataSource._entityCollection._entities._array[ i ];
+
+                if ( !entity._properties._avgheatexposuretobuilding || entity._properties._kayttotarkoitus == 'n/a') {
+
+                    dataSource._entityCollection._entities._array[ i ].show = false;
+
+                }
+            }						
+        }
+    });     
+}
+
+function showAllBuildings( ) {
+
+    viewer.dataSources._dataSources.forEach( function( dataSource ) {
+            
+        if ( dataSource.name == "Buildings" ) {
+
+            for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+
+                dataSource._entityCollection._entities._array[ i ].show = true;
+
+            }						
+        }
+    });    
+}
+
 function hideNonSoteEvent( ) {
 
     hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
 
     if ( hideNonSote ) {
         
-        viewer.dataSources._dataSources.forEach( function( dataSource ) {
-            
-            if ( dataSource.name == "Buildings" ) {
-
-                for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
-
-                    let entity = dataSource._entityCollection._entities._array[ i ];
-
-                    if ( !entity._properties._avgheatexposuretobuilding || entity._properties._kayttotarkoitus == 'n/a') {
-
-                        dataSource._entityCollection._entities._array[ i ].show = false;
-
-                    }
-                }						
-            }
-        });
+        hideNonSoteBuildings( );
 
     } else {
 
-        viewer.dataSources._dataSources.forEach( function( dataSource ) {
-            
-            if ( dataSource.name == "Buildings" ) {
+        showAllBuildings( );
 
-                for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
-
-                    dataSource._entityCollection._entities._array[ i ].show = true;
-
-                }						
-            }
-        });
     }
 
 }
