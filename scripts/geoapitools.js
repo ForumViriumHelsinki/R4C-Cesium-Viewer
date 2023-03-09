@@ -4,7 +4,7 @@ function reset( ) {
     resetViewer( );
     resetSwitches( );
     // Load post code zones & energy availability tags
-	loadPostCodeZones(0.2);
+	loadPostCodeZones( 0.2, viewer );
 	
 	document.getElementById( 'printContainer' ).innerHTML =  "<i>Please click on a postcode area to load building and lot polygons from the WFS server...</i>";
 
@@ -43,7 +43,7 @@ function resetViewer( ) {
 }
 
 // Loads postal code zone polygons, opacity given as float from 0 - 1
-function loadPostCodeZones( opacity ) {
+function loadPostCodeZones( opacity, viewer ) {
     // Load postal code zones
     const HKIPostCodesURL = 'uusimaa_po_clipped.json';
 	console.log( "Loading: " + HKIPostCodesURL );
