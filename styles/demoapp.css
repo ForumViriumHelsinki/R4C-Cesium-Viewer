@@ -31,9 +31,17 @@
 	overflow-y: scroll;
 }
 
-#logo {
+#logoFVH {
     position: fixed;
-    bottom:  60px;
+    bottom:  10%;
+    right: 20px;
+    z-index: 1000;
+    width: 100px;
+}
+
+#logoR4C {
+    position: fixed;
+    top:  75%;
     right: 20px;
     z-index: 1000;
     width: 150px;

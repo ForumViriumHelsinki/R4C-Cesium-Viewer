@@ -97,6 +97,21 @@ function setHeatExposureToBuildings( entities ) {
 	}
 }
 
+function setHelsinkiBuildingsHight( entities ) {
+
+	for ( let i = 0; i < entities.length; i++ ) {
+
+		let entity = entities[ i ];
+
+		if ( entity.properties.i_kerrlkm != null ) {
+
+			entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 2.7;
+
+		}
+		
+	}
+}
+
 async function addBuildingsDataSource( data, inhelsinki ) {
 
 	viewer.dataSources.add( Cesium.GeoJsonDataSource.load( data, {
@@ -116,6 +131,7 @@ async function addBuildingsDataSource( data, inhelsinki ) {
 
 		} else {
 
+			setHelsinkiBuildingsHight( entities );
 			setHeatExposureToBuildings( entities );
 
 		}	

@@ -45,7 +45,7 @@ function resetViewer( ) {
 // Loads postal code zone polygons, opacity given as float from 0 - 1
 function loadPostCodeZones( opacity ) {
     // Load postal code zones
-    const HKIPostCodesURL = 'Helsinki_postinumerot.geojson';
+    const HKIPostCodesURL = 'assets/data/Helsinki_postinumerot.geojson';
 	console.log( "Loading: " + HKIPostCodesURL );
 	
 	let promisePostCodes = Cesium.GeoJsonDataSource.load( HKIPostCodesURL, {

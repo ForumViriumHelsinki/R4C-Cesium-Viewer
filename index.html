@@ -4,17 +4,17 @@
 <title>R4C demo</title>
   <meta charset="utf-8">
   <!-- Include the CesiumJS JavaScript and CSS files -->
-  <script src="Cesium/Cesium.js"></script>
-  <script type="text/javascript" src="scripts/geoapitools.js"></script>
-  <script type="text/javascript" src="scripts/buildings.js"></script>
-  <script type="text/javascript" src="scripts/natureareas.js"></script>
-  <script type="text/javascript" src="scripts/sliderevents.js"></script>
-  <script type="text/javascript" src="scripts/urbanheat.js"></script>
-  <script type="text/javascript" src="scripts/featurepicker.js"></script>
-  <script src="localforage/dist/localforage.js"></script>
-  <script src="plotly-2.12.1.min.js"></script>
-  <link href="Cesium/Widgets/widgets.css" rel="stylesheet">
-  <link href="DemoApp.css" rel="stylesheet">
+  <script src="lib/Cesium/Cesium.js"></script>
+  <script type="text/javascript" src="services/geoapitools.js"></script>
+  <script type="text/javascript" src="services/buildings.js"></script>
+  <script type="text/javascript" src="services/natureareas.js"></script>
+  <script type="text/javascript" src="services/sliderevents.js"></script>
+  <script type="text/javascript" src="services/urbanheat.js"></script>
+  <script type="text/javascript" src="services/featurepicker.js"></script>
+  <script src="lib/localforage/dist/localforage.js"></script>
+  <script src="lib/plotly-2.12.1.min.js"></script>
+  <link href="lib/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <link href="styles/demoapp.css" rel="stylesheet">
 </head>
 <body>
 <div id="canvasScalerDiv">
@@ -57,11 +57,11 @@
   
 	<div id="printContainer">
   <i>Please click on a postcode area to load building and lot polygons from the WFS server...</i>
+  	</div>
+  		<!-- Add Logo -->
+	<img src="assets/images/regions4climate-black.png" id="logoR4C" alt="Regions4Climate" />
+	<img src="assets/images/fvh-1_musta.png" id="logoFVH" alt="Forum Virium Helsinki" />
   </div>
-  	
-  	<!-- Add Logo -->
-	<img src="fvh-1_musta.png" id="logo" alt="Forum Virium Helsinki" />
-	</div>
   <script>
   
   	// UI related global variables...
@@ -77,8 +77,8 @@
     const viewer = new Cesium.Viewer('cesiumContainer', {
     	terrainProvider : new Cesium.EllipsoidTerrainProvider(),
 		imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
-			url : ' https://avoin-karttakuva.maanmittauslaitos.fi/avoin/wmts/?api-key=97cd06ee-393a-4e7f-bd92-7ca33172df00',
-			layer : 'taustakartta',
+			url : 'https://avoin-karttakuva.maanmittauslaitos.fi/avoin/wmts/?api-key=97cd06ee-393a-4e7f-bd92-7ca33172df00',
+			layer : 'ortokuva',
 			style : 'default',
 			tileMatrixSetID : 'WGS84_Pseudo-Mercator'
 		}),
