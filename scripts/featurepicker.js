@@ -97,7 +97,7 @@ function handleBuildingFeature( properties ) {
 
 function handleFeatureWithProperties( id ) {                
     
-    postalcode = id.properties.postinumeroalue;
+    postalcode = id.properties.posno;
 
     //If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
     if ( postalcode ) {
