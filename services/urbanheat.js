@@ -28,15 +28,15 @@ function findKayttotarkoitusHKI( kayttotarkoitus ) {
 		case '521': 
 			return 'Ammatilliset oppilaitokset';					
 		default:
-			return 'n/a' 
+			return 'n/a';
 		}
 }
 
 function setKayttoKayttotarkoitus ( properties, features ) {
 
     for ( let i = 0; i < features.length; i++ ) {
-	
-        if ( properties.hki_id == features[ i ].properties.it ) {
+
+        if ( properties.id == features[ i ].properties.hki_id ) {
 
             properties.avgheatexposuretobuilding = features[ i ].properties.avgheatexposuretobuilding;
             properties.kayttotarkoitus = findKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
