@@ -36,7 +36,7 @@ function setKayttoKayttotarkoitus ( properties, features ) {
 
     for ( let i = 0; i < features.length; i++ ) {
 	
-        if ( properties.ratu == features[ i ].properties.ratu ) {
+        if ( properties.hki_id == features[ i ].properties.it ) {
 
             properties.avgheatexposuretobuilding = features[ i ].properties.avgheatexposuretobuilding;
             properties.kayttotarkoitus = findKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
