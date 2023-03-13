@@ -66,31 +66,32 @@
   
   	// UI related global variables...
   	var showPlot = true;
-	var showNature = false;
+	  var showNature = false;
   	var print = true; //show object details..
-	var postalcode = null;
-    
+	  var postalcode = null;
+    var nameOfZone = null;
+    var averageHeatExposure = 0;
 	// OS version, operating without Cesium Ion services...
     Cesium.Ion.defaultAccessToken = null;
 
     // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
     const viewer = new Cesium.Viewer('cesiumContainer', {
     	terrainProvider : new Cesium.EllipsoidTerrainProvider(),
-		imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
-			url : 'https://avoin-karttakuva.maanmittauslaitos.fi/avoin/wmts/?api-key=97cd06ee-393a-4e7f-bd92-7ca33172df00',
-			layer : 'ortokuva',
-			style : 'default',
-			tileMatrixSetID : 'WGS84_Pseudo-Mercator'
-		}),
+		  imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
+			  url : 'https://avoin-karttakuva.maanmittauslaitos.fi/avoin/wmts/?api-key=97cd06ee-393a-4e7f-bd92-7ca33172df00',
+			  layer : 'ortokuva',
+			  style : 'default',
+			  tileMatrixSetID : 'WGS84_Pseudo-Mercator'
+		  }),
     	animation: false,
-        fullscreenButton: false,
-        geocoder: false,
-        shadows: false,
-        navigationHelpButton: false,
-        timeline: false,
-        sceneModePicker: false,
-        baseLayerPicker: false,
-        infoBox: false
+      fullscreenButton: false,
+      geocoder: false,
+      shadows: false,
+      navigationHelpButton: false,
+      timeline: false,
+      sceneModePicker: false,
+      baseLayerPicker: false,
+      infoBox: false
     });    
   
     // Fly the camera to Helsinki at the given longitude, latitude, and height.

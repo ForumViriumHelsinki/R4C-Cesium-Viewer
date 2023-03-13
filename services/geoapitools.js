@@ -55,6 +55,7 @@ function loadPostCodeZones( opacity ) {
 		clampToGround: false
 	})
 	.then( function ( dataSource ) {
+        dataSource.name = "PostCodes";
 		viewer.dataSources.add( dataSource );
 		let entities = dataSource.entities.values;
 	})	

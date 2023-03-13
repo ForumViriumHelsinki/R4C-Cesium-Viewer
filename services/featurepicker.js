@@ -71,19 +71,27 @@ function handlePostalCodeFeature( postalcode, id ) {
 
 }
 
-function handleBuildingFeature( properties ) {
+function handleBuildingFeature( buildingHeatExposure, address, postinumero ) {
 
     console.log("Building found!");
-        
-    let data = [
-        {
-        labels: [ 'Kerrosala', 'Muu ala' ],
-        values: [ parseInt( properties.i_kerrosala ), parseInt( properties.i_kokala ) - parseInt( properties.i_kerrosala ) ],
-        type: 'pie'
-      }
-    ];
 
-    let layout = { title: { text: 'Kerrosalan osuus kokonaisalasta' } };
+    let trace1 = {
+        x: [ 'to building' ],
+        y: [ buildingHeatExposure ],
+        name: address,
+        type: 'bar'
+    };
+      
+    let trace2 = {
+        x: [ 'average in postal code area' ],
+        y: [ averageHeatExposure ],
+        name: postinumero,
+        type: 'bar',
+    };
+      
+    let data = [ trace1, trace2 ];
+      
+    let layout = { title: { text: 'Urban Heat Exposure Comparison' }, barmode: 'group' };
 
     //Test plotting
     if ( showPlot ) {
@@ -98,6 +106,7 @@ function handleBuildingFeature( properties ) {
 function handleFeatureWithProperties( id ) {                
     
     postalcode = id.properties.posno;
+    nameOfZone = id.properties.nimi;
 
     //If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
     if ( postalcode ) {
@@ -106,9 +115,17 @@ function handleFeatureWithProperties( id ) {
     }
 
     //See if we can find building floor areas
-    if ( id.properties.i_kokala ) {
+    if ( id.properties._avgheatexposuretobuilding ) {
+
+        let address = 'n/a'
+
+        if ( id.properties.katunimi_suomi ) {
+
+            address = id.properties.katunimi_suomi + ' ' + id.properties.osoitenumero
+
+        }
         
-        handleBuildingFeature( id.properties );
+        handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value );
 
     }
 

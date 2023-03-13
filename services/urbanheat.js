@@ -1,6 +1,6 @@
 function findKayttotarkoitusHKI( kayttotarkoitus ) {
 
-	switch ( kayttotarkoitus ){
+	switch ( kayttotarkoitus ) {
 		case '211': 
 			return 'Keskussairaalat';
 		case '213': 
@@ -45,6 +45,57 @@ function setKayttoKayttotarkoitus ( properties, features ) {
     }
 }
 
+async function createUrbanHeatHistogram( urbanHeatData ) {
+
+	let trace = {
+		x: urbanHeatData,
+		type: 'histogram',
+		name: 'average heat exposure to building',
+		marker: {
+			color: 'orange',
+		},
+	};
+
+	if ( showPlot ) {
+
+        document.getElementById( "plotContainer" ).style.visibility = 'visible';
+    }
+
+	let layout = { 
+		title: 'Heat exposure to buildings in ' + nameOfZone,
+		bargap: 0.05, 
+	};
+
+	Plotly.newPlot( 'plotContainer', [ trace ], layout );
+
+}
+
+function calculateAverageExposure( features ) {
+
+	let count = 0;
+	let total = 0;
+	let urbanHeatData = [ ];
+
+	for ( let i = 0; i < features.length; i++ ) {
+
+		if ( features[ i ].properties.avgheatexposuretobuilding ) {
+
+			total = total + features[ i ].properties.avgheatexposuretobuilding;
+			count++;
+			urbanHeatData.push( features[ i ].properties.avgheatexposuretobuilding );
+
+		}
+
+	}
+
+	if ( count != 0 ) {
+
+		averageHeatExposure = total / count;
+		createUrbanHeatHistogram( urbanHeatData );
+	
+	}
+}
+
 async function findUrbanHeatData( data, inhelsinki, postcode ) {
 
 	if ( inhelsinki ) {
@@ -62,6 +113,7 @@ async function findUrbanHeatData( data, inhelsinki, postcode ) {
 
 			}
 			
+			calculateAverageExposure( data.features );
 			addBuildingsDataSource( data, inhelsinki );
 
 		//	return response.json();
