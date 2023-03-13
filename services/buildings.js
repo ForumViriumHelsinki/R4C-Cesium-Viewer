@@ -82,6 +82,10 @@ function setHeatExposureToBuildings( entities ) {
 
 			entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.avgheatexposuretobuilding._value, 0, entity.properties.avgheatexposuretobuilding._value );
 
+		} else {
+
+			entity.polygon.material = new Cesium.Color( 0, 0, 0, 0 );
+
 		}
 
 		if ( hideNonSote ) {
