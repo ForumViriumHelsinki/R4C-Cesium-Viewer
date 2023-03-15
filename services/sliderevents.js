@@ -23,6 +23,12 @@ function sliderEvents( event ) {
         hideNonSoteEvent();
 
     }	
+
+    if ( event.target.value == 'showNatureHeat' ) {
+        
+        showNatureHeatEvent();
+
+    }
             
 }
 
@@ -150,4 +156,61 @@ function hideNonSoteEvent( ) {
 
     }
 
+}
+
+function showNatureHeatEvent( ) {
+
+    showNatureHeat = document.getElementById( "showNatureHeatToggle" ).checked;
+
+    if ( showNatureHeat ) {
+        
+        showNatureAreaHeat( );
+
+    } else {
+
+        hideNatureAreaHeat( );
+
+    }
+
+}
+
+ 
+function showNatureAreaHeat( ) {
+
+    viewer.dataSources._dataSources.forEach( function( dataSource ) {
+            
+        if ( dataSource.name == "NatureAreas" ) {
+
+            for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+
+                let entity = dataSource._entityCollection._entities._array[ i ];
+
+                if ( entity._properties._avgheatexposuretoarea._value ) {
+
+                    entity.polygon.material = new Cesium.Color( 1, 1 - entity._properties._avgheatexposuretoarea._value, 0, entity._properties._avgheatexposuretoarea._value );
+
+                }
+            }						
+        }
+    });     
+}
+
+function hideNatureAreaHeat( ) {
+
+    viewer.dataSources._dataSources.forEach( function( dataSource ) {
+            
+        if ( dataSource.name == "NatureAreas" ) {
+
+            for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+
+                let entity = dataSource._entityCollection._entities._array[ i ];
+
+                if ( entity._properties._category ) {
+
+                    setNatureAreaPolygonMaterialColor( entity, entity._properties._category._value );
+
+                }
+            }						
+        }
+    });     
 }

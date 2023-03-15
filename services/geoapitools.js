@@ -18,10 +18,12 @@ function resetSwitches( ) {
 	document.getElementById( "showNatureToggle" ).checked = false;
 	document.getElementById( "printToggle" ).checked = true;
 	document.getElementById( "hideNonSoteToggle" ).checked = false;	
+    document.getElementById( "showNatureHeatToggle" ).checked = false;	
 
   	showPlot = true;
 	showNature = false;
 	hideNonSote = false;
+    showNatureHeat = false;
 	print = true;
 
 }

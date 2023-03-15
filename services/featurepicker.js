@@ -142,14 +142,32 @@ function pickEntity( viewer, windowPosition ) {
             
             if ( id instanceof Cesium.Entity ) {
                 
-                printCesiumEntity( picked , id);
+                printCesiumEntity( picked , id );
             }
             
             if ( picked.id.properties ) {
 
+                hidePlotlyIfNatureFeatureIsClicked( picked.id.properties.category );
                 handleFeatureWithProperties( picked.id );
                 
             }
         }
+    }
+}
+
+function hidePlotlyIfNatureFeatureIsClicked( category ) {
+
+    if ( category ) {
+
+        document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
+
+    } else {
+
+        if ( document.getElementById( "showPlotToggle" ).checked ) {
+
+            document.getElementById( 'plotContainer' ).style.visibility = 'visible';
+
+        }
+
     }
 }
