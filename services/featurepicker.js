@@ -31,7 +31,7 @@ function printCesiumEntity( picked, id ) {
 
     console.log(toPrint);
 
-    toPrint = toPrint + "<br/><br/><i>Click on objects to retrieve information. Red points indicate energy data availability.</i>"
+    toPrint = toPrint + "<br/><br/><i>Click on objects to retrieve information.</i>"
     document.getElementById('printContainer').innerHTML = toPrint;
     document.getElementById('printContainer').scroll({
           top: 1000,

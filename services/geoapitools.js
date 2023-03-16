@@ -6,7 +6,7 @@ function reset( ) {
     // Load post code zones & energy availability tags
 	loadPostCodeZones( 0.2 );
 	
-	document.getElementById( 'printContainer' ).innerHTML =  "<i>Please click on a postcode area to load building and lot polygons from the WFS server...</i>";
+	document.getElementById( 'printContainer' ).innerHTML =  "<i>Please click on a postcode area to load building and nature areas from the WFS server...</i>";
 
 }
 

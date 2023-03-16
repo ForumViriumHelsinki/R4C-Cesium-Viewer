@@ -1,3 +1,10 @@
+/**
+ * Finds the purpose of a building in Helsinki based on code included in wfs source data
+ * Code list: https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf
+ *
+ * @param { String } kayttotarkoitus code for purpose
+ * @return { String } purpose of building
+ */
 function findKayttotarkoitusHKI( kayttotarkoitus ) {
 
 	switch ( kayttotarkoitus ) {
@@ -32,20 +39,33 @@ function findKayttotarkoitusHKI( kayttotarkoitus ) {
 		}
 }
 
-function setKayttoKayttotarkoitus ( properties, features ) {
+/**
+ * Finds the purpose of a building in Helsinki based on code included in wfs source data
+ * Code list: https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf
+ *
+ * @param { Object } properties of a building
+ * @param { Object } features Urban Heat Exposure buildings dataset
+ */
+function setKayttoKayttotarkoitusAndAverageHeatExposureToBuilding ( properties, features ) {
 
     for ( let i = 0; i < features.length; i++ ) {
 
+		// match building based on Helsinki id
         if ( properties.id == features[ i ].properties.hki_id ) {
 
             properties.avgheatexposuretobuilding = features[ i ].properties.avgheatexposuretobuilding;
             properties.kayttotarkoitus = findKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
-
+			break;
         }
     }
 }
 
-async function createUrbanHeatHistogram( urbanHeatData ) {
+/**
+ * Creates Urban Heat Exposure to buildings histogram for a postal code area
+ *
+ * @param { Object } urbanHeatData urban heat data of a buildings in postal code area
+ */
+function createUrbanHeatHistogram( urbanHeatData ) {
 
 	let trace = {
 		x: urbanHeatData,
@@ -70,6 +90,11 @@ async function createUrbanHeatHistogram( urbanHeatData ) {
 
 }
 
+/**
+ * Calculate average Urban Heat exposure to buildings in postal code area
+ *
+ * @param { Object } features buildings in postal code area
+ */
 function calculateAverageExposure( features ) {
 
 	let count = 0;
@@ -96,7 +121,7 @@ function calculateAverageExposure( features ) {
 	}
 }
 
-async function findUrbanHeatData( data, inhelsinki, postcode ) {
+function findUrbanHeatData( data, inhelsinki, postcode ) {
 
 	if ( inhelsinki ) {
 
@@ -109,7 +134,7 @@ async function findUrbanHeatData( data, inhelsinki, postcode ) {
 			for ( let i = 0; i < data.features.length; i++ ) {
 	
 				let feature = data.features[ i ];
-                setKayttoKayttotarkoitus( feature.properties, urbanheat.features );
+                setKayttoKayttotarkoitusAndAverageHeatExposureToBuilding( feature.properties, urbanheat.features );
 
 			}
 			
