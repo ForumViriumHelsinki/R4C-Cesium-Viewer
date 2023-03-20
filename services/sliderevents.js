@@ -78,8 +78,6 @@ function showNatureEvent( ) {
 
     if ( showNature ) {
 
-        console.log( postalcode )
-
         if ( postalcode ) {
 
             loadNatureAreas( postalcode );

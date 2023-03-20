@@ -73,64 +73,71 @@ function loadNatureAreasWithoutCache( url ) {
 }
 
 function setNatureAreaPolygonMaterialColor( entity, category ) {
+
+	let a = entity.properties.avgheatexposuretoarea._value;
+
+	if ( !a ) {
+
+		a = 0;
+	}
 			 						
 	switch ( category ){
 		case "jarvi":
-			entity.polygon.material = Cesium.Color.DEEPSKYBLUE;
+			entity.polygon.material = Cesium.Color.DEEPSKYBLUE.withAlpha( a );
 			break;
 		case "suo":
-			entity.polygon.material = Cesium.Color.DARKOLIVEGREEN;
+			entity.polygon.material = Cesium.Color.DARKOLIVEGREEN.withAlpha( a );
 			break;
 		case "matalikko":
-			entity.polygon.material = new Cesium.Color( 138, 241, 254, 1 ); 
+			entity.polygon.material = new Cesium.Color( 138, 241, 254, a ); 
 			break;
 		case "puisto":
-			entity.polygon.material = Cesium.Color.LIGHTGREEN;
+			entity.polygon.material = Cesium.Color.LIGHTGREEN.withAlpha( a );
 			break;
 		case "vesikivikko":
-			entity.polygon.material = Cesium.Color.LIGHTSTEELBLUE;
+			entity.polygon.material = Cesium.Color.LIGHTSTEELBLUE.withAlpha( a );
 			break;
 		case "niitty":
-			entity.polygon.material = Cesium.Color.YELLOWGREEN;
+			entity.polygon.material = Cesium.Color.YELLOWGREEN.withAlpha( a );
 			break;
 		case "luonnonsuojelualue": 
-			entity.polygon.material = Cesium.Color.DARKGREEN;
+			entity.polygon.material = Cesium.Color.DARKGREEN.withAlpha( a );
 			break;	
 		case "hietikko":
-			entity.polygon.material = Cesium.Color.BURLYWOOD;
+			entity.polygon.material = Cesium.Color.BURLYWOOD.withAlpha( a );
 			break;
 		case "kallioalue": 
-			entity.polygon.material = Cesium.Color.DARKGREY;
+			entity.polygon.material = Cesium.Color.DARKGREY.withAlpha( a );
 			break;	
 		case "maatuvavesialue": 
-			entity.polygon.material = Cesium.Color.DARKKHAKI;
+			entity.polygon.material = Cesium.Color.DARKKHAKI.withAlpha( a );
 			break;	
 		case "kivikko": 
-			entity.polygon.material = Cesium.Color.GREY;
+			entity.polygon.material = Cesium.Color.GREY.withAlpha( a );
 			break;	
 		case "suojaalue": 
-			entity.polygon.material = new Cesium.Color( 0, 100, 0, 0.2 );
+			entity.polygon.material = new Cesium.Color( 0, 100, 0, a );
 			break;
 		case "soistuma": 
-			entity.polygon.material = Cesium.Color.DARKSEAGREEN;
+			entity.polygon.material = Cesium.Color.DARKSEAGREEN.withAlpha( a );
 			break;	
 		case "meri": 
-			entity.polygon.material = Cesium.Color.DODGERBLUE;
+			entity.polygon.material = Cesium.Color.DODGERBLUE.withAlpha( a );
 			break;
 		case "luonnonpuisto": 
-			entity.polygon.material = Cesium.Color.LIMEGREEN;
+			entity.polygon.material = Cesium.Color.LIMEGREEN.withAlpha( a );
 			break;
 		case "kansallispuisto": 
-			entity.polygon.material = Cesium.Color.FORESTGREEN;
+			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( a );
 			break;
 		case "tulvaalue": 
-			entity.polygon.material = Cesium.Color.PURPLE;
+			entity.polygon.material = Cesium.Color.PURPLE.withAlpha( a );
 			break;	
 		case "virtavesialue": 
-			entity.polygon.material = Cesium.Color.CYAN;
+			entity.polygon.material = Cesium.Color.CYAN.withAlpha( a );
 			break;																																			
 		default:
-			entity.polygon.material = Cesium.Color.DARKGREEN;
+			entity.polygon.material = Cesium.Color.DARKGREEN.withAlpha( a );
 		}	
 
 }

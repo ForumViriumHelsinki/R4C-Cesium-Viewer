@@ -18,9 +18,6 @@ function printCesiumEntity( picked, id ) {
         id.polygon.material = new Cesium.Color( 1, 0.5, 0.5, 0.8 );
         setTimeout(() => { id.polygon.material = oldMaterial }, 500 );
 
-        console.log( "properties ", picked.id.properties );
-        console.log( "picked ", picked );
-
         let length = picked.id.properties.propertyNames.length;
         for ( let i = 0; i < length; ++i ) {
 
@@ -137,7 +134,6 @@ function addColdPoint( location ) {
 
 function removeColdPoint( ) {
 
-    console.log("viewer.entities", viewer.entities)
     viewer.entities._entities._array.forEach( function( entity ) {
 
         if ( entity.name == "coldpoint" ) {
@@ -175,7 +171,6 @@ function handleFeatureWithProperties( id ) {
 
         if ( id.properties._locationUnder40._value ) {
 
-            console.log("id.properties._locationUnder40 ", id.properties._locationUnder40 )
             addColdPoint( id.properties._locationUnder40._value );
 
         }
