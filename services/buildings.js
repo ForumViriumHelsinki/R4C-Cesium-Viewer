@@ -78,7 +78,7 @@ function setHeatExposureToBuildings( entities ) {
 
 		let entity = entities[ i ];
 
-		if ( entity.properties.avgheatexposuretobuilding ) {
+		if ( entity.properties.avgheatexposuretobuilding && entity.polygon ) {
 
 			entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.avgheatexposuretobuilding._value, 0, entity.properties.avgheatexposuretobuilding._value );
 
