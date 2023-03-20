@@ -30,14 +30,28 @@ function printCesiumEntity( picked, id ) {
     }
 
     console.log(toPrint);
+    
+    addToPrint( toPrint, picked.id.properties.posno )
+    
+}
 
-    toPrint = toPrint + "<br/><br/><i>Click on objects to retrieve information.</i>"
+function addToPrint( toPrint, postno ) {
+
+    if ( postno ) {
+
+        toPrint = toPrint + "<br/><br/><i>Click on objects to retrieve information.</i>"
+
+    } else {
+
+        toPrint = toPrint + "<br/><br/><i>If average urban heat exposure of building is over 0.5 the nearest location with under 0.4 heat exposure is shown on map.</i>"
+
+    }
+
     document.getElementById('printContainer').innerHTML = toPrint;
     document.getElementById('printContainer').scroll({
           top: 1000,
           behavior: 'smooth'
     });
-    
 }
 
 function handlePostalCodeFeature( postalcode, id ) {

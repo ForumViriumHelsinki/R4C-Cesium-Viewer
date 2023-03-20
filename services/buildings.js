@@ -107,7 +107,7 @@ function setHelsinkiBuildingsHight( entities ) {
 
 		let entity = entities[ i ];
 
-		if ( entity.properties.i_kerrlkm != null ) {
+		if ( entity.properties.i_kerrlkm != null && entity.polygon ) {
 
 			entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 2.7;
 
