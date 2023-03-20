@@ -103,10 +103,44 @@ function handleBuildingFeature( buildingHeatExposure, address, postinumero ) {
 
 }
 
+function addColdPoint( location ) {
+
+    const coordinates = location.split(","); 
+
+    viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees( coordinates[ 1 ], coordinates[ 0 ] ),
+        name: "coldpoint",
+        point: {
+          show: true, 
+          color: Cesium.Color.ROYALBLUE, 
+          pixelSize: 15, 
+          outlineColor: Cesium.Color.LIGHTYELLOW, 
+          outlineWidth: 5, 
+        },
+      });
+
+}
+
+function removeColdPoint( ) {
+
+    console.log("viewer.entities", viewer.entities)
+    viewer.entities._entities._array.forEach( function( entity ) {
+
+        if ( entity.name == "coldpoint" ) {
+
+            viewer.entities.remove( entity );
+            
+        }
+    });
+    
+
+}
+
 function handleFeatureWithProperties( id ) {                
     
     postalcode = id.properties.posno;
     nameOfZone = id.properties.nimi;
+    removeColdPoint( );
 
     //If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
     if ( postalcode ) {
@@ -122,6 +156,13 @@ function handleFeatureWithProperties( id ) {
         if ( id.properties.katunimi_suomi ) {
 
             address = id.properties.katunimi_suomi + ' ' + id.properties.osoitenumero
+
+        }
+
+        if ( id.properties._locationUnder40._value ) {
+
+            console.log("id.properties._locationUnder40 ", id.properties._locationUnder40 )
+            addColdPoint( id.properties._locationUnder40._value );
 
         }
         

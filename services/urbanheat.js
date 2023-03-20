@@ -54,6 +54,8 @@ function setKayttoKayttotarkoitusAndAverageHeatExposureToBuilding ( properties, 
         if ( properties.id == features[ i ].properties.hki_id ) {
 
             properties.avgheatexposuretobuilding = features[ i ].properties.avgheatexposuretobuilding;
+			properties.distanceToUnder40 = features[ i ].properties.distancetounder40;
+			properties.locationUnder40 = features[ i ].properties.locationunder40;
             properties.kayttotarkoitus = findKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
 			break;
         }
