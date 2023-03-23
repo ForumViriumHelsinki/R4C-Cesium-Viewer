@@ -64,7 +64,7 @@
   </div>
   
 	<div id="printContainer">
-  <i>Please click on a postcode area to load building and lot polygons from the WFS server...</i>
+  <i>Please click on a postcode area to load building and nature polygons from the WFS server...</i>
   	</div>
   		<!-- Add Logo -->
 	<img src="assets/images/regions4climate-black.png" id="logoR4C" alt="Regions4Climate" />
@@ -118,6 +118,14 @@
 	document.getElementById("cesiumContainer").addEventListener("click", function() { processClick( viewer, event ) });
 	//Attaching UI events...
 	addEventListener('input', ( event ) => { sliderEvents( event ) } );
+
+  const hriCredit = new Cesium.Credit('<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>');
+  const statsCredit = new Cesium.Credit('<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>');
+  const mmlCredit = new Cesium.Credit('<a href="https://www.maanmittauslaitos.fi/en/maastotietokannan-kyselypalvelu/tekninen-kuvaus" target="_blank"><img src="assets/images/english_logo_rgb_50x25.png" title="MML"/></a>');
+
+  viewer.scene.frameState.creditDisplay.addDefaultCredit( mmlCredit );
+  viewer.scene.frameState.creditDisplay.addDefaultCredit( hriCredit );
+  viewer.scene.frameState.creditDisplay.addDefaultCredit( statsCredit );
 
   </script>
 </body>
