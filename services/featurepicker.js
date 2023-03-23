@@ -51,7 +51,7 @@ function addToPrint( toPrint, postno ) {
     });
 }
 
-function handlePostalCodeFeature( postalcode, id ) {
+function handlePostalCodeFeature( postcode, id ) {
 
     let bbox = findEntityBounds( id );
     let buffer = 0.000005 //Buffer for bounding box, somewhat complex as in radians...
@@ -73,11 +73,11 @@ function handlePostalCodeFeature( postalcode, id ) {
     
     if ( showNature ) {
         
-        loadNatureAreas( postalcode );
+        loadNatureAreas( postcode );
     
     }
 
-    loadWFSBuildings( postalcode );			    
+    loadWFSBuildings( postcode );			    
     loadPostCodeZones( 0.0 );
 
 }
@@ -111,6 +111,8 @@ function handleBuildingFeature( buildingHeatExposure, address, postinumero ) {
     }
 
     Plotly.newPlot( 'plotContainer', data, layout );
+
+    postalcode = postinumero;
 
 }
 
