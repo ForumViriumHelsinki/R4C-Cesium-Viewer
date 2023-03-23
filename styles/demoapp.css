@@ -14,7 +14,7 @@
 
 #printContainer
 {
-	top: 500px; 
+	bottom: 5%; 
 	left: 20px; 
 	width: 480px; 
 	height: 180px; 
@@ -33,7 +33,7 @@
 
 #logoFVH {
     position: fixed;
-    bottom:  10%;
+    bottom:  5%;
     right: 20px;
     z-index: 1000;
     width: 100px;
