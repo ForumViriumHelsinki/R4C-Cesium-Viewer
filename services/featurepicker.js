@@ -84,6 +84,8 @@ function handlePostalCodeFeature( postcode, id ) {
 
 function handleBuildingFeature( buildingHeatExposure, address, postinumero ) {
 
+    document.getElementById( "plotSoSContainer" ).style.visibility = 'hidden';
+
     console.log("Building found!");
 
     let trace1 = {

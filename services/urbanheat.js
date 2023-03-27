@@ -93,6 +93,38 @@ function createUrbanHeatHistogram( urbanHeatData ) {
 }
 
 /**
+ * Creates SocioEconomics histogram for a postal code area
+ *
+ */
+function createSocioEconomicsDiagram( sosData ) {
+
+	if ( sosData ) {
+		let x = [ 'vulnerable both', 'vulnerable children', 'vulnerable eldery', 'apartment size', 'low education', 'low income' ];
+		let y = [ sosData.vulnerable_both_rank, sosData.vulnerable_children_rank, sosData.vulnerable_eldery_rank, sosData.apart_size_rank, sosData.educ_rank, sosData.income_rank ]
+
+		let data = [
+			{
+				x: x,
+				y: y,
+				type: 'bar',
+			}
+		];
+	
+		if ( showPlot ) {
+	
+			document.getElementById( "plotSoSContainer" ).style.visibility = 'visible';
+		}
+	
+		let layout = { 
+			title: 'Heat vulnerability ranks (max=84) in ' + nameOfZone,
+		};
+	
+		Plotly.newPlot( 'plotSoSContainer',  data, layout );
+	}
+
+}
+
+/**
  * Calculate average Urban Heat exposure to buildings in postal code area
  *
  * @param { Object } features buildings in postal code area
@@ -119,7 +151,24 @@ function calculateAverageExposure( features ) {
 
 		averageHeatExposure = total / count;
 		createUrbanHeatHistogram( urbanHeatData );
+		
+		const response = fetch( 'assets/data/stats_po_uh.json' )
+		.then( function( response ) {
+		  return response.json();
+		})
+		.then( function( data ) {
+			for ( let i = 0; i < data.features.length; i++ ) {
+
+				console.log("data.features.length", data.features.length)
+				if ( data.features[ i ].properties.postinumeroalue == postalcode ) {
 	
+					createSocioEconomicsDiagram( data.features[ i ].properties );
+					break;
+	
+				}
+			}
+		})
+
 	}
 }
 

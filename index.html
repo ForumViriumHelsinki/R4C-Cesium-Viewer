@@ -62,7 +62,9 @@
   <div id="plotContainer">
   
   </div>
+  <div id="plotSoSContainer">
   
+  </div>
 	<div id="printContainer">
   <i>Please click on a postcode area to load building and nature polygons from the WFS server...</i>
   	</div>
@@ -79,6 +81,7 @@
 	  var postalcode = null;
     var nameOfZone = null;
     var averageHeatExposure = 0;
+    const averageHeatExpWholeHKI = 0.4410802563886266;
 	// OS version, operating without Cesium Ion services...
     Cesium.Ion.defaultAccessToken = null;
 
