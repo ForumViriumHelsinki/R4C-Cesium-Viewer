@@ -57,6 +57,7 @@ function setKayttoKayttotarkoitusAndAverageHeatExposureToBuilding ( properties, 
 			properties.distanceToUnder40 = features[ i ].properties.distancetounder40;
 			properties.locationUnder40 = features[ i ].properties.locationunder40;
             properties.kayttotarkoitus = findKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
+			features.splice( i, 1 );
 			break;
         }
     }
@@ -159,7 +160,6 @@ function calculateAverageExposure( features ) {
 		.then( function( data ) {
 			for ( let i = 0; i < data.features.length; i++ ) {
 
-				console.log("data.features.length", data.features.length)
 				if ( data.features[ i ].properties.postinumeroalue == postalcode ) {
 	
 					createSocioEconomicsDiagram( data.features[ i ].properties );
@@ -188,7 +188,8 @@ function findUrbanHeatData( data, inhelsinki, postcode ) {
                 setKayttoKayttotarkoitusAndAverageHeatExposureToBuilding( feature.properties, urbanheat.features );
 
 			}
-			
+
+			addMissingHeatData( data.features, urbanheat.features  );
 			calculateAverageExposure( data.features );
 			addBuildingsDataSource( data, inhelsinki );
 
@@ -205,6 +206,27 @@ function findUrbanHeatData( data, inhelsinki, postcode ) {
 
 		addBuildingsDataSource( data, inhelsinki );
 
+	}
+
+}
+
+function addMissingHeatData( features, heat ) {
+
+	for ( let i = 0; i < heat.length; i++ ) {
+	
+		features.push( heat[ i ] );
+
+	}
+
+	let count = 0;
+
+
+	for ( let i = 0; i < features.length; i++ ) {
+
+		if ( Number( features[ i ].properties.c_kayttark ) < 40 ) {
+			count++;
+		}
+	
 	}
 
 }
