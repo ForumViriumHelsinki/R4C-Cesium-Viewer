@@ -100,8 +100,8 @@ function createUrbanHeatHistogram( urbanHeatData ) {
 function createSocioEconomicsDiagram( sosData ) {
 
 	if ( sosData ) {
-		let x = [ 'vulnerable both', 'vulnerable children', 'vulnerable eldery', 'apartment size', 'low education', 'low income' ];
-		let y = [ sosData.vulnerable_both_rank, sosData.vulnerable_children_rank, sosData.vulnerable_eldery_rank, sosData.apart_size_rank, sosData.educ_rank, sosData.income_rank ]
+		let x = [ 'apart heat expsoure', 'sum of next 6', 'vulnerable both', 'vulnerable children', 'vulnerable eldery', 'small apartments', 'low education', 'low income' ];
+		let y = [ sosData.apartment_heat_exposure_rank, sosData.average_vul_rank ,sosData.vulnerable_both_rank, sosData.vulnerable_children_rank, sosData.vulnerable_eldery_rank, sosData.apart_size_rank, sosData.educ_rank, sosData.income_rank ]
 
 		let data = [
 			{
@@ -117,7 +117,7 @@ function createSocioEconomicsDiagram( sosData ) {
 		}
 	
 		let layout = { 
-			title: 'Heat vulnerability ranks (max=84) in ' + nameOfZone,
+			title: 'Heat vulnerability ranks (max=83) in ' + nameOfZone,
 		};
 	
 		Plotly.newPlot( 'plotSoSContainer',  data, layout );
