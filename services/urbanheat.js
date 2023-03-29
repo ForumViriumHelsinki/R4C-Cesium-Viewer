@@ -8,6 +8,54 @@
 function findKayttotarkoitusHKI( kayttotarkoitus ) {
 
 	switch ( kayttotarkoitus ) {
+		case '011': 
+			return 'Yhden asunnon talot';
+		case '012': 
+			return 'Kahden asunnon talot';
+		case '013': 
+			return 'Muut erilliset pientalot';
+		case '021': 
+			return 'Rivitalot';
+		case '022': 
+			return 'Ketjutalot';
+		case '032': 
+			return 'Luhtitalot';
+		case '039': 
+			return 'Muut kerrostalot';			
+		case '041': 
+			return 'Vapaa-ajan asunnot';
+		case '111': 
+			return 'Myymälähallit';
+		case '112': 
+			return 'Liike- ja tavaratalot, kauppakeskukset';
+		case '119': 
+			return 'Myymälärakennukset';	
+		case '121': 
+			return 'Hotellit, motellit, matkustajakodit, kylpylähotellit';				
+		case '123': 
+			return 'Loma- lepo- ja virkistyskodit';		
+		case '124': 
+			return 'Vuokrattavat lomamökit ja osakkeet (liiketoiminnallisesti)';				
+		case '129': 
+			return 'Muut majoitusliikerakennukset';	
+		case '131': 
+			return 'Asuntolat, vanhusten palvelutalot, asuntolahotellit';			
+		case '139': 
+			return 'Muut majoitusrakennukset';				
+		case '141': 
+			return 'Ravintolat, ruokalat ja baarit';		
+		case '151': 
+			return 'Toimistorakennukset';
+		case '161': 
+			return 'Rautatie- ja linja-autoasemat, lento- ja satamaterminaalit';	
+		case '162': 
+			return 'Kulkuneuvojen suoja- ja huoltorakennukset';			
+		case '163': 
+			return 'Pysäköintitalot';		
+		case '164': 
+			return 'Tietoliikenteen rakennukset';	
+		case '169': 
+			return 'Muut liikenteen rakennukset';												
 		case '211': 
 			return 'Keskussairaalat';
 		case '213': 
@@ -29,13 +77,93 @@ function findKayttotarkoitusHKI( kayttotarkoitus ) {
 		case '231': 
 			return 'Lasten päiväkodit';
 		case '239': 
-			return 'Muut sosiaalitoimen rakennukset';		
+			return 'Muut sosiaalitoimen rakennukset';
+		case '241': 
+			return 'Vankilat';	
+		case '311': 
+			return 'Teatterit, konsertti- ja kongressitalot, oopperat';		
+		case '312': 
+			return 'Elokuvateatterit';		
+		case '322': 
+			return 'Kirjastot';			
+		case '323': 
+			return 'Museot, taidegalleriat';
+		case '324': 
+			return 'Näyttelyhallit';	
+		case '331': 
+			return 'Seurain-, nuoriso- yms. talot';	
+		case '341': 
+			return 'Kirkot, kappelit, luostarit, rukoushuoneet';	
+		case '342': 
+			return 'Seurakuntatalot';				
+		case '349': 
+			return 'Muut uskonnollisten yhteisöjen rakennukset';	
+		case '351': 
+			return 'Jäähallit';
+		case '352': 
+			return 'Uimahallit';	
+		case '353': 
+			return 'Tennis-, squash- ja sulkapallohallit';	
+		case '354': 
+			return 'Monitoimi- ja muut urheiluhallit';	
+		case '359': 
+			return 'Muut urheilu- ja kuntoilurakennukset';				
+		case '369': 
+			return 'Muut kokoontumisrakennukset';	
 		case '511': 
 			return 'Peruskoulut, lukiot ja muut';
 		case '521': 
-			return 'Ammatilliset oppilaitokset';					
+			return 'Ammatilliset oppilaitokset';		
+		case '531': 
+			return 'Korkeakoulurakennukset';				
+		case '532': 
+			return 'Tutkimuslaitosrakennukset';	
+		case '541': 
+			return 'Järjestöjen, liittojen, työnantajien yms. opetusrakennukset';
+		case '549': 
+			return 'Muualla luokittelemattomat opetusrakennukset';		
+		case '611': 
+			return 'Voimalaitosrakennukset';		
+		case '613': 
+			return 'Yhdyskuntatekniikan rakennukset';				
+		case '691': 
+			return 'Teollisuushallit';	
+		case '692': 
+			return 'Teollisuus- ja pienteollisuustalot';
+		case '699': 
+			return 'Muut teollisuuden tuotantorakennukset';			
+		case '711': 
+			return 'Teollisuusvarastot';		
+		case '712': 
+			return 'Kauppavarastot';				
+		case '719': 
+			return 'Muut varastorakennukset';	
+		case '721': 
+			return 'Paloasemat';
+		case '722': 
+			return 'Väestönsuojat';	
+		case '711': 
+			return 'Muut palo- ja pelastustoimen rakennukset';		
+		case '712': 
+			return 'Navetat, sikalat, kanalat yms.';				
+		case '719': 
+			return 'Eläinsuojat, ravihevostallit, maneesit';	
+		case '721': 
+			return 'Viljankuivaamot ja viljan säilytysrakennukset, siilot';
+		case '722': 
+			return 'Kasvihuoneet';	
+		case '729': 
+			return 'Turkistarhat';		
+		case '811': 
+			return 'Muut maa-, metsä- ja kalatalouden rakennukset';				
+		case '819': 
+			return 'Saunarakennukset';	
+		case '891': 
+			return 'Talousrakennukset';
+		case '892': 
+			return 'Muut rakennukset';				
 		default:
-			return 'n/a';
+			return kayttotarkoitus;
 		}
 }
 
@@ -100,13 +228,15 @@ function createUrbanHeatHistogram( urbanHeatData ) {
 function createSocioEconomicsDiagram( sosData ) {
 
 	if ( sosData ) {
-		let x = [ 'apart heat expsoure', 'sum of next 6', 'vulnerable both', 'vulnerable children', 'vulnerable eldery', 'small apartments', 'low education', 'low income' ];
+		let x = [ 'apart heat expsoure', 'sum of next 6', 'vulnerable both', 'children', 'eldery', 'size of apartments', 'level of education', 'income' ];
 		let y = [ sosData.apartment_heat_exposure_rank, sosData.average_vul_rank ,sosData.vulnerable_both_rank, sosData.vulnerable_children_rank, sosData.vulnerable_eldery_rank, sosData.apart_size_rank, sosData.educ_rank, sosData.income_rank ]
+		let text = [ 84 - sosData.apartment_heat_exposure_rank, 84 - sosData.average_vul_rank, 84 - sosData.vulnerable_both_rank, 84 - sosData.vulnerable_children_rank, 84 - sosData.vulnerable_eldery_rank, 84 - sosData.apart_size_rank, 84 - sosData.educ_rank, 84 - sosData.income_rank ];
 
 		let data = [
 			{
 				x: x,
 				y: y,
+				text: text,
 				type: 'bar',
 			}
 		];
@@ -117,7 +247,7 @@ function createSocioEconomicsDiagram( sosData ) {
 		}
 	
 		let layout = { 
-			title: 'Heat vulnerability ranks (max=83) in ' + nameOfZone,
+			title: 'Vulnerability ranks (max=83) in ' + nameOfZone,
 		};
 	
 		Plotly.newPlot( 'plotSoSContainer',  data, layout );

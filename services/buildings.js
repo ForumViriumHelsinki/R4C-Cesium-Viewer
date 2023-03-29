@@ -92,10 +92,20 @@ function setHeatExposureToBuildings( entities ) {
 
 		if ( hideNonSote ) {
 			   
-			if ( entity._properties._kayttotarkoitus == 'n/a' ) {
+			if ( !entity._properties.c_kayttark  || !entity._properties.c_kayttark._value ) {
 	
 				entity.show = false;
 	
+			} else {
+
+				const kayttotark = Number( entity._properties.c_kayttark._value );
+
+				if ( !kayttotark != 511 && !kayttotark != 131 && !( kayttotark > 212 && kayttotark < 240 ) ) {
+	
+					entity.show = false;
+		
+				}
+
 			}
 		
 		}

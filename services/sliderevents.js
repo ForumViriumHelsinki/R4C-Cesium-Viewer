@@ -115,11 +115,22 @@ function hideNonSoteBuildings( ) {
 
                 let entity = dataSource._entityCollection._entities._array[ i ];
 
-                if ( !entity._properties._avgheatexposuretobuilding || entity._properties._kayttotarkoitus == 'n/a') {
-
-                    dataSource._entityCollection._entities._array[ i ].show = false;
-
+                if ( !entity._properties.c_kayttark ) {
+	
+                    entity.show = false;
+        
+                } else {
+    
+                    const kayttotark = Number( entity._properties.c_kayttark._value );
+    
+                    if ( !kayttotark != 511 && !kayttotark != 131 && !( kayttotark > 212 && kayttotark < 240 ) ) {
+        
+                        entity.show = false;
+            
+                    }
+    
                 }
+
             }						
         }
     });     
