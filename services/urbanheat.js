@@ -247,10 +247,14 @@ function createSocioEconomicsDiagram( sosData ) {
 		}
 	
 		let layout = { 
+			yaxis: {
+				visible: false, 
+				showticklabels: false
+			},
 			title: 'Vulnerability ranks (max=83) in ' + nameOfZone,
 		};
 	
-		Plotly.newPlot( 'plotSoSContainer',  data, layout );
+		Plotly.newPlot( 'plotSoSContainer',  data, layout, { staticPlot: true } );
 	}
 
 }
