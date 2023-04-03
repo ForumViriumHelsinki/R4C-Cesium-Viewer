@@ -1,7 +1,7 @@
 
 function setBuildingPolygonMaterialColor( entity, kayttotarkoitus ) {
 
-	switch ( kayttotarkoitus ){
+	switch ( kayttotarkoitus ) {
 		case 2: // business
 			entity.polygon.material = Cesium.Color.TOMATO;
 			break;
@@ -28,7 +28,7 @@ function setBuildingPolygonMaterialColor( entity, kayttotarkoitus ) {
 
 function findMultiplierForFloorCount( kayttotarkoitus ) {
 
-	switch ( kayttotarkoitus ){
+	switch ( kayttotarkoitus ) {
 		case 2: // business
 			return 4.0;
 		case 3: // holiday/cottage

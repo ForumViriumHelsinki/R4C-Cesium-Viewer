@@ -77,7 +77,15 @@ function handlePostalCodeFeature( postcode, id ) {
     
     }
 
-    loadWFSBuildings( postcode );			    
+    // add laajasalo flood data
+    if ( postcode._value == '00870' || postcode._value == '00850' || postcode._value == '00840' || postcode._value == '00590' ) {
+
+        loadFloodData( postcode );
+
+    }
+    
+    loadWFSBuildings( postcode );	
+
     loadPostCodeZones( 0.0 );
 
 }
