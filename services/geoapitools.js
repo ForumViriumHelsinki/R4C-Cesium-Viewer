@@ -112,5 +112,5 @@ function findEntityBounds( element ) {
         i++;
     }
 
-    return [ latMIN, latMAX, lonMIN, lonMAX ];
+    return [ latMIN, latMAX, lonMIN - 0.0002, lonMAX - 0.0002 ];
 }

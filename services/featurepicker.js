@@ -67,6 +67,12 @@ function handlePostalCodeFeature( postcode, id ) {
         duration: 5
     });
 
+    loadPostalCode( postcode );
+
+}
+
+function loadPostalCode( postcode ) {
+
     console.log("Postal code area found!");
     viewer.dataSources.removeAll();
     viewer.entities.removeAll();
@@ -78,9 +84,9 @@ function handlePostalCodeFeature( postcode, id ) {
     }
 
     // add laajasalo flood data
-    if ( postcode._value == '00870' || postcode._value == '00850' || postcode._value == '00840' || postcode._value == '00590' ) {
+    if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
 
-        loadFloodData( postcode );
+        loadFloodData( );
 
     }
     

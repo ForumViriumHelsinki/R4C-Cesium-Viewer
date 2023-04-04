@@ -1,14 +1,10 @@
 /**
  * Fetches data from API Features based on postal code value
- *
- * @param { string }  postcode of the area 
  * 
  */
-async function loadFloodData( postcode ) {
+async function loadFloodData( ) {
 
-    console.log( "postalcodefloods", postcode._value )
-
-	const urbanheatdata = fetch( "https://geo.fvh.fi/r4c/collections/flood_data/items?f=json&limit=20000&postinumero=" + postcode._value )
+	const urbanheatdata = fetch( "https://geo.fvh.fi/r4c/collections/flood_data/items?f=json&limit=20000&postinumero=" + postalcode )
     .then( function( response ) {
         return response.json();
 	})
@@ -73,6 +69,7 @@ function setColorAndMaterial( entities ) {
             entity.polygon.material = Cesium.Color.fromCssColorString( value );
             let material = findMaterial( Number( entity.properties.material._value ) );
             entity.properties.material = material;
+            entity.polygon.extrudedHeight = entity.properties.water._value;
 
 
         } 

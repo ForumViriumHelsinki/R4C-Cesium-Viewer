@@ -2,8 +2,8 @@
 
 #plotContainer
 {
-	top: 80px; 
-	left: 20px; 
+	top: 8%; 
+	left: 1%; 
 	width: 500px; 
 	height: 400px; 
 	position: fixed; 
@@ -14,8 +14,8 @@
 
 #plotSoSContainer
 {
-	top: 80px; 
-	right: 20px; 
+	bottom: 4%; 
+	left: 1%; 
 	width: 500px; 
 	height: 400px; 
 	position: fixed; 
@@ -26,9 +26,9 @@
 
 #printContainer
 {
-	bottom: 5%; 
-	left: 20px; 
-	width: 480px; 
+	bottom: 4%; 
+	right: 2%; 
+	width: 450px; 
 	height: 180px; 
 	position: fixed; 
 	border: 1px solid black; 
@@ -45,16 +45,16 @@
 
 #logoFVH {
     position: fixed;
-    bottom:  5%;
-    right: 20px;
+    bottom:  30%;
+    right: 10px;
     z-index: 1000;
     width: 100px;
 }
 
 #logoR4C {
     position: fixed;
-    top:  75%;
-    right: 20px;
+    bottom:  35%;
+    right: 4px;
     z-index: 1000;
     width: 150px;
 }
@@ -118,6 +118,27 @@ body, html
 	padding: 5px;
 	
 	min-height: 30px;
+}
+
+#searchcontainer {
+	top: 20px; 
+	right: 160px; 
+
+	position: fixed; 
+	border: 1px solid black; 
+	box-shadow: 10px 5px 5px black; 
+	visibility: visible;
+	
+	background: white;
+	padding: 5px;
+	
+}
+
+#searchbutton {
+	top: 20px; 
+	right: 50px; 
+
+	position: fixed; 
 }
 
 /* The switch - the box around the slider */

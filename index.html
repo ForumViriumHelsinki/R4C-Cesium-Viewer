@@ -12,6 +12,7 @@
   <script type="text/javascript" src="services/urbanheat.js"></script>
   <script type="text/javascript" src="services/featurepicker.js"></script>
   <script type="text/javascript" src="services/floods.js"></script>
+  <script type="text/javascript" src="services/geocoding.js"></script>
   <script src="lib/localforage/dist/localforage.js"></script>
   <script src="lib/plotly-2.12.1.min.js"></script>
   <link href="lib/Cesium/Widgets/widgets.css" rel="stylesheet">
@@ -22,7 +23,6 @@
   <div id="cesiumContainer"></div>
   <div id="UIContainer">
   <p class="uiButton" onClick="reset()" style="color: red; float:right;">Reset</p>
- 
   <!-- showPlotSwitch-->
 <label class="switch">
   <input type="checkbox" id="showPlotToggle" value="showPlot" checked>
@@ -60,6 +60,27 @@
   <label for="showNatureHeat" class="label">Show Heat Exposure on Nature areas</label>
 
   </div>
+
+  <div id="searchcontainer" class="container-fluid">
+    <form role="search">
+        <div class="form-group">
+            <div class="input-group">
+                <div class="input-group-addon"><span class="glyphicon glyphicon-search"></span></div>
+                <input type="search" class="form-control" placeholder="enter place or address" id="searchInput" autocomplete="off" />
+            </div>
+          </div>
+        </form>
+            
+<div id="searchresultscontainer" class="container-fluid hidden">
+            <div class="panel-group" id="searchresults" role="tablist"></div>
+      </div>
+    </div>
+<div id="searchbutton">
+  <button class="btn btn-primary btn-block" id="searchButton">Move to target</button>
+</div>
+
+
+
   <div id="plotContainer">
   
   </div>
@@ -122,6 +143,7 @@
 	document.getElementById("cesiumContainer").addEventListener("click", function() { processClick( viewer, event ) });
 	//Attaching UI events...
 	addEventListener('input', ( event ) => { sliderEvents( event ) } );
+  addGeocodingEventListeners( viewer );
 
   const hriCredit = new Cesium.Credit('<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>');
   const statsCredit = new Cesium.Credit('<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>');
