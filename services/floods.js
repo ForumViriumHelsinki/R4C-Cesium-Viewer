@@ -122,25 +122,27 @@ function findMaterial( value ) {
 function findFloodColor( value ) {
 
     switch ( true ) {
+    
+        case value >= 1.0:
+            return '#311465'; 
         case value >= 0.9:
-            return '#00ABF0';  
+            return '#00008B';              
         case value >= 0.8:
-            return '#19BDFF';     
+            return '#0052A2';     
         case value >= 0.7:
-            return '#37C6FF';  
+            return '#1b7ced';  
         case value >= 0.6:
-            return '#55CEFF';  
+            return '#19BDFF';  
         case value >= 0.5:
-            return '#73D7FF';  
+            return '#37C6FF';  
         case value >= 0.4:
-            return '#91E0FF';     
+            return '#55CEFF';     
         case value>= 0.3:
-            return '#A5E5FF';  
+            return '#73D7FF';  
         case value >= 0.2:
-            return '#CDF0FF';
+            return '#91E0FF';
         case value >= 0.1:
-            return '#CDF0FF';                                                                                                                                                                      
+            return '#A5E5FF';  
+                                                                                                                                                                    
     }
-
-
 }

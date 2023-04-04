@@ -28,7 +28,7 @@ function processAddressData ( data ) {
     for ( let i = 0, len = data.length; i < len; i++ ) {
 
         // only include results from Helsinki
-        if ( data[ i ][ 'properties' ][ 'locality' ] === 'Helsinki' || data[ i ][ 'properties' ][ 'localadmin' ] === 'Helsinki' ) {
+        if ( ( data[ i ][ 'properties' ][ 'locality' ] === 'Helsinki' || data[ i ][ 'properties' ][ 'localadmin' ] === 'Helsinki' ) && data[ i ].properties.postalcode ) {
 
             let row = { address: data[ i ][ 'properties' ][ 'name' ], latitude: data[ i ][ 'geometry' ][ 'coordinates'][ 1 ], longitude: data[ i ][ 'geometry' ][ 'coordinates'][ 0 ], postalcode: data[ i ].properties.postalcode };
             features.push( row );
