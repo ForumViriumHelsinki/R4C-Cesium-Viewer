@@ -111,6 +111,8 @@ function hideNonSoteBuildings( ) {
             
         if ( dataSource.name == "Buildings" ) {
 
+            let urbanHeatData = [ ];
+
             for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
 
                 let entity = dataSource._entityCollection._entities._array[ i ];
@@ -127,16 +129,26 @@ function hideNonSoteBuildings( ) {
         
                         entity.show = false;
             
+                    } else {
+                        
+                        // add data for updating histogram
+                        urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
+
                     }
     
                 }
 
-            }						
+            }	
+            
+            createUrbanHeatHistogram( urbanHeatData );
+
         }
     });     
 }
 
 function showAllBuildings( ) {
+
+    let urbanHeatData = [ ];
 
     viewer.dataSources._dataSources.forEach( function( dataSource ) {
             
@@ -145,8 +157,13 @@ function showAllBuildings( ) {
             for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
 
                 dataSource._entityCollection._entities._array[ i ].show = true;
+                // add data for updating histogram
+                urbanHeatData.push( dataSource._entityCollection._entities._array[ i ]._properties.avgheatexposuretobuilding._value );
 
-            }						
+            }
+            
+            createUrbanHeatHistogram( urbanHeatData );
+
         }
     });    
 }
