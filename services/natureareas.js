@@ -43,11 +43,25 @@ function addNatureDataSource( data ) {
 			
 			let entity = entities[ i ];
 			const category = entity.properties._category._value;
-			
-			if ( category ) {
-				//colors of nature area enity are set based on it's category
-				setNatureAreaPolygonMaterialColor( entity, category )
+
+			showNatureHeat = document.getElementById( "showNatureHeatToggle" ).checked;
+
+			if ( showNatureHeat ) {
+				
+				if ( entity.properties._avgheatexposuretoarea._value ) {
+
+					entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties._avgheatexposuretoarea._value, 0, entity.properties._avgheatexposuretoarea._value );
+	
+				}		
+			} else {
+		
+				if ( category ) {
+					//colors of nature area enity are set based on it's category
+					setNatureAreaPolygonMaterialColor( entity, category )
+				}
+		
 			}
+		
 		}
 	})	
 	.otherwise(function ( error ) {

@@ -1,6 +1,7 @@
 // Resets the objects displayed and camera orientation
 function reset( ) {
 
+    removeDataSourcesAndEntities();
     resetViewer( );
     resetSwitches( );
     // Load post code zones & energy availability tags
@@ -18,14 +19,24 @@ function resetSwitches( ) {
 	document.getElementById( "showPlotToggle" ).checked = true;
 	document.getElementById( "showNatureToggle" ).checked = false;
 	document.getElementById( "printToggle" ).checked = true;
-	document.getElementById( "hideNonSoteToggle" ).checked = false;	
     document.getElementById( "showNatureHeatToggle" ).checked = false;	
+    document.getElementById( "hideNonSoteToggle" ).checked = false;	
+    document.getElementById( "hideLowToggle" ).checked = false;	
+    document.getElementById("showNatureHeatToggle").disabled = true;
 
   	showPlot = true;
 	showNature = false;
-	hideNonSote = false;
     showNatureHeat = false;
+	hideNonSote = false;
+    hideLow = false;
 	print = true;
+
+}
+
+function removeDataSourcesAndEntities( ) {
+
+    viewer.dataSources.removeAll( );
+    viewer.entities.removeAll( );
 
 }
 
@@ -39,9 +50,6 @@ function resetViewer( ) {
             pitch : Cesium.Math.toRadians( -85.0 ),
         }
     });
-
-    viewer.dataSources.removeAll( );
-    viewer.entities.removeAll( );
 
 }
 

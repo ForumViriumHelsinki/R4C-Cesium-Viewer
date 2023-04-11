@@ -74,8 +74,8 @@ function handlePostalCodeFeature( postcode, id ) {
 function loadPostalCode( postcode ) {
 
     console.log("Postal code area found!");
-    viewer.dataSources.removeAll();
-    viewer.entities.removeAll();
+
+    removeDataSourcesAndEntities();
     
     if ( showNature ) {
         

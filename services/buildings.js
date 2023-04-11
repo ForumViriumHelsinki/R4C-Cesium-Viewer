@@ -72,8 +72,6 @@ function findAndSetOutsideHelsinkiBuildingsColor( entities ) {
 
 function setHeatExposureToBuildings( entities ) {
 
-	let hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
-
 	for ( let i = 0; i < entities.length; i++ ) {
 
 		let entity = entities[ i ];
@@ -90,27 +88,72 @@ function setHeatExposureToBuildings( entities ) {
 			}
 		}
 
-		if ( hideNonSote ) {
-			   
-			if ( !entity._properties.c_kayttark  || !entity._properties.c_kayttark._value ) {
-	
-				entity.show = false;
-	
-			} else {
-
-				const kayttotark = Number( entity._properties.c_kayttark._value );
-
-				if ( !kayttotark != 511 && !kayttotark != 131 && !( kayttotark > 212 && kayttotark < 240 ) ) {
-	
-					entity.show = false;
-		
-				}
-
-			}
-		
-		}
+		hideNonSoteBuilding( entity );
+		hideLowBuilding( entity );
 
 	}
+}
+
+
+/**
+ * If hideNonSote switch is checked this function hides buildings based on value of c_kayttark
+ *
+ * @param { Object } entity Cesium entity
+ */
+function hideNonSoteBuilding( entity ) {
+
+	const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
+
+	if ( hideNonSote ) {
+			   
+		if ( !entity._properties.c_kayttark  || !entity._properties.c_kayttark._value ) {
+
+			entity.show = false;
+
+		} else {
+
+			const kayttotark = Number( entity._properties.c_kayttark._value );
+
+			if ( !kayttotark != 511 && !kayttotark != 131 && !( kayttotark > 212 && kayttotark < 240 ) ) {
+
+				entity.show = false;
+	
+			}
+
+		}
+	
+	}
+}
+
+/**
+ * If hideLow switch is checked this function hides buildings based on their floor count
+ *
+ * @param { Object } entity Cesium entity
+ */
+function hideLowBuilding( entity ) {
+
+	const hideLow = document.getElementById( "hideLowToggle" ).checked;
+
+	if ( hideLow ) {
+			   
+		if ( !entity._properties.i_kerrlkm  || !entity._properties.i_kerrlkm._value ) {
+
+			entity.show = false;
+
+		} else {
+
+			const floorCount = Number( entity._properties.i_kerrlkm._value );
+
+			if ( floorCount < 7  ) {
+
+				entity.show = false;
+	
+			}
+
+		}
+	
+	}
+	
 }
 
 function setHelsinkiBuildingsHight( entities ) {

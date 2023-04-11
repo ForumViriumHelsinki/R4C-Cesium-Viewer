@@ -44,22 +44,28 @@
 </label>
 <label for="showNatureToggle" class="label">Show nature areas</label>
 
+<!-- showNatureHeatSwitch-->
+<label class="switch">
+  <input type="checkbox" id="showNatureHeatToggle" value="showNatureHeat" >
+  <span class="slider round"></span>
+</label>
+<label for="showNatureHeat" class="label">Show Heat Exposure on Nature areas</label>
+
   <!-- hideNonSoteSwitch-->
-  <label class="switch">
+<label class="switch" id = "hideLowSwitch">
 	<input type="checkbox" id="hideNonSoteToggle" value="hideNonSote" >
 	<span class="slider round"></span>
 </label>
 <label for="hideNonSote" class="label">Hide non sote buildings</label>
 
+  <!--  hideLowSwitch-->
+<label class="switch" id = "hideLowSwitch" >
+  <input type="checkbox" id="hideLowToggle" value="hideLow" >
+  <span class="slider round"></span>
+</label>
+<label for="hideLow" class="label">Show only tall buildings</label>
 
-  <!-- showNatureHeatSwitch-->
-  <label class="switch">
-    <input type="checkbox" id="showNatureHeatToggle" value="showNatureHeat" >
-    <span class="slider round"></span>
-  </label>
-  <label for="showNatureHeat" class="label">Show Heat Exposure on Nature areas</label>
-
-  </div>
+</div>
 
   <div id="searchcontainer" class="container-fluid">
     <form role="search">
@@ -143,6 +149,8 @@
 	document.getElementById("cesiumContainer").addEventListener("click", function() { processClick( viewer, event ) });
 	//Attaching UI events...
 	addEventListener('input', ( event ) => { sliderEvents( event ) } );
+  //disable switch for showing heat exposure on nature areas
+  document.getElementById("showNatureHeatToggle").disabled = true;
   addGeocodingEventListeners( viewer );
 
   const hriCredit = new Cesium.Credit('<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>');
