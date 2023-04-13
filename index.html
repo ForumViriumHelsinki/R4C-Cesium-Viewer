@@ -22,6 +22,7 @@
 <div id="canvasScalerDiv">
   <div id="cesiumContainer"></div>
   <div id="UIContainer">
+  <p class="header">R4C Urban Heat risk demonstrator</p>
   <p class="uiButton" onClick="reset()" style="color: red; float:right;">Reset</p>
   <!-- showPlotSwitch-->
 <label class="switch">
@@ -67,6 +68,12 @@
 
 </div>
 
+	<div id="printContainer">
+  <i>Please click on a postcode area to load building and nature polygons from the WFS server...</i>
+  	</div>
+
+<div id="georefContainer">
+<p class="header" style="font-size: smaller; margin: 0px;">Move to address</p>
   <div id="searchcontainer" class="container-fluid">
     <form role="search">
         <div class="form-group">
@@ -84,21 +91,20 @@
 <div id="searchbutton">
   <button class="btn btn-primary btn-block" id="searchButton">Move to target</button>
 </div>
-
-
+</div>
 
   <div id="plotContainer">
-  
   </div>
   <div id="plotSoSContainer">
-  
   </div>
-	<div id="printContainer">
-  <i>Please click on a postcode area to load building and nature polygons from the WFS server...</i>
-  	</div>
+
   		<!-- Add Logo -->
+		
+	<div class="logoHolder">	
 	<img src="assets/images/regions4climate-black.png" id="logoR4C" alt="Regions4Climate" />
 	<img src="assets/images/fvh-1_musta.png" id="logoFVH" alt="Forum Virium Helsinki" />
+  </div>
+  
   </div>
   <script>
   
@@ -130,7 +136,8 @@
       timeline: false,
       sceneModePicker: false,
       baseLayerPicker: false,
-      infoBox: false
+      infoBox: false,
+	  homeButton: false
     });    
   
     // Fly the camera to Helsinki at the given longitude, latitude, and height.

@@ -1,42 +1,80 @@
 @charset "UTF-8";
 
-#plotContainer
+.header
 {
-	top: 8%; 
-	left: 1%; 
-	width: 500px; 
-	height: 380px; 
+	font-family: sans-serif;
+	font-weight: bold;
+	font-size: small;
+	margin: 3px;
+}
+
+.logoHolder
+{
+	position: fixed;
+	bottom: 10px; 
+	right: 2%;
+}
+
+#georefContainer
+{
+	bottom: 280px; 
+	right: 2%; 
+	width: 450px; 
+	height: 40px; 
 	position: fixed; 
 	border: 1px solid black; 
-	box-shadow: 10px 5px 5px black; 
+	box-shadow: 3px 5px 5px black; 
+	background: white;
+	visibility: visible;
+	
+	font-size: smaller;
+	font-family: sans-serif;
+	
+	padding: 10px;
+}
+
+#plotContainer
+{
+	position: fixed;
+	bottom: 360px;
+	left: 10px;
+	width: 400px;
+	height: 300px; 
 	visibility: hidden;
+	
+	font-size: smaller;
+	
+	border: 1px solid black;
+	box-shadow: 3px 5px 5px black; 
 }
 
 #plotSoSContainer
 {
-	bottom: 4%; 
-	left: 1%; 
-	width: 500px; 
-	height: 380px; 
-	position: fixed; 
-	border: 1px solid black; 
-	box-shadow: 10px 5px 5px black; 
+	position: fixed;
+	bottom: 40px;
+	left: 10px;
+	width: 400px;
+	height: 300px; 
 	visibility: hidden;
+	
+	font-size: smaller;
+	border: 1px solid black;
+	box-shadow: 3px 5px 5px black; 
 }
 
 #printContainer
 {
-	bottom: 4%; 
+	bottom: 75px; 
 	right: 2%; 
 	width: 450px; 
 	height: 180px; 
 	position: fixed; 
 	border: 1px solid black; 
-	box-shadow: 10px 5px 5px black; 
+	box-shadow: 3px 5px 5px black; 
 	background: white;
 	visibility: visible;
 	
-	font: small;
+	font-size: smaller;
 	font-family: Monospace;
 	
 	padding: 10px;
@@ -44,26 +82,22 @@
 }
 
 #logoFVH {
-    position: fixed;
-    bottom:  30%;
-    right: 10px;
     z-index: 1000;
-    width: 100px;
+    height: 40px;
+	float: right;
+	margin-right: 20px;
 }
 
 #logoR4C {
-    position: fixed;
-    bottom:  35%;
-    right: 4px;
     z-index: 1000;
-    width: 150px;
+    height: 40px;
+	float: right;
 }
 
 body, html
 {
 	margin: 0px;
 	height: 100%;
-	
 }
 
 #cesiumContainer {
@@ -81,6 +115,7 @@ body, html
 	border: 0px solid black; 
 
 	font-family: sans-serif;
+	font-size: small;
 	text-align: middle;
 	padding: 5px;
 	margin: 5px;
@@ -106,47 +141,46 @@ body, html
 }
 
 #UIContainer {
-	top: 20px; 
-	left: 20px; 
+	top: 10px; 
+	left: 0px; 
 
 	position: fixed; 
 	border: 1px solid black; 
-	box-shadow: 10px 5px 5px black; 
+	box-shadow: 3px 5px 5px black; 
 	visibility: visible;
 	
 	background: white;
 	padding: 5px;
 	
-	min-height: 30px;
+	min-height: 25px;
+	
+	width: 100%;
 }
 
 #searchcontainer {
-	top: 20px; 
-	right: 160px; 
-
-	position: fixed; 
-	border: 1px solid black; 
-	box-shadow: 10px 5px 5px black; 
 	visibility: visible;
-	
-	background: white;
-	padding: 5px;
-	
+	float:left;
 }
 
 #searchbutton {
-	top: 20px; 
-	right: 50px; 
-
-	position: fixed; 
+float: left;
 }
+
+#searchresultscontainer
+{
+	background: white;
+	border-bottom: 1px solid black;
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+}
+
 
 /* The switch - the box around the slider */
 .switch {
   position: relative;
   display: inline-block;
-  width: 60px;
-  height: 34px;
+  width: 47px;
+  height: 20px;
 }
 
 /* Hide default HTML checkbox */
@@ -172,10 +206,10 @@ body, html
 .slider:before {
   position: absolute;
   content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
   background-color: white;
   -webkit-transition: .4s;
   transition: .4s;
