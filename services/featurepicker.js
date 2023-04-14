@@ -54,20 +54,38 @@ function addToPrint( toPrint, postno ) {
 function handlePostalCodeFeature( postcode, id ) {
 
     let bbox = findEntityBounds( id );
-    let buffer = 0.000005 //Buffer for bounding box, somewhat complex as in radians...
-    let rectangle = new Cesium.Rectangle( bbox[ 2 ] - buffer, bbox[ 0 ] - buffer, bbox[ 3 ] + buffer, bbox[ 1 ] + buffer );
-        
-    viewer.camera.flyTo({
-        destination: rectangle,
-        orientation:  {
-            heading : Cesium.Math.toRadians( 0.0 ),
-            pitch : Cesium.Math.toRadians( -90.0 ),
-            roll : 0.0
-        },
-        duration: 5
-    });
+    let z = bbox[ 1 ] - bbox[ 0 ]
 
-    loadPostalCode( postcode );
+    console.log("z", z )
+
+
+    // this geojson has precalculated centeroids for each postal code areas
+    const response = fetch( 'assets/data/hki_postalcode_center.json' )
+    .then( function( response ) {
+      return response.json();
+    })
+    .then( function( data ) {
+
+        for ( let i = 0; i < data.features.length; i++ ) {
+
+            if ( data.features[ i ].properties.posno == postcode ) {
+                
+                // TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
+                viewer.camera.flyTo( {
+                    destination: Cesium.Cartesian3.fromDegrees( data.features[ i ].properties.center_x, data.features[ i ].properties.center_y - 0.025, 2000 ),
+                    orientation: {
+                        heading: 0.0,
+                        pitch: Cesium.Math.toRadians( -35.0 ),
+                        roll: 0.0
+                    },
+                    duration: 3
+                });
+            
+                loadPostalCode( postcode );
+
+            }
+        }
+    })
 
 }
 

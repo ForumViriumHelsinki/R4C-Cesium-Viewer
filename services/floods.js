@@ -69,7 +69,7 @@ function setColorAndMaterial( entities ) {
             entity.polygon.material = Cesium.Color.fromCssColorString( value );
             let material = findMaterial( Number( entity.properties.material._value ) );
             entity.properties.material = material;
-            entity.polygon.extrudedHeight = entity.properties.water._value;
+            entity.polygon.extrudedHeight = entity.properties.water._value * 0.1;
 
 
         } 
