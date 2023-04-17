@@ -228,9 +228,9 @@ function createUrbanHeatHistogram( urbanHeatData ) {
 function createSocioEconomicsDiagram( sosData ) {
 
 	if ( sosData ) {
-		let x = [ 'apart heat expsoure', 'sum of next 6', 'vulnerable both', 'children', 'eldery', 'size of apartments', 'level of education', 'income' ];
-		let y = [ sosData.apartment_heat_exposure_rank, sosData.average_vul_rank ,sosData.vulnerable_both_rank, sosData.vulnerable_children_rank, sosData.vulnerable_eldery_rank, sosData.apart_size_rank, sosData.educ_rank, sosData.income_rank ]
-		let text = [ 84 - sosData.apartment_heat_exposure_rank, 84 - sosData.average_vul_rank, 84 - sosData.vulnerable_both_rank, 84 - sosData.vulnerable_children_rank, 84 - sosData.vulnerable_eldery_rank, 84 - sosData.apart_size_rank, 84 - sosData.educ_rank, 84 - sosData.income_rank ];
+		let x = [ 'apart heat expsoure', 'sum of next 7', 'vulnerable both', 'children', 'eldery', 'size of apartments', 'level of education', 'income', 'rental rate' ];
+		let y = [ sosData.apartment_heat_exposure_rank, sosData.average_vul_rank ,sosData.vulnerable_both_rank, sosData.vulnerable_children_rank, sosData.vulnerable_eldery_rank, sosData.apart_size_rank, sosData.educ_rank, sosData.income_rank, sosData.rental_rate_rank ]
+		let text = [ 84 - sosData.apartment_heat_exposure_rank, 84 - sosData.average_vul_rank, 84 - sosData.vulnerable_both_rank, 84 - sosData.vulnerable_children_rank, 84 - sosData.vulnerable_eldery_rank, 84 - sosData.apart_size_rank, 84 - sosData.educ_rank, 84 - sosData.income_rank, 85 - sosData.rental_rate_rank ];
 
 		let data = [
 			{
@@ -286,24 +286,22 @@ function calculateAverageExposure( features ) {
 
 		averageHeatExposure = total / count;
 		createUrbanHeatHistogram( urbanHeatData );
-		
-		const response = fetch( 'assets/data/stats_po_uh.json' )
-		.then( function( response ) {
-		  return response.json();
-		})
-		.then( function( data ) {
-			for ( let i = 0; i < data.features.length; i++ ) {
-
-				if ( data.features[ i ].properties.postinumeroalue == postalcode ) {
-	
-					createSocioEconomicsDiagram( data.features[ i ].properties );
-					break;
-	
-				}
-			}
-		})
 
 	}
+}
+
+function findSocioEconomicsData( postcode ) {
+
+	const response = fetch( "https://geo.fvh.fi/r4c/collections/heat_vulnerable_demographic/items?f=json&limit=1&postinumero=" + postcode )
+	.then( function( response ) {
+		return response.json();
+	})
+	.then( function( data ) {
+			
+		createSocioEconomicsDiagram( data.features[ 0 ].properties );
+	
+	})
+	
 }
 
 function findUrbanHeatData( data, inhelsinki, postcode ) {
@@ -339,6 +337,12 @@ function findUrbanHeatData( data, inhelsinki, postcode ) {
 	} else {
 
 		addBuildingsDataSource( data, inhelsinki );
+
+	}
+
+	if ( postcode != '00230' ) {
+
+		findSocioEconomicsData( postcode );
 
 	}
 

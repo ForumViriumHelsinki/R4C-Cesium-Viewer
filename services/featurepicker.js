@@ -56,9 +56,6 @@ function handlePostalCodeFeature( postcode, id ) {
     let bbox = findEntityBounds( id );
     let z = bbox[ 1 ] - bbox[ 0 ]
 
-    console.log("z", z )
-
-
     // this geojson has precalculated centeroids for each postal code areas
     const response = fetch( 'assets/data/hki_postalcode_center.json' )
     .then( function( response ) {
