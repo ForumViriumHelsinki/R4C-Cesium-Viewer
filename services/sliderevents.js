@@ -198,7 +198,11 @@ function hideLowBuildings( ) {
 
             }	
             
-            createUrbanHeatHistogram( urbanHeatData );
+            if ( urbanHeatData.length > 0 ) {
+
+                createUrbanHeatHistogram( urbanHeatData );
+   
+            } 
 
         }
     });     

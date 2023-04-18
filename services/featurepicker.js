@@ -202,7 +202,7 @@ function handleFeatureWithProperties( id ) {
 
         }
 
-        if ( id.properties._locationUnder40 ) {
+        if ( id.properties._locationUnder40._value ) {
 
             addColdPoint( id.properties._locationUnder40._value );
 
