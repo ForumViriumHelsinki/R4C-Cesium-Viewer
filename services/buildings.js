@@ -162,16 +162,21 @@ function setHelsinkiBuildingsHight( entities ) {
 
 		let entity = entities[ i ];
 
-		if ( entity.properties.i_kerrlkm != null && entity.polygon ) {
+		if ( entity.properties.measured_height ) {
 
-			entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 2.7;
+			entity.polygon.extrudedHeight = entity.properties.measured_height._value;
 
-		}
+		} else {
 
-		if ( entity.properties.i_kerrlkm == null && entity.polygon ) {
+			if ( entity.properties.i_kerrlkm && entity.polygon ) {
 
-			entity.polygon.extrudedHeight = 2.7;
-
+				entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 2.7;
+	
+			} else {
+	
+				entity.polygon.extrudedHeight = 2.7;
+	
+			}
 		}
 		
 	}
@@ -196,8 +201,8 @@ async function addBuildingsDataSource( data, inhelsinki ) {
 
 		} else {
 
-			setHelsinkiBuildingsHight( entities );
 			setHeatExposureToBuildings( entities );
+			setHelsinkiBuildingsHight( entities );
 
 		}	
 	})	

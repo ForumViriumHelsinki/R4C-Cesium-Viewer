@@ -48,6 +48,21 @@
 	box-shadow: 3px 5px 5px black; 
 }
 
+#plotMaterialContainer
+{
+	position: fixed;
+	bottom: 360px;
+	right: 10px;
+	width: 500px;
+	height: 300px; 
+	visibility: visible;
+	
+	font-size: smaller;
+	
+	border: 1px solid black;
+	box-shadow: 3px 5px 5px black; 
+}
+
 #plotSoSContainer
 {
 	position: fixed;
