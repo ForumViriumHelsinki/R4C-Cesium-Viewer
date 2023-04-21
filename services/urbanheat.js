@@ -168,13 +168,15 @@ function findKayttotarkoitusHKI( kayttotarkoitus ) {
 }
 
 /**
+ * Sets attributes from API data source to building data source
+ * 
  * Finds the purpose of a building in Helsinki based on code included in wfs source data
  * Code list: https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf
  *
  * @param { Object } properties of a building
  * @param { Object } features Urban Heat Exposure buildings dataset
  */
-function setKayttoKayttotarkoitusAndAverageHeatExposureToBuilding ( properties, features ) {
+function setAttributesFromApiToBuilding ( properties, features ) {
 
     for ( let i = 0; i < features.length; i++ ) {
 
@@ -355,7 +357,7 @@ function findUrbanHeatData( data, inhelsinki, postcode ) {
 			for ( let i = 0; i < data.features.length; i++ ) {
 	
 				let feature = data.features[ i ];
-                setKayttoKayttotarkoitusAndAverageHeatExposureToBuilding( feature.properties, urbanheat.features );
+                setAttributesFromApiToBuilding( feature.properties, urbanheat.features );
 
 			}
 

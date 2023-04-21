@@ -170,7 +170,7 @@ function setHelsinkiBuildingsHight( entities ) {
 
 			if ( entity.properties.i_kerrlkm && entity.polygon ) {
 
-				entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 2.7;
+				entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 3.2;
 	
 			} else {
 	
