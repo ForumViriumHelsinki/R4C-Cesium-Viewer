@@ -64,6 +64,7 @@ function showPlotEvent( ) {
 
         document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
         document.getElementById( 'plotSoSContainer' ).style.visibility = 'hidden';
+        document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
 
     }
     
@@ -73,6 +74,7 @@ function showPlotEvent( ) {
     
             document.getElementById( 'plotContainer' ).style.visibility = 'visible';
             document.getElementById( 'plotSoSContainer' ).style.visibility = 'visible';
+            document.getElementById( 'plotMaterialContainer' ).style.visibility = 'visible';
 
         }
 

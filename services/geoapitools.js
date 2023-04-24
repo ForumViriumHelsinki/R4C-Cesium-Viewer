@@ -24,6 +24,8 @@ function resetSwitches( ) {
     document.getElementById( "hideNonSoteToggle" ).checked = false;	
     document.getElementById( "hideLowToggle" ).checked = false;	
     document.getElementById("showNatureHeatToggle").disabled = true;
+    document.getElementById( "hideNonSoteToggle" ).disabled = true;
+    document.getElementById( "hideLowToggle" ).disabled = true;
 
   	showPlot = true;
 	showNature = false;

@@ -156,7 +156,7 @@ function hideLowBuilding( entity ) {
 	
 }
 
-function setHelsinkiBuildingsHight( entities ) {
+function setHelsinkiBuildingsHeight( entities ) {
 
 	for ( let i = 0; i < entities.length; i++ ) {
 
@@ -168,17 +168,18 @@ function setHelsinkiBuildingsHight( entities ) {
 
 		} else {
 
-			if ( entity.properties.i_kerrlkm && entity.polygon ) {
+			if ( entity.properties.i_kerrlkm != null && entity.polygon ) {
 
 				entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 3.2;
 	
-			} else {
+			}
+	
+			if ( entity.properties.i_kerrlkm == null && entity.polygon ) {
 	
 				entity.polygon.extrudedHeight = 2.7;
 	
-			}
+			}		
 		}
-		
 	}
 }
 
@@ -202,7 +203,7 @@ async function addBuildingsDataSource( data, inhelsinki ) {
 		} else {
 
 			setHeatExposureToBuildings( entities );
-			setHelsinkiBuildingsHight( entities );
+			setHelsinkiBuildingsHeight( entities );
 
 		}	
 	})	

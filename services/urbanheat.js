@@ -542,34 +542,42 @@ function createUniqueValuesList( features, category ) {
  */
 function createScatterPlot( features, categorical, numerical ) {
 
-	const values = createUniqueValuesList( features, categorical );
-	let data = [ ];
+	if ( features.length > 0 ) {
 
-	for ( let i = 0; i < values.length; i++ ) {
-
-		const dataWithHeat = addHeatForLabelAndX( values[ i ], features, categorical, numerical );
-
-		const plotData = {
-			x: dataWithHeat[ 1 ],
-			y: dataWithHeat[ 0 ],
-			name: values[ i ] + ' ' + dataWithHeat[ 2 ].toFixed( 2 ),
-			type: 'scatter',
-			mode: 'markers'
-		};
-
-		data.push( plotData );
+		const values = createUniqueValuesList( features, categorical );
+		let data = [ ];
 	
-	}
+		for ( let i = 0; i < values.length; i++ ) {
+	
+			const dataWithHeat = addHeatForLabelAndX( values[ i ], features, categorical, numerical );
+	
+			const plotData = {
+				x: dataWithHeat[ 1 ],
+				y: dataWithHeat[ 0 ],
+				name: values[ i ] + ' ' + dataWithHeat[ 2 ].toFixed( 2 ),
+				type: 'scatter',
+				mode: 'markers'
+			};
+	
+			data.push( plotData );
+		
+		}
+	
+		document.getElementById( "plotMaterialContainer" ).style.visibility = 'visible';
+		  
+		const layout = {
+			scattermode: 'group',
+			title: categorical,
+			xaxis: {title: numerical },
+			yaxis: {title: 'Heat'},
+		};
+		  
+		Plotly.newPlot('plotMaterialContainer', data, layout);
 
-	document.getElementById( "plotMaterialContainer" ).style.visibility = 'visible';
-	  
-	const layout = {
-		scattermode: 'group',
-		title: categorical,
-		xaxis: {title: numerical },
-		yaxis: {title: 'Heat'},
-	};
-	  
-	Plotly.newPlot('plotMaterialContainer', data, layout);
+	} else {
+		
+		document.getElementById( "plotMaterialContainer" ).style.visibility = 'hidden';
+
+	}
 
 }

@@ -88,6 +88,9 @@ function handlePostalCodeFeature( postcode, id ) {
 
 function loadPostalCode( postcode ) {
 
+    document.getElementById( "hideNonSoteToggle" ).disabled = false;
+    document.getElementById( "hideLowToggle" ).disabled = false;
+
     console.log("Postal code area found!");
 
     removeDataSourcesAndEntities();
