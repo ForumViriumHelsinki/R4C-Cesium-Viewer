@@ -220,7 +220,12 @@ function showAllBuildings( ) {
 
                 dataSource._entityCollection._entities._array[ i ].show = true;
                 // add data for updating histogram
-                urbanHeatData.push( dataSource._entityCollection._entities._array[ i ]._properties.avgheatexposuretobuilding._value );
+
+                if ( dataSource._entityCollection._entities._array[ i ]._properties.avgheatexposuretobuilding ) {
+
+                    urbanHeatData.push( dataSource._entityCollection._entities._array[ i ]._properties.avgheatexposuretobuilding._value );
+
+                }
 
             }
             

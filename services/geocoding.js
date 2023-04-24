@@ -147,7 +147,7 @@ function moveCameraAndReset( longitude, latitude, postcode ) {
     } );
 
     postalcode = postcode;
-    createToPrint(postcode );
+    createToPrint( postcode );
     loadPostalCode( postcode );
 
 }

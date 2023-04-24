@@ -5,7 +5,7 @@
  * @param { String } kayttotarkoitus code for purpose
  * @return { String } purpose of building
  */
-function findKayttotarkoitusHKI( kayttotarkoitus ) {
+function decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 
 	switch ( kayttotarkoitus ) {
 		case '011': 
@@ -219,7 +219,7 @@ function setAttributesFromApiToBuilding ( properties, features ) {
 
 			}
 
-            properties.kayttotarkoitus = findKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
+            properties.kayttotarkoitus = decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
 			features.splice( i, 1 );
 			break;
         }
@@ -229,7 +229,7 @@ function setAttributesFromApiToBuilding ( properties, features ) {
 /**
  * Creates Urban Heat Exposure to buildings histogram for a postal code area
  *
- * @param { Object } urbanHeatData urban heat data of a buildings in postal code area
+ * @param { object } urbanHeatData urban heat data of a buildings in postal code area
  */
 function createUrbanHeatHistogram( urbanHeatData ) {
 
@@ -257,8 +257,9 @@ function createUrbanHeatHistogram( urbanHeatData ) {
 }
 
 /**
- * Creates SocioEconomics histogram for a postal code area
+ * Creates SocioEconomics histogram for a postal code area.
  *
+ * @param { object } sosData socioeconomic data used for creating the diagram
  */
 function createSocioEconomicsDiagram( sosData ) {
 
@@ -304,8 +305,6 @@ function calculateAverageExposure( features ) {
 	let count = 0;
 	let total = 0;
 	let urbanHeatData = [ ];
-	let urbanHeatDataAndMaterial = [ ];
-
 
 	for ( let i = 0; i < features.length; i++ ) {
 
@@ -314,8 +313,6 @@ function calculateAverageExposure( features ) {
 			total = total + features[ i ].properties.avgheatexposuretobuilding;
 			count++;
 			urbanHeatData.push( features[ i ].properties.avgheatexposuretobuilding );
-			let element = { heat: features[ i ].properties.avgheatexposuretobuilding, facade: features[ i ].properties.c_julkisivu, material: features[ i ].properties.c_rakeaine };
-			urbanHeatDataAndMaterial.push( element );
 
 		}
 
@@ -325,11 +322,70 @@ function calculateAverageExposure( features ) {
 
 		averageHeatExposure = total / count;
 		createUrbanHeatHistogram( urbanHeatData );
-	//	createScatterPlot( urbanHeatDataAndMaterial );
+		let urbanHeatDataAndMaterial = createDataSetForScatterPlot( features, 'facade', 'height', 'c_julkisivu', 'measured_height' )
+		createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
 
 	}
 }
 
+/**
+ * Creates data set needed for scatter plotting urban heat exposure
+ *
+ * @param { Object } features buildings in postal code area
+ * @param { String } categorical name of categorical attribute
+ * @param { String } numerical name of numerical attribute
+ */
+function createDataSetForScatterPlot( features, categorical, numerical, categoricalValue, numericalValue ) {
+
+	let urbanHeatDataAndMaterial = [ ];
+
+	for ( let i = 0; i < features.length; i++ ) {
+
+		if ( features[ i ].properties.avgheatexposuretobuilding && features[ i ].properties[ categoricalValue ] && features[ i ].properties[ numericalValue ] ) {
+			
+			let element = { heat: features[ i ].properties.avgheatexposuretobuilding, [ categorical ]: decodeFacade( features[ i ].properties[ categoricalValue ] ), [ numerical ]: features[ i ].properties[ numericalValue ] };
+			urbanHeatDataAndMaterial.push( element );
+
+		}
+
+	}	
+
+	return urbanHeatDataAndMaterial;
+
+}
+
+/**
+ * Decodes facade material https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf
+ *
+ * @param { String } facade value code for facade material.'
+ * @return { String } face material
+ */
+function decodeFacade( facade ) {
+
+	switch ( facade ) {
+		case '1': 
+			return 'concrete';
+		case '2': 
+			return 'brick';
+		case '3': 
+			return 'metal';
+		case '4': 
+			return 'stone';
+		case '5': 
+			return 'wood';
+		case '6': 
+			return 'glass';
+		case '7': 
+			return 'other';
+		}
+
+}
+
+/**
+ * Fetches heat vulnerable demographic data from pygeoapi for postal code.
+ *
+ * @param { String } postcode postal code of the area
+ */
 function findSocioEconomicsData( postcode ) {
 
 	const response = fetch( "https://geo.fvh.fi/r4c/collections/heat_vulnerable_demographic/items?f=json&limit=1&postinumero=" + postcode )
@@ -344,6 +400,13 @@ function findSocioEconomicsData( postcode ) {
 	
 }
 
+/**
+ * Fetches heat exposure data from pygeoapi for postal code.
+ * 
+ * @param { object } data of buildings from city wfs
+ * @param { boolean } inhelsinki informs if the area is within Helsinki
+ * @param { String } postcode postal code of the area
+ */
 function findUrbanHeatData( data, inhelsinki, postcode ) {
 
 	if ( inhelsinki ) {
@@ -380,6 +443,7 @@ function findUrbanHeatData( data, inhelsinki, postcode ) {
 
 	}
 
+	// exclude postikeskus postal code area
 	if ( postcode != '00230' ) {
 
 		findSocioEconomicsData( postcode );
@@ -388,6 +452,12 @@ function findUrbanHeatData( data, inhelsinki, postcode ) {
 
 }
 
+/**
+ * Adds urban heat exposure data that did not match in previous phase.
+ * 
+ * @param { object } features the buildings from city wfs
+ * @param { object } heat urban heat exposure data from pygeoapi
+ */
 function addMissingHeatData( features, heat ) {
 
 	for ( let i = 0; i < heat.length; i++ ) {
@@ -396,239 +466,105 @@ function addMissingHeatData( features, heat ) {
 
 	}
 
-	let count = 0;
-
-
-	for ( let i = 0; i < features.length; i++ ) {
-
-		if ( Number( features[ i ].properties.c_kayttark ) < 40 ) {
-			count++;
-		}
-	
-	}
-
 }
 
-function filterMaterial2( facade, material, features ) {
+/**
+ * The function adds heat exposure data for given category value. 
+ *
+ * @param { String } valeu value of category
+ * @param { object } features dataset that contains building heat exposure and attributes of the building
+ * @param { String } categorical name of categorical attribute
+ * @param { String } numerical name of numerical attribute
+ * @return { object } Object that contains list of heat exposures and numerical values, and average heat exposure
+ */
+function addHeatForLabelAndX( value, features, categorical, numerical ) {
 
 	let heatList = [ ];
-
-	for ( let i = 0; i < features.length; i++ ) {
-
-		if ( features[ i ].facade == facade && features[ i ].material == material ) {
-
-			console.log("facade", facade)
-			console.log("material", material)
-
-			heatList.push( features[ i ].heat )
-		}
-	
-	}
-	
-	if ( heatList.length == 0 ) {
-
-		heatList.push( 0 );
-	}
-
-	return heatList;
-
-}
-
-function filterMaterial( facade, features, material ) {
-
-	let heatList = [ ];
-	let materialList = [ ];
+	let numericalList = [ ];
 	let average = 0;
 	let sum = 0;
 
 	for ( let i = 0; i < features.length; i++ ) {
 
-		if ( features[ i ].facade == facade  ) {
+		if ( features[ i ][ categorical ] == value ) {
 
 			heatList.push( features[ i ].heat );
-			materialList.push( material );
+			numericalList.push( features[ i ][ numerical ] );
 			sum = sum + features[ i ].heat;
 
 		}
 	
 	}
 	
-	if ( heatList.length == 0 ) {
+	// calculate average heat exposure
+	average = sum / heatList.length;
 
-		heatList.push( 0 );
-		materialList.push( material );
+	return [ heatList, numericalList, average ];
 
-	} else {
-		
-		average = sum / heatList.length;
+}
 
+/**
+ * The function finds all unique values for given category.
+ *
+ * @param { object } features dataset that contains building heat exposure and attributes of the building
+ * @param { String } category value code for facade material
+ * @return { Array<String> } List containing all unique values for the category
+ */
+function createUniqueValuesList( features, category ) {
+
+	let uniqueValues = [ ];
+	
+	for ( let i = 0; i < features.length; i++ ) {
+
+		let value = features[ i ][ category ] 
+
+		if ( !uniqueValues.includes( value ) ) {
+
+			uniqueValues.push( value );
+
+		}
+	
+	}
+	
+	return uniqueValues;
+
+}
+
+/**
+ * Creates scatter plot that always has average urban heat exposure to building at y-axis. Categorical attributes.
+ *
+ * @param { object } features dataset that contains building heat exposure and attributes of the building
+ * @param { String } categorical name of categorical attribute
+ * @param { String } numerical name of numerical attribute
+ */
+function createScatterPlot( features, categorical, numerical ) {
+
+	const values = createUniqueValuesList( features, categorical );
+	let data = [ ];
+
+	for ( let i = 0; i < values.length; i++ ) {
+
+		const dataWithHeat = addHeatForLabelAndX( values[ i ], features, categorical, numerical );
+
+		const plotData = {
+			x: dataWithHeat[ 1 ],
+			y: dataWithHeat[ 0 ],
+			name: values[ i ] + ' ' + dataWithHeat[ 2 ].toFixed( 2 ),
+			type: 'scatter',
+			mode: 'markers'
+		};
+
+		data.push( plotData );
+	
 	}
 
-	return [ heatList, materialList, average ];
-
-}
-
-function createScatterPlot( features ) {
-
-	console.log("featres", features )
-
-	const concreteData = filterMaterial( "1", features, 'Concrete' );
-
-	const concrete = {
-		x: concreteData[ 1 ],
-		y: concreteData[ 0 ],
-		name: concreteData[ 2 ].toFixed( 2 ),
-		type: 'scatter',
-		mode: 'markers'
-	  };
-
-	  const brickData = filterMaterial( "2", features, 'Brick' );
-
-	  const brick = {
-		x: brickData[ 1 ],
-		y: brickData[ 0 ],
-		name:  brickData[ 2 ].toFixed( 2 ),
-		type: 'scatter',
-		mode: 'markers'
-	  };
-
-	  const metalData = filterMaterial( "3", features, 'Metal' );
-	  
-	  const metal = {
-		x: metalData[ 1 ],
-		y: metalData[ 0 ],
-		name: metalData[ 2 ].toFixed( 2 ),
-		type: 'scatter',
-		mode: 'markers'
-	  };
-
-	  const stoneData = filterMaterial( "4", features, 'Stone' );
-
-	  const stone = {
-		x: stoneData[ 1 ],
-		y: stoneData[ 0 ],
-		name: stoneData[ 2 ].toFixed( 2 ),
-		type: 'scatter',
-		mode: 'markers'
-	  };
-
-	  const woodData = filterMaterial( "5", features, 'Wood' );
-
-	  const wood = {
-		x: woodData[ 1 ],
-		y: woodData[ 0 ],
-		name: woodData[ 2 ].toFixed( 2 ),
-		type: 'scatter',
-		mode: 'markers'
-	  };
-	
-	  const glassData = filterMaterial( "6", features, 'Glass' );
-
-	  const glass = {
-		x: glassData[ 1 ],
-		y: glassData[ 0 ],
-		name: glassData[ 2 ].toFixed( 2 ),
-		type: 'scatter',
-		mode: 'markers'
-	  };
-
-	  const otherData = filterMaterial( "7", features, 'Other' );
-
-	  const other = {
-		x: otherData[ 1 ],
-		y: otherData[ 0 ],
-		name: otherData[ 2 ].toFixed( 2 ),
-		type: 'scatter',
-		mode: 'markers'
-	  };
-	  
-	  
-	  const data = [ concrete, brick, metal, stone, wood, glass, other ];
-
-	  console.log( "data", data );
+	document.getElementById( "plotMaterialContainer" ).style.visibility = 'visible';
 	  
 	  const layout = {
 		scattermode: 'group',
-		title: 'Facade Material',
-	  };
-	  
-	  Plotly.newPlot('plotMaterialContainer', data, layout);
-
-}
-
-function createScatterPlot2( features ) {
-
-	console.log("featres", features )
-
-	const concrete = {
-		x: ['Concrete', 'Brick', 'Steel', 'Wood', 'other', 'n/a' ],
-		y: [ filterMaterial( "1", "1" , features ), filterMaterial( "1", "2" , features ), filterMaterial( "1", "3" , features ), filterMaterial( "1", "4" , features ), filterMaterial( "1", "5" , features ), filterMaterial( "1", "undefined" , features ) ],
-		name: 'Concrete',
-		type: 'scatter',
-		mode: 'markers'
-	  };
-	  
-	  const brick = {
-		x: ['Concrete', 'Brick', 'Steel', 'Wood', 'other', 'n/a' ],
-		y: [ filterMaterial( "2", "1" , features ), filterMaterial( "2", "2" , features ), filterMaterial( "2", "3" , features ), filterMaterial( "2", "4" , features ), filterMaterial( "2", "5" , features ), filterMaterial( "2", "undefined" , features ) ],
-		name: 'Brick',
-		type: 'scatter',
-		mode: 'markers'
-	  };
-	  
-	  
-	  const metal = {
-		x: ['Concrete', 'Brick', 'Steel', 'Wood', 'other', 'n/a' ],
-		y: [ filterMaterial( "3", "1" , features ), filterMaterial( "3", "2" , features ), filterMaterial( "3", "3" , features ), filterMaterial( "3", "4" , features ), filterMaterial( "3", "5" , features ), filterMaterial( "3", "undefined" , features ) ],
-		name: 'Metal',
-		type: 'scatter',
-		mode: 'markers'
-	  };
-
-	  const stone = {
-		x: ['Concrete', 'Brick', 'Steel', 'Wood', 'other', 'n/a' ],
-		y: [ filterMaterial( "4", "1" , features ), filterMaterial( "4", "2" , features ), filterMaterial( "4", "3" , features ), filterMaterial( "4", "4" , features ), filterMaterial( "4", "5" , features ), filterMaterial( "4", "undefined" , features ) ],
-		name: 'Stone',
-		type: 'scatter',
-		mode: 'markers'
-	  };
-	  
-	  
-
-	  const wood = {
-		x: ['Concrete', 'Brick', 'Steel', 'Wood', 'other', 'n/a' ],
-		y: [ filterMaterial( "5", "1" , features ), filterMaterial( "5", "2" , features ), filterMaterial( "5", "3" , features ), filterMaterial( "5", "4" , features ), filterMaterial( "5", "5" , features ), filterMaterial( "5", "undefined" , features ) ],
-		name: 'Wood',
-		type: 'scatter',
-		mode: 'markers'
-	  };
-	
-	  const glass = {
-		x: ['Concrete', 'Brick', 'Steel', 'Wood', 'other', 'n/a' ],
-		y: [ filterMaterial( "6", "1" , features ), filterMaterial( "6", "2" , features ), filterMaterial( "6", "3" , features ), filterMaterial( "6", "4" , features ), filterMaterial( "6", "5" , features ), filterMaterial( "6", "6" , features ) ],
-		name: 'Glass',
-		type: 'scatter',
-		mode: 'markers'
-	  };
-
-
-	  const other = {
-		x: ['Concrete', 'Brick', 'Steel', 'Wood', 'other', 'n/a' ],
-		y: [ filterMaterial( "7", "1" , features ), filterMaterial( "7", "2" , features ), filterMaterial( "7", "3" , features ), filterMaterial( "7", "4" , features ), filterMaterial( "7", "5" , features ), filterMaterial( "7", "6" , features ) ],
-		name: 'Other',
-		type: 'scatter',
-		mode: 'markers'
-	  };
-	  
-	  
-	  const data = [ concrete, brick, metal, stone, wood, glass, other ];
-
-	  console.log( "data", data );
-	  
-	  const layout = {
-		scattermode: 'group',
-		title: 'Grouped by Material',
-		xaxis: { title: 'Facade Material' },
+		title: categorical,
+		xaxis: {title: numerical },
+		yaxis: {title: 'Heat'},
 	  };
 	  
 	  Plotly.newPlot('plotMaterialContainer', data, layout);

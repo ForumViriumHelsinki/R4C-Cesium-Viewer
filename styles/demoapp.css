@@ -36,9 +36,24 @@
 #plotContainer
 {
 	position: fixed;
-	bottom: 360px;
+	top: 220px;
 	left: 10px;
 	width: 400px;
+	height: 300px; 
+	visibility: hidden;
+	
+	font-size: smaller;
+	
+	border: 1px solid black;
+	box-shadow: 3px 5px 5px black; 
+}
+
+#plotSoSContainer
+{
+	position: fixed;
+	bottom: 360px;
+	right: 10px;
+	width: 500px;
 	height: 300px; 
 	visibility: hidden;
 	
@@ -51,30 +66,15 @@
 #plotMaterialContainer
 {
 	position: fixed;
-	bottom: 360px;
-	right: 10px;
-	width: 500px;
-	height: 300px; 
-	visibility: visible;
-	
-	font-size: smaller;
-	
-	border: 1px solid black;
-	box-shadow: 3px 5px 5px black; 
-}
-
-#plotSoSContainer
-{
-	position: fixed;
 	bottom: 40px;
 	left: 10px;
-	width: 400px;
+	width: 600px;
 	height: 300px; 
 	visibility: hidden;
 	
 	font-size: smaller;
 	border: 1px solid black;
-	box-shadow: 3px 5px 5px black; 
+	box-shadow: 3px 5px 5px black;  
 }
 
 #printContainer

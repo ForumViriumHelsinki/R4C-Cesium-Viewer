@@ -16,6 +16,7 @@ function resetSwitches( ) {
 
 	document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
     document.getElementById( "plotSoSContainer" ).style.visibility = 'hidden';
+    document.getElementById( "plotMaterialContainer" ).style.visibility = 'hidden';
 	document.getElementById( "showPlotToggle" ).checked = true;
 	document.getElementById( "showNatureToggle" ).checked = false;
 	document.getElementById( "printToggle" ).checked = true;
