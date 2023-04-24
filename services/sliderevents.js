@@ -205,12 +205,8 @@ function hideLowBuildings( ) {
 
             }	
             
-            if ( urbanHeatData.length > 0 ) {
-
-                createUrbanHeatHistogram( urbanHeatData );
-                createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
-   
-            } 
+            createUrbanHeatHistogram( urbanHeatData );
+            createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
 
         }
     });     
@@ -229,7 +225,7 @@ function addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, n
     
     if ( entity._properties.avgheatexposuretobuilding && entity._properties[ categoricalName ] && entity._properties[ numericalName ] && entity._properties[ categoricalName ]._value ) {
 
-		let element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: decodeFacade( entity._properties[ categoricalName ]._value ), [ numerical ]: entity._properties[ numericalName ]._value };
+		let element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: entity._properties[ numericalName ]._value };
         urbanHeatDataAndMaterial.push( element );
 
     }

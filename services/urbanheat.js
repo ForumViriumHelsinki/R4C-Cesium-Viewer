@@ -220,6 +220,7 @@ function setAttributesFromApiToBuilding ( properties, features ) {
 			}
 
             properties.kayttotarkoitus = decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
+			properties.c_julkisivu = decodeFacade( properties.c_julkisivu );
 			features.splice( i, 1 );
 			break;
         }
@@ -233,26 +234,34 @@ function setAttributesFromApiToBuilding ( properties, features ) {
  */
 function createUrbanHeatHistogram( urbanHeatData ) {
 
-	let trace = {
-		x: urbanHeatData,
-		type: 'histogram',
-		name: 'average heat exposure to building',
-		marker: {
-			color: 'orange',
-		},
-	};
+	if ( urbanHeatData.length > 0 ) {
 
-	if ( showPlot ) {
+		let trace = {
+			x: urbanHeatData,
+			type: 'histogram',
+			name: 'average heat exposure to building',
+			marker: {
+				color: 'orange',
+			},
+		};
+	
+		if ( showPlot ) {
+	
+			document.getElementById( "plotContainer" ).style.visibility = 'visible';
+		}
+	
+		let layout = { 
+			title: 'Heat exposure to buildings in ' + nameOfZone,
+			bargap: 0.05, 
+		};
+	
+		Plotly.newPlot( 'plotContainer', [ trace ], layout );
 
-        document.getElementById( "plotContainer" ).style.visibility = 'visible';
-    }
+	} else {
+		
+		document.getElementById( "plotContainer" ).style.visibility = 'hidden';
 
-	let layout = { 
-		title: 'Heat exposure to buildings in ' + nameOfZone,
-		bargap: 0.05, 
-	};
-
-	Plotly.newPlot( 'plotContainer', [ trace ], layout );
+	}
 
 }
 
@@ -346,7 +355,7 @@ function createDataSetForScatterPlot( features, categorical, numerical, categori
 
 		if ( features[ i ].properties.avgheatexposuretobuilding && features[ i ].properties[ categoricalName ] && features[ i ].properties[ numericalName ] ) {
 			
-			let element = { heat: features[ i ].properties.avgheatexposuretobuilding, [ categorical ]: decodeFacade( features[ i ].properties[ categoricalName ] ), [ numerical ]: features[ i ].properties[ numericalName ] };
+			let element = { heat: features[ i ].properties.avgheatexposuretobuilding, [ categorical ]:  features[ i ].properties[ categoricalName ], [ numerical ]: features[ i ].properties[ numericalName ] };
 			urbanHeatDataAndMaterial.push( element );
 
 		}
