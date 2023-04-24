@@ -322,7 +322,7 @@ function calculateAverageExposure( features ) {
 
 		averageHeatExposure = total / count;
 		createUrbanHeatHistogram( urbanHeatData );
-		let urbanHeatDataAndMaterial = createDataSetForScatterPlot( features, 'facade', 'height', 'c_julkisivu', 'measured_height' )
+		let urbanHeatDataAndMaterial = createDataSetForScatterPlot( features, 'facade', 'height', 'c_julkisivu', 'measured_height' );
 		createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
 
 	}
@@ -332,18 +332,21 @@ function calculateAverageExposure( features ) {
  * Creates data set needed for scatter plotting urban heat exposure
  *
  * @param { Object } features buildings in postal code area
- * @param { String } categorical name of categorical attribute
- * @param { String } numerical name of numerical attribute
+ * @param { String } categorical name of categorical attribute for user
+ * @param { String } numerical name of numerical attribute for user
+ * @param { String } categoricalName name of numerical attribute in register
+ * @param { String } numericalName name for numerical attribute in registery
+ * @return { object } data set for plotting
  */
-function createDataSetForScatterPlot( features, categorical, numerical, categoricalValue, numericalValue ) {
+function createDataSetForScatterPlot( features, categorical, numerical, categoricalName, numericalName ) {
 
 	let urbanHeatDataAndMaterial = [ ];
 
 	for ( let i = 0; i < features.length; i++ ) {
 
-		if ( features[ i ].properties.avgheatexposuretobuilding && features[ i ].properties[ categoricalValue ] && features[ i ].properties[ numericalValue ] ) {
+		if ( features[ i ].properties.avgheatexposuretobuilding && features[ i ].properties[ categoricalName ] && features[ i ].properties[ numericalName ] ) {
 			
-			let element = { heat: features[ i ].properties.avgheatexposuretobuilding, [ categorical ]: decodeFacade( features[ i ].properties[ categoricalValue ] ), [ numerical ]: features[ i ].properties[ numericalValue ] };
+			let element = { heat: features[ i ].properties.avgheatexposuretobuilding, [ categorical ]: decodeFacade( features[ i ].properties[ categoricalName ] ), [ numerical ]: features[ i ].properties[ numericalName ] };
 			urbanHeatDataAndMaterial.push( element );
 
 		}
@@ -560,13 +563,13 @@ function createScatterPlot( features, categorical, numerical ) {
 
 	document.getElementById( "plotMaterialContainer" ).style.visibility = 'visible';
 	  
-	  const layout = {
+	const layout = {
 		scattermode: 'group',
 		title: categorical,
 		xaxis: {title: numerical },
 		yaxis: {title: 'Heat'},
-	  };
+	};
 	  
-	  Plotly.newPlot('plotMaterialContainer', data, layout);
+	Plotly.newPlot('plotMaterialContainer', data, layout);
 
 }

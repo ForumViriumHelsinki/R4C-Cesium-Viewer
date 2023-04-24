@@ -125,6 +125,7 @@ function hideNonSoteBuildings( ) {
         if ( dataSource.name == "Buildings" ) {
 
             let urbanHeatData = [ ];
+            let urbanHeatDataAndMaterial = [ ];
 
             for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
 
@@ -146,6 +147,7 @@ function hideNonSoteBuildings( ) {
                         
                         // add data for updating histogram
                         urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
+                        addDataForScatterPlot( urbanHeatDataAndMaterial, entity, 'facade', 'height', 'c_julkisivu', 'measured_height' );
 
                     }
     
@@ -153,6 +155,7 @@ function hideNonSoteBuildings( ) {
 
             }	
             
+            createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
             createUrbanHeatHistogram( urbanHeatData );
 
         }
@@ -160,7 +163,7 @@ function hideNonSoteBuildings( ) {
 }
 
 /**
- * Hides buildings with floor count under 7 and updates histogram
+ * Hides buildings with floor count under 7 and updates histogram & scatter plot
  *
  */
 function hideLowBuildings( ) {
@@ -170,6 +173,7 @@ function hideLowBuildings( ) {
         if ( dataSource.name == "Buildings" ) {
 
             let urbanHeatData = [ ];
+            let urbanHeatDataAndMaterial = [ ];
 
             for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
 
@@ -191,6 +195,7 @@ function hideLowBuildings( ) {
                         
                         // add data for updating histogram
                         urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
+                        addDataForScatterPlot( urbanHeatDataAndMaterial, entity, 'facade', 'height', 'c_julkisivu', 'measured_height' );
 
                     }
     
@@ -201,6 +206,7 @@ function hideLowBuildings( ) {
             if ( urbanHeatData.length > 0 ) {
 
                 createUrbanHeatHistogram( urbanHeatData );
+                createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
    
             } 
 
@@ -208,9 +214,31 @@ function hideLowBuildings( ) {
     });     
 }
 
+/**
+ * Creates data set needed for scatter plotting urban heat exposure
+ *
+ * @param { Object } features buildings in postal code area
+ * @param { String } categorical name of categorical attribute for user
+ * @param { String } numerical name of numerical attribute for user
+ * @param { String } categoricalName name of numerical attribute in register
+ * @param { String } numericalName name for numerical attribute in registery
+ */
+function addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, numerical, categoricalName, numericalName ) {
+    
+    if ( entity._properties.avgheatexposuretobuilding && entity._properties[ categoricalName ] && entity._properties[ numericalName ] && entity._properties[ categoricalName ]._value ) {
+
+		let element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: decodeFacade( entity._properties[ categoricalName ]._value ), [ numerical ]: entity._properties[ numericalName ]._value };
+        urbanHeatDataAndMaterial.push( element );
+
+    }
+
+}
+
+
 function showAllBuildings( ) {
 
     let urbanHeatData = [ ];
+    let urbanHeatDataAndMaterial = [ ];
 
     viewer.dataSources._dataSources.forEach( function( dataSource ) {
             
@@ -219,17 +247,20 @@ function showAllBuildings( ) {
             for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
 
                 dataSource._entityCollection._entities._array[ i ].show = true;
+                let entity = dataSource._entityCollection._entities._array[ i ];
                 // add data for updating histogram
 
                 if ( dataSource._entityCollection._entities._array[ i ]._properties.avgheatexposuretobuilding ) {
 
-                    urbanHeatData.push( dataSource._entityCollection._entities._array[ i ]._properties.avgheatexposuretobuilding._value );
+                    urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
+                    addDataForScatterPlot( urbanHeatDataAndMaterial, entity, 'facade', 'height', 'c_julkisivu', 'measured_height' );
 
                 }
 
             }
             
             createUrbanHeatHistogram( urbanHeatData );
+            createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
 
         }
     });    
