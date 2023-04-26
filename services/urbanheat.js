@@ -221,6 +221,8 @@ function setAttributesFromApiToBuilding ( properties, features ) {
 
             properties.kayttotarkoitus = decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
 			properties.c_julkisivu = decodeFacade( properties.c_julkisivu );
+			properties.c_rakeaine = decodeMaterial( properties.c_rakeaine );
+
 			features.splice( i, 1 );
 			break;
         }
@@ -389,7 +391,30 @@ function decodeFacade( facade ) {
 			return 'glass';
 		case '7': 
 			return 'other';
-		}
+	}
+
+}
+
+/**
+ * Decodes building material https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf
+ *
+ * @param { String } material value code for building material.'
+ * @return { String } building material
+ */
+function decodeMaterial( material ) {
+
+	switch ( material ) {
+		case '1': 
+			return 'concrete';
+		case '2': 
+			return 'brick';
+		case '3': 
+			return 'steel';
+		case '4': 
+			return 'wood';
+		case '5': 
+			return 'other';
+	}
 
 }
 
@@ -572,6 +597,8 @@ function createScatterPlot( features, categorical, numerical ) {
 		
 		}
 	
+		document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
+		document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
 		document.getElementById( "plotMaterialContainer" ).style.visibility = 'visible';
 		  
 		const layout = {
@@ -585,6 +612,8 @@ function createScatterPlot( features, categorical, numerical ) {
 
 	} else {
 		
+		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 		document.getElementById( "plotMaterialContainer" ).style.visibility = 'hidden';
 
 	}

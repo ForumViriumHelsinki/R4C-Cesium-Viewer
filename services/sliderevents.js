@@ -122,6 +122,9 @@ function showNatureEvent( ) {
 
 function hideNonSoteBuildings( ) {
 
+    let currentNum = document.getElementById("numericalSelect").value
+    let currentCat= document.getElementById("categoricalSelect").value
+
     viewer.dataSources._dataSources.forEach( function( dataSource ) {
             
         if ( dataSource.name == "Buildings" ) {
@@ -149,7 +152,7 @@ function hideNonSoteBuildings( ) {
                         
                         // add data for updating histogram
                         urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
-                        addDataForScatterPlot( urbanHeatDataAndMaterial, entity, 'facade', 'height', 'c_julkisivu', 'measured_height' );
+                        addDataForScatterPlot( urbanHeatDataAndMaterial, entity, currentCat, currentNum, decodeCategorical( currentCat ), decodeNumerical( currentNum ) );
 
                     }
     
@@ -157,8 +160,8 @@ function hideNonSoteBuildings( ) {
 
             }	
             
-            createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
             createUrbanHeatHistogram( urbanHeatData );
+            createScatterPlot( urbanHeatDataAndMaterial, currentCat, currentNum );
 
         }
     });     
@@ -169,6 +172,9 @@ function hideNonSoteBuildings( ) {
  *
  */
 function hideLowBuildings( ) {
+
+    let currentNum = document.getElementById("numericalSelect").value
+    let currentCat= document.getElementById("categoricalSelect").value
 
     viewer.dataSources._dataSources.forEach( function( dataSource ) {
             
@@ -194,10 +200,10 @@ function hideLowBuildings( ) {
                         entity.show = false;
             
                     } else {
-                        
+          
                         // add data for updating histogram
                         urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
-                        addDataForScatterPlot( urbanHeatDataAndMaterial, entity, 'facade', 'height', 'c_julkisivu', 'measured_height' );
+                        addDataForScatterPlot( urbanHeatDataAndMaterial, entity, currentCat, currentNum, decodeCategorical( currentCat ), decodeNumerical( currentNum ) );
 
                     }
     
@@ -206,7 +212,7 @@ function hideLowBuildings( ) {
             }	
             
             createUrbanHeatHistogram( urbanHeatData );
-            createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
+            createScatterPlot( urbanHeatDataAndMaterial, currentCat, currentNum );
 
         }
     });     
@@ -225,7 +231,14 @@ function addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, n
     
     if ( entity._properties.avgheatexposuretobuilding && entity._properties[ categoricalName ] && entity._properties[ numericalName ] && entity._properties[ categoricalName ]._value ) {
 
-		let element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: entity._properties[ numericalName ]._value };
+        let numbericalValue = entity._properties[ numericalName ]._value;
+
+        if ( numericalName == 'c_valmpvm' && numbericalValue ) {
+
+            numbericalValue = new Date().getFullYear() - Number( numbericalValue.slice( 0, 4 ));
+        }
+
+		let element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
         urbanHeatDataAndMaterial.push( element );
 
     }
@@ -237,6 +250,9 @@ function showAllBuildings( ) {
 
     let urbanHeatData = [ ];
     let urbanHeatDataAndMaterial = [ ];
+
+    let currentNum = document.getElementById("numericalSelect").value
+    let currentCat= document.getElementById("categoricalSelect").value
 
     viewer.dataSources._dataSources.forEach( function( dataSource ) {
             
@@ -251,14 +267,14 @@ function showAllBuildings( ) {
                 if ( dataSource._entityCollection._entities._array[ i ]._properties.avgheatexposuretobuilding ) {
 
                     urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
-                    addDataForScatterPlot( urbanHeatDataAndMaterial, entity, 'facade', 'height', 'c_julkisivu', 'measured_height' );
+                    addDataForScatterPlot( urbanHeatDataAndMaterial, entity, currentCat, currentNum, decodeCategorical( currentCat ), decodeNumerical( currentNum ) );
 
                 }
 
             }
             
             createUrbanHeatHistogram( urbanHeatData );
-            createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
+            createScatterPlot( urbanHeatDataAndMaterial, currentCat, currentNum );
 
         }
     });    
@@ -360,4 +376,26 @@ function hideNatureAreaHeat( ) {
             }						
         }
     });     
+}
+
+function decodeNumerical( numerical ) {
+
+    switch ( numerical ) {
+		case 'height': 
+			return 'measured_height';
+		case 'age': 
+			return 'c_valmpvm';
+		case 'area': 
+			return 'i_kokala';
+	}
+}
+
+function decodeCategorical( categorical ) {
+
+    switch ( categorical ) {
+		case 'facade': 
+			return 'c_julkisivu';
+		case 'material': 
+			return 'c_rakeaine';
+	}
 }

@@ -9,6 +9,7 @@
   <script type="text/javascript" src="services/buildings.js"></script>
   <script type="text/javascript" src="services/natureareas.js"></script>
   <script type="text/javascript" src="services/sliderevents.js"></script>
+  <script type="text/javascript" src="services/selectevents.js"></script>
   <script type="text/javascript" src="services/urbanheat.js"></script>
   <script type="text/javascript" src="services/featurepicker.js"></script>
   <script type="text/javascript" src="services/floods.js"></script>
@@ -100,6 +101,16 @@
   <div id="plotMaterialContainer">
   </div>
 
+<select id="numericalSelect" value="numerical">
+    <option value="height" selected>height</option>
+    <option value="age">age</option>
+    <option value="area">area</option>
+</select>
+
+<select id="categoricalSelect" value="categorical">
+  <option value="facade" selected>facade</option>
+  <option value="material">material</option>
+</select>
   		<!-- Add Logo -->
 		
 	<div class="logoHolder">	
@@ -117,7 +128,6 @@
 	  var postalcode = null;
     var nameOfZone = null;
     var averageHeatExposure = 0;
-    const averageHeatExpWholeHKI = 0.4410802563886266;
 	// OS version, operating without Cesium Ion services...
     Cesium.Ion.defaultAccessToken = null;
 
@@ -158,6 +168,8 @@
 	document.getElementById("cesiumContainer").addEventListener("click", function() { processClick( viewer, event ) });
 	//Attaching UI events...
 	addEventListener('input', ( event ) => { sliderEvents( event ) } );
+  addEventListener('change', ( event ) => { selectEvents( event ) } );
+
   //disable switch for showing heat exposure on nature areas
   document.getElementById("showNatureHeatToggle").disabled = true;
   document.getElementById( "hideNonSoteToggle" ).disabled = true;

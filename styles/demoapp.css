@@ -77,6 +77,26 @@
 	box-shadow: 3px 5px 5px black;  
 }
 
+#numericalSelect
+{
+	position: fixed;
+	bottom: 40px;
+	left: 610px;
+	visibility: hidden;
+	
+	font-size: smaller;
+}
+
+#categoricalSelect
+{
+	position: fixed;
+	bottom: 340px;
+	left: 548px;
+	visibility: hidden;
+	
+	font-size: smaller;
+}
+
 #printContainer
 {
 	bottom: 75px; 

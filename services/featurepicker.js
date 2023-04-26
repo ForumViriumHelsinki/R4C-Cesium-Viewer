@@ -118,6 +118,8 @@ function handleBuildingFeature( buildingHeatExposure, address, postinumero ) {
 
     document.getElementById( "plotSoSContainer" ).style.visibility = 'hidden';
     document.getElementById( "plotMaterialContainer" ).style.visibility = 'hidden';
+    document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+    document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 
     console.log("Building found!");
 
