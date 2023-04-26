@@ -27,6 +27,9 @@ function resetSwitches( ) {
     document.getElementById( "hideNonSoteToggle" ).disabled = true;
     document.getElementById( "hideLowToggle" ).disabled = true;
 
+    document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+    document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+
   	showPlot = true;
 	showNature = false;
     showNatureHeat = false;
