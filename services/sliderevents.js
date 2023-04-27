@@ -387,6 +387,10 @@ function decodeNumerical( numerical ) {
 			return 'c_valmpvm';
 		case 'area': 
 			return 'i_kokala';
+        case 'volume': 
+			return 'i_raktilav';
+        default:
+            return numerical;            
 	}
 }
 
@@ -397,5 +401,17 @@ function decodeCategorical( categorical ) {
 			return 'c_julkisivu';
 		case 'material': 
 			return 'c_rakeaine';
+        case 'roof type': 
+			return 'roof_type';
+        case 'usage': 
+			return 'kayttotarkoitus';
+        case 'type': 
+			return 'tyyppi';
+        case 'heating method': 
+			return 'c_lammtapa';     
+        case 'heating source': 
+			return 'c_poltaine';                   
+        default:
+            return categorical;                 
 	}
 }

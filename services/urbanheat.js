@@ -13,7 +13,7 @@ function decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 		case '012': 
 			return 'Kahden asunnon talot';
 		case '013': 
-			return 'Muut erilliset pientalot';
+			return 'Muut pientalot';
 		case '021': 
 			return 'Rivitalot';
 		case '022': 
@@ -27,29 +27,29 @@ function decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 		case '111': 
 			return 'Myymälähallit';
 		case '112': 
-			return 'Liike- ja tavaratalot, kauppakeskukset';
+			return 'Liike- ja tavaratalot';
 		case '119': 
 			return 'Myymälärakennukset';	
 		case '121': 
-			return 'Hotellit, motellit, matkustajakodit, kylpylähotellit';				
+			return 'Hotellit';				
 		case '123': 
 			return 'Loma- lepo- ja virkistyskodit';		
 		case '124': 
-			return 'Vuokrattavat lomamökit ja osakkeet (liiketoiminnallisesti)';				
+			return 'Vuokrattavat lomamökit';				
 		case '129': 
-			return 'Muut majoitusliikerakennukset';	
+			return 'Muu majoitusliike';	
 		case '131': 
-			return 'Asuntolat, vanhusten palvelutalot, asuntolahotellit';			
+			return 'Asuntolat, vanhusten yms';			
 		case '139': 
 			return 'Muut majoitusrakennukset';				
 		case '141': 
-			return 'Ravintolat, ruokalat ja baarit';		
+			return 'Ravintolat, baarit yms';		
 		case '151': 
 			return 'Toimistorakennukset';
 		case '161': 
-			return 'Rautatie- ja linja-autoasemat, lento- ja satamaterminaalit';	
+			return 'Asemat ja terminaalit';	
 		case '162': 
-			return 'Kulkuneuvojen suoja- ja huoltorakennukset';			
+			return 'Kulkuneuvojen rakennukset';			
 		case '163': 
 			return 'Pysäköintitalot';		
 		case '164': 
@@ -63,25 +63,25 @@ function decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 		case '214': 
 			return 'Terveyskeskukset';
 		case '215': 
-			return 'Terveydenhoidon erityislaitokset (mm. kuntoutuslaitokset)';
+			return 'Erityis terveydenhoito';
 		case '219': 
-			return 'Muut terveydenhoitorakennukset';
+			return 'Muu terveydenhoito';
 		case '221': 
 			return 'Vanhainkodit';
 		case '222': 
 			return 'Lastenkodit, koulukodit';
 		case '223': 
-			return 'Kehitysvammaisten hoitolaitokset';
+			return 'Kehitysvammaisten hoito';
 		case '229': 
-			return 'Muut huoltolaitosrakennukset';
+			return 'Muut huoltolaitokset';
 		case '231': 
 			return 'Lasten päiväkodit';
 		case '239': 
-			return 'Muut sosiaalitoimen rakennukset';
+			return 'Muut sosiaalitoimi';
 		case '241': 
 			return 'Vankilat';	
 		case '311': 
-			return 'Teatterit, konsertti- ja kongressitalot, oopperat';		
+			return 'Teatterit, konsertti yms';		
 		case '312': 
 			return 'Elokuvateatterit';		
 		case '322': 
@@ -91,23 +91,23 @@ function decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 		case '324': 
 			return 'Näyttelyhallit';	
 		case '331': 
-			return 'Seurain-, nuoriso- yms. talot';	
+			return 'Seurain-, nuoriso- yms';	
 		case '341': 
-			return 'Kirkot, kappelit, luostarit, rukoushuoneet';	
+			return 'Kirkot, kappelit yms';	
 		case '342': 
 			return 'Seurakuntatalot';				
 		case '349': 
-			return 'Muut uskonnollisten yhteisöjen rakennukset';	
+			return 'Muut uskonnolliset yhteisöt';	
 		case '351': 
 			return 'Jäähallit';
 		case '352': 
 			return 'Uimahallit';	
 		case '353': 
-			return 'Tennis-, squash- ja sulkapallohallit';	
+			return 'Tennis, squash yms';	
 		case '354': 
-			return 'Monitoimi- ja muut urheiluhallit';	
+			return 'Monitoimi/urheiluhallit';	
 		case '359': 
-			return 'Muut urheilu- ja kuntoilurakennukset';				
+			return 'Muut urheilu';				
 		case '369': 
 			return 'Muut kokoontumisrakennukset';	
 		case '511': 
@@ -119,19 +119,19 @@ function decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 		case '532': 
 			return 'Tutkimuslaitosrakennukset';	
 		case '541': 
-			return 'Järjestöjen, liittojen, työnantajien yms. opetusrakennukset';
+			return 'Järjestöjen opetus';
 		case '549': 
-			return 'Muualla luokittelemattomat opetusrakennukset';		
+			return 'Muut opetusrakennukset';		
 		case '611': 
 			return 'Voimalaitosrakennukset';		
 		case '613': 
-			return 'Yhdyskuntatekniikan rakennukset';				
+			return 'Yhdyskuntatekniikka';				
 		case '691': 
 			return 'Teollisuushallit';	
 		case '692': 
-			return 'Teollisuus- ja pienteollisuustalot';
+			return 'Teollisuus- ja pienteollisuus';
 		case '699': 
-			return 'Muut teollisuuden tuotantorakennukset';			
+			return 'Muut teollisuus/tuotanto';			
 		case '711': 
 			return 'Teollisuusvarastot';		
 		case '712': 
@@ -142,29 +142,28 @@ function decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 			return 'Paloasemat';
 		case '722': 
 			return 'Väestönsuojat';	
-		case '711': 
-			return 'Muut palo- ja pelastustoimen rakennukset';		
-		case '712': 
-			return 'Navetat, sikalat, kanalat yms.';				
-		case '719': 
-			return 'Eläinsuojat, ravihevostallit, maneesit';	
-		case '721': 
-			return 'Viljankuivaamot ja viljan säilytysrakennukset, siilot';
-		case '722': 
-			return 'Kasvihuoneet';	
 		case '729': 
-			return 'Turkistarhat';		
+			return 'Muu palo- ja pelastustoiminta';		
 		case '811': 
-			return 'Muut maa-, metsä- ja kalatalouden rakennukset';				
+			return 'Navetat, sikalat, kanalat yms';				
 		case '819': 
-			return 'Saunarakennukset';	
+			return 'Eläinsuojat';	
 		case '891': 
-			return 'Talousrakennukset';
+			return 'Viljarakennukset';
 		case '892': 
-			return 'Muut rakennukset';				
+			return 'Kasvihuoneet';	
+		case '893': 
+			return 'Turkistarhat';		
+		case '899': 
+			return 'Muu maa/metsä/kala';						
+		case '931': 
+			return 'Saunarakennukset';	
+		case '941': 
+			return 'Talousrakennukset';				
 		default:
 			return kayttotarkoitus;
 		}
+
 }
 
 /**
@@ -222,6 +221,8 @@ function setAttributesFromApiToBuilding ( properties, features ) {
             properties.kayttotarkoitus = decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
 			properties.c_julkisivu = decodeFacade( properties.c_julkisivu );
 			properties.c_rakeaine = decodeMaterial( properties.c_rakeaine );
+			properties.c_lammtapa = decodeHeatingMethod( properties.c_lammtapa );
+			properties.c_poltaine = decodeHeatingSource( properties.c_poltaine );
 
 			features.splice( i, 1 );
 			break;
@@ -391,6 +392,8 @@ function decodeFacade( facade ) {
 			return 'glass';
 		case '7': 
 			return 'other';
+		default:
+			return facade;  				
 	}
 
 }
@@ -414,6 +417,8 @@ function decodeMaterial( material ) {
 			return 'wood';
 		case '5': 
 			return 'other';
+		default:
+			return material;  		
 	}
 
 }
@@ -616,6 +621,54 @@ function createScatterPlot( features, categorical, numerical ) {
 		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 		document.getElementById( "plotMaterialContainer" ).style.visibility = 'hidden';
 
+	}
+
+}
+
+function decodeHeatingMethod( heatingMethod ) {
+
+	switch ( heatingMethod ) {
+		case '1': 
+			return 'central water';
+		case '2': 
+			return 'central air';
+		case '3': 
+			return 'electricity';
+        case '4': 
+			return 'oven';
+		case '5': 
+			return 'no fixed heating';			
+        default:
+            return heatingMethod;  
+	}
+
+}
+
+function decodeHeatingSource( heatingSource ) {
+
+	switch ( heatingSource ) {
+		case '1': 
+			return 'district';
+		case '2': 
+			return 'light fuel oil';
+		case '3': 
+			return 'heavy fuel oil';
+        case '4': 
+			return 'electricity';
+		case '5': 
+			return 'gas';		
+		case '6': 
+			return 'coal';
+		case '7': 
+			return 'wood';
+		case '8': 
+			return 'peat';
+        case '9': 
+			return 'ground-source';
+		case '10': 
+			return 'other';					
+        default:
+            return heatingSource;  
 	}
 
 }

@@ -29,6 +29,8 @@ function resetSwitches( ) {
 
     document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+    document.getElementById( 'categoricalSelect' ).value = 'facade';
+    document.getElementById( 'numericalSelect' ).value = 'height';
 
   	showPlot = true;
 	showNature = false;
