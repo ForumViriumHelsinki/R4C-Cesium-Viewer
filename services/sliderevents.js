@@ -1,41 +1,53 @@
+/**
+ * This function is triggered by a slider event and it checks the value of the slider to determine which function to execute
+ *
+ * @param { Object } event the slider event
+ */
 function sliderEvents( event ) {
 		
+    // If the slider value is "print", call the printEvent function.
     if ( event.target.value == 'print' ) {
 
         printEvent();
 
     }
-        
+      
+    // If the slider value is "showPlot", call the showPlotEvent function.
     if ( event.target.value == 'showPlot' ) {
 
         showPlotEvent();
 
     }	
 
+    // If the slider value is "showNature", call the showNatureEvent function.
     if ( event.target.value == 'showNature' ) {
 
         showNatureEvent();
 
     }
 
+    // If the slider value is "hideNonSote", call the hideNonSoteEvent function.
     if ( event.target.value == 'hideNonSote' ) {
         
         hideNonSoteEvent();
 
     }	
 
+    // If the slider value is "hideLow", call the hideLowEvent function.
     if ( event.target.value == 'hideLow' ) {
         
         hideLowEvent();
 
     }	
 
+    // If the slider value is "showNatureHeat", call the showNatureHeatEvent function.
     if ( event.target.value == 'showNatureHeat' ) {
         
         showNatureHeatEvent();
 
     }
 
+    // If the slider value is "showTrees", call the showTrees function.
     if ( event.target.value == 'showTrees' ) {
         
         showTrees();
@@ -43,44 +55,59 @@ function sliderEvents( event ) {
     }
             
 }
+
+/**
+ * This function to show or hide tree entities on the map based on the toggle button state
+ *
+ */
 function showTrees( ) {
 
+    // Get the state of the showTrees toggle button
     const showTrees = document.getElementById( "showTreesToggle" ).checked;
 
+    // If showTrees toggle is on
     if ( showTrees ) {
 
+        // If a postal code is available, load trees for that postal code
         if ( postalcode ) {
 
             loadTrees( postalcode );
 
         }
         
+        // Set the show property of all data sources to true to show the entities
         viewer.dataSources._dataSources.forEach( function( dataSource ) {
 
             dataSource.show = true;
 
         });
 
-    } else {
+    } else { // If showTrees toggle is off
 
-        viewer.dataSources._dataSources.forEach( function( dataSource ) {
-
-            if ( dataSource.name == "Trees" ) {
-
-                dataSource.show = false;	
-                
-            }
-        });
-
+        // Find the data source for trees
+        const treesDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "Trees" );
+        // If the data source isn't found, exit the function
+        if ( !treesDataSource ) {
+            return;
+        
+        } else {
+            // Set the show property of the Trees data source to false to hide the tree entities
+            treesDataSource.show  = false;
+        }
     }
 
 }
 
+/**
+ * This function is called when the Object details button is clicked
+ *
+ */
 function printEvent( ) {
 
     console.log( "Set the print to: " + String( document.getElementById( "printToggle" ).checked ) );
     const print = document.getElementById( "printToggle" ).checked;
 
+    // If print is not selected, hide the print container, search container, georeference container, and search button
     if ( !print ) {
 
         document.getElementById( 'printContainer' ).style.visibility = 'hidden';
@@ -88,7 +115,7 @@ function printEvent( ) {
         document.getElementById( 'georefContainer' ).style.visibility = 'hidden';
         document.getElementById( 'searchbutton' ).style.visibility = 'hidden';
 
-    } else {
+    } else { // Otherwise, make the print container visible
 
         setPrintVisible( );
 
@@ -96,51 +123,50 @@ function printEvent( ) {
 
 }
 
+/**
+ * This function is called when the "Display Plot" toggle button is clicked
+ *
+ */
 function showPlotEvent( ) {
 
-    console.log("Set the showplot to: " + String(document.getElementById("showPlotToggle").checked));
+    // Get the value of the "Show Plot" toggle button
     const showPlot = document.getElementById( "showPlotToggle" ).checked;
     
+    // Hide the plot and its controls if the toggle button is unchecked
     if ( !showPlot ) {
 
-        document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
-        document.getElementById( 'plotSoSContainer' ).style.visibility = 'hidden';
-        document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
-        document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
-        document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+        hideAllPlots( );
 
-    }
-    
-    if ( showPlot ) {
+    } else { // Otherwise, show the plot and its controls if the toggle button is checked and the plot is already loaded
 
-        if ( document.getElementById( 'plotContainer' ).textContent.includes( "plotly" ) ) { //This is a bit dirty...
-    
-            document.getElementById( 'plotContainer' ).style.visibility = 'visible';
-            document.getElementById( 'plotSoSContainer' ).style.visibility = 'visible';
-            document.getElementById( 'plotMaterialContainer' ).style.visibility = 'visible';
-            document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
-            document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
-
-        }
+        showAllPlots( );
 
     }
 
 }
 
+/**
+ * This function handles the toggle event for showing or hiding the nature areas layer on the map.
+ *
+ */
 function showNatureEvent( ) {
 
+    // Get the current state of the toggle button for showing nature areas.
     const showNature = document.getElementById( "showNatureToggle" ).checked;
 
     if ( showNature ) {
 
+        // If the toggle button is checked, enable the toggle button for showing the nature area heat map.
         document.getElementById("showNatureHeatToggle").disabled = false;
 
+        // If there is a postal code available, load the nature areas for that area.
         if ( postalcode ) {
 
             loadNatureAreas( postalcode );
 
         }
-        
+
+        // Show all data sources on the map.  
         viewer.dataSources._dataSources.forEach( function( dataSource ) {
 
             dataSource.show = true;
@@ -149,68 +175,122 @@ function showNatureEvent( ) {
 
     } else {
 
+        // If the toggle button is not checked, disable the toggle button for showing the nature area heat map and uncheck it.
         document.getElementById("showNatureHeatToggle").checked = false;
         document.getElementById("showNatureHeatToggle").disabled = true;
 
-        viewer.dataSources._dataSources.forEach( function( dataSource ) {
-
-            if ( dataSource.name == "NatureAreas" ) {
-
-                dataSource.show = false;	
-                
-            }
-        });
+        // Find the data source for trees
+        const natureAreasDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "NatureAreas" );
+        // If the data source isn't found, exit the function
+        if ( !natureAreasDataSource ) {
+            return;
+        
+        } else {
+            // Set the show property of the Nature Aras data source to false to hide the nature areas entities
+            natureAreasDataSource.show  = false;
+        }
 
     }
 
 }
 
-function hideNonSoteBuildings( ) {
+/**
+ * Hide non-SOTE buildings and update the histograms and scatter plot based on the selected numerical and categorical data
+ */
+function hideNonSoteBuildings() {
 
-    const currentNum = document.getElementById("numericalSelect").value
-    const currentCat= document.getElementById("categoricalSelect").value
-
-    viewer.dataSources._dataSources.forEach( function( dataSource ) {
-            
-        if ( dataSource.name == "Buildings" ) {
-
-            let urbanHeatData = [ ];
-            let urbanHeatDataAndMaterial = [ ];
-
-            for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
-
-                let entity = dataSource._entityCollection._entities._array[ i ];
-
-                if ( !entity._properties.c_kayttark ) {
-	
-                    entity.show = false;
-        
-                } else {
+    const currentNum = document.getElementById( "numericalSelect" ).value;
+    const currentCat = document.getElementById( "categoricalSelect" ).value;
+    const buildingsDataSource = getBuildingsDataSource();
+  
+    const soteBuildings = filterSoteBuildings( buildingsDataSource );
+    const urbanHeatData = mapUrbanHeatData( soteBuildings );
+    const urbanHeatDataAndMaterial = mapUrbanHeatDataAndMaterial( soteBuildings, currentNum, currentCat );
     
-                    const kayttotark = Number( entity._properties.c_kayttark._value );
+    updateBuildingsVisibility( buildingsDataSource, soteBuildings );
+    // Create/update the urban heat histogram and scatter plot
+    updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial );
+
+  }
+  
+  /**
+   * Get the "Buildings" data source from the Cesium viewer
+   * 
+   * @returns { Object } The "Buildings" data source
+   */
+  function getBuildingsDataSource() {
+
+    return viewer.dataSources._dataSources.find( ds => ds.name === "Buildings" );
+
+  }
+  
+  /**
+   * Filter out non-SOTE buildings from the given data source
+   * 
+   * @param { Object } dataSource The data source containing buildings
+   * @returns { Object[ ] } An array of SOTE buildings
+   */
+  function filterSoteBuildings( dataSource ) {
+
+    return dataSource.entities.values.filter( entity => {
+      const kayttotark = Number( entity._properties.c_kayttark._value );
+      return kayttotark === 511 || kayttotark === 131 || ( kayttotark > 212 && kayttotark < 240 );
+    });
+
+  }
+  
+  /**
+   * Get an array of urban heat data from the given array of entities
+   * @param { Object[ ] } entities An array of entities with the "avgheatexposuretobuilding" property
+   * @returns { Object[ ] } An array of urban heat data
+   */
+  function mapUrbanHeatData( entities ) {
+
+    return entities.map( entity => entity._properties.avgheatexposuretobuilding._value );
+
+  }
+  
+  /**
+   * Get an array of urban heat data and material from the given array of entities
+   * 
+   * @param { Object[ ] } entities An array of entities with the "avgheatexposuretobuilding" and "c_kayttark" properties
+   * @returns {Object[ ]} An array of objects containing "urban heat" and "material" properties
+   */
+  function mapUrbanHeatDataAndMaterial( entities ) {
+
+    return entities.map( entity => {
+
+      const kayttotark = Number( entity._properties.c_kayttark._value );
+      const material = kayttotark === 511 ? "Material A" :
+                       kayttotark === 131 ? "Material B" :
+                       "Other";
+      const urbanHeat = entity._properties.avgheatexposuretobuilding._value;
+
+      return { "material": material, "urban heat": urbanHeat };
     
-                    if ( !kayttotark != 511 && !kayttotark != 131 && !( kayttotark > 212 && kayttotark < 240 ) ) {
-        
-                        entity.show = false;
-            
-                    } else {
-                        
-                        // add data for updating histogram
-                        urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
-                        addDataForScatterPlot( urbanHeatDataAndMaterial, entity, currentCat, currentNum, decodeCategorical( currentCat ), decodeNumerical( currentNum ) );
+    });
+  }
+  
+  /**
+   * Show/hide entites based on whether they are in the given array of entities
+   * 
+   * @param { Object } dataSource The data source containing the entites to show/hide
+   * @param { Object[ ] } entitiesToShow An array of entities to show
+   */
+  function updateBuildingsVisibility( dataSource, entitiesToShow ) {
 
-                    }
-    
-                }
+    dataSource.entities.values.forEach( entity => {
+      if ( entitiesToShow.includes( entity ) ) {
 
-            }	
-            
-            createUrbanHeatHistogram( urbanHeatData );
-            createScatterPlot( urbanHeatDataAndMaterial, currentCat, currentNum );
+        entity.show = true;
 
-        }
-    });     
-}
+      } else {
+
+        entity.show = false;
+
+      }
+    });
+  }
 
 /**
  * Hides buildings with floor count under 7 and updates histogram & scatter plot
@@ -218,71 +298,84 @@ function hideNonSoteBuildings( ) {
  */
 function hideLowBuildings( ) {
 
+    // Get the current numerical and categorical select values
     const currentNum = document.getElementById("numericalSelect").value
     const currentCat= document.getElementById("categoricalSelect").value
 
-    viewer.dataSources._dataSources.forEach( function( dataSource ) {
-            
-        if ( dataSource.name == "Buildings" ) {
+    // Find the data source for buildings
+    const buildingsDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "Buildings" );
 
-            let urbanHeatData = [ ];
-            let urbanHeatDataAndMaterial = [ ];
+    // If the data source isn't found, exit the function
+    if ( !buildingsDataSource ) {
+        return;
+    }
 
-            for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+    // Initialize arrays to hold data for histogram and scatter plot
+    let urbanHeatData = [ ];
+    let urbanHeatDataAndMaterial = [ ];
 
-                let entity = dataSource._entityCollection._entities._array[ i ];
+    // Loop through all entities in the "Buildings" data source
+    for ( let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++ ) {
 
-                if ( !entity._properties.i_kerrlkm ) {
+        let entity = buildingsDataSource._entityCollection._entities._array[ i ];
+
+        // If the entity does not have a floor count property, hide it
+        if ( !entity._properties.i_kerrlkm ) {
 	
-                    entity.show = false;
+            entity.show = false;
         
-                } else {
+        } else {
     
-                    const floorCount = Number( entity._properties.i_kerrlkm._value );
-    
-                    if ( floorCount < 7 ){
+            const floorCount = Number( entity._properties.i_kerrlkm._value );
+
+            // If the floor count is less than 7, hide the entity
+            if ( floorCount < 7 ){
         
-                        entity.show = false;
+                entity.show = false;
             
-                    } else {
+            } else {
           
-                        // add data for updating histogram
-                        urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
-                        addDataForScatterPlot( urbanHeatDataAndMaterial, entity, currentCat, currentNum, decodeCategorical( currentCat ), decodeNumerical( currentNum ) );
+                // Add the entity's heat exposure value to the array for the histogram
+                urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
+                // Add the entity's data to the array for the scatter plot
+                addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), currentCat, currentNum );
 
-                    }
+            }
     
-                }
-
-            }	
-            
-            createUrbanHeatHistogram( urbanHeatData );
-            createScatterPlot( urbanHeatDataAndMaterial, currentCat, currentNum );
-
         }
-    });     
+
+    }	
+
+    // Create/update the urban heat histogram and scatter plot
+    updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial );
+      
 }
 
 /**
- * Creates data set needed for scatter plotting urban heat exposure
+ * This function creates a data set required for scatter plotting urban heat exposure.
  *
  * @param { Object } features buildings in postal code area
- * @param { String } categorical name of categorical attribute for user
- * @param { String } numerical name of numerical attribute for user
+ * @param { String } categorical name of categorical attribute displayed for user
+ * @param { String } numerical name of numerical attribute displayed for user
  * @param { String } categoricalName name of numerical attribute in register
- * @param { String } numericalName name for numerical attribute in registery
+ * @param { String } numericalName name of numerical attribute in registery
  */
 function addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, numerical, categoricalName, numericalName ) {
     
+    // Check if entity has the required properties.
     if ( entity._properties.avgheatexposuretobuilding && entity._properties[ categoricalName ] && entity._properties[ numericalName ] && entity._properties[ categoricalName ]._value ) {
 
+         // Get the numerical value from the entity properties.
         let numbericalValue = entity._properties[ numericalName ]._value;
 
+        // If the numerical attribute is c_valmpvm, convert it to a number.
         if ( numericalName == 'c_valmpvm' && numbericalValue ) {
 
             numbericalValue = new Date().getFullYear() - Number( numbericalValue.slice( 0, 4 ));
+
         }
 
+         // Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
 		const element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
         urbanHeatDataAndMaterial.push( element );
 
@@ -290,53 +383,71 @@ function addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, n
 
 }
 
-
+/**
+* Shows all buildings and updates the histograms and scatter plot
+*
+*/
 function showAllBuildings( ) {
 
+    // Initialize arrays for data
     let urbanHeatData = [ ];
     let urbanHeatDataAndMaterial = [ ];
 
+    // Get current numerical and categorical values from select elements
     const currentNum = document.getElementById("numericalSelect").value
     const currentCat= document.getElementById("categoricalSelect").value
 
-    viewer.dataSources._dataSources.forEach( function( dataSource ) {
-            
-        if ( dataSource.name == "Buildings" ) {
+    // Find the data source for buildings
+    const buildingsDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "Buildings" );
 
-            for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+    // If the data source isn't found, exit the function
+    if ( !buildingsDataSource ) {
+        return;
+    }
 
-                dataSource._entityCollection._entities._array[ i ].show = true;
-                let entity = dataSource._entityCollection._entities._array[ i ];
-                // add data for updating histogram
+    // Iterate over all entities in data source
+    for ( let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++ ) {
 
-                if ( dataSource._entityCollection._entities._array[ i ]._properties.avgheatexposuretobuilding ) {
+        // Show the entity
+        buildingsDataSource._entityCollection._entities._array[ i ].show = true;
+        let entity = buildingsDataSource._entityCollection._entities._array[ i ];
 
-                    urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
-                    addDataForScatterPlot( urbanHeatDataAndMaterial, entity, currentCat, currentNum, decodeCategorical( currentCat ), decodeNumerical( currentNum ) );
+        // If entity has a heat exposure value, add it to the urbanHeatData array and add data for the scatter plot
+        if ( buildingsDataSource._entityCollection._entities._array[ i ]._properties.avgheatexposuretobuilding ) {
 
-                }
+            urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
+            addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), currentCat, currentNum );
 
             }
-            
-            createUrbanHeatHistogram( urbanHeatData );
-            createScatterPlot( urbanHeatDataAndMaterial, currentCat, currentNum );
 
-        }
-    });    
+    }
+
+    // Create/update the urban heat histogram and scatter plot
+    updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial );    
+       
 }
 
+
+/**
+* Hides or shows non-SOTE buildings based on whether the hideNonSoteToggle checkbox is checked
+*
+*/
 function hideNonSoteEvent( ) {
 
     const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
 
     if ( hideNonSote ) {
-        
+
+         // disable hideLowToggle checkbox
         document.getElementById("hideLowToggle").disabled = true;
+         // hide non-SOTE buildings
         hideNonSoteBuildings( );
 
     } else {
 
+        // show all buildings
         showAllBuildings( );
+        // enable hideLowToggle checkbox
         document.getElementById("hideLowToggle").disabled = false;
 
     }
@@ -345,20 +456,25 @@ function hideNonSoteEvent( ) {
 
 
 /**
- * Event that results in either all buildings to be shown or only tall buildings to be shown
+ * This function is called when the user clicks on the "hide low" toggle button.
  *
  */
 function hideLowEvent( ) {
 
+    // Get the status of the "hide low" toggle button.
     const hideLow = document.getElementById( "hideLowToggle" ).checked;
 
+    // If the "hide low" toggle button is checked.
     if ( hideLow ) {
-        
+
+        // Disable the "hide non-SOTE" toggle button and hide low buildings.
         document.getElementById( "hideNonSoteToggle" ).disabled = true;
         hideLowBuildings( );
 
+    // If the "hide low" toggle button is not checked.
     } else {
 
+        // Enable the "hide non-SOTE" toggle button and show all buildings.
         document.getElementById( "hideNonSoteToggle" ).disabled = false;
         showAllBuildings( );
 
@@ -366,97 +482,97 @@ function hideLowEvent( ) {
 
 }
 
+/**
+ * This is a function that toggles the display of nature area heat on the map. 
+ *
+ */
 function showNatureHeatEvent( ) {
 
+    // get the checked value of the toggle switch 
     const showNatureHeat = document.getElementById( "showNatureHeatToggle" ).checked;
 
     if ( showNatureHeat ) {
         
+        // displays the heat data for the nature areas on the map
         showNatureAreaHeat( );
 
     } else {
 
+        // hides the heat data for the nature areas on the map
         hideNatureAreaHeat( );
 
     }
 
 }
 
- 
+ /**
+ * This function shows the heat exposure of nature areas on the map.
+ *
+ */
 function showNatureAreaHeat( ) {
 
-    viewer.dataSources._dataSources.forEach( function( dataSource ) {
-            
-        if ( dataSource.name == "NatureAreas" ) {
+    // Find the data source for buildings
+    const natureAreasDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "NatureAreas" );
 
-            for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+    // If the data source isn't found, exit the function
+    if ( !natureAreasDataSource ) {
+        return;
+    }
 
-                let entity = dataSource._entityCollection._entities._array[ i ];
+    // Iterate over all entities in the nature area data source.
+    for ( let i = 0; i < natureAreasDataSource._entityCollection._entities._array.length; i++ ) {
 
-                if ( entity._properties._avgheatexposuretoarea._value ) {
+        let entity = natureAreasDataSource._entityCollection._entities._array[ i ];
 
-                    entity.polygon.material = new Cesium.Color( 1, 1 - entity._properties._avgheatexposuretoarea._value, 0, entity._properties._avgheatexposuretoarea._value );
+        // Check if the entity has the property for average heat exposure to the area.
+        if ( entity._properties._avgheatexposuretoarea._value ) {
 
-                }
-            }						
+            // Set the material color of the entity's polygon based on the heat exposure value.
+            entity.polygon.material = new Cesium.Color( 1, 1 - entity._properties._avgheatexposuretoarea._value, 0, entity._properties._avgheatexposuretoarea._value );
+
         }
-    });     
+    }						    
+    
 }
 
+ /**
+ * This function hides the heat exposure color of all nature areas by resetting their polygon color to their category color
+ *
+ */
 function hideNatureAreaHeat( ) {
 
-    viewer.dataSources._dataSources.forEach( function( dataSource ) {
-            
-        if ( dataSource.name == "NatureAreas" ) {
+    // Find the data source for buildings
+    const natureAreasDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "NatureAreas" );
 
-            for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+    // If the data source isn't found, exit the function
+    if ( !natureAreasDataSource ) {
+        return;
+    }
+    // Loop through each entity in the data source
+    for ( let i = 0; i < natureAreasDataSource._entityCollection._entities._array.length; i++ ) {
 
-                let entity = dataSource._entityCollection._entities._array[ i ];
+        let entity = natureAreasDataSource._entityCollection._entities._array[ i ];
 
-                if ( entity._properties._category ) {
+        // Check if the entity has a category property
+        if ( entity._properties._category ) {
 
-                    setNatureAreaPolygonMaterialColor( entity, entity._properties._category._value );
+            // Reset the polygon color of the entity to its original category color
+            setNatureAreaPolygonMaterialColor( entity, entity._properties._category._value );
 
-                }
-            }						
         }
-    });     
+    }						
+           
 }
 
-function decodeNumerical( numerical ) {
+/**
+ * Updates the urban heat histogram and scatter plot
+ * 
+ * @param {Array} urbanHeatData - the array of heat exposure data for the histogram
+ * @param {Array} urbanHeatDataAndMaterial - the array of data for the scatter plot
+ */
+function updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial ) {
 
-    switch ( numerical ) {
-		case 'height': 
-			return 'measured_height';
-		case 'age': 
-			return 'c_valmpvm';
-		case 'area': 
-			return 'i_kokala';
-        case 'volume': 
-			return 'i_raktilav';
-        default:
-            return numerical;            
-	}
-}
+    createUrbanHeatHistogram( urbanHeatData );
+    createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
 
-function decodeCategorical( categorical ) {
-
-    switch ( categorical ) {
-		case 'facade': 
-			return 'c_julkisivu';
-		case 'material': 
-			return 'c_rakeaine';
-        case 'roof type': 
-			return 'roof_type';
-        case 'usage': 
-			return 'kayttotarkoitus';
-        case 'type': 
-			return 'tyyppi';
-        case 'heating method': 
-			return 'c_lammtapa';     
-        case 'heating source': 
-			return 'c_poltaine';                   
-        default:
-            return categorical;                 
-	}
 }

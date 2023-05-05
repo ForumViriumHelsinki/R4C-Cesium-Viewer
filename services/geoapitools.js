@@ -14,9 +14,6 @@ function reset( ) {
 // Resets the switches
 function resetSwitches( ) {
 
-	document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
-    document.getElementById( "plotSoSContainer" ).style.visibility = 'hidden';
-    document.getElementById( "plotMaterialContainer" ).style.visibility = 'hidden';
 	document.getElementById( "showPlotToggle" ).checked = true;
 	document.getElementById( "showNatureToggle" ).checked = false;
 	document.getElementById( "printToggle" ).checked = true;
@@ -28,9 +25,7 @@ function resetSwitches( ) {
     document.getElementById( "hideLowToggle" ).disabled = true;
     document.getElementById( "showTreesToggle" ).disabled = false;
     setPrintVisible( );
-
-    document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
-    document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+    hideAllPlots( );    
     document.getElementById( 'categoricalSelect' ).value = 'facade';
     document.getElementById( 'numericalSelect' ).value = 'height';
 
@@ -133,9 +128,63 @@ function findEntityBounds( element ) {
     return [ latMIN, latMAX, lonMIN - 0.0002, lonMAX - 0.0002 ];
 }
 
+/**
+ * This function sets the visibility of HTML elements related to printing and geocoder to "visible", making them visible on the webpage.  
+ * 
+ */
 function setPrintVisible( ) {
     document.getElementById( 'printContainer' ).style.visibility = 'visible';
     document.getElementById( 'searchcontainer' ).style.visibility = 'visible';
     document.getElementById( 'georefContainer' ).style.visibility = 'visible';
     document.getElementById( 'searchbutton' ).style.visibility = 'visible';
+}
+
+/**
+ * Returns the selected text of a dropdown menu with the given element ID.
+ * 
+ * @param { string } elementId - The ID of the HTML element that represents the dropdown menu.
+ * @returns { string } The selected text of the dropdown menu, or null if no option is selected.
+ */
+function getSelectedText( elementId ) {
+
+    const elt = document.getElementById( elementId );
+  
+    if ( elt.selectedIndex == -1 ) {
+
+      return null;
+
+    }
+  
+    return elt.options[ elt.selectedIndex ].text;
+
+}
+
+
+/**
+ * Shows all plots and select elements
+ * 
+ * */
+function showAllPlots( ) {
+
+    document.getElementById( 'plotContainer' ).style.visibility = 'visible';
+    document.getElementById( 'plotSoSContainer' ).style.visibility = 'visible';
+    document.getElementById( 'plotMaterialContainer' ).style.visibility = 'visible';
+    document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
+    document.getElementById( 'categoricalSelect' ).style.visibility = 'visible'; 
+
+}
+
+/**
+ * Hides all plots and select elements
+ * 
+ * */
+function hideAllPlots( ) {
+
+    document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
+    document.getElementById( 'plotSoSContainer' ).style.visibility = 'hidden';
+    document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+    document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+    document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
+
+
 }
