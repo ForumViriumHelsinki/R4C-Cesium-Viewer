@@ -255,6 +255,12 @@ async function loadWFSBuildings( postcode ) {
 		console.log(err);
 	}
 
+	if ( document.getElementById( "showTreesToggle" ).checked ) {
+	
+		loadTrees( postcode );
+
+	}
+
 }
 
 async function loadWFSBuildingsWithoutCache( url, inhelsinki, postcode ) {

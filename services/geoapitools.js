@@ -23,7 +23,7 @@ function resetSwitches( ) {
     document.getElementById("showNatureHeatToggle").disabled = true;
     document.getElementById( "hideNonSoteToggle" ).disabled = true;
     document.getElementById( "hideLowToggle" ).disabled = true;
-    document.getElementById( "showTreesToggle" ).disabled = false;
+    document.getElementById( "showTreesToggle" ).checked = false;
     setPrintVisible( );
     hideAllPlots( );    
     document.getElementById( 'categoricalSelect' ).value = 'facade';
