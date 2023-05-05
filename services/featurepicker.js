@@ -90,6 +90,13 @@ function loadPostalCode( postcode ) {
 
     document.getElementById( "hideNonSoteToggle" ).disabled = false;
     document.getElementById( "hideLowToggle" ).disabled = false;
+    document.getElementById( "showTreesToggle" ).disabled = false;
+
+    if ( document.getElementById( "printToggle" ).checked ) {
+
+        setPrintVisible( );
+
+    }
 
     console.log("Postal code area found!");
 

@@ -35,21 +35,62 @@ function sliderEvents( event ) {
         showNatureHeatEvent();
 
     }
+
+    if ( event.target.value == 'showTrees' ) {
+        
+        showTrees();
+
+    }
             
+}
+function showTrees( ) {
+
+    const showTrees = document.getElementById( "showTreesToggle" ).checked;
+
+    if ( showTrees ) {
+
+        if ( postalcode ) {
+
+            loadTrees( postalcode );
+
+        }
+        
+        viewer.dataSources._dataSources.forEach( function( dataSource ) {
+
+            dataSource.show = true;
+
+        });
+
+    } else {
+
+        viewer.dataSources._dataSources.forEach( function( dataSource ) {
+
+            if ( dataSource.name == "Trees" ) {
+
+                dataSource.show = false;	
+                
+            }
+        });
+
+    }
+
 }
 
 function printEvent( ) {
 
     console.log( "Set the print to: " + String( document.getElementById( "printToggle" ).checked ) );
-    print = document.getElementById( "printToggle" ).checked;
+    const print = document.getElementById( "printToggle" ).checked;
 
     if ( !print ) {
 
         document.getElementById( 'printContainer' ).style.visibility = 'hidden';
+        document.getElementById( 'searchcontainer' ).style.visibility = 'hidden';
+        document.getElementById( 'georefContainer' ).style.visibility = 'hidden';
+        document.getElementById( 'searchbutton' ).style.visibility = 'hidden';
 
     } else {
 
-        document.getElementById( 'printContainer' ).style.visibility = 'visible';
+        setPrintVisible( );
 
     }
 
@@ -58,13 +99,15 @@ function printEvent( ) {
 function showPlotEvent( ) {
 
     console.log("Set the showplot to: " + String(document.getElementById("showPlotToggle").checked));
-    showPlot = document.getElementById( "showPlotToggle" ).checked;
+    const showPlot = document.getElementById( "showPlotToggle" ).checked;
     
     if ( !showPlot ) {
 
         document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
         document.getElementById( 'plotSoSContainer' ).style.visibility = 'hidden';
         document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
+        document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+        document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
 
     }
     
@@ -75,6 +118,8 @@ function showPlotEvent( ) {
             document.getElementById( 'plotContainer' ).style.visibility = 'visible';
             document.getElementById( 'plotSoSContainer' ).style.visibility = 'visible';
             document.getElementById( 'plotMaterialContainer' ).style.visibility = 'visible';
+            document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
+            document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
 
         }
 
@@ -84,7 +129,7 @@ function showPlotEvent( ) {
 
 function showNatureEvent( ) {
 
-    showNature = document.getElementById( "showNatureToggle" ).checked;
+    const showNature = document.getElementById( "showNatureToggle" ).checked;
 
     if ( showNature ) {
 
@@ -122,8 +167,8 @@ function showNatureEvent( ) {
 
 function hideNonSoteBuildings( ) {
 
-    let currentNum = document.getElementById("numericalSelect").value
-    let currentCat= document.getElementById("categoricalSelect").value
+    const currentNum = document.getElementById("numericalSelect").value
+    const currentCat= document.getElementById("categoricalSelect").value
 
     viewer.dataSources._dataSources.forEach( function( dataSource ) {
             
@@ -173,8 +218,8 @@ function hideNonSoteBuildings( ) {
  */
 function hideLowBuildings( ) {
 
-    let currentNum = document.getElementById("numericalSelect").value
-    let currentCat= document.getElementById("categoricalSelect").value
+    const currentNum = document.getElementById("numericalSelect").value
+    const currentCat= document.getElementById("categoricalSelect").value
 
     viewer.dataSources._dataSources.forEach( function( dataSource ) {
             
@@ -238,7 +283,7 @@ function addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, n
             numbericalValue = new Date().getFullYear() - Number( numbericalValue.slice( 0, 4 ));
         }
 
-		let element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
+		const element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
         urbanHeatDataAndMaterial.push( element );
 
     }
@@ -251,8 +296,8 @@ function showAllBuildings( ) {
     let urbanHeatData = [ ];
     let urbanHeatDataAndMaterial = [ ];
 
-    let currentNum = document.getElementById("numericalSelect").value
-    let currentCat= document.getElementById("categoricalSelect").value
+    const currentNum = document.getElementById("numericalSelect").value
+    const currentCat= document.getElementById("categoricalSelect").value
 
     viewer.dataSources._dataSources.forEach( function( dataSource ) {
             
@@ -282,7 +327,7 @@ function showAllBuildings( ) {
 
 function hideNonSoteEvent( ) {
 
-    hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
+    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
 
     if ( hideNonSote ) {
         
@@ -305,7 +350,7 @@ function hideNonSoteEvent( ) {
  */
 function hideLowEvent( ) {
 
-    hideLow = document.getElementById( "hideLowToggle" ).checked;
+    const hideLow = document.getElementById( "hideLowToggle" ).checked;
 
     if ( hideLow ) {
         
@@ -323,7 +368,7 @@ function hideLowEvent( ) {
 
 function showNatureHeatEvent( ) {
 
-    showNatureHeat = document.getElementById( "showNatureHeatToggle" ).checked;
+    const showNatureHeat = document.getElementById( "showNatureHeatToggle" ).checked;
 
     if ( showNatureHeat ) {
         

@@ -14,6 +14,7 @@
   <script type="text/javascript" src="services/featurepicker.js"></script>
   <script type="text/javascript" src="services/floods.js"></script>
   <script type="text/javascript" src="services/geocoding.js"></script>
+  <script type="text/javascript" src="services/trees.js"></script>
   <script src="lib/localforage/dist/localforage.js"></script>
   <script src="lib/plotly-2.12.1.min.js"></script>
   <link href="lib/Cesium/Widgets/widgets.css" rel="stylesheet">
@@ -67,10 +68,17 @@
 </label>
 <label for="hideLow" class="label">Show only tall buildings</label>
 
+  <!--  showTrees-->
+  <label class="switch" id = "showTreesSwitch" >
+    <input type="checkbox" id="showTreesToggle" value="showTrees" >
+    <span class="slider round"></span>
+  </label>
+  <label for="showTrees" class="label">Show trees</label>
+
 </div>
 
 	<div id="printContainer">
-  <i>Please click on a postcode area to load building and nature polygons from the WFS server...</i>
+  <i>Please click on a postcode area or enter location to load building and nature polygons from the WFS server...</i>
   	</div>
 
 <div id="georefContainer">
@@ -180,6 +188,7 @@
   document.getElementById("showNatureHeatToggle").disabled = true;
   document.getElementById( "hideNonSoteToggle" ).disabled = true;
   document.getElementById( "hideLowToggle" ).disabled = true;
+  document.getElementById( "showTreesToggle" ).disabled = true;
   addGeocodingEventListeners( viewer );
 
   const hriCredit = new Cesium.Credit('<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>');

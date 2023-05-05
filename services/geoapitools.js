@@ -26,6 +26,8 @@ function resetSwitches( ) {
     document.getElementById("showNatureHeatToggle").disabled = true;
     document.getElementById( "hideNonSoteToggle" ).disabled = true;
     document.getElementById( "hideLowToggle" ).disabled = true;
+    document.getElementById( "showTreesToggle" ).disabled = false;
+    setPrintVisible( );
 
     document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
@@ -129,4 +131,11 @@ function findEntityBounds( element ) {
     }
 
     return [ latMIN, latMAX, lonMIN - 0.0002, lonMAX - 0.0002 ];
+}
+
+function setPrintVisible( ) {
+    document.getElementById( 'printContainer' ).style.visibility = 'visible';
+    document.getElementById( 'searchcontainer' ).style.visibility = 'visible';
+    document.getElementById( 'georefContainer' ).style.visibility = 'visible';
+    document.getElementById( 'searchbutton' ).style.visibility = 'visible';
 }

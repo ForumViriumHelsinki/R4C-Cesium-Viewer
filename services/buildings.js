@@ -254,6 +254,7 @@ async function loadWFSBuildings( postcode ) {
 		// This code runs if there were any errors.
 		console.log(err);
 	}
+
 }
 
 async function loadWFSBuildingsWithoutCache( url, inhelsinki, postcode ) {
