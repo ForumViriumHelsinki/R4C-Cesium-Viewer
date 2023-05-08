@@ -124,9 +124,9 @@ function loadPostalCode( postcode ) {
 function handleBuildingFeature( buildingHeatExposure, address, postinumero ) {
 
     document.getElementById( "plotSoSContainer" ).style.visibility = 'hidden';
-    document.getElementById( "scatterplot" ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+    document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
 
     console.log("Building found!");
 
