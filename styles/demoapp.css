@@ -17,7 +17,7 @@
 
 #georefContainer
 {
-	bottom: 280px; 
+	bottom: 270px; 
 	right: 2%; 
 	width: 450px; 
 	height: 40px; 
@@ -36,7 +36,7 @@
 #plotContainer
 {
 	position: fixed;
-	top: 100px;
+	top: 90px;
 	left: 10px;
 	width: 400px;
 	height: 300px; 
@@ -51,7 +51,7 @@
 #plotSoSContainer
 {
 	position: fixed;
-	bottom: 380px;
+	top: 90px;
 	right: 10px;
 	width: 500px;
 	height: 300px; 
@@ -69,7 +69,7 @@
 	bottom: 40px;
 	left: 10px;
 	width: 600px;
-	height: 300px; 
+	height: 290px; 
 	visibility: hidden;
 	
 	font-size: smaller;
@@ -99,10 +99,10 @@
 
 #printContainer
 {
-	bottom: 75px; 
+	bottom: 65px; 
 	right: 2%; 
 	width: 450px; 
-	height: 180px; 
+	height: 170px; 
 	position: fixed; 
 	border: 1px solid black; 
 	box-shadow: 3px 5px 5px black; 
