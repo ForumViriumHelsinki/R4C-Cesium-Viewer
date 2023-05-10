@@ -17,10 +17,10 @@
 
 #georefContainer
 {
-	bottom: 270px; 
+	top: 385px;
 	right: 2%; 
 	width: 450px; 
-	height: 40px; 
+	height: 35px; 
 	position: fixed; 
 	border: 1px solid black; 
 	box-shadow: 3px 5px 5px black; 
