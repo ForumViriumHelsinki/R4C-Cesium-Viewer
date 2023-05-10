@@ -17,10 +17,10 @@
 
 #georefContainer
 {
-	top: 385px;
+	top: 400px;
 	right: 2%; 
 	width: 450px; 
-	height: 35px; 
+	height: 30px; 
 	position: fixed; 
 	border: 1px solid black; 
 	box-shadow: 3px 5px 5px black; 
@@ -90,7 +90,7 @@
 #categoricalSelect
 {
 	position: fixed;
-	bottom: 340px;
+	bottom: 330px;
 	left: 492px;
 	visibility: hidden;
 	
