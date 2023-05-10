@@ -199,17 +199,22 @@ function showNatureEvent( ) {
  */
 function hideNonSoteBuildings() {
 
-    const currentNum = document.getElementById( "numericalSelect" ).value;
-    const currentCat = document.getElementById( "categoricalSelect" ).value;
     const buildingsDataSource = getBuildingsDataSource();
-  
     const soteBuildings = filterSoteBuildings( buildingsDataSource );
     const urbanHeatData = mapUrbanHeatData( soteBuildings );
-    const urbanHeatDataAndMaterial = mapUrbanHeatDataAndMaterial( soteBuildings, currentNum, currentCat );
+    const urbanHeatDataAndMaterial = [];
+    const currentCat = document.getElementById( "categoricalSelect" ).value;
+    const currentNum =  document.getElementById( "numericalSelect" ).value;
+    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
+    const hideLowToggle = document.getElementById( "hideLowToggle" ).checked;
+
+    // Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
+    processEntitiesForScatterPlot( buildingsDataSource.entities.values, urbanHeatDataAndMaterial, currentCat, currentNum, hideNonSote, hideLowToggle );
     
     updateBuildingsVisibility( buildingsDataSource, soteBuildings );
-    // Create/update the urban heat histogram and scatter plot
-    updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial );
+
+    createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
+    createUrbanHeatHistogram( urbanHeatData );    
 
   }
   
@@ -238,6 +243,22 @@ function hideNonSoteBuildings() {
     });
 
   }
+
+  /**
+   * Filter out buildings with floor count 6 or less from the given data source
+   * 
+   * @param { Object } dataSource The data source containing buildings
+   * @returns { Object[ ] } An array of SOTE buildings
+   */
+    function filterTallBuildings( dataSource ) {
+
+        return dataSource.entities.values.filter( entity => {
+            if ( entity._properties.i_kerrlkm ) {
+                return Number( entity._properties.i_kerrlkm._value ) > 6;
+            }
+        });
+    
+      }
   
   /**
    * Get an array of urban heat data from the given array of entities
@@ -301,53 +322,30 @@ function hideLowBuildings( ) {
     // Get the current numerical and categorical select values
     const currentNum = document.getElementById("numericalSelect").value
     const currentCat= document.getElementById("categoricalSelect").value
+    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
+    const hideLowToggle = document.getElementById( "hideLowToggle" ).checked;
+    
 
     // Find the data source for buildings
-    const buildingsDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "Buildings" );
+    const buildingsDataSource = getBuildingsDataSource();
+    const tallBuildings = filterTallBuildings( buildingsDataSource );
+    const urbanHeatData = mapUrbanHeatData( tallBuildings );
 
     // If the data source isn't found, exit the function
     if ( !buildingsDataSource ) {
         return;
     }
 
-    // Initialize arrays to hold data for histogram and scatter plot
-    let urbanHeatData = [ ];
+    // Initialize array to hold data for scatter plot
     let urbanHeatDataAndMaterial = [ ];
 
-    // Loop through all entities in the "Buildings" data source
-    for ( let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++ ) {
-
-        let entity = buildingsDataSource._entityCollection._entities._array[ i ];
-
-        // If the entity does not have a floor count property, hide it
-        if ( !entity._properties.i_kerrlkm ) {
-	
-            entity.show = false;
-        
-        } else {
+    // Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
+    processEntitiesForScatterPlot( buildingsDataSource.entities.values, urbanHeatDataAndMaterial, currentCat, currentNum, hideNonSote, hideLowToggle );
     
-            const floorCount = Number( entity._properties.i_kerrlkm._value );
+    updateBuildingsVisibility( buildingsDataSource, tallBuildings );
 
-            // If the floor count is less than 7, hide the entity
-            if ( floorCount < 7 ){
-        
-                entity.show = false;
-            
-            } else {
-          
-                // Add the entity's heat exposure value to the array for the histogram
-                urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
-                // Add the entity's data to the array for the scatter plot
-                addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), currentCat, currentNum );
-
-            }
-    
-        }
-
-    }	
-
-    // Create/update the urban heat histogram and scatter plot
-    updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial );
+    createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
+    createUrbanHeatHistogram( urbanHeatData );    
       
 }
 
@@ -571,6 +569,10 @@ function hideNatureAreaHeat( ) {
  * @param {Array} urbanHeatDataAndMaterial - the array of data for the scatter plot
  */
 function updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial ) {
+
+    console.log("urbanHeatData", urbanHeatData)
+    console.log("urbanHeatDataAndMaterial", urbanHeatData)
+
 
     createUrbanHeatHistogram( urbanHeatData );
     createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
