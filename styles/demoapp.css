@@ -36,7 +36,7 @@
 #plotContainer
 {
 	position: fixed;
-	top: 120px;
+	top: 100px;
 	left: 10px;
 	width: 400px;
 	height: 300px; 
@@ -51,7 +51,7 @@
 #plotSoSContainer
 {
 	position: fixed;
-	bottom: 360px;
+	bottom: 380px;
 	right: 10px;
 	width: 500px;
 	height: 300px; 

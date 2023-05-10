@@ -4,6 +4,7 @@ function reset( ) {
     removeDataSourcesAndEntities();
     resetViewer( );
     resetSwitches( );
+    postalcode = null;
     // Load post code zones & energy availability tags
 	loadPostCodeZones( 0.2 );
 	
@@ -26,8 +27,6 @@ function resetSwitches( ) {
     document.getElementById( "showTreesToggle" ).checked = false;
     setPrintVisible( );
     hideAllPlots( );    
-    document.getElementById( 'categoricalSelect' ).value = 'facade';
-    document.getElementById( 'numericalSelect' ).value = 'height';
 
   	showPlot = true;
 	showNature = false;
@@ -185,6 +184,8 @@ function hideAllPlots( ) {
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
+    document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
+    document.getElementById( 'numericalSelect' ).value = 'measured_height';
 
 
 }
