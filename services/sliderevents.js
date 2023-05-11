@@ -157,7 +157,7 @@ function showNatureEvent( ) {
     if ( showNature ) {
 
         // If the toggle button is checked, enable the toggle button for showing the nature area heat map.
-        document.getElementById("showNatureHeatToggle").disabled = false;
+        //document.getElementById("showNatureHeatToggle").disabled = false;
 
         // If there is a postal code available, load the nature areas for that area.
         if ( postalcode ) {
@@ -176,8 +176,8 @@ function showNatureEvent( ) {
     } else {
 
         // If the toggle button is not checked, disable the toggle button for showing the nature area heat map and uncheck it.
-        document.getElementById("showNatureHeatToggle").checked = false;
-        document.getElementById("showNatureHeatToggle").disabled = true;
+       // document.getElementById("showNatureHeatToggle").checked = false;
+       // document.getElementById("showNatureHeatToggle").disabled = true;
 
         // Find the data source for trees
         const natureAreasDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "NatureAreas" );
@@ -487,7 +487,7 @@ function hideLowEvent( ) {
 function showNatureHeatEvent( ) {
 
     // get the checked value of the toggle switch 
-    const showNatureHeat = document.getElementById( "showNatureHeatToggle" ).checked;
+    const showNatureHeat = false;
 
     if ( showNatureHeat ) {
         
@@ -569,10 +569,6 @@ function hideNatureAreaHeat( ) {
  * @param {Array} urbanHeatDataAndMaterial - the array of data for the scatter plot
  */
 function updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial ) {
-
-    console.log("urbanHeatData", urbanHeatData)
-    console.log("urbanHeatDataAndMaterial", urbanHeatData)
-
 
     createUrbanHeatHistogram( urbanHeatData );
     createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );

@@ -47,13 +47,6 @@
 </label>
 <label for="showNatureToggle" class="label">Show nature areas</label>
 
-<!-- showNatureHeatSwitch-->
-<label class="switch">
-  <input type="checkbox" id="showNatureHeatToggle" value="showNatureHeat" >
-  <span class="slider round"></span>
-</label>
-<label for="showNatureHeat" class="label">Show Heat Exposure on Nature areas</label>
-
   <!-- hideNonSoteSwitch-->
 <label class="switch" id = "hideLowSwitch">
 	<input type="checkbox" id="hideNonSoteToggle" value="hideNonSote" >
@@ -185,7 +178,7 @@
   addEventListener('change', ( event ) => { selectEvents( event ) } );
 
   //disable switch for showing heat exposure on nature areas
-  document.getElementById("showNatureHeatToggle").disabled = true;
+  // document.getElementById("showNatureHeatToggle").disabled = true;
   document.getElementById( "hideNonSoteToggle" ).disabled = true;
   document.getElementById( "hideLowToggle" ).disabled = true;
   addGeocodingEventListeners( viewer );

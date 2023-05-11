@@ -1,6 +1,6 @@
 async function loadNatureAreas( postcode ) {
 
-	let url = "https://geo.fvh.fi/r4c/collections/uusimaa_nature_area/items?f=json&limit=100000&postinumeroalue=" + postcode ;
+	let url = "https://geo.fvh.fi/r4c/collections/naturearea/items?f=json&limit=10000&postinumero=" + postcode ;
 
 	try {
 		const value = await localforage.getItem( url );
@@ -27,10 +27,12 @@ async function loadNatureAreas( postcode ) {
 
 
 function addNatureDataSource( data ) {
+
+	console.log("data", data)
 	
 	viewer.dataSources.add( Cesium.GeoJsonDataSource.load( data, {
 		stroke: Cesium.Color.BLACK,
-		fill: Cesium.Color.DARKGREEN,
+		fill: Cesium.Color.LIGHTGREEN,
 		strokeWidth: 3,
 		clampToGround: true
 	}) )
@@ -42,9 +44,9 @@ function addNatureDataSource( data ) {
 		for ( let i = 0; i < entities.length; i++ ) {
 			
 			let entity = entities[ i ];
-			const category = entity.properties._category._value;
+			const category = entity.properties._koodi._value;
 
-			showNatureHeat = document.getElementById( "showNatureHeatToggle" ).checked;
+			showNatureHeat = false;
 
 			if ( showNatureHeat ) {
 				
@@ -57,7 +59,7 @@ function addNatureDataSource( data ) {
 		
 				if ( category ) {
 					//colors of nature area enity are set based on it's category
-					setNatureAreaPolygonMaterialColor( entity, category )
+				//	setNatureAreaPolygonMaterialColor( entity, category )
 				}
 		
 			}
@@ -87,6 +89,25 @@ function loadNatureAreasWithoutCache( url ) {
 }
 
 function setNatureAreaPolygonMaterialColor( entity, category ) {
+	 						
+	switch ( category ){
+		case "212":
+			entity.polygon.material = Cesium.Color.LIGHTGREEN.withAlpha( 100 );
+			break;
+		case "211":
+			entity.polygon.material = Cesium.Color.GREENYELLOW.withAlpha( 100 );
+			break;
+		case "510":
+			entity.polygon.material = Cesium.Color.DEEPSKYBLUE.withAlpha( 100 );
+			break;
+		case "520":
+			entity.polygon.material = Cesium.Color.DODGERBLUE.withAlpha( 100 );
+			break;
+		}	
+
+}
+
+function setNatureAreaPolygonMaterialColorOld( entity, category ) {
 
 	let a = entity.properties.avgheatexposuretoarea._value;
 
