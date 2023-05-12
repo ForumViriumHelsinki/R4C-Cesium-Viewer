@@ -59,7 +59,7 @@ function addNatureDataSource( data ) {
 		
 				if ( category ) {
 					//colors of nature area enity are set based on it's category
-				//	setNatureAreaPolygonMaterialColor( entity, category )
+					setNatureAreaPolygonMaterialColor( entity, category )
 				}
 		
 			}
@@ -92,16 +92,16 @@ function setNatureAreaPolygonMaterialColor( entity, category ) {
 	 						
 	switch ( category ){
 		case "212":
-			entity.polygon.material = Cesium.Color.LIGHTGREEN.withAlpha( 100 );
+			entity.polygon.material = Cesium.Color.LIGHTGREEN.withAlpha( 0.5 );
 			break;
 		case "211":
-			entity.polygon.material = Cesium.Color.GREENYELLOW.withAlpha( 100 );
+			entity.polygon.material = Cesium.Color.GREENYELLOW.withAlpha( 0.5 );
 			break;
 		case "510":
-			entity.polygon.material = Cesium.Color.DEEPSKYBLUE.withAlpha( 100 );
+			entity.polygon.material = Cesium.Color.DEEPSKYBLUE.withAlpha( 0.5 );
 			break;
 		case "520":
-			entity.polygon.material = Cesium.Color.DODGERBLUE.withAlpha( 100 );
+			entity.polygon.material = Cesium.Color.DODGERBLUE.withAlpha( 0.5 );
 			break;
 		}	
 

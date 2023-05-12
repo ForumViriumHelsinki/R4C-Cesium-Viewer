@@ -60,13 +60,13 @@ function resetViewer( ) {
 // Loads postal code zone polygons, opacity given as float from 0 - 1
 function loadPostCodeZones( opacity ) {
     // Load postal code zones
-    const HKIPostCodesURL = 'assets/data/Helsinki_postinumerot.geojson';
+    const HKIPostCodesURL = 'assets/data/hki_po_clipped.json';
 	console.log( "Loading: " + HKIPostCodesURL );
 	
 	let promisePostCodes = Cesium.GeoJsonDataSource.load( HKIPostCodesURL, {
   		stroke: Cesium.Color.BLACK,
   		fill: new Cesium.Color( 0.3, 0.3, 0.3, opacity ),
-  		strokeWidth: 5,
+  		strokeWidth: 8,
 		clampToGround: false
 	})
 	.then( function ( dataSource ) {
@@ -170,6 +170,23 @@ function showAllPlots( ) {
     document.getElementById( 'plotMaterialContainer' ).style.visibility = 'visible';
     document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
     document.getElementById( 'categoricalSelect' ).style.visibility = 'visible'; 
+
+}
+
+/**
+ * Hides all plots and select elements
+ * 
+ * */
+function hideAllPlots( ) {
+
+    document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
+    document.getElementById( 'plotSoSContainer' ).style.visibility = 'hidden';
+    document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+    document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+    document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
+    document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
+    document.getElementById( 'numericalSelect' ).value = 'measured_height';
+
 
 }
 

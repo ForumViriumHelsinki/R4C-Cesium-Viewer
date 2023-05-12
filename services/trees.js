@@ -103,13 +103,13 @@ function setTreePolygonMaterialColor( entity, description ) {
             entity.polygon.extrudedHeight = 22.5;
 			break;
 		case "puusto, 15 m - 20 m":
-			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.75 );
+			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.6 );
             entity.polygon.extrudedHeight = 17.5;
 		case "puusto, 10 m - 15 m":
-			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.8 );
+			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.55 );
             entity.polygon.extrudedHeight = 12.5;
 		case "puusto, 2 m - 10 m":
-			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.85 );
+			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.5 );
             entity.polygon.extrudedHeight = 6;
 		}	
 

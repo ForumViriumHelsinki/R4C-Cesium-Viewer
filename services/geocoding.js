@@ -160,22 +160,21 @@ function moveCameraAndReset( longitude, latitude, postcode ) {
   */
 function findNameOfZone( postalcode ) {
 
-    const response = fetch( 'assets/data/Helsinki_postinumerot.geojson' )
-    .then( function( response ) {
-      return response.json();
-    })
-    .then( function( data ) {
-
-        for ( let i = 0; i < data.features.length; i++ ) {
-
-            if ( data.features[ i ].properties.posno == postalcode ) {
-
-                nameOfZone = data.features[ i ].properties.nimi;
-                break;
-
-            }
+    // Find the data source for postcodes
+    const postCodesDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "PostCodes" );
+    
+    // Iterate over all entities in the postcodes data source.
+    for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
+    
+        let entity = postCodesDataSource._entityCollection._entities._array[ i ];
+    
+        // Check if the entity posno property matches the postalcode.
+        if ( entity._properties._posno._value  == postalcode ) {
+    
+            nameOfZone = entity._properties._nimi._value;
+            break;
         }
-    })
+    }
 }
 
 
