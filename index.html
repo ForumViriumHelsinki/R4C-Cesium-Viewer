@@ -7,7 +7,7 @@
   <script src="lib/Cesium/Cesium.js"></script>
   <script type="text/javascript" src="services/geoapitools.js"></script>
   <script type="text/javascript" src="services/buildings.js"></script>
-  <script type="text/javascript" src="services/natureareas.js"></script>
+  <script type="text/javascript" src="services/vegetation.js"></script>
   <script type="text/javascript" src="services/sliderevents.js"></script>
   <script type="text/javascript" src="services/selectevents.js"></script>
   <script type="text/javascript" src="services/urbanheat.js"></script>
@@ -40,12 +40,12 @@
 </label>
 <label for="printToggle" class="label">Object details</label>
 
-  <!-- showNatureSwitch-->
+  <!-- showVegetationSwitch-->
 <label class="switch">
-	<input type="checkbox" id="showNatureToggle" value="showNature" >
+	<input type="checkbox" id="showVegetationToggle" value="showVegetation" >
 	<span class="slider round"></span>
 </label>
-<label for="showNatureToggle" class="label">Show nature areas</label>
+<label for="showVegetationToggle" class="label">Show vegetation</label>
 
   <!-- hideNonSoteSwitch-->
 <label class="switch" id = "hideLowSwitch">
@@ -130,7 +130,7 @@
   
   	// UI related global variables...
   	var showPlot = true;
-	  var showNature = false;
+	  var showVegetation = false;
   	var print = true; //show object details..
 	  var postalcode = null;
     var nameOfZone = null;
@@ -178,7 +178,7 @@
   addEventListener('change', ( event ) => { selectEvents( event ) } );
 
   //disable switch for showing heat exposure on nature areas
-  // document.getElementById("showNatureHeatToggle").disabled = true;
+  // document.getElementById("showVegetationHeatToggle").disabled = true;
   document.getElementById( "hideNonSoteToggle" ).disabled = true;
   document.getElementById( "hideLowToggle" ).disabled = true;
   addGeocodingEventListeners( viewer );

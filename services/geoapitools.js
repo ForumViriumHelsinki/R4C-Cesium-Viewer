@@ -16,12 +16,12 @@ function reset( ) {
 function resetSwitches( ) {
 
 	document.getElementById( "showPlotToggle" ).checked = true;
-	document.getElementById( "showNatureToggle" ).checked = false;
+	document.getElementById( "showVegetationToggle" ).checked = false;
 	document.getElementById( "printToggle" ).checked = true;
- //   document.getElementById( "showNatureHeatToggle" ).checked = false;	
+ //   document.getElementById( "showVegetationHeatToggle" ).checked = false;	
     document.getElementById( "hideNonSoteToggle" ).checked = false;	
     document.getElementById( "hideLowToggle" ).checked = false;	
- //   document.getElementById("showNatureHeatToggle").disabled = true;
+ //   document.getElementById("showVegetationHeatToggle").disabled = true;
     document.getElementById( "hideNonSoteToggle" ).disabled = true;
     document.getElementById( "hideLowToggle" ).disabled = true;
     document.getElementById( "showTreesToggle" ).checked = false;
@@ -29,8 +29,8 @@ function resetSwitches( ) {
     hideAllPlots( );    
 
   	showPlot = true;
-	showNature = false;
-    showNatureHeat = false;
+    showVegetation = false;
+    showVegetationHeat = false;
 	hideNonSote = false;
     hideLow = false;
 	print = true;

@@ -100,7 +100,7 @@ function loadPostalCode( postcode ) {
 
     removeDataSourcesAndEntities();
     
-    if ( showNature ) {
+    if ( showVegetation ) {
         
         loadNatureAreas( postcode );
     

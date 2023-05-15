@@ -19,10 +19,10 @@ function sliderEvents( event ) {
 
     }	
 
-    // If the slider value is "showNature", call the showNatureEvent function.
-    if ( event.target.value == 'showNature' ) {
+    // If the slider value is "showVegetation", call the showVegetationEvent function.
+    if ( event.target.value == 'showVegetation' ) {
 
-        showNatureEvent();
+        showVegetationEvent();
 
     }
 
@@ -39,13 +39,6 @@ function sliderEvents( event ) {
         hideLowEvent();
 
     }	
-
-    // If the slider value is "showNatureHeat", call the showNatureHeatEvent function.
-    if ( event.target.value == 'showNatureHeat' ) {
-        
-        showNatureHeatEvent();
-
-    }
 
     // If the slider value is "showTrees", call the showTrees function.
     if ( event.target.value == 'showTrees' ) {
@@ -75,27 +68,28 @@ function showTrees( ) {
 
         }
         
-        // Set the show property of all data sources to true to show the entities
-        viewer.dataSources._dataSources.forEach( function( dataSource ) {
-
-            dataSource.show = true;
-
-        });
+        showAllDataSources( );
 
     } else { // If showTrees toggle is off
-
-        // Find the data source for trees
-        const treesDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "Trees" );
-        // If the data source isn't found, exit the function
-        if ( !treesDataSource ) {
-            return;
         
-        } else {
-            // Set the show property of the Trees data source to false to hide the tree entities
-            treesDataSource.show  = false;
-        }
+        hideDataSourceByName( "Trees" );
+
     }
 
+}
+
+/**
+ * This function to shows all datasources to user.
+ *
+ */
+function showAllDataSources( ) {
+
+    // Set the show property of all data sources to true to show the entities
+    viewer.dataSources._dataSources.forEach( function( dataSource ) {
+
+        dataSource.show = true;
+
+    });  
 }
 
 /**
@@ -149,46 +143,29 @@ function showPlotEvent( ) {
  * This function handles the toggle event for showing or hiding the nature areas layer on the map.
  *
  */
-function showNatureEvent( ) {
+function showVegetationEvent( ) {
 
     // Get the current state of the toggle button for showing nature areas.
-    const showNature = document.getElementById( "showNatureToggle" ).checked;
+    const showVegetation = document.getElementById( "showVegetationToggle" ).checked;
 
-    if ( showNature ) {
+    if ( showVegetation ) {
 
         // If the toggle button is checked, enable the toggle button for showing the nature area heat map.
-        //document.getElementById("showNatureHeatToggle").disabled = false;
+        //document.getElementById("showVegetationHeatToggle").disabled = false;
 
         // If there is a postal code available, load the nature areas for that area.
         if ( postalcode ) {
 
-            loadNatureAreas( postalcode );
+            loadVegetation( postalcode );
 
         }
 
         // Show all data sources on the map.  
-        viewer.dataSources._dataSources.forEach( function( dataSource ) {
-
-            dataSource.show = true;
-
-        });
+        showAllDataSources( );
 
     } else {
 
-        // If the toggle button is not checked, disable the toggle button for showing the nature area heat map and uncheck it.
-       // document.getElementById("showNatureHeatToggle").checked = false;
-       // document.getElementById("showNatureHeatToggle").disabled = true;
-
-        // Find the data source for trees
-        const natureAreasDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "NatureAreas" );
-        // If the data source isn't found, exit the function
-        if ( !natureAreasDataSource ) {
-            return;
-        
-        } else {
-            // Set the show property of the Nature Aras data source to false to hide the nature areas entities
-            natureAreasDataSource.show  = false;
-        }
+        hideDataSourceByName( "Vegetation" );
 
     }
 
@@ -199,7 +176,7 @@ function showNatureEvent( ) {
  */
 function hideNonSoteBuildings() {
 
-    const buildingsDataSource = getBuildingsDataSource();
+    const buildingsDataSource = getDataSourceByName( "Buildings" );
     const soteBuildings = filterSoteBuildings( buildingsDataSource );
     const urbanHeatData = mapUrbanHeatData( soteBuildings );
     const urbanHeatDataAndMaterial = [];
@@ -218,16 +195,31 @@ function hideNonSoteBuildings() {
 
   }
   
-  /**
-   * Get the "Buildings" data source from the Cesium viewer
-   * 
-   * @returns { Object } The "Buildings" data source
-   */
-  function getBuildingsDataSource() {
+/**
+ * Get a data source from the Cesium viewer
+ * 
+ * @param { String } name name of the datasource
+ * @returns { Object } The found data source
+*/
+function getDataSourceByName( name ) {
+    
+    return viewer.dataSources._dataSources.find( ds => ds.name === name );
 
-    return viewer.dataSources._dataSources.find( ds => ds.name === "Buildings" );
+}
 
-  }
+/**
+ * Get a data source from the Cesium viewer
+ * 
+ * @param { String } name name of the datasource
+*/
+function hideDataSourceByName( name ) {
+
+    viewer.dataSources._dataSources.forEach( function( dataSource ) {
+        if ( dataSource.name == name ) {
+            dataSource.show = false;	
+        }
+    });
+}
   
   /**
    * Filter out non-SOTE buildings from the given data source
@@ -235,14 +227,14 @@ function hideNonSoteBuildings() {
    * @param { Object } dataSource The data source containing buildings
    * @returns { Object[ ] } An array of SOTE buildings
    */
-  function filterSoteBuildings( dataSource ) {
+function filterSoteBuildings( dataSource ) {
 
     return dataSource.entities.values.filter( entity => {
       const kayttotark = Number( entity._properties.c_kayttark._value );
       return kayttotark === 511 || kayttotark === 131 || ( kayttotark > 212 && kayttotark < 240 );
     });
 
-  }
+}
 
   /**
    * Filter out buildings with floor count 6 or less from the given data source
@@ -250,26 +242,26 @@ function hideNonSoteBuildings() {
    * @param { Object } dataSource The data source containing buildings
    * @returns { Object[ ] } An array of SOTE buildings
    */
-    function filterTallBuildings( dataSource ) {
+function filterTallBuildings( dataSource ) {
 
-        return dataSource.entities.values.filter( entity => {
-            if ( entity._properties.i_kerrlkm ) {
-                return Number( entity._properties.i_kerrlkm._value ) > 6;
-            }
-        });
+    return dataSource.entities.values.filter( entity => {
+        if ( entity._properties.i_kerrlkm ) {
+            return Number( entity._properties.i_kerrlkm._value ) > 6;
+        }
+    });
     
-      }
+}
   
-  /**
-   * Get an array of urban heat data from the given array of entities
-   * @param { Object[ ] } entities An array of entities with the "avgheatexposuretobuilding" property
-   * @returns { Object[ ] } An array of urban heat data
-   */
-  function mapUrbanHeatData( entities ) {
-
+/**
+ * Get an array of urban heat data from the given array of entities
+ * @param { Object[ ] } entities An array of entities with the "avgheatexposuretobuilding" property
+ * @returns { Object[ ] } An array of urban heat data
+ */
+function mapUrbanHeatData( entities ) {
+    
     return entities.map( entity => entity._properties.avgheatexposuretobuilding._value );
 
-  }
+}
   
   /**
    * Get an array of urban heat data and material from the given array of entities
@@ -277,7 +269,7 @@ function hideNonSoteBuildings() {
    * @param { Object[ ] } entities An array of entities with the "avgheatexposuretobuilding" and "c_kayttark" properties
    * @returns {Object[ ]} An array of objects containing "urban heat" and "material" properties
    */
-  function mapUrbanHeatDataAndMaterial( entities ) {
+function mapUrbanHeatDataAndMaterial( entities ) {
 
     return entities.map( entity => {
 
@@ -290,16 +282,16 @@ function hideNonSoteBuildings() {
       return { "material": material, "urban heat": urbanHeat };
     
     });
-  }
+}
   
-  /**
-   * Show/hide entites based on whether they are in the given array of entities
-   * 
-   * @param { Object } dataSource The data source containing the entites to show/hide
-   * @param { Object[ ] } entitiesToShow An array of entities to show
-   */
-  function updateBuildingsVisibility( dataSource, entitiesToShow ) {
-
+/**
+ * Show/hide entites based on whether they are in the given array of entities
+ * 
+ * @param { Object } dataSource The data source containing the entites to show/hide
+ * @param { Object[ ] } entitiesToShow An array of entities to show
+ */
+function updateBuildingsVisibility( dataSource, entitiesToShow ) {
+    
     dataSource.entities.values.forEach( entity => {
       if ( entitiesToShow.includes( entity ) ) {
 
@@ -311,7 +303,7 @@ function hideNonSoteBuildings() {
 
       }
     });
-  }
+}
 
 /**
  * Hides buildings with floor count under 7 and updates histogram & scatter plot
@@ -327,7 +319,7 @@ function hideLowBuildings( ) {
     
 
     // Find the data source for buildings
-    const buildingsDataSource = getBuildingsDataSource();
+    const buildingsDataSource = getDataSourceByName( "Buildings" );
     const tallBuildings = filterTallBuildings( buildingsDataSource );
     const urbanHeatData = mapUrbanHeatData( tallBuildings );
 
@@ -396,7 +388,7 @@ function showAllBuildings( ) {
     const currentCat= document.getElementById("categoricalSelect").value
 
     // Find the data source for buildings
-    const buildingsDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "Buildings" );
+    const buildingsDataSource = getDataSourceByName( "Buildings" );
 
     // If the data source isn't found, exit the function
     if ( !buildingsDataSource ) {
@@ -478,88 +470,6 @@ function hideLowEvent( ) {
 
     }
 
-}
-
-/**
- * This is a function that toggles the display of nature area heat on the map. 
- *
- */
-function showNatureHeatEvent( ) {
-
-    // get the checked value of the toggle switch 
-    const showNatureHeat = false;
-
-    if ( showNatureHeat ) {
-        
-        // displays the heat data for the nature areas on the map
-        showNatureAreaHeat( );
-
-    } else {
-
-        // hides the heat data for the nature areas on the map
-        hideNatureAreaHeat( );
-
-    }
-
-}
-
- /**
- * This function shows the heat exposure of nature areas on the map.
- *
- */
-function showNatureAreaHeat( ) {
-
-    // Find the data source for buildings
-    const natureAreasDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "NatureAreas" );
-
-    // If the data source isn't found, exit the function
-    if ( !natureAreasDataSource ) {
-        return;
-    }
-
-    // Iterate over all entities in the nature area data source.
-    for ( let i = 0; i < natureAreasDataSource._entityCollection._entities._array.length; i++ ) {
-
-        let entity = natureAreasDataSource._entityCollection._entities._array[ i ];
-
-        // Check if the entity has the property for average heat exposure to the area.
-        if ( entity._properties._avgheatexposuretoarea._value ) {
-
-            // Set the material color of the entity's polygon based on the heat exposure value.
-            entity.polygon.material = new Cesium.Color( 1, 1 - entity._properties._avgheatexposuretoarea._value, 0, entity._properties._avgheatexposuretoarea._value );
-
-        }
-    }						    
-    
-}
-
- /**
- * This function hides the heat exposure color of all nature areas by resetting their polygon color to their category color
- *
- */
-function hideNatureAreaHeat( ) {
-
-    // Find the data source for buildings
-    const natureAreasDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "NatureAreas" );
-
-    // If the data source isn't found, exit the function
-    if ( !natureAreasDataSource ) {
-        return;
-    }
-    // Loop through each entity in the data source
-    for ( let i = 0; i < natureAreasDataSource._entityCollection._entities._array.length; i++ ) {
-
-        let entity = natureAreasDataSource._entityCollection._entities._array[ i ];
-
-        // Check if the entity has a category property
-        if ( entity._properties._category ) {
-
-            // Reset the polygon color of the entity to its original category color
-            setNatureAreaPolygonMaterialColor( entity, entity._properties._category._value );
-
-        }
-    }						
-           
 }
 
 /**

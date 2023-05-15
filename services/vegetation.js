@@ -1,4 +1,4 @@
-async function loadNatureAreas( postcode ) {
+async function loadVegetation( postcode ) {
 
 	let url = "https://geo.fvh.fi/r4c/collections/naturearea/items?f=json&limit=10000&postinumero=" + postcode ;
 
@@ -11,11 +11,11 @@ async function loadNatureAreas( postcode ) {
 			console.log("found from cache");
 
 			let datasource = JSON.parse( value )
-			addNatureDataSource( datasource );
+			addVegetationDataSource( datasource );
 
 		} else {
 
-			loadNatureAreasWithoutCache( url );
+			loadVegetationWithoutCache( url );
 
 		}
 	  	
@@ -26,9 +26,7 @@ async function loadNatureAreas( postcode ) {
 }
 
 
-function addNatureDataSource( data ) {
-
-	console.log("data", data)
+function addVegetationDataSource( data ) {
 	
 	viewer.dataSources.add( Cesium.GeoJsonDataSource.load( data, {
 		stroke: Cesium.Color.BLACK,
@@ -38,7 +36,7 @@ function addNatureDataSource( data ) {
 	}) )
 	.then(function ( dataSource ) {
 		
-		dataSource.name = "NatureAreas";
+		dataSource.name = "Vegetation";
 		let entities = dataSource.entities.values;
 		
 		for ( let i = 0; i < entities.length; i++ ) {
@@ -46,9 +44,9 @@ function addNatureDataSource( data ) {
 			let entity = entities[ i ];
 			const category = entity.properties._koodi._value;
 
-			showNatureHeat = false;
+			showVegetationHeat = false;
 
-			if ( showNatureHeat ) {
+			if ( showVegetationHeat ) {
 				
 				if ( entity.properties._avgheatexposuretoarea._value ) {
 
@@ -59,7 +57,7 @@ function addNatureDataSource( data ) {
 		
 				if ( category ) {
 					//colors of nature area enity are set based on it's category
-					setNatureAreaPolygonMaterialColor( entity, category )
+					setVegetationPolygonMaterialColor( entity, category )
 				}
 		
 			}
@@ -73,7 +71,7 @@ function addNatureDataSource( data ) {
 
 }
 
-function loadNatureAreasWithoutCache( url ) {
+function loadVegetationWithoutCache( url ) {
 	
 	console.log("Not in cache! Loading: " + url );
 
@@ -83,18 +81,20 @@ function loadNatureAreasWithoutCache( url ) {
 	})
 	.then( function( data ) {
 		localforage.setItem( url, JSON.stringify( data ) );
-		addNatureDataSource( data );
+		addVegetationDataSource( data );
 	})
 	
 }
 
-function setNatureAreaPolygonMaterialColor( entity, category ) {
+function setVegetationPolygonMaterialColor( entity, category ) {
 	 						
 	switch ( category ){
 		case "212":
+			entity.polygon.extrudedHeight = 0.1;
 			entity.polygon.material = Cesium.Color.LIGHTGREEN.withAlpha( 0.5 );
 			break;
 		case "211":
+			entity.polygon.extrudedHeight = 0.5;
 			entity.polygon.material = Cesium.Color.GREENYELLOW.withAlpha( 0.5 );
 			break;
 		case "510":
