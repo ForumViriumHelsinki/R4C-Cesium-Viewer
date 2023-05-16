@@ -237,7 +237,7 @@ function setAttributesFromApiToBuilding ( properties, features ) {
  */
 function createUrbanHeatHistogram( urbanHeatData ) {
 
-	if ( urbanHeatData.length > 0 ) {
+	if ( urbanHeatData.length > 0 && showPlot ) {
 
 		let trace = {
 			x: urbanHeatData,
@@ -275,10 +275,10 @@ function createUrbanHeatHistogram( urbanHeatData ) {
  */
 function createSocioEconomicsDiagram( sosData ) {
 
-	if ( sosData ) {
-		let x = [ 'apart heat expsoure', 'sum of next 7', 'vulnerable both', 'children', 'eldery', 'size of apartments', 'level of education', 'income', 'rental rate' ];
-		let y = [ sosData.apartment_heat_exposure_rank, sosData.average_vul_rank ,sosData.vulnerable_both_rank, sosData.vulnerable_children_rank, sosData.vulnerable_eldery_rank, sosData.apart_size_rank, sosData.educ_rank, sosData.income_rank, sosData.rental_rate_rank ]
-		let text = [ 84 - sosData.apartment_heat_exposure_rank, 84 - sosData.average_vul_rank, 84 - sosData.vulnerable_both_rank, 84 - sosData.vulnerable_children_rank, 84 - sosData.vulnerable_eldery_rank, 84 - sosData.apart_size_rank, 84 - sosData.educ_rank, 84 - sosData.income_rank, 85 - sosData.rental_rate_rank ];
+	if ( sosData && showPlot ) {
+		let x = [ 'vegetation', 'apart heat expsoure', 'sum of next 7', 'vulnerable both', 'children', 'eldery', 'size of apartments', 'level of education', 'income', 'rental rate' ];
+		let y = [ 84 - sosData.vegetation_rank, sosData.apartment_heat_exposure_rank, sosData.average_vul_rank ,sosData.vulnerable_both_rank, sosData.vulnerable_children_rank, sosData.vulnerable_eldery_rank, sosData.apart_size_rank, sosData.educ_rank, sosData.income_rank, sosData.rental_rate_rank ]
+		let text = [ sosData.vegetation_rank, 84 - sosData.apartment_heat_exposure_rank, 84 - sosData.average_vul_rank, 84 - sosData.vulnerable_both_rank, 84 - sosData.vulnerable_children_rank, 84 - sosData.vulnerable_eldery_rank, 84 - sosData.apart_size_rank, 84 - sosData.educ_rank, 84 - sosData.income_rank, 85 - sosData.rental_rate_rank ];
 
 		let data = [
 			{
@@ -581,7 +581,7 @@ function createUniqueValuesList( features, category ) {
  */
 function createScatterPlot( features, categorical, numerical ) {
 
-	if ( features.length > 0 ) {
+	if ( features.length > 0 && showPlot ) {
 
 		const values = createUniqueValuesList( features, categorical );
 		let data = [ ];

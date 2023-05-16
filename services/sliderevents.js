@@ -124,16 +124,18 @@ function printEvent( ) {
 function showPlotEvent( ) {
 
     // Get the value of the "Show Plot" toggle button
-    const showPlot = document.getElementById( "showPlotToggle" ).checked;
+    const showPlots = document.getElementById( "showPlotToggle" ).checked;
     
     // Hide the plot and its controls if the toggle button is unchecked
-    if ( !showPlot ) {
+    if ( !showPlots ) {
 
+        showPlot = false;
         hideAllPlots( );
 
     } else { // Otherwise, show the plot and its controls if the toggle button is checked and the plot is already loaded
 
         showAllPlots( );
+        showPlot = true;
 
     }
 
@@ -320,13 +322,14 @@ function hideLowBuildings( ) {
 
     // Find the data source for buildings
     const buildingsDataSource = getDataSourceByName( "Buildings" );
-    const tallBuildings = filterTallBuildings( buildingsDataSource );
-    const urbanHeatData = mapUrbanHeatData( tallBuildings );
 
     // If the data source isn't found, exit the function
     if ( !buildingsDataSource ) {
         return;
     }
+
+    const tallBuildings = filterTallBuildings( buildingsDataSource );
+    const urbanHeatData = mapUrbanHeatData( tallBuildings );
 
     // Initialize array to hold data for scatter plot
     let urbanHeatDataAndMaterial = [ ];
