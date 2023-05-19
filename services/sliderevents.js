@@ -26,6 +26,13 @@ function sliderEvents( event ) {
 
     }
 
+    // If the slider value is "showOtherNature", call the showOtherNatureEvent function.
+    if ( event.target.value == 'showOtherNature' ) {
+
+        showOtherNatureEvent();
+    
+    }
+
     // If the slider value is "hideNonSote", call the hideNonSoteEvent function.
     if ( event.target.value == 'hideNonSote' ) {
         
@@ -62,14 +69,15 @@ function showTrees( ) {
     if ( showTrees ) {
 
         // If a postal code is available, load trees for that postal code
-        if ( postalcode ) {
+        if ( postalcode && !getDataSourceByName("Trees") ) {
 
             loadTrees( postalcode );
 
+        } else {
+
+            showAllDataSources( );
         }
         
-        showAllDataSources( );
-
     } else { // If showTrees toggle is off
         
         hideDataSourceByName( "Trees" );
@@ -142,7 +150,7 @@ function showPlotEvent( ) {
 }
 
 /**
- * This function handles the toggle event for showing or hiding the nature areas layer on the map.
+ * This function handles the toggle event for showing or hiding the vegetation layer on the map.
  *
  */
 function showVegetationEvent( ) {
@@ -156,18 +164,51 @@ function showVegetationEvent( ) {
         //document.getElementById("showVegetationHeatToggle").disabled = false;
 
         // If there is a postal code available, load the nature areas for that area.
-        if ( postalcode ) {
+        if ( postalcode && !getDataSourceByName("Vegetation") ) {
 
             loadVegetation( postalcode );
 
-        }
+        } else {
 
-        // Show all data sources on the map.  
-        showAllDataSources( );
+            showAllDataSources( );
+        }
 
     } else {
 
         hideDataSourceByName( "Vegetation" );
+
+    }
+
+}
+
+/**
+ * This function handles the toggle event for showing or hiding the nature areas layer on the map.
+ *
+ */
+function showOtherNatureEvent( ) {
+
+    // Get the current state of the toggle button for showing nature areas.
+    const showloadOtherNature = document.getElementById( "showOtherNatureToggle" ).checked;
+
+    if ( showloadOtherNature ) {
+
+        // If the toggle button is checked, enable the toggle button for showing the nature area heat map.
+        //document.getElementById("showloadOtherNature").disabled = false;
+
+        // If there is a postal code available, load the nature areas for that area.
+        if ( postalcode && !getDataSourceByName( "OtherNature" ) ) {
+
+            loadOtherNature( postalcode );
+
+        } else {
+
+            showAllDataSources( );
+        }
+
+
+    } else {
+
+        hideDataSourceByName( "OtherNature" );
 
     }
 

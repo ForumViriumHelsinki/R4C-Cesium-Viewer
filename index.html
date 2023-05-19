@@ -8,6 +8,7 @@
   <script type="text/javascript" src="services/geoapitools.js"></script>
   <script type="text/javascript" src="services/buildings.js"></script>
   <script type="text/javascript" src="services/vegetation.js"></script>
+  <script type="text/javascript" src="services/othernature.js"></script>
   <script type="text/javascript" src="services/sliderevents.js"></script>
   <script type="text/javascript" src="services/selectevents.js"></script>
   <script type="text/javascript" src="services/urbanheat.js"></script>
@@ -49,6 +50,13 @@
 </label>
 <label for="showVegetationToggle" class="label">Show vegetation</label>
 
+  <!-- showOtherNatureSwitch-->
+<label class="switch">
+  <input type="checkbox" id="showOtherNatureToggle" value="showOtherNature" >
+  <span class="slider round"></span>
+</label>
+<label for="showOtherNatureToggle" class="label">Show other nature</label>
+  
   <!-- hideNonSoteSwitch-->
 <label class="switch" id = "hideLowSwitch">
 	<input type="checkbox" id="hideNonSoteToggle" value="hideNonSote" >
@@ -133,6 +141,7 @@
   	// UI related global variables...
   	var showPlot = true;
 	  var showVegetation = false;
+    var showOtherNature = false;
   	var print = true; //show object details..
 	  var postalcode = null;
     var nameOfZone = null;
@@ -180,7 +189,6 @@
   addEventListener('change', ( event ) => { selectEvents( event ) } );
 
   //disable switch for showing heat exposure on nature areas
-  // document.getElementById("showVegetationHeatToggle").disabled = true;
   document.getElementById( "hideNonSoteToggle" ).disabled = true;
   document.getElementById( "hideLowToggle" ).disabled = true;
   addGeocodingEventListeners( viewer );

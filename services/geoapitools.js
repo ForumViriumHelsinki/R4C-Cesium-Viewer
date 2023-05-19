@@ -22,11 +22,10 @@ function resetSwitches( ) {
 
 	document.getElementById( "showPlotToggle" ).checked = true;
 	document.getElementById( "showVegetationToggle" ).checked = false;
+    document.getElementById( "showOtherNatureToggle" ).checked = false;
 	document.getElementById( "printToggle" ).checked = true;
- //   document.getElementById( "showVegetationHeatToggle" ).checked = false;	
     document.getElementById( "hideNonSoteToggle" ).checked = false;	
     document.getElementById( "hideLowToggle" ).checked = false;	
- //   document.getElementById("showVegetationHeatToggle").disabled = true;
     document.getElementById( "hideNonSoteToggle" ).disabled = true;
     document.getElementById( "hideLowToggle" ).disabled = true;
     document.getElementById( "showTreesToggle" ).checked = false;
@@ -35,7 +34,7 @@ function resetSwitches( ) {
 
   	showPlot = true;
     showVegetation = false;
-    showVegetationHeat = false;
+    showOtherNature = false;
 	hideNonSote = false;
     hideLow = false;
 	print = true;

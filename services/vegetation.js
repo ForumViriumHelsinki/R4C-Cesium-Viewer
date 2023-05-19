@@ -6,7 +6,7 @@
  */
 async function loadVegetation( postcode ) {
 
-	let url = "https://geo.fvh.fi/r4c/collections/naturearea/items?f=json&limit=10000&postinumero=" + postcode ;
+	let url = "https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=" + postcode ;
 
 	try {
 		const value = await localforage.getItem( url );
