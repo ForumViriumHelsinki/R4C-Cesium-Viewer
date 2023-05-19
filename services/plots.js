@@ -25,9 +25,9 @@ function createSocioEconomicsDiagram( sosData ) {
 			sosData.vulnerable_both.toFixed( 3 ), 
 			sosData.vulnerable_children.toFixed( 3 ), 
 			sosData.vulnerable_eldery.toFixed( 3 ), 
-			sosData.avg_apart_size.toFixed( 3 ), 
+			1 - sosData.avg_apart_size.toFixed( 3 ), 
 			sosData.educ.toFixed( 3 ), 
-			sosData.income.toFixed( 3 ), 
+			1 - sosData.income.toFixed( 3 ), 
 			sosData.rental_rate.toFixed( 3 ) 
 		]
 
