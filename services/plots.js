@@ -8,15 +8,15 @@ function createSocioEconomicsDiagram( sosData ) {
 	if ( sosData && showPlot ) {
 	
 		let x = [
-			'Lack of Vegetation',
+			'% not vegetation',
 			'Apartment Heat Exposure',
-			'Children & Elderly',
-			'Vulnerable Children',
-			'Vulnerable Elderly',
-			'Small Apartments',
-			'Low Education',
-			'Low Income',
-			'High Rental Rate'
+			'% of Children & Elderly',
+			'% of Children',
+			'% of  Elderly',
+			'Small Apartment',
+			'% with Basic Education',
+			'Lack of Income',
+			'% of Rentals'
 		];	
 
 		let y = [
@@ -26,7 +26,7 @@ function createSocioEconomicsDiagram( sosData ) {
 			sosData.vulnerable_children.toFixed( 3 ), 
 			sosData.vulnerable_eldery.toFixed( 3 ), 
 			1 - sosData.avg_apart_size.toFixed( 3 ), 
-			sosData.educ.toFixed( 3 ), 
+			1 - sosData.educ.toFixed( 3 ), 
 			1 - sosData.income.toFixed( 3 ), 
 			sosData.rental_rate.toFixed( 3 ) 
 		]
@@ -45,10 +45,6 @@ function createSocioEconomicsDiagram( sosData ) {
 		}
 	
 		let layout = { 
-			yaxis: {
-				visible: false, 
-				showticklabels: false
-			},
 			title: 'Vulnerability in ' + nameOfZone,
 		};
 	
