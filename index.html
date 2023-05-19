@@ -15,6 +15,8 @@
   <script type="text/javascript" src="services/floods.js"></script>
   <script type="text/javascript" src="services/geocoding.js"></script>
   <script type="text/javascript" src="services/trees.js"></script>
+  <script type="text/javascript" src="services/plots.js"></script>
+  <script type="text/javascript" src="services/decoding.js"></script>
   <script src="lib/localforage/dist/localforage.js"></script>
   <script src="lib/plotly-2.12.1.min.js"></script>
   <link href="lib/Cesium/Widgets/widgets.css" rel="stylesheet">
@@ -186,10 +188,12 @@
   const hriCredit = new Cesium.Credit('<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>');
   const statsCredit = new Cesium.Credit('<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>');
   const mmlCredit = new Cesium.Credit('<a href="https://www.maanmittauslaitos.fi/en/maastotietokannan-kyselypalvelu/tekninen-kuvaus" target="_blank"><img src="assets/images/english_logo_rgb_50x25.png" title="MML"/></a>');
+  const hsyCredit = new Cesium.Credit('<a href="https://www.hsy.fi/en/air-quality-and-climate/geographic-information/open-geographic-information-interfaces/" target="_blank"><img src="assets/images/hsy-logo41x25.png" title="HSY"/></a>');
 
   viewer.scene.frameState.creditDisplay.addDefaultCredit( mmlCredit );
   viewer.scene.frameState.creditDisplay.addDefaultCredit( hriCredit );
   viewer.scene.frameState.creditDisplay.addDefaultCredit( statsCredit );
+  viewer.scene.frameState.creditDisplay.addDefaultCredit( hsyCredit );
 
   </script>
 </body>

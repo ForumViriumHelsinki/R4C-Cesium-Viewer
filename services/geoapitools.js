@@ -1,4 +1,7 @@
-// Resets the objects displayed and camera orientation
+
+/**
+ * Resets the objects displayed, camera orientation, and switches to their default state
+ */
 function reset( ) {
 
     removeDataSourcesAndEntities();
@@ -12,7 +15,9 @@ function reset( ) {
 
 }
 
-// Resets the switches
+/**
+ * Resets the switches to their default state
+ */
 function resetSwitches( ) {
 
 	document.getElementById( "showPlotToggle" ).checked = true;
@@ -37,6 +42,9 @@ function resetSwitches( ) {
 
 }
 
+/**
+ * Removes all data sources and entities from the viewer
+ */
 function removeDataSourcesAndEntities( ) {
 
     viewer.dataSources.removeAll( );
@@ -44,7 +52,9 @@ function removeDataSourcesAndEntities( ) {
 
 }
 
-// Resets the objects displayed and camera orientation
+/**
+ * Resets the viewer's camera to Helsinki with a specific orientation
+ */
 function resetViewer( ) {
     // Fly the camera to Helsinki at the given longitude, latitude, and height.
     viewer.camera.flyTo({
@@ -57,7 +67,11 @@ function resetViewer( ) {
 
 }
 
-// Loads postal code zone polygons, opacity given as float from 0 - 1
+/**
+ * Loads postal code zone polygons with the given opacity
+ * 
+ * @param {number} opacity - The opacity of the polygons (range from 0 to 1)
+ */
 function loadPostCodeZones( opacity ) {
     // Load postal code zones
     const HKIPostCodesURL = 'assets/data/hki_po_clipped.json';
@@ -80,7 +94,12 @@ function loadPostCodeZones( opacity ) {
     });
 }
 
-	
+/**
+ * Finds the bounding box of an entity and returns the latitude and longitude bounds
+ * 
+ * @param {Cesium.Entity} element - The entity to find the bounds for
+ * @returns {number[]} - An array containing the latitude and longitude bounds in the order [latMIN, latMAX, lonMIN, lonMAX]
+ */	
 function findEntityBounds( element ) {
 	
     let i = 0;

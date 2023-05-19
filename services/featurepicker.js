@@ -1,8 +1,20 @@
+/**
+ * Processes the click event on the viewer
+ * 
+ * @param {Cesium.Viewer} viewer - The Cesium viewer object
+ * @param {MouseEvent} event - The click event
+ */
 function processClick( viewer, event ) {
     console.log("Clicked at " + String( event.x ) + ", " + String( event.y ));
     pickEntity( viewer, new Cesium.Cartesian2( event.x, event.y ) );
 }
 
+/**
+ * Prints the properties of the picked Cesium entity
+ * 
+ * @param {Object} picked - The picked Cesium entity
+ * @param {Object} id - The ID of the picked entity
+ */
 function printCesiumEntity( picked, id ) {
 
     document.getElementById( 'printContainer' ).scroll({
@@ -32,6 +44,12 @@ function printCesiumEntity( picked, id ) {
     
 }
 
+/**
+ * Adds the provided content to the print container
+ * 
+ * @param {string} toPrint - The content to be added to the print container
+ * @param {string} postno - The postal code associated with the content
+ */
 function addToPrint( toPrint, postno ) {
 
     if ( postno ) {
@@ -190,6 +208,11 @@ function removeColdPoint( ) {
 
 }
 
+/**
+ * Handles the feature with properties
+ * 
+ * @param {Object} id - The ID of the picked entity
+ */
 function handleFeatureWithProperties( id ) {                
     
     postalcode = id.properties.posno;
@@ -229,6 +252,13 @@ function handleFeatureWithProperties( id ) {
 
 }
     
+
+/**
+ * Picks the entity at the given window position in the viewer
+ * 
+ * @param {Cesium.Viewer} viewer - The Cesium viewer object
+ * @param {Cesium.Cartesian2} windowPosition - The window position to pick the entity
+ */
 function pickEntity( viewer, windowPosition ) {
     let picked = viewer.scene.pick( windowPosition );
     
@@ -253,6 +283,11 @@ function pickEntity( viewer, windowPosition ) {
     }
 }
 
+/**
+ * Hides the plot container if the nature feature is clicked; otherwise, shows the plot container if the show plot toggle is checked
+ * 
+ * @param {string} category - The category of the picked entity
+ */
 function hidePlotlyIfNatureFeatureIsClicked( category ) {
 
     if ( category ) {

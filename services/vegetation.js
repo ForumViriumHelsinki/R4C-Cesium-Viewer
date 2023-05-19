@@ -1,3 +1,9 @@
+/**
+ * Loads vegetation data for a given postcode asynchronously
+ * 
+ * @param {string} postcode - The postcode for which to load vegetation data
+ * @returns {Promise} - A promise that resolves once the data has been loaded
+ */
 async function loadVegetation( postcode ) {
 
 	let url = "https://geo.fvh.fi/r4c/collections/naturearea/items?f=json&limit=10000&postinumero=" + postcode ;
@@ -25,7 +31,11 @@ async function loadVegetation( postcode ) {
 	}
 }
 
-
+/**
+ * Adds a vegetation data source to the viewer
+ * 
+ * @param {Object} data - The vegetation data to be added as a data source
+ */
 function addVegetationDataSource( data ) {
 	
 	viewer.dataSources.add( Cesium.GeoJsonDataSource.load( data, {
@@ -71,6 +81,11 @@ function addVegetationDataSource( data ) {
 
 }
 
+/**
+ * Loads vegetation data from the provided URL without using cache
+ * 
+ * @param {string} url - The URL from which to load vegetation data
+ */
 function loadVegetationWithoutCache( url ) {
 	
 	console.log("Not in cache! Loading: " + url );
@@ -86,6 +101,12 @@ function loadVegetationWithoutCache( url ) {
 	
 }
 
+/**
+ * Sets the polygon material color for a vegetation entity based on its category
+ * 
+ * @param {Object} entity - The vegetation entity
+ * @param {string} category - The category of the vegetation entity
+ */
 function setVegetationPolygonMaterialColor( entity, category ) {
 	 						
 	switch ( category ){
@@ -103,76 +124,6 @@ function setVegetationPolygonMaterialColor( entity, category ) {
 		case "520":
 			entity.polygon.material = Cesium.Color.DODGERBLUE.withAlpha( 0.5 );
 			break;
-		}	
-
-}
-
-function setNatureAreaPolygonMaterialColorOld( entity, category ) {
-
-	let a = entity.properties.avgheatexposuretoarea._value;
-
-	if ( !a ) {
-
-		a = 0;
-	}
-			 						
-	switch ( category ){
-		case "jarvi":
-			entity.polygon.material = Cesium.Color.DEEPSKYBLUE.withAlpha( a );
-			break;
-		case "suo":
-			entity.polygon.material = Cesium.Color.DARKOLIVEGREEN.withAlpha( a );
-			break;
-		case "matalikko":
-			entity.polygon.material = new Cesium.Color( 138, 241, 254, a ); 
-			break;
-		case "puisto":
-			entity.polygon.material = Cesium.Color.LIGHTGREEN.withAlpha( a );
-			break;
-		case "vesikivikko":
-			entity.polygon.material = Cesium.Color.LIGHTSTEELBLUE.withAlpha( a );
-			break;
-		case "niitty":
-			entity.polygon.material = Cesium.Color.YELLOWGREEN.withAlpha( a );
-			break;
-		case "luonnonsuojelualue": 
-			entity.polygon.material = Cesium.Color.DARKGREEN.withAlpha( a );
-			break;	
-		case "hietikko":
-			entity.polygon.material = Cesium.Color.BURLYWOOD.withAlpha( a );
-			break;
-		case "kallioalue": 
-			entity.polygon.material = Cesium.Color.DARKGREY.withAlpha( a );
-			break;	
-		case "maatuvavesialue": 
-			entity.polygon.material = Cesium.Color.DARKKHAKI.withAlpha( a );
-			break;	
-		case "kivikko": 
-			entity.polygon.material = Cesium.Color.GREY.withAlpha( a );
-			break;	
-		case "suojaalue": 
-			entity.polygon.material = new Cesium.Color( 0, 100, 0, a );
-			break;
-		case "soistuma": 
-			entity.polygon.material = Cesium.Color.DARKSEAGREEN.withAlpha( a );
-			break;	
-		case "meri": 
-			entity.polygon.material = Cesium.Color.DODGERBLUE.withAlpha( a );
-			break;
-		case "luonnonpuisto": 
-			entity.polygon.material = Cesium.Color.LIMEGREEN.withAlpha( a );
-			break;
-		case "kansallispuisto": 
-			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( a );
-			break;
-		case "tulvaalue": 
-			entity.polygon.material = Cesium.Color.PURPLE.withAlpha( a );
-			break;	
-		case "virtavesialue": 
-			entity.polygon.material = Cesium.Color.CYAN.withAlpha( a );
-			break;																																			
-		default:
-			entity.polygon.material = Cesium.Color.DARKGREEN.withAlpha( a );
 		}	
 
 }
