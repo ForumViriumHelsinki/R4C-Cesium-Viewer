@@ -10,7 +10,6 @@ function createSocioEconomicsDiagram( sosData ) {
 		let x = [
 			'Lack of Vegetation',
 			'Apartment Heat Exposure',
-			'Sum of Next 7',
 			'Children & Elderly',
 			'Vulnerable Children',
 			'Vulnerable Elderly',
@@ -21,36 +20,21 @@ function createSocioEconomicsDiagram( sosData ) {
 		];	
 
 		let y = [
-			sosData.vegetation_rank, 
-			sosData.apartment_heat_exposure_rank, 
-			sosData.average_vul_rank,
-			sosData.vulnerable_both_rank, 
-			sosData.vulnerable_children_rank, 
-			sosData.vulnerable_eldery_rank, 
-			sosData.apart_size_rank, 
-			sosData.educ_rank, 
-			sosData.income_rank, 
-			sosData.rental_rate_rank 
+			1 - sosData.vegetation.toFixed( 3 ), 
+			sosData.apartment_heat_exposure.toFixed( 3 ), 
+			sosData.vulnerable_both.toFixed( 3 ), 
+			sosData.vulnerable_children.toFixed( 3 ), 
+			sosData.vulnerable_eldery.toFixed( 3 ), 
+			sosData.avg_apart_size.toFixed( 3 ), 
+			sosData.educ.toFixed( 3 ), 
+			sosData.income.toFixed( 3 ), 
+			sosData.rental_rate.toFixed( 3 ) 
 		]
-
-		let text = [ 
-			84 - sosData.vegetation_rank, 
-			84 - sosData.apartment_heat_exposure_rank, 
-			84 - sosData.average_vul_rank, 
-			84 - sosData.vulnerable_both_rank, 
-			84 - sosData.vulnerable_children_rank, 
-			84 - sosData.vulnerable_eldery_rank, 
-			84 - sosData.apart_size_rank, 
-			84 - sosData.educ_rank, 
-			84 - sosData.income_rank, 
-			84 - sosData.rental_rate_rank 
-		];
 
 		let data = [
 			{
 				x: x,
 				y: y,
-				text: text,
 				type: 'bar',
 			}
 		];
@@ -65,10 +49,10 @@ function createSocioEconomicsDiagram( sosData ) {
 				visible: false, 
 				showticklabels: false
 			},
-			title: 'Vulnerability ranks (max=83) in ' + nameOfZone,
+			title: 'Vulnerability in ' + nameOfZone,
 		};
 	
-		Plotly.newPlot( 'plotSoSContainer',  data, layout, { staticPlot: true } );
+		Plotly.newPlot( 'plotSoSContainer',  data, layout );
 	}
 
 }
