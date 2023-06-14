@@ -56,6 +56,12 @@ function setAttributesFromApiToBuilding ( properties, features ) {
 
 			}
 
+			if ( features[ i ].properties.roof_mode_color ) {
+
+				properties.roof_mode_color = features[ i ].properties.roof_mode_color;
+
+			}
+
             properties.kayttotarkoitus = decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
 			properties.c_julkisivu = decodeFacade( properties.c_julkisivu );
 			properties.c_rakeaine = decodeMaterial( properties.c_rakeaine );
