@@ -52,13 +52,13 @@ function setAttributesFromApiToBuilding ( properties, features ) {
 
 			if ( features[ i ].properties.roof_median_color ) {
 
-				properties.roof_median_color = features[ i ].properties.roof_median_color;
+				properties.roof_median_color = getColorValue( features[ i ].properties.roof_median_color );
 
 			}
 
 			if ( features[ i ].properties.roof_mode_color ) {
 
-				properties.roof_mode_color = features[ i ].properties.roof_mode_color;
+				properties.roof_mode_color = getColorValue( features[ i ].properties.roof_mode_color );
 
 			}
 
