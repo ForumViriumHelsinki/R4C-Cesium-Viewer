@@ -29,6 +29,8 @@ function resetSwitches( ) {
     document.getElementById( "hideNonSoteToggle" ).disabled = true;
     document.getElementById( "hideLowToggle" ).disabled = true;
     document.getElementById( "showTreesToggle" ).checked = false;
+    document.getElementById( "showSensorDataToggle" ).checked = false;
+
     setPrintVisible( );
     hideAllPlots( );    
 

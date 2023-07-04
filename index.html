@@ -18,6 +18,7 @@
   <script type="text/javascript" src="services/trees.js"></script>
   <script type="text/javascript" src="services/plots.js"></script>
   <script type="text/javascript" src="services/decoding.js"></script>
+  <script type="text/javascript" src="services/sensors.js"></script>
   <script src="lib/localforage/dist/localforage.js"></script>
   <script src="lib/plotly-2.12.1.min.js"></script>
   <link href="lib/Cesium/Widgets/widgets.css" rel="stylesheet">
@@ -77,6 +78,13 @@
     <span class="slider round"></span>
   </label>
   <label for="showTrees" class="label">Show trees</label>
+
+  <!--  showSensorData-->
+  <label class="switch" id = "showSensorDataSwitch" >
+    <input type="checkbox" id="showSensorDataToggle" value="showSensorData" >
+    <span class="slider round"></span>
+  </label>
+  <label for="showSensorData" class="label">Show sensor data</label>
 
 </div>
 
@@ -193,6 +201,7 @@
   //disable switch for showing heat exposure on nature areas
   document.getElementById( "hideNonSoteToggle" ).disabled = true;
   document.getElementById( "hideLowToggle" ).disabled = true;
+  document.getElementById( "showSensorDataToggle" ).disabled = true;
   addGeocodingEventListeners( viewer );
 
   const hriCredit = new Cesium.Credit('<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>');

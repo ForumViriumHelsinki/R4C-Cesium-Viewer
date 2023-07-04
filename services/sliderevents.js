@@ -53,6 +53,13 @@ function sliderEvents( event ) {
         showTrees();
 
     }
+
+    // If the slider value is "showSensorData", call the showSensorData function.
+    if ( event.target.value == 'showSensorData' ) {
+        
+        showSensorData();
+
+    }    
             
 }
 
@@ -81,6 +88,36 @@ function showTrees( ) {
     } else { // If showTrees toggle is off
         
         hideDataSourceByName( "Trees" );
+
+    }
+
+}
+
+/**
+ * This function to show or hide sensordata entities on the map based on the toggle button state
+ *
+ */
+function showSensorData( ) {
+
+    // Get the state of the showSensorData toggle button
+    const showSensorData = document.getElementById( "showSensorDataToggle" ).checked;
+
+    // If showSensorData toggle is on
+    if ( showSensorData ) {
+        
+        // If a postal code is available, load trees for that postal code
+        if ( postalcode && !getDataSourceByName("SensorData") && ( postalcode == '00870' || postalcode == '00850' || postalcode == '00840' || postalcode == '00590' ) ) {
+
+            loadSensorData( postalcode );
+
+        } else {
+
+            showAllDataSources( );
+        }
+        
+    } else { // If showTrees toggle is off
+        
+        hideDataSourceByName( "SensorData" );
 
     }
 
