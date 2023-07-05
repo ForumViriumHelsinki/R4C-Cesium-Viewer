@@ -57,10 +57,24 @@ function addSensorDataSource( data ) {
             if ( measurement ) {
                 let tempAir = measurement.temp_air;
                 let rhAir = measurement.rh_air;
+
+                // Create a Date object from the timestamp
+                let date = new Date( measurement.time );
+
+                // Get the month, day, hour, and minute components
+                let month = date.getMonth(); // Adding 1 since getMonth() returns a zero-based index
+                let day = date.getDate();
+                let hour = date.getHours();
+                let minute = date.getMinutes();
+
+                // Create a new Date object with the extracted components
+                let formattedDate = new Date( 0, month, day, hour, minute );
+                // Format the components into a string
+                let formattedString = formattedDate.toLocaleString('en-GB', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' });
                 
                 if ( tempAir !== undefined && rhAir !== undefined ) {
                     entity.label = {
-                        text: 'Temp: ' + tempAir.toFixed( 2 ) + '°C\nRH: ' + rhAir.toFixed( 2 ) + '%',
+                        text: 'Temp: ' + tempAir.toFixed( 1 ) + '°C \nRH: ' + rhAir.toFixed( 1 ) + '% \nTime: ' + formattedString, 
                         showBackground: true,
                         font: '14px sans-serif',
                         horizontalOrigin : Cesium.HorizontalOrigin.CENTER,

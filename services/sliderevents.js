@@ -105,17 +105,9 @@ function showSensorData( ) {
     // If showSensorData toggle is on
     if ( showSensorData ) {
         
-        // If a postal code is available, load trees for that postal code
-        if ( postalcode && !getDataSourceByName("SensorData") && ( postalcode == '00870' || postalcode == '00850' || postalcode == '00840' || postalcode == '00590' ) ) {
-
-            loadSensorData( postalcode );
-
-        } else {
-
-            showAllDataSources( );
-        }
+        loadSensorData( postalcode );
         
-    } else { // If showTrees toggle is off
+    } else { 
         
         hideDataSourceByName( "SensorData" );
 
