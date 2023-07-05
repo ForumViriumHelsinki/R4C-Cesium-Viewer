@@ -39,10 +39,7 @@ function addSensorDataSource( data ) {
 
     // Add the data source to the viewer
     viewer.dataSources.add( Cesium.GeoJsonDataSource.load( data, {
-		stroke: Cesium.Color.BLACK,
-		fill: Cesium.Color.DARKGREEN,
-		strokeWidth: 3,
-		clampToGround: true
+
 	}) )
 	.then( function ( dataSource ) {
 		
@@ -66,15 +63,22 @@ function addSensorDataSource( data ) {
                         text: 'Temp: ' + tempAir.toFixed( 2 ) + '°C\nRH: ' + rhAir.toFixed( 2 ) + '%',
                         showBackground: true,
                         font: '14px sans-serif',
-                        horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
-                        verticalOrigin: Cesium.VerticalOrigin.TOP,
-                        pixelOffset: new Cesium.Cartesian2(8, -8),
+                        horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                        verticalOrigin : Cesium.VerticalOrigin.CENTER,
+                        pixelOffset: new Cesium.Cartesian2( 8, -8 ),
                         fillColor: Cesium.Color.BLUE,
-                        showBackground: true,
-                        backgroundColor: Cesium.Color.YELLOW
+                        backgroundColor: Cesium.Color.YELLOW,
+                        eyeOffset: new Cesium.Cartesian3( 0, 0, -100 )
+
                     };
                 }
             }
+
+            entity.billboard = undefined; // Remove any billboard icon
+            entity.point = undefined; // Remove any point marker
+            entity.polyline = undefined; // Remove any polyline
+            entity.polygon = undefined; // Remove any polygon
+
 		}
 	})	
 	.otherwise(function ( error ) {
