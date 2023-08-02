@@ -76,18 +76,18 @@ function showTrees( ) {
     if ( showTrees ) {
 
         // If a postal code is available, load trees for that postal code
-        if ( postalcode && !getDataSourceByName("Trees") ) {
+        if ( postalcode ) {
 
             loadTrees( postalcode );
 
-        } else {
-
-            showAllDataSources( );
-        }
+        } 
         
     } else { // If showTrees toggle is off
         
         hideDataSourceByName( "Trees" );
+        document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
+        document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
+        selectAttributeForScatterPlot( );
 
     }
 

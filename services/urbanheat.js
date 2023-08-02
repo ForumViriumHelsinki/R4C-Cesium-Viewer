@@ -115,7 +115,7 @@ function calculateAverageExposure( features ) {
  * @param { String } numerical name of numerical attribute for user
  * @param { String } categoricalName name of numerical attribute in register
  * @param { String } numericalName name for numerical attribute in registery
- * @return { object } data set for plotting
+ * @return { object }  data set for plotting
  */
 function createDataSetForScatterPlot( features, categorical, numerical, categoricalName, numericalName ) {
 

@@ -144,3 +144,47 @@ function createUrbanHeatHistogram( urbanHeatData ) {
 	}
 
 }
+
+/**
+ * Creates trees nearby buildings histogram
+ *
+ * @param { object } treeBuildingData nearby 
+ */
+function createTreesNearbyBuildingsScatterPlot( tree_areas, avgheatexps, buildings, noNearbyTrees ) {
+
+	if ( tree_areas.length > 0 && showPlot ) {
+
+		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+
+		const trace1 = {
+			x: avgheatexps,
+			y: tree_areas,
+			mode: 'markers',
+			type: 'scatter',
+			name: 'Nearby Tree Area of Buildings',
+			text: buildings,
+			textfont : {
+			  family:'Times New Roman'
+			},
+			marker: { 
+				size: 12,
+				color: 'green'
+			 }
+		};
+		  
+		const data = [ trace1 ];
+		  
+		const layout = {
+			title:'Nearby Tree Area of Buildings. Average Heat exposure for buildings with no nearby trees: ' + noNearbyTrees
+		};
+		  
+		Plotly.newPlot('plotMaterialContainer', data, layout);
+
+	} else {
+		
+		document.getElementById( "plotMaterialContainer" ).style.visibility = 'hidden';
+
+	}
+
+}

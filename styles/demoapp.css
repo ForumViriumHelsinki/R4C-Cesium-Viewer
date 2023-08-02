@@ -68,7 +68,7 @@
 	position: fixed;
 	bottom: 40px;
 	left: 10px;
-	width: 600px;
+	width: 800px;
 	height: 290px; 
 	visibility: hidden;
 	
@@ -80,8 +80,8 @@
 #numericalSelect
 {
 	position: fixed;
-	bottom: 40px;
-	left: 610px;
+	bottom: 41px;
+	left: 746px;
 	visibility: hidden;
 	
 	font-size: smaller;
@@ -90,8 +90,8 @@
 #categoricalSelect
 {
 	position: fixed;
-	bottom: 330px;
-	left: 492px;
+	bottom: 312px;
+	left: 11px;
 	visibility: hidden;
 	
 	font-size: smaller;
