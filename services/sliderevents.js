@@ -438,9 +438,13 @@ function addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, n
 
         }
 
-         // Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
-		const element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
-        urbanHeatDataAndMaterial.push( element );
+        if ( entity._properties._i_kokala && Number( entity._properties._i_kokala._value ) > 225 ) {
+
+            // Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
+            const element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
+            urbanHeatDataAndMaterial.push( element );
+
+        }
 
     }
 

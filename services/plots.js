@@ -176,7 +176,9 @@ function createTreesNearbyBuildingsScatterPlot( tree_areas, avgheatexps, buildin
 		const data = [ trace1 ];
 		  
 		const layout = {
-			title:'Nearby Tree Area of Buildings. Average Heat exposure for buildings with no nearby trees: ' + noNearbyTrees
+			title:'Average heat exposure for buildings with no nearby trees: ' + noNearbyTrees,
+			xaxis: { title: 'Average Heat Exposure' },
+			yaxis: { title: 'Nearby Tree area' },
 		};
 		  
 		Plotly.newPlot('plotMaterialContainer', data, layout);
