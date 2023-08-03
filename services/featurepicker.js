@@ -69,10 +69,7 @@ function addToPrint( toPrint, postno ) {
     });
 }
 
-function handlePostalCodeFeature( postcode, id ) {
-
-    let bbox = findEntityBounds( id );
-    let z = bbox[ 1 ] - bbox[ 0 ]
+function handlePostalCodeFeature( postcode ) {
 
     // Find the data source for postcodes
     const postCodesDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "PostCodes" );
@@ -96,6 +93,7 @@ function handlePostalCodeFeature( postcode, id ) {
                     duration: 3
                 });
             
+                document.getElementById( "switchViewToggle" ).disabled = false;
                 loadPostalCode( postcode );
         }
     }

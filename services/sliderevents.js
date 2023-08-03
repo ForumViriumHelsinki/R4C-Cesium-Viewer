@@ -59,7 +59,14 @@ function sliderEvents( event ) {
         
         showSensorData();
 
-    }    
+    }  
+    
+    // If the slider value is "switchView", call the switchView function.
+    if ( event.target.value == 'switchView' ) {
+        
+        switchView();
+    
+    }  
             
 }
 
@@ -560,4 +567,90 @@ function updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial 
     createUrbanHeatHistogram( urbanHeatData );
     createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
 
+}
+
+/**
+ * This function is called when the user clicks on the "switch view" toggle button.
+ *
+ */
+function switchView( ) {
+
+    // Get the status of the "switch view" toggle button.
+    const switchView = document.getElementById( "switchViewToggle" ).checked;
+
+    // If the "switch view" toggle button is checked.
+    if ( switchView ) {
+
+        switchTo2DView( );
+
+    // If the "switch view"" toggle button is not checked.
+    } else {
+
+        switchTo3DView( );
+
+    }
+
+}
+
+// Function to switch to 2D view
+function switchTo2DView() {
+
+    // Find the data source for postcodes
+    const postCodesDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "PostCodes" );
+    
+    // Iterate over all entities in the postcodes data source.
+    for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
+        
+        let entity = postCodesDataSource._entityCollection._entities._array[ i ];
+        
+        // Check if the entity posno property matches the postalcode.
+        if ( entity._properties._posno._value  == postalcode ) {
+        
+                // TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
+                viewer.camera.flyTo( {
+                    destination: Cesium.Cartesian3.fromDegrees( entity._properties._center_x._value, entity._properties._center_y._value, 3500 ),
+                    orientation: {
+                        heading: Cesium.Math.toRadians( 0.0 ),
+                        pitch: Cesium.Math.toRadians( -90.0 ),
+                    },
+                    duration: 3
+                });
+            
+        }
+    }
+
+    const labelElement = document.getElementById("switchViewLabel");
+    labelElement.innerHTML = "Switch to 3D";
+
+}
+  
+// Function to switch back to 3D view
+function switchTo3DView() {
+    // Find the data source for postcodes
+    const postCodesDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "PostCodes" );
+    
+    // Iterate over all entities in the postcodes data source.
+    for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
+        
+        let entity = postCodesDataSource._entityCollection._entities._array[ i ];
+        
+        // Check if the entity posno property matches the postalcode.
+        if ( entity._properties._posno._value  == postalcode ) {
+        
+                // TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
+                viewer.camera.flyTo( {
+                    destination: Cesium.Cartesian3.fromDegrees( entity._properties._center_x._value, entity._properties._center_y._value - 0.025, 2000 ),
+                    orientation: {
+                        heading: 0.0,
+                        pitch: Cesium.Math.toRadians( -35.0 ),
+                        roll: 0.0
+                    },
+                    duration: 3
+                });
+            
+        }
+    }
+
+    const labelElement = document.getElementById("switchViewLabel");
+    labelElement.innerHTML = "Switch to 2D";
 }

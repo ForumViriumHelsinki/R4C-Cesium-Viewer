@@ -86,6 +86,13 @@
   </label>
   <label for="showSensorData" class="label">Show sensor data</label>
 
+    <!--  switchView-->
+    <label class="switch" id = "switchViewSwitch" >
+      <input type="checkbox" id="switchViewToggle" value="switchView" >
+      <span class="slider round"></span>
+    </label>
+    <label for="switchView" class="label" id="switchViewLabel">Switch to 2D</label>
+
 </div>
 
 	<div id="printContainer">
@@ -201,6 +208,7 @@
   //disable switch for showing heat exposure on nature areas
   document.getElementById( "hideNonSoteToggle" ).disabled = true;
   document.getElementById( "hideLowToggle" ).disabled = true;
+  document.getElementById( "switchViewToggle" ).disabled = true;
   addGeocodingEventListeners( viewer );
 
   const hriCredit = new Cesium.Credit('<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>');

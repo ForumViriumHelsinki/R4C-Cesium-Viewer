@@ -30,6 +30,8 @@ function resetSwitches( ) {
     document.getElementById( "hideLowToggle" ).disabled = true;
     document.getElementById( "showTreesToggle" ).checked = false;
     document.getElementById( "showSensorDataToggle" ).checked = false;
+    document.getElementById( "switchViewToggle" ).checked = false;
+    document.getElementById( "switchViewToggle" ).disabled = true;
 
     setPrintVisible( );
     hideAllPlots( );    
