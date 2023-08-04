@@ -633,7 +633,7 @@ function switchTo2DView() {
     }
 
     // change label
-    changeLabel( "switchViewLabel", "Switch to 3D" );
+    changeLabel( "switchViewLabel", "3D view" );
 
 }
   
@@ -665,6 +665,6 @@ function switchTo3DView() {
     }
 
     // change label
-    changeLabel( "switchViewLabel", "Switch to 2D" );
+    changeLabel( "switchViewLabel", "2D view" );
 
 }

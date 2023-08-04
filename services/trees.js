@@ -87,8 +87,9 @@ function fetchAndAddTreeDistanceData( postcode, treeData ) {
 	  .then( data => {
 		// Call function that combines datasets for plotting
 		const sumPAlaM2Map = combineDistanceAndTreeData( data, treeData );
-		const treeAreaBuilding = createTreeBuildingPlotData( sumPAlaM2Map );
-		createTreesNearbyBuildingsScatterPlot( treeAreaBuilding[ 0 ], treeAreaBuilding[ 1 ], treeAreaBuilding[ 2 ], treeAreaBuilding[ 3 ] );
+		const heatExpTreeArea = createTreeBuildingPlotMap( sumPAlaM2Map );
+		const heatExpAverageTreeArea = extractKeysAndAverageTreeArea( heatExpTreeArea );
+		createTreesNearbyBuildingsPlot( heatExpAverageTreeArea[ 0 ], heatExpAverageTreeArea[ 1 ], heatExpAverageTreeArea[ 2 ] );
 
 	  })
 	  .catch( error => {
@@ -98,21 +99,50 @@ function fetchAndAddTreeDistanceData( postcode, treeData ) {
 }
 
 /**
- * Combines the distance and tree datasets for plotting
+ * Extracts heat expsoure and calculates average tree_area from the heatTreeAverageMap.
  *
- * @param { object } distanceData - The dataset containing distance information
- * @param { object } treeData - The dataset containing tree information
+ * @param { Map } heatTreeAverageMap - The map containing heat exposure values as keys and tree_area/count as values.
  * 
- * @return { object } array data for plotting
+ * @return { Array } An array containing three sub-arrays. The first sub-array contains all the keys from the map, and the second sub-array contains the calculated average tree_area for each key. Third one contains the count of buildings for the heat exposure value.
  */
-function createTreeBuildingPlotData( sumPAlaM2Map ) {
+function extractKeysAndAverageTreeArea( heatTreeAverageMap ) {
+	const heatExpArray = [];
+	const averageTreeAreaArray = [];
+	const buildingCounts = [];
 
-	const buildings = [];
-	const avgheatexps = [];
-	const tree_areas = [];
-	let noTreesCounter = 0;
+	heatTreeAverageMap.forEach( ( value, key ) => {
+		heatExpArray.push( key );
+
+		if ( value.tree_area == 0 ) {
+	
+			// setting the value to 1 if there is no tree area nearby
+			averageTreeAreaArray.push( 1 );
+
+		} else {
+
+			averageTreeAreaArray.push( value.tree_area / value.count );
+
+		}
+
+		buildingCounts.push( value.count );
+
+	});
+  
+	return [ heatExpArray, averageTreeAreaArray, buildingCounts ];
+
+}
+
+/**
+ * Adds Urban Heat Exposure to tree area data.
+ *
+ * @param { Map } sumPAlaM2Map - The dataset containing tree information, mapped to building IDs.
+ * 
+ * @return { Map } A map for plotting that contains the aggregated tree_area and count of buildings for each heat exposure value.
+ */
+function createTreeBuildingPlotMap( sumPAlaM2Map ) {
+
+	const heatTreeAverageMap = new Map();
 	let totalCounter = 0;
-	let noTreeAvgHeatExp = 0;
 	let totalTreeArea = 0;
 
 	// Find the data source for buildings
@@ -132,43 +162,52 @@ function createTreeBuildingPlotData( sumPAlaM2Map ) {
 		if ( entity._properties.avgheatexposuretobuilding && entity._properties._id && entity._properties._i_kokala && Number( entity._properties._i_kokala._value ) > 225 ) {
 
 			const building_id = entity._properties._id._value;
-			let tree_area = sumPAlaM2Map.get( building_id )
+			const heatExposure = entity._properties.avgheatexposuretobuilding._value.toFixed( 2 );
+			let tree_area = sumPAlaM2Map.get( building_id );
 
-			// Fill arrays needed for plotting.
-			if ( tree_area ) {
+			// Set tree area to 0
+			if ( !tree_area ) {
 
-				buildings.push( building_id );
-				avgheatexps.push( entity._properties.avgheatexposuretobuilding._value );
-				tree_areas.push( tree_area );
-				// Set tree_area as a property of the entity
-				entity._properties.treeArea = tree_area;
-				totalTreeArea += tree_area;
+				tree_area = 0;
 
-				if ( tree_area > 225 ) {
-				  
-					// Highlight the building entity edges by changing its outlineColor and outlineWidth
-					entity.polygon.outline = true; // Enable outline
-					entity.polygon.outlineColor = Cesium.Color.GREEN; // Set outline color to red
-					entity.polygon.outlineWidth = 3; // Set outline width to 3 (adjust as needed)
+			}
+			
+			if ( heatTreeAverageMap.has( heatExposure ) ) {
 
-				  } 
+				let storedValues = heatTreeAverageMap.get( heatExposure )
+				storedValues.tree_area = storedValues.tree_area + tree_area
+				storedValues.count = storedValues.count + 1;
 
+
+				heatTreeAverageMap.set( heatExposure, storedValues );
+			
 			} else {
-
-				noTreesCounter++;
-				noTreeAvgHeatExp += entity._properties.avgheatexposuretobuilding._value;
+				
+				heatTreeAverageMap.set( heatExposure, { tree_area: tree_area, count: 1 } );
 
 			}
 
+			// Set tree_area as a property of the entity
+			entity._properties.treeArea = tree_area;
+			
+			if ( tree_area > 225 ) {
+				  
+				// Highlight the building entity edges by changing its outlineColor and outlineWidth
+				entity.polygon.outline = true; // Enable outline
+				entity.polygon.outlineColor = Cesium.Color.GREEN; // Set outline color to red
+				entity.polygon.outlineWidth = 3; // Set outline width to 3 (adjust as needed)
+			} 
+
+			// for calculating postal code average
+			totalTreeArea += tree_area;
 			totalCounter++;
 
 		}
 	}
 
-	const noNearbyTrees = noTreeAvgHeatExp / noTreesCounter;
 	averageTreeArea = totalTreeArea / totalCounter;
 
-	return [ tree_areas, avgheatexps, buildings, noNearbyTrees.toFixed( 2 ) ];
+	return heatTreeAverageMap;
 
 }
 

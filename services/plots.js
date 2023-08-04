@@ -146,11 +146,13 @@ function createUrbanHeatHistogram( urbanHeatData ) {
 }
 
 /**
- * Creates trees nearby buildings histogram
+ * Creates trees nearby buildings bar plot
  *
- * @param { object } treeBuildingData nearby 
+ * @param { Array<Number> } heatexps array cointainig buildings heat exposure
+ * @param { Array<Number> } tree_areas array cointainig buildings nearby tree area
+* @param { Array<Number> } counts array cointainig count of buildings for that heat exposure
  */
-function createTreesNearbyBuildingsScatterPlot( tree_areas, avgheatexps, buildings, noNearbyTrees ) {
+function createTreesNearbyBuildingsPlot( heatexps, tree_areas, counts ) {
 
 	if ( tree_areas.length > 0 && showPlot ) {
 
@@ -158,12 +160,12 @@ function createTreesNearbyBuildingsScatterPlot( tree_areas, avgheatexps, buildin
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
 
 		const trace1 = {
-			x: avgheatexps,
+			x: heatexps,
 			y: tree_areas,
 			mode: 'markers',
-			type: 'scatter',
+			type: 'bar',
 			name: 'Nearby Tree Area of Buildings',
-			text: buildings,
+			text: counts,
 			textfont : {
 			  family:'Times New Roman'
 			},
@@ -176,7 +178,7 @@ function createTreesNearbyBuildingsScatterPlot( tree_areas, avgheatexps, buildin
 		const data = [ trace1 ];
 		  
 		const layout = {
-			title:'Average heat exposure for buildings with no nearby trees: ' + noNearbyTrees,
+			title:'Nearby Tree Area of Buildings with Heat Exposure ',
 			xaxis: { title: 'Average Heat Exposure' },
 			yaxis: { title: 'Nearby Tree area' },
 		};
@@ -194,6 +196,10 @@ function createTreesNearbyBuildingsScatterPlot( tree_areas, avgheatexps, buildin
 /**
  * Create tree histogram.
  *
+ * @param { Array<Number> } tree_areas array cointainig buildings nearby tree area
+ * @param { Array<Number> } avgheatexps array cointainig buildings heat exposure
+ * @param { Array<Number> } buildings array cointainig buildings ids 
+ * @param { Number } noNearbyTrees average heat exposure to buildings with no trees nearby 
  */
 function createTreeHistogram( treeArea, address, postinumero) {
 
@@ -222,5 +228,39 @@ function createTreeHistogram( treeArea, address, postinumero) {
     }
 
     Plotly.newPlot( 'plotSoSContainer', data, layout );
+
+}
+
+/**
+ * Create building specific histogram.
+ *
+ */
+function createBuildingHistogram( buildingHeatExposure, address, postinumero) {
+
+    let trace1 = {
+        x: [ 'to building' ],
+        y: [ buildingHeatExposure ],
+        name: address,
+        type: 'bar'
+    };
+      
+    let trace2 = {
+        x: [ 'average in postal code area' ],
+        y: [ averageHeatExposure ],
+        name: postinumero,
+        type: 'bar',
+    };
+      
+    let data = [ trace1, trace2 ];
+      
+    let layout = { title: { text: 'Urban Heat Exposure Comparison' }, barmode: 'group' };
+
+    //Test plotting
+    if ( showPlot ) {
+
+        document.getElementById( "plotContainer" ).style.visibility = 'visible';
+    }
+
+    Plotly.newPlot( 'plotContainer', data, layout );
 
 }

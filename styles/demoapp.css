@@ -68,7 +68,7 @@
 	position: fixed;
 	bottom: 40px;
 	left: 10px;
-	width: 800px;
+	width: 600px;
 	height: 290px; 
 	visibility: hidden;
 	
@@ -81,7 +81,7 @@
 {
 	position: fixed;
 	bottom: 41px;
-	left: 746px;
+	left: 546px;
 	visibility: hidden;
 	
 	font-size: smaller;

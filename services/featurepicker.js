@@ -149,43 +149,21 @@ function handleBuildingFeature( buildingHeatExposure, address, postinumero, tree
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
 
-    if ( treeArea ) {
+    if (  document.getElementById( "showTreesToggle" ).checked ) {
 
-        createTreeHistogram( treeArea, address, postinumero );
+        if ( treeArea ) {
 
-    } else {
-
-        createTreeHistogram( 0, address, postinumero );
+            createTreeHistogram( treeArea, address, postinumero );
+    
+        } else {
+    
+            createTreeHistogram( 0, address, postinumero );
+    
+        }
 
     }
 
-    console.log("Building found!");
-
-    let trace1 = {
-        x: [ 'to building' ],
-        y: [ buildingHeatExposure ],
-        name: address,
-        type: 'bar'
-    };
-      
-    let trace2 = {
-        x: [ 'average in postal code area' ],
-        y: [ averageHeatExposure ],
-        name: postinumero,
-        type: 'bar',
-    };
-      
-    let data = [ trace1, trace2 ];
-      
-    let layout = { title: { text: 'Urban Heat Exposure Comparison' }, barmode: 'group' };
-
-    //Test plotting
-    if ( showPlot ) {
-
-        document.getElementById( "plotContainer" ).style.visibility = 'visible';
-    }
-
-    Plotly.newPlot( 'plotContainer', data, layout );
+    createBuildingHistogram( buildingHeatExposure, address, postinumero );
 
     postalcode = postinumero;
 
