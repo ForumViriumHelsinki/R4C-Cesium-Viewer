@@ -16,8 +16,8 @@ function selectEvents( event ) {
  * 
  * @param { Array } urbanHeatDataAndMaterial - The array to store the urban heat data and material data.
  * @param { Object } entity - The entity to add the data for.
- * @param { string } categorical - The current categorical data.
- * @param { string } numerical - The current numerical data.
+ * @param { String } categorical - The current categorical data.
+ * @param { String } numerical - The current numerical data.
 */
 function scatterForSoteBuildings( urbanHeatDataAndMaterial, entity, categorical, numerical ) {
 
@@ -43,8 +43,8 @@ function scatterForSoteBuildings( urbanHeatDataAndMaterial, entity, categorical,
  * 
  * @param { Array } urbanHeatDataAndMaterial - The array to store the urban heat data and material data.
  * @param { Object } entity - The entity to add the data for.
- * @param { string } categorical - The current categorical data.
- * @param { string } numerical - The current numerical data.
+ * @param { String } categorical - The current categorical data.
+ * @param { String } numerical - The current numerical data.
 */
 function scatterForTallBuildings( urbanHeatDataAndMaterial, entity, categorical, numerical ) {
 
@@ -95,8 +95,8 @@ function selectAttributeForScatterPlot( ) {
  * 
  * @param { Array } entities - Array of entities to process
  * @param { Array } urbanHeatDataAndMaterial - Array to store scatter plot data
- * @param { string } categorical - The categorical variable selected by the user
- * @param { string } numerical - The numerical variable selected by the user
+ * @param { String } categorical - The categorical variable selected by the user
+ * @param { String } numerical - The numerical variable selected by the user
  * @param { boolean } hideNonSote - Whether to hide non-SOTE buildings in the scatter plot
  * @param { boolean } hideLowToggle - Whether to hide short buildings in the scatter plot
  */

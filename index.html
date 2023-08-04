@@ -49,42 +49,42 @@
 	<input type="checkbox" id="showVegetationToggle" value="showVegetation" >
 	<span class="slider round"></span>
 </label>
-<label for="showVegetationToggle" class="label">Show vegetation</label>
+<label for="showVegetationToggle" class="label">Vegetation</label>
 
   <!-- showOtherNatureSwitch-->
 <label class="switch">
   <input type="checkbox" id="showOtherNatureToggle" value="showOtherNature" >
   <span class="slider round"></span>
 </label>
-<label for="showOtherNatureToggle" class="label">Show other nature</label>
+<label for="showOtherNatureToggle" class="label">Other nature</label>
   
   <!-- hideNonSoteSwitch-->
 <label class="switch" id = "hideLowSwitch">
 	<input type="checkbox" id="hideNonSoteToggle" value="hideNonSote" >
 	<span class="slider round"></span>
 </label>
-<label for="hideNonSote" class="label">Hide non sote buildings</label>
+<label for="hideNonSote" class="label">Only sote buildings</label>
 
   <!--  hideLowSwitch-->
 <label class="switch" id = "hideLowSwitch" >
   <input type="checkbox" id="hideLowToggle" value="hideLow" >
   <span class="slider round"></span>
 </label>
-<label for="hideLow" class="label">Show only tall buildings</label>
+<label for="hideLow" class="label">Only tall buildings</label>
 
   <!--  showTrees-->
   <label class="switch" id = "showTreesSwitch" >
     <input type="checkbox" id="showTreesToggle" value="showTrees" >
     <span class="slider round"></span>
   </label>
-  <label for="showTrees" class="label">Show trees</label>
+  <label for="showTrees" class="label">Trees</label>
 
   <!--  showSensorData-->
   <label class="switch" id = "showSensorDataSwitch" >
     <input type="checkbox" id="showSensorDataToggle" value="showSensorData" >
     <span class="slider round"></span>
   </label>
-  <label for="showSensorData" class="label">Show sensor data</label>
+  <label for="showSensorData" class="label">Sensor data</label>
 
     <!--  switchView-->
     <label class="switch" id = "switchViewSwitch" >
@@ -163,6 +163,7 @@
 	  var postalcode = null;
     var nameOfZone = null;
     var averageHeatExposure = 0;
+    var averageTreeArea = 0;
 	// OS version, operating without Cesium Ion services...
     Cesium.Ion.defaultAccessToken = null;
 

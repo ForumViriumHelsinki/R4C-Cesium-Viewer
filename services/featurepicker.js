@@ -142,12 +142,22 @@ function loadPostalCode( postcode ) {
 
 }
 
-function handleBuildingFeature( buildingHeatExposure, address, postinumero ) {
+function handleBuildingFeature( buildingHeatExposure, address, postinumero, treeArea ) {
 
-    document.getElementById( "plotSoSContainer" ).style.visibility = 'hidden';
+    // document.getElementById( "plotSoSContainer" ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
+
+    if ( treeArea ) {
+
+        createTreeHistogram( treeArea, address, postinumero );
+
+    } else {
+
+        createTreeHistogram( 0, address, postinumero );
+
+    }
 
     console.log("Building found!");
 
@@ -251,7 +261,7 @@ function handleFeatureWithProperties( id ) {
 
         }
         
-        handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value );
+        handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value, id.properties.treeArea );
 
     }
 
@@ -261,8 +271,8 @@ function handleFeatureWithProperties( id ) {
 /**
  * Picks the entity at the given window position in the viewer
  * 
- * @param {Cesium.Viewer} viewer - The Cesium viewer object
- * @param {Cesium.Cartesian2} windowPosition - The window position to pick the entity
+ * @param { String } viewer - The Cesium viewer object
+ * @param { String } windowPosition - The window position to pick the entity
  */
 function pickEntity( viewer, windowPosition ) {
     let picked = viewer.scene.pick( windowPosition );

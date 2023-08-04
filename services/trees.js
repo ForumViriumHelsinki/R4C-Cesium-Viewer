@@ -110,8 +110,10 @@ function createTreeBuildingPlotData( sumPAlaM2Map ) {
 	const buildings = [];
 	const avgheatexps = [];
 	const tree_areas = [];
-	let count = 0;
-	let totalAvgHeatExp = 0;
+	let noTreesCounter = 0;
+	let totalCounter = 0;
+	let noTreeAvgHeatExp = 0;
+	let totalTreeArea = 0;
 
 	// Find the data source for buildings
 	const buildingsDataSource = getDataSourceByName( "Buildings" );
@@ -138,6 +140,9 @@ function createTreeBuildingPlotData( sumPAlaM2Map ) {
 				buildings.push( building_id );
 				avgheatexps.push( entity._properties.avgheatexposuretobuilding._value );
 				tree_areas.push( tree_area );
+				// Set tree_area as a property of the entity
+				entity._properties.treeArea = tree_area;
+				totalTreeArea += tree_area;
 
 				if ( tree_area > 225 ) {
 				  
@@ -150,16 +155,18 @@ function createTreeBuildingPlotData( sumPAlaM2Map ) {
 
 			} else {
 
-				count++;
-				totalAvgHeatExp += entity._properties.avgheatexposuretobuilding._value;
+				noTreesCounter++;
+				noTreeAvgHeatExp += entity._properties.avgheatexposuretobuilding._value;
 
 			}
 
+			totalCounter++;
 
 		}
 	}
 
-	const noNearbyTrees = totalAvgHeatExp / count;
+	const noNearbyTrees = noTreeAvgHeatExp / noTreesCounter;
+	averageTreeArea = totalTreeArea / totalCounter;
 
 	return [ tree_areas, avgheatexps, buildings, noNearbyTrees.toFixed( 2 ) ];
 

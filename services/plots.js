@@ -190,3 +190,37 @@ function createTreesNearbyBuildingsScatterPlot( tree_areas, avgheatexps, buildin
 	}
 
 }
+
+/**
+ * Create tree histogram.
+ *
+ */
+function createTreeHistogram( treeArea, address, postinumero) {
+
+    let trace1 = {
+        x: [ 'nearby building' ],
+        y: [ treeArea ],
+        name: address,
+        type: 'bar'
+    };
+      
+    let trace2 = {
+        x: [ 'average in postal code area' ],
+        y: [ averageTreeArea ],
+        name: postinumero,
+        type: 'bar',
+    };
+      
+    let data = [ trace1, trace2 ];
+      
+    let layout = { title: { text: 'Tree area comparison' }, barmode: 'group' };
+
+    //Test plotting
+    if ( showPlot ) {
+
+        document.getElementById( "plotSoSContainer" ).style.visibility = 'visible';
+    }
+
+    Plotly.newPlot( 'plotSoSContainer', data, layout );
+
+}

@@ -101,6 +101,19 @@ function showTrees( ) {
 }
 
 /**
+ * Gets label element by id and changes it 
+ * 
+ * @param { String } id - The Cesium viewer object
+ * @param { String } text - The window position to pick the entity
+ */
+function changeLabel( id, text ) {
+
+    const labelElement = document.getElementById( id );
+    labelElement.innerHTML = text;
+
+}
+
+/**
  * This function to show or hide sensordata entities on the map based on the toggle button state
  *
  */
@@ -619,8 +632,8 @@ function switchTo2DView() {
         }
     }
 
-    const labelElement = document.getElementById("switchViewLabel");
-    labelElement.innerHTML = "Switch to 3D";
+    // change label
+    changeLabel( "switchViewLabel", "Switch to 3D" );
 
 }
   
@@ -651,6 +664,7 @@ function switchTo3DView() {
         }
     }
 
-    const labelElement = document.getElementById("switchViewLabel");
-    labelElement.innerHTML = "Switch to 2D";
+    // change label
+    changeLabel( "switchViewLabel", "Switch to 2D" );
+
 }
