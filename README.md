@@ -4,7 +4,6 @@ Codebase copied from https://github.com/ForumViriumHelsinki/CityModelFME/tree/ma
 
 This user interface is currently running at https://geo.fvh.fi/r4c/M8Na2P0v6z/
 
-
 # Deployment
 
 Build a Docker image from a Dockerfile in the current directory and tag it with your chosen image name: 
