@@ -152,6 +152,9 @@ function createTreeBuildingPlotMap( sumPAlaM2Map ) {
 	if ( !buildingsDataSource ) {
 		return;
 	}
+
+	let maxTreeArea = 0;
+	let maxTreeAreaBuilding = null;
 	
 	// Iterate over all entities in data source
 	for ( let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++ ) {
@@ -194,8 +197,16 @@ function createTreeBuildingPlotMap( sumPAlaM2Map ) {
 				  
 				// Highlight the building entity edges by changing its outlineColor and outlineWidth
 				entity.polygon.outline = true; // Enable outline
-				entity.polygon.outlineColor = Cesium.Color.GREEN; // Set outline color to red
-				entity.polygon.outlineWidth = 3; // Set outline width to 3 (adjust as needed)
+				entity.polygon.outlineColor = Cesium.Color.GREEN; // Set outline color to green
+				entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
+
+				if ( maxTreeArea < tree_area ) {
+
+					maxTreeArea = tree_area;
+					maxTreeAreaBuilding = building_id;
+
+				}
+
 			} 
 
 			// for calculating postal code average
@@ -205,9 +216,35 @@ function createTreeBuildingPlotMap( sumPAlaM2Map ) {
 		}
 	}
 
+	setEntityColorToGreen( maxTreeAreaBuilding, buildingsDataSource );
+
 	averageTreeArea = totalTreeArea / totalCounter;
 
 	return heatTreeAverageMap;
+
+}
+
+/**
+ * Set up entity outline
+ *
+ * @param { object } entityId - Id of Cesium entity
+ * @param { object } datasource - The datasource the entity is located in
+ * 
+ */
+function setEntityColorToGreen( entityId, datasource ) {
+	
+	// Iterate over all entities in data source
+	for ( let i = 0; i < datasource._entityCollection._entities._array.length; i++ ) {
+	
+		const entity = datasource._entityCollection._entities._array[ i ];
+
+		if ( entity._properties._id && entity._properties._id._value == entityId ) {
+
+			entity.polygon.material = Cesium.Color.FORESTGREEN;
+			entity.polygon.outlineColor = Cesium.Color.RED; // Set outline color to red
+			
+		}
+	}
 
 }
 
