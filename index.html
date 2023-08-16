@@ -170,12 +170,7 @@
     // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
     const viewer = new Cesium.Viewer('cesiumContainer', {
     	terrainProvider : new Cesium.EllipsoidTerrainProvider(),
-		  imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
-			  url : 'https://avoin-karttakuva.maanmittauslaitos.fi/avoin/wmts/?api-key=97cd06ee-393a-4e7f-bd92-7ca33172df00',
-			  layer : 'ortokuva',
-			  style : 'default',
-			  tileMatrixSetID : 'WGS84_Pseudo-Mercator'
-		  }),
+		  imageryProvider: createImageryProvider( 'taustakartat_ja_aluejaot:Ortoilmakuva_2021' ),
     	animation: false,
       fullscreenButton: false,
       geocoder: false,
@@ -190,7 +185,7 @@
   
     // Fly the camera to Helsinki at the given longitude, latitude, and height.
     viewer.camera.flyTo({
-      destination : Cesium.Cartesian3.fromDegrees(24.941745, 60.165464, 35000), 
+      destination : Cesium.Cartesian3.fromDegrees( 24.941745, 60.165464, 35000 ), 
       orientation : {
         heading : Cesium.Math.toRadians(0.0),
         pitch : Cesium.Math.toRadians(-85.0),
@@ -214,10 +209,8 @@
 
   const hriCredit = new Cesium.Credit('<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>');
   const statsCredit = new Cesium.Credit('<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>');
-  const mmlCredit = new Cesium.Credit('<a href="https://www.maanmittauslaitos.fi/en/maastotietokannan-kyselypalvelu/tekninen-kuvaus" target="_blank"><img src="assets/images/english_logo_rgb_50x25.png" title="MML"/></a>');
   const hsyCredit = new Cesium.Credit('<a href="https://www.hsy.fi/en/air-quality-and-climate/geographic-information/open-geographic-information-interfaces/" target="_blank"><img src="assets/images/hsy-logo_41x25px.png" title="HSY"/></a>');
 
-  viewer.scene.frameState.creditDisplay.addDefaultCredit( mmlCredit );
   viewer.scene.frameState.creditDisplay.addDefaultCredit( hriCredit );
   viewer.scene.frameState.creditDisplay.addDefaultCredit( statsCredit );
   viewer.scene.frameState.creditDisplay.addDefaultCredit( hsyCredit );

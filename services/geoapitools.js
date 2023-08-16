@@ -1,3 +1,16 @@
+/**
+ * Function to create an imagery provider based on the selected layer
+ * 
+ * @param { String } layer - layer of WMS service
+ */
+function createImageryProvider( layer ) {
+    return new Cesium.WebMapServiceImageryProvider({
+        url: 'https://kartta.hsy.fi/geoserver/ows?SERVICE=WMS&',
+        layers: layer,
+        proxy: new Cesium.DefaultProxy('/proxy/')
+    });
+}
+
 
 /**
  * Resets the objects displayed, camera orientation, and switches to their default state
