@@ -170,7 +170,7 @@
     // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
     const viewer = new Cesium.Viewer('cesiumContainer', {
     	terrainProvider : new Cesium.EllipsoidTerrainProvider(),
-		  imageryProvider: createImageryProvider( 'taustakartat_ja_aluejaot:Ortoilmakuva_2021' ),
+		  imageryProvider: createImageryProvider( 'Karttasarja_PKS' ),
     	animation: false,
       fullscreenButton: false,
       geocoder: false,
@@ -185,7 +185,7 @@
   
     // Fly the camera to Helsinki at the given longitude, latitude, and height.
     viewer.camera.flyTo({
-      destination : Cesium.Cartesian3.fromDegrees( 24.941745, 60.165464, 35000 ), 
+      destination : Cesium.Cartesian3.fromDegrees( 24.931745, 60.190464, 35000 ), 
       orientation : {
         heading : Cesium.Math.toRadians(0.0),
         pitch : Cesium.Math.toRadians(-85.0),

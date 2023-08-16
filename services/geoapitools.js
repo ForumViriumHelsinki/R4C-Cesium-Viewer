@@ -5,7 +5,7 @@
  */
 function createImageryProvider( layer ) {
     return new Cesium.WebMapServiceImageryProvider({
-        url: 'https://kartta.hsy.fi/geoserver/ows?SERVICE=WMS&',
+        url: 'https://kartta.hel.fi/ws/geoserver/avoindata/ows?SERVICE=WMTS&',
         layers: layer,
         proxy: new Cesium.DefaultProxy('/proxy/')
     });
@@ -74,7 +74,7 @@ function removeDataSourcesAndEntities( ) {
 function resetViewer( ) {
     // Fly the camera to Helsinki at the given longitude, latitude, and height.
     viewer.camera.flyTo({
-        destination : Cesium.Cartesian3.fromDegrees( 24.941745, 60.165464, 35000 ), 
+        destination : Cesium.Cartesian3.fromDegrees( 24.931745, 60.190464, 35000 ), 
         orientation : {
             heading : Cesium.Math.toRadians( 0.0 ),
             pitch : Cesium.Math.toRadians( -85.0 ),
