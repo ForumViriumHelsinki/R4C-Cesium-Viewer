@@ -1,0 +1,162 @@
+{
+    "type": "FeatureCollection",
+    "name": "r4c_laajasalo_sensors",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "urn:ogc:def:crs:EPSG::4326"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Rudolfintie 19",
+                "Asennus": "Valopylvas"
+            },
+            "id": "11404",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.03807638,
+                    60.17022593
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Jurmonkuja 1",
+                "Asennus": "Valopylvas"
+            },
+            "id": "113C3",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.03385924,
+                    60.17321285
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Kuunaritie 1 ",
+                "Asennus": "Valopylvas"
+            },
+            "id": "113FE",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.06887814,
+                    60.16385877
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Yliskyläntie 2",
+                "Asennus": "Valopylvas"
+            },
+            "id": "11447",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.05095562,
+                    60.18088958
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Puuskaniementie 19 ",
+                "Asennus": "Valopylvas"
+            },
+            "id": "1140C",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.08115494,
+                    60.16637161
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Holmanmoisionpolku 1",
+                "Asennus": "Valopylvas"
+            },
+            "id": "114B8",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.05440426,
+                    60.17794268
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Pojamankatu 1",
+                "Asennus": "Valopylvas"
+            },
+            "id": "11400",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.0196764,
+                    60.16734041
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Sarvastonkaari 1",
+                "Asennus": "Valopylvas"
+            },
+            "id": "114BE",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.05177308,
+                    60.16761306
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Poikasaartentie 4",
+                "Asennus": "Valopylväs"
+            },
+            "id": "114EC",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.08972085,	
+                    60.16370294
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Address": "Tuurholmanpolku",
+                "Asennus": "Valopylvas"
+            },
+            "id": "113D6",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    25.03307164,
+                    60.17817173
+                ]
+            }
+        }
+    ]
+}

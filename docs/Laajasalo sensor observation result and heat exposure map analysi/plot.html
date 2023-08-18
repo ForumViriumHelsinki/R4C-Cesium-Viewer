@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scatter Plot with Plotly</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src='https://unpkg.com/simple-statistics@7.8.2/dist/simple-statistics.min.js'></script>
+</head>
+<body>
+    <div id="plot"></div>
+
+    <script>
+        // Load data from GeoJSON file
+        fetch('SensorsVsExposure.json')
+            .then( response => response.json() )
+            .then( data => {
+
+                // Extract heat exposure values from GeoJSON properties and convert them to numbers
+                const heatExposureValues = data.features.map( feature => Number( feature.properties.heatExposureIndex ) );
+
+                // Extract Steadman values from GeoJSON properties and convert them to numbers
+                const steadmanValues = data.features.map( feature => Number( feature.properties.steadmanIndexC ) );
+
+                // Extract addresses from GeoJSON properties
+                const addresses = data.features.map( feature => feature.properties.address) ;
+
+                // Calculate linear regression parameters using simple-statistics
+                const regressionLine = ss.linearRegression(
+                    heatExposureValues.map( ( value, index ) => [ value, steadmanValues[ index ] ] )
+                );
+
+                // Extract slope and intercept from the regression parameters
+                const slope = regressionLine.m;
+                const intercept = regressionLine.b;
+
+                // Create x values for the regression line (using heat exposure values)
+                const regressionX = heatExposureValues;
+
+                // Calculate corresponding y values for the regression line using the linear equation
+                const regressionY = regressionX.map( xVal => slope * xVal + intercept );
+
+
+                // Define trace for Heat Exposure Index
+                const traces = [
+                    {
+                        x: regressionX,
+                        y: regressionY,
+                        mode: 'lines',
+                        type: 'scatter',
+                        name: 'Regression Line'
+                    },
+                    {
+                        x: heatExposureValues,
+                        y: steadmanValues,
+                        mode: 'markers+text',
+                        type: 'scatter',
+                        marker: { color: 'blue', symbol: 'circle' },
+                        text: addresses,
+                        textposition: 'top center', // Position text slightly above the markers
+                        name: 'Location'
+                    }                    
+                ];
+
+                // Create layout with specific axis ranges
+                const layout = {
+                    title: 'Heat Exposure and Sensor Observations with regression line',
+                    xaxis: { title: 'Heat Exposure Index' },
+                    yaxis: { title: 'Steadman Index (°C)' },
+                    height: 600
+                };
+
+                // Create plot
+                Plotly.newPlot( 'plot', traces, layout );
+            })
+            .catch( error => console.error( 'Error fetching data:', error ) );
+    </script>
+</body>
+</html>
