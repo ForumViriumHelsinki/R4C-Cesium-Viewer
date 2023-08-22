@@ -3,7 +3,7 @@ This folder contains files, FME workspace and HTML code needed to compare observ
 
 # FME workspace and files
 
-The calculation is done with [FME workspace](https://fme.safe.com/) named laajasalosensors.fmw. The workspace takes three input files: "r4c_laajasalo_sensors_4326.geojson", "Urban Heat Exposure Index.tif" and "r4c_all.parquet". Before running the FME workspace, make sure to set the local file system locations for these input files.
+The calculation is done with [FME workspace](https://fme.safe.com/) named laajasalosensors_v2.fmw. The workspace takes three input files: "r4c_laajasalo_sensors_4326.geojson", "Urban Heat Exposure Index.tif" and "r4c_all.parquet". Before running the FME workspace, make sure to set the local file system locations for these input files.
 
 The "r4c_laajasalo_sensors_4326.geojson" file contains the locations of sensor installations in GeoJSON format. The "Urban Heat Exposure Index.tif" file is an Urban Heat Exposure raster map that includes heat exposure index values for each raster pixel. The workspace utilizes the sensor locations to find the corresponding heat exposure values from the "Urban Heat Exposure Index.tif" file. Sensor observation results are stored in "r4c_all.parquet." The latest version of this data dump file can be found [here](https://bri3.fvh.io/opendata/r4c/). The workspace uses the Steadman heat index formula for lower temperatures to calculate the heat index value for each sensor observation. Then it calculates the mean heat index for each sensor. The calculated heat exposure values and heat indexes are saved in the "SensorsVsExposure.json" file. 
 
