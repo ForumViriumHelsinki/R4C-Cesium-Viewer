@@ -6,120 +6,100 @@
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 85.0633877840909,
-				"temprh_temp.mean" : 16.464215198863634,
+				"steadmanIndexC" : 16.38728160511364,
 				"id" : "114EC",
 				"heatExposureIndex" : "0.15337315836409632",
-				"address" : "Poikasaartentie 4",
-				"steadmanIndexC" : "16.38729184422348\n"
+				"address" : "Poikasaartentie 4"
 			}
 		},
 		{
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 80.28817974601107,
-				"temprh_temp.mean" : 17.562017258222077,
+				"steadmanIndexC" : 17.470151416476718,
 				"id" : "114B8",
 				"heatExposureIndex" : "0.5340108291106864",
-				"address" : "Holmanmoisionpolku 1",
-				"steadmanIndexC" : "17.470188121856797\n"
+				"address" : "Holmanmoisionpolku 1"
 			}
 		},
 		{
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 82.93262627804059,
-				"temprh_temp.mean" : 17.267649931329164,
+				"steadmanIndexC" : 17.215446360445593,
 				"id" : "113D6",
 				"heatExposureIndex" : "0.3465139315012321",
-				"address" : "Tuurholmanpolku",
-				"steadmanIndexC" : "17.215433499499813\n"
+				"address" : "Tuurholmanpolku"
 			}
 		},
 		{
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 80.0528967254408,
-				"temprh_temp.mean" : 17.343620007196833,
+				"steadmanIndexC" : 17.223776538323136,
 				"id" : "114BE",
 				"heatExposureIndex" : "0.4157111348840428",
-				"address" : "Sarvastonkaari 1",
-				"steadmanIndexC" : "17.22380764463636\n"
+				"address" : "Sarvastonkaari 1"
 			}
 		},
 		{
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 80.2470579689089,
-				"temprh_temp.mean" : 17.444322243207903,
+				"steadmanIndexC" : 17.339660031962808,
 				"id" : "11404",
 				"heatExposureIndex" : "0.42116038004685563",
-				"address" : "Rudolfintie 19",
-				"steadmanIndexC" : "17.339649870050206\n"
+				"address" : "Rudolfintie 19"
 			}
 		},
 		{
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 78.53664649956785,
-				"temprh_temp.mean" : 17.45097493517718,
+				"steadmanIndexC" : 17.302238547968887,
 				"id" : "1140C",
 				"heatExposureIndex" : "0.3493448942269759",
-				"address" : "Puuskaniementie 19 ",
-				"steadmanIndexC" : "17.302307087294725\n"
+				"address" : "Puuskaniementie 19 "
 			}
 		},
 		{
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 77.92846768336965,
-				"temprh_temp.mean" : 17.60607262164125,
+				"steadmanIndexC" : 17.457077705156134,
 				"id" : "11400",
 				"heatExposureIndex" : "0.5083854416352073",
-				"address" : "Pojamankatu 1",
-				"steadmanIndexC" : "17.457034317760026\n"
+				"address" : "Pojamankatu 1"
 			}
 		},
 		{
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 79.40694998465787,
-				"temprh_temp.mean" : 18.154955507824486,
+				"steadmanIndexC" : 18.09941546486652,
 				"id" : "113FE",
 				"heatExposureIndex" : "0.30605845030484813",
-				"address" : "Kuunaritie 1 ",
-				"steadmanIndexC" : "18.09941030820634\n"
+				"address" : "Kuunaritie 1 "
 			}
 		},
 		{
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 77.38113920371985,
-				"temprh_temp.mean" : 17.585340017436792,
+				"steadmanIndexC" : 17.4199433304272,
 				"id" : "113C3",
 				"heatExposureIndex" : "0.4236539323559167",
-				"address" : "Jurmonkuja 1",
-				"steadmanIndexC" : "17.419937098388715\n"
+				"address" : "Jurmonkuja 1"
 			}
 		},
 		{
 			"type" : "Feature",
 			"geometry" : null,
 			"properties" : {
-				"temprh_rh.mean" : 76.89295671313279,
-				"temprh_temp.mean" : 17.944523844460747,
+				"steadmanIndexC" : 17.80231401320616,
 				"id" : "11447",
 				"heatExposureIndex" : "0.43729666452138094",
-				"address" : "Yliskyläntie 2",
-				"steadmanIndexC" : "17.802292320860843\n"
+				"address" : "Yliskyläntie 2"
 			}
 		}
 	]
