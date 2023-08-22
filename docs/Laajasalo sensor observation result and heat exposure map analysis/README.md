@@ -10,3 +10,7 @@ The "r4c_laajasalo_sensors_4326.geojson" file contains the locations of sensor i
 # Plot and regression line
 
 The "plot.html" file contains HTML and JavaScript code necessary for plotting the results from the FME workspace using [plotly.js](https://plotly.com/javascript/). It also includes the addition of a linear regression line to the plot. All lines of code in the file are thoroughly commented to provide clarity. To run "plot.html," initiate an HTTP server in the "sensors_heatexposure" folder and open a browser window at http://localhost:8080/plot.html. "SensorHeatPlotResults.png" is a screenshot of the plot.
+
+# Analysis with mean temperature observation value only
+
+ [The process is repeated with only mean temperature value](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/tree/main/docs/Laajasalo%20sensor%20observation%20result%20and%20heat%20exposure%20map%20analysis/temperature_only)

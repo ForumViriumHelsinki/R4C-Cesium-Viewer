@@ -1,0 +1,106 @@
+{
+	"type" : "FeatureCollection",
+	"name" : "r4c_laajasalo_sensors",
+	"features" : [
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 16.46,
+				"id" : "114EC",
+				"heatExposureIndex" : "0.15337315836409632",
+				"address" : "Poikasaartentie 4"
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 17.56,
+				"id" : "114B8",
+				"heatExposureIndex" : "0.5340108291106864",
+				"address" : "Holmanmoisionpolku 1"
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 17.27,
+				"id" : "113D6",
+				"heatExposureIndex" : "0.3465139315012321",
+				"address" : "Tuurholmanpolku"
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 17.34,
+				"id" : "114BE",
+				"heatExposureIndex" : "0.4157111348840428",
+				"address" : "Sarvastonkaari 1"
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 17.44,
+				"id" : "11404",
+				"heatExposureIndex" : "0.42116038004685563",
+				"address" : "Rudolfintie 19"
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 17.45,
+				"id" : "1140C",
+				"heatExposureIndex" : "0.3493448942269759",
+				"address" : "Puuskaniementie 19 "
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 17.61,
+				"id" : "11400",
+				"heatExposureIndex" : "0.5083854416352073",
+				"address" : "Pojamankatu 1"
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 18.15,
+				"id" : "113FE",
+				"heatExposureIndex" : "0.30605845030484813",
+				"address" : "Kuunaritie 1 "
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 17.59,
+				"id" : "113C3",
+				"heatExposureIndex" : "0.4236539323559167",
+				"address" : "Jurmonkuja 1"
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : null,
+			"properties" : {
+				"temperatureMean" : 17.94,
+				"id" : "11447",
+				"heatExposureIndex" : "0.43729666452138094",
+				"address" : "Yliskyläntie 2"
+			}
+		}
+	]
+}

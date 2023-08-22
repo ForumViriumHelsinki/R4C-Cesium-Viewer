@@ -1,0 +1,100 @@
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Current FME version: FME 2022.2.3.0 (20230131 - Build 22789 - macosx-x64)
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME_HOME is '/Library/FME/2022.2/'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Desktop Professional Edition (floating)
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Permanent License.
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Machine host name is: Andreas-A-(FVH)-M2
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|OS Locale Name     : en_FI
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|OS Locale Encoding : UTF-8
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Process Encoding   : UTF-8
+2023-08-22 17:04:13|   0.0|  0.0|WARN  |The user-selected locale setting of en_FI is not recognised by the operating system and might lead to unexpected results, including poor localization of messages
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME API version: '4.0 20220615'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: FME_BASE is 'no'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: FME_MF_DIR is '/Users/andreas.andra/R4C-Cesium-Viewer/docs/Laajasalo sensor observation result and heat exposure map analysis/temperature_only/'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: FME_MF_NAME is 'laajasalosensors_v2.fmw'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: FME_PRODUCT_NAME is 'FME(R) 2022.2.3.0'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Operating System: macOS Version 	13.2.1 (Build 	22D68)
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Platform: macosx-x64
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|System Status: 91.12 GB of disk space available in the FME temporary folder (/private/var/folders/cc/10r67lds309fbk67j5bqy0rm0000gq/T/wbrun_1692705017834_44460/fmetmp_1b)
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|System Status: 16.00 GB of physical memory available
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|System Status: 21.00 GB of virtual memory available
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|START - ProcessID: 49670, peak process memory usage: 86436 kB, current process memory usage: 86436 kB
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Command line arguments are `/Library/FME/2022.2/fme' `/Users/andreas.andra/R4C-Cesium-Viewer/docs/Laajasalo sensor observation result and heat exposure map analysis/temperature_only/wb-xlate-1692713050091_44460' `LOG_STANDARDOUT' `YES' `LOG_TIMINGS' `YES' `LogCountServerName' `59957' `LOG_STANDARDOUT' `No' `WORKBENCH_LOG_SERVER' `59703'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Connection Storage: '/Users/andreas.andra/Library/Caches/Safe Software/FME/'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Shared folders for formats are : /Library/FME/2022.2/datasources;/Users/andreas.andra/Library/Application Support/FME/Formats
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Shared folders for transformers are : /Users/andreas.andra/Library/Caches/Safe Software/FME/Packages/22789-macosx-x64/transformers;/Library/FME/2022.2/transformers
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Shared folders for coordinate systems are : /Users/andreas.andra/Library/Application Support/FME/CoordinateSystems
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Shared folders for coordinate system exceptions are : /Users/andreas.andra/Library/Application Support/FME/CoordinateSystemExceptions
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Shared folders for coordinate system grid overrides are : /Users/andreas.andra/Library/Application Support/FME/CoordinateSystemGridOverrides
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Shared folders for CS-MAP transformation exceptions are : /Users/andreas.andra/Library/Application Support/FME/CsmapTransformationExceptions
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Shared folders for transformer categories are : /Users/andreas.andra/Library/Application Support/FME/TransformerCategories
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Reader Keyword is `MULTI_READER'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Writer Keyword is `MULTI_WRITER'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Writer Group Definition Keyword is `MULTI_WRITER_DEF'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Reader type is `MULTI_READER'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Writer type is `MULTI_WRITER'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: No destination coordinate system set
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Current working folder is `/Users/andreas.andra/R4C-Cesium-Viewer/docs/Laajasalo sensor observation result and heat exposure map analysis/temperature_only'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Temporary folder is `/private/var/folders/cc/10r67lds309fbk67j5bqy0rm0000gq/T/wbrun_1692705017834_44460/fmetmp_1b', set from environment variable `FME_TEMP'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Cache folder is '/private/var/folders/cc/10r67lds309fbk67j5bqy0rm0000gq/T'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: FME_HOME is `/Library/FME/2022.2/'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Start freeing memory when the process exceeds 19.83 GB
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: Stop freeing memory when the process is below 14.87 GB
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Creating writer for format: 
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Creating reader for format: 
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|MULTI_READER(MULTI_READER): Will fail with first member reader failure
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Using Multi Reader with keyword `MULTI_READER' to read multiple datasets
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Using MultiWriter with keyword `MULTI_WRITER' to output data (ID_ATTRIBUTE is `multi_writer_id')
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Writer output will be ordered by value of multi_writer_id
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|DYLD_LIBRARY_PATH is not set
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Loaded module 'LogCount_func' from file '/Library/FME/2022.2/plugins/logcount_func.so'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME API version of module 'LogCount_func' matches current internal version (4.0 20220615)
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Emptying factory pipeline
+2023-08-22 17:04:13|   0.0|  0.0|STATS |Router and Unexpected Input Remover (RoutingFactory): Tested 0 input feature(s), wrote 0 output feature(s): 0 matched merge filters, 0 were routed to output, 0 could not be routed.
+2023-08-22 17:04:13|   0.0|  0.0|STATS |Unwanted Router Input Nuker (TeeFactory): Cloned 0 input feature(s) into 0 output feature(s)
+2023-08-22 17:04:13|   0.0|  0.0|STATS |GEOTIFF_GEOTIFF_1 Splitter (TeeFactory): Cloned 0 input feature(s) into 0 output feature(s)
+2023-08-22 17:04:13|   0.0|  0.0|STATS |r4c_laajasalo_sensors_GEOJSON_1 Splitter (TeeFactory): Cloned 0 input feature(s) into 0 output feature(s)
+2023-08-22 17:04:13|   0.0|  0.0|STATS |r4c_all_PARQUET_1 Splitter (TeeFactory): Cloned 0 input feature(s) into 0 output feature(s)
+2023-08-22 17:04:13|   0.0|  0.0|STATS |Restoring 10 feature(s) from FME feature store file `/private/var/folders/cc/10r67lds309fbk67j5bqy0rm0000gq/T/wb-cache-laajasalosensors-antXvZ/Main_AttributeRemover_3 -1 30 fo 0 OUTPUT  0  4d65a76c307e5e09b7e7203b403c87dcb48f07e0.ffs'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Creating writer for format: GeoJSON (Geographic JavaScript Object Notation)
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Trying to find a DYNAMIC plugin for writer named `GEOJSON'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Loaded module 'GEOJSON' from file '/Library/FME/2022.2/plugins/json.so'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME API version of module 'JSON' matches current internal version (4.0 20220615)
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|FME Configuration: No destination coordinate system set
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Writer `GEOJSON_2' of type `GEOJSON' using group definition keyword `GEOJSON_2_DEF'
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|GeoJSON Writer: All features not in WGS84 will be reprojected to WGS84
+2023-08-22 17:04:13|   0.0|  0.0|INFORM|Opening the GEOJSON writer with destination dataset '/Users/andreas.andra/R4C-Cesium-Viewer/docs/Laajasalo sensor observation result and heat exposure map analysis/temperature_only/SensorsVsExposure.json'
+2023-08-22 17:04:13|   0.0|  0.0|STATS |Destination Feature Type Routing Correlator (RoutingFactory): Tested 10 input feature(s), wrote 10 output feature(s): 0 matched merge filters, 10 were routed to output, 0 could not be routed.
+2023-08-22 17:04:13|   0.0|  0.0|STATS |Final Output Nuker (TeeFactory): Cloned 0 input feature(s) into 0 output feature(s)
+2023-08-22 17:04:13|   0.1|  0.1|INFORM|Closing the GEOJSON writer
+2023-08-22 17:04:13|   0.1|  0.0|INFORM|=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|INFORM|Feature output statistics for `GEOJSON' writer using keyword `GEOJSON_2':
+2023-08-22 17:04:13|   0.1|  0.0|STATS |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|STATS |                               Features Written
+2023-08-22 17:04:13|   0.1|  0.0|STATS |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|STATS |r4c_laajasalo_sensors                                                       10
+2023-08-22 17:04:13|   0.1|  0.0|STATS |==============================================================================
+2023-08-22 17:04:13|   0.1|  0.0|STATS |Total Features Written                                                      10
+2023-08-22 17:04:13|   0.1|  0.0|STATS |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|STATS |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|STATS |                            Features Read Summary
+2023-08-22 17:04:13|   0.1|  0.0|STATS |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|STATS |==============================================================================
+2023-08-22 17:04:13|   0.1|  0.0|STATS |Total Features Read                                                          0
+2023-08-22 17:04:13|   0.1|  0.0|STATS |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|STATS |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|STATS |                           Features Written Summary
+2023-08-22 17:04:13|   0.1|  0.0|STATS |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|STATS |r4c_laajasalo_sensors                                                       10
+2023-08-22 17:04:13|   0.1|  0.0|STATS |==============================================================================
+2023-08-22 17:04:13|   0.1|  0.0|STATS |Total Features Written                                                      10
+2023-08-22 17:04:13|   0.1|  0.0|STATS |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2023-08-22 17:04:13|   0.1|  0.0|WARN  |-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+2023-08-22 17:04:13|   0.1|  0.0|WARN  |-~                                                                             ~-
+2023-08-22 17:04:13|   0.1|  0.0|WARN  |-~    Feature caches have been recorded at every stage of the translation.     ~-
+2023-08-22 17:04:13|   0.1|  0.0|WARN  |-~                      To inspect the recorded features,                      ~-
+2023-08-22 17:04:13|   0.1|  0.0|WARN  |-~              click the feature cache icons next to the ports.               ~-
+2023-08-22 17:04:13|   0.1|  0.0|WARN  |-~                                                                             ~-
+2023-08-22 17:04:13|   0.1|  0.0|WARN  |-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+2023-08-22 17:04:13|   0.1|  0.0|INFORM|Translation was SUCCESSFUL with 8 warning(s) (10 feature(s) output)
+2023-08-22 17:04:13|   0.1|  0.0|INFORM|FME Session Duration: 0.1 seconds. (CPU: 0.1s user, 0.0s system)
+2023-08-22 17:04:13|   0.1|  0.0|INFORM|END - ProcessID: 49670, peak process memory usage: 151568 kB, current process memory usage: 151568 kB
