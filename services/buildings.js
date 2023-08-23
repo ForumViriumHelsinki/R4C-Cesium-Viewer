@@ -162,23 +162,26 @@ function setHelsinkiBuildingsHeight( entities ) {
 
 		let entity = entities[ i ];
 
-		if ( entity.properties.measured_height ) {
+		if ( entity.polygon ) {
 
-			entity.polygon.extrudedHeight = entity.properties.measured_height._value;
+			if ( entity.properties.measured_height ) {
 
-		} else {
-
-			if ( entity.properties.i_kerrlkm != null && entity.polygon ) {
-
-				entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 3.2;
+				entity.polygon.extrudedHeight = entity.properties.measured_height._value;
 	
+			} else {
+	
+				if ( entity.properties.i_kerrlkm != null ) {
+	
+					entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 3.2;
+		
+				}
+		
+				if ( entity.properties.i_kerrlkm == null ) {
+		
+					entity.polygon.extrudedHeight = 2.7;
+		
+				}		
 			}
-	
-			if ( entity.properties.i_kerrlkm == null && entity.polygon ) {
-	
-				entity.polygon.extrudedHeight = 2.7;
-	
-			}		
 		}
 	}
 }

@@ -193,7 +193,7 @@ function createTreeBuildingPlotMap( sumPAlaM2Map ) {
 			// Set tree_area as a property of the entity
 			entity._properties.treeArea = tree_area;
 			
-			if ( tree_area > 225 ) {
+			if ( entity.polygon & tree_area > 225 ) {
 				  
 				// Highlight the building entity edges by changing its outlineColor and outlineWidth
 				entity.polygon.outline = true; // Enable outline
