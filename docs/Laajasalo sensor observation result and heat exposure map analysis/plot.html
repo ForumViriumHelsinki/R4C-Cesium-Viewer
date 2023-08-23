@@ -14,14 +14,21 @@
             .then( response => response.json() )
             .then( data => {
 
+                // Sort data.features array by heatExposureIndex
+                const sortedFeatures = data.features.slice().sort((a, b) => {
+                    const heatExposureA = Number(a.properties.heatExposureIndex);
+                    const heatExposureB = Number(b.properties.heatExposureIndex);
+                    return heatExposureA - heatExposureB;
+                 });
+
                 // Extract heat exposure values from GeoJSON properties and convert them to numbers
-                const heatExposureValues = data.features.map( feature => Number( feature.properties.heatExposureIndex ) );
+                const heatExposureValues = sortedFeatures.map( feature => Number( feature.properties.heatExposureIndex ) );
 
                 // Extract Steadman values from GeoJSON properties and convert them to numbers
-                const steadmanValues = data.features.map( feature => Number( feature.properties.steadmanIndexC ) );
+                const steadmanValues = sortedFeatures.map( feature => Number( feature.properties.steadmanIndexC ) );
 
                 // Extract addresses from GeoJSON properties
-                const addresses = data.features.map( feature => feature.properties.address) ;
+                const addresses = sortedFeatures.map( feature => feature.properties.address) ;
 
                 // Calculate linear regression parameters using simple-statistics
                 const regressionLine = ss.linearRegression(
@@ -38,6 +45,27 @@
                 // Calculate corresponding y values for the regression line using the linear equation
                 const regressionY = regressionX.map( xVal => slope * xVal + intercept );
 
+                // Calculate the differences between heat exposure and temperature values
+                const differences = steadmanValues.map((heatValue, index) => heatValue - regressionY[index])
+                // Calculate the sum of the differences between heat exposure and temperature values
+                const sumOfDifferences = differences.reduce((sum, difference) => sum + difference, 0);
+
+                console.log( "slope", slope );
+                console.log( "intercept", intercept );
+                console.log( "differences from regression line", differences );
+                console.log( "sum differences from regression line", sumOfDifferences );
+
+                // Calculate the sum of the squared differences (residual sum of squares)
+                const residualSumOfSquares = differences.reduce((sum, difference) => sum + difference ** 2, 0);
+
+                // Calculate the total sum of squares
+                const meanSteadmanValue = ss.mean(steadmanValues);
+                const totalSumOfSquares = steadmanValues.reduce((sum, value) => sum + (value - meanSteadmanValue) ** 2, 0);
+
+                // Calculate the R-squared value
+                const rSquared = 1 - (residualSumOfSquares / totalSumOfSquares);
+
+                console.log("R-Squared:", rSquared);
 
                 // Define trace for Heat Exposure Index
                 const traces = [
