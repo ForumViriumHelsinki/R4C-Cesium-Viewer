@@ -162,7 +162,7 @@ function createTreeBuildingPlotMap( sumPAlaM2Map ) {
 		let entity = buildingsDataSource._entityCollection._entities._array[ i ];
 	
 		// If entity has a heat exposure value, add it to the urbanHeatData array and add data for the scatter plot
-		if ( entity._properties.avgheatexposuretobuilding && entity._properties._id && entity._properties._i_kokala && Number( entity._properties._i_kokala._value ) > 225 ) {
+		if ( entity._properties.avgheatexposuretobuilding && entity._properties._id && entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
 
 			const building_id = entity._properties._id._value;
 			const heatExposure = entity._properties.avgheatexposuretobuilding._value.toFixed( 2 );

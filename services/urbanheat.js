@@ -50,6 +50,12 @@ function setAttributesFromApiToBuilding ( properties, features ) {
 
 			}
 
+			if ( features[ i ].properties.area_m2 ) {
+
+				properties.area_m2 = features[ i ].properties.area_m2;
+
+			}
+
 			if ( features[ i ].properties.roof_median_color ) {
 
 				properties.roof_median_color = getColorValue( features[ i ].properties.roof_median_color );
@@ -123,14 +129,17 @@ function createDataSetForScatterPlot( features, categorical, numerical, categori
 
 	for ( let i = 0; i < features.length; i++ ) {
 
-		if ( features[ i ].properties.avgheatexposuretobuilding && features[ i ].properties[ categoricalName ] && features[ i ].properties[ numericalName ] ) {
+		if ( features[ i ].properties.avgheatexposuretobuilding && features[ i ].properties[ categoricalName ] && features[ i ].properties[ numericalName ] && features[ i ].properties.area_m2 && Number( features[ i ].properties.area_m2 ) > 225 ) {
 			
 			let element = { heat: features[ i ].properties.avgheatexposuretobuilding, [ categorical ]:  features[ i ].properties[ categoricalName ], [ numerical ]: features[ i ].properties[ numericalName ] };
 			urbanHeatDataAndMaterial.push( element );
 
 		}
 
-	}	
+	}
+	
+	console.log("number of buildings added to scatterplot:", urbanHeatDataAndMaterial.length );
+
 
 	return urbanHeatDataAndMaterial;
 

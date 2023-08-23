@@ -87,6 +87,7 @@ function selectAttributeForScatterPlot( ) {
     // Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
     processEntitiesForScatterPlot( buildingsDataSource.entities.values, urbanHeatDataAndMaterial, currentCat, currentNum, hideNonSote, hideLowToggle );
     // Create a scatter plot with the updated data
+    console.log("number of buildings added to scatterplot:", urbanHeatDataAndMaterial.length );
     createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
 }
 

@@ -458,7 +458,7 @@ function addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, n
 
         }
 
-        if ( entity._properties._i_kokala && Number( entity._properties._i_kokala._value ) > 225 ) {
+        if ( entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
 
             // Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
             const element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
@@ -508,6 +508,9 @@ function showAllBuildings( ) {
             }
 
     }
+
+    console.log("number of buildings in area:", buildingsDataSource._entityCollection._entities._array.length );
+    console.log("number of buildings added to scatterplot:", urbanHeatDataAndMaterial.length );
 
     // Create/update the urban heat histogram and scatter plot
     updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial );    
