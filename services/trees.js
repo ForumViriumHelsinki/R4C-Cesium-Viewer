@@ -196,9 +196,13 @@ function createTreeBuildingPlotMap( sumPAlaM2Map ) {
 			if ( tree_area > 225 ) {
 				  
 				// Highlight the building entity edges by changing its outlineColor and outlineWidth
-				entity.polygon.outline = true; // Enable outline
-				entity.polygon.outlineColor = Cesium.Color.GREEN; // Set outline color to green
-				entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
+				if ( entity.polygon ) {
+
+					entity.polygon.outline = true; // Enable outline
+					entity.polygon.outlineColor = Cesium.Color.GREEN; // Set outline color to green
+					entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
+										
+				}
 
 				if ( maxTreeArea < tree_area ) {
 
