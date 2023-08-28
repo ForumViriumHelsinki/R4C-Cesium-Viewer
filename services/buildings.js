@@ -70,30 +70,45 @@ function findAndSetOutsideHelsinkiBuildingsColor( entities ) {
 	}
 }
 
+/**
+ * Set building entities heat exposure
+ *
+ * @param { Object } entities Cesium entities
+ */
 function setHeatExposureToBuildings( entities ) {
 
 	for ( let i = 0; i < entities.length; i++ ) {
 
 		let entity = entities[ i ];
-
-		if ( entity.properties.avgheatexposuretobuilding && entity.polygon ) {
-
-			entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.avgheatexposuretobuilding._value, 0, entity.properties.avgheatexposuretobuilding._value );
-
-		} else {
-
-			if ( entity.polygon ) {
-				
-				entity.polygon.material = new Cesium.Color( 0, 0, 0, 0 );
-			}
-		}
-
-		hideNonSoteBuilding( entity );
-		hideLowBuilding( entity );
+		setBuildingEntityPolygon( entity );
 
 	}
 }
 
+/**
+ * Set building entity polygon
+ *
+ * @param { Object } entity building entity
+ */
+function setBuildingEntityPolygon( entity ) {
+
+	if ( entity.properties.avgheatexposuretobuilding && entity.polygon ) {
+
+		entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.avgheatexposuretobuilding._value, 0, entity.properties.avgheatexposuretobuilding._value );
+
+	} else {
+
+		if ( entity.polygon ) {
+			
+			entity.polygon.material = new Cesium.Color( 0, 0, 0, 0 );
+
+		}
+	}
+
+	hideNonSoteBuilding( entity );
+	hideLowBuilding( entity );
+
+}
 
 /**
  * If hideNonSote switch is checked this function hides buildings based on value of c_kayttark
@@ -279,4 +294,43 @@ async function loadWFSBuildingsWithoutCache( url, inhelsinki, postcode ) {
 		findUrbanHeatData( data, inhelsinki, postcode );
 	})
 	
+}
+
+/**
+ * Finds building datasource and resets building entities polygon
+ *
+ */
+function resetBuildingEntites( ) {
+
+	// Find the data source for buildings
+	const buildingDataSource = getDataSourceByName( "Buildings" );
+
+	// If the data source isn't found, exit the function
+	if ( !buildingDataSource ) {
+		return;
+	}
+
+	for ( let i = 0; i < buildingDataSource._entityCollection._entities._array.length; i++ ) {
+        
+		let entity = buildingDataSource._entityCollection._entities._array[ i ];
+
+
+		entity.polygon.outlineColor = Cesium.Color.BLACK; 
+		entity.polygon.outlineWidth = 3; 
+
+		if ( entity._properties._avgheatexposuretobuilding && entity.polygon ) {
+
+			entity.polygon.material = new Cesium.Color( 1, 1 - entity._properties._avgheatexposuretobuilding._value, 0, entity._properties._avgheatexposuretobuilding._value );
+	
+		} else {
+	
+			if ( entity.polygon ) {
+				
+				entity.polygon.material = new Cesium.Color( 0, 0, 0, 0 );
+	
+			}
+		}
+
+	}
+
 }

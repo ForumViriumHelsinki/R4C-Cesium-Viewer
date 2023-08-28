@@ -203,8 +203,18 @@ function showAllPlots( ) {
     document.getElementById( 'plotContainer' ).style.visibility = 'visible';
     document.getElementById( 'plotSoSContainer' ).style.visibility = 'visible';
     document.getElementById( 'plotMaterialContainer' ).style.visibility = 'visible';
-    document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
-    document.getElementById( 'categoricalSelect' ).style.visibility = 'visible'; 
+
+    // only show scatter plot selects if trees are not visible
+    if ( !document.getElementById( "showTreesToggle" ).checked ) {
+
+        document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
+        document.getElementById( 'categoricalSelect' ).style.visibility = 'visible'; 
+       
+    } else {
+
+        document.getElementById( 'bearingSelect' ).style.visibility = 'visible';
+
+    }
 
 }
 
@@ -218,26 +228,10 @@ function hideAllPlots( ) {
     document.getElementById( 'plotSoSContainer' ).style.visibility = 'hidden';
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+    document.getElementById( 'bearingSelect' ).style.visibility = 'hidden';
     document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
     document.getElementById( 'numericalSelect' ).value = 'measured_height';
-
-
-}
-
-/**
- * Hides all plots and select elements
- * 
- * */
-function hideAllPlots( ) {
-
-    document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
-    document.getElementById( 'plotSoSContainer' ).style.visibility = 'hidden';
-    document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
-    document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
-    document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
-    document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
-    document.getElementById( 'numericalSelect' ).value = 'measured_height';
-
+    document.getElementById( 'bearingSelect' ).value = 'a';
 
 }

@@ -77,18 +77,18 @@ function addTreesDataSource( data, postcode ) {
  * Fetch tree distance data from the provided URL and create a new dataset for plot that presents the cooldown effect on trees on buildings
  *
  * @param { string } postcode - The postal code to fetch the tree distance data for.
- * @param { object } treeData - The dataset containing tree information
  */
-function fetchAndAddTreeDistanceData( postcode, treeData ) {
+function fetchAndAddTreeDistanceData( postcode ) {
 	// Fetch the tree data from the URL
 	const url = "https://geo.fvh.fi/r4c/collections/tree_building_distance/items?f=json&limit=100000&postinumero=" + postcode;
 	fetch( url )
 	  .then( response => response.json() )
 	  .then( data => {
 		// Call function that combines datasets for plotting
-		const sumPAlaM2Map = combineDistanceAndTreeData( data, treeData );
+		const sumPAlaM2Map = combineDistanceAndTreeData( data );
 		const heatExpTreeArea = createTreeBuildingPlotMap( sumPAlaM2Map );
 		const heatExpAverageTreeArea = extractKeysAndAverageTreeArea( heatExpTreeArea );
+		console.log("heatExpAverageTreeArea", heatExpAverageTreeArea)
 		createTreesNearbyBuildingsPlot( heatExpAverageTreeArea[ 0 ], heatExpAverageTreeArea[ 1 ], heatExpAverageTreeArea[ 2 ] );
 
 	  })
@@ -199,9 +199,9 @@ function createTreeBuildingPlotMap( sumPAlaM2Map ) {
 				if ( entity.polygon ) {
 
 					entity.polygon.outline = true; // Enable outline
-					entity.polygon.outlineColor = Cesium.Color.GREEN; // Set outline color to green
+					entity.polygon.outlineColor = Cesium.Color.CHARTREUSE; // Set outline color to green
 					entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
-										
+
 				}
 
 				if ( maxTreeArea < tree_area ) {
@@ -260,39 +260,99 @@ function setEntityColorToGreen( entityId, datasource ) {
  * 
  * @return { object } mapped data for plotting
  */
-function combineDistanceAndTreeData( distanceData, treeData ) {
+function combineDistanceAndTreeData( distanceData ) {
 
   	// Create a map to store the sum of 'p_ala_m2' for each 'kohde_id' in 'treeData'
   	const sumPAlaM2Map = new Map();
 
+	// Find the data source for trees
+	const treeDataSource = getDataSourceByName( "Trees" );
+
+	// If the data source isn't found, exit the function
+	if ( !treeDataSource ) {
+		return;
+	}
+
 	for ( let i = 0, len = distanceData.features.length; i < len; i++ ) {
 
-		const building_id = distanceData.features[ i ].properties.building_id;
-		const tree_id = distanceData.features[ i ].properties.tree_id;
+		const bearing = distanceData.features[ i ].properties.bearing;
 
-		for ( let j = 0, len = treeData.features.length; j < len; j++ ) {
+		if ( checkBearing( bearing ) ) {
 
-			if ( tree_id === treeData.features[ j ].properties.kohde_id ) {
+			const building_id = distanceData.features[ i ].properties.building_id;
+			const tree_id = distanceData.features[ i ].properties.tree_id;
 
-				const p_ala_m2 = treeData.features[ j ].properties.p_ala_m2;
-
-				if ( sumPAlaM2Map.has( building_id ) ) {
-
-					sumPAlaM2Map.set( building_id, sumPAlaM2Map.get( building_id ) + p_ala_m2 );
+			for ( let i = 0; i < treeDataSource._entityCollection._entities._array.length; i++ ) {
+        
+				let entity = treeDataSource._entityCollection._entities._array[ i ];
 				
-				} else {
+				// Check if the entity posno property matches the postalcode.
+				if ( entity._properties._kohde_id._value === tree_id ) {
+
+					entity.polygon.outline = true; // Enable outline
+					entity.polygon.outlineColor = Cesium.Color.CHARTREUSE; // Set outline color to green
+					entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
+
+					const p_ala_m2 = entity._properties._p_ala_m2._value ;
+	
+					if ( sumPAlaM2Map.has( building_id ) ) {
+	
+						sumPAlaM2Map.set( building_id, sumPAlaM2Map.get( building_id ) + p_ala_m2 );
 					
-					sumPAlaM2Map.set( building_id, p_ala_m2 );
+					} else {
+						
+						sumPAlaM2Map.set( building_id, p_ala_m2 );
+	
+					}
 
 				}
-
-			}
-
-		}			
-
+			}	
+		}
 	}
 
 	return sumPAlaM2Map;
+
+}
+
+/**
+ * Check if the bearing value is according to user select value
+ *
+ * @param { Number } bearing - The bearing of tree to building
+ * 
+* @return { Boolean } 
+ */
+function checkBearing( bearing ) {
+
+	const selectedValue = document.getElementById( "bearingSelect" ).value;
+
+	switch ( selectedValue ){
+		case "a":
+			return true;
+		case "s":
+			if ( bearing > 134 && bearing < 225 ) {
+				return true;
+			}
+
+		case "w":
+			if ( bearing > 224 && bearing < 315 ) {
+
+				return true;
+			}
+		case "n":
+			if ( bearing > 314 && bearing < 45 ) {
+
+				return true;
+			}
+		case "e":
+			if ( bearing > 44 && bearing < 135 ) {
+
+				return true;
+			}
+
+		default:
+				return false;
+		}	
+
 
 }
   
@@ -340,5 +400,35 @@ function setTreePolygonMaterialColor( entity, description ) {
 			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.5 );
             entity.polygon.extrudedHeight = 6;
 		}	
+
+}
+
+/**
+ * Finds building datasource and resets tree entities polygon
+ *
+ */
+function resetTreeEntites( ) {
+
+	// Find the data source for trees
+	const treeDataSource = getDataSourceByName( "Trees" );
+
+	// If the data source isn't found, exit the function
+	if ( !treeDataSource ) {
+		return;
+	}
+
+	for ( let i = 0; i < treeDataSource._entityCollection._entities._array.length; i++ ) {
+        
+		let entity = treeDataSource._entityCollection._entities._array[ i ];
+
+
+		entity.polygon.outlineColor = Cesium.Color.BLACK; 
+		entity.polygon.outlineWidth = 3; 
+
+		if ( entity._properties._description && entity.polygon ) {
+
+			setTreePolygonMaterialColor( entity, entity._properties._description._value );	
+		}
+	}
 
 }

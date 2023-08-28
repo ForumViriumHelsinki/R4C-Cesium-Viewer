@@ -8,6 +8,13 @@ function selectEvents( event ) {
         
         selectAttributeForScatterPlot( );
     }	
+
+    if ( event.target.id  == 'bearingSelect' ) {
+        
+        resetBuildingEntites( );
+        resetTreeEntites( );
+        fetchAndAddTreeDistanceData( postalcode );
+    }
             
 }
 

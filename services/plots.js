@@ -87,6 +87,7 @@ function createScatterPlot( features, categorical, numerical ) {
 		document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
 		document.getElementById( "plotMaterialContainer" ).style.visibility = 'visible';
+		document.getElementById( 'bearingSelect' ).style.visibility = 'hidden';
 		  
 		const layout = {
 			scattermode: 'group',
@@ -102,6 +103,13 @@ function createScatterPlot( features, categorical, numerical ) {
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 		document.getElementById( "plotMaterialContainer" ).style.visibility = 'hidden';
+
+		// only show bearing select if trees are  visible
+		if ( document.getElementById( "showTreesToggle" ).checked ) {
+			
+			document.getElementById( 'bearingSelect' ).style.visibility = 'visible';
+		
+		}
 
 	}
 
@@ -158,6 +166,7 @@ function createTreesNearbyBuildingsPlot( heatexps, tree_areas, counts ) {
 
 		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+		document.getElementById( 'bearingSelect' ).style.visibility = 'visible';
 
 		const trace1 = {
 			x: heatexps,

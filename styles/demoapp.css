@@ -87,6 +87,16 @@
 	font-size: smaller;
 }
 
+#bearingSelect
+{
+	position: fixed;
+	bottom: 41px;
+	left: 546px;
+	visibility: hidden;
+	
+	font-size: smaller;
+}
+
 #categoricalSelect
 {
 	position: fixed;
