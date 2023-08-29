@@ -124,6 +124,6 @@ function setVegetationPolygonMaterialColor( entity, category ) {
 		case "520":
 			entity.polygon.material = Cesium.Color.DODGERBLUE.withAlpha( 0.5 );
 			break;
-		}	
+	}	
 
 }

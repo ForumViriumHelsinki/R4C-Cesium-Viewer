@@ -4,70 +4,47 @@
  * @param { Object } event the slider event
  */
 function sliderEvents( event ) {
-		
-    // If the slider value is "print", call the printEvent function.
-    if ( event.target.value == 'print' ) {
 
-        printEvent();
+    const eventValue = event.target.value;
 
-    }
-      
-    // If the slider value is "showPlot", call the showPlotEvent function.
-    if ( event.target.value == 'showPlot' ) {
-
-        showPlotEvent();
-
-    }	
-
-    // If the slider value is "showVegetation", call the showVegetationEvent function.
-    if ( event.target.value == 'showVegetation' ) {
-
-        showVegetationEvent();
-
-    }
-
-    // If the slider value is "showOtherNature", call the showOtherNatureEvent function.
-    if ( event.target.value == 'showOtherNature' ) {
-
-        showOtherNatureEvent();
+    switch ( eventValue ){
+		case "print":                   // If the slider value is "print", call the printEvent function.
     
-    }
+            printEvent();
 
-    // If the slider value is "hideNonSote", call the hideNonSoteEvent function.
-    if ( event.target.value == 'hideNonSote' ) {
-        
-        hideNonSoteEvent();
-
-    }	
-
-    // If the slider value is "hideLow", call the hideLowEvent function.
-    if ( event.target.value == 'hideLow' ) {
-        
-        hideLowEvent();
-
-    }	
-
-    // If the slider value is "showTrees", call the showTrees function.
-    if ( event.target.value == 'showTrees' ) {
-        
-        showTrees();
-
-    }
-
-    // If the slider value is "showSensorData", call the showSensorData function.
-    if ( event.target.value == 'showSensorData' ) {
-        
-        showSensorData();
-
-    }  
-    
-    // If the slider value is "switchView", call the switchView function.
-    if ( event.target.value == 'switchView' ) {
-        
-        switchView();
-    
-    }  
+		case "showPlot":                // If the slider value is "showPlot", call the showPlotEvent function.
             
+            printEvent();
+
+		case "showVegetation":
+
+            showVegetationEvent();      // If the slider value is "showVegetation", call the showVegetationEvent function.
+
+		case "showOtherNature":
+
+            showVegetationEvent();      // If the slider value is "showVegetation", call the showVegetationEvent function.
+
+		case "hideNonSote":
+
+            hideNonSoteEvent();         // If the slider value is "hideNonSote", call the hideNonSoteEvent function.
+
+        case "hideLow":
+
+            hideLowEvent();             // If the slider value is "hideLow", call the hideLowEvent function.
+
+        case "showTrees":
+
+            showTrees();                // If the slider value is "showTrees", call the showTrees function. 
+
+        case "showSensorData":
+
+            showSensorData();           // If the slider value is "showSensorData", call the showSensorData function.
+ 
+        case "switchView":
+
+            switchView();               // If the slider value is "switchView", call the switchView function.            
+
+	}	
 }
 
 /**
@@ -86,6 +63,7 @@ function showTrees( ) {
         if ( postalcode ) {
 
             loadTrees( postalcode );
+            bearingLabel.style.visibility = 'visible';
 
         } 
         
@@ -95,6 +73,9 @@ function showTrees( ) {
         document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
         document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
         selectAttributeForScatterPlot( );
+        resetTreeEntites( );
+        resetBuildingEntites( );
+        bearingLabel.style.visibility = 'hidden';
 
     }
 
