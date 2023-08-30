@@ -87,7 +87,7 @@ function createScatterPlot( features, categorical, numerical ) {
 		document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
 		document.getElementById( "plotMaterialContainer" ).style.visibility = 'visible';
-		document.getElementById( 'bearingSelect' ).style.visibility = 'hidden';
+		toggleBearingSwitchesVisibility( 'hidden' );
 		  
 		const layout = {
 			scattermode: 'group',
@@ -98,6 +98,12 @@ function createScatterPlot( features, categorical, numerical ) {
 		  
 		Plotly.newPlot('plotMaterialContainer', data, layout);
 
+		toggleBearingSwitchesVisibility( 'hidden' );
+        bearingLabel.style.visibility = 'hidden';
+		document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
+        document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
+
+
 	} else {
 		
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
@@ -105,9 +111,9 @@ function createScatterPlot( features, categorical, numerical ) {
 		document.getElementById( "plotMaterialContainer" ).style.visibility = 'hidden';
 
 		// only show bearing select if trees are  visible
-		if ( document.getElementById( "showTreesToggle" ).checked ) {
-			
-			document.getElementById( 'bearingSelect' ).style.visibility = 'visible';
+		if ( document.getElementById( "showTreesToggle" ).checked & showPlot ) {
+
+			toggleBearingSwitchesVisibility( 'visible' );
 		
 		}
 
@@ -164,10 +170,6 @@ function createTreesNearbyBuildingsPlot( heatexps, tree_areas, counts ) {
 
 	if ( tree_areas.length > 0 && showPlot ) {
 
-		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
-		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
-		document.getElementById( 'bearingSelect' ).style.visibility = 'visible';
-
 		const trace1 = {
 			x: heatexps,
 			y: tree_areas,
@@ -193,6 +195,11 @@ function createTreesNearbyBuildingsPlot( heatexps, tree_areas, counts ) {
 		};
 		  
 		Plotly.newPlot('plotMaterialContainer', data, layout);
+
+		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+		toggleBearingSwitchesVisibility( 'visible' );
+		bearingLabel.style.visibility = 'visible';
 
 	} else {
 		

@@ -88,7 +88,6 @@ function fetchAndAddTreeDistanceData( postcode ) {
 		const sumPAlaM2Map = combineDistanceAndTreeData( data );
 		const heatExpTreeArea = createTreeBuildingPlotMap( sumPAlaM2Map );
 		const heatExpAverageTreeArea = extractKeysAndAverageTreeArea( heatExpTreeArea );
-		console.log("heatExpAverageTreeArea", heatExpAverageTreeArea)
 		createTreesNearbyBuildingsPlot( heatExpAverageTreeArea[ 0 ], heatExpAverageTreeArea[ 1 ], heatExpAverageTreeArea[ 2 ] );
 
 	  })
@@ -262,6 +261,8 @@ function setEntityColorToGreen( entityId, datasource ) {
  */
 function combineDistanceAndTreeData( distanceData ) {
 
+	const selectedBearingValue = findSelectedBearingValue();
+
   	// Create a map to store the sum of 'p_ala_m2' for each 'kohde_id' in 'treeData'
   	const sumPAlaM2Map = new Map();
 
@@ -277,7 +278,7 @@ function combineDistanceAndTreeData( distanceData ) {
 
 		const bearing = distanceData.features[ i ].properties.bearing;
 
-		if ( checkBearing( bearing ) ) {
+		if ( checkBearing( bearing, selectedBearingValue ) ) {
 
 			const building_id = distanceData.features[ i ].properties.building_id;
 			const tree_id = distanceData.features[ i ].properties.tree_id;
@@ -318,14 +319,13 @@ function combineDistanceAndTreeData( distanceData ) {
  * Check if the bearing value is according to user select value
  *
  * @param { Number } bearing - The bearing of tree to building
+ * @param { String } selectedBearingValue - The selected bearing value by user
  * 
 * @return { Boolean } 
  */
-function checkBearing( bearing ) {
+function checkBearing( bearing, selectedBearingValue ) {
 
-	const selectedValue = document.getElementById( "bearingSelect" ).value;
-
-	switch ( selectedValue ){
+	switch ( selectedBearingValue ){
 		case "a":
 			return true;
 		case "s":
@@ -431,4 +431,25 @@ function resetTreeEntites( ) {
 		}
 	}
 
+}
+
+/**
+ * This function iterates through each direction using the switches array. 
+ * For each direction, function gets the corresponding switch container and the associated toggle input element. 
+ * If the toggle is checked (meaning the switch is turned on), the function return its value
+ *
+ */
+function findSelectedBearingValue() {
+	const switches = [ 'All', 'South', 'West', 'East', 'North' ];
+  
+	for ( const direction of switches ) {
+	  const switchContainer = document.getElementById( `bearing${ direction }SwitchContainer` );
+	  const toggle = switchContainer.querySelector(`#bearing${ direction }Toggle` );
+	  
+	  if (toggle.checked) {
+		return toggle.value;
+	  }
+	}
+  
+	return null; // Return null if no switch is selected
 }

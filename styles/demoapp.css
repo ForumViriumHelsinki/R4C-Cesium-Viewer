@@ -87,14 +87,44 @@
 	font-size: smaller;
 }
 
-#bearingSelect
+#bearingAllSwitchContainer 
 {
-	position: fixed;
-	bottom: 41px;
-	left: 546px;
+    position: fixed;
+    bottom: 42px;
+    left: 140px;
 	visibility: hidden;
-	
-	font-size: smaller;
+}
+
+#bearingSouthSwitchContainer 
+{
+    position: fixed;
+    bottom: 42px;
+    left: 230px;
+	visibility: hidden;
+}
+
+#bearingWestSwitchContainer 
+{
+    position: fixed;
+    bottom: 42px;
+    left: 320px;
+	visibility: hidden;
+}
+
+#bearingEastSwitchContainer 
+{
+    position: fixed;
+    bottom: 42px;
+    left: 410px;
+	visibility: hidden;
+}
+
+#bearingNorthSwitchContainer 
+{
+    position: fixed;
+    bottom: 42px;
+    left: 500px;
+	visibility: hidden;
 }
 
 #categoricalSelect

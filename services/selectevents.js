@@ -7,14 +7,8 @@ function selectEvents( event ) {
     if ( event.target.id  == 'categoricalSelect' || event.target.id == 'numericalSelect' ) {
         
         selectAttributeForScatterPlot( );
-    }	
 
-    if ( event.target.id  == 'bearingSelect' ) {
-        
-        resetBuildingEntites( );
-        resetTreeEntites( );
-        fetchAndAddTreeDistanceData( postalcode );
-    }
+    }	
             
 }
 

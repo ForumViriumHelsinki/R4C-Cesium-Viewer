@@ -212,7 +212,7 @@ function showAllPlots( ) {
        
     } else {
 
-        document.getElementById( 'bearingSelect' ).style.visibility = 'visible';
+        toggleBearingSwitchesVisibility( 'visible' );
 
     }
 
@@ -228,10 +228,9 @@ function hideAllPlots( ) {
     document.getElementById( 'plotSoSContainer' ).style.visibility = 'hidden';
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
-    document.getElementById( 'bearingSelect' ).style.visibility = 'hidden';
+    toggleBearingSwitchesVisibility( 'hidden' );
     document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
     document.getElementById( 'numericalSelect' ).value = 'measured_height';
-    document.getElementById( 'bearingSelect' ).value = 'a';
 
 }

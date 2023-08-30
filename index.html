@@ -127,15 +127,52 @@
   <div id="plotMaterialContainer">
   </div>
 
-  <label id="bearingLabel" style="position: fixed; bottom: 41px; left: 290px; visibility: hidden;">Select direction of trees from buildings</label>
+  <label id="bearingLabel" style="position: fixed; bottom: 41px; left: 15px; visibility: hidden;">Direction of trees</label>
 
-  <select id="bearingSelect" value="bearing">
-    <option value="a" selected>All</option>
-    <option value="s">South</option>
-    <option value="w">West</option>
-    <option value="n">North</option>
-    <option value="e">East</option>
-</select>
+  <div id="bearingAllSwitchContainer">
+    <!-- bearingAll -->
+    <label class="switch" id="bearingAllSwitch">
+      <input type="checkbox" id="bearingAllToggle" value="a">
+      <span class="slider round"></span>
+    </label>
+    <label for="bearingAllToggle" class="label" id="bearingAllLabel">All</label>
+  </div>
+
+  <div id="bearingSouthSwitchContainer">
+    <!-- bearingSouth -->
+    <label class="switch" id="bearingSouthSwitch">
+      <input type="checkbox" id="bearingSouthToggle" value="s">
+      <span class="slider round"></span>
+    </label>
+    <label for="bearingSouthToggle" class="label" id="bearingSouthLabel">South</label>
+  </div>
+
+  <div id="bearingWestSwitchContainer">
+    <!-- bearingWest -->
+    <label class="switch" id="bearingWestSwitch">
+      <input type="checkbox" id="bearingWestToggle" value="w">
+      <span class="slider round"></span>
+    </label>
+    <label for="bearingWestToggle" class="label" id="bearingWestLabel">West</label>
+  </div>
+
+  <div id="bearingEastSwitchContainer">
+    <!-- bearingEast -->
+    <label class="switch" id="bearingEastwitch">
+      <input type="checkbox" id="bearingEastToggle" value="e">
+      <span class="slider round"></span>
+    </label>
+    <label for="bearingEastToggle" class="label" id="bearingEastLabel">East</label>
+  </div>
+
+  <div id="bearingNorthSwitchContainer">
+    <!-- bearingWest -->
+    <label class="switch" id="bearingNorthSwitch">
+      <input type="checkbox" id="bearingNorthToggle" value="n">
+      <span class="slider round"></span>
+    </label>
+    <label for="bearingNorthToggle" class="label" id="bearingNorthLabel">North</label>
+  </div>
 
   <select id="numericalSelect" value="numerical">
     <option value="measured_height" selected>height</option>
@@ -216,6 +253,9 @@
   document.getElementById( "hideLowToggle" ).disabled = true;
   document.getElementById( "switchViewToggle" ).disabled = true;
   addGeocodingEventListeners( viewer );
+
+  // Call the function to set up the bearing switches
+  setupBearingSwitches();
 
   const hriCredit = new Cesium.Credit('<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>');
   const statsCredit = new Cesium.Credit('<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>');

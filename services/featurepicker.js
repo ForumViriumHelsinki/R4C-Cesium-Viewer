@@ -147,7 +147,8 @@ function handleBuildingFeature( buildingHeatExposure, address, postinumero, tree
     // document.getElementById( "plotSoSContainer" ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
-    document.getElementById( 'bearingSelect' ).style.visibility = 'hidden';
+    toggleBearingSwitchesVisibility( 'hidden' );
+
     document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
 
     if (  document.getElementById( "showTreesToggle" ).checked ) {

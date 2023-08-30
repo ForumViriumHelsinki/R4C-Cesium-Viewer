@@ -14,7 +14,7 @@ function sliderEvents( event ) {
 
 		case "showPlot":                // If the slider value is "showPlot", call the showPlotEvent function.
             
-            printEvent();
+            showPlotEvent();
 
 		case "showVegetation":
 
@@ -22,7 +22,7 @@ function sliderEvents( event ) {
 
 		case "showOtherNature":
 
-            showVegetationEvent();      // If the slider value is "showVegetation", call the showVegetationEvent function.
+            showOtherNatureEvent();      // If the slider value is "showVegetation", call the showVegetationEvent function.
 
 		case "hideNonSote":
 
@@ -63,19 +63,15 @@ function showTrees( ) {
         if ( postalcode ) {
 
             loadTrees( postalcode );
-            bearingLabel.style.visibility = 'visible';
 
         } 
         
     } else { // If showTrees toggle is off
         
         hideDataSourceByName( "Trees" );
-        document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
-        document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
-        selectAttributeForScatterPlot( );
         resetTreeEntites( );
         resetBuildingEntites( );
-        bearingLabel.style.visibility = 'hidden';
+        selectAttributeForScatterPlot( );
 
     }
 
@@ -652,3 +648,60 @@ function switchTo3DView() {
     changeLabel( "switchViewLabel", "2D view" );
 
 }
+
+/**
+ * Setups tree bearing switches. Only one of the switch can be turned on same time,
+ * so when user turns on one switch rest are turned off.
+ * 
+ * */
+function setupBearingSwitches() {
+
+    const switches = [ 'All', 'South', 'West', 'East', 'North' ];
+  
+    for ( const direction of switches ) {
+
+      const switchContainer = document.getElementById( `bearing${ direction }SwitchContainer` );
+      const toggle = switchContainer.querySelector( `#bearing${ direction }Toggle` );
+      
+      toggle.addEventListener( 'click', () => {
+
+        for ( const otherDirection of switches) {
+    
+          if ( direction !== otherDirection ) {
+
+            const otherSwitchContainer = document.getElementById( `bearing${ otherDirection }SwitchContainer` );
+            const otherToggle = otherSwitchContainer.querySelector( `#bearing${ otherDirection }Toggle` );
+            otherToggle.checked = false;
+
+          }
+        }
+
+        resetBuildingEntites( );
+        resetTreeEntites( );
+        fetchAndAddTreeDistanceData( postalcode );
+
+      });
+  
+      // Set the 'All' switch to checked by default
+      if ( direction === 'All' ) {
+        toggle.checked = true;
+      }
+    }
+}
+
+/**
+ * Toggle visibility of tree bearing switches
+ * 
+ * @param {string} status - The desired visibility status ("visible" or "hidden")
+ */
+function toggleBearingSwitchesVisibility( status ) {
+
+    const switchContainers = [ 'All', 'South', 'West', 'East', 'North' ];
+  
+    for ( const direction of switchContainers ) {
+
+      const switchContainer = document.getElementById( `bearing${direction}SwitchContainer` );
+      switchContainer.style.visibility = status;
+
+    }
+  }
