@@ -36,11 +36,13 @@ function resetSwitches( ) {
 	document.getElementById( "showPlotToggle" ).checked = true;
 	document.getElementById( "showVegetationToggle" ).checked = false;
     document.getElementById( "showOtherNatureToggle" ).checked = false;
+    document.getElementById( "hideNonSoteToggle" ).checked = false;
+    document.getElementById( "hideLowToggle" ).checked = false;
+    document.getElementById( "hideNewBuildingsToggle" ).checked = false;
 	document.getElementById( "printToggle" ).checked = true;
-    document.getElementById( "hideNonSoteToggle" ).checked = false;	
-    document.getElementById( "hideLowToggle" ).checked = false;	
     document.getElementById( "hideNonSoteToggle" ).disabled = true;
     document.getElementById( "hideLowToggle" ).disabled = true;
+    document.getElementById( "hideNewBuildingsToggle" ).disabled = true;
     document.getElementById( "showTreesToggle" ).checked = false;
     document.getElementById( "showSensorDataToggle" ).checked = false;
     document.getElementById( "switchViewToggle" ).checked = false;

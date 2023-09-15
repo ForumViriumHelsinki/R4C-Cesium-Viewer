@@ -28,7 +28,7 @@ function scatterForSoteBuildings( urbanHeatDataAndMaterial, entity, categorical,
         const kayttotark = Number( entity._properties.c_kayttark._value );
 
         // Check if the entity is a SOTE building.
-        if ( kayttotark == 511 || !kayttotark == 131 || ( kayttotark > 212 && kayttotark < 240 ) ) {
+        if ( kayttotark == 511 || kayttotark == 131 || ( kayttotark > 212 && kayttotark < 240 ) ) {
 
             // Add urban heat data and material data for the entity.
             addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), categorical, numerical );
@@ -67,6 +67,35 @@ function scatterForTallBuildings( urbanHeatDataAndMaterial, entity, categorical,
 }
 
 /**
+ * A function to add urban heat data and material data for the given entity if it is building built before June 2018.
+ * 
+ * @param { Array } urbanHeatDataAndMaterial - The array to store the urban heat data and material data.
+ * @param { Object } entity - The entity to add the data for.
+ * @param { String } categorical - The current categorical data.
+ * @param { String } numerical - The current numerical data.
+*/
+function scatterForOldBuildings( urbanHeatDataAndMaterial, entity, categorical, numerical ) {
+
+    // Check if the entity has the floor count value
+    if ( entity._properties.c_valmpvm  && entity._properties.c_valmpvm._value ) {
+
+        const date = new Date( entity._properties.c_valmpvm._value );
+
+        // Define the target date (June 1, 2018)
+        const targetDate = new Date("2018-06-01T00:00:00");
+
+        // Check if the date is before June 1, 2018
+        if ( date < targetDate ) {
+
+            console.log("The date is after May 31, 2018.");
+            // Add urban heat data and material data for the entity.
+            addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), categorical, numerical );
+
+        }
+    }
+}
+
+/**
  * A function to handle change of categorical or numerical value in the scatter plot
  * 
  */
@@ -80,13 +109,9 @@ function selectAttributeForScatterPlot( ) {
     }
 
     const urbanHeatDataAndMaterial = [];
-    const currentCat = document.getElementById( "categoricalSelect" ).value;
-    const currentNum =  document.getElementById( "numericalSelect" ).value;
-    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
-    const hideLowToggle = document.getElementById( "hideLowToggle" ).checked;
 
     // Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
-    processEntitiesForScatterPlot( buildingsDataSource.entities.values, urbanHeatDataAndMaterial, currentCat, currentNum, hideNonSote, hideLowToggle );
+    processEntitiesForScatterPlot( buildingsDataSource.entities.values, urbanHeatDataAndMaterial );
     // Create a scatter plot with the updated data
     console.log("number of buildings added to scatterplot:", urbanHeatDataAndMaterial.length );
     createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
@@ -102,7 +127,12 @@ function selectAttributeForScatterPlot( ) {
  * @param { boolean } hideNonSote - Whether to hide non-SOTE buildings in the scatter plot
  * @param { boolean } hideLowToggle - Whether to hide short buildings in the scatter plot
  */
-function processEntitiesForScatterPlot( entities, urbanHeatDataAndMaterial, categorical, numerical, hideNonSote, hideLowToggle ) {
+function processEntitiesForScatterPlot( entities, urbanHeatDataAndMaterial ) {
+
+    const numerical = document.getElementById("numericalSelect").value
+    const categorical = document.getElementById("categoricalSelect").value
+    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
+    const hideLowToggle = document.getElementById( "hideLowToggle" ).checked;
 
     entities.forEach( entity => {
 
@@ -118,7 +148,13 @@ function processEntitiesForScatterPlot( entities, urbanHeatDataAndMaterial, cate
     
       }
 
-      if ( !hideNonSote && !hideLowToggle ) {
+      if ( document.getElementById( "hideNewBuildingsToggle" ).checked )  {
+
+        scatterForOldBuildings( urbanHeatDataAndMaterial, entity, categorical, numerical );
+    
+      }
+
+      if ( !hideNonSote && !hideLowToggle && !document.getElementById( "hideNewBuildingsToggle" ).checked ) {
 
         addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), categorical, numerical );
 

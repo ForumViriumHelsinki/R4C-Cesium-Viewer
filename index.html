@@ -57,17 +57,24 @@
   <span class="slider round"></span>
 </label>
 <label for="showOtherNatureToggle" class="label">Other nature</label>
-  
+
+  <!-- hideNewBuildingsSwitch-->
+<label class="switch" id = "hideNewBuildingsSwitch">
+  <input type="checkbox" id="hideNewBuildingsToggle" value="filterBuildings" >
+  <span class="slider round"></span>
+</label>
+<label for="hideNewBuildings" class="label">Built before summer 2018</label>
+
   <!-- hideNonSoteSwitch-->
-<label class="switch" id = "hideLowSwitch">
-	<input type="checkbox" id="hideNonSoteToggle" value="hideNonSote" >
+<label class="switch" id = "hideNonSoteSwitch">
+	<input type="checkbox" id="hideNonSoteToggle" value="filterBuildings" >
 	<span class="slider round"></span>
 </label>
 <label for="hideNonSote" class="label">Only sote buildings</label>
 
   <!--  hideLowSwitch-->
 <label class="switch" id = "hideLowSwitch" >
-  <input type="checkbox" id="hideLowToggle" value="hideLow" >
+  <input type="checkbox" id="hideLowToggle" value="filterBuildings" >
   <span class="slider round"></span>
 </label>
 <label for="hideLow" class="label">Only tall buildings</label>
@@ -250,6 +257,7 @@
 
   //disable switch for showing heat exposure on nature areas
   document.getElementById( "hideNonSoteToggle" ).disabled = true;
+  document.getElementById( "hideNewBuildingsToggle" ).disabled = true;
   document.getElementById( "hideLowToggle" ).disabled = true;
   document.getElementById( "switchViewToggle" ).disabled = true;
   addGeocodingEventListeners( viewer );

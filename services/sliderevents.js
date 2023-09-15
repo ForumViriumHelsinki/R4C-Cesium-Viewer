@@ -24,13 +24,9 @@ function sliderEvents( event ) {
 
             showOtherNatureEvent();      // If the slider value is "showVegetation", call the showVegetationEvent function.
 
-		case "hideNonSote":
-
-            hideNonSoteEvent();         // If the slider value is "hideNonSote", call the hideNonSoteEvent function.
-
-        case "hideLow":
-
-            hideLowEvent();             // If the slider value is "hideLow", call the hideLowEvent function.
+		case "filterBuildings":
+            
+            filterBuildingsEvent();         // If the slider value is "filterBuildings", call the filterBuildingsEvent function.           
 
         case "showTrees":
 
@@ -241,28 +237,29 @@ function showOtherNatureEvent( ) {
 }
 
 /**
- * Hide non-SOTE buildings and update the histograms and scatter plot based on the selected numerical and categorical data
+ * Hide buildings based on silder values and update the histograms and scatter plot based on the selected numerical and categorical data
  */
-function hideNonSoteBuildings() {
-
-    const buildingsDataSource = getDataSourceByName( "Buildings" );
-    const soteBuildings = filterSoteBuildings( buildingsDataSource );
-    const urbanHeatData = mapUrbanHeatData( soteBuildings );
-    const urbanHeatDataAndMaterial = [];
-    const currentCat = document.getElementById( "categoricalSelect" ).value;
-    const currentNum =  document.getElementById( "numericalSelect" ).value;
-    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
-    const hideLowToggle = document.getElementById( "hideLowToggle" ).checked;
-
-    // Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
-    processEntitiesForScatterPlot( buildingsDataSource.entities.values, urbanHeatDataAndMaterial, currentCat, currentNum, hideNonSote, hideLowToggle );
+function hideBuildings() {
     
-    updateBuildingsVisibility( buildingsDataSource, soteBuildings );
+    // Find the data source for buildings
+    const buildingsDataSource = getDataSourceByName( "Buildings" );
 
+    // If the data source isn't found, exit the function
+    if ( !buildingsDataSource ) {
+        return;
+    }
+
+    const includedBuildings = filterBuildings( buildingsDataSource );
+    const urbanHeatData = mapUrbanHeatData( includedBuildings );
+
+    let urbanHeatDataAndMaterial = [];
+    // Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
+    processEntitiesForScatterPlot( buildingsDataSource.entities.values, urbanHeatDataAndMaterial );
     createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
     createUrbanHeatHistogram( urbanHeatData );    
 
-  }
+}
+
   
 /**
  * Get a data source from the Cesium viewer
@@ -289,37 +286,90 @@ function hideDataSourceByName( name ) {
         }
     });
 }
-  
-  /**
-   * Filter out non-SOTE buildings from the given data source
-   * 
-   * @param { Object } dataSource The data source containing buildings
-   * @returns { Object[ ] } An array of SOTE buildings
-   */
-function filterSoteBuildings( dataSource ) {
 
-    return dataSource.entities.values.filter( entity => {
-      const kayttotark = Number( entity._properties.c_kayttark._value );
-      return kayttotark === 511 || kayttotark === 131 || ( kayttotark > 212 && kayttotark < 240 );
-    });
+/**
+ * Filter buildings from the given data source based on UI toggle switches.
+ * 
+ * @param {Object} dataSource The data source containing buildings
+ * @returns {Object[]} An array of filtered buildings
+ */
+function filterBuildings( dataSource ) {
 
-}
+    const hideNewBuildings = document.getElementById( "hideNewBuildingsToggle" ).checked;
+    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
+    const hideLow = document.getElementById( "hideLowToggle" ).checked;
 
-  /**
-   * Filter out buildings with floor count 6 or less from the given data source
-   * 
-   * @param { Object } dataSource The data source containing buildings
-   * @returns { Object[ ] } An array of SOTE buildings
-   */
-function filterTallBuildings( dataSource ) {
+    const filteredBuildings = dataSource.entities.values.filter( entity => {
+        let passFilter = true;
 
-    return dataSource.entities.values.filter( entity => {
-        if ( entity._properties.i_kerrlkm ) {
-            return Number( entity._properties.i_kerrlkm._value ) > 6;
-        }
-    });
+        if ( hideNewBuildings ) {
+            // Filter out buildings built before summer 2018
+            const cutoffDate = new Date( "2018-06-01T00:00:00" ).getTime();
+            if ( entity._properties._c_valmpvm && typeof entity._properties._c_valmpvm._value === 'string' ) {
+
+                const c_valmpvm = new Date( entity._properties._c_valmpvm._value ).getTime();
+
+                if ( c_valmpvm >= cutoffDate ) {
+
+                    passFilter = false;
+                    entity.show = false;
+
+                }
+            } else {
+
+                passFilter = false;
+                entity.show = false;
     
+            }
+        }
+
+        if ( hideNonSote ) {
+            // Filter out non-SOTE buildings
+
+            if ( entity._properties._c_kayttark ) {
+
+                const kayttotark = Number( entity._properties.c_kayttark._value );
+
+                if ( !kayttotark != 511 && !kayttotark != 131 && !( kayttotark > 212 && kayttotark < 240 ) ) {
+    
+                    entity.show = false;
+                    passFilter = false;
+        
+                }
+                
+            } else {
+
+                entity.show = false;
+                passFilter = false;
+    
+            }
+        }
+
+        if ( hideLow ) {
+            // Filter out buildings with fewer floors
+            if ( entity._properties._i_kerrlkm ) {
+
+                if ( entity._properties._i_kerrlkm && Number( entity._properties._i_kerrlkm._value ) <= 6 ) {
+
+                    entity.show = false;
+                    passFilter = false;
+    
+                }
+                
+            } else {
+
+                entity.show = false;
+                passFilter = false;
+    
+            }
+        }
+
+        return passFilter;
+    });
+
+    return filteredBuildings;
 }
+
   
 /**
  * Get an array of urban heat data from the given array of entities
@@ -328,7 +378,7 @@ function filterTallBuildings( dataSource ) {
  */
 function mapUrbanHeatData( entities ) {
     
-    return entities.map( entity => entity._properties.avgheatexposuretobuilding._value );
+    return entities.map( entity => entity._properties._avgheatexposuretobuilding._value );
 
 }
   
@@ -360,7 +410,7 @@ function mapUrbanHeatDataAndMaterial( entities ) {
  * @param { Object[ ] } entitiesToShow An array of entities to show
  */
 function updateBuildingsVisibility( dataSource, entitiesToShow ) {
-    
+
     dataSource.entities.values.forEach( entity => {
       if ( entitiesToShow.includes( entity ) ) {
 
@@ -370,45 +420,9 @@ function updateBuildingsVisibility( dataSource, entitiesToShow ) {
 
         entity.show = false;
 
+
       }
     });
-}
-
-/**
- * Hides buildings with floor count under 7 and updates histogram & scatter plot
- *
- */
-function hideLowBuildings( ) {
-
-    // Get the current numerical and categorical select values
-    const currentNum = document.getElementById("numericalSelect").value
-    const currentCat= document.getElementById("categoricalSelect").value
-    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
-    const hideLowToggle = document.getElementById( "hideLowToggle" ).checked;
-    
-
-    // Find the data source for buildings
-    const buildingsDataSource = getDataSourceByName( "Buildings" );
-
-    // If the data source isn't found, exit the function
-    if ( !buildingsDataSource ) {
-        return;
-    }
-
-    const tallBuildings = filterTallBuildings( buildingsDataSource );
-    const urbanHeatData = mapUrbanHeatData( tallBuildings );
-
-    // Initialize array to hold data for scatter plot
-    let urbanHeatDataAndMaterial = [ ];
-
-    // Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
-    processEntitiesForScatterPlot( buildingsDataSource.entities.values, urbanHeatDataAndMaterial, currentCat, currentNum, hideNonSote, hideLowToggle );
-    
-    updateBuildingsVisibility( buildingsDataSource, tallBuildings );
-
-    createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
-    createUrbanHeatHistogram( urbanHeatData );    
-      
 }
 
 /**
@@ -482,12 +496,9 @@ function showAllBuildings( ) {
             urbanHeatData.push( entity._properties.avgheatexposuretobuilding._value );
             addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), currentCat, currentNum );
 
-            }
+        }
 
     }
-
-    console.log("number of buildings in area:", buildingsDataSource._entityCollection._entities._array.length );
-    console.log("number of buildings added to scatterplot:", urbanHeatDataAndMaterial.length );
 
     // Create/update the urban heat histogram and scatter plot
     updateHistogramAndScatterPlot( urbanHeatData, urbanHeatDataAndMaterial );    
@@ -496,53 +507,21 @@ function showAllBuildings( ) {
 
 
 /**
-* Hides or shows non-SOTE buildings based on whether the hideNonSoteToggle checkbox is checked
+* Hides or shows buildings based on whether the hideNonSoteToggle checkbox is checked
 *
 */
-function hideNonSoteEvent( ) {
+function filterBuildingsEvent( ) {
 
     const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
-
-    if ( hideNonSote ) {
-
-         // disable hideLowToggle checkbox
-        document.getElementById("hideLowToggle").disabled = true;
-         // hide non-SOTE buildings
-        hideNonSoteBuildings( );
-
-    } else {
-
-        // show all buildings
-        showAllBuildings( );
-        // enable hideLowToggle checkbox
-        document.getElementById("hideLowToggle").disabled = false;
-
-    }
-
-}
-
-
-/**
- * This function is called when the user clicks on the "hide low" toggle button.
- *
- */
-function hideLowEvent( ) {
-
-    // Get the status of the "hide low" toggle button.
+    const hideNewBuildings = document.getElementById( "hideNewBuildingsToggle" ).checked;
     const hideLow = document.getElementById( "hideLowToggle" ).checked;
 
-    // If the "hide low" toggle button is checked.
-    if ( hideLow ) {
+    if ( hideNonSote || hideNewBuildings || hideLow ) {
 
-        // Disable the "hide non-SOTE" toggle button and hide low buildings.
-        document.getElementById( "hideNonSoteToggle" ).disabled = true;
-        hideLowBuildings( );
+        hideBuildings( );
 
-    // If the "hide low" toggle button is not checked.
     } else {
 
-        // Enable the "hide non-SOTE" toggle button and show all buildings.
-        document.getElementById( "hideNonSoteToggle" ).disabled = false;
         showAllBuildings( );
 
     }

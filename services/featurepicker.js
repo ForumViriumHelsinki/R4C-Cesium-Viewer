@@ -103,6 +103,7 @@ function handlePostalCodeFeature( postcode ) {
 function loadPostalCode( postcode ) {
 
     document.getElementById( "hideNonSoteToggle" ).disabled = false;
+    document.getElementById( "hideNewBuildingsToggle" ).disabled = false;
     document.getElementById( "hideLowToggle" ).disabled = false;
     document.getElementById( "showTreesToggle" ).disabled = false;
 
