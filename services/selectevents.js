@@ -79,19 +79,19 @@ function scatterForOldBuildings( urbanHeatDataAndMaterial, entity, categorical, 
     // Check if the entity has the floor count value
     if ( entity._properties.c_valmpvm  && entity._properties.c_valmpvm._value ) {
 
-        const date = new Date( entity._properties.c_valmpvm._value );
-
-        // Define the target date (June 1, 2018)
-        const targetDate = new Date("2018-06-01T00:00:00");
-
-        // Check if the date is before June 1, 2018
-        if ( date < targetDate ) {
-
-            console.log("The date is after May 31, 2018.");
-            // Add urban heat data and material data for the entity.
-            addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), categorical, numerical );
-
+        // Filter out buildings built before summer 2018
+        const cutoffDate = new Date( "2018-06-01T00:00:00" ).getTime();
+        if ( entity._properties._c_valmpvm && typeof entity._properties._c_valmpvm._value === 'string' ) {
+        
+            const c_valmpvm = new Date( entity._properties._c_valmpvm._value ).getTime();
+        
+            if ( c_valmpvm < cutoffDate ) {
+        
+                addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), categorical, numerical );
+        
+            }
         }
+
     }
 }
 
@@ -133,6 +133,7 @@ function processEntitiesForScatterPlot( entities, urbanHeatDataAndMaterial ) {
     const categorical = document.getElementById("categoricalSelect").value
     const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
     const hideLowToggle = document.getElementById( "hideLowToggle" ).checked;
+    const hideNew = document.getElementById( "hideNewBuildingsToggle" ).checked;
 
     entities.forEach( entity => {
 
@@ -148,7 +149,7 @@ function processEntitiesForScatterPlot( entities, urbanHeatDataAndMaterial ) {
     
       }
 
-      if ( document.getElementById( "hideNewBuildingsToggle" ).checked )  {
+      if ( hideNew )  {
 
         scatterForOldBuildings( urbanHeatDataAndMaterial, entity, categorical, numerical );
     
