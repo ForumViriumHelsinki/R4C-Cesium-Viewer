@@ -38,9 +38,60 @@ function sliderEvents( event ) {
  
         case "switchView":
 
-            switchView();               // If the slider value is "switchView", call the switchView function.            
+            switchView();               // If the slider value is "switchView", call the switchView function.    
+        
+        case "populationGrid":                // If the slider value is "populationGrid", call the populationGrid function.
+            
+            populationGrid();                    
 
 	}	
+}
+
+/**
+ * This function to switch between population grid and postal code area view
+ *
+ */
+function populationGrid( ) {
+
+    // Get the state of the populationGrid toggle button
+    const populationGrid = document.getElementById( "populationGridToggle" ).checked;
+
+    // If populationGrid toggle is on
+    if ( populationGrid ) {
+
+        setPostalCodeElementsDisplay( 'none' );
+        removeDataSourcesByNamePrefix( 'PostCodes' );
+        viewer.camera.flyTo( {
+            destination: Cesium.Cartesian3.fromDegrees( 24.991745, 60.045, 12000 ),
+            orientation: {
+                heading: 0.0,
+                pitch: Cesium.Math.toRadians( -35.0 ),
+                roll: 0.0
+            },
+            duration: 1
+        });
+        loadGeoJsonDataSource( 0.1, 'assets/data/populationgrid.json', 'PopulationGrid' )
+        .then( function ( entities ) {
+
+            // Use the entities here
+            setHeatExposureToGrid( entities );
+            setGridHeight( entities );
+
+        })
+        .catch( function ( error ) {
+            // Handle errors here
+            console.error( error) ;
+        });
+
+
+    } else { 
+
+        setPostalCodeElementsDisplay( 'inline-block' );
+        removeDataSourcesByNamePrefix( 'PopulationGrid' );
+        loadGeoJsonDataSource( 0.2, 'assets/data/hki_po_clipped.json', 'PostCodes' );
+
+    }
+
 }
 
 /**

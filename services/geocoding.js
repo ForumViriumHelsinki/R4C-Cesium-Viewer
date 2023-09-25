@@ -162,6 +162,12 @@ function findNameOfZone( postalcode ) {
 
     // Find the data source for postcodes
     const postCodesDataSource = viewer.dataSources._dataSources.find( ds => ds.name === "PostCodes" );
+
+    if ( !postCodesDataSource ) {
+
+        return;
+
+    }
     
     // Iterate over all entities in the postcodes data source.
     for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {

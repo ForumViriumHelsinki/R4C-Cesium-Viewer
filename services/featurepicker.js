@@ -131,7 +131,7 @@ function loadPostalCode( postcode ) {
 
     loadWFSBuildings( postcode );	
 
-    loadPostCodeZones( 0.0 );
+    loadGeoJsonDataSource( 0.0, 'assets/data/hki_po_clipped.json', 'PostCodes' );
 
     // add laajasalo flood data
     if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {

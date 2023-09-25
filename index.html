@@ -19,6 +19,8 @@
   <script type="text/javascript" src="services/plots.js"></script>
   <script type="text/javascript" src="services/decoding.js"></script>
   <script type="text/javascript" src="services/sensors.js"></script>
+  <script type="text/javascript" src="services/population.js"></script>
+  <script type="text/javascript" src="services/datasource.js"></script>
   <script src="lib/localforage/dist/localforage.js"></script>
   <script src="lib/plotly-2.12.1.min.js"></script>
   <link href="lib/Cesium/Widgets/widgets.css" rel="stylesheet">
@@ -31,6 +33,13 @@
   <p class="header">R4C Urban Heat risk demonstrator</p>
   <p class="uiButton" onClick="reset()" style="color: red; float:right;">Reset</p>
   <!-- showPlotSwitch-->
+
+<label class="switch">
+  <input type="checkbox" id="populationGridToggle" value="populationGrid">
+  <span class="slider round"></span>
+</label>
+<label for="populationGridToggle" class="label" id="populationGridLabel">Population grid</label>  
+
 <label class="switch">
   <input type="checkbox" id="showPlotToggle" value="showPlot" checked>
   <span class="slider round"></span>
@@ -45,60 +54,60 @@
 <label for="printToggle" class="label">Object details</label>
 
   <!-- showVegetationSwitch-->
-<label class="switch">
+<label class="switch" id="showVegetationSwitch">
 	<input type="checkbox" id="showVegetationToggle" value="showVegetation" >
 	<span class="slider round"></span>
 </label>
-<label for="showVegetationToggle" class="label">Vegetation</label>
+<label for="showVegetationToggle" class="label" id="showVegetationLabel">Vegetation</label>
 
   <!-- showOtherNatureSwitch-->
-<label class="switch">
+<label class="switch" id="showOtherNatureSwitch">
   <input type="checkbox" id="showOtherNatureToggle" value="showOtherNature" >
   <span class="slider round"></span>
 </label>
-<label for="showOtherNatureToggle" class="label">Other nature</label>
+<label for="showOtherNatureToggle" class="label" id="showOtherNatureLabel">Other nature</label>
 
   <!-- hideNewBuildingsSwitch-->
 <label class="switch" id = "hideNewBuildingsSwitch">
   <input type="checkbox" id="hideNewBuildingsToggle" value="filterBuildings" >
   <span class="slider round"></span>
 </label>
-<label for="hideNewBuildings" class="label">Built before summer 2018</label>
+<label for="hideNewBuildings" class="label" id="hideNewBuildingsLabel">Built before summer 2018</label>
 
   <!-- hideNonSoteSwitch-->
 <label class="switch" id = "hideNonSoteSwitch">
 	<input type="checkbox" id="hideNonSoteToggle" value="filterBuildings" >
 	<span class="slider round"></span>
 </label>
-<label for="hideNonSote" class="label">Only sote buildings</label>
+<label for="hideNonSote" class="label" id="hideNonSoteLabel">Only sote buildings</label>
 
   <!--  hideLowSwitch-->
 <label class="switch" id = "hideLowSwitch" >
   <input type="checkbox" id="hideLowToggle" value="filterBuildings" >
   <span class="slider round"></span>
 </label>
-<label for="hideLow" class="label">Only tall buildings</label>
+<label for="hideLow" class="label" id="hideLowLabel">Only tall buildings</label>
 
   <!--  showTrees-->
-  <label class="switch" id = "showTreesSwitch" >
-    <input type="checkbox" id="showTreesToggle" value="showTrees" >
-    <span class="slider round"></span>
-  </label>
-  <label for="showTrees" class="label">Trees</label>
+<label class="switch" id = "showTreesSwitch" >
+  <input type="checkbox" id="showTreesToggle" value="showTrees" >
+  <span class="slider round"></span>
+</label>
+<label for="showTrees" class="label" id="showTreesLabel">Trees</label>
+
+  <!--  switchView-->
+<label class="switch" id = "switchViewSwitch" >
+  <input type="checkbox" id="switchViewToggle" value="switchView" >
+  <span class="slider round"></span>
+</label>
+<label for="switchView" class="label" id="switchViewLabel">2D view</label>
 
   <!--  showSensorData-->
-  <label class="switch" id = "showSensorDataSwitch" >
-    <input type="checkbox" id="showSensorDataToggle" value="showSensorData" >
-    <span class="slider round"></span>
-  </label>
-  <label for="showSensorData" class="label">Sensor data</label>
-
-    <!--  switchView-->
-    <label class="switch" id = "switchViewSwitch" >
-      <input type="checkbox" id="switchViewToggle" value="switchView" >
-      <span class="slider round"></span>
-    </label>
-    <label for="switchView" class="label" id="switchViewLabel">2D view</label>
+<label class="switch" id = "showSensorDataSwitch" >
+  <input type="checkbox" id="showSensorDataToggle" value="showSensorData" >
+  <span class="slider round"></span>
+</label>
+<label for="showSensorData" class="label">Sensor data</label>
 
 </div>
 
@@ -247,7 +256,7 @@
     });
     
     // Load post code zones & energy data availability tags
-	loadPostCodeZones(0.2);
+  loadGeoJsonDataSource( 0.2, 'assets/data/hki_po_clipped.json', 'PostCodes' );
     
 	//Experimental scripts for playing around with the objects, and retrieving their information...
 	document.getElementById("cesiumContainer").addEventListener("click", function() { processClick( viewer, event ) });

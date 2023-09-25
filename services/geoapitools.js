@@ -22,7 +22,7 @@ function reset( ) {
     resetSwitches( );
     postalcode = null;
     // Load post code zones & energy availability tags
-	loadPostCodeZones( 0.2 );
+    loadGeoJsonDataSource( 0.2, 'assets/data/hki_po_clipped.json', 'PostCodes' );
 	
 	document.getElementById( 'printContainer' ).innerHTML =  "<i>Please click on a postcode area to load building and nature areas from the WFS server...</i>";
 
@@ -83,33 +83,6 @@ function resetViewer( ) {
         }
     });
 
-}
-
-/**
- * Loads postal code zone polygons with the given opacity
- * 
- * @param {number} opacity - The opacity of the polygons (range from 0 to 1)
- */
-function loadPostCodeZones( opacity ) {
-    // Load postal code zones
-    const HKIPostCodesURL = 'assets/data/hki_po_clipped.json';
-	console.log( "Loading: " + HKIPostCodesURL );
-	
-	let promisePostCodes = Cesium.GeoJsonDataSource.load( HKIPostCodesURL, {
-  		stroke: Cesium.Color.BLACK,
-  		fill: new Cesium.Color( 0.3, 0.3, 0.3, opacity ),
-  		strokeWidth: 8,
-		clampToGround: false
-	})
-	.then( function ( dataSource ) {
-        dataSource.name = "PostCodes";
-		viewer.dataSources.add( dataSource );
-		let entities = dataSource.entities.values;
-	})	
-	.otherwise( function ( error ) {
-      //Display any errrors encountered while loading.
-      console.log( error );
-    });
 }
 
 /**
@@ -236,3 +209,4 @@ function hideAllPlots( ) {
     document.getElementById( 'numericalSelect' ).value = 'measured_height';
 
 }
+
