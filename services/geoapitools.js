@@ -33,6 +33,9 @@ function reset( ) {
  */
 function resetSwitches( ) {
 
+    setPostalCodeElementsDisplay( 'inline-block' );
+
+    document.getElementById( "populationGridToggle" ).checked = false;
 	document.getElementById( "showPlotToggle" ).checked = true;
 	document.getElementById( "showVegetationToggle" ).checked = false;
     document.getElementById( "showOtherNatureToggle" ).checked = false;
@@ -47,6 +50,7 @@ function resetSwitches( ) {
     document.getElementById( "showSensorDataToggle" ).checked = false;
     document.getElementById( "switchViewToggle" ).checked = false;
     document.getElementById( "switchViewToggle" ).disabled = true;
+    document.getElementById( "populationGridToggle" ).disabled = false;
 
     setPrintVisible( );
     hideAllPlots( );    
@@ -208,5 +212,18 @@ function hideAllPlots( ) {
     document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
     document.getElementById( 'numericalSelect' ).value = 'measured_height';
 
+}
+
+function flyCamera3D( lat, long , z ) {
+
+    viewer.camera.flyTo( {
+        destination: Cesium.Cartesian3.fromDegrees( lat, long , z ),
+        orientation: {
+            heading: 0.0,
+            pitch: Cesium.Math.toRadians( -35.0 ),
+            roll: 0.0
+        },
+        duration: 1
+    });
 }
 

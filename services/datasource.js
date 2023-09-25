@@ -1,4 +1,44 @@
 /**
+ * This function to shows all datasources to user.
+ *
+ */
+function showAllDataSources( ) {
+
+    // Set the show property of all data sources to true to show the entities
+    viewer.dataSources._dataSources.forEach( function( dataSource ) {
+
+        dataSource.show = true;
+
+    });  
+}
+
+/**
+ * Get a data source from the Cesium viewer
+ * 
+ * @param { String } name name of the datasource
+*/
+function hideDataSourceByName( name ) {
+
+    viewer.dataSources._dataSources.forEach( function( dataSource ) {
+        if ( dataSource.name.startsWith( name ) ) { 
+            dataSource.show = false;	
+        }
+    });
+}
+
+/**
+ * Get a data source from the Cesium viewer
+ * 
+ * @param { String } name name of the datasource
+ * @returns { Object } The found data source
+*/
+function getDataSourceByName( name ) {
+    
+    return viewer.dataSources._dataSources.find( ds => ds.name === name );
+
+}
+
+/**
  * Removes all data sources whose names start with the provided name prefix from the Cesium viewer.
  * 
  * @param {string} namePrefix The prefix of the data source names to remove.
@@ -67,4 +107,33 @@ function loadGeoJsonDataSource( opacity, url, name ) {
             reject(error);
         });
     });
+}
+
+function calculateDatasourcePropertyTotal( datasource, property ) {
+
+    // Find the data source 
+	const foundDataSource = getDataSourceByName( datasource );
+    let total = 0;
+
+	// If the data source isn't found, exit the function
+	if ( !foundDataSource ) {
+		return total;
+	}
+
+    // Iterate through the entities in the data source
+    const entities = foundDataSource.entities.values;
+    for ( const entity of entities ) {
+        // Check if the entity has the specified property
+        if ( entity.properties && entity.properties.hasOwnProperty( property ) ) {
+            // Extract the property value and add it to the total
+            const propertyValue = entity.properties[ property ].getValue();
+            if ( !isNaN( propertyValue ) ) {
+
+                total += propertyValue;
+
+            }
+        }
+    }
+    return total;
+
 }

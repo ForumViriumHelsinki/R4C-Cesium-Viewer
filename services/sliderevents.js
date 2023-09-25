@@ -61,15 +61,7 @@ function populationGrid( ) {
 
         setPostalCodeElementsDisplay( 'none' );
         removeDataSourcesByNamePrefix( 'PostCodes' );
-        viewer.camera.flyTo( {
-            destination: Cesium.Cartesian3.fromDegrees( 24.991745, 60.045, 12000 ),
-            orientation: {
-                heading: 0.0,
-                pitch: Cesium.Math.toRadians( -35.0 ),
-                roll: 0.0
-            },
-            duration: 1
-        });
+        flyCamera3D( 24.991745, 60.045, 12000 );
         loadGeoJsonDataSource( 0.1, 'assets/data/populationgrid.json', 'PopulationGrid' )
         .then( function ( entities ) {
 
@@ -157,20 +149,6 @@ function showSensorData( ) {
 
     }
 
-}
-
-/**
- * This function to shows all datasources to user.
- *
- */
-function showAllDataSources( ) {
-
-    // Set the show property of all data sources to true to show the entities
-    viewer.dataSources._dataSources.forEach( function( dataSource ) {
-
-        dataSource.show = true;
-
-    });  
 }
 
 /**
@@ -309,33 +287,6 @@ function hideBuildings() {
     createScatterPlot( urbanHeatDataAndMaterial, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ) );
     createUrbanHeatHistogram( urbanHeatData );    
 
-}
-
-  
-/**
- * Get a data source from the Cesium viewer
- * 
- * @param { String } name name of the datasource
- * @returns { Object } The found data source
-*/
-function getDataSourceByName( name ) {
-    
-    return viewer.dataSources._dataSources.find( ds => ds.name === name );
-
-}
-
-/**
- * Get a data source from the Cesium viewer
- * 
- * @param { String } name name of the datasource
-*/
-function hideDataSourceByName( name ) {
-
-    viewer.dataSources._dataSources.forEach( function( dataSource ) {
-        if ( dataSource.name == name ) {
-            dataSource.show = false;	
-        }
-    });
 }
 
 /**

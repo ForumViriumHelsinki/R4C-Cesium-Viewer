@@ -219,7 +219,16 @@ function handleFeatureWithProperties( id ) {
     if ( postalcode ) {
         
         handlePostalCodeFeature( postalcode, id );
+        document.getElementById( "populationGridToggle" ).disabled = true;
+
     }
+
+    if ( id.properties.asukkaita ) {
+
+        createDiagramForPopulationGrid( id.properties.index, id.properties.asukkaita );
+
+    }
+
 
     //See if we can find building floor areas
     if ( id.properties._avgheatexposuretobuilding ) {
@@ -292,7 +301,7 @@ function hidePlotlyIfNatureFeatureIsClicked( category ) {
 
     } else {
 
-        if ( document.getElementById( "showPlotToggle" ).checked ) {
+        if ( document.getElementById( "showPlotToggle" ).checked && !document.getElementById( "populationGridToggle" ).checked ) {
 
             document.getElementById( 'plotContainer' ).style.visibility = 'visible';
 

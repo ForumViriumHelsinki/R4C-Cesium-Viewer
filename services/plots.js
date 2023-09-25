@@ -280,3 +280,45 @@ function createBuildingHistogram( buildingHeatExposure, address, postinumero) {
     Plotly.newPlot( 'plotContainer', data, layout );
 
 }
+
+
+/**
+ * Create bar chart for specific population grid.
+ *
+ * @param { String } index  grid index
+ */
+function createDiagramForPopulationGrid( index ) {
+
+    const labels = [ 'heat exposure', 'tree cover area', 'vegetation area' ];
+	const unitData = getGridDataForUnit( index._value, 'PopulationGrid' );
+	const cityData = getGridDataForCity( 'PopulationGrid' );
+
+    let trace1 = {
+        x: labels,
+        y: unitData,
+        name: index._value,
+        type: 'bar',
+    };
+      
+    let trace2 = {
+        x: labels,
+        y: cityData,
+        name: "Helsinki",
+        type: 'bar',
+        marker: {
+            color: 'green'
+        }
+    };
+      
+    let data = [ trace1, trace2 ];      
+    let layout = { title: { text: 'Heat and vegetation comparison in populated areas' }, barmode: 'group' };
+
+    //Test plotting
+    if ( showPlot ) {
+
+        document.getElementById( "plotSoSContainer" ).style.visibility = 'visible';
+    }
+
+    Plotly.newPlot( 'plotSoSContainer', data, layout );
+
+}
