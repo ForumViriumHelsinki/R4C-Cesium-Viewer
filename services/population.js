@@ -34,6 +34,25 @@ function setPostalCodeElementsDisplay( display ) {
 }
 
 /**
+ * Changes the display of gird elements when user switches between postal code and grid view
+ */
+function setGridElementsDisplay( display ) {
+    const elements = [
+        'natureGridSwitch',
+        'natureGridLabel'
+    ];
+
+    elements.forEach(( elementId ) => {
+        const element = document.getElementById( elementId );
+        if (element) {
+
+            element.style.display = display;
+        
+        }
+    });
+}
+
+/**
  * Set population grid entities heat exposure
  *
  * @param { Object } entities Cesium entities
@@ -75,20 +94,32 @@ function setGridEntityPolygon( entity ) {
  *
  * @param { Object } entity grid entity
  */
-function setGridEntityPolygonForGreen( entity ) {
+function setGridEntityPolygonToGreen( entity ) {
 
-	if ( entity.properties.averageheatexposure && entity.polygon ) {
+    let water = 0;
+    let vegetation = 0;
+    let trees = 0;
 
-		entity.polygon.material = new Cesium.Color( 1 - entity.properties.averageheatexposure._value, 1, 0, entity.properties.averageheatexposure._value );
+	if ( entity.properties.water_m2 ) {
 
-	} else {
+        water = entity.properties.water_m2._value;
 
-		if ( entity.polygon ) {
-			
-			entity.show = false;
+	} 
 
-		}
+    if ( entity.properties.vegetation_m2 ) {
+
+        vegetation = entity.properties.vegetation_m2._value;
+
+	} 
+
+    if ( entity.properties.tree_cover_m2 ) {
+
+        trees = entity.properties.tree_cover_m2._value;
+
 	}
+
+    const greenIndex = ( water + vegetation + trees ) / gridArea;
+    entity.polygon.material = new Cesium.Color( 1 - greenIndex, 1, 0, greenIndex );
 
 }
 

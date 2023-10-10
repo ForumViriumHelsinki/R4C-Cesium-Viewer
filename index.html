@@ -276,8 +276,7 @@
   document.getElementById( "hideNewBuildingsToggle" ).disabled = true;
   document.getElementById( "hideLowToggle" ).disabled = true;
   document.getElementById( "switchViewToggle" ).disabled = true;
-  document.getElementById( 'natureGridSwitch' ).style.display = "none";
-  document.getElementById( 'natureGridLabel' ).style.display = "none";
+  setGridElementsDisplay( 'none' );
   addGeocodingEventListeners( viewer );
 
   // Call the function to set up the bearing switches

@@ -49,11 +49,52 @@ function sliderEvents( event ) {
             break;
 
         case "populationGrid":                // If the slider value is "populationGrid", call the populationGrid function.
-            
+
             populationGrid();                    
             break;
 
+        case "natureGrid":                // If the slider value is "natureGrid", call the natureGrid function.
+
+            natureGrid();               
+            break;
 	}	
+}
+
+/**
+ * This function to switch between population grid and nature grid view
+ *
+ */
+function natureGrid( ) {
+
+    const natureGrid = document.getElementById( "natureGridToggle" ).checked;
+
+    if ( natureGrid ) {
+
+        const dataSource = getDataSourceByName( 'PopulationGrid' );
+
+        if ( !dataSource ) {
+            console.error(`Data source with name PopulationGrid not found.`);
+            return [];
+        }
+    
+        // Get the entities of the data source
+        const entities = dataSource.entities.values;
+
+        for ( let i = 0; i < entities.length; i++ ) {
+
+            let entity = entities[ i ];
+            setGridEntityPolygonToGreen( entity );
+    
+        }
+
+    } else { 
+
+        removeDataSourcesByNamePrefix( 'PopulationGrid' );
+        populationGrid( );
+
+    }
+
+
 }
 
 /**
@@ -69,6 +110,7 @@ function populationGrid( ) {
     if ( populationGrid ) {
 
         setPostalCodeElementsDisplay( 'none' );
+        setGridElementsDisplay( 'inline-block' );
         removeDataSourcesByNamePrefix( 'PostCodes' );
         flyCamera3D( 24.991745, 60.045, 12000 );
         loadGeoJsonDataSource( 0.1, 'assets/data/populationgrid.json', 'PopulationGrid' )
@@ -88,6 +130,7 @@ function populationGrid( ) {
     } else { 
 
         setPostalCodeElementsDisplay( 'inline-block' );
+        setGridElementsDisplay( 'none' );
         removeDataSourcesByNamePrefix( 'PopulationGrid' );
         loadGeoJsonDataSource( 0.2, 'assets/data/hki_po_clipped.json', 'PostCodes' );
 
