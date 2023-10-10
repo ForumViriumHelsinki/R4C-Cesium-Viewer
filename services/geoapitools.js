@@ -51,6 +51,9 @@ function resetSwitches( ) {
     document.getElementById( "switchViewToggle" ).checked = false;
     document.getElementById( "switchViewToggle" ).disabled = true;
     document.getElementById( "populationGridToggle" ).disabled = false;
+    document.getElementById( "populationGridToggle" ).disabled = false;
+    document.getElementById( 'natureGridSwitch' ).style.display = "none";
+    document.getElementById( 'natureGridLabel' ).style.display = "none";
 
     setPrintVisible( );
     hideAllPlots( );    

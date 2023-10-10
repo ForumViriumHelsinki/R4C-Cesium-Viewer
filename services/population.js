@@ -70,6 +70,28 @@ function setGridEntityPolygon( entity ) {
 
 }
 
+/**
+ * Set grid entity polygon
+ *
+ * @param { Object } entity grid entity
+ */
+function setGridEntityPolygonForGreen( entity ) {
+
+	if ( entity.properties.averageheatexposure && entity.polygon ) {
+
+		entity.polygon.material = new Cesium.Color( 1 - entity.properties.averageheatexposure._value, 1, 0, entity.properties.averageheatexposure._value );
+
+	} else {
+
+		if ( entity.polygon ) {
+			
+			entity.show = false;
+
+		}
+	}
+
+}
+
 function setGridHeight( entities ) {
 
 	for ( let i = 0; i < entities.length; i++ ) {

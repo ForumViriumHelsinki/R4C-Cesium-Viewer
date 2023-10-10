@@ -11,38 +11,47 @@ function sliderEvents( event ) {
 		case "print":                   // If the slider value is "print", call the printEvent function.
     
             printEvent();
+            break;
 
 		case "showPlot":                // If the slider value is "showPlot", call the showPlotEvent function.
             
             showPlotEvent();
+            break;
 
 		case "showVegetation":
 
             showVegetationEvent();      // If the slider value is "showVegetation", call the showVegetationEvent function.
+            break;
 
 		case "showOtherNature":
 
             showOtherNatureEvent();      // If the slider value is "showVegetation", call the showVegetationEvent function.
+            break;
 
 		case "filterBuildings":
             
             filterBuildingsEvent();         // If the slider value is "filterBuildings", call the filterBuildingsEvent function.           
+            break;
 
         case "showTrees":
 
             showTrees();                // If the slider value is "showTrees", call the showTrees function. 
+            break;
 
         case "showSensorData":
 
             showSensorData();           // If the slider value is "showSensorData", call the showSensorData function.
- 
+            break;
+
         case "switchView":
 
             switchView();               // If the slider value is "switchView", call the switchView function.    
-        
+            break;
+
         case "populationGrid":                // If the slider value is "populationGrid", call the populationGrid function.
             
             populationGrid();                    
+            break;
 
 	}	
 }

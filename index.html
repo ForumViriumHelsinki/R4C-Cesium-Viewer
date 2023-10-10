@@ -109,6 +109,13 @@
 </label>
 <label for="showSensorData" class="label">Sensor data</label>
 
+  <!--  natureGrid-->
+  <label class="switch" id = "natureGridSwitch" >
+    <input type="checkbox" id="natureGridToggle" value="natureGrid" >
+    <span class="slider round"></span>
+  </label>
+  <label for="natureGrid" class="label" id="natureGridLabel">Nature grid</label>
+
 </div>
 
 	<div id="printContainer">
@@ -269,6 +276,8 @@
   document.getElementById( "hideNewBuildingsToggle" ).disabled = true;
   document.getElementById( "hideLowToggle" ).disabled = true;
   document.getElementById( "switchViewToggle" ).disabled = true;
+  document.getElementById( 'natureGridSwitch' ).style.display = "none";
+  document.getElementById( 'natureGridLabel' ).style.display = "none";
   addGeocodingEventListeners( viewer );
 
   // Call the function to set up the bearing switches
