@@ -39,7 +39,9 @@ function setPostalCodeElementsDisplay( display ) {
 function setGridElementsDisplay( display ) {
     const elements = [
         'natureGridSwitch',
-        'natureGridLabel'
+        'natureGridLabel',
+        'travelTimeSwitch',
+        'travelTimeLabel'
     ];
 
     elements.forEach(( elementId ) => {

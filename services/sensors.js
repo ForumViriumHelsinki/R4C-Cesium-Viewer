@@ -86,6 +86,8 @@ function addSensorDataSource( data ) {
 
                     };
                 }
+
+                console.log("entity", entity)
             }
 
             entity.billboard = undefined; // Remove any billboard icon

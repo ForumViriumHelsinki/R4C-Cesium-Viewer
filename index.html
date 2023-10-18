@@ -21,6 +21,7 @@
   <script type="text/javascript" src="services/sensors.js"></script>
   <script type="text/javascript" src="services/population.js"></script>
   <script type="text/javascript" src="services/datasource.js"></script>
+  <script type="text/javascript" src="services/traveltime.js"></script>
   <script src="lib/localforage/dist/localforage.js"></script>
   <script src="lib/plotly-2.12.1.min.js"></script>
   <link href="lib/Cesium/Widgets/widgets.css" rel="stylesheet">
@@ -38,7 +39,7 @@
   <input type="checkbox" id="populationGridToggle" value="populationGrid">
   <span class="slider round"></span>
 </label>
-<label for="populationGridToggle" class="label" id="populationGridLabel">Population grid</label>  
+<label for="populationGridToggle" class="label" id="populationGridLabel">Grid view</label>  
 
 <label class="switch">
   <input type="checkbox" id="showPlotToggle" value="showPlot" checked>
@@ -115,6 +116,13 @@
     <span class="slider round"></span>
   </label>
   <label for="natureGrid" class="label" id="natureGridLabel">Nature grid</label>
+
+  <!--  travelTime-->
+  <label class="switch" id = "travelTimeSwitch" >
+    <input type="checkbox" id="travelTimeToggle" value="travelTime" >
+    <span class="slider round"></span>
+  </label>
+  <label for="travelTime" class="label" id="travelTimeLabel">Travel time grid</label> 
 
 </div>
 
@@ -278,6 +286,10 @@
   document.getElementById( "switchViewToggle" ).disabled = true;
   setGridElementsDisplay( 'none' );
   addGeocodingEventListeners( viewer );
+
+  viewer.scene.postRender.addEventListener(function () {
+    viewer.scene.globe._surface.tileProvider._debug.disableCulling = true;
+});
 
   // Call the function to set up the bearing switches
   setupBearingSwitches();

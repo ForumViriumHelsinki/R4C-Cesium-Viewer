@@ -190,17 +190,42 @@ function addColdPoint( location ) {
 
 }
 
-function removeColdPoint( ) {
+function removeEntityByName( name ) {
 
     viewer.entities._entities._array.forEach( function( entity ) {
 
-        if ( entity.name == "coldpoint" ) {
+        if ( entity.name == name ) {
 
             viewer.entities.remove( entity );
             
         }
     });
     
+
+}
+
+function markCurrentLocation( entity ) {
+
+    const hierarchy = entity.polygon.hierarchy.getValue().positions;
+
+    // Calculate the center of the polygon's vertices
+    const boundingSphere = Cesium.BoundingSphere.fromPoints(hierarchy);
+    const centerCartesian = boundingSphere.center;
+
+    viewer.entities.add({
+        position: centerCartesian,
+        name: "currentLocation",
+        point: {
+          show: true, 
+          color: Cesium.Color.BLACK, 
+          pixelSize: 42, 
+          outlineColor: Cesium.Color.BLACK, 
+          outlineWidth: 14, 
+          eyeOffset: new Cesium.Cartesian3( 0, 200, -200 ),
+          scaleByDistance: new Cesium.NearFarScalar(4000, 1, 40000, 0.0)
+        },
+      });
+
 
 }
 
@@ -213,7 +238,9 @@ function handleFeatureWithProperties( id ) {
     
     postalcode = id.properties.posno;
     nameOfZone = id.properties.nimi;
-    removeColdPoint( );
+    removeEntityByName( 'coldpoint' );
+    removeEntityByName( 'currentLocation' );
+    removeDataSourcesByNamePrefix( 'TravelLabel' );
 
     //If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
     if ( postalcode ) {
@@ -229,6 +256,12 @@ function handleFeatureWithProperties( id ) {
 
     }
 
+    if ( !id.properties.posno && id.entityCollection._entities._array[ 0 ]._properties._id._value == 5879932 ) {
+
+        loadTravelTimeData( id.properties.id._value );
+        markCurrentLocation( id );
+
+    }
 
     //See if we can find building floor areas
     if ( id.properties._avgheatexposuretobuilding ) {

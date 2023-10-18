@@ -51,7 +51,6 @@ function resetSwitches( ) {
     document.getElementById( "switchViewToggle" ).checked = false;
     document.getElementById( "switchViewToggle" ).disabled = true;
     document.getElementById( "populationGridToggle" ).disabled = false;
-    document.getElementById( "populationGridToggle" ).disabled = false;
     setGridElementsDisplay( 'none' );
 
     setPrintVisible( );

@@ -57,7 +57,45 @@ function sliderEvents( event ) {
 
             natureGrid();               
             break;
+
+        case "travelTime":                // If the slider value is "travelTime", call the travelTime function.
+
+            travelTime();               
+            break;            
 	}	
+}
+
+/**
+ * This function to switch between population grid and travel time grid view
+ *
+ */
+function travelTime( ) {
+
+    const travelTime = document.getElementById( "travelTimeToggle" ).checked;
+    removeDataSourcesByNamePrefix( 'TravelLabel' );
+
+    if ( travelTime ) {
+
+        removeDataSourcesByNamePrefix( 'PopulationGrid' );
+        loadGeoJsonDataSource( 0.1, 'assets/data/travel_time_grid.json', 'TravelTimeGrid' )
+        .then( function ( entities ) {
+
+
+        })
+        .catch( function ( error ) {
+            // Handle errors here
+            console.error( error) ;
+        });
+
+    } else { 
+
+        removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
+        removeDataSourcesByNamePrefix( 'TravelLabel' );
+        populationGrid( );
+
+    }
+
+
 }
 
 /**
@@ -67,6 +105,7 @@ function sliderEvents( event ) {
 function natureGrid( ) {
 
     const natureGrid = document.getElementById( "natureGridToggle" ).checked;
+    removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
 
     if ( natureGrid ) {
 
@@ -87,6 +126,8 @@ function natureGrid( ) {
     
         }
 
+        document.getElementById( "travelTimeToggle" ).checked = false;
+
     } else { 
 
         removeDataSourcesByNamePrefix( 'PopulationGrid' );
@@ -105,6 +146,7 @@ function populationGrid( ) {
 
     // Get the state of the populationGrid toggle button
     const populationGrid = document.getElementById( "populationGridToggle" ).checked;
+    removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
 
     // If populationGrid toggle is on
     if ( populationGrid ) {
@@ -118,7 +160,16 @@ function populationGrid( ) {
 
             // Use the entities here
             setHeatExposureToGrid( entities );
-            setGridHeight( entities );
+
+            if ( !document.getElementById( "travelTimeToggle" ).checked ) {
+
+                setGridHeight( entities );
+
+            } else {
+
+                document.getElementById( "travelTimeToggle" ).checked = false;
+
+            }
 
         })
         .catch( function ( error ) {
@@ -126,13 +177,9 @@ function populationGrid( ) {
             console.error( error) ;
         });
 
-
     } else { 
 
-        setPostalCodeElementsDisplay( 'inline-block' );
-        setGridElementsDisplay( 'none' );
-        removeDataSourcesByNamePrefix( 'PopulationGrid' );
-        loadGeoJsonDataSource( 0.2, 'assets/data/hki_po_clipped.json', 'PostCodes' );
+        reset();
 
     }
 
