@@ -137,28 +137,98 @@ function processEntitiesForScatterPlot( entities, urbanHeatDataAndMaterial ) {
 
     entities.forEach( entity => {
 
-      if ( hideNonSote ) {
 
-        scatterForSoteBuildings( urbanHeatDataAndMaterial, entity, categorical, numerical );
-
-      }
-
-      if ( hideLowToggle)  {
-
-        scatterForTallBuildings( urbanHeatDataAndMaterial, entity, categorical, numerical );
-    
-      }
-
-      if ( hideNew )  {
-
-        scatterForOldBuildings( urbanHeatDataAndMaterial, entity, categorical, numerical );
-    
-      }
-
-      if ( !hideNonSote && !hideLowToggle && !document.getElementById( "hideNewBuildingsToggle" ).checked ) {
+      if ( !hideNonSote && !hideLowToggle && !hideNew ) {
 
         addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), categorical, numerical );
+
+      } else {
+
+        let addDataToScatterPlot = true;
+
+        if ( hideNonSote ) {
+
+                // Check if the entity has the usage value
+    if ( entity._properties.c_kayttark  && entity._properties.c_kayttark._value ) {
+
+        const kayttotark = Number( entity._properties.c_kayttark._value );
+
+        // Check if the entity is a SOTE building.
+        if ( kayttotark == 511 || kayttotark == 131 || ( kayttotark > 212 && kayttotark < 240 ) ) {
+
+
+    
+        } else {
+
+            addDataToScatterPlot = false;
+
+        }
+
+    } else {
+
+        addDataToScatterPlot = false;
+    }
+    
+          }
+    
+          if ( hideLowToggle)  {
+    
+            if ( entity._properties.i_kerrlkm  && entity._properties.i_kerrlkm._value ) {
+
+                const floorCount = Number( entity._properties.i_kerrlkm._value );
+        
+                // Check if the entity is a tall building.
+                if ( floorCount > 6  ) {
+        
+                    // Add urban heat data and material data for the entity.
+        
+                } else {
+                    addDataToScatterPlot = false;
+    
+                }
+        
+            } else {
+
+                addDataToScatterPlot = false;
+            }
+        
+          }
+    
+          if ( hideNew )  {
+    
+    // Check if the entity has the floor count value
+    if ( entity._properties.c_valmpvm  && entity._properties.c_valmpvm._value ) {
+
+        // Filter out buildings built before summer 2018
+        const cutoffDate = new Date( "2018-06-01T00:00:00" ).getTime();
+        if ( entity._properties._c_valmpvm && typeof entity._properties._c_valmpvm._value === 'string' ) {
+        
+            const c_valmpvm = new Date( entity._properties._c_valmpvm._value ).getTime();
+        
+            if ( c_valmpvm < cutoffDate ) {
+        
+        
+            } else {
+                addDataToScatterPlot = false;
+
+            }
+        } else {
+            addDataToScatterPlot = false;
+
+        }
+
+    }        
+          }
+
+          if ( addDataToScatterPlot ) {
+
+            addDataForScatterPlot( urbanHeatDataAndMaterial, entity, getSelectedText( "categoricalSelect" ), getSelectedText( "numericalSelect" ), categorical, numerical );
+
+          }
+
 
       }
     });
 }
+
+
