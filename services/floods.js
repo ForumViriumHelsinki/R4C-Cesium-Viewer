@@ -44,7 +44,7 @@ async function addFloodDataSource( data ) {
         setColorAndMaterial( entities );
 
 	})	
-	.otherwise(function ( error ) {
+	.catch(function ( error ) {
 		//Display any errrors encountered while loading.
 		console.log( error );
 	});

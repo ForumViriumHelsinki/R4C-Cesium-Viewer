@@ -74,7 +74,7 @@ function addVegetationDataSource( data ) {
 		
 		}
 	})	
-	.otherwise(function ( error ) {
+	.catch(function ( error ) {
 		//Display any errrors encountered while loading.
 		console.log( error );
 	});

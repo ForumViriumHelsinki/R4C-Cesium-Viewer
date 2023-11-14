@@ -3,14 +3,15 @@
  * 
  * @param { String } layer - layer of WMS service
  */
-function createImageryProvider( layer ) {
-    return new Cesium.WebMapServiceImageryProvider({
-        url: 'https://kartta.hel.fi/ws/geoserver/avoindata/ows?SERVICE=WMTS&',
-        layers: layer,
+function createImageryLayer( layer ) {
+    const provider = new Cesium.WebMapServiceImageryProvider({
+        url : 'https://kartta.hel.fi/ws/geoserver/avoindata/ows?SERVICE=WMS&',
+        layers : layer,
         proxy: new Cesium.DefaultProxy('/proxy/')
-    });
+      });
+      
+      return new Cesium.ImageryLayer( provider );
 }
-
 
 /**
  * Resets the objects displayed, camera orientation, and switches to their default state

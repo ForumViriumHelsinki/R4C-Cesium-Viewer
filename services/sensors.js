@@ -97,7 +97,7 @@ function addSensorDataSource( data ) {
 
 		}
 	})	
-	.otherwise(function ( error ) {
+	.catch(function ( error ) {
 		// Log any errors encountered while loading the data source
 		console.log( error );
 	});

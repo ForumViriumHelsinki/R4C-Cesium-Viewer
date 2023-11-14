@@ -225,7 +225,7 @@ async function addBuildingsDataSource( data, inhelsinki ) {
 
 		}	
 	})	
-	.otherwise(function ( error ) {
+	.catch(function ( error ) {
 		//Display any errrors encountered while loading.
 		console.log( error );
 	});

@@ -101,7 +101,7 @@ function loadGeoJsonDataSource( opacity, url, name ) {
             const entities = dataSource.entities.values;
             resolve(entities);
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
             // Display any errors encountered while loading.
             console.log(error);
             reject(error);
