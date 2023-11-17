@@ -1,20 +1,7 @@
-# R4C-Cesium-Viewer
+# Vue 3 + Vite
 
-Codebase copied from https://github.com/ForumViriumHelsinki/CityModelFME/tree/main/cesium_viewer, refactored to suit the visualisation needs of R4C project.
+This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
 
-This user interface is currently running at https://geo.fvh.fi/r4c/M8Na2P0v6z/
+## Recommended IDE Setup
 
-# Deployment
-
-Build a Docker image from a Dockerfile in the current directory and tag it with your chosen image name: 
-
-```
-docker build -t <Your-Image-Name> .
-```
-
-Start a detached Docker container with a specified name, port mapping, and using the specified image: 
-
-```
-docker run -d --name <Your-Container-Name> -p <Host-Port:Container-Port> <Your-Image-Name> 
-```
-
+- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
