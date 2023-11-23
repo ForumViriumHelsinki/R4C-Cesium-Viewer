@@ -2,6 +2,7 @@ import Resetui from "./reset.js";
 import Viewercamera from "./viewercamera.js"; 
 import PrintBox from "./printbox.js"; 
 import FeaturePicker from "./featurepicker.js"; 
+import { useGlobalStore } from '../store.js';
 
 export default class Geocoding {
     constructor( viewer ) {
@@ -11,6 +12,7 @@ export default class Geocoding {
       this.printBox = new PrintBox( this.viewer );
       this.featurePicker = new FeaturePicker( this.viewer );
       this.addressData = null;
+      this.store = useGlobalStore( );
     }
     
 /**
@@ -35,7 +37,7 @@ checkSearch = ( ) => {
 
     if ( this.addressData.length === 1 ) {
 
-        this.$postalcode = this.addressData[ 0 ].postalcode;
+        this.store.postalcode = this.addressData[ 0 ].postalcode;
         this.moveCameraAndReset( this.addressData[ 0 ].longitude, this.addressData[ 0 ].latitude, this.addressData[ 0 ].postalcode );
         document.getElementById( 'searchresults' ).innerHTML = '';
 
@@ -152,7 +154,7 @@ moveCameraAndReset( longitude, latitude, postcode ) {
 
     this.viewercamera.setCameraView( longitude, latitude );
     this.resetui.resetSwitches( );
-    this.$postalcode = postcode;
+    this.store.postalcode = postcode;
     this.printBox.createToPrint( postcode );
     this.featurePicker.loadPostalCode( postcode );
 
@@ -182,7 +184,7 @@ findNameOfZone( postalcode ) {
         // Check if the entity posno property matches the postalcode.
         if ( entity._properties._posno._value  == postalcode ) {
     
-            this.$nameOfZone = entity._properties._nimi._value;
+            this.store.nameOfZone = entity._properties._nimi._value;
             break;
         }
     }

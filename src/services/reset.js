@@ -2,7 +2,8 @@ import * as Cesium from "cesium";
 import Datasource from "./datasource.js"; 
 import Postalcodeview from "./postalcodeview.js"; 
 import Gridview from "./gridview.js"; 
-import Plot from "./plot.js"; 
+import Plot from "./plot.js";
+import { useGlobalStore } from '../store.js';
 
 export default class Reset {
     constructor( viewer ) {
@@ -11,7 +12,7 @@ export default class Reset {
       this.postalcodeview = new Postalcodeview( );
       this.gridview = new Gridview( );
       this.plots = new Plot( );
-
+      this.store = useGlobalStore( );
     }
   
 /**
@@ -22,7 +23,7 @@ reset( ) {
   this.removeDataSourcesAndEntities( );
   this.resetViewer( );
   this.resetSwitches( );
-  this.$postalcode = null;
+  this.store.reset();
   // Load post code zones & energy availability tags
   this.datasourceHandler.loadGeoJsonDataSource( 0.2, 'assets/data/hki_po_clipped.json', 'PostCodes' );
 
@@ -56,14 +57,7 @@ resetSwitches( ) {
   this.gridview.setGridElementsDisplay( 'none' );
 
   this.setPrintVisible( );
-  this.plots.hideAllPlotElements( );    
-
-  this.$showPlot = true;
-  this.$showVegetation = false;
-  this.$showOtherNature = false;
-  this.$hideNonSote = false;
-  this.$hideLow = false;
-  this.$print = true;
+  this.plots.hideAllPlotElements( );
 
 }
 

@@ -1,14 +1,18 @@
 import * as Cesium from "cesium";
 import Datasource from "./datasource.js"; 
-import PrintBox from "./printbox.js"; 
+import PrintBoxService from "./printbox.js"; 
 import Reset from "./reset.js";
+import Building from "./building.js";
+import { useGlobalStore } from '../store.js';
 
 export default class FeaturePicker {
     constructor( viewer ) {
       this.viewer = viewer;
-      this.datasourceHandler = new Datasource( this.viewer );
-      this.printBox = new PrintBox( this.viewer );
-      this.resetUI = new Reset( this.viewer );
+      this.datasourceService = new Datasource( this.viewer );
+      this.printBoxService = new PrintBoxService( this.viewer );
+      this.resetService = new Reset( this.viewer );
+      this.buildingService = new Building( this.viewer );
+      this.store = useGlobalStore( );
 
     }
   
@@ -152,15 +156,15 @@ export default class FeaturePicker {
     
         if ( document.getElementById( "printToggle" ).checked ) {
     
-            this.printBox.setPrintVisible( );
+            this.printBoxService.setPrintVisible( );
     
         }
     
         console.log("Postal code area found!");
     
-        this.resetUI.removeDataSourcesAndEntities();
+        this.resetService.removeDataSourcesAndEntities();
         
-        if ( this.$showVegetation ) {
+        if ( this.store.showVegetation ) {
             
             // loadNatureAreas( postcode );
         
@@ -172,9 +176,9 @@ export default class FeaturePicker {
     
         }
     
-        // loadWFSBuildings( postcode );	
+        this.buildingService.loadBuildings( postcode );	
     
-        this.datasourceHandler.loadGeoJsonDataSource( 0.0, 'src/assets/data/hki_po_clipped.json', 'PostCodes' );
+        this.datasourceService.loadGeoJsonDataSource( 0.0, 'src/assets/data/hki_po_clipped.json', 'PostCodes' );
     
         // add laajasalo flood data
         if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
@@ -208,7 +212,7 @@ export default class FeaturePicker {
         }
     
         createBuildingHistogram( buildingHeatExposure, address, postinumero );
-        this.$postalcode = postinumero;
+        this.store.postalcode = postinumero;
     
     }
     
@@ -217,7 +221,7 @@ export default class FeaturePicker {
         const coordinates = location.split(","); 
     
         this.viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees( coordinates[ 1 ], coordinates[ 0 ] ),
+            position: Cesium.Cartesian3.fromDegrees( Number( coordinates[ 1 ] ), Number(coordinates[ 0 ] ) ),
             name: "coldpoint",
             point: {
               show: true, 
@@ -276,16 +280,17 @@ export default class FeaturePicker {
      */
     handleFeatureWithProperties( id ) {                
         
-        this.$postalcode = id.properties.posno;
-        this.$nameOfZone = id.properties.nimi;
+        this.store.postalcode = id.properties.posno;
+        this.store.nameOfZone = id.properties.nimi;
+        console.log(" this.$nameOfZone",  this.store.nameOfZone)
         this.removeEntityByName( 'coldpoint' );
         this.removeEntityByName( 'currentLocation' );
-        this.datasourceHandler.removeDataSourcesByNamePrefix( 'TravelLabel' );
+        this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
     
         //If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
-        if ( this.$postalcode ) {
+        if ( this.store.postalcode ) {
             
-            this.handlePostalCodeFeature( this.$postalcode, id );
+            this.handlePostalCodeFeature( this.store.postalcode, id );
             document.getElementById( "populationGridToggle" ).disabled = true;
     
         }
@@ -318,7 +323,7 @@ export default class FeaturePicker {
     
                 if ( id.properties._locationUnder40._value  ) {
                     
-                    addColdPoint( id.properties._locationUnder40._value );
+                    this.addColdPoint( id.properties._locationUnder40._value );
                 
                 }
     

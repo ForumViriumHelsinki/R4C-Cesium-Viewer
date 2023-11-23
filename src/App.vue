@@ -4,6 +4,8 @@
   <CesiumViewer />
   <PrintBox />
   <Geocoding />
+  <HeatHistogram />
+  <SocioEconomics />
 
   <div id="UIContainer">
   <p class="header">R4C Urban Heat risk demonstrator</p>
@@ -101,11 +103,7 @@
 
 </div>
 
-  <div id="plotContainer">
-  </div>
   <div id="plotSoSContainer">
-  </div>
-  <div id="plotMaterialContainer">
   </div>
 
   <label id="bearingLabel" style="position: fixed; bottom: 41px; left: 15px; visibility: hidden;">Direction of trees</label>
@@ -187,5 +185,7 @@
 import CesiumViewer from "./components/CesiumViewer.vue";
 import Geocoding from "./components/Geocoding.vue";
 import PrintBox from "./components/PrintBox.vue";
+import HeatHistogram from "./components/HeatHistogram.vue";
+import SocioEconomics from "./components/SocioEconomics.vue";
 
 </script>

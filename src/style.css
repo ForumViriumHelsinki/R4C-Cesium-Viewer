@@ -15,50 +15,6 @@
 	right: 2%;
 }
 
-#plotContainer
-{
-	position: fixed;
-	top: 90px;
-	left: 10px;
-	width: 400px;
-	height: 300px; 
-	visibility: hidden;
-	
-	font-size: smaller;
-	
-	border: 1px solid black;
-	box-shadow: 3px 5px 5px black; 
-}
-
-#plotSoSContainer
-{
-	position: fixed;
-	top: 90px;
-	right: 10px;
-	width: 500px;
-	height: 300px; 
-	visibility: hidden;
-	
-	font-size: smaller;
-	
-	border: 1px solid black;
-	box-shadow: 3px 5px 5px black; 
-}
-
-#plotMaterialContainer
-{
-	position: fixed;
-	bottom: 40px;
-	left: 10px;
-	width: 600px;
-	height: 290px; 
-	visibility: hidden;
-	
-	font-size: smaller;
-	border: 1px solid black;
-	box-shadow: 3px 5px 5px black;  
-}
-
 #numericalSelect
 {
 	position: fixed;

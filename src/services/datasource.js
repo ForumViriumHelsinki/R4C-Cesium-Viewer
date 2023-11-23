@@ -108,4 +108,26 @@ export default class GeoJSONDataSource {
     return total;
 
 }
+
+async addDataSourceWithName(data, name) {
+  try {
+    const dataSource = await this.viewer.dataSources.add(
+      Cesium.GeoJsonDataSource.load(data, {
+        stroke: Cesium.Color.BLACK,
+        fill: Cesium.Color.CRIMSON,
+        strokeWidth: 3,
+        clampToGround: true,
+      })
+    );
+
+    dataSource.name = name;
+    let entities = dataSource.entities.values;
+    return entities; // Return entities once loaded and processed
+  } catch (error) {
+    // Display any errors encountered while loading.
+    console.log(error);
+    return null; // Return null or handle error accordingly
+  }
+}
+
 }
