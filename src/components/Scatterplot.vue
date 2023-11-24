@@ -37,6 +37,13 @@
     mounted() {
       this.unsubscribe = eventBus.$on('newScatterPlot', this.newScatterPlot);
       this.store = useGlobalStore( );
+
+      const numericalSelect = document.getElementById('numericalSelect');
+      numericalSelect.addEventListener('change', this.handleSelectChange);
+      
+      const categoricalSelect = document.getElementById('categoricalSelect');
+      categoricalSelect.addEventListener('change', this.handleSelectChange);
+
     },
     beforeUnmount() {
       this.unsubscribe();
@@ -55,6 +62,10 @@
           this.clearScatterPlot();
         }
       },
+      // Method to handle the change event for both selects
+        handleSelectChange(event) {
+            this.selectAttributeForScatterPlot();
+        },
       /**
        * * A function to handle change of categorical or numerical value in the scatter plot
        * 
@@ -313,7 +324,7 @@ return [ heatList, numericalList, average ];
     
     }
 
-    const margin = { top: 30, right: 100, bottom: 20, left: 30 };
+    const margin = { top: 30, right: 170, bottom: 20, left: 30 };
     const width = 600 - margin.left - margin.right;
     const height = 290 - margin.top - margin.bottom;
 
@@ -339,7 +350,7 @@ return [ heatList, numericalList, average ];
 
     // Find the minimum and maximum values in heatData
     const minXValue = d3.min(xValues) - 1;
-    const maxXValue = d3.max(xValues) + 1;
+    const maxXValue = d3.max(xValues) + 2;
 
     const minYValue = d3.min(yValues) - 0.05;
     const maxYValue = d3.max(yValues) + 0.05;
@@ -416,8 +427,8 @@ legend.selectAll('.legend-color')
   .data(values)
   .enter()
   .append('rect')
-  .attr('x', 0)
-  .attr('y', (_, i) => i * 20)
+  .attr('x', -55)
+  .attr('y', (_, i) => i * 20 - 50)
   .attr('width', 10)
   .attr('height', 10)
   .style('fill', d => colorScale(d));
@@ -427,8 +438,8 @@ legend.selectAll('.legend-label')
   .data(labelsWithAverage)
   .enter()
   .append('text')
-  .attr('x', 15)
-  .attr('y', (_, i) => i * 20 + 9)
+  .attr('x', -40)
+  .attr('y', (_, i) => i * 20 - 41)
   .text(d => d)
   .style('font-size', '10px'); // Adjust font size as needed
   }
@@ -447,7 +458,7 @@ legend.selectAll('.legend-label')
     position: fixed;
     bottom: 40px;
     left: 10px;
-    width: 600px; /* Adjusted width to accommodate margin */
+    width: 640px; /* Adjusted width to accommodate margin */
     height: 300px; /* Adjusted height to accommodate margin */
     visibility: hidden;
     font-size: smaller;
@@ -468,7 +479,7 @@ legend.selectAll('.legend-label')
 #numericalSelect {
     position: fixed;
     bottom: 61px;
-    left: 566px; /* Adjusted position to match scatter plot container */
+    left: 480px; /* Adjusted position to match scatter plot container */
     visibility: hidden;
     font-size: smaller;
 }
