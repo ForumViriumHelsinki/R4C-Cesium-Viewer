@@ -4,7 +4,7 @@
   </template>
   
   <script>
-  import { eventBus } from '../services/urbanheat.js';
+  import { eventBus } from '../services/eventEmitter.js';
   import * as d3 from 'd3'; // Import D3.js
   import { useGlobalStore } from '../store.js';
   
@@ -23,17 +23,18 @@
     },
     methods: {
         newSocioEconomicsDiagram(newData) {
-            console.log("newdata", newData);
-        this.showPlot = newData && document.getElementById("showPlotToggle").checked;
-        console.log("this plot", this.showPlot)
-        if (this.showPlot) {
-          this.findSocioEconomicsData( newData );
-        } else {
-          // Hide or clear the visualization when not visible
+            
+            this.showPlot = newData && document.getElementById("showPlotToggle").checked;
+            
+            if (this.showPlot) {
+
+                this.findSocioEconomicsData( newData );
+            } else {
+            // Hide or clear the visualization when not visible
           // Example: call a method to hide or clear the D3 visualization
-          this.clearDiagram();
-        }
-      },
+                this.clearDiagram();
+            }
+        },
     
 /**
  * Fetches heat vulnerable demographic data from pygeoapi for postal code.
@@ -106,8 +107,6 @@ findSocioEconomicsData(postcode) {
             1 - sosData.income.toFixed(3),
             sosData.rental_rate.toFixed(3)
         ];
-
-        const maxBarWidth = 100; // Adjust this value based on desired bar width
 
         const xScale = d3.scaleBand()
             .domain(x)

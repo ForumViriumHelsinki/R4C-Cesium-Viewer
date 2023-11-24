@@ -1,5 +1,6 @@
 import Decoding from "./decoding.js";
 import Scatterplot from "./scatterplot.js";
+import EventEmitter from "./eventEmitter.js"
 import { reactive } from 'vue';
 import Datasource from "./datasource.js"; 
 import { useGlobalStore } from '../store.js';
@@ -26,6 +27,7 @@ export default class Urbanheat {
     this.scatterplotService = new Scatterplot( );
     this.datasourceService = new Datasource( viewer );
     this.store = useGlobalStore( );
+	this.eventEmitterService = new EventEmitter( );
 
   }
 
@@ -138,9 +140,9 @@ calculateAverageExposure( features ) {
 
 		this.store.averageHeatExposure = total / count;
 
-        eventBus.$emit( 'urbanHeatDataChanged', urbanHeatData );
-		let urbanHeatDataAndMaterial = this.scatterplotService.createDataSetForScatterPlot( features, 'facade', 'height', 'c_julkisivu', 'measured_height' );
-		eventBus.$emit( 'materialDataChanged', urbanHeatDataAndMaterial );
+		// let urbanHeatDataAndMaterial = this.scatterplotService.createDataSetForScatterPlot( features, 'facade', 'height', 'c_julkisivu', 'measured_height' );
+
+		return urbanHeatData;
 
 	//	this.scatterplotService.createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
 
@@ -165,17 +167,13 @@ async findUrbanHeatData( data, postcode ) {
         }
     
         this.addMissingHeatData(data.features, urbanheat.features);
-        this.calculateAverageExposure(data.features);
+        let urbanHeatData = this.calculateAverageExposure(data.features);
+		let entites = await this.datasourceService.addDataSourceWithName(data, 'Buildings');
 
-			// exclude postikeskus postal code area
-		if ( postcode != '00230' ) {
+		this.eventEmitterService.emitNewEvents( urbanHeatData, postcode, entites );
 
-			eventBus.$emit( 'newSocioEconomicsDiagram', postcode );
+		return entites;
 
-		}
-        
-        // Assuming datasourceService is available and implemented similarly to addBuildingsDataSource
-        return await this.datasourceService.addDataSourceWithName(data, 'Buildings');
       } catch (error) {
         console.error("Error finding urban heat data:", error);
         return null; // Handle error case or return accordingly

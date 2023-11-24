@@ -6,6 +6,8 @@
   <Geocoding />
   <HeatHistogram />
   <SocioEconomics />
+  <Scatterplot />
+
 
   <div id="UIContainer">
   <p class="header">R4C Urban Heat risk demonstrator</p>
@@ -152,25 +154,6 @@
     </label>
     <label for="bearingNorthToggle" class="label" id="bearingNorthLabel">North</label>
   </div>
-
-  <select id="numericalSelect" value="numerical">
-    <option value="measured_height" selected>height</option>
-    <option value="c_valmpvm">age</option>
-    <option value="area_m2">area</option>
-    <option value="i_raktilav">volume</option>
-</select>
-
-<select id="categoricalSelect" value="categorical">
-  <option value="c_julkisivu" selected>facade material</option>
-  <option value="c_rakeaine">building material</option>
-  <option value="roof_type">roof type</option>
-  <option value="roof_median_color">roof median color</option>
-  <option value="roof_mode_color">roof mode color</option>
-  <option value="kayttotarkoitus">usage</option>
-  <option value="tyyppi">type</option>
-  <option value="c_lammtapa">heating method</option>
-  <option value="c_poltaine">heating source</option>
-</select>
   		<!-- Add Logo -->
 		
 	<div class="logoHolder">	
@@ -187,5 +170,6 @@ import Geocoding from "./components/Geocoding.vue";
 import PrintBox from "./components/PrintBox.vue";
 import HeatHistogram from "./components/HeatHistogram.vue";
 import SocioEconomics from "./components/SocioEconomics.vue";
+import Scatterplot from "./components/Scatterplot.vue";
 
 </script>

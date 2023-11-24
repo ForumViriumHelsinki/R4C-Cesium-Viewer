@@ -15,16 +15,6 @@
 	right: 2%;
 }
 
-#numericalSelect
-{
-	position: fixed;
-	bottom: 41px;
-	left: 546px;
-	visibility: hidden;
-	
-	font-size: smaller;
-}
-
 #bearingAllSwitchContainer 
 {
     position: fixed;
@@ -63,16 +53,6 @@
     bottom: 42px;
     left: 500px;
 	visibility: hidden;
-}
-
-#categoricalSelect
-{
-	position: fixed;
-	bottom: 312px;
-	left: 11px;
-	visibility: hidden;
-	
-	font-size: smaller;
 }
 
 #printContainer

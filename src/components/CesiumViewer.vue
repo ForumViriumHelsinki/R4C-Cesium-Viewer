@@ -36,9 +36,9 @@ export default {
       // Other initialization logic...
 
       // For example, add a placeholder imagery layer
-      viewer.imageryLayers.add(
-        this.createImageryLayer( 'avoindata:Karttasarja_PKS' )
-      );
+     // viewer.imageryLayers.add(
+     //   this.createImageryLayer( 'avoindata:Karttasarja_PKS' )
+     // );
 
       // Fly to a specific location
       viewer.camera.flyTo({
