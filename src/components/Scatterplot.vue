@@ -44,6 +44,10 @@
       const categoricalSelect = document.getElementById('categoricalSelect');
       categoricalSelect.addEventListener('change', this.handleSelectChange);
 
+      document.getElementById('hideNewBuildingsToggle').addEventListener('change', this.updateScatterPlot);
+      document.getElementById('hideNonSoteToggle').addEventListener('change', this.updateScatterPlot);
+      document.getElementById('hideLowToggle').addEventListener('change', this.updateScatterPlot);
+
     },
     beforeUnmount() {
       this.unsubscribe();
@@ -54,7 +58,6 @@
 
         this.showPlot = this.buildingEntities.length > 0 && document.getElementById("showPlotToggle").checked;
         if (this.showPlot) {
-            console.log("this.buildingEntities", this.buildingEntities)
           this.selectAttributeForScatterPlot();
         } else {
           // Hide or clear the visualization when not visible
@@ -66,6 +69,13 @@
         handleSelectChange(event) {
             this.selectAttributeForScatterPlot();
         },
+        updateScatterPlot() {
+  // Check if the scatter plot container is visible
+  if (document.getElementById('scatterPlotContainer').style.visibility === 'visible') {
+    // Call the function to update the scatter plot
+    this.selectAttributeForScatterPlot();
+  }
+},
       /**
        * * A function to handle change of categorical or numerical value in the scatter plot
        * 
@@ -279,7 +289,7 @@ return [ heatList, numericalList, average ];
  * @param { String } numerical name of numerical attribute
  */
  createScatterPlot(features, categorical, numerical) {
-  if (features.length > 0) {
+
     const values = this.createUniqueValuesList(features, categorical);
 
     const scatterPlotContainer = document.getElementById( 'scatterPlotContainer' );
@@ -442,7 +452,7 @@ legend.selectAll('.legend-label')
   .attr('y', (_, i) => i * 20 - 41)
   .text(d => d)
   .style('font-size', '10px'); // Adjust font size as needed
-  }
+  
 },
       clearScatterPlot() {
         // Remove or clear the D3.js visualization
