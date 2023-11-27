@@ -1,5 +1,5 @@
 <template>
-    <div id="plotContainer">
+    <div id="heatHistogramContainer">
     </div>
   </template>
   
@@ -16,14 +16,14 @@
       };
     },
     mounted() {
-      this.unsubscribe = eventBus.$on('urbanHeatDataChanged', this.handleUrbanHeatDataChanged);
+      this.unsubscribe = eventBus.$on('newHeatHistogram', this.newHeatHistogram);
       this.store = useGlobalStore( );
     },
     beforeUnmount() {
       this.unsubscribe();
     },
     methods: {
-      handleUrbanHeatDataChanged(newData) {
+      newHeatHistogram(newData) {
         this.urbanHeatData = newData;
         this.showPlot = this.urbanHeatData.length > 0 && document.getElementById("showPlotToggle").checked;
         if (this.showPlot) {
@@ -35,7 +35,7 @@
         }
       },
 createHistogram() {
-  const plotContainer = document.getElementById('plotContainer');
+  const plotContainer = document.getElementById('heatHistogramContainer');
 
   // Remove any existing content in the plot container
   plotContainer.innerHTML = '';
@@ -50,7 +50,7 @@ createHistogram() {
 
   // Create the SVG element
   const svg = d3
-    .select('#plotContainer')
+    .select('#heatHistogramContainer')
     .append('svg')
     .attr('width', width + margin.left + margin.right)
     .attr('height', height + margin.top + margin.bottom)
@@ -69,9 +69,9 @@ createHistogram() {
     const maxDataValue = d3.max(this.urbanHeatData) + 0.02;
 
     // Configure scales
-    const x = d3.scaleLinear().domain([minDataValue, maxDataValue]).range([0, width]);
+    const x = d3.scaleLinear().domain([minDataValue, maxDataValue]).range([0, width]).nice();
   const bins = d3.histogram().domain(x.domain()).thresholds(x.ticks(20))(this.urbanHeatData);
-  const y = d3.scaleLinear().domain([0, d3.max(bins, (d) => d.length)]).range([height, 0]);
+  const y = d3.scaleLinear().domain([0, d3.max(bins, (d) => d.length)]).range([height, 0]).nice();
 
   // Create x-axis
   const xAxis = d3.axisBottom().scale(x);
@@ -95,7 +95,7 @@ createHistogram() {
     .attr('class', 'bar')
     .attr('transform', (d) => `translate(${x(d.x0)},${y(d.length)})`);
 
-  const tooltip = d3.select('#plotContainer')
+  const tooltip = d3.select('#heatHistogramContainer')
     .append('div')
     .style('opacity', 0)
     .attr('class', 'tooltip')
@@ -114,7 +114,7 @@ createHistogram() {
     .attr('height', (d) => height - y(d.length))
     .attr('fill', 'orange')
     .on('mouseover', function (event, d) {
-      const containerRect = document.getElementById('plotContainer').getBoundingClientRect();
+      const containerRect = document.getElementById('heatHistogramContainer').getBoundingClientRect();
         const xPos = event.pageX - containerRect.left;
         const yPos = event.pageY - containerRect.top;
       tooltip.transition().duration(200).style('opacity', 0.9);
@@ -139,14 +139,14 @@ createHistogram() {
       clearHistogram() {
         // Remove or clear the D3.js visualization
         // Example:
-        d3.select("#plotContainer").select("svg").remove();
+        d3.select("#heatHistogramContainer").select("svg").remove();
       },
     },
   };
   </script>
   
   <style>
-  #plotContainer {
+  #heatHistogramContainer {
     position: fixed;
     top: 90px;
     left: 10px;

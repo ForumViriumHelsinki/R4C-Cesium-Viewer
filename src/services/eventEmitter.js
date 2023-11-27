@@ -29,11 +29,11 @@ export const eventBus = reactive({
  * @param { object } entites entities of a buildings in postal code area
  * 
  */
-emitNewEvents( urbanHeatData, postcode, entites ) {
+emitPostalCodeEvents( urbanHeatData, postcode, entites ) {
 
     if ( urbanHeatData ) {
 
-        eventBus.$emit( 'urbanHeatDataChanged', urbanHeatData );
+        eventBus.$emit( 'newHeatHistogram', urbanHeatData );
 
     }
 
@@ -53,6 +53,29 @@ emitNewEvents( urbanHeatData, postcode, entites ) {
     }
 
 }
+
+/**
+ * The function emits events after user picks a building from viewer
+ *
+ * @param { Number } buildingHeatExposure urban heat data of a building in postal code area
+ * @param { String } address the address of building
+ * @param { String } postinumero the postal code area
+ * 
+ */
+emitBuildingEvents( buildingHeatExposure, address, postinumero  ) {
+
+if ( buildingHeatExposure ) {
+
+        console.log("building", buildingHeatExposure, address, postinumero )
+
+
+    eventBus.$emit( 'newBuilding', buildingHeatExposure, address, postinumero  );
+
+}       
+
+}
+
+
   }
 
 

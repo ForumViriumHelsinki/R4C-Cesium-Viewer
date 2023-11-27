@@ -1,5 +1,4 @@
 import Decoding from "./decoding.js";
-import Scatterplot from "./scatterplot.js";
 import EventEmitter from "./eventEmitter.js"
 import { reactive } from 'vue';
 import Datasource from "./datasource.js"; 
@@ -23,8 +22,8 @@ export const eventBus = reactive({
 
 export default class Urbanheat {
   constructor( viewer ) {
+	this.viewer = viewer;
     this.decodingService = new Decoding( );
-    this.scatterplotService = new Scatterplot( );
     this.datasourceService = new Datasource( viewer );
     this.store = useGlobalStore( );
 	this.eventEmitterService = new EventEmitter( );
@@ -140,11 +139,7 @@ calculateAverageExposure( features ) {
 
 		this.store.averageHeatExposure = total / count;
 
-		// let urbanHeatDataAndMaterial = this.scatterplotService.createDataSetForScatterPlot( features, 'facade', 'height', 'c_julkisivu', 'measured_height' );
-
 		return urbanHeatData;
-
-	//	this.scatterplotService.createScatterPlot( urbanHeatDataAndMaterial, 'facade', 'height' );
 
 	}
 }
@@ -169,8 +164,7 @@ async findUrbanHeatData( data, postcode ) {
         this.addMissingHeatData(data.features, urbanheat.features);
         let urbanHeatData = this.calculateAverageExposure(data.features);
 		let entites = await this.datasourceService.addDataSourceWithName(data, 'Buildings');
-
-		this.eventEmitterService.emitNewEvents( urbanHeatData, postcode, entites );
+		this.eventEmitterService.emitPostalCodeEvents( urbanHeatData, postcode, entites );
 
 		return entites;
 

@@ -3,6 +3,8 @@ import Datasource from "./datasource.js";
 import PrintBoxService from "./printbox.js"; 
 import Reset from "./reset.js";
 import Building from "./building.js";
+import Plot from "./plot.js"
+import EventEmitter from "./eventEmitter.js"
 import { useGlobalStore } from '../store.js';
 
 export default class FeaturePicker {
@@ -12,7 +14,9 @@ export default class FeaturePicker {
       this.printBoxService = new PrintBoxService( this.viewer );
       this.resetService = new Reset( this.viewer );
       this.buildingService = new Building( this.viewer );
+      this.plotService = new Plot( );
       this.store = useGlobalStore( );
+      this.eventEmitterService = new EventEmitter( );
 
     }
   
@@ -22,9 +26,9 @@ export default class FeaturePicker {
     * @param {Cesium.Viewer} viewer - The Cesium viewer object
     * @param {MouseEvent} event - The click event
     */
-    processClick( viewer, event ) {
+    processClick( event ) {
         console.log("Clicked at " + String( event.x ) + ", " + String( event.y ));
-        this.pickEntity( viewer, new Cesium.Cartesian2( event.x, event.y ) );
+        this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
     }    
     
     /**
@@ -33,8 +37,8 @@ export default class FeaturePicker {
     * @param { String } viewer - The Cesium viewer object
     * @param { String } windowPosition - The window position to pick the entity
     */
-    pickEntity( viewer, windowPosition ) {
-       let picked = viewer.scene.pick( windowPosition );
+    pickEntity( windowPosition ) {
+       let picked = this.viewer.scene.pick( windowPosition );
        
        if ( picked ) {
            
@@ -189,14 +193,10 @@ export default class FeaturePicker {
     }
     
     handleBuildingFeature( buildingHeatExposure, address, postinumero, treeArea ) {
-
-        // document.getElementById( "plotSoSContainer" ).style.visibility = 'hidden';
-        document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
-        document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
-        toggleBearingSwitchesVisibility( 'hidden' );
-    
-        document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
-    
+        
+        this.plotService.togglePostalCodePlotVisibility( 'hidden' );
+        this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
+        
         if (  document.getElementById( "showTreesToggle" ).checked ) {
     
             if ( treeArea ) {
@@ -210,8 +210,8 @@ export default class FeaturePicker {
             }
     
         }
-    
-        createBuildingHistogram( buildingHeatExposure, address, postinumero );
+
+        this.eventEmitterService.emitBuildingEvents( buildingHeatExposure, address, postinumero );    
         this.store.postalcode = postinumero;
     
     }
@@ -282,7 +282,6 @@ export default class FeaturePicker {
         
         this.store.postalcode = id.properties.posno;
         this.store.nameOfZone = id.properties.nimi;
-        console.log(" this.$nameOfZone",  this.store.nameOfZone)
         this.removeEntityByName( 'coldpoint' );
         this.removeEntityByName( 'currentLocation' );
         this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
@@ -329,7 +328,7 @@ export default class FeaturePicker {
     
             }
             
-            handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value, id.properties.treeArea );
+            this.handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value, id.properties.treeArea );
     
         }
     
@@ -344,13 +343,13 @@ export default class FeaturePicker {
     
         if ( category ) {
     
-            document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
+            document.getElementById( 'heatHistogramContainer' ).style.visibility = 'hidden';
     
         } else {
     
             if ( document.getElementById( "showPlotToggle" ).checked && !document.getElementById( "populationGridToggle" ).checked ) {
     
-                document.getElementById( 'plotContainer' ).style.visibility = 'visible';
+                document.getElementById( 'heatHistogramContainer' ).style.visibility = 'visible';
     
             }
     

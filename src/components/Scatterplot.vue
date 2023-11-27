@@ -87,7 +87,6 @@
     // Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
     this.processEntitiesForScatterPlot( this.buildingEntities, urbanHeatDataAndMaterial );
     // Create a scatter plot with the updated data
-    console.log("number of buildings added to scatterplot:", urbanHeatDataAndMaterial.length );
     this.createScatterPlot( urbanHeatDataAndMaterial, this.getSelectedText( "categoricalSelect" ), this.getSelectedText( "numericalSelect" ) );
 },
 /**
@@ -367,7 +366,8 @@ return [ heatList, numericalList, average ];
 
     const xScale = d3.scaleLinear()
       .domain([minXValue, maxXValue])
-      .range([0, width]); // Define width or use another variable for width value
+      .range([0, width]) // Define width or use another variable for width value
+      .nice();
 
     // Append x-axis
     svg.append('g')
@@ -376,7 +376,8 @@ return [ heatList, numericalList, average ];
 
     const yScale = d3.scaleLinear()
       .domain([minYValue, maxYValue])
-      .range([height, 0]); // Define height or use another variable for height value
+      .range([height, 0]) // Define height or use another variable for height value
+      .nice();
 
     // Append y-axis
     svg.append('g')
@@ -489,7 +490,7 @@ legend.selectAll('.legend-label')
 #numericalSelect {
     position: fixed;
     bottom: 61px;
-    left: 480px; /* Adjusted position to match scatter plot container */
+    left: 484px; /* Adjusted position to match scatter plot container */
     visibility: hidden;
     font-size: smaller;
 }

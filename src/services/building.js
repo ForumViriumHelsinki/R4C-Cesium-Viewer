@@ -255,12 +255,11 @@ async loadBuildingsWithoutCache(url, postcode) {
     try {
       const response = await fetch(url);
       const data = await response.json();
-  
-      await this.datasourceService.addDataSourceWithName(data, "Buildings");
       const entities = await this.urbanheatService.findUrbanHeatData(data, postcode);
   
       this.setHeatExposureToBuildings(entities);
       this.setHelsinkiBuildingsHeight(entities);
+	  
       
       return entities; // Return the processed entities or whatever you need here
     } catch (error) {

@@ -130,4 +130,64 @@ async addDataSourceWithName(data, name) {
   }
 }
 
+/**
+ * Removes duplicate data sources from the Cesium viewer.
+ * 
+ * @returns {Promise<void>} A promise that resolves when the operation is complete.
+ */
+async removeDuplicateDataSources( ) {
+    return new Promise((resolve, reject) => {
+        const dataSources = this.viewer.dataSources._dataSources;
+        const uniqueDataSources = {};
+
+        for (let i = 0; i < dataSources.length; i++) {
+            const dataSource = dataSources[i];
+
+            if (!uniqueDataSources[dataSource.name] || uniqueDataSources[dataSource.name].index > i) {
+                // Store or replace the data source if it's the first occurrence or has a smaller index
+                uniqueDataSources[dataSource.name] = {
+                    dataSource: dataSource,
+                    index: i
+                };
+            }
+        }
+
+        // Clear all existing data sources
+        this.viewer.dataSources.removeAll();
+
+        // Add the unique data sources back to the viewer
+        const addPromises = [];
+        for (const name in uniqueDataSources) {
+            const dataSource = uniqueDataSources[name].dataSource;
+            const addPromise = this.viewer.dataSources.add(dataSource);
+            addPromises.push(addPromise);
+        }
+
+        // Wait for all data sources to be added
+        Promise.all(addPromises)
+            .then(() => {
+                resolve();
+            })
+            .catch((error) => {
+                reject(error);
+            });
+    });
+}
+
+/**
+ * Removes the data source by name from the Cesium viewer
+ * 
+ */
+removeDataSourceByName( name ) {
+    // Find the data source named 'MajorDistricts' in the viewer
+    const majorDistrictsDataSource = this.getDataSourceByName( name );
+
+    // If the data source is found, remove it
+    if ( majorDistrictsDataSource ) {
+
+        this.viewer.dataSources.remove( majorDistrictsDataSource, true );    
+
+    }
+}
+
 }

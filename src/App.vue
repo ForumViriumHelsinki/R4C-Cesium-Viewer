@@ -7,7 +7,7 @@
   <HeatHistogram />
   <SocioEconomics />
   <Scatterplot />
-
+  <Building />
 
   <div id="UIContainer">
   <p class="header">R4C Urban Heat risk demonstrator</p>
@@ -105,9 +105,6 @@
 
 </div>
 
-  <div id="plotSoSContainer">
-  </div>
-
   <label id="bearingLabel" style="position: fixed; bottom: 41px; left: 15px; visibility: hidden;">Direction of trees</label>
 
   <div id="bearingAllSwitchContainer">
@@ -171,5 +168,6 @@ import PrintBox from "./components/PrintBox.vue";
 import HeatHistogram from "./components/HeatHistogram.vue";
 import SocioEconomics from "./components/SocioEconomics.vue";
 import Scatterplot from "./components/Scatterplot.vue";
+import Building from "./components/Building.vue";
 
 </script>

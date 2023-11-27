@@ -8,6 +8,7 @@ import "cesium/Source/Widgets/widgets.css";
 import Datasource from "../services/datasource.js"; 
 import Featurepicker from "../services/featurepicker.js"; 
 import Geocoding from "../services/geocoding.js";
+import ControlPanel from "../services/controlpanel.js"
 
 export default {
   mounted() {
@@ -36,9 +37,9 @@ export default {
       // Other initialization logic...
 
       // For example, add a placeholder imagery layer
-     // viewer.imageryLayers.add(
-     //   this.createImageryLayer( 'avoindata:Karttasarja_PKS' )
-     // );
+      viewer.imageryLayers.add(
+        this.createImageryLayer( 'avoindata:Karttasarja_PKS' )
+      );
 
       // Fly to a specific location
       viewer.camera.flyTo({
@@ -64,11 +65,14 @@ export default {
       const cesiumContainer = document.getElementById( "cesiumContainer" );
       const featurepicker = new Featurepicker( viewer );
       cesiumContainer.addEventListener( "click", function( event ) { 
-        featurepicker.processClick( viewer, event ); // Assuming processClick is defined later
+        featurepicker.processClick( event ); // Assuming processClick is defined later
       });
 
       const geocoding = new Geocoding( viewer );
-      geocoding.addGeocodingEventListeners( viewer );
+      geocoding.addGeocodingEventListeners( );
+      
+      const controlpanel = new ControlPanel( viewer );
+      controlpanel.addBuildingEventListeners( );
 
     },
     createImageryLayer( layerName ) {

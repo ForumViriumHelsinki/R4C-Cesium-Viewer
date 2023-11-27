@@ -11,7 +11,7 @@ export default class Reset {
       this.datasourceHandler = new Datasource( this.viewer );
       this.postalcodeview = new Postalcodeview( );
       this.gridview = new Gridview( );
-      this.plots = new Plot( );
+      this.plotsService = new Plot( );
       this.store = useGlobalStore( );
     }
   
@@ -57,7 +57,7 @@ resetSwitches( ) {
   this.gridview.setGridElementsDisplay( 'none' );
 
   this.setPrintVisible( );
-  this.plots.hideAllPlotElements( );
+  this.plotsService.togglePostalCodePlotVisibility( 'hidden' );
 
 }
 

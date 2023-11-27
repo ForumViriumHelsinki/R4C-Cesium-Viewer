@@ -1,17 +1,22 @@
 export default class Plot {
 
+
+    constructor(  ) {
+
+    }
+  
+
 /**
- * Hides all plots and select elements
+ * Toggle visibility of plot elements visible at postal code level
  * 
  * */
-hideAllPlotElements( ) {
+togglePostalCodePlotVisibility( status ) {
 
-    document.getElementById( 'plotContainer' ).style.visibility = 'hidden';
-    document.getElementById( 'plotSoSContainer' ).style.visibility = 'hidden';
-    document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
-    document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
-    this.toggleBearingSwitchesVisibility( 'hidden' );
-    document.getElementById( 'plotMaterialContainer' ).style.visibility = 'hidden';
+    document.getElementById( 'heatHistogramContainer' ).style.visibility = status;
+    document.getElementById( 'socioeonomicsContainer' ).style.visibility = status;
+    document.getElementById( 'numericalSelect' ).style.visibility = status;
+    document.getElementById( 'categoricalSelect' ).style.visibility = status;
+    document.getElementById( 'scatterPlotContainer' ).style.visibility = status;
     document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
     document.getElementById( 'numericalSelect' ).value = 'measured_height';
 
