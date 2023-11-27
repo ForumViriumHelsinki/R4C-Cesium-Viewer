@@ -234,19 +234,17 @@ export default class FeaturePicker {
     
     }
     
-    removeEntityByName( name ) {
-    
-        this.viewer.entities._entities._array.forEach( function( entity ) {
-    
-            if ( entity.name == name ) {
-    
-                this.viewer.entities.remove( entity );
-                
-            }
-        });
-        
-    
-    }
+removeEntityByName( name ) {
+
+    this.viewer.entities._entities._array.forEach( ( entity ) => {
+
+        if ( entity.name === name ) {
+
+            this.viewer.entities.remove( entity );
+
+        }
+    });
+}
     
     markCurrentLocation( entity ) {
     
@@ -300,7 +298,7 @@ export default class FeaturePicker {
     
         }
     
-        if ( !id.properties.posno && id.entityCollection._entities._array[ 0 ]._properties._id._value == 5879932 ) {
+        if ( !id.properties.posno && id.entityCollection._entities._array[ 0 ]._properties._id && id.entityCollection._entities._array[ 0 ]._properties._id._value == 5879932 ) {
     
             loadTravelTimeData( id.properties.id._value );
             markCurrentLocation( id );

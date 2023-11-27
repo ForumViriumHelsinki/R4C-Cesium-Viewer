@@ -8,102 +8,7 @@
   <SocioEconomics />
   <Scatterplot />
   <Building />
-
-  <div id="UIContainer">
-  <p class="header">R4C Urban Heat risk demonstrator</p>
-  <p class="uiButton" onClick="reset()" style="color: red; float:right;">Reset</p>
-  <!-- showPlotSwitch-->
-
-<label class="switch">
-  <input type="checkbox" id="populationGridToggle" value="populationGrid">
-  <span class="slider round"></span>
-</label>
-<label for="populationGridToggle" class="label" id="populationGridLabel">Grid view</label>  
-
-<label class="switch">
-  <input type="checkbox" id="showPlotToggle" value="showPlot" checked>
-  <span class="slider round"></span>
-</label>
-<label for="showPlotToggle" class="label">Display plot</label>
-
-  <!-- showPrintSwitch-->
-<label class="switch">
-  <input type="checkbox" id="printToggle" value="print" checked>
-  <span class="slider round"></span>
-</label>
-<label for="printToggle" class="label">Object details</label>
-
-  <!-- showVegetationSwitch-->
-<label class="switch" id="showVegetationSwitch">
-	<input type="checkbox" id="showVegetationToggle" value="showVegetation" >
-	<span class="slider round"></span>
-</label>
-<label for="showVegetationToggle" class="label" id="showVegetationLabel">Vegetation</label>
-
-  <!-- showOtherNatureSwitch-->
-<label class="switch" id="showOtherNatureSwitch">
-  <input type="checkbox" id="showOtherNatureToggle" value="showOtherNature" >
-  <span class="slider round"></span>
-</label>
-<label for="showOtherNatureToggle" class="label" id="showOtherNatureLabel">Other nature</label>
-
-  <!-- hideNewBuildingsSwitch-->
-<label class="switch" id = "hideNewBuildingsSwitch">
-  <input type="checkbox" id="hideNewBuildingsToggle" value="filterBuildings" >
-  <span class="slider round"></span>
-</label>
-<label for="hideNewBuildings" class="label" id="hideNewBuildingsLabel">Built before summer 2018</label>
-
-  <!-- hideNonSoteSwitch-->
-<label class="switch" id = "hideNonSoteSwitch">
-	<input type="checkbox" id="hideNonSoteToggle" value="filterBuildings" >
-	<span class="slider round"></span>
-</label>
-<label for="hideNonSote" class="label" id="hideNonSoteLabel">Only sote buildings</label>
-
-  <!--  hideLowSwitch-->
-<label class="switch" id = "hideLowSwitch" >
-  <input type="checkbox" id="hideLowToggle" value="filterBuildings" >
-  <span class="slider round"></span>
-</label>
-<label for="hideLow" class="label" id="hideLowLabel">Only tall buildings</label>
-
-  <!--  showTrees-->
-<label class="switch" id = "showTreesSwitch" >
-  <input type="checkbox" id="showTreesToggle" value="showTrees" >
-  <span class="slider round"></span>
-</label>
-<label for="showTrees" class="label" id="showTreesLabel">Trees</label>
-
-  <!--  switchView-->
-<label class="switch" id = "switchViewSwitch" >
-  <input type="checkbox" id="switchViewToggle" value="switchView" >
-  <span class="slider round"></span>
-</label>
-<label for="switchView" class="label" id="switchViewLabel">2D view</label>
-
-  <!--  showSensorData-->
-<label class="switch" id = "showSensorDataSwitch" >
-  <input type="checkbox" id="showSensorDataToggle" value="showSensorData" >
-  <span class="slider round"></span>
-</label>
-<label for="showSensorData" class="label">Sensor data</label>
-
-  <!--  natureGrid-->
-  <label class="switch" id = "natureGridSwitch" >
-    <input type="checkbox" id="natureGridToggle" value="natureGrid" >
-    <span class="slider round"></span>
-  </label>
-  <label for="natureGrid" class="label" id="natureGridLabel">Nature grid</label>
-
-  <!--  travelTime-->
-  <label class="switch" id = "travelTimeSwitch" >
-    <input type="checkbox" id="travelTimeToggle" value="travelTime" >
-    <span class="slider round"></span>
-  </label>
-  <label for="travelTime" class="label" id="travelTimeLabel">Travel time grid</label> 
-
-</div>
+  <Controlpanel />
 
   <label id="bearingLabel" style="position: fixed; bottom: 41px; left: 15px; visibility: hidden;">Direction of trees</label>
 
@@ -169,5 +74,6 @@ import HeatHistogram from "./components/HeatHistogram.vue";
 import SocioEconomics from "./components/SocioEconomics.vue";
 import Scatterplot from "./components/Scatterplot.vue";
 import Building from "./components/Building.vue";
+import Controlpanel from "./components/ControlPanel.vue";
 
 </script>

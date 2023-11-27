@@ -14,22 +14,6 @@ export default class Reset {
       this.plotsService = new Plot( );
       this.store = useGlobalStore( );
     }
-  
-/**
- * Resets the objects displayed, camera orientation, and switches to their default state
- */
-reset( ) {
-
-  this.removeDataSourcesAndEntities( );
-  this.resetViewer( );
-  this.resetSwitches( );
-  this.store.reset();
-  // Load post code zones & energy availability tags
-  this.datasourceHandler.loadGeoJsonDataSource( 0.2, 'assets/data/hki_po_clipped.json', 'PostCodes' );
-
-  document.getElementById( 'printContainer' ).innerHTML =  "<i>Please click on a postcode area to load building and nature areas from the WFS server...</i>";
-
-}
 
 /**
 * Resets the switches to their default state
@@ -71,21 +55,7 @@ removeDataSourcesAndEntities( ) {
 
 }
 
-/**
-* Resets the viewer's camera to Helsinki with a specific orientation
-*/
-resetViewer( ) {
-  // Fly the camera to Helsinki at the given longitude, latitude, and height.
-  viewer.camera.flyTo({
-      destination : Cesium.Cartesian3.fromDegrees( 24.931745, 60.190464, 35000 ), 
-      orientation : {
-          heading : Cesium.Math.toRadians( 0.0 ),
-          pitch : Cesium.Math.toRadians( -85.0 ),
-      }
-  });
 
-}
-  
 /**
  * This function sets the visibility of HTML elements related to printing and geocoder to "visible", making them visible on the webpage.  
  * 
@@ -117,29 +87,5 @@ getSelectedText( elementId ) {
 
 }
 
-
-/**
- * Shows all plots and select elements
- * 
- * */
-showAllPlots( ) {
-
-    document.getElementById( 'plotContainer' ).style.visibility = 'visible';
-    document.getElementById( 'plotSoSContainer' ).style.visibility = 'visible';
-    document.getElementById( 'plotMaterialContainer' ).style.visibility = 'visible';
-
-    // only show scatter plot selects if trees are not visible
-    if ( !document.getElementById( "showTreesToggle" ).checked ) {
-
-        document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
-        document.getElementById( 'categoricalSelect' ).style.visibility = 'visible'; 
-       
-    } else {
-
-        toggleBearingSwitchesVisibility( 'visible' );
-
-    }
-
-}
 
 }

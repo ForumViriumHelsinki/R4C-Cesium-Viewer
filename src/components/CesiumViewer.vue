@@ -72,7 +72,7 @@ export default {
       geocoding.addGeocodingEventListeners( );
       
       const controlpanel = new ControlPanel( viewer );
-      controlpanel.addBuildingEventListeners( );
+      controlpanel.addEventListeners( );
 
     },
     createImageryLayer( layerName ) {

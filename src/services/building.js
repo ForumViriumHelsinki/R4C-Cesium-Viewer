@@ -1,5 +1,4 @@
 import * as Cesium from "cesium";
-import localforage from "localforage";
 import Datasource from "./datasource.js"; 
 import Urbanheat from "./urbanheat.js"; 
 

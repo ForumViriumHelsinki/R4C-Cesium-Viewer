@@ -1,19 +1,97 @@
 import Datasource from "./datasource.js"; 
+import Vegetation from "./vegetation.js"; 
+import OtherNature from "./othernature.js"; 
+import { useGlobalStore } from '../store.js';
 
 export default class Controlpanel {
     constructor( viewer ) {
         this.viewer = viewer;
         this.dataSourceService = new Datasource( this.viewer );
+        this.vegetationService = new Vegetation( this.viewer );
+        this.otherNatureService = new OtherNature( this.viewer );
+        this.store = useGlobalStore( );
+
+        this.filterBuildingsEvent = this.filterBuildingsEvent.bind(this);
+        this.loadVegetationEvent = this.loadVegetationEvent.bind(this);
+        this.loadOtherNatureEvent = this.loadOtherNatureEvent.bind(this);
 
     }
   
 /**
  * Add EventListeners related to buildings
  */
-addBuildingEventListeners() {
-   document.getElementById('hideNewBuildingsToggle').addEventListener('change', this.filterBuildingsEvent);
-   document.getElementById('hideNonSoteToggle').addEventListener('change', this.filterBuildingsEvent);
-   document.getElementById('hideLowToggle').addEventListener('change', this.filterBuildingsEvent);
+addEventListeners() {
+    document.getElementById('hideNewBuildingsToggle').addEventListener('change', this.filterBuildingsEvent);
+    document.getElementById('hideNonSoteToggle').addEventListener('change', this.filterBuildingsEvent);
+    document.getElementById('hideLowToggle').addEventListener('change', this.filterBuildingsEvent);
+    document.getElementById('showVegetationToggle').addEventListener('change', this.loadVegetationEvent);
+    document.getElementById('showOtherNatureToggle').addEventListener('change', this.loadOtherNatureEvent);
+
+}
+
+/**
+ * This function handles the toggle event for showing or hiding the nature areas layer on the map.
+ *
+ */
+loadOtherNatureEvent( ) {
+
+    // Get the current state of the toggle button for showing nature areas.
+    const showloadOtherNature = document.getElementById( "showOtherNatureToggle" ).checked;
+
+    if ( showloadOtherNature ) {
+
+        // If the toggle button is checked, enable the toggle button for showing the nature area heat map.
+        //document.getElementById("showloadOtherNature").disabled = false;
+
+        // If there is a postal code available, load the nature areas for that area.
+        if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( "OtherNature" ) ) {
+
+            this.otherNatureService.loadOtherNature( this.store.postalcode );
+
+        } else {
+
+            this.dataSourceService.showAllDataSources( );
+        }
+
+
+    } else {
+
+        this.dataSourceService.hideDataSourceByName( "OtherNature" );
+
+    }
+
+}
+
+/**
+ * This function handles the toggle event for showing or hiding the vegetation layer on the map.
+ *
+ */
+loadVegetationEvent( ) {
+
+    // Get the current state of the toggle button for showing nature areas.
+    const showVegetation = document.getElementById( "showVegetationToggle" ).checked;
+
+    if ( showVegetation ) {
+
+        // If the toggle button is checked, enable the toggle button for showing the nature area heat map.
+        //document.getElementById("showVegetationHeatToggle").disabled = false;
+
+        // If there is a postal code available, load the nature areas for that area.
+        if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName("Vegetation") ) {
+
+            this.vegetationService.loadVegetation( this.store.postalcode );
+
+        } else {
+
+            this.dataSourceService.showAllDataSources( );
+        }
+
+    } else {
+
+        this.dataSourceService.hideDataSourceByName( "Vegetation" );
+
+    }
+
 }
 
 filterBuildingsEvent = () => {
