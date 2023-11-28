@@ -13,10 +13,10 @@ export default class GeoJSONDataSource {
   }
 
   // Function to hide a data source by name
-  hideDataSourceByName(name) {
+  changeDataSourceShowByName(name, show) {
     this.viewer.dataSources._dataSources.forEach(( dataSource ) => {
       if ( dataSource.name.startsWith( name ) ) {
-        dataSource.show = false;
+        dataSource.show = show;
       }
     });
   }

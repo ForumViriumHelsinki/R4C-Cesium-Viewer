@@ -190,15 +190,5 @@ findNameOfZone( postalcode ) {
     }
 }
 
-/**
- * This function sets the visibility of HTML elements related to geocoder to "visible", making them visible on the webpage.  
- * 
- */
-setGeocodingVisible( ) {
-    document.getElementById( 'printContainer' ).style.visibility = 'visible';
-    document.getElementById( 'searchcontainer' ).style.visibility = 'visible';
-    document.getElementById( 'georefContainer' ).style.visibility = 'visible';
-    document.getElementById( 'searchbutton' ).style.visibility = 'visible';
-}
 
 }

@@ -31,4 +31,23 @@ setPostalCodeElementsDisplay( display ) {
         }
     });
 }
+
+/**
+ * Changes the display of switch view elements 
+ */
+setSwitchViewElementsDisplay( display ) {
+    const elements = [
+        'switchViewSwitch',
+        'switchViewLabel'
+    ];
+
+    elements.forEach(( elementId ) => {
+        const element = document.getElementById( elementId );
+        if (element) {
+
+            element.style.display = display;
+        
+        }
+    });
+}
 }

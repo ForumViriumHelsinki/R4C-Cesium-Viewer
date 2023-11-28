@@ -10,11 +10,6 @@
   import { useGlobalStore } from '../store.js';
   
   export default {
-    data() {
-      return {
-        showPlot: false
-      };
-    },
     mounted() {
       this.unsubscribe = eventBus.$on('newBuilding', this.newBuilding);
       this.store = useGlobalStore( );
@@ -24,9 +19,7 @@
     },
     methods: {
         newBuilding( buildingHeatExposure, address, postinumero  ) {
-            console.log("building", buildingHeatExposure, address, postinumero )
-        this.showPlot = buildingHeatExposure && document.getElementById("showPlotToggle").checked;
-        if (this.showPlot) {
+        if (buildingHeatExposure) {
           this.createBuildingBarChart( buildingHeatExposure, address, postinumero );
         } else {
           // Hide or clear the visualization when not visible
@@ -45,8 +38,10 @@
   // Remove any existing content in the plot container
   plotContainer.innerHTML = '';
 
-  // Set plot container visibility to visible
-  plotContainer.style.visibility = 'visible';
+  if ( document.getElementById( "showPlotToggle" ).checked ) {
+    // Set container visibility to visible
+    plotContainer.style.visibility = 'visible';
+  }
 
   const trace1 = { x: [address], y: [buildingHeatExposure.toFixed( 3 ) ], name: address, type: 'bar' };
   const trace2 = { x: [postinumero], y: [this.store.averageHeatExposure.toFixed( 3 )], name: postinumero, type: 'bar' };

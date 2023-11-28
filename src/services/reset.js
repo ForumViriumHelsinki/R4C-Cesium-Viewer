@@ -40,7 +40,6 @@ resetSwitches( ) {
   document.getElementById( "populationGridToggle" ).disabled = false;
   this.gridview.setGridElementsDisplay( 'none' );
 
-  this.setPrintVisible( );
   this.plotsService.togglePostalCodePlotVisibility( 'hidden' );
 
 }

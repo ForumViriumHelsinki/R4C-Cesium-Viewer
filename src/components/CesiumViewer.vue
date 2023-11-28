@@ -9,6 +9,7 @@ import Datasource from "../services/datasource.js";
 import Featurepicker from "../services/featurepicker.js"; 
 import Geocoding from "../services/geocoding.js";
 import ControlPanel from "../services/controlpanel.js"
+import GridView from "../services/gridview.js"
 
 export default {
   mounted() {
@@ -73,6 +74,9 @@ export default {
       
       const controlpanel = new ControlPanel( viewer );
       controlpanel.addEventListeners( );
+
+      const gridview = new GridView( );
+      gridview.setGridElementsDisplay( 'none' );
 
     },
     createImageryLayer( layerName ) {

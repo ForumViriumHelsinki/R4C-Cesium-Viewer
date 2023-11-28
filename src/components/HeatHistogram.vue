@@ -12,7 +12,6 @@
     data() {
       return {
         urbanHeatData: [],
-        showPlot: false,
       };
     },
     mounted() {
@@ -25,8 +24,7 @@
     methods: {
       newHeatHistogram(newData) {
         this.urbanHeatData = newData;
-        this.showPlot = this.urbanHeatData.length > 0 && document.getElementById("showPlotToggle").checked;
-        if (this.showPlot) {
+        if (this.urbanHeatData.length > 0) {
           this.createHistogram();
         } else {
           // Hide or clear the visualization when not visible
@@ -39,9 +37,10 @@ createHistogram() {
 
   // Remove any existing content in the plot container
   plotContainer.innerHTML = '';
-
-  // Set plot container visibility to visible
-  plotContainer.style.visibility = 'visible';
+  if ( document.getElementById( "showPlotToggle" ).checked ) {
+    // Set container visibility to visible
+    plotContainer.style.visibility = 'visible';
+  }
 
   // Set up dimensions and margins
   const margin = { top: 30, right: 30, bottom: 30, left: 30 };
@@ -110,7 +109,7 @@ createHistogram() {
   bar
     .append('rect')
     .attr('x', 1)
-    .attr('width', (d) => x(d.x1) - x(d.x0) - 1) // Adjusted width for the bars
+    .attr('width', (d) => x(d.x1) - x(d.x0)) // Adjusted width for the bars
     .attr('height', (d) => height - y(d.length))
     .attr('fill', 'orange')
     .on('mouseover', function (event, d) {

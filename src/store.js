@@ -10,6 +10,7 @@ export const useGlobalStore = defineStore('global', {
     nameOfZone: null,
     averageHeatExposure: 0,
     averageTreeArea: 0,
+    level: 'city',
   }),
   getters: {
     getShowPlot: (state) => state.showPlot,
@@ -20,6 +21,7 @@ export const useGlobalStore = defineStore('global', {
     getNameOfZone: (state) => state.nameOfZone,
     getAverageHeatExposure: (state) => state.averageHeatExposure,
     getAverageTreeArea: (state) => state.averageTreeArea,
+    getLevel: (state) => state.level,
   },
   actions: {
     setShowPlot(newValue) {
@@ -55,6 +57,7 @@ export const useGlobalStore = defineStore('global', {
         this.nameOfZone = null;
         this.averageHeatExposure = 0;
         this.averageTreeArea = 0;
+        this.averageTreeArea = 'city';
     },
   },
 });

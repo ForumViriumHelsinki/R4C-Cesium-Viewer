@@ -30,7 +30,6 @@
   export default {
     data() {
       return {
-        showPlot: false,
         buildingEntities: null
       };
     },
@@ -56,8 +55,7 @@
         newScatterPlot(newData) {
         this.buildingEntities = newData;
 
-        this.showPlot = this.buildingEntities.length > 0 && document.getElementById("showPlotToggle").checked;
-        if (this.showPlot) {
+        if (this.buildingEntities.length > 0) {
           this.selectAttributeForScatterPlot();
         } else {
           // Hide or clear the visualization when not visible
@@ -294,8 +292,12 @@ return [ heatList, numericalList, average ];
     const scatterPlotContainer = document.getElementById( 'scatterPlotContainer' );
     // Clear existing content in the container
     scatterPlotContainer.innerHTML = '';
-    // Set container visibility to visible
-    scatterPlotContainer.style.visibility = 'visible';
+
+    if ( document.getElementById( "showPlotToggle" ).checked ) {
+      // Set container visibility to visible
+      scatterPlotContainer.style.visibility = 'visible';
+    }
+
     document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
     document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
 
@@ -490,7 +492,7 @@ legend.selectAll('.legend-label')
 #numericalSelect {
     position: fixed;
     bottom: 61px;
-    left: 484px; /* Adjusted position to match scatter plot container */
+    left: 490px; /* Adjusted position to match scatter plot container */
     visibility: hidden;
     font-size: smaller;
 }

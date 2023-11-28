@@ -66,11 +66,11 @@
 <label for="showTrees" class="label" id="showTreesLabel">Trees</label>
 
   <!--  switchView-->
-<label class="switch" id = "switchViewSwitch" >
+<label class="switch" id = "switchViewSwitch" style="display:none;">
   <input type="checkbox" id="switchViewToggle" value="switchView" >
   <span class="slider round"></span>
 </label>
-<label for="switchView" class="label" id="switchViewLabel">2D view</label>
+<label for="switchView" class="label" id="switchViewLabel" style="display:none;">2D view</label>
 
   <!--  showSensorData-->
 <label class="switch" id = "showSensorDataSwitch" >

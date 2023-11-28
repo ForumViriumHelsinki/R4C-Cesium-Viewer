@@ -3,6 +3,7 @@ import Datasource from "./datasource.js";
 import PrintBoxService from "./printbox.js"; 
 import Reset from "./reset.js";
 import Building from "./building.js";
+import Postalcodeview from "./postalcodeview.js";
 import Plot from "./plot.js"
 import EventEmitter from "./eventEmitter.js"
 import { useGlobalStore } from '../store.js';
@@ -14,6 +15,7 @@ export default class FeaturePicker {
       this.printBoxService = new PrintBoxService( this.viewer );
       this.resetService = new Reset( this.viewer );
       this.buildingService = new Building( this.viewer );
+      this.postalCodeViewService = new Postalcodeview( );
       this.plotService = new Plot( );
       this.store = useGlobalStore( );
       this.eventEmitterService = new EventEmitter( );
@@ -157,12 +159,8 @@ export default class FeaturePicker {
         document.getElementById( "hideNewBuildingsToggle" ).disabled = false;
         document.getElementById( "hideLowToggle" ).disabled = false;
         document.getElementById( "showTreesToggle" ).disabled = false;
-    
-        if ( document.getElementById( "printToggle" ).checked ) {
-    
-            this.printBoxService.setPrintVisible( );
-    
-        }
+
+        this.postalCodeViewService.setSwitchViewElementsDisplay( 'inline-block' );
     
         console.log("Postal code area found!");
     
@@ -174,15 +172,10 @@ export default class FeaturePicker {
         
         }
     
-        if ( document.getElementById( "showSensorDataToggle" ).checked ) {
-    
-            // loadSensorData( postalcode );
-    
-        }
-    
         this.buildingService.loadBuildings( postcode );	
     
         this.datasourceService.loadGeoJsonDataSource( 0.0, 'src/assets/data/hki_po_clipped.json', 'PostCodes' );
+        this.store.level = 'postalCode';
     
         // add laajasalo flood data
         if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
@@ -213,7 +206,8 @@ export default class FeaturePicker {
 
         this.eventEmitterService.emitBuildingEvents( buildingHeatExposure, address, postinumero );    
         this.store.postalcode = postinumero;
-    
+        this.store.level = 'building';
+
     }
     
     addColdPoint( location ) {

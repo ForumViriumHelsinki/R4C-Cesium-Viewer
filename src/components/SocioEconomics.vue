@@ -9,11 +9,6 @@
   import { useGlobalStore } from '../store.js';
   
   export default {
-    data() {
-      return {
-        showPlot: false,
-      };
-    },
     mounted() {
       this.unsubscribe = eventBus.$on('newSocioEconomicsDiagram', this.newSocioEconomicsDiagram);
       this.store = useGlobalStore( );
@@ -23,10 +18,8 @@
     },
     methods: {
         newSocioEconomicsDiagram(newData) {
-            
-            this.showPlot = newData && document.getElementById("showPlotToggle").checked;
-            
-            if (this.showPlot) {
+                        
+            if (newData) {
 
                 this.findSocioEconomicsData( newData );
             } else {
@@ -62,8 +55,10 @@ findSocioEconomicsData(postcode) {
         // Clear existing content in the container
         container.innerHTML = '';
 
-        // Set container visibility to visible
-        container.style.visibility = 'visible';
+        if ( document.getElementById( "showPlotToggle" ).checked ) {
+            // Set container visibility to visible
+            container.style.visibility = 'visible';
+        }
 
         const margin = { top: 20, right: 30, bottom: 50, left: 30 };
         const width = 460 - margin.left - margin.right;

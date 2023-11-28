@@ -66,9 +66,6 @@ emitBuildingEvents( buildingHeatExposure, address, postinumero  ) {
 
 if ( buildingHeatExposure ) {
 
-        console.log("building", buildingHeatExposure, address, postinumero )
-
-
     eventBus.$emit( 'newBuilding', buildingHeatExposure, address, postinumero  );
 
 }       
