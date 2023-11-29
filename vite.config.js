@@ -13,4 +13,5 @@ export default defineConfig({
       usePolling: true,
     },
   },
+  base: './', // Ensure that paths resolve correctly within the Docker environment
 });
