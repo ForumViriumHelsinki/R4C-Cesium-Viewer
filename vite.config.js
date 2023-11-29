@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import cesium from 'vite-plugin-cesium';
 import Vue from '@vitejs/plugin-vue';
-import { fileURLToPath, URL } from "url";
+import path from 'path'
 
 export default defineConfig({
   plugins: [
@@ -15,12 +15,9 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: [
-      { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
-      { find: '@assets', replacement: fileURLToPath(new URL('./src/shared/assets', import.meta.url)) },
-      { find: '@cmp', replacement: fileURLToPath(new URL('./src/shared/cmp', import.meta.url)) },
-      { find: '@stores', replacement: fileURLToPath(new URL('./src/shared/stores', import.meta.url)) },
-      { find: '@use', replacement: fileURLToPath(new URL('./src/shared/use', import.meta.url)) },
-    ],
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    }
   },
+  base: '.',
 });
