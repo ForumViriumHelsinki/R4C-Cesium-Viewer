@@ -189,22 +189,23 @@ export default class FeaturePicker {
         
         this.plotService.togglePostalCodePlotVisibility( 'hidden' );
         this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
+        document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
         
         if (  document.getElementById( "showTreesToggle" ).checked ) {
     
             if ( treeArea ) {
     
-                createTreeHistogram( treeArea, address, postinumero );
+                this.eventEmitterService.emitBuildingTreeEvent( treeArea, address, postinumero );    
         
             } else {
         
-                createTreeHistogram( 0, address, postinumero );
+                this.eventEmitterService.emitBuildingTreeEvent( 0, address, postinumero  );    
         
             }
     
         }
 
-        this.eventEmitterService.emitBuildingEvents( buildingHeatExposure, address, postinumero );    
+        this.eventEmitterService.emitBuildingHeatEvent( buildingHeatExposure, address, postinumero );    
         this.store.postalcode = postinumero;
         this.store.level = 'building';
 

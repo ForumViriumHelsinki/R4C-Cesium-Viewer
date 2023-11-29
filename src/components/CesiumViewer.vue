@@ -6,13 +6,17 @@
 import * as Cesium from "cesium"
 import "cesium/Source/Widgets/widgets.css";
 import Datasource from "../services/datasource.js"; 
+import Tree from "../services/tree.js"; 
+import Building from "../services/building.js"; 
 import Featurepicker from "../services/featurepicker.js"; 
 import Geocoding from "../services/geocoding.js";
 import ControlPanel from "../services/controlpanel.js"
 import GridView from "../services/gridview.js"
+import { useGlobalStore } from '../store.js';
 
 export default {
   mounted() {
+    this.store = useGlobalStore( );
     Cesium.Ion.defaultAccessToken = null;
     this.initViewer();
   },
@@ -55,8 +59,8 @@ export default {
         },
       });
 
-      const datasourceHandler = new Datasource( viewer );
-      datasourceHandler.loadGeoJsonDataSource(
+      const datasourceService = new Datasource( viewer );
+      datasourceService.loadGeoJsonDataSource(
         0.2,
         'src/assets/data/hki_po_clipped.json',
         'PostCodes'
@@ -78,6 +82,8 @@ export default {
       const gridview = new GridView( );
       gridview.setGridElementsDisplay( 'none' );
 
+      this.setupBearingSwitches( viewer );
+
     },
     createImageryLayer( layerName ) {
       const provider = new Cesium.WebMapServiceImageryProvider({
@@ -88,6 +94,43 @@ export default {
       
       return new Cesium.ImageryLayer( provider );
     },
+
+    setupBearingSwitches( viewer ) {
+
+    const switches = [ 'All', 'South', 'West', 'East', 'North' ];
+  
+    for ( const direction of switches ) {
+
+      const switchContainer = document.getElementById( `bearing${ direction }SwitchContainer` );
+      const toggle = switchContainer.querySelector( `#bearing${ direction }Toggle` );
+      
+      toggle.addEventListener( 'click', () => {
+
+        for ( const otherDirection of switches) {
+    
+          if ( direction !== otherDirection ) {
+
+            const otherSwitchContainer = document.getElementById( `bearing${ otherDirection }SwitchContainer` );
+            const otherToggle = otherSwitchContainer.querySelector( `#bearing${ otherDirection }Toggle` );
+            otherToggle.checked = false;
+
+          }
+        }
+
+        const buildingService = new Building( viewer );
+        const treeService = new Tree( viewer );
+        buildingService.resetBuildingEntites( );
+        treeService.resetTreeEntites( );
+        treeService.fetchAndAddTreeDistanceData( this.store.postalcode );
+
+      });
+  
+      // Set the 'All' switch to checked by default
+      if ( direction === 'All' ) {
+        toggle.checked = true;
+      }
+    }
+},
   },
 };
 </script>

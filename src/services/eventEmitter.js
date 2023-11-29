@@ -55,18 +55,49 @@ emitPostalCodeEvents( urbanHeatData, postcode, entites ) {
 }
 
 /**
- * The function emits events after user picks a building from viewer
+ * The function emits event after user picks a building from viewer
  *
  * @param { Number } buildingHeatExposure urban heat data of a building in postal code area
  * @param { String } address the address of building
  * @param { String } postinumero the postal code area
  * 
  */
-emitBuildingEvents( buildingHeatExposure, address, postinumero  ) {
+emitBuildingHeatEvent( buildingHeatExposure, address, postinumero  ) {
 
 if ( buildingHeatExposure ) {
 
-    eventBus.$emit( 'newBuilding', buildingHeatExposure, address, postinumero  );
+    eventBus.$emit( 'newBuildingHeat', buildingHeatExposure, address, postinumero  );
+
+}       
+
+}
+
+/**
+ * The function emits event after user picks a building from viewer
+ *
+ * @param { Number } treeArea building tree area
+ * @param { String } address the address of building
+ * @param { String } postinumero the postal code area
+ * 
+ */
+emitBuildingTreeEvent( treeArea, address, postinumero  ) {
+
+    eventBus.$emit( 'newBuildingTree', treeArea, address, postinumero  ); 
+
+}
+
+/**
+ * The function emits an event after trees have been loaded
+ *
+ * @param { String } data tree-building-distance data
+ * @param { Object } entities the tree entities of postal code area
+ * @param { Object } buildingDataSource - The postal code area buildings datasource
+ */
+emitTreeEvent( data, entities, buildingDataSource ) {
+
+if ( data ) {
+
+    eventBus.$emit( 'newNearbyTreeDiagram', data, entities, buildingDataSource );
 
 }       
 

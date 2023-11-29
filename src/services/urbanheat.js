@@ -1,24 +1,7 @@
 import Decoding from "./decoding.js";
 import EventEmitter from "./eventEmitter.js"
-import { reactive } from 'vue';
 import Datasource from "./datasource.js"; 
 import { useGlobalStore } from '../store.js';
-
-export const eventBus = reactive({
-  listeners: {},
-  $on(event, callback) {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
-    }
-    this.listeners[event].push(callback);
-  },
-  $emit(event, ...args) {
-    if (this.listeners[event]) {
-      this.listeners[event].forEach(callback => callback(...args));
-    }
-  },
-});
-
 
 export default class Urbanheat {
   constructor( viewer ) {

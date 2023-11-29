@@ -1,4 +1,3 @@
-import * as Cesium from "cesium";
 import Datasource from "./datasource.js"; 
 import Postalcodeview from "./postalcodeview.js"; 
 import Gridview from "./gridview.js"; 

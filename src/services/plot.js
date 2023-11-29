@@ -37,6 +37,7 @@ showAllPlots( ) {
 
 
     document.getElementById( 'buildingChartContainer' ).style.visibility = 'visible';
+    document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'visible';
 
 }
 }
@@ -50,6 +51,7 @@ hideAllPlots( ) {
     document.getElementById( 'heatHistogramContainer' ).style.visibility = 'hidden';
     document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'hidden';
     document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
+    document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'hidden';
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
     this.toggleBearingSwitchesVisibility( 'hidden' );
@@ -58,6 +60,19 @@ hideAllPlots( ) {
     document.getElementById( 'numericalSelect' ).value = 'measured_height';
 
 }
+
+/**
+ * Hides all scatter plot related elements
+ * 
+ * */
+hideScatterPlot( ) {
+
+  document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
+  document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
+  document.getElementById( 'scatterPlotContainer' ).style.visibility = 'hidden';
+
+}
+
 /**
  * Toggle visibility of plot elements visible at postal code level
  * 

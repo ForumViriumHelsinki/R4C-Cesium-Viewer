@@ -1,11 +1,12 @@
 import Datasource from "./datasource.js"; 
 import Vegetation from "./vegetation.js"; 
 import OtherNature from "./othernature.js"; 
+import Building from "./building.js"; 
 import Plot from "./plot.js"; 
 import Tree from "./tree.js"; 
-import Sensor from "./sensor.js"; 
+import Sensor from "./sensor.js";
+import View from "./view.js"; 
 import { useGlobalStore } from '../store.js';
-import * as Cesium from "cesium"
 
 export default class Controlpanel {
     constructor( viewer ) {
@@ -16,6 +17,8 @@ export default class Controlpanel {
         this.plotService = new Plot( );
         this.treeService = new Tree( this.viewer );
         this.sensorService = new Sensor( this.viewer );
+        this.viewService = new View( this.viewer );
+        this.buildingService = new Building( this.viewer );
         this.store = useGlobalStore( );
 
         this.filterBuildingsEvent = this.filterBuildingsEvent.bind(this);
@@ -85,23 +88,16 @@ printEvent( ) {
         document.getElementById( 'searchbutton' ).style.visibility = 'hidden';
 
     } else { // Otherwise, make the print container visible
-
-        this.setPrintVisible( );
+    
+    document.getElementById( 'printContainer' ).style.visibility = 'visible';
+    document.getElementById( 'searchcontainer' ).style.visibility = 'visible';
+    document.getElementById( 'georefContainer' ).style.visibility = 'visible';
+    document.getElementById( 'searchbutton' ).style.visibility = 'visible';
 
     }
 
 }
 
-/**
- * This function sets the visibility of HTML elements related to printing and geocoder to "visible", making them visible on the webpage.  
- * 
- */
- setPrintVisible( ) {
-    document.getElementById( 'printContainer' ).style.visibility = 'visible';
-    document.getElementById( 'searchcontainer' ).style.visibility = 'visible';
-    document.getElementById( 'georefContainer' ).style.visibility = 'visible';
-    document.getElementById( 'searchbutton' ).style.visibility = 'visible';
-}
 
 /**
  * This function to show or hide sensordata entities on the map based on the toggle button state
@@ -150,8 +146,11 @@ loadTreesEvent( ) {
     } else { // If showTrees toggle is off
         
         this.dataSourceService.changeDataSourceShowByName( "Trees", false );
+        	// Find the data source for buildings
+	// const buildingDataSource = datasourceService.getDataSourceByName( "Buildings" );
+
      //   resetTreeEntites( );
-     //   resetBuildingEntites( );
+     //   resetBuildingEntites( buildingDataSource );
      //   selectAttributeForScatterPlot( );
 
     }
@@ -224,125 +223,30 @@ loadVegetationEvent( ) {
 
 }
 
-filterBuildingsEvent = () => {
+filterBuildingsEvent() {
 
     const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
     const hideNewBuildings = document.getElementById( "hideNewBuildingsToggle" ).checked;
     const hideLow = document.getElementById( "hideLowToggle" ).checked;
 
-    if ( hideNonSote || hideNewBuildings || hideLow ) {
+  if ( this.dataSourceService ) {
 
-        this.filterBuildings( );
+    const buildingsDataSource = this.dataSourceService.getDataSourceByName("Buildings");
 
-    } else {
+    if ( buildingsDataSource ) {
 
-        this.showAllBuildings( );
+      if ( hideNonSote || hideNewBuildings || hideLow ) {
 
-    }
+        this.buildingService.filterBuildings( buildingsDataSource );
 
-}
+      } else {
 
-/**
- * Filter buildings from the given data source based on UI toggle switches.
- * 
- */
- filterBuildings = () => {
-
-    // Find the data source for buildings
-    const buildingsDataSource = this.dataSourceService.getDataSourceByName( "Buildings" );
-        // If the data source isn't found, exit the function
-    if ( !buildingsDataSource ) {
-        return;
-    }
-
-
-    const hideNewBuildings = document.getElementById( "hideNewBuildingsToggle" ).checked;
-    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
-    const hideLow = document.getElementById( "hideLowToggle" ).checked;
-
-    buildingsDataSource.entities.values.forEach(( entity ) => {
-
-        if ( hideNewBuildings ) {
-            // Filter out buildings built before summer 2018
-            const cutoffDate = new Date( "2018-06-01T00:00:00" ).getTime();
-            if ( entity._properties._c_valmpvm && typeof entity._properties._c_valmpvm._value === 'string' ) {
-
-                const c_valmpvm = new Date( entity._properties._c_valmpvm._value ).getTime();
-
-                if ( c_valmpvm >= cutoffDate ) {
-
-                    entity.show = false;
-
-                }
-            } else {
-
-                entity.show = false;
-    
-            }
-        }
-
-        if ( hideNonSote ) {
-            // Filter out non-SOTE buildings
-
-            if ( entity._properties._c_kayttark ) {
-
-                const kayttotark = Number( entity._properties.c_kayttark._value );
-
-                if ( !kayttotark != 511 && !kayttotark != 131 && !( kayttotark > 212 && kayttotark < 240 ) ) {
-    
-                    entity.show = false;
-        
-                } 
-
-            } else {
-
-                entity.show = false;
-    
-            }
-        }
-
-        if ( hideLow ) {
-            // Filter out buildings with fewer floors
-            if ( entity._properties._i_kerrlkm ) {
-
-                if ( entity._properties._i_kerrlkm && Number( entity._properties._i_kerrlkm._value ) <= 6 ) {
-
-                    entity.show = false;
-    
-                }
-                
-            } else {
-
-                entity.show = false;
-    
-            }
-        }
-
-    });
-
-}
-/**
-* Shows all buildings and updates the histograms and scatter plot
-*
-*/
-showAllBuildings( ) {
-
-    const buildingsDataSource = this.dataSourceService.getDataSourceByName( "Buildings" );
-
-    // If the data source isn't found, exit the function
-    if ( !buildingsDataSource ) {
-        return;
-    }
-
-    // Iterate over all entities in data source
-    for ( let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++ ) {
-
-        // Show the entity
-        buildingsDataSource._entityCollection._entities._array[ i ].show = true;
+        this.buildingService.showAllBuildings( buildingsDataSource );
 
     }
+    }
+    }
 
- 
 }
 
 /**
@@ -357,92 +261,18 @@ switchViewEvent( ) {
     // If the "switch view" toggle button is checked.
     if ( switchView ) {
 
-        this.switchTo2DView( );
+        this.viewService.switchTo2DView( );
 
     // If the "switch view"" toggle button is not checked.
     } else {
 
-        this.switchTo3DView( );
+        this.viewService.switchTo3DView( );
 
     }
 
 }
 
-// Function to switch to 2D view
-switchTo2DView() {
 
-    // Find the data source for postcodes
-    const postCodesDataSource = this.dataSourceService.getDataSourceByName( "PostCodes" );
-    
-    // Iterate over all entities in the postcodes data source.
-    for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
-        
-        let entity = postCodesDataSource._entityCollection._entities._array[ i ];
-        
-        // Check if the entity posno property matches the postalcode.
-        if ( entity._properties._posno._value  == this.store.postalcode ) {
-        
-                // TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
-                this.viewer.camera.flyTo( {
-                    destination: Cesium.Cartesian3.fromDegrees( entity._properties._center_x._value, entity._properties._center_y._value, 3500 ),
-                    orientation: {
-                        heading: Cesium.Math.toRadians( 0.0 ),
-                        pitch: Cesium.Math.toRadians( -90.0 ),
-                    },
-                    duration: 3
-                });
-            
-        }
-    }
 
-    // change label
-    this.changeLabel( "switchViewLabel", "3D view" );
-
-}
-  
-// Function to switch back to 3D view
-switchTo3DView() {
-    // Find the data source for postcodes
-    const postCodesDataSource = this.dataSourceService.getDataSourceByName( "PostCodes" );
-    
-    // Iterate over all entities in the postcodes data source.
-    for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
-        
-        let entity = postCodesDataSource._entityCollection._entities._array[ i ];
-        
-        // Check if the entity posno property matches the postalcode.
-        if ( entity._properties._posno._value  == this.store.postalcode ) {
-        
-                // TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
-                this.viewer.camera.flyTo( {
-                    destination: Cesium.Cartesian3.fromDegrees( entity._properties._center_x._value, entity._properties._center_y._value - 0.025, 2000 ),
-                    orientation: {
-                        heading: 0.0,
-                        pitch: Cesium.Math.toRadians( -35.0 ),
-                        roll: 0.0
-                    },
-                    duration: 3
-                });
-            
-        }
-    }
-
-    // change label
-    this.changeLabel( "switchViewLabel", "2D view" );
-
-}
-
-/**
- * Gets label element by id and changes it 
- * 
- * @param { String } id - The Cesium viewer object
- * @param { String } text - The window position to pick the entity
- */
-changeLabel( id, text ) {
-
-    const labelElement = document.getElementById( id );
-    labelElement.innerHTML = text;
-
-}
 
 }

@@ -1,9 +1,11 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
+import EventEmitter from "./eventEmitter.js"
 
 export default class Tree {
   constructor( viewer ) {
     this.datasourceService = new Datasource( viewer );
+    this.eventEmitterService = new EventEmitter( );
   }
 
 /**
@@ -63,9 +65,8 @@ async addTreesDataSource( data, postcode ) {
 
 		
 		}
-
-		// this.fetchAndAddTreeDistanceData( postcode, data );
-
+        
+		this.fetchAndAddTreeDistanceData( postcode, entities );
 
 }
 
@@ -73,283 +74,48 @@ async addTreesDataSource( data, postcode ) {
  * Fetch tree distance data from the provided URL and create a new dataset for plot that presents the cooldown effect on trees on buildings
  *
  * @param { string } postcode - The postal code to fetch the tree distance data for.
+ * @param { Object } entities - The postal code area tree entities
  */
-fetchAndAddTreeDistanceData( postcode ) {
-	// Fetch the tree data from the URL
-	const url = "https://geo.fvh.fi/r4c/collections/tree_building_distance/items?f=json&limit=100000&postinumero=" + postcode;
-	fetch( url )
-	  .then( response => response.json() )
-	  .then( data => {
-		// Call function that combines datasets for plotting
-		const sumPAlaM2Map = combineDistanceAndTreeData( data );
-		const heatExpTreeArea = createTreeBuildingPlotMap( sumPAlaM2Map );
-		const heatExpAverageTreeArea = extractKeysAndAverageTreeArea( heatExpTreeArea );
-		createTreesNearbyBuildingsPlot( heatExpAverageTreeArea[ 0 ], heatExpAverageTreeArea[ 1 ], heatExpAverageTreeArea[ 2 ] );
+fetchAndAddTreeDistanceData( postcode, entities ) {
 
-	  })
-	  .catch( error => {
-		// Log any errors encountered while fetching the data
-		console.log( "Error fetching tree distance data:", error );
-	  });
-}
+    if ( !entities ) {
 
-/**
- * Extracts heat expsoure and calculates average tree_area from the heatTreeAverageMap.
- *
- * @param { Map } heatTreeAverageMap - The map containing heat exposure values as keys and tree_area/count as values.
- * 
- * @return { Array } An array containing three sub-arrays. The first sub-array contains all the keys from the map, and the second sub-array contains the calculated average tree_area for each key. Third one contains the count of buildings for the heat exposure value.
- */
-extractKeysAndAverageTreeArea( heatTreeAverageMap ) {
-	const heatExpArray = [];
-	const averageTreeAreaArray = [];
-	const buildingCounts = [];
-
-	heatTreeAverageMap.forEach( ( value, key ) => {
-		heatExpArray.push( key );
-
-		if ( value.tree_area == 0 ) {
-	
-			// setting the value to 1 if there is no tree area nearby
-			averageTreeAreaArray.push( 1 );
-
-		} else {
-
-			averageTreeAreaArray.push( value.tree_area / value.count );
-
-		}
-
-		buildingCounts.push( value.count );
-
-	});
-  
-	return [ heatExpArray, averageTreeAreaArray, buildingCounts ];
-
-}
-
-/**
- * Adds Urban Heat Exposure to tree area data.
- *
- * @param { Map } sumPAlaM2Map - The dataset containing tree information, mapped to building IDs.
- * 
- * @return { Map } A map for plotting that contains the aggregated tree_area and count of buildings for each heat exposure value.
- */
-createTreeBuildingPlotMap( sumPAlaM2Map ) {
-
-	const heatTreeAverageMap = new Map();
-	let totalCounter = 0;
-	let totalTreeArea = 0;
-
-	// Find the data source for buildings
-	const buildingsDataSource = getDataSourceByName( "Buildings" );
-
-	// If the data source isn't found, exit the function
-	if ( !buildingsDataSource ) {
-		return;
-	}
-
-	let maxTreeArea = 0;
-	let maxTreeAreaBuilding = null;
-	
-	// Iterate over all entities in data source
-	for ( let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++ ) {
-	
-		let entity = buildingsDataSource._entityCollection._entities._array[ i ];
-	
-		// If entity has a heat exposure value, add it to the urbanHeatData array and add data for the scatter plot
-		if ( entity._properties.avgheatexposuretobuilding && entity._properties._id && entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
-
-			const building_id = entity._properties._id._value;
-			const heatExposure = entity._properties.avgheatexposuretobuilding._value.toFixed( 2 );
-			let tree_area = sumPAlaM2Map.get( building_id );
-
-			// Set tree area to 0
-			if ( !tree_area ) {
-
-				tree_area = 0;
-
-			}
-			
-			if ( heatTreeAverageMap.has( heatExposure ) ) {
-
-				let storedValues = heatTreeAverageMap.get( heatExposure )
-				storedValues.tree_area = storedValues.tree_area + tree_area
-				storedValues.count = storedValues.count + 1;
-
-
-				heatTreeAverageMap.set( heatExposure, storedValues );
-			
-			} else {
-				
-				heatTreeAverageMap.set( heatExposure, { tree_area: tree_area, count: 1 } );
-
-			}
-
-			// Set tree_area as a property of the entity
-			entity._properties.treeArea = tree_area;
-			
-			if ( tree_area > 225 ) {
-				  
-				// Highlight the building entity edges by changing its outlineColor and outlineWidth
-				if ( entity.polygon ) {
-
-					entity.polygon.outline = true; // Enable outline
-					entity.polygon.outlineColor = Cesium.Color.CHARTREUSE; // Set outline color to green
-					entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
-
-				}
-
-				if ( maxTreeArea < tree_area ) {
-
-					maxTreeArea = tree_area;
-					maxTreeAreaBuilding = building_id;
-
-				}
-
-			} 
-
-			// for calculating postal code average
-			totalTreeArea += tree_area;
-			totalCounter++;
-
-		}
-	}
-
-	setEntityColorToGreen( maxTreeAreaBuilding, buildingsDataSource );
-
-	averageTreeArea = totalTreeArea / totalCounter;
-
-	return heatTreeAverageMap;
-
-}
-
-/**
- * Set up entity outline
- *
- * @param { object } entityId - Id of Cesium entity
- * @param { object } datasource - The datasource the entity is located in
- * 
- */
-setEntityColorToGreen( entityId, datasource ) {
-	
-	// Iterate over all entities in data source
-	for ( let i = 0; i < datasource._entityCollection._entities._array.length; i++ ) {
-	
-		const entity = datasource._entityCollection._entities._array[ i ];
-
-		if ( entity._properties._id && entity._properties._id._value == entityId ) {
-
-			entity.polygon.material = Cesium.Color.FORESTGREEN;
-			entity.polygon.outlineColor = Cesium.Color.RED; // Set outline color to red
-			
-		}
-	}
-
-}
-
-/**
- * Combines the distance and tree datasets for plotting
- *
- * @param { object } distanceData - The dataset containing distance information
- * @param { object } treeData - The dataset containing tree information
- * 
- * @return { object } mapped data for plotting
- */
-combineDistanceAndTreeData( distanceData ) {
-
-	const selectedBearingValue = findSelectedBearingValue();
-
-  	// Create a map to store the sum of 'p_ala_m2' for each 'kohde_id' in 'treeData'
-  	const sumPAlaM2Map = new Map();
-
-	// Find the data source for trees
-	const treeDataSource = getDataSourceByName( "Trees" );
+            	// Find the data source for buildings
+	const treeDataSource = this.datasourceService.getDataSourceByName( "Trees" );
 
 	// If the data source isn't found, exit the function
 	if ( !treeDataSource ) {
 		return;
 	}
 
-	for ( let i = 0, len = distanceData.features.length; i < len; i++ ) {
+    entities = treeDataSource.entities.values;
 
-		const bearing = distanceData.features[ i ].properties.bearing;
+    }
 
-		if ( checkBearing( bearing, selectedBearingValue ) ) {
 
-			const building_id = distanceData.features[ i ].properties.building_id;
-			const tree_id = distanceData.features[ i ].properties.tree_id;
 
-			for ( let i = 0; i < treeDataSource._entityCollection._entities._array.length; i++ ) {
-        
-				let entity = treeDataSource._entityCollection._entities._array[ i ];
-				
-				// Check if the entity posno property matches the postalcode.
-				if ( entity._properties._kohde_id._value === tree_id ) {
+            	// Find the data source for buildings
+	const buildingsDataSource = this.datasourceService.getDataSourceByName( "Buildings" );
 
-					entity.polygon.outline = true; // Enable outline
-					entity.polygon.outlineColor = Cesium.Color.CHARTREUSE; // Set outline color to green
-					entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
-
-					const p_ala_m2 = entity._properties._p_ala_m2._value ;
-	
-					if ( sumPAlaM2Map.has( building_id ) ) {
-	
-						sumPAlaM2Map.set( building_id, sumPAlaM2Map.get( building_id ) + p_ala_m2 );
-					
-					} else {
-						
-						sumPAlaM2Map.set( building_id, p_ala_m2 );
-	
-					}
-
-				}
-			}	
-		}
+	// If the data source isn't found, exit the function
+	if ( !buildingsDataSource ) {
+		return;
 	}
 
-	return sumPAlaM2Map;
+	// Fetch the tree data from the URL
+	const url = "https://geo.fvh.fi/r4c/collections/tree_building_distance/items?f=json&limit=100000&postinumero=" + postcode;
+	fetch( url )
+	  .then( response => response.json() )
+	  .then( data => {
 
-}
+console.log( data, entities, buildingsDataSource  );
+        this.eventEmitterService.emitTreeEvent( data, entities, buildingsDataSource );
 
-/**
- * Check if the bearing value is according to user select value
- *
- * @param { Number } bearing - The bearing of tree to building
- * @param { String } selectedBearingValue - The selected bearing value by user
- * 
-* @return { Boolean } 
- */
-checkBearing( bearing, selectedBearingValue ) {
-
-	switch ( selectedBearingValue ){
-		case "a":
-			return true;
-		case "s":
-			if ( bearing > 134 && bearing < 225 ) {
-				return true;
-			}
-
-		case "w":
-			if ( bearing > 224 && bearing < 315 ) {
-
-				return true;
-			}
-		case "n":
-			if ( bearing > 314 && bearing < 45 ) {
-
-				return true;
-			}
-		case "e":
-			if ( bearing > 44 && bearing < 135 ) {
-
-				return true;
-			}
-
-		default:
-				return false;
-		}	
-
-
+	  })
+	  .catch( error => {
+		// Log any errors encountered while fetching the data
+		console.log( "Error fetching tree distance data:", error );
+	  });
 }
   
 /**
@@ -365,7 +131,7 @@ loadTreesWithoutCache( url, postcode ) {
     const response = fetch( url )
         .then( (response) => response.json() )
         .then( (data) => {
-            this.addTreesDataSource( data );
+            this.addTreesDataSource( data, postcode  );
         });
 	
 }
@@ -403,7 +169,7 @@ setTreePolygonMaterialColor( entity, description ) {
 resetTreeEntites( ) {
 
 	// Find the data source for trees
-	const treeDataSource = getDataSourceByName( "Trees" );
+	const treeDataSource = this.datasourceService.getDataSourceByName( "Trees" );
 
 	// If the data source isn't found, exit the function
 	if ( !treeDataSource ) {
@@ -420,30 +186,10 @@ resetTreeEntites( ) {
 
 		if ( entity._properties._description && entity.polygon ) {
 
-			setTreePolygonMaterialColor( entity, entity._properties._description._value );	
+			this.setTreePolygonMaterialColor( entity, entity._properties._description._value );	
 		}
 	}
 
 }
 
-/**
- * This function iterates through each direction using the switches array. 
- * For each direction, function gets the corresponding switch container and the associated toggle input element. 
- * If the toggle is checked (meaning the switch is turned on), the function return its value
- *
- */
-findSelectedBearingValue() {
-	const switches = [ 'All', 'South', 'West', 'East', 'North' ];
-  
-	for ( const direction of switches ) {
-	  const switchContainer = document.getElementById( `bearing${ direction }SwitchContainer` );
-	  const toggle = switchContainer.querySelector(`#bearing${ direction }Toggle` );
-	  
-	  if (toggle.checked) {
-		return toggle.value;
-	  }
-	}
-  
-	return null; // Return null if no switch is selected
-}
 }
