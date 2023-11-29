@@ -7,20 +7,13 @@ export default defineConfig({
     Vue(), 
     cesium()
   ],
+  resolve: { alias: { '@': '/src' } },
   server: { // for allowing any external access
-    host: '0.0.0.0',
+   host: true,
+   port: 5173,
     watch: {
       usePolling: true,
     },
-  },
-  resolve: {
-    alias: [
-        {
-            find: '@',
-            replacement: 'src',
-        },
-    ],
-    extensions: ['.vue', '.js']
   },
   base: './', // Ensure that paths resolve correctly within the Docker environment
 });
