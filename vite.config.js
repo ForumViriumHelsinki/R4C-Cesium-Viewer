@@ -7,13 +7,15 @@ export default defineConfig({
     Vue(), 
     cesium()
   ],
-  resolve: { alias: { '@': '/src' } },
-  server: { // for allowing any external access
-   host: true,
-   port: 5173,
-    watch: {
-      usePolling: true,
+  server: {
+    host: '0.0.0.0',
+    hmr: {
+        clientPort: 5173,
+        host: 'localhost',
     },
+    watch: {
+        usePolling: true
+    }
   },
   base: './', // Ensure that paths resolve correctly within the Docker environment
 });
