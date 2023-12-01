@@ -1,14 +1,16 @@
 import { defineConfig } from 'vite';
 import cesium from 'vite-plugin-cesium';
 import Vue from '@vitejs/plugin-vue';
-import path from 'path'
-import pluginRewriteAll from 'vite-plugin-rewrite-all';
+import forwardToTrailingSlashPlugin from './forward-to-trailing-slash-plugin.js'
+import { fileURLToPath, URL } from 'url'
+
+const base = '.';
 
 export default defineConfig({
   plugins: [
     Vue(), 
     cesium(),
-    pluginRewriteAll()
+  //  forwardToTrailingSlashPlugin(base),
   ],
   server: { // for allowing any external access
     host: '0.0.0.0',
@@ -16,10 +18,20 @@ export default defineConfig({
       usePolling: true,
     },
   },
+  define: { 'process.env': {} },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-    }
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    },
+    extensions: [
+      '.js',
+      '.json',
+      '.jsx',
+      '.mjs',
+      '.ts',
+      '.tsx',
+      '.vue',
+    ],
   },
-  base: '.',
+  base: base,
 });
