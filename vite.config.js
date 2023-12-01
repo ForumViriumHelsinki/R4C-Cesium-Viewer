@@ -5,7 +5,7 @@ import forwardToTrailingSlashPlugin from './forward-to-trailing-slash-plugin.js'
 import { fileURLToPath, URL } from 'url'
 import { buildCesium } from 'vite-plugin-cesium-build'
 
-const base = '.';
+const base = 'https://geo.fvh.fi/r4c/M8Na2P0v6z/';
 
 export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
   if (command === 'serve') {
