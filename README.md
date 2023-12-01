@@ -1,7 +1,20 @@
-# Vue 3 + Vite
+# R4C-Cesium-Viewer
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+R4C user interface Vue3 interface with Vite and Cesium
 
-## Recommended IDE Setup
+THE user interface is currently running at https://geo.fvh.fi/r4c/M8Na2P0v6z/
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+## Installation 
+```
+npm install
+```
+### local development
+```
+npm run serve
+```
+
+## Run build with Docker 
+
+```
+docker build -t <my-build-image> . ; sudo docker run -d --name r4c-cesium-viewer -p 5173:80 <my-build-image> 
+```
