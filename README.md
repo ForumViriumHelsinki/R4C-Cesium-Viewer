@@ -18,3 +18,5 @@ npm run serve
 ```
 docker build -t <my-build-image> . ; sudo docker run -d --name r4c-cesium-viewer -p 5173:80 <my-build-image> 
 ```
+
+The build has been only tested and should only work on Ubuntu server with nginx. With different setup the Dockerfile needs to be updated
