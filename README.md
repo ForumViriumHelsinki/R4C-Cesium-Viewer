@@ -12,11 +12,19 @@ npm install
 ```
 npm run serve
 ```
+The application should now be running at [http://localhost:5173](http://localhost:5173).
 
-## Run build with Docker 
+## Start locally with Docker
 
 ```
-docker build -t <my-build-image> . ; sudo docker run -d --name r4c-cesium-viewer -p 5173:80 <my-build-image> 
+docker build -t my-local-app -f Dockerfile.dev . ; docker run -d --name app-name -p 5173:5173 my-local-app
+```
+The application should now be running at [http://localhost:5173](http://localhost:5173).
+
+## Start server build with Docker 
+
+```
+docker build -t my-server-app . ; sudo docker run -d --name app-name -p 5173:80 my-server-app
 ```
 
 The build has been only tested and should only work on Ubuntu server with nginx. With different setup the Dockerfile needs to be updated

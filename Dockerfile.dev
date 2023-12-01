@@ -1,0 +1,23 @@
+# Use an official Node.js image as the base image
+FROM node:latest
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
+
+# Install project dependencies
+RUN npm install
+
+# Copy the rest of the application code to the working directory
+COPY . .
+
+# Build the Vue app for production
+RUN npm run build
+
+# Expose the port on which the Vue app runs (adjust according to your Vue app's configuration)
+EXPOSE 5173
+
+# Command to serve the built Vue app
+CMD ["npm", "run", "dev"]
