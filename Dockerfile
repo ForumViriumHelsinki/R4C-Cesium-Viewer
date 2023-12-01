@@ -1,5 +1,5 @@
 # Use the official Node.js image as the base image
-FROM node:18
+FROM node:18 AS build
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
@@ -13,8 +13,11 @@ RUN npm install
 # Copy the rest of the application code to the working directory
 COPY . .
 
-# Expose the port the app will run on
-EXPOSE 5173
+# Build the application
+RUN npm run build
 
-# Command to run your application
-CMD ["npm", "run", "dev"]
+# Stage 2: Use Nginx to serve the built application
+FROM nginx:alpine
+
+# Copy the built app from the previous stage
+COPY --from=build /usr/src/app/dist /usr/share/nginx/html
