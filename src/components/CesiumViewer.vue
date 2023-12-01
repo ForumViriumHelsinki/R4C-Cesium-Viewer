@@ -62,7 +62,7 @@ export default {
       const datasourceService = new Datasource( viewer );
       datasourceService.loadGeoJsonDataSource(
         0.2,
-        '../../public/assets/data/hki_po_clipped.json',
+        './assets/data/hki_po_clipped.json',
         'PostCodes'
       );
 

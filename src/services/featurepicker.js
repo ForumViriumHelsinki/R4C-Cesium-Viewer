@@ -174,7 +174,7 @@ export default class FeaturePicker {
     
         this.buildingService.loadBuildings( postcode );	
     
-        this.datasourceService.loadGeoJsonDataSource( 0.0, '../../public/assets/data/hki_po_clipped.json', 'PostCodes' );
+        this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
         this.store.level = 'postalCode';
     
         // add laajasalo flood data
