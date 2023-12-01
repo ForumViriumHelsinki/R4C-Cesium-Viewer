@@ -13,8 +13,8 @@
   		<!-- Add Logo -->
 		
 	<div class="logoHolder">	
-	<img src="/src/assets/images/regions4climate-black.png" id="logoR4C" alt="Regions4Climate" />
-	<img src="/src/assets/images/fvh-1_musta.png" id="logoFVH" alt="Forum Virium Helsinki" />
+	<img src="/public/assets/images/regions4climate-black.png" id="logoR4C" alt="Regions4Climate" />
+	<img src="/public/assets/images/fvh-1_musta.png" id="logoFVH" alt="Forum Virium Helsinki" />
   </div>
   
   </div>

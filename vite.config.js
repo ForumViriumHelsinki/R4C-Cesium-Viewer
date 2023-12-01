@@ -1,7 +1,5 @@
 import { defineConfig } from 'vite';
-import cesium from 'vite-plugin-cesium';
 import Vue from '@vitejs/plugin-vue';
-import forwardToTrailingSlashPlugin from './forward-to-trailing-slash-plugin.js'
 import { fileURLToPath, URL } from 'url'
 import { buildCesium } from 'vite-plugin-cesium-build'
 
