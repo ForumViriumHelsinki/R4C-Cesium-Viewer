@@ -1,5 +1,6 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
+import localforage from 'localforage';
 
 export default class Othernature {
   constructor( viewer ) {
@@ -17,21 +18,21 @@ async loadOtherNature( postcode ) {
 	let url = "https://geo.fvh.fi/r4c/collections/othernature/items?f=json&limit=10000&postinumero=" + postcode ;
 
 	try {
-		//const value = await localforage.getItem( url );
+		const value = await localforage.getItem( url );
 		// This code runs once the value has been loaded
 		// from the offline store.
 
-		//if ( value ) {
-		//	console.log("found from cache");
+		if ( value ) {
+			console.log("found from cache");
 
-		//	let datasource = JSON.parse( value )
-		//	addOtherNatureDataSource( datasource );
+			let datasource = JSON.parse( value )
+		  	this.addOtherNatureDataSource( datasource );
 
-		//} else {
+		} else {
 
 			this.loadOtherNatureWithoutCache( url );
 
-		//}
+		}
 	  	
 	} catch ( err ) {
 		// This code runs if there were any errors.
@@ -46,23 +47,18 @@ async loadOtherNature( postcode ) {
  */
 async addOtherNatureDataSource( data ) {
 	
-    let entities = await this.datasourceService.addDataSourceWithName(data, 'OtherNature');
+    let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'OtherNature');
 
-		
-		for ( let i = 0; i < entities.length; i++ ) {
+	for ( let i = 0; i < entities.length; i++ ) {
 			
-			let entity = entities[ i ];
-			const category = entity.properties._koodi._value;
+		let entity = entities[ i ];
+		const category = entity.properties._koodi._value;
             
-            if ( category ) {
-				//colors of nature area enity are set based on it's category
-				this.setOtherNaturePolygonMaterialColor( entity, category )
-			}
-
+        if ( category ) {
+			//colors of nature area enity are set based on it's category
+			this.setOtherNaturePolygonMaterialColor( entity, category )
 		}
-	
-
-
+	}
 }
 
 /**
@@ -77,6 +73,7 @@ loadOtherNatureWithoutCache( url ) {
     const response = fetch( url )
         .then( (response) => response.json() )
         .then( (data) => {
+			localforage.setItem( url, JSON.stringify( data ) );
             this.addOtherNatureDataSource( data );
         });
 	

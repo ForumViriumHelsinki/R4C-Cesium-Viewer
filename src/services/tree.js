@@ -1,6 +1,7 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
 import EventEmitter from "./eventEmitter.js"
+import localforage from 'localforage';
 
 export default class Tree {
   constructor( viewer ) {
@@ -21,21 +22,21 @@ async loadTrees( postcode ) {
 	try {
 
         // Attempt to retrieve the tree data from the local storage using the API endpoint URL as the key
-		//const value = await localforage.getItem( url );
+		const value = await localforage.getItem( url );
 
          // If the tree data is already available in the local storage, add it to the Cesium map
-		//if ( value ) {
+		if ( value ) {
 
-		//	console.log("found from cache");
-		//	let datasource = JSON.parse( value )
-		//	addTreesDataSource( datasource, postcode );
+		console.log("found from cache");
+		let datasource = JSON.parse( value )
+		this.addTreesDataSource( datasource, postcode );
 
-		//} else {
+		} else {
 
             // Otherwise, fetch the tree data from the API endpoint and add it to the local storage
 			this.loadTreesWithoutCache( url, postcode );
 
-		//}
+		}
 	  	
 	} catch ( err ) {
 		// This code runs if there were any errors.
@@ -130,6 +131,7 @@ loadTreesWithoutCache( url, postcode ) {
     const response = fetch( url )
         .then( (response) => response.json() )
         .then( (data) => {
+			localforage.setItem( url, JSON.stringify( data ) );
             this.addTreesDataSource( data, postcode  );
         });
 	

@@ -1,5 +1,6 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
+import localforage from 'localforage';
 
 export default class Vegetation {
   constructor( viewer ) {
@@ -19,21 +20,21 @@ async loadVegetation( postcode ) {
 	let url = "https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=" + postcode ;
 
 	try {
-		// const value = await localforage.getItem( url );
+		const value = await localforage.getItem( url );
 		// This code runs once the value has been loaded
 		// from the offline store.
 
-		//if ( value ) {
-		//	console.log("found from cache");
+		if ( value ) {
+			console.log("found from cache");
 
-		//	let datasource = JSON.parse( value )
-		//	addVegetationDataSource( datasource );
+			let datasource = JSON.parse( value )
+			this.addVegetationDataSource( datasource );
 
-		//} else {
+		} else {
 
 			this.loadVegetationWithoutCache( url );
 
-		// }
+		}
 	  	
 	} catch ( err ) {
 		// This code runs if there were any errors.
@@ -74,6 +75,7 @@ loadVegetationWithoutCache( url ) {
     const response = fetch( url )
         .then( (response) => response.json() )
         .then( (data) => {
+			localforage.setItem( url, JSON.stringify( data ) );
             this.addVegetationDataSource( data );
         });
 	

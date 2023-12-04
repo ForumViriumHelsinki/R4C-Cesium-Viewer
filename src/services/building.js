@@ -1,11 +1,14 @@
 import * as Cesium from "cesium";
 import Datasource from "./datasource.js"; 
 import Urbanheat from "./urbanheat.js"; 
+import Tree from "./tree.js"; 
+import localforage from 'localforage';
 
 export default class Building {
   constructor( viewer ) {
     this.viewer = viewer;
     this.datasourceService = new Datasource( this.viewer );
+	this.treeService = new Tree( this.viewer );
     this.urbanheatService = new Urbanheat( this.viewer );
   }
 
@@ -219,21 +222,23 @@ async loadBuildings( postcode ) {
     HKIBuildingURL = "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27" + postcode + "%27";
 
 	try {
-	//	const value = await localforage.getItem( HKIBuildingURL );
+		const value = await localforage.getItem( HKIBuildingURL );
 		// This code runs once the value has been loaded
 		// from the offline store.
 
-	//	if ( value ) {
-	//		console.log("found from cache");
+		if ( value ) {
+			console.log("found from cache");
 
-	//		let datasource = JSON.parse( value )
-	//		await this.findUrbanHeatData( datasource, postcode );
-
-	//	} else {
+			let datasource = JSON.parse( value )
+			const entities = await this.urbanheatService.findUrbanHeatData( datasource, postcode );
+			this.setHeatExposureToBuildings(entities);
+      	this.setHelsinkiBuildingsHeight(entities);
+			
+		} else {
 
 			this.loadBuildingsWithoutCache( HKIBuildingURL, postcode );
-
-	//	}
+			
+		}
 	  	
 	} catch (err) {
 		// This code runs if there were any errors.
@@ -242,7 +247,7 @@ async loadBuildings( postcode ) {
 
 	if ( document.getElementById( "showTreesToggle" ).checked ) {
 	
-		loadTrees( postcode );
+		this.treeService.loadTrees( postcode );
 
 	}
 
@@ -252,18 +257,20 @@ async loadBuildingsWithoutCache(url, postcode) {
     console.log("Not in cache! Loading: " + url);
   
     try {
-      const response = await fetch(url);
-      const data = await response.json();
-      const entities = await this.urbanheatService.findUrbanHeatData(data, postcode);
+      	const response = await fetch(url);
+      	const data = await response.json();
+		localforage.setItem( url, JSON.stringify( data ) );
+
+      	const entities = await this.urbanheatService.findUrbanHeatData( data, postcode );
   
-      this.setHeatExposureToBuildings(entities);
-      this.setHelsinkiBuildingsHeight(entities);
+      	this.setHeatExposureToBuildings(entities);
+      	this.setHelsinkiBuildingsHeight(entities);
 	  
       
-      return entities; // Return the processed entities or whatever you need here
+      	return entities; // Return the processed entities or whatever you need here
     } catch (error) {
-      console.error("Error loading buildings without cache:", error);
-      return null; // Handle error case or return accordingly
+      	console.error("Error loading buildings without cache:", error);
+      	return null; // Handle error case or return accordingly
     }
   }
 
