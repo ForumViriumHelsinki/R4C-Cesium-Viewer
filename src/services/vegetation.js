@@ -48,7 +48,7 @@ async loadVegetation( postcode ) {
  */
 async addVegetationDataSource ( data ) {
 
-    let entities = await this.datasourceService.addDataSourceWithName(data, 'Vegetation');
+    let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Vegetation');
 	
     for ( let i = 0; i < entities.length; i++ ) {
 			

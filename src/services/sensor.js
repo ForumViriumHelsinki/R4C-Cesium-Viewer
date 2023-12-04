@@ -45,7 +45,7 @@ async loadSensorData( ) {
  */
 async addSensorDataSource( data ) {
 
-    let entities = await this.datasourceService.addDataSourceWithName(data, 'SensorData');
+    let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'SensorData');
      	
         // Iterate over the entities and add labels for "temp_air" and "rh_air"
 	    for ( let i = 0; i < entities.length; i++ ) {

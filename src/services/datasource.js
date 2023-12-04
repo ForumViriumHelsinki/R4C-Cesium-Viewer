@@ -80,6 +80,35 @@ export default class GeoJSONDataSource {
     });
   }
 
+async addDataSourceWithPolygonFix(data, name) {
+
+    return new Promise((resolve) => {
+        Cesium.GeoJsonDataSource.load(data, {
+        stroke: Cesium.Color.BLACK,
+        fill: Cesium.Color.CRIMSON,
+        strokeWidth: 3,
+        clampToGround: true,
+    }).then((data) => {
+          
+          data.name = name;
+
+            for (let i = 0; i < data.entities.values.length; i++) {
+                let entity = data.entities.values[i];
+
+                if (Cesium.defined(entity.polygon)) {
+                    entity.polygon.arcType = Cesium.ArcType.GEODESIC;
+                }
+            }
+
+            this.viewer.dataSources.add(data);
+            resolve(data.entities.values);
+        })
+        .catch((error) => {
+          console.log(error);
+          reject(error);
+        });
+    });
+  }
   // Function to calculate property total from a data source
   calculateDataSourcePropertyTotal( datasource, property ) {
     // Find the data source 
@@ -107,27 +136,6 @@ export default class GeoJSONDataSource {
     }
     return total;
 
-}
-
-async addDataSourceWithName(data, name) {
-  try {
-    const dataSource = await this.viewer.dataSources.add(
-      Cesium.GeoJsonDataSource.load(data, {
-        stroke: Cesium.Color.BLACK,
-        fill: Cesium.Color.CRIMSON,
-        strokeWidth: 3,
-        clampToGround: true,
-      })
-    );
-
-    dataSource.name = name;
-    let entities = dataSource.entities.values;
-    return entities; // Return entities once loaded and processed
-  } catch (error) {
-    // Display any errors encountered while loading.
-    console.log(error);
-    return null; // Return null or handle error accordingly
-  }
 }
 
 /**

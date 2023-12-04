@@ -78,6 +78,8 @@ async addTreesDataSource( data, postcode ) {
  */
 fetchAndAddTreeDistanceData( postcode, entities ) {
 
+	console.log("entities", entities)
+
     if ( !entities ) {
 
             	// Find the data source for buildings
@@ -96,6 +98,7 @@ fetchAndAddTreeDistanceData( postcode, entities ) {
 
             	// Find the data source for buildings
 	const buildingsDataSource = this.datasourceService.getDataSourceByName( "Buildings" );
+		console.log("buildingsDataSource", buildingsDataSource)
 
 	// If the data source isn't found, exit the function
 	if ( !buildingsDataSource ) {
@@ -152,12 +155,15 @@ setTreePolygonMaterialColor( entity, description ) {
 		case "puusto, 15 m - 20 m":
 			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.6 );
             entity.polygon.extrudedHeight = 17.5;
+            break;
 		case "puusto, 10 m - 15 m":
 			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.55 );
             entity.polygon.extrudedHeight = 12.5;
+            break;
 		case "puusto, 2 m - 10 m":
 			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.5 );
             entity.polygon.extrudedHeight = 6;
+            break;
 		}	
 
 }
@@ -185,7 +191,6 @@ resetTreeEntites( ) {
 		entity.polygon.outlineWidth = 3; 
 
 		if ( entity._properties._description && entity.polygon ) {
-
 			this.setTreePolygonMaterialColor( entity, entity._properties._description._value );	
 		}
 	}
