@@ -52,7 +52,7 @@ async loadTrees( postcode ) {
 async addTreesDataSource( data, postcode ) {
 	
 
-	    let entities = await this.datasourceService.addDataSourceWithName(data, 'Trees');
+	    let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Trees');
 
 
 		
@@ -78,8 +78,6 @@ async addTreesDataSource( data, postcode ) {
  */
 fetchAndAddTreeDistanceData( postcode, entities ) {
 
-	console.log("entities", entities)
-
     if ( !entities ) {
 
             	// Find the data source for buildings
@@ -98,7 +96,6 @@ fetchAndAddTreeDistanceData( postcode, entities ) {
 
             	// Find the data source for buildings
 	const buildingsDataSource = this.datasourceService.getDataSourceByName( "Buildings" );
-		console.log("buildingsDataSource", buildingsDataSource)
 
 	// If the data source isn't found, exit the function
 	if ( !buildingsDataSource ) {
@@ -111,7 +108,6 @@ fetchAndAddTreeDistanceData( postcode, entities ) {
 	  .then( response => response.json() )
 	  .then( data => {
 
-console.log( data, entities, buildingsDataSource  );
         this.eventEmitterService.emitTreeEvent( data, entities, buildingsDataSource );
 
 	  })

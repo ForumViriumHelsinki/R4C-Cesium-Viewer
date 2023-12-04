@@ -71,7 +71,6 @@
     },
     methods: {
         newNearbyTreeDiagram( data, entities, buildings ) {
-          console.log("data", data)
           this.plotService.hideScatterPlot();
           		// Call function that combines datasets for plotting
 		      const sumPAlaM2Map = this.combineDistanceAndTreeData( data, entities );
