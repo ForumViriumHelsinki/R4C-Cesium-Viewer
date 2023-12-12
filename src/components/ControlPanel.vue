@@ -65,6 +65,13 @@
 </label>
 <label for="showTrees" class="label" id="showTreesLabel">Trees</label>
 
+  <!--  switchFlood-->
+<label class="switch" id = "floodSwitch" style="display:none;">
+  <input type="checkbox" id="floodToggle" value="switchFlood" >
+  <span class="slider round"></span>
+</label>
+<label for="switchFlood" class="label" id="floodLabel" style="display:none;">Flood data</label>
+
   <!--  switchView-->
 <label class="switch" id = "switchViewSwitch" style="display:none;">
   <input type="checkbox" id="switchViewToggle" value="switchView" >

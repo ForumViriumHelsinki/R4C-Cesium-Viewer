@@ -6,6 +6,7 @@ import Building from "./building.js";
 import Postalcodeview from "./postalcodeview.js";
 import Plot from "./plot.js"
 import EventEmitter from "./eventEmitter.js"
+import Flood from "./flood.js"
 import { useGlobalStore } from '../store.js';
 
 export default class FeaturePicker {
@@ -19,6 +20,7 @@ export default class FeaturePicker {
       this.plotService = new Plot( );
       this.store = useGlobalStore( );
       this.eventEmitterService = new EventEmitter( );
+      this.floodService = new Flood( this.viewer );
 
     }
   
@@ -179,10 +181,10 @@ export default class FeaturePicker {
     
         // add laajasalo flood data
         if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
+            
+            this.floodService.updateFloodSwitch( 'inline-block' );
     
-        //    loadFloodData( );
-    
-        }     
+        }    
     }
     
     handleBuildingFeature( buildingHeatExposure, address, postinumero, treeArea ) {
