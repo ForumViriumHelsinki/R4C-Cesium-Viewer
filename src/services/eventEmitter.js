@@ -103,7 +103,31 @@ if ( data ) {
 
 }
 
+/**
+ * The function emits event after user selects grid view 
+ *
+ * @param { Object } viewer Cesium viewer
+ * 
+ */
+emitGridViewEvent( viewer  ) {
 
-  }
+  eventBus.$emit( 'createPopulationGrid', viewer ); 
+
+}
+
+/**
+ * The function emits event after user selects postal view 
+ *
+ * @param { Object } viewer Cesium viewer
+ * 
+ */
+emitPostalCodeViewEvent( viewer  ) {
+
+  eventBus.$emit( 'initPostalCodeView', viewer );
+
+}
+
+
+}
 
 

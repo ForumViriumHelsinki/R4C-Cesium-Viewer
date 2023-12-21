@@ -1,45 +1,151 @@
-import Datasource from "./datasource.js"; 
-import Vegetation from "./vegetation.js"; 
-import OtherNature from "./othernature.js"; 
-import Building from "./building.js"; 
-import Flood from "./flood.js"; 
-import Plot from "./plot.js"; 
-import Tree from "./tree.js"; 
-import Sensor from "./sensor.js";
-import View from "./view.js"; 
-import EventEmitter from "./eventEmitter.js"
+<template>
+ <div id="postalCodeViewContainer">
+  <p class="header">R4C Urban Heat risk demonstrator</p>
+  <p class="uiButton" @click="reset" style="color: red; float:right; cursor: pointer;">Reset</p>
+  <!-- showPlotSwitch-->
+
+<label class="switch">
+  <input type="checkbox" id="gridViewToggle" value="gridView">
+  <span class="slider round"></span>
+</label>
+<label for="gridViewToggle" class="label" id="gridViewLabel">Grid view</label>  
+
+<label class="switch">
+  <input type="checkbox" id="showPlotToggle" value="showPlot" checked>
+  <span class="slider round"></span>
+</label>
+<label for="showPlotToggle" class="label">Display plot</label>
+
+  <!-- showPrintSwitch-->
+<label class="switch">
+  <input type="checkbox" id="printToggle" value="print" checked>
+  <span class="slider round"></span>
+</label>
+<label for="printToggle" class="label">Object details</label>
+
+  <!-- showVegetationSwitch-->
+<label class="switch" id="showVegetationSwitch">
+	<input type="checkbox" id="showVegetationToggle" value="showVegetation" >
+	<span class="slider round"></span>
+</label>
+<label for="showVegetationToggle" class="label" id="showVegetationLabel">Vegetation</label>
+
+  <!-- showOtherNatureSwitch-->
+<label class="switch" id="showOtherNatureSwitch">
+  <input type="checkbox" id="showOtherNatureToggle" value="showOtherNature" >
+  <span class="slider round"></span>
+</label>
+<label for="showOtherNatureToggle" class="label" id="showOtherNatureLabel">Other nature</label>
+
+  <!-- hideNewBuildingsSwitch-->
+<label class="switch" id = "hideNewBuildingsSwitch">
+  <input type="checkbox" id="hideNewBuildingsToggle" value="filterBuildings" >
+  <span class="slider round"></span>
+</label>
+<label for="hideNewBuildings" class="label" id="hideNewBuildingsLabel">Built before summer 2018</label>
+
+  <!-- hideNonSoteSwitch-->
+<label class="switch" id = "hideNonSoteSwitch">
+	<input type="checkbox" id="hideNonSoteToggle" value="filterBuildings" >
+	<span class="slider round"></span>
+</label>
+<label for="hideNonSote" class="label" id="hideNonSoteLabel">Only sote buildings</label>
+
+  <!--  hideLowSwitch-->
+<label class="switch" id = "hideLowSwitch" >
+  <input type="checkbox" id="hideLowToggle" value="filterBuildings" >
+  <span class="slider round"></span>
+</label>
+<label for="hideLow" class="label" id="hideLowLabel">Only tall buildings</label>
+
+  <!--  showTrees-->
+<label class="switch" id = "showTreesSwitch" >
+  <input type="checkbox" id="showTreesToggle" value="showTrees" >
+  <span class="slider round"></span>
+</label>
+<label for="showTrees" class="label" id="showTreesLabel">Trees</label>
+
+  <!--  switchFlood-->
+<label class="switch" id = "floodSwitch" style="display:none;">
+  <input type="checkbox" id="floodToggle" value="switchFlood" >
+  <span class="slider round"></span>
+</label>
+<label for="switchFlood" class="label" id="floodLabel" style="display:none;">Flood data</label>
+
+  <!--  switchView-->
+<label class="switch" id = "switchViewSwitch" style="display:none;">
+  <input type="checkbox" id="switchViewToggle" value="switchView" >
+  <span class="slider round"></span>
+</label>
+<label for="switchView" class="label" id="switchViewLabel" style="display:none;">2D view</label>
+
+  <!--  showSensorData-->
+<label class="switch" id = "showSensorDataSwitch" >
+  <input type="checkbox" id="showSensorDataToggle" value="showSensorData" >
+  <span class="slider round"></span>
+</label>
+<label for="showSensorData" class="label">Sensor data</label>
+
+  <!--  natureGrid-->
+  <label class="switch" id = "natureGridSwitch" >
+    <input type="checkbox" id="natureGridToggle" value="natureGrid" >
+    <span class="slider round"></span>
+  </label>
+  <label for="natureGrid" class="label" id="natureGridLabel">Nature grid</label>
+
+  <!--  travelTime-->
+  <label class="switch" id = "travelTimeSwitch" >
+    <input type="checkbox" id="travelTimeToggle" value="travelTime" >
+    <span class="slider round"></span>
+  </label>
+  <label for="travelTime" class="label" id="travelTimeLabel">Travel time grid</label> 
+
+</div>
+</template>
+
+<script>
+
+import Datasource from "../services/datasource.js"; 
+import Tree from "../services/tree.js"; 
+import Building from "../services/building.js"; 
+import EventEmitter from "../services/eventEmitter.js"
+import Flood from "../services/flood.js"
+import Sensor from "../services/sensor.js"
+import Vegetation from "../services/vegetation.js"
+import Othernature from "../services/othernature.js"
+import Plot from "../services/plot.js"
+import View from "../services/view.js"
 import { useGlobalStore } from '../store.js';
+import { eventBus } from '../services/eventEmitter.js';
 
-
-export default class Controlpanel {
-    constructor( viewer ) {
+export default {
+  data() {
+    return {
+      viewer: null,
+      dataSourceService: null,
+      treeService: null
+    };
+  },
+    mounted() {
+      this.unsubscribe = eventBus.$on('initPostalCodeView', this.initPostalCodeView);
+      this.store = useGlobalStore( );
+      this.eventEmitterService = new EventEmitter( );
+    },
+    beforeUnmount() {
+      this.unsubscribe();
+    },    
+    methods: {
+      reset(){
+            location.reload();
+        },
+      initPostalCodeView( viewer ) {
         this.viewer = viewer;
         this.dataSourceService = new Datasource( this.viewer );
-        this.vegetationService = new Vegetation( this.viewer );
-        this.otherNatureService = new OtherNature( this.viewer );
-        this.plotService = new Plot( );
         this.treeService = new Tree( this.viewer );
-        this.floodService = new Flood( this.viewer );
-        this.sensorService = new Sensor( this.viewer );
-        this.viewService = new View( this.viewer );
-        this.buildingService = new Building( this.viewer );
-        this.store = useGlobalStore( );
-        this.eventEmitterService = new EventEmitter( );
+        this.addEventListeners();
 
-        this.filterBuildingsEvent = this.filterBuildingsEvent.bind(this);
-        this.loadVegetationEvent = this.loadVegetationEvent.bind(this);
-        this.loadOtherNatureEvent = this.loadOtherNatureEvent.bind(this);
-        this.loadSensorDataEvent = this.loadSensorDataEvent.bind(this);
-        this.switchViewEvent = this.switchViewEvent.bind(this);
-        this.loadTreesEvent = this.loadTreesEvent.bind(this);
-        this.printEvent = this.printEvent.bind(this);
-        this.showPlotEvent = this.showPlotEvent.bind(this);
-        this.loadFloodEvent = this.loadFloodEvent.bind(this);
-        this.gridViewEvent = this.gridViewEvent.bind(this);
-
-    }
-  
-/**
+      },
+    /**
  * Add EventListeners related to buildings
  */
 addEventListeners() {
@@ -56,7 +162,7 @@ addEventListeners() {
     document.getElementById( 'floodToggle').addEventListener('change', this.loadFloodEvent);
     document.getElementById( 'gridViewToggle').addEventListener('change', this.gridViewEvent);
 
-}
+},
 
 /**
  * This function handles the toggle event for switching to grid view
@@ -72,7 +178,7 @@ gridViewEvent( ) {
 
     } 
 
-}
+},
 
 /**
  * This function handles the toggle event for showing or hiding the flood layer on the map.
@@ -91,7 +197,8 @@ loadFloodEvent( ) {
         // If there is a postal code available, load the flood for that area.
         if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( "Flood" ) ) {
 
-            this.floodService.loadFlood( this.store.postalcode );
+          const floodService = new Flood( this.viewer );
+          floodService.loadFlood( this.store.postalcode );
 
         } else {
             
@@ -105,7 +212,7 @@ loadFloodEvent( ) {
 
     }
 
-}
+},
 
 /**
  * This function is called when the "Display Plot" toggle button is clicked
@@ -113,21 +220,23 @@ loadFloodEvent( ) {
  */
 showPlotEvent( ) {
 
+  const plotService = new Plot( );
+
     // Get the value of the "Show Plot" toggle button
     const showPlots = document.getElementById( "showPlotToggle" ).checked;
     
     // Hide the plot and its controls if the toggle button is unchecked
     if ( !showPlots ) {
 
-        this.plotService.hideAllPlots( );
+      plotService.hideAllPlots( );
 
     } else { // Otherwise, show the plot and its controls if the toggle button is checked and the plot is already loaded
 
-        this.plotService.showAllPlots( );
+      plotService.showAllPlots( );
 
     }
 
-}
+},
 
 /**
  * This function is called when the Object details button is clicked
@@ -154,7 +263,7 @@ printEvent( ) {
 
     }
 
-}
+},
 
 
 /**
@@ -169,7 +278,8 @@ loadSensorDataEvent( ) {
     // If showSensorData toggle is on
     if ( showSensorData ) {
         
-        this.sensorService.loadSensorData( );
+        const sensorService = new Sensor( this.viewer ); 
+        sensorService.loadSensorData( );
         
     } else { 
         
@@ -177,7 +287,7 @@ loadSensorDataEvent( ) {
 
     }
 
-}
+},
 
 /**
  * This function to show or hide tree entities on the map based on the toggle button state
@@ -204,16 +314,10 @@ loadTreesEvent( ) {
     } else { // If showTrees toggle is off
         
         this.dataSourceService.changeDataSourceShowByName( "Trees", false );
-        	// Find the data source for buildings
-	// const buildingDataSource = datasourceService.getDataSourceByName( "Buildings" );
-
-     //   resetTreeEntites( );
-     //   resetBuildingEntites( buildingDataSource );
-     //   selectAttributeForScatterPlot( );
 
     }
 
-}
+},
 
 /**
  * This function handles the toggle event for showing or hiding the nature areas layer on the map.
@@ -232,7 +336,8 @@ loadOtherNatureEvent( ) {
         // If there is a postal code available, load the nature areas for that area.
         if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( "OtherNature" ) ) {
 
-            this.otherNatureService.loadOtherNature( this.store.postalcode );
+          const otherNatureService = new Othernature( this.viewer );        
+          otherNatureService.loadOtherNature( this.store.postalcode );
 
         } else {
             
@@ -246,7 +351,7 @@ loadOtherNatureEvent( ) {
 
     }
 
-}
+},
 
 /**
  * This function handles the toggle event for showing or hiding the vegetation layer on the map.
@@ -265,7 +370,8 @@ loadVegetationEvent( ) {
         // If there is a postal code available, load the nature areas for that area.
         if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName("Vegetation") ) {
 
-            this.vegetationService.loadVegetation( this.store.postalcode );
+          const vegetationService = new Vegetation( this.viewer );         
+          vegetationService.loadVegetation( this.store.postalcode );
 
         } else {
             
@@ -279,7 +385,7 @@ loadVegetationEvent( ) {
 
     }
 
-}
+},
 
 filterBuildingsEvent() {
 
@@ -293,6 +399,8 @@ filterBuildingsEvent() {
 
     if ( buildingsDataSource ) {
 
+      buildingService = new Building( this.viewer );
+
       if ( hideNonSote || hideNewBuildings || hideLow ) {
 
         this.buildingService.filterBuildings( buildingsDataSource );
@@ -305,7 +413,7 @@ filterBuildingsEvent() {
     }
     }
 
-}
+},
 
 /**
  * This function is called when the user clicks on the "switch view" toggle button.
@@ -315,22 +423,132 @@ switchViewEvent( ) {
 
     // Get the status of the "switch view" toggle button.
     const switchView = document.getElementById( "switchViewToggle" ).checked;
-
+    const viewService = new View( this.viewer );        
     // If the "switch view" toggle button is checked.
     if ( switchView ) {
 
-        this.viewService.switchTo2DView( );
+      viewService.switchTo2DView( );
 
     // If the "switch view"" toggle button is not checked.
     } else {
 
-        this.viewService.switchTo3DView( );
+      viewService.switchTo3DView( );
 
     }
 
 }
+  },
+};
+</script>
 
+<style>
+.uiButton {
+	background-color: white;
+	border: 0px solid black; 
 
-
-
+	font-family: sans-serif;
+	font-size: small;
+	text-align: middle;
+	padding: 5px;
+	margin: 5px;
+	
+	float: left;
+	
+	text-decoration: underline;
 }
+
+.uiButton:hover {
+	color: rgb(150,150,150);
+}
+
+.label {
+	background-color: white;
+	border: 0px solid black; 
+
+	font-family: sans-serif;
+	text-align: middle;
+	
+	text-decoration: none;
+	font-size: small;
+}
+
+#postalCodeViewContainer{
+	top: 10px; 
+	left: 0px; 
+
+	position: fixed; 
+	border: 1px solid black; 
+	box-shadow: 3px 5px 5px black; 
+	visibility: visible;
+	
+	background: white;
+	padding: 5px;
+	
+	min-height: 25px;
+	
+	width: 100%;
+}
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 47px;
+  height: 20px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+</style>

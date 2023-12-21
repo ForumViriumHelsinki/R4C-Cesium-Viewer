@@ -285,7 +285,6 @@ removeEntityByName( name ) {
         if ( this.store.postalcode ) {
             
             this.handlePostalCodeFeature( this.store.postalcode, id );
-            document.getElementById( "populationGridToggle" ).disabled = true;
     
         }
     
@@ -342,7 +341,7 @@ removeEntityByName( name ) {
     
         } else {
     
-            if ( document.getElementById( "showPlotToggle" ).checked && !document.getElementById( "populationGridToggle" ).checked ) {
+            if ( document.getElementById( "showPlotToggle" ).checked && !document.getElementById( "gridViewToggle" ).checked ) {
     
                 document.getElementById( 'heatHistogramContainer' ).style.visibility = 'visible';
     

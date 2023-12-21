@@ -21,7 +21,7 @@ resetSwitches( ) {
 
   this.postalcodeview.setPostalCodeElementsDisplay( 'inline-block' );
 
-  document.getElementById( "populationGridToggle" ).checked = false;
+  document.getElementById( "gridViewToggle" ).checked = false;
   document.getElementById( "showPlotToggle" ).checked = true;
   document.getElementById( "showVegetationToggle" ).checked = false;
   document.getElementById( "showOtherNatureToggle" ).checked = false;
@@ -36,7 +36,7 @@ resetSwitches( ) {
   document.getElementById( "showSensorDataToggle" ).checked = false;
   document.getElementById( "switchViewToggle" ).checked = false;
   document.getElementById( "switchViewToggle" ).disabled = true;
-  document.getElementById( "populationGridToggle" ).disabled = false;
+  document.getElementById( "gridViewToggle" ).disabled = false;
   this.gridview.setGridElementsDisplay( 'none' );
 
   this.plotsService.togglePostalCodePlotVisibility( 'hidden' );
