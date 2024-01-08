@@ -126,7 +126,7 @@ setGridEntityPolygonToGreen( entity ) {
 
 	}
 
-    const greenIndex = ( water + vegetation + trees ) / gridArea;
+    const greenIndex = ( water + vegetation + trees ) / this.gridArea;
     entity.polygon.material = new Cesium.Color( 1 - greenIndex, 1, 0, greenIndex );
 
 }

@@ -67,10 +67,16 @@ gridViewEvent( ) {
 
     if ( gridView ) {
 
+
+
         this.eventEmitterService.emitGridViewEvent( this.viewer );
 
 
-    } 
+    } else {
+
+        this.eventEmitterService.emitPostalCodeViewEvent( this.viewer );
+
+    }
 
 }
 

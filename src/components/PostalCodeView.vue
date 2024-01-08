@@ -1,5 +1,5 @@
 <template>
- <div id="postalCodeViewContainer">
+  <div v-if="showPostalCodeView" id="postalCodeViewContainer">
   <p class="header">R4C Urban Heat risk demonstrator</p>
   <p class="uiButton" @click="reset" style="color: red; float:right; cursor: pointer;">Reset</p>
   <!-- showPlotSwitch-->
@@ -86,20 +86,6 @@
 </label>
 <label for="showSensorData" class="label">Sensor data</label>
 
-  <!--  natureGrid-->
-  <label class="switch" id = "natureGridSwitch" >
-    <input type="checkbox" id="natureGridToggle" value="natureGrid" >
-    <span class="slider round"></span>
-  </label>
-  <label for="natureGrid" class="label" id="natureGridLabel">Nature grid</label>
-
-  <!--  travelTime-->
-  <label class="switch" id = "travelTimeSwitch" >
-    <input type="checkbox" id="travelTimeToggle" value="travelTime" >
-    <span class="slider round"></span>
-  </label>
-  <label for="travelTime" class="label" id="travelTimeLabel">Travel time grid</label> 
-
 </div>
 </template>
 
@@ -123,7 +109,8 @@ export default {
     return {
       viewer: null,
       dataSourceService: null,
-      treeService: null
+      treeService: null,
+      showPostalCodeView: true
     };
   },
     mounted() {
@@ -145,8 +132,8 @@ export default {
         this.addEventListeners();
 
       },
-    /**
- * Add EventListeners related to buildings
+/**
+ * Add EventListeners 
  */
 addEventListeners() {
     document.getElementById( 'hideNewBuildingsToggle' ).addEventListener('change', this.filterBuildingsEvent);
@@ -173,7 +160,8 @@ gridViewEvent( ) {
 
     if ( gridView ) {
 
-        this.eventEmitterService.emitGridViewEvent( this.viewer );
+      this.showPostalCodeView = false;
+      this.eventEmitterService.emitGridViewEvent( this.viewer );
 
 
     } 

@@ -56,8 +56,7 @@ export default {
         this.createImageryLayer( 'avoindata:Karttasarja_PKS' )
       );
 
-      // Fly to a specific location
-      this.viewer.camera.flyTo({
+      this.viewer.camera.setView({
         destination: Cesium.Cartesian3.fromDegrees(
           24.931745,
           60.190464,
@@ -66,7 +65,8 @@ export default {
         orientation: {
           heading: Cesium.Math.toRadians( 0.0 ),
           pitch: Cesium.Math.toRadians( -85.0 ),
-        },
+          roll : 0.0
+        }
       });
 
       this.dataSourceService = new Datasource(this.viewer);
@@ -86,9 +86,6 @@ export default {
 
       const geocoding = new Geocoding( this.viewer );
       geocoding.addGeocodingEventListeners( );
-
-      const gridview = new GridView( );
-      gridview.setGridElementsDisplay( 'none' );
 
     this.treeService = new Tree( this.viewer );
     this.buildingService = new Building( this.viewer  );

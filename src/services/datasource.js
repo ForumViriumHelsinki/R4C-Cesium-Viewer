@@ -28,32 +28,35 @@ export default class GeoJSONDataSource {
 
   // Function to remove data sources by name prefix
   async removeDataSourcesByNamePrefix(namePrefix) {
-    return new Promise( ( resolve, reject ) => {
-        const dataSources = this.viewer.dataSources._dataSources;
-        const removalPromises = [];
-
-        for (const dataSource of dataSources) {
-            if ( dataSource.name.startsWith( namePrefix ) ) {
-                const removalPromise = new Promise(( resolveRemove, rejectRemove ) => {
-                    this.viewer.dataSources.remove( dataSource, true );
-                    this.viewer.dataSources.dataSourceRemoved.addEventListener( function onDataSourceRemoved() {
-                        this.viewer.dataSources.dataSourceRemoved.removeEventListener( onDataSourceRemoved );
-                        resolveRemove();
-                    });
-                });
-
-                removalPromises.push( removalPromise );
-            }
+    return new Promise((resolve, reject) => {
+      const dataSources = this.viewer.dataSources._dataSources;
+      const removalPromises = [];
+  
+      for (const dataSource of dataSources) {
+        if (dataSource.name.startsWith(namePrefix)) {
+          const removalPromise = new Promise((resolveRemove, rejectRemove) => {
+            // Correctly handle event listener with arrow function to preserve 'this' context
+            const onDataSourceRemoved = () => {
+              this.viewer.dataSources.dataSourceRemoved.removeEventListener(onDataSourceRemoved);
+              resolveRemove();
+            };
+  
+            this.viewer.dataSources.remove(dataSource, true);
+            this.viewer.dataSources.dataSourceRemoved.addEventListener(onDataSourceRemoved);
+          });
+  
+          removalPromises.push(removalPromise);
         }
-
-        // Wait for all removal promises to resolve
-        Promise.all( removalPromises )
-            .then(() => {
-                resolve();
-            })
-            .catch((error) => {
-                reject( error );
-            });
+      }
+  
+      // Wait for all removal promises to resolve
+      Promise.all(removalPromises)
+        .then(() => {
+          resolve();
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
   }
 

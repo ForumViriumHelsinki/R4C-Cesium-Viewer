@@ -5,6 +5,7 @@ import Reset from "./reset.js";
 import Building from "./building.js";
 import Postalcodeview from "./postalcodeview.js";
 import Plot from "./plot.js"
+import Traveltime from "./traveltime.js"
 import EventEmitter from "./eventEmitter.js"
 import Flood from "./flood.js"
 import { useGlobalStore } from '../store.js';
@@ -21,6 +22,7 @@ export default class FeaturePicker {
       this.store = useGlobalStore( );
       this.eventEmitterService = new EventEmitter( );
       this.floodService = new Flood( this.viewer );
+      this.traveltimeService = new Traveltime( this.viewer );
 
     }
   
@@ -58,7 +60,7 @@ export default class FeaturePicker {
                
                if ( picked.id.properties ) {
    
-                   this.hidePlotlyIfNatureFeatureIsClicked( picked.id.properties.category );
+                   // this.hidePlotlyIfNatureFeatureIsClicked( picked.id.properties.category );
                    this.handleFeatureWithProperties( picked.id );
                    
                 }
@@ -296,8 +298,8 @@ removeEntityByName( name ) {
     
         if ( !id.properties.posno && id.entityCollection._entities._array[ 0 ]._properties._id && id.entityCollection._entities._array[ 0 ]._properties._id._value == 5879932 ) {
     
-            loadTravelTimeData( id.properties.id._value );
-            markCurrentLocation( id );
+            this.traveltimeService.loadTravelTimeData( id.properties.id._value );
+            this.markCurrentLocation( id );
     
         }
     
