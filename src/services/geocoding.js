@@ -3,6 +3,8 @@ import Viewercamera from "./viewercamera.js";
 import PrintBox from "./printbox.js"; 
 import FeaturePicker from "./featurepicker.js"; 
 import { useGlobalStore } from '../store.js';
+const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
+
 
 export default class Geocoding {
     constructor( viewer ) {
@@ -83,7 +85,7 @@ filterSearchResults = async () => {
     if ( searchField.value.length > 2 ) {
 
         try {
-            let response = await fetch( 'https://api.digitransit.fi/geocoding/v1/autocomplete?text=' + searchField.value + '&digitransit-subscription-key=449738b35f49484c8f31cf4c03723d4d' );
+            let response = await fetch( 'https://api.digitransit.fi/geocoding/v1/autocomplete?text=' + searchField.value + '&digitransit-subscription-key=' + apiKey );
             let data = await response.json();
 
             // Use arrow functions to maintain the component's context

@@ -33,7 +33,6 @@ import EventEmitter from "../services/eventEmitter.js"
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../store.js';
 import Datasource from "../services/datasource.js"; 
-import Viewercamera from "../services/viewercamera.js"; 
 import Populationgrid from "../services/populationgrid.js"; 
 
 export default {
@@ -58,45 +57,9 @@ export default {
         },
         async createPopulationGrid( viewer ) {
             this.viewer = viewer;
-            const datasourceService = new Datasource( this.viewer );
-            datasourceService.loadGeoJsonDataSource(
-                0.2,
-                './assets/data/hki_po_clipped.json',
-                'PostCodes'
-            );
+            const populationgridService = new Populationgrid( this.viewer );
+            populationgridService.createPopulationGrid();
 
-            datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
-            //setPostalCodeElementsDisplay( 'none' );
-            //setGridElementsDisplay( 'inline-block' );
-            datasourceService.removeDataSourcesByNamePrefix( 'PostCodes' );
-            const cameraService = new Viewercamera( this.viewer );
-            cameraService.flyCamera3D( 24.991745, 60.045, 12000 );
-
-            try {
-
-                const populationgridService = new Populationgrid( this.viewer );
-                const entities = await datasourceService.loadGeoJsonDataSource(
-                    0.1,
-                    'assets/data/populationgrid.json',
-                    'PopulationGrid'
-                );
-                
-                populationgridService.setHeatExposureToGrid(entities);
-
-                if ( !document.getElementById( "travelTimeToggle" ).checked ) {
-            
-                    populationgridService.setGridHeight( entities );
-
-                } else {
-
-                    document.getElementById( "travelTimeToggle" ).checked = false;
-        
-                }
-
-            } catch (error) {
-                
-                console.error(error);
-            }
         },
         /**
         * Add EventListeners 
@@ -129,7 +92,7 @@ export default {
         *
         */
         async travelTimeEvent( ) {
-            console.log("Viewer before travelTimeEvent:", this.viewer); // Check if viewer is undefined
+
             const datasourceService = new Datasource(this.viewer);
 
             // Check if viewer is initialized
@@ -141,7 +104,8 @@ export default {
             try {
                 const travelTime = document.getElementById("travelTimeToggle").checked;
                 datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
-                
+                datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
+
                 if (travelTime) {
                    
                    // await datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');

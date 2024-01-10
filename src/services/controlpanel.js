@@ -68,7 +68,7 @@ gridViewEvent( ) {
     if ( gridView ) {
 
 
-
+        this.datasourceService.removeDataSourcesByNamePrefix('PostCodes');
         this.eventEmitterService.emitGridViewEvent( this.viewer );
 
 

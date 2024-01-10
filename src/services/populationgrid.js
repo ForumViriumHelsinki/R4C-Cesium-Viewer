@@ -1,9 +1,11 @@
 import * as Cesium from "cesium";
 import Datasource from "./datasource.js"; 
+import Viewercamera from "./viewercamera.js"; 
 
 export default class Populationgrid {
     constructor( viewer ) {
       this.datasourceService = new Datasource( viewer );
+      this.cameraService = new Viewercamera( viewer );
       this.gridArea = 62500;
     }
 
@@ -224,6 +226,40 @@ getGridDataForCity( datasource ) {
   
     return data; // Return the final data array
 
+}
+
+async createPopulationGrid( ) {
+
+    this.datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
+    //setPostalCodeElementsDisplay( 'none' );
+    //setGridElementsDisplay( 'inline-block' );
+    this.datasourceService.removeDataSourcesByNamePrefix( 'PostCodes' );
+    this.cameraService.flyCamera3D( 24.991745, 60.045, 12000 );
+
+    try {
+
+        const entities = await this.datasourceService.loadGeoJsonDataSource(
+            0.1,
+            'assets/data/populationgrid.json',
+            'PopulationGrid'
+        );
+        
+        this.setHeatExposureToGrid(entities);
+
+        if ( !document.getElementById( "travelTimeToggle" ).checked ) {
+    
+            this.setGridHeight( entities );
+
+        } else {
+
+            document.getElementById( "travelTimeToggle" ).checked = false;
+
+        }
+
+    } catch (error) {
+        
+        console.error(error);
+    }
 }
 
 }

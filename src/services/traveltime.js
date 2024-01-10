@@ -1,10 +1,12 @@
 import Datasource from "./datasource.js"; 
+import Populationgrid from "./populationgrid.js";
 import * as Cesium from "cesium";
 
 export default class Traveltime {
   constructor( viewer ) {
     this.viewer = viewer;
     this.datasourceService = new Datasource( viewer );
+    this.populationGridService = new Populationgrid( viewer );
   }
 
 
@@ -15,27 +17,19 @@ export default class Traveltime {
  */
 async loadTravelTimeData( from_id ) {
 
-	fetch( "https://geo.fvh.fi/r4c/collections/hki_travel_time/items?f=json&limit=2&from_id=" + from_id )
-    .then( function( response ) {
-        loadGeoJsonDataSource( 0.0, 'assets/data/populationgrid.json', 'PopulationGrid' );
-
-        return response.json();
-	})
-    .then( function( traveltimedata ) {
-
-        addTravelTimeLabels( traveltimedata.features[ 0 ].properties.travel_data, from_id );
-
-		//	return response.json();
-		}).catch(
-            ( e ) => {
-	
-				console.log( 'something went wrong', e );
-	
-			}
-		);
+    fetch("https://geo.fvh.fi/r4c/collections/hki_travel_time/items?f=json&limit=2&from_id=" + from_id)
+        .then((response) => {
+            return response.json();
+        })
+        .then((traveltimedata) => {
+            this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data);
+        })
+        .catch((e) => {
+            console.log('something went wrong', e);
+        });
 }
 
-addTravelTimeLabels(traveldata, from_id) {
+addTravelTimeLabels(traveldata ) {
 
     const geoJsonData = {
         type: "FeatureCollection",
@@ -98,19 +92,33 @@ addTravelTimeLabels(traveldata, from_id) {
 
 }
 
-removeTravelTimeGridAndAddDataGrid( ) {
+async removeTravelTimeGridAndAddDataGrid( ) {
 
     this.datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
+    await this.populationGridService.createPopulationGrid( );
 
     if ( document.getElementById( "natureGridToggle" ).checked ) {
     
-        natureGrid( );
-    
-    } else {
+        const dataSource = this.datasourceService.getDataSourceByName( 'PopulationGrid' );
 
-        populationGrid( );
+        if ( !dataSource ) {
+            console.error(`Data source with name PopulationGrid not found.`);
+            return [];
+        }
     
-    }
+        // Get the entities of the data source
+        const entities = dataSource.entities.values;
+
+        for ( let i = 0; i < entities.length; i++ ) {
+
+            let entity = entities[ i ];
+            this.populationGridService.setGridEntityPolygonToGreen( entity );
+    
+        }
+
+        document.getElementById( "travelTimeToggle" ).checked = false;
+    
+    } 
 
 }
 
