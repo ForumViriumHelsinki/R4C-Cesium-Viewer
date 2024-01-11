@@ -1,6 +1,6 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
-import localforage from 'localforage';
+import axios from 'axios';
 
 export default class Flood {
   constructor( viewer ) {
@@ -18,15 +18,12 @@ async loadFlood( postcode ) {
 	let url = "https://geo.fvh.fi/r4c/collections/flood_data/items?f=json&limit=20000&postinumero=" + postcode ;
 
 	try {
-		const value = await localforage.getItem( url );
-		// This code runs once the value has been loaded
-		// from the offline store.
-
-		if ( value ) {
-			console.log("found from cache");
-
-			let datasource = JSON.parse( value )
-		  	this.addFloodDataSource( datasource );
+        const cacheApiUrl = `http://localhost:3000/api/cache/get?key=${encodeURIComponent(url)}`;
+        const cachedResponse = await axios.get(cacheApiUrl);
+        const cachedData = cachedResponse.data;
+  
+        if ( cachedData ) {
+		  	this.addFloodDataSource( cachedData );
 
 		} else {
 
@@ -61,14 +58,17 @@ loadFloodWithoutCache( url ) {
 
     console.log("Not in cache! Loading: " + url );
 
-    const response = fetch( url )
-        .then( (response) => response.json() )
-        .then( (data) => {
-			localforage.setItem( url, JSON.stringify( data ) );
-            this.addFloodDataSource( data );
-        });
-	
-}
+
+    fetch( url )
+      .then( response => response.json())
+      .then( data => {
+        axios.post('http://localhost:3000/api/cache/set', { key: url, value: data });
+        this.addFloodDataSource( data );
+      })
+      .catch( error => {
+        console.log( "Error loading flood data:", error );
+      });
+  }
 
 /**
  * Finds and sets color and the material for each entity in the datasource

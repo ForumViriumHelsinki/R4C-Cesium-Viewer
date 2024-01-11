@@ -1,7 +1,7 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
 import EventEmitter from "./eventEmitter.js"
-import localforage from 'localforage';
+import axios from 'axios';
 
 export default class Tree {
   constructor( viewer ) {
@@ -17,31 +17,23 @@ export default class Tree {
 async loadTrees( postcode ) {
 
       // Construct the API endpoint URL
-	let url = "https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=" + postcode ;
+	  let url = "https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=" + postcode;
 
-	try {
+	  try {
+		  // Attempt to retrieve the tree data from the Redis cache
+		  const cacheApiUrl = `http://localhost:3000/api/cache/get?key=${encodeURIComponent(url)}`;
+		  const cachedResponse = await axios.get(cacheApiUrl);
+		  const cachedData = cachedResponse.data;
 
-        // Attempt to retrieve the tree data from the local storage using the API endpoint URL as the key
-		const value = await localforage.getItem( url );
-
-         // If the tree data is already available in the local storage, add it to the Cesium map
-		if ( value ) {
-
-		console.log("found from cache");
-		let datasource = JSON.parse( value )
-		this.addTreesDataSource( datasource, postcode );
-
-		} else {
-
-            // Otherwise, fetch the tree data from the API endpoint and add it to the local storage
-			this.loadTreesWithoutCache( url, postcode );
-
-		}
-	  	
-	} catch ( err ) {
-		// This code runs if there were any errors.
-		console.log( err );
-	}
+		  if (cachedData) {
+			  console.log("found from cache");
+			  this.addTreesDataSource(cachedData, postcode);
+		  } else {
+			  this.loadTreesWithoutCache(url, postcode);
+		  }
+	  } catch (err) {
+		  console.log(err);
+	  }
 }
 
 /**
@@ -126,14 +118,18 @@ fetchAndAddTreeDistanceData( postcode, entities ) {
  */
 loadTreesWithoutCache( url, postcode ) {
 
-    console.log("Not in cache! Loading: " + url );
+	console.log("Not in cache! Loading: " + url);
 
-    const response = fetch( url )
-        .then( (response) => response.json() )
-        .then( (data) => {
-			localforage.setItem( url, JSON.stringify( data ) );
-            this.addTreesDataSource( data, postcode  );
-        });
+	fetch(url)
+		.then((response) => response.json())
+		.then((data) => {
+			// Save fetched data to Redis cache through the backend
+			axios.post('http://localhost:3000/api/cache/set', { key: url, value: data });
+			this.addTreesDataSource(data, postcode);
+		})
+		.catch((error) => {
+			console.log("Error loading trees:", error);
+		});
 	
 }
 

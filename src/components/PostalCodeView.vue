@@ -387,15 +387,15 @@ filterBuildingsEvent() {
 
     if ( buildingsDataSource ) {
 
-      buildingService = new Building( this.viewer );
+      const buildingService = new Building( this.viewer );
 
       if ( hideNonSote || hideNewBuildings || hideLow ) {
 
-        this.buildingService.filterBuildings( buildingsDataSource );
+        buildingService.filterBuildings( buildingsDataSource );
 
       } else {
 
-        this.buildingService.showAllBuildings( buildingsDataSource );
+        buildingService.showAllBuildings( buildingsDataSource );
 
     }
     }

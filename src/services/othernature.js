@@ -1,6 +1,6 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
-import localforage from 'localforage';
+import axios from 'axios';
 
 export default class Othernature {
   constructor( viewer ) {
@@ -18,15 +18,14 @@ async loadOtherNature( postcode ) {
 	let url = "https://geo.fvh.fi/r4c/collections/othernature/items?f=json&limit=10000&postinumero=" + postcode ;
 
 	try {
-		const value = await localforage.getItem( url );
-		// This code runs once the value has been loaded
-		// from the offline store.
+		const cacheApiUrl = `http://localhost:3000/api/cache/get?key=${encodeURIComponent(url)}`;
+		const cachedResponse = await axios.get( cacheApiUrl );
+		const cachedData = cachedResponse.data;
 
-		if ( value ) {
+		if ( cachedData ) {
 			console.log("found from cache");
 
-			let datasource = JSON.parse( value )
-		  	this.addOtherNatureDataSource( datasource );
+		  	this.addOtherNatureDataSource( cachedData );
 
 		} else {
 
@@ -70,12 +69,15 @@ loadOtherNatureWithoutCache( url ) {
 
     console.log("Not in cache! Loading: " + url );
 
-    const response = fetch( url )
-        .then( (response) => response.json() )
-        .then( (data) => {
-			localforage.setItem( url, JSON.stringify( data ) );
-            this.addOtherNatureDataSource( data );
-        });
+    fetch( url )
+      .then( response => response.json() )
+      .then( data => {
+        axios.post('http://localhost:3000/api/cache/set', { key: url, value: data });
+        this.addOtherNatureDataSource( data );
+      })
+      .catch( error => {
+        console.log( "Error loading other nature data:", error );
+      });
 	
 }
 

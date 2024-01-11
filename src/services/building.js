@@ -2,7 +2,7 @@ import * as Cesium from "cesium";
 import Datasource from "./datasource.js"; 
 import Urbanheat from "./urbanheat.js"; 
 import Tree from "./tree.js"; 
-import localforage from 'localforage';
+import axios from 'axios';
 
 export default class Building {
   constructor( viewer ) {
@@ -222,15 +222,14 @@ async loadBuildings( postcode ) {
     HKIBuildingURL = "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27" + postcode + "%27";
 
 	try {
-		const value = await localforage.getItem( HKIBuildingURL );
-		// This code runs once the value has been loaded
-		// from the offline store.
+		const cacheApiUrl = `http://localhost:3000/api/cache/get?key=${encodeURIComponent(HKIBuildingURL)}`;
+		const cachedResponse = await axios.get( cacheApiUrl );
+		const cachedData = cachedResponse.data;
+  
+		if (cachedData) {
+		  	console.log("found from cache");
 
-		if ( value ) {
-			console.log("found from cache");
-
-			let datasource = JSON.parse( value )
-			const entities = await this.urbanheatService.findUrbanHeatData( datasource, postcode );
+			const entities = await this.urbanheatService.findUrbanHeatData( cachedData, postcode );
 			this.setHeatExposureToBuildings(entities);
       	this.setHelsinkiBuildingsHeight(entities);
 			
@@ -257,18 +256,18 @@ async loadBuildingsWithoutCache(url, postcode) {
     console.log("Not in cache! Loading: " + url);
   
     try {
-      	const response = await fetch(url);
-      	const data = await response.json();
-		localforage.setItem( url, JSON.stringify( data ) );
+		const response = await fetch( url );
+		const data = await response.json();
+		axios.post('http://localhost:3000/api/cache/set', { key: url, value: data });  
 
       	const entities = await this.urbanheatService.findUrbanHeatData( data, postcode );
   
-      	this.setHeatExposureToBuildings(entities);
-      	this.setHelsinkiBuildingsHeight(entities);
+      	this.setHeatExposureToBuildings( entities );
+      	this.setHelsinkiBuildingsHeight( entities );
 	  
       
       	return entities; // Return the processed entities or whatever you need here
-    } catch (error) {
+    } catch ( error ) {
       	console.error("Error loading buildings without cache:", error);
       	return null; // Handle error case or return accordingly
     }

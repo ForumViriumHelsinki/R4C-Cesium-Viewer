@@ -1,6 +1,6 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
-import localforage from 'localforage';
+import axios from 'axios';
 
 export default class Vegetation {
   constructor( viewer ) {
@@ -15,32 +15,28 @@ export default class Vegetation {
  * @param {string} postcode - The postcode for which to load vegetation data
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
-async loadVegetation( postcode ) {
+async loadVegetation(postcode) {
+    let url = "https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=" + postcode;
 
-	let url = "https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=" + postcode ;
+    try {
+      const cacheApiUrl = `http://localhost:3000/api/cache/get?key=${encodeURIComponent(url)}`;
+      const cachedResponse = await axios.get( cacheApiUrl );
+      const cachedData = cachedResponse.data;
 
-	try {
-		const value = await localforage.getItem( url );
-		// This code runs once the value has been loaded
-		// from the offline store.
+      if ( cachedData ) {
 
-		if ( value ) {
-			console.log("found from cache");
+        console.log("found from cache");
+        this.addVegetationDataSource( cachedData );
 
-			let datasource = JSON.parse( value )
-			this.addVegetationDataSource( datasource );
+      } else {
 
-		} else {
+        this.loadVegetationWithoutCache( url);
 
-			this.loadVegetationWithoutCache( url );
-
-		}
-	  	
-	} catch ( err ) {
-		// This code runs if there were any errors.
-		console.log( err );
-	}
-}
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
 /**
  * Adds a vegetation data source to the viewer
@@ -69,16 +65,17 @@ async addVegetationDataSource ( data ) {
  * @param {string} url - The URL from which to load vegetation data
  */
 loadVegetationWithoutCache( url ) {
-	
-	console.log("Not in cache! Loading: " + url );
+    console.log("Not in cache! Loading: " + url);
 
-    const response = fetch( url )
-        .then( (response) => response.json() )
-        .then( (data) => {
-			localforage.setItem( url, JSON.stringify( data ) );
-            this.addVegetationDataSource( data );
-        });
-	
+    fetch( url )
+      .then( response => response.json() )
+      .then( data => {
+        axios.post( 'http://localhost:3000/api/cache/set', { key: url, value: data });
+        this.addVegetationDataSource( data );
+      })
+      .catch( error => {
+        console.log( "Error loading vegetation:", error );
+      });
 }
 
 /**
