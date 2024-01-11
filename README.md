@@ -17,7 +17,7 @@ The application should now be running at [http://localhost:5173](http://localhos
 ## Start locally with Docker
 
 ```
-docker build -t my-local-app -f Dockerfile.dev . ; docker run -d --name app-name -p 5173:5173 my-local-app
+docker-compose -f docker-compose.dev.yml up
 ```
 The application should now be running at [http://localhost:5173](http://localhost:5173).
 

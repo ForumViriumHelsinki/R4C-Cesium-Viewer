@@ -11,6 +11,18 @@ services:
       - NODE_ENV=production
     # Additional environment variables can be added here if needed
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile # Make sure this points to your backend Dockerfile
+    ports:
+      - "3000:3000" # Expose the backend port
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+
   redis:
     image: redis:alpine
     ports:
