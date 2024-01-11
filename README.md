@@ -2,7 +2,7 @@
 
 R4C user interface Vue3 interface with Vite and Cesium
 
-THE user interface is currently running at https://geo.fvh.fi/r4c/M8Na2P0v6z/
+The user interface is currently running at https://geo.fvh.fi/r4c/M8Na2P0v6z/
 
 ## Installation 
 ```
@@ -14,6 +14,8 @@ npm run serve
 ```
 The application should now be running at [http://localhost:5173](http://localhost:5173).
 
+Warning: if redis cache is needed to application should be started also locally with docker-compose
+
 ## Start locally with Docker
 
 ```
@@ -24,7 +26,7 @@ The application should now be running at [http://localhost:5173](http://localhos
 ## Start server build with Docker 
 
 ```
-docker build -t my-server-app . ; sudo docker run -d --name app-name -p 5173:80 my-server-app
+docker-compose up -d --build --force-recreate
 ```
 
 The build has been only tested and should only work on Ubuntu server with nginx. With different setup the Dockerfile needs to be updated
