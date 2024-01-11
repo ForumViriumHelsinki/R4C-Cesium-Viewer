@@ -1,6 +1,7 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
 import axios from 'axios';
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Flood {
   constructor( viewer ) {
@@ -18,7 +19,7 @@ async loadFlood( postcode ) {
 	let url = "https://geo.fvh.fi/r4c/collections/flood_data/items?f=json&limit=20000&postinumero=" + postcode ;
 
 	try {
-        const cacheApiUrl = `http://localhost:3000/api/cache/get?key=${encodeURIComponent(url)}`;
+        const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent(url)}`;
         const cachedResponse = await axios.get(cacheApiUrl);
         const cachedData = cachedResponse.data;
   
@@ -62,7 +63,7 @@ loadFloodWithoutCache( url ) {
     fetch( url )
       .then( response => response.json())
       .then( data => {
-        axios.post('http://localhost:3000/api/cache/set', { key: url, value: data });
+        axios.post(`${backendURL}/api/cache/set`, { key: url, value: data });
         this.addFloodDataSource( data );
       })
       .catch( error => {

@@ -3,6 +3,7 @@ import Datasource from "./datasource.js";
 import Urbanheat from "./urbanheat.js"; 
 import Tree from "./tree.js"; 
 import axios from 'axios';
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Building {
   constructor( viewer ) {
@@ -216,13 +217,13 @@ findAndSetOutsideHelsinkiBuildingsColor( entities ) {
 
 async loadBuildings( postcode ) {
 
-	let HKIBuildingURL;
+	let url;
 
 	console.log( "postal code", Number( postcode ) )
-    HKIBuildingURL = "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27" + postcode + "%27";
+    url = "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27" + postcode + "%27";
 
 	try {
-		const cacheApiUrl = `http://localhost:3000/api/cache/get?key=${encodeURIComponent(HKIBuildingURL)}`;
+		const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent(url)}`;
 		const cachedResponse = await axios.get( cacheApiUrl );
 		const cachedData = cachedResponse.data;
   
@@ -235,7 +236,7 @@ async loadBuildings( postcode ) {
 			
 		} else {
 
-			this.loadBuildingsWithoutCache( HKIBuildingURL, postcode );
+			this.loadBuildingsWithoutCache( url, postcode );
 			
 		}
 	  	
@@ -258,7 +259,7 @@ async loadBuildingsWithoutCache(url, postcode) {
     try {
 		const response = await fetch( url );
 		const data = await response.json();
-		axios.post('http://localhost:3000/api/cache/set', { key: url, value: data });  
+		axios.post( `${backendURL}/api/cache/set`, { key: url, value: data });
 
       	const entities = await this.urbanheatService.findUrbanHeatData( data, postcode );
   

@@ -2,6 +2,7 @@ import Datasource from "./datasource.js";
 import * as Cesium from "cesium";
 import EventEmitter from "./eventEmitter.js"
 import axios from 'axios';
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Tree {
   constructor( viewer ) {
@@ -21,7 +22,7 @@ async loadTrees( postcode ) {
 
 	  try {
 		  // Attempt to retrieve the tree data from the Redis cache
-		  const cacheApiUrl = `http://localhost:3000/api/cache/get?key=${encodeURIComponent(url)}`;
+		  const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent(url)}`;
 		  const cachedResponse = await axios.get(cacheApiUrl);
 		  const cachedData = cachedResponse.data;
 
@@ -124,7 +125,7 @@ loadTreesWithoutCache( url, postcode ) {
 		.then((response) => response.json())
 		.then((data) => {
 			// Save fetched data to Redis cache through the backend
-			axios.post('http://localhost:3000/api/cache/set', { key: url, value: data });
+			axios.post(`${backendURL}/api/cache/set`, { key: url, value: data });
 			this.addTreesDataSource(data, postcode);
 		})
 		.catch((error) => {

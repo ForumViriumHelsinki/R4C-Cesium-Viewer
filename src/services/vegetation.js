@@ -1,6 +1,7 @@
 import Datasource from "./datasource.js"; 
 import * as Cesium from "cesium";
 import axios from 'axios';
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Vegetation {
   constructor( viewer ) {
@@ -19,7 +20,7 @@ async loadVegetation(postcode) {
     let url = "https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=" + postcode;
 
     try {
-      const cacheApiUrl = `http://localhost:3000/api/cache/get?key=${encodeURIComponent(url)}`;
+      const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent(url)}`;
       const cachedResponse = await axios.get( cacheApiUrl );
       const cachedData = cachedResponse.data;
 
@@ -70,7 +71,7 @@ loadVegetationWithoutCache( url ) {
     fetch( url )
       .then( response => response.json() )
       .then( data => {
-        axios.post( 'http://localhost:3000/api/cache/set', { key: url, value: data });
+        axios.post( `${backendURL}/api/cache/set`, { key: url, value: data });
         this.addVegetationDataSource( data );
       })
       .catch( error => {
