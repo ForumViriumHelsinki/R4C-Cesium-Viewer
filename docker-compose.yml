@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile # Use the production Dockerfile
     ports:
-      - "80:80" # Nginx serves on port 80
+      - "5173:80" # Nginx serves on port 80
     environment:
       - NODE_ENV=production
     # Additional environment variables can be added here if needed
