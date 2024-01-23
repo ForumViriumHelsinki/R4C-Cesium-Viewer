@@ -355,7 +355,7 @@ findSelectedBearingValue() {
  * @param { Array<Number> } tree_areas array cointainig buildings nearby tree area
 * @param { Array<Number> } counts array cointainig count of buildings for that heat exposure
  */
- createTreesNearbyBuildingsPlot( heatexps, tree_areas, counts ) {
+ createTreesNearbyBuildingsPlot( heatexps, tree_areas ) {
   const plotContainer = d3.select('#nearbyTreeAreaContainer');
 
   // Remove any existing content in the plot container

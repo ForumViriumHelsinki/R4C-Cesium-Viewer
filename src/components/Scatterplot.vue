@@ -278,139 +278,74 @@ average = sum / heatList.length;
 return [ heatList, numericalList, average ];
 
 },
-/**
- * Creates scatter plot that always has average urban heat exposure to building at y-axis. Categorical attributes.
- *
- * @param { object } features dataset that contains building heat exposure and attributes of the building
- * @param { String } categorical name of categorical attribute
- * @param { String } numerical name of numerical attribute
- */
- createScatterPlot(features, categorical, numerical) {
 
-    const values = this.createUniqueValuesList(features, categorical);
-
-    const scatterPlotContainer = document.getElementById( 'scatterPlotContainer' );
-    // Clear existing content in the container
+initializeScatterPlotContainer() {
+    const scatterPlotContainer = document.getElementById('scatterPlotContainer');
     scatterPlotContainer.innerHTML = '';
+    scatterPlotContainer.style.visibility = document.getElementById("showPlotToggle").checked ? 'visible' : 'hidden';
+    document.getElementById('numericalSelect').style.visibility = 'visible';
+    document.getElementById('categoricalSelect').style.visibility = 'visible';
+},
 
-    if ( document.getElementById( "showPlotToggle" ).checked ) {
-      // Set container visibility to visible
-      scatterPlotContainer.style.visibility = 'visible';
-    }
+prepareDataForPlot(features, categorical, numerical) {
+    const values = this.createUniqueValuesList(features, categorical);
+    let heatData = [];
+    let labelsWithAverage = [];
 
-    document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
-    document.getElementById( 'categoricalSelect' ).style.visibility = 'visible';
-
-    let heatData = [ ];
-    let labelsWithAverage = [ ];
-	
-    for ( let i = 0; i < values.length; i++ ) {
-
-        const dataWithHeat = this.addHeatForLabelAndX( values[ i ], features, categorical, numerical );
-
-        const plotData = {
-            xData: dataWithHeat[ 1 ],
-            yData: dataWithHeat[ 0 ],
-            name: values[ i ] + ' ' + dataWithHeat[ 2 ].toFixed( 2 )
-        };
-
-        for ( let j = 0; j < plotData.xData.length; j++ ) {
-
-            const dData = {
-                xData: plotData.xData[ j ],
-                yData: plotData.yData[ j ],
-                name: values[ i ]
-
-            }
-
-            heatData.push( dData );
-
+    values.forEach(value => {
+        const dataWithHeat = this.addHeatForLabelAndX(value, features, categorical, numerical);
+        const plotData = { xData: dataWithHeat[1], yData: dataWithHeat[0], name: value };
+        plotData.xData.forEach((xData, j) => {
+            heatData.push({ xData: xData, yData: plotData.yData[j], name: value });
+        });
+        const averageLabel = value + ' ' + dataWithHeat[2].toFixed(2);
+        if (!labelsWithAverage.includes(averageLabel)) {
+            labelsWithAverage.push(averageLabel);
         }
+    });
 
-        if ( !labelsWithAverage.includes( plotData.name ) ) {
-            
-            labelsWithAverage.push( plotData.name );
-        
-        }
-    
-    }
+    return { heatData, labelsWithAverage, values };
+},
 
+createSVGElement() {
     const margin = { top: 30, right: 170, bottom: 20, left: 30 };
     const width = 600 - margin.left - margin.right;
     const height = 290 - margin.top - margin.bottom;
+    const svg = d3.select('#scatterPlotContainer').append('svg')
+                  .attr('width', width + margin.left + margin.right)
+                  .attr('height', height + margin.top + margin.bottom)
+                  .append('g')
+                  .attr('transform', `translate(${margin.left},${margin.top})`);
+    svg.append('rect').attr('width', width).attr('height', height).attr('fill', 'white');
+    return { svg, width, height, margin };
+},
 
-    // Create the SVG element
-    const svg = d3
-        .select('#scatterPlotContainer')
-        .append('svg')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
+setupAxes(svg, heatData, width, height) {
+    const xScale = this.createScale(d3.min(heatData, d => d.xData) - 1, d3.max(heatData, d => d.xData) + 2, [0, width]);
+    const yScale = this.createScale(d3.min(heatData, d => d.yData) - 0.05, d3.max(heatData, d => d.yData) + 0.05, [height, 0]);
 
-    // Append a white background rectangle
-        svg
-            .append('rect')
-            .attr('width', width)
-            .attr('height', height)
-            .attr('fill', 'white');
+    svg.append('g').attr('transform', `translate(0, ${height})`).call(d3.axisBottom(xScale));
+    svg.append('g').call(d3.axisLeft(yScale));
 
+    return { xScale, yScale };
+},
 
-    const xValues = Object.values(heatData).map(entry => entry.xData);
-    const yValues = Object.values(heatData).map(entry => entry.yData);
+createScale(domainMin, domainMax, range) {
+    return d3.scaleLinear().domain([domainMin, domainMax]).range(range).nice();
+},
 
-    // Find the minimum and maximum values in heatData
-    const minXValue = d3.min(xValues) - 1;
-    const maxXValue = d3.max(xValues) + 2;
-
-    const minYValue = d3.min(yValues) - 0.05;
-    const maxYValue = d3.max(yValues) + 0.05;
-
-    const xScale = d3.scaleLinear()
-      .domain([minXValue, maxXValue])
-      .range([0, width]) // Define width or use another variable for width value
-      .nice();
-
-    // Append x-axis
-    svg.append('g')
-      .attr('transform', `translate(0, ${height})`)
-      .call( d3.axisBottom( xScale ) );
-
-    const yScale = d3.scaleLinear()
-      .domain([minYValue, maxYValue])
-      .range([height, 0]) // Define height or use another variable for height value
-      .nice();
-
-    // Append y-axis
-    svg.append('g')
-      .call( d3.axisLeft( yScale ) );
-
-    // Define a color scale using D3's scaleOrdinal
-    const colorScale = d3.scaleOrdinal()
-        .domain(values)
-        .range(d3.schemeCategory10); // Use any color scheme you prefer
+addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorical) {
+    const tooltip = this.createTooltip();
     
-        const tooltip = d3.select('#scatterPlotContainer')
-            .append('div')
-            .style('opacity', 0)
-            .attr('class', 'tooltip')
-            .style('position', 'absolute')
-            .style('background-color', 'white')
-            .style('border', 'solid')
-            .style('border-width', '1px')
-            .style('border-radius', '5px')
-            .style('padding', '10px');    
-
-// Add dots
-svg.append('g')
+    svg.append('g')
         .selectAll("dot")
         .data(heatData)
         .enter()
         .append("circle")
-        .attr("cx", function (d) { return xScale(d.xData); } )
-        .attr("cy", function (d) { return yScale(d.yData); } )
-        .attr("r", 2) // Define circle radius
-        .style("fill", function (d) { return colorScale(d.name); }) // Assign colors based on name
+        .attr("cx", d => xScale(d.xData))
+        .attr("cy", d => yScale(d.yData))
+        .attr("r", 2)
+        .style("fill", d => colorScale(d.name))
         .on('mouseover', function (event, d) {
         // Calculate the mouse position relative to the container
         const containerRect = document.getElementById('scatterPlotContainer').getBoundingClientRect();
@@ -429,35 +364,104 @@ svg.append('g')
             .on('mouseout', function () {
                 tooltip.transition().duration(200).style('opacity', 0);
             });
-
-            // Create legend
-const legend = svg.append('g')
-  .attr('class', 'legend')
-  .attr('transform', `translate(${width + margin.right - 100},${margin.top})`); // Adjust the translation for positioning
-
-// Add color rectangles
-legend.selectAll('.legend-color')
-  .data(values)
-  .enter()
-  .append('rect')
-  .attr('x', -55)
-  .attr('y', (_, i) => i * 20 - 50)
-  .attr('width', 10)
-  .attr('height', 10)
-  .style('fill', d => colorScale(d));
-
-// Add labels next to color rectangles
-legend.selectAll('.legend-label')
-  .data(labelsWithAverage)
-  .enter()
-  .append('text')
-  .attr('x', -40)
-  .attr('y', (_, i) => i * 20 - 41)
-  .text(d => d)
-  .style('font-size', '10px'); // Adjust font size as needed
-  
 },
-      clearScatterPlot() {
+
+showTooltip(event, d) {
+        // Calculate the mouse position relative to the container
+        const containerRect = document.getElementById('scatterPlotContainer').getBoundingClientRect();
+        const xPos = event.pageX - containerRect.left;
+        const yPos = event.pageY - containerRect.top;
+
+        const numValue = d.xData; 
+        const heatValue = d.yData;
+        const catValue = d.name;
+
+        tooltip.transition().duration(200).style('opacity', 0.9);
+        tooltip.html(`${numerical}: ${numValue}<br>heat exposure index: ${heatValue}<br>${categorical}: ${catValue}`)
+            .style('left', `${xPos}px`) // Use left for horizontal positioning
+            .style('top', `${yPos}px`); // Use top for vertical positioning
+},
+
+hideTooltip() {
+  const tooltip = d3.select('.tooltip');
+  tooltip.transition().duration(200).style('opacity', 0);
+},
+
+createTooltip() {
+  return d3.select('#scatterPlotContainer')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0)
+        .style('position', 'absolute')
+        .style('background-color', 'white')
+        .style('border', 'solid')
+        .style('border-width', '1px')
+        .style('border-radius', '5px')
+        .style('padding', '10px');
+},
+
+createLegend(svg, width, margin, values, colorScale) {
+    const legend = svg.append('g')
+        .attr('class', 'legend')
+        .attr('transform', `translate(${width + margin.right - 120},${margin.top})`);
+
+    legend.selectAll('.legend-color')
+        .data(values)
+        .enter()
+        .append('rect')
+        .attr('x', 0)
+        .attr('y', (_, i) => i * 20)
+        .attr('width', 10)
+        .attr('height', 10)
+        .style('fill', d => colorScale(d));
+
+    legend.selectAll('.legend-label')
+        .data(values)
+        .enter()
+        .append('text')
+        .attr('x', 20)
+        .attr('y', (_, i) => i * 20 + 9)
+        .text(d => d)
+        .style('font-size', '10px');
+},
+
+createColorScale(values) {
+    return d3.scaleOrdinal()
+        .domain(values)
+        .range(d3.schemeCategory10); // This is a D3 predefined set of colors
+},
+
+/**
+ * Creates scatter plot that always has average urban heat exposure to building at y-axis. Categorical attributes.
+ *
+ * @param { object } features dataset that contains building heat exposure and attributes of the building
+ * @param { String } categorical name of categorical attribute
+ * @param { String } numerical name of numerical attribute
+ */
+createScatterPlot(features, categorical, numerical) {
+    // Setup the scatter plot container
+    this.initializeScatterPlotContainer();
+
+    // Prepare the data for the plot
+    const { heatData, labelsWithAverage } = this.prepareDataForPlot(features, categorical, numerical);
+
+    // Initialize the SVG element
+    const { svg, width, height, margin } = this.createSVGElement();
+
+    // Setup the axes
+    const { xScale, yScale } = this.setupAxes(svg, heatData, width, height);
+
+    // Create the color scale
+    const colorScale = this.createColorScale(labelsWithAverage);
+
+    // Add the dots (plot elements) to the plot
+    this.addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorical);
+
+    // Create the legend
+    this.createLegend(svg, width, margin, labelsWithAverage, colorScale);
+},
+
+clearScatterPlot() {
         // Remove or clear the D3.js visualization
         // Example:
         d3.select("#scatterPlotContainer").select("svg").remove();
