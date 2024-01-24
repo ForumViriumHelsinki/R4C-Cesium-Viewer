@@ -11,12 +11,14 @@
   import { eventBus } from '../services/eventEmitter.js';
   import * as d3 from 'd3'; // Import D3.js
   import { useGlobalStore } from '../store.js';
+  import Plot from "../services/plot.js"; 
   
   export default {
     mounted() {
       this.unsubscribe = eventBus.$on('newBuildingHeat', this.newBuildingHeat);
       this.unsubscribe = eventBus.$on('newBuildingTree', this.newBuildingTree);
       this.store = useGlobalStore( );
+      this.plotService = new Plot( );
     },
     beforeUnmount() {
       this.unsubscribe();
@@ -44,167 +46,80 @@
  * Create building specific bar chart.
  *
  */
-      createBuildingBarChart( buildingHeatExposure, address, postinumero ) {
+ createBuildingBarChart(buildingHeatExposure, address, postinumero) {
+    this.plotService.initializePlotContainer('buildingChartContainer');
 
-          const plotContainer = document.getElementById('buildingChartContainer');
+    const margin = { top: 70, right: 30, bottom: 30, left: 60 };
+    const width = 300 - margin.left - margin.right;
+    const height = 200 - margin.top - margin.bottom;
 
-  // Remove any existing content in the plot container
-  plotContainer.innerHTML = '';
+    const svg = this.plotService.createSVGElement(margin, width, height, '#buildingChartContainer');
 
-  if ( document.getElementById( "showPlotToggle" ).checked ) {
-    // Set container visibility to visible
-    plotContainer.style.visibility = 'visible';
-  }
+    const xScale = this.plotService.createScaleBand([address, postinumero], width);
+    const yScale = this.plotService.createScaleLinear(0, Math.max(buildingHeatExposure, this.store.averageHeatExposure), [height, 0]);
 
-  const trace1 = { x: [address], y: [buildingHeatExposure.toFixed( 3 ) ], name: address, type: 'bar' };
-  const trace2 = { x: [postinumero], y: [this.store.averageHeatExposure.toFixed( 3 )], name: postinumero, type: 'bar' };
+    // Create bars and labels
+    const data = [
+        { name: address, value: buildingHeatExposure.toFixed(3) },
+        { name: postinumero, value: this.store.averageHeatExposure.toFixed(3) }
+    ];
+    const colors = { [address]: 'orange', [postinumero]: 'steelblue' };
 
-  const data = [trace1, trace2];
+    this.createBarsWithLabels(svg, data, xScale, yScale, height, colors);
 
-  const margin = { top: 70, right: 30, bottom: 30, left: 60 };
-  const width = 300 - margin.left - margin.right;
-  const height = 200 - margin.top - margin.bottom;
+    this.plotService.setupAxes(svg, xScale, yScale, height);
 
-  // Create the SVG element
-  const svg = d3.select('#buildingChartContainer')
-    .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
-
-  const xScale = d3.scaleBand()
-    .domain([address, postinumero])
-    .range([0, width])
-    .padding(0.1);
-
-  const yScale = d3.scaleLinear()
-    .domain([0, Math.max(buildingHeatExposure, this.store.averageHeatExposure)])
-    .range([height, 0])
-    .nice(); // Make the scale "nice" for better readability
-
-  // Create bars for trace1
-  const colors = { [address]: 'orange', [postinumero]: 'steelblue' }; // Define colors for bars
-
-  svg.selectAll('.bar')
-    .data(data)
-    .enter().append('rect')
-    .attr('class', 'bar')
-    .attr('x', d => xScale(d.name))
-    .attr('width', xScale.bandwidth())
-    .attr('y', d => yScale(d.y[0]))
-    .attr('height', d => height - yScale(d.y[0]))
-    .style('fill', d => colors[d.name]); // Set fill color based on name
-
-  // Add labels
-  svg.selectAll('.text')
-    .data(data)
-    .enter().append('text')
-    .attr('class', 'label')
-    .attr('x', d => xScale(d.name) + xScale.bandwidth() / 2)
-    .attr('y', d => yScale(d.y[0]) - 5)
-    .attr('text-anchor', 'middle')
-    .text(d => d.y[0]);
-
-  // Append x-axis
-  svg.append('g')
-    .attr('transform', `translate(0, ${height})`)
-    .call(d3.axisBottom(xScale));
-
-  // Append y-axis
-  svg.append('g')
-    .call(d3.axisLeft(yScale));
-
-  // Add title
-  svg.append('text')
-    .attr('x', width / 2)
-    .attr('y', -margin.top / 2)
-    .attr('text-anchor', 'middle')
-    .text('Urban Heat Exposure Index Comparison');
-  
+    this.plotService.addTitle(svg, 'Urban Heat Exposure Index Comparison', width, margin);
 },
 /**
  * Create building specific bar chart.
  *
  */
-  createBuildingTreeBarChart( treeArea, address, postinumero ) {
+ createBuildingTreeBarChart(treeArea, address, postinumero) {
+    this.plotService.initializePlotContainer('buildingTreeChartContainer');
 
-          const plotContainer = document.getElementById('buildingTreeChartContainer');
+    const margin = { top: 70, right: 30, bottom: 30, left: 60 };
+    const width = 300 - margin.left - margin.right;
+    const height = 200 - margin.top - margin.bottom;
 
-  // Remove any existing content in the plot container
-  plotContainer.innerHTML = '';
+    const svg = this.plotService.createSVGElement(margin, width, height, '#buildingTreeChartContainer');
 
-  if ( document.getElementById( "showPlotToggle" ).checked ) {
-    // Set container visibility to visible
-    plotContainer.style.visibility = 'visible';
-  }
+    const xScale = this.plotService.createScaleBand([address, postinumero], width);
+    const yScale = this.plotService.createScaleLinear(0, Math.max(treeArea, this.store.averageTreeArea), [height, 0]);
 
-  const trace1 = { x: [address], y: [treeArea.toFixed( 3 ) ], name: address, type: 'bar' };
-  const trace2 = { x: [postinumero], y: [this.store.averageHeatExposure.toFixed( 3 )], name: postinumero, type: 'bar' };
+    // Create bars and labels
+    const data = [
+        { name: address, value: treeArea.toFixed(3) },
+        { name: postinumero, value: this.store.averageTreeArea.toFixed(3) }
+    ];
+    const colors = { [address]: 'green', [postinumero]: 'yellow' };
 
-  const data = [trace1, trace2];
+    this.createBarsWithLabels(svg, data, xScale, yScale, height, colors);
 
-  const margin = { top: 70, right: 30, bottom: 30, left: 60 };
-  const width = 300 - margin.left - margin.right;
-  const height = 200 - margin.top - margin.bottom;
+    this.plotService.setupAxes(svg, xScale, yScale, height);
 
-  // Create the SVG element
-  const svg = d3.select('#buildingTreeChartContainer')
-    .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
+    this.plotService.addTitle(svg, 'Nearby tree area comparison', width, margin);
+},
 
-  const xScale = d3.scaleBand()
-    .domain([address, postinumero])
-    .range([0, width])
-    .padding(0.1);
+createBarsWithLabels(svg, data, xScale, yScale, height, colors) {
+    svg.selectAll('.bar')
+        .data(data)
+        .enter().append('rect')
+        .attr('class', 'bar')
+        .attr('x', d => xScale(d.name))
+        .attr('width', xScale.bandwidth())
+        .attr('y', d => yScale(d.value))
+        .attr('height', d => height - yScale(d.value))
+        .style('fill', d => colors[d.name]);
 
-  const yScale = d3.scaleLinear()
-    .domain([0, Math.max(treeArea, this.store.averageTreeArea)])
-    .range([height, 0])
-    .nice(); // Make the scale "nice" for better readability
-
-  // Create bars for trace1
-  const colors = { [address]: 'orange', [postinumero]: 'steelblue' }; // Define colors for bars
-
-  svg.selectAll('.bar')
-    .data(data)
-    .enter().append('rect')
-    .attr('class', 'bar')
-    .attr('x', d => xScale(d.name))
-    .attr('width', xScale.bandwidth())
-    .attr('y', d => yScale(d.y[0]))
-    .attr('height', d => height - yScale(d.y[0]))
-    .style('fill', d => colors[d.name]); // Set fill color based on name
-
-  // Add labels
-  svg.selectAll('.text')
-    .data(data)
-    .enter().append('text')
-    .attr('class', 'label')
-    .attr('x', d => xScale(d.name) + xScale.bandwidth() / 2)
-    .attr('y', d => yScale(d.y[0]) - 5)
-    .attr('text-anchor', 'middle')
-    .text(d => d.y[0]);
-
-  // Append x-axis
-  svg.append('g')
-    .attr('transform', `translate(0, ${height})`)
-    .call(d3.axisBottom(xScale));
-
-  // Append y-axis
-  svg.append('g')
-    .call(d3.axisLeft(yScale));
-
-  // Add title
-  svg.append('text')
-    .attr('x', width / 2)
-    .attr('y', -margin.top / 2)
-    .attr('text-anchor', 'middle')
-    .text('Urban Heat Exposure Index Comparison');
-  
+    svg.selectAll('.label')
+        .data(data)
+        .enter().append('text')
+        .attr('class', 'label')
+        .attr('x', d => xScale(d.name) + xScale.bandwidth() / 2)
+        .attr('y', d => yScale(d.value) - 5)
+        .attr('text-anchor', 'middle')
+        .text(d => d.value);
 },
 clearBuildingBarChart() {
         // Remove or clear the D3.js visualization

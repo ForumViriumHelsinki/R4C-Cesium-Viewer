@@ -75,20 +75,6 @@ createHistogram() {
   this.plotService.addTitle(svg, `Heat exposure to buildings in ${this.store.nameOfZone}`, width, margin);
 
 },
-
-handleHistogramMouseover(tooltip, event, d) {
-  const containerRect = document.getElementById('heatHistogramContainer').getBoundingClientRect();
-  const xPos = event.pageX - containerRect.left;
-  const yPos = event.pageY - containerRect.top;
-  tooltip.transition().duration(200).style('opacity', 0.9);
-  tooltip.html(`Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`)
-    .style('left', `${xPos}px`)
-    .style('top', `${yPos}px`);
-},
-
-handleHistogramMouseout(tooltip) {
-  tooltip.transition().duration(200).style('opacity', 0);
-},
       clearHistogram() {
         // Remove or clear the D3.js visualization
         // Example:
