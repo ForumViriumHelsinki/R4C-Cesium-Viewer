@@ -307,13 +307,6 @@ prepareDataForPlot(features, categorical, numerical) {
     return { heatData, labelsWithAverage, values };
 },
 
-setupAxes(svg, height, xScale, yScale) {
-
-    svg.append('g').attr('transform', `translate(0, ${height})`).call(d3.axisBottom(xScale));
-    svg.append('g').call(d3.axisLeft(yScale));
-
-},
-
 addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorical) {
     const tooltip = this.plotService.createTooltip( '#scatterPlotContainer' );
     
@@ -326,24 +319,11 @@ addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorica
         .attr("cy", d => yScale(d.yData))
         .attr("r", 2)
         .style("fill", d => colorScale(d.name))
-        .on('mouseover', function (event, d) {
-        // Calculate the mouse position relative to the container
-        const containerRect = document.getElementById('scatterPlotContainer').getBoundingClientRect();
-        const xPos = event.pageX - containerRect.left;
-        const yPos = event.pageY - containerRect.top;
-
-        const numValue = d.xData; 
-        const heatValue = d.yData;
-        const catValue = d.name;
-
-        tooltip.transition().duration(200).style('opacity', 0.9);
-        tooltip.html(`${numerical}: ${numValue}<br>heat exposure index: ${heatValue}<br>${categorical}: ${catValue}`)
-            .style('left', `${xPos}px`) // Use left for horizontal positioning
-            .style('top', `${yPos}px`); // Use top for vertical positioning
-    })
-            .on('mouseout', function () {
-                tooltip.transition().duration(200).style('opacity', 0);
-            });
+        .on('mouseover', (event, d) => 
+            this.plotService.handleMouseover(tooltip, 'scatterPlotContainer', event, d, 
+                (data) => `${numerical}: ${data.xData}<br>heat exposure index: ${data.yData}<br>${categorical}: ${data.name}`))
+        .on('mouseout', () => 
+            this.plotService.handleMouseout(tooltip));
 },
 
 createLegend(svg, width, margin, values, labelsWithAverage, colorScale) {
@@ -403,7 +383,7 @@ createScatterPlot(features, categorical, numerical) {
     const yScale = this.plotService.createScaleLinear(d3.min(heatData, d => d.yData) - 0.05, d3.max(heatData, d => d.yData) + 0.05, [height, 0]);
 
     // Setup the axes
-    this.setupAxes( svg, height, xScale, yScale );
+    this.plotService.setupAxes( svg, xScale, yScale, height );
 
     // Create the color scale
     const colorScale = this.createColorScale(values);

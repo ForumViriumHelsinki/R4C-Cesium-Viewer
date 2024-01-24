@@ -87,25 +87,14 @@ createBars(svg, data, xScale, yScale, height, tooltip) {
         .attr('class', 'bar')
         .attr('transform', d => `translate(${xScale(d.label)}, 0)`);
 
-    bar.append('rect')
+        bar.append('rect')
         .attr('x', 0)
         .attr('y', d => yScale(d.value))
         .attr('width', xScale.bandwidth())
         .attr('height', d => height - yScale(d.value))
         .attr('fill', 'lightblue')
-        .on('mouseover', function (event, d) {
-            const containerRect = document.getElementById('socioeonomicsContainer').getBoundingClientRect();
-            const xPos = event.pageX - containerRect.left;
-            const yPos = event.pageY - containerRect.top;
-
-            tooltip.transition().duration(200).style('opacity', 0.9);
-            tooltip.html(`Indicator: ${d.label}<br>Value: ${d.value}`)
-                .style('left', `${xPos}px`)
-                .style('top', `${yPos}px`);
-        })
-        .on('mouseout', function () {
-            tooltip.transition().duration(200).style('opacity', 0);
-        });
+        .on('mouseover', (event, d) => this.plotService.handleMouseover(tooltip, 'socioeonomicsContainer', event, d, (data) => `Indicator: ${data.label}<br>Value: ${data.value}`))
+        .on('mouseout', () => this.plotService.handleMouseout(tooltip));
 },
 
 /**

@@ -7,6 +7,7 @@
   import { eventBus } from '../services/eventEmitter.js';
   import * as d3 from 'd3'; // Import D3.js
   import { useGlobalStore } from '../store.js';
+  import Plot from "../services/plot.js"; 
   
   export default {
     data() {
@@ -17,6 +18,7 @@
     mounted() {
       this.unsubscribe = eventBus.$on('newHeatHistogram', this.newHeatHistogram);
       this.store = useGlobalStore( );
+      this.plotService = new Plot( );
     },
     beforeUnmount() {
       this.unsubscribe();
@@ -32,108 +34,60 @@
           this.clearHistogram();
         }
       },
+
+createBars(svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter) {
+    svg.selectAll('.bar')
+        .data(data)
+        .enter()
+        .append('g')
+        .attr('class', 'bar')
+        .attr('transform', d => `translate(${xScale(d.x0)},${yScale(d.length)})`)
+        .append('rect')
+        .attr('x', 1)
+        .attr('width', d => xScale(d.x1) - xScale(d.x0) - 1) // Adjusted width for the bars
+        .attr('height', d => height - yScale(d.length))
+        .attr('fill', 'orange')
+        .on('mouseover', (event, d) => this.plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter))
+        .on('mouseout', () => this.plotService.handleMouseout(tooltip));
+},      
 createHistogram() {
-  const plotContainer = document.getElementById('heatHistogramContainer');
+  this.plotService.initializePlotContainer('heatHistogramContainer');
 
-  // Remove any existing content in the plot container
-  plotContainer.innerHTML = '';
-  if ( document.getElementById( "showPlotToggle" ).checked ) {
-    // Set container visibility to visible
-    plotContainer.style.visibility = 'visible';
-  }
-
-  // Set up dimensions and margins
   const margin = { top: 30, right: 30, bottom: 30, left: 30 };
   const width = 420 - margin.left - margin.right;
   const height = 300 - margin.top - margin.bottom;
 
-  // Create the SVG element
-  const svg = d3
-    .select('#heatHistogramContainer')
-    .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
+  const svg = this.plotService.createSVGElement(margin, width, height, '#heatHistogramContainer');
 
-  // Append a white background rectangle
-  svg
-    .append('rect')
-    .attr('width', width)
-    .attr('height', height)
-    .attr('fill', 'white');
-
-    // Find the minimum and maximum values in urbanHeatData
-    const minDataValue = d3.min(this.urbanHeatData) - 0.02;
-    const maxDataValue = d3.max(this.urbanHeatData) + 0.02;
-
-    // Configure scales
-    const x = d3.scaleLinear().domain([minDataValue, maxDataValue]).range([0, width]).nice();
+  const minDataValue = d3.min(this.urbanHeatData) - 0.02;
+  const maxDataValue = d3.max(this.urbanHeatData) + 0.02;
+  const x = this.plotService.createScaleLinear(minDataValue, maxDataValue, [0, width]);
   const bins = d3.histogram().domain(x.domain()).thresholds(x.ticks(20))(this.urbanHeatData);
-  const y = d3.scaleLinear().domain([0, d3.max(bins, (d) => d.length)]).range([height, 0]).nice();
+  const y = this.plotService.createScaleLinear(0, d3.max(bins, (d) => d.length), [height, 0]);
 
-  // Create x-axis
-  const xAxis = d3.axisBottom().scale(x);
-  svg
-    .append('g')
-    .attr('transform', `translate(0, ${height})`)
-    .call(xAxis);
+  this.plotService.setupAxes(svg, x, y, height);
 
-  // Create y-axis
-  const yAxis = d3.axisLeft().scale(y);
-  svg
-    .append('g')
-    .call(yAxis);
+  const tooltip = this.plotService.createTooltip('#heatHistogramContainer');
 
-  // Create bars
-  const bar = svg
-    .selectAll('.bar')
-    .data(bins)
-    .enter()
-    .append('g')
-    .attr('class', 'bar')
-    .attr('transform', (d) => `translate(${x(d.x0)},${y(d.length)})`);
+  this.createBars(svg, bins, x, y, height, tooltip, 'heatHistogramContainer', 
+                d => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`);
 
-  const tooltip = d3.select('#heatHistogramContainer')
-    .append('div')
-    .style('opacity', 0)
-    .attr('class', 'tooltip')
-    .style('position', 'absolute')
-    .style('background-color', 'white')
-    .style('border', 'solid')
-    .style('border-width', '1px')
-    .style('border-radius', '5px')
-    .style('padding', '10px');
+  this.plotService.addTitle(svg, `Heat exposure to buildings in ${this.store.nameOfZone}`, width, margin);
 
-  // Create bars with interactive tooltips
-  bar
-    .append('rect')
-    .attr('x', 1)
-    .attr('width', (d) => x(d.x1) - x(d.x0)) // Adjusted width for the bars
-    .attr('height', (d) => height - y(d.length))
-    .attr('fill', 'orange')
-    .on('mouseover', function (event, d) {
-      const containerRect = document.getElementById('heatHistogramContainer').getBoundingClientRect();
-        const xPos = event.pageX - containerRect.left;
-        const yPos = event.pageY - containerRect.top;
-      tooltip.transition().duration(200).style('opacity', 0.9);
-      tooltip.html(`Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`)
-        .style('left', `${xPos}px`)
-        .style('top', `${yPos}px`);
-    })
-    .on('mouseout', function () {
-      tooltip.transition().duration(200).style('opacity', 0);
-    });
+},
 
-  // Add a title
-  svg
-    .append('text')
-    .attr('x', width / 2)
-    .attr('y', -margin.top / 3)
-    .attr('text-anchor', 'middle')
-    .style('font-size', '12px')
-    .text(`Heat exposure to buildings in ${this.store.nameOfZone}`);
-    
+handleHistogramMouseover(tooltip, event, d) {
+  const containerRect = document.getElementById('heatHistogramContainer').getBoundingClientRect();
+  const xPos = event.pageX - containerRect.left;
+  const yPos = event.pageY - containerRect.top;
+  tooltip.transition().duration(200).style('opacity', 0.9);
+  tooltip.html(`Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`)
+    .style('left', `${xPos}px`)
+    .style('top', `${yPos}px`);
+},
+
+handleHistogramMouseout(tooltip) {
+  tooltip.transition().duration(200).style('opacity', 0);
 },
       clearHistogram() {
         // Remove or clear the D3.js visualization

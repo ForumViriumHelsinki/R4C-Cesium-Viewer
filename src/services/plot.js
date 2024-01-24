@@ -174,4 +174,33 @@ createTooltip( container ) {
         .style('border-radius', '5px')
         .style('padding', '10px');
 }
+
+setupAxes(svg, xScale, yScale, height) {
+  // Create x-axis
+  svg.append('g')
+      .attr('transform', `translate(0, ${height})`)
+      .call(d3.axisBottom(xScale));
+
+  // Create y-axis
+  svg.append('g').call(d3.axisLeft(yScale));
+
+  // If you need additional customization like gridlines or tick formatting,
+  // you can add that logic here.
+}
+
+handleMouseover(tooltip, containerId, event, d, dataFormatter) {
+  const containerRect = document.getElementById(containerId).getBoundingClientRect();
+  const xPos = event.pageX - containerRect.left;
+  const yPos = event.pageY - containerRect.top;
+
+  tooltip.transition().duration(200).style('opacity', 0.9);
+  tooltip.html(dataFormatter(d))
+    .style('left', `${xPos}px`)
+    .style('top', `${yPos}px`);
+}
+
+handleMouseout(tooltip) {
+  tooltip.transition().duration(200).style('opacity', 0);
+}
+
 }
