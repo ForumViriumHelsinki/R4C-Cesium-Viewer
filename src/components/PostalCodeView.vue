@@ -129,6 +129,8 @@ export default {
         this.viewer = viewer;
         this.dataSourceService = new Datasource( this.viewer );
         this.treeService = new Tree( this.viewer );
+        this.buildingService = new Building ( this.viewer );
+        this.plotService = new Plot( );
         this.addEventListeners();
 
       },
@@ -208,19 +210,17 @@ loadFloodEvent( ) {
  */
 showPlotEvent( ) {
 
-  const plotService = new Plot( );
-
     // Get the value of the "Show Plot" toggle button
     const showPlots = document.getElementById( "showPlotToggle" ).checked;
     
     // Hide the plot and its controls if the toggle button is unchecked
     if ( !showPlots ) {
 
-      plotService.hideAllPlots( );
+      this.plotService.hideAllPlots( );
 
     } else { // Otherwise, show the plot and its controls if the toggle button is checked and the plot is already loaded
 
-      plotService.showAllPlots( );
+      this.plotService.showAllPlots( );
 
     }
 
@@ -295,13 +295,18 @@ loadTreesEvent( ) {
             this.treeService.loadTrees( this.store.postalcode );
 
         } else {
-            
+
             this.dataSourceService.changeDataSourceShowByName( "Trees", true );
+            this.plotService.updateTreeElements( 'visible' );
+
         }
-        
+
     } else { // If showTrees toggle is off
-        
+
         this.dataSourceService.changeDataSourceShowByName( "Trees", false );
+        this.plotService.updateTreeElements( 'hidden' );
+        this.plotService.showAllPlots( );
+        this.buildingService.resetBuildingEntites( );
 
     }
 
@@ -387,15 +392,13 @@ filterBuildingsEvent() {
 
     if ( buildingsDataSource ) {
 
-      const buildingService = new Building( this.viewer );
-
       if ( hideNonSote || hideNewBuildings || hideLow ) {
 
-        buildingService.filterBuildings( buildingsDataSource );
+        this.buildingService.filterBuildings( buildingsDataSource );
 
       } else {
 
-        buildingService.showAllBuildings( buildingsDataSource );
+        this.buildingService.showAllBuildings( buildingsDataSource );
 
     }
     }

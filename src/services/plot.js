@@ -108,6 +108,17 @@ toggleBearingSwitchesVisibility( status ) {
 }
 
 /**
+ * 
+ */
+
+updateTreeElements( status ) {
+
+  document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = status;
+  this.toggleBearingSwitchesVisibility( status );
+
+}
+
+/**
  * Initializes container for plotting
  * 
  * @param {string} containerId - The containerId

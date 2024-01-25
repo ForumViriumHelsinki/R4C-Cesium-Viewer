@@ -326,6 +326,21 @@ checkBearing( bearing, selectedBearingValue ) {
 
 
 },
+
+createBarsForTreeChart(svg, data, xScale, yScale, width, height, tooltip, containerId, heatExps, color = 'green') {
+  svg.selectAll('.bar')
+    .data(data)
+    .enter().append('rect')
+    .attr('class', 'bar')
+    .attr('x', (d, i) => xScale(heatExps[i]))
+    .attr('y', d => yScale(d))
+    .attr('width', width / data.length)
+    .attr('height', d => height - yScale(d))
+    .attr('fill', color)
+    .on('mouseover', (event, d, i) => this.handleMouseover(tooltip, containerId, event, d, 
+                  () => `Heat Exposure: ${heatExps[i]}<br>Tree Area: ${d}`))
+    .on('mouseout', () => this.handleMouseout(tooltip));
+},
 /**
  * This function iterates through each direction using the switches array. 
  * For each direction, function gets the corresponding switch container and the associated toggle input element. 
@@ -355,100 +370,30 @@ findSelectedBearingValue() {
  * @param { Array<Number> } tree_areas array cointainig buildings nearby tree area
 * @param { Array<Number> } counts array cointainig count of buildings for that heat exposure
  */
- createTreesNearbyBuildingsPlot( heatexps, tree_areas ) {
-  const plotContainer = d3.select('#nearbyTreeAreaContainer');
-
-  // Remove any existing content in the plot container
-  plotContainer.selectAll('svg').remove();
-  if (document.getElementById('showPlotToggle').checked) {
-    // Set container visibility to visible
-    plotContainer.style('visibility', 'visible');
-    this.plotService.toggleBearingSwitchesVisibility( 'visible' );
-    
-  }
+ createTreesNearbyBuildingsPlot(heatexps, tree_areas) {
+  this.plotService.initializePlotContainer('nearbyTreeAreaContainer');
 
   if (tree_areas.length > 0) {
-    // Set up dimensions and margins
+    this.plotService.toggleBearingSwitchesVisibility( 'visible' );
+
     const margin = { top: 30, right: 30, bottom: 60, left: 30 };
     const width = 600 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
 
-    // Create the SVG element
-    const svg = plotContainer
-      .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    const svg = this.plotService.createSVGElement(margin, width, height, '#nearbyTreeAreaContainer');
 
-    // Append a white background rectangle
-    svg
-      .append('rect')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('fill', 'white');
+    const x = this.plotService.createScaleLinear(d3.min(heatexps), d3.max(heatexps), [0, width]);
+    const y = this.plotService.createScaleLinear(0, d3.max(tree_areas), [height, 0]);
 
-    // Set up x and y scales
-    const x = d3
-      .scaleLinear()
-      .domain([d3.min(heatexps), d3.max(heatexps)])
-      .range([0, width]);
-    const y = d3
-      .scaleLinear()
-      .domain([0, d3.max(tree_areas)])
-      .range([height, 0]);
+    this.plotService.setupAxes(svg, x, y, height);
 
-    // Create x-axis
-    const xAxis = d3.axisBottom().scale(x);
-    svg
-      .append('g')
-      .attr('transform', `translate(0, ${height})`)
-      .call(xAxis);
+    const tooltip = this.plotService.createTooltip('#nearbyTreeAreaContainer');
 
-    // Create y-axis
-    const yAxis = d3.axisLeft().scale(y);
-    svg.append('g').call(yAxis);
-
-    // Create bars
-    const bar = svg
-      .selectAll('.bar')
-      .data(tree_areas)
-      .enter()
-      .append('rect')
-      .attr('class', 'bar')
-      .attr('x', (d, i) => x(heatexps[i]))
-      .attr('y', (d) => y(d))
-      .attr('width', width / heatexps.length)
-      .attr('height', (d) => height - y(d))
-      .attr('fill', 'green');
-
-    // Add tooltips
-    bar
-      .on('mouseover', function (event, d, i) {
-        const xPos = event.pageX;
-        const yPos = event.pageY;
-        const tooltip = d3.select('.tooltip');
-        tooltip
-          .style('left', `${xPos}px`)
-          .style('top', `${yPos}px`)
-          .html(`Heat Exposure: ${heatexps[i]}<br>Tree Area: ${d}`)
-          .style('opacity', 0.9);
-      })
-      .on('mouseout', function () {
-        const tooltip = d3.select('.tooltip');
-        tooltip.style('opacity', 0);
-      });
-
-    // Add title
-    svg
-      .append('text')
-      .attr('x', width / 2)
-      .attr('y', -margin.top / 3)
-      .attr('text-anchor', 'middle')
-      .style('font-size', '12px')
-      .text(`Nearby Tree Area of Buildings with Heat Exposure`);
+    this.createBarsForTreeChart( svg, tree_areas, x, y, width, height, tooltip, 'nearbyTreeAreaContainer', heatexps, 'green' );
+    this.plotService.addTitle( svg, 'Nearby Tree Area of Buildings with Heat Exposure', width, margin );
 
   }
+
 },
     },
   };

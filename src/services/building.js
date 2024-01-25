@@ -13,74 +13,19 @@ export default class Building {
     this.urbanheatService = new Urbanheat( this.viewer );
   }
 
-  setBuildingPolygonMaterialColor( entity, kayttotarkoitus ) {
 
-	switch ( kayttotarkoitus ) {
-		case 2: // business
-			entity.polygon.material = Cesium.Color.TOMATO;
-			break;
-		case 3: // holiday/cottage
-			entity.polygon.material = Cesium.Color.YELLOW;
-			break;
-		case 4: // factory/production
-			entity.polygon.material = Cesium.Color.BLACK; 
-			break;
-		case 5: // religous buildings
-			entity.polygon.material = Cesium.Color.MEDIUMPURPLE;
-			break;
-		case 6: // open areas with roof, for example for parking cars and trash
-			entity.polygon.material = Cesium.Color.MEDIUMAQUAMARINE;
-			break;
-		case 8: // // churches
-			entity.polygon.material = Cesium.Color.HOTPINK;
-			break;
-		default: // residential
-			entity.polygon.material = Cesium.Color.MIDNIGHTBLUE;
-		}
-
-}
-
- findMultiplierForFloorCount( kayttotarkoitus ) {
-
-	switch ( kayttotarkoitus ) {
-		case 2: // business
-			return 4.0;
-		case 3: // holiday/cottage
-			return 2.0;
-		case 4: // factory/production
-			return 5.4;
-		case 5: // religous buildings
-			return 4.0;
-		case 6: // open areas with roof, for example for parking cars and trash
-			return 3.0;
-		case 8: // // churches
-			return 8.1;
-		default: // residential
-			return 2.7 
-		}
-
-}
-
-findAndSetOutsideHelsinkiBuildingsColor( entities ) {
+/**
+ * Set building entities heat exposure to original
+ *
+ * @param { Object } entities Cesium entities
+ */
+ removeNearbyTreeEffect( entities ) {
 
 	for ( let i = 0; i < entities.length; i++ ) {
 
 		let entity = entities[ i ];
-		const kayttotarkoitus = Number( entity.properties._kayttotarkoitus._value );
-		const multiplier = this.findMultiplierForFloorCount( kayttotarkoitus )
+		this.setBuildingEntityPolygon( entity );
 
-		if ( entity.properties.kerrosluku != null ) {
-
-			entity.polygon.extrudedHeight = entity.properties.kerrosluku._value * multiplier;
-
-		}
-
-		if ( kayttotarkoitus ) {
-
-			this.setBuildingPolygonMaterialColor( entity, kayttotarkoitus );
-
-		}	
-		
 	}
 }
 
