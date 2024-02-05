@@ -70,7 +70,7 @@
   <input type="checkbox" id="floodToggle" value="switchFlood" >
   <span class="slider round"></span>
 </label>
-<label for="switchFlood" class="label" id="floodLabel" style="display:none;">Flood data</label>
+<label for="switchFlood" class="label" id="floodLabel" style="display:none;">Experimental flood simulation</label>
 
   <!--  switchView-->
 <label class="switch" id = "switchViewSwitch" style="display:none;">
