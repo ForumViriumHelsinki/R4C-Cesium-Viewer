@@ -16,7 +16,7 @@ async loadHSYBuildings( postcode ) {
 
 	let url;
 
-    url = "https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=2000&posno=" + postcode;
+    url = "https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=2000&postinumero=" + postcode;
 
 	try {
 		const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent(url)}`;
