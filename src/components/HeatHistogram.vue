@@ -44,7 +44,7 @@ createBars(svg, data, xScale, yScale, height, tooltip, containerId, dataFormatte
         .attr('transform', d => `translate(${xScale(d.x0)},${yScale(d.length)})`)
         .append('rect')
         .attr('x', 1)
-        .attr('width', d => xScale(d.x1) - xScale(d.x0) - 1) // Adjusted width for the bars
+        .attr('width', d => xScale(d.x1) - xScale(d.x0)) // Adjusted width for the bars
         .attr('height', d => height - yScale(d.length))
         .attr('fill', 'orange')
         .on('mouseover', (event, d) => this.plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter))

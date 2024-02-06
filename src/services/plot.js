@@ -18,9 +18,20 @@ showAllPlots( ) {
   if ( this.store.level === 'postalCode') {
 
     document.getElementById( 'heatHistogramContainer' ).style.visibility = 'visible';
-    document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'visible';
+
+    if ( this.store.postalcode._value !== '00230' ) {
+
+      if ( !document.getElementById( "capitalRegionViewToggle" ).checked ) {
+
+        document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'visible';
+
+      }
+  
+    }
+  
     document.getElementById( 'scatterPlotContainer' ).style.visibility = 'visible';
 
+    if ( !document.getElementById( "capitalRegionViewToggle" ).checked ) {
     // only show scatter plot selects if trees are not visible
     if ( !document.getElementById( "showTreesToggle" ).checked ) {
 
@@ -32,7 +43,11 @@ showAllPlots( ) {
         this.toggleBearingSwitchesVisibility( 'visible' );
 
     }
-  }
+  } else {
+
+  this.toggleHSYScatterPlot( 'visible' );
+
+}
 
     if ( this.store.level === 'building' ) {
 
@@ -40,6 +55,7 @@ showAllPlots( ) {
     document.getElementById( 'buildingChartContainer' ).style.visibility = 'visible';
     document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'visible';
 
+}
 }
 }
 
@@ -59,6 +75,9 @@ hideAllPlots( ) {
     document.getElementById( 'scatterPlotContainer' ).style.visibility = 'hidden';
     document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
     document.getElementById( 'numericalSelect' ).value = 'measured_height';
+    this.toggleHSYScatterPlot( 'hidden' );
+    document.getElementById( 'categoricalHSYSelect' ).value = 'julkisivu_s';
+    document.getElementById( 'numericalHSYSelect' ).value = 'area_m2';
 
 }
 
@@ -71,6 +90,18 @@ hideScatterPlot( ) {
   document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
   document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
   document.getElementById( 'scatterPlotContainer' ).style.visibility = 'hidden';
+
+}
+
+/**
+ * Toggle HSY Scatterplot
+ * 
+ * */
+toggleHSYScatterPlot( status ) {
+
+  document.getElementById( 'numericalHSYSelect' ).style.visibility = status;
+  document.getElementById( 'categoricalHSYSelect' ).style.visibility = status;
+  document.getElementById( 'scatterPlotContainerHSY' ).style.visibility = status;
 
 }
 

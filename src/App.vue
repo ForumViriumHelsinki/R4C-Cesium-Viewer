@@ -8,6 +8,7 @@
   <HeatHistogram />
   <SocioEconomics />
   <Scatterplot />
+  <HSYScatterplot />
   <Building />
   <PostalCodeView />
   <NearbyTreeArea />
@@ -28,6 +29,7 @@ import PrintBox from "./components/PrintBox.vue";
 import HeatHistogram from "./components/HeatHistogram.vue";
 import SocioEconomics from "./components/SocioEconomics.vue";
 import Scatterplot from "./components/Scatterplot.vue";
+import HSYScatterplot from "./components/HSYScatterplot.vue";
 import Building from "./components/Building.vue";
 import PostalCodeView from "./components/PostalCodeView.vue";
 import NearbyTreeArea from "./components/NearbyTreeArea.vue";

@@ -29,21 +29,14 @@ export const eventBus = reactive({
  * @param { object } entites entities of a buildings in postal code area
  * 
  */
-emitPostalCodeEvents( urbanHeatData, postcode, entites ) {
+emitPostalCodeEvents( urbanHeatData, entites ) {
 
     if ( urbanHeatData ) {
 
-        eventBus.$emit( 'newHeatHistogram', urbanHeatData );
+        this.emitHeatHistogram( urbanHeatData );
 
     }
-
-        // exclude postikeskus postal code area
-    if ( urbanHeatData && postcode != '00230' ) {
-
-        eventBus.$emit( 'newSocioEconomicsDiagram', postcode );
-
-    }
-    
+  
     // Assuming datasourceService is available and implemented similarly to addBuildingsDataSource
 
     if ( entites ) {
@@ -53,6 +46,43 @@ emitPostalCodeEvents( urbanHeatData, postcode, entites ) {
     }
 
 }
+
+emitHeatHistogram( urbanHeatData ) {
+
+  if ( urbanHeatData ) {
+
+      eventBus.$emit( 'newHeatHistogram', urbanHeatData );
+
+  }
+
+}
+
+
+
+/**
+ * The function emits event after user picks a postal code area from viewer
+ *
+ * @param { String } postcode postcode of area
+ * 
+ */
+emitSocioEconomicsEvents(  postcode ) {
+
+  eventBus.$emit( 'newSocioEconomicsDiagram', postcode );
+
+}
+
+/**
+ * The function emits event after user picks a postal code area from viewer
+ *
+ * @param { String } postcode postcode of area
+ * 
+ */
+emitHSYScatterPlotEvents( postcode ) {
+
+  eventBus.$emit( 'newHSYScatterPlot', postcode );
+
+}
+
 
 /**
  * The function emits event after user picks a building from viewer

@@ -1,7 +1,9 @@
 import * as Cesium from "cesium";
 import Datasource from "./datasource.js"; 
 import Building from "./building.js"; 
+import UrbanHeat from "./urbanheat.js"; 
 import axios from 'axios';
+import EventEmitter from "./eventEmitter.js"
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class HSYBuilding {
@@ -9,6 +11,9 @@ export default class HSYBuilding {
     this.viewer = viewer;
     this.datasourceService = new Datasource( this.viewer );
     this.buildingService = new Building( this.viewer );
+    this.urbanHeatService = new UrbanHeat( this.viewer );
+    this.eventEmitterService = new EventEmitter( );
+
   }
 
 
@@ -26,10 +31,11 @@ async loadHSYBuildings( postcode ) {
 		if (cachedData) {
 		  	console.log("found from cache");
 
-            let entities = await this.datasourceService.addDataSourceWithPolygonFix(cachedData, 'Buildings');
+            let entities = await this.datasourceService.addDataSourceWithPolygonFix( cachedData, 'Buildings' );
 
-			this.buildingService.setHeatExposureToBuildings(entities);
-      	    this.setHSYBuildingsHeight(entities);
+			this.buildingService.setHeatExposureToBuildings( entities );
+      	    this.setHSYBuildingsHeight( entities );
+            this.calculateHSYUrbanHeatData( cachedData, entities );
 			
 		} else {
 
@@ -62,6 +68,7 @@ async loadHSYBuildingsWithoutCache(url, postcode) {
 
         this.buildingService.setHeatExposureToBuildings(entities);
         this.setHSYBuildingsHeight(entities);
+        this.calculateHSYUrbanHeatData( data, entities );
 	  
       
       	return entities; // Return the processed entities or whatever you need here
@@ -91,6 +98,13 @@ setHSYBuildingsHeight( entities ) {
 			
 		}
     }
+}
+
+async calculateHSYUrbanHeatData( data, entities ) {
+
+    let urbanHeatData = this.urbanHeatService.calculateAverageExposure(data.features);
+    this.eventEmitterService.emitHeatHistogram( urbanHeatData );
+    this.eventEmitterService.emitHSYScatterPlotEvents( entities );
 }
 
 

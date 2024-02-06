@@ -56,7 +56,6 @@
     methods: {
         newScatterPlot(newData) {
         this.buildingEntities = newData;
-
         if (this.buildingEntities.length > 0) {
           this.selectAttributeForScatterPlot();
         } else {
