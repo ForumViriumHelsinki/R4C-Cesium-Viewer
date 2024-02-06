@@ -177,8 +177,12 @@ capitalRegionViewEvent( ) {
 
     } else {
 
-    //    this.eventEmitterService.emitPostalCodeViewEvent( this.viewer );
-
+      this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
+        this.dataSourceService.loadGeoJsonDataSource(
+            0.2,
+            './assets/data/hki_po_clipped.json',
+            'PostCodes'
+        );
     }
 
 },
