@@ -113,6 +113,18 @@ emitGridViewEvent( viewer  ) {
 
   eventBus.$emit( 'createPopulationGrid', viewer ); 
 
+} 
+
+/**
+ * The function emits event after user selects grid view 
+ *
+ * @param { Object } viewer Cesium viewer
+ * 
+ */
+emitCapitalRegionViewEvent( viewer  ) {
+
+  eventBus.$emit( 'loadCapitalRegionView', viewer ); 
+
 }
 
 /**

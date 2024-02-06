@@ -8,6 +8,7 @@ import Plot from "./plot.js"
 import Traveltime from "./traveltime.js"
 import EventEmitter from "./eventEmitter.js"
 import Flood from "./flood.js"
+import HSYBuilding from "./hsybuilding.js"
 import { useGlobalStore } from '../store.js';
 
 export default class FeaturePicker {
@@ -23,6 +24,7 @@ export default class FeaturePicker {
       this.eventEmitterService = new EventEmitter( );
       this.floodService = new Flood( this.viewer );
       this.traveltimeService = new Traveltime( this.viewer );
+      this.hSYBuildingService = new HSYBuilding( this.viewer );
 
     }
   
@@ -176,9 +178,18 @@ export default class FeaturePicker {
         
         }
     
-        this.buildingService.loadBuildings( postcode );	
+        if ( document.getElementById( "capitalRegionViewToggle" ).checked ) {
+              
+            this.hSYBuildingService.loadHSYBuildings( postcode );	
+            this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
     
-        this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
+        } else {
+        
+            this.buildingService.loadBuildings( postcode );	
+            this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
+    
+        }
+
         this.store.level = 'postalCode';
     
         // add laajasalo flood data

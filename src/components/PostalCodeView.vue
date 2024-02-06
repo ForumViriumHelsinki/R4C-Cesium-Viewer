@@ -11,6 +11,12 @@
 <label for="gridViewToggle" class="label" id="gridViewLabel">Grid view</label>  
 
 <label class="switch">
+  <input type="checkbox" id="capitalRegionViewToggle" value="capitalRegionView">
+  <span class="slider round"></span>
+</label>
+<label for="capitalRegionViewToggle" class="label" id="capitalRegionViewLabel">Capital Region view</label>  
+
+<label class="switch">
   <input type="checkbox" id="showPlotToggle" value="showPlot" checked>
   <span class="slider round"></span>
 </label>
@@ -149,7 +155,31 @@ addEventListeners() {
     document.getElementById( 'printToggle' ).addEventListener('change', this.printEvent);
     document.getElementById( 'showPlotToggle' ).addEventListener('change', this.showPlotEvent);
     document.getElementById( 'floodToggle').addEventListener('change', this.loadFloodEvent);
-    document.getElementById( 'gridViewToggle').addEventListener('change', this.gridViewEvent);
+    document.getElementById( 'capitalRegionViewToggle').addEventListener('change', this.capitalRegionViewEvent);
+
+},
+
+/**
+ * This function handles the toggle event for switching to capital region view
+ */
+capitalRegionViewEvent( ) {
+
+    const metropolitanView = document.getElementById( "capitalRegionViewToggle" ).checked;
+
+    if ( metropolitanView ) {
+        
+        this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
+        this.dataSourceService.loadGeoJsonDataSource(
+            0.2,
+            './assets/data/hsy_po.json',
+            'PostCodes'
+        );
+
+    } else {
+
+    //    this.eventEmitterService.emitPostalCodeViewEvent( this.viewer );
+
+    }
 
 },
 

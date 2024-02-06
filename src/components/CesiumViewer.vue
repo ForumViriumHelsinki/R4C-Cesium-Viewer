@@ -70,7 +70,6 @@ export default {
       });
 
       this.dataSourceService = new Datasource(this.viewer);
-
       this.dataSourceService.loadGeoJsonDataSource(
         0.2,
         './assets/data/hki_po_clipped.json',
