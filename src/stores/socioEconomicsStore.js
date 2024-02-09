@@ -69,9 +69,9 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
       },
 
     // Function to add data to store and calculate statistics
-    addPaavoDataToStore(data) {
+    addPaavoDataToStore( data ) {
     // Filter out rows where postinumeroalue is "00230", then map the rest
-        this.data = data.features.filter(feature => feature.properties.postinumeroalue !== "00230").map(feature => feature.properties);
+        this.data = data.features.filter( feature => ![ "00230", "02290", "01770" ].includes( feature.properties.postinumeroalue ) ).map( feature => feature.properties );
 
       // Example statistics calculation (adjust according to actual data attributes)
         this.regionStatistics = {
