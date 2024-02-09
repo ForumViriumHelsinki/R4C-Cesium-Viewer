@@ -1,7 +1,10 @@
 <template>
     <div id="socioeonomicsContainer">
     </div>
-  </template>
+
+    <select id="areaSelect" @change="onAreaSelectChange">
+    </select>
+</template>
   
   <script>
   import { eventBus } from '../services/eventEmitter.js';
@@ -16,6 +19,7 @@
       this.store = useGlobalStore( );
       this.socioEconomicsStore = useSocioEconomicsStore();
       this.plotService = new Plot( );
+  
     },
     beforeUnmount() {
       this.unsubscribe();
@@ -24,11 +28,10 @@
         newSocioEconomicsDiagram(newData) {
                         
             if (newData) {
-
+                this.populateSelectFromStore();
                 const dataForPostcode = this.socioEconomicsStore.getDataByPostcode( newData._value );
                 const statsData = this.findSocioEconomicsStats( );
                 this.createSocioEconomicsDiagram( dataForPostcode, statsData );
-
 
             } else {
             // Hide or clear the visualization when not visible
@@ -89,21 +92,23 @@ wrapText(text, width) {
     });
 },
 
-// 4. Create Bars
-createBars(svg, data, xScale, yScale, height, tooltip) {
-    const bar = svg.selectAll('.bar')
+// Updated to include xOffset and barColor parameters
+createBars(svg, data, xScale, yScale, height, tooltip, xOffset, barColor) {
+    const barWidth = xScale.bandwidth() / 2; // Make bars narrower
+
+    const bar = svg.selectAll(`.bar.${barColor}`)
         .data(data)
         .enter()
         .append('g')
-        .attr('class', 'bar')
-        .attr('transform', d => `translate(${xScale(d.label)}, 0)`);
+        .attr('class', `bar ${barColor}`)
+        .attr('transform', d => `translate(${xScale(d.label) + xOffset}, 0)`); // Adjust position based on xOffset
 
-        bar.append('rect')
+    bar.append('rect')
         .attr('x', 0)
         .attr('y', d => yScale(d.value))
-        .attr('width', xScale.bandwidth())
+        .attr('width', barWidth) // Use the narrower width
         .attr('height', d => height - yScale(d.value))
-        .attr('fill', 'lightblue')
+        .attr('fill', barColor)
         .on('mouseover', (event, d) => this.plotService.handleMouseover(tooltip, 'socioeonomicsContainer', event, d, (data) => `Indicator: ${data.label}<br>Value: ${data.value}`))
         .on('mouseout', () => this.plotService.handleMouseout(tooltip));
 },
@@ -128,6 +133,14 @@ createSocioEconomicsDiagram(sosData, statsData) {
         const totalChildrenAndEldery = this.countTotalChildrenAndEldery( sosData );
         const normalisedApartmentSize = ( sosData.ra_as_kpa - statsData.ra_as_kpa.min ) / ( statsData.ra_as_kpa.max - statsData.ra_as_kpa.min )
         const normalisedIncome = ( sosData.hr_ktu - statsData.hr_ktu.min ) / ( statsData.hr_ktu.max - statsData.hr_ktu.min )
+
+    // Get the second area's data based on the selected nimi
+        const selectedNimi = document.getElementById('areaSelect').value || 'Kruunuvuorenranta';
+        const compareData = this.socioEconomicsStore.getDataByNimi(selectedNimi);
+        const cTotalChildrenAndEldery = this.countTotalChildrenAndEldery( compareData);
+
+        const cNormalisedApartmentSize = ( compareData.ra_as_kpa - statsData.ra_as_kpa.min ) / ( statsData.ra_as_kpa.max - statsData.ra_as_kpa.min )
+        const cNormalisedIncome = ( compareData.hr_ktu - statsData.hr_ktu.min ) / ( statsData.hr_ktu.max - statsData.hr_ktu.min )
 
         this.plotService.initializePlotContainer('socioeonomicsContainer');
 
@@ -161,23 +174,90 @@ createSocioEconomicsDiagram(sosData, statsData) {
             ( sosData.te_vuok_as / sosData.te_taly ).toFixed( 3 )
         ];
 
+        const compareValues = [
+            this.store.averageHeatExposure.toFixed( 3 ),
+            ( ( cTotalChildrenAndEldery.totalChildren + cTotalChildrenAndEldery.totalEldery ) / compareData.he_vakiy ).toFixed( 3 ),
+            ( cTotalChildrenAndEldery.totalChildren / compareData.he_vakiy ).toFixed( 3 ),
+            ( cTotalChildrenAndEldery.totalEldery / compareData.he_vakiy ).toFixed( 3 ),
+            ( compareData.pt_tyott / compareData.he_vakiy ).toFixed( 3 ),
+            1 - cNormalisedApartmentSize.toFixed (3 ),
+            ( compareData.ko_perus / compareData.ko_ika18y ).toFixed( 3 ),
+            1 - cNormalisedIncome.toFixed( 3 ),
+            ( compareData.te_vuok_as / compareData.te_taly ).toFixed( 3 )
+        ];        
+
         const xScale = this.plotService.createScaleBand(xLabels, width);  
         const yScale = this.plotService.createScaleLinear(0, d3.max(yValues), [ height, 0 ] ); 
         this.setupAxes(svg, xScale, yScale, height);
 
         const barData = yValues.map((value, index) => ({ value, label: xLabels[index] }));
-        const tooltip = this.plotService.createTooltip( '#socioeonomicsContainer' );
-        this.createBars(svg, barData, xScale, yScale, height, tooltip);
+        const compareBarData = compareValues.map((value, index) => ({ value, label: xLabels[index] }));
 
-        this.plotService.addTitle(svg, `Vulnerability in ${this.store.nameOfZone}`, width, margin);
+        const tooltip = this.plotService.createTooltip( '#socioeonomicsContainer' );
+        // Original dataset bars (light blue)
+        this.createBars(svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue');
+
+        // Additional dataset bars (orange), with an xOffset to place them next to the original bars
+        const xOffsetForCompareData = xScale.bandwidth() / 2; // Adjust as needed for proper spacing
+        this.createBars(svg, compareBarData, xScale, yScale, height, tooltip, xOffsetForCompareData, 'orange');
+
+        this.plotService.addTitle(svg, `Compare vulnerability in ${this.store.nameOfZone} to:`, width / 2, margin);
 
     }
 },
+
+/**
+ * Populate a <select> element with options based on the 'nimi' attribute of socioEconomics store
+ * 
+ * @param {string} selectElementId - The ID of the <select> element to populate.
+ * @param {string} currentValue - The currently selected value 
+ */
+ populateSelectFromStore() {
+    document.getElementById( 'areaSelect' ).style.visibility = 'visible';
+    const selectElement = document.getElementById("areaSelect");
+    const nimiValues = this.getNimiDataFromStore();
+
+    // Clear existing options first
+    selectElement.innerHTML = '';
+
+    // Populate with nimi values
+    nimiValues.forEach(nimi => {
+        const option = document.createElement("option");
+        option.textContent = nimi;
+        option.value = nimi;
+        selectElement.appendChild(option);
+    });
+  },
+
+  getNimiDataFromStore() {
+
+    const metropolitanView = document.getElementById( "capitalRegionViewToggle" ).checked;
+
+    if ( metropolitanView ) {
+
+        return this.socioEconomicsStore.getNimiForCapital();;
+
+    } else {
+
+        return this.socioEconomicsStore.getNimiForHelsinki();;
+    }
+  },
+
+  onAreaSelectChange(event) {
+    const selectedNimi = event.target.value;
+
+    const dataForPostcode = this.socioEconomicsStore.getDataByPostcode( this.store.postalcode._value );
+
+    const statsData = this.findSocioEconomicsStats( );
+    this.createSocioEconomicsDiagram( dataForPostcode, statsData );
+
+  },
 
 clearDiagram() {
     // Remove or clear the D3.js visualization
     // Example:
     d3.select("#socioeonomicsContainer").select("svg").remove();
+    document.getElementById( 'areaSelect' ).style.visibility = 'hidden';
 },
     },
   };
@@ -199,5 +279,13 @@ clearDiagram() {
 	box-shadow: 3px 5px 5px black; 
     background-color: white;
 
+}
+
+#areaSelect {
+    position: fixed;
+    top: 90px; /* Margin from the content below */
+    right: 10px;
+    font-size: smaller;
+    visibility: hidden;
 }
   </style>

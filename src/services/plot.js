@@ -18,23 +18,16 @@ showAllPlots( ) {
   if ( this.store.level === 'postalCode') {
 
     document.getElementById( 'heatHistogramContainer' ).style.visibility = 'visible';
-
-    if ( this.store.postalcode._value !== '00230' ) {
-
-      if ( !document.getElementById( "capitalRegionViewToggle" ).checked ) {
-
-        document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'visible';
-
-      }
+    document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'visible';
+    document.getElementById( 'areaSelect' ).style.visibility = 'visible';
+      
+  }
   
-    }
-  
-    document.getElementById( 'scatterPlotContainer' ).style.visibility = 'visible';
-
     if ( !document.getElementById( "capitalRegionViewToggle" ).checked ) {
     // only show scatter plot selects if trees are not visible
     if ( !document.getElementById( "showTreesToggle" ).checked ) {
 
+      document.getElementById( 'scatterPlotContainer' ).style.visibility = 'visible';
         document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
         document.getElementById( 'categoricalSelect' ).style.visibility = 'visible'; 
        
@@ -57,7 +50,6 @@ showAllPlots( ) {
 
 }
 }
-}
 
 /**
  * Hides all plots and select elements
@@ -67,6 +59,7 @@ hideAllPlots( ) {
 
     document.getElementById( 'heatHistogramContainer' ).style.visibility = 'hidden';
     document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'hidden';
+    document.getElementById( 'areaSelect' ).style.visibility = 'hidden';
     document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
     document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'hidden';
     document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
@@ -113,6 +106,7 @@ togglePostalCodePlotVisibility( status ) {
 
     document.getElementById( 'heatHistogramContainer' ).style.visibility = status;
     document.getElementById( 'socioeonomicsContainer' ).style.visibility = status;
+    document.getElementById( 'areaSelect' ).style.visibility = status;
     document.getElementById( 'numericalSelect' ).style.visibility = status;
     document.getElementById( 'categoricalSelect' ).style.visibility = status;
     document.getElementById( 'scatterPlotContainer' ).style.visibility = status;

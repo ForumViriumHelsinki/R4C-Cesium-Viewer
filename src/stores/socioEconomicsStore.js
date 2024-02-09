@@ -11,6 +11,15 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
     getDataByPostcode: (state) => (postcode) => {
         return state.data.find((item) => item.postinumeroalue === postcode);
     },
+    getDataByNimi: (state) => (nimi) => {
+        return state.data.find((item) => item.nimi === nimi);
+    },    
+    getNimiForCapital: (state) => () => {
+        return state.data.map(item => item.nimi).sort();
+    },
+    getNimiForHelsinki: (state) => () => {
+        return state.data.filter(item => item.kunta === "091").map(item => item.nimi).sort();
+    },
     getRegionStatistics: (state) => state.regionStatistics,
     getHelsinkiStatistics: (state) => state.helsinkiStatistics,
   },
