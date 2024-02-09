@@ -93,7 +93,7 @@ wrapText(text, width) {
 },
 
 // Updated to include xOffset and barColor parameters
-createBars(svg, data, xScale, yScale, height, tooltip, xOffset, barColor) {
+createBars(svg, data, xScale, yScale, height, tooltip, xOffset, barColor, name) {
     const barWidth = xScale.bandwidth() / 2; // Make bars narrower
 
     const bar = svg.selectAll(`.bar.${barColor}`)
@@ -109,7 +109,9 @@ createBars(svg, data, xScale, yScale, height, tooltip, xOffset, barColor) {
         .attr('width', barWidth) // Use the narrower width
         .attr('height', d => height - yScale(d.value))
         .attr('fill', barColor)
-        .on('mouseover', (event, d) => this.plotService.handleMouseover(tooltip, 'socioeonomicsContainer', event, d, (data) => `Indicator: ${data.label}<br>Value: ${data.value}`))
+        .on('mouseover', (event, d) => 
+            this.plotService.handleMouseover(tooltip, 'socioeonomicsContainer', event, d, 
+                (data) => `Area: ${name}<br>Indicator: ${data.label}<br>Value: ${data.value}`))
         .on('mouseout', () => this.plotService.handleMouseout(tooltip));
 },
 
@@ -195,11 +197,11 @@ createSocioEconomicsDiagram(sosData, statsData) {
 
         const tooltip = this.plotService.createTooltip( '#socioeonomicsContainer' );
         // Original dataset bars (light blue)
-        this.createBars(svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue');
+        this.createBars(svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue', sosData.nimi );
 
         // Additional dataset bars (orange), with an xOffset to place them next to the original bars
         const xOffsetForCompareData = xScale.bandwidth() / 2; // Adjust as needed for proper spacing
-        this.createBars(svg, compareBarData, xScale, yScale, height, tooltip, xOffsetForCompareData, 'orange');
+        this.createBars(svg, compareBarData, xScale, yScale, height, tooltip, xOffsetForCompareData, 'orange', selectedNimi);
 
         this.plotService.addTitle(svg, `Compare vulnerability in ${this.store.nameOfZone} to:`, width / 2, margin);
 
