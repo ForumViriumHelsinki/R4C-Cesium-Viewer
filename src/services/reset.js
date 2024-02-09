@@ -2,7 +2,7 @@ import Datasource from "./datasource.js";
 import Postalcodeview from "./postalcodeview.js"; 
 import Gridview from "./gridview.js"; 
 import Plot from "./plot.js";
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class Reset {
     constructor( viewer ) {

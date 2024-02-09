@@ -1,4 +1,4 @@
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 import * as d3 from 'd3'; // Import D3.js
 
 export default class Plot {

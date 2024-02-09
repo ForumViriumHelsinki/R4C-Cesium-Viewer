@@ -23,7 +23,7 @@
     <script>
     import { eventBus } from '../services/eventEmitter.js';
     import * as d3 from 'd3'; // Import D3.js
-    import { useGlobalStore } from '../store.js';
+    import { useGlobalStore } from '../stores/globalStore.js';
     import Plot from "../services/plot.js"; 
     
     export default {
@@ -54,7 +54,6 @@
       methods: {
           newHSYScatterPlot(newData) {
           this.buildingEntities = newData;
-          console.log( "newdata", newData );
 
           if (this.buildingEntities.length > 0) {
             this.selectAttributeForHSYScatterPlot();

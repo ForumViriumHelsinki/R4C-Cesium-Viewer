@@ -107,7 +107,7 @@ import Vegetation from "../services/vegetation.js"
 import Othernature from "../services/othernature.js"
 import Plot from "../services/plot.js"
 import View from "../services/view.js"
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 
 export default {

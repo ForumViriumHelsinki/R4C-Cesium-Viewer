@@ -11,8 +11,8 @@ import Building from "../services/building.js";
 import Featurepicker from "../services/featurepicker.js"; 
 import Geocoding from "../services/geocoding.js";
 import EventEmitter from "../services/eventEmitter.js"
-import GridView from "../services/gridview.js"
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
+import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 
 export default {
   data() {
@@ -25,9 +25,11 @@ export default {
   },
   mounted() {
     this.store = useGlobalStore( );
+    this.socioEconomicsStore = useSocioEconomicsStore( );
     this.eventEmitterService = new EventEmitter( );
     Cesium.Ion.defaultAccessToken = null;
     this.initViewer();
+    this.socioEconomicsStore.loadPaavo();
 
   },
   methods: {

@@ -8,7 +8,7 @@ import Tree from "./tree.js";
 import Sensor from "./sensor.js";
 import View from "./view.js"; 
 import EventEmitter from "./eventEmitter.js"
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 
 
 export default class Controlpanel {

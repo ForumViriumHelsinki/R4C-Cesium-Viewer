@@ -6,13 +6,15 @@
   <script>
   import { eventBus } from '../services/eventEmitter.js';
   import * as d3 from 'd3'; // Import D3.js
-  import { useGlobalStore } from '../store.js';
+  import { useGlobalStore } from '../stores/globalStore.js';
+  import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
   import Plot from "../services/plot.js"; 
 
   export default {
     mounted() {
       this.unsubscribe = eventBus.$on('newSocioEconomicsDiagram', this.newSocioEconomicsDiagram);
       this.store = useGlobalStore( );
+      this.socioEconomicsStore = useSocioEconomicsStore();
       this.plotService = new Plot( );
     },
     beforeUnmount() {
@@ -23,7 +25,11 @@
                         
             if (newData) {
 
-                this.findSocioEconomicsData( newData );
+                const dataForPostcode = this.socioEconomicsStore.getDataByPostcode( newData._value );
+                const statsData = this.findSocioEconomicsStats( );
+                this.createSocioEconomicsDiagram( dataForPostcode, statsData );
+
+
             } else {
             // Hide or clear the visualization when not visible
           // Example: call a method to hide or clear the D3 visualization
@@ -32,16 +38,21 @@
         },
     
 /**
- * Fetches heat vulnerable demographic data from pygeoapi for postal code.
+ * Fetches heat vulnerable demographic statistical data from store 
  *
- * @param { String } postcode postal code of the area
  */
-findSocioEconomicsData(postcode) {
-    fetch("https://geo.fvh.fi/r4c/collections/heat_vulnerable_demographic/items?f=json&limit=1&postinumero=" + postcode)
-        .then((response) => response.json())
-        .then((data) => {
-            this.createSocioEconomicsDiagram(data.features[0].properties); // 'this' will refer to the component instance
-        });
+findSocioEconomicsStats( ) {
+    const metropolitanView = document.getElementById( "capitalRegionViewToggle" ).checked;
+
+    if ( metropolitanView ) {
+
+        return this.socioEconomicsStore.regionStatistics;
+
+    } else {
+
+        return this.socioEconomicsStore.helsinkiStatistics;
+    }
+
 },
 
 // 3. Setup Axes
@@ -97,13 +108,27 @@ createBars(svg, data, xScale, yScale, height, tooltip) {
         .on('mouseout', () => this.plotService.handleMouseout(tooltip));
 },
 
+countTotalChildrenAndEldery( data ) {
+
+    const totalChildren = data.he_0_2 + data.he_3_6 + data.he_7_12;
+    const totalEldery = data.he_65_69 + data.he_70_74 + data.he_80_84 + data.he_85_;
+
+    return { totalChildren: totalChildren, totalEldery: totalEldery }
+
+},
+
 /**
  * Creates SocioEconomics histogram for a postal code area.
  *
  * @param { object } sosData socioeconomic data used for creating the diagram
  */
-createSocioEconomicsDiagram(sosData) {
+createSocioEconomicsDiagram(sosData, statsData) {
     if (sosData) {
+
+        const totalChildrenAndEldery = this.countTotalChildrenAndEldery( sosData );
+        const normalisedApartmentSize = ( sosData.ra_as_kpa - statsData.ra_as_kpa.min ) / ( statsData.ra_as_kpa.max - statsData.ra_as_kpa.min )
+        const normalisedIncome = ( sosData.hr_ktu - statsData.hr_ktu.min ) / ( statsData.hr_ktu.max - statsData.hr_ktu.min )
+
         this.plotService.initializePlotContainer('socioeonomicsContainer');
 
         const margin = { top: 20, right: 30, bottom: 50, left: 30 };
@@ -113,27 +138,27 @@ createSocioEconomicsDiagram(sosData) {
         const svg = this.plotService.createSVGElement( margin, width, height, '#socioeonomicsContainer' );
 
         const xLabels = [
-            '% not vegetation',
             'Apartment Heat Exposure',
             '% of Children & Elderly',
             '% of Children',
             '% of Elderly',
+            '% of Unemployed',
             'Small Apartment Size',
             '% with Basic Education',
-            'Lack of Income',
+            'Low Income',
             '% of Rentals'
         ];
 
         const yValues = [
-            1 - sosData.vegetation.toFixed(3),
-            sosData.apartment_heat_exposure.toFixed(3),
-            sosData.vulnerable_both.toFixed(3),
-            sosData.vulnerable_children.toFixed(3),
-            sosData.vulnerable_eldery.toFixed(3),
-            1 - sosData.avg_apart_size.toFixed(3),
-            1 - sosData.educ.toFixed(3),
-            1 - sosData.income.toFixed(3),
-            sosData.rental_rate.toFixed(3)
+            this.store.averageHeatExposure.toFixed( 3 ),
+            ( ( totalChildrenAndEldery.totalChildren + totalChildrenAndEldery.totalEldery ) / sosData.he_vakiy ).toFixed( 3 ),
+            ( totalChildrenAndEldery.totalChildren / sosData.he_vakiy ).toFixed( 3 ),
+            ( totalChildrenAndEldery.totalEldery / sosData.he_vakiy ).toFixed( 3 ),
+            ( sosData.pt_tyott / sosData.he_vakiy ).toFixed( 3 ),
+            1 - normalisedApartmentSize.toFixed (3 ),
+            ( sosData.ko_perus / sosData.ko_ika18y ).toFixed( 3 ),
+            1 - normalisedIncome.toFixed( 3 ),
+            ( sosData.te_vuok_as / sosData.te_taly ).toFixed( 3 )
         ];
 
         const xScale = this.plotService.createScaleBand(xLabels, width);  

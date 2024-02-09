@@ -31,7 +31,7 @@
 
 import EventEmitter from "../services/eventEmitter.js"
 import { eventBus } from '../services/eventEmitter.js';
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 import Datasource from "../services/datasource.js"; 
 import Populationgrid from "../services/populationgrid.js"; 
 

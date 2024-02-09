@@ -9,7 +9,7 @@ import Traveltime from "./traveltime.js"
 import EventEmitter from "./eventEmitter.js"
 import Flood from "./flood.js"
 import HSYBuilding from "./hsybuilding.js"
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class FeaturePicker {
     constructor( viewer ) {

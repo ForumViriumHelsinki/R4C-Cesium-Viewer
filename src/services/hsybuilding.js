@@ -35,7 +35,7 @@ async loadHSYBuildings( postcode ) {
 
 			this.buildingService.setHeatExposureToBuildings( entities );
       	    this.setHSYBuildingsHeight( entities );
-            this.calculateHSYUrbanHeatData( cachedData, entities );
+            this.calculateHSYUrbanHeatData( cachedData, entities, postcode );
 			
 		} else {
 
@@ -68,7 +68,7 @@ async loadHSYBuildingsWithoutCache(url, postcode) {
 
         this.buildingService.setHeatExposureToBuildings(entities);
         this.setHSYBuildingsHeight(entities);
-        this.calculateHSYUrbanHeatData( data, entities );
+        this.calculateHSYUrbanHeatData( data, entities, postcode );
 	  
       
       	return entities; // Return the processed entities or whatever you need here
@@ -100,11 +100,13 @@ setHSYBuildingsHeight( entities ) {
     }
 }
 
-async calculateHSYUrbanHeatData( data, entities ) {
+async calculateHSYUrbanHeatData( data, entities, postcode ) {
 
     let urbanHeatData = this.urbanHeatService.calculateAverageExposure(data.features);
     this.eventEmitterService.emitHeatHistogram( urbanHeatData );
-    this.eventEmitterService.emitHSYScatterPlotEvents( entities );
+    this.eventEmitterService.emitHSYScatterPlotEvent( entities );
+	this.eventEmitterService.emitSocioEconomicsEvent( postcode );
+
 }
 
 

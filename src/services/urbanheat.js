@@ -1,7 +1,7 @@
 import Decoding from "./decoding.js";
 import EventEmitter from "./eventEmitter.js"
 import Datasource from "./datasource.js"; 
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class Urbanheat {
   constructor( viewer ) {
@@ -147,11 +147,11 @@ async findUrbanHeatData( data, postcode ) {
         this.addMissingHeatData(data.features, urbanheat.features);
         let urbanHeatData = this.calculateAverageExposure(data.features);
 		let entites = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Buildings');
-		this.eventEmitterService.emitPostalCodeEvents( urbanHeatData, entites );
+		this.eventEmitterService.emitPostalCodeEvent( urbanHeatData, entites );
 
 		if ( postcode._value !== '00230' ) {
 
-			this.eventEmitterService.emitSocioEconomicsEvents( postcode );
+			this.eventEmitterService.emitSocioEconomicsEvent( postcode );
 
 		}
 

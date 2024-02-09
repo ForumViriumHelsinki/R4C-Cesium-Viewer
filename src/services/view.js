@@ -1,5 +1,5 @@
 import Datasource from "./datasource.js"; 
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 import * as Cesium from "cesium"
 
 export default class View {

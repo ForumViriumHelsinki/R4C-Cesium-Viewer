@@ -65,7 +65,7 @@ emitHeatHistogram( urbanHeatData ) {
  * @param { String } postcode postcode of area
  * 
  */
-emitSocioEconomicsEvents(  postcode ) {
+emitSocioEconomicsEvent(  postcode ) {
 
   eventBus.$emit( 'newSocioEconomicsDiagram', postcode );
 
@@ -77,7 +77,7 @@ emitSocioEconomicsEvents(  postcode ) {
  * @param { String } postcode postcode of area
  * 
  */
-emitHSYScatterPlotEvents( postcode ) {
+emitHSYScatterPlotEvent( postcode ) {
 
   eventBus.$emit( 'newHSYScatterPlot', postcode );
 

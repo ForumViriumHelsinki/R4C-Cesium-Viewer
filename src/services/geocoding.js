@@ -2,7 +2,7 @@ import Resetui from "./reset.js";
 import Viewercamera from "./viewercamera.js"; 
 import PrintBox from "./printbox.js"; 
 import FeaturePicker from "./featurepicker.js"; 
-import { useGlobalStore } from '../store.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
 
 

@@ -8,7 +8,7 @@ export default class Othernature {
     this.datasourceService = new Datasource( viewer );
   }
 
-  /**
+/**
  * Loads othernature data for a given postcode asynchronously
  * 
  * @param {string} postcode - The postcode for which to load othernature data
