@@ -13,6 +13,7 @@ import Geocoding from "../services/geocoding.js";
 import EventEmitter from "../services/eventEmitter.js"
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
+import { usePostalCodeStore } from '../stores/postalCodeStore.js';
 
 export default {
   data() {
@@ -26,10 +27,12 @@ export default {
   mounted() {
     this.store = useGlobalStore( );
     this.socioEconomicsStore = useSocioEconomicsStore( );
+    this.postalCodeStore = usePostalCodeStore( );
     this.eventEmitterService = new EventEmitter( );
     Cesium.Ion.defaultAccessToken = null;
-    this.initViewer();
-    this.socioEconomicsStore.loadPaavo();
+    this.initViewer( );
+    this.socioEconomicsStore.loadPaavo( );
+    this.postalCodeStore.loadPostalCode( );
 
   },
   methods: {

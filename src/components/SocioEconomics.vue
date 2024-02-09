@@ -11,6 +11,7 @@
   import * as d3 from 'd3'; // Import D3.js
   import { useGlobalStore } from '../stores/globalStore.js';
   import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
+  import { usePostalCodeStore } from '../stores/postalCodeStore.js';
   import Plot from "../services/plot.js"; 
 
   export default {
@@ -18,6 +19,7 @@
       this.unsubscribe = eventBus.$on('newSocioEconomicsDiagram', this.newSocioEconomicsDiagram);
       this.store = useGlobalStore( );
       this.socioEconomicsStore = useSocioEconomicsStore();
+      this.postalCodeStore = usePostalCodeStore();
       this.plotService = new Plot( );
   
     },
@@ -176,8 +178,10 @@ createSocioEconomicsDiagram(sosData, statsData) {
             ( sosData.te_vuok_as / sosData.te_taly ).toFixed( 3 )
         ];
 
+        const compareHeatData = this.postalCodeStore.getDataById( compareData.postinumeroalue );
+
         const compareValues = [
-            this.store.averageHeatExposure.toFixed( 3 ),
+            compareHeatData.properties.avgheatexposure.toFixed( 3 ),
             ( ( cTotalChildrenAndEldery.totalChildren + cTotalChildrenAndEldery.totalEldery ) / compareData.he_vakiy ).toFixed( 3 ),
             ( cTotalChildrenAndEldery.totalChildren / compareData.he_vakiy ).toFixed( 3 ),
             ( cTotalChildrenAndEldery.totalEldery / compareData.he_vakiy ).toFixed( 3 ),
