@@ -67,7 +67,11 @@ emitHeatHistogram( urbanHeatData ) {
  */
 emitSocioEconomicsEvent(  postcode ) {
 
-  eventBus.$emit( 'newSocioEconomicsDiagram', postcode );
+  if ( !postcode !== '00230' ) {
+
+    eventBus.$emit( 'newSocioEconomicsDiagram', postcode );
+
+  }
 
 }
 

@@ -70,36 +70,37 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 
     // Function to add data to store and calculate statistics
     addPaavoDataToStore(data) {
-      this.data = data.features.map(feature => feature.properties);
+    // Filter out rows where postinumeroalue is "00230", then map the rest
+        this.data = data.features.filter(feature => feature.properties.postinumeroalue !== "00230").map(feature => feature.properties);
 
       // Example statistics calculation (adjust according to actual data attributes)
-      this.regionStatistics = {
+        this.regionStatistics = {
         // Assuming 'someAttribute' is part of your data, replace with actual attribute names
-        ra_as_kpa: {
-            min: Math.min(...this.data.map(item => Number(item.ra_as_kpa))),
-            max: Math.max(...this.data.map(item => Number(item.ra_as_kpa))),
-        },
-        hr_ktu: {
-            min: Math.min(...this.data.map(item => Number(item.hr_ktu))),
-            max: Math.max(...this.data.map(item => Number(item.hr_ktu))),
-        },                             
+            ra_as_kpa: {
+                min: Math.min(...this.data.map(item => Number(item.ra_as_kpa))),
+                max: Math.max(...this.data.map(item => Number(item.ra_as_kpa))),
+            },
+            hr_ktu: {
+                min: Math.min(...this.data.map(item => Number(item.hr_ktu))),
+                max: Math.max(...this.data.map(item => Number(item.hr_ktu))),
+            },                             
         // Add more attributes as needed
-      };
+        };
 
         // Filter data for Helsinki (kunta = "091")
-  const helsinkiData = this.data.filter(item => item.kunta === "091");
+        const helsinkiData = this.data.filter(item => item.kunta === "091");
 
-  // Helsinki specific statistics
-  this.helsinkiStatistics = {
-    ra_as_kpa: {
-      min: helsinkiData.length > 0 ? Math.min(...helsinkiData.map(item => Number(item.ra_as_kpa))) : null,
-      max: helsinkiData.length > 0 ? Math.max(...helsinkiData.map(item => Number(item.ra_as_kpa))) : null,
-    },
-    hr_ktu: {
-      min: helsinkiData.length > 0 ? Math.min(...helsinkiData.map(item => Number(item.hr_ktu))) : null,
-      max: helsinkiData.length > 0 ? Math.max(...helsinkiData.map(item => Number(item.hr_ktu))) : null,
-    },
-    };
+        // Helsinki specific statistics
+        this.helsinkiStatistics = {
+            ra_as_kpa: {
+                min: helsinkiData.length > 0 ? Math.min(...helsinkiData.map(item => Number(item.ra_as_kpa))) : null,
+                max: helsinkiData.length > 0 ? Math.max(...helsinkiData.map(item => Number(item.ra_as_kpa))) : null,
+            },
+            hr_ktu: {
+                min: helsinkiData.length > 0 ? Math.min(...helsinkiData.map(item => Number(item.hr_ktu))) : null,
+                max: helsinkiData.length > 0 ? Math.max(...helsinkiData.map(item => Number(item.hr_ktu))) : null,
+            },
+        };
       
     },
   },

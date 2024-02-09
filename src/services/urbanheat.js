@@ -147,7 +147,7 @@ async findUrbanHeatData( data, postcode ) {
         this.addMissingHeatData(data.features, urbanheat.features);
         let urbanHeatData = this.calculateAverageExposure(data.features);
 		let entites = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Buildings');
-		this.eventEmitterService.emitPostalCodeEvent( urbanHeatData, entites );
+		this.eventEmitterService.emitPostalCodeEvents( urbanHeatData, entites );
 
 		if ( postcode._value !== '00230' ) {
 
