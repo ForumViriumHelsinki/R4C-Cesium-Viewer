@@ -117,7 +117,7 @@ createBars(svg, data, xScale, yScale, height, tooltip, xOffset, barColor, name) 
         .on('mouseout', () => this.plotService.handleMouseout(tooltip));
 },
 
-countTotalChildrenAndEldery( data ) {
+calculateTotalChildrenAndEldery( data ) {
 
     const totalChildren = data.he_0_2 + data.he_3_6 + data.he_7_12;
     const totalEldery = data.he_65_69 + data.he_70_74 + data.he_80_84 + data.he_85_;
@@ -133,18 +133,6 @@ countTotalChildrenAndEldery( data ) {
  */
 createSocioEconomicsDiagram(sosData, statsData) {
     if (sosData) {
-
-        const totalChildrenAndEldery = this.countTotalChildrenAndEldery( sosData );
-        const normalisedApartmentSize = ( sosData.ra_as_kpa - statsData.ra_as_kpa.min ) / ( statsData.ra_as_kpa.max - statsData.ra_as_kpa.min )
-        const normalisedIncome = ( sosData.hr_ktu - statsData.hr_ktu.min ) / ( statsData.hr_ktu.max - statsData.hr_ktu.min )
-
-    // Get the second area's data based on the selected nimi
-        const selectedNimi = document.getElementById('areaSelect').value || 'Kruunuvuorenranta';
-        const compareData = this.socioEconomicsStore.getDataByNimi(selectedNimi);
-        const cTotalChildrenAndEldery = this.countTotalChildrenAndEldery( compareData);
-
-        const cNormalisedApartmentSize = ( compareData.ra_as_kpa - statsData.ra_as_kpa.min ) / ( statsData.ra_as_kpa.max - statsData.ra_as_kpa.min )
-        const cNormalisedIncome = ( compareData.hr_ktu - statsData.hr_ktu.min ) / ( statsData.hr_ktu.max - statsData.hr_ktu.min )
 
         this.plotService.initializePlotContainer('socioeonomicsContainer');
 
@@ -166,31 +154,13 @@ createSocioEconomicsDiagram(sosData, statsData) {
             '% of Rentals'
         ];
 
-        const yValues = [
-            this.store.averageHeatExposure.toFixed( 3 ),
-            ( ( totalChildrenAndEldery.totalChildren + totalChildrenAndEldery.totalEldery ) / sosData.he_vakiy ).toFixed( 3 ),
-            ( totalChildrenAndEldery.totalChildren / sosData.he_vakiy ).toFixed( 3 ),
-            ( totalChildrenAndEldery.totalEldery / sosData.he_vakiy ).toFixed( 3 ),
-            ( sosData.pt_tyott / sosData.he_vakiy ).toFixed( 3 ),
-            1 - normalisedApartmentSize.toFixed (3 ),
-            ( sosData.ko_perus / sosData.ko_ika18y ).toFixed( 3 ),
-            1 - normalisedIncome.toFixed( 3 ),
-            ( sosData.te_vuok_as / sosData.te_taly ).toFixed( 3 )
-        ];
-
-        const compareHeatData = this.postalCodeStore.getDataById( compareData.postinumeroalue );
-
-        const compareValues = [
-            compareHeatData.properties.avgheatexposure.toFixed( 3 ),
-            ( ( cTotalChildrenAndEldery.totalChildren + cTotalChildrenAndEldery.totalEldery ) / compareData.he_vakiy ).toFixed( 3 ),
-            ( cTotalChildrenAndEldery.totalChildren / compareData.he_vakiy ).toFixed( 3 ),
-            ( cTotalChildrenAndEldery.totalEldery / compareData.he_vakiy ).toFixed( 3 ),
-            ( compareData.pt_tyott / compareData.he_vakiy ).toFixed( 3 ),
-            1 - cNormalisedApartmentSize.toFixed (3 ),
-            ( compareData.ko_perus / compareData.ko_ika18y ).toFixed( 3 ),
-            1 - cNormalisedIncome.toFixed( 3 ),
-            ( compareData.te_vuok_as / compareData.te_taly ).toFixed( 3 )
-        ];        
+        // Get the second area's data based on the selected nimi
+        const selectedNimi = document.getElementById('areaSelect').value || 'Kruunuvuorenranta';
+        const compareData = this.socioEconomicsStore.getDataByNimi(selectedNimi);
+        const heatData = this.store.averageHeatExposure.toFixed(3)
+        const yValues = this.calculateYValues( sosData, statsData, heatData );
+        const compareHeatData = this.helsinkiOrCapitalHeatExposure( this.postalCodeStore.getDataById( compareData.postinumeroalue ) );
+        const compareValues = this.calculateYValues( compareData, statsData, compareHeatData );       
 
         const xScale = this.plotService.createScaleBand(xLabels, width);  
         const yScale = this.plotService.createScaleLinear(0, d3.max(yValues), [ height, 0 ] ); 
@@ -210,6 +180,47 @@ createSocioEconomicsDiagram(sosData, statsData) {
         this.plotService.addTitle(svg, `Compare vulnerability in ${this.store.nameOfZone} to:`, width / 2, margin);
 
     }
+},
+
+// Normalize values based on stats
+normalizeValue( value, min, max ) {
+    return ( value - min ) / ( max - min );
+},
+
+// Calculate yValues for the diagram
+calculateYValues( data, statsData, heatData ) {
+    const { totalChildren, totalEldery } = this.calculateTotalChildrenAndEldery(data);
+    return [
+        heatData,
+        ((totalChildren + totalEldery) / data.he_vakiy).toFixed(3),
+        (totalChildren / data.he_vakiy).toFixed(3),
+        (totalEldery / data.he_vakiy).toFixed(3),
+        (data.pt_tyott / data.he_vakiy).toFixed(3),
+        1 - this.normalizeValue(data.ra_as_kpa, statsData.ra_as_kpa.min, statsData.ra_as_kpa.max).toFixed(3),
+        (data.ko_perus / data.ko_ika18y).toFixed(3),
+        1 - this.normalizeValue(data.hr_ktu, statsData.hr_ktu.min, statsData.hr_ktu.max).toFixed(3),
+        (data.te_vuok_as / data.te_taly).toFixed(3)
+    ];
+},
+
+/**
+ * Returns correct average heat exposure value of postal code area based on view the diagram is created from.
+ * 
+ * @param {Object} heatData - The averarage heat exposure for postal code region
+ */
+helsinkiOrCapitalHeatExposure( heatData ) {
+
+    const metropolitanView = document.getElementById( "capitalRegionViewToggle" ).checked;
+
+    if ( metropolitanView ) {
+
+        return heatData.properties.avgheatexposure.toFixed( 3 );
+
+    } else {
+
+        return heatData.properties.hki_avgheatexposure.toFixed( 3 );
+    }
+
 },
 
 /**
