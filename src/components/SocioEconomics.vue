@@ -11,7 +11,7 @@
   import * as d3 from 'd3'; // Import D3.js
   import { useGlobalStore } from '../stores/globalStore.js';
   import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
-  import { usePostalCodeStore } from '../stores/postalCodeStore.js';
+  import { useHeatExposureStore } from '../stores/heatExposureStore.js';
   import Plot from "../services/plot.js"; 
 
   export default {
@@ -19,7 +19,7 @@
       this.unsubscribe = eventBus.$on('newSocioEconomicsDiagram', this.newSocioEconomicsDiagram);
       this.store = useGlobalStore( );
       this.socioEconomicsStore = useSocioEconomicsStore();
-      this.postalCodeStore = usePostalCodeStore();
+      this.heatExposureStore = useHeatExposureStore();
       this.plotService = new Plot( );
   
     },
@@ -159,7 +159,7 @@ createSocioEconomicsDiagram(sosData, statsData) {
         const compareData = this.socioEconomicsStore.getDataByNimi(selectedNimi);
         const heatData = this.store.averageHeatExposure.toFixed(3)
         const yValues = this.calculateYValues( sosData, statsData, heatData );
-        const compareHeatData = this.helsinkiOrCapitalHeatExposure( this.postalCodeStore.getDataById( compareData.postinumeroalue ) );
+        const compareHeatData = this.helsinkiOrCapitalHeatExposure( this.heatExposureStore.getDataById( compareData.postinumeroalue ) );
         const compareValues = this.calculateYValues( compareData, statsData, compareHeatData );       
 
         const xScale = this.plotService.createScaleBand(xLabels, width);  
