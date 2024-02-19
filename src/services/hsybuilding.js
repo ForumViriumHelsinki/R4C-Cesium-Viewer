@@ -31,11 +31,9 @@ async loadHSYBuildings( postcode ) {
 		if (cachedData) {
 		  	console.log("found from cache");
 
+			await this.setAvgTempInCelsius( cachedData.features );
             let entities = await this.datasourceService.addDataSourceWithPolygonFix( cachedData, 'Buildings' );
-
-			this.buildingService.setHeatExposureToBuildings( entities );
-      	    this.setHSYBuildingsHeight( entities );
-            this.calculateHSYUrbanHeatData( cachedData, entities, postcode );
+			this.setHSYBuildingAttributes( cachedData, entities, postcode );
 			
 		} else {
 
@@ -63,15 +61,12 @@ async loadHSYBuildingsWithoutCache(url, postcode) {
 		const response = await fetch( url );
 		const data = await response.json();
 		axios.post( `${backendURL}/api/cache/set`, { key: url, value: data });
-
+		await this.setAvgTempInCelsius( data.features );
         let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Buildings');
+		this.setHSYBuildingAttributes( data, entities, postcode ); 
 
-        this.buildingService.setHeatExposureToBuildings(entities);
-        this.setHSYBuildingsHeight(entities);
-        this.calculateHSYUrbanHeatData( data, entities, postcode );
-	  
-      
       	return entities; // Return the processed entities or whatever you need here
+	
     } catch ( error ) {
       	console.error("Error loading buildings without cache:", error);
       	return null; // Handle error case or return accordingly
@@ -109,5 +104,31 @@ async calculateHSYUrbanHeatData( data, entities, postcode ) {
 
 }
 
+setHSYBuildingAttributes( data, entities, postcode ) {
 
+	this.buildingService.setHeatExposureToBuildings(entities);
+	this.setHSYBuildingsHeight(entities);
+	this.calculateHSYUrbanHeatData( data, entities, postcode );
+
+}
+
+async setAvgTempInCelsius( features ) {
+
+
+	for (let i = 0; i < features.length; i++) {
+		let feature = features[i];
+		let normalizedIndex = feature.properties.avgheatexposuretobuilding;
+
+		// Actual min and max values in Kelvin
+		let actualMin = 287.123046875;
+		let actualMax = 315.011962890625;
+
+		// Convert normalized index back to Kelvin
+		let tempInKelvin = normalizedIndex * (actualMax - actualMin) + actualMin;
+
+		// Convert Kelvin to Celsius
+		feature.properties.avgTempC = tempInKelvin - 273.15;
+
+	}
+}
 }

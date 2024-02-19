@@ -174,7 +174,7 @@
   addDataForHSYScatterPlot( urbanHeatDataAndMaterial, entity, categorical, numerical, categoricalName, numericalName ) {
       
       // Check if entity has the required properties.
-      if ( entity._properties.avgheatexposuretobuilding && entity._properties[ categoricalName ] && entity._properties[ numericalName ] && entity._properties[ categoricalName ]._value ) {
+      if ( entity._properties.avgTempC && entity._properties[ categoricalName ] && entity._properties[ numericalName ] && entity._properties[ categoricalName ]._value ) {
   
            // Get the numerical value from the entity properties.
           let numbericalValue = entity._properties[ numericalName ]._value;
@@ -189,7 +189,7 @@
           if ( entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 && numbericalValue < 99999999 && numbericalValue != 0 ) {
   
               // Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
-              const element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
+              const element = { heat: entity._properties.avgTempC._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
               urbanHeatDataAndMaterial.push( element );
   
           }
@@ -392,7 +392,7 @@
       // Create the legend
       this.createLegend(svg, width, margin, values, labelsWithAverage, colorScale);
   
-      this.plotService.addTitle(svg, 'Building attributes and heat exposure', width, margin);
+      this.plotService.addTitle(svg, 'Building attributes and average surface heat in Celsius', width + 100, margin);
   },
   
   clearHSYScatterPlot() {

@@ -36,6 +36,7 @@
       },
 
 createBars(svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter) {
+  console.log("data", data);
     svg.selectAll('.bar')
         .data(data)
         .enter()
