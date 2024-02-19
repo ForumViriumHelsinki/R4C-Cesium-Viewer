@@ -298,7 +298,7 @@
           });
           const averageLabel = value + ' ' + dataWithHeat[2].toFixed(2);
           if (!labelsWithAverage.includes(averageLabel)) {
-              labelsWithAverage.push(averageLabel);
+              labelsWithAverage.push(averageLabel + ' °C');
           }
       });
   
@@ -392,7 +392,7 @@
       // Create the legend
       this.createLegend(svg, width, margin, values, labelsWithAverage, colorScale);
   
-      this.plotService.addTitle(svg, 'Building attributes and average surface heat in Celsius', width + 100, margin);
+      this.plotService.addTitle(svg, 'Building attributes and average surface temperature in Celsius', width + 100, margin);
   },
   
   clearHSYScatterPlot() {

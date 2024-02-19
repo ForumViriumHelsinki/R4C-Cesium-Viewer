@@ -24,10 +24,10 @@
       this.unsubscribe();
     },
     methods: {
-      newHeatHistogram(newData) {
-        this.urbanHeatData = newData;
+      newHeatHistogram(data) {
+        this.urbanHeatData = data;
         if (this.urbanHeatData.length > 0) {
-          this.createHistogram();
+          this.createHistogram( );
         } else {
           // Hide or clear the visualization when not visible
           // Example: call a method to hide or clear the D3 visualization
@@ -36,7 +36,7 @@
       },
 
 createBars(svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter) {
-  console.log("data", data);
+
     svg.selectAll('.bar')
         .data(data)
         .enter()
@@ -47,11 +47,34 @@ createBars(svg, data, xScale, yScale, height, tooltip, containerId, dataFormatte
         .attr('x', 1)
         .attr('width', d => xScale(d.x1) - xScale(d.x0)) // Adjusted width for the bars
         .attr('height', d => height - yScale(d.length))
-        .attr('fill', 'orange')
+        .attr('fill', d => this.rgbColor(d))
         .on('mouseover', (event, d) => this.plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter))
         .on('mouseout', () => this.plotService.handleMouseout(tooltip));
-},      
-createHistogram() {
+
+},  
+rgbColor( data ) {
+
+  const average = data.reduce((sum, value) => sum + value, 0) / data.length;
+  let index;
+
+  if ( data && data[ 0 ] && data[ 0 ].toString().startsWith( "0" ) ) {
+
+    index = average;
+
+  } else {
+
+		index =  (average + 273.15 - this.store.minKelvin ) / ( this.store.maxKelvin - this.store.minKelvin );
+
+  }
+
+  let g = 255 - ( index * 255 );
+  let a = 255 * index;
+  let rgbaColor = "rgba(" + 255 + "," + g +  ",0," + a + ")"
+
+  return rgbaColor;
+
+},    
+createHistogram( ) {
   this.plotService.initializePlotContainer('heatHistogramContainer');
 
   const margin = { top: 30, right: 30, bottom: 30, left: 30 };
@@ -60,8 +83,8 @@ createHistogram() {
 
   const svg = this.plotService.createSVGElement(margin, width, height, '#heatHistogramContainer');
 
-  const minDataValue = d3.min(this.urbanHeatData) - 0.02;
-  const maxDataValue = d3.max(this.urbanHeatData) + 0.02;
+  let minDataValue = d3.min(this.urbanHeatData) - 0.02;
+  let maxDataValue = d3.max(this.urbanHeatData) + 0.02;
   const x = this.plotService.createScaleLinear(minDataValue, maxDataValue, [0, width]);
   const bins = d3.histogram().domain(x.domain()).thresholds(x.ticks(20))(this.urbanHeatData);
   const y = this.plotService.createScaleLinear(0, d3.max(bins, (d) => d.length), [height, 0]);
@@ -72,9 +95,17 @@ createHistogram() {
 
   this.createBars(svg, bins, x, y, height, tooltip, 'heatHistogramContainer', 
                 d => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`);
+                
 
-  this.plotService.addTitle(svg, `Heat exposure to buildings in ${this.store.nameOfZone}`, width, margin);
+  if ( this.urbanHeatData && this.urbanHeatData[ 0 ] && this.urbanHeatData[ 0 ].toString().startsWith( "0" ) ) {
 
+    this.plotService.addTitle(svg, `Heat exposure to buildings in ${this.store.nameOfZone}`, width, margin);
+
+  } else {
+
+    this.plotService.addTitle(svg, `${this.store.nameOfZone} buildings average surface temperature in Celsius`, width, margin);
+
+  } 
 },
       clearHistogram() {
         // Remove or clear the D3.js visualization

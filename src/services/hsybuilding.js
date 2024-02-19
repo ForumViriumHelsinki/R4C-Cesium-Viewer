@@ -1,9 +1,9 @@
-import * as Cesium from "cesium";
 import Datasource from "./datasource.js"; 
 import Building from "./building.js"; 
 import UrbanHeat from "./urbanheat.js"; 
 import axios from 'axios';
 import EventEmitter from "./eventEmitter.js"
+import { useGlobalStore } from '../stores/globalStore.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class HSYBuilding {
@@ -13,6 +13,7 @@ export default class HSYBuilding {
     this.buildingService = new Building( this.viewer );
     this.urbanHeatService = new UrbanHeat( this.viewer );
     this.eventEmitterService = new EventEmitter( );
+	this.store = useGlobalStore( );
 
   }
 
@@ -98,7 +99,9 @@ setHSYBuildingsHeight( entities ) {
 async calculateHSYUrbanHeatData( data, entities, postcode ) {
 
     let urbanHeatData = this.urbanHeatService.calculateAverageExposure(data.features);
-    this.eventEmitterService.emitHeatHistogram( urbanHeatData );
+
+	const avgTempCList = data.features.map(feature => feature.properties.avgTempC);
+    this.eventEmitterService.emitHeatHistogram( avgTempCList );
     this.eventEmitterService.emitHSYScatterPlotEvent( entities );
 	this.eventEmitterService.emitSocioEconomicsEvent( postcode );
 
@@ -115,16 +118,13 @@ setHSYBuildingAttributes( data, entities, postcode ) {
 async setAvgTempInCelsius( features ) {
 
 
-	for (let i = 0; i < features.length; i++) {
-		let feature = features[i];
+	for ( let i = 0; i < features.length; i++ ) {
+
+		let feature = features[ i ];
 		let normalizedIndex = feature.properties.avgheatexposuretobuilding;
 
-		// Actual min and max values in Kelvin
-		let actualMin = 287.123046875;
-		let actualMax = 315.011962890625;
-
 		// Convert normalized index back to Kelvin
-		let tempInKelvin = normalizedIndex * (actualMax - actualMin) + actualMin;
+		let tempInKelvin = normalizedIndex * (this.store.maxKelvin - this.store.minKelvin) + this.store.minKelvin;
 
 		// Convert Kelvin to Celsius
 		feature.properties.avgTempC = tempInKelvin - 273.15;

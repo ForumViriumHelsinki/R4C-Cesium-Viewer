@@ -11,6 +11,8 @@ export const useGlobalStore = defineStore('global', {
     averageHeatExposure: 0,
     averageTreeArea: 0,
     level: 'city',
+    minKelvin: 287.123046875,
+    maxKelvin: 315.011962890625,
   }),
   getters: {
     getShowPlot: (state) => state.showPlot,
@@ -22,6 +24,8 @@ export const useGlobalStore = defineStore('global', {
     getAverageHeatExposure: (state) => state.averageHeatExposure,
     getAverageTreeArea: (state) => state.averageTreeArea,
     getLevel: (state) => state.level,
+    getMinKelvin: (state) => state.minKelvin,
+    getMaxKelvin: (state) => state.maxKelvin,
   },
   actions: {
     setShowPlot(newValue) {
@@ -57,7 +61,8 @@ export const useGlobalStore = defineStore('global', {
         this.nameOfZone = null;
         this.averageHeatExposure = 0;
         this.averageTreeArea = 0;
-        this.averageTreeArea = 'city';
+        this.minKelvin = 287.123046875;
+        this.maxKelvin = 315.011962890625;
     },
   },
 });
