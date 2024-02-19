@@ -319,7 +319,7 @@
           .style("fill", d => colorScale(d.name))
           .on('mouseover', (event, d) => 
               this.plotService.handleMouseover(tooltip, 'scatterPlotContainerHSY', event, d, 
-                  (data) => `${numerical}: ${data.xData}<br>heat exposure index: ${data.yData}<br>${categorical}: ${data.name}`))
+                  (data) => `${numerical}: ${data.xData.toFixed(2)}<br>temparature in celsius: ${data.yData.toFixed(2)}<br>${categorical}: ${data.name}`))
           .on('mouseout', () => 
               this.plotService.handleMouseout(tooltip));
   },
