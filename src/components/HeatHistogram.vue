@@ -93,16 +93,17 @@ createHistogram( ) {
 
   const tooltip = this.plotService.createTooltip('#heatHistogramContainer');
 
-  this.createBars(svg, bins, x, y, height, tooltip, 'heatHistogramContainer', 
-                d => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`);
-                
-
   if ( this.urbanHeatData && this.urbanHeatData[ 0 ] && this.urbanHeatData[ 0 ].toString().startsWith( "0" ) ) {
+
+    this.createBars(svg, bins, x, y, height, tooltip, 'heatHistogramContainer', 
+                d => `Temperature in Celsius: ${d.x0}<br>Amount of buildings: ${d.length}`);
 
     this.plotService.addTitle(svg, `Heat exposure to buildings in ${this.store.nameOfZone}`, width, margin);
 
   } else {
 
+    this.createBars(svg, bins, x, y, height, tooltip, 'heatHistogramContainer', 
+                d => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`);
     this.plotService.addTitle(svg, `${this.store.nameOfZone} buildings average surface temperature in Celsius`, width, margin);
 
   } 

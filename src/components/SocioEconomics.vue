@@ -47,9 +47,8 @@
  *
  */
 findSocioEconomicsStats( ) {
-    const metropolitanView = document.getElementById( "capitalRegionViewToggle" ).checked;
 
-    if ( metropolitanView ) {
+    if ( this.store.view == 'capitalRegion' ) {
 
         return this.socioEconomicsStore.regionStatistics;
 
@@ -248,9 +247,7 @@ helsinkiOrCapitalHeatExposure( heatData ) {
 
   getNimiDataFromStore() {
 
-    const metropolitanView = document.getElementById( "capitalRegionViewToggle" ).checked;
-
-    if ( metropolitanView ) {
+    if ( this.store.view == 'capitalRegion' ) {
 
         return this.socioEconomicsStore.getNimiForCapital();;
 

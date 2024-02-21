@@ -167,6 +167,8 @@ capitalRegionViewEvent( ) {
     const metropolitanView = document.getElementById( "capitalRegionViewToggle" ).checked;
 
     if ( metropolitanView ) {
+
+      this.store.view = 'capitalRegion';
         
         this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
         this.dataSourceService.loadGeoJsonDataSource(
@@ -176,6 +178,8 @@ capitalRegionViewEvent( ) {
         );
 
     } else {
+
+      this.store.view = 'helsinki';
 
       this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
         this.dataSourceService.loadGeoJsonDataSource(
@@ -196,6 +200,7 @@ gridViewEvent( ) {
 
     if ( gridView ) {
 
+      this.store.view = 'grid';
       this.showPostalCodeView = false;
       this.eventEmitterService.emitGridViewEvent( this.viewer );
 

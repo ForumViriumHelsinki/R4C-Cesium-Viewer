@@ -23,7 +23,7 @@ showAllPlots( ) {
       
   }
   
-    if ( !document.getElementById( "capitalRegionViewToggle" ).checked ) {
+    if ( this.store.view != 'capitalRegion' ) {
     // only show scatter plot selects if trees are not visible
     if ( !document.getElementById( "showTreesToggle" ).checked ) {
 

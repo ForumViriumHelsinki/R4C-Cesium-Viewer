@@ -3,6 +3,8 @@ import Datasource from "./datasource.js";
 import Urbanheat from "./urbanheat.js"; 
 import Tree from "./tree.js"; 
 import axios from 'axios';
+import { useGlobalStore } from '../stores/globalStore.js';
+import EventEmitter from "./eventEmitter.js"
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Building {
@@ -11,6 +13,8 @@ export default class Building {
     this.datasourceService = new Datasource( this.viewer );
 	this.treeService = new Tree( this.viewer );
     this.urbanheatService = new Urbanheat( this.viewer );
+	this.store = useGlobalStore( );
+	this.eventEmitterService = new EventEmitter( );
   }
 
 
@@ -42,6 +46,108 @@ export default class Building {
 		this.setBuildingEntityPolygon( entity );
 
 	}
+}
+
+
+/**
+ * Submits events for creating building charts
+ *  
+ * @param { Number } buildingHeatExposure building heat exposure index
+ * @param { String } address address of the building
+ * @param { String } postinumero postal code of the building
+ * @param { Number } treeArea nearby tree area of building
+ * @param { Number } avgTempC average surface temperature of building in Celsius
+ */
+createBuildingCharts( buildingHeatExposure, address, postinumero, treeArea, avgTempC  ) {
+
+	if (  document.getElementById( "showTreesToggle" ).checked ) {
+    
+		if ( treeArea ) {
+
+			this.eventEmitterService.emitBuildingTreeEvent( treeArea, address, postinumero );    
+	
+		} else {
+	
+			this.eventEmitterService.emitBuildingTreeEvent( 0, address, postinumero  );    
+	
+		}
+
+	}
+
+	if ( this.store.view == 'helsinki' ) {
+
+		this.eventEmitterService.emitBuildingHeatEvent( buildingHeatExposure, address, postinumero );    
+
+	} else {
+
+		this.eventEmitterService.emitBuildingHeatEvent( avgTempC, address, postinumero );    
+
+	}        
+}
+
+/**
+ * Finds building's address based on its properties
+ *  
+ * @param { Object } properties building properties
+ */
+findAddressForBuilding( properties ) {
+
+	let address = ''
+
+	if ( properties.katunimi_suomi ) {
+
+		address += properties.katunimi_suomi;
+
+		if ( properties.osoitenumero ) {
+
+			address +=  ' ' + properties.katunimi_suomi;
+		
+		}
+	}
+	else if ( properties.katu ) {
+
+		address += properties.katu;
+
+		if ( properties.osno1 ) {
+
+			address +=  ' ' + properties.osno1;
+
+			if ( properties.oski1 ) {
+
+				address +=  ' ' + properties.oski1;
+
+				if ( properties.osno2 != 999999999 ) {
+
+					address +=  ' ' + properties.osno2;
+				
+				}
+			
+			}
+		
+		}
+
+	} else {
+
+		address = 'n/a';
+	}
+
+	return this.removeNullSuffix(address);
+
+}
+
+/**
+ * Removes null suffix from string
+ *
+ * @param { string } str 
+ */
+removeNullSuffix(str) {
+    // Check if the last 4 letters are 'null'
+    if (str.substr(-4) === 'null') {
+        // Remove the last 5 characters
+        return str.substring(0, str.length - 5);
+    }
+    // Return the original string if it doesn't end with 'null'
+    return str;
 }
 
 /**

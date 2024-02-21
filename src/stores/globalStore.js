@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 
 export const useGlobalStore = defineStore('global', {
   state: () => ({
+    view: "helsinki",
     showPlot: true,
     showVegetation: false,
     showOtherNature: false,
@@ -15,6 +16,7 @@ export const useGlobalStore = defineStore('global', {
     maxKelvin: 315.011962890625,
   }),
   getters: {
+    getView: (state) => state.view,
     getShowPlot: (state) => state.showPlot,
     getShowVegetation: (state) => state.showVegetation,
     getShowOtherNature: (state) => state.showOtherNature,
@@ -28,6 +30,9 @@ export const useGlobalStore = defineStore('global', {
     getMaxKelvin: (state) => state.maxKelvin,
   },
   actions: {
+    setShowPlot(newValue) {
+      this.view = view;
+    },
     setShowPlot(newValue) {
       this.showPlot = newValue;
     },

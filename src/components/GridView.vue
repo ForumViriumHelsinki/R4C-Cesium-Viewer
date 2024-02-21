@@ -81,7 +81,8 @@ export default {
 
             if ( postalView ) {
 
-                this.reset();
+              this.store.view = 'helsinki';
+              this.reset();
         
             } 
 

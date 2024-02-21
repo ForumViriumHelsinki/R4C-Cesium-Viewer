@@ -6,7 +6,6 @@ import Building from "./building.js";
 import Postalcodeview from "./postalcodeview.js";
 import Plot from "./plot.js"
 import Traveltime from "./traveltime.js"
-import EventEmitter from "./eventEmitter.js"
 import Flood from "./flood.js"
 import HSYBuilding from "./hsybuilding.js"
 import { useGlobalStore } from '../stores/globalStore.js';
@@ -21,7 +20,6 @@ export default class FeaturePicker {
       this.postalCodeViewService = new Postalcodeview( );
       this.plotService = new Plot( );
       this.store = useGlobalStore( );
-      this.eventEmitterService = new EventEmitter( );
       this.floodService = new Flood( this.viewer );
       this.traveltimeService = new Traveltime( this.viewer );
       this.hSYBuildingService = new HSYBuilding( this.viewer );
@@ -178,7 +176,7 @@ export default class FeaturePicker {
         
         }
     
-        if ( document.getElementById( "capitalRegionViewToggle" ).checked ) {
+        if ( this.store.view == 'capitalRegion' ) {
               
             this.hSYBuildingService.loadHSYBuildings( postcode );	
             this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
@@ -200,27 +198,12 @@ export default class FeaturePicker {
         }    
     }
     
-    handleBuildingFeature( buildingHeatExposure, address, postinumero, treeArea ) {
+    handleBuildingFeature( buildingHeatExposure, address, postinumero, treeArea, avgTempC ) {
         
         this.plotService.togglePostalCodePlotVisibility( 'hidden' );
         this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
         document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
-        
-        if (  document.getElementById( "showTreesToggle" ).checked ) {
-    
-            if ( treeArea ) {
-    
-                this.eventEmitterService.emitBuildingTreeEvent( treeArea, address, postinumero );    
-        
-            } else {
-        
-                this.eventEmitterService.emitBuildingTreeEvent( 0, address, postinumero  );    
-        
-            }
-    
-        }
-
-        this.eventEmitterService.emitBuildingHeatEvent( buildingHeatExposure, address, postinumero );    
+        this.buildingService.createBuildingCharts( buildingHeatExposure, address, postinumero, treeArea, avgTempC );
         this.store.postalcode = postinumero;
         this.store.level = 'building';
 
@@ -316,14 +299,8 @@ removeEntityByName( name ) {
     
         //See if we can find building floor areas
         if ( id.properties._avgheatexposuretobuilding ) {
-    
-            let address = 'n/a'
-    
-            if ( id.properties.katunimi_suomi ) {
-    
-                address = id.properties.katunimi_suomi + ' ' + id.properties.osoitenumero
-    
-            }
+
+            const address = this.buildingService.findAddressForBuilding( id.properties );
     
             if ( id.properties._locationUnder40 ) {
     
@@ -335,7 +312,7 @@ removeEntityByName( name ) {
     
             }
             
-            this.handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value, id.properties.treeArea );
+            this.handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value, id.properties.treeArea, id.properties._avgTempC._value );
     
         }
     

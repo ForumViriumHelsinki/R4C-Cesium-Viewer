@@ -49,6 +49,8 @@
  createBuildingBarChart(buildingHeatExposure, address, postinumero) {
     this.plotService.initializePlotContainer('buildingChartContainer');
 
+    const postalCodeHeat = this.getPostalCodeHeat();
+
     const margin = { top: 70, right: 30, bottom: 30, left: 60 };
     const width = 300 - margin.left - margin.right;
     const height = 200 - margin.top - margin.bottom;
@@ -56,12 +58,12 @@
     const svg = this.plotService.createSVGElement(margin, width, height, '#buildingChartContainer');
 
     const xScale = this.plotService.createScaleBand([address, postinumero], width);
-    const yScale = this.plotService.createScaleLinear(0, Math.max(buildingHeatExposure, this.store.averageHeatExposure), [height, 0]);
+    const yScale = this.plotService.createScaleLinear( 0, Math.max(buildingHeatExposure, postalCodeHeat ), [height, 0]);
 
     // Create bars and labels
     const data = [
         { name: address, value: buildingHeatExposure.toFixed(3) },
-        { name: postinumero, value: this.store.averageHeatExposure.toFixed(3) }
+        { name: postinumero, value: postalCodeHeat.toFixed(3) }
     ];
     const colors = { [address]: 'orange', [postinumero]: 'steelblue' };
 
@@ -69,7 +71,35 @@
 
     this.plotService.setupAxes(svg, xScale, yScale, height);
 
-    this.plotService.addTitle(svg, 'Urban Heat Exposure Index Comparison', width, margin);
+    if ( this.store.view == 'Helsinki' ) {
+
+      this.plotService.addTitle(svg, 'Urban Heat Exposure Index Comparison', width, margin);
+    
+    } else {
+
+      this.plotService.addTitle(svg, 'Temperature in Celsius Comparison', width, margin);
+
+    }
+},
+
+/**
+ * Returns either heat exposure or temperature in Celsius of postal code area.
+ *
+ */
+getPostalCodeHeat() {
+
+  if ( this.store.view == 'Helsinki' ) {
+
+    return this.store.averageHeatExposure;
+
+  } else {
+
+    let tempInKelvin = this.store.averageHeatExposure * (this.store.maxKelvin - this.store.minKelvin) + this.store.minKelvin;
+
+    return tempInKelvin - 273.15;
+
+  }
+
 },
 /**
  * Create building specific bar chart.
