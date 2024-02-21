@@ -156,6 +156,7 @@ addEventListeners() {
     document.getElementById( 'showPlotToggle' ).addEventListener('change', this.showPlotEvent);
     document.getElementById( 'floodToggle').addEventListener('change', this.loadFloodEvent);
     document.getElementById( 'capitalRegionViewToggle').addEventListener('change', this.capitalRegionViewEvent);
+    document.getElementById( 'gridViewToggle').addEventListener('change', this.gridViewEvent);
 
 },
 
