@@ -269,7 +269,7 @@ removeEntityByName( name ) {
      * 
      * @param {Object} id - The ID of the picked entity
      */
-    handleFeatureWithProperties( id ) {                
+    handleFeatureWithProperties( id ) {       
         
         this.store.postalcode = id.properties.posno;
         this.store.nameOfZone = id.properties.nimi;
@@ -312,10 +312,86 @@ removeEntityByName( name ) {
     
             }
             
-            this.handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value, id.properties.treeArea, id.properties._avgTempC._value );
+            this.handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value, id.properties.treeArea, id.properties._avgTempC );
     
         }
     
+    }
+
+    getBoundingBox( id ) {
+
+        // Assuming `entity` is your Cesium Entity
+let boundingBox = null;
+
+if (id.polygon) {
+    // Access the hierarchy of the polygon to get the positions
+    const hierarchy = id.polygon.hierarchy.getValue();
+
+    // Cesium entities may have positions defined in various ways; this example assumes a simple polygon
+    if (hierarchy) {
+        const positions = hierarchy.positions;
+
+        // Convert positions to Cartographic to get longitude and latitude
+        const cartographics = positions.map(position => Cesium.Cartographic.fromCartesian(position));
+        
+        // Find the minimum and maximum longitude and latitude
+        let minLon = Number.POSITIVE_INFINITY, maxLon = Number.NEGATIVE_INFINITY;
+        let minLat = Number.POSITIVE_INFINITY, maxLat = Number.NEGATIVE_INFINITY;
+
+        cartographics.forEach(cartographic => {
+            minLon = Math.min(minLon, cartographic.longitude);
+            maxLon = Math.max(maxLon, cartographic.longitude);
+            minLat = Math.min(minLat, cartographic.latitude);
+            maxLat = Math.max(maxLat, cartographic.latitude);
+        });
+
+        // Convert back to degrees
+        minLon = Cesium.Math.toDegrees(minLon);
+        maxLon = Cesium.Math.toDegrees(maxLon);
+        minLat = Cesium.Math.toDegrees(minLat);
+        maxLat = Cesium.Math.toDegrees(maxLat);
+
+        // Now you have the bounding box corners
+        boundingBox = {
+            minLon: minLon,
+            maxLon: maxLon,
+            minLat: minLat,
+            maxLat: maxLat
+        };
+    }
+}
+
+this.makeWfsRequestWithBoundingBox(boundingBox);
+    }
+
+    async makeWfsRequestWithBoundingBox(boundingBox) {
+        // Assuming boundingBox is {minLon, maxLon, minLat, maxLat}
+        const baseUrl = "https://kartta.hsy.fi/geoserver/wfs?service=WFS";
+        const params = {
+            service: "WFS",
+            version: "2.0.0",
+            request: "GetFeature",
+            typename: "asuminen_ja_maankaytto:Vaestotietoruudukko_2022",
+            outputFormat: "application/json",
+            srsName: "EPSG:4326",
+    //        bbox: `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`
+        };
+    
+        const url = new URL(baseUrl);
+        Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+
+        console.log("url", url)
+    
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log(data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
     }
     
     /**

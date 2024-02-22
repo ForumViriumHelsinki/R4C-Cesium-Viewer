@@ -80,7 +80,7 @@ createBuildingCharts( buildingHeatExposure, address, postinumero, treeArea, avgT
 
 	} else {
 
-		this.eventEmitterService.emitBuildingHeatEvent( avgTempC, address, postinumero );    
+		this.eventEmitterService.emitBuildingHeatEvent( avgTempC._value, address, postinumero );    
 
 	}        
 }

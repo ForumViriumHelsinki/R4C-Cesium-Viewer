@@ -71,7 +71,7 @@
 
     this.plotService.setupAxes(svg, xScale, yScale, height);
 
-    if ( this.store.view == 'Helsinki' ) {
+    if ( this.store.view == 'helsinki' ) {
 
       this.plotService.addTitle(svg, 'Urban Heat Exposure Index Comparison', width, margin);
     
@@ -88,7 +88,7 @@
  */
 getPostalCodeHeat() {
 
-  if ( this.store.view == 'Helsinki' ) {
+  if ( this.store.view == 'helsinki' ) {
 
     return this.store.averageHeatExposure;
 
