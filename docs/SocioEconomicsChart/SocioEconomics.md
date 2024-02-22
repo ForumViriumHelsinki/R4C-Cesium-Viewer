@@ -4,9 +4,8 @@ The Statistics Finland Paavo2024 dataset provides detailed socio-economic data a
 
 ## Example WFS Request URL
 
-Below is an example of how to construct the full WFS request URL using the parameters provided:
-
-[https://geo.stat.fi/geoserver/postialue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=postialue:pno_tilasto_2024&outputFormat=application/json&CQL_FILTER=kunta IN ('091','092','049','235')](https://geo.stat.fi/geoserver/postialue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=postialue:pno_tilasto_2024&outputFormat=application/json&CQL_FILTER=kunta IN ('091','092','049','235'))
+Below is an example of how to construct the full WFS request URL using the parameters provided:     
+https://geo.stat.fi/geoserver/postialue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=postialue:pno_tilasto_2024&outputFormat=application/json&CQL_FILTER=kunta IN ('091','092','049','235')
 
 This request URL can be used in a web browser or a tool like `curl` to fetch socio-economic data for the specified municipalities from the Paavo2024 dataset.
 
