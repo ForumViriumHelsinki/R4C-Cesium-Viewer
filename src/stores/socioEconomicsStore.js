@@ -33,7 +33,8 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
           typename: 'postialue:pno_tilasto_2024',
           version: '2.0.0',
           outputFormat: 'application/json',
-          CQL_FILTER: `kunta IN ('091','092','049','235')` // Ensure proper URL encoding
+          CQL_FILTER: `kunta IN ('091','092','049','235')`,
+          srsName: 'EPSG:4326'
         });
 
       const requestUrl = `${wfsUrl}?${params.toString()}`;
