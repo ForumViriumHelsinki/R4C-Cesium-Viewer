@@ -288,6 +288,7 @@ removeEntityByName( name ) {
     
 
             const boundingBox = this.getBoundingBox(id);
+            this.store.currentGridCell = id.properties;
 
             // Construct the URL for the WFS request with the bounding box
             if (boundingBox) {

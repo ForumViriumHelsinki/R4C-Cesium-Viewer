@@ -14,6 +14,7 @@ export const useGlobalStore = defineStore('global', {
     level: 'city',
     minKelvin: 287.123046875,
     maxKelvin: 315.011962890625,
+    currentGridCell: null,
   }),
   getters: {
     getView: (state) => state.view,
@@ -28,8 +29,13 @@ export const useGlobalStore = defineStore('global', {
     getLevel: (state) => state.level,
     getMinKelvin: (state) => state.minKelvin,
     getMaxKelvin: (state) => state.maxKelvin,
+    getCurrentGridCell: (state) => state.currentGridCell,
+
   },
   actions: {
+    setCurrentGridCell(newValue) {
+      this.currentGridCell = view;
+    },
     setShowPlot(newValue) {
       this.view = view;
     },

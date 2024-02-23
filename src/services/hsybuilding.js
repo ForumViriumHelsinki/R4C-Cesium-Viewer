@@ -65,10 +65,16 @@ async loadHSYBuildingsWithoutCache(url, postcode) {
 
 			axios.post( `${backendURL}/api/cache/set`, { key: url, value: data });
 
+		} else {
+
+			await this.setGridAttributes( data.features );
+
 		}
+
 		await this.setAvgTempInCelsius( data.features );
         let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Buildings');
-		this.setHSYBuildingAttributes( data, entities, postcode ); 
+		this.setHSYBuildingAttributes( data, entities, postcode );
+ 
 
       	return entities; // Return the processed entities or whatever you need here
 	
@@ -77,6 +83,30 @@ async loadHSYBuildingsWithoutCache(url, postcode) {
       	return null; // Handle error case or return accordingly
     }
   }
+
+
+  async setGridAttributes( features ) {
+
+	const gridProps = this.store.currentGridCell;
+
+	for ( let i = 0; i < features.length; i++ ) {
+
+		let feature = features[ i ];
+		const asukkaita = gridProps.asukkaita;
+		feature.properties.population = gridProps.asukkaita;
+		feature.properties.pop_d_0_9 = ( gridProps.ika0_9 / asukkaita ).toFixed( 4 );
+		feature.properties.pop_d_10_19 = ( gridProps.ika10_19 / asukkaita ).toFixed( 4 );
+		feature.properties.pop_d_20_29 = ( gridProps.ika20_29 / asukkaita ).toFixed( 4 );
+		feature.properties.pop_d_30_39 = ( gridProps.ika30_39 / asukkaita ).toFixed( 4 );
+		feature.properties.pop_d_40_49  = ( gridProps.ika40_49 / asukkaita ).toFixed( 4 );
+		feature.properties.pop_d_50_59 = ( gridProps.ika50_59 / asukkaita ).toFixed( 4 );
+		feature.properties.pop_d_60_69 = ( gridProps.ika60_69 / asukkaita ).toFixed( 4 );
+		feature.properties.pop_d_70_79 = ( gridProps.ika70_79 / asukkaita ).toFixed( 4 );
+		feature.properties.pop_d_over80= ( gridProps.ika_yli80 / asukkaita ).toFixed( 4 );
+
+
+	}
+}
 
 setHSYBuildingsHeight( entities ) {
 
