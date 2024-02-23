@@ -177,7 +177,7 @@ removeNullSuffix(str) {
 
 	} else {
 
-		if ( !entity._properties.kayttarks  || !entity._properties.kayttarks._value ) {
+		if ( !entity._properties._kayttarks  || entity._properties._kayttarks._value !== 'Asuinrakennus' ) {
 
 			entity.show = false;
 
