@@ -168,7 +168,7 @@ export default class FeaturePicker {
     
         console.log("Postal code area found!");
     
-        this.resetService.removeDataSourcesAndEntities();
+        this.datasourceService.removeDataSourcesAndEntities();
         
         if ( this.store.showVegetation ) {
             
@@ -286,7 +286,23 @@ removeEntityByName( name ) {
     
         if ( id.properties.asukkaita ) {
     
-            createDiagramForPopulationGrid( id.properties.index, id.properties.asukkaita );
+
+            const boundingBox = this.getBoundingBox(id);
+
+            // Construct the URL for the WFS request with the bounding box
+            if (boundingBox) {
+                const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`;
+            
+                // Replace 'postinumero' parameter with 'bbox' in your WFS request URL
+                const Url = `https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=2000&bbox=${bboxString}`;
+            
+                console.log(Url);
+                // Now you can use this URL to make your WFS request
+                this.hSYBuildingService.loadHSYBuildingsWithoutCache( Url );	
+
+            }
+
+            //createDiagramForPopulationGrid( id.properties.index, id.properties.asukkaita );
     
         }
     
@@ -358,11 +374,14 @@ if (id.polygon) {
             minLat: minLat,
             maxLat: maxLat
         };
+
+        id.show = false;
     }
 }
 
-this.makeWfsRequestWithBoundingBox(boundingBox);
-    }
+return boundingBox
+
+}
 
     async makeWfsRequestWithBoundingBox(boundingBox) {
         // Assuming boundingBox is {minLon, maxLon, minLat, maxLat}

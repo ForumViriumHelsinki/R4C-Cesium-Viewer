@@ -230,17 +230,14 @@ getGridDataForCity( datasource ) {
 
 async createPopulationGrid( ) {
 
-    this.datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
-    //setPostalCodeElementsDisplay( 'none' );
-    //setGridElementsDisplay( 'inline-block' );
-    this.datasourceService.removeDataSourcesByNamePrefix( 'PostCodes' );
+    this.datasourceService.removeDataSourcesAndEntities();
     this.cameraService.flyCamera3D( 24.991745, 60.045, 12000 );
 
     try {
 
         const entities = await this.datasourceService.loadGeoJsonDataSource(
             0.1,
-            'assets/data/populationgrid.json',
+            'assets/data/hsy_populationgrid.json',
             'PopulationGrid'
         );
         

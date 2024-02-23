@@ -23,6 +23,13 @@
             <span class="slider round"></span>
         </label>
         <label for="travelTime" class="label" id="travelTimeLabel">Travel time grid</label> 
+
+        <!--  resetGrid-->
+        <label class="switch" id = "resetGridwitch" >
+            <input type="checkbox" id="resetGridToggle" value="resetGrid" >
+            <span class="slider round"></span>
+        </label>
+        <label for="resetGrid" class="label" id="resetGridLabel">Reset grid</label> 
     </div>
 
 </template>
@@ -69,6 +76,7 @@ export default {
             document.getElementById('postalCodeToggle').addEventListener('change', this.postalCodeViewEvent.bind(this));
             document.getElementById('travelTimeToggle').addEventListener('change', this.travelTimeEvent.bind(this));
             document.getElementById('natureGridToggle').addEventListener('change', this.natureGridEvent.bind(this));
+            document.getElementById('resetGridToggle').addEventListener('change', this.resetGridViewEvent.bind(this));
 
         },
 
@@ -87,6 +95,21 @@ export default {
             } 
 
         },
+
+        /**
+        * This function resets grid view
+        */
+        resetGridViewEvent( ) {
+
+            const resetGrid = document.getElementById( "resetGridToggle" ).checked;
+
+            if ( resetGrid ) {
+
+              const populationgridService = new Populationgrid( this.viewer );
+              populationgridService.createPopulationGrid();        
+            } 
+
+        },        
 
         /**
         * This function to switch between population grid and travel time grid view

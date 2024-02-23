@@ -60,7 +60,7 @@ export default class Building {
  */
 createBuildingCharts( buildingHeatExposure, address, postinumero, treeArea, avgTempC  ) {
 
-	if (  document.getElementById( "showTreesToggle" ).checked ) {
+	if (   this.store.view == 'helsinki' && document.getElementById( "showTreesToggle" ).checked ) {
     
 		if ( treeArea ) {
 
@@ -170,8 +170,20 @@ removeNullSuffix(str) {
 		}
 	}
 
-	this.hideNonSoteBuilding( entity );
-	this.hideLowBuilding( entity );
+	if ( this.store.view == 'helsinki' ) {
+
+		this.hideNonSoteBuilding( entity );
+		this.hideLowBuilding( entity );
+
+	} else {
+
+		if ( !entity._properties.kayttarks  || !entity._properties.kayttarks._value ) {
+
+			entity.show = false;
+
+		}	
+	}
+
 
 }
 

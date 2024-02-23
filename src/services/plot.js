@@ -151,7 +151,12 @@ updateTreeElements( status ) {
 initializePlotContainer( containerId ) {
   const container = document.getElementById( containerId );
   container.innerHTML = '';
-  container.style.visibility = document.getElementById( "showPlotToggle" ).checked ? 'visible' : 'hidden';
+
+  if ( this.store.level == 'helsinki' ) {
+
+    container.style.visibility = document.getElementById( "showPlotToggle" ).checked ? 'visible' : 'hidden';
+
+  }
 }
 
 

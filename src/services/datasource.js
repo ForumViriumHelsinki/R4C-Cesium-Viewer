@@ -21,6 +21,13 @@ export default class GeoJSONDataSource {
     });
   }
 
+  removeDataSourcesAndEntities() {
+
+      this.viewer.dataSources.removeAll();
+      // Remove all entities directly added to the viewer
+      this.viewer.entities.removeAll();
+    }
+
   // Function to get a data source by name
   getDataSourceByName(name) {
     return this.viewer.dataSources._dataSources.find((ds) => ds.name === name);

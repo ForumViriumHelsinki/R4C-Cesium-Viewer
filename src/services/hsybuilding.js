@@ -17,12 +17,11 @@ export default class HSYBuilding {
 
   }
 
-
 async loadHSYBuildings( postcode ) {
 
 	let url;
 
-    url = "https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=2000&postinumero=" + postcode;
+    url = "https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=5000&postinumero=" + postcode;
 
 	try {
 		const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent(url)}`;
@@ -61,7 +60,12 @@ async loadHSYBuildingsWithoutCache(url, postcode) {
     try {
 		const response = await fetch( url );
 		const data = await response.json();
-		axios.post( `${backendURL}/api/cache/set`, { key: url, value: data });
+
+		if ( postcode ) {
+
+			axios.post( `${backendURL}/api/cache/set`, { key: url, value: data });
+
+		}
 		await this.setAvgTempInCelsius( data.features );
         let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Buildings');
 		this.setHSYBuildingAttributes( data, entities, postcode ); 
@@ -111,7 +115,12 @@ setHSYBuildingAttributes( data, entities, postcode ) {
 
 	this.buildingService.setHeatExposureToBuildings(entities);
 	this.setHSYBuildingsHeight(entities);
-	this.calculateHSYUrbanHeatData( data, entities, postcode );
+
+	if ( postcode ) {
+
+		this.calculateHSYUrbanHeatData( data, entities, postcode );
+
+	}
 
 }
 

@@ -44,17 +44,6 @@ resetSwitches( ) {
 }
 
 /**
-* Removes all data sources and entities from the viewer
-*/
-removeDataSourcesAndEntities( ) {
-
-  this.viewer.dataSources.removeAll( );
-  this.viewer.entities.removeAll( );
-
-}
-
-
-/**
  * This function sets the visibility of HTML elements related to printing and geocoder to "visible", making them visible on the webpage.  
  * 
  */
