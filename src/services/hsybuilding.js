@@ -93,7 +93,6 @@ async loadHSYBuildingsWithoutCache(url, postcode) {
 
 		let feature = features[ i ];
 		const asukkaita = gridProps.asukkaita;
-		feature.properties.population = gridProps.asukkaita;
 		feature.properties.pop_d_0_9 = ( gridProps.ika0_9 / asukkaita ).toFixed( 4 );
 		feature.properties.pop_d_10_19 = ( gridProps.ika10_19 / asukkaita ).toFixed( 4 );
 		feature.properties.pop_d_20_29 = ( gridProps.ika20_29 / asukkaita ).toFixed( 4 );
