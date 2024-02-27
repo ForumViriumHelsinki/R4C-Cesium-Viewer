@@ -10,10 +10,12 @@
 
     <script>
         // Load data from the updated GeoJSON file
-        fetch('max_20230711_10_25_with_sat.geojson')
+        fetch('avg_20230711_8_22_with_sat.geojson')
             .then(response => response.json())
             .then(data => {
                 const features = data.features;
+
+                console.log(features)
 
                 // Extract 'dev-id', sensor temperatures, and satellite temperatures
                 const location = features.map(feature => feature.properties['name']);

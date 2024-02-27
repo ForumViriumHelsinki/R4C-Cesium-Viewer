@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,7 +9,7 @@
 
     <script>
         // Load data from the updated GeoJSON file
-        fetch('max_20230711_9_11_with_sat.geojson')
+        fetch('min_20230711_8_22_with_sat.geojson')
             .then(response => response.json())
             .then(data => {
                 const features = data.features;
@@ -20,12 +19,13 @@
                 const sensorTempValues = features.map(feature => Number(feature.properties.temprh_temp));
                 const satelliteTempValues = features.map(feature => Number(feature.properties.landsat_temp_20230711));
 
+
                 // Calculate the sum of absolute differences between sensor and satellite temperatures
                 const sumOfAbsoluteDifferences = sensorTempValues.reduce((sum, current, index) => {
                     return sum + Math.abs(current - satelliteTempValues[index]);
                 }, 0);
 
-                console.log(`Sum of Absolute Differences: ${sumOfAbsoluteDifferences.toFixed(2)}`);
+                console.log(`Sum of Absolute Differences: ${sumOfAbsoluteDifferences.toFixed(2)}`);                
                 // Define traces for sensor and satellite temperature readings
                 const sensorTrace = {
                     x: location,
