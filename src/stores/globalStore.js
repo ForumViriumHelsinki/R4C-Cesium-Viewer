@@ -15,6 +15,7 @@ export const useGlobalStore = defineStore('global', {
     minKelvin: 287.123046875,
     maxKelvin: 315.011962890625,
     currentGridCell: null,
+    cesiumViewer: null,
   }),
   getters: {
     getView: (state) => state.view,
@@ -30,14 +31,17 @@ export const useGlobalStore = defineStore('global', {
     getMinKelvin: (state) => state.minKelvin,
     getMaxKelvin: (state) => state.maxKelvin,
     getCurrentGridCell: (state) => state.currentGridCell,
-
+    getCesiumViewer: (state) => state.cesiumViewer,
   },
   actions: {
+    setCesiumViewer(newValue) {
+      this.cesiumViewer = newValue;
+    },
     setCurrentGridCell(newValue) {
-      this.currentGridCell = view;
+      this.currentGridCell = newValue;
     },
     setShowPlot(newValue) {
-      this.view = view;
+      this.view = newValue;
     },
     setShowPlot(newValue) {
       this.showPlot = newValue;
@@ -74,6 +78,8 @@ export const useGlobalStore = defineStore('global', {
         this.averageTreeArea = 0;
         this.minKelvin = 287.123046875;
         this.maxKelvin = 315.011962890625;
+        this.cesiumViewer = null;
+        this.currentGridCell = null;
     },
   },
 });

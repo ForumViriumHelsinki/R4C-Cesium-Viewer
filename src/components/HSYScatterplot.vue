@@ -25,6 +25,7 @@
     import * as d3 from 'd3'; // Import D3.js
     import { useGlobalStore } from '../stores/globalStore.js';
     import Plot from "../services/plot.js"; 
+    import Building from "../services/building.js"; 
     
     export default {
       data() {
@@ -189,7 +190,7 @@
           if ( entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 && numbericalValue < 99999999 && numbericalValue != 0 ) {
   
               // Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
-              const element = { heat: entity._properties.avgTempC._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
+              const element = { heat: entity._properties.avgTempC._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue , buildingId: entity._properties._kiitun._value };
               urbanHeatDataAndMaterial.push( element );
   
           }
@@ -259,6 +260,7 @@
   let numericalList = [ ];
   let average = 0;
   let sum = 0;
+  let ids = [ ];
   
   for ( let i = 0; i < features.length; i++ ) {
   
@@ -267,6 +269,7 @@
           heatList.push( features[ i ].heat );
           numericalList.push( features[ i ][ numerical ] );
           sum = sum + features[ i ].heat;
+          ids.push( features[ i ].buildingId )
   
       }
   
@@ -275,7 +278,7 @@
   // calculate average heat exposure
   average = sum / heatList.length;
   
-  return [ heatList, numericalList, average ];
+  return [ heatList, numericalList, average, ids ];
   
   },
   
@@ -292,9 +295,9 @@
   
       values.forEach(value => {
           const dataWithHeat = this.addHeatForLabelAndX(value, features, categorical, numerical);
-          const plotData = { xData: dataWithHeat[1], yData: dataWithHeat[0], name: value };
+          const plotData = { xData: dataWithHeat[1], yData: dataWithHeat[0], name: value, buildingId: dataWithHeat[ 3 ] };
           plotData.xData.forEach((xData, j) => {
-              heatData.push({ xData: xData, yData: plotData.yData[j], name: value });
+            heatData.push({ xData: xData, yData: plotData.yData[ j ], name: value, buildingId: plotData.buildingId[ j ] });
           });
           const averageLabel = value + ' ' + dataWithHeat[2].toFixed(2);
           if (!labelsWithAverage.includes(averageLabel)) {
@@ -307,7 +310,8 @@
   
   addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorical) {
       const tooltip = this.plotService.createTooltip( '#scatterPlotContainerHSY' );
-      
+      const buildingSerivce  = new Building(this.store.cesiumViewer);
+
       svg.append('g')
           .selectAll("dot")
           .data(heatData)
@@ -321,7 +325,12 @@
               this.plotService.handleMouseover(tooltip, 'scatterPlotContainerHSY', event, d, 
                   (data) => `${numerical}: ${data.xData.toFixed(2)}<br>temparature in celsius: ${data.yData.toFixed(2)}<br>${categorical}: ${data.name}`))
           .on('mouseout', () => 
-              this.plotService.handleMouseout(tooltip));
+              this.plotService.handleMouseout(tooltip))
+        .on('click', (event, d) => {
+            // Assume each data point includes a building ID or some identifier
+            console.log("d",d)
+            buildingSerivce.highlightBuildingInViewer(d.buildingId);
+        });
   },
   
   createLegend(svg, width, margin, values, labelsWithAverage, colorScale) {

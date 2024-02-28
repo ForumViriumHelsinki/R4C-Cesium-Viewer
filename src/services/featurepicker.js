@@ -53,9 +53,9 @@ export default class FeaturePicker {
            if ( picked.id._polygon ) {
                
                if ( id instanceof Cesium.Entity ) {
-                   
-                   this.printCesiumEntity( picked , id );
 
+                this.printBoxService.printCesiumEntity( id );
+                   
                 }
                
                if ( picked.id.properties ) {
@@ -68,67 +68,6 @@ export default class FeaturePicker {
         }
     }
     
-    
-    /**
-    * Prints the properties of the picked Cesium entity
-    * 
-    * @param {Object} picked - The picked Cesium entity
-    * @param {Object} id - The ID of the picked entity
-    */
-    printCesiumEntity( picked, id ) {
-
-        document.getElementById( 'printContainer' ).scroll({
-            top: 0,
-            behavior: 'instant'
-        });
-
-        if ( picked.id._polygon && picked.id.properties ) {
-            var toPrint = "<u>Found following properties & values:</u><br/>";	
-
-            //Highlight for clicking...
-            let oldMaterial = id.polygon.material;
-            id.polygon.material = new Cesium.Color( 1, 0.5, 0.5, 0.8 );
-            setTimeout(() => { id.polygon.material = oldMaterial }, 500 );
-
-            let length = picked.id.properties.propertyNames.length;
-            for ( let i = 0; i < length; ++i ) {
-
-                toPrint = toPrint + picked.id.properties.propertyNames[ i ] + ": " + picked.id.properties[ picked.id.properties.propertyNames[ i ] ] + "<br/>";
-
-            };
-        }
-
-        console.log(toPrint);
-
-        this.addToPrint( toPrint, picked.id.properties.posno )    
-
-    }
-
-    /**
-    * Adds the provided content to the print container
-    * 
-    * @param {string} toPrint - The content to be added to the print container
-    * @param {string} postno - The postal code associated with the content
-    */  
-    addToPrint( toPrint, postno ) {
-
-        if ( postno ) {
-
-            toPrint = toPrint + "<br/><br/><i>Click on objects to retrieve information.</i>"
-    
-        } else {
-    
-            toPrint = toPrint + "<br/><br/><i>If average urban heat exposure of building is over 0.5 the nearest location with under 0.4 heat exposure is shown on map.</i>"
-    
-        }
-    
-        document.getElementById('printContainer').innerHTML = toPrint;
-        document.getElementById('printContainer').scroll({
-              top: 1000,
-              behavior: 'smooth'
-        });    
-    }
-  
     handlePostalCodeFeature( postcode ) {
         // Find the data source for postcodes
         const postCodesDataSource = this.viewer.dataSources._dataSources.find( ds => ds.name === "PostCodes" );
@@ -198,13 +137,14 @@ export default class FeaturePicker {
         }    
     }
     
-    handleBuildingFeature( buildingHeatExposure, address, postinumero, treeArea, avgTempC ) {
+    handleBuildingFeature( properties, address ) {
         
         this.plotService.togglePostalCodePlotVisibility( 'hidden' );
         this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
         document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
-        this.buildingService.createBuildingCharts( buildingHeatExposure, address, postinumero, treeArea, avgTempC );
-        this.store.postalcode = postinumero;
+        this.buildingService.resetBuildingOutline();
+        this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, address, properties._postinumero._value, properties.treeArea, properties._avgTempC );
+        this.store.postalcode = properties._postinumero._value;
         this.store.level = 'building';
 
     }
@@ -288,7 +228,7 @@ removeEntityByName( name ) {
     
 
             const boundingBox = this.getBoundingBox(id);
-            this.store.currentGridCell = id.properties;
+            this.store.currentGridCell = id;
 
             // Construct the URL for the WFS request with the bounding box
             if (boundingBox) {
@@ -328,8 +268,8 @@ removeEntityByName( name ) {
                 }
     
             }
-            
-            this.handleBuildingFeature( id.properties._avgheatexposuretobuilding._value, address, id.properties._postinumero._value, id.properties.treeArea, id.properties._avgTempC );
+
+            this.handleBuildingFeature( id.properties, address );
     
         }
     
@@ -383,37 +323,7 @@ if (id.polygon) {
 return boundingBox
 
 }
-
-    async makeWfsRequestWithBoundingBox(boundingBox) {
-        // Assuming boundingBox is {minLon, maxLon, minLat, maxLat}
-        const baseUrl = "https://kartta.hsy.fi/geoserver/wfs?service=WFS";
-        const params = {
-            service: "WFS",
-            version: "2.0.0",
-            request: "GetFeature",
-            typename: "asuminen_ja_maankaytto:Vaestotietoruudukko_2022",
-            outputFormat: "application/json",
-            srsName: "EPSG:4326",
-    //        bbox: `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`
-        };
-    
-        const url = new URL(baseUrl);
-        Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-
-        console.log("url", url)
-    
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            console.log(data);
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
-    }
-    
+ 
     /**
      * Hides the plot container if the nature feature is clicked; otherwise, shows the plot container if the show plot toggle is checked
      * 

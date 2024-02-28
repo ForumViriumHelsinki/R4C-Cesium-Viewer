@@ -94,6 +94,7 @@ export default {
     this.treeService = new Tree( this.viewer );
     this.buildingService = new Building( this.viewer  );
     this.setupBearingSwitches( this.viewer );
+    this.store.cesiumViewer = this.viewer;
 
     this.$nextTick(() => {
       this.eventEmitterService.emitPostalCodeViewEvent(this.viewer);

@@ -87,7 +87,9 @@ async loadHSYBuildingsWithoutCache(url, postcode) {
 
   async setGridAttributes( features ) {
 
-	const gridProps = this.store.currentGridCell;
+	const gridProps = this.store.currentGridCell.properties;
+
+	console.log("cell", this.store.currentGridCell)
 
 	for ( let i = 0; i < features.length; i++ ) {
 

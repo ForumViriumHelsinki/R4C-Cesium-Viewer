@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@turf/turf": "^6.5.0",
     "axios": "^1.6.5",
     "d3": "^7.8.5",
     "path": "^0.12.7",

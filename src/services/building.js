@@ -5,6 +5,7 @@ import Tree from "./tree.js";
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
 import EventEmitter from "./eventEmitter.js"
+import PrintBoxService from "./printbox.js"; 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Building {
@@ -15,6 +16,7 @@ export default class Building {
     this.urbanheatService = new Urbanheat( this.viewer );
 	this.store = useGlobalStore( );
 	this.eventEmitterService = new EventEmitter( );
+	this.printBoxService = new PrintBoxService( this.viewer );
   }
 
 
@@ -175,7 +177,9 @@ removeNullSuffix(str) {
 		this.hideNonSoteBuilding( entity );
 		this.hideLowBuilding( entity );
 
-	} else {
+	} 
+	
+	if ( this.store.view == 'grid' ) {
 
 		if ( !entity._properties._kayttarks  || entity._properties._kayttarks._value !== 'Asuinrakennus' ) {
 
@@ -474,4 +478,120 @@ showAllBuildings( buildingsDataSource ) {
  
 }
 
+highlightBuildingsInViewer( tempsInC ) {
+	// Find the data source for buildings
+	const buildingDataSource = this.datasourceService.getDataSourceByName( "Buildings" );
+
+	// If the data source isn't found, exit the function
+	if ( !buildingDataSource ) {
+		return;
+	}    const entities = buildingDataSource.entities.values;
+
+    for (let i = 0; i < entities.length; i++) {
+        const entity = entities[i];
+
+		this.outlineTemperature( entity, tempsInC );
+    }
+}
+
+resetBuildingOutline( ) {
+	// Find the data source for buildings
+	const buildingDataSource = this.datasourceService.getDataSourceByName( "Buildings" );
+
+	// If the data source isn't found, exit the function
+	if ( !buildingDataSource ) {
+		return;
+	}    const entities = buildingDataSource.entities.values;
+
+    for (let i = 0; i < entities.length; i++) {
+        const entity = entities[i];
+
+		this.polygonOutlineToBlack( entity );
+    }
+}
+
+outlineTemperature( entity, tempsInC ) {
+
+	if ( entity._properties._avgTempC && tempsInC.includes(entity._properties._avgTempC._value )) {
+
+		this.polygonOutlineToBlue( entity );
+
+	} else {
+
+		this.polygonOutlineToBlack( entity );
+
+	}
+
+}
+
+
+
+highlightBuildingInViewer( id ) {
+	// Find the data source for buildings
+	const buildingDataSource = this.datasourceService.getDataSourceByName( "Buildings" );
+
+	// If the data source isn't found, exit the function
+	if ( !buildingDataSource ) {
+		return;
+	}    const entities = buildingDataSource.entities.values;
+
+    for (let i = 0; i < entities.length; i++) {
+        const entity = entities[i];
+
+		if ( this.store.view == 'helsinki' ) {
+
+			this.outlineHelsinkiBuildings( entity, id );
+
+		} else {
+
+			this.outlineCapitalRegionBuildings( entity, id );
+
+		}
+    }
+}
+
+outlineHelsinkiBuildings( entity, id ) {
+
+	if ( entity._properties._id && entity._properties._id._value === id ) {
+
+		this.polygonOutlineToBlue( entity );
+		this.printBoxService.printCesiumEntity( entity );
+
+	} else {
+
+		this.polygonOutlineToBlack( entity );
+
+	}
+
+}
+
+outlineCapitalRegionBuildings( entity, id ) {
+
+	if ( entity._properties._kiitun && entity._properties._kiitun._value === id ) {
+
+		this.polygonOutlineToBlue( entity );
+		this.printBoxService.printCesiumEntity( entity );
+
+	} else {
+
+		this.polygonOutlineToBlack( entity );
+
+	}
+
+}
+
+polygonOutlineToBlue( entity ) {
+
+	entity.polygon.outline = true;
+	entity.polygon.outlineColor = Cesium.Color.BLUE;
+	entity.polygon.outlineWidth = 20;
+
+}
+
+polygonOutlineToBlack( entity ) {
+
+	entity.polygon.outlineColor = Cesium.Color.BLACK;
+	entity.polygon.outlineWidth = 8;
+
+}
 }

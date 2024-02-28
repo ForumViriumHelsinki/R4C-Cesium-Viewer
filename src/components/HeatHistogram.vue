@@ -8,6 +8,7 @@
   import * as d3 from 'd3'; // Import D3.js
   import { useGlobalStore } from '../stores/globalStore.js';
   import Plot from "../services/plot.js"; 
+  import Building from "../services/building.js";
   
   export default {
     data() {
@@ -49,7 +50,18 @@ createBars(svg, data, xScale, yScale, height, tooltip, containerId, dataFormatte
         .attr('height', d => height - yScale(d.length))
         .attr('fill', d => this.rgbColor(d))
         .on('mouseover', (event, d) => this.plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter))
-        .on('mouseout', () => this.plotService.handleMouseout(tooltip));
+        .on('mouseout', () => this.plotService.handleMouseout(tooltip))
+        .on('click', (event, d) => {
+            // Assume each data point includes a building ID or some identifier
+
+            if ( this.store.view == 'capitalRegion' ) {
+
+              const buildingSerivce  = new Building(this.store.cesiumViewer);
+              buildingSerivce.highlightBuildingsInViewer(d);
+          
+            }
+
+        });
 
 },  
 rgbColor( data ) {

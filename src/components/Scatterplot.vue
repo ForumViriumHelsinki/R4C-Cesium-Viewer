@@ -27,6 +27,7 @@
   import * as d3 from 'd3'; // Import D3.js
   import { useGlobalStore } from '../stores/globalStore.js';
   import Plot from "../services/plot.js"; 
+  import Building from "../services/building.js"; 
   
   export default {
     data() {
@@ -190,7 +191,7 @@ addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, numerical,
         if ( entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
 
             // Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
-            const element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue };
+            const element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue, buildingId: entity._properties._id._value };
             urbanHeatDataAndMaterial.push( element );
 
         }
@@ -260,6 +261,7 @@ let heatList = [ ];
 let numericalList = [ ];
 let average = 0;
 let sum = 0;
+let ids = [ ];
 
 for ( let i = 0; i < features.length; i++ ) {
 
@@ -267,6 +269,7 @@ for ( let i = 0; i < features.length; i++ ) {
 
         heatList.push( features[ i ].heat );
         numericalList.push( features[ i ][ numerical ] );
+        ids.push( features[ i ].buildingId )
         sum = sum + features[ i ].heat;
 
     }
@@ -276,7 +279,7 @@ for ( let i = 0; i < features.length; i++ ) {
 // calculate average heat exposure
 average = sum / heatList.length;
 
-return [ heatList, numericalList, average ];
+return [ heatList, numericalList, average, ids ];
 
 },
 
@@ -293,9 +296,11 @@ prepareDataForPlot(features, categorical, numerical) {
 
     values.forEach(value => {
         const dataWithHeat = this.addHeatForLabelAndX(value, features, categorical, numerical);
-        const plotData = { xData: dataWithHeat[1], yData: dataWithHeat[0], name: value };
+        const plotData = { xData: dataWithHeat[1], yData: dataWithHeat[0], name: value, buildingId: dataWithHeat[ 3 ] };
         plotData.xData.forEach((xData, j) => {
-            heatData.push({ xData: xData, yData: plotData.yData[j], name: value });
+
+            // Include the buildingId in the data pushed to heatData
+            heatData.push({ xData: xData, yData: plotData.yData[ j ], name: value, buildingId: plotData.buildingId[ j ] });
         });
         const averageLabel = value + ' ' + dataWithHeat[2].toFixed(2);
         if (!labelsWithAverage.includes(averageLabel)) {
@@ -308,7 +313,8 @@ prepareDataForPlot(features, categorical, numerical) {
 
 addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorical) {
     const tooltip = this.plotService.createTooltip( '#scatterPlotContainer' );
-    
+    const buildingSerivce  = new Building(this.store.cesiumViewer);
+
     svg.append('g')
         .selectAll("dot")
         .data(heatData)
@@ -322,7 +328,12 @@ addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorica
             this.plotService.handleMouseover(tooltip, 'scatterPlotContainer', event, d, 
                 (data) => `${numerical}: ${data.xData}<br>heat exposure index: ${data.yData}<br>${categorical}: ${data.name}`))
         .on('mouseout', () => 
-            this.plotService.handleMouseout(tooltip));
+            this.plotService.handleMouseout(tooltip))
+        .on('click', (event, d) => {
+            // Assume each data point includes a building ID or some identifier
+            console.log("d",d)
+            buildingSerivce.highlightBuildingInViewer(d.buildingId);
+        });
 },
 
 createLegend(svg, width, margin, values, labelsWithAverage, colorScale) {
@@ -369,7 +380,7 @@ createScatterPlot(features, categorical, numerical) {
     this.plotService.showAllPlots( );
 
     // Prepare the data for the plot
-    const { heatData, labelsWithAverage, values } = this.prepareDataForPlot(features, categorical, numerical);
+    const { heatData, labelsWithAverage, values, ids } = this.prepareDataForPlot(features, categorical, numerical);
 
     const margin = { top: 30, right: 170, bottom: 20, left: 30 };
     const width = 600 - margin.left - margin.right;
