@@ -53,14 +53,9 @@ createBars(svg, data, xScale, yScale, height, tooltip, containerId, dataFormatte
         .on('mouseout', () => this.plotService.handleMouseout(tooltip))
         .on('click', (event, d) => {
             // Assume each data point includes a building ID or some identifier
-
-            if ( this.store.view == 'capitalRegion' ) {
-
               const buildingSerivce  = new Building(this.store.cesiumViewer);
               buildingSerivce.highlightBuildingsInViewer(d);
           
-            }
-
         });
 
 },  
@@ -108,14 +103,14 @@ createHistogram( ) {
   if ( this.urbanHeatData && this.urbanHeatData[ 0 ] && this.urbanHeatData[ 0 ].toString().startsWith( "0" ) ) {
 
     this.createBars(svg, bins, x, y, height, tooltip, 'heatHistogramContainer', 
-                d => `Temperature in Celsius: ${d.x0}<br>Amount of buildings: ${d.length}`);
+                d => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`);
 
     this.plotService.addTitle(svg, `Heat exposure to buildings in ${this.store.nameOfZone}`, width, margin);
 
   } else {
 
     this.createBars(svg, bins, x, y, height, tooltip, 'heatHistogramContainer', 
-                d => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`);
+                d => `Temperature in Celsius: ${d.x0}<br>Amount of buildings: ${d.length}`);
     this.plotService.addTitle(svg, `${this.store.nameOfZone} buildings average surface temperature in Celsius`, width, margin);
 
   } 

@@ -478,7 +478,7 @@ showAllBuildings( buildingsDataSource ) {
  
 }
 
-highlightBuildingsInViewer( tempsInC ) {
+highlightBuildingsInViewer( temps ) {
 	// Find the data source for buildings
 	const buildingDataSource = this.datasourceService.getDataSourceByName( "Buildings" );
 
@@ -490,7 +490,16 @@ highlightBuildingsInViewer( tempsInC ) {
     for (let i = 0; i < entities.length; i++) {
         const entity = entities[i];
 
-		this.outlineTemperature( entity, tempsInC );
+		if ( this.store.view == 'capitalRegion' ) {
+
+			this.outlineByTemperature( entity, 'avgTempC', temps );
+
+		} else {
+
+			this.outlineByTemperature( entity, 'avgheatexposuretobuilding', temps );
+
+		}
+
     }
 }
 
@@ -510,9 +519,9 @@ resetBuildingOutline( ) {
     }
 }
 
-outlineTemperature( entity, tempsInC ) {
+outlineByTemperature( entity, property, values ) {
 
-	if ( entity._properties._avgTempC && tempsInC.includes(entity._properties._avgTempC._value )) {
+    if ( entity._properties[ property ] && values.includes( entity._properties[ property ]._value)) {
 
 		this.polygonOutlineToBlue( entity );
 
@@ -540,34 +549,19 @@ highlightBuildingInViewer( id ) {
 
 		if ( this.store.view == 'helsinki' ) {
 
-			this.outlineHelsinkiBuildings( entity, id );
+			this.outlineById( entity, 'id', id );
 
 		} else {
 
-			this.outlineCapitalRegionBuildings( entity, id );
+			this.outlineById( entity, 'kiitun', id );
 
 		}
     }
 }
 
-outlineHelsinkiBuildings( entity, id ) {
+outlineById( entity, property, id ) {
 
-	if ( entity._properties._id && entity._properties._id._value === id ) {
-
-		this.polygonOutlineToBlue( entity );
-		this.printBoxService.printCesiumEntity( entity );
-
-	} else {
-
-		this.polygonOutlineToBlack( entity );
-
-	}
-
-}
-
-outlineCapitalRegionBuildings( entity, id ) {
-
-	if ( entity._properties._kiitun && entity._properties._kiitun._value === id ) {
+	if ( entity._properties[ property ] && entity._properties[ property ]._value === id ) {
 
 		this.polygonOutlineToBlue( entity );
 		this.printBoxService.printCesiumEntity( entity );
