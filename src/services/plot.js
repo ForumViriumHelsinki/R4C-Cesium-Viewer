@@ -148,6 +148,19 @@ updateTreeElements( status ) {
  * 
  * @param {string} containerId - The containerId
  */
+initializePlotContainerForGrid( containerId ) {
+  const container = document.getElementById( containerId );
+  container.innerHTML = '';
+  
+  container.style.visibility = 'visible';
+
+}
+
+/**
+ * Initializes container for plotting
+ * 
+ * @param {string} containerId - The containerId
+ */
 initializePlotContainer( containerId ) {
   const container = document.getElementById( containerId );
   container.innerHTML = '';

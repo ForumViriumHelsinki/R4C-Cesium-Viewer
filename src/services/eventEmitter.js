@@ -173,6 +173,13 @@ emitPostalCodeViewEvent( viewer  ) {
 
 }
 
+emitBuildingGridEvent( buildingProps  ) {
+
+  eventBus.$emit( 'createBuildingGrid', buildingProps );
+
+}
+
+
 
 }
 

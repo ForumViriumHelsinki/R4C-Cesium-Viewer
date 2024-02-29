@@ -8,6 +8,7 @@ import Plot from "./plot.js"
 import Traveltime from "./traveltime.js"
 import Flood from "./flood.js"
 import HSYBuilding from "./hsybuilding.js"
+import Address from "./address.js";
 import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class FeaturePicker {
@@ -23,7 +24,7 @@ export default class FeaturePicker {
       this.floodService = new Flood( this.viewer );
       this.traveltimeService = new Traveltime( this.viewer );
       this.hSYBuildingService = new HSYBuilding( this.viewer );
-
+      this.addressService = new Address(  );
     }
   
     /**
@@ -143,7 +144,7 @@ export default class FeaturePicker {
         this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
         document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
         this.buildingService.resetBuildingOutline();
-        this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, address, properties._postinumero._value, properties.treeArea, properties._avgTempC );
+        this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, address, properties._postinumero._value, properties.treeArea, properties._avgTempC, properties );
         this.store.postalcode = properties._postinumero._value;
         this.store.level = 'building';
 
@@ -257,7 +258,7 @@ removeEntityByName( name ) {
         //See if we can find building floor areas
         if ( id.properties._avgheatexposuretobuilding ) {
 
-            const address = this.buildingService.findAddressForBuilding( id.properties );
+            const address = this.addressService.findAddressForBuilding( id.properties );
     
             if ( id.properties._locationUnder40 ) {
     
