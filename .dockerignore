@@ -12,9 +12,3 @@ Dockerfile*
 npm-debug.log
 yarn-error.log
 yarn-debug.log
-
-# Vue.js specifics
-public/
-src/
-babel.config.js
-vue.config.js
