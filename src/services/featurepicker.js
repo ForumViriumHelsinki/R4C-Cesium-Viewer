@@ -3,14 +3,13 @@ import Datasource from "./datasource.js";
 import PrintBoxService from "./printbox.js"; 
 import Reset from "./reset.js";
 import Building from "./building.js";
-import Postalcodeview from "./postalcodeview.js";
 import Plot from "./plot.js"
 import Traveltime from "./traveltime.js"
 import Flood from "./flood.js"
 import HSYBuilding from "./hsybuilding.js"
 import Address from "./address.js";
+import ElementsDisplay from "./elementsDisplay.js";
 import { useGlobalStore } from '../stores/globalStore.js';
-import WMS from "../services/wms.js"; 
 
 export default class FeaturePicker {
     constructor( viewer ) {
@@ -19,14 +18,13 @@ export default class FeaturePicker {
       this.printBoxService = new PrintBoxService( this.viewer );
       this.resetService = new Reset( this.viewer );
       this.buildingService = new Building( this.viewer );
-      this.postalCodeViewService = new Postalcodeview( );
       this.plotService = new Plot( );
       this.store = useGlobalStore( );
       this.floodService = new Flood( this.viewer );
       this.traveltimeService = new Traveltime( this.viewer );
       this.hSYBuildingService = new HSYBuilding( this.viewer );
       this.addressService = new Address( );
-      this.wmsService = new WMS ( );
+      this.elementsDisplayService = new ElementsDisplay( );
     }
   
     /**
@@ -106,7 +104,7 @@ export default class FeaturePicker {
         document.getElementById( "hideLowToggle" ).disabled = false;
         document.getElementById( "showTreesToggle" ).disabled = false;
 
-        this.postalCodeViewService.setSwitchViewElementsDisplay( 'inline-block' );
+        this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );
     
         console.log("Postal code area found!");
     
@@ -119,15 +117,13 @@ export default class FeaturePicker {
         }
     
         if ( this.store.view == 'capitalRegion' ) {
-              
-            this.viewer.imageryLayers.add(
-                this.wmsService.createHSYImageryLayer()
-              );
+
             this.hSYBuildingService.loadHSYBuildings( postcode );	
             this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
     
         } else {
         
+            this.elementsDisplayService.setHelsinkiElementsDisplay( 'inline-block' );
             this.buildingService.loadBuildings( postcode );	
             this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
     
@@ -138,7 +134,7 @@ export default class FeaturePicker {
         // add laajasalo flood data
         if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
             
-            this.floodService.updateFloodSwitch( 'inline-block' );
+            this.elementsDisplayService.setFloodElementsDisplay( 'inline-block' );
     
         }    
     }

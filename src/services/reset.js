@@ -1,16 +1,14 @@
 import Datasource from "./datasource.js"; 
-import Postalcodeview from "./postalcodeview.js"; 
-import Gridview from "./gridview.js"; 
 import Plot from "./plot.js";
+import ElementsDisplay from "./elementsDisplay.js";
 import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class Reset {
     constructor( viewer ) {
       this.viewer = viewer;
       this.datasourceHandler = new Datasource( this.viewer );
-      this.postalcodeview = new Postalcodeview( );
-      this.gridview = new Gridview( );
       this.plotsService = new Plot( );
+      this.elementsDisplayService = new ElementsDisplay( );
       this.store = useGlobalStore( );
     }
 
@@ -19,7 +17,7 @@ export default class Reset {
 */
 resetSwitches( ) {
 
-  this.postalcodeview.setPostalCodeElementsDisplay( 'inline-block' );
+  this.elementsDisplayService.setPostalCodeElementsDisplay( 'inline-block' );
 
   document.getElementById( "gridViewToggle" ).checked = false;
   document.getElementById( "showPlotToggle" ).checked = true;
@@ -37,7 +35,7 @@ resetSwitches( ) {
   document.getElementById( "switchViewToggle" ).checked = false;
   document.getElementById( "switchViewToggle" ).disabled = true;
   document.getElementById( "gridViewToggle" ).disabled = false;
-  this.gridview.setGridElementsDisplay( 'none' );
+  this.elementsDisplayService.setGridElementsDisplay( 'none' );
 
   this.plotsService.togglePostalCodePlotVisibility( 'hidden' );
 

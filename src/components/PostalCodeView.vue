@@ -30,46 +30,53 @@
 <label for="printToggle" class="label">Object details</label>
 
   <!-- showVegetationSwitch-->
-<label class="switch" id="showVegetationSwitch">
+<label class="switch" id="showVegetationSwitch"  style="display:none;">
 	<input type="checkbox" id="showVegetationToggle" value="showVegetation" >
 	<span class="slider round"></span>
 </label>
-<label for="showVegetationToggle" class="label" id="showVegetationLabel">Vegetation</label>
+<label for="showVegetationToggle" class="label" id="showVegetationLabel"  style="display:none;">Vegetation</label>
 
   <!-- showOtherNatureSwitch-->
-<label class="switch" id="showOtherNatureSwitch">
+<label class="switch" id="showOtherNatureSwitch"  style="display:none;">
   <input type="checkbox" id="showOtherNatureToggle" value="showOtherNature" >
   <span class="slider round"></span>
 </label>
-<label for="showOtherNatureToggle" class="label" id="showOtherNatureLabel">Other nature</label>
+<label for="showOtherNatureToggle" class="label" id="showOtherNatureLabel"  style="display:none;">Other nature</label>
 
   <!-- hideNewBuildingsSwitch-->
-<label class="switch" id = "hideNewBuildingsSwitch">
+<label class="switch" id = "hideNewBuildingsSwitch"  style="display:none;">
   <input type="checkbox" id="hideNewBuildingsToggle" value="filterBuildings" >
   <span class="slider round"></span>
 </label>
-<label for="hideNewBuildings" class="label" id="hideNewBuildingsLabel">Built before summer 2018</label>
+<label for="hideNewBuildings" class="label" id="hideNewBuildingsLabel"  style="display:none;">Built before summer 2018</label>
 
   <!-- hideNonSoteSwitch-->
-<label class="switch" id = "hideNonSoteSwitch">
+<label class="switch" id = "hideNonSoteSwitch"  style="display:none;">
 	<input type="checkbox" id="hideNonSoteToggle" value="filterBuildings" >
 	<span class="slider round"></span>
 </label>
-<label for="hideNonSote" class="label" id="hideNonSoteLabel">Only sote buildings</label>
+<label for="hideNonSote" class="label" id="hideNonSoteLabel"  style="display:none;">Only sote buildings</label>
 
   <!--  hideLowSwitch-->
-<label class="switch" id = "hideLowSwitch" >
+<label class="switch" id = "hideLowSwitch"  style="display:none;">
   <input type="checkbox" id="hideLowToggle" value="filterBuildings" >
   <span class="slider round"></span>
 </label>
-<label for="hideLow" class="label" id="hideLowLabel">Only tall buildings</label>
+<label for="hideLow" class="label" id="hideLowLabel" style="display:none;">Only tall buildings</label>
 
   <!--  showTrees-->
-<label class="switch" id = "showTreesSwitch" >
+<label class="switch" id = "showTreesSwitch"  style="display:none;">
   <input type="checkbox" id="showTreesToggle" value="showTrees" >
   <span class="slider round"></span>
 </label>
-<label for="showTrees" class="label" id="showTreesLabel">Trees</label>
+<label for="showTrees" class="label" id="showTreesLabel" style="display:none;">Trees</label>
+
+<!--  showLandCover-->
+<label class="switch" id = "landCoverSwitch" style="display:none;">
+  <input type="checkbox" id="landCoverToggle" value="getLandCover" >
+  <span class="slider round"></span>
+</label>
+<label for="getLandCover" class="label" id="landCoverLabel" style="display:none;">HSY land cover</label>
 
   <!--  switchFlood-->
 <label class="switch" id = "floodSwitch" style="display:none;">
@@ -109,6 +116,8 @@ import Plot from "../services/plot.js"
 import View from "../services/view.js"
 import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
+import ElementsDisplay from "../services/elementsDisplay.js"
+import WMS from "../services/wms.js"; 
 
 export default {
   data() {
@@ -123,6 +132,9 @@ export default {
       this.unsubscribe = eventBus.$on('initPostalCodeView', this.initPostalCodeView);
       this.store = useGlobalStore( );
       this.eventEmitterService = new EventEmitter( );
+      this.elementsDisplayService = new ElementsDisplay( );
+      this.wmsService = new WMS ( );
+
     },
     beforeUnmount() {
       this.unsubscribe();
@@ -157,6 +169,7 @@ addEventListeners() {
     document.getElementById( 'floodToggle').addEventListener('change', this.loadFloodEvent);
     document.getElementById( 'capitalRegionViewToggle').addEventListener('change', this.capitalRegionViewEvent);
     document.getElementById( 'gridViewToggle').addEventListener('change', this.gridViewEvent);
+    document.getElementById( 'landCoverToggle').addEventListener('change', this.getLandCoverEvent);
 
 },
 
@@ -178,6 +191,9 @@ capitalRegionViewEvent( ) {
             'PostCodes'
         );
 
+        this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
+        this.elementsDisplayService.setLandCoverElementsDisplay( 'inline-block' )
+
     } else {
 
 
@@ -185,6 +201,34 @@ capitalRegionViewEvent( ) {
       this.reset();
   
     }
+
+},
+
+/**
+ * This function handles the toggle event for switching to capital region view
+ */
+ getLandCoverEvent( ) {
+
+const landcover = document.getElementById( "landCoverToggle" ).checked;
+
+if ( landcover ) {
+
+  this.viewer.imageryLayers.add(
+    this.wmsService.createHSYImageryLayer()
+  );
+
+  this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
+
+
+} else {
+
+  this.viewer.imageryLayers.removeAll();
+
+  this.viewer.imageryLayers.add(
+    this.wmsService.createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )  );
+}
+
+
 
 },
 
@@ -200,7 +244,6 @@ gridViewEvent( ) {
       this.store.view = 'grid';
       this.showPostalCodeView = false;
       this.eventEmitterService.emitGridViewEvent( this.viewer );
-
 
     } 
 

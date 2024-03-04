@@ -167,14 +167,4 @@ findFloodColor( value ) {
     }
 }
 
-updateFloodSwitch( display ) {
-
-    let switchElement = document.getElementById('floodSwitch');
-    let labelElement = document.getElementById('floodLabel');
-
-    switchElement.style.display = display;
-    labelElement.style.display = display;
-
-}
-
 }

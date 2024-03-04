@@ -11,11 +11,11 @@
         <label for="postalCodeToggle" class="label" id="postalCodeLabel">Postalcode view</label> 
 
           <!--  natureGrid-->
-        <label class="switch" id = "natureGridSwitch" >
+        <label class="switch" id = "natureGridSwitch" style="display:none;">
             <input type="checkbox" id="natureGridToggle" value="natureGrid" >
             <span class="slider round"></span>
         </label>
-        <label for="natureGrid" class="label" id="natureGridLabel">Nature grid</label>
+        <label for="natureGrid" class="label" id="natureGridLabel" style="display:none;">Nature grid</label>
 
         <!--  travelTime-->
         <label class="switch" id = "travelTimeSwitch" >

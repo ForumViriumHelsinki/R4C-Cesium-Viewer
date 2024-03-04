@@ -66,27 +66,6 @@ export default class Printbox {
     }
 
     /**
-     * Changes the display of gird elements when user switches between postal code and grid view
-     */
-    setGridElementsDisplay( display ) {
-        const elements = [
-            'natureGridSwitch',
-            'natureGridLabel',
-            'travelTimeSwitch',
-            'travelTimeLabel'
-        ];
-    
-        elements.forEach(( elementId ) => {
-            const element = document.getElementById( elementId );
-            if (element) {
-    
-                element.style.display = display;
-            
-            }
-        });
-    }
-
-    /**
   * Creates content for printing from postal code properties
   *
   * @param { string } postalcode postal code of new zone
