@@ -7,6 +7,7 @@ import * as Cesium from "cesium"
 import "cesium/Source/Widgets/widgets.css";
 import Datasource from "../services/datasource.js"; 
 import Tree from "../services/tree.js"; 
+import WMS from "../services/wms.js"; 
 import Building from "../services/building.js"; 
 import Featurepicker from "../services/featurepicker.js"; 
 import Geocoding from "../services/geocoding.js";
@@ -29,6 +30,7 @@ export default {
     this.socioEconomicsStore = useSocioEconomicsStore( );
     this.heatExposureStore = useHeatExposureStore();
     this.eventEmitterService = new EventEmitter( );
+    this.wmsService = new WMS ();
     Cesium.Ion.defaultAccessToken = null;
     this.initViewer( );
     this.socioEconomicsStore.loadPaavo( );
@@ -58,7 +60,7 @@ export default {
 
       // For example, add a placeholder imagery layer
       this.viewer.imageryLayers.add(
-        this.createImageryLayer( 'avoindata:Karttasarja_PKS' )
+        this.wmsService.createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
       );
 
       this.viewer.camera.setView({
@@ -100,15 +102,6 @@ export default {
       this.eventEmitterService.emitPostalCodeViewEvent(this.viewer);
     });
 
-    },
-    createImageryLayer( layerName ) {
-      const provider = new Cesium.WebMapServiceImageryProvider({
-        url : 'https://kartta.hel.fi/ws/geoserver/avoindata/ows?SERVICE=WMS&',
-        layers : layerName,
-        proxy: new Cesium.DefaultProxy( '/proxy/' )
-      });
-      
-      return new Cesium.ImageryLayer( provider );
     },
 
     setupBearingSwitches( ) {

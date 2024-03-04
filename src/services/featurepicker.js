@@ -10,6 +10,7 @@ import Flood from "./flood.js"
 import HSYBuilding from "./hsybuilding.js"
 import Address from "./address.js";
 import { useGlobalStore } from '../stores/globalStore.js';
+import WMS from "../services/wms.js"; 
 
 export default class FeaturePicker {
     constructor( viewer ) {
@@ -24,7 +25,8 @@ export default class FeaturePicker {
       this.floodService = new Flood( this.viewer );
       this.traveltimeService = new Traveltime( this.viewer );
       this.hSYBuildingService = new HSYBuilding( this.viewer );
-      this.addressService = new Address(  );
+      this.addressService = new Address( );
+      this.wmsService = new WMS ( );
     }
   
     /**
@@ -118,6 +120,9 @@ export default class FeaturePicker {
     
         if ( this.store.view == 'capitalRegion' ) {
               
+            this.viewer.imageryLayers.add(
+                this.wmsService.createHSYImageryLayer()
+              );
             this.hSYBuildingService.loadHSYBuildings( postcode );	
             this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
     

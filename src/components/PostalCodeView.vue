@@ -180,14 +180,10 @@ capitalRegionViewEvent( ) {
 
     } else {
 
-      this.store.view = 'helsinki';
 
-      this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
-        this.dataSourceService.loadGeoJsonDataSource(
-            0.2,
-            './assets/data/hki_po_clipped.json',
-            'PostCodes'
-        );
+      this.store.view = 'helsinki';
+      this.reset();
+  
     }
 
 },
