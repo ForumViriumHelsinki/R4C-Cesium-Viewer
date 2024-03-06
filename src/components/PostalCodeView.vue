@@ -94,7 +94,7 @@
 
   <!--  flood Link-->
 <div>  
-  <a href="https://geo.fvh.fi/r4c/6fkgOUqn3/" class="label" id="floodLink" target="_blank" rel="noopener noreferrer" style="display:none;">Experimental flood simulation</a>
+  <a href="https://geo.fvh.fi/r4c/6fkgOUqn3/" class="label" id="floodLink" target="_blank" rel="noopener noreferrer" style="display:none;">Experimental flood simulations</a>
 </div>
 
 
