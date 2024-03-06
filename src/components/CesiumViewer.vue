@@ -1,5 +1,13 @@
 <template>
   <div id="cesiumContainer"></div>
+  <HeatHistogram />
+  <SocioEconomics />
+  <Scatterplot />
+  <HSYScatterplot />
+  <BuildingComponent />
+  <PostalCodeView />
+  <NearbyTreeArea />
+  <DisclaimerPopup />
 </template>
 
 <script>
@@ -12,6 +20,14 @@ import Building from "../services/building.js";
 import Featurepicker from "../services/featurepicker.js"; 
 import Geocoding from "../services/geocoding.js";
 import EventEmitter from "../services/eventEmitter.js"
+import HeatHistogram from './HeatHistogram.vue';
+import SocioEconomics from './SocioEconomics.vue';
+import Scatterplot from './Scatterplot.vue';
+import HSYScatterplot from './HSYScatterplot.vue';
+import BuildingComponent from './Building.vue';
+import PostalCodeView from './PostalCodeView.vue';
+import NearbyTreeArea from './NearbyTreeArea.vue';
+import DisclaimerPopup from './DisclaimerPopup.vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
@@ -37,6 +53,16 @@ export default {
     this.heatExposureStore.loadHeatExposure( );
 
   },
+  components: {
+    HeatHistogram,
+    SocioEconomics,
+    Scatterplot,
+    HSYScatterplot,
+    BuildingComponent,
+    PostalCodeView,
+    NearbyTreeArea,
+    DisclaimerPopup,
+  },  
   methods: {
     initViewer() {
       // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.

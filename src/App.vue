@@ -1,17 +1,10 @@
 <template>
 
 <div id="canvasScalerDiv">
-  <CesiumViewer />
   <GridView />
+  <CesiumViewer />
   <PrintBox />
   <Geocoding />
-  <HeatHistogram />
-  <SocioEconomics />
-  <Scatterplot />
-  <HSYScatterplot />
-  <Building />
-  <PostalCodeView />
-  <NearbyTreeArea />
   		<!-- Add Logo -->
 		
 	<div class="logoHolder">	
@@ -26,13 +19,6 @@
 import CesiumViewer from "./components/CesiumViewer.vue";
 import Geocoding from "./components/Geocoding.vue";
 import PrintBox from "./components/PrintBox.vue";
-import HeatHistogram from "./components/HeatHistogram.vue";
-import SocioEconomics from "./components/SocioEconomics.vue";
-import Scatterplot from "./components/Scatterplot.vue";
-import HSYScatterplot from "./components/HSYScatterplot.vue";
-import Building from "./components/Building.vue";
-import PostalCodeView from "./components/PostalCodeView.vue";
-import NearbyTreeArea from "./components/NearbyTreeArea.vue";
 import GridView from "./components/GridView.vue";
 
 </script>
