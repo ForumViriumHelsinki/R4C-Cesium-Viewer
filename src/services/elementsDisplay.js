@@ -42,8 +42,7 @@ export default class ElementsDisplay {
 setFloodElementsDisplay( display ) {
 
     const elements = [
-        'floodSwitch',
-        'floodLabel'          
+        'floodLink'          
     ];
 
     this.setElementsDisplay( elements, display );

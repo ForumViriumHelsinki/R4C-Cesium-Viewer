@@ -2,7 +2,6 @@ import Datasource from "./datasource.js";
 import Vegetation from "./vegetation.js"; 
 import OtherNature from "./othernature.js"; 
 import Building from "./building.js"; 
-import Flood from "./flood.js"; 
 import Plot from "./plot.js"; 
 import Tree from "./tree.js"; 
 import Sensor from "./sensor.js";
@@ -19,7 +18,6 @@ export default class Controlpanel {
         this.otherNatureService = new OtherNature( this.viewer );
         this.plotService = new Plot( );
         this.treeService = new Tree( this.viewer );
-        this.floodService = new Flood( this.viewer );
         this.sensorService = new Sensor( this.viewer );
         this.viewService = new View( this.viewer );
         this.buildingService = new Building( this.viewer );
@@ -34,7 +32,6 @@ export default class Controlpanel {
         this.loadTreesEvent = this.loadTreesEvent.bind(this);
         this.printEvent = this.printEvent.bind(this);
         this.showPlotEvent = this.showPlotEvent.bind(this);
-        this.loadFloodEvent = this.loadFloodEvent.bind(this);
         this.gridViewEvent = this.gridViewEvent.bind(this);
 
     }
@@ -53,7 +50,6 @@ addEventListeners() {
     document.getElementById( 'showTreesToggle' ).addEventListener('change', this.loadTreesEvent);
     document.getElementById( 'printToggle' ).addEventListener('change', this.printEvent);
     document.getElementById( 'showPlotToggle' ).addEventListener('change', this.showPlotEvent);
-    document.getElementById( 'floodToggle').addEventListener('change', this.loadFloodEvent);
     document.getElementById( 'gridViewToggle').addEventListener('change', this.gridViewEvent);
 
 }
@@ -75,39 +71,6 @@ gridViewEvent( ) {
     } else {
 
         this.eventEmitterService.emitPostalCodeViewEvent( this.viewer );
-
-    }
-
-}
-
-/**
- * This function handles the toggle event for showing or hiding the flood layer on the map.
- *
- */
-loadFloodEvent( ) {
-
-    // Get the current state of the toggle button for showing flood.
-    const showFlood = document.getElementById( "floodToggle" ).checked;
-
-    if ( showFlood ) {
-
-        // If the toggle button is checked, enable the toggle button for showing the flood heat map.
-        //document.getElementById("showloadOtherNature").disabled = false;
-
-        // If there is a postal code available, load the flood for that area.
-        if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( "Flood" ) ) {
-
-            this.floodService.loadFlood( this.store.postalcode );
-
-        } else {
-            
-            this.dataSourceService.changeDataSourceShowByName( "Flood", true );
-        }
-
-
-    } else {
-
-        this.dataSourceService.changeDataSourceShowByName( "Flood", false );
 
     }
 

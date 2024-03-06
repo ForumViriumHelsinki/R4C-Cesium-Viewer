@@ -78,13 +78,6 @@
 </label>
 <label for="getLandCover" class="label" id="landCoverLabel" style="display:none;">HSY land cover</label>
 
-  <!--  switchFlood-->
-<label class="switch" id = "floodSwitch" style="display:none;">
-  <input type="checkbox" id="floodToggle" value="switchFlood" >
-  <span class="slider round"></span>
-</label>
-<label for="switchFlood" class="label" id="floodLabel" style="display:none;">Experimental flood simulation</label>
-
   <!--  switchView-->
 <label class="switch" id = "switchViewSwitch" style="display:none;">
   <input type="checkbox" id="switchViewToggle" value="switchView" >
@@ -99,6 +92,12 @@
 </label>
 <label for="showSensorData" class="label">Sensor data</label>
 
+  <!--  flood Link-->
+<div>  
+  <a href="https://geo.fvh.fi/r4c/6fkgOUqn3/" class="label" id="floodLink" target="_blank" rel="noopener noreferrer" style="display:none;">Experimental flood simulation</a>
+</div>
+
+
 </div>
 </template>
 
@@ -108,7 +107,6 @@ import Datasource from "../services/datasource.js";
 import Tree from "../services/tree.js"; 
 import Building from "../services/building.js"; 
 import EventEmitter from "../services/eventEmitter.js"
-import Flood from "../services/flood.js"
 import Sensor from "../services/sensor.js"
 import Vegetation from "../services/vegetation.js"
 import Othernature from "../services/othernature.js"
@@ -166,7 +164,6 @@ addEventListeners() {
     document.getElementById( 'showTreesToggle' ).addEventListener('change', this.loadTreesEvent);
     document.getElementById( 'printToggle' ).addEventListener('change', this.printEvent);
     document.getElementById( 'showPlotToggle' ).addEventListener('change', this.showPlotEvent);
-    document.getElementById( 'floodToggle').addEventListener('change', this.loadFloodEvent);
     document.getElementById( 'capitalRegionViewToggle').addEventListener('change', this.capitalRegionViewEvent);
     document.getElementById( 'gridViewToggle').addEventListener('change', this.gridViewEvent);
     document.getElementById( 'landCoverToggle').addEventListener('change', this.getLandCoverEvent);
@@ -249,39 +246,6 @@ gridViewEvent( ) {
 
 },
 
-/**
- * This function handles the toggle event for showing or hiding the flood layer on the map.
- *
- */
-loadFloodEvent( ) {
-
-    // Get the current state of the toggle button for showing flood.
-    const showFlood = document.getElementById( "floodToggle" ).checked;
-
-    if ( showFlood ) {
-
-        // If the toggle button is checked, enable the toggle button for showing the flood heat map.
-        //document.getElementById("showloadOtherNature").disabled = false;
-
-        // If there is a postal code available, load the flood for that area.
-        if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( "Flood" ) ) {
-
-          const floodService = new Flood( this.viewer );
-          floodService.loadFlood( this.store.postalcode );
-
-        } else {
-            
-            this.dataSourceService.changeDataSourceShowByName( "Flood", true );
-        }
-
-
-    } else {
-
-        this.dataSourceService.changeDataSourceShowByName( "Flood", false );
-
-    }
-
-},
 
 /**
  * This function is called when the "Display Plot" toggle button is clicked

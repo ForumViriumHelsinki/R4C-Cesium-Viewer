@@ -5,7 +5,6 @@ import Reset from "./reset.js";
 import Building from "./building.js";
 import Plot from "./plot.js"
 import Traveltime from "./traveltime.js"
-import Flood from "./flood.js"
 import HSYBuilding from "./hsybuilding.js"
 import Address from "./address.js";
 import ElementsDisplay from "./elementsDisplay.js";
@@ -20,7 +19,6 @@ export default class FeaturePicker {
       this.buildingService = new Building( this.viewer );
       this.plotService = new Plot( );
       this.store = useGlobalStore( );
-      this.floodService = new Flood( this.viewer );
       this.traveltimeService = new Traveltime( this.viewer );
       this.hSYBuildingService = new HSYBuilding( this.viewer );
       this.addressService = new Address( );
