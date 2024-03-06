@@ -1,348 +1,348 @@
-import * as Cesium from "cesium";
-import Datasource from "./datasource.js"; 
-import PrintBoxService from "./printbox.js"; 
-import Reset from "./reset.js";
-import Building from "./building.js";
-import Plot from "./plot.js"
-import Traveltime from "./traveltime.js"
-import HSYBuilding from "./hsybuilding.js"
-import Address from "./address.js";
-import ElementsDisplay from "./elementsDisplay.js";
+import * as Cesium from 'cesium';
+import Datasource from './datasource.js'; 
+import PrintBoxService from './printbox.js'; 
+import Reset from './reset.js';
+import Building from './building.js';
+import Plot from './plot.js';
+import Traveltime from './traveltime.js';
+import HSYBuilding from './hsybuilding.js';
+import Address from './address.js';
+import ElementsDisplay from './elementsDisplay.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class FeaturePicker {
-    constructor( viewer ) {
-      this.viewer = viewer;
-      this.datasourceService = new Datasource( this.viewer );
-      this.printBoxService = new PrintBoxService( this.viewer );
-      this.resetService = new Reset( this.viewer );
-      this.buildingService = new Building( this.viewer );
-      this.plotService = new Plot( );
-      this.store = useGlobalStore( );
-      this.traveltimeService = new Traveltime( this.viewer );
-      this.hSYBuildingService = new HSYBuilding( this.viewer );
-      this.addressService = new Address( );
-      this.elementsDisplayService = new ElementsDisplay( );
-    }
+	constructor( viewer ) {
+		this.viewer = viewer;
+		this.datasourceService = new Datasource( this.viewer );
+		this.printBoxService = new PrintBoxService( this.viewer );
+		this.resetService = new Reset( this.viewer );
+		this.buildingService = new Building( this.viewer );
+		this.plotService = new Plot();
+		this.store = useGlobalStore();
+		this.traveltimeService = new Traveltime( this.viewer );
+		this.hSYBuildingService = new HSYBuilding( this.viewer );
+		this.addressService = new Address();
+		this.elementsDisplayService = new ElementsDisplay();
+	}
   
-    /**
+	/**
     * Processes the click event on the viewer
     * 
     * @param {Cesium.Viewer} viewer - The Cesium viewer object
     * @param {MouseEvent} event - The click event
     */
-    processClick( event ) {
-        console.log("Clicked at " + String( event.x ) + ", " + String( event.y ));
-        this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
-    }    
+	processClick( event ) {
+		console.log( 'Clicked at ' + String( event.x ) + ', ' + String( event.y ) );
+		this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
+	}    
     
-    /**
+	/**
     * Picks the entity at the given window position in the viewer
     * 
     * @param { String } viewer - The Cesium viewer object
     * @param { String } windowPosition - The window position to pick the entity
     */
-    pickEntity( windowPosition ) {
-       let picked = this.viewer.scene.pick( windowPosition );
+	pickEntity( windowPosition ) {
+		let picked = this.viewer.scene.pick( windowPosition );
        
-       if ( picked ) {
+		if ( picked ) {
            
-           let id = Cesium.defaultValue( picked.id, picked.primitive.id );
+			let id = Cesium.defaultValue( picked.id, picked.primitive.id );
            
-           if ( picked.id._polygon ) {
+			if ( picked.id._polygon ) {
                
-               if ( id instanceof Cesium.Entity ) {
+				if ( id instanceof Cesium.Entity ) {
 
-                this.printBoxService.printCesiumEntity( id );
+					this.printBoxService.printCesiumEntity( id );
                    
-                }
+				}
                
-               if ( picked.id.properties ) {
+				if ( picked.id.properties ) {
    
-                   // this.hidePlotlyIfNatureFeatureIsClicked( picked.id.properties.category );
-                   this.handleFeatureWithProperties( picked.id );
+					// this.hidePlotlyIfNatureFeatureIsClicked( picked.id.properties.category );
+					this.handleFeatureWithProperties( picked.id );
                    
-                }
-            }
-        }
-    }
+				}
+			}
+		}
+	}
     
-    handlePostalCodeFeature( postcode ) {
-        // Find the data source for postcodes
-        const postCodesDataSource = this.viewer.dataSources._dataSources.find( ds => ds.name === "PostCodes" );
+	handlePostalCodeFeature( postcode ) {
+		// Find the data source for postcodes
+		const postCodesDataSource = this.viewer.dataSources._dataSources.find( ds => ds.name === 'PostCodes' );
     
-        // Iterate over all entities in the postcodes data source.
-        for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
+		// Iterate over all entities in the postcodes data source.
+		for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
         
-            let entity = postCodesDataSource._entityCollection._entities._array[ i ];
+			let entity = postCodesDataSource._entityCollection._entities._array[ i ];
         
-            // Check if the entity posno property matches the postalcode.
-            if ( entity._properties._posno._value  == postcode ) {
+			// Check if the entity posno property matches the postalcode.
+			if ( entity._properties._posno._value  == postcode ) {
         
-                // TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
-                this.viewer.camera.flyTo( {
-                    destination: Cesium.Cartesian3.fromDegrees( entity._properties._center_x._value, entity._properties._center_y._value - 0.025, 2000 ),
-                    orientation: {
-                        heading: 0.0,
-                        pitch: Cesium.Math.toRadians( -35.0 ),
-                        roll: 0.0
-                    },
-                    duration: 3
-                });
+				// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
+				this.viewer.camera.flyTo( {
+					destination: Cesium.Cartesian3.fromDegrees( entity._properties._center_x._value, entity._properties._center_y._value - 0.025, 2000 ),
+					orientation: {
+						heading: 0.0,
+						pitch: Cesium.Math.toRadians( -35.0 ),
+						roll: 0.0
+					},
+					duration: 3
+				} );
             
-                document.getElementById( "switchViewToggle" ).disabled = false;
-                this.loadPostalCode( postcode );
-            }
-        }   
-    }
+				document.getElementById( 'switchViewToggle' ).disabled = false;
+				this.loadPostalCode( postcode );
+			}
+		}   
+	}
   
-    loadPostalCode( postcode ) {
-        document.getElementById( "hideNonSoteToggle" ).disabled = false;
-        document.getElementById( "hideNewBuildingsToggle" ).disabled = false;
-        document.getElementById( "hideLowToggle" ).disabled = false;
-        document.getElementById( "showTreesToggle" ).disabled = false;
+	loadPostalCode( postcode ) {
+		document.getElementById( 'hideNonSoteToggle' ).disabled = false;
+		document.getElementById( 'hideNewBuildingsToggle' ).disabled = false;
+		document.getElementById( 'hideLowToggle' ).disabled = false;
+		document.getElementById( 'showTreesToggle' ).disabled = false;
 
-        this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );
+		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );
     
-        console.log("Postal code area found!");
+		console.log( 'Postal code area found!' );
     
-        this.datasourceService.removeDataSourcesAndEntities();
+		this.datasourceService.removeDataSourcesAndEntities();
         
-        if ( this.store.showVegetation ) {
+		if ( this.store.showVegetation ) {
             
-            // loadNatureAreas( postcode );
+			// loadNatureAreas( postcode );
         
-        }
+		}
     
-        if ( this.store.view == 'capitalRegion' ) {
+		if ( this.store.view == 'capitalRegion' ) {
 
-            this.hSYBuildingService.loadHSYBuildings( postcode );	
-            this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
+			this.hSYBuildingService.loadHSYBuildings( postcode );	
+			this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
     
-        } else {
+		} else {
         
-            this.elementsDisplayService.setHelsinkiElementsDisplay( 'inline-block' );
-            this.buildingService.loadBuildings( postcode );	
-            this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
+			this.elementsDisplayService.setHelsinkiElementsDisplay( 'inline-block' );
+			this.buildingService.loadBuildings( postcode );	
+			this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
     
-        }
+		}
 
-        this.store.level = 'postalCode';
+		this.store.level = 'postalCode';
     
-        // add laajasalo flood data
-        if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
+		// add laajasalo flood data
+		if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
             
-            this.elementsDisplayService.setFloodElementsDisplay( 'inline-block' );
+			this.elementsDisplayService.setFloodElementsDisplay( 'inline-block' );
     
-        }    
-    }
+		}    
+	}
     
-    handleBuildingFeature( properties, address ) {
+	handleBuildingFeature( properties, address ) {
         
-        this.plotService.togglePostalCodePlotVisibility( 'hidden' );
-        this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
-        document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
-        this.buildingService.resetBuildingOutline();
-        this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, address, properties._postinumero._value, properties.treeArea, properties._avgTempC, properties );
-        this.store.postalcode = properties._postinumero._value;
-        this.store.level = 'building';
+		this.plotService.togglePostalCodePlotVisibility( 'hidden' );
+		this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
+		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
+		this.buildingService.resetBuildingOutline();
+		this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, address, properties._postinumero._value, properties.treeArea, properties._avgTempC, properties );
+		this.store.postalcode = properties._postinumero._value;
+		this.store.level = 'building';
 
-    }
+	}
     
-    addColdPoint( location ) {
+	addColdPoint( location ) {
     
-        const coordinates = location.split(","); 
+		const coordinates = location.split( ',' ); 
     
-        this.viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees( Number( coordinates[ 1 ] ), Number(coordinates[ 0 ] ) ),
-            name: "coldpoint",
-            point: {
-              show: true, 
-              color: Cesium.Color.ROYALBLUE, 
-              pixelSize: 15, 
-              outlineColor: Cesium.Color.LIGHTYELLOW, 
-              outlineWidth: 5, 
-            },
-          });
+		this.viewer.entities.add( {
+			position: Cesium.Cartesian3.fromDegrees( Number( coordinates[ 1 ] ), Number( coordinates[ 0 ] ) ),
+			name: 'coldpoint',
+			point: {
+				show: true, 
+				color: Cesium.Color.ROYALBLUE, 
+				pixelSize: 15, 
+				outlineColor: Cesium.Color.LIGHTYELLOW, 
+				outlineWidth: 5, 
+			},
+		} );
     
-    }
+	}
     
-removeEntityByName( name ) {
+	removeEntityByName( name ) {
 
-    this.viewer.entities._entities._array.forEach( ( entity ) => {
+		this.viewer.entities._entities._array.forEach( ( entity ) => {
 
-        if ( entity.name === name ) {
+			if ( entity.name === name ) {
 
-            this.viewer.entities.remove( entity );
+				this.viewer.entities.remove( entity );
 
-        }
-    });
-}
+			}
+		} );
+	}
     
-    markCurrentLocation( entity ) {
+	markCurrentLocation( entity ) {
     
-        const hierarchy = entity.polygon.hierarchy.getValue().positions;
+		const hierarchy = entity.polygon.hierarchy.getValue().positions;
     
-        // Calculate the center of the polygon's vertices
-        const boundingSphere = Cesium.BoundingSphere.fromPoints(hierarchy);
-        const centerCartesian = boundingSphere.center;
+		// Calculate the center of the polygon's vertices
+		const boundingSphere = Cesium.BoundingSphere.fromPoints( hierarchy );
+		const centerCartesian = boundingSphere.center;
     
-        this.viewer.entities.add({
-            position: centerCartesian,
-            name: "currentLocation",
-            point: {
-              show: true, 
-              color: Cesium.Color.BLACK, 
-              pixelSize: 42, 
-              outlineColor: Cesium.Color.BLACK, 
-              outlineWidth: 14, 
-              eyeOffset: new Cesium.Cartesian3( 0, 200, -200 ),
-              scaleByDistance: new Cesium.NearFarScalar(4000, 1, 40000, 0.0)
-            },
-          });
+		this.viewer.entities.add( {
+			position: centerCartesian,
+			name: 'currentLocation',
+			point: {
+				show: true, 
+				color: Cesium.Color.BLACK, 
+				pixelSize: 42, 
+				outlineColor: Cesium.Color.BLACK, 
+				outlineWidth: 14, 
+				eyeOffset: new Cesium.Cartesian3( 0, 200, -200 ),
+				scaleByDistance: new Cesium.NearFarScalar( 4000, 1, 40000, 0.0 )
+			},
+		} );
     
     
-    }
+	}
     
-    /**
+	/**
      * Handles the feature with properties
      * 
      * @param {Object} id - The ID of the picked entity
      */
-    handleFeatureWithProperties( id ) {       
+	handleFeatureWithProperties( id ) {       
         
-        this.store.postalcode = id.properties.posno;
-        this.store.nameOfZone = id.properties.nimi;
-        this.removeEntityByName( 'coldpoint' );
-        this.removeEntityByName( 'currentLocation' );
-        this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
+		this.store.postalcode = id.properties.posno;
+		this.store.nameOfZone = id.properties.nimi;
+		this.removeEntityByName( 'coldpoint' );
+		this.removeEntityByName( 'currentLocation' );
+		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
     
-        //If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
-        if ( this.store.postalcode ) {
+		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
+		if ( this.store.postalcode ) {
             
-            this.handlePostalCodeFeature( this.store.postalcode, id );
+			this.handlePostalCodeFeature( this.store.postalcode, id );
     
-        }
+		}
     
-        if ( id.properties.asukkaita ) {
+		if ( id.properties.asukkaita ) {
     
 
-            const boundingBox = this.getBoundingBox(id);
-            this.store.currentGridCell = id;
+			const boundingBox = this.getBoundingBox( id );
+			this.store.currentGridCell = id;
 
-            // Construct the URL for the WFS request with the bounding box
-            if (boundingBox) {
-                const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`;
+			// Construct the URL for the WFS request with the bounding box
+			if ( boundingBox ) {
+				const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`;
             
-                // Replace 'postinumero' parameter with 'bbox' in your WFS request URL
-                const Url = `https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=2000&bbox=${bboxString}`;
+				// Replace 'postinumero' parameter with 'bbox' in your WFS request URL
+				const Url = `https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=2000&bbox=${bboxString}`;
             
-                console.log(Url);
-                // Now you can use this URL to make your WFS request
-                this.hSYBuildingService.loadHSYBuildingsWithoutCache( Url );	
+				console.log( Url );
+				// Now you can use this URL to make your WFS request
+				this.hSYBuildingService.loadHSYBuildingsWithoutCache( Url );	
 
-            }
+			}
 
-            //createDiagramForPopulationGrid( id.properties.index, id.properties.asukkaita );
+			//createDiagramForPopulationGrid( id.properties.index, id.properties.asukkaita );
     
-        }
+		}
     
-        if ( !id.properties.posno && id.entityCollection._entities._array[ 0 ]._properties._id && id.entityCollection._entities._array[ 0 ]._properties._id._value == 5879932 ) {
+		if ( !id.properties.posno && id.entityCollection._entities._array[ 0 ]._properties._id && id.entityCollection._entities._array[ 0 ]._properties._id._value == 5879932 ) {
     
-            this.traveltimeService.loadTravelTimeData( id.properties.id._value );
-            this.markCurrentLocation( id );
+			this.traveltimeService.loadTravelTimeData( id.properties.id._value );
+			this.markCurrentLocation( id );
     
-        }
+		}
     
-        //See if we can find building floor areas
-        if ( id.properties._avgheatexposuretobuilding ) {
+		//See if we can find building floor areas
+		if ( id.properties._avgheatexposuretobuilding ) {
 
-            const address = this.addressService.findAddressForBuilding( id.properties );
+			const address = this.addressService.findAddressForBuilding( id.properties );
     
-            if ( id.properties._locationUnder40 ) {
+			if ( id.properties._locationUnder40 ) {
     
-                if ( id.properties._locationUnder40._value  ) {
+				if ( id.properties._locationUnder40._value ) {
                     
-                    this.addColdPoint( id.properties._locationUnder40._value );
+					this.addColdPoint( id.properties._locationUnder40._value );
                 
-                }
+				}
     
-            }
+			}
 
-            this.handleBuildingFeature( id.properties, address );
+			this.handleBuildingFeature( id.properties, address );
     
-        }
+		}
     
-    }
+	}
 
-    getBoundingBox( id ) {
+	getBoundingBox( id ) {
 
-        // Assuming `entity` is your Cesium Entity
-let boundingBox = null;
+		// Assuming `entity` is your Cesium Entity
+		let boundingBox = null;
 
-if (id.polygon) {
-    // Access the hierarchy of the polygon to get the positions
-    const hierarchy = id.polygon.hierarchy.getValue();
+		if ( id.polygon ) {
+			// Access the hierarchy of the polygon to get the positions
+			const hierarchy = id.polygon.hierarchy.getValue();
 
-    // Cesium entities may have positions defined in various ways; this example assumes a simple polygon
-    if (hierarchy) {
-        const positions = hierarchy.positions;
+			// Cesium entities may have positions defined in various ways; this example assumes a simple polygon
+			if ( hierarchy ) {
+				const positions = hierarchy.positions;
 
-        // Convert positions to Cartographic to get longitude and latitude
-        const cartographics = positions.map(position => Cesium.Cartographic.fromCartesian(position));
+				// Convert positions to Cartographic to get longitude and latitude
+				const cartographics = positions.map( position => Cesium.Cartographic.fromCartesian( position ) );
         
-        // Find the minimum and maximum longitude and latitude
-        let minLon = Number.POSITIVE_INFINITY, maxLon = Number.NEGATIVE_INFINITY;
-        let minLat = Number.POSITIVE_INFINITY, maxLat = Number.NEGATIVE_INFINITY;
+				// Find the minimum and maximum longitude and latitude
+				let minLon = Number.POSITIVE_INFINITY, maxLon = Number.NEGATIVE_INFINITY;
+				let minLat = Number.POSITIVE_INFINITY, maxLat = Number.NEGATIVE_INFINITY;
 
-        cartographics.forEach(cartographic => {
-            minLon = Math.min(minLon, cartographic.longitude);
-            maxLon = Math.max(maxLon, cartographic.longitude);
-            minLat = Math.min(minLat, cartographic.latitude);
-            maxLat = Math.max(maxLat, cartographic.latitude);
-        });
+				cartographics.forEach( cartographic => {
+					minLon = Math.min( minLon, cartographic.longitude );
+					maxLon = Math.max( maxLon, cartographic.longitude );
+					minLat = Math.min( minLat, cartographic.latitude );
+					maxLat = Math.max( maxLat, cartographic.latitude );
+				} );
 
-        // Convert back to degrees
-        minLon = Cesium.Math.toDegrees(minLon);
-        maxLon = Cesium.Math.toDegrees(maxLon);
-        minLat = Cesium.Math.toDegrees(minLat);
-        maxLat = Cesium.Math.toDegrees(maxLat);
+				// Convert back to degrees
+				minLon = Cesium.Math.toDegrees( minLon );
+				maxLon = Cesium.Math.toDegrees( maxLon );
+				minLat = Cesium.Math.toDegrees( minLat );
+				maxLat = Cesium.Math.toDegrees( maxLat );
 
-        // Now you have the bounding box corners
-        boundingBox = {
-            minLon: minLon,
-            maxLon: maxLon,
-            minLat: minLat,
-            maxLat: maxLat
-        };
+				// Now you have the bounding box corners
+				boundingBox = {
+					minLon: minLon,
+					maxLon: maxLon,
+					minLat: minLat,
+					maxLat: maxLat
+				};
 
-        id.show = false;
-    }
-}
+				id.show = false;
+			}
+		}
 
-return boundingBox
+		return boundingBox;
 
-}
+	}
  
-    /**
+	/**
      * Hides the plot container if the nature feature is clicked; otherwise, shows the plot container if the show plot toggle is checked
      * 
      * @param {string} category - The category of the picked entity
      */
-    hidePlotlyIfNatureFeatureIsClicked( category ) {
+	hidePlotlyIfNatureFeatureIsClicked( category ) {
     
-        if ( category ) {
+		if ( category ) {
     
-            document.getElementById( 'heatHistogramContainer' ).style.visibility = 'hidden';
+			document.getElementById( 'heatHistogramContainer' ).style.visibility = 'hidden';
     
-        } else {
+		} else {
     
-            if ( document.getElementById( "showPlotToggle" ).checked && !document.getElementById( "gridViewToggle" ).checked ) {
+			if ( document.getElementById( 'showPlotToggle' ).checked && !document.getElementById( 'gridViewToggle' ).checked ) {
     
-                document.getElementById( 'heatHistogramContainer' ).style.visibility = 'visible';
+				document.getElementById( 'heatHistogramContainer' ).style.visibility = 'visible';
     
-            }
+			}
     
-        }
-    }
+		}
+	}
 }

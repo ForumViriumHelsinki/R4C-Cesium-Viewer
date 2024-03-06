@@ -10,17 +10,17 @@
 
 <script>
 export default {
-  name: 'DisclaimerPopup',
-  data() {
-    return {
-      isVisible: true,
-    };
-  },
-  methods: {
-    closePopup() {
-      this.isVisible = false;
-    },
-  },
+	name: 'DisclaimerPopup',
+	data() {
+		return {
+			isVisible: true,
+		};
+	},
+	methods: {
+		closePopup() {
+			this.isVisible = false;
+		},
+	},
 };
 </script>
 

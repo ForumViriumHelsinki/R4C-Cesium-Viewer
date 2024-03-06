@@ -103,375 +103,375 @@
 
 <script>
 
-import Datasource from "../services/datasource.js"; 
-import Tree from "../services/tree.js"; 
-import Building from "../services/building.js"; 
-import EventEmitter from "../services/eventEmitter.js"
-import Sensor from "../services/sensor.js"
-import Vegetation from "../services/vegetation.js"
-import Othernature from "../services/othernature.js"
-import Plot from "../services/plot.js"
-import View from "../services/view.js"
+import Datasource from '../services/datasource.js'; 
+import Tree from '../services/tree.js'; 
+import Building from '../services/building.js'; 
+import EventEmitter from '../services/eventEmitter.js';
+import Sensor from '../services/sensor.js';
+import Vegetation from '../services/vegetation.js';
+import Othernature from '../services/othernature.js';
+import Plot from '../services/plot.js';
+import View from '../services/view.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
-import ElementsDisplay from "../services/elementsDisplay.js"
-import WMS from "../services/wms.js"; 
+import ElementsDisplay from '../services/elementsDisplay.js';
+import WMS from '../services/wms.js'; 
 
 export default {
-  data() {
-    return {
-      viewer: null,
-      dataSourceService: null,
-      treeService: null,
-      showPostalCodeView: true
-    };
-  },
-    mounted() {
-      this.unsubscribe = eventBus.$on('initPostalCodeView', this.initPostalCodeView);
-      this.store = useGlobalStore( );
-      this.eventEmitterService = new EventEmitter( );
-      this.elementsDisplayService = new ElementsDisplay( );
-      this.wmsService = new WMS ( );
+	data() {
+		return {
+			viewer: null,
+			dataSourceService: null,
+			treeService: null,
+			showPostalCodeView: true
+		};
+	},
+	mounted() {
+		this.unsubscribe = eventBus.$on( 'initPostalCodeView', this.initPostalCodeView );
+		this.store = useGlobalStore();
+		this.eventEmitterService = new EventEmitter();
+		this.elementsDisplayService = new ElementsDisplay();
+		this.wmsService = new WMS ();
 
-    },
-    beforeUnmount() {
-      this.unsubscribe();
-    },    
-    methods: {
-      reset(){
-            location.reload();
-        },
-      initPostalCodeView( viewer ) {
-        this.viewer = viewer;
-        this.dataSourceService = new Datasource( this.viewer );
-        this.treeService = new Tree( this.viewer );
-        this.buildingService = new Building ( this.viewer );
-        this.plotService = new Plot( );
-        this.addEventListeners();
+	},
+	beforeUnmount() {
+		this.unsubscribe();
+	},    
+	methods: {
+		reset(){
+			location.reload();
+		},
+		initPostalCodeView( viewer ) {
+			this.viewer = viewer;
+			this.dataSourceService = new Datasource( this.viewer );
+			this.treeService = new Tree( this.viewer );
+			this.buildingService = new Building ( this.viewer );
+			this.plotService = new Plot();
+			this.addEventListeners();
 
-      },
-/**
+		},
+		/**
  * Add EventListeners 
  */
-addEventListeners() {
-    document.getElementById( 'hideNewBuildingsToggle' ).addEventListener('change', this.filterBuildingsEvent);
-    document.getElementById( 'hideNonSoteToggle' ).addEventListener('change', this.filterBuildingsEvent);
-    document.getElementById( 'hideLowToggle' ).addEventListener('change', this.filterBuildingsEvent);
-    document.getElementById( 'showVegetationToggle' ).addEventListener('change', this.loadVegetationEvent);
-    document.getElementById( 'showOtherNatureToggle' ).addEventListener('change', this.loadOtherNatureEvent);
-    document.getElementById( 'showSensorDataToggle' ).addEventListener('change', this.loadSensorDataEvent);
-    document.getElementById( 'switchViewToggle' ).addEventListener('change', this.switchViewEvent);
-    document.getElementById( 'showTreesToggle' ).addEventListener('change', this.loadTreesEvent);
-    document.getElementById( 'printToggle' ).addEventListener('change', this.printEvent);
-    document.getElementById( 'showPlotToggle' ).addEventListener('change', this.showPlotEvent);
-    document.getElementById( 'capitalRegionViewToggle').addEventListener('change', this.capitalRegionViewEvent);
-    document.getElementById( 'gridViewToggle').addEventListener('change', this.gridViewEvent);
-    document.getElementById( 'landCoverToggle').addEventListener('change', this.getLandCoverEvent);
+		addEventListeners() {
+			document.getElementById( 'hideNewBuildingsToggle' ).addEventListener( 'change', this.filterBuildingsEvent );
+			document.getElementById( 'hideNonSoteToggle' ).addEventListener( 'change', this.filterBuildingsEvent );
+			document.getElementById( 'hideLowToggle' ).addEventListener( 'change', this.filterBuildingsEvent );
+			document.getElementById( 'showVegetationToggle' ).addEventListener( 'change', this.loadVegetationEvent );
+			document.getElementById( 'showOtherNatureToggle' ).addEventListener( 'change', this.loadOtherNatureEvent );
+			document.getElementById( 'showSensorDataToggle' ).addEventListener( 'change', this.loadSensorDataEvent );
+			document.getElementById( 'switchViewToggle' ).addEventListener( 'change', this.switchViewEvent );
+			document.getElementById( 'showTreesToggle' ).addEventListener( 'change', this.loadTreesEvent );
+			document.getElementById( 'printToggle' ).addEventListener( 'change', this.printEvent );
+			document.getElementById( 'showPlotToggle' ).addEventListener( 'change', this.showPlotEvent );
+			document.getElementById( 'capitalRegionViewToggle' ).addEventListener( 'change', this.capitalRegionViewEvent );
+			document.getElementById( 'gridViewToggle' ).addEventListener( 'change', this.gridViewEvent );
+			document.getElementById( 'landCoverToggle' ).addEventListener( 'change', this.getLandCoverEvent );
 
-},
+		},
 
-/**
+		/**
  * This function handles the toggle event for switching to capital region view
  */
-capitalRegionViewEvent( ) {
+		capitalRegionViewEvent() {
 
-    const metropolitanView = document.getElementById( "capitalRegionViewToggle" ).checked;
+			const metropolitanView = document.getElementById( 'capitalRegionViewToggle' ).checked;
 
-    if ( metropolitanView ) {
+			if ( metropolitanView ) {
 
-      this.store.view = 'capitalRegion';
+				this.store.view = 'capitalRegion';
         
-        this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
-        this.dataSourceService.loadGeoJsonDataSource(
-            0.2,
-            './assets/data/hsy_po.json',
-            'PostCodes'
-        );
+				this.dataSourceService.removeDataSourcesByNamePrefix( 'PostCodes' );
+				this.dataSourceService.loadGeoJsonDataSource(
+					0.2,
+					'./assets/data/hsy_po.json',
+					'PostCodes'
+				);
 
-        this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
-        this.elementsDisplayService.setLandCoverElementsDisplay( 'inline-block' )
+				this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
+				this.elementsDisplayService.setLandCoverElementsDisplay( 'inline-block' );
 
-    } else {
+			} else {
 
 
-      this.store.view = 'helsinki';
-      this.reset();
+				this.store.view = 'helsinki';
+				this.reset();
   
-    }
+			}
 
-},
+		},
 
-/**
+		/**
  * This function handles the toggle event for switching to capital region view
  */
- getLandCoverEvent( ) {
+		getLandCoverEvent() {
 
-const landcover = document.getElementById( "landCoverToggle" ).checked;
+			const landcover = document.getElementById( 'landCoverToggle' ).checked;
 
-if ( landcover ) {
+			if ( landcover ) {
 
-  this.viewer.imageryLayers.add(
-    this.wmsService.createHSYImageryLayer()
-  );
+				this.viewer.imageryLayers.add(
+					this.wmsService.createHSYImageryLayer()
+				);
 
-  this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
-
-
-} else {
-
-  this.viewer.imageryLayers.removeAll();
-
-  this.viewer.imageryLayers.add(
-    this.wmsService.createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )  );
-}
+				this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
 
 
+			} else {
 
-},
+				this.viewer.imageryLayers.removeAll();
 
-/**
+				this.viewer.imageryLayers.add(
+					this.wmsService.createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' ) );
+			}
+
+
+
+		},
+
+		/**
  * This function handles the toggle event for switching to grid view
  */
-gridViewEvent( ) {
+		gridViewEvent() {
 
-    const gridView = document.getElementById( "gridViewToggle" ).checked;
+			const gridView = document.getElementById( 'gridViewToggle' ).checked;
 
-    if ( gridView ) {
+			if ( gridView ) {
 
-      this.store.view = 'grid';
-      this.showPostalCodeView = false;
-      this.eventEmitterService.emitGridViewEvent( this.viewer );
+				this.store.view = 'grid';
+				this.showPostalCodeView = false;
+				this.eventEmitterService.emitGridViewEvent( this.viewer );
 
-    } 
+			} 
 
-},
+		},
 
 
-/**
+		/**
  * This function is called when the "Display Plot" toggle button is clicked
  *
  */
-showPlotEvent( ) {
+		showPlotEvent() {
 
-    // Get the value of the "Show Plot" toggle button
-    const showPlots = document.getElementById( "showPlotToggle" ).checked;
+			// Get the value of the "Show Plot" toggle button
+			const showPlots = document.getElementById( 'showPlotToggle' ).checked;
     
-    // Hide the plot and its controls if the toggle button is unchecked
-    if ( !showPlots ) {
+			// Hide the plot and its controls if the toggle button is unchecked
+			if ( !showPlots ) {
 
-      this.plotService.hideAllPlots( );
+				this.plotService.hideAllPlots();
 
-    } else { // Otherwise, show the plot and its controls if the toggle button is checked and the plot is already loaded
+			} else { // Otherwise, show the plot and its controls if the toggle button is checked and the plot is already loaded
 
-      this.plotService.showAllPlots( );
+				this.plotService.showAllPlots();
 
-    }
+			}
 
-},
+		},
 
-/**
+		/**
  * This function is called when the Object details button is clicked
  *
  */
-printEvent( ) {
+		printEvent() {
 
-    const print = document.getElementById( "printToggle" ).checked;
+			const print = document.getElementById( 'printToggle' ).checked;
 
-    // If print is not selected, hide the print container, search container, georeference container, and search button
-    if ( !print ) {
+			// If print is not selected, hide the print container, search container, georeference container, and search button
+			if ( !print ) {
 
-        document.getElementById( 'printContainer' ).style.visibility = 'hidden';
-        document.getElementById( 'searchcontainer' ).style.visibility = 'hidden';
-        document.getElementById( 'georefContainer' ).style.visibility = 'hidden';
-        document.getElementById( 'searchbutton' ).style.visibility = 'hidden';
+				document.getElementById( 'printContainer' ).style.visibility = 'hidden';
+				document.getElementById( 'searchcontainer' ).style.visibility = 'hidden';
+				document.getElementById( 'georefContainer' ).style.visibility = 'hidden';
+				document.getElementById( 'searchbutton' ).style.visibility = 'hidden';
 
-    } else { // Otherwise, make the print container visible
+			} else { // Otherwise, make the print container visible
     
-    document.getElementById( 'printContainer' ).style.visibility = 'visible';
-    document.getElementById( 'searchcontainer' ).style.visibility = 'visible';
-    document.getElementById( 'georefContainer' ).style.visibility = 'visible';
-    document.getElementById( 'searchbutton' ).style.visibility = 'visible';
+				document.getElementById( 'printContainer' ).style.visibility = 'visible';
+				document.getElementById( 'searchcontainer' ).style.visibility = 'visible';
+				document.getElementById( 'georefContainer' ).style.visibility = 'visible';
+				document.getElementById( 'searchbutton' ).style.visibility = 'visible';
 
-    }
+			}
 
-},
+		},
 
 
-/**
+		/**
  * This function to show or hide sensordata entities on the map based on the toggle button state
  *
  */
-loadSensorDataEvent( ) {
+		loadSensorDataEvent() {
 
-    // Get the state of the showSensorData toggle button
-    const showSensorData = document.getElementById( "showSensorDataToggle" ).checked;
+			// Get the state of the showSensorData toggle button
+			const showSensorData = document.getElementById( 'showSensorDataToggle' ).checked;
 
-    // If showSensorData toggle is on
-    if ( showSensorData ) {
+			// If showSensorData toggle is on
+			if ( showSensorData ) {
         
-        const sensorService = new Sensor( this.viewer ); 
-        sensorService.loadSensorData( );
+				const sensorService = new Sensor( this.viewer ); 
+				sensorService.loadSensorData();
         
-    } else { 
+			} else { 
         
-        this.dataSourceService.changeDataSourceShowByName( "SensorData", false );
+				this.dataSourceService.changeDataSourceShowByName( 'SensorData', false );
 
-    }
+			}
 
-},
+		},
 
-/**
+		/**
  * This function to show or hide tree entities on the map based on the toggle button state
  *
  */
-loadTreesEvent( ) {
+		loadTreesEvent() {
 
-    // Get the state of the showTrees toggle button
-    const showTrees = document.getElementById( "showTreesToggle" ).checked;
+			// Get the state of the showTrees toggle button
+			const showTrees = document.getElementById( 'showTreesToggle' ).checked;
 
-    // If showTrees toggle is on
-    if ( showTrees ) {
+			// If showTrees toggle is on
+			if ( showTrees ) {
 
-        // If a postal code is available, load trees for that postal code
-        if ( this.store.postalcode  && !this.dataSourceService.getDataSourceByName( "Trees" )  ) {
+				// If a postal code is available, load trees for that postal code
+				if ( this.store.postalcode  && !this.dataSourceService.getDataSourceByName( 'Trees' ) ) {
 
-            this.treeService.loadTrees( this.store.postalcode );
+					this.treeService.loadTrees( this.store.postalcode );
 
-        } else {
+				} else {
 
-            this.dataSourceService.changeDataSourceShowByName( "Trees", true );
-            this.plotService.updateTreeElements( 'visible' );
+					this.dataSourceService.changeDataSourceShowByName( 'Trees', true );
+					this.plotService.updateTreeElements( 'visible' );
 
-        }
+				}
 
-    } else { // If showTrees toggle is off
+			} else { // If showTrees toggle is off
 
-        this.dataSourceService.changeDataSourceShowByName( "Trees", false );
-        this.plotService.updateTreeElements( 'hidden' );
-        this.plotService.showAllPlots( );
-        this.buildingService.resetBuildingEntites( );
+				this.dataSourceService.changeDataSourceShowByName( 'Trees', false );
+				this.plotService.updateTreeElements( 'hidden' );
+				this.plotService.showAllPlots();
+				this.buildingService.resetBuildingEntites();
 
-    }
+			}
 
-},
+		},
 
-/**
+		/**
  * This function handles the toggle event for showing or hiding the nature areas layer on the map.
  *
  */
-loadOtherNatureEvent( ) {
+		loadOtherNatureEvent() {
 
-    // Get the current state of the toggle button for showing nature areas.
-    const showloadOtherNature = document.getElementById( "showOtherNatureToggle" ).checked;
+			// Get the current state of the toggle button for showing nature areas.
+			const showloadOtherNature = document.getElementById( 'showOtherNatureToggle' ).checked;
 
-    if ( showloadOtherNature ) {
+			if ( showloadOtherNature ) {
 
-        // If the toggle button is checked, enable the toggle button for showing the nature area heat map.
-        //document.getElementById("showloadOtherNature").disabled = false;
+				// If the toggle button is checked, enable the toggle button for showing the nature area heat map.
+				//document.getElementById("showloadOtherNature").disabled = false;
 
-        // If there is a postal code available, load the nature areas for that area.
-        if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( "OtherNature" ) ) {
+				// If there is a postal code available, load the nature areas for that area.
+				if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'OtherNature' ) ) {
 
-          const otherNatureService = new Othernature( this.viewer );        
-          otherNatureService.loadOtherNature( this.store.postalcode );
+					const otherNatureService = new Othernature( this.viewer );        
+					otherNatureService.loadOtherNature( this.store.postalcode );
 
-        } else {
+				} else {
             
-            this.dataSourceService.changeDataSourceShowByName( "OtherNature", true );
-        }
+					this.dataSourceService.changeDataSourceShowByName( 'OtherNature', true );
+				}
 
 
-    } else {
+			} else {
 
-        this.dataSourceService.changeDataSourceShowByName( "OtherNature", false );
+				this.dataSourceService.changeDataSourceShowByName( 'OtherNature', false );
 
-    }
+			}
 
-},
+		},
 
-/**
+		/**
  * This function handles the toggle event for showing or hiding the vegetation layer on the map.
  *
  */
-loadVegetationEvent( ) {
+		loadVegetationEvent() {
 
-    // Get the current state of the toggle button for showing nature areas.
-    const showVegetation = document.getElementById( "showVegetationToggle" ).checked;
+			// Get the current state of the toggle button for showing nature areas.
+			const showVegetation = document.getElementById( 'showVegetationToggle' ).checked;
 
-    if ( showVegetation ) {
+			if ( showVegetation ) {
 
-        // If the toggle button is checked, enable the toggle button for showing the nature area heat map.
-        //document.getElementById("showVegetationHeatToggle").disabled = false;
+				// If the toggle button is checked, enable the toggle button for showing the nature area heat map.
+				//document.getElementById("showVegetationHeatToggle").disabled = false;
 
-        // If there is a postal code available, load the nature areas for that area.
-        if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName("Vegetation") ) {
+				// If there is a postal code available, load the nature areas for that area.
+				if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'Vegetation' ) ) {
 
-          const vegetationService = new Vegetation( this.viewer );         
-          vegetationService.loadVegetation( this.store.postalcode );
+					const vegetationService = new Vegetation( this.viewer );         
+					vegetationService.loadVegetation( this.store.postalcode );
 
-        } else {
+				} else {
             
-            this.dataSourceService.changeDataSourceShowByName( "Vegetation", true );
+					this.dataSourceService.changeDataSourceShowByName( 'Vegetation', true );
 
-        }
+				}
 
-    } else {
+			} else {
 
-        this.dataSourceService.changeDataSourceShowByName( "Vegetation", false );
+				this.dataSourceService.changeDataSourceShowByName( 'Vegetation', false );
 
-    }
+			}
 
-},
+		},
 
-filterBuildingsEvent() {
+		filterBuildingsEvent() {
 
-    const hideNonSote = document.getElementById( "hideNonSoteToggle" ).checked;
-    const hideNewBuildings = document.getElementById( "hideNewBuildingsToggle" ).checked;
-    const hideLow = document.getElementById( "hideLowToggle" ).checked;
+			const hideNonSote = document.getElementById( 'hideNonSoteToggle' ).checked;
+			const hideNewBuildings = document.getElementById( 'hideNewBuildingsToggle' ).checked;
+			const hideLow = document.getElementById( 'hideLowToggle' ).checked;
 
-  if ( this.dataSourceService ) {
+			if ( this.dataSourceService ) {
 
-    const buildingsDataSource = this.dataSourceService.getDataSourceByName("Buildings");
+				const buildingsDataSource = this.dataSourceService.getDataSourceByName( 'Buildings' );
 
-    if ( buildingsDataSource ) {
+				if ( buildingsDataSource ) {
 
-      if ( hideNonSote || hideNewBuildings || hideLow ) {
+					if ( hideNonSote || hideNewBuildings || hideLow ) {
 
-        this.buildingService.filterBuildings( buildingsDataSource );
+						this.buildingService.filterBuildings( buildingsDataSource );
 
-      } else {
+					} else {
 
-        this.buildingService.showAllBuildings( buildingsDataSource );
+						this.buildingService.showAllBuildings( buildingsDataSource );
 
-    }
-    }
-    }
+					}
+				}
+			}
 
-},
+		},
 
-/**
+		/**
  * This function is called when the user clicks on the "switch view" toggle button.
  *
  */
-switchViewEvent( ) {
+		switchViewEvent() {
 
-    // Get the status of the "switch view" toggle button.
-    const switchView = document.getElementById( "switchViewToggle" ).checked;
-    const viewService = new View( this.viewer );        
-    // If the "switch view" toggle button is checked.
-    if ( switchView ) {
+			// Get the status of the "switch view" toggle button.
+			const switchView = document.getElementById( 'switchViewToggle' ).checked;
+			const viewService = new View( this.viewer );        
+			// If the "switch view" toggle button is checked.
+			if ( switchView ) {
 
-      viewService.switchTo2DView( );
+				viewService.switchTo2DView();
 
-    // If the "switch view"" toggle button is not checked.
-    } else {
+				// If the "switch view"" toggle button is not checked.
+			} else {
 
-      viewService.switchTo3DView( );
+				viewService.switchTo3DView();
 
-    }
+			}
 
-}
-  },
+		}
+	},
 };
 </script>
 

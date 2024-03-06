@@ -25,15 +25,15 @@
   
 <script>
 export default {
-    data() {
-        return {
-            addressData: null, // Define your variable here
-        };
-    },
-    methods: {
+	data() {
+		return {
+			addressData: null, // Define your variable here
+		};
+	},
+	methods: {
 
-    },
-  };
+	},
+};
 </script>
 
 <style>

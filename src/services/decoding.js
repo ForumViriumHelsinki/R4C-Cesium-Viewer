@@ -1,16 +1,16 @@
 
 export default class Decoding {
 
-/**
+	/**
  * Finds the purpose of a building in Helsinki based on code included in wfs source data
  * Code list: https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf
  *
  * @param { String } kayttotarkoitus code for purpose
  * @return { String } purpose of building
  */
-decodeKayttotarkoitusHKI( kayttotarkoitus ) {
+	decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 
-	switch ( kayttotarkoitus ) {
+		switch ( kayttotarkoitus ) {
 		case '011': 
 			return 'Yhden asunnon talot';
 		case '012': 
@@ -167,18 +167,18 @@ decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 			return kayttotarkoitus;
 		}
 
-}
+	}
 
 
-/**
+	/**
  * Decodes building material https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf
  *
  * @param { String } material value code for building material.'
  * @return { String } building material
  */
-decodeMaterial( material ) {
+	decodeMaterial( material ) {
 
-	switch ( material ) {
+		switch ( material ) {
 		case '1': 
 			return 'concrete';
 		case '2': 
@@ -191,39 +191,39 @@ decodeMaterial( material ) {
 			return 'other';
 		default:
 			return material;  		
+		}
+
 	}
 
-}
+	decodeHeatingMethod( heatingMethod ) {
 
-decodeHeatingMethod( heatingMethod ) {
-
-	switch ( heatingMethod ) {
+		switch ( heatingMethod ) {
 		case '1': 
 			return 'central water';
 		case '2': 
 			return 'central air';
 		case '3': 
 			return 'electricity';
-        case '4': 
+		case '4': 
 			return 'oven';
 		case '5': 
 			return 'no fixed heating';			
-        default:
-            return heatingMethod;  
+		default:
+			return heatingMethod;  
+		}
+
 	}
 
-}
+	decodeHeatingSource( heatingSource ) {
 
-decodeHeatingSource( heatingSource ) {
-
-	switch ( heatingSource ) {
+		switch ( heatingSource ) {
 		case '1': 
 			return 'district';
 		case '2': 
 			return 'light fuel oil';
 		case '3': 
 			return 'heavy fuel oil';
-        case '4': 
+		case '4': 
 			return 'electricity';
 		case '5': 
 			return 'gas';		
@@ -233,25 +233,25 @@ decodeHeatingSource( heatingSource ) {
 			return 'wood';
 		case '8': 
 			return 'peat';
-        case '9': 
+		case '9': 
 			return 'ground-source';
 		case '10': 
 			return 'other';					
-        default:
-            return heatingSource;  
+		default:
+			return heatingSource;  
+		}
+
 	}
 
-}
-
-/**
+	/**
  * Decodes facade material https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf
  *
  * @param { String } facade value code for facade material.'
  * @return { String } face material
  */
-decodeFacade( facade ) {
+	decodeFacade( facade ) {
 
-	switch ( facade ) {
+		switch ( facade ) {
 		case '1': 
 			return 'concrete';
 		case '2': 
@@ -268,168 +268,168 @@ decodeFacade( facade ) {
 			return 'other';
 		default:
 			return facade;  				
+		}
+
 	}
 
-}
-
-/**
+	/**
  * Get the closest color value for a given key using a pre-defined color mapping.
  * The mapping was created from webcolors using K-means clustering.
  * 
  * @param { String } key original color
  * @return { String } reduced value for original color
  */
-getColorValue( key ) {
-    const colorMap = {
-        aliceblue: 'seashell',
-        antiquewhite: 'seashell',
-        aqua: 'deepskyblue',
-        aquamarine: 'aquamarine',
-        azure: 'seashell',
-        beige: 'seashell',
-        bisque: 'peachpuff',
-        black: 'black',
-        blanchedalmond: 'peachpuff',
-        blue: 'blue',
-        blueviolet: 'blueviolet',
-        brown: 'brown',
-        burlywood: 'tan',
-        cadetblue: 'steelblue',
-        chartreuse: 'chartreuse',
-        chocolate: 'peru',
-        coral: 'peru',
-        cornflowerblue: 'mediumslateblue',
-        cornsilk: 'seashell',
-        crimson: 'red',
-        cyan: 'deepskyblue',
-        darkblue: 'navy',
-        darkcyan: 'darkcyan',
-        darkgoldenrod: 'olive',
-        darkgray: 'darkgray',
-        darkgrey: 'darkgray',
-        darkgreen: 'green',
-        darkkhaki: 'tan',
-        darkmagenta: 'purple',
-        darkolivegreen: 'darkslategray',
-        darkorange: 'orange',
-        darkorchid: 'blueviolet',
-        darkred: 'darkred',
-        darksalmon: 'darksalmon',
-        darkseagreen: 'darkgray',
-        darkslateblue: 'purple',
-        darkslategray: 'darkslategray',
-        darkslategrey: 'darkslategray',
-        darkturquoise: 'deepskyblue',
-        darkviolet: 'blueviolet',
-        deeppink: 'deeppink',
-        deepskyblue: 'deepskyblue',
-        dimgray: 'gray',
-        dimgrey: 'gray',
-        dodgerblue: 'deepskyblue',
-        firebrick: 'brown',
-        floralwhite: 'seashell',
-        forestgreen: 'green',
-        fuchsia: 'magenta',
-        gainsboro: 'lightgray',
-        ghostwhite: 'seashell',
-        gold: 'gold',
-        goldenrod: 'orange',
-        gray: 'gray',
-        grey: 'gray',
-        green: 'green',
-        greenyellow: 'chartreuse',
-        honeydew: 'seashell',
-        hotpink: 'orchid',
-        indianred: 'peru',
-        indigo: 'purple',
-        ivory: 'seashell',
-        khaki: 'peachpuff',
-        lavender: 'seashell',
-        lavenderblush: 'seashell',
-        lawngreen: 'chartreuse',
-        lemonchiffon: 'seashell',
-        lightblue: 'lightblue',
-        lightcoral: 'darksalmon',
-        lightcyan: 'seashell',
-        lightgoldenrodyellow: 'seashell',
-        lightgray: 'lightgray',
-        lightgrey: 'lightgray',
-        lightgreen: 'lightgreen',
-        lightpink: 'peachpuff',
-        lightsalmon: 'darksalmon',
-        lightseagreen: 'lightseagreen',
-        lightskyblue: 'lightblue',
-        lightslategray: 'gray',
-        lightslategrey: 'gray',
-        lightsteelblue: 'lightblue',
-        lightyellow: 'seashell',
-        lime: 'lime',
-        limegreen: 'lime',
-        linen: 'seashell',
-        magenta: 'magenta',
-        maroon: 'darkred',
-        mediumaquamarine: 'mediumturquoise',
-        mediumblue: 'blue',
-        mediumorchid: 'orchid',
-        mediumpurple: 'mediumslateblue',
-        mediumseagreen: 'lightseagreen',
-        mediumslateblue: 'mediumslateblue',
-        mediumspringgreen: 'springgreen',
-        mediumturquoise: 'mediumturquoise',
-        mediumvioletred: 'deeppink',
-        midnightblue: 'navy',
-        mintcream: 'seashell',
-        mistyrose: 'seashell',
-        moccasin: 'peachpuff',
-        navajowhite: 'peachpuff',
-        navy: 'navy',
-        oldlace: 'seashell',
-        olive: 'olive',
-        olivedrab: 'olive',
-        orange: 'orange',
-        orangered: 'red',
-        orchid: 'orchid',
-        palegoldenrod: 'peachpuff',
-        palegreen: 'lightgreen',
-        paleturquoise: 'lightblue',
-        palevioletred: 'darksalmon',
-        papayawhip: 'seashell',
-        peachpuff: 'peachpuff',
-        peru: 'peru',
-        pink: 'peachpuff',
-        plum: 'orchid',
-        powderblue: 'lightblue',
-        purple: 'purple',
-        red: 'red',
-        rosybrown: 'darkgray',
-        royalblue: 'steelblue',
-        saddlebrown: 'brown',
-        salmon: 'darksalmon',
-        sandybrown: 'darksalmon',
-        seagreen: 'darkslategray',
-        seashell: 'seashell',
-        sienna: 'brown',
-        silver: 'lightgray',
-        skyblue: 'lightblue',
-        slateblue: 'mediumslateblue',
-        slategray: 'gray',
-        slategrey: 'gray',
-        snow: 'seashell',
-        springgreen: 'springgreen',
-        steelblue: 'steelblue',
-        tan: 'tan',
-        teal: 'darkcyan',
-        thistle: 'lightgray',
-        tomato: 'peru',
-        turquoise: 'mediumturquoise',
-        violet: 'orchid',
-        wheat: 'peachpuff',
-        white: 'seashell',
-        whitesmoke: 'seashell',
-        yellow: 'gold',
-        yellowgreen: 'chartreuse'
-    };
+	getColorValue( key ) {
+		const colorMap = {
+			aliceblue: 'seashell',
+			antiquewhite: 'seashell',
+			aqua: 'deepskyblue',
+			aquamarine: 'aquamarine',
+			azure: 'seashell',
+			beige: 'seashell',
+			bisque: 'peachpuff',
+			black: 'black',
+			blanchedalmond: 'peachpuff',
+			blue: 'blue',
+			blueviolet: 'blueviolet',
+			brown: 'brown',
+			burlywood: 'tan',
+			cadetblue: 'steelblue',
+			chartreuse: 'chartreuse',
+			chocolate: 'peru',
+			coral: 'peru',
+			cornflowerblue: 'mediumslateblue',
+			cornsilk: 'seashell',
+			crimson: 'red',
+			cyan: 'deepskyblue',
+			darkblue: 'navy',
+			darkcyan: 'darkcyan',
+			darkgoldenrod: 'olive',
+			darkgray: 'darkgray',
+			darkgrey: 'darkgray',
+			darkgreen: 'green',
+			darkkhaki: 'tan',
+			darkmagenta: 'purple',
+			darkolivegreen: 'darkslategray',
+			darkorange: 'orange',
+			darkorchid: 'blueviolet',
+			darkred: 'darkred',
+			darksalmon: 'darksalmon',
+			darkseagreen: 'darkgray',
+			darkslateblue: 'purple',
+			darkslategray: 'darkslategray',
+			darkslategrey: 'darkslategray',
+			darkturquoise: 'deepskyblue',
+			darkviolet: 'blueviolet',
+			deeppink: 'deeppink',
+			deepskyblue: 'deepskyblue',
+			dimgray: 'gray',
+			dimgrey: 'gray',
+			dodgerblue: 'deepskyblue',
+			firebrick: 'brown',
+			floralwhite: 'seashell',
+			forestgreen: 'green',
+			fuchsia: 'magenta',
+			gainsboro: 'lightgray',
+			ghostwhite: 'seashell',
+			gold: 'gold',
+			goldenrod: 'orange',
+			gray: 'gray',
+			grey: 'gray',
+			green: 'green',
+			greenyellow: 'chartreuse',
+			honeydew: 'seashell',
+			hotpink: 'orchid',
+			indianred: 'peru',
+			indigo: 'purple',
+			ivory: 'seashell',
+			khaki: 'peachpuff',
+			lavender: 'seashell',
+			lavenderblush: 'seashell',
+			lawngreen: 'chartreuse',
+			lemonchiffon: 'seashell',
+			lightblue: 'lightblue',
+			lightcoral: 'darksalmon',
+			lightcyan: 'seashell',
+			lightgoldenrodyellow: 'seashell',
+			lightgray: 'lightgray',
+			lightgrey: 'lightgray',
+			lightgreen: 'lightgreen',
+			lightpink: 'peachpuff',
+			lightsalmon: 'darksalmon',
+			lightseagreen: 'lightseagreen',
+			lightskyblue: 'lightblue',
+			lightslategray: 'gray',
+			lightslategrey: 'gray',
+			lightsteelblue: 'lightblue',
+			lightyellow: 'seashell',
+			lime: 'lime',
+			limegreen: 'lime',
+			linen: 'seashell',
+			magenta: 'magenta',
+			maroon: 'darkred',
+			mediumaquamarine: 'mediumturquoise',
+			mediumblue: 'blue',
+			mediumorchid: 'orchid',
+			mediumpurple: 'mediumslateblue',
+			mediumseagreen: 'lightseagreen',
+			mediumslateblue: 'mediumslateblue',
+			mediumspringgreen: 'springgreen',
+			mediumturquoise: 'mediumturquoise',
+			mediumvioletred: 'deeppink',
+			midnightblue: 'navy',
+			mintcream: 'seashell',
+			mistyrose: 'seashell',
+			moccasin: 'peachpuff',
+			navajowhite: 'peachpuff',
+			navy: 'navy',
+			oldlace: 'seashell',
+			olive: 'olive',
+			olivedrab: 'olive',
+			orange: 'orange',
+			orangered: 'red',
+			orchid: 'orchid',
+			palegoldenrod: 'peachpuff',
+			palegreen: 'lightgreen',
+			paleturquoise: 'lightblue',
+			palevioletred: 'darksalmon',
+			papayawhip: 'seashell',
+			peachpuff: 'peachpuff',
+			peru: 'peru',
+			pink: 'peachpuff',
+			plum: 'orchid',
+			powderblue: 'lightblue',
+			purple: 'purple',
+			red: 'red',
+			rosybrown: 'darkgray',
+			royalblue: 'steelblue',
+			saddlebrown: 'brown',
+			salmon: 'darksalmon',
+			sandybrown: 'darksalmon',
+			seagreen: 'darkslategray',
+			seashell: 'seashell',
+			sienna: 'brown',
+			silver: 'lightgray',
+			skyblue: 'lightblue',
+			slateblue: 'mediumslateblue',
+			slategray: 'gray',
+			slategrey: 'gray',
+			snow: 'seashell',
+			springgreen: 'springgreen',
+			steelblue: 'steelblue',
+			tan: 'tan',
+			teal: 'darkcyan',
+			thistle: 'lightgray',
+			tomato: 'peru',
+			turquoise: 'mediumturquoise',
+			violet: 'orchid',
+			wheat: 'peachpuff',
+			white: 'seashell',
+			whitesmoke: 'seashell',
+			yellow: 'gold',
+			yellowgreen: 'chartreuse'
+		};
   
-    return colorMap[key.toLowerCase()] || null;
-  }
+		return colorMap[key.toLowerCase()] || null;
+	}
 }

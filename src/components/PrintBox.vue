@@ -2,22 +2,22 @@
 
 	<div id="printContainer">
         <i>Please click on a postcode area or enter location to load building and nature polygons from the WFS server...</i>
-  	</div>
+	</div>
 
 </template>
   
 <script>
-  export default {
-    methods: {
-      addToPrint(content, postno) {
-        // Logic to add content to printContainer
-        // Access and manipulate printContainer DOM here
-        console.log(`Adding content to printContainer: ${content}`);
-        // Example: document.getElementById('printContainer').innerHTML = content;
-      },
-      // Other methods related to printContainer...
-    },
-  };
+export default {
+	methods: {
+		addToPrint( content ) {
+			// Logic to add content to printContainer
+			// Access and manipulate printContainer DOM here
+			console.log( `Adding content to printContainer: ${content}` );
+			// Example: document.getElementById('printContainer').innerHTML = content;
+		},
+		// Other methods related to printContainer...
+	},
+};
 </script>
 
 <style>

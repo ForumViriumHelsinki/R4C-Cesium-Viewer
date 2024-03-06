@@ -36,157 +36,157 @@
   
 <script>
 
-import EventEmitter from "../services/eventEmitter.js"
+import EventEmitter from '../services/eventEmitter.js';
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
-import Datasource from "../services/datasource.js"; 
-import Populationgrid from "../services/populationgrid.js"; 
+import Datasource from '../services/datasource.js'; 
+import Populationgrid from '../services/populationgrid.js'; 
 
 export default {
-    data() {
-      return {
-        viewer: null,
-      };
-    },
-    mounted() {
-      this.unsubscribe = eventBus.$on('createPopulationGrid', this.createPopulationGrid);
-      this.store = useGlobalStore( );
-      this.eventEmitterService = new EventEmitter( );
-      this.addEventListeners();
+	data() {
+		return {
+			viewer: null,
+		};
+	},
+	mounted() {
+		this.unsubscribe = eventBus.$on( 'createPopulationGrid', this.createPopulationGrid );
+		this.store = useGlobalStore();
+		this.eventEmitterService = new EventEmitter();
+		this.addEventListeners();
 
-    },
-    beforeUnmount() {
-      this.unsubscribe();
-    },    
-    methods: {
-        reset(){
-            location.reload();
-        },
-        async createPopulationGrid( viewer ) {
-            this.viewer = viewer;
-            const populationgridService = new Populationgrid( this.viewer );
-            populationgridService.createPopulationGrid();
+	},
+	beforeUnmount() {
+		this.unsubscribe();
+	},    
+	methods: {
+		reset(){
+			location.reload();
+		},
+		async createPopulationGrid( viewer ) {
+			this.viewer = viewer;
+			const populationgridService = new Populationgrid( this.viewer );
+			populationgridService.createPopulationGrid();
 
-        },
-        /**
+		},
+		/**
         * Add EventListeners 
         */
-        addEventListeners() {
+		addEventListeners() {
             
-            document.getElementById('postalCodeToggle').addEventListener('change', this.postalCodeViewEvent.bind(this));
-            document.getElementById('travelTimeToggle').addEventListener('change', this.travelTimeEvent.bind(this));
-            document.getElementById('natureGridToggle').addEventListener('change', this.natureGridEvent.bind(this));
-            document.getElementById('resetGridToggle').addEventListener('change', this.resetGridViewEvent.bind(this));
+			document.getElementById( 'postalCodeToggle' ).addEventListener( 'change', this.postalCodeViewEvent.bind( this ) );
+			document.getElementById( 'travelTimeToggle' ).addEventListener( 'change', this.travelTimeEvent.bind( this ) );
+			document.getElementById( 'natureGridToggle' ).addEventListener( 'change', this.natureGridEvent.bind( this ) );
+			document.getElementById( 'resetGridToggle' ).addEventListener( 'change', this.resetGridViewEvent.bind( this ) );
 
-        },
+		},
 
-        /**
+		/**
         * This function handles the toggle event for switching to postal code view
         */
-        postalCodeViewEvent( ) {
+		postalCodeViewEvent() {
 
-            const postalView = document.getElementById( "postalCodeToggle" ).checked;
+			const postalView = document.getElementById( 'postalCodeToggle' ).checked;
 
-            if ( postalView ) {
+			if ( postalView ) {
 
-              this.store.view = 'helsinki';
-              this.reset();
+				this.store.view = 'helsinki';
+				this.reset();
         
-            } 
+			} 
 
-        },
+		},
 
-        /**
+		/**
         * This function resets grid view
         */
-        resetGridViewEvent( ) {
+		resetGridViewEvent() {
 
-            const resetGrid = document.getElementById( "resetGridToggle" ).checked;
+			const resetGrid = document.getElementById( 'resetGridToggle' ).checked;
 
-            if ( resetGrid ) {
+			if ( resetGrid ) {
 
-              const populationgridService = new Populationgrid( this.viewer );
-              populationgridService.createPopulationGrid();        
-            } 
+				const populationgridService = new Populationgrid( this.viewer );
+				populationgridService.createPopulationGrid();        
+			} 
 
-        },        
+		},        
 
-        /**
+		/**
         * This function to switch between population grid and travel time grid view
         *
         */
-        async travelTimeEvent( ) {
+		async travelTimeEvent() {
 
-            const datasourceService = new Datasource(this.viewer);
+			const datasourceService = new Datasource( this.viewer );
 
-            // Check if viewer is initialized
-            if (!this.viewer) {
-                console.error("Viewer is not initialized.");
-                return; // Exit the function if viewer is not initialized
-            }
+			// Check if viewer is initialized
+			if ( !this.viewer ) {
+				console.error( 'Viewer is not initialized.' );
+				return; // Exit the function if viewer is not initialized
+			}
 
-            try {
-                const travelTime = document.getElementById("travelTimeToggle").checked;
-                datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
-                datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
+			try {
+				const travelTime = document.getElementById( 'travelTimeToggle' ).checked;
+				datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
+				datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
 
-                if (travelTime) {
+				if ( travelTime ) {
                    
-                   // await datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
-                    await datasourceService.loadGeoJsonDataSource(0.1, 'assets/data/travel_time_grid.json', 'TravelTimeGrid');
-                } else {
-                    await datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
-                    await datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
-                    this.createPopulationGrid(this.viewer); // Pass this.viewer
-                }
-            } catch (error) {
-                console.error("Error in travelTimeEvent:", error);
-            }
-        },
+					// await datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
+					await datasourceService.loadGeoJsonDataSource( 0.1, 'assets/data/travel_time_grid.json', 'TravelTimeGrid' );
+				} else {
+					await datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
+					await datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
+					this.createPopulationGrid( this.viewer ); // Pass this.viewer
+				}
+			} catch ( error ) {
+				console.error( 'Error in travelTimeEvent:', error );
+			}
+		},
 
-        /**
+		/**
         * This function to switch between population grid and nature grid view
         *
         */
-        natureGridEvent( ) {
+		natureGridEvent() {
 
-            const datasourceService = new Datasource( this.viewer );
-            const natureGrid = document.getElementById( "natureGridToggle" ).checked;
-            datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
+			const datasourceService = new Datasource( this.viewer );
+			const natureGrid = document.getElementById( 'natureGridToggle' ).checked;
+			datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
 
-            if ( natureGrid ) {
+			if ( natureGrid ) {
 
-                const dataSource = datasourceService.getDataSourceByName( 'PopulationGrid' );
+				const dataSource = datasourceService.getDataSourceByName( 'PopulationGrid' );
 
-            if ( !dataSource ) {
-                console.error(`Data source with name PopulationGrid not found.`);
-                return [];
-            }
+				if ( !dataSource ) {
+					console.error( 'Data source with name PopulationGrid not found.' );
+					return [];
+				}
 
-            // Get the entities of the data source
-            const entities = dataSource.entities.values;
-            const populationgridService = new Populationgrid( this.viewer );
+				// Get the entities of the data source
+				const entities = dataSource.entities.values;
+				const populationgridService = new Populationgrid( this.viewer );
 
-            for ( let i = 0; i < entities.length; i++ ) {
+				for ( let i = 0; i < entities.length; i++ ) {
 
-                let entity = entities[ i ];
-                populationgridService.setGridEntityPolygonToGreen( entity );
+					let entity = entities[ i ];
+					populationgridService.setGridEntityPolygonToGreen( entity );
 
-            }
+				}
 
-            document.getElementById( "travelTimeToggle" ).checked = false;
+				document.getElementById( 'travelTimeToggle' ).checked = false;
 
-            } else { 
+			} else { 
 
-                datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
-                this.createPopulationGrid( this.viewer );
+				datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
+				this.createPopulationGrid( this.viewer );
 
-            }
+			}
 
 
-        },
-    },
-}
+		},
+	},
+};
 
 </script>
 
