@@ -3,9 +3,8 @@
   <HeatHistogram />
   <SocioEconomics />
   <ScatterPlot />
-  <HSYScatterplot />
+  <HSYScatterPlot />
   <BuildingComponent />
-  <PostalCodeView />
   <NearbyTreeArea />
   <DisclaimerPopup />
 </template>
@@ -23,9 +22,8 @@ import EventEmitter from '../services/eventEmitter.js';
 import HeatHistogram from './HeatHistogram.vue';
 import SocioEconomics from './SocioEconomics.vue';
 import ScatterPlot from './ScatterPlot.vue';
-import HSYScatterplot from './HSYScatterplot.vue';
+import HSYScatterPlot from './HSYScatterPlot.vue';
 import BuildingComponent from './Building.vue';
-import PostalCodeView from './PostalCodeView.vue';
 import NearbyTreeArea from './NearbyTreeArea.vue';
 import DisclaimerPopup from './DisclaimerPopup.vue';
 import { useGlobalStore } from '../stores/globalStore.js';
@@ -57,9 +55,8 @@ export default {
 		HeatHistogram,
 		SocioEconomics,
 		ScatterPlot,
-		HSYScatterplot,
+		HSYScatterPlot,
 		BuildingComponent,
-		PostalCodeView,
 		NearbyTreeArea,
 		DisclaimerPopup,
 	},  
