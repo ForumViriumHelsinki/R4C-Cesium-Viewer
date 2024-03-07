@@ -1,11 +1,16 @@
 import * as Cesium from 'cesium';
 import Datasource from './datasource.js'; 
 import Viewercamera from './viewercamera.js'; 
+import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 
 export default class Populationgrid {
-	constructor( viewer ) {
-		this.datasourceService = new Datasource( viewer );
-		this.cameraService = new Viewercamera( viewer );
+	constructor( ) {
+		this.store = useGlobalStore();
+		this.toggleStore = useToggleStore();
+		this.viewer = this.store.cesiumViewer;
+		this.datasourceService = new Datasource( );
+		this.cameraService = new Viewercamera( );
 		this.gridArea = 62500;
 	}
 
@@ -112,13 +117,13 @@ export default class Populationgrid {
         
 			this.setHeatExposureToGrid( entities );
 
-			if ( !document.getElementById( 'travelTimeToggle' ).checked ) {
+			if ( !this.toggleStore.travelTime ) {
     
 				this.setGridHeight( entities );
 
 			} else {
 
-				document.getElementById( 'travelTimeToggle' ).checked = false;
+				this.toggleStore.travelTime = false;
 
 			}
 

@@ -1,9 +1,11 @@
 import * as Cesium from 'cesium';
+import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class Printbox {
 
-	constructor( viewer ) {
-		this.viewer = viewer;  
+	constructor( ) {
+		this.store = useGlobalStore();
+		this.viewer = this.store.cesiumViewer;
 	}
 
 	/**

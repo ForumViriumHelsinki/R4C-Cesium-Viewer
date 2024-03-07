@@ -24,6 +24,7 @@
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 import Plot from '../services/plot.js'; 
 import Building from '../services/building.js'; 
     
@@ -36,6 +37,7 @@ export default {
 	mounted() {
 		this.unsubscribe = eventBus.$on( 'newHSYScatterPlot', this.newHSYScatterPlot );
 		this.store = useGlobalStore();
+		this.toggleStore = useToggleStore();
 		this.plotService = new Plot();
   
 		const numericalHSYSelect = document.getElementById( 'numericalHSYSelect' );
@@ -101,9 +103,9 @@ export default {
 		processEntitiesForHSYScatterPlot( entities, urbanHeatDataAndMaterial ) {
 			const numerical = document.getElementById( 'numericalHSYSelect' ).value;
 			const categorical = document.getElementById( 'categoricalHSYSelect' ).value;
-			const hideNonSote = document.getElementById( 'hideNonSoteToggle' ).checked;
-			const hideLowToggle = document.getElementById( 'hideLowToggle' ).checked;
-			const hideNew = document.getElementById( 'hideNewBuildingsToggle' ).checked;
+			const hideNonSote = this.toggleStore.hideNonSote;
+			const hideLowToggle = this.toggleStore.hideLowToggle;
+			const hideNew = this.toggleStore.hideNew;
   
 			entities.forEach( ( entity ) => {
 				let addDataToHSYScatterPlot = true;
@@ -285,7 +287,7 @@ export default {
 		initializePlotContainer( containerId ) {
 			const container = document.getElementById( containerId );
 			container.innerHTML = '';
-			container.style.visibility = document.getElementById( 'showPlotToggle' ).checked ? 'visible' : 'hidden';
+			container.style.visibility = this.toggleStore.showPlot ? 'visible' : 'hidden';
 		},
   
 		prepareDataForPlot( features, categorical, numerical ) {

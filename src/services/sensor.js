@@ -1,9 +1,12 @@
 import Datasource from './datasource.js'; 
 import * as Cesium from 'cesium';
+import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class Vegetation {
-	constructor( viewer ) {
-		this.datasourceService = new Datasource( viewer );
+	constructor( ) {
+		this.store = useGlobalStore();
+		this.viewer = this.store.cesiumViewer;
+		this.datasourceService = new Datasource( );
 	}
 
 	/**

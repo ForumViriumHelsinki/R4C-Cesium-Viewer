@@ -1,23 +1,22 @@
 import Datasource from './datasource.js'; 
 import * as Cesium from 'cesium';
 import axios from 'axios';
+import { useGlobalStore } from '../stores/globalStore.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Vegetation {
-	constructor( viewer ) {
-		this.datasourceService = new Datasource( viewer );
+	constructor( ) {
+		this.datasourceService = new Datasource();
+		this.store = useGlobalStore();
 	}
-
-
 
 	/**
  * Loads vegetation data for a given postcode asynchronously
  * 
- * @param {string} postcode - The postcode for which to load vegetation data
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
-	async loadVegetation( postcode ) {
-		let url = 'https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=' + postcode;
+	async loadVegetation( ) {
+		const url = 'https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;

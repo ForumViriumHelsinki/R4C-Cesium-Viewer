@@ -2,12 +2,14 @@ import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import EventEmitter from './eventEmitter.js';
 import axios from 'axios';
+import { useGlobalStore } from '../stores/globalStore.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Tree {
-	constructor( viewer ) {
-		this.datasourceService = new Datasource( viewer );
+	constructor( ) {
+		this.datasourceService = new Datasource();
 		this.eventEmitterService = new EventEmitter();
+		this.store = useGlobalStore();
 	}
 
 	/**
@@ -18,7 +20,7 @@ export default class Tree {
 	async loadTrees( postcode ) {
 
 		// Construct the API endpoint URL
-		let url = 'https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=' + postcode;
+		let url = 'https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
 
 		try {
 			// Attempt to retrieve the tree data from the Redis cache

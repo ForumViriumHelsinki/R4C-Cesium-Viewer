@@ -39,6 +39,7 @@
 import EventEmitter from '../services/eventEmitter.js';
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 import Datasource from '../services/datasource.js'; 
 import Populationgrid from '../services/populationgrid.js'; 
 
@@ -51,6 +52,8 @@ export default {
 	mounted() {
 		this.unsubscribe = eventBus.$on( 'createPopulationGrid', this.createPopulationGrid );
 		this.store = useGlobalStore();
+		this.toggleStore  = useToggleStore();
+		this.viewer = this.store.cesiumViewer;
 		this.eventEmitterService = new EventEmitter();
 		this.addEventListeners();
 
@@ -62,9 +65,8 @@ export default {
 		reset(){
 			location.reload();
 		},
-		async createPopulationGrid( viewer ) {
-			this.viewer = viewer;
-			const populationgridService = new Populationgrid( this.viewer );
+		async createPopulationGrid( ) {
+			const populationgridService = new Populationgrid();
 			populationgridService.createPopulationGrid();
 
 		},
@@ -86,6 +88,7 @@ export default {
 		postalCodeViewEvent() {
 
 			const postalView = document.getElementById( 'postalCodeToggle' ).checked;
+			this.toggleStore.setPostalCode(postalView);
 
 			if ( postalView ) {
 
@@ -102,10 +105,11 @@ export default {
 		resetGridViewEvent() {
 
 			const resetGrid = document.getElementById( 'resetGridToggle' ).checked;
+			this.toggleStore.setResetGrid(resetGrid);
 
 			if ( resetGrid ) {
 
-				const populationgridService = new Populationgrid( this.viewer );
+				const populationgridService = new Populationgrid();
 				populationgridService.createPopulationGrid();        
 			} 
 
@@ -117,7 +121,7 @@ export default {
         */
 		async travelTimeEvent() {
 
-			const datasourceService = new Datasource( this.viewer );
+			const datasourceService = new Datasource();
 
 			// Check if viewer is initialized
 			if ( !this.viewer ) {
@@ -127,6 +131,7 @@ export default {
 
 			try {
 				const travelTime = document.getElementById( 'travelTimeToggle' ).checked;
+				this.toggleStore.setTravelTime(travelTime);
 				datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
 				datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
 
@@ -137,7 +142,7 @@ export default {
 				} else {
 					await datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
 					await datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
-					this.createPopulationGrid( this.viewer ); // Pass this.viewer
+					this.createPopulationGrid( ); // Pass this.viewer
 				}
 			} catch ( error ) {
 				console.error( 'Error in travelTimeEvent:', error );
@@ -150,8 +155,10 @@ export default {
         */
 		natureGridEvent() {
 
-			const datasourceService = new Datasource( this.viewer );
+			const datasourceService = new Datasource();
 			const natureGrid = document.getElementById( 'natureGridToggle' ).checked;
+			this.toggleStore.setNatureGrid(natureGrid);
+
 			datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
 
 			if ( natureGrid ) {
@@ -165,7 +172,7 @@ export default {
 
 				// Get the entities of the data source
 				const entities = dataSource.entities.values;
-				const populationgridService = new Populationgrid( this.viewer );
+				const populationgridService = new Populationgrid();
 
 				for ( let i = 0; i < entities.length; i++ ) {
 
@@ -179,7 +186,7 @@ export default {
 			} else { 
 
 				datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
-				this.createPopulationGrid( this.viewer );
+				this.createPopulationGrid( );
 
 			}
 

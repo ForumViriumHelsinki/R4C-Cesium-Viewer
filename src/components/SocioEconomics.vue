@@ -31,7 +31,7 @@ export default {
                         
 			if ( newData ) {
 				this.populateSelectFromStore();
-				const dataForPostcode = this.socioEconomicsStore.getDataByPostcode( newData._value );
+				const dataForPostcode = this.socioEconomicsStore.getDataByPostcode( newData );
 				const statsData = this.findSocioEconomicsStats();
 				this.createSocioEconomicsDiagram( dataForPostcode, statsData );
 

@@ -1,8 +1,10 @@
 import * as Cesium from 'cesium';
+import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class Viewercamera {
-	constructor( viewer ) {
-		this.viewer = viewer;
+	constructor( ) {
+		this.store = useGlobalStore();
+		this.viewer = this.store.cesiumViewer;
 	}
 
 	flyCamera3D( lat, long , z ) {

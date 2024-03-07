@@ -63,7 +63,7 @@ export default {
 	methods: {
 		initViewer() {
 			// Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
-			this.viewer = new Cesium.Viewer( 'cesiumContainer', {
+			this.store.cesiumViewer = new Cesium.Viewer( 'cesiumContainer', {
 				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
 				animation: false,
 				fullscreenButton: false,
@@ -82,11 +82,11 @@ export default {
 			// Other initialization logic...
 
 			// For example, add a placeholder imagery layer
-			this.viewer.imageryLayers.add(
+			this.store.cesiumViewer.imageryLayers.add(
 				this.wmsService.createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
 			);
 
-			this.viewer.camera.setView( {
+			this.store.cesiumViewer.camera.setView( {
 				destination: Cesium.Cartesian3.fromDegrees(
 					24.931745,
 					60.190464,
@@ -99,7 +99,7 @@ export default {
 				}
 			} );
 
-			this.dataSourceService = new Datasource( this.viewer );
+			this.dataSourceService = new Datasource( );
 			this.dataSourceService.loadGeoJsonDataSource(
 				0.2,
 				'./assets/data/hki_po_clipped.json',
@@ -108,21 +108,20 @@ export default {
 
 			// Add click event listener to the viewer container
 			const cesiumContainer = document.getElementById( 'cesiumContainer' );
-			const featurepicker = new Featurepicker( this.viewer );
+			const featurepicker = new Featurepicker(  );
 			cesiumContainer.addEventListener( 'click', function( event ) { 
 				featurepicker.processClick( event ); // Assuming processClick is defined later
 			} );
 
-			const geocoding = new Geocoding( this.viewer );
+			const geocoding = new Geocoding( );
 			geocoding.addGeocodingEventListeners();
 
-			this.treeService = new Tree( this.viewer );
-			this.buildingService = new Building( this.viewer );
-			this.setupBearingSwitches( this.viewer );
-			this.store.cesiumViewer = this.viewer;
+			this.treeService = new Tree( );
+			this.buildingService = new Building( );
+			this.setupBearingSwitches();
 
 			this.$nextTick( () => {
-				this.eventEmitterService.emitPostalCodeViewEvent( this.viewer );
+				this.eventEmitterService.emitPostalCodeViewEvent( );
 			} );
 
 		},

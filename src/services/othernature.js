@@ -1,22 +1,24 @@
 import Datasource from './datasource.js'; 
 import * as Cesium from 'cesium';
 import axios from 'axios';
+import { useGlobalStore } from '../stores/globalStore.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Othernature {
-	constructor( viewer ) {
-		this.datasourceService = new Datasource( viewer );
+	constructor( ) {
+		this.store = useGlobalStore();
+		this.viewer = this.store.cesiumViewer;
+		this.datasourceService = new Datasource();
 	}
 
 	/**
  * Loads othernature data for a given postcode asynchronously
  * 
- * @param {string} postcode - The postcode for which to load othernature data
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
-	async loadOtherNature( postcode ) {
+	async loadOtherNature() {
 
-		let url = 'https://geo.fvh.fi/r4c/collections/othernature/items?f=json&limit=10000&postinumero=' + postcode ;
+		let url = 'https://geo.fvh.fi/r4c/collections/othernature/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;

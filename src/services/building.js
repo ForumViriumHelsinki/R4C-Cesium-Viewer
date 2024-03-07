@@ -4,19 +4,21 @@ import Urbanheat from './urbanheat.js';
 import Tree from './tree.js'; 
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 import EventEmitter from './eventEmitter.js';
 import PrintBoxService from './printbox.js'; 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Building {
-	constructor( viewer ) {
-		this.viewer = viewer;
-		this.datasourceService = new Datasource( this.viewer );
-		this.treeService = new Tree( this.viewer );
-		this.urbanheatService = new Urbanheat( this.viewer );
+	constructor( ) {
 		this.store = useGlobalStore();
+		this.toggleStore = useToggleStore();
+		this.viewer = this.store.cesiumViewer;
+		this.datasourceService = new Datasource();
+		this.treeService = new Tree();
+		this.urbanheatService = new Urbanheat();
 		this.eventEmitterService = new EventEmitter();
-		this.printBoxService = new PrintBoxService( this.viewer );
+		this.printBoxService = new PrintBoxService();
 	}
 
 
@@ -62,7 +64,7 @@ export default class Building {
  */
 	createBuildingCharts( buildingHeatExposure, address, postinumero, treeArea, avgTempC, buildingProps ) {
 
-		if ( this.store.view == 'helsinki' && document.getElementById( 'showTreesToggle' ).checked ) {
+		if ( this.store.view == 'helsinki' && this.toggleStore.showTrees ) {
     
 			if ( treeArea ) {
 
@@ -140,7 +142,7 @@ export default class Building {
  */
 	hideNonSoteBuilding( entity ) {
 
-		const hideNonSote = document.getElementById( 'hideNonSoteToggle' ).checked;
+		const hideNonSote = this.toggleStore.hideNonSote;
 
 		if ( hideNonSote ) {
 
@@ -170,7 +172,7 @@ export default class Building {
  */
 	hideLowBuilding( entity ) {
 
-		const hideLow = document.getElementById( 'hideLowToggle' ).checked;
+		const hideLow = this.toggleStore.hideLow;
 
 		if ( hideLow ) {
 
@@ -224,12 +226,9 @@ export default class Building {
 		}
 	}
 
-	async loadBuildings( postcode ) {
-
-		let url;
-
-		console.log( 'postal code', Number( postcode ) );
-		url = 'https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27' + postcode + '%27';
+	async loadBuildings( ) {
+		
+		const url = 'https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27' + this.store.postalcode + '%27';
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
@@ -239,13 +238,13 @@ export default class Building {
 			if ( cachedData ) {
 				console.log( 'found from cache' );
 
-				const entities = await this.urbanheatService.findUrbanHeatData( cachedData, postcode );
+				const entities = await this.urbanheatService.findUrbanHeatData( cachedData );
 				this.setHeatExposureToBuildings( entities );
 				this.setHelsinkiBuildingsHeight( entities );
 			
 			} else {
 
-				this.loadBuildingsWithoutCache( url, postcode );
+				this.loadBuildingsWithoutCache( url );
 
 			}
 
@@ -254,15 +253,15 @@ export default class Building {
 			console.log( err );
 		}
 
-		if ( document.getElementById( 'showTreesToggle' ).checked ) {
+		if ( this.toggleStore.showTrees ) {
 	
-			this.treeService.loadTrees( postcode );
+			this.treeService.loadTrees( );
 
 		}
 
 	}
 
-	async loadBuildingsWithoutCache( url, postcode ) {
+	async loadBuildingsWithoutCache( url ) {
 		console.log( 'Not in cache! Loading: ' + url );
   
 		try {
@@ -270,7 +269,7 @@ export default class Building {
 			const data = await response.json();
 			axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
 
-			const entities = await this.urbanheatService.findUrbanHeatData( data, postcode );
+			const entities = await this.urbanheatService.findUrbanHeatData( data );
 			this.setHeatExposureToBuildings( entities );
 			this.setHelsinkiBuildingsHeight( entities );
 
@@ -332,9 +331,9 @@ export default class Building {
 		}
 
 
-		const hideNewBuildings = document.getElementById( 'hideNewBuildingsToggle' ).checked;
-		const hideNonSote = document.getElementById( 'hideNonSoteToggle' ).checked;
-		const hideLow = document.getElementById( 'hideLowToggle' ).checked;
+		const hideNewBuildings = this.toggleStore.hideNewBuildings
+		const hideNonSote = this.toggleStore.hideNonSote;
+		const hideLow = this.toggleStore.hideLow;
 
 		buildingsDataSource.entities.values.forEach( ( entity ) => {
 

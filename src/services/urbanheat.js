@@ -4,11 +4,11 @@ import Datasource from './datasource.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 
 export default class Urbanheat {
-	constructor( viewer ) {
-		this.viewer = viewer;
-		this.decodingService = new Decoding();
-		this.datasourceService = new Datasource( viewer );
+	constructor( ) {
 		this.store = useGlobalStore();
+		this.viewer = this.store.cesiumViewer;
+		this.decodingService = new Decoding();
+		this.datasourceService = new Datasource( );
 		this.eventEmitterService = new EventEmitter();
 
 	}
@@ -131,9 +131,10 @@ export default class Urbanheat {
  * Fetches heat exposure data from pygeoapi for postal code.
  * 
  * @param { object } data of buildings from city wfs
- * @param { String } postcode postal code of the area
  */
-	async findUrbanHeatData( data, postcode ) {
+	async findUrbanHeatData( data ) {
+
+		const postcode = this.store.postalcode;
 
 		try {
 			const response = await fetch( 'https://geo.fvh.fi/r4c/collections/urban_heat_building/items?f=json&limit=2000&postinumero=' + postcode );
@@ -146,12 +147,12 @@ export default class Urbanheat {
     
 			this.addMissingHeatData( data.features, urbanheat.features );
 			let urbanHeatData = this.calculateAverageExposure( data.features );
-			let entites = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings' );
+			let entites = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + postcode );
 			this.eventEmitterService.emitPostalCodeEvents( urbanHeatData, entites );
 
-			if ( postcode._value !== '00230' ) {
+			if ( postcode !== '00230' ) {
 
-				this.eventEmitterService.emitSocioEconomicsEvent( postcode );
+				this.eventEmitterService.emitSocioEconomicsEvent();
 
 			}
 

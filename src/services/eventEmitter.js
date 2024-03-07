@@ -1,4 +1,5 @@
 import { reactive } from 'vue';
+import { useGlobalStore } from '../stores/globalStore.js';
 
 export const eventBus = reactive( {
 	listeners: {},
@@ -18,7 +19,7 @@ export const eventBus = reactive( {
 export default class EventEmitter {
 
 	constructor() {
-
+		this.store = useGlobalStore();
 	}
 
 	/**
@@ -65,7 +66,9 @@ export default class EventEmitter {
  * @param { String } postcode postcode of area
  * 
  */
-	emitSocioEconomicsEvent( postcode ) {
+	emitSocioEconomicsEvent() {
+
+		const postcode = this.store.postalcode;
 
 		if ( !postcode !== '00230' || !postcode !== '02290' || !postcode !== '01770' ) {
 
@@ -143,9 +146,9 @@ export default class EventEmitter {
  * @param { Object } viewer Cesium viewer
  * 
  */
-	emitGridViewEvent( viewer ) {
+	emitGridViewEvent( ) {
 
-		eventBus.$emit( 'createPopulationGrid', viewer ); 
+		eventBus.$emit( 'createPopulationGrid' ); 
 
 	} 
 
@@ -167,9 +170,9 @@ export default class EventEmitter {
  * @param { Object } viewer Cesium viewer
  * 
  */
-	emitPostalCodeViewEvent( viewer ) {
+	emitPostalCodeViewEvent( ) {
 
-		eventBus.$emit( 'initPostalCodeView', viewer );
+		eventBus.$emit( 'initPostalCodeView' );
 
 	}
 

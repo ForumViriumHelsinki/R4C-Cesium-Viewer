@@ -10,21 +10,20 @@ import * as Cesium from 'cesium';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class HSYBuilding {
-	constructor( viewer ) {
-		this.viewer = viewer;
-		this.datasourceService = new Datasource( this.viewer );
-		this.buildingService = new Building( this.viewer );
-		this.urbanHeatService = new UrbanHeat( this.viewer );
-		this.eventEmitterService = new EventEmitter();
+	constructor( ) {
 		this.store = useGlobalStore();
-
+		this.viewer = this.store.cesiumViewer;
+		this.datasourceService = new Datasource();
+		this.buildingService = new Building();
+		this.urbanHeatService = new UrbanHeat();
+		this.eventEmitterService = new EventEmitter();
 	}
 
-	async loadHSYBuildings( postcode ) {
+	async loadHSYBuildings( ) {
 
-		let url;
+		const url = 'https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=5000&postinumero=' + this.store.postalcode;
 
-		url = 'https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=5000&postinumero=' + postcode;
+		console.log("url",url)
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
@@ -35,12 +34,12 @@ export default class HSYBuilding {
 				console.log( 'found from cache' );
 
 				await this.setAvgTempInCelsius( cachedData.features );
-				let entities = await this.datasourceService.addDataSourceWithPolygonFix( cachedData, 'Buildings' );
-				this.setHSYBuildingAttributes( cachedData, entities, postcode );
+				let entities = await this.datasourceService.addDataSourceWithPolygonFix( cachedData, 'Buildings ' + this.store.postalcode );
+				this.setHSYBuildingAttributes( cachedData, entities );
 			
 			} else {
 
-				this.loadHSYBuildingsWithoutCache( url, postcode );
+				this.loadHSYBuildingsWithoutCache( url );
 			
 			}
 
@@ -49,22 +48,16 @@ export default class HSYBuilding {
 			console.log( err );
 		}
 
-		if ( document.getElementById( 'showTreesToggle' ).checked ) {
-	
-			this.treeService.loadTrees( postcode );
-
-		}
-
 	}
 
-	async loadHSYBuildingsWithoutCache( url, postcode ) {
+	async loadHSYBuildingsWithoutCache( url ) {
 		console.log( 'Not in cache! Loading: ' + url );
   
 		try {
 			const response = await fetch( url );
 			const data = await response.json();
 
-			if ( postcode ) {
+			if ( this.store.postalcode ) {
 
 				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
 
@@ -75,8 +68,8 @@ export default class HSYBuilding {
 			}
 
 			await this.setAvgTempInCelsius( data.features );
-			let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings' );
-			this.setHSYBuildingAttributes( data, entities, postcode );
+			let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + this.store.postalcode );
+			this.setHSYBuildingAttributes( data, entities );
 			return entities; // Return the processed entities or whatever you need here
 	
 		} catch ( error ) {
@@ -274,24 +267,24 @@ export default class HSYBuilding {
 		}
 	}
 
-	async calculateHSYUrbanHeatData( data, entities, postcode ) {
+	async calculateHSYUrbanHeatData( data, entities ) {
 
 		this.urbanHeatService.calculateAverageExposure( data.features );
 		const avgTempCList = data.features.map( feature => feature.properties.avgTempC );
 		this.eventEmitterService.emitHeatHistogram( avgTempCList );
 		this.eventEmitterService.emitHSYScatterPlotEvent( entities );
-		this.eventEmitterService.emitSocioEconomicsEvent( postcode );
+		this.eventEmitterService.emitSocioEconomicsEvent( );
 
 	}
 
-	setHSYBuildingAttributes( data, entities, postcode ) {
+	setHSYBuildingAttributes( data, entities ) {
 
 		this.buildingService.setHeatExposureToBuildings( entities );
 		this.setHSYBuildingsHeight( entities );
 
-		if ( postcode ) {
+		if ( this.store.postalcode ) {
 
-			this.calculateHSYUrbanHeatData( data, entities, postcode );
+			this.calculateHSYUrbanHeatData( data, entities );
 
 		}
 

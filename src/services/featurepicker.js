@@ -1,7 +1,6 @@
 import * as Cesium from 'cesium';
 import Datasource from './datasource.js'; 
 import PrintBoxService from './printbox.js'; 
-import Reset from './reset.js';
 import Building from './building.js';
 import Plot from './plot.js';
 import Traveltime from './traveltime.js';
@@ -9,20 +8,32 @@ import HSYBuilding from './hsybuilding.js';
 import Address from './address.js';
 import ElementsDisplay from './elementsDisplay.js';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
+import Helsinki from './helsinki.js';
+import CapitalRegion from './capitalRegion.js';
+import Sensor from './sensor.js';
+import View from './view.js';
+import ColdSpot from './coldspot.js';
 
 export default class FeaturePicker {
-	constructor( viewer ) {
-		this.viewer = viewer;
-		this.datasourceService = new Datasource( this.viewer );
-		this.printBoxService = new PrintBoxService( this.viewer );
-		this.resetService = new Reset( this.viewer );
-		this.buildingService = new Building( this.viewer );
-		this.plotService = new Plot();
+	constructor( ) {
 		this.store = useGlobalStore();
-		this.traveltimeService = new Traveltime( this.viewer );
-		this.hSYBuildingService = new HSYBuilding( this.viewer );
+		this.toggleStore = useToggleStore();
+		this.viewer = this.store.cesiumViewer;
+		this.datasourceService = new Datasource();
+		this.printBoxService = new PrintBoxService();
+		this.buildingService = new Building();
+		this.helsinkiService = new Helsinki();
+		this.capitalRegionService = new CapitalRegion();
+		this.sensorService = new Sensor();
+		this.buildingService = new Building();
+		this.plotService = new Plot();
+		this.traveltimeService = new Traveltime();
+		this.hSYBuildingService = new HSYBuilding();
 		this.addressService = new Address();
 		this.elementsDisplayService = new ElementsDisplay();
+		this.viewService = new View();
+		this.coldSpotService = new ColdSpot()
 	}
   
 	/**
@@ -66,64 +77,25 @@ export default class FeaturePicker {
 			}
 		}
 	}
-    
-	handlePostalCodeFeature( postcode ) {
-		// Find the data source for postcodes
-		const postCodesDataSource = this.viewer.dataSources._dataSources.find( ds => ds.name === 'PostCodes' );
-    
-		// Iterate over all entities in the postcodes data source.
-		for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
-        
-			let entity = postCodesDataSource._entityCollection._entities._array[ i ];
-        
-			// Check if the entity posno property matches the postalcode.
-			if ( entity._properties._posno._value  == postcode ) {
-        
-				// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
-				this.viewer.camera.flyTo( {
-					destination: Cesium.Cartesian3.fromDegrees( entity._properties._center_x._value, entity._properties._center_y._value - 0.025, 2000 ),
-					orientation: {
-						heading: 0.0,
-						pitch: Cesium.Math.toRadians( -35.0 ),
-						roll: 0.0
-					},
-					duration: 3
-				} );
-            
-				document.getElementById( 'switchViewToggle' ).disabled = false;
-				this.loadPostalCode( postcode );
-			}
-		}   
-	}
   
 	loadPostalCode( postcode ) {
-		document.getElementById( 'hideNonSoteToggle' ).disabled = false;
-		document.getElementById( 'hideNewBuildingsToggle' ).disabled = false;
-		document.getElementById( 'hideLowToggle' ).disabled = false;
-		document.getElementById( 'showTreesToggle' ).disabled = false;
 
-		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );
-    
-		console.log( 'Postal code area found!' );
-    
+		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
 		this.datasourceService.removeDataSourcesAndEntities();
-        
-		if ( this.store.showVegetation ) {
-            
-			// loadNatureAreas( postcode );
-        
+
+		if ( this.toggleStore.showSensorData ) {
+
+			this.sensorService.loadSensorData();
+
 		}
     
 		if ( this.store.view == 'capitalRegion' ) {
 
-			this.hSYBuildingService.loadHSYBuildings( postcode );	
-			this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
+			this.capitalRegionService.loadCapitalRegionElements();
     
 		} else {
         
-			this.elementsDisplayService.setHelsinkiElementsDisplay( 'inline-block' );
-			this.buildingService.loadBuildings( postcode );	
-			this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
+			this.helsinkiService.loadHelsinkiElements();
     
 		}
 
@@ -148,25 +120,8 @@ export default class FeaturePicker {
 		this.store.level = 'building';
 
 	}
-    
-	addColdPoint( location ) {
-    
-		const coordinates = location.split( ',' ); 
-    
-		this.viewer.entities.add( {
-			position: Cesium.Cartesian3.fromDegrees( Number( coordinates[ 1 ] ), Number( coordinates[ 0 ] ) ),
-			name: 'coldpoint',
-			point: {
-				show: true, 
-				color: Cesium.Color.ROYALBLUE, 
-				pixelSize: 15, 
-				outlineColor: Cesium.Color.LIGHTYELLOW, 
-				outlineWidth: 5, 
-			},
-		} );
-    
-	}
-    
+
+	        
 	removeEntityByName( name ) {
 
 		this.viewer.entities._entities._array.forEach( ( entity ) => {
@@ -179,31 +134,6 @@ export default class FeaturePicker {
 		} );
 	}
     
-	markCurrentLocation( entity ) {
-    
-		const hierarchy = entity.polygon.hierarchy.getValue().positions;
-    
-		// Calculate the center of the polygon's vertices
-		const boundingSphere = Cesium.BoundingSphere.fromPoints( hierarchy );
-		const centerCartesian = boundingSphere.center;
-    
-		this.viewer.entities.add( {
-			position: centerCartesian,
-			name: 'currentLocation',
-			point: {
-				show: true, 
-				color: Cesium.Color.BLACK, 
-				pixelSize: 42, 
-				outlineColor: Cesium.Color.BLACK, 
-				outlineWidth: 14, 
-				eyeOffset: new Cesium.Cartesian3( 0, 200, -200 ),
-				scaleByDistance: new Cesium.NearFarScalar( 4000, 1, 40000, 0.0 )
-			},
-		} );
-    
-    
-	}
-    
 	/**
      * Handles the feature with properties
      * 
@@ -211,7 +141,7 @@ export default class FeaturePicker {
      */
 	handleFeatureWithProperties( id ) {       
         
-		this.store.postalcode = id.properties.posno;
+		this.store.postalcode = id.properties.posno._value;
 		this.store.nameOfZone = id.properties.nimi;
 		this.removeEntityByName( 'coldpoint' );
 		this.removeEntityByName( 'currentLocation' );
@@ -220,7 +150,8 @@ export default class FeaturePicker {
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
 		if ( this.store.postalcode ) {
             
-			this.handlePostalCodeFeature( this.store.postalcode, id );
+			this.viewService.switchTo3DView()
+			this.loadPostalCode( this.store.postalcode, id );
     
 		}
     
@@ -250,7 +181,7 @@ export default class FeaturePicker {
 		if ( !id.properties.posno && id.entityCollection._entities._array[ 0 ]._properties._id && id.entityCollection._entities._array[ 0 ]._properties._id._value == 5879932 ) {
     
 			this.traveltimeService.loadTravelTimeData( id.properties.id._value );
-			this.markCurrentLocation( id );
+			this.traveltimeService.markCurrentLocation( id );
     
 		}
     
@@ -263,7 +194,7 @@ export default class FeaturePicker {
     
 				if ( id.properties._locationUnder40._value ) {
                     
-					this.addColdPoint( id.properties._locationUnder40._value );
+					this.coldSpotService.addColdPoint( id.properties._locationUnder40._value );
                 
 				}
     
@@ -337,7 +268,7 @@ export default class FeaturePicker {
     
 		} else {
     
-			if ( document.getElementById( 'showPlotToggle' ).checked && !document.getElementById( 'gridViewToggle' ).checked ) {
+			if ( this.toggleStore.showPlot && !this.toggleStore.gridView ) {
     
 				document.getElementById( 'heatHistogramContainer' ).style.visibility = 'visible';
     

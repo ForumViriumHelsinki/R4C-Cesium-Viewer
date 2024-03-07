@@ -1,20 +1,22 @@
-import Resetui from './reset.js'; 
 import Viewercamera from './viewercamera.js'; 
 import PrintBox from './printbox.js'; 
 import FeaturePicker from './featurepicker.js'; 
+import View from './view.js'
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
 
 
 export default class Geocoding {
-	constructor( viewer ) {
-		this.viewer = viewer;
-		this.resetui = new Resetui( this.viewer );
-		this.viewercamera = new Viewercamera( this.viewer );
-		this.printBox = new PrintBox( this.viewer );
-		this.featurePicker = new FeaturePicker( this.viewer );
-		this.addressData = null;
+	constructor( ) {
 		this.store = useGlobalStore();
+		this.viewer = this.store.cesiumViewer;
+		this.viewercamera = new Viewercamera();
+		this.printBox = new PrintBox();
+		this.featurePicker = new FeaturePicker();
+		this.addressData = null;
+		this.viewService = new View();
+		this.toggleStore = useToggleStore();
 	}
     
 	/**
@@ -40,7 +42,7 @@ export default class Geocoding {
 		if ( this.addressData.length === 1 ) {
 
 			this.store.postalcode = this.addressData[ 0 ].postalcode;
-			this.moveCameraAndReset( this.addressData[ 0 ].longitude, this.addressData[ 0 ].latitude, this.addressData[ 0 ].postalcode );
+			this.moveCameraAndReset( this.addressData[ 0 ].longitude, this.addressData[ 0 ].latitude );
 			document.getElementById( 'searchresults' ).innerHTML = '';
 
 		}
@@ -61,7 +63,7 @@ export default class Geocoding {
 			let row = { address: data[ i ][ 'properties' ][ 'name' ], latitude: data[ i ][ 'geometry' ][ 'coordinates'][ 1 ], longitude: data[ i ][ 'geometry' ][ 'coordinates'][ 0 ], postalcode: data[ i ].properties.postalcode };
 
 
-			if ( !document.getElementById( 'capitalRegionViewToggle' ).checked ) {
+			if ( !this.toggleStore.capitalRegionView ) {
 				// only include results from Helsinki
 				if ( ( data[ i ][ 'properties' ][ 'locality' ] === 'Helsinki' || data[ i ][ 'properties' ][ 'localadmin' ] === 'Helsinki' ) && data[ i ].properties.postalcode ) {
 
@@ -128,14 +130,14 @@ export default class Geocoding {
 
 				lat = this.addressData[ i ].latitude;
 				long = this.addressData[ i ].longitude;
-				postcode = this.addressData[ i ].postalcode; 
+				this.store.postalcode = this.addressData[ i ].postalcode; 
 				break;
 
 			}
 		}
 
 		this.findNameOfZone( postcode );
-		this.moveCameraAndReset( long, lat, postcode );
+		this.moveCameraAndReset( long, lat );
 		document.getElementById( 'searchresults' ).innerHTML = '';
 		document.getElementById( 'searchInput' ).value = 'enter place or address';
 	};
@@ -161,13 +163,16 @@ export default class Geocoding {
 	}
 
 	// Moves camera to specified latitude, longitude coordinates
-	moveCameraAndReset( longitude, latitude, postcode ) {
+	moveCameraAndReset( longitude, latitude ) {
 
 		this.viewercamera.setCameraView( longitude, latitude );
-		this.resetui.resetSwitches();
-		this.store.postalcode = postcode;
-		this.printBox.createToPrint( postcode );
-		this.featurePicker.loadPostalCode( postcode );
+		this.printBox.createToPrint();
+		this.featurePicker.loadPostalCode();
+
+		if ( this.toggleStore.switchView ) {
+
+			this.viewService.switchTo2DView();
+		}
 
 	}
 

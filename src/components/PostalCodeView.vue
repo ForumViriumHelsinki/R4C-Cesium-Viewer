@@ -116,6 +116,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 import ElementsDisplay from '../services/elementsDisplay.js';
 import WMS from '../services/wms.js'; 
+import { useToggleStore } from '../stores/toggleStore.js';
 
 export default {
 	data() {
@@ -129,9 +130,11 @@ export default {
 	mounted() {
 		this.unsubscribe = eventBus.$on( 'initPostalCodeView', this.initPostalCodeView );
 		this.store = useGlobalStore();
+		this.toggleStore  = useToggleStore();
+		this.viewer = this.store.cesiumViewer;
 		this.eventEmitterService = new EventEmitter();
 		this.elementsDisplayService = new ElementsDisplay();
-		this.wmsService = new WMS ();
+		this.wmsService = new WMS();
 
 	},
 	beforeUnmount() {
@@ -141,11 +144,10 @@ export default {
 		reset(){
 			location.reload();
 		},
-		initPostalCodeView( viewer ) {
-			this.viewer = viewer;
-			this.dataSourceService = new Datasource( this.viewer );
-			this.treeService = new Tree( this.viewer );
-			this.buildingService = new Building ( this.viewer );
+		initPostalCodeView( ) {
+			this.dataSourceService = new Datasource();
+			this.treeService = new Tree();
+			this.buildingService = new Building();
 			this.plotService = new Plot();
 			this.addEventListeners();
 
@@ -176,6 +178,7 @@ export default {
 		capitalRegionViewEvent() {
 
 			const metropolitanView = document.getElementById( 'capitalRegionViewToggle' ).checked;
+			this.toggleStore.setCapitalRegionView(metropolitanView);
 
 			if ( metropolitanView ) {
 
@@ -207,6 +210,7 @@ export default {
 		getLandCoverEvent() {
 
 			const landcover = document.getElementById( 'landCoverToggle' ).checked;
+			this.toggleStore.setLandCover(landcover);
 
 			if ( landcover ) {
 
@@ -235,12 +239,13 @@ export default {
 		gridViewEvent() {
 
 			const gridView = document.getElementById( 'gridViewToggle' ).checked;
+			this.toggleStore.setGridView(gridView);
 
 			if ( gridView ) {
 
 				this.store.view = 'grid';
 				this.showPostalCodeView = false;
-				this.eventEmitterService.emitGridViewEvent( this.viewer );
+				this.eventEmitterService.emitGridViewEvent( );
 
 			} 
 
@@ -255,7 +260,8 @@ export default {
 
 			// Get the value of the "Show Plot" toggle button
 			const showPlots = document.getElementById( 'showPlotToggle' ).checked;
-    
+    		this.toggleStore.setShowPlot(showPlots);
+
 			// Hide the plot and its controls if the toggle button is unchecked
 			if ( !showPlots ) {
 
@@ -276,6 +282,7 @@ export default {
 		printEvent() {
 
 			const print = document.getElementById( 'printToggle' ).checked;
+			this.toggleStore.setPrint(print);
 
 			// If print is not selected, hide the print container, search container, georeference container, and search button
 			if ( !print ) {
@@ -305,11 +312,12 @@ export default {
 
 			// Get the state of the showSensorData toggle button
 			const showSensorData = document.getElementById( 'showSensorDataToggle' ).checked;
+			this.toggleStore.setShowSensorData(showSensorData);
 
 			// If showSensorData toggle is on
 			if ( showSensorData ) {
         
-				const sensorService = new Sensor( this.viewer ); 
+				const sensorService = new Sensor(); 
 				sensorService.loadSensorData();
         
 			} else { 
@@ -328,6 +336,7 @@ export default {
 
 			// Get the state of the showTrees toggle button
 			const showTrees = document.getElementById( 'showTreesToggle' ).checked;
+			this.toggleStore.setShowTrees(showTrees);
 
 			// If showTrees toggle is on
 			if ( showTrees ) {
@@ -363,6 +372,7 @@ export default {
 
 			// Get the current state of the toggle button for showing nature areas.
 			const showloadOtherNature = document.getElementById( 'showOtherNatureToggle' ).checked;
+			this.toggleStore.setShowOtherNature(showloadOtherNature);
 
 			if ( showloadOtherNature ) {
 
@@ -372,7 +382,7 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'OtherNature' ) ) {
 
-					const otherNatureService = new Othernature( this.viewer );        
+					const otherNatureService = new Othernature();        
 					otherNatureService.loadOtherNature( this.store.postalcode );
 
 				} else {
@@ -397,6 +407,7 @@ export default {
 
 			// Get the current state of the toggle button for showing nature areas.
 			const showVegetation = document.getElementById( 'showVegetationToggle' ).checked;
+			this.toggleStore.setShowVegetation(showVegetation);
 
 			if ( showVegetation ) {
 
@@ -406,7 +417,7 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'Vegetation' ) ) {
 
-					const vegetationService = new Vegetation( this.viewer );         
+					const vegetationService = new Vegetation( );         
 					vegetationService.loadVegetation( this.store.postalcode );
 
 				} else {
@@ -428,6 +439,9 @@ export default {
 			const hideNonSote = document.getElementById( 'hideNonSoteToggle' ).checked;
 			const hideNewBuildings = document.getElementById( 'hideNewBuildingsToggle' ).checked;
 			const hideLow = document.getElementById( 'hideLowToggle' ).checked;
+			this.toggleStore.setHideNonSote(hideNonSote);
+			this.toggleStore.setHideNewBuildings(hideNewBuildings);
+			this.toggleStore.setHideLow(hideLow);
 
 			if ( this.dataSourceService ) {
 
@@ -457,7 +471,8 @@ export default {
 
 			// Get the status of the "switch view" toggle button.
 			const switchView = document.getElementById( 'switchViewToggle' ).checked;
-			const viewService = new View( this.viewer );        
+			this.toggleStore.setSwitchView(switchView);
+			const viewService = new View( );        
 			// If the "switch view" toggle button is checked.
 			if ( switchView ) {
 

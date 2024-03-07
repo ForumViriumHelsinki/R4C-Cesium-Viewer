@@ -1,11 +1,10 @@
-import Datasource from './datasource.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 import * as Cesium from 'cesium';
 
 export default class View {
-	constructor( viewer ) {
-		this.viewer = viewer;
-		this.dataSourceService = new Datasource( this.viewer );
+	constructor( ) {
+		this.store = useGlobalStore();
+		this.viewer = this.store.cesiumViewer;
 		this.store = useGlobalStore();
 	}
 
@@ -13,7 +12,7 @@ export default class View {
 	switchTo2DView() {
 
 		// Find the data source for postcodes
-		const postCodesDataSource = this.dataSourceService.getDataSourceByName( 'PostCodes' );
+		const postCodesDataSource = this.viewer.dataSources._dataSources.find( ds => ds.name === 'PostCodes' );
     
 		// Iterate over all entities in the postcodes data source.
 		for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
@@ -37,14 +36,14 @@ export default class View {
 		}
 
 		// change label
-		this.changeLabel( 'switchViewLabel', '3D view' );
+		this.changeLabel( 'switchViewLabel', '2D view' );
 
 	}
   
 	// Function to switch back to 3D view
 	switchTo3DView() {
 		// Find the data source for postcodes
-		const postCodesDataSource = this.dataSourceService.getDataSourceByName( 'PostCodes' );
+		const postCodesDataSource = this.viewer.dataSources._dataSources.find( ds => ds.name === 'PostCodes' );
     
 		// Iterate over all entities in the postcodes data source.
 		for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {

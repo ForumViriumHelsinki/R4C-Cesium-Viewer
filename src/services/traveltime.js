@@ -1,12 +1,16 @@
 import Datasource from './datasource.js'; 
 import Populationgrid from './populationgrid.js';
 import * as Cesium from 'cesium';
+import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 
 export default class Traveltime {
-	constructor( viewer ) {
-		this.viewer = viewer;
-		this.datasourceService = new Datasource( viewer );
-		this.populationGridService = new Populationgrid( viewer );
+	constructor( ) {
+		this.toggleStore = useToggleStore();
+		this.store = useGlobalStore();
+		this.viewer = this.store.cesiumViewer;
+		this.datasourceService = new Datasource();
+		this.populationGridService = new Populationgrid();
 	}
 
 
@@ -97,7 +101,7 @@ export default class Traveltime {
 		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
 		await this.populationGridService.createPopulationGrid();
 
-		if ( document.getElementById( 'natureGridToggle' ).checked ) {
+		if ( this.toggleStore.travelTime ) {
     
 			const dataSource = this.datasourceService.getDataSourceByName( 'PopulationGrid' );
 
@@ -116,7 +120,7 @@ export default class Traveltime {
     
 			}
 
-			document.getElementById( 'travelTimeToggle' ).checked = false;
+			this.toggleStore.travelTime = false;
     
 		} 
 
@@ -185,6 +189,31 @@ export default class Traveltime {
 				console.log( error );
 			} );
 
+	}
+
+	markCurrentLocation( entity ) {
+    
+		const hierarchy = entity.polygon.hierarchy.getValue().positions;
+    
+		// Calculate the center of the polygon's vertices
+		const boundingSphere = Cesium.BoundingSphere.fromPoints( hierarchy );
+		const centerCartesian = boundingSphere.center;
+    
+		this.viewer.entities.add( {
+			position: centerCartesian,
+			name: 'currentLocation',
+			point: {
+				show: true, 
+				color: Cesium.Color.BLACK, 
+				pixelSize: 42, 
+				outlineColor: Cesium.Color.BLACK, 
+				outlineWidth: 14, 
+				eyeOffset: new Cesium.Cartesian3( 0, 200, -200 ),
+				scaleByDistance: new Cesium.NearFarScalar( 4000, 1, 40000, 0.0 )
+			},
+		} );
+    
+    
 	}
 
 }
