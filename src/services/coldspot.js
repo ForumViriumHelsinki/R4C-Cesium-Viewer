@@ -6,7 +6,7 @@ export default class ColdSpot {
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
-    }
+	}
 
     	addColdPoint( location ) {
     

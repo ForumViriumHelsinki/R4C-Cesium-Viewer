@@ -88,7 +88,7 @@ export default {
 		postalCodeViewEvent() {
 
 			const postalView = document.getElementById( 'postalCodeToggle' ).checked;
-			this.toggleStore.setPostalCode(postalView);
+			this.toggleStore.setPostalCode( postalView );
 
 			if ( postalView ) {
 
@@ -105,7 +105,7 @@ export default {
 		resetGridViewEvent() {
 
 			const resetGrid = document.getElementById( 'resetGridToggle' ).checked;
-			this.toggleStore.setResetGrid(resetGrid);
+			this.toggleStore.setResetGrid( resetGrid );
 
 			if ( resetGrid ) {
 
@@ -131,7 +131,7 @@ export default {
 
 			try {
 				const travelTime = document.getElementById( 'travelTimeToggle' ).checked;
-				this.toggleStore.setTravelTime(travelTime);
+				this.toggleStore.setTravelTime( travelTime );
 				datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
 				datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
 
@@ -157,7 +157,7 @@ export default {
 
 			const datasourceService = new Datasource();
 			const natureGrid = document.getElementById( 'natureGridToggle' ).checked;
-			this.toggleStore.setNatureGrid(natureGrid);
+			this.toggleStore.setNatureGrid( natureGrid );
 
 			datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
 

@@ -33,7 +33,7 @@ export default class FeaturePicker {
 		this.addressService = new Address();
 		this.elementsDisplayService = new ElementsDisplay();
 		this.viewService = new View();
-		this.coldSpotService = new ColdSpot()
+		this.coldSpotService = new ColdSpot();
 	}
   
 	/**
@@ -150,7 +150,7 @@ export default class FeaturePicker {
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
 		if ( this.store.postalcode ) {
             
-			this.viewService.switchTo3DView()
+			this.viewService.switchTo3DView();
 			this.loadPostalCode( this.store.postalcode, id );
     
 		}

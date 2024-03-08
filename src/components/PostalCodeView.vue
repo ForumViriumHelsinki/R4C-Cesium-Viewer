@@ -178,7 +178,7 @@ export default {
 		capitalRegionViewEvent() {
 
 			const metropolitanView = document.getElementById( 'capitalRegionViewToggle' ).checked;
-			this.toggleStore.setCapitalRegionView(metropolitanView);
+			this.toggleStore.setCapitalRegionView( metropolitanView );
 
 			if ( metropolitanView ) {
 
@@ -210,7 +210,7 @@ export default {
 		getLandCoverEvent() {
 
 			const landcover = document.getElementById( 'landCoverToggle' ).checked;
-			this.toggleStore.setLandCover(landcover);
+			this.toggleStore.setLandCover( landcover );
 
 			if ( landcover ) {
 
@@ -239,7 +239,7 @@ export default {
 		gridViewEvent() {
 
 			const gridView = document.getElementById( 'gridViewToggle' ).checked;
-			this.toggleStore.setGridView(gridView);
+			this.toggleStore.setGridView( gridView );
 
 			if ( gridView ) {
 
@@ -260,7 +260,7 @@ export default {
 
 			// Get the value of the "Show Plot" toggle button
 			const showPlots = document.getElementById( 'showPlotToggle' ).checked;
-    		this.toggleStore.setShowPlot(showPlots);
+    		this.toggleStore.setShowPlot( showPlots );
 
 			// Hide the plot and its controls if the toggle button is unchecked
 			if ( !showPlots ) {
@@ -282,7 +282,7 @@ export default {
 		printEvent() {
 
 			const print = document.getElementById( 'printToggle' ).checked;
-			this.toggleStore.setPrint(print);
+			this.toggleStore.setPrint( print );
 
 			// If print is not selected, hide the print container, search container, georeference container, and search button
 			if ( !print ) {
@@ -312,7 +312,7 @@ export default {
 
 			// Get the state of the showSensorData toggle button
 			const showSensorData = document.getElementById( 'showSensorDataToggle' ).checked;
-			this.toggleStore.setShowSensorData(showSensorData);
+			this.toggleStore.setShowSensorData( showSensorData );
 
 			// If showSensorData toggle is on
 			if ( showSensorData ) {
@@ -336,7 +336,7 @@ export default {
 
 			// Get the state of the showTrees toggle button
 			const showTrees = document.getElementById( 'showTreesToggle' ).checked;
-			this.toggleStore.setShowTrees(showTrees);
+			this.toggleStore.setShowTrees( showTrees );
 
 			// If showTrees toggle is on
 			if ( showTrees ) {
@@ -372,7 +372,7 @@ export default {
 
 			// Get the current state of the toggle button for showing nature areas.
 			const showloadOtherNature = document.getElementById( 'showOtherNatureToggle' ).checked;
-			this.toggleStore.setShowOtherNature(showloadOtherNature);
+			this.toggleStore.setShowOtherNature( showloadOtherNature );
 
 			if ( showloadOtherNature ) {
 
@@ -407,7 +407,7 @@ export default {
 
 			// Get the current state of the toggle button for showing nature areas.
 			const showVegetation = document.getElementById( 'showVegetationToggle' ).checked;
-			this.toggleStore.setShowVegetation(showVegetation);
+			this.toggleStore.setShowVegetation( showVegetation );
 
 			if ( showVegetation ) {
 
@@ -439,9 +439,9 @@ export default {
 			const hideNonSote = document.getElementById( 'hideNonSoteToggle' ).checked;
 			const hideNewBuildings = document.getElementById( 'hideNewBuildingsToggle' ).checked;
 			const hideLow = document.getElementById( 'hideLowToggle' ).checked;
-			this.toggleStore.setHideNonSote(hideNonSote);
-			this.toggleStore.setHideNewBuildings(hideNewBuildings);
-			this.toggleStore.setHideLow(hideLow);
+			this.toggleStore.setHideNonSote( hideNonSote );
+			this.toggleStore.setHideNewBuildings( hideNewBuildings );
+			this.toggleStore.setHideLow( hideLow );
 
 			if ( this.dataSourceService ) {
 
@@ -471,7 +471,7 @@ export default {
 
 			// Get the status of the "switch view" toggle button.
 			const switchView = document.getElementById( 'switchViewToggle' ).checked;
-			this.toggleStore.setSwitchView(switchView);
+			this.toggleStore.setSwitchView( switchView );
 			const viewService = new View( );        
 			// If the "switch view" toggle button is checked.
 			if ( switchView ) {

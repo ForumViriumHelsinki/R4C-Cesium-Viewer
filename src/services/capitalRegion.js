@@ -7,13 +7,13 @@ import HSYBuilding from './hsybuilding.js';
 export default class CapitalRegion {
 	constructor( ) {
 		this.toggleStore = useToggleStore();
-        this.store = useGlobalStore();
+		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
-        this.hSYBuildingService = new HSYBuilding();
-        this.datasourceService = new DataSource();;
+		this.hSYBuildingService = new HSYBuilding();
+		this.datasourceService = new DataSource();
 	}
 
-    /**
+	/**
     * Load Helsinki elements depending on toggle values
     * 
     */

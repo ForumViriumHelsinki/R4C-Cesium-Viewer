@@ -331,7 +331,7 @@ export default class Building {
 		}
 
 
-		const hideNewBuildings = this.toggleStore.hideNewBuildings
+		const hideNewBuildings = this.toggleStore.hideNewBuildings;
 		const hideNonSote = this.toggleStore.hideNonSote;
 		const hideLow = this.toggleStore.hideLow;
 

@@ -10,17 +10,17 @@ import Tree from './tree.js';
 export default class Helsinki {
 	constructor( ) {
 		this.toggleStore = useToggleStore();
-        this.store = useGlobalStore();
+		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
-        this.buildingService = new Building();
-        this.elementsDisplayService = new ElementsDisplay();
-        this.datasourceService = new DataSource();
+		this.buildingService = new Building();
+		this.elementsDisplayService = new ElementsDisplay();
+		this.datasourceService = new DataSource();
 		this.vegetationService = new Vegetation();
 		this.otherNatureService = new OtherNature();
 		this.treeService = new Tree();
 	}
 
-    /**
+	/**
     * Load Helsinki elements depending on toggle values
     * 
     */
@@ -29,11 +29,11 @@ export default class Helsinki {
 		this.elementsDisplayService.setHelsinkiElementsDisplay( 'inline-block' );
 		this.buildingService.loadBuildings( );	
 		this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
-        this.loadHelsinkiGreenElements( );
+		this.loadHelsinkiGreenElements( );
 
 	} 
 
-    /**
+	/**
     * Load Helsinki Green elements depending on toggle values
     * 
     */

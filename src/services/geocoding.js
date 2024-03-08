@@ -1,7 +1,7 @@
 import Viewercamera from './viewercamera.js'; 
 import PrintBox from './printbox.js'; 
 import FeaturePicker from './featurepicker.js'; 
-import View from './view.js'
+import View from './view.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
