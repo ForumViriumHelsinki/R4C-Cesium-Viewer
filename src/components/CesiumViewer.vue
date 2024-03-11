@@ -3,7 +3,7 @@
   <HeatHistogram />
   <SocioEconomics />
   <Scatterplot />
-  <HSYScatterPlot />
+  <HSYScatterplot />
   <BuildingComponent />
   <NearbyTreeArea />
   <DisclaimerPopup />
@@ -22,7 +22,7 @@ import EventEmitter from '../services/eventEmitter.js';
 import HeatHistogram from './HeatHistogram.vue';
 import SocioEconomics from './SocioEconomics.vue';
 import Scatterplot from './Scatterplot.vue';
-import HSYScatterPlot from './HSYScatterPlot.vue';
+import HSYScatterplot from './HSYScatterplot.vue';
 import BuildingComponent from './Building.vue';
 import NearbyTreeArea from './NearbyTreeArea.vue';
 import DisclaimerPopup from './DisclaimerPopup.vue';
@@ -170,4 +170,4 @@ export default {
 	width: 100%;
 	height: 100%;
 }
-</style>./Scatterplot.vue
+</style>./Scatterplot.vue./HSYScatterplot.vue
