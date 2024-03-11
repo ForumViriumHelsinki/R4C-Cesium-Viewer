@@ -38,6 +38,18 @@ export default class ElementsDisplay {
 		this.setElementsDisplay( elements, display );
 	} 
 
+	/**
+     * Changes the display of tree elements
+    */
+	setTreeElementsDisplay( display ) {
+		const elements = [
+			'showTreesSwitch',
+			'showTreesLabel'         
+		];
+
+		this.setElementsDisplay( elements, display );
+	} 	
+
 
 	setFloodElementsDisplay( display ) {
 
