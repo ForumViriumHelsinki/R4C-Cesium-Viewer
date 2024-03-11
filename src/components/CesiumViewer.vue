@@ -54,8 +54,8 @@ export default {
 	components: {
 		HeatHistogram,
 		SocioEconomics,
-		ScatterPlot,
-		HSYScatterPlot,
+		Scatterplot,
+		HSYScatterplot,
 		BuildingComponent,
 		NearbyTreeArea,
 		DisclaimerPopup,
