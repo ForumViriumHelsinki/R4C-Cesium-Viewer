@@ -2,7 +2,7 @@
   <div id="cesiumContainer"></div>
   <HeatHistogram />
   <SocioEconomics />
-  <ScatterPlot />
+  <Scatterplot />
   <HSYScatterPlot />
   <BuildingComponent />
   <NearbyTreeArea />
@@ -21,7 +21,7 @@ import Geocoding from '../services/geocoding.js';
 import EventEmitter from '../services/eventEmitter.js';
 import HeatHistogram from './HeatHistogram.vue';
 import SocioEconomics from './SocioEconomics.vue';
-import ScatterPlot from './ScatterPlot.vue';
+import Scatterplot from './Scatterplot.vue';
 import HSYScatterPlot from './HSYScatterPlot.vue';
 import BuildingComponent from './Building.vue';
 import NearbyTreeArea from './NearbyTreeArea.vue';
@@ -170,4 +170,4 @@ export default {
 	width: 100%;
 	height: 100%;
 }
-</style>
+</style>./Scatterplot.vue
