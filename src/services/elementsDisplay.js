@@ -29,10 +29,12 @@ export default class ElementsDisplay {
 	/**
      * Changes the display of helsinki elements when user switches between postal code and grid view
     */
-	setLandCoverElementsDisplay( display ) {
+	setCapitalRegionElementsDisplay( display ) {
 		const elements = [
 			'landCoverSwitch',
-			'landCoverLabel'          
+			'landCoverLabel',
+			'hideLowSwitch',
+			'hideLowLabel'			          
 		];
 
 		this.setElementsDisplay( elements, display );
@@ -55,33 +57,6 @@ export default class ElementsDisplay {
 
 		const elements = [
 			'floodLink'          
-		];
-
-		this.setElementsDisplay( elements, display );
-
-	}
-
-
-	/**
- * Changes the display of postal code elements when user switches between postal code and population view
- */
-	setPostalCodeElementsDisplay( display ) {
-		const elements = [
-			'showVegetationSwitch',
-			'showVegetationLabel',
-			'showOtherNatureSwitch',
-			'showOtherNatureLabel',
-			'hideNewBuildingsSwitch',
-			'hideNewBuildingsLabel',
-			'hideNonSoteSwitch',
-			'hideNonSoteLabel',
-			'hideLowSwitch',
-			'hideLowLabel',
-			'showTreesSwitch',
-			'showTreesLabel',
-			'switchViewSwitch',
-			'switchViewLabel',
-			'georefContainer'
 		];
 
 		this.setElementsDisplay( elements, display );

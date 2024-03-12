@@ -105,7 +105,7 @@ export default {
 			const numerical = document.getElementById( 'numericalSelect' ).value;
 			const categorical = document.getElementById( 'categoricalSelect' ).value;
 			const hideNonSote = this.toggleStore.hideNonSote;
-			const hideLowToggle = this.toggleStore.hideLowToggle;
+			const hideLowToggle = this.toggleStore.hideLow;
 			const hideNew = this.toggleStore.hideNew;
 
 			entities.forEach( ( entity ) => {

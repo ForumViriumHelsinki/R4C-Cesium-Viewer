@@ -330,7 +330,6 @@ export default class Building {
 			return;
 		}
 
-
 		const hideNewBuildings = this.toggleStore.hideNewBuildings;
 		const hideNonSote = this.toggleStore.hideNonSote;
 		const hideLow = this.toggleStore.hideLow;
@@ -378,23 +377,31 @@ export default class Building {
 
 			if ( hideLow ) {
 				// Filter out buildings with fewer floors
-				if ( entity._properties._i_kerrlkm ) {
-
-					if ( entity._properties._i_kerrlkm && Number( entity._properties._i_kerrlkm._value ) <= 6 ) {
-
-						entity.show = false;
-    
-					}
-                
-				} else {
-
-					entity.show = false;
-    
-				}
+				this.lowBuildings( entity );
 			}
 
 		} );
 
+	}
+
+	lowBuildings( entity ) {
+		
+		let property = this.store.view == 'helsinki' ? '_i_kerrlkm' : '_kerrosten_lkm';
+
+		// Filter out buildings with fewer floors
+		if ( entity._properties[ property ] ) {
+
+			if ( entity._properties[ property ] && Number( entity._properties[ property ]._value ) <= 6 ) {
+
+				entity.show = false;
+    
+			}
+                
+		} else {
+
+			entity.show = false;
+    
+		}		
 	}
 	/**
 * Shows all buildings and updates the histograms and scatter plot

@@ -192,7 +192,7 @@ export default {
 				);
 
 				this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
-				this.elementsDisplayService.setLandCoverElementsDisplay( 'inline-block' );
+				this.elementsDisplayService.setCapitalRegionElementsDisplay( 'inline-block' );
 
 			} else {
 
@@ -459,6 +459,9 @@ export default {
 
 					}
 				}
+
+				this.eventEmitterService.emitScatterPlotEvent( buildingsDataSource.entities.values );
+
 			}
 
 		},

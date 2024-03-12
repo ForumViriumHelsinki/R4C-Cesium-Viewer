@@ -104,7 +104,7 @@ export default {
 			const numerical = document.getElementById( 'numericalHSYSelect' ).value;
 			const categorical = document.getElementById( 'categoricalHSYSelect' ).value;
 			const hideNonSote = this.toggleStore.hideNonSote;
-			const hideLowToggle = this.toggleStore.hideLowToggle;
+			const hideLowToggle = this.toggleStore.hideLow;
 			const hideNew = this.toggleStore.hideNew;
   
 			entities.forEach( ( entity ) => {
@@ -153,7 +153,7 @@ export default {
 		},
   
 		isLowBuilding( entity ) {
-			const floorCount = Number( entity._properties.i_kerrlkm?._value );
+			const floorCount = Number( entity._properties.kerrosten_lkm?._value );
   
 			return !floorCount || floorCount <= 6;
 		},

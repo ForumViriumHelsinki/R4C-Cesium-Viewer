@@ -272,7 +272,7 @@ export default class HSYBuilding {
 		this.urbanHeatService.calculateAverageExposure( data.features );
 		const avgTempCList = data.features.map( feature => feature.properties.avgTempC );
 		this.eventEmitterService.emitHeatHistogram( avgTempCList );
-		this.eventEmitterService.emitHSYScatterPlotEvent( entities );
+		this.eventEmitterService.emitScatterPlotEvent( entities );
 		this.eventEmitterService.emitSocioEconomicsEvent( );
 
 	}
@@ -305,5 +305,66 @@ export default class HSYBuilding {
 			feature.properties.avgTempC = tempInKelvin - 273.15;
 
 		}
+	}
+
+/**
+ * If hideNonSote switch is checked this function hides buildings based on value of c_kayttark
+ *
+ * @param { Object } entity Cesium entity
+ */
+	hideNonSoteBuilding( entity ) {
+
+		const hideNonSote = this.toggleStore.hideNonSote;
+
+		if ( hideNonSote ) {
+
+			if ( !entity._properties.kayttarks  || !entity._properties.kayttarks._value ) {
+
+				entity.show = false;
+
+			} else {
+
+				const kayttotark = entity._properties.kayttarks._value;
+
+				if ( !kayttotark != 'Keskussairaalat' ) {
+
+					entity.show = false;
+	
+				}
+
+			}
+	
+		}
+	}
+
+/**
+ * If hideLow switch is checked this function hides buildings based on their floor count
+ *
+ * @param { Object } entity Cesium entity
+ */
+	hideLowBuilding( entity ) {
+
+		const hideLow = this.toggleStore.hideLow;
+
+		if ( hideLow ) {
+
+			if ( !entity._properties.kerrosten_lkm  || !entity._properties.kerrosten_lkm._value ) {
+
+				entity.show = false;
+
+			} else {
+
+				const floorCount = Number( entity._properties.kerrosten_lkm._value );
+
+				if ( floorCount < 7 ) {
+
+					entity.show = false;
+	
+				}
+
+			}
+	
+		}
+	
 	}
 }

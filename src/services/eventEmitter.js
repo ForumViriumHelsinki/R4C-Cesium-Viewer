@@ -27,10 +27,10 @@ export default class EventEmitter {
  *
  * @param { object } urbanHeatData urban heat data of a buildings in postal code area
  * @param { String } postcode postcode of area
- * @param { object } entites entities of a buildings in postal code area
+ * @param { object } entities entities of a buildings in postal code area
  * 
  */
-	emitPostalCodeEvents( urbanHeatData, entites ) {
+	emitPostalCodeEvents( urbanHeatData, entities ) {
 
 		if ( urbanHeatData ) {
 
@@ -40,9 +40,9 @@ export default class EventEmitter {
   
 		// Assuming datasourceService is available and implemented similarly to addBuildingsDataSource
 
-		if ( entites ) {
+		if ( entities ) {
 
-			eventBus.$emit( 'newScatterPlot', entites );
+			eventBus.$emit( 'newScatterPlot', entities );
 
 		}
 
@@ -81,12 +81,12 @@ export default class EventEmitter {
 	/**
  * The function emits event after user picks a postal code area from viewer
  *
- * @param { String } postcode postcode of area
+ * @param { Object } entites entites
  * 
  */
-	emitHSYScatterPlotEvent( postcode ) {
+	emitScatterPlotEvent( entities ) {
 
-		eventBus.$emit( 'newHSYScatterPlot', postcode );
+		eventBus.$emit( this.store.view == 'helsinki' ? 'newScatterPlot' : 'newHSYScatterPlot', entities );
 
 	}
 
