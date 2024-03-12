@@ -418,7 +418,7 @@ export default {
     <style>
   #scatterPlotContainerHSY {
       position: fixed;
-      bottom: 40px;
+      bottom: 35px;
       left: 10px;
       width: 640px; /* Adjusted width to accommodate margin */
       height: 300px; /* Adjusted height to accommodate margin */

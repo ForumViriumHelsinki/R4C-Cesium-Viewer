@@ -141,15 +141,15 @@ export default class FeaturePicker {
      */
 	handleFeatureWithProperties( id ) {       
         
-		this.store.postalcode = id.properties.posno._value;
-		this.store.nameOfZone = id.properties.nimi;
 		this.removeEntityByName( 'coldpoint' );
 		this.removeEntityByName( 'currentLocation' );
 		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
     
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
-		if ( this.store.postalcode ) {
+		if ( id.properties.posno ) {
             
+			this.store.postalcode = id.properties.posno._value;
+			this.store.nameOfZone = id.properties.nimi;
 			this.viewService.switchTo3DView();
 			this.loadPostalCode( this.store.postalcode, id );
     
