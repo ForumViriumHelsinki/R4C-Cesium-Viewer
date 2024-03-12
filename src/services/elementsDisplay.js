@@ -34,8 +34,12 @@ export default class ElementsDisplay {
 			'landCoverSwitch',
 			'landCoverLabel',
 			'hideLowSwitch',
-			'hideLowLabel'			          
+			'hideLowLabel',
+			'hideNonSoteSwitch',
+			'hideNonSoteLabel'		          
 		];
+
+		document.getElementById( 'hideNonSoteLabel' ).textContent = 'Only public buildings';
 
 		this.setElementsDisplay( elements, display );
 	} 

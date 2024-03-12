@@ -357,30 +357,33 @@ export default class Building {
 
 			if ( hideNonSote ) {
 				// Filter out non-SOTE buildings
+				this.soteBuildings( entity );
 
-				if ( entity._properties._c_kayttark ) {
-
-					const kayttotark = Number( entity._properties.c_kayttark._value );
-
-					if ( !kayttotark != 511 && !kayttotark != 131 && !( kayttotark > 212 && kayttotark < 240 ) ) {
-    
-						entity.show = false;
-        
-					} 
-
-				} else {
-
-					entity.show = false;
-    
-				}
 			}
 
 			if ( hideLow ) {
 				// Filter out buildings with fewer floors
 				this.lowBuildings( entity );
+
 			}
 
 		} );
+
+	}
+
+	soteBuildings( entity ) {
+
+		if ( this.store.view == 'helsinki' ) {
+
+			const kayttotark = entity._properties._c_kayttark ? Number( entity._properties.c_kayttark._value ) : null;
+			entity.show = kayttotark && ( kayttotark == 511 || kayttotark == 131 || ( kayttotark > 210 && kayttotark < 240 ) );
+
+		} else {
+
+			const kayttotark = entity._properties._kayttarks && entity._properties._kayttarks._value;
+			entity.show = kayttotark == 'Yleinen rakennus';
+
+		}
 
 	}
 

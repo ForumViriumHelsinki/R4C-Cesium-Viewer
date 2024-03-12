@@ -307,7 +307,7 @@ export default class HSYBuilding {
 		}
 	}
 
-/**
+	/**
  * If hideNonSote switch is checked this function hides buildings based on value of c_kayttark
  *
  * @param { Object } entity Cesium entity
@@ -318,7 +318,7 @@ export default class HSYBuilding {
 
 		if ( hideNonSote ) {
 
-			if ( !entity._properties.kayttarks  || !entity._properties.kayttarks._value ) {
+			if ( !entity._properties.kayttarks || !entity._properties.kayttarks._value ) {
 
 				entity.show = false;
 
@@ -326,7 +326,7 @@ export default class HSYBuilding {
 
 				const kayttotark = entity._properties.kayttarks._value;
 
-				if ( !kayttotark != 'Keskussairaalat' ) {
+				if ( !kayttotark != 'Yleinen rakennus' ) {
 
 					entity.show = false;
 	
@@ -337,7 +337,7 @@ export default class HSYBuilding {
 		}
 	}
 
-/**
+	/**
  * If hideLow switch is checked this function hides buildings based on their floor count
  *
  * @param { Object } entity Cesium entity

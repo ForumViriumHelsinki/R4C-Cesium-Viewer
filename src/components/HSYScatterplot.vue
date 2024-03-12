@@ -147,9 +147,17 @@ export default {
 		},
   
 		isSoteBuilding( entity ) {
-			const kayttotark = Number( entity._properties.c_kayttark?._value );
-  
-			return !kayttotark || [ 511, 131, ...Array.from( { length: 28 }, ( _, i ) => i + 213 ) ].includes( kayttotark );
+			const kayttotark = entity._properties._kayttarks._value;
+
+			if ( kayttotark != 'Yleinen rakennus' ) {
+
+				return false;
+
+			} else {
+
+				return true;
+
+			}  
 		},
   
 		isLowBuilding( entity ) {
