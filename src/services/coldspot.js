@@ -8,7 +8,7 @@ export default class ColdSpot {
 		this.viewer = this.store.cesiumViewer;
 	}
 
-    	addColdPoint( location ) {
+	addColdPoint( location ) {
     
 		const coordinates = location.split( ',' ); 
     

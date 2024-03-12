@@ -121,7 +121,6 @@ export default class FeaturePicker {
 
 	}
 
-	        
 	removeEntityByName( name ) {
 
 		this.viewer.entities._entities._array.forEach( ( entity ) => {
@@ -191,11 +190,11 @@ export default class FeaturePicker {
 			const address = this.addressService.findAddressForBuilding( id.properties );
     
 			if ( id.properties._locationUnder40 ) {
-    
+
 				if ( id.properties._locationUnder40._value ) {
-                    
+
 					this.coldSpotService.addColdPoint( id.properties._locationUnder40._value );
-                
+
 				}
     
 			}

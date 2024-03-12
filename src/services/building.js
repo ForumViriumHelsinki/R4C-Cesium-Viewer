@@ -287,7 +287,7 @@ export default class Building {
 	resetBuildingEntites() {
 
 		// Find the data source for buildings
-		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings' );
+		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 		// If the data source isn't found, exit the function
 		if ( !buildingDataSource ) {
@@ -419,7 +419,7 @@ export default class Building {
 
 	highlightBuildingsInViewer( temps ) {
 	// Find the data source for buildings
-		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings' );
+		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 		// If the data source isn't found, exit the function
 		if ( !buildingDataSource ) {
@@ -444,7 +444,7 @@ export default class Building {
 
 	resetBuildingOutline() {
 	// Find the data source for buildings
-		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings' );
+		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 		// If the data source isn't found, exit the function
 		if ( !buildingDataSource ) {
@@ -476,7 +476,7 @@ export default class Building {
 
 	highlightBuildingInViewer( id ) {
 	// Find the data source for buildings
-		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings' );
+		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 		// If the data source isn't found, exit the function
 		if ( !buildingDataSource ) {

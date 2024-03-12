@@ -85,7 +85,7 @@ export default class Tree {
 		}
 
 		// Find the data source for buildings
-		const buildingsDataSource = this.datasourceService.getDataSourceByName( 'Buildings' );
+		const buildingsDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 		// If the data source isn't found, exit the function
 		if ( !buildingsDataSource ) {

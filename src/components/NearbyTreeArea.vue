@@ -136,65 +136,129 @@ export default {
 			// Iterate over all entities in data source
 			for ( let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++ ) {
 	
-				let entity = buildingsDataSource._entityCollection._entities._array[ i ];
-	
+				let entity = buildingsDataSource._entityCollection._entities._array[ i ];	
 				// If entity has a heat exposure value, add it to the urbanHeatData array and add data for the scatter plot
-				if ( entity._properties.avgheatexposuretobuilding && entity._properties._id && entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
 
-					const building_id = entity._properties._id._value;
-					const heatExposure = entity._properties.avgheatexposuretobuilding._value.toFixed( 2 );
-					let tree_area = sumPAlaM2Map.get( building_id );
+				if ( this.store.view == 'helsinki' ) {
+					
+					if ( entity._properties.avgheatexposuretobuilding && entity._properties._id && entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
 
-					// Set tree area to 0
-					if ( !tree_area ) {
+						const building_id = entity._properties._id._value;
+						const heatExposure = entity._properties.avgheatexposuretobuilding._value.toFixed( 2 );
+						let tree_area = sumPAlaM2Map.get( building_id );
 
-						tree_area = 0;
+						// Set tree area to 0
+						if ( !tree_area ) {
 
-					}
+							tree_area = 0;
+
+						}
 			
-					if ( heatTreeAverageMap.has( heatExposure ) ) {
+						if ( heatTreeAverageMap.has( heatExposure ) ) {
 
-						let storedValues = heatTreeAverageMap.get( heatExposure );
-						storedValues.tree_area = storedValues.tree_area + tree_area;
-						storedValues.count = storedValues.count + 1;
+							let storedValues = heatTreeAverageMap.get( heatExposure );
+							storedValues.tree_area = storedValues.tree_area + tree_area;
+							storedValues.count = storedValues.count + 1;
 
 
-						heatTreeAverageMap.set( heatExposure, storedValues );
+							heatTreeAverageMap.set( heatExposure, storedValues );
 			
-					} else {
+						} else {
 				
-						heatTreeAverageMap.set( heatExposure, { tree_area: tree_area, count: 1 } );
+							heatTreeAverageMap.set( heatExposure, { tree_area: tree_area, count: 1 } );
+
+						}
+
+						// Set tree_area as a property of the entity
+						entity._properties.treeArea = tree_area;
+			
+						if ( tree_area > 225 ) {
+
+							// Highlight the building entity edges by changing its outlineColor and outlineWidth
+							if ( entity.polygon ) {
+
+								entity.polygon.outline = true; // Enable outline
+								entity.polygon.outlineColor = Cesium.Color.CHARTREUSE; // Set outline color to green
+								entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
+
+							}
+
+							if ( maxTreeArea < tree_area ) {
+
+								maxTreeArea = tree_area;
+								maxTreeAreaBuilding = building_id;
+
+							}
+
+						} 
+
+						// for calculating postal code average
+						totalTreeArea += tree_area;
+						totalCounter++;
 
 					}
 
-					// Set tree_area as a property of the entity
-					entity._properties.treeArea = tree_area;
+				} else {
+
+					if ( entity._properties._avgheatexposuretobuilding && entity._properties._hki_id && entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
+
+						const building_id = entity._properties._hki_id._value;
+						const heatExposure = entity._properties.avgheatexposuretobuilding._value.toFixed( 2 );
+						let tree_area = sumPAlaM2Map.get( building_id );
+
+						// Set tree area to 0
+						if ( !tree_area ) {
+
+							tree_area = 0;
+
+						}
 			
-					if ( tree_area > 225 ) {
+						if ( heatTreeAverageMap.has( heatExposure ) ) {
 
-						// Highlight the building entity edges by changing its outlineColor and outlineWidth
-						if ( entity.polygon ) {
+							let storedValues = heatTreeAverageMap.get( heatExposure );
+							storedValues.tree_area = storedValues.tree_area + tree_area;
+							storedValues.count = storedValues.count + 1;
 
-							entity.polygon.outline = true; // Enable outline
-							entity.polygon.outlineColor = Cesium.Color.CHARTREUSE; // Set outline color to green
-							entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
 
-						}
-
-						if ( maxTreeArea < tree_area ) {
-
-							maxTreeArea = tree_area;
-							maxTreeAreaBuilding = building_id;
+							heatTreeAverageMap.set( heatExposure, storedValues );
+			
+						} else {
+				
+							heatTreeAverageMap.set( heatExposure, { tree_area: tree_area, count: 1 } );
 
 						}
 
-					} 
+						// Set tree_area as a property of the entity
+						entity._properties.treeArea = tree_area;
+			
+						if ( tree_area > 225 ) {
 
-					// for calculating postal code average
-					totalTreeArea += tree_area;
-					totalCounter++;
+							// Highlight the building entity edges by changing its outlineColor and outlineWidth
+							if ( entity.polygon ) {
+
+								entity.polygon.outline = true; // Enable outline
+								entity.polygon.outlineColor = Cesium.Color.CHARTREUSE; // Set outline color to green
+								entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
+
+							}
+
+							if ( maxTreeArea < tree_area ) {
+
+								maxTreeArea = tree_area;
+								maxTreeAreaBuilding = building_id;
+
+							}
+
+						} 
+
+						// for calculating postal code average
+						totalTreeArea += tree_area;
+						totalCounter++;
+
+					}
 
 				}
+
 			}
 
 			this.setEntityColorToGreen( maxTreeAreaBuilding, buildingsDataSource );

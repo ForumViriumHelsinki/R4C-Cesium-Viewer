@@ -445,7 +445,7 @@ export default {
 
 			if ( this.dataSourceService ) {
 
-				const buildingsDataSource = this.dataSourceService.getDataSourceByName( 'Buildings' );
+				const buildingsDataSource = this.dataSourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 				if ( buildingsDataSource ) {
 
