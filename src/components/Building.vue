@@ -18,7 +18,7 @@ export default {
 	mounted() {
 		this.unsubscribe = eventBus.$on( 'newBuildingHeat', this.newBuildingHeat );
 		this.unsubscribe = eventBus.$on( 'newBuildingTree', this.newBuildingTree );
-		this.unsubscribe = eventBus.$on( 'createBuildingGrid', this.createBuildingGridChart );
+		this.unsubscribe = eventBus.$on( 'newBuildingGridChart', this.newBuildingGridChart );
 		this.store = useGlobalStore();
 		this.plotService = new Plot();
 		this.addressService = new Address();
@@ -28,7 +28,7 @@ export default {
 		this.unsubscribe();
 	},
 	methods: {
-		createBuildingGridChart( buildingProps ) {
+		newBuildingGridChart( buildingProps ) {
 			if ( buildingProps ) {
 				this.createBuildingGridChart( buildingProps );
 			} else {

@@ -18,7 +18,8 @@ export const useToggleStore = defineStore( 'toggle', {
 		showTrees: false,
 		landCover: false,
 		switchView: false,
-		showSensorData: false,                         
+		showSensorData: false,  
+		surveyPlaces: false,                                                
 	} ),
 	getters: {
 		getPostalCode: ( state ) => state.postalCode,
@@ -38,6 +39,7 @@ export const useToggleStore = defineStore( 'toggle', {
 		getLandCover: ( state ) => state.landCover,
 		getSwitchView: ( state ) => state.switchView,
 		getShowSensorData: ( state ) => state.showSensorData,
+		getSurveyPlaces: ( state ) => state.surveyPlaces,
 	},
 	actions: {
 		setPostalCode( show ) {
@@ -91,6 +93,9 @@ export const useToggleStore = defineStore( 'toggle', {
 		setShowSensorData( show ) {
 			this.showSensorData = show;
 		},
+		setSurveyPlaces( show ) {
+			this.surveyPlaces = show;
+		},		
 		// Reset function
 		resetStore() {
 			this.postalCode = false;
@@ -108,6 +113,7 @@ export const useToggleStore = defineStore( 'toggle', {
 			this.showTrees = false;
 			this.switchView = false;
 			this.showSensorData  = false;
+			this.surveyPlaces  = false;
 		},
 	},
 } );

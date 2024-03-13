@@ -90,6 +90,18 @@ export default class EventEmitter {
 
 	}
 
+	/**
+ * The function emits event after user chooses to view Espoo resident survey places
+ *
+ * @param { Object } entites entites
+ * 
+ */
+	emitSurveyScatterPlotEvent( entities ) {
+
+		eventBus.$emit( 'newSurveyScatterPlot', entities );
+
+	}
+
 
 	/**
  * The function emits event after user picks a building from viewer

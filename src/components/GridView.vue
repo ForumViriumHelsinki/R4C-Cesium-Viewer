@@ -30,7 +30,16 @@
             <span class="slider round"></span>
         </label>
         <label for="resetGrid" class="label" id="resetGridLabel">Reset grid</label> 
+
+		<!--  surveyPlaces-->
+        <label class="switch" id = "surveyPlacesSwitch">
+            <input type="checkbox" id="surveyPlacesToggle" value="surveyPlaces" >
+            <span class="slider round"></span>
+        </label>
+        <label for="surveyPlaces" class="label" id="surveyPlacesLabel">Espoo resident survey places</label>
     </div>
+
+	<SurveyScatterPlot />
 
 </template>
   
@@ -40,8 +49,10 @@ import EventEmitter from '../services/eventEmitter.js';
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
-import Datasource from '../services/datasource.js'; 
-import Populationgrid from '../services/populationgrid.js'; 
+import Datasource from '../services/datasource.js';
+import Populationgrid from '../services/populationgrid.js';
+import EspooSurvey from '../services/espooSurvey.js';
+import SurveyScatterPlot from './SurveyScatterPlot.vue';
 
 export default {
 	data() {
@@ -58,6 +69,9 @@ export default {
 		this.addEventListeners();
 
 	},
+	components: {
+		SurveyScatterPlot
+	}, 	
 	beforeUnmount() {
 		this.unsubscribe();
 	},    
@@ -79,8 +93,28 @@ export default {
 			document.getElementById( 'travelTimeToggle' ).addEventListener( 'change', this.travelTimeEvent.bind( this ) );
 			document.getElementById( 'natureGridToggle' ).addEventListener( 'change', this.natureGridEvent.bind( this ) );
 			document.getElementById( 'resetGridToggle' ).addEventListener( 'change', this.resetGridViewEvent.bind( this ) );
+			document.getElementById( 'surveyPlacesToggle' ).addEventListener( 'change', this.surveyPlacesEvent.bind( this ) );
 
 		},
+
+		/**
+        * This function handles the toggle event for switching to postal code view
+        */
+		surveyPlacesEvent() {
+
+			const surveyPlaces = document.getElementById( 'surveyPlacesToggle' ).checked;
+			this.toggleStore.setSurveyPlaces( surveyPlaces );
+
+			if ( surveyPlaces ) {
+				const espooSurveyService = new EspooSurvey();
+				espooSurveyService.loadSurveyFeatures( 'places_in_everyday_life' );
+        
+			} else {
+				
+				datasourceService.removeDataSourcesByNamePrefix( 'Survey ' );
+			}
+
+		},		
 
 		/**
         * This function handles the toggle event for switching to postal code view

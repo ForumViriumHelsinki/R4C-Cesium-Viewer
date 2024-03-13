@@ -58,7 +58,7 @@ export default {
 		HSYScatterplot,
 		BuildingComponent,
 		NearbyTreeArea,
-		DisclaimerPopup,
+		DisclaimerPopup
 	},  
 	methods: {
 		initViewer() {
