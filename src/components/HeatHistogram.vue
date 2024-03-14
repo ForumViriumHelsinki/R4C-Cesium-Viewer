@@ -27,7 +27,7 @@ export default {
 	methods: {
 		newHeatHistogram( data ) {
 			this.urbanHeatData = data;
-			if ( this.urbanHeatData.length > 0 ) {
+			if ( this.urbanHeatData.length > 0 && this.store.level == 'postalCode' ) {
 				this.createHistogram();
 			} else {
 				// Hide or clear the visualization when not visible

@@ -29,7 +29,7 @@ export default {
 	methods: {
 		newSocioEconomicsDiagram( newData ) {
                         
-			if ( newData ) {
+			if ( newData && this.store.level == 'postalCode'  ) {
 				this.populateSelectFromStore();
 				const dataForPostcode = this.socioEconomicsStore.getDataByPostcode( newData );
 				const statsData = this.findSocioEconomicsStats();

@@ -71,12 +71,16 @@ export default {
 	},
 	methods: {
 		newNearbyTreeDiagram( data, entities, buildings ) {
-			this.plotService.hideScatterPlot();
-			// Call function that combines datasets for plotting
-			const sumPAlaM2Map = this.combineDistanceAndTreeData( data, entities );
-			const heatExpTreeArea = this.createTreeBuildingPlotMap( sumPAlaM2Map, buildings );
-			const heatExpAverageTreeArea = this.extractKeysAndAverageTreeArea( heatExpTreeArea );
-			this.createTreesNearbyBuildingsPlot( heatExpAverageTreeArea[ 0 ], heatExpAverageTreeArea[ 1 ], heatExpAverageTreeArea[ 2 ] );
+
+			if ( this.store.level == 'postalCode' ) {
+				this.plotService.hideScatterPlot();
+				// Call function that combines datasets for plotting
+				const sumPAlaM2Map = this.combineDistanceAndTreeData( data, entities );
+				const heatExpTreeArea = this.createTreeBuildingPlotMap( sumPAlaM2Map, buildings );
+				const heatExpAverageTreeArea = this.extractKeysAndAverageTreeArea( heatExpTreeArea );
+				this.createTreesNearbyBuildingsPlot( heatExpAverageTreeArea[ 0 ], heatExpAverageTreeArea[ 1 ], heatExpAverageTreeArea[ 2 ] );
+
+			}
 		},
 		clearNearbyTreeDiagram() {
 			d3.select( '#nearbyTreeAreaContainer' ).select( 'svg' ).remove();

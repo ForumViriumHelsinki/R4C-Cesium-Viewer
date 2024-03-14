@@ -58,7 +58,7 @@ export default {
 		newHSYScatterPlot( newData ) {
 			this.buildingEntities = newData;
 
-			if ( this.buildingEntities.length > 0 ) {
+			if ( this.buildingEntities.length > 0 && this.store.view == 'capitalRegion' ) {
 				this.selectAttributeForHSYScatterPlot();
 			} else {
 				// Hide or clear the visualization when not visible

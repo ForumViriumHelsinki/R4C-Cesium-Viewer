@@ -59,7 +59,7 @@ export default {
 	methods: {
 		newScatterPlot( newData ) {
 			this.buildingEntities = newData;
-			if ( this.buildingEntities.length > 0 ) {
+			if ( this.buildingEntities.length > 0 && this.store.view == 'helsinki' ) {
 				this.selectAttributeForScatterPlot();
 			} else {
 				// Hide or clear the visualization when not visible

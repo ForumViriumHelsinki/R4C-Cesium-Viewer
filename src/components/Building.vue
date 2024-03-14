@@ -29,7 +29,7 @@ export default {
 	},
 	methods: {
 		newBuildingGridChart( buildingProps ) {
-			if ( buildingProps ) {
+			if ( buildingProps && this.store.view == 'grid' ) {
 				this.createBuildingGridChart( buildingProps );
 			} else {
 				// Hide or clear the visualization when not visible
@@ -38,7 +38,7 @@ export default {
 			}
 		},
 		newBuildingHeat( buildingHeatExposure, address, postinumero ) {
-			if ( buildingHeatExposure ) {
+			if ( buildingHeatExposure && this.store.level == 'building' ) {
 				this.createBuildingBarChart( buildingHeatExposure, address, postinumero );
 			} else {
 				// Hide or clear the visualization when not visible
@@ -47,7 +47,7 @@ export default {
 			}
 		},
 		newBuildingTree( treeArea, address, postinumero ) {
-			if ( postinumero ) {
+			if ( postinumero  && this.store.level == 'building' ) {
 				this.createBuildingTreeBarChart( treeArea, address, postinumero );
 			} else {
 				// Hide or clear the visualization when not visible

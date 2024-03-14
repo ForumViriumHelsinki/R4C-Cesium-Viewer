@@ -1,4 +1,5 @@
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 import * as d3 from 'd3'; // Import D3.js
 
 export default class Plot {
@@ -6,6 +7,7 @@ export default class Plot {
 
 	constructor() {
 		this.store = useGlobalStore();
+		this.toggleStore = useToggleStore();
 	}
   
 
@@ -112,6 +114,11 @@ export default class Plot {
 		document.getElementById( 'scatterPlotContainer' ).style.visibility = status;
 		document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
 		document.getElementById( 'numericalSelect' ).value = 'measured_height';
+		document.getElementById( 'scatterPlotContainerHSY' ).style.visibility = status;
+		document.getElementById( 'numericalHSYSelect' ).style.visibility = status;
+		document.getElementById( 'categoricalHSYSelect' ).style.visibility = status;		
+		document.getElementById( 'categoricalHSYSelect' ).value = 'julkisivu_s';
+		document.getElementById( 'numericalHSYSelect' ).value = 'area_m2';
 
 	}
 
@@ -165,7 +172,7 @@ export default class Plot {
 		const container = document.getElementById( containerId );
 		container.innerHTML = '';
   
-		container.style.visibility = document.getElementById( 'showPlotToggle' ).checked ? 'visible' : 'hidden';
+		container.style.visibility = this.toggleStore.showPlot ? 'visible' : 'hidden';
 
 	}
 
