@@ -165,7 +165,7 @@ export default class EventEmitter {
 	} 
 
 	/**
- * The function emits event after user selects grid view 
+ * The function emits event after user selects capital region view 
  *
  * @param { Object } viewer Cesium viewer
  * 
@@ -190,7 +190,7 @@ export default class EventEmitter {
 
 	emitBuildingGridEvent( buildingProps ) {
 
-		eventBus.$emit( 'createBuildingGrid', buildingProps );
+		eventBus.$emit( 'newBuildingGridChart', buildingProps );
 
 	}
 

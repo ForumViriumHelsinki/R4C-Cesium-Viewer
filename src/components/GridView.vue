@@ -66,6 +66,7 @@ export default {
 		this.toggleStore  = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
 		this.eventEmitterService = new EventEmitter();
+		this.datasourceService = new Datasource();
 		this.addEventListeners();
 
 	},
@@ -111,7 +112,9 @@ export default {
         
 			} else {
 				
-				datasourceService.removeDataSourcesByNamePrefix( 'Survey ' );
+				this.datasourceService.removeDataSourcesByNamePrefix( 'Survey ' );
+				document.getElementById( 'surveyScatterPlot' ).style.visibility = 'hidden';
+				
 			}
 
 		},		
@@ -155,8 +158,6 @@ export default {
         */
 		async travelTimeEvent() {
 
-			const datasourceService = new Datasource();
-
 			// Check if viewer is initialized
 			if ( !this.viewer ) {
 				console.error( 'Viewer is not initialized.' );
@@ -166,16 +167,16 @@ export default {
 			try {
 				const travelTime = document.getElementById( 'travelTimeToggle' ).checked;
 				this.toggleStore.setTravelTime( travelTime );
-				datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
-				datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
+				this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
+				this.datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
 
 				if ( travelTime ) {
                    
 					// await datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
-					await datasourceService.loadGeoJsonDataSource( 0.1, 'assets/data/travel_time_grid.json', 'TravelTimeGrid' );
+					await this.datasourceService.loadGeoJsonDataSource( 0.1, 'assets/data/travel_time_grid.json', 'TravelTimeGrid' );
 				} else {
-					await datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
-					await datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
+					await this.datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
+					await this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
 					this.createPopulationGrid( ); // Pass this.viewer
 				}
 			} catch ( error ) {
@@ -189,15 +190,14 @@ export default {
         */
 		natureGridEvent() {
 
-			const datasourceService = new Datasource();
 			const natureGrid = document.getElementById( 'natureGridToggle' ).checked;
 			this.toggleStore.setNatureGrid( natureGrid );
 
-			datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
+			this.datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
 
 			if ( natureGrid ) {
 
-				const dataSource = datasourceService.getDataSourceByName( 'PopulationGrid' );
+				const dataSource = this.datasourceService.getDataSourceByName( 'PopulationGrid' );
 
 				if ( !dataSource ) {
 					console.error( 'Data source with name PopulationGrid not found.' );
@@ -219,7 +219,7 @@ export default {
 
 			} else { 
 
-				datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
+				this.datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
 				this.createPopulationGrid( );
 
 			}
