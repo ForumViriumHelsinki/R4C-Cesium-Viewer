@@ -110,14 +110,15 @@ export default class FeaturePicker {
 	}
     
 	handleBuildingFeature( properties, address ) {
-        
+
+		this.store.level = 'building';
 		this.plotService.togglePostalCodePlotVisibility( 'hidden' );
 		this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
+		this.elementsDisplayService.setBuildingDisplay( 'none' );
 		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
 		this.buildingService.resetBuildingOutline();
-		this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, address, properties._postinumero._value, properties.treeArea, properties._avgTempC, properties );
+		this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, address, properties._postinumero._value, properties.treeArea, properties._avg_temp_c, properties );
 		this.store.postalcode = properties._postinumero._value;
-		this.store.level = 'building';
 
 	}
 

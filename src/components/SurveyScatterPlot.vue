@@ -39,7 +39,7 @@ export default {
 
 			// Adjusting to access nested properties
 			const xValues = entities.map( d => d._properties.Paikan_kok );
-			const yValues = entities.map( d => d._properties.avgTempC );
+			const yValues = entities.map( d => d._properties.avg_temp_c );
 
 			// Creating scales with correct access to nested properties and adjusted yScale
 			const xScale = this.plotService.createScaleLinear(
@@ -61,7 +61,7 @@ export default {
 			const tooltip = this.plotService.createTooltip( '#surveyScatterPlot' );
 
 			// Data formatter for the tooltip, adjusted for nested properties
-			const dataFormatter = d => `Paikan_kok: ${d._properties.Paikan_kok}<br>Temp in Celsius: ${d._properties.avgTempC}`;
+			const dataFormatter = d => `Paikan_kok: ${d._properties.Paikan_kok}<br>Temp in Celsius: ${d._properties.avg_temp_c}`;
 			this.plotService.addTitle( svg, 'Espoo on the map: resident survey places in everyday life with heat exposure', width, margin );
 
 			// Plot points, adjusted for nested properties
@@ -70,7 +70,7 @@ export default {
 				.enter().append( 'circle' )
 				.attr( 'class', 'dot' )
 				.attr( 'cx', d => xScale( d._properties.Paikan_kok ) )
-				.attr( 'cy', d => yScale( d._properties.avgTempC ) )
+				.attr( 'cy', d => yScale( d._properties.avg_temp_c ) )
 				.attr( 'r', 2 ) // Increase dot size for better visibility in the larger plot
 				.style( 'fill', d => this.getOutlineColor( d._properties.Paikan_kok ) )
 				.on( 'mouseover', ( event, d ) => this.plotService.handleMouseover( tooltip, containerId, event, d, dataFormatter ) )

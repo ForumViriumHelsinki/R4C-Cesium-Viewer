@@ -185,7 +185,7 @@ export default {
 		addDataForHSYScatterPlot( urbanHeatDataAndMaterial, entity, categorical, numerical, categoricalName, numericalName ) {
       
 			// Check if entity has the required properties.
-			if ( entity._properties.avgTempC && entity._properties[ categoricalName ] && entity._properties[ numericalName ] && entity._properties[ categoricalName ]._value ) {
+			if ( entity._properties.avg_temp_c && entity._properties[ categoricalName ] && entity._properties[ numericalName ] && entity._properties[ categoricalName ]._value ) {
   
 				// Get the numerical value from the entity properties.
 				let numbericalValue = entity._properties[ numericalName ]._value;
@@ -200,7 +200,7 @@ export default {
 				if ( entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 && numbericalValue < 99999999 && numbericalValue != 0 ) {
   
 					// Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
-					const element = { heat: entity._properties.avgTempC._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue , buildingId: entity._properties._kiitun._value };
+					const element = { heat: entity._properties.avg_temp_c._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue , buildingId: entity._properties._kiitun._value };
 					urbanHeatDataAndMaterial.push( element );
   
 				}

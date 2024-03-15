@@ -1,6 +1,8 @@
+import { useGlobalStore } from '../stores/globalStore.js';
+
 export default class ElementsDisplay {
 	constructor() {
-
+		this.store = useGlobalStore();
 	}
 
 	/**
@@ -25,6 +27,26 @@ export default class ElementsDisplay {
 		this.setElementsDisplay( elements, display );
 
 	}
+
+	/**
+     * Changes the display of helsinki elements when user switches between postal code and grid view
+    */
+	setBuildingDisplay( display ) {
+		const elements = [
+			'hideLowSwitch',
+			'hideLowLabel',
+			'hideNonSoteSwitch',
+			'hideNonSoteLabel'		          
+		];
+		
+		if ( this.store.view == 'helsinki' ) {
+
+			elements.push( 'hideNewBuildingsSwitch' );
+			elements.push( 'hideNewBuildingsLabel' );
+		}
+
+		this.setElementsDisplay( elements, display );
+	} 	
 
 	/**
      * Changes the display of helsinki elements when user switches between postal code and grid view

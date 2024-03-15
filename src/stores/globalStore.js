@@ -13,7 +13,7 @@ export const useGlobalStore = defineStore( 'global', {
 		averageTreeArea: 0,
 		level: 'city',
 		minKelvin: 287.123046875,
-		maxKelvin: 315.011962890625,
+		maxKelvin: 313.70355224609375,
 		currentGridCell: null,
 		cesiumViewer: null,
 	} ),
@@ -77,7 +77,9 @@ export const useGlobalStore = defineStore( 'global', {
 			this.averageHeatExposure = 0;
 			this.averageTreeArea = 0;
 			this.minKelvin = 287.123046875;
-			this.maxKelvin = 315.011962890625;
+			this.maxKelvin = 313.70355224609375;			
+			//			this.minKelvin = 287.123046875;
+			//			this.maxKelvin = 315.011962890625;
 			this.cesiumViewer = null;
 			this.currentGridCell = null;
 		},

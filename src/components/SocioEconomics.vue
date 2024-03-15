@@ -258,8 +258,7 @@ export default {
 		},
 
 		onAreaSelectChange( ) {
-
-			const dataForPostcode = this.socioEconomicsStore.getDataByPostcode( this.store.postalcode._value );
+			const dataForPostcode = this.socioEconomicsStore.getDataByPostcode( this.store.postalcode );
 			const statsData = this.findSocioEconomicsStats();
 			this.createSocioEconomicsDiagram( dataForPostcode, statsData );
 

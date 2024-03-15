@@ -71,7 +71,7 @@ export default class EspooSurvey {
 			let tempInKelvin = normalizedIndex * ( this.store.maxKelvin - this.store.minKelvin ) + this.store.minKelvin;
 
 			// Convert Kelvin to Celsius
-			feature.properties.avgTempC = tempInKelvin - 273.15;
+			feature.properties.avg_temp_c = tempInKelvin - 273.15;
 
 		}
 	}

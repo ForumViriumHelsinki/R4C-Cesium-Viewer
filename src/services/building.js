@@ -60,9 +60,9 @@ export default class Building {
  * @param { String } address address of the building
  * @param { String } postinumero postal code of the building
  * @param { Number } treeArea nearby tree area of building
- * @param { Number } avgTempC average surface temperature of building in Celsius
+ * @param { Number } avg_temp_c average surface temperature of building in Celsius
  */
-	createBuildingCharts( buildingHeatExposure, address, postinumero, treeArea, avgTempC, buildingProps ) {
+	createBuildingCharts( buildingHeatExposure, address, postinumero, treeArea, avg_temp_c, buildingProps ) {
 
 		if ( this.store.view == 'helsinki' && this.toggleStore.showTrees ) {
     
@@ -86,7 +86,7 @@ export default class Building {
 
 			if ( this.store.view == 'capitalRegion' ) {
 
-				this.eventEmitterService.emitBuildingHeatEvent( avgTempC._value, address, postinumero );    
+				this.eventEmitterService.emitBuildingHeatEvent( avg_temp_c._value, address, postinumero );    
 
 			} else {
 
@@ -441,7 +441,7 @@ export default class Building {
 
 			if ( this.store.view == 'capitalRegion' ) {
 
-				this.outlineByTemperature( entity, 'avgTempC', temps );
+				this.outlineByTemperature( entity, 'avg_temp_c', temps );
 
 			} else {
 

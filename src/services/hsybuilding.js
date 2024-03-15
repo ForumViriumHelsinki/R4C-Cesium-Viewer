@@ -33,7 +33,6 @@ export default class HSYBuilding {
 			if ( cachedData ) {
 				console.log( 'found from cache' );
 
-				await this.setAvgTempInCelsius( cachedData.features );
 				let entities = await this.datasourceService.addDataSourceWithPolygonFix( cachedData, 'Buildings ' + this.store.postalcode );
 				this.setHSYBuildingAttributes( cachedData, entities );
 			
@@ -67,7 +66,6 @@ export default class HSYBuilding {
 
 			}
 
-			await this.setAvgTempInCelsius( data.features );
 			let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + this.store.postalcode );
 			this.setHSYBuildingAttributes( data, entities );
 			return entities; // Return the processed entities or whatever you need here
@@ -270,8 +268,8 @@ export default class HSYBuilding {
 	async calculateHSYUrbanHeatData( data, entities ) {
 
 		this.urbanHeatService.calculateAverageExposure( data.features );
-		const avgTempCList = data.features.map( feature => feature.properties.avgTempC );
-		this.eventEmitterService.emitHeatHistogram( avgTempCList );
+		const avg_temp_cList = data.features.map( feature => feature.properties.avg_temp_c );
+		this.eventEmitterService.emitHeatHistogram( avg_temp_cList );
 		this.eventEmitterService.emitScatterPlotEvent( entities );
 		this.eventEmitterService.emitSocioEconomicsEvent( );
 
@@ -288,23 +286,6 @@ export default class HSYBuilding {
 
 		}
 
-	}
-
-	async setAvgTempInCelsius( features ) {
-
-
-		for ( let i = 0; i < features.length; i++ ) {
-
-			let feature = features[ i ];
-			let normalizedIndex = feature.properties.avgheatexposuretobuilding;
-
-			// Convert normalized index back to Kelvin
-			let tempInKelvin = normalizedIndex * ( this.store.maxKelvin - this.store.minKelvin ) + this.store.minKelvin;
-
-			// Convert Kelvin to Celsius
-			feature.properties.avgTempC = tempInKelvin - 273.15;
-
-		}
 	}
 
 	/**
