@@ -221,7 +221,7 @@ export default {
   <style>
   #pieChartContainer {  
     position: fixed;
-    top: 37%;
+    top: 39%;
 	right: 10px;
     width: 400px;
     height: 200px; 
@@ -234,7 +234,7 @@ export default {
 
   #HSYSelect {
     position: fixed;
-    top: 37%; /* Margin from the content below */
+    top: 39%; /* Margin from the content below */
     right: 10px;
     font-size: smaller;
     visibility: hidden;
