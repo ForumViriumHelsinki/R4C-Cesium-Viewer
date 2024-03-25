@@ -411,7 +411,7 @@ export default {
 			// Create the legend
 			this.createLegend( svg, width, margin, values, labelsWithAverage, colorScale );
   
-			this.plotService.addTitle( svg, 'Building attributes and average surface temperature in Celsius', width + 100, margin );
+			this.plotService.addTitle( svg, 'Building attributes and average surface temperature in Celsius', width + 120, margin );
 		},
   
 		clearHSYScatterPlot() {

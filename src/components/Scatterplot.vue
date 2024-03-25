@@ -406,7 +406,7 @@ export default {
 			// Create the legend
 			this.createLegend( svg, width, margin, values, labelsWithAverage, colorScale );
 
-			this.plotService.addTitle( svg, 'Building attributes and heat exposure', width, margin );
+			this.plotService.addTitle( svg, 'Building attributes and heat exposure', width + 120, margin );
 		},
 
 		clearScatterPlot() {
