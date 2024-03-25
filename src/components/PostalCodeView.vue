@@ -219,6 +219,8 @@ export default {
 				);
 
 				this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
+				const dataSource = this.dataSourceService.getDataSourceByName( 'PostCodes' );
+				this.eventEmitterService.emitPieChartEvent( dataSource );
 
 
 			} else {

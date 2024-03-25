@@ -23,9 +23,9 @@ export default {
 <style>
 #printContainer
 {
-	bottom: 65px; 
-	right: 2%; 
-	width: 450px; 
+	bottom: 55px; 
+	right: 10px;
+	width: 380px; 
 	height: 170px; 
 	position: fixed; 
 	border: 1px solid black; 

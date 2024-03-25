@@ -346,7 +346,7 @@ export default {
 		createLegend( svg, width, margin, values, labelsWithAverage, colorScale ) {
 			const legend = svg.append( 'g' )
 				.attr( 'class', 'legend' )
-				.attr( 'transform', `translate(${width + margin.right - 120},${margin.top})` );
+				.attr( 'transform', `translate(${width + margin.right - 110},${margin.top})` );
   
 			legend.selectAll( '.legend-color' )
 				.data( values )
@@ -389,8 +389,8 @@ export default {
 			// Prepare the data for the plot
 			const { heatData, labelsWithAverage, values } = this.prepareDataForPlot( features, categorical, numerical );
   
-			const margin = { top: 30, right: 170, bottom: 20, left: 30 };
-			const width = 600 - margin.left - margin.right;
+			const margin = { top: 30, right: 120, bottom: 20, left: 30 };
+			const width = 550 - margin.left - margin.right;
 			const height = 290 - margin.top - margin.bottom;
   
 			// Initialize the SVG element
@@ -427,8 +427,8 @@ export default {
   #scatterPlotContainerHSY {
       position: fixed;
       bottom: 35px;
-      left: 10px;
-      width: 640px; /* Adjusted width to accommodate margin */
+      left: -10px;
+      width: 550px; /* Adjusted width to accommodate margin */
       height: 300px; /* Adjusted height to accommodate margin */
       visibility: hidden;
       font-size: smaller;
@@ -440,17 +440,17 @@ export default {
   
   #categoricalHSYSelect {
       position: fixed;
-      bottom: 343px; /* Adjusted position to match scatter plot container */
-      left: 31px;
+      bottom: 338px; /* Adjusted position to match scatter plot container */
+      left: 10px;
       visibility: hidden;
       font-size: smaller;
   }
   
   #numericalHSYSelect {
       position: fixed;
-      bottom: 61px;
-      left: 490px; /* Adjusted position to match scatter plot container */
+      bottom: 55px;
+      left: 460px; /* Adjusted position to match scatter plot container */
       visibility: hidden;
       font-size: smaller;
   }
-    </style>./HSYScatterplot.vue/index.js
+    </style>

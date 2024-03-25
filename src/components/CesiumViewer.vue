@@ -6,6 +6,7 @@
   <HSYScatterplot />
   <BuildingComponent />
   <NearbyTreeArea />
+  <PieChart />
   <DisclaimerPopup />
 </template>
 
@@ -24,6 +25,7 @@ import SocioEconomics from './SocioEconomics.vue';
 import Scatterplot from './Scatterplot.vue';
 import HSYScatterplot from './HSYScatterplot.vue';
 import BuildingComponent from './Building.vue';
+import PieChart from './PieChart.vue';
 import NearbyTreeArea from './NearbyTreeArea.vue';
 import DisclaimerPopup from './DisclaimerPopup.vue';
 import { useGlobalStore } from '../stores/globalStore.js';
@@ -58,6 +60,7 @@ export default {
 		HSYScatterplot,
 		BuildingComponent,
 		NearbyTreeArea,
+		PieChart,
 		DisclaimerPopup
 	},  
 	methods: {

@@ -15,25 +15,6 @@
 	right: 2%;
 }
 
-#printContainer
-{
-	bottom: 65px; 
-	right: 2%; 
-	width: 450px; 
-	height: 170px; 
-	position: fixed; 
-	border: 1px solid black; 
-	box-shadow: 3px 5px 5px black; 
-	background: white;
-	visibility: visible;
-	
-	font-size: smaller;
-	font-family: Monospace;
-	
-	padding: 10px;
-	overflow-y: scroll;
-}
-
 #logoFVH {
     z-index: 1000;
     height: 40px;

@@ -194,6 +194,12 @@ export default class EventEmitter {
 
 	}
 
+	emitPieChartEvent( dataSource ) {
+
+		eventBus.$emit( 'newPieChart', dataSource );
+
+	}
+
 
 
 }

@@ -137,7 +137,7 @@ export default {
 
 				const margin = { top: 20, right: 30, bottom: 50, left: 30 };
 				const width = 460 - margin.left - margin.right;
-				const height = 300 - margin.top - margin.bottom;
+				const height = 200 - margin.top - margin.bottom;
 
 				const svg = this.plotService.createSVGElement( margin, width, height, '#socioeonomicsContainer' );
 
@@ -281,7 +281,7 @@ export default {
 	top: 90px;
 	right: 10px;
 	width: 500px;
-	height: 300px; 
+	height: 200px; 
 	visibility: hidden;
 	
 	font-size: smaller;

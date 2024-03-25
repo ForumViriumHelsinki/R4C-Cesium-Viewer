@@ -230,7 +230,9 @@ export default class Plot {
 			.style( 'border', 'solid' )
 			.style( 'border-width', '1px' )
 			.style( 'border-radius', '5px' )
-			.style( 'padding', '10px' );
+			.style( 'padding', '10px' )
+			.style( 'pointer-events', 'none' )
+        	.style( 'z-index', '100' );
 	}
 
 	setupAxes( svg, xScale, yScale, height ) {

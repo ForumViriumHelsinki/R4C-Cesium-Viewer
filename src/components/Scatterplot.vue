@@ -384,8 +384,8 @@ export default {
 			// Prepare the data for the plot
 			const { heatData, labelsWithAverage, values } = this.prepareDataForPlot( features, categorical, numerical );
 
-			const margin = { top: 30, right: 170, bottom: 20, left: 30 };
-			const width = 600 - margin.left - margin.right;
+			const margin = { top: 30, right: 120, bottom: 20, left: 30 };
+			const width = 550 - margin.left - margin.right;
 			const height = 290 - margin.top - margin.bottom;
 
 			// Initialize the SVG element
@@ -422,8 +422,8 @@ export default {
 #scatterPlotContainer {
     position: fixed;
     bottom: 35px;
-    left: 10px;
-    width: 640px; /* Adjusted width to accommodate margin */
+    left: -10px;
+    width: 550px; /* Adjusted width to accommodate margin */
     height: 300px; /* Adjusted height to accommodate margin */
     visibility: hidden;
     font-size: smaller;
@@ -435,17 +435,17 @@ export default {
 
 #categoricalSelect {
     position: fixed;
-    bottom: 343px; /* Adjusted position to match scatter plot container */
-    left: 31px;
+    bottom: 338px;  /* Adjusted position to match scatter plot container */
+    left: 10px;
     visibility: hidden;
     font-size: smaller;
 }
 
 #numericalSelect {
     position: fixed;
-    bottom: 61px;
-    left: 490px; /* Adjusted position to match scatter plot container */
+    bottom: 55px;
+    left: 460px; /* Adjusted position to match scatter plot container */
     visibility: hidden;
     font-size: smaller;
 }
-  </style>./Scatterplot.vue/index.js
+  </style>
