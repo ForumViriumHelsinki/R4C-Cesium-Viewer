@@ -56,8 +56,8 @@ export default {
 					}
 				}
 			}
-
-			return nimiValuesSet;
+            
+            return Array.from(nimiValuesSet).sort();
 		},
 
 		populateHSYSelect() {
