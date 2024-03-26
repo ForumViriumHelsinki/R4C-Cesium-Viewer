@@ -183,7 +183,7 @@ export default {
 			this.plotService.initializePlotContainerForGrid( 'pieChartContainer' );
 
 			// Assuming firstData and secondData are already fetched and processed
-			const labels = [ 'trees20', 'trees15', 'trees10', 'trees2', 'vegetation', 'water', 'fields', 'rocks', 'other', 'bareland', 'buildings', 'dirtroads', 'pavedroads' ];
+			const labels = [ 'trees20m', 'trees15-20m', 'trees10-15m', 'trees2-10m', 'vegetation', 'water', 'fields', 'rocks', 'other', 'bareland', 'buildings', 'dirtroads', 'pavedroads' ];
 			const colors = [ '#326428', '#327728', '#328228', '#32a028', '#b2df43', '#6495ed', '#ffd980', '#bfbdc2', '#857976', '#cd853f', '#d80000', '#824513', '#000000' ];
 
 			const firstData = this.getLandCoverDataForArea( this.store.nameOfZone._value );
