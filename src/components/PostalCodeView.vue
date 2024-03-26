@@ -103,19 +103,20 @@
 
 <script>
 
-import Datasource from '../services/datasource.js'; 
+import Datasource from '../services/datasource.js';
+import Landcover from '../services/landcover.js'; 
 import Tree from '../services/tree.js'; 
 import Building from '../services/building.js'; 
 import EventEmitter from '../services/eventEmitter.js';
 import Sensor from '../services/sensor.js';
 import Vegetation from '../services/vegetation.js';
+import CapitalRegion from '../services/capitalRegion.js';
 import Othernature from '../services/othernature.js';
 import Plot from '../services/plot.js';
 import View from '../services/view.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 import ElementsDisplay from '../services/elementsDisplay.js';
-import WMS from '../services/wms.js'; 
 import { useToggleStore } from '../stores/toggleStore.js';
 
 export default {
@@ -134,8 +135,6 @@ export default {
 		this.viewer = this.store.cesiumViewer;
 		this.eventEmitterService = new EventEmitter();
 		this.elementsDisplayService = new ElementsDisplay();
-		this.wmsService = new WMS();
-
 	},
 	beforeUnmount() {
 		this.unsubscribe();
@@ -175,7 +174,7 @@ export default {
 		/**
  * This function handles the toggle event for switching to capital region view
  */
-		capitalRegionViewEvent() {
+		async capitalRegionViewEvent() {
 
 			const metropolitanView = document.getElementById( 'capitalRegionViewToggle' ).checked;
 			this.toggleStore.setCapitalRegionView( metropolitanView );
@@ -185,12 +184,14 @@ export default {
 				this.store.view = 'capitalRegion';
         
 				this.dataSourceService.removeDataSourcesByNamePrefix( 'PostCodes' );
-				this.dataSourceService.loadGeoJsonDataSource(
+				await this.dataSourceService.loadGeoJsonDataSource(
 					0.2,
 					'./assets/data/hsy_po.json',
 					'PostCodes'
 				);
 
+				const capitalRegionService = new CapitalRegion();
+				capitalRegionService.addPostalCodeDataToPinia();
 				this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
 				this.elementsDisplayService.setCapitalRegionElementsDisplay( 'inline-block' );
 
@@ -211,27 +212,17 @@ export default {
 
 			const landcover = document.getElementById( 'landCoverToggle' ).checked;
 			this.toggleStore.setLandCover( landcover );
+			const landcoverService = new Landcover();
 
 			if ( landcover ) {
-
-				this.viewer.imageryLayers.add(
-					this.wmsService.createHSYImageryLayer()
-				);
-
-				this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
-				const dataSource = this.dataSourceService.getDataSourceByName( 'PostCodes' );
-				this.eventEmitterService.emitPieChartEvent( dataSource );
-
+				
+				landcoverService.addLandcover();
 
 			} else {
 
-				this.viewer.imageryLayers.removeAll();
+				landcoverService.removeLandcover();
 
-				this.viewer.imageryLayers.add(
-					this.wmsService.createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' ) );
 			}
-
-
 
 		},
 

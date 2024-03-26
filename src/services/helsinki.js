@@ -24,11 +24,11 @@ export default class Helsinki {
     * Load Helsinki elements depending on toggle values
     * 
     */
-	loadHelsinkiElements( ) {
+	async loadHelsinkiElements( ) {
 
 		this.elementsDisplayService.setHelsinkiElementsDisplay( 'inline-block' );
 		this.buildingService.loadBuildings( );	
-		this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
+		await this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
 		this.loadHelsinkiGreenElements( );
 
 	} 

@@ -12,10 +12,10 @@ import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
 import Plot from '../services/plot.js'; 
   
-export default {
+export default {   
 	data() {
 		return {
-			dataSource: [],
+			datasource: [],
 		};
 	},    
 	mounted() {
@@ -27,11 +27,11 @@ export default {
 		this.unsubscribe();
 	},
 	methods: {
-		newPieChart( dataSource ) {
+		newPieChart( ) {
 			if ( this.store.level == 'postalCode' ) {
-				this.dataSource = dataSource;
+                this.datasource = this.store.postalCodeData;
 				this.populateHSYSelect();
-				this.createPieChart( dataSource );
+				this.createPieChart( );
 			} else {
 				// Hide or clear the visualization when not visible
 				// Example: call a method to hide or clear the D3 visualization
@@ -41,9 +41,8 @@ export default {
 
 		extractNimiValues() {
 			const nimiValues = [];
-
 			// Assuming dataSource._entityCollection._entities._array is the array you mentioned
-			const entitiesArray = this.dataSource._entityCollection._entities._array;
+			const entitiesArray = this.datasource._entityCollection._entities._array;
 
 			// Check if entitiesArray exists and is an array
 			if ( Array.isArray( entitiesArray ) ) {
@@ -86,20 +85,16 @@ export default {
  * 
  * @returns { Number } The total area 
 */
-		getTotalAreaByNameAndPropertyKeys( dataSource, name, propertyKeys ) {
+		getTotalAreaByNameAndPropertyKeys( name, propertyKeys ) {
     
 			let totalArea = 0;
 			const year = '2022';
 
-			for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+			for ( let i = 0; i < this.datasource._entityCollection._entities._array.length; i++ ) {
 
-				console.log( 'name', name );
-				console.log( 'dataSource._entityCollection._entities._array[ i ]._properties._nimi._value', dataSource._entityCollection._entities._array[ i ]._properties._nimi._value );
+				if ( this.datasource._entityCollection._entities._array[ i ]._properties._nimi._value == name ) {
 
-
-				if ( dataSource._entityCollection._entities._array[ i ]._properties._nimi._value == name ) {
-
-					const entity = dataSource._entityCollection._entities._array[ i ];
+					const entity = this.datasource._entityCollection._entities._array[ i ];
 	
 					propertyKeys.forEach( propertyKey => {
 
@@ -123,7 +118,7 @@ export default {
 
 		onHSYSelectChange( ) {
 
-			this.createPieChart( this.dataSource );
+			this.createPieChart( this.datasource );
 
 		},
 
@@ -133,25 +128,38 @@ export default {
  * @param { string } majordistrict - Major district code
  * @returns { Array } Data array for the specified major district
  */
-		getLandCoverDataForArea( dataSource, name ) {
+		getLandCoverDataForArea( name ) {
 
-			let trees20 = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'tree20_m2' ] );
-			let trees15 = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'tree15_m2' ] );
-			let trees10 = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'tree10_m2' ] );
-			let trees2 = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'tree2_m2' ] ); 
-			let vegetation = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'vegetation_m2' ] );
-			let water = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'water_m2' ] );
-			let fields = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'field_m2' ] );
-			let rock = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'rocks_m2' ] );
-			let other = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'other_m2' ] );
-			let bareland = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'bareland_m2' ] );
-			let building = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [ 'building_m2' ] );
-			let dirtroad = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [  'dirtroad_m2' ] );
-			let pavedroad = this.getTotalAreaByNameAndPropertyKeys( dataSource, name, [  'pavedroad_m2' ] );
+			let trees20 = this.getTotalAreaByNameAndPropertyKeys( name, [ 'tree20_m2' ] );
+			let trees15 = this.getTotalAreaByNameAndPropertyKeys( name, [ 'tree15_m2' ] );
+			let trees10 = this.getTotalAreaByNameAndPropertyKeys( name, [ 'tree10_m2' ] );
+			let trees2 = this.getTotalAreaByNameAndPropertyKeys( name, [ 'tree2_m2' ] ); 
+			let vegetation = this.getTotalAreaByNameAndPropertyKeys( name, [ 'vegetation_m2' ] );
+			let water = this.getTotalAreaByNameAndPropertyKeys( name, [ 'water_m2' ] );
+			let fields = this.getTotalAreaByNameAndPropertyKeys( name, [ 'field_m2' ] );
+			let rock = this.getTotalAreaByNameAndPropertyKeys( name, [ 'rocks_m2' ] );
+			let other = this.getTotalAreaByNameAndPropertyKeys( name, [ 'other_m2' ] );
+			let bareland = this.getTotalAreaByNameAndPropertyKeys( name, [ 'bareland_m2' ] );
+			let building = this.getTotalAreaByNameAndPropertyKeys( name, [ 'building_m2' ] );
+			let dirtroad = this.getTotalAreaByNameAndPropertyKeys( name, [  'dirtroad_m2' ] );
+			let pavedroad = this.getTotalAreaByNameAndPropertyKeys( name, [  'pavedroad_m2' ] );
 
 			let totalArea = trees20 + trees15 + trees10 + trees2 + vegetation + water + fields + rock + other + bareland + building + dirtroad + pavedroad;
 
-			return [ trees20 / totalArea, trees15 / totalArea, trees10 / totalArea, trees2 / totalArea, vegetation / totalArea, water / totalArea, fields / totalArea, rock / totalArea, other / totalArea, bareland / totalArea, building / totalArea, dirtroad / totalArea, pavedroad / totalArea ];
+			return [ 
+                ( trees20 / totalArea ).toFixed( 3 ), 
+                ( trees15 / totalArea ).toFixed( 3 ), 
+                ( trees10 / totalArea ).toFixed( 3 ), 
+                ( trees2 / totalArea ).toFixed( 3 ), 
+                ( vegetation / totalArea ).toFixed( 3 ), 
+                ( water / totalArea ).toFixed( 3 ), 
+                ( fields / totalArea ).toFixed( 3 ), 
+                ( rock / totalArea ).toFixed( 3 ), 
+                ( other / totalArea ).toFixed( 3 ), 
+                ( bareland / totalArea ).toFixed( 3 ), 
+                ( building / totalArea ).toFixed( 3 ), 
+                ( dirtroad / totalArea ).toFixed( 3 ),
+                ( pavedroad / totalArea ).toFixed( 3 ) ];
 
 		}, 
 
@@ -165,12 +173,12 @@ export default {
 				.attr( 'transform', `translate(${xOffset}, ${yOffset})` ) // Adjusted positioning
 				.on( 'mouseover', ( event, d ) => {
 					this.plotService.handleMouseover( tooltip, 'pieChartContainer', event, d, 
-						( data ) => `Area: ${data.data.zone}<br>Element: ${data.data.label}<br>${100 * data.data.value.toFixed( 3 )} % of landcover` );
+						( data ) => `Area: ${data.data.zone}<br>Element: ${data.data.label}<br>${100 * data.data.value } % of landcover` );
 				} )
 				.on( 'mouseout', () => this.plotService.handleMouseout( tooltip ) );
 		},
 
-		createPieChart( dataSource ) {
+		createPieChart( ) {
 
 			this.plotService.initializePlotContainerForGrid( 'pieChartContainer' );
 
@@ -178,9 +186,9 @@ export default {
 			const labels = [ 'trees20', 'trees15', 'trees10', 'trees2', 'vegetation', 'water', 'fields', 'rocks', 'other', 'bareland', 'buildings', 'dirtroads', 'pavedroads' ];
 			const colors = [ '#326428', '#327728', '#328228', '#32a028', '#b2df43', '#6495ed', '#ffd980', '#bfbdc2', '#857976', '#cd853f', '#d80000', '#824513', '#000000' ];
 
-			const firstData = this.getLandCoverDataForArea( dataSource, this.store.nameOfZone._value );
+			const firstData = this.getLandCoverDataForArea( this.store.nameOfZone._value );
 			const selectedNimi = document.getElementById( 'HSYSelect' ).value; 
-			const secondData = this.getLandCoverDataForArea( dataSource, selectedNimi );
+			const secondData = this.getLandCoverDataForArea( selectedNimi );
 			const margin = {top: 20, right: 10, bottom: 10, left: 10};
 			const width = 400 - margin.left - margin.right;
 			const height = 200 - margin.top - margin.bottom;

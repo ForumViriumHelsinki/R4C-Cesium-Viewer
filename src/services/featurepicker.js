@@ -78,7 +78,7 @@ export default class FeaturePicker {
 		}
 	}
   
-	loadPostalCode( postcode ) {
+	async loadPostalCode( postcode ) {
 
 		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
 		this.datasourceService.removeDataSourcesAndEntities();
@@ -88,11 +88,12 @@ export default class FeaturePicker {
 			this.sensorService.loadSensorData();
 
 		}
-    
+
 		if ( this.store.view == 'capitalRegion' ) {
 
-			this.capitalRegionService.loadCapitalRegionElements();
-    
+			await this.capitalRegionService.loadCapitalRegionElements();
+			this.capitalRegionService.addPostalCodeDataToPinia();
+
 		} else {
         
 			this.helsinkiService.loadHelsinkiElements();
@@ -114,6 +115,7 @@ export default class FeaturePicker {
 		this.store.level = 'building';
 		this.plotService.togglePostalCodePlotVisibility( 'hidden' );
 		this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
+		this.plotService.toggleLandCoverChart( 'hidden' );
 		this.elementsDisplayService.setBuildingDisplay( 'none' );
 		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
 		this.buildingService.resetBuildingOutline();

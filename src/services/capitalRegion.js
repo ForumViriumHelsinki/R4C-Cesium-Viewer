@@ -19,10 +19,10 @@ export default class CapitalRegion {
     * Load Helsinki elements depending on toggle values
     * 
     */
-	loadCapitalRegionElements( ) {
+	async loadCapitalRegionElements( ) {
 
 		this.hSYBuildingService.loadHSYBuildings();	
-		this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
+		await this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
 
 		if ( Number ( this.store.postalcode ) < 1000 ) {
 
@@ -30,5 +30,13 @@ export default class CapitalRegion {
 
 		}
 
+		this.addPostalCodeDataToPinia()
+
+	}
+
+	addPostalCodeDataToPinia( ) {
+
+		const dataSource = this.datasourceService.getDataSourceByName( 'PostCodes' );
+		this.store.postalCodeData = dataSource;
 	}     
 }

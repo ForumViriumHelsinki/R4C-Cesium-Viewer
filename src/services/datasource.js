@@ -70,7 +70,7 @@ export default class GeoJSONDataSource {
 	}
 
 	// Function to load GeoJSON data source
-	loadGeoJsonDataSource( opacity, url, name ) {
+	async loadGeoJsonDataSource( opacity, url, name ) {
 		return new Promise( ( resolve, reject ) => {
 			Cesium.GeoJsonDataSource.load( url, {
 				stroke: Cesium.Color.BLACK,

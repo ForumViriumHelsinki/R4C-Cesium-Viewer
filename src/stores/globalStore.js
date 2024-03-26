@@ -16,6 +16,7 @@ export const useGlobalStore = defineStore( 'global', {
 		maxKelvin: 313.70355224609375,
 		currentGridCell: null,
 		cesiumViewer: null,
+		postalCodeData: null,
 	} ),
 	getters: {
 		getView: ( state ) => state.view,
@@ -32,8 +33,12 @@ export const useGlobalStore = defineStore( 'global', {
 		getMaxKelvin: ( state ) => state.maxKelvin,
 		getCurrentGridCell: ( state ) => state.currentGridCell,
 		getCesiumViewer: ( state ) => state.cesiumViewer,
+		getPostalCodeData: ( state ) => state.postalCodeData,
 	},
 	actions: {
+		setPostalCodeData( newValue ) {
+			this.postalCodeData = newValue;
+		},		
 		setCesiumViewer( newValue ) {
 			this.cesiumViewer = newValue;
 		},
@@ -82,6 +87,7 @@ export const useGlobalStore = defineStore( 'global', {
 			//			this.maxKelvin = 315.011962890625;
 			this.cesiumViewer = null;
 			this.currentGridCell = null;
+			this.postalCodeData = null;
 		},
 	},
 } );

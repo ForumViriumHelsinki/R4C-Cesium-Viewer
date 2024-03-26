@@ -4,6 +4,8 @@ import FeaturePicker from './featurepicker.js';
 import View from './view.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import Landcover from './landcover.js'; 
+
 const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
 
 
@@ -172,6 +174,12 @@ export default class Geocoding {
 		if ( this.toggleStore.switchView ) {
 
 			this.viewService.switchTo2DView();
+		}
+
+		if ( this.toggleStore.landCover ) {
+			
+			const landcoverService = new Landcover();
+			landcoverService.emitLandcoverEvent();
 		}
 
 	}

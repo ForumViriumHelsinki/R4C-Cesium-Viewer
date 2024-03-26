@@ -101,6 +101,17 @@ export default class Plot {
 	}
 
 	/**
+ * Toggle HSY Landcover piechart
+ * 
+ * */
+	toggleLandCoverChart( status ) {
+
+		document.getElementById( 'pieChartContainer' ).style.visibility = status;
+		document.getElementById( 'HSYSelect' ).style.visibility = status;
+
+	}
+
+	/**
  * Toggle visibility of plot elements visible at postal code level
  * 
  * */
