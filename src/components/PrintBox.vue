@@ -26,7 +26,7 @@ export default {
 	bottom: 55px; 
 	right: 10px;
 	width: 380px; 
-	height: 170px; 
+	height: 120px; 
 	position: fixed; 
 	border: 1px solid black; 
 	box-shadow: 3px 5px 5px black; 

@@ -1,7 +1,6 @@
 <template>
 
 <div id="georefContainer">
-<p class="header" style="font-size: smaller; margin: 0px;">Move to address</p>
   <div id="searchcontainer" class="container-fluid">
     <form role="search">
         <div class="form-group">
@@ -12,14 +11,15 @@
           </div>
         </form>
             
-<div id="searchresultscontainer" class="container-fluid hidden">
-            <div class="panel-group" id="searchresults" role="tablist"></div>
-      </div>
     </div>
 <div id="searchbutton">
   <button class="btn btn-primary btn-block" id="searchButton">Move to target</button>
 </div>
 </div>
+
+		<div id="searchresultscontainer" class="container-fluid hidden">
+            <div class="panel-group" id="searchresults" role="tablist"></div>
+      </div>
 
 </template>
   
@@ -40,10 +40,10 @@ export default {
 
 #georefContainer
 {
-	bottom: 30%;
-	right: 10px;
-	width: 380px; 
-	height: 30px; 
+	bottom: 0.5%;
+	left: 10px;
+	width: 530px; 
+	height: 25px; 
 	position: fixed; 
 	border: 1px solid black; 
 	box-shadow: 3px 5px 5px black; 
@@ -56,7 +56,7 @@ export default {
 	padding: 10px;
 }
 
-#searchcontainer {
+#searchcontainer {	
 	visibility: visible;
 	float:left;
 }
@@ -67,10 +67,13 @@ export default {
 
 #searchresultscontainer
 {
+	bottom: 5%;
+	left: 285px;
+	width: 276px; 
+	height: 30px; 
+	position: fixed;
 	background: white;
-	border-bottom: 1px solid black;
-	border-left: 1px solid black;
-	border-right: 1px solid black;
+	visibility: hidden;
 }
 
 </style>

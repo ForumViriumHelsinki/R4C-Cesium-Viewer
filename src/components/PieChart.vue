@@ -57,7 +57,7 @@ export default {
 				}
 			}
             
-            return Array.from(nimiValuesSet).sort();
+			return Array.from( nimiValuesSet ).sort();
 		},
 
 		populateHSYSelect() {
@@ -228,7 +228,7 @@ export default {
   <style>
   #pieChartContainer {  
     position: fixed;
-    top: 39%;
+    top: 295px;
 	right: 10px;
     width: 400px;
     height: 200px; 
@@ -241,7 +241,7 @@ export default {
 
   #HSYSelect {
     position: fixed;
-    top: 39%; /* Margin from the content below */
+    top: 295px;
     right: 10px;
     font-size: smaller;
     visibility: hidden;

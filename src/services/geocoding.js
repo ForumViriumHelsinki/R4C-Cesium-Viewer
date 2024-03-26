@@ -142,6 +142,8 @@ export default class Geocoding {
 		this.moveCameraAndReset( long, lat );
 		document.getElementById( 'searchresults' ).innerHTML = '';
 		document.getElementById( 'searchInput' ).value = 'enter place or address';
+		const searchresultscontainer = document.getElementById( 'searchresultscontainer' );
+		searchresultscontainer.style.display = 'none';
 	};
 
 	/**
@@ -160,6 +162,14 @@ export default class Geocoding {
 		}
 		const searchresultscontainer = document.getElementById( 'searchresultscontainer' );
 		searchresultscontainer.style.display = 'block';
+		searchresultscontainer.style.visibility = 'visible';
+
+		if ( liElemet == '') {
+
+			searchresultscontainer.style.visibility = 'hidden';
+
+		}
+
 		document.getElementById( 'searchresults' ).innerHTML = liElemet;
 
 	}

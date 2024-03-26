@@ -86,7 +86,7 @@ export default {
 
 			const margin = { top: 30, right: 30, bottom: 30, left: 30 };
 			const width = 420 - margin.left - margin.right;
-			const height = 300 - margin.top - margin.bottom;
+			const height = 220 - margin.top - margin.bottom;
 
 			const svg = this.plotService.createSVGElement( margin, width, height, '#heatHistogramContainer' );
 
@@ -130,7 +130,7 @@ export default {
     top: 90px;
     left: 10px;
     width: 420px;
-    height: 300px; 
+    height: 220px; 
     visibility: hidden;
     font-size: smaller;
     border: 1px solid black;
