@@ -29,7 +29,7 @@ export default {
 	methods: {
 		newPieChart( ) {
 			if ( this.store.level == 'postalCode' ) {
-                this.datasource = this.store.postalCodeData;
+				this.datasource = this.store.postalCodeData;
 				this.populateHSYSelect();
 				this.createPieChart( );
 			} else {
@@ -40,7 +40,7 @@ export default {
 		},  
 
 		extractNimiValues() {
-			const nimiValues = [];
+			let nimiValuesSet = new Set();
 			// Assuming dataSource._entityCollection._entities._array is the array you mentioned
 			const entitiesArray = this.datasource._entityCollection._entities._array;
 
@@ -52,29 +52,28 @@ export default {
 
 					// Safely access the ._nimi._value property
 					if ( entity && entity._properties && entity._properties._nimi && typeof entity._properties._nimi._value !== 'undefined' ) {
-						nimiValues.push( entity._properties._nimi._value );
+						nimiValuesSet.add( entity._properties._nimi._value );
 					}
 				}
 			}
 
-			return nimiValues;
+			return nimiValuesSet;
 		},
 
 		populateHSYSelect() {
 			document.getElementById( 'HSYSelect' ).style.visibility = 'visible';
 			const selectElement = document.getElementById( 'HSYSelect' );
 			const nimiValues = this.extractNimiValues();
+			const fragment = document.createDocumentFragment();
 
-			// Clear existing options first
-			selectElement.innerHTML = '';
-
-			// Populate with nimi values
 			nimiValues.forEach( nimi => {
 				const option = document.createElement( 'option' );
 				option.textContent = nimi;
 				option.value = nimi;
-				selectElement.appendChild( option );
+				fragment.appendChild( option );
 			} );
+
+			selectElement.appendChild( fragment );
 		},
 
         		/**
@@ -147,19 +146,19 @@ export default {
 			let totalArea = trees20 + trees15 + trees10 + trees2 + vegetation + water + fields + rock + other + bareland + building + dirtroad + pavedroad;
 
 			return [ 
-                ( trees20 / totalArea ).toFixed( 3 ), 
-                ( trees15 / totalArea ).toFixed( 3 ), 
-                ( trees10 / totalArea ).toFixed( 3 ), 
-                ( trees2 / totalArea ).toFixed( 3 ), 
-                ( vegetation / totalArea ).toFixed( 3 ), 
-                ( water / totalArea ).toFixed( 3 ), 
-                ( fields / totalArea ).toFixed( 3 ), 
-                ( rock / totalArea ).toFixed( 3 ), 
-                ( other / totalArea ).toFixed( 3 ), 
-                ( bareland / totalArea ).toFixed( 3 ), 
-                ( building / totalArea ).toFixed( 3 ), 
-                ( dirtroad / totalArea ).toFixed( 3 ),
-                ( pavedroad / totalArea ).toFixed( 3 ) ];
+				( trees20 / totalArea ).toFixed( 3 ), 
+				( trees15 / totalArea ).toFixed( 3 ), 
+				( trees10 / totalArea ).toFixed( 3 ), 
+				( trees2 / totalArea ).toFixed( 3 ), 
+				( vegetation / totalArea ).toFixed( 3 ), 
+				( water / totalArea ).toFixed( 3 ), 
+				( fields / totalArea ).toFixed( 3 ), 
+				( rock / totalArea ).toFixed( 3 ), 
+				( other / totalArea ).toFixed( 3 ), 
+				( bareland / totalArea ).toFixed( 3 ), 
+				( building / totalArea ).toFixed( 3 ), 
+				( dirtroad / totalArea ).toFixed( 3 ),
+				( pavedroad / totalArea ).toFixed( 3 ) ];
 
 		}, 
 

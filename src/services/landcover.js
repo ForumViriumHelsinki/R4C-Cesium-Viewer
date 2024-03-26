@@ -17,19 +17,19 @@ export default class Landcover {
 		);
 
 		this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
-        this.emitLandcoverEvent();
+		this.emitLandcoverEvent();
 
 	}
 
-    emitLandcoverEvent() {
+	emitLandcoverEvent() {
 
-        const eventEmitterService = new EventEmitter();
+		const eventEmitterService = new EventEmitter();
 		eventEmitterService.emitPieChartEvent( );  
-    }
+	}
 
 	removeLandcover() {
 
-        const plotService = new Plot();
+		const plotService = new Plot();
 		plotService.toggleLandCoverChart( 'hidden' );
 		this.viewer.imageryLayers.removeAll();
 
