@@ -4,6 +4,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import DataSource from './datasource.js';
 import HSYBuilding from './hsybuilding.js';
 import ElementsDisplay from './elementsDisplay.js';
+import Landcover from './landcover.js'; 
 
 export default class CapitalRegion {
 	constructor( ) {
@@ -27,6 +28,13 @@ export default class CapitalRegion {
 		if ( Number ( this.store.postalcode ) < 1000 ) {
 
 			this.elementsDisplayService.setTreeElementsDisplay( 'inline-block' );
+
+		}
+
+		if ( this.toggleStore.landCover ) {
+
+			const landcoverService = new Landcover();
+			landcoverService.emitLandcoverEvent();
 
 		}
 

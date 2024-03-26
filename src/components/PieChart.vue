@@ -216,7 +216,7 @@ export default {
 			this.plotService.addTitle( svg, `Compare landcover in ${this.store.nameOfZone} to:`, width / 2, margin );  
            
 		},
-		clearHistogram() {
+		clearPieChart() {
 			// Remove or clear the D3.js visualization
 			// Example:
 			d3.select( '#pieChartContainer' ).select( 'svg' ).remove();
