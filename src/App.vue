@@ -3,8 +3,8 @@
 <div id="canvasScalerDiv">
   <CesiumViewer />
   <GridView />
-  <PrintBox />
   <Geocoding />
+  <PrintBox />
   <PostalCodeView />
 
   <!-- Add Logo -->		

@@ -40,7 +40,7 @@ export default {
 
 #georefContainer
 {
-	top: 502px;
+	bottom: 30%;
 	right: 10px;
 	width: 380px; 
 	height: 30px; 
