@@ -10,7 +10,10 @@ services:
     environment:
       - NODE_ENV=production
     # Additional environment variables can be added here if needed
-
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
   backend:
     build:
       context: ./backend
@@ -22,8 +25,3 @@ services:
       - REDIS_HOST=redis
     depends_on:
       - redis
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
