@@ -128,7 +128,7 @@ export default {
   #heatHistogramContainer {
     position: fixed;
     top: 90px;
-    left: 10px;
+    left: 1px;
     width: 420px;
     height: 220px; 
     visibility: hidden;

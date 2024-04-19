@@ -427,7 +427,7 @@ export default {
   #scatterPlotContainerHSY {
       position: fixed;
       bottom: 35px;
-      left: -10px;
+      left: -19px;
       width: 550px; /* Adjusted width to accommodate margin */
       height: 300px; /* Adjusted height to accommodate margin */
       visibility: hidden;
@@ -441,7 +441,7 @@ export default {
   #categoricalHSYSelect {
       position: fixed;
       bottom: 338px; /* Adjusted position to match scatter plot container */
-      left: 10px;
+      left: 1px;
       visibility: hidden;
       font-size: smaller;
   }
@@ -449,7 +449,7 @@ export default {
   #numericalHSYSelect {
       position: fixed;
       bottom: 55px;
-      left: 460px; /* Adjusted position to match scatter plot container */
+      left: 463px; /* Adjusted position to match scatter plot container */
       visibility: hidden;
       font-size: smaller;
   }

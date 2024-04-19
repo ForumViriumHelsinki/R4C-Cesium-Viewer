@@ -279,7 +279,7 @@ export default {
 {
 	position: fixed;
 	top: 90px;
-	right: 10px;
+	right: 1px;
 	width: 500px;
 	height: 200px; 
 	visibility: hidden;
@@ -295,7 +295,7 @@ export default {
 #areaSelect {
     position: fixed;
     top: 90px; /* Margin from the content below */
-    right: 10px;
+    right: 1px;
     font-size: smaller;
     visibility: hidden;
 }

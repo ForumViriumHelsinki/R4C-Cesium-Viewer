@@ -252,7 +252,7 @@ export default {
   #buildingTreeChartContainer {
     position: fixed;
     top: 90px;
-    right: 10px;
+    right: 1px;
     width: 300px;
     height: 200px; 
     visibility: hidden;
@@ -264,7 +264,7 @@ export default {
   #buildingChartContainer {
     position: fixed;
     top: 80px;
-    left: 10px;
+    left: 1px;
     width: 300px;
     height: 250px; 
     visibility: hidden;

@@ -422,7 +422,7 @@ export default {
 #scatterPlotContainer {
     position: fixed;
     bottom: 35px;
-    left: -10px;
+    left: -19px;
     width: 550px; /* Adjusted width to accommodate margin */
     height: 300px; /* Adjusted height to accommodate margin */
     visibility: hidden;

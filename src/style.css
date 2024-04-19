@@ -12,19 +12,19 @@
 {
 	position: fixed;
 	bottom: 10px; 
-	right: 2%;
+	right: 5px;
 }
 
 #logoFVH {
     z-index: 1000;
     height: 40px;
 	float: right;
-	margin-right: 20px;
+	margin-right: 10px;
 }
 
 #logoR4C {
     z-index: 1000;
-    height: 40px;
+    height: 30px;
 	float: right;
 }
 

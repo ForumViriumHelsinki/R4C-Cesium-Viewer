@@ -40,10 +40,10 @@ export default {
 
 #georefContainer
 {
-	bottom: 0.5%;
-	left: 10px;
+	bottom: 2px;
+	right: 1px;
 	width: 530px; 
-	height: 25px; 
+	height: 30px; 
 	position: fixed; 
 	border: 1px solid black; 
 	box-shadow: 3px 5px 5px black; 
@@ -67,8 +67,8 @@ export default {
 
 #searchresultscontainer
 {
-	bottom: 5%;
-	left: 285px;
+	bottom: 4.5%;
+	right: 100px;
 	width: 276px; 
 	height: 30px; 
 	position: fixed;

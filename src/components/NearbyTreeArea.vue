@@ -474,8 +474,8 @@ export default {
 
 #nearbyTreeAreaContainer{
     position: fixed;
-    bottom: 40px;
-    left: 10px;
+    bottom: 35px;
+    left: -19px;
     width: 640px; /* Adjusted width to accommodate margin */
     height: 300px; /* Adjusted height to accommodate margin */
     visibility: hidden;
@@ -488,40 +488,40 @@ export default {
 #bearingAllSwitchContainer 
 {
     position: fixed;
-    bottom: 80px;
-    left: 140px;
+    bottom: 65px;
+    left: 120px;
 	visibility: hidden;
 }
 
 #bearingSouthSwitchContainer 
 {
     position: fixed;
-    bottom: 80px;
-    left: 230px;
+    bottom: 65px;
+    left: 210px;
 	visibility: hidden;
 }
 
 #bearingWestSwitchContainer 
 {
     position: fixed;
-    bottom: 80px;
-    left: 320px;
+    bottom: 65px;
+    left: 300px;
 	visibility: hidden;
 }
 
 #bearingEastSwitchContainer 
 {
     position: fixed;
-    bottom: 80px;
-    left: 410px;
+    bottom: 65px;
+    left: 390px;
 	visibility: hidden;
 }
 
 #bearingNorthSwitchContainer 
 {
     position: fixed;
-    bottom: 80px;
-    left: 500px;
+    bottom: 65px;
+    left: 480px;
 	visibility: hidden;
 }
 </style>

@@ -229,7 +229,7 @@ export default {
   #pieChartContainer {  
     position: fixed;
     top: 295px;
-	right: 10px;
+	right: 1px;
     width: 400px;
     height: 200px; 
     visibility: hidden;
@@ -242,7 +242,7 @@ export default {
   #HSYSelect {
     position: fixed;
     top: 295px;
-    right: 10px;
+    right: 1px;
     font-size: smaller;
     visibility: hidden;
 }
