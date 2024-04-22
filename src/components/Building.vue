@@ -13,6 +13,9 @@ import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
 import Plot from '../services/plot.js'; 
 import Address from '../services/address.js';
+import ColdSpot from '../services/coldspot.js';
+import ElementsDisplay from '../services/elementsDisplay.js';
+import { useToggleStore } from '../stores/toggleStore.js';
   
 export default {
 	mounted() {
@@ -20,14 +23,20 @@ export default {
 		this.unsubscribe = eventBus.$on( 'newBuildingTree', this.newBuildingTree );
 		this.unsubscribe = eventBus.$on( 'newBuildingGridChart', this.newBuildingGridChart );
 		this.store = useGlobalStore();
+		this.toggleStore  = useToggleStore();
 		this.plotService = new Plot();
 		this.addressService = new Address();
+		this.coldSpotService = new ColdSpot();
+		this.elementsDisplayService = new ElementsDisplay();
 
 	},
 	beforeUnmount() {
 		this.unsubscribe();
 	},
 	methods: {
+		addEventListeners() {
+			document.getElementById( 'hideColdAreasToggle' ).addEventListener( 'change', this.hideColdAreas );
+		},		
 		newBuildingGridChart( buildingProps ) {
 			if ( buildingProps && this.store.view == 'grid' ) {
 				this.createBuildingGridChart( buildingProps );
@@ -40,6 +49,14 @@ export default {
 		newBuildingHeat( buildingHeatExposure, address, postinumero ) {
 			if ( buildingHeatExposure && this.store.level == 'building' ) {
 				this.createBuildingBarChart( buildingHeatExposure, address, postinumero );
+
+				if ( buildingHeatExposure > 0.5 ) {
+
+					this.addEventListeners()
+					this.elementsDisplayService.setColdAreasElementsDisplay( 'inline-block' );
+					this.coldSpotService.loadColdSpot();
+
+				}
 			} else {
 				// Hide or clear the visualization when not visible
 				// Example: call a method to hide or clear the D3 visualization
@@ -55,6 +72,27 @@ export default {
 				this.clearBuildingTreeBarChart();
 			}
 		},
+
+		/**
+ 		* This function handles the toggle event for showing or hiding the cold areas layer on the map.
+ 		*
+ 		*/
+		hideColdAreas() {
+
+			const hideColdAreas = document.getElementById( 'hideColdAreasToggle' ).checked;
+			this.toggleStore.setHideColdAreas( hideColdAreas );
+
+			if ( hideColdAreas ) {
+
+				this.dataSourceService.changeDataSourceShowByName( 'ColdAreas', false );
+
+			} else {
+
+				this.dataSourceService.changeDataSourceShowByName( 'ColdAreas', true );
+
+			}
+
+		},		
 
 		createBuildingGridChart( buildingProps ) {
 

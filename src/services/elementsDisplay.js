@@ -116,6 +116,16 @@ export default class ElementsDisplay {
 		this.setElementsDisplay( elements, display );
 
 	}
+
+	setColdAreasElementsDisplay( display ) {
+		const elements = [
+			'hideColdAreasSwitch',
+			'hideColdAreasLabel'
+		];
+
+		this.setElementsDisplay( elements, display );
+
+	}	
     
 	setElementsDisplay( elements, display ) {
 

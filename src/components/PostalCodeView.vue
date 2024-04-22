@@ -92,6 +92,13 @@
 </label>
 <label for="showSensorData" class="label">Sensor data</label>
 
+  <!-- hideColdAreasSwitch-->
+<label class="switch" id = "hideColdAreasSwitch"  style="display:none;">
+	<input type="checkbox" id="hideColdAreasToggle" value="hideColdAreas" >
+	<span class="slider round"></span>
+</label>
+<label for="hideColdAreas" class="label" id="hideColdAreasLabel"  style="display:none;">Hide cold areas</label>
+
   <!--  flood Link-->
 <div>  
   <a href="https://geo.fvh.fi/r4c/6fkgOUqn3/" class="label" id="floodLink" target="_blank" rel="noopener noreferrer" style="display:none;">Experimental flood simulations</a>

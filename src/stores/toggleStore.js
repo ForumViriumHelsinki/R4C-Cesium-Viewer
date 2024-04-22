@@ -16,6 +16,7 @@ export const useToggleStore = defineStore( 'toggle', {
 		hideNonSote: false,
 		hideLow: false, 
 		showTrees: false,
+		hideColdAreas: false,
 		landCover: false,
 		switchView: false,
 		showSensorData: false,  
@@ -36,6 +37,7 @@ export const useToggleStore = defineStore( 'toggle', {
 		getHideNonSote: ( state ) => state.hideNonSote,
 		getHideLow: ( state ) => state.hideLow,
 		getShowTrees: ( state ) => state.showTrees,
+		getHideColdAreas: ( state ) => state.hideColdAreas,
 		getLandCover: ( state ) => state.landCover,
 		getSwitchView: ( state ) => state.switchView,
 		getShowSensorData: ( state ) => state.showSensorData,
@@ -83,7 +85,10 @@ export const useToggleStore = defineStore( 'toggle', {
 		},
 		setShowTrees( show ) {
 			this.showTrees = show;
-		},    
+		}, 
+		setHideColdAreas( show ) {
+			this.hideColdAreas = show;
+		},		   
 		setLandCover( enabled ) {
 			this.landCover = enabled;
 		},
@@ -111,6 +116,7 @@ export const useToggleStore = defineStore( 'toggle', {
 			this.hideNonSote = false;
 			this.hideLow = false;
 			this.showTrees = false;
+			this.hideColdAreas = false;
 			this.switchView = false;
 			this.showSensorData  = false;
 			this.surveyPlaces  = false;

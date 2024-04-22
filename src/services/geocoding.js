@@ -164,7 +164,7 @@ export default class Geocoding {
 		searchresultscontainer.style.display = 'block';
 		searchresultscontainer.style.visibility = 'visible';
 
-		if ( liElemet == '') {
+		if ( liElemet == '' ) {
 
 			searchresultscontainer.style.visibility = 'hidden';
 
