@@ -112,7 +112,7 @@ export default class GeoJSONDataSource {
 					}
 				}
 
-				this.viewer.dataSources.add( data );
+				this.store.cesiumViewer.dataSources.add( data );
 				resolve( data.entities.values );
 			} )
 				.catch( ( error ) => {

@@ -56,7 +56,7 @@ export default class Printbox {
     
 		} else {
     
-			toPrint = toPrint + '<br/><br/><i>If average urban heat exposure of building is over 0.5 the nearest location with under 0.4 heat exposure is shown on map.</i>';
+			toPrint = toPrint + '<br/><br/><i>If average urban heat exposure of building is over 0.5 the areas with under 0.4 heat exposure is shown on map.</i>';
     
 		}
     

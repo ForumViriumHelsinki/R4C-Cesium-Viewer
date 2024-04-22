@@ -14,6 +14,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import Plot from '../services/plot.js'; 
 import Address from '../services/address.js';
 import ColdSpot from '../services/coldspot.js';
+import Datasource from '../services/datasource.js';
 import ElementsDisplay from '../services/elementsDisplay.js';
 import { useToggleStore } from '../stores/toggleStore.js';
   
@@ -81,14 +82,15 @@ export default {
 
 			const hideColdAreas = document.getElementById( 'hideColdAreasToggle' ).checked;
 			this.toggleStore.setHideColdAreas( hideColdAreas );
+			const dataSourceService = new Datasource();
 
 			if ( hideColdAreas ) {
 
-				this.dataSourceService.changeDataSourceShowByName( 'ColdAreas', false );
+				dataSourceService.changeDataSourceShowByName( 'ColdAreas', false );
 
 			} else {
 
-				this.dataSourceService.changeDataSourceShowByName( 'ColdAreas', true );
+				dataSourceService.changeDataSourceShowByName( 'ColdAreas', true );
 
 			}
 

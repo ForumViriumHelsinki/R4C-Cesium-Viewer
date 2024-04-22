@@ -1,19 +1,21 @@
 import * as Cesium from 'cesium';
 import axios from 'axios';
+import Datasource from './datasource.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class ColdSpot {
 	constructor( ) {
+		this.datasourceService = new Datasource();
 		this.store = useGlobalStore();
-		this.viewer = this.store.cesiumViewer;
+
 	}
 
 	addColdPoint( location ) {
     
 		const coordinates = location.split( ',' ); 
     
-		this.viewer.entities.add( {
+		this.store.cesiumViewer.entities.add( {
 			position: Cesium.Cartesian3.fromDegrees( Number( coordinates[ 1 ] ), Number( coordinates[ 0 ] ) ),
 			name: 'coldpoint',
 			point: {

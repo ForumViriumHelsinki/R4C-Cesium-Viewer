@@ -147,7 +147,7 @@ export default class FeaturePicker {
 		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
     
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
-		if ( id.properties.posno ) {
+		if ( id.properties.posno && this.store.level != 'building' ) {
             
 			this.store.postalcode = id.properties.posno._value;
 			this.store.nameOfZone = id.properties.nimi;
