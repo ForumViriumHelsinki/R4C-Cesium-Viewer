@@ -2,11 +2,13 @@ import * as Cesium from 'cesium';
 import axios from 'axios';
 import Datasource from './datasource.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
+import ElementsDisplay from './elementsDisplay.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class ColdSpot {
 	constructor( ) {
 		this.datasourceService = new Datasource();
+		this.elementsDisplayService = new ElementsDisplay();
 		this.store = useGlobalStore();
 
 	}
@@ -29,7 +31,7 @@ export default class ColdSpot {
     
 	}
 
-		/**
+	/**
  * Loads ColdSpot data for a given postcode asynchronously
  * 
  * @returns {Promise} - A promise that resolves once the data has been loaded
@@ -65,19 +67,24 @@ export default class ColdSpot {
 	async addColdSpotDataSource ( data ) {
 
 		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'ColdAreas' );
-	
-		for ( let i = 0; i < entities.length; i++ ) {
-			
-			let entity = entities[ i ];
-            
-			if ( entity._properties._heatexposure && entity.polygon ) {
 
-				entity.polygon.material = new Cesium.Color( 1, 1 - entity._properties._heatexposure._value, 0, entity._properties._heatexposure._value );
-				entity.polygon.outlineColor = Cesium.Color.BLACK; 
-				entity.polygon.outlineWidth = 3; 
+		if ( entities ) {
+
+			this.elementsDisplayService.setColdAreasElementsDisplay( 'inline-block' );
+			for ( let i = 0; i < entities.length; i++ ) {
+			
+				let entity = entities[ i ];
+            
+				if ( entity._properties._heatexposure && entity.polygon ) {
+
+					entity.polygon.material = new Cesium.Color( 1, 1 - entity._properties._heatexposure._value, 0, entity._properties._heatexposure._value );
+					entity.polygon.outlineColor = Cesium.Color.BLACK; 
+					entity.polygon.outlineWidth = 3; 
 	
+				}
 			}
 		}
+
 	}
 
 	/**

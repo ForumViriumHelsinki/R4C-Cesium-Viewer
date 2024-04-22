@@ -15,7 +15,6 @@ import Plot from '../services/plot.js';
 import Address from '../services/address.js';
 import ColdSpot from '../services/coldspot.js';
 import Datasource from '../services/datasource.js';
-import ElementsDisplay from '../services/elementsDisplay.js';
 import { useToggleStore } from '../stores/toggleStore.js';
   
 export default {
@@ -28,7 +27,6 @@ export default {
 		this.plotService = new Plot();
 		this.addressService = new Address();
 		this.coldSpotService = new ColdSpot();
-		this.elementsDisplayService = new ElementsDisplay();
 
 	},
 	beforeUnmount() {
@@ -53,8 +51,7 @@ export default {
 
 				if ( buildingHeatExposure > 0.5 ) {
 
-					this.addEventListeners()
-					this.elementsDisplayService.setColdAreasElementsDisplay( 'inline-block' );
+					this.addEventListeners();
 					this.coldSpotService.loadColdSpot();
 
 				}
