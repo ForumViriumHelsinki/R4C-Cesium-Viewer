@@ -49,7 +49,7 @@ export default {
 			if ( buildingHeatExposure && this.store.level == 'building' ) {
 				this.createBuildingBarChart( buildingHeatExposure, address, postinumero );
 
-				if ( buildingHeatExposure > 0.5 ) {
+				if ( buildingHeatExposure > 27.2632995605 ) {
 
 					this.addEventListeners();
 					this.coldSpotService.loadColdSpot();

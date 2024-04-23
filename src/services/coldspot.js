@@ -37,7 +37,7 @@ export default class ColdSpot {
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
 	async loadColdSpot( ) {
-		const url = 'https://geo.fvh.fi/r4c/collections/coldspot/items?f=json&limit=50000&posno=' + this.store.postalcode;
+		const url = 'https://geo.fvh.fi/r4c/collections/coldspot/items?f=json&limit=100000&posno=' + this.store.postalcode;
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
