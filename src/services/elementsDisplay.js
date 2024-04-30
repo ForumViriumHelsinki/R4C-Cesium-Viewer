@@ -57,6 +57,8 @@ export default class ElementsDisplay {
 			'landCoverLabel',
 			'hideLowSwitch',
 			'hideLowLabel',
+			'showTreesSwitch',
+			'showTreesLabel',
 			'hideNonSoteSwitch',
 			'hideNonSoteLabel'		          
 		];

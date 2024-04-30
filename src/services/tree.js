@@ -58,7 +58,12 @@ export default class Tree {
 
 		}
 
-		this.fetchAndAddTreeDistanceData( postcode, entities );
+		if ( Number( postcode ) < 1001) {
+			
+			this.fetchAndAddTreeDistanceData( postcode, entities );
+
+		}
+
 
 	}
 
