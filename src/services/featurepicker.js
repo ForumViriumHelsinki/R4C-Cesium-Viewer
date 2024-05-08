@@ -152,6 +152,7 @@ export default class FeaturePicker {
 			this.store.postalcode = id.properties.posno._value;
 			this.store.nameOfZone = id.properties.nimi;
 			this.viewService.switchTo3DView();
+			this.elementsDisplayService.setViewDisplay( 'none' );
 			this.loadPostalCode( this.store.postalcode, id );
     
 		}

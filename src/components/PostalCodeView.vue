@@ -4,13 +4,13 @@
   <p class="uiButton" @click="reset" style="color: red; float:right; cursor: pointer;">Reset</p>
   <!-- showPlotSwitch-->
 
-<label class="switch">
+<label class="switch" id="gridViewSwitch" >
   <input type="checkbox" id="gridViewToggle" value="gridView">
   <span class="slider round"></span>
 </label>
 <label for="gridViewToggle" class="label" id="gridViewLabel">Grid view</label>  
 
-<label class="switch">
+<label class="switch"  id="capitalRegionSwitch" >
   <input type="checkbox" id="capitalRegionViewToggle" value="capitalRegionView">
   <span class="slider round"></span>
 </label>
@@ -247,6 +247,11 @@ export default {
 				this.showPostalCodeView = false;
 				this.eventEmitterService.emitGridViewEvent( );
 
+			}  else {
+
+				this.store.view = 'helsinki';
+				this.reset();
+  
 			} 
 
 		},

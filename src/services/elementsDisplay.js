@@ -51,6 +51,25 @@ export default class ElementsDisplay {
 	/**
      * Changes the display of helsinki elements when user switches between postal code and grid view
     */
+	setViewDisplay( display ) {
+		const elements = [
+			'gridViewSwitch',
+			'gridViewLabel',		          
+		];
+
+		if ( this.store.view != 'helösinki' ) {
+
+			elements.push( 'capitalRegionSwitch' );
+			elements.push( 'capitalRegionViewLabel' );
+
+		}
+
+		this.setElementsDisplay( elements, display );
+	}
+
+	/**
+     * Changes the display of helsinki elements when user switches between postal code and grid view
+    */
 	setCapitalRegionElementsDisplay( display ) {
 		const elements = [
 			'landCoverSwitch',
