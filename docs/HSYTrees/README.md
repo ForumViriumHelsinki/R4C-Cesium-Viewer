@@ -5,9 +5,9 @@ This script automates the retrieval of tree data from the HSY (Helsinki Region E
 
 HSY WFS Endpoint: Ensure access to the HSY WFS service providing tree data. The endpoint and relevant parameters (typename, city) are loaded from a .env file.
 
-Postal Code GeoJSON: A GeoJSON file containing postal code boundaries (hsy_po.json in this script) is required for spatial joining.
+Postal Code GeoJSON: A GeoJSON file containing postal code boundaries is required for spatial joining.
 
-PostgreSQL Database: A PostgreSQL database with a table named tree_f should be set up to store the results. The database connection details are loaded from the .env file.
+PostgreSQL Database: The database connection details are loaded from the .env file. A PostgreSQL database with a table matching .env tablename should be set up to store the results.
 
 ## Procedure
 
@@ -24,4 +24,4 @@ Iterate through postal code areas:
 Clip the tree features to the current postal code area.
 If there are clipped features:
 Calculate areas and other relevant attributes.
-Insert each processed feature into the PostgreSQL table tree_f along with the associated postal code.
+Insert each processed feature into the PostgreSQL table along with the associated postal code.

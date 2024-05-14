@@ -66,6 +66,9 @@ def spatial_relation_with_postal_code_areas_and_save_to_db(wfs_json, postal_code
         password=env_vars["DB_PASSWORD"]
     )
     cur = conn.cursor()
+    
+    # Get table name from environment variables
+    table_name = env_vars["TABLE_NAME"]
 
     postal_code_gdf = gpd.read_file(postal_code_geojson_path)
     wfs_gdf = gpd.GeoDataFrame.from_features(wfs_json["features"])
@@ -97,7 +100,7 @@ def spatial_relation_with_postal_code_areas_and_save_to_db(wfs_json, postal_code
 
                 # Insert to database
                 cur.execute("""
-                    INSERT INTO tree_f (postinumero, kohde_id, kunta, paaluokka, alaluokka, ryhma, koodi, kuvaus, geom)
+                    INSERT INTO {table_name} (postinumero, kohde_id, kunta, paaluokka, alaluokka, ryhma, koodi, kuvaus, geom)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s))
                 """, (postalarea['posno'], clipped_feature['kohde_id'], clipped_feature['kunta'], clipped_feature['paaluokka'], clipped_feature['alaluokka'], clipped_feature['ryhma'], clipped_feature['koodi'], clipped_feature['kuvaus'], geometry_wkt))
 
