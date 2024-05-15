@@ -13,7 +13,7 @@ import Helsinki from './helsinki.js';
 import CapitalRegion from './capitalRegion.js';
 import Sensor from './sensor.js';
 import View from './view.js';
-import ColdSpot from './coldspot.js';
+import ColdArea from './coldarea.js';
 
 export default class FeaturePicker {
 	constructor( ) {
@@ -33,7 +33,7 @@ export default class FeaturePicker {
 		this.addressService = new Address();
 		this.elementsDisplayService = new ElementsDisplay();
 		this.viewService = new View();
-		this.coldSpotService = new ColdSpot();
+		this.coldAreaService = new ColdArea();
 	}
   
 	/**
@@ -196,7 +196,7 @@ export default class FeaturePicker {
 
 				if ( id.properties._locationUnder40._value ) {
 
-					this.coldSpotService.addColdPoint( id.properties._locationUnder40._value );
+					this.coldAreaService.addColdPoint( id.properties._locationUnder40._value );
 
 				}
     

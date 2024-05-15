@@ -5,7 +5,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import ElementsDisplay from './elementsDisplay.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-export default class ColdSpot {
+export default class ColdArea {
 	constructor( ) {
 		this.datasourceService = new Datasource();
 		this.elementsDisplayService = new ElementsDisplay();
@@ -32,12 +32,12 @@ export default class ColdSpot {
 	}
 
 	/**
- * Loads ColdSpot data for a given postcode asynchronously
+ * Loads ColdArea data for a given postcode asynchronously
  * 
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
-	async loadColdSpot( ) {
-		const url = 'https://geo.fvh.fi/r4c/collections/coldspot/items?f=json&limit=100000&posno=' + this.store.postalcode;
+	async loadColdAreas( ) {
+		const url = 'https://geo.fvh.fi/r4c/collections/coldarea/items?f=json&limit=100000&posno=' + this.store.postalcode;
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;

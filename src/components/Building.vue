@@ -13,7 +13,7 @@ import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
 import Plot from '../services/plot.js'; 
 import Address from '../services/address.js';
-import ColdSpot from '../services/coldspot.js';
+import ColdArea from '../services/coldarea.js';
 import Datasource from '../services/datasource.js';
 import { useToggleStore } from '../stores/toggleStore.js';
   
@@ -26,7 +26,7 @@ export default {
 		this.toggleStore  = useToggleStore();
 		this.plotService = new Plot();
 		this.addressService = new Address();
-		this.coldSpotService = new ColdSpot();
+		this.coldAreaService = new ColdArea();
 
 	},
 	beforeUnmount() {
@@ -52,7 +52,7 @@ export default {
 				if ( buildingHeatExposure > 27.2632995605 ) {
 
 					this.addEventListeners();
-					this.coldSpotService.loadColdSpot();
+					this.coldAreaService.loadColdAreas();
 
 				}
 			} else {
