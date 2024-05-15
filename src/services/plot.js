@@ -198,12 +198,34 @@ export default class Plot {
 
  */
 	addTitle( svg, title, width, margin ) {
-		svg.append( 'text' )
-			.attr( 'x', width / 2 )
-			.attr( 'y', -margin.top / 3 )
-			.attr( 'text-anchor', 'middle' )
-			.style( 'font-size', '12px' )
-			.text( title );
+		if ( title.includes( '2022' ) ) {
+			// Title needs splitting
+			const titleParts = title.split( '2022' );
+
+			svg.append( 'text' )
+				.attr( 'x', width / 2 )
+				.attr( 'y', -margin.top / 3 )
+				.attr( 'text-anchor', 'middle' )
+				.style( 'font-size', '12px' )
+				.append( 'tspan' )
+				.text( titleParts[0] + '2022' );
+
+			svg.append( 'text' )
+				.attr( 'x', width / 2 )
+				.attr( 'y', -margin.top / 3 + 16 ) 
+				.attr( 'text-anchor', 'middle' )
+				.style( 'font-size', '12px' )
+				.append( 'tspan' )
+				.text( titleParts[1] );
+		} else {
+			// Title doesn't need splitting
+			svg.append( 'text' )
+				.attr( 'x', width / 2 )
+				.attr( 'y', -margin.top / 3 )
+				.attr( 'text-anchor', 'middle' )
+				.style( 'font-size', '12px' )
+				.text( title );
+		}
 	}
 
 	// 1. Initialize SVG and Background

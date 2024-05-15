@@ -172,7 +172,7 @@ export default {
 				.attr( 'transform', `translate(${xOffset}, ${yOffset})` ) // Adjusted positioning
 				.on( 'mouseover', ( event, d ) => {
 					this.plotService.handleMouseover( tooltip, 'pieChartContainer', event, d, 
-						( data ) => `Area: ${data.data.zone}<br>Element: ${data.data.label}<br>${100 * data.data.value } % of landcover` );
+						( data ) => `Area: ${data.data.zone}<br>Element: ${data.data.label}<br>${100 * data.data.value } % of HSY 2022 landcover` );
 				} )
 				.on( 'mouseout', () => this.plotService.handleMouseout( tooltip ) );
 		},
@@ -213,7 +213,7 @@ export default {
 			const tooltip = this.plotService.createTooltip( '#pieChartContainer' );
 			this.createPie( svg, '.firstPie', firstPieData, colors, arc, xOffsetFirstPie, yOffset, tooltip );
 			this.createPie( svg, '.secondPie', secondPieData, colors, arc, xOffsetSecondPie, yOffset, tooltip );
-			this.plotService.addTitle( svg, `Compare landcover in ${this.store.nameOfZone} to:`, width / 2, margin );  
+			this.plotService.addTitle( svg, `Compare HSY 2022 Landcover in ${this.store.nameOfZone} to:`, width / 2, margin );  
            
 		},
 		clearPieChart() {
