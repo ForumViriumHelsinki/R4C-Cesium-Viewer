@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
+import axios from 'axios';
 
 export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 	state: () => ( {
@@ -46,6 +47,7 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 				if ( !data ) {
 
 					data = await this.getAllPaavoData( requestUrl );
+					axios.post( `${backendURL}/api/cache/set`, { key: requestUrl, value: data } );
 
 				}
 

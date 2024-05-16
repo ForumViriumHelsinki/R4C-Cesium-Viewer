@@ -47,11 +47,11 @@ export default class ColdArea {
 			if ( cachedData ) {
 
 				console.log( 'found from cache' );
-				this.addColdSpotDataSource( cachedData );
+				this.addColdAreaDataSource( cachedData );
 
 			} else {
 
-				this.loadColdSpotWithoutCache( url );
+				this.loadColdAreaWithoutCache( url );
 
 			}
 		} catch ( err ) {
@@ -60,11 +60,11 @@ export default class ColdArea {
 	}
 
 	/**
- * Adds a ColdSpot data source to the viewer
+ * Adds a ColdArea data source to the viewer
  * 
- * @param {Object} data - The ColdSpot data to be added as a data source
+ * @param {Object} data - The ColdArea data to be added as a data source
  */
-	async addColdSpotDataSource ( data ) {
+	async addColdAreaDataSource ( data ) {
 
 		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'ColdAreas' );
 
@@ -88,18 +88,18 @@ export default class ColdArea {
 	}
 
 	/**
- * Loads ColdSpot data from the provided URL without using cache
+ * Loads ColdArea data from the provided URL without using cache
  * 
- * @param {string} url - The URL from which to load ColdSpot data
+ * @param {string} url - The URL from which to load ColdArea data
  */
-	loadColdSpotWithoutCache( url ) {
+	loadColdAreaWithoutCache( url ) {
 		console.log( 'Not in cache! Loading: ' + url );
 
 		fetch( url )
 			.then( response => response.json() )
 			.then( data => {
 				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
-				this.addColdSpotDataSource( data );
+				this.addColdAreaDataSource( data );
 			} )
 			.catch( error => {
 				console.log( 'Error loading ColdAreas:', error );

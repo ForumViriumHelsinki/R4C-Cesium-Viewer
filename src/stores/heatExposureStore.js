@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
+import axios from 'axios';
 
 export const useHeatExposureStore = defineStore( 'heatExposure', {
 	state: () => ( {
@@ -23,6 +24,7 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 				if ( !data ) {
     
 					data = await this.getAllHeatExposureData( requestUrl );
+					axios.post( `${backendURL}/api/cache/set`, { key: requestUrl, value: data } );
     
 				}
 
