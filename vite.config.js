@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import Vue from '@vitejs/plugin-vue';
 import { fileURLToPath, URL } from 'url';
-import { buildCesium } from 'vite-plugin-cesium-build';
+import cesium from 'vite-plugin-cesium-build';
 
 const base = 'https://geo.fvh.fi/r4c/M8Na2P0v6z/';
 
@@ -9,7 +9,7 @@ export default defineConfig( ( { command } ) => {
 	if ( command === 'serve' ) {
 		return {
 			// dev specific config
-			plugins: [ Vue(),  buildCesium() ],
+			plugins: [ Vue(),  cesium() ],
 			test: {
 				include: [ 'src/**/*.{test,spec}.{js,ts}' ],
 				server: { // for allowing any external access
@@ -40,7 +40,7 @@ export default defineConfig( ( { command } ) => {
 		// command === 'build'
 		return {
 			// build specific config
-			plugins: [ Vue(),  buildCesium() ],
+			plugins: [ Vue(),  cesium() ],
 			test: {
 				include: [ 'src/**/*.{test,spec}.{js,ts}' ]
 			},
