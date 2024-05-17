@@ -7,6 +7,8 @@
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import Plot from '../services/plot.js'; 
+import { usePropsStore } from '../stores/propsStore';
+import { useGlobalStore } from '../stores/globalStore';
   
 export default {
 	mounted() {
@@ -17,15 +19,18 @@ export default {
 		this.unsubscribe();
 	},
 	methods: {
-		newSurveyScatterPlot( entities ) {
-			if ( entities ) {
-				this.createSurveyScatterPlot( entities );
+		newSurveyScatterPlot(  ) {
+			const store = useGlobalStore( );
+			if ( store.view == 'grid' ) {
+				this.createSurveyScatterPlot( );
 			} else {
 				this.clearSurveyScatterPlot();
 			}
 		},
 
-		createSurveyScatterPlot( entities ) {
+		createSurveyScatterPlot( ) {
+			const propsStore = usePropsStore( );
+			const entities = propsStore.scatterPlotEntities;
 			const containerId = 'surveyScatterPlot';
 			this.plotService.initializePlotContainerForGrid( containerId );
 

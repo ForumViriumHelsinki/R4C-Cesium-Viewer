@@ -4,6 +4,7 @@ import UrbanHeat from './urbanheat.js';
 import axios from 'axios';
 import EventEmitter from './eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
 import * as turf from '@turf/turf';
 import * as Cesium from 'cesium';
 
@@ -269,8 +270,11 @@ export default class HSYBuilding {
 
 		this.urbanHeatService.calculateAverageExposure( data.features );
 		const avg_temp_cList = data.features.map( feature => feature.properties.avg_temp_c );
-		this.eventEmitterService.emitHeatHistogram( avg_temp_cList );
-		this.eventEmitterService.emitScatterPlotEvent( entities );
+		const propsStore = usePropsStore( );
+		propsStore.setScatterPlotEntities( entities );
+		propsStore.setHeatHistogramData( avg_temp_cList );
+		this.eventEmitterService.emitHeatHistogram( );
+		this.eventEmitterService.emitScatterplotEvent( );
 		this.eventEmitterService.emitSocioEconomicsEvent( );
 
 	}

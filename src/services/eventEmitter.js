@@ -22,39 +22,10 @@ export default class EventEmitter {
 		this.store = useGlobalStore();
 	}
 
-	/**
- * The function emits events after user picks a postal code area from viewer
- *
- * @param { object } urbanHeatData urban heat data of a buildings in postal code area
- * @param { String } postcode postcode of area
- * @param { object } entities entities of a buildings in postal code area
- * 
- */
-	emitPostalCodeEvents( urbanHeatData, entities ) {
 
-		if ( urbanHeatData ) {
-
-			this.emitHeatHistogram( urbanHeatData );
-
-		}
-  
-		// Assuming datasourceService is available and implemented similarly to addBuildingsDataSource
-
-		if ( entities ) {
-
-			eventBus.$emit( 'newScatterPlot', entities );
-
-		}
-
-	}
-
-	emitHeatHistogram( urbanHeatData ) {
-
-		if ( urbanHeatData ) {
-
-			eventBus.$emit( 'newHeatHistogram', urbanHeatData );
-
-		}
+	emitHeatHistogram( ) {
+		
+		eventBus.$emit( 'newHeatHistogram' );
 
 	}
 
@@ -63,7 +34,6 @@ export default class EventEmitter {
 	/**
  * The function emits event after user picks a postal code area from viewer
  *
- * @param { String } postcode postcode of area
  * 
  */
 	emitSocioEconomicsEvent() {
@@ -81,24 +51,21 @@ export default class EventEmitter {
 	/**
  * The function emits event after user picks a postal code area from viewer
  *
- * @param { Object } entites entites
  * 
  */
-	emitScatterPlotEvent( entities ) {
+	emitScatterplotEvent( ) {
 
-		eventBus.$emit( this.store.view == 'helsinki' ? 'newScatterPlot' : 'newHSYScatterPlot', entities );
+		eventBus.$emit( this.store.view == 'helsinki' ? 'newScatterPlot' : 'newHSYScatterPlot' );
 
 	}
 
 	/**
  * The function emits event after user chooses to view Espoo resident survey places
- *
- * @param { Object } entites entites
- * 
+ * * 
  */
-	emitSurveyScatterPlotEvent( entities ) {
+	emitSurveyScatterPlotEvent( ) {
 
-		eventBus.$emit( 'newSurveyScatterPlot', entities );
+		eventBus.$emit( 'newSurveyScatterPlot' );
 
 	}
 
@@ -106,56 +73,39 @@ export default class EventEmitter {
 	/**
  * The function emits event after user picks a building from viewer
  *
- * @param { Number } buildingHeatExposure urban heat data of a building in postal code area
- * @param { String } address the address of building
- * @param { String } postinumero the postal code area
  * 
  */
-	emitBuildingHeatEvent( buildingHeatExposure, address, postinumero ) {
-
-		if ( buildingHeatExposure ) {
-
-			eventBus.$emit( 'newBuildingHeat', buildingHeatExposure, address, postinumero );
-
-		}       
+	emitBuildingHeatEvent(  ) {
+		
+		eventBus.$emit( 'newBuildingHeat' );   
 
 	}
 
 	/**
  * The function emits event after user picks a building from viewer
  *
- * @param { Number } treeArea building tree area
- * @param { String } address the address of building
- * @param { String } postinumero the postal code area
  * 
  */
-	emitBuildingTreeEvent( treeArea, address, postinumero ) {
+	emitBuildingTreeEvent( ) {
 
-		eventBus.$emit( 'newBuildingTree', treeArea, address, postinumero ); 
+		eventBus.$emit( 'newBuildingTree' ); 
 
 	}
 
 	/**
  * The function emits an event after trees have been loaded
  *
- * @param { String } data tree-building-distance data
- * @param { Object } entities the tree entities of postal code area
- * @param { Object } buildingDataSource - The postal code area buildings datasource
  */
-	emitTreeEvent( data, entities, buildingDataSource ) {
+	emitTreeEvent( ) {
 
-		if ( data ) {
+		eventBus.$emit( 'newNearbyTreeDiagram' );
 
-			eventBus.$emit( 'newNearbyTreeDiagram', data, entities, buildingDataSource );
-
-		}       
 
 	}
 
 	/**
  * The function emits event after user selects grid view 
  *
- * @param { Object } viewer Cesium viewer
  * 
  */
 	emitGridViewEvent( ) {
@@ -164,22 +114,10 @@ export default class EventEmitter {
 
 	} 
 
-	/**
- * The function emits event after user selects capital region view 
- *
- * @param { Object } viewer Cesium viewer
- * 
- */
-	emitCapitalRegionViewEvent( viewer ) {
-
-		eventBus.$emit( 'loadCapitalRegionView', viewer ); 
-
-	}
 
 	/**
  * The function emits event after user selects postal view 
  *
- * @param { Object } viewer Cesium viewer
  * 
  */
 	emitPostalCodeViewEvent( ) {
@@ -188,9 +126,9 @@ export default class EventEmitter {
 
 	}
 
-	emitBuildingGridEvent( buildingProps ) {
+	emitBuildingGridEvent( ) {
 
-		eventBus.$emit( 'newBuildingGridChart', buildingProps );
+		eventBus.$emit( 'newBuildingGridChart' );
 
 	}
 

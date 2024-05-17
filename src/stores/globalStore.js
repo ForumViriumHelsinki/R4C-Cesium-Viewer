@@ -17,77 +17,47 @@ export const useGlobalStore = defineStore( 'global', {
 		currentGridCell: null,
 		cesiumViewer: null,
 		postalCodeData: null,
+		buildAddress: null,
 	} ),
-	getters: {
-		getView: ( state ) => state.view,
-		getShowPlot: ( state ) => state.showPlot,
-		getShowVegetation: ( state ) => state.showVegetation,
-		getShowOtherNature: ( state ) => state.showOtherNature,
-		getPrint: ( state ) => state.print,
-		getPostalCode: ( state ) => state.postalcode,
-		getNameOfZone: ( state ) => state.nameOfZone,
-		getAverageHeatExposure: ( state ) => state.averageHeatExposure,
-		getAverageTreeArea: ( state ) => state.averageTreeArea,
-		getLevel: ( state ) => state.level,
-		getMinKelvin: ( state ) => state.minKelvin,
-		getMaxKelvin: ( state ) => state.maxKelvin,
-		getCurrentGridCell: ( state ) => state.currentGridCell,
-		getCesiumViewer: ( state ) => state.cesiumViewer,
-		getPostalCodeData: ( state ) => state.postalCodeData,
-	},
 	actions: {
-		setPostalCodeData( newValue ) {
-			this.postalCodeData = newValue;
+		setPostalCodeData( postalCodeData ) {
+			this.postalCodeData = postalCodeData;
 		},		
-		setCesiumViewer( newValue ) {
-			this.cesiumViewer = newValue;
+		setCesiumViewer( viewer ) {
+			this.cesiumViewer = viewer;
 		},
-		setCurrentGridCell( newValue ) {
-			this.currentGridCell = newValue;
+		setCurrentGridCell( currentGridCell ) {
+			this.currentGridCell = currentGridCell;
 		},
-		setView( newValue ) {
-			this.view = newValue;
+		setView( view ) {
+			this.view = view;
 		},
-		setShowPlot( newValue ) {
-			this.showPlot = newValue;
+		setShowPlot( showPlot ) {
+			this.showPlot = showPlot;
 		},
-		setShowVegetation( newValue ) {
-			this.showVegetation = newValue;
+		setShowVegetation( showVegetation ) {
+			this.showVegetation = showVegetation;
 		},
-		setShowOtherNature( newValue ) {
-			this.showOtherNature = newValue;
+		setShowOtherNature( showOtherNature ) {
+			this.showOtherNature = showOtherNature;
 		},
-		setPrint( newValue ) {
-			this.print = newValue;
+		setPrint( print ) {
+			this.print = print;
 		},
-		setPostalCode( newValue ) {
-			this.postalcode = newValue;
+		setPostalCode( postalcode ) {
+			this.postalcode = postalcode;
 		},
-		setNameOfZone( newValue ) {
-			this.nameOfZone = newValue;
+		setNameOfZone( nameOfZone ) {
+			this.nameOfZone = nameOfZone;
 		},
-		setAverageHeatExposure( newValue ) {
-			this.averageHeatExposure = newValue;
+		setAverageHeatExposure( averageHeatExposure ) {
+			this.averageHeatExposure = averageHeatExposure;
 		},
-		setAverageTreeArea( newValue ) {
-			this.averageTreeArea = newValue;
+		setAverageTreeArea( averageTreeArea ) {
+			this.averageTreeArea = averageTreeArea;
 		},
-		reset() {
-			this.showPlot = true;
-			this.showVegetation = false;
-			this.showOtherNature = false;
-			this.print = true;
-			this.postalcode = null;
-			this.nameOfZone = null;
-			this.averageHeatExposure = 0;
-			this.averageTreeArea = 0;
-			this.minKelvin = 287.123046875;
-			this.maxKelvin = 313.70355224609375;			
-			//			this.minKelvin = 287.123046875;
-			//			this.maxKelvin = 315.011962890625;
-			this.cesiumViewer = null;
-			this.currentGridCell = null;
-			this.postalCodeData = null;
-		},
+		setBuildingAddress( buildingAddress ) {
+			this.buildingAddress = buildingAddress;
+		},		
 	},
 } );

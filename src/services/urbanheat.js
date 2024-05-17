@@ -2,6 +2,7 @@ import Decoding from './decoding.js';
 import EventEmitter from './eventEmitter.js';
 import Datasource from './datasource.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
 
 export default class Urbanheat {
 	constructor( ) {
@@ -127,6 +128,15 @@ export default class Urbanheat {
 		}
 	}
 
+	setPropertiesAndCreateCharts( entities, features ) {
+
+		const propsStore = usePropsStore();
+		propsStore.setHeatHistogramData( this.calculateAverageExposure( features ) );
+		propsStore.setScatterPlotEntities( entities );
+		this.eventEmitterService.emitHeatHistogram( );
+		this.eventEmitterService.emitScatterplotEvent( );
+	}
+
 	/**
  * Fetches heat exposure data from pygeoapi for postal code.
  * 
@@ -146,9 +156,8 @@ export default class Urbanheat {
 			}
     
 			this.addMissingHeatData( data.features, urbanheat.features );
-			let urbanHeatData = this.calculateAverageExposure( data.features );
-			let entites = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + postcode );
-			this.eventEmitterService.emitPostalCodeEvents( urbanHeatData, entites );
+			let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + postcode );
+			this.setPropertiesAndCreateCharts( entities, data.features );
 
 			if ( postcode !== '00230' ) {
 
@@ -156,7 +165,7 @@ export default class Urbanheat {
 
 			}
 
-			return entites;
+			return entities;
 
 		} catch ( error ) {
 			console.error( 'Error finding urban heat data:', error );
@@ -178,68 +187,6 @@ export default class Urbanheat {
 			features.push( heat[ i ] );
 
 		}
-
-	}
-
-	/**
- * The function adds heat exposure data for given category value. 
- *
- * @param { String } valeu value of category
- * @param { object } features dataset that contains building heat exposure and attributes of the building
- * @param { String } categorical name of categorical attribute
- * @param { String } numerical name of numerical attribute
- * @return { object } Object that contains list of heat exposures and numerical values, and average heat exposure
- */
-	addHeatForLabelAndX( value, features, categorical, numerical ) {
-
-		let heatList = [ ];
-		let numericalList = [ ];
-		let average = 0;
-		let sum = 0;
-
-		for ( let i = 0; i < features.length; i++ ) {
-
-			if ( features[ i ][ categorical ] == value ) {
-
-				heatList.push( features[ i ].heat );
-				numericalList.push( features[ i ][ numerical ] );
-				sum = sum + features[ i ].heat;
-
-			}
-	
-		}
-	
-		// calculate average heat exposure
-		average = sum / heatList.length;
-
-		return [ heatList, numericalList, average ];
-
-	}
-
-	/**
- * The function finds all unique values for given category.
- *
- * @param { object } features dataset that contains building heat exposure and attributes of the building
- * @param { String } category value code for facade material
- * @return { Array<String> } List containing all unique values for the category
- */
-	createUniqueValuesList( features, category ) {
-
-		let uniqueValues = [ ];
-	
-		for ( let i = 0; i < features.length; i++ ) {
-
-			let value = features[ i ][ category ]; 
-
-			if ( !uniqueValues.includes( value ) ) {
-
-				uniqueValues.push( value );
-
-			}
-	
-		}
-	
-		return uniqueValues;
 
 	}
 }

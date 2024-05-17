@@ -29,13 +29,9 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import Plot from '../services/plot.js'; 
 import Building from '../services/building.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { usePropsStore } from '../stores/propsStore';
   
 export default {
-	data() {
-		return {
-			buildingEntities: null
-		};
-	},
 	mounted() {
 		this.unsubscribe = eventBus.$on( 'newScatterPlot', this.newScatterPlot );
 		this.store = useGlobalStore();
@@ -57,9 +53,8 @@ export default {
 		this.unsubscribe();
 	},
 	methods: {
-		newScatterPlot( newData ) {
-			this.buildingEntities = newData;
-			if ( this.buildingEntities.length > 0 && this.store.view == 'helsinki' ) {
+		newScatterPlot( ) {
+			if (  this.store.view == 'helsinki' ) {
 				this.selectAttributeForScatterPlot();
 			} else {
 				// Hide or clear the visualization when not visible
@@ -87,26 +82,23 @@ export default {
 			const urbanHeatDataAndMaterial = [];
 
 			// Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
-			this.processEntitiesForScatterPlot( this.buildingEntities, urbanHeatDataAndMaterial );
+			this.processEntitiesForScatterPlot( urbanHeatDataAndMaterial );
 			// Create a scatter plot with the updated data
 			this.createScatterPlot( urbanHeatDataAndMaterial, this.getSelectedText( 'categoricalSelect' ), this.getSelectedText( 'numericalSelect' ) );
 		},
 		/**
  * A function to process entities for scatter plot data
  * 
- * @param { Array } entities - Array of entities to process
  * @param { Array } urbanHeatDataAndMaterial - Array to store scatter plot data
- * @param { String } categorical - The categorical variable selected by the user
- * @param { String } numerical - The numerical variable selected by the user
- * @param { boolean } hideNonSote - Whether to hide non-SOTE buildings in the scatter plot
- * @param { boolean } hideLowToggle - Whether to hide short buildings in the scatter plot
  */
-		processEntitiesForScatterPlot( entities, urbanHeatDataAndMaterial ) {
+		processEntitiesForScatterPlot( urbanHeatDataAndMaterial ) {
 			const numerical = document.getElementById( 'numericalSelect' ).value;
 			const categorical = document.getElementById( 'categoricalSelect' ).value;
 			const hideNonSote = this.toggleStore.hideNonSote;
 			const hideLowToggle = this.toggleStore.hideLow;
 			const hideNew = this.toggleStore.hideNew;
+			const propsStore = usePropsStore( );
+			const entities = propsStore.scatterPlotEntities;
 
 			entities.forEach( ( entity ) => {
 				let addDataToScatterPlot = true;

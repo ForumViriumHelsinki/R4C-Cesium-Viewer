@@ -25,6 +25,7 @@ import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
 import Plot from '../services/plot.js'; 
 import Building from '../services/building.js'; 
     
@@ -55,10 +56,9 @@ export default {
 		this.unsubscribe();
 	},
 	methods: {
-		newHSYScatterPlot( newData ) {
-			this.buildingEntities = newData;
+		newHSYScatterPlot( ) {
 
-			if ( this.buildingEntities.length > 0 && this.store.view == 'capitalRegion' ) {
+			if ( this.store.view == 'capitalRegion' ) {
 				this.selectAttributeForHSYScatterPlot();
 			} else {
 				// Hide or clear the visualization when not visible
@@ -86,21 +86,18 @@ export default {
 			const urbanHeatDataAndMaterial = [];
   
 			// Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
-			this.processEntitiesForHSYScatterPlot( this.buildingEntities, urbanHeatDataAndMaterial );
+			this.processEntitiesForHSYScatterPlot( urbanHeatDataAndMaterial );
 			// Create a scatter plot with the updated data
 			this.createHSYScatterPlot( urbanHeatDataAndMaterial, this.getSelectedText( 'categoricalHSYSelect' ), this.getSelectedText( 'numericalHSYSelect' ) );
 		},
 		/**
    * A function to process entities for scatter plot data
    * 
-   * @param { Array } entities - Array of entities to process
    * @param { Array } urbanHeatDataAndMaterial - Array to store scatter plot data
-   * @param { String } categorical - The categorical variable selected by the user
-   * @param { String } numerical - The numerical variable selected by the user
-   * @param { boolean } hideNonSote - Whether to hide non-SOTE buildings in the scatter plot
-   * @param { boolean } hideLowToggle - Whether to hide short buildings in the scatter plot
    */
-		processEntitiesForHSYScatterPlot( entities, urbanHeatDataAndMaterial ) {
+		processEntitiesForHSYScatterPlot( urbanHeatDataAndMaterial ) {
+			const propsStore = usePropsStore( );
+			const entities = propsStore.scatterPlotEntities;
 			const numerical = document.getElementById( 'numericalHSYSelect' ).value;
 			const categorical = document.getElementById( 'categoricalHSYSelect' ).value;
 			const hideNonSote = this.toggleStore.hideNonSote;

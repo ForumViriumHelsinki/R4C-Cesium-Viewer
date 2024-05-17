@@ -4,15 +4,18 @@ import Urbanheat from './urbanheat.js';
 import Tree from './tree.js'; 
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import EventEmitter from './eventEmitter.js';
 import PrintBoxService from './printbox.js'; 
+
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Building {
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
+		this.propsStore = usePropsStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
 		this.treeService = new Tree();
@@ -57,22 +60,21 @@ export default class Building {
  * Submits events for creating building charts
  *  
  * @param { Number } buildingHeatExposure building heat exposure index
- * @param { String } address address of the building
- * @param { String } postinumero postal code of the building
  * @param { Number } treeArea nearby tree area of building
  * @param { Number } avg_temp_c average surface temperature of building in Celsius
  */
-	createBuildingCharts( buildingHeatExposure, address, postinumero, treeArea, avg_temp_c, buildingProps ) {
+	createBuildingCharts( buildingHeatExposure, treeArea, avg_temp_c, buildingProps ) {
 
 		if ( this.store.view == 'helsinki' && this.toggleStore.showTrees ) {
     
 			if ( treeArea ) {
-
-				this.eventEmitterService.emitBuildingTreeEvent( treeArea, address, postinumero );    
+				
+				this.propsStore.setTreeArea( treeArea );
+				this.eventEmitterService.emitBuildingTreeEvent( );    
 	
 			} else {
 	
-				this.eventEmitterService.emitBuildingTreeEvent( 0, address, postinumero );    
+				this.eventEmitterService.emitBuildingTreeEvent( 0 );    
 	
 			}
 
@@ -80,17 +82,22 @@ export default class Building {
 
 		if ( this.store.view == 'helsinki' ) {
 
-			this.eventEmitterService.emitBuildingHeatEvent( buildingHeatExposure, address, postinumero );    
+			this.propsStore.setBuildingHeatExposure( buildingHeatExposure );
+			this.eventEmitterService.emitBuildingHeatEvent( );    
 
 		} else {
 
 			if ( this.store.view == 'capitalRegion' ) {
 
-				this.eventEmitterService.emitBuildingHeatEvent( avg_temp_c._value, address, postinumero );    
+				this.propsStore.setBuildingHeatExposure( avg_temp_c._value );
+
+ 				this.eventEmitterService.emitBuildingHeatEvent( );    
 
 			} else {
 
-				this.eventEmitterService.emitBuildingGridEvent( buildingProps );
+				this.propsStore.setGridBuildingProps( buildingProps );
+
+				this.eventEmitterService.emitBuildingGridEvent( );
 			}
 
 		}        
@@ -284,7 +291,7 @@ export default class Building {
  * Finds building datasource and resets building entities polygon
  *
  */
-	resetBuildingEntites() {
+	resetBuildingEntities() {
 
 		// Find the data source for buildings
 		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );

@@ -9,25 +9,21 @@ import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
 import Plot from '../services/plot.js'; 
 import Building from '../services/building.js';
+import { usePropsStore } from '../stores/propsStore.js';
   
 export default {
-	data() {
-		return {
-			urbanHeatData: [],
-		};
-	},
 	mounted() {
 		this.unsubscribe = eventBus.$on( 'newHeatHistogram', this.newHeatHistogram );
 		this.store = useGlobalStore();
 		this.plotService = new Plot();
+		this.propsStore  = usePropsStore();
 	},
 	beforeUnmount() {
 		this.unsubscribe();
 	},
 	methods: {
-		newHeatHistogram( data ) {
-			this.urbanHeatData = data;
-			if ( this.urbanHeatData.length > 0 && this.store.level == 'postalCode' ) {
+		newHeatHistogram( ) {
+			if ( this.store.level == 'postalCode' ) {
 				this.createHistogram();
 			} else {
 				// Hide or clear the visualization when not visible
@@ -82,6 +78,7 @@ export default {
 
 		},    
 		createHistogram() {
+			const urbanHeatData = this.propsStore.heatHistogramData;
 			this.plotService.initializePlotContainer( 'heatHistogramContainer' );
 
 			const margin = { top: 30, right: 30, bottom: 30, left: 30 };
@@ -90,17 +87,17 @@ export default {
 
 			const svg = this.plotService.createSVGElement( margin, width, height, '#heatHistogramContainer' );
 
-			let minDataValue = d3.min( this.urbanHeatData ) - 0.02;
-			let maxDataValue = d3.max( this.urbanHeatData ) + 0.02;
+			let minDataValue = d3.min( urbanHeatData ) - 0.02;
+			let maxDataValue = d3.max( urbanHeatData ) + 0.02;
 			const x = this.plotService.createScaleLinear( minDataValue, maxDataValue, [ 0, width ] );
-			const bins = d3.histogram().domain( x.domain() ).thresholds( x.ticks( 20 ) )( this.urbanHeatData );
+			const bins = d3.histogram().domain( x.domain() ).thresholds( x.ticks( 20 ) )( urbanHeatData );
 			const y = this.plotService.createScaleLinear( 0, d3.max( bins, ( d ) => d.length ), [ height, 0 ] );
 
 			this.plotService.setupAxes( svg, x, y, height );
 
 			const tooltip = this.plotService.createTooltip( '#heatHistogramContainer' );
 
-			if ( this.urbanHeatData && this.urbanHeatData[ 0 ] && this.urbanHeatData[ 0 ].toString().startsWith( '0' ) ) {
+			if ( urbanHeatData && urbanHeatData[ 0 ] && urbanHeatData[ 0 ].toString().startsWith( '0' ) ) {
 
 				this.createBars( svg, bins, x, y, height, tooltip, 'heatHistogramContainer', 
 					d => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}` );

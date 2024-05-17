@@ -11,11 +11,11 @@
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
 import Plot from '../services/plot.js'; 
-import Address from '../services/address.js';
 import ColdArea from '../services/coldarea.js';
 import Datasource from '../services/datasource.js';
-import { useToggleStore } from '../stores/toggleStore.js';
   
 export default {
 	mounted() {
@@ -24,10 +24,9 @@ export default {
 		this.unsubscribe = eventBus.$on( 'newBuildingGridChart', this.newBuildingGridChart );
 		this.store = useGlobalStore();
 		this.toggleStore  = useToggleStore();
+		this.propsStore  = usePropsStore();
 		this.plotService = new Plot();
-		this.addressService = new Address();
 		this.coldAreaService = new ColdArea();
-
 	},
 	beforeUnmount() {
 		this.unsubscribe();
@@ -36,20 +35,20 @@ export default {
 		addEventListeners() {
 			document.getElementById( 'hideColdAreasToggle' ).addEventListener( 'change', this.hideColdAreas );
 		},		
-		newBuildingGridChart( buildingProps ) {
-			if ( buildingProps && this.store.view == 'grid' ) {
-				this.createBuildingGridChart( buildingProps );
+		newBuildingGridChart( ) {
+			if ( this.propsStore.gridBuildingProps && this.store.view == 'grid' ) {
+				this.createBuildingGridChart( this.propsStore.gridBuildingProps );
 			} else {
 				// Hide or clear the visualization when not visible
 				// Example: call a method to hide or clear the D3 visualization
 				this.clearBuildingBarChart();
 			}
 		},
-		newBuildingHeat( buildingHeatExposure, address, postinumero ) {
-			if ( buildingHeatExposure && this.store.level == 'building' ) {
-				this.createBuildingBarChart( buildingHeatExposure, address, postinumero );
+		newBuildingHeat( ) {
+			if ( this.store.level == 'building' ) {
+				this.createBuildingBarChart();
 
-				if ( buildingHeatExposure > 27.2632995605 ) {
+				if ( this.propsStore.buildingHeatExposure > 27.2632995605 ) {
 
 					this.addEventListeners();
 					this.coldAreaService.loadColdAreas();
@@ -61,9 +60,9 @@ export default {
 				this.clearBuildingBarChart();
 			}
 		},
-		newBuildingTree( treeArea, address, postinumero ) {
-			if ( postinumero  && this.store.level == 'building' ) {
-				this.createBuildingTreeBarChart( treeArea, address, postinumero );
+		newBuildingTree( ) {
+			if ( this.store.level == 'building' ) {
+				this.createBuildingTreeBarChart( );
 			} else {
 				// Hide or clear the visualization when not visible
 				// Example: call a method to hide or clear the D3 visualization
@@ -95,12 +94,12 @@ export default {
 
 		createBuildingGridChart( buildingProps ) {
 
+			console.log( this.store.buildAddress );
+
 			this.plotService.initializePlotContainerForGrid( 'buildingChartContainer' );
 			const margin = { top: 50, right: 20, bottom: 30, left: 40 };
 			const width = 300 - margin.left - margin.right;
 			const height = 250 - margin.top - margin.bottom;
-			const address = this.addressService.findAddressForBuilding( buildingProps );
-
 
 			// Prepare the data array from buildingProps
 			const data = [
@@ -137,7 +136,7 @@ export default {
 				.style( 'display', 'none' ); // Hide the text labels
 
 			// Add chart title
-			this.plotService.addTitle( svg, 'Population approximation for ' + address, width, margin );
+			this.plotService.addTitle( svg, 'Population approximation for ' + this.store.buildingAddress, width, margin );
 		}, 
 		// Updated to include xOffset and barColor parameters
 		createBars( svg, data, xScale, yScale, height, tooltip, xOffset, barColor ) {
@@ -165,7 +164,11 @@ export default {
  * Create building specific bar chart.
  *
  */
-		createBuildingBarChart( buildingHeatExposure, address, postinumero ) {
+		createBuildingBarChart( ) {
+
+			const buildingHeatExposure = this.propsStore.buildingHeatExposure;
+			const address = this.store.buildingAddress;
+			const postinumero = this.store.postalcode;
 			this.plotService.initializePlotContainer( 'buildingChartContainer' );
 
 			const postalCodeHeat = this.getPostalCodeHeat();
@@ -220,12 +223,22 @@ export default {
 			}
 
 		},
+
+		setTreeArea() {
+
+			return this.propsStore.treeArea || 0; // Return the value or 0 if it's falsy
+	
+		},
 		/**
  * Create building specific bar chart.
  *
  */
-		createBuildingTreeBarChart( treeArea, address, postinumero ) {
+		createBuildingTreeBarChart( ) {
+
+			const treeArea = this.setTreeArea();
+			const postinumero = this.store.postalcode;
 			this.plotService.initializePlotContainer( 'buildingTreeChartContainer' );
+			const address = this.store.buildingAddress;
 
 			const margin = { top: 70, right: 30, bottom: 30, left: 60 };
 			const width = 300 - margin.left - margin.right;

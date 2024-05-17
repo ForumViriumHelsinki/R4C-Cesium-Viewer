@@ -363,7 +363,7 @@ export default {
 				this.dataSourceService.changeDataSourceShowByName( 'Trees', false );
 				this.plotService.updateTreeElements( 'hidden' );
 				this.plotService.showAllPlots();
-				this.buildingService.resetBuildingEntites();
+				this.buildingService.resetBuildingEntities();
 
 			}
 

@@ -3,6 +3,7 @@ import * as Cesium from 'cesium';
 import EventEmitter from './eventEmitter.js';
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Tree {
@@ -15,9 +16,8 @@ export default class Tree {
 	/**
  * Asynchronously load tree data from an API endpoint based on postcode
  * 
- * @param { String } postcode area's postal code
  */
-	async loadTrees( postcode ) {
+	async loadTrees( ) {
 
 		// Construct the API endpoint URL
 		let url = 'https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
@@ -30,9 +30,9 @@ export default class Tree {
 
 			if ( cachedData ) {
 				console.log( 'found from cache' );
-				this.addTreesDataSource( cachedData, postcode );
+				this.addTreesDataSource( cachedData );
 			} else {
-				this.loadTreesWithoutCache( url, postcode );
+				this.loadTreesWithoutCache( url );
 			}
 		} catch ( err ) {
 			console.log( err );
@@ -43,9 +43,8 @@ export default class Tree {
  * Add the tree data as a new data source to the Cesium
  * 
  * @param { object } data tree data
- * @param { String } postcode - The postal code to fetch the tree distance data for
  */
-	async addTreesDataSource( data, postcode ) {
+	async addTreesDataSource( data ) {
 	
 		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Trees' );
 
@@ -58,9 +57,9 @@ export default class Tree {
 
 		}
 
-		if ( Number( postcode ) < 1001 ) {
+		if ( Number( this.store.postalcode ) < 1001 ) {
 			
-			this.fetchAndAddTreeDistanceData( postcode, entities );
+			this.fetchAndAddTreeDistanceData( entities );
 
 		}
 
@@ -70,10 +69,9 @@ export default class Tree {
 	/**
  * Fetch tree distance data from the provided URL and create a new dataset for plot that presents the cooldown effect on trees on buildings
  *
- * @param { string } postcode - The postal code to fetch the tree distance data for.
  * @param { Object } entities - The postal code area tree entities
  */
-	fetchAndAddTreeDistanceData( postcode, entities ) {
+	fetchAndAddTreeDistanceData( entities ) {
 
 		if ( !entities ) {
 
@@ -98,12 +96,12 @@ export default class Tree {
 		}
 
 		// Fetch the tree data from the URL
-		const url = 'https://geo.fvh.fi/r4c/collections/tree_building_distance/items?f=json&limit=100000&postinumero=' + postcode;
+		const url = 'https://geo.fvh.fi/r4c/collections/tree_building_distance/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
 		fetch( url )
 			.then( response => response.json() )
 			.then( data => {
 
-				this.eventEmitterService.emitTreeEvent( data, entities, buildingsDataSource );
+				this.setPropertiesAndEmitEvent( data, entities, buildingsDataSource );
 
 			} )
 			.catch( error => {
@@ -111,14 +109,23 @@ export default class Tree {
 				console.log( 'Error fetching tree distance data:', error );
 			} );
 	}
+	
+	setPropertiesAndEmitEvent( data, entities, buildingsDataSource ) {
+
+		const propsStore = usePropsStore();
+		propsStore.setTreeBuildingDistanceData( data );
+		propsStore.setTreeEntities( entities );
+		propsStore.setBuildingsDatasource( buildingsDataSource );
+		this.eventEmitterService.emitTreeEvent( );
+	}
+
   
 	/**
  * Fetch tree data from the API endpoint and add it to the local storage
  * 
  * @param { String } url API endpoint's url
- * @param { String } postcode - The postal code to fetch the tree distance data for.
  */
-	loadTreesWithoutCache( url, postcode ) {
+	loadTreesWithoutCache( url ) {
 
 		console.log( 'Not in cache! Loading: ' + url );
 
@@ -127,7 +134,7 @@ export default class Tree {
 			.then( ( data ) => {
 			// Save fetched data to Redis cache through the backend
 				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
-				this.addTreesDataSource( data, postcode );
+				this.addTreesDataSource( data );
 			} )
 			.catch( ( error ) => {
 				console.log( 'Error loading trees:', error );
@@ -168,7 +175,7 @@ export default class Tree {
  * Finds building datasource and resets tree entities polygon
  *
  */
-	resetTreeEntites() {
+	resetTreeEntities() {
 
 		// Find the data source for trees
 		const treeDataSource = this.datasourceService.getDataSourceByName( 'Trees' );

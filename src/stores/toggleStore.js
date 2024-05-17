@@ -22,39 +22,18 @@ export const useToggleStore = defineStore( 'toggle', {
 		showSensorData: false,  
 		surveyPlaces: false,                                                
 	} ),
-	getters: {
-		getPostalCode: ( state ) => state.postalCode,
-		getNatureGrid: ( state ) => state.natureGrid,
-		getTravelTime: ( state ) => state.travelTime,
-		getResetGrid: ( state ) => state.resetGrid,   
-		getGridView: ( state ) => state.gridView,    
-		getCapitalRegionView: ( state ) => state.capitalRegionView,
-		getShowPlot: ( state ) => state.showPlot,
-		getPrint: ( state ) => state.print,
-		getShowVegetation: ( state ) => state.showVegetation,
-		getShowOtherNature: ( state ) => state.showOtherNature,
-		getHideNewBuildings: ( state ) => state.hideNewBuildings,
-		getHideNonSote: ( state ) => state.hideNonSote,
-		getHideLow: ( state ) => state.hideLow,
-		getShowTrees: ( state ) => state.showTrees,
-		getHideColdAreas: ( state ) => state.hideColdAreas,
-		getLandCover: ( state ) => state.landCover,
-		getSwitchView: ( state ) => state.switchView,
-		getShowSensorData: ( state ) => state.showSensorData,
-		getSurveyPlaces: ( state ) => state.surveyPlaces,
-	},
 	actions: {
-		setPostalCode( show ) {
-			this.postalCode = show;
+		setPostalCode( enabled ) {
+			this.postalCode = enabled;
 		},
-		setNatureGrid( show ) {
-			this.natureGrid = show;
+		setNatureGrid( enabled ) {
+			this.natureGrid = enabled;
 		},
-		setTravelTime( time ) {
-			this.travelTime = time;
+		setTravelTime( enabled ) {
+			this.travelTime = enabled;
 		},  
-		setResetGrid( rested ) {
-			this.resetGrid = rested;
+		setResetGrid( enabled ) {
+			this.resetGrid = enabled;
 		},      
 		setGridView( enabled ) {
 			this.gridView = enabled;
@@ -65,8 +44,8 @@ export const useToggleStore = defineStore( 'toggle', {
 		setShowPlot( enabled ) {
 			this.showPlot = enabled;
 		},
-		setPrint( print ) {
-			this.print = print;
+		setPrint( enabled ) {
+			this.print = enabled;
 		},
 		setShowVegetation( show ) {
 			this.showVegetation = show;
@@ -83,14 +62,14 @@ export const useToggleStore = defineStore( 'toggle', {
 		setHideLow( hide ) {
 			this.hideLow = hide;
 		},
-		setShowTrees( show ) {
-			this.showTrees = show;
+		setShowTrees( treesVisible ) {
+			this.showTrees = treesVisible;
 		}, 
-		setHideColdAreas( show ) {
-			this.hideColdAreas = show;
+		setHideColdAreas( coldAreasHidden ) {
+			this.hideColdAreas = coldAreasHidden;
 		},		   
-		setLandCover( enabled ) {
-			this.landCover = enabled;
+		setLandCover( showLandCover ) {
+			this.landCover = showLandCover;
 		},
 		setSwitchView( switchView ) {
 			this.switchView = switchView;
@@ -101,25 +80,5 @@ export const useToggleStore = defineStore( 'toggle', {
 		setSurveyPlaces( show ) {
 			this.surveyPlaces = show;
 		},		
-		// Reset function
-		resetStore() {
-			this.postalCode = false;
-			this.natureGrid = false;
-			this.travelTime = false;
-			this.resetGrid = false;
-			this.gridView = false;
-			this.showPlot = true;
-			this.print = true;
-			this.showVegetation = false;
-			this.showOtherNature = false;
-			this.hideNewBuildings = false;
-			this.hideNonSote = false;
-			this.hideLow = false;
-			this.showTrees = false;
-			this.hideColdAreas = false;
-			this.switchView = false;
-			this.showSensorData  = false;
-			this.surveyPlaces  = false;
-		},
 	},
 } );

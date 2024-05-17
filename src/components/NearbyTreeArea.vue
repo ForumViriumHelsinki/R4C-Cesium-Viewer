@@ -56,6 +56,7 @@
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
 import * as Cesium from 'cesium';
 import Plot from '../services/plot.js'; 
   
@@ -70,13 +71,15 @@ export default {
 		this.unsubscribe();
 	},
 	methods: {
-		newNearbyTreeDiagram( data, entities, buildings ) {
+		newNearbyTreeDiagram( ) {
+
+			const propsStore = usePropsStore();
 
 			if ( this.store.level == 'postalCode' ) {
 				this.plotService.hideScatterPlot();
 				// Call function that combines datasets for plotting
-				const sumPAlaM2Map = this.combineDistanceAndTreeData( data, entities );
-				const heatExpTreeArea = this.createTreeBuildingPlotMap( sumPAlaM2Map, buildings );
+				const sumPAlaM2Map = this.combineDistanceAndTreeData( propsStore.treeBuildingDistanceData, propsStore.treeEntities );
+				const heatExpTreeArea = this.createTreeBuildingPlotMap( sumPAlaM2Map, propsStore.buildingsDatasource );
 				const heatExpAverageTreeArea = this.extractKeysAndAverageTreeArea( heatExpTreeArea );
 				this.createTreesNearbyBuildingsPlot( heatExpAverageTreeArea[ 0 ], heatExpAverageTreeArea[ 1 ], heatExpAverageTreeArea[ 2 ] );
 

@@ -5,7 +5,7 @@ import Building from './building.js';
 import Plot from './plot.js';
 import Traveltime from './traveltime.js';
 import HSYBuilding from './hsybuilding.js';
-import Address from './address.js';
+import { findAddressForBuilding } from './address.js';
 import ElementsDisplay from './elementsDisplay.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
@@ -30,7 +30,6 @@ export default class FeaturePicker {
 		this.plotService = new Plot();
 		this.traveltimeService = new Traveltime();
 		this.hSYBuildingService = new HSYBuilding();
-		this.addressService = new Address();
 		this.elementsDisplayService = new ElementsDisplay();
 		this.viewService = new View();
 		this.coldAreaService = new ColdArea();
@@ -109,17 +108,17 @@ export default class FeaturePicker {
 		}    
 	}
     
-	handleBuildingFeature( properties, address ) {
+	handleBuildingFeature( properties ) {
 
 		this.store.level = 'building';
+		this.store.postalcode = properties._postinumero._value;
 		this.plotService.togglePostalCodePlotVisibility( 'hidden' );
 		this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
 		this.plotService.toggleLandCoverChart( 'hidden' );
 		this.elementsDisplayService.setBuildingDisplay( 'none' );
 		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
 		this.buildingService.resetBuildingOutline();
-		this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, address, properties._postinumero._value, properties.treeArea, properties._avg_temp_c, properties );
-		this.store.postalcode = properties._postinumero._value;
+		this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, properties.treeArea, properties._avg_temp_c, properties );
 
 	}
 
@@ -190,7 +189,8 @@ export default class FeaturePicker {
 		//See if we can find building floor areas
 		if ( id.properties._avgheatexposuretobuilding ) {
 
-			const address = this.addressService.findAddressForBuilding( id.properties );
+			this.store.setBuildingAddress( findAddressForBuilding( id.properties ) );
+			console.log( this.store.buildingAddress );
     
 			if ( id.properties._locationUnder40 ) {
 
@@ -202,7 +202,7 @@ export default class FeaturePicker {
     
 			}
 
-			this.handleBuildingFeature( id.properties, address );
+			this.handleBuildingFeature( id.properties );
     
 		}
     

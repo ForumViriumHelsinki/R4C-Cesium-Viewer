@@ -3,6 +3,7 @@ import * as Cesium from 'cesium';
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
 import EventEmitter from './eventEmitter.js';
+import { usePropsStore } from '../stores/propsStore.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class EspooSurvey {
@@ -56,7 +57,9 @@ export default class EspooSurvey {
 		this.setAvgTempInCelsius( data.features );
 		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Survey ' + collection );
 		this.setColorAndLabelForPointEntities( entities );
-		this.eventEmitterService.emitSurveyScatterPlotEvent( entities );
+		const propsStore = usePropsStore( );
+		propsStore.setScatterPlotEntities( entities );
+		this.eventEmitterService.emitSurveyScatterPlotEvent( );
 
 	}
 

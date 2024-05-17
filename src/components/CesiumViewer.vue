@@ -36,9 +36,6 @@ export default {
 	data() {
 		return {
 			viewer: null,
-			datasourceService: null,
-			treeService: null,
-			buildingService: null
 		};
 	},
 	mounted() {
@@ -66,7 +63,7 @@ export default {
 	methods: {
 		initViewer() {
 			// Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
-			this.store.cesiumViewer = new Cesium.Viewer( 'cesiumContainer', {
+			let viewer = new Cesium.Viewer( 'cesiumContainer', {
 				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
 				animation: false,
 				fullscreenButton: false,
@@ -85,11 +82,11 @@ export default {
 			// Other initialization logic...
 
 			// For example, add a placeholder imagery layer
-			this.store.cesiumViewer.imageryLayers.add(
+			viewer.imageryLayers.add(
 				this.wmsService.createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
 			);
 
-			this.store.cesiumViewer.camera.setView( {
+			viewer.camera.setView( {
 				destination: Cesium.Cartesian3.fromDegrees(
 					24.931745,
 					60.190464,
@@ -102,27 +99,16 @@ export default {
 				}
 			} );
 
-			this.dataSourceService = new Datasource( );
-			this.dataSourceService.loadGeoJsonDataSource(
-				0.2,
-				'./assets/data/hki_po_clipped.json',
-				'PostCodes'
-			);
+			this.store.setCesiumViewer( viewer );
 
-			// Add click event listener to the viewer container
-			const cesiumContainer = document.getElementById( 'cesiumContainer' );
-			const featurepicker = new Featurepicker(  );
-			cesiumContainer.addEventListener( 'click', function( event ) { 
-				featurepicker.processClick( event ); // Assuming processClick is defined later
-			} );
+			addPostalCodes( );
+			addFeaturePicker( );
 
 			const geocoding = new Geocoding( );
-			geocoding.addGeocodingEventListeners();
+			geocoding.addGeocodingEventListeners( );
 
-			this.treeService = new Tree( );
-			this.buildingService = new Building( );
 			this.addAttribution( );
-			this.setupBearingSwitches( );
+			setupBearingSwitches( this.store.postalcode );
 
 			this.$nextTick( () => {
 				this.eventEmitterService.emitPostalCodeViewEvent( );
@@ -131,55 +117,82 @@ export default {
 		},
 
 		addAttribution() {
-			
+            
 			const hriCredit = new Cesium.Credit( '<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>' );
-    		const statsCredit = new Cesium.Credit( '<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>' );
-    		const hsyCredit = new Cesium.Credit( '<a href="https://www.hsy.fi/en/air-quality-and-climate/geographic-information/open-geographic-information-interfaces/" target="_blank"><img src="assets/images/hsy-logo_41x25px.png" title="Helsingin Seudun Ympäristöpalvelut"/></a>' );
-    		const sentinelHubCredit = new Cesium.Credit( '<a href="https://www.sentinel-hub.com/index.html" target="_blank"><img src="assets/images/sentinel_hub_small.png" title="Sentinel Hub"/></a>' );
+			const statsCredit = new Cesium.Credit( '<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>' );
+			const hsyCredit = new Cesium.Credit( '<a href="https://www.hsy.fi/en/air-quality-and-climate/geographic-information/open-geographic-information-interfaces/" target="_blank"><img src="assets/images/hsy-logo_41x25px.png" title="Helsingin Seudun Ympäristöpalvelut"/></a>' );
+			const sentinelHubCredit = new Cesium.Credit( '<a href="https://www.sentinel-hub.com/index.html" target="_blank"><img src="assets/images/sentinel_hub_small.png" title="Sentinel Hub"/></a>' );
 			this.store.cesiumViewer.creditDisplay.addStaticCredit( hriCredit );
 			this.store.cesiumViewer.creditDisplay.addStaticCredit( statsCredit );
 			this.store.cesiumViewer.creditDisplay.addStaticCredit( hsyCredit );
 			this.store.cesiumViewer.creditDisplay.addStaticCredit( sentinelHubCredit );
 
 		},
-
-		setupBearingSwitches() {
-
-			const switches = [ 'All', 'South', 'West', 'East', 'North' ];
-  
-			for ( const direction of switches ) {
-
-				const switchContainer = document.getElementById( `bearing${ direction }SwitchContainer` );
-				const toggle = switchContainer.querySelector( `#bearing${ direction }Toggle` );
-      
-				toggle.addEventListener( 'click', () => {
-
-					for ( const otherDirection of switches ) {
-    
-						if ( direction !== otherDirection ) {
-
-							const otherSwitchContainer = document.getElementById( `bearing${ otherDirection }SwitchContainer` );
-							const otherToggle = otherSwitchContainer.querySelector( `#bearing${ otherDirection }Toggle` );
-							otherToggle.checked = false;
-
-						}
-					}
-
-					this.buildingService.resetBuildingEntites();
-					this.treeService.resetTreeEntites();
-					this.treeService.fetchAndAddTreeDistanceData( this.store.postalcode );
-
-				} );
-  
-				// Set the 'All' switch to checked by default
-				if ( direction === 'All' ) {
-					toggle.checked = true;
-				}
-			}
-		},
  
 	},
 };
+
+const addPostalCodes = ( ) => {
+	const dataSourceService = new Datasource( );
+	dataSourceService.loadGeoJsonDataSource(
+		0.2,
+		'./assets/data/hki_po_clipped.json',
+		'PostCodes'
+	);
+};
+
+const addFeaturePicker = ( ) => {
+	// Add click event listener to the viewer container
+	const cesiumContainer = document.getElementById( 'cesiumContainer' );
+	const featurepicker = new Featurepicker(  );
+	cesiumContainer.addEventListener( 'click', function( event ) { 
+		featurepicker.processClick( event ); // Assuming processClick is defined later
+	} );
+};
+
+const setupBearingSwitches = ( postalcode ) => {
+	const switches = [ 'All', 'South', 'West', 'East', 'North' ];
+  
+	for ( const currentDirection of switches ) {
+
+		const switchContainer = document.getElementById( `bearing${ currentDirection }SwitchContainer` );
+		const toggle = switchContainer.querySelector( `#bearing${ currentDirection }Toggle` );
+      
+		toggle.addEventListener( 'click', () => {
+					
+			updateBearingSwitches( switches, currentDirection );
+			const treeService = new Tree( );
+			const buildingService = new Building( );
+			buildingService.resetBuildingEntities();
+			treeService.resetTreeEntities();
+			treeService.fetchAndAddTreeDistanceData( postalcode );
+
+		} );
+  
+		// Set the 'All' switch to checked by default
+		if ( currentDirection === 'All' ) {
+			toggle.checked = true;
+		}
+	}
+};
+
+const updateBearingSwitches = ( switches, currentDirection ) => {  // Use an arrow function with const
+	for ( const otherDirection of switches ) {
+    
+		if ( currentDirection !== otherDirection ) {
+
+			const otherSwitchContainer = document.getElementById( `bearing${ otherDirection }SwitchContainer` );
+			const otherToggle = otherSwitchContainer.querySelector( `#bearing${ otherDirection }Toggle` );
+			otherToggle.checked = false;
+
+		}
+	}
+};
+
+const updateBuildingsAndTrees = ( ) => { 
+
+};
+
 </script>
 
 <style>
