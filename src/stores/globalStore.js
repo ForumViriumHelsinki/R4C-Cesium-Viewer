@@ -3,10 +3,6 @@ import { defineStore } from 'pinia';
 export const useGlobalStore = defineStore( 'global', {
 	state: () => ( {
 		view: 'helsinki',
-		showPlot: true,
-		showVegetation: false,
-		showOtherNature: false,
-		print: true,
 		postalcode: null,
 		nameOfZone: null,
 		averageHeatExposure: 0,
@@ -17,7 +13,7 @@ export const useGlobalStore = defineStore( 'global', {
 		currentGridCell: null,
 		cesiumViewer: null,
 		postalCodeData: null,
-		buildAddress: null,
+		buildingAddress: null,
 	} ),
 	actions: {
 		setPostalCodeData( postalCodeData ) {
@@ -31,18 +27,6 @@ export const useGlobalStore = defineStore( 'global', {
 		},
 		setView( view ) {
 			this.view = view;
-		},
-		setShowPlot( showPlot ) {
-			this.showPlot = showPlot;
-		},
-		setShowVegetation( showVegetation ) {
-			this.showVegetation = showVegetation;
-		},
-		setShowOtherNature( showOtherNature ) {
-			this.showOtherNature = showOtherNature;
-		},
-		setPrint( print ) {
-			this.print = print;
 		},
 		setPostalCode( postalcode ) {
 			this.postalcode = postalcode;

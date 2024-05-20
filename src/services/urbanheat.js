@@ -121,7 +121,7 @@ export default class Urbanheat {
 
 		if ( count != 0 ) {
 
-			this.store.averageHeatExposure = total / count;
+			this.store.setAverageHeatExposure( total / count );
 
 			return urbanHeatData;
 

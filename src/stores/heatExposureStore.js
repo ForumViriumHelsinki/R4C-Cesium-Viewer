@@ -10,7 +10,6 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 		getDataById: ( state ) => ( postcode ) => {
 			return state.data.find( ( item ) => item.id === postcode );
 		},
-		getData: ( state ) => state.data,
 	},
 	actions: {
 		// Function to load Heat Exposure  data

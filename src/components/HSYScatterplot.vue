@@ -317,7 +317,7 @@ export default {
   
 		addPlotElements( svg, heatData, xScale, yScale, colorScale, numerical, categorical ) {
 			const tooltip = this.plotService.createTooltip( '#scatterPlotContainerHSY' );
-			const buildingSerivce  = new Building( this.store.cesiumViewer );
+			const buildingSerivce  = new Building( );
 
 			svg.append( 'g' )
 				.selectAll( 'dot' )

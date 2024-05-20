@@ -188,7 +188,7 @@ export default {
 
 			if ( metropolitanView ) {
 
-				this.store.view = 'capitalRegion';
+				this.store.setView( 'capitalRegion' );
         
 				this.dataSourceService.removeDataSourcesByNamePrefix( 'PostCodes' );
 				await this.dataSourceService.loadGeoJsonDataSource(
@@ -205,7 +205,7 @@ export default {
 			} else {
 
 
-				this.store.view = 'helsinki';
+				this.store.setView( 'helsinki' );
 				this.reset();
   
 			}
@@ -243,13 +243,13 @@ export default {
 
 			if ( gridView ) {
 
-				this.store.view = 'grid';
+				this.store.setView( 'grid' );
 				this.showPostalCodeView = false;
 				this.eventEmitterService.emitGridViewEvent( );
 
 			}  else {
 
-				this.store.view = 'helsinki';
+				this.store.setView( 'helsinki' );
 				this.reset();
   
 			} 

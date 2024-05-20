@@ -49,7 +49,7 @@ export default {
 				.on( 'mouseout', () => this.plotService.handleMouseout( tooltip ) )
 				.on( 'click', ( event, d ) => {
 					// Assume each data point includes a building ID or some identifier
-					const buildingSerivce  = new Building( this.store.cesiumViewer );
+					const buildingSerivce  = new Building( );
 					buildingSerivce.highlightBuildingsInViewer( d );
           
 				} );

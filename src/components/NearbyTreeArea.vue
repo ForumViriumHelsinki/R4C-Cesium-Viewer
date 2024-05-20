@@ -270,7 +270,7 @@ export default {
 
 			this.setEntityColorToGreen( maxTreeAreaBuilding, buildingsDataSource );
 
-			this.store.averageTreeArea = totalTreeArea / totalCounter;
+			this.store.setAverageTreeArea( totalTreeArea / totalCounter );
 
 			return heatTreeAverageMap;
 

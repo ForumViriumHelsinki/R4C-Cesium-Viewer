@@ -45,6 +45,6 @@ export default class CapitalRegion {
 	addPostalCodeDataToPinia( ) {
 
 		const dataSource = this.datasourceService.getDataSourceByName( 'PostCodes' );
-		this.store.postalCodeData = dataSource;
+		this.store.setPostalCodeData( dataSource );
 	}     
 }

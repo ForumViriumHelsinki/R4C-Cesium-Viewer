@@ -111,7 +111,7 @@ export default class FeaturePicker {
 	handleBuildingFeature( properties ) {
 
 		this.store.level = 'building';
-		this.store.postalcode = properties._postinumero._value;
+		this.store.setPostalCode( properties._postinumero._value );
 		this.plotService.togglePostalCodePlotVisibility( 'hidden' );
 		this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
 		this.plotService.toggleLandCoverChart( 'hidden' );
@@ -148,8 +148,8 @@ export default class FeaturePicker {
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
 		if ( id.properties.posno && this.store.level != 'building' ) {
             
-			this.store.postalcode = id.properties.posno._value;
-			this.store.nameOfZone = id.properties.nimi;
+			this.store.setPostalCode( id.properties.posno._value );
+			this.store.setNameOfZone( id.properties.nimi );
 			this.viewService.switchTo3DView();
 			this.elementsDisplayService.setViewDisplay( 'none' );
 			this.loadPostalCode( this.store.postalcode, id );
@@ -160,7 +160,7 @@ export default class FeaturePicker {
     
 
 			const boundingBox = this.getBoundingBox( id );
-			this.store.currentGridCell = id;
+			this.store.setCurrentGridCell( id );
 
 			// Construct the URL for the WFS request with the bounding box
 			if ( boundingBox ) {

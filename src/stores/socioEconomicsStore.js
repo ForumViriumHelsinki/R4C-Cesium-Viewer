@@ -21,8 +21,6 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		getNimiForHelsinki: ( state ) => () => {
 			return state.data.filter( item => item.kunta === '091' ).map( item => item.nimi ).sort();
 		},
-		getRegionStatistics: ( state ) => state.regionStatistics,
-		getHelsinkiStatistics: ( state ) => state.helsinkiStatistics,
 	},
 	actions: {
 		// Function to load Paavo data

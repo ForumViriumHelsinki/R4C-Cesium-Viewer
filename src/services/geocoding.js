@@ -43,7 +43,7 @@ export default class Geocoding {
 
 		if ( this.addressData.length === 1 ) {
 
-			this.store.postalcode = this.addressData[ 0 ].postalcode;
+			this.store.setPostalCode( this.addressData[ 0 ].postalcode );
 			this.moveCameraAndReset( this.addressData[ 0 ].longitude, this.addressData[ 0 ].latitude );
 			document.getElementById( 'searchresults' ).innerHTML = '';
 
@@ -132,7 +132,7 @@ export default class Geocoding {
 
 				lat = this.addressData[ i ].latitude;
 				long = this.addressData[ i ].longitude;
-				this.store.postalcode = this.addressData[ i ].postalcode; 
+				this.store.setPostalCode( this.addressData[ i ].postalcode ); 
 				break;
 
 			}
@@ -218,7 +218,7 @@ export default class Geocoding {
 			// Check if the entity posno property matches the postalcode.
 			if ( entity._properties._posno._value  == postalcode ) {
     
-				this.store.nameOfZone = entity._properties._nimi._value;
+				this.store.setNameOfZone( entity._properties._nimi._value );
 				break;
 			}
 		}
