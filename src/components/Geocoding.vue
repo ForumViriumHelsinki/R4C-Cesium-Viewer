@@ -1,6 +1,6 @@
 <template>
 
-<div id="georefContainer">
+<div  v-if="showGeocoding" id="georefContainer">
   <div id="searchcontainer" class="container-fluid">
     <form role="search">
         <div class="form-group">
@@ -24,12 +24,27 @@
 </template>
   
 <script>
+
+import { useGlobalStore } from '../stores/globalStore.js';
+
 export default {
 	data() {
 		return {
-			addressData: null, // Define your variable here
+			showGeocoding: true
 		};
 	},
+	computed: {
+        shouldShowGeocoding() {
+            const store = useGlobalStore(); // Get access to the global store
+            const view = store.view.toLowerCase(); // Make comparison case-insensitive
+            return view === 'helsinki' || view === 'capitalregion';
+        }
+    },
+    watch: {
+        shouldShowGeocoding(newValue) { // Watch for changes in computed property
+            this.showGeocoding = newValue; // Update data property if needed
+        }
+    },
 	methods: {
 
 	},
