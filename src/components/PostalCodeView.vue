@@ -1,6 +1,7 @@
 <template>
   <div v-if="showPostalCodeView" id="postalCodeViewContainer">
   <p class="header">R4C Urban Heat risk demonstrator</p>
+  <p v-if="showReturn" class="uiButton" @click="returnToPostalCode" style="color: red; float:right; cursor: pointer;">Return to postalcode</p>
   <p class="uiButton" @click="reset" style="color: red; float:right; cursor: pointer;">Reset</p>
   <!-- showPlotSwitch-->
 
@@ -125,6 +126,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 import ElementsDisplay from '../services/elementsDisplay.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import Featurepicker from '../services/featurepicker.js'; 
 
 export default {
 	data() {
@@ -132,7 +134,8 @@ export default {
 			viewer: null,
 			dataSourceService: null,
 			treeService: null,
-			showPostalCodeView: true
+			showPostalCodeView: true,
+			showReturn: false,
 		};
 	},
 	mounted() {
@@ -145,10 +148,26 @@ export default {
 	},
 	beforeUnmount() {
 		this.unsubscribe();
-	},    
+	}, 
+	computed: {
+        shouldShowReturn() {
+			const store = useGlobalStore(); // Get access to the global store
+            return store.level === 'building';
+        }
+    },
+    watch: {
+        shouldShowReturn(newValue) { // Watch for changes in computed property
+            this.showReturn = newValue; // Update data property if needed
+        }
+    },
 	methods: {
 		reset(){
 			location.reload();
+		},
+		returnToPostalCode( ) {
+			const featurepicker = new Featurepicker();
+			featurepicker.loadPostalCode();
+
 		},
 		initPostalCodeView( ) {
 			this.dataSourceService = new Datasource();

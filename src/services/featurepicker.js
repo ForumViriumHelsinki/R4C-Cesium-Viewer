@@ -77,7 +77,7 @@ export default class FeaturePicker {
 		}
 	}
   
-	async loadPostalCode( postcode ) {
+	async loadPostalCode() {
 
 		this.store.level = 'postalCode';
 		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
@@ -99,6 +99,8 @@ export default class FeaturePicker {
 			this.helsinkiService.loadHelsinkiElements();
     
 		}
+
+		const postcode = this.store.postcode 
     
 		// add laajasalo flood data
 		if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
@@ -152,7 +154,7 @@ export default class FeaturePicker {
 			this.store.setNameOfZone( id.properties.nimi );
 			this.viewService.switchTo3DView();
 			this.elementsDisplayService.setViewDisplay( 'none' );
-			this.loadPostalCode( this.store.postalcode, id );
+			this.loadPostalCode();
     
 		}
     

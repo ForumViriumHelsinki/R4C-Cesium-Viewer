@@ -1,8 +1,8 @@
 <template>
-    <div id="buildingChartContainer">
+    <div v-if="showBuilding" id="buildingChartContainer">
     </div>
 
-    <div id="buildingTreeChartContainer">
+    <div v-if="showBuilding" id="buildingTreeChartContainer">
     </div>
 
   </template>
@@ -18,6 +18,22 @@ import ColdArea from '../services/coldarea.js';
 import Datasource from '../services/datasource.js';
   
 export default {
+	data() {
+		return {
+			showBuilding: true
+		};
+	},	
+	computed: {
+        shouldShowBuilding() {
+			const store = useGlobalStore(); // Get access to the global store
+            return store.level === 'building';
+        }
+    },
+    watch: {
+        shouldShowBuilding(newValue) { // Watch for changes in computed property
+            this.showBuilding = newValue; // Update data property if needed
+        }
+    },
 	mounted() {
 		this.unsubscribe = eventBus.$on( 'newBuildingHeat', this.newBuildingHeat );
 		this.unsubscribe = eventBus.$on( 'newBuildingTree', this.newBuildingTree );
