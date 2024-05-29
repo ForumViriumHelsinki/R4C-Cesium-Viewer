@@ -192,7 +192,6 @@ export default class FeaturePicker {
 		if ( id.properties._avgheatexposuretobuilding ) {
 
 			this.store.setBuildingAddress( findAddressForBuilding( id.properties ) );
-			console.log( this.store.buildingAddress );
     
 			if ( id.properties._locationUnder40 ) {
 
