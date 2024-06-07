@@ -1,6 +1,5 @@
 import * as Cesium from 'cesium';
 import Datasource from './datasource.js'; 
-import PrintBoxService from './printbox.js'; 
 import Building from './building.js';
 import Plot from './plot.js';
 import Traveltime from './traveltime.js';
@@ -14,6 +13,7 @@ import CapitalRegion from './capitalRegion.js';
 import Sensor from './sensor.js';
 import View from './view.js';
 import ColdArea from './coldarea.js';
+import EventEmitter from './eventEmitter.js';
 
 export default class FeaturePicker {
 	constructor( ) {
@@ -21,7 +21,6 @@ export default class FeaturePicker {
 		this.toggleStore = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
-		this.printBoxService = new PrintBoxService();
 		this.buildingService = new Building();
 		this.helsinkiService = new Helsinki();
 		this.capitalRegionService = new CapitalRegion();
@@ -33,6 +32,8 @@ export default class FeaturePicker {
 		this.elementsDisplayService = new ElementsDisplay();
 		this.viewService = new View();
 		this.coldAreaService = new ColdArea();
+		this.eventEmitterService = new EventEmitter();
+
 	}
   
 	/**
@@ -63,7 +64,8 @@ export default class FeaturePicker {
                
 				if ( id instanceof Cesium.Entity ) {
 
-					this.printBoxService.printCesiumEntity( id );
+					this.store.setPickedEntity( id );
+					this.eventEmitterService.emitEntityPrintEvent( );
                    
 				}
                

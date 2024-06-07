@@ -7,7 +7,6 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import EventEmitter from './eventEmitter.js';
-import PrintBoxService from './printbox.js'; 
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
@@ -21,8 +20,7 @@ export default class Building {
 		this.treeService = new Tree();
 		this.urbanheatService = new Urbanheat();
 		this.eventEmitterService = new EventEmitter();
-		this.printBoxService = new PrintBoxService();
-	}
+ 	}
 
 
 	/**
@@ -520,7 +518,8 @@ export default class Building {
 		if ( entity._properties[ property ] && entity._properties[ property ]._value === id ) {
 
 			this.polygonOutlineToBlue( entity );
-			this.printBoxService.printCesiumEntity( entity );
+			this.store.setPickedEntity( entity );
+			this.eventEmitterService.emitEntityPrintEvent( );
 
 		} else {
 

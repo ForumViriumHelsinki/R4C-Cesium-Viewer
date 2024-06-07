@@ -138,7 +138,17 @@ export default class EventEmitter {
 
 	}
 
+	emitEntityPrintEvent( ) {
 
+		eventBus.$emit( 'entityPrintEvent' );
+
+	}
+
+	emitGeocodingPrintEvent( ) {
+
+		eventBus.$emit( 'geocodingPrintEvent' );
+
+	}	
 
 }
 

@@ -14,6 +14,7 @@ export const useGlobalStore = defineStore( 'global', {
 		cesiumViewer: null,
 		postalCodeData: null,
 		buildingAddress: null,
+		pickedEntity: null,
 	} ),
 	actions: {
 		setPostalCodeData( postalCodeData ) {
@@ -42,6 +43,9 @@ export const useGlobalStore = defineStore( 'global', {
 		},
 		setBuildingAddress( buildingAddress ) {
 			this.buildingAddress = buildingAddress;
+		},
+		setPickedEntity( picked ) {
+			this.pickedEntity = picked;
 		},		
 	},
 } );

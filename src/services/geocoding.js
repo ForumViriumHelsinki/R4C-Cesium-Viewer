@@ -1,10 +1,10 @@
 import Viewercamera from './viewercamera.js'; 
-import PrintBox from './printbox.js'; 
 import FeaturePicker from './featurepicker.js'; 
 import View from './view.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import Landcover from './landcover.js'; 
+import EventEmitter from './eventEmitter.js';
 
 const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
 
@@ -14,7 +14,6 @@ export default class Geocoding {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
 		this.viewercamera = new Viewercamera();
-		this.printBox = new PrintBox();
 		this.featurePicker = new FeaturePicker();
 		this.addressData = null;
 		this.viewService = new View();
@@ -178,7 +177,8 @@ export default class Geocoding {
 	moveCameraAndReset( longitude, latitude ) {
 
 		this.viewercamera.setCameraView( longitude, latitude );
-		this.printBox.createToPrint();
+		const eventEmitterService = new EventEmitter();
+		eventEmitterService.emitGeocodingPrintEvent( );
 		this.featurePicker.loadPostalCode();
 
 		if ( this.toggleStore.switchView ) {
