@@ -31,8 +31,10 @@ export default class Printbox {
 			let length = id.properties.propertyNames.length;
 			for ( let i = 0; i < length; ++i ) {
 
-				toPrint = toPrint + id.properties.propertyNames[ i ] + ': ' + id.properties[ id.properties.propertyNames[ i ] ] + '<br/>';
+										if ( goodForPrint( id.properties, i ) ) {
 
+				toPrint = toPrint + id.properties.propertyNames[ i ] + ': ' + id.properties[ id.properties.propertyNames[ i ] ] + '<br/>';
+}
 			}
 		}
 
@@ -90,8 +92,11 @@ export default class Printbox {
 
 						for ( let i = 0; i < length; ++i ) {
 
+										if ( goodForPrint( id.properties, i ) ) {
+
+
 							toPrint = toPrint + entity._properties._propertyNames[ i ] + ': ' + entity._properties[ entity._properties._propertyNames[ i ] ]._value + '<br/>';
-                        
+                        }
 						}                    
                     
 					} 
@@ -104,12 +109,12 @@ export default class Printbox {
 
 	}
 
-	/**
- * This function sets the visibility of HTML elements related to printing to "visible", making them visible on the webpage.  
- * 
- */
-	setPrintVisible() {
-		document.getElementById( 'printContainer' ).style.visibility = 'visible';
-	}
+
 
 }
+
+const goodForPrint = ( properties, i ) => {
+
+	return !properties.propertyNames[ i ].includes( 'fid' ) && !properties.propertyNames[ i ].includes( '_id' ) && !properties.propertyNames[ i ].includes( 'value' ) && properties.propertyNames[ i ] != 'id' && properties[ properties.propertyNames[ i ] ]._value;
+
+};
