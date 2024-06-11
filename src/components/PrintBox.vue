@@ -89,11 +89,19 @@ const printEntity = ( entity, postno ) => {
 
 						for ( let i = 0; i < length; ++i ) {
 
-										if ( goodForPrint( entity._properties, i ) ) {
 
+			if ( goodForPrint( entity._properties, i ) ) {
+				if ( typeof entity._properties[ entity._properties._propertyNames[ i ] ]._value === 'number' ) {
+
+					toPrint = toPrint + entity._properties._propertyNames[ i ]  + ': ' +  entity._properties[ entity._properties._propertyNames[ i ] ]._value.toFixed( 1 ) + '<br/>';
+
+				} else {
 
 							toPrint = toPrint + entity._properties._propertyNames[ i ] + ': ' + entity._properties[ entity._properties._propertyNames[ i ] ]._value + '<br/>';
-                        }
+
+				}
+			}
+
 						}   
 
 						addToPrint( toPrint, postno );           
