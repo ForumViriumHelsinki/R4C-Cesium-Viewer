@@ -15,7 +15,7 @@ export default class Wms {
 		return new Cesium.ImageryLayer( provider );
 	}
 
-	createHSYImageryLayer() {
+	createHSYImageryLayer( year ) {
 		// Define the backend proxy URL
 		const backendURL = import.meta.env.VITE_BACKEND_URL; // Ensure this is set correctly in your .env file
 
@@ -25,11 +25,33 @@ export default class Wms {
 		// Use the proxy URL in the WebMapServiceImageryProvider
 		const provider = new Cesium.WebMapServiceImageryProvider( {
 			url: proxyUrl, // Point this to your backend proxy
-			layers: 'asuminen_ja_maankaytto:maanpeite_avokalliot_2022,asuminen_ja_maankaytto:maanpeite_merialue_2022,asuminen_ja_maankaytto:maanpeite_muu_avoin_matala_kasvillisuus_2022,asuminen_ja_maankaytto:maanpeite_muu_vetta_lapaisematon_pinta_2022,asuminen_ja_maankaytto:maanpeite_paallystamaton_tie_2022,asuminen_ja_maankaytto:maanpeite_paallystetty_tie_2022,asuminen_ja_maankaytto:maanpeite_paljas_maa_2022,asuminen_ja_maankaytto:maanpeite_pellot_2022,asuminen_ja_maankaytto:maanpeite_puusto_10_15m_2022,asuminen_ja_maankaytto:maanpeite_puusto_15_20m_2022,asuminen_ja_maankaytto:maanpeite_puusto_2_10m_2022,asuminen_ja_maankaytto:maanpeite_puusto_yli20m_2022,asuminen_ja_maankaytto:maanpeite_vesi_2022',
-			// Other necessary WebMapServiceImageryProvider parameters...
+			layers: createLayersForHsyLandcover( year )
 		} );
     
 		return new Cesium.ImageryLayer( provider );
 	}
 
 }
+
+
+const createLayersForHsyLandcover = ( years ) => {
+    const layerNames = [
+        'asuminen_ja_maankaytto:maanpeite_avokalliot',
+        'asuminen_ja_maankaytto:maanpeite_merialue',
+        'asuminen_ja_maankaytto:maanpeite_muu_avoin_matala_kasvillisuus',
+        'asuminen_ja_maankaytto:maanpeite_muu_vetta_lapaisematon_pinta',
+        'asuminen_ja_maankaytto:maanpeite_paallystamaton_tie',
+        'asuminen_ja_maankaytto:maanpeite_paallystetty_tie',
+        'asuminen_ja_maankaytto:maanpeite_paljas_maa',
+        'asuminen_ja_maankaytto:maanpeite_pellot',
+        'asuminen_ja_maankaytto:maanpeite_puusto_10_15m',
+        'asuminen_ja_maankaytto:maanpeite_puusto_15_20m',
+        'asuminen_ja_maankaytto:maanpeite_puusto_2_10m',
+        'asuminen_ja_maankaytto:maanpeite_puusto_yli20m',
+        'asuminen_ja_maankaytto:maanpeite_vesi'
+    ];
+
+    const layers = layerNames.map( name => `${ name }_${ years }`).join(',');
+
+    return layers;
+};

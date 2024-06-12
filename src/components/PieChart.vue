@@ -4,6 +4,9 @@
 
     <select id="HSYSelect" @change="onHSYSelectChange">
     </select>
+
+	<select id="YearSelect" @change="onYearSelectChange">
+    </select>
   </template>
   
 <script>
@@ -11,6 +14,7 @@ import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
 import Plot from '../services/plot.js'; 
+import Landcover from '../services/landcover.js';
   
 export default {   
 	data() {
@@ -31,6 +35,7 @@ export default {
 			if ( this.store.level == 'postalCode' ) {
 				this.datasource = this.store.postalCodeData;
 				this.populateHSYSelect();
+				populateYearSelect( );
 				this.createPieChart( );
 			} else {
 				// Hide or clear the visualization when not visible
@@ -120,6 +125,14 @@ export default {
 			this.createPieChart( this.datasource );
 
 		},
+
+		onYearSelectChange( ) {
+
+			const landcoverService = new Landcover();
+			console.log(document.getElementById( 'YearSelect' ).value)
+			landcoverService.addLandcover( document.getElementById( 'YearSelect' ).value );
+
+		},		
 
 		/**
  * Get landcover data array for a specific major district
@@ -223,6 +236,29 @@ export default {
 		},
 	},
 };
+
+const populateYearSelect = () => {
+    document.getElementById('YearSelect').style.visibility = 'visible';
+
+    const selectElement = document.getElementById('YearSelect');
+
+    // Check if options already exist
+    if (selectElement.options.length > 0) {
+        return; // Exit function early to avoid adding duplicates
+    }
+
+    const yearValues = new Set([2022, 2020, 2018]); // Unique year values
+
+    const fragment = document.createDocumentFragment();
+    yearValues.forEach(year => {
+        const option = document.createElement('option');
+        option.textContent = year;
+        option.value = year;
+        fragment.appendChild(option);
+    });
+
+    selectElement.appendChild(fragment);
+};
 </script>
   
   <style>
@@ -243,6 +279,14 @@ export default {
     position: fixed;
     top: 295px;
     right: 1px;
+    font-size: smaller;
+    visibility: hidden;
+}
+
+  #YearSelect {
+    position: fixed;
+    top: 295px;
+    right: 220px;
     font-size: smaller;
     visibility: hidden;
 }

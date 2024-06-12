@@ -10,13 +10,12 @@ export default class Landcover {
 		this.wmsService = new WMS();
 	}
 
-	addLandcover() {
+	addLandcover( year ) {
 
 	    this.viewer.imageryLayers.add(
-			this.wmsService.createHSYImageryLayer()
+			this.wmsService.createHSYImageryLayer( year )
 		);
 
-		this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
 		this.emitLandcoverEvent();
 
 	}
