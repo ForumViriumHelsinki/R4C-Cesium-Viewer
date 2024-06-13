@@ -108,6 +108,7 @@ export default class Plot {
 
 		document.getElementById( 'pieChartContainer' ).style.visibility = status;
 		document.getElementById( 'HSYSelect' ).style.visibility = status;
+		document.getElementById( 'YearSelect' ).style.visibility = status;
 
 	}
 

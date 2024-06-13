@@ -13,8 +13,9 @@
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 import Plot from '../services/plot.js'; 
-import Landcover from '../services/landcover.js';
+import Wms from '../services/wms';
   
 export default {   
 	data() {
@@ -25,6 +26,7 @@ export default {
 	mounted() {
 		this.unsubscribe = eventBus.$on( 'newPieChart', this.newPieChart );
 		this.store = useGlobalStore();
+		this.toggleStore = useToggleStore();
 		this.plotService = new Plot();
 	},
 	beforeUnmount() {
@@ -92,7 +94,7 @@ export default {
 		getTotalAreaByNameAndPropertyKeys( name, propertyKeys ) {
     
 			let totalArea = 0;
-			const year = '2022';
+			const year = this.toggleStore.hsyYear;
 
 			for ( let i = 0; i < this.datasource._entityCollection._entities._array.length; i++ ) {
 
@@ -128,9 +130,13 @@ export default {
 
 		onYearSelectChange( ) {
 
-			const landcoverService = new Landcover();
-			console.log(document.getElementById( 'YearSelect' ).value)
-			landcoverService.addLandcover( document.getElementById( 'YearSelect' ).value );
+			this.toggleStore.setHSYYear( document.getElementById( 'YearSelect' ).value );
+			this.store.cesiumViewer.imageryLayers.removeAll();
+			const wmsService = new Wms();
+			this.store.cesiumViewer.imageryLayers.add(
+				wmsService.createHSYImageryLayer( )
+			);
+			this.createPieChart( this.datasource );
 
 		},		
 
@@ -247,7 +253,7 @@ const populateYearSelect = () => {
         return; // Exit function early to avoid adding duplicates
     }
 
-    const yearValues = new Set([2022, 2020, 2018]); // Unique year values
+    const yearValues = new Set([2022, 2020, 2018, 2016]); // Unique year values
 
     const fragment = document.createDocumentFragment();
     yearValues.forEach(year => {

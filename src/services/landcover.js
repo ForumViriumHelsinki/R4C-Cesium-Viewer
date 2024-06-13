@@ -10,10 +10,10 @@ export default class Landcover {
 		this.wmsService = new WMS();
 	}
 
-	addLandcover( year ) {
+	addLandcover( ) {
 
 	    this.viewer.imageryLayers.add(
-			this.wmsService.createHSYImageryLayer( year )
+			this.wmsService.createHSYImageryLayer( )
 		);
 
 		this.emitLandcoverEvent();

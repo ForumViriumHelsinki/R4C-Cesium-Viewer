@@ -243,7 +243,7 @@ export default {
 			if ( landcover ) {
 				
 				this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
-				landcoverService.addLandcover( 2022 );
+				landcoverService.addLandcover( );
 
 			} else {
 

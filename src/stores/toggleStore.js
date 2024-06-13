@@ -20,7 +20,8 @@ export const useToggleStore = defineStore( 'toggle', {
 		landCover: false,
 		switchView: false,
 		showSensorData: false,  
-		surveyPlaces: false,                                                
+		surveyPlaces: false,
+		hsyYear: 2022                                                
 	} ),
 	actions: {
 		setPostalCode( enabled ) {
@@ -79,6 +80,9 @@ export const useToggleStore = defineStore( 'toggle', {
 		},
 		setSurveyPlaces( show ) {
 			this.surveyPlaces = show;
-		},		
+		},
+		setHSYYear( year ) {
+			this.hsyYear = year;
+		},			
 	},
 } );

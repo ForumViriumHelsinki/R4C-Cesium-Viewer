@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { useToggleStore } from '../stores/toggleStore';
 
 export default class Wms {
 	constructor() {
@@ -15,7 +16,7 @@ export default class Wms {
 		return new Cesium.ImageryLayer( provider );
 	}
 
-	createHSYImageryLayer( year ) {
+	createHSYImageryLayer( ) {
 		// Define the backend proxy URL
 		const backendURL = import.meta.env.VITE_BACKEND_URL; // Ensure this is set correctly in your .env file
 
@@ -25,7 +26,7 @@ export default class Wms {
 		// Use the proxy URL in the WebMapServiceImageryProvider
 		const provider = new Cesium.WebMapServiceImageryProvider( {
 			url: proxyUrl, // Point this to your backend proxy
-			layers: createLayersForHsyLandcover( year )
+			layers: createLayersForHsyLandcover( )
 		} );
     
 		return new Cesium.ImageryLayer( provider );
@@ -34,7 +35,9 @@ export default class Wms {
 }
 
 
-const createLayersForHsyLandcover = ( years ) => {
+const createLayersForHsyLandcover = ( ) => {
+	const store = useToggleStore();
+	const year = store.hsyYear;
     const layerNames = [
         'asuminen_ja_maankaytto:maanpeite_avokalliot',
         'asuminen_ja_maankaytto:maanpeite_merialue',
@@ -51,7 +54,7 @@ const createLayersForHsyLandcover = ( years ) => {
         'asuminen_ja_maankaytto:maanpeite_vesi'
     ];
 
-    const layers = layerNames.map( name => `${ name }_${ years }`).join(',');
+    const layers = layerNames.map( name => `${ name }_${ year }`).join(',');
 
     return layers;
 };
