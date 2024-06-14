@@ -27,7 +27,6 @@ export default {
 		this.unsubscribe = eventBus.$on( 'newPieChart', this.newPieChart );
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
-		this.plotService = new Plot();
 	},
 	beforeUnmount() {
 		this.unsubscribe();
@@ -36,20 +35,60 @@ export default {
 		newPieChart( ) {
 			if ( this.store.level == 'postalCode' ) {
 				this.datasource = this.store.postalCodeData;
-				this.populateHSYSelect();
+				populateHSYSelect( this.datasource );
 				populateYearSelect( );
-				this.createPieChart( );
+				createPieChart( this.datasource, this.store.nameOfZone._value, this.toggleStore.hsyYear );
 			} else {
 				// Hide or clear the visualization when not visible
 				// Example: call a method to hide or clear the D3 visualization
-				this.clearPieChart();
+				clearPieChart();
 			}
-		},  
+		}, 
+		onHSYSelectChange( ) {
 
-		extractNimiValues() {
+			createPieChart( this.datasource, this.store.nameOfZone._value, this.toggleStore.hsyYear );
+
+		},
+
+		onYearSelectChange( ) {
+
+			this.toggleStore.setHSYYear( document.getElementById( 'YearSelect' ).value );
+			this.store.cesiumViewer.imageryLayers.removeAll();
+			const wmsService = new Wms();
+			this.store.cesiumViewer.imageryLayers.add(
+				wmsService.createHSYImageryLayer( )
+			);
+			createPieChart( this.datasource, this.store.nameOfZone._value, this.toggleStore.hsyYear );
+
+		},		
+		clearPieChart() {
+			// Remove or clear the D3.js visualization
+			// Example:
+			d3.select( '#pieChartContainer' ).select( 'svg' ).remove();
+		},
+	},
+};
+
+const populateHSYSelect = ( datasource ) => {
+			document.getElementById( 'HSYSelect' ).style.visibility = 'visible';
+			const selectElement = document.getElementById( 'HSYSelect' );
+			const nimiValues = extractNimiValues( datasource );
+			const fragment = document.createDocumentFragment();
+
+			nimiValues.forEach( nimi => {
+				const option = document.createElement( 'option' );
+				option.textContent = nimi;
+				option.value = nimi;
+				fragment.appendChild( option );
+			} );
+
+			selectElement.appendChild( fragment );
+		}
+
+const extractNimiValues = (  datasource )  => {
 			let nimiValuesSet = new Set();
 			// Assuming dataSource._entityCollection._entities._array is the array you mentioned
-			const entitiesArray = this.datasource._entityCollection._entities._array;
+			const entitiesArray = datasource._entityCollection._entities._array;
 
 			// Check if entitiesArray exists and is an array
 			if ( Array.isArray( entitiesArray ) ) {
@@ -65,148 +104,20 @@ export default {
 			}
             
 			return Array.from( nimiValuesSet ).sort();
-		},
+		}
 
-		populateHSYSelect() {
-			document.getElementById( 'HSYSelect' ).style.visibility = 'visible';
-			const selectElement = document.getElementById( 'HSYSelect' );
-			const nimiValues = this.extractNimiValues();
-			const fragment = document.createDocumentFragment();
+const createPieChart = ( datasource, nameOfZone, year ) => {
 
-			nimiValues.forEach( nimi => {
-				const option = document.createElement( 'option' );
-				option.textContent = nimi;
-				option.value = nimi;
-				fragment.appendChild( option );
-			} );
-
-			selectElement.appendChild( fragment );
-		},
-
-        		/**
- * Get total area of district properties by district data source name and district id and list of property keys
- * 
- * @param { Number } id Id of the district
- * @param { Array } propertyKeys - List of property keys to calculate the total area
- * 
- * @returns { Number } The total area 
-*/
-		getTotalAreaByNameAndPropertyKeys( name, propertyKeys ) {
-    
-			let totalArea = 0;
-			const year = this.toggleStore.hsyYear;
-
-			for ( let i = 0; i < this.datasource._entityCollection._entities._array.length; i++ ) {
-
-				if ( this.datasource._entityCollection._entities._array[ i ]._properties._nimi._value == name ) {
-
-					const entity = this.datasource._entityCollection._entities._array[ i ];
-	
-					propertyKeys.forEach( propertyKey => {
-
-						if ( entity._properties.hasOwnProperty( propertyKey + '_' + year ) ) {
-
-							totalArea += entity._properties[ propertyKey + '_' + year ]._value;
-
-						}
-
-					} );
-
-					return totalArea;
-
-				}
-
-			}
-
-			return totalArea;
-
-		},
-
-		onHSYSelectChange( ) {
-
-			this.createPieChart( this.datasource );
-
-		},
-
-		onYearSelectChange( ) {
-
-			this.toggleStore.setHSYYear( document.getElementById( 'YearSelect' ).value );
-			this.store.cesiumViewer.imageryLayers.removeAll();
-			const wmsService = new Wms();
-			this.store.cesiumViewer.imageryLayers.add(
-				wmsService.createHSYImageryLayer( )
-			);
-			this.createPieChart( this.datasource );
-
-		},		
-
-		/**
- * Get landcover data array for a specific major district
- * 
- * @param { string } majordistrict - Major district code
- * @returns { Array } Data array for the specified major district
- */
-		getLandCoverDataForArea( name ) {
-
-			let trees20 = this.getTotalAreaByNameAndPropertyKeys( name, [ 'tree20_m2' ] );
-			let trees15 = this.getTotalAreaByNameAndPropertyKeys( name, [ 'tree15_m2' ] );
-			let trees10 = this.getTotalAreaByNameAndPropertyKeys( name, [ 'tree10_m2' ] );
-			let trees2 = this.getTotalAreaByNameAndPropertyKeys( name, [ 'tree2_m2' ] ); 
-			let vegetation = this.getTotalAreaByNameAndPropertyKeys( name, [ 'vegetation_m2' ] );
-			let water = this.getTotalAreaByNameAndPropertyKeys( name, [ 'water_m2' ] );
-			let fields = this.getTotalAreaByNameAndPropertyKeys( name, [ 'field_m2' ] );
-			let rock = this.getTotalAreaByNameAndPropertyKeys( name, [ 'rocks_m2' ] );
-			let other = this.getTotalAreaByNameAndPropertyKeys( name, [ 'other_m2' ] );
-			let bareland = this.getTotalAreaByNameAndPropertyKeys( name, [ 'bareland_m2' ] );
-			let building = this.getTotalAreaByNameAndPropertyKeys( name, [ 'building_m2' ] );
-			let dirtroad = this.getTotalAreaByNameAndPropertyKeys( name, [  'dirtroad_m2' ] );
-			let pavedroad = this.getTotalAreaByNameAndPropertyKeys( name, [  'pavedroad_m2' ] );
-
-			let totalArea = trees20 + trees15 + trees10 + trees2 + vegetation + water + fields + rock + other + bareland + building + dirtroad + pavedroad;
-
-			return [ 
-				( trees20 / totalArea ).toFixed( 3 ), 
-				( trees15 / totalArea ).toFixed( 3 ), 
-				( trees10 / totalArea ).toFixed( 3 ), 
-				( trees2 / totalArea ).toFixed( 3 ), 
-				( vegetation / totalArea ).toFixed( 3 ), 
-				( water / totalArea ).toFixed( 3 ), 
-				( fields / totalArea ).toFixed( 3 ), 
-				( rock / totalArea ).toFixed( 3 ), 
-				( other / totalArea ).toFixed( 3 ), 
-				( bareland / totalArea ).toFixed( 3 ), 
-				( building / totalArea ).toFixed( 3 ), 
-				( dirtroad / totalArea ).toFixed( 3 ),
-				( pavedroad / totalArea ).toFixed( 3 ) ];
-
-		}, 
-
-		createPie( svg, name, data, colors, arc, xOffset, yOffset, tooltip ) {
-			// Drawing first pie chart
-			svg.selectAll( name )
-				.data( data )
-				.enter().append( 'path' )
-				.attr( 'fill', ( d, i ) => colors[i] )
-				.attr( 'd', arc )
-				.attr( 'transform', `translate(${xOffset}, ${yOffset})` ) // Adjusted positioning
-				.on( 'mouseover', ( event, d ) => {
-					this.plotService.handleMouseover( tooltip, 'pieChartContainer', event, d, 
-						( data ) => `Area: ${data.data.zone}<br>Element: ${data.data.label}<br>${100 * data.data.value } % of HSY 2022 landcover` );
-				} )
-				.on( 'mouseout', () => this.plotService.handleMouseout( tooltip ) );
-		},
-
-		createPieChart( ) {
-
-			this.plotService.initializePlotContainerForGrid( 'pieChartContainer' );
+			const plotService = new Plot();
+			plotService.initializePlotContainerForGrid( 'pieChartContainer' );
 
 			// Assuming firstData and secondData are already fetched and processed
 			const labels = [ 'trees20m', 'trees15-20m', 'trees10-15m', 'trees2-10m', 'vegetation', 'water', 'fields', 'rocks', 'other', 'bareland', 'buildings', 'dirtroads', 'pavedroads' ];
 			const colors = [ '#326428', '#327728', '#328228', '#32a028', '#b2df43', '#6495ed', '#ffd980', '#bfbdc2', '#857976', '#cd853f', '#d80000', '#824513', '#000000' ];
 
-			const firstData = this.getLandCoverDataForArea( this.store.nameOfZone._value );
+			const firstData = getLandCoverDataForArea( nameOfZone, year, datasource );
 			const selectedNimi = document.getElementById( 'HSYSelect' ).value; 
-			const secondData = this.getLandCoverDataForArea( selectedNimi );
+			const secondData = getLandCoverDataForArea( selectedNimi, year, datasource );
 			const margin = {top: 20, right: 10, bottom: 10, left: 10};
 			const width = 400 - margin.left - margin.right;
 			const height = 200 - margin.top - margin.bottom;
@@ -216,12 +127,12 @@ export default {
 			const arc = d3.arc().innerRadius( 0 ).outerRadius( radius );
 
 			// First pie chart data setup
-			const firstPieData = pie( firstData.map( ( value, index ) => ( { value: value, label: labels[index], zone: this.store.nameOfZone._value } ) ) );
+			const firstPieData = pie( firstData.map( ( value, index ) => ( { value: value, label: labels[index], zone: nameOfZone } ) ) );
 
 			// Second pie chart data setup
 			const secondPieData = pie( secondData.map( ( value, index ) => ( { value: value, label: labels[index], zone: selectedNimi } ) ) );
 
-			const svg = this.plotService.createSVGElement( margin, width, height, '#pieChartContainer' );
+			const svg = plotService.createSVGElement( margin, width, height, '#pieChartContainer' );
 
 			// Translate pies to be centered vertically and positioned horizontally
 			const xOffsetFirstPie = width / 4; // Keeps existing horizontal positioning for the first pie
@@ -229,19 +140,18 @@ export default {
 			const yOffset = height / 2; // New: Centers pies vertically
 
 			// Initialize tooltip using the Plot service
-			const tooltip = this.plotService.createTooltip( '#pieChartContainer' );
-			this.createPie( svg, '.firstPie', firstPieData, colors, arc, xOffsetFirstPie, yOffset, tooltip );
-			this.createPie( svg, '.secondPie', secondPieData, colors, arc, xOffsetSecondPie, yOffset, tooltip );
-			this.plotService.addTitle( svg, `Compare HSY 2022 Landcover in ${this.store.nameOfZone} to:`, width / 2, margin );  
+			const tooltip = plotService.createTooltip( '#pieChartContainer' );
+			createPie( svg, '.firstPie', firstPieData, colors, arc, xOffsetFirstPie, yOffset, tooltip, plotService );
+			createPie( svg, '.secondPie', secondPieData, colors, arc, xOffsetSecondPie, yOffset, tooltip, plotService );
+			plotService.addTitle( svg, `Compare HSY 2022 Landcover in ${nameOfZone} to:`, width / 2, margin );  
            
-		},
-		clearPieChart() {
-			// Remove or clear the D3.js visualization
-			// Example:
-			d3.select( '#pieChartContainer' ).select( 'svg' ).remove();
-		},
-	},
-};
+		}
+
+const clearPieChart = ()  => {
+	// Remove or clear the D3.js visualization
+	// Example:
+	d3.select( '#pieChartContainer' ).select( 'svg' ).remove();
+}
 
 const populateYearSelect = () => {
     document.getElementById('YearSelect').style.visibility = 'visible';
@@ -264,7 +174,106 @@ const populateYearSelect = () => {
     });
 
     selectElement.appendChild(fragment);
-};
+}
+
+        		/**
+ * Get total area of district properties by district data source name and district id and list of property keys
+ * 
+ * @param { Number } id Id of the district
+ * @param { Array } propertyKeys - List of property keys to calculate the total area
+ * @param { Number } year user selected year
+ * @param { Object } datasource postalcode datasource
+ * 
+ * @returns { Number } The total area 
+*/
+const getTotalAreaByNameAndPropertyKeys = ( name, propertyKeys, year, datasource ) => {
+    
+			let totalArea = 0;
+
+			for ( let i = 0; i < datasource._entityCollection._entities._array.length; i++ ) {
+
+				if ( datasource._entityCollection._entities._array[ i ]._properties._nimi._value == name ) {
+
+					const entity = datasource._entityCollection._entities._array[ i ];
+	
+					propertyKeys.forEach( propertyKey => {
+
+						if ( entity._properties.hasOwnProperty( propertyKey + '_' + year ) ) {
+
+							totalArea += entity._properties[ propertyKey + '_' + year ]._value;
+
+						}
+
+					} );
+
+					return totalArea;
+
+				}
+
+			}
+
+			return totalArea;
+
+}
+ 
+		/**
+ * Get landcover data array for a specific area
+ * 
+ * @param { string } name - name of the area
+ * @param { Number } year user selected year
+ * @param { Object } datasource postalcode datasource
+ * 
+ * @returns { Array } Data array for the specified area
+ */
+const getLandCoverDataForArea = ( name, year, datasource ) => {
+
+			let trees20 = getTotalAreaByNameAndPropertyKeys( name, [ 'tree20_m2' ], year, datasource );
+			let trees15 = getTotalAreaByNameAndPropertyKeys( name, [ 'tree15_m2' ], year, datasource );
+			let trees10 = getTotalAreaByNameAndPropertyKeys( name, [ 'tree10_m2' ], year, datasource );
+			let trees2 = getTotalAreaByNameAndPropertyKeys( name, [ 'tree2_m2' ], year, datasource ); 
+			let vegetation = getTotalAreaByNameAndPropertyKeys( name, [ 'vegetation_m2' ], year, datasource );
+			let water = getTotalAreaByNameAndPropertyKeys( name, [ 'water_m2' ], year, datasource );
+			let fields = getTotalAreaByNameAndPropertyKeys( name, [ 'field_m2' ], year, datasource );
+			let rock = getTotalAreaByNameAndPropertyKeys( name, [ 'rocks_m2' ], year, datasource );
+			let other = getTotalAreaByNameAndPropertyKeys( name, [ 'other_m2' ], year, datasource );
+			let bareland = getTotalAreaByNameAndPropertyKeys( name, [ 'bareland_m2' ], year, datasource );
+			let building = getTotalAreaByNameAndPropertyKeys( name, [ 'building_m2' ], year, datasource );
+			let dirtroad = getTotalAreaByNameAndPropertyKeys( name, [  'dirtroad_m2' ], year, datasource );
+			let pavedroad = getTotalAreaByNameAndPropertyKeys( name, [  'pavedroad_m2' ], year, datasource );
+
+			let totalArea = trees20 + trees15 + trees10 + trees2 + vegetation + water + fields + rock + other + bareland + building + dirtroad + pavedroad;
+
+			return [ 
+				( trees20 / totalArea ).toFixed( 3 ), 
+				( trees15 / totalArea ).toFixed( 3 ), 
+				( trees10 / totalArea ).toFixed( 3 ), 
+				( trees2 / totalArea ).toFixed( 3 ), 
+				( vegetation / totalArea ).toFixed( 3 ), 
+				( water / totalArea ).toFixed( 3 ), 
+				( fields / totalArea ).toFixed( 3 ), 
+				( rock / totalArea ).toFixed( 3 ), 
+				( other / totalArea ).toFixed( 3 ), 
+				( bareland / totalArea ).toFixed( 3 ), 
+				( building / totalArea ).toFixed( 3 ), 
+				( dirtroad / totalArea ).toFixed( 3 ),
+				( pavedroad / totalArea ).toFixed( 3 ) ];
+
+		}
+
+const createPie = ( svg, name, data, colors, arc, xOffset, yOffset, tooltip, plotService ) => {
+			// Drawing first pie chart
+			svg.selectAll( name )
+				.data( data )
+				.enter().append( 'path' )
+				.attr( 'fill', ( d, i ) => colors[i] )
+				.attr( 'd', arc )
+				.attr( 'transform', `translate(${xOffset}, ${yOffset})` ) // Adjusted positioning
+				.on( 'mouseover', ( event, d ) => {
+					plotService.handleMouseover( tooltip, 'pieChartContainer', event, d, 
+						( data ) => `Area: ${data.data.zone}<br>Element: ${data.data.label}<br>${100 * data.data.value } % of HSY 2022 landcover` );
+				} )
+				.on( 'mouseout', () => plotService.handleMouseout( tooltip ) );
+		}
 </script>
   
   <style>
