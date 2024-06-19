@@ -1,7 +1,8 @@
 <template>
     <div id="buildingChartContainer">
     </div>
-
+	<div id="hsyBuildingChartContainer">
+    </div>
     <div id="buildingTreeChartContainer" >
     </div>
 
@@ -29,6 +30,7 @@ export default {
 			if ( !newValue ) {
 				document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
 				document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'hidden';
+				document.getElementById( 'hsyBuildingChartContainer' ).style.visibility = 'hidden';
 			}
         }
     },
@@ -60,7 +62,10 @@ export default {
 		},
 		newBuildingHeat( ) {
 			if ( this.store.level == 'building' ) {
-				this.createBuildingBarChart();
+
+				if ( this.store.view == 'capitalRegion' ) {
+
+				this.createHSYBuildingBarChart();
 
 				if ( this.propsStore.buildingHeatExposure > 27.2632995605 ) {
 
@@ -68,6 +73,12 @@ export default {
 					this.coldAreaService.loadColdAreas();
 
 				}
+				} else {
+
+					this.createBuildingBarChart();
+
+				}
+
 			} else {
 				// Hide or clear the visualization when not visible
 				// Example: call a method to hide or clear the D3 visualization
@@ -185,7 +196,7 @@ export default {
 			const postinumero = this.store.postalcode;
 			this.plotService.initializePlotContainer( 'buildingChartContainer' );
 
-			const postalCodeHeat = this.getPostalCodeHeat();
+			const postalCodeHeat = this.propsStore.postalcodeHeatTimeseries;
 
 			const margin = { top: 70, right: 30, bottom: 30, left: 60 };
 			const width = 300 - margin.left - margin.right;
@@ -217,6 +228,85 @@ export default {
 
 			}
 		},
+
+		/**
+ * Create building specific bar chart.
+ *
+ */
+		createHSYBuildingBarChart( ) {
+
+			const buildingHeatExposure = this.propsStore.buildingHeatTimeseries;
+			const postalcodeHeatTimeseries = this.propsStore.postalcodeHeatTimeseries;
+			const address = this.store.buildingAddress;
+			const postinumero = this.store.postalcode;
+
+			this.plotService.initializePlotContainer( 'hsyBuildingChartContainer' );
+
+			const postalCodeHeat = createPostalCodeTimeseries( postalcodeHeatTimeseries );
+
+			const margin = { top: 70, right: 30, bottom: 30, left: 60 };
+			const width = 500 - margin.left - margin.right;
+			const height = 250 - margin.top - margin.bottom;
+
+			const svg = this.plotService.createSVGElement( margin, width, height, '#hsyBuildingChartContainer' );
+
+    // Extract unique dates and create scales
+    const allDates = Array.from(new Set(buildingHeatExposure.map(d => d.date).concat(postalCodeHeat.map(d => d.date))));
+    const xScale = this.plotService.createScaleBand(allDates.sort(), width);
+    const maxTemp = Math.max(
+        ...buildingHeatExposure.map(d => d.avg_temp_c),
+        ...postalCodeHeat.map(d => d.averageTemp)
+    );
+    const yScale = this.plotService.createScaleLinear(0, maxTemp, [height, 0]);
+
+    // Combine building and postal code data
+    const combinedData = [
+        ...buildingHeatExposure.map(d => ({ date: d.date, value: d.avg_temp_c, type: 'building' })),
+        ...postalCodeHeat.map(d => ({ date: d.date, value: d.averageTemp, type: 'postalcode' }))
+    ];
+
+	const tooltip = this.plotService.createTooltip( '#hsyBuildingChartContainer' );
+
+
+    // Create bars and labels (only once)
+    this.createHSYBarsWithLabels(svg, combinedData, xScale, yScale, height, { building: 'orange', postalcode: 'steelblue' }, tooltip ); 
+
+    this.plotService.setupAxes(svg, xScale, yScale, height);
+    this.plotService.addTitle(svg, 'Temperature in Celsius Comparison', width, margin);
+				    // Add legend in top-right corner
+    const legendData = [
+        { name: address, color: 'orange' },
+        { name: postinumero, color: 'steelblue' }
+    ];
+    const legendX = 345 - margin.right;  // Adjust as needed
+    const legendY = margin.top - 120;              // Adjust as needed
+
+    const legend = svg.append("g")
+        .attr("transform", `translate(${legendX}, ${legendY})`);
+
+    legend.selectAll(".legend-item")
+        .data(legendData)
+        .enter()
+        .append("rect")
+        .attr("class", "legend-item")
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("x", 0)
+        .attr("y", (d, i) => i * 20)
+        .attr("fill", d => d.color);
+
+    legend.selectAll(".legend-text")
+        .data(legendData)
+        .enter()
+        .append("text")
+        .attr("class", "legend-text")
+        .attr("x", 15)
+        .attr("y", (d, i) => i * 20 + 9)  // Adjust to vertically center text
+        .text(d => d.name);
+	    legend.attr("transform", `translate(${legendX}, ${legendY})`);
+
+
+},
 
 		/**
  * Returns either heat exposure or temperature in Celsius of postal code area.
@@ -297,6 +387,39 @@ export default {
 				.attr( 'text-anchor', 'middle' )
 				.text( d => d.value );
 		},
+createHSYBarsWithLabels(svg, data, xScale, yScale, height, colors, tooltip) { // Removed dataType parameter
+    if (!data || !Array.isArray(data) || data.length === 0) {
+        console.warn('No data available for chart.');
+        return;
+    }
+
+    const barWidth = xScale.bandwidth() / 2;
+
+    svg.selectAll(".bar")
+        .data(data, d => d.date) // Key function for updates
+        .join(
+            enter => enter.append("rect")
+                .attr("class", d => `bar ${d.type}`) // Class based on data type
+                .attr("x", d => xScale(d.date) + (d.type === "building" ? 0 : barWidth))
+                .attr("y", d => yScale(d.value)) 
+                .attr("width", barWidth)
+                .attr("height", d => height - yScale(d.value))
+                .attr("fill", d => colors[d.type]), // Color based on data type
+            update => update
+                .attr("x", d => xScale(d.date) + (d.type === "building" ? 0 : barWidth)) 
+                .attr("y", d => yScale(d.value))
+                .attr("height", d => height - yScale(d.value)),
+            exit => exit.remove()
+        )
+		.on( 'mouseover', ( event, d ) => 
+			this.plotService.handleMouseover( tooltip, 'hsyBuildingChartContainer', event, d, 
+				( data ) => `Temperature ${(data.value).toFixed( 2 )} in Celsius` ) )
+			.on( 'mouseout', () => this.plotService.handleMouseout( tooltip ) );
+
+    // ... (code for adding labels, handling potential null values)
+},
+
+
 		clearBuildingBarChart() {
 			// Remove or clear the D3.js visualization
 			// Example:
@@ -310,6 +433,39 @@ export default {
 		},
 	},
 };
+
+const createPostalCodeTimeseries = ( postalcodeHeatTimeseries ) => {
+  	const dateToTemps = {};
+
+  	// Iterate through the outer array
+  	postalcodeHeatTimeseries.forEach(subArray => {
+    	// Iterate through each object within the sub-array
+    	subArray.forEach(entry => {
+      		const date = entry.date;
+      		const temp = entry.avg_temp_c;
+
+    		// Initialize storage for the date if it doesn't exist
+    	if (!dateToTemps[date]) {
+    		dateToTemps[date] = [];
+    	}
+
+    	// Add the temperature to the array for the date
+    	dateToTemps[date].push(temp);
+    
+		});
+	});
+
+  	// Calculate averages for each date
+  	const averageTemps = [];
+  	for (const date in dateToTemps) {
+    	const totalTemp = dateToTemps[date].reduce((sum, temp) => sum + temp, 0);
+    	const averageTemp = totalTemp / dateToTemps[date].length;
+    	averageTemps.push( { date: date, averageTemp: averageTemp})
+  	}
+
+  	return averageTemps;
+		
+}
 </script>
   
   <style>
@@ -330,6 +486,18 @@ export default {
     top: 80px;
     left: 1px;
     width: 300px;
+    height: 250px; 
+    visibility: hidden;
+    font-size: smaller;
+    border: 1px solid black;
+    box-shadow: 3px 5px 5px black; 
+    background-color: white;
+  }
+  #hsyBuildingChartContainer {
+    position: fixed;
+    top: 80px;
+    left: 1px;
+    width: 500px;
     height: 250px; 
     visibility: hidden;
     font-size: smaller;

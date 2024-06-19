@@ -10,6 +10,8 @@ export const usePropsStore = defineStore( 'props', {
 		treeBuildingDistanceData: null,
 		treeEntities: null,
 		buildingsDatasource: null,
+		postalcodeHeatTimeseries: null,
+		buildingHeatTimeseries: null,
 	} ),
 	actions: {
 		setGridBuildingProps( props ) {
@@ -39,6 +41,14 @@ export const usePropsStore = defineStore( 'props', {
 
 		setBuildingsDatasource( datasource ) {
 			this.buildingsDatasource = datasource;
+		},
+
+		setPostalcodeHeatTimeseries( heatTimeseries ) {
+			this.postalcodeHeatTimeseries = heatTimeseries;
+		},
+
+		setBuildingHeatTimeseries( heatTimeseries ) {
+			this.buildingHeatTimeseries = heatTimeseries;
 		}
 
 	},

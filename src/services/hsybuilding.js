@@ -268,10 +268,11 @@ export default class HSYBuilding {
 
 	async calculateHSYUrbanHeatData( data, entities ) {
 
-		this.urbanHeatService.calculateAverageExposure( data.features );
+		const heatExposureData = this.urbanHeatService.calculateAverageExposure( data.features );
 		const avg_temp_cList = data.features.map( feature => feature.properties.avg_temp_c );
 		const propsStore = usePropsStore( );
 		propsStore.setScatterPlotEntities( entities );
+		propsStore.setPostalcodeHeatTimeseries( heatExposureData[ 1 ] );
 		propsStore.setHeatHistogramData( avg_temp_cList );
 		this.eventEmitterService.emitHeatHistogram( );
 		this.eventEmitterService.emitScatterplotEvent( );

@@ -46,9 +46,14 @@ export default class Plot {
 
 		if ( this.store.level === 'building' ) {
 
-
 			document.getElementById( 'buildingChartContainer' ).style.visibility = 'visible';
 			document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'visible';
+
+			if ( this.store.view === 'capitalRegion' ) {
+
+				document.getElementById( 'hsyBuildingChartContainer' ).style.visibility = 'visible';
+
+			}
 
 		}
 	}
@@ -63,6 +68,7 @@ export default class Plot {
 		document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'areaSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
+		document.getElementById( 'hsyBuildingChartContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';

@@ -106,6 +106,7 @@ export default class Urbanheat {
 		let count = 0;
 		let total = 0;
 		let urbanHeatData = [ ];
+		let heatTimeseries = [ ];
 
 		for ( let i = 0; i < features.length; i++ ) {
 
@@ -117,13 +118,19 @@ export default class Urbanheat {
 
 			}
 
+			if ( features[ i ].properties.heat_timeseries ) {
+
+				heatTimeseries.push( features[ i ].properties.heat_timeseries );			
+				
+			}
+
 		}
 
 		if ( count != 0 ) {
 
 			this.store.setAverageHeatExposure( total / count );
 
-			return urbanHeatData;
+			return [ urbanHeatData, heatTimeseries ];
 
 		}
 	}
@@ -131,7 +138,8 @@ export default class Urbanheat {
 	setPropertiesAndCreateCharts( entities, features ) {
 
 		const propsStore = usePropsStore();
-		propsStore.setHeatHistogramData( this.calculateAverageExposure( features ) );
+		const heatData = this.calculateAverageExposure( features );
+		propsStore.setHeatHistogramData( heatData[ 0 ] );
 		propsStore.setScatterPlotEntities( entities );
 		this.eventEmitterService.emitHeatHistogram( );
 		this.eventEmitterService.emitScatterplotEvent( );

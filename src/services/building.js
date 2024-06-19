@@ -89,6 +89,12 @@ export default class Building {
 
 				this.propsStore.setBuildingHeatExposure( avg_temp_c._value );
 
+				if ( buildingProps.heat_timeseries ) {
+				
+					this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value );
+
+				}
+
  				this.eventEmitterService.emitBuildingHeatEvent( );    
 
 			} else {
