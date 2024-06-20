@@ -42,7 +42,7 @@ export default class EventEmitter {
 
 		if ( !postcode !== '00230' || !postcode !== '02290' || !postcode !== '01770' ) {
 
-			eventBus.$emit( 'newSocioEconomicsDiagram', postcode );
+	//		eventBus.$emit( 'newSocioEconomicsDiagram', postcode );
 
 		}
 

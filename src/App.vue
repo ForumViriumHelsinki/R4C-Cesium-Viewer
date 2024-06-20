@@ -6,7 +6,6 @@
   <Geocoding />
   <PrintBox />
   <PostalCodeView />
-  <Timeline />
 
   <!-- Add Logo -->		
 	<div class="logoHolder">	
@@ -23,6 +22,5 @@ import Geocoding from './components/Geocoding.vue';
 import PrintBox from './components/PrintBox.vue';
 import GridView from './components/GridView.vue';
 import PostalCodeView from './components/PostalCodeView.vue';
-import Timeline from './components/Timeline.vue';
 
 </script>

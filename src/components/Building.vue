@@ -196,7 +196,7 @@ export default {
 			const postinumero = this.store.postalcode;
 			this.plotService.initializePlotContainer( 'buildingChartContainer' );
 
-			const postalCodeHeat = this.propsStore.postalcodeHeatTimeseries;
+			const postalCodeHeat = this.store.averageHeatExposure;
 
 			const margin = { top: 70, right: 30, bottom: 30, left: 60 };
 			const width = 300 - margin.left - margin.right;

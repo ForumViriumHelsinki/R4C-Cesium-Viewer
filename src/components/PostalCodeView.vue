@@ -208,10 +208,6 @@ export default {
 			if ( metropolitanView ) {
 
 				this.store.setView( 'capitalRegion' );
-
-						console.log("this.store.view ", this.store.view )
-
-        
 				this.dataSourceService.removeDataSourcesByNamePrefix( 'PostCodes' );
 				await this.dataSourceService.loadGeoJsonDataSource(
 					0.2,
