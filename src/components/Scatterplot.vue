@@ -182,7 +182,7 @@ export default {
 
 				}
 
-				if ( entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
+				if ( entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 && entity._properties._id ) {
 
 					// Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
 					const element = { heat: entity._properties.avgheatexposuretobuilding._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue, buildingId: entity._properties._id._value };
