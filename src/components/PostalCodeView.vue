@@ -73,11 +73,11 @@
 <label for="showTrees" class="label" id="showTreesLabel" style="display:none;">Trees</label>
 
 <!--  showLandCover-->
-<label class="switch" id = "landCoverSwitch" style="display:none;">
+<label class="switch" id = "landCoverSwitch">
   <input type="checkbox" id="landCoverToggle" value="getLandCover" >
   <span class="slider round"></span>
 </label>
-<label for="getLandCover" class="label" id="landCoverLabel" style="display:none;">HSY land cover</label>
+<label for="getLandCover" class="label" id="landCoverLabel">HSY land cover</label>
 
   <!--  switchView-->
 <label class="switch" id = "switchViewSwitch" style="display:none;">

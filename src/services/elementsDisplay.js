@@ -72,8 +72,6 @@ export default class ElementsDisplay {
     */
 	setCapitalRegionElementsDisplay( display ) {
 		const elements = [
-			'landCoverSwitch',
-			'landCoverLabel',
 			'hideLowSwitch',
 			'hideLowLabel',
 			'showTreesSwitch',

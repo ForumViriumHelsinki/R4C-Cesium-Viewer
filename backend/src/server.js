@@ -27,7 +27,46 @@ app.post( '/api/cache/set', async ( req, res ) => {
 	res.status( 200 ).send( { message: 'Cached successfully' } );
 } );
 
+// New Paavo endpoint
+app.get('/paavo', async (req, res) => {
+	console.log("hi we got request")
+    const wfsUrl = 'https://geo.stat.fi/geoserver/postialue/wfs';
+    const params = new URLSearchParams({
+        service: 'WFS',
+        request: 'GetFeature',
+        typename: 'postialue:pno_tilasto_2024',
+        version: '2.0.0',
+        outputFormat: 'application/json',
+        CQL_FILTER: 'kunta IN (\'091\',\'092\',\'049\',\'235\')',
+        srsName: 'EPSG:4326'
+    });
+
+    const requestUrl = `${wfsUrl}?${params.toString()}`;
+	const httpsAgent = new https.Agent({
+		rejectUnauthorized: false, // Bypass SSL certificate verification 
+	}); // add this line
+
+    try {
+        let data = await redis.get(requestUrl);
+
+        if (!data) {
+            const response = await axios.get(requestUrl, { httpsAgent }); // Add httpsAgent here
+            data = response.data;
+            await redis.set(requestUrl, JSON.stringify(data)); // Cache the data
+        } else {
+            data = JSON.parse(data); // Parse the cached data
+        }
+        
+        res.json(data); 
+    } catch (error) {
+        console.error('Error fetching Paavo data:', error);
+        res.status(500).json({ error: 'Failed to fetch data' });
+    }
+});
+
 app.get( '/wms/proxy', async ( req, res ) => {
+		console.log("hi we got request")
+
 	// The base URL of the WMS server you're proxying
 	const baseUrl = 'https://kartta.hsy.fi/geoserver/wms';
 

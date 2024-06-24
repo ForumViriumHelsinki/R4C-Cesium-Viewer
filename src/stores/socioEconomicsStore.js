@@ -25,37 +25,21 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 	actions: {
 		// Function to load Paavo data
 		async loadPaavo() {
-			const wfsUrl = 'https://geo.stat.fi/geoserver/postialue/wfs';
-			const params = new URLSearchParams( {
-				service: 'WFS',
-				request: 'GetFeature',
-				typename: 'postialue:pno_tilasto_2024',
-				version: '2.0.0',
-				outputFormat: 'application/json',
-				CQL_FILTER: 'kunta IN (\'091\',\'092\',\'049\',\'235\')',
-				srsName: 'EPSG:4326'
-			} );
-
-			const requestUrl = `${wfsUrl}?${params.toString()}`;
-
-			try {
+			// replace all this with call to backend
+    try {
+        const response = await fetch(`${backendURL}/paavo`);
+        const data = response.data;
         
-				let data = await this.getDataFromCache( requestUrl );
-
-				if ( !data ) {
-
-					data = await this.getAllPaavoData( requestUrl );
-					axios.post( `${backendURL}/api/cache/set`, { key: requestUrl, value: data } );
-
-				}
-
-				this.addDataToStore( data );
-				this.addRegionStatisticsToStore();
-				this.addHelsinkiStatisticsToStore();
-
-			} catch ( error ) {
-				console.error( 'Error fetching socio-economic data:', error );
-			}
+        // The data fetching logic (getDataFromCache, getAllPaavoData) 
+        // is removed as it's handled by the backend
+		console.log(response)
+        
+        this.addDataToStore(data);
+        this.addRegionStatisticsToStore();
+        this.addHelsinkiStatisticsToStore();
+    } catch (error) {
+        console.error('Error fetching Paavo data:', error); 
+    }
 		},
 
 		// Function to fetch all Paavo data from redis cache
