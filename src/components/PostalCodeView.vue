@@ -1,8 +1,13 @@
 <template>
   <div v-if="showPostalCodeView" id="postalCodeViewContainer">
   <p class="header">R4C Urban Heat risk demonstrator</p>
-  <p v-if="showReturn" class="uiButton" @click="returnToPostalCode" style="color: red; float:right; cursor: pointer;">Return to postalcode</p>
-  <p class="uiButton" @click="reset" style="color: red; float:right; cursor: pointer;">Reset</p>
+  <v-btn v-if="showReturn" icon @click="returnToPostalCode" class="uiButton" style="color: red; float:right; cursor: pointer;"> 
+    <v-icon>mdi-arrow-left</v-icon>
+  </v-btn>
+
+  <v-btn icon @click="reset" class="uiButton" style="color: red; float:right; cursor: pointer;">
+    <v-icon>mdi-refresh</v-icon>
+  </v-btn>
   <!-- showPlotSwitch-->
 
 <label class="switch" id="gridViewSwitch" >
@@ -531,6 +536,13 @@ export default {
 	float: left;
 	
 	text-decoration: underline;
+  height: 18px !important; /* Set a smaller height */
+  width: 18px !important;  /* Set a smaller width */
+  min-width: 0 !important; /* Override Vuetify's min-width */
+}
+
+.uiButton .v-btn__content {
+  padding: 0 !important; /* Remove default padding */
 }
 
 .uiButton:hover {

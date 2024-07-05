@@ -437,8 +437,8 @@ export default {
   
   #categoricalHSYSelect {
       position: fixed;
-      bottom: 338px; /* Adjusted position to match scatter plot container */
-      left: 1px;
+      bottom: 335px; /* Adjusted position to match scatter plot container */
+      left: 10px;
       visibility: hidden;
       font-size: smaller;
   }

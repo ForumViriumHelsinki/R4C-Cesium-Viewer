@@ -2,8 +2,9 @@
 
     <div id="gridviewContainer">
         <p class="header">R4C Urban Heat risk demonstrator</p>
-        <p class="uiButton" @click="reset" style="color: red; float:right; cursor: pointer;">Reset</p>
-        
+  <v-btn icon @click="reset" class="uiButton" style="color: red; float:right; cursor: pointer;">
+    <v-icon>mdi-refresh</v-icon>
+  </v-btn>        
         <label class="switch">
             <input type="checkbox" id="postalCodeToggle" value="postalCode">
             <span class="slider round"></span>
@@ -245,6 +246,13 @@ export default {
 	float: left;
 	
 	text-decoration: underline;
+  height: 18px !important; /* Set a smaller height */
+  width: 18px !important;  /* Set a smaller width */
+  min-width: 0 !important; /* Override Vuetify's min-width */
+}
+
+.uiButton .v-btn__content {
+  padding: 0 !important; /* Remove default padding */
 }
 
 .uiButton:hover {

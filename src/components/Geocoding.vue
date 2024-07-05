@@ -13,7 +13,7 @@
             
     </div>
 <div id="searchbutton">
-  <button class="btn btn-primary btn-block" id="searchButton">Move to target</button>
+  <v-btn block color="primary" id="searchButton" size="x-small" @click="moveToTarget">Move to target</v-btn>
 </div>
 </div>
 
@@ -56,9 +56,9 @@ export default {
 #georefContainer
 {
 	bottom: 2px;
-	right: 1px;
+	right: 175px;
 	width: 530px; 
-	height: 30px; 
+	height: 40px; 
 	position: fixed; 
 	border: 1px solid black; 
 	box-shadow: 3px 5px 5px black; 
@@ -80,15 +80,16 @@ export default {
     float: left;
 }
 
-#searchresultscontainer
+#searchresultscontainer  
 {
-	bottom: 4.5%;
-	right: 100px;
-	width: 276px; 
+	bottom: 5.5%;
+	right: 176px;
+	width: 250px; 
 	height: 30px; 
 	position: fixed;
 	background: white;
 	visibility: hidden;
+	z-index: 1000;
 }
 
 </style>
