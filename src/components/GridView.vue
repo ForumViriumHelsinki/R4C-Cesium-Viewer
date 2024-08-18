@@ -38,6 +38,13 @@
             <span class="slider round"></span>
         </label>
         <label for="surveyPlaces" class="label" id="surveyPlacesLabel">Espoo resident survey places</label>
+
+          <!--  250mGrid-->
+        <label class="switch" id = "250mGridSwitch">
+            <input type="checkbox" id="250mGridToggle" value="250mGrid" >
+            <span class="slider round"></span>
+        </label>
+        <label for="250mGrid" class="label" id="250mGridLabel">250m grid</label>		
     </div>
 
 	<SurveyScatterPlot />
