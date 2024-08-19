@@ -5,6 +5,7 @@
 node_modules
 /dist
 
+public/assets/data/r4c_stats_grid.geojson
 
 # local env files
 .env.local

@@ -61,6 +61,7 @@ import Datasource from '../services/datasource.js';
 import Populationgrid from '../services/populationgrid.js';
 import EspooSurvey from '../services/espooSurvey.js';
 import SurveyScatterPlot from './SurveyScatterPlot.vue';
+import SosEco250mGrid from './SosEco250mGrid.vue'; // Import the 250mGrid component
 
 export default {
 	data() {
@@ -79,7 +80,8 @@ export default {
 
 	},
 	components: {
-		SurveyScatterPlot
+		SurveyScatterPlot,
+		SosEco250mGrid
 	}, 	
 	beforeUnmount() {
 		this.unsubscribe();
@@ -103,8 +105,24 @@ export default {
 			document.getElementById( 'natureGridToggle' ).addEventListener( 'change', this.natureGridEvent.bind( this ) );
 			document.getElementById( 'resetGridToggle' ).addEventListener( 'change', this.resetGridViewEvent.bind( this ) );
 			document.getElementById( 'surveyPlacesToggle' ).addEventListener( 'change', this.surveyPlacesEvent.bind( this ) );
+			document.getElementById( '250mGridToggle' ).addEventListener( 'change', this.activate250mGridEvent.bind( this ) );
 
 		},
+
+		/**
+        * This function handles the toggle event for activing 250m sos eco grid
+        */
+		activate250mGridEvent() {
+
+			const checked = document.getElementById( '250mGridToggle' ).checked;
+
+            if (checked) {
+                this.eventEmitterService.$emit('create250mGrid'); // Emit the event to trigger 250mGrid
+            } else {
+                // ... (logic to remove 250mGrid if needed)
+            }
+
+		},			
 
 		/**
         * This function handles the toggle event for switching to postal code view
