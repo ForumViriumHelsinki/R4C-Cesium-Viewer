@@ -47,6 +47,7 @@
         <label for="250mGrid" class="label" id="250mGridLabel">250m grid</label>		
     </div>
 
+	<SosEco250mGrid />
 	<SurveyScatterPlot />
 
 </template>
@@ -117,7 +118,10 @@ export default {
 			const checked = document.getElementById( '250mGridToggle' ).checked;
 
             if (checked) {
-                this.eventEmitterService.$emit('create250mGrid'); // Emit the event to trigger 250mGrid
+
+				this.datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
+				eventBus.$emit('create250mGrid'); // Trigger the simulation to start
+
             } else {
                 // ... (logic to remove 250mGrid if needed)
             }
