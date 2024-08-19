@@ -64,7 +64,7 @@ const loadGrid = async () => {
   const dataSourceService = new DataSource();
   await dataSourceService.loadGeoJsonDataSource(
     0.8,
-    '/assets/data/r4c_stats_grid.geojson',
+    '/assets/data/r4c_stats_grid.json',
     '250m_grid'
   );
 };
