@@ -10,7 +10,7 @@
     <v-select
       v-model="localSelectedIndex"
       :items="indexOptions"
-      item-text="text"
+      item-title="text"
       item-value="value"
       label="Select Index"
       @update:modelValue="handleSelectionChange"
@@ -20,25 +20,41 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { defineProps, defineEmits } from 'vue';
+import { ref, computed } from 'vue';
+import { defineEmits } from 'vue';
 
-// Props and Emits
-const props = defineProps({
-  legendData: Array,
-  indexOptions: Array,
-  selectedIndex: String,
+const indexOptions = [
+  { text: 'Heat Index', value: 'heat_index' },
+  { text: 'Flood Index', value: 'flood_index' },
+];
+
+// Compute legend data based on the selected index
+const legendData = computed(() => {
+  return localSelectedIndex.value === 'heat_index'
+    ? [
+        { color: '#ffffcc', range: '< 0.2' },
+        { color: '#ffeda0', range: '0.2 - 0.4' },
+        { color: '#feb24c', range: '0.4 - 0.6' },
+        { color: '#f03b20', range: '0.6 - 0.8' },
+        { color: '#bd0026', range: '> 0.8' },
+      ]
+    : [
+        { color: '#eff3ff', range: '< 0.2' },
+        { color: '#bdd7e7', range: '0.2 - 0.4' },
+        { color: '#6baed6', range: '0.4 - 0.6' },
+        { color: '#3182bd', range: '0.6 - 0.8' },
+        { color: '#08519c', range: '> 0.8' },
+      ];
 });
 
 const emit = defineEmits(['onIndexChange']);
 
 // Local state to bind to v-select
-const localSelectedIndex = ref(props.selectedIndex);
+const localSelectedIndex = ref('heat_index');
 
-// Watch for changes and emit the selection
-watch(localSelectedIndex, (newValue) => {
-  emit('onIndexChange', newValue);
-});
+const handleSelectionChange = (value) => {
+  emit('onIndexChange', value);
+};
 
 // Compute the title based on the selected index
 const title = computed(() => {
