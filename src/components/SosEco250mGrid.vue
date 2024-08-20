@@ -84,9 +84,9 @@ const checkPassword = () => {
 };
 
 // Function to load the GeoJSON data source
-const loadGrid = () => {
+const loadGrid = async () => {
   const dataSourceService = new DataSource();
-  dataSourceService.loadGeoJsonDataSource(
+  await dataSourceService.loadGeoJsonDataSource(
     0.8,
     '/assets/data/r4c_stats_grid.json',
     '250m_grid'

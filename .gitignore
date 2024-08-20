@@ -7,6 +7,7 @@ node_modules
 
 public/assets/data/r4c_stats_grid.geojson
 public/assets/data/r4c_stats_grid.json
+public/assets/data/r4c_stats_grid_with_index.json
 
 # local env files
 .env.local
