@@ -5,6 +5,8 @@ const cors = require( 'cors' );
 const bodyParser = require( 'body-parser' );
 const axios = require( 'axios' );
 const https = require( 'https' );
+const { Pool } = require('pg');
+const { OAuth2Client } = require('google-auth-library');
 
 const app = express();
 app.use( cors() ); // Enable CORS for all routes
@@ -13,6 +15,55 @@ app.use( bodyParser.urlencoded( { extended: true, limit: '100mb' } ) );
 
 // Connect to Redis
 const redis = new Redis( { host: 'redis' } );
+
+
+// Configure PostgreSQL connection
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'myapp',
+  password: 'yourpassword',
+  port: 5432,
+});
+
+// Google OAuth2 Client setup
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Verify Google Token and Extract Email
+async function verifyToken(token) {
+  // Verify the ID token and ensure it was issued for your client (i.e., the audience matches your Client ID)
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID,  // Use the Client ID here
+  });
+
+  // Extract the payload (which contains user info) from the verified token
+  const payload = ticket.getPayload();
+  return payload.email;
+}
+
+// Route to Save Email and Timestamp
+app.post('/api/save-email', async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const email = await verifyToken(token);
+
+    if (process.env.NODE_ENV === 'production') {
+      // Insert email and current timestamp into PostgreSQL only in production
+      const query = 'INSERT INTO r4c_users (email) VALUES ($1) RETURNING *';
+      const result = await pool.query(query, [email]);
+      res.json({ success: true, user: result.rows[0] });
+    } else {
+      // In non-production environments, just log the email for testing purposes
+      console.log(`Email received in ${process.env.NODE_ENV}: ${email}`);
+      res.json({ success: true, message: `Email would be saved: ${email}` });
+    }
+  } catch (error) {
+    console.error('Error saving email:', error);
+    res.status(400).json({ error: 'Invalid token or email already exists' });
+  }
+});
 
 // Existing cache endpoints
 app.get( '/api/cache/get', async ( req, res ) => {
