@@ -16,6 +16,10 @@
       @update:modelValue="handleSelectionChange"
       style="max-width: 300px;"
     ></v-select>
+    <div class="source-note">
+      Socioeconomic source data by<br>
+    <a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a>
+</div>   
   </div>
 </template>
 
@@ -24,8 +28,8 @@ import { ref, computed } from 'vue';
 import { defineEmits } from 'vue';
 
 const indexOptions = [
-  { text: 'Heat Index', value: 'heat_index' },
-  { text: 'Flood Index', value: 'flood_index' },
+  { text: 'Heat Vulnerability', value: 'heat_index' },
+  { text: 'Flood Vulnerability', value: 'flood_index' },
 ];
 
 // Compute legend data based on the selected index
@@ -58,7 +62,7 @@ const handleSelectionChange = (value) => {
 
 // Compute the title based on the selected index
 const title = computed(() => {
-  return localSelectedIndex.value === 'heat_index' ? 'Heat Index' : 'Flood Index';
+  return localSelectedIndex.value === 'heat_index' ? 'Heat Vulnerability' : 'Flood Vulnerability';
 });
 </script>
 
@@ -71,6 +75,8 @@ const title = computed(() => {
   border-radius: 4px;
   padding: 10px;
   z-index: 10;
+  border: 1px solid black; 
+	box-shadow: 3px 5px 5px black; 
 }
 
 .swatch {
@@ -84,5 +90,19 @@ const title = computed(() => {
   height: 20px;
   border: 1px solid black;
   margin-right: 5px;
+}
+
+.source-note {
+  margin-top: -12px;
+  font-size: 8px;
+}
+
+.source-note a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.source-note a:hover {
+  text-decoration: underline;
 }
 </style>

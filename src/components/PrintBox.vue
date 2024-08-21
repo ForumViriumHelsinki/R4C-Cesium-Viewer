@@ -1,7 +1,7 @@
 <template>
 
 	<div id="printContainer">
-        <i>Please click on a postcode area or enter location to load building and nature polygons from the WFS server...</i>
+        <i>Please click on areas to retrieve more information</i>
 	</div>
 
 </template>
