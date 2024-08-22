@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import DataSource from '../services/datasource.js';
 import * as Cesium from 'cesium';
@@ -34,6 +34,10 @@ const showGrid = ref(false);
 // Access the password from the environment variables
 const correctPassword = import.meta.env.VITE_250_PASSWORD;
 
+const isDataAvailable = (selectedIndex) => {
+  // Placeholder implementation; replace it with actual logic to check data availability
+  return selectedIndex === 'heat_index' || selectedIndex === 'flood_index';
+};
 
 // Watcher to load or remove grid data source based on `showGrid` state
 watch(showGrid, async (newValue) => {
@@ -73,12 +77,12 @@ const updateGridColors = async (selectedIndex) => {
   if (!dataSource) return;
 
   const entities = dataSource.entities.values;
+  const dataAvailable = isDataAvailable(selectedIndex);
+
   for (const entity of entities) {
-    const indexValue = entity.properties[selectedIndex]?.getValue();
-    if (indexValue !== undefined) {
-      const color = getColorForIndex(indexValue, selectedIndex);
-      entity.polygon.material = color;
-    }
+    const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
+    const color = indexValue !== undefined ? getColorForIndex(indexValue, selectedIndex) : Cesium.Color.WHITE.withAlpha(0.8);
+    entity.polygon.material = color;
   }
 };
 
@@ -97,6 +101,7 @@ const getColorForIndex = (indexValue, indexType) => {
     if (indexValue < 8) return Cesium.Color.fromCssColorString('#3182bd').withAlpha(0.8);
     return Cesium.Color.fromCssColorString('#08519c').withAlpha(0.8);
   }
+  return Cesium.Color.WHITE.withAlpha(0.8); // Default to white if no data
 };
 
 // Event listener to show the password dialog when the event is triggered
