@@ -37,6 +37,7 @@ const legendData = computed(() => {
   return localSelectedIndex.value === 'heat_index'
     ? [
         { color: '#ffffff', range: 'Incomplete data' }, // Add Incomplete data with white color
+        { color: '#A9A9A9', range: 'Missing values' }, // Add Missing values with grey color
         { color: '#ffffcc', range: '< 0.2' },
         { color: '#ffeda0', range: '0.2 - 0.4' },
         { color: '#feb24c', range: '0.4 - 0.6' },
@@ -45,6 +46,7 @@ const legendData = computed(() => {
       ]
     : [
         { color: '#ffffff', range: 'Incomplete data' }, // Add Incomplete data with white color
+        { color: '#A9A9A9', range: 'Missing values' }, // Add Missing values with grey color
         { color: '#eff3ff', range: '< 0.2' },
         { color: '#bdd7e7', range: '0.2 - 0.4' },
         { color: '#6baed6', range: '0.4 - 0.6' },

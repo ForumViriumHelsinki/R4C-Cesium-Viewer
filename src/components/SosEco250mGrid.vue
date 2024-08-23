@@ -80,9 +80,20 @@ const updateGridColors = async (selectedIndex) => {
   const dataAvailable = isDataAvailable(selectedIndex);
 
   for (const entity of entities) {
-    const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
-    const color = indexValue !== undefined ? getColorForIndex(indexValue, selectedIndex) : Cesium.Color.WHITE.withAlpha(0.8);
-    entity.polygon.material = color;
+    // Check if the missing_values property is true
+    const isMissingValues = entity.properties['missing_values']?.getValue();
+
+    if (isMissingValues) {
+      // Color the entity grey if missing_values is true
+      entity.polygon.material = Cesium.Color.fromCssColorString('#A9A9A9').withAlpha(0.8);
+    } else {
+      // Proceed with normal color assignment if missing_values is not true
+      const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
+      const color = indexValue !== undefined 
+        ? getColorForIndex(indexValue, selectedIndex) 
+        : Cesium.Color.WHITE.withAlpha(0.8); // Default to white if no data
+      entity.polygon.material = color;
+    }
   }
 };
 
