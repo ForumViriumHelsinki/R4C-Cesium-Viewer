@@ -105,10 +105,14 @@
 </label>
 <label for="hideColdAreas" class="label" id="hideColdAreasLabel"  style="display:none;">Hide cold areas</label>
 
+  <!--  sensor map Link-->
+  <a href="https://bri3.fvh.io/opendata/r4c/r4c_all.html" class="label" id="sensorMapLink" target="_blank" rel="noopener noreferrer"> Sensor map </a>
+
+  <!--  sensor dashboard-->
+  <a href="https://iot.fvh.fi/grafana/d/aduw70oqqdon4c/r4c-laajasalo-and-koivukyla?orgId=6&refresh=30m" class="label" id="sensorDashboardLink" target="_blank" rel="noopener noreferrer"> Sensor Dashboard </a>
+
   <!--  flood Link-->
-<div>  
-  <a href="https://geo.fvh.fi/r4c/6fkgOUqn3/" class="label" id="floodLink" target="_blank" rel="noopener noreferrer" style="display:none;">Experimental flood simulations</a>
-</div>
+  <a href="https://geo.fvh.fi/r4c/6fkgOUqn3/" class="label" id="floodLink" target="_blank" rel="noopener noreferrer" style="display:none;"> Experimental flood simulations </a>
 
 
 </div>
