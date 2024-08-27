@@ -19,6 +19,8 @@
     <div class="source-note">
       Socioeconomic source data by<br>
       <a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a>
+      <br>
+      <a href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf" target="_blank">Methodology for Assessing Social Vulnerability</a>
     </div>
   </div>
 </template>
@@ -43,7 +45,7 @@ const indexOptions = [
   { text: 'Income', value: 'income' },
   { text: 'Information', value: 'info' },
   { text: 'Tenure', value: 'tenure' },
-  { text: 'Green Areas', value: 'green' },
+  { text: 'Green Space', value: 'green' },
   { text: 'Social Networks', value: 'social_networks' },
   { text: 'Overcrowding', value: 'overcrowding' },
 ];
@@ -70,12 +72,22 @@ const floodColors = [
   { color: '#08519c', range: '> 0.8' },
 ];
 
+// Define green space vulnerability colors with the desired gradient
+const greenSpaceColors = [
+  { color: '#ffffff', range: 'Incomplete data' }, // White for incomplete data
+  { color: '#006d2c', range: '< 0.2' },           // Darkest green for < 0.2
+  { color: '#31a354', range: '0.2 - 0.4' },       // Dark green for 0.2 - 0.4
+  { color: '#74c476', range: '0.4 - 0.6' },       // Medium green for 0.4 - 0.6
+  { color: '#a1d99b', range: '0.6 - 0.8' },       // Light green for 0.6 - 0.8
+  { color: '#e5f5e0', range: '> 0.8' },           // Very light green for > 0.8
+];
+
 // Define a mapping of indices to their corresponding color schemes
 const indexToColorScheme = {
   heat_index: heatColors,
   flood_index: floodColors,
   sensitivity: heatColors, // Sensitivity uses heat coloring
-  flood_exposure: floodColors,
+  flood_exposure: greenSpaceColors,
   flood_prepare: floodColors,
   flood_respond: floodColors,
   flood_recover: floodColors,

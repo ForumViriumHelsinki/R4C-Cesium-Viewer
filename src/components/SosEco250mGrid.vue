@@ -48,12 +48,21 @@ const floodColors = [
   { color: '#08519c', range: '> 0.8' },
 ];
 
+// Define green space vulnerability colors with reversed logic
+const greenSpaceColors = [
+  { color: '#006d2c', range: '< 0.2' },           // Darkest green for < 0.2
+  { color: '#31a354', range: '0.2 - 0.4' },       // Dark green for 0.2 - 0.4
+  { color: '#74c476', range: '0.4 - 0.6' },       // Medium green for 0.4 - 0.6
+  { color: '#a1d99b', range: '0.6 - 0.8' },       // Light green for 0.6 - 0.8
+  { color: '#e5f5e0', range: '> 0.8' },           // Very light green for > 0.8
+];
+
 // Define a mapping of indices to their corresponding color schemes
 const indexToColorScheme = {
   heat_index: heatColors,
   flood_index: floodColors,
   sensitivity: heatColors, // Sensitivity uses heat coloring
-  flood_exposure: floodColors,
+  flood_exposure: greenSpaceColors,
   flood_prepare: floodColors,
   flood_respond: floodColors,
   flood_recover: floodColors,
@@ -100,7 +109,7 @@ const loadGrid = async () => {
   );
 };
 
-// Function to update the colors of the grid based on the selected index
+// Function to update grid colors based on the selected index
 const updateGridColors = async (selectedIndex) => {
   const dataSourceService = new DataSource();
   const dataSource = dataSourceService.getDataSourceByName('250m_grid');
@@ -112,7 +121,7 @@ const updateGridColors = async (selectedIndex) => {
   for (const entity of entities) {
     const isMissingValues = entity.properties['missing_values']?.getValue();
 
-    if (isMissingValues) {
+    if (isMissingValues && selectedIndex !== 'flood_exposure') {
       entity.polygon.material = Cesium.Color.fromCssColorString('#A9A9A9').withAlpha(0.8);
     } else {
       const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
