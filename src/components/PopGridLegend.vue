@@ -18,8 +18,8 @@
     ></v-select>
     <div class="source-note">
       Socioeconomic source data by<br>
-    <a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a>
-</div>   
+      <a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a>
+    </div>
   </div>
 </template>
 
@@ -27,46 +27,87 @@
 import { ref, computed } from 'vue';
 import { defineEmits } from 'vue';
 
+// Define index options with their corresponding colors
 const indexOptions = [
   { text: 'Heat Vulnerability', value: 'heat_index' },
   { text: 'Flood Vulnerability', value: 'flood_index' },
+  { text: 'Sensitivity', value: 'sensitivity' },  // Add new indices as needed
+  { text: 'Flood Exposure', value: 'flood_exposure' },
+  { text: 'Flood Preparedness', value: 'flood_prepare' },
+  { text: 'Flood Response', value: 'flood_respond' },
+  { text: 'Flood Recovery', value: 'flood_recover' },
+  { text: 'Heat Exposure', value: 'heat_exposure' },
+  { text: 'Heat Preparedness', value: 'heat_prepare' },
+  { text: 'Heat Response', value: 'heat_respond' },
+  { text: 'Age', value: 'age' },
+  { text: 'Income', value: 'income' },
+  { text: 'Information', value: 'info' },
+  { text: 'Tenure', value: 'tenure' },
+  { text: 'Green Areas', value: 'green' },
+  { text: 'Social Networks', value: 'social_networks' },
+  { text: 'Overcrowding', value: 'overcrowding' },
 ];
 
-// Compute legend data based on the selected index
-const legendData = computed(() => {
-  return localSelectedIndex.value === 'heat_index'
-    ? [
-        { color: '#ffffff', range: 'Incomplete data' }, // Add Incomplete data with white color
-        { color: '#A9A9A9', range: 'Missing values' }, // Add Missing values with grey color
-        { color: '#ffffcc', range: '< 0.2' },
-        { color: '#ffeda0', range: '0.2 - 0.4' },
-        { color: '#feb24c', range: '0.4 - 0.6' },
-        { color: '#f03b20', range: '0.6 - 0.8' },
-        { color: '#bd0026', range: '> 0.8' },
-      ]
-    : [
-        { color: '#ffffff', range: 'Incomplete data' }, // Add Incomplete data with white color
-        { color: '#A9A9A9', range: 'Missing values' }, // Add Missing values with grey color
-        { color: '#eff3ff', range: '< 0.2' },
-        { color: '#bdd7e7', range: '0.2 - 0.4' },
-        { color: '#6baed6', range: '0.4 - 0.6' },
-        { color: '#3182bd', range: '0.6 - 0.8' },
-        { color: '#08519c', range: '> 0.8' },
-      ];
-});
+// Define heat vulnerability colors
+const heatColors = [
+  { color: '#ffffff', range: 'Incomplete data' },
+  { color: '#A9A9A9', range: 'Missing values' },
+  { color: '#ffffcc', range: '< 0.2' },
+  { color: '#ffeda0', range: '0.2 - 0.4' },
+  { color: '#feb24c', range: '0.4 - 0.6' },
+  { color: '#f03b20', range: '0.6 - 0.8' },
+  { color: '#bd0026', range: '> 0.8' },
+];
 
-const emit = defineEmits(['onIndexChange']);
+// Define flood vulnerability colors
+const floodColors = [
+  { color: '#ffffff', range: 'Incomplete data' },
+  { color: '#A9A9A9', range: 'Missing values' },
+  { color: '#eff3ff', range: '< 0.2' },
+  { color: '#bdd7e7', range: '0.2 - 0.4' },
+  { color: '#6baed6', range: '0.4 - 0.6' },
+  { color: '#3182bd', range: '0.6 - 0.8' },
+  { color: '#08519c', range: '> 0.8' },
+];
+
+// Define a mapping of indices to their corresponding color schemes
+const indexToColorScheme = {
+  heat_index: heatColors,
+  flood_index: floodColors,
+  sensitivity: heatColors, // Sensitivity uses heat coloring
+  flood_exposure: floodColors,
+  flood_prepare: floodColors,
+  flood_respond: floodColors,
+  flood_recover: floodColors,
+  heat_exposure: heatColors,
+  heat_prepare: heatColors,
+  heat_respond: heatColors,
+  age: heatColors, // Age uses heat coloring
+  income: heatColors, // Income uses heat coloring
+  info: heatColors, // Info uses heat coloring
+  tenure: heatColors, // Tenure uses heat coloring
+  green: heatColors, // Green areas use heat coloring
+  social_networks: floodColors, // Social networks use flood coloring
+  overcrowding: floodColors, // Overcrowding uses flood coloring
+};
 
 // Local state to bind to v-select
 const localSelectedIndex = ref('heat_index');
 
+// Compute legend data based on the selected index and the color scheme mapping
+const legendData = computed(() => indexToColorScheme[localSelectedIndex.value] || heatColors);
+
+const emit = defineEmits(['onIndexChange']);
+
+// Handle selection change and emit event
 const handleSelectionChange = (value) => {
   emit('onIndexChange', value);
 };
 
 // Compute the title based on the selected index
 const title = computed(() => {
-  return localSelectedIndex.value === 'heat_index' ? 'Heat Vulnerability' : 'Flood Vulnerability';
+  const selectedOption = indexOptions.find(option => option.value === localSelectedIndex.value);
+  return selectedOption ? selectedOption.text : 'Heat Vulnerability';
 });
 </script>
 
@@ -79,8 +120,8 @@ const title = computed(() => {
   border-radius: 4px;
   padding: 10px;
   z-index: 10;
-  border: 1px solid black; 
-	box-shadow: 3px 5px 5px black; 
+  border: 1px solid black;
+  box-shadow: 3px 5px 5px black;
 }
 
 .swatch {
