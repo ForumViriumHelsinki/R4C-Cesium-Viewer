@@ -73,7 +73,7 @@ const indexToColorScheme = {
   income: heatColors, // Income uses heat coloring
   info: heatColors, // Info uses heat coloring
   tenure: heatColors, // Tenure uses heat coloring
-  green: heatColors, // Green areas use heat coloring
+  green: greenSpaceColors, // Green areas use heat coloring
   social_networks: floodColors, // Social networks use flood coloring
   overcrowding: floodColors, // Overcrowding uses flood coloring
 };
@@ -121,7 +121,7 @@ const updateGridColors = async (selectedIndex) => {
   for (const entity of entities) {
     const isMissingValues = entity.properties['missing_values']?.getValue();
 
-    if (isMissingValues && selectedIndex !== 'flood_exposure') {
+    if (isMissingValues && (selectedIndex !== 'flood_exposure' && selectedIndex !== 'heat_exposure' && selectedIndex !== 'green') ) {
       entity.polygon.material = Cesium.Color.fromCssColorString('#A9A9A9').withAlpha(0.8);
     } else {
       const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;

@@ -7,6 +7,7 @@
 </template>
   
 <script>
+import { GridImageryProvider } from 'cesium';
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 
@@ -28,6 +29,8 @@ export default {
 
 		const entity = this.store.pickedEntity;
 
+		const view = this.store.view;
+
 		document.getElementById( 'printContainer' ).scroll( {
 			top: 0,
 			behavior: 'instant'
@@ -39,7 +42,7 @@ export default {
 			let oldMaterial = entity.polygon.material;
 			entity.polygon.material = new Cesium.Color( 1, 0.5, 0.5, 0.8 );
 			setTimeout( () => { entity.polygon.material = oldMaterial; }, 5000 );
-			printEntity( entity, entity.properties.posno );
+			printEntity( entity, entity.properties.posno, view );
 		}
 
 	},
@@ -80,7 +83,7 @@ const findPostalcodeEntity = ( dataSource, currentPostcode ) => {
 
 }
 
-const printEntity = ( entity, postno ) => {
+const printEntity = ( entity, postno, view ) => {
 
 		let toPrint = '<u>Found following properties & values:</u><br/>';
 
@@ -104,7 +107,7 @@ const printEntity = ( entity, postno ) => {
 
 						}   
 
-						addToPrint( toPrint, postno );           
+						addToPrint( toPrint, postno, view );           
 
 }
 
@@ -124,9 +127,9 @@ const goodForPrint = ( properties, i ) => {
     * @param {string} toPrint - The content to be added to the print container
     * @param {string} postno - The postal code associated with the content
     */  
-const addToPrint = ( toPrint, postno ) => {
+const addToPrint = ( toPrint, postno, view ) => {
 
-		if ( postno ) {
+		if ( postno  || view === 'grid' ) {
 
 			toPrint = toPrint + '<br/><br/><i>Click on objects to retrieve information.</i>';
     

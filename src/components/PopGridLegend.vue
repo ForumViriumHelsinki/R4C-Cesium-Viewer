@@ -74,7 +74,6 @@ const floodColors = [
 
 // Define green space vulnerability colors with the desired gradient
 const greenSpaceColors = [
-  { color: '#ffffff', range: 'Incomplete data' }, // White for incomplete data
   { color: '#006d2c', range: '< 0.2' },           // Darkest green for < 0.2
   { color: '#31a354', range: '0.2 - 0.4' },       // Dark green for 0.2 - 0.4
   { color: '#74c476', range: '0.4 - 0.6' },       // Medium green for 0.4 - 0.6
@@ -98,7 +97,7 @@ const indexToColorScheme = {
   income: heatColors, // Income uses heat coloring
   info: heatColors, // Info uses heat coloring
   tenure: heatColors, // Tenure uses heat coloring
-  green: heatColors, // Green areas use heat coloring
+  green: greenSpaceColors,
   social_networks: floodColors, // Social networks use flood coloring
   overcrowding: floodColors, // Overcrowding uses flood coloring
 };
