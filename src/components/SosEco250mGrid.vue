@@ -76,6 +76,7 @@ const indexToColorScheme = {
   green: greenSpaceColors, // Green areas use heat coloring
   social_networks: floodColors, // Social networks use flood coloring
   overcrowding: floodColors, // Overcrowding uses flood coloring
+  avgheatexposure: heatColors,
 };
 
 // Watcher to load or remove grid data source based on `showGrid` state
@@ -121,14 +122,30 @@ const updateGridColors = async (selectedIndex) => {
   for (const entity of entities) {
     const isMissingValues = entity.properties['missing_values']?.getValue();
 
-    if (isMissingValues && (selectedIndex !== 'flood_exposure' && selectedIndex !== 'heat_exposure' && selectedIndex !== 'green') ) {
+    if (isMissingValues && selectedIndex !== 'flood_exposure' && selectedIndex !== 'avgheatexposure' && selectedIndex !== 'green') {
       entity.polygon.material = Cesium.Color.fromCssColorString('#A9A9A9').withAlpha(0.8);
     } else {
-      const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
-      const color = indexValue !== undefined 
-        ? getColorForIndex(indexValue, selectedIndex) 
-        : Cesium.Color.WHITE.withAlpha(0.8);
-      entity.polygon.material = color;
+      if (selectedIndex === 'avgheatexposure') {
+        // Custom color scheme for avgheatexposure
+        const avgHeatExposureValue = entity.properties[selectedIndex]?.getValue();
+        if (avgHeatExposureValue !== undefined) {
+          entity.polygon.material = new Cesium.Color(
+            1, // Red component fixed at 1
+            1 - avgHeatExposureValue, // Green component decreases as avgheatexposure increases
+            0, // Blue component fixed at 0
+            avgHeatExposureValue // Alpha (opacity) is set to avgheatexposure value
+          );
+        } else {
+          entity.polygon.material = Cesium.Color.WHITE.withAlpha(0.8); // Default color if no value
+        }
+      } else {
+        // Generic color assignment for other indices
+        const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
+        const color = indexValue !== undefined 
+          ? getColorForIndex(indexValue, selectedIndex) 
+          : Cesium.Color.WHITE.withAlpha(0.8);
+        entity.polygon.material = color;
+      }
     }
   }
 };

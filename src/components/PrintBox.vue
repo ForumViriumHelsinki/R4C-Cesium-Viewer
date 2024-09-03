@@ -96,7 +96,7 @@ const printEntity = ( entity, postno, view ) => {
 			if ( goodForPrint( entity._properties, i ) ) {
 				if ( typeof entity._properties[ entity._properties._propertyNames[ i ] ]._value === 'number' ) {
 
-					toPrint = toPrint + entity._properties._propertyNames[ i ]  + ': ' +  entity._properties[ entity._properties._propertyNames[ i ] ]._value.toFixed( 1 ) + '<br/>';
+					toPrint = toPrint + entity._properties._propertyNames[ i ]  + ': ' +  entity._properties[ entity._properties._propertyNames[ i ] ]._value.toFixed( 2 ) + '<br/>';
 
 				} else {
 

@@ -2,18 +2,33 @@
   <div id="legend" v-if="legendData.length > 0">
     <div>
       <h3>{{ title }}</h3>
-      <div class="swatch" v-for="item in legendData" :key="item.range">
-        <div class="color-box" :style="{ backgroundColor: item.color }"></div>
-        <span>{{ item.range }}</span>
+      
+      <!-- Conditional rendering of the gradient legend for avgheatexposure -->
+      <div v-if="localSelectedIndex === 'avgheatexposure'" class="gradient-legend">
+        <div class="gradient-bar"></div>
+        <div class="gradient-labels">
+          <span>0.1</span>
+          <span>0.2</span>
+          <span>0.3</span>
+          <span>0.4</span>
+          <span>0.5</span>
+          <span>0.6</span>
+          <span>0.7</span>
+          <span>0.8</span>
+          <span>0.9</span>
+        </div>
+      </div>
+
+      <!-- Default legend display for non-gradient indices -->
+      <div v-else>
+        <div class="swatch" v-for="item in legendData" :key="item.range">
+          <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+          <span>{{ item.range }}</span>
+        </div>
       </div>
     </div>
 
-    <!-- Tooltip wrapping the v-select -->
-    <v-tooltip
-      v-if="selectedIndexDescription"  
-      :text="selectedIndexDescription" 
-      bottom
-    >
+    <v-tooltip v-if="selectedIndexDescription" :text="selectedIndexDescription" bottom>
       <template v-slot:activator="{ props }">
         <v-select
           v-bind="props"
@@ -30,8 +45,7 @@
 
     <div class="source-note">
       Socioeconomic source data by<br>
-      <a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a>
-      <br>
+      <a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a><br>
       <a href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf" target="_blank">Methodology for Assessing Social Vulnerability</a>
     </div>
   </div>
@@ -60,6 +74,7 @@ const indexOptions = [
   { text: 'Green Space', value: 'green', description: 'Greenspace availability. Considers the percentage of water area, green space, low vegetation, and tree coverage in the land area.' },
   { text: 'Social Networks', value: 'social_networks', description: 'Social network-based vulnerability. Includes the percentage of students, single-person households, and school-age children in the population.' },
   { text: 'Overcrowding', value: 'overcrowding', description: 'Overcrowding vulnerability. Based on the occupancy rate and the percentage of households with seven or more people.' },
+  { text: 'Landsat surface heat', value: 'avgheatexposure', description: 'Landsat surface heat index 2022-06-28' },
 ];
 
 // Define heat vulnerability colors
@@ -178,5 +193,39 @@ const selectedIndexDescription = computed(() => {
 
 .source-note a:hover {
   text-decoration: underline;
+}
+
+.gradient-legend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.gradient-bar {
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to right, 
+    #ffffcc,  /* Color for < 0.2 */
+    #ffeda0,  /* Color for 0.2 - 0.4 */
+    #feb24c,  /* Color for 0.4 - 0.6 */
+    #f03b20,  /* Color for 0.6 - 0.8 */
+    #bd0026   /* Color for > 0.8 */
+  );
+  border: 1px solid black;
+  border-radius: 4px;
+}
+
+.gradient-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.gradient-labels span {
+  font-size: 12px;
+  text-align: center;
+  flex: 1;
 }
 </style>
