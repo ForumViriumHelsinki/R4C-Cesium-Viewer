@@ -41,11 +41,11 @@ const heatColors = [
 ];
 
 const floodColors = [
-  { color: '#eff3ff', range: '< 0.2' },
-  { color: '#bdd7e7', range: '0.2 - 0.4' },
-  { color: '#6baed6', range: '0.4 - 0.6' },
-  { color: '#3182bd', range: '0.6 - 0.8' },
-  { color: '#08519c', range: '> 0.8' },
+  { color: '#c6dbef', range: '< 0.2' },  // More saturated light blue
+  { color: '#9ecae1', range: '0.2 - 0.4' },  // Slightly darker blue
+  { color: '#6baed6', range: '0.4 - 0.6' },  // Mid-tone blue
+  { color: '#3182bd', range: '0.6 - 0.8' },  // Darker blue
+  { color: '#08519c', range: '> 0.8' },  // Deep blue
 ];
 
 // Define green space vulnerability colors with reversed logic
