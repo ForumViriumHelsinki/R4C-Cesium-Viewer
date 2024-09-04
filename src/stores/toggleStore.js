@@ -19,7 +19,6 @@ export const useToggleStore = defineStore( 'toggle', {
 		hideColdAreas: false,
 		landCover: false,
 		switchView: false,
-		showSensorData: false,  
 		surveyPlaces: false,
 		hsyYear: 2022                                                
 	} ),
@@ -74,9 +73,6 @@ export const useToggleStore = defineStore( 'toggle', {
 		},
 		setSwitchView( switchView ) {
 			this.switchView = switchView;
-		},
-		setShowSensorData( show ) {
-			this.showSensorData = show;
 		},
 		setSurveyPlaces( show ) {
 			this.surveyPlaces = show;

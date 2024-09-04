@@ -24,10 +24,18 @@ export default class Plot {
 			document.getElementById( 'areaSelect' ).style.visibility = 'visible';
       
 		}
+
+		if ( this.toggleStore.landCover ) {
+
+			document.getElementById( 'pieChartContainer' ).style.visibility = 'visible';
+			document.getElementById( 'HSYSelect' ).style.visibility = 'visible';
+			document.getElementById( 'YearSelect' ).style.visibility = 'visible';
+
+		}
   
 		if ( this.store.view != 'capitalRegion' ) {
 			// only show scatter plot selects if trees are not visible
-			if ( !document.getElementById( 'showTreesToggle' ).checked ) {
+			if ( !this.toggleStore.showTrees ) {
 
 				document.getElementById( 'scatterPlotContainer' ).style.visibility = 'visible';
 				document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
@@ -35,6 +43,7 @@ export default class Plot {
        
 			} else {
 
+				document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'visible';
 				this.toggleBearingSwitchesVisibility( 'visible' );
 
 			}
@@ -64,12 +73,16 @@ export default class Plot {
  * */
 	hideAllPlots() {
 
+		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'heatHistogramContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'areaSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'hsyBuildingChartContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'hidden';
+		document.getElementById( 'pieChartContainer' ).style.visibility = 'hidden';
+		document.getElementById( 'HSYSelect' ).style.visibility = 'hidden';
+		document.getElementById( 'YearSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
 		this.toggleBearingSwitchesVisibility( 'hidden' );

@@ -91,13 +91,6 @@
 </label>
 <label for="switchView" class="label" id="switchViewLabel" style="display:none;">2D view</label>
 
-  <!--  showSensorData-->
-<label class="switch" id = "showSensorDataSwitch" >
-  <input type="checkbox" id="showSensorDataToggle" value="showSensorData" >
-  <span class="slider round"></span>
-</label>
-<label for="showSensorData" class="label">Sensor data</label>
-
   <!-- hideColdAreasSwitch-->
 <label class="switch" id = "hideColdAreasSwitch"  style="display:none;">
 	<input type="checkbox" id="hideColdAreasToggle" value="hideColdAreas" >
@@ -195,7 +188,6 @@ export default {
 			document.getElementById( 'hideLowToggle' ).addEventListener( 'change', this.filterBuildingsEvent );
 			document.getElementById( 'showVegetationToggle' ).addEventListener( 'change', this.loadVegetationEvent );
 			document.getElementById( 'showOtherNatureToggle' ).addEventListener( 'change', this.loadOtherNatureEvent );
-			document.getElementById( 'showSensorDataToggle' ).addEventListener( 'change', this.loadSensorDataEvent );
 			document.getElementById( 'switchViewToggle' ).addEventListener( 'change', this.switchViewEvent );
 			document.getElementById( 'showTreesToggle' ).addEventListener( 'change', this.loadTreesEvent );
 			document.getElementById( 'printToggle' ).addEventListener( 'change', this.printEvent );
@@ -336,30 +328,6 @@ export default {
 
 		},
 
-
-		/**
- * This function to show or hide sensordata entities on the map based on the toggle button state
- *
- */
-		loadSensorDataEvent() {
-
-			// Get the state of the showSensorData toggle button
-			const showSensorData = document.getElementById( 'showSensorDataToggle' ).checked;
-			this.toggleStore.setShowSensorData( showSensorData );
-
-			// If showSensorData toggle is on
-			if ( showSensorData ) {
-        
-				const sensorService = new Sensor(); 
-				sensorService.loadSensorData();
-        
-			} else { 
-        
-				this.dataSourceService.changeDataSourceShowByName( 'SensorData', false );
-
-			}
-
-		},
 
 		/**
  * This function to show or hide tree entities on the map based on the toggle button state

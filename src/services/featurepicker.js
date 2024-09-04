@@ -87,12 +87,6 @@ export default class FeaturePicker {
 		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
 		this.datasourceService.removeDataSourcesAndEntities();
 
-		if ( this.toggleStore.showSensorData ) {
-
-			this.sensorService.loadSensorData();
-
-		}
-
 		if ( this.store.view == 'capitalRegion' ) {
 
 			await this.capitalRegionService.loadCapitalRegionElements();

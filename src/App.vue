@@ -63,15 +63,9 @@ const view = computed(() => globalStore.view);
 	float: right;
 }
 
-body, html
-{
-	margin: 0px;
-	height: 100%;
-}
-
 #canvasScalerDiv {
 	width: 100%;
-	height: 100%;
+	height: 835px;
 }
 
 #app {
