@@ -122,11 +122,16 @@ export default {
 
             if (checked) {
 
-				this.datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
+				this.datasourceService.changeDataSourceShowByName( 'PopulationGrid', false );
 				eventBus.$emit('create250mGrid'); // Trigger the simulation to start
 
             } else {
-                // ... (logic to remove 250mGrid if needed)
+
+				this.datasourceService.removeDataSourcesByNamePrefix( '250m_grid' );
+				document.getElementById( 'bar-chart-container' ).style.visibility = 'hidden';
+				document.getElementById( 'legend' ).style.visibility = 'hidden';
+				this.datasourceService.changeDataSourceShowByName( 'PopulationGrid', true );
+	
             }
 
 		},			
