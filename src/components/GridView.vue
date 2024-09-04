@@ -49,6 +49,7 @@
 
 	<SosEco250mGrid />
 	<SurveyScatterPlot />
+	<VulnerabilityChart/>
 
 </template>
   
@@ -63,6 +64,7 @@ import Populationgrid from '../services/populationgrid.js';
 import EspooSurvey from '../services/espooSurvey.js';
 import SurveyScatterPlot from './SurveyScatterPlot.vue';
 import SosEco250mGrid from './SosEco250mGrid.vue'; // Import the 250mGrid component
+import VulnerabilityChart from './VulnerabilityChart.vue';
 
 export default {
 	data() {
@@ -82,7 +84,8 @@ export default {
 	},
 	components: {
 		SurveyScatterPlot,
-		SosEco250mGrid
+		SosEco250mGrid,
+		VulnerabilityChart
 	}, 	
 	beforeUnmount() {
 		this.unsubscribe();

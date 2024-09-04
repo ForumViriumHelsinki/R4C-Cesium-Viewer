@@ -12,8 +12,12 @@ export const usePropsStore = defineStore( 'props', {
 		buildingsDatasource: null,
 		postalcodeHeatTimeseries: null,
 		buildingHeatTimeseries: null,
+		heatFloodVulnerabilityEntity: null
 	} ),
 	actions: {
+		setHeatFloodVulnerability( entity ) {
+			this.heatFloodVulnerabilityEntity = entity;
+		},
 		setGridBuildingProps( props ) {
 			this.gridBuildingProps = props;
 		},	

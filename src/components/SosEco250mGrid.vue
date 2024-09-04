@@ -76,7 +76,6 @@ const indexToColorScheme = {
   green: greenSpaceColors, // Green areas use heat coloring
   social_networks: floodColors, // Social networks use flood coloring
   overcrowding: floodColors, // Overcrowding uses flood coloring
-  avgheatexposure: heatColors,
 };
 
 // Watcher to load or remove grid data source based on `showGrid` state

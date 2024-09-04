@@ -13,12 +13,13 @@ import { useGlobalStore } from '../stores/globalStore.js';
 
 export default {
 	mounted() {
-		this.unsubscribe = eventBus.$on( 'entityPrintEvent', this.entityPrint );
-		this.unsubscribe = eventBus.$on( 'geocodingPrintEvent', this.geocodingPrint );
-		this.store = useGlobalStore();
+		this.unsubscribeEntityPrint = eventBus.$on('entityPrintEvent', this.entityPrint);
+  		this.unsubscribeGeocodingPrint = eventBus.$on('geocodingPrintEvent', this.geocodingPrint);
+  		this.store = useGlobalStore();
 	},
 	beforeUnmount() {
-		this.unsubscribe();
+  		if (this.unsubscribeEntityPrint) this.unsubscribeEntityPrint();
+  		if (this.unsubscribeGeocodingPrint) this.unsubscribeGeocodingPrint();
 	},
 	methods: {
 	/**
@@ -31,12 +32,13 @@ export default {
 
 		const view = this.store.view;
 
+		if ( entity._polygon && entity.properties && view !== 'grid' ) {
+
+
 		document.getElementById( 'printContainer' ).scroll( {
 			top: 0,
 			behavior: 'instant'
 		} );
-
-		if ( entity._polygon && entity.properties ) {
 
 			//Highlight for clicking...
 			let oldMaterial = entity.polygon.material;

@@ -8,12 +8,14 @@ import { findAddressForBuilding } from './address.js';
 import ElementsDisplay from './elementsDisplay.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
 import Helsinki from './helsinki.js';
 import CapitalRegion from './capitalRegion.js';
 import Sensor from './sensor.js';
 import View from './view.js';
 import ColdArea from './coldarea.js';
 import EventEmitter from './eventEmitter.js';
+import { eventBus } from '../services/eventEmitter.js';
 
 export default class FeaturePicker {
 	constructor( ) {
@@ -148,6 +150,14 @@ export default class FeaturePicker {
 		this.removeEntityByName( 'coldpoint' );
 		this.removeEntityByName( 'currentLocation' );
 		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
+
+		const propStore = usePropsStore();
+		propStore.setHeatFloodVulnerability(id.properties ?? null);
+
+		if ( id.properties.grid_id ) {
+			propStore.setHeatFloodVulnerability( id.properties );
+			eventBus.$emit( 'createHeatFloodVulnerabilityChart' );
+		}
     
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
 		if ( id.properties.posno && this.store.level != 'building' ) {

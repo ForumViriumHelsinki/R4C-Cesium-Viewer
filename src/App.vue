@@ -4,7 +4,9 @@
   <CesiumViewer />
   <GridView />
   <Geocoding />
-  <PrintBox />
+	<div v-if="view !== 'grid'">
+      <PrintBox />
+    </div>
   <PostalCodeView />
 
   <!-- Add Logo -->		
@@ -22,6 +24,11 @@ import Geocoding from './components/Geocoding.vue';
 import PrintBox from './components/PrintBox.vue';
 import GridView from './components/GridView.vue';
 import PostalCodeView from './components/PostalCodeView.vue';
+import { useGlobalStore } from './stores/globalStore.js';
+import { computed } from 'vue';
+
+const globalStore = useGlobalStore();
+const view = computed(() => globalStore.view);
 
 </script>
 

@@ -119,8 +119,6 @@ export default {
 
 		createBuildingGridChart( buildingProps ) {
 
-			console.log( this.store.buildAddress );
-
 			this.plotService.initializePlotContainerForGrid( 'buildingChartContainer' );
 			const margin = { top: 50, right: 20, bottom: 30, left: 40 };
 			const width = 300 - margin.left - margin.right;
