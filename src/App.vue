@@ -65,7 +65,7 @@ const view = computed(() => globalStore.view);
 
 #canvasScalerDiv {
 	width: 100%;
-	height: 835px;
+	height: 100%;
 }
 
 #app {

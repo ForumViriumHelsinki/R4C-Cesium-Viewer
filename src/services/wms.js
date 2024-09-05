@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
-import { useToggleStore } from '../stores/toggleStore';
+import { usePropsStore } from '../stores/propsStore';
+import { useGlobalStore } from '../stores/globalStore';
 
 export default class Wms {
 	constructor() {
@@ -32,11 +33,20 @@ export default class Wms {
 		return new Cesium.ImageryLayer( provider );
 	}
 
+	reCreateHSYImageryLayer( ) {
+
+		const store = useGlobalStore();
+
+		store.cesiumViewer.imageryLayers.removeAll();
+		store.cesiumViewer.imageryLayers.add(
+			this.createHSYImageryLayer( )
+		);		
+	}
+
 }
 
-
 const createLayersForHsyLandcover = ( ) => {
-	const store = useToggleStore();
+	const store = usePropsStore();
 	const year = store.hsyYear;
     const layerNames = [
         'asuminen_ja_maankaytto:maanpeite_avokalliot',

@@ -29,7 +29,6 @@ app.post( '/api/cache/set', async ( req, res ) => {
 
 // New Paavo endpoint
 app.get('/paavo', async (req, res) => {
-	console.log("hi we got request")
     const wfsUrl = 'https://geo.stat.fi/geoserver/postialue/wfs';
     const params = new URLSearchParams({
         service: 'WFS',
@@ -65,7 +64,6 @@ app.get('/paavo', async (req, res) => {
 });
 
 app.get( '/wms/proxy', async ( req, res ) => {
-		console.log("hi we got request")
 
 	// The base URL of the WMS server you're proxying
 	const baseUrl = 'https://kartta.hsy.fi/geoserver/wms';

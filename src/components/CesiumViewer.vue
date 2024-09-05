@@ -1,13 +1,45 @@
 <template>
-  <div id="cesiumContainer"></div>
-  <HeatHistogram />
-  <SocioEconomics />
-  <Scatterplot />
-  <HSYScatterplot />
-  <BuildingComponent />
-  <NearbyTreeArea />
-  <PieChart />
-  <DisclaimerPopup />
+  <v-container fluid class="d-flex flex-column pa-0 ma-0">
+    <!-- Cesium Container -->
+    <div id="cesiumContainer"></div>
+
+    <!-- Layout on top of Cesium -->
+    <v-container fluid class="d-flex flex-column pa-0 ma-0" style="position: relative; z-index: 10;">
+      <!-- Row 7 -->
+      <v-row no-gutters class="pa-0 ma-0">
+        <v-col cols="6" class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
+          <HeatHistogram />
+          <BuildingComponent />
+        </v-col>
+        <v-col cols="6" class="d-flex align-end pa-0 ma-0" style="z-index: 20;">
+          <SocioEconomics />
+        </v-col>
+      </v-row>
+
+      <v-spacer></v-spacer>
+
+      <!-- Row 6 -->
+      <v-row no-gutters class="pa-0 ma-0">
+        <v-col cols="6" class="d-flex align-start pa-0 ma-0" style="z-index: 20;">
+          <Landcover />
+        </v-col>
+      </v-row>
+
+      <v-spacer></v-spacer>
+
+      <!-- Row 1 -->
+      <v-row no-gutters class="pa-0 ma-0">
+        <v-col cols="6" class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
+          <Scatterplot />
+          <HSYScatterplot />
+          <NearbyTreeArea />
+        </v-col>
+      </v-row>
+    </v-container>
+
+    <!-- Disclaimer Popup -->
+    <DisclaimerPopup class="disclaimer-popup" />
+  </v-container>
 </template>
 
 <script>
@@ -25,7 +57,7 @@ import SocioEconomics from './SocioEconomics.vue';
 import Scatterplot from './Scatterplot.vue';
 import HSYScatterplot from './HSYScatterplot.vue';
 import BuildingComponent from './Building.vue';
-import PieChart from './PieChart.vue';
+import Landcover from './Landcover.vue';
 import NearbyTreeArea from './NearbyTreeArea.vue';
 import DisclaimerPopup from './DisclaimerPopup.vue';
 import { useGlobalStore } from '../stores/globalStore.js';
@@ -57,7 +89,7 @@ export default {
 		HSYScatterplot,
 		BuildingComponent,
 		NearbyTreeArea,
-		PieChart,
+		Landcover,
 		DisclaimerPopup
 	},  
 	methods: {

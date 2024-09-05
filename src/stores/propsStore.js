@@ -12,9 +12,18 @@ export const usePropsStore = defineStore( 'props', {
 		buildingsDatasource: null,
 		postalcodeHeatTimeseries: null,
 		buildingHeatTimeseries: null,
-		heatFloodVulnerabilityEntity: null
+		heatFloodVulnerabilityEntity: null,
+		postalCodeData: null,
+		hsyYear: 2022,
+		hsySelectArea: 'Askisto',   
 	} ),
 	actions: {
+		setHSYSelectArea( area ) {
+			this.hsySelectArea = area;
+		},
+		setPostalCodeData( data ) {
+			this.postalCodeData = data;
+		},		
 		setHeatFloodVulnerability( entity ) {
 			this.heatFloodVulnerabilityEntity = entity;
 		},
@@ -53,7 +62,9 @@ export const usePropsStore = defineStore( 'props', {
 
 		setBuildingHeatTimeseries( heatTimeseries ) {
 			this.buildingHeatTimeseries = heatTimeseries;
+		},	
+		setHSYYear( year ) {
+			this.hsyYear = year;
 		}
-
 	},
 } );

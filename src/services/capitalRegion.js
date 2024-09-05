@@ -1,6 +1,7 @@
 
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
 import DataSource from './datasource.js';
 import HSYBuilding from './hsybuilding.js';
 import ElementsDisplay from './elementsDisplay.js';
@@ -10,6 +11,7 @@ export default class CapitalRegion {
 	constructor( ) {
 		this.toggleStore = useToggleStore();
 		this.store = useGlobalStore();
+		this.propsStore = usePropsStore();
 		this.viewer = this.store.cesiumViewer;
 		this.hSYBuildingService = new HSYBuilding();
 		this.datasourceService = new DataSource();
@@ -34,7 +36,7 @@ export default class CapitalRegion {
 		if ( this.toggleStore.landCover ) {
 
 			const landcoverService = new Landcover();
-			landcoverService.emitLandcoverEvent();
+			landcoverService.emitLandcoverEvents();
 
 		}
 
@@ -45,6 +47,7 @@ export default class CapitalRegion {
 	addPostalCodeDataToPinia( ) {
 
 		const dataSource = this.datasourceService.getDataSourceByName( 'PostCodes' );
-		this.store.setPostalCodeData( dataSource );
+		this.propsStore.setPostalCodeData( dataSource );
+
 	}     
 }

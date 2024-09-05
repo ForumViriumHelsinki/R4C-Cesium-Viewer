@@ -80,13 +80,11 @@ export default class Plot {
 		document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'hsyBuildingChartContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'hidden';
-		document.getElementById( 'pieChartContainer' ).style.visibility = 'hidden';
-		document.getElementById( 'HSYSelect' ).style.visibility = 'hidden';
-		document.getElementById( 'YearSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
 		this.toggleBearingSwitchesVisibility( 'hidden' );
 		document.getElementById( 'scatterPlotContainer' ).style.visibility = 'hidden';
+		document.getElementById( 'scatterPlotContainerHSY' ).style.visibility = 'hidden';
 		document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
 		document.getElementById( 'numericalSelect' ).value = 'measured_height';
 		this.toggleHSYScatterPlot( 'hidden' );

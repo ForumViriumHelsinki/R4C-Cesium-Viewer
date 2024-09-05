@@ -1,181 +1,70 @@
+<!-- Piechart.vue -->
 <template>
-    <div id="pieChartContainer">
-    </div>
+  <div id="pieChartContainer"></div>
+</template>
 
-    <select id="HSYSelect" @change="onHSYSelectChange">
-    </select>
-
-	<select id="YearSelect" @change="onYearSelectChange">
-    </select>
-  </template>
-  
-<script>
-import { eventBus } from '../services/eventEmitter.js';
-import * as d3 from 'd3'; // Import D3.js
+<script setup>
+import * as d3 from 'd3';
+import { onMounted, onBeforeUnmount } from 'vue';
+import Plot from '../services/plot.js';
+import { usePropsStore } from '../stores/propsStore.js';
 import { useGlobalStore } from '../stores/globalStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import Plot from '../services/plot.js'; 
-import Wms from '../services/wms';
-  
-export default {   
-	data() {
-		return {
-			datasource: [],
-		};
-	},    
-	mounted() {
-		this.unsubscribe = eventBus.$on( 'newPieChart', this.newPieChart );
-		this.store = useGlobalStore();
-		this.toggleStore = useToggleStore();
-	},
-	beforeUnmount() {
-		this.unsubscribe();
-	},
-	methods: {
-		newPieChart( ) {
-			if ( this.store.level == 'postalCode' ) {
-				this.datasource = this.store.postalCodeData;
-				populateHSYSelect( this.datasource );
-				populateYearSelect( );
-				createPieChart( this.datasource, this.store.nameOfZone._value, this.toggleStore.hsyYear );
-			} else {
-				// Hide or clear the visualization when not visible
-				// Example: call a method to hide or clear the D3 visualization
-				clearPieChart();
-			}
-		}, 
-		onHSYSelectChange( ) {
+import { eventBus } from '../services/eventEmitter.js';
 
-			createPieChart( this.datasource, this.store.nameOfZone._value, this.toggleStore.hsyYear );
+// Pinia store
+const propsStore = usePropsStore();
+const globalStore = useGlobalStore();
 
-		},
+const createPieChart = ( ) => {
 
-		onYearSelectChange( ) {
+	const datasource = propsStore.postalCodeData;
+	const nameOfZone = globalStore.nameOfZone._value;
+	const year = propsStore.hsyYear;
+	const area = propsStore.hsySelectArea;
 
-			this.toggleStore.setHSYYear( document.getElementById( 'YearSelect' ).value );
-			this.store.cesiumViewer.imageryLayers.removeAll();
-			const wmsService = new Wms();
-			this.store.cesiumViewer.imageryLayers.add(
-				wmsService.createHSYImageryLayer( )
-			);
-			createPieChart( this.datasource, this.store.nameOfZone._value, this.toggleStore.hsyYear );
+	const plotService = new Plot();
+	plotService.initializePlotContainerForGrid( 'pieChartContainer' );
 
-		},		
-		clearPieChart() {
-			// Remove or clear the D3.js visualization
-			// Example:
-			d3.select( '#pieChartContainer' ).select( 'svg' ).remove();
-		},
-	},
-};
+	// Assuming firstData and secondData are already fetched and processed
+	const labels = [ 'trees20m', 'trees15-20m', 'trees10-15m', 'trees2-10m', 'vegetation', 'water', 'fields', 'rocks', 'other', 'bareland', 'buildings', 'dirtroads', 'pavedroads' ];
+	const colors = [ '#326428', '#327728', '#328228', '#32a028', '#b2df43', '#6495ed', '#ffd980', '#bfbdc2', '#857976', '#cd853f', '#d80000', '#824513', '#000000' ];
 
-const populateHSYSelect = ( datasource ) => {
-			document.getElementById( 'HSYSelect' ).style.visibility = 'visible';
-			const selectElement = document.getElementById( 'HSYSelect' );
-			const nimiValues = extractNimiValues( datasource );
-			const fragment = document.createDocumentFragment();
+	const firstData = getLandCoverDataForArea( nameOfZone, year, datasource );
+	const secondData = getLandCoverDataForArea( area, year, datasource );
+	const margin = {top: 20, right: 10, bottom: 10, left: 10};
+	const width = 400 - margin.left - margin.right;
+	const height = 200 - margin.top - margin.bottom;
+	const radius = Math.min( width, height ) / 2.5; // Adjust as needed
 
-			nimiValues.forEach( nimi => {
-				const option = document.createElement( 'option' );
-				option.textContent = nimi;
-				option.value = nimi;
-				fragment.appendChild( option );
-			} );
+	const pie = d3.pie().sort( null ).value( d => d.value );
+	const arc = d3.arc().innerRadius( 0 ).outerRadius( radius );
 
-			selectElement.appendChild( fragment );
-		}
+	// First pie chart data setup
+	const firstPieData = pie( firstData.map( ( value, index ) => ( { value: value, label: labels[index], zone: nameOfZone } ) ) );
 
-const extractNimiValues = (  datasource )  => {
-			let nimiValuesSet = new Set();
-			// Assuming dataSource._entityCollection._entities._array is the array you mentioned
-			const entitiesArray = datasource._entityCollection._entities._array;
+	// Second pie chart data setup
+	const secondPieData = pie( secondData.map( ( value, index ) => ( { value: value, label: labels[index], zone: area } ) ) );
 
-			// Check if entitiesArray exists and is an array
-			if ( Array.isArray( entitiesArray ) ) {
-				// Loop through each entity in the array
-				for ( let i = 0; i < entitiesArray.length; i++ ) {
-					const entity = entitiesArray[i];
+	const svg = plotService.createSVGElement( margin, width, height, '#pieChartContainer' );
 
-					// Safely access the ._nimi._value property
-					if ( entity && entity._properties && entity._properties._nimi && typeof entity._properties._nimi._value !== 'undefined' ) {
-						nimiValuesSet.add( entity._properties._nimi._value );
-					}
-				}
-			}
-            
-			return Array.from( nimiValuesSet ).sort();
-		}
+	// Translate pies to be centered vertically and positioned horizontally
+	const xOffsetFirstPie = width / 4; // Keeps existing horizontal positioning for the first pie
+	const xOffsetSecondPie = 3 * width / 4; // Keeps existing horizontal positioning for the second pie
+	const yOffset = height / 2; // New: Centers pies vertically
 
-const createPieChart = ( datasource, nameOfZone, year ) => {
-
-			const plotService = new Plot();
-			plotService.initializePlotContainerForGrid( 'pieChartContainer' );
-
-			// Assuming firstData and secondData are already fetched and processed
-			const labels = [ 'trees20m', 'trees15-20m', 'trees10-15m', 'trees2-10m', 'vegetation', 'water', 'fields', 'rocks', 'other', 'bareland', 'buildings', 'dirtroads', 'pavedroads' ];
-			const colors = [ '#326428', '#327728', '#328228', '#32a028', '#b2df43', '#6495ed', '#ffd980', '#bfbdc2', '#857976', '#cd853f', '#d80000', '#824513', '#000000' ];
-
-			const firstData = getLandCoverDataForArea( nameOfZone, year, datasource );
-			const selectedNimi = document.getElementById( 'HSYSelect' ).value; 
-			const secondData = getLandCoverDataForArea( selectedNimi, year, datasource );
-			const margin = {top: 20, right: 10, bottom: 10, left: 10};
-			const width = 400 - margin.left - margin.right;
-			const height = 200 - margin.top - margin.bottom;
-			const radius = Math.min( width, height ) / 2.5; // Adjust as needed
-
-			const pie = d3.pie().sort( null ).value( d => d.value );
-			const arc = d3.arc().innerRadius( 0 ).outerRadius( radius );
-
-			// First pie chart data setup
-			const firstPieData = pie( firstData.map( ( value, index ) => ( { value: value, label: labels[index], zone: nameOfZone } ) ) );
-
-			// Second pie chart data setup
-			const secondPieData = pie( secondData.map( ( value, index ) => ( { value: value, label: labels[index], zone: selectedNimi } ) ) );
-
-			const svg = plotService.createSVGElement( margin, width, height, '#pieChartContainer' );
-
-			// Translate pies to be centered vertically and positioned horizontally
-			const xOffsetFirstPie = width / 4; // Keeps existing horizontal positioning for the first pie
-			const xOffsetSecondPie = 3 * width / 4; // Keeps existing horizontal positioning for the second pie
-			const yOffset = height / 2; // New: Centers pies vertically
-
-			// Initialize tooltip using the Plot service
-			const tooltip = plotService.createTooltip( '#pieChartContainer' );
-			createPie( svg, '.firstPie', firstPieData, colors, arc, xOffsetFirstPie, yOffset, tooltip, plotService );
-			createPie( svg, '.secondPie', secondPieData, colors, arc, xOffsetSecondPie, yOffset, tooltip, plotService );
-			plotService.addTitle( svg, `Compare HSY 2022 Landcover in ${nameOfZone} to:`, width / 2, margin );  
+	// Initialize tooltip using the Plot service
+	const tooltip = plotService.createTooltip( '#pieChartContainer' );
+	createPie( svg, '.firstPie', firstPieData, colors, arc, xOffsetFirstPie, yOffset, tooltip, plotService );
+	createPie( svg, '.secondPie', secondPieData, colors, arc, xOffsetSecondPie, yOffset, tooltip, plotService );
+	plotService.addTitle( svg, `Compare HSY ${year} Landcover in ${nameOfZone} to:`, width / 2, margin );  
            
-		}
+}
 
 const clearPieChart = ()  => {
 	// Remove or clear the D3.js visualization
 	// Example:
 	d3.select( '#pieChartContainer' ).select( 'svg' ).remove();
 }
-
-const populateYearSelect = () => {
-    document.getElementById('YearSelect').style.visibility = 'visible';
-
-    const selectElement = document.getElementById('YearSelect');
-
-    // Check if options already exist
-    if (selectElement.options.length > 0) {
-        return; // Exit function early to avoid adding duplicates
-    }
-
-    const yearValues = new Set([2022, 2020, 2018, 2016]); // Unique year values
-
-    const fragment = document.createDocumentFragment();
-    yearValues.forEach(year => {
-        const option = document.createElement('option');
-        option.textContent = year;
-        option.value = year;
-        fragment.appendChild(option);
-    });
-
-    selectElement.appendChild(fragment);
-}
-
         		/**
  * Get total area of district properties by district data source name and district id and list of property keys
  * 
@@ -274,35 +163,31 @@ const createPie = ( svg, name, data, colors, arc, xOffset, yOffset, tooltip, plo
 				} )
 				.on( 'mouseout', () => plotService.handleMouseout( tooltip ) );
 		}
+
+const recreatePieChart = () => {
+  clearPieChart();
+  createPieChart();
+};
+
+onMounted(() => {
+  createPieChart();
+  eventBus.$on('recreate piechart', recreatePieChart);
+});
+
+onBeforeUnmount(() => {
+  clearPieChart();
+  eventBus.$off('recreate piechart', recreatePieChart);
+});
+
 </script>
-  
-  <style>
-  #pieChartContainer {  
-    position: fixed;
-    top: 295px;
-	right: 1px;
-    width: 400px;
-    height: 200px; 
-    visibility: hidden;
-    font-size: smaller;
-    border: 1px solid black;
-    box-shadow: 3px 5px 5px black; 
-    background-color: white;
-  }
 
-  #HSYSelect {
-    position: fixed;
-    top: 295px;
-    right: 1px;
-    font-size: smaller;
-    visibility: hidden;
+<style>
+#pieChartContainer {  
+  width: 100%;
+  height: 200px; 
+  font-size: smaller;
+  border: 1px solid black;
+  box-shadow: 3px 5px 5px black; 
+  background-color: white;
 }
-
-  #YearSelect {
-    position: fixed;
-    top: 295px;
-    right: 220px;
-    font-size: smaller;
-    visibility: hidden;
-}
-  </style>
+</style>

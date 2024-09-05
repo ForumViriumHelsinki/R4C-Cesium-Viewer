@@ -1,6 +1,6 @@
 import { useGlobalStore } from '../stores/globalStore.js';
 import WMS from './wms.js';
-import EventEmitter from './eventEmitter.js';
+import { eventBus } from './eventEmitter.js';
 import Plot from './plot.js';
 
 export default class Landcover {
@@ -16,20 +16,19 @@ export default class Landcover {
 			this.wmsService.createHSYImageryLayer( )
 		);
 
-		this.emitLandcoverEvent();
+		this.emitLandcoverEvents();
 
 	}
 
-	emitLandcoverEvent() {
+	emitLandcoverEvents() {
 
-		const eventEmitterService = new EventEmitter();
-		eventEmitterService.emitPieChartEvent( );  
+		eventBus.$emit( 'showLandcover' ); 
+
 	}
 
 	removeLandcover() {
 
-		const plotService = new Plot();
-		plotService.toggleLandCoverChart( 'hidden' );
+		eventBus.$emit( 'hideLandcover' ); 
 		this.viewer.imageryLayers.removeAll();
 
 		this.viewer.imageryLayers.add(

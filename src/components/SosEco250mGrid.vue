@@ -18,7 +18,6 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
 import DataSource from '../services/datasource.js';
 import * as Cesium from 'cesium';
 import { eventBus } from '../services/eventEmitter.js';
