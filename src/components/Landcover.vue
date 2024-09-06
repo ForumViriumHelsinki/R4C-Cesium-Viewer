@@ -1,6 +1,6 @@
 <template>
-  <v-container fluid>
-    <v-row v-if="showLandcoverComponents" no-guttersclass="pa-0 ma-0">
+  <v-container fluid v-if="showComponents">
+    <v-row no-guttersclass="pa-0 ma-0">
       <v-col cols="3" class="pa-0 ma-0" style="position: fixed; top: 295px; right: 1px; width: 400px; height: 200px; visibility: hidden; font-size: smaller; border: 1px solid black; box-shadow: 3px 5px 5px black; background-color: white;">
         <PieChart />
       </v-col>
@@ -31,18 +31,18 @@ export default {
     PieChart,
   },
   setup() {
-    const showLandcoverComponents = ref(false);
+    const showComponents = ref(false);
     const store = useGlobalStore();
 
     onMounted(() => {
       eventBus.$on('showLandcover', () => {
         if (store.level === 'postalCode') {
-          showLandcoverComponents.value = true;
+          showComponents.value = true;
         }
       });
 
       eventBus.$on('hideLandcover', () => {
-        showLandcoverComponents.value = false;
+        showComponents.value = false;
       });
     });
 
@@ -52,7 +52,7 @@ export default {
     });
 
     return {
-      showLandcoverComponents,
+      showComponents,
     };
   }
 };

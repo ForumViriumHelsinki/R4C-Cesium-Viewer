@@ -31,7 +31,7 @@
       <v-row no-gutters class="pa-0 ma-0">
         <v-col cols="6" class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
           <Scatterplot />
-          <HSYScatterplot />
+          <BuildingScatterPlot />
           <NearbyTreeArea />
         </v-col>
       </v-row>
@@ -63,6 +63,7 @@ import DisclaimerPopup from './DisclaimerPopup.vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
+import BuildingScatterPlot from './BuildingScatterPlot.vue';
 
 export default {
 	data() {
@@ -86,7 +87,7 @@ export default {
 		HeatHistogram,
 		SocioEconomics,
 		Scatterplot,
-		HSYScatterplot,
+		BuildingScatterPlot,
 		BuildingComponent,
 		NearbyTreeArea,
 		Landcover,
