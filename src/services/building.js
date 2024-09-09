@@ -113,37 +113,35 @@ export default class Building {
  * @param { Object } entity building entity
  */
 	setBuildingEntityPolygon( entity ) {
+		const { properties, polygon } = entity;
 
-		if ( entity.properties.avgheatexposuretobuilding && entity.polygon ) {
+		if ( properties?.avgheatexposuretobuilding && polygon ) {
 
-			entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.avgheatexposuretobuilding._value, 0, entity.properties.avgheatexposuretobuilding._value );
+			if ( this.toggleStore.capitalRegionCold ) {
+      	const targetDate = '2021-02-18';
+      	const heatTimeseries = properties.heat_timeseries?._value || [];
+      	const foundEntry = heatTimeseries.find( ( { date } ) => date === targetDate );
 
-		} else {
-
-			if ( entity.polygon ) {
-			
-				entity.polygon.material = new Cesium.Color( 0, 0, 0, 0 );
-
+				polygon.material = foundEntry
+					? new Cesium.Color( 0, ( 1 - ( 1 - foundEntry.avgheatexposure ) ), 1, 1 - foundEntry.avgheatexposure )
+					: new Cesium.Color( 0, 0, 0, 0 );
+			} else {
+				const heatExposureValue = properties.avgheatexposuretobuilding._value;
+				polygon.material = new Cesium.Color( 1, 1 - heatExposureValue, 0, heatExposureValue );
 			}
+		} else if ( polygon ) {
+			polygon.material = new Cesium.Color( 0, 0, 0, 0 );
 		}
 
-		if ( this.store.view == 'helsinki' ) {
-
+		if ( this.store.view === 'helsinki' ) {
 			this.hideNonSoteBuilding( entity );
 			this.hideLowBuilding( entity );
-
-		} 
-	
-		if ( this.store.view == 'grid' ) {
-
-			if ( !entity._properties._kayttarks  || entity._properties._kayttarks._value !== 'Asuinrakennus' ) {
-
-				entity.show = false;
-
-			}	
 		}
 
-
+		if ( this.store.view === 'grid' ) {
+			const isResidentialBuilding = entity._properties?._kayttarks?._value === 'Asuinrakennus';
+			if ( !isResidentialBuilding ) entity.show = false;
+		}
 	}
 
 	/**

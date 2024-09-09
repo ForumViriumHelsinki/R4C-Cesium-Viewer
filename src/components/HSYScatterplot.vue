@@ -196,8 +196,15 @@ export default {
   
 				if ( entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 && numbericalValue < 99999999 && numbericalValue != 0 ) {
   
-					// Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
-					const element = { heat: entity._properties.avg_temp_c._value, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue , buildingId: entity._properties._kiitun._value };
+					let heatValue = entity._properties.avg_temp_c._value;
+  					if ( this.toggleStore.capitalRegionCold ) {
+						    const targetDate = "2021-02-18";
+      						const heatTimeseries = entity._properties._heat_timeseries?._value || [];
+      						const foundEntry = heatTimeseries.find(({ date }) => date === targetDate);
+							heatValue = foundEntry.avg_temp_c;
+
+					} 
+					const element = { heat: heatValue, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue , buildingId: entity._properties._kiitun._value };
 					urbanHeatDataAndMaterial.push( element );
   
 				}
@@ -335,7 +342,6 @@ export default {
 					this.plotService.handleMouseout( tooltip ) )
 				.on( 'click', ( event, d ) => {
 					// Assume each data point includes a building ID or some identifier
-					console.log( 'd',d );
 					buildingSerivce.highlightBuildingInViewer( d.buildingId );
 				} );
 		},

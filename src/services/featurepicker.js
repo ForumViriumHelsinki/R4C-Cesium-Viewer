@@ -98,7 +98,7 @@ export default class FeaturePicker {
     
 		}
 
-		const postcode = this.store.postcode 
+		const postcode = this.store.postcode; 
     
 		// add laajasalo flood data
 		if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
@@ -114,7 +114,7 @@ export default class FeaturePicker {
 		this.store.setPostalCode( properties._postinumero._value );
 		this.plotService.togglePostalCodePlotVisibility( 'hidden' );
 		this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
-		this.plotService.toggleLandCoverChart( 'hidden' );
+		eventBus.$emit( 'hideLandcover' ); 
 		this.elementsDisplayService.setBuildingDisplay( 'none' );
 		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
 		this.buildingService.resetBuildingOutline();
@@ -146,7 +146,7 @@ export default class FeaturePicker {
 		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
 
 		const propStore = usePropsStore();
-		propStore.setHeatFloodVulnerability(id.properties ?? null);
+		propStore.setHeatFloodVulnerability( id.properties ?? null );
 
 		if ( id.properties.grid_id ) {
 			propStore.setHeatFloodVulnerability( id.properties );

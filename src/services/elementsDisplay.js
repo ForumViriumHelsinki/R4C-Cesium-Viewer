@@ -57,7 +57,7 @@ export default class ElementsDisplay {
 			'gridViewLabel',		          
 		];
 
-		if ( this.store.view != 'helösinki' ) {
+		if ( this.store.view != 'helsinki' ) {
 
 			elements.push( 'capitalRegionSwitch' );
 			elements.push( 'capitalRegionViewLabel' );

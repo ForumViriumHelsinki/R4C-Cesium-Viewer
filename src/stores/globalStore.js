@@ -10,6 +10,8 @@ export const useGlobalStore = defineStore( 'global', {
 		level: 'city',
 		minKelvin: 287.123046875,
 		maxKelvin: 313.70355224609375,
+		minKelvinCold: 246.72064208984375,
+		maxKelvinCold: 266.2488708496094,
 		currentGridCell: null,
 		cesiumViewer: null,
 		postalCodeData: null,

@@ -26,17 +26,17 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		// Function to load Paavo data
 		async loadPaavo() {
 			// replace all this with call to backend
-    try {
-        const response = await fetch('https://geo.fvh.fi/paavo'); // Fetch directly
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json(); // Parse as JSON
+			try {
+				const response = await fetch( 'https://geo.fvh.fi/paavo' ); // Fetch directly
+				if ( !response.ok ) throw new Error( `HTTP error! status: ${response.status}` );
+				const data = await response.json(); // Parse as JSON
         
-        this.addDataToStore(data);
-        this.addRegionStatisticsToStore();
-        this.addHelsinkiStatisticsToStore();
-    } catch (error) {
-        console.error('Error fetching Paavo data:', error); 
-    }
+				this.addDataToStore( data );
+				this.addRegionStatisticsToStore();
+				this.addHelsinkiStatisticsToStore();
+			} catch ( error ) {
+				console.error( 'Error fetching Paavo data:', error ); 
+			}
 		},
 
 		// Function to fetch all Paavo data from redis cache

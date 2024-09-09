@@ -40,8 +40,6 @@ export default class CapitalRegion {
 
 		}
 
-		this.addPostalCodeDataToPinia();
-
 	}
 
 	addPostalCodeDataToPinia( ) {
