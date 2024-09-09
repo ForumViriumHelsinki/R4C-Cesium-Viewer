@@ -151,26 +151,12 @@ export default class Building {
  */
 	hideNonSoteBuilding( entity ) {
 
-		const hideNonSote = this.toggleStore.hideNonSote;
+		if ( this.toggleStore.hideNonSote ) {
+			const kayttotark = entity._properties.c_kayttark?._value;
 
-		if ( hideNonSote ) {
-
-			if ( !entity._properties.c_kayttark  || !entity._properties.c_kayttark._value ) {
-
+			if ( !kayttotark || ![ 511, 131 ].includes( Number( kayttotark ) ) && !( Number( kayttotark ) > 212 && Number( kayttotark ) < 240 ) ) {
 				entity.show = false;
-
-			} else {
-
-				const kayttotark = Number( entity._properties.c_kayttark._value );
-
-				if ( !kayttotark != 511 && !kayttotark != 131 && !( kayttotark > 212 && kayttotark < 240 ) ) {
-
-					entity.show = false;
-	
-				}
-
 			}
-	
 		}
 	}
 
@@ -181,26 +167,12 @@ export default class Building {
  */
 	hideLowBuilding( entity ) {
 
-		const hideLow = this.toggleStore.hideLow;
+		if ( this.toggleStore.hideLow ) {
+			const floorCount = Number( entity._properties.i_kerrlkm?._value );
 
-		if ( hideLow ) {
-
-			if ( !entity._properties.i_kerrlkm  || !entity._properties.i_kerrlkm._value ) {
-
+			if ( !floorCount || floorCount < 7 ) {
 				entity.show = false;
-
-			} else {
-
-				const floorCount = Number( entity._properties.i_kerrlkm._value );
-
-				if ( floorCount < 7 ) {
-
-					entity.show = false;
-	
-				}
-
 			}
-	
 		}
 	
 	}
@@ -212,25 +184,13 @@ export default class Building {
 			let entity = entities[ i ];
 
 			if ( entity.polygon ) {
-
-				if ( entity.properties.measured_height ) {
-
-					entity.polygon.extrudedHeight = entity.properties.measured_height._value;
-	
-				} else {
-	
-					if ( entity.properties.i_kerrlkm != null ) {
-	
-						entity.polygon.extrudedHeight = entity.properties.i_kerrlkm._value * 3.2;
-		
-					}
-		
-					if ( entity.properties.i_kerrlkm == null ) {
-		
-						entity.polygon.extrudedHeight = 2.7;
-		
-					}		
-				}
+				const { measured_height, i_kerrlkm } = entity.properties;
+    
+				entity.polygon.extrudedHeight = measured_height
+					? measured_height._value
+					: ( i_kerrlkm != null
+						? i_kerrlkm._value * 3.2
+						: 2.7 );
 			}
 		}
 	}
@@ -311,17 +271,12 @@ export default class Building {
 			entity.polygon.outlineColor = Cesium.Color.BLACK; 
 			entity.polygon.outlineWidth = 3; 
 
-			if ( entity._properties._avgheatexposuretobuilding && entity.polygon ) {
+			if ( entity.polygon ) {
+				const color = entity._properties._avgheatexposuretobuilding
+					? new Cesium.Color( 1, 1 - entity._properties._avgheatexposuretobuilding._value, 0, entity._properties._avgheatexposuretobuilding._value )
+					: new Cesium.Color( 0, 0, 0, 0 );
 
-				entity.polygon.material = new Cesium.Color( 1, 1 - entity._properties._avgheatexposuretobuilding._value, 0, entity._properties._avgheatexposuretobuilding._value );
-	
-			} else {
-	
-				if ( entity.polygon ) {
-				
-					entity.polygon.material = new Cesium.Color( 0, 0, 0, 0 );
-	
-				}
+				entity.polygon.material = color;
 			}
 
 		}
@@ -348,19 +303,10 @@ export default class Building {
 			if ( hideNewBuildings ) {
 				// Filter out buildings built before summer 2018
 				const cutoffDate = new Date( '2018-06-01T00:00:00' ).getTime();
-				if ( entity._properties._c_valmpvm && typeof entity._properties._c_valmpvm._value === 'string' ) {
+				const c_valmpvm = entity._properties._c_valmpvm?._value;
 
-					const c_valmpvm = new Date( entity._properties._c_valmpvm._value ).getTime();
-
-					if ( c_valmpvm >= cutoffDate ) {
-
-						entity.show = false;
-
-					}
-				} else {
-
+				if ( c_valmpvm && new Date( c_valmpvm ).getTime() >= cutoffDate ) {
 					entity.show = false;
-    
 				}
 			}
 
@@ -398,21 +344,8 @@ export default class Building {
 
 	lowBuildings( entity ) {
 		
-		let property = this.store.view == 'helsinki' ? '_i_kerrlkm' : '_kerrosten_lkm';
-
-		// Filter out buildings with fewer floors
-		if ( entity._properties[ property ] ) {
-
-			if ( entity._properties[ property ] && Number( entity._properties[ property ]._value ) <= 6 ) {
-
-				entity.show = false;
-    
-			}
-                
-		} else {
-
+		if ( entity._properties[ this.store.view == 'helsinki' ? '_i_kerrlkm' : '_kerrosten_lkm' ]?. _value <= 6 ) {
 			entity.show = false;
-    
 		}		
 	}
 	/**
@@ -448,15 +381,9 @@ export default class Building {
 		for ( let i = 0; i < entities.length; i++ ) {
 			const entity = entities[i];
 
-			if ( this.store.view == 'capitalRegion' ) {
-
-				this.outlineByTemperature( entity, 'avg_temp_c', temps );
-
-			} else {
-
-				this.outlineByTemperature( entity, 'avgheatexposuretobuilding', temps );
-
-			}
+			this.store.view === 'capitalRegion' 
+				? this.outlineByTemperature( entity, 'avg_temp_c', temps ) 
+				: this.outlineByTemperature( entity, 'avgheatexposuretobuilding', temps );
 
 		}
 	}
@@ -478,17 +405,18 @@ export default class Building {
 	}
 
 	outlineByTemperature( entity, property, values ) {
+		const targetDate = '2021-02-18';
+		const isCold = this.toggleStore.capitalRegionCold;
+		const heatTimeseries = entity._properties['heat_timeseries']?._value || [];
+		const foundEntry = isCold && heatTimeseries.find( ( { date } ) => date === targetDate );
 
-		if ( entity._properties[ property ] && values.includes( entity._properties[ property ]._value ) ) {
+		const shouldOutlineYellow = isCold 
+			? foundEntry && values.includes( foundEntry.avg_temp_c )
+			: entity._properties[property] && values.includes( entity._properties[property]._value );
 
-			this.polygonOutlineToBlue( entity );
-
-		} else {
-
-			this.polygonOutlineToBlack( entity );
-
-		}
-
+		shouldOutlineYellow 
+			? this.polygonOutlineToYellow( entity ) 
+			: this.polygonOutlineToBlack( entity );
 	}
 
 
@@ -505,38 +433,23 @@ export default class Building {
 		for ( let i = 0; i < entities.length; i++ ) {
 			const entity = entities[i];
 
-			if ( this.store.view == 'helsinki' ) {
+			this.outlineById( entity, this.store.view === 'helsinki' ? 'id' : 'kiitun', id );
 
-				this.outlineById( entity, 'id', id );
-
-			} else {
-
-				this.outlineById( entity, 'kiitun', id );
-
-			}
 		}
 	}
 
 	outlineById( entity, property, id ) {
 
-		if ( entity._properties[ property ] && entity._properties[ property ]._value === id ) {
-
-			this.polygonOutlineToBlue( entity );
-			this.store.setPickedEntity( entity );
-			this.eventEmitterService.emitEntityPrintEvent( );
-
-		} else {
-
-			this.polygonOutlineToBlack( entity );
-
-		}
+		entity._properties[property] && entity._properties[property]._value === id
+			? ( this.polygonOutlineToYellow( entity ), this.store.setPickedEntity( entity ), this.eventEmitterService.emitEntityPrintEvent() )
+			: this.polygonOutlineToBlack( entity );
 
 	}
 
-	polygonOutlineToBlue( entity ) {
+	polygonOutlineToYellow( entity ) {
 
 		entity.polygon.outline = true;
-		entity.polygon.outlineColor = Cesium.Color.BLUE;
+		entity.polygon.outlineColor = Cesium.Color.YELLOW;
 		entity.polygon.outlineWidth = 20;
 
 	}

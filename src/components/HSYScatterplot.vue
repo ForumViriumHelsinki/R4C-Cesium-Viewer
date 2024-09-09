@@ -196,16 +196,25 @@ export default {
   
 				if ( entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 && numbericalValue < 99999999 && numbericalValue != 0 ) {
   
-					let heatValue = entity._properties.avg_temp_c._value;
+					let heatValue;
   					if ( this.toggleStore.capitalRegionCold ) {
 						    const targetDate = "2021-02-18";
       						const heatTimeseries = entity._properties._heat_timeseries?._value || [];
       						const foundEntry = heatTimeseries.find(({ date }) => date === targetDate);
-							heatValue = foundEntry.avg_temp_c;
+							if ( foundEntry ) {
+								heatValue = foundEntry.avg_temp_c;
+							}
 
-					} 
-					const element = { heat: heatValue, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue , buildingId: entity._properties._kiitun._value };
-					urbanHeatDataAndMaterial.push( element );
+					} else {
+
+						heatValue = entity._properties.avg_temp_c._value;
+					}
+
+					if ( heatValue ) {
+						const element = { heat: heatValue, [ categorical ]: entity._properties[ categoricalName ]._value, [ numerical ]: numbericalValue , buildingId: entity._properties._kiitun._value };
+						urbanHeatDataAndMaterial.push( element );
+					}
+					
   
 				}
   

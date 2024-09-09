@@ -488,7 +488,7 @@ export default {
 					}
 				}
 
-				this.eventEmitterService.emitScatterPlotEvent( buildingsDataSource.entities.values );
+				this.eventEmitterService.emitScatterplotEvent( buildingsDataSource.entities.values );
 
 			}
 

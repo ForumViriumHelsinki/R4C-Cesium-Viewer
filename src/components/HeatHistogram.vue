@@ -57,19 +57,18 @@ export default {
 				} );
 
 		},  
-  rgbColor(data) {
+rgbColor(data) {
     const average = this.calculateAverage(data);
     const isCold = this.toggleStore.capitalRegionCold;
 
-    let index;
-    if (!isCold) {
-      index = this.calculateIndex(average, this.store.minKelvin, this.store.maxKelvin);
-      return this.getWarmColor(index);
-    } else {
-      index = this.calculateIndex(average, this.store.minKelvinCold, this.store.maxKelvinCold);
-      return this.getColdColor(index);
-    }
-  },
+    const index = isCold 
+        ? this.calculateIndex(average, this.store.minKelvinCold, this.store.maxKelvinCold)
+        : this.store.view === 'capitalRegion'
+            ? this.calculateIndex(average, this.store.minKelvin, this.store.maxKelvin)
+            : average;
+
+    return isCold ? this.getColdColor(index) : this.getWarmColor(index);
+},
 
   calculateAverage(data) {
     if (!data || data.length === 0) return 0;
