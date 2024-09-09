@@ -70,7 +70,9 @@ export default {
 				if ( this.propsStore.buildingHeatExposure > 27.2632995605 ) {
 
 					this.addEventListeners();
-					this.coldAreaService.loadColdAreas();
+
+					!this.toggleStore.capitalRegionCold && this.coldAreaService.loadColdAreas();
+
 
 				}
 				} else {
