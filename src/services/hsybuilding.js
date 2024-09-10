@@ -7,6 +7,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import * as turf from '@turf/turf';
 import * as Cesium from 'cesium';
+import { useToggleStore } from '../stores/toggleStore.js';
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
@@ -269,7 +270,28 @@ export default class HSYBuilding {
 	async calculateHSYUrbanHeatData( data, entities ) {
 
 		const heatExposureData = this.urbanHeatService.calculateAverageExposure( data.features );
-		const avg_temp_cList = data.features.map( feature => feature.properties.avg_temp_c );
+  		// Set the target date
+  		const targetDate = '2021-02-18';
+
+  		// Initialize avg_temp_cList
+  		let avg_temp_cList = [];
+  		const toggleStore = useToggleStore();
+
+  	if ( toggleStore.capitalRegionCold ) {
+			// If capitalRegionCold is true, map through entities and extract avg_temp_c based on heat_timeseries
+			avg_temp_cList = entities
+				.map( entity => {
+					const heatTimeseries = entity.properties.heat_timeseries?._value || [];
+					const foundEntry = heatTimeseries.find( ( { date } ) => date === targetDate );
+					return foundEntry ? foundEntry.avg_temp_c : null;  // Handle case where no entry is found
+				} )
+				.filter( temp => temp != null );  // Filter out null or undefined values
+		} else {
+			// Otherwise, extract avg_temp_c directly from data features
+			avg_temp_cList = data.features.map( feature => feature.properties.avg_temp_c );
+		}
+
+
 		const propsStore = usePropsStore( );
 		propsStore.setScatterPlotEntities( entities );
 		propsStore.setPostalcodeHeatTimeseries( heatExposureData[ 1 ] );

@@ -10,6 +10,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import Plot from '../services/plot.js'; 
 import Building from '../services/building.js';
 import { usePropsStore } from '../stores/propsStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
   
 export default {
 	mounted() {
@@ -17,6 +18,7 @@ export default {
 		this.store = useGlobalStore();
 		this.plotService = new Plot();
 		this.propsStore  = usePropsStore();
+		this.toggleStore  = useToggleStore();
 	},
 	beforeUnmount() {
 		this.unsubscribe();
@@ -55,28 +57,39 @@ export default {
 				} );
 
 		},  
-		rgbColor( data ) {
+rgbColor(data) {
+    const average = this.calculateAverage(data);
+    const isCold = this.toggleStore.capitalRegionCold;
 
-			const average = data.reduce( ( sum, value ) => sum + value, 0 ) / data.length;
-			let index;
+    const index = isCold 
+        ? this.calculateIndex(average, this.store.minKelvinCold, this.store.maxKelvinCold)
+        : this.store.view === 'capitalRegion'
+            ? this.calculateIndex(average, this.store.minKelvin, this.store.maxKelvin)
+            : average;
 
-			if ( data && data[ 0 ] && data[ 0 ].toString().startsWith( '0' ) ) {
+    return isCold ? this.getColdColor(index) : this.getWarmColor(index);
+},
 
-				index = average;
+  calculateAverage(data) {
+    if (!data || data.length === 0) return 0;
+    return data.reduce((sum, value) => sum + value, 0) / data.length;
+  },
 
-			} else {
+  calculateIndex(average, minKelvin, maxKelvin) {
+    return (average + 273.15 - minKelvin) / (maxKelvin - minKelvin);
+  },
 
-				index =  ( average + 273.15 - this.store.minKelvin ) / ( this.store.maxKelvin - this.store.minKelvin );
+  getWarmColor(index) {
+    const g = 255 - (index * 255);
+    const a = 255 * index;
+    return `rgba(255, ${g}, 0, ${a / 255})`; // Convert alpha to range [0, 1]
+  },
 
-			}
-
-			let g = 255 - ( index * 255 );
-			let a = 255 * index;
-			let rgbaColor = 'rgba(' + 255 + ',' + g +  ',0,' + a + ')';
-
-			return rgbaColor;
-
-		},    
+  getColdColor(index) {
+    const g = 255 - (255 - index * 255);
+    const a = 1 - (index); // Convert alpha to range [0, 1]
+    return `rgba(0, ${g}, 255, ${a})`; // Convert alpha to range [0, 1]
+  },    
 		createHistogram() {
 			const urbanHeatData = this.propsStore.heatHistogramData;
 			this.plotService.initializePlotContainer( 'heatHistogramContainer' );

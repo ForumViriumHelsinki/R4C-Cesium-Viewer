@@ -70,7 +70,9 @@ export default {
 				if ( this.propsStore.buildingHeatExposure > 27.2632995605 ) {
 
 					this.addEventListeners();
-					this.coldAreaService.loadColdAreas();
+
+					!this.toggleStore.capitalRegionCold && this.coldAreaService.loadColdAreas();
+
 
 				}
 				} else {
@@ -255,7 +257,11 @@ export default {
         ...buildingHeatExposure.map(d => d.avg_temp_c),
         ...postalCodeHeat.map(d => d.averageTemp)
     );
-    const yScale = this.plotService.createScaleLinear(0, maxTemp, [height, 0]);
+	const minxTemp = Math.min(
+        ...buildingHeatExposure.map(d => d.avg_temp_c),
+        ...postalCodeHeat.map(d => d.averageTemp)
+    );
+    const yScale = this.plotService.createScaleLinear(minxTemp, maxTemp, [height, 0]);
 
     // Combine building and postal code data
     const combinedData = [

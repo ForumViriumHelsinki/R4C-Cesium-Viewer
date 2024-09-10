@@ -19,9 +19,13 @@ export const useToggleStore = defineStore( 'toggle', {
 		hideColdAreas: false,
 		landCover: false,
 		switchView: false,
-		surveyPlaces: false                                               
+		surveyPlaces: false,
+		capitalRegionCold: false,                                              
 	} ),
 	actions: {
+		setCapitalRegionCold( enabled ) {
+			this.capitalRegionCold = enabled;
+		},		
 		setPostalCode( enabled ) {
 			this.postalCode = enabled;
 		},

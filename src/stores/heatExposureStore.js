@@ -18,7 +18,8 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 
 			try {
 
-				let data = await this.getDataFromCache( requestUrl );
+				//let data = await this.getDataFromCache( requestUrl );
+				let data = null;
 
 				if ( !data ) {
     

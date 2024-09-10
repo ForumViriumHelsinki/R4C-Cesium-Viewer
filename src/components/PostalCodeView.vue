@@ -98,6 +98,13 @@
 </label>
 <label for="hideColdAreas" class="label" id="hideColdAreasLabel"  style="display:none;">Hide cold areas</label>
 
+  <!-- CapitalRegionColdSwitch-->
+<label class="switch" id = "capitalRegionColdSwitch">
+	<input type="checkbox" id="capitalRegionColdToggle" value="capitalRegionCold" >
+	<span class="slider round"></span>
+</label>
+<label for="capitalRegionCold" class="label" id="capitalRegionColdLabel">Capital Region Cold</label>
+
   <!--  sensor map Link-->
   <a href="https://bri3.fvh.io/opendata/r4c/r4c_all.html" class="label" id="sensorMapLink" target="_blank" rel="noopener noreferrer"> Sensor map </a>
 
@@ -118,7 +125,6 @@ import Landcover from '../services/landcover.js';
 import Tree from '../services/tree.js'; 
 import Building from '../services/building.js'; 
 import EventEmitter from '../services/eventEmitter.js';
-import Sensor from '../services/sensor.js';
 import Vegetation from '../services/vegetation.js';
 import CapitalRegion from '../services/capitalRegion.js';
 import Othernature from '../services/othernature.js';
@@ -195,6 +201,27 @@ export default {
 			document.getElementById( 'capitalRegionViewToggle' ).addEventListener( 'change', this.capitalRegionViewEvent );
 			document.getElementById( 'gridViewToggle' ).addEventListener( 'change', this.gridViewEvent );
 			document.getElementById( 'landCoverToggle' ).addEventListener( 'change', this.getLandCoverEvent );
+			document.getElementById( 'capitalRegionColdToggle' ).addEventListener( 'change', this.toggleCold );
+
+		},
+
+		toggleCold() {
+
+			// Get the value of the "Show Plot" toggle button
+			const checked = document.getElementById( 'capitalRegionColdToggle' ).checked;
+    		this.toggleStore.setCapitalRegionCold( checked );
+
+			// Hide the plot and its controls if the toggle button is unchecked
+			if ( checked ) {
+
+				document.getElementById( 'capitalRegionViewToggle' ).checked = true;
+				this.capitalRegionViewEvent();
+
+			} else {
+
+				this.reset();
+
+			}
 
 		},
 
@@ -461,7 +488,7 @@ export default {
 					}
 				}
 
-				this.eventEmitterService.emitScatterPlotEvent( buildingsDataSource.entities.values );
+				this.eventEmitterService.emitScatterplotEvent( buildingsDataSource.entities.values );
 
 			}
 

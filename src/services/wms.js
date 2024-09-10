@@ -48,23 +48,23 @@ export default class Wms {
 const createLayersForHsyLandcover = ( ) => {
 	const store = usePropsStore();
 	const year = store.hsyYear;
-    const layerNames = [
-        'asuminen_ja_maankaytto:maanpeite_avokalliot',
-        'asuminen_ja_maankaytto:maanpeite_merialue',
-        'asuminen_ja_maankaytto:maanpeite_muu_avoin_matala_kasvillisuus',
-        'asuminen_ja_maankaytto:maanpeite_muu_vetta_lapaisematon_pinta',
-        'asuminen_ja_maankaytto:maanpeite_paallystamaton_tie',
-        'asuminen_ja_maankaytto:maanpeite_paallystetty_tie',
-        'asuminen_ja_maankaytto:maanpeite_paljas_maa',
-        'asuminen_ja_maankaytto:maanpeite_pellot',
-        'asuminen_ja_maankaytto:maanpeite_puusto_10_15m',
-        'asuminen_ja_maankaytto:maanpeite_puusto_15_20m',
-        'asuminen_ja_maankaytto:maanpeite_puusto_2_10m',
-        'asuminen_ja_maankaytto:maanpeite_puusto_yli20m',
-        'asuminen_ja_maankaytto:maanpeite_vesi'
-    ];
+	const layerNames = [
+		'asuminen_ja_maankaytto:maanpeite_avokalliot',
+		'asuminen_ja_maankaytto:maanpeite_merialue',
+		'asuminen_ja_maankaytto:maanpeite_muu_avoin_matala_kasvillisuus',
+		'asuminen_ja_maankaytto:maanpeite_muu_vetta_lapaisematon_pinta',
+		'asuminen_ja_maankaytto:maanpeite_paallystamaton_tie',
+		'asuminen_ja_maankaytto:maanpeite_paallystetty_tie',
+		'asuminen_ja_maankaytto:maanpeite_paljas_maa',
+		'asuminen_ja_maankaytto:maanpeite_pellot',
+		'asuminen_ja_maankaytto:maanpeite_puusto_10_15m',
+		'asuminen_ja_maankaytto:maanpeite_puusto_15_20m',
+		'asuminen_ja_maankaytto:maanpeite_puusto_2_10m',
+		'asuminen_ja_maankaytto:maanpeite_puusto_yli20m',
+		'asuminen_ja_maankaytto:maanpeite_vesi'
+	];
 
-    const layers = layerNames.map( name => `${ name }_${ year }`).join(',');
+	const layers = layerNames.map( name => `${ name }_${ year }` ).join( ',' );
 
-    return layers;
+	return layers;
 };

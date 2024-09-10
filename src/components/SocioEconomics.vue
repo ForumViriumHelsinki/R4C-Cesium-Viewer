@@ -10,6 +10,7 @@
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
 import Plot from '../services/plot.js'; 
@@ -18,6 +19,7 @@ export default {
 	mounted() {
 		this.unsubscribe = eventBus.$on( 'newSocioEconomicsDiagram', this.newSocioEconomicsDiagram );
 		this.store = useGlobalStore();
+		this.toggleGlobalStore = useToggleStore();
 		this.socioEconomicsStore = useSocioEconomicsStore();
 		this.heatExposureStore = useHeatExposureStore();
 		this.plotService = new Plot();
@@ -141,22 +143,28 @@ export default {
 
 				const svg = this.plotService.createSVGElement( margin, width, height, '#socioeonomicsContainer' );
 
-				const xLabels = [
-					'Apartment Heat Exposure',
-					'% of Children & Elderly',
-					'% of Children',
-					'% of Elderly',
-					'% of Unemployed',
-					'Small Apartment Size',
-					'% with Basic Education',
-					'Low Income',
-					'% of Rentals'
-				];
+				let xLabels = [
+      				'Apartment Heat Exposure',
+      				'% of Children & Elderly',
+      				'% of Children',
+      				'% of Elderly',
+      				'% of Unemployed',
+      				'Small Apartment Size',
+      				'% with Basic Education',
+      				'Low Income',
+      				'% of Rentals'
+    			];
 
+if (this.toggleGlobalStore.capitalRegionCold) {
+  xLabels[0] = 'Apartment Cold Exposure';
+}
 				// Get the second area's data based on the selected nimi
 				const selectedNimi = document.getElementById( 'areaSelect' ).value || 'Kruunuvuorenranta';
 				const compareData = this.socioEconomicsStore.getDataByNimi( selectedNimi );
-				const heatData = this.store.averageHeatExposure.toFixed( 3 );
+				const heatData  = this.toggleGlobalStore.capitalRegionCold
+  ? 1 - this.store.averageHeatExposure.toFixed(3)  // Use cold exposure data if the cold toggle is active
+  : this.store.averageHeatExposure.toFixed(3); // Otherwise, use heat exposure data
+
 				const yValues = this.calculateYValues( sosData, statsData, heatData );
 				const compareHeatData = this.helsinkiOrCapitalHeatExposure( this.heatExposureStore.getDataById( compareData.postinumeroalue ) );
 				const compareValues = this.calculateYValues( compareData, statsData, compareHeatData );       
@@ -202,25 +210,22 @@ export default {
 			];
 		},
 
-		/**
- * Returns correct average heat exposure value of postal code area based on view the diagram is created from.
+/**
+ * Returns the correct average exposure value (heat or cold) of a postal code area based on the view.
  * 
- * @param {Object} heatData - The averarage heat exposure for postal code region
+ * @param {Object} heatData - The average exposure data for the postal code region.
  */
-		helsinkiOrCapitalHeatExposure( heatData ) {
+helsinkiOrCapitalHeatExposure(heatData) {
 
-			const metropolitanView = document.getElementById( 'capitalRegionViewToggle' ).checked;
+  if (this.toggleGlobalStore.capitalRegionCold) {
+    return 1 - heatData.properties.avgcoldexposure.toFixed(3); // Return cold exposure data if the cold toggle is active
+  } else {
+    return this.toggleGlobalStore.capitalRegionView
+      ? heatData.properties.avgheatexposure.toFixed(3)  // Return heat exposure data for the metropolitan view
+      : heatData.properties.hki_avgheatexposure.toFixed(3);  // Return Helsinki-specific heat exposure data
+  }
+},
 
-			if ( metropolitanView ) {
-
-				return heatData.properties.avgheatexposure.toFixed( 3 );
-
-			} else {
-
-				return heatData.properties.hki_avgheatexposure.toFixed( 3 );
-			}
-
-		},
 
 		/**
  * Populate a <select> element with options based on the 'nimi' attribute of socioEconomics store
