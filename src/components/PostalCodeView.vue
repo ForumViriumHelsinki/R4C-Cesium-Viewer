@@ -470,28 +470,21 @@ export default {
 			this.toggleStore.setHideNonSote( hideNonSote );
 			this.toggleStore.setHideNewBuildings( hideNewBuildings );
 			this.toggleStore.setHideLow( hideLow );
-
+			
 			if ( this.dataSourceService ) {
+    		
+			const buildingsDataSource = this.dataSourceService.getDataSourceByName( `Buildings ${this.store.postalcode}` );
 
-				const buildingsDataSource = this.dataSourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
+    			if ( buildingsDataSource ) {
+        			( hideNonSote || hideNewBuildings || hideLow ) 
+            			? this.buildingService.filterBuildings( buildingsDataSource ) 
+            			: this.buildingService.showAllBuildings( buildingsDataSource );
 
-				if ( buildingsDataSource ) {
-
-					if ( hideNonSote || hideNewBuildings || hideLow ) {
-
-						this.buildingService.filterBuildings( buildingsDataSource );
-
-					} else {
-
-						this.buildingService.showAllBuildings( buildingsDataSource );
-
-					}
+        			this.eventEmitterService.emitScatterplotEvent(buildingsDataSource.entities.values);
+        			this.toggleStore.capitalRegionView && eventBus.$emit('updateScatterPlot');
+				
 				}
-
-				this.eventEmitterService.emitScatterplotEvent( buildingsDataSource.entities.values );
-
 			}
-
 		},
 
 		/**

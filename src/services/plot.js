@@ -47,22 +47,12 @@ export default class Plot {
 				this.toggleBearingSwitchesVisibility( 'visible' );
 
 			}
-		} else {
-
-			this.toggleHSYScatterPlot( 'visible' );
-
-		}
+		} 
 
 		if ( this.store.level === 'building' ) {
 
 			document.getElementById( 'buildingChartContainer' ).style.visibility = 'visible';
 			document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'visible';
-
-			if ( this.store.view === 'capitalRegion' ) {
-
-				document.getElementById( 'hsyBuildingChartContainer' ).style.visibility = 'visible';
-
-			}
 
 		}
 	}
@@ -78,18 +68,11 @@ export default class Plot {
 		document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'areaSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
-		document.getElementById( 'hsyBuildingChartContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'hidden';
 		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
 		this.toggleBearingSwitchesVisibility( 'hidden' );
 		document.getElementById( 'scatterPlotContainer' ).style.visibility = 'hidden';
-		document.getElementById( 'scatterPlotContainerHSY' ).style.visibility = 'hidden';
-		document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
-		document.getElementById( 'numericalSelect' ).value = 'measured_height';
-		this.toggleHSYScatterPlot( 'hidden' );
-		document.getElementById( 'categoricalHSYSelect' ).value = 'julkisivu_s';
-		document.getElementById( 'numericalHSYSelect' ).value = 'area_m2';
 
 	}
 
@@ -102,18 +85,6 @@ export default class Plot {
 		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
 		document.getElementById( 'scatterPlotContainer' ).style.visibility = 'hidden';
-
-	}
-
-	/**
- * Toggle HSY Scatterplot
- * 
- * */
-	toggleHSYScatterPlot( status ) {
-
-		document.getElementById( 'numericalHSYSelect' ).style.visibility = status;
-		document.getElementById( 'categoricalHSYSelect' ).style.visibility = status;
-		document.getElementById( 'scatterPlotContainerHSY' ).style.visibility = status;
 
 	}
 
@@ -142,10 +113,7 @@ export default class Plot {
 		document.getElementById( 'categoricalSelect' ).style.visibility = status;
 		document.getElementById( 'scatterPlotContainer' ).style.visibility = status;
 		document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
-		document.getElementById( 'numericalSelect' ).value = 'measured_height';
-		document.getElementById( 'scatterPlotContainerHSY' ).style.visibility = status;
-		document.getElementById( 'numericalHSYSelect' ).style.visibility = status;
-		document.getElementById( 'categoricalHSYSelect' ).style.visibility = status;		
+		document.getElementById( 'numericalSelect' ).value = 'measured_height';		
 		document.getElementById( 'categoricalHSYSelect' ).value = 'julkisivu_s';
 		document.getElementById( 'numericalHSYSelect' ).value = 'area_m2';
 

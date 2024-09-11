@@ -1,37 +1,47 @@
 <template>
   <v-select
-    v-model="selected"
+    v-model="selectedCategorical"
     :items="categoricalOptions"
-    label="Select Categorical Attribute"
-    @change="emitChange"
-  ></v-select>
+    label="Select Categorical"
+    item-title="text"
+    item-value="value"    
+    dense
+  />
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { eventBus } from '../services/eventEmitter.js';
+import { usePropsStore } from '../stores/propsStore.js';
 
 export default {
-  emits: ['change'],
-  setup(_, { emit }) {
+  setup() {
+    const propsStore = usePropsStore();
     const categoricalOptions = [
       { text: 'Facade Material', value: 'julkisivu_s' },
       { text: 'Building Material', value: 'rakennusaine_s' },
       { text: 'Usage', value: 'kayttarks' },
       { text: 'Heating Method', value: 'lammitystapa_s' },
-      { text: 'Heating Source', value: 'lammitysaine_s' },
+      { text: 'Heating Source', value: 'lammitysaine_s' }
     ];
 
-    const selected = ref('julkisivu_s');
+    const selectedCategorical = ref('julkisivu_s');
 
-    const emitChange = () => {
-      emit('change', selected.value);
+    // Watch for changes and emit both value and text
+    watch(() => selectedCategorical.value, (newValue) => {
+      const selectedOption = categoricalOptions.find(option => option.value === newValue);
+      emitChange(selectedOption);
+    });
+
+    const emitChange = (selectedOption) => {
+      propsStore.setCategoricalSelect( { value: selectedOption.value, text: selectedOption.text } );
+      eventBus.$emit( 'updateScatterPlot' );
     };
 
     return {
-      selected,
-      categoricalOptions,
-      emitChange,
+      selectedCategorical,
+      categoricalOptions
     };
-  },
+  }
 };
 </script>

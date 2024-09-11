@@ -54,7 +54,6 @@ import EventEmitter from '../services/eventEmitter.js';
 import HeatHistogram from './HeatHistogram.vue';
 import SocioEconomics from './SocioEconomics.vue';
 import Scatterplot from './Scatterplot.vue';
-import HSYScatterplot from './HSYScatterplot.vue';
 import BuildingComponent from './Building.vue';
 import Landcover from './Landcover.vue';
 import NearbyTreeArea from './NearbyTreeArea.vue';

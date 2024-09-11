@@ -16,8 +16,16 @@ export const usePropsStore = defineStore( 'props', {
 		postalCodeData: null,
 		hsyYear: 2022,
 		hsySelectArea: 'Askisto',   
+		categoricalSelect: { text: 'Facade Material', value: 'julkisivu_s' },
+		numericalSelect: { text: 'Area', value: 'area_m2' },
 	} ),
 	actions: {
+		setCategoricalSelect( object ) {
+			this.categoricalSelect = object;
+		},
+		setNumericalSelect( object ) {
+			this.numericalSelect = object;
+		},		
 		setHSYSelectArea( area ) {
 			this.hsySelectArea = area;
 		},

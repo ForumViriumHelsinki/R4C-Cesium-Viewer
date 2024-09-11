@@ -55,7 +55,7 @@ export default class EventEmitter {
  */
 	emitScatterplotEvent( ) {
 
-		eventBus.$emit( this.store.view == 'helsinki' ? 'newScatterPlot' : 'newHSYScatterPlot' );
+		eventBus.$emit( this.store.view == 'helsinki' ? 'newScatterPlot' : 'showBuildingScatterPlot' );
 
 	}
 
