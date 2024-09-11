@@ -147,7 +147,7 @@ export default {
 		};
 	},
 	mounted() {
-		this.unsubscribe = eventBus.$on( 'initPostalCodeView', this.initPostalCodeView );
+		this.unsubscribe = eventBus.on( 'initPostalCodeView', this.initPostalCodeView );
 		this.store = useGlobalStore();
 		this.toggleStore  = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
@@ -175,7 +175,8 @@ export default {
 		returnToPostalCode( ) {
 			const featurepicker = new Featurepicker();
 			featurepicker.loadPostalCode();
-
+			this.store.level === 'postalCode'
+			this.toggleStore.landcover && eventBus.emit( 'showLandcover' );
 		},
 		initPostalCodeView( ) {
 			this.dataSourceService = new Datasource();
@@ -183,7 +184,6 @@ export default {
 			this.buildingService = new Building();
 			this.plotService = new Plot();
 			this.addEventListeners();
-
 		},
 		/**
  * Add EventListeners 
@@ -211,17 +211,9 @@ export default {
 			const checked = document.getElementById( 'capitalRegionColdToggle' ).checked;
     		this.toggleStore.setCapitalRegionCold( checked );
 
-			// Hide the plot and its controls if the toggle button is unchecked
-			if ( checked ) {
-
-				document.getElementById( 'capitalRegionViewToggle' ).checked = true;
-				this.capitalRegionViewEvent();
-
-			} else {
-
-				this.reset();
-
-			}
+			checked 
+    			? (document.getElementById('capitalRegionViewToggle').checked = true, this.capitalRegionViewEvent()) 
+    			: this.reset();
 
 		},
 
@@ -267,16 +259,9 @@ export default {
 			this.toggleStore.setLandCover( landcover );
 			const landcoverService = new Landcover();
 
-			if ( landcover ) {
-				
-				this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
-				landcoverService.addLandcover( );
-
-			} else {
-
-				landcoverService.removeLandcover();
-
-			}
+			landcover 
+    			? ( this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true ), landcoverService.addLandcover() ) 
+    			: landcoverService.removeLandcover();
 
 		},
 
@@ -285,21 +270,12 @@ export default {
  */
 		gridViewEvent() {
 
-			const gridView = document.getElementById( 'gridViewToggle' ).checked;
-			this.toggleStore.setGridView( gridView );
+			const gridView = document.getElementById('gridViewToggle').checked;
+			this.toggleStore.setGridView(gridView);
 
-			if ( gridView ) {
-
-				this.store.setView( 'grid' );
-				this.showPostalCodeView = false;
-				this.eventEmitterService.emitGridViewEvent( );
-
-			}  else {
-
-				this.store.setView( 'helsinki' );
-				this.reset();
-  
-			} 
+			gridView 
+    			? (this.store.setView('grid'), this.showPostalCodeView = false, this.eventEmitterService.emitGridViewEvent())
+    			: (this.store.setView('helsinki'), this.reset());
 
 		},
 
@@ -310,20 +286,10 @@ export default {
  */
 		showPlotEvent() {
 
-			// Get the value of the "Show Plot" toggle button
 			const showPlots = document.getElementById( 'showPlotToggle' ).checked;
-    		this.toggleStore.setShowPlot( showPlots );
+			this.toggleStore.setShowPlot( showPlots );
 
-			// Hide the plot and its controls if the toggle button is unchecked
-			if ( !showPlots ) {
-
-				this.plotService.hideAllPlots();
-
-			} else { // Otherwise, show the plot and its controls if the toggle button is checked and the plot is already loaded
-
-				this.plotService.showAllPlots();
-
-			}
+			showPlots ? this.plotService.showAllPlots() : this.plotService.hideAllPlots();
 
 		},
 
@@ -335,23 +301,12 @@ export default {
 
 			const print = document.getElementById( 'printToggle' ).checked;
 			this.toggleStore.setPrint( print );
+			const elementIds = ['printContainer', 'searchcontainer', 'georefContainer', 'searchbutton'];
+			const visibility = print ? 'visible' : 'hidden';
 
-			// If print is not selected, hide the print container, search container, georeference container, and search button
-			if ( !print ) {
-
-				document.getElementById( 'printContainer' ).style.visibility = 'hidden';
-				document.getElementById( 'searchcontainer' ).style.visibility = 'hidden';
-				document.getElementById( 'georefContainer' ).style.visibility = 'hidden';
-				document.getElementById( 'searchbutton' ).style.visibility = 'hidden';
-
-			} else { // Otherwise, make the print container visible
-    
-				document.getElementById( 'printContainer' ).style.visibility = 'visible';
-				document.getElementById( 'searchcontainer' ).style.visibility = 'visible';
-				document.getElementById( 'georefContainer' ).style.visibility = 'visible';
-				document.getElementById( 'searchbutton' ).style.visibility = 'visible';
-
-			}
+			elementIds.forEach(id => {
+				document.getElementById(id).style.visibility = visibility;
+			});
 
 		},
 
@@ -366,29 +321,11 @@ export default {
 			const showTrees = document.getElementById( 'showTreesToggle' ).checked;
 			this.toggleStore.setShowTrees( showTrees );
 
-			// If showTrees toggle is on
-			if ( showTrees ) {
-
-				// If a postal code is available, load trees for that postal code
-				if ( this.store.postalcode  && !this.dataSourceService.getDataSourceByName( 'Trees' ) ) {
-
-					this.treeService.loadTrees( this.store.postalcode );
-
-				} else {
-
-					this.dataSourceService.changeDataSourceShowByName( 'Trees', true );
-					this.plotService.updateTreeElements( 'visible' );
-
-				}
-
-			} else { // If showTrees toggle is off
-
-				this.dataSourceService.changeDataSourceShowByName( 'Trees', false );
-				this.plotService.updateTreeElements( 'hidden' );
-				this.plotService.showAllPlots();
-				this.buildingService.resetBuildingEntities();
-
-			}
+			showTrees 
+    			? (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Trees') 
+        		? this.treeService.loadTrees(this.store.postalcode)
+        		: (this.dataSourceService.changeDataSourceShowByName('Trees', true), this.plotService.updateTreeElements('visible')))
+    			: (this.dataSourceService.changeDataSourceShowByName('Trees', false), this.plotService.updateTreeElements('hidden'), this.plotService.showAllPlots(), this.buildingService.resetBuildingEntities());
 
 		},
 
@@ -481,7 +418,7 @@ export default {
             			: this.buildingService.showAllBuildings( buildingsDataSource );
 
         			this.eventEmitterService.emitScatterplotEvent(buildingsDataSource.entities.values);
-        			this.toggleStore.capitalRegionView && eventBus.$emit('updateScatterPlot');
+        			this.toggleStore.capitalRegionView && eventBus.emit('updateScatterPlot');
 				
 				}
 			}

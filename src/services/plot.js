@@ -113,9 +113,7 @@ export default class Plot {
 		document.getElementById( 'categoricalSelect' ).style.visibility = status;
 		document.getElementById( 'scatterPlotContainer' ).style.visibility = status;
 		document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
-		document.getElementById( 'numericalSelect' ).value = 'measured_height';		
-		document.getElementById( 'categoricalHSYSelect' ).value = 'julkisivu_s';
-		document.getElementById( 'numericalHSYSelect' ).value = 'area_m2';
+		document.getElementById( 'numericalSelect' ).value = 'measured_height';
 
 	}
 
@@ -184,26 +182,6 @@ export default class Plot {
 
  */
 	addTitle( svg, title, width, margin ) {
-		if ( title.includes( '2022' ) ) {
-			// Title needs splitting
-			const titleParts = title.split( '2022' );
-
-			svg.append( 'text' )
-				.attr( 'x', width / 2 )
-				.attr( 'y', -margin.top / 3 )
-				.attr( 'text-anchor', 'middle' )
-				.style( 'font-size', '12px' )
-				.append( 'tspan' )
-				.text( titleParts[0] + '2022' );
-
-			svg.append( 'text' )
-				.attr( 'x', width / 2 )
-				.attr( 'y', -margin.top / 3 + 16 ) 
-				.attr( 'text-anchor', 'middle' )
-				.style( 'font-size', '12px' )
-				.append( 'tspan' )
-				.text( titleParts[1] );
-		} else {
 			// Title doesn't need splitting
 			svg.append( 'text' )
 				.attr( 'x', width / 2 )
@@ -211,7 +189,7 @@ export default class Plot {
 				.attr( 'text-anchor', 'middle' )
 				.style( 'font-size', '12px' )
 				.text( title );
-		}
+		
 	}
 
 	// 1. Initialize SVG and Background

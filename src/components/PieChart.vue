@@ -48,15 +48,15 @@ const createPieChart = ( ) => {
 	const svg = plotService.createSVGElement( margin, width, height, '#pieChartContainer' );
 
 	// Translate pies to be centered vertically and positioned horizontally
-	const xOffsetFirstPie = width / 4; // Keeps existing horizontal positioning for the first pie
-	const xOffsetSecondPie = 3 * width / 4; // Keeps existing horizontal positioning for the second pie
+	const xOffsetFirstPie = width / 5; // Keeps existing horizontal positioning for the first pie
+	const xOffsetSecondPie = 4.5 * width / 7; // Keeps existing horizontal positioning for the second pie
 	const yOffset = height / 2; // New: Centers pies vertically
 
 	// Initialize tooltip using the Plot service
 	const tooltip = plotService.createTooltip( '#pieChartContainer' );
 	createPie( svg, '.firstPie', firstPieData, colors, arc, xOffsetFirstPie, yOffset, tooltip, plotService );
 	createPie( svg, '.secondPie', secondPieData, colors, arc, xOffsetSecondPie, yOffset, tooltip, plotService );
-	plotService.addTitle( svg, `Compare HSY ${year} Landcover in ${nameOfZone} to:`, width / 2, margin );  
+	plotService.addTitle( svg, `Compare HSY ${year} Landcover in ${nameOfZone} to:`, width / 2 + 100, { top: 0 } );  
            
 }
 
@@ -75,35 +75,12 @@ const clearPieChart = ()  => {
  * 
  * @returns { Number } The total area 
 */
-const getTotalAreaByNameAndPropertyKeys = ( name, propertyKeys, year, datasource ) => {
-    
-			let totalArea = 0;
-
-			for ( let i = 0; i < datasource._entityCollection._entities._array.length; i++ ) {
-
-				if ( datasource._entityCollection._entities._array[ i ]._properties._nimi._value == name ) {
-
-					const entity = datasource._entityCollection._entities._array[ i ];
-	
-					propertyKeys.forEach( propertyKey => {
-
-						if ( entity._properties.hasOwnProperty( propertyKey + '_' + year ) ) {
-
-							totalArea += entity._properties[ propertyKey + '_' + year ]._value;
-
-						}
-
-					} );
-
-					return totalArea;
-
-				}
-
-			}
-
-			return totalArea;
-
-}
+const getTotalAreaByNameAndPropertyKeys = ( name, propertyKeys, year, datasource ) => 
+  datasource._entityCollection._entities._array
+    .filter(({ _properties }) => _properties._nimi._value === name )
+    .reduce( ( total, { _properties } ) => 
+      total + propertyKeys.reduce( ( sum, key ) => 
+        sum + ( _properties[`${ key }_${ year }`]?._value || 0 ), 0 ), 0 );
  
 		/**
  * Get landcover data array for a specific area
@@ -115,39 +92,17 @@ const getTotalAreaByNameAndPropertyKeys = ( name, propertyKeys, year, datasource
  * @returns { Array } Data array for the specified area
  */
 const getLandCoverDataForArea = ( name, year, datasource ) => {
+  const propertyKeys = [
+    'tree20_m2', 'tree15_m2', 'tree10_m2', 'tree2_m2', 'vegetation_m2',
+    'water_m2', 'field_m2', 'rocks_m2', 'other_m2', 'bareland_m2',
+    'building_m2', 'dirtroad_m2', 'pavedroad_m2'
+  ];
 
-			let trees20 = getTotalAreaByNameAndPropertyKeys( name, [ 'tree20_m2' ], year, datasource );
-			let trees15 = getTotalAreaByNameAndPropertyKeys( name, [ 'tree15_m2' ], year, datasource );
-			let trees10 = getTotalAreaByNameAndPropertyKeys( name, [ 'tree10_m2' ], year, datasource );
-			let trees2 = getTotalAreaByNameAndPropertyKeys( name, [ 'tree2_m2' ], year, datasource ); 
-			let vegetation = getTotalAreaByNameAndPropertyKeys( name, [ 'vegetation_m2' ], year, datasource );
-			let water = getTotalAreaByNameAndPropertyKeys( name, [ 'water_m2' ], year, datasource );
-			let fields = getTotalAreaByNameAndPropertyKeys( name, [ 'field_m2' ], year, datasource );
-			let rock = getTotalAreaByNameAndPropertyKeys( name, [ 'rocks_m2' ], year, datasource );
-			let other = getTotalAreaByNameAndPropertyKeys( name, [ 'other_m2' ], year, datasource );
-			let bareland = getTotalAreaByNameAndPropertyKeys( name, [ 'bareland_m2' ], year, datasource );
-			let building = getTotalAreaByNameAndPropertyKeys( name, [ 'building_m2' ], year, datasource );
-			let dirtroad = getTotalAreaByNameAndPropertyKeys( name, [  'dirtroad_m2' ], year, datasource );
-			let pavedroad = getTotalAreaByNameAndPropertyKeys( name, [  'pavedroad_m2' ], year, datasource );
+  const areas = propertyKeys.map( key => getTotalAreaByNameAndPropertyKeys( name, [ key ], year, datasource ) );
+  const totalArea = areas.reduce( ( sum, area ) => sum + area, 0 );
 
-			let totalArea = trees20 + trees15 + trees10 + trees2 + vegetation + water + fields + rock + other + bareland + building + dirtroad + pavedroad;
-
-			return [ 
-				( trees20 / totalArea ).toFixed( 3 ), 
-				( trees15 / totalArea ).toFixed( 3 ), 
-				( trees10 / totalArea ).toFixed( 3 ), 
-				( trees2 / totalArea ).toFixed( 3 ), 
-				( vegetation / totalArea ).toFixed( 3 ), 
-				( water / totalArea ).toFixed( 3 ), 
-				( fields / totalArea ).toFixed( 3 ), 
-				( rock / totalArea ).toFixed( 3 ), 
-				( other / totalArea ).toFixed( 3 ), 
-				( bareland / totalArea ).toFixed( 3 ), 
-				( building / totalArea ).toFixed( 3 ), 
-				( dirtroad / totalArea ).toFixed( 3 ),
-				( pavedroad / totalArea ).toFixed( 3 ) ];
-
-		}
+  return areas.map( area => ( area / totalArea ).toFixed( 3 ) );
+};
 
 const createPie = ( svg, name, data, colors, arc, xOffset, yOffset, tooltip, plotService ) => {
 			// Drawing first pie chart
@@ -171,23 +126,27 @@ const recreatePieChart = () => {
 
 onMounted(() => {
   createPieChart();
-  eventBus.$on('recreate piechart', recreatePieChart);
+  eventBus.on('recreate piechart', recreatePieChart);
 });
 
 onBeforeUnmount(() => {
   clearPieChart();
-  eventBus.$off('recreate piechart', recreatePieChart);
+  eventBus.off('recreate piechart', recreatePieChart);
 });
 
 </script>
 
 <style>
 #pieChartContainer {  
-  width: 100%;
-  height: 200px; 
-  font-size: smaller;
-  border: 1px solid black;
-  box-shadow: 3px 5px 5px black; 
-  background-color: white;
+ position: fixed; 
+ top: 295px; 
+ right: 10px; 
+ width: 400px; 
+ height: 200px; 
+ visibility: hidden; 
+ font-size: smaller; 
+ border: 1px solid black; 
+ box-shadow: 3px 5px 5px black; 
+ background-color: white;
 }
 </style>

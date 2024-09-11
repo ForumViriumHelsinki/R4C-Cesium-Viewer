@@ -1,15 +1,15 @@
 <template>
   <v-container fluid v-if="showComponents">
     <v-row no-guttersclass="pa-0 ma-0">
-      <v-col cols="3" class="pa-0 ma-0" style="position: fixed; top: 295px; right: 1px; width: 400px; height: 200px; visibility: hidden; font-size: smaller; border: 1px solid black; box-shadow: 3px 5px 5px black; background-color: white;">
+      <v-col cols="3" class="pa-0 ma-0">
         <PieChart />
       </v-col>
 
-      <v-col cols="3" class="pa-0 ma-0" style="position: fixed; top: 295px; right: 220px; width: 100px; font-size: smaller;">
+      <v-col cols="3" class="pa-0 ma-0" style="position: fixed; top: 465px; right: 10px; width: 100px; font-size: smaller;">
         <HSYYearSelect />
       </v-col>
 
-      <v-col cols="4" class="pa-0 ma-0" style="position: fixed; top: 295px; right: 1px; width: 100px;  font-size: smaller;">
+      <v-col cols="4" class="pa-0 ma-0" style="position: fixed; top: 310px; right: 10px; width: 100px;  font-size: smaller;">
         <HSYAreaSelect />
       </v-col>
     </v-row>
@@ -35,20 +35,20 @@ export default {
     const store = useGlobalStore();
 
     onMounted(() => {
-      eventBus.$on('showLandcover', () => {
+      eventBus.on('showLandcover', () => {
         if (store.level === 'postalCode') {
           showComponents.value = true;
         }
       });
 
-      eventBus.$on('hideLandcover', () => {
+      eventBus.on('hideLandcover', () => {
         showComponents.value = false;
       });
     });
 
     onBeforeUnmount(() => {
-      eventBus.$off('showLandcover');
-      eventBus.$off('hideLandcover');
+      eventBus.off('showLandcover');
+      eventBus.off('hideLandcover');
     });
 
     return {

@@ -83,7 +83,7 @@ export default class FeaturePicker {
   
 	async loadPostalCode() {
 
-		this.store.level = 'postalCode';
+		this.store.setLevel('postalCode');
 		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
 		this.datasourceService.removeDataSourcesAndEntities();
 
@@ -110,11 +110,12 @@ export default class FeaturePicker {
     
 	handleBuildingFeature( properties ) {
 
-		this.store.level = 'building';
+		eventBus.emit( 'hideBuildingScatterPlot' );
+		this.store.setLevel( 'building' );
 		this.store.setPostalCode( properties._postinumero._value );
 		this.plotService.togglePostalCodePlotVisibility( 'hidden' );
 		this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
-		eventBus.$emit( 'hideLandcover' ); 
+		eventBus.emit( 'hideLandcover' ); 
 		this.elementsDisplayService.setBuildingDisplay( 'none' );
 		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
 		this.buildingService.resetBuildingOutline();
@@ -150,7 +151,7 @@ export default class FeaturePicker {
 
 		if ( id.properties.grid_id ) {
 			propStore.setHeatFloodVulnerability( id.properties );
-			eventBus.$emit( 'createHeatFloodVulnerabilityChart' );
+			eventBus.emit( 'createHeatFloodVulnerabilityChart' );
 		}
     
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.

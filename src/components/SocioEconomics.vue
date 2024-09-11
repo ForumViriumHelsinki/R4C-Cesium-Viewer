@@ -17,7 +17,7 @@ import Plot from '../services/plot.js';
 
 export default {
 	mounted() {
-		this.unsubscribe = eventBus.$on( 'newSocioEconomicsDiagram', this.newSocioEconomicsDiagram );
+		this.unsubscribe = eventBus.on( 'newSocioEconomicsDiagram', this.newSocioEconomicsDiagram );
 		this.store = useGlobalStore();
 		this.toggleGlobalStore = useToggleStore();
 		this.socioEconomicsStore = useSocioEconomicsStore();
@@ -26,7 +26,7 @@ export default {
   
 	},
 	beforeUnmount() {
-		this.unsubscribe();
+		eventBus.off( 'newSocioEconomicsDiagram' );
 	},
 	methods: {
 		newSocioEconomicsDiagram( newData ) {

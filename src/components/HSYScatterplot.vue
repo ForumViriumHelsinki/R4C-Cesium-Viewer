@@ -104,7 +104,7 @@ export default {
 
       const { heatData, labelsWithAverage, values } = prepareDataForPlot( features );
 
-      const margin = { top: 40, right: 130, bottom: 20, left: 30 };
+      const margin = { top: 50, right: 145, bottom: 20, left: 30 };
       const width = 550 - margin.left - margin.right;
       const height = 290 - margin.top - margin.bottom;
 
@@ -117,7 +117,8 @@ export default {
 
       addPlotElements( svg, heatData, xScale, yScale, colorScale );
       createLegend( svg, width, margin, values, labelsWithAverage, colorScale );
-      plotService.addTitle( svg, 'Building attributes and average surface temperature in Celsius', width + 120, margin );
+      plotService.addTitle( svg, 'Building attributes and average surface temperature in Celsius', width + 240, margin );
+
     };
 
     const createColorScale = ( values ) => {
@@ -203,14 +204,13 @@ export default {
     };
 
     // Call updateHSYScatterPlot on mounted
-    onMounted( () => {
+    onMounted(() => {
       updateHSYScatterPlot(); // This will be called once the component is mounted
-      eventBus.$on( 'updateScatterPlot', updateHSYScatterPlot ); // Listen to the event
+      eventBus.on( 'updateScatterPlot', updateHSYScatterPlot ); // Listen to the event
     });
 
-    // Clean up event listener on unmount
-    onBeforeUnmount( () => {
-      eventBus.$off( 'updateScatterPlot', updateHSYScatterPlot );
+    onBeforeUnmount(() => {
+      eventBus.off( 'updateScatterPlot', updateHSYScatterPlot ); // Clean up event listener on unmount
     });
 
     return {

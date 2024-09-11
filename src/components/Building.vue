@@ -35,9 +35,9 @@ export default {
         }
     },
 	mounted() {
-		this.unsubscribe = eventBus.$on( 'newBuildingHeat', this.newBuildingHeat );
-		this.unsubscribe = eventBus.$on( 'newBuildingTree', this.newBuildingTree );
-		this.unsubscribe = eventBus.$on( 'newBuildingGridChart', this.newBuildingGridChart );
+		this.unsubscribe = eventBus.on( 'newBuildingHeat', this.newBuildingHeat );
+		this.unsubscribe = eventBus.on( 'newBuildingTree', this.newBuildingTree );
+		this.unsubscribe = eventBus.on( 'newBuildingGridChart', this.newBuildingGridChart );
 		this.store = useGlobalStore();
 		this.toggleStore  = useToggleStore();
 		this.propsStore  = usePropsStore();
@@ -106,16 +106,7 @@ export default {
 			const hideColdAreas = document.getElementById( 'hideColdAreasToggle' ).checked;
 			this.toggleStore.setHideColdAreas( hideColdAreas );
 			const dataSourceService = new Datasource();
-
-			if ( hideColdAreas ) {
-
-				dataSourceService.changeDataSourceShowByName( 'ColdAreas', false );
-
-			} else {
-
-				dataSourceService.changeDataSourceShowByName( 'ColdAreas', true );
-
-			}
+			dataSourceService.changeDataSourceShowByName('ColdAreas', !hideColdAreas);
 
 		},		
 

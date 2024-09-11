@@ -73,7 +73,7 @@ export default {
 		};
 	},
 	mounted() {
-		this.unsubscribe = eventBus.$on( 'createPopulationGrid', this.createPopulationGrid );
+		this.unsubscribe = eventBus.on( 'createPopulationGrid', this.createPopulationGrid );
 		this.store = useGlobalStore();
 		this.toggleStore  = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
@@ -123,7 +123,7 @@ export default {
             if (checked) {
 
 				this.datasourceService.changeDataSourceShowByName( 'PopulationGrid', false );
-				eventBus.$emit('create250mGrid'); // Trigger the simulation to start
+				eventBus.emit('create250mGrid'); // Trigger the simulation to start
 
             } else {
 

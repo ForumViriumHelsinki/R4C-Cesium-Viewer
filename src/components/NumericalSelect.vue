@@ -2,10 +2,11 @@
   <v-select
     v-model="selectedNumerical"
     :items="numericalOptions"
-    label="Select Numerical"
+    label="Select Property"
     item-title="text"
     item-value="value"
-    dense
+    density="compact"
+    variant="underlined"
   />
 </template>
 
@@ -37,7 +38,7 @@ export default {
     // Emit function
     const emitChange = (selectedOption) => {
       propsStore.setNumericalSelect( { value: selectedOption.value, text: selectedOption.text } );
-      eventBus.$emit('updateScatterPlot' );
+      eventBus.emit('updateScatterPlot' );
     };
 
     return {

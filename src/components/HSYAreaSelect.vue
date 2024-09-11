@@ -3,6 +3,8 @@
     v-model="selectedArea"
     :items="areaOptions"
     label="Select Area"
+    density="compact"
+    variant="underlined"
   />
 </template>
 
@@ -44,7 +46,7 @@ export default {
 
     watch(() => selectedArea.value, (newValue) => {
       propsStore.setHSYSelectArea(newValue);
-      eventBus.$emit('recreate piechart');
+      eventBus.emit('recreate piechart');
     });
 
     return {

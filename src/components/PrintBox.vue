@@ -13,8 +13,8 @@ import { useGlobalStore } from '../stores/globalStore.js';
 
 export default {
 	mounted() {
-		this.unsubscribeEntityPrint = eventBus.$on('entityPrintEvent', this.entityPrint);
-  		this.unsubscribeGeocodingPrint = eventBus.$on('geocodingPrintEvent', this.geocodingPrint);
+		this.unsubscribeEntityPrint = eventBus.on('entityPrintEvent', this.entityPrint);
+  		this.unsubscribeGeocodingPrint = eventBus.on('geocodingPrintEvent', this.geocodingPrint);
   		this.store = useGlobalStore();
 	},
 	beforeUnmount() {

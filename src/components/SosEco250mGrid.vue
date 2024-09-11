@@ -159,7 +159,7 @@ const getColorForIndex = (indexValue, indexType) => {
 };
 
 // Event listener to show the password dialog when the event is triggered
-eventBus.$on('create250mGrid', () => {
+eventBus.on('create250mGrid', () => {
   showPasswordDialog.value = true;
 });
 

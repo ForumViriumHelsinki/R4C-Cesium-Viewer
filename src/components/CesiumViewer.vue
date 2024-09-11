@@ -21,6 +21,7 @@
       <!-- Row 6 -->
       <v-row no-gutters class="pa-0 ma-0">
         <v-col cols="6" class="d-flex align-start pa-0 ma-0" style="z-index: 20;">
+		  <Landcover />
         </v-col>
       </v-row>
 

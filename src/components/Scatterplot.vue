@@ -33,7 +33,7 @@ import { usePropsStore } from '../stores/propsStore';
   
 export default {
 	mounted() {
-		this.unsubscribe = eventBus.$on( 'newScatterPlot', this.newScatterPlot );
+		this.unsubscribe = eventBus.on( 'newScatterPlot', this.newScatterPlot );
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
 		this.plotService = new Plot();

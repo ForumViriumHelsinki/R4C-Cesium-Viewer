@@ -2,10 +2,11 @@
   <v-select
     v-model="selectedCategorical"
     :items="categoricalOptions"
-    label="Select Categorical"
+    label="Select Property"
     item-title="text"
     item-value="value"    
-    dense
+    density="compact"
+    variant="underlined"
   />
 </template>
 
@@ -35,7 +36,7 @@ export default {
 
     const emitChange = (selectedOption) => {
       propsStore.setCategoricalSelect( { value: selectedOption.value, text: selectedOption.text } );
-      eventBus.$emit( 'updateScatterPlot' );
+      eventBus.emit( 'updateScatterPlot' );
     };
 
     return {

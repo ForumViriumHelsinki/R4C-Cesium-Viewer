@@ -1,20 +1,7 @@
-import { reactive } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
+import mitt from 'mitt'; // Import mitt
 
-export const eventBus = reactive( {
-	listeners: {},
-	$on( event, callback ) {
-		if ( !this.listeners[event] ) {
-			this.listeners[event] = [];
-		}
-		this.listeners[event].push( callback );
-	},
-	$emit( event, ...args ) {
-		if ( this.listeners[event] ) {
-			this.listeners[event].forEach( callback => callback( ...args ) );
-		}
-	},
-} );
+export const eventBus = mitt(); // Create a mitt instance
+import { useGlobalStore } from '../stores/globalStore';
 
 export default class EventEmitter {
 
@@ -25,7 +12,7 @@ export default class EventEmitter {
 
 	emitHeatHistogram( ) {
 		
-		eventBus.$emit( 'newHeatHistogram' );
+		eventBus.emit( 'newHeatHistogram' );
 
 	}
 
@@ -42,7 +29,7 @@ export default class EventEmitter {
 
 		if ( !postcode !== '00230' || !postcode !== '02290' || !postcode !== '01770' ) {
 
-			eventBus.$emit( 'newSocioEconomicsDiagram', postcode );
+			eventBus.emit( 'newSocioEconomicsDiagram', postcode );
 
 		}
 
@@ -55,7 +42,7 @@ export default class EventEmitter {
  */
 	emitScatterplotEvent( ) {
 
-		eventBus.$emit( this.store.view == 'helsinki' ? 'newScatterPlot' : 'showBuildingScatterPlot' );
+		eventBus.emit( this.store.view == 'helsinki' ? 'newScatterPlot' : 'showBuildingScatterPlot' );
 
 	}
 
@@ -65,7 +52,7 @@ export default class EventEmitter {
  */
 	emitSurveyScatterPlotEvent( ) {
 
-		eventBus.$emit( 'newSurveyScatterPlot' );
+		eventBus.emit( 'newSurveyScatterPlot' );
 
 	}
 
@@ -77,7 +64,7 @@ export default class EventEmitter {
  */
 	emitBuildingHeatEvent(  ) {
 		
-		eventBus.$emit( 'newBuildingHeat' );   
+		eventBus.emit( 'newBuildingHeat' );   
 
 	}
 
@@ -88,7 +75,7 @@ export default class EventEmitter {
  */
 	emitBuildingTreeEvent( ) {
 
-		eventBus.$emit( 'newBuildingTree' ); 
+		eventBus.emit( 'newBuildingTree' ); 
 
 	}
 
@@ -98,7 +85,7 @@ export default class EventEmitter {
  */
 	emitTreeEvent( ) {
 
-		eventBus.$emit( 'newNearbyTreeDiagram' );
+		eventBus.emit( 'newNearbyTreeDiagram' );
 
 
 	}
@@ -110,7 +97,7 @@ export default class EventEmitter {
  */
 	emitGridViewEvent( ) {
 
-		eventBus.$emit( 'createPopulationGrid' ); 
+		eventBus.emit( 'createPopulationGrid' ); 
 
 	} 
 
@@ -122,31 +109,31 @@ export default class EventEmitter {
  */
 	emitPostalCodeViewEvent( ) {
 
-		eventBus.$emit( 'initPostalCodeView' );
+		eventBus.emit( 'initPostalCodeView' );
 
 	}
 
 	emitBuildingGridEvent( ) {
 
-		eventBus.$emit( 'newBuildingGridChart' );
+		eventBus.emit( 'newBuildingGridChart' );
 
 	}
 
 	emitPieChartEvent( ) {
 
-		eventBus.$emit( 'newPieChart' );
+		eventBus.emit( 'newPieChart' );
 
 	}
 
 	emitEntityPrintEvent( ) {
 
-		eventBus.$emit( 'entityPrintEvent' );
+		eventBus.emit( 'entityPrintEvent' );
 
 	}
 
 	emitGeocodingPrintEvent( ) {
 
-		eventBus.$emit( 'geocodingPrintEvent' );
+		eventBus.emit( 'geocodingPrintEvent' );
 
 	}	
 

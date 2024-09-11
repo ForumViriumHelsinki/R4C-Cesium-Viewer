@@ -19,6 +19,9 @@ export const useGlobalStore = defineStore( 'global', {
 		pickedEntity: null,
 	} ),
 	actions: {
+		setLevel( level ) {
+			this.level = level;
+		},
 		setPostalCodeData( postalCodeData ) {
 			this.postalCodeData = postalCodeData;
 		},		

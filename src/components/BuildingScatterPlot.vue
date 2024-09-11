@@ -1,10 +1,10 @@
 <template>
   <v-container fluid v-if="showComponents">
     <v-row no-gutters class="pa-0 ma-0">
-<v-col class="pa-0 ma-0" style="position: fixed; bottom: 283px; left: 10px; width: 100px; font-size: 12px; z-index: 10;">
+<v-col class="pa-0 ma-0" style="position: fixed; bottom: 292px; left: 5px; width: 155px; z-index: 10;">
   <CategoricalSelect />
 </v-col>
-<v-col class="pa-0 ma-0" style="position: fixed; bottom: 35px; left: 452px; width: 100px; font-size: 12px; z-index: 10;">
+<v-col class="pa-0 ma-0" style="position: fixed; bottom: 35px; left: 426px; width: 124px; z-index: 10;">
   <NumericalSelect />
 </v-col>
     </v-row>
@@ -35,20 +35,20 @@ export default {
     const showComponents = ref(false);
 
     onMounted(() => {
-      eventBus.$on('showBuildingScatterPlot', () => {
+      eventBus.on('showBuildingScatterPlot', () => {
         if (store.level === 'postalCode') {
           showComponents.value = true;
         }
       });
 
-      eventBus.$on('hideBuildingScatterPlot', () => {
+      eventBus.on('hideBuildingScatterPlot', () => {
         showComponents.value = false;
       });
     });
 
     onBeforeUnmount(() => {
-      eventBus.$off('showBuildingScatterPlot');
-      eventBus.$off('hideBuildingScatterPlot');
+      eventBus.off('showBuildingScatterPlot');
+      eventBus.off('hideBuildingScatterPlot');
     });
 
     return {
@@ -73,6 +73,4 @@ export default {
   background-color: white;
   margin: 20px;
 }
-
-/* Optional: Additional styling can be done here if needed */
 </style>

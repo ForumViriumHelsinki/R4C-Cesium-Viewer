@@ -14,14 +14,14 @@ import { useToggleStore } from '../stores/toggleStore.js';
   
 export default {
 	mounted() {
-		this.unsubscribe = eventBus.$on( 'newHeatHistogram', this.newHeatHistogram );
+		this.unsubscribe = eventBus.on( 'newHeatHistogram', this.newHeatHistogram );
 		this.store = useGlobalStore();
 		this.plotService = new Plot();
 		this.propsStore  = usePropsStore();
 		this.toggleStore  = useToggleStore();
 	},
 	beforeUnmount() {
-		this.unsubscribe();
+		eventBus.off( 'newHeatHistogram' );
 	},
 	methods: {
 		newHeatHistogram( ) {

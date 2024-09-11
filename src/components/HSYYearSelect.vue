@@ -3,6 +3,8 @@
       v-model="selectedYear"
       :items="yearOptions"
       label="Select Year"
+      density="compact"
+      variant="underlined"
   />
 </template>
 
@@ -22,7 +24,7 @@ export default {
       propsStore.setHSYYear(newValue);
       const wmsService = new WMS();
       wmsService.reCreateHSYImageryLayer();
-      eventBus.$emit('recreate piechart');
+      eventBus.emit('recreate piechart');
     });
 
     return {

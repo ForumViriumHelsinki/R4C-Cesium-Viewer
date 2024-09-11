@@ -62,7 +62,7 @@ import Plot from '../services/plot.js';
   
 export default {
 	mounted() {
-		this.unsubscribe = eventBus.$on( 'newNearbyTreeDiagram', this.newNearbyTreeDiagram );
+		this.unsubscribe = eventBus.on( 'newNearbyTreeDiagram', this.newNearbyTreeDiagram );
 		this.store = useGlobalStore();
 		this.plotService = new Plot();
 

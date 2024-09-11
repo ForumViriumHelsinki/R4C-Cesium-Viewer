@@ -1,7 +1,6 @@
 import { useGlobalStore } from '../stores/globalStore.js';
 import WMS from './wms.js';
 import { eventBus } from './eventEmitter.js';
-import Plot from './plot.js';
 
 export default class Landcover {
 	constructor( ) {
@@ -16,19 +15,13 @@ export default class Landcover {
 			this.wmsService.createHSYImageryLayer( )
 		);
 
-		this.emitLandcoverEvents();
-
-	}
-
-	emitLandcoverEvents() {
-
-		eventBus.$emit( 'showLandcover' ); 
+		eventBus.emit( 'showLandcover' ); 
 
 	}
 
 	removeLandcover() {
 
-		eventBus.$emit( 'hideLandcover' ); 
+		eventBus.emit( 'hideLandcover' ); 
 		this.viewer.imageryLayers.removeAll();
 
 		this.viewer.imageryLayers.add(

@@ -12,7 +12,7 @@ import { useGlobalStore } from '../stores/globalStore';
   
 export default {
 	mounted() {
-		this.unsubscribe = eventBus.$on( 'newSurveyScatterPlot', this.newSurveyScatterPlot );
+		this.unsubscribe = eventBus.on( 'newSurveyScatterPlot', this.newSurveyScatterPlot );
 		this.plotService = new Plot();
 	},
 	beforeUnmount() {
