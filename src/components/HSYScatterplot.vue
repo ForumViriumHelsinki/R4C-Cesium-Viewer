@@ -104,7 +104,7 @@ export default {
 
       const { heatData, labelsWithAverage, values } = prepareDataForPlot( features );
 
-      const margin = { top: 50, right: 145, bottom: 20, left: 30 };
+      const margin = { top: 50, right: 150, bottom: 20, left: 30 };
       const width = 550 - margin.left - margin.right;
       const height = 290 - margin.top - margin.bottom;
 
@@ -130,7 +130,7 @@ export default {
     const createLegend = ( svg, width, margin, values, labelsWithAverage, colorScale ) => {
       const legend = svg.append( 'g' )
         .attr( 'class', 'legend' )
-        .attr( 'transform', `translate( ${ width + margin.right - 120 },${ margin.top } )` );
+        .attr( 'transform', `translate( ${ width + margin.right - 145 },${ margin.top } )` );
   
       legend.selectAll( '.legend-color' )
         .data( values )
@@ -146,10 +146,10 @@ export default {
         .data( labelsWithAverage )
         .enter()
         .append( 'text' )
-        .attr( 'x', 20 )
+        .attr( 'x', 15 )
         .attr( 'y', ( _, i ) => i * 20 + 9 )
         .text( d => d )
-        .style( 'font-size', '10px' );
+        .style( 'font-size', '9px' );
     };
 
     const prepareDataForPlot = ( features ) => {
