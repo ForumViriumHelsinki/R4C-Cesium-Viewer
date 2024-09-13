@@ -138,15 +138,15 @@ export default {
         .append( 'rect' )
         .attr( 'x', 0 )
         .attr( 'y', ( _, i ) => i * 20 )
-        .attr( 'width', 10 )
-        .attr( 'height', 10 )
+        .attr( 'width', 9 )
+        .attr( 'height', 9 )
         .style( 'fill', d => colorScale( d ) );
   
       legend.selectAll( '.legend-label' )
         .data( labelsWithAverage )
         .enter()
         .append( 'text' )
-        .attr( 'x', 15 )
+        .attr( 'x', 14 )
         .attr( 'y', ( _, i ) => i * 20 + 9 )
         .text( d => d )
         .style( 'font-size', '9px' );
@@ -164,7 +164,7 @@ export default {
         plotData.xData.forEach( ( xData, j ) => {
           heatData.push({ xData, yData: plotData.yData[ j ], name: value, buildingId: plotData.buildingId[ j ] });
         });
-        const averageLabel = `${ value } ${ dataWithHeat[ 2 ].toFixed( 2 ) }`;
+        const averageLabel = `${ value } ${ dataWithHeat[ 2 ].toFixed( 1 ) }`;
         if ( !labelsWithAverage.includes( averageLabel ) ) {
           labelsWithAverage.push( `${ averageLabel } °C` );
         }

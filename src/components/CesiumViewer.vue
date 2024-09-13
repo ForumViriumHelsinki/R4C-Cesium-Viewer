@@ -7,11 +7,11 @@
     <v-container fluid class="d-flex flex-column pa-0 ma-0" style="position: relative; z-index: 10;">
       <!-- Row 7 -->
       <v-row no-gutters class="pa-0 ma-0">
-        <v-col cols="6" class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
-          <HeatHistogram />
-          <BuildingComponent />
+        <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
+          <HeatHistogram />		
+		  <Building />
         </v-col>
-        <v-col cols="6" class="d-flex align-end pa-0 ma-0" style="z-index: 20;">
+        <v-col class="d-flex align-end pa-0 ma-0" style="z-index: 20;">
           <SocioEconomics />
         </v-col>
       </v-row>
@@ -20,7 +20,7 @@
 
       <!-- Row 6 -->
       <v-row no-gutters class="pa-0 ma-0">
-        <v-col cols="6" class="d-flex align-start pa-0 ma-0" style="z-index: 20;">
+        <v-col class="d-flex align-start pa-0 ma-0" style="z-index: 20;">
 		  <Landcover />
         </v-col>
       </v-row>
@@ -29,7 +29,7 @@
 
       <!-- Row 1 -->
       <v-row no-gutters class="pa-0 ma-0">
-        <v-col cols="6" class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
+        <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
           <Scatterplot />
           <BuildingScatterPlot />
           <NearbyTreeArea />
@@ -48,14 +48,15 @@ import 'cesium/Source/Widgets/widgets.css';
 import Datasource from '../services/datasource.js'; 
 import Tree from '../services/tree.js'; 
 import WMS from '../services/wms.js'; 
-import Building from '../services/building.js'; 
 import Featurepicker from '../services/featurepicker.js'; 
 import Geocoding from '../services/geocoding.js';
 import EventEmitter from '../services/eventEmitter.js';
 import HeatHistogram from './HeatHistogram.vue';
 import SocioEconomics from './SocioEconomics.vue';
 import Scatterplot from './Scatterplot.vue';
-import BuildingComponent from './Building.vue';
+import BuildingHeatChart from './BuildingHeatChart.vue';
+import HSYBuildingHeatChart from './HSYBuildingHeatChart.vue';
+import BuildingTreeChart from './BuildingTreeChart.vue';
 import Landcover from './Landcover.vue';
 import NearbyTreeArea from './NearbyTreeArea.vue';
 import DisclaimerPopup from './DisclaimerPopup.vue';
@@ -63,6 +64,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
 import BuildingScatterPlot from './BuildingScatterPlot.vue';
+import Building from '../views/Building.vue';
 
 export default {
 	data() {
@@ -87,10 +89,13 @@ export default {
 		SocioEconomics,
 		Scatterplot,
 		BuildingScatterPlot,
-		BuildingComponent,
+		BuildingHeatChart,
+		BuildingTreeChart,
+		HSYBuildingHeatChart,
 		NearbyTreeArea,
 		Landcover,
-		DisclaimerPopup
+		DisclaimerPopup,
+		Building
 	},  
 	methods: {
 		initViewer() {

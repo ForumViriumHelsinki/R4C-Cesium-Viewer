@@ -7,6 +7,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import EventEmitter from './eventEmitter.js';
+import { eventBus } from './eventEmitter.js';
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
@@ -57,54 +58,21 @@ export default class Building {
 	/**
  * Submits events for creating building charts
  *  
- * @param { Number } buildingHeatExposure building heat exposure index
  * @param { Number } treeArea nearby tree area of building
  * @param { Number } avg_temp_c average surface temperature of building in Celsius
+ * @param { Object } buildingProps 
+
  */
-	createBuildingCharts( buildingHeatExposure, treeArea, avg_temp_c, buildingProps ) {
+	createBuildingCharts( treeArea, avg_temp_c, buildingProps ) {
 
-		if ( this.store.view == 'helsinki' && this.toggleStore.showTrees ) {
-    
-			if ( treeArea ) {
-				
-				this.propsStore.setTreeArea( treeArea );
-				this.eventEmitterService.emitBuildingTreeEvent( );    
-	
-			} else {
-	
-				this.eventEmitterService.emitBuildingTreeEvent( 0 );    
-	
-			}
+		( this.toggleStore.showTrees && treeArea ) && 
+			( this.propsStore.setTreeArea( treeArea ) );
 
-		}
-
-		if ( this.store.view == 'helsinki' ) {
-
-			this.propsStore.setBuildingHeatExposure( buildingHeatExposure );
-			this.eventEmitterService.emitBuildingHeatEvent( );    
-
-		} else {
-
-			if ( this.store.view == 'capitalRegion' ) {
-
-				this.propsStore.setBuildingHeatExposure( avg_temp_c._value );
-
-				if ( buildingProps.heat_timeseries ) {
-				
-					this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value );
-
-				}
-
- 				this.eventEmitterService.emitBuildingHeatEvent( );    
-
-			} else {
-
-				this.propsStore.setGridBuildingProps( buildingProps );
-
-				this.eventEmitterService.emitBuildingGridEvent( );
-			}
-
-		}        
+		this.store.view === 'helsinki' 
+    		? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
+    		: ( this.store.view === 'capitalRegion' 
+        		? ( this.propsStore.setBuildingHeatExposure( avg_temp_c._value ), buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) ) 
+        		: ( this.propsStore.setGridBuildingProps( buildingProps ), eventBus.emit( 'newBuildingGridChart' ) ) );       
 	}
 
 	/**
@@ -133,15 +101,9 @@ export default class Building {
 			polygon.material = new Cesium.Color( 0, 0, 0, 0 );
 		}
 
-		if ( this.store.view === 'helsinki' ) {
-			this.hideNonSoteBuilding( entity );
-			this.hideLowBuilding( entity );
-		}
+		this.store.view === 'helsinki' && ( this.hideNonSoteBuilding( entity ), this.hideLowBuilding( entity ) ); 
+    	( this.store.view === 'grid' && entity._properties?._kayttarks?._value !== 'Asuinrakennus' ) && ( entity.show = false );
 
-		if ( this.store.view === 'grid' ) {
-			const isResidentialBuilding = entity._properties?._kayttarks?._value === 'Asuinrakennus';
-			if ( !isResidentialBuilding ) entity.show = false;
-		}
 	}
 
 	/**
@@ -166,14 +128,10 @@ export default class Building {
  * @param { Object } entity Cesium entity
  */
 	hideLowBuilding( entity ) {
-
-		if ( this.toggleStore.hideLow ) {
-			const floorCount = Number( entity._properties.i_kerrlkm?._value );
-
-			if ( !floorCount || floorCount < 7 ) {
-				entity.show = false;
-			}
-		}
+		
+		this.toggleStore.hideLow && 
+    		( !Number( entity._properties.i_kerrlkm?._value )  || Number( entity._properties.i_kerrlkm?._value ) < 7 ) &&
+    		( entity.show = false );
 	
 	}
 
@@ -221,12 +179,8 @@ export default class Building {
 		// This code runs if there were any errors.
 			console.log( err );
 		}
-
-		if ( this.toggleStore.showTrees ) {
-	
-			this.treeService.loadTrees( );
-
-		}
+		
+		this.toggleStore.showTrees && this.treeService.loadTrees();
 
 	}
 
@@ -259,9 +213,7 @@ export default class Building {
 		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 		// If the data source isn't found, exit the function
-		if ( !buildingDataSource ) {
-			return;
-		}
+		if ( !buildingDataSource ) return;
 
 		for ( let i = 0; i < buildingDataSource._entityCollection._entities._array.length; i++ ) {
         
@@ -290,9 +242,7 @@ export default class Building {
 	filterBuildings( buildingsDataSource ) {
 
 		// If the data source isn't found, exit the function
-		if ( !buildingsDataSource ) {
-			return;
-		}
+		if ( !buildingsDataSource ) return;
 
 		const hideNewBuildings = this.toggleStore.hideNewBuildings;
 		const hideNonSote = this.toggleStore.hideNonSote;
@@ -300,27 +250,13 @@ export default class Building {
 
 		buildingsDataSource.entities.values.forEach( ( entity ) => {
 
-			if ( hideNewBuildings ) {
-				// Filter out buildings built before summer 2018
-				const cutoffDate = new Date( '2018-06-01T00:00:00' ).getTime();
-				const c_valmpvm = entity._properties._c_valmpvm?._value;
+			hideNewBuildings && 
+    			entity._properties?._c_valmpvm?._value && 
+    			new Date( entity._properties._c_valmpvm._value ).getTime() >= new Date( '2018-06-01T00:00:00' ).getTime() && 
+    			( entity.show = false );
 
-				if ( c_valmpvm && new Date( c_valmpvm ).getTime() >= cutoffDate ) {
-					entity.show = false;
-				}
-			}
-
-			if ( hideNonSote ) {
-				// Filter out non-SOTE buildings
-				this.soteBuildings( entity );
-
-			}
-
-			if ( hideLow ) {
-				// Filter out buildings with fewer floors
-				this.lowBuildings( entity );
-
-			}
+			hideNonSote && this.soteBuildings( entity );
+			hideLow && this.lowBuildings( entity );
 
 		} );
 
@@ -328,25 +264,19 @@ export default class Building {
 
 	soteBuildings( entity ) {
 
-		if ( this.store.view == 'helsinki' ) {
+		const kayttotark = this.store.view === 'helsinki' 
+    		? entity._properties?._c_kayttark?._value ? Number( entity._properties.c_kayttark._value ) : null
+    		: entity._properties?._kayttarks?._value;
 
-			const kayttotark = entity._properties._c_kayttark ? Number( entity._properties.c_kayttark._value ) : null;
-			entity.show = kayttotark && ( kayttotark == 511 || kayttotark == 131 || ( kayttotark > 210 && kayttotark < 240 ) );
-
-		} else {
-
-			const kayttotark = entity._properties._kayttarks && entity._properties._kayttarks._value;
-			entity.show = kayttotark == 'Yleinen rakennus';
-
-		}
-
+		entity.show = this.store.view === 'helsinki'
+    		? kayttotark && ( [ 511, 131 ].includes( kayttotark ) || ( kayttotark > 210 && kayttotark < 240 ) )
+    		: kayttotark === 'Yleinen rakennus';
 	}
 
 	lowBuildings( entity ) {
 		
-		if ( entity._properties[ this.store.view == 'helsinki' ? '_i_kerrlkm' : '_kerrosten_lkm' ]?. _value <= 6 ) {
-			entity.show = false;
-		}		
+		( entity._properties?.[ this.store.view === 'helsinki' ? '_i_kerrlkm' : '_kerrosten_lkm' ]?._value <= 6 ) && ( entity.show = false );
+		
 	}
 	/**
 * Shows all buildings and updates the histograms and scatter plot
@@ -354,9 +284,7 @@ export default class Building {
 */
 	showAllBuildings( buildingsDataSource ) {
 		// If the data source isn't found, exit the function
-		if ( !buildingsDataSource ) {
-			return;
-		}
+		if ( !buildingsDataSource ) return;
 
 		// Iterate over all entities in data source
 		for ( let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++ ) {
@@ -365,8 +293,6 @@ export default class Building {
 			buildingsDataSource._entityCollection._entities._array[ i ].show = true;
 
 		}
-
- 
 	}
 
 	highlightBuildingsInViewer( temps ) {
@@ -374,9 +300,9 @@ export default class Building {
 		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 		// If the data source isn't found, exit the function
-		if ( !buildingDataSource ) {
-			return;
-		}    const entities = buildingDataSource.entities.values;
+		if ( !buildingDataSource ) return;
+  
+		const entities = buildingDataSource.entities.values;
 
 		for ( let i = 0; i < entities.length; i++ ) {
 			const entity = entities[i];
@@ -393,13 +319,12 @@ export default class Building {
 		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 		// If the data source isn't found, exit the function
-		if ( !buildingDataSource ) {
-			return;
-		}    const entities = buildingDataSource.entities.values;
+		if ( !buildingDataSource ) return;    
+		
+		const entities = buildingDataSource.entities.values;
 
 		for ( let i = 0; i < entities.length; i++ ) {
-			const entity = entities[i];
-
+			const entity = entities[ i ];
 			this.polygonOutlineToBlack( entity );
 		}
 	}
@@ -407,12 +332,12 @@ export default class Building {
 	outlineByTemperature( entity, property, values ) {
 		const targetDate = '2021-02-18';
 		const isCold = this.toggleStore.capitalRegionCold;
-		const heatTimeseries = entity._properties['heat_timeseries']?._value || [];
+		const heatTimeseries = entity._properties[ 'heat_timeseries' ]?._value || [];
 		const foundEntry = isCold && heatTimeseries.find( ( { date } ) => date === targetDate );
 
 		const shouldOutlineYellow = isCold 
 			? foundEntry && values.includes( foundEntry.avg_temp_c )
-			: entity._properties[property] && values.includes( entity._properties[property]._value );
+			: entity._properties[property] && values.includes( entity._properties[ property ]._value );
 
 		shouldOutlineYellow 
 			? this.polygonOutlineToYellow( entity ) 
@@ -426,12 +351,12 @@ export default class Building {
 		const buildingDataSource = this.datasourceService.getDataSourceByName( 'Buildings ' + this.store.postalcode );
 
 		// If the data source isn't found, exit the function
-		if ( !buildingDataSource ) {
-			return;
-		}    const entities = buildingDataSource.entities.values;
+		if ( !buildingDataSource ) return;    
+  
+		const entities = buildingDataSource.entities.values;
 
 		for ( let i = 0; i < entities.length; i++ ) {
-			const entity = entities[i];
+			const entity = entities[ i ];
 
 			this.outlineById( entity, this.store.view === 'helsinki' ? 'id' : 'kiitun', id );
 
@@ -440,7 +365,7 @@ export default class Building {
 
 	outlineById( entity, property, id ) {
 
-		entity._properties[property] && entity._properties[property]._value === id
+		entity._properties[ property ] && entity._properties[ property ]._value === id
 			? ( this.polygonOutlineToYellow( entity ), this.store.setPickedEntity( entity ), this.eventEmitterService.emitEntityPrintEvent() )
 			: this.polygonOutlineToBlack( entity );
 

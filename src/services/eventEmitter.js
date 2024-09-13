@@ -56,40 +56,6 @@ export default class EventEmitter {
 
 	}
 
-
-	/**
- * The function emits event after user picks a building from viewer
- *
- * 
- */
-	emitBuildingHeatEvent(  ) {
-		
-		eventBus.emit( 'newBuildingHeat' );   
-
-	}
-
-	/**
- * The function emits event after user picks a building from viewer
- *
- * 
- */
-	emitBuildingTreeEvent( ) {
-
-		eventBus.emit( 'newBuildingTree' ); 
-
-	}
-
-	/**
- * The function emits an event after trees have been loaded
- *
- */
-	emitTreeEvent( ) {
-
-		eventBus.emit( 'newNearbyTreeDiagram' );
-
-
-	}
-
 	/**
  * The function emits event after user selects grid view 
  *

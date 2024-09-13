@@ -408,9 +408,9 @@ export default {
 				.attr( 'width', width / data.length )
 				.attr( 'height', d => height - yScale( d ) )
 				.attr( 'fill', color )
-				.on( 'mouseover', ( event, d, i ) => this.handleMouseover( tooltip, containerId, event, d, 
+				.on( 'mouseover', ( event, d, i ) => this.plotService.handleMouseover( tooltip, containerId, event, d, 
 					() => `Heat Exposure: ${heatExps[i]}<br>Tree Area: ${d}` ) )
-				.on( 'mouseout', () => this.handleMouseout( tooltip ) );
+				.on( 'mouseout', () => this.plotService.handleMouseout( tooltip ) );
 		},
 		/**
  * This function iterates through each direction using the switches array. 

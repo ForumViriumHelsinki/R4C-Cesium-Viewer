@@ -46,7 +46,7 @@
         </label>
         <label for="250mGrid" class="label" id="250mGridLabel">250m grid</label>		
     </div>
-
+    <BuildingGridChart />
 	<SosEco250mGrid />
 	<SurveyScatterPlot />
 	<VulnerabilityChart/>
@@ -62,6 +62,7 @@ import { useToggleStore } from '../stores/toggleStore.js';
 import Datasource from '../services/datasource.js';
 import Populationgrid from '../services/populationgrid.js';
 import EspooSurvey from '../services/espooSurvey.js';
+import BuildingGridChart from './BuildingGridChart.vue';
 import SurveyScatterPlot from './SurveyScatterPlot.vue';
 import SosEco250mGrid from './SosEco250mGrid.vue'; // Import the 250mGrid component
 import VulnerabilityChart from './VulnerabilityChart.vue';
@@ -85,7 +86,8 @@ export default {
 	components: {
 		SurveyScatterPlot,
 		SosEco250mGrid,
-		VulnerabilityChart
+		VulnerabilityChart,
+		BuildingGridChart
 	}, 	
 	beforeUnmount() {
 		this.unsubscribe();

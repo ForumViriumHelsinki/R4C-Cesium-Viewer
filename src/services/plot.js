@@ -24,14 +24,6 @@ export default class Plot {
 			document.getElementById( 'areaSelect' ).style.visibility = 'visible';
       
 		}
-
-		if ( this.toggleStore.landCover ) {
-
-			document.getElementById( 'pieChartContainer' ).style.visibility = 'visible';
-			document.getElementById( 'HSYSelect' ).style.visibility = 'visible';
-			document.getElementById( 'YearSelect' ).style.visibility = 'visible';
-
-		}
   
 		if ( this.store.view != 'capitalRegion' ) {
 			// only show scatter plot selects if trees are not visible
@@ -182,13 +174,13 @@ export default class Plot {
 
  */
 	addTitle( svg, title, width, margin ) {
-			// Title doesn't need splitting
-			svg.append( 'text' )
-				.attr( 'x', width / 2 )
-				.attr( 'y', -margin.top / 3 )
-				.attr( 'text-anchor', 'middle' )
-				.style( 'font-size', '12px' )
-				.text( title );
+		// Title doesn't need splitting
+		svg.append( 'text' )
+			.attr( 'x', width / 2 )
+			.attr( 'y', -margin.top / 3 )
+			.attr( 'text-anchor', 'middle' )
+			.style( 'font-size', '12px' )
+			.text( title );
 		
 	}
 

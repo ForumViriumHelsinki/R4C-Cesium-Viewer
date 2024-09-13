@@ -22,12 +22,6 @@
 </label>
 <label for="capitalRegionViewToggle" class="label" id="capitalRegionViewLabel">Capital Region view</label>  
 
-<label class="switch">
-  <input type="checkbox" id="showPlotToggle" value="showPlot" checked>
-  <span class="slider round"></span>
-</label>
-<label for="showPlotToggle" class="label">Display plot</label>
-
   <!-- showPrintSwitch-->
 <label class="switch">
   <input type="checkbox" id="printToggle" value="print" checked>
@@ -176,7 +170,10 @@ export default {
 			const featurepicker = new Featurepicker();
 			featurepicker.loadPostalCode();
 			this.store.level === 'postalCode'
+			this.toggleStore.showTrees && this.treeService.loadTrees();
 			this.toggleStore.landcover && eventBus.emit( 'showLandcover' );
+			this.toggleStore.capitalRegion && eventBus.emit( 'hideHSYBulding' );
+
 		},
 		initPostalCodeView( ) {
 			this.dataSourceService = new Datasource();
@@ -197,7 +194,7 @@ export default {
 			document.getElementById( 'switchViewToggle' ).addEventListener( 'change', this.switchViewEvent );
 			document.getElementById( 'showTreesToggle' ).addEventListener( 'change', this.loadTreesEvent );
 			document.getElementById( 'printToggle' ).addEventListener( 'change', this.printEvent );
-			document.getElementById( 'showPlotToggle' ).addEventListener( 'change', this.showPlotEvent );
+	// needs to be redone after refactoring is complete		document.getElementById( 'showPlotToggle' ).addEventListener( 'change', this.showPlotEvent );
 			document.getElementById( 'capitalRegionViewToggle' ).addEventListener( 'change', this.capitalRegionViewEvent );
 			document.getElementById( 'gridViewToggle' ).addEventListener( 'change', this.gridViewEvent );
 			document.getElementById( 'landCoverToggle' ).addEventListener( 'change', this.getLandCoverEvent );

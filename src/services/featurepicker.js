@@ -83,7 +83,7 @@ export default class FeaturePicker {
   
 	async loadPostalCode() {
 
-		this.store.setLevel('postalCode');
+		this.store.setLevel( 'postalCode' );
 		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
 		this.datasourceService.removeDataSourcesAndEntities();
 
@@ -119,7 +119,7 @@ export default class FeaturePicker {
 		this.elementsDisplayService.setBuildingDisplay( 'none' );
 		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
 		this.buildingService.resetBuildingOutline();
-		this.buildingService.createBuildingCharts( properties._avgheatexposuretobuilding._value, properties.treeArea, properties._avg_temp_c, properties );
+		this.buildingService.createBuildingCharts( properties.treeArea, properties._avg_temp_c, properties );
 
 	}
 
@@ -147,6 +147,7 @@ export default class FeaturePicker {
 		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
 
 		const propStore = usePropsStore();
+		propStore.setTreeArea( null );
 		propStore.setHeatFloodVulnerability( id.properties ?? null );
 
 		if ( id.properties.grid_id ) {

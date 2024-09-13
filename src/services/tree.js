@@ -4,6 +4,7 @@ import EventEmitter from './eventEmitter.js';
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
+import { eventBus } from '../services/eventEmitter.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Tree {
@@ -116,7 +117,8 @@ export default class Tree {
 		propsStore.setTreeBuildingDistanceData( data );
 		propsStore.setTreeEntities( entities );
 		propsStore.setBuildingsDatasource( buildingsDataSource );
-		this.eventEmitterService.emitTreeEvent( );
+		eventBus.emit( 'hideBuildingScatterPlot' );
+		eventBus.emit( 'newNearbyTreeDiagram' );
 	}
 
   
