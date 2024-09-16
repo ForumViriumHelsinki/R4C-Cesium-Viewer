@@ -1,5 +1,6 @@
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { eventBus } from '../services/eventEmitter.js';
 import DataSource from './datasource.js';
 import ElementsDisplay from './elementsDisplay.js';
 import Building from './building.js';
@@ -27,9 +28,10 @@ export default class Helsinki {
 	async loadHelsinkiElements( ) {
 
 		this.elementsDisplayService.setHelsinkiElementsDisplay( 'inline-block' );
-		this.buildingService.loadBuildings( );	
+		await this.buildingService.loadBuildings( );	
 		await this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
 		this.loadHelsinkiGreenElements( );
+		eventBus.emit( 'showHelsinki' );
 
 	} 
 
@@ -37,23 +39,23 @@ export default class Helsinki {
     * Load Helsinki Green elements depending on toggle values
     * 
     */
-	loadHelsinkiGreenElements( ) {
+	async loadHelsinkiGreenElements( ) {
 
 		if ( this.toggleStore.showVegetation ) {
 
-			this.vegetationService.loadVegetation();
+			await this.vegetationService.loadVegetation();
     
 		}
 
 		if ( this.toggleStore.showTrees ) {
 
-			this.treeService.loadTrees();
+			await this.treeService.loadTrees();
 
 		}
 
 		if ( this.toggleStore.OtherNature ) {
 
-			this.otherNatureService.loadOtherNature();
+			await this.otherNatureService.loadOtherNature();
 
 		}	
 	}    

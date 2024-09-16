@@ -2,7 +2,7 @@ import Datasource from './datasource.js';
 import Building from './building.js'; 
 import UrbanHeat from './urbanheat.js'; 
 import axios from 'axios';
-import EventEmitter from './eventEmitter.js';
+import { eventBus } from './eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import * as turf from '@turf/turf';
@@ -18,7 +18,6 @@ export default class HSYBuilding {
 		this.datasourceService = new Datasource();
 		this.buildingService = new Building();
 		this.urbanHeatService = new UrbanHeat();
-		this.eventEmitterService = new EventEmitter();
 	}
 
 	async loadHSYBuildings( ) {
@@ -296,9 +295,7 @@ export default class HSYBuilding {
 		propsStore.setScatterPlotEntities( entities );
 		propsStore.setPostalcodeHeatTimeseries( heatExposureData[ 1 ] );
 		propsStore.setHeatHistogramData( avg_temp_cList );
-		this.eventEmitterService.emitHeatHistogram( );
-		this.eventEmitterService.emitScatterplotEvent( );
-		this.eventEmitterService.emitSocioEconomicsEvent( );
+		eventBus.emit( 'showCapitalRegion');
 
 	}
 

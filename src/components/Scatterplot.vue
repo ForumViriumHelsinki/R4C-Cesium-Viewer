@@ -30,10 +30,10 @@ import Plot from '../services/plot.js';
 import Building from '../services/building.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { usePropsStore } from '../stores/propsStore';
+import { nextTick } from 'vue'; // Import nextTick
   
 export default {
 	mounted() {
-		this.unsubscribe = eventBus.on( 'newScatterPlot', this.newScatterPlot );
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
 		this.plotService = new Plot();
@@ -48,9 +48,8 @@ export default {
 		document.getElementById( 'hideNonSoteToggle' ).addEventListener( 'change', this.updateScatterPlot );
 		document.getElementById( 'hideLowToggle' ).addEventListener( 'change', this.updateScatterPlot );
 
-	},
-	beforeUnmount() {
-		this.unsubscribe();
+		this.newScatterPlot();
+
 	},
 	methods: {
 		newScatterPlot( ) {
@@ -417,7 +416,6 @@ export default {
     left: -19px;
     width: 550px; /* Adjusted width to accommodate margin */
     height: 300px; /* Adjusted height to accommodate margin */
-    visibility: hidden;
     font-size: smaller;
     border: 1px solid black;
     box-shadow: 3px 5px 5px black;
@@ -429,7 +427,6 @@ export default {
     position: fixed;
     bottom: 335px;  /* Adjusted position to match scatter plot container */
     left: 10px;
-    visibility: hidden;
     font-size: smaller;
 }
 
@@ -437,7 +434,6 @@ export default {
     position: fixed;
     bottom: 55px;
     left: 460px; /* Adjusted position to match scatter plot container */
-    visibility: hidden;
     font-size: smaller;
 }
   </style>

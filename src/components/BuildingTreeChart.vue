@@ -79,7 +79,6 @@ export default {
     watch(
       () => propsStore.treeArea,
       ( treeArea ) => {
-        console.log("treeArea", treeArea)
         if ( treeArea ) {
           showChart.value = true;
           nextTick( () => {

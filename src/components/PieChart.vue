@@ -29,6 +29,7 @@ const createPieChart = ( ) => {
 	const labels = [ 'trees20m', 'trees15-20m', 'trees10-15m', 'trees2-10m', 'vegetation', 'water', 'fields', 'rocks', 'other', 'bareland', 'buildings', 'dirtroads', 'pavedroads' ];
 	const colors = [ '#326428', '#327728', '#328228', '#32a028', '#b2df43', '#6495ed', '#ffd980', '#bfbdc2', '#857976', '#cd853f', '#d80000', '#824513', '#000000' ];
 
+console.log(datasource._entityCollection)
 	const firstData = getLandCoverDataForArea( nameOfZone, year, datasource );
 	const secondData = getLandCoverDataForArea( area, year, datasource );
 	const margin = {top: 20, right: 10, bottom: 10, left: 10};
@@ -125,7 +126,6 @@ const recreatePieChart = () => {
 };
 
 onMounted(() => {
-  createPieChart();
   eventBus.on('recreate piechart', recreatePieChart);
 });
 

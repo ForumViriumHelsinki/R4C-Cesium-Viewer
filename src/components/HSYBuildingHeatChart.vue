@@ -208,7 +208,6 @@ export default {
   width: 500px;
   height: 250px;
   font-size: smaller;
-  visibility: hidden;
   border: 1px solid black;
   box-shadow: 3px 5px 5px black;
   background-color: white;

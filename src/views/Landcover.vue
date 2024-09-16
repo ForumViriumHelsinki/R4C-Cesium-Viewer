@@ -17,12 +17,11 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch } from 'vue';
 import { eventBus } from '../services/eventEmitter.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import HSYYearSelect from './HSYYearSelect.vue';
-import HSYAreaSelect from './HSYAreaSelect.vue';
-import PieChart from './PieChart.vue';
+import HSYYearSelect from '../components/HSYYearSelect.vue';
+import HSYAreaSelect from '../components/HSYAreaSelect.vue';
+import PieChart from '../components/PieChart.vue';
 
 export default {
   components: {
@@ -31,25 +30,7 @@ export default {
     PieChart,
   },
   setup() {
-    const showComponents = ref(false);
-    const store = useGlobalStore();
-
-    onMounted(() => {
-      eventBus.on('showLandcover', () => {
-        if (store.level === 'postalCode') {
-          showComponents.value = true;
-        }
-      });
-
-      eventBus.on('hideLandcover', () => {
-        showComponents.value = false;
-      });
-    });
-
-    onBeforeUnmount(() => {
-      eventBus.off('showLandcover');
-      eventBus.off('hideLandcover');
-    });
+    const showComponents = ref(true);
 
     return {
       showComponents,

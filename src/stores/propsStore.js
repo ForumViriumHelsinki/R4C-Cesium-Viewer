@@ -18,8 +18,12 @@ export const usePropsStore = defineStore( 'props', {
 		hsySelectArea: 'Askisto',   
 		categoricalSelect: { text: 'Facade Material', value: 'julkisivu_s' },
 		numericalSelect: { text: 'Area', value: 'area_m2' },
+		socioEconomics: 'Alppila - Vallila'
 	} ),
 	actions: {
+		setSocioEconomics( area ) {
+			this.socioEconomics = area;
+		},
 		setCategoricalSelect( object ) {
 			this.categoricalSelect = object;
 		},

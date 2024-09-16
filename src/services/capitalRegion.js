@@ -24,20 +24,16 @@ export default class CapitalRegion {
     */
 	async loadCapitalRegionElements( ) {
 
-		this.hSYBuildingService.loadHSYBuildings();	
-		await this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hsy_po.json', 'PostCodes' );
-
 		if ( Number ( this.store.postalcode ) < 1000 ) {
 
 			this.elementsDisplayService.setTreeElementsDisplay( 'inline-block' );
 
 		}
-
-		this.toggleStore.landCover && eventBus.emit( 'showLandcover' );
+		this.hSYBuildingService.loadHSYBuildings();	
 
 	}
 
-	addPostalCodeDataToPinia( ) {
+	async addPostalCodeDataToPinia( ) {
 
 		const dataSource = this.datasourceService.getDataSourceByName( 'PostCodes' );
 		this.propsStore.setPostalCodeData( dataSource );

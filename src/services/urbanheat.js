@@ -1,5 +1,5 @@
 import Decoding from './decoding.js';
-import EventEmitter from './eventEmitter.js';
+import { eventBus } from './eventEmitter.js';
 import Datasource from './datasource.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
@@ -10,7 +10,6 @@ export default class Urbanheat {
 		this.viewer = this.store.cesiumViewer;
 		this.decodingService = new Decoding();
 		this.datasourceService = new Datasource( );
-		this.eventEmitterService = new EventEmitter();
 
 	}
 
@@ -141,8 +140,7 @@ export default class Urbanheat {
 		const heatData = this.calculateAverageExposure( features );
 		propsStore.setHeatHistogramData( heatData[ 0 ] );
 		propsStore.setScatterPlotEntities( entities );
-		this.eventEmitterService.emitHeatHistogram( );
-		this.eventEmitterService.emitScatterplotEvent( );
+
 	}
 
 	/**
@@ -169,7 +167,7 @@ export default class Urbanheat {
 
 			if ( postcode !== '00230' ) {
 
-				this.eventEmitterService.emitSocioEconomicsEvent();
+			   	eventBus.emit( 'newSocioEconomicsDiagram' );
 
 			}
 

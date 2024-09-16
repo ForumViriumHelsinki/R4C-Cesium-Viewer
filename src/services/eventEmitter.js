@@ -1,50 +1,12 @@
 import mitt from 'mitt'; // Import mitt
 
 export const eventBus = mitt(); // Create a mitt instance
-import { useGlobalStore } from '../stores/globalStore';
 
 export default class EventEmitter {
 
 	constructor() {
-		this.store = useGlobalStore();
 	}
 
-
-	emitHeatHistogram( ) {
-		
-		eventBus.emit( 'newHeatHistogram' );
-
-	}
-
-
-
-	/**
- * The function emits event after user picks a postal code area from viewer
- *
- * 
- */
-	emitSocioEconomicsEvent() {
-
-		const postcode = this.store.postalcode;
-
-		if ( !postcode !== '00230' || !postcode !== '02290' || !postcode !== '01770' ) {
-
-			eventBus.emit( 'newSocioEconomicsDiagram', postcode );
-
-		}
-
-	}
-
-	/**
- * The function emits event after user picks a postal code area from viewer
- *
- * 
- */
-	emitScatterplotEvent( ) {
-
-		eventBus.emit( this.store.view == 'helsinki' ? 'newScatterPlot' : 'showBuildingScatterPlot' );
-
-	}
 
 	/**
  * The function emits event after user chooses to view Espoo resident survey places
@@ -74,7 +36,6 @@ export default class EventEmitter {
  * 
  */
 	emitPostalCodeViewEvent( ) {
-
 		eventBus.emit( 'initPostalCodeView' );
 
 	}

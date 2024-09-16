@@ -20,9 +20,9 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
-import CategoricalSelect from './CategoricalSelect.vue';
-import NumericalSelect from './NumericalSelect.vue';
-import HSYScatterplot from './HSYScatterplot.vue';
+import CategoricalSelect from '../components/CategoricalSelect.vue';
+import NumericalSelect from '../components/NumericalSelect.vue';
+import HSYScatterplot from '../components/HSYScatterplot.vue';
 
 export default {
   components: {
@@ -32,24 +32,7 @@ export default {
   },
   setup() {
     const store = useGlobalStore();
-    const showComponents = ref(false);
-
-    onMounted(() => {
-      eventBus.on('showBuildingScatterPlot', () => {
-        if (store.level === 'postalCode') {
-          showComponents.value = true;
-        }
-      });
-
-      eventBus.on('hideBuildingScatterPlot', () => {
-        showComponents.value = false;
-      });
-    });
-
-    onBeforeUnmount(() => {
-      eventBus.off('showBuildingScatterPlot');
-      eventBus.off('hideBuildingScatterPlot');
-    });
+    const showComponents = ref(true);
 
     return {
       showComponents,
@@ -66,7 +49,6 @@ export default {
   left: -19px;
   width: 550px;
   height: 300px;
-  visibility: hidden;
   font-size: smaller;
   border: 1px solid black;
   box-shadow: 3px 5px 5px black;

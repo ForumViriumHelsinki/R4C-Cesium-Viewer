@@ -3,39 +3,9 @@
     <!-- Cesium Container -->
     <div id="cesiumContainer"></div>
 
-    <!-- Layout on top of Cesium -->
-    <v-container fluid class="d-flex flex-column pa-0 ma-0" style="position: relative; z-index: 10;">
-      <!-- Row 7 -->
-      <v-row no-gutters class="pa-0 ma-0">
-        <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
-          <HeatHistogram />		
-		  <Building />
-        </v-col>
-        <v-col class="d-flex align-end pa-0 ma-0" style="z-index: 20;">
-          <SocioEconomics />
-        </v-col>
-      </v-row>
-
-      <v-spacer></v-spacer>
-
-      <!-- Row 6 -->
-      <v-row no-gutters class="pa-0 ma-0">
-        <v-col class="d-flex align-start pa-0 ma-0" style="z-index: 20;">
-		  <Landcover />
-        </v-col>
-      </v-row>
-
-      <v-spacer></v-spacer>
-
-      <!-- Row 1 -->
-      <v-row no-gutters class="pa-0 ma-0">
-        <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
-          <Scatterplot />
-          <BuildingScatterPlot />
-          <NearbyTreeArea />
-        </v-col>
-      </v-row>
-    </v-container>
+	<Building/>
+	<Helsinki/>
+	<CapitalRegion/>
 
     <!-- Disclaimer Popup -->
     <DisclaimerPopup class="disclaimer-popup" />
@@ -50,21 +20,14 @@ import Tree from '../services/tree.js';
 import WMS from '../services/wms.js'; 
 import Featurepicker from '../services/featurepicker.js'; 
 import Geocoding from '../services/geocoding.js';
-import EventEmitter from '../services/eventEmitter.js';
-import HeatHistogram from './HeatHistogram.vue';
-import SocioEconomics from './SocioEconomics.vue';
-import Scatterplot from './Scatterplot.vue';
-import BuildingHeatChart from './BuildingHeatChart.vue';
-import HSYBuildingHeatChart from './HSYBuildingHeatChart.vue';
-import BuildingTreeChart from './BuildingTreeChart.vue';
-import Landcover from './Landcover.vue';
-import NearbyTreeArea from './NearbyTreeArea.vue';
-import DisclaimerPopup from './DisclaimerPopup.vue';
+import EventEmitter from '../services/eventEmitter.js';;;
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
-import BuildingScatterPlot from './BuildingScatterPlot.vue';
-import Building from '../views/Building.vue';
+import DisclaimerPopup from '../components/DisclaimerPopup.vue';
+import Building from './Building.vue';
+import Helsinki from './Helsinki.vue';
+import CapitalRegion from './CapitalRegion.vue'
 
 export default {
 	data() {
@@ -85,17 +48,10 @@ export default {
 
 	},
 	components: {
-		HeatHistogram,
-		SocioEconomics,
-		Scatterplot,
-		BuildingScatterPlot,
-		BuildingHeatChart,
-		BuildingTreeChart,
-		HSYBuildingHeatChart,
-		NearbyTreeArea,
-		Landcover,
+		Building,
+		Helsinki,
+		CapitalRegion,
 		DisclaimerPopup,
-		Building
 	},  
 	methods: {
 		initViewer() {
@@ -145,7 +101,6 @@ export default {
 			geocoding.addGeocodingEventListeners( );
 
 			this.addAttribution( );
-			setupBearingSwitches( this.store.postalcode );
 
 			this.$nextTick( () => {
 				this.eventEmitterService.emitPostalCodeViewEvent( );
@@ -187,48 +142,6 @@ const addFeaturePicker = ( ) => {
 	} );
 };
 
-const setupBearingSwitches = ( postalcode ) => {
-	const switches = [ 'All', 'South', 'West', 'East', 'North' ];
-  
-	for ( const currentDirection of switches ) {
-
-		const switchContainer = document.getElementById( `bearing${ currentDirection }SwitchContainer` );
-		const toggle = switchContainer.querySelector( `#bearing${ currentDirection }Toggle` );
-      
-		toggle.addEventListener( 'click', () => {
-					
-			updateBearingSwitches( switches, currentDirection );
-			const treeService = new Tree( );
-			const buildingService = new Building( );
-			buildingService.resetBuildingEntities();
-			treeService.resetTreeEntities();
-			treeService.fetchAndAddTreeDistanceData( postalcode );
-
-		} );
-  
-		// Set the 'All' switch to checked by default
-		if ( currentDirection === 'All' ) {
-			toggle.checked = true;
-		}
-	}
-};
-
-const updateBearingSwitches = ( switches, currentDirection ) => {  // Use an arrow function with const
-	for ( const otherDirection of switches ) {
-    
-		if ( currentDirection !== otherDirection ) {
-
-			const otherSwitchContainer = document.getElementById( `bearing${ otherDirection }SwitchContainer` );
-			const otherToggle = otherSwitchContainer.querySelector( `#bearing${ otherDirection }Toggle` );
-			otherToggle.checked = false;
-
-		}
-	}
-};
-
-const updateBuildingsAndTrees = ( ) => { 
-
-};
 
 </script>
 

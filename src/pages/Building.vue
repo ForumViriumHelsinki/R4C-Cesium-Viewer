@@ -17,12 +17,13 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
 import BuildingTreeChart from '../components/BuildingTreeChart.vue';
 import BuildingHeatChart from '../components/BuildingHeatChart.vue';
+import { eventBus } from '../services/eventEmitter.js';
 
 export default {
   components: {
@@ -35,18 +36,25 @@ export default {
     const store = useGlobalStore();
     const toggleStore = useToggleStore();
 
-    // Watch the store level and toggleStore to show or hide components
-    watch(
-      () => store.level,
-      (newValue) => {
-        showComponents.value = newValue === 'building';
-      }
-    );
+    onMounted(() => {
+      eventBus.on('showBuilding', () => {
+        showComponents.value = true;
+      });
+
+      eventBus.on('hideBuilding', () => {
+        showComponents.value = false;
+      });
+    });
+
+    onBeforeUnmount(() => {
+      eventBus.off('showBuilding');
+      eventBus.off('hideBuilding');
+    });
 
     return {
       showComponents,
-      toggleStore, // Added so it's available in the template
+      toggleStore
     };
-  },
+  }
 };
 </script>

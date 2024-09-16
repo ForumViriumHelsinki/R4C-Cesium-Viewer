@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import CesiumViewer from './components/CesiumViewer.vue';
+import CesiumViewer from './pages/CesiumViewer.vue';
 import Geocoding from './components/Geocoding.vue';
 import PrintBox from './components/PrintBox.vue';
 import GridView from './components/GridView.vue';

@@ -59,6 +59,8 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import * as Cesium from 'cesium';
 import Plot from '../services/plot.js'; 
+import Tree from '../services/tree.js'; 
+import Building from '../services/building.js'; 
   
 export default {
 	mounted() {
@@ -68,12 +70,13 @@ export default {
 
 	},
 	beforeUnmount() {
-		this.unsubscribe();
+		eventBus.off( 'newNearbyTreeDiagram' );
 	},
 	methods: {
 		newNearbyTreeDiagram( ) {
 
 			const propsStore = usePropsStore();
+			setupBearingSwitches( this.store.postalcode );
 
 			if ( this.store.level == 'postalCode' ) {
 				this.plotService.hideScatterPlot();
@@ -470,6 +473,45 @@ export default {
 
 		},
 	},
+};
+
+const setupBearingSwitches = ( postalcode ) => {
+	const switches = [ 'All', 'South', 'West', 'East', 'North' ];
+  
+	for ( const currentDirection of switches ) {
+
+		const switchContainer = document.getElementById( `bearing${ currentDirection }SwitchContainer` );
+		const toggle = switchContainer.querySelector( `#bearing${ currentDirection }Toggle` );
+      
+		toggle.addEventListener( 'click', () => {
+					
+			updateBearingSwitches( switches, currentDirection );
+			const treeService = new Tree( );
+			const buildingService = new Building( );
+			buildingService.resetBuildingEntities();
+			treeService.resetTreeEntities();
+			treeService.fetchAndAddTreeDistanceData( postalcode );
+
+		} );
+  
+		// Set the 'All' switch to checked by default
+		if ( currentDirection === 'All' ) {
+			toggle.checked = true;
+		}
+	}
+};
+
+const updateBearingSwitches = ( switches, currentDirection ) => {  // Use an arrow function with const
+	for ( const otherDirection of switches ) {
+    
+		if ( currentDirection !== otherDirection ) {
+
+			const otherSwitchContainer = document.getElementById( `bearing${ otherDirection }SwitchContainer` );
+			const otherToggle = otherSwitchContainer.querySelector( `#bearing${ otherDirection }Toggle` );
+			otherToggle.checked = false;
+
+		}
+	}
 };
 </script>
 

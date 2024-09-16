@@ -15,8 +15,6 @@ export default class Landcover {
 			this.wmsService.createHSYImageryLayer( )
 		);
 
-		eventBus.emit( 'showLandcover' ); 
-
 	}
 
 	removeLandcover() {

@@ -73,7 +73,6 @@ export default class FeaturePicker {
                
 				if ( picked.id.properties ) {
    
-					// this.hidePlotlyIfNatureFeatureIsClicked( picked.id.properties.category );
 					this.handleFeatureWithProperties( picked.id );
                    
 				}
@@ -89,8 +88,9 @@ export default class FeaturePicker {
 
 		if ( this.store.view == 'capitalRegion' ) {
 
+			this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
+			this.elementsDisplayService.setCapitalRegionElementsDisplay( 'inline-block' );
 			await this.capitalRegionService.loadCapitalRegionElements();
-			this.capitalRegionService.addPostalCodeDataToPinia();
 
 		} else {
         
@@ -110,14 +110,11 @@ export default class FeaturePicker {
     
 	handleBuildingFeature( properties ) {
 
-		eventBus.emit( 'hideBuildingScatterPlot' );
 		this.store.setLevel( 'building' );
 		this.store.setPostalCode( properties._postinumero._value );
-		this.plotService.togglePostalCodePlotVisibility( 'hidden' );
-		this.plotService.toggleBearingSwitchesVisibility( 'hidden' );
-		eventBus.emit( 'hideLandcover' ); 
+		this.toggleStore.capitalRegionView ? eventBus.emit( 'hideCapitalRegion' ) : eventBus.emit( 'hideHelsinki' );
+		eventBus.emit( 'showBuilding' );
 		this.elementsDisplayService.setBuildingDisplay( 'none' );
-		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
 		this.buildingService.resetBuildingOutline();
 		this.buildingService.createBuildingCharts( properties.treeArea, properties._avg_temp_c, properties );
 
@@ -264,27 +261,5 @@ export default class FeaturePicker {
 
 		return boundingBox;
 
-	}
- 
-	/**
-     * Hides the plot container if the nature feature is clicked; otherwise, shows the plot container if the show plot toggle is checked
-     * 
-     * @param {string} category - The category of the picked entity
-     */
-	hidePlotlyIfNatureFeatureIsClicked( category ) {
-    
-		if ( category ) {
-    
-			document.getElementById( 'heatHistogramContainer' ).style.visibility = 'hidden';
-    
-		} else {
-    
-			if ( this.toggleStore.showPlot && !this.toggleStore.gridView ) {
-    
-				document.getElementById( 'heatHistogramContainer' ).style.visibility = 'visible';
-    
-			}
-    
-		}
 	}
 }

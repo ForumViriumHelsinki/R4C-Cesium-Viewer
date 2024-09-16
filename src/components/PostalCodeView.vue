@@ -10,6 +10,12 @@
   </v-btn>
   <!-- showPlotSwitch-->
 
+<label class="switch">
+  <input type="checkbox" id="showPlotToggle" value="showPlot" checked>
+  <span class="slider round"></span>
+</label>
+<label for="showPlotToggle" class="label">Display plot</label>
+
 <label class="switch" id="gridViewSwitch" >
   <input type="checkbox" id="gridViewToggle" value="gridView">
   <span class="slider round"></span>
@@ -171,9 +177,7 @@ export default {
 			featurepicker.loadPostalCode();
 			this.store.level === 'postalCode'
 			this.toggleStore.showTrees && this.treeService.loadTrees();
-			this.toggleStore.landcover && eventBus.emit( 'showLandcover' );
-			this.toggleStore.capitalRegion && eventBus.emit( 'hideHSYBulding' );
-
+			eventBus.emit( 'hideBuilding' );
 		},
 		initPostalCodeView( ) {
 			this.dataSourceService = new Datasource();
@@ -194,7 +198,7 @@ export default {
 			document.getElementById( 'switchViewToggle' ).addEventListener( 'change', this.switchViewEvent );
 			document.getElementById( 'showTreesToggle' ).addEventListener( 'change', this.loadTreesEvent );
 			document.getElementById( 'printToggle' ).addEventListener( 'change', this.printEvent );
-	// needs to be redone after refactoring is complete		document.getElementById( 'showPlotToggle' ).addEventListener( 'change', this.showPlotEvent );
+			document.getElementById( 'showPlotToggle' ).addEventListener( 'change', this.showPlotEvent );
 			document.getElementById( 'capitalRegionViewToggle' ).addEventListener( 'change', this.capitalRegionViewEvent );
 			document.getElementById( 'gridViewToggle' ).addEventListener( 'change', this.gridViewEvent );
 			document.getElementById( 'landCoverToggle' ).addEventListener( 'change', this.getLandCoverEvent );
@@ -233,9 +237,7 @@ export default {
 				);
 
 				const capitalRegionService = new CapitalRegion();
-				capitalRegionService.addPostalCodeDataToPinia();
-				this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
-				this.elementsDisplayService.setCapitalRegionElementsDisplay( 'inline-block' );
+				await capitalRegionService.addPostalCodeDataToPinia();
 
 			} else {
 
@@ -321,8 +323,8 @@ export default {
 			showTrees 
     			? (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Trees') 
         		? this.treeService.loadTrees(this.store.postalcode)
-        		: (this.dataSourceService.changeDataSourceShowByName('Trees', true), this.plotService.updateTreeElements('visible')))
-    			: (this.dataSourceService.changeDataSourceShowByName('Trees', false), this.plotService.updateTreeElements('hidden'), this.plotService.showAllPlots(), this.buildingService.resetBuildingEntities());
+        		: (this.dataSourceService.changeDataSourceShowByName('Trees', true)))
+    			: (this.dataSourceService.changeDataSourceShowByName('Trees', false), this.plotService.showAllPlots(), this.buildingService.resetBuildingEntities());
 
 		},
 

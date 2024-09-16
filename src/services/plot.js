@@ -1,5 +1,6 @@
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { eventBus } from './eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 
 export default class Plot {
@@ -17,36 +18,16 @@ export default class Plot {
  * */
 	showAllPlots() {
 
-		if ( this.store.level === 'postalCode' ) {
-
-			document.getElementById( 'heatHistogramContainer' ).style.visibility = 'visible';
-			document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'visible';
-			document.getElementById( 'areaSelect' ).style.visibility = 'visible';
-      
-		}
-  
-		if ( this.store.view != 'capitalRegion' ) {
-			// only show scatter plot selects if trees are not visible
-			if ( !this.toggleStore.showTrees ) {
-
-				document.getElementById( 'scatterPlotContainer' ).style.visibility = 'visible';
-				document.getElementById( 'numericalSelect' ).style.visibility = 'visible';
-				document.getElementById( 'categoricalSelect' ).style.visibility = 'visible'; 
-       
-			} else {
-
-				document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'visible';
-				this.toggleBearingSwitchesVisibility( 'visible' );
-
-			}
+		switch ( this.store.level ) {
+  			case 'postalCode':
+    			eventBus.emit( this.toggleStore.capitalRegionView ? 'showCapitalRegion' : 'showHelsinki' );
+   	 			break;
+  			case 'building':
+    			eventBus.emit( 'showBuilding' );
+    			break;
+				
 		} 
 
-		if ( this.store.level === 'building' ) {
-
-			document.getElementById( 'buildingChartContainer' ).style.visibility = 'visible';
-			document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'visible';
-
-		}
 	}
 
 	/**
@@ -55,59 +36,18 @@ export default class Plot {
  * */
 	hideAllPlots() {
 
-		document.getElementById( 'nearbyTreeAreaContainer' ).style.visibility = 'hidden';
-		document.getElementById( 'heatHistogramContainer' ).style.visibility = 'hidden';
-		document.getElementById( 'socioeonomicsContainer' ).style.visibility = 'hidden';
-		document.getElementById( 'areaSelect' ).style.visibility = 'hidden';
-		document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
-		document.getElementById( 'buildingTreeChartContainer' ).style.visibility = 'hidden';
-		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
-		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
-		this.toggleBearingSwitchesVisibility( 'hidden' );
-		document.getElementById( 'scatterPlotContainer' ).style.visibility = 'hidden';
-
+		switch (this.store.level) {
+  			case 'postalCode':
+    			eventBus.emit( this.toggleStore.capitalRegionView ? 'hideCapitalRegion' : 'hideHelsinki' );
+    			break;
+  			case 'building':
+    			eventBus.emit( 'hideBuilding' );
+    			break;
+		}
 	}
 
 	/**
- * Hides all scatter plot related elements
- * 
- * */
-	hideScatterPlot() {
 
-		document.getElementById( 'numericalSelect' ).style.visibility = 'hidden';
-		document.getElementById( 'categoricalSelect' ).style.visibility = 'hidden';
-		document.getElementById( 'scatterPlotContainer' ).style.visibility = 'hidden';
-
-	}
-
-	/**
- * Toggle HSY Landcover piechart
- * 
- * */
-	toggleLandCoverChart( status ) {
-
-		document.getElementById( 'pieChartContainer' ).style.visibility = status;
-		document.getElementById( 'HSYSelect' ).style.visibility = status;
-		document.getElementById( 'YearSelect' ).style.visibility = status;
-
-	}
-
-	/**
- * Toggle visibility of plot elements visible at postal code level
- * 
- * */
-	togglePostalCodePlotVisibility( status ) {
-
-		document.getElementById( 'heatHistogramContainer' ).style.visibility = status;
-		document.getElementById( 'socioeonomicsContainer' ).style.visibility = status;
-		document.getElementById( 'areaSelect' ).style.visibility = status;
-		document.getElementById( 'numericalSelect' ).style.visibility = status;
-		document.getElementById( 'categoricalSelect' ).style.visibility = status;
-		document.getElementById( 'scatterPlotContainer' ).style.visibility = status;
-		document.getElementById( 'categoricalSelect' ).value = 'c_julkisivu';
-		document.getElementById( 'numericalSelect' ).value = 'measured_height';
-
-	}
 
 	/**
  * Toggle visibility of tree bearing switches
