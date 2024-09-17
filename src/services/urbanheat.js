@@ -165,12 +165,6 @@ export default class Urbanheat {
 			let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + postcode );
 			this.setPropertiesAndCreateCharts( entities, data.features );
 
-			if ( postcode !== '00230' ) {
-
-			   	eventBus.emit( 'newSocioEconomicsDiagram' );
-
-			}
-
 			return entities;
 
 		} catch ( error ) {

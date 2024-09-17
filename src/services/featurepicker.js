@@ -14,7 +14,6 @@ import CapitalRegion from './capitalRegion.js';
 import Sensor from './sensor.js';
 import View from './view.js';
 import ColdArea from './coldarea.js';
-import EventEmitter from './eventEmitter.js';
 import { eventBus } from '../services/eventEmitter.js';
 
 export default class FeaturePicker {
@@ -34,7 +33,6 @@ export default class FeaturePicker {
 		this.elementsDisplayService = new ElementsDisplay();
 		this.viewService = new View();
 		this.coldAreaService = new ColdArea();
-		this.eventEmitterService = new EventEmitter();
 
 	}
   
@@ -67,7 +65,7 @@ export default class FeaturePicker {
 				if ( id instanceof Cesium.Entity ) {
 
 					this.store.setPickedEntity( id );
-					this.eventEmitterService.emitEntityPrintEvent( );
+					eventBus.emit( 'entityPrintEvent' );
                    
 				}
                
@@ -86,7 +84,7 @@ export default class FeaturePicker {
 		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
 		this.datasourceService.removeDataSourcesAndEntities();
 
-		if ( this.store.view == 'capitalRegion' ) {
+		if ( !this.toggleStore.helsinkiView ) {
 
 			this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
 			this.elementsDisplayService.setCapitalRegionElementsDisplay( 'inline-block' );
@@ -97,22 +95,14 @@ export default class FeaturePicker {
 			this.helsinkiService.loadHelsinkiElements();
     
 		}
-
-		const postcode = this.store.postcode; 
-    
-		// add laajasalo flood data
-		if ( postcode == '00870' || postcode == '00850' || postcode == '00840' || postcode == '00590' ) {
-            
-			this.elementsDisplayService.setFloodElementsDisplay( 'inline-block' );
-    
-		}    
+  
 	}
     
 	handleBuildingFeature( properties ) {
 
 		this.store.setLevel( 'building' );
 		this.store.setPostalCode( properties._postinumero._value );
-		this.toggleStore.capitalRegionView ? eventBus.emit( 'hideCapitalRegion' ) : eventBus.emit( 'hideHelsinki' );
+		this.toggleStore.helsinkiView ? eventBus.emit( 'hideHelsinki' ) : eventBus.emit( 'hideCapitalRegion' );
 		eventBus.emit( 'showBuilding' );
 		this.elementsDisplayService.setBuildingDisplay( 'none' );
 		this.buildingService.resetBuildingOutline();

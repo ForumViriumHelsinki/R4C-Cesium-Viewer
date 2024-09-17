@@ -26,7 +26,7 @@
   <input type="checkbox" id="capitalRegionViewToggle" value="capitalRegionView">
   <span class="slider round"></span>
 </label>
-<label for="capitalRegionViewToggle" class="label" id="capitalRegionViewLabel">Capital Region view</label>  
+<label for="capitalRegionViewToggle" class="label" id="capitalRegionViewLabel">Helsinki view</label>  
 
   <!-- showPrintSwitch-->
 <label class="switch">
@@ -124,7 +124,6 @@ import Datasource from '../services/datasource.js';
 import Landcover from '../services/landcover.js'; 
 import Tree from '../services/tree.js'; 
 import Building from '../services/building.js'; 
-import EventEmitter from '../services/eventEmitter.js';
 import Vegetation from '../services/vegetation.js';
 import CapitalRegion from '../services/capitalRegion.js';
 import Othernature from '../services/othernature.js';
@@ -151,7 +150,6 @@ export default {
 		this.store = useGlobalStore();
 		this.toggleStore  = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
-		this.eventEmitterService = new EventEmitter();
 		this.elementsDisplayService = new ElementsDisplay();
 	},
 	beforeUnmount() {
@@ -212,9 +210,7 @@ export default {
 			const checked = document.getElementById( 'capitalRegionColdToggle' ).checked;
     		this.toggleStore.setCapitalRegionCold( checked );
 
-			checked 
-    			? (document.getElementById('capitalRegionViewToggle').checked = true, this.capitalRegionViewEvent()) 
-    			: this.reset();
+			!checked && this.reset();
 
 		},
 
@@ -224,25 +220,21 @@ export default {
 		async capitalRegionViewEvent() {
 
 			const metropolitanView = document.getElementById( 'capitalRegionViewToggle' ).checked;
-			this.toggleStore.setCapitalRegionView( metropolitanView );
+			this.toggleStore.setHelsinkiView( metropolitanView );
 
 			if ( metropolitanView ) {
 
-				this.store.setView( 'capitalRegion' );
+				this.store.setView( 'helsinki' );
 				this.dataSourceService.removeDataSourcesByNamePrefix( 'PostCodes' );
 				await this.dataSourceService.loadGeoJsonDataSource(
 					0.2,
-					'./assets/data/hsy_po.json',
+					'./assets/data/hki_po_clipped.json',
 					'PostCodes'
 				);
 
-				const capitalRegionService = new CapitalRegion();
-				await capitalRegionService.addPostalCodeDataToPinia();
-
 			} else {
 
-
-				this.store.setView( 'helsinki' );
+				this.store.setView( 'capitalRegion' );
 				this.reset();
   
 			}
@@ -273,8 +265,8 @@ export default {
 			this.toggleStore.setGridView(gridView);
 
 			gridView 
-    			? (this.store.setView('grid'), this.showPostalCodeView = false, this.eventEmitterService.emitGridViewEvent())
-    			: (this.store.setView('helsinki'), this.reset());
+    			? ( this.store.setView('grid'), this.showPostalCodeView = false, eventBus.emit( 'createPopulationGrid' ) )
+    			: ( this.store.setView('capitalRegion'), this.reset() );
 
 		},
 
@@ -416,8 +408,7 @@ export default {
             			? this.buildingService.filterBuildings( buildingsDataSource ) 
             			: this.buildingService.showAllBuildings( buildingsDataSource );
 
-        			this.eventEmitterService.emitScatterplotEvent(buildingsDataSource.entities.values);
-        			this.toggleStore.capitalRegionView && eventBus.emit('updateScatterPlot');
+        			!this.toggleStore.helsinkiView && eventBus.emit('updateScatterPlot');
 				
 				}
 			}

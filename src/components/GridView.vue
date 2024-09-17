@@ -55,7 +55,6 @@
   
 <script>
 
-import EventEmitter from '../services/eventEmitter.js';
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
@@ -78,7 +77,6 @@ export default {
 		this.store = useGlobalStore();
 		this.toggleStore  = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
-		this.eventEmitterService = new EventEmitter();
 		this.datasourceService = new Datasource();
 		this.addEventListeners();
 
@@ -169,7 +167,7 @@ export default {
 
 			if ( postalView ) {
 
-				this.store.setView( 'helsinki' );
+				this.store.setView( 'capitalRegion' );
 				this.reset();
         
 			} 

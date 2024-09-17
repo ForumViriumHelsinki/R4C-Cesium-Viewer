@@ -1,6 +1,5 @@
 import Datasource from './datasource.js'; 
 import * as Cesium from 'cesium';
-import EventEmitter from './eventEmitter.js';
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
@@ -10,7 +9,6 @@ const backendURL = import.meta.env.VITE_BACKEND_URL;
 export default class Tree {
 	constructor( ) {
 		this.datasourceService = new Datasource();
-		this.eventEmitterService = new EventEmitter();
 		this.store = useGlobalStore();
 	}
 

@@ -4,7 +4,7 @@ import View from './view.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import Landcover from './landcover.js'; 
-import EventEmitter from './eventEmitter.js';
+import { eventBus } from './eventEmitter.js';
 
 const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
 
@@ -64,7 +64,7 @@ export default class Geocoding {
 			let row = { address: data[ i ][ 'properties' ][ 'name' ], latitude: data[ i ][ 'geometry' ][ 'coordinates'][ 1 ], longitude: data[ i ][ 'geometry' ][ 'coordinates'][ 0 ], postalcode: data[ i ].properties.postalcode };
 
 
-			if ( !this.toggleStore.capitalRegionView ) {
+			if ( this.toggleStore.helsinkiView ) {
 				// only include results from Helsinki
 				if ( ( data[ i ][ 'properties' ][ 'locality' ] === 'Helsinki' || data[ i ][ 'properties' ][ 'localadmin' ] === 'Helsinki' ) && data[ i ].properties.postalcode ) {
 
@@ -178,7 +178,7 @@ export default class Geocoding {
 
 		this.viewercamera.setCameraView( longitude, latitude );
 		const eventEmitterService = new EventEmitter();
-		eventEmitterService.emitGeocodingPrintEvent( );
+		eventBus.emit( 'geocodingPrintEvent' );
 		this.featurePicker.loadPostalCode();
 
 		if ( this.toggleStore.switchView ) {

@@ -18,6 +18,7 @@ const globalStore = useGlobalStore();
 const createPieChart = ( ) => {
 
 	const datasource = propsStore.postalCodeData;
+	console.log("data", propsStore.postalCodeData)
 	const nameOfZone = globalStore.nameOfZone._value;
 	const year = propsStore.hsyYear;
 	const area = propsStore.hsySelectArea;

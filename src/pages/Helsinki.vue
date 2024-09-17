@@ -1,37 +1,39 @@
 <template>
+  <!-- Layout on top of Cesium -->
+  <v-container v-if="showComponents" fluid class="d-flex flex-column pa-0 ma-0" style="position: relative; z-index: 10;">
+    <!-- Row 7 -->
+    <v-row no-gutters class="pa-0 ma-0">
+      <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
+        <HeatHistogram />
+      </v-col>
+      <v-col
+        v-if="store.postalcode !== '00230'"
+        class="d-flex align-end pa-0 ma-0"
+        style="z-index: 20;"
+      >
+        <SocioEconomics />
+      </v-col>
+    </v-row>
 
-    <!-- Layout on top of Cesium -->
-    <v-container v-if="showComponents" fluid class="d-flex flex-column pa-0 ma-0" style="position: relative; z-index: 10;">
-      <!-- Row 7 -->
-      <v-row no-gutters class="pa-0 ma-0">
-        <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
-          <HeatHistogram />		
-        </v-col>
-        <v-col class="d-flex align-end pa-0 ma-0" style="z-index: 20;">
-          <SocioEconomics />
-        </v-col>
-      </v-row>
+    <v-spacer></v-spacer>
 
-      <v-spacer></v-spacer>
+    <!-- Row 6 -->
+    <v-row no-gutters class="pa-0 ma-0">
+      <v-col class="d-flex align-start pa-0 ma-0" style="z-index: 20;">
+        <Landcover />
+      </v-col>
+    </v-row>
 
-      <!-- Row 6 -->
-      <v-row no-gutters class="pa-0 ma-0">
-        <v-col class="d-flex align-start pa-0 ma-0" style="z-index: 20;">
-		  <Landcover />
-        </v-col>
-      </v-row>
+    <v-spacer></v-spacer>
 
-      <v-spacer></v-spacer>
-
-      <!-- Row 1 -->
-      <v-row no-gutters class="pa-0 ma-0">
-        <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
-          <Scatterplot />
-          <NearbyTreeArea />
-        </v-col>
-      </v-row>
-    </v-container>
-
+    <!-- Row 1 -->
+    <v-row no-gutters class="pa-0 ma-0">
+      <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
+        <Scatterplot />
+        <NearbyTreeArea />
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -52,7 +54,7 @@ export default {
   },
   setup() {
     const showComponents = ref(false);
-    const store = useGlobalStore();
+    const store = useGlobalStore(); // Access the store
 
     onMounted(() => {
       eventBus.on('showHelsinki', () => {
@@ -71,8 +73,9 @@ export default {
 
     return {
       showComponents,
+      store, // Return the store to access postalCode in the template
     };
-  }
+  },
 };
 </script>
 
