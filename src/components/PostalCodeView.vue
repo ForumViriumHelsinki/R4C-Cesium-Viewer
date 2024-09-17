@@ -416,7 +416,6 @@ export default {
             			? this.buildingService.filterBuildings( buildingsDataSource ) 
             			: this.buildingService.showAllBuildings( buildingsDataSource );
 
-        			this.eventEmitterService.emitScatterplotEvent(buildingsDataSource.entities.values);
         			this.toggleStore.capitalRegionView && eventBus.emit('updateScatterPlot');
 				
 				}
