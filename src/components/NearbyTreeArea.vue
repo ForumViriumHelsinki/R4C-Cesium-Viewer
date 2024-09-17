@@ -149,7 +149,7 @@ export default {
 				let entity = buildingsDataSource._entityCollection._entities._array[ i ];	
 				// If entity has a heat exposure value, add it to the urbanHeatData array and add data for the scatter plot
 
-				if ( this.store.view == 'helsinki' ) {
+				if ( !this.toggleStore.helsinkiView ) {
 					
 					if ( entity._properties.avgheatexposuretobuilding && entity._properties._id && entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
 

@@ -53,7 +53,7 @@ export default {
 	},
 	methods: {
 		newScatterPlot( ) {
-			if (  this.store.view == 'helsinki' ) {
+			if (  this.toggleStore.helsinkiView ) {
 				this.selectAttributeForScatterPlot();
 			} else {
 				// Hide or clear the visualization when not visible

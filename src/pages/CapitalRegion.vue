@@ -6,7 +6,7 @@
         <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
           <HeatHistogram />		
         </v-col>
-        <v-col class="d-flex align-end pa-0 ma-0" style="z-index: 20;">
+        <v-col class="d-flex align-end pa-0 ma-0" style="z-index: 20;" v-if="store.postalcode !== '00230'">
           <SocioEconomics />
         </v-col>
       </v-row>
@@ -71,12 +71,13 @@ export default {
     });
 
     watch(() => toggleStore.landCover , (newValue) => {
-      showLandcover.value = toggleStore.capitalRegionView ? !!newValue : showLandcover.value; 
+      showLandcover.value = toggleStore.helsinkiView ? showLandcover.value : !!newValue; 
     });
 
     return {
       showComponents,
       showLandcover,
+      store,
     };
   }
 };

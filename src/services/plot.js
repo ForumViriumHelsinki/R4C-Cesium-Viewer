@@ -20,7 +20,7 @@ export default class Plot {
 
 		switch ( this.store.level ) {
   			case 'postalCode':
-    			eventBus.emit( this.toggleStore.capitalRegionView ? 'showCapitalRegion' : 'showHelsinki' );
+    			eventBus.emit( this.toggleStore.helsinkiView ?  'showHelsinki' : 'showCapitalRegion' );
    	 			break;
   			case 'building':
     			eventBus.emit( 'showBuilding' );
@@ -38,7 +38,7 @@ export default class Plot {
 
 		switch (this.store.level) {
   			case 'postalCode':
-    			eventBus.emit( this.toggleStore.capitalRegionView ? 'hideCapitalRegion' : 'hideHelsinki' );
+    			eventBus.emit( this.toggleStore.helsinkiView ? 'hideHelsinki' : 'hideCapitalRegion' );
     			break;
   			case 'building':
     			eventBus.emit( 'hideBuilding' );

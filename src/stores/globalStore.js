@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 export const useGlobalStore = defineStore( 'global', {
 	state: () => ( {
-		view: 'helsinki',
+		view: 'capitalRegion',
 		postalcode: null,
 		nameOfZone: null,
 		averageHeatExposure: 0,

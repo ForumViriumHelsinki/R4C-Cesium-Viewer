@@ -1,8 +1,8 @@
-import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 
 export default class ElementsDisplay {
 	constructor() {
-		this.store = useGlobalStore();
+		this.toggleStore = useToggleStore();
 	}
 
 	/**
@@ -39,7 +39,7 @@ export default class ElementsDisplay {
 			'hideNonSoteLabel'		          
 		];
 		
-		if ( this.store.view == 'helsinki' ) {
+		if ( this.toggleStore.helsinkiView ) {
 
 			elements.push( 'hideNewBuildingsSwitch' );
 			elements.push( 'hideNewBuildingsLabel' );
@@ -57,7 +57,7 @@ export default class ElementsDisplay {
 			'gridViewLabel',		          
 		];
 
-		if ( this.store.view != 'helsinki' ) {
+		if ( !this.toggleStore.helsinkiView ) {
 
 			elements.push( 'capitalRegionSwitch' );
 			elements.push( 'capitalRegionViewLabel' );

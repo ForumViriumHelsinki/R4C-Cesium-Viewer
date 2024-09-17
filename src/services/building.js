@@ -6,7 +6,6 @@ import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
-import EventEmitter from './eventEmitter.js';
 import { eventBus } from './eventEmitter.js';
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -20,7 +19,6 @@ export default class Building {
 		this.datasourceService = new Datasource();
 		this.treeService = new Tree();
 		this.urbanheatService = new Urbanheat();
-		this.eventEmitterService = new EventEmitter();
  	}
 
 
@@ -68,9 +66,9 @@ export default class Building {
 		( this.toggleStore.showTrees && treeArea ) && 
 			( this.propsStore.setTreeArea( treeArea ) );
 
-		this.store.view === 'helsinki' 
+		this.toggleStore.helsinkiView 
     		? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
-    		: ( this.store.view === 'capitalRegion' 
+    		: ( !this.toggleStore.helsinkiView 
         		? ( this.propsStore.setBuildingHeatExposure( avg_temp_c._value ), buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) ) 
         		: ( this.propsStore.setGridBuildingProps( buildingProps ), eventBus.emit( 'newBuildingGridChart' ) ) );       
 	}
@@ -101,7 +99,7 @@ export default class Building {
 			polygon.material = new Cesium.Color( 0, 0, 0, 0 );
 		}
 
-		this.store.view === 'helsinki' && ( this.hideNonSoteBuilding( entity ), this.hideLowBuilding( entity ) ); 
+		this.toggleStore.helsinkiView && ( this.hideNonSoteBuilding( entity ), this.hideLowBuilding( entity ) ); 
     	( this.store.view === 'grid' && entity._properties?._kayttarks?._value !== 'Asuinrakennus' ) && ( entity.show = false );
 
 	}
@@ -264,18 +262,18 @@ export default class Building {
 
 	soteBuildings( entity ) {
 
-		const kayttotark = this.store.view === 'helsinki' 
+		const kayttotark = this.toggleStore.helsinkiView
     		? entity._properties?._c_kayttark?._value ? Number( entity._properties.c_kayttark._value ) : null
     		: entity._properties?._kayttarks?._value;
 
-		entity.show = this.store.view === 'helsinki'
+		entity.show = this.toggleStore.helsinkiView
     		? kayttotark && ( [ 511, 131 ].includes( kayttotark ) || ( kayttotark > 210 && kayttotark < 240 ) )
     		: kayttotark === 'Yleinen rakennus';
 	}
 
 	lowBuildings( entity ) {
 		
-		( entity._properties?.[ this.store.view === 'helsinki' ? '_i_kerrlkm' : '_kerrosten_lkm' ]?._value <= 6 ) && ( entity.show = false );
+		( entity._properties?.[ this.toggleStore.helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm' ]?._value <= 6 ) && ( entity.show = false );
 		
 	}
 	/**
@@ -307,7 +305,7 @@ export default class Building {
 		for ( let i = 0; i < entities.length; i++ ) {
 			const entity = entities[i];
 
-			this.store.view === 'capitalRegion' 
+			!this.toggleStore.helsinkiView
 				? this.outlineByTemperature( entity, 'avg_temp_c', temps ) 
 				: this.outlineByTemperature( entity, 'avgheatexposuretobuilding', temps );
 
@@ -358,7 +356,7 @@ export default class Building {
 		for ( let i = 0; i < entities.length; i++ ) {
 			const entity = entities[ i ];
 
-			this.outlineById( entity, this.store.view === 'helsinki' ? 'id' : 'kiitun', id );
+			this.outlineById( entity, this.toggleStore.helsinkiView ? 'id' : 'kiitun', id );
 
 		}
 	}
@@ -366,7 +364,7 @@ export default class Building {
 	outlineById( entity, property, id ) {
 
 		entity._properties[ property ] && entity._properties[ property ]._value === id
-			? ( this.polygonOutlineToYellow( entity ), this.store.setPickedEntity( entity ), this.eventEmitterService.emitEntityPrintEvent() )
+			? ( this.polygonOutlineToYellow( entity ), this.store.setPickedEntity( entity ), eventBus.emit( 'entityPrintEvent' ) )
 			: this.polygonOutlineToBlack( entity );
 
 	}

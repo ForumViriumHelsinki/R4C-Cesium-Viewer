@@ -7,7 +7,7 @@ export const useToggleStore = defineStore( 'toggle', {
 		travelTime: false,
 		resetGrid: false,
 		gridView: false,
-		capitalRegionView: false,
+		helsinkiView: false,
 		showPlot: true,
 		print: true,
 		showVegetation: false,
@@ -41,8 +41,8 @@ export const useToggleStore = defineStore( 'toggle', {
 		setGridView( enabled ) {
 			this.gridView = enabled;
 		},
-		setCapitalRegionView( enabled ) {
-			this.capitalRegionView = enabled;
+		setHelsinkiView( enabled ) {
+			this.helsinkiView = enabled;
 		},
 		setShowPlot( enabled ) {
 			this.showPlot = enabled;

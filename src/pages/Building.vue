@@ -4,8 +4,8 @@
       <!-- Left column for Heat charts -->
       <v-col cols="9">
         <!-- Conditionally render either HSYBuildingHeatChart or BuildingHeatChart -->
-        <HSYBuildingHeatChart v-if="toggleStore.capitalRegionView" />
-        <BuildingHeatChart v-else />
+        <BuildingHeatChart v-if="toggleStore.helsinkiView" />
+        <HSYBuildingHeatChart v-else />
       </v-col>
 
       <!-- Right column for Tree chart -->

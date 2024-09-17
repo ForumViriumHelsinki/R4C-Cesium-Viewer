@@ -20,7 +20,7 @@ import Tree from '../services/tree.js';
 import WMS from '../services/wms.js'; 
 import Featurepicker from '../services/featurepicker.js'; 
 import Geocoding from '../services/geocoding.js';
-import EventEmitter from '../services/eventEmitter.js';;;
+import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
@@ -28,6 +28,7 @@ import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import Building from './Building.vue';
 import Helsinki from './Helsinki.vue';
 import CapitalRegion from './CapitalRegion.vue'
+import CapitalRegionService from '../services/capitalRegion.js'
 
 export default {
 	data() {
@@ -39,7 +40,6 @@ export default {
 		this.store = useGlobalStore();
 		this.socioEconomicsStore = useSocioEconomicsStore();
 		this.heatExposureStore = useHeatExposureStore();
-		this.eventEmitterService = new EventEmitter();
 		this.wmsService = new WMS ();
 		Cesium.Ion.defaultAccessToken = null;
 		this.initViewer();
@@ -103,7 +103,7 @@ export default {
 			this.addAttribution( );
 
 			this.$nextTick( () => {
-				this.eventEmitterService.emitPostalCodeViewEvent( );
+				eventBus.emit( 'initPostalCodeView' );
 			} );
 
 		},
@@ -124,13 +124,15 @@ export default {
 	},
 };
 
-const addPostalCodes = ( ) => {
+const addPostalCodes = async () => {
 	const dataSourceService = new Datasource( );
-	dataSourceService.loadGeoJsonDataSource(
+	await dataSourceService.loadGeoJsonDataSource(
 		0.2,
-		'./assets/data/hki_po_clipped.json',
+		'./assets/data/hsy_po.json',
 		'PostCodes'
 	);
+	const capitalRegionService = new CapitalRegionService();
+	capitalRegionService.addPostalCodeDataToPinia();
 };
 
 const addFeaturePicker = ( ) => {

@@ -2,7 +2,7 @@ import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
-import EventEmitter from './eventEmitter.js';
+import { eventBus } from './eventEmitter.js';
 import { usePropsStore } from '../stores/propsStore.js';
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
@@ -11,7 +11,6 @@ export default class EspooSurvey {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
-		this.eventEmitterService = new EventEmitter();
 	}
 
 	/**
@@ -59,7 +58,7 @@ export default class EspooSurvey {
 		this.setColorAndLabelForPointEntities( entities );
 		const propsStore = usePropsStore( );
 		propsStore.setScatterPlotEntities( entities );
-		this.eventEmitterService.emitSurveyScatterPlotEvent( );
+		eventBus.emit( 'newSurveyScatterPlot' );
 
 	}
 

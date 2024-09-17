@@ -31,7 +31,7 @@ export default {
       selectedArea.value = nimiValues[0] || ''; // Set the first area as default
     };
 
-    const getNimiDataFromStore = () => toggleStore.capitalRegionView ? socioEconomicsStore.getNimiForCapital() : socioEconomicsStore.getNimiForHelsinki();
+    const getNimiDataFromStore = () => toggleStore.helsinkiView ? socioEconomicsStore.getNimiForHelsinki() : socioEconomicsStore.getNimiForCapital();
 
     // Populate areaOptions when the component is mounted
     onMounted(() => {
