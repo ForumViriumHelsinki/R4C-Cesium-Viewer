@@ -7,7 +7,12 @@ build:
     useBuildkit: true
     concurrency: 0
   artifacts:
-    - image: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
+    - image: viewer
+      context: .
+      docker:
+        dockerfile: Dockerfile
+    - image: backend
+      context: backend
       docker:
         dockerfile: Dockerfile
 deploy:
@@ -18,5 +23,12 @@ deploy:
         valuesFiles:
           - helm/values.yaml
         version: 0.1.0
+        setValueTemplates:
+          image.repository: "{{.IMAGE_REPO_viewer}}"
+          image.tag: "{{.IMAGE_TAG_viewer}}@{{.IMAGE_DIGEST_viewer}}"
+          image2.repository: "{{.IMAGE_REPO_backend}}"
+          image2.tag: "{{.IMAGE_TAG_backend}}@{{.IMAGE_DIGEST_backend}}"
         setValues:
+          image.pullPolicy: "IfNotPresent"
+          image2.pullPolicy: "IfNotPresent"
           vite.backend_url: "/backend"
