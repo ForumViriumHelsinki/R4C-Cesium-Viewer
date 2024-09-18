@@ -1,0 +1,22 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: r4c-cesium-viewer
+build:
+  local:
+    useBuildkit: true
+    concurrency: 0
+  artifacts:
+    - image: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
+      docker:
+        dockerfile: Dockerfile
+deploy:
+  helm:
+    releases:
+      - name: r4c-cesium-viewer
+        chartPath: helm
+        valuesFiles:
+          - helm/values.yaml
+        version: 0.1.0
+        setValues:
+          vite.backend_url: "/backend"
