@@ -13,6 +13,12 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
+image2:
+  repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer-backend
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
