@@ -1,0 +1,27 @@
+services:
+  app:
+    image: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
+    build:
+      context: .
+    volumes:
+      - .:/usr/src/app # Mount the project directory inside the container
+    ports:
+      - "8080:80" # Expose the Vue app's port
+    environment:
+      - NODE_ENV=development
+    command: "/bin/sh -c npm run dev"
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  backend:
+    image: ghcr.io/forumviriumhelsinki/r4c-cesium-backend
+    build:
+      context: ./backend
+    ports:
+      - "3000:3000" # Expose the backend port
+    environment:
+      - NODE_ENV=development
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
