@@ -1,7 +1,5 @@
 FROM node:21-alpine as build
 
-ARG VITE_PASSWORD=defaultpass
-
 WORKDIR /app
 
 COPY . .
