@@ -1,98 +1,15 @@
 import Decoding from './decoding.js';
-import { eventBus } from './eventEmitter.js';
 import Datasource from './datasource.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
+import { useBuildingStore } from '../stores/buildingStore.js';
 
 export default class Urbanheat {
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
-		this.decodingService = new Decoding();
 		this.datasourceService = new Datasource( );
 
-	}
-
-	/**
- * Sets attributes from API data source to building data source
- * 
- * Finds the purpose of a building in Helsinki based on code included in wfs source data
- * Code list: https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf
- *
- * @param { Object } properties of a building
- * @param { Object } features Urban Heat Exposure buildings dataset
- */
-	setAttributesFromApiToBuilding ( properties, features ) {
-
-		for ( let i = 0; i < features.length; i++ ) {
-
-			// match building based on Helsinki id
-			if ( properties.id == features[ i ].properties.hki_id ) {
-
-				if ( features[ i ].properties.avgheatexposuretobuilding ) {
-
-					properties.avgheatexposuretobuilding = features[ i ].properties.avgheatexposuretobuilding;
-
-				}
-
-				if ( features[ i ].properties.distancetounder40 ) {
-
-					properties.distanceToUnder40 = features[ i ].properties.distancetounder40;
-
-				}
-
-				if ( features[ i ].properties.distancetounder40 ) {
-
-					properties.locationUnder40 = features[ i ].properties.locationunder40;
-
-				}
-
-				if ( features[ i ].properties.year_of_construction ) {
-
-					properties.year_of_construction = features[ i ].properties.year_of_construction;
-
-				}
-
-				if ( features[ i ].properties.measured_height ) {
-
-					properties.measured_height = features[ i ].properties.measured_height;
-
-				}
-
-				if ( features[ i ].properties.roof_type ) {
-
-					properties.roof_type = features[ i ].properties.roof_type;
-
-				}
-
-				if ( features[ i ].properties.area_m2 ) {
-
-					properties.area_m2 = features[ i ].properties.area_m2;
-
-				}
-
-				if ( features[ i ].properties.roof_median_color ) {
-
-					properties.roof_median_color = this.decodingService.getColorValue( features[ i ].properties.roof_median_color );
-
-				}
-
-				if ( features[ i ].properties.roof_mode_color ) {
-
-					properties.roof_mode_color = this.decodingService.getColorValue( features[ i ].properties.roof_mode_color );
-
-				}
-
-				properties.kayttotarkoitus = this.decodingService.decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
-				properties.c_julkisivu = this.decodingService.decodeFacade( properties.c_julkisivu );
-				properties.c_rakeaine = this.decodingService.decodeMaterial( properties.c_rakeaine );
-				properties.c_lammtapa = this.decodingService.decodeHeatingMethod( properties.c_lammtapa );
-				properties.c_poltaine = this.decodingService.decodeHeatingSource( properties.c_poltaine );
-
-				features.splice( i, 1 );
-				break;
-			}
-		}
 	}
 
 	/**
@@ -150,18 +67,20 @@ export default class Urbanheat {
  */
 	async findUrbanHeatData( data ) {
 
+		const buildingStore = useBuildingStore();
 		const postcode = this.store.postalcode;
+		buildingStore.setBuildingFeatures( data );
 
 		try {
 			const response = await fetch( 'https://geo.fvh.fi/r4c/collections/urban_heat_building/items?f=json&limit=2000&postinumero=' + postcode );
 			const urbanheat = await response.json();
     
 			for ( let i = 0; i < data.features.length; i++ ) {
-				let feature = data.features[i];
-				this.setAttributesFromApiToBuilding( feature.properties, urbanheat.features );
+				let feature = data.features[ i ];
+				setAttributesFromApiToBuilding( feature.properties, urbanheat.features );
 			}
     
-			this.addMissingHeatData( data.features, urbanheat.features );
+			addMissingHeatData( data.features, urbanheat.features );
 			let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + postcode );
 			this.setPropertiesAndCreateCharts( entities, data.features );
 
@@ -174,19 +93,105 @@ export default class Urbanheat {
 
 	}
 
+}
+
 	/**
  * Adds urban heat exposure data that did not match in previous phase.
  * 
  * @param { object } features the buildings from city wfs
  * @param { object } heat urban heat exposure data from pygeoapi
  */
-	addMissingHeatData( features, heat ) {
 
-		for ( let i = 0; i < heat.length; i++ ) {
+const addMissingHeatData = ( features, heat ) => {
+
+	for ( let i = 0; i < heat.length; i++ ) {
 	
-			features.push( heat[ i ] );
-
-		}
+		features.push( heat[ i ] );
 
 	}
+
 }
+
+	/**
+ * Sets attributes from API data source to building data source
+ * 
+ * Finds the purpose of a building in Helsinki based on code included in wfs source data
+ * Code list: https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf
+ *
+ * @param { Object } properties of a building
+ * @param { Object } features Urban Heat Exposure buildings dataset
+ */
+const setAttributesFromApiToBuilding = ( properties, features ) => {
+
+		const decodingService = new Decoding();
+
+		for ( let i = 0; i < features.length; i++ ) {
+
+			// match building based on Helsinki id
+			if ( properties.id == features[ i ].properties.hki_id ) {
+
+				if ( features[ i ].properties.avgheatexposuretobuilding ) {
+
+					properties.avgheatexposuretobuilding = features[ i ].properties.avgheatexposuretobuilding;
+
+				}
+
+				if ( features[ i ].properties.distancetounder40 ) {
+
+					properties.distanceToUnder40 = features[ i ].properties.distancetounder40;
+
+				}
+
+				if ( features[ i ].properties.distancetounder40 ) {
+
+					properties.locationUnder40 = features[ i ].properties.locationunder40;
+
+				}
+
+				if ( features[ i ].properties.year_of_construction ) {
+
+					properties.year_of_construction = features[ i ].properties.year_of_construction;
+
+				}
+
+				if ( features[ i ].properties.measured_height ) {
+
+					properties.measured_height = features[ i ].properties.measured_height;
+
+				}
+
+				if ( features[ i ].properties.roof_type ) {
+
+					properties.roof_type = features[ i ].properties.roof_type;
+
+				}
+
+				if ( features[ i ].properties.area_m2 ) {
+
+					properties.area_m2 = features[ i ].properties.area_m2;
+
+				}
+
+				if ( features[ i ].properties.roof_median_color ) {
+
+					properties.roof_median_color = decodingService.getColorValue( features[ i ].properties.roof_median_color );
+
+				}
+
+				if ( features[ i ].properties.roof_mode_color ) {
+
+					properties.roof_mode_color = decodingService.getColorValue( features[ i ].properties.roof_mode_color );
+
+				}
+
+				properties.kayttotarkoitus = decodingService.decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
+				properties.c_julkisivu = decodingService.decodeFacade( properties.c_julkisivu );
+				properties.c_rakeaine = decodingService.decodeMaterial( properties.c_rakeaine );
+				properties.c_lammtapa = decodingService.decodeHeatingMethod( properties.c_lammtapa );
+				properties.c_poltaine = decodingService.decodeHeatingSource( properties.c_poltaine );
+
+				features.splice( i, 1 );
+				break;
+			}
+		}
+	}

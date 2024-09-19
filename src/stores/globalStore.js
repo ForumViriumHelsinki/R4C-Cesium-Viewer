@@ -14,17 +14,13 @@ export const useGlobalStore = defineStore( 'global', {
 		maxKelvinCold: 266.2488708496094,
 		currentGridCell: null,
 		cesiumViewer: null,
-		postalCodeData: null,
 		buildingAddress: null,
 		pickedEntity: null,
 	} ),
 	actions: {
 		setLevel( level ) {
 			this.level = level;
-		},
-		setPostalCodeData( postalCodeData ) {
-			this.postalCodeData = postalCodeData;
-		},		
+		},	
 		setCesiumViewer( viewer ) {
 			this.cesiumViewer = viewer;
 		},

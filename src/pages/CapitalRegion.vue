@@ -28,7 +28,10 @@
           <BuildingScatterPlot />
         </v-col>
       </v-row>
+       <!-- Conditionally render BuildingInformation when there is buildings to be shown -->
     </v-container>
+
+  <BuildingInformation v-if="buildingStore.buildingFeatures && !toggleStore.helsinkiView" />
 
 </template>
 
@@ -37,7 +40,9 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { useBuildingStore } from '../stores/buildingStore.js';
 import HeatHistogram from '../components/HeatHistogram.vue';
+import BuildingInformation from '../components/BuildingInformation.vue';
 import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
 import Landcover from '../views/Landcover.vue';
@@ -48,12 +53,14 @@ export default {
     BuildingScatterPlot,
     SocioEconomics,
     Landcover,
+    BuildingInformation,
   },
   setup() {
     const showComponents = ref(false);
     const showLandcover = ref(false);
     const store = useGlobalStore();
     const toggleStore = useToggleStore();
+    const buildingStore = useBuildingStore();
 
     onMounted(() => {
       eventBus.on('showCapitalRegion', () => {
@@ -78,6 +85,8 @@ export default {
       showComponents,
       showLandcover,
       store,
+      buildingStore,
+      toggleStore,
     };
   }
 };

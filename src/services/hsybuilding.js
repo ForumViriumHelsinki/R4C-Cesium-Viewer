@@ -8,6 +8,7 @@ import { usePropsStore } from '../stores/propsStore.js';
 import * as turf from '@turf/turf';
 import * as Cesium from 'cesium';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { useBuildingStore } from '../stores/buildingStore.js';
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
@@ -300,6 +301,9 @@ export default class HSYBuilding {
 	}
 
 	setHSYBuildingAttributes( data, entities ) {
+
+		const buildingStore = useBuildingStore();
+		buildingStore.setBuildingFeatures( data );
 
 		this.buildingService.setHeatExposureToBuildings( entities );
 		this.setHSYBuildingsHeight( entities );
