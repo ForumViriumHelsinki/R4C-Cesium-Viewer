@@ -31,7 +31,8 @@
        <!-- Conditionally render BuildingInformation when there is buildings to be shown -->
     </v-container>
 
-  <BuildingInformation v-if="buildingStore.buildingFeatures && !toggleStore.helsinkiView" />
+  <BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
+  <Loading v-if="store.isLoading" />
 
 </template>
 
@@ -46,6 +47,7 @@ import BuildingInformation from '../components/BuildingInformation.vue';
 import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
 import Landcover from '../views/Landcover.vue';
+import Loading from '../components/Loading.vue'
 
 export default {
   components: {
@@ -54,6 +56,7 @@ export default {
     SocioEconomics,
     Landcover,
     BuildingInformation,
+    Loading,
   },
   setup() {
     const showComponents = ref(false);

@@ -107,7 +107,7 @@ export default {
         );
         plotService.addTitle(
           svg,
-          `${store.nameOfZone} buildings average surface temperature in Celsius`,
+          `${store.nameOfZone} ${store.heatDataDate} buildings surface temperature in °C `,
           width,
           margin
         );

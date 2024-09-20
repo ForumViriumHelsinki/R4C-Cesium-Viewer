@@ -1,15 +1,21 @@
 <template>
   <div v-if="showTooltip" :style="tooltipStyle" class="building-tooltip">
     <div v-if="buildingAttributes">
-      <strong>Address:</strong> {{ buildingAttributes.address }} <br />
-      <strong>Building Material:</strong> {{ buildingAttributes.rakennusaine_s }} <br />
-      <strong>Surface temperature 23.06.2024:</strong> {{ buildingAttributes.avg_temp_c }} °C<br />
+      <div v-if="buildingAttributes.address">
+        <strong>Address:</strong> {{ buildingAttributes.address }} <br />
+      </div>
+      <div v-if="buildingAttributes.rakennusaine_s">
+        <strong>Building Material:</strong> {{ buildingAttributes.rakennusaine_s }} <br />
+      </div>
+      <div v-if="buildingAttributes.avg_temp_c">
+        <strong>Surface Temperature {{ store.heatDataDate }}:</strong> {{ buildingAttributes.avg_temp_c }} °C<br />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import Datasource from '../services/datasource.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
@@ -40,7 +46,13 @@ export default {
       try {
         const features = buildingStore.buildingFeatures.features;
 
-        if (features && entity._id) {
+        const validIdPattern = /^[0-9]{9}[A-Z]$/;
+
+        if (!entity._id || !validIdPattern.test(entity._id)) {
+          return; // Exit if the ID is invalid
+        }
+
+        if (features) {
           const matchingFeature = features.find(
             (feature) => feature.id === entity._id
           );
@@ -74,8 +86,8 @@ export default {
           new Cesium.Cartesian2(endPosition.x, endPosition.y)
         );
 
-        if (pickedEntity && pickedEntity.id) {
-          fetchBuildingInfo(pickedEntity.id);
+        if ( pickedEntity && pickedEntity.id ) {
+          fetchBuildingInfo( pickedEntity.id );
         } else {
           showTooltip.value = false;
         }
@@ -83,13 +95,17 @@ export default {
     };
 
     // Set up Cesium mouse events
-    onMounted(() => {
-      if (buildingStore.buildingFeatures) {
-        store.cesiumViewer.screenSpaceEventHandler.setInputAction(
-          onMouseMove,
-          Cesium.ScreenSpaceEventType.MOUSE_MOVE
-        );
-      }
+    onMounted( () => {
+      setTimeout( () => {
+        nextTick( () => {
+          if ( buildingStore.buildingFeatures ) {
+            store.cesiumViewer.screenSpaceEventHandler.setInputAction(
+              onMouseMove,
+              Cesium.ScreenSpaceEventType.MOUSE_MOVE
+            );
+          }
+        });
+      }, 1000 ); // 1000 milliseconds = 1 second delay
     });
 
     // Clean up Cesium mouse events
@@ -104,6 +120,7 @@ export default {
     return {
       showTooltip,
       tooltipStyle,
+      store,
       buildingAttributes,
     };
   },

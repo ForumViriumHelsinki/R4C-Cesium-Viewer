@@ -14,6 +14,11 @@ app.use( bodyParser.urlencoded( { extended: true, limit: '100mb' } ) );
 // Connect to Redis
 const redis = new Redis( { host: 'redis' } );
 
+// Flush the Redis cache on server start
+redis.flushall()
+  .then(() => console.log('Redis cache flushed on server start'))
+  .catch(error => console.error('Error flushing Redis cache:', error));
+
 // Existing cache endpoints
 app.get( '/api/cache/get', async ( req, res ) => {
 	const key = req.query.key;

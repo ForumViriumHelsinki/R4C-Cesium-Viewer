@@ -12,12 +12,20 @@ export const useGlobalStore = defineStore( 'global', {
 		maxKelvin: 313.70355224609375,
 		minKelvinCold: 246.72064208984375,
 		maxKelvinCold: 266.2488708496094,
+		heatDataDate: '23.06.2023',
 		currentGridCell: null,
 		cesiumViewer: null,
 		buildingAddress: null,
 		pickedEntity: null,
+		isLoading: false,
 	} ),
 	actions: {
+		setIsLoading( isLoading ) {
+			this.isLoading = isLoading;
+		},
+		setHeatDataDate( date ) {
+			this.heatDataDate = date;
+		},	
 		setLevel( level ) {
 			this.level = level;
 		},	

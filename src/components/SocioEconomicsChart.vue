@@ -117,7 +117,7 @@ export default {
       if (sosData) {
         plotService.initializePlotContainer('socioeonomicsContainer');
 
-        const margin = { top: 45, right: 5, bottom: 55, left: 25 };
+        const margin = { top: 45, right: 5, bottom: 55, left: 30 };
         const width = 460 - margin.left - margin.right;
         const height = 200 - margin.top - margin.bottom;
 
@@ -190,9 +190,9 @@ export default {
     const helsinkiOrCapitalHeatExposure = (heatData) => {
       return toggleStore.capitalRegionCold
         ? 1 - heatData.properties.avgcoldexposure.toFixed(3)
-        : toggleStore.capitalRegionView
-        ? heatData.properties.avgheatexposure.toFixed(3)
-        : heatData.properties.hki_avgheatexposure.toFixed(3);
+        : toggleStore.helsinkiView
+        ? heatData.properties.hki_avgheatexposure.toFixed(3)
+        : heatData.properties.avgheatexposure.toFixed(3);
     };
 
     return {
