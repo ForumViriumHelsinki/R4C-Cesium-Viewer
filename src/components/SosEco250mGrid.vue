@@ -139,7 +139,7 @@ const updateGridColors = async (selectedIndex) => {
       } else {
         // Generic color assignment for other indices
         const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
-        const color = indexValue !== undefined 
+        const color = indexValue
           ? getColorForIndex(indexValue, selectedIndex) 
           : Cesium.Color.WHITE.withAlpha(0.8);
         entity.polygon.material = color;
