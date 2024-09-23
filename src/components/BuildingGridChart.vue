@@ -13,18 +13,18 @@ import Plot from '../services/plot.js';
   
 export default {
 	computed: {
-        shouldShowBuilding() {
+		shouldShowBuilding() {
 			const store = useGlobalStore(); // Get access to the global store
-            return store.level === 'building';
-        }
-    },
-    watch: {
-        shouldShowBuilding(newValue) {
+			return store.level === 'building';
+		}
+	},
+	watch: {
+		shouldShowBuilding( newValue ) {
 			if ( !newValue ) {
 				document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
 			}
-        }
-    },
+		}
+	},
 	mounted() {
 		this.unsubscribe = eventBus.on( 'newBuildingGridChart', this.newBuildingGridChart );
 		this.store = useGlobalStore();

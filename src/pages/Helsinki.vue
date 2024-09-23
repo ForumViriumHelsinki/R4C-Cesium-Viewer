@@ -47,38 +47,38 @@ import Scatterplot from '../components/Scatterplot.vue';
 import NearbyTreeArea from '../components/NearbyTreeArea.vue';
 
 export default {
-  components: {
-    HeatHistogram,
-    SocioEconomics,
-    Scatterplot,
-    NearbyTreeArea,
-  },
-  setup() {
-    const showComponents = ref(false);
-    const store = useGlobalStore(); // Access the store
-    const propsStore = usePropsStore();
+	components: {
+		HeatHistogram,
+		SocioEconomics,
+		Scatterplot,
+		NearbyTreeArea,
+	},
+	setup() {
+		const showComponents = ref( false );
+		const store = useGlobalStore(); // Access the store
+		const propsStore = usePropsStore();
 
-    onMounted(() => {
-      eventBus.on('showHelsinki', () => {
-        showComponents.value = true;
-      });
+		onMounted( () => {
+			eventBus.on( 'showHelsinki', () => {
+				showComponents.value = true;
+			} );
 
-      eventBus.on('hideHelsinki', () => {
-        showComponents.value = false;
-      });
-    });
+			eventBus.on( 'hideHelsinki', () => {
+				showComponents.value = false;
+			} );
+		} );
 
-    onBeforeUnmount(() => {
-      eventBus.off('showHelsinki');
-      eventBus.off('hideHelsinki');
-    });
+		onBeforeUnmount( () => {
+			eventBus.off( 'showHelsinki' );
+			eventBus.off( 'hideHelsinki' );
+		} );
 
-    return {
-      showComponents,
-      propsStore,
-      store, // Return the store to access postalCode in the template
-    };
-  },
+		return {
+			showComponents,
+			propsStore,
+			store, // Return the store to access postalCode in the template
+		};
+	},
 };
 </script>
 

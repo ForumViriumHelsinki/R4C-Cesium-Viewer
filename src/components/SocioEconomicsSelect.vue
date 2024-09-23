@@ -5,7 +5,7 @@
     label="Select Area"
     density="compact"
     variant="underlined"
-    class="pa-0 ma-0" style="position: fixed; top: 100px; right: 5px; width: 155px; z-index: 10;"
+    class="pa-0 ma-0" style="position: fixed; top: 100px; right: 5px; width: 245px; z-index: 10;"
   />
 </template>
 
@@ -17,39 +17,39 @@ import { usePropsStore } from '../stores/propsStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 
 export default {
-  setup() {
-    const socioEconomicsStore = useSocioEconomicsStore();
-    const toggleStore = useToggleStore(); 
-    const propsStore = usePropsStore(); 
-    const selectedArea = ref('');
-    const areaOptions = ref([]);
+	setup() {
+		const socioEconomicsStore = useSocioEconomicsStore();
+		const toggleStore = useToggleStore(); 
+		const propsStore = usePropsStore(); 
+		const selectedArea = ref( '' );
+		const areaOptions = ref( [] );
 
-    // Populate the select options based on 'nimi' attribute of socioEconomics store
-    const populateSelectFromStore = () => {
-      const nimiValues = getNimiDataFromStore();
-      areaOptions.value = nimiValues;
-      selectedArea.value = nimiValues[0] || ''; // Set the first area as default
-    };
+		// Populate the select options based on 'nimi' attribute of socioEconomics store
+		const populateSelectFromStore = () => {
+			const nimiValues = getNimiDataFromStore();
+			areaOptions.value = nimiValues;
+			selectedArea.value = nimiValues[0] || ''; // Set the first area as default
+		};
 
-    const getNimiDataFromStore = () => toggleStore.helsinkiView ? socioEconomicsStore.getNimiForHelsinki() : socioEconomicsStore.getNimiForCapital();
+		const getNimiDataFromStore = () => toggleStore.helsinkiView ? socioEconomicsStore.getNimiForHelsinki() : socioEconomicsStore.getNimiForCapital();
 
-    // Populate areaOptions when the component is mounted
-    onMounted(() => {
+		// Populate areaOptions when the component is mounted
+		onMounted( () => {
 
-        populateSelectFromStore();
+			populateSelectFromStore();
 
-    });
+		} );
 
-    // Watch for changes in the selected area and handle the change
-    watch(() => selectedArea.value, (newValue) => {
-        propsStore.setSocioEconomics(newValue);
-        eventBus.emit( 'updateSocioEconomics' );
-    });
+		// Watch for changes in the selected area and handle the change
+		watch( () => selectedArea.value, ( newValue ) => {
+			propsStore.setSocioEconomics( newValue );
+			eventBus.emit( 'updateSocioEconomics' );
+		} );
 
-    return {
-      selectedArea,
-      areaOptions
-    };
-  }
+		return {
+			selectedArea,
+			areaOptions
+		};
+	}
 };
 </script>

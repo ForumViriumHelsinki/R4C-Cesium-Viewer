@@ -149,16 +149,16 @@ export default {
 		this.unsubscribe();
 	}, 
 	computed: {
-        shouldShowReturn() {
+		shouldShowReturn() {
 			const store = useGlobalStore(); // Get access to the global store
-            return store.level === 'building';
-        }
-    },
-    watch: {
-        shouldShowReturn(newValue) { // Watch for changes in computed property
-            this.showReturn = newValue; // Update data property if needed
-        }
-    },
+			return store.level === 'building';
+		}
+	},
+	watch: {
+		shouldShowReturn( newValue ) { // Watch for changes in computed property
+			this.showReturn = newValue; // Update data property if needed
+		}
+	},
 	methods: {
 		reset(){
 			location.reload();
@@ -166,7 +166,7 @@ export default {
 		returnToPostalCode( ) {
 			const featurepicker = new Featurepicker();
 			featurepicker.loadPostalCode();
-			this.store.level === 'postalCode'
+			this.store.level === 'postalCode';
 			this.toggleStore.showTrees && this.treeService.loadTrees();
 			eventBus.emit( 'hideBuilding' );
 		},
@@ -253,12 +253,12 @@ export default {
  */
 		gridViewEvent() {
 
-			const gridView = document.getElementById('gridViewToggle').checked;
-			this.toggleStore.setGridView(gridView);
+			const gridView = document.getElementById( 'gridViewToggle' ).checked;
+			this.toggleStore.setGridView( gridView );
 
 			gridView 
-    			? ( this.store.setView('grid'), this.showPostalCodeView = false, eventBus.emit( 'createPopulationGrid' ) )
-    			: ( this.store.setView('capitalRegion'), this.reset() );
+    			? ( this.store.setView( 'grid' ), this.showPostalCodeView = false, eventBus.emit( 'createPopulationGrid' ) )
+    			: ( this.store.setView( 'capitalRegion' ), this.reset() );
 
 		},
 
@@ -287,10 +287,10 @@ export default {
 			this.toggleStore.setShowTrees( showTrees );
 
 			showTrees 
-    			? (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Trees') 
-        		? this.treeService.loadTrees(this.store.postalcode)
-        		: (this.dataSourceService.changeDataSourceShowByName('Trees', true)))
-    			: (this.dataSourceService.changeDataSourceShowByName('Trees', false), this.plotService.showAllPlots(), this.buildingService.resetBuildingEntities());
+    			? ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'Trees' ) 
+        		? this.treeService.loadTrees( this.store.postalcode )
+        		: ( this.dataSourceService.changeDataSourceShowByName( 'Trees', true ) ) )
+    			: ( this.dataSourceService.changeDataSourceShowByName( 'Trees', false ), this.plotService.showAllPlots(), this.buildingService.resetBuildingEntities() );
 
 		},
 
@@ -375,14 +375,14 @@ export default {
 			
 			if ( this.dataSourceService ) {
     		
-			const buildingsDataSource = this.dataSourceService.getDataSourceByName( `Buildings ${this.store.postalcode}` );
+				const buildingsDataSource = this.dataSourceService.getDataSourceByName( `Buildings ${this.store.postalcode}` );
 
     			if ( buildingsDataSource ) {
         			( hideNonSote || hideNewBuildings || hideLow ) 
             			? this.buildingService.filterBuildings( buildingsDataSource ) 
             			: this.buildingService.showAllBuildings( buildingsDataSource );
 
-        			!this.toggleStore.helsinkiView && eventBus.emit('updateScatterPlot');
+        			!this.toggleStore.helsinkiView && eventBus.emit( 'updateScatterPlot' );
 				
 				}
 			}

@@ -11,23 +11,23 @@ import { ref, watch } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 
 export default {
-  setup() {
-    const store = useGlobalStore();
-    const visible = ref(false);
+	setup() {
+		const store = useGlobalStore();
+		const visible = ref( false );
 
-    // Watch the store.isLoading property to control the visibility
-    watch(
-      () => store.isLoading,
-      (newVal) => {
-        visible.value = newVal;
-      },
-      { immediate: true }
-    );
+		// Watch the store.isLoading property to control the visibility
+		watch(
+			() => store.isLoading,
+			( newVal ) => {
+				visible.value = newVal;
+			},
+			{ immediate: true }
+		);
 
-    return {
-      visible,
-    };
-  },
+		return {
+			visible,
+		};
+	},
 };
 </script>
 

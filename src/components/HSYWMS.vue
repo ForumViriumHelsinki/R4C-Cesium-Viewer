@@ -39,73 +39,73 @@ import wms from '../services/wms.js';
 import axios from 'axios';
 
 export default {
-  setup() {
-    const propsStore = usePropsStore();
-    const searchQuery = ref('');
-    const filteredLayers = ref([]);
-    const wmsService = new wms();
+	setup() {
+		const propsStore = usePropsStore();
+		const searchQuery = ref( '' );
+		const filteredLayers = ref( [] );
+		const wmsService = new wms();
 
-    // Backend URL
-    const backendURL = import.meta.env.VITE_BACKEND_URL;
+		// Backend URL
+		const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    // Fetch WMS layers from the backend
-    const fetchLayers = async () => {
-      try {
-        const response = await axios.get(`${backendURL}/wms/layers`);
-        propsStore.setHSYWMSLayers(response.data); // Set layers in the store
-      } catch (error) {
-        console.error('Error fetching WMS layers:', error);
-      }
-    };
+		// Fetch WMS layers from the backend
+		const fetchLayers = async () => {
+			try {
+				const response = await axios.get( `${backendURL}/wms/layers` );
+				propsStore.setHSYWMSLayers( response.data ); // Set layers in the store
+			} catch ( error ) {
+				console.error( 'Error fetching WMS layers:', error );
+			}
+		};
 
-    // Filter layers based on user input
-    const onSearch = () => {
-      if (searchQuery.value.length >= 3) {
-        filteredLayers.value = propsStore.hSYWMSLayers.filter(layer =>
-          layer.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-        );
-      } else {
-        filteredLayers.value = [];
-      }
-    };
+		// Filter layers based on user input
+		const onSearch = () => {
+			if ( searchQuery.value.length >= 3 ) {
+				filteredLayers.value = propsStore.hSYWMSLayers.filter( layer =>
+					layer.title.toLowerCase().includes( searchQuery.value.toLowerCase() )
+				);
+			} else {
+				filteredLayers.value = [];
+			}
+		};
 
-    // Select and switch the WMS layer
-    const selectLayer = (layerName) => {
-      wmsService.reCreateHSYImageryLayer(layerName);
-      // Clear the filtered layers after selecting
-      filteredLayers.value = [];
-    };
+		// Select and switch the WMS layer
+		const selectLayer = ( layerName ) => {
+			wmsService.reCreateHSYImageryLayer( layerName );
+			// Clear the filtered layers after selecting
+			filteredLayers.value = [];
+		};
 
-    // Handle enter key press
-    const onEnter = () => {
-      const matchingLayer = propsStore.hSYWMSLayers.find(layer =>
-        layer.title.toLowerCase() === searchQuery.value.toLowerCase()
-      );
-      if (matchingLayer) {
-        selectLayer(matchingLayer.name); // Switch to the matching layer
-      }
-    };
+		// Handle enter key press
+		const onEnter = () => {
+			const matchingLayer = propsStore.hSYWMSLayers.find( layer =>
+				layer.title.toLowerCase() === searchQuery.value.toLowerCase()
+			);
+			if ( matchingLayer ) {
+				selectLayer( matchingLayer.name ); // Switch to the matching layer
+			}
+		};
 
-    // Handle search button click
-    const onSearchClick = () => {
-      onEnter(); // Trigger the same behavior as pressing enter
-    };
+		// Handle search button click
+		const onSearchClick = () => {
+			onEnter(); // Trigger the same behavior as pressing enter
+		};
 
-    onMounted(() => {
-      if (!propsStore.hSYWMSLayers) {
-        fetchLayers();
-      }
-    });
+		onMounted( () => {
+			if ( !propsStore.hSYWMSLayers ) {
+				fetchLayers();
+			}
+		} );
 
-    return {
-      searchQuery,
-      filteredLayers,
-      selectLayer,
-      onSearch,
-      onEnter,
-      onSearchClick,
-    };
-  },
+		return {
+			searchQuery,
+			filteredLayers,
+			selectLayer,
+			onSearch,
+			onEnter,
+			onSearchClick,
+		};
+	},
 };
 </script>
 

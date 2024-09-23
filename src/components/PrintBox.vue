@@ -13,105 +13,105 @@ import { useGlobalStore } from '../stores/globalStore.js';
 
 export default {
 	mounted() {
-		this.unsubscribeEntityPrint = eventBus.on('entityPrintEvent', this.entityPrint);
-  		this.unsubscribeGeocodingPrint = eventBus.on('geocodingPrintEvent', this.geocodingPrint);
+		this.unsubscribeEntityPrint = eventBus.on( 'entityPrintEvent', this.entityPrint );
+  		this.unsubscribeGeocodingPrint = eventBus.on( 'geocodingPrintEvent', this.geocodingPrint );
   		this.store = useGlobalStore();
 	},
 	beforeUnmount() {
-  		if (this.unsubscribeEntityPrint) this.unsubscribeEntityPrint();
-  		if (this.unsubscribeGeocodingPrint) this.unsubscribeGeocodingPrint();
+  		if ( this.unsubscribeEntityPrint ) this.unsubscribeEntityPrint();
+  		if ( this.unsubscribeGeocodingPrint ) this.unsubscribeGeocodingPrint();
 	},
 	methods: {
 	/**
     * Prints the properties of the picked Cesium entity
     * 
     */
-	entityPrint( ) {
+		entityPrint( ) {
 
-		const entity = this.store.pickedEntity;
+			const entity = this.store.pickedEntity;
 
-		const view = this.store.view;
+			const view = this.store.view;
 
-		if ( entity._polygon && entity.properties && view !== 'grid' ) {
+			if ( entity._polygon && entity.properties && view !== 'grid' ) {
 
 
-		document.getElementById( 'printContainer' ).scroll( {
-			top: 0,
-			behavior: 'instant'
-		} );
+				document.getElementById( 'printContainer' ).scroll( {
+					top: 0,
+					behavior: 'instant'
+				} );
 
-			//Highlight for clicking...
-			let oldMaterial = entity.polygon.material;
-			entity.polygon.material = new Cesium.Color( 1, 0.5, 0.5, 0.8 );
-			setTimeout( () => { entity.polygon.material = oldMaterial; }, 5000 );
-			printEntity( entity, entity.properties.posno, view );
-		}
+				//Highlight for clicking...
+				let oldMaterial = entity.polygon.material;
+				entity.polygon.material = new Cesium.Color( 1, 0.5, 0.5, 0.8 );
+				setTimeout( () => { entity.polygon.material = oldMaterial; }, 5000 );
+				printEntity( entity, entity.properties.posno, view );
+			}
 
-	},
+		},
 
-	/**
+		/**
   * Creates content for printing from postal code properties
   *
   */
-	geocodingPrint( ) {
+		geocodingPrint( ) {
 
-		const store = new useGlobalStore();	
-		store.cesiumViewer.dataSources._dataSources.forEach( function( dataSource ) {
+			const store = new useGlobalStore();	
+			store.cesiumViewer.dataSources._dataSources.forEach( function( dataSource ) {
             
-			if ( dataSource.name == 'PostCodes' ) {
+				if ( dataSource.name == 'PostCodes' ) {
 
-				findPostalcodeEntity( dataSource, store.postalcode );
+					findPostalcodeEntity( dataSource, store.postalcode );
 						
-			}
-		} ); 
-	},
+				}
+			} ); 
+		},
 	},
 };
 
 const findPostalcodeEntity = ( dataSource, currentPostcode ) => {
 
 
-				for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+	for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
 
-					let entity = dataSource._entityCollection._entities._array[ i ];
+		let entity = dataSource._entityCollection._entities._array[ i ];
 
-					if ( entity._properties._posno._value == currentPostcode ) {
+		if ( entity._properties._posno._value == currentPostcode ) {
 						
-						printEntity( entity );
+			printEntity( entity );
 
-					} 
+		} 
 
-				}
+	}
 
-}
+};
 
 const printEntity = ( entity, postno, view ) => {
 
-		let toPrint = '<u>Found following properties & values:</u><br/>';
+	let toPrint = '<u>Found following properties & values:</u><br/>';
 
 
-						let length = entity._properties._propertyNames.length;
+	let length = entity._properties._propertyNames.length;
 
-						for ( let i = 0; i < length; ++i ) {
+	for ( let i = 0; i < length; ++i ) {
 
 
-			if ( goodForPrint( entity._properties, i ) ) {
-				if ( typeof entity._properties[ entity._properties._propertyNames[ i ] ]._value === 'number' ) {
+		if ( goodForPrint( entity._properties, i ) ) {
+			if ( typeof entity._properties[ entity._properties._propertyNames[ i ] ]._value === 'number' ) {
 
-					toPrint = toPrint + entity._properties._propertyNames[ i ]  + ': ' +  entity._properties[ entity._properties._propertyNames[ i ] ]._value.toFixed( 2 ) + '<br/>';
+				toPrint = toPrint + entity._properties._propertyNames[ i ]  + ': ' +  entity._properties[ entity._properties._propertyNames[ i ] ]._value.toFixed( 2 ) + '<br/>';
 
-				} else {
+			} else {
 
-							toPrint = toPrint + entity._properties._propertyNames[ i ] + ': ' + entity._properties[ entity._properties._propertyNames[ i ] ]._value + '<br/>';
+				toPrint = toPrint + entity._properties._propertyNames[ i ] + ': ' + entity._properties[ entity._properties._propertyNames[ i ] ]._value + '<br/>';
 
-				}
 			}
+		}
 
-						}   
+	}   
 
-						addToPrint( toPrint, postno, view );           
+	addToPrint( toPrint, postno, view );           
 
-}
+};
 
 const goodForPrint = ( properties, i ) => {
 
@@ -123,7 +123,7 @@ const goodForPrint = ( properties, i ) => {
 
 };
 
-	/**
+/**
     * Adds the provided content to the print container
     * 
     * @param {string} toPrint - The content to be added to the print container
@@ -131,21 +131,21 @@ const goodForPrint = ( properties, i ) => {
     */  
 const addToPrint = ( toPrint, postno, view ) => {
 
-		if ( postno  || view === 'grid' ) {
+	if ( postno  || view === 'grid' ) {
 
-			toPrint = toPrint + '<br/><br/><i>Click on objects to retrieve information.</i>';
+		toPrint = toPrint + '<br/><br/><i>Click on objects to retrieve information.</i>';
     
-		} else {
+	} else {
     
-			toPrint = toPrint + '<br/><br/><i>If average urban heat exposure of building is over 0.5 the areas with under 0.4 heat exposure is shown on map.</i>';
+		toPrint = toPrint + '<br/><br/><i>If average urban heat exposure of building is over 0.5 the areas with under 0.4 heat exposure is shown on map.</i>';
     
-		}
+	}
     
-		document.getElementById( 'printContainer' ).innerHTML = toPrint;
-		document.getElementById( 'printContainer' ).scroll( {
-			top: 1000,
-			behavior: 'smooth'
-		} );    
+	document.getElementById( 'printContainer' ).innerHTML = toPrint;
+	document.getElementById( 'printContainer' ).scroll( {
+		top: 1000,
+		behavior: 'smooth'
+	} );    
 };
 </script>
 

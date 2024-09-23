@@ -26,35 +26,35 @@ import BuildingHeatChart from '../components/BuildingHeatChart.vue';
 import { eventBus } from '../services/eventEmitter.js';
 
 export default {
-  components: {
-    HSYBuildingHeatChart,
-    BuildingTreeChart,
-    BuildingHeatChart,
-  },
-  setup() {
-    const showComponents = ref(false);
-    const store = useGlobalStore();
-    const toggleStore = useToggleStore();
+	components: {
+		HSYBuildingHeatChart,
+		BuildingTreeChart,
+		BuildingHeatChart,
+	},
+	setup() {
+		const showComponents = ref( false );
+		const store = useGlobalStore();
+		const toggleStore = useToggleStore();
 
-    onMounted(() => {
-      eventBus.on('showBuilding', () => {
-        showComponents.value = true;
-      });
+		onMounted( () => {
+			eventBus.on( 'showBuilding', () => {
+				showComponents.value = true;
+			} );
 
-      eventBus.on('hideBuilding', () => {
-        showComponents.value = false;
-      });
-    });
+			eventBus.on( 'hideBuilding', () => {
+				showComponents.value = false;
+			} );
+		} );
 
-    onBeforeUnmount(() => {
-      eventBus.off('showBuilding');
-      eventBus.off('hideBuilding');
-    });
+		onBeforeUnmount( () => {
+			eventBus.off( 'showBuilding' );
+			eventBus.off( 'hideBuilding' );
+		} );
 
-    return {
-      showComponents,
-      toggleStore
-    };
-  }
+		return {
+			showComponents,
+			toggleStore
+		};
+	}
 };
 </script>

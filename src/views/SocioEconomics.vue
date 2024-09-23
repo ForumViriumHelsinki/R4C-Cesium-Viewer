@@ -15,16 +15,16 @@ import SocioEconomicsSelect from '../components/SocioEconomicsSelect.vue';
 import SocioEconomicsChart from '../components/SocioEconomicsChart.vue';
 
 export default {
-  components: {
-    SocioEconomicsSelect,
-    SocioEconomicsChart
-  },
-  setup() {
-    const showComponents = ref(true);
+	components: {
+		SocioEconomicsSelect,
+		SocioEconomicsChart
+	},
+	setup() {
+		const showComponents = ref( true );
 
-    return {
-      showComponents
-    };
-  },
+		return {
+			showComponents
+		};
+	},
 };
 </script>

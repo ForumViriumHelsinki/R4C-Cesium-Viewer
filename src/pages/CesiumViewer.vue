@@ -27,8 +27,8 @@ import { useHeatExposureStore } from '../stores/heatExposureStore.js';
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import Building from './Building.vue';
 import Helsinki from './Helsinki.vue';
-import CapitalRegion from './CapitalRegion.vue'
-import CapitalRegionService from '../services/capitalRegion.js'
+import CapitalRegion from './CapitalRegion.vue';
+import CapitalRegionService from '../services/capitalRegion.js';
 
 export default {
 	data() {

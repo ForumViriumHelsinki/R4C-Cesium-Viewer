@@ -120,19 +120,19 @@ export default {
 
 			const checked = document.getElementById( '250mGridToggle' ).checked;
 
-            if (checked) {
+			if ( checked ) {
 
 				this.datasourceService.changeDataSourceShowByName( 'PopulationGrid', false );
-				eventBus.emit('create250mGrid'); // Trigger the simulation to start
+				eventBus.emit( 'create250mGrid' ); // Trigger the simulation to start
 
-            } else {
+			} else {
 
 				this.datasourceService.removeDataSourcesByNamePrefix( '250m_grid' );
 				document.getElementById( 'bar-chart-container' ).style.visibility = 'hidden';
 				document.getElementById( 'legend' ).style.visibility = 'hidden';
 				this.datasourceService.changeDataSourceShowByName( 'PopulationGrid', true );
 	
-            }
+			}
 
 		},			
 

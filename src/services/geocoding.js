@@ -177,7 +177,6 @@ export default class Geocoding {
 	moveCameraAndReset( longitude, latitude ) {
 
 		this.viewercamera.setCameraView( longitude, latitude );
-		const eventEmitterService = new EventEmitter();
 		eventBus.emit( 'geocodingPrintEvent' );
 		this.featurePicker.loadPostalCode();
 
