@@ -28,13 +28,6 @@
 </label>
 <label for="capitalRegionViewToggle" class="label" id="capitalRegionViewLabel">Helsinki view</label>  
 
-  <!-- showPrintSwitch-->
-<label class="switch">
-  <input type="checkbox" id="printToggle" value="print" checked>
-  <span class="slider round"></span>
-</label>
-<label for="printToggle" class="label">Object details</label>
-
   <!-- showVegetationSwitch-->
 <label class="switch" id="showVegetationSwitch"  style="display:none;">
 	<input type="checkbox" id="showVegetationToggle" value="showVegetation" >
@@ -195,7 +188,6 @@ export default {
 			document.getElementById( 'showOtherNatureToggle' ).addEventListener( 'change', this.loadOtherNatureEvent );
 			document.getElementById( 'switchViewToggle' ).addEventListener( 'change', this.switchViewEvent );
 			document.getElementById( 'showTreesToggle' ).addEventListener( 'change', this.loadTreesEvent );
-			document.getElementById( 'printToggle' ).addEventListener( 'change', this.printEvent );
 			document.getElementById( 'showPlotToggle' ).addEventListener( 'change', this.showPlotEvent );
 			document.getElementById( 'capitalRegionViewToggle' ).addEventListener( 'change', this.capitalRegionViewEvent );
 			document.getElementById( 'gridViewToggle' ).addEventListener( 'change', this.gridViewEvent );
@@ -283,24 +275,6 @@ export default {
 			showPlots ? this.plotService.showAllPlots() : this.plotService.hideAllPlots();
 
 		},
-
-		/**
- * This function is called when the Object details button is clicked
- *
- */
-		printEvent() {
-
-			const print = document.getElementById( 'printToggle' ).checked;
-			this.toggleStore.setPrint( print );
-			const elementIds = ['printContainer', 'searchcontainer', 'georefContainer', 'searchbutton'];
-			const visibility = print ? 'visible' : 'hidden';
-
-			elementIds.forEach(id => {
-				document.getElementById(id).style.visibility = visibility;
-			});
-
-		},
-
 
 		/**
  * This function to show or hide tree entities on the map based on the toggle button state

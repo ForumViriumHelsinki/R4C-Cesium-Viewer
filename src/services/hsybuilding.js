@@ -373,6 +373,6 @@ const setBuildingPropsAndEmitEvent = ( entities, heatExposureData, avg_temp_cLis
 	propsStore.setHeatHistogramData( avg_temp_cList );
 	const buildingStore = useBuildingStore();
 	buildingStore.setBuildingFeatures( data );
-	eventBus.emit( 'showCapitalRegion');
+	eventBus.emit( 'showCapitalRegion' );
 
-}
+};

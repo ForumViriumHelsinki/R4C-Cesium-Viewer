@@ -95,7 +95,7 @@ export default class Urbanheat {
 
 }
 
-	/**
+/**
  * Adds urban heat exposure data that did not match in previous phase.
  * 
  * @param { object } features the buildings from city wfs
@@ -110,9 +110,9 @@ const addMissingHeatData = ( features, heat ) => {
 
 	}
 
-}
+};
 
-	/**
+/**
  * Sets attributes from API data source to building data source
  * 
  * Finds the purpose of a building in Helsinki based on code included in wfs source data
@@ -123,75 +123,75 @@ const addMissingHeatData = ( features, heat ) => {
  */
 const setAttributesFromApiToBuilding = ( properties, features ) => {
 
-		const decodingService = new Decoding();
+	const decodingService = new Decoding();
 
-		for ( let i = 0; i < features.length; i++ ) {
+	for ( let i = 0; i < features.length; i++ ) {
 
-			// match building based on Helsinki id
-			if ( properties.id == features[ i ].properties.hki_id ) {
+		// match building based on Helsinki id
+		if ( properties.id == features[ i ].properties.hki_id ) {
 
-				if ( features[ i ].properties.avgheatexposuretobuilding ) {
+			if ( features[ i ].properties.avgheatexposuretobuilding ) {
 
-					properties.avgheatexposuretobuilding = features[ i ].properties.avgheatexposuretobuilding;
+				properties.avgheatexposuretobuilding = features[ i ].properties.avgheatexposuretobuilding;
 
-				}
-
-				if ( features[ i ].properties.distancetounder40 ) {
-
-					properties.distanceToUnder40 = features[ i ].properties.distancetounder40;
-
-				}
-
-				if ( features[ i ].properties.distancetounder40 ) {
-
-					properties.locationUnder40 = features[ i ].properties.locationunder40;
-
-				}
-
-				if ( features[ i ].properties.year_of_construction ) {
-
-					properties.year_of_construction = features[ i ].properties.year_of_construction;
-
-				}
-
-				if ( features[ i ].properties.measured_height ) {
-
-					properties.measured_height = features[ i ].properties.measured_height;
-
-				}
-
-				if ( features[ i ].properties.roof_type ) {
-
-					properties.roof_type = features[ i ].properties.roof_type;
-
-				}
-
-				if ( features[ i ].properties.area_m2 ) {
-
-					properties.area_m2 = features[ i ].properties.area_m2;
-
-				}
-
-				if ( features[ i ].properties.roof_median_color ) {
-
-					properties.roof_median_color = decodingService.getColorValue( features[ i ].properties.roof_median_color );
-
-				}
-
-				if ( features[ i ].properties.roof_mode_color ) {
-
-					properties.roof_mode_color = decodingService.getColorValue( features[ i ].properties.roof_mode_color );
-
-				}
-
-				properties.kayttotarkoitus = decodingService.decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
-				properties.c_julkisivu = decodingService.decodeFacade( properties.c_julkisivu );
-				properties.c_rakeaine = decodingService.decodeMaterial( properties.c_rakeaine );
-				properties.c_lammtapa = decodingService.decodeHeatingMethod( properties.c_lammtapa );
-				properties.c_poltaine = decodingService.decodeHeatingSource( properties.c_poltaine );
-
-				features.splice( i, 1 );
-				break;
 			}
+
+			if ( features[ i ].properties.distancetounder40 ) {
+
+				properties.distanceToUnder40 = features[ i ].properties.distancetounder40;
+
+			}
+
+			if ( features[ i ].properties.distancetounder40 ) {
+
+				properties.locationUnder40 = features[ i ].properties.locationunder40;
+
+			}
+
+			if ( features[ i ].properties.year_of_construction ) {
+
+				properties.year_of_construction = features[ i ].properties.year_of_construction;
+
+			}
+
+			if ( features[ i ].properties.measured_height ) {
+
+				properties.measured_height = features[ i ].properties.measured_height;
+
+			}
+
+			if ( features[ i ].properties.roof_type ) {
+
+				properties.roof_type = features[ i ].properties.roof_type;
+
+			}
+
+			if ( features[ i ].properties.area_m2 ) {
+
+				properties.area_m2 = features[ i ].properties.area_m2;
+
+			}
+
+			if ( features[ i ].properties.roof_median_color ) {
+
+				properties.roof_median_color = decodingService.getColorValue( features[ i ].properties.roof_median_color );
+
+			}
+
+			if ( features[ i ].properties.roof_mode_color ) {
+
+				properties.roof_mode_color = decodingService.getColorValue( features[ i ].properties.roof_mode_color );
+
+			}
+
+			properties.kayttotarkoitus = decodingService.decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
+			properties.c_julkisivu = decodingService.decodeFacade( properties.c_julkisivu );
+			properties.c_rakeaine = decodingService.decodeMaterial( properties.c_rakeaine );
+			properties.c_lammtapa = decodingService.decodeHeatingMethod( properties.c_lammtapa );
+			properties.c_poltaine = decodingService.decodeHeatingSource( properties.c_poltaine );
+
+			features.splice( i, 1 );
+			break;
 		}
 	}
+};

@@ -103,16 +103,28 @@ export default {
         plotService.addTitle(svg, `Heat exposure to buildings in ${store.nameOfZone}`, width, margin);
       } else {
         createBars(svg, bins, x, y, height, tooltip, 'heatHistogramContainer', (d) =>
-          `Temperature in Celsius: ${d.x0}<br>Amount of buildings: ${d.length}`
+          `Temperature in Celsius: ${d.x0}<br>Amount of buildings: ${d.length}<br>Left click highlights the building(s) on map`
         );
-        plotService.addTitle(
+        addTitle(
           svg,
-          `${store.nameOfZone} ${store.heatDataDate} buildings surface temperature in °C `,
+          `${store.nameOfZone} ${store.heatDataDate} buildings <a href="https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature" target="_blank">surface temperature</a> in °C`,
           width,
           margin
         );
       }
     };
+
+    const addTitle = ( svg, title, width, margin ) =>  {
+      svg.append('foreignObject')
+        .attr('x', width / 2 - 160) // Adjust horizontal position
+        .attr('y', -margin.top + 10)  // Adjust vertical position
+        .attr('width', 4000)          // Width of the foreignObject
+        .attr('height', 40)          // Height of the foreignObject
+        .append('xhtml:div')         // Append a div as a child of the foreignObject
+        .style('font-size', '12px')
+        .style('text-align', 'left') // Center-align the text
+        .html(title); // Insert the HTML content (including the link)
+    }
 
     const clearHistogram = () => {
       d3.select('#heatHistogramContainer').select('svg').remove();

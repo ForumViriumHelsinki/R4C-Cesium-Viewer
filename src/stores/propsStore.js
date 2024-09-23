@@ -85,22 +85,22 @@ export const usePropsStore = defineStore( 'props', {
 		},
 
 		    // Fetch WMS layers from the GetCapabilities response
-    async fetchHSYWMSLayers() {
-      try {
-        const response = await axios.get('https://kartta.hsy.fi/geoserver/wms?request=getCapabilities');
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(response.data, 'text/xml');
+		async fetchHSYWMSLayers() {
+			try {
+				const response = await axios.get( 'https://kartta.hsy.fi/geoserver/wms?request=getCapabilities' );
+				const parser = new DOMParser();
+				const xmlDoc = parser.parseFromString( response.data, 'text/xml' );
 
-        const layers = Array.from(xmlDoc.getElementsByTagName('Layer')).map(layer => {
-          const name = layer.getElementsByTagName('Name')[0]?.textContent;
-          const title = layer.getElementsByTagName('Title')[0]?.textContent;
-          return { name, title };
-        });
+				const layers = Array.from( xmlDoc.getElementsByTagName( 'Layer' ) ).map( layer => {
+					const name = layer.getElementsByTagName( 'Name' )[0]?.textContent;
+					const title = layer.getElementsByTagName( 'Title' )[0]?.textContent;
+					return { name, title };
+				} );
 
-        this.setHSYWMSLayers(layers);
-      } catch (error) {
-        console.error('Failed to fetch WMS layers:', error);
-      }
-    },
+				this.setHSYWMSLayers( layers );
+			} catch ( error ) {
+				console.error( 'Failed to fetch WMS layers:', error );
+			}
+		},
 	},
 } );

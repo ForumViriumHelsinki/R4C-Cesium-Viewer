@@ -4,7 +4,7 @@
   <CesiumViewer />
   <GridView />
   <Geocoding />
-	<div v-if="view !== 'grid'">
+	<div v-if="level === 'building'">
       <PrintBox />
     </div>
   <PostalCodeView />
@@ -28,7 +28,7 @@ import { useGlobalStore } from './stores/globalStore.js';
 import { computed } from 'vue';
 
 const globalStore = useGlobalStore();
-const view = computed(() => globalStore.view);
+const level = computed(() => globalStore.level);
 
 </script>
 

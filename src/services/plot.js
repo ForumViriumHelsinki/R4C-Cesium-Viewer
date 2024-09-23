@@ -36,7 +36,7 @@ export default class Plot {
  * */
 	hideAllPlots() {
 
-		switch (this.store.level) {
+		switch ( this.store.level ) {
   			case 'postalCode':
     			eventBus.emit( this.toggleStore.helsinkiView ? 'hideHelsinki' : 'hideCapitalRegion' );
     			break;
