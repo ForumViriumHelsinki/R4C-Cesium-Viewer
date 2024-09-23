@@ -1,13 +1,19 @@
 <template>
   <div class="wms-layer-switcher">
+    <!-- Added upper margin with link to HSY map service -->
+    <div class="hsy-link">
+      All Background Map options can be found at 
+      <a href="https://kartta.hsy.fi/" target="_blank">HSY map service</a> under 'karttatasot'.
+    </div>
+
     <v-text-field
       :loading="loading"
       append-inner-icon="mdi-magnify"
       density="compact"
       v-model="searchQuery"
-      label="Change Background Map"
-      placeholder="Search for WMS layers"
-      variant="solo"
+      label=" Change Background Map"
+      placeholder=" Search for WMS layers"
+      variant="outlined"
       hide-details
       single-line
       @input="onSearch"
@@ -108,11 +114,25 @@ export default {
   max-width: 400px;
   width: 400px;
   margin: 0 auto;
-  top: 300px; 
+  top: 350px; 
   right: 1px; 
   position: fixed;
   border: 1px solid black; 
-  box-shadow: 3px 5px 5px black; 
+  box-shadow: 3px 5px 5px black;
+  background-color: white;
+}
+
+.hsy-link {
+  background-color: white;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-size: 10px;
+  text-align: center;
+}
+
+.hsy-link a {
+  color: blue;
+  text-decoration: underline;
 }
 
 .v-list {
