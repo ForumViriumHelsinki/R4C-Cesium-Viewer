@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import axios from 'axios';
 
 export const usePropsStore = defineStore( 'props', {
 	state: () => ( {
@@ -18,9 +19,13 @@ export const usePropsStore = defineStore( 'props', {
 		hsySelectArea: 'Askisto',   
 		categoricalSelect: { text: 'Facade Material', value: 'julkisivu_s' },
 		numericalSelect: { text: 'Area', value: 'area_m2' },
-		socioEconomics: 'Alppila - Vallila'
+		socioEconomics: 'Alppila - Vallila',
+		hSYWMSLayers: null,
 	} ),
 	actions: {
+		setHSYWMSLayers( layers ) {
+			this.hSYWMSLayers = layers;
+		},		
 		setSocioEconomics( area ) {
 			this.socioEconomics = area;
 		},
@@ -77,6 +82,25 @@ export const usePropsStore = defineStore( 'props', {
 		},	
 		setHSYYear( year ) {
 			this.hsyYear = year;
-		}
+		},
+
+		    // Fetch WMS layers from the GetCapabilities response
+    async fetchHSYWMSLayers() {
+      try {
+        const response = await axios.get('https://kartta.hsy.fi/geoserver/wms?request=getCapabilities');
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(response.data, 'text/xml');
+
+        const layers = Array.from(xmlDoc.getElementsByTagName('Layer')).map(layer => {
+          const name = layer.getElementsByTagName('Name')[0]?.textContent;
+          const title = layer.getElementsByTagName('Title')[0]?.textContent;
+          return { name, title };
+        });
+
+        this.setHSYWMSLayers(layers);
+      } catch (error) {
+        console.error('Failed to fetch WMS layers:', error);
+      }
+    },
 	},
 } );

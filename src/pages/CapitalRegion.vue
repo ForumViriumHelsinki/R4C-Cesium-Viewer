@@ -33,6 +33,7 @@
 
   <BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
   <Loading v-if="store.isLoading" />
+  <HSYWMS v-if="showComponents && store.postalcode && !toggleStore.showLandcover" style="z-index: 20;"/>
 
 </template>
 
@@ -48,6 +49,7 @@ import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
 import Landcover from '../views/Landcover.vue';
 import Loading from '../components/Loading.vue'
+import HSYWMS from '../components/HSYWMS.vue'
 
 export default {
   components: {
@@ -57,6 +59,7 @@ export default {
     Landcover,
     BuildingInformation,
     Loading,
+    HSYWMS,
   },
   setup() {
     const showComponents = ref(false);

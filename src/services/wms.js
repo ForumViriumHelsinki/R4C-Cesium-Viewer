@@ -17,9 +17,11 @@ export default class Wms {
 		return new Cesium.ImageryLayer( provider );
 	}
 
-	createHSYImageryLayer( ) {
+	createHSYImageryLayer( layers ) {
 		// Define the backend proxy URL
 		const backendURL = import.meta.env.VITE_BACKEND_URL; // Ensure this is set correctly in your .env file
+
+		console.log( layers );
 
 		// Construct the proxy URL with the full WMS request URL encoded as a query parameter
 		const proxyUrl = `${backendURL}/wms/proxy`;
@@ -27,19 +29,19 @@ export default class Wms {
 		// Use the proxy URL in the WebMapServiceImageryProvider
 		const provider = new Cesium.WebMapServiceImageryProvider( {
 			url: proxyUrl, // Point this to your backend proxy
-			layers: createLayersForHsyLandcover( )
+			layers: layers ? layers : createLayersForHsyLandcover( )
 		} );
     
 		return new Cesium.ImageryLayer( provider );
 	}
 
-	reCreateHSYImageryLayer( ) {
+	reCreateHSYImageryLayer( layer ) {
 
 		const store = useGlobalStore();
 
 		store.cesiumViewer.imageryLayers.removeAll();
 		store.cesiumViewer.imageryLayers.add(
-			this.createHSYImageryLayer( )
+			this.createHSYImageryLayer( layer )
 		);		
 	}
 
@@ -65,6 +67,8 @@ const createLayersForHsyLandcover = ( ) => {
 	];
 
 	const layers = layerNames.map( name => `${ name }_${ year }` ).join( ',' );
+
+	console.log("layers", layers)
 
 	return layers;
 };

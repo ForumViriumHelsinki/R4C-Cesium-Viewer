@@ -5,6 +5,7 @@ const cors = require( 'cors' );
 const bodyParser = require( 'body-parser' );
 const axios = require( 'axios' );
 const https = require( 'https' );
+const { XMLParser } = require('fast-xml-parser');  // Import fast-xml-parser
 
 const app = express();
 app.use( cors() ); // Enable CORS for all routes
@@ -160,6 +161,49 @@ app.get( '/terrain-proxy/*', async ( req, res ) => {
 		res.status( 500 ).send( 'Error proxying terrain data' );
 	}
 } );
+
+// Route to fetch and cache WMS layers
+app.get('/wms/layers', async (req, res) => {
+  const wmsUrl = 'https://kartta.hsy.fi/geoserver/wms?request=getCapabilities';
+  const cacheKey = 'wms:layers';
+
+  try {
+    // Try to retrieve the cached WMS layers from Redis
+    let cachedData = await redis.get(cacheKey);
+
+    if (cachedData) {
+      console.log('Returning cached WMS layers');
+      return res.json(JSON.parse(cachedData)); // Send cached data if available
+    }
+
+    // If not cached, fetch the WMS capabilities
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false, // Ignore SSL certificate errors
+    });
+
+    const response = await axios.get(wmsUrl, { httpsAgent });
+    const xmlData = response.data;
+
+    // Parse the XML to extract the layers using fast-xml-parser
+    const parser = new XMLParser();
+    const parsedXml = parser.parse(xmlData);
+
+    // Extract layers from the parsed XML
+    const layers = parsedXml.WMS_Capabilities.Capability.Layer.Layer.map(layer => ({
+      name: layer.Name,
+      title: layer.Title.replace(/_/g, ' '), // Replace underscores with spaces
+    }));
+
+    // Cache the parsed layers in Redis with an expiration time (e.g., 24 hours)
+    await redis.set(cacheKey, JSON.stringify(layers), 'EX', 86400); // Cache for 24 hours
+
+    // Return the layers
+    res.json(layers);
+  } catch (error) {
+    console.error('Error fetching WMS layers:', error);
+    res.status(500).json({ error: 'Failed to fetch WMS layers' });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen( PORT, () => console.log( `Server running on port ${PORT}` ) );

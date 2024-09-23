@@ -129,7 +129,7 @@ export default {
 
 <style scoped>
 .building-tooltip {
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   z-index: 100;
