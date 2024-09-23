@@ -21,8 +21,6 @@ export default class Wms {
 		// Define the backend proxy URL
 		const backendURL = import.meta.env.VITE_BACKEND_URL; // Ensure this is set correctly in your .env file
 
-		console.log( layers );
-
 		// Construct the proxy URL with the full WMS request URL encoded as a query parameter
 		const proxyUrl = `${backendURL}/wms/proxy`;
 
@@ -67,8 +65,6 @@ const createLayersForHsyLandcover = ( ) => {
 	];
 
 	const layers = layerNames.map( name => `${ name }_${ year }` ).join( ',' );
-
-	console.log("layers", layers)
 
 	return layers;
 };

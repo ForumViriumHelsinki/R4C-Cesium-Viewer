@@ -33,7 +33,8 @@
 
   <BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
   <Loading v-if="store.isLoading" />
-  <HSYWMS v-if="showComponents && store.postalcode && !toggleStore.showLandcover" style="z-index: 20;"/>
+  <!-- Use showHSYWMS to control the visibility of the HSYWMS component -->
+  <HSYWMS v-if="showComponents && showHSYWMS" style="z-index: 20;" />
 
 </template>
 
@@ -64,6 +65,7 @@ export default {
   setup() {
     const showComponents = ref(false);
     const showLandcover = ref(false);
+    const showHSYWMS = ref(false);
     const store = useGlobalStore();
     const toggleStore = useToggleStore();
     const buildingStore = useBuildingStore();
@@ -83,13 +85,21 @@ export default {
       eventBus.off('hideCapitalRegion');
     });
 
-    watch(() => toggleStore.landCover , (newValue) => {
+    // Watch landCover toggle to control mutual exclusivity
+    watch(() => toggleStore.landCover, (newValue) => {
       showLandcover.value = toggleStore.helsinkiView ? showLandcover.value : !!newValue; 
+      showHSYWMS.value = !showLandcover.value;
+    });
+
+    // Separate control for HSYWMS based on postalcode and landcover visibility
+    watch(() => store.postalcode, ( newPostalCode ) => {
+      ( !showLandcover.value && newPostalCode ) && ( showHSYWMS.value = true ); 
     });
 
     return {
       showComponents,
       showLandcover,
+      showHSYWMS, // Return showHSYWMS to be used in the template
       store,
       buildingStore,
       toggleStore,
