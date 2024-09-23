@@ -31,6 +31,7 @@ const createPieChart = ( ) => {
 
 	const firstData = getLandCoverDataForArea( nameOfZone, year, datasource );
 	const secondData = getLandCoverDataForArea( area, year, datasource );
+
 	const margin = {top: 20, right: 10, bottom: 10, left: 10};
 	const width = 400 - margin.left - margin.right;
 	const height = 200 - margin.top - margin.bottom;
@@ -101,10 +102,11 @@ const getLandCoverDataForArea = ( name, year, datasource ) => {
   const areas = propertyKeys.map( key => getTotalAreaByNameAndPropertyKeys( name, [ key ], year, datasource ) );
   const totalArea = areas.reduce( ( sum, area ) => sum + area, 0 );
 
-  return areas.map( area => ( area / totalArea ).toFixed( 3 ) );
+  return areas.map( area => ( area / totalArea ) );
 };
 
 const createPie = ( svg, name, data, colors, arc, xOffset, yOffset, tooltip, plotService ) => {
+	console.log("data.data", data)
 			// Drawing first pie chart
 			svg.selectAll( name )
 				.data( data )
@@ -114,7 +116,7 @@ const createPie = ( svg, name, data, colors, arc, xOffset, yOffset, tooltip, plo
 				.attr( 'transform', `translate(${xOffset}, ${yOffset})` ) // Adjusted positioning
 				.on( 'mouseover', ( event, d ) => {
 					plotService.handleMouseover( tooltip, 'pieChartContainer', event, d, 
-						( data ) => `Area: ${data.data.zone}<br>Element: ${data.data.label}<br>${100 * data.data.value } % of HSY 2022 landcover` );
+						( data ) => `Area: ${data.data.zone}<br>Element: ${data.data.label}<br>${ ( 100 * data.value ).toFixed( 1 ) } % of HSY 2022 landcover` );
 				} )
 				.on( 'mouseout', () => plotService.handleMouseout( tooltip ) );
 		}
