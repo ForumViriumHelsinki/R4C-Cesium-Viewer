@@ -173,7 +173,7 @@ export default class Plot {
 			.style( 'border-radius', '5px' )
 			.style( 'padding', '10px' )
 			.style( 'pointer-events', 'none' )
-        	.style( 'z-index', '100' );
+        	.style( 'z-index', '10000' );
 	}
 
 	setupAxes( svg, xScale, yScale, height ) {

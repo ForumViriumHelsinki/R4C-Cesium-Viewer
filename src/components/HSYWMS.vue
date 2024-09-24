@@ -7,7 +7,6 @@
     </div>
 
     <v-text-field
-      :loading="loading"
       append-inner-icon="mdi-magnify"
       density="compact"
       v-model="searchQuery"

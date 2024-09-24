@@ -166,7 +166,6 @@ export default {
 		returnToPostalCode( ) {
 			const featurepicker = new Featurepicker();
 			featurepicker.loadPostalCode();
-			this.store.level === 'postalCode';
 			this.toggleStore.showTrees && this.treeService.loadTrees();
 			eventBus.emit( 'hideBuilding' );
 		},
