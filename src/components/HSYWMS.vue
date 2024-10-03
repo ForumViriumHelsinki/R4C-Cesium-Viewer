@@ -110,15 +110,10 @@ export default {
 
 <style scoped>
 .wms-layer-switcher {
-  max-width: 400px;
-  width: 400px;
-  margin: 0 auto;
-  top: 350px; 
-  right: 1px; 
-  position: fixed;
-  border: 1px solid black; 
-  box-shadow: 3px 5px 5px black;
+  width: 100%; 
+  font-size: smaller;
   background-color: white;
+  z-index: 100000;
 }
 
 .hsy-link {

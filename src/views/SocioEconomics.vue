@@ -1,9 +1,13 @@
 <template>
     <v-container v-if="showComponents">
-        <v-row >
-            <v-col cols="3">
-                <SocioEconomicsSelect />
-                <SocioEconomicsChart />
+    <v-row no-gutters class="pa-0 ma-0">
+      <v-col cols="3" class="pa-0 ma-0">
+				<div class="socio-economics-container">
+					<SocioEconomicsChart />
+					<div class="socio-economics-select">
+                		<SocioEconomicsSelect />
+          			</div>
+        		</div>
             </v-col>
         </v-row>
     </v-container>
@@ -28,3 +32,21 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.socio-economics-container {
+	position: relative;
+  	width: 100%;
+  	height: 250px; 
+  	background-color: white;
+  	z-index: 10; /* Ensure it is on top */
+}
+
+.socio-economics-select {
+  	position: absolute;
+  	top: 40px; /* Adjusts distance from top */
+  	right: -350px; /* Adjusts distance from right */
+  	width: 295px;
+  	z-index: 10; /* Ensure it is on top */
+}
+</style>

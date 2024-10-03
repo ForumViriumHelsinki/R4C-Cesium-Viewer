@@ -80,6 +80,13 @@ const printEntity = (entity, postno, view) => {
   for (let i = 0; i < length; ++i) {
     if (goodForPrint(entity._properties, i)) {
       let value = entity._properties[entity._properties._propertyNames[i]]._value;
+
+      // Check if the value is an object (like heat_timeseries)
+      if (typeof value === 'object') {  
+        // If it's an object, skip it or handle it differently
+        continue; // This will skip printing the object
+      }
+      
       toPrint += `${entity._properties._propertyNames[i]}: ${
         typeof value === 'number' ? value.toFixed(2) : value
       }<br/>`;
@@ -122,15 +129,9 @@ const addToPrint = (toPrint, postno, view) => {
 
 <style scoped>
 #printContainer {
-  bottom: 55px;
-  right: 1px;
-  width: 380px;
-  height: 120px;
-  position: fixed;
-  border: 1px solid black;
-  box-shadow: 3px 5px 5px black;
-  background: white;
-  visibility: visible;
+  width: 500px;
+  height: 800px;
+  position: relative;
 
   font-size: smaller;
   font-family: Monospace;

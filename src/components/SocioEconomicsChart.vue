@@ -61,8 +61,8 @@ export default {
       'Children and Elderly %': 'Percentage of the population aged 0-12 and 65+.',
       'Children %': 'Percentage of the population aged 0-12.',
       'Elderly %': 'Percentage of the population aged 65 and over.',
-      'Unemployed %': 'Percentage of the population that is unemployed. Higher values indicate higher unemployment rates.',
-      'Apartment Size': 'Relative size of apartments. Higher values indicate smaller apartment sizes.',
+      'Unemployed rate': 'Percentage of the population that is unemployed. Higher values indicate higher unemployment rates.',
+      'Size of Apartments': 'Relative size of apartments. Higher values indicate smaller apartment sizes.',
       'Basic Education %': 'Percentage of the population with only basic education. Higher values indicate lower education levels.',
       'Income': 'Relative income level in the area. Higher values indicate lower income levels.',
       'Rentals %': 'Percentage of residential properties that are rented. Higher values indicate a higher proportion of rentals.'
@@ -138,11 +138,11 @@ export default {
 
 		const createSocioEconomicsDiagram = ( sosData, statsData ) => {
 			if ( sosData ) {
-				plotService.initializePlotContainer( 'socioeonomicsContainer' );
+				plotService.initializePlotContainerForGrid( 'socioeonomicsContainer' );
 
-				const margin = { top: 65, right: 5, bottom: 55, left: 30 };
-				const width = 460 - margin.left - margin.right;
-				const height = 200 - margin.top - margin.bottom;
+				const margin = { top: 90, right: 5, bottom: 50, left: 24 };
+				const width = 450 - margin.left - margin.right;
+				const height = 250 - margin.top - margin.bottom;
 
 				const svg = plotService.createSVGElement( margin, width, height, '#socioeonomicsContainer' );
 
@@ -151,8 +151,8 @@ export default {
 					'Children and Elderly %',
 					'Children %',
 					'Elderly %',
-					'Unemployed %',
-					'Apartment Size',
+					'Unemployed rate',
+					'Size of Apartments',
 					'Basic Education',
 					'Income',
 					'Rentals %',
@@ -187,7 +187,7 @@ export default {
 				createBars( svg, compareBarData, xScale, yScale, height, tooltip, xOffsetForCompareData, 'orange', selectedNimi );
 
 				plotService.addTitleWithLink( svg, `Compare <a href="https://stat.fi/tup/paavo/index_en.html" 
-		      target="_blank">socioeconomic statistics</a> <br> and heat data of ${globalStore.nameOfZone} to:`, width / 1.25, { top: 70 } );
+		      target="_blank">socioeconomic statistics</a> and heat data of ${globalStore.nameOfZone} to:`, width / 1.5, { top: 75 } );
 			}
 		};
 
@@ -224,21 +224,3 @@ export default {
 	},
 };
 </script>
-  
-  <style>
- #socioeonomicsContainer
-{
-	position: fixed;
-	top: 90px;
-	right: 1px;
-	width: 500px;
-	height: 200px; 
-	
-	font-size: smaller;
-	
-	border: 1px solid black;
-	box-shadow: 3px 5px 5px black; 
-    background-color: white;
-
-}
-  </style>

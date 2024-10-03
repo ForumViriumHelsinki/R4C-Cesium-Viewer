@@ -29,6 +29,7 @@ export default class CapitalRegion {
 			this.elementsDisplayService.setTreeElementsDisplay( 'inline-block' );
 
 		}
+		
 		this.hSYBuildingService.loadHSYBuildings();	
 
 	}

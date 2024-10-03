@@ -4,7 +4,7 @@
 <v-col class="pa-0 ma-0" style="position: fixed; bottom: 292px; left: 5px; width: 160px; z-index: 10;">
   <CategoricalSelect />
 </v-col>
-<v-col class="pa-0 ma-0" style="position: fixed; bottom: 35px; left: 426px; width: 124px; z-index: 10;">
+<v-col class="pa-0 ma-0" style="position: fixed; bottom: 35px; left: 380px; width: 124px; z-index: 10;">
   <NumericalSelect />
 </v-col>
     </v-row>
@@ -47,11 +47,8 @@ export default {
   position: fixed;
   bottom: 35px;
   left: -19px;
-  width: 550px;
+  width: 500px;
   height: 300px;
-  font-size: smaller;
-  border: 1px solid black;
-  box-shadow: 3px 5px 5px black;
   background-color: white;
   margin: 20px;
 }

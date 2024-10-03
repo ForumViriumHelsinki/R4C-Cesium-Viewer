@@ -4,7 +4,6 @@
       <!-- Row 7 -->
       <v-row no-gutters class="pa-0 ma-0">
         <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
-          <HeatHistogram />		
         </v-col>
         <v-col class="d-flex align-end pa-0 ma-0" style="z-index: 20;" v-if="store.postalcode !== '00230'">
           <SocioEconomics />

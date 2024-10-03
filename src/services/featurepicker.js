@@ -65,7 +65,6 @@ export default class FeaturePicker {
 				if ( id instanceof Cesium.Entity ) {
 
 					this.store.setPickedEntity( id );
-					console.log("hi")
 					eventBus.emit( 'entityPrintEvent' );
                    
 				}

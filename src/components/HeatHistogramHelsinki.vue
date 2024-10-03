@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import { onMounted, onBeforeUnmount, nextTick  } from 'vue';
+import { onMounted, onBeforeUnmount } from 'vue';
 import * as d3 from 'd3'; // Import D3.js
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
@@ -19,25 +19,27 @@ export default {
 		const propsStore = usePropsStore();
 		const toggleStore = useToggleStore();
 
-	const createBars = (svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter) => {
-		svg.selectAll('.bar')
-    		.data(data)
-    		.enter()
-    .append('g')
-    .attr('class', 'bar')
-    .attr('transform', (d) => `translate(${xScale(d.x0)}, ${yScale(d.length)})`)
-    .append('rect')
-    .attr('x', 1)
-    .attr('width', (d) => Math.max(0, xScale(d.x1) - xScale(d.x0))) // Adjust width for the bars
-    .attr('height', (d) => Math.max(0, height - yScale(d.length))) // Ensure no negative heights
-    .attr('fill', (d) => rgbColor(d)) // Assuming you have a function for coloring bars
-    .on('mouseover', (event, d) => plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter))
-    .on('mouseout', () => plotService.handleMouseout(tooltip))
-    .on('click', (event, d) => {
-      const buildingService = new Building();
-      buildingService.highlightBuildingsInViewer(d);
-    });
-};
+		const createBars = ( svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter ) => {
+			svg.selectAll( '.bar' )
+				.data( data )
+				.enter()
+				.append( 'g' )
+				.attr( 'class', 'bar' )
+				.attr( 'transform', ( d ) => `translate(${xScale( d.x0 )}, ${yScale( d.length )})` )
+				.append( 'rect' )
+				.attr( 'x', 1 )
+				.attr( 'width', ( d ) => xScale( d.x1 ) - xScale( d.x0 ) ) // Adjust width for the bars
+				.attr( 'height', ( d ) => height - yScale( d.length ) )
+				.attr( 'fill', ( d ) => rgbColor( d ) )
+				.on( 'mouseover', ( event, d ) =>
+					plotService.handleMouseover( tooltip, containerId, event, d, dataFormatter )
+				)
+				.on( 'mouseout', () => plotService.handleMouseout( tooltip ) )
+				.on( 'click', ( event, d ) => {
+					const buildingService = new Building();
+					buildingService.highlightBuildingsInViewer( d );
+				} );
+		};
 
 		const rgbColor = ( data ) => {
 			const average = calculateAverage( data );
@@ -76,14 +78,12 @@ export default {
 		const createHistogram = () => {
 			const urbanHeatData = propsStore.heatHistogramData;
       
-			plotService.initializePlotContainerForGrid( 'heatHistogramContainer' );
+			plotService.initializePlotContainer( 'heatHistogramContainer' );
 
-      // Get the container's actual width and height dynamically
-      const container = document.getElementById('heatHistogramContainer');
-      const margin = { top: 30, right: 30, bottom: 30, left: 30 };
-      const width = container.offsetWidth - margin.left - margin.right; // Use container width
-      const height = container.offsetHeight - margin.top - margin.bottom; // Use container height
-  
+			const margin = { top: 30, right: 30, bottom: 30, left: 30 };
+			const width = 420 - margin.left - margin.right;
+			const height = 220 - margin.top - margin.bottom;
+
 			const svg = plotService.createSVGElement( margin, width, height, '#heatHistogramContainer' );
 
 			const minDataValue = d3.min( urbanHeatData ) - 0.02;
@@ -128,11 +128,8 @@ export default {
 
 		// Lifecycle hooks for mounting and unmounting
 		onMounted( () => {
-				nextTick( () => {
-					newHeatHistogram();
-				} );
-			
-			eventBus.on( 'newHeatHistogram', createHistogram );
+			newHeatHistogram();
+			eventBus.on( 'newHeatHistogram', newHeatHistogram );
 		} );
 
 		onBeforeUnmount( () => {
@@ -146,9 +143,14 @@ export default {
 
 <style scoped>
 #heatHistogramContainer {
-  	height: 220px;
-  	width: 100%; 
-	position: relative;
-	background-color: white;
+  position: fixed;
+  top: 90px;
+  left: 1px;
+  width: 420px;
+  height: 220px;
+  font-size: smaller;
+  border: 1px solid black;
+  box-shadow: 3px 5px 5px black;
+  background-color: white;
 }
 </style>
