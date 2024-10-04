@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview",
+    "build": "vite build && vite optimize",
+    "preview": "vite preview --host",
     "lint": "eslint . --ext .js,.vue"
   },
   "dependencies": {
