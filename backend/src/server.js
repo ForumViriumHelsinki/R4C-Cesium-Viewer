@@ -13,7 +13,7 @@ app.use( bodyParser.json( { limit: '100mb' } ) );
 app.use( bodyParser.urlencoded( { extended: true, limit: '100mb' } ) );
 
 // Connect to Redis
-const redis = new Redis( { host: 'redis' } );
+const redis = new Redis( { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT } );
 
 // Flush the Redis cache on server start
 redis.flushall()
@@ -205,5 +205,5 @@ app.get('/wms/layers', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen( PORT, () => console.log( `Server running on port ${PORT}` ) );
+const PORT = process.env.PORT || 80;
+app.listen( PORT, () => console.log( `Server running on port ${PORT}, Redis ${process.env.REDIS_HOST}:${process.env.REDIS_PORT}` ) );
