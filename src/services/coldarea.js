@@ -38,6 +38,7 @@ export default class ColdArea {
  */
 	async loadColdAreas( ) {
 		const url = 'https://geo.fvh.fi/r4c/collections/coldarea/items?f=json&limit=100000&posno=' + this.store.postalcode;
+		this.store.setIsLoading( true );
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
@@ -57,6 +58,7 @@ export default class ColdArea {
 		} catch ( err ) {
 			console.log( err );
 		}
+
 	}
 
 	/**
@@ -84,6 +86,8 @@ export default class ColdArea {
 				}
 			}
 		}
+
+		this.store.setIsLoading( false );
 
 	}
 

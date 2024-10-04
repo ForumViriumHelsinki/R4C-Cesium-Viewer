@@ -65,6 +65,7 @@ export default class FeaturePicker {
 				if ( id instanceof Cesium.Entity ) {
 
 					this.store.setPickedEntity( id );
+					console.log("hi")
 					eventBus.emit( 'entityPrintEvent' );
                    
 				}
@@ -80,7 +81,6 @@ export default class FeaturePicker {
   
 	async loadPostalCode() {
 
-		this.store.setLevel( 'postalCode' );
 		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
 		this.datasourceService.removeDataSourcesAndEntities();
 
@@ -95,6 +95,9 @@ export default class FeaturePicker {
 			this.helsinkiService.loadHelsinkiElements();
     
 		}
+
+		this.store.setLevel( 'postalCode' );
+
   
 	}
     

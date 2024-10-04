@@ -8,6 +8,7 @@ import { usePropsStore } from '../stores/propsStore.js';
 import * as turf from '@turf/turf';
 import * as Cesium from 'cesium';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { useBuildingStore } from '../stores/buildingStore.js';
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
@@ -290,12 +291,7 @@ export default class HSYBuilding {
 			avg_temp_cList = data.features.map( feature => feature.properties.avg_temp_c );
 		}
 
-
-		const propsStore = usePropsStore( );
-		propsStore.setScatterPlotEntities( entities );
-		propsStore.setPostalcodeHeatTimeseries( heatExposureData[ 1 ] );
-		propsStore.setHeatHistogramData( avg_temp_cList );
-		eventBus.emit( 'showCapitalRegion');
+		setBuildingPropsAndEmitEvent( entities, heatExposureData, avg_temp_cList, data );
 
 	}
 
@@ -303,12 +299,7 @@ export default class HSYBuilding {
 
 		this.buildingService.setHeatExposureToBuildings( entities );
 		this.setHSYBuildingsHeight( entities );
-
-		if ( this.store.postalcode ) {
-
-			this.calculateHSYUrbanHeatData( data, entities );
-
-		}
+		this.store.postalcode && this.calculateHSYUrbanHeatData( data, entities );
 
 	}
 
@@ -373,3 +364,15 @@ export default class HSYBuilding {
 	
 	}
 }
+
+const setBuildingPropsAndEmitEvent = ( entities, heatExposureData, avg_temp_cList, data ) => {
+
+	const propsStore = usePropsStore( );
+	propsStore.setScatterPlotEntities( entities );
+	propsStore.setPostalcodeHeatTimeseries( heatExposureData[ 1 ] );
+	propsStore.setHeatHistogramData( avg_temp_cList );
+	const buildingStore = useBuildingStore();
+	buildingStore.setBuildingFeatures( data );
+	eventBus.emit( 'showCapitalRegion' );
+
+};

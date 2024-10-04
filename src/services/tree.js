@@ -20,6 +20,7 @@ export default class Tree {
 
 		// Construct the API endpoint URL
 		let url = 'https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
+		this.store.setIsLoading( true );
 
 		try {
 			// Attempt to retrieve the tree data from the Redis cache
@@ -62,6 +63,7 @@ export default class Tree {
 
 		}
 
+		this.store.setIsLoading( false );
 
 	}
 

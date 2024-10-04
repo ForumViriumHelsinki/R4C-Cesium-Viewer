@@ -28,13 +28,6 @@
 </label>
 <label for="capitalRegionViewToggle" class="label" id="capitalRegionViewLabel">Helsinki view</label>  
 
-  <!-- showPrintSwitch-->
-<label class="switch">
-  <input type="checkbox" id="printToggle" value="print" checked>
-  <span class="slider round"></span>
-</label>
-<label for="printToggle" class="label">Object details</label>
-
   <!-- showVegetationSwitch-->
 <label class="switch" id="showVegetationSwitch"  style="display:none;">
 	<input type="checkbox" id="showVegetationToggle" value="showVegetation" >
@@ -156,16 +149,16 @@ export default {
 		this.unsubscribe();
 	}, 
 	computed: {
-        shouldShowReturn() {
+		shouldShowReturn() {
 			const store = useGlobalStore(); // Get access to the global store
-            return store.level === 'building';
-        }
-    },
-    watch: {
-        shouldShowReturn(newValue) { // Watch for changes in computed property
-            this.showReturn = newValue; // Update data property if needed
-        }
-    },
+			return store.level === 'building';
+		}
+	},
+	watch: {
+		shouldShowReturn( newValue ) { // Watch for changes in computed property
+			this.showReturn = newValue; // Update data property if needed
+		}
+	},
 	methods: {
 		reset(){
 			location.reload();
@@ -173,7 +166,6 @@ export default {
 		returnToPostalCode( ) {
 			const featurepicker = new Featurepicker();
 			featurepicker.loadPostalCode();
-			this.store.level === 'postalCode'
 			this.toggleStore.showTrees && this.treeService.loadTrees();
 			eventBus.emit( 'hideBuilding' );
 		},
@@ -195,7 +187,6 @@ export default {
 			document.getElementById( 'showOtherNatureToggle' ).addEventListener( 'change', this.loadOtherNatureEvent );
 			document.getElementById( 'switchViewToggle' ).addEventListener( 'change', this.switchViewEvent );
 			document.getElementById( 'showTreesToggle' ).addEventListener( 'change', this.loadTreesEvent );
-			document.getElementById( 'printToggle' ).addEventListener( 'change', this.printEvent );
 			document.getElementById( 'showPlotToggle' ).addEventListener( 'change', this.showPlotEvent );
 			document.getElementById( 'capitalRegionViewToggle' ).addEventListener( 'change', this.capitalRegionViewEvent );
 			document.getElementById( 'gridViewToggle' ).addEventListener( 'change', this.gridViewEvent );
@@ -261,12 +252,12 @@ export default {
  */
 		gridViewEvent() {
 
-			const gridView = document.getElementById('gridViewToggle').checked;
-			this.toggleStore.setGridView(gridView);
+			const gridView = document.getElementById( 'gridViewToggle' ).checked;
+			this.toggleStore.setGridView( gridView );
 
 			gridView 
-    			? ( this.store.setView('grid'), this.showPostalCodeView = false, eventBus.emit( 'createPopulationGrid' ) )
-    			: ( this.store.setView('capitalRegion'), this.reset() );
+    			? ( this.store.setView( 'grid' ), this.showPostalCodeView = false, eventBus.emit( 'createPopulationGrid' ) )
+    			: ( this.store.setView( 'capitalRegion' ), this.reset() );
 
 		},
 
@@ -285,24 +276,6 @@ export default {
 		},
 
 		/**
- * This function is called when the Object details button is clicked
- *
- */
-		printEvent() {
-
-			const print = document.getElementById( 'printToggle' ).checked;
-			this.toggleStore.setPrint( print );
-			const elementIds = ['printContainer', 'searchcontainer', 'georefContainer', 'searchbutton'];
-			const visibility = print ? 'visible' : 'hidden';
-
-			elementIds.forEach(id => {
-				document.getElementById(id).style.visibility = visibility;
-			});
-
-		},
-
-
-		/**
  * This function to show or hide tree entities on the map based on the toggle button state
  *
  */
@@ -313,10 +286,10 @@ export default {
 			this.toggleStore.setShowTrees( showTrees );
 
 			showTrees 
-    			? (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Trees') 
-        		? this.treeService.loadTrees(this.store.postalcode)
-        		: (this.dataSourceService.changeDataSourceShowByName('Trees', true)))
-    			: (this.dataSourceService.changeDataSourceShowByName('Trees', false), this.plotService.showAllPlots(), this.buildingService.resetBuildingEntities());
+    			? ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'Trees' ) 
+        		? this.treeService.loadTrees( this.store.postalcode )
+        		: ( this.dataSourceService.changeDataSourceShowByName( 'Trees', true ) ) )
+    			: ( this.dataSourceService.changeDataSourceShowByName( 'Trees', false ), this.plotService.showAllPlots(), this.buildingService.resetBuildingEntities() );
 
 		},
 
@@ -401,14 +374,14 @@ export default {
 			
 			if ( this.dataSourceService ) {
     		
-			const buildingsDataSource = this.dataSourceService.getDataSourceByName( `Buildings ${this.store.postalcode}` );
+				const buildingsDataSource = this.dataSourceService.getDataSourceByName( `Buildings ${this.store.postalcode}` );
 
     			if ( buildingsDataSource ) {
         			( hideNonSote || hideNewBuildings || hideLow ) 
             			? this.buildingService.filterBuildings( buildingsDataSource ) 
             			: this.buildingService.showAllBuildings( buildingsDataSource );
 
-        			!this.toggleStore.helsinkiView && eventBus.emit('updateScatterPlot');
+        			!this.toggleStore.helsinkiView && eventBus.emit( 'updateScatterPlot' );
 				
 				}
 			}

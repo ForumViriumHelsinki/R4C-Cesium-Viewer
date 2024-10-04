@@ -36,7 +36,7 @@ export default class Plot {
  * */
 	hideAllPlots() {
 
-		switch (this.store.level) {
+		switch ( this.store.level ) {
   			case 'postalCode':
     			eventBus.emit( this.toggleStore.helsinkiView ? 'hideHelsinki' : 'hideCapitalRegion' );
     			break;
@@ -124,6 +124,18 @@ export default class Plot {
 		
 	}
 
+	addTitleWithLink( svg, title, width, margin ) {
+		svg.append( 'foreignObject' )
+			.attr( 'x', width / 2 - 160 ) // Adjust horizontal position
+			.attr( 'y', -margin.top + 10 )  // Adjust vertical position
+			.attr( 'width', 4000 )          // Width of the foreignObject
+			.attr( 'height', 40 )          // Height of the foreignObject
+			.append( 'xhtml:div' )         // Append a div as a child of the foreignObject
+			.style( 'font-size', '12px' )
+			.style( 'text-align', 'left' ) // Center-align the text
+			.html( title ); // Insert the HTML content (including the link)
+	}
+
 	// 1. Initialize SVG and Background
 	createSVGElement( margin, width, height, container ) {
 		const svg = d3.select( container )
@@ -161,7 +173,7 @@ export default class Plot {
 			.style( 'border-radius', '5px' )
 			.style( 'padding', '10px' )
 			.style( 'pointer-events', 'none' )
-        	.style( 'z-index', '100' );
+        	.style( 'z-index', '10000' );
 	}
 
 	setupAxes( svg, xScale, yScale, height ) {

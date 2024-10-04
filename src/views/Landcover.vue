@@ -9,7 +9,7 @@
         <HSYYearSelect />
       </v-col>
 
-      <v-col cols="4" class="pa-0 ma-0" style="position: fixed; top: 310px; right: 10px; width: 100px;  font-size: smaller;">
+      <v-col cols="4" class="pa-0 ma-0" style="position: fixed; top: 310px; right: 10px; width: 130px;  font-size: smaller;">
         <HSYAreaSelect />
       </v-col>
     </v-row>
@@ -24,18 +24,18 @@ import HSYAreaSelect from '../components/HSYAreaSelect.vue';
 import PieChart from '../components/PieChart.vue';
 
 export default {
-  components: {
-    HSYYearSelect,
-    HSYAreaSelect,
-    PieChart,
-  },
-  setup() {
-    const showComponents = ref(true);
+	components: {
+		HSYYearSelect,
+		HSYAreaSelect,
+		PieChart,
+	},
+	setup() {
+		const showComponents = ref( true );
 
-    return {
-      showComponents,
-    };
-  }
+		return {
+			showComponents,
+		};
+	}
 };
 </script>
 

@@ -1,7 +1,7 @@
 <template>
   <v-container fluid v-if="showComponents">
     <v-row no-gutters class="pa-0 ma-0">
-<v-col class="pa-0 ma-0" style="position: fixed; bottom: 292px; left: 5px; width: 155px; z-index: 10;">
+<v-col class="pa-0 ma-0" style="position: fixed; bottom: 292px; left: 5px; width: 160px; z-index: 10;">
   <CategoricalSelect />
 </v-col>
 <v-col class="pa-0 ma-0" style="position: fixed; bottom: 35px; left: 426px; width: 124px; z-index: 10;">
@@ -25,19 +25,19 @@ import NumericalSelect from '../components/NumericalSelect.vue';
 import HSYScatterplot from '../components/HSYScatterplot.vue';
 
 export default {
-  components: {
-    CategoricalSelect,
-    NumericalSelect,
-    HSYScatterplot,
-  },
-  setup() {
-    const store = useGlobalStore();
-    const showComponents = ref(true);
+	components: {
+		CategoricalSelect,
+		NumericalSelect,
+		HSYScatterplot,
+	},
+	setup() {
+		const store = useGlobalStore();
+		const showComponents = ref( true );
 
-    return {
-      showComponents,
-    };
-  },
+		return {
+			showComponents,
+		};
+	},
 };
 </script>
 

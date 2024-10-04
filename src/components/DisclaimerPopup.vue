@@ -27,15 +27,15 @@
 
 <script>
 export default {
-  data() {
-    return {
-      isVisible: true
-    };
-  },
-  methods: {
-    closePopup() {
-      this.isVisible = false;
-    },
-  },
+	data() {
+		return {
+			isVisible: true
+		};
+	},
+	methods: {
+		closePopup() {
+			this.isVisible = false;
+		},
+	},
 };
 </script>
