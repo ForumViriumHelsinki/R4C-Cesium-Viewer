@@ -73,7 +73,7 @@ export default class Urbanheat {
 		buildingStore.setBuildingFeatures( data );
 
 		try {
-			const response = await fetch( 'https://geo.fvh.fi/r4c/collections/urban_heat_building/items?f=json&limit=2000&postinumero=' + postcode );
+			const response = await fetch( '/pygeoapi/collections/urban_heat_building/items?f=json&limit=2000&postinumero=' + postcode );
 			const urbanheat = await response.json();
 
 			for ( let i = 0; i < data.features.length; i++ ) {

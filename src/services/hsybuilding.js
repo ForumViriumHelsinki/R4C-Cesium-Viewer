@@ -23,7 +23,7 @@ export default class HSYBuilding {
 
 	async loadHSYBuildings( ) {
 
-		const url = 'https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=5000&postinumero=' + this.store.postalcode;
+		const url = '/pygeoapi/collections/hsy_buildings/items?f=json&limit=5000&postinumero=' + this.store.postalcode;
 
 		console.log( 'url',url );
 

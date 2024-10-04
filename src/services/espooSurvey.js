@@ -21,7 +21,7 @@ export default class EspooSurvey {
  */
 	async loadSurveyFeatures( collection ) {
 
-		let url = 'https://geo.fvh.fi/r4c/collections/' + collection + '/items?f=json&limit=35000';
+		let url = '/pygeoapi/collections/' + collection + '/items?f=json&limit=35000';
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;

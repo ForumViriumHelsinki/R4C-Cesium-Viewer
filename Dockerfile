@@ -1,23 +1,24 @@
-# Use the official Node.js image as the base image
-FROM node:18 AS build
+FROM node:21-alpine AS build
 
-# Set the working directory inside the container
-WORKDIR /usr/src/app
+# These will be automatically populated by docker/metadata-action
+ARG DOCKER_META_VERSION
+ARG DOCKER_META_TITLE
+ARG DOCKER_META_VERSION_SEMVER
+ARG DOCKER_META_REVISION
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+WORKDIR /app
 
-# Install project dependencies
-RUN npm install
+COPY package*.json .
+RUN npm ci
 
-# Copy the rest of the application code to the working directory
 COPY . .
 
-# Build the application
-RUN npm run build
+# Create version.json that will be copied to the final image
+RUN echo "{\"version\": \"${DOCKER_META_VERSION_SEMVER:-0.0.0}\", \"commitHash\": \"${DOCKER_META_REVISION:-development}\", \"buildTime\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"}" > public/version.json
 
-# Stage 2: Use Nginx to serve the built application
-FROM nginx:alpine
+RUN npx vite build && npx vite optimize
 
-# Copy the built app from the previous stage
-COPY --from=build /usr/src/app/dist /usr/share/nginx/html
+FROM nginx:1.27
+
+COPY --link --from=build /app/dist/ /usr/share/nginx/html
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
