@@ -1,24 +1,31 @@
 <template>
   <div class="wms-layer-switcher">
     <!-- Added upper margin with link to HSY map service -->
+
+    <div class="search-and-restore">
+      <v-text-field
+        append-inner-icon="mdi-magnify"
+        density="compact"
+        v-model="searchQuery"
+        label=" Change Background Map"
+        placeholder=" Search for WMS layers"
+        variant="outlined"
+        hide-details
+        single-line
+        @input="onSearch"
+        @keyup.enter="onEnter"
+        @click:append="onSearchClick"
+      />
+      <v-btn class="restore-btn" @click="restoreDefaultLayer">
+        Restore Default
+      </v-btn>
+    </div>
+
     <div class="hsy-link">
-      All Background Map options can be found at 
+      All Background Map options can be found at
       <a href="https://kartta.hsy.fi/" target="_blank">HSY map service</a> under 'karttatasot'.
     </div>
 
-    <v-text-field
-      append-inner-icon="mdi-magnify"
-      density="compact"
-      v-model="searchQuery"
-      label=" Change Background Map"
-      placeholder=" Search for WMS layers"
-      variant="outlined"
-      hide-details
-      single-line
-      @input="onSearch"
-      @keyup.enter="onEnter"
-      @click:append="onSearchClick"
-    />
     <v-list v-if="filteredLayers.length > 0">
       <v-list-item
         v-for="(layer, index) in filteredLayers"
@@ -34,86 +41,111 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { usePropsStore } from '../stores/propsStore';
-import wms from '../services/wms.js';
+import { useGlobalStore } from '../stores/globalStore';
+import wms from '../services/wms';
 import axios from 'axios';
 
 export default {
-	setup() {
-		const propsStore = usePropsStore();
-		const searchQuery = ref( '' );
-		const filteredLayers = ref( [] );
-		const wmsService = new wms();
+  setup() {
+    const propsStore = usePropsStore();
+    const searchQuery = ref('');
+    const filteredLayers = ref([]);
+    const wmsService = new wms();
 
-		// Backend URL
-		const backendURL = import.meta.env.VITE_BACKEND_URL;
+    // Backend URL
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-		// Fetch WMS layers from the backend
-		const fetchLayers = async () => {
-			try {
-				const response = await axios.get( `${backendURL}/wms/layers` );
-				propsStore.setHSYWMSLayers( response.data ); // Set layers in the store
-			} catch ( error ) {
-				console.error( 'Error fetching WMS layers:', error );
-			}
-		};
+    // Fetch WMS layers from the backend
+    const fetchLayers = async () => {
+      try {
+        const response = await axios.get(`${backendURL}/wms/layers`);
+        propsStore.setHSYWMSLayers(response.data); // Set layers in the store
+      } catch (error) {
+        console.error('Error fetching WMS layers:', error);
+      }
+    };
 
-		// Filter layers based on user input
-		const onSearch = () => {
-			if ( searchQuery.value.length >= 3 ) {
-				filteredLayers.value = propsStore.hSYWMSLayers.filter( layer =>
-					layer.title.toLowerCase().includes( searchQuery.value.toLowerCase() )
-				);
-			} else {
-				filteredLayers.value = [];
-			}
-		};
+    // Filter layers based on user input
+    const onSearch = () => {
+      if (searchQuery.value.length >= 3) {
+        filteredLayers.value = propsStore.hSYWMSLayers.filter((layer) =>
+          layer.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+      } else {
+        filteredLayers.value = [];
+      }
+    };
 
-		// Select and switch the WMS layer
-		const selectLayer = ( layerName ) => {
-			wmsService.reCreateHSYImageryLayer( layerName );
-			// Clear the filtered layers after selecting
-			filteredLayers.value = [];
-		};
+    // Select and switch the WMS layer
+    const selectLayer = (layerName) => {
+      wmsService.reCreateHSYImageryLayer(layerName);
+      // Clear the filtered layers after selecting
+      filteredLayers.value = [];
+    };
 
-		// Handle enter key press
-		const onEnter = () => {
-			const matchingLayer = propsStore.hSYWMSLayers.find( layer =>
-				layer.title.toLowerCase() === searchQuery.value.toLowerCase()
-			);
-			if ( matchingLayer ) {
-				selectLayer( matchingLayer.name ); // Switch to the matching layer
-			}
-		};
+    // Handle enter key press
+    const onEnter = () => {
+      const matchingLayer = propsStore.hSYWMSLayers.find((layer) =>
+        layer.title.toLowerCase() === searchQuery.value.toLowerCase()
+      );
+      if (matchingLayer) {
+        selectLayer(matchingLayer.name); // Switch to the matching layer
+      }
+    };
 
-		// Handle search button click
-		const onSearchClick = () => {
-			onEnter(); // Trigger the same behavior as pressing enter
-		};
+    // Handle search button click
+    const onSearchClick = () => {
+      onEnter(); // Trigger the same behavior as pressing enter
+    };
 
-		onMounted( () => {
-			if ( !propsStore.hSYWMSLayers ) {
-				fetchLayers();
-			}
-		} );
+    // Restore default WMS layer
+    const restoreDefaultLayer = () => {
+	const store = useGlobalStore();
+      // Restore default WMS layer (avoindata:Karttasarja_PKS)
+      store.cesiumViewer.imageryLayers.add(
+        wmsService.createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
+      );
+    };
 
-		return {
-			searchQuery,
-			filteredLayers,
-			selectLayer,
-			onSearch,
-			onEnter,
-			onSearchClick,
-		};
-	},
+    onMounted(() => {
+      if (!propsStore.hSYWMSLayers) {
+        fetchLayers();
+      }
+    });
+
+    return {
+      searchQuery,
+      filteredLayers,
+      selectLayer,
+      onSearch,
+      onEnter,
+      onSearchClick,
+      restoreDefaultLayer,
+    };
+  },
 };
 </script>
 
 <style scoped>
 .wms-layer-switcher {
-  width: 100%; 
+  width: 100%;
   font-size: smaller;
   background-color: white;
   z-index: 100000;
+}
+
+.search-and-restore {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.restore-btn {
+  margin-left: 10px;
+  font-size: 12px;
+  text-transform: none;
+  background-color: #f5f5f5;
+  color: #000;
 }
 
 .hsy-link {

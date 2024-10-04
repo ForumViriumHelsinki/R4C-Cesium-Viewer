@@ -22,8 +22,15 @@
                 </v-list-item-content>
               </v-list-item>
 
-              <v-expansion-panels class="pa-0 ma-0">
+              <!-- Add `multiple` prop here to allow multiple panels to stay open -->
+              <v-expansion-panels multiple class="pa-0 ma-0">
                 <template v-if="currentLevel === 'postalCode'">
+                  <v-expansion-panel class="pa-0 ma-0" title="HSY Background maps">
+                    <v-expansion-panel-text class="pa-0 ma-0">
+                      <HSYWMS />
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                
                   <!-- Conditionally render Heat Histogram if data is available -->
                   <v-expansion-panel
                     v-if="heatHistogramData && heatHistogramData.length > 0"
@@ -41,12 +48,6 @@
                     </v-expansion-panel-text>
                   </v-expansion-panel>
 
-                  <v-expansion-panel class="pa-0 ma-0" title="HSY Background maps">
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <HSYWMS />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
                   <v-expansion-panel class="pa-0 ma-0" title="Land Cover">
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <Landcover />
@@ -61,24 +62,17 @@
                 </template>
 
                 <template v-if="currentLevel === 'building'">
-                  <v-expansion-panel
-                    class="pa-0 ma-0"
-                    title="Building heat data"
-                  >
+                  <v-expansion-panel class="pa-0 ma-0" title="Building heat data">
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <HSYBuildingHeatChart />
                     </v-expansion-panel-text>
                   </v-expansion-panel>
 
-                  <v-expansion-panel
-                    class="pa-0 ma-0"
-                    title="Building properties"
-                  >
+                  <v-expansion-panel class="pa-0 ma-0" title="Building properties">
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <PrintBox />
                     </v-expansion-panel-text>
                   </v-expansion-panel>   
-
                 </template>                
               </v-expansion-panels>
             </v-list-item-group>
