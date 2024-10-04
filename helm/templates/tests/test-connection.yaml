@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "r4c-cesium-viewer.fullname" . }}:{{ .Values.service.port }}']
+      args: ['{{ include "r4c-cesium-viewer.fullname" . }}:{{ .Values.frontend.service.port }}']
   restartPolicy: Never

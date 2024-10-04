@@ -51,6 +51,57 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Frontend Helpers
+*/}}
+{{- define "r4c-cesium-viewer.frontend.fullname" -}}
+{{- printf "%s-frontend" (include "r4c-cesium-viewer.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "r4c-cesium-viewer.frontend.labels" -}}
+{{ include "r4c-cesium-viewer.labels" . }}
+app.kubernetes.io/component: frontend
+{{- end }}
+
+{{- define "r4c-cesium-viewer.frontend.selectorLabels" -}}
+{{ include "r4c-cesium-viewer.selectorLabels" . }}
+app.kubernetes.io/component: frontend
+{{- end }}
+
+{{/*
+Backend Helpers
+*/}}
+{{- define "r4c-cesium-viewer.backend.fullname" -}}
+{{- printf "%s-backend" (include "r4c-cesium-viewer.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "r4c-cesium-viewer.backend.labels" -}}
+{{ include "r4c-cesium-viewer.labels" . }}
+app.kubernetes.io/component: backend
+{{- end }}
+
+{{- define "r4c-cesium-viewer.backend.selectorLabels" -}}
+{{ include "r4c-cesium-viewer.selectorLabels" . }}
+app.kubernetes.io/component: backend
+{{- end }}
+
+{{/*
+PyGeoAPI Helpers
+*/}}
+{{- define "r4c-cesium-viewer.pygeoapi.fullname" -}}
+{{- printf "%s-pygeoapi" (include "r4c-cesium-viewer.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "r4c-cesium-viewer.pygeoapi.labels" -}}
+{{ include "r4c-cesium-viewer.labels" . }}
+app.kubernetes.io/component: pygeoapi
+{{- end }}
+
+{{- define "r4c-cesium-viewer.pygeoapi.selectorLabels" -}}
+{{ include "r4c-cesium-viewer.selectorLabels" . }}
+app.kubernetes.io/component: pygeoapi
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "r4c-cesium-viewer.serviceAccountName" -}}

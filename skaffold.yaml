@@ -4,10 +4,11 @@ metadata:
   name: r4c-cesium-viewer
 build:
   local:
+    useDockerCLI: true
     useBuildkit: true
     concurrency: 0
   artifacts:
-    - image: viewer
+    - image: frontend
       context: .
       docker:
         dockerfile: Dockerfile
@@ -15,6 +16,8 @@ build:
       context: backend
       docker:
         dockerfile: Dockerfile
+        buildArgs:
+          VITE_BACKEND_URL: "http://r4c-cesium-viewer-backend/"
 deploy:
   helm:
     releases:
@@ -22,12 +25,11 @@ deploy:
         chartPath: helm
         valuesFiles:
           - helm/values.yaml
-        # version: 0.2.0
         setValueTemplates:
-          image.repository: "{{.IMAGE_REPO_viewer}}"
-          image.tag: "{{.IMAGE_TAG_viewer}}@{{.IMAGE_DIGEST_viewer}}"
+          frontend.image.repository: "{{.IMAGE_REPO_frontend}}"
+          frontend.image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
           backend.image.repository: "{{.IMAGE_REPO_backend}}"
           backend.image.tag: "{{.IMAGE_TAG_backend}}@{{.IMAGE_DIGEST_backend}}"
-        setValues:
-          image.pullPolicy: "IfNotPresent"
-          backend.image.pullPolicy: "IfNotPresent"
+        # setValues:
+        #   frontend.image.pullPolicy: "IfNotPresent"
+        #   backend.image.pullPolicy: "IfNotPresent"

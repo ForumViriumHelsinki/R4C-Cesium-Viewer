@@ -5,19 +5,97 @@
 replicaCount: 1
 
 vite:
-  backend_url: ""
 
-image:
-  repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+frontend:
+  image:
+    repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
+    pullPolicy: IfNotPresent
+    tag: "1"
 
-image2:
-  repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer-backend
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: true
+    className: "nginx"
+    # annotations:
+    #   kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: r4c-cesium-viewer.test
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+backend:
+  image:
+    repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer-backend
+    pullPolicy: IfNotPresent
+    tag: "1"
+  service:
+    type: ClusterIP
+    port: 80
+  redis:
+    host: r4c-cesium-viewer-redis-master
+    port: 6379
+
+pygeoapi:
+  image:
+    repository: ghcr.io/geopython/pygeoapi
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 80
+  config:
+    server:
+      bind:
+          host: 0.0.0.0  # listening address for incoming connections
+          port: 80  # listening port for incoming connections
+      url: http://localhost/  # url of server
+      mimetype: application/json; charset=UTF-8  # default MIME type
+      encoding: utf-8  # default server encoding
+      language: en-US  # default server language
+      locale_dir: /path/to/translations
+      gzip: false # default server config to gzip/compress responses to requests with gzip in the Accept-Encoding header
+      cors: true  # boolean on whether server should support CORS
+      pretty_print: true  # whether JSON responses should be pretty-printed
+      limit: 10  # server limit on number of items to return
+      admin: false  # whether to enable the Admin API
+
+      templates: # optional configuration to specify a different set of templates for HTML pages. Recommend using absolute paths. Omit this to use the default provided templates
+        path: /path/to/jinja2/templates/folder # path to templates folder containing the Jinja2 template HTML files
+        static: /path/to/static/folder # path to static folder containing css, js, images and other static files referenced by the template
+
+      map:  # leaflet map setup for HTML pages
+          url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+          attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+      ogc_schemas_location: /opt/schemas.opengis.net  # local copy of https://schemas.opengis.net
+
+      manager:  # optional OGC API - Processes asynchronous job management
+          name: TinyDB  # plugin name (see pygeoapi.plugin for supported process_manager's)
+          connection: /tmp/pygeoapi-process-manager.db  # connection info to store jobs (e.g. filepath)
+          output_dir: /tmp/  # temporary file area for storing job results (files)
+
+      api_rules:  # optional API design rules to which pygeoapi should adhere
+          api_version: 1.2.3  # omit to use pygeoapi's software version
+          strict_slashes: true  # trailing slashes will not be allowed and result in a 404
+          url_prefix: 'v{api_major}'  # adds a /v1 prefix to all URL paths
+          version_header: X-API-Version  # add a response header of this name with the API version
+
+postgresql:
+  enabled: true
+  primary.initdb.scriptsConfigMap: postgresql-scripts
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
 
 imagePullSecrets: []
 nameOverride: ""
@@ -48,24 +126,6 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  enabled: true
-  className: "nginx"
-  # annotations:
-  #   kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: r4c-cesium-viewer.test
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
