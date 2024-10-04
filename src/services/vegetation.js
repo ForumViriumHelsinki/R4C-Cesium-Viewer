@@ -16,7 +16,7 @@ export default class Vegetation {
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
 	async loadVegetation( ) {
-		const url = 'https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
+		const url = '/pygeoapi/collections/vegetation/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
 		try {

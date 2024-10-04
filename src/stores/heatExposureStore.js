@@ -14,7 +14,7 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 	actions: {
 		// Function to load Heat Exposure  data
 		async loadHeatExposure() {
-			const requestUrl = 'https://geo.fvh.fi/r4c/collections/heatexposure/items?f=json&limit=1000';
+			const requestUrl = '/pygeoapi/collections/heatexposure/items?f=json&limit=1000';
 
 			try {
 

@@ -18,7 +18,7 @@ export default class Othernature {
  */
 	async loadOtherNature() {
 
-		let url = 'https://geo.fvh.fi/r4c/collections/othernature/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
+		let url = '/pygeoapi/collections/othernature/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
 		try {

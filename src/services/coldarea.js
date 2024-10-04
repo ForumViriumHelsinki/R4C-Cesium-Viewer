@@ -37,7 +37,7 @@ export default class ColdArea {
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
 	async loadColdAreas( ) {
-		const url = 'https://geo.fvh.fi/r4c/collections/coldarea/items?f=json&limit=100000&posno=' + this.store.postalcode;
+		const url = '/pygeoapi/collections/coldarea/items?f=json&limit=100000&posno=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
 		try {

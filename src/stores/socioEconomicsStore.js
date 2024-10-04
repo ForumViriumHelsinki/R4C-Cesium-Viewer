@@ -24,9 +24,8 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 	actions: {
 		// Function to load Paavo data
 		async loadPaavo() {
-			// replace all this with call to backend
 			try {
-				const response = await fetch( 'https://geo.fvh.fi/paavo' ); // Fetch directly
+				const response = await fetch( '/backend/paavo' );
 				if ( !response.ok ) throw new Error( `HTTP error! status: ${response.status}` );
 				const data = await response.json(); // Parse as JSON
         

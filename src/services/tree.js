@@ -19,7 +19,7 @@ export default class Tree {
 	async loadTrees( ) {
 
 		// Construct the API endpoint URL
-		let url = 'https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
+		let url = '/pygeoapi/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
 		try {
@@ -97,7 +97,7 @@ export default class Tree {
 		}
 
 		// Fetch the tree data from the URL
-		const url = 'https://geo.fvh.fi/r4c/collections/tree_building_distance/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
+		const url = '/pygeoapi/collections/tree_building_distance/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
 		fetch( url )
 			.then( response => response.json() )
 			.then( data => {
