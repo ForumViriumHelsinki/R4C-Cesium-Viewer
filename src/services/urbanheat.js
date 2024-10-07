@@ -36,6 +36,7 @@ export default class Urbanheat {
 
 			if ( features[ i ].properties.heat_timeseries ) {
 
+				filterHeatTimeseries( features[ i ].properties );
 				heatTimeseries.push( features[ i ].properties.heat_timeseries );			
 				
 			}
@@ -195,3 +196,14 @@ const setAttributesFromApiToBuilding = ( properties, features ) => {
 		}
 	}
 };
+
+const filterHeatTimeseries = ( buildingProps ) => {
+
+  if ( buildingProps.kavu && typeof buildingProps.kavu === 'number' && buildingProps.kavu > 2015 ) {
+    const cutoffYear = buildingProps.kavu;
+    buildingProps.heat_timeseries = buildingProps.heat_timeseries.filter(entry => {
+      const entryYear = new Date(entry.date).getFullYear();
+      return entryYear >= cutoffYear;
+    });
+  }
+}
