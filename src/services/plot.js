@@ -138,23 +138,23 @@ export default class Plot {
 
 	// 1. Initialize SVG and Background
 	createSVGElement( margin, width, height, container ) {
-    // Ensure width and height are non-negative
-    const validatedWidth = Math.max(0, width);
-    const validatedHeight = Math.max(0, height);
+		// Ensure width and height are non-negative
+		const validatedWidth = Math.max( 0, width );
+		const validatedHeight = Math.max( 0, height );
 
-    const svg = d3.select(container)
-        .append('svg')
-        .attr('width', validatedWidth + margin.left + margin.right)
-        .attr('height', validatedHeight + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`);
+		const svg = d3.select( container )
+			.append( 'svg' )
+			.attr( 'width', validatedWidth + margin.left + margin.right )
+			.attr( 'height', validatedHeight + margin.top + margin.bottom )
+			.append( 'g' )
+			.attr( 'transform', `translate(${margin.left}, ${margin.top})` );
 
-    svg.append('rect')
-        .attr('width', validatedWidth)
-        .attr('height', validatedHeight)
-        .attr('fill', 'white');
+		svg.append( 'rect' )
+			.attr( 'width', validatedWidth )
+			.attr( 'height', validatedHeight )
+			.attr( 'fill', 'white' );
 
-    return svg;
+		return svg;
 	}
 
 	createScaleLinear( domainMin, domainMax, range ) {

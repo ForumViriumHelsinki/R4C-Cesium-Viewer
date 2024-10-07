@@ -41,39 +41,39 @@ import { useToggleStore } from '../stores/toggleStore.js'; // Store for toggling
 import { useGlobalStore } from '../stores/globalStore.js'; // Global store for Cesium viewer
 
 export default {
-  components: {
-    HSYYearSelect,
-    HSYAreaSelect,
-    PieChart,
-  },
-  setup() {
-    const showComponents = ref(true);
-    const landcover = ref(false); // State for checkbox
-    const toggleStore = useToggleStore();
-    const store = useGlobalStore();
-    const landcoverService = new Landcover(); // Landcover service
+	components: {
+		HSYYearSelect,
+		HSYAreaSelect,
+		PieChart,
+	},
+	setup() {
+		const showComponents = ref( true );
+		const landcover = ref( false ); // State for checkbox
+		const toggleStore = useToggleStore();
+		const store = useGlobalStore();
+		const landcoverService = new Landcover(); // Landcover service
 
-    // Function to toggle land cover
-    const toggleLandCover = () => {
-      const isLandcoverChecked = landcover.value;
-      toggleStore.setLandCover(isLandcoverChecked); // Update land cover state in store
+		// Function to toggle land cover
+		const toggleLandCover = () => {
+			const isLandcoverChecked = landcover.value;
+			toggleStore.setLandCover( isLandcoverChecked ); // Update land cover state in store
 
-      if (isLandcoverChecked) {
-        // Remove background map and add land cover layer
-        store.cesiumViewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
-        landcoverService.addLandcover(); // Add land cover
-      } else {
-        // Remove land cover
-        landcoverService.removeLandcover();
-      }
-    };
+			if ( isLandcoverChecked ) {
+				// Remove background map and add land cover layer
+				store.cesiumViewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
+				landcoverService.addLandcover(); // Add land cover
+			} else {
+				// Remove land cover
+				landcoverService.removeLandcover();
+			}
+		};
 
-    return {
-      showComponents,
-      landcover,
-      toggleLandCover, // Expose the toggle function
-    };
-  },
+		return {
+			showComponents,
+			landcover,
+			toggleLandCover, // Expose the toggle function
+		};
+	},
 };
 </script>
 

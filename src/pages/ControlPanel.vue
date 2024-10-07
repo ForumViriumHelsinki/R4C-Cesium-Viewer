@@ -96,41 +96,41 @@ import { useGlobalStore } from '../stores/globalStore'; // Import global store f
 import { usePropsStore } from '../stores/propsStore'; // Import global store for current level
 
 export default {
-  components: {
-    HeatHistogram,
-    SocioEconomics,
-    HSYWMS,
-    Landcover,
-    BuildingScatterPlot,
-    PrintBox,
-    HSYBuildingHeatChart
-  },
-  setup() {
-    const globalStore = useGlobalStore();
-    const propsStore = usePropsStore();
-    const panelVisible = ref(true);
-    const componentsVisible = ref({
-      heatHistogram: false,
-      socioEconomics: false,
-      hsyWMS: false,
-      landCover: false,
-      buildingScatterPlot: false,
-    });
-    const currentLevel = computed(() => globalStore.level);
-    const heatHistogramData = computed(() => propsStore.heatHistogramData);
+	components: {
+		HeatHistogram,
+		SocioEconomics,
+		HSYWMS,
+		Landcover,
+		BuildingScatterPlot,
+		PrintBox,
+		HSYBuildingHeatChart
+	},
+	setup() {
+		const globalStore = useGlobalStore();
+		const propsStore = usePropsStore();
+		const panelVisible = ref( true );
+		const componentsVisible = ref( {
+			heatHistogram: false,
+			socioEconomics: false,
+			hsyWMS: false,
+			landCover: false,
+			buildingScatterPlot: false,
+		} );
+		const currentLevel = computed( () => globalStore.level );
+		const heatHistogramData = computed( () => propsStore.heatHistogramData );
 
-    const togglePanel = () => {
-      panelVisible.value = !panelVisible.value;
-    };
+		const togglePanel = () => {
+			panelVisible.value = !panelVisible.value;
+		};
 
-    return {
-      panelVisible,
-      componentsVisible,
-      currentLevel,
-      togglePanel,
-      heatHistogramData,
-    };
-  },
+		return {
+			panelVisible,
+			componentsVisible,
+			currentLevel,
+			togglePanel,
+			heatHistogramData,
+		};
+	},
 };
 </script>
 

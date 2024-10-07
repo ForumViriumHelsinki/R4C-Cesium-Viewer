@@ -54,19 +54,19 @@ export default {
 			svg.append( 'g' ).call( d3.axisLeft( yScale ) );
 		};
 
-    const labelDescriptions = {
-      'Apartment Heat Exposure': 'Average heat exposure for apartments.',
-      'Apartment Cold Exposure': 'Average surface temperature of residential buildings during cold periods (Landsat data).',
-      'Apartment Surface Heat': 'Average surface temperature of residential buildings (Landsat data).',
-      'Children and Elderly %': 'Percentage of the population aged 0-12 and 65+.',
-      'Children %': 'Percentage of the population aged 0-12.',
-      'Elderly %': 'Percentage of the population aged 65 and over.',
-      'Unemployed rate': 'Percentage of the population that is unemployed. Higher values indicate higher unemployment rates.',
-      'Size of Apartments': 'Relative size of apartments. Higher values indicate smaller apartment sizes.',
-      'Basic Education %': 'Percentage of the population with only basic education. Higher values indicate lower education levels.',
-      'Income': 'Relative income level in the area. Higher values indicate lower income levels.',
-      'Rentals %': 'Percentage of residential properties that are rented. Higher values indicate a higher proportion of rentals.'
-    };
+		const labelDescriptions = {
+			'Apartment Heat Exposure': 'Average heat exposure for apartments.',
+			'Apartment Cold Exposure': 'Average surface temperature of residential buildings during cold periods (Landsat data).',
+			'Apartment Surface Heat': 'Average surface temperature of residential buildings (Landsat data).',
+			'Children and Elderly %': 'Percentage of the population aged 0-12 and 65+.',
+			'Children %': 'Percentage of the population aged 0-12.',
+			'Elderly %': 'Percentage of the population aged 65 and over.',
+			'Unemployed rate': 'Percentage of the population that is unemployed. Higher values indicate higher unemployment rates.',
+			'Size of Apartments': 'Relative size of apartments. Higher values indicate smaller apartment sizes.',
+			'Basic Education %': 'Percentage of the population with only basic education. Higher values indicate lower education levels.',
+			'Income': 'Relative income level in the area. Higher values indicate lower income levels.',
+			'Rentals %': 'Percentage of residential properties that are rented. Higher values indicate a higher proportion of rentals.'
+		};
 
 		const wrapText = ( text, width ) => {
 			text.each( function () {
@@ -158,8 +158,8 @@ export default {
 					'Rentals %',
 				];
 
-        if ( toggleStore.capitalRegionCold ) xLabels[0] = 'Apartment Cold Exposure';
-        if ( toggleStore.helsinkiView ) xLabels[0] = 'Apartment Heat Exposure';
+				if ( toggleStore.capitalRegionCold ) xLabels[0] = 'Apartment Cold Exposure';
+				if ( toggleStore.helsinkiView ) xLabels[0] = 'Apartment Heat Exposure';
 
 				const selectedNimi = propsStore.socioEconomics;
 				const compareData = socioEconomicsStore.getDataByNimi( selectedNimi );

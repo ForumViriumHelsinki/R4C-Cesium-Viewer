@@ -19,25 +19,25 @@ export default {
 		const propsStore = usePropsStore();
 		const toggleStore = useToggleStore();
 
-	const createBars = (svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter) => {
-		svg.selectAll('.bar')
-    		.data(data)
+		const createBars = ( svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter ) => {
+			svg.selectAll( '.bar' )
+    		.data( data )
     		.enter()
-    .append('g')
-    .attr('class', 'bar')
-    .attr('transform', (d) => `translate(${xScale(d.x0)}, ${yScale(d.length)})`)
-    .append('rect')
-    .attr('x', 1)
-    .attr('width', (d) => Math.max(0, xScale(d.x1) - xScale(d.x0))) // Adjust width for the bars
-    .attr('height', (d) => Math.max(0, height - yScale(d.length))) // Ensure no negative heights
-    .attr('fill', (d) => rgbColor(d)) // Assuming you have a function for coloring bars
-    .on('mouseover', (event, d) => plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter))
-    .on('mouseout', () => plotService.handleMouseout(tooltip))
-    .on('click', (event, d) => {
-      const buildingService = new Building();
-      buildingService.highlightBuildingsInViewer(d);
-    });
-};
+				.append( 'g' )
+				.attr( 'class', 'bar' )
+				.attr( 'transform', ( d ) => `translate(${xScale( d.x0 )}, ${yScale( d.length )})` )
+				.append( 'rect' )
+				.attr( 'x', 1 )
+				.attr( 'width', ( d ) => Math.max( 0, xScale( d.x1 ) - xScale( d.x0 ) ) ) // Adjust width for the bars
+				.attr( 'height', ( d ) => Math.max( 0, height - yScale( d.length ) ) ) // Ensure no negative heights
+				.attr( 'fill', ( d ) => rgbColor( d ) ) // Assuming you have a function for coloring bars
+				.on( 'mouseover', ( event, d ) => plotService.handleMouseover( tooltip, containerId, event, d, dataFormatter ) )
+				.on( 'mouseout', () => plotService.handleMouseout( tooltip ) )
+				.on( 'click', ( event, d ) => {
+					const buildingService = new Building();
+					buildingService.highlightBuildingsInViewer( d );
+				} );
+		};
 
 		const rgbColor = ( data ) => {
 			const average = calculateAverage( data );
@@ -78,11 +78,11 @@ export default {
       
 			plotService.initializePlotContainerForGrid( 'heatHistogramContainer' );
 
-      // Get the container's actual width and height dynamically
-      const container = document.getElementById('heatHistogramContainer');
-      const margin = { top: 30, right: 30, bottom: 30, left: 30 };
-      const width = container.offsetWidth - margin.left - margin.right; // Use container width
-      const height = container.offsetHeight - margin.top - margin.bottom; // Use container height
+			// Get the container's actual width and height dynamically
+			const container = document.getElementById( 'heatHistogramContainer' );
+			const margin = { top: 30, right: 30, bottom: 30, left: 30 };
+			const width = container.offsetWidth - margin.left - margin.right; // Use container width
+			const height = container.offsetHeight - margin.top - margin.bottom; // Use container height
   
 			const svg = plotService.createSVGElement( margin, width, height, '#heatHistogramContainer' );
 
@@ -128,9 +128,9 @@ export default {
 
 		// Lifecycle hooks for mounting and unmounting
 		onMounted( () => {
-				nextTick( () => {
-					newHeatHistogram();
-				} );
+			nextTick( () => {
+				newHeatHistogram();
+			} );
 			
 			eventBus.on( 'newHeatHistogram', createHistogram );
 		} );

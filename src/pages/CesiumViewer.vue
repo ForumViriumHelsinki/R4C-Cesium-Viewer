@@ -37,100 +37,100 @@ import Helsinki from './Helsinki.vue';
 import ControlPanel from './ControlPanel.vue';
 
 export default {
-  components: {
-    Building,
-    Helsinki,
-    DisclaimerPopup,
-    ControlPanel,
-  },
-  setup() {
-    const store = useGlobalStore();
-	const propsStore = usePropsStore();
-    const socioEconomicsStore = useSocioEconomicsStore();
-    const heatExposureStore = useHeatExposureStore();
-    const buildingStore = useBuildingStore();
+	components: {
+		Building,
+		Helsinki,
+		DisclaimerPopup,
+		ControlPanel,
+	},
+	setup() {
+		const store = useGlobalStore();
+		const propsStore = usePropsStore();
+		const socioEconomicsStore = useSocioEconomicsStore();
+		const heatExposureStore = useHeatExposureStore();
+		const buildingStore = useBuildingStore();
 
-    const viewer = ref(null);
+		const viewer = ref( null );
 
-    const initViewer = () => {
-      viewer.value = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-        animation: false,
-        fullscreenButton: false,
-        geocoder: false,
-        shadows: false,
-        navigationHelpButton: false,
-        timeline: false,
-        sceneModePicker: false,
-        baseLayerPicker: false,
-        infoBox: false,
-        homeButton: false,
-      });
+		const initViewer = () => {
+			viewer.value = new Cesium.Viewer( 'cesiumContainer', {
+				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+				animation: false,
+				fullscreenButton: false,
+				geocoder: false,
+				shadows: false,
+				navigationHelpButton: false,
+				timeline: false,
+				sceneModePicker: false,
+				baseLayerPicker: false,
+				infoBox: false,
+				homeButton: false,
+			} );
 
-      viewer.value.imageryLayers.add(
-        new WMS().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-      );
+			viewer.value.imageryLayers.add(
+				new WMS().createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
+			);
 
-      viewer.value.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(24.931745, 60.190464, 35000),
-        orientation: {
-          heading: Cesium.Math.toRadians(0.0),
-          pitch: Cesium.Math.toRadians(-85.0),
-          roll: 0.0,
-        },
-      });
+			viewer.value.camera.setView( {
+				destination: Cesium.Cartesian3.fromDegrees( 24.931745, 60.190464, 35000 ),
+				orientation: {
+					heading: Cesium.Math.toRadians( 0.0 ),
+					pitch: Cesium.Math.toRadians( -85.0 ),
+					roll: 0.0,
+				},
+			} );
 
-      store.setCesiumViewer(viewer.value);
-      addPostalCodes();
-      addFeaturePicker();
-      addAttribution();
-      eventBus.emit('initPostalCodeView');
-    };
+			store.setCesiumViewer( viewer.value );
+			addPostalCodes();
+			addFeaturePicker();
+			addAttribution();
+			eventBus.emit( 'initPostalCodeView' );
+		};
 
-    const addAttribution = () => {
-      const hriCredit = new Cesium.Credit(
-        '<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>'
-      );
-      const statsCredit = new Cesium.Credit(
-        '<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>'
-      );
-      store.cesiumViewer.creditDisplay.addStaticCredit(hriCredit);
-      store.cesiumViewer.creditDisplay.addStaticCredit(statsCredit);
-    };
+		const addAttribution = () => {
+			const hriCredit = new Cesium.Credit(
+				'<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>'
+			);
+			const statsCredit = new Cesium.Credit(
+				'<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>'
+			);
+			store.cesiumViewer.creditDisplay.addStaticCredit( hriCredit );
+			store.cesiumViewer.creditDisplay.addStaticCredit( statsCredit );
+		};
 
-    const addPostalCodes = async () => {
-      const dataSourceService = new Datasource();
-      await dataSourceService.loadGeoJsonDataSource(
-        0.2,
-        './assets/data/hsy_po.json',
-        'PostCodes'
-      );
+		const addPostalCodes = async () => {
+			const dataSourceService = new Datasource();
+			await dataSourceService.loadGeoJsonDataSource(
+				0.2,
+				'./assets/data/hsy_po.json',
+				'PostCodes'
+			);
 
-		const dataSource = await dataSourceService.getDataSourceByName( 'PostCodes' );
-		propsStore.setPostalCodeData( dataSource );
+			const dataSource = await dataSourceService.getDataSourceByName( 'PostCodes' );
+			propsStore.setPostalCodeData( dataSource );
 
-    };
+		};
 
-    const addFeaturePicker = () => {
-      const cesiumContainer = document.getElementById('cesiumContainer');
-      const featurepicker = new Featurepicker();
-      cesiumContainer.addEventListener('click', (event) => {
-        featurepicker.processClick(event);
-      });
-    };
+		const addFeaturePicker = () => {
+			const cesiumContainer = document.getElementById( 'cesiumContainer' );
+			const featurepicker = new Featurepicker();
+			cesiumContainer.addEventListener( 'click', ( event ) => {
+				featurepicker.processClick( event );
+			} );
+		};
 
-    onMounted(() => {
-      initViewer();
-      socioEconomicsStore.loadPaavo();
-      heatExposureStore.loadHeatExposure();
-    });
+		onMounted( () => {
+			initViewer();
+			socioEconomicsStore.loadPaavo();
+			heatExposureStore.loadHeatExposure();
+		} );
 
-    return {
-      store,
-      buildingStore,
-      viewer,
-    };
-  },
+		return {
+			store,
+			buildingStore,
+			viewer,
+		};
+	},
 };
 </script>
 
