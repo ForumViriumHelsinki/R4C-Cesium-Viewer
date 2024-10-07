@@ -63,6 +63,8 @@ export default class Building {
  */
 	createBuildingCharts( treeArea, avg_temp_c, buildingProps ) {
 
+		filterHeatTimeseries( buildingProps );
+
 		( this.toggleStore.showTrees && treeArea ) && 
 			( this.propsStore.setTreeArea( treeArea ) );
 
@@ -383,4 +385,14 @@ export default class Building {
 		entity.polygon.outlineWidth = 8;
 
 	}
+}
+
+const filterHeatTimeseries = ( buildingProps ) => {
+  if (buildingProps._kavu && typeof buildingProps._kavu._value === 'number') {
+    const cutoffYear = buildingProps._kavu._value;
+    buildingProps._heat_timeseries._value = buildingProps._heat_timeseries._value.filter(entry => {
+      const entryYear = new Date(entry.date).getFullYear();
+      return entryYear >= cutoffYear;
+    });
+  }
 }
