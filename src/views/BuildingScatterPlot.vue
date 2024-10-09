@@ -1,10 +1,10 @@
 <template>
   <v-container fluid v-if="showComponents">
     <v-row no-gutters class="pa-0 ma-0">
-<v-col class="pa-0 ma-0" style="position: fixed; bottom: 292px; left: 5px; width: 160px; z-index: 10;">
+<v-col class="pa-0 ma-0" style="position: absolute; top: 80px; left: 5px; width: 160px; z-index: 10;">
   <CategoricalSelect />
 </v-col>
-<v-col class="pa-0 ma-0" style="position: fixed; bottom: 35px; left: 380px; width: 124px; z-index: 10;">
+<v-col class="pa-0 ma-0" style="position: absolute; bottom: 35px; right: 0px; width: 124px; z-index: 10;">
   <NumericalSelect />
 </v-col>
     </v-row>
@@ -44,7 +44,7 @@ export default {
 <style scoped>
 /* Ensuring the scatter plot has fixed positioning as required */
 #scatterPlotContainerHSY {
-  position: fixed;
+  position: relative;
   bottom: 35px;
   left: -19px;
   width: 500px;

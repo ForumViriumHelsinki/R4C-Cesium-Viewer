@@ -32,7 +32,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import HSYYearSelect from '../components/HSYYearSelect.vue';
 import HSYAreaSelect from '../components/HSYAreaSelect.vue';
 import PieChart from '../components/PieChart.vue';
@@ -41,39 +41,48 @@ import { useToggleStore } from '../stores/toggleStore.js'; // Store for toggling
 import { useGlobalStore } from '../stores/globalStore.js'; // Global store for Cesium viewer
 
 export default {
-	components: {
-		HSYYearSelect,
-		HSYAreaSelect,
-		PieChart,
-	},
-	setup() {
-		const showComponents = ref( true );
-		const landcover = ref( false ); // State for checkbox
-		const toggleStore = useToggleStore();
-		const store = useGlobalStore();
-		const landcoverService = new Landcover(); // Landcover service
+  components: {
+    HSYYearSelect,
+    HSYAreaSelect,
+    PieChart,
+  },
+  setup() {
+    const showComponents = ref(true);
+    const landcover = ref(false); // State for checkbox
+    const toggleStore = useToggleStore();
+    const store = useGlobalStore();
+    const landcoverService = new Landcover(); // Landcover service
 
-		// Function to toggle land cover
-		const toggleLandCover = () => {
-			const isLandcoverChecked = landcover.value;
-			toggleStore.setLandCover( isLandcoverChecked ); // Update land cover state in store
+    // Watch to synchronize landcover state with the store's landCover value
+    watch(
+      () => toggleStore.landCover,
+      (newVal) => {
+        landcover.value = newVal;
+      },
+      { immediate: true }
+    );
 
-			if ( isLandcoverChecked ) {
-				// Remove background map and add land cover layer
-				store.cesiumViewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true );
-				landcoverService.addLandcover(); // Add land cover
-			} else {
-				// Remove land cover
-				landcoverService.removeLandcover();
-			}
-		};
+    // Function to toggle land cover
+    const toggleLandCover = () => {
+      const isLandcoverChecked = landcover.value;
+      toggleStore.setLandCover(isLandcoverChecked); // Update land cover state in store
 
-		return {
-			showComponents,
-			landcover,
-			toggleLandCover, // Expose the toggle function
-		};
-	},
+      if (isLandcoverChecked) {
+        // Remove background map and add land cover layer
+        store.cesiumViewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
+        landcoverService.addLandcover(); // Add land cover
+      } else {
+        // Remove land cover
+        landcoverService.removeLandcover();
+      }
+    };
+
+    return {
+      showComponents,
+      landcover,
+      toggleLandCover, // Expose the toggle function
+    };
+  },
 };
 </script>
 
@@ -81,7 +90,7 @@ export default {
 .pie-chart-container {
   position: relative;
   width: 100%;
-  height: 200px; 
+  height: 200px;
   background-color: white;
 }
 

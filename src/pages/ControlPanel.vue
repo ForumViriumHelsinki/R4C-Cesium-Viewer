@@ -17,8 +17,14 @@
           <v-list dense>
             <v-list-item-group>
               <v-list-item class="pa-0 ma-0">
-                <v-list-item-content class="pa-0 ma-0">
+                <v-list-item-content class="pa-0 ma-0" v-if="currentLevel === 'postalCode'">
                   <v-list-item-title>Control Panel</v-list-item-title>
+
+                  <!-- The Filters and Layers are now side by side -->
+                  <div class="filters-layers-container">
+                    <Layers />
+                    <Filters />
+                  </div>
                 </v-list-item-content>
               </v-list-item>
 
@@ -88,6 +94,8 @@ import { ref, computed } from 'vue';
 import HeatHistogram from '../components/HeatHistogram.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
 import HSYWMS from '../components/HSYWMS.vue';
+import Filters from '../components/Filters.vue';
+import Layers from '../components/Layers.vue';
 import Landcover from '../views/Landcover.vue';
 import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
 import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
@@ -97,6 +105,8 @@ import { usePropsStore } from '../stores/propsStore'; // Import global store for
 
 export default {
 	components: {
+    Layers,
+    Filters,
 		HeatHistogram,
 		SocioEconomics,
 		HSYWMS,
@@ -135,10 +145,68 @@ export default {
 </script>
 
 <style scoped>
-.toggle-btn {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 1000000;
+.filters-layers-container {
+  display: flex;
+  justify-content: space-between; /* Ensures there's space between Filters and Layers */
+  gap: 20px; /* Adds some space between the two components */
+}
+
+.filter-title {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+  font-family: sans-serif;
+}
+
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  padding: 10px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 200px;
+}
+
+.switch-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 47px;
+  height: 20px;
+}
+
+/* Additional styling for toggles */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.label {
+  margin-left: 10px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
 }
 </style>
