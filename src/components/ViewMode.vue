@@ -1,111 +1,152 @@
 <template>
-  <div class="view-mode-container">
-    <label class="view-mode">
-      <input type="radio" v-model="selectedMode" value="capitalRegion" @change="handleToggle('capitalRegion')">
-      <span class="checkmark"></span> Helsinki View
-    </label>
-
-    <label class="view-mode">
-      <input type="radio" v-model="selectedMode" value="gridView" @change="handleToggle('gridView')">
-      <span class="checkmark"></span> Grid View
-    </label>
-
-    <label class="view-mode">
-      <input type="radio" v-model="selectedMode" value="capitalRegionCold" @change="handleToggle('capitalRegionCold')">
-      <span class="checkmark"></span> Capital Region Cold
-    </label>
+  <div id="viewModeContainer">
+    <div id="viewModeToggleContainer">
+      <label class="radio-label">
+        <input 
+          type="radio" 
+          v-model="activeViewMode" 
+          value="capitalRegionView" 
+          @change="onToggleChange('capitalRegionView')" 
+        />
+        Capital Region Heat
+      </label>
+      <label class="radio-label">
+        <input 
+          type="radio" 
+          v-model="activeViewMode" 
+          value="helsinkiHeat" 
+          @change="onToggleChange('helsinkiHeat')" 
+        />
+        Helsinki Heat
+      </label>      
+      <label class="radio-label">
+        <input 
+          type="radio" 
+          v-model="activeViewMode" 
+          value="gridView" 
+          @change="onToggleChange('gridView')" 
+        />
+        Statistical Grid
+      </label>
+      <label class="radio-label">
+        <input 
+          type="radio" 
+          v-model="activeViewMode" 
+          value="capitalRegionCold" 
+          @change="onToggleChange('capitalRegionCold')" 
+        />
+        Capital Region Cold
+      </label>
+    </div>
   </div>
 </template>
 
 <script>
+import { ref, watch } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import Datasource from '../services/datasource.js';
+import { eventBus } from '../services/eventEmitter.js';
 
 export default {
-  data() {
-    return {
-      selectedMode: null, // Tracks the selected view mode
-      showControlPanel: true, // Controls visibility of the control panel
-    };
-  },
-  computed: {
-    toggleStore() {
-      return useToggleStore();
-    },
-    globalStore() {
-      return useGlobalStore();
-    },
-  },
-  methods: {
-    handleToggle(mode) {
-      this.resetToggles();
+  setup() {
+    const activeViewMode = ref('capitalRegionView'); // Default view mode
+    const toggleStore = useToggleStore();
+    const store = useGlobalStore(); 
+    const dataSourceService = new Datasource();
 
-      if (mode === 'capitalRegion') {
-        this.toggleStore.setHelsinkiView(true);
-        this.globalStore.setView('helsinki');
-        this.showControlPanel = true;
-      } else if (mode === 'gridView') {
-        this.toggleStore.setGridView(true);
-        this.globalStore.setView('grid');
-        this.showControlPanel = false; // Hide control panel when Grid view is selected
-        this.$emit('hideControlPanel'); // Emit an event to hide control panel
-      } else if (mode === 'capitalRegionCold') {
-        this.toggleStore.setCapitalRegionCold(true);
-        this.showControlPanel = true;
+    // Watcher for activeViewMode changes
+    watch(activeViewMode, (newViewMode) => {
+      onToggleChange(newViewMode);
+    });
+
+    const onToggleChange = (viewMode) => {
+      activeViewMode.value = viewMode;
+
+      switch (viewMode) {
+        case 'capitalRegionView':
+          capitalRegion(viewMode);
+          break;
+        case 'gridView':
+          gridView();
+          break;
+        case 'capitalRegionCold':
+          toggleCold(viewMode);
+          break;
+        // Additional cases if necessary
+        default:
+          break;
       }
-    },
-    resetToggles() {
-      // Reset all toggle values when a new mode is selected
-      this.toggleStore.setHelsinkiView(false);
-      this.toggleStore.setGridView(false);
-      this.toggleStore.setCapitalRegionCold(false);
-    },
+    };
+
+    const toggleCold = () => {
+      const checked = activeViewMode.value === 'capitalRegionCold';
+      toggleStore.setCapitalRegionCold(checked);
+      if (!checked) reset();
+    };
+
+    const capitalRegion = async (viewMode) => {
+      const metropolitanView = viewMode === 'capitalRegionView';
+      toggleStore.setHelsinkiView(metropolitanView);
+      store.setView(metropolitanView ? 'helsinki' : 'capitalRegion');
+
+      if (metropolitanView) {
+        dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
+        await dataSourceService.loadGeoJsonDataSource(
+          0.2,
+          './assets/data/hki_po_clipped.json',
+          'PostCodes'
+        );
+      } else {
+        reset();
+      }
+    };
+
+    const gridView = () => {
+      const isGridView = activeViewMode.value === 'gridView';
+      toggleStore.setGridView(isGridView);
+      store.setView(isGridView ? 'grid' : 'capitalRegion');
+      if (isGridView) {
+        eventBus.emit('createPopulationGrid');
+      } else {
+        reset();
+      }
+    };
+
+    const reset = () => {
+      // Reset logic if needed
+    };
+
+    return {
+      activeViewMode,
+      onToggleChange,
+    };
   },
 };
 </script>
 
 <style scoped>
-.view-mode-container {
+#viewModeContainer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 10px;
+  align-items: flex-start;
 }
 
-.view-mode {
+#viewModeToggleContainer {
   display: flex;
-  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1rem;
 }
 
-.view-mode input {
-  display: none;
-}
-
-/* Checkmark as a small circle */
-.checkmark {
-  height: 16px;
-  width: 16px;
-  background-color: #ccc;
-  border-radius: 50%;
+.radio-label {
   display: inline-block;
-  margin-right: 8px;
-  position: relative;
+  margin-right: 10px;
   cursor: pointer;
+  font-size: 12px; /* Change this to adjust font size */
 }
 
-/* When selected, change the background color */
-.view-mode input:checked + .checkmark {
-  background-color: #2196F3;
-}
-
-.view-mode input:checked + .checkmark:after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 8px;
-  height: 8px;
-  background: white;
-  border-radius: 50%;
+input[type="radio"] {
+  margin-right: 5px;
 }
 </style>

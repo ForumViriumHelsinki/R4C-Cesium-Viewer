@@ -3,7 +3,6 @@
     <v-btn icon @click="togglePanel" class="toggle-btn">
       <v-icon>{{ panelVisible ? 'mdi-menu-open' : 'mdi-menu' }}</v-icon>
     </v-btn>
-
     <v-app>
       <div>
         <v-navigation-drawer
@@ -16,9 +15,26 @@
         >
           <v-list dense>
             <v-list-item-group>
+                <v-list-item class="pa-0 ma-0">
+                  <v-list-item-content class="pa-0 ma-0">
+                    <v-btn v-if="currentLevel === 'building' " icon @click="returnToPostalCode" class="uiButton" style="color: red; float:right; cursor: pointer;"> 
+                      <v-icon>mdi-arrow-left</v-icon>
+                    </v-btn>
+
+                    <v-btn icon @click="reset" class="uiButton" style="color: red; float:right; cursor: pointer;">
+                      <v-icon>mdi-refresh</v-icon>
+                    </v-btn>
+                  </v-list-item-content>                
+              </v-list-item>
               <v-list-item class="pa-0 ma-0">
+                <v-list-item-content class="pa-0 ma-0">
+                  <v-list-item-title>View Mode</v-list-item-title>
+
+                 <!-- Include ViewMode component here -->
+                  <ViewMode />
+
+                </v-list-item-content>                
                 <v-list-item-content class="pa-0 ma-0" v-if="currentLevel === 'postalCode'">
-                  <v-list-item-title>Control Panel</v-list-item-title>
 
                   <!-- The Filters and Layers are now side by side -->
                   <div class="filters-layers-container">
@@ -29,7 +45,7 @@
               </v-list-item>
 
               <!-- Add `multiple` prop here to allow multiple panels to stay open -->
-              <v-expansion-panels multiple class="pa-0 ma-0">
+              <v-expansion-panels multiple class="pa-0 ma-0">  
                 <template v-if="currentLevel === 'postalCode'">
                   <v-expansion-panel class="pa-0 ma-0" title="HSY Background maps">
                     <v-expansion-panel-text class="pa-0 ma-0">
@@ -79,7 +95,14 @@
                       <PrintBox />
                     </v-expansion-panel-text>
                   </v-expansion-panel>   
-                </template>                
+                </template>  
+
+                <v-expansion-panel class="pa-0 ma-0" title="Geocoding">
+                    <v-expansion-panel-text class="pa-0 ma-0">
+                      <Geocoding />
+                    </v-expansion-panel-text>
+                </v-expansion-panel> 
+                               
               </v-expansion-panels>
             </v-list-item-group>
           </v-list>
@@ -93,6 +116,7 @@
 import { ref, computed } from 'vue';
 import HeatHistogram from '../components/HeatHistogram.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
+import ViewMode from '../components/ViewMode.vue'; // Adjust the path as necessary
 import HSYWMS from '../components/HSYWMS.vue';
 import Filters from '../components/Filters.vue';
 import Layers from '../components/Layers.vue';
@@ -102,6 +126,9 @@ import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
 import PrintBox from '../components/PrintBox.vue';
 import { useGlobalStore } from '../stores/globalStore'; // Import global store for current level
 import { usePropsStore } from '../stores/propsStore'; // Import global store for current level
+import Tree from '../services/tree';
+import Featurepicker from '../services/featurepicker';
+import Geocoding from '../components/Geocoding.vue';
 
 export default {
 	components: {
@@ -113,7 +140,9 @@ export default {
 		Landcover,
 		BuildingScatterPlot,
 		PrintBox,
-		HSYBuildingHeatChart
+		HSYBuildingHeatChart,
+    ViewMode,
+    Geocoding
 	},
 	setup() {
 		const globalStore = useGlobalStore();
@@ -133,18 +162,38 @@ export default {
 			panelVisible.value = !panelVisible.value;
 		};
 
+    const reset = () => {
+			location.reload();
+		};
+
+    const returnToPostalCode = () => {
+			const featurepicker = new Featurepicker();
+      const treeService = new Tree();
+			featurepicker.loadPostalCode();
+			toggleStore.showTrees && treeService.loadTrees();
+			eventBus.emit( 'hideBuilding' );
+		};
+
 		return {
 			panelVisible,
 			componentsVisible,
 			currentLevel,
 			togglePanel,
 			heatHistogramData,
+      reset,
+      returnToPostalCode
 		};
 	},
 };
 </script>
 
 <style scoped>
+.toggle-btn {
+  position: fixed;
+  top: 10px;
+  right: 100px;
+  z-index: 1000000;
+}
 .filters-layers-container {
   display: flex;
   justify-content: space-between; /* Ensures there's space between Filters and Layers */

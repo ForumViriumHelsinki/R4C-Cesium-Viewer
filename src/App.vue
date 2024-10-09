@@ -1,10 +1,8 @@
 <template>
 
 <div id="canvasScalerDiv">
-  <CesiumViewer />
-  <GridView />
-  <Geocoding />
-  <PostalCodeView />
+  	<CesiumViewer />
+	<GridView v-if="view === 'grid'" />
 
   <!-- Add Logo -->		
 	<div class="logoHolder">	
@@ -24,7 +22,7 @@ import { useGlobalStore } from './stores/globalStore.js';
 import { computed } from 'vue';
 
 const globalStore = useGlobalStore();
-const level = computed( () => globalStore.level );
+const view = computed( () => globalStore.view );
 
 </script>
 

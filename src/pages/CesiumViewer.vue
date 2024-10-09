@@ -6,7 +6,8 @@
     <!-- Other Components -->
     <Building />
     <Helsinki />
-    <ControlPanel />
+    <!-- Control Panel with event listener -->
+    <ControlPanel v-if="store.view !== 'grid'" />
 
     <!-- Loading Component -->
     <Loading v-if="store.isLoading" />
@@ -17,13 +18,12 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import * as Cesium from 'cesium';
 import 'cesium/Source/Widgets/widgets.css';
 import Datasource from '../services/datasource.js'; 
 import WMS from '../services/wms.js'; 
 import Featurepicker from '../services/featurepicker.js'; 
-import Geocoding from '../services/geocoding.js';
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
@@ -51,6 +51,7 @@ export default {
 		const buildingStore = useBuildingStore();
 
 		const viewer = ref( null );
+		const view = computed( () => store.view );
 
 		const initViewer = () => {
 			viewer.value = new Cesium.Viewer( 'cesiumContainer', {
@@ -129,6 +130,7 @@ export default {
 			store,
 			buildingStore,
 			viewer,
+			view,
 		};
 	},
 };

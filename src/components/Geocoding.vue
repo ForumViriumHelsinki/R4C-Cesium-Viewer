@@ -67,11 +67,11 @@ const moveToTarget = () => {
 
 <style scoped>
 #georefContainer {
-  bottom: 2px;
-  right: 175px;
+  top: 0px;
+  left: 0px;
   width: 530px;
   height: 40px;
-  position: fixed;
+  position: relative;
   border: 1px solid black;
   box-shadow: 3px 5px 5px black;
   background: white;
@@ -84,6 +84,7 @@ const moveToTarget = () => {
 #searchcontainer {
   visibility: visible;
   float: left;
+  z-index: 1000;
 }
 
 #searchbutton {

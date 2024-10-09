@@ -85,8 +85,8 @@ export default class FeaturePicker {
 
 		if ( !this.toggleStore.helsinkiView ) {
 
-			this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
-			this.elementsDisplayService.setCapitalRegionElementsDisplay( 'inline-block' );
+		//	this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
+		//	this.elementsDisplayService.setCapitalRegionElementsDisplay( 'inline-block' );
 			await this.capitalRegionService.loadCapitalRegionElements();
 
 		} else {
