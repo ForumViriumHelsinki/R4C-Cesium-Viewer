@@ -59,9 +59,9 @@ export default {
             } else {
                 buildingService.showAllBuildings(buildingsDataSource);
             }
-            if (!toggleStore.helsinkiView) {
-                eventBus.emit('updateScatterPlot');
-            }
+            
+            eventBus.emit('updateScatterPlot');
+            
       }
     };
 

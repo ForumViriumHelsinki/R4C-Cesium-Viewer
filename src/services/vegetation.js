@@ -17,6 +17,7 @@ export default class Vegetation {
  */
 	async loadVegetation( ) {
 		const url = 'https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
+		this.store.setIsLoading( true );
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
@@ -57,6 +58,8 @@ export default class Vegetation {
 				this.setVegetationPolygonMaterialColor( entity, category );
 			}	
 		}
+
+		this.store.setIsLoading( false );
 	}
 
 	/**

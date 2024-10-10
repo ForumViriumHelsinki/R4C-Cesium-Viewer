@@ -65,14 +65,17 @@ export default {
 
       switch (viewMode) {
         case 'capitalRegionView':
-          capitalRegion(viewMode);
+          capitalRegion();
           break;
         case 'gridView':
           gridView();
           break;
         case 'capitalRegionCold':
-          toggleCold(viewMode);
+          toggleCold();
           break;
+        case 'helsinkiHeat':
+          helsinkiHeat();
+          break;  
         // Additional cases if necessary
         default:
           break;
@@ -85,21 +88,22 @@ export default {
       if (!checked) reset();
     };
 
-    const capitalRegion = async (viewMode) => {
-      const metropolitanView = viewMode === 'capitalRegionView';
-      toggleStore.setHelsinkiView(metropolitanView);
-      store.setView(metropolitanView ? 'helsinki' : 'capitalRegion');
+    const capitalRegion = async () => {
+        store.setView('capitalRegion');
+        reset();
+      
+    };
 
-      if (metropolitanView) {
+    const helsinkiHeat = async () => {
+        toggleStore.setHelsinkiView( true );
+        store.setView( 'helsinki' );
         dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
         await dataSourceService.loadGeoJsonDataSource(
-          0.2,
-          './assets/data/hki_po_clipped.json',
-          'PostCodes'
+            0.2,
+            './assets/data/hki_po_clipped.json',
+            'PostCodes'
         );
-      } else {
-        reset();
-      }
+
     };
 
     const gridView = () => {

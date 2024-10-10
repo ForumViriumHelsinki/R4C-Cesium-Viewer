@@ -17,6 +17,7 @@ export default {
 		// Create building heat chart
 		const createBuildingBarChart = () => {
 			const buildingHeatExposure = propsStore.buildingHeatExposure;
+			console.log("buildingHeatExposure",buildingHeatExposure)
 			const address = store.buildingAddress;
 			const postinumero = store.postalcode;
 
@@ -79,7 +80,7 @@ export default {
 
 		// Call updateHSYBuildingChart on mounted
 		onMounted( () => {
-
+			console.log("hi");
 			createBuildingBarChart();
 
 		} );

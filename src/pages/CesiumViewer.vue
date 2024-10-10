@@ -3,14 +3,12 @@
     <!-- Cesium Container -->
     <div id="cesiumContainer"></div>
 
-    <!-- Other Components -->
-    <Building />
-    <Helsinki />
     <!-- Control Panel with event listener -->
     <ControlPanel v-if="store.view !== 'grid'" />
 
     <!-- Loading Component -->
     <Loading v-if="store.isLoading" />
+  	<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
 
     <!-- Disclaimer Popup -->
     <DisclaimerPopup class="disclaimer-popup" />
@@ -32,16 +30,16 @@ import { usePropsStore } from '../stores/propsStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
-import Building from './Building.vue';
-import Helsinki from './Helsinki.vue';
 import ControlPanel from './ControlPanel.vue';
+import Loading from '../components/Loading.vue';
+import BuildingInformation from '../components/BuildingInformation.vue';
 
 export default {
 	components: {
-		Building,
-		Helsinki,
 		DisclaimerPopup,
 		ControlPanel,
+		BuildingInformation,
+		Loading
 	},
 	setup() {
 		const store = useGlobalStore();

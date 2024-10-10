@@ -70,24 +70,30 @@
                     </v-expansion-panel-text>
                   </v-expansion-panel>
 
-                  <v-expansion-panel class="pa-0 ma-0" title="Land Cover">
+                  <v-expansion-panel v-if="currentView !== 'helsinki'" class="pa-0 ma-0" title="Land Cover">
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <Landcover />
                     </v-expansion-panel-text>
                   </v-expansion-panel>
 
                   <v-expansion-panel class="pa-0 ma-0" title="Building Scatter Plot">
-                    <v-expansion-panel-text class="pa-0 ma-0">
+                    <v-expansion-panel-text v-if="currentView !== 'helsinki'" class="pa-0 ma-0">
                       <BuildingScatterPlot />
                     </v-expansion-panel-text>
+                    <v-expansion-panel-text v-if="currentView === 'helsinki'" class="pa-0 ma-0">
+                      <Scatterplot v-if="scatterPlotEntities" />                    
+                    </v-expansion-panel-text>                    
                   </v-expansion-panel>
                 </template>
 
                 <template v-if="currentLevel === 'building'">
                   <v-expansion-panel class="pa-0 ma-0" title="Building heat data">
-                    <v-expansion-panel-text class="pa-0 ma-0">
+                    <v-expansion-panel-text  v-if="currentView !== 'helsinki'" class="pa-0 ma-0">
                       <HSYBuildingHeatChart />
                     </v-expansion-panel-text>
+                    <v-expansion-panel-text class="pa-0 ma-0">
+                      <BuildingHeatChart />
+                    </v-expansion-panel-text>                    
                   </v-expansion-panel>
 
                   <v-expansion-panel class="pa-0 ma-0" title="Building properties">
@@ -122,10 +128,12 @@ import Filters from '../components/Filters.vue';
 import Layers from '../components/Layers.vue';
 import Landcover from '../views/Landcover.vue';
 import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
+import Scatterplot from '../components/Scatterplot.vue';
 import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
+import BuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
 import PrintBox from '../components/PrintBox.vue';
 import { useGlobalStore } from '../stores/globalStore'; // Import global store for current level
-import { usePropsStore } from '../stores/propsStore'; // Import global store for current level
+import { usePropsStore } from '../stores/propsStore';
 import Tree from '../services/tree';
 import Featurepicker from '../services/featurepicker';
 import Geocoding from '../components/Geocoding.vue';
@@ -142,7 +150,9 @@ export default {
 		PrintBox,
 		HSYBuildingHeatChart,
     ViewMode,
-    Geocoding
+    Geocoding,
+    Scatterplot,
+    BuildingHeatChart
 	},
 	setup() {
 		const globalStore = useGlobalStore();
@@ -156,7 +166,9 @@ export default {
 			buildingScatterPlot: false,
 		} );
 		const currentLevel = computed( () => globalStore.level );
+    const currentView = computed( () => globalStore.view );
 		const heatHistogramData = computed( () => propsStore.heatHistogramData );
+    const scatterPlotEntities = computed( () => propsStore.scatterPlotEntities );
 
 		const togglePanel = () => {
 			panelVisible.value = !panelVisible.value;
@@ -178,8 +190,10 @@ export default {
 			panelVisible,
 			componentsVisible,
 			currentLevel,
-			togglePanel,
+      currentView,
 			heatHistogramData,
+      scatterPlotEntities,
+      togglePanel,
       reset,
       returnToPostalCode
 		};
