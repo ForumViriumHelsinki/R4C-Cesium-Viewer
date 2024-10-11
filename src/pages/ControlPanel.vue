@@ -90,7 +90,10 @@
                   <v-expansion-panel class="pa-0 ma-0" title="Building heat data">
                     <v-expansion-panel-text  v-if="currentView !== 'helsinki'" class="pa-0 ma-0">
                       <HSYBuildingHeatChart />
-                    </v-expansion-panel-text>
+                    </v-expansion-panel-text>                  
+                  </v-expansion-panel>
+
+                  <v-expansion-panel class="pa-0 ma-0" title="Building heat data">
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <BuildingHeatChart />
                     </v-expansion-panel-text>                    
@@ -152,19 +155,12 @@ export default {
     ViewMode,
     Geocoding,
     Scatterplot,
-    BuildingHeatChart
+    BuildingHeatChart,
 	},
 	setup() {
 		const globalStore = useGlobalStore();
 		const propsStore = usePropsStore();
 		const panelVisible = ref( true );
-		const componentsVisible = ref( {
-			heatHistogram: false,
-			socioEconomics: false,
-			hsyWMS: false,
-			landCover: false,
-			buildingScatterPlot: false,
-		} );
 		const currentLevel = computed( () => globalStore.level );
     const currentView = computed( () => globalStore.view );
 		const heatHistogramData = computed( () => propsStore.heatHistogramData );
@@ -188,7 +184,6 @@ export default {
 
 		return {
 			panelVisible,
-			componentsVisible,
 			currentLevel,
       currentView,
 			heatHistogramData,

@@ -92,15 +92,8 @@ export default {
 
 <style scoped>
 #buildingChartContainer {
-  position: fixed;
-  top: 80px;
-  left: 1px;
+  position: relative;
   width: 300px;
   height: 200px;
-  visibility: hidden;
-  font-size: smaller;
-  border: 1px solid black;
-  box-shadow: 3px 5px 5px black;
-  background-color: white;
 }
 </style>
