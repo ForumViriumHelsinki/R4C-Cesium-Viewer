@@ -20,6 +20,7 @@ export default class FeaturePicker {
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
+		this.propStore = usePropsStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
 		this.buildingService = new Building();
@@ -80,6 +81,7 @@ export default class FeaturePicker {
   
 	async loadPostalCode() {
 
+		this.setNameOfZone();
 		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
 		this.datasourceService.removeDataSourcesAndEntities();
 
@@ -98,6 +100,22 @@ export default class FeaturePicker {
 		this.store.setLevel( 'postalCode' );
 
   
+	}
+
+	setNameOfZone() {
+		
+		const entitiesArray = this.propStore.postalCodeData ._entityCollection?._entities._array;
+
+if (Array.isArray(entitiesArray)) {
+  for (let i = 0; i < entitiesArray.length; i++) {
+    const entity = entitiesArray[i];
+    if (entity && entity._properties && entity._properties._nimi && typeof entity._properties._nimi._value !== 'undefined' && entity._properties._posno._value === this.store.postalcode) {
+      this.store.setNameOfZone(entity._properties._nimi);
+      break; // Exit the loop after finding the first match
+    }
+  }
+}
+
 	}
     
 	handleBuildingFeature( properties ) {
@@ -135,12 +153,11 @@ export default class FeaturePicker {
 		this.removeEntityByName( 'currentLocation' );
 		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
 
-		const propStore = usePropsStore();
-		propStore.setTreeArea( null );
-		propStore.setHeatFloodVulnerability( id.properties ?? null );
+		this.propStore.setTreeArea( null );
+		this.propStore.setHeatFloodVulnerability( id.properties ?? null );
 
 		if ( id.properties.grid_id ) {
-			propStore.setHeatFloodVulnerability( id.properties );
+			this.propStore.setHeatFloodVulnerability( id.properties );
 			eventBus.emit( 'createHeatFloodVulnerabilityChart' );
 		}
     
@@ -148,7 +165,6 @@ export default class FeaturePicker {
 		if ( id.properties.posno && this.store.level != 'building' ) {
             
 			this.store.setPostalCode( id.properties.posno._value );
-			this.store.setNameOfZone( id.properties.nimi );
 			this.viewService.switchTo3DView();
 			this.elementsDisplayService.setViewDisplay( 'none' );
 			this.loadPostalCode();

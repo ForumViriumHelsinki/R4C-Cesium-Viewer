@@ -22,7 +22,6 @@ import 'cesium/Source/Widgets/widgets.css';
 import Datasource from '../services/datasource.js'; 
 import WMS from '../services/wms.js'; 
 import Featurepicker from '../services/featurepicker.js'; 
-import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
@@ -83,7 +82,6 @@ export default {
 			addPostalCodes();
 			addFeaturePicker();
 			addAttribution();
-			eventBus.emit( 'initPostalCodeView' );
 		};
 
 		const addAttribution = () => {
