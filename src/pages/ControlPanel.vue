@@ -90,13 +90,10 @@
                   <v-expansion-panel class="pa-0 ma-0" title="Building heat data">
                     <v-expansion-panel-text  v-if="currentView !== 'helsinki'" class="pa-0 ma-0">
                       <HSYBuildingHeatChart />
-                    </v-expansion-panel-text>                  
-                  </v-expansion-panel>
-
-                  <v-expansion-panel class="pa-0 ma-0" title="Building heat data">
-                    <v-expansion-panel-text class="pa-0 ma-0">
+                    </v-expansion-panel-text> 
+                    <v-expansion-panel-text v-if="currentView === 'helsinki'" class="pa-0 ma-0">
                       <BuildingHeatChart />
-                    </v-expansion-panel-text>                    
+                    </v-expansion-panel-text>                                       
                   </v-expansion-panel>
 
                   <v-expansion-panel class="pa-0 ma-0" title="Building properties">
@@ -133,7 +130,7 @@ import Landcover from '../views/Landcover.vue';
 import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
 import Scatterplot from '../components/Scatterplot.vue';
 import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
-import BuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
+import BuildingHeatChart from '../components/BuildingHeatChart.vue';
 import PrintBox from '../components/PrintBox.vue';
 import { useGlobalStore } from '../stores/globalStore'; // Import global store for current level
 import { usePropsStore } from '../stores/propsStore';

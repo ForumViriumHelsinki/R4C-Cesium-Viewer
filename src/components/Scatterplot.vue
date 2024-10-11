@@ -366,7 +366,7 @@ export default {
 			// Prepare the data for the plot
 			const { heatData, labelsWithAverage, values } = this.prepareDataForPlot( features, categorical, numerical );
 
-			const margin = { top: 30, right: 120, bottom: 20, left: 30 };
+			const margin = { top: 30, right: 120, bottom: 16, left: 30 };
 			const width = 450 - margin.left - margin.right;
 			const height = 290 - margin.top - margin.bottom;
 
