@@ -1,42 +1,40 @@
 <template>
   <div v-if="showGeocoding" id="georefContainer">
-    <!-- Close button 'X' to hide the component -->
-    <div id="searchcontainer" class="container-fluid">
-      <form role="search">
-        <div class="form-group">
-          <div class="input-group">
-            <div class="input-group-addon">
-              <span class="glyphicon glyphicon-search"></span>
-            </div>
-            <input
-              type="search"
-              class="form-control"
-              placeholder="Enter place or address"
-              v-model="searchQuery"
-              @keyup="filterSearchResults"
-              autocomplete="off"
-            />
-          </div>
-        </div>
-      </form>
-    </div>
+    <!-- Search bar with search icon -->
+    <v-container fluid class="pa-0">
+      <v-row>
+        <v-col>
+          <v-text-field
+            v-model="searchQuery"
+            label="Enter place or address"
+            prepend-inner-icon="mdi-magnify"
+            @keyup="filterSearchResults"
+            outlined
+            dense
+            clearable
+          ></v-text-field>
+        </v-col>
+        <v-col class="d-flex justify-end align-center" cols="auto">
+          <v-btn color="primary" @click="moveToTarget" small>Move to Target</v-btn>
+        </v-col>
+      </v-row>
+    </v-container>
 
-    <div id="searchbutton">
-      <v-btn block color="primary" size="x-small" @click="moveToTarget">Move to target</v-btn>
-    </div>
-
-    <div id="searchresultscontainer" class="container-fluid" v-if="showSearchResults">
-      <div class="panel-group" id="searchresults">
-        <dl>
-          <!-- Render each address properly -->
-          <dt v-for="address in filteredAddresses" :key="address.address" @click="moveCameraToLocation(address)">
-            {{ address.address }}
-          </dt>
-        </dl>
-      </div>
-    </div>
+    <!-- Search results container -->
+    <v-container v-if="showSearchResults" fluid class="pa-0 mt-2">
+      <v-list dense>
+        <v-list-item
+          v-for="address in filteredAddresses"
+          :key="address.address"
+          @click="moveCameraToLocation(address)"
+        >
+          <v-list-item-title>{{ address.address }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-container>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, watch } from 'vue';
@@ -172,28 +170,20 @@ watch(searchQuery, filterSearchResults);
 
 <style scoped>
 #georefContainer {
-  top: 0px;
-  left: 0px;
-  width: 475px;
-  height: 100px;
-  position: relative;
+  width: 100%;
+  max-width: 600px;
+  padding: 8px;
+  background-color: white;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
 }
 
-#searchcontainer {
-  visibility: visible;
-  float: left;
+.v-list-item {
+  cursor: pointer;
 }
 
-#searchbutton {
-  float: left;
-}
-
-#searchresultscontainer {
-  top: -25px;
-  right: -50px;
-  width: 220px;
-  height: 30px;
-  position: absolute;
-  background: white;
+.v-list-item:hover {
+  background-color: #f5f5f5;
 }
 </style>
+
