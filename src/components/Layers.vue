@@ -172,6 +172,17 @@ export default {
 
 		}
     }
+
+    // Added this new reset function inside the script block
+  const resetLayers = () => {
+    showVegetation.value = false;
+    showOtherNature.value = false;
+    showTrees.value = false;
+    landCover.value = false;
+  };
+
+  // Watch for view mode changes and reset layers
+  watch(() => store.view, resetLayers);
 		      
 
     onMounted(() => {

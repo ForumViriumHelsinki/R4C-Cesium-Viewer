@@ -92,8 +92,9 @@ export default {
 
     const setCapitalRegion = async () => {       
         store.setView('capitalRegion');
+        toggleStore.reset();
         toggleStore.setHelsinkiView( false );
-		    store.cesiumViewer.dataSources.removeAll();
+        await dataSourceService.removeDataSourcesAndEntities();
 			  await dataSourceService.loadGeoJsonDataSource(
 				  0.2,
 				  './assets/data/hsy_po.json',
@@ -111,10 +112,11 @@ export default {
 
     const helsinkiHeat = async () => {
         const checked = activeViewMode.value === 'helsinkiHeat';
+        toggleStore.reset();
         toggleStore.setHelsinkiView( checked );
         toggleStore.setCapitalRegionCold( false );
         store.setView( 'helsinki' );
-        store.cesiumViewer.dataSources.removeAll();
+        await dataSourceService.removeDataSourcesAndEntities();
         await dataSourceService.loadGeoJsonDataSource(
             0.2,
             './assets/data/hki_po_clipped.json',
