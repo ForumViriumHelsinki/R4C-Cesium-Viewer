@@ -7,7 +7,7 @@ export const useGlobalStore = defineStore( 'global', {
 		nameOfZone: null,
 		averageHeatExposure: 0,
 		averageTreeArea: 0,
-		level: 'city',
+		level: 'start',
 		minKelvin: 287.123046875,
 		maxKelvin: 313.70355224609375,
 		minKelvinCold: 246.72064208984375,

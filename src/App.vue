@@ -1,13 +1,8 @@
 <template>
 
 <div id="canvasScalerDiv">
-  <CesiumViewer />
-  <GridView />
-  <Geocoding />
-	<div v-if="level === 'building'">
-      <PrintBox />
-    </div>
-  <PostalCodeView />
+  	<CesiumViewer />
+	<GridView v-if="view === 'grid'" />
 
   <!-- Add Logo -->		
 	<div class="logoHolder">	
@@ -20,15 +15,12 @@
 
 <script setup>
 import CesiumViewer from './pages/CesiumViewer.vue';
-import Geocoding from './components/Geocoding.vue';
-import PrintBox from './components/PrintBox.vue';
 import GridView from './components/GridView.vue';
-import PostalCodeView from './components/PostalCodeView.vue';
 import { useGlobalStore } from './stores/globalStore.js';
 import { computed } from 'vue';
 
 const globalStore = useGlobalStore();
-const level = computed( () => globalStore.level );
+const view = computed( () => globalStore.view );
 
 </script>
 

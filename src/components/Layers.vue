@@ -1,0 +1,281 @@
+<template>
+  <!-- Add Filters Title -->
+  <div class="slider-container">
+    <h3 class="filter-title">Layers</h3>
+    <div class="switch-container" v-if="helsinkiView">
+      <label class="switch">
+        <input type="checkbox" v-model="showVegetation" @change="loadVegetation" />
+        <span class="slider round"></span>
+      </label>
+      <label for="showVegetation" class="label">Vegetation</label>
+    </div>
+
+    <div class="switch-container" v-if="helsinkiView">
+      <label class="switch">
+        <input type="checkbox" v-model="showOtherNature" @change="loadOtherNature" />
+        <span class="slider round"></span>
+      </label>
+      <label for="showOtherNature" class="label">Other Nature</label>
+    </div>
+
+    <div class="switch-container">
+      <label class="switch">
+        <input type="checkbox" v-model="showTrees" @change="loadTrees" />
+        <span class="slider round"></span>
+      </label>
+      <label for="showTrees" class="label">Trees</label>
+    </div>
+
+    <div class="switch-container" v-if="!helsinkiView">
+      <label class="switch">
+        <input type="checkbox" v-model="landCover" @change="addLandCover" />
+        <span class="slider round"></span>
+      </label>
+      <label for="landCover" class="label">HSY Land Cover</label>
+    </div>
+
+  </div>
+</template>
+
+<script>
+import { ref, computed, onMounted, watch } from 'vue';
+import { useToggleStore } from '../stores/toggleStore';
+import { useGlobalStore } from '../stores/globalStore';
+import Datasource from '../services/datasource.js';
+import Building from '../services/building.js';
+import Landcover from '../services/landcover.js'; 
+import Tree from '../services/tree.js';
+import Othernature from '../services/othernature.js';
+import Vegetation from '../services/vegetation';
+
+export default {
+  setup() {
+    const toggleStore = useToggleStore();
+    const store = useGlobalStore();
+
+    const showVegetation = ref(toggleStore.showVegetation);
+    const showOtherNature = ref(toggleStore.showOtherNature);
+    const showTrees = ref(toggleStore.showTrees);
+    const landCover = ref(toggleStore.landCover);
+
+    const helsinkiView = computed( () => toggleStore.helsinkiView );
+
+    let buildingService = null;
+    let dataSourceService = null;
+
+    const toggleLandCover = () => {
+      toggleStore.setLandCover(landCover.value);
+    };
+
+    // Synchronize checkbox with global store value
+    watch(
+      () => toggleStore.landCover,
+      (newValue) => {
+        landCover.value = newValue;
+      },
+      { immediate: true }
+    );
+
+    /**
+    * This function handles the toggle event for showing or hiding the vegetation layer on the map.
+    *
+    */
+	const loadVegetation = () =>  {
+
+		// Get the current state of the toggle button for showing nature areas.
+		toggleStore.setShowVegetation( showVegetation.value );
+
+		if ( showVegetation.value ) {
+
+			// If the toggle button is checked, enable the toggle button for showing the nature area heat map.
+			//document.getElementById("showVegetationHeatToggle").disabled = false;
+
+			// If there is a postal code available, load the nature areas for that area.
+			if ( store.postalcode && !dataSourceService.getDataSourceByName( 'Vegetation' ) ) {
+
+				const vegetationService = new Vegetation( );         
+				vegetationService.loadVegetation( store.postalcode );
+
+			} else {
+            
+				dataSourceService.changeDataSourceShowByName( 'Vegetation', true );
+
+			}
+
+		} else {
+
+			dataSourceService.changeDataSourceShowByName( 'Vegetation', false );
+
+		}
+	}
+
+    /**
+    * This function shows or hides tree entities on the map based on the toggle button state
+    *
+    */
+	const loadTrees = () =>  {
+
+		toggleStore.setShowTrees( showTrees.value );
+		const treeService = new Tree();
+
+		showTrees.value 
+    		? ( store.postalcode && !dataSourceService.getDataSourceByName( 'Trees' ) 
+        	? treeService.loadTrees( )
+        	: ( dataSourceService.changeDataSourceShowByName( 'Trees', true ) ) )
+    		: ( dataSourceService.changeDataSourceShowByName( 'Trees', false ), buildingService.resetBuildingEntities() );
+
+	}
+
+	/**
+    * This function shows or hides wms landcover background map based on the toggle button state
+    */
+	const addLandCover = () =>  {
+
+		toggleStore.setLandCover( landCover.value );
+		const landcoverService = new Landcover();
+
+		landCover.value 
+    		? ( store.cesiumViewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true ), landcoverService.addLandcover() ) 
+    		: landcoverService.removeLandcover();
+
+	} 
+
+	/**
+    * This function handles the toggle event for showing or hiding the nature areas layer on the map.
+    *
+    */
+	const loadOtherNature = () =>  {
+
+		// Get the current state of the toggle button for showing nature areas.
+		toggleStore.setShowOtherNature( showOtherNature.value );
+
+		if ( showOtherNature.value ) {
+
+			// If the toggle button is checked, enable the toggle button for showing the nature area heat map.
+			//document.getElementById("showloadOtherNature").disabled = false;
+
+			// If there is a postal code available, load the nature areas for that area.
+			if ( store.postalcode && !dataSourceService.getDataSourceByName( 'OtherNature' ) ) {
+
+				const otherNatureService = new Othernature();        
+				otherNatureService.loadOtherNature( );
+
+			} else {
+            
+				dataSourceService.changeDataSourceShowByName( 'OtherNature', true );
+			}
+
+
+			} else {
+
+				dataSourceService.changeDataSourceShowByName( 'OtherNature', false );
+
+		}
+    }
+		      
+
+    onMounted(() => {
+        buildingService = new Building();
+        dataSourceService = new Datasource();
+    });
+
+    return {
+      showVegetation,
+      showOtherNature,
+      showTrees,
+      landCover,
+      helsinkiView,
+      loadVegetation,
+      loadOtherNature,
+      addLandCover,
+      loadTrees,
+      toggleLandCover,
+    };
+  },
+};
+</script>
+
+<style scoped>
+.filter-title {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+  font-family: sans-serif;
+}
+
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  padding: 10px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 200px;
+}
+
+/* Align switch and label horizontally */
+.switch-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 47px;
+  height: 20px;
+}
+
+/* The slider input */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Align label to the right of the slider */
+.label {
+  margin-left: 10px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+}
+</style>

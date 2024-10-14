@@ -1,24 +1,31 @@
 <template>
   <div class="wms-layer-switcher">
     <!-- Added upper margin with link to HSY map service -->
+
+    <div class="search-and-restore">
+      <v-text-field
+        append-inner-icon="mdi-magnify"
+        density="compact"
+        v-model="searchQuery"
+        label=" Change Background Map"
+        placeholder=" Search for WMS layers"
+        variant="outlined"
+        hide-details
+        single-line
+        @input="onSearch"
+        @keyup.enter="onEnter"
+        @click:append="onSearchClick"
+      />
+      <v-btn class="restore-btn" @click="restoreDefaultLayer">
+        Restore Default
+      </v-btn>
+    </div>
+
     <div class="hsy-link">
-      All Background Map options can be found at 
+      All Background Map options can be found at
       <a href="https://kartta.hsy.fi/" target="_blank">HSY map service</a> under 'karttatasot'.
     </div>
 
-    <v-text-field
-      append-inner-icon="mdi-magnify"
-      density="compact"
-      v-model="searchQuery"
-      label=" Change Background Map"
-      placeholder=" Search for WMS layers"
-      variant="outlined"
-      hide-details
-      single-line
-      @input="onSearch"
-      @keyup.enter="onEnter"
-      @click:append="onSearchClick"
-    />
     <v-list v-if="filteredLayers.length > 0">
       <v-list-item
         v-for="(layer, index) in filteredLayers"
@@ -34,7 +41,8 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { usePropsStore } from '../stores/propsStore';
-import wms from '../services/wms.js';
+import { useGlobalStore } from '../stores/globalStore';
+import wms from '../services/wms';
 import axios from 'axios';
 
 export default {
@@ -60,7 +68,7 @@ export default {
 		// Filter layers based on user input
 		const onSearch = () => {
 			if ( searchQuery.value.length >= 3 ) {
-				filteredLayers.value = propsStore.hSYWMSLayers.filter( layer =>
+				filteredLayers.value = propsStore.hSYWMSLayers.filter( ( layer ) =>
 					layer.title.toLowerCase().includes( searchQuery.value.toLowerCase() )
 				);
 			} else {
@@ -77,7 +85,7 @@ export default {
 
 		// Handle enter key press
 		const onEnter = () => {
-			const matchingLayer = propsStore.hSYWMSLayers.find( layer =>
+			const matchingLayer = propsStore.hSYWMSLayers.find( ( layer ) =>
 				layer.title.toLowerCase() === searchQuery.value.toLowerCase()
 			);
 			if ( matchingLayer ) {
@@ -88,6 +96,15 @@ export default {
 		// Handle search button click
 		const onSearchClick = () => {
 			onEnter(); // Trigger the same behavior as pressing enter
+		};
+
+		// Restore default WMS layer
+		const restoreDefaultLayer = () => {
+			const store = useGlobalStore();
+			// Restore default WMS layer (avoindata:Karttasarja_PKS)
+			store.cesiumViewer.imageryLayers.add(
+				wmsService.createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
+			);
 		};
 
 		onMounted( () => {
@@ -103,6 +120,7 @@ export default {
 			onSearch,
 			onEnter,
 			onSearchClick,
+			restoreDefaultLayer,
 		};
 	},
 };
@@ -110,15 +128,24 @@ export default {
 
 <style scoped>
 .wms-layer-switcher {
-  max-width: 400px;
-  width: 400px;
-  margin: 0 auto;
-  top: 350px; 
-  right: 1px; 
-  position: fixed;
-  border: 1px solid black; 
-  box-shadow: 3px 5px 5px black;
+  width: 100%;
+  font-size: smaller;
   background-color: white;
+  z-index: 100000;
+}
+
+.search-and-restore {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.restore-btn {
+  margin-left: 10px;
+  font-size: 12px;
+  text-transform: none;
+  background-color: #f5f5f5;
+  color: #000;
 }
 
 .hsy-link {

@@ -2,10 +2,9 @@
   <v-select
     v-model="selectedArea"
     :items="areaOptions"
-    label="Select Area"
     density="compact"
     variant="underlined"
-    class="pa-0 ma-0" style="position: fixed; top: 100px; right: 5px; width: 245px; z-index: 10;"
+    class="pa-0 ma-0"
   />
 </template>
 

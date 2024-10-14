@@ -22,6 +22,8 @@ export default {
 		// Populate areaOptions when the component is mounted
 		onMounted( () => {
 
+			console.log("propsStore.postalCodeData", propsStore.postalCodeData)
+
 			if ( propsStore.postalCodeData ) {
 				areaOptions.value = extractNimiValues( propsStore.postalCodeData );
 				selectedArea.value = 'Askisto';

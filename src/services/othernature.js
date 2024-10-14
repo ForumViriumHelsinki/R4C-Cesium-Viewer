@@ -19,6 +19,7 @@ export default class Othernature {
 	async loadOtherNature() {
 
 		let url = 'https://geo.fvh.fi/r4c/collections/othernature/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
+		this.store.setIsLoading( true );
 
 		try {
 			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
@@ -61,6 +62,8 @@ export default class Othernature {
 				this.setOtherNaturePolygonMaterialColor( entity, category );
 			}
 		}
+
+		this.store.setIsLoading( false );
 	}
 
 	/**
@@ -94,13 +97,13 @@ export default class Othernature {
 
 		switch ( category ){
 		case '310':
-			entity.polygon.material = Cesium.Color.LIGHTGREY.withAlpha( 0.5 );
+			entity._polygon._material._color._value = Cesium.Color.LIGHTGREY.withAlpha( 0.5 );
 			break;
 		case '410':
-			entity.polygon.material = Cesium.Color.SANDYBROWN.withAlpha( 0.5 );
+			entity._polygon._material._color._value = Cesium.Color.SANDYBROWN.withAlpha( 0.5 );
 			break;
 		case '130':
-			entity.polygon.material = Cesium.Color.ROSYBROWN.withAlpha( 0.5 );
+			entity._polygon._material._color._value = Cesium.Color.ROSYBROWN.withAlpha( 0.5 );
 			break;
 		}	
 

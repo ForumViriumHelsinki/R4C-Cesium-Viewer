@@ -98,7 +98,7 @@ export default {
 		onMounted( () => {
 			setTimeout( () => {
 				nextTick( () => {
-					if ( buildingStore.buildingFeatures && store.level === 'postalCode') {
+					if ( buildingStore.buildingFeatures && store.level === 'postalCode' ) {
 						store.cesiumViewer.screenSpaceEventHandler.setInputAction(
 							onMouseMove,
 							Cesium.ScreenSpaceEventType.MOUSE_MOVE

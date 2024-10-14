@@ -36,7 +36,7 @@ export default class View {
 		}
 
 		// change label
-		this.changeLabel( 'switchViewLabel', '2D view' );
+		// this.changeLabel( 'switchViewLabel', '2D view' );
 
 	}
   
@@ -68,7 +68,7 @@ export default class View {
 		}
 
 		// change label
-		this.changeLabel( 'switchViewLabel', '2D view' );
+		// this.changeLabel( 'switchViewLabel', '2D view' );
 
 	}
 

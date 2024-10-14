@@ -1,5 +1,5 @@
 <template>
-    <div id="buildingChartContainer">
+    <div id="buildingGridChartContainer">
     </div>
   </template>
   
@@ -21,7 +21,7 @@ export default {
 	watch: {
 		shouldShowBuilding( newValue ) {
 			if ( !newValue ) {
-				document.getElementById( 'buildingChartContainer' ).style.visibility = 'hidden';
+				document.getElementById( 'buildingGridChartContainer' ).style.visibility = 'hidden';
 			}
 		}
 	},
@@ -48,7 +48,7 @@ export default {
 
 		createBuildingGridChart( buildingProps ) {
 
-			this.plotService.initializePlotContainerForGrid( 'buildingChartContainer' );
+			this.plotService.initializePlotContainerForGrid( 'buildingGridChartContainer' );
 			const margin = { top: 50, right: 20, bottom: 30, left: 40 };
 			const width = 300 - margin.left - margin.right;
 			const height = 250 - margin.top - margin.bottom;
@@ -67,7 +67,7 @@ export default {
 			];
 
 			// Create SVG element
-			const svg = this.plotService.createSVGElement( margin, width, height, '#buildingChartContainer' );
+			const svg = this.plotService.createSVGElement( margin, width, height, '#buildingGridChartContainer' );
 
 			// Create scales
 			const xScale = this.plotService.createScaleBand( data.map( d => d.label ), width );
@@ -75,7 +75,7 @@ export default {
 
 			// Setup axes
 			this.plotService.setupAxes( svg, xScale, yScale, height );
-			const tooltip = this.plotService.createTooltip( '#buildingChartContainer' );
+			const tooltip = this.plotService.createTooltip( '#buildingGridChartContainer' );
 
 			// Create the bars
 			this.createBars( svg, data, xScale, yScale, height, tooltip, 0, 'steelblue' );
@@ -108,7 +108,7 @@ export default {
 				.attr( 'height', d => height - yScale( d.value ) )
 				.attr( 'fill', barColor )
 				.on( 'mouseover', ( event, d ) => 
-					this.plotService.handleMouseover( tooltip, 'buildingChartContainer', event, d, 
+					this.plotService.handleMouseover( tooltip, 'buildingGridChartContainer', event, d, 
 						( data ) => `Age ${data.label}: ${( data.value * 100 ).toFixed( 2 )} %` ) )
 				.on( 'mouseout', () => this.plotService.handleMouseout( tooltip ) );
 		},     
@@ -116,7 +116,7 @@ export default {
 		clearBuildingBarChart() {
 			// Remove or clear the D3.js visualization
 			// Example:
-			d3.select( '#buildingChartContainer' ).select( 'svg' ).remove();
+			d3.select( '#buildingGridChartContainer' ).select( 'svg' ).remove();
 		},
 	},
 };
@@ -124,7 +124,7 @@ export default {
 </script>
   
   <style>
-  #buildingChartContainer {
+  #buildingGridChartContainer {
     position: fixed;
     top: 80px;
     left: 1px;

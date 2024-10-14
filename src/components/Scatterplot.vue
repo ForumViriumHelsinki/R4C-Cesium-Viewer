@@ -44,9 +44,7 @@ export default {
 		const categoricalSelect = document.getElementById( 'categoricalSelect' );
 		categoricalSelect.addEventListener( 'change', this.handleSelectChange );
 
-		document.getElementById( 'hideNewBuildingsToggle' ).addEventListener( 'change', this.updateScatterPlot );
-		document.getElementById( 'hideNonSoteToggle' ).addEventListener( 'change', this.updateScatterPlot );
-		document.getElementById( 'hideLowToggle' ).addEventListener( 'change', this.updateScatterPlot );
+    	eventBus.on('updateScatterPlot', this.selectAttributeForScatterPlot);
 
 		this.newScatterPlot();
 
@@ -64,13 +62,6 @@ export default {
 		// Method to handle the change event for both selects
 		handleSelectChange() {
 			this.selectAttributeForScatterPlot();
-		},
-		updateScatterPlot() {
-			// Check if the scatter plot container is visible
-			if ( document.getElementById( 'scatterPlotContainer' ).style.visibility === 'visible' ) {
-				// Call the function to update the scatter plot
-				this.selectAttributeForScatterPlot();
-			}
 		},
 		/**
        * * A function to handle change of categorical or numerical value in the scatter plot
@@ -375,8 +366,8 @@ export default {
 			// Prepare the data for the plot
 			const { heatData, labelsWithAverage, values } = this.prepareDataForPlot( features, categorical, numerical );
 
-			const margin = { top: 30, right: 120, bottom: 20, left: 30 };
-			const width = 550 - margin.left - margin.right;
+			const margin = { top: 30, right: 120, bottom: 16, left: 30 };
+			const width = 450 - margin.left - margin.right;
 			const height = 290 - margin.top - margin.bottom;
 
 			// Initialize the SVG element
@@ -411,29 +402,24 @@ export default {
   
   <style>
 #scatterPlotContainer {
-    position: fixed;
+  	position: relative;
     bottom: 35px;
     left: -19px;
     width: 550px; /* Adjusted width to accommodate margin */
     height: 300px; /* Adjusted height to accommodate margin */
-    font-size: smaller;
-    border: 1px solid black;
-    box-shadow: 3px 5px 5px black;
-    background-color: white;
-    margin: 20px; /* Add margins to the container */
 }
 
 #categoricalSelect {
-    position: fixed;
-    bottom: 335px;  /* Adjusted position to match scatter plot container */
-    left: 10px;
+    position: absolute;
+    top: 40px;  /* Adjusted position to match scatter plot container */
+    left: 5px;
     font-size: smaller;
 }
 
 #numericalSelect {
-    position: fixed;
-    bottom: 55px;
-    left: 460px; /* Adjusted position to match scatter plot container */
+    position: absolute;
+    bottom: 40px;
+    right: 20px; /* Adjusted position to match scatter plot container */
     font-size: smaller;
 }
   </style>

@@ -26,7 +26,7 @@ const createPieChart = ( ) => {
 	plotService.initializePlotContainerForGrid( 'pieChartContainer' );
 
 	// Assuming firstData and secondData are already fetched and processed
-	const labels = [ 'trees20m', 'trees15-20m', 'trees10-15m', 'trees2-10m', 'vegetation', 'water', 'fields', 'rocks', 'other', 'bareland', 'buildings', 'dirtroads', 'pavedroads' ];
+	const labels = [ 'Trees 20m+', 'Trees 15-20m', 'Trees 10-15m', 'Trees2 -10m', 'Vegetation', 'Water', 'Fields', 'Rocks', 'Other', 'Bareland', 'Buildings', 'Dirtroads', 'Pavedroads' ];
 	const colors = [ '#326428', '#327728', '#328228', '#32a028', '#b2df43', '#6495ed', '#ffd980', '#bfbdc2', '#857976', '#cd853f', '#d80000', '#824513', '#000000' ];
 
 	const firstData = getLandCoverDataForArea( nameOfZone, year, datasource );
@@ -49,17 +49,21 @@ const createPieChart = ( ) => {
 	const svg = plotService.createSVGElement( margin, width, height, '#pieChartContainer' );
 
 	// Translate pies to be centered vertically and positioned horizontally
-	const xOffsetFirstPie = width / 5; // Keeps existing horizontal positioning for the first pie
-	const xOffsetSecondPie = 4.5 * width / 7.5; // Keeps existing horizontal positioning for the second pie
+	const xOffsetFirstPie = width / 6.5; // Keeps existing horizontal positioning for the first pie
+	const xOffsetSecondPie = 4.5 * width / 8; // Keeps existing horizontal positioning for the second pie
 	const yOffset = height / 1.8; // New: Centers pies vertically
 
 	// Initialize tooltip using the Plot service
 	const tooltip = plotService.createTooltip( '#pieChartContainer' );
 	createPie( svg, '.firstPie', firstPieData, colors, arc, xOffsetFirstPie, yOffset, tooltip, plotService );
 	createPie( svg, '.secondPie', secondPieData, colors, arc, xOffsetSecondPie, yOffset, tooltip, plotService );
-	plotService.addTitleWithLink( svg, `Compare <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/helsinki-region-land-cover-dataset/" 
-		target="_blank">HSY Landcover</a> ${year} in ${nameOfZone} to:`, width - 50, margin + 5 );  
-           
+	plotService.addTitleWithLink(     
+		svg,
+    	`Compare <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/helsinki-region-land-cover-dataset/" 
+        	target="_blank">HSY landcover</a> in <br> ${nameOfZone} to:`,
+    	width - 81.6,
+    	{ top: 30 }
+	);
 };
 
 const clearPieChart = ()  => {
@@ -107,7 +111,6 @@ const getLandCoverDataForArea = ( name, year, datasource ) => {
 };
 
 const createPie = ( svg, name, data, colors, arc, xOffset, yOffset, tooltip, plotService ) => {
-	console.log( 'data.data', data );
 	// Drawing first pie chart
 	svg.selectAll( name )
 		.data( data )
@@ -117,7 +120,7 @@ const createPie = ( svg, name, data, colors, arc, xOffset, yOffset, tooltip, plo
 		.attr( 'transform', `translate(${xOffset}, ${yOffset})` ) // Adjusted positioning
 		.on( 'mouseover', ( event, d ) => {
 			plotService.handleMouseover( tooltip, 'pieChartContainer', event, d, 
-				( data ) => `Area: ${data.data.zone}<br>Element: ${data.data.label}<br>${ ( 100 * data.value ).toFixed( 1 ) } % of total landcover` );
+				( data ) => `${data.data.label} cover ${ ( 100 * data.value ).toFixed( 1 ) } % of the land in ${data.data.zone}` );
 		} )
 		.on( 'mouseout', () => plotService.handleMouseout( tooltip ) );
 };
@@ -137,18 +140,3 @@ onBeforeUnmount( () => {
 } );
 
 </script>
-
-<style>
-#pieChartContainer {  
- position: fixed; 
- top: 295px; 
- right: 10px; 
- width: 400px; 
- height: 200px; 
- visibility: hidden; 
- font-size: smaller; 
- border: 1px solid black; 
- box-shadow: 3px 5px 5px black; 
- background-color: white;
-}
-</style>

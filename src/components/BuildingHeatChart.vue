@@ -22,7 +22,7 @@ export default {
 
 			plotService.initializePlotContainer( 'buildingChartContainer' );
 
-			const margin = { top: 70, right: 30, bottom: 30, left: 60 };
+			const margin = { top: 40, right: 30, bottom: 30, left: 30 };
 			const width = 300 - margin.left - margin.right;
 			const height = 200 - margin.top - margin.bottom;
 
@@ -39,7 +39,7 @@ export default {
 
 			createBarsWithLabels( svg, data, xScale, yScale, height, colors );
 			plotService.setupAxes( svg, xScale, yScale, height );
-			plotService.addTitle( svg, 'Temperature Comparison', width, margin );
+			plotService.addTitle( svg, 'Temperature Comparison', width, { top: 80 } );
 		};
 
 		// Create bars and labels
@@ -79,7 +79,6 @@ export default {
 
 		// Call updateHSYBuildingChart on mounted
 		onMounted( () => {
-
 			createBuildingBarChart();
 
 		} );
@@ -91,15 +90,8 @@ export default {
 
 <style scoped>
 #buildingChartContainer {
-  position: fixed;
-  top: 80px;
-  left: 1px;
+  position: relative;
   width: 300px;
   height: 200px;
-  visibility: hidden;
-  font-size: smaller;
-  border: 1px solid black;
-  box-shadow: 3px 5px 5px black;
-  background-color: white;
 }
 </style>

@@ -1,16 +1,31 @@
 <template>
   <v-container fluid v-if="showComponents">
-    <v-row no-guttersclass="pa-0 ma-0">
+    <!-- Vuetify Checkbox for toggling land cover -->
+    <v-row no-gutters class="pa-0 ma-0">
       <v-col cols="3" class="pa-0 ma-0">
-        <PieChart />
-      </v-col>
-
-      <v-col cols="3" class="pa-0 ma-0" style="position: fixed; top: 465px; right: 10px; width: 100px; font-size: smaller;">
-        <HSYYearSelect />
-      </v-col>
-
-      <v-col cols="4" class="pa-0 ma-0" style="position: fixed; top: 310px; right: 10px; width: 130px;  font-size: smaller;">
-        <HSYAreaSelect />
+        <div class="pie-chart-container">
+          <PieChart />
+          <div class="hsy-area-select">
+            <HSYAreaSelect />
+          </div>
+          <div class="land-cover-checkbox">
+            <!-- Checkbox component -->
+            <v-checkbox
+              v-model="landcover"
+              color="success"
+              hide-details
+              class="checkbox-aligned"
+              @change="toggleLandCover"
+            />
+            <!-- Custom label for the checkbox with better alignment -->
+            <label for="landcover" class="landcover-label">
+              Landcover as background map
+            </label>
+          </div>
+          <div class="hsy-year-select">
+            <HSYYearSelect />
+          </div>
+        </div>
       </v-col>
     </v-row>
   </v-container>
@@ -18,38 +33,95 @@
 
 <script>
 import { ref, watch } from 'vue';
-import { eventBus } from '../services/eventEmitter.js';
 import HSYYearSelect from '../components/HSYYearSelect.vue';
 import HSYAreaSelect from '../components/HSYAreaSelect.vue';
 import PieChart from '../components/PieChart.vue';
+import Landcover from '../services/landcover.js'; // Import Landcover service
+import { useToggleStore } from '../stores/toggleStore.js'; // Store for toggling
+import { useGlobalStore } from '../stores/globalStore.js'; // Global store for Cesium viewer
 
 export default {
-	components: {
-		HSYYearSelect,
-		HSYAreaSelect,
-		PieChart,
-	},
-	setup() {
-		const showComponents = ref( true );
+  components: {
+    HSYYearSelect,
+    HSYAreaSelect,
+    PieChart,
+  },
+  setup() {
+    const showComponents = ref(true);
+    const landcover = ref(false); // State for checkbox
+    const toggleStore = useToggleStore();
+    const store = useGlobalStore();
+    const landcoverService = new Landcover(); // Landcover service
 
-		return {
-			showComponents,
-		};
-	}
+    // Watch to synchronize landcover state with the store's landCover value
+    watch(
+      () => toggleStore.landCover,
+      (newVal) => {
+        landcover.value = newVal;
+      },
+      { immediate: true }
+    );
+
+    // Function to toggle land cover
+    const toggleLandCover = () => {
+      const isLandcoverChecked = landcover.value;
+      toggleStore.setLandCover(isLandcoverChecked); // Update land cover state in store
+
+      if (isLandcoverChecked) {
+        // Remove background map and add land cover layer
+        store.cesiumViewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
+        landcoverService.addLandcover(); // Add land cover
+      } else {
+        // Remove land cover
+        landcoverService.removeLandcover();
+      }
+    };
+
+    return {
+      showComponents,
+      landcover,
+      toggleLandCover, // Expose the toggle function
+    };
+  },
 };
 </script>
 
 <style scoped>
-#landcoverControls {
-  display: flex;
-  flex-direction: column;
-  gap: 16px; /* Space between controls */
-  max-width: 100%;
-  padding: 16px; /* Optional: Add some padding */
-  box-sizing: border-box; /* Ensures padding is included in width */
+.pie-chart-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background-color: white;
 }
 
-.landcover-content {
-  position: relative; /* Positioning context for internal components */
+.hsy-area-select {
+  position: absolute;
+  top: 10px; /* Adjusts distance from top */
+  right: -280px; /* Adjusts distance from right */
+  width: 215px;
+}
+
+.hsy-year-select {
+  position: absolute;
+  bottom: 0px; /* Adjusts distance from bottom */
+  right: -280px; /* Adjusts distance from right */
+  width: 80px;
+}
+
+.land-cover-checkbox { 
+  position: absolute;
+  top: 180px;
+  display: flex;
+  align-items: center; /* Ensures checkbox and label are vertically aligned */
+}
+
+.checkbox-aligned {
+  margin-right: 40px; /* Space between checkbox and label */
+}
+
+.landcover-label {
+  font-size: 14px; /* Adjust the font size as needed */
+  vertical-align: middle; /* Align label with checkbox */
+  white-space: nowrap; /* Prevent the label from wrapping */
 }
 </style>
