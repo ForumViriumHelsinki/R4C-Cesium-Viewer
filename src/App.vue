@@ -15,9 +15,7 @@
 
 <script setup>
 import CesiumViewer from './pages/CesiumViewer.vue';
-import Geocoding from './components/Geocoding.vue';
 import GridView from './components/GridView.vue';
-import PostalCodeView from './components/PostalCodeView.vue';
 import { useGlobalStore } from './stores/globalStore.js';
 import { computed } from 'vue';
 

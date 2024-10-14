@@ -7,7 +7,8 @@
         <input type="checkbox" v-model="hideNonSote" @change="filterBuildings" />
         <span class="slider round"></span>
       </label>
-      <label for="hideNonSote" class="label">Only public buildings</label>
+      <label for="hideNonSote" class="label" v-if="!helsinkiView">Only public buildings</label>
+      <label for="hideNonSote" class="label" v-if="helsinkiView">Only social & <br> healthcare buildings</label>
     </div>
 
     <div class="switch-container" v-if="helsinkiView">
@@ -59,7 +60,7 @@ export default {
             } else {
                 buildingService.showAllBuildings(buildingsDataSource);
             }
-            
+
             eventBus.emit('updateScatterPlot');
             
       }

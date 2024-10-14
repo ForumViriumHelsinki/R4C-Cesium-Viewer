@@ -84,6 +84,12 @@
                       <Scatterplot v-if="scatterPlotEntities" />                    
                     </v-expansion-panel-text>                    
                   </v-expansion-panel>
+
+                  <v-expansion-panel class="pa-0 ma-0" title="Area properties">
+                    <v-expansion-panel-text class="pa-0 ma-0">
+                      <PrintBox />
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>   
                 </template>
 
                 <template v-if="currentLevel === 'building'">

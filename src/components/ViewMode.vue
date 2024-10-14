@@ -47,6 +47,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import Datasource from '../services/datasource.js';
 import { eventBus } from '../services/eventEmitter.js';
+import FeaturePicker from '../services/featurepicker';
 
 export default {
   setup() {
@@ -54,6 +55,7 @@ export default {
     const toggleStore = useToggleStore();
     const store = useGlobalStore(); 
     const dataSourceService = new Datasource();
+    const featurePicker = new FeaturePicker();
 
     // Watcher for activeViewMode changes
     watch(activeViewMode, (newViewMode) => {
@@ -82,27 +84,44 @@ export default {
       }
     };
 
-    const toggleCold = () => {
+    const toggleCold = async () => {
       const checked = activeViewMode.value === 'capitalRegionCold';
-      toggleStore.setCapitalRegionCold(checked);
-      if (!checked) reset();
+      toggleStore.setCapitalRegionCold( checked );
+      setCapitalRegion();
     };
 
-    const capitalRegion = async () => {
+    const setCapitalRegion = async () => {       
         store.setView('capitalRegion');
-        reset();
-      
+        toggleStore.setHelsinkiView( false );
+		    store.cesiumViewer.dataSources.removeAll();
+			  await dataSourceService.loadGeoJsonDataSource(
+				  0.2,
+				  './assets/data/hsy_po.json',
+				  'PostCodes'
+			  ); 
+
+        store.postalcode && featurePicker.loadPostalCode();  
+    }
+    
+    const capitalRegion = async () => {
+      const checked = activeViewMode.value === 'capitalRegionView';
+      toggleStore.setCapitalRegionCold( !checked );
+      setCapitalRegion();
     };
 
     const helsinkiHeat = async () => {
-        toggleStore.setHelsinkiView( true );
+        const checked = activeViewMode.value === 'helsinkiHeat';
+        toggleStore.setHelsinkiView( checked );
+        toggleStore.setCapitalRegionCold( false );
         store.setView( 'helsinki' );
-        dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
+        store.cesiumViewer.dataSources.removeAll();
         await dataSourceService.loadGeoJsonDataSource(
             0.2,
             './assets/data/hki_po_clipped.json',
             'PostCodes'
         );
+
+        store.postalcode && featurePicker.loadPostalCode();  
 
     };
 
