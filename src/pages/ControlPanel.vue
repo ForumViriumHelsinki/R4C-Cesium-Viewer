@@ -140,6 +140,7 @@ import BuildingHeatChart from '../components/BuildingHeatChart.vue';
 import PrintBox from '../components/PrintBox.vue';
 import { useGlobalStore } from '../stores/globalStore'; // Import global store for current level
 import { usePropsStore } from '../stores/propsStore';
+import { useToggleStore } from '../stores/toggleStore';
 import Tree from '../services/tree';
 import Featurepicker from '../services/featurepicker';
 import Geocoding from '../components/Geocoding.vue';
@@ -163,6 +164,7 @@ export default {
 	setup() {
 		const globalStore = useGlobalStore();
 		const propsStore = usePropsStore();
+    const toggleStore = useToggleStore();
 		const panelVisible = ref( true );
 		const currentLevel = computed( () => globalStore.level );
     const currentView = computed( () => globalStore.view );
@@ -182,7 +184,6 @@ export default {
       const treeService = new Tree();
 			featurepicker.loadPostalCode();
 			toggleStore.showTrees && treeService.loadTrees();
-			eventBus.emit( 'hideBuilding' );
 		};
 
 		return {

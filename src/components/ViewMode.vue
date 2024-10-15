@@ -98,7 +98,6 @@ export default {
       toggleStore.reset();
       toggleStore.setHelsinkiView(false);
       await dataSourceService.removeDataSourcesAndEntities();
-      await dataSourceService.removeDataSourcesByNamePrefix('Buildings');
       await dataSourceService.loadGeoJsonDataSource(
         0.2,
         './assets/data/hsy_po.json',
@@ -121,7 +120,6 @@ export default {
       toggleStore.setCapitalRegionCold(false);
       store.setView('helsinki');
       await dataSourceService.removeDataSourcesAndEntities();
-      await dataSourceService.removeDataSourcesByNamePrefix('Buildings');
       await dataSourceService.loadGeoJsonDataSource(
         0.2,
         './assets/data/hki_po_clipped.json',
