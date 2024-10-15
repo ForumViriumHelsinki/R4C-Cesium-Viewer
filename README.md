@@ -27,8 +27,6 @@ The application should now be running at [http://localhost:5173](http://localhos
 docker-compose up -d --build --force-recreate
 ```
 
-The build has been only tested and should only work on Ubuntu server with nginx. With different setup the Dockerfile needs to be updated
-
 ## Running tests
 
 Use Playwright to run tests
@@ -37,13 +35,9 @@ Use Playwright to run tests
 npx playwright test
 ```
 
-Run tests with an interactive user interface
-
-```
-npx playwright test --ui
-
 ## Skaffold
 
 ```
 skaffold delete
 docker system --prune --all
+```
