@@ -1,6 +1,6 @@
 # backend/Dockerfile
 # Use a specific version of Node.js as the base image
-FROM node:14
+FROM node:21-alpine
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
@@ -15,7 +15,7 @@ RUN npm install
 COPY . .
 
 # The port the app runs on
-EXPOSE 3000
+EXPOSE 80
 
 # The command to run the app
 CMD ["node", "src/server.js"]
