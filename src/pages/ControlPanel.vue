@@ -15,17 +15,41 @@
         >
           <v-list dense>
             <v-list-item-group>
-                <v-list-item class="pa-0 ma-0">
-                  <v-list-item-content class="pa-0 ma-0">
-                    <v-btn v-if="currentLevel === 'building' " icon @click="returnToPostalCode" class="uiButton" style="color: red; float:right; cursor: pointer;"> 
-                      <v-icon>mdi-arrow-left</v-icon>
-                    </v-btn>
+              <v-list-item class="pa-0 ma-0">
+                <v-list-item-content class="pa-0 ma-0">
+                  <v-btn
+                    v-if="currentLevel === 'building'"
+                    icon
+                    @click="returnToPostalCode"
+                    class="uiButton"
+                    style="color: red; float:right; cursor: pointer;"
+                  >
+                    <v-icon>mdi-arrow-left</v-icon>
+                  </v-btn>
 
-                    <v-btn icon @click="reset" class="uiButton" style="color: red; float:right; cursor: pointer;">
-                      <v-icon>mdi-refresh</v-icon>
-                    </v-btn>
-                  </v-list-item-content>                
+                  <!-- Reset Button -->
+                  <v-btn
+                    icon
+                    @click="reset"
+                    class="uiButton"
+                    style="color: red; float:right; cursor: pointer;"
+                  >
+                    <v-icon>mdi-refresh</v-icon>
+                  </v-btn>
+
+                  <!-- Compass Button -->
+                  <v-btn
+                    v-if="currentLevel !== 'start'"
+                    icon
+                    @click="rotateCamera"
+                    class="uiButton"
+                    style="color: blue; float:right; cursor: pointer;"
+                  >
+                    <v-icon>mdi-compass</v-icon>
+                  </v-btn>
+                </v-list-item-content>
               </v-list-item>
+              
               <v-list-item class="pa-0 ma-0">
                 <v-list-item-content class="pa-0 ma-0">
                   <v-list-item-title>View Mode</v-list-item-title>
@@ -143,6 +167,7 @@ import { usePropsStore } from '../stores/propsStore';
 import { useToggleStore } from '../stores/toggleStore';
 import Tree from '../services/tree';
 import Featurepicker from '../services/featurepicker';
+import Camera from '../services/camera';
 import Geocoding from '../components/Geocoding.vue';
 
 export default {
@@ -186,12 +211,19 @@ export default {
 			toggleStore.showTrees && treeService.loadTrees();
 		};
 
+        // Function to rotate the Cesium camera
+    const rotateCamera = () => {
+      const camera = new Camera();
+      camera.rotate180Degrees();
+    };
+
 		return {
 			panelVisible,
 			currentLevel,
       currentView,
 			heatHistogramData,
       scatterPlotEntities,
+      rotateCamera,
       togglePanel,
       reset,
       returnToPostalCode

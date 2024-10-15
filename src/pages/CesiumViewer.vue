@@ -21,7 +21,8 @@ import * as Cesium from 'cesium';
 import 'cesium/Source/Widgets/widgets.css';
 import Datasource from '../services/datasource.js'; 
 import WMS from '../services/wms.js'; 
-import Featurepicker from '../services/featurepicker.js'; 
+import Featurepicker from '../services/featurepicker.js';
+import Camera from '../services/camera.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
@@ -65,20 +66,15 @@ export default {
 				homeButton: false,
 			} );
 
+			store.setCesiumViewer( viewer.value );
+
 			viewer.value.imageryLayers.add(
 				new WMS().createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
 			);
 
-			viewer.value.camera.setView( {
-				destination: Cesium.Cartesian3.fromDegrees( 24.931745, 60.190464, 35000 ),
-				orientation: {
-					heading: Cesium.Math.toRadians( 0.0 ),
-					pitch: Cesium.Math.toRadians( -85.0 ),
-					roll: 0.0,
-				},
-			} );
+			const camera = new Camera();
+			camera.init();
 
-			store.setCesiumViewer( viewer.value );
 			addPostalCodes();
 			addFeaturePicker();
 			addAttribution();

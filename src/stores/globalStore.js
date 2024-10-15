@@ -18,6 +18,7 @@ export const useGlobalStore = defineStore( 'global', {
 		buildingAddress: null,
 		pickedEntity: null,
 		isLoading: false,
+		isCameraRotated: false,
 	} ),
 	actions: {
 		setIsLoading( isLoading ) {
@@ -55,6 +56,9 @@ export const useGlobalStore = defineStore( 'global', {
 		},
 		setPickedEntity( picked ) {
 			this.pickedEntity = picked;
-		},		
+		},
+    	toggleCameraRotation() {
+      		this.isCameraRotated = !this.isCameraRotated;
+   	 	},					
 	},
 } );
