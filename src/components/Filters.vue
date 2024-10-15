@@ -52,7 +52,6 @@ export default {
         toggleStore.setHideNonSote(hideNonSote.value);
         toggleStore.setHideNewBuildings(hideNewBuildings.value);
         toggleStore.setHideLow(hideLow.value);
-
         const buildingsDataSource = globalStore?.cesiumViewer?.dataSources?.getByName(`Buildings ${globalStore.postalcode}`)[0];
         if (buildingsDataSource) {
             if (hideNonSote.value || hideNewBuildings.value || hideLow.value) {

@@ -93,7 +93,6 @@ export default class GeoJSONDataSource {
 	}
 
 	async addDataSourceWithPolygonFix( data, name ) {
-
 		return new Promise( ( resolve ) => {
 			Cesium.GeoJsonDataSource.load( data, {
 				stroke: Cesium.Color.BLACK,
@@ -101,7 +100,9 @@ export default class GeoJSONDataSource {
 				strokeWidth: 3,
 				clampToGround: true,
 			} ).then( ( data ) => {
-          
+
+				// remove previous datasource with same name
+		  		this.removeDataSourcesByNamePrefix( name );
 				data.name = name;
 
 				for ( let i = 0; i < data.entities.values.length; i++ ) {

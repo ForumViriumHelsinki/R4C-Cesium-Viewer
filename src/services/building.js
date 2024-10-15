@@ -264,8 +264,6 @@ export default class Building {
 
 	soteBuildings( entity ) {
 
-		console.log("this.toggleStore.helsinkiView", this.toggleStore.helsinkiView)
-
 		const kayttotark = this.toggleStore.helsinkiView
     		? entity._properties?._c_kayttark?._value ? Number( entity._properties.c_kayttark._value ) : null
     		: entity._properties?._kayttarks?._value;
@@ -273,9 +271,7 @@ export default class Building {
 		entity.show = this.toggleStore.helsinkiView
     		? kayttotark && ( [ 511, 131 ].includes( kayttotark ) || ( kayttotark > 210 && kayttotark < 240 ) )
     		: kayttotark === 'Yleinen rakennus';
-
-		console.log("show", entity);	
-		console.log("show", entity.show);	
+	
 	}
 
 	lowBuildings( entity ) {

@@ -75,7 +75,7 @@ export default class Urbanheat {
 		try {
 			const response = await fetch( 'https://geo.fvh.fi/r4c/collections/urban_heat_building/items?f=json&limit=2000&postinumero=' + postcode );
 			const urbanheat = await response.json();
-    
+
 			for ( let i = 0; i < data.features.length; i++ ) {
 				let feature = data.features[ i ];
 				setAttributesFromApiToBuilding( feature.properties, urbanheat.features );
