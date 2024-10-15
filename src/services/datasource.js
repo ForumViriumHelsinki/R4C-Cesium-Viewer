@@ -197,7 +197,7 @@ export default class GeoJSONDataSource {
  * Removes the data source by name from the Cesium viewer
  * 
  */
-	removeDataSourceByName( name ) {
+	async removeDataSourceByName( name ) {
 		// Find the data source named 'MajorDistricts' in the viewer
 		const majorDistrictsDataSource = this.getDataSourceByName( name );
 

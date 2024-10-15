@@ -10,7 +10,9 @@
         />
         Capital Region Heat
       </label>
-      <label class="radio-label">
+
+      <!-- Conditional rendering for Helsinki Heat -->
+      <label class="radio-label" v-if="showHelsinkiHeat">
         <input 
           type="radio" 
           v-model="activeViewMode" 
@@ -19,6 +21,7 @@
         />
         Helsinki Heat
       </label>      
+
       <label class="radio-label">
         <input 
           type="radio" 
@@ -28,6 +31,7 @@
         />
         Statistical Grid
       </label>
+
       <label class="radio-label">
         <input 
           type="radio" 
@@ -42,7 +46,7 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import Datasource from '../services/datasource.js';
@@ -78,7 +82,6 @@ export default {
         case 'helsinkiHeat':
           helsinkiHeat();
           break;  
-        // Additional cases if necessary
         default:
           break;
       }
@@ -86,45 +89,46 @@ export default {
 
     const toggleCold = async () => {
       const checked = activeViewMode.value === 'capitalRegionCold';
-      toggleStore.setCapitalRegionCold( checked );
+      toggleStore.setCapitalRegionCold(checked);
       setCapitalRegion();
     };
 
     const setCapitalRegion = async () => {       
-        store.setView('capitalRegion');
-        toggleStore.reset();
-        toggleStore.setHelsinkiView( false );
-        await dataSourceService.removeDataSourcesAndEntities();
-			  await dataSourceService.loadGeoJsonDataSource(
-				  0.2,
-				  './assets/data/hsy_po.json',
-				  'PostCodes'
-			  ); 
+      store.setView('capitalRegion');
+      toggleStore.reset();
+      toggleStore.setHelsinkiView(false);
+      await dataSourceService.removeDataSourcesAndEntities();
+      await dataSourceService.removeDataSourcesByNamePrefix('Buildings');
+      await dataSourceService.loadGeoJsonDataSource(
+        0.2,
+        './assets/data/hsy_po.json',
+        'PostCodes'
+      ); 
 
-        store.postalcode && featurePicker.loadPostalCode();  
-    }
-    
+      store.postalcode && featurePicker.loadPostalCode();  
+    };
+
     const capitalRegion = async () => {
       const checked = activeViewMode.value === 'capitalRegionView';
-      toggleStore.setCapitalRegionCold( !checked );
+      toggleStore.setCapitalRegionCold(!checked);
       setCapitalRegion();
     };
 
     const helsinkiHeat = async () => {
-        const checked = activeViewMode.value === 'helsinkiHeat';
-        toggleStore.reset();
-        toggleStore.setHelsinkiView( checked );
-        toggleStore.setCapitalRegionCold( false );
-        store.setView( 'helsinki' );
-        await dataSourceService.removeDataSourcesAndEntities();
-        await dataSourceService.loadGeoJsonDataSource(
-            0.2,
-            './assets/data/hki_po_clipped.json',
-            'PostCodes'
-        );
+      const checked = activeViewMode.value === 'helsinkiHeat';
+      toggleStore.reset();
+      toggleStore.setHelsinkiView(checked);
+      toggleStore.setCapitalRegionCold(false);
+      store.setView('helsinki');
+      await dataSourceService.removeDataSourcesAndEntities();
+      await dataSourceService.removeDataSourcesByNamePrefix('Buildings');
+      await dataSourceService.loadGeoJsonDataSource(
+        0.2,
+        './assets/data/hki_po_clipped.json',
+        'PostCodes'
+      );
 
-        store.postalcode && featurePicker.loadPostalCode();  
-
+      store.postalcode && featurePicker.loadPostalCode(); 
     };
 
     const gridView = () => {
@@ -142,9 +146,16 @@ export default {
       // Reset logic if needed
     };
 
+    // Computed property to control the visibility of the Helsinki Heat option
+    const showHelsinkiHeat = computed(() => {
+      const postalCode = Number(store.postalcode);
+      return postalCode === null || (postalCode >= 0 && postalCode <= 1000);
+    });
+
     return {
       activeViewMode,
       onToggleChange,
+      showHelsinkiHeat, // Add this to expose the computed property to the template
     };
   },
 };
