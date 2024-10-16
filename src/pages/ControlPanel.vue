@@ -3,6 +3,7 @@
     <v-btn icon @click="togglePanel" class="toggle-btn">
       <v-icon>{{ panelVisible ? 'mdi-menu-open' : 'mdi-menu' }}</v-icon>
     </v-btn>
+
     <v-app>
       <div>
         <v-navigation-drawer
@@ -17,36 +18,54 @@
             <v-list-item-group>
               <v-list-item class="pa-0 ma-0">
                 <v-list-item-content class="pa-0 ma-0">
-                  <v-btn
-                    v-if="currentLevel === 'building'"
-                    icon
-                    @click="returnToPostalCode"
-                    class="uiButton"
-                    style="color: red; float:right; cursor: pointer;"
-                  >
-                    <v-icon>mdi-arrow-left</v-icon>
-                  </v-btn>
 
-                  <!-- Reset Button -->
-                  <v-btn
-                    icon
-                    @click="reset"
-                    class="uiButton"
-                    style="color: red; float:right; cursor: pointer;"
-                  >
-                    <v-icon>mdi-refresh</v-icon>
-                  </v-btn>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-if="currentLevel === 'building'"
+                        icon
+                        @click="returnToPostalCode"
+                        class="uiButton"
+                        style="color: red; float:right; cursor: pointer;"
+                        v-bind="props"
+                      >
+                        <v-icon>mdi-arrow-left</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Return to postal code level</span>
+                  </v-tooltip>
 
-                  <!-- Compass Button -->
-                  <v-btn
-                    v-if="currentLevel !== 'start'"
-                    icon
-                    @click="rotateCamera"
-                    class="uiButton"
-                    style="color: blue; float:right; cursor: pointer;"
-                  >
-                    <v-icon>mdi-compass</v-icon>
-                  </v-btn>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        icon
+                        @click="reset"
+                        class="uiButton"
+                        style="color: red; float:right; cursor: pointer;"
+                        v-bind="props"
+                      >
+                        <v-icon>mdi-refresh</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Reset application</span>
+                  </v-tooltip>
+
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-if="currentLevel !== 'start'"
+                        icon
+                        @click="rotateCamera"
+                        class="uiButton"
+                        style="color: blue; float:right; cursor: pointer;"
+                        v-bind="props"
+                      >
+                        <v-icon>mdi-compass</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Rotate camera 180 degrees</span>
+                  </v-tooltip>
+
                 </v-list-item-content>
               </v-list-item>
               
