@@ -1,6 +1,5 @@
 <template>
 
-<div id="canvasScalerDiv">
   	<CesiumViewer />
 	<GridView v-if="view === 'grid'" />
 
@@ -10,7 +9,6 @@
 	<img src="/public/assets/images/fvh-1_musta.png" id="logoFVH" alt="Forum Virium Helsinki" />
   </div>
   
-  </div>
 </template>
 
 <script setup>
@@ -53,11 +51,6 @@ const view = computed( () => globalStore.view );
     z-index: 1000;
     height: 30px;
 	float: right;
-}
-
-#canvasScalerDiv {
-	width: 100%;
-	height: 100%;
 }
 
 #app {

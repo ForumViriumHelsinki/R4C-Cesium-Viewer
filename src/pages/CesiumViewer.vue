@@ -8,10 +8,13 @@
 
     <!-- Loading Component -->
     <Loading v-if="store.isLoading" />
-  	<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
 
     <!-- Disclaimer Popup -->
     <DisclaimerPopup class="disclaimer-popup" />
+
+    <!-- Flood Component will be rendered here when toggled -->
+	<Floods v-if="floodsEnabled" />   <!-- Render Floods component here -->
+
   </v-container>
 </template>
 
@@ -27,27 +30,33 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import ControlPanel from './ControlPanel.vue';
 import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
+import Floods from '../components/Flood.vue';
 
 export default {
 	components: {
 		DisclaimerPopup,
 		ControlPanel,
 		BuildingInformation,
-		Loading
+		Loading,
+		Floods,
 	},
 	setup() {
 		const store = useGlobalStore();
 		const propsStore = usePropsStore();
+		const toggleStore = useToggleStore();  // Access the toggle store
 		const socioEconomicsStore = useSocioEconomicsStore();
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
 
+    	// Computed value to track flood layer toggle from toggleStore
+    	const floodsEnabled = computed(() => toggleStore.floods)
 		const viewer = ref( null );
 		const view = computed( () => store.view );
 
@@ -120,9 +129,11 @@ export default {
 
 		return {
 			store,
+			toggleStore,
 			buildingStore,
 			viewer,
 			view,
+			floodsEnabled,  // Expose this variable to toggle the Floods component visibility
 		};
 	},
 };
