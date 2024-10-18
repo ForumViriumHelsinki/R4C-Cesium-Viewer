@@ -40,7 +40,6 @@ export default {
 		ControlPanel,
 		BuildingInformation,
 		Loading,
-		Floods,
 	},
 	setup() {
 		const store = useGlobalStore();
@@ -50,8 +49,6 @@ export default {
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
 
-		// Computed value to track flood layer toggle from toggleStore
-		const floodsEnabled = computed( () => toggleStore.floods )
 		const viewer = ref(null);
 		const view = computed( () => store.view );
 
@@ -126,8 +123,7 @@ export default {
 			toggleStore,
 			buildingStore,
 			viewer,
-			view,
-			floodsEnabled,  // Expose this variable to toggle the Floods component visibility
+			view
 		};
 	},
 };
