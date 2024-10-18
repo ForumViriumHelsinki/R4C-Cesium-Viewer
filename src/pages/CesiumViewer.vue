@@ -9,9 +9,7 @@
 
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
-
-    	<!-- Flood Component will be rendered here when toggled -->
-    	<Floods v-if="floodsEnabled" />   <!-- Render Floods component here -->
+  		<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
 		
 	</div>
 </template>
@@ -35,7 +33,6 @@ import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import ControlPanel from './ControlPanel.vue';
 import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
-import Floods from '../components/Flood.vue';
 
 export default {
 	components: {
