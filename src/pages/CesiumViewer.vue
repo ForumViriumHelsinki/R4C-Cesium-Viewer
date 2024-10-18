@@ -9,7 +9,6 @@
 
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
-  		<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
 
     	<!-- Flood Component will be rendered here when toggled -->
     	<Floods v-if="floodsEnabled" />   <!-- Render Floods component here -->

@@ -34,15 +34,6 @@
       <label for="landCover" class="label">HSY Land Cover</label>
     </div>
 
-    <!-- Floods Toggle -->
-    <div class="switch-container">
-      <label class="switch">
-        <input type="checkbox" v-model="floods" @change="toggleFloods" />
-        <span class="slider round"></span>
-      </label>
-      <label for="floods" class="label">Flood data</label>
-    </div>
-
   </div>
 </template>
 
@@ -66,7 +57,6 @@ export default {
     const showOtherNature = ref(toggleStore.showOtherNature);
     const showTrees = ref(toggleStore.showTrees);
     const landCover = ref(toggleStore.landCover);
-    const floods = ref(toggleStore.floods);
 
     const helsinkiView = computed( () => toggleStore.helsinkiView );
     const postalCode = computed( () => store.postalcode );
