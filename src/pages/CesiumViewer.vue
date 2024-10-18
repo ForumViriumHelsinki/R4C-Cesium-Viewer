@@ -1,21 +1,20 @@
 <template>
-  <v-container fluid class="d-flex flex-column pa-0 ma-0">
     <!-- Cesium Container -->
-    <div id="cesiumContainer"></div>
+    <div id="cesiumContainer">
 
-    <!-- Control Panel with event listener -->
-    <ControlPanel v-if="store.view !== 'grid'" />
+		    <!-- Control Panel with event listener -->
+		<ControlPanel v-if="store.view !== 'grid'" />
+	    <!-- Loading Component -->
+    	<Loading v-if="store.isLoading" />
 
-    <!-- Loading Component -->
-    <Loading v-if="store.isLoading" />
+    	<!-- Disclaimer Popup -->
+    	<DisclaimerPopup class="disclaimer-popup" />
+  		<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
 
-    <!-- Disclaimer Popup -->
-    <DisclaimerPopup class="disclaimer-popup" />
-
-    <!-- Flood Component will be rendered here when toggled -->
-	<Floods v-if="floodsEnabled" />   <!-- Render Floods component here -->
-
-  </v-container>
+    	<!-- Flood Component will be rendered here when toggled -->
+    	<Floods v-if="floodsEnabled" />   <!-- Render Floods component here -->
+		
+	</div>
 </template>
 
 <script>
@@ -55,13 +54,13 @@ export default {
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
 
-    	// Computed value to track flood layer toggle from toggleStore
-    	const floodsEnabled = computed(() => toggleStore.floods)
-		const viewer = ref( null );
+		// Computed value to track flood layer toggle from toggleStore
+		const floodsEnabled = computed( () => toggleStore.floods )
+		const viewer = ref(null);
 		const view = computed( () => store.view );
 
 		const initViewer = () => {
-			viewer.value = new Cesium.Viewer( 'cesiumContainer', {
+			viewer.value = new Cesium.Viewer('cesiumContainer', {
 				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
 				animation: false,
 				fullscreenButton: false,
@@ -73,9 +72,9 @@ export default {
 				baseLayerPicker: false,
 				infoBox: false,
 				homeButton: false,
-			} );
+			});
 
-			store.setCesiumViewer( viewer.value );
+			store.setCesiumViewer(viewer.value);
 
 			viewer.value.imageryLayers.add(
 				new WMS().createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
@@ -108,24 +107,23 @@ export default {
 				'PostCodes'
 			);
 
-			const dataSource = await dataSourceService.getDataSourceByName( 'PostCodes' );
-			propsStore.setPostalCodeData( dataSource );
-
+			const dataSource = await dataSourceService.getDataSourceByName('PostCodes');
+			propsStore.setPostalCodeData(dataSource);
 		};
 
 		const addFeaturePicker = () => {
-			const cesiumContainer = document.getElementById( 'cesiumContainer' );
+			const cesiumContainer = document.getElementById('cesiumContainer');
 			const featurepicker = new Featurepicker();
-			cesiumContainer.addEventListener( 'click', ( event ) => {
-				featurepicker.processClick( event );
-			} );
+			cesiumContainer.addEventListener('click', (event) => {
+				featurepicker.processClick(event);
+			});
 		};
 
-		onMounted( () => {
+		onMounted(() => {
 			initViewer();
 			socioEconomicsStore.loadPaavo();
 			heatExposureStore.loadHeatExposure();
-		} );
+		});
 
 		return {
 			store,
@@ -140,8 +138,9 @@ export default {
 </script>
 
 <style scoped>
+
 #cesiumContainer {
-  width: 100%;
-  height: 100%;
+	position: relative;
 }
+
 </style>

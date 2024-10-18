@@ -1,8 +1,8 @@
 <template>
-
+  <div>
   	<CesiumViewer />
 	<GridView v-if="view === 'grid'" />
-
+  </div>
   <!-- Add Logo -->		
 	<div class="logoHolder">	
 	<img src="/public/assets/images/regions4climate-black.png" id="logoR4C" alt="Regions4Climate" />

@@ -1,11 +1,10 @@
 <template>
-  <div>
+  <div class="control-panel-main">
     <v-btn icon @click="togglePanel" class="toggle-btn">
       <v-icon>{{ panelVisible ? 'mdi-menu-open' : 'mdi-menu' }}</v-icon>
     </v-btn>
 
     <v-app>
-      <div>
         <v-navigation-drawer
           v-model="panelVisible"
           location="right"
@@ -162,7 +161,6 @@
             </v-list-item-group>
           </v-list>
         </v-navigation-drawer>
-      </div>
     </v-app>
   </div>
 </template>
@@ -321,5 +319,12 @@ input:checked + .slider {
   margin-left: 10px;
   font-size: 14px;
   font-family: Arial, sans-serif;
+}
+
+.control-panel-main { /* Or the appropriate class/ID for your ControlPanel */
+  position: absolute; 
+  top: 10px; /* Adjust as needed */
+  right: 10px; /* Adjust as needed */
+  /* ... other styles ... */
 }
 </style>
