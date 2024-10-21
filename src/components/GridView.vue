@@ -49,7 +49,6 @@
     <BuildingGridChart />
 	<SosEco250mGrid />
 	<SurveyScatterPlot />
-	<VulnerabilityChart/>
 
 </template>
   

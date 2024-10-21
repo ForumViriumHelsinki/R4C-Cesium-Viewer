@@ -11,7 +11,7 @@
           app
           temporary
           class="control-panel"
-          :width="500"
+          :width="drawerWidth"
         >
           <v-list dense>
             <v-list-item-group>
@@ -234,7 +234,13 @@ export default {
       camera.rotate180Degrees();
     };
 
+    // Computed property to calculate drawer width in percentage
+    const drawerWidth = computed(() => {
+      return window.innerWidth * 0.375; // 37.5% of the window width
+    });
+
 		return {
+      drawerWidth,
 			panelVisible,
 			currentLevel,
       currentView,

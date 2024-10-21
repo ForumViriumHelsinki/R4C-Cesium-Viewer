@@ -142,13 +142,6 @@ export default {
 	} 
 
 	/**
-    * This function shows or hides flood data based on the toggle button state
-    */
-  const toggleFloods = () => {
-    toggleStore.setFloods(floods.value); // Store the toggle state
-  };
-
-	/**
     * This function handles the toggle event for showing or hiding the nature areas layer on the map.
     *
     */
@@ -199,8 +192,6 @@ export default {
     });
 
     return {
-      floods,
-      toggleFloods,
       showVegetation,
       showOtherNature,
       showTrees,
