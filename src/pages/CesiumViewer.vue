@@ -2,8 +2,11 @@
     <!-- Cesium Container -->
     <div id="cesiumContainer">
 
+		<div class="control-panel">
 		    <!-- Control Panel with event listener -->
-		<ControlPanel v-if="store.view !== 'grid'" />
+			<ControlPanel v-if="store.view !== 'grid'" />
+		
+		</div>
 	    <!-- Loading Component -->
     	<Loading v-if="store.isLoading" />
 
@@ -108,8 +111,11 @@ export default {
 			const cesiumContainer = document.getElementById('cesiumContainer');
 			const featurepicker = new Featurepicker();
 			cesiumContainer.addEventListener('click', (event) => {
-				featurepicker.processClick(event);
-			});
+  				const controlPanelElement = document.querySelector('.control-panel');
+  				const isClickOnControlPanel = controlPanelElement.contains(event.target);
+				!isClickOnControlPanel && featurepicker.processClick(event);
+  						
+  			});
 		};
 
 		onMounted(() => {

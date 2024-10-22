@@ -19,7 +19,7 @@ export const useGlobalStore = defineStore( 'global', {
 		pickedEntity: null,
 		isLoading: false,
 		isCameraRotated: false,
-		screenWidth: false,
+		navbarWidth: Math.max( window.innerWidth * 0.375, 400 ),
 	} ),
 	actions: {
 		setIsLoading( isLoading ) {

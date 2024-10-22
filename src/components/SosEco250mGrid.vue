@@ -108,44 +108,141 @@ const loadGrid = async () => {
 	);
 };
 
-// Function to update grid colors based on the selected index
-const updateGridColors = async ( selectedIndex ) => {
-	const dataSourceService = new DataSource();
-	const dataSource = dataSourceService.getDataSourceByName( '250m_grid' );
-	if ( !dataSource ) return;
+const handleMissingValues = (entity, selectedIndex) => {
+    const isMissingValues = entity.properties['missing_values']?.getValue();
+    if (isMissingValues && selectedIndex !== 'flood_exposure' && selectedIndex !== 'avgheatexposure' && selectedIndex !== 'green') {
+        entity.polygon.material = Cesium.Color.fromCssColorString('#A9A9A9').withAlpha(0.8);
+    }
+    return isMissingValues;
+};
 
-	const entities = dataSource.entities.values;
-	const dataAvailable = isDataAvailable( selectedIndex );
-
-	for ( const entity of entities ) {
-		const isMissingValues = entity.properties['missing_values']?.getValue();
-
-		if ( isMissingValues && selectedIndex !== 'flood_exposure' && selectedIndex !== 'avgheatexposure' && selectedIndex !== 'green' ) {
-			entity.polygon.material = Cesium.Color.fromCssColorString( '#A9A9A9' ).withAlpha( 0.8 );
-		} else {
-			if ( selectedIndex === 'avgheatexposure' ) {
-				// Custom color scheme for avgheatexposure
-				const avgHeatExposureValue = entity.properties[selectedIndex]?.getValue();
-				if ( avgHeatExposureValue !== undefined ) {
-					entity.polygon.material = new Cesium.Color(
-						1, // Red component fixed at 1
-						1 - avgHeatExposureValue, // Green component decreases as avgheatexposure increases
-						0, // Blue component fixed at 0
-						avgHeatExposureValue // Alpha (opacity) is set to avgheatexposure value
-					);
-				} else {
-					entity.polygon.material = Cesium.Color.WHITE.withAlpha( 0.8 ); // Default color if no value
-				}
-			} else {
-				// Generic color assignment for other indices
-				const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
-				const color = indexValue
-					? getColorForIndex( indexValue, selectedIndex ) 
-					: Cesium.Color.WHITE.withAlpha( 0.8 );
-				entity.polygon.material = color;
-			}
-		}
+const handleAvgHeatExposure = (entity, selectedIndex) => {
+	if ( selectedIndex === 'combined_avgheatexposure' ) {
+		handleCombinedAvgHeatExposure( entity );
+	} else {
+    	const avgHeatExposureValue = entity.properties['avgheatexposure']?.getValue();
+    	if (avgHeatExposureValue !== undefined) {
+        	entity.polygon.material = new Cesium.Color(
+            	1,
+            	1 - avgHeatExposureValue,
+            	0,
+            	avgHeatExposureValue
+        	);
+    	} 	
 	}
+};
+
+const handleCombinedAvgHeatExposure = (entity) => {
+    const avgHeatExposureValue = entity.properties['avgheatexposure']?.getValue();
+    if (avgHeatExposureValue !== undefined) {
+        entity.polygon.material = new Cesium.Color(
+            1,
+            1 - avgHeatExposureValue,
+            0,
+            avgHeatExposureValue
+        );
+        const heat_index = entity.properties['heat_index']?.getValue();
+        if (heat_index !== undefined) {
+            entity.polygon.extrudedHeight = heat_index * 250;
+        }
+    }
+};
+
+const handleCombinedHeatIndexAndAvgHeatExposure = (entity) => {
+    const avgHeatExposureValue = entity.properties['avgheatexposure']?.getValue();
+    const heatIndexValue = entity.properties['heat_index']?.getValue();
+
+    if (avgHeatExposureValue !== undefined && heatIndexValue !== undefined && heatIndexValue !== null) {
+        entity.polygon.material = getColorForIndex(heatIndexValue, 'heat_index');
+        entity.polygon.extrudedHeight = avgHeatExposureValue * 250;
+    } else {
+        entity.polygon.material = Cesium.Color.WHITE.withAlpha(0.8);
+    }
+};
+
+const handleCombinedIndices = (entity, selectedIndex) => {
+    const heatIndexValue = entity.properties['heat_index']?.getValue();
+    const floodIndexValue = entity.properties['flood_index']?.getValue();
+
+    if (heatIndexValue !== undefined && floodIndexValue !== undefined && heatIndexValue !== null && floodIndexValue !== null) {
+        if (selectedIndex === 'combined_heat_flood') {
+            entity.polygon.material = getColorForIndex(heatIndexValue, 'heat_index');
+            entity.polygon.extrudedHeight = floodIndexValue * 250;
+        } else {
+            entity.polygon.material = getColorForIndex(floodIndexValue, 'flood_index');
+            entity.polygon.extrudedHeight = heatIndexValue * 250;
+        }
+    } else {
+        entity.polygon.material = Cesium.Color.WHITE.withAlpha(0.8);
+    }
+};
+
+const handleOtherIndices = (entity, selectedIndex) => {
+    const dataAvailable = isDataAvailable(selectedIndex);
+    const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
+    const color = indexValue
+        ? getColorForIndex(indexValue, selectedIndex)
+        : Cesium.Color.WHITE.withAlpha(0.8);
+    entity.polygon.material = color;
+};
+
+const handleCombinedHeatFloodGreen = (entity) => {
+    const heatIndexValue = entity.properties['heat_index']?.getValue();
+    const floodIndexValue = entity.properties['flood_index']?.getValue();
+    const greenSpaceValue = entity.properties['green']?.getValue();
+
+
+    if (heatIndexValue !== null && floodIndexValue !== null && greenSpaceValue !== null 
+        && heatIndexValue !== undefined && floodIndexValue !== undefined 
+        && greenSpaceValue !== undefined) {
+	    // Set the polygon color based on the heat index
+        entity.polygon.material = createStripedMaterial(heatIndexValue, floodIndexValue);
+        
+        // Extrude based on the green space index
+        entity.polygon.extrudedHeight = greenSpaceValue * 250;
+    } 
+};
+
+const updateGridColors = async (selectedIndex) => {
+    const dataSourceService = new DataSource();
+    const dataSource = dataSourceService.getDataSourceByName('250m_grid');
+    if (!dataSource) return;
+
+    const entities = dataSource.entities.values;
+
+    for (const entity of entities) {
+		entity.polygon.extrudedHeight = 0; 
+		entity.polygon.material = Cesium.Color.WHITE.withAlpha(0.8);  // Default color for missing data
+
+        if (handleMissingValues(entity, selectedIndex)) continue;
+
+        if (selectedIndex === 'combined_heat_flood_green') {
+            handleCombinedHeatFloodGreen(entity);  // Handle combined heat, flood, and green space
+        } else if (selectedIndex === 'avgheatexposure') {
+            handleAvgHeatExposure(entity, selectedIndex);
+        } else if (selectedIndex === 'combined_avgheatexposure') {
+            handleCombinedAvgHeatExposure(entity);
+        } else if (selectedIndex === 'combined_heatindex_avgheatexposure') {
+            handleCombinedHeatIndexAndAvgHeatExposure(entity);
+        } else if (selectedIndex === 'combined_heat_flood' || selectedIndex === 'combined_flood_heat') {
+            handleCombinedIndices(entity, selectedIndex);
+        } else {
+            handleOtherIndices(entity, selectedIndex);
+        }
+    }
+};
+
+// Function to create a striped pattern for heat (red) and flood (blue) indices
+const createStripedMaterial = (heatIndex, floodIndex) => {
+    const heatColor = getColorForIndex(heatIndex, 'heat_index');
+    const floodColor = getColorForIndex(floodIndex, 'flood_index');
+
+    return new Cesium.StripeMaterialProperty({
+        evenColor: heatColor,
+        oddColor: floodColor,
+        repeat: 10, // Adjust the repeat value to control stripe thickness
+        orientation: Cesium.StripeOrientation.HORIZONTAL // You can change to VERTICAL if preferred
+    });
 };
 
 // Function to determine the color based on the index value

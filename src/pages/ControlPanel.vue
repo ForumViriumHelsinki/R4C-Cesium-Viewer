@@ -236,7 +236,7 @@ export default {
 
     // Computed property to calculate drawer width in percentage
     const drawerWidth = computed(() => {
-      return window.innerWidth * 0.375; // 37.5% of the window width
+      return globalStore.navbarWidth; // 37.5% of the window width
     });
 
 		return {
@@ -331,6 +331,5 @@ input:checked + .slider {
   position: absolute; 
   top: 10px; /* Adjust as needed */
   right: 10px; /* Adjust as needed */
-  /* ... other styles ... */
 }
 </style>
