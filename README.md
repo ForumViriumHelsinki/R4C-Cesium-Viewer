@@ -2,8 +2,6 @@
 
 R4C user interface Vue3 interface with Vite and Cesium
 
-The user interface is currently running at https://geo.fvh.fi/r4c/M8Na2P0v6z/
-
 ## Installation 
 ```
 npm install

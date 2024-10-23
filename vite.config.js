@@ -3,7 +3,7 @@ import Vue from '@vitejs/plugin-vue';
 import { fileURLToPath, URL } from 'url';
 import cesium from 'vite-plugin-cesium-build';
 
-const base = 'https://geo.fvh.fi/r4c/M8Na2P0v6z/';
+const base = import.meta.env.VITE_BASE;
 
 export default defineConfig( ( { command } ) => {
 	if ( command === 'serve' ) {
