@@ -50,7 +50,7 @@ import { ref, watch, computed } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import Datasource from '../services/datasource.js';
-import { eventBus } from '../services/eventEmitter.js';
+import Populationgrid from '../services/populationgrid.js';
 import FeaturePicker from '../services/featurepicker';
 
 export default {
@@ -134,7 +134,8 @@ export default {
       toggleStore.setGridView(isGridView);
       store.setView(isGridView ? 'grid' : 'capitalRegion');
       if (isGridView) {
-        eventBus.emit('createPopulationGrid');
+        const populationgridService = new Populationgrid();
+			  populationgridService.createPopulationGrid();
       } else {
         reset();
       }

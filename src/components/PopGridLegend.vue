@@ -195,7 +195,7 @@ const selectedIndexDescription = computed( () => {
 #legend {
   position: absolute;
   top: 100px;
-  right: 10px;
+  left: 10px;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 4px;
   padding: 10px;

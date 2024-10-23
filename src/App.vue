@@ -1,7 +1,8 @@
 <template>
   <div>
   	<CesiumViewer />
-	<GridView v-if="view === 'grid'" />
+    <BuildingGridChart />
+	<SosEco250mGrid v-if="view === 'grid'" />	
   </div>
   <!-- Add Logo -->		
 	<div class="logoHolder">	
@@ -13,7 +14,8 @@
 
 <script setup>
 import CesiumViewer from './pages/CesiumViewer.vue';
-import GridView from './components/GridView.vue';
+import BuildingGridChart from './components/BuildingGridChart.vue';
+import SosEco250mGrid from './components/SosEco250mGrid.vue';
 import { useGlobalStore } from './stores/globalStore.js';
 import { computed } from 'vue';
 

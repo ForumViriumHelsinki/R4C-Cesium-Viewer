@@ -4,7 +4,7 @@
 
 		<div class="control-panel">
 		    <!-- Control Panel with event listener -->
-			<ControlPanel v-if="store.view !== 'grid'" />
+			<ControlPanel />
 		
 		</div>
 	    <!-- Loading Component -->

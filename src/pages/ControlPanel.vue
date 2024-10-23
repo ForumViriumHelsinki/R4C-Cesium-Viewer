@@ -76,25 +76,24 @@
                   <ViewMode />
 
                 </v-list-item-content>                
-                <v-list-item-content class="pa-0 ma-0" v-if="currentLevel === 'postalCode'">
+                <v-list-item-content class="pa-0 ma-0" v-if="currentLevel === 'postalCode' || currentView === 'grid' ">
 
                   <!-- The Filters and Layers are now side by side -->
                   <div class="filters-layers-container">
                     <Layers />
-                    <Filters />
+                    <Filters v-if="currentView !== 'grid'"/>
                   </div>
                 </v-list-item-content>
               </v-list-item>
 
               <!-- Add `multiple` prop here to allow multiple panels to stay open -->
               <v-expansion-panels multiple class="pa-0 ma-0">  
-                <template v-if="currentLevel === 'postalCode'">
                   <v-expansion-panel class="pa-0 ma-0" title="HSY Background maps">
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <HSYWMS />
                     </v-expansion-panel-text>
                   </v-expansion-panel>
-                
+                <template v-if="currentLevel === 'postalCode'">
                   <!-- Conditionally render Heat Histogram if data is available -->
                   <v-expansion-panel
                     v-if="heatHistogramData && heatHistogramData.length > 0"
