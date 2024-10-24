@@ -12,7 +12,7 @@
 
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
-  		<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
+  		<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid'" />
 		
 	</div>
 </template>
