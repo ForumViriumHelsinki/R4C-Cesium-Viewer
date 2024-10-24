@@ -1,5 +1,5 @@
 <template>
-  <div v-if="showGrid">
+  <div v-if="grid250m && showGrid">
     <PopGridLegend @onIndexChange="updateGridColors" />
   </div>
   <v-dialog v-model="showPasswordDialog" persistent max-width="400">
@@ -11,22 +11,25 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" @click="checkPassword">Submit</v-btn>
+		<v-btn color="secondary" @click="cancelPassword">Cancel</v-btn> <!-- Cancel Button -->
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import DataSource from '../services/datasource.js';
 import * as Cesium from 'cesium';
-import { eventBus } from '../services/eventEmitter.js';
 import PopGridLegend from './PopGridLegend.vue';
+import { useToggleStore } from '../stores/toggleStore';
 
 // Reactive variables
 const showPasswordDialog = ref( false );
 const enteredPassword = ref( '' );
 const showGrid = ref( false );
+const grid250m = computed( () => toggleStore.grid250m );
+const toggleStore = useToggleStore();
 
 // Access the password from the environment variables
 const correctPassword = import.meta.env.VITE_250_PASSWORD;
@@ -80,19 +83,16 @@ const indexToColorScheme = {
 // Watcher to load or remove grid data source based on `showGrid` state
 watch( showGrid, async ( newValue ) => {
 	if ( newValue ) {
-		await loadGrid();
 		updateGridColors( 'heat_index' ); // Initial color update
-	} else {
-		const dataSourceService = new DataSource();
-		await dataSourceService.removeDataSourcesByNamePrefix( '250m_grid' );
 	}
 } );
 
 // Function to check password and show grid if correct
-const checkPassword = () => {
+const checkPassword = async () => {
 	if ( enteredPassword.value === correctPassword ) {
 		showPasswordDialog.value = false;
 		showGrid.value = true;
+		await loadGrid();
 	} else {
 		console.error( 'Incorrect password' );
 	}
@@ -101,11 +101,14 @@ const checkPassword = () => {
 // Function to load the GeoJSON data source
 const loadGrid = async () => {
 	const dataSourceService = new DataSource();
+	dataSourceService.changeDataSourceShowByName( 'PopulationGrid', false );
 	await dataSourceService.loadGeoJsonDataSource(
 		0.8,
 		'./assets/data/r4c_stats_grid_index.json',
 		'250m_grid'
 	);
+	updateGridColors( 'heat_index' ); // Initial color update
+
 };
 
 const handleMissingValues = (entity, selectedIndex) => {
@@ -255,13 +258,22 @@ const getColorForIndex = ( indexValue, indexType ) => {
 	return Cesium.Color.fromCssColorString( colorScheme[4].color ).withAlpha( 0.8 );
 };
 
-// Event listener to show the password dialog when the event is triggered
-eventBus.on( 'create250mGrid', () => {
-	showPasswordDialog.value = true;
-} );
+// On mount, show the password dialog
+onMounted(() => {
+  showPasswordDialog.value = true;
+});
 
 // Placeholder implementation for checking data availability
 const isDataAvailable = ( selectedIndex ) => {
 	return Object.keys( indexToColorScheme ).includes( selectedIndex );
+};
+
+// Function to cancel the password input and hide the grid
+const cancelPassword = () => {
+  	showPasswordDialog.value = false;
+  	showGrid.value = false; // Ensure the grid is not shown
+  	enteredPassword.value = ''; // Clear the entered password
+  	toggleStore.setGrid250m( false );
+
 };
 </script>

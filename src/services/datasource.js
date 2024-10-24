@@ -15,7 +15,7 @@ export default class GeoJSONDataSource {
 	}
 
 	// Function to hide a data source by name
-	changeDataSourceShowByName( name, show ) {
+	async changeDataSourceShowByName( name, show ) {
 		this.viewer.dataSources._dataSources.forEach( ( dataSource ) => {
 			if ( dataSource.name.startsWith( name ) ) {
 				dataSource.show = show;

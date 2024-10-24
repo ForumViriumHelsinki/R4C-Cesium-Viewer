@@ -83,6 +83,38 @@ export default class Camera {
 
 	}
 
+switchTo3DGrid() {
+
+  if ( this.store.level === 'start' ) {
+	this.flyCamera3D( 24.991745, 60.045, 12000  );
+  } else {
+
+  // Get the current camera and its center coordinates
+  const camera = this.viewer.scene.camera;
+  const centerCartographic = camera.positionCartographic;
+
+  // Get current longitude, latitude, and altitude from the camera's current center position
+  const centerLongitude = Cesium.Math.toDegrees(centerCartographic.longitude);
+  const centerLatitude = Cesium.Math.toDegrees(centerCartographic.latitude);
+  const currentAltitude = centerCartographic.height; // Get current altitude
+
+  // Fly the camera to the current center position, preserving altitude and orientation
+  this.viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(centerLongitude, centerLatitude, currentAltitude), // Use current altitude
+					orientation: {
+						heading: 0.0,
+						pitch: Cesium.Math.toRadians( -35.0 ),
+						roll: 0.0
+					},
+    duration: 1 // Animation duration in seconds
+  });
+
+  this.store.setLevel(null);
+
+  }
+}
+
+
 	flyCamera3D( lat, long , z ) {
 
 		this.viewer.camera.flyTo( {

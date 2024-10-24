@@ -56,6 +56,7 @@ import Landcover from '../services/landcover.js';
 import Tree from '../services/tree.js';
 import Othernature from '../services/othernature.js';
 import Vegetation from '../services/vegetation';
+import Populationgrid from '../services/populationgrid.js';
 
 export default {
   setup() {
@@ -88,24 +89,22 @@ export default {
       { immediate: true }
     );
 
+            // Watch to synchronize landcover state with the store's landCover value
+    watch(
+      () => toggleStore.grid250m,
+      (newVal) => {
+        grid250m.value = newVal;
+      },
+      { immediate: true }
+    );
+
 		/**
     * This function handles the toggle event for activing 250m sos eco grid
     */
-		const activate250mGrid = () => {
+		const activate250mGrid = async () => {
 
-		  toggleStore.setShowVegetation( grid250m.value );
-
-			if ( grid250m.value ) {
-        
-        dataSourceService.changeDataSourceShowByName( 'PopulationGrid', false );
-				eventBus.emit( 'create250mGrid' ); // Trigger the simulation to start
-
-			} else {
-
-				dataSourceService.removeDataSourcesByNamePrefix( '250m_grid' );
-				dataSourceService.changeDataSourceShowByName( 'PopulationGrid', true );
-	
-			}
+		  toggleStore.setGrid250m( grid250m.value );
+      !grid250m.value && (new Populationgrid().createPopulationGrid());
 
 		}
 

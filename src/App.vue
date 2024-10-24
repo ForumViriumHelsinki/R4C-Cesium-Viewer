@@ -2,7 +2,7 @@
   <div>
   	<CesiumViewer />
     <BuildingGridChart />
-	<SosEco250mGrid v-if="view === 'grid'" />	
+	<SosEco250mGrid v-if="grid250m" />	
   </div>
   <!-- Add Logo -->		
 	<div class="logoHolder">	
@@ -16,11 +16,11 @@
 import CesiumViewer from './pages/CesiumViewer.vue';
 import BuildingGridChart from './components/BuildingGridChart.vue';
 import SosEco250mGrid from './components/SosEco250mGrid.vue';
-import { useGlobalStore } from './stores/globalStore.js';
+import { useToggleStore } from './stores/toggleStore.js';
 import { computed } from 'vue';
 
-const globalStore = useGlobalStore();
-const view = computed( () => globalStore.view );
+const toggleStore = useToggleStore();
+const grid250m = computed( () => toggleStore.grid250m );
 
 </script>
 
