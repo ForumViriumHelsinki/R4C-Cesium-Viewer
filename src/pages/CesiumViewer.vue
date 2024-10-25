@@ -1,18 +1,20 @@
 <template>
-  <v-container fluid class="d-flex flex-column pa-0 ma-0">
     <!-- Cesium Container -->
-    <div id="cesiumContainer"></div>
+    <div id="cesiumContainer">
 
-    <!-- Control Panel with event listener -->
-    <ControlPanel v-if="store.view !== 'grid'" />
+		<div class="control-panel">
+		    <!-- Control Panel with event listener -->
+			<ControlPanel />
+		
+		</div>
+	    <!-- Loading Component -->
+    	<Loading v-if="store.isLoading" />
 
-    <!-- Loading Component -->
-    <Loading v-if="store.isLoading" />
-  	<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
-
-    <!-- Disclaimer Popup -->
-    <DisclaimerPopup class="disclaimer-popup" />
-  </v-container>
+    	<!-- Disclaimer Popup -->
+    	<DisclaimerPopup class="disclaimer-popup" />
+  		<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid'" />
+		
+	</div>
 </template>
 
 <script>
@@ -21,11 +23,13 @@ import * as Cesium from 'cesium';
 import 'cesium/Source/Widgets/widgets.css';
 import Datasource from '../services/datasource.js'; 
 import WMS from '../services/wms.js'; 
-import Featurepicker from '../services/featurepicker.js'; 
+import Featurepicker from '../services/featurepicker.js';
+import Camera from '../services/camera.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
@@ -38,20 +42,21 @@ export default {
 		DisclaimerPopup,
 		ControlPanel,
 		BuildingInformation,
-		Loading
+		Loading,
 	},
 	setup() {
 		const store = useGlobalStore();
 		const propsStore = usePropsStore();
+		const toggleStore = useToggleStore();  // Access the toggle store
 		const socioEconomicsStore = useSocioEconomicsStore();
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
 
-		const viewer = ref( null );
+		const viewer = ref(null);
 		const view = computed( () => store.view );
 
 		const initViewer = () => {
-			viewer.value = new Cesium.Viewer( 'cesiumContainer', {
+			viewer.value = new Cesium.Viewer('cesiumContainer', {
 				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
 				animation: false,
 				fullscreenButton: false,
@@ -63,22 +68,17 @@ export default {
 				baseLayerPicker: false,
 				infoBox: false,
 				homeButton: false,
-			} );
+			});
+
+			store.setCesiumViewer(viewer.value);
 
 			viewer.value.imageryLayers.add(
 				new WMS().createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
 			);
 
-			viewer.value.camera.setView( {
-				destination: Cesium.Cartesian3.fromDegrees( 24.931745, 60.190464, 35000 ),
-				orientation: {
-					heading: Cesium.Math.toRadians( 0.0 ),
-					pitch: Cesium.Math.toRadians( -85.0 ),
-					roll: 0.0,
-				},
-			} );
+			const camera = new Camera();
+			camera.init();
 
-			store.setCesiumViewer( viewer.value );
 			addPostalCodes();
 			addFeaturePicker();
 			addAttribution();
@@ -103,38 +103,42 @@ export default {
 				'PostCodes'
 			);
 
-			const dataSource = await dataSourceService.getDataSourceByName( 'PostCodes' );
-			propsStore.setPostalCodeData( dataSource );
-
+			const dataSource = await dataSourceService.getDataSourceByName('PostCodes');
+			propsStore.setPostalCodeData(dataSource);
 		};
 
 		const addFeaturePicker = () => {
-			const cesiumContainer = document.getElementById( 'cesiumContainer' );
+			const cesiumContainer = document.getElementById('cesiumContainer');
 			const featurepicker = new Featurepicker();
-			cesiumContainer.addEventListener( 'click', ( event ) => {
-				featurepicker.processClick( event );
-			} );
+			cesiumContainer.addEventListener('click', (event) => {
+  				const controlPanelElement = document.querySelector('.control-panel');
+  				const isClickOnControlPanel = controlPanelElement.contains(event.target);
+				!isClickOnControlPanel && featurepicker.processClick(event);
+  						
+  			});
 		};
 
-		onMounted( () => {
+		onMounted(() => {
 			initViewer();
 			socioEconomicsStore.loadPaavo();
 			heatExposureStore.loadHeatExposure();
-		} );
+		});
 
 		return {
 			store,
+			toggleStore,
 			buildingStore,
 			viewer,
-			view,
+			view
 		};
 	},
 };
 </script>
 
 <style scoped>
+
 #cesiumContainer {
-  width: 100%;
-  height: 100%;
+	position: relative;
 }
+
 </style>

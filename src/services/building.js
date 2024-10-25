@@ -260,6 +260,27 @@ export default class Building {
 
 		} );
 
+		this.updateHeatHistogramDataAfterFilter( buildingsDataSource.entities._entities._array );
+
+	}
+
+	updateHeatHistogramDataAfterFilter(entities) {
+
+  		// Add the condition to filter only entities with show === true
+  		const visibleEntities = entities.filter( entity => entity.show) ; // Filter visible entities
+
+  		const avg_temp = this.toggleStore.capitalRegionCold
+    		? visibleEntities
+      			.map( entity => ( entity.properties.heat_timeseries?._value || []).find(({ date }) => date === targetDate )?.avg_temp )
+      			.filter( temp => temp !== undefined ) // Filter out undefined values
+    		: this.toggleStore.helsinkiView
+      			? visibleEntities.map( entity => entity.properties._avgheatexposuretobuilding._value )
+      			: visibleEntities.map( entity => entity.properties._avg_temp_c._value );
+
+  		// Update the heat histogram data and emit the event
+  		this.propsStore.setHeatHistogramData( avg_temp );
+  		eventBus.emit('newHeatHistogram');
+
 	}
 
 	soteBuildings( entity ) {
@@ -271,6 +292,7 @@ export default class Building {
 		entity.show = this.toggleStore.helsinkiView
     		? kayttotark && ( [ 511, 131 ].includes( kayttotark ) || ( kayttotark > 210 && kayttotark < 240 ) )
     		: kayttotark === 'Yleinen rakennus';
+	
 	}
 
 	lowBuildings( entity ) {
@@ -293,6 +315,9 @@ export default class Building {
 			buildingsDataSource._entityCollection._entities._array[ i ].show = true;
 
 		}
+
+		this.updateHeatHistogramDataAfterFilter( buildingsDataSource.entities._entities._array );
+
 	}
 
 	highlightBuildingsInViewer( temps ) {

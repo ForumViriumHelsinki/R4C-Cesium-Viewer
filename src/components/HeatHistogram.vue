@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import { onMounted, onBeforeUnmount, nextTick  } from 'vue';
+import { onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as d3 from 'd3'; // Import D3.js
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';

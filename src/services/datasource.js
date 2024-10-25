@@ -15,7 +15,7 @@ export default class GeoJSONDataSource {
 	}
 
 	// Function to hide a data source by name
-	changeDataSourceShowByName( name, show ) {
+	async changeDataSourceShowByName( name, show ) {
 		this.viewer.dataSources._dataSources.forEach( ( dataSource ) => {
 			if ( dataSource.name.startsWith( name ) ) {
 				dataSource.show = show;
@@ -93,7 +93,6 @@ export default class GeoJSONDataSource {
 	}
 
 	async addDataSourceWithPolygonFix( data, name ) {
-
 		return new Promise( ( resolve ) => {
 			Cesium.GeoJsonDataSource.load( data, {
 				stroke: Cesium.Color.BLACK,
@@ -101,7 +100,9 @@ export default class GeoJSONDataSource {
 				strokeWidth: 3,
 				clampToGround: true,
 			} ).then( ( data ) => {
-          
+
+				// remove previous datasource with same name
+		  		this.removeDataSourcesByNamePrefix( name );
 				data.name = name;
 
 				for ( let i = 0; i < data.entities.values.length; i++ ) {
@@ -197,7 +198,7 @@ export default class GeoJSONDataSource {
  * Removes the data source by name from the Cesium viewer
  * 
  */
-	removeDataSourceByName( name ) {
+	async removeDataSourceByName( name ) {
 		// Find the data source named 'MajorDistricts' in the viewer
 		const majorDistrictsDataSource = this.getDataSourceByName( name );
 

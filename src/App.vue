@@ -1,26 +1,26 @@
 <template>
-
-<div id="canvasScalerDiv">
+  <div>
   	<CesiumViewer />
-	<GridView v-if="view === 'grid'" />
-
+    <BuildingGridChart />
+	<SosEco250mGrid v-if="grid250m" />	
+  </div>
   <!-- Add Logo -->		
 	<div class="logoHolder">	
 	<img src="/public/assets/images/regions4climate-black.png" id="logoR4C" alt="Regions4Climate" />
 	<img src="/public/assets/images/fvh-1_musta.png" id="logoFVH" alt="Forum Virium Helsinki" />
   </div>
   
-  </div>
 </template>
 
 <script setup>
 import CesiumViewer from './pages/CesiumViewer.vue';
-import GridView from './components/GridView.vue';
-import { useGlobalStore } from './stores/globalStore.js';
+import BuildingGridChart from './components/BuildingGridChart.vue';
+import SosEco250mGrid from './components/SosEco250mGrid.vue';
+import { useToggleStore } from './stores/toggleStore.js';
 import { computed } from 'vue';
 
-const globalStore = useGlobalStore();
-const view = computed( () => globalStore.view );
+const toggleStore = useToggleStore();
+const grid250m = computed( () => toggleStore.grid250m );
 
 </script>
 
@@ -53,11 +53,6 @@ const view = computed( () => globalStore.view );
     z-index: 1000;
     height: 30px;
 	float: right;
-}
-
-#canvasScalerDiv {
-	width: 100%;
-	height: 100%;
 }
 
 #app {

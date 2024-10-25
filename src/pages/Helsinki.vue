@@ -1,6 +1,6 @@
 <template>
   <!-- Layout on top of Cesium -->
-  <v-container v-if="showComponents" fluid class="d-flex flex-column pa-0 ma-0" style="position: relative; z-index: 10;">
+  <v-container v-if="showComponents" fluid class="d-flex flex-column pa-0 ma-0" style="position: relative; z-index: 10; height: 100vh;">
     <!-- Row 7 -->
     <v-row no-gutters class="pa-0 ma-0">
       <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">

@@ -21,8 +21,12 @@ export const useToggleStore = defineStore('toggle', {
     switchView: false,
     surveyPlaces: false,
     capitalRegionCold: false,
+	grid250m: false,
   }),
   actions: {
+    setGrid250m(enabled) {
+      this.grid250m = enabled;
+    },  	
     setCapitalRegionCold(enabled) {
       this.capitalRegionCold = enabled;
     },    
