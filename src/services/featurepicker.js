@@ -12,7 +12,7 @@ import { usePropsStore } from '../stores/propsStore.js';
 import Helsinki from './helsinki.js';
 import CapitalRegion from './capitalRegion.js';
 import Sensor from './sensor.js';
-import View from './view.js';
+import Camera from './camera.js';
 import ColdArea from './coldarea.js';
 import { eventBus } from '../services/eventEmitter.js';
 
@@ -32,7 +32,7 @@ export default class FeaturePicker {
 		this.traveltimeService = new Traveltime();
 		this.hSYBuildingService = new HSYBuilding();
 		this.elementsDisplayService = new ElementsDisplay();
-		this.viewService = new View();
+		this.cameraService = new Camera();
 		this.coldAreaService = new ColdArea();
 
 	}
@@ -165,7 +165,7 @@ if (Array.isArray(entitiesArray)) {
 		if ( id.properties.posno && this.store.level != 'building' ) {
             
 			this.store.setPostalCode( id.properties.posno._value );
-			this.viewService.switchTo3DView();
+			this.cameraService.switchTo3DView();
 			this.elementsDisplayService.setViewDisplay( 'none' );
 			this.loadPostalCode();
     

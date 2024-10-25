@@ -18,7 +18,7 @@
       <label for="showOtherNature" class="label">Other Nature</label>
     </div>
 
-    <div class="switch-container">
+    <div class="switch-container" v-if="view !== 'grid'">
       <label class="switch">
         <input type="checkbox" v-model="showTrees" @change="loadTrees" />
         <span class="slider round"></span>
@@ -34,6 +34,14 @@
       <label for="landCover" class="label">HSY Land Cover</label>
     </div>
 
+    <!--  250mGrid-->
+    <div class="switch-container" v-if="view === 'grid'">
+      <label class="switch">
+        <input type="checkbox" v-model="grid250m" @change="activate250mGrid" />
+        <span class="slider round"></span>
+      </label>
+      <label for="250mGrid" class="label">250m grid</label>	
+    </div>
   </div>
 </template>
 
@@ -41,12 +49,14 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useToggleStore } from '../stores/toggleStore';
 import { useGlobalStore } from '../stores/globalStore';
+import { eventBus } from '../services/eventEmitter.js';
 import Datasource from '../services/datasource.js';
 import Building from '../services/building.js';
 import Landcover from '../services/landcover.js'; 
 import Tree from '../services/tree.js';
 import Othernature from '../services/othernature.js';
 import Vegetation from '../services/vegetation';
+import Populationgrid from '../services/populationgrid.js';
 
 export default {
   setup() {
@@ -57,8 +67,11 @@ export default {
     const showOtherNature = ref(toggleStore.showOtherNature);
     const showTrees = ref(toggleStore.showTrees);
     const landCover = ref(toggleStore.landCover);
+    const grid250m = ref(toggleStore.grid250m);
 
     const helsinkiView = computed( () => toggleStore.helsinkiView );
+    const view = computed( () => store.view );
+    const postalCode = computed( () => store.postalcode );
 
     let buildingService = null;
     let dataSourceService = null;
@@ -75,6 +88,25 @@ export default {
       },
       { immediate: true }
     );
+
+            // Watch to synchronize landcover state with the store's landCover value
+    watch(
+      () => toggleStore.grid250m,
+      (newVal) => {
+        grid250m.value = newVal;
+      },
+      { immediate: true }
+    );
+
+		/**
+    * This function handles the toggle event for activing 250m sos eco grid
+    */
+		const activate250mGrid = async () => {
+
+		  toggleStore.setGrid250m( grid250m.value );
+      !grid250m.value && (new Populationgrid().createPopulationGrid());
+
+		}
 
     /**
     * This function handles the toggle event for showing or hiding the vegetation layer on the map.
@@ -172,6 +204,18 @@ export default {
 
 		}
     }
+
+    // Added this new reset function inside the script block
+  const resetLayers = () => {
+    showVegetation.value = false;
+    showOtherNature.value = false;
+    showTrees.value = false;
+    landCover.value = false;
+    grid250m.value = false;
+  };
+
+  // Watch for view mode changes and reset layers
+  watch(() => store.view, resetLayers);
 		      
 
     onMounted(() => {
@@ -185,11 +229,15 @@ export default {
       showTrees,
       landCover,
       helsinkiView,
+      view,
+      grid250m,
+      activate250mGrid,
       loadVegetation,
       loadOtherNature,
       addLandCover,
       loadTrees,
       toggleLandCover,
+      postalCode,
     };
   },
 };

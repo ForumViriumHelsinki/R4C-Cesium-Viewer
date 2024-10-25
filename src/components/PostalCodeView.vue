@@ -121,7 +121,7 @@ import Vegetation from '../services/vegetation.js';
 import CapitalRegion from '../services/capitalRegion.js';
 import Othernature from '../services/othernature.js';
 import Plot from '../services/plot.js';
-import View from '../services/view.js';
+import Camera from '../services/camera.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 import ElementsDisplay from '../services/elementsDisplay.js';
@@ -396,7 +396,7 @@ export default {
 			// Get the status of the "switch view" toggle button.
 			const switchView = document.getElementById( 'switchViewToggle' ).checked;
 			this.toggleStore.setSwitchView( switchView );
-			const viewService = new View( );        
+			const viewService = new Camera( );        
 			// If the "switch view" toggle button is checked.
 			if ( switchView ) {
 

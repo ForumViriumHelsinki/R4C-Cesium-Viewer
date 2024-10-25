@@ -99,7 +99,7 @@ export default {
 		};
 
 		const createBars = ( svg, data, xScale, yScale, height, tooltip, xOffset, barColor, name ) => {
-			const barWidth = xScale.bandwidth() / 2; // Make bars narrower
+			const barWidth = xScale.bandwidth() / 2.5; // Make bars narrower
 
 			const bar = svg
 				.selectAll( `.bar.${barColor}` )
@@ -183,7 +183,7 @@ export default {
 				const tooltip = plotService.createTooltip( '#socioeonomicsContainer' );
 				createBars( svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue', sosData.nimi );
 
-				const xOffsetForCompareData = xScale.bandwidth() / 2; // Adjust as needed for proper spacing
+				const xOffsetForCompareData = xScale.bandwidth() / 2.4; // Adjust as needed for proper spacing
 				createBars( svg, compareBarData, xScale, yScale, height, tooltip, xOffsetForCompareData, 'orange', selectedNimi );
 
 				plotService.addTitleWithLink( svg, `Compare <a href="https://stat.fi/tup/paavo/index_en.html" 

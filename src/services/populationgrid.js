@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import Datasource from './datasource.js'; 
-import Viewercamera from './viewercamera.js'; 
+import Camera from './camera.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 
@@ -10,7 +10,7 @@ export default class Populationgrid {
 		this.toggleStore = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource( );
-		this.cameraService = new Viewercamera( );
+		this.cameraService = new Camera( );
 		this.gridArea = 62500;
 	}
 
@@ -105,10 +105,11 @@ export default class Populationgrid {
 	async createPopulationGrid() {
 
 		this.datasourceService.removeDataSourcesAndEntities();
-		this.cameraService.flyCamera3D( 24.991745, 60.045, 12000 );
+		this.cameraService.switchTo3DGrid();
 
 		try {
 
+			await this.datasourceService.removeDataSourcesByNamePrefix( '250m_grid' );
 			const entities = await this.datasourceService.loadGeoJsonDataSource(
 				0.1,
 				'assets/data/hsy_populationgrid.json',

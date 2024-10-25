@@ -2,8 +2,6 @@
 
 R4C user interface Vue3 interface with Vite and Cesium
 
-The user interface is currently running at https://geo.fvh.fi/r4c/M8Na2P0v6z/
-
 ## Installation 
 ```
 npm install
@@ -39,9 +37,13 @@ Use Playwright to run tests
 npx playwright test
 ```
 
+Run tests with an interactive user interface
+
+```
+npx playwright test --ui
+
 ## Skaffold
 
 ```
 skaffold delete
 docker system --prune --all
-```

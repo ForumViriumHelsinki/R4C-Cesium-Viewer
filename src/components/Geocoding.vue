@@ -40,7 +40,7 @@
 import { ref, computed, watch } from 'vue';
 import { useGlobalStore } from '../stores/globalStore';
 import { useToggleStore } from '../stores/toggleStore';
-import Viewercamera from '../services/viewercamera';
+import Camera from '../services/camera';
 import FeaturePicker from '../services/featurepicker';
 import Landcover from '../services/landcover';
 import { eventBus } from '../services/eventEmitter';
@@ -55,7 +55,7 @@ const addressData = ref([]);
 // Access stores
 const globalStore = useGlobalStore();
 const toggleStore = useToggleStore();
-const viewercamera = new Viewercamera();
+const cameraService = new Camera();
 const featurePicker = new FeaturePicker();
 const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
 
@@ -150,7 +150,7 @@ const moveCameraToLocation = (address) => {
 
 // Move camera and reset related settings
 const moveCameraAndReset = (longitude, latitude) => {
-  viewercamera.setCameraView(longitude, latitude);
+  cameraService.setCameraView(longitude, latitude);
   eventBus.emit('geocodingPrintEvent');
   featurePicker.loadPostalCode();
 

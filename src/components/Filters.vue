@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { eventBus } from '../services/eventEmitter.js';
@@ -52,7 +52,6 @@ export default {
         toggleStore.setHideNonSote(hideNonSote.value);
         toggleStore.setHideNewBuildings(hideNewBuildings.value);
         toggleStore.setHideLow(hideLow.value);
-
         const buildingsDataSource = globalStore?.cesiumViewer?.dataSources?.getByName(`Buildings ${globalStore.postalcode}`)[0];
         if (buildingsDataSource) {
             if (hideNonSote.value || hideNewBuildings.value || hideLow.value) {
@@ -65,6 +64,17 @@ export default {
             
       }
     };
+
+    // Added this new reset function inside the script block
+    const resetFilters = () => {
+      hideNonSote.value = false;
+      hideNewBuildings.value = false;
+      hideLow.value = false;
+      filterBuildings(); // Apply reset
+    };
+
+    // Watch for view mode changes and reset filters
+    watch(() => globalStore.view, resetFilters);
 
     onMounted(() => {
       buildingService = new Building();

@@ -4,7 +4,7 @@
       <h3>{{ title }}</h3>
       
       <!-- Conditional rendering of the gradient legend for avgheatexposure -->
-      <div v-if="localSelectedIndex === 'avgheatexposure'" class="gradient-legend">
+      <div v-if="localSelectedIndex === 'avgheatexposure'  || localSelectedIndex === 'combined_avgheatexposure'" class="gradient-legend">
         <div class="gradient-bar"></div>
         <div class="gradient-labels">
           <span>0.1</span>
@@ -18,6 +18,33 @@
           <span>0.9</span>
         </div>
       </div>
+
+      <!-- Custom striped legend for combined_heat_flood_green, simplified to combined heat and flood -->
+<div v-else-if="localSelectedIndex === 'combined_heat_flood_green'" class="striped-legend">
+  <div class="legend-title">Combined Heat and Flood Vulnerability</div>
+  <div class="legend-container">
+    <!-- Combined Legend for Heat and Flood -->
+    <div class="combined-legend">
+      <h4>Vulnerability</h4>
+      <div class="legend-section">
+        <div class="heat-legend">
+          <div v-for="item in indexToColorScheme.heat_index" :key="item.range" class="swatch">
+            <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+          </div>
+        </div>
+
+        <div class="flood-legend">
+          <div v-for="item in indexToColorScheme.flood_index" :key="item.range" class="swatch">
+            <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="extrusion-note">
+    <span>Extrusion represents Green Space (Height)</span>
+  </div>
+</div>
 
       <!-- Default legend display for non-gradient indices -->
       <div v-else>
@@ -74,7 +101,12 @@ const indexOptions = [
 	{ text: 'Green Space', value: 'green', description: 'Greenspace availability. Considers the percentage of water area, green space, low vegetation, and tree coverage in the land area.' },
 	{ text: 'Social Networks', value: 'social_networks', description: 'Social network-based vulnerability. Includes the percentage of students, single-person households, and school-age children in the population.' },
 	{ text: 'Overcrowding', value: 'overcrowding', description: 'Overcrowding vulnerability. Based on the occupancy rate and the percentage of households with seven or more people.' },
-	{ text: 'Landsat surface heat', value: 'avgheatexposure', description: 'Landsat surface heat index 2022-06-28' },
+  { text: 'Landsat surface heat', value: 'avgheatexposure', description: 'Landsat surface heat 2023-06-28 (not combined)' },
+  { text: 'Combined Landsat surface heat', value: 'combined_avgheatexposure', description: 'Combined Landsat surface heat  2023-06-28 and heat index' },
+  { text: 'Heat and Landsat surface heat combined', value: 'combined_heatindex_avgheatexposure', description: 'Landsat surface heat and heat vulnerability combined' },
+  { text: 'Combined Indices (Heat/Flood)', value: 'combined_heat_flood', description: 'Combined heat and flood vulnerability, colored by heat and extruded by flood.' },
+  { text: 'Combined Indices (Flood/Heat)', value: 'combined_flood_heat', description: 'Combined heat and flood vulnerability, colored by flood and extruded by heat.' },
+  { text: 'Combined Indices (Heat/Flood/Green)', value: 'combined_heat_flood_green', description: 'Combined heat and flood vulnerability, colored by heat and flood (Green space not included).' },
 ];
 
 // Define heat vulnerability colors
@@ -127,6 +159,10 @@ const indexToColorScheme = {
 	green: greenSpaceColors,
 	social_networks: floodColors, // Social networks use flood coloring
 	overcrowding: floodColors, // Overcrowding uses flood coloring
+  combined_heat_flood: heatColors,
+  combined_flood_heat: floodColors,
+  combined_heatindex_avgheatexposure: heatColors,
+  combined_heat_flood_green: heatColors,
 };
 
 // Local state to bind to v-select
@@ -159,7 +195,7 @@ const selectedIndexDescription = computed( () => {
 #legend {
   position: absolute;
   top: 100px;
-  right: 10px;
+  left: 10px;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 4px;
   padding: 10px;
@@ -227,5 +263,38 @@ const selectedIndexDescription = computed( () => {
   font-size: 12px;
   text-align: center;
   flex: 1;
+}
+
+.striped-legend {
+  margin-top: 1rem;
+}
+
+.legend-title {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.legend-container {
+  display: flex;                   /* Use flexbox for layout */
+  justify-content: space-between; /* Space items evenly */
+  margin-bottom: 0.5rem;          /* Add spacing below the legend container */
+}
+
+.heat-legend,
+.flood-legend {
+  display: flex;
+  align-items: center;            /* Center items vertically */
+}
+
+.color-box {
+  width: 20px;                   /* Width of the color box */
+  height: 20px;                  /* Height of the color box */
+  border: 1px solid black;       /* Border for the color box */
+  margin-right: 5px;             /* Space between color box and text */
+}
+
+.extrusion-note {
+  margin-top: 0.5rem;            /* Spacing above the note */
+  font-style: italic;             /* Italicize the note text */
 }
 </style>
