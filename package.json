@@ -21,6 +21,8 @@
     "vuetify": "^3.7.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.47.2",
+    "@types/node": "^22.7.5",
     "@vitejs/plugin-vue": "^5.1.4",
     "cesium": "^1.122.0",
     "eslint": "^9.13.0",
