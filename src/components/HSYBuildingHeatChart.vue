@@ -227,7 +227,7 @@ export default {
 <style scoped>
 #hsyBuildingChartContainer {
   position: relative;
-  width: 500px;
+  width: 100%;
   height: 250px;
 }
 
