@@ -1,6 +1,6 @@
 <template>
   <!-- Add Filters Title -->
-  <div class="slider-container">
+  <div class="slider-container" style="width: 100%;">
     <h3 class="filter-title">Layers</h3>
     <div class="switch-container" v-if="helsinkiView">
       <label class="switch">
@@ -254,10 +254,8 @@ export default {
   display: flex;
   flex-direction: column;
   background-color: white;
-  padding: 10px;
   border: 1px solid #ccc;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 200px;
 }
 
 /* Align switch and label horizontally */

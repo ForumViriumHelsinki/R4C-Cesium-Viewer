@@ -76,14 +76,19 @@
                   <ViewMode />
 
                 </v-list-item-content>                
-                <v-list-item-content class="pa-0 ma-0" v-if="currentLevel === 'postalCode' || currentView === 'grid' ">
-
-                  <!-- The Filters and Layers are now side by side -->
-                  <div class="filters-layers-container">
-                    <Layers />
-                    <Filters v-if="currentView !== 'grid'"/>
-                  </div>
-                </v-list-item-content>
+                  <v-list-item-content class="pa-0 ma-0" v-if="currentLevel === 'postalCode' || currentView === 'grid'">
+                    <v-container fluid class="pa-0 ma-0 custom-container"> 
+                      <v-row no-gutters class="pa-0 ma-0">
+                        <v-col cols="6" class="pa-0 ma-0" v-if="currentView !== 'grid'">
+                          <Layers />
+                        </v-col>
+                        <v-col :cols="currentView === 'grid' ? 12 : 6" class="pa-0 ma-0"> 
+                          <Layers v-if="currentView === 'grid'" />
+                          <Filters v-else /> 
+                        </v-col>
+                      </v-row>
+                    </v-container>
+                  </v-list-item-content>
               </v-list-item>
 
               <!-- Add `multiple` prop here to allow multiple panels to stay open -->
@@ -330,5 +335,13 @@ input:checked + .slider {
   position: absolute; 
   top: 10px; /* Adjust as needed */
   right: 10px; /* Adjust as needed */
+}
+/* In your ControlPanel.vue styles */
+.custom-container {
+  padding: 0; 
+}
+
+.custom-container > .v-row { 
+  margin: 0;
 }
 </style>

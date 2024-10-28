@@ -38,21 +38,21 @@ const grid250m = computed( () => toggleStore.grid250m );
 .logoHolder
 {
 	position: fixed;
-	bottom: 10px; 
-	right: 5px;
+	top: 10px; 
+	left: 5px;
 }
 
 #logoFVH {
     z-index: 1000;
     height: 40px;
 	float: right;
-	margin-right: 10px;
+	margin-left: 10px;
 }
 
 #logoR4C {
     z-index: 1000;
     height: 30px;
-	float: right;
+	float: left;
 }
 
 #app {
