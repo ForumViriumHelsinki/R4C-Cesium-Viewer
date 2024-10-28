@@ -96,21 +96,21 @@ export default {
 
 .hsy-area-select {
   position: absolute;
-  top: 10px; /* Adjusts distance from top */
-  right: -280px; /* Adjusts distance from right */
+  top: 30px; /* Adjusts distance from top */
+  left: 0px; /* Adjusts distance from right */
   width: 215px;
 }
 
 .hsy-year-select {
   position: absolute;
-  bottom: 0px; /* Adjusts distance from bottom */
-  right: -280px; /* Adjusts distance from right */
+  bottom: -55px; /* Adjusts distance from bottom */
+  right: -270px; /* Adjusts distance from right */
   width: 80px;
 }
 
 .land-cover-checkbox { 
   position: absolute;
-  top: 180px;
+  top: 190px;
   display: flex;
   align-items: center; /* Ensures checkbox and label are vertically aligned */
 }

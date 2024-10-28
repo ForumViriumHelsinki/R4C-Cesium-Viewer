@@ -44,8 +44,8 @@ export default {
 
 .socio-economics-select {
   	position: absolute;
-  	top: 40px; /* Adjusts distance from top */
-  	right: -350px; /* Adjusts distance from right */
+  	top: 35px; /* Adjusts distance from top */
+  	left: 0px; /* Adjusts distance from right */
   	width: 295px;
   	z-index: 10; /* Ensure it is on top */
 }

@@ -32,10 +32,10 @@ const createPieChart = ( ) => {
 	const firstData = getLandCoverDataForArea( nameOfZone, year, datasource );
 	const secondData = getLandCoverDataForArea( area, year, datasource );
 
-	const margin = {top: 20, right: 10, bottom: 10, left: 10};
-	const width = 400 - margin.left - margin.right;
-	const height = 200 - margin.top - margin.bottom;
-	const radius = Math.min( width, height ) / 2.5; // Adjust as needed
+	const margin = {top: 10, right: 10, bottom: 10, left: 10};
+	const width = globalStore.navbarWidth - margin.left - margin.right;
+	const height = 220 - margin.top - margin.bottom;
+	const radius = Math.min( width, height ) / 3; // Adjust as needed
 
 	const pie = d3.pie().sort( null ).value( d => d.value );
 	const arc = d3.arc().innerRadius( 0 ).outerRadius( radius );
@@ -50,8 +50,8 @@ const createPieChart = ( ) => {
 
 	// Translate pies to be centered vertically and positioned horizontally
 	const xOffsetFirstPie = width / 6.5; // Keeps existing horizontal positioning for the first pie
-	const xOffsetSecondPie = 4.5 * width / 8; // Keeps existing horizontal positioning for the second pie
-	const yOffset = height / 1.8; // New: Centers pies vertically
+	const xOffsetSecondPie = width / 1.8; // Keeps existing horizontal positioning for the second pie
+	const yOffset = height / 1.6; // New: Centers pies vertically
 
 	// Initialize tooltip using the Plot service
 	const tooltip = plotService.createTooltip( '#pieChartContainer' );
@@ -60,9 +60,9 @@ const createPieChart = ( ) => {
 	plotService.addTitleWithLink(     
 		svg,
     	`Compare <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/helsinki-region-land-cover-dataset/" 
-        	target="_blank">HSY landcover</a> in <br> ${nameOfZone} to:`,
+        	target="_blank">HSY landcover</a> in ${nameOfZone} to:`,
     	width - 81.6,
-    	{ top: 30 }
+    	{ top: 20 }
 	);
 };
 
