@@ -132,6 +132,7 @@ export default {
     const gridView = () => {
       const isGridView = activeViewMode.value === 'gridView';
       toggleStore.setGridView(isGridView);
+      toggleStore.setHelsinkiView(false);
       store.setView(isGridView ? 'grid' : 'capitalRegion');
       if (isGridView) {
         const populationgridService = new Populationgrid();
