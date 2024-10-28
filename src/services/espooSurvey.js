@@ -1,10 +1,8 @@
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
-import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from './eventEmitter.js';
 import { usePropsStore } from '../stores/propsStore.js';
-const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class EspooSurvey {
 	constructor() {
@@ -23,26 +21,10 @@ export default class EspooSurvey {
 
 		let url = '/pygeoapi/collections/' + collection + '/items?f=json&limit=35000';
 
-		try {
-			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
-			const cachedResponse = await axios.get( cacheApiUrl );
-			const cachedData = cachedResponse.data;
-
-			if ( cachedData ) {
-				console.log( 'found from cache' );
-
-				this.addSurveyDataSource( cachedData, collection );
-
-			} else {
-
-				this.loadSurveyWithoutCache( url, collection );
-
-			}
-
-		} catch ( err ) {
-		// This code runs if there were any errors.
-			console.log( err );
-		}
+		fetch( url )
+			.then( response => response.json() )
+			.then( data => { this.addSurveyDataSource( data, collection ); } )
+			.catch( error => { console.log( 'Error loading other nature data:', error ); } );
 	}
 
 	/**
@@ -52,11 +34,11 @@ export default class EspooSurvey {
  * @param {String} collection - The name of survey collection to be added as a data source
  */
 	async addSurveyDataSource( data, collection ) {
-	
+
 		this.setAvgTempInCelsius( data.features );
 		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Survey ' + collection );
 		this.setColorAndLabelForPointEntities( entities );
-		const propsStore = usePropsStore( );
+		const propsStore = usePropsStore();
 		propsStore.setScatterPlotEntities( entities );
 		eventBus.emit( 'newSurveyScatterPlot' );
 
@@ -66,7 +48,7 @@ export default class EspooSurvey {
 
 		for ( let i = 0; i < features.length; i++ ) {
 
-			let feature = features[ i ];
+			let feature = features[i];
 			let normalizedIndex = feature.properties.heatexposure;
 
 			// Convert normalized index back to Kelvin
@@ -79,27 +61,6 @@ export default class EspooSurvey {
 	}
 
 	/**
- * Loads othernature data from the provided URL without using cache
- * 
- * @param {string} url - The URL from which to load othernature data
- */
-	loadSurveyWithoutCache( url, collection ) {
-
-		console.log( 'Not in cache! Loading: ' + url );
-
-		fetch( url )
-			.then( response => response.json() )
-			.then( data => {
-				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
-				this.addSurveyDataSource( data, collection );
-			} )
-			.catch( error => {
-				console.log( 'Error loading other nature data:', error );
-			} );
-	
-	}
-
-	/**
  * Sets the polygon material color for a othernature entity based on its category
  * 
  * @param {Object} entity - The othernature entity
@@ -108,8 +69,8 @@ export default class EspooSurvey {
 	setColorAndLabelForPointEntities( entities ) {
 
 		for ( let i = 0; i < entities.length; i++ ) {
-			let entity = entities[ i ];
-			if ( entity.position ) { 
+			let entity = entities[i];
+			if ( entity.position ) {
 
 				const color = new Cesium.Color( 1, 1 - entity._properties._heatexposure._value, 0, entity._properties._heatexposure._value );
 				const outlineColor = this.getOutlineColor( entity._properties._Paikan_kok._value );
@@ -120,8 +81,8 @@ export default class EspooSurvey {
 					entity.point = new Cesium.PointGraphics( {
 						color: color,
 						pixelSize: 10,
-						outlineColor: outlineColor, 
-				        outlineWidth: 3, 
+						outlineColor: outlineColor,
+						outlineWidth: 3,
 					} );
 
 				} else {
@@ -140,7 +101,7 @@ export default class EspooSurvey {
 		if ( value >= 100 * 2 / 3 ) return Cesium.Color.GREEN;
 		if ( value >= 100 * 1 / 3 ) return Cesium.Color.YELLOW;
 		return value ? Cesium.Color.RED : null;
-    
+
 	}
-	
+
 }

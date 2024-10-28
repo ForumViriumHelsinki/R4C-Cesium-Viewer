@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-const backendURL = import.meta.env.VITE_BACKEND_URL;
+null
 
 export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 	state: () => ( {
@@ -25,7 +25,7 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		// Function to load Paavo data
 		async loadPaavo() {
 			try {
-				const response = await fetch( '/backend/paavo' );
+				const response = await fetch( '/paavo' );
 				if ( !response.ok ) throw new Error( `HTTP error! status: ${response.status}` );
 				const data = await response.json(); // Parse as JSON
         
@@ -35,16 +35,6 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 			} catch ( error ) {
 				console.error( 'Error fetching Paavo data:', error ); 
 			}
-		},
-
-		// Function to fetch all Paavo data from redis cache
-		async getDataFromCache( requestUrl ) {
-			// Assuming backendURL is defined globally or imported
-			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( requestUrl )}`;
-			const response = await fetch( cacheApiUrl );
-			if ( !response.ok ) throw new Error( `HTTP error! status: ${response.status}` );
-
-			return await response.json();
 		},
 
 		// Function to fetch all Paavo data

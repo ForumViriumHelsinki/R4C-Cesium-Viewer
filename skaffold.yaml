@@ -26,6 +26,7 @@ deploy:
         valuesFiles:
           - helm/values.yaml
         setValueTemplates:
+<<<<<<< HEAD
           frontend.image.repository: "{{.IMAGE_REPO_frontend}}"
           frontend.image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
           backend.image.repository: "{{.IMAGE_REPO_backend}}"
@@ -33,3 +34,16 @@ deploy:
         # setValues:
         #   frontend.image.pullPolicy: "IfNotPresent"
         #   backend.image.pullPolicy: "IfNotPresent"
+||||||| parent of 57fad0b (feat(frontend): add placeholder values for vite environment variables)
+          image.repository: "{{.IMAGE_REPO_frontend}}"
+          image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
+        setValues:
+          # image.pullPolicy: "IfNotPresent"
+=======
+          image.repository: "{{.IMAGE_REPO_frontend}}"
+          image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
+        setValues:
+          vite:
+            digitransit_key: "placeholder"
+            password_250: "placeholder"
+>>>>>>> 57fad0b (feat(frontend): add placeholder values for vite environment variables)

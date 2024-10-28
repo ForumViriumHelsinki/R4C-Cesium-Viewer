@@ -18,11 +18,8 @@ export default class Wms {
 	}
 
 	createHSYImageryLayer( layers ) {
-		// Define the backend proxy URL
-		const backendURL = import.meta.env.VITE_BACKEND_URL; // Ensure this is set correctly in your .env file
-
 		// Construct the proxy URL with the full WMS request URL encoded as a query parameter
-		const proxyUrl = `${backendURL}/wms/proxy`;
+		const proxyUrl = '/wms/proxy';
 
 		// Use the proxy URL in the WebMapServiceImageryProvider
 		const provider = new Cesium.WebMapServiceImageryProvider( {
