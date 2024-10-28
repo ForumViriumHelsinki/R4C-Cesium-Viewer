@@ -3,7 +3,6 @@ import axios from 'axios';
 import Datasource from './datasource.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 import ElementsDisplay from './elementsDisplay.js';
-const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class ColdArea {
 	constructor( ) {
@@ -40,25 +39,10 @@ export default class ColdArea {
 		const url = '/pygeoapi/collections/coldarea/items?f=json&limit=100000&posno=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
-		try {
-			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
-			const cachedResponse = await axios.get( cacheApiUrl );
-			const cachedData = cachedResponse.data;
-
-			if ( cachedData ) {
-
-				console.log( 'found from cache' );
-				this.addColdAreaDataSource( cachedData );
-
-			} else {
-
-				this.loadColdAreaWithoutCache( url );
-
-			}
-		} catch ( err ) {
-			console.log( err );
-		}
-
+		fetch( url )
+			.then( response => response.json() )
+			.then( data => { this.addColdAreaDataSource( data ); } )
+			.catch( error => { console.log( 'Error loading ColdAreas:', error ); } );
 	}
 
 	/**
@@ -90,24 +74,4 @@ export default class ColdArea {
 		this.store.setIsLoading( false );
 
 	}
-
-	/**
- * Loads ColdArea data from the provided URL without using cache
- * 
- * @param {string} url - The URL from which to load ColdArea data
- */
-	loadColdAreaWithoutCache( url ) {
-		console.log( 'Not in cache! Loading: ' + url );
-
-		fetch( url )
-			.then( response => response.json() )
-			.then( data => {
-				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
-				this.addColdAreaDataSource( data );
-			} )
-			.catch( error => {
-				console.log( 'Error loading ColdAreas:', error );
-			} );
-	}
-
 }

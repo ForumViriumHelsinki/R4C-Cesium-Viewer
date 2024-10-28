@@ -57,7 +57,6 @@ const globalStore = useGlobalStore();
 const toggleStore = useToggleStore();
 const cameraService = new Camera();
 const featurePicker = new FeaturePicker();
-const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
 
 // Computed property to determine if geocoding should be shown
 const shouldShowGeocoding = computed(() => {
@@ -119,7 +118,7 @@ const filterSearchResults = async () => {
   if (searchQuery.value.length > 2) {
     try {
       const response = await fetch(
-        `https://api.digitransit.fi/geocoding/v1/autocomplete?text=${searchQuery.value}&digitransit-subscription-key=${apiKey}`
+        `/digitransit/geocoding/v1/autocomplete?text=${searchQuery.value}&digitransit-subscription-key=${apiKey}`
       );
       const data = await response.json();
 

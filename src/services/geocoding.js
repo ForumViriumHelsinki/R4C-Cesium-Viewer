@@ -6,9 +6,6 @@ import { useToggleStore } from '../stores/toggleStore.js';
 import Landcover from './landcover.js'; 
 import { eventBus } from './eventEmitter.js';
 
-const apiKey = import.meta.env.VITE_DIGITRANSIT_KEY;
-
-
 export default class Geocoding {
 	constructor( ) {
 		this.store = useGlobalStore();
@@ -96,7 +93,7 @@ export default class Geocoding {
 		if ( searchField.value.length > 2 ) {
 
 			try {
-				let response = await fetch( 'https://api.digitransit.fi/geocoding/v1/autocomplete?text=' + searchField.value + '&digitransit-subscription-key=' + apiKey );
+				let response = await fetch( '/digitransit/geocoding/v1/autocomplete?text=' + searchField.value );
 				let data = await response.json();
 
 				// Use arrow functions to maintain the component's context

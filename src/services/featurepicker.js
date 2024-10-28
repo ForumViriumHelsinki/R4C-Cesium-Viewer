@@ -186,7 +186,7 @@ if (Array.isArray(entitiesArray)) {
             
 				console.log( Url );
 				// Now you can use this URL to make your WFS request
-				this.hSYBuildingService.loadHSYBuildingsWithoutCache( Url );	
+				this.hSYBuildingService.loadHSYBuildings( Url );	
 
 			}
 

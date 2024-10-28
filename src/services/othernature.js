@@ -2,7 +2,7 @@ import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
-const backendURL = import.meta.env.VITE_BACKEND_URL;
+		const proxyUrl = '/wms/proxy';
 
 export default class Othernature {
 	constructor( ) {
@@ -21,26 +21,10 @@ export default class Othernature {
 		let url = '/pygeoapi/collections/othernature/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
-		try {
-			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
-			const cachedResponse = await axios.get( cacheApiUrl );
-			const cachedData = cachedResponse.data;
-
-			if ( cachedData ) {
-				console.log( 'found from cache' );
-
-				this.addOtherNatureDataSource( cachedData );
-
-			} else {
-
-				this.loadOtherNatureWithoutCache( url );
-
-			}
-
-		} catch ( err ) {
-		// This code runs if there were any errors.
-			console.log( err );
-		}
+		fetch( url )
+			.then( response => response.json() )
+			.then( data => { this.addOtherNatureDataSource( data ); } )
+			.catch( error => { console.log( 'Error loading other nature data:', error ); } );
 	}
 
 	/**
@@ -64,27 +48,6 @@ export default class Othernature {
 		}
 
 		this.store.setIsLoading( false );
-	}
-
-	/**
- * Loads othernature data from the provided URL without using cache
- * 
- * @param {string} url - The URL from which to load othernature data
- */
-	loadOtherNatureWithoutCache( url ) {
-
-		console.log( 'Not in cache! Loading: ' + url );
-
-		fetch( url )
-			.then( response => response.json() )
-			.then( data => {
-				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
-				this.addOtherNatureDataSource( data );
-			} )
-			.catch( error => {
-				console.log( 'Error loading other nature data:', error );
-			} );
-	
 	}
 
 	/**
