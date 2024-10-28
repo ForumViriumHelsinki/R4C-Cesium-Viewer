@@ -95,7 +95,6 @@ const indexOptions = [
 	{ text: 'Heat Preparedness', value: 'heat_prepare', description: 'Ability to prepare for high temperatures. Considers economic and social factors, as well as housing conditions.' },
 	{ text: 'Heat Response', value: 'heat_respond', description: 'Ability to respond to high temperatures. Similar factors as preparedness, focusing on response capabilities.' },
 	{ text: 'Age', value: 'age', description: 'Age-based vulnerability. Combines the percentage of young children (0-6 years old) and elderly people (over 75 years old).' },
-	{ text: 'Income', value: 'income', description: 'Income-based vulnerability. Includes unemployment, economic inactivity, long-term unemployment, and median household income.' },
 	{ text: 'Information', value: 'info', description: 'Information-based vulnerability. Calculated from the percentage of people with only basic education.' },
 	{ text: 'Tenure', value: 'tenure', description: 'Tenure-based vulnerability. Includes the percentage of rented households and those rented from ARA (The Housing Finance and Development Centre of Finland).' },
 	{ text: 'Green Space', value: 'green', description: 'Greenspace availability. Considers the percentage of water area, green space, low vegetation, and tree coverage in the land area.' },
