@@ -136,7 +136,7 @@ export default {
 		const createLegend = ( svg, width, margin, values, labelsWithAverage, colorScale ) => {
 			const legend = svg.append( 'g' )
 				.attr( 'class', 'legend' )
-				.attr( 'transform', `translate( ${ width + margin.right - 145 },${ margin.top } )` );
+				.attr( 'transform', `translate( ${ width + margin.right - 145 },${ margin.top + 35 } )` );
   
 			legend.selectAll( '.legend-color' )
 				.data( values )
