@@ -1,6 +1,6 @@
 <template>
   <div class="control-panel-main">
-    <v-btn icon @click="togglePanel" class="toggle-btn">
+    <v-btn icon @click="togglePanel" class="toggle-btn" size="x-small">
       <v-icon>{{ panelVisible ? 'mdi-menu-open' : 'mdi-menu' }}</v-icon>
     </v-btn>
 
@@ -27,6 +27,7 @@
                         class="uiButton"
                         style="color: red; float:right; cursor: pointer;"
                         v-bind="props"
+                        size="x-small"
                       >
                         <v-icon>mdi-arrow-left</v-icon>
                       </v-btn>
@@ -42,6 +43,7 @@
                         class="uiButton"
                         style="color: red; float:right; cursor: pointer;"
                         v-bind="props"
+                        size="x-small"
                       >
                         <v-icon>mdi-refresh</v-icon>
                       </v-btn>
@@ -58,6 +60,7 @@
                         class="uiButton"
                         style="color: blue; float:right; cursor: pointer;"
                         v-bind="props"
+                        size="x-small"
                       >
                         <v-icon>mdi-compass</v-icon>
                       </v-btn>
