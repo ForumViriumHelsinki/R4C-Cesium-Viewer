@@ -140,10 +140,9 @@ export default {
 			if ( sosData ) {
 				plotService.initializePlotContainerForGrid( 'socioeonomicsContainer' );
 
-				const margin = { top: 90, right: 5, bottom: 50, left: 24 };
-				const width = 450 - margin.left - margin.right;
+				const margin = { top: 90, right: 5, bottom: 50, left: 23 };
+				const width = globalStore.navbarWidth - margin.left - margin.right;
 				const height = 250 - margin.top - margin.bottom;
-
 				const svg = plotService.createSVGElement( margin, width, height, '#socioeonomicsContainer' );
 
 				let xLabels = [
@@ -172,9 +171,10 @@ export default {
 					heatExposureStore.getDataById( compareData.postinumeroalue )
 				);
 				const compareValues = calculateYValues( compareData, statsData, compareHeatData );
-
-				const xScale = plotService.createScaleBand( xLabels, width );
-				const yScale = plotService.createScaleLinear( 0, d3.max( yValues ), [ height, 0 ] );
+				// Combine both yValues and compareValues arrays
+				const allYValues = yValues.concat(compareValues);
+				const xScale = plotService.createScaleBand( xLabels, width - 50 );
+				const yScale = plotService.createScaleLinear( 0, d3.max( allYValues ), [ height, 0 ] );
 				setupAxes( svg, xScale, yScale, height );
 
 				const barData = yValues.map( ( value, index ) => ( { value, label: xLabels[index] } ) );
@@ -183,11 +183,11 @@ export default {
 				const tooltip = plotService.createTooltip( '#socioeonomicsContainer' );
 				createBars( svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue', sosData.nimi );
 
-				const xOffsetForCompareData = xScale.bandwidth() / 2.4; // Adjust as needed for proper spacing
+				const xOffsetForCompareData = xScale.bandwidth() / 2.5; // Adjust as needed for proper spacing
 				createBars( svg, compareBarData, xScale, yScale, height, tooltip, xOffsetForCompareData, 'orange', selectedNimi );
 
 				plotService.addTitleWithLink( svg, `Compare <a href="https://stat.fi/tup/paavo/index_en.html" 
-		      target="_blank">socioeconomic statistics</a> and heat data of ${globalStore.nameOfZone} to:`, width / 1.5, { top: 75 } );
+		      target="_blank">socioeconomic statistics</a> and heat data of ${globalStore.nameOfZone} to:`, width - 100, { top: 80 } );
 			}
 		};
 

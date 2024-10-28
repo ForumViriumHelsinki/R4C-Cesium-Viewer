@@ -30,7 +30,6 @@ import Plot from '../services/plot.js';
 import Building from '../services/building.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { usePropsStore } from '../stores/propsStore';
-import { nextTick } from 'vue'; // Import nextTick
   
 export default {
 	mounted() {
@@ -323,7 +322,7 @@ export default {
 		createLegend( svg, width, margin, values, labelsWithAverage, colorScale ) {
 			const legend = svg.append( 'g' )
 				.attr( 'class', 'legend' )
-				.attr( 'transform', `translate(${width + margin.right - 120},${margin.top})` );
+				.attr( 'transform', `translate(${width + margin.right - 130},${margin.top + 20})` );
 
 			legend.selectAll( '.legend-color' )
 				.data( values )
@@ -366,8 +365,8 @@ export default {
 			// Prepare the data for the plot
 			const { heatData, labelsWithAverage, values } = this.prepareDataForPlot( features, categorical, numerical );
 
-			const margin = { top: 30, right: 120, bottom: 16, left: 30 };
-			const width = 450 - margin.left - margin.right;
+			const margin = { top: 25, right: 150, bottom: 16, left: 28 };;
+			const width = this.store.navbarWidth - margin.left - margin.right;
 			const height = 290 - margin.top - margin.bottom;
 
 			// Initialize the SVG element
@@ -388,7 +387,7 @@ export default {
 			// Create the legend
 			this.createLegend( svg, width, margin, values, labelsWithAverage, colorScale );
 
-			this.plotService.addTitle( svg, 'Building attributes and heat exposure', width + 120, margin );
+			this.plotService.addTitle( svg, 'Building attributes and heat exposure', width + 200, { top : 48 } );
 		},
 
 		clearScatterPlot() {
@@ -403,23 +402,22 @@ export default {
   <style>
 #scatterPlotContainer {
   	position: relative;
-    bottom: 35px;
-    left: -19px;
-    width: 550px; /* Adjusted width to accommodate margin */
-    height: 300px; /* Adjusted height to accommodate margin */
+  	width: 100%;
+  	height: 300px;
+  	background-color: white;
 }
 
 #categoricalSelect {
     position: absolute;
-    top: 40px;  /* Adjusted position to match scatter plot container */
-    left: 5px;
+    top: 65px;  /* Adjusted position to match scatter plot container */
+    left: 10px;
     font-size: smaller;
 }
 
 #numericalSelect {
     position: absolute;
-    bottom: 40px;
-    right: 20px; /* Adjusted position to match scatter plot container */
+    bottom: 26px;
+    right: 30px; /* Adjusted position to match scatter plot container */
     font-size: smaller;
 }
   </style>

@@ -200,8 +200,8 @@ export default class Plot {
 
 		tooltip.transition().duration( 200 ).style( 'opacity', 0.9 );
 		tooltip.html( dataFormatter( d ) )
-			.style( 'left', `${xPos}px` )
-			.style( 'top', `${yPos}px` );
+			.style( 'left', `${xPos - 80}px` )
+			.style( 'top', `${yPos - 100}px` );
 	}
 
 	handleMouseout( tooltip ) {

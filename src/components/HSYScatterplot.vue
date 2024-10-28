@@ -10,10 +10,12 @@ import Plot from '../services/plot.js';
 import Building from '../services/building.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
+import { useGlobalStore } from '../stores/globalStore.js';
 
 export default {
 	setup() {
 		const toggleStore = useToggleStore();
+		const globalStore = useGlobalStore();
 		const propsStore = usePropsStore();
 		const plotService = new Plot();
 		const buildingService = new Building();
@@ -105,8 +107,8 @@ export default {
 
 			const { heatData, labelsWithAverage, values } = prepareDataForPlot( features );
 
-			const margin = { top: 50, right: 150, bottom: 20, left: 30 };
-			const width = 500 - margin.left - margin.right;
+			const margin = { top: 35, right: 150, bottom: 16, left: 23 };
+			const width = globalStore.navbarWidth - margin.left - margin.right;
 			const height = 290 - margin.top - margin.bottom;
 
 			const svg = plotService.createSVGElement( margin, width, height, '#scatterPlotContainerHSY' );
@@ -120,9 +122,9 @@ export default {
 			createLegend( svg, width, margin, values, labelsWithAverage, colorScale );
 			plotService.addTitleWithLink(
 				svg,
-				'<a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/buildings-in-the-helsinki-metropolitan-area/" target="_blank">Building attributes</a> and average surface temperature in °C',
-				width + 290,
-				{ top : 40 }
+				'<a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/buildings-in-the-helsinki-metropolitan-area/" target="_blank">Building attributes</a> and average <br> surface temperature in °C',
+				width + 375,
+				{ top : 48 }
 			);
 		};
 
@@ -135,7 +137,7 @@ export default {
 		const createLegend = ( svg, width, margin, values, labelsWithAverage, colorScale ) => {
 			const legend = svg.append( 'g' )
 				.attr( 'class', 'legend' )
-				.attr( 'transform', `translate( ${ width + margin.right - 145 },${ margin.top } )` );
+				.attr( 'transform', `translate( ${ width + margin.right - 145 },${ margin.top + 35 } )` );
   
 			legend.selectAll( '.legend-color' )
 				.data( values )

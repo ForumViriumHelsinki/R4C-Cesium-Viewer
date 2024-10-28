@@ -57,8 +57,8 @@ export default {
 
       const postalCodeHeat = createPostalCodeTimeseries(postalcodeHeatTimeseries);
 
-      const margin = { top: 55, right: 30, bottom: 30, left: 20 };
-      const width = 450 - margin.left - margin.right;
+      const margin = { top: 45, right: 10, bottom: 18, left: 20 };
+      const width = store.navbarWidth - margin.left - margin.right;
       const height = 250 - margin.top - margin.bottom;
 
       const svg = plotService.createSVGElement(margin, width, height, '#hsyBuildingChartContainer');
@@ -66,7 +66,7 @@ export default {
       const allDates = Array.from(
         new Set(buildingHeatExposure.map((d) => d.date).concat(postalCodeHeat.map((d) => d.date)))
       );
-      const xScale = plotService.createScaleBand(allDates.sort(), width);
+      const xScale = plotService.createScaleBand(allDates.sort(), width - 40);
       const maxTemp = Math.max(
         ...buildingHeatExposure.map((d) => d.avg_temp_c),
         ...postalCodeHeat.map((d) => d.averageTemp)
@@ -87,14 +87,14 @@ export default {
       createHSYBarsWithLabels(svg, combinedData, xScale, yScale, height, { building: 'orange', postalcode: 'steelblue' }, tooltip);
 
       plotService.setupAxes(svg, xScale, yScale, height);
-      plotService.addTitle(svg, 'Temperature in Celsius Comparison', width - 200, margin);
+      plotService.addTitle(svg, 'Temperature in Celsius Comparison', width - 220, { top: 75 } );
 
       const legendData = [
         { name: address, color: 'orange' },
         { name: 'Average of ' + postinumero, color: 'steelblue' },
       ];
-      const legendX = 250 - margin.right;
-      const legendY = margin.top - 100;
+      const legendX = width - 190;
+      const legendY = margin.top - 87;
 
       const legend = svg.append('g').attr('transform', `translate(${legendX}, ${legendY})`);
 
