@@ -214,7 +214,7 @@ export default {
 		const globalStore = useGlobalStore();
 		const propsStore = usePropsStore();
     const toggleStore = useToggleStore();
-		const panelVisible = ref( true );
+		const panelVisible = ref( window.innerWidth > 600 ); ;
 		const currentLevel = computed( () => globalStore.level );
     const currentView = computed( () => globalStore.view );
 		const heatHistogramData = computed( () => propsStore.heatHistogramData );
