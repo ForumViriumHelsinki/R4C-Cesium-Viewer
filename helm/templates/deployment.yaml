@@ -1,17 +1,16 @@
-{{- $fullName := include "r4c-cesium-viewer.frontend.fullname" .  -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "r4c-cesium-viewer.frontend.fullname" . }}
+  name: {{ include "r4c.fullname" . }}
   labels:
-    {{- include "r4c-cesium-viewer.frontend.labels" . | nindent 4 }}
+    {{- include "r4c.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "r4c-cesium-viewer.frontend.selectorLabels" . | nindent 6 }}
+      {{- include "r4c.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "r4c-cesium-viewer.frontend.labels" . | nindent 8 }}
+        {{- include "r4c.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -28,18 +27,18 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "r4c-cesium-viewer.serviceAccountName" . }}
+      serviceAccountName: {{ include "r4c.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ $fullName }}
+        - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.frontend.service.port }}
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
@@ -52,8 +51,6 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           env:
-          - name: VITE_BACKEND_URL
-            value: "{{- .Values.vite.backend_url }}"
           - name: VITE_DIGITRANSIT_KEY
             value: "{{- .Values.vite.digitransit_key }}"
           - name: VITE_250_PASSWORD

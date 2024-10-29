@@ -1,7 +1,7 @@
 apiVersion: skaffold/v4beta11
 kind: Config
 metadata:
-  name: r4c-cesium-viewer
+  name: r4c
 build:
   local:
     useDockerCLI: true
@@ -12,38 +12,15 @@ build:
       context: .
       docker:
         dockerfile: Dockerfile
-    - image: backend
-      context: backend
-      docker:
-        dockerfile: Dockerfile
-        buildArgs:
-          VITE_BACKEND_URL: "http://r4c-cesium-viewer-backend/"
 deploy:
   helm:
     releases:
-      - name: r4c-cesium-viewer
+      - name: r4c
         chartPath: helm
         valuesFiles:
           - helm/values.yaml
         setValueTemplates:
-<<<<<<< HEAD
-          frontend.image.repository: "{{.IMAGE_REPO_frontend}}"
-          frontend.image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
-          backend.image.repository: "{{.IMAGE_REPO_backend}}"
-          backend.image.tag: "{{.IMAGE_TAG_backend}}@{{.IMAGE_DIGEST_backend}}"
-        # setValues:
-        #   frontend.image.pullPolicy: "IfNotPresent"
-        #   backend.image.pullPolicy: "IfNotPresent"
-||||||| parent of 57fad0b (feat(frontend): add placeholder values for vite environment variables)
           image.repository: "{{.IMAGE_REPO_frontend}}"
           image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
         setValues:
           # image.pullPolicy: "IfNotPresent"
-=======
-          image.repository: "{{.IMAGE_REPO_frontend}}"
-          image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
-        setValues:
-          vite:
-            digitransit_key: "placeholder"
-            password_250: "placeholder"
->>>>>>> 57fad0b (feat(frontend): add placeholder values for vite environment variables)

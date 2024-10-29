@@ -1,106 +1,27 @@
-# Default values for r4c-cesium-viewer.
+# Default values for r4c.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+vite:
+  digitransit_key: ""
+  password_250: "" 
 
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
-vite:
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
+  pullPolicy: IfNotPresent
+  tag: "0"
 
-frontend:
-  image:
-    repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
-    pullPolicy: IfNotPresent
-    tag: "0"
-
-  service:
-    type: ClusterIP
-    port: 80
-
-  ingress:
-    enabled: true
-    className: "nginx"
-    # annotations:
-    #   kubernetes.io/tls-acme: "true"
-    hosts:
-      - host: r4c-cesium-viewer.test
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
-    tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
-
-backend:
-  image:
-    repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer-backend
-    pullPolicy: IfNotPresent
-    tag: "0"
-  service:
-    type: ClusterIP
-    port: 80
-  redis:
-    host: r4c-cesium-viewer-redis-master
-    port: 6379
-
-pygeoapi:
-  image:
-    repository: ghcr.io/geopython/pygeoapi
-    pullPolicy: IfNotPresent
-    tag: "latest"
-  service:
-    type: ClusterIP
-    port: 80
-  config:
-    server:
-      bind:
-          host: 0.0.0.0  # listening address for incoming connections
-          port: 80  # listening port for incoming connections
-      url: http://localhost/  # url of server
-      mimetype: application/json; charset=UTF-8  # default MIME type
-      encoding: utf-8  # default server encoding
-      language: en-US  # default server language
-      locale_dir: /path/to/translations
-      gzip: false # default server config to gzip/compress responses to requests with gzip in the Accept-Encoding header
-      cors: true  # boolean on whether server should support CORS
-      pretty_print: true  # whether JSON responses should be pretty-printed
-      limit: 10  # server limit on number of items to return
-      admin: false  # whether to enable the Admin API
-
-      templates: # optional configuration to specify a different set of templates for HTML pages. Recommend using absolute paths. Omit this to use the default provided templates
-        path: /path/to/jinja2/templates/folder # path to templates folder containing the Jinja2 template HTML files
-        static: /path/to/static/folder # path to static folder containing css, js, images and other static files referenced by the template
-
-      map:  # leaflet map setup for HTML pages
-          url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
-          attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-      ogc_schemas_location: /opt/schemas.opengis.net  # local copy of https://schemas.opengis.net
-
-      manager:  # optional OGC API - Processes asynchronous job management
-          name: TinyDB  # plugin name (see pygeoapi.plugin for supported process_manager's)
-          connection: /tmp/pygeoapi-process-manager.db  # connection info to store jobs (e.g. filepath)
-          output_dir: /tmp/  # temporary file area for storing job results (files)
-
-      api_rules:  # optional API design rules to which pygeoapi should adhere
-          api_version: 1.2.3  # omit to use pygeoapi's software version
-          strict_slashes: true  # trailing slashes will not be allowed and result in a 404
-          url_prefix: 'v{api_major}'  # adds a /v1 prefix to all URL paths
-          version_header: X-API-Version  # add a response header of this name with the API version
-
-postgresql:
-  enabled: true
-  primary.initdb.scriptsConfigMap: postgresql-scripts
-
-redis:
-  enabled: true
-  architecture: standalone
-  auth:
-    enabled: false
-
+# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
+
+# This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
 
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
@@ -112,7 +33,11 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
 
 podSecurityContext: {}
@@ -125,6 +50,29 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 80
+
+ingress:
+  enabled: true
+  # className: "traefik-internal"
+  # annotations:
+  #   ingress.kubernetes.io/ssl-redirect: "false"
+  #   kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: r4c.test
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
 
 
 resources: {}
@@ -139,6 +87,7 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   httpGet:
     path: /
@@ -148,6 +97,7 @@ readinessProbe:
     path: /
     port: http
 
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -157,16 +107,8 @@ autoscaling:
 
 # Additional volumes on the output Deployment definition.
 volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
 
-# Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
 
 nodeSelector: {}
 
