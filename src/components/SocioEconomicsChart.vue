@@ -140,7 +140,7 @@ export default {
 			if ( sosData ) {
 				plotService.initializePlotContainerForGrid( 'socioeonomicsContainer' );
 
-				const margin = { top: 90, right: 5, bottom: 50, left: 23 };
+				const margin = { top: 60, right: 5, bottom: 50, left: 23 };
 				const width = globalStore.navbarWidth - margin.left - margin.right;
 				const height = 250 - margin.top - margin.bottom;
 				const svg = plotService.createSVGElement( margin, width, height, '#socioeonomicsContainer' );
@@ -187,7 +187,7 @@ export default {
 				createBars( svg, compareBarData, xScale, yScale, height, tooltip, xOffsetForCompareData, 'orange', selectedNimi );
 
 				plotService.addTitleWithLink( svg, `Compare <a href="https://stat.fi/tup/paavo/index_en.html" 
-		      target="_blank">socioeconomic statistics</a> and heat data of ${globalStore.nameOfZone} to:`, width - 100, { top: 80 } );
+		      target="_blank">socioeconomic statistics</a> and heat data of ${globalStore.nameOfZone} to:`, margin.left, margin.top );
 			}
 		};
 

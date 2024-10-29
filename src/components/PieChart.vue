@@ -61,8 +61,8 @@ const createPieChart = ( ) => {
 		svg,
     	`Compare <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/helsinki-region-land-cover-dataset/" 
         	target="_blank">HSY landcover</a> in ${nameOfZone} to:`,
-    	width - 81.6,
-    	{ top: 20 }
+    	margin.left,
+    	margin.top
 	);
 };
 

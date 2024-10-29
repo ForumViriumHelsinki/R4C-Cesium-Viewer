@@ -113,21 +113,21 @@ export default class Plot {
  * @param {number} margin
 
  */
-	addTitle( svg, title, width, margin ) {
+	addTitle( svg, title, left, top ){
 		// Title doesn't need splitting
 		svg.append( 'text' )
-			.attr( 'x', width / 2 )
-			.attr( 'y', -margin.top / 3 )
-			.attr( 'text-anchor', 'middle' )
+			.attr( 'x', 0 - left )
+			.attr( 'y', 0 - top )
 			.style( 'font-size', '12px' )
+			.style( 'text-align', 'left' )			
 			.text( title );
 		
 	}
 
-	addTitleWithLink( svg, title, width, margin ) {
+	addTitleWithLink( svg, title, left, top ) {
 		svg.append( 'foreignObject' )
-			.attr( 'x', width / 2 - 160 ) // Adjust horizontal position
-			.attr( 'y', -margin.top + 10 )  // Adjust vertical position
+			.attr( 'x', 0 - left ) // Adjust horizontal position
+			.attr( 'y', 0 - top )  // Adjust vertical position
 			.attr( 'width', 4000 )          // Width of the foreignObject
 			.attr( 'height', 40 )          // Height of the foreignObject
 			.append( 'xhtml:div' )         // Append a div as a child of the foreignObject

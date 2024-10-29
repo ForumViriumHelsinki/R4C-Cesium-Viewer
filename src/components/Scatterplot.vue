@@ -387,7 +387,7 @@ export default {
 			// Create the legend
 			this.createLegend( svg, width, margin, values, labelsWithAverage, colorScale );
 
-			this.plotService.addTitle( svg, 'Building attributes and heat exposure', width + 200, { top : 48 } );
+			this.plotService.addTitle( svg, 'Heat exposure index with building attributes', margin.left, margin.top - 8 );
 		},
 
 		clearScatterPlot() {
@@ -409,8 +409,8 @@ export default {
 
 #categoricalSelect {
     position: absolute;
-    top: 65px;  /* Adjusted position to match scatter plot container */
-    left: 10px;
+    top: 67px;  /* Adjusted position to match scatter plot container */
+    right: 30px;
     font-size: smaller;
 }
 

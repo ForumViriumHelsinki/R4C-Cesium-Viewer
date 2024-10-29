@@ -79,10 +79,9 @@ export default {
 			plotService.initializePlotContainerForGrid( 'heatHistogramContainer' );
 
 			// Get the container's actual width and height dynamically
-			const container = document.getElementById( 'heatHistogramContainer' );
-			const margin = { top: 30, right: 30, bottom: 30, left: 30 };
-			const width = container.offsetWidth - margin.left - margin.right; // Use container width
-			const height = container.offsetHeight - margin.top - margin.bottom; // Use container height
+			const margin = { top: 30, right: 50, bottom: 34, left: 30 };
+			const width = store.navbarWidth - margin.left - margin.right; // Use container width
+			const height = 250 - margin.top - margin.bottom; // Use container height
   
 			const svg = plotService.createSVGElement( margin, width, height, '#heatHistogramContainer' );
 
@@ -108,8 +107,8 @@ export default {
 				plotService.addTitleWithLink(
 					svg,
 					`${store.nameOfZone} ${store.heatDataDate} buildings <a href="https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature" target="_blank">surface temperature</a> in °C`,
-					width - 20,
-					margin
+					margin.left,
+					margin.top
 				);
 			}
 		};
