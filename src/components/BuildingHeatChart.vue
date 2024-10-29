@@ -39,7 +39,7 @@ export default {
 
 			createBarsWithLabels( svg, data, xScale, yScale, height, colors );
 			plotService.setupAxes( svg, xScale, yScale, height );
-			plotService.addTitle( svg, 'Temperature Comparison', width, { top: 80 } );
+			plotService.addTitle( svg, 'Temperature Comparison', margin.left, margin.top - 10 );
 		};
 
 		// Create bars and labels

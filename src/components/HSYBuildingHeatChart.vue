@@ -87,13 +87,13 @@ export default {
       createHSYBarsWithLabels(svg, combinedData, xScale, yScale, height, { building: 'orange', postalcode: 'steelblue' }, tooltip);
 
       plotService.setupAxes(svg, xScale, yScale, height);
-      plotService.addTitle(svg, 'Temperature in Celsius Comparison', width - 220, { top: 75 } );
+      plotService.addTitle(svg, 'Temperature in Celsius Comparison', margin.left, margin.top - 20 );
 
       const legendData = [
         { name: address, color: 'orange' },
         { name: 'Average of ' + postinumero, color: 'steelblue' },
       ];
-      const legendX = width - 190;
+      const legendX = margin.left + store.navbarWidth / 2.5;
       const legendY = margin.top - 87;
 
       const legend = svg.append('g').attr('transform', `translate(${legendX}, ${legendY})`);

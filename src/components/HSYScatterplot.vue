@@ -107,7 +107,7 @@ export default {
 
 			const { heatData, labelsWithAverage, values } = prepareDataForPlot( features );
 
-			const margin = { top: 35, right: 150, bottom: 16, left: 23 };
+			const margin = { top: 50, right: 150, bottom: 16, left: 28 };
 			const width = globalStore.navbarWidth - margin.left - margin.right;
 			const height = 290 - margin.top - margin.bottom;
 
@@ -122,9 +122,9 @@ export default {
 			createLegend( svg, width, margin, values, labelsWithAverage, colorScale );
 			plotService.addTitleWithLink(
 				svg,
-				'<a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/buildings-in-the-helsinki-metropolitan-area/" target="_blank">Building attributes</a> and average <br> surface temperature in °C',
-				width + 375,
-				{ top : 48 }
+				'Average surface temperature in °C <br> and <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/buildings-in-the-helsinki-metropolitan-area/" target="_blank">Building attributes</a>',
+				margin.left,
+				margin.top + 3
 			);
 		};
 
@@ -137,7 +137,7 @@ export default {
 		const createLegend = ( svg, width, margin, values, labelsWithAverage, colorScale ) => {
 			const legend = svg.append( 'g' )
 				.attr( 'class', 'legend' )
-				.attr( 'transform', `translate( ${ width + margin.right - 145 },${ margin.top + 35 } )` );
+				.attr( 'transform', `translate( ${ width + margin.right - 145 },${ margin.top } )` );
   
 			legend.selectAll( '.legend-color' )
 				.data( values )
