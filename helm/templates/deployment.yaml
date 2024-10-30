@@ -50,11 +50,11 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          env:
-          - name: VITE_DIGITRANSIT_KEY
-            value: "{{- .Values.vite.digitransit_key }}"
-          - name: VITE_250_PASSWORD
-            value: "{{- .Values.vite.password_250 }}"
+          envFrom:
+          - configMapRef:
+              name: r4c-configmap
+          - secretRef:
+              name: r4c-secrets
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
