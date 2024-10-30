@@ -9,7 +9,7 @@
 		</div>
 	    <!-- Loading Component -->
     	<Loading v-if="store.isLoading" />
-		<HeatTimeseries v-if="store.level === 'postalCode' && !toggleStore.helsinkiView "/>
+		<Timeline v-if="store.level === 'postalCode' && !toggleStore.helsinkiView "/>
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
   		<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid'" />
@@ -36,7 +36,7 @@ import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import ControlPanel from './ControlPanel.vue';
 import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
-import HeatTimeseries from '../components/HeatTimeseries.vue';
+import Timeline from '../components/Timeline.vue';
 
 export default {
 	components: {
@@ -44,7 +44,7 @@ export default {
 		ControlPanel,
 		BuildingInformation,
 		Loading,
-		HeatTimeseries,
+		Timeline,
 	},
 	setup() {
 		const store = useGlobalStore();
