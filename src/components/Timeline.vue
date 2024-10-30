@@ -1,5 +1,5 @@
 <template>
-  <div id="heatTimeseriesContainer">
+  <div id="heatTimeseriesContainer" :style="{ width: `${sliderWidth.value}px` }"> 
     <div class="date-labels">
       <span v-for="(date, index) in dates" :key="index" class="date-label">
         {{ date }}
@@ -14,6 +14,7 @@
       hide-details
       class="timeline-slider"
 	  :width="sliderWidth" 
+	  :style="{ marginLeft: marginWidth, marginRight: marginWidth }"
     >
       <template v-slot:append>
         <div class="label-container">
@@ -56,8 +57,12 @@ export default {
     const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)); // Set default index    
 
     const sliderWidth = computed(() => {
-      return window.innerWidth - Math.min(Math.max(window.innerWidth * 0.375, 400), 800) - 30; // Calculate remaining width
+      return ( window.innerWidth - Math.min(Math.max(window.innerWidth * 0.375, 400), 800)) * 0.90; // Calculate remaining width
     });
+
+    const marginWidth = computed(() => {
+      return sliderWidth.value * 0.07 + 'px'; // Calculate remaining width
+    });	
 
     const updateViewAndPlots = () => {
         const buildingsDataSource = dataSourceService.getDataSourceByName('Buildings ' + globalStore.postalcode);
@@ -88,6 +93,7 @@ export default {
       	currentPropertyIndex, // Return currentPropertyIndex
       	sliderWidth,
       	dates, // Expose the dates array
+		marginWidth
     };
   },
 };
