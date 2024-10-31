@@ -12,8 +12,10 @@
 		<Timeline v-if="store.level === 'postalCode' && !toggleStore.helsinkiView "/>
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
-  		<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid'" />
-		
+    	<BuildingInformation 
+      		v-if="shouldShowBuildingInformation"  
+      		:delay="2000"  
+    	/>
 	</div>
 </template>
 
@@ -53,7 +55,9 @@ export default {
 		const socioEconomicsStore = useSocioEconomicsStore();
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
-
+    	const shouldShowBuildingInformation = computed(() => {
+      		return buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid';
+    	});
 		const viewer = ref(null);
 		const view = computed( () => store.view );
 
@@ -131,7 +135,8 @@ export default {
 			toggleStore,
 			buildingStore,
 			viewer,
-			view
+			view,
+			shouldShowBuildingInformation
 		};
 	},
 };

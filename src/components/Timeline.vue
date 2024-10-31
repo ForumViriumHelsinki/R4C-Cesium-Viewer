@@ -15,6 +15,7 @@
       class="timeline-slider"
 	  :width="sliderWidth" 
 	  :style="{ marginLeft: marginWidth, marginRight: marginWidth }"
+	  :disabled="isTimelineLocked"
     >
       <template v-slot:append>
         <div class="label-container">
@@ -47,7 +48,6 @@ export default {
     const dates = [
       '2015-07-03',
       '2018-07-27',
-      '2021-02-18',
       '2021-07-12',
       '2022-06-28',
       '2023-06-23',
@@ -78,22 +78,35 @@ export default {
 
     onMounted(() => {
       	timelineLength.value = dates.length; // Set the timeline length when mounted
+  		// Unlock the timeline after a 1-second delay
+  		setTimeout(() => {
+    		isTimelineLocked.value = false;
+  		}, 1000);		
     });
+
+	const isTimelineLocked = ref(true); // Initially unlocked
 
     // Watch for changes in currentPropertyIndex
-    watch(currentPropertyIndex, (newIndex) => {
-      	selectedDate.value = dates[newIndex];
-      	globalStore.setHeatDataDate(selectedDate.value);
-      	updateViewAndPlots();
-    });
+	watch(currentPropertyIndex, (newIndex) => {
+  		isTimelineLocked.value = true; // Lock the timeline
 
+  		selectedDate.value = dates[newIndex];
+  		globalStore.setHeatDataDate(selectedDate.value);
+  		updateViewAndPlots();
+
+  		// Unlock the timeline after a 1-second delay
+  		setTimeout(() => {
+    		isTimelineLocked.value = false;
+  		}, 1200);
+	});
     return {
       	selectedDate,
       	timelineLength, // Return timelineLength
       	currentPropertyIndex, // Return currentPropertyIndex
       	sliderWidth,
       	dates, // Expose the dates array
-		marginWidth
+		marginWidth,
+		isTimelineLocked
     };
   },
 };
