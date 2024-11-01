@@ -143,12 +143,15 @@
 
                 <template v-if="currentLevel === 'building'">
                   <v-expansion-panel class="pa-0 ma-0" title="Building heat data">
-                    <v-expansion-panel-text  v-if="currentView !== 'helsinki'" class="pa-0 ma-0">
+                    <v-expansion-panel-text  v-if="currentView !== 'helsinki' && currentView !== 'grid'" class="pa-0 ma-0">
                       <HSYBuildingHeatChart />
                     </v-expansion-panel-text> 
-                    <v-expansion-panel-text v-if="currentView === 'helsinki'" class="pa-0 ma-0">
+                    <v-expansion-panel-text v-if="currentView === 'helsinki' && currentView !== 'grid'" class="pa-0 ma-0">
                       <BuildingHeatChart />
-                    </v-expansion-panel-text>                                       
+                    </v-expansion-panel-text> 
+                    <v-expansion-panel-text v-if="currentView === 'grid'" class="pa-0 ma-0">
+                      <BuildingGridChart />
+                    </v-expansion-panel-text>                                                           
                   </v-expansion-panel>
 
                   <v-expansion-panel class="pa-0 ma-0" title="Building properties">
@@ -185,6 +188,7 @@ import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
 import Scatterplot from '../components/Scatterplot.vue';
 import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
 import BuildingHeatChart from '../components/BuildingHeatChart.vue';
+import BuildingGridChart from '../components/BuildingGridChart.vue';
 import PrintBox from '../components/PrintBox.vue';
 import { useGlobalStore } from '../stores/globalStore'; // Import global store for current level
 import { usePropsStore } from '../stores/propsStore';
@@ -209,6 +213,7 @@ export default {
     Geocoding,
     Scatterplot,
     BuildingHeatChart,
+    BuildingGridChart,
 	},
 	setup() {
 		const globalStore = useGlobalStore();

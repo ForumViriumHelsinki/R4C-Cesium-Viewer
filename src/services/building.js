@@ -63,6 +63,8 @@ export default class Building {
  */
 	createBuildingCharts( treeArea, avg_temp_c, buildingProps ) {
 
+		this.store.view === 'grid' && this.propsStore.setGridBuildingProps( buildingProps );
+
 		filterHeatTimeseries( buildingProps );
 
 		( this.toggleStore.showTrees && treeArea ) && 
@@ -72,7 +74,7 @@ export default class Building {
     		? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
     		: ( !this.toggleStore.helsinkiView 
         		? ( this.propsStore.setBuildingHeatExposure( avg_temp_c._value ), buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) ) 
-        		: ( this.propsStore.setGridBuildingProps( buildingProps ), eventBus.emit( 'newBuildingGridChart' ) ) );       
+        		: ( this.propsStore.setGridBuildingProps( buildingProps ) ) );       
 	}
 
 	/**

@@ -22,8 +22,8 @@ export default {
 
 			plotService.initializePlotContainer( 'buildingChartContainer' );
 
-			const margin = { top: 40, right: 30, bottom: 30, left: 30 };
-			const width = 300 - margin.left - margin.right;
+			const margin = { top: 40, right: 40, bottom: 30, left: 30 };
+			const width = store.navbarWidth - margin.left - margin.right;
 			const height = 200 - margin.top - margin.bottom;
 
 			const svg = plotService.createSVGElement( margin, width, height, '#buildingChartContainer' );
@@ -66,8 +66,6 @@ export default {
 				.text( d => d.value );
 		};
 
-
-		// Watch for changes in buildingHeatTimeseries and call newHSYBuildingHeat when it changes
 		watch(
 			() => propsStore.buildingHeatExposure,
 			( newHeatExposure ) => {
@@ -77,7 +75,6 @@ export default {
 			}
 		);
 
-		// Call updateHSYBuildingChart on mounted
 		onMounted( () => {
 			createBuildingBarChart();
 
@@ -91,7 +88,7 @@ export default {
 <style scoped>
 #buildingChartContainer {
   position: relative;
-  width: 300px;
+  width: 100%;
   height: 200px;
 }
 </style>

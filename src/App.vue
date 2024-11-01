@@ -1,7 +1,6 @@
 <template>
   <div>
   	<CesiumViewer />
-    <BuildingGridChart />
 	<SosEco250mGrid v-if="grid250m" />	
   </div>
   <!-- Add Logo -->		
@@ -14,7 +13,6 @@
 
 <script setup>
 import CesiumViewer from './pages/CesiumViewer.vue';
-import BuildingGridChart from './components/BuildingGridChart.vue';
 import SosEco250mGrid from './components/SosEco250mGrid.vue';
 import { useToggleStore } from './stores/toggleStore.js';
 import { computed } from 'vue';
