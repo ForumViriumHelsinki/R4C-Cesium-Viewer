@@ -1,14 +1,12 @@
 <template>
   <div id="legend" v-if="legendData.length > 0 && legendVisible">
-    <div class="legend-header">
-      <h3>{{ title }}</h3>
-      <!-- Toggle button to minimize or expand the legend -->
-      <v-icon @click="toggleLegend" class="toggle-icon">
-        {{ legendExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
-      </v-icon>
-    </div>
+    <!-- Toggle button to minimize or expand the legend -->
+    <v-icon @click="toggleLegend" class="toggle-icon">
+      {{ legendExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+    </v-icon>
 
     <div v-if="legendExpanded">
+      <h3>{{ title }}</h3>
       <!-- Conditional rendering of the gradient legend for avgheatexposure -->
       <div v-if="localSelectedIndex === 'avgheatexposure' || localSelectedIndex === 'combined_avgheatexposure'" class="gradient-legend">
         <div class="gradient-bar"></div>
