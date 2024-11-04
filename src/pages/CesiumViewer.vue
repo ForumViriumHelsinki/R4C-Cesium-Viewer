@@ -9,11 +9,13 @@
 		</div>
 	    <!-- Loading Component -->
     	<Loading v-if="store.isLoading" />
-
+		<Timeline v-if="store.level === 'postalCode' && !toggleStore.helsinkiView "/>
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
-  		<BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid'" />
-		
+    	<BuildingInformation 
+      		v-if="shouldShowBuildingInformation"  
+      		:delay="2000"  
+    	/>
 	</div>
 </template>
 
@@ -36,6 +38,7 @@ import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import ControlPanel from './ControlPanel.vue';
 import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
+import Timeline from '../components/Timeline.vue';
 
 export default {
 	components: {
@@ -43,6 +46,7 @@ export default {
 		ControlPanel,
 		BuildingInformation,
 		Loading,
+		Timeline,
 	},
 	setup() {
 		const store = useGlobalStore();
@@ -51,7 +55,9 @@ export default {
 		const socioEconomicsStore = useSocioEconomicsStore();
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
-
+    	const shouldShowBuildingInformation = computed(() => {
+      		return buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid';
+    	});
 		const viewer = ref(null);
 		const view = computed( () => store.view );
 
@@ -129,7 +135,8 @@ export default {
 			toggleStore,
 			buildingStore,
 			viewer,
-			view
+			view,
+			shouldShowBuildingInformation
 		};
 	},
 };

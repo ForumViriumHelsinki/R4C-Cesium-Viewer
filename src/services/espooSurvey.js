@@ -52,7 +52,7 @@ export default class EspooSurvey {
 			let normalizedIndex = feature.properties.heatexposure;
 
 			// Convert normalized index back to Kelvin
-			let tempInKelvin = normalizedIndex * ( this.store.maxKelvin - this.store.minKelvin ) + this.store.minKelvin;
+			let tempInKelvin = normalizedIndex * ( this.store.minMaxKelvin['2023-06-23'].max - this.store.minMaxKelvin['2023-06-23'].min ) + this.store.minMaxKelvin['2023-06-23'].min
 
 			// Convert Kelvin to Celsius
 			feature.properties.avg_temp_c = tempInKelvin - 273.15;

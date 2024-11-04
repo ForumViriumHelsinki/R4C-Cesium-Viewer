@@ -60,16 +60,18 @@ export default class Building {
  */
 	createBuildingCharts( treeArea, avg_temp_c, buildingProps ) {
 
+		this.store.view === 'grid' && this.propsStore.setGridBuildingProps( buildingProps );
+
 		filterHeatTimeseries( buildingProps );
 
 		( this.toggleStore.showTrees && treeArea ) &&
       ( this.propsStore.setTreeArea( treeArea ) );
 
-		this.toggleStore.helsinkiView
-			? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
-			: ( !this.toggleStore.helsinkiView
-				? ( this.propsStore.setBuildingHeatExposure( avg_temp_c._value ), buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) )
-				: ( this.propsStore.setGridBuildingProps( buildingProps ), eventBus.emit( 'newBuildingGridChart' ) ) );
+		this.toggleStore.helsinkiView 
+    		? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
+    		: ( !this.toggleStore.helsinkiView 
+        		? ( this.propsStore.setBuildingHeatExposure( avg_temp_c._value ), buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) ) 
+        		: ( this.propsStore.setGridBuildingProps( buildingProps ) ) );       
 	}
 
 	/**
@@ -80,23 +82,32 @@ export default class Building {
 	setBuildingEntityPolygon( entity ) {
 		const { properties, polygon } = entity;
 
-		if ( properties?.avgheatexposuretobuilding && polygon ) {
+		const targetDate = this.store.heatDataDate;
 
-			if ( this.toggleStore.capitalRegionCold ) {
-				const targetDate = '2021-02-18';
-				const heatTimeseries = properties.heat_timeseries?._value || [];
-				const foundEntry = heatTimeseries.find( ( { date } ) => date === targetDate );
-
-				polygon.material = foundEntry
-					? new Cesium.Color( 0, ( 1 - ( 1 - foundEntry.avgheatexposure ) ), 1, 1 - foundEntry.avgheatexposure )
-					: new Cesium.Color( 0, 0, 0, 0 );
-			} else {
+		if ( polygon ) {
+							if (this.toggleStore.helsinkiView) {
+								if ( properties?.avgheatexposuretobuilding ) {
 				const heatExposureValue = properties.avgheatexposuretobuilding._value;
 				polygon.material = new Cesium.Color( 1, 1 - heatExposureValue, 0, heatExposureValue );
-			}
-		} else if ( polygon ) {
-			polygon.material = new Cesium.Color( 0, 0, 0, 0 );
-		}
+								}
+				} else {
+      	const heatTimeseries = properties.heat_timeseries?._value || [];
+      	const foundEntry = heatTimeseries.find( ( { date } ) => date === targetDate );
+			
+  if (foundEntry) { // Only set color if an entry is found
+    if (targetDate === '2021-02-18') {
+      polygon.material = new Cesium.Color(0, (1 - (1 - foundEntry.avgheatexposure)), 1, 1 - foundEntry.avgheatexposure);
+    } else {
+      polygon.material = new Cesium.Color(1, 1 - foundEntry.avgheatexposure, 0, foundEntry.avgheatexposure);
+    }
+  } else {
+	entity.show = false;
+    polygon.material = new Cesium.Color(0, 0, 0, 0); // Set color to 0 0 0 0 if no entry is found
+  }
+				}
+} else if (polygon) {
+  polygon.material = new Cesium.Color(0, 0, 0, 0);
+}
 
 		this.toggleStore.helsinkiView && ( this.hideNonSoteBuilding( entity ), this.hideLowBuilding( entity ) );
 		( this.store.view === 'grid' && entity._properties?._kayttarks?._value !== 'Asuinrakennus' ) && ( entity.show = false );
@@ -229,22 +240,20 @@ export default class Building {
 	}
 
 	updateHeatHistogramDataAfterFilter( entities ) {
+  		// Add the condition to filter only entities with show === true
+  		const visibleEntities = entities.filter(entity => entity.show);
+  		const targetDate = this.store.heatDataDate;
 
-		// Add the condition to filter only entities with show === true
-		const visibleEntities = entities.filter( entity => entity.show ); // Filter visible entities
+  		const avg_temp = this.toggleStore.helsinkiView
+    		? visibleEntities.map(entity => entity.properties._avgheatexposuretobuilding._value)
+    		: visibleEntities.map(entity => {
+        		const heatTimeseries = entity.properties.heat_timeseries?._value || [];
+        		const foundEntry = heatTimeseries.find(({ date }) => date === targetDate);
+        		return foundEntry ? foundEntry.avg_temp_c : null;
+      		}).filter(temp => temp !== null);
 
-		const avg_temp = this.toggleStore.capitalRegionCold
-			? visibleEntities
-				.map( entity => ( entity.properties.heat_timeseries?._value || [] ).find( ( { date } ) => date === targetDate )?.avg_temp )
-				.filter( temp => temp !== undefined ) // Filter out undefined values
-			: this.toggleStore.helsinkiView
-				? visibleEntities.map( entity => entity.properties._avgheatexposuretobuilding._value )
-				: visibleEntities.map( entity => entity.properties._avg_temp_c._value );
-
-		// Update the heat histogram data and emit the event
-		this.propsStore.setHeatHistogramData( avg_temp );
-		eventBus.emit( 'newHeatHistogram' );
-
+  		this.propsStore.setHeatHistogramData(avg_temp);
+  		eventBus.emit('newHeatHistogram');
 	}
 
 	soteBuildings( entity ) {

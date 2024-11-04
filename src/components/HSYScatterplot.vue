@@ -59,6 +59,7 @@ export default {
 
 		const addDataForHSYScatterPlot = ( urbanHeatDataAndMaterial, entity ) => {
 			const props = entity._properties;
+			const targetDate = globalStore.heatDataDate;
 
 			if ( props?.avg_temp_c && props?.[ propsStore.categoricalSelect.value ]?._value && props?.[ propsStore.numericalSelect.value ]?._value ) {
 				let numericalValue = props[ propsStore.numericalSelect.value ]._value;
@@ -68,9 +69,7 @@ export default {
 				}
 
 				if ( props?._area_m2?._value > 225 && numericalValue < 99999999 && numericalValue !== 0 ) {
-					const heatValue = toggleStore.capitalRegionCold 
-						? props?._heat_timeseries?._value.find( ( { date } ) => date === '2021-02-18' )?.avg_temp_c 
-						: props.avg_temp_c._value;
+					const heatValue = props?._heat_timeseries?._value.find( ( { date } ) => date === targetDate )?.avg_temp_c;
 
 					if ( heatValue ) {
 						urbanHeatDataAndMaterial.push( {

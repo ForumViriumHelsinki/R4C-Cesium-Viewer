@@ -46,9 +46,9 @@ export default {
 			const isCold = toggleStore.capitalRegionCold;
 
 			const index = isCold
-				? calculateIndex( average, store.minKelvinCold, store.maxKelvinCold )
+				? calculateIndex( average, store.minMaxKelvin['2021-02-18'].min, store.minMaxKelvin['2021-02-18'].max )
 				: store.view === 'capitalRegion'
-					? calculateIndex( average, store.minKelvin, store.maxKelvin )
+					? calculateIndex( average, store.minMaxKelvin['2023-06-23'].min, store.minMaxKelvin['2023-06-23'].max  )
 					: average;
 
 			return isCold ? getColdColor( index ) : getWarmColor( index );

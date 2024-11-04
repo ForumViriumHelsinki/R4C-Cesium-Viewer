@@ -31,16 +31,6 @@
         />
         Statistical Grid
       </label>
-
-      <label class="radio-label">
-        <input 
-          type="radio" 
-          v-model="activeViewMode" 
-          value="capitalRegionCold" 
-          @change="onToggleChange('capitalRegionCold')" 
-        />
-        Capital Region Cold
-      </label>
     </div>
   </div>
 </template>
