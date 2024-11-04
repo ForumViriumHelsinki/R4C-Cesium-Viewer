@@ -1,12 +1,25 @@
 import { defineConfig, loadEnv } from 'vite';
 import Vue from '@vitejs/plugin-vue';
 import cesium from 'vite-plugin-cesium-build';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig( ( { mode } ) => {
 	// Load env file based on mode (development/production)
 	const env = loadEnv( mode, '.' );
 	return {
-		plugins: [ Vue(), cesium() ],
+		build: {
+			sourcemap: true, // Source map generation must be turned on
+		},
+		plugins: [
+		  Vue(),
+		  cesium(),
+			// Put the Sentry vite plugin after all other plugins
+			sentryVitePlugin( {
+				authToken: env.SENTRY_AUTH_TOKEN,
+				org: 'forum-virium-helsinki',
+				project: 'regions4climate',
+			} ),
+		],
 		server: {
 			proxy: {
 				'/pygeoapi': {
