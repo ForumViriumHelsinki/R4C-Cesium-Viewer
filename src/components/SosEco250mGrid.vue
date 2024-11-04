@@ -241,8 +241,8 @@ const createStripedMaterial = (heatIndex, floodIndex) => {
     const floodColor = getColorForIndex(floodIndex, 'flood_index');
 
     return new Cesium.StripeMaterialProperty({
-        evenColor: heatColor,
-        oddColor: floodColor,
+        evenColor: floodColor,
+        oddColor: heatColor,
         repeat: 10, // Adjust the repeat value to control stripe thickness
         orientation: Cesium.StripeOrientation.HORIZONTAL // You can change to VERTICAL if preferred
     });

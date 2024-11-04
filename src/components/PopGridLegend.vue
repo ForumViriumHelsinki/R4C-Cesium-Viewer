@@ -1,9 +1,16 @@
 <template>
-  <div id="legend" v-if="legendData.length > 0">
-    <div>
+  <div id="legend" v-if="legendData.length > 0 && legendVisible">
+    <div class="legend-header">
       <h3>{{ title }}</h3>
-      
-      <div v-if="localSelectedIndex === 'avgheatexposure'  || localSelectedIndex === 'combined_avgheatexposure'" class="gradient-legend">
+      <!-- Toggle button to minimize or expand the legend -->
+      <v-icon @click="toggleLegend" class="toggle-icon">
+        {{ legendExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+      </v-icon>
+    </div>
+
+    <div v-if="legendExpanded">
+      <!-- Conditional rendering of the gradient legend for avgheatexposure -->
+      <div v-if="localSelectedIndex === 'avgheatexposure' || localSelectedIndex === 'combined_avgheatexposure'" class="gradient-legend">
         <div class="gradient-bar"></div>
         <div class="gradient-labels">
           <span>0.1</span>
@@ -14,75 +21,48 @@
           <span>0.6</span>
           <span>0.7</span>
           <span>0.8</span>
-          <span>0.9</span>   
-
+          <span>0.9</span>
         </div>
       </div>
 
+      <!-- Custom striped legend for combined_heat_flood_green, simplified to combined heat and flood -->
       <div v-else-if="localSelectedIndex === 'combined_heat_flood_green'" class="striped-legend">
-        <div class="legend-title">Combined Heat and Flood Vulnerability</div>
         <div class="legend-container">
+          <!-- Combined Legend for Heat and Flood -->
           <div class="combined-legend">
-            <h4>Vulnerability</h4>
             <div class="legend-section">
               <div class="heat-legend">
-                <div v-for="item in indexToColorScheme.heat_index" :key="item.range" class="swatch">
+                <h5>Heat Index</h5>
+                <div v-for="item in indexToColorScheme.partialHeat" :key="item.range" class="swatch">
                   <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                  <span>{{ item.range }}</span>
                 </div>
               </div>
+
               <div class="flood-legend">
-                <div v-for="item in indexToColorScheme.flood_index" :key="item.range" class="swatch">
+                <h5>Flood Index</h5>
+                <div v-for="item in indexToColorScheme.partialFlood" :key="item.range" class="swatch">
                   <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                  <span>{{ item.range }}</span>
                 </div>
               </div>
+
+              <div class="missing-legend">
+                <h5>Incomplete Data</h5>
+                <div v-for="item in indexToColorScheme.both" :key="item.range" class="swatch">
+                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                  <span>{{ item.range }}</span>
+                </div>
+              </div>        
             </div>
           </div>
         </div>
         <div class="extrusion-note">
-          <span>Green Space Index (Grid Cell Height, Max 250m)</span>
+          <span>Green Space Index shown by grid cell <br> height visualisation, with a maximum <br> height of 250m (least green).</span>
         </div>
       </div>
 
-      <div v-else-if="['combined_heat_flood', 'combined_flood_heat', 'combined_heatindex_avgheatexposure'].includes(localSelectedIndex.value)" class="striped-legend">
-        <div class="legend-title">Combined Indices</div>
-        <div class="legend-container">
-          <div class="combined-legend">
-            <h4>Color</h4>
-            <div class="legend-section">
-              <div v-if="localSelectedIndex.value === 'combined_heat_flood' || localSelectedIndex.value === 'combined_heatindex_avgheatexposure'" class="heat-legend">
-                <div v-for="item in indexToColorScheme.heat_index" :key="item.range" class="swatch">
-                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
-                </div>
-              </div>
-              <div v-else-if="localSelectedIndex.value === 'combined_flood_heat'" class="flood-legend">
-                <div v-for="item in indexToColorScheme.flood_index" :key="item.range" class="swatch">
-                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
-                </div>
-              </div>
-            </div>
-            <h4>Height</h4>
-            <div class="legend-section">
-              <div v-if="localSelectedIndex.value === 'combined_flood_heat'" class="heat-legend">
-                <div v-for="item in indexToColorScheme.heat_index" :key="item.range" class="swatch">
-                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
-                </div>
-              </div>
-              <div v-else-if="localSelectedIndex.value === 'combined_heat_flood'" class="flood-legend">
-                <div v-for="item in indexToColorScheme.flood_index" :key="item.range" class="swatch">
-                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
-                </div>
-              </div>
-              <div v-else-if="localSelectedIndex.value === 'combined_heatindex_avgheatexposure'" class="avgheatexposure-legend">
-                <div class="gradient-bar"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="extrusion-note">
-          <span>Grid Cell Height (Max 250m)</span>
-        </div>
-      </div>
-
+      <!-- Default legend display for non-gradient indices -->
       <div v-else>
         <div class="swatch" v-for="item in legendData" :key="item.range">
           <div class="color-box" :style="{ backgroundColor: item.color }"></div>
@@ -91,7 +71,23 @@
       </div>
     </div>
 
-    <v-tooltip v-if="selectedIndexDescription" :text="selectedIndexDescription" bottom>
+    <div v-if="localSelectedIndex === 'combined_avgheatexposure' && legendExpanded" class="extrusion-note">
+      <span>Heat Index shown by grid  <br> cell height visualisation, <br> with a maximum height of 250m.</span>
+    </div>
+
+    <div v-if="localSelectedIndex === 'combined_heatindex_avgheatexposure' && legendExpanded" class="extrusion-note">
+      <span>Normalised Landsat Surface heat shown <br> by grid cell height visualisation, <br> with a maximum height of 250m.</span>
+    </div>
+
+    <div v-if="localSelectedIndex === 'combined_heat_flood' && legendExpanded" class="extrusion-note">
+      <span>Flood Index shown by grid <br> cell height visualisation, <br> with a maximum height of 250m.</span>
+    </div>
+
+    <div v-if="localSelectedIndex === 'combined_flood_heat' && legendExpanded" class="extrusion-note">
+      <span>Heat Index shown by grid <br> cell height visualisation, <br> with a maximum height of 250m.</span>
+    </div>
+
+    <v-tooltip v-if="selectedIndexDescription && legendExpanded" :text="selectedIndexDescription" bottom>
       <template v-slot:activator="{ props }">
         <v-select
           v-bind="props"
@@ -106,7 +102,7 @@
       </template>
     </v-tooltip>
 
-    <div class="source-note">
+    <div v-if="legendExpanded" class="source-note">
       Socioeconomic source data by<br>
       <a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a><br>
       <a href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf" target="_blank">Methodology for Assessing Social Vulnerability</a>
@@ -118,6 +114,14 @@
 import { ref, computed } from 'vue';
 import { defineEmits } from 'vue';
 
+// Define state to control the visibility and expansion of the legend
+const legendVisible = ref(true);
+const legendExpanded = ref(true);
+
+// Toggle function for legend expansion/minimization
+const toggleLegend = () => {
+  legendExpanded.value = !legendExpanded.value;
+};
 // Define index options with their corresponding colors and descriptions
 const indexOptions = [
 	{ text: 'Heat Vulnerability', value: 'heat_index', description: 'Total social vulnerability to high temperatures. Includes factors like age, income, and housing conditions.' },
@@ -155,10 +159,28 @@ const heatColors = [
 	{ color: '#bd0026', range: '> 0.8' },
 ];
 
+// Define heat vulnerability colors
+const partialHeatColors = [
+	{ color: '#ffffcc', range: '< 0.2' },
+	{ color: '#ffeda0', range: '0.2 - 0.4' },
+	{ color: '#feb24c', range: '0.4 - 0.6' },
+	{ color: '#f03b20', range: '0.6 - 0.8' },
+	{ color: '#bd0026', range: '> 0.8' },
+];
+
+
 // Define flood vulnerability colors
 const floodColors = [
 	{ color: '#ffffff', range: 'Incomplete data' },
 	{ color: '#A9A9A9', range: 'Missing values' },
+	{ color: '#c6dbef', range: '< 0.2' },  // More saturated light blue
+	{ color: '#9ecae1', range: '0.2 - 0.4' },  // Slightly darker blue
+	{ color: '#6baed6', range: '0.4 - 0.6' },  // Mid-tone blue
+	{ color: '#3182bd', range: '0.6 - 0.8' },  // Darker blue
+	{ color: '#08519c', range: '> 0.8' },  // Deep blue
+];
+
+const partialFloodColors = [
 	{ color: '#c6dbef', range: '< 0.2' },  // More saturated light blue
 	{ color: '#9ecae1', range: '0.2 - 0.4' },  // Slightly darker blue
 	{ color: '#6baed6', range: '0.4 - 0.6' },  // Mid-tone blue
@@ -175,8 +197,15 @@ const greenSpaceColors = [
 	{ color: '#e5f5e0', range: '> 0.8' },           // Very light green for > 0.8
 ];
 
+const bothColors = [
+  { color: '#ffffff', range: 'Incomplete data' },
+	{ color: '#A9A9A9', range: 'Missing values' },
+];
+
 // Define a mapping of indices to their corresponding color schemes
 const indexToColorScheme = {
+  partialHeat: partialHeatColors,
+  partialFlood: partialFloodColors,
 	heat_index: heatColors,
 	flood_index: floodColors,
 	sensitivity: heatColors, // Sensitivity uses heat coloring
@@ -198,6 +227,7 @@ const indexToColorScheme = {
   combined_flood_heat: floodColors,
   combined_heatindex_avgheatexposure: heatColors,
   combined_heat_flood_green: heatColors,
+  both: bothColors,
 };
 
 // Local state to bind to v-select
@@ -237,6 +267,23 @@ const selectedIndexDescription = computed( () => {
   z-index: 10;
   border: 1px solid black;
   box-shadow: 3px 5px 5px black;
+}
+
+.toggle-legend-btn {
+  position: absolute;
+  top: 70px;  /* Adjust position as needed */
+  left: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 11;
+}
+
+.legend-section {
+  display: flex;
+  flex-direction: row; /* Arrange Heat and Flood sections as columns */
+  gap: 20px; /* Space between the columns */
 }
 
 .swatch {
@@ -318,7 +365,9 @@ const selectedIndexDescription = computed( () => {
 .heat-legend,
 .flood-legend {
   display: flex;
-  align-items: center;            /* Center items vertically */
+  flex-direction: column;  /* Stack items vertically */
+  align-items: flex-start;            /* Center items vertically */
+  margin-bottom: 1rem;
 }
 
 .color-box {
