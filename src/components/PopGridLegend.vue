@@ -3,7 +3,6 @@
     <div>
       <h3>{{ title }}</h3>
       
-      <!-- Conditional rendering of the gradient legend for avgheatexposure -->
       <div v-if="localSelectedIndex === 'avgheatexposure'  || localSelectedIndex === 'combined_avgheatexposure'" class="gradient-legend">
         <div class="gradient-bar"></div>
         <div class="gradient-labels">
@@ -15,38 +14,75 @@
           <span>0.6</span>
           <span>0.7</span>
           <span>0.8</span>
-          <span>0.9</span>
+          <span>0.9</span>   
+
         </div>
       </div>
 
-      <!-- Custom striped legend for combined_heat_flood_green, simplified to combined heat and flood -->
-<div v-else-if="localSelectedIndex === 'combined_heat_flood_green'" class="striped-legend">
-  <div class="legend-title">Combined Heat and Flood Vulnerability</div>
-  <div class="legend-container">
-    <!-- Combined Legend for Heat and Flood -->
-    <div class="combined-legend">
-      <h4>Vulnerability</h4>
-      <div class="legend-section">
-        <div class="heat-legend">
-          <div v-for="item in indexToColorScheme.heat_index" :key="item.range" class="swatch">
-            <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+      <div v-else-if="localSelectedIndex === 'combined_heat_flood_green'" class="striped-legend">
+        <div class="legend-title">Combined Heat and Flood Vulnerability</div>
+        <div class="legend-container">
+          <div class="combined-legend">
+            <h4>Vulnerability</h4>
+            <div class="legend-section">
+              <div class="heat-legend">
+                <div v-for="item in indexToColorScheme.heat_index" :key="item.range" class="swatch">
+                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                </div>
+              </div>
+              <div class="flood-legend">
+                <div v-for="item in indexToColorScheme.flood_index" :key="item.range" class="swatch">
+                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div class="flood-legend">
-          <div v-for="item in indexToColorScheme.flood_index" :key="item.range" class="swatch">
-            <div class="color-box" :style="{ backgroundColor: item.color }"></div>
-          </div>
+        <div class="extrusion-note">
+          <span>Green Space Index (Grid Cell Height, Max 250m)</span>
         </div>
       </div>
-    </div>
-  </div>
-  <div class="extrusion-note">
-    <span>Extrusion represents Green Space (Height)</span>
-  </div>
-</div>
 
-      <!-- Default legend display for non-gradient indices -->
+      <div v-else-if="['combined_heat_flood', 'combined_flood_heat', 'combined_heatindex_avgheatexposure'].includes(localSelectedIndex.value)" class="striped-legend">
+        <div class="legend-title">Combined Indices</div>
+        <div class="legend-container">
+          <div class="combined-legend">
+            <h4>Color</h4>
+            <div class="legend-section">
+              <div v-if="localSelectedIndex.value === 'combined_heat_flood' || localSelectedIndex.value === 'combined_heatindex_avgheatexposure'" class="heat-legend">
+                <div v-for="item in indexToColorScheme.heat_index" :key="item.range" class="swatch">
+                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                </div>
+              </div>
+              <div v-else-if="localSelectedIndex.value === 'combined_flood_heat'" class="flood-legend">
+                <div v-for="item in indexToColorScheme.flood_index" :key="item.range" class="swatch">
+                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                </div>
+              </div>
+            </div>
+            <h4>Height</h4>
+            <div class="legend-section">
+              <div v-if="localSelectedIndex.value === 'combined_flood_heat'" class="heat-legend">
+                <div v-for="item in indexToColorScheme.heat_index" :key="item.range" class="swatch">
+                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                </div>
+              </div>
+              <div v-else-if="localSelectedIndex.value === 'combined_heat_flood'" class="flood-legend">
+                <div v-for="item in indexToColorScheme.flood_index" :key="item.range" class="swatch">
+                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                </div>
+              </div>
+              <div v-else-if="localSelectedIndex.value === 'combined_heatindex_avgheatexposure'" class="avgheatexposure-legend">
+                <div class="gradient-bar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="extrusion-note">
+          <span>Grid Cell Height (Max 250m)</span>
+        </div>
+      </div>
+
       <div v-else>
         <div class="swatch" v-for="item in legendData" :key="item.range">
           <div class="color-box" :style="{ backgroundColor: item.color }"></div>
@@ -103,9 +139,9 @@ const indexOptions = [
   { text: 'Landsat surface heat', value: 'avgheatexposure', description: 'Landsat surface heat 2023-06-28 (not combined)' },
   { text: 'Combined Landsat surface heat', value: 'combined_avgheatexposure', description: 'Combined Landsat surface heat  2023-06-28 and heat index' },
   { text: 'Heat and Landsat surface heat combined', value: 'combined_heatindex_avgheatexposure', description: 'Landsat surface heat and heat vulnerability combined' },
-  { text: 'Combined Indices (Heat/Flood)', value: 'combined_heat_flood', description: 'Combined heat and flood vulnerability, colored by heat and extruded by flood.' },
-  { text: 'Combined Indices (Flood/Heat)', value: 'combined_flood_heat', description: 'Combined heat and flood vulnerability, colored by flood and extruded by heat.' },
-  { text: 'Combined Indices (Heat/Flood/Green)', value: 'combined_heat_flood_green', description: 'Combined heat and flood vulnerability, colored by heat and flood (Green space not included).' },
+  { text: 'Combined Indices (Heat/Flood)', value: 'combined_heat_flood', description: 'Combined heat and flood vulnerability, colored by heat and height by flood.' },
+  { text: 'Combined Indices (Flood/Heat)', value: 'combined_flood_heat', description: 'Combined heat and flood vulnerability, colored by flood and height by heat.' },
+  { text: 'Combined Indices (Heat/Flood/Green)', value: 'combined_heat_flood_green', description: 'Combined heat and flood vulnerability, colored by heat and flood, height by green space.' },
 ];
 
 // Define heat vulnerability colors

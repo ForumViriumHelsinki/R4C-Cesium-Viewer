@@ -101,7 +101,7 @@ const checkPassword = async () => {
 // Function to load the GeoJSON data source
 const loadGrid = async () => {
 	const dataSourceService = new DataSource();
-	dataSourceService.changeDataSourceShowByName( 'PopulationGrid', false );
+	dataSourceService.removeDataSourcesAndEntities();
 	await dataSourceService.loadGeoJsonDataSource(
 		0.8,
 		'./assets/data/r4c_stats_grid_index.json',
@@ -260,6 +260,7 @@ const getColorForIndex = ( indexValue, indexType ) => {
 
 // On mount, show the password dialog
 onMounted(() => {
+	
   showPasswordDialog.value = true;
 });
 
