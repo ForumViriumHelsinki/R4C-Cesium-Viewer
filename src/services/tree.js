@@ -17,10 +17,19 @@ export default class Tree {
  * 
  */
 	async loadTrees( ) {
+		
+		this.store.setIsLoading( true );
+		await this.loadTreesWithKoodi('221');
+		await this.loadTreesWithKoodi('222');
+		await this.loadTreesWithKoodi('223');
+		await this.loadTreesWithKoodi('224');
+
+	}
+
+	async loadTreesWithKoodi( koodi ) {
 
 		// Construct the API endpoint URL
-		let url = 'https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
-		this.store.setIsLoading( true );
+		let url = 'https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode + '&koodi=' + koodi;
 
 		try {
 			// Attempt to retrieve the tree data from the Redis cache
@@ -30,23 +39,23 @@ export default class Tree {
 
 			if ( cachedData ) {
 				console.log( 'found from cache' );
-				this.addTreesDataSource( cachedData );
+				this.addTreesDataSource( cachedData, koodi );
 			} else {
-				this.loadTreesWithoutCache( url );
+				this.loadTreesWithoutCache( url, koodi );
 			}
 		} catch ( err ) {
 			console.log( err );
 		}
-	}
+	}	
 
 	/**
  * Add the tree data as a new data source to the Cesium
  * 
  * @param { object } data tree data
  */
-	async addTreesDataSource( data ) {
+	async addTreesDataSource( data, koodi ) {
 	
-		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Trees' );
+		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Trees' + koodi );
 
 		// Iterate over each entity in the data source and set its polygon material color based on the tree description
 		for ( let i = 0; i < entities.length; i++ ) {
@@ -63,7 +72,7 @@ export default class Tree {
 
 		}
 
-		this.store.setIsLoading( false );
+		koodi === '224' && this.store.setIsLoading( false );
 
 	}
 
@@ -127,7 +136,7 @@ export default class Tree {
  * 
  * @param { String } url API endpoint's url
  */
-	loadTreesWithoutCache( url ) {
+	loadTreesWithoutCache( url, koodi ) {
 
 		console.log( 'Not in cache! Loading: ' + url );
 
@@ -136,7 +145,7 @@ export default class Tree {
 			.then( ( data ) => {
 			// Save fetched data to Redis cache through the backend
 				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
-				this.addTreesDataSource( data );
+				this.addTreesDataSource( data, koodi );
 			} )
 			.catch( ( error ) => {
 				console.log( 'Error loading trees:', error );
