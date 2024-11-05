@@ -291,6 +291,7 @@ export default class Building {
         		return foundEntry ? foundEntry.avg_temp_c : null;
       		}).filter(temp => temp !== null);
 
+		this.resetBuildingOutline();
   		this.propsStore.setHeatHistogramData(avg_temp);
   		eventBus.emit('newHeatHistogram');
 
@@ -368,12 +369,10 @@ export default class Building {
 	}
 
 	outlineByTemperature( entity, property, values ) {
-		const targetDate = '2021-02-18';
-		const isCold = this.toggleStore.capitalRegionCold;
 		const heatTimeseries = entity._properties[ 'heat_timeseries' ]?._value || [];
-		const foundEntry = isCold && heatTimeseries.find( ( { date } ) => date === targetDate );
+		const foundEntry = heatTimeseries.find( ( { date } ) => date === this.store.heatDataDate );
 
-		const shouldOutlineYellow = isCold 
+		const shouldOutlineYellow = !this.toggleStore.helsinkiView 
 			? foundEntry && values.includes( foundEntry.avg_temp_c )
 			: entity._properties[property] && values.includes( entity._properties[ property ]._value );
 

@@ -139,8 +139,6 @@ app.get( '/terrain-proxy/*', async ( req, res ) => {
 		terrainUrl = terrainUrl.substring( 0, terrainUrl.length - und.length );
 	}
     
-	console.log( 'Proxying request to:', terrainUrl );
-
 	try {
 		const response = await axios( {
 			method: 'get',

@@ -65,13 +65,13 @@ export default {
     });	
 
     const updateViewAndPlots = () => {
-        const buildingsDataSource = dataSourceService.getDataSourceByName('Buildings ' + globalStore.postalcode);
+        const buildingsDataSource = dataSourceService.getDataSourceByName( 'Buildings ' + globalStore.postalcode );
 
         if (!buildingsDataSource) return;
 
         const entities = buildingsDataSource.entities.values;
-        buildingService.setHeatExposureToBuildings(entities);
-        buildingService.updateHeatHistogramDataAfterFilter(entities);
+        buildingService.setHeatExposureToBuildings( entities );
+        buildingService.updateHeatHistogramDataAfterFilter( entities) ;
         propsStore.setScatterPlotEntities( entities );
   		eventBus.emit('updateScatterPlot');
     };    

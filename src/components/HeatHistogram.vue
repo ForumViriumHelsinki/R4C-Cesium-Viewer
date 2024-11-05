@@ -8,7 +8,6 @@ import * as d3 from 'd3'; // Import D3.js
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
 import Plot from '../services/plot.js'; 
 import Building from '../services/building.js';
 
@@ -17,7 +16,6 @@ export default {
 		const store = useGlobalStore();
 		const plotService = new Plot();
 		const propsStore = usePropsStore();
-		const toggleStore = useToggleStore();
 
 		const createBars = ( svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter ) => {
 			svg.selectAll( '.bar' )
@@ -42,11 +40,9 @@ export default {
 		const rgbColor = ( data ) => {
 			const average = calculateAverage( data );
 			const isCold = store.heatDataDate === '2021-02-18';
-			const index = isCold
-				? calculateIndex( average, store.minMaxKelvin['2021-02-18'].min, store.minMaxKelvin['2021-02-18'].max )
-				: store.view === 'capitalRegion'
-					? calculateIndex( average, store.minMaxKelvin['2023-06-23'].min, store.minMaxKelvin['2023-06-23'].max  )
-					: average;
+			const index = store.view === 'capitalRegion'
+				? calculateIndex( average, store.minMaxKelvin[ store.heatDataDate ].min, store.minMaxKelvin[ store.heatDataDate ].max  )
+				: average;
 
 			return isCold ? getColdColor( index ) : getWarmColor( index );
 		};

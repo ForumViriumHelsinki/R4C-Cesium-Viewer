@@ -111,11 +111,10 @@ export default {
 		// Clean up Cesium mouse events
 		onUnmounted( () => {
 
-			if ( buildingStore.buildingFeatures ) {
-				store.cesiumViewer.screenSpaceEventHandler.removeInputAction(
-					Cesium.ScreenSpaceEventType.MOUSE_MOVE
-				);
-			}
+			store.cesiumViewer.screenSpaceEventHandler.removeInputAction(
+				Cesium.ScreenSpaceEventType.MOUSE_MOVE
+			);
+			
 		} );
 
 		return {

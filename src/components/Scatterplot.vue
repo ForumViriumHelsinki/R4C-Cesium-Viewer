@@ -314,7 +314,6 @@ export default {
 					this.plotService.handleMouseout( tooltip ) )
 				.on( 'click', ( event, d ) => {
 					// Assume each data point includes a building ID or some identifier
-					console.log( 'd',d );
 					buildingSerivce.highlightBuildingInViewer( d.buildingId );
 				} );
 		},
