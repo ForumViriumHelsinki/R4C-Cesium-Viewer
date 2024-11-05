@@ -73,6 +73,7 @@ export default {
         buildingService.setHeatExposureToBuildings( entities );
         buildingService.updateHeatHistogramDataAfterFilter( entities) ;
         propsStore.setScatterPlotEntities( entities );
+		globalStore.setShowBuildingInfo( true );
   		eventBus.emit('updateScatterPlot');
     };    
 
@@ -88,6 +89,7 @@ export default {
 
     // Watch for changes in currentPropertyIndex
 	watch(currentPropertyIndex, (newIndex) => {
+		globalStore.setShowBuildingInfo( false );
   		isTimelineLocked.value = true; // Lock the timeline
 
   		selectedDate.value = dates[newIndex];

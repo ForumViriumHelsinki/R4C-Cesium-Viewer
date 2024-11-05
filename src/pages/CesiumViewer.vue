@@ -14,7 +14,6 @@
     	<DisclaimerPopup class="disclaimer-popup" />
     	<BuildingInformation 
       		v-if="shouldShowBuildingInformation"  
-      		:delay="2000"  
     	/>
 	</div>
 </template>
@@ -56,7 +55,7 @@ export default {
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
     	const shouldShowBuildingInformation = computed(() => {
-      		return buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid';
+      		return buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid' && store.showBuildingInfo;
     	});
 		const viewer = ref(null);
 		const view = computed( () => store.view );

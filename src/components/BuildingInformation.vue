@@ -17,15 +17,14 @@
 <script>
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
-import Datasource from '../services/datasource.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 import { findAddressForBuilding } from '../services/address.js'; // Import the updated address function
+import * as Cesium from 'cesium';
 
 export default {
 	setup() {
 		const store = useGlobalStore(); // Access Cesium viewer via global store
 		const buildingStore = useBuildingStore(); // Access Cesium viewer via global store
-		const datasourceService = new Datasource(); // For fetching the datasource
 		const showTooltip = ref( false ); // State for whether to show the tooltip
 		const mousePosition = ref( { x: 0, y: 0 } ); // Mouse cursor position
 		const buildingAttributes = ref( null ); // Stores building data when hovering

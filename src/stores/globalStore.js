@@ -15,7 +15,7 @@ export const useGlobalStore = defineStore( 'global', {
       		'2021-07-12': { min: 285.3197937, max: 330.1052856 },
       		'2022-06-28': { min: 291.5029602, max: 332.3135986 },
       		'2023-06-23': { min: 287.1230469, max: 313.7035522 },
-      		'2024-05-25': { min: 247.1928711, max: 328.0393066 },
+      		'2024-05-25': { min: 287.1928711, max: 328.0393066 }, // TODO fix for min temperature
     	},
 		heatDataDate: '2023-06-23',
 		currentGridCell: null,
@@ -23,10 +23,14 @@ export const useGlobalStore = defineStore( 'global', {
 		buildingAddress: null,
 		pickedEntity: null,
 		isLoading: false,
+		showBuildingInfo: true,
 		isCameraRotated: false,
 		navbarWidth: Math.min(Math.max(window.innerWidth * 0.375, 400), 800),
 	} ),
 	actions: {
+		setShowBuildingInfo( status ) {
+			this.showBuildingInfo = status;
+		},		
 		setIsLoading( isLoading ) {
 			this.isLoading = isLoading;
 		},
