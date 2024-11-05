@@ -18,7 +18,7 @@
               <v-list-item class="pa-0 ma-0">
                 <v-list-item-content class="pa-0 ma-0">
 
-                  <v-tooltip location="bottom">
+                  <v-tooltip location="bottom" class="tooltip">
                     <template v-slot:activator="{ props }">
                       <v-btn
                         v-if="currentLevel === 'building'"
@@ -236,11 +236,20 @@ export default {
     const returnToPostalCode = () => {
 			const featurepicker = new Featurepicker();
       const treeService = new Tree();
+      hideTooltip(); 
 			featurepicker.loadPostalCode();
 			toggleStore.showTrees && treeService.loadTrees();
 		};
 
-        // Function to rotate the Cesium camera
+    // Function to hide the tooltip
+    const hideTooltip = () => {
+      const tooltip = document.querySelector('.tooltip'); // Select the tooltip element
+      if (tooltip) {
+        tooltip.style.display = 'none'; // Hide the tooltip
+      }
+    };
+
+    // Function to rotate the Cesium camera
     const rotateCamera = () => {
       const camera = new Camera();
       camera.rotate180Degrees();
