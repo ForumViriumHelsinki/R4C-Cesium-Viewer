@@ -1,0 +1,11 @@
+{
+  "plugins": ["node-workspace"],
+  "packages": {
+    ".": {
+      "release-type": "node"
+    },
+    "helm":{
+      "release-type": "helm"
+    }
+  }
+}
