@@ -37,7 +37,7 @@ Use Playwright to run tests
 npx playwright test
 ```
 
-Run tests with an interactive user interface
+Run tests with an interactive user interface:
 
 ```
 npx playwright test --ui
