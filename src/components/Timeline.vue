@@ -73,7 +73,6 @@ export default {
         buildingService.setHeatExposureToBuildings( entities );
         buildingService.updateHeatHistogramDataAfterFilter( entities) ;
         propsStore.setScatterPlotEntities( entities );
-		globalStore.setShowBuildingInfo( true );
   		eventBus.emit('updateScatterPlot');
     };    
 
@@ -93,13 +92,14 @@ export default {
   		isTimelineLocked.value = true; // Lock the timeline
 
   		selectedDate.value = dates[newIndex];
-  		globalStore.setHeatDataDate(selectedDate.value);
+  		globalStore.setHeatDataDate( selectedDate.value );
   		updateViewAndPlots();
 
   		// Unlock the timeline after a 1-second delay
   		setTimeout(() => {
     		isTimelineLocked.value = false;
-  		}, 1200);
+			globalStore.setShowBuildingInfo( true );
+  		}, 1000);
 	});
     return {
       	selectedDate,

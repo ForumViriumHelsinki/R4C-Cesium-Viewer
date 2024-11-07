@@ -15,7 +15,7 @@ export const useGlobalStore = defineStore( 'global', {
       		'2021-07-12': { min: 285.3197937, max: 330.1052856 },
       		'2022-06-28': { min: 291.5029602, max: 332.3135986 },
       		'2023-06-23': { min: 287.1230469, max: 313.7035522 },
-      		'2024-05-25': { min: 287.1928711, max: 328.0393066 }, // TODO fix for min temperature
+      		'2024-05-25': { min: 247.1928711, max: 328.0393066 }, // TODO fix min temperature or better create function 
     	},
 		heatDataDate: '2023-06-23',
 		currentGridCell: null,
