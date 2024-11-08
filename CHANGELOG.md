@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.1.0...r4c-cesium-viewer-v1.2.0) (2024-11-08)
+
+
+### Features
+
+* add dotenv package for env variables ([#21](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/21)) ([a9ff6b1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a9ff6b1baf89593a8a9af48ea6a2e4f25b64ea66))
+
+
+### Bug Fixes
+
+* mangled merge ([eab3899](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/eab3899f166392f6043eaa46dc86f47b15772d18))
+* skaffold config ([#18](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/18)) ([0186560](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0186560b755d42ac5359cfb1ed6d69340e6f229a))
+
 ## [1.1.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.0.0...r4c-cesium-viewer-v1.1.0) (2024-11-08)
 
 
