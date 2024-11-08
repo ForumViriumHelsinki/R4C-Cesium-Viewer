@@ -104,7 +104,7 @@ export default {
 						);
 					}
 				} );
-			}, 2000 ); // 2000 milliseconds = 2 second delay
+			}, 1000 ); // 1000 milliseconds = 21 second delay
 		} );
 
 		// Clean up Cesium mouse events

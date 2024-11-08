@@ -117,9 +117,10 @@ export default {
 			const featurepicker = new Featurepicker();
 			cesiumContainer.addEventListener('click', (event) => {
   				const controlPanelElement = document.querySelector('.control-panel');
+				const timeSeriesElement = document.querySelector('#heatTimeseriesContainer');
   				const isClickOnControlPanel = controlPanelElement.contains(event.target);
-				!isClickOnControlPanel && featurepicker.processClick(event);
-  						
+				const isClickOutsideTimeSeries = timeSeriesElement && timeSeriesElement.contains(event.target);
+				!isClickOnControlPanel && !isClickOutsideTimeSeries && featurepicker.processClick(event);						
   			});
 		};
 
