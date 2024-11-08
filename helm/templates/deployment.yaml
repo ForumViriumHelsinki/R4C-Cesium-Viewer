@@ -52,9 +52,9 @@ spec:
           {{- end }}
           envFrom:
           - configMapRef:
-              name: r4c-configmap
+              name: {{ .Release.Name }}-configmap
           - secretRef:
-              name: r4c-secrets
+              name: {{ .Release.Name }}-secrets
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}

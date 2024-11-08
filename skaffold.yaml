@@ -26,3 +26,6 @@ deploy:
           vite:
             digitransit_key: "placeholder"
             password_250: "placeholder"
+          sentry:
+            dsn: "placeholder"
+            auth_token: "placeholder"
