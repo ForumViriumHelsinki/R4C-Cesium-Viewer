@@ -67,25 +67,11 @@ export default class Building {
 		( this.toggleStore.showTrees && treeArea ) &&
       ( this.propsStore.setTreeArea( treeArea ) );
 
-<<<<<<< HEAD
 		this.toggleStore.helsinkiView 
     		? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
     		: ( !this.toggleStore.helsinkiView 
         		? ( this.propsStore.setBuildingHeatExposure( avg_temp_c._value ), buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) ) 
         		: ( this.propsStore.setGridBuildingProps( buildingProps ) ) );       
-||||||| parent of 8727c47 (feat: remove backend calls and cache layer)
-		this.toggleStore.helsinkiView 
-    		? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
-    		: ( !this.toggleStore.helsinkiView 
-        		? ( this.propsStore.setBuildingHeatExposure( avg_temp_c._value ), buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) ) 
-        		: ( this.propsStore.setGridBuildingProps( buildingProps ), eventBus.emit( 'newBuildingGridChart' ) ) );       
-=======
-		this.toggleStore.helsinkiView
-			? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
-			: ( !this.toggleStore.helsinkiView
-				? ( this.propsStore.setBuildingHeatExposure( avg_temp_c._value ), buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) )
-				: ( this.propsStore.setGridBuildingProps( buildingProps ), eventBus.emit( 'newBuildingGridChart' ) ) );
->>>>>>> 8727c47 (feat: remove backend calls and cache layer)
 	}
 
 	/**
@@ -98,31 +84,9 @@ export default class Building {
 
 		const targetDate = this.store.heatDataDate;
 
-<<<<<<< HEAD
 		if ( polygon ) {
 							if (this.toggleStore.helsinkiView) {
 								if ( properties?.avgheatexposuretobuilding ) {
-||||||| parent of 8727c47 (feat: remove backend calls and cache layer)
-			if ( this.toggleStore.capitalRegionCold ) {
-      	const targetDate = '2021-02-18';
-      	const heatTimeseries = properties.heat_timeseries?._value || [];
-      	const foundEntry = heatTimeseries.find( ( { date } ) => date === targetDate );
-
-				polygon.material = foundEntry
-					? new Cesium.Color( 0, ( 1 - ( 1 - foundEntry.avgheatexposure ) ), 1, 1 - foundEntry.avgheatexposure )
-					: new Cesium.Color( 0, 0, 0, 0 );
-			} else {
-=======
-			if ( this.toggleStore.capitalRegionCold ) {
-				const targetDate = '2021-02-18';
-				const heatTimeseries = properties.heat_timeseries?._value || [];
-				const foundEntry = heatTimeseries.find( ( { date } ) => date === targetDate );
-
-				polygon.material = foundEntry
-					? new Cesium.Color( 0, ( 1 - ( 1 - foundEntry.avgheatexposure ) ), 1, 1 - foundEntry.avgheatexposure )
-					: new Cesium.Color( 0, 0, 0, 0 );
-			} else {
->>>>>>> 8727c47 (feat: remove backend calls and cache layer)
 				const heatExposureValue = properties.avgheatexposuretobuilding._value;
 				polygon.material = new Cesium.Color( 1, 1 - heatExposureValue, 0, heatExposureValue );
 								}
@@ -369,37 +333,17 @@ export default class Building {
 	}
 
 	outlineByTemperature( entity, property, values ) {
-<<<<<<< HEAD
 		const heatTimeseries = entity._properties[ 'heat_timeseries' ]?._value || [];
 		const foundEntry = heatTimeseries.find( ( { date } ) => date === this.store.heatDataDate );
-||||||| parent of 8727c47 (feat: remove backend calls and cache layer)
-		const targetDate = '2021-02-18';
-		const isCold = this.toggleStore.capitalRegionCold;
-		const heatTimeseries = entity._properties[ 'heat_timeseries' ]?._value || [];
-		const foundEntry = isCold && heatTimeseries.find( ( { date } ) => date === targetDate );
-=======
-		const targetDate = '2021-02-18';
-		const isCold = this.toggleStore.capitalRegionCold;
-		const heatTimeseries = entity._properties['heat_timeseries']?._value || [];
-		const foundEntry = isCold && heatTimeseries.find( ( { date } ) => date === targetDate );
->>>>>>> 8727c47 (feat: remove backend calls and cache layer)
 
-<<<<<<< HEAD
 		const shouldOutlineYellow = !this.toggleStore.helsinkiView 
-||||||| parent of 8727c47 (feat: remove backend calls and cache layer)
-		const shouldOutlineYellow = isCold 
-=======
-		const shouldOutlineYellow = isCold
->>>>>>> 8727c47 (feat: remove backend calls and cache layer)
 			? foundEntry && values.includes( foundEntry.avg_temp_c )
-			: entity._properties[property] && values.includes( entity._properties[property]._value );
+			: entity._properties[property] && values.includes( entity._properties[ property ]._value );
 
-		shouldOutlineYellow
-			? this.polygonOutlineToYellow( entity )
+		shouldOutlineYellow 
+			? this.polygonOutlineToYellow( entity ) 
 			: this.polygonOutlineToBlack( entity );
 	}
-
-
 
 	highlightBuildingInViewer( id ) {
 		// Find the data source for buildings
