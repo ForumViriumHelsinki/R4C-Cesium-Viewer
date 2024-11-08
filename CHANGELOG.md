@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.2.0...r4c-cesium-viewer-v1.2.1) (2024-11-08)
+
+
+### Bug Fixes
+
+* container build tags ([#22](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/22)) ([114016c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/114016c4879c2cb4faf1e223d41f9adb4d3635bd))
+
 ## [1.2.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.1.0...r4c-cesium-viewer-v1.2.0) (2024-11-08)
 
 
