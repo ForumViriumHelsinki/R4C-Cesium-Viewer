@@ -318,30 +318,48 @@ export default {
 				} );
 		},
 
-		createLegend( svg, width, margin, values, labelsWithAverage, colorScale ) {
-			const legend = svg.append( 'g' )
-				.attr( 'class', 'legend' )
-				.attr( 'transform', `translate(${width + margin.right - 130},${margin.top + 20})` );
+createLegend(svg, width, margin, values, labelsWithAverage, colorScale) {
+  const maxVisibleItems = 15;
+  const itemHeight = 16;
+  const legendHeight = maxVisibleItems * itemHeight;
 
-			legend.selectAll( '.legend-color' )
-				.data( values )
-				.enter()
-				.append( 'rect' )
-				.attr( 'x', 0 )
-				.attr( 'y', ( _, i ) => i * 20 )
-				.attr( 'width', 10 )
-				.attr( 'height', 10 )
-				.style( 'fill', d => colorScale( d ) );
+  const legend = svg.append('g')
+    .attr('class', 'legend')
+    .attr('transform', `translate(${width},${margin.top - 20})`);
 
-			legend.selectAll( '.legend-label' )
-				.data( labelsWithAverage )
-				.enter()
-				.append( 'text' )
-				.attr( 'x', 20 )
-				.attr( 'y', ( _, i ) => i * 20 + 9 )
-				.text( d => d )
-				.style( 'font-size', '10px' );
-		},
+  // Create a scrolling container
+  const legendContainer = legend.append("foreignObject")
+    .attr("width", margin.right)  // Adjust based on your layout
+    .attr("height", legendHeight)
+    .style("overflow-y", values.length > maxVisibleItems ? "scroll" : "hidden");
+
+  const legendContent = legendContainer.append("xhtml:div")
+    .style("height", `${values.length * itemHeight}px`) // Total height to allow scroll
+    .style("position", "relative");
+
+  // Draw color boxes
+  legendContent.selectAll('.legend-color')
+    .data(values)
+    .enter()
+    .append('div')
+    .style('position', 'absolute')
+    .style('top', (d, i) => `${i * itemHeight}px`)
+    .style('left', '2px')
+    .style('width', '10px')
+    .style('height', '10px')
+    .style('background-color', d => colorScale(d));
+
+  // Draw labels
+  legendContent.selectAll('.legend-label')
+    .data(labelsWithAverage)
+    .enter()
+    .append('div')
+    .style('position', 'absolute')
+    .style('top', (d, i) => `${i * itemHeight}px`)
+    .style('left', '15px')
+    .style('font-size', '9px')
+    .text(d => d);
+},
 
 		createColorScale( values ) {
 			return d3.scaleOrdinal()
@@ -364,9 +382,9 @@ export default {
 			// Prepare the data for the plot
 			const { heatData, labelsWithAverage, values } = this.prepareDataForPlot( features, categorical, numerical );
 
-			const margin = { top: 25, right: 150, bottom: 16, left: 28 };;
+			const margin = { top: 25, right: 190, bottom: 18, left: 28 };;
 			const width = this.store.navbarWidth - margin.left - margin.right;
-			const height = 290 - margin.top - margin.bottom;
+			const height = 300 - margin.top - margin.bottom;
 
 			// Initialize the SVG element
 			const svg = this.plotService.createSVGElement( margin, width, height, '#scatterPlotContainer' );
@@ -408,15 +426,15 @@ export default {
 
 #categoricalSelect {
     position: absolute;
-    top: 67px;  /* Adjusted position to match scatter plot container */
-    right: 30px;
+    top: 65px;  /* Adjusted position to match scatter plot container */
+    right: 15%;
     font-size: smaller;
 }
 
 #numericalSelect {
     position: absolute;
-    bottom: 26px;
-    right: 30px; /* Adjusted position to match scatter plot container */
+    bottom: 0px;
+    right: 18%; /* Adjusted position to match scatter plot container */
     font-size: smaller;
 }
   </style>

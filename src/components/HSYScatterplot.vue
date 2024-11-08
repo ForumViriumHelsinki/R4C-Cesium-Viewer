@@ -106,7 +106,7 @@ export default {
 
 			const { heatData, labelsWithAverage, values } = prepareDataForPlot( features );
 
-			const margin = { top: 50, right: 150, bottom: 16, left: 28 };
+			const margin = { top: 50, right: 175, bottom: 16, left: 28 };
 			const width = globalStore.navbarWidth - margin.left - margin.right;
 			const height = 290 - margin.top - margin.bottom;
 
@@ -136,26 +136,41 @@ export default {
 		const createLegend = ( svg, width, margin, values, labelsWithAverage, colorScale ) => {
 			const legend = svg.append( 'g' )
 				.attr( 'class', 'legend' )
-				.attr( 'transform', `translate( ${ width + margin.right - 145 },${ margin.top } )` );
+				.attr( 'transform', `translate( ${ width },${ -10 } )` );
   
 			legend.selectAll( '.legend-color' )
 				.data( values )
 				.enter()
 				.append( 'rect' )
-				.attr( 'x', 0 )
-				.attr( 'y', ( _, i ) => i * 20 )
+				.attr( 'x', 50 )
+				.attr( 'y', ( _, i ) => i * 40 + 20)
 				.attr( 'width', 9 )
 				.attr( 'height', 9 )
 				.style( 'fill', d => colorScale( d ) );
   
-			legend.selectAll( '.legend-label' )
-				.data( labelsWithAverage )
-				.enter()
-				.append( 'text' )
-				.attr( 'x', 14 )
-				.attr( 'y', ( _, i ) => i * 20 + 9 )
-				.text( d => d )
-				.style( 'font-size', '9px' );
+  			legend.selectAll('.legend-label')
+    			.data(labelsWithAverage)
+    			.enter()
+    			.append('text')
+    			.attr('x', 0)
+    			.attr('y', (_, i) => i * 40 )
+    			.each(function(_, i) {  // Iterate over each label
+      		
+					const label = d3.select(this);
+      				const labelText = labelsWithAverage[i];
+
+      				const lines = labelText.split('<br>'); // Split the label text by <br>
+      				label.text(null); // Clear the original text
+
+      				// Append tspans for each line
+      				lines.forEach((line, j) => {
+        			label.append('tspan')
+          				.attr('x', 10)
+          				.attr('dy', `${j + 1}em`) // Adjust vertical offset for each line
+          				.text(line);
+      				});
+    			})
+    			.style('font-size', '9px');
 		};
 
 		const prepareDataForPlot = ( features ) => {
@@ -170,7 +185,7 @@ export default {
 				plotData.xData.forEach( ( xData, j ) => {
 					heatData.push( { xData, yData: plotData.yData[ j ], name: value, buildingId: plotData.buildingId[ j ] } );
 				} );
-				const averageLabel = `${ value } ${ dataWithHeat[ 2 ].toFixed( 1 ) }`;
+				const averageLabel = `${value} <br> ${dataWithHeat[2].toFixed(1)}`;
 				if ( !labelsWithAverage.includes( averageLabel ) ) {
 					labelsWithAverage.push( `${ averageLabel } °C` );
 				}
