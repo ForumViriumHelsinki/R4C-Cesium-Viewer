@@ -1,14 +1,7 @@
-# General
-.DS_Store
-.git
-.gitignore
-.dockerignore
-README.md
-LICENSE
-.docker*
-Dockerfile*
-
-# Node.js
-npm-debug.log
-yarn-error.log
-yarn-debug.log
+*
+!nginx
+!src
+!vite.config.js
+!public
+!package*.json
+!index.html

@@ -10,8 +10,6 @@ import * as Cesium from 'cesium';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 
-const backendURL = import.meta.env.VITE_BACKEND_URL;
-
 export default class HSYBuilding {
 	constructor( ) {
 		this.store = useGlobalStore();
@@ -23,59 +21,16 @@ export default class HSYBuilding {
 
 	async loadHSYBuildings( ) {
 
-		const url = 'https://geo.fvh.fi/r4c/collections/hsy_buildings/items?f=json&limit=5000&postinumero=' + this.store.postalcode;
+		const url = '/pygeoapi/collections/hsy_buildings/items?f=json&limit=5000&postinumero=' + this.store.postalcode;
 
 		console.log( 'url',url );
+		const response = await fetch( url );
+		const data = await response.json();
 
-		try {
-			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
-			const cachedResponse = await axios.get( cacheApiUrl );
-			const cachedData = cachedResponse.data;
-  
-			if ( cachedData ) {
-				console.log( 'found from cache' );
+		await this.setGridAttributes( data.features );
 
-				let entities = await this.datasourceService.addDataSourceWithPolygonFix( cachedData, 'Buildings ' + this.store.postalcode );
-				this.setHSYBuildingAttributes( cachedData, entities );
-			
-			} else {
-
-				this.loadHSYBuildingsWithoutCache( url );
-			
-			}
-
-		} catch ( err ) {
-		// This code runs if there were any errors.
-			console.log( err );
-		}
-
-	}
-
-	async loadHSYBuildingsWithoutCache( url ) {
-		console.log( 'Not in cache! Loading: ' + url );
-  
-		try {
-			const response = await fetch( url );
-			const data = await response.json();
-
-			if ( this.store.postalcode ) {
-
-				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
-
-			} else {
-
-				await this.setGridAttributes( data.features );
-
-			}
-
-			let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + this.store.postalcode );
-			this.setHSYBuildingAttributes( data, entities );
-			return entities; // Return the processed entities or whatever you need here
-	
-		} catch ( error ) {
-			console.error( 'Error loading buildings without cache:', error );
-			return null; // Handle error case or return accordingly
-		}
+		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + this.store.postalcode );
+		this.setHSYBuildingAttributes( data, entities );
 	}
 
 	createGeoJsonPolygon() {

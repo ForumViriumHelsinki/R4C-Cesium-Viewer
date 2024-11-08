@@ -1,6 +1,4 @@
 import { defineStore } from 'pinia';
-const backendURL = import.meta.env.VITE_BACKEND_URL;
-import axios from 'axios';
 
 export const useHeatExposureStore = defineStore( 'heatExposure', {
 	state: () => ( {
@@ -14,18 +12,13 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 	actions: {
 		// Function to load Heat Exposure  data
 		async loadHeatExposure() {
-			const requestUrl = 'https://geo.fvh.fi/r4c/collections/heatexposure/items?f=json&limit=1000';
+			const requestUrl = '/pygeoapi/collections/heatexposure/items?f=json&limit=1000';
 
 			try {
-
-				//let data = await this.getDataFromCache( requestUrl );
 				let data = null;
 
 				if ( !data ) {
-    
 					data = await this.getAllHeatExposureData( requestUrl );
-					axios.post( `${backendURL}/api/cache/set`, { key: requestUrl, value: data } );
-    
 				}
 
 				this.data = data;
@@ -33,16 +26,6 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 			} catch ( error ) {
 				console.error( 'Error fetching postal codedata:', error );
 			}
-		},
-
-		// Function to fetch all Paavo data from redis cache
-		async getDataFromCache( requestUrl ) {
-			// Assuming backendURL is defined globally or imported
-			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( requestUrl )}`;
-			const response = await fetch( cacheApiUrl );
-			if ( !response.ok ) throw new Error( `HTTP error! status: ${response.status}` );
-  
-			return await response.json();
 		},
 
 		// Function to fetch all PostalCode data

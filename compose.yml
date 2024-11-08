@@ -1,0 +1,20 @@
+services:
+  app:
+    image: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer:latest
+    build:
+      context: .
+    ports:
+      - "8080:80" # Expose the Vue app's port
+    volumes:
+      - nginx_cache:/tmp/nginx_cache
+      - nginx_wms_cache:/tmp/nginx_wms_cache
+    environment:
+      NODE_ENV: "development"
+      # Create a .env file and set the key there.
+      # The values will be picked up automatically by leaving them empty here.
+      VITE_DIGITRANSIT_KEY:
+      VITE_250_PASSWORD:
+
+volumes:
+  nginx_cache:
+  nginx_wms_cache:

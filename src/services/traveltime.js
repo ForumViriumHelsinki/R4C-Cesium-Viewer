@@ -21,7 +21,7 @@ export default class Traveltime {
  */
 	async loadTravelTimeData( from_id ) {
 
-		fetch( 'https://geo.fvh.fi/r4c/collections/hki_travel_time/items?f=json&limit=2&from_id=' + from_id )
+		fetch( '/pygeoapi/collections/hki_travel_time/items?f=json&limit=2&from_id=' + from_id )
 			.then( ( response ) => {
 				return response.json();
 			} )

@@ -3,19 +3,9 @@
     <!-- Added upper margin with link to HSY map service -->
 
     <div class="search-and-restore">
-      <v-text-field
-        append-inner-icon="mdi-magnify"
-        density="compact"
-        v-model="searchQuery"
-        label=" Change Background Map"
-        placeholder=" Search for WMS layers"
-        variant="outlined"
-        hide-details
-        single-line
-        @input="onSearch"
-        @keyup.enter="onEnter"
-        @click:append="onSearchClick"
-      />
+      <v-text-field append-inner-icon="mdi-magnify" density="compact" v-model="searchQuery"
+        label=" Change Background Map" placeholder=" Search for WMS layers" variant="outlined" hide-details single-line
+        @input="onSearch" @keyup.enter="onEnter" @click:append="onSearchClick" />
       <v-btn class="restore-btn" @click="restoreDefaultLayer">
         Restore Default
       </v-btn>
@@ -27,11 +17,7 @@
     </div>
 
     <v-list v-if="filteredLayers.length > 0">
-      <v-list-item
-        v-for="(layer, index) in filteredLayers"
-        :key="index"
-        @click="selectLayer(layer.name)"
-      >
+      <v-list-item v-for="(layer, index) in filteredLayers" :key="index" @click="selectLayer(layer.name)">
         {{ layer.title }}
       </v-list-item>
     </v-list>
@@ -44,85 +30,115 @@ import { usePropsStore } from '../stores/propsStore';
 import { useGlobalStore } from '../stores/globalStore';
 import wms from '../services/wms';
 import axios from 'axios';
+import { XMLParser } from 'fast-xml-parser';
 
 export default {
-	setup() {
-		const propsStore = usePropsStore();
-		const searchQuery = ref( '' );
-		const filteredLayers = ref( [] );
-		const wmsService = new wms();
+  setup() {
+    const propsStore = usePropsStore();
+    const searchQuery = ref('');
+    const filteredLayers = ref([]);
+    const wmsService = new wms();
 
-		// Backend URL
-		const backendURL = import.meta.env.VITE_BACKEND_URL;
+    const fetchLayers = async () => {
+      try {
+        console.log('Fetching layers from:', '/wms/layers');
+        const response = await axios.get('/wms/layers');
+        console.log('Received response:', response.data);
+        
+        if (response.data) {
+          const parser = new XMLParser({
+            ignoreAttributes: false,
+            attributeNamePrefix: '@_'
+          });
+          // Parse the response.data, not undefined 'data' variable
+          const parsedXml = parser.parse(response.data);
+          console.log('Parsed XML:', parsedXml);
 
-		// Fetch WMS layers from the backend
-		const fetchLayers = async () => {
-			try {
-				const response = await axios.get( `${backendURL}/wms/layers` );
-				propsStore.setHSYWMSLayers( response.data ); // Set layers in the store
-			} catch ( error ) {
-				console.error( 'Error fetching WMS layers:', error );
-			}
-		};
+          // Handle potential different XML structures
+          const layerData = parsedXml.WMS_Capabilities?.Capability?.Layer?.Layer || [];
+          const layers = (Array.isArray(layerData) ? layerData : [layerData])
+            .filter(layer => layer && layer.Name) // Make sure layer and Name exist
+            .map(layer => ({
+              name: layer.Name,
+              title: layer.Title ? layer.Title.replace(/_/g, ' ') : layer.Name
+            }));
 
-		// Filter layers based on user input
-		const onSearch = () => {
-			if ( searchQuery.value.length >= 3 ) {
-				filteredLayers.value = propsStore.hSYWMSLayers.filter( ( layer ) =>
-					layer.title.toLowerCase().includes( searchQuery.value.toLowerCase() )
-				);
-			} else {
-				filteredLayers.value = [];
-			}
-		};
+          console.log('Extracted layers:', layers);
+          // Set the processed layers array, not the raw response data
+          propsStore.setHSYWMSLayers(layers);
+        } else {
+          console.error('No data received from WMS layers endpoint');
+          propsStore.setHSYWMSLayers([]);
+        }
+      } catch (error) {
+        console.error('Error fetching WMS layers:', error);
+        console.error('Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        propsStore.setHSYWMSLayers([]);
+      }
+    };
 
-		// Select and switch the WMS layer
-		const selectLayer = ( layerName ) => {
-			wmsService.reCreateHSYImageryLayer( layerName );
-			// Clear the filtered layers after selecting
-			filteredLayers.value = [];
-		};
+    // Filter layers based on user input
+    const onSearch = () => {
+      if (searchQuery.value.length >= 3) {
+        filteredLayers.value = propsStore.hSYWMSLayers.filter((layer) =>
+          layer.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+      } else {
+        filteredLayers.value = [];
+      }
+    };
 
-		// Handle enter key press
-		const onEnter = () => {
-			const matchingLayer = propsStore.hSYWMSLayers.find( ( layer ) =>
-				layer.title.toLowerCase() === searchQuery.value.toLowerCase()
-			);
-			if ( matchingLayer ) {
-				selectLayer( matchingLayer.name ); // Switch to the matching layer
-			}
-		};
+    // Select and switch the WMS layer
+    const selectLayer = (layerName) => {
+      wmsService.reCreateHSYImageryLayer(layerName);
+      // Clear the filtered layers after selecting
+      filteredLayers.value = [];
+    };
 
-		// Handle search button click
-		const onSearchClick = () => {
-			onEnter(); // Trigger the same behavior as pressing enter
-		};
+    // Handle enter key press
+    const onEnter = () => {
+      const matchingLayer = propsStore.hSYWMSLayers.find((layer) =>
+        layer.title.toLowerCase() === searchQuery.value.toLowerCase()
+      );
+      if (matchingLayer) {
+        selectLayer(matchingLayer.name); // Switch to the matching layer
+      }
+    };
 
-		// Restore default WMS layer
-		const restoreDefaultLayer = () => {
-			const store = useGlobalStore();
-			// Restore default WMS layer (avoindata:Karttasarja_PKS)
-			store.cesiumViewer.imageryLayers.add(
-				wmsService.createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
-			);
-		};
+    // Handle search button click
+    const onSearchClick = () => {
+      onEnter(); // Trigger the same behavior as pressing enter
+    };
 
-		onMounted( () => {
-			if ( !propsStore.hSYWMSLayers ) {
-				fetchLayers();
-			}
-		} );
+    // Restore default WMS layer
+    const restoreDefaultLayer = () => {
+      const store = useGlobalStore();
+      // Restore default WMS layer (avoindata:Karttasarja_PKS)
+      store.cesiumViewer.imageryLayers.add(
+        wmsService.createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
+      );
+    };
 
-		return {
-			searchQuery,
-			filteredLayers,
-			selectLayer,
-			onSearch,
-			onEnter,
-			onSearchClick,
-			restoreDefaultLayer,
-		};
-	},
+    onMounted(() => {
+      if (!propsStore.hSYWMSLayers) {
+        fetchLayers();
+      }
+    });
+
+    return {
+      searchQuery,
+      filteredLayers,
+      selectLayer,
+      onSearch,
+      onEnter,
+      onSearchClick,
+      restoreDefaultLayer,
+    };
+  },
 };
 </script>
 

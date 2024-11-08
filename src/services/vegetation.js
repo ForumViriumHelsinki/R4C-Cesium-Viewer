@@ -1,8 +1,6 @@
 import Datasource from './datasource.js'; 
 import * as Cesium from 'cesium';
-import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
-const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default class Vegetation {
 	constructor( ) {
@@ -16,27 +14,13 @@ export default class Vegetation {
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
 	async loadVegetation( ) {
-		const url = 'https://geo.fvh.fi/r4c/collections/vegetation/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
+		const url = '/pygeoapi/collections/vegetation/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
-		try {
-			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
-			const cachedResponse = await axios.get( cacheApiUrl );
-			const cachedData = cachedResponse.data;
-
-			if ( cachedData ) {
-
-				console.log( 'found from cache' );
-				this.addVegetationDataSource( cachedData );
-
-			} else {
-
-				this.loadVegetationWithoutCache( url );
-
-			}
-		} catch ( err ) {
-			console.log( err );
-		}
+		fetch( url )
+			.then( response => response.json() )
+			.then( data => { this.addVegetationDataSource( data ); } )
+			.catch( error => { console.log( 'Error loading vegetation:', error ); } );
 	}
 
 	/**
@@ -60,25 +44,6 @@ export default class Vegetation {
 		}
 
 		this.store.setIsLoading( false );
-	}
-
-	/**
- * Loads vegetation data from the provided URL without using cache
- * 
- * @param {string} url - The URL from which to load vegetation data
- */
-	loadVegetationWithoutCache( url ) {
-		console.log( 'Not in cache! Loading: ' + url );
-
-		fetch( url )
-			.then( response => response.json() )
-			.then( data => {
-				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
-				this.addVegetationDataSource( data );
-			} )
-			.catch( error => {
-				console.log( 'Error loading vegetation:', error );
-			} );
 	}
 
 	/**

@@ -6,13 +6,16 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --host",
     "lint": "eslint . --ext .js,.vue"
   },
   "dependencies": {
+    "@sentry/browser": "^8.36.0",
+    "@sentry/vite-plugin": "^2.22.6",
     "@turf/turf": "^7.1.0",
     "axios": "^1.7.7",
     "d3": "^7.9.0",
+    "fast-xml-parser": "^4.5.0",
     "mitt": "^3.0.1",
     "path": "^0.12.7",
     "pinia": "^2.2.4",
