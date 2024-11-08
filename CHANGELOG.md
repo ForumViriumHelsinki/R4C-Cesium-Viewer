@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.2.1...r4c-cesium-viewer-v1.2.2) (2024-11-08)
+
+
+### Bug Fixes
+
+* **build:** add sentry env variables ([2a41534](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2a415341b0379194d108e88db636111db38402ce))
+
 ## [1.2.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.2.0...r4c-cesium-viewer-v1.2.1) (2024-11-08)
 
 
