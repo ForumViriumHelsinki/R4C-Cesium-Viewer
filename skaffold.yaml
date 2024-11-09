@@ -8,7 +8,7 @@ build:
     useBuildkit: true
     concurrency: 0
   artifacts:
-    - image: r4c-cesium-viewer
+    - image: frontend
       context: .
       docker:
         dockerfile: Dockerfile
@@ -20,8 +20,8 @@ deploy:
         valuesFiles:
           - helm/values.yaml
         setValueTemplates:
-          r4c-cesium-viewer.image.repository: "{{.IMAGE_REPO_r4c-cesium-viewer}}"
-          r4c-cesium-viewer.image.tag: "{{.IMAGE_TAG_r4c-cesium-viewer}}@{{.IMAGE_DIGEST_r4c-cesium-viewer}}"
+          image.repository: "{{.IMAGE_REPO_frontend}}"
+          image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
         setValues:
           vite:
             digitransit_key: "placeholder"
