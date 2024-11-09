@@ -2,29 +2,24 @@
 
 R4C user interface Vue3 interface with Vite and Cesium
 
-## Installation 
+## Run with Vite
+
 ```
-npm install
-```
-### local development
-```
-npm run serve
+npx vite dev
 ```
 The application should now be running at [http://localhost:5173](http://localhost:5173).
 
-Warning: if redis cache is needed to application should be started also locally with docker-compose
-
-## Start locally with Docker
+## Run with Docker
 
 ```
-docker-compose -f docker-compose.dev.yml up
+docker compose up
 ```
-The application should now be running at [http://localhost:5173](http://localhost:5173).
+The application should now be running at [http://localhost:4173](http://localhost:4173).
 
-## Start server build with Docker 
+## Run with Skaffold
 
 ```
-docker-compose up -d --build --force-recreate
+scaffold dev
 ```
 
 ## Running tests
@@ -35,7 +30,7 @@ Use Playwright to run tests
 npx playwright test
 ```
 
-## Skaffold
+## Troubleshooting
 
 ```
 skaffold delete
