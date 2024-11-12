@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.4.1...v1.4.2) (2024-11-12)
+
+
+### Bug Fixes
+
+* **docs:** fix skaffold command in README.md ([9cf3698](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9cf3698ae90656609a176cecd080765ad14f5f12))
+* **tests:** Use dev instead of preview for tests ([842eabb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/842eabbde3be0926808f6e0441312f5e4c632edc))
+
 ## [1.4.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.4.0...v1.4.1) (2024-11-12)
 
 
