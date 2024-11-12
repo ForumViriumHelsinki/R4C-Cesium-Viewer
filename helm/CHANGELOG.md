@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-v0.3.0...r4c-v0.4.0) (2024-11-12)
+
+
+### Features
+
+* bump app version to 1.5.0 ([c05f7fb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c05f7fb91d93ba1480c0170baac9a02b8a0f31c9))
+
 ## [0.3.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-v0.2.0...r4c-v0.3.0) (2024-11-12)
 
 
