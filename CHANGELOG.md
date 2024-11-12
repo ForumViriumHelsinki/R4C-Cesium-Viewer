@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.4.0...v1.4.1) (2024-11-12)
+
+
+### Bug Fixes
+
+* unable to read polygon ([bfd729c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bfd729c8ff28246e0f7f8ff806be839009c17a82))
+
 ## [1.4.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.3.0...v1.4.0) (2024-11-09)
 
 
