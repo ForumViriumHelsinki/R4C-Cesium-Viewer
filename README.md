@@ -19,7 +19,7 @@ The application should now be running at [http://localhost:4173](http://localhos
 ## Run with Skaffold
 
 ```
-scaffold dev
+skaffold dev
 ```
 
 ## Running tests
