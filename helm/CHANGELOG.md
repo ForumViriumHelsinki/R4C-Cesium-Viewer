@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-v0.2.0...r4c-v0.3.0) (2024-11-12)
+
+
+### Features
+
+* Add option to use existing secret ([1f7f65e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1f7f65e0d0f35ef25857047ded976140d9f2eb6b))
+
+
+### Bug Fixes
+
+* remove unused `appVersion` field ([76b70e5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/76b70e5cb1a77192c2ae58cb00902b848fe58292))
+
 ## [0.2.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-v0.1.0...r4c-v0.2.0) (2024-11-08)
 
 
