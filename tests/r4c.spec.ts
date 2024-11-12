@@ -19,16 +19,20 @@ test('Building properties', async ({ page }) => {
   await page.getByRole('button', { name: 'Close' }).click();
   await page.locator('canvas').click({
     position: {
-      x: 659,
-      y: 383
+      x: 690,
+      y: 394
     }
   });
+  // Wait until map transition is complete
+  await page.waitForTimeout(3000);
   await page.locator('canvas').click({
     position: {
-      x: 671,
+      x: 674,
       y: 363
     }
   });
+  // Wait until map transition is complete
+  await page.waitForTimeout(1000);
   await page.getByRole('button', { name: 'Building properties' }).click();
   await expect(page.locator('#printContainer')).toContainText('Talousrakennus');
   await expect(page.locator('canvas')).toBeVisible();
