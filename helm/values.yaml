@@ -4,13 +4,15 @@
 
 replicaCount: 1
 
-vite:
-  digitransit_key: ""
-  password_250: ""
-
-sentry:
-  dsn: ""
-  auth_token: ""
+secrets:
+  # Use an existing secret by setting this to the name of it
+  existing_secret: false
+  vite:
+    digitransit_key: ""
+    password_250: ""
+  sentry:
+    dsn: ""
+    auth_token: ""
 
 image:
   repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer

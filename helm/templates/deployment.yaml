@@ -54,7 +54,11 @@ spec:
           - configMapRef:
               name: {{ .Release.Name }}-configmap
           - secretRef:
+              {{- if not .Values.secrets.existing_secret }}
               name: {{ .Release.Name }}-secrets
+              {{- else }}
+              name: {{ .Values.secrets.existing_secret }}
+              {{- end }}
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
