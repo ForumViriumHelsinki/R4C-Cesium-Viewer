@@ -22,12 +22,21 @@ The application should now be running at [http://localhost:4173](http://localhos
 skaffold dev --port-forward
 ```
 
-## Running tests
+## Testing with Playwright
 
-Use Playwright to run tests
-
+Run tests:
 ```
 npx playwright test
+```
+
+Run tests in interactive UI mode:
+```
+npx playwright test --ui
+```
+
+Run tests in headed browsers (default: headless):
+```
+npx playwright test --headed
 ```
 
 ## Troubleshooting
