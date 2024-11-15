@@ -22,10 +22,8 @@ deploy:
         setValueTemplates:
           image.repository: "{{.IMAGE_REPO_frontend}}"
           image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
-        setValues:
           vite:
-            digitransit_key: "placeholder"
-            password_250: "placeholder"
+            digitransit_key: "{{.DIGITRANSIT_KEY}}"
           sentry:
-            dsn: "placeholder"
-            auth_token: "placeholder"
+            dsn: "{{.SENTRY_DSN}}"
+            auth_token: "{{.SENTRY_AUTH_TOKEN}}"
