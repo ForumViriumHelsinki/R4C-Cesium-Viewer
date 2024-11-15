@@ -59,6 +59,7 @@ export default {
     	});
 		const viewer = ref(null);
 		const view = computed( () => store.view );
+		Cesium.Ion.defaultAccessToken = null;
 
 		const initViewer = () => {
 			viewer.value = new Cesium.Viewer('cesiumContainer', {
