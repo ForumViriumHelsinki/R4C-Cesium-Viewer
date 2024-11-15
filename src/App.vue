@@ -5,8 +5,8 @@
   </div>
   <!-- Add Logo -->		
 	<div class="logoHolder">	
-	<img src="/public/assets/images/regions4climate-black.png" id="logoR4C" alt="Regions4Climate" />
-	<img src="/public/assets/images/fvh-1_musta.png" id="logoFVH" alt="Forum Virium Helsinki" />
+	<img src="/assets/images/regions4climate-black.png?url" id="logoR4C" alt="Regions4Climate" />
+	<img src="/assets/images/fvh-1_musta.png?url" id="logoFVH" alt="Forum Virium Helsinki" />
   </div>
   
 </template>

@@ -110,7 +110,6 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { defineEmits } from 'vue';
 
 // Define state to control the visibility and expansion of the legend
 const legendVisible = ref(true);
