@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-v0.4.0...r4c-v0.5.0) (2024-11-15)
+
+
+### Features
+
+* Remove password protection for 250m grid ([#44](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/44)) ([6fd947d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6fd947d7939d8698df60d112ff1bc8dae3ad7c76))
+
 ## [0.4.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-v0.3.0...r4c-v0.4.0) (2024-11-12)
 
 
