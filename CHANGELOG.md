@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.5.0...v1.6.0) (2024-11-15)
+
+
+### Features
+
+* **cesium-viewer:** Resize the Cesium viewer to 100% height ([#48](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/48)) ([09da57a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/09da57ae211051c472ece885f0f917a0e14c29a5))
+* Remove password protection for 250m grid ([#44](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/44)) ([6fd947d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6fd947d7939d8698df60d112ff1bc8dae3ad7c76))
+
+
+### Bug Fixes
+
+* Cesium Ion token reminder ([#47](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/47)) ([a0eb4f5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a0eb4f5ec51d5c6f9fd19c3e019611d759769d21)), closes [#40](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/40)
+
 ## [1.5.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.4.2...v1.5.0) (2024-11-12)
 
 
