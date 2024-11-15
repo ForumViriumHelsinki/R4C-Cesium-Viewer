@@ -9,7 +9,6 @@ secrets:
   existing_secret: false
   vite:
     digitransit_key: ""
-    password_250: ""
   sentry:
     dsn: ""
     auth_token: ""

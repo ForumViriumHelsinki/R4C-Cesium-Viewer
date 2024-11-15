@@ -2,19 +2,6 @@
   <div v-if="grid250m && showGrid">
     <PopGridLegend @onIndexChange="updateGridColors" />
   </div>
-  <v-dialog v-model="showPasswordDialog" persistent max-width="400">
-    <v-card>
-      <v-card-title class="headline">Enter Password</v-card-title>
-      <v-card-text>
-        <v-text-field v-model="enteredPassword" label="Password" type="password" />
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" @click="checkPassword">Submit</v-btn>
-		<v-btn color="secondary" @click="cancelPassword">Cancel</v-btn> <!-- Cancel Button -->
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
 </template>
 
 <script setup>
@@ -25,14 +12,9 @@ import PopGridLegend from './PopGridLegend.vue';
 import { useToggleStore } from '../stores/toggleStore';
 
 // Reactive variables
-const showPasswordDialog = ref( false );
-const enteredPassword = ref( '' );
 const showGrid = ref( false );
 const grid250m = computed( () => toggleStore.grid250m );
 const toggleStore = useToggleStore();
-
-// Access the password from the environment variables
-const correctPassword = import.meta.env.VITE_250_PASSWORD;
 
 const heatColors = [
 	{ color: '#ffffcc', range: '< 0.2' },
@@ -87,17 +69,6 @@ watch( showGrid, async ( newValue ) => {
 	}
 } );
 
-// Function to check password and show grid if correct
-const checkPassword = async () => {
-	if ( enteredPassword.value === correctPassword ) {
-		showPasswordDialog.value = false;
-		showGrid.value = true;
-		await loadGrid();
-	} else {
-		console.error( 'Incorrect password' );
-	}
-};
-
 // Function to load the GeoJSON data source
 const loadGrid = async () => {
 	const dataSourceService = new DataSource();
@@ -108,7 +79,6 @@ const loadGrid = async () => {
 		'250m_grid'
 	);
 	updateGridColors( 'heat_index' ); // Initial color update
-
 };
 
 const handleMissingValues = (entity, selectedIndex) => {
@@ -258,23 +228,12 @@ const getColorForIndex = ( indexValue, indexType ) => {
 	return Cesium.Color.fromCssColorString( colorScheme[4].color ).withAlpha( 0.8 );
 };
 
-// On mount, show the password dialog
 onMounted(() => {
-	
-  showPasswordDialog.value = true;
+    loadGrid();
 });
 
 // Placeholder implementation for checking data availability
 const isDataAvailable = ( selectedIndex ) => {
 	return Object.keys( indexToColorScheme ).includes( selectedIndex );
-};
-
-// Function to cancel the password input and hide the grid
-const cancelPassword = () => {
-  	showPasswordDialog.value = false;
-  	showGrid.value = false; // Ensure the grid is not shown
-  	enteredPassword.value = ''; // Clear the entered password
-  	toggleStore.setGrid250m( false );
-
 };
 </script>
