@@ -37,3 +37,12 @@ test('Building properties', async ({ page }) => {
   await expect(page.locator('#printContainer')).toContainText('Talousrakennus');
   await expect(page.locator('canvas')).toBeVisible();
 });
+
+test('Heat Vulnerability', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByLabel('Statistical Grid').check();
+  await page.locator('div').filter({ hasText: /^250m grid$/ }).locator('span').click();
+  await page.getByRole('heading', { name: 'Heat Vulnerability' }).click();
+  await expect(page.getByRole('heading', { name: 'Heat Vulnerability' })).toBeVisible();
+});
