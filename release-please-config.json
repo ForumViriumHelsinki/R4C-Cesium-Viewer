@@ -4,9 +4,16 @@
     ".": {
       "release-type": "node",
       "include-component-in-tag": false,
-      "exclude-paths": ["helm"]
+      "exclude-paths": ["helm"],
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "helm/Chart.yaml",
+          "jsonpath": "$.appVersion"
+        }
+      ]
     },
-    "helm":{
+    "helm": {
       "release-type": "helm"
     }
   }
