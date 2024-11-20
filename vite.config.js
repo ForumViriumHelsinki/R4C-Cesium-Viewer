@@ -1,25 +1,55 @@
-import { defineConfig, loadEnv } from 'vite';
+import Components from 'unplugin-vue-components/vite'
 import Vue from '@vitejs/plugin-vue';
+import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
 import cesium from 'vite-plugin-cesium-build';
-import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-export default defineConfig( ( { mode } ) => {
-	// Load env file based on mode (development/production)
-	const env = loadEnv( mode, '.' );
+import { sentryVitePlugin } from '@sentry/vite-plugin';
+import eslint from 'vite-plugin-eslint';
+
+import { defineConfig } from 'vite';
+import { fileURLToPath, URL } from 'node:url'
+import { version } from './package.json'
+
+export default defineConfig( () => {
 	return {
 		build: {
 			sourcemap: true, // Source map generation must be turned on
 		},
 		plugins: [
-		  Vue(),
+			eslint(),
+    Vue({
+      template: { transformAssetUrls }
+    }),
+    Vuetify({
+      autoImport: true,
+      // styles: {
+      //   configFile: 'src/styles/settings.scss',
+      // },
+    }),
+    Components(),
 		  cesium(),
 			// Put the Sentry vite plugin after all other plugins
 			sentryVitePlugin( {
-				authToken: env.SENTRY_AUTH_TOKEN,
+				authToken: process.env.SENTRY_AUTH_TOKEN,
 				org: 'forum-virium-helsinki',
 				project: 'regions4climate',
 			} ),
 		],
+		define: { 'process.env': {} },
+		resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    },
+    extensions: [
+      '.js',
+      '.json',
+      '.jsx',
+      '.mjs',
+      '.ts',
+      '.tsx',
+      '.vue',
+    ],
+  },
 		server: {
 			proxy: {
 				'/pygeoapi': {
@@ -81,7 +111,7 @@ export default defineConfig( ( { mode } ) => {
 					changeOrigin: true,
 					secure: false,
 					headers: {
-						'digitransit-subscription-key': env.VITE_DIGITRANSIT_KEY
+						'digitransit-subscription-key': process.env.VITE_DIGITRANSIT_KEY
 					},
 					rewrite: ( path ) => path.replace( /^\/digitransit/, '' )
 				}
