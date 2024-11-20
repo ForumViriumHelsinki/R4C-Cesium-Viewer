@@ -118,7 +118,7 @@ const filterSearchResults = async () => {
   if (searchQuery.value.length > 2) {
     try {
       const response = await fetch(
-        `/digitransit/geocoding/v1/autocomplete?text=${searchQuery.value}&digitransit-subscription-key=${apiKey}`
+        `/digitransit/geocoding/v1/autocomplete?text=${searchQuery.value}`
       );
       const data = await response.json();
 
