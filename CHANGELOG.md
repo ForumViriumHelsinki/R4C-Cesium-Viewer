@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.6.0...v1.6.1) (2024-11-20)
+
+
+### Bug Fixes
+
+* geocoding apiKey missing ([#57](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/57)) ([249f143](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/249f14368cc3f046c15c07384ab9a3f2c1984d0b))
+* playwright tests ([#55](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/55)) ([9b5bde6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9b5bde637a694bdb190dd8df89f2f2e5c5511c97))
+
 ## [1.6.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.5.0...v1.6.0) (2024-11-15)
 
 
