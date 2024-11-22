@@ -105,10 +105,7 @@ export default class Building {
 	entity.show = false;
     polygon.material = new Cesium.Color(0, 0, 0, 0); // Set color to 0 0 0 0 if no entry is found
   }
-				}
-} else if (polygon) {
-  polygon.material = new Cesium.Color(0, 0, 0, 0);
-
+	}
 }
 
 		this.toggleStore.helsinkiView && ( this.hideNonSoteBuilding( entity ), this.hideLowBuilding( entity ) );
