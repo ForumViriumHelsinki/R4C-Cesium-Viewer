@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.7.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.6.1...v1.7.0) (2024-11-22)
+
+
+### Features
+
+* add dotenv package for env variables ([#21](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/21)) ([a9ff6b1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a9ff6b1baf89593a8a9af48ea6a2e4f25b64ea66))
+* **cesium-viewer:** Resize the Cesium viewer to 100% height ([#48](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/48)) ([09da57a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/09da57ae211051c472ece885f0f917a0e14c29a5))
+* Fix image name in skaffold.yaml ([299a1fb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/299a1fbc7ca7e77be11aaa2b74fcfac16aafb53f))
+* integrate playwright ([#5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/5)) ([8cfc3e0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8cfc3e09ff229f8e2d1cff99f1ba9c19d19bf958))
+* **release:** add release-please configuration ([#11](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/11)) ([5310693](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5310693704c75b69b3dd33adabe00184b0f7c3ff))
+* Remove password protection for 250m grid ([#44](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/44)) ([6fd947d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6fd947d7939d8698df60d112ff1bc8dae3ad7c76))
+* update disclaimer ([#59](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/59)) ([96e09c4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/96e09c4eda13c35ecd07a43a65f2b2e2e5fc2d5d))
+
+
+### Bug Fixes
+
+* build errors ([#58](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/58)) ([7765961](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7765961e4ca723f5fdc068d2a208f652e59e9c57))
+* **build:** add sentry env variables ([2a41534](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2a415341b0379194d108e88db636111db38402ce))
+* Cesium Ion token reminder ([#47](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/47)) ([a0eb4f5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a0eb4f5ec51d5c6f9fd19c3e019611d759769d21)), closes [#40](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/40)
+* container build tags ([#22](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/22)) ([114016c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/114016c4879c2cb4faf1e223d41f9adb4d3635bd))
+* **docs:** fix skaffold command in README.md ([9cf3698](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9cf3698ae90656609a176cecd080765ad14f5f12))
+* eslint error ([#61](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/61)) ([9d80486](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9d804868a32a69201df4a5b88fb8b2d4858d277f))
+* geocoding apiKey missing ([#57](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/57)) ([249f143](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/249f14368cc3f046c15c07384ab9a3f2c1984d0b))
+* mangled merge ([eab3899](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/eab3899f166392f6043eaa46dc86f47b15772d18))
+* missing import ([#62](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/62)) ([25eeaa0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/25eeaa0796aaed983476a44bb0db9e2b16d4a230))
+* playwright tests ([#55](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/55)) ([9b5bde6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9b5bde637a694bdb190dd8df89f2f2e5c5511c97))
+* README.md ([#13](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/13)) ([567b90d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/567b90d1cf47e86c0e6d8e13157f5158db612780))
+* **release:** semver tags ([7e99e0c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7e99e0c00ca4c799e51039037da897f061a2f80d))
+* skaffold config ([#18](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/18)) ([0186560](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0186560b755d42ac5359cfb1ed6d69340e6f229a))
+* **tests:** Use dev instead of preview for tests ([842eabb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/842eabbde3be0926808f6e0441312f5e4c632edc))
+* unable to read polygon ([bfd729c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bfd729c8ff28246e0f7f8ff806be839009c17a82))
+
 ## [1.6.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/v1.6.0...v1.6.1) (2024-11-20)
 
 
