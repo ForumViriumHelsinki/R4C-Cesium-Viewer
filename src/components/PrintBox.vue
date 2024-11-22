@@ -8,6 +8,7 @@
 import { onMounted, onBeforeUnmount } from 'vue';
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
+import * as Cesium from 'cesium';
 
 export default {
 	setup() {
