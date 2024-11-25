@@ -13,6 +13,8 @@ services:
       # Create a .env file and set the key there.
       # The values will be picked up automatically by leaving them empty here.
       VITE_DIGITRANSIT_KEY:
+      VITE_SENTRY_DSN:
+      SENTRY_AUTH_TOKEN:
 volumes:
   nginx_cache:
   nginx_wms_cache:
