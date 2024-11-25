@@ -1,6 +1,6 @@
 <template>
   <div v-if="grid250m && showGrid">
-    <PopGridLegend @onIndexChange="updateGridColors" />
+    <PopGridLegend @on-index-change="updateGridColors" />
   </div>
 </template>
 

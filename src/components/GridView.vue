@@ -1,50 +1,122 @@
 <template>
 
     <div id="gridviewContainer">
-        <p class="header">R4C Urban Heat risk demonstrator</p>
-  <v-btn icon @click="reset" class="uiButton" style="color: red; float:right; cursor: pointer;">
+        <p class="header">
+R4C Urban Heat risk demonstrator
+</p>
+  <v-btn
+icon
+class="uiButton"
+style="color: red; float:right; cursor: pointer;"
+@click="reset"
+>
     <v-icon>mdi-refresh</v-icon>
   </v-btn>        
         <label class="switch">
-            <input type="checkbox" id="postalCodeToggle" value="postalCode">
-            <span class="slider round"></span>
+            <input
+id="postalCodeToggle"
+type="checkbox"
+value="postalCode"
+>
+            <span class="slider round"/>
         </label>
-        <label for="postalCodeToggle" class="label" id="postalCodeLabel">Postalcode view</label> 
+        <label
+id="postalCodeLabel"
+for="postalCodeToggle"
+class="label"
+>Postalcode view</label> 
 
           <!--  natureGrid-->
-        <label class="switch" id = "natureGridSwitch" style="display:none;">
-            <input type="checkbox" id="natureGridToggle" value="natureGrid" >
-            <span class="slider round"></span>
+        <label
+id="natureGridSwitch"
+class="switch"
+style="display:none;"
+>
+            <input
+id="natureGridToggle"
+type="checkbox"
+value="natureGrid"
+>
+            <span class="slider round"/>
         </label>
-        <label for="natureGrid" class="label" id="natureGridLabel" style="display:none;">Nature grid</label>
+        <label
+id="natureGridLabel"
+for="natureGrid"
+class="label"
+style="display:none;"
+>Nature grid</label>
 
         <!--  travelTime-->
-        <label class="switch" id = "travelTimeSwitch" >
-            <input type="checkbox" id="travelTimeToggle" value="travelTime" >
-            <span class="slider round"></span>
+        <label
+id="travelTimeSwitch"
+class="switch"
+>
+            <input
+id="travelTimeToggle"
+type="checkbox"
+value="travelTime"
+>
+            <span class="slider round"/>
         </label>
-        <label for="travelTime" class="label" id="travelTimeLabel">Travel time grid</label> 
+        <label
+id="travelTimeLabel"
+for="travelTime"
+class="label"
+>Travel time grid</label> 
 
         <!--  resetGrid-->
-        <label class="switch" id = "resetGridwitch" >
-            <input type="checkbox" id="resetGridToggle" value="resetGrid" >
-            <span class="slider round"></span>
+        <label
+id="resetGridwitch"
+class="switch"
+>
+            <input
+id="resetGridToggle"
+type="checkbox"
+value="resetGrid"
+>
+            <span class="slider round"/>
         </label>
-        <label for="resetGrid" class="label" id="resetGridLabel">Reset grid</label> 
+        <label
+id="resetGridLabel"
+for="resetGrid"
+class="label"
+>Reset grid</label> 
 
 		<!--  surveyPlaces-->
-        <label class="switch" id = "surveyPlacesSwitch">
-            <input type="checkbox" id="surveyPlacesToggle" value="surveyPlaces" >
-            <span class="slider round"></span>
+        <label
+id="surveyPlacesSwitch"
+class="switch"
+>
+            <input
+id="surveyPlacesToggle"
+type="checkbox"
+value="surveyPlaces"
+>
+            <span class="slider round"/>
         </label>
-        <label for="surveyPlaces" class="label" id="surveyPlacesLabel">Espoo resident survey places</label>
+        <label
+id="surveyPlacesLabel"
+for="surveyPlaces"
+class="label"
+>Espoo resident survey places</label>
 
           <!--  250mGrid-->
-        <label class="switch" id = "250mGridSwitch">
-            <input type="checkbox" id="250mGridToggle" value="250mGrid" >
-            <span class="slider round"></span>
+        <label
+id="250mGridSwitch"
+class="switch"
+>
+            <input
+id="250mGridToggle"
+type="checkbox"
+value="250mGrid"
+>
+            <span class="slider round"/>
         </label>
-        <label for="250mGrid" class="label" id="250mGridLabel">250m grid</label>		
+        <label
+id="250mGridLabel"
+for="250mGrid"
+class="label"
+>250m grid</label>		
     </div>
     <BuildingGridChart />
 	<SosEco250mGrid />
@@ -66,6 +138,12 @@ import SosEco250mGrid from './SosEco250mGrid.vue'; // Import the 250mGrid compon
 import VulnerabilityChart from './VulnerabilityChart.vue';
 
 export default {
+	components: {
+		SurveyScatterPlot,
+		SosEco250mGrid,
+		VulnerabilityChart,
+		BuildingGridChart
+	},
 	data() {
 		return {
 			viewer: null,
@@ -79,12 +157,6 @@ export default {
 		this.datasourceService = new Datasource();
 		this.addEventListeners();
 
-	},
-	components: {
-		SurveyScatterPlot,
-		SosEco250mGrid,
-		VulnerabilityChart,
-		BuildingGridChart
 	}, 	
 	beforeUnmount() {
 		this.unsubscribe();

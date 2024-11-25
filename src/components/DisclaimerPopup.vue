@@ -16,7 +16,7 @@
       All data for development use only - Do not apply in planning.
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer/>
         <v-btn
           color="primary"
           variant="text"

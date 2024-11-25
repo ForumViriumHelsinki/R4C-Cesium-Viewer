@@ -1,30 +1,64 @@
 <template>
   <!-- Add Filters Title -->
-  <div class="slider-container"  style="width: 100%;">
-    <h3 class="filter-title">Filters</h3>
+  <div
+class="slider-container"
+style="width: 100%;"
+>
+    <h3 class="filter-title">
+Filters
+</h3>
     <div class="switch-container">
       <label class="switch">
-        <input type="checkbox" v-model="hideNonSote" @change="filterBuildings" />
-        <span class="slider round"></span>
+        <input
+v-model="hideNonSote"
+type="checkbox"
+@change="filterBuildings"
+>
+        <span class="slider round"/>
       </label>
-      <label for="hideNonSote" class="label" v-if="!helsinkiView">Only public buildings</label>
-      <label for="hideNonSote" class="label" v-if="helsinkiView">Only social & <br> healthcare buildings</label>
+      <label
+v-if="!helsinkiView"
+for="hideNonSote"
+class="label"
+>Only public buildings</label>
+      <label
+v-if="helsinkiView"
+for="hideNonSote"
+class="label"
+>Only social & <br> healthcare buildings</label>
     </div>
 
-    <div class="switch-container" v-if="helsinkiView">
+    <div
+v-if="helsinkiView"
+class="switch-container"
+>
       <label class="switch">
-        <input type="checkbox" v-model="hideNewBuildings" @change="filterBuildings" />
-        <span class="slider round"></span>
+        <input
+v-model="hideNewBuildings"
+type="checkbox"
+@change="filterBuildings"
+>
+        <span class="slider round"/>
       </label>
-      <label for="hideNewBuildings" class="label">Built before summer 2018</label>
+      <label
+for="hideNewBuildings"
+class="label"
+>Built before summer 2018</label>
     </div>
 
     <div class="switch-container">
       <label class="switch">
-        <input type="checkbox" v-model="hideLow" @change="filterBuildings" />
-        <span class="slider round"></span>
+        <input
+v-model="hideLow"
+type="checkbox"
+@change="filterBuildings"
+>
+        <span class="slider round"/>
       </label>
-      <label for="hideLow" class="label">Only tall buildings</label>
+      <label
+for="hideLow"
+class="label"
+>Only tall buildings</label>
     </div>
   </div>
 </template>

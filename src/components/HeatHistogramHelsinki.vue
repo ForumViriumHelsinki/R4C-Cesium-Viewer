@@ -1,5 +1,5 @@
 <template>
-  <div id="heatHistogramContainer"></div>
+  <div id="heatHistogramContainer"/>
 </template>
 
 <script>

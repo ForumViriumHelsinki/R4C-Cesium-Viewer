@@ -3,19 +3,22 @@
     <v-row>
       <v-col>
         <!-- Toggle for hiding cold areas (only visible if cold areas are loaded) -->
-        <div class="hide-cold-switch" v-if="coldAreasLoaded">
+        <div
+v-if="coldAreasLoaded"
+class="hide-cold-switch"
+>
           <v-switch
             v-model="hideColdAreasChecked"
             label="Hide Cold Areas"
             @change="hideColdAreas"
-          ></v-switch>
+          />
         </div>
       </v-col>
     </v-row>
     <v-row>
       <v-col>
         <!-- Container for the HSY Building Chart -->
-        <div id="hsyBuildingChartContainer"></div>
+        <div id="hsyBuildingChartContainer"/>
       </v-col>
     </v-row>
   </v-container>

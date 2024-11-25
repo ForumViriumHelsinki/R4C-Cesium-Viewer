@@ -1,24 +1,61 @@
 <template>
-  <div id="scatterPlotContainer">
-  </div>
+  <div id="scatterPlotContainer"/>
 
-  <select id="numericalSelect" value="numerical">
-    <option value="measured_height" selected>height</option>
-    <option value="c_valmpvm">age</option>
-    <option value="area_m2">area</option>
-    <option value="i_raktilav">volume</option>
+  <select
+id="numericalSelect"
+value="numerical"
+>
+    <option
+value="measured_height"
+selected
+>
+height
+</option>
+    <option value="c_valmpvm">
+age
+</option>
+    <option value="area_m2">
+area
+</option>
+    <option value="i_raktilav">
+volume
+</option>
 </select>
 
-<select id="categoricalSelect" value="categorical">
-  <option value="c_julkisivu" selected>facade material</option>
-  <option value="c_rakeaine">building material</option>
-  <option value="roof_type">roof type</option>
-  <option value="roof_median_color">roof median color</option>
-  <option value="roof_mode_color">roof mode color</option>
-  <option value="kayttotarkoitus">usage</option>
-  <option value="tyyppi">type</option>
-  <option value="c_lammtapa">heating method</option>
-  <option value="c_poltaine">heating source</option>
+<select
+id="categoricalSelect"
+value="categorical"
+>
+  <option
+value="c_julkisivu"
+selected
+>
+facade material
+</option>
+  <option value="c_rakeaine">
+building material
+</option>
+  <option value="roof_type">
+roof type
+</option>
+  <option value="roof_median_color">
+roof median color
+</option>
+  <option value="roof_mode_color">
+roof mode color
+</option>
+  <option value="kayttotarkoitus">
+usage
+</option>
+  <option value="tyyppi">
+type
+</option>
+  <option value="c_lammtapa">
+heating method
+</option>
+  <option value="c_poltaine">
+heating source
+</option>
 </select>
 </template>
   

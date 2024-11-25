@@ -1,5 +1,5 @@
 <template>
-  <div id="buildingGridChartContainer"></div>
+  <div id="buildingGridChartContainer"/>
 </template>
 
 <script>

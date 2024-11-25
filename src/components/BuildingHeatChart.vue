@@ -1,5 +1,5 @@
 <template>
-  <div id="buildingChartContainer"></div>
+  <div id="buildingChartContainer"/>
 </template>
 
 <script>

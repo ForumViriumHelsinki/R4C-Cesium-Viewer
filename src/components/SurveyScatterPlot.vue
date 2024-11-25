@@ -1,6 +1,5 @@
 <template>
-    <div id="surveyScatterPlot">
-    </div>
+    <div id="surveyScatterPlot"/>
   </template>
   
 <script>

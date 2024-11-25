@@ -1,5 +1,8 @@
 <template>
-  <div v-if="visible" class="loading-overlay">
+  <div
+v-if="visible"
+class="loading-overlay"
+>
     <div class="loading-message">
       Loading data, please wait
     </div>

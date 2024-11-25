@@ -1,46 +1,101 @@
 <template>
   <!-- Add Filters Title -->
-  <div class="slider-container" style="width: 100%;">
-    <h3 class="filter-title">Layers</h3>
-    <div class="switch-container" v-if="helsinkiView">
+  <div
+class="slider-container"
+style="width: 100%;"
+>
+    <h3 class="filter-title">
+Layers
+</h3>
+    <div
+v-if="helsinkiView"
+class="switch-container"
+>
       <label class="switch">
-        <input type="checkbox" v-model="showVegetation" @change="loadVegetation" />
-        <span class="slider round"></span>
+        <input
+v-model="showVegetation"
+type="checkbox"
+@change="loadVegetation"
+>
+        <span class="slider round"/>
       </label>
-      <label for="showVegetation" class="label">Vegetation</label>
+      <label
+for="showVegetation"
+class="label"
+>Vegetation</label>
     </div>
 
-    <div class="switch-container" v-if="helsinkiView">
+    <div
+v-if="helsinkiView"
+class="switch-container"
+>
       <label class="switch">
-        <input type="checkbox" v-model="showOtherNature" @change="loadOtherNature" />
-        <span class="slider round"></span>
+        <input
+v-model="showOtherNature"
+type="checkbox"
+@change="loadOtherNature"
+>
+        <span class="slider round"/>
       </label>
-      <label for="showOtherNature" class="label">Other Nature</label>
+      <label
+for="showOtherNature"
+class="label"
+>Other Nature</label>
     </div>
 
-    <div class="switch-container" v-if="view !== 'grid'">
+    <div
+v-if="view !== 'grid'"
+class="switch-container"
+>
       <label class="switch">
-        <input type="checkbox" v-model="showTrees" @change="loadTrees" />
-        <span class="slider round"></span>
+        <input
+v-model="showTrees"
+type="checkbox"
+@change="loadTrees"
+>
+        <span class="slider round"/>
       </label>
-      <label for="showTrees" class="label">Trees</label>
+      <label
+for="showTrees"
+class="label"
+>Trees</label>
     </div>
 
-    <div class="switch-container" v-if="!helsinkiView">
+    <div
+v-if="!helsinkiView"
+class="switch-container"
+>
       <label class="switch">
-        <input type="checkbox" v-model="landCover" @change="addLandCover" />
-        <span class="slider round"></span>
+        <input
+v-model="landCover"
+type="checkbox"
+@change="addLandCover"
+>
+        <span class="slider round"/>
       </label>
-      <label for="landCover" class="label">HSY Land Cover</label>
+      <label
+for="landCover"
+class="label"
+>HSY Land Cover</label>
     </div>
 
     <!--  250mGrid-->
-    <div class="switch-container" v-if="view === 'grid'">
+    <div
+v-if="view === 'grid'"
+class="switch-container"
+>
       <label class="switch">
-        <input type="checkbox" v-model="grid250m" @change="activate250mGrid" />
-        <span class="slider round"></span>
+        <input
+v-model="grid250m"
+type="checkbox"
+@change="activate250mGrid"
+>
+        <span class="slider round"/>
       </label>
-      <label for="250mGrid" class="label">250m grid</label>	
+      <label
+for="250mGrid"
+class="label"
+>250m grid</label>	
     </div>
   </div>
 </template>

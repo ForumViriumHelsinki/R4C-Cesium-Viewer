@@ -3,32 +3,35 @@
     <div id="viewModeToggleContainer">
       <label class="radio-label">
         <input 
-          type="radio" 
           v-model="activeViewMode" 
+          type="radio" 
           value="capitalRegionView" 
           @change="onToggleChange('capitalRegionView')" 
-        />
+        >
         Capital Region Heat
       </label>
 
       <!-- Conditional rendering for Helsinki Heat -->
-      <label class="radio-label" v-if="showHelsinkiHeat">
+      <label
+v-if="showHelsinkiHeat"
+class="radio-label"
+>
         <input 
-          type="radio" 
           v-model="activeViewMode" 
+          type="radio" 
           value="helsinkiHeat" 
           @change="onToggleChange('helsinkiHeat')" 
-        />
+        >
         Helsinki Heat
       </label>      
 
       <label class="radio-label">
         <input 
-          type="radio" 
           v-model="activeViewMode" 
+          type="radio" 
           value="gridView" 
           @change="onToggleChange('gridView')" 
-        />
+        >
         Statistical Grid
       </label>
     </div>

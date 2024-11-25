@@ -1,14 +1,18 @@
 <template>
-  <div v-if="showTooltip" :style="tooltipStyle" class="building-tooltip">
+  <div
+v-if="showTooltip"
+:style="tooltipStyle"
+class="building-tooltip"
+>
     <div v-if="buildingAttributes">
       <div v-if="buildingAttributes.address">
-        <strong>Address:</strong> {{ buildingAttributes.address }} <br />
+        <strong>Address:</strong> {{ buildingAttributes.address }} <br >
       </div>
       <div v-if="buildingAttributes.rakennusaine_s">
-        <strong>Building Material:</strong> {{ buildingAttributes.rakennusaine_s }} <br />
+        <strong>Building Material:</strong> {{ buildingAttributes.rakennusaine_s }} <br >
       </div>
       <div v-if="buildingAttributes.avg_temp_c">
-        <strong>Surface Temperature {{ store.heatDataDate }}:</strong> {{ buildingAttributes.avg_temp_c }} °C<br />
+        <strong>Surface Temperature {{ store.heatDataDate }}:</strong> {{ buildingAttributes.avg_temp_c }} °C<br >
       </div>
     </div>
   </div>

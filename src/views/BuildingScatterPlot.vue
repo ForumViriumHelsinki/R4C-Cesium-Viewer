@@ -1,14 +1,29 @@
 <template>
-  <v-container fluid v-if="showComponents">
-    <v-row no-gutters class="pa-0 ma-0">
-<v-col class="pa-0 ma-0" style="position: absolute; top: 85px; right: 10px; width: 160px; z-index: 20;">
+  <v-container
+v-if="showComponents"
+fluid
+>
+    <v-row
+no-gutters
+class="pa-0 ma-0"
+>
+<v-col
+class="pa-0 ma-0"
+style="position: absolute; top: 85px; right: 10px; width: 160px; z-index: 20;"
+>
   <CategoricalSelect />
 </v-col>
-<v-col class="pa-0 ma-0" style="position: absolute; bottom: -23px; right: 10px; width: 124px; z-index: 20;">
+<v-col
+class="pa-0 ma-0"
+style="position: absolute; bottom: -23px; right: 10px; width: 124px; z-index: 20;"
+>
   <NumericalSelect />
 </v-col>
     </v-row>
-    <v-row no-gutters class="pa-0 ma-0">
+    <v-row
+no-gutters
+class="pa-0 ma-0"
+>
       <v-col class="pa-0 ma-0">
         <HSYScatterplot />
       </v-col>

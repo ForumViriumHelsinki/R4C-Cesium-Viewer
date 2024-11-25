@@ -1,29 +1,56 @@
 <template>
     <!-- Layout on top of Cesium -->
-    <v-container v-if="showComponents" fluid class="d-flex flex-column pa-0 ma-0" style="position: relative; z-index: 10;">
+    <v-container
+v-if="showComponents"
+fluid
+class="d-flex flex-column pa-0 ma-0"
+style="position: relative; z-index: 10;"
+>
       <!-- Row 7 -->
-      <v-row no-gutters class="pa-0 ma-0">
-        <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
-        </v-col>
-        <v-col class="d-flex align-end pa-0 ma-0" style="z-index: 20;" v-if="store.postalcode !== '00230'">
+      <v-row
+no-gutters
+class="pa-0 ma-0"
+>
+        <v-col
+class="d-flex flex-column pa-0 ma-0"
+style="z-index: 20;"
+/>
+        <v-col
+v-if="store.postalcode !== '00230'"
+class="d-flex align-end pa-0 ma-0"
+style="z-index: 20;"
+>
           <SocioEconomics />
         </v-col>
       </v-row>
 
-      <v-spacer></v-spacer>
+      <v-spacer/>
 
       <!-- Row 6 -->
-      <v-row v-if="showLandcover" no-gutters class="pa-0 ma-0">
-        <v-col class="d-flex align-start pa-0 ma-0" style="z-index: 20;">
+      <v-row
+v-if="showLandcover"
+no-gutters
+class="pa-0 ma-0"
+>
+        <v-col
+class="d-flex align-start pa-0 ma-0"
+style="z-index: 20;"
+>
 		      <Landcover />
         </v-col>
       </v-row>
 
-      <v-spacer></v-spacer>
+      <v-spacer/>
 
       <!-- Row 1 -->
-      <v-row no-gutters class="pa-0 ma-0">
-        <v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20;">
+      <v-row
+no-gutters
+class="pa-0 ma-0"
+>
+        <v-col
+class="d-flex flex-column pa-0 ma-0"
+style="z-index: 20;"
+>
           <BuildingScatterPlot />
         </v-col>
       </v-row>
@@ -33,7 +60,10 @@
   <BuildingInformation v-if="buildingStore.buildingFeatures && !store.isLoading" />
   <Loading v-if="store.isLoading" />
   <!-- Use showHSYWMS to control the visibility of the HSYWMS component -->
-  <HSYWMS v-if="showComponents && showHSYWMS" style="z-index: 20;" />
+  <HSYWMS
+v-if="showComponents && showHSYWMS"
+style="z-index: 20;"
+/>
 
 </template>
 
