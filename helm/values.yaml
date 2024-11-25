@@ -91,6 +91,7 @@ autoscaling:
 
 # Additional volumes on the output Deployment definition.
 volumes: []
+
 # - name: foo
 #   secret:
 #     secretName: mysecret
@@ -98,6 +99,7 @@ volumes: []
 
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
+
 # - name: foo
 #   mountPath: "/etc/foo"
 #   readOnly: true
@@ -107,3 +109,9 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+persistence:
+  enabled: true
+  data:
+    size: 8Gi
+    storageClass: standard
