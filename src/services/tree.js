@@ -31,21 +31,14 @@ export default class Tree {
 		// Construct the API endpoint URL
 		let url = '/pygeoapi/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode + '&koodi=' + koodi;
 
-		try {
-			// Attempt to retrieve the tree data from the Redis cache
-			const cacheApiUrl = `${backendURL}/api/cache/get?key=${encodeURIComponent( url )}`;
-			const cachedResponse = await axios.get( cacheApiUrl );
-			const cachedData = cachedResponse.data;
-
-			if ( cachedData ) {
-				console.log( 'found from cache' );
-				this.addTreesDataSource( cachedData, koodi );
-			} else {
-				this.loadTreesWithoutCache( url, koodi );
-			}
-		} catch ( err ) {
-			console.log( err );
-		}
+		fetch( url )
+			.then( ( response ) => response.json() )
+			.then( ( data ) => {
+				this.addTreesDataSource( data, koodi );
+			} )
+			.catch( ( error ) => {
+				console.log( 'Error loading trees:', error );
+			} );
 	}	
 
 	/**
@@ -128,29 +121,6 @@ export default class Tree {
 		propsStore.setBuildingsDatasource( buildingsDataSource );
 		eventBus.emit( 'hideBuildingScatterPlot' );
 		eventBus.emit( 'newNearbyTreeDiagram' );
-	}
-
-  
-	/**
- * Fetch tree data from the API endpoint and add it to the local storage
- * 
- * @param { String } url API endpoint's url
- */
-	loadTreesWithoutCache( url, koodi ) {
-
-		console.log( 'Not in cache! Loading: ' + url );
-
-		fetch( url )
-			.then( ( response ) => response.json() )
-			.then( ( data ) => {
-			// Save fetched data to Redis cache through the backend
-				axios.post( `${backendURL}/api/cache/set`, { key: url, value: data } );
-				this.addTreesDataSource( data, koodi );
-			} )
-			.catch( ( error ) => {
-				console.log( 'Error loading trees:', error );
-			} );
-	
 	}
 
 	/**
