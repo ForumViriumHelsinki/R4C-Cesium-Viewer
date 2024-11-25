@@ -1,5 +1,8 @@
 <template>
-  <div v-if="showChart" id="buildingTreeChartContainer"></div>
+  <div
+v-if="showChart"
+id="buildingTreeChartContainer"
+/>
 </template>
 
 <script>

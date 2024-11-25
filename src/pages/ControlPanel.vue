@@ -1,6 +1,11 @@
 <template>
   <div class="control-panel-main">
-    <v-btn icon @click="togglePanel" class="toggle-btn" size="x-small">
+    <v-btn
+icon
+class="toggle-btn"
+size="x-small"
+@click="togglePanel"
+>
       <v-icon>{{ panelVisible ? 'mdi-menu-open' : 'mdi-menu' }}</v-icon>
     </v-btn>
 
@@ -18,16 +23,19 @@
               <v-list-item class="pa-0 ma-0">
                 <v-list-item-content class="pa-0 ma-0">
 
-                  <v-tooltip location="bottom" class="tooltip">
-                    <template v-slot:activator="{ props }">
+                  <v-tooltip
+location="bottom"
+class="tooltip"
+>
+                    <template #activator="{ props }">
                       <v-btn
                         v-if="currentLevel === 'building'"
                         icon
-                        @click="returnToPostalCode"
                         class="uiButton"
                         style="color: red; float:right; cursor: pointer;"
                         v-bind="props"
                         size="x-small"
+                        @click="returnToPostalCode"
                       >
                         <v-icon>mdi-arrow-left</v-icon>
                       </v-btn>
@@ -36,14 +44,14 @@
                   </v-tooltip>
 
                   <v-tooltip location="bottom">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
                         icon
-                        @click="reset"
                         class="uiButton"
                         style="color: red; float:right; cursor: pointer;"
                         v-bind="props"
                         size="x-small"
+                        @click="reset"
                       >
                         <v-icon>mdi-refresh</v-icon>
                       </v-btn>
@@ -52,15 +60,15 @@
                   </v-tooltip>
 
                   <v-tooltip location="bottom">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
                         v-if="currentLevel !== 'start'"
                         icon
-                        @click="rotateCamera"
                         class="uiButton"
                         style="color: blue; float:right; cursor: pointer;"
                         v-bind="props"
                         size="x-small"
+                        @click="rotateCamera"
                       >
                         <v-icon>mdi-compass</v-icon>
                       </v-btn>
@@ -79,13 +87,29 @@
                   <ViewMode />
 
                 </v-list-item-content>                
-                  <v-list-item-content class="pa-0 ma-0" v-if="currentLevel === 'postalCode' || currentView === 'grid'">
-                    <v-container fluid class="pa-0 ma-0 custom-container"> 
-                      <v-row no-gutters class="pa-0 ma-0">
-                        <v-col cols="6" class="pa-0 ma-0" v-if="currentView !== 'grid'">
+                  <v-list-item-content
+v-if="currentLevel === 'postalCode' || currentView === 'grid'"
+class="pa-0 ma-0"
+>
+                    <v-container
+fluid
+class="pa-0 ma-0 custom-container"
+> 
+                      <v-row
+no-gutters
+class="pa-0 ma-0"
+>
+                        <v-col
+v-if="currentView !== 'grid'"
+cols="6"
+class="pa-0 ma-0"
+>
                           <Layers />
                         </v-col>
-                        <v-col :cols="currentView === 'grid' ? 12 : 6" class="pa-0 ma-0"> 
+                        <v-col
+:cols="currentView === 'grid' ? 12 : 6"
+class="pa-0 ma-0"
+> 
                           <Layers v-if="currentView === 'grid'" />
                           <Filters v-else /> 
                         </v-col>
@@ -95,8 +119,14 @@
               </v-list-item>
 
               <!-- Add `multiple` prop here to allow multiple panels to stay open -->
-              <v-expansion-panels multiple class="pa-0 ma-0">  
-                  <v-expansion-panel class="pa-0 ma-0" title="HSY Background maps">
+              <v-expansion-panels
+multiple
+class="pa-0 ma-0"
+>  
+                  <v-expansion-panel
+class="pa-0 ma-0"
+title="HSY Background maps"
+>
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <HSYWMS />
                     </v-expansion-panel-text>
@@ -113,28 +143,47 @@
                     </v-expansion-panel-text>
                   </v-expansion-panel>
 
-                  <v-expansion-panel class="pa-0 ma-0" title="Socioeconomics Diagram">
+                  <v-expansion-panel
+class="pa-0 ma-0"
+title="Socioeconomics Diagram"
+>
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <SocioEconomics />
                     </v-expansion-panel-text>
                   </v-expansion-panel>
 
-                  <v-expansion-panel v-if="currentView !== 'helsinki'" class="pa-0 ma-0" title="Land Cover">
+                  <v-expansion-panel
+v-if="currentView !== 'helsinki'"
+class="pa-0 ma-0"
+title="Land Cover"
+>
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <Landcover />
                     </v-expansion-panel-text>
                   </v-expansion-panel>
 
-                  <v-expansion-panel class="pa-0 ma-0" title="Building Scatter Plot">
-                    <v-expansion-panel-text v-if="currentView !== 'helsinki'" class="pa-0 ma-0">
+                  <v-expansion-panel
+class="pa-0 ma-0"
+title="Building Scatter Plot"
+>
+                    <v-expansion-panel-text
+v-if="currentView !== 'helsinki'"
+class="pa-0 ma-0"
+>
                       <BuildingScatterPlot />
                     </v-expansion-panel-text>
-                    <v-expansion-panel-text v-if="currentView === 'helsinki'" class="pa-0 ma-0">
+                    <v-expansion-panel-text
+v-if="currentView === 'helsinki'"
+class="pa-0 ma-0"
+>
                       <Scatterplot v-if="scatterPlotEntities" />                    
                     </v-expansion-panel-text>                    
                   </v-expansion-panel>
 
-                  <v-expansion-panel class="pa-0 ma-0" title="Area properties">
+                  <v-expansion-panel
+class="pa-0 ma-0"
+title="Area properties"
+>
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <PrintBox />
                     </v-expansion-panel-text>
@@ -142,26 +191,44 @@
                 </template>
 
                 <template v-if="currentLevel === 'building'">
-                  <v-expansion-panel class="pa-0 ma-0" title="Building heat data">
-                    <v-expansion-panel-text  v-if="currentView !== 'helsinki' && currentView !== 'grid'" class="pa-0 ma-0">
+                  <v-expansion-panel
+class="pa-0 ma-0"
+title="Building heat data"
+>
+                    <v-expansion-panel-text
+v-if="currentView !== 'helsinki' && currentView !== 'grid'"
+class="pa-0 ma-0"
+>
                       <HSYBuildingHeatChart />
                     </v-expansion-panel-text> 
-                    <v-expansion-panel-text v-if="currentView === 'helsinki' && currentView !== 'grid'" class="pa-0 ma-0">
+                    <v-expansion-panel-text
+v-if="currentView === 'helsinki' && currentView !== 'grid'"
+class="pa-0 ma-0"
+>
                       <BuildingHeatChart />
                     </v-expansion-panel-text> 
-                    <v-expansion-panel-text v-if="currentView === 'grid'" class="pa-0 ma-0">
+                    <v-expansion-panel-text
+v-if="currentView === 'grid'"
+class="pa-0 ma-0"
+>
                       <BuildingGridChart />
                     </v-expansion-panel-text>                                                           
                   </v-expansion-panel>
 
-                  <v-expansion-panel class="pa-0 ma-0" title="Building properties">
+                  <v-expansion-panel
+class="pa-0 ma-0"
+title="Building properties"
+>
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <PrintBox />
                     </v-expansion-panel-text>
                   </v-expansion-panel>   
                 </template>  
 
-                <v-expansion-panel class="pa-0 ma-0" title="Geocoding">
+                <v-expansion-panel
+class="pa-0 ma-0"
+title="Geocoding"
+>
                     <v-expansion-panel-text class="pa-0 ma-0">
                       <Geocoding />
                     </v-expansion-panel-text>

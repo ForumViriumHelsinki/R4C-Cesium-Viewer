@@ -3,21 +3,41 @@
     <!-- Added upper margin with link to HSY map service -->
 
     <div class="search-and-restore">
-      <v-text-field append-inner-icon="mdi-magnify" density="compact" v-model="searchQuery"
-        label=" Change Background Map" placeholder=" Search for WMS layers" variant="outlined" hide-details single-line
-        @input="onSearch" @keyup.enter="onEnter" @click:append="onSearchClick" />
-      <v-btn class="restore-btn" @click="restoreDefaultLayer">
+      <v-text-field
+v-model="searchQuery"
+append-inner-icon="mdi-magnify"
+density="compact"
+        label=" Change Background Map"
+placeholder=" Search for WMS layers"
+variant="outlined"
+hide-details
+single-line
+        @input="onSearch"
+@keyup.enter="onEnter"
+@click:append="onSearchClick"
+/>
+      <v-btn
+class="restore-btn"
+@click="restoreDefaultLayer"
+>
         Restore Default
       </v-btn>
     </div>
 
     <div class="hsy-link">
       All Background Map options can be found at
-      <a href="https://kartta.hsy.fi/" target="_blank">HSY map service</a> under 'karttatasot'.
+      <a
+href="https://kartta.hsy.fi/"
+target="_blank"
+>HSY map service</a> under 'karttatasot'.
     </div>
 
     <v-list v-if="filteredLayers.length > 0">
-      <v-list-item v-for="(layer, index) in filteredLayers" :key="index" @click="selectLayer(layer.name)">
+      <v-list-item
+v-for="(layer, index) in filteredLayers"
+:key="index"
+@click="selectLayer(layer.name)"
+>
         {{ layer.title }}
       </v-list-item>
     </v-list>

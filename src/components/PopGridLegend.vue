@@ -1,15 +1,24 @@
 <template>
-  <div id="legend" v-if="legendData.length > 0 && legendVisible">
+  <div
+v-if="legendData.length > 0 && legendVisible"
+id="legend"
+>
     <!-- Toggle button to minimize or expand the legend -->
-    <v-icon @click="toggleLegend" class="toggle-icon">
+    <v-icon
+class="toggle-icon"
+@click="toggleLegend"
+>
       {{ legendExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
     </v-icon>
 
     <div v-if="legendExpanded">
       <h3>{{ title }}</h3>
       <!-- Conditional rendering of the gradient legend for avgheatexposure -->
-      <div v-if="localSelectedIndex === 'avgheatexposure' || localSelectedIndex === 'combined_avgheatexposure'" class="gradient-legend">
-        <div class="gradient-bar"></div>
+      <div
+v-if="localSelectedIndex === 'avgheatexposure' || localSelectedIndex === 'combined_avgheatexposure'"
+class="gradient-legend"
+>
+        <div class="gradient-bar"/>
         <div class="gradient-labels">
           <span>0.1</span>
           <span>0.2</span>
@@ -24,31 +33,55 @@
       </div>
 
       <!-- Custom striped legend for combined_heat_flood_green, simplified to combined heat and flood -->
-      <div v-else-if="localSelectedIndex === 'combined_heat_flood_green'" class="striped-legend">
+      <div
+v-else-if="localSelectedIndex === 'combined_heat_flood_green'"
+class="striped-legend"
+>
         <div class="legend-container">
           <!-- Combined Legend for Heat and Flood -->
           <div class="combined-legend">
             <div class="legend-section">
               <div class="heat-legend">
                 <h5>Heat Index</h5>
-                <div v-for="item in indexToColorScheme.partialHeat" :key="item.range" class="swatch">
-                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                <div
+v-for="item in indexToColorScheme.partialHeat"
+:key="item.range"
+class="swatch"
+>
+                  <div
+class="color-box"
+:style="{ backgroundColor: item.color }"
+/>
                   <span>{{ item.range }}</span>
                 </div>
               </div>
 
               <div class="flood-legend">
                 <h5>Flood Index</h5>
-                <div v-for="item in indexToColorScheme.partialFlood" :key="item.range" class="swatch">
-                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                <div
+v-for="item in indexToColorScheme.partialFlood"
+:key="item.range"
+class="swatch"
+>
+                  <div
+class="color-box"
+:style="{ backgroundColor: item.color }"
+/>
                   <span>{{ item.range }}</span>
                 </div>
               </div>
 
               <div class="missing-legend">
                 <h5>Incomplete Data</h5>
-                <div v-for="item in indexToColorScheme.both" :key="item.range" class="swatch">
-                  <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+                <div
+v-for="item in indexToColorScheme.both"
+:key="item.range"
+class="swatch"
+>
+                  <div
+class="color-box"
+:style="{ backgroundColor: item.color }"
+/>
                   <span>{{ item.range }}</span>
                 </div>
               </div>        
@@ -62,31 +95,54 @@
 
       <!-- Default legend display for non-gradient indices -->
       <div v-else>
-        <div class="swatch" v-for="item in legendData" :key="item.range">
-          <div class="color-box" :style="{ backgroundColor: item.color }"></div>
+        <div
+v-for="item in legendData"
+:key="item.range"
+class="swatch"
+>
+          <div
+class="color-box"
+:style="{ backgroundColor: item.color }"
+/>
           <span>{{ item.range }}</span>
         </div>
       </div>
     </div>
 
-    <div v-if="localSelectedIndex === 'combined_avgheatexposure' && legendExpanded" class="extrusion-note">
+    <div
+v-if="localSelectedIndex === 'combined_avgheatexposure' && legendExpanded"
+class="extrusion-note"
+>
       <span>Heat Index shown by grid  <br> cell height visualisation, <br> with a maximum height of 250m.</span>
     </div>
 
-    <div v-if="localSelectedIndex === 'combined_heatindex_avgheatexposure' && legendExpanded" class="extrusion-note">
+    <div
+v-if="localSelectedIndex === 'combined_heatindex_avgheatexposure' && legendExpanded"
+class="extrusion-note"
+>
       <span>Normalised Landsat Surface heat shown <br> by grid cell height visualisation, <br> with a maximum height of 250m.</span>
     </div>
 
-    <div v-if="localSelectedIndex === 'combined_heat_flood' && legendExpanded" class="extrusion-note">
+    <div
+v-if="localSelectedIndex === 'combined_heat_flood' && legendExpanded"
+class="extrusion-note"
+>
       <span>Flood Index shown by grid <br> cell height visualisation, <br> with a maximum height of 250m.</span>
     </div>
 
-    <div v-if="localSelectedIndex === 'combined_flood_heat' && legendExpanded" class="extrusion-note">
+    <div
+v-if="localSelectedIndex === 'combined_flood_heat' && legendExpanded"
+class="extrusion-note"
+>
       <span>Heat Index shown by grid <br> cell height visualisation, <br> with a maximum height of 250m.</span>
     </div>
 
-    <v-tooltip v-if="selectedIndexDescription && legendExpanded" :text="selectedIndexDescription" bottom>
-      <template v-slot:activator="{ props }">
+    <v-tooltip
+v-if="selectedIndexDescription && legendExpanded"
+:text="selectedIndexDescription"
+bottom
+>
+      <template #activator="{ props }">
         <v-select
           v-bind="props"
           v-model="localSelectedIndex"
@@ -94,16 +150,25 @@
           item-title="text"
           item-value="value"
           label="Select Index"
-          @update:modelValue="handleSelectionChange"
           style="max-width: 300px;"
-        ></v-select>
+          @update:model-value="handleSelectionChange"
+        />
       </template>
     </v-tooltip>
 
-    <div v-if="legendExpanded" class="source-note">
+    <div
+v-if="legendExpanded"
+class="source-note"
+>
       Socioeconomic source data by<br>
-      <a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a><br>
-      <a href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf" target="_blank">Methodology for Assessing Social Vulnerability</a>
+      <a
+href="https://stat.fi/index_en.html"
+target="_blank"
+>Statistics Finland</a><br>
+      <a
+href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf"
+target="_blank"
+>Methodology for Assessing Social Vulnerability</a>
     </div>
   </div>
 </template>

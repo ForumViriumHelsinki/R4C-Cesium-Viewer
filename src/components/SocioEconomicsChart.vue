@@ -1,5 +1,5 @@
 <template>
-  <div id="socioeonomicsContainer"></div>
+  <div id="socioeonomicsContainer"/>
 </template>
 
 <script>

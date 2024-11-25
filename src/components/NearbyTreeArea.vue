@@ -1,53 +1,110 @@
 <template>
 
-  <div id="nearbyTreeAreaContainer">
-  </div>
+  <div id="nearbyTreeAreaContainer"/>
 
-<label id="bearingLabel" style="position: fixed; bottom: 41px; left: 15px; visibility: hidden;">Direction of trees</label>
+<label
+id="bearingLabel"
+style="position: fixed; bottom: 41px; left: 15px; visibility: hidden;"
+>Direction of trees</label>
 
   <div id="bearingAllSwitchContainer">
     <!-- bearingAll -->
-    <label class="switch" id="bearingAllSwitch">
-      <input type="checkbox" id="bearingAllToggle" value="a">
-      <span class="slider round"></span>
+    <label
+id="bearingAllSwitch"
+class="switch"
+>
+      <input
+id="bearingAllToggle"
+type="checkbox"
+value="a"
+>
+      <span class="slider round"/>
     </label>
-    <label for="bearingAllToggle" class="label" id="bearingAllLabel">All</label>
+    <label
+id="bearingAllLabel"
+for="bearingAllToggle"
+class="label"
+>All</label>
   </div>
 
   <div id="bearingSouthSwitchContainer">
     <!-- bearingSouth -->
-    <label class="switch" id="bearingSouthSwitch">
-      <input type="checkbox" id="bearingSouthToggle" value="s">
-      <span class="slider round"></span>
+    <label
+id="bearingSouthSwitch"
+class="switch"
+>
+      <input
+id="bearingSouthToggle"
+type="checkbox"
+value="s"
+>
+      <span class="slider round"/>
     </label>
-    <label for="bearingSouthToggle" class="label" id="bearingSouthLabel">South</label>
+    <label
+id="bearingSouthLabel"
+for="bearingSouthToggle"
+class="label"
+>South</label>
   </div>
 
   <div id="bearingWestSwitchContainer">
     <!-- bearingWest -->
-    <label class="switch" id="bearingWestSwitch">
-      <input type="checkbox" id="bearingWestToggle" value="w">
-      <span class="slider round"></span>
+    <label
+id="bearingWestSwitch"
+class="switch"
+>
+      <input
+id="bearingWestToggle"
+type="checkbox"
+value="w"
+>
+      <span class="slider round"/>
     </label>
-    <label for="bearingWestToggle" class="label" id="bearingWestLabel">West</label>
+    <label
+id="bearingWestLabel"
+for="bearingWestToggle"
+class="label"
+>West</label>
   </div>
 
   <div id="bearingEastSwitchContainer">
     <!-- bearingEast -->
-    <label class="switch" id="bearingEastwitch">
-      <input type="checkbox" id="bearingEastToggle" value="e">
-      <span class="slider round"></span>
+    <label
+id="bearingEastwitch"
+class="switch"
+>
+      <input
+id="bearingEastToggle"
+type="checkbox"
+value="e"
+>
+      <span class="slider round"/>
     </label>
-    <label for="bearingEastToggle" class="label" id="bearingEastLabel">East</label>
+    <label
+id="bearingEastLabel"
+for="bearingEastToggle"
+class="label"
+>East</label>
   </div>
 
   <div id="bearingNorthSwitchContainer">
     <!-- bearingWest -->
-    <label class="switch" id="bearingNorthSwitch">
-      <input type="checkbox" id="bearingNorthToggle" value="n">
-      <span class="slider round"></span>
+    <label
+id="bearingNorthSwitch"
+class="switch"
+>
+      <input
+id="bearingNorthToggle"
+type="checkbox"
+value="n"
+>
+      <span class="slider round"/>
     </label>
-    <label for="bearingNorthToggle" class="label" id="bearingNorthLabel">North</label>
+    <label
+id="bearingNorthLabel"
+for="bearingNorthToggle"
+class="label"
+>North</label>
   </div>
 
 </template>

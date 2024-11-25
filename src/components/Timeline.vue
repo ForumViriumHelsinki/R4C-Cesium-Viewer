@@ -1,7 +1,14 @@
 <template>
-  <div id="heatTimeseriesContainer" :style="{ width: `${sliderWidth.value}px` }"> 
+  <div
+id="heatTimeseriesContainer"
+:style="{ width: `${sliderWidth.value}px` }"
+> 
     <div class="date-labels">
-      <span v-for="(date, index) in dates" :key="index" class="date-label">
+      <span
+v-for="(date, index) in dates"
+:key="index"
+class="date-label"
+>
         {{ date }}
       </span>
     </div>
@@ -17,7 +24,7 @@
 	  :style="{ marginLeft: marginWidth, marginRight: marginWidth }"
 	  :disabled="isTimelineLocked"
     >
-      <template v-slot:append>
+      <template #append>
         <div class="label-container">
           <div class="time-label">
             {{ selectedDate.value }}

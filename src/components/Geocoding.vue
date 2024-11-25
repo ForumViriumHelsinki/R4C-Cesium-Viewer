@@ -1,27 +1,46 @@
 <template>
-  <div v-if="showGeocoding" id="georefContainer">
+  <div
+v-if="showGeocoding"
+id="georefContainer"
+>
     <!-- Search bar with search icon -->
-    <v-container fluid class="pa-0">
+    <v-container
+fluid
+class="pa-0"
+>
       <v-row>
         <v-col>
           <v-text-field
             v-model="searchQuery"
             label="Enter place or address"
             prepend-inner-icon="mdi-magnify"
-            @keyup="filterSearchResults"
             outlined
             dense
             clearable
-          ></v-text-field>
+            @keyup="filterSearchResults"
+          />
         </v-col>
-        <v-col class="d-flex justify-end align-center" cols="auto">
-          <v-btn color="primary" @click="moveToTarget" small>Move to Target</v-btn>
+        <v-col
+class="d-flex justify-end align-center"
+cols="auto"
+>
+          <v-btn
+color="primary"
+small
+@click="moveToTarget"
+>
+Move to Target
+</v-btn>
         </v-col>
       </v-row>
     </v-container>
 
     <!-- Search results container -->
-    <v-container v-if="showSearchResults" fluid class="pa-0 mt-2">
+    <v-container
+v-if="showSearchResults"
+fluid
+class="pa-0 mt-2"
+>
       <v-list dense>
         <v-list-item
           v-for="address in filteredAddresses"

@@ -1,6 +1,6 @@
 <!-- Piechart.vue -->
 <template>
-  <div id="pieChartContainer"></div>
+  <div id="pieChartContainer"/>
 </template>
 
 <script setup>

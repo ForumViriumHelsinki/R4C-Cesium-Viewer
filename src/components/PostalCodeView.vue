@@ -1,111 +1,302 @@
 <template>
-  <div v-if="showPostalCodeView" id="postalCodeViewContainer">
-  <p class="header">R4C Urban Heat risk demonstrator</p>
-  <v-btn v-if="showReturn" icon @click="returnToPostalCode" class="uiButton" style="color: red; float:right; cursor: pointer;"> 
+  <div
+v-if="showPostalCodeView"
+id="postalCodeViewContainer"
+>
+  <p class="header">
+R4C Urban Heat risk demonstrator
+</p>
+  <v-btn
+v-if="showReturn"
+icon
+class="uiButton"
+style="color: red; float:right; cursor: pointer;"
+@click="returnToPostalCode"
+> 
     <v-icon>mdi-arrow-left</v-icon>
   </v-btn>
 
-  <v-btn icon @click="reset" class="uiButton" style="color: red; float:right; cursor: pointer;">
+  <v-btn
+icon
+class="uiButton"
+style="color: red; float:right; cursor: pointer;"
+@click="reset"
+>
     <v-icon>mdi-refresh</v-icon>
   </v-btn>
   <!-- showPlotSwitch-->
 
 <label class="switch">
-  <input type="checkbox" id="showPlotToggle" value="showPlot" checked>
-  <span class="slider round"></span>
+  <input
+id="showPlotToggle"
+type="checkbox"
+value="showPlot"
+checked
+>
+  <span class="slider round"/>
 </label>
-<label for="showPlotToggle" class="label">Display plot</label>
+<label
+for="showPlotToggle"
+class="label"
+>Display plot</label>
 
-<label class="switch" id="gridViewSwitch" >
-  <input type="checkbox" id="gridViewToggle" value="gridView">
-  <span class="slider round"></span>
+<label
+id="gridViewSwitch"
+class="switch"
+>
+  <input
+id="gridViewToggle"
+type="checkbox"
+value="gridView"
+>
+  <span class="slider round"/>
 </label>
-<label for="gridViewToggle" class="label" id="gridViewLabel">Grid view</label>  
+<label
+id="gridViewLabel"
+for="gridViewToggle"
+class="label"
+>Grid view</label>  
 
-<label class="switch"  id="capitalRegionSwitch" >
-  <input type="checkbox" id="capitalRegionViewToggle" value="capitalRegionView">
-  <span class="slider round"></span>
+<label
+id="capitalRegionSwitch"
+class="switch"
+>
+  <input
+id="capitalRegionViewToggle"
+type="checkbox"
+value="capitalRegionView"
+>
+  <span class="slider round"/>
 </label>
-<label for="capitalRegionViewToggle" class="label" id="capitalRegionViewLabel">Helsinki view</label>  
+<label
+id="capitalRegionViewLabel"
+for="capitalRegionViewToggle"
+class="label"
+>Helsinki view</label>  
 
   <!-- showVegetationSwitch-->
-<label class="switch" id="showVegetationSwitch"  style="display:none;">
-	<input type="checkbox" id="showVegetationToggle" value="showVegetation" >
-	<span class="slider round"></span>
+<label
+id="showVegetationSwitch"
+class="switch"
+style="display:none;"
+>
+	<input
+id="showVegetationToggle"
+type="checkbox"
+value="showVegetation"
+>
+	<span class="slider round"/>
 </label>
-<label for="showVegetationToggle" class="label" id="showVegetationLabel"  style="display:none;">Vegetation</label>
+<label
+id="showVegetationLabel"
+for="showVegetationToggle"
+class="label"
+style="display:none;"
+>Vegetation</label>
 
   <!-- showOtherNatureSwitch-->
-<label class="switch" id="showOtherNatureSwitch"  style="display:none;">
-  <input type="checkbox" id="showOtherNatureToggle" value="showOtherNature" >
-  <span class="slider round"></span>
+<label
+id="showOtherNatureSwitch"
+class="switch"
+style="display:none;"
+>
+  <input
+id="showOtherNatureToggle"
+type="checkbox"
+value="showOtherNature"
+>
+  <span class="slider round"/>
 </label>
-<label for="showOtherNatureToggle" class="label" id="showOtherNatureLabel"  style="display:none;">Other nature</label>
+<label
+id="showOtherNatureLabel"
+for="showOtherNatureToggle"
+class="label"
+style="display:none;"
+>Other nature</label>
 
   <!-- hideNewBuildingsSwitch-->
-<label class="switch" id = "hideNewBuildingsSwitch"  style="display:none;">
-  <input type="checkbox" id="hideNewBuildingsToggle" value="filterBuildings" >
-  <span class="slider round"></span>
+<label
+id="hideNewBuildingsSwitch"
+class="switch"
+style="display:none;"
+>
+  <input
+id="hideNewBuildingsToggle"
+type="checkbox"
+value="filterBuildings"
+>
+  <span class="slider round"/>
 </label>
-<label for="hideNewBuildings" class="label" id="hideNewBuildingsLabel"  style="display:none;">Built before summer 2018</label>
+<label
+id="hideNewBuildingsLabel"
+for="hideNewBuildings"
+class="label"
+style="display:none;"
+>Built before summer 2018</label>
 
   <!-- hideNonSoteSwitch-->
-<label class="switch" id = "hideNonSoteSwitch"  style="display:none;">
-	<input type="checkbox" id="hideNonSoteToggle" value="filterBuildings" >
-	<span class="slider round"></span>
+<label
+id="hideNonSoteSwitch"
+class="switch"
+style="display:none;"
+>
+	<input
+id="hideNonSoteToggle"
+type="checkbox"
+value="filterBuildings"
+>
+	<span class="slider round"/>
 </label>
-<label for="hideNonSote" class="label" id="hideNonSoteLabel"  style="display:none;">Only sote buildings</label>
+<label
+id="hideNonSoteLabel"
+for="hideNonSote"
+class="label"
+style="display:none;"
+>Only sote buildings</label>
 
   <!--  hideLowSwitch-->
-<label class="switch" id = "hideLowSwitch"  style="display:none;">
-  <input type="checkbox" id="hideLowToggle" value="filterBuildings" >
-  <span class="slider round"></span>
+<label
+id="hideLowSwitch"
+class="switch"
+style="display:none;"
+>
+  <input
+id="hideLowToggle"
+type="checkbox"
+value="filterBuildings"
+>
+  <span class="slider round"/>
 </label>
-<label for="hideLow" class="label" id="hideLowLabel" style="display:none;">Only tall buildings</label>
+<label
+id="hideLowLabel"
+for="hideLow"
+class="label"
+style="display:none;"
+>Only tall buildings</label>
 
   <!--  showTrees-->
-<label class="switch" id = "showTreesSwitch"  style="display:none;">
-  <input type="checkbox" id="showTreesToggle" value="showTrees" >
-  <span class="slider round"></span>
+<label
+id="showTreesSwitch"
+class="switch"
+style="display:none;"
+>
+  <input
+id="showTreesToggle"
+type="checkbox"
+value="showTrees"
+>
+  <span class="slider round"/>
 </label>
-<label for="showTrees" class="label" id="showTreesLabel" style="display:none;">Trees</label>
+<label
+id="showTreesLabel"
+for="showTrees"
+class="label"
+style="display:none;"
+>Trees</label>
 
 <!--  showLandCover-->
-<label class="switch" id = "landCoverSwitch">
-  <input type="checkbox" id="landCoverToggle" value="getLandCover" >
-  <span class="slider round"></span>
+<label
+id="landCoverSwitch"
+class="switch"
+>
+  <input
+id="landCoverToggle"
+type="checkbox"
+value="getLandCover"
+>
+  <span class="slider round"/>
 </label>
-<label for="getLandCover" class="label" id="landCoverLabel">HSY land cover</label>
+<label
+id="landCoverLabel"
+for="getLandCover"
+class="label"
+>HSY land cover</label>
 
   <!--  switchView-->
-<label class="switch" id = "switchViewSwitch" style="display:none;">
-  <input type="checkbox" id="switchViewToggle" value="switchView" >
-  <span class="slider round"></span>
+<label
+id="switchViewSwitch"
+class="switch"
+style="display:none;"
+>
+  <input
+id="switchViewToggle"
+type="checkbox"
+value="switchView"
+>
+  <span class="slider round"/>
 </label>
-<label for="switchView" class="label" id="switchViewLabel" style="display:none;">2D view</label>
+<label
+id="switchViewLabel"
+for="switchView"
+class="label"
+style="display:none;"
+>2D view</label>
 
   <!-- hideColdAreasSwitch-->
-<label class="switch" id = "hideColdAreasSwitch"  style="display:none;">
-	<input type="checkbox" id="hideColdAreasToggle" value="hideColdAreas" >
-	<span class="slider round"></span>
+<label
+id="hideColdAreasSwitch"
+class="switch"
+style="display:none;"
+>
+	<input
+id="hideColdAreasToggle"
+type="checkbox"
+value="hideColdAreas"
+>
+	<span class="slider round"/>
 </label>
-<label for="hideColdAreas" class="label" id="hideColdAreasLabel"  style="display:none;">Hide cold areas</label>
+<label
+id="hideColdAreasLabel"
+for="hideColdAreas"
+class="label"
+style="display:none;"
+>Hide cold areas</label>
 
   <!-- CapitalRegionColdSwitch-->
-<label class="switch" id = "capitalRegionColdSwitch">
-	<input type="checkbox" id="capitalRegionColdToggle" value="capitalRegionCold" >
-	<span class="slider round"></span>
+<label
+id="capitalRegionColdSwitch"
+class="switch"
+>
+	<input
+id="capitalRegionColdToggle"
+type="checkbox"
+value="capitalRegionCold"
+>
+	<span class="slider round"/>
 </label>
-<label for="capitalRegionCold" class="label" id="capitalRegionColdLabel">Capital Region Cold</label>
+<label
+id="capitalRegionColdLabel"
+for="capitalRegionCold"
+class="label"
+>Capital Region Cold</label>
 
   <!--  sensor map Link-->
-  <a href="https://bri3.fvh.io/opendata/r4c/r4c_all.html" class="label" id="sensorMapLink" target="_blank" rel="noopener noreferrer"> Sensor map </a>
+  <a
+id="sensorMapLink"
+href="https://bri3.fvh.io/opendata/r4c/r4c_all.html"
+class="label"
+target="_blank"
+rel="noopener noreferrer"
+> Sensor map </a>
 
   <!--  sensor dashboard-->
-  <a href="https://iot.fvh.fi/grafana/d/aduw70oqqdon4c/r4c-laajasalo-and-koivukyla?orgId=6&refresh=30m" class="label" id="sensorDashboardLink" target="_blank" rel="noopener noreferrer"> Sensor Dashboard </a>
+  <a
+id="sensorDashboardLink"
+href="https://iot.fvh.fi/grafana/d/aduw70oqqdon4c/r4c-laajasalo-and-koivukyla?orgId=6&refresh=30m"
+class="label"
+target="_blank"
+rel="noopener noreferrer"
+> Sensor Dashboard </a>
 
   <!--  flood Link-->
-  <a href="https://geo.fvh.fi/r4c/6fkgOUqn3/" class="label" id="floodLink" target="_blank" rel="noopener noreferrer" style="display:none;"> Experimental flood simulations </a>
+  <a
+id="floodLink"
+href="https://geo.fvh.fi/r4c/6fkgOUqn3/"
+class="label"
+target="_blank"
+rel="noopener noreferrer"
+style="display:none;"
+> Experimental flood simulations </a>
 
 
 </div>
@@ -137,16 +328,6 @@ export default {
 			showPostalCodeView: true,
 			showReturn: false,
 		};
-	},
-	mounted() {
-		this.unsubscribe = eventBus.on( 'initPostalCodeView', this.initPostalCodeView );
-		this.store = useGlobalStore();
-		this.toggleStore  = useToggleStore();
-		this.viewer = this.store.cesiumViewer;
-		this.elementsDisplayService = new ElementsDisplay();
-	},
-	beforeUnmount() {
-		this.unsubscribe();
 	}, 
 	computed: {
 		shouldShowReturn() {
@@ -158,6 +339,16 @@ export default {
 		shouldShowReturn( newValue ) { // Watch for changes in computed property
 			this.showReturn = newValue; // Update data property if needed
 		}
+	},
+	mounted() {
+		this.unsubscribe = eventBus.on( 'initPostalCodeView', this.initPostalCodeView );
+		this.store = useGlobalStore();
+		this.toggleStore  = useToggleStore();
+		this.viewer = this.store.cesiumViewer;
+		this.elementsDisplayService = new ElementsDisplay();
+	},
+	beforeUnmount() {
+		this.unsubscribe();
 	},
 	methods: {
 		reset(){
