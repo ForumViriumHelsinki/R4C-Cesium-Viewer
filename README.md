@@ -5,7 +5,7 @@ R4C user interface Vue3 interface with Vite and Cesium
 ## Run with Vite
 
 ```
-npx vite dev
+npm run dev
 ```
 The application should now be running at [http://localhost:5173](http://localhost:5173).
 
@@ -45,3 +45,8 @@ npx playwright test --headed
 skaffold delete
 docker system --prune --all
 ```
+
+## Sentry
+https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite/
+https://docs.sentry.io/platforms/javascript/guides/vue/
+https://docs.sentry.io/platforms/javascript/guides/vue/features/pinia/
