@@ -15,7 +15,7 @@ build:
 deploy:
   helm:
     releases:
-      - name: r4c
+      - name: helm-r4c
         chartPath: helm
         valuesFiles:
           - helm/values.yaml
