@@ -29,7 +29,7 @@ export default class Tree {
 	async loadTreesWithKoodi( koodi ) {
 
 		// Construct the API endpoint URL
-		let url = 'https://geo.fvh.fi/r4c/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode + '&koodi=' + koodi;
+		let url = '/pygeoapi/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode + '&koodi=' + koodi;
 
 		try {
 			// Attempt to retrieve the tree data from the Redis cache
