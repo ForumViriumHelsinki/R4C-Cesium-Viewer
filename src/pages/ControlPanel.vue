@@ -237,6 +237,11 @@ title="Geocoding"
               </v-expansion-panels>
             </v-list-item-group>
           </v-list>
+<template #append>
+          <div class="text-center text-subtitle-2">
+        Data sources from Helsinki Region Environmental Services HSY: Buildings in the Helsinki metropolitan area & Helsinki metropolitan postal code areas by CC-BY-4.0 Licence. Open data by postal code area from Statistics Finland by CC-BY-4.0 Licence.
+</div>
+        </template>
         </v-navigation-drawer>
     </v-app>
   </div>
