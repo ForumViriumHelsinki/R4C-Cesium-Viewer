@@ -1,5 +1,5 @@
 <template>
-  <div v-if="grid250m && showGrid">
+  <div v-if="grid250m">
     <PopGridLegend @on-index-change="updateGridColors" />
   </div>
 </template>
@@ -12,7 +12,6 @@ import PopGridLegend from './PopGridLegend.vue';
 import { useToggleStore } from '../stores/toggleStore';
 
 // Reactive variables
-const showGrid = ref( false );
 const grid250m = computed( () => toggleStore.grid250m );
 const toggleStore = useToggleStore();
 
@@ -61,13 +60,6 @@ const indexToColorScheme = {
 	social_networks: floodColors, // Social networks use flood coloring
 	overcrowding: floodColors, // Overcrowding uses flood coloring
 };
-
-// Watcher to load or remove grid data source based on `showGrid` state
-watch( showGrid, async ( newValue ) => {
-	if ( newValue ) {
-		updateGridColors( 'heat_index' ); // Initial color update
-	}
-} );
 
 // Function to load the GeoJSON data source
 const loadGrid = async () => {
