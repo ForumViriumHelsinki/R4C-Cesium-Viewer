@@ -19,7 +19,7 @@ server {
     proxy_http_version 1.1;
     proxy_set_header Connection "";
     chunked_transfer_encoding on;
-    
+
     # Default buffer settings
     proxy_buffering on;  # Keep buffering on by default
     proxy_buffer_size 8k;
@@ -66,18 +66,18 @@ server {
         proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
         proxy_cache_background_update on;
         proxy_cache_lock on;
-        
+
         # Optimize for tile delivery
         proxy_buffers 8 256k;
         proxy_buffer_size 256k;
         proxy_busy_buffers_size 256k;
         proxy_temp_file_write_size 256k;
-        
+
         # Increase timeouts for large tiles
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
-        
+
         # Enable compression
         gzip on;
         gzip_types image/jpeg image/png image/gif;
@@ -95,10 +95,11 @@ server {
         rewrite ^/wms/layers$ /geoserver/wms?request=getCapabilities break;
     }
 
-    location /digitransit {
-        set $vite_digitransit_key $VITE_DIGITRANSIT_KEY;
-        proxy_pass https://api.digitransit.fi;
-        proxy_set_header digitransit-subscription-key $vite_digitransit_key;
-        rewrite ^/digitransit(.*)$ $1 break;
-    }
+location /digitransit {
+    proxy_set_header digitransit-subscription-key ${VITE_DIGITRANSIT_KEY};
+
+    # Keep your existing proxy settings
+    proxy_pass https://api.digitransit.fi;
+    rewrite ^/digitransit(.*)$ $1 break;
+}
 }
