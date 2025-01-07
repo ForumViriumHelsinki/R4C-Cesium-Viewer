@@ -5,8 +5,6 @@
 node_modules
 /dist
 
-public/assets/data/r4c_stats_grid_index.json
-
 # local env files
 .env.local
 .env.*.local
