@@ -25,9 +25,10 @@ export default class GeoJSONDataSource {
 
 	async removeDataSourcesAndEntities() {
 
-		await this.viewer.dataSources.removeAll();
+		const quickStore = useGlobalStore();
+		await quickStore.cesiumViewer.dataSources.removeAll();
 		// Remove all entities directly added to the viewer
-		await this.viewer.entities.removeAll();
+		await quickStore.cesiumViewer.entities.removeAll();
 	}
 
 	// Function to get a data source by name
@@ -80,8 +81,8 @@ export default class GeoJSONDataSource {
 			} )
 				.then( ( dataSource ) => {
 					dataSource.name = name;
-					this.viewer.dataSources.add( dataSource );
-
+					const quickStore = useGlobalStore();
+					quickStore.cesiumViewer.dataSources.add( dataSource );
 					const entities = dataSource.entities.values;
 					resolve( entities );
 				} )

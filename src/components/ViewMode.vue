@@ -114,8 +114,7 @@ export default {
       toggleStore.setHelsinkiView(false);
       store.setView(isGridView ? 'grid' : 'capitalRegion');
       if (isGridView) {
-        const populationgridService = new Populationgrid();
-			  populationgridService.createPopulationGrid();
+		    toggleStore.setGrid250m( true );
       } else {
         reset();
       }
