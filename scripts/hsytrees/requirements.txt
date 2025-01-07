@@ -1,0 +1,4 @@
+google-cloud-sql
+geopandas
+shapely
+psycopg2-binary

@@ -1,0 +1,8 @@
+geopandas
+rasterio
+psycopg2
+shapely
+python-dotenv
+numpy
+affine
+webcolors
