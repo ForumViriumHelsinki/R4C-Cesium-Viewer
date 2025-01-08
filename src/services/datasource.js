@@ -4,19 +4,18 @@ import { useGlobalStore } from '../stores/globalStore.js';
 export default class GeoJSONDataSource {
 	constructor( ) {
 		this.store = useGlobalStore();
-		this.viewer = this.store.cesiumViewer;
 	}
 
 	// Function to show all data sources
 	showAllDataSources() {
-		this.viewer.dataSources._dataSources.forEach( ( dataSource ) => {
+		this.store.cesiumViewer.dataSources._dataSources.forEach( ( dataSource ) => {
 			dataSource.show = true;
 		} );
 	}
 
 	// Function to hide a data source by name
 	async changeDataSourceShowByName( name, show ) {
-		this.viewer.dataSources._dataSources.forEach( ( dataSource ) => {
+		this.store.cesiumViewer.dataSources._dataSources.forEach( ( dataSource ) => {
 			if ( dataSource.name.startsWith( name ) ) {
 				dataSource.show = show;
 			}
@@ -25,21 +24,20 @@ export default class GeoJSONDataSource {
 
 	async removeDataSourcesAndEntities() {
 
-		const quickStore = useGlobalStore();
-		await quickStore.cesiumViewer.dataSources.removeAll();
+		await this.store.cesiumViewer.dataSources.removeAll();
 		// Remove all entities directly added to the viewer
-		await quickStore.cesiumViewer.entities.removeAll();
+		await this.store.cesiumViewer.entities.removeAll();
 	}
 
 	// Function to get a data source by name
 	getDataSourceByName( name ) {
-		return this.viewer.dataSources._dataSources.find( ( ds ) => ds.name === name );
+		return this.store.cesiumViewer.dataSources._dataSources.find( ( ds ) => ds.name === name );
 	}
 
 	// Function to remove data sources by name prefix
 	async removeDataSourcesByNamePrefix( namePrefix ) {
 		return new Promise( ( resolve, reject ) => {
-			const dataSources = this.viewer.dataSources._dataSources;
+			const dataSources = this.store.cesiumViewer.dataSources._dataSources;
 			const removalPromises = [];
   
 			for ( const dataSource of dataSources ) {
@@ -47,12 +45,12 @@ export default class GeoJSONDataSource {
 					const removalPromise = new Promise( ( resolveRemove ) => {
 						// Correctly handle event listener with arrow function to preserve 'this' context
 						const onDataSourceRemoved = () => {
-							this.viewer.dataSources.dataSourceRemoved.removeEventListener( onDataSourceRemoved );
+							this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener( onDataSourceRemoved );
 							resolveRemove();
 						};
   
-						this.viewer.dataSources.remove( dataSource, true );
-						this.viewer.dataSources.dataSourceRemoved.addEventListener( onDataSourceRemoved );
+						this.store.cesiumViewer.dataSources.remove( dataSource, true );
+						this.store.cesiumViewer.dataSources.dataSourceRemoved.addEventListener( onDataSourceRemoved );
 					} );
   
 					removalPromises.push( removalPromise );
@@ -81,8 +79,7 @@ export default class GeoJSONDataSource {
 			} )
 				.then( ( dataSource ) => {
 					dataSource.name = name;
-					const quickStore = useGlobalStore();
-					quickStore.cesiumViewer.dataSources.add( dataSource );
+					this.store.cesiumViewer.dataSources.add( dataSource );
 					const entities = dataSource.entities.values;
 					resolve( entities );
 				} )
@@ -158,7 +155,7 @@ export default class GeoJSONDataSource {
  */
 	async removeDuplicateDataSources() {
 		return new Promise( ( resolve, reject ) => {
-			const dataSources = this.viewer.dataSources._dataSources;
+			const dataSources = this.store.cesiumViewer.dataSources._dataSources;
 			const uniqueDataSources = {};
 
 			for ( let i = 0; i < dataSources.length; i++ ) {
@@ -174,13 +171,13 @@ export default class GeoJSONDataSource {
 			}
 
 			// Clear all existing data sources
-			this.viewer.dataSources.removeAll();
+			this.store.cesiumViewer.dataSources.removeAll();
 
 			// Add the unique data sources back to the viewer
 			const addPromises = [];
 			for ( const name in uniqueDataSources ) {
 				const dataSource = uniqueDataSources[name].dataSource;
-				const addPromise = this.viewer.dataSources.add( dataSource );
+				const addPromise = this.store.cesiumViewer.dataSources.add( dataSource );
 				addPromises.push( addPromise );
 			}
 
@@ -206,7 +203,7 @@ export default class GeoJSONDataSource {
 		// If the data source is found, remove it
 		if ( majorDistrictsDataSource ) {
 
-			this.viewer.dataSources.remove( majorDistrictsDataSource, true );    
+			this.store.cesiumViewer.dataSources.remove( majorDistrictsDataSource, true );    
 
 		}
 	}
