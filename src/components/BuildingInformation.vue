@@ -90,7 +90,9 @@ export default {
 				);
 
 				if ( pickedEntity && pickedEntity.id ) {
+
 					fetchBuildingInfo( pickedEntity.id );
+  	
 				} else {
 					showTooltip.value = false;
 				}
@@ -101,14 +103,14 @@ export default {
 		onMounted( () => {
 			setTimeout( () => {
 				nextTick( () => {
-					if ( buildingStore.buildingFeatures && store.level === 'postalCode' ) {
+					if ( buildingStore.buildingFeatures ) {
 						store.cesiumViewer.screenSpaceEventHandler.setInputAction(
 							onMouseMove,
 							Cesium.ScreenSpaceEventType.MOUSE_MOVE
 						);
 					}
 				} );
-			}, 1000 ); // 1000 milliseconds = 21 second delay
+			}, 1000 ); // 1000 milliseconds = 1 second delay
 		} );
 
 		// Clean up Cesium mouse events
