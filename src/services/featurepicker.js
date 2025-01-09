@@ -34,6 +34,7 @@ export default class FeaturePicker {
 		this.elementsDisplayService = new ElementsDisplay();
 		this.cameraService = new Camera();
 		this.coldAreaService = new ColdArea();
+		this.lastClickTime = 0; // Variable to store the timestamp of the last click
 
 	}
   
@@ -44,8 +45,15 @@ export default class FeaturePicker {
     * @param {MouseEvent} event - The click event
     */
 	processClick( event ) {
-		console.log( 'Clicked at ' + String( event.x ) + ', ' + String( event.y ) );
-		this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
+		this.store.setShowBuildingInfo( false );
+		const currentTime = Date.now();
+
+  		if ( currentTime - this.lastClickTime >= 1000 ) { 
+    		console.log( 'Clicked at ' + String( event.x ) + ', ' + String( event.y ) );
+    		this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
+    		this.lastClickTime = currentTime; // Update the last click timestamp
+			this.store.setShowBuildingInfo( true );
+  		}
 	}    
     
 	/**
@@ -56,7 +64,7 @@ export default class FeaturePicker {
     */
 	pickEntity( windowPosition ) {
 		let picked = this.viewer.scene.pick( windowPosition );
-       
+
 		if ( picked ) {
            
 			let id = Cesium.defaultValue( picked.id, picked.primitive.id );

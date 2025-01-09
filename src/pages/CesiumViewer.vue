@@ -55,7 +55,7 @@ export default {
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
     	const shouldShowBuildingInformation = computed(() => {
-      		return buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid' && store.showBuildingInfo;
+      		return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid';
     	});
 		const viewer = ref(null);
 		const view = computed( () => store.view );
