@@ -28,7 +28,12 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=sha  
+            type=sha
+            # match release-please manifest driven release tag format
+            # https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md
+            type=match,pattern=.*-v(\d+.\d+.\d+),group=1
+            type=match,pattern=.*-v(\d+.\d+),group=1
+            type=match,pattern=.*-v(\d+),group=1
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
