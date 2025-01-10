@@ -1,4 +1,4 @@
-FROM node:21-alpine AS build
+FROM node:23-alpine AS build
 
 # These will be automatically populated by docker/metadata-action
 ARG DOCKER_META_VERSION
