@@ -3,7 +3,6 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "include-component-in-tag": false,
       "exclude-paths": ["helm"],
       "extra-files": [
         {
