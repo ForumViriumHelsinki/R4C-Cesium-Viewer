@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.8.0...r4c-cesium-viewer-v1.8.1) (2025-01-13)
+
+
+### Bug Fixes
+
+* build workflow trigger tag ([#82](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/82)) ([9ca3a8f](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9ca3a8fef33d786ea0e42aae4a44e5138f84a80b))
+
 ## [1.8.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.7.0...r4c-cesium-viewer-v1.8.0) (2025-01-10)
 
 
