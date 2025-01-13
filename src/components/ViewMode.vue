@@ -114,6 +114,7 @@ export default {
       toggleStore.setHelsinkiView(false);
       store.setView(isGridView ? 'grid' : 'capitalRegion');
       if (isGridView) {
+        store.setShowBuildingInfo( false );
 		    toggleStore.setGrid250m( true );
       } else {
         reset();
