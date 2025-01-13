@@ -34,7 +34,6 @@ export default class FeaturePicker {
 		this.elementsDisplayService = new ElementsDisplay();
 		this.cameraService = new Camera();
 		this.coldAreaService = new ColdArea();
-		this.lastClickTime = 0; // Variable to store the timestamp of the last click
 
 	}
   
@@ -45,15 +44,10 @@ export default class FeaturePicker {
     * @param {MouseEvent} event - The click event
     */
 	processClick( event ) {
-		this.store.setShowBuildingInfo( false );
-		const currentTime = Date.now();
 
-  		if ( currentTime - this.lastClickTime >= 1000 ) { 
-    		console.log( 'Clicked at ' + String( event.x ) + ', ' + String( event.y ) );
-    		this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
-    		this.lastClickTime = currentTime; // Update the last click timestamp
-			this.store.setShowBuildingInfo( true );
-  		}
+    	console.log( 'Clicked at ' + String( event.x ) + ', ' + String( event.y ) );
+    	this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
+  	
 	}    
     
 	/**
@@ -192,7 +186,6 @@ if (Array.isArray(entitiesArray)) {
 				// Replace 'postinumero' parameter with 'bbox' in your WFS request URL
 				const Url = `/pygeoapi/collections/hsy_buildings/items?f=json&limit=2000&bbox=${bboxString}`;
             
-				console.log( Url );
 				// Now you can use this URL to make your WFS request
 				this.hSYBuildingService.loadHSYBuildings( Url );	
 

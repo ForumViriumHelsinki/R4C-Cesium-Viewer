@@ -60,6 +60,7 @@ export default {
 		const viewer = ref(null);
 		const view = computed( () => store.view );
 		Cesium.Ion.defaultAccessToken = null;
+		let lastPickTime = 0;
 
 		const initViewer = () => {
 			viewer.value = new Cesium.Viewer('cesiumContainer', {
@@ -121,7 +122,16 @@ export default {
 				const timeSeriesElement = document.querySelector('#heatTimeseriesContainer');
   				const isClickOnControlPanel = controlPanelElement.contains(event.target);
 				const isClickOutsideTimeSeries = timeSeriesElement && timeSeriesElement.contains(event.target);
-				!isClickOnControlPanel && !isClickOutsideTimeSeries && featurepicker.processClick(event);						
+    			const currentTime = Date.now();
+
+    			if ( !isClickOnControlPanel && !isClickOutsideTimeSeries && ( currentTime - lastPickTime ) > 500) {
+      				store.setShowBuildingInfo( false );
+      				!store.showBuildingInfo && featurepicker.processClick( event );
+      				lastPickTime = currentTime; // Update the last pick time
+      				setTimeout( () => {
+						store.setShowBuildingInfo( true );
+      				}, 1000 );					
+    			}
   			});
 		};
 
