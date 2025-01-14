@@ -21,8 +21,12 @@ export const usePropsStore = defineStore( 'props', {
 		numericalSelect: { text: 'Area', value: 'area_m2' },
 		socioEconomics: 'Alppila - Vallila',
 		hSYWMSLayers: null,
+		statsIndex: 'heat_index',
 	} ),
 	actions: {
+		setStatsIndex(  index ){
+			this.statsIndex = index;
+		},
 		setHSYWMSLayers( layers ) {
 			this.hSYWMSLayers = layers;
 		},		
