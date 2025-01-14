@@ -79,7 +79,7 @@ export default {
         buildingService.setHeatExposureToBuildings( entities );
         buildingService.updateHeatHistogramDataAfterFilter( entities) ;
         propsStore.setScatterPlotEntities( entities );
-  		eventBus.emit('updateScatterPlot');
+  		  eventBus.emit('updateScatterPlot');
     };    
 
     onMounted(() => {
