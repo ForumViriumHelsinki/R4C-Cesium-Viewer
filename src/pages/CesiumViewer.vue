@@ -9,7 +9,7 @@
 		</div>
 	    <!-- Loading Component -->
     	<Loading v-if="store.isLoading" />
-		<Timeline v-if="store.level === 'postalCode' && !toggleStore.helsinkiView "/>
+		<Timeline v-if="store.level !== 'start' && !toggleStore.helsinkiView "/>
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
     	<BuildingInformation 
