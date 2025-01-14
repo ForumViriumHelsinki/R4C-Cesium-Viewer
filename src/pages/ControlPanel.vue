@@ -123,6 +123,19 @@ class="pa-0 ma-0"
 multiple
 class="pa-0 ma-0"
 >  
+
+                  <v-expansion-panel
+v-if="currentView === 'grid'"
+class="pa-0 ma-0"
+title="Statistical grid options"
+>
+                    <v-expansion-panel-text
+class="pa-0 ma-0"
+>
+                      <StatisticalGridOptions />
+                    </v-expansion-panel-text>                                                           
+                  </v-expansion-panel>
+
                   <v-expansion-panel
 class="pa-0 ma-0"
 title="HSY Background maps"
@@ -269,6 +282,7 @@ import Tree from '../services/tree';
 import Featurepicker from '../services/featurepicker';
 import Camera from '../services/camera';
 import Geocoding from '../components/Geocoding.vue';
+import StatisticalGridOptions  from '../components/StatisticalGridOptions.vue';
 
 export default {
 	components: {
@@ -286,6 +300,7 @@ export default {
     Scatterplot,
     BuildingHeatChart,
     BuildingGridChart,
+    StatisticalGridOptions,
 	},
 	setup() {
 		const globalStore = useGlobalStore();
