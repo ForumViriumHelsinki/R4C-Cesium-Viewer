@@ -12,7 +12,7 @@ class="toggle-icon"
     </v-icon>
 
     <div v-if="legendExpanded">
-      <h3>{{ title }}</h3>
+      <h3>Statistical grid options</h3>
       <!-- Conditional rendering of the gradient legend for avgheatexposure -->
       <div
 v-if="localSelectedIndex === 'avgheatexposure' || localSelectedIndex === 'combined_avgheatexposure'"
