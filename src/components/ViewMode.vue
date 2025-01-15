@@ -29,7 +29,8 @@ import { ref, watch, computed } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import Datasource from '../services/datasource.js';
-import Populationgrid from '../services/populationgrid.js';
+import Landcover from '../services/landcover.js'; 
+import Tree from '../services/tree.js';
 import FeaturePicker from '../services/featurepicker';
 
 export default {
@@ -74,8 +75,8 @@ export default {
 
     const setCapitalRegion = async () => {       
       store.setView('capitalRegion');
-      toggleStore.reset();
       toggleStore.setHelsinkiView(false);
+      store.level === 'start' && toggleStore.reset() && await removeLandCover();
       await dataSourceService.removeDataSourcesAndEntities();
       await dataSourceService.loadGeoJsonDataSource(
         0.2,
@@ -83,7 +84,19 @@ export default {
         'PostCodes'
       ); 
 
-      store.postalcode && featurePicker.loadPostalCode();  
+      store.postalcode && featurePicker.loadPostalCode();
+      toggleStore.showTrees && await loadTrees();
+
+    };
+
+    const loadTrees = async () => {
+		  const treeService = new Tree();
+      treeService.loadTrees( );
+    };
+
+    const removeLandCover = async () => {
+		  const landcoverService = new Landcover();
+      landcoverService.removeLandcover();
     };
 
     const capitalRegion = async () => {
