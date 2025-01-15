@@ -43,6 +43,69 @@ export default {
 			} );
 		};
 
+		const findPostalcodeEntity = ( dataSource, currentPostcode ) => {
+			for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
+				let entity = dataSource._entityCollection._entities._array[i];
+				if ( entity._properties._posno._value === currentPostcode ) {
+					printEntity( entity );
+				}
+			}
+		};
+
+		const printEntity = ( entity, postno, view ) => {
+			let toPrint = '<u>Found following properties & values:</u><br/>';
+			let length = entity._properties._propertyNames.length;
+
+			for ( let i = 0; i < length; ++i ) {
+				if ( goodForPrint( entity._properties, i ) ) {
+					let value = entity._properties[entity._properties._propertyNames[i]]._value;
+
+					// Check if the value is an object (like heat_timeseries)
+					if ( typeof value === 'object' ) {  
+						// If it's an object, skip it or handle it differently
+						continue; // This will skip printing the object
+					}
+      
+					toPrint += `${entity._properties._propertyNames[i]}: ${
+						typeof value === 'number' ? value.toFixed( 2 ) : value
+					}<br/>`;
+				}
+			}
+
+			addToPrint( toPrint, postno, view );
+		};
+
+		const goodForPrint = ( properties, i ) => {
+			const name = properties.propertyNames[i];
+			return (
+				!name.includes( 'fid' ) &&
+    			!name.includes( '_id' ) &&
+    			!name.includes( 'value' ) &&
+    			name !== 'id' &&
+    			!name.includes( '_x' ) &&
+    			!name.includes( '_y' ) &&
+    			properties[name]._value &&
+    			!name.endsWith( 'id' ) &&
+    			!name.includes( 'gml_parent_property' )
+			);
+		};
+
+		const addToPrint = ( toPrint, postno, view ) => {
+	
+			if ( store.heatDataDate === '2023-06-23' ) {
+
+				toPrint += '<br/><br/><i>If average urban heat exposure of building is over 0.5, the areas with under 0.4 heat exposure are shown on map.</i>';
+
+			}
+
+			const container = document.getElementById( 'printContainer' );
+			container.innerHTML = toPrint;
+			container.scroll( {
+				top: 1000,
+				behavior: 'smooth',
+			} );
+		};
+
 
 		onMounted( () => {
 			entityPrint();
@@ -63,80 +126,16 @@ export default {
 	},
 };
 
-// Utility functions
-
-const findPostalcodeEntity = ( dataSource, currentPostcode ) => {
-	for ( let i = 0; i < dataSource._entityCollection._entities._array.length; i++ ) {
-		let entity = dataSource._entityCollection._entities._array[i];
-		if ( entity._properties._posno._value === currentPostcode ) {
-			printEntity( entity );
-		}
-	}
-};
-
-const printEntity = ( entity, postno, view ) => {
-	let toPrint = '<u>Found following properties & values:</u><br/>';
-	let length = entity._properties._propertyNames.length;
-
-	for ( let i = 0; i < length; ++i ) {
-		if ( goodForPrint( entity._properties, i ) ) {
-			let value = entity._properties[entity._properties._propertyNames[i]]._value;
-
-			// Check if the value is an object (like heat_timeseries)
-			if ( typeof value === 'object' ) {  
-				// If it's an object, skip it or handle it differently
-				continue; // This will skip printing the object
-			}
-      
-			toPrint += `${entity._properties._propertyNames[i]}: ${
-				typeof value === 'number' ? value.toFixed( 2 ) : value
-			}<br/>`;
-		}
-	}
-
-	addToPrint( toPrint, postno, view );
-};
-
-const goodForPrint = ( properties, i ) => {
-	const name = properties.propertyNames[i];
-	return (
-		!name.includes( 'fid' ) &&
-    !name.includes( '_id' ) &&
-    !name.includes( 'value' ) &&
-    name !== 'id' &&
-    !name.includes( '_x' ) &&
-    !name.includes( '_y' ) &&
-    properties[name]._value &&
-    !name.endsWith( 'id' ) &&
-    !name.includes( 'gml_parent_property' )
-	);
-};
-
-const addToPrint = ( toPrint, postno, view ) => {
-	if ( postno || view === 'grid' ) {
-		toPrint += '<br/><br/><i>Click on objects to retrieve information.</i>';
-	} else {
-		toPrint += '<br/><br/><i>If average urban heat exposure of building is over 0.5, the areas with under 0.4 heat exposure are shown on map.</i>';
-	}
-
-	const container = document.getElementById( 'printContainer' );
-	container.innerHTML = toPrint;
-	container.scroll( {
-		top: 1000,
-		behavior: 'smooth',
-	} );
-};
 </script>
 
 <style scoped>
 #printContainer {
   width: 500px;
-  height: 800px;
   position: relative;
 
-  font-size: smaller;
+  font-size: x-small;
   font-family: Monospace;
-
+  text-align: left;
   padding: 10px;
   overflow-y: scroll;
 }

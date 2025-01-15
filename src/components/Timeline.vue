@@ -22,7 +22,6 @@ class="date-label"
       class="timeline-slider"
 	  :width="sliderWidth" 
 	  :style="{ marginLeft: marginWidth, marginRight: marginWidth }"
-	  :disabled="isTimelineLocked"
     >
       <template #append>
         <div class="label-container">
@@ -80,42 +79,30 @@ export default {
         buildingService.setHeatExposureToBuildings( entities );
         buildingService.updateHeatHistogramDataAfterFilter( entities) ;
         propsStore.setScatterPlotEntities( entities );
-  		eventBus.emit('updateScatterPlot');
+  		  eventBus.emit('updateScatterPlot');
     };    
 
     onMounted(() => {
       	timelineLength.value = dates.length; // Set the timeline length when mounted
-  		// Unlock the timeline after a 1-second delay
-  		setTimeout(() => {
-    		isTimelineLocked.value = false;
-  		}, 1000);		
     });
-
-	const isTimelineLocked = ref(true); // Initially unlocked
 
     // Watch for changes in currentPropertyIndex
 	watch(currentPropertyIndex, (newIndex) => {
 		globalStore.setShowBuildingInfo( false );
-  		isTimelineLocked.value = true; // Lock the timeline
 
-  		selectedDate.value = dates[newIndex];
-  		globalStore.setHeatDataDate( selectedDate.value );
-  		updateViewAndPlots();
+  	selectedDate.value = dates[newIndex];
+  	globalStore.setHeatDataDate( selectedDate.value );
+  	updateViewAndPlots();
 
-  		// Unlock the timeline after a 1-second delay
-  		setTimeout(() => {
-    		isTimelineLocked.value = false;
-			globalStore.setShowBuildingInfo( true );
-  		}, 1000);
+		globalStore.setShowBuildingInfo( true );
 	});
     return {
-      	selectedDate,
-      	timelineLength, // Return timelineLength
-      	currentPropertyIndex, // Return currentPropertyIndex
-      	sliderWidth,
-      	dates, // Expose the dates array
-		marginWidth,
-		isTimelineLocked
+      selectedDate,
+      timelineLength, // Return timelineLength
+      currentPropertyIndex, // Return currentPropertyIndex
+      sliderWidth,
+      dates, // Expose the dates array
+		  marginWidth
     };
   },
 };

@@ -9,7 +9,7 @@
 		</div>
 	    <!-- Loading Component -->
     	<Loading v-if="store.isLoading" />
-		<Timeline v-if="store.level === 'postalCode' && !toggleStore.helsinkiView "/>
+		<Timeline v-if="store.level === 'postalCode' || store.level === 'building' "/>
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
     	<BuildingInformation 
@@ -55,11 +55,11 @@ export default {
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
     	const shouldShowBuildingInformation = computed(() => {
-      		return buildingStore.buildingFeatures && !store.isLoading && !toggleStore.helsinkiView && view !== 'grid' && store.showBuildingInfo;
+      		return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading;
     	});
 		const viewer = ref(null);
-		const view = computed( () => store.view );
 		Cesium.Ion.defaultAccessToken = null;
+		let lastPickTime = 0;
 
 		const initViewer = () => {
 			viewer.value = new Cesium.Viewer('cesiumContainer', {
@@ -121,7 +121,16 @@ export default {
 				const timeSeriesElement = document.querySelector('#heatTimeseriesContainer');
   				const isClickOnControlPanel = controlPanelElement.contains(event.target);
 				const isClickOutsideTimeSeries = timeSeriesElement && timeSeriesElement.contains(event.target);
-				!isClickOnControlPanel && !isClickOutsideTimeSeries && featurepicker.processClick(event);						
+    			const currentTime = Date.now();
+
+    			if ( !isClickOnControlPanel && !isClickOutsideTimeSeries && ( currentTime - lastPickTime ) > 500) {
+      				store.setShowBuildingInfo( false );
+      				!store.showBuildingInfo && featurepicker.processClick( event );
+      				lastPickTime = currentTime; // Update the last pick time
+      				setTimeout( () => {
+						store.setShowBuildingInfo( true );
+      				}, 1000 );					
+    			}
   			});
 		};
 
@@ -136,7 +145,6 @@ export default {
 			toggleStore,
 			buildingStore,
 			viewer,
-			view,
 			shouldShowBuildingInformation
 		};
 	},

@@ -1,13 +1,14 @@
 <template>
   <div class="control-panel-main">
-    <v-btn
-icon
-class="toggle-btn"
-size="x-small"
-@click="togglePanel"
+<v-btn
+  icon
+  class="toggle-btn"
+  size="x-small"
+  :style="toggleButtonStyles"
+  @click="togglePanel"
 >
-      <v-icon>{{ panelVisible ? 'mdi-menu-open' : 'mdi-menu' }}</v-icon>
-    </v-btn>
+  <v-icon>{{ panelVisible ? 'mdi-menu-open' : 'mdi-menu' }}</v-icon>
+</v-btn>
 
     <v-app>
         <v-navigation-drawer
@@ -123,6 +124,19 @@ class="pa-0 ma-0"
 multiple
 class="pa-0 ma-0"
 >  
+
+                  <v-expansion-panel
+v-if="currentView === 'grid'"
+class="pa-0 ma-0"
+title="Statistical grid options"
+>
+                    <v-expansion-panel-text
+class="pa-0 ma-0"
+>
+                      <StatisticalGridOptions />
+                    </v-expansion-panel-text>                                                           
+                  </v-expansion-panel>
+
                   <v-expansion-panel
 class="pa-0 ma-0"
 title="HSY Background maps"
@@ -269,6 +283,7 @@ import Tree from '../services/tree';
 import Featurepicker from '../services/featurepicker';
 import Camera from '../services/camera';
 import Geocoding from '../components/Geocoding.vue';
+import StatisticalGridOptions  from '../components/StatisticalGridOptions.vue';
 
 export default {
 	components: {
@@ -286,6 +301,7 @@ export default {
     Scatterplot,
     BuildingHeatChart,
     BuildingGridChart,
+    StatisticalGridOptions,
 	},
 	setup() {
 		const globalStore = useGlobalStore();
@@ -332,7 +348,14 @@ export default {
       return globalStore.navbarWidth; // 37.5% of the window width
     });
 
+    const toggleButtonStyles = computed(() => {
+      return panelVisible.value
+        ? { right: `${drawerWidth.value }px`, position: 'fixed', top: '10px' }
+        : { right: '0px', position: 'fixed', top: '10px' };
+    });
+
 		return {
+      toggleButtonStyles,
       drawerWidth,
 			panelVisible,
 			currentLevel,
@@ -350,11 +373,10 @@ export default {
 
 <style scoped>
 .toggle-btn {
-  position: fixed;
-  top: 10px;
-  right: 100px;
   z-index: 1000000;
+  transition: right 0.3s ease, position 0.3s ease; /* Smooth transition for the position */
 }
+
 .filters-layers-container {
   display: flex;
   justify-content: space-between; /* Ensures there's space between Filters and Layers */

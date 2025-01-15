@@ -62,8 +62,9 @@ export default {
 
 					if ( matchingFeature ) {
 						const properties = matchingFeature.properties;
+
 						buildingAttributes.value = {
-							avg_temp_c: ( properties.avg_temp_c ).toFixed( 2 ),
+							avg_temp_c: findAverageTempC ( properties ),
 							rakennusaine_s: properties.rakennusaine_s,
 							address: findAddressForBuilding( properties ), // Use the updated address function
 						};
@@ -75,6 +76,12 @@ export default {
 			} catch ( error ) {
 				console.error( 'Failed to fetch building data', error );
 			}
+		};
+
+		const findAverageTempC = ( properties ) => {
+  			const heatTimeseries = properties.heat_timeseries;
+  			const foundEntry = heatTimeseries.find( ({  date } ) => date === store.heatDataDate );
+  			return foundEntry ? foundEntry.avg_temp_c.toFixed( 2 ) : 'n/a'; // Return 'n/a' if no entry is found
 		};
 
 		// Handle mouse movement and check if the user is hovering over a building entity
@@ -90,7 +97,9 @@ export default {
 				);
 
 				if ( pickedEntity && pickedEntity.id ) {
+
 					fetchBuildingInfo( pickedEntity.id );
+  	
 				} else {
 					showTooltip.value = false;
 				}
@@ -101,14 +110,14 @@ export default {
 		onMounted( () => {
 			setTimeout( () => {
 				nextTick( () => {
-					if ( buildingStore.buildingFeatures && store.level === 'postalCode' ) {
+					if ( buildingStore.buildingFeatures ) {
 						store.cesiumViewer.screenSpaceEventHandler.setInputAction(
 							onMouseMove,
 							Cesium.ScreenSpaceEventType.MOUSE_MOVE
 						);
 					}
 				} );
-			}, 1000 ); // 1000 milliseconds = 21 second delay
+			}, 1000 ); // 1000 milliseconds = 1 second delay
 		} );
 
 		// Clean up Cesium mouse events

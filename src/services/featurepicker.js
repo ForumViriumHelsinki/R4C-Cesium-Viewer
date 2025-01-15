@@ -44,8 +44,10 @@ export default class FeaturePicker {
     * @param {MouseEvent} event - The click event
     */
 	processClick( event ) {
-		console.log( 'Clicked at ' + String( event.x ) + ', ' + String( event.y ) );
-		this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
+
+    	console.log( 'Clicked at ' + String( event.x ) + ', ' + String( event.y ) );
+    	this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
+  	
 	}    
     
 	/**
@@ -56,7 +58,7 @@ export default class FeaturePicker {
     */
 	pickEntity( windowPosition ) {
 		let picked = this.viewer.scene.pick( windowPosition );
-       
+
 		if ( picked ) {
            
 			let id = Cesium.defaultValue( picked.id, picked.primitive.id );
@@ -184,7 +186,6 @@ if (Array.isArray(entitiesArray)) {
 				// Replace 'postinumero' parameter with 'bbox' in your WFS request URL
 				const Url = `/pygeoapi/collections/hsy_buildings/items?f=json&limit=2000&bbox=${bboxString}`;
             
-				console.log( Url );
 				// Now you can use this URL to make your WFS request
 				this.hSYBuildingService.loadHSYBuildings( Url );	
 

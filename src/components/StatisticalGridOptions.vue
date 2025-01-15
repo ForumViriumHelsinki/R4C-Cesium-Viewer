@@ -3,14 +3,6 @@
 v-if="legendData.length > 0 && legendVisible"
 id="legend"
 >
-    <!-- Toggle button to minimize or expand the legend -->
-    <v-icon
-class="toggle-icon"
-@click="toggleLegend"
->
-      {{ legendExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
-    </v-icon>
-
     <div v-if="legendExpanded">
       <h3>Statistical grid options</h3>
       <!-- Conditional rendering of the gradient legend for avgheatexposure -->
@@ -89,7 +81,7 @@ class="color-box"
           </div>
         </div>
         <div class="extrusion-note">
-          <span>Green Space Index shown by grid cell <br> height visualisation, with a maximum <br> height of 250m (least green).</span>
+          <span>Green Space Index shown by grid cell height visualisation, with a maximum height of 250m (least green).</span>
         </div>
       </div>
 
@@ -113,48 +105,41 @@ class="color-box"
 v-if="localSelectedIndex === 'combined_avgheatexposure' && legendExpanded"
 class="extrusion-note"
 >
-      <span>Heat Index shown by grid  <br> cell height visualisation, <br> with a maximum height of 250m.</span>
+      <span>Heat Index shown by grid cell height visualisation, with a maximum height of 250m.</span>
     </div>
 
     <div
 v-if="localSelectedIndex === 'combined_heatindex_avgheatexposure' && legendExpanded"
 class="extrusion-note"
 >
-      <span>Normalised Landsat Surface heat shown <br> by grid cell height visualisation, <br> with a maximum height of 250m.</span>
+      <span>Normalised Landsat Surface heat shown by grid cell height visualisation, with a maximum height of 250m.</span>
     </div>
 
     <div
 v-if="localSelectedIndex === 'combined_heat_flood' && legendExpanded"
 class="extrusion-note"
 >
-      <span>Flood Index shown by grid <br> cell height visualisation, <br> with a maximum height of 250m.</span>
+      <span>Flood Index shown by grid cell height visualisation, with a maximum height of 250m.</span>
     </div>
 
     <div
 v-if="localSelectedIndex === 'combined_flood_heat' && legendExpanded"
 class="extrusion-note"
 >
-      <span>Heat Index shown by grid <br> cell height visualisation, <br> with a maximum height of 250m.</span>
+      <span>Heat Index shown by grid cell height visualisation, with a maximum height of 250m.</span>
     </div>
 
-    <v-tooltip
-v-if="selectedIndexDescription && legendExpanded"
-:text="selectedIndexDescription"
-bottom
->
-      <template #activator="{ props }">
-        <v-select
-          v-bind="props"
-          v-model="localSelectedIndex"
-          :items="indexOptions"
-          item-title="text"
-          item-value="value"
-          label="Select Index"
-          style="max-width: 300px;"
-          @update:model-value="handleSelectionChange"
-        />
-      </template>
-    </v-tooltip>
+    <v-select
+      v-model="localSelectedIndex"
+      :items="indexOptions"
+      item-title="text"
+      item-value="value"
+      label="Select Index"
+      style="max-width: 300px;"
+      @update:model-value="handleSelectionChange"
+    ></v-select>
+
+    <p class="index-description">{{ selectedIndexDescription }}</p>
 
     <div
 v-if="legendExpanded"
@@ -175,15 +160,14 @@ target="_blank"
 
 <script setup>
 import { ref, computed } from 'vue';
+import { usePropsStore } from '../stores/propsStore.js';
+
+const propsStore = usePropsStore();
 
 // Define state to control the visibility and expansion of the legend
 const legendVisible = ref(true);
 const legendExpanded = ref(true);
 
-// Toggle function for legend expansion/minimization
-const toggleLegend = () => {
-  legendExpanded.value = !legendExpanded.value;
-};
 // Define index options with their corresponding colors and descriptions
 const indexOptions = [
 	{ text: 'Heat Vulnerability', value: 'heat_index', description: 'Total social vulnerability to high temperatures. Includes factors like age, income, and housing conditions.' },
@@ -298,18 +282,10 @@ const localSelectedIndex = ref( 'heat_index' );
 // Compute legend data based on the selected index and the color scheme mapping
 const legendData = computed( () => indexToColorScheme[localSelectedIndex.value] || heatColors );
 
-const emit = defineEmits( [ 'onIndexChange' ] );
-
 // Handle selection change and emit event
 const handleSelectionChange = ( value ) => {
-	emit( 'onIndexChange', value );
+  propsStore.setStatsIndex( value );
 };
-
-// Compute the title based on the selected index
-const title = computed( () => {
-	const selectedOption = indexOptions.find( option => option.value === localSelectedIndex.value );
-	return selectedOption ? selectedOption.text : 'Heat Vulnerability';
-} );
 
 // Compute the description of the selected index for the tooltip
 const selectedIndexDescription = computed( () => {
@@ -320,15 +296,9 @@ const selectedIndexDescription = computed( () => {
 
 <style scoped>
 #legend {
-  position: absolute;
-  top: 100px;
-  left: 10px;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 4px;
-  padding: 10px;
-  z-index: 10;
-  border: 1px solid black;
-  box-shadow: 3px 5px 5px black;
+  width: 100%; 
+	position: relative;
+	background-color: white;
 }
 
 .toggle-legend-btn {
@@ -441,6 +411,12 @@ const selectedIndexDescription = computed( () => {
 
 .extrusion-note {
   margin-top: 0.5rem;            /* Spacing above the note */
+  margin-bottom: 20px;
   font-style: italic;             /* Italicize the note text */
+}
+
+.index-description { /* Add styles for the description */
+  font-style: italic;
+  margin-bottom: 20px;
 }
 </style>

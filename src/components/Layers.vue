@@ -78,25 +78,6 @@ for="landCover"
 class="label"
 >HSY Land Cover</label>
     </div>
-
-    <!--  250mGrid-->
-    <div
-v-if="view === 'grid'"
-class="switch-container"
->
-      <label class="switch">
-        <input
-v-model="grid250m"
-type="checkbox"
-@change="activate250mGrid"
->
-        <span class="slider round"/>
-      </label>
-      <label
-for="250mGrid"
-class="label"
->250m grid</label>	
-    </div>
   </div>
 </template>
 

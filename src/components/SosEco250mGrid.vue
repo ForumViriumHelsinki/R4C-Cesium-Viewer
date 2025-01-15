@@ -1,19 +1,18 @@
-<template>
-  <div v-if="grid250m">
-    <PopGridLegend @on-index-change="updateGridColors" />
-  </div>
-</template>
-
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue';
 import DataSource from '../services/datasource.js';
 import * as Cesium from 'cesium';
-import PopGridLegend from './PopGridLegend.vue';
-import { useToggleStore } from '../stores/toggleStore';
+import Camera from '../services/camera.js'; 
+import { usePropsStore } from '../stores/propsStore.js';
 
 // Reactive variables
-const grid250m = computed( () => toggleStore.grid250m );
-const toggleStore = useToggleStore();
+const propsStore = usePropsStore();
+const statsIndex = computed( () => propsStore.statsIndex );
+
+// Watcher to update grid colors when statsIndex changes
+watch(statsIndex, (newIndex) => {
+  updateGridColors(newIndex);
+});
 
 const heatColors = [
 	{ color: '#ffffcc', range: '< 0.2' },
@@ -70,7 +69,7 @@ const loadGrid = async () => {
 		'./assets/data/r4c_stats_grid_index.json',
 		'250m_grid'
 	);
-	updateGridColors( 'heat_index' ); // Initial color update
+	updateGridColors( propsStore.statsIndex ); // Initial color update
 };
 
 const handleMissingValues = (entity, selectedIndex) => {
@@ -221,6 +220,8 @@ const getColorForIndex = ( indexValue, indexType ) => {
 };
 
 onMounted(() => {
+    const cameraService = new Camera( );
+    cameraService.switchTo3DGrid();
     loadGrid();
 });
 

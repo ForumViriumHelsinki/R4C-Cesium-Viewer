@@ -9,21 +9,7 @@
           @change="onToggleChange('capitalRegionView')" 
         >
         Capital Region Heat
-      </label>
-
-      <!-- Conditional rendering for Helsinki Heat -->
-      <label
-v-if="showHelsinkiHeat"
-class="radio-label"
->
-        <input 
-          v-model="activeViewMode" 
-          type="radio" 
-          value="helsinkiHeat" 
-          @change="onToggleChange('helsinkiHeat')" 
-        >
-        Helsinki Heat
-      </label>      
+      </label>    
 
       <label class="radio-label">
         <input 
@@ -128,8 +114,8 @@ export default {
       toggleStore.setHelsinkiView(false);
       store.setView(isGridView ? 'grid' : 'capitalRegion');
       if (isGridView) {
-        const populationgridService = new Populationgrid();
-			  populationgridService.createPopulationGrid();
+        store.setShowBuildingInfo( false );
+		    toggleStore.setGrid250m( true );
       } else {
         reset();
       }
