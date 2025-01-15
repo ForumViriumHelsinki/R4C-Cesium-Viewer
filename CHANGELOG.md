@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.8.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.8.1...r4c-cesium-viewer-v1.8.2) (2025-01-15)
+
+
+### Bug Fixes
+
+* 78: changed ref to store CesiumViewer ([82ebfae](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/82ebfae461f8741c086c5f2485b16d1c40190bda))
+* 79: added delays to featurepicker and buildinginformation ([148265a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/148265a9785d965a7e4ec39828aaabf7f63cc4e7))
+* 79: reduced the bug by adding delay to clicker ([4e65438](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4e65438eb75b0cd3b1e72cc67e4a784660d80df5))
+* 79: rendering bug when entering grid view if timeline has changed ([0d00b83](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0d00b8337f26b51d40c5b75e0d6cb9c278c81278))
+* 86 added functionality for updating temperature to buildingInfo ([db04c68](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/db04c6897c67f18f7e620f4b5b6dd7f1435fec9e))
+* 87 timeline is shown at building level ([490c6ef](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/490c6ef0e9d2e9a7c2f777dd3cfecae086eb4e7a))
+* 87 timeline is shown at building level ([039a8da](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/039a8da95b4dc13ec45e97ebca17ad752b01f9ca))
+* 88 250m dialog/legend title is now “Statistical grid options” ([7ef670b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7ef670bb22345f1409cefccced2b969ba393f6f1))
+* 89 stats grid legend and related functionalities moved to sidebar ([0b19ca7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0b19ca7ab2e3794595122dde2c97688537fb60e3))
+* 90 fixed multiple issues with print ([9681278](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/968127803ce1c51a68260446e4829283cb756cc9))
+* 91 toggle button moves with sidebar ([3d62ea1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3d62ea18ed9502603823666a0e4ca2d0501676ae))
+
 ## [1.8.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.8.0...r4c-cesium-viewer-v1.8.1) (2025-01-13)
 
 
