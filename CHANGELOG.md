@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.8.2...r4c-cesium-viewer-v1.8.3) (2025-01-16)
+
+
+### Bug Fixes
+
+* 94 bug with layers when user changes modes ([7a91099](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7a9109964d7e0ebfa7cd01364f0a36fdd5e4c4e0))
+
 ## [1.8.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.8.1...r4c-cesium-viewer-v1.8.2) (2025-01-15)
 
 
