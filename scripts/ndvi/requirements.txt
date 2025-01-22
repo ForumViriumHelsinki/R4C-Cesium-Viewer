@@ -1,0 +1,6 @@
+rasterio
+numpy
+google-cloud-storage
+flask
+shapely
+geopandas
