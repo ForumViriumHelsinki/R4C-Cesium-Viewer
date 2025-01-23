@@ -102,7 +102,7 @@ def calculate_average_ndvi(request):
 
     # Upload the processed GeoJSON back to the bucket
     output_blob = bucket.blob(f'NDVI/vector_data/{json_output}')
-    output_blob.upload_from_filename('polygons_temp.json')
+    output_blob.upload_from_filename(output_path)
 
     # Close the raster file
     src.close()
