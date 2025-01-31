@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.9.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.8.2...r4c-cesium-viewer-v1.9.0) (2025-01-31)
+
+
+### Features
+
+* fix and instructions for ([#97](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/97)) ([9a69102](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9a691026c13ec3b005061a0feccc8e6b12395c05))
+* Implement NDVI calculation with GCS input/output ([#97](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/97)) ([a172be4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a172be45d16a8021b9e0117a1c6ab99d1c6e56c0))
+* implementation for ([#74](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/74)) ([e36b248](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e36b2486809afbc7094225ceab12f6eb8848b2bc))
+
+
+### Bug Fixes
+
+* 94 bug with layers when user changes modes ([7a91099](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7a9109964d7e0ebfa7cd01364f0a36fdd5e4c4e0))
+
 ## [1.8.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.8.1...r4c-cesium-viewer-v1.8.2) (2025-01-15)
 
 
