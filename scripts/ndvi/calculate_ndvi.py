@@ -6,6 +6,9 @@ from shapely.geometry import shape, box
 from google.cloud import storage
 from flask import jsonify
 
+def health_check():
+    return jsonify({'status': 'healthy'}), 200
+
 # Load the NDVI raster and GeoJSON
 def calculate_average_ndvi(request):
     

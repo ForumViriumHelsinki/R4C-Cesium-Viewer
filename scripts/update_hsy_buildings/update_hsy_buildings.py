@@ -3,12 +3,14 @@ import json
 import urllib.request
 import urllib.parse
 import ssl
+from flask import Response, stream_with_context
 
-from google.cloud import sql_v1beta4
+from google.cloud.sql.connector import Connector
+import pg8000
 
 def fetch_wfs_data():
     """
-    Fetches data from the WFS server.
+    Fetches data from the WFS server and logs the response content.
     """
 
     # Base URL for the WFS server
@@ -38,94 +40,116 @@ def fetch_wfs_data():
     # Request to WFS and process response
     try:
         response = urllib.request.urlopen(request_url, context=ssl_context)
-        data = json.loads(response.read())
-        return data
+        
+        # Read the response content
+        response_content = response.read()
+
+        # Check if response is empty
+        if not response_content:
+            print("No data returned from the server.")
+            return None
+
+        # Try to parse the JSON response
+        try:
+            data = json.loads(response_content)
+            return data
+        except json.JSONDecodeError:
+            print(f"Failed to parse JSON. Response content:\n{response_content.decode('utf-8')}")
+            return None
+
     except Exception as e:
         print(f"An error occurred: {e}")
         return None  # Return None in case of an error
 
 def update_google_sql(data):
     """
-    Updates the Google SQL table with the fetched WFS data.
+    Updates the Google Cloud SQL PostgreSQL table with the fetched WFS data.
     """
+    if not data or 'features' not in data:
+        print("Invalid or empty WFS data.")
+        return
 
-    # Google SQL connection details
-    instance_name = os.environ.get("INSTANCE_NAME")
+    print(f"Processing {len(data['features'])} features...")
+
+    instance_connection_name = os.environ.get("INSTANCE_NAME")
     db_name = os.environ.get("DB_NAME")
     db_user = os.environ.get("DB_USER")
     db_password = os.environ.get("DB_PASSWORD")
+
+    connector = Connector()
     
-    db_config = {
-        "user": db_user,
-        "password": db_password,
-        "database": db_name,
-    }
-    pool = sql_v1beta4.ConnectionPool(instance_connection_name=instance_name, db_config=db_config)
+    # Counters for inserts and updates
+    update_count = 0
+    insert_count = 0    
+    
+    def getconn() -> pg8000.dbapi.Connection:
+        conn: pg8000.dbapi.Connection = connector.connect(
+            instance_connection_name,
+            "pg8000",
+            user=db_user,
+            password=db_password,
+            db=db_name,
+        )
+        return conn
+    
+    try:
+        conn = getconn()
+        cursor = conn.cursor()
 
-    with pool.connect() as conn:
-        with conn.cursor() as cursor:
-            for feature in data['features']:
-                # Extract relevant data from the feature
-                kunta = feature['properties']['kunta']
-                osno1 = feature['properties']['osno1']
-                korala = feature['properties']['korala']
-                lammitysaine_s = feature['properties']['lammitysaine_s']
-                area_m2 = feature['properties']['area_m2']
-                raktun = feature['properties']['raktun']
-                oski1 = feature['properties']['oski1']
-                kohala = feature['properties']['kohala']
-                avgheatexposuretobuilding = feature['properties']['avgheatexposuretobuilding']
-                osno2 = feature['properties']['osno2']
-                ashala = feature['properties']['ashala']
-                viemari = feature['properties']['viemari']
-                oski2 = feature['properties']['oski2']
-                asuntojen_lkm = feature['properties']['asuntojen_lkm']
-                vesijohto = feature['properties']['vesijohto']
-                hki_id = feature['properties']['hki_id']
-                postinumero = feature['properties']['postinumero']
-                kerrosten_lkm = feature['properties']['kerrosten_lkm']
-                olotila_s = feature['properties']['olotila_s']
-                avg_temp_c = feature['properties']['avg_temp_c']
-                kavu = feature['properties']['kavu']
-                rakennusaine_s = feature['properties']['rakennusaine_s']
-                kiitun = feature['properties']['kiitun']
-                kayttarks = feature['properties']['kayttarks']
-                julkisivu_s = feature['properties']['julkisivu_s']
-                poimintapvm = feature['properties']['poimintapvm']
-                katu = feature['properties']['katu']
-                kerala = feature['properties']['kerala']
-                lammitystapa_s = feature['properties']['lammitystapa_s']
-                kokotun = feature['properties']['kokotun']
-                vtj_prt = feature['properties']['vtj_prt']
-                geom = json.dumps(feature['geometry'])  # Convert geometry to GeoJSON string
+        for feature in data['features']:
+            properties = feature['properties']
+            
+            # Skip features where 'geometria' property equals 'piste'
+            if properties.get('geometria') == 'piste':
+                continue
+            
+            geom = json.dumps(feature['geometry'])
+    
+            fields = [
+                'kunta', 'vtj_prt', 'raktun', 'kiitun', 'katu', 'osno1', 'oski1', 
+                'osno2', 'oski2', 'postinumero', 'kavu', 'kayttarks', 'kerala', 'korala', 
+                'kohala', 'ashala', 'asuntojen_lkm', 'kerrosten_lkm', 'rakennusaine_s', 
+                'julkisivu_s', 'lammitystapa_s', 'lammitysaine_s', 'viemari', 'vesijohto', 
+                'olotila_s', 'poimintapvm', 'kokotun'
+            ]
 
-                cursor.execute("SELECT * FROM r4c_hsy_building WHERE vtj_prt = %s", (vtj_prt,))
-                existing_record = cursor.fetchone()
+            values = [properties.get(field) for field in fields] + [geom]
 
-                if existing_record:
-                    # Compare values and check for 'vtj_prt'
-                    values_changed = any(
-                        existing_record[i] != val for i, val in enumerate((kunta, osno1, korala, lammitysaine_s, area_m2, oski1, kohala, osno2, ashala, viemari, oski2, asuntojen_lkm, vesijohto, hki_id, postinumero, kerrosten_lkm, olotila_s, avg_temp_c, kavu, rakennusaine_s, kiitun, kayttarks, julkisivu_s, poimintapvm, katu, kerala, lammitystapa_s, kokotun, vtj_prt, geom))
-                    )
-                    vtj_prt_missing = existing_record[29] is None  # 29 is the index of 'vtj_prt' in the fetched row
+            # Use pg8000 placeholder style
+            placeholders = ', '.join(['%s'] * len(fields))
 
-                    if values_changed or vtj_prt_missing:
-                        # Construct SQL UPDATE statement (only if changes found)
-                        sql = """
-                            UPDATE r4c_hsy_building
-                            SET kunta = %s, osno1 = %s, korala = %s, lammitysaine_s = %s, area_m2 = %s, oski1 = %s, kohala = %s, osno2 = %s, ashala = %s, viemari = %s, oski2 = %s, asuntojen_lkm = %s, vesijohto = %s, hki_id = %s, postinumero = %s, kerrosten_lkm = %s, olotila_s = %s, avg_temp_c = %s, kavu = %s, rakennusaine_s = %s, kiitun = %s, kayttarks = %s, julkisivu_s = %s, poimintapvm = %s, katu = %s, kerala = %s, lammitystapa_s = %s, kokotun = %s, vtj_prt = %s, geom = ST_GeomFromGeoJSON(%s)
-                            WHERE raktun = %s;
-                        """
-                        cursor.execute(sql, (kunta, osno1, korala, lammitysaine_s, area_m2, oski1, kohala, osno2, ashala, viemari, oski2, asuntojen_lkm, vesijohto, hki_id, postinumero, kerrosten_lkm, olotila_s, avg_temp_c, kavu, rakennusaine_s, kiitun, kayttarks, julkisivu_s, poimintapvm, katu, kerala, lammitystapa_s, kokotun, vtj_prt, geom, raktun))
-                else:
-                    # Construct SQL INSERT statement (only if record doesn't exist)
-                    sql = """
-                        INSERT INTO r4c_hsy_building (kunta, osno1, korala, lammitysaine_s, area_m2, raktun, oski1, kohala, osno2, ashala, viemari, oski2, asuntojen_lkm, vesijohto, hki_id, postinumero, kerrosten_lkm, olotila_s, avg_temp_c, kavu, rakennusaine_s, kiitun, kayttarks, julkisivu_s, poimintapvm, katu, kerala, lammitystapa_s, kokotun, vtj_prt, geom)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromGeoJSON(%s));
-                    """
-                    cursor.execute(sql, (kunta, osno1, korala, lammitysaine_s, area_m2, raktun, oski1, kohala, osno2, ashala, viemari, oski2, asuntojen_lkm, vesijohto, hki_id, postinumero, kerrosten_lkm, olotila_s, avg_temp_c, kavu, rakennusaine_s, kiitun, kayttarks, julkisivu_s, poimintapvm, katu, kerala, lammitystapa_s, kokotun, vtj_prt, geom))
+            cursor.execute("SELECT 1 FROM r4c_hsy_building_test WHERE vtj_prt = %s", (properties.get('vtj_prt'),))
+            existing_record = cursor.fetchone()
+                        
+            if existing_record:
+                update_sql = f"""
+                    UPDATE r4c_hsy_building_test
+                    SET {', '.join([f"{field} = %s" for field in fields])}, geom = ST_GeomFromGeoJSON(%s)
+                    WHERE vtj_prt = %s
+                """
+                cursor.execute(update_sql, values + [properties.get('vtj_prt')])
+                update_count += 1
 
-def fetch_and_update_data(request):
+            else:
+                insert_sql = f"""
+                    INSERT INTO r4c_hsy_building_test ({', '.join(fields)}, geom)
+                    VALUES ({placeholders}, ST_GeomFromGeoJSON(%s))
+                """
+                cursor.execute(insert_sql, values)
+                insert_count += 1
+
+        conn.commit()
+        cursor.close()
+        print(f"Database update completed successfully. {update_count} records updated, {insert_count} records inserted.")
+
+    except Exception as e:
+        print(f"An error occurred while updating the database: {e}")
+        print(f"geom {geom}")
+
+    finally:
+        connector.close()
+
+def update_hsy_buildings(request):
     """
     Cloud Function to fetch data from a WFS server and update a Google SQL table.
     """
