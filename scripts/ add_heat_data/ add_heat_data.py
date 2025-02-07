@@ -1,5 +1,3 @@
-import ssl
-import urllib.request
 import json
 import rasterio
 import geopandas as gpd
@@ -8,54 +6,71 @@ import numpy as np
 from flask import Response, stream_with_context
 from google.cloud.sql.connector import Connector
 import pg8000
-from shapely.geometry import shape, box
+from shapely.geometry import shape, Polygon
 from google.cloud import storage
 from flask import jsonify
 import os
 
-def fetch_wfs_data(typename, posno):
-
-    # Base URL for the WFS server
-    wfs_url = 'https://kartta.hsy.fi/geoserver/wfs'
+def fetch_buildings_from_db(posno):
+    """
+    Fetches buildings from the PostgreSQL database filtered by posno.
     
-        # Ensure posno is properly formatted for CQL_FILTER
-    if isinstance(posno, list):  
-        posno_str = ",".join(f"'{p}'" for p in posno)  # Format as 'value1','value2'
-        cql_filter = f"posno IN ({posno_str})"
-    else:
-        cql_filter = f"posno = '{posno}'"  # Single value case
-
-    # Parameters for the WFS request
-    params = {
-        'service': 'WFS',
-	    'request': 'GetFeature',
-	    'typename': typename,
-	    'version': '2.0.0',
-	    'outputFormat': 'application/json',
-        'CQL_FILTER': cql_filter,
-	    'srsName': 'EPSG:4326'
-    }
-
-    # Construct the query string
-    query_string = urllib.parse.urlencode(params)
-
-    # Complete URL for the request
-    request_url = wfs_url + '?' + query_string
-
-    print(request_url)
-
-    # Create an SSL context that does not verify certificates
-    ssl_context = ssl.create_default_context()
-    ssl_context.check_hostname = False
-    ssl_context.verify_mode = ssl.CERT_NONE
+    Args:
+        posno (str or list): A single postal code or a list of postal codes.
     
-    # Request to WFS and process response
+    Returns:
+        dict: GeoJSON-like dictionary of features.
+    """
+    instance_connection_name = os.getenv("INSTANCE_NAME")
+    select_table = os.getenv("SELECT_TABLE")  # Ensure the table name is sanitized and trusted
+    db_name = os.getenv("DB_NAME")
+    db_user = os.getenv("DB_USER")
+    db_password = os.getenv("DB_PASSWORD")
+
+    connector = Connector()
+
+    def getconn():
+        return connector.connect(
+            instance_connection_name,
+            "pg8000",
+            user=db_user,
+            password=db_password,
+            db=db_name,
+        )
+
     try:
-        response = urllib.request.urlopen(request_url, context=ssl_context)
-        data = json.loads(response.read())
-        return data                                                                                                                                                                                                                  
+        conn = getconn()
+        cursor = conn.cursor()
+
+        # Construct query with filtering on posno
+        if isinstance(posno, list):
+            posno_str = ', '.join(f"'{p}'" for p in posno)  # Format as 'value1', 'value2'
+            sql = f"SELECT vtj_prt, posno, ST_AsGeoJSON(geom) FROM {select_table} WHERE posno IN ({posno_str})"
+        else:
+            # Use the correct SQL parameterization for values like posno, while using the select_table variable directly
+            sql = f"SELECT vtj_prt, posno, ST_AsGeoJSON(geom) FROM {select_table} WHERE posno = %s"
+
+        cursor.execute(sql, (posno,) if isinstance(posno, str) else None)
+
+        features = []
+        for row in cursor.fetchall():
+            vtj_prt, posno, geom_json = row
+            if geom_json:  # Ensure geometry is valid
+                feature = {
+                    "type": "Feature",
+                    "properties": {"vtj_prt": vtj_prt, "posno": posno},
+                    "geometry": json.loads(geom_json)
+                }
+                features.append(feature)
+
+        cursor.close()
+        connector.close()
+
+        return {"type": "FeatureCollection", "features": features}
+
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Database query error: {e}")
+        return None
 
 def calculate_heat_exp(geojson, src):
 
@@ -64,8 +79,6 @@ def calculate_heat_exp(geojson, src):
 
     # Open the raster and vector files
     gdf =  gpd.GeoDataFrame.from_features(geojson["features"])
-    # Drop rows where the 'geometria' property is 'piste'
-    gdf = gdf[gdf["geometria"] != "piste"]
 
     # Initialize a list to store weighted average  values
     weighted_avg_values = []
@@ -75,7 +88,7 @@ def calculate_heat_exp(geojson, src):
         polygon = shape(geom.geometry)
 
         # Mask the raster with the polygon geometry
-        out_image, out_transform = mask(src, [polygon], crop=True, all_touched=True, filled=True)
+        out_image, out_transform = mask(src, [polygon], crop=True, all_touched=True, filled=False)
         out_image = out_image[0]  # Assuming a single band
 
         # Initialize total value and total area
@@ -95,12 +108,18 @@ def calculate_heat_exp(geojson, src):
                 if pixel_value < 0:
                     continue
                 
-                # Get the bounding box of the current cell
-                cell_x, cell_y = out_transform * (col, row)
-                cell_geom = box(cell_x, cell_y, cell_x + out_transform.a, cell_y + out_transform.e)
+                # Get the four corner coordinates of the pixel
+                top_left = out_transform * (col, row)
+                top_right = out_transform * (col + 1, row)
+                bottom_left = out_transform * (col, row + 1)
+                bottom_right = out_transform * (col + 1, row + 1)
+
+                # Create an accurate polygon for the raster cell
+                cell_geom = Polygon([top_left, top_right, bottom_right, bottom_left])
 
                 # Compute the intersection area
                 intersection = polygon.intersection(cell_geom)
+                
                 if not intersection.is_empty:
                     intersection_area = intersection.area
                     total_value += pixel_value * intersection_area
@@ -135,6 +154,7 @@ def insert_to_db(buildings_gdf, date_str):
     db_name = os.getenv("DB_NAME")
     db_user = os.getenv("DB_USER")
     db_password = os.getenv("DB_PASSWORD")
+    insert_table = os.getenv("INSERT_TABLE")
 
     connector = Connector()
 
@@ -153,8 +173,8 @@ def insert_to_db(buildings_gdf, date_str):
         conn = getconn()
         cursor = conn.cursor()
 
-        insert_sql = """
-            INSERT INTO hsy_building_heat (avgheatexposure, date, vtj_prt, avg_temp_c, posno)
+        insert_sql = f"""
+            INSERT INTO {insert_table} (avgheatexposure, date, vtj_prt, avg_temp_c, posno)
             VALUES (%s, %s, %s, %s, %s)
         """
 
@@ -189,17 +209,17 @@ def insert_to_db(buildings_gdf, date_str):
 
 def calculate_temp_in_c(heatexposure, max_temp_k, min_temp_k):
     """
-    Calculates temperature in Celsius from a normalized heatexposure index and reference temperatures in Kelvin.
+    Calculates temperature in Celsius from a normalised heatexposure index and reference temperatures in Kelvin.
 
     Args:
-        heatexposure (float): The normalized heatexposure index.
+        heatexposure (float): The normalised heatexposure index.
         max_temp_k (float): The maximum reference temperature in Kelvin.
         min_temp_k (float): The minimum reference temperature in Kelvin.
 
     Returns:
         float: The calculated temperature in Celsius.
     """
-    temp_k = heatexposure * (max_temp_k - min_temp_k) + min_temp_k  # Denormalize to Kelvin
+    temp_k = heatexposure * (max_temp_k - min_temp_k) + min_temp_k  # Denormalise to Kelvin
     temp_c = temp_k - 273.15  # Convert from Kelvin to Celsius
     return temp_c
 
@@ -236,13 +256,11 @@ def calculate_heat_data( request ):
     date_str = request_json['date']
     posno = request_json['posno']
     bucket_name = request_json['bucket']
-    # 'asuminen_ja_maankaytto:pks_rakennukset_paivittyva'
-    typename = request_json['hsy_wfs']
     
-    wfs_json = fetch_wfs_data(typename, posno)
+    buildings_json = fetch_buildings_from_db(posno)
     
     # Folder path where TIFF filee
-    raster_path = f'Thermal/raster_data/{date_str}/{date_str}_normalized.tiff'
+    raster_path = f'Thermal/raster_data/{date_str}/{date_str}_normalised.tiff'
     
     # Create a Google Cloud Storage client
     storage_client = storage.Client()
@@ -250,13 +268,13 @@ def calculate_heat_data( request ):
     
     # Download raster file
     raster_blob = bucket.blob(raster_path)
-    raster_blob.download_to_filename('/tmp/normalized.tiff')
+    raster_blob.download_to_filename('/tmp/normalised.tiff')
     
     # Open the raster and vector files
-    src = rasterio.open('/tmp/normalized.tiff')
+    src = rasterio.open('/tmp/normalised.tiff')
     
-    gdf = calculate_heat_exp( wfs_json, src )
-    print(f"Number of filtered features: {len(gdf)}")
+    # Perform heat exposure calculation
+    gdf = calculate_heat_exp(buildings_json, src)
     
     # Download metadata file
     metadata_path = "Thermal/heat_metadata.json"

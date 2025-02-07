@@ -11,7 +11,7 @@ import pg8000
 
 def normalise_landsat_b10(request):
     """
-    Google Cloud Function to normalize Landsat raster data and update heat metadata.
+    Google Cloud Function to normalise Landsat raster data and update heat metadata.
     """
     # Access data from the request arguments
     request_json = request.get_json(silent=True)
@@ -27,14 +27,14 @@ def normalise_landsat_b10(request):
     # Paths for the raster and vector files in the bucket
     folder_path = f'Thermal/raster_data/{date_str}/'
     landsat_file_name = f"{folder_path}{date_str}-00:00_{date_str}-23:59_Landsat_8-9_L2_B10_(Raw).tiff"
-    output_raster = f"{folder_path}{date_str}_normalized.tiff"
+    output_raster = f"{folder_path}{date_str}_normalised.tiff"
     json_path = f'Thermal/vector_data/{json_input}'
     metadata_path = "Thermal/heat_metadata.json"
 
     # Temporary file paths
     local_raster_path = '/tmp/thermal.tiff'
     local_vector_path = '/tmp/vector.geojson'
-    local_output_path = '/tmp/normalized.tiff'
+    local_output_path = '/tmp/normalised.tiff'
     local_metadata_path = "/tmp/heat_metadata.json"
 
     # Create a Google Cloud Storage client
@@ -70,9 +70,9 @@ def normalise_landsat_b10(request):
             actual_min = np.min(valid_pixels)
             actual_max = np.max(valid_pixels)
 
-            # Normalize only valid pixel values
-            normalized_band = np.where(
-                (band >= 273),  # Only normalize valid temperatures
+            # Normalise only valid pixel values
+            normalised_band = np.where(
+                (band >= 273),  # Only normalise valid temperatures
                 (band.astype(float) - actual_min) / (actual_max - actual_min),
                 -1  # Set ignored pixels to 0
             )
@@ -80,11 +80,11 @@ def normalise_landsat_b10(request):
             # Update the raster profile for output
             src_profile.update(dtype=rasterio.float32, count=1, compress='lzw', transform=out_transform)
 
-            # Write the normalized raster to a temporary file
+            # Write the normalised raster to a temporary file
             with rasterio.open(local_output_path, 'w', **src_profile) as dst:
-                dst.write(normalized_band.astype(rasterio.float32), 1)
+                dst.write(normalised_band.astype(rasterio.float32), 1)
 
-        # Upload the normalized raster back to the GCS bucket
+        # Upload the normalised raster back to the GCS bucket
         output_blob = bucket.blob(output_raster)
         output_blob.upload_from_filename(local_output_path)
 
