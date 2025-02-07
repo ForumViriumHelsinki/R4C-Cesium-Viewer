@@ -53,7 +53,7 @@ export default defineConfig( () => {
 		server: {
 			proxy: {
 				'/pygeoapi': {
-					target: 'https://geo.fvh.fi/r4c',
+					target: 'https://pygeoapi.dataportal.fi/',
 					changeOrigin: true,
 					secure: false,
 					rewrite: ( path ) => path.replace( /^\/pygeoapi/, '' ),
