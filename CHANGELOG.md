@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.9.0...r4c-cesium-viewer-v1.9.1) (2025-02-07)
+
+
+### Bug Fixes
+
+* pygeoapi url ([01404b0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/01404b0a0b053ad4d3f26692f57f3d8d1f28e5ba))
+
 ## [1.9.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.8.2...r4c-cesium-viewer-v1.9.0) (2025-01-31)
 
 
