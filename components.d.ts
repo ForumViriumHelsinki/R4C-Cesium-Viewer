@@ -14,6 +14,7 @@ declare module 'vue' {
     CategoricalSelect: typeof import('./src/components/CategoricalSelect.vue')['default']
     DisclaimerPopup: typeof import('./src/components/DisclaimerPopup.vue')['default']
     Filters: typeof import('./src/components/Filters.vue')['default']
+    FloodBackgroundSyke: typeof import('./src/components/FloodBackgroundSyke.vue')['default']
     Geocoding: typeof import('./src/components/Geocoding.vue')['default']
     GridView: typeof import('./src/components/GridView.vue')['default']
     HeatHistogram: typeof import('./src/components/HeatHistogram.vue')['default']

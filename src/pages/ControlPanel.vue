@@ -145,6 +145,16 @@ title="HSY Background maps"
                       <HSYWMS />
                     </v-expansion-panel-text>
                   </v-expansion-panel>
+
+                  <v-expansion-panel
+class="pa-0 ma-0"
+title="Syke Flood Background Maps"
+>
+                    <v-expansion-panel-text class="pa-0 ma-0">
+                      <FloodBackgroundSyke />
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+
                 <template v-if="currentLevel === 'postalCode'">
                   <!-- Conditionally render Heat Histogram if data is available -->
                   <v-expansion-panel
@@ -284,6 +294,7 @@ import Featurepicker from '../services/featurepicker';
 import Camera from '../services/camera';
 import Geocoding from '../components/Geocoding.vue';
 import StatisticalGridOptions  from '../components/StatisticalGridOptions.vue';
+import FloodBackgroundSyke from '../components/FloodBackgroundSyke.vue';
 
 export default {
 	components: {
@@ -302,6 +313,7 @@ export default {
     BuildingHeatChart,
     BuildingGridChart,
     StatisticalGridOptions,
+    FloodBackgroundSyke,
 	},
 	setup() {
 		const globalStore = useGlobalStore();
