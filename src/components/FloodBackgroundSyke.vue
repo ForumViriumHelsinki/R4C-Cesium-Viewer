@@ -1,57 +1,58 @@
 <template>
   <div>
-    <div class="legend-container">
-      <div
-        v-for="item in legendItems1"
-      :key="item.color"
-      >
-        <div
-          class="color-square"
-        :style="{ backgroundColor: item.color }"
-        ></div>
-        <span class="legend-text">{{ item.text }}</span>
-      </div>
+    <!-- Disclaimer Title -->
+    <div class="disclaimer">
+      The map contains significant errors. Not for building-specific evaluation!
     </div>
 
     <v-radio-group v-model="selectedScenario">
       <v-radio
-        label="Tulvavaara-alueet eri päästöskenaarioilla (matala = SSP1-2.6, keskimääräinen = SSP2-4.5, korkea = SSP5-8.5)"
-        value="meritulvakartat_2022_yhdistelma"
+        label="Stormwater flood map water depth 52 mm rainfall in 1 hour"
+        value="HulevesitulvaVesisyvyysSade52mmMallinnettuAlue"
       ></v-radio>
       <v-radio
-        label="SSO585, vuosi 2050, toistuvuus 1/0020 a"
-        value="sso585_2050"
+        label="Stormwater flood map water depth 80 mm rainfall in 1 hour"
+        value="HulevesitulvaVesisyvyysSade80mmMallinnettuAlue"
+      ></v-radio>              
+      <v-radio
+        label="Flood hazard areas under different emission scenarios (low = SSP1-2.6, medium = SSP2-4.5, high = SSP5-8.5)"
+        value="SSP585_re_with_SSP245_with_SSP126_with_current"
       ></v-radio>
       <v-radio
-        label="SSO585, vuosi 2100, toistuvuus 1/0020 a"
-        value="sso585_2100"
+        label="SSP585, year 2050, recurrence 1/0020 years"
+        value="coastal_flood_SSP585_2050_0020_with_protected"
       ></v-radio>
       <v-radio
-        label="SSO245, vuosi 2050, toistuvuus 1/0020 a"
-        value="sso245_2050"
+        label="SSP585, year 2100, recurrence 1/0020 years"
+        value="coastal_flood_SSP585_2100_0020_with_protected"
       ></v-radio>
       <v-radio
-        label="SSO245, vuosi 2100, toistuvuus 1/0020 a"
-        value="sso245_2100"
+        label="SSP245, year 2050, recurrence 1/0020 years"
+        value="coastal_flood_SSP245_2050_0020_with_protected"
       ></v-radio>
       <v-radio
-        label="SSO126, vuosi 2050, toistuvuus 1/0020 a"
-        value="sso126_2050"
+        label="SSP245, year 2100, recurrence 1/0020 years"
+        value="coastal_flood_SSP245_2100_0020_with_protected"
       ></v-radio>
       <v-radio
-        label="SSO126, vuosi 2100, toistuvuus 1/0020 a"
-        value="sso126_2100"
+        label="SSP126, year 2050, recurrence 1/0020 years"
+        value="coastal_flood_SSP126_2050_0020_with_protected"
+      ></v-radio>
+      <v-radio
+        label="SSP126, year 2100, recurrence 1/0020 years"
+        value="coastal_flood_SSP126_2100_0020_with_protected"
       ></v-radio>
     </v-radio-group>
+
     <div class="legend-container">
       <div
-        v-for="item in legendItems2"
+        v-for="item in currentLegend"
       :key="item.color"
       >
         <div
           class="color-square"
         :style="{ backgroundColor: item.color }"
-        ></div>
+        />
         <span class="legend-text">{{ item.text }}</span>
       </div>
     </div>
@@ -62,47 +63,66 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore';
+import { useToggleStore } from '../stores/toggleStore';
 
 const globalStore = useGlobalStore();
 const selectedScenario = ref(null);
-let activeLayer = null; // Store reference to the currently active layer
+const viewer = globalStore.cesiumViewer;
+const toggleStore = useToggleStore();
 
-const legendItems1 = ref([
-  { color: '#001f3f', text: 'Nykytilanne (2020)' },
-  { color: '#0074D9', text: 'Vuosi 2100 matala' },
-  { color: '#85144b', text: 'Vuosi 2100 keskimääräinen' },
-  { color: '#FF4136', text: 'Vuosi 2100 korkea' },
+const legendItemsCombination = ref([
+  { color: '#001f3f', text: 'Current situation (2020)' },
+  { color: '#0074D9', text: 'Year 2100 low' },
+  { color: '#85144b', text: 'Year 2100 medium' },
+  { color: '#FF4136', text: 'Year 2100 high' },
 ]);
 
-const legendItems2 = ref([
-  { color: '#ADD8E6', text: 'alle 0,5 m' },
-  { color: '#87CEEB', text: '0,5-1 m' },
-  { color: '#00BFFF', text: '1-2 m' },
-  { color: '#1E90FF', text: '2-3 m' },
-  { color: '#000080', text: 'yli 3m' },
-  { color: '#FFA500', text: 'tulvasuojeltu kiinteillä rakenteilla' },
+const legendItemsSea = ref([
+  { color: '#ADD8E6', text: 'Less than 0.5 m' },
+  { color: '#87CEEB', text: '0.5-1 m' },
+  { color: '#0074D9', text: '1-2 m' },
+  { color: '#0056A3', text: '2-3 m' },
+  { color: '#000080', text: 'More than 3 m' },
+  { color: '#FFA500', text: 'Flood-protected by permanent structures' },
 ]);
 
-const wmsConfig = computed(() => {
-  if (selectedScenario.value === 'meritulvakartat_2022_yhdistelma') {
-    return {
-      url: 'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022_yhdistelma/wms?SERVICE=WMS&',
-      layerName: 'SSP585_re_with_SSP245_with_SSP126_with_current',
-    };
+const legendItemsStormwater = ref([
+  { color: '#ADD8E6', text: '0.1 m' }, // Light blue
+  { color: '#0074D9', text: '0.3 m' }, // Blue
+  { color: '#0056A3', text: '0.5 m' }, // Dark blue
+  { color: '#003366', text: '1 m' },   // Darker blue
+  { color: '#001022', text: '2- m' },  // Almost black blue
+]);
+
+const currentLegend = computed(() => {
+  if (selectedScenario.value?.startsWith('Hulevesitulva')) {
+    return legendItemsStormwater.value;
+  } else if (selectedScenario.value === 'SSP585_re_with_SSP245_with_SSP126_with_current') {
+    return legendItemsCombination.value;
+  } else if (selectedScenario.value?.startsWith('coastal_flood')) {
+    return legendItemsSea.value;
+  } else {
+    return [];
   }
-  const layerMapping = {
-    sso585_2050: 'coastal_flood_SSP585_2050_0020_with_protected',
-    sso585_2100: 'coastal_flood_SSP585_2100_0020_with_protected',
-    sso245_2050: 'coastal_flood_SSP245_2050_0020_with_protected',
-    sso245_2100: 'coastal_flood_SSP245_2100_0020_with_protected',
-    sso126_2050: 'coastal_flood_SSP126_2050_0020_with_protected',
-    sso126_2100: 'coastal_flood_SSP126_2100_0020_with_protected',
+});
+
+// https://paikkatiedot.ymparisto.fi/geoserver/tulva/ows?SERVICE=WMS&REQUEST
+const wmsConfig = computed(() => {
+  const urlMapping = {
+    'HulevesitulvaVesisyvyysSade52mmMallinnettuAlue': 'https://paikkatiedot.ymparisto.fi/geoserver/tulva/ows?SERVICE=WMS&',
+    'HulevesitulvaVesisyvyysSade80mmMallinnettuAlue': 'https://paikkatiedot.ymparisto.fi/geoserver/tulva/ows?SERVICE=WMS&',
+    'SSP585_re_with_SSP245_with_SSP126_with_current': 'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022_yhdistelma/wms?SERVICE=WMS&',
+    'coastal_flood_SSP585_2050_0020_with_protected': 'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
+    'coastal_flood_SSP585_2100_0020_with_protected': 'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
+    'coastal_flood_SSP245_2050_0020_with_protected': 'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
+    'coastal_flood_SSP245_2100_0020_with_protected': 'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
+    'coastal_flood_SSP126_2050_0020_with_protected': 'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
+    'coastal_flood_SSP126_2100_0020_with_protected': 'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
   };
 
-  return {
-    url: 'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-    layerName: layerMapping[selectedScenario.value] || null,
-  };
+  const url = urlMapping[selectedScenario.value] || null;
+
+  return { url, layerName: selectedScenario.value };
 });
 
 const createWMSImageryLayer = (url, layerName) => {
@@ -116,17 +136,20 @@ const createWMSImageryLayer = (url, layerName) => {
 
   const imageryLayer = new Cesium.ImageryLayer(provider);
   imageryLayer.alpha = 1;
+  viewer.imageryLayers.add(imageryLayer);
 
-  activeLayer = imageryLayer;
-  globalStore.cesiumViewer.imageryLayers.add(activeLayer);
 };
 
 const updateWMS = async (config) => {
   if (!config || !config.layerName) return;
 
-  // Remove previous layer if exists
-  if (activeLayer) {
-    await globalStore.cesiumViewer.imageryLayers.remove(activeLayer, true);
+  const imageryLayers = viewer.imageryLayers;
+  let size = toggleStore.landCover? 3: 2;
+  
+  // Remove the last imagery layer before adding a new one
+  if (imageryLayers.length > size ) {
+    const lastLayer = imageryLayers.get(imageryLayers.length - 1);
+    await imageryLayers.remove(lastLayer, true); // `true` ensures the layer is destroyed
   }
 
   // Create and add new layer
@@ -141,6 +164,15 @@ watch(selectedScenario, async () => {
 </script>
 
 <style scoped>
+/* Disclaimer Styling */
+.disclaimer {
+  color: red;         /* Red text */
+  font-weight: bold;  /* Bold font */
+  font-size: 18px;    /* Large font size */
+  text-align: center; /* Center the text */
+  margin-bottom: 10px; /* Space below the disclaimer */
+}
+
 .legend-container {
   display: flex; /* Arrange items horizontally */
   flex-direction: column; /* Stack items vertically */
