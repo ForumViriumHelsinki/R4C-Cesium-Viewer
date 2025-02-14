@@ -49,21 +49,24 @@ export default {
     const dataSourceService = new Datasource();
     const buildingService = new Building();
 
-    const selectedDate = ref('2023-06-23'); // Set default date
+    const selectedDate = ref('2022-06-28'); // Set default date
     const timelineLength = ref(0);
     const dates = [
       '2015-07-03',
+      '2016-06-03',
       '2018-07-27',
+      '2019-06-05',
+      '2020-06-23',
       '2021-07-12',
       '2022-06-28',
       '2023-06-23',
-      '2024-05-25',
+      '2024-06-26',
     ];
 
     const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)); // Set default index    
 
     const sliderWidth = computed(() => {
-      return ( window.innerWidth - Math.min(Math.max(window.innerWidth * 0.375, 400), 800)) * 0.90; // Calculate remaining width
+      return ( window.innerWidth - Math.min(Math.max(window.innerWidth * 0.375, 400), 800)) * 0.88; // Calculate remaining width
     });
 
     const marginWidth = computed(() => {

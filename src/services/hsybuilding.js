@@ -242,20 +242,20 @@ export default class HSYBuilding {
 
     async calculateHSYUrbanHeatData(data, entities) {
         const heatExposureData = this.urbanHeatService.calculateAverageExposure(data.features);
-        const targetDate = '2021-02-18';
-        const toggleStore = useToggleStore();
+		const targetDate = this.store.heatDataDate;
 
-        let avg_temp_cList = toggleStore.capitalRegionCold
-            ? entities
-                .map(entity => {
-                    const heatTimeseries = entity.properties.heat_timeseries?._value || [];
-                    const foundEntry = heatTimeseries.find(({date}) => date === targetDate);
-                    return foundEntry?.avg_temp_c || null;
-                })
-                .filter(temp => temp != null)
-            : data.features.map(feature => feature.properties.avg_temp_c);
+        const avgTempCList = entities
+            .map(entity => {
+                const heatTimeseries = entity.properties.heat_timeseries || []; // Ensure it's an array
 
-        setBuildingPropsAndEmitEvent(entities, heatExposureData, avg_temp_cList, data);
+                if (!Array.isArray(heatTimeseries)) return null;
+
+                const foundEntry = heatTimeseries.find(({ date }) => date === targetDate);
+                return foundEntry ? foundEntry.avg_temp_c : null;
+            })
+            .filter(temp => temp !== null); // Ensures we only keep valid temperature values
+
+        setBuildingPropsAndEmitEvent(entities, heatExposureData, avgTempCList, data);
     }
 
     setHSYBuildingAttributes(data, entities) {
