@@ -3,6 +3,8 @@ import Datasource from './datasource.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
+
 
 export default class Urbanheat {
 	constructor( ) {
@@ -23,24 +25,38 @@ export default class Urbanheat {
 		let total = 0;
 		let urbanHeatData = [ ];
 		let heatTimeseries = [ ];
+		const toggleStore = useGlobalStore();
+		const inHelsinki = toggleStore.helsinkiView;
+		const targetDate = this.store.heatDataDate;
 
 		for ( let i = 0; i < features.length; i++ ) {
 
-			if ( features[ i ].properties.avgheatexposuretobuilding ) {
+			if ( !inHelsinki ) {
 
-				total = total + features[ i ].properties.avgheatexposuretobuilding;
-				count++;
-				urbanHeatData.push( features[ i ].properties.avgheatexposuretobuilding );
+				if ( features[ i ].properties.heat_timeseries ) {
 
+        			const properties = features[i].properties;
+        			const heatTimeseriesValue = properties.heat_timeseries || null;
+        			const heatExposureValue = inHelsinki 
+            			? properties.avgheatexposuretobuilding 
+            			: heatTimeseriesValue?.find(({ date }) => date === targetDate)?.avgheatexposure;
+
+        			if ( heatExposureValue ) {
+
+            			total += heatExposureValue;
+            			count++;
+            			urbanHeatData.push(heatExposureValue);
+
+        			}
+
+        			if ( heatTimeseriesValue)  {
+
+            			filterHeatTimeseries(properties);
+            			heatTimeseries.push(heatTimeseriesValue);
+
+        			}
+				}
 			}
-
-			if ( features[ i ].properties.heat_timeseries ) {
-
-				filterHeatTimeseries( features[ i ].properties );
-				heatTimeseries.push( features[ i ].properties.heat_timeseries );			
-				
-			}
-
 		}
 
 		if ( count != 0 ) {

@@ -28,6 +28,7 @@ import * as Cesium from 'cesium';
 export default {
 	setup() {
 		const store = useGlobalStore(); // Access Cesium viewer via global store
+		const viewer = store.cesiumViewer;
 		const buildingStore = useBuildingStore(); // Access Cesium viewer via global store
 		const showTooltip = ref( false ); // State for whether to show the tooltip
 		const mousePosition = ref( { x: 0, y: 0 } ); // Mouse cursor position
@@ -91,8 +92,8 @@ export default {
 			// Update mouse position for tooltip
 			mousePosition.value = { x: endPosition.x, y: endPosition.y };
 
-			if ( buildingStore.buildingFeatures && store.cesiumViewer ) {
-				const pickedEntity = store.cesiumViewer.scene.pick(
+			if ( buildingStore.buildingFeatures && viewer ) {
+				const pickedEntity = viewer.scene.pick(
 					new Cesium.Cartesian2( endPosition.x, endPosition.y )
 				);
 
@@ -111,7 +112,7 @@ export default {
 			setTimeout( () => {
 				nextTick( () => {
 					if ( buildingStore.buildingFeatures ) {
-						store.cesiumViewer.screenSpaceEventHandler.setInputAction(
+						viewer.screenSpaceEventHandler.setInputAction(
 							onMouseMove,
 							Cesium.ScreenSpaceEventType.MOUSE_MOVE
 						);
@@ -123,7 +124,7 @@ export default {
 		// Clean up Cesium mouse events
 		onUnmounted( () => {
 
-			store.cesiumViewer.screenSpaceEventHandler.removeInputAction(
+			viewer.screenSpaceEventHandler.removeInputAction(
 				Cesium.ScreenSpaceEventType.MOUSE_MOVE
 			);
 			

@@ -61,7 +61,7 @@ export default {
 			const props = entity._properties;
 			const targetDate = globalStore.heatDataDate;
 
-			if ( props?.avg_temp_c && props?.[ propsStore.categoricalSelect.value ]?._value && props?.[ propsStore.numericalSelect.value ]?._value ) {
+			if ( props?.[ propsStore.categoricalSelect.value ]?._value && props?.[ propsStore.numericalSelect.value ]?._value ) {
 				let numericalValue = props[ propsStore.numericalSelect.value ]._value;
 
 				if ( propsStore.numericalSelect.text === 'c_valmpvm' && numericalValue ) {

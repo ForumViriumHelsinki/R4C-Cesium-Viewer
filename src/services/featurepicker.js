@@ -203,7 +203,7 @@ if (Array.isArray(entitiesArray)) {
 		}
     
 		//See if we can find building floor areas
-		if ( id.properties._avgheatexposuretobuilding ) {
+		if ( this.store.postalcode ) {
 
 			this.store.setBuildingAddress( findAddressForBuilding( id.properties ) );
     
