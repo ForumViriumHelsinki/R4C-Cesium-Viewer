@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.10.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.9.1...r4c-cesium-viewer-v1.10.0) (2025-02-14)
+
+
+### Features
+
+* added new heat dates and made changes to reflect database changes ([#103](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/103)) ([c645ff6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c645ff66d060edace992482c000a7fac8ad51210))
+* implementation for ([#100](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/100)) ([c6dbec1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c6dbec14d4498eba405ad25d0516d8394531dc19))
+* implementation for ([#74](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/74)) ([7758016](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7758016bd68c0ac916436cd2fdc465caf55810ce))
+* legend colors, ref to syke ([#100](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/100)) ([7056544](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/70565441f262d868f2ba6194896a948d054d923f))
+* stormwater implementation for, also fixed bugs and legends, disclaimer added ([#100](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/100)) ([77af9bf](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/77af9bfd7c096c074d8a7dfb994ff4dba91b1e09))
+
+
+### Bug Fixes
+
+* building level fixed ([#103](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/103)) ([2f59671](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2f596712ced7ac4de2155c7657db80c8b213f365))
+* failed fix ([#102](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/102)) ([a756dac](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a756dac976db65b6474e018ec2a765720d7e05f8))
+* fixed legend and added attribution to syke ([#104](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/104)) ([04509d7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/04509d75f9f16bdc189a267da0ba5e07c77118d9))
+
 ## [1.9.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.9.0...r4c-cesium-viewer-v1.9.1) (2025-02-07)
 
 
