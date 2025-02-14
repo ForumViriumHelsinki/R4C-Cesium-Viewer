@@ -70,7 +70,7 @@ export default class Building {
 		this.toggleStore.helsinkiView 
     		? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
     		: ( !this.toggleStore.helsinkiView 
-        		? ( this.propsStore.setBuildingHeatExposure( avg_temp_c._value ), buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) ) 
+        		? ( buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) ) 
         		: ( this.propsStore.setGridBuildingProps( buildingProps ) ) );       
 	}
 
