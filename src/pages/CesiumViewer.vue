@@ -117,7 +117,7 @@ export default {
 			const cesiumContainer = document.getElementById('cesiumContainer');
 			const featurepicker = new Featurepicker();
 			cesiumContainer.addEventListener('click', (event) => {
-  				const controlPanelElement = document.querySelector('.control-panel');
+  				const controlPanelElement = document.querySelector('.control-panel-main');
 				const timeSeriesElement = document.querySelector('#heatTimeseriesContainer');
   				const isClickOnControlPanel = controlPanelElement.contains(event.target);
 				const isClickOutsideTimeSeries = timeSeriesElement && timeSeriesElement.contains(event.target);
