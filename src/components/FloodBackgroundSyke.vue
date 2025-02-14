@@ -56,7 +56,7 @@
         <span class="legend-text">{{ item.text }}</span>
       </div>
       <div class="reference">
-        Data provided by <a href="https://www.syke.fi/en" target="_blank">Finnish Environment Institute (SYKE)</a>
+        Open data distributed by <a href="https://www.syke.fi/en" target="_blank">Finnish Environment Institute (Syke)</a> is licensed under Creative Commons Attribution 4.0 International licence.
       </div>
     </div>
   </div>
@@ -73,19 +73,20 @@ const viewer = globalStore.cesiumViewer;
 const previousSelected = ref(false);
 
 const legendItemsCombination = ref([
-  { color: '#003366', text: 'Current situation (2020)' },
-  { color: '#0074D9', text: 'Year 2100, low = SSP1-2.6' },
-  { color: '#C14444', text: 'Year 2100, medium = SSP2-4.5' },
-  { color: '#F5E9D7', text: 'Year 2100 ,high = SSP5-8.5' },
+  { color: '#002a8e', text: 'Current situation (2020)' },
+  { color: '#0f62fe', text: 'Year 2100, low = SSP1-2.6' },
+  { color: '#b2192b', text: 'Year 2100, medium = SSP2-4.5' },
+  { color: '#fde9dc', text: 'Year 2100 ,high = SSP5-8.5' },
 ]);
 
 const legendItemsSea = ref([
-  { color: '#81c1d5', text: 'Less than 0.5 m' },
-  { color: '#5893b2', text: '0.5-1 m' },
-  { color: '#3269a0', text: '1-2 m' },
-  { color: '#0056A3', text: '2-3 m' },
-  { color: '#000080', text: 'More than 3 m' },
-  { color: '#FFA500', text: 'Flood-protected by permanent structures' },
+  { color: '#7ecce6', text: 'Less than 0.5 m' },
+  { color: '#5498cc', text: '0.5-1 m' },
+  { color: '#2b66b3', text: '1-2 m' },
+  { color: '#003399', text: '2-3 m' },
+  { color: '#002673', text: 'More than 3 m' },
+  { color: '#fddbc6', text: 'Flood-protected by permanent structures' },
+  { color: '#d2ffff', text: 'Sea area' },
 ]);
 
 const legendItemsStormwater = ref([
