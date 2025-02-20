@@ -89,7 +89,6 @@ class="tooltip"
 
                 </v-list-item-content>                
                   <v-list-item-content
-v-if="currentLevel === 'postalCode' || currentView === 'grid'"
 class="pa-0 ma-0"
 >
                     <v-container
@@ -136,6 +135,17 @@ class="pa-0 ma-0"
                       <StatisticalGridOptions />
                     </v-expansion-panel-text>                                                           
                   </v-expansion-panel>
+
+                  <v-expansion-panel
+class="pa-0 ma-0"
+title="NDVI"
+>
+                    <v-expansion-panel-text
+class="pa-0 ma-0"
+>
+                      <PostalCodeNDVI />
+                    </v-expansion-panel-text>                                                           
+                  </v-expansion-panel>                  
 
                   <v-expansion-panel
 class="pa-0 ma-0"
@@ -272,7 +282,7 @@ title="Geocoding"
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import HeatHistogram from '../components/HeatHistogram.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
 import ViewMode from '../components/ViewMode.vue'; // Adjust the path as necessary
@@ -295,6 +305,8 @@ import Camera from '../services/camera';
 import Geocoding from '../components/Geocoding.vue';
 import StatisticalGridOptions  from '../components/StatisticalGridOptions.vue';
 import FloodBackgroundSyke from '../components/FloodBackgroundSyke.vue';
+import PostalCodeNDVI from '../views/PostalCodeNDVI.vue'
+import { storeToRefs } from 'pinia';
 
 export default {
 	components: {
@@ -314,6 +326,7 @@ export default {
     BuildingGridChart,
     StatisticalGridOptions,
     FloodBackgroundSyke,
+    PostalCodeNDVI,
 	},
 	setup() {
 		const globalStore = useGlobalStore();
@@ -322,6 +335,10 @@ export default {
 		const panelVisible = ref( window.innerWidth > 600 ); ;
 		const currentLevel = computed( () => globalStore.level );
     const currentView = computed( () => globalStore.view );
+    const { ndvi } = storeToRefs(toggleStore);
+
+    console.log("ndvi", ndvi);
+    console.log("propsStore.heatHistogramData", propsStore.heatHistogramData)
 		const heatHistogramData = computed( () => propsStore.heatHistogramData );
     const scatterPlotEntities = computed( () => propsStore.scatterPlotEntities );
 
@@ -377,7 +394,8 @@ export default {
       rotateCamera,
       togglePanel,
       reset,
-      returnToPostalCode
+      returnToPostalCode,
+      ndvi
 		};
 	},
 };

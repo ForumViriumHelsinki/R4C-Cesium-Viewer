@@ -1,3 +1,5 @@
+<template><div></div></template>
+
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue';
 import DataSource from '../services/datasource.js';

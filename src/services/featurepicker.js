@@ -162,6 +162,25 @@ if (Array.isArray(entitiesArray)) {
 			this.propStore.setHeatFloodVulnerability( id.properties );
 			eventBus.emit( 'createHeatFloodVulnerabilityChart' );
 		}
+
+		//See if we can find building floor areas
+		if ( this.store.level == 'postalCode' ) {
+
+			this.store.setBuildingAddress( findAddressForBuilding( id.properties ) );
+    
+			if ( id.properties._locationUnder40 ) {
+
+				if ( id.properties._locationUnder40._value ) {
+
+					this.coldAreaService.addColdPoint( id.properties._locationUnder40._value );
+
+				}
+    
+			}
+
+			this.handleBuildingFeature( id.properties );
+    
+		}
     
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
 		if ( id.properties.posno && this.store.level != 'building' ) {
@@ -199,25 +218,6 @@ if (Array.isArray(entitiesArray)) {
     
 			this.traveltimeService.loadTravelTimeData( id.properties.id._value );
 			this.traveltimeService.markCurrentLocation( id );
-    
-		}
-    
-		//See if we can find building floor areas
-		if ( this.store.postalcode ) {
-
-			this.store.setBuildingAddress( findAddressForBuilding( id.properties ) );
-    
-			if ( id.properties._locationUnder40 ) {
-
-				if ( id.properties._locationUnder40._value ) {
-
-					this.coldAreaService.addColdPoint( id.properties._locationUnder40._value );
-
-				}
-    
-			}
-
-			this.handleBuildingFeature( id.properties );
     
 		}
     

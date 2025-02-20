@@ -44,7 +44,7 @@ class="label"
     </div>
 
     <div
-v-if="view !== 'grid'"
+v-if="view !== 'grid' && postalCode"
 class="switch-container"
 >
       <label class="switch">
@@ -78,6 +78,23 @@ for="landCover"
 class="label"
 >HSY Land Cover</label>
     </div>
+
+    <div
+class="switch-container"
+>
+      <label class="switch">
+        <input
+v-model="ndvi"
+type="checkbox"
+@change="toggleNDVI"
+>
+        <span class="slider round"/>
+      </label>
+      <label
+for="ndvi"
+class="label"
+>NDVI</label>
+    </div>    
   </div>
 </template>
 
@@ -93,6 +110,8 @@ import Tree from '../services/tree.js';
 import Othernature from '../services/othernature.js';
 import Vegetation from '../services/vegetation';
 import Populationgrid from '../services/populationgrid.js';
+import Wms from '../services/wms.js';
+import { changeTIFF } from '../services/tiffImagery.js';
 
 export default {
   setup() {
@@ -104,6 +123,7 @@ export default {
     const showTrees = ref(toggleStore.showTrees);
     const landCover = ref(toggleStore.landCover);
     const grid250m = ref(toggleStore.grid250m);
+    const ndvi = ref(toggleStore.ndvi);
 
     const helsinkiView = computed( () => toggleStore.helsinkiView );
     const view = computed( () => store.view );
@@ -194,19 +214,46 @@ export default {
 
 	}
 
-	/**
-    * This function shows or hides wms landcover background map based on the toggle button state
-    */
-	const addLandCover = () =>  {
+const disableOtherLayer = (layer) => {
+  if (layer === 'ndvi') {
+    landCover.value = false;
+    toggleStore.setLandCover(false);
+    new Landcover().removeLandcover();
+  } else if (layer === 'landcover') {
+    ndvi.value = false;
+    toggleStore.setNDVI(false);
+    store.cesiumViewer.imageryLayers.removeAll();
+    store.cesiumViewer.imageryLayers.add(
+      new Wms().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
+    );
+  }
+};
 
-		toggleStore.setLandCover( landCover.value );
-		const landcoverService = new Landcover();
+const addLandCover = () => {
+  if (landCover.value && ndvi.value) disableOtherLayer('landcover');
 
-		landCover.value 
-    		? ( store.cesiumViewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true ), landcoverService.addLandcover() ) 
-    		: landcoverService.removeLandcover();
+  toggleStore.setLandCover(landCover.value);
+  const landcoverService = new Landcover();
 
-	} 
+  landCover.value ? landcoverService.addLandcover() : landcoverService.removeLandcover();
+};
+
+const toggleNDVI = () => {
+  if (ndvi.value && landCover.value) disableOtherLayer('ndvi');
+
+  toggleStore.setNDVI(ndvi.value);
+
+  if (ndvi.value) {
+    changeTIFF('2022-06-26', [], store.cesiumViewer);
+    eventBus.emit('addNDVI');
+  } else {
+    store.cesiumViewer.imageryLayers.removeAll();
+    store.cesiumViewer.imageryLayers.add(
+      new Wms().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
+    );
+  }
+};
+
 
 	/**
     * This function handles the toggle event for showing or hiding the nature areas layer on the map.
@@ -270,10 +317,12 @@ export default {
       activate250mGrid,
       loadVegetation,
       loadOtherNature,
+      toggleNDVI,
       addLandCover,
       loadTrees,
       toggleLandCover,
       postalCode,
+      ndvi,
     };
   },
 };
