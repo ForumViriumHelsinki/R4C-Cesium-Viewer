@@ -1,7 +1,6 @@
 import Datasource from './datasource.js';
 import Building from './building.js';
 import UrbanHeat from './urbanheat.js';
-import axios from 'axios';
 import { eventBus } from './eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
@@ -246,14 +245,16 @@ export default class HSYBuilding {
 
         const avgTempCList = entities
             .map(entity => {
-                const heatTimeseries = entity.properties.heat_timeseries || []; // Ensure it's an array
+                // Get the actual array from ConstantProperty
+                const heatTimeseries = entity.properties.heat_timeseries?.getValue() || []; 
 
                 if (!Array.isArray(heatTimeseries)) return null;
 
+                // Find the entry that matches the target date
                 const foundEntry = heatTimeseries.find(({ date }) => date === targetDate);
                 return foundEntry ? foundEntry.avg_temp_c : null;
             })
-            .filter(temp => temp !== null); // Ensures we only keep valid temperature values
+            .filter(temp => temp !== null); // Keep only valid temperature values
 
         setBuildingPropsAndEmitEvent(entities, heatExposureData, avgTempCList, data);
     }

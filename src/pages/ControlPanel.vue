@@ -337,8 +337,6 @@ export default {
     const currentView = computed( () => globalStore.view );
     const { ndvi } = storeToRefs(toggleStore);
 
-    console.log("ndvi", ndvi);
-    console.log("propsStore.heatHistogramData", propsStore.heatHistogramData)
 		const heatHistogramData = computed( () => propsStore.heatHistogramData );
     const scatterPlotEntities = computed( () => propsStore.scatterPlotEntities );
 
