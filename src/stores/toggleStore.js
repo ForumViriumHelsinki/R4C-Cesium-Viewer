@@ -21,9 +21,13 @@ export const useToggleStore = defineStore('toggle', {
     switchView: false,
     surveyPlaces: false,
     capitalRegionCold: false,
-	grid250m: false,
+	  grid250m: false,
+    ndvi: false,
   }),
   actions: {
+    setNDVI(enabled) {
+      this.ndvi = enabled;
+    },
     setGrid250m(enabled) {
       this.grid250m = enabled;
     },  	
