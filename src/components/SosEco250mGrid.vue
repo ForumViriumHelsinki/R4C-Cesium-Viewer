@@ -6,14 +6,19 @@ import DataSource from '../services/datasource.js';
 import * as Cesium from 'cesium';
 import Camera from '../services/camera.js'; 
 import { usePropsStore } from '../stores/propsStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
 
 // Reactive variables
 const propsStore = usePropsStore();
-const statsIndex = computed( () => propsStore.statsIndex );
+const toggleStore = useToggleStore();
 
-// Watcher to update grid colors when statsIndex changes
-watch(statsIndex, (newIndex) => {
-  updateGridColors(newIndex);
+const statsIndex = computed( () => propsStore.statsIndex );
+const ndviActive = computed( () => toggleStore.ndvi );
+const baseAlpha = computed( () => ndviActive.value ? 0.4 : 0.8 );
+
+// Watchers to update grid colors when NDVI or statsIndex changes
+watch([statsIndex, ndviActive], () => {
+  updateGridColors(statsIndex.value);
 });
 
 const heatColors = [
@@ -77,7 +82,7 @@ const loadGrid = async () => {
 const handleMissingValues = (entity, selectedIndex) => {
     const isMissingValues = entity.properties['missing_values']?.getValue();
     if (isMissingValues && selectedIndex !== 'flood_exposure' && selectedIndex !== 'avgheatexposure' && selectedIndex !== 'green') {
-        entity.polygon.material = Cesium.Color.fromCssColorString('#A9A9A9').withAlpha(0.8);
+        entity.polygon.material = Cesium.Color.fromCssColorString('#A9A9A9').withAlpha( baseAlpha.value );
     }
     return isMissingValues;
 };
@@ -122,7 +127,7 @@ const handleCombinedHeatIndexAndAvgHeatExposure = (entity) => {
         entity.polygon.material = getColorForIndex(heatIndexValue, 'heat_index');
         entity.polygon.extrudedHeight = avgHeatExposureValue * 250;
     } else {
-        entity.polygon.material = Cesium.Color.WHITE.withAlpha(0.8);
+        entity.polygon.material = Cesium.Color.WHITE.withAlpha( baseAlpha.value );
     }
 };
 
@@ -139,7 +144,7 @@ const handleCombinedIndices = (entity, selectedIndex) => {
             entity.polygon.extrudedHeight = heatIndexValue * 250;
         }
     } else {
-        entity.polygon.material = Cesium.Color.WHITE.withAlpha(0.8);
+        entity.polygon.material = Cesium.Color.WHITE.withAlpha( baseAlpha.value );
     }
 };
 
@@ -148,7 +153,7 @@ const handleOtherIndices = (entity, selectedIndex) => {
     const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
     const color = indexValue
         ? getColorForIndex(indexValue, selectedIndex)
-        : Cesium.Color.WHITE.withAlpha(0.8);
+        : Cesium.Color.WHITE.withAlpha( baseAlpha.value );
     entity.polygon.material = color;
 };
 
@@ -172,13 +177,14 @@ const handleCombinedHeatFloodGreen = (entity) => {
 const updateGridColors = async (selectedIndex) => {
     const dataSourceService = new DataSource();
     const dataSource = dataSourceService.getDataSourceByName('250m_grid');
+
     if (!dataSource) return;
 
     const entities = dataSource.entities.values;
 
     for (const entity of entities) {
 		entity.polygon.extrudedHeight = 0; 
-		entity.polygon.material = Cesium.Color.WHITE.withAlpha(0.8);  // Default color for missing data
+		entity.polygon.material = Cesium.Color.WHITE.withAlpha( baseAlpha.value );  // Default color for missing data
 
         if (handleMissingValues(entity, selectedIndex)) continue;
 
@@ -214,11 +220,11 @@ const createStripedMaterial = (heatIndex, floodIndex) => {
 // Function to determine the color based on the index value
 const getColorForIndex = ( indexValue, indexType ) => {
 	const colorScheme = indexToColorScheme[indexType] || heatColors; // Default to heat colors
-	if ( indexValue < 0.2 ) return Cesium.Color.fromCssColorString( colorScheme[0].color ).withAlpha( 0.8 );
-	if ( indexValue < 0.4 ) return Cesium.Color.fromCssColorString( colorScheme[1].color ).withAlpha( 0.8 );
-	if ( indexValue < 0.6 ) return Cesium.Color.fromCssColorString( colorScheme[2].color ).withAlpha( 0.8 );
-	if ( indexValue < 0.8 ) return Cesium.Color.fromCssColorString( colorScheme[3].color ).withAlpha( 0.8 );
-	return Cesium.Color.fromCssColorString( colorScheme[4].color ).withAlpha( 0.8 );
+	if ( indexValue < 0.2 ) return Cesium.Color.fromCssColorString( colorScheme[0].color ).withAlpha( baseAlpha.value );
+	if ( indexValue < 0.4 ) return Cesium.Color.fromCssColorString( colorScheme[1].color ).withAlpha( baseAlpha.value );
+	if ( indexValue < 0.6 ) return Cesium.Color.fromCssColorString( colorScheme[2].color ).withAlpha( baseAlpha.value );
+	if ( indexValue < 0.8 ) return Cesium.Color.fromCssColorString( colorScheme[3].color ).withAlpha( baseAlpha.value );
+	return Cesium.Color.fromCssColorString( colorScheme[4].color ).withAlpha( baseAlpha.value );
 };
 
 onMounted(() => {
