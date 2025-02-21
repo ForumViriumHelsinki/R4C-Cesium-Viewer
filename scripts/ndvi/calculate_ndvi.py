@@ -5,6 +5,7 @@ from rasterio.mask import mask
 from shapely.geometry import shape, box
 from google.cloud import storage
 from flask import jsonify
+from shapely.geometry import shape, Polygon
 
 def health_check():
     return jsonify({'status': 'healthy'}), 200
@@ -77,12 +78,18 @@ def calculate_average_ndvi(request):
                 if pixel_value < 0:
                     continue
                 
-                # Get the bounding box of the current cell
-                cell_x, cell_y = out_transform * (col, row)
-                cell_geom = box(cell_x, cell_y, cell_x + out_transform.a, cell_y + out_transform.e)
+                # Get the four corner coordinates of the pixel
+                top_left = out_transform * (col, row)
+                top_right = out_transform * (col + 1, row)
+                bottom_left = out_transform * (col, row + 1)
+                bottom_right = out_transform * (col + 1, row + 1)
+
+                # Create an accurate polygon for the raster cell
+                cell_geom = Polygon([top_left, top_right, bottom_right, bottom_left])
 
                 # Compute the intersection area
                 intersection = polygon.intersection(cell_geom)
+                
                 if not intersection.is_empty:
                     intersection_area = intersection.area
                     total_value += pixel_value * intersection_area
