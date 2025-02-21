@@ -138,6 +138,7 @@ class="pa-0 ma-0"
 
                   <v-expansion-panel
 class="pa-0 ma-0"
+v-if="currentView !== 'grid'"
 title="NDVI"
 >
                     <v-expansion-panel-text
