@@ -22,7 +22,6 @@ export default class HSYBuilding {
     async loadHSYBuildings() {
         try {
             const url = '/pygeoapi/collections/hsy_buildings/items?f=json&limit=5000&postinumero=' + this.store.postalcode;
-            console.log('url', url);
             
             const response = await fetch(url);
             const data = await response.json();
