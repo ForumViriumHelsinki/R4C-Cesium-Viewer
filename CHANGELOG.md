@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.10.0...r4c-cesium-viewer-v1.10.1) (2025-02-21)
+
+
+### Bug Fixes
+
+* fixed ndvi calcualtion [#113](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/113) ([#114](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/114)) ([400d566](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/400d566f14040f5f6d68324de2055e4853606c4f))
+
 ## [1.10.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.9.1...r4c-cesium-viewer-v1.10.0) (2025-02-14)
 
 
