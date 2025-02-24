@@ -7,20 +7,22 @@
 import * as d3 from 'd3';
 import { onMounted, onBeforeUnmount } from 'vue';
 import Plot from '../services/plot.js';
+import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 
 // Pinia store
-const propsStore = usePropsStore();
+const backgroundMapStore = useBackgroundMapStore();
 const globalStore = useGlobalStore();
+const propsStore = usePropsStore();
 
 const createPieChart = ( ) => {
 
 	const datasource = propsStore.postalCodeData;
 	const nameOfZone = globalStore.nameOfZone._value;
-	const year = propsStore.hsyYear;
-	const area = propsStore.hsySelectArea;
+	const year = backgroundMapStore.hsyYear;
+	const area = backgroundMapStore.hsySelectArea;
 
 	const plotService = new Plot();
 	plotService.initializePlotContainerForGrid( 'pieChartContainer' );

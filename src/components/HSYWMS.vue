@@ -46,15 +46,16 @@ v-for="(layer, index) in filteredLayers"
 
 <script>
 import { ref, onMounted } from 'vue';
-import { usePropsStore } from '../stores/propsStore';
+import { useBackgroundMapStore } from '../stores/backgroundMapStore';
 import { useGlobalStore } from '../stores/globalStore';
 import wms from '../services/wms';
+import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
 import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 
 export default {
   setup() {
-    const propsStore = usePropsStore();
+    const backgroundMapStore = useBackgroundMapStore();
     const searchQuery = ref('');
     const filteredLayers = ref([]);
     const wmsService = new wms();
@@ -85,10 +86,10 @@ export default {
 
           console.log('Extracted layers:', layers);
           // Set the processed layers array, not the raw response data
-          propsStore.setHSYWMSLayers(layers);
+          backgroundMapStore.setHSYWMSLayers(layers);
         } else {
           console.error('No data received from WMS layers endpoint');
-          propsStore.setHSYWMSLayers([]);
+          backgroundMapStore.setHSYWMSLayers([]);
         }
       } catch (error) {
         console.error('Error fetching WMS layers:', error);
@@ -97,14 +98,14 @@ export default {
           response: error.response?.data,
           status: error.response?.status
         });
-        propsStore.setHSYWMSLayers([]);
+        backgroundMapStore.setHSYWMSLayers([]);
       }
     };
 
     // Filter layers based on user input
     const onSearch = () => {
       if (searchQuery.value.length >= 3) {
-        filteredLayers.value = propsStore.hSYWMSLayers.filter((layer) =>
+        filteredLayers.value = backgroundMapStore.hSYWMSLayers.filter((layer) =>
           layer.title.toLowerCase().includes(searchQuery.value.toLowerCase())
         );
       } else {
@@ -114,14 +115,16 @@ export default {
 
     // Select and switch the WMS layer
     const selectLayer = (layerName) => {
-      wmsService.reCreateHSYImageryLayer(layerName);
+      const store = useGlobalStore();
+      removeLandcover( store.landcoverLayers, store.cesiumViewer );
+      createHSYImageryLayer( layerName );
       // Clear the filtered layers after selecting
       filteredLayers.value = [];
     };
 
     // Handle enter key press
     const onEnter = () => {
-      const matchingLayer = propsStore.hSYWMSLayers.find((layer) =>
+      const matchingLayer = backgroundMapStore.hSYWMSLayers.find((layer) =>
         layer.title.toLowerCase() === searchQuery.value.toLowerCase()
       );
       if (matchingLayer) {
@@ -144,7 +147,7 @@ export default {
     };
 
     onMounted(() => {
-      if (!propsStore.hSYWMSLayers) {
+      if (!backgroundMapStore.hSYWMSLayers) {
         fetchLayers();
       }
     });

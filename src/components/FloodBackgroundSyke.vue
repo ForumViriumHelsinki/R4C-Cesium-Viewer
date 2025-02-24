@@ -42,6 +42,10 @@
         label="SSP126, year 2100, recurrence 1/0020 years"
         value="coastal_flood_SSP126_2100_0020_with_protected"
       ></v-radio>
+      <v-radio
+        label="none"
+        value="none"
+      ></v-radio>      
     </v-radio-group>
 
     <div class="legend-container">
@@ -70,7 +74,7 @@ import { useGlobalStore } from '../stores/globalStore';
 const globalStore = useGlobalStore();
 const selectedScenario = ref(null);
 const viewer = globalStore.cesiumViewer;
-const previousSelected = ref(false);
+let floodLayers = [];
 
 const legendItemsCombination = ref([
   { color: '#002a8e', text: 'Current situation (2020)' },
@@ -129,35 +133,62 @@ const wmsConfig = computed(() => {
   return { url, layerName: selectedScenario.value };
 });
 
-const createWMSImageryLayer = (url, layerName) => {
-  const provider = new Cesium.WebMapServiceImageryProvider({
-    url: `${url}&format=image/png&transparent=true`,
-    layers: layerName,
-    proxy: new Cesium.DefaultProxy('/proxy/'),
-  });
+const createWMSImageryLayer = async (url, layerName) => {
+  console.log("Creating WMS layer:", { url, layerName });
 
-  console.log('WMS Request URL:', provider.url);
+  try {
+    const provider = new Cesium.WebMapServiceImageryProvider({
+      url: `${url}&format=image/png&transparent=true`,
+      layers: layerName,
+      proxy: new Cesium.DefaultProxy('/proxy/'),
+    });
 
-  const imageryLayer = new Cesium.ImageryLayer(provider);
-  imageryLayer.alpha = 1;
-  viewer.imageryLayers.add(imageryLayer);
-  previousSelected.value = true;
-
+    await provider.readyPromise;
+    const addedLayer = viewer.imageryLayers.addImageryProvider(provider);
+    addedLayer.alpha = 1;
+    floodLayers.push( addedLayer );
+    console.log("floodLayers after add", floodLayers)
+  
+  } catch (error) {
+    console.error("Error creating WMS layer:", error);
+  }
 };
 
 const updateWMS = async (config) => {
   if (!config || !config.layerName) return;
 
-  const imageryLayers = viewer.imageryLayers;
-  
-  // Remove the last imagery layer before adding a new one
-  if ( previousSelected.value ) {
-    const lastLayer = imageryLayers.get(imageryLayers.length - 1);
-    await imageryLayers.remove(lastLayer, true); // `true` ensures the layer is destroyed
-  }
+  // Remove previous layers
+  removeFloodLayers();
 
-  // Create and add new layer
-  createWMSImageryLayer(config.url, config.layerName);
+  if (config.layerName !== 'none') {
+    await createWMSImageryLayer( config.url, config.layerName);
+  }
+};
+
+const removeFloodLayers = () => {
+  console.log("layers before remove", viewer.imageryLayers._layers)
+
+  try {
+    if (Array.isArray(floodLayers) && floodLayers.length > 0) {
+    
+    // Remove each layer from the Cesium viewer
+    floodLayers.forEach(layer => {
+      if (viewer.imageryLayers.contains(layer)) {
+         viewer.imageryLayers.remove(layer);
+         console.log("removed")
+      }
+    });
+
+    floodLayers = [ ];
+    viewer.scene.requestRender();
+
+    }
+  } catch (error) {
+    console.error("Error removing floodlayer:", error);
+  }
+  
+
+  console.log("layers after remove", viewer.imageryLayers._layers)
 
 };
 

@@ -27,7 +27,7 @@ export const useGlobalStore = defineStore( 'global', {
 		isLoading: false,
 		showBuildingInfo: true,
 		isCameraRotated: false,
-		navbarWidth: Math.min(Math.max(window.innerWidth * 0.375, 400), 800),
+		navbarWidth: Math.min(Math.max(window.innerWidth * 0.375, 400), 800),	
 	} ),
 	actions: {
 		setShowBuildingInfo( status ) {

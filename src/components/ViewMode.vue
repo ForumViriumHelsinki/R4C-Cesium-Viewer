@@ -29,7 +29,7 @@ import { ref, watch, computed } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import Datasource from '../services/datasource.js';
-import Landcover from '../services/landcover.js'; 
+import { removeLandcover } from '../services/landcover';
 import Tree from '../services/tree.js';
 import FeaturePicker from '../services/featurepicker';
 
@@ -76,7 +76,7 @@ export default {
     const setCapitalRegion = async () => {       
       store.setView('capitalRegion');
       toggleStore.setHelsinkiView(false);
-      store.level === 'start' && toggleStore.reset() && await removeLandCover();
+      store.level === 'start' && toggleStore.reset() && await clearLandCover();
       await dataSourceService.removeDataSourcesAndEntities();
       await dataSourceService.loadGeoJsonDataSource(
         0.2,
@@ -94,9 +94,8 @@ export default {
       treeService.loadTrees( );
     };
 
-    const removeLandCover = async () => {
-		  const landcoverService = new Landcover();
-      landcoverService.removeLandcover();
+    const clearLandCover = async () => {
+      removeLandcover( store.landcoverLayers );
     };
 
     const capitalRegion = async () => {

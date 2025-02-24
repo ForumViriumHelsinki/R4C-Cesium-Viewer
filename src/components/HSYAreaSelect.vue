@@ -10,11 +10,13 @@
 
 <script>
 import { ref, watch, onMounted } from 'vue';
+import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 
 export default {
 	setup() {
+		const backgroundMapStore = useBackgroundMapStore();
 		const propsStore = usePropsStore();
 		const selectedArea = ref( '' );
 		const areaOptions = ref( [] );
@@ -45,7 +47,7 @@ export default {
 
 
 		watch( () => selectedArea.value, ( newValue ) => {
-			propsStore.setHSYSelectArea( newValue );
+			backgroundMapStore.setHSYSelectArea( newValue );
 			eventBus.emit( 'recreate piechart' );
 		} );
 

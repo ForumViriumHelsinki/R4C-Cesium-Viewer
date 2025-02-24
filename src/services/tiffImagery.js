@@ -1,11 +1,17 @@
 import TIFFImageryProvider from "tiff-imagery-provider";
+import { useGlobalStore } from '../stores/globalStore.js';
+import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
 
-export const changeTIFF = async ( selectedDate, tiffLayers, viewer ) => {
+export const changeTIFF = async ( ) => {
+    const store = useGlobalStore();
+    const backgroundMapStore = useBackgroundMapStore();
+    const ndviDate = backgroundMapStore.ndviDate;
+    const viewer = store.cesiumViewer;
+    const tiffLayers = backgroundMapStore.tiffLayers;
 
       try {
 
-        const tiffUrl = `./assets/images/ndvi_${selectedDate}.tiff`;
-
+        const tiffUrl = `./assets/images/ndvi_${ndviDate}.tiff`;
         const provider = await TIFFImageryProvider.fromUrl(tiffUrl, {
           tileSize: 512,
           minimumLevel: 0,
@@ -50,3 +56,22 @@ export const changeTIFF = async ( selectedDate, tiffLayers, viewer ) => {
         console.error("Error loading TIFF:", error);
       }
     }
+
+
+export const removeTIFF = async ( ) => {
+  const store = useGlobalStore();
+  const backgroundMapStore = useBackgroundMapStore();
+  const viewer = store.cesiumViewer;
+  const tiffLayers = backgroundMapStore.tiffLayers;
+
+  try {
+    while ( tiffLayers.length ) {
+      const layer = tiffLayers.shift();
+      if ( viewer.imageryLayers.contains( layer ) ) {
+        viewer.imageryLayers.remove( layer );
+      }
+    }
+  } catch (error) {
+    console.error("Error removing TIFF:", error);
+  }
+};   

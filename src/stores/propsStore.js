@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
 
 export const usePropsStore = defineStore( 'props', {
 	state: () => ( {
@@ -15,13 +14,10 @@ export const usePropsStore = defineStore( 'props', {
 		buildingHeatTimeseries: null,
 		heatFloodVulnerabilityEntity: null,
 		postalCodeData: null,
-		hsyYear: 2022,
-		hsySelectArea: 'Askisto',   
 		categoricalSelect: { text: 'Facade Material', value: 'julkisivu_s' },
 		numericalSelect: { text: 'Area', value: 'area_m2' },
 		socioEconomics: 'Alppila - Vallila',
-		hSYWMSLayers: null,
-		statsIndex: 'heat_index',
+		statsIndex: 'heat_index',		
 	} ),
 	actions: {
 		setStatsIndex(  index ){
@@ -39,9 +35,6 @@ export const usePropsStore = defineStore( 'props', {
 		setNumericalSelect( object ) {
 			this.numericalSelect = object;
 		},		
-		setHSYSelectArea( area ) {
-			this.hsySelectArea = area;
-		},
 		setPostalCodeData( data ) {
 			this.postalCodeData = data;
 		},		
@@ -84,27 +77,6 @@ export const usePropsStore = defineStore( 'props', {
 		setBuildingHeatTimeseries( heatTimeseries ) {
 			this.buildingHeatTimeseries = heatTimeseries;
 		},	
-		setHSYYear( year ) {
-			this.hsyYear = year;
-		},
 
-		    // Fetch WMS layers from the GetCapabilities response
-		async fetchHSYWMSLayers() {
-			try {
-				const response = await axios.get( 'https://kartta.hsy.fi/geoserver/wms?request=getCapabilities' );
-				const parser = new DOMParser();
-				const xmlDoc = parser.parseFromString( response.data, 'text/xml' );
-
-				const layers = Array.from( xmlDoc.getElementsByTagName( 'Layer' ) ).map( layer => {
-					const name = layer.getElementsByTagName( 'Name' )[0]?.textContent;
-					const title = layer.getElementsByTagName( 'Title' )[0]?.textContent;
-					return { name, title };
-				} );
-
-				this.setHSYWMSLayers( layers );
-			} catch ( error ) {
-				console.error( 'Failed to fetch WMS layers:', error );
-			}
-		},
 	},
 } );
