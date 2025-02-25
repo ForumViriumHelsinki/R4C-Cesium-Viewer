@@ -45,7 +45,6 @@ export default class FeaturePicker {
     */
 	processClick( event ) {
 
-    	console.log( 'Clicked at ' + String( event.x ) + ', ' + String( event.y ) );
     	this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
   	
 	}    
