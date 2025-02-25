@@ -62,9 +62,7 @@ export default {
 
     const fetchLayers = async () => {
       try {
-        console.log('Fetching layers from:', '/wms/layers');
         const response = await axios.get('/wms/layers');
-        console.log('Received response:', response.data);
         
         if (response.data) {
           const parser = new XMLParser({
@@ -73,7 +71,6 @@ export default {
           });
           // Parse the response.data, not undefined 'data' variable
           const parsedXml = parser.parse(response.data);
-          console.log('Parsed XML:', parsedXml);
 
           // Handle potential different XML structures
           const layerData = parsedXml.WMS_Capabilities?.Capability?.Layer?.Layer || [];
@@ -84,11 +81,9 @@ export default {
               title: layer.Title ? layer.Title.replace(/_/g, ' ') : layer.Name
             }));
 
-          console.log('Extracted layers:', layers);
           // Set the processed layers array, not the raw response data
           backgroundMapStore.setHSYWMSLayers(layers);
         } else {
-          console.error('No data received from WMS layers endpoint');
           backgroundMapStore.setHSYWMSLayers([]);
         }
       } catch (error) {
