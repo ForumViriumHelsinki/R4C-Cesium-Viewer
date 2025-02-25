@@ -1,15 +1,15 @@
 import Datasource from './datasource.js'; 
 import * as Cesium from 'cesium';
-import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { eventBus } from '../services/eventEmitter.js';
-const backendURL = import.meta.env.VITE_BACKEND_URL;
+import { useURLStore } from '../stores/urlStore.js';
 
 export default class Tree {
 	constructor( ) {
 		this.datasourceService = new Datasource();
 		this.store = useGlobalStore();
+        this.urlStore = useURLStore();
 	}
 
 	/**
@@ -28,10 +28,7 @@ export default class Tree {
 
 	async loadTreesWithKoodi( koodi ) {
 
-		// Construct the API endpoint URL
-		let url = '/pygeoapi/collections/tree/items?f=json&limit=100000&postinumero=' + this.store.postalcode + '&koodi=' + koodi;
-
-		fetch( url )
+		fetch( this.urlStore.tree( this.store.postalcode, koodi ) )
 			.then( ( response ) => response.json() )
 			.then( ( data ) => {
 				this.addTreesDataSource( data, koodi );
@@ -59,7 +56,7 @@ export default class Tree {
 
 		}
 
-		if ( Number( this.store.postalcode ) < 1001 ) {
+		if ( this.view === 'helsinki' ) {
 			
 			this.fetchAndAddTreeDistanceData( entities );
 
@@ -98,9 +95,7 @@ export default class Tree {
 			return;
 		}
 
-		// Fetch the tree data from the URL
-		const url = '/pygeoapi/collections/tree_building_distance/items?f=json&limit=100000&postinumero=' + this.store.postalcode;
-		fetch( url )
+		fetch( this.urlStore.treeBuildingDistance(this.store.postalcode) )
 			.then( response => response.json() )
 			.then( data => {
 

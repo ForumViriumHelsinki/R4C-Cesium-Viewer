@@ -8,6 +8,7 @@ import * as turf from '@turf/turf';
 import * as Cesium from 'cesium';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
+import { useURLStore } from '../stores/urlStore.js';
 
 export default class HSYBuilding {
     constructor() {
@@ -17,13 +18,14 @@ export default class HSYBuilding {
         this.buildingService = new Building();
         this.urbanHeatService = new UrbanHeat();
         this.toggleStore = useToggleStore();
+        this.urlStore = useURLStore();
     }
 
-    async loadHSYBuildings() {
+    async loadHSYBuildings( bbox ) {
         try {
-            const url = '/pygeoapi/collections/hsy_buildings/items?f=json&limit=5000&postinumero=' + this.store.postalcode;
             
-            const response = await fetch(url);
+            const url = bbox ? this.urlStore.hsyGridBuildings( bbox ) : this.urlStore.hsyBuildings( this.store.postalcode )
+            const response = await fetch( url );
             const data = await response.json();
 
             // Only process grid attributes if we have a current grid cell

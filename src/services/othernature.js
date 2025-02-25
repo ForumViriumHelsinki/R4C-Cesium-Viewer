@@ -1,12 +1,12 @@
 import Datasource from './datasource.js'; 
 import * as Cesium from 'cesium';
-import axios from 'axios';
 import { useGlobalStore } from '../stores/globalStore.js';
-		const proxyUrl = '/wms/proxy';
+import { useURLStore } from '../stores/urlStore.js';
 
 export default class Othernature {
 	constructor( ) {
 		this.store = useGlobalStore();
+		this.urlStore = useURLStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
 	}
@@ -18,10 +18,9 @@ export default class Othernature {
  */
 	async loadOtherNature() {
 
-		let url = '/pygeoapi/collections/othernature/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
-		fetch( url )
+		fetch( this.urlStore.otherNature( this.store.postalcode ) )
 			.then( response => response.json() )
 			.then( data => { this.addOtherNatureDataSource( data ); } )
 			.catch( error => { console.log( 'Error loading other nature data:', error ); } );

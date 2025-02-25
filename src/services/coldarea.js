@@ -1,15 +1,15 @@
 import * as Cesium from 'cesium';
-import axios from 'axios';
 import Datasource from './datasource.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 import ElementsDisplay from './elementsDisplay.js';
+import { useURLStore } from '../stores/urlStore.js';
 
 export default class ColdArea {
 	constructor( ) {
 		this.datasourceService = new Datasource();
 		this.elementsDisplayService = new ElementsDisplay();
 		this.store = useGlobalStore();
-
+        this.urlStore = useURLStore();
 	}
 
 	addColdPoint( location ) {
@@ -36,10 +36,9 @@ export default class ColdArea {
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
 	async loadColdAreas( ) {
-		const url = '/pygeoapi/collections/coldarea/items?f=json&limit=100000&posno=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
-		fetch( url )
+		fetch( this.urlStore.coldAreas( this.store.postalcode ) )
 			.then( response => response.json() )
 			.then( data => { this.addColdAreaDataSource( data ); } )
 			.catch( error => { console.log( 'Error loading ColdAreas:', error ); } );

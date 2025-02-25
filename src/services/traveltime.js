@@ -3,6 +3,7 @@ import Populationgrid from './populationgrid.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { useURLStore } from '../stores/urlStore.js';
 
 export default class Traveltime {
 	constructor( ) {
@@ -11,6 +12,7 @@ export default class Traveltime {
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
 		this.populationGridService = new Populationgrid();
+		this.urlStore = useURLStore();
 	}
 
 
@@ -21,7 +23,7 @@ export default class Traveltime {
  */
 	async loadTravelTimeData( from_id ) {
 
-		fetch( '/pygeoapi/collections/hki_travel_time/items?f=json&limit=2&from_id=' + from_id )
+		fetch( this.urlStore.hkiTravelTime( from_id ) )
 			.then( ( response ) => {
 				return response.json();
 			} )

@@ -68,14 +68,9 @@
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
-import * as Cesium from 'cesium';
-import { useGlobalStore } from '../stores/globalStore';
 import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms';
 
-const globalStore = useGlobalStore();
 const selectedScenario = ref(null);
-const viewer = globalStore.cesiumViewer;
-let floodLayers = [];
 
 const legendItemsCombination = ref([
   { color: '#002a8e', text: 'Current situation (2020)' },

@@ -1,9 +1,11 @@
 import TIFFImageryProvider from "tiff-imagery-provider";
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
+import { useURLStore } from '../stores/urlStore.js';
 
 export const changeTIFF = async ( ) => {
     const store = useGlobalStore();
+    const urlStore = useURLStore();
     const backgroundMapStore = useBackgroundMapStore();
     const ndviDate = backgroundMapStore.ndviDate;
     const viewer = store.cesiumViewer;
@@ -11,8 +13,7 @@ export const changeTIFF = async ( ) => {
 
       try {
 
-        const tiffUrl = `./assets/images/ndvi_${ndviDate}.tiff`;
-        const provider = await TIFFImageryProvider.fromUrl(tiffUrl, {
+        const provider = await TIFFImageryProvider.fromUrl(urlStore.ndviTiffUrl(ndviDate), {
           tileSize: 512,
           minimumLevel: 0,
           maximumLevel: 12,

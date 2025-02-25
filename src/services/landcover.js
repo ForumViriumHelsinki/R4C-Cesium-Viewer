@@ -1,17 +1,19 @@
 import { useGlobalStore } from '../stores/globalStore.js';
 import * as Cesium from 'cesium';
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
+import { useURLStore } from '../stores/urlStore.js';
 
 export const createHSYImageryLayer = async ( newLayers ) => {
   const store = useGlobalStore();
+  const urlStore = useURLStore();
+
   const backgroundMapStore = useBackgroundMapStore();
   const viewer = store.cesiumViewer;
 
-  const proxyUrl = '/wms/proxy';
   const layersList = newLayers ? newLayers : createLayersForHsyLandcover( backgroundMapStore );
 
   const provider = new Cesium.WebMapServiceImageryProvider({
-    url: proxyUrl,
+    url: urlStore.wmsProxy,
     layers: layersList,
   });
 

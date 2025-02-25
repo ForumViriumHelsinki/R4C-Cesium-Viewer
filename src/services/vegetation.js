@@ -1,11 +1,13 @@
 import Datasource from './datasource.js'; 
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useURLStore } from '../stores/urlStore.js';
 
 export default class Vegetation {
 	constructor( ) {
 		this.datasourceService = new Datasource();
 		this.store = useGlobalStore();
+		this.urlStore = useURLStore();
 	}
 
 	/**
@@ -14,10 +16,9 @@ export default class Vegetation {
  * @returns {Promise} - A promise that resolves once the data has been loaded
  */
 	async loadVegetation( ) {
-		const url = '/pygeoapi/collections/vegetation/items?f=json&limit=10000&postinumero=' + this.store.postalcode;
 		this.store.setIsLoading( true );
 
-		fetch( url )
+		fetch( this.urlStore.vegetation( this.store.postalcode )  )
 			.then( response => response.json() )
 			.then( data => { this.addVegetationDataSource( data ); } )
 			.catch( error => { console.log( 'Error loading vegetation:', error ); } );
