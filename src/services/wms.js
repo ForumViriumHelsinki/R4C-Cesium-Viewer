@@ -1,6 +1,5 @@
 import * as Cesium from 'cesium';
 import { usePropsStore } from '../stores/propsStore';
-import { useGlobalStore } from '../stores/globalStore';
 
 export default class Wms {
 	constructor() {
@@ -17,51 +16,4 @@ export default class Wms {
 		return new Cesium.ImageryLayer( provider );
 	}
 
-	createHSYImageryLayer( layers ) {
-		// Construct the proxy URL with the full WMS request URL encoded as a query parameter
-		const proxyUrl = '/wms/proxy';
-
-		// Use the proxy URL in the WebMapServiceImageryProvider
-		const provider = new Cesium.WebMapServiceImageryProvider( {
-			url: proxyUrl, // Point this to your backend proxy
-			layers: layers ? layers : createLayersForHsyLandcover( )
-		} );
-    
-		return new Cesium.ImageryLayer( provider );
-	}
-
-	reCreateHSYImageryLayer( layer ) {
-
-		const store = useGlobalStore();
-
-		store.cesiumViewer.imageryLayers.removeAll();
-		store.cesiumViewer.imageryLayers.add(
-			this.createHSYImageryLayer( layer )
-		);		
-	}
-
 }
-
-const createLayersForHsyLandcover = ( ) => {
-	const store = usePropsStore();
-	const year = store.hsyYear;
-	const layerNames = [
-		'asuminen_ja_maankaytto:maanpeite_avokalliot',
-		'asuminen_ja_maankaytto:maanpeite_merialue',
-		'asuminen_ja_maankaytto:maanpeite_muu_avoin_matala_kasvillisuus',
-		'asuminen_ja_maankaytto:maanpeite_muu_vetta_lapaisematon_pinta',
-		'asuminen_ja_maankaytto:maanpeite_paallystamaton_tie',
-		'asuminen_ja_maankaytto:maanpeite_paallystetty_tie',
-		'asuminen_ja_maankaytto:maanpeite_paljas_maa',
-		'asuminen_ja_maankaytto:maanpeite_pellot',
-		'asuminen_ja_maankaytto:maanpeite_puusto_10_15m',
-		'asuminen_ja_maankaytto:maanpeite_puusto_15_20m',
-		'asuminen_ja_maankaytto:maanpeite_puusto_2_10m',
-		'asuminen_ja_maankaytto:maanpeite_puusto_yli20m',
-		'asuminen_ja_maankaytto:maanpeite_vesi'
-	];
-
-	const layers = layerNames.map( name => `${ name }_${ year }` ).join( ',' );
-
-	return layers;
-};

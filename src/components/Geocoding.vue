@@ -61,7 +61,6 @@ import { useGlobalStore } from '../stores/globalStore';
 import { useToggleStore } from '../stores/toggleStore';
 import Camera from '../services/camera';
 import FeaturePicker from '../services/featurepicker';
-import Landcover from '../services/landcover';
 import { eventBus } from '../services/eventEmitter';
 
 // State variables
@@ -172,14 +171,6 @@ const moveCameraAndReset = (longitude, latitude) => {
   eventBus.emit('geocodingPrintEvent');
   featurePicker.loadPostalCode();
 
-  if (toggleStore.switchView) {
-    // Optionally switch to 2D view
-  }
-
-  if (toggleStore.landCover) {
-    const landcoverService = new Landcover();
-    landcoverService.emitLandcoverEvent();
-  }
 };
 
 // Watch for changes in `searchQuery` to trigger filtering

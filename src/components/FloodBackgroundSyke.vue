@@ -42,6 +42,10 @@
         label="SSP126, year 2100, recurrence 1/0020 years"
         value="coastal_flood_SSP126_2100_0020_with_protected"
       ></v-radio>
+      <v-radio
+        label="none"
+        value="none"
+      ></v-radio>      
     </v-radio-group>
 
     <div class="legend-container">
@@ -66,11 +70,12 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore';
+import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms';
 
 const globalStore = useGlobalStore();
 const selectedScenario = ref(null);
 const viewer = globalStore.cesiumViewer;
-const previousSelected = ref(false);
+let floodLayers = [];
 
 const legendItemsCombination = ref([
   { color: '#002a8e', text: 'Current situation (2020)' },
@@ -129,37 +134,17 @@ const wmsConfig = computed(() => {
   return { url, layerName: selectedScenario.value };
 });
 
-const createWMSImageryLayer = (url, layerName) => {
-  const provider = new Cesium.WebMapServiceImageryProvider({
-    url: `${url}&format=image/png&transparent=true`,
-    layers: layerName,
-    proxy: new Cesium.DefaultProxy('/proxy/'),
-  });
-
-  console.log('WMS Request URL:', provider.url);
-
-  const imageryLayer = new Cesium.ImageryLayer(provider);
-  imageryLayer.alpha = 1;
-  viewer.imageryLayers.add(imageryLayer);
-  previousSelected.value = true;
-
-};
-
 const updateWMS = async (config) => {
   if (!config || !config.layerName) return;
 
-  const imageryLayers = viewer.imageryLayers;
-  
-  // Remove the last imagery layer before adding a new one
-  if ( previousSelected.value ) {
-    const lastLayer = imageryLayers.get(imageryLayers.length - 1);
-    await imageryLayers.remove(lastLayer, true); // `true` ensures the layer is destroyed
+  // Remove previous layers
+  removeFloodLayers();
+
+  if (config.layerName !== 'none') {
+    await createFloodImageryLayer( config.url, config.layerName);
   }
-
-  // Create and add new layer
-  createWMSImageryLayer(config.url, config.layerName);
-
 };
+
 
 watch(selectedScenario, async () => {
   await nextTick(); // Ensure updates propagate before modifying layers

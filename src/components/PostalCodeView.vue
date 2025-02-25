@@ -305,11 +305,10 @@ style="display:none;"
 <script>
 
 import Datasource from '../services/datasource.js';
-import Landcover from '../services/landcover.js'; 
+import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
 import Tree from '../services/tree.js'; 
 import Building from '../services/building.js'; 
 import Vegetation from '../services/vegetation.js';
-import CapitalRegion from '../services/capitalRegion.js';
 import Othernature from '../services/othernature.js';
 import Plot from '../services/plot.js';
 import Camera from '../services/camera.js';
@@ -430,11 +429,10 @@ export default {
 
 			const landcover = document.getElementById( 'landCoverToggle' ).checked;
 			this.toggleStore.setLandCover( landcover );
-			const landcoverService = new Landcover();
 
 			landcover 
-    			? ( this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true ), landcoverService.addLandcover() ) 
-    			: landcoverService.removeLandcover();
+    			? ( this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true ), createHSYImageryLayer( ) ) 
+    			: removeLandcover( );
 
 		},
 

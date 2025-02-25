@@ -48,7 +48,7 @@ import { ref, watch } from 'vue';
 import HSYYearSelect from '../components/HSYYearSelect.vue';
 import HSYAreaSelect from '../components/HSYAreaSelect.vue';
 import PieChart from '../components/PieChart.vue';
-import Landcover from '../services/landcover.js'; // Import Landcover service
+import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
 import { useToggleStore } from '../stores/toggleStore.js'; // Store for toggling
 import { useGlobalStore } from '../stores/globalStore.js'; // Global store for Cesium viewer
 
@@ -63,7 +63,6 @@ export default {
     const landcover = ref(false); // State for checkbox
     const toggleStore = useToggleStore();
     const store = useGlobalStore();
-    const landcoverService = new Landcover(); // Landcover service
 
     // Watch to synchronize landcover state with the store's landCover value
     watch(
@@ -82,10 +81,10 @@ export default {
       if (isLandcoverChecked) {
         // Remove background map and add land cover layer
         store.cesiumViewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
-        landcoverService.addLandcover(); // Add land cover
+        createHSYImageryLayer( ); // Add land cover
       } else {
         // Remove land cover
-        landcoverService.removeLandcover();
+        removeLandcover( );
       }
     };
 

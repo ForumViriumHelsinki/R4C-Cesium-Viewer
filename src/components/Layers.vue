@@ -105,13 +105,13 @@ import { useGlobalStore } from '../stores/globalStore';
 import { eventBus } from '../services/eventEmitter.js';
 import Datasource from '../services/datasource.js';
 import Building from '../services/building.js';
-import Landcover from '../services/landcover.js'; 
+import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
 import Tree from '../services/tree.js';
 import Othernature from '../services/othernature.js';
 import Vegetation from '../services/vegetation';
 import Populationgrid from '../services/populationgrid.js';
 import Wms from '../services/wms.js';
-import { changeTIFF } from '../services/tiffImagery.js';
+import { changeTIFF, removeTIFF } from '../services/tiffImagery.js';
 
 export default {
   setup() {
@@ -218,7 +218,7 @@ const disableOtherLayer = (layer) => {
   if (layer === 'ndvi') {
     landCover.value = false;
     toggleStore.setLandCover(false);
-    new Landcover().removeLandcover();
+    removeLandcover( store.landcoverLayers, store.cesiumViewer );
   } else if (layer === 'landcover') {
     ndvi.value = false;
     toggleStore.setNDVI(false);
@@ -232,10 +232,9 @@ const disableOtherLayer = (layer) => {
 const addLandCover = () => {
   if (landCover.value && ndvi.value) disableOtherLayer('landcover');
 
-  toggleStore.setLandCover(landCover.value);
-  const landcoverService = new Landcover();
+    toggleStore.setLandCover(landCover.value);
+    landCover.value ? createHSYImageryLayer( ) : removeLandcover( );
 
-  landCover.value ? landcoverService.addLandcover() : landcoverService.removeLandcover();
 };
 
 const toggleNDVI = () => {
@@ -244,13 +243,10 @@ const toggleNDVI = () => {
   toggleStore.setNDVI(ndvi.value);
 
   if (ndvi.value) {
-    changeTIFF('2022-06-26', [], store.cesiumViewer);
+    changeTIFF( );
     eventBus.emit('addNDVI');
   } else {
-    store.cesiumViewer.imageryLayers.removeAll();
-    store.cesiumViewer.imageryLayers.add(
-      new Wms().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-    );
+    removeTIFF( );
   }
 };
 

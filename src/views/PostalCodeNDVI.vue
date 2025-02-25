@@ -3,14 +3,14 @@
     <v-row>
       <!-- Left: Radio Buttons -->
       <v-col cols="4">
-        <v-radio-group v-model="selectedDate" dense @change="updateImage">
+        <v-radio-group v-model="selectedDate" dense @change="updateImage" :disabled="!ndvi">
           <v-radio
             v-for="date in availableDates"
             :key="date"
             :label="date"
             :value="date"
             class="small-radio"
-          />
+            />
         </v-radio-group>
       </v-col>
 
@@ -24,17 +24,16 @@
 
 <script>
 import { onMounted, ref, onBeforeUnmount } from "vue";
-import { useGlobalStore } from "../stores/globalStore.js";
 import { useToggleStore } from "../stores/toggleStore.js";
+import { useBackgroundMapStore } from "../stores/backgroundMapStore.js";
 import { storeToRefs } from "pinia";
 import { eventBus } from '../services/eventEmitter.js';
 import { changeTIFF } from '../services/tiffImagery.js';
 
 export default {
   setup() {
-    const globalStore = useGlobalStore();
     const toggleStore = useToggleStore();
-    const viewer = globalStore.cesiumViewer;
+    const backgroundMapStore = useBackgroundMapStore();
 
     // Make ndvi reactive
     const { ndvi } = storeToRefs(toggleStore);
@@ -51,10 +50,9 @@ export default {
       "2024-06-27",
     ];
 
-    let tiffLayers = []; // Store active TIFF layers
-
     const updateImage = async () => {
-      changeTIFF( selectedDate.value, tiffLayers, viewer );
+      backgroundMapStore.setNdviDate( selectedDate.value );
+      changeTIFF( );
     }
 
     onMounted(async () => {
