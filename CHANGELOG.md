@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.10.1...r4c-cesium-viewer-v1.10.2) (2025-02-25)
+
+
+### Bug Fixes
+
+* removed console logs [#85](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/85) ([#119](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/119)) ([be1d0b5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/be1d0b5fa193485569fdeab11ccad88eacd882c3))
+
 ## [1.10.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.10.0...r4c-cesium-viewer-v1.10.1) (2025-02-21)
 
 
