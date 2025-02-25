@@ -8,8 +8,12 @@ export const useBackgroundMapStore = defineStore( 'backgroundMap', {
         ndviDate: '2022-06-26',
 		tiffLayers: [],
 		landcoverLayers: [],		
+		floodLayers: [],		
 	} ),
 	actions: {
+		setFloodLayers( layers ){
+			this.floodLayers = layers;
+		},			
 		setLandcoverLayers( layers ){
 			this.landcoverLayers = layers;
 		},		

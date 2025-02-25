@@ -51,7 +51,6 @@ import PieChart from '../components/PieChart.vue';
 import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
 import { useToggleStore } from '../stores/toggleStore.js'; // Store for toggling
 import { useGlobalStore } from '../stores/globalStore.js'; // Global store for Cesium viewer
-import { usePropsStore } from '../stores/propsStore.js';
 
 export default {
   components: {
@@ -63,7 +62,6 @@ export default {
     const showComponents = ref(true);
     const landcover = ref(false); // State for checkbox
     const toggleStore = useToggleStore();
-    const propsStore = usePropsStore();
     const store = useGlobalStore();
 
     // Watch to synchronize landcover state with the store's landCover value

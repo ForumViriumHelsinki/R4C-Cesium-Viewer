@@ -70,6 +70,7 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore';
+import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms';
 
 const globalStore = useGlobalStore();
 const selectedScenario = ref(null);
@@ -133,27 +134,6 @@ const wmsConfig = computed(() => {
   return { url, layerName: selectedScenario.value };
 });
 
-const createWMSImageryLayer = async (url, layerName) => {
-  console.log("Creating WMS layer:", { url, layerName });
-
-  try {
-    const provider = new Cesium.WebMapServiceImageryProvider({
-      url: `${url}&format=image/png&transparent=true`,
-      layers: layerName,
-      proxy: new Cesium.DefaultProxy('/proxy/'),
-    });
-
-    await provider.readyPromise;
-    const addedLayer = viewer.imageryLayers.addImageryProvider(provider);
-    addedLayer.alpha = 1;
-    floodLayers.push( addedLayer );
-    console.log("floodLayers after add", floodLayers)
-  
-  } catch (error) {
-    console.error("Error creating WMS layer:", error);
-  }
-};
-
 const updateWMS = async (config) => {
   if (!config || !config.layerName) return;
 
@@ -161,36 +141,10 @@ const updateWMS = async (config) => {
   removeFloodLayers();
 
   if (config.layerName !== 'none') {
-    await createWMSImageryLayer( config.url, config.layerName);
+    await createFloodImageryLayer( config.url, config.layerName);
   }
 };
 
-const removeFloodLayers = () => {
-  console.log("layers before remove", viewer.imageryLayers._layers)
-
-  try {
-    if (Array.isArray(floodLayers) && floodLayers.length > 0) {
-    
-    // Remove each layer from the Cesium viewer
-    floodLayers.forEach(layer => {
-      if (viewer.imageryLayers.contains(layer)) {
-         viewer.imageryLayers.remove(layer);
-         console.log("removed")
-      }
-    });
-
-    floodLayers = [ ];
-    viewer.scene.requestRender();
-
-    }
-  } catch (error) {
-    console.error("Error removing floodlayer:", error);
-  }
-  
-
-  console.log("layers after remove", viewer.imageryLayers._layers)
-
-};
 
 watch(selectedScenario, async () => {
   await nextTick(); // Ensure updates propagate before modifying layers
