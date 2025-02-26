@@ -119,7 +119,5 @@ def calculate_average_ndvi(request):
     
     message = f"NDVI calculated and saved to: gs://{bucket_name}/NDVI/vector_data/{json_output}"
 
-    print(message)
-
     # Return success response
     return jsonify({"message": message}), 200
