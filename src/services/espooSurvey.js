@@ -3,12 +3,14 @@ import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from './eventEmitter.js';
 import { usePropsStore } from '../stores/propsStore.js';
+import { useURLStore } from '../stores/urlStore.js';
 
 export default class EspooSurvey {
 	constructor() {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
+		this.urlStore = useURLStore();
 	}
 
 	/**
@@ -19,9 +21,7 @@ export default class EspooSurvey {
  */
 	async loadSurveyFeatures( collection ) {
 
-		let url = '/pygeoapi/collections/' + collection + '/items?f=json&limit=35000';
-
-		fetch( url )
+		fetch( this.urlStore.collectionUrl( collection ) )
 			.then( response => response.json() )
 			.then( data => { this.addSurveyDataSource( data, collection ); } )
 			.catch( error => { console.log( 'Error loading other nature data:', error ); } );

@@ -200,12 +200,9 @@ if (Array.isArray(entitiesArray)) {
 			// Construct the URL for the WFS request with the bounding box
 			if ( boundingBox ) {
 				const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`;
-            
-				// Replace 'postinumero' parameter with 'bbox' in your WFS request URL
-				const Url = `/pygeoapi/collections/hsy_buildings/items?f=json&limit=2000&bbox=${bboxString}`;
-            
+             
 				// Now you can use this URL to make your WFS request
-				this.hSYBuildingService.loadHSYBuildings( Url );	
+				this.hSYBuildingService.loadHSYBuildings( bboxString );	
 
 			}
 

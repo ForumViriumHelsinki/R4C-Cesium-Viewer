@@ -3,15 +3,14 @@ import Datasource from './datasource.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-
+import { useURLStore } from '../stores/urlStore.js';
 
 export default class Urbanheat {
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource( );
-
+        this.urlStore = useURLStore();
 	}
 
 	/**
@@ -89,7 +88,7 @@ export default class Urbanheat {
 		buildingStore.setBuildingFeatures( data );
 
 		try {
-			const response = await fetch( '/pygeoapi/collections/urban_heat_building/items?f=json&limit=2000&postinumero=' + postcode );
+			const response = await fetch( this.urlStore.urbanHeatHelsinki( postcode ) );
 			const urbanheat = await response.json();
 
 			for ( let i = 0; i < data.features.length; i++ ) {

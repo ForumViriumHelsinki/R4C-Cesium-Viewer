@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import { usePropsStore } from '../stores/propsStore';
+import { useURLStore } from '../stores/urlStore.js';
 
 export default class Wms {
 	constructor() {
@@ -7,8 +7,9 @@ export default class Wms {
 	}
 
 	createHelsinkiImageryLayer( layerName ) {
+		const urlStore = useURLStore();
 		const provider = new Cesium.WebMapServiceImageryProvider( {
-			url : 'https://kartta.hel.fi/ws/geoserver/avoindata/ows?SERVICE=WMS&',
+			url : urlStore.helsinkiWMS,
 			layers : layerName,
 			proxy: new Cesium.DefaultProxy( '/proxy/' )
 		} );

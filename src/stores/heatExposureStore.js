@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { useURLStore } from './urlStore.js';
 
 export const useHeatExposureStore = defineStore( 'heatExposure', {
 	state: () => ( {
@@ -12,13 +13,12 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 	actions: {
 		// Function to load Heat Exposure  data
 		async loadHeatExposure() {
-			const requestUrl = '/pygeoapi/collections/heatexposure/items?f=json&limit=1000';
-
+			const urlStore = useURLStore(); // Get the URL from the store
 			try {
 				let data = null;
 
 				if ( !data ) {
-					data = await this.getAllHeatExposureData( requestUrl );
+					data = await this.getAllHeatExposureData( urlStore.heatExposure() );
 				}
 
 				this.data = data;
