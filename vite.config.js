@@ -69,7 +69,7 @@ export default defineConfig( () => {
 							const url = new URL( proxyReq.path, 'https://geo.stat.fi' );
 							url.searchParams.set( 'service', 'WFS' );
 							url.searchParams.set( 'request', 'GetFeature' );
-							url.searchParams.set( 'typename', 'postialue:pno_tilasto_2024' );
+							url.searchParams.set( 'typename', 'postialue:pno_tilasto' );
 							url.searchParams.set( 'version', '2.0.0' );
 							url.searchParams.set( 'outputFormat', 'application/json' );
 							url.searchParams.set( 'CQL_FILTER', 'kunta IN (\'091\',\'092\',\'049\',\'235\')' );

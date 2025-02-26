@@ -3,9 +3,9 @@ null
 
 export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 	state: () => ( {
-		data: {}, // Stores the raw Paavo data
-		regionStatistics: {}, // Stores min and max values for attributes
-		helsinkiStatistics: {}
+		data: null, // Stores the raw Paavo data
+		regionStatistics: null, // Stores min and max values for attributes
+		helsinkiStatistics: null
 	} ),
 	getters: {
 		getDataByPostcode: ( state ) => ( postcode ) => {
@@ -32,6 +32,7 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 				this.addDataToStore( data );
 				this.addRegionStatisticsToStore();
 				this.addHelsinkiStatisticsToStore();
+				this.calculateRegionTotal();
 			} catch ( error ) {
 				console.error( 'Error fetching Paavo data:', error ); 
 			}
@@ -128,5 +129,56 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 			};
               
 		},
+
+		calculateRegionTotal() {
+    if (!this.data || this.data.length === 0) return;
+
+    const attributesToSum = [
+        'he_0_2', 'he_3_6', 'he_7_12', 'he_65_69', 'he_70_74', 'he_80_84', 'he_85_',
+        'he_vakiy', 'pt_tyott', 'ko_perus', 'ko_ika18y', 'te_taly', 'te_vuok_as'
+    ];
+    
+    const attributesToAverage = ['ra_as_kpa', 'hr_ktu'];
+    
+    let totalSums = {};
+    let totalAverages = {};
+    let count = this.data.length;
+    
+    // Initialize sums
+    attributesToSum.forEach(attr => totalSums[attr] = 0);
+    attributesToAverage.forEach(attr => totalAverages[attr] = 0);
+    
+    // Calculate sums and prepare averages
+    this.data.forEach(item => {
+        attributesToSum.forEach(attr => {
+            if (item[attr] !== undefined) {
+                totalSums[attr] += Number(item[attr]) || 0;
+            }
+        });
+        
+        attributesToAverage.forEach(attr => {
+            if (item[attr] !== undefined) {
+                totalAverages[attr] += Number(item[attr]) || 0;
+            }
+        });
+    });
+    
+    // Compute averages
+    attributesToAverage.forEach(attr => {
+        totalAverages[attr] = count > 0 ? totalAverages[attr] / count : 0;
+    });
+    
+    // Create the new "whole region" object
+    const wholeRegionEntry = {
+        nimi: "Whole Region",
+        postinumeroalue: "99999",
+        ...totalSums,
+        ...totalAverages
+    };
+    
+    // Append the new entry to the dataset
+    this.data.push(wholeRegionEntry);
+}
+
 	},
 } );

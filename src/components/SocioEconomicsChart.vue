@@ -167,9 +167,12 @@ export default {
 					: globalStore.averageHeatExposure.toFixed( 3 ); // Use heat exposure data
 
 				const yValues = calculateYValues( sosData, statsData, heatData );
-				const compareHeatData = helsinkiOrCapitalHeatExposure(
-					heatExposureStore.getDataById( compareData.postinumeroalue )
-				);
+
+				// if compareData.postinumeroalue is 999999 set compareHeatData to 0.5053521006138908
+    			const compareHeatData = compareData.postinumeroalue === "99999" 
+        			? 0.505
+        			: helsinkiOrCapitalHeatExposure( heatExposureStore.getDataById( compareData.postinumeroalue ));
+
 				const compareValues = calculateYValues( compareData, statsData, compareHeatData );
 				// Combine both yValues and compareValues arrays
 				const allYValues = yValues.concat(compareValues);
