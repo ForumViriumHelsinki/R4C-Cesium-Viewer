@@ -179,6 +179,7 @@ title="Syke Flood Background Maps"
                   </v-expansion-panel>
 
                   <v-expansion-panel
+                  v-if="showSosEco"
 class="pa-0 ma-0"
 title="Socioeconomics Diagram"
 >
@@ -300,6 +301,8 @@ import PrintBox from '../components/PrintBox.vue';
 import { useGlobalStore } from '../stores/globalStore'; // Import global store for current level
 import { usePropsStore } from '../stores/propsStore';
 import { useToggleStore } from '../stores/toggleStore';
+import { useHeatExposureStore } from '../stores/heatExposureStore';
+import { useSocioEconomicsStore } from '../stores/socioEconomicsStore';
 import Tree from '../services/tree';
 import Featurepicker from '../services/featurepicker';
 import Camera from '../services/camera';
@@ -333,6 +336,8 @@ export default {
 		const globalStore = useGlobalStore();
 		const propsStore = usePropsStore();
     const toggleStore = useToggleStore();
+    const heatExposureStore = useHeatExposureStore();
+    const socioEconomicsStore = useSocioEconomicsStore();
 		const panelVisible = ref( window.innerWidth > 600 ); ;
 		const currentLevel = computed( () => globalStore.level );
     const currentView = computed( () => globalStore.view );
@@ -340,6 +345,7 @@ export default {
 
 		const heatHistogramData = computed( () => propsStore.heatHistogramData );
     const scatterPlotEntities = computed( () => propsStore.scatterPlotEntities );
+    const showSosEco = computed( () => socioEconomicsStore.data && heatExposureStore.data ) ;
 
 		const togglePanel = () => {
 			panelVisible.value = !panelVisible.value;
@@ -394,7 +400,8 @@ export default {
       togglePanel,
       reset,
       returnToPostalCode,
-      ndvi
+      ndvi,
+      showSosEco
 		};
 	},
 };

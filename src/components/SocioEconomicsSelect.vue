@@ -27,7 +27,7 @@ export default {
 		const populateSelectFromStore = () => {
 			const nimiValues = getNimiDataFromStore();
 			areaOptions.value = nimiValues;
-			selectedArea.value = nimiValues[0] || ''; // Set the first area as default
+			selectedArea.value = nimiValues[ nimiValues.length - 4 ] || ''; // Set the whole region as default
 		};
 
 		const getNimiDataFromStore = () => toggleStore.helsinkiView ? socioEconomicsStore.getNimiForHelsinki() : socioEconomicsStore.getNimiForCapital();

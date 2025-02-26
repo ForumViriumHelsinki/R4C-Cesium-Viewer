@@ -3,7 +3,7 @@ import { useURLStore } from './urlStore.js';
 
 export const useHeatExposureStore = defineStore( 'heatExposure', {
 	state: () => ( {
-		data: {}, // Stores the raw Postal code data
+		data: null, // Stores the raw Postal code data
 	} ),
 	getters: {
 		getDataById: ( state ) => ( postcode ) => {
