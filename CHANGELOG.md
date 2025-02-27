@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.11.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.10.2...r4c-cesium-viewer-v1.11.0) (2025-02-27)
+
+
+### Features
+
+* [#130](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/130) ([#132](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/132)) ([da49f4d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/da49f4dc3f15c347c22688eba999f966f6fa6d5d))
+* Cloud functions docs [#74](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/74) ([#129](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/129)) ([2951287](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/29512873cd39b4ba45cb1351bfc10db7885a3a9b))
+* paavo updated 2025, only shown if data, can compare region ( default) [#121](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/121) ([#125](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/125)) ([b2320ce](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b2320ce3152e0c56738a3ba2e22b17f4c2e2ac02))
+* removed hardcoding  [#121](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/121) ([#127](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/127)) ([e716394](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e71639431f56801ce8f26c887e2538d342c29bec))
+
+
+### Bug Fixes
+
+* updated docs and calculation result [#97](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/97) ([#128](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/128)) ([e66713a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e66713a1215936b2caa5503c0772fbf39a20e639))
+
 ## [1.10.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.10.1...r4c-cesium-viewer-v1.10.2) (2025-02-25)
 
 
