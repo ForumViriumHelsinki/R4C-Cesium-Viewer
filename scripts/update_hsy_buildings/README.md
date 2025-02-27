@@ -51,3 +51,12 @@ The function returns a JSON response indicating the number of features inserted 
   "features_updated": 5
 }
 ```
+
+If no data is returned from the WFS service, an error response is returned:
+
+```json
+{
+  "status": "error",
+  "message": "No data returned from WFS"
+}
+```
