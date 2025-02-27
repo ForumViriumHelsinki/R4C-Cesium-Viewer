@@ -188,8 +188,8 @@ if __name__ == "__main__":
     year = sys.argv[2]
     index_column = sys.argv[3]
         
-    if year not in ["2022", "2020", "2018", "2016"]:
-        print("Year must be either 2022, 2020, 2018 or 2016")
+    if year not in ["2022", "2020", "2018", "2016", "2024"]:
+        print("Year must be either 2024, 2022, 2020, 2018 or 2016")
         sys.exit(1)
         
     main(geojson_path, year, index_column)

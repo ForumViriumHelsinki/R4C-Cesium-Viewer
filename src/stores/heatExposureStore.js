@@ -22,8 +22,6 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 				}
 
 				this.data = data;
-
-				console.log("this.data", this.data)
               
 			} catch ( error ) {
 				console.error( 'Error fetching postal codedata:', error );

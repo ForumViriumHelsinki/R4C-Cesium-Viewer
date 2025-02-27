@@ -8,8 +8,6 @@ export const createHSYImageryLayer = async ( newLayers ) => {
   const urlStore = useURLStore();
 
   const backgroundMapStore = useBackgroundMapStore();
-  const viewer = store.cesiumViewer;
-
   const layersList = newLayers ? newLayers : createLayersForHsyLandcover( backgroundMapStore );
 
   const provider = new Cesium.WebMapServiceImageryProvider({
@@ -20,22 +18,21 @@ export const createHSYImageryLayer = async ( newLayers ) => {
   await provider.readyPromise;
 
   // Add the new layer and update store
-  const addedLayer = viewer.imageryLayers.addImageryProvider(provider);
-  backgroundMapStore.landcoverLayers.push(addedLayer);
+  const addedLayer = store.cesiumViewer.imageryLayers.addImageryProvider( provider );
+  backgroundMapStore.landcoverLayers.push( addedLayer );
 
 };
 
 export const removeLandcover = () => {
   const store = useGlobalStore();
   const backgroundMapStore = useBackgroundMapStore();
-  const viewer = store.cesiumViewer;
 
   try {
     if (Array.isArray(backgroundMapStore.landcoverLayers) && backgroundMapStore.landcoverLayers.length > 0) {
       // Remove each layer from the viewer and store
       backgroundMapStore.landcoverLayers.forEach((layer) => {
-        if (viewer.imageryLayers.contains(layer)) {
-          viewer.imageryLayers.remove(layer);
+        if (store.cesiumViewer.imageryLayers.contains(layer)) {
+          store.cesiumViewer.imageryLayers.remove(layer);
         }
       });
 
