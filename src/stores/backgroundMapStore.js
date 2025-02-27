@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 export const useBackgroundMapStore = defineStore( 'backgroundMap', {
 	state: () => ( {
-		hsyYear: 2022,
+		hsyYear: 2024,
 		hsySelectArea: 'Askisto',   
 		hSYWMSLayers: null,
         ndviDate: '2022-06-26',

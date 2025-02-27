@@ -19,8 +19,8 @@ export default {
 	setup() {
 		const backgroundMapStore = useBackgroundMapStore();
 		const store = useGlobalStore();
-		const yearOptions = [ 2022, 2020, 2018, 2016 ];
-		const selectedYear = ref( 2022 );
+		const yearOptions = [ 2024, 2022, 2020, 2018, 2016 ];
+		const selectedYear = ref( 2024 );
 
 		watch( () => selectedYear.value, ( newValue ) => {
 			backgroundMapStore.setHSYYear( newValue );

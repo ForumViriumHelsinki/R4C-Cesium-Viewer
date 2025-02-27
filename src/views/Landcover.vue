@@ -115,7 +115,7 @@ export default {
 .hsy-year-select {
   position: absolute;
   bottom: -55px; /* Adjusts distance from bottom */
-  right: -270px; /* Adjusts distance from right */
+  right: -290px; /* Adjusts distance from right */
   width: 80px;
 }
 
