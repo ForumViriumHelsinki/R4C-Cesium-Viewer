@@ -196,7 +196,7 @@ def insert_to_db(buildings_gdf, date_str):
             cursor.executemany(insert_sql, data_to_insert)
             conn.commit()
             inserted_count = len(data_to_insert)
-            print(f"Inserted {inserted_count} records into hsy_building_heat.")
+            print(f"Inserted {inserted_count} records")
 
     except Exception as e:
         print(f"Database insert error: {e}")
