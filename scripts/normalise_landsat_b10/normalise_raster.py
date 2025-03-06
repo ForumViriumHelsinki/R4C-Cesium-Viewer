@@ -6,8 +6,6 @@ import numpy as np
 import geopandas as gpd
 from flask import jsonify
 from google.cloud import storage
-from google.cloud.sql.connector import Connector
-import pg8000
 
 def normalise_landsat_b10(request):
     """
@@ -18,22 +16,19 @@ def normalise_landsat_b10(request):
 
     date_str = request_json.get('date')
     bucket_name = request_json.get('bucket')
-    json_input = request_json.get('json_input')
 
     # Validate input parameters
-    if not date_str or not bucket_name or not json_input:
-        return jsonify({"error": "Missing required parameters: 'date', 'bucket', or 'json_input'"}), 400
+    if not date_str or not bucket_name:
+        return jsonify({"error": "Missing required parameters: 'date', 'bucket'"}), 400
 
     # Paths for the raster and vector files in the bucket
     folder_path = f'Thermal/raster_data/{date_str}/'
     landsat_file_name = f"{folder_path}{date_str}-00:00_{date_str}-23:59_Landsat_8-9_L2_B10_(Raw).tiff"
     output_raster = f"{folder_path}{date_str}_normalised.tiff"
-    json_path = f'Thermal/vector_data/{json_input}'
     metadata_path = "Thermal/heat_metadata.json"
 
     # Temporary file paths
     local_raster_path = '/tmp/thermal.tiff'
-    local_vector_path = '/tmp/vector.geojson'
     local_output_path = '/tmp/normalised.tiff'
     local_metadata_path = "/tmp/heat_metadata.json"
 
@@ -46,21 +41,10 @@ def normalise_landsat_b10(request):
         raster_blob = bucket.blob(landsat_file_name)
         raster_blob.download_to_filename(local_raster_path)
 
-        # Download vector file from GCS
-        vector_blob = bucket.blob(json_path)
-        vector_blob.download_to_filename(local_vector_path)
-
         # Open the raster and vector files
         with rasterio.open(local_raster_path) as src:
-            gdf = gpd.read_file(local_vector_path)
 
-            # Convert GeoDataFrame to GeoJSON features
-            features = [feature["geometry"] for _, feature in gdf.iterrows()]
-
-            # Clip the raster with the GeoJSON geometry
-            out_image, out_transform = mask(src, features, crop=True)
-            band = out_image[0]  # First band of the raster
-            src_profile = src.profile
+            band = src.read(1)  # First band of the raster
 
             # Exclude no-data and sub-zero values from the normalization calculation
             valid_pixels = band[(band > 0) & (band >= 273)]  # Ignore sub-zero temperatures
@@ -74,14 +58,19 @@ def normalise_landsat_b10(request):
             normalised_band = np.where(
                 (band >= 273),  # Only normalise valid temperatures
                 (band.astype(float) - actual_min) / (actual_max - actual_min),
-                -1  # Set ignored pixels to 0
+                0  # Set ignored pixels to 0
             )
 
             # Update the raster profile for output
-            src_profile.update(dtype=rasterio.float32, count=1, compress='lzw', transform=out_transform)
+            new_profile = src.profile.copy()
+            new_profile.update(
+                dtype=rasterio.float32,
+                count=1,
+                compress='lzw'
+            )
 
             # Write the normalised raster to a temporary file
-            with rasterio.open(local_output_path, 'w', **src_profile) as dst:
+            with rasterio.open(local_output_path, 'w', **new_profile) as dst:
                 dst.write(normalised_band.astype(rasterio.float32), 1)
 
         # Upload the normalised raster back to the GCS bucket
@@ -99,7 +88,7 @@ def normalise_landsat_b10(request):
 
     finally:
         # Clean up temporary files
-        for file_path in [local_raster_path, local_vector_path, local_output_path, local_metadata_path]:
+        for file_path in [local_raster_path, local_output_path, local_metadata_path]:
             if os.path.exists(file_path):
                 os.remove(file_path)
 
@@ -144,44 +133,3 @@ def save_heat_metadata(bucket, metadata_path, date, min_value, max_value, local_
 
     # Upload the updated file back to GCS
     blob.upload_from_filename(local_metadata_path)
-
-def insert_metadata_into_db(date_str, raster_min, raster_max, output_raster):
-    """
-    Inserts normalization metadata into Google Cloud SQL PostgreSQL.
-    """
-    instance_connection_name = os.environ.get("INSTANCE_NAME")
-    db_name = os.environ.get("DB_NAME")
-    db_user = os.environ.get("DB_USER")
-    db_password = os.environ.get("DB_PASSWORD")
-
-    connector = Connector()
-
-    def getconn() -> pg8000.dbapi.Connection:
-        return connector.connect(
-            instance_connection_name,
-            "pg8000",
-            user=db_user,
-            password=db_password,
-            db=db_name,
-        )
-
-    try:
-        conn = getconn()
-        cursor = conn.cursor()
-
-        # Insert metadata into table
-        insert_sql = """
-            INSERT INTO heat_metadata (date, raster_min, raster_max, raster_path)
-            VALUES (%s, %s, %s, %s)
-        """
-        print(insert_sql)
-        cursor.execute(insert_sql, (date_str, raster_min, raster_max, output_raster))
-        conn.commit()
-        cursor.close()
-        print("Metadata successfully inserted into Cloud SQL.")
-
-    except Exception as e:
-        print(f"Database insert error: {e}")
-
-    finally:
-        connector.close()

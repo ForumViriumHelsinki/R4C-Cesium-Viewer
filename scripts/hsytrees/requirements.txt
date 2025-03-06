@@ -1,4 +1,6 @@
-google-cloud-sql
+numpy
+google-cloud-storage
+flask
 geopandas
-shapely
-psycopg2-binary
+google-cloud-sql
+urllib3
