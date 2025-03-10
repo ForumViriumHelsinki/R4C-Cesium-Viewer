@@ -52,9 +52,23 @@ export default {
 			}
 		};
 
+		const addVtjPrtToPrint = ( entity, toPrint ) => {
+
+			toPrint += `vtj_prt: ${entity._id}<br/>`;
+
+			return toPrint;
+		}
+
 		const printEntity = ( entity, postno, view ) => {
 			let toPrint = '<u>Found following properties & values:</u><br/>';
 			let length = entity._properties._propertyNames.length;
+			let idLength = String(entity._id).length;
+
+			if ( idLength == 10 ) {
+				
+				toPrint = addVtjPrtToPrint( entity, toPrint );
+			
+			}
 
 			for ( let i = 0; i < length; ++i ) {
 				if ( goodForPrint( entity._properties, i ) ) {
