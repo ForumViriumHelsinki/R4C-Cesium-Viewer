@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.12.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.11.0...r4c-cesium-viewer-v1.12.0) (2025-03-12)
+
+
+### Features
+
+* added tree height [#135](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/135) ([#138](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/138)) ([e7c01e8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e7c01e8eef58eba355397545c4b564ec863b91b1))
+* Cloud functions update [#74](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/74) ([#133](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/133)) ([66b2af9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/66b2af9263b4215725af7c2d7ca8e74a79826f52))
+
+
+### Bug Fixes
+
+* added vtj_prt  [#136](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/136) ([#137](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/137)) ([12cd7eb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/12cd7ebe7ca7fb77f5df958d14bdb9f7bedc10cf))
+
 ## [1.11.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.10.2...r4c-cesium-viewer-v1.11.0) (2025-02-27)
 
 
