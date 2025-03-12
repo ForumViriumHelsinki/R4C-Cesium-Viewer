@@ -1,24 +1,20 @@
-#!/bin/bash
-
-# Google Cloud Function details
-CLOUD_FUNCTION_NAME="add_hsy_trees"
-REGION="europe-north1"
-
-# Static parameters
-TYPENAME="asuminen_ja_maankaytto:maanpeite_puusto_yli20m_2020"
-CITY="helsinki"
+CLOUD_RUN_URL="https://add-hsy-trees-179156192201.europe-north1.run.app/"
+TYPENAME="asuminen_ja_maankaytto:maanpeite_puusto_yli20m_2024"
+CITY="Helsinki"
 BUCKET="regions4climate"
 JSON_PATH="NDVI/vector_data/hsy_po.json"
 
-# Loop through height ranges from 0-4 to 76-80
 for LOWER_HEIGHT in $(seq 0 4 76); do
     UPPER_HEIGHT=$((LOWER_HEIGHT + 4))
 
     echo "Processing height range: $LOWER_HEIGHT - $UPPER_HEIGHT"
 
-    gcloud functions call $CLOUD_FUNCTION_NAME \
-        --region=$REGION \
-        --data '{
+    ACCESS_TOKEN=$(gcloud auth print-identity-token)
+
+    curl -X POST "$CLOUD_RUN_URL" \
+        -H "Authorization: Bearer $ACCESS_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{
             "typename": "'"$TYPENAME"'",
             "city": "'"$CITY"'",
             "bucket": "'"$BUCKET"'",

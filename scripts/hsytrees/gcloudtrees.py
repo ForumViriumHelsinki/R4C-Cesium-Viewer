@@ -39,8 +39,8 @@ def insert_to_db(trees_gdf):
         cursor = conn.cursor()
 
         insert_sql = f"""
-            INSERT INTO {insert_table} (postinumero, korkeus_ka_m, kohde_id, kunta, paaluokka, alaluokka, ryhma, koodi, kuvaus, geom)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, ST_MakeValid(ST_GeomFromText(%s, 4326)))
+            INSERT INTO {insert_table} (postinumero, korkeus_ka_m, kohde_id, kunta, koodi, kuvaus, geom)
+            VALUES (%s, %s, %s, %s, %s, %s, ST_MakeValid(ST_GeomFromText(%s, 4326)))
         """
 
         # Prepare data for insertion
@@ -49,7 +49,7 @@ def insert_to_db(trees_gdf):
             if row.geometry:  # Ensure valid geometry
                 
                 data_to_insert.append((
-                    row.postinumero, row.korkeus_ka_m, row.kohde_id, row.kunta, row.paaluokka, row.alaluokka, row.ryhma, row.koodi, row.kuvaus, row.geometry.wkt
+                    row.postinumero, row.korkeus_ka_m, row.kohde_id, row.kunta, row.koodi, row.kuvaus, row.geometry.wkt
                 ))
 
         # Batch insert into database
@@ -69,10 +69,27 @@ def insert_to_db(trees_gdf):
     return inserted_count  # Return the number of inserted records
 
 
-def fetch_wfs_data(typename, city, lowerHeight, upperHeight):
-
+def fetch_wfs_data(typename, city, lowerHeight=None, upperHeight=None):
+    """
+    Fetches data from a WFS server with optional height filtering.
+    
+    :param typename: The name of the feature type in WFS.
+    :param city: The city name to filter data.
+    :param lowerHeight: (Optional) The lower bound for height filtering (must be provided together with upperHeight).
+    :param upperHeight: (Optional) The upper bound for height filtering (must be provided together with lowerHeight).
+    :return: WFS data in JSON format.
+    """
     # Base URL for the WFS server
     wfs_url = 'https://kartta.hsy.fi/geoserver/wfs'
+
+    # Construct the CQL filter dynamically
+    cql_filter = f"kunta = '{city}' AND p_ala_m2 >= 1"
+
+    # Add height filtering only if both lowerHeight and upperHeight are provided
+    if lowerHeight is not None and upperHeight is not None:
+        cql_filter += f" AND korkeus_ka_m >= {lowerHeight} AND korkeus_ka_m < {upperHeight}"
+    elif lowerHeight is not None or upperHeight is not None:
+        raise ValueError("Both lowerHeight and upperHeight must be provided together or omitted.")
 
     # Parameters for the WFS request
     params = {
@@ -81,7 +98,7 @@ def fetch_wfs_data(typename, city, lowerHeight, upperHeight):
         'typename': typename,
         'version': '2.0.0',
         'outputFormat': 'application/json',
-        'CQL_FILTER': f"kunta IN ('{city}') AND p_ala_m2 >= 1 AND korkeus_ka_m >= {lowerHeight} AND korkeus_ka_m < {upperHeight}",
+        'CQL_FILTER': cql_filter,
         'srsName': 'EPSG:4326'
     }
 
@@ -100,56 +117,77 @@ def fetch_wfs_data(typename, city, lowerHeight, upperHeight):
     try:
         response = urllib.request.urlopen(request_url, context=ssl_context)
         data = json.loads(response.read())
-        return data                                                                                                                                                                                                                  
+        # Check if "features" exist and are non-empty
+        if "features" not in data or not data["features"]:
+            print("No data found from WFS with the given parameters.")
+            return None  # Return None if no data
+
+        return data                                                                                                                                                                                                                 
     except Exception as e:
         print(f"An error occurred: {e}")
     
 def spatial_relation_with_postal_code_areas(wfs_json, postal_code_gdf):
     """
-    Compare fetched WFS data with postal code GeoJSON file, join posno, and save to PostgreSQL table.
+    Clips WFS features by postal code areas and assigns the postal code (postinumero).
+    If a feature spans multiple postal code areas, it is split into multiple features.
     """
 
+    # Convert WFS JSON to GeoDataFrame
     wfs_gdf = gpd.GeoDataFrame.from_features(wfs_json["features"])
-    print(f"Number of filtered features: {len(wfs_gdf)}")
+    print(f"Number of fetched WFS features: {len(wfs_gdf)}")
 
+    # Ensure CRS consistency
     wfs_gdf.crs = "EPSG:4326"
     postal_code_gdf.crs = "EPSG:4326"
 
-    # Iterate over each feature in postal_code_gdf
-    for _, postalarea in postal_code_gdf.iterrows():
-        try:
-            # Clip the hsylandcover features by the district geometry
-            clipped = wfs_gdf.clip(postalarea.geometry)
+    # List to store new split features
+    split_features = []
 
-            # Skip if there are no clipped geometries
-            if clipped.empty:
-                continue
+    # Iterate over each WFS feature
+    for _, feature in wfs_gdf.iterrows():
+        feature_geom = feature.geometry
 
-            # Assign valid geometry WKT
-            for index, clipped_feature in clipped.iterrows():
-                if clipped_feature['geometry'].geom_type in ['Polygon', 'MultiPolygon']:
-                    wfs_gdf.at[index, 'geometry_wkt'] = clipped_feature['geometry'].wkt
-                else:
-                    print(f"Unsupported geometry type: {clipped_feature['geometry'].geom_type}")
-                    continue
-                        
-        except Exception as e:
-            print(f"An error occurred while processing postalarea {postalarea['posno']}: {e}")
-                
-    return wfs_gdf                 
+        # Iterate over each postal code area
+        for _, postalarea in postal_code_gdf.iterrows():
+            if feature_geom.intersects(postalarea.geometry):
+                # Clip feature to the postal area
+                clipped_geom = feature_geom.intersection(postalarea.geometry)
+
+                # Ensure valid geometry
+                if not clipped_geom.is_empty:
+                    new_feature = feature.copy()
+                    new_feature.geometry = clipped_geom
+                    new_feature["postinumero"] = postalarea["posno"]  # Assign postal code
+                    split_features.append(new_feature)
+
+    # Create a new GeoDataFrame with the split features
+    split_gdf = gpd.GeoDataFrame(split_features, crs="EPSG:4326")
+
+    print(f"Number of split features with assigned postal codes: {len(split_gdf)}")
+
+    return split_gdf              
 
 def add_hsy_trees(request):
     
     # Access data from the request arguments
-    request_json = request.get_json(silent=True)
+    request_json = request.get_json(silent=True) or {}
 
-    typename = request_json['typename']
-    city = request_json['city']
-    bucket_name = request_json['bucket']
-    lowerHeight = request_json['lowerHeight']
-    upperHeight = request_json['upperHeight']
-    json_path = request_json['json_path']
-    
+    typename = request_json.get('typename')
+    city = request_json.get('city')
+    bucket_name = request_json.get('bucket')
+    json_path = request_json.get('json_path')
+
+    # Retrieve height filters safely
+    lowerHeight = request_json.get('lowerHeight')
+    upperHeight = request_json.get('upperHeight')
+
+    if (lowerHeight is None and upperHeight is not None) or (lowerHeight is not None and upperHeight is None):
+        return jsonify({"error": "Both lowerHeight and upperHeight must be provided together or omitted."}), 400
+
+    # Ensure required parameters exist
+    if not all([typename, city, bucket_name, json_path]):
+        return jsonify({"error": "Missing required parameters: typename, city, bucket, or json_path."}), 400
+
     # Create a Google Cloud Storage client
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
@@ -161,6 +199,11 @@ def add_hsy_trees(request):
     gdf = gpd.read_file('/tmp/vector.geojson')
 
     wfs_json = fetch_wfs_data(typename, city, lowerHeight, upperHeight)
+    
+        # Check if no data was found
+    if wfs_json is None:
+        return jsonify({"status": "no_data", "message": "No data found from WFS with the given parameters."}), 200
+
     wfs_gdf = spatial_relation_with_postal_code_areas(wfs_json, gdf)
 
     # Insert data into database and get the count of inserted records

@@ -1,6 +1,6 @@
 numpy
 google-cloud-storage
+cloud-sql-python-connector[pg8000]
+pg8000
 flask
 geopandas
-google-cloud-sql
-urllib3
