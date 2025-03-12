@@ -126,22 +126,24 @@ export default class Tree {
  */
 	setTreePolygonMaterialColor( entity, description ) {
 
+		const height = entity._properties._korkeus_ka_m;
+
 		switch ( description ){
 		case 'Puusto yli 20 m':
 			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.7 );
-			entity.polygon.extrudedHeight = 22.5;
+            height ? extrudeTree( entity, entity._properties._korkeus_ka_m._value ) : extrudeTree( 22.5 );
 			break;
 		case 'puusto, 15 m - 20 m':
 			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.6 );
-			entity.polygon.extrudedHeight = 17.5;
+			height ? extrudeTree( entity, entity._properties._korkeus_ka_m._value ) : extrudeTree( 17.5 );
 			break;
 		case 'puusto, 10 m - 15 m':
 			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.55 );
-			entity.polygon.extrudedHeight = 12.5;
+			height ? extrudeTree( entity, entity._properties._korkeus_ka_m._value ) : extrudeTree( 12.5 );
 			break;
 		case 'puusto, 2 m - 10 m':
 			entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha( 0.5 );
-			entity.polygon.extrudedHeight = 6;
+			height ? extrudeTree( entity, entity._properties._korkeus_ka_m._value ) : extrudeTree( 6 );
 			break;
 		}	
 
@@ -170,10 +172,19 @@ export default class Tree {
 			entity.polygon.outlineWidth = 3; 
 
 			if ( entity._properties._description && entity.polygon ) {
+
 				this.setTreePolygonMaterialColor( entity, entity._properties._description._value );	
+
 			}
 		}
 
 	}
 
 }
+
+const extrudeTree = (entity, heightValue) => {
+    if (heightValue) {
+        entity.polygon.extrudedHeight = heightValue;
+    }
+};
+

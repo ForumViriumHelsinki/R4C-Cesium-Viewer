@@ -1,3 +1,5 @@
-google-cloud-sql
 geopandas
 pandas
+google-cloud-storage
+flask
+geopandas
