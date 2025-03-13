@@ -51,9 +51,6 @@ jobs:
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         with:
           push: ${{ github.event_name != 'pull_request' }}
           platforms: linux/amd64,linux/arm64
@@ -64,6 +61,8 @@ jobs:
             DOCKER_META_TITLE=${{ steps.meta.outputs.title }}
             DOCKER_META_VERSION_SEMVER=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
             DOCKER_META_REVISION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+            VITE_SENTRY_DSN=${{ secrets.VITE_SENTRY_DSN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: mode=max
