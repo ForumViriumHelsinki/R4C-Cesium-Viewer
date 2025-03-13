@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.12.0...r4c-cesium-viewer-v1.13.0) (2025-03-13)
+
+
+### Features
+
+* pass sentry dsn via env var ([#139](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/139)) ([b938631](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b938631cd2f20bb641f76896c6e8061742283f92))
+
 ## [1.12.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.11.0...r4c-cesium-viewer-v1.12.0) (2025-03-12)
 
 
