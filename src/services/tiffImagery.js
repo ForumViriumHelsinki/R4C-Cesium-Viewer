@@ -12,7 +12,6 @@ export const changeTIFF = async ( ) => {
     const tiffLayers = backgroundMapStore.tiffLayers;
 
       try {
-
         const provider = await TIFFImageryProvider.fromUrl(urlStore.ndviTiffUrl(ndviDate), {
           tileSize: 512,
           minimumLevel: 0,

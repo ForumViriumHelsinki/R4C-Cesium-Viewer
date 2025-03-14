@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 export const useURLStore = defineStore('url', {
   state: () => ({
-    imagesBase: './assets/images/',
+    imagesBase: '/ndvi_public',
     helsinkiWMS: 'https://kartta.hel.fi/ws/geoserver/avoindata/ows?SERVICE=WMS&',
     pygeoapiBase: import.meta.env.VITE_PYGEOAPI_BASE || '/pygeoapi/collections', // Base URL for pygeoapi
     wmsProxy: '/wms/proxy'
@@ -27,7 +27,7 @@ export const useURLStore = defineStore('url', {
       return `${state.pygeoapiBase}/hsy_buildings/items?f=json&limit=${limit}&bbox=${bboxString}`;
     },
     ndviTiffUrl: (state) => (ndviDate) => {
-      return `${state.imagesBase}ndvi_${ndviDate}.tiff`;
+      return `${state.imagesBase}/ndvi_${ndviDate}.tiff`;
     },
     otherNature: (state) => (postinumero, limit = 10000) => {
       return `${state.pygeoapiBase}/othernature/items?f=json&limit=${limit}&postinumero=${postinumero}`;
