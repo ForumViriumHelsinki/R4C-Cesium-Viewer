@@ -47,10 +47,6 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-          {{- if .Values.persistence.enabled }}
-          - name: r4c-data
-            mountPath: "/app/public/assets/data/"
-          {{- end }}
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -64,11 +60,6 @@ spec:
               name: {{ .Values.secrets.existing_secret }}
               {{- end }}
       volumes:
-      {{- if .Values.persistence.enabled }}
-      - name: r4c-data
-        persistentVolumeClaim:
-          claimName: {{ include "helm-r4c.fullname" . }}-data
-      {{- end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
