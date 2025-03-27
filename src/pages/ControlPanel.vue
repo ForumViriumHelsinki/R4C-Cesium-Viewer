@@ -122,7 +122,20 @@ class="pa-0 ma-0"
               <v-expansion-panels
 multiple
 class="pa-0 ma-0"
->  
+>
+
+                  <v-expansion-panel
+v-if="currentView === 'grid'"
+class="pa-0 ma-0"
+title="Add cooling centers"
+>
+                    <v-expansion-panel-text
+class="pa-0 ma-0"
+>
+                      <CoolingCenter />
+                    </v-expansion-panel-text>                                                           
+                  </v-expansion-panel>
+
 
                   <v-expansion-panel
 v-if="currentView === 'grid'"
@@ -311,6 +324,7 @@ import StatisticalGridOptions  from '../components/StatisticalGridOptions.vue';
 import FloodBackgroundSyke from '../components/FloodBackgroundSyke.vue';
 import PostalCodeNDVI from '../views/PostalCodeNDVI.vue'
 import { storeToRefs } from 'pinia';
+import CoolingCenter from '../components/CoolingCenter.vue';
 
 export default {
 	components: {
@@ -331,6 +345,7 @@ export default {
     StatisticalGridOptions,
     FloodBackgroundSyke,
     PostalCodeNDVI,
+    CoolingCenter,
 	},
 	setup() {
 		const globalStore = useGlobalStore();

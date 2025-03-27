@@ -7,11 +7,14 @@ import * as Cesium from 'cesium';
 import Camera from '../services/camera.js'; 
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { useMitigationStore } from '../stores/mitigationStore';
 
 // Reactive variables
 const propsStore = usePropsStore();
 const toggleStore = useToggleStore();
+const mitigationStore = useMitigationStore();
 
+const coolingCenters = computed(() => mitigationStore.coolingCenters );
 const statsIndex = computed( () => propsStore.statsIndex );
 const ndviActive = computed( () => toggleStore.ndvi );
 const baseAlpha = computed( () => ndviActive.value ? 0.4 : 0.8 );
@@ -20,6 +23,12 @@ const baseAlpha = computed( () => ndviActive.value ? 0.4 : 0.8 );
 watch([statsIndex, ndviActive], () => {
   updateGridColors(statsIndex.value);
 });
+
+watch(coolingCenters, () => {
+  if (statsIndex.value === 'heat_index') {
+    updateGridColors('heat_index');
+  }
+}, { deep: true });
 
 const heatColors = [
 	{ color: '#ffffcc', range: '< 0.2' },
@@ -149,12 +158,17 @@ const handleCombinedIndices = (entity, selectedIndex) => {
 };
 
 const handleOtherIndices = (entity, selectedIndex) => {
+
+    if ( selectedIndex === 'heat_index' ) {
+        heatIndex( entity );
+    } else {
     const dataAvailable = isDataAvailable(selectedIndex);
     const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
     const color = indexValue
         ? getColorForIndex(indexValue, selectedIndex)
         : Cesium.Color.WHITE.withAlpha( baseAlpha.value );
     entity.polygon.material = color;
+    }
 };
 
 const handleCombinedHeatFloodGreen = (entity) => {
@@ -173,6 +187,39 @@ const handleCombinedHeatFloodGreen = (entity) => {
         entity.polygon.extrudedHeight = greenSpaceValue * 250;
     } 
 };
+
+const heatIndex = ( entity ) => {
+
+            let heatIndexValue = entity.properties['heat_index']?.getValue();
+            if (heatIndexValue !== undefined && heatIndexValue !== null) {
+                const euref_x = entity.properties['euref_x']?.getValue();
+                const euref_y = entity.properties['euref_y']?.getValue();
+                
+                let reduction = 0;
+                const coolingCentersList = coolingCenters.value
+                
+                for ( let i = 0; i < coolingCentersList.length; i++ ) {
+                    const distanceX = Math.abs(coolingCentersList[ i ].euref_x - euref_x);
+                    const distanceY = Math.abs(coolingCentersList[ i ].euref_y - euref_y);
+
+                    
+                    if (distanceX === 0 && distanceY === 0) {
+                        reduction = Math.max(reduction, 0.25);
+                    } else if (distanceX <= 250 && distanceY <= 250) {
+                        reduction = Math.max(reduction, 0.2);
+                    } else if (distanceX <= 500 && distanceY <= 500) {
+                        reduction = Math.max(reduction, 0.15);
+                    } else if (distanceX <= 750 && distanceY <= 750) {
+                        reduction = Math.max(reduction, 0.1);
+                    } else if (distanceX <= 1000 && distanceY <= 1000) {
+                        reduction = Math.max(reduction, 0.05);
+                    }
+                }
+                
+                heatIndexValue = Math.max(0, heatIndexValue - reduction);
+                entity.polygon.material = getColorForIndex(heatIndexValue, 'heat_index');
+            }
+}
 
 const updateGridColors = async (selectedIndex) => {
     const dataSourceService = new DataSource();
