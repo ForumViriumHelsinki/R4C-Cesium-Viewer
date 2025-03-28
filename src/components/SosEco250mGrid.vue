@@ -15,6 +15,7 @@ const toggleStore = useToggleStore();
 const mitigationStore = useMitigationStore();
 
 const coolingCenters = computed(() => mitigationStore.coolingCenters );
+const reachability = computed(() => mitigationStore.reachability );
 const statsIndex = computed( () => propsStore.statsIndex );
 const ndviActive = computed( () => toggleStore.ndvi );
 const baseAlpha = computed( () => ndviActive.value ? 0.4 : 0.8 );
@@ -190,36 +191,56 @@ const handleCombinedHeatFloodGreen = (entity) => {
 
 const heatIndex = ( entity ) => {
 
-            let heatIndexValue = entity.properties['heat_index']?.getValue();
-            if (heatIndexValue !== undefined && heatIndexValue !== null) {
-                const euref_x = entity.properties['euref_x']?.getValue();
-                const euref_y = entity.properties['euref_y']?.getValue();
+    let heatIndexValue = entity.properties['heat_index']?.getValue();
+    if ( heatIndexValue !== undefined && heatIndexValue !== null ) {
+        const euref_x = entity.properties[ 'euref_x' ]?.getValue();
+        const euref_y = entity.properties[ 'euref_y' ]?.getValue();
                 
-                let reduction = 0;
-                const coolingCentersList = coolingCenters.value
+        let reduction = 0; 
+        const coolingCentersList = coolingCenters.value
                 
-                for ( let i = 0; i < coolingCentersList.length; i++ ) {
-                    const distanceX = Math.abs(coolingCentersList[ i ].euref_x - euref_x);
-                    const distanceY = Math.abs(coolingCentersList[ i ].euref_y - euref_y);
+        for ( let i = 0; i < coolingCentersList.length; i++ ) {
 
-                    
-                    if (distanceX === 0 && distanceY === 0) {
-                        reduction = Math.max(reduction, 0.25);
-                    } else if (distanceX <= 250 && distanceY <= 250) {
-                        reduction = Math.max(reduction, 0.2);
-                    } else if (distanceX <= 500 && distanceY <= 500) {
-                        reduction = Math.max(reduction, 0.15);
-                    } else if (distanceX <= 750 && distanceY <= 750) {
-                        reduction = Math.max(reduction, 0.1);
-                    } else if (distanceX <= 1000 && distanceY <= 1000) {
-                        reduction = Math.max(reduction, 0.05);
-                    }
-                }
-                
-                heatIndexValue = Math.max(0, heatIndexValue - reduction);
-                entity.polygon.material = getColorForIndex(heatIndexValue, 'heat_index');
+            const center = coolingCentersList[ i ];
+
+            // **Euclidean Distance Formula**
+            const distance = Math.sqrt(
+                Math.pow( center.euref_x - euref_x, 2 ) + Math.pow( center.euref_y - euref_y, 2)
+            );
+
+            const currentReduction = getReductionValue( distance );
+            
+            if ( currentReduction > 0 ) {
+
+                reduction = Math.max( reduction, currentReduction );
+                mitigationStore.addCell( entity.properties[ 'grid_id' ]?.getValue() );
+                mitigationStore.addImpact( reduction );
+
             }
+        }
+                
+        heatIndexValue = Math.max( 0, heatIndexValue - reduction );
+        entity.polygon.material = getColorForIndex( heatIndexValue, 'heat_index' );
+
+    }
 }
+
+const getReductionValue = ( distance ) => {
+    switch ( true ) {
+        case distance === reachability.value * 0:
+            return 0.25;
+        case distance <= reachability.value * 0.25:
+            return 0.2;
+        case distance <= reachability.value * 0.5:
+            return 0.15;
+        case distance <= reachability.value * 0.75:
+            return 0.1;
+        case distance <= reachability.value:
+            return 0.05;
+        default:
+            return 0;
+    }
+};
 
 const updateGridColors = async (selectedIndex) => {
     const dataSourceService = new DataSource();
