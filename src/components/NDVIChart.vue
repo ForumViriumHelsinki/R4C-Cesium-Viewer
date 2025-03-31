@@ -1,16 +1,27 @@
 <template>
   <div class="chart-container">
     <h3>
-      <a href="https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/ndvi/" target="_blank">
+      <a
+href="https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/ndvi/"
+target="_blank"
+>
         NDVI
       </a> Distribution for {{ selectedDate }}
     </h3>
-    <svg ref="chart" width="400" height="250"></svg>
+    <svg
+ref="chart"
+width="400"
+height="250"
+/>
 
     <!-- Updated Legend with text below -->
     <div class="legend">
-      <div v-for="(color, index) in ndviColors" :key="index" class="legend-item">
-        <span :style="{ backgroundColor: color }"></span>
+      <div
+v-for="(color, index) in ndviColors"
+:key="index"
+class="legend-item"
+>
+        <span :style="{ backgroundColor: color }"/>
         <small>{{ labels[index] }}</small>
       </div>
     </div>

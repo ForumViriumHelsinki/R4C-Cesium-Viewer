@@ -137,9 +137,11 @@ class="extrusion-note"
       label="Select Index"
       style="max-width: 300px;"
       @update:model-value="handleSelectionChange"
-    ></v-select>
+    />
 
-    <p class="index-description">{{ selectedIndexDescription }}</p>
+    <p class="index-description">
+{{ selectedIndexDescription }}
+</p>
 
     <div
 v-if="legendExpanded"

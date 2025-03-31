@@ -4,6 +4,8 @@ export const useMitigationStore = defineStore( 'mitigation', {
     state: () => ( {
         coolingCenters: [],	
         reachability: 1000,
+        maxReduction: 0.25,
+        minReduction: 0.05,
         affected: [],
         impact: 0	
     } ),
@@ -21,6 +23,14 @@ export const useMitigationStore = defineStore( 'mitigation', {
             this.coolingCenters = [];
             this.affected = [];
             this.impact = 0;
+        },
+        getCoolingCenterCount(gridId) {
+            return this.coolingCenters.filter(center => center.grid_id === gridId).length;
+        },        
+        getCoolingCapacity(gridId) {
+            return this.coolingCenters
+                .filter(center => center.grid_id === gridId)
+                .reduce((total, center) => total + center.capacity, 0);
         }
     },
 });

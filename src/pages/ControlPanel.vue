@@ -20,10 +20,7 @@
           :width="drawerWidth"
         >
           <v-list dense>
-            <v-list-item-group>
               <v-list-item class="pa-0 ma-0">
-                <v-list-item-content class="pa-0 ma-0">
-
                   <v-tooltip
 location="bottom"
 class="tooltip"
@@ -76,21 +73,13 @@ class="tooltip"
                     </template>
                     <span>Rotate camera 180 degrees</span>
                   </v-tooltip>
-
-                </v-list-item-content>
               </v-list-item>
               
               <v-list-item class="pa-0 ma-0">
-                <v-list-item-content class="pa-0 ma-0">
                   <v-list-item-title>View Mode</v-list-item-title>
 
                  <!-- Include ViewMode component here -->
                   <ViewMode />
-
-                </v-list-item-content>                
-                  <v-list-item-content
-class="pa-0 ma-0"
->
                     <v-container
 fluid
 class="pa-0 ma-0 custom-container"
@@ -115,7 +104,6 @@ class="pa-0 ma-0"
                         </v-col>
                       </v-row>
                     </v-container>
-                  </v-list-item-content>
               </v-list-item>
 
               <!-- Add `multiple` prop here to allow multiple panels to stay open -->
@@ -125,7 +113,7 @@ class="pa-0 ma-0"
 >
 
                   <v-expansion-panel
-v-if="currentView === 'grid'"
+v-if="currentView === 'grid' && statsIndex === 'heat_index'"
 class="pa-0 ma-0"
 title="Add cooling centers"
 >
@@ -150,8 +138,8 @@ class="pa-0 ma-0"
                   </v-expansion-panel>
 
                   <v-expansion-panel
-class="pa-0 ma-0"
 v-if="currentView !== 'grid'"
+class="pa-0 ma-0"
 title="NDVI"
 >
                     <v-expansion-panel-text
@@ -284,7 +272,6 @@ title="Geocoding"
                 </v-expansion-panel> 
                                
               </v-expansion-panels>
-            </v-list-item-group>
           </v-list>
 <template #append>
           <div class="text-center text-subtitle-2">
@@ -359,6 +346,7 @@ export default {
     const { ndvi } = storeToRefs(toggleStore);
 
 		const heatHistogramData = computed( () => propsStore.heatHistogramData );
+    const statsIndex = computed( () => propsStore.statsIndex );
     const scatterPlotEntities = computed( () => propsStore.scatterPlotEntities );
     const showSosEco = computed( () => socioEconomicsStore.data && heatExposureStore.data ) ;
 
@@ -416,7 +404,8 @@ export default {
       reset,
       returnToPostalCode,
       ndvi,
-      showSosEco
+      showSosEco,
+      statsIndex
 		};
 	},
 };

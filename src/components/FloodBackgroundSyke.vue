@@ -9,43 +9,43 @@
       <v-radio
         label="Stormwater flood map water depth 52 mm rainfall in 1 hour"
         value="HulevesitulvaVesisyvyysSade52mmMallinnettuAlue"
-      ></v-radio>
+      />
       <v-radio
         label="Stormwater flood map water depth 80 mm rainfall in 1 hour"
         value="HulevesitulvaVesisyvyysSade80mmMallinnettuAlue"
-      ></v-radio>              
+      />              
       <v-radio
         label="Flood hazard areas under different emission scenarios"
         value="SSP585_re_with_SSP245_with_SSP126_with_current"
-      ></v-radio>
+      />
       <v-radio
         label="SSP585, year 2050, recurrence 1/0020 years"
         value="coastal_flood_SSP585_2050_0020_with_protected"
-      ></v-radio>
+      />
       <v-radio
         label="SSP585, year 2100, recurrence 1/0020 years"
         value="coastal_flood_SSP585_2100_0020_with_protected"
-      ></v-radio>
+      />
       <v-radio
         label="SSP245, year 2050, recurrence 1/0020 years"
         value="coastal_flood_SSP245_2050_0020_with_protected"
-      ></v-radio>
+      />
       <v-radio
         label="SSP245, year 2100, recurrence 1/0020 years"
         value="coastal_flood_SSP245_2100_0020_with_protected"
-      ></v-radio>
+      />
       <v-radio
         label="SSP126, year 2050, recurrence 1/0020 years"
         value="coastal_flood_SSP126_2050_0020_with_protected"
-      ></v-radio>
+      />
       <v-radio
         label="SSP126, year 2100, recurrence 1/0020 years"
         value="coastal_flood_SSP126_2100_0020_with_protected"
-      ></v-radio>
+      />
       <v-radio
         label="none"
         value="none"
-      ></v-radio>      
+      />      
     </v-radio-group>
 
     <div class="legend-container">
@@ -60,7 +60,10 @@
         <span class="legend-text">{{ item.text }}</span>
       </div>
       <div class="reference">
-        Open data distributed by <a href="https://www.syke.fi/en" target="_blank">Finnish Environment Institute (Syke)</a> is licensed under Creative Commons Attribution 4.0 International licence.
+        Open data distributed by <a
+href="https://www.syke.fi/en"
+target="_blank"
+>Finnish Environment Institute (Syke)</a> is licensed under Creative Commons Attribution 4.0 International licence.
       </div>
     </div>
   </div>

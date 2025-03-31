@@ -1,4 +1,4 @@
-<template><div></div></template>
+<template><div/></template>
 
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue';
@@ -15,7 +15,7 @@ const toggleStore = useToggleStore();
 const mitigationStore = useMitigationStore();
 
 const coolingCenters = computed(() => mitigationStore.coolingCenters );
-const reachability = computed(() => mitigationStore.reachability );
+const { reachability, maxReduction, minReduction } = mitigationStore;
 const statsIndex = computed( () => propsStore.statsIndex );
 const ndviActive = computed( () => toggleStore.ndvi );
 const baseAlpha = computed( () => ndviActive.value ? 0.4 : 0.8 );
@@ -211,35 +211,23 @@ const heatIndex = ( entity ) => {
             const currentReduction = getReductionValue( distance );
             
             if ( currentReduction > 0 ) {
-
-                reduction = Math.max( reduction, currentReduction );
+                reduction += currentReduction;
                 mitigationStore.addCell( entity.properties[ 'grid_id' ]?.getValue() );
-                mitigationStore.addImpact( reduction );
+                mitigationStore.addImpact( currentReduction );
 
             }
         }
-                
+
         heatIndexValue = Math.max( 0, heatIndexValue - reduction );
         entity.polygon.material = getColorForIndex( heatIndexValue, 'heat_index' );
 
     }
 }
 
-const getReductionValue = ( distance ) => {
-    switch ( true ) {
-        case distance === reachability.value * 0:
-            return 0.25;
-        case distance <= reachability.value * 0.25:
-            return 0.2;
-        case distance <= reachability.value * 0.5:
-            return 0.15;
-        case distance <= reachability.value * 0.75:
-            return 0.1;
-        case distance <= reachability.value:
-            return 0.05;
-        default:
-            return 0;
-    }
+const getReductionValue = (distance) => {
+    if ( distance >= reachability ) return 0;
+
+    return maxReduction - ( distance / reachability ) * ( maxReduction - minReduction );
 };
 
 const updateGridColors = async (selectedIndex) => {
