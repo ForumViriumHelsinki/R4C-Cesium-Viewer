@@ -3,7 +3,12 @@
     <v-row>
       <!-- Left: Radio Buttons -->
       <v-col cols="4">
-        <v-radio-group v-model="selectedDate" dense @change="updateImage" :disabled="!ndvi">
+        <v-radio-group
+v-model="selectedDate"
+dense
+:disabled="!ndvi"
+@change="updateImage"
+>
           <v-radio
             v-for="date in availableDates"
             :key="date"
@@ -16,7 +21,7 @@
 
       <!-- Right: NDVI Chart -->
       <v-col cols="8">
-        <NDVIChart :selectedDate="selectedDate" />
+        <NDVIChart :selected-date="selectedDate" />
       </v-col>
     </v-row>
   </v-container>

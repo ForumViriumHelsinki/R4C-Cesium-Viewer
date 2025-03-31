@@ -1,4 +1,4 @@
-<template><div></div></template>
+<template><div/></template>
 
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue';
@@ -7,11 +7,15 @@ import * as Cesium from 'cesium';
 import Camera from '../services/camera.js'; 
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { useMitigationStore } from '../stores/mitigationStore';
 
 // Reactive variables
 const propsStore = usePropsStore();
 const toggleStore = useToggleStore();
+const mitigationStore = useMitigationStore();
 
+const coolingCenters = computed(() => mitigationStore.coolingCenters );
+const { reachability, maxReduction, minReduction } = mitigationStore;
 const statsIndex = computed( () => propsStore.statsIndex );
 const ndviActive = computed( () => toggleStore.ndvi );
 const baseAlpha = computed( () => ndviActive.value ? 0.4 : 0.8 );
@@ -20,6 +24,12 @@ const baseAlpha = computed( () => ndviActive.value ? 0.4 : 0.8 );
 watch([statsIndex, ndviActive], () => {
   updateGridColors(statsIndex.value);
 });
+
+watch(coolingCenters, () => {
+  if (statsIndex.value === 'heat_index') {
+    updateGridColors('heat_index');
+  }
+}, { deep: true });
 
 const heatColors = [
 	{ color: '#ffffcc', range: '< 0.2' },
@@ -149,12 +159,17 @@ const handleCombinedIndices = (entity, selectedIndex) => {
 };
 
 const handleOtherIndices = (entity, selectedIndex) => {
+
+    if ( selectedIndex === 'heat_index' ) {
+        heatIndex( entity );
+    } else {
     const dataAvailable = isDataAvailable(selectedIndex);
     const indexValue = dataAvailable ? entity.properties[selectedIndex]?.getValue() : undefined;
     const color = indexValue
         ? getColorForIndex(indexValue, selectedIndex)
         : Cesium.Color.WHITE.withAlpha( baseAlpha.value );
     entity.polygon.material = color;
+    }
 };
 
 const handleCombinedHeatFloodGreen = (entity) => {
@@ -172,6 +187,47 @@ const handleCombinedHeatFloodGreen = (entity) => {
         // Extrude based on the green space index
         entity.polygon.extrudedHeight = greenSpaceValue * 250;
     } 
+};
+
+const heatIndex = ( entity ) => {
+
+    let heatIndexValue = entity.properties['heat_index']?.getValue();
+    if ( heatIndexValue !== undefined && heatIndexValue !== null ) {
+        const euref_x = entity.properties[ 'euref_x' ]?.getValue();
+        const euref_y = entity.properties[ 'euref_y' ]?.getValue();
+                
+        let reduction = 0; 
+        const coolingCentersList = coolingCenters.value
+                
+        for ( let i = 0; i < coolingCentersList.length; i++ ) {
+
+            const center = coolingCentersList[ i ];
+
+            // **Euclidean Distance Formula**
+            const distance = Math.sqrt(
+                Math.pow( center.euref_x - euref_x, 2 ) + Math.pow( center.euref_y - euref_y, 2)
+            );
+
+            const currentReduction = getReductionValue( distance );
+            
+            if ( currentReduction > 0 ) {
+                reduction += currentReduction;
+                mitigationStore.addCell( entity.properties[ 'grid_id' ]?.getValue() );
+                mitigationStore.addImpact( currentReduction );
+
+            }
+        }
+
+        heatIndexValue = Math.max( 0, heatIndexValue - reduction );
+        entity.polygon.material = getColorForIndex( heatIndexValue, 'heat_index' );
+
+    }
+}
+
+const getReductionValue = (distance) => {
+    if ( distance >= reachability ) return 0;
+
+    return maxReduction - ( distance / reachability ) * ( maxReduction - minReduction );
 };
 
 const updateGridColors = async (selectedIndex) => {

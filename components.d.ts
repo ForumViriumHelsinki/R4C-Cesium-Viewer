@@ -12,6 +12,7 @@ declare module 'vue' {
     BuildingInformation: typeof import('./src/components/BuildingInformation.vue')['default']
     BuildingTreeChart: typeof import('./src/components/BuildingTreeChart.vue')['default']
     CategoricalSelect: typeof import('./src/components/CategoricalSelect.vue')['default']
+    CoolingCenter: typeof import('./src/components/CoolingCenter.vue')['default']
     DisclaimerPopup: typeof import('./src/components/DisclaimerPopup.vue')['default']
     Filters: typeof import('./src/components/Filters.vue')['default']
     FloodBackgroundSyke: typeof import('./src/components/FloodBackgroundSyke.vue')['default']

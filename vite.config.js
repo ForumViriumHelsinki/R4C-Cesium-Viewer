@@ -84,6 +84,12 @@ export default defineConfig( () => {
 					secure: false,
 					rewrite: ( path ) => path.replace( /^\/wms\/proxy/, '/geoserver/wms' ),
 				},
+				'/ndvi_public': {
+					target: 'https://storage.googleapis.com',
+					changeOrigin: true,
+					secure: false,
+					rewrite: ( path ) => path.replace( /^\/wms\/proxy/, '/ndvi_public' ),
+				},				
 				'/terrain-proxy': {
 					target: 'https://kartta.hel.fi',
 					changeOrigin: true,
