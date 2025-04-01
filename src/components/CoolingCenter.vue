@@ -88,7 +88,7 @@ const handleMapClick = (clickEvent) => {
 
   if (Cesium.defined(pickedObject) && pickedObject.id) {
     const entity = pickedObject.id;
-    addCoolingCenter( entity );
+    entity._properties && addCoolingCenter( entity );
     selectingGrid.value = false;
 
   }
@@ -115,54 +115,53 @@ const getEntityCentroid = (entity) => {
     return Cesium.Cartesian3.fromDegrees(longitude, latitude);
 };
 
-const addCoolingCenter = ( entity ) => {
+const addCoolingCenter = (entity) => {
+  const gridId = entity.properties.grid_id?.getValue();
+  if (mitigationStore.getCoolingCenterCount(gridId) >= 5) {
+    alert("Maximum 5 cooling centers per grid reached!");
+    return;
+  }
 
-    const gridId = entity.properties.grid_id?.getValue();
-    const euref_x = entity.properties.euref_x?.getValue();
-    const euref_y = entity.properties.euref_y?.getValue();
-        // Add cooling center to store
-    mitigationStore.addCoolingCenter({
-        grid_id: gridId,
-        euref_x,
-        euref_y,
-        capacity: selectedCapacity.value
-    });
+  const euref_x = entity.properties.euref_x?.getValue();
+  const euref_y = entity.properties.euref_y?.getValue();
+  mitigationStore.addCoolingCenter({ grid_id: gridId, euref_x, euref_y, capacity: selectedCapacity.value });
 
-    const cartesianPosition = getEntityCentroid( entity ); // Get centroid position
-    // Create a blue point entity
-    // Get updated capacity
-    const currentCapacity = mitigationStore.getCoolingCapacity( gridId );   
-    const coolingCentersCount = mitigationStore.getCoolingCenterCount( gridId ); 
-        // Find existing cooling center entity for this gridId
-    let existingEntity = coolingCentersDataSource.entities.getById(`cooling_${gridId}`);
+  const cartesianPosition = getEntityCentroid(entity);
+  const coolingCentersCount = mitigationStore.getCoolingCenterCount(gridId);
+  const offsets = [
+    [0, 0],
+    [-100, 80],
+    [-100, -80],
+    [100, 80],
+    [100, -80]
+  ];
+  
+  const offset = offsets[coolingCentersCount - 1];
+  const newPosition = Cesium.Cartesian3.fromDegrees(
+    Cesium.Math.toDegrees(Cesium.Cartographic.fromCartesian(cartesianPosition).longitude) + offset[0] / 111320,
+    Cesium.Math.toDegrees(Cesium.Cartographic.fromCartesian(cartesianPosition).latitude) + offset[1] / 111320
+  );
 
-    if (existingEntity) {
-        // If entity exists, just update the label
-        existingEntity.label.text = `${coolingCentersCount} Cooling Center(s)\nCapacity: ${currentCapacity}`;
-    } else {
-        // Otherwise, create a new entity
-        const cartesianPosition = getEntityCentroid(entity);
-        const coolingCenterEntity = coolingCentersDataSource.entities.add({
-            id: `cooling_${gridId}`,  // Assign unique ID based on grid
-            position: cartesianPosition,
-            point: {
-                pixelSize: 15,
-                color: Cesium.Color.BLUE,
-                outlineColor: Cesium.Color.WHITE,
-                outlineWidth: 2
-            },
-            label: {
-                text: `${coolingCentersCount} Cooling Center(s)\nCapacity: ${currentCapacity}`,
-                font: "12px sans-serif",
-                fillColor: Cesium.Color.BLACK,
-                outlineColor: Cesium.Color.BLACK,
-                outlineWidth: 1,
-                style: Cesium.LabelStyle.FILL,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                pixelOffset: new Cesium.Cartesian2(0, -10)
-            }
-        });
-    }
+  const dimension = ( selectedCapacity.value - 0 ) / ( 1000 - 100 );
+
+  coolingCentersDataSource.entities.add({
+    id: `cooling_${gridId}_${coolingCentersCount}`,
+    position: newPosition,
+    box: {
+      dimensions: new Cesium.Cartesian3(dimension * 80, dimension * 80, dimension * 80),
+      material: Cesium.Color.BLUE.withAlpha(0.8),
+    },
+    label: {
+      text: `Capacity: ${selectedCapacity.value}`,
+      font: "12px sans-serif",
+      fillColor: Cesium.Color.BLACK,
+      outlineColor: Cesium.Color.BLACK,
+      outlineWidth: 1,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset: new Cesium.Cartesian2(0, -40)
+    },
+    allowPicking: false 
+  });
 };
 
 onMounted(() => {
@@ -180,7 +179,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  if ( viewer.value && viewer.value.screenSpaceEventHandler ) {
+    viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  }
 });
 </script>
 
