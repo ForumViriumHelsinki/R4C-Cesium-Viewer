@@ -1,54 +1,34 @@
 <template>
   <v-container class="cooling-center">
-    <v-card
-elevation="2"
-class="pa-4"
->
-      <v-card-title>Cooling Centers</v-card-title>
-
-      <!-- Reset Button as Vuetify Button -->
-      <v-btn
-color="error"
-class="mt-2"
-@click="resetCoolingCenters"
->
-        Reset Cooling Centers
-      </v-btn>
+    <v-card elevation="2" class="pa-4">
+      <v-card-title>Add Cooling <br> Centers</v-card-title>
 
       <v-card-text>
-
         <!-- Capacity Slider -->
+        <v-label class="mb-2">Cooling Center Capacity</v-label>
+        <br><br>
         <v-slider
           v-model="selectedCapacity"
-          label="Cooling Center Capacity"
           min="100"
           max="1000"
           step="1"
           thumb-label="always"
-          class="mt-4"
+          class="mt-2"
         />
 
-        <!-- Add Cooling Center Button -->
-        <v-btn
-color="primary"
-:class="{ 'active-btn': selectingGrid }"
-@click="toggleGridSelection"
->
-          {{ selectingGrid ? 'Click on Grid to Select' : 'Add Cooling Center' }}
-        </v-btn>
-
-        <!-- List of Cooling Centers -->
-        <div
-v-if="coolingCenters.length"
-class="mt-4"
->
-            <!-- Estimated Impacts Section -->
-            <v-divider class="my-4"/>
-            <h3>Estimated Impacts</h3>
-            <p>Total Centers Added: {{ coolingCenters.length }}</p>
-            <p>Total Cells Affected: {{ affectedCells.length }}</p>
-        </div>
-
+        <!-- Buttons Row: Add & Reset -->
+        <v-row class="mt-4">
+          <v-col cols="6">
+            <v-btn color="primary" :class="{ 'active-btn': selectingGrid }" block @click="toggleGridSelection">
+              {{ selectingGrid ? 'Select' : 'Add' }}
+            </v-btn>
+          </v-col>
+          <v-col cols="6">
+            <v-btn color="error" block @click="resetCoolingCenters">
+              Reset
+            </v-btn>
+          </v-col>
+        </v-row>
       </v-card-text>
     </v-card>
   </v-container>
@@ -60,24 +40,27 @@ import { useMitigationStore } from '../stores/mitigationStore';
 import { useGlobalStore } from '../stores/globalStore.js';
 import * as Cesium from 'cesium';
 import * as turf from '@turf/turf';
+import DataSource from '../services/datasource.js';
 
 const globalStore = useGlobalStore();
 const mitigationStore = useMitigationStore();
-const coolingCenters = computed(() => mitigationStore.coolingCenters);
-const affectedCells = computed(() => mitigationStore.affected); // Get affected cells
 const viewer = computed(() => globalStore.cesiumViewer);
 const selectingGrid = ref(false);
-const selectedCapacity = ref(500); // Default capacity for slider
-const coolingCentersDataSource = new Cesium.CustomDataSource("cooling_centers");
+const selectedCapacity = ref(1000); // Default capacity for slider
+let coolingCentersDataSource = globalStore?.cesiumViewer.dataSources?.getByName('cooling_centers')[0];
 
 const toggleGridSelection = () => {
   selectingGrid.value = !selectingGrid.value;
 };
 
 // Reset function
-const resetCoolingCenters = () => {
-    mitigationStore.resetStore();
-    coolingCentersDataSource.entities.removeAll(); // Clear cooling center points
+const resetCoolingCenters = async () => {
+  const dataSourceService = new DataSource();
+  await dataSourceService.removeDataSourcesByNamePrefix('cooling_centers');
+  await globalStore.cesiumViewer.dataSources.remove(coolingCentersDataSource);
+  mitigationStore.resetStore();
+  coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers');
+  globalStore.cesiumViewer.dataSources.add(coolingCentersDataSource);
 };
 
 const handleMapClick = (clickEvent) => {
@@ -88,7 +71,7 @@ const handleMapClick = (clickEvent) => {
 
   if (Cesium.defined(pickedObject) && pickedObject.id) {
     const entity = pickedObject.id;
-    addCoolingCenter( entity );
+    entity._properties && addCoolingCenter( entity );
     selectingGrid.value = false;
 
   }
@@ -115,63 +98,67 @@ const getEntityCentroid = (entity) => {
     return Cesium.Cartesian3.fromDegrees(longitude, latitude);
 };
 
-const addCoolingCenter = ( entity ) => {
+const addCoolingCenter = (entity) => {
+  
+  const gridId = entity.properties.grid_id?.getValue();
+  if (mitigationStore.getCoolingCenterCount(gridId) >= 5) {
+    alert("Maximum 5 cooling centers per grid reached!");
+    return;
+  }
 
-    const gridId = entity.properties.grid_id?.getValue();
-    const euref_x = entity.properties.euref_x?.getValue();
-    const euref_y = entity.properties.euref_y?.getValue();
-        // Add cooling center to store
-    mitigationStore.addCoolingCenter({
-        grid_id: gridId,
-        euref_x,
-        euref_y,
-        capacity: selectedCapacity.value
-    });
+  const euref_x = entity.properties.euref_x?.getValue();
+  const euref_y = entity.properties.euref_y?.getValue();
+  mitigationStore.addCoolingCenter({ grid_id: gridId, euref_x, euref_y, capacity: selectedCapacity.value });
 
-    const cartesianPosition = getEntityCentroid( entity ); // Get centroid position
-    // Create a blue point entity
-    // Get updated capacity
-    const currentCapacity = mitigationStore.getCoolingCapacity( gridId );   
-    const coolingCentersCount = mitigationStore.getCoolingCenterCount( gridId ); 
-        // Find existing cooling center entity for this gridId
-    let existingEntity = coolingCentersDataSource.entities.getById(`cooling_${gridId}`);
+  const cartesianPosition = getEntityCentroid(entity);
+  const coolingCentersCount = mitigationStore.getCoolingCenterCount(gridId);
+  const offsets = [
+    [0, 0],
+    [-100, 80],
+    [-100, -80],
+    [100, 80],
+    [100, -80]
+  ];
+  
+  const offset = offsets[coolingCentersCount - 1];
+  const newPosition = Cesium.Cartesian3.fromDegrees(
+    Cesium.Math.toDegrees(Cesium.Cartographic.fromCartesian(cartesianPosition).longitude) + offset[0] / 111320,
+    Cesium.Math.toDegrees(Cesium.Cartographic.fromCartesian(cartesianPosition).latitude) + offset[1] / 111320
+  );
 
-    if (existingEntity) {
-        // If entity exists, just update the label
-        existingEntity.label.text = `${coolingCentersCount} Cooling Center(s)\nCapacity: ${currentCapacity}`;
-    } else {
-        // Otherwise, create a new entity
-        const cartesianPosition = getEntityCentroid(entity);
-        const coolingCenterEntity = coolingCentersDataSource.entities.add({
-            id: `cooling_${gridId}`,  // Assign unique ID based on grid
-            position: cartesianPosition,
-            point: {
-                pixelSize: 15,
-                color: Cesium.Color.BLUE,
-                outlineColor: Cesium.Color.WHITE,
-                outlineWidth: 2
-            },
-            label: {
-                text: `${coolingCentersCount} Cooling Center(s)\nCapacity: ${currentCapacity}`,
-                font: "12px sans-serif",
-                fillColor: Cesium.Color.BLACK,
-                outlineColor: Cesium.Color.BLACK,
-                outlineWidth: 1,
-                style: Cesium.LabelStyle.FILL,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                pixelOffset: new Cesium.Cartesian2(0, -10)
-            }
-        });
-    }
+  const dimension =  selectedCapacity.value / 1000 * 80;
+
+  coolingCentersDataSource.entities.add({
+    id: `cooling_${gridId}_${coolingCentersCount}`,
+    position: newPosition,
+    box: {
+      dimensions: new Cesium.Cartesian3( dimension, dimension, dimension ),
+      material: Cesium.Color.BLUE.withAlpha( 0.8 ),
+    },
+    label: {
+      text: `Capacity: ${selectedCapacity.value}`,
+      font: "12px sans-serif",
+      fillColor: Cesium.Color.BLACK,
+      outlineColor: Cesium.Color.BLACK,
+      outlineWidth: 1,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset: new Cesium.Cartesian2(0, -40)
+    },
+    allowPicking: false 
+  });
 };
 
 onMounted(() => {
-  if (!viewer.value) {
+  if ( !viewer.value ) {
     console.error("Cesium viewer is not initialized.");
     return;
   }
+
+  if ( !coolingCentersDataSource ) {
+    coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers');
+  } 
   
-  viewer.value.dataSources.add(coolingCentersDataSource);
+  viewer.value.dataSources.add( coolingCentersDataSource );
 
   viewer.value.screenSpaceEventHandler.setInputAction(
     handleMapClick,
@@ -180,19 +167,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  if ( viewer.value && viewer.value.screenSpaceEventHandler ) {
+    viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  }
 });
 </script>
-
-<style scoped>
-.cooling-center {
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background: #f9f9f9;
-}
-
-.active-btn {
-  background-color: #ff9800;
-}
-</style>
