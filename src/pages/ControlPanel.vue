@@ -112,18 +112,28 @@ multiple
 class="pa-0 ma-0"
 >
 
-                  <v-expansion-panel
-v-if="currentView === 'grid' && statsIndex === 'heat_index'"
-class="pa-0 ma-0"
-title="Add cooling centers"
+<v-expansion-panel
+  v-if="currentView === 'grid' && statsIndex === 'heat_index'"
+  class="pa-0 ma-0"
+  title="Manage Cooling Centers"
 >
-                    <v-expansion-panel-text
-class="pa-0 ma-0"
->
-                      <CoolingCenter />
-                    </v-expansion-panel-text>                                                           
-                  </v-expansion-panel>
+  <v-expansion-panel-text class="pa-2">
+    <v-row no-gutters>
+      <!-- Left: Add Cooling Centers -->
+      <v-col cols="6" class="pa-2">
+        <CoolingCenter class="fill-height" />
+      </v-col>
 
+      <!-- Right: Optimize Cooling Centers -->
+      <v-col cols="6" class="pa-2">
+        <CoolingCenterOptimiser class="fill-height" />
+      </v-col>
+    </v-row>
+
+    <!-- Add Estimated Impacts Component Below -->
+    <EstimatedImpacts />
+  </v-expansion-panel-text>
+</v-expansion-panel>
 
                   <v-expansion-panel
 v-if="currentView === 'grid'"
@@ -312,6 +322,8 @@ import FloodBackgroundSyke from '../components/FloodBackgroundSyke.vue';
 import PostalCodeNDVI from '../views/PostalCodeNDVI.vue'
 import { storeToRefs } from 'pinia';
 import CoolingCenter from '../components/CoolingCenter.vue';
+import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue';
+import EstimatedImpacts from '../components/EstimatedImpacts.vue';
 
 export default {
 	components: {
@@ -333,6 +345,8 @@ export default {
     FloodBackgroundSyke,
     PostalCodeNDVI,
     CoolingCenter,
+    CoolingCenterOptimiser,
+    EstimatedImpacts
 	},
 	setup() {
 		const globalStore = useGlobalStore();

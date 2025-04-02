@@ -1,54 +1,34 @@
 <template>
   <v-container class="cooling-center">
-    <v-card
-elevation="2"
-class="pa-4"
->
-      <v-card-title>Cooling Centers</v-card-title>
-
-      <!-- Reset Button as Vuetify Button -->
-      <v-btn
-color="error"
-class="mt-2"
-@click="resetCoolingCenters"
->
-        Reset Cooling Centers
-      </v-btn>
+    <v-card elevation="2" class="pa-4">
+      <v-card-title>Add Cooling <br> Centers</v-card-title>
 
       <v-card-text>
-
         <!-- Capacity Slider -->
+        <v-label class="mb-2">Cooling Center Capacity</v-label>
+        <br><br>
         <v-slider
           v-model="selectedCapacity"
-          label="Cooling Center Capacity"
           min="100"
           max="1000"
           step="1"
           thumb-label="always"
-          class="mt-4"
+          class="mt-2"
         />
 
-        <!-- Add Cooling Center Button -->
-        <v-btn
-color="primary"
-:class="{ 'active-btn': selectingGrid }"
-@click="toggleGridSelection"
->
-          {{ selectingGrid ? 'Click on Grid to Select' : 'Add Cooling Center' }}
-        </v-btn>
-
-        <!-- List of Cooling Centers -->
-        <div
-v-if="coolingCenters.length"
-class="mt-4"
->
-            <!-- Estimated Impacts Section -->
-            <v-divider class="my-4"/>
-            <h3>Estimated Impacts</h3>
-            <p>Total Centers Added: {{ coolingCenters.length }}</p>
-            <p>Total Cells Affected: {{ affectedCells.length }}</p>
-        </div>
-
+        <!-- Buttons Row: Add & Reset -->
+        <v-row class="mt-4">
+          <v-col cols="6">
+            <v-btn color="primary" :class="{ 'active-btn': selectingGrid }" block @click="toggleGridSelection">
+              {{ selectingGrid ? 'Select' : 'Add' }}
+            </v-btn>
+          </v-col>
+          <v-col cols="6">
+            <v-btn color="error" block @click="resetCoolingCenters">
+              Reset
+            </v-btn>
+          </v-col>
+        </v-row>
       </v-card-text>
     </v-card>
   </v-container>
@@ -60,24 +40,27 @@ import { useMitigationStore } from '../stores/mitigationStore';
 import { useGlobalStore } from '../stores/globalStore.js';
 import * as Cesium from 'cesium';
 import * as turf from '@turf/turf';
+import DataSource from '../services/datasource.js';
 
 const globalStore = useGlobalStore();
 const mitigationStore = useMitigationStore();
-const coolingCenters = computed(() => mitigationStore.coolingCenters);
-const affectedCells = computed(() => mitigationStore.affected); // Get affected cells
 const viewer = computed(() => globalStore.cesiumViewer);
 const selectingGrid = ref(false);
-const selectedCapacity = ref(500); // Default capacity for slider
-const coolingCentersDataSource = new Cesium.CustomDataSource("cooling_centers");
+const selectedCapacity = ref(1000); // Default capacity for slider
+let coolingCentersDataSource = globalStore?.cesiumViewer.dataSources?.getByName('cooling_centers')[0];
 
 const toggleGridSelection = () => {
   selectingGrid.value = !selectingGrid.value;
 };
 
 // Reset function
-const resetCoolingCenters = () => {
-    mitigationStore.resetStore();
-    coolingCentersDataSource.entities.removeAll(); // Clear cooling center points
+const resetCoolingCenters = async () => {
+  const dataSourceService = new DataSource();
+  await dataSourceService.removeDataSourcesByNamePrefix('cooling_centers');
+  await globalStore.cesiumViewer.dataSources.remove(coolingCentersDataSource);
+  mitigationStore.resetStore();
+  coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers');
+  globalStore.cesiumViewer.dataSources.add(coolingCentersDataSource);
 };
 
 const handleMapClick = (clickEvent) => {
@@ -116,6 +99,7 @@ const getEntityCentroid = (entity) => {
 };
 
 const addCoolingCenter = (entity) => {
+  
   const gridId = entity.properties.grid_id?.getValue();
   if (mitigationStore.getCoolingCenterCount(gridId) >= 5) {
     alert("Maximum 5 cooling centers per grid reached!");
@@ -142,14 +126,14 @@ const addCoolingCenter = (entity) => {
     Cesium.Math.toDegrees(Cesium.Cartographic.fromCartesian(cartesianPosition).latitude) + offset[1] / 111320
   );
 
-  const dimension = ( selectedCapacity.value - 0 ) / ( 1000 - 100 );
+  const dimension =  selectedCapacity.value / 1000 * 80;
 
   coolingCentersDataSource.entities.add({
     id: `cooling_${gridId}_${coolingCentersCount}`,
     position: newPosition,
     box: {
-      dimensions: new Cesium.Cartesian3(dimension * 80, dimension * 80, dimension * 80),
-      material: Cesium.Color.BLUE.withAlpha(0.8),
+      dimensions: new Cesium.Cartesian3( dimension, dimension, dimension ),
+      material: Cesium.Color.BLUE.withAlpha( 0.8 ),
     },
     label: {
       text: `Capacity: ${selectedCapacity.value}`,
@@ -165,12 +149,16 @@ const addCoolingCenter = (entity) => {
 };
 
 onMounted(() => {
-  if (!viewer.value) {
+  if ( !viewer.value ) {
     console.error("Cesium viewer is not initialized.");
     return;
   }
+
+  if ( !coolingCentersDataSource ) {
+    coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers');
+  } 
   
-  viewer.value.dataSources.add(coolingCentersDataSource);
+  viewer.value.dataSources.add( coolingCentersDataSource );
 
   viewer.value.screenSpaceEventHandler.setInputAction(
     handleMapClick,
@@ -184,16 +172,3 @@ onUnmounted(() => {
   }
 });
 </script>
-
-<style scoped>
-.cooling-center {
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background: #f9f9f9;
-}
-
-.active-btn {
-  background-color: #ff9800;
-}
-</style>

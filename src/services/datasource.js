@@ -1,7 +1,7 @@
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 
-export default class GeoJSONDataSource {
+export default class DataSource {
 	constructor( ) {
 		this.store = useGlobalStore();
 	}

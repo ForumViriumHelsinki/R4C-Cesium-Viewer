@@ -7,7 +7,8 @@ export const useMitigationStore = defineStore( 'mitigation', {
         maxReduction: 0.20,
         minReduction: 0.04,
         affected: [],
-        impact: 0	
+        impact: 0,
+        optimalEffect: 4.64	
     } ),
     actions: {
         addCoolingCenter( coolingCenter ) {

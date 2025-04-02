@@ -27,6 +27,7 @@ watch([statsIndex, ndviActive], () => {
 
 watch(coolingCenters, () => {
   if (statsIndex.value === 'heat_index') {
+    mitigationStore.impact = 0;
     updateGridColors('heat_index');
   }
 }, { deep: true });
@@ -225,7 +226,7 @@ const heatIndex = ( entity ) => {
 }
 
 const getReductionValue = (distance) => {
-    if ( distance >= reachability ) return 0;
+    if ( distance > reachability ) return 0;
 
     return maxReduction - ( distance / reachability ) * ( maxReduction - minReduction );
 };
