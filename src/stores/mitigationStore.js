@@ -30,7 +30,6 @@ export const useMitigationStore = defineStore( 'mitigation', {
                 console.warn('Grid cells are not set. Cannot pre-calculate impacts.');
                 return;
             }
-            const start = Date.now();
             this.gridCells.forEach( ( cell ) => {
                 let totalReduction = 0;
                 this.gridCells.forEach((otherCell) => {
@@ -43,8 +42,6 @@ export const useMitigationStore = defineStore( 'mitigation', {
                 this.gridImpacts[ cell.id ] = totalReduction;
             } );
 
-            console.log("took", Date.now() - start);
-            console.log("this.gridImpacts", this.gridImpacts)
          },
         addCoolingCenter( coolingCenter ) {
             this.coolingCenters.push( coolingCenter );
