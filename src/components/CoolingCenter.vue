@@ -6,7 +6,8 @@
       <v-card-text>
         <!-- Capacity Slider -->
         <v-label class="mb-2">Cooling Center Capacity</v-label>
-        <br><br>
+        <br>
+        <br>
         <v-slider
           v-model="selectedCapacity"
           min="100"
@@ -142,7 +143,7 @@ const addCoolingCenter = (entity) => {
       outlineColor: Cesium.Color.BLACK,
       outlineWidth: 1,
       verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-      pixelOffset: new Cesium.Cartesian2(0, -40)
+      pixelOffset: new Cesium.Cartesian2(0, -30)
     },
     allowPicking: false 
   });
