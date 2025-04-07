@@ -13,6 +13,7 @@ import { useMitigationStore } from '../stores/mitigationStore';
 const propsStore = usePropsStore();
 const toggleStore = useToggleStore();
 const mitigationStore = useMitigationStore();
+const dataSourceService = new DataSource();
 
 const coolingCenters = computed(() => mitigationStore.coolingCenters );
 const { reachability, maxReduction, minReduction } = mitigationStore;
@@ -80,15 +81,19 @@ const indexToColorScheme = {
 
 // Function to load the GeoJSON data source
 const loadGrid = async () => {
-	const dataSourceService = new DataSource();
 	dataSourceService.removeDataSourcesAndEntities();
 	await dataSourceService.loadGeoJsonDataSource(
 		0.8,
 		'./assets/data/r4c_stats_grid_index.json',
 		'250m_grid'
 	);
-	updateGridColors( propsStore.statsIndex ); // Initial color update
 };
+
+const prepareMigitation = ( ) => {
+    const dataSource = dataSourceService.getDataSourceByName('250m_grid');
+    mitigationStore.setGridCells( dataSource ); 
+    mitigationStore.preCalculateGridImpacts();
+}
 
 const handleMissingValues = (entity, selectedIndex) => {
     const isMissingValues = entity.properties['missing_values']?.getValue();
@@ -284,10 +289,16 @@ const getColorForIndex = ( indexValue, indexType ) => {
 	return Cesium.Color.fromCssColorString( colorScheme[4].color ).withAlpha( baseAlpha.value );
 };
 
-onMounted(() => {
-    const cameraService = new Camera( );
+onMounted(async () => {
+    const cameraService = new Camera();
     cameraService.switchTo3DGrid();
-    loadGrid();
+    try {
+        await loadGrid(); // Wait for loadGrid to complete
+        await updateGridColors( propsStore.statsIndex ); // Initial color update
+        prepareMigitation();
+    } catch (error) {
+        console.error('Error loading grid:', error);
+    }
 });
 
 // Placeholder implementation for checking data availability

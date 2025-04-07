@@ -117,20 +117,17 @@ class="pa-0 ma-0"
   class="pa-0 ma-0"
   title="Manage Cooling Centers"
 >
-  <v-expansion-panel-text class="pa-2">
+  <v-expansion-panel-text class="pa-0 ma-0 cooling-center-expansion-text">
     <v-row no-gutters>
-      <!-- Left: Add Cooling Centers -->
-      <v-col cols="6" class="pa-2">
-        <CoolingCenter class="fill-height" />
+      <v-col cols="6">
+        <CoolingCenter />
       </v-col>
 
-      <!-- Right: Optimize Cooling Centers -->
-      <v-col cols="6" class="pa-2">
-        <CoolingCenterOptimiser class="fill-height" />
+      <v-col cols="6">
+        <CoolingCenterOptimiser />
       </v-col>
     </v-row>
 
-    <!-- Add Estimated Impacts Component Below -->
     <EstimatedImpacts />
   </v-expansion-panel-text>
 </v-expansion-panel>
