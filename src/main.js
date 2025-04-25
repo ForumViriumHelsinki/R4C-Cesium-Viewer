@@ -70,6 +70,10 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
 });
 
+console.log(`Sentry DSN: ${ import.meta.env.VITE_SENTRY_DSN }`);
+console.log(`Sentry environment: ${ import.meta.env.MODE }`);
+console.log(`Release: ${ version }`);
+
 app.use( pinia );
 app.use( vuetify );
 app.mount( '#app' );
