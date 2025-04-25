@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.16.0...r4c-cesium-viewer-v1.16.1) (2025-04-25)
+
+
+### Bug Fixes
+
+* **dockerfile:** Sentry integration ([#153](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/153)) ([c25d152](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c25d1527d781c13954976bdd31acbd7ef97408ff))
+
 ## [1.16.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.15.0...r4c-cesium-viewer-v1.16.0) (2025-04-07)
 
 
