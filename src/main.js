@@ -44,7 +44,7 @@ Sentry.init({
   // Vue: Vue,
 	dsn: import.meta.env.VITE_SENTRY_DSN,
 	environment: import.meta.env.MODE,
-	release: version,
+	release: "r4c-cesium-viewer@" + version,
 
   // This enables automatic instrumentation (highly recommended),
   // but is not necessary for purely manual usage
