@@ -1,11 +1,16 @@
 <template>
   <v-container class="cooling-center">
-    <v-card elevation="2" class="pa-4">
+    <v-card
+elevation="2"
+class="pa-4"
+>
       <v-card-title>Add Cooling <br> Centers</v-card-title>
 
       <v-card-text>
         <!-- Capacity Slider -->
-        <v-label class="mb-2">Cooling Center Capacity</v-label>
+        <v-label class="mb-2">
+Cooling Center Capacity
+</v-label>
         <br>
         <br>
         <v-slider
@@ -20,12 +25,21 @@
         <!-- Buttons Row: Add & Reset -->
         <v-row class="mt-4">
           <v-col cols="6">
-            <v-btn color="primary" :class="{ 'active-btn': selectingGrid }" block @click="toggleGridSelection">
+            <v-btn
+color="primary"
+:class="{ 'active-btn': selectingGrid }"
+block
+@click="toggleGridSelection"
+>
               {{ selectingGrid ? 'Select' : 'Add' }}
             </v-btn>
           </v-col>
           <v-col cols="6">
-            <v-btn color="error" block @click="resetCoolingCenters">
+            <v-btn
+color="error"
+block
+@click="resetCoolingCenters"
+>
               Reset
             </v-btn>
           </v-col>

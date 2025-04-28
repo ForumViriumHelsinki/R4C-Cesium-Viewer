@@ -1,9 +1,14 @@
 <template>
   <v-container class="cooling-center-optimisation">
-    <v-card elevation="2" class="pa-4">
+    <v-card
+elevation="2"
+class="pa-4"
+>
       <v-card-title>  Cooling Center <br> Optimization</v-card-title>
       
-      <v-label class="mb-2">Number of Cooling Centers</v-label>
+      <v-label class="mb-2">
+Number of Cooling Centers
+</v-label>
       <br><br>
       <v-slider 
         v-model="numCoolingCenters"
@@ -15,7 +20,11 @@
       />  
     
         <v-col cols="12">    
-          <v-btn color="success" class="mt-2" @click="findOptimalCoolingCenters">
+          <v-btn
+color="success"
+class="mt-2"
+@click="findOptimalCoolingCenters"
+>
             Optimise Locations
           </v-btn>
         </v-col>

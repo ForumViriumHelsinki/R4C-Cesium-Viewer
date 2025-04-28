@@ -14,6 +14,13 @@ export default defineConfig( () => {
 	return {
 		build: {
 			sourcemap: true, // Source map generation must be turned on
+			rollupOptions: {
+				output: {
+					assetFileNames: `assets/[name].[hash].${version}.[ext]`,
+					chunkFileNames: `assets/[name].[hash].${version}.js`,
+					entryFileNames: `assets/[name].${version}.js`,
+				}
+			}
 		},
 		plugins: [
 			eslint(),
@@ -37,19 +44,19 @@ export default defineConfig( () => {
 		],
 		define: { 'process.env': {} },
 		resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url))
+      },
+      extensions: [
+        '.js',
+        '.json',
+        '.jsx',
+        '.mjs',
+        '.ts',
+        '.tsx',
+        '.vue',
+      ],
     },
-    extensions: [
-      '.js',
-      '.json',
-      '.jsx',
-      '.mjs',
-      '.ts',
-      '.tsx',
-      '.vue',
-    ],
-  },
 		server: {
 			proxy: {
 				'/pygeoapi': {

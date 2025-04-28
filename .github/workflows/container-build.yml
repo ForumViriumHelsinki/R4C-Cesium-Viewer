@@ -57,10 +57,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            DOCKER_META_VERSION=${{ steps.meta.outputs.version }}
-            DOCKER_META_TITLE=${{ steps.meta.outputs.title }}
-            DOCKER_META_VERSION_SEMVER=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
-            DOCKER_META_REVISION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
             VITE_SENTRY_DSN=${{ secrets.VITE_SENTRY_DSN }}
           cache-from: type=gha
