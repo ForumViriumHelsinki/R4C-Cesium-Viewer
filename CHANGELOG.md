@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.17.0...r4c-cesium-viewer-v1.17.1) (2025-04-28)
+
+
+### Bug Fixes
+
+* **sentry:** release name ([#157](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/157)) ([6a88d90](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6a88d905e7cff1c6115a66e29693b041e41c4f4e))
+
 ## [1.17.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.16.1...r4c-cesium-viewer-v1.17.0) (2025-04-28)
 
 
