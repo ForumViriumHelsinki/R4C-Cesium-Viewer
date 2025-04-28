@@ -1,286 +1,217 @@
 <template>
-  <div class="control-panel-main">
-<v-btn
-  icon
-  class="toggle-btn"
-  size="x-small"
-  :style="toggleButtonStyles"
-  @click="togglePanel"
->
-  <v-icon>{{ panelVisible ? 'mdi-menu-open' : 'mdi-menu' }}</v-icon>
-</v-btn>
+  <v-navigation-drawer>
+    <v-list>
+      <v-list-item>
+        <v-tooltip location="bottom">
+          <template #activator="{ props }">
+            <v-btn
+              v-if="currentLevel === 'building'"
+              icon
+              v-bind="props"
+              size="x-small"
+              @click="returnToPostalCode"
+            >
+              <v-icon>mdi-arrow-left</v-icon>
+            </v-btn>
+          </template>
+          <span>Return to postal code level</span>
+        </v-tooltip>
 
-    <v-app>
-        <v-navigation-drawer
-          v-model="panelVisible"
-          location="right"
-          app
-          temporary
-          class="control-panel"
-          :width="drawerWidth"
+        <v-tooltip location="bottom">
+          <template #activator="{ props }">
+            <v-btn
+              icon
+              v-bind="props"
+              size="x-small"
+              @click="reset"
+            >
+              <v-icon>mdi-refresh</v-icon>
+            </v-btn>
+          </template>
+          <span>Reset application</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom">
+          <template #activator="{ props }">
+            <v-btn
+              v-if="currentLevel !== 'start'"
+              icon
+              v-bind="props"
+              size="x-small"
+              @click="rotateCamera"
+            >
+              <v-icon>mdi-compass</v-icon>
+            </v-btn>
+          </template>
+          <span>Rotate camera 180 degrees</span>
+        </v-tooltip>
+      </v-list-item>
+
+      <v-list-item>
+        <v-list-item-title>View Mode</v-list-item-title>
+
+        <!-- Include ViewMode component here -->
+        <ViewMode />
+
+        <v-container fluid>
+          <v-row no-gutters>
+            <v-col cols="12">
+              <v-card>
+                <v-card-title>Layers</v-card-title>
+                <v-card-text>
+                  <Layers />
+                </v-card-text>
+              </v-card>
+            </v-col>
+            <v-col cols="12">
+              <v-card>
+                <v-card-title>Filters</v-card-title>
+                <v-card-text>
+                  <Filters />
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-list-item>
+
+      <!-- Add `multiple` prop here to allow multiple panels to stay open -->
+      <v-expansion-panels multiple>
+        <v-expansion-panel
+          v-if="currentView === 'grid' && statsIndex === 'heat_index'"
+          title="Manage Cooling Centers"
         >
-          <v-list dense>
-              <v-list-item class="pa-0 ma-0">
-                  <v-tooltip
-location="bottom"
-class="tooltip"
->
-                    <template #activator="{ props }">
-                      <v-btn
-                        v-if="currentLevel === 'building'"
-                        icon
-                        class="uiButton"
-                        style="color: red; float:right; cursor: pointer;"
-                        v-bind="props"
-                        size="x-small"
-                        @click="returnToPostalCode"
-                      >
-                        <v-icon>mdi-arrow-left</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Return to postal code level</span>
-                  </v-tooltip>
+          <v-expansion-panel-text>
+            <v-row no-gutters>
+              <v-col cols="6">
+                <CoolingCenter />
+              </v-col>
+              <v-col cols="6">
+                <CoolingCenterOptimiser />
+              </v-col>
+            </v-row>
 
-                  <v-tooltip location="bottom">
-                    <template #activator="{ props }">
-                      <v-btn
-                        icon
-                        class="uiButton"
-                        style="color: red; float:right; cursor: pointer;"
-                        v-bind="props"
-                        size="x-small"
-                        @click="reset"
-                      >
-                        <v-icon>mdi-refresh</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Reset application</span>
-                  </v-tooltip>
-              </v-list-item>
-              
-              <v-list-item class="pa-0 ma-0">
-                  <v-list-item-title>View Mode</v-list-item-title>
+            <EstimatedImpacts />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
 
-                 <!-- Include ViewMode component here -->
-                  <ViewMode />
-                    <v-container
-fluid
-class="pa-0 ma-0 custom-container"
-> 
-                      <v-row
-no-gutters
-class="pa-0 ma-0"
->
-                        <v-col
-v-if="currentView !== 'grid'"
-cols="6"
-class="pa-0 ma-0"
->
-                          <Layers />
-                        </v-col>
-                        <v-col
-:cols="currentView === 'grid' ? 12 : 6"
-class="pa-0 ma-0"
-> 
-                          <Layers v-if="currentView === 'grid'" />
-                          <Filters v-else /> 
-                        </v-col>
-                      </v-row>
-                    </v-container>
-              </v-list-item>
+        <v-expansion-panel
+          v-if="currentView === 'grid'"
+          title="Turn landcover green and blue"
+        >
+          <v-expansion-panel-text>
+            <LandcoverToParks />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
 
-              <!-- Add `multiple` prop here to allow multiple panels to stay open -->
-              <v-expansion-panels
-multiple
-class="pa-0 ma-0"
->
+        <v-expansion-panel
+          v-if="currentView === 'grid'"
+          title="Statistical grid options"
+        >
+          <v-expansion-panel-text>
+            <StatisticalGridOptions />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
 
-<v-expansion-panel
-  v-if="currentView === 'grid'"
-  class="pa-0 ma-0"
-  title="Manage Cooling Centers"
->
-  <v-expansion-panel-text class="pa-0 ma-0 cooling-center-expansion-text">
-    <v-row no-gutters>
-      <v-col cols="6">
-        <CoolingCenter />
-      </v-col>
+        <v-expansion-panel
+          v-if="currentView !== 'grid'"
+          title="NDVI"
+        >
+          <v-expansion-panel-text>
+            <PostalCodeNDVI />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
 
-      <v-col cols="6">
-        <CoolingCenterOptimiser />
-      </v-col>
-    </v-row>
+        <v-expansion-panel title="HSY Background maps">
+          <v-expansion-panel-text>
+            <HSYWMS />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
 
-    <EstimatedImpacts />
-  </v-expansion-panel-text>
-</v-expansion-panel>
+        <v-expansion-panel title="Syke Flood Background Maps">
+          <v-expansion-panel-text>
+            <FloodBackgroundSyke />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
 
-<v-expansion-panel
-  v-if="currentView === 'grid'"
-  class="pa-0 ma-0"
-  title="Turn landcover green and blue"
->
-  <v-expansion-panel-text class="pa-0 ma-0 landcover-to-parks-expansion-text">
-    <LandcoverToParks />
-  </v-expansion-panel-text>
-</v-expansion-panel>
+        <template v-if="currentLevel === 'postalCode'">
+          <!-- Conditionally render Heat Histogram if data is available -->
+          <v-expansion-panel
+            v-if="heatHistogramData && heatHistogramData.length > 0"
+            title="Heat Histogram"
+          >
+            <v-expansion-panel-text>
+              <HeatHistogram />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
 
-                  <v-expansion-panel
-v-if="currentView === 'grid'"
-class="pa-0 ma-0"
-title="Statistical grid options"
->
-                    <v-expansion-panel-text
-class="pa-0 ma-0"
->
-                      <StatisticalGridOptions />
-                    </v-expansion-panel-text>                                                           
-                  </v-expansion-panel>
+          <v-expansion-panel
+            v-if="showSosEco"
+            title="Socioeconomics Diagram"
+          >
+            <v-expansion-panel-text>
+              <SocioEconomics />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
 
-                  <v-expansion-panel
-v-if="currentView !== 'grid'"
-class="pa-0 ma-0"
-title="NDVI"
->
-                    <v-expansion-panel-text
-class="pa-0 ma-0"
->
-                      <PostalCodeNDVI />
-                    </v-expansion-panel-text>                                                           
-                  </v-expansion-panel>                  
+          <v-expansion-panel
+            v-if="currentView !== 'helsinki'"
+            title="Land Cover"
+          >
+            <v-expansion-panel-text>
+              <Landcover />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
 
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="HSY Background maps"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <HSYWMS />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
+          <v-expansion-panel title="Building Scatter Plot">
+            <v-expansion-panel-text v-if="currentView !== 'helsinki'">
+              <BuildingScatterPlot />
+            </v-expansion-panel-text>
+            <v-expansion-panel-text v-if="currentView === 'helsinki'">
+              <Scatterplot v-if="scatterPlotEntities" />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
 
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Syke Flood Background Maps"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <FloodBackgroundSyke />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
-                <template v-if="currentLevel === 'postalCode'">
-                  <!-- Conditionally render Heat Histogram if data is available -->
-                  <v-expansion-panel
-                    v-if="heatHistogramData && heatHistogramData.length > 0"
-                    class="pa-0 ma-0"
-                    title="Heat Histogram"
-                  >
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <HeatHistogram />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-                  v-if="showSosEco"
-class="pa-0 ma-0"
-title="Socioeconomics Diagram"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <SocioEconomics />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-v-if="currentView !== 'helsinki'"
-class="pa-0 ma-0"
-title="Land Cover"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <Landcover />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Building Scatter Plot"
->
-                    <v-expansion-panel-text
-v-if="currentView !== 'helsinki'"
-class="pa-0 ma-0"
->
-                      <BuildingScatterPlot />
-                    </v-expansion-panel-text>
-                    <v-expansion-panel-text
-v-if="currentView === 'helsinki'"
-class="pa-0 ma-0"
->
-                      <Scatterplot v-if="scatterPlotEntities" />                    
-                    </v-expansion-panel-text>                    
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Area properties"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <PrintBox />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>   
-                </template>
-
-                <template v-if="currentLevel === 'building'">
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Building heat data"
->
-                    <v-expansion-panel-text
-v-if="currentView !== 'helsinki' && currentView !== 'grid'"
-class="pa-0 ma-0"
->
-                      <HSYBuildingHeatChart />
-                    </v-expansion-panel-text> 
-                    <v-expansion-panel-text
-v-if="currentView === 'helsinki' && currentView !== 'grid'"
-class="pa-0 ma-0"
->
-                      <BuildingHeatChart />
-                    </v-expansion-panel-text> 
-                    <v-expansion-panel-text
-v-if="currentView === 'grid'"
-class="pa-0 ma-0"
->
-                      <BuildingGridChart />
-                    </v-expansion-panel-text>                                                           
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Building properties"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <PrintBox />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>   
-                </template>  
-
-                <v-expansion-panel
-class="pa-0 ma-0"
-title="Geocoding"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <Geocoding />
-                    </v-expansion-panel-text>
-                </v-expansion-panel> 
-                               
-              </v-expansion-panels>
-          </v-list>
-<template #append>
-          <div class="text-center text-subtitle-2">
-        Data sources from Helsinki Region Environmental Services HSY: Buildings in the Helsinki metropolitan area & Helsinki metropolitan postal code areas by CC-BY-4.0 Licence. Open data by postal code area from Statistics Finland by CC-BY-4.0 Licence.
-</div>
+          <v-expansion-panel title="Area properties">
+            <v-expansion-panel-text>
+              <PrintBox />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
         </template>
-        </v-navigation-drawer>
-    </v-app>
-  </div>
+
+        <template v-if="currentLevel === 'building'">
+          <v-expansion-panel title="Building heat data">
+            <v-expansion-panel-text
+              v-if="currentView !== 'helsinki' && currentView !== 'grid'"
+            >
+              <HSYBuildingHeatChart />
+            </v-expansion-panel-text>
+            <v-expansion-panel-text
+              v-if="currentView === 'helsinki' && currentView !== 'grid'"
+            >
+              <BuildingHeatChart />
+            </v-expansion-panel-text>
+            <v-expansion-panel-text v-if="currentView === 'grid'">
+              <BuildingGridChart />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+
+          <v-expansion-panel title="Building properties">
+            <v-expansion-panel-text>
+              <PrintBox />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </template>
+
+        <v-expansion-panel title="Geocoding">
+          <v-expansion-panel-text>
+            <Geocoding />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-list>
+
+  </v-navigation-drawer>
 </template>
 
 <script>
@@ -307,9 +238,13 @@ import Tree from '../services/tree';
 import Featurepicker from '../services/featurepicker';
 import Camera from '../services/camera';
 import Geocoding from '../components/Geocoding.vue';
-import StatisticalGridOptions  from '../components/StatisticalGridOptions.vue';
+import StatisticalGridOptions from '../components/StatisticalGridOptions.vue';
+import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue';
+import MapControls from '../components/MapControls.vue';
+import DataSourceStatus from '../components/DataSourceStatus.vue';
+import GraphicsSettingsDialog from '../components/GraphicsSettingsDialog.vue';
 import FloodBackgroundSyke from '../components/FloodBackgroundSyke.vue';
-import PostalCodeNDVI from '../views/PostalCodeNDVI.vue'
+import PostalCodeNDVI from '../views/PostalCodeNDVI.vue';
 import { storeToRefs } from 'pinia';
 import CoolingCenter from '../components/CoolingCenter.vue';
 import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue';
@@ -317,59 +252,66 @@ import EstimatedImpacts from '../components/EstimatedImpacts.vue';
 import LandcoverToParks from '../components/LandcoverToParks.vue';
 
 export default {
-	components: {
-    Layers,
-    Filters,
-		HeatHistogram,
-		SocioEconomics,
-		HSYWMS,
-		Landcover,
-		BuildingScatterPlot,
-		PrintBox,
-		HSYBuildingHeatChart,
-    ViewMode,
-    Geocoding,
+  components: {
+    HeatHistogram,
+    SocioEconomics,
+    Landcover,
+    BuildingScatterPlot,
     Scatterplot,
+    HSYBuildingHeatChart,
     BuildingHeatChart,
     BuildingGridChart,
+    PrintBox,
+    ViewMode,
+    HSYWMS,
+    Filters,
+    Layers,
+    Geocoding,
     StatisticalGridOptions,
+    BackgroundMapBrowser,
+    MapControls,
+    DataSourceStatus,
+    GraphicsSettingsDialog,
     FloodBackgroundSyke,
     PostalCodeNDVI,
     CoolingCenter,
     CoolingCenterOptimiser,
     EstimatedImpacts,
-    LandcoverToParks
-	},
-	setup() {
-		const globalStore = useGlobalStore();
-		const propsStore = usePropsStore();
+    LandcoverToParks,
+  },
+  setup() {
+    const globalStore = useGlobalStore();
+    const propsStore = usePropsStore();
     const toggleStore = useToggleStore();
     const heatExposureStore = useHeatExposureStore();
     const socioEconomicsStore = useSocioEconomicsStore();
-		const panelVisible = ref( window.innerWidth > 600 ); ;
-		const currentLevel = computed( () => globalStore.level );
-    const currentView = computed( () => globalStore.view );
+    const currentLevel = computed(() => globalStore.level);
+    const currentView = computed(() => globalStore.view);
     const { ndvi } = storeToRefs(toggleStore);
 
-		const heatHistogramData = computed( () => propsStore.heatHistogramData );
-    const scatterPlotEntities = computed( () => propsStore.scatterPlotEntities );
-    const showSosEco = computed( () => socioEconomicsStore.data && heatExposureStore.data ) ;
-
-		const togglePanel = () => {
-			panelVisible.value = !panelVisible.value;
-		};
+    const heatHistogramData = computed(() => propsStore.heatHistogramData);
+    const statsIndex = computed(() => propsStore.statsIndex);
+    const scatterPlotEntities = computed(() => propsStore.scatterPlotEntities);
+    const showSosEco = computed(
+      () => socioEconomicsStore.data && heatExposureStore.data
+    );
 
     const reset = () => {
-			location.reload();
-		};
+      location.reload();
+    };
+
+    const rotateCamera = () => {
+      const camera = new Camera();
+      camera.rotateCamera();
+    };
 
     const returnToPostalCode = () => {
-			const featurepicker = new Featurepicker();
+      const featurepicker = new Featurepicker();
       const treeService = new Tree();
-      hideTooltip(); 
-			featurepicker.loadPostalCode();
-			toggleStore.showTrees && treeService.loadTrees();
-		};
+      hideTooltip();
+      featurepicker.loadPostalCode();
+      toggleStore.showTrees && treeService.loadTrees();
+    };
 
     // Function to hide the tooltip
     const hideTooltip = () => {
@@ -384,112 +326,19 @@ export default {
       return globalStore.navbarWidth; // 37.5% of the window width
     });
 
-    const toggleButtonStyles = computed(() => {
-      return panelVisible.value
-        ? { right: `${drawerWidth.value }px`, position: 'fixed', top: '10px' }
-        : { right: '0px', position: 'fixed', top: '10px' };
-    });
-
-		return {
-      toggleButtonStyles,
+    return {
       drawerWidth,
-			panelVisible,
-			currentLevel,
+      currentLevel,
       currentView,
-			heatHistogramData,
+      heatHistogramData,
       scatterPlotEntities,
-      togglePanel,
+      rotateCamera,
       reset,
       returnToPostalCode,
       ndvi,
-      showSosEco
-		};
-	},
+      showSosEco,
+      statsIndex,
+    };
+  },
 };
 </script>
-
-<style scoped>
-.toggle-btn {
-  z-index: 1000000;
-  transition: right 0.3s ease, position 0.3s ease; /* Smooth transition for the position */
-}
-
-.filters-layers-container {
-  display: flex;
-  justify-content: space-between; /* Ensures there's space between Filters and Layers */
-  gap: 20px; /* Adds some space between the two components */
-}
-
-.filter-title {
-  font-size: 1.2em;
-  margin-bottom: 10px;
-  font-family: sans-serif;
-}
-
-.slider-container {
-  display: flex;
-  flex-direction: column;
-  background-color: white;
-  padding: 10px;
-  border: 1px solid #ccc;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 200px;
-}
-
-.switch-container {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 47px;
-  height: 20px;
-}
-
-/* Additional styling for toggles */
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: 0.4s;
-}
-
-input:checked + .slider {
-  background-color: #2196F3;
-}
-
-.slider.round {
-  border-radius: 34px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
-}
-
-.label {
-  margin-left: 10px;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-}
-
-.control-panel-main { /* Or the appropriate class/ID for your ControlPanel */
-  position: absolute; 
-  top: 10px; /* Adjust as needed */
-  right: 10px; /* Adjust as needed */
-}
-/* In your ControlPanel.vue styles */
-.custom-container {
-  padding: 0; 
-}
-
-.custom-container > .v-row { 
-  margin: 0;
-}
-</style>
