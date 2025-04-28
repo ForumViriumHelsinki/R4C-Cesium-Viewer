@@ -1,12 +1,6 @@
 <template>
     <!-- Cesium Container -->
     <div id="cesiumContainer">
-
-		<div class="control-panel">
-		    <!-- Control Panel with event listener -->
-			<ControlPanel />
-		
-		</div>
 	    <!-- Loading Component -->
     	<Loading v-if="store.isLoading" />
 		<Timeline v-if="store.level === 'postalCode' || store.level === 'building' "/>
@@ -150,13 +144,3 @@ export default {
 	},
 };
 </script>
-
-<style scoped>
-
-#cesiumContainer {
-	position: relative;
-	width: 100%;
-	height: 100vh;
-}
-
-</style>
