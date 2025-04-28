@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.16.1...r4c-cesium-viewer-v1.17.0) (2025-04-28)
+
+
+### Features
+
+* add versioning to assets for cache busting ([#155](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/155)) ([217747c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/217747ca88addbf38c57ff7521e763e27dbbb44e))
+
 ## [1.16.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.16.0...r4c-cesium-viewer-v1.16.1) (2025-04-25)
 
 
