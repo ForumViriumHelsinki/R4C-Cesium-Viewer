@@ -62,7 +62,7 @@ Sentry.init({
   tracesSampleRate: 1.0,
 
   // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
-  tracePropagationTargets: ["localhost", /^https:\/\/r4c\.dataportal\.fi/],
+  tracePropagationTargets: ["localhost", /^https:\/\/r4c\.dataportal\.fi/, /^https:\/\/r4c\.dev\.dataportal\.fi/],
 
 	// Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
