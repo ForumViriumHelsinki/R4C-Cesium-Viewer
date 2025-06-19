@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BackgroundMapBrowser: typeof import('./src/components/BackgroundMapBrowser.vue')['default']
     BuildingGridChart: typeof import('./src/components/BuildingGridChart.vue')['default']
     BuildingHeatChart: typeof import('./src/components/BuildingHeatChart.vue')['default']
     BuildingInformation: typeof import('./src/components/BuildingInformation.vue')['default']
@@ -14,11 +15,14 @@ declare module 'vue' {
     CategoricalSelect: typeof import('./src/components/CategoricalSelect.vue')['default']
     CoolingCenter: typeof import('./src/components/CoolingCenter.vue')['default']
     CoolingCenterOptimiser: typeof import('./src/components/CoolingCenterOptimiser.vue')['default']
+    DataSourceStatus: typeof import('./src/components/DataSourceStatus.vue')['default']
+    DataSourceStatusCompact: typeof import('./src/components/DataSourceStatusCompact.vue')['default']
     DisclaimerPopup: typeof import('./src/components/DisclaimerPopup.vue')['default']
     EstimatedImpacts: typeof import('./src/components/EstimatedImpacts.vue')['default']
     Filters: typeof import('./src/components/Filters.vue')['default']
     FloodBackgroundSyke: typeof import('./src/components/FloodBackgroundSyke.vue')['default']
     Geocoding: typeof import('./src/components/Geocoding.vue')['default']
+    GraphicsQuality: typeof import('./src/components/GraphicsQuality.vue')['default']
     GridView: typeof import('./src/components/GridView.vue')['default']
     HeatHistogram: typeof import('./src/components/HeatHistogram.vue')['default']
     HeatHistogramHelsinki: typeof import('./src/components/HeatHistogramHelsinki.vue')['default']
@@ -29,12 +33,14 @@ declare module 'vue' {
     HSYYearSelect: typeof import('./src/components/HSYYearSelect.vue')['default']
     Layers: typeof import('./src/components/Layers.vue')['default']
     Loading: typeof import('./src/components/Loading.vue')['default']
+    LoadingIndicator: typeof import('./src/components/LoadingIndicator.vue')['default']
+    MapControls: typeof import('./src/components/MapControls.vue')['default']
     NDVIChart: typeof import('./src/components/NDVIChart.vue')['default']
     NearbyTreeArea: typeof import('./src/components/NearbyTreeArea.vue')['default']
     NumericalSelect: typeof import('./src/components/NumericalSelect.vue')['default']
     PieChart: typeof import('./src/components/PieChart.vue')['default']
     PopGridLegend: typeof import('./src/components/PopGridLegend.vue')['default']
-    PostalCodeNDVI: typeof import('./src/components/PostalCodeNDVI.vue')['default']
+    PostalCodePicker: typeof import('./src/components/PostalCodePicker.vue')['default']
     PostalCodeView: typeof import('./src/components/PostalCodeView.vue')['default']
     PrintBox: typeof import('./src/components/PrintBox.vue')['default']
     Scatterplot: typeof import('./src/components/Scatterplot.vue')['default']
@@ -44,7 +50,9 @@ declare module 'vue' {
     StatisticalGridOptions: typeof import('./src/components/StatisticalGridOptions.vue')['default']
     SurveyScatterPlot: typeof import('./src/components/SurveyScatterPlot.vue')['default']
     Timeline: typeof import('./src/components/Timeline.vue')['default']
+    UnifiedSearch: typeof import('./src/components/UnifiedSearch.vue')['default']
     ViewMode: typeof import('./src/components/ViewMode.vue')['default']
+    ViewModeCompact: typeof import('./src/components/ViewModeCompact.vue')['default']
     VulnerabilityChart: typeof import('./src/components/VulnerabilityChart.vue')['default']
   }
 }

@@ -1,36 +1,62 @@
 <template>
   <div
 id="heatTimeseriesContainer"
-:style="{ width: `${sliderWidth.value}px` }"
-> 
+class="timeline-container"
+>
+    <div class="timeline-header">
+      <h4 class="timeline-title">
+        <v-icon
+class="mr-2"
+size="18"
+>
+mdi-clock-outline
+</v-icon>
+        Heat Data Timeline
+      </h4>
+      <v-chip
+size="small"
+color="primary"
+variant="tonal"
+>
+        {{ selectedDate }}
+      </v-chip>
+    </div>
+    
     <div class="date-labels">
       <span
-v-for="(date, index) in dates"
-:key="index"
-class="date-label"
->
-        {{ date }}
+        v-for="(date, index) in dates"
+        :key="index"
+        class="date-label"
+        :class="{ active: index === currentPropertyIndex }"
+      >
+        {{ formatDate(date) }}
       </span>
     </div>
-    <v-slider
-      v-model="currentPropertyIndex"
-      :max="timelineLength - 1"
-      :step="1"
-      :tick-size="2"
-      tick-labels
-      hide-details
-      class="timeline-slider"
-	  :width="sliderWidth" 
-	  :style="{ marginLeft: marginWidth, marginRight: marginWidth }"
-    >
-      <template #append>
-        <div class="label-container">
-          <div class="time-label">
-            {{ selectedDate.value }}
-          </div>
-        </div>
-      </template>
-    </v-slider>
+    
+    <div class="slider-container">
+      <v-slider
+        v-model="currentPropertyIndex"
+        :max="timelineLength - 1"
+        :step="1"
+        :tick-size="2"
+        tick-labels
+        hide-details
+        class="timeline-slider"
+        color="primary"
+        track-color="grey-lighten-3"
+        thumb-color="primary"
+      />
+    </div>
+    
+    <div class="timeline-info">
+      <span class="info-text">
+        <v-icon
+size="14"
+class="mr-1"
+>mdi-information-outline</v-icon>
+        Use the slider to explore heat data across different time periods
+      </span>
+    </div>
   </div>
 </template>
 
@@ -65,13 +91,14 @@ export default {
 
     const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)); // Set default index    
 
-    const sliderWidth = computed(() => {
-      return ( window.innerWidth - Math.min(Math.max(window.innerWidth * 0.375, 400), 800)) * 0.88; // Calculate remaining width
-    });
-
-    const marginWidth = computed(() => {
-      return sliderWidth.value * 0.07 + 'px'; // Calculate remaining width
-    });	
+    // Format date for display
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: '2-digit', 
+        month: 'short' 
+      });
+    };	
 
     const updateViewAndPlots = () => {
         const buildingsDataSource = dataSourceService.getDataSourceByName( 'Buildings ' + globalStore.postalcode );
@@ -101,34 +128,113 @@ export default {
 	});
     return {
       selectedDate,
-      timelineLength, // Return timelineLength
-      currentPropertyIndex, // Return currentPropertyIndex
-      sliderWidth,
-      dates, // Expose the dates array
-		  marginWidth
+      timelineLength,
+      currentPropertyIndex,
+      dates,
+      formatDate,
     };
   },
 };
 </script>
 
 <style scoped>
-#heatTimeseriesContainer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  z-index: 1000; /* Ensure it's on top */
-  background-color: rgba(255, 255, 255, 0.5); /* White background with 80% opacity */
-  border: 1px solid black; /* Small black border */
-  padding: 5px; /* Add some padding for spacing */
-  border-radius: 4px; /* Optional: Add rounded corners */
+.timeline-container {
+  width: 100%;
+  padding: 0;
+  background-color: transparent;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.timeline-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: rgba(0, 0, 0, 0.87);
+  display: flex;
+  align-items: center;
 }
 
 .date-labels {
   display: flex;
-  justify-content: space-around; /* Distribute labels evenly */
-  margin-bottom: 0px; /* Add some space between labels and slider */
-  font-size: 14px; /* Adjust font size as needed */
-  font-weight: 1000;
-  color: #0000d7;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 0 12px;
+}
+
+.date-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  transition: color 0.2s;
+  cursor: pointer;
+}
+
+.date-label.active {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.date-label:hover {
+  color: #1976d2;
+}
+
+.slider-container {
+  margin: 8px 0 16px 0;
+}
+
+.timeline-slider {
+  margin: 0;
+}
+
+.timeline-info {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.info-text {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .date-labels {
+    padding: 0 8px;
+  }
+  
+  .date-label {
+    font-size: 0.7rem;
+  }
+  
+  .timeline-title {
+    font-size: 0.9rem;
+  }
+  
+  .info-text {
+    font-size: 0.7rem;
+  }
+}
+
+/* When used as standalone (fixed positioning) */
+.timeline-container.standalone {
+  position: fixed;
+  bottom: 32px;
+  left: 0;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
 }
 </style>
