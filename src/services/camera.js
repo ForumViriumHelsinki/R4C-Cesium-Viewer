@@ -141,6 +141,41 @@ switchTo3DGrid() {
 		} );
 	}
 
+	// Focus camera on a specific postal code
+	focusOnPostalCode(postalCode) {
+		// Find the data source for postcodes
+		const postCodesDataSource = this.viewer.dataSources._dataSources.find(ds => ds.name === 'PostCodes');
+		
+		if (!postCodesDataSource) {
+			console.warn('PostCodes data source not found');
+			return;
+		}
+		
+		// Find the entity with matching postal code
+		const entity = postCodesDataSource._entityCollection._entities._array.find(
+			entity => entity._properties._posno._value == postalCode
+		);
+		
+		if (entity) {
+			// Fly to the postal code area
+			this.viewer.camera.flyTo({
+				destination: Cesium.Cartesian3.fromDegrees(
+					entity._properties._center_x._value, 
+					entity._properties._center_y._value - 0.015, 
+					2500
+				),
+				orientation: {
+					heading: 0.0,
+					pitch: Cesium.Math.toRadians(-45.0),
+					roll: 0.0
+				},
+				duration: 2
+			});
+		} else {
+			console.warn(`Postal code ${postalCode} not found in data source`);
+		}
+	}
+
 	rotate180Degrees() {
 		const camera = this.viewer.camera;
 		const scene = this.viewer.scene;
