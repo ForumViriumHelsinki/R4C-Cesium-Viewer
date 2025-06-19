@@ -1,18 +1,36 @@
 <template>
   <div
-v-if="showTooltip"
-:style="tooltipStyle"
-class="building-tooltip"
+    v-if="showTooltip"
+    :style="tooltipStyle"
+    class="building-tooltip"
+    role="tooltip"
+    aria-live="polite"
+    aria-label="Building information"
+  >
+    <div
+v-if="buildingAttributes"
+class="tooltip-content"
 >
-    <div v-if="buildingAttributes">
-      <div v-if="buildingAttributes.address">
-        <strong>Address:</strong> {{ buildingAttributes.address }} <br >
+      <div
+v-if="buildingAttributes.address"
+class="tooltip-item"
+>
+        <span class="tooltip-label">Address:</span>
+        <span class="tooltip-value">{{ buildingAttributes.address }}</span>
       </div>
-      <div v-if="buildingAttributes.rakennusaine_s">
-        <strong>Building Material:</strong> {{ buildingAttributes.rakennusaine_s }} <br >
+      <div
+v-if="buildingAttributes.rakennusaine_s"
+class="tooltip-item"
+>
+        <span class="tooltip-label">Building Material:</span>
+        <span class="tooltip-value">{{ buildingAttributes.rakennusaine_s }}</span>
       </div>
-      <div v-if="buildingAttributes.avg_temp_c">
-        <strong>Surface Temperature {{ store.heatDataDate }}:</strong> {{ buildingAttributes.avg_temp_c }} °C<br >
+      <div
+v-if="buildingAttributes.avg_temp_c"
+class="tooltip-item"
+>
+        <span class="tooltip-label">Surface Temperature ({{ store.heatDataDate }}):</span>
+        <span class="tooltip-value">{{ buildingAttributes.avg_temp_c }}°C</span>
       </div>
     </div>
   </div>
@@ -142,9 +160,55 @@ export default {
 
 <style scoped>
 .building-tooltip {
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  max-width: 300px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tooltip-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tooltip-label {
+  font-weight: 600;
+  color: #e0e0e0;
   font-size: 12px;
-  white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  z-index: 100;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tooltip-value {
+  color: #ffffff;
+  font-weight: 400;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .building-tooltip {
+    background: #000000 !important;
+    border: 2px solid #ffffff;
+  }
+  
+  .tooltip-label {
+    color: #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .building-tooltip {
+    transition: none;
+  }
 }
 </style>

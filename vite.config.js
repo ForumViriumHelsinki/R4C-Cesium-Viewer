@@ -138,6 +138,23 @@ export default defineConfig( () => {
 						'digitransit-subscription-key': process.env.VITE_DIGITRANSIT_KEY
 					},
 					rewrite: ( path ) => path.replace( /^\/digitransit/, '' )
+				},
+				'/hsy-action': {
+					target: 'https://kartta.hsy.fi',
+					changeOrigin: true,
+					secure: false,
+					rewrite: ( path ) => path.replace( /^\/hsy-action/, '/action' ),
+					configure: ( proxy, _options ) => {
+						proxy.on( 'error', ( err, _req, _res ) => {
+							console.log( 'HSY action proxy error', err );
+						} );
+						proxy.on( 'proxyReq', ( proxyReq, req, _res ) => {
+							console.log( 'Sending HSY Action Request:', req.method, req.url );
+						} );
+						proxy.on( 'proxyRes', ( proxyRes, req, _res ) => {
+							console.log( 'Received HSY Action Response:', proxyRes.statusCode, req.url );
+						} );
+					},
 				}
 			}
 		}
