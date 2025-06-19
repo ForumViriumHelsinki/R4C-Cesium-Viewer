@@ -163,15 +163,26 @@ export default class Building {
 	async loadBuildings() {
 		const url = 'https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27' + this.store.postalcode + '%27';
 
+		console.log('[HelsinkiBuilding] 🏢 Loading Helsinki buildings for postal code:', this.store.postalcode);
+		console.log('[HelsinkiBuilding] API URL:', url);
+
 		try {
 			const response = await fetch( url );
+			
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+			}
+			
 			const data = await response.json();
+			console.log('[HelsinkiBuilding] ✅ Received', data.features?.length || 0, 'building features');
 
 			const entities = await this.urbanheatService.findUrbanHeatData( data );
 			this.setHeatExposureToBuildings( entities );
 			this.setHelsinkiBuildingsHeight( entities );
+			
+			console.log('[HelsinkiBuilding] ✅ Buildings processed and added to Cesium viewer');
 		} catch ( error ) {
-			console.error( 'Error loading buildings:', error );
+			console.error( '[HelsinkiBuilding] ❌ Error loading buildings:', error );
 		}
 
 		this.toggleStore.showTrees && this.treeService.loadTrees();

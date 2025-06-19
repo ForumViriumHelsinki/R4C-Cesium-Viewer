@@ -25,8 +25,17 @@ export default class HSYBuilding {
         try {
             
             const url = bbox ? this.urlStore.hsyGridBuildings( bbox ) : this.urlStore.hsyBuildings( this.store.postalcode )
+            console.log('[HSYBuilding] 🏢 Loading HSY buildings for postal code:', this.store.postalcode);
+            console.log('[HSYBuilding] API URL:', url);
+            
             const response = await fetch( url );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const data = await response.json();
+            console.log('[HSYBuilding] ✅ Received', data.features?.length || 0, 'building features');
 
             // Only process grid attributes if we have a current grid cell
             if (this.store.currentGridCell) {
@@ -36,9 +45,10 @@ export default class HSYBuilding {
             let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Buildings ' + this.store.postalcode);
             this.setHSYBuildingAttributes(data, entities);
             
+            console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer');
             return entities;
         } catch (error) {
-            console.error('Error loading HSY buildings:', error);
+            console.error('[HSYBuilding] ❌ Error loading HSY buildings:', error);
             throw error;
         }
     }
