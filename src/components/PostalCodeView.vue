@@ -351,7 +351,21 @@ export default {
 	},
 	methods: {
 		reset(){
-			location.reload();
+			// Smart reset instead of page reload
+			this.store.setLevel('start');
+			this.store.setPostalCode(null);
+			this.store.setNameOfZone(null);
+			this.store.setView('capitalRegion');
+			
+			// Reset camera to initial position
+			const camera = new Camera();
+			camera.init();
+			
+			// Hide tooltip
+			const tooltip = document.querySelector('.tooltip');
+			if (tooltip) {
+				tooltip.style.display = 'none';
+			}
 		},
 		returnToPostalCode( ) {
 			const featurepicker = new Featurepicker();

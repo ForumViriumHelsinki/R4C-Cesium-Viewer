@@ -1,27 +1,30 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col>
-        <!-- Toggle for hiding cold areas (only visible if cold areas are loaded) -->
-        <div
+  <div class="heat-chart-container">
+    <!-- Toggle for hiding cold areas (only visible if cold areas are loaded) -->
+    <div
 v-if="coldAreasLoaded"
-class="hide-cold-switch"
+class="chart-controls"
 >
-          <v-switch
-            v-model="hideColdAreasChecked"
-            label="Hide Cold Areas"
-            @change="hideColdAreas"
-          />
-        </div>
-      </v-col>
-    </v-row>
-    <v-row>
-      <v-col>
-        <!-- Container for the HSY Building Chart -->
-        <div id="hsyBuildingChartContainer"/>
-      </v-col>
-    </v-row>
-  </v-container>
+      <v-switch
+        v-model="hideColdAreasChecked"
+        label="Hide Cold Areas"
+        density="compact"
+        hide-details
+        @change="hideColdAreas"
+      />
+    </div>
+    
+    <!-- Container for the HSY Building Chart -->
+    <div
+id="hsyBuildingChartContainer"
+class="chart-container"
+/>
+    
+    <!-- Timeline Controls -->
+    <div class="timeline-section">
+      <Timeline />
+    </div>
+  </div>
 </template>
 
 <script>
@@ -32,8 +35,12 @@ import { useToggleStore } from '../stores/toggleStore.js';
 import Plot from '../services/plot.js';
 import ColdArea from '../services/coldarea.js';
 import Datasource from '../services/datasource.js';
+import Timeline from './Timeline.vue';
 
 export default {
+  components: {
+    Timeline,
+  },
   setup() {
     const store = useGlobalStore();
     const propsStore = usePropsStore();
@@ -228,17 +235,46 @@ export default {
 </script>
 
 <style scoped>
-#hsyBuildingChartContainer {
-  position: relative;
+.heat-chart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   width: 100%;
-  height: 250px;
+  height: 100%;
 }
 
-.hide-cold-switch { 
-  position: absolute;
-  top: 60px;
-  left: 20px;
+.chart-controls {
   display: flex;
-  align-items: center; /* Ensures checkbox and label are vertically aligned */
+  justify-content: flex-start;
+  padding: 8px 0;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  flex: 1;
+  min-height: 250px;
+}
+
+.timeline-section {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  padding-top: 16px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+  padding: 12px;
+}
+
+/* Override timeline positioning when embedded */
+.timeline-section :deep(#heatTimeseriesContainer) {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  z-index: auto !important;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  width: 100% !important;
 }
 </style>
