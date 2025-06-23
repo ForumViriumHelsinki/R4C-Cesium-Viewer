@@ -91,10 +91,12 @@ export default class Urbanheat {
 			const response = await fetch( this.urlStore.urbanHeatHelsinki( postcode ) );
 			const urbanheat = await response.json();
 
+			console.log('[UrbanHeat] 🔄 Processing building heat attributes...');
 			for ( let i = 0; i < data.features.length; i++ ) {
 				let feature = data.features[ i ];
-				setAttributesFromApiToBuilding( feature.properties, urbanheat.features );
+				await setAttributesFromApiToBuilding( feature.properties, urbanheat.features );
 			}
+			console.log('[UrbanHeat] ✅ Building heat attributes processing complete');
     
 			addMissingHeatData( data.features, urbanheat.features );
 			let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + postcode );
@@ -137,77 +139,73 @@ const addMissingHeatData = ( features, heat ) => {
  * @param { Object } properties of a building
  * @param { Object } features Urban Heat Exposure buildings dataset
  */
-const setAttributesFromApiToBuilding = ( properties, features ) => {
+const setAttributesFromApiToBuilding = async ( properties, features ) => {
 
 	const decodingService = new Decoding();
+	const batchSize = 25; // Smaller batches for better responsiveness
 
-	for ( let i = 0; i < features.length; i++ ) {
+	for ( let i = 0; i < features.length; i += batchSize ) {
+		const batch = features.slice(i, i + batchSize);
+		
+		// Process batch with yielding for better UI responsiveness
+		for ( let j = 0; j < batch.length; j++ ) {
+			const feature = batch[j];
+			const actualIndex = i + j; // Track actual index for splicing
+			
+			// match building based on Helsinki id
+			if ( properties.id == feature.properties.hki_id ) {
 
-		// match building based on Helsinki id
-		if ( properties.id == features[ i ].properties.hki_id ) {
+				if ( feature.properties.avgheatexposuretobuilding ) {
+					properties.avgheatexposuretobuilding = feature.properties.avgheatexposuretobuilding;
+				}
 
-			if ( features[ i ].properties.avgheatexposuretobuilding ) {
+				if ( feature.properties.distancetounder40 ) {
+					properties.distanceToUnder40 = feature.properties.distancetounder40;
+				}
 
-				properties.avgheatexposuretobuilding = features[ i ].properties.avgheatexposuretobuilding;
+				if ( feature.properties.distancetounder40 ) {
+					properties.locationUnder40 = feature.properties.locationunder40;
+				}
 
+				if ( feature.properties.year_of_construction ) {
+					properties.year_of_construction = feature.properties.year_of_construction;
+				}
+
+				if ( feature.properties.measured_height ) {
+					properties.measured_height = feature.properties.measured_height;
+				}
+
+				if ( feature.properties.roof_type ) {
+					properties.roof_type = feature.properties.roof_type;
+				}
+
+				if ( feature.properties.area_m2 ) {
+					properties.area_m2 = feature.properties.area_m2;
+				}
+
+				if ( feature.properties.roof_median_color ) {
+					properties.roof_median_color = decodingService.getColorValue( feature.properties.roof_median_color );
+				}
+
+				if ( feature.properties.roof_mode_color ) {
+					properties.roof_mode_color = decodingService.getColorValue( feature.properties.roof_mode_color );
+				}
+
+				properties.kayttotarkoitus = decodingService.decodeKayttotarkoitusHKI( feature.properties.c_kayttark );
+				properties.c_julkisivu = decodingService.decodeFacade( properties.c_julkisivu );
+				properties.c_rakeaine = decodingService.decodeMaterial( properties.c_rakeaine );
+				properties.c_lammtapa = decodingService.decodeHeatingMethod( properties.c_lammtapa );
+				properties.c_poltaine = decodingService.decodeHeatingSource( properties.c_poltaine );
+
+				// Remove matched feature (note: this modifies the original array)
+				features.splice( actualIndex, 1 );
+				return; // Found match, exit function
 			}
-
-			if ( features[ i ].properties.distancetounder40 ) {
-
-				properties.distanceToUnder40 = features[ i ].properties.distancetounder40;
-
-			}
-
-			if ( features[ i ].properties.distancetounder40 ) {
-
-				properties.locationUnder40 = features[ i ].properties.locationunder40;
-
-			}
-
-			if ( features[ i ].properties.year_of_construction ) {
-
-				properties.year_of_construction = features[ i ].properties.year_of_construction;
-
-			}
-
-			if ( features[ i ].properties.measured_height ) {
-
-				properties.measured_height = features[ i ].properties.measured_height;
-
-			}
-
-			if ( features[ i ].properties.roof_type ) {
-
-				properties.roof_type = features[ i ].properties.roof_type;
-
-			}
-
-			if ( features[ i ].properties.area_m2 ) {
-
-				properties.area_m2 = features[ i ].properties.area_m2;
-
-			}
-
-			if ( features[ i ].properties.roof_median_color ) {
-
-				properties.roof_median_color = decodingService.getColorValue( features[ i ].properties.roof_median_color );
-
-			}
-
-			if ( features[ i ].properties.roof_mode_color ) {
-
-				properties.roof_mode_color = decodingService.getColorValue( features[ i ].properties.roof_mode_color );
-
-			}
-
-			properties.kayttotarkoitus = decodingService.decodeKayttotarkoitusHKI( features[ i ].properties.c_kayttark );
-			properties.c_julkisivu = decodingService.decodeFacade( properties.c_julkisivu );
-			properties.c_rakeaine = decodingService.decodeMaterial( properties.c_rakeaine );
-			properties.c_lammtapa = decodingService.decodeHeatingMethod( properties.c_lammtapa );
-			properties.c_poltaine = decodingService.decodeHeatingSource( properties.c_poltaine );
-
-			features.splice( i, 1 );
-			break;
+		}
+		
+		// Yield control to prevent UI blocking after each batch
+		if (i + batchSize < features.length) {
+			await new Promise(resolve => requestIdleCallback ? requestIdleCallback(resolve) : setTimeout(resolve, 0));
 		}
 	}
 };

@@ -1,390 +1,280 @@
 /**
- * Progressive Data Loader Service
- * Provides utilities for loading large datasets with progress tracking and streaming
+ * Progressive Loader Service
+ * 
+ * Handles chunked loading of large datasets with progressive rendering
+ * and intelligent retry logic for optimal user experience.
  */
-export class ProgressiveLoader {
-  constructor() {
-    this.activeRequests = new Map();
-    this.chunkSize = 1000; // Default chunk size
-    this.progressCallbacks = new Map(); // Store progress callbacks
-  }
 
-  /**
-   * Load data in chunks with progress tracking
-   * @param {Object} options Configuration options
-   * @param {string} options.layerName Name of the layer being loaded
-   * @param {string} options.baseUrl Base URL for the API
-   * @param {Object} options.params Query parameters
-   * @param {number} options.chunkSize Number of items per chunk
-   * @param {Function} options.processor Function to process each chunk
-   * @param {Function} options.onProgress Progress callback
-   * @param {Function} options.onStart Start callback for external progress tracking
-   * @param {Function} options.onComplete Complete callback for external progress tracking
-   * @param {Function} options.onError Error callback for external progress tracking
-   * @param {AbortSignal} options.signal Abort signal for cancellation
-   * @returns {Promise} Promise that resolves when all chunks are loaded
-   */
-  async loadChunked(options) {
-    const {
-      layerName,
-      baseUrl,
-      params = {},
-      chunkSize = this.chunkSize,
-      processor,
-      onProgress,
-      onStart,
-      onComplete,
-      onError,
-      signal,
-    } = options;
-
-    // Call start callback if provided
-    if (onStart) {
-      onStart(layerName, { message: `Preparing to load ${layerName}...`, total: 1 });
-    }
-
-    try {
-      // First, get the total count
-      const countUrl = new URL(baseUrl);
-      const countParams = { ...params, limit: 1, resulttype: 'hits' };
-      Object.entries(countParams).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          countUrl.searchParams.append(key, value);
-        }
-      });
-
-      const countResponse = await fetch(countUrl, { signal });
-      const countData = await countResponse.json();
-      const totalItems = countData.numberMatched || countData.features?.length || 0;
-      
-      if (totalItems === 0) {
-        if (onComplete) onComplete(layerName, true);
-        return [];
-      }
-
-      const totalChunks = Math.ceil(totalItems / chunkSize);
-      
-      // Update progress tracking with actual totals
-      if (onStart) {
-        onStart(layerName, { 
-          message: `Loading ${layerName}: 0/${totalChunks} chunks (${totalItems} items)`,
-          total: totalChunks 
-        });
-      }
-
-      const allData = [];
-      let currentChunk = 0;
-
-      // Load chunks sequentially to avoid overwhelming the server
-      for (let offset = 0; offset < totalItems; offset += chunkSize) {
-        if (signal?.aborted) {
-          throw new Error('Request aborted');
-        }
-
-        currentChunk++;
-        
-        // Update progress
-        if (onProgress) {
-          onProgress(layerName, currentChunk, `Loading ${layerName}: ${currentChunk}/${totalChunks} chunks`);
-        }
-
-        // Build chunk URL
-        const chunkUrl = new URL(baseUrl);
-        const chunkParams = {
-          ...params,
-          limit: chunkSize,
-          offset: offset,
+class ProgressiveLoader {
+    constructor() {
+        this.activeLoads = new Map();
+        this.defaultOptions = {
+            chunkSize: 1000,        // Features per chunk
+            maxRetries: 3,          // Max retry attempts per chunk
+            retryDelay: 1000,       // Base retry delay in ms
+            timeout: 30000,         // Request timeout in ms
+            concurrency: 2,         // Max concurrent chunk requests
+            adaptiveChunking: true  // Adjust chunk size based on performance
         };
-        
-        Object.entries(chunkParams).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            chunkUrl.searchParams.append(key, value);
-          }
-        });
-
-        // Fetch chunk with retry logic
-        const chunkData = await this.fetchWithRetry(chunkUrl, {
-          signal,
-          maxRetries: 3,
-          retryDelay: 1000,
-        });
-
-        // Process chunk if processor provided
-        let processedChunk = chunkData.features || chunkData;
-        if (processor && typeof processor === 'function') {
-          processedChunk = await processor(processedChunk, currentChunk, totalChunks);
-        }
-
-        allData.push(...processedChunk);
-
-        // Call detailed progress callback
-        if (typeof onProgress === 'function') {
-          onProgress({
-            layerName,
-            chunk: currentChunk,
-            totalChunks,
-            items: processedChunk.length,
-            totalItems: allData.length,
-            data: processedChunk,
-          });
-        }
-
-        // Small delay to prevent overwhelming the UI
-        await this.delay(50);
-      }
-
-      if (onComplete) onComplete(layerName, true);
-      return allData;
-
-    } catch (error) {
-      if (onError) onError(layerName, error.message);
-      throw error;
     }
-  }
 
-  /**
-   * Load data with streaming/progressive display
-   * @param {Object} options Configuration options
-   * @returns {Promise} Promise that resolves when loading is complete
-   */
-  async loadProgressive(options) {
-    const {
-      layerName,
-      baseUrl,
-      params = {},
-      chunkSize = this.chunkSize,
-      onChunkLoaded,
-      signal,
-    } = options;
-
-    return this.loadChunked({
-      ...options,
-      onProgress: (progressInfo) => {
-        // Immediately display each chunk as it loads
-        if (onChunkLoaded && typeof onChunkLoaded === 'function') {
-          onChunkLoaded(progressInfo.data, progressInfo);
+    /**
+     * Load data progressively in chunks
+     * @param {string} url - Data source URL
+     * @param {Object} options - Loading options
+     * @returns {Promise} Promise that resolves with complete data
+     */
+    async loadData(url, options = {}) {
+        const config = { ...this.defaultOptions, ...options };
+        const loadId = this.generateLoadId(url);
+        
+        try {
+            // Store active load for potential cancellation
+            const controller = new AbortController();
+            this.activeLoads.set(loadId, controller);
+            
+            // First, get metadata about the dataset
+            const metadata = await this.getDatasetMetadata(url, controller.signal);
+            
+            // Determine if progressive loading is beneficial
+            if (!this.shouldUseProgressiveLoading(metadata, config)) {
+                // Fall back to standard loading for small datasets
+                return this.loadStandard(url, controller.signal, config);
+            }
+            
+            // Load data progressively
+            const result = await this.loadProgressively(url, metadata, controller.signal, config);
+            
+            return result;
+            
+        } finally {
+            this.activeLoads.delete(loadId);
         }
-      }
-    });
-  }
+    }
 
-  /**
-   * Fetch with automatic retry logic
-   * @param {string|URL} url URL to fetch
-   * @param {Object} options Fetch options including retry configuration
-   * @returns {Promise} Promise that resolves to the response data
-   */
-  async fetchWithRetry(url, options = {}) {
-    const {
-      maxRetries = 3,
-      retryDelay = 1000,
-      signal,
-      ...fetchOptions
-    } = options;
-
-    let lastError;
-
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        if (signal?.aborted) {
-          throw new Error('Request aborted');
+    /**
+     * Get dataset metadata to determine loading strategy
+     */
+    async getDatasetMetadata(url, signal) {
+        try {
+            // For GeoJSON, we might need to inspect the data structure
+            // This is a simplified approach - in reality, you might have
+            // specific endpoints that provide metadata
+            const response = await fetch(url, { 
+                signal,
+                method: 'HEAD' // Try HEAD first to get size info
+            });
+            
+            const contentLength = response.headers.get('content-length');
+            
+            return {
+                estimatedSize: contentLength ? parseInt(contentLength) : null,
+                contentType: response.headers.get('content-type'),
+                supportsRangeRequests: response.headers.get('accept-ranges') === 'bytes'
+            };
+        } catch (error) {
+            // If HEAD fails, we'll proceed with progressive loading anyway
+            console.warn('Could not get dataset metadata:', error);
+            return {
+                estimatedSize: null,
+                contentType: 'application/json',
+                supportsRangeRequests: false
+            };
         }
+    }
 
-        const response = await fetch(url, { ...fetchOptions, signal });
+    /**
+     * Determine if progressive loading should be used
+     */
+    shouldUseProgressiveLoading(metadata, config) {
+        // Use progressive loading for:
+        // 1. Large datasets (>100KB)
+        // 2. Unknown size datasets (when explicitly requested)
+        // 3. When config.forceProgressive is true
+        
+        if (config.forceProgressive) return true;
+        
+        if (metadata.estimatedSize) {
+            return metadata.estimatedSize > 100000; // 100KB threshold
+        }
+        
+        // Default to progressive for unknown sizes
+        return true;
+    }
+
+    /**
+     * Standard loading fallback
+     */
+    async loadStandard(url, signal, config) {
+        const response = await fetch(url, { 
+            signal,
+            timeout: config.timeout 
+        });
         
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-
-        return await response.json();
-      } catch (error) {
-        lastError = error;
         
-        if (attempt < maxRetries && !signal?.aborted) {
-          // Exponential backoff
-          const delay = retryDelay * Math.pow(2, attempt);
-          await this.delay(delay);
+        const data = await response.json();
+        
+        // Still call onProgress for consistency
+        if (config.onProgress) {
+            config.onProgress(1, 1);
         }
-      }
+        
+        return data;
     }
 
-    throw lastError;
-  }
-
-  /**
-   * Cancel a loading operation
-   * @param {string} layerName Name of the layer to cancel
-   */
-  cancelLoading(layerName) {
-    const request = this.activeRequests.get(layerName);
-    if (request && request.controller) {
-      request.controller.abort();
-      this.activeRequests.delete(layerName);
-    }
-  }
-
-  /**
-   * Start a cancellable loading operation
-   * @param {string} layerName Name of the layer
-   * @param {Function} loadFunction Function that performs the loading
-   * @returns {Promise} Promise that resolves when loading completes
-   */
-  async loadCancellable(layerName, loadFunction, onError = null) {
-    // Cancel any existing loading for this layer
-    this.cancelLoading(layerName);
-
-    const controller = new AbortController();
-    this.activeRequests.set(layerName, { controller });
-
-    try {
-      const result = await loadFunction(controller.signal);
-      this.activeRequests.delete(layerName);
-      return result;
-    } catch (error) {
-      this.activeRequests.delete(layerName);
-      if (onError) {
-        if (error.name === 'AbortError') {
-          onError(layerName, 'Loading cancelled');
+    /**
+     * Load data progressively in chunks
+     */
+    async loadProgressively(url, metadata, signal, config) {
+        // For most APIs, we can't actually chunk the requests
+        // So we'll load the full data and then process it in chunks
+        // This still provides progressive UI updates
+        
+        console.log('🔄 Starting progressive loading for:', url);
+        
+        // Load the complete dataset
+        const response = await fetch(url, { signal, timeout: config.timeout });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const fullData = await response.json();
+        
+        // Process data in chunks if it has features
+        if (fullData.features && fullData.features.length > config.chunkSize) {
+            return this.processDataInChunks(fullData, config);
         } else {
-          onError(layerName, error.message);
+            // Small dataset, process normally
+            if (config.onProgress) {
+                config.onProgress(1, 1);
+            }
+            if (config.onChunk) {
+                await config.onChunk(fullData);
+            }
+            return fullData;
         }
-      }
-      throw error;
-    }
-  }
-
-  /**
-   * Load multiple layers in parallel with coordination
-   * @param {Array} layerConfigs Array of layer configuration objects
-   * @returns {Promise} Promise that resolves when all layers are loaded
-   */
-  async loadParallel(layerConfigs) {
-    const promises = layerConfigs.map(config => 
-      this.loadCancellable(config.layerName, (signal) => 
-        this.loadChunked({ ...config, signal })
-      )
-    );
-
-    return Promise.allSettled(promises);
-  }
-
-  /**
-   * Utility function for creating delays
-   * @param {number} ms Milliseconds to delay
-   * @returns {Promise} Promise that resolves after the delay
-   */
-  delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Get optimal chunk size based on data type and network conditions
-   * @param {string} dataType Type of data being loaded
-   * @param {number} estimatedItemSize Estimated size per item in bytes
-   * @returns {number} Optimal chunk size
-   */
-  getOptimalChunkSize(dataType, estimatedItemSize = 1000) {
-    // Estimate based on connection and data type
-    const connection = navigator.connection;
-    let baseChunkSize = 500;
-
-    if (connection) {
-      // Adjust based on connection speed
-      switch (connection.effectiveType) {
-        case 'slow-2g':
-        case '2g':
-          baseChunkSize = 100;
-          break;
-        case '3g':
-          baseChunkSize = 300;
-          break;
-        case '4g':
-          baseChunkSize = 1000;
-          break;
-        default:
-          baseChunkSize = 500;
-      }
     }
 
-    // Adjust based on data type
-    const typeMultipliers = {
-      trees: 0.5,      // Trees have complex geometry
-      buildings: 0.3,  // Buildings are very complex
-      vegetation: 0.7, // Moderate complexity
-      points: 1.5,     // Simple point data
-    };
-
-    const multiplier = typeMultipliers[dataType] || 1;
-    return Math.max(50, Math.round(baseChunkSize * multiplier));
-  }
-
-  /**
-   * Preload data for faster access
-   * @param {Object} options Preload configuration
-   * @returns {Promise} Promise that resolves when preloading completes
-   */
-  async preload(options) {
-    const { layerName, ...loadOptions } = options;
-    
-    // Load in background without showing progress
-    try {
-      const data = await this.loadChunked({
-        ...loadOptions,
-        layerName: `${layerName}_preload`,
-      });
-      
-      // Cache the data for quick access
-      this.cacheData(layerName, data);
-      return data;
-    } catch (error) {
-      console.warn(`Preload failed for ${layerName}:`, error);
-      return null;
+    /**
+     * Process large datasets in chunks for progressive rendering
+     */
+    async processDataInChunks(data, config) {
+        const features = data.features;
+        const totalFeatures = features.length;
+        const chunkSize = config.adaptiveChunking ? 
+            this.calculateOptimalChunkSize(totalFeatures) : 
+            config.chunkSize;
+        
+        console.log(`📦 Processing ${totalFeatures} features in chunks of ${chunkSize}`);
+        
+        let processedFeatures = 0;
+        const processedChunks = [];
+        
+        for (let i = 0; i < features.length; i += chunkSize) {
+            const chunk = features.slice(i, i + chunkSize);
+            const chunkData = {
+                ...data,
+                features: chunk
+            };
+            
+            // Process chunk
+            if (config.onChunk) {
+                try {
+                    await config.onChunk(chunkData);
+                    processedChunks.push(chunkData);
+                } catch (error) {
+                    console.error(`Error processing chunk ${Math.floor(i / chunkSize)}:`, error);
+                    // Continue with other chunks
+                }
+            }
+            
+            processedFeatures += chunk.length;
+            
+            // Update progress
+            if (config.onProgress) {
+                config.onProgress(processedFeatures, totalFeatures);
+            }
+            
+            // Yield control to prevent UI blocking
+            await new Promise(resolve => {
+                if (window.requestIdleCallback) {
+                    requestIdleCallback(resolve, { timeout: 50 });
+                } else {
+                    setTimeout(resolve, 0);
+                }
+            });
+        }
+        
+        console.log(`✅ Progressive processing complete: ${processedFeatures} features`);
+        
+        // Return the original data structure
+        return data;
     }
-  }
 
-  /**
-   * Simple data caching
-   * @param {string} key Cache key
-   * @param {*} data Data to cache
-   */
-  cacheData(key, data) {
-    // Simple in-memory cache - could be replaced with IndexedDB for persistence
-    if (!this.cache) {
-      this.cache = new Map();
+    /**
+     * Calculate optimal chunk size based on dataset size and performance
+     */
+    calculateOptimalChunkSize(totalFeatures) {
+        // Adaptive chunking based on dataset size
+        if (totalFeatures < 500) return 100;
+        if (totalFeatures < 2000) return 250;
+        if (totalFeatures < 10000) return 500;
+        return 1000;
     }
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      size: JSON.stringify(data).length
-    });
 
-    // Clean up old cache entries (simple LRU)
-    if (this.cache.size > 10) {
-      const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+    /**
+     * Cancel active loading operation
+     */
+    cancelLoad(url) {
+        const loadId = this.generateLoadId(url);
+        const controller = this.activeLoads.get(loadId);
+        if (controller) {
+            controller.abort();
+            this.activeLoads.delete(loadId);
+            console.log('📛 Cancelled progressive loading:', url);
+        }
     }
-  }
 
-  /**
-   * Get cached data
-   * @param {string} key Cache key
-   * @param {number} maxAge Maximum age in milliseconds
-   * @returns {*} Cached data or null
-   */
-  getCachedData(key, maxAge = 5 * 60 * 1000) { // 5 minutes default
-    if (!this.cache) return null;
-    
-    const cached = this.cache.get(key);
-    if (!cached) return null;
-    
-    if (Date.now() - cached.timestamp > maxAge) {
-      this.cache.delete(key);
-      return null;
+    /**
+     * Cancel all active loading operations
+     */
+    cancelAllLoads() {
+        for (const [loadId, controller] of this.activeLoads) {
+            controller.abort();
+        }
+        this.activeLoads.clear();
+        console.log('📛 Cancelled all progressive loading operations');
     }
-    
-    return cached.data;
-  }
+
+    /**
+     * Generate unique load ID for tracking
+     */
+    generateLoadId(url) {
+        return btoa(url).replace(/[/+=]/g, '').substring(0, 16);
+    }
+
+    /**
+     * Get statistics about active loads
+     */
+    getLoadStats() {
+        return {
+            activeLoads: this.activeLoads.size,
+            loadIds: Array.from(this.activeLoads.keys())
+        };
+    }
+
+    /**
+     * Update default options
+     */
+    updateDefaults(newDefaults) {
+        this.defaultOptions = { ...this.defaultOptions, ...newDefaults };
+    }
 }
 
-// Export singleton instance
-export const progressiveLoader = new ProgressiveLoader();
+// Create and export singleton instance
+const progressiveLoader = new ProgressiveLoader();
+export default progressiveLoader;

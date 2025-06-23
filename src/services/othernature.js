@@ -2,6 +2,7 @@ import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useURLStore } from '../stores/urlStore.js';
+import unifiedLoader from './unifiedLoader.js';
 
 export default class Othernature {
 	constructor( ) {
@@ -12,41 +13,80 @@ export default class Othernature {
 	}
 
 	/**
- * Loads othernature data for a given postcode asynchronously
- * 
- * @returns {Promise} - A promise that resolves once the data has been loaded
- */
+	 * Loads othernature data for a given postcode using unified loader
+	 * 
+	 * @returns {Promise} - A promise that resolves once the data has been loaded
+	 */
 	async loadOtherNature() {
-
-		this.store.setIsLoading( true );
-
-		fetch( this.urlStore.otherNature( this.store.postalcode ) )
-			.then( response => response.json() )
-			.then( data => { this.addOtherNatureDataSource( data ); } )
-			.catch( error => { console.log( 'Error loading other nature data:', error ); } );
+		try {
+			const data = await unifiedLoader.loadLayer({
+				layerId: 'othernature',
+				url: this.urlStore.otherNature(this.store.postalcode),
+				type: 'geojson',
+				processor: (data) => this.addOtherNatureDataSource(data),
+				options: {
+					cache: true,
+					cacheTTL: 20 * 60 * 1000, // 20 minutes
+					retries: 2,
+					batchSize: 20,
+					progressive: true
+				}
+			});
+			
+			console.log(`✓ Other nature data loaded for postal code ${this.store.postalcode}`);
+			return data;
+			
+		} catch (error) {
+			console.error('Failed to load other nature data:', error);
+			throw error;
+		}
 	}
 
 	/**
- * Adds a othernature data source to the viewer
- * 
- * @param {Object} data - The othernature data to be added as a data source
- */
-	async addOtherNatureDataSource( data ) {
-	
-		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'OtherNature' );
-
-		for ( let i = 0; i < entities.length; i++ ) {
+	 * Adds a othernature data source to the viewer with batch processing
+	 * 
+	 * @param {Object} data - The othernature data to be added as a data source
+	 * @param {Object} metadata - Additional metadata about the loading process
+	 */
+	async addOtherNatureDataSource(data, metadata = {}) {
+		try {
+			const entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'OtherNature');
 			
-			let entity = entities[ i ];
-			const category = entity.properties._koodi._value;
-            
-			if ( category ) {
-			//colors of nature area enity are set based on it's category
-				this.setOtherNaturePolygonMaterialColor( entity, category );
+			// Process entities in batches for smooth performance
+			const batchSize = 20;
+			for (let i = 0; i < entities.length; i += batchSize) {
+				const batch = entities.slice(i, i + batchSize);
+				
+				// Process batch
+				for (const entity of batch) {
+					const category = entity.properties._koodi?._value;
+					if (category) {
+						this.setOtherNaturePolygonMaterialColor(entity, category);
+					}
+				}
+				
+				// Yield control after each batch to prevent UI blocking
+				if (i + batchSize < entities.length) {
+					await new Promise(resolve => {
+						if (window.requestIdleCallback) {
+							requestIdleCallback(resolve);
+						} else {
+							setTimeout(resolve, 0);
+						}
+					});
+				}
 			}
+			
+			if (!metadata.fromCache) {
+				console.log(`✓ Processed ${entities.length} other nature entities`);
+			} else {
+				console.log(`✓ Restored ${entities.length} other nature entities from cache`);
+			}
+			
+		} catch (error) {
+			console.error('Error processing other nature data:', error);
+			throw error;
 		}
-
-		this.store.setIsLoading( false );
 	}
 
 	/**
