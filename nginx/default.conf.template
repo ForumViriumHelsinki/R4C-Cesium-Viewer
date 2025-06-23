@@ -37,17 +37,15 @@ server {
 
     # Debug headers
     add_header X-Cache-Status $upstream_cache_status;
-    # add_header X-Debug-Request-URI $request_uri;
-    # add_header X-Debug-Original-URI $uri;
-
 
     location / {
         try_files $uri $uri/ /index.html;
     }
 
+    # FIXED: Updated to match Vite configuration (removed _2024 suffix)
     location /paavo {
         proxy_pass https://geo.stat.fi;
-        rewrite ^/paavo(.*)$ /geoserver/postialue/wfs?service=WFS&request=GetFeature&typename=postialue:pno_tilasto_2024&version=2.0.0&outputFormat=application/json&CQL_FILTER=kunta%20IN%20(%27091%27%2C%27092%27%2C%27049%27%2C%27235%27)&srsName=EPSG:4326$1 break;
+        rewrite ^/paavo(.*)$ /geoserver/postialue/wfs?service=WFS&request=GetFeature&typename=postialue:pno_tilasto&version=2.0.0&outputFormat=application/json&CQL_FILTER=kunta%20IN%20(%27091%27%2C%27092%27%2C%27049%27%2C%27235%27)&srsName=EPSG:4326$1 break;
     }
 
     location /pygeoapi {
@@ -84,6 +82,12 @@ server {
         rewrite ^/wms/proxy(.*)$ /geoserver/wms$1 break;
     }
 
+    # ADDED: Missing NDVI proxy route
+    location /ndvi_public {
+        proxy_pass https://storage.googleapis.com;
+        rewrite ^/ndvi_public(.*)$ /ndvi_public$1 break;
+    }
+
     location /terrain-proxy {
         proxy_pass https://kartta.hel.fi;
         rewrite ^/terrain-proxy(.*)$ /3d/datasource-data/4383570b-33a3-4a9f-ae16-93373aff5ffa$1 break;
@@ -91,15 +95,22 @@ server {
 
     location /wms/layers {
         proxy_pass https://kartta.hsy.fi;
-        # Don't include the request=getCapabilities in the proxy_pass
         rewrite ^/wms/layers$ /geoserver/wms?request=getCapabilities break;
     }
 
-location /digitransit {
-    proxy_set_header digitransit-subscription-key ${VITE_DIGITRANSIT_KEY};
+    # ADDED: Missing HSY action proxy route
+    location /hsy-action {
+        proxy_pass https://kartta.hsy.fi;
+        rewrite ^/hsy-action(.*)$ /action$1 break;
+    }
 
-    # Keep your existing proxy settings
-    proxy_pass https://api.digitransit.fi;
-    rewrite ^/digitransit(.*)$ $1 break;
-}
+    # FIXED: Environment variable handling for digitransit
+    location /digitransit {
+        # Use nginx environment variable substitution
+        set $digitransit_key "${VITE_DIGITRANSIT_KEY}";
+        proxy_set_header digitransit-subscription-key $digitransit_key;
+
+        proxy_pass https://api.digitransit.fi;
+        rewrite ^/digitransit(.*)$ $1 break;
+    }
 }
