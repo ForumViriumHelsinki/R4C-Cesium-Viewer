@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.17.2...r4c-cesium-viewer-v1.17.3) (2025-06-23)
+
+
+### Bug Fixes
+
+* pygeoapi proxy host ([#162](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/162)) ([3662a21](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3662a21c2e3beeb56d5d7023889912a3dc5b722e))
+
 ## [1.17.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.17.1...r4c-cesium-viewer-v1.17.2) (2025-06-23)
 
 
