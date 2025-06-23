@@ -52,7 +52,7 @@ server {
 
     location /pygeoapi {
         proxy_pass https://pygeoapi.dataportal.fi;
-        rewrite ^/pygeoapi(.*)$ /$1 break;
+        rewrite ^/pygeoapi/(.*)$ /$1 break;
     }
 
     location /wms/proxy {
