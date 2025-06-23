@@ -47,18 +47,9 @@ mdi-map-outline
         <BackgroundMapBrowser />
       </div>
       
-      <!-- Graphics Quality -->
+      <!-- Graphics Settings -->
       <div class="control-section">
-        <h3 class="section-subtitle">
-          <v-icon class="mr-2">
-mdi-palette
-</v-icon>
-          Graphics Quality
-        </h3>
-        <p class="search-description">
-          Anti-aliasing and rendering settings for better 3D building visualization
-        </p>
-        <GraphicsQuality />
+        <GraphicsSettingsDialog />
       </div>
 
       <!-- Analysis Tools -->
@@ -308,7 +299,7 @@ import StatisticalGridOptions from '../components/StatisticalGridOptions.vue';
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue';
 import MapControls from '../components/MapControls.vue';
 import DataSourceStatus from '../components/DataSourceStatus.vue';
-import GraphicsQuality from '../components/GraphicsQuality.vue';
+import GraphicsSettingsDialog from '../components/GraphicsSettingsDialog.vue';
 import CoolingCenter from '../components/CoolingCenter.vue';
 import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue';
 import EstimatedImpacts from '../components/EstimatedImpacts.vue';
@@ -330,7 +321,7 @@ export default {
     BackgroundMapBrowser,
     MapControls,
     DataSourceStatus,
-    GraphicsQuality,
+    GraphicsSettingsDialog,
     CoolingCenter,
     CoolingCenterOptimiser,
     EstimatedImpacts,

@@ -128,16 +128,38 @@ if (Array.isArray(entitiesArray)) {
 
 	}
     
-	handleBuildingFeature( properties ) {
+	async handleBuildingFeature( properties ) {
+		// Show loading indicator for building selection
+		try {
+			const { useLoadingStore } = await import('../stores/loadingStore.js');
+			const loadingStore = useLoadingStore();
+			loadingStore.startLoading('building-selection', 'Loading building information...');
+		} catch (error) {
+			console.warn('Loading store not available:', error);
+		}
 
-		this.store.setLevel( 'building' );
-		this.store.setPostalCode( properties._postinumero._value );
-		this.toggleStore.helsinkiView ? eventBus.emit( 'hideHelsinki' ) : eventBus.emit( 'hideCapitalRegion' );
-		eventBus.emit( 'showBuilding' );
-		this.elementsDisplayService.setBuildingDisplay( 'none' );
-		this.buildingService.resetBuildingOutline();
-		this.buildingService.createBuildingCharts( properties.treeArea, properties._avg_temp_c, properties );
-
+		try {
+			this.store.setLevel( 'building' );
+			this.store.setPostalCode( properties._postinumero._value );
+			this.toggleStore.helsinkiView ? eventBus.emit( 'hideHelsinki' ) : eventBus.emit( 'hideCapitalRegion' );
+			eventBus.emit( 'showBuilding' );
+			this.elementsDisplayService.setBuildingDisplay( 'none' );
+			this.buildingService.resetBuildingOutline();
+			
+			// Process building charts asynchronously
+			await this.buildingService.createBuildingCharts( properties.treeArea, properties._avg_temp_c, properties );
+		} catch (error) {
+			console.error('Error handling building feature:', error);
+		} finally {
+			// Hide loading indicator
+			try {
+				const { useLoadingStore } = await import('../stores/loadingStore.js');
+				const loadingStore = useLoadingStore();
+				loadingStore.stopLoading('building-selection');
+			} catch (error) {
+				console.warn('Loading store not available for cleanup:', error);
+			}
+		}
 	}
 
 	removeEntityByName( name ) {

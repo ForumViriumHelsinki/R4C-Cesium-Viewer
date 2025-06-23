@@ -2,6 +2,7 @@ import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useURLStore } from '../stores/urlStore.js';
+import unifiedLoader from './unifiedLoader.js';
 
 export default class Vegetation {
 	constructor( ) {
@@ -11,40 +12,80 @@ export default class Vegetation {
 	}
 
 	/**
- * Loads vegetation data for a given postcode asynchronously
- * 
- * @returns {Promise} - A promise that resolves once the data has been loaded
- */
-	async loadVegetation( ) {
-		this.store.setIsLoading( true );
-
-		fetch( this.urlStore.vegetation( this.store.postalcode )  )
-			.then( response => response.json() )
-			.then( data => { this.addVegetationDataSource( data ); } )
-			.catch( error => { console.log( 'Error loading vegetation:', error ); } );
+	 * Loads vegetation data for a given postcode using unified loader
+	 * 
+	 * @returns {Promise} - A promise that resolves once the data has been loaded
+	 */
+	async loadVegetation() {
+		try {
+			const data = await unifiedLoader.loadLayer({
+				layerId: 'vegetation',
+				url: this.urlStore.vegetation(this.store.postalcode),
+				type: 'geojson',
+				processor: (data) => this.addVegetationDataSource(data),
+				options: {
+					cache: true,
+					cacheTTL: 15 * 60 * 1000, // 15 minutes
+					retries: 2,
+					batchSize: 25,
+					progressive: true
+				}
+			});
+			
+			console.log(`✓ Vegetation data loaded for postal code ${this.store.postalcode}`);
+			return data;
+			
+		} catch (error) {
+			console.error('Failed to load vegetation data:', error);
+			throw error;
+		}
 	}
 
 	/**
- * Adds a vegetation data source to the viewer
- * 
- * @param {Object} data - The vegetation data to be added as a data source
- */
-	async addVegetationDataSource ( data ) {
-
-		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Vegetation' );
-	
-		for ( let i = 0; i < entities.length; i++ ) {
+	 * Adds a vegetation data source to the viewer with batch processing
+	 * 
+	 * @param {Object} data - The vegetation data to be added as a data source
+	 * @param {Object} metadata - Additional metadata about the loading process
+	 */
+	async addVegetationDataSource(data, metadata = {}) {
+		try {
+			const entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Vegetation');
 			
-			let entity = entities[ i ];
-			const category = entity.properties._koodi._value;
-            
-			if ( category ) {
-			//colors of nature area enity are set based on it's category
-				this.setVegetationPolygonMaterialColor( entity, category );
-			}	
+			// Process entities in batches for smooth performance
+			const batchSize = 25;
+			for (let i = 0; i < entities.length; i += batchSize) {
+				const batch = entities.slice(i, i + batchSize);
+				
+				// Process batch
+				for (const entity of batch) {
+					const category = entity.properties._koodi?._value;
+					if (category) {
+						this.setVegetationPolygonMaterialColor(entity, category);
+					}
+				}
+				
+				// Yield control after each batch to prevent UI blocking
+				if (i + batchSize < entities.length) {
+					await new Promise(resolve => {
+						if (window.requestIdleCallback) {
+							requestIdleCallback(resolve);
+						} else {
+							setTimeout(resolve, 0);
+						}
+					});
+				}
+			}
+			
+			if (!metadata.fromCache) {
+				console.log(`✓ Processed ${entities.length} vegetation entities`);
+			} else {
+				console.log(`✓ Restored ${entities.length} vegetation entities from cache`);
+			}
+			
+		} catch (error) {
+			console.error('Error processing vegetation data:', error);
+			throw error;
 		}
-
-		this.store.setIsLoading( false );
 	}
 
 	/**
