@@ -24,13 +24,21 @@ export default class Building {
  *
  * @param { Object } entities Cesium entities
  */
-	removeNearbyTreeEffect( entities ) {
-
-		for ( let i = 0; i < entities.length; i++ ) {
-
-			let entity = entities[i];
-			this.setBuildingEntityPolygon( entity );
-
+	async removeNearbyTreeEffect( entities ) {
+		const batchSize = 25; // Process 25 entities at a time
+		
+		for ( let i = 0; i < entities.length; i += batchSize ) {
+			const batch = entities.slice(i, i + batchSize);
+			
+			// Process batch synchronously
+			for ( let j = 0; j < batch.length; j++ ) {
+				this.setBuildingEntityPolygon( batch[j] );
+			}
+			
+			// Yield control to prevent UI blocking
+			if ( i + batchSize < entities.length ) {
+				await new Promise(resolve => requestIdleCallback(resolve));
+			}
 		}
 	}
 
@@ -39,13 +47,21 @@ export default class Building {
  *
  * @param { Object } entities Cesium entities
  */
-	setHeatExposureToBuildings( entities ) {
-
-		for ( let i = 0; i < entities.length; i++ ) {
-
-			let entity = entities[i];
-			this.setBuildingEntityPolygon( entity );
-
+	async setHeatExposureToBuildings( entities ) {
+		const batchSize = 25; // Process 25 entities at a time
+		
+		for ( let i = 0; i < entities.length; i += batchSize ) {
+			const batch = entities.slice(i, i + batchSize);
+			
+			// Process batch synchronously
+			for ( let j = 0; j < batch.length; j++ ) {
+				this.setBuildingEntityPolygon( batch[j] );
+			}
+			
+			// Yield control to prevent UI blocking
+			if ( i + batchSize < entities.length ) {
+				await new Promise(resolve => requestIdleCallback(resolve));
+			}
 		}
 	}
 
@@ -58,11 +74,15 @@ export default class Building {
  * @param { Object } buildingProps 
 
  */
-	createBuildingCharts( treeArea, avg_temp_c, buildingProps ) {
+	async createBuildingCharts( treeArea, avg_temp_c, buildingProps ) {
 
 		this.store.view === 'grid' && this.propsStore.setGridBuildingProps( buildingProps );
 
-		filterHeatTimeseries( buildingProps );
+		// Process heat timeseries asynchronously to avoid blocking
+		await new Promise(resolve => {
+			filterHeatTimeseries( buildingProps );
+			requestIdleCallback ? requestIdleCallback(resolve) : setTimeout(resolve, 0);
+		});
 
 		( this.toggleStore.showTrees && treeArea ) &&
       ( this.propsStore.setTreeArea( treeArea ) );
@@ -142,20 +162,30 @@ export default class Building {
 
 	}
 
-	setHelsinkiBuildingsHeight( entities ) {
+	async setHelsinkiBuildingsHeight( entities ) {
+		const batchSize = 30; // Process 30 entities at a time (height calc is lighter)
+		
+		for ( let i = 0; i < entities.length; i += batchSize ) {
+			const batch = entities.slice(i, i + batchSize);
+			
+			// Process batch synchronously
+			for ( let j = 0; j < batch.length; j++ ) {
+				const entity = batch[j];
+				
+				if ( entity.polygon ) {
+					const { measured_height, i_kerrlkm } = entity.properties;
 
-		for ( let i = 0; i < entities.length; i++ ) {
-
-			let entity = entities[i];
-
-			if ( entity.polygon ) {
-				const { measured_height, i_kerrlkm } = entity.properties;
-
-				entity.polygon.extrudedHeight = measured_height
-					? measured_height._value
-					: ( i_kerrlkm != null
-						? i_kerrlkm._value * 3.2
-						: 2.7 );
+					entity.polygon.extrudedHeight = measured_height
+						? measured_height._value
+						: ( i_kerrlkm != null
+							? i_kerrlkm._value * 3.2
+							: 2.7 );
+				}
+			}
+			
+			// Yield control to prevent UI blocking
+			if ( i + batchSize < entities.length ) {
+				await new Promise(resolve => requestIdleCallback(resolve));
 			}
 		}
 	}
@@ -177,8 +207,8 @@ export default class Building {
 			console.log('[HelsinkiBuilding] ✅ Received', data.features?.length || 0, 'building features');
 
 			const entities = await this.urbanheatService.findUrbanHeatData( data );
-			this.setHeatExposureToBuildings( entities );
-			this.setHelsinkiBuildingsHeight( entities );
+			await this.setHeatExposureToBuildings( entities );
+			await this.setHelsinkiBuildingsHeight( entities );
 			
 			console.log('[HelsinkiBuilding] ✅ Buildings processed and added to Cesium viewer');
 		} catch ( error ) {

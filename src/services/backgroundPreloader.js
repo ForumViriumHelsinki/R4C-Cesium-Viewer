@@ -1,5 +1,5 @@
 import cacheService from './cacheService.js';
-import { progressiveLoader } from './progressiveLoader.js';
+import progressiveLoader from './progressiveLoader.js';
 
 /**
  * Background Preloader Service

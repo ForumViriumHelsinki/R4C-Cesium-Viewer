@@ -1,8 +1,6 @@
 <template>
     <!-- Cesium Container -->
     <div id="cesiumContainer">
-	    <!-- Loading Component -->
-    	<Loading v-if="store.isLoading" />
 		<Timeline v-if="store.level === 'postalCode' || store.level === 'building' "/>
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
@@ -31,7 +29,6 @@ import { useGraphicsStore } from '../stores/graphicsStore.js';
 
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import ControlPanel from './ControlPanel.vue';
-import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
 import Timeline from '../components/Timeline.vue';
 
@@ -40,7 +37,6 @@ export default {
 		DisclaimerPopup,
 		ControlPanel,
 		BuildingInformation,
-		Loading,
 		Timeline,
 	},
 	setup() {

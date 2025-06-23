@@ -23,6 +23,7 @@ declare module 'vue' {
     FloodBackgroundSyke: typeof import('./src/components/FloodBackgroundSyke.vue')['default']
     Geocoding: typeof import('./src/components/Geocoding.vue')['default']
     GraphicsQuality: typeof import('./src/components/GraphicsQuality.vue')['default']
+    GraphicsSettingsDialog: typeof import('./src/components/GraphicsSettingsDialog.vue')['default']
     GridView: typeof import('./src/components/GridView.vue')['default']
     HeatHistogram: typeof import('./src/components/HeatHistogram.vue')['default']
     HeatHistogramHelsinki: typeof import('./src/components/HeatHistogramHelsinki.vue')['default']
