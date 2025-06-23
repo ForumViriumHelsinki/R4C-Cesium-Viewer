@@ -1,4 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { setupDigitransitMock } from './setup/digitransit-mock';
+
+// Setup digitransit mocking for all tests in this file
+setupDigitransitMock();
 
 test.describe('Navigation and App Layout', () => {
   test.beforeEach(async ({ page }) => {
