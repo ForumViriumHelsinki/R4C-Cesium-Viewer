@@ -1,26 +1,27 @@
 <template>
   <div
 id="heatTimeseriesContainer"
-class="timeline-container"
+class="timeline-overlay"
 >
-    <div class="timeline-header">
-      <h4 class="timeline-title">
-        <v-icon
+    <div class="timeline-card">
+      <div class="timeline-header">
+        <div class="timeline-title">
+          <v-icon
 class="mr-2"
-size="18"
+size="16"
 >
 mdi-clock-outline
 </v-icon>
-        Heat Data Timeline
-      </h4>
-      <v-chip
+          <span>Heat Timeline</span>
+        </div>
+        <v-chip
 size="small"
 color="primary"
 variant="tonal"
 >
-        {{ selectedDate }}
-      </v-chip>
-    </div>
+          {{ selectedDate }}
+        </v-chip>
+      </div>
     
     <div class="date-labels">
       <span
@@ -48,14 +49,15 @@ variant="tonal"
       />
     </div>
     
-    <div class="timeline-info">
-      <span class="info-text">
-        <v-icon
+      <div class="timeline-info">
+        <span class="info-text">
+          <v-icon
 size="14"
 class="mr-1"
 >mdi-information-outline</v-icon>
-        Use the slider to explore heat data across different time periods
-      </span>
+          Use the slider to explore heat data across different time periods
+        </span>
+      </div>
     </div>
   </div>
 </template>
@@ -139,26 +141,41 @@ export default {
 </script>
 
 <style scoped>
-.timeline-container {
-  width: 100%;
-  padding: 0;
-  background-color: transparent;
+.timeline-overlay {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.timeline-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  min-width: 400px;
+  max-width: 500px;
+  pointer-events: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .timeline-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .timeline-title {
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
   font-weight: 600;
   margin: 0;
   color: rgba(0, 0, 0, 0.87);
-  display: flex;
-  align-items: center;
 }
 
 .date-labels {
@@ -208,6 +225,21 @@ export default {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .timeline-overlay {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+  }
+  
+  .timeline-card {
+    min-width: auto;
+    padding: 12px 16px;
+  }
+  
+  .timeline-title {
+    font-size: 13px;
+  }
+  
   .date-labels {
     padding: 0 8px;
   }
@@ -216,26 +248,16 @@ export default {
     font-size: 0.7rem;
   }
   
-  .timeline-title {
-    font-size: 0.9rem;
-  }
-  
   .info-text {
     font-size: 0.7rem;
   }
 }
 
-/* When used as standalone (fixed positioning) */
-.timeline-container.standalone {
-  position: fixed;
-  bottom: 32px;
-  left: 0;
-  z-index: 1000;
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .timeline-card {
+    background: #ffffff;
+    border: 2px solid #000000;
+  }
 }
 </style>

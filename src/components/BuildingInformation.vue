@@ -11,26 +11,52 @@
 v-if="buildingAttributes"
 class="tooltip-content"
 >
-      <div
+      <!-- Header with building icon -->
+      <div class="tooltip-header">
+        <div class="building-icon">
+🏢
+</div>
+        <div class="building-title">
+Building Details
+</div>
+      </div>
+      
+      <!-- Compact data grid -->
+      <div class="data-grid">
+        <div
 v-if="buildingAttributes.address"
-class="tooltip-item"
+class="data-item"
 >
-        <span class="tooltip-label">Address:</span>
-        <span class="tooltip-value">{{ buildingAttributes.address }}</span>
-      </div>
-      <div
+          <div class="data-label">
+📍
+</div>
+          <div class="data-value">
+{{ buildingAttributes.address }}
+</div>
+        </div>
+        <div
 v-if="buildingAttributes.rakennusaine_s"
-class="tooltip-item"
+class="data-item"
 >
-        <span class="tooltip-label">Building Material:</span>
-        <span class="tooltip-value">{{ buildingAttributes.rakennusaine_s }}</span>
-      </div>
-      <div
+          <div class="data-label">
+🧱
+</div>
+          <div class="data-value">
+{{ buildingAttributes.rakennusaine_s }}
+</div>
+        </div>
+        <div
 v-if="buildingAttributes.avg_temp_c"
-class="tooltip-item"
+class="data-item"
 >
-        <span class="tooltip-label">Surface Temperature ({{ store.heatDataDate }}):</span>
-        <span class="tooltip-value">{{ buildingAttributes.avg_temp_c }}°C</span>
+          <div class="data-label">
+🌡️
+</div>
+          <div class="data-value">
+            <span class="temp-value">{{ buildingAttributes.avg_temp_c }}°C</span>
+            <span class="temp-date">({{ store.heatDataDate }})</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -56,11 +82,13 @@ export default {
 			position: 'absolute',
 			top: `${mousePosition.value.y + 15}px`, // Offset to avoid overlapping cursor
 			left: `${mousePosition.value.x + 15}px`,
-			background: 'rgba(0, 0, 0, 0.8)',
+			background: 'rgba(30, 30, 30, 0.95)',
 			color: 'white',
-			padding: '8px',
-			borderRadius: '4px',
+			padding: '12px',
+			borderRadius: '8px',
 			pointerEvents: 'none',
+			backdropFilter: 'blur(8px)',
+			border: '1px solid rgba(255, 255, 255, 0.1)',
 		} ) );
 
 		// Function to fetch building information based on the hovered entity
@@ -160,37 +188,77 @@ export default {
 
 <style scoped>
 .building-tooltip {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.4;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   z-index: 1000;
-  max-width: 300px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 280px;
+  min-width: 220px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .tooltip-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
-.tooltip-item {
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.building-icon {
+  font-size: 16px;
+}
+
+.building-title {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+.data-grid {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
 }
 
-.tooltip-label {
-  font-weight: 600;
-  color: #e0e0e0;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.data-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 20px;
 }
 
-.tooltip-value {
+.data-label {
+  font-size: 14px;
+  flex-shrink: 0;
+  width: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.data-value {
   color: #ffffff;
   font-weight: 400;
+  flex: 1;
+  word-wrap: break-word;
+}
+
+.temp-value {
+  font-weight: 600;
+  color: #4fc3f7;
+}
+
+.temp-date {
+  font-size: 11px;
+  color: #b0b0b0;
+  margin-left: 4px;
 }
 
 /* High contrast mode support */
@@ -200,7 +268,12 @@ export default {
     border: 2px solid #ffffff;
   }
   
-  .tooltip-label {
+  .building-title,
+  .data-value {
+    color: #ffffff;
+  }
+  
+  .temp-value {
     color: #ffffff;
   }
 }
@@ -209,6 +282,18 @@ export default {
 @media (prefers-reduced-motion: reduce) {
   .building-tooltip {
     transition: none;
+  }
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .building-tooltip {
+    max-width: 240px;
+    font-size: 12px;
+  }
+  
+  .building-icon {
+    font-size: 14px;
   }
 }
 </style>

@@ -234,11 +234,11 @@ onMounted(async () => {
 
 .minimal-disclaimer {
 	position: fixed;
-	bottom: 4px;
-	left: 8px;
-	z-index: 999;
+	bottom: 8px;
+	left: 12px;
+	z-index: 1100;
 	pointer-events: none;
-	opacity: 0.6;
+	opacity: 0.7;
 	transition: opacity 0.2s ease;
 }
 
@@ -283,8 +283,8 @@ onMounted(async () => {
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
 	.minimal-disclaimer {
-		bottom: 2px;
-		left: 4px;
+		bottom: 6px;
+		left: 8px;
 	}
 	
 	.disclaimer-text {
