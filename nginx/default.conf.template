@@ -50,8 +50,9 @@ server {
         rewrite ^/paavo(.*)$ /geoserver/postialue/wfs?service=WFS&request=GetFeature&typename=postialue:pno_tilasto_2024&version=2.0.0&outputFormat=application/json&CQL_FILTER=kunta%20IN%20(%27091%27%2C%27092%27%2C%27049%27%2C%27235%27)&srsName=EPSG:4326$1 break;
     }
 
-    location /pygeoapi {
-        proxy_pass https://pygeoapi.dataportal.fi;
+    location /pygeoapi/ {
+        proxy_pass https://pygeoapi.dataportal.fi/;
+        proxy_set_header Host $host;
         rewrite ^/pygeoapi/(.*)$ /$1 break;
     }
 
