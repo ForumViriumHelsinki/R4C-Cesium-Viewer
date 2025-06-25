@@ -1,14 +1,6 @@
 <template>
     <!-- Cesium Container -->
     <div id="cesiumContainer">
-
-		<div class="control-panel">
-		    <!-- Control Panel with event listener -->
-			<ControlPanel />
-		
-		</div>
-	    <!-- Loading Component -->
-    	<Loading v-if="store.isLoading" />
 		<Timeline v-if="store.level === 'postalCode' || store.level === 'building' "/>
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
@@ -25,17 +17,18 @@ import 'cesium/Source/Widgets/widgets.css';
 import Datasource from '../services/datasource.js'; 
 import WMS from '../services/wms.js'; 
 import Featurepicker from '../services/featurepicker.js';
-import Camera from '../services/camera.js'; 
+import Camera from '../services/camera.js';
+import Graphics from '../services/graphics.js'; 
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
+import { useGraphicsStore } from '../stores/graphicsStore.js';
 
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import ControlPanel from './ControlPanel.vue';
-import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
 import Timeline from '../components/Timeline.vue';
 
@@ -44,7 +37,6 @@ export default {
 		DisclaimerPopup,
 		ControlPanel,
 		BuildingInformation,
-		Loading,
 		Timeline,
 	},
 	setup() {
@@ -54,6 +46,7 @@ export default {
 		const socioEconomicsStore = useSocioEconomicsStore();
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
+		const graphicsStore = useGraphicsStore();
     	const shouldShowBuildingInformation = computed(() => {
       		return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading;
     	});
@@ -62,7 +55,8 @@ export default {
 		let lastPickTime = 0;
 
 		const initViewer = () => {
-			viewer.value = new Cesium.Viewer('cesiumContainer', {
+			// Create viewer with enhanced graphics options
+			const viewerOptions = {
 				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
 				animation: false,
 				fullscreenButton: false,
@@ -74,9 +68,21 @@ export default {
 				baseLayerPicker: false,
 				infoBox: false,
 				homeButton: false,
-			});
+			};
+
+			// Add request render mode if enabled for performance
+			if (graphicsStore.requestRenderMode) {
+				viewerOptions.requestRenderMode = true;
+				viewerOptions.maximumRenderTimeChange = Infinity;
+			}
+
+			viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions);
 
 			store.setCesiumViewer(viewer.value);
+
+			// Initialize graphics quality settings
+			const graphics = new Graphics();
+			graphics.init(viewer.value);
 
 			viewer.value.imageryLayers.add(
 				new WMS().createHelsinkiImageryLayer( 'avoindata:Karttasarja_PKS' )
@@ -102,6 +108,7 @@ export default {
 		};
 
 		const addPostalCodes = async () => {
+			console.log('[CesiumViewer] 📮 Loading postal codes...');
 			const dataSourceService = new Datasource();
 			await dataSourceService.loadGeoJsonDataSource(
 				0.2,
@@ -110,27 +117,38 @@ export default {
 			);
 
 			const dataSource = await dataSourceService.getDataSourceByName('PostCodes');
+			console.log('[CesiumViewer] ✅ Postal codes loaded, entities count:', dataSource?._entityCollection?._entities?._array?.length || 0);
 			propsStore.setPostalCodeData(dataSource);
 		};
 
 		const addFeaturePicker = () => {
 			const cesiumContainer = document.getElementById('cesiumContainer');
 			const featurepicker = new Featurepicker();
+			console.log('[CesiumViewer] ✅ FeaturePicker click handler added');
+			
 			cesiumContainer.addEventListener('click', (event) => {
   				const controlPanelElement = document.querySelector('.control-panel-main');
 				const timeSeriesElement = document.querySelector('#heatTimeseriesContainer');
-  				const isClickOnControlPanel = controlPanelElement.contains(event.target);
-				const isClickOutsideTimeSeries = timeSeriesElement && timeSeriesElement.contains(event.target);
+  				const isClickOnControlPanel = controlPanelElement && controlPanelElement.contains(event.target);
+				const isClickOnTimeSeries = timeSeriesElement && timeSeriesElement.contains(event.target);
     			const currentTime = Date.now();
 
-    			if ( !isClickOnControlPanel && !isClickOutsideTimeSeries && ( currentTime - lastPickTime ) > 500) {
+				console.log('[CesiumViewer] 🖱️ Cesium click detected');
+				console.log('[CesiumViewer] Click on control panel:', isClickOnControlPanel);
+				console.log('[CesiumViewer] Click on time series:', isClickOnTimeSeries);
+				console.log('[CesiumViewer] Time since last pick:', currentTime - lastPickTime);
+
+    			if ( !isClickOnControlPanel && !isClickOnTimeSeries && ( currentTime - lastPickTime ) > 500) {
+					console.log('[CesiumViewer] ✅ Processing click through FeaturePicker');
       				store.setShowBuildingInfo( false );
       				!store.showBuildingInfo && featurepicker.processClick( event );
       				lastPickTime = currentTime; // Update the last pick time
       				setTimeout( () => {
 						store.setShowBuildingInfo( true );
       				}, 1000 );					
-    			}
+    			} else {
+					console.log('[CesiumViewer] ⚠️ Click ignored due to conditions');
+				}
   			});
 		};
 
@@ -150,13 +168,3 @@ export default {
 	},
 };
 </script>
-
-<style scoped>
-
-#cesiumContainer {
-	position: relative;
-	width: 100%;
-	height: 100vh;
-}
-
-</style>

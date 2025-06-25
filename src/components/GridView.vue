@@ -132,6 +132,7 @@ import { useToggleStore } from '../stores/toggleStore.js';
 import Datasource from '../services/datasource.js';
 import Populationgrid from '../services/populationgrid.js';
 import EspooSurvey from '../services/espooSurvey.js';
+import Camera from '../services/camera.js';
 import BuildingGridChart from './BuildingGridChart.vue';
 import SurveyScatterPlot from './SurveyScatterPlot.vue';
 import SosEco250mGrid from './SosEco250mGrid.vue'; // Import the 250mGrid component
@@ -163,7 +164,15 @@ export default {
 	},    
 	methods: {
 		reset(){
-			location.reload();
+			// Smart reset instead of page reload
+			this.store.setLevel('start');
+			this.store.setPostalCode(null);
+			this.store.setNameOfZone(null);
+			this.store.setView('capitalRegion');
+			
+			// Reset camera to initial position
+			const camera = new Camera();
+			camera.init();
 		},
 		async createPopulationGrid( ) {
 			const populationgridService = new Populationgrid();
