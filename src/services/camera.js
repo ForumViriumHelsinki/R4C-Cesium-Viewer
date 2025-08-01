@@ -141,6 +141,49 @@ switchTo3DGrid() {
 		} );
 	}
 
+    /**
+     * Zooms the camera in or out.
+     * @param {number} multiplier - A value > 1 zooms in, < 1 zooms out.
+     */
+    zoom(multiplier) {
+        if (multiplier > 1) {
+            this.viewer.camera.zoomIn(this.viewer.camera.positionCartographic.height * (1 - 1 / multiplier));
+        } else {
+            this.viewer.camera.zoomOut(this.viewer.camera.positionCartographic.height * (1 - multiplier));
+        }
+    }
+
+    /**
+     * Rotates the camera to a specific heading (azimuth).
+     * @param {number} headingInDegrees - The target heading in degrees (0 = North, 90 = East).
+     */
+    setHeading(headingInDegrees) {
+        this.viewer.camera.flyTo({
+            destination: this.viewer.camera.position,
+            orientation: {
+                heading: Cesium.Math.toRadians(headingInDegrees),
+                pitch: this.viewer.camera.pitch, // Keep current pitch
+                roll: this.viewer.camera.roll,   // Keep current roll
+            },
+            duration: 1.0 // Animation duration in seconds
+        });
+    }
+
+    /**
+     * Resets the camera orientation to face North with a default pitch.
+     */
+    resetNorth() {
+        this.viewer.camera.flyTo({
+            destination: this.viewer.camera.position,
+            orientation: {
+                heading: Cesium.Math.toRadians(0),
+                pitch: Cesium.Math.toRadians(-35.0), // Default 3D pitch
+                roll: 0.0,
+            },
+            duration: 1.0
+        });
+    }	
+
 	rotate180Degrees() {
 		const camera = this.viewer.camera;
 		const scene = this.viewer.scene;

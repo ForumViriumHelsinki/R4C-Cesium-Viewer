@@ -11,6 +11,7 @@ declare module 'vue' {
     BuildingHeatChart: typeof import('./src/components/BuildingHeatChart.vue')['default']
     BuildingInformation: typeof import('./src/components/BuildingInformation.vue')['default']
     BuildingTreeChart: typeof import('./src/components/BuildingTreeChart.vue')['default']
+    CameraControls: typeof import('./src/components/CameraControls.vue')['default']
     CategoricalSelect: typeof import('./src/components/CategoricalSelect.vue')['default']
     CoolingCenter: typeof import('./src/components/CoolingCenter.vue')['default']
     CoolingCenterOptimiser: typeof import('./src/components/CoolingCenterOptimiser.vue')['default']

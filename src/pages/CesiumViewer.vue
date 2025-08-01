@@ -4,6 +4,7 @@
 
 		<div class="control-panel">
 		    <!-- Control Panel with event listener -->
+			<CameraControls />
 			<ControlPanel />
 		
 		</div>
@@ -38,10 +39,12 @@ import ControlPanel from './ControlPanel.vue';
 import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
 import Timeline from '../components/Timeline.vue';
+import CameraControls from '../components/CameraControls.vue';
 
 export default {
 	components: {
 		DisclaimerPopup,
+		CameraControls,
 		ControlPanel,
 		BuildingInformation,
 		Loading,
