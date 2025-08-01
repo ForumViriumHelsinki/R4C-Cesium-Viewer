@@ -1,0 +1,21 @@
+# 1. Set your Function's Cloud Run URL
+URL="https://europe-north1-fvh-project-containers-etc.cloudfunctions.net/adaptation_landcover"
+
+# 2. Set the Authorization Header. This command gets a fresh, valid token from gcloud.
+AUTH_HEADER="Authorization: Bearer $(gcloud auth print-identity-token)"
+
+# 3. Construct the JSON payload
+JSON_PAYLOAD='{
+    "year": "2022",
+    "gcs_bucket": "regions4climate",
+    "gcs_path": "Thermal/vector_data/grid_3_dates_heat.json",
+    "wfs_layers": [
+        "asuminen_ja_maankaytto:maanpeite_muu_vetta_lapaisematon_pinta"
+    ]
+}'
+
+# 4. Execute the request using curl
+curl -X POST "$URL" \
+     -H "Content-Type: application/json" \
+     -H "$AUTH_HEADER" \
+     -d "$JSON_PAYLOAD"
