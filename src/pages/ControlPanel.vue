@@ -56,23 +56,6 @@ class="tooltip"
                     </template>
                     <span>Reset application</span>
                   </v-tooltip>
-
-                  <v-tooltip location="bottom">
-                    <template #activator="{ props }">
-                      <v-btn
-                        v-if="currentLevel !== 'start'"
-                        icon
-                        class="uiButton"
-                        style="color: blue; float:right; cursor: pointer;"
-                        v-bind="props"
-                        size="x-small"
-                        @click="rotateCamera"
-                      >
-                        <v-icon>mdi-compass</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Rotate camera 180 degrees</span>
-                  </v-tooltip>
               </v-list-item>
               
               <v-list-item class="pa-0 ma-0">
@@ -385,12 +368,6 @@ export default {
       }
     };
 
-    // Function to rotate the Cesium camera
-    const rotateCamera = () => {
-      const camera = new Camera();
-      camera.rotate180Degrees();
-    };
-
     // Computed property to calculate drawer width in percentage
     const drawerWidth = computed(() => {
       return globalStore.navbarWidth; // 37.5% of the window width
@@ -410,7 +387,6 @@ export default {
       currentView,
 			heatHistogramData,
       scatterPlotEntities,
-      rotateCamera,
       togglePanel,
       reset,
       returnToPostalCode,
