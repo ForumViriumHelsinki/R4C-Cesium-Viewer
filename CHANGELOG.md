@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.17.3...r4c-cesium-viewer-v1.18.0) (2025-08-01)
+
+
+### Features
+
+* compass and zoom [#166](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/166) ([#167](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/167)) ([c66048b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c66048b87e5d12c7d04108ad830ae1886e6dfedf))
+
 ## [1.17.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.17.2...r4c-cesium-viewer-v1.17.3) (2025-06-23)
 
 
