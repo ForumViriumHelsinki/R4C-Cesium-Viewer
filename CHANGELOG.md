@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.18.0...r4c-cesium-viewer-v1.19.0) (2025-08-07)
+
+
+### Features
+
+* parks adaption module [#164](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/164) ([#169](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/169)) ([85a5d3c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/85a5d3c2d3fd175fc0b1c7315ba8ad5a3d2b1ddf))
+
 ## [1.18.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.17.3...r4c-cesium-viewer-v1.18.0) (2025-08-01)
 
 
