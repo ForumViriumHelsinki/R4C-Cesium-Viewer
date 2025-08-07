@@ -28,6 +28,7 @@ declare module 'vue' {
     HSYScatterplot: typeof import('./src/components/HSYScatterplot.vue')['default']
     HSYWMS: typeof import('./src/components/HSYWMS.vue')['default']
     HSYYearSelect: typeof import('./src/components/HSYYearSelect.vue')['default']
+    LandcoverToParks: typeof import('./src/components/LandcoverToParks.vue')['default']
     Layers: typeof import('./src/components/Layers.vue')['default']
     Loading: typeof import('./src/components/Loading.vue')['default']
     NDVIChart: typeof import('./src/components/NDVIChart.vue')['default']

@@ -26,6 +26,9 @@ export const useURLStore = defineStore('url', {
     hsyGridBuildings: (state) => (bboxString, limit = 2000) => {
       return `${state.pygeoapiBase}/hsy_buildings/items?f=json&limit=${limit}&bbox=${bboxString}`;
     },
+    landcoverToParks: (state) => (gridId, limit = 2) => {
+      return `${state.pygeoapiBase}/adaptation_landcover/items?f=json&limit=${limit}&grid_id=${gridId}`;
+    },    
     ndviTiffUrl: (state) => (ndviDate) => {
       return `${state.imagesBase}/ndvi_${ndviDate}.tiff`;
     },

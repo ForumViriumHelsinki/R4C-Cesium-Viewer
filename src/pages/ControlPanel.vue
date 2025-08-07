@@ -115,6 +115,16 @@ class="pa-0 ma-0"
   </v-expansion-panel-text>
 </v-expansion-panel>
 
+<v-expansion-panel
+  v-if="currentView === 'grid' && statsIndex.includes('heat')"
+  class="pa-0 ma-0"
+  title="Turn landcover green and blue"
+>
+  <v-expansion-panel-text class="pa-0 ma-0 landcover-to-parks-expansion-text">
+    <LandcoverToParks />
+  </v-expansion-panel-text>
+</v-expansion-panel>
+
                   <v-expansion-panel
 v-if="currentView === 'grid'"
 class="pa-0 ma-0"
@@ -304,6 +314,7 @@ import { storeToRefs } from 'pinia';
 import CoolingCenter from '../components/CoolingCenter.vue';
 import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue';
 import EstimatedImpacts from '../components/EstimatedImpacts.vue';
+import LandcoverToParks from '../components/LandcoverToParks.vue';
 
 export default {
 	components: {
@@ -326,7 +337,8 @@ export default {
     PostalCodeNDVI,
     CoolingCenter,
     CoolingCenterOptimiser,
-    EstimatedImpacts
+    EstimatedImpacts,
+    LandcoverToParks
 	},
 	setup() {
 		const globalStore = useGlobalStore();
