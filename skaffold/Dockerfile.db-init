@@ -1,0 +1,35 @@
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install psycopg2-binary
+
+# Install dbmate
+ARG DBMATE_VERSION=v2.13.0
+RUN curl -fsSL -o /usr/local/bin/dbmate \
+    https://github.com/amacneil/dbmate/releases/download/${DBMATE_VERSION}/dbmate-linux-amd64 \
+    && chmod +x /usr/local/bin/dbmate
+
+# Create app directory
+WORKDIR /app
+
+# Copy migration files and scripts
+COPY db/ ./db/
+
+# Set dbmate environment variables
+ENV DBMATE_MIGRATIONS_DIR="/app/db/migrations"
+ENV DBMATE_WAIT=true
+ENV DBMATE_MIGRATIONS_TABLE="schema_migrations"
+
+# Copy initialization and test scripts
+COPY db/scripts/init-database.sh ./init-database.sh
+COPY scripts/test_migration.sh ./test_migration.sh
+RUN chmod +x ./init-database.sh ./test_migration.sh
+
+# Run initialization script
+CMD ["./init-database.sh"]

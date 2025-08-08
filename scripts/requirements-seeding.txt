@@ -1,0 +1,2 @@
+# Requirements for database seeding scripts
+psycopg2-binary>=2.9.0

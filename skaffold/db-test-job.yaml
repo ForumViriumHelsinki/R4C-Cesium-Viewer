@@ -1,0 +1,61 @@
+# Database Migration Test Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration-test
+  labels:
+    app.kubernetes.io/name: db-migration-test
+    app.kubernetes.io/component: database-test
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 3600
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: db-migration-test
+        app.kubernetes.io/component: database-test
+    spec:
+      restartPolicy: Never
+
+      # Wait for PostgreSQL to be ready
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:15-alpine
+        env:
+        - name: PGHOST
+          value: "postgresql"
+        - name: PGPORT
+          value: "5432"
+        - name: PGUSER
+          value: "regions4climate_user"
+        - name: PGPASSWORD
+          value: "regions4climate_pass"
+        - name: PGDATABASE
+          value: "regions4climate"
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for PostgreSQL to be ready..."
+          until pg_isready -h $PGHOST -p $PGPORT -U $PGUSER; do
+            echo "PostgreSQL is not ready yet. Waiting..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+
+      # Run migration tests
+      containers:
+      - name: db-test
+        image: "{{.IMAGE_REPO_db-init}}:{{.IMAGE_TAG_db-init}}@{{.IMAGE_DIGEST_db-init}}"
+        env:
+        - name: DATABASE_URL
+          value: "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate?sslmode=disable"
+        - name: DB_INIT_MODE
+          value: "test"
+        - name: DBMATE_MIGRATIONS_DIR
+          value: "/app/db/migrations"
+        - name: DBMATE_WAIT
+          value: "true"
+        - name: DBMATE_MIGRATIONS_TABLE
+          value: "schema_migrations"

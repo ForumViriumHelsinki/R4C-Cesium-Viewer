@@ -1,0 +1,52 @@
+# PostgreSQL configuration for local development with PostGIS
+
+auth:
+  postgresPassword: "postgres"
+  username: "regions4climate_user"
+  password: "regions4climate_pass"
+  database: "regions4climate"
+
+# image:
+#   registry: docker.io
+#   repository: postgis/postgis
+#   tag: "15-3.4"
+
+# PostGIS is included in the postgis/postgis image
+primary:
+  initdb:
+    scripts:
+      01-create-extensions.sql: |
+        -- Create PostGIS in the main regions4climate database
+        CREATE EXTENSION IF NOT EXISTS postgis;
+        CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+        -- Verify PostGIS is working
+        SELECT PostGIS_version();
+      02-create-med-iren-db.sql: |
+        CREATE DATABASE med_iren;
+        \c med_iren;
+        CREATE EXTENSION IF NOT EXISTS postgis;
+        CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+        -- Verify PostGIS is working in med_iren
+        SELECT PostGIS_version();
+
+# Resource limits for local development
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Persistence settings for local development
+persistence:
+  enabled: true
+  size: 2Gi
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    postgresql: 5432
