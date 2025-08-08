@@ -1,0 +1,69 @@
+# apiVersion specifies the Kubernetes API version to use. For Jobs, it's batch/v1.
+apiVersion: batch/v1
+# kind specifies the type of Kubernetes object.
+kind: Job
+metadata:
+  # The name of the Job object. Must be unique within the namespace.
+  name: db-migration-init
+  # Labels are key/value pairs that are attached to objects. They can be used to organize and select subsets of objects.
+  labels:
+    app.kubernetes.io/name: db-migration-init
+    app.kubernetes.io/component: database
+spec:
+  # backoffLimit specifies the number of retries before considering a Job as failed.
+  # Setting it to 1 means it will try once, and if it fails, it won't be retried automatically by the Job controller.
+  # This is useful when an external tool like Skaffold is managing redeployment.
+  backoffLimit: 1
+
+  # ttlSecondsAfterFinished allows the automatic cleanup of finished Jobs.
+  # This Job (and its pods) will be removed 3600 seconds (1 hour) after it completes.
+  ttlSecondsAfterFinished: 3600
+
+  # template is the pod template. It defines the pod that will be created to run the Job.
+  # This section is immutable after the Job is created.
+  template:
+    metadata:
+      # These labels are applied to the Pods created by this Job, allowing you to select them.
+      labels:
+        app.kubernetes.io/name: db-migration-init
+        app.kubernetes.io/component: database
+    spec:
+      # restartPolicy for a Job's pods must be 'Never' or 'OnFailure'.
+      # 'Never' means that if the container fails, the pod is not restarted. The Job controller will create a new pod if retries are allowed.
+      restartPolicy: Never
+
+      # Init containers run to completion in order before the main containers are started.
+      # They are useful for setup tasks, like waiting for a database to be ready.
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:15-alpine # Using the official postgres image which includes the 'pg_isready' utility.
+        env:
+        - name: PGHOST
+          value: "postgresql"
+        - name: PGPORT
+          value: "5432"
+        - name: PGUSER
+          value: "regions4climate_user"
+        - name: PGPASSWORD
+          value: "regions4climate_pass"
+        - name: PGDATABASE
+          value: "regions4climate"
+        # This command checks in a loop until the PostgreSQL database is ready to accept connections.
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for PostgreSQL to be ready..."
+          until pg_isready -h $PGHOST -p $PGPORT -U $PGUSER; do
+            echo "PostgreSQL is not ready yet. Waiting..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+
+      # The main container(s) for the Job. This is where your primary logic runs.
+      containers:
+      - name: db-init
+        image: "{{.IMAGE_REPO_db-init}}:{{.IMAGE_TAG_db-init}}@{{.IMAGE_DIGEST_db-init}}"
+        env:
+        - name: DATABASE_URL
+          value: "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate?sslmode=disable"
