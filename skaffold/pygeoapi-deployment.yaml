@@ -1,0 +1,209 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pygeoapi
+  namespace: default
+  labels:
+    app: pygeoapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pygeoapi
+  template:
+    metadata:
+      labels:
+        app: pygeoapi
+    spec:
+      initContainers:
+      - name: wait-for-db-init
+        image: postgres:15-alpine
+        env:
+        - name: DATABASE_URL
+          value: "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate?sslmode=disable"
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for database to be initialized..."
+          
+          # Wait for PostgreSQL to be ready
+          until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
+            echo "PostgreSQL is not ready yet. Waiting..."
+            sleep 2
+          done
+          
+          # Wait for tables to be created (check for main table)
+          echo "Waiting for database schema to be ready..."
+          until psql "$DATABASE_URL" -c "SELECT 1 FROM r4c_hsy_building_current LIMIT 1;" > /dev/null 2>&1; do
+            echo "Database schema not ready yet. Waiting..."
+            sleep 5
+          done
+          
+          echo "Database is ready!"
+      containers:
+      - name: pygeoapi
+        image: geopython/pygeoapi:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: PYGEOAPI_CONFIG
+          value: /pygeoapi/local.config.yml
+        - name: DB_HOST
+          value: postgresql
+        - name: DB_NAME_R4C
+          value: regions4climate
+        - name: DB_NAME_MED_IREN
+          value: med_iren
+        - name: DB_USER
+          value: regions4climate_user
+        - name: DB_PASSWORD
+          value: regions4climate_pass
+        volumeMounts:
+        - name: config
+          mountPath: /pygeoapi/local.config.yml
+          subPath: local.config.yml
+        - name: data
+          mountPath: /pygeoapi/tests/data
+        resources:
+          limits:
+            cpu: 250m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+      volumes:
+      - name: config
+        configMap:
+          name: pygeoapi-config
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pygeoapi
+  namespace: default
+  labels:
+    app: pygeoapi
+spec:
+  selector:
+    app: pygeoapi
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pygeoapi-config
+  namespace: default
+data:
+  local.config.yml: |
+    server:
+        bind:
+            host: 0.0.0.0
+            port: 80
+        url: /
+        mimetype: application/json; charset=UTF-8
+        encoding: utf-8
+        gzip: false
+        languages:
+            - en-US
+            - fr-CA
+        pretty_print: true
+        limits:
+          default_items: 100
+          max_items: 100000
+          max_distance_x: 2500
+          max_distance_y: 2500
+          max_distance_units: m
+        map:
+            url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+
+    logging:
+        level: ERROR
+
+    metadata:
+        identification:
+            title:
+                en: pygeoapi local development instance
+            description:
+                en: pygeoapi provides an API to geospatial data
+            keywords:
+                en:
+                    - geospatial
+                    - data
+                    - api
+            keywords_type: theme
+            terms_of_service: https://creativecommons.org/licenses/by/4.0/
+            url: https://example.org
+        license:
+            name: CC-BY 4.0 license
+            url: https://creativecommons.org/licenses/by/4.0/
+        provider:
+            name: Organization Name
+            url: https://pygeoapi.io
+        contact:
+            name: Developer
+            email: dev@example.org
+
+    resources:
+        adaptation_landcover:
+            type: collection
+            title: HSY landcover areas used for climate adaptation
+            description: This collection contains HSY landcover areas used for climate adaptation in R4C demo.
+            keywords:
+                - Climate Adaptation
+                - Uusimaa
+                - Urban Heat
+                - HSY
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2028-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: postgresql
+                    dbname: regions4climate
+                    user: regions4climate_user
+                    password: regions4climate_pass
+                  id_field: id
+                  table: adaptation_landcover
+                  geom_field: geom
+
+        r4c_coldspot:
+            type: collection
+            title: Cold areas
+            description: This collection contains Capital Region areas that have heatexposure index 0.4 or less
+            keywords:
+                - Heat Exposure
+                - Uusimaa
+                - Urban Heat
+                - Capital Region
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: postgresql
+                    dbname: regions4climate
+                    user: regions4climate_user
+                    password: regions4climate_pass
+                  id_field: id
+                  table: r4c_coldspot
+                  geom_field: geom
