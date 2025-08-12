@@ -1,0 +1,513 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-migration-script
+  labels:
+    app.kubernetes.io/name: db-migration-script
+    app.kubernetes.io/component: database
+data:
+  migrate.sh: |
+    #!/bin/bash
+    set -e
+    
+    echo "Starting database migrations..."
+    echo "DATABASE_URL: ${DATABASE_URL:-not set}"
+    echo "DBMATE_MIGRATIONS_DIR: ${DBMATE_MIGRATIONS_DIR:-not set}"
+    
+    # Wait for PostgreSQL to be ready
+    echo "Waiting for PostgreSQL to be ready..."
+    until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
+        echo "PostgreSQL is not ready yet. Waiting..."
+        sleep 2
+    done
+    echo "PostgreSQL is ready!"
+    
+    # Wait for PostGIS to be available in the regions4climate database
+    echo "Waiting for PostGIS extension to be available..."
+    max_attempts=30
+    attempt=1
+    
+    while [ $attempt -le $max_attempts ]; do
+        if psql "$DATABASE_URL" -t -c "SELECT PostGIS_version();" > /dev/null 2>&1; then
+            POSTGIS_VERSION=$(psql "$DATABASE_URL" -t -c "SELECT PostGIS_version();" | tr -d ' ')
+            echo "PostGIS is ready! Version: $POSTGIS_VERSION"
+            break
+        fi
+        
+        if [ $attempt -eq $max_attempts ]; then
+            echo "ERROR: PostGIS not available after $max_attempts attempts"
+            echo "Checking if PostGIS extension exists..."
+            psql "$DATABASE_URL" -c "\dx" || true
+            echo "Checking available geometry types..."
+            psql "$DATABASE_URL" -c "SELECT typname FROM pg_type WHERE typname LIKE '%geometry%';" || true
+            exit 1
+        fi
+        
+        echo "PostGIS not ready yet. Attempt $attempt/$max_attempts - waiting..."
+        sleep 3
+        ((attempt++))
+    done
+    
+    # Run database migrations
+    echo "Running database migrations..."
+    echo "Current working directory: $(pwd)"
+    echo "Checking migration files:"
+    ls -la /migrations/ || echo "Migration directory not found"
+    
+    if ! dbmate up; then
+        echo "ERROR: Database migration failed"
+        echo "Checking database connection..."
+        psql "$DATABASE_URL" -c "SELECT version();" || echo "Database connection failed"
+        exit 1
+    fi
+    echo "Database migrations completed successfully."
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-seeding-script
+  labels:
+    app.kubernetes.io/name: db-seeding-script
+    app.kubernetes.io/component: database
+data:
+  seed-dev-data.py: |
+    #!/usr/bin/env python3
+    """
+    Seed development database with mock data for testing.
+    This script populates key tables with realistic test data.
+    """
+    
+    import os
+    import sys
+    import random
+    import json
+    from datetime import datetime, date, timedelta
+    from decimal import Decimal
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    import argparse
+    
+    # Configuration
+    DEFAULT_DATABASE_URL = "postgres://regions4climate_user:regions4climate_pass@localhost:5432/regions4climate"
+    
+    # Helsinki area bounding box
+    HELSINKI_BBOX = {
+        'min_lat': 60.1,
+        'max_lat': 60.3,
+        'min_lon': 24.8,
+        'max_lon': 25.3
+    }
+    
+    # Sample postal codes in Helsinki area
+    HELSINKI_POSTAL_CODES = [
+        "00100", "00120", "00130", "00140", "00150", "00160", "00170", "00180", "00190",
+        "00200", "00210", "00220", "00230", "00240", "00250", "00260", "00270", "00280",
+        "00290", "00300", "00320", "00330", "00340", "00350", "00360", "00370", "00380",
+        "00390", "00400", "00410", "00420", "00430", "00440", "00450", "00460", "00470",
+        "00480", "00490", "00500", "00510", "00520", "00530", "00540", "00550", "00560",
+        "00570", "00580", "00590", "00600", "00610", "00620", "00630", "00640", "00650",
+        "00660", "00670", "00680", "00690", "00700", "00710", "00720", "00730", "00740",
+        "00750", "00760", "00770", "00780", "00790", "00800", "00810", "00820", "00830",
+        "00840", "00850", "00860", "00870", "00880", "00890", "00900", "00910", "00920",
+        "00930", "00940", "00950", "00960", "00970", "00980", "00990"
+    ]
+    
+    def get_db_connection(database_url=None):
+        """Get database connection."""
+        url = database_url or os.getenv('DATABASE_URL', DEFAULT_DATABASE_URL)
+        try:
+            conn = psycopg2.connect(url)
+            return conn
+        except Exception as e:
+            print(f"❌ Failed to connect to database: {e}")
+            sys.exit(1)
+    
+    def random_point_in_helsinki():
+        """Generate a random point within Helsinki area."""
+        lat = random.uniform(HELSINKI_BBOX['min_lat'], HELSINKI_BBOX['max_lat'])
+        lon = random.uniform(HELSINKI_BBOX['min_lon'], HELSINKI_BBOX['max_lon'])
+        return f"POINT({lon} {lat})"
+    
+    def random_polygon_in_helsinki():
+        """Generate a random polygon within Helsinki area."""
+        # Create a small rectangle
+        center_lat = random.uniform(HELSINKI_BBOX['min_lat'], HELSINKI_BBOX['max_lat'])
+        center_lon = random.uniform(HELSINKI_BBOX['min_lon'], HELSINKI_BBOX['max_lon'])
+        
+        # Small offset for polygon corners (about 100m)
+        offset = 0.001
+        
+        points = [
+            f"{center_lon - offset} {center_lat - offset}",
+            f"{center_lon + offset} {center_lat - offset}",
+            f"{center_lon + offset} {center_lat + offset}",
+            f"{center_lon - offset} {center_lat + offset}",
+            f"{center_lon - offset} {center_lat - offset}"  # Close the polygon
+        ]
+        
+        return f"POLYGON(({', '.join(points)}))"
+    
+    def seed_adaptation_landcover(conn, num_records=100):
+        """Seed adaptation_landcover table."""
+        print(f"🌱 Seeding adaptation_landcover with {num_records} records...")
+        
+        cur = conn.cursor()
+        
+        # Land cover codes (simplified)
+        land_cover_codes = ["FOREST", "WATER", "URBAN", "GRASS", "AGRICULTURAL", "BARE"]
+        
+        for i in range(num_records):
+            grid_id = f"GRID_{i:06d}"
+            area_m2 = random.uniform(100, 10000)
+            year = random.choice([2020, 2021, 2022, 2023, 2024])
+            koodi = random.choice(land_cover_codes)
+            geom = random_polygon_in_helsinki()
+            
+            cur.execute("""
+                INSERT INTO adaptation_landcover (grid_id, area_m2, year, koodi, geom)
+                VALUES (%s, %s, %s, %s, ST_GeomFromText(%s, 4326))
+            """, (grid_id, area_m2, year, koodi, geom))
+        
+        conn.commit()
+        print(f"✅ Seeded {num_records} adaptation_landcover records")
+    
+    def seed_r4c_coldspot(conn, num_records=50):
+        """Seed r4c_coldspot table."""
+        print(f"🌱 Seeding r4c_coldspot with {num_records} records...")
+        
+        cur = conn.cursor()
+        
+        for i in range(num_records):
+            posno = random.choice(HELSINKI_POSTAL_CODES)
+            heatexposure = random.uniform(0.0, 0.4)  # Cold spots have low heat exposure
+            temp_c = random.uniform(15.0, 25.0)
+            date_val = date.today() - timedelta(days=random.randint(0, 365))
+            geom = random_point_in_helsinki()
+            
+            cur.execute("""
+                INSERT INTO r4c_coldspot (posno, heatexposure, temp_c, date, geom)
+                VALUES (%s, %s, %s, %s, ST_GeomFromText(%s, 4326))
+            """, (posno, heatexposure, temp_c, date_val, geom))
+        
+        conn.commit()
+        print(f"✅ Seeded {num_records} r4c_coldspot records")
+    
+    def seed_tree_f(conn, num_records=200):
+        """Seed tree_f table."""
+        print(f"🌱 Seeding tree_f with {num_records} records...")
+        
+        cur = conn.cursor()
+        
+        tree_types = ["DECIDUOUS", "CONIFEROUS", "MIXED"]
+        
+        for i in range(num_records):
+            kohde_id = f"TREE_{i:06d}"
+            kunta = "Helsinki"
+            koodi = f"T{random.randint(100, 999)}"
+            kuvaus = random.choice(tree_types)
+            p_ala_m2 = random.uniform(10, 500)
+            postinumero = random.choice(HELSINKI_POSTAL_CODES)
+            korkeus_ka_m = random.uniform(5.0, 25.0)
+            geom = random_polygon_in_helsinki()
+            
+            cur.execute("""
+                INSERT INTO tree_f (kohde_id, kunta, koodi, kuvaus, p_ala_m2, postinumero, korkeus_ka_m, geom)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326))
+            """, (kohde_id, kunta, koodi, kuvaus, p_ala_m2, postinumero, korkeus_ka_m, geom))
+        
+        conn.commit()
+        print(f"✅ Seeded {num_records} tree_f records")
+    
+    def seed_hsy_building_heat(conn, num_records=150):
+        """Seed hsy_building_heat table."""
+        print(f"🌱 Seeding hsy_building_heat with {num_records} records...")
+        
+        cur = conn.cursor()
+        
+        # Generate some buildings first in r4c_hsy_building_current if it doesn't exist
+        buildings_exist = False
+        cur.execute("SELECT COUNT(*) FROM r4c_hsy_building_current LIMIT 1")
+        if cur.fetchone()[0] > 0:
+            buildings_exist = True
+        
+        if not buildings_exist:
+            print("🏢 Creating sample buildings first...")
+            seed_r4c_hsy_building_current(conn, 50)
+        
+        # Get existing building IDs
+        cur.execute("SELECT vtj_prt FROM r4c_hsy_building_current LIMIT 50")
+        building_ids = [row[0] for row in cur.fetchall()]
+        
+        if not building_ids:
+            print("⚠️ No buildings found, creating sample building IDs")
+            building_ids = [f"BUILD_{i:06d}" for i in range(50)]
+        
+        for i in range(num_records):
+            vtj_prt = random.choice(building_ids)
+            avgheatexposure = random.uniform(0.2, 0.8)
+            date_val = date.today() - timedelta(days=random.randint(0, 365))
+            avg_temp_c = random.uniform(18.0, 32.0)
+            posno = random.choice(HELSINKI_POSTAL_CODES)
+            
+            cur.execute("""
+                INSERT INTO hsy_building_heat (avgheatexposure, date, vtj_prt, avg_temp_c, posno)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (avgheatexposure, date_val, vtj_prt, avg_temp_c, posno))
+        
+        conn.commit()
+        print(f"✅ Seeded {num_records} hsy_building_heat records")
+    
+    def seed_r4c_hsy_building_current(conn, num_records=100):
+        """Seed r4c_hsy_building_current table."""
+        print(f"🌱 Seeding r4c_hsy_building_current with {num_records} records...")
+        
+        cur = conn.cursor()
+        
+        building_types = ["RESIDENTIAL", "COMMERCIAL", "INDUSTRIAL", "PUBLIC"]
+        heating_types = ["DISTRICT_HEATING", "ELECTRIC", "OIL", "GAS"]
+        
+        for i in range(num_records):
+            kunta = "Helsinki"
+            vtj_prt = f"BUILD_{i:06d}"
+            raktun = f"RAK{random.randint(100000, 999999)}"
+            kiitun = f"KII{random.randint(100000, 999999)}"
+            katu = f"Test Street {random.randint(1, 100)}"
+            osno1 = random.randint(1, 999)
+            posno = random.choice(HELSINKI_POSTAL_CODES)
+            kavu = random.uniform(50, 2000)  # Building volume
+            kayttarks = random.choice(building_types)
+            kerala = random.uniform(30, 800)  # Floor area
+            korala = random.uniform(35, 850)  # Total area
+            kohala = random.uniform(40, 900)  # Space area
+            ashala = random.uniform(25, 700)  # Living area
+            asuntojen_lkm = random.randint(1, 50)
+            kerrosten_lkm = random.randint(1, 20)
+            lammitystapa_s = random.choice(heating_types)
+            area_m2 = random.uniform(40, 900)
+            geom = random_polygon_in_helsinki()
+            
+            try:
+                cur.execute("""
+                    INSERT INTO r4c_hsy_building_current 
+                    (kunta, vtj_prt, raktun, kiitun, katu, osno1, posno, kavu, kayttarks, 
+                     kerala, korala, kohala, ashala, asuntojen_lkm, kerrosten_lkm, 
+                     lammitystapa_s, area_m2, geom)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                            ST_GeomFromText(%s, 4326))
+                """, (kunta, vtj_prt, raktun, kiitun, katu, osno1, posno, kavu, kayttarks,
+                      kerala, korala, kohala, ashala, asuntojen_lkm, kerrosten_lkm,
+                      lammitystapa_s, area_m2, geom))
+            except psycopg2.IntegrityError:
+                # Skip duplicates
+                conn.rollback()
+                continue
+        
+        conn.commit()
+        print(f"✅ Seeded buildings in r4c_hsy_building_current")
+    
+    def seed_urban_heat_building_f(conn, num_records=80):
+        """Seed urban_heat_building_f table."""
+        print(f"🌱 Seeding urban_heat_building_f with {num_records} records...")
+        
+        cur = conn.cursor()
+        
+        building_uses = ["RESIDENTIAL", "OFFICE", "RETAIL", "INDUSTRIAL", "SCHOOL", "HOSPITAL"]
+        
+        for i in range(num_records):
+            ratu = random.randint(100000, 999999)
+            geom = random_polygon_in_helsinki()
+            distancetounder40 = random.randint(50, 2000)  # Distance in meters
+            c_kayttark = random.choice(building_uses)
+            katunimi_suomi = f"Test Street {random.randint(1, 100)}"
+            katunimi_ruotsi = f"Test Gata {random.randint(1, 100)}"
+            osoitenumero = str(random.randint(1, 200))
+            postinumero = random.choice(HELSINKI_POSTAL_CODES)
+            year_of_construction = str(random.randint(1950, 2024))
+            measured_height = random.uniform(5.0, 100.0)
+            roof_type = random.choice(["FLAT", "PITCHED", "COMPLEX"])
+            avgheatexposuretobuilding = random.uniform(0.1, 0.9)
+            hki_id = random.randint(1000000, 9999999)
+            area_m2 = random.uniform(50, 2000)
+            
+            cur.execute("""
+                INSERT INTO urban_heat_building_f 
+                (ratu, geom, distancetounder40, c_kayttark, katunimi_suomi, katunimi_ruotsi,
+                 osoitenumero, postinumero, year_of_construction, measured_height, roof_type,
+                 avgheatexposuretobuilding, hki_id, area_m2)
+                VALUES (%s, ST_GeomFromText(%s, 4326), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (ratu, geom, distancetounder40, c_kayttark, katunimi_suomi, katunimi_ruotsi,
+                  osoitenumero, postinumero, year_of_construction, measured_height, roof_type,
+                  avgheatexposuretobuilding, hki_id, area_m2))
+        
+        conn.commit()
+        print(f"✅ Seeded {num_records} urban_heat_building_f records")
+    
+    def seed_r4c_paavo(conn, num_records=30):
+        """Seed r4c_paavo (postal code statistics) table."""
+        print(f"🌱 Seeding r4c_paavo with {num_records} records...")
+        
+        cur = conn.cursor()
+        
+        for i, posno in enumerate(HELSINKI_POSTAL_CODES[:num_records]):
+            pinta_ala = random.randint(100000, 5000000)  # Area in m²
+            he_vakiy = random.randint(1000, 15000)  # Population
+            he_0_2 = random.randint(50, 500)  # Children 0-2
+            he_3_6 = random.randint(80, 600)  # Children 3-6
+            he_7_12 = random.randint(100, 800)  # Children 7-12
+            he_65_69 = random.randint(80, 400)  # Elderly 65-69
+            he_70_74 = random.randint(70, 350)  # Elderly 70-74
+            he_75_79 = random.randint(60, 300)  # Elderly 75-79
+            he_80_84 = random.randint(40, 200)  # Elderly 80-84
+            he_85_ = random.randint(20, 100)  # Elderly 85+
+            ko_koul = random.randint(500, 3000)  # Education level
+            ra_as_kpa = random.uniform(800, 4000)  # Average apartment price
+            hr_ktu = random.randint(800, 2500)  # Household income
+            ko_ika18y = random.randint(200, 2000)  # Adults over 18
+            ko_al_kork = random.randint(300, 2000)  # Higher education
+            vuosi = 2023
+            postinumeroalue = posno
+            kunta = "Helsinki"
+            nimi = f"Helsinki {posno}"
+            
+            # Create a polygon for the postal code area
+            geom = random_polygon_in_helsinki()
+            
+            cur.execute("""
+                INSERT INTO r4c_paavo 
+                (pinta_ala, he_vakiy, he_0_2, he_3_6, he_7_12, he_65_69, he_70_74, he_75_79,
+                 he_80_84, he_85_, ko_koul, ra_as_kpa, hr_ktu, ko_ika18y, ko_al_kork, vuosi,
+                 postinumeroalue, kunta, nimi, geom)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        ST_GeomFromText(%s, 4326))
+            """, (pinta_ala, he_vakiy, he_0_2, he_3_6, he_7_12, he_65_69, he_70_74, he_75_79,
+                  he_80_84, he_85_, ko_koul, ra_as_kpa, hr_ktu, ko_ika18y, ko_al_kork, vuosi,
+                  postinumeroalue, kunta, nimi, geom))
+        
+        conn.commit()
+        print(f"✅ Seeded {num_records} r4c_paavo records")
+    
+    def clear_existing_data(conn):
+        """Clear existing test data."""
+        print("🧹 Clearing existing test data...")
+        
+        cur = conn.cursor()
+        
+        tables_to_clear = [
+            'hsy_building_heat',
+            'r4c_hsy_building_current', 
+            'urban_heat_building_f',
+            'tree_f',
+            'r4c_coldspot',
+            'adaptation_landcover',
+            'r4c_paavo'
+        ]
+        
+        for table in tables_to_clear:
+            try:
+                cur.execute(f"DELETE FROM {table}")
+                print(f"  Cleared {table}")
+            except Exception as e:
+                print(f"  ⚠️ Could not clear {table}: {e}")
+                conn.rollback()
+        
+        conn.commit()
+        print("✅ Cleared existing test data")
+    
+    def main():
+        parser = argparse.ArgumentParser(description='Seed development database with mock data')
+        parser.add_argument('--database-url', help='Database connection URL')
+        parser.add_argument('--clear-first', action='store_true', help='Clear existing data first')
+        parser.add_argument('--num-records', type=int, default=100, help='Number of records to create per table')
+        parser.add_argument('--tables', nargs='+', help='Specific tables to seed', 
+                           choices=['adaptation_landcover', 'r4c_coldspot', 'tree_f', 
+                                   'hsy_building_heat', 'r4c_hsy_building_current', 
+                                   'urban_heat_building_f', 'r4c_paavo', 'all'])
+        
+        args = parser.parse_args()
+        
+        print("🌱 Starting database seeding...")
+        
+        conn = get_db_connection(args.database_url)
+        
+        if args.clear_first:
+            clear_existing_data(conn)
+        
+        tables_to_seed = args.tables or ['all']
+        
+        if 'all' in tables_to_seed:
+            # Seed in dependency order
+            seed_r4c_paavo(conn, min(30, args.num_records))
+            seed_r4c_hsy_building_current(conn, args.num_records)
+            seed_hsy_building_heat(conn, args.num_records + 50)
+            seed_adaptation_landcover(conn, args.num_records)
+            seed_r4c_coldspot(conn, args.num_records // 2)
+            seed_tree_f(conn, args.num_records * 2)
+            seed_urban_heat_building_f(conn, args.num_records)
+        else:
+            # Seed specific tables
+            if 'r4c_paavo' in tables_to_seed:
+                seed_r4c_paavo(conn, min(30, args.num_records))
+            if 'r4c_hsy_building_current' in tables_to_seed:
+                seed_r4c_hsy_building_current(conn, args.num_records)
+            if 'hsy_building_heat' in tables_to_seed:
+                seed_hsy_building_heat(conn, args.num_records)
+            if 'adaptation_landcover' in tables_to_seed:
+                seed_adaptation_landcover(conn, args.num_records)
+            if 'r4c_coldspot' in tables_to_seed:
+                seed_r4c_coldspot(conn, args.num_records)
+            if 'tree_f' in tables_to_seed:
+                seed_tree_f(conn, args.num_records)
+            if 'urban_heat_building_f' in tables_to_seed:
+                seed_urban_heat_building_f(conn, args.num_records)
+        
+        conn.close()
+        print("🎉 Database seeding completed!")
+    
+    if __name__ == '__main__':
+        main()
+
+  seed.sh: |
+    #!/bin/bash
+    set -e
+    
+    echo "Starting database seeding..."
+    
+    # Wait for PostgreSQL and migrations to be complete
+    echo "Waiting for database migrations to complete..."
+    until psql "$DATABASE_URL" -c "SELECT 1 FROM r4c_hsy_building_current LIMIT 1;" > /dev/null 2>&1; do
+        echo "Database schema not ready yet. Waiting..."
+        sleep 5
+    done
+    
+    # Check if seed data needs to be loaded
+    echo "Checking if seed data needs to be loaded..."
+    SEED_CHECK=$(python3 -c "
+    import psycopg2
+    import os
+    try:
+        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        cur = conn.cursor()
+        cur.execute('SELECT COUNT(*) FROM r4c_hsy_building_current;')
+        count = cur.fetchone()[0]
+        print(count)
+        conn.close()
+    except Exception as e:
+        print('0')  # Assume empty if error
+    ")
+    
+    if [ "$SEED_CHECK" = "0" ]; then
+        echo "Database appears to be empty. Loading seed data..."
+        
+        echo "Running seeding script..."
+        if ! python3 /scripts/seed-dev-data.py --num-records 50 --clear-first; then
+            echo "WARNING: Seed data loading failed, but continuing..."
+        else
+            echo "Seed data loading completed."
+        fi
+    else
+        echo "Database already contains data (${SEED_CHECK} buildings found). Skipping seed data loading."
+    fi
+    
+    echo "Database seeding completed successfully."
