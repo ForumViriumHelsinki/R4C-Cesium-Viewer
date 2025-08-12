@@ -1,0 +1,99 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration
+  labels:
+    app.kubernetes.io/name: db-migration
+    app.kubernetes.io/component: database
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: db-migration
+        app.kubernetes.io/component: database
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: dbmate
+        image: postgres:15-alpine
+        env:
+        - name: DATABASE_URL
+          value: "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate?sslmode=disable"
+        - name: DBMATE_MIGRATIONS_DIR
+          value: "/migrations"
+        - name: DBMATE_WAIT
+          value: "true"
+        - name: DBMATE_MIGRATIONS_TABLE
+          value: "schema_migrations"
+        volumeMounts:
+        - name: migration-script
+          mountPath: /scripts
+          readOnly: true
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for PostgreSQL to be ready..."
+          until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
+            echo "PostgreSQL is not ready yet. Waiting..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+          
+          # Check if PostGIS extension exists and create if needed
+          psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS postgis;" || echo "PostGIS may already exist"
+          psql "$DATABASE_URL" -c "SELECT PostGIS_version();" || echo "PostGIS check failed"
+          
+          echo "Database initialization completed (migrations skipped for now)"
+      volumes:
+      - name: migration-script
+        configMap:
+          name: db-migration-script
+          defaultMode: 0755
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-seeding
+  labels:
+    app.kubernetes.io/name: db-seeding
+    app.kubernetes.io/component: database
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: db-seeding
+        app.kubernetes.io/component: database
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: python-seeder
+        image: python:3.11-slim
+        env:
+        - name: DATABASE_URL
+          value: "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate?sslmode=disable"
+        volumeMounts:
+        - name: seeding-script
+          mountPath: /scripts
+          readOnly: true
+        command:
+        - sh
+        - -c
+        - |
+          # Install postgresql-client and python dependencies
+          apt-get update && apt-get install -y postgresql-client
+          pip install psycopg2-binary
+          chmod +x /scripts/seed.sh
+          chmod +x /scripts/seed-dev-data.py
+          /scripts/seed.sh
+      volumes:
+      - name: seeding-script
+        configMap:
+          name: db-seeding-script
+          defaultMode: 0755

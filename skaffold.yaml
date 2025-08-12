@@ -13,10 +13,6 @@ build:
       context: .
       docker:
         dockerfile: Dockerfile
-    - image: db-init
-      context: .
-      docker:
-        dockerfile: skaffold/Dockerfile.db-init
 deploy:
   helm:
     releases:
@@ -63,8 +59,9 @@ profiles:
                 auth_token: "{{.SENTRY_AUTH_TOKEN}}"
     manifests:
       rawYaml:
+        - k8s/db-init-configmaps.yaml
+        - k8s/db-jobs.yaml
         - skaffold/pygeoapi-deployment.yaml
-        - skaffold/db-init-job.yaml
 
   - name: migration-test
     deploy:
@@ -79,12 +76,11 @@ profiles:
             valuesFiles:
               - skaffold/postgresql-values.yaml
     test:
-      - image: db-init
+      - image: amacneil/dbmate:v2.13.0
         custom:
-          - command: "DB_INIT_MODE=test ./init-database.sh"
+          - command: "sh -c 'apk add --no-cache postgresql-client && /scripts/test_migration.sh'"
             timeoutSeconds: 600
             dependencies:
               paths:
                 - "db/migrations/*.sql"
                 - "scripts/test_migration.sh"
-                - "db/scripts/init-database.sh"
