@@ -59,8 +59,6 @@ profiles:
                 auth_token: "{{.SENTRY_AUTH_TOKEN}}"
     manifests:
       rawYaml:
-        - k8s/db-init-configmaps.yaml
-        - k8s/db-jobs.yaml
         - skaffold/pygeoapi-deployment.yaml
 
   - name: migration-test
