@@ -73,15 +73,26 @@ export default defineConfig( () => {
 					configure: ( proxy, _options ) => {
 						proxy.on( 'proxyReq', ( proxyReq, req, _res ) => {
 							// Modify the outgoing request to include the necessary parameters
-							const url = new URL( proxyReq.path, 'https://geo.stat.fi' );
-							url.searchParams.set( 'service', 'WFS' );
-							url.searchParams.set( 'request', 'GetFeature' );
-							url.searchParams.set( 'typename', 'postialue:pno_tilasto' );
-							url.searchParams.set( 'version', '2.0.0' );
-							url.searchParams.set( 'outputFormat', 'application/json' );
-							url.searchParams.set( 'CQL_FILTER', 'kunta IN (\'091\',\'092\',\'049\',\'235\')' );
-							url.searchParams.set( 'srsName', 'EPSG:4326' );
-							proxyReq.path = url.pathname + url.search;
+							try {
+								// Sanitize the path to ensure it's a valid URL component
+								const sanitizedPath = proxyReq.path.startsWith('/') ? proxyReq.path : '/' + proxyReq.path;
+								const url = new URL( sanitizedPath, 'https://geo.stat.fi' );
+								url.searchParams.set( 'service', 'WFS' );
+								url.searchParams.set( 'request', 'GetFeature' );
+								url.searchParams.set( 'typename', 'postialue:pno_tilasto' );
+								url.searchParams.set( 'version', '2.0.0' );
+								url.searchParams.set( 'outputFormat', 'application/json' );
+								url.searchParams.set( 'CQL_FILTER', 'kunta IN (\'091\',\'092\',\'049\',\'235\')' );
+								url.searchParams.set( 'srsName', 'EPSG:4326' );
+								proxyReq.path = url.pathname + url.search;
+							} catch (error) {
+								console.error('Failed to construct URL for proxy request:', {
+									path: proxyReq.path,
+									error: error.message
+								});
+								// Fallback: use the original path if URL construction fails
+								// This ensures the proxy still functions even with malformed URLs
+							}
 						} );
 					},
 				},
