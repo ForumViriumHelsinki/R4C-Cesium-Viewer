@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.19.0...r4c-cesium-viewer-v1.19.1) (2025-08-14)
+
+
+### Bug Fixes
+
+* **vite:** handle malformed URLs in proxy configuration ([#174](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/174)) ([4f19889](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4f19889789949bd79faa2658a74af86b55b9f1a7))
+
 ## [1.19.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.18.0...r4c-cesium-viewer-v1.19.0) (2025-08-07)
 
 
