@@ -223,4 +223,9 @@ switchTo3DGrid() {
 			console.log("No ellipsoid point was found at the center of the screen.");
 		}
 	}
+
+	// Alias method for compatibility with ControlPanel
+	rotateCamera() {
+		this.rotate180Degrees();
+	}
 }

@@ -262,6 +262,12 @@ Impact Estimates
 </h4>
             <EstimatedImpacts />
           </div>
+          <div class="mt-4">
+            <h4 class="subsection-title">
+Green & Blue Infrastructure
+</h4>
+            <LandcoverToParks />
+          </div>
         </div>
         
         <!-- Grid Options -->
@@ -294,6 +300,10 @@ import { usePropsStore } from '../stores/propsStore';
 import { useHeatExposureStore } from '../stores/heatExposureStore';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore';
 import { useToggleStore } from '../stores/toggleStore';
+import Tree from '../services/tree';
+import Featurepicker from '../services/featurepicker';
+import Camera from '../services/camera';
+import { storeToRefs } from 'pinia';
 import UnifiedSearch from '../components/UnifiedSearch.vue';
 import StatisticalGridOptions from '../components/StatisticalGridOptions.vue';
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue';
@@ -303,6 +313,7 @@ import GraphicsSettingsDialog from '../components/GraphicsSettingsDialog.vue';
 import CoolingCenter from '../components/CoolingCenter.vue';
 import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue';
 import EstimatedImpacts from '../components/EstimatedImpacts.vue';
+import LandcoverToParks from '../components/LandcoverToParks.vue';
 import PostalCodeNDVI from '../views/PostalCodeNDVI.vue';
 
 export default {
@@ -325,6 +336,7 @@ export default {
     CoolingCenter,
     CoolingCenterOptimiser,
     EstimatedImpacts,
+    LandcoverToParks,
     PostalCodeNDVI,
   },
   setup() {
@@ -336,6 +348,7 @@ export default {
     
     const currentLevel = computed(() => globalStore.level);
     const currentView = computed(() => globalStore.view);
+    const { ndvi } = storeToRefs(toggleStore);
     
     // Analysis dialog state
     const analysisDialog = ref(false);
@@ -459,6 +472,34 @@ export default {
       console.log(`Preloading requested for: ${sourceId}`);
     };
 
+    // Reset application function
+    const reset = () => {
+      location.reload();
+    };
+
+    // Rotate camera function
+    const rotateCamera = () => {
+      const camera = new Camera();
+      camera.rotateCamera();
+    };
+
+    // Return to postal code level function
+    const returnToPostalCode = () => {
+      const featurepicker = new Featurepicker();
+      const treeService = new Tree();
+      hideTooltip();
+      featurepicker.loadPostalCode();
+      toggleStore.showTrees && treeService.loadTrees();
+    };
+
+    // Function to hide the tooltip
+    const hideTooltip = () => {
+      const tooltip = document.querySelector('.tooltip');
+      if (tooltip) {
+        tooltip.style.display = 'none';
+      }
+    };
+
     return {
       analysisDialog,
       currentAnalysis,
@@ -478,6 +519,10 @@ export default {
       handleSourceRetry,
       handleCacheCleared,
       handleDataPreload,
+      reset,
+      rotateCamera,
+      returnToPostalCode,
+      ndvi,
     };
   },
 };

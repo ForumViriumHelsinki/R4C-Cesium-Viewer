@@ -1,6 +1,10 @@
 <template>
     <!-- Cesium Container -->
     <div id="cesiumContainer">
+		<!-- Camera Controls -->
+		<CameraControls />
+		<!-- Control Panel -->
+		<ControlPanel />
 		<Timeline v-if="store.level === 'postalCode' || store.level === 'building' "/>
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
@@ -31,10 +35,12 @@ import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import ControlPanel from './ControlPanel.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
 import Timeline from '../components/Timeline.vue';
+import CameraControls from '../components/CameraControls.vue';
 
 export default {
 	components: {
 		DisclaimerPopup,
+		CameraControls,
 		ControlPanel,
 		BuildingInformation,
 		Timeline,
