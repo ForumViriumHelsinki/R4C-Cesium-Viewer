@@ -450,7 +450,7 @@ const dataSources = ref([
   {
     id: 'pygeoapi',
     name: 'PyGeoAPI',
-    url: '/pygeoapi/collections/heatexposure/items?f=json&limit=1',
+    url: '/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=1',
     type: 'heat-exposure',
     status: 'unknown',
     message: 'Not checked',
