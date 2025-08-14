@@ -47,7 +47,7 @@ class BackgroundPreloader {
       },
       {
         key: 'heat-exposure-sample',
-        url: '/pygeoapi/collections/heatexposure/items?f=json&limit=100',
+        url: '/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=100',
         type: 'heat-exposure',
         priority: 'high',
         description: 'Sample heat exposure data'
@@ -244,7 +244,7 @@ class BackgroundPreloader {
       trees: '/pygeoapi/collections/trees/items',
       buildings: '/pygeoapi/collections/buildings/items',
       vegetation: '/pygeoapi/collections/vegetation/items',
-      'heat-exposure': '/pygeoapi/collections/heatexposure/items'
+      'heat-exposure': '/pygeoapi/collections/heatexposure_optimized/items'
     };
 
     const url = baseUrls[layer];

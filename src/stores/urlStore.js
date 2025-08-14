@@ -15,16 +15,16 @@ export const useURLStore = defineStore('url', {
       return `${state.pygeoapiBase}${collection}/items?f=json&limit=${limit}`;
     },     
     heatExposure: (state) => ( limit = 1000 ) => {
-      return `${state.pygeoapiBase}/heatexposure/items?f=json&limit=${limit}`; // New getter
+      return `${state.pygeoapiBase}/heatexposure_optimized/items?f=json&limit=${limit}`; // New getter
     },
     hkiTravelTime: (state) => ( from_id, limit = 2) => {
       return `${state.pygeoapiBase}/hki_travel_time/items?f=json&limit=${limit}&from_id=${from_id}`;
     },          
     hsyBuildings: (state) => (postinumero, limit = 10000) => { 
-      return `${state.pygeoapiBase}/hsy_buildings/items?f=json&limit=${limit}&postinumero=${postinumero}`;
+      return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&postinumero=${postinumero}`;
     },     
     hsyGridBuildings: (state) => (bboxString, limit = 2000) => {
-      return `${state.pygeoapiBase}/hsy_buildings/items?f=json&limit=${limit}&bbox=${bboxString}`;
+      return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&bbox=${bboxString}`;
     },
     landcoverToParks: (state) => (gridId, limit = 2) => {
       return `${state.pygeoapiBase}/adaptation_landcover/items?f=json&limit=${limit}&grid_id=${gridId}`;
