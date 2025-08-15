@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.19.1...r4c-cesium-viewer-v1.19.2) (2025-08-15)
+
+
+### Bug Fixes
+
+* **nginx:** set explicit Host header for pygeoapi proxy ([#177](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/177)) ([5a10558](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5a105585fb526187880b106050e50700f868bbd5))
+
 ## [1.19.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.19.0...r4c-cesium-viewer-v1.19.1) (2025-08-14)
 
 
