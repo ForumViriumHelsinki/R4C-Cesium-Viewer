@@ -354,7 +354,7 @@ describe('toggleStore', () => {
         store.setGridView(i % 2 === 0);
       }
       
-      expect(store.gridView).toBe(true); // Should be true after even number of toggles
+      expect(store.gridView).toBe(false); // Should be false after 100 iterations (last call with i=99, 99%2===0 is false)
     });
   });
 });

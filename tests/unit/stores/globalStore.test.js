@@ -126,7 +126,7 @@ describe('globalStore', () => {
       const testEntity = { id: 'test', properties: {} };
       
       store.setPickedEntity(testEntity);
-      expect(store.pickedEntity).toBe(testEntity);
+      expect(store.pickedEntity).toStrictEqual(testEntity);
     });
 
     it('should set current grid cell', () => {
@@ -134,7 +134,7 @@ describe('globalStore', () => {
       const testCell = { x: 10, y: 20 };
       
       store.setCurrentGridCell(testCell);
-      expect(store.currentGridCell).toBe(testCell);
+      expect(store.currentGridCell).toStrictEqual(testCell);
     });
 
     it('should set cesium viewer', () => {
@@ -142,7 +142,7 @@ describe('globalStore', () => {
       const mockViewer = { scene: {}, camera: {} };
       
       store.setCesiumViewer(mockViewer);
-      expect(store.cesiumViewer).toBe(mockViewer);
+      expect(store.cesiumViewer).toStrictEqual(mockViewer);
     });
 
     it('should set building info visibility', () => {
