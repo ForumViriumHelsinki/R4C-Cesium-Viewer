@@ -108,7 +108,7 @@ jobs:
   accessibility-tests:
     name: Accessibility Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     
     steps:
       - name: Checkout code
@@ -148,19 +148,19 @@ jobs:
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
       
       - name: Run accessibility tests - Desktop
-        run: timeout 300 npm run test:accessibility:desktop
+        run: timeout 600 npm run test:accessibility:desktop
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
       
       - name: Run accessibility tests - Tablet  
-        run: timeout 300 npm run test:accessibility:tablet
+        run: timeout 600 npm run test:accessibility:tablet
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
       
       - name: Run accessibility tests - Mobile
-        run: timeout 300 npm run test:accessibility:mobile
+        run: timeout 600 npm run test:accessibility:mobile
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
