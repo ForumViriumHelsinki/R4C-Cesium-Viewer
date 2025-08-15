@@ -35,7 +35,8 @@ describe('API Integration Tests', () => {
 
   describe('Frontend API Service Integration', () => {
     describe('Address Service', () => {
-      it('should handle building address resolution end-to-end', () => {
+      it('should handle building address resolution end-to-end', async () => {
+        const { findAddressForBuilding } = await import('../../src/services/address.js');
         // Test realistic building property scenarios
         const testCases = [
           {
@@ -72,12 +73,11 @@ describe('API Integration Tests', () => {
               katunimi_suomi: 'nullKatunullnimi',
               osoitenumero: 'null10null'
             },
-            expected: 'Katunnimi 10'
+            expected: 'Katunimi 10'
           }
         ];
 
         testCases.forEach(testCase => {
-          const { findAddressForBuilding } = require('@/services/address.js');
           const result = findAddressForBuilding(testCase.properties);
           expect(result).toBe(testCase.expected);
         });
