@@ -108,7 +108,7 @@ jobs:
   accessibility-tests:
     name: Accessibility Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     
     steps:
       - name: Checkout code
@@ -124,30 +124,54 @@ jobs:
         run: npm ci
       
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: npx playwright install --with-deps chromium
       
       - name: Build frontend
         run: npm run build
       
-      - name: Start frontend server
+      - name: Start frontend server and wait for readiness
         run: |
           npm run preview &
-          sleep 10
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
+          
+          # Wait for server to be ready with timeout
+          timeout 30 bash -c 'until curl -sf http://localhost:4173 >/dev/null; do sleep 1; done'
+          
+          if ! curl -sf http://localhost:4173 >/dev/null; then
+            echo "Server failed to start within 30 seconds"
+            kill $SERVER_PID 2>/dev/null || true
+            exit 1
+          fi
+          
+          echo "Server is ready"
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
       
       - name: Run accessibility tests - Desktop
-        run: npm run test:accessibility:desktop
+        run: timeout 300 npm run test:accessibility:desktop
         env:
           CI: true
+          PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
       
       - name: Run accessibility tests - Tablet  
-        run: npm run test:accessibility:tablet
+        run: timeout 300 npm run test:accessibility:tablet
         env:
           CI: true
+          PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
       
       - name: Run accessibility tests - Mobile
-        run: npm run test:accessibility:mobile
+        run: timeout 300 npm run test:accessibility:mobile
         env:
           CI: true
+          PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
+      
+      - name: Cleanup server process
+        if: always()
+        run: |
+          if [ ! -z "$SERVER_PID" ]; then
+            kill $SERVER_PID 2>/dev/null || true
+            echo "Server process $SERVER_PID terminated"
+          fi
       
       - name: Upload accessibility test report
         uses: actions/upload-artifact@v4
@@ -155,7 +179,7 @@ jobs:
         with:
           name: accessibility-test-report
           path: |
-            playwright-report/
+            playwright-report-*/
             test-results/
           retention-days: 30
 

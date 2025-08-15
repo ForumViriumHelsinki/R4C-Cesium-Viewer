@@ -30,7 +30,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.CI ? 'http://localhost:4173' : 'http://localhost:5173',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -46,11 +46,11 @@ export default defineConfig({
     navigationTimeout: 30000,
   },
 
-  /* Test timeout extended for complex 3D interactions */
-  timeout: 60000,
+  /* Test timeout extended for complex 3D interactions, shorter in CI */
+  timeout: process.env.CI ? 45000 : 60000,
   expect: {
     /* Timeout for assertions */
-    timeout: 10000,
+    timeout: process.env.CI ? 8000 : 10000,
   },
 
   /* Configure projects for major browsers */
@@ -126,9 +126,9 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
+  webServer: process.env.CI ? undefined : {
     command: 'npm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
   },
 });
