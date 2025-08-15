@@ -55,7 +55,7 @@
                 <td>{{ calculationResults.totalCoolingArea }} ha</td>
               </tr>
               <tr>
-                <td>Neighbor Areas Cooled</td>
+                <td>Neighbor Cells Cooled</td>
                 <td>{{ calculationResults.neighborsAffected }}</td>
               </tr>
               <tr>
@@ -101,6 +101,7 @@ const loadedGeoJson = ref(null);
 const loadedLandcoverDataSource = ref(null);
 const calculationResults = ref(null);
 const convertedCellIds = ref([]);
+const modifiedHeatIndices = ref(new Map());
 
 // --- DYNAMIC UI ---
 const primaryButtonText = computed(() => {
@@ -152,6 +153,7 @@ const fullReset = () => {
   clearCurrentSelection();
   if (convertedCellIds.value.length > 0) {
     convertedCellIds.value = [];
+    modifiedHeatIndices.value.clear(); // Clear the map
 
     const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
     if (gridDataSource) {
@@ -315,13 +317,36 @@ const turnToParks = () => {
       gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
 
       const results = mitigationStore.calculateParksEffect(selectedGridEntity.value, totalAreaConverted, getHeatColor);
-      
-      const newColor = getHeatColor(results.sourceNewIndex);
-      selectedGridEntity.value.polygon.material = newColor;
-      originalGridColor.value = newColor; // The new "original" color is the improved one
 
-      const sourceGridId = selectedGridEntity.value.properties.grid_id.getValue();
-      convertedCellIds.value.push(sourceGridId);
+      const entityMap = new Map();
+
+      for (const entity of gridDataSource.entities.values) {
+          const gridId = entity.properties.grid_id?.getValue();
+          if (gridId) {
+              entityMap.set(gridId, entity);
+          }
+      }
+
+      results.heatReductions.forEach(reductionData => {
+        // Use our reliable map to find the entity
+        const entityToColor = entityMap.get(reductionData.grid_id);
+
+        if (entityToColor) {
+         const currentIndex = modifiedHeatIndices.value.has(reductionData.grid_id)
+            ? modifiedHeatIndices.value.get(reductionData.grid_id)
+            : entityToColor.properties.final_avg_conditional.getValue();
+
+          const newIdx = Math.max(0, currentIndex - reductionData.heatReduction);
+          modifiedHeatIndices.value.set(reductionData.grid_id, newIdx);
+
+          const newColor = getHeatColor(newIdx);
+          entityToColor.polygon.material = newColor;
+
+          if (entityToColor.properties.grid_id.getValue() === selectedGridEntity.value.properties.grid_id.getValue()) {
+            originalGridColor.value = newColor;
+          }
+        }
+      });
       
       gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
 
@@ -333,8 +358,12 @@ const turnToParks = () => {
         neighborsAffected: results.neighborsAffected,
         totalReduction: totalReduction.toFixed(3)
       };
+      
+      const sourceGridId = selectedGridEntity.value.properties.grid_id.getValue();
+      convertedCellIds.value.push(sourceGridId);
   }
 
+  // Recolor the loaded landcover features to green
   if (loadedLandcoverDataSource.value) {
     for (const entity of loadedLandcoverDataSource.value.entities.values) {
         if (entity.polygon) {

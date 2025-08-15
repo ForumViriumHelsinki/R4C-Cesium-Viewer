@@ -20,36 +20,42 @@ export const useMitigationStore = defineStore( 'mitigation', {
         effecting9GridCellsCoolingAreaMax: Math.PI * Math.pow(375, 2), // Area = πr²  441786.46691 cooling area, 55223.3083638 park area, 0 count, 54983.17882646234 highest
         heatReducedByParks: 0,
         totalAreaEffected: 0,
-        percentageMax: 0
-
+        percentageMax: 0,
+        modifiedHeatIndices: {},
     } ),
     actions: {
-        async setGridCells( datasource ) {
+        async setGridCells(datasource) {
             this.gridCells = datasource.entities.values
-                .filter( entity => entity.properties?.heat_index?.getValue() )
-                .map( entity => ({
-                    id: entity.properties.grid_id.getValue(),
-                    x: entity.properties.euref_x.getValue(),
-                    y: entity.properties.euref_y.getValue(),
-                    final_avg_conditional: entity.properties.final_avg_conditional.getValue(),
-                    entity: entity, 
-                }))
+                .filter(entity => entity.properties?.final_avg_conditional?.getValue() != null)
+                .map(entity => {
+                    const gridId = entity.properties.grid_id.getValue();
+                    const heatIndex = entity.properties.final_avg_conditional.getValue();
+                    
+                    this.modifiedHeatIndices[gridId] = heatIndex;
 
+                    return {
+                        id: gridId,
+                        x: entity.properties.euref_x.getValue(),
+                        y: entity.properties.euref_y.getValue(),
+                        entity: entity,
+                    };
+                });
         },
         // ** NEW HELPER ACTION to find neighbors **
-        findNearestNeighbors(sourceCellId) {
+        findNearestNeighbors(sourceCellId, maxDistance) {
             const sourceCell = this.gridCells.find(c => c.id === sourceCellId);
             if (!sourceCell) return [];
 
-            // Calculate distance from the source to all other cells
             return this.gridCells
                 .filter(c => c.id !== sourceCellId)
                 .map(neighbor => ({
                     ...neighbor,
                     distance: Math.sqrt(Math.pow(sourceCell.x - neighbor.x, 2) + Math.pow(sourceCell.y - neighbor.y, 2))
                 }))
+                // ** NEW: Filter out neighbors that are too far away **
+                .filter(neighbor => neighbor.distance <= maxDistance)
                 .sort((a, b) => a.distance - b.distance) // Sort by distance
-                .slice(0, 8); // Get the 8 closest
+                .slice(0, 8); // Still cap at 8, just in case
         },
         calculateParksEffect(sourceEntity, totalAreaConverted) {
             const heatReductions = []; // Array to store the results
@@ -64,9 +70,9 @@ export const useMitigationStore = defineStore( 'mitigation', {
             const newIndex = Math.max(0, originalIndex - sourceReduction);
 
             const areaOfInfluence = totalAreaConverted * this.parksEffect;
+            const coolingRadius = Math.sqrt(areaOfInfluence / Math.PI);
+            const neighbors = this.findNearestNeighbors(sourceEntity.properties.grid_id.getValue(), coolingRadius);
             
-            const neighbors = this.findNearestNeighbors(sourceEntity.properties.grid_id.getValue());
-
             neighbors.forEach((neighbor, index) => {
                 let neighborReduction = 0;
 
