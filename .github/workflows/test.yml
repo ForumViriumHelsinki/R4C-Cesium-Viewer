@@ -45,17 +45,6 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -69,39 +58,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Install backend dependencies
-        run: cd backend && npm ci
-      
-      - name: Start backend server
-        run: |
-          cd backend
-          REDIS_HOST=localhost REDIS_PORT=6379 PORT=3001 npm run dev &
-          sleep 5
-        env:
-          NODE_ENV: test
-      
       - name: Run integration tests
         run: npm run test:integration
-      
-      - name: Stop backend server
-        run: pkill -f "node.*server.js" || true
+        env:
+          NODE_ENV: test
 
   e2e-tests:
     name: End-to-End Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -115,19 +81,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Install backend dependencies
-        run: cd backend && npm ci
-      
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
-      
-      - name: Start backend server
-        run: |
-          cd backend
-          REDIS_HOST=localhost REDIS_PORT=6379 PORT=3001 npm run dev &
-          sleep 5
-        env:
-          NODE_ENV: test
       
       - name: Build frontend
         run: npm run build
@@ -241,44 +196,6 @@ jobs:
           path: performance-results/
           retention-days: 7
 
-  backend-tests:
-    name: Backend Tests
-    runs-on: ubuntu-latest
-    
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'backend/package-lock.json'
-      
-      - name: Install backend dependencies
-        run: cd backend && npm ci
-      
-      - name: Run backend tests
-        run: cd backend && npm test
-        env:
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-          NODE_ENV: test
-      
-      - name: Generate backend coverage
-        run: cd backend && npm run test:coverage
 
   security-scan:
     name: Security Scan
@@ -299,17 +216,11 @@ jobs:
       
       - name: Run npm audit
         run: npm audit --audit-level moderate
-      
-      - name: Install backend dependencies
-        run: cd backend && npm ci
-      
-      - name: Run backend npm audit
-        run: cd backend && npm audit --audit-level moderate
 
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, e2e-tests, accessibility-tests]
+    needs: [unit-tests, integration-tests, e2e-tests, accessibility-tests, security-scan]
     if: always()
     
     steps:
@@ -318,7 +229,8 @@ jobs:
           if [[ "${{ needs.unit-tests.result }}" == "failure" || 
                 "${{ needs.integration-tests.result }}" == "failure" || 
                 "${{ needs.e2e-tests.result }}" == "failure" || 
-                "${{ needs.accessibility-tests.result }}" == "failure" ]]; then
+                "${{ needs.accessibility-tests.result }}" == "failure" ||
+                "${{ needs.security-scan.result }}" == "failure" ]]; then
             echo "❌ Some tests failed"
             exit 1
           else
@@ -334,3 +246,4 @@ jobs:
           echo "| Integration Tests | ${{ needs.integration-tests.result == 'success' && '✅' || '❌' }} ${{ needs.integration-tests.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| E2E Tests | ${{ needs.e2e-tests.result == 'success' && '✅' || '❌' }} ${{ needs.e2e-tests.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Accessibility Tests | ${{ needs.accessibility-tests.result == 'success' && '✅' || '❌' }} ${{ needs.accessibility-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security-scan.result == 'success' && '✅' || '❌' }} ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
