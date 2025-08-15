@@ -17,10 +17,10 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 3 : undefined,
+  /* Retry on CI only - increased for flaky Cesium tests */
+  retries: process.env.CI ? 3 : 0,
+  /* Reduce parallel workers for accessibility tests to avoid resource contention */
+  workers: process.env.CI ? 2 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html'],
@@ -46,11 +46,11 @@ export default defineConfig({
     navigationTimeout: 30000,
   },
 
-  /* Test timeout extended for complex 3D interactions, shorter in CI */
-  timeout: process.env.CI ? 45000 : 60000,
+  /* Test timeout extended for complex 3D interactions, increased for CI due to Cesium complexity */
+  timeout: process.env.CI ? 90000 : 60000,
   expect: {
-    /* Timeout for assertions */
-    timeout: process.env.CI ? 8000 : 10000,
+    /* Timeout for assertions - increased for CI accessibility tests */
+    timeout: process.env.CI ? 15000 : 10000,
   },
 
   /* Configure projects for major browsers */

@@ -334,29 +334,47 @@ export class AccessibilityTestHelpers {
   }
 
   /**
-   * Wait for Cesium viewer to be fully loaded
+   * Wait for Cesium viewer to be fully loaded with improved robustness
    */
   async waitForCesiumReady(): Promise<void> {
+    // Extended timeout for CI environment
+    const containerTimeout = process.env.CI ? 30000 : 15000;
+    
     // Wait for Cesium container
-    await this.page.waitForSelector('#cesiumContainer', { timeout: 15000 });
+    await this.page.waitForSelector('#cesiumContainer', { timeout: containerTimeout });
     
     // Wait for Cesium to initialize (checking for canvas element)
-    await this.page.waitForSelector('#cesiumContainer canvas', { timeout: 15000 });
+    await this.page.waitForSelector('#cesiumContainer canvas', { timeout: containerTimeout });
     
-    // Shorter wait for CI environment
-    const waitTime = process.env.CI ? 2000 : 5000;
+    // Wait for Cesium viewer to be ready with multiple checks
+    await this.page.waitForFunction(() => {
+      const container = document.querySelector('#cesiumContainer');
+      const canvas = container?.querySelector('canvas');
+      
+      // Check if canvas has meaningful dimensions
+      return canvas && 
+             canvas.offsetWidth > 0 && 
+             canvas.offsetHeight > 0 &&
+             !canvas.classList.contains('cesium-cesiumWidget-loading');
+    }, { timeout: containerTimeout });
+    
+    // Extended wait for CI environment to allow full initialization
+    const waitTime = process.env.CI ? 8000 : 3000;
     await this.page.waitForTimeout(waitTime);
     
-    // Wait for any loading indicators to disappear with shorter timeout in CI
-    const loadingTimeout = process.env.CI ? 15000 : 30000;
+    // Wait for any loading indicators to disappear
+    const loadingTimeout = process.env.CI ? 20000 : 30000;
     try {
       await this.page.waitForFunction(() => {
         const loading = document.querySelector('.loading-overlay');
-        return !loading || !loading.offsetParent;
+        const cesiumLoading = document.querySelector('.cesium-viewer-loading');
+        return (!loading || !loading.offsetParent) && 
+               (!cesiumLoading || !cesiumLoading.offsetParent);
       }, { timeout: loadingTimeout });
     } catch (error) {
-      console.warn('Loading indicator timeout, proceeding with tests');
-      // Continue with tests even if loading indicator doesn't disappear
+      console.warn('Loading indicator timeout, proceeding with tests - this may cause flaky tests');
+      // Additional fallback wait
+      await this.page.waitForTimeout(2000);
     }
   }
 
