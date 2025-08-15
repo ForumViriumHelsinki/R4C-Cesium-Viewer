@@ -8,8 +8,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.js'],
-    include: ['tests/unit/**/*.test.js', 'tests/integration/**/*.test.js', 'tests/performance/**/*.test.js'],
-    exclude: ['tests/**/*.spec.ts', 'tests/e2e/**/*'],
+    include: ['tests/unit/**/*.test.js', 'tests/integration/**/*.test.js'],
+    exclude: ['tests/**/*.spec.ts', 'tests/e2e/**/*', 'tests/performance/**/*'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
