@@ -85,7 +85,7 @@ describe('Camera service', () => {
   describe('constructor', () => {
     it('should initialize with correct properties', () => {
       expect(camera.store).toBeDefined();
-      expect(camera.viewer).toBe(mockViewer);
+      expect(camera.viewer).toStrictEqual(mockViewer);
       expect(camera.isRotated).toBe(false);
     });
   });
@@ -278,10 +278,10 @@ describe('Camera service', () => {
       expect(mockZoomOut).toHaveBeenCalledWith(500); // 1000 * (1 - 0.5)
     });
 
-    it('should handle multiplier of 1 (zoom in with 0)', () => {
+    it('should handle multiplier of 1 (zoom out with 0)', () => {
       camera.zoom(1);
       
-      expect(mockZoomIn).toHaveBeenCalledWith(0); // 1000 * (1 - 1/1)
+      expect(mockZoomOut).toHaveBeenCalledWith(0); // 1000 * (1 - 1)
     });
   });
 

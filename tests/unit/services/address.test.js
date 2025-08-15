@@ -138,7 +138,7 @@ describe('address service', () => {
         osoitenumero: 'nullnull5null'
       };
       
-      expect(findAddressForBuilding(properties)).toBe('Katunull 5');
+      expect(findAddressForBuilding(properties)).toBe('Katu 5');
     });
 
     it('should trim whitespace from the final address', () => {
@@ -147,7 +147,7 @@ describe('address service', () => {
         osoitenumero: '  10  '
       };
       
-      expect(findAddressForBuilding(properties)).toBe('Katu   10');
+      expect(findAddressForBuilding(properties)).toBe('Katu 10');
     });
 
     it('should handle mixed valid and invalid values', () => {
