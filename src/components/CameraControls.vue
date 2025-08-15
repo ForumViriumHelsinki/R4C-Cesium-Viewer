@@ -2,24 +2,95 @@
   <div class="camera-controls-container">
     <div class="compass-assembly">
       <div class="compass-needle-container">
-        <v-icon :style="compassNeedleStyle" size="x-large">mdi-navigation-variant</v-icon>
+        <v-icon
+:style="compassNeedleStyle"
+size="x-large"
+>
+mdi-navigation-variant
+</v-icon>
       </div>
 
-      <v-btn class="dir-btn north" size="x-small" :disabled="!viewerReady" @click.stop="setHeading(0)">N</v-btn>
-      <v-btn class="dir-btn northeast" size="x-small" :disabled="!viewerReady" @click.stop="setHeading(45)">NE</v-btn>
-      <v-btn class="dir-btn east" size="x-small" :disabled="!viewerReady" @click.stop="setHeading(90)">E</v-btn>
-      <v-btn class="dir-btn southeast" size="x-small" :disabled="!viewerReady" @click.stop="setHeading(135)">SE</v-btn>
-      <v-btn class="dir-btn south" size="x-small" :disabled="!viewerReady" @click.stop="setHeading(180)">S</v-btn>
-      <v-btn class="dir-btn southwest" size="x-small" :disabled="!viewerReady" @click.stop="setHeading(225)">SW</v-btn>
-      <v-btn class="dir-btn west" size="x-small" :disabled="!viewerReady" @click.stop="setHeading(270)">W</v-btn>
-      <v-btn class="dir-btn northwest" size="x-small" :disabled="!viewerReady" @click.stop="setHeading(315)">NW</v-btn>
+      <v-btn
+class="dir-btn north"
+size="x-small"
+:disabled="!viewerReady"
+@click.stop="setHeading(0)"
+>
+N
+</v-btn>
+      <v-btn
+class="dir-btn northeast"
+size="x-small"
+:disabled="!viewerReady"
+@click.stop="setHeading(45)"
+>
+NE
+</v-btn>
+      <v-btn
+class="dir-btn east"
+size="x-small"
+:disabled="!viewerReady"
+@click.stop="setHeading(90)"
+>
+E
+</v-btn>
+      <v-btn
+class="dir-btn southeast"
+size="x-small"
+:disabled="!viewerReady"
+@click.stop="setHeading(135)"
+>
+SE
+</v-btn>
+      <v-btn
+class="dir-btn south"
+size="x-small"
+:disabled="!viewerReady"
+@click.stop="setHeading(180)"
+>
+S
+</v-btn>
+      <v-btn
+class="dir-btn southwest"
+size="x-small"
+:disabled="!viewerReady"
+@click.stop="setHeading(225)"
+>
+SW
+</v-btn>
+      <v-btn
+class="dir-btn west"
+size="x-small"
+:disabled="!viewerReady"
+@click.stop="setHeading(270)"
+>
+W
+</v-btn>
+      <v-btn
+class="dir-btn northwest"
+size="x-small"
+:disabled="!viewerReady"
+@click.stop="setHeading(315)"
+>
+NW
+</v-btn>
     </div>
 
     <div class="zoom-controls">
-      <v-btn icon size="small" :disabled="!viewerReady" @click.stop="zoomIn">
+      <v-btn
+icon
+size="small"
+:disabled="!viewerReady"
+@click.stop="zoomIn"
+>
         <v-icon>mdi-plus</v-icon>
       </v-btn>
-      <v-btn icon size="small" :disabled="!viewerReady" @click.stop="zoomOut">
+      <v-btn
+icon
+size="small"
+:disabled="!viewerReady"
+@click.stop="zoomOut"
+>
         <v-icon>mdi-minus</v-icon>
       </v-btn>
     </div>
