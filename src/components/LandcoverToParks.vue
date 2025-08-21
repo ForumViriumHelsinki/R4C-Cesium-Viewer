@@ -59,11 +59,15 @@
                 <td>{{ calculationResults.neighborsAffected }}</td>
               </tr>
               <tr>
-                <td>Total Heat Index Reduction</td>
+                <td>Total Surface Heat Index Reduction</td>
                 <td class="font-weight-bold text-green">
                   -{{ calculationResults.totalReduction }}
                 </td>
               </tr>
+              <tr>
+                <td>{{ calculationResults.selectedIndexName }} (Original)</td>
+                <td>{{ calculationResults.selectedIndexValue }}</td>
+              </tr>              
             </tbody>
           </v-table>
         </div>
@@ -78,6 +82,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useGridStyling } from '../composables/useGridStyling.js';
 import { useURLStore } from '../stores/urlStore.js';
+import { useIndexData } from '../composables/useIndexData.js';
 import { useMitigationStore } from '../stores/mitigationStore.js';
 import * as Cesium from 'cesium';
 
@@ -89,6 +94,7 @@ const mitigationStore = useMitigationStore();
 const viewer = computed(() => globalStore.cesiumViewer);
 const statsIndex = computed(() => propsStore.statsIndex);
 const { updateGridColors: restoreGridColoring } = useGridStyling();
+const { getIndexInfo } = useIndexData();
 
 const isSelectingGrid = ref(false);
 const isLoading = ref(false);
@@ -316,8 +322,11 @@ const turnToParks = () => {
   if (gridDataSource) {
       gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
 
-      const results = mitigationStore.calculateParksEffect(selectedGridEntity.value, totalAreaConverted, getHeatColor);
-
+      const currentIndexInfo = getIndexInfo(statsIndex.value);
+      const currentIndexValue = selectedGridEntity.value.properties[statsIndex.value]?.getValue();
+      
+      const results = mitigationStore.calculateParksEffect(selectedGridEntity.value, totalAreaConverted);
+     
       const entityMap = new Map();
 
       for (const entity of gridDataSource.entities.values) {
@@ -356,7 +365,9 @@ const turnToParks = () => {
         area: (totalAreaConverted / 10000).toFixed(2), 
         totalCoolingArea: (results.totalCoolingArea / 10000).toFixed(2),
         neighborsAffected: results.neighborsAffected,
-        totalReduction: totalReduction.toFixed(3)
+        totalReduction: totalReduction.toFixed(3),
+        selectedIndexName: currentIndexInfo ? currentIndexInfo.text : statsIndex.value,
+        selectedIndexValue: currentIndexValue ? currentIndexValue.toFixed(3) : 'N/A',
       };
       
       const sourceGridId = selectedGridEntity.value.properties.grid_id.getValue();
