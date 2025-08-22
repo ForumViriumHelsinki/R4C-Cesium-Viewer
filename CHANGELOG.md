@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.19.2...r4c-cesium-viewer-v1.20.0) (2025-08-22)
+
+
+### Features
+
+* distance to landcover parks [#171](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/171) ([#179](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/179)) ([fccaa4c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fccaa4c7892e8b9b6970d712d8ba5bd8a9690893))
+
 ## [1.19.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.19.1...r4c-cesium-viewer-v1.19.2) (2025-08-15)
 
 
