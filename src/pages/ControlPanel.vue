@@ -96,7 +96,7 @@ class="pa-0 ma-0"
 >
 
 <v-expansion-panel
-  v-if="currentView === 'grid' && statsIndex === 'heat_index'"
+  v-if="currentView === 'grid'"
   class="pa-0 ma-0"
   title="Manage Cooling Centers"
 >
@@ -116,7 +116,7 @@ class="pa-0 ma-0"
 </v-expansion-panel>
 
 <v-expansion-panel
-  v-if="currentView === 'grid' && statsIndex.includes('heat')"
+  v-if="currentView === 'grid'"
   class="pa-0 ma-0"
   title="Turn landcover green and blue"
 >
@@ -352,7 +352,6 @@ export default {
     const { ndvi } = storeToRefs(toggleStore);
 
 		const heatHistogramData = computed( () => propsStore.heatHistogramData );
-    const statsIndex = computed( () => propsStore.statsIndex );
     const scatterPlotEntities = computed( () => propsStore.scatterPlotEntities );
     const showSosEco = computed( () => socioEconomicsStore.data && heatExposureStore.data ) ;
 
@@ -403,8 +402,7 @@ export default {
       reset,
       returnToPostalCode,
       ndvi,
-      showSosEco,
-      statsIndex
+      showSosEco
 		};
 	},
 };

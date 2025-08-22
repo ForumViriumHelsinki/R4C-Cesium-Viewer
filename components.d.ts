@@ -43,6 +43,7 @@ declare module 'vue' {
     SocioEconomicsChart: typeof import('./src/components/SocioEconomicsChart.vue')['default']
     SocioEconomicsSelect: typeof import('./src/components/SocioEconomicsSelect.vue')['default']
     SosEco250mGrid: typeof import('./src/components/SosEco250mGrid.vue')['default']
+    StatisticalGridLegend: typeof import('./src/components/StatisticalGridLegend.vue')['default']
     StatisticalGridOptions: typeof import('./src/components/StatisticalGridOptions.vue')['default']
     SurveyScatterPlot: typeof import('./src/components/SurveyScatterPlot.vue')['default']
     Timeline: typeof import('./src/components/Timeline.vue')['default']

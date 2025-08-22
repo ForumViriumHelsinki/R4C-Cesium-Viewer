@@ -14,9 +14,7 @@ export const heatColors = [
     { color: '#f03b20', range: '0.6 - 0.8' },
     { color: '#bd0026', range: '> 0.8' },
 ];
-
 export const partialHeatColors = heatColors.slice(2);
-
 export const floodColors = [
     { color: '#ffffff', range: 'Incomplete data' },
     { color: '#A9A9A9', range: 'Missing values' },
@@ -26,9 +24,7 @@ export const floodColors = [
     { color: '#3182bd', range: '0.6 - 0.8' },
     { color: '#08519c', range: '> 0.8' },
 ];
-
 export const partialFloodColors = floodColors.slice(2);
-
 export const greenSpaceColors = [
     { color: '#006d2c', range: '< 0.2' },
     { color: '#31a354', range: '0.2 - 0.4' },
@@ -36,12 +32,12 @@ export const greenSpaceColors = [
     { color: '#a1d99b', range: '0.6 - 0.8' },
     { color: '#e5f5e0', range: '> 0.8' },
 ];
-
 export const bothColors = [
     { color: '#ffffff', range: 'Incomplete data' },
     { color: '#A9A9A9', range: 'Missing values' },
 ];
 
+// ** THE FIX IS HERE: The map is now complete **
 export const indexToColorScheme = {
     partialHeat: partialHeatColors,
     partialFlood: partialFloodColors,
@@ -67,8 +63,9 @@ export const indexToColorScheme = {
     combined_heatindex_avgheatexposure: heatColors,
     combined_heat_flood_green: heatColors,
     both: bothColors,
+    avgheatexposure: [{ color: 'gradient', range: 'Heat Exposure' }],
+    combined_avgheatexposure: [{ color: 'gradient', range: 'Combined Heat Exposure' }],
 };
-
 
 /**
  * Composable that centralizes all logic for styling the main statistical grid.
@@ -109,22 +106,63 @@ export function useGridStyling() {
         const dataSource = viewer.value.dataSources.getByName('250m_grid')[0];
         if (!dataSource) return;
 
-        console.log(`Updating grid colors based on index: '${selectedIndex}'`);
-
         for (const entity of dataSource.entities.values) {
-            entity.show = true;
-
-            if (entity.polygon) {
-                entity.polygon.material = Cesium.Color.WHITE.withAlpha(baseAlpha.value);
-            }
+            // Reset state for each entity
+            entity.polygon.extrudedHeight = 0;
+            entity.polygon.material = Cesium.Color.WHITE.withAlpha(baseAlpha.value);
 
             if (handleMissingValues(entity, selectedIndex)) continue;
 
-            // Note: This is a simplified restoration. The full implementation would require
-            // porting all the complex `handleCombined...` logic into this composable.
-            const indexValue = entity.properties[selectedIndex]?.getValue();
-            if (indexValue !== undefined && indexValue !== null && entity.polygon) {
-                entity.polygon.material = getColorForIndex(indexValue, selectedIndex);
+            // ** THE FIX: Re-integrate the full logic for all index types **
+            if (selectedIndex === 'combined_heat_flood_green') {
+                const heat = entity.properties['heat_index']?.getValue();
+                const flood = entity.properties['flood_index']?.getValue();
+                const green = entity.properties['green']?.getValue();
+                if (heat != null && flood != null && green != null) {
+                    entity.polygon.material = new Cesium.StripeMaterialProperty({
+                        evenColor: getColorForIndex(flood, 'flood_index'),
+                        oddColor: getColorForIndex(heat, 'heat_index'),
+                        repeat: 10,
+                    });
+                    entity.polygon.extrudedHeight = green * 250;
+                }
+            } else if (selectedIndex === 'avgheatexposure') {
+                const avgHeat = entity.properties['final_avg_conditional']?.getValue();
+                if (avgHeat != null) {
+                    entity.polygon.material = new Cesium.Color(1, 1 - avgHeat, 0, avgHeat);
+                }
+            } else if (selectedIndex === 'combined_avgheatexposure') {
+                const avgHeat = entity.properties['final_avg_conditional']?.getValue();
+                const heatIndex = entity.properties['heat_index']?.getValue();
+                if (avgHeat != null && heatIndex != null) {
+                    entity.polygon.material = new Cesium.Color(1, 1 - avgHeat, 0, avgHeat);
+                    entity.polygon.extrudedHeight = heatIndex * 250;
+                }
+            } else if (selectedIndex === 'combined_heatindex_avgheatexposure') {
+                const avgHeat = entity.properties['final_avg_conditional']?.getValue();
+                const heatIndex = entity.properties['heat_index']?.getValue();
+                if (avgHeat != null && heatIndex != null) {
+                    entity.polygon.material = getColorForIndex(heatIndex, 'heat_index');
+                    entity.polygon.extrudedHeight = avgHeat * 250;
+                }
+            } else if (selectedIndex === 'combined_heat_flood' || selectedIndex === 'combined_flood_heat') {
+                const heat = entity.properties['heat_index']?.getValue();
+                const flood = entity.properties['flood_index']?.getValue();
+                if (heat != null && flood != null) {
+                    if (selectedIndex === 'combined_heat_flood') {
+                        entity.polygon.material = getColorForIndex(heat, 'heat_index');
+                        entity.polygon.extrudedHeight = flood * 250;
+                    } else {
+                        entity.polygon.material = getColorForIndex(flood, 'flood_index');
+                        entity.polygon.extrudedHeight = heat * 250;
+                    }
+                }
+            } else {
+                // Handle all other simple indices
+                const indexValue = entity.properties[selectedIndex]?.getValue();
+                if (indexValue !== undefined && indexValue !== null && entity.polygon) {
+                    entity.polygon.material = getColorForIndex(indexValue, selectedIndex);
+                }
             }
         }
     };

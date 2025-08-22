@@ -77,8 +77,6 @@ const findOptimalCoolingCenters = async () => {
 
     const availableGrids = [...highImpactGrids];
 
-    console.log( "availableGrids", availableGrids.lenght ); 
-
     // Shuffle the availableGrids array
     shuffleArray(availableGrids);
 
