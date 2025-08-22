@@ -26,9 +26,9 @@
             <v-btn
               color="error"
               block
-              @click="resetLandcover"
+              @click="fullReset"
             >
-              Reset
+              Reset All
             </v-btn>
           </v-col>
         </v-row>
@@ -51,21 +51,23 @@
                 <td>{{ calculationResults.area }} ha</td>
               </tr>
               <tr>
-                <td>Heat Index Reduction</td>
+                <td>Total Cooling Area</td>
+                <td>{{ calculationResults.totalCoolingArea }} ha</td>
+              </tr>
+              <tr>
+                <td>Neighbor Cells Cooled</td>
+                <td>{{ calculationResults.neighborsAffected }}</td>
+              </tr>
+              <tr>
+                <td>Total Surface Heat Index Reduction</td>
                 <td class="font-weight-bold text-green">
-                  -{{ calculationResults.reduction }}
+                  -{{ calculationResults.totalReduction }}
                 </td>
               </tr>
               <tr>
-                <td>Original Index</td>
-                <td>{{ calculationResults.original }}</td>
-              </tr>
-              <tr>
-                <td>New Index</td>
-                <td class="font-weight-bold">
-                  {{ calculationResults.new }}
-                </td>
-              </tr>
+                <td>{{ calculationResults.selectedIndexName }} (Original)</td>
+                <td>{{ calculationResults.selectedIndexValue }}</td>
+              </tr>              
             </tbody>
           </v-table>
         </div>
@@ -80,29 +82,32 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useGridStyling } from '../composables/useGridStyling.js';
 import { useURLStore } from '../stores/urlStore.js';
+import { useIndexData } from '../composables/useIndexData.js';
+import { useMitigationStore } from '../stores/mitigationStore.js';
 import * as Cesium from 'cesium';
 
 // --- STATE MANAGEMENT ---
 const globalStore = useGlobalStore();
-const propsStore = usePropsStore(); 
+const propsStore = usePropsStore();
 const urlStore = useURLStore();
+const mitigationStore = useMitigationStore();
 const viewer = computed(() => globalStore.cesiumViewer);
 const statsIndex = computed(() => propsStore.statsIndex);
-
-// ** Instantiate the composable to get the restore function **
 const { updateGridColors: restoreGridColoring } = useGridStyling();
+const { getIndexInfo } = useIndexData();
 
 const isSelectingGrid = ref(false);
 const isLoading = ref(false);
 const dataSourceName = 'landcover_for_parks';
 const gridDataSourceName = '250m_grid';
-
 const selectedGridEntity = ref(null);
 const originalGridColor = ref(null);
 const landcoverFeaturesLoaded = ref(false);
 const loadedGeoJson = ref(null);
 const loadedLandcoverDataSource = ref(null);
 const calculationResults = ref(null);
+const convertedCellIds = ref([]);
+const modifiedHeatIndices = ref(new Map());
 
 // --- DYNAMIC UI ---
 const primaryButtonText = computed(() => {
@@ -125,7 +130,8 @@ const toggleSelectionMode = () => {
   if (!isSelectingGrid.value) isLoading.value = false;
 };
 
-const resetLandcover = async () => {
+// This function now only clears the *current selection*
+const clearCurrentSelection = () => {
   isLoading.value = false;
   isSelectingGrid.value = false;
   
@@ -148,6 +154,27 @@ const resetLandcover = async () => {
   calculationResults.value = null;
 };
 
+// A new function for the main reset button that clears everything
+const fullReset = () => {
+  clearCurrentSelection();
+  if (convertedCellIds.value.length > 0) {
+    convertedCellIds.value = [];
+    modifiedHeatIndices.value.clear(); // Clear the map
+
+    const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
+    if (gridDataSource) {
+      // 1. Mute
+      gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
+
+      // 2. Perform the mass update
+      filterGridEntities();
+
+      // 3. Unmute
+      gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
+    }
+  }
+};
+
 // --- CORE LOGIC ---
 const handleMapClick = async (clickEvent) => {
   if (!isSelectingGrid.value) return;
@@ -157,11 +184,22 @@ const handleMapClick = async (clickEvent) => {
 
   if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.properties) {
     const gridId = pickedObject.id.properties.grid_id?.getValue();
+    
+    // 1. CHECK FIRST: See if the cell is already converted.
+    if (convertedCellIds.value.includes(gridId)) {
+      console.log(`Grid cell ${gridId} has already been converted. Reset to try again.`);
+      isSelectingGrid.value = false;
+      return;
+    }
+
+    // 2. RESET SECOND: Clear state from any PREVIOUS selection.
+    clearCurrentSelection();
+    
+    // 3. PROCEED THIRD: Set up the NEW selection.
     const clickedEntity = pickedObject.id;
     const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
     
     if (gridId && clickedEntity.polygon && gridDataSource) {
-      await resetLandcover();
       isLoading.value = true;
       isSelectingGrid.value = false;
       
@@ -182,13 +220,27 @@ const handleMapClick = async (clickEvent) => {
 const getHeatColor = (value) => {
   let r, g, b;
   const alpha = 0.65;
-  if (value < 0.5) {
-    const interp = value * 2;
-    r = interp; g = interp; b = 1.0;
+  
+  const clampedValue = Math.max(0, Math.min(1, value));
+
+  if (clampedValue < 0.5) {
+    // Blue to White range: Square the value to expand the blue/white gradient
+    let interp = clampedValue * 2; // Scale to 0-1
+    interp = interp * interp; // Non-linear scale
+    
+    r = interp;
+    g = interp;
+    b = 1.0;
   } else {
-    const interp = (value - 0.5) * 2;
-    r = 1.0; g = 1.0 - interp; b = 1.0 - interp;
+    // White to Red range: Use square root to expand the red/white gradient
+    let interp = (clampedValue - 0.5) * 2; // Scale to 0-1
+    interp = Math.sqrt(interp); // Non-linear scale
+
+    r = 1.0;
+    g = 1.0 - interp;
+    b = 1.0 - interp;
   }
+
   return new Cesium.Color(r, g, b, alpha);
 };
 
@@ -210,10 +262,12 @@ const applyDynamicStyling = (dataSource) => {
 };
 
 const loadLandcoverData = async (gridId) => {
-  const apiUrl = urlStore.landcoverToParks( gridId );
+  const apiUrl = urlStore.landcoverToParks(gridId);
+
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) throw new Error(`API returned status ${response.status}`);
+    
     const geojsonData = await response.json();
 
     if (geojsonData.features.length === 0) {
@@ -237,7 +291,7 @@ const loadLandcoverData = async (gridId) => {
 
   } catch (error) {
     console.error("Failed to load landcover data:", error);
-    alert("An error occurred while fetching landcover data.");
+    alert("An error occurred while fetching landcover data. Please check the console for details.");
   }
 };
 
@@ -264,23 +318,63 @@ const turnToParks = () => {
     return sum + (feature.properties.area_m2 || 0);
   }, 0);
 
-  const gridCellTotalArea = 250 * 250;
-  const maxReduction = 0.177;
-  const proportionConverted = totalAreaConverted / gridCellTotalArea;
-  const actualReduction = proportionConverted * maxReduction;
-
-  const originalIndex = selectedGridEntity.value.properties.final_avg_conditional.getValue();
-  const newIndex = Math.max(0, originalIndex - actualReduction);
-
-  const newColor = getHeatColor(newIndex);
   const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
   if (gridDataSource) {
       gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
-      selectedGridEntity.value.polygon.material = newColor;
-      originalGridColor.value = newColor; 
+
+      const currentIndexInfo = getIndexInfo(statsIndex.value);
+      const currentIndexValue = selectedGridEntity.value.properties[statsIndex.value]?.getValue();
+      
+      const results = mitigationStore.calculateParksEffect(selectedGridEntity.value, totalAreaConverted);
+     
+      const entityMap = new Map();
+
+      for (const entity of gridDataSource.entities.values) {
+          const gridId = entity.properties.grid_id?.getValue();
+          if (gridId) {
+              entityMap.set(gridId, entity);
+          }
+      }
+
+      results.heatReductions.forEach(reductionData => {
+        // Use our reliable map to find the entity
+        const entityToColor = entityMap.get(reductionData.grid_id);
+
+        if (entityToColor) {
+         const currentIndex = modifiedHeatIndices.value.has(reductionData.grid_id)
+            ? modifiedHeatIndices.value.get(reductionData.grid_id)
+            : entityToColor.properties.final_avg_conditional.getValue();
+
+          const newIdx = Math.max(0, currentIndex - reductionData.heatReduction);
+          modifiedHeatIndices.value.set(reductionData.grid_id, newIdx);
+
+          const newColor = getHeatColor(newIdx);
+          entityToColor.polygon.material = newColor;
+
+          if (entityToColor.properties.grid_id.getValue() === selectedGridEntity.value.properties.grid_id.getValue()) {
+            originalGridColor.value = newColor;
+          }
+        }
+      });
+      
       gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
+
+      const totalReduction = results.heatReductions.reduce((sum, item) => sum + item.heatReduction, 0);
+
+      calculationResults.value = {
+        area: (totalAreaConverted / 10000).toFixed(2), 
+        totalCoolingArea: (results.totalCoolingArea / 10000).toFixed(2),
+        neighborsAffected: results.neighborsAffected,
+        totalReduction: totalReduction.toFixed(3),
+        selectedIndexName: currentIndexInfo ? currentIndexInfo.text : statsIndex.value,
+        selectedIndexValue: currentIndexValue ? currentIndexValue.toFixed(3) : 'N/A',
+      };
+      
+      const sourceGridId = selectedGridEntity.value.properties.grid_id.getValue();
+      convertedCellIds.value.push(sourceGridId);
   }
 
+  // Recolor the loaded landcover features to green
   if (loadedLandcoverDataSource.value) {
     for (const entity of loadedLandcoverDataSource.value.entities.values) {
         if (entity.polygon) {
@@ -288,13 +382,6 @@ const turnToParks = () => {
         }
     }
   }
-
-  calculationResults.value = {
-    area: (totalAreaConverted / 10000).toFixed(2), 
-    reduction: actualReduction.toFixed(3),
-    original: originalIndex.toFixed(3),
-    new: newIndex.toFixed(3)
-  };
 
   landcoverFeaturesLoaded.value = false;
 };
@@ -322,7 +409,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (viewer.value && !viewer.value.isDestroyed()) {
     viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    resetLandcover();
+    fullReset(); // Use fullReset on unmount to clean everything
     
     const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
     if (gridDataSource) {
