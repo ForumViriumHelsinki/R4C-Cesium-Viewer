@@ -1,7 +1,7 @@
 {
   "name": "r4c-cesium-viewer",
   "private": true,
-  "version": "1.19.2",
+  "version": "1.20.0",
   "type": "module",
   "scripts": {
     "dev": "./node_modules/.bin/dotenvx run -- vite --host",
