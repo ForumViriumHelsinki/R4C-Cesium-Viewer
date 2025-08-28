@@ -61,6 +61,7 @@ export default {
       '2022-06-28',
       '2023-06-23',
       '2024-06-26',
+      '2025-07-14'
     ];
 
     const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)); // Set default index    

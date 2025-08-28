@@ -19,6 +19,11 @@ Both functions should be deployed to Google Cloud Functions.
 - Provide the **date** and **bucket name** as arguments.
 - The function downloads the red and NIR bands for the specified date from the bucket, calculates the NDVI, and saves the NDVI TIFF file back to the bucket.
 
+To invoke `process_sentinel_ndvi` using `gcloud`:
+```sh
+gcloud functions call process_sentinel_ndvi --region europe-north1 --project fvh-project-containers-etc --data '{"date": "2025-06-20", "bucket": "regions4climate"}'
+```
+
 #### Input:
 - `date` (string): The date in `YYYY-MM-DD` format for which the NDVI data should be processed.
 - `bucket` (string): The name of the Google Cloud Storage bucket where the input and output data are stored.
@@ -45,7 +50,7 @@ Both functions should be deployed to Google Cloud Functions.
 
 To invoke `calculate_average_ndvi` using `gcloud`:
 ```sh
-gcloud functions call calculate_average_ndvi --region europe-north1 --project fvh-project-containers-etc --data '{"date": "2017-06-04", "bucket": "regions4climate", "json_input": "hsy_po_org.json", "json_output": "hsy_po_new.json"}'
+gcloud functions call calculate_average_ndvi --region europe-north1 --project fvh-project-containers-etc --data '{"date": "2025-06-20", "bucket": "regions4climate", "json_input": "hsy_po_org.json", "json_output": "hsy_po_new.json"}'
 ```
 
 ## Implementation Details
