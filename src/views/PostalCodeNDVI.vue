@@ -53,6 +53,7 @@ export default {
       "2022-06-26",
       "2023-06-23",
       "2024-06-27",
+      "2025-06-20",
     ];
 
     const updateImage = async () => {

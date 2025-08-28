@@ -21,7 +21,17 @@ The function is designed to be deployed as a Google Cloud Function.
 To invoke the function using `gcloud`, use the following command:
 
 ```bash
-gcloud functions call normalise-landsat-b10 --region europe-north1 --data '{"date": "2023-06-01", "bucket": "thermal-data-bucket", "json_input": "heat_zones.geojson"}'
+gcloud functions call normalise-landsat-b10 --region europe-north1 --data '{"date": "yyyy-mm-dd", "bucket": "regions4climate", "json_input": "hsy_po.json"}'
+```
+
+### With Curl
+The function can be also used with curl command
+
+```bash
+curl -X POST "https://normalise-landsat-b10-ykahq53hja-lz.a.run.app" \
+-H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+-H "Content-Type: application/json" \
+-d '{"date": "2025-07-14", "bucket": "regions4climate", "json_input": "hsy_po.json"}'
 ```
 
 ## Input Parameters
