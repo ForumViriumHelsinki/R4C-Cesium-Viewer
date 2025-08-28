@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.21.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.20.1...r4c-cesium-viewer-v1.21.0) (2025-08-28)
+
+
+### Features
+
+* 2025 satellite data [#185](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/185) ([#186](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/186)) ([3ac960a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3ac960ad02e151021695b147f52356012bdf0547))
+
+
+### Bug Fixes
+
+* parks coloring [#184](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/184) ([#188](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/188)) ([5cbf784](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5cbf78419b539a34ad6497e87890c36ff2b083a1))
+
 ## [1.20.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.20.0...r4c-cesium-viewer-v1.20.1) (2025-08-28)
 
 
