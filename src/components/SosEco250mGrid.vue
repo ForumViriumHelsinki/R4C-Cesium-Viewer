@@ -31,6 +31,7 @@ watch([statsIndex, ndviActive], () => {
 watch(coolingCenters, () => {
   if (statsIndex.value === 'heat_index') {
     mitigationStore.impact = 0;
+    mitigationStore.affected = [];
     // Note: The original code's complex `heatIndex` function with mitigation
     // would need to be moved into the composable as well to be fully DRY.
     // For now, this call restores the base colors.

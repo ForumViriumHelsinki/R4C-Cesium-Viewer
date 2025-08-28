@@ -2,6 +2,7 @@ import { computed } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { useMitigationStore } from '../stores/mitigationStore.js';
 import * as Cesium from 'cesium';
 
 // --- CENTRALIZED STYLING CONSTANTS ---
@@ -75,6 +76,7 @@ export function useGridStyling() {
     const globalStore = useGlobalStore();
     const propsStore = usePropsStore();
     const toggleStore = useToggleStore();
+    const mitigationStore = useMitigationStore();
     
     const viewer = computed(() => globalStore.cesiumViewer);
     const ndviActive = computed(() => toggleStore.ndvi);
@@ -113,8 +115,23 @@ export function useGridStyling() {
 
             if (handleMissingValues(entity, selectedIndex)) continue;
 
-            // ** THE FIX: Re-integrate the full logic for all index types **
-            if (selectedIndex === 'combined_heat_flood_green') {
+            if (selectedIndex === 'heat_index') {
+                const originalHeatIndex = entity.properties['heat_index']?.getValue();
+                if (originalHeatIndex != null) {
+                    const reduction = mitigationStore.calculateTotalReductionForCell(entity);
+                    const newHeatIndex = Math.max(0, originalHeatIndex - reduction);
+                    
+                    if (reduction > 0) {
+                        // Correctly update the global state
+                        mitigationStore.addImpact(reduction);
+                        mitigationStore.addCell(entity.properties.grid_id.getValue());
+                    }
+                    
+                    if (entity.polygon) {
+                        entity.polygon.material = getColorForIndex(newHeatIndex, 'heat_index');
+                    }
+                }
+            }  else if (selectedIndex === 'combined_heat_flood_green') {
                 const heat = entity.properties['heat_index']?.getValue();
                 const flood = entity.properties['flood_index']?.getValue();
                 const green = entity.properties['green']?.getValue();

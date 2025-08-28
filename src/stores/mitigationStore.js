@@ -41,6 +41,45 @@ export const useMitigationStore = defineStore( 'mitigation', {
                     };
                 });
         },
+        /**
+         * Calculates the new heat index for a single entity,
+         * factoring in the effect of all active cooling centers.
+         */
+        calculateCoolingCenterEffect(entity) {
+            let heatIndexValue = entity.properties['heat_index']?.getValue();
+            if (heatIndexValue == null) return null;
+
+            const euref_x = entity.properties['euref_x']?.getValue();
+            const euref_y = entity.properties['euref_y']?.getValue();
+            
+            let totalReduction = 0;
+            
+            for (const center of this.coolingCenters) {
+                const distance = Math.sqrt(
+                    Math.pow(center.euref_x - euref_x, 2) + Math.pow(center.euref_y - euref_y, 2)
+                );
+                const currentReduction = this.getReductionValue(distance);
+                if (currentReduction > 0) {
+                    totalReduction += currentReduction;
+                }
+            }
+            return Math.max(0, heatIndexValue - totalReduction);
+        },
+        calculateTotalReductionForCell(entity) {
+            const euref_x = entity.properties['euref_x']?.getValue();
+            const euref_y = entity.properties['euref_y']?.getValue();
+            
+            let totalReduction = 0;
+            if (euref_x == null || euref_y == null) return 0;
+            
+            for (const center of this.coolingCenters) {
+                const distance = Math.sqrt(
+                    Math.pow(center.euref_x - euref_x, 2) + Math.pow(center.euref_y - euref_y, 2)
+                );
+                totalReduction += this.getReductionValue(distance);
+            }
+            return totalReduction;
+        },
         // ** NEW HELPER ACTION to find neighbors **
         findNearestNeighbors(sourceCellId, maxDistance) {
             const sourceCell = this.gridCells.find(c => c.id === sourceCellId);
