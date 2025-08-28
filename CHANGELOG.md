@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.20.0...r4c-cesium-viewer-v1.20.1) (2025-08-28)
+
+
+### Bug Fixes
+
+* cooling centers [#181](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/181) ([#182](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/182)) ([0269f37](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0269f371f46036496808e406ab0e3ba28a3f4d46))
+
 ## [1.20.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.19.2...r4c-cesium-viewer-v1.20.0) (2025-08-22)
 
 
