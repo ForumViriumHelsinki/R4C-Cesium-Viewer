@@ -26,9 +26,9 @@
             <v-btn
               color="error"
               block
-              @click="fullReset"
+              @click="handleResetOrCancel"
             >
-              Reset All
+              {{ resetOrCancelButtonText }}
             </v-btn>
           </v-col>
         </v-row>
@@ -47,27 +47,37 @@
           >
             <tbody>
               <tr>
-                <td>Area Converted</td>
+                <td>{{ calculationResults.selectedIndexName }} (Initial)</td>
+                <td>{{ calculationResults.initialIndex }}</td>
+              </tr>
+              <tr>
+                <td>Area Converted (This Turn)</td>
                 <td>{{ calculationResults.area }} ha</td>
               </tr>
               <tr>
-                <td>Total Cooling Area</td>
-                <td>{{ calculationResults.totalCoolingArea }} ha</td>
-              </tr>
-              <tr>
-                <td>Neighbor Cells Cooled</td>
+                <td>Neighbor Cells Cooled (This Turn)</td>
                 <td>{{ calculationResults.neighborsAffected }}</td>
               </tr>
               <tr>
-                <td>Total Surface Heat Index Reduction</td>
+                <td>Heat Index Reduction (This Turn)</td>
                 <td class="font-weight-bold text-green">
                   -{{ calculationResults.totalReduction }}
                 </td>
               </tr>
               <tr>
-                <td>{{ calculationResults.selectedIndexName }} (Original)</td>
-                <td>{{ calculationResults.selectedIndexValue }}</td>
-              </tr>              
+                <td>{{ calculationResults.selectedIndexName }} (New Cumulative)</td>
+                <td class="font-weight-bold">
+                  {{ calculationResults.newIndex }}
+                </td>
+              </tr>
+              <tr class="font-weight-bold">
+                <td>Cumulative Cooling Area</td>
+                <td>{{ calculationResults.cumulativeCoolingArea }} ha</td>
+              </tr>
+              <tr class="font-weight-bold text-green">
+                <td>Cumulative Heat Reduction</td>
+                <td>-{{ calculationResults.cumulativeHeatReduction }}</td>
+              </tr>
             </tbody>
           </v-table>
         </div>
@@ -108,12 +118,18 @@ const loadedLandcoverDataSource = ref(null);
 const calculationResults = ref(null);
 const convertedCellIds = ref([]);
 const modifiedHeatIndices = ref(new Map());
+const convertedParkDataSources = ref([]);
 
 // --- DYNAMIC UI ---
 const primaryButtonText = computed(() => {
   if (landcoverFeaturesLoaded.value) return "Turn to Parks";
   if (isSelectingGrid.value) return "...";
   return "Select";
+});
+
+// ** NEW: Dynamic text for the reset/cancel button **
+const resetOrCancelButtonText = computed(() => {
+  return landcoverFeaturesLoaded.value ? "Cancel" : "Reset All";
 });
 
 const handlePrimaryButtonClick = () => {
@@ -124,13 +140,23 @@ const handlePrimaryButtonClick = () => {
   }
 };
 
+// ** NEW: Handler for the dual-purpose reset/cancel button **
+const handleResetOrCancel = () => {
+  if (landcoverFeaturesLoaded.value) {
+    // If we are in a selection state, just clear the current selection (Cancel)
+    clearCurrentSelection();
+  } else {
+    // Otherwise, perform a full reset of the simulation
+    fullReset();
+  }
+};
+
 // --- UI ACTIONS ---
 const toggleSelectionMode = () => {
   isSelectingGrid.value = !isSelectingGrid.value;
   if (!isSelectingGrid.value) isLoading.value = false;
 };
 
-// This function now only clears the *current selection*
 const clearCurrentSelection = () => {
   isLoading.value = false;
   isSelectingGrid.value = false;
@@ -154,26 +180,27 @@ const clearCurrentSelection = () => {
   calculationResults.value = null;
 };
 
-// A new function for the main reset button that clears everything
 const fullReset = () => {
   clearCurrentSelection();
+  
+  convertedParkDataSources.value.forEach(dataSource => {
+    viewer.value.dataSources.remove(dataSource, true);
+  });
+  convertedParkDataSources.value = [];
+
   if (convertedCellIds.value.length > 0) {
     convertedCellIds.value = [];
-    modifiedHeatIndices.value.clear(); // Clear the map
+    modifiedHeatIndices.value.clear();
 
     const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
     if (gridDataSource) {
-      // 1. Mute
       gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
-
-      // 2. Perform the mass update
-      filterGridEntities();
-
-      // 3. Unmute
+      filterGridEntities(); // Restore the blue-red heat map
       gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
     }
   }
 };
+
 
 // --- CORE LOGIC ---
 const handleMapClick = async (clickEvent) => {
@@ -185,17 +212,13 @@ const handleMapClick = async (clickEvent) => {
   if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.properties) {
     const gridId = pickedObject.id.properties.grid_id?.getValue();
     
-    // 1. CHECK FIRST: See if the cell is already converted.
     if (convertedCellIds.value.includes(gridId)) {
-      console.log(`Grid cell ${gridId} has already been converted. Reset to try again.`);
       isSelectingGrid.value = false;
       return;
     }
 
-    // 2. RESET SECOND: Clear state from any PREVIOUS selection.
     clearCurrentSelection();
     
-    // 3. PROCEED THIRD: Set up the NEW selection.
     const clickedEntity = pickedObject.id;
     const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
     
@@ -220,27 +243,17 @@ const handleMapClick = async (clickEvent) => {
 const getHeatColor = (value) => {
   let r, g, b;
   const alpha = 0.65;
-  
   const clampedValue = Math.max(0, Math.min(1, value));
 
   if (clampedValue < 0.5) {
-    // Blue to White range: Square the value to expand the blue/white gradient
-    let interp = clampedValue * 2; // Scale to 0-1
-    interp = interp * interp; // Non-linear scale
-    
-    r = interp;
-    g = interp;
-    b = 1.0;
+    let interp = clampedValue * 2;
+    interp = interp * interp;
+    r = interp; g = interp; b = 1.0;
   } else {
-    // White to Red range: Use square root to expand the red/white gradient
-    let interp = (clampedValue - 0.5) * 2; // Scale to 0-1
-    interp = Math.sqrt(interp); // Non-linear scale
-
-    r = 1.0;
-    g = 1.0 - interp;
-    b = 1.0 - interp;
+    let interp = (clampedValue - 0.5) * 2;
+    interp = Math.sqrt(interp);
+    r = 1.0; g = 1.0 - interp; b = 1.0 - interp;
   }
-
   return new Cesium.Color(r, g, b, alpha);
 };
 
@@ -263,15 +276,13 @@ const applyDynamicStyling = (dataSource) => {
 
 const loadLandcoverData = async (gridId) => {
   const apiUrl = urlStore.landcoverToParks(gridId);
-
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) throw new Error(`API returned status ${response.status}`);
-    
     const geojsonData = await response.json();
 
     if (geojsonData.features.length === 0) {
-      alert(`No convertible landcover features found for the selected grid cell.`);
+      alert(`No convertible landcover features found.`);
       if (selectedGridEntity.value && originalGridColor.value) {
           selectedGridEntity.value.polygon.material = originalGridColor.value;
       }
@@ -288,10 +299,9 @@ const loadLandcoverData = async (gridId) => {
     
     loadedLandcoverDataSource.value = newDataSource;
     landcoverFeaturesLoaded.value = true;
-
   } catch (error) {
     console.error("Failed to load landcover data:", error);
-    alert("An error occurred while fetching landcover data. Please check the console for details.");
+    alert("An error occurred while fetching landcover data.");
   }
 };
 
@@ -301,7 +311,11 @@ const filterGridEntities = () => {
   for (const entity of gridDataSource.entities.values) {
     if (entity.properties && entity.properties['final_avg_conditional']?.getValue()) {
       entity.show = true;
-      const heatIndex = entity.properties['final_avg_conditional'].getValue();
+      const gridId = entity.properties.grid_id.getValue();
+      const heatIndex = modifiedHeatIndices.value.has(gridId)
+        ? modifiedHeatIndices.value.get(gridId)
+        : entity.properties['final_avg_conditional'].getValue();
+      
       if (entity.polygon) {
         entity.polygon.material = getHeatColor(heatIndex);
       }
@@ -323,35 +337,33 @@ const turnToParks = () => {
       gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
 
       const currentIndexInfo = getIndexInfo(statsIndex.value);
-      const currentIndexValue = selectedGridEntity.value.properties[statsIndex.value]?.getValue();
+      const sourceGridId = selectedGridEntity.value.properties.grid_id.getValue();
       
       const results = mitigationStore.calculateParksEffect(selectedGridEntity.value, totalAreaConverted);
-     
+      
       const entityMap = new Map();
-
       for (const entity of gridDataSource.entities.values) {
           const gridId = entity.properties.grid_id?.getValue();
-          if (gridId) {
-              entityMap.set(gridId, entity);
-          }
+          if (gridId) entityMap.set(gridId, entity);
       }
 
-      results.heatReductions.forEach(reductionData => {
-        // Use our reliable map to find the entity
-        const entityToColor = entityMap.get(reductionData.grid_id);
+      let actualTotalReduction = 0;
 
+      results.heatReductions.forEach(reductionData => {
+        const entityToColor = entityMap.get(reductionData.grid_id);
         if (entityToColor) {
          const currentIndex = modifiedHeatIndices.value.has(reductionData.grid_id)
             ? modifiedHeatIndices.value.get(reductionData.grid_id)
             : entityToColor.properties.final_avg_conditional.getValue();
+          
+          actualTotalReduction += reductionData.heatReduction;
 
           const newIdx = Math.max(0, currentIndex - reductionData.heatReduction);
           modifiedHeatIndices.value.set(reductionData.grid_id, newIdx);
-
           const newColor = getHeatColor(newIdx);
           entityToColor.polygon.material = newColor;
 
-          if (entityToColor.properties.grid_id.getValue() === selectedGridEntity.value.properties.grid_id.getValue()) {
+          if (entityToColor.id === selectedGridEntity.value.id) {
             originalGridColor.value = newColor;
           }
         }
@@ -359,47 +371,43 @@ const turnToParks = () => {
       
       gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
 
-      const totalReduction = results.heatReductions.reduce((sum, item) => sum + item.heatReduction, 0);
-
+      const initialIndexForDisplay = modifiedHeatIndices.value.has(sourceGridId) ? modifiedHeatIndices.value.get(sourceGridId) + results.sourceReduction : selectedGridEntity.value.properties.final_avg_conditional.getValue();
+      
       calculationResults.value = {
         area: (totalAreaConverted / 10000).toFixed(2), 
         totalCoolingArea: (results.totalCoolingArea / 10000).toFixed(2),
         neighborsAffected: results.neighborsAffected,
-        totalReduction: totalReduction.toFixed(3),
+        totalReduction: actualTotalReduction.toFixed(3),
         selectedIndexName: currentIndexInfo ? currentIndexInfo.text : statsIndex.value,
-        selectedIndexValue: currentIndexValue ? currentIndexValue.toFixed(3) : 'N/A',
+        initialIndex: initialIndexForDisplay.toFixed(3),
+        newIndex: modifiedHeatIndices.value.get(sourceGridId).toFixed(3),
+        cumulativeCoolingArea: (mitigationStore.cumulativeCoolingArea / 10000).toFixed(2),
+        cumulativeHeatReduction: mitigationStore.cumulativeHeatReduction.toFixed(3),
       };
       
-      const sourceGridId = selectedGridEntity.value.properties.grid_id.getValue();
       convertedCellIds.value.push(sourceGridId);
   }
 
-  // Recolor the loaded landcover features to green
   if (loadedLandcoverDataSource.value) {
-    for (const entity of loadedLandcoverDataSource.value.entities.values) {
+    const dataSourceToConvert = loadedLandcoverDataSource.value;
+    for (const entity of dataSourceToConvert.entities.values) {
         if (entity.polygon) {
             entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.8);
         }
     }
+    convertedParkDataSources.value.push(dataSourceToConvert);
+    loadedLandcoverDataSource.value = null;
   }
-
   landcoverFeaturesLoaded.value = false;
 };
 
 // --- LIFECYCLE HOOKS ---
 onMounted(() => {
-  if (!viewer.value) {
-    console.error("Cesium viewer is not initialized.");
-    return;
-  }
-  
+  if (!viewer.value) return;
   viewer.value.screenSpaceEventHandler.setInputAction(handleMapClick, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-  
   const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
   if (gridDataSource) {
-    if (gridDataSource.entities.values.length > 0) {
-      filterGridEntities();
-    }
+    if (gridDataSource.entities.values.length > 0) filterGridEntities();
     gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
   } else {
     console.warn(`Datasource '${gridDataSourceName}' not found on mount.`);
@@ -409,8 +417,11 @@ onMounted(() => {
 onUnmounted(() => {
   if (viewer.value && !viewer.value.isDestroyed()) {
     viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    fullReset(); // Use fullReset on unmount to clean everything
     
+    // First, do a full reset of this component's state
+    fullReset();
+    
+    // THEN, restore the main application's colors
     const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
     if (gridDataSource) {
       gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);

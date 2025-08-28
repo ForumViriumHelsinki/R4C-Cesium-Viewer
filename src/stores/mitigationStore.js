@@ -12,7 +12,6 @@ export const useMitigationStore = defineStore( 'mitigation', {
         gridImpacts: {}, // Store impact for each grid_id
         gridCells: [], // Add gridCells here
         optimised: false,
-        parksEffect: 8,
         parks2022CoolingConstant: 0.177,
         gridArea: 62500,
         effecting1GridCellsCoolingAreaMax: Math.PI * Math.pow(125, 2), // Area = πr² 49087.38521 cooling area, 6135.92315125 park area, 4107 count 
@@ -22,6 +21,8 @@ export const useMitigationStore = defineStore( 'mitigation', {
         totalAreaEffected: 0,
         percentageMax: 0,
         modifiedHeatIndices: {},
+        cumulativeCoolingArea: 0,
+        cumulativeHeatReduction: 0,
     } ),
     actions: {
         async setGridCells(datasource) {
@@ -96,58 +97,72 @@ export const useMitigationStore = defineStore( 'mitigation', {
                 .sort((a, b) => a.distance - b.distance) // Sort by distance
                 .slice(0, 8); // Still cap at 8, just in case
         },
+        getParksEffect(area) {
+            if (area > 48000) {
+                return 11;
+            } else if (area > 40000) {
+                return 10;
+            } else if (area > 32000) {
+                return 9;
+            } else if (area > 24000) {
+                return 8;
+            } else if (area > 16000) {
+                return 7;
+            } else if (area > 8000) {
+                return 6;
+            } else {
+                return 5;
+            }
+        },
         calculateParksEffect(sourceEntity, totalAreaConverted) {
-            const heatReductions = []; // Array to store the results
-            this.totalHeatReduction = 0;
-            this.neighborCellsAffected = 0;
-
+            const heatReductions = [];
+            const sourceGridId = sourceEntity.properties.grid_id.getValue();
+            const originalIndex = this.modifiedHeatIndices[sourceGridId];
             const sourceReduction = (totalAreaConverted / this.gridArea) * this.parks2022CoolingConstant;
-            
-            heatReductions.push({ grid_id: sourceEntity.properties.grid_id.getValue(), heatReduction: sourceReduction });
-
-            const originalIndex = sourceEntity.properties.final_avg_conditional.getValue();
             const newIndex = Math.max(0, originalIndex - sourceReduction);
-
-            const areaOfInfluence = totalAreaConverted * this.parksEffect;
-            const coolingRadius = Math.sqrt(areaOfInfluence / Math.PI);
-            const neighbors = this.findNearestNeighbors(sourceEntity.properties.grid_id.getValue(), coolingRadius);
             
+            this.modifiedHeatIndices[sourceGridId] = newIndex;
+            heatReductions.push({ grid_id: sourceGridId, heatReduction: sourceReduction });
+
+            const areaOfInfluence = totalAreaConverted * this.getParksEffect(totalAreaConverted);
+            const coolingRadius = Math.sqrt(areaOfInfluence / Math.PI);
+            const neighbors = this.findNearestNeighbors(sourceGridId, coolingRadius);
+
             neighbors.forEach((neighbor, index) => {
                 let neighborReduction = 0;
-
-                // Apply logic to the 4 closest neighbors
                 if (index < 4) {
-                    if (areaOfInfluence >= this.effecting5GridCellsCoolingAreaMax) {
-                        neighborReduction = this.parks2022CoolingConstant * 0.5;
-                    } else if (areaOfInfluence > this.effecting1GridCellsCoolingAreaMax) {
+                    if (areaOfInfluence >= this.effecting5GridCellsCoolingAreaMax) neighborReduction = this.parks2022CoolingConstant * 0.5;
+                    else if (areaOfInfluence > this.effecting1GridCellsCoolingAreaMax) {
                         const range = this.effecting5GridCellsCoolingAreaMax - this.effecting1GridCellsCoolingAreaMax;
                         const progress = areaOfInfluence - this.effecting1GridCellsCoolingAreaMax;
                         neighborReduction = this.parks2022CoolingConstant * ((progress / range) * 0.5);
                     }
                 } else {
-                     if (areaOfInfluence >= this.effecting9GridCellsCoolingAreaMax) {
-                        neighborReduction = this.parks2022CoolingConstant * 0.25;
-                    } else if (areaOfInfluence > this.effecting5GridCellsCoolingAreaMax) {
+                    if (areaOfInfluence >= this.effecting9GridCellsCoolingAreaMax) neighborReduction = this.parks2022CoolingConstant * 0.25;
+                    else if (areaOfInfluence > this.effecting5GridCellsCoolingAreaMax) {
                         const range = this.effecting9GridCellsCoolingAreaMax - this.effecting5GridCellsCoolingAreaMax;
                         const progress = areaOfInfluence - this.effecting5GridCellsCoolingAreaMax;
                         neighborReduction = this.parks2022CoolingConstant * ((progress / range) * 0.25);
                     }
                 }
-
                 if (neighborReduction > 0) {
+                    const neighborOriginalIndex = this.modifiedHeatIndices[neighbor.id];
+                    const neighborNewIndex = Math.max(0, neighborOriginalIndex - neighborReduction);
+                    this.modifiedHeatIndices[neighbor.id] = neighborNewIndex;
                     heatReductions.push({ grid_id: neighbor.id, heatReduction: neighborReduction });
-                    this.neighborCellsAffected++;
                 }
             });
 
+            this.cumulativeCoolingArea += areaOfInfluence;
+            this.cumulativeHeatReduction += heatReductions.reduce((sum, item) => sum + item.heatReduction, 0);
+
             return {
-                heatReductions, // <-- **THE FIX: Add the array to the return object**
+                heatReductions,
                 sourceNewIndex: newIndex,
-                sourceReduction: sourceReduction,
                 totalCoolingArea: areaOfInfluence,
-                neighborsAffected: this.neighborCellsAffected,
+                neighborsAffected: neighbors.length,
             };
-        }, 
+        },
         preCalculateGridImpacts( ) {
             if ( !this.gridCells || this.gridCells.length === 0 ) {
                 console.warn('Grid cells are not set. Cannot pre-calculate impacts.');
@@ -180,6 +195,8 @@ export const useMitigationStore = defineStore( 'mitigation', {
             this.affected = [];
             this.impact = 0;
             this.optimised = false;
+            this.cumulativeCoolingArea = 0;
+            this.cumulativeHeatReduction = 0;
         },
         getCoolingCenterCount(gridId) {
             return this.coolingCenters.filter(center => center.grid_id === gridId).length;
