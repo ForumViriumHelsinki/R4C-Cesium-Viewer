@@ -114,7 +114,8 @@ describe('Timeline Component', () => {
     });
 
     it('should handle selection of 2025 date', async () => {
-      await wrapper.setData({ selectedDate: '2025-07-14' });
+      wrapper.vm.selectedDate = '2025-07-14';
+      await wrapper.vm.$nextTick();
       expect(wrapper.vm.selectedDate).toBe('2025-07-14');
       
       const dateDisplay = wrapper.find('.date-display');
@@ -125,7 +126,8 @@ describe('Timeline Component', () => {
   describe('Date Navigation', () => {
     it('should navigate forward through dates', async () => {
       const initialDate = '2024-06-26';
-      await wrapper.setData({ selectedDate: initialDate });
+      wrapper.vm.selectedDate = initialDate;
+      await wrapper.vm.$nextTick();
       
       const nextButton = wrapper.find('.mdi-chevron-right').element.closest('button');
       await wrapper.find('.mdi-chevron-right').trigger('click');
@@ -135,7 +137,8 @@ describe('Timeline Component', () => {
 
     it('should navigate backward through dates', async () => {
       const initialDate = '2025-07-14';
-      await wrapper.setData({ selectedDate: initialDate });
+      wrapper.vm.selectedDate = initialDate;
+      await wrapper.vm.$nextTick();
       
       await wrapper.find('.mdi-chevron-left').trigger('click');
       
@@ -143,7 +146,7 @@ describe('Timeline Component', () => {
     });
 
     it('should disable next button on last date', async () => {
-      await wrapper.setData({ selectedDate: '2025-07-14' });
+      wrapper.vm.selectedDate = '2025-07-14';
       await wrapper.vm.$nextTick();
       
       const nextButton = wrapper.find('.mdi-chevron-right').element.closest('button');
@@ -151,7 +154,7 @@ describe('Timeline Component', () => {
     });
 
     it('should disable previous button on first date', async () => {
-      await wrapper.setData({ selectedDate: '2003-06-08' });
+      wrapper.vm.selectedDate = '2003-06-08';
       await wrapper.vm.$nextTick();
       
       const prevButton = wrapper.find('.mdi-chevron-left').element.closest('button');
@@ -164,13 +167,15 @@ describe('Timeline Component', () => {
       const datasourceService = wrapper.vm.datasourceService;
       const loadSpy = vi.spyOn(datasourceService, 'loadSentinelHeatData');
       
-      await wrapper.setData({ selectedDate: '2025-07-14' });
+      wrapper.vm.selectedDate = '2025-07-14';
+      await wrapper.vm.$nextTick();
       
       expect(loadSpy).toHaveBeenCalledWith('2025-07-14');
     });
 
     it('should update store when date changes', async () => {
-      await wrapper.setData({ selectedDate: '2025-07-14' });
+      wrapper.vm.selectedDate = '2025-07-14';
+      await wrapper.vm.$nextTick();
       expect(mockPropsStore.currentDataDate).toBe('2025-07-14');
     });
   });
@@ -192,7 +197,8 @@ describe('Timeline Component', () => {
     });
 
     it('should sync slider position with selected date', async () => {
-      await wrapper.setData({ selectedDate: '2025-07-14' });
+      wrapper.vm.selectedDate = '2025-07-14';
+      await wrapper.vm.$nextTick();
       const expectedIndex = wrapper.vm.dates.indexOf('2025-07-14');
       expect(wrapper.vm.currentPropertyIndex).toBe(expectedIndex);
     });

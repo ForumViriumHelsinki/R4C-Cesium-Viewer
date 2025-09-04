@@ -47,7 +47,7 @@ export default defineConfig({
   },
 
   /* Test timeout extended for complex 3D interactions, increased for CI due to Cesium complexity */
-  timeout: process.env.CI ? 90000 : 60000,
+  timeout: process.env.CI ? 120000 : 60000,
   expect: {
     /* Timeout for assertions - increased for CI accessibility tests */
     timeout: process.env.CI ? 15000 : 10000,

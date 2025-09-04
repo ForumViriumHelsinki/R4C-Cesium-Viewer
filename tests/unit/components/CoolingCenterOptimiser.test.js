@@ -8,10 +8,19 @@ import { createPinia } from 'pinia';
 
 // Mock Cesium
 vi.mock('cesium', () => ({
-  Color: {
-    BLUE: { withAlpha: vi.fn(() => 'blue-alpha') }
-  },
-  Cartesian3: vi.fn((x, y, z) => ({ x, y, z })),
+  Color: vi.fn(function(r, g, b, a) {
+    this.red = r;
+    this.green = g;
+    this.blue = b;
+    this.alpha = a;
+    this.withAlpha = vi.fn((alpha) => new this.constructor(r, g, b, alpha));
+  }),
+  Cartesian3: Object.assign(
+    vi.fn((x, y, z) => ({ x, y, z })),
+    {
+      fromDegrees: vi.fn((lon, lat, height = 0) => ({ x: lon, y: lat, z: height }))
+    }
+  ),
   Cartographic: {
     fromCartesian: vi.fn(() => ({
       longitude: 0,
@@ -223,7 +232,8 @@ describe('CoolingCenterOptimiser Component', () => {
     });
 
     it('should update value when slider changes', async () => {
-      await wrapper.setData({ numCoolingCenters: 30 });
+      wrapper.vm.numCoolingCenters = 30;
+      await wrapper.vm.$nextTick();
       expect(wrapper.vm.numCoolingCenters).toBe(30);
     });
   });
@@ -250,7 +260,8 @@ describe('CoolingCenterOptimiser Component', () => {
     });
 
     it('should select cells with highest impact first', async () => {
-      await wrapper.setData({ numCoolingCenters: 1 });
+      wrapper.vm.numCoolingCenters = 1;
+      await wrapper.vm.$nextTick();
       await wrapper.vm.findOptimalCoolingCenters();
       
       // grid_002 has highest impact (8), should be selected first
@@ -456,7 +467,8 @@ describe('CoolingCenterOptimiser Component', () => {
       mockMitigationStore.optimalEffect = 5;
       
       // Only grid_002 (impact 8) exceeds the threshold
-      await wrapper.setData({ numCoolingCenters: 3 });
+      wrapper.vm.numCoolingCenters = 3;
+      await wrapper.vm.$nextTick();
       await wrapper.vm.findOptimalCoolingCenters();
       
       // Should only add centers for high impact grids
@@ -466,14 +478,16 @@ describe('CoolingCenterOptimiser Component', () => {
 
   describe('Edge Cases', () => {
     it('should handle zero cooling centers request', async () => {
-      await wrapper.setData({ numCoolingCenters: 0 });
+      wrapper.vm.numCoolingCenters = 0;
+      await wrapper.vm.$nextTick();
       await wrapper.vm.findOptimalCoolingCenters();
       
       expect(mockMitigationStore.addCoolingCenter).not.toHaveBeenCalled();
     });
 
     it('should handle more centers than available grids', async () => {
-      await wrapper.setData({ numCoolingCenters: 100 });
+      wrapper.vm.numCoolingCenters = 100;
+      await wrapper.vm.$nextTick();
       await wrapper.vm.findOptimalCoolingCenters();
       
       // Should only add as many as there are valid grids

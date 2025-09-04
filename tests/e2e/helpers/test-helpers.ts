@@ -362,12 +362,12 @@ export class AccessibilityTestHelpers {
              !canvas.classList.contains('cesium-cesiumWidget-loading');
     }, { timeout: containerTimeout });
     
-    // Extended wait for CI environment to allow full initialization
-    const waitTime = process.env.CI ? 8000 : 3000;
+    // Reduced wait for CI environment - optimized timing
+    const waitTime = process.env.CI ? 3000 : 2000;
     await this.page.waitForTimeout(waitTime);
     
-    // Wait for any loading indicators to disappear
-    const loadingTimeout = process.env.CI ? 20000 : 30000;
+    // Wait for any loading indicators to disappear with reduced timeout
+    const loadingTimeout = process.env.CI ? 15000 : 10000;
     try {
       await this.page.waitForFunction(() => {
         const loading = document.querySelector('.loading-overlay');
@@ -376,9 +376,9 @@ export class AccessibilityTestHelpers {
                (!cesiumLoading || !cesiumLoading.offsetParent);
       }, { timeout: loadingTimeout });
     } catch (error) {
-      console.warn('Loading indicator timeout, proceeding with tests - this may cause flaky tests');
-      // Additional fallback wait
-      await this.page.waitForTimeout(2000);
+      console.warn('Loading indicator timeout, proceeding with tests');
+      // Reduced fallback wait
+      await this.page.waitForTimeout(1000);
     }
   }
 

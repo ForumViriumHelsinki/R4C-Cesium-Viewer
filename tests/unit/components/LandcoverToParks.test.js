@@ -6,38 +6,48 @@ import * as directives from 'vuetify/directives';
 import LandcoverToParks from '../../../src/components/LandcoverToParks.vue';
 import { createPinia } from 'pinia';
 
-// Mock Cesium
-vi.mock('cesium', () => ({
-  Color: {
-    WHITE: { withAlpha: vi.fn(() => 'white-alpha') },
-    FORESTGREEN: { withAlpha: vi.fn(() => 'green-alpha') },
-    LIGHTSLATEGRAY: { withAlpha: vi.fn(() => 'gray-alpha') },
-    fromCssColorString: vi.fn(() => ({ withAlpha: vi.fn(() => 'color-alpha') }))
-  },
-  Cartesian3: {
-    fromDegrees: vi.fn(() => 'cartesian3')
-  },
-  Cartographic: {
-    fromCartesian: vi.fn(() => ({ longitude: 0, latitude: 0 }))
-  },
-  Math: {
-    toDegrees: vi.fn(val => val * 180 / Math.PI)
-  },
-  ScreenSpaceEventType: {
-    LEFT_CLICK: 0
-  },
-  defined: vi.fn(val => val !== undefined && val !== null),
-  GeoJsonDataSource: {
-    load: vi.fn().mockResolvedValue({
-      name: 'test',
-      entities: { values: [] }
-    })
-  },
-  CustomDataSource: vi.fn(() => ({
-    name: '',
-    entities: { add: vi.fn(), values: [] }
-  }))
-}));
+// Mock Cesium - needs to be defined in the factory function
+vi.mock('cesium', () => {
+  const ColorMock = vi.fn(function(r, g, b, a) {
+    this.red = r;
+    this.green = g;
+    this.blue = b;
+    this.alpha = a;
+    this.withAlpha = vi.fn((alpha) => new ColorMock(this.red, this.green, this.blue, alpha));
+  });
+  ColorMock.WHITE = new ColorMock(1, 1, 1, 1);
+  ColorMock.FORESTGREEN = new ColorMock(0.13, 0.54, 0.13, 1);
+  ColorMock.LIGHTSLATEGRAY = new ColorMock(0.47, 0.53, 0.6, 1);
+  ColorMock.fromCssColorString = vi.fn(() => new ColorMock(0, 0, 0, 1));
+  ColorMock.BLUE = new ColorMock(0, 0, 1, 1);
+
+  return {
+    Color: ColorMock,
+    Cartesian3: {
+      fromDegrees: vi.fn(() => 'cartesian3')
+    },
+    Cartographic: {
+      fromCartesian: vi.fn(() => ({ longitude: 0, latitude: 0 }))
+    },
+    Math: {
+      toDegrees: vi.fn(val => val * 180 / Math.PI)
+    },
+    ScreenSpaceEventType: {
+      LEFT_CLICK: 0
+    },
+    defined: vi.fn(val => val !== undefined && val !== null),
+    GeoJsonDataSource: {
+      load: vi.fn().mockResolvedValue({
+        name: 'test',
+        entities: { values: [] }
+      })
+    },
+    CustomDataSource: vi.fn(() => ({
+      name: '',
+      entities: { add: vi.fn(), values: [] }
+    }))
+  };
+});
 
 // Mock turf
 vi.mock('@turf/turf', () => ({
@@ -148,7 +158,7 @@ describe('LandcoverToParks Component', () => {
     });
 
     it('should display the correct title', () => {
-      const title = wrapper.find('h3');
+      const title = wrapper.find('.v-card-title');
       expect(title.text()).toBe('Create Parks');
     });
 
@@ -168,25 +178,29 @@ describe('LandcoverToParks Component', () => {
 
   describe('Button State Management', () => {
     it('should show "..." when selecting grid', async () => {
-      await wrapper.setData({ isSelectingGrid: true });
+      wrapper.vm.isSelectingGrid = true;
+      await wrapper.vm.$nextTick();
       const button = wrapper.find('.v-btn');
       expect(button.text()).toBe('...');
     });
 
     it('should show "Turn to Parks" when features are loaded', async () => {
-      await wrapper.setData({ landcoverFeaturesLoaded: true });
+      wrapper.vm.landcoverFeaturesLoaded = true;
+      await wrapper.vm.$nextTick();
       const button = wrapper.find('.v-btn');
       expect(button.text()).toBe('Turn to Parks');
     });
 
     it('should show "Cancel" for reset button when features loaded', async () => {
-      await wrapper.setData({ landcoverFeaturesLoaded: true });
+      wrapper.vm.landcoverFeaturesLoaded = true;
+      await wrapper.vm.$nextTick();
       const resetButton = wrapper.findAll('.v-btn')[1];
       expect(resetButton.text()).toBe('Cancel');
     });
 
     it('should show "Reset All" for reset button when no features', async () => {
-      await wrapper.setData({ landcoverFeaturesLoaded: false });
+      wrapper.vm.landcoverFeaturesLoaded = false;
+      await wrapper.vm.$nextTick();
       const resetButton = wrapper.findAll('.v-btn')[1];
       expect(resetButton.text()).toBe('Reset All');
     });
@@ -203,7 +217,9 @@ describe('LandcoverToParks Component', () => {
     });
 
     it('should disable loading when selection mode is turned off', async () => {
-      await wrapper.setData({ isSelectingGrid: true, isLoading: true });
+      wrapper.vm.isSelectingGrid = true;
+      wrapper.vm.isLoading = true;
+      await wrapper.vm.$nextTick();
       const button = wrapper.find('.v-btn');
       await button.trigger('click');
       expect(wrapper.vm.isLoading).toBe(false);
@@ -259,7 +275,8 @@ describe('LandcoverToParks Component', () => {
         cumulativeHeatReduction: '0.250'
       };
       
-      await wrapper.setData({ calculationResults: mockResults });
+      wrapper.vm.calculationResults = mockResults;
+      await wrapper.vm.$nextTick();
       
       const table = wrapper.find('.v-table');
       expect(table.exists()).toBe(true);
@@ -287,7 +304,8 @@ describe('LandcoverToParks Component', () => {
         cumulativeHeatReduction: '0.250'
       };
       
-      await wrapper.setData({ calculationResults: mockResults });
+      wrapper.vm.calculationResults = mockResults;
+      await wrapper.vm.$nextTick();
       
       const boldRows = wrapper.findAll('tr.font-weight-bold');
       expect(boldRows.length).toBeGreaterThan(0);
@@ -299,10 +317,9 @@ describe('LandcoverToParks Component', () => {
 
   describe('Reset Functionality', () => {
     it('should clear selection when Cancel is clicked', async () => {
-      await wrapper.setData({ 
-        landcoverFeaturesLoaded: true,
-        selectedGridEntity: { id: 'test' }
-      });
+      wrapper.vm.landcoverFeaturesLoaded = true;
+      wrapper.vm.selectedGridEntity = { id: 'test' };
+      await wrapper.vm.$nextTick();
       
       const cancelButton = wrapper.findAll('.v-btn')[1];
       await cancelButton.trigger('click');
@@ -312,11 +329,10 @@ describe('LandcoverToParks Component', () => {
     });
 
     it('should perform full reset when Reset All is clicked', async () => {
-      await wrapper.setData({
-        convertedCellIds: ['grid_001', 'grid_002'],
-        modifiedHeatIndices: new Map([['grid_001', 0.3]]),
-        calculationResults: { area: '5.00' }
-      });
+      wrapper.vm.convertedCellIds = ['grid_001', 'grid_002'];
+      wrapper.vm.modifiedHeatIndices = new Map([['grid_001', 0.3]]);
+      wrapper.vm.calculationResults = { area: '5.00' };
+      await wrapper.vm.$nextTick();
       
       const resetButton = wrapper.findAll('.v-btn')[1];
       await resetButton.trigger('click');
