@@ -1,7 +1,7 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 // Helper functions for common interactions
-async function dismissDisclaimer(page: Page) {
+async function dismissDisclaimer(page: any) {
   try {
     await page.getByRole('button', { name: 'Close' }).click({ timeout: 2000 });
   } catch (error) {
@@ -9,13 +9,13 @@ async function dismissDisclaimer(page: Page) {
   }
 }
 
-async function waitForMapLoad(page: Page) {
+async function waitForMapLoad(page: any) {
   // Wait for Cesium to load and render
   await page.waitForSelector('canvas', { state: 'visible', timeout: 10000 });
   await page.waitForTimeout(2000); // Additional time for 3D rendering
 }
 
-async function clickOnMap(page: Page, x: number, y: number) {
+async function clickOnMap(page: any, x: number, y: number) {
   await page.locator('canvas').click({ position: { x, y } });
   await page.waitForTimeout(1000); // Wait for map response
 }

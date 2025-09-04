@@ -5,7 +5,7 @@
  * to ensure nothing gets lost during interface overhaul.
  */
 
-import { Page, expect, Locator } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 export interface ViewMode {
   id: 'capitalRegionView' | 'gridView' | 'helsinkiHeat';
@@ -19,7 +19,11 @@ export interface NavigationLevel {
 }
 
 export class AccessibilityTestHelpers {
-  constructor(private page: Page) {}
+  private page: any;
+  
+  constructor(page: any) {
+    this.page = page;
+  }
 
   /**
    * Navigate to specific view mode and verify selection

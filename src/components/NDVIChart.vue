@@ -36,7 +36,12 @@ import * as Cesium from "cesium";
 import Datasource from "../services/datasource.js";
 
 export default {
-  props: ["selectedDate"],
+  props: {
+    selectedDate: {
+      type: String,
+      required: true
+    }
+  },
   setup(props) {
     const propsStore = usePropsStore();
     const datasourceService = new Datasource();
