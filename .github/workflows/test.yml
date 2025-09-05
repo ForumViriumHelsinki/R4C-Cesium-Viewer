@@ -90,7 +90,9 @@ jobs:
             libglapi-mesa \
             libosmesa6 \
             libxi6 \
-            libgconf-2-4
+            libxext6 \
+            libxfixes3 \
+            libxrandr2
       
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
@@ -146,7 +148,9 @@ jobs:
             libglapi-mesa \
             libosmesa6 \
             libxi6 \
-            libgconf-2-4
+            libxext6 \
+            libxfixes3 \
+            libxrandr2
       
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
