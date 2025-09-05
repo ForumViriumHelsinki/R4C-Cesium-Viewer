@@ -7,7 +7,24 @@
     "dev": "./node_modules/.bin/dotenvx run -- vite --host",
     "build": "./node_modules/.bin/dotenvx run -- vite build",
     "preview": "./node_modules/.bin/dotenvx run -- vite preview --host",
-    "lint": "eslint --fix src/"
+    "lint": "eslint --fix src/",
+    "test": "vitest",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration", 
+    "test:e2e": "playwright test tests/e2e",
+    "test:performance": "vitest run tests/performance",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:accessibility": "playwright test tests/e2e/accessibility",
+    "test:accessibility:desktop": "playwright test tests/e2e/accessibility --project=accessibility-desktop",
+    "test:accessibility:tablet": "playwright test tests/e2e/accessibility --project=accessibility-tablet",
+    "test:accessibility:mobile": "playwright test tests/e2e/accessibility --project=accessibility-mobile",
+    "test:accessibility:all-viewports": "npm run test:accessibility:desktop && npm run test:accessibility:tablet && npm run test:accessibility:mobile",
+    "test:accessibility:watch": "playwright test tests/e2e/accessibility --ui",
+    "test:accessibility:report": "playwright show-report",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:ci": "npm run test:coverage && npm run test:e2e",
+    "test:ci:accessibility": "npm run test:accessibility:all-viewports"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.22.1",
@@ -31,10 +48,19 @@
   "devDependencies": {
     "@playwright/test": "^1.47.2",
     "@vitejs/plugin-vue": "^5.2.0",
+    "@vitest/coverage-v8": "^2.0.5",
+    "@vue/test-utils": "^2.4.6",
+    "esbuild": "^0.25.9",
     "eslint-plugin-vue": "^9.31.0",
     "globals": "^15.12.0",
+    "jsdom": "^25.0.0",
+    "supertest": "^7.0.0",
     "vite": "^5.4.10",
     "vite-plugin-cesium": "^1.2.23",
-    "vite-plugin-cesium-build": "^0.5.0"
+    "vite-plugin-cesium-build": "^0.7.0",
+    "vitest": "^2.0.5"
+  },
+  "overrides": {
+    "esbuild": "^0.25.9"
   }
 }
