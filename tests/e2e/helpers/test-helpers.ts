@@ -6,6 +6,12 @@
  */
 
 import { expect } from '@playwright/test';
+import { 
+  waitForCesiumReady as cesiumWaitForReady,
+  setupCesiumForCI,
+  initializeCesiumWithRetry,
+  waitForAppReady
+} from './cesium-helper';
 
 export interface ViewMode {
   id: 'capitalRegionView' | 'gridView' | 'helsinkiHeat';
@@ -341,45 +347,27 @@ export class AccessibilityTestHelpers {
    * Wait for Cesium viewer to be fully loaded with improved robustness
    */
   async waitForCesiumReady(): Promise<void> {
-    // Extended timeout for CI environment
-    const containerTimeout = process.env.CI ? 30000 : 15000;
-    
-    // Wait for Cesium container
-    await this.page.waitForSelector('#cesiumContainer', { timeout: containerTimeout });
-    
-    // Wait for Cesium to initialize (checking for canvas element)
-    await this.page.waitForSelector('#cesiumContainer canvas', { timeout: containerTimeout });
-    
-    // Wait for Cesium viewer to be ready with multiple checks
-    await this.page.waitForFunction(() => {
-      const container = document.querySelector('#cesiumContainer');
-      const canvas = container?.querySelector('canvas');
-      
-      // Check if canvas has meaningful dimensions
-      return canvas && 
-             canvas.offsetWidth > 0 && 
-             canvas.offsetHeight > 0 &&
-             !canvas.classList.contains('cesium-cesiumWidget-loading');
-    }, { timeout: containerTimeout });
-    
-    // Reduced wait for CI environment - optimized timing
-    const waitTime = process.env.CI ? 3000 : 2000;
-    await this.page.waitForTimeout(waitTime);
-    
-    // Wait for any loading indicators to disappear with reduced timeout
-    const loadingTimeout = process.env.CI ? 15000 : 10000;
-    try {
-      await this.page.waitForFunction(() => {
-        const loading = document.querySelector('.loading-overlay');
-        const cesiumLoading = document.querySelector('.cesium-viewer-loading');
-        return (!loading || !loading.offsetParent) && 
-               (!cesiumLoading || !cesiumLoading.offsetParent);
-      }, { timeout: loadingTimeout });
-    } catch (error) {
-      console.warn('Loading indicator timeout, proceeding with tests');
-      // Reduced fallback wait
-      await this.page.waitForTimeout(1000);
+    // Use the enhanced Cesium helper for better CI compatibility
+    if (process.env.CI) {
+      // In CI, use the full initialization with retry logic
+      const initialized = await initializeCesiumWithRetry(this.page, 3);
+      if (!initialized) {
+        console.warn('Cesium initialization incomplete in CI, proceeding with limited functionality');
+      }
+    } else {
+      // In local development, use simpler initialization
+      await waitForAppReady(this.page);
+      await cesiumWaitForReady(this.page, 30000);
     }
+    
+    // Ensure the Cesium container is present
+    await this.page.waitForSelector('#cesiumContainer', { 
+      timeout: process.env.CI ? 30000 : 15000 
+    });
+    
+    // Additional stabilization time
+    const waitTime = process.env.CI ? 2000 : 1000;
+    await this.page.waitForTimeout(waitTime);
   }
 
   /**

@@ -81,11 +81,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: Install system dependencies for WebGL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            xvfb \
+            libgl1-mesa-dri \
+            libglapi-mesa \
+            libosmesa6 \
+            libxi6 \
+            libgconf-2-4
+      
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
       
       - name: Build frontend
         run: npm run build
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
       
       - name: Start frontend server
         run: |
@@ -93,9 +106,10 @@ jobs:
           sleep 10
       
       - name: Run Playwright tests
-        run: npm run test:e2e
+        run: xvfb-run -a --server-args="-screen 0 1920x1080x24" npm run test:e2e
         env:
           CI: true
+          NODE_OPTIONS: '--max-old-space-size=4096'
       
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -123,11 +137,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: Install system dependencies for WebGL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            xvfb \
+            libgl1-mesa-dri \
+            libglapi-mesa \
+            libosmesa6 \
+            libxi6 \
+            libgconf-2-4
+      
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       
       - name: Build frontend
         run: npm run build
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
       
       - name: Start frontend server and wait for readiness
         run: |
@@ -148,22 +175,25 @@ jobs:
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
       
       - name: Run accessibility tests - Desktop
-        run: timeout 600 npm run test:accessibility:desktop
+        run: xvfb-run -a --server-args="-screen 0 1920x1080x24" timeout 600 npm run test:accessibility:desktop
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
+          NODE_OPTIONS: '--max-old-space-size=4096'
       
       - name: Run accessibility tests - Tablet  
-        run: timeout 600 npm run test:accessibility:tablet
+        run: xvfb-run -a --server-args="-screen 0 1024x768x24" timeout 600 npm run test:accessibility:tablet
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
+          NODE_OPTIONS: '--max-old-space-size=4096'
       
       - name: Run accessibility tests - Mobile
-        run: timeout 600 npm run test:accessibility:mobile
+        run: xvfb-run -a --server-args="-screen 0 375x667x24" timeout 600 npm run test:accessibility:mobile
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
+          NODE_OPTIONS: '--max-old-space-size=4096'
       
       - name: Cleanup server process
         if: always()

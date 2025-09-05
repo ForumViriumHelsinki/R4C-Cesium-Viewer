@@ -44,6 +44,19 @@ export default defineConfig({
     /* Extended timeouts for Cesium loading */
     actionTimeout: 30000,
     navigationTimeout: 30000,
+    
+    /* CI-specific browser launch options for WebGL support */
+    ...(process.env.CI && {
+      launchOptions: {
+        args: [
+          '--disable-gpu',
+          '--use-gl=swiftshader',
+          '--disable-dev-shm-usage',
+          '--no-sandbox',
+          '--disable-web-security'
+        ]
+      }
+    }),
   },
 
   /* Test timeout extended for complex 3D interactions, increased for CI due to Cesium complexity */
