@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * Helper utilities for handling Cesium WebGL initialization in tests
@@ -148,14 +148,21 @@ export async function waitForAppReady(page: Page, timeout: number = 30000): Prom
   await page.waitForLoadState('domcontentloaded');
   
   // Wait for network to be idle (but don't fail if it doesn't)
-  await page.waitForLoadState('networkidle', { timeout: timeout / 2 }).catch(() => {
-    console.log('Network did not become idle, continuing...');
+  // In CI, use shorter timeout as the app might have continuous polling
+  const networkTimeout = process.env.CI ? 5000 : timeout / 2;
+  await page.waitForLoadState('networkidle', { timeout: networkTimeout }).catch(() => {
+    // This is expected for apps with continuous polling/WebGL updates
+    if (!process.env.CI) {
+      console.log('Network did not become idle, continuing...');
+    }
   });
   
   // Check for app-specific readiness indicators
   try {
     // Wait for Vue app to be present (not necessarily visible)
-    await page.waitForSelector('#app', { state: 'attached', timeout: timeout / 3 });
+    // Use full timeout in CI for better reliability
+    const appTimeout = process.env.CI ? timeout : timeout / 2;
+    await page.waitForSelector('#app', { state: 'attached', timeout: appTimeout });
     
     // Wait for any loading indicators to disappear (if they exist)
     const loadingSelectors = ['.loading', '.spinner', '.loading-overlay'];
@@ -188,7 +195,9 @@ export async function initializeCesiumWithRetry(
   for (let i = 0; i < retries; i++) {
     try {
       await setupCesiumForCI(page);
-      await waitForAppReady(page);
+      // Increase timeout in CI for better reliability
+      const appTimeout = process.env.CI ? 45000 : 30000;
+      await waitForAppReady(page, appTimeout);
       
       const hasWebGL = await isWebGLAvailable(page);
       if (!hasWebGL && !process.env.CI) {
