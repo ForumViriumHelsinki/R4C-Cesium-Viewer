@@ -148,7 +148,8 @@ test.describe('Layer Controls Accessibility', () => {
       // Navigate to postal code level in Capital Region view
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level UI
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Trees toggle should now be visible
       await expect(page.getByText('Trees')).toBeVisible();
@@ -166,21 +167,24 @@ test.describe('Layer Controls Accessibility', () => {
       // Navigate to postal code in Capital Region first
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code UI elements
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Verify Trees is visible
       await expect(page.getByText('Trees')).toBeVisible();
       
       // Switch to grid view
       await helpers.navigateToView('gridView');
-      await page.waitForTimeout(2000);
+      // Wait for grid view switch
+      await expect(page.locator('input[value="gridView"]')).toBeChecked();
       
       // Trees should now be hidden
       await expect(page.getByText('Trees')).not.toBeVisible();
       
       // Switch back to Capital Region
       await helpers.navigateToView('capitalRegionView');
-      await page.waitForTimeout(2000);
+      // Wait for view switch back
+      await expect(page.locator('input[value="capitalRegionView"]')).toBeChecked();
       
       // Trees should be visible again
       await expect(page.getByText('Trees')).toBeVisible();
@@ -190,7 +194,8 @@ test.describe('Layer Controls Accessibility', () => {
       // Navigate to postal code in Capital Region
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       const treesToggle = page.getByText('Trees').locator('..').locator('input[type="checkbox"]');
       
@@ -200,7 +205,8 @@ test.describe('Layer Controls Accessibility', () => {
       
       // Navigate to building level (Trees should still be available)
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(3000);
+      // Wait for building level
+      await page.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
       
       // Trees should still be visible and checked
       await expect(page.getByText('Trees')).toBeVisible();
@@ -209,7 +215,8 @@ test.describe('Layer Controls Accessibility', () => {
       // Navigate back to postal code
       const backButton = page.getByRole('button').filter({ has: page.locator('.mdi-arrow-left') });
       await backButton.click();
-      await page.waitForTimeout(2000);
+      // Wait for navigation back to postal code
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Trees state should be maintained
       await expect(treesToggle).toBeChecked();
@@ -223,9 +230,11 @@ test.describe('Layer Controls Accessibility', () => {
       // Rapidly toggle NDVI multiple times
       for (let i = 0; i < 5; i++) {
         await ndviToggle.check();
-        await page.waitForTimeout(200);
+        // Wait for toggle state change
+        await expect(ndviToggle).toBeChecked();
         await ndviToggle.uncheck();
-        await page.waitForTimeout(200);
+        // Wait for toggle state change
+        await expect(ndviToggle).not.toBeChecked();
       }
       
       // Final state should be consistent
@@ -240,7 +249,8 @@ test.describe('Layer Controls Accessibility', () => {
     test('should handle multiple layer toggles simultaneously', async ({ page }) => {
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Get available toggles
       const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
@@ -278,7 +288,8 @@ test.describe('Layer Controls Accessibility', () => {
       
       // Navigate to postal code level
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code UI
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // States should be maintained
       await expect(ndviToggle).toBeChecked();
@@ -286,7 +297,8 @@ test.describe('Layer Controls Accessibility', () => {
       
       // Navigate to building level
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(3000);
+      // Wait for building level
+      await page.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
       
       // States should still be maintained
       await expect(ndviToggle).toBeChecked();
@@ -299,7 +311,8 @@ test.describe('Layer Controls Accessibility', () => {
       // Navigate to context where multiple layers are visible
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code UI
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Check that all visible toggles have consistent structure
       const toggles = page.locator('.switch-container');
@@ -342,7 +355,8 @@ test.describe('Layer Controls Accessibility', () => {
           if (type === 'checkbox') {
             // Found a checkbox, test space bar activation
             await page.keyboard.press(' ');
-            await page.waitForTimeout(500);
+            // Wait for keyboard activation to complete
+            await page.waitForFunction(() => document.readyState === 'complete', { timeout: 2000 }).catch(() => {});
             
             // Should toggle the checkbox
             const isChecked = await focused.isChecked();
@@ -358,7 +372,8 @@ test.describe('Layer Controls Accessibility', () => {
     test('should have proper labels for screen readers', async ({ page }) => {
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code UI
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Check that layer labels are descriptive
       const layerLabels = [
@@ -388,7 +403,8 @@ test.describe('Layer Controls Accessibility', () => {
       
       // Toggle on
       await ndviToggle.check();
-      await page.waitForTimeout(500);
+      // Wait for toggle state change
+      await expect(ndviToggle).toBeChecked();
       
       // Visual state should reflect change
       const afterToggle = await ndviToggle.isChecked();
@@ -414,7 +430,7 @@ test.describe('Layer Controls Accessibility', () => {
       await ndviToggle.check();
       
       // Wait for loading to complete
-      await page.waitForTimeout(3000);
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
       
       // Toggle state should be consistent
       await expect(ndviToggle).toBeChecked();
@@ -439,7 +455,8 @@ test.describe('Layer Controls Accessibility', () => {
       // Reset application
       const resetButton = page.getByRole('button').filter({ has: page.locator('.mdi-refresh') });
       await resetButton.click();
-      await page.waitForTimeout(3000);
+      // Wait for reset to complete
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       
       // Layer states behavior after reset depends on implementation
       // We verify that toggles are still functional
@@ -456,7 +473,8 @@ test.describe('Layer Controls Accessibility', () => {
       const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
       
       await ndviToggle.check();
-      await page.waitForTimeout(2000);
+      // Wait for toggle state change
+      await expect(ndviToggle).toBeChecked();
       
       // Should not cause application errors
       const errorElements = page.locator('[class*="error"], [class*="Error"]');
@@ -479,7 +497,10 @@ test.describe('Layer Controls Accessibility', () => {
 
       for (const viewport of viewports) {
         await page.setViewportSize(viewport);
-        await page.waitForTimeout(1000);
+        // Wait for viewport change to take effect
+        await page.waitForFunction((expectedWidth) => {
+          return window.innerWidth === expectedWidth;
+        }, viewport.width, { timeout: 3000 });
         
         // Layer controls should remain accessible
         await expect(page.getByText('NDVI')).toBeVisible();

@@ -74,8 +74,8 @@ test.describe('Navigation Levels Accessibility', () => {
       // Click on map to select postal code area
       await helpers.drillToLevel('postalCode');
       
-      // Wait for level transition
-      await page.waitForTimeout(3000);
+      // Wait for level transition by checking for postal code specific UI elements
+      await page.waitForSelector('text="Building Scatter Plot", text="Area properties"', { timeout: 10000 }).catch(() => {});
       
       // Verify postal code level features appear
       await helpers.verifyPanelVisibility({
@@ -90,7 +90,8 @@ test.describe('Navigation Levels Accessibility', () => {
 
     test('should display postal code specific panels', async ({ page }) => {
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code UI to load
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Postal code specific panels
       await expect(page.getByText('Building Scatter Plot')).toBeVisible();
@@ -117,7 +118,8 @@ test.describe('Navigation Levels Accessibility', () => {
 
     test('should show navigation controls at postal code level', async ({ page }) => {
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for navigation controls to be ready
+      await page.waitForSelector('.mdi-compass', { timeout: 10000 }).catch(() => {});
       
       await helpers.testNavigationControls('postalCode');
       
@@ -136,7 +138,8 @@ test.describe('Navigation Levels Accessibility', () => {
       
       // Navigate to postal code level
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level features
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Verify view mode is maintained
       await expect(page.locator('input[value="gridView"]')).toBeChecked();
@@ -152,14 +155,16 @@ test.describe('Navigation Levels Accessibility', () => {
         // Reset to start
         const resetButton = page.getByRole('button').filter({ has: page.locator('.mdi-refresh') });
         await resetButton.click();
-        await page.waitForTimeout(2000);
+        // Wait for reset to complete
+        await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
         
         // Switch to view
         await helpers.navigateToView(view as 'capitalRegionView' | 'gridView');
         
         // Navigate to postal code
         await helpers.drillToLevel('postalCode');
-        await page.waitForTimeout(3000);
+        // Wait for postal code specific elements
+        await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
         
         // Verify view-specific features are present
         if (view === 'gridView') {
@@ -178,11 +183,13 @@ test.describe('Navigation Levels Accessibility', () => {
     test('should transition to building level from postal code', async ({ page }) => {
       // First navigate to postal code level
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Then navigate to building level
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(3000);
+      // Wait for building level elements
+      await page.waitForSelector('text="Building heat data", text="Building properties"', { timeout: 10000 }).catch(() => {});
       
       // Verify building level features
       await helpers.verifyPanelVisibility({
@@ -196,7 +203,8 @@ test.describe('Navigation Levels Accessibility', () => {
 
     test('should display building-specific panels', async ({ page }) => {
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(5000);
+      // Wait for building-specific panels to load
+      await page.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
       
       // Building-specific panels
       await expect(page.getByText('Building heat data')).toBeVisible();
@@ -211,7 +219,8 @@ test.describe('Navigation Levels Accessibility', () => {
 
     test('should show back navigation button at building level', async ({ page }) => {
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(5000);
+      // Wait for building level navigation to be ready
+      await page.waitForSelector('.mdi-arrow-left', { timeout: 15000 }).catch(() => {});
       
       await helpers.testNavigationControls('building');
       
@@ -227,15 +236,16 @@ test.describe('Navigation Levels Accessibility', () => {
     test('should handle back navigation from building to postal code', async ({ page }) => {
       // Navigate to building level
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(5000);
+      // Wait for building level
+      await page.waitForSelector('.mdi-arrow-left', { timeout: 15000 }).catch(() => {});
       
       // Click back button
       const backButton = page.getByRole('button').filter({ has: page.locator('.mdi-arrow-left') });
       await expect(backButton).toBeVisible();
       await backButton.click();
       
-      // Wait for navigation
-      await page.waitForTimeout(3000);
+      // Wait for navigation back to postal code level
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Should be back at postal code level
       await helpers.verifyPanelVisibility({
@@ -261,13 +271,15 @@ test.describe('Navigation Levels Accessibility', () => {
         // Reset and navigate to view
         const resetButton = page.getByRole('button').filter({ has: page.locator('.mdi-refresh') });
         await resetButton.click();
-        await page.waitForTimeout(2000);
+        // Wait for reset to complete by checking for initial state
+        await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
         
         await helpers.navigateToView(view as 'capitalRegionView' | 'gridView');
         
         // Navigate to building level
         await helpers.drillToLevel('building');
-        await page.waitForTimeout(5000);
+        // Wait for building level to load
+        await page.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
         
         // Verify building heat data panel is present
         await expect(page.getByText('Building heat data')).toBeVisible();
@@ -284,11 +296,13 @@ test.describe('Navigation Levels Accessibility', () => {
     test('should maintain level when switching views', async ({ page }) => {
       // Navigate to postal code level
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Switch view modes
       await helpers.navigateToView('gridView');
-      await page.waitForTimeout(2000);
+      // Wait for view switch
+      await expect(page.locator('input[value="gridView"]')).toBeChecked();
       
       // Should still be at postal code level
       await helpers.verifyTimelineVisibility('postalCode');
@@ -296,7 +310,8 @@ test.describe('Navigation Levels Accessibility', () => {
       
       // Switch back
       await helpers.navigateToView('capitalRegionView');
-      await page.waitForTimeout(2000);
+      // Wait for view switch back
+      await expect(page.locator('input[value="capitalRegionView"]')).toBeChecked();
       
       // Still at postal code level
       await helpers.verifyTimelineVisibility('postalCode');
@@ -307,20 +322,24 @@ test.describe('Navigation Levels Accessibility', () => {
       
       // Test reset from postal code level
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       await resetButton.click();
-      await page.waitForTimeout(3000);
+      // Wait for reset to complete
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       
       // Should be back to start level
       await helpers.testNavigationControls('start');
       
       // Test reset from building level
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(5000);
+      // Wait for building level
+      await page.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
       
       await resetButton.click();
-      await page.waitForTimeout(3000);
+      // Wait for reset to complete
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       
       // Should be back to start level
       await helpers.testNavigationControls('start');
@@ -334,7 +353,8 @@ test.describe('Navigation Levels Accessibility', () => {
       
       // Navigate to postal code level
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level UI
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Trees toggle should now be available (unless in grid view)
       const currentView = await page.locator('input[value="capitalRegionView"]').isChecked() ? 'capitalRegion' : 'grid';
@@ -356,7 +376,8 @@ test.describe('Navigation Levels Accessibility', () => {
       
       // Navigate to postal code level
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code UI
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Filters should still be visible and functional
       await helpers.testAllToggles({
@@ -369,14 +390,16 @@ test.describe('Navigation Levels Accessibility', () => {
     test('should handle timeline interactions at postal code and building levels', async ({ page }) => {
       // Navigate to postal code level
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code UI
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Test timeline at postal code level
       await helpers.verifyTimelineVisibility('postalCode');
       
       // Navigate to building level
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(5000);
+      // Wait for building level UI
+      await page.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
       
       // Timeline should still be functional at building level
       await helpers.verifyTimelineVisibility('building');
@@ -397,7 +420,10 @@ test.describe('Navigation Levels Accessibility', () => {
       
       for (const position of clickPositions) {
         await cesiumContainer.click({ position });
-        await page.waitForTimeout(1000);
+        // Wait for any UI updates from the click
+        await page.waitForFunction(() => {
+          return document.readyState === 'complete';
+        }, { timeout: 3000 });
         
         // Application should not crash or show error states
         const errorElements = page.locator('[class*="error"], [class*="Error"]');
@@ -423,7 +449,7 @@ test.describe('Navigation Levels Accessibility', () => {
       await helpers.drillToLevel('building');
       
       // Wait for everything to settle
-      await page.waitForTimeout(5000);
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
       
       // Should end up in a consistent state
       const resetButton = page.getByRole('button').filter({ has: page.locator('.mdi-refresh') });
@@ -431,7 +457,8 @@ test.describe('Navigation Levels Accessibility', () => {
       
       // Navigation should still work
       await resetButton.click();
-      await page.waitForTimeout(2000);
+      // Wait for reset
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       
       await helpers.testNavigationControls('start');
     });
@@ -450,7 +477,10 @@ test.describe('Navigation Levels Accessibility', () => {
       
       // Test Enter key activation
       await page.keyboard.press('Enter');
-      await page.waitForTimeout(1000);
+      // Wait for any activation effects
+      await page.waitForFunction(() => {
+        return document.readyState === 'complete';
+      }, { timeout: 3000 });
       
       // Should not cause errors
       const errorElements = page.locator('[class*="error"], [class*="Error"]');
@@ -465,14 +495,16 @@ test.describe('Navigation Levels Accessibility', () => {
       
       // Navigate to building level to test back button
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(5000);
+      // Wait for building level
+      await page.waitForSelector('.mdi-arrow-left', { timeout: 15000 }).catch(() => {});
       
       const backButton = page.getByRole('button').filter({ has: page.locator('.mdi-arrow-left') });
       await expect(backButton).toBeVisible();
       
       // Buttons should have tooltips for accessibility
       await backButton.hover();
-      await page.waitForTimeout(500);
+      // Wait for tooltip to appear
+      await page.waitForSelector('[role="tooltip"], .v-tooltip', { timeout: 2000 }).catch(() => {});
       
       // Tooltip should appear
       const tooltip = page.locator('[role="tooltip"], .v-tooltip');

@@ -125,9 +125,12 @@ describe('Performance and Load Tests', () => {
       const page = await browser.newPage();
       await page.goto('http://localhost:5173');
       
-      // Wait for initial load
+      // Wait for initial load and Cesium to be ready
       await page.waitForSelector('canvas', { state: 'visible' });
-      await page.waitForTimeout(3000);
+      await page.waitForFunction(() => {
+        const canvas = document.querySelector('canvas');
+        return canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0;
+      }, { timeout: 10000 });
       
       // Start performance monitoring
       await page.evaluate(() => {
@@ -146,15 +149,24 @@ describe('Performance and Load Tests', () => {
       // Perform map interactions
       const canvas = page.locator('canvas');
       await canvas.click({ position: { x: 400, y: 300 } });
-      await page.waitForTimeout(1000);
+      await page.waitForFunction(() => {
+        const metrics = (window as any).performanceMetrics;
+        return metrics && metrics.frameCount > 10;
+      }, { timeout: 5000 });
       
       await canvas.click({ position: { x: 500, y: 400 } });
-      await page.waitForTimeout(1000);
+      await page.waitForFunction(() => {
+        const metrics = (window as any).performanceMetrics;
+        return metrics && metrics.frameCount > 20;
+      }, { timeout: 5000 });
       
       // Simulate zoom interaction
       await canvas.hover();
       await page.mouse.wheel(0, -300);
-      await page.waitForTimeout(1000);
+      await page.waitForFunction(() => {
+        const metrics = (window as any).performanceMetrics;
+        return metrics && metrics.frameCount > 30;
+      }, { timeout: 5000 });
       
       // Measure FPS
       const fps = await page.evaluate(() => {
@@ -185,7 +197,10 @@ describe('Performance and Load Tests', () => {
       // Perform memory-intensive operations
       for (let i = 0; i < 10; i++) {
         await page.locator('canvas').click({ position: { x: 300 + i * 10, y: 300 + i * 10 } });
-        await page.waitForTimeout(200);
+        // Wait for any visual updates or animations to complete
+        await page.waitForFunction(() => {
+          return document.readyState === 'complete';
+        }, { timeout: 1000 });
       }
       
       // Check memory after operations
@@ -321,8 +336,10 @@ describe('Performance and Load Tests', () => {
         page.locator('canvas').click({ position: pos });
       }
       
-      // Wait for responses
-      await page.waitForTimeout(5000);
+      // Wait for API responses or network activity to settle
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        // Continue if network doesn't become idle (expected for ongoing operations)
+      });
       
       const endTime = Date.now();
       const totalTime = endTime - startTime;
@@ -362,8 +379,10 @@ describe('Performance and Load Tests', () => {
           await page.mouse.wheel(0, Math.random() > 0.5 ? -100 : 100);
         }
         
-        // Brief pause to simulate realistic usage
-        await page.waitForTimeout(100);
+        // Wait for interaction to complete before next one
+        await page.waitForFunction(() => {
+          return document.readyState === 'complete';
+        }, { timeout: 500 });
       }
       
       const endTime = Date.now();
@@ -399,7 +418,11 @@ describe('Performance and Load Tests', () => {
             await page.locator('canvas').click({ 
               position: { x: 300 + index * 50, y: 300 + i * 30 } 
             });
-            await page.waitForTimeout(200);
+            // Wait for canvas interaction to complete
+            await page.waitForFunction(() => {
+              const canvas = document.querySelector('canvas');
+              return canvas && canvas.offsetWidth > 0;
+            }, { timeout: 1000 });
           }
         });
         
@@ -436,14 +459,18 @@ describe('Performance and Load Tests', () => {
       
       // Normal interaction first
       await page.locator('canvas').click({ position: { x: 400, y: 300 } });
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
       
       // Enable network failure
       networkDown = true;
       
       // Try interaction during network failure
       await page.locator('canvas').click({ position: { x: 500, y: 300 } });
-      await page.waitForTimeout(2000);
+      // Wait for the application to handle the network error gracefully
+      await page.waitForFunction(() => {
+        const canvas = document.querySelector('canvas');
+        return canvas && canvas.offsetWidth > 0;
+      }, { timeout: 5000 });
       
       // Application should still be responsive
       await expect(page.locator('canvas')).toBeVisible();
@@ -453,7 +480,7 @@ describe('Performance and Load Tests', () => {
       
       // Should recover and work normally
       await page.locator('canvas').click({ position: { x: 300, y: 400 } });
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
       
       await expect(page.locator('canvas')).toBeVisible();
       

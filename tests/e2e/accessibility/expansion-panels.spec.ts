@@ -87,7 +87,8 @@ test.describe('Expansion Panels Accessibility', () => {
   test.describe('Level-Specific Expansion Panels', () => {
     test('should show postal code specific panels', async ({ page }) => {
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level to be active by checking for specific elements
+      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 });
       
       // Should show postal code level panels
       await expect(page.getByText('Building Scatter Plot')).toBeVisible();
@@ -112,7 +113,8 @@ test.describe('Expansion Panels Accessibility', () => {
 
     test('should show building specific panels', async ({ page }) => {
       await helpers.drillToLevel('building');
-      await page.waitForTimeout(5000);
+      // Wait for building level to be active by checking for building-specific elements
+      await page.waitForSelector('text="Building heat data"', { timeout: 15000 });
       
       // Should show building level panels
       await expect(page.getByText('Building heat data')).toBeVisible();
@@ -125,7 +127,11 @@ test.describe('Expansion Panels Accessibility', () => {
       // Test expanding a universal panel
       const hsyPanel = page.getByText('HSY Background maps');
       await hsyPanel.click();
-      await page.waitForTimeout(500);
+      // Wait for panel expansion animation to complete
+      await page.waitForFunction(() => {
+        const panel = document.querySelector('.v-expansion-panel-text');
+        return panel && getComputedStyle(panel).display !== 'none';
+      }, { timeout: 2000 }).catch(() => {});
       
       // Should expand (test for panel content visibility)
       const panelContent = hsyPanel.locator('..').locator('.v-expansion-panel-text');
@@ -138,11 +144,16 @@ test.describe('Expansion Panels Accessibility', () => {
       // Expand a panel
       const geocodingPanel = page.getByText('Geocoding');
       await geocodingPanel.click();
-      await page.waitForTimeout(500);
+      // Wait for panel to expand
+      await page.waitForFunction(() => {
+        const panel = document.querySelector('.v-expansion-panel-text');
+        return panel && getComputedStyle(panel).display !== 'none';
+      }, { timeout: 2000 }).catch(() => {});
       
       // Navigate to different level
       await helpers.drillToLevel('postalCode');
-      await page.waitForTimeout(3000);
+      // Wait for postal code level elements to be visible
+      await page.waitForSelector('text="Area properties"', { timeout: 10000 });
       
       // Panel should still be accessible
       await expect(geocodingPanel).toBeVisible();

@@ -28,6 +28,7 @@ pnpm-debug.log*
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/coverage/
 
 # Sentry Config File
 .env.sentry-build-plugin

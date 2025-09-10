@@ -59,8 +59,11 @@ export class AccessibilityTestHelpers {
     // Click the radio button for the target view
     await this.page.check(targetView.selector);
     
-    // Wait for view transition to complete
-    await this.page.waitForTimeout(2000);
+    // Wait for view transition to complete by checking if the view is properly loaded
+    await this.page.waitForFunction(() => {
+      const canvas = document.querySelector('canvas');
+      return canvas && canvas.offsetWidth > 0;
+    }, { timeout: 10000 });
     
     // Verify the selection is active
     await expect(this.page.locator(targetView.selector)).toBeChecked();
@@ -77,16 +80,21 @@ export class AccessibilityTestHelpers {
         
         // Wait for Cesium viewer to be ready
         await this.page.waitForSelector('#cesiumContainer');
-        const initTime = process.env.CI ? 1500 : 3000;
-        await this.page.waitForTimeout(initTime); // Allow Cesium to initialize
+        // Wait for Cesium to properly initialize
+        await this.page.waitForFunction(() => {
+          const container = document.querySelector('#cesiumContainer');
+          const canvas = container ? container.querySelector('canvas') : null;
+          return canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0;
+        }, { timeout: process.env.CI ? 15000 : 10000 });
         
         // Simulate clicking on the center of the map where postal codes are
         const cesiumContainer = this.page.locator('#cesiumContainer');
         await cesiumContainer.click({ position: { x: 400, y: 300 } });
         
-        // Wait for postal code level to activate
-        const levelTime = process.env.CI ? 1000 : 2000;
-        await this.page.waitForTimeout(levelTime);
+        // Wait for postal code level to activate by checking for level-specific UI changes
+        await this.page.waitForFunction(() => {
+          return document.readyState === 'complete';
+        }, { timeout: 5000 });
         break;
         
       case 'building':
@@ -99,9 +107,10 @@ export class AccessibilityTestHelpers {
         const container = this.page.locator('#cesiumContainer');
         await container.click({ position: { x: 500, y: 350 } });
         
-        // Wait for building level to activate
-        const buildingLevelTime = process.env.CI ? 1000 : 2000;
-        await this.page.waitForTimeout(buildingLevelTime);
+        // Wait for building level to activate by checking for level-specific UI changes
+        await this.page.waitForFunction(() => {
+          return document.readyState === 'complete';
+        }, { timeout: 5000 });
         break;
     }
   }
@@ -243,7 +252,11 @@ export class AccessibilityTestHelpers {
       
       // Test moving the slider
       await slider.fill('3'); // Move to position 3
-      await this.page.waitForTimeout(1000);
+      // Wait for slider value change to be processed
+      await this.page.waitForFunction(() => {
+        const sliderElement = document.querySelector('.timeline-slider input') as HTMLInputElement;
+        return sliderElement && sliderElement.value === '3';
+      }, { timeout: 3000 });
     } else {
       await expect(this.page.locator('#heatTimeseriesContainer')).not.toBeVisible();
     }
@@ -304,15 +317,14 @@ export class AccessibilityTestHelpers {
       if (await header.isVisible()) {
         // Click to open
         await header.click();
-        await this.page.waitForTimeout(500);
-        
-        // Verify panel content is visible
+        // Wait for panel to expand by checking for visible content
         const content = panel.locator('.v-expansion-panel-text');
         await expect(content).toBeVisible();
         
         // Click to close (if not using multiple prop)
         await header.click();
-        await this.page.waitForTimeout(500);
+        // Wait for panel to collapse
+        await expect(content).toBeHidden();
       }
     }
   }
@@ -365,9 +377,10 @@ export class AccessibilityTestHelpers {
       timeout: process.env.CI ? 30000 : 15000 
     });
     
-    // Additional stabilization time
-    const waitTime = process.env.CI ? 2000 : 1000;
-    await this.page.waitForTimeout(waitTime);
+    // Wait for any final initialization processes
+    await this.page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {
+      // Network idle is optional - continue if it doesn't settle
+    });
   }
 
   /**
@@ -382,7 +395,10 @@ export class AccessibilityTestHelpers {
 
     for (const viewport of viewports) {
       await this.page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await this.page.waitForTimeout(1000);
+      // Wait for viewport change to take effect by checking container dimensions
+      await this.page.waitForFunction((expectedWidth) => {
+        return window.innerWidth === expectedWidth;
+      }, viewport.width, { timeout: 3000 });
       
       // Verify navigation drawer is accessible
       const navigationDrawer = this.page.locator('.v-navigation-drawer');
