@@ -45,6 +45,9 @@ export default defineConfig({
     actionTimeout: 30000,
     navigationTimeout: 30000,
     
+    /* Explicitly run headless in CI */
+    headless: process.env.CI ? true : undefined,
+    
     /* CI-specific browser launch options for WebGL support */
     ...(process.env.CI && {
       launchOptions: {

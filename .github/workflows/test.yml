@@ -81,18 +81,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Install system dependencies for WebGL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            xvfb \
-            libgl1-mesa-dri \
-            libglapi-mesa \
-            libosmesa6 \
-            libxi6 \
-            libxext6 \
-            libxfixes3 \
-            libxrandr2
+      # SwiftShader is bundled with Playwright's Chromium, no system GL libraries needed
       
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
@@ -108,7 +97,7 @@ jobs:
           sleep 10
       
       - name: Run Playwright tests
-        run: xvfb-run -a --server-args="-screen 0 1920x1080x24" npm run test:e2e
+        run: npm run test:e2e
         env:
           CI: true
           NODE_OPTIONS: '--max-old-space-size=4096'
@@ -139,18 +128,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Install system dependencies for WebGL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            xvfb \
-            libgl1-mesa-dri \
-            libglapi-mesa \
-            libosmesa6 \
-            libxi6 \
-            libxext6 \
-            libxfixes3 \
-            libxrandr2
+      # SwiftShader is bundled with Playwright's Chromium, no system GL libraries needed
       
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -179,21 +157,21 @@ jobs:
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
       
       - name: Run accessibility tests - Desktop
-        run: xvfb-run -a --server-args="-screen 0 1920x1080x24" timeout 600 npm run test:accessibility:desktop
+        run: timeout 600 npm run test:accessibility:desktop
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
           NODE_OPTIONS: '--max-old-space-size=4096'
       
       - name: Run accessibility tests - Tablet  
-        run: xvfb-run -a --server-args="-screen 0 1024x768x24" timeout 600 npm run test:accessibility:tablet
+        run: timeout 600 npm run test:accessibility:tablet
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
           NODE_OPTIONS: '--max-old-space-size=4096'
       
       - name: Run accessibility tests - Mobile
-        run: xvfb-run -a --server-args="-screen 0 375x667x24" timeout 600 npm run test:accessibility:mobile
+        run: timeout 600 npm run test:accessibility:mobile
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
