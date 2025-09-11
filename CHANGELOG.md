@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.0...r4c-cesium-viewer-v1.23.0) (2025-09-11)
+
+
+### Features
+
+* add comprehensive test suite with CI/CD pipeline ([d20a105](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d20a1056640cee2476f336b730a15cb2ef89709f))
+
 ## [1.22.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.21.0...r4c-cesium-viewer-v1.22.0) (2025-08-29)
 
 
