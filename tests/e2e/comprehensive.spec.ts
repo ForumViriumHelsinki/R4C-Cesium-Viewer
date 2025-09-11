@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { PlaywrightPage } from '../types/playwright';
 
 // Helper functions for common interactions
-async function dismissDisclaimer(page: any) {
+async function dismissDisclaimer(page: PlaywrightPage) {
   try {
     await page.getByRole('button', { name: 'Close' }).click({ timeout: 2000 });
   } catch (error) {
@@ -9,13 +10,13 @@ async function dismissDisclaimer(page: any) {
   }
 }
 
-async function waitForMapLoad(page: any) {
+async function waitForMapLoad(page: PlaywrightPage) {
   // Wait for Cesium to load and render
   await page.waitForSelector('canvas', { state: 'visible', timeout: 10000 });
   await page.waitForTimeout(2000); // Additional time for 3D rendering
 }
 
-async function clickOnMap(page: any, x: number, y: number) {
+async function clickOnMap(page: PlaywrightPage, x: number, y: number) {
   await page.locator('canvas').click({ position: { x, y } });
   await page.waitForTimeout(1000); // Wait for map response
 }
@@ -279,7 +280,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
   test.describe('Data Loading and Performance', () => {
     test('should handle loading states correctly', async ({ page }) => {
       // Monitor network requests
-      const responses: any[] = [];
+      const responses: Response[] = [];
       page.on('response', response => {
         responses.push({
           url: response.url(),

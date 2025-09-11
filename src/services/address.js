@@ -16,21 +16,21 @@ export const findAddressForBuilding = ( properties ) => {
   	const osno2 = getProperty( properties, 'osno2' );
 
   	if ( isValidValue(katunimi_suomi) ) {
-    	address += String(katunimi_suomi).trim();
-    	if ( isValidValue(osoitenumero) ) {
-      		address += ' ' + String(osoitenumero).trim();
-    	}
-  	} else if ( isValidValue(katu) ) {
-    	address += String(katu).trim();
-    	if ( isValidValue(osno1) && osno1 != 999999999 ) {
-      		address += ' ' + String(osno1).trim();
-      	if ( isValidValue(oski1) && oski1 != 999999999 ) {
-        	address += ' ' + String(oski1).trim();
-        	if ( isValidValue(osno2) && osno2 != 999999999 ) {
-          	address += ' ' + String(osno2).trim();
-        	}
-      	}
-    	}
+		address += String(katunimi_suomi).trim();
+		if ( isValidValue(osoitenumero) ) {
+			address += ' ' + String(osoitenumero).trim();
+		}
+	} else if ( isValidValue(katu) ) {
+		address += String(katu).trim();
+		if ( isValidValue(osno1) && osno1 != 999999999 ) {
+			address += ' ' + String(osno1).trim();
+			if ( isValidValue(oski1) && oski1 != 999999999 ) {
+				address += ' ' + String(oski1).trim();
+				if ( isValidValue(osno2) && osno2 != 999999999 ) {
+					address += ' ' + String(osno2).trim();
+				}
+			}
+		}
 	} else {
 		address = 'n/a';
 	}

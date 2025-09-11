@@ -5,6 +5,7 @@ import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 import CoolingCenterOptimiser from '../../../src/components/CoolingCenterOptimiser.vue';
 import { createPinia } from 'pinia';
+import { TEST_COORDINATES, DATASET_SIZES, CAMERA_CONSTANTS } from '../../config/constants';
 
 // Mock Cesium
 vi.mock('cesium', () => {
@@ -65,7 +66,7 @@ vi.mock('@turf/turf', () => ({
   })),
   centroid: vi.fn(() => ({ 
     geometry: { 
-      coordinates: [25.0, 60.0] // Helsinki coordinates
+      coordinates: [TEST_COORDINATES.HELSINKI.LNG, TEST_COORDINATES.HELSINKI.LAT] // Helsinki coordinates
     } 
   }))
 }));
@@ -94,13 +95,13 @@ const mockMitigationStore = {
   gridCells: [
     { 
       id: 'grid_001', 
-      x: 1000, 
-      y: 2000,
+      x: TEST_COORDINATES.TEST_POINT_1.X, 
+      y: TEST_COORDINATES.TEST_POINT_1.Y,
       entity: {
         properties: {
           grid_id: { getValue: () => 'grid_001' },
-          euref_x: { getValue: () => 1000 },
-          euref_y: { getValue: () => 2000 }
+          euref_x: { getValue: () => TEST_COORDINATES.TEST_POINT_1.X },
+          euref_y: { getValue: () => TEST_COORDINATES.TEST_POINT_1.Y }
         },
         polygon: {
           hierarchy: {
@@ -225,7 +226,7 @@ describe('CoolingCenterOptimiser Component', () => {
     });
 
     it('should initialize with default number of cooling centers', () => {
-      expect(wrapper.vm.numCoolingCenters).toBe(25);
+      expect(wrapper.vm.numCoolingCenters).toBe(DATASET_SIZES.SMALL);
     });
 
     it('should display the slider for number of centers', () => {

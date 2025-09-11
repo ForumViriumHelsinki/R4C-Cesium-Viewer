@@ -6,6 +6,7 @@
  */
 
 import { expect } from '@playwright/test';
+import { PlaywrightPage, CesiumTestState } from '../types/playwright';
 import { 
   waitForCesiumReady as cesiumWaitForReady,
   setupCesiumForCI,
@@ -25,9 +26,9 @@ export interface NavigationLevel {
 }
 
 export class AccessibilityTestHelpers {
-  private page: any;
+  private page: PlaywrightPage;
   
-  constructor(page: any) {
+  constructor(page: PlaywrightPage) {
     this.page = page;
   }
 
@@ -335,7 +336,7 @@ export class AccessibilityTestHelpers {
   async captureAccessibilityTree(): Promise<{
     visibleElements: string[];
     interactiveElements: string[];
-    currentState: any;
+    currentState: CesiumTestState;
   }> {
     // Get all visible text elements
     const visibleElements = await this.page.locator('*:visible').allTextContents();

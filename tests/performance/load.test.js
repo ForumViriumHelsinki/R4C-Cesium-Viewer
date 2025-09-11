@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { chromium, Browser, Page } from 'playwright';
+import { TIMEOUTS, PERFORMANCE_THRESHOLDS } from '../config/constants';
 
 describe('Performance and Load Tests', () => {
   let browser: Browser;
@@ -17,15 +18,15 @@ describe('Performance and Load Tests', () => {
       const page = await browser.newPage();
       
       const startTime = Date.now();
-      await page.goto('http://localhost:5173');
+      await page.goto('/');
       
       // Wait for main content to load
-      await page.waitForSelector('canvas', { state: 'visible', timeout: 10000 });
+      await page.waitForSelector('canvas', { state: 'visible', timeout: TIMEOUTS.ELEMENT_WAIT });
       
       const loadTime = Date.now() - startTime;
       
       // Should load within 5 seconds
-      expect(loadTime).toBeLessThan(5000);
+      expect(loadTime).toBeLessThan(PERFORMANCE_THRESHOLDS.INITIAL_LOAD);
       
       await page.close();
     });
