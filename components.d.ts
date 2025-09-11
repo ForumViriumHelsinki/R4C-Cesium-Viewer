@@ -36,7 +36,6 @@ declare module 'vue' {
     NumericalSelect: typeof import('./src/components/NumericalSelect.vue')['default']
     PieChart: typeof import('./src/components/PieChart.vue')['default']
     PopGridLegend: typeof import('./src/components/PopGridLegend.vue')['default']
-    PostalCodeNDVI: typeof import('./src/components/PostalCodeNDVI.vue')['default']
     PostalCodeView: typeof import('./src/components/PostalCodeView.vue')['default']
     PrintBox: typeof import('./src/components/PrintBox.vue')['default']
     Scatterplot: typeof import('./src/components/Scatterplot.vue')['default']
