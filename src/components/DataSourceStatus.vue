@@ -88,9 +88,9 @@ variant="text"
 v-if="source.cached"
 location="top"
 >
-                <template #activator="{ props }">
+                <template #activator="{ props: tooltipProps }">
                   <v-icon
-                    v-bind="props"
+                    v-bind="tooltipProps"
                     size="12"
                     color="blue"
                     class="ml-1 cache-indicator"
@@ -160,9 +160,9 @@ class="detail-row"
 v-if="source.status === 'error'"
 location="top"
 >
-              <template #activator="{ props }">
+              <template #activator="{ props: tooltipProps }">
                 <v-btn
-                  v-bind="props"
+                  v-bind="tooltipProps"
                   icon
                   size="x-small"
                   color="error"
@@ -182,9 +182,9 @@ mdi-refresh
 v-if="source.cached"
 location="top"
 >
-              <template #activator="{ props }">
+              <template #activator="{ props: tooltipProps }">
                 <v-btn
-                  v-bind="props"
+                  v-bind="tooltipProps"
                   icon
                   size="x-small"
                   color="orange"
@@ -203,9 +203,9 @@ mdi-delete-variant
 v-if="!compactMode"
 location="bottom end"
 >
-              <template #activator="{ props }">
+              <template #activator="{ props: menuProps }">
                 <v-btn
-                  v-bind="props"
+                  v-bind="menuProps"
                   icon
                   size="x-small"
                   variant="text"
