@@ -1,296 +1,293 @@
 <template>
-  <div class="control-panel-main">
-<v-btn
-  icon
-  class="toggle-btn"
-  size="x-small"
-  :style="toggleButtonStyles"
-  @click="togglePanel"
->
-  <v-icon>{{ panelVisible ? 'mdi-menu-open' : 'mdi-menu' }}</v-icon>
-</v-btn>
+  <!-- Simplified Analysis Sidebar -->
+  <v-navigation-drawer
+    role="navigation"
+    aria-label="Analysis tools and data exploration"
+    class="analysis-sidebar"
+    width="280"
+    location="right"
+  >
+    <div class="sidebar-content">
+      <!-- Unified Search -->
+      <div class="control-section">
+        <h3 class="section-subtitle">
+          <v-icon class="mr-2">
+mdi-magnify
+</v-icon>
+          Search & Navigate
+        </h3>
+        <p class="search-description">
+          Find locations by address, postal code, or area name
+        </p>
+        <UnifiedSearch />
+      </div>
+      
+      <!-- Map Controls -->
+      <div class="control-section">
+        <h3 class="section-subtitle">
+          <v-icon class="mr-2">
+mdi-layers
+</v-icon>
+          Map Controls
+        </h3>
+        <p class="search-description">
+          Toggle data layers and apply filters
+        </p>
+        <MapControls />
+      </div>
+      
+      <!-- Background Maps -->
+      <div class="control-section">
+        <h3 class="section-subtitle">
+          <v-icon class="mr-2">
+mdi-map-outline
+</v-icon>
+          Background Maps
+        </h3>
+        <BackgroundMapBrowser />
+      </div>
+      
+      <!-- Graphics Settings -->
+      <div class="control-section">
+        <GraphicsSettingsDialog />
+      </div>
 
-    <v-app>
-        <v-navigation-drawer
-          v-model="panelVisible"
-          location="right"
-          app
-          temporary
-          class="control-panel"
-          :width="drawerWidth"
-        >
-          <v-list dense>
-              <v-list-item class="pa-0 ma-0">
-                  <v-tooltip
-location="bottom"
-class="tooltip"
+      <!-- Analysis Tools -->
+      <div class="control-section">
+        <h3 class="section-subtitle">
+          <v-icon class="mr-2">
+mdi-chart-line
+</v-icon>
+          Analysis Tools
+        </h3>
+        <div class="analysis-buttons">
+          <!-- Postal Code Level Analysis -->
+          <template v-if="currentLevel === 'postalCode'">
+            <v-btn 
+              v-if="heatHistogramData && heatHistogramData.length > 0"
+              block 
+              variant="outlined" 
+              prepend-icon="mdi-chart-histogram"
+              class="mb-2"
+              @click="openAnalysisPanel('heat-histogram')"
+            >
+              Heat Distribution
+            </v-btn>
+            
+            <v-btn 
+              v-if="showSosEco"
+              block 
+              variant="outlined" 
+              prepend-icon="mdi-account-group"
+              class="mb-2"
+              @click="openAnalysisPanel('socioeconomics')"
+            >
+              Socioeconomics
+            </v-btn>
+            
+            <v-btn 
+              v-if="currentView !== 'helsinki'"
+              block 
+              variant="outlined" 
+              prepend-icon="mdi-leaf"
+              class="mb-2"
+              @click="openAnalysisPanel('landcover')"
+            >
+              Land Cover
+            </v-btn>
+            
+            <v-btn 
+              block 
+              variant="outlined" 
+              prepend-icon="mdi-chart-scatter-plot"
+              class="mb-2"
+              @click="openAnalysisPanel('scatter-plot')"
+            >
+              Building Analysis
+            </v-btn>
+            
+            <v-btn 
+              v-if="hasNDVIData"
+              block 
+              variant="outlined" 
+              prepend-icon="mdi-leaf"
+              class="mb-2"
+              @click="openAnalysisPanel('ndvi-analysis')"
+            >
+              NDVI Vegetation
+            </v-btn>
+          </template>
+          
+          <!-- Building Level Analysis -->
+          <template v-if="currentLevel === 'building'">
+            <v-btn 
+              block 
+              variant="outlined" 
+              prepend-icon="mdi-thermometer"
+              class="mb-2"
+              @click="openAnalysisPanel('building-heat')"
+            >
+              Building Heat Data
+            </v-btn>
+          </template>
+          
+          <!-- Grid View Specific Tools -->
+          <template v-if="currentView === 'grid'">
+            <v-btn 
+              v-if="statsIndex === 'heat_index'"
+              block 
+              variant="outlined" 
+              prepend-icon="mdi-air-conditioner"
+              class="mb-2"
+              @click="openAnalysisPanel('cooling-centers')"
+            >
+              Cooling Centers
+            </v-btn>
+            
+            <v-btn 
+              block 
+              variant="outlined" 
+              prepend-icon="mdi-grid"
+              class="mb-2"
+              @click="openAnalysisPanel('grid-options')"
+            >
+              Grid Options
+            </v-btn>
+          </template>
+          
+          <!-- No Analysis Available Message -->
+          <div
+v-if="!hasAvailableAnalysis"
+class="no-analysis-message"
 >
-                    <template #activator="{ props }">
-                      <v-btn
-                        v-if="currentLevel === 'building'"
-                        icon
-                        class="uiButton"
-                        style="color: red; float:right; cursor: pointer;"
-                        v-bind="props"
-                        size="x-small"
-                        @click="returnToPostalCode"
-                      >
-                        <v-icon>mdi-arrow-left</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Return to postal code level</span>
-                  </v-tooltip>
+            <v-icon class="mb-2">
+mdi-information-outline
+</v-icon>
+            <p class="text-body-2 text-center">
+              {{ currentLevel === 'start' 
+                ? 'Select a postal code area to access analysis tools' 
+                : 'No analysis tools available for current selection' }}
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      
+      <!-- Properties Display -->
+      <div
+v-if="currentLevel !== 'start'"
+class="control-section"
+>
+        <h3 class="section-subtitle">
+          <v-icon class="mr-2">
+mdi-information
+</v-icon>
+          {{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
+        </h3>
+        <PrintBox />
+      </div>
+    </div>
+  </v-navigation-drawer>
 
-                  <v-tooltip location="bottom">
-                    <template #activator="{ props }">
-                      <v-btn
-                        icon
-                        class="uiButton"
-                        style="color: red; float:right; cursor: pointer;"
-                        v-bind="props"
-                        size="x-small"
-                        @click="reset"
-                      >
-                        <v-icon>mdi-refresh</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Reset application</span>
-                  </v-tooltip>
-              </v-list-item>
-              
-              <v-list-item class="pa-0 ma-0">
-                  <v-list-item-title>View Mode</v-list-item-title>
-
-                 <!-- Include ViewMode component here -->
-                  <ViewMode />
-                    <v-container
-fluid
-class="pa-0 ma-0 custom-container"
-> 
-                      <v-row
-no-gutters
-class="pa-0 ma-0"
+  <!-- Analysis Panels (same as before) -->
+  <v-dialog 
+    v-model="analysisDialog" 
+    :width="analysisDialogWidth"
+    :height="analysisDialogHeight"
+    scrollable
+  >
+    <v-card>
+      <v-card-title class="d-flex align-center">
+        <v-icon class="mr-2">
+{{ currentAnalysisIcon }}
+</v-icon>
+        {{ currentAnalysisTitle }}
+        <v-spacer />
+        <v-btn
+icon
+@click="analysisDialog = false"
 >
-                        <v-col
-v-if="currentView !== 'grid'"
-cols="6"
-class="pa-0 ma-0"
->
-                          <Layers />
-                        </v-col>
-                        <v-col
-:cols="currentView === 'grid' ? 12 : 6"
-class="pa-0 ma-0"
-> 
-                          <Layers v-if="currentView === 'grid'" />
-                          <Filters v-else /> 
-                        </v-col>
-                      </v-row>
-                    </v-container>
-              </v-list-item>
-
-              <!-- Add `multiple` prop here to allow multiple panels to stay open -->
-              <v-expansion-panels
-multiple
-class="pa-0 ma-0"
->
-
-<v-expansion-panel
-  v-if="currentView === 'grid'"
-  class="pa-0 ma-0"
-  title="Manage Cooling Centers"
->
-  <v-expansion-panel-text class="pa-0 ma-0 cooling-center-expansion-text">
-    <v-row no-gutters>
-      <v-col cols="6">
-        <CoolingCenter />
-      </v-col>
-
-      <v-col cols="6">
-        <CoolingCenterOptimiser />
-      </v-col>
-    </v-row>
-
-    <EstimatedImpacts />
-  </v-expansion-panel-text>
-</v-expansion-panel>
-
-<v-expansion-panel
-  v-if="currentView === 'grid'"
-  class="pa-0 ma-0"
-  title="Turn landcover green and blue"
->
-  <v-expansion-panel-text class="pa-0 ma-0 landcover-to-parks-expansion-text">
-    <LandcoverToParks />
-  </v-expansion-panel-text>
-</v-expansion-panel>
-
-                  <v-expansion-panel
-v-if="currentView === 'grid'"
-class="pa-0 ma-0"
-title="Statistical grid options"
->
-                    <v-expansion-panel-text
-class="pa-0 ma-0"
->
-                      <StatisticalGridOptions />
-                    </v-expansion-panel-text>                                                           
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-v-if="currentView !== 'grid'"
-class="pa-0 ma-0"
-title="NDVI"
->
-                    <v-expansion-panel-text
-class="pa-0 ma-0"
->
-                      <PostalCodeNDVI />
-                    </v-expansion-panel-text>                                                           
-                  </v-expansion-panel>                  
-
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="HSY Background maps"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <HSYWMS />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Syke Flood Background Maps"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <FloodBackgroundSyke />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
-                <template v-if="currentLevel === 'postalCode'">
-                  <!-- Conditionally render Heat Histogram if data is available -->
-                  <v-expansion-panel
-                    v-if="heatHistogramData && heatHistogramData.length > 0"
-                    class="pa-0 ma-0"
-                    title="Heat Histogram"
-                  >
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <HeatHistogram />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-                  v-if="showSosEco"
-class="pa-0 ma-0"
-title="Socioeconomics Diagram"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <SocioEconomics />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-v-if="currentView !== 'helsinki'"
-class="pa-0 ma-0"
-title="Land Cover"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <Landcover />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Building Scatter Plot"
->
-                    <v-expansion-panel-text
-v-if="currentView !== 'helsinki'"
-class="pa-0 ma-0"
->
-                      <BuildingScatterPlot />
-                    </v-expansion-panel-text>
-                    <v-expansion-panel-text
-v-if="currentView === 'helsinki'"
-class="pa-0 ma-0"
->
-                      <Scatterplot v-if="scatterPlotEntities" />                    
-                    </v-expansion-panel-text>                    
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Area properties"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <PrintBox />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>   
-                </template>
-
-                <template v-if="currentLevel === 'building'">
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Building heat data"
->
-                    <v-expansion-panel-text
-v-if="currentView !== 'helsinki' && currentView !== 'grid'"
-class="pa-0 ma-0"
->
-                      <HSYBuildingHeatChart />
-                    </v-expansion-panel-text> 
-                    <v-expansion-panel-text
-v-if="currentView === 'helsinki' && currentView !== 'grid'"
-class="pa-0 ma-0"
->
-                      <BuildingHeatChart />
-                    </v-expansion-panel-text> 
-                    <v-expansion-panel-text
-v-if="currentView === 'grid'"
-class="pa-0 ma-0"
->
-                      <BuildingGridChart />
-                    </v-expansion-panel-text>                                                           
-                  </v-expansion-panel>
-
-                  <v-expansion-panel
-class="pa-0 ma-0"
-title="Building properties"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <PrintBox />
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>   
-                </template>  
-
-                <v-expansion-panel
-class="pa-0 ma-0"
-title="Geocoding"
->
-                    <v-expansion-panel-text class="pa-0 ma-0">
-                      <Geocoding />
-                    </v-expansion-panel-text>
-                </v-expansion-panel> 
-                               
-              </v-expansion-panels>
-          </v-list>
-<template #append>
-          <div class="text-center text-subtitle-2">
-        Data sources from Helsinki Region Environmental Services HSY: Buildings in the Helsinki metropolitan area & Helsinki metropolitan postal code areas by CC-BY-4.0 Licence. Open data by postal code area from Statistics Finland by CC-BY-4.0 Licence.
-</div>
-        </template>
-        </v-navigation-drawer>
-    </v-app>
-  </div>
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
+      
+      <v-card-text class="analysis-content">
+        <!-- Heat Histogram -->
+        <div v-if="currentAnalysis === 'heat-histogram'">
+          <HeatHistogram />
+        </div>
+        
+        <!-- Socioeconomics -->
+        <div v-if="currentAnalysis === 'socioeconomics'">
+          <SocioEconomics />
+        </div>
+        
+        <!-- Land Cover -->
+        <div v-if="currentAnalysis === 'landcover'">
+          <Landcover />
+        </div>
+        
+        <!-- Scatter Plot -->
+        <div v-if="currentAnalysis === 'scatter-plot'">
+          <BuildingScatterPlot v-if="currentView !== 'helsinki'" />
+          <Scatterplot v-if="currentView === 'helsinki' && scatterPlotEntities" />
+        </div>
+        
+        <!-- Building Heat -->
+        <div v-if="currentAnalysis === 'building-heat'">
+          <HSYBuildingHeatChart v-if="currentView !== 'helsinki' && currentView !== 'grid'" />
+          <BuildingHeatChart v-if="currentView === 'helsinki' && currentView !== 'grid'" />
+          <BuildingGridChart v-if="currentView === 'grid'" />
+        </div>
+        
+        <!-- Cooling Centers -->
+        <div v-if="currentAnalysis === 'cooling-centers'">
+          <div class="cooling-centers-layout">
+            <div class="cooling-section">
+              <h4 class="subsection-title">
+Cooling Centers
+</h4>
+              <CoolingCenter />
+            </div>
+            <div class="cooling-section">
+              <h4 class="subsection-title">
+Optimizer
+</h4>
+              <CoolingCenterOptimiser />
+            </div>
+          </div>
+          <div class="mt-4">
+            <h4 class="subsection-title">
+Impact Estimates
+</h4>
+            <EstimatedImpacts />
+          </div>
+          <div class="mt-4">
+            <h4 class="subsection-title">
+Green & Blue Infrastructure
+</h4>
+            <LandcoverToParks />
+          </div>
+        </div>
+        
+        <!-- Grid Options -->
+        <div v-if="currentAnalysis === 'grid-options'">
+          <StatisticalGridOptions />
+        </div>
+        
+        <!-- NDVI Analysis -->
+        <div v-if="currentAnalysis === 'ndvi-analysis'">
+          <PostalCodeNDVI />
+        </div>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import HeatHistogram from '../components/HeatHistogram.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
-import ViewMode from '../components/ViewMode.vue'; // Adjust the path as necessary
-import HSYWMS from '../components/HSYWMS.vue';
-import Filters from '../components/Filters.vue';
-import Layers from '../components/Layers.vue';
 import Landcover from '../views/Landcover.vue';
 import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
 import Scatterplot from '../components/Scatterplot.vue';
@@ -298,198 +295,360 @@ import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
 import BuildingHeatChart from '../components/BuildingHeatChart.vue';
 import BuildingGridChart from '../components/BuildingGridChart.vue';
 import PrintBox from '../components/PrintBox.vue';
-import { useGlobalStore } from '../stores/globalStore'; // Import global store for current level
+import { useGlobalStore } from '../stores/globalStore';
 import { usePropsStore } from '../stores/propsStore';
-import { useToggleStore } from '../stores/toggleStore';
 import { useHeatExposureStore } from '../stores/heatExposureStore';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore';
+import { useToggleStore } from '../stores/toggleStore';
 import Tree from '../services/tree';
 import Featurepicker from '../services/featurepicker';
 import Camera from '../services/camera';
-import Geocoding from '../components/Geocoding.vue';
-import StatisticalGridOptions  from '../components/StatisticalGridOptions.vue';
-import FloodBackgroundSyke from '../components/FloodBackgroundSyke.vue';
-import PostalCodeNDVI from '../views/PostalCodeNDVI.vue'
 import { storeToRefs } from 'pinia';
+import UnifiedSearch from '../components/UnifiedSearch.vue';
+import StatisticalGridOptions from '../components/StatisticalGridOptions.vue';
+import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue';
+import MapControls from '../components/MapControls.vue';
+import DataSourceStatus from '../components/DataSourceStatus.vue';
+import GraphicsSettingsDialog from '../components/GraphicsSettingsDialog.vue';
 import CoolingCenter from '../components/CoolingCenter.vue';
 import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue';
 import EstimatedImpacts from '../components/EstimatedImpacts.vue';
-import LandcoverToParks from '../components/LandcoverToParks.vue';
+import PostalCodeNDVI from '../views/PostalCodeNDVI.vue';
 
 export default {
-	components: {
-    Layers,
-    Filters,
-		HeatHistogram,
-		SocioEconomics,
-		HSYWMS,
-		Landcover,
-		BuildingScatterPlot,
-		PrintBox,
-		HSYBuildingHeatChart,
-    ViewMode,
-    Geocoding,
+  components: {
+    HeatHistogram,
+    SocioEconomics,
+    Landcover,
+    BuildingScatterPlot,
+    PrintBox,
+    HSYBuildingHeatChart,
+    UnifiedSearch,
     Scatterplot,
     BuildingHeatChart,
     BuildingGridChart,
     StatisticalGridOptions,
-    FloodBackgroundSyke,
-    PostalCodeNDVI,
+    BackgroundMapBrowser,
+    MapControls,
+    DataSourceStatus,
+    GraphicsSettingsDialog,
     CoolingCenter,
     CoolingCenterOptimiser,
     EstimatedImpacts,
-    LandcoverToParks
-	},
-	setup() {
-		const globalStore = useGlobalStore();
-		const propsStore = usePropsStore();
-    const toggleStore = useToggleStore();
+    PostalCodeNDVI,
+  },
+  setup() {
+    const globalStore = useGlobalStore();
+    const propsStore = usePropsStore();
     const heatExposureStore = useHeatExposureStore();
     const socioEconomicsStore = useSocioEconomicsStore();
-		const panelVisible = ref( window.innerWidth > 600 ); ;
-		const currentLevel = computed( () => globalStore.level );
-    const currentView = computed( () => globalStore.view );
+    const toggleStore = useToggleStore();
+    
+    const currentLevel = computed(() => globalStore.level);
+    const currentView = computed(() => globalStore.view);
     const { ndvi } = storeToRefs(toggleStore);
+    
+    // Analysis dialog state
+    const analysisDialog = ref(false);
+    const currentAnalysis = ref('');
 
-		const heatHistogramData = computed( () => propsStore.heatHistogramData );
-    const scatterPlotEntities = computed( () => propsStore.scatterPlotEntities );
-    const showSosEco = computed( () => socioEconomicsStore.data && heatExposureStore.data ) ;
+    const heatHistogramData = computed(() => propsStore.heatHistogramData);
+    const statsIndex = computed(() => propsStore.statsIndex);
+    const scatterPlotEntities = computed(() => propsStore.scatterPlotEntities);
+    const showSosEco = computed(
+      () => socioEconomicsStore.data && heatExposureStore.data
+    );
+    
+    // Check if NDVI data is available (when NDVI layer is enabled)
+    const hasNDVIData = computed(() => toggleStore.ndvi);
 
-		const togglePanel = () => {
-			panelVisible.value = !panelVisible.value;
-		};
+    // Check if any analysis tools are available
+    const hasAvailableAnalysis = computed(() => {
+      if (currentLevel.value === 'start') return false;
+      
+      if (currentLevel.value === 'postalCode') {
+        return (heatHistogramData.value && heatHistogramData.value.length > 0) ||
+               showSosEco.value ||
+               (currentView.value !== 'helsinki') ||
+               true; // Building analysis is always available at postal level
+      }
+      
+      if (currentLevel.value === 'building') {
+        return true; // Building heat data is always available
+      }
+      
+      if (currentView.value === 'grid') {
+        return true; // Grid options are always available in grid view
+      }
+      
+      return false;
+    });
 
-    const reset = () => {
-			location.reload();
-		};
-
-    const returnToPostalCode = () => {
-			const featurepicker = new Featurepicker();
-      const treeService = new Tree();
-      hideTooltip(); 
-			featurepicker.loadPostalCode();
-			toggleStore.showTrees && treeService.loadTrees();
-		};
-
-    // Function to hide the tooltip
-    const hideTooltip = () => {
-      const tooltip = document.querySelector('.tooltip'); // Select the tooltip element
-      if (tooltip) {
-        tooltip.style.display = 'none'; // Hide the tooltip
+    // Analysis panel configuration
+    const analysisConfig = {
+      'heat-histogram': {
+        title: 'Heat Distribution Analysis',
+        icon: 'mdi-chart-histogram',
+        width: '800px',
+        height: '600px'
+      },
+      'socioeconomics': {
+        title: 'Socioeconomic Analysis',
+        icon: 'mdi-account-group',
+        width: '900px',
+        height: '700px'
+      },
+      'landcover': {
+        title: 'Land Cover Analysis',
+        icon: 'mdi-leaf',
+        width: '800px',
+        height: '600px'
+      },
+      'scatter-plot': {
+        title: 'Building Analysis',
+        icon: 'mdi-chart-scatter-plot',
+        width: '1000px',
+        height: '700px'
+      },
+      'building-heat': {
+        title: 'Building Heat Data',
+        icon: 'mdi-thermometer',
+        width: '800px',
+        height: '600px'
+      },
+      'cooling-centers': {
+        title: 'Cooling Center Management',
+        icon: 'mdi-air-conditioner',
+        width: '1000px',
+        height: '800px'
+      },
+      'grid-options': {
+        title: 'Statistical Grid Options',
+        icon: 'mdi-grid',
+        width: '600px',
+        height: '500px'
+      },
+      'ndvi-analysis': {
+        title: 'NDVI Vegetation Analysis',
+        icon: 'mdi-leaf',
+        width: '900px',
+        height: '600px'
       }
     };
 
-    // Computed property to calculate drawer width in percentage
-    const drawerWidth = computed(() => {
-      return globalStore.navbarWidth; // 37.5% of the window width
+    const currentAnalysisTitle = computed(() => {
+      return analysisConfig[currentAnalysis.value]?.title || '';
     });
 
-    const toggleButtonStyles = computed(() => {
-      return panelVisible.value
-        ? { right: `${drawerWidth.value }px`, position: 'fixed', top: '10px' }
-        : { right: '0px', position: 'fixed', top: '10px' };
+    const currentAnalysisIcon = computed(() => {
+      return analysisConfig[currentAnalysis.value]?.icon || 'mdi-chart-line';
     });
 
-		return {
-      toggleButtonStyles,
-      drawerWidth,
-			panelVisible,
-			currentLevel,
+    const analysisDialogWidth = computed(() => {
+      return analysisConfig[currentAnalysis.value]?.width || '800px';
+    });
+
+    const analysisDialogHeight = computed(() => {
+      return analysisConfig[currentAnalysis.value]?.height || '600px';
+    });
+
+    const openAnalysisPanel = (analysisType) => {
+      currentAnalysis.value = analysisType;
+      analysisDialog.value = true;
+    };
+
+    // Data source event handlers
+    const handleSourceRetry = (sourceId) => {
+      console.log(`Retrying data source: ${sourceId}`);
+    };
+
+    const handleCacheCleared = (sourceId) => {
+      console.log(`Cache cleared for: ${sourceId}`);
+    };
+
+    const handleDataPreload = (sourceId) => {
+      console.log(`Preloading requested for: ${sourceId}`);
+    };
+
+    // Reset application function
+    const reset = () => {
+      location.reload();
+    };
+
+    // Rotate camera function
+    const rotateCamera = () => {
+      const camera = new Camera();
+      camera.rotateCamera();
+    };
+
+    // Return to postal code level function
+    const returnToPostalCode = () => {
+      const featurepicker = new Featurepicker();
+      const treeService = new Tree();
+      hideTooltip();
+      featurepicker.loadPostalCode();
+      toggleStore.showTrees && treeService.loadTrees();
+    };
+
+    // Function to hide the tooltip
+    const hideTooltip = () => {
+      const tooltip = document.querySelector('.tooltip');
+      if (tooltip) {
+        tooltip.style.display = 'none';
+      }
+    };
+
+    return {
+      analysisDialog,
+      currentAnalysis,
+      currentAnalysisTitle,
+      currentAnalysisIcon,
+      analysisDialogWidth,
+      analysisDialogHeight,
+      openAnalysisPanel,
+      currentLevel,
       currentView,
-			heatHistogramData,
+      heatHistogramData,
       scatterPlotEntities,
-      togglePanel,
+      showSosEco,
+      statsIndex,
+      hasAvailableAnalysis,
+      hasNDVIData,
+      handleSourceRetry,
+      handleCacheCleared,
+      handleDataPreload,
       reset,
+      rotateCamera,
       returnToPostalCode,
       ndvi,
-      showSosEco
-		};
-	},
+    };
+  },
 };
 </script>
 
 <style scoped>
-.toggle-btn {
-  z-index: 1000000;
-  transition: right 0.3s ease, position 0.3s ease; /* Smooth transition for the position */
-}
-
-.filters-layers-container {
-  display: flex;
-  justify-content: space-between; /* Ensures there's space between Filters and Layers */
-  gap: 20px; /* Adds some space between the two components */
-}
-
-.filter-title {
-  font-size: 1.2em;
-  margin-bottom: 10px;
-  font-family: sans-serif;
-}
-
-.slider-container {
+.analysis-sidebar {
   display: flex;
   flex-direction: column;
-  background-color: white;
-  padding: 10px;
-  border: 1px solid #ccc;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 200px;
+  height: 100%;
 }
 
-.switch-container {
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.control-section {
+  padding: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.control-section:last-child {
+  border-bottom: none;
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: rgba(0, 0, 0, 0.87);
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
 }
 
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 47px;
-  height: 20px;
+.subsection-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: rgba(0, 0, 0, 0.7);
 }
 
-/* Additional styling for toggles */
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: 0.4s;
+.subsection {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+  border-left: 3px solid rgba(25, 118, 210, 0.3);
 }
 
-input:checked + .slider {
-  background-color: #2196F3;
+.subsection:last-child {
+  margin-bottom: 0;
 }
 
-.slider.round {
-  border-radius: 34px;
+
+.analysis-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.slider.round:before {
-  border-radius: 50%;
+.no-analysis-message {
+  text-align: center;
+  padding: 16px;
+  color: rgba(0, 0, 0, 0.6);
 }
 
-.label {
-  margin-left: 10px;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
+.analysis-content {
+  padding: 24px;
 }
 
-.control-panel-main { /* Or the appropriate class/ID for your ControlPanel */
-  position: absolute; 
-  top: 10px; /* Adjust as needed */
-  right: 10px; /* Adjust as needed */
-}
-/* In your ControlPanel.vue styles */
-.custom-container {
-  padding: 0; 
+.cooling-centers-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
-.custom-container > .v-row { 
-  margin: 0;
+.cooling-section {
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.v-btn:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+.mb-2 {
+  margin-bottom: 8px;
+}
+
+.mt-4 {
+  margin-top: 16px;
+}
+
+.search-description {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 8px;
+  margin-top: -4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cooling-centers-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .control-section {
+    padding: 12px;
+  }
+  
+  .analysis-content {
+    padding: 16px;
+  }
+}
+
+/* Dialog responsive sizing */
+@media (max-width: 1200px) {
+  .v-dialog .v-card {
+    width: 95vw !important;
+    height: 90vh !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
 }
 </style>
