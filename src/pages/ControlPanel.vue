@@ -313,7 +313,6 @@ import GraphicsSettingsDialog from '../components/GraphicsSettingsDialog.vue';
 import CoolingCenter from '../components/CoolingCenter.vue';
 import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue';
 import EstimatedImpacts from '../components/EstimatedImpacts.vue';
-import LandcoverToParks from '../components/LandcoverToParks.vue';
 import PostalCodeNDVI from '../views/PostalCodeNDVI.vue';
 
 export default {
@@ -336,7 +335,6 @@ export default {
     CoolingCenter,
     CoolingCenterOptimiser,
     EstimatedImpacts,
-    LandcoverToParks,
     PostalCodeNDVI,
   },
   setup() {
