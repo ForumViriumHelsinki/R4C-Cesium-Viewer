@@ -10,13 +10,15 @@ primary:
   initdb:
     scripts:
       01-create-extensions.sql: |
-        -- Create PostGIS in the main regions4climate database
+        -- Create PostGIS extensions in the main regions4climate database
+        -- Note: These will be created with superuser privileges during initdb
         CREATE EXTENSION IF NOT EXISTS postgis;
         CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
         -- Verify PostGIS is working
         SELECT PostGIS_version();
       02-create-med-iren-db.sql: |
+        -- Create secondary database for med_iren project
         CREATE DATABASE med_iren;
         \c med_iren;
         CREATE EXTENSION IF NOT EXISTS postgis;
@@ -24,45 +26,13 @@ primary:
 
         -- Verify PostGIS is working in med_iren
         SELECT PostGIS_version();
-      99-seed-data.sh: |
+      99-database-ready-marker.sh: |
         #!/bin/bash
         set -e
-        echo "🌱 Starting database seeding for development..."
-
-        # Check if seed data already exists
-        EXISTING_COUNT=$(psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='r4c_hsy_building_current';" 2>/dev/null || echo "0")
-
-        if [ "$EXISTING_COUNT" = "0" ]; then
-            echo "ℹ️  No schema found, skipping seeding (migrations not yet implemented in initdb)"
-        else
-            BUILDING_COUNT=$(psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT COUNT(*) FROM r4c_hsy_building_current;" 2>/dev/null || echo "0")
-
-            if [ "$BUILDING_COUNT" = "0" ]; then
-                echo "🏢 Database is empty, creating sample data for development..."
-
-                # Insert a few sample buildings for development
-                psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<EOF
-        -- Sample buildings for development testing
-        INSERT INTO r4c_hsy_building_current (kunta, vtj_prt, posno, kavu, kayttarks, kerala, area_m2, geom)
-        VALUES
-        ('Helsinki', 'DEV_001', '00100', 500, 'RESIDENTIAL', 150, 150, ST_GeomFromText('POLYGON((24.945 60.17, 24.946 60.17, 24.946 60.171, 24.945 60.171, 24.945 60.17))', 4326)),
-        ('Helsinki', 'DEV_002', '00120', 800, 'COMMERCIAL', 300, 300, ST_GeomFromText('POLYGON((24.950 60.175, 24.951 60.175, 24.951 60.176, 24.950 60.176, 24.950 60.175))', 4326)),
-        ('Helsinki', 'DEV_003', '00140', 200, 'RESIDENTIAL', 80, 80, ST_GeomFromText('POLYGON((24.955 60.180, 24.956 60.180, 24.956 60.181, 24.955 60.181, 24.955 60.180))', 4326));
-
-        -- Sample postal code data
-        INSERT INTO r4c_paavo (pinta_ala, he_vakiy, postinumeroalue, kunta, nimi, geom)
-        VALUES
-        (1000000, 5000, '00100', 'Helsinki', 'Helsinki 00100', ST_GeomFromText('POLYGON((24.940 60.165, 24.950 60.165, 24.950 60.175, 24.940 60.175, 24.940 60.165))', 4326)),
-        (1200000, 8000, '00120', 'Helsinki', 'Helsinki 00120', ST_GeomFromText('POLYGON((24.945 60.170, 24.955 60.170, 24.955 60.180, 24.945 60.180, 24.945 60.170))', 4326));
-        EOF
-
-                echo "✅ Sample data created successfully"
-            else
-                echo "ℹ️  Database already contains $BUILDING_COUNT buildings, skipping seeding"
-            fi
-        fi
-
-        echo "🎉 Database seeding completed"
+        echo "🎉 PostgreSQL initialization completed"
+        echo "📋 Database: regions4climate"
+        echo "📋 Extensions: PostGIS, PostGIS Topology"
+        echo "📋 Ready for migrations via dbmate"
 
 # Resource limits for local development
 resources:
