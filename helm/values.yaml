@@ -109,3 +109,25 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# Database migration configuration
+migration:
+  enabled: false
+  image:
+    repository: amacneil/dbmate
+    tag: v2.13.0
+  database:
+    host: postgresql
+    port: 5432
+    name: regions4climate
+    username: regions4climate_user
+    password: regions4climate_pass
+    postgresPassword: postgres
+  migrationsPath: /migrations
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
