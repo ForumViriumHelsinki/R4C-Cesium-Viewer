@@ -1,9 +1,10 @@
 <template>
-  <div>
-  	<CesiumViewer />
+  <v-app>
+    <div>
+    	<CesiumViewer />
 	<SosEco250mGrid v-if="grid250m" />	
-  </div>
-  <!-- Add Logo -->		
+    </div>
+    <!-- Add Logo -->		
 	<div class="logoHolder">	
 	<img
 id="logoR4C"
@@ -15,8 +16,8 @@ id="logoFVH"
 src="/assets/images/fvh-1_musta.png?url"
 alt="Forum Virium Helsinki"
 >
-  </div>
-  
+    </div>
+  </v-app>
 </template>
 
 <script setup>
