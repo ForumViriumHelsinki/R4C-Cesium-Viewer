@@ -97,10 +97,11 @@ jobs:
           sleep 10
       
       - name: Run Playwright tests
-        run: npm run test:e2e
+        run: npm run test:e2e -- --reporter=list,json --trace=on-first-retry
         env:
           CI: true
           NODE_OPTIONS: '--max-old-space-size=4096'
+          DEBUG: 'pw:api'
       
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -157,25 +158,28 @@ jobs:
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
       
       - name: Run accessibility tests - Desktop
-        run: timeout 600 npm run test:accessibility:desktop
+        run: timeout 600 npm run test:accessibility:desktop -- --reporter=list,json --trace=on-first-retry
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
           NODE_OPTIONS: '--max-old-space-size=4096'
+          DEBUG: 'pw:api'
       
       - name: Run accessibility tests - Tablet  
-        run: timeout 600 npm run test:accessibility:tablet
+        run: timeout 600 npm run test:accessibility:tablet -- --reporter=list,json --trace=on-first-retry
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
           NODE_OPTIONS: '--max-old-space-size=4096'
+          DEBUG: 'pw:api'
       
       - name: Run accessibility tests - Mobile
-        run: timeout 600 npm run test:accessibility:mobile
+        run: timeout 600 npm run test:accessibility:mobile -- --reporter=list,json --trace=on-first-retry
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
           NODE_OPTIONS: '--max-old-space-size=4096'
+          DEBUG: 'pw:api'
       
       - name: Cleanup server process
         if: always()
