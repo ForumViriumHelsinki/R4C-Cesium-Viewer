@@ -10,7 +10,6 @@
 			icon
 			class="panel-toggle-button"
 			@click="toggleControlPanel"
-			:style="{ position: 'fixed', top: '60px', left: '10px', zIndex: 1000 }"
 		>
 			<v-icon>mdi-menu</v-icon>
 		</v-btn>
@@ -168,3 +167,18 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+#cesiumContainer {
+	position: relative;
+	width: 100%;
+	height: 100vh;
+}
+
+.panel-toggle-button {
+	position: fixed;
+	top: 60px;
+	left: 10px;
+	z-index: 1000;
+}
+</style>
