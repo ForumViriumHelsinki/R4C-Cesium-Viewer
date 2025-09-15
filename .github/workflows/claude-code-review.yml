@@ -1,5 +1,10 @@
 name: Claude Code Review
 
+# This workflow provides automated code reviews for pull requests.
+# It runs automatically when PRs are opened or updated.
+# This workflow has READ-ONLY permissions and cannot modify code.
+# For interactive changes, users should mention @claude in comments (handled by claude.yml)
+
 on:
   pull_request:
     types: [opened, synchronize]

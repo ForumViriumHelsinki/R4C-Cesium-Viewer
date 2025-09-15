@@ -178,7 +178,7 @@ jobs:
           timeout: '30'
 
       - name: Run accessibility tests - Desktop
-        run: timeout 600 npm run test:accessibility:desktop
+        run: timeout 600 npm run test:accessibility:desktop -- --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
 
@@ -188,7 +188,7 @@ jobs:
           PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
 
       - name: Run accessibility tests - Mobile
-        run: timeout 600 npm run test:accessibility:mobile
+        run: timeout 600 npm run test:accessibility:mobile -- --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
 

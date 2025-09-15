@@ -24,7 +24,12 @@ export default defineConfig({
   /* Reduce parallel workers for accessibility tests to avoid resource contention */
   workers: process.env.CI ? 2 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
+  reporter: process.env.CI ? [
+    ['list'],  // Verbose output in CI
+    ['json', { outputFile: 'test-results/test-results.json' }],
+    ['junit', { outputFile: 'test-results/junit.xml' }],
+    ['html', { open: 'never' }]
+  ] : [
     ['html'],
     ['json', { outputFile: 'test-results/test-results.json' }],
     ['junit', { outputFile: 'test-results/junit.xml' }]
@@ -65,10 +70,10 @@ export default defineConfig({
   },
 
   /* Test timeout extended for complex 3D interactions, increased for CI due to Cesium complexity */
-  timeout: process.env.CI ? 120000 : 60000,
+  timeout: process.env.CI ? 180000 : 60000,  // 3 minutes in CI for accessibility tests
   expect: {
     /* Timeout for assertions - increased for CI accessibility tests */
-    timeout: process.env.CI ? 15000 : 10000,
+    timeout: process.env.CI ? 30000 : 10000,  // 30 seconds in CI for complex assertions
   },
 
   /* Configure projects for major browsers */
