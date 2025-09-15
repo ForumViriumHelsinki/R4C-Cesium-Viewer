@@ -1,5 +1,12 @@
 <template>
-  <v-navigation-drawer>
+  <v-navigation-drawer 
+    v-model="panelVisible"
+    :location="$vuetify.display.smAndDown ? 'bottom' : 'left'"
+    :temporary="$vuetify.display.smAndDown"
+    :permanent="!$vuetify.display.smAndDown"
+    :width="drawerWidth"
+    class="control-panel-main"
+  >
     <v-list>
       <v-list-item>
         <v-tooltip location="bottom">
@@ -20,11 +27,11 @@
         <v-tooltip location="bottom">
           <template #activator="{ props }">
             <v-btn
-icon
-v-bind="props"
-size="x-small"
-@click="reset"
->
+              icon
+              v-bind="props"
+              size="x-small"
+              @click="reset"
+            >
               <v-icon>mdi-refresh</v-icon>
             </v-btn>
           </template>
@@ -78,7 +85,7 @@ size="x-small"
       <!-- Add `multiple` prop here to allow multiple panels to stay open -->
       <v-expansion-panels multiple>
         <v-expansion-panel
-          v-if="currentView === 'grid' && statsIndex === 'heat_index'"
+          v-if="currentView === 'grid' && statsIndex && statsIndex.includes('heat')"
           title="Manage Cooling Centers"
         >
           <v-expansion-panel-text>
@@ -105,7 +112,7 @@ size="x-small"
         </v-expansion-panel>
 
         <v-expansion-panel
-          v-if="currentView === 'grid' && statsIndex.includes('heat')"
+          v-if="currentView === 'grid' && statsIndex && statsIndex.includes('heat')"
           title="Turn landcover green and blue"
         >
           <v-expansion-panel-text>
@@ -146,18 +153,18 @@ size="x-small"
           </v-expansion-panel>
 
           <v-expansion-panel
-v-if="showSosEco"
-title="Socioeconomics Diagram"
->
+            v-if="showSosEco"
+            title="Socioeconomics Diagram"
+          >
             <v-expansion-panel-text>
               <SocioEconomics />
             </v-expansion-panel-text>
           </v-expansion-panel>
 
           <v-expansion-panel
-v-if="currentView !== 'helsinki'"
-title="Land Cover"
->
+            v-if="currentView !== 'helsinki'"
+            title="Land Cover"
+          >
             <v-expansion-panel-text>
               <Landcover />
             </v-expansion-panel-text>
@@ -211,11 +218,17 @@ title="Land Cover"
       </v-expansion-panels>
     </v-list>
 
+    <!-- Data Attribution Footer -->
+    <v-list-item class="attribution-footer">
+      <div style="font-size: 0.75rem; color: #666; padding: 8px;">
+        Data sources: HRI, Statistics Finland
+      </div>
+    </v-list-item>
   </v-navigation-drawer>
 </template>
 
 <script>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import HeatHistogram from '../components/HeatHistogram.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
 import ViewMode from '../components/ViewMode.vue'; // Adjust the path as necessary
@@ -281,6 +294,9 @@ export default {
     const currentView = computed(() => globalStore.view);
     const { ndvi } = storeToRefs(toggleStore);
 
+    // Panel visibility state
+    const panelVisible = ref(true);
+
     const heatHistogramData = computed(() => propsStore.heatHistogramData);
     const statsIndex = computed(() => propsStore.statsIndex);
     const scatterPlotEntities = computed(() => propsStore.scatterPlotEntities);
@@ -318,6 +334,11 @@ export default {
       return globalStore.navbarWidth; // 37.5% of the window width
     });
 
+    // Toggle panel visibility
+    const togglePanel = () => {
+      panelVisible.value = !panelVisible.value;
+    };
+
     return {
       drawerWidth,
       currentLevel,
@@ -330,6 +351,8 @@ export default {
       ndvi,
       showSosEco,
       statsIndex,
+      panelVisible,
+      togglePanel,
     };
   },
 };

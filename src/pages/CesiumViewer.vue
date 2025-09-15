@@ -4,7 +4,16 @@
 		<!-- Camera Controls -->
 		<CameraControls />
 		<!-- Control Panel -->
-		<ControlPanel />
+		<ControlPanel ref="controlPanel" />
+		<!-- Toggle Button for Control Panel -->
+		<v-btn
+			icon
+			class="panel-toggle-button"
+			@click="toggleControlPanel"
+			:style="{ position: 'fixed', top: '60px', left: '10px', zIndex: 1000 }"
+		>
+			<v-icon>mdi-menu</v-icon>
+		</v-btn>
 	    <!-- Loading Component -->
     	<Loading v-if="store.isLoading" />
 		<Timeline v-if="store.level === 'postalCode' || store.level === 'building' "/>
@@ -58,8 +67,15 @@ export default {
       		return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading;
     	});
 		const viewer = ref(null);
+		const controlPanel = ref(null);
 		Cesium.Ion.defaultAccessToken = null;
 		let lastPickTime = 0;
+
+		const toggleControlPanel = () => {
+			if (controlPanel.value) {
+				controlPanel.value.togglePanel();
+			}
+		};
 
 		const initViewer = () => {
 			viewer.value = new Cesium.Viewer('cesiumContainer', {
@@ -145,7 +161,9 @@ export default {
 			toggleStore,
 			buildingStore,
 			viewer,
-			shouldShowBuildingInformation
+			shouldShowBuildingInformation,
+			controlPanel,
+			toggleControlPanel
 		};
 	},
 };
