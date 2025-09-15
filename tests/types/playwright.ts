@@ -2,7 +2,10 @@
  * TypeScript interfaces for Playwright testing
  */
 
-import { Page, Locator, BrowserContext } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+// Type-only export for Page
+export type { Page };
 
 export interface PlaywrightPage extends Page {
   // Add any custom methods or properties if needed
@@ -35,5 +38,7 @@ export interface CesiumTestState {
   scene?: any;
   camera?: any;
   entities?: any;
-  currentState: any;
+  currentState?: any;
+  timestamp?: string;
+  url?: string;
 }
