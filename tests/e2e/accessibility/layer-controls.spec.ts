@@ -11,25 +11,25 @@
  * Ensures all layer controls remain accessible and functional during interface overhaul.
  */
 
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
 import AccessibilityTestHelpers from '../helpers/test-helpers';
 
-test.describe('Layer Controls Accessibility', () => {
+cesiumDescribe('Layer Controls Accessibility', () => {
   let helpers: AccessibilityTestHelpers;
 
-  test.beforeEach(async ({ page }) => {
-    helpers = new AccessibilityTestHelpers(page);
-    await page.goto('/');
-    await helpers.waitForCesiumReady();
+  cesiumTest.beforeEach(async ({ cesiumPage }) => {
+    helpers = new AccessibilityTestHelpers(cesiumPage);
+    // Cesium is already initialized by the fixture
   });
 
-  test.describe('Universal Layer Controls', () => {
-    test('should display NDVI toggle in all views and contexts', async ({ page }) => {
+  cesiumTest.describe('Universal Layer Controls', () => {
+    cesiumTest('should display NDVI toggle in all views and contexts', async ({ cesiumPage }) => {
       // Test NDVI in Capital Region view
       await helpers.navigateToView('capitalRegionView');
-      await expect(page.getByText('NDVI')).toBeVisible();
+      await expect(cesiumPage.getByText('NDVI')).toBeVisible();
       
-      const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+      const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
       await expect(ndviToggle).toBeVisible();
       
       // Test NDVI functionality
@@ -40,15 +40,15 @@ test.describe('Layer Controls Accessibility', () => {
       
       // Test NDVI in Statistical Grid view
       await helpers.navigateToView('gridView');
-      await expect(page.getByText('NDVI')).toBeVisible();
+      await expect(cesiumPage.getByText('NDVI')).toBeVisible();
       
       // NDVI should be functional in grid view too
       await ndviToggle.check();
       await expect(ndviToggle).toBeChecked();
     });
 
-    test('should maintain NDVI state across view changes', async ({ page }) => {
-      const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+    cesiumTest('should maintain NDVI state across view changes', async ({ cesiumPage }) => {
+      const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
       
       // Enable NDVI in Capital Region
       await helpers.navigateToView('capitalRegionView');
@@ -66,25 +66,25 @@ test.describe('Layer Controls Accessibility', () => {
       await expect(ndviToggle).toBeChecked();
     });
 
-    test('should display Layers section header consistently', async ({ page }) => {
-      await expect(page.getByText('Layers', { exact: true })).toBeVisible();
+    cesiumTest('should display Layers section header consistently', async ({ cesiumPage }) => {
+      await expect(cesiumPage.getByText('Layers', { exact: true })).toBeVisible();
       
       // Should remain visible across view changes
       await helpers.navigateToView('gridView');
-      await expect(page.getByText('Layers', { exact: true })).toBeVisible();
+      await expect(cesiumPage.getByText('Layers', { exact: true })).toBeVisible();
       
       await helpers.navigateToView('capitalRegionView');
-      await expect(page.getByText('Layers', { exact: true })).toBeVisible();
+      await expect(cesiumPage.getByText('Layers', { exact: true })).toBeVisible();
     });
   });
 
-  test.describe('View-Specific Layer Controls', () => {
-    test('should show HSY Land Cover only in non-Helsinki views', async ({ page }) => {
+  cesiumTest.describe('View-Specific Layer Controls', () => {
+    cesiumTest('should show HSY Land Cover only in non-Helsinki views', async ({ cesiumPage }) => {
       // Should be visible in Capital Region view (default)
       await helpers.navigateToView('capitalRegionView');
-      await expect(page.getByText('HSY Land Cover')).toBeVisible();
+      await expect(cesiumPage.getByText('HSY Land Cover')).toBeVisible();
       
-      const landCoverToggle = page.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
+      const landCoverToggle = cesiumPage.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
       
       // Test toggle functionality
       await landCoverToggle.check();
@@ -94,22 +94,22 @@ test.describe('Layer Controls Accessibility', () => {
       
       // Should be visible in Grid view too
       await helpers.navigateToView('gridView');
-      await expect(page.getByText('HSY Land Cover')).toBeVisible();
+      await expect(cesiumPage.getByText('HSY Land Cover')).toBeVisible();
       
       // Note: Helsinki view testing would require navigation to Helsinki-specific postal codes
       // For comprehensive testing, we verify the conditional logic structure exists
     });
 
-    test('should show vegetation controls only in Helsinki view', async ({ page }) => {
+    cesiumTest('should show vegetation controls only in Helsinki view', async ({ cesiumPage }) => {
       // In default Capital Region view, vegetation controls should not be visible
       await helpers.navigateToView('capitalRegionView');
-      await expect(page.getByText('Vegetation')).not.toBeVisible();
-      await expect(page.getByText('Other Nature')).not.toBeVisible();
+      await expect(cesiumPage.getByText('Vegetation')).not.toBeVisible();
+      await expect(cesiumPage.getByText('Other Nature')).not.toBeVisible();
       
       // In Grid view, vegetation controls should not be visible
       await helpers.navigateToView('gridView');
-      await expect(page.getByText('Vegetation')).not.toBeVisible();
-      await expect(page.getByText('Other Nature')).not.toBeVisible();
+      await expect(cesiumPage.getByText('Vegetation')).not.toBeVisible();
+      await expect(cesiumPage.getByText('Other Nature')).not.toBeVisible();
       
       // Note: Testing Helsinki view would require:
       // 1. Setting helsinkiView store state to true
@@ -117,12 +117,12 @@ test.describe('Layer Controls Accessibility', () => {
       // For now we verify the conditional structure exists
     });
 
-    test('should handle view-specific layer state correctly', async ({ page }) => {
+    cesiumTest('should handle view-specific layer state correctly', async ({ cesiumPage }) => {
       // Start with Capital Region
       await helpers.navigateToView('capitalRegionView');
       
       // Enable HSY Land Cover
-      const landCoverToggle = page.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
+      const landCoverToggle = cesiumPage.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
       await landCoverToggle.check();
       await expect(landCoverToggle).toBeChecked();
       
@@ -140,21 +140,21 @@ test.describe('Layer Controls Accessibility', () => {
     });
   });
 
-  test.describe('Context-Dependent Layer Controls', () => {
-    test('should show Trees toggle only with postal code in non-grid views', async ({ page }) => {
+  cesiumTest.describe('Context-Dependent Layer Controls', () => {
+    cesiumTest('should show Trees toggle only with postal code in non-grid views', async ({ cesiumPage }) => {
       // At start level, Trees should not be visible
-      await expect(page.getByText('Trees')).not.toBeVisible();
+      await expect(cesiumPage.getByText('Trees')).not.toBeVisible();
       
       // Navigate to postal code level in Capital Region view
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
       // Wait for postal code level UI
-      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Trees toggle should now be visible
-      await expect(page.getByText('Trees')).toBeVisible();
+      await expect(cesiumPage.getByText('Trees')).toBeVisible();
       
-      const treesToggle = page.getByText('Trees').locator('..').locator('input[type="checkbox"]');
+      const treesToggle = cesiumPage.getByText('Trees').locator('..').locator('input[type="checkbox"]');
       
       // Test Trees toggle functionality
       await treesToggle.check();
@@ -163,41 +163,41 @@ test.describe('Layer Controls Accessibility', () => {
       await expect(treesToggle).not.toBeChecked();
     });
 
-    test('should hide Trees toggle in grid view even with postal code', async ({ page }) => {
+    cesiumTest('should hide Trees toggle in grid view even with postal code', async ({ cesiumPage }) => {
       // Navigate to postal code in Capital Region first
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
       // Wait for postal code UI elements
-      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Verify Trees is visible
-      await expect(page.getByText('Trees')).toBeVisible();
+      await expect(cesiumPage.getByText('Trees')).toBeVisible();
       
       // Switch to grid view
       await helpers.navigateToView('gridView');
       // Wait for grid view switch
-      await expect(page.locator('input[value="gridView"]')).toBeChecked();
+      await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked();
       
       // Trees should now be hidden
-      await expect(page.getByText('Trees')).not.toBeVisible();
+      await expect(cesiumPage.getByText('Trees')).not.toBeVisible();
       
       // Switch back to Capital Region
       await helpers.navigateToView('capitalRegionView');
       // Wait for view switch back
-      await expect(page.locator('input[value="capitalRegionView"]')).toBeChecked();
+      await expect(cesiumPage.locator('input[value="capitalRegionView"]')).toBeChecked();
       
       // Trees should be visible again
-      await expect(page.getByText('Trees')).toBeVisible();
+      await expect(cesiumPage.getByText('Trees')).toBeVisible();
     });
 
-    test('should handle Trees toggle state across valid contexts', async ({ page }) => {
+    cesiumTest('should handle Trees toggle state across valid contexts', async ({ cesiumPage }) => {
       // Navigate to postal code in Capital Region
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
       // Wait for postal code level
-      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
-      const treesToggle = page.getByText('Trees').locator('..').locator('input[type="checkbox"]');
+      const treesToggle = cesiumPage.getByText('Trees').locator('..').locator('input[type="checkbox"]');
       
       // Enable Trees
       await treesToggle.check();
@@ -206,26 +206,26 @@ test.describe('Layer Controls Accessibility', () => {
       // Navigate to building level (Trees should still be available)
       await helpers.drillToLevel('building');
       // Wait for building level
-      await page.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
       
       // Trees should still be visible and checked
-      await expect(page.getByText('Trees')).toBeVisible();
+      await expect(cesiumPage.getByText('Trees')).toBeVisible();
       await expect(treesToggle).toBeChecked();
       
       // Navigate back to postal code
-      const backButton = page.getByRole('button').filter({ has: page.locator('.mdi-arrow-left') });
+      const backButton = cesiumPage.getByRole('button').filter({ has: cesiumPage.locator('.mdi-arrow-left') });
       await backButton.click();
       // Wait for navigation back to postal code
-      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Trees state should be maintained
       await expect(treesToggle).toBeChecked();
     });
   });
 
-  test.describe('Layer Toggle Interactions', () => {
-    test('should handle rapid toggle switching without errors', async ({ page }) => {
-      const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+  cesiumTest.describe('Layer Toggle Interactions', () => {
+    cesiumTest('should handle rapid toggle switching without errors', async ({ cesiumPage }) => {
+      const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
       
       // Rapidly toggle NDVI multiple times
       for (let i = 0; i < 5; i++) {
@@ -241,21 +241,21 @@ test.describe('Layer Controls Accessibility', () => {
       await expect(ndviToggle).not.toBeChecked();
       
       // No error states should be present
-      const errorElements = page.locator('[class*="error"], [class*="Error"]');
+      const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]');
       const errorCount = await errorElements.count();
       expect(errorCount).toBe(0);
     });
 
-    test('should handle multiple layer toggles simultaneously', async ({ page }) => {
+    cesiumTest('should handle multiple layer toggles simultaneously', async ({ cesiumPage }) => {
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
       // Wait for postal code level
-      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Get available toggles
-      const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
-      const landCoverToggle = page.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
-      const treesToggle = page.getByText('Trees').locator('..').locator('input[type="checkbox"]');
+      const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+      const landCoverToggle = cesiumPage.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
+      const treesToggle = cesiumPage.getByText('Trees').locator('..').locator('input[type="checkbox"]');
       
       // Enable all available layers
       await ndviToggle.check();
@@ -278,10 +278,10 @@ test.describe('Layer Controls Accessibility', () => {
       await expect(treesToggle).not.toBeChecked();
     });
 
-    test('should maintain layer states during navigation', async ({ page }) => {
+    cesiumTest('should maintain layer states during navigation', async ({ cesiumPage }) => {
       // Enable NDVI and HSY Land Cover
-      const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
-      const landCoverToggle = page.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
+      const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+      const landCoverToggle = cesiumPage.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
       
       await ndviToggle.check();
       await landCoverToggle.check();
@@ -289,7 +289,7 @@ test.describe('Layer Controls Accessibility', () => {
       // Navigate to postal code level
       await helpers.drillToLevel('postalCode');
       // Wait for postal code UI
-      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // States should be maintained
       await expect(ndviToggle).toBeChecked();
@@ -298,7 +298,7 @@ test.describe('Layer Controls Accessibility', () => {
       // Navigate to building level
       await helpers.drillToLevel('building');
       // Wait for building level
-      await page.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building heat data"', { timeout: 15000 }).catch(() => {});
       
       // States should still be maintained
       await expect(ndviToggle).toBeChecked();
@@ -306,16 +306,16 @@ test.describe('Layer Controls Accessibility', () => {
     });
   });
 
-  test.describe('Layer Control Styling and Accessibility', () => {
-    test('should have consistent styling for all layer toggles', async ({ page }) => {
+  cesiumTest.describe('Layer Control Styling and Accessibility', () => {
+    cesiumTest('should have consistent styling for all layer toggles', async ({ cesiumPage }) => {
       // Navigate to context where multiple layers are visible
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
       // Wait for postal code UI
-      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Check that all visible toggles have consistent structure
-      const toggles = page.locator('.switch-container');
+      const toggles = cesiumPage.locator('.switch-container');
       const count = await toggles.count();
       
       expect(count).toBeGreaterThan(2); // Should have multiple layer toggles
@@ -334,29 +334,29 @@ test.describe('Layer Controls Accessibility', () => {
       }
     });
 
-    test('should support keyboard navigation for layer toggles', async ({ page }) => {
+    cesiumTest('should support keyboard navigation for layer toggles', async ({ cesiumPage }) => {
       // Tab through the interface to reach layer controls
-      await page.keyboard.press('Tab');
-      await page.keyboard.press('Tab');
-      await page.keyboard.press('Tab');
-      await page.keyboard.press('Tab');
-      await page.keyboard.press('Tab');
+      await cesiumPage.keyboard.press('Tab');
+      await cesiumPage.keyboard.press('Tab');
+      await cesiumPage.keyboard.press('Tab');
+      await cesiumPage.keyboard.press('Tab');
+      await cesiumPage.keyboard.press('Tab');
       
       // Should eventually reach layer toggle controls
-      const focusedElement = page.locator(':focus');
+      const focusedElement = cesiumPage.locator(':focus');
       
       // Continue tabbing to find toggles
       for (let i = 0; i < 10; i++) {
-        const focused = page.locator(':focus');
+        const focused = cesiumPage.locator(':focus');
         const tagName = await focused.evaluate(el => el.tagName.toLowerCase());
         
         if (tagName === 'input') {
           const type = await focused.getAttribute('type');
           if (type === 'checkbox') {
             // Found a checkbox, test space bar activation
-            await page.keyboard.press(' ');
+            await cesiumPage.keyboard.press(' ');
             // Wait for keyboard activation to complete
-            await page.waitForFunction(() => document.readyState === 'complete', { timeout: 2000 }).catch(() => {});
+            await cesiumPage.waitForFunction(() => document.readyState === 'complete', { timeout: 2000 }).catch(() => {});
             
             // Should toggle the checkbox
             const isChecked = await focused.isChecked();
@@ -365,15 +365,15 @@ test.describe('Layer Controls Accessibility', () => {
           }
         }
         
-        await page.keyboard.press('Tab');
+        await cesiumPage.keyboard.press('Tab');
       }
     });
 
-    test('should have proper labels for screen readers', async ({ page }) => {
+    cesiumTest('should have proper labels for screen readers', async ({ cesiumPage }) => {
       await helpers.navigateToView('capitalRegionView');
       await helpers.drillToLevel('postalCode');
       // Wait for postal code UI
-      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
+      await cesiumPage.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 }).catch(() => {});
       
       // Check that layer labels are descriptive
       const layerLabels = [
@@ -383,7 +383,7 @@ test.describe('Layer Controls Accessibility', () => {
       ];
       
       for (const labelText of layerLabels) {
-        const label = page.getByText(labelText);
+        const label = cesiumPage.getByText(labelText);
         if (await label.isVisible()) {
           await expect(label).toBeVisible();
           
@@ -394,9 +394,9 @@ test.describe('Layer Controls Accessibility', () => {
       }
     });
 
-    test('should provide visual feedback for toggle state changes', async ({ page }) => {
-      const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
-      const slider = page.getByText('NDVI').locator('..').locator('.slider');
+    cesiumTest('should provide visual feedback for toggle state changes', async ({ cesiumPage }) => {
+      const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+      const slider = cesiumPage.getByText('NDVI').locator('..').locator('.slider');
       
       // Initial state
       const initialChecked = await ndviToggle.isChecked();
@@ -415,10 +415,10 @@ test.describe('Layer Controls Accessibility', () => {
     });
   });
 
-  test.describe('Layer Control Edge Cases', () => {
-    test('should handle layer toggles during data loading', async ({ page }) => {
+  cesiumTest.describe('Layer Control Edge Cases', () => {
+    cesiumTest('should handle layer toggles during data loading', async ({ cesiumPage }) => {
       // Intercept requests to simulate slow loading
-      page.route('**/*.json', route => {
+      cesiumPage.route('**/*.json', route => {
         setTimeout(() => route.continue(), 1000);
       });
       
@@ -426,25 +426,25 @@ test.describe('Layer Controls Accessibility', () => {
       await helpers.drillToLevel('postalCode');
       
       // Immediately try to toggle layers
-      const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+      const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
       await ndviToggle.check();
       
       // Wait for loading to complete
-      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+      await cesiumPage.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
       
       // Toggle state should be consistent
       await expect(ndviToggle).toBeChecked();
       
       // No error states
-      const errorElements = page.locator('[class*="error"], [class*="Error"]');
+      const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]');
       const errorCount = await errorElements.count();
       expect(errorCount).toBe(0);
     });
 
-    test('should reset layer states appropriately on application reset', async ({ page }) => {
+    cesiumTest('should reset layer states appropriately on application reset', async ({ cesiumPage }) => {
       // Enable some layers
-      const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
-      const landCoverToggle = page.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
+      const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+      const landCoverToggle = cesiumPage.getByText('HSY Land Cover').locator('..').locator('input[type="checkbox"]');
       
       await ndviToggle.check();
       await landCoverToggle.check();
@@ -453,10 +453,10 @@ test.describe('Layer Controls Accessibility', () => {
       await expect(landCoverToggle).toBeChecked();
       
       // Reset application
-      const resetButton = page.getByRole('button').filter({ has: page.locator('.mdi-refresh') });
+      const resetButton = cesiumPage.getByRole('button').filter({ has: cesiumPage.locator('.mdi-refresh') });
       await resetButton.click();
       // Wait for reset to complete
-      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+      await cesiumPage.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       
       // Layer states behavior after reset depends on implementation
       // We verify that toggles are still functional
@@ -468,16 +468,16 @@ test.describe('Layer Controls Accessibility', () => {
       await expect(ndviToggle).toBeChecked();
     });
 
-    test('should handle missing layer data gracefully', async ({ page }) => {
+    cesiumTest('should handle missing layer data gracefully', async ({ cesiumPage }) => {
       // Toggle layers even if underlying data might be missing
-      const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+      const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
       
       await ndviToggle.check();
       // Wait for toggle state change
       await expect(ndviToggle).toBeChecked();
       
       // Should not cause application errors
-      const errorElements = page.locator('[class*="error"], [class*="Error"]');
+      const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]');
       const errorCount = await errorElements.count();
       expect(errorCount).toBe(0);
       
@@ -487,8 +487,8 @@ test.describe('Layer Controls Accessibility', () => {
     });
   });
 
-  test.describe('Layer Control Performance', () => {
-    test('should handle layer toggles efficiently across viewports', async ({ page }) => {
+  cesiumTest.describe('Layer Control Performance', () => {
+    cesiumTest('should handle layer toggles efficiently across viewports', async ({ cesiumPage }) => {
       const viewports = [
         { width: 1920, height: 1080 },
         { width: 768, height: 1024 },
@@ -496,16 +496,16 @@ test.describe('Layer Controls Accessibility', () => {
       ];
 
       for (const viewport of viewports) {
-        await page.setViewportSize(viewport);
+        await cesiumPage.setViewportSize(viewport);
         // Wait for viewport change to take effect
-        await page.waitForFunction((expectedWidth) => {
+        await cesiumPage.waitForFunction((expectedWidth) => {
           return window.innerWidth === expectedWidth;
         }, viewport.width, { timeout: 3000 });
         
         // Layer controls should remain accessible
-        await expect(page.getByText('NDVI')).toBeVisible();
+        await expect(cesiumPage.getByText('NDVI')).toBeVisible();
         
-        const ndviToggle = page.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+        const ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
         
         // Toggle should work efficiently
         const startTime = Date.now();
