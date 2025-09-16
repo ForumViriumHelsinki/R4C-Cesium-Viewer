@@ -9,7 +9,7 @@ on:
 jobs:
   unit-tests:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 10
     
     strategy:
@@ -44,7 +44,7 @@ jobs:
 
   integration-tests:
     name: Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 15
     
     steps:
@@ -67,7 +67,7 @@ jobs:
 
   e2e-tests:
     name: End-to-End Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
       - name: Checkout code
@@ -114,7 +114,7 @@ jobs:
 
   accessibility-tests:
     name: Accessibility Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 45
     
     steps:
@@ -202,7 +202,7 @@ jobs:
 
   performance-tests:
     name: Performance Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 20
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
