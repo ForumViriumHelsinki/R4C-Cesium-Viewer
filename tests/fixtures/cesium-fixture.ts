@@ -1,8 +1,6 @@
 import { test as base, Page } from '@playwright/test';
 import { waitForCesiumReady, setupCesiumForCI, waitForAppReady } from '../e2e/helpers/cesium-helper';
 import { createCesiumMock } from '../mocks/cesium-mock';
-import * as fs from 'fs';
-import * as path from 'path';
 
 /**
  * Cesium Test Fixture
@@ -38,11 +36,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
     if (process.env.CI) {
       console.log('CI environment detected - using Cesium mock');
       
-      // Read the mock file and inject it
-      const mockPath = path.join(__dirname, '../mocks/cesium-mock.ts');
-      const mockContent = fs.readFileSync(mockPath, 'utf8');
-      
-      // Extract just the functions and inject them
+      // Inject the mock implementation directly
       await page.addInitScript(() => {
         // Inject Cesium mock implementation inline
         console.log('Injecting Cesium mock...');
