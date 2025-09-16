@@ -3,8 +3,6 @@
     <div id="cesiumContainer">
 		<!-- Camera Controls -->
 		<CameraControls />
-		<!-- Control Panel -->
-		<ControlPanel />
 	    <!-- Loading Component -->
     	<Loading v-if="store.isLoading" />
 		<Timeline v-if="store.level === 'postalCode' || store.level === 'building' "/>
@@ -34,7 +32,6 @@ import { useBuildingStore } from '../stores/buildingStore.js';
 import { useGraphicsStore } from '../stores/graphicsStore.js';
 
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
-import ControlPanel from './ControlPanel.vue';
 import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
 import Timeline from '../components/Timeline.vue';
@@ -44,7 +41,6 @@ export default {
 	components: {
 		DisclaimerPopup,
 		CameraControls,
-		ControlPanel,
 		BuildingInformation,
 		Loading,
 		Timeline,
