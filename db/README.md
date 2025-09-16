@@ -88,6 +88,114 @@ dbmate drop
 dbmate wait
 ```
 
+## Rollback Procedures
+
+### Understanding dbmate Rollbacks
+
+Each migration consists of two sections that are essential for rollback functionality:
+- `-- migrate:up`: Applied when running migrations forward
+- `-- migrate:down`: Applied when rolling back migrations
+
+### Basic Rollback Commands
+
+```bash
+# Rollback the last applied migration
+dbmate rollback
+
+# Check migration status before and after rollback
+dbmate status
+
+# Rollback multiple migrations (run command multiple times)
+dbmate rollback
+dbmate rollback
+
+# Re-apply migrations after testing rollback
+dbmate up
+```
+
+### Safe Rollback Practices
+
+#### 1. **Pre-Rollback Checks**
+```bash
+# Always check current migration status first
+dbmate status
+
+# Review what will be rolled back
+cat db/migrations/$(ls -1 db/migrations | tail -1)
+```
+
+#### 2. **Data Loss Prevention**
+- **WARNING**: Rollbacks that drop tables will lose all data in those tables
+- Always backup critical data before rolling back destructive migrations
+- Consider using transactions for complex rollbacks
+
+#### 3. **Production Rollback Procedure**
+```bash
+# 1. Create a database backup
+pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# 2. Check current status
+dbmate status
+
+# 3. Perform rollback
+dbmate rollback
+
+# 4. Verify rollback
+dbmate status
+
+# 5. Test application functionality
+# If issues arise, restore from backup:
+# psql $DATABASE_URL < backup_TIMESTAMP.sql
+```
+
+#### 4. **Rollback Testing in CI**
+The CI workflow includes automated rollback testing:
+```yaml
+# From .github/workflows/database-migrations.yml
+- name: Test rollback
+  run: |
+    dbmate up        # Apply migrations
+    dbmate rollback  # Test rollback
+    dbmate up        # Re-apply to ensure idempotency
+```
+
+#### 5. **Emergency Rollback**
+For urgent production rollbacks:
+```bash
+# Rollback with logging
+dbmate rollback 2>&1 | tee rollback_$(date +%Y%m%d_%H%M%S).log
+
+# If automated rollback fails, manual SQL execution may be needed
+# Extract the down migration SQL and run manually:
+psql $DATABASE_URL -f emergency_rollback.sql
+```
+
+### Rollback Considerations by Migration Type
+
+#### **Index Operations**
+- Use `CONCURRENTLY` to avoid locking (already implemented in our migrations)
+- Rollbacks are generally safe but may impact query performance
+
+#### **Table Drops**
+- Most destructive type of rollback
+- Always backup data first
+- Consider adding safety checks:
+```sql
+-- migrate:down
+DO $$
+BEGIN
+  IF (SELECT COUNT(*) FROM table_name) > 0 THEN
+    RAISE EXCEPTION 'Cannot rollback: table contains data';
+  END IF;
+END $$;
+DROP TABLE IF EXISTS table_name;
+```
+
+#### **Data Migrations**
+- May not be fully reversible
+- Document any data transformations that cannot be undone
+- Consider keeping backups of transformed data
+
 ## Creating New Migrations
 
 ### 1. Generate Migration File
