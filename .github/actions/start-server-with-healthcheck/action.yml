@@ -1,0 +1,64 @@
+name: 'Start Server with Health Check'
+description: 'Start frontend server and wait for it to be ready with health checks'
+
+inputs:
+  server-command:
+    description: 'Command to start the server'
+    required: false
+    default: 'npm run preview'
+  server-url:
+    description: 'URL to check for server readiness'
+    required: false
+    default: 'http://localhost:4173'
+  timeout:
+    description: 'Maximum time to wait for server to be ready (seconds)'
+    required: false
+    default: '30'
+
+outputs:
+  server-pid:
+    description: 'Process ID of the started server'
+    value: ${{ steps.start-server.outputs.pid }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Start server and wait for readiness
+      id: start-server
+      shell: bash
+      run: |
+        # Start the server in background
+        ${{ inputs.server-command }} &
+        SERVER_PID=$!
+        echo "Server PID: $SERVER_PID"
+        echo "pid=$SERVER_PID" >> $GITHUB_OUTPUT
+
+        # Wait for server to be ready with timeout
+        timeout ${{ inputs.timeout }} bash -c 'until curl -sf ${{ inputs.server-url }} >/dev/null; do
+          echo "Waiting for server to be ready..."
+          sleep 1
+        done'
+
+        # Check if server is actually ready
+        if ! curl -sf ${{ inputs.server-url }} >/dev/null; then
+          echo "::error::Server failed to start within ${{ inputs.timeout }} seconds"
+          kill $SERVER_PID 2>/dev/null || true
+          exit 1
+        fi
+
+        echo "::notice::Server is ready at ${{ inputs.server-url }}"
+
+        # Double-check server is still running after initial health check
+        sleep 2
+        if ! kill -0 $SERVER_PID 2>/dev/null; then
+          echo "::error::Server process died after initial startup"
+          exit 1
+        fi
+
+        if ! curl -sf ${{ inputs.server-url }} >/dev/null; then
+          echo "::error::Server stopped responding after initial health check"
+          kill $SERVER_PID 2>/dev/null || true
+          exit 1
+        fi
+
+        echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
