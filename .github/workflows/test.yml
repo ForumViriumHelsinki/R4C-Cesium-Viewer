@@ -94,16 +94,37 @@ jobs:
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
 
-      - name: Start frontend server
+      - name: Start frontend server and wait for readiness
         run: |
           npm run preview &
-          sleep 10
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
+
+          # Wait for server to be ready with timeout
+          timeout 30 bash -c 'until curl -sf http://localhost:4173 >/dev/null; do sleep 1; done'
+
+          if ! curl -sf http://localhost:4173 >/dev/null; then
+            echo "Server failed to start within 30 seconds"
+            kill $SERVER_PID 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "Server is ready"
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
 
       - name: Run Playwright tests
         run: npm run test:e2e
         env:
           CI: true
           NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Cleanup server process
+        if: always()
+        run: |
+          if [ ! -z "$SERVER_PID" ]; then
+            kill $SERVER_PID 2>/dev/null || true
+            echo "Server process $SERVER_PID terminated"
+          fi
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -219,23 +240,45 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup CI environment
-        run: |
-          if [ -f .env.ci ]; then
-            cp .env.ci .env
-          fi
-
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Build and start frontend
+      - name: Build frontend
+        run: npm run build
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
+
+      - name: Start frontend server and wait for readiness
         run: |
-          npm run build
           npm run preview &
-          sleep 10
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
+
+          # Wait for server to be ready with timeout
+          timeout 30 bash -c 'until curl -sf http://localhost:4173 >/dev/null; do sleep 1; done'
+
+          if ! curl -sf http://localhost:4173 >/dev/null; then
+            echo "Server failed to start within 30 seconds"
+            kill $SERVER_PID 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "Server is ready"
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
 
       - name: Run performance tests
         run: npm run test:performance
+
+      - name: Cleanup server process
+        if: always()
+        run: |
+          if [ ! -z "$SERVER_PID" ]; then
+            kill $SERVER_PID 2>/dev/null || true
+            echo "Server process $SERVER_PID terminated"
+          fi
 
       - name: Upload performance results
         uses: actions/upload-artifact@v4
