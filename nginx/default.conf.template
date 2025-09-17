@@ -51,8 +51,8 @@ server {
     }
 
     location /pygeoapi/ {
-        proxy_pass https://pygeoapi.dataportal.fi/;
-        proxy_set_header Host pygeoapi.dataportal.fi;
+        proxy_pass ${VITE_PYGEOAPI_URL};
+        proxy_set_header Host ${VITE_PYGEOAPI_HOST};
         rewrite ^/pygeoapi/(.*)$ /$1 break;
     }
 
