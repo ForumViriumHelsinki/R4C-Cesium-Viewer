@@ -1,5 +1,5 @@
 <template>
-  <div class="wms-layer-switcher">
+  <div class="wms-layer-switcher" @click.stop>
     <!-- Added upper margin with link to HSY map service -->
 
     <div class="search-and-restore">
@@ -14,11 +14,12 @@ hide-details
 single-line
         @input="onSearch"
 @keyup.enter="onEnter"
-@click:append="onSearchClick"
+@click:append.stop="onSearchClick"
+@click.stop
 />
       <v-btn
 class="restore-btn"
-@click="restoreDefaultLayer"
+@click.stop="restoreDefaultLayer"
 >
         Restore Default
       </v-btn>
@@ -36,7 +37,7 @@ target="_blank"
       <v-list-item
 v-for="(layer, index) in filteredLayers"
 :key="index"
-@click="selectLayer(layer.name)"
+@click.stop="selectLayer(layer.name)"
 >
         {{ layer.title }}
       </v-list-item>
