@@ -4,7 +4,7 @@ export const useURLStore = defineStore('url', {
   state: () => ({
     imagesBase: '/ndvi_public',
     helsinkiWMS: 'https://kartta.hel.fi/ws/geoserver/avoindata/ows?SERVICE=WMS&',
-    pygeoapiBase: import.meta.env.VITE_PYGEOAPI_BASE || '/pygeoapi/collections', // Base URL for pygeoapi
+    pygeoapiBase: '/pygeoapi/collections', // Base URL for pygeoapi collections (proxied through /pygeoapi)
     wmsProxy: '/wms/proxy'
   }),
   getters: {

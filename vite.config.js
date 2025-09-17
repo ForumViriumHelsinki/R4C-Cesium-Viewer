@@ -60,7 +60,7 @@ export default defineConfig( () => {
 		server: {
 			proxy: {
 				'/pygeoapi': {
-					target: process.env.VITE_PYGEOAPI_URL || 'https://pygeoapi.dataportal.fi/',
+					target: (process.env.VITE_PYGEOAPI_URL || 'https://pygeoapi.dataportal.fi').replace(/\/$/, '') + '/',
 					changeOrigin: true,
 					secure: false,
 					rewrite: ( path ) => path.replace( /^\/pygeoapi/, '' ),
