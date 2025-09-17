@@ -62,6 +62,11 @@ jobs:
         run: npm run test:integration
         env:
           NODE_ENV: test
+          CI: true
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
 
   e2e-tests:
     name: End-to-End Tests
@@ -94,23 +99,13 @@ jobs:
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
 
-      - name: Start frontend server and wait for readiness
-        run: |
-          npm run preview &
-          SERVER_PID=$!
-          echo "Server PID: $SERVER_PID"
-
-          # Wait for server to be ready with timeout
-          timeout 30 bash -c 'until curl -sf http://localhost:4173 >/dev/null; do sleep 1; done'
-
-          if ! curl -sf http://localhost:4173 >/dev/null; then
-            echo "Server failed to start within 30 seconds"
-            kill $SERVER_PID 2>/dev/null || true
-            exit 1
-          fi
-
-          echo "Server is ready"
-          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+      - name: Start frontend server
+        uses: ./.github/actions/start-server-with-healthcheck
+        id: server
+        with:
+          server-command: 'npm run preview'
+          server-url: 'http://localhost:4173'
+          timeout: '30'
 
       - name: Run Playwright tests
         run: npm run test:e2e
@@ -165,23 +160,13 @@ jobs:
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
 
-      - name: Start frontend server and wait for readiness
-        run: |
-          npm run preview &
-          SERVER_PID=$!
-          echo "Server PID: $SERVER_PID"
-
-          # Wait for server to be ready with timeout
-          timeout 30 bash -c 'until curl -sf http://localhost:4173 >/dev/null; do sleep 1; done'
-
-          if ! curl -sf http://localhost:4173 >/dev/null; then
-            echo "Server failed to start within 30 seconds"
-            kill $SERVER_PID 2>/dev/null || true
-            exit 1
-          fi
-
-          echo "Server is ready"
-          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+      - name: Start frontend server
+        uses: ./.github/actions/start-server-with-healthcheck
+        id: server
+        with:
+          server-command: 'npm run preview'
+          server-url: 'http://localhost:4173'
+          timeout: '30'
 
       - name: Run accessibility tests - Desktop
         run: timeout 600 npm run test:accessibility:desktop
@@ -251,23 +236,13 @@ jobs:
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
 
-      - name: Start frontend server and wait for readiness
-        run: |
-          npm run preview &
-          SERVER_PID=$!
-          echo "Server PID: $SERVER_PID"
-
-          # Wait for server to be ready with timeout
-          timeout 30 bash -c 'until curl -sf http://localhost:4173 >/dev/null; do sleep 1; done'
-
-          if ! curl -sf http://localhost:4173 >/dev/null; then
-            echo "Server failed to start within 30 seconds"
-            kill $SERVER_PID 2>/dev/null || true
-            exit 1
-          fi
-
-          echo "Server is ready"
-          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+      - name: Start frontend server
+        uses: ./.github/actions/start-server-with-healthcheck
+        id: server
+        with:
+          server-command: 'npm run preview'
+          server-url: 'http://localhost:4173'
+          timeout: '30'
 
       - name: Run performance tests
         run: npm run test:performance
