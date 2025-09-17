@@ -10,30 +10,30 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: self-hosted
-    
+
     strategy:
       matrix:
         node-version: [18, 20]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run unit tests
         run: npm run test:unit
-      
+
       - name: Generate coverage report
         run: npm run test:coverage
-      
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -44,20 +44,20 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: self-hosted
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run integration tests
         run: npm run test:integration
         env:
@@ -67,41 +67,44 @@ jobs:
     name: End-to-End Tests
     runs-on: self-hosted
     timeout-minutes: 15
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       # SwiftShader is bundled with Playwright's Chromium, no system GL libraries needed
-      
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
-      
+
       - name: Build frontend
         run: npm run build
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
-      
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
+
       - name: Start frontend server
         run: |
           npm run preview &
           sleep 10
-      
+
       - name: Run Playwright tests
         run: npm run test:e2e
         env:
           CI: true
           NODE_OPTIONS: '--max-old-space-size=4096'
-      
+
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: failure()
@@ -114,69 +117,72 @@ jobs:
     name: Accessibility Tests
     runs-on: self-hosted
     timeout-minutes: 30
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       # SwiftShader is bundled with Playwright's Chromium, no system GL libraries needed
-      
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-      
+
       - name: Build frontend
         run: npm run build
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
-      
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
+
       - name: Start frontend server and wait for readiness
         run: |
           npm run preview &
           SERVER_PID=$!
           echo "Server PID: $SERVER_PID"
-          
+
           # Wait for server to be ready with timeout
           timeout 30 bash -c 'until curl -sf http://localhost:4173 >/dev/null; do sleep 1; done'
-          
+
           if ! curl -sf http://localhost:4173 >/dev/null; then
             echo "Server failed to start within 30 seconds"
             kill $SERVER_PID 2>/dev/null || true
             exit 1
           fi
-          
+
           echo "Server is ready"
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
-      
+
       - name: Run accessibility tests - Desktop
         run: timeout 600 npm run test:accessibility:desktop
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
           NODE_OPTIONS: '--max-old-space-size=4096'
-      
-      - name: Run accessibility tests - Tablet  
+
+      - name: Run accessibility tests - Tablet
         run: timeout 600 npm run test:accessibility:tablet
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
           NODE_OPTIONS: '--max-old-space-size=4096'
-      
+
       - name: Run accessibility tests - Mobile
         run: timeout 600 npm run test:accessibility:mobile
         env:
           CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
           NODE_OPTIONS: '--max-old-space-size=4096'
-      
+
       - name: Cleanup server process
         if: always()
         run: |
@@ -184,7 +190,7 @@ jobs:
             kill $SERVER_PID 2>/dev/null || true
             echo "Server process $SERVER_PID terminated"
           fi
-      
+
       - name: Upload accessibility test report
         uses: actions/upload-artifact@v4
         if: always()
@@ -199,32 +205,38 @@ jobs:
     name: Performance Tests
     runs-on: self-hosted
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
+      - name: Setup CI environment
+        run: |
+          if [ -f .env.ci ]; then
+            cp .env.ci .env
+          fi
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-      
+
       - name: Build and start frontend
         run: |
           npm run build
           npm run preview &
           sleep 10
-      
+
       - name: Run performance tests
         run: npm run test:performance
-      
+
       - name: Upload performance results
         uses: actions/upload-artifact@v4
         with:
@@ -236,20 +248,20 @@ jobs:
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run npm audit
         run: npm audit --audit-level moderate
 
@@ -258,13 +270,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests, e2e-tests, accessibility-tests, security-scan]
     if: always()
-    
+
     steps:
       - name: Check test results
         run: |
-          if [[ "${{ needs.unit-tests.result }}" == "failure" || 
-                "${{ needs.integration-tests.result }}" == "failure" || 
-                "${{ needs.e2e-tests.result }}" == "failure" || 
+          if [[ "${{ needs.unit-tests.result }}" == "failure" ||
+                "${{ needs.integration-tests.result }}" == "failure" ||
+                "${{ needs.e2e-tests.result }}" == "failure" ||
                 "${{ needs.accessibility-tests.result }}" == "failure" ||
                 "${{ needs.security-scan.result }}" == "failure" ]]; then
             echo "❌ Some tests failed"
@@ -272,7 +284,7 @@ jobs:
           else
             echo "✅ All tests passed"
           fi
-      
+
       - name: Test Results Summary
         run: |
           echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
