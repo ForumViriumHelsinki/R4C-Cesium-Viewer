@@ -47,4 +47,18 @@ runs:
         fi
 
         echo "::notice::Server is ready at ${{ inputs.server-url }}"
+
+        # Double-check server is still running after initial health check
+        sleep 2
+        if ! kill -0 $SERVER_PID 2>/dev/null; then
+          echo "::error::Server process died after initial startup"
+          exit 1
+        fi
+
+        if ! curl -sf ${{ inputs.server-url }} >/dev/null; then
+          echo "::error::Server stopped responding after initial health check"
+          kill $SERVER_PID 2>/dev/null || true
+          exit 1
+        fi
+
         echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV

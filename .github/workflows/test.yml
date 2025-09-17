@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+env:
+  # Common environment variables for all jobs
+  CI: true
+  NODE_OPTIONS: '--max-old-space-size=4096'
+  # Build-time environment variables
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+  VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+  VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
+
 jobs:
   unit-tests:
     name: Unit Tests
@@ -62,11 +71,6 @@ jobs:
         run: npm run test:integration
         env:
           NODE_ENV: test
-          CI: true
-          NODE_OPTIONS: '--max-old-space-size=4096'
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
 
   e2e-tests:
     name: End-to-End Tests
@@ -93,11 +97,6 @@ jobs:
 
       - name: Build frontend
         run: npm run build
-        env:
-          NODE_OPTIONS: '--max-old-space-size=4096'
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
 
       - name: Start frontend server
         uses: ./.github/actions/start-server-with-healthcheck
@@ -109,16 +108,31 @@ jobs:
 
       - name: Run Playwright tests
         run: npm run test:e2e
-        env:
-          CI: true
-          NODE_OPTIONS: '--max-old-space-size=4096'
 
       - name: Cleanup server process
         if: always()
         run: |
           if [ ! -z "$SERVER_PID" ]; then
-            kill $SERVER_PID 2>/dev/null || true
-            echo "Server process $SERVER_PID terminated"
+            # Check if process exists before killing
+            if kill -0 $SERVER_PID 2>/dev/null; then
+              echo "Terminating server process $SERVER_PID..."
+              kill $SERVER_PID 2>/dev/null
+              # Wait up to 5 seconds for graceful shutdown
+              for i in {1..5}; do
+                if ! kill -0 $SERVER_PID 2>/dev/null; then
+                  echo "Server process $SERVER_PID terminated gracefully"
+                  break
+                fi
+                sleep 1
+              done
+              # Force kill if still running
+              if kill -0 $SERVER_PID 2>/dev/null; then
+                echo "Force killing server process $SERVER_PID..."
+                kill -9 $SERVER_PID 2>/dev/null || true
+              fi
+            else
+              echo "Server process $SERVER_PID already terminated"
+            fi
           fi
 
       - name: Upload Playwright report
@@ -154,11 +168,6 @@ jobs:
 
       - name: Build frontend
         run: npm run build
-        env:
-          NODE_OPTIONS: '--max-old-space-size=4096'
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
 
       - name: Start frontend server
         uses: ./.github/actions/start-server-with-healthcheck
@@ -171,30 +180,42 @@ jobs:
       - name: Run accessibility tests - Desktop
         run: timeout 600 npm run test:accessibility:desktop
         env:
-          CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
-          NODE_OPTIONS: '--max-old-space-size=4096'
 
       - name: Run accessibility tests - Tablet
         run: timeout 600 npm run test:accessibility:tablet
         env:
-          CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
-          NODE_OPTIONS: '--max-old-space-size=4096'
 
       - name: Run accessibility tests - Mobile
         run: timeout 600 npm run test:accessibility:mobile
         env:
-          CI: true
           PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
-          NODE_OPTIONS: '--max-old-space-size=4096'
 
       - name: Cleanup server process
         if: always()
         run: |
           if [ ! -z "$SERVER_PID" ]; then
-            kill $SERVER_PID 2>/dev/null || true
-            echo "Server process $SERVER_PID terminated"
+            # Check if process exists before killing
+            if kill -0 $SERVER_PID 2>/dev/null; then
+              echo "Terminating server process $SERVER_PID..."
+              kill $SERVER_PID 2>/dev/null
+              # Wait up to 5 seconds for graceful shutdown
+              for i in {1..5}; do
+                if ! kill -0 $SERVER_PID 2>/dev/null; then
+                  echo "Server process $SERVER_PID terminated gracefully"
+                  break
+                fi
+                sleep 1
+              done
+              # Force kill if still running
+              if kill -0 $SERVER_PID 2>/dev/null; then
+                echo "Force killing server process $SERVER_PID..."
+                kill -9 $SERVER_PID 2>/dev/null || true
+              fi
+            else
+              echo "Server process $SERVER_PID already terminated"
+            fi
           fi
 
       - name: Upload accessibility test report
@@ -230,11 +251,6 @@ jobs:
 
       - name: Build frontend
         run: npm run build
-        env:
-          NODE_OPTIONS: '--max-old-space-size=4096'
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
 
       - name: Start frontend server
         uses: ./.github/actions/start-server-with-healthcheck
@@ -251,8 +267,26 @@ jobs:
         if: always()
         run: |
           if [ ! -z "$SERVER_PID" ]; then
-            kill $SERVER_PID 2>/dev/null || true
-            echo "Server process $SERVER_PID terminated"
+            # Check if process exists before killing
+            if kill -0 $SERVER_PID 2>/dev/null; then
+              echo "Terminating server process $SERVER_PID..."
+              kill $SERVER_PID 2>/dev/null
+              # Wait up to 5 seconds for graceful shutdown
+              for i in {1..5}; do
+                if ! kill -0 $SERVER_PID 2>/dev/null; then
+                  echo "Server process $SERVER_PID terminated gracefully"
+                  break
+                fi
+                sleep 1
+              done
+              # Force kill if still running
+              if kill -0 $SERVER_PID 2>/dev/null; then
+                echo "Force killing server process $SERVER_PID..."
+                kill -9 $SERVER_PID 2>/dev/null || true
+              fi
+            else
+              echo "Server process $SERVER_PID already terminated"
+            fi
           fi
 
       - name: Upload performance results
