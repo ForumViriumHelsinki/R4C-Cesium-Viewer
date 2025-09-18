@@ -60,7 +60,12 @@ export default defineConfig( () => {
 		server: {
 			proxy: {
 				'/pygeoapi': {
-					target: (process.env.VITE_PYGEOAPI_URL || 'https://pygeoapi.dataportal.fi').replace(/\/$/, '') + '/',
+					// Derive URL from HOST - use http for localhost development, https for production
+					target: (() => {
+						const host = process.env.VITE_PYGEOAPI_HOST || 'pygeoapi.dataportal.fi';
+						const protocol = host.startsWith('localhost:') ? 'http' : 'https';
+						return `${protocol}://${host}/`;
+					})(),
 					changeOrigin: true,
 					secure: false,
 					rewrite: ( path ) => path.replace( /^\/pygeoapi/, '' ),

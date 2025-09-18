@@ -12,14 +12,14 @@ cp .env.example .env
 
 ### PygeoAPI Configuration
 
-The PygeoAPI URL can be configured via environment variables:
+The PygeoAPI host can be configured via environment variable:
 
-- `VITE_PYGEOAPI_URL`: The URL for the PygeoAPI service (default: `https://pygeoapi.dataportal.fi/`)
-- `VITE_PYGEOAPI_HOST`: The host header for nginx proxy (default: `pygeoapi.dataportal.fi`)
+- `VITE_PYGEOAPI_HOST`: The PygeoAPI host (default: `pygeoapi.dataportal.fi`)
+  - For production hosts (without port), HTTPS protocol is used automatically
+  - For localhost with port (e.g., `localhost:5000`), HTTP protocol is used automatically
 
 For development, you can point to a local PygeoAPI instance:
 ```bash
-VITE_PYGEOAPI_URL=http://localhost:5000/
 VITE_PYGEOAPI_HOST=localhost:5000
 ```
 
