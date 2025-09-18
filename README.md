@@ -2,6 +2,27 @@
 
 R4C user interface Vue3 interface with Vite and Cesium
 
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure your environment variables:
+
+```bash
+cp .env.example .env
+```
+
+### PygeoAPI Configuration
+
+The PygeoAPI host can be configured via environment variable:
+
+- `VITE_PYGEOAPI_HOST`: The PygeoAPI host (default: `pygeoapi.dataportal.fi`)
+  - For production hosts (without port), HTTPS protocol is used automatically
+  - For localhost with port (e.g., `localhost:5000`), HTTP protocol is used automatically
+
+For development, you can point to a local PygeoAPI instance:
+```bash
+VITE_PYGEOAPI_HOST=localhost:5000
+```
+
 ## Run with Vite
 
 ```

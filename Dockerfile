@@ -2,7 +2,9 @@ FROM node:23-alpine AS build
 
 ARG SENTRY_AUTH_TOKEN
 ARG VITE_SENTRY_DSN
+ARG VITE_PYGEOAPI_HOST=pygeoapi.dataportal.fi
 ENV VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
+ENV VITE_PYGEOAPI_HOST=${VITE_PYGEOAPI_HOST}
 
 WORKDIR /app
 
@@ -23,6 +25,9 @@ RUN apt-get update && apt-get install -y \
     && chmod +x /usr/local/bin/dbmate \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Set default value for nginx environment variable
+ENV VITE_PYGEOAPI_HOST=pygeoapi.dataportal.fi
 
 # Copy built frontend
 COPY --link --from=build /app/dist/ /usr/share/nginx/html

@@ -224,6 +224,43 @@ Tests run automatically on:
 npm run test:ci
 ```
 
+#### Required Environment Variables
+
+The following environment variables are required for running tests in CI/CD:
+
+| Variable | Description | Required For | Example |
+|----------|-------------|--------------|---------|
+| `NODE_ENV` | Environment mode | All tests | `test` |
+| `CI` | Indicates CI environment | All tests | `true` |
+| `NODE_OPTIONS` | Node.js runtime options | All tests | `--max-old-space-size=4096` |
+| `SENTRY_AUTH_TOKEN` | Sentry authentication token | Build & Integration tests | `secret` |
+| `VITE_SENTRY_DSN` | Sentry DSN for error tracking | Build & Integration tests | `https://...@sentry.io/...` |
+| `VITE_DIGITRANSIT_KEY` | Digitransit API key | Build & Integration tests | `your-api-key` |
+
+**Setting up for local testing:**
+
+```bash
+# Create a .env.test file with required variables
+cat > .env.test << EOF
+NODE_ENV=test
+CI=true
+NODE_OPTIONS=--max-old-space-size=4096
+SENTRY_AUTH_TOKEN=your-token-here
+VITE_SENTRY_DSN=your-dsn-here
+VITE_DIGITRANSIT_KEY=your-key-here
+EOF
+
+# Source the environment variables
+source .env.test
+```
+
+**GitHub Actions Secrets:**
+
+These secrets must be configured in GitHub repository settings:
+- `SENTRY_AUTH_TOKEN` - Required for source map uploads
+- `SENTRY_DSN` - Error tracking endpoint
+- `DIGITRANSIT_KEY` - Transit data API access
+
 ## Test Data and Mocking
 
 ### Mock Strategy
