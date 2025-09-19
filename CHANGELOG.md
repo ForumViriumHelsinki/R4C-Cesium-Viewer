@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.23.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.0...r4c-cesium-viewer-v1.23.0) (2025-09-19)
+
+
+### Features
+
+* add comprehensive test suite with CI/CD pipeline ([d20a105](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d20a1056640cee2476f336b730a15cb2ef89709f))
+* make PygeoAPI URL configurable via environment variables ([#199](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/199)) ([6b92f47](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6b92f47893eac7921627e594fec375cf0279bfbd))
+
+
+### Bug Fixes
+
+* resolve nginx configuration syntax error in pygeoapi proxy ([#201](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/201)) ([8655cca](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8655cca25e0a4ad4f9fdce66e037f539cb47a9d8))
+
 ## [1.22.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.21.0...r4c-cesium-viewer-v1.22.0) (2025-08-29)
 
 
