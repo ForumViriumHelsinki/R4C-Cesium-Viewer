@@ -49,8 +49,16 @@ server {
     }
 
     location /pygeoapi/ {
-        proxy_pass https://pygeoapi.dataportal.fi/;
-        proxy_set_header Host pygeoapi.dataportal.fi;
+        # Store the host in a variable first
+        set $pygeoapi_host "${VITE_PYGEOAPI_HOST}";
+
+        # Derive protocol based on port - use http for localhost development ports, https otherwise
+        set $pygeoapi_protocol "https";
+        if ($pygeoapi_host ~* "^localhost:[0-9]+$") {
+            set $pygeoapi_protocol "http";
+        }
+        proxy_pass $pygeoapi_protocol://$pygeoapi_host/;
+        proxy_set_header Host $pygeoapi_host;
         rewrite ^/pygeoapi/(.*)$ /$1 break;
     }
 

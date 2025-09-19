@@ -13,6 +13,10 @@ secrets:
     dsn: ""
     auth_token: ""
 
+vite:
+  # PygeoAPI host (defaults to production)
+  pygeoapi_host: "pygeoapi.dataportal.fi"
+
 image:
   repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
   pullPolicy: IfNotPresent
