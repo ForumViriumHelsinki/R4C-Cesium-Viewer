@@ -111,7 +111,7 @@ export default defineConfig( () => {
 					target: 'https://storage.googleapis.com',
 					changeOrigin: true,
 					secure: false,
-					rewrite: ( path ) => path.replace( /^\/wms\/proxy/, '/ndvi_public' ),
+					rewrite: ( path ) => path.replace( /^\/ndvi_public/, '/ndvi_public' ),
 				},				
 				'/terrain-proxy': {
 					target: 'https://kartta.hel.fi',
@@ -139,10 +139,33 @@ export default defineConfig( () => {
 					target: 'https://api.digitransit.fi',
 					changeOrigin: true,
 					secure: false,
-					headers: {
+					headers: process.env.VITE_DIGITRANSIT_KEY ? {
 						'digitransit-subscription-key': process.env.VITE_DIGITRANSIT_KEY
+					} : {},
+					rewrite: ( path ) => path.replace( /^\/digitransit/, '' ),
+					configure: (proxy, options) => {
+						// Log warning if API key is missing
+						if (!process.env.VITE_DIGITRANSIT_KEY) {
+							console.warn('⚠️  VITE_DIGITRANSIT_KEY not set - digitransit API calls may fail or be rate limited');
+						}
+					}
+				},
+				'/hsy-action': {
+					target: 'https://kartta.hsy.fi',
+					changeOrigin: true,
+					secure: false,
+					rewrite: ( path ) => path.replace( /^\/hsy-action/, '/action' ),
+					configure: ( proxy, _options ) => {
+						proxy.on( 'error', ( err, _req, _res ) => {
+							console.log( 'HSY action proxy error', err );
+						} );
+						proxy.on( 'proxyReq', ( proxyReq, req, _res ) => {
+							console.log( 'Sending HSY Action Request:', req.method, req.url );
+						} );
+						proxy.on( 'proxyRes', ( proxyRes, req, _res ) => {
+							console.log( 'Received HSY Action Response:', proxyRes.statusCode, req.url );
+						} );
 					},
-					rewrite: ( path ) => path.replace( /^\/digitransit/, '' )
 				}
 			}
 		}

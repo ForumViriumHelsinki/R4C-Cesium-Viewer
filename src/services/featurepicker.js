@@ -45,6 +45,7 @@ export default class FeaturePicker {
     */
 	processClick( event ) {
 
+		console.log('[FeaturePicker] 🖱️ Processing click at coordinates:', event.x, event.y);
     	this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
   	
 	}    
@@ -56,7 +57,9 @@ export default class FeaturePicker {
     * @param { String } windowPosition - The window position to pick the entity
     */
 	pickEntity( windowPosition ) {
+		console.log('[FeaturePicker] 🎯 Picking entity at window position:', windowPosition);
 		let picked = this.viewer.scene.pick( windowPosition );
+		console.log('[FeaturePicker] Picked object:', picked);
 
 		if ( picked ) {
            
@@ -81,6 +84,9 @@ export default class FeaturePicker {
 	}
   
 	async loadPostalCode() {
+		
+		console.log('[FeaturePicker] 🚀 Loading postal code:', this.store.postalcode);
+		console.log('[FeaturePicker] Helsinki view mode:', this.toggleStore.helsinkiView);
 
 		this.setNameOfZone();
 		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
@@ -90,15 +96,18 @@ export default class FeaturePicker {
 
 		//	this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
 		//	this.elementsDisplayService.setCapitalRegionElementsDisplay( 'inline-block' );
+			console.log('[FeaturePicker] Loading Capital Region elements (including buildings)...');
 			await this.capitalRegionService.loadCapitalRegionElements();
 
 		} else {
         
+			console.log('[FeaturePicker] Loading Helsinki elements (including buildings)...');
 			this.helsinkiService.loadHelsinkiElements();
     
 		}
 
 		this.store.setLevel( 'postalCode' );
+		console.log('[FeaturePicker] ✅ Postal code loading complete');
 
   
 	}
@@ -119,16 +128,38 @@ if (Array.isArray(entitiesArray)) {
 
 	}
     
-	handleBuildingFeature( properties ) {
+	async handleBuildingFeature( properties ) {
+		// Show loading indicator for building selection
+		try {
+			const { useLoadingStore } = await import('../stores/loadingStore.js');
+			const loadingStore = useLoadingStore();
+			loadingStore.startLoading('building-selection', 'Loading building information...');
+		} catch (error) {
+			console.warn('Loading store not available:', error);
+		}
 
-		this.store.setLevel( 'building' );
-		this.store.setPostalCode( properties._postinumero._value );
-		this.toggleStore.helsinkiView ? eventBus.emit( 'hideHelsinki' ) : eventBus.emit( 'hideCapitalRegion' );
-		eventBus.emit( 'showBuilding' );
-		this.elementsDisplayService.setBuildingDisplay( 'none' );
-		this.buildingService.resetBuildingOutline();
-		this.buildingService.createBuildingCharts( properties.treeArea, properties._avg_temp_c, properties );
-
+		try {
+			this.store.setLevel( 'building' );
+			this.store.setPostalCode( properties._postinumero._value );
+			this.toggleStore.helsinkiView ? eventBus.emit( 'hideHelsinki' ) : eventBus.emit( 'hideCapitalRegion' );
+			eventBus.emit( 'showBuilding' );
+			this.elementsDisplayService.setBuildingDisplay( 'none' );
+			this.buildingService.resetBuildingOutline();
+			
+			// Process building charts asynchronously
+			await this.buildingService.createBuildingCharts( properties.treeArea, properties._avg_temp_c, properties );
+		} catch (error) {
+			console.error('Error handling building feature:', error);
+		} finally {
+			// Hide loading indicator
+			try {
+				const { useLoadingStore } = await import('../stores/loadingStore.js');
+				const loadingStore = useLoadingStore();
+				loadingStore.stopLoading('building-selection');
+			} catch (error) {
+				console.warn('Loading store not available for cleanup:', error);
+			}
+		}
 	}
 
 	removeEntityByName( name ) {
@@ -150,6 +181,9 @@ if (Array.isArray(entitiesArray)) {
      */
 	handleFeatureWithProperties( id ) {       
         
+		console.log('[FeaturePicker] Clicked feature properties:', id.properties);
+		console.log('[FeaturePicker] Current level:', this.store.level);
+		
 		this.removeEntityByName( 'coldpoint' );
 		this.removeEntityByName( 'currentLocation' );
 		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
@@ -184,11 +218,27 @@ if (Array.isArray(entitiesArray)) {
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
 		if ( id.properties.posno && this.store.level != 'building' ) {
             
-			this.store.setPostalCode( id.properties.posno._value );
-			this.cameraService.switchTo3DView();
-			this.elementsDisplayService.setViewDisplay( 'none' );
-			this.loadPostalCode();
+			const newPostalCode = id.properties.posno._value;
+			const currentPostalCode = this.store.postalcode;
+			
+			console.log('[FeaturePicker] ✓ Postal code detected:', newPostalCode);
+			console.log('[FeaturePicker] Current postal code:', currentPostalCode);
+			
+			// Allow switching between postal codes or loading a new one
+			if (newPostalCode !== currentPostalCode || this.store.level === 'start') {
+				console.log('[FeaturePicker] Triggering postal code loading...');
+				this.store.setPostalCode( newPostalCode );
+				this.cameraService.switchTo3DView();
+				this.elementsDisplayService.setViewDisplay( 'none' );
+				this.loadPostalCode();
+			} else {
+				console.log('[FeaturePicker] ⚠️ Same postal code already selected, skipping reload');
+			}
     
+		} else if (id.properties.posno) {
+			console.log('[FeaturePicker] ⚠️ Postal code found but current level is building, skipping load');
+		} else {
+			console.log('[FeaturePicker] ⚠️ No postal code property (posno) found in clicked feature');
 		}
     
 		if ( id.properties.asukkaita ) {

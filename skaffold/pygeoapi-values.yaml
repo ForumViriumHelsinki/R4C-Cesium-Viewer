@@ -1,0 +1,40 @@
+# pygeoapi configuration for local development
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Database connection (connects to local PostgreSQL)
+database:
+  host: "postgresql"
+  nameR4C: "regions4climate"
+  nameMedIren: "med_iren"
+  user: "regions4climate_user"
+  password: "regions4climate_pass"
+
+# Resource limits for local development
+resources:
+  limits:
+    cpu: 250m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# Disable ingress for local development
+ingress:
+  enabled: false
+
+# Disable any production-specific features
+podAnnotations: {}
+
+serviceAccount:
+  annotations: {}
+
+# Volume configuration (disable GCS volumes for local)
+volumes: []
+volumeMounts: []
+
+# Use the existing configmap from the root directory
+# The pygeoapi chart should pick up the configmap.yaml configuration
