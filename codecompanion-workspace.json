@@ -1,0 +1,173 @@
+{
+  "name": "R4C-Cesium-Viewer",
+  "version": "1.0.0",
+  "system_prompt": "You're assisting with an R4C-Cesium-Viewer project, which is a demo tool for visualizing heat risk and socioeconomic vulnerability related to climate change adaptation. The tool also highlights the role of green infrastructure in mitigating these risks. Note that the visualizations offer general indications only and should not be used for actual planning decisions. The primary users are researchers and government employees.",
+  "groups": [
+    {
+      "name": "Project Overview",
+      "system_prompt": "This group contains core files that define the overall structure and configuration of the R4C-Cesium-Viewer application. Use these files to understand the application architecture, main dependencies, and entry points.",
+      "data": ["main_app", "app_configuration", "main_viewer", "control_panel"]
+    },
+    {
+      "name": "Heat Risk Visualization",
+      "system_prompt": "This group focuses on the heat risk visualization features of the application. These files handle the display and analysis of urban heat, heat exposure metrics, and related data visualization components.",
+      "data": [
+        "heat_components",
+        "heat_services",
+        "heat_stores",
+        "heat_scripts"
+      ]
+    },
+    {
+      "name": "Socioeconomic Vulnerability",
+      "system_prompt": "This group includes components and services for analyzing and visualizing socioeconomic vulnerability data. These files help users understand the relationship between socioeconomic factors and climate risks.",
+      "data": [
+        "socioeconomic_components",
+        "socioeconomic_services",
+        "socioeconomic_stores"
+      ]
+    },
+    {
+      "name": "Green Infrastructure",
+      "system_prompt": "This group contains files related to green infrastructure visualization and analysis, including trees, vegetation coverage, and other natural elements that can mitigate heat risks.",
+      "data": [
+        "tree_components",
+        "vegetation_services",
+        "landcover_views",
+        "nature_scripts"
+      ]
+    },
+    {
+      "name": "Data Services",
+      "system_prompt": "This group includes core data services that power the application's functionality, including data fetching, processing, and manipulation of geographic and statistical data.",
+      "data": ["core_services", "data_processing", "geocoding"]
+    },
+    {
+      "name": "Documentation",
+      "system_prompt": "This group contains documentation files that explain various features and components of the application.",
+      "data": ["readme", "feature_docs"]
+    },
+    {
+      "name": "Deployment",
+      "system_prompt": "This group includes files related to the application's deployment, including Docker configurations, Helm charts, and CI/CD workflows.",
+      "data": ["docker_config", "helm_charts", "ci_cd"]
+    }
+  ],
+  "data": {
+    "main_app": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/App.vue",
+      "description": "Main Vue application component that defines the overall layout and structure of the application."
+    },
+    "app_configuration": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/vite.config.js",
+      "description": "Vite configuration file that defines build settings and dependencies for the application."
+    },
+    "main_viewer": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/pages/CesiumViewer.vue",
+      "description": "Main Cesium viewer component that handles the 3D visualization of geographic data."
+    },
+    "control_panel": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/pages/ControlPanel.vue",
+      "description": "Control panel component that provides user interface controls for the visualization."
+    },
+    "heat_components": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/components/BuildingHeatChart.vue",
+      "description": "Component for visualizing heat-related data for buildings."
+    },
+    "heat_services": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/services/urbanheat.js",
+      "description": "Service for handling urban heat data and calculations."
+    },
+    "heat_stores": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/stores/heatExposureStore.js",
+      "description": "Store for managing heat exposure data and state."
+    },
+    "heat_scripts": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/scripts/heat_exposure/calculate_and_insert.py",
+      "description": "Python script for calculating and inserting heat exposure data."
+    },
+    "socioeconomic_components": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/components/SocioEconomicsChart.vue",
+      "description": "Component for visualizing socioeconomic data."
+    },
+    "socioeconomic_services": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/services/populationgrid.js",
+      "description": "Service for handling population grid data related to socioeconomic analysis."
+    },
+    "socioeconomic_stores": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/stores/socioEconomicsStore.js",
+      "description": "Store for managing socioeconomic data and state."
+    },
+    "tree_components": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/components/BuildingTreeChart.vue",
+      "description": "Component for visualizing tree data related to buildings."
+    },
+    "vegetation_services": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/services/vegetation.js",
+      "description": "Service for handling vegetation data and calculations."
+    },
+    "landcover_views": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/views/Landcover.vue",
+      "description": "View for visualizing land cover data related to green infrastructure."
+    },
+    "nature_scripts": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/scripts/hsytrees/gcloudtrees.py",
+      "description": "Python script for processing tree data."
+    },
+    "core_services": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/services/datasource.js",
+      "description": "Core service for handling data sources within the application."
+    },
+    "data_processing": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/services/decoding.js",
+      "description": "Service for decoding and processing data within the application."
+    },
+    "geocoding": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/src/services/geocoding.js",
+      "description": "Service for handling geocoding functionality."
+    },
+    "readme": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/README.md",
+      "description": "Main README file providing an overview of the project."
+    },
+    "feature_docs": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/docs/SocioEconomicsChart/README.md",
+      "description": "Documentation for the socioeconomics chart feature."
+    },
+    "docker_config": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/Dockerfile",
+      "description": "Docker configuration for containerizing the application."
+    },
+    "helm_charts": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/helm/Chart.yaml",
+      "description": "Helm chart for Kubernetes deployment."
+    },
+    "ci_cd": {
+      "type": "file",
+      "path": "~/repos/R4C-Cesium-Viewer/skaffold.yaml",
+      "description": "Skaffold configuration for continuous deployment."
+    }
+  }
+}

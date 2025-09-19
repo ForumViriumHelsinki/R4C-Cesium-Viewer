@@ -4,6 +4,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 import { useURLStore } from '../stores/urlStore.js';
+import unifiedLoader from './unifiedLoader.js';
 
 export default class Tree {
 	constructor( ) {
@@ -13,59 +14,137 @@ export default class Tree {
 	}
 
 	/**
- * Asynchronously load tree data from an API endpoint based on postcode
- * 
- */
-	async loadTrees( ) {
-		
-		this.store.setIsLoading( true );
-		await this.loadTreesWithKoodi('221');
-		await this.loadTreesWithKoodi('222');
-		await this.loadTreesWithKoodi('223');
-		await this.loadTreesWithKoodi('224');
-
+	 * Asynchronously load tree data using unified loader with coordinated parallel loading
+	 */
+	async loadTrees() {
+		try {
+			// Define all tree height categories
+			const koodis = ['221', '222', '223', '224'];
+			
+			// Create loading configurations for parallel execution
+			const loadingConfigs = koodis.map(koodi => ({
+				layerId: `trees_${koodi}`,
+				url: this.urlStore.tree(this.store.postalcode, koodi),
+				type: 'geojson',
+				processor: (data, metadata) => this.addTreesDataSource(data, koodi, metadata),
+				options: {
+					cache: true,
+					cacheTTL: 25 * 60 * 1000, // 25 minutes (trees change less frequently)
+					retries: 2,
+					batchSize: 30,
+					progressive: true,
+					priority: 'high' // Trees are important for cooling analysis
+				}
+			}));
+			
+			// Load all tree types in parallel using unified loader
+			const results = await unifiedLoader.loadLayers(loadingConfigs);
+			
+			// Check results and log success/failures
+			const successful = results.filter(r => r.status === 'fulfilled').length;
+			const failed = results.length - successful;
+			
+			if (failed === 0) {
+				console.log(`✓ All ${successful} tree height categories loaded successfully`);
+			} else {
+				console.warn(`⚠ ${successful}/${results.length} tree categories loaded, ${failed} failed`);
+			}
+			
+			return results;
+			
+		} catch (error) {
+			console.error('Failed to load tree data:', error);
+			throw error;
+		}
 	}
 
-	async loadTreesWithKoodi( koodi ) {
-
-		console.log( "tree", this.urlStore.tree( this.store.postalcode, koodi ) );
-
-		fetch( this.urlStore.tree( this.store.postalcode, koodi ) )
-			.then( ( response ) => response.json() )
-			.then( ( data ) => {
-				this.addTreesDataSource( data, koodi );
-			} )
-			.catch( ( error ) => {
-				console.log( 'Error loading trees:', error );
-			} );
+	/**
+	 * Legacy method maintained for backward compatibility
+	 * @deprecated Use loadTrees() instead for unified loading
+	 */
+	async loadTreesWithKoodi(koodi) {
+		console.warn('loadTreesWithKoodi is deprecated, use loadTrees() instead');
+		
+		try {
+			const data = await unifiedLoader.loadLayer({
+				layerId: `trees_${koodi}`,
+				url: this.urlStore.tree(this.store.postalcode, koodi),
+				type: 'geojson',
+				processor: (data, metadata) => this.addTreesDataSource(data, koodi, metadata),
+				options: {
+					cache: true,
+					retries: 2,
+					batchSize: 30
+				}
+			});
+			
+			console.log(`✓ Loaded trees for height category ${koodi}`);
+			return data;
+			
+		} catch (error) {
+			console.error(`Failed to load trees for koodi ${koodi}:`, error);
+			throw error;
+		}
 	}	
 
 	/**
- * Add the tree data as a new data source to the Cesium
- * 
- * @param { object } data tree data
- */
-	async addTreesDataSource( data, koodi ) {
-	
-		let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Trees' + koodi );
+	 * Add the tree data as a new data source to Cesium with optimized batch processing
+	 * 
+	 * @param {Object} data - Tree data from API
+	 * @param {string} koodi - Tree height category code
+	 * @param {Object} metadata - Loading metadata from unified loader
+	 */
+	async addTreesDataSource(data, koodi, metadata = {}) {
+		try {
+			const entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Trees' + koodi);
 
-		// Iterate over each entity in the data source and set its polygon material color based on the tree description
-		for ( let i = 0; i < entities.length; i++ ) {
+			// Enhanced batch processing with adaptive batch sizes
+			const adaptiveBatchSize = entities.length > 1000 ? 15 : 25;
+			let processed = 0;
 			
-			let entity = entities[ i ];
-			const description = entity.properties._kuvaus._value;
-			this.setTreePolygonMaterialColor( entity, description );
+			for (let i = 0; i < entities.length; i += adaptiveBatchSize) {
+				const batch = entities.slice(i, i + adaptiveBatchSize);
+				
+				// Process batch with improved error handling
+				for (const entity of batch) {
+					try {
+						const description = entity.properties._kuvaus?._value;
+						if (description) {
+							this.setTreePolygonMaterialColor(entity, description);
+						}
+						processed++;
+					} catch (entityError) {
+						console.warn(`Error processing tree entity in koodi ${koodi}:`, entityError);
+					}
+				}
+				
+				// Yield control with improved scheduling
+				if (i + adaptiveBatchSize < entities.length) {
+					await new Promise(resolve => {
+						if (window.requestIdleCallback) {
+							requestIdleCallback(resolve, { timeout: 50 });
+						} else {
+							setTimeout(resolve, 0);
+						}
+					});
+				}
+			}
 
-		}
-
-		if ( this.view === 'helsinki' ) {
+			// Handle Helsinki-specific tree distance data
+			if (this.store.view === 'helsinki') {
+				this.fetchAndAddTreeDistanceData(entities);
+			}
 			
-			this.fetchAndAddTreeDistanceData( entities );
-
+			if (!metadata.fromCache) {
+				console.log(`✓ Processed ${processed} trees for height category ${koodi}`);
+			} else {
+				console.log(`✓ Restored ${processed} trees from cache for category ${koodi}`);
+			}
+			
+		} catch (error) {
+			console.error(`Error processing tree data for koodi ${koodi}:`, error);
+			throw error;
 		}
-
-		koodi === '224' && this.store.setIsLoading( false );
-
 	}
 
 	/**

@@ -14,149 +14,370 @@
  * - Geocoding (universal)
  */
 
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
 import AccessibilityTestHelpers from '../helpers/test-helpers';
 
-test.describe('Expansion Panels Accessibility', () => {
+cesiumDescribe('Expansion Panels Accessibility', () => {
   let helpers: AccessibilityTestHelpers;
 
-  test.beforeEach(async ({ page }) => {
-    helpers = new AccessibilityTestHelpers(page);
-    await page.goto('/');
-    await helpers.waitForCesiumReady();
+  cesiumTest.beforeEach(async ({ cesiumPage }) => {
+    helpers = new AccessibilityTestHelpers(cesiumPage);
+    // Cesium is already initialized by the fixture
   });
 
-  test.describe('Universal Expansion Panels', () => {
-    test('should always display HSY and Syke background map panels', async ({ page }) => {
-      // HSY Background maps
-      await expect(page.getByText('HSY Background maps')).toBeVisible();
+  cesiumTest.describe('Universal Expansion Panels', () => {
+    cesiumTest('should display HSY Background maps panel in all contexts', async ({ cesiumPage }) => {
+      // Available in all views and levels
+      await expect(cesiumPage.getByText('HSY Background maps')).toBeVisible();
       
-      // Syke Flood Background Maps  
-      await expect(page.getByText('Syke Flood Background Maps')).toBeVisible();
-      
-      // Geocoding
-      await expect(page.getByText('Geocoding')).toBeVisible();
-      
-      // Should remain visible across views
-      await helpers.navigateToView('gridView');
-      await expect(page.getByText('HSY Background maps')).toBeVisible();
-      await expect(page.getByText('Syke Flood Background Maps')).toBeVisible();
-      await expect(page.getByText('Geocoding')).toBeVisible();
-    });
-
-    test('should allow expansion panel interactions', async ({ page }) => {
-      await helpers.testExpansionPanels();
-    });
-  });
-
-  test.describe('View-Specific Expansion Panels', () => {
-    test('should show Statistical grid options only in grid view', async ({ page }) => {
-      // Not visible in Capital Region view
-      await helpers.navigateToView('capitalRegionView');
-      await expect(page.getByText('Statistical grid options')).not.toBeVisible();
-      
-      // Should be visible in Grid view
-      await helpers.navigateToView('gridView');
-      await expect(page.getByText('Statistical grid options')).toBeVisible();
-    });
-
-    test('should show NDVI panel in non-grid views', async ({ page }) => {
-      // Should be visible in Capital Region view
-      await helpers.navigateToView('capitalRegionView');
-      await expect(page.getByText('NDVI', { exact: true })).toBeVisible();
-      
-      // Should not be visible in Grid view
-      await helpers.navigateToView('gridView');
-      await expect(page.getByText('NDVI', { exact: true })).not.toBeVisible();
-    });
-
-    test('should show Cooling Centers panel in grid view with heat index', async ({ page }) => {
-      await helpers.navigateToView('gridView');
-      
-      // Cooling centers panel visibility depends on statsIndex = 'heat_index'
-      // We test the conditional structure exists
-      const coolingCenters = page.getByText('Manage Cooling Centers');
-      
-      // If visible, should be functional
-      if (await coolingCenters.isVisible()) {
-        await expect(coolingCenters).toBeVisible();
-      }
-    });
-  });
-
-  test.describe('Level-Specific Expansion Panels', () => {
-    test('should show postal code specific panels', async ({ page }) => {
-      await helpers.drillToLevel('postalCode');
-      // Wait for postal code level to be active by checking for specific elements
-      await page.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 });
-      
-      // Should show postal code level panels
-      await expect(page.getByText('Building Scatter Plot')).toBeVisible();
-      await expect(page.getByText('Area properties')).toBeVisible();
-      
-      // Data-dependent panels (if data available)
-      const heatHistogram = page.getByText('Heat Histogram');
-      const socioEconomics = page.getByText('Socioeconomics Diagram');
-      const landCover = page.getByText('Land Cover');
-      
-      // Test visibility if present
-      if (await heatHistogram.isVisible()) {
-        await expect(heatHistogram).toBeVisible();
-      }
-      if (await socioEconomics.isVisible()) {
-        await expect(socioEconomics).toBeVisible();
-      }
-      if (await landCover.isVisible()) {
-        await expect(landCover).toBeVisible();
-      }
-    });
-
-    test('should show building specific panels', async ({ page }) => {
-      await helpers.drillToLevel('building');
-      // Wait for building level to be active by checking for building-specific elements
-      await page.waitForSelector('text="Building heat data"', { timeout: 15000 });
-      
-      // Should show building level panels
-      await expect(page.getByText('Building heat data')).toBeVisible();
-      await expect(page.getByText('Building properties')).toBeVisible();
-    });
-  });
-
-  test.describe('Panel Interaction and State', () => {
-    test('should handle panel expansion and collapse', async ({ page }) => {
-      // Test expanding a universal panel
-      const hsyPanel = page.getByText('HSY Background maps');
+      // Test expansion
+      const hsyPanel = cesiumPage.getByText('HSY Background maps');
       await hsyPanel.click();
-      // Wait for panel expansion animation to complete
-      await page.waitForFunction(() => {
-        const panel = document.querySelector('.v-expansion-panel-text');
-        return panel && getComputedStyle(panel).display !== 'none';
-      }, { timeout: 2000 }).catch(() => {});
       
-      // Should expand (test for panel content visibility)
-      const panelContent = hsyPanel.locator('..').locator('.v-expansion-panel-text');
-      if (await panelContent.isVisible()) {
-        await expect(panelContent).toBeVisible();
+      // Should reveal background map options
+      await expect(cesiumPage.getByText('Orthophoto')).toBeVisible();
+      await expect(cesiumPage.getByText('Map')).toBeVisible();
+      
+      // Collapse again
+      await hsyPanel.click();
+      await expect(cesiumPage.getByText('Orthophoto')).toBeHidden();
+    });
+
+    cesiumTest('should display Syke Flood Background Maps panel universally', async ({ cesiumPage }) => {
+      await expect(cesiumPage.getByText('Syke Flood Background Maps')).toBeVisible();
+      
+      const sykePanel = cesiumPage.getByText('Syke Flood Background Maps');
+      await sykePanel.click();
+      
+      // Should show flood scenario options
+      await expect(cesiumPage.getByText('Flood: 1/5a, Sea')).toBeVisible();
+      await expect(cesiumPage.getByText('Flood: 1/20a, Sea')).toBeVisible();
+      await expect(cesiumPage.getByText('Flood: 1/50a, Sea')).toBeVisible();
+      
+      await sykePanel.click();
+      await expect(cesiumPage.getByText('Flood: 1/5a, Sea')).toBeHidden();
+    });
+
+    cesiumTest('should display Geocoding panel in all contexts', async ({ cesiumPage }) => {
+      await expect(cesiumPage.getByText('Geocoding')).toBeVisible();
+      
+      const geocodingPanel = cesiumPage.getByText('Geocoding');
+      await geocodingPanel.click();
+      
+      // Should show search input
+      const searchInput = cesiumPage.getByPlaceholder('Search for a location');
+      await expect(searchInput).toBeVisible();
+      
+      // Test keyboard interaction
+      await searchInput.fill('Helsinki');
+      await cesiumPage.keyboard.press('Enter');
+      
+      await geocodingPanel.click();
+      await expect(searchInput).toBeHidden();
+    });
+  });
+
+  cesiumTest.describe('View-Specific Expansion Panels', () => {
+    cesiumTest('should show Statistical grid options only in Grid view', async ({ cesiumPage }) => {
+      // Not visible in Capital Region view
+      await expect(cesiumPage.getByText('Statistical grid options')).toBeHidden();
+      
+      // Switch to Grid view
+      await helpers.navigateToView('gridView');
+      
+      // Now visible
+      await expect(cesiumPage.getByText('Statistical grid options')).toBeVisible();
+      
+      // Test expansion
+      const gridOptionsPanel = cesiumPage.getByText('Statistical grid options');
+      await gridOptionsPanel.click();
+      
+      // Should show grid configuration options
+      await expect(cesiumPage.getByText('250m x 250m')).toBeVisible();
+      
+      await gridOptionsPanel.click();
+      await expect(cesiumPage.getByText('250m x 250m')).toBeHidden();
+    });
+
+    cesiumTest('should show Cooling Centers only in Grid view with heat index', async ({ cesiumPage }) => {
+      // Not visible in Capital Region view
+      await expect(cesiumPage.getByText('Manage Cooling Centers')).toBeHidden();
+      
+      // Switch to Grid view
+      await helpers.navigateToView('gridView');
+      
+      // Still might not be visible without heat_index data
+      // This depends on data availability
+      const coolingCenters = cesiumPage.getByText('Manage Cooling Centers');
+      if (await coolingCenters.isVisible()) {
+        await coolingCenters.click();
+        
+        // Should show cooling center management
+        await expect(cesiumPage.getByText('Add Cooling Center')).toBeVisible();
+        
+        await coolingCenters.click();
+        await expect(cesiumPage.getByText('Add Cooling Center')).toBeHidden();
       }
     });
 
-    test('should maintain panel states during navigation', async ({ page }) => {
-      // Expand a panel
-      const geocodingPanel = page.getByText('Geocoding');
-      await geocodingPanel.click();
-      // Wait for panel to expand
-      await page.waitForFunction(() => {
-        const panel = document.querySelector('.v-expansion-panel-text');
-        return panel && getComputedStyle(panel).display !== 'none';
-      }, { timeout: 2000 }).catch(() => {});
+    cesiumTest('should show NDVI panel only in non-Grid views', async ({ cesiumPage }) => {
+      // Visible in Capital Region view
+      await expect(cesiumPage.getByText('NDVI')).toBeVisible();
       
-      // Navigate to different level
+      const ndviPanel = cesiumPage.getByText('NDVI');
+      await ndviPanel.click();
+      
+      // Should show NDVI options
+      const ndviSlider = cesiumPage.locator('.ndvi-threshold-slider');
+      await expect(ndviSlider).toBeVisible();
+      
+      await ndviPanel.click();
+      await expect(ndviSlider).toBeHidden();
+      
+      // Switch to Grid view
+      await helpers.navigateToView('gridView');
+      
+      // NDVI panel should be hidden
+      await expect(cesiumPage.getByText('NDVI')).toBeHidden();
+    });
+  });
+
+  cesiumTest.describe('Level-Specific Expansion Panels', () => {
+    cesiumTest('should show Heat histogram at postal code level with data', async ({ cesiumPage }) => {
+      // Not visible at start level
+      await expect(cesiumPage.getByText('Heat histogram')).toBeHidden();
+      
+      // Navigate to postal code level
       await helpers.drillToLevel('postalCode');
-      // Wait for postal code level elements to be visible
-      await page.waitForSelector('text="Area properties"', { timeout: 10000 });
       
-      // Panel should still be accessible
-      await expect(geocodingPanel).toBeVisible();
+      // Should be visible if data is available
+      const heatHistogram = cesiumPage.getByText('Heat histogram');
+      if (await heatHistogram.isVisible()) {
+        await heatHistogram.click();
+        
+        // Should show histogram visualization
+        const histogramChart = cesiumPage.locator('.heat-histogram-chart');
+        await expect(histogramChart).toBeVisible();
+        
+        await heatHistogram.click();
+        await expect(histogramChart).toBeHidden();
+      }
+    });
+
+    cesiumTest('should show Socioeconomics panel at postal code level', async ({ cesiumPage }) => {
+      // Not visible at start level
+      await expect(cesiumPage.getByText('Socioeconomics')).toBeHidden();
+      
+      // Navigate to postal code level
+      await helpers.drillToLevel('postalCode');
+      
+      // Should be visible
+      const socioPanel = cesiumPage.getByText('Socioeconomics');
+      if (await socioPanel.isVisible()) {
+        await socioPanel.click();
+        
+        // Should show socioeconomic data
+        await expect(cesiumPage.getByText('Population')).toBeVisible();
+        
+        await socioPanel.click();
+        await expect(cesiumPage.getByText('Population')).toBeHidden();
+      }
+    });
+
+    cesiumTest('should show Land cover at postal code level outside Helsinki', async ({ cesiumPage }) => {
+      // Navigate to postal code level
+      await helpers.drillToLevel('postalCode');
+      
+      // Land cover visibility depends on location
+      const landCoverPanel = cesiumPage.getByText('Land cover');
+      if (await landCoverPanel.isVisible()) {
+        await landCoverPanel.click();
+        
+        // Should show land cover data
+        const landCoverChart = cesiumPage.locator('.land-cover-chart');
+        await expect(landCoverChart).toBeVisible();
+        
+        await landCoverPanel.click();
+        await expect(landCoverChart).toBeHidden();
+      }
+    });
+
+    cesiumTest('should show Building Scatter Plot at postal code level', async ({ cesiumPage }) => {
+      // Not visible at start level
+      await expect(cesiumPage.getByText('Building Scatter Plot')).toBeHidden();
+      
+      // Navigate to postal code level
+      await helpers.drillToLevel('postalCode');
+      
+      // Should be visible
+      await expect(cesiumPage.getByText('Building Scatter Plot')).toBeVisible();
+      
+      const scatterPanel = cesiumPage.getByText('Building Scatter Plot');
+      await scatterPanel.click();
+      
+      // Should show scatter plot
+      const scatterChart = cesiumPage.locator('.building-scatter-chart');
+      await expect(scatterChart).toBeVisible();
+      
+      await scatterPanel.click();
+      await expect(scatterChart).toBeHidden();
+    });
+
+    cesiumTest('should show Area properties at postal code level', async ({ cesiumPage }) => {
+      // Navigate to postal code level
+      await helpers.drillToLevel('postalCode');
+      
+      // Should show area properties
+      const areaProps = cesiumPage.getByText('Area properties');
+      if (await areaProps.isVisible()) {
+        await areaProps.click();
+        
+        // Should show property details
+        await expect(cesiumPage.getByText('Total area')).toBeVisible();
+        
+        await areaProps.click();
+        await expect(cesiumPage.getByText('Total area')).toBeHidden();
+      }
+    });
+
+    cesiumTest('should show Building properties at building level', async ({ cesiumPage }) => {
+      // Navigate to building level
+      await helpers.drillToLevel('building');
+      
+      // Should show building properties
+      const buildingProps = cesiumPage.getByText('Building properties');
+      if (await buildingProps.isVisible()) {
+        await buildingProps.click();
+        
+        // Should show property details
+        await expect(cesiumPage.getByText('Building type')).toBeVisible();
+        
+        await buildingProps.click();
+        await expect(cesiumPage.getByText('Building type')).toBeHidden();
+      }
+    });
+  });
+
+  cesiumTest.describe('Panel Interaction Patterns', () => {
+    cesiumTest('should support keyboard navigation for all panels', async ({ cesiumPage }) => {
+      // Focus on first panel
+      await cesiumPage.keyboard.press('Tab');
+      
+      // Find HSY panel via keyboard
+      let foundPanel = false;
+      for (let i = 0; i < 20; i++) {
+        const focused = cesiumPage.locator(':focus');
+        const text = await focused.textContent();
+        if (text?.includes('HSY Background maps')) {
+          foundPanel = true;
+          break;
+        }
+        await cesiumPage.keyboard.press('Tab');
+      }
+      
+      expect(foundPanel).toBeTruthy();
+      
+      // Expand with keyboard
+      await cesiumPage.keyboard.press('Enter');
+      await expect(cesiumPage.getByText('Orthophoto')).toBeVisible();
+      
+      // Collapse with keyboard
+      await cesiumPage.keyboard.press('Enter');
+      await expect(cesiumPage.getByText('Orthophoto')).toBeHidden();
+    });
+
+    cesiumTest('should maintain panel state during view switches', async ({ cesiumPage }) => {
+      // Expand HSY panel
+      const hsyPanel = cesiumPage.getByText('HSY Background maps');
+      await hsyPanel.click();
+      await expect(cesiumPage.getByText('Orthophoto')).toBeVisible();
+      
+      // Switch view
+      await helpers.navigateToView('gridView');
+      
+      // Panel should remain expanded
+      await expect(cesiumPage.getByText('Orthophoto')).toBeVisible();
+      
+      // Switch back
+      await helpers.navigateToView('capitalRegionView');
+      
+      // Still expanded
+      await expect(cesiumPage.getByText('Orthophoto')).toBeVisible();
+    });
+
+    cesiumTest('should handle multiple panels expanded simultaneously', async ({ cesiumPage }) => {
+      // Expand multiple panels
+      const hsyPanel = cesiumPage.getByText('HSY Background maps');
+      const sykePanel = cesiumPage.getByText('Syke Flood Background Maps');
+      const geocodingPanel = cesiumPage.getByText('Geocoding');
+      
+      await hsyPanel.click();
+      await sykePanel.click();
+      await geocodingPanel.click();
+      
+      // All should be expanded
+      await expect(cesiumPage.getByText('Orthophoto')).toBeVisible();
+      await expect(cesiumPage.getByText('Flood: 1/5a, Sea')).toBeVisible();
+      await expect(cesiumPage.getByPlaceholder('Search for a location')).toBeVisible();
+      
+      // Collapse one shouldn't affect others
+      await hsyPanel.click();
+      await expect(cesiumPage.getByText('Orthophoto')).toBeHidden();
+      await expect(cesiumPage.getByText('Flood: 1/5a, Sea')).toBeVisible();
+      await expect(cesiumPage.getByPlaceholder('Search for a location')).toBeVisible();
+    });
+  });
+
+  cesiumTest.describe('Accessibility Compliance', () => {
+    cesiumTest('should have proper ARIA attributes for all panels', async ({ cesiumPage }) => {
+      // Check HSY panel
+      const hsyPanel = cesiumPage.getByText('HSY Background maps');
+      const hsyButton = hsyPanel.locator('..');
+      
+      // Should have expansion ARIA attributes
+      const ariaExpanded = await hsyButton.getAttribute('aria-expanded');
+      expect(ariaExpanded).toBeDefined();
+      
+      // Expand and check state change
+      await hsyPanel.click();
+      const expandedState = await hsyButton.getAttribute('aria-expanded');
+      expect(expandedState).toBe('true');
+      
+      // Collapse and check
+      await hsyPanel.click();
+      const collapsedState = await hsyButton.getAttribute('aria-expanded');
+      expect(collapsedState).toBe('false');
+    });
+
+    cesiumTest('should announce panel state changes to screen readers', async ({ cesiumPage }) => {
+      // This would require screen reader testing tools
+      // For now, verify ARIA live regions exist
+      const liveRegions = cesiumPage.locator('[aria-live]');
+      const count = await liveRegions.count();
+      expect(count).toBeGreaterThan(0);
+    });
+
+    cesiumTest('should maintain focus after panel interactions', async ({ cesiumPage }) => {
+      const hsyPanel = cesiumPage.getByText('HSY Background maps');
+      
+      // Focus the panel
+      await hsyPanel.focus();
+      
+      // Expand with keyboard
+      await cesiumPage.keyboard.press('Enter');
+      
+      // Focus should remain on panel header
+      const focusedElement = cesiumPage.locator(':focus');
+      const focusedText = await focusedElement.textContent();
+      expect(focusedText).toContain('HSY Background maps');
+      
+      // Collapse
+      await cesiumPage.keyboard.press('Enter');
+      
+      // Focus should still be on panel
+      const stillFocused = await focusedElement.textContent();
+      expect(stillFocused).toContain('HSY Background maps');
     });
   });
 });
