@@ -18,7 +18,7 @@ env:
 jobs:
   unit-tests:
     name: Unit Tests
-    runs-on: arc-runner-set
+    runs-on: fvh-arc-runners
 
     strategy:
       matrix:
@@ -52,7 +52,7 @@ jobs:
 
   integration-tests:
     name: Integration Tests
-    runs-on: arc-runner-set
+    runs-on: fvh-arc-runners
 
     steps:
       - name: Checkout code
@@ -74,7 +74,7 @@ jobs:
 
   e2e-tests:
     name: End-to-End Tests
-    runs-on: arc-runner-set
+    runs-on: fvh-arc-runners
     timeout-minutes: 15
 
     steps:
@@ -145,7 +145,7 @@ jobs:
 
   accessibility-tests:
     name: Accessibility Tests
-    runs-on: arc-runner-set
+    runs-on: fvh-arc-runners
     timeout-minutes: 30
 
     steps:
@@ -230,7 +230,7 @@ jobs:
 
   performance-tests:
     name: Performance Tests
-    runs-on: arc-runner-set
+    runs-on: fvh-arc-runners
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
