@@ -366,7 +366,7 @@ export default {
     const hasAvailableAnalysis = computed(() => {
       if (currentLevel.value === 'start') return false;
       
-      if (currentLevel.value === 'postalCode') {
+      if (currentLevel.value === 'postalCode' && currentView.value !== 'grid') {
         return (heatHistogramData.value && heatHistogramData.value.length > 0) ||
                showSosEco.value ||
                (currentView.value !== 'helsinki') ||

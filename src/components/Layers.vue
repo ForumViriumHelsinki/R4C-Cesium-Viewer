@@ -160,6 +160,7 @@ export default {
 		const activate250mGrid = async () => {
 
 		  toggleStore.setGrid250m( grid250m.value );
+      store.setView('grid');
       !grid250m.value && (new Populationgrid().createPopulationGrid());
 
 		}
