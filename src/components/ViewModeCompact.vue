@@ -36,20 +36,6 @@ mdi-grid
         Statistical Grid
       </v-btn>
       
-      <v-btn 
-        v-if="showHelsinkiHeat"
-        value="helsinkiHeat"
-        size="small"
-        @click="onToggleChange('helsinkiHeat')"
-      >
-        <v-icon
-start
-size="16"
->
-mdi-city-variant
-</v-icon>
-        Helsinki Focus
-      </v-btn>
     </v-btn-toggle>
 
     <!-- Contextual Info Chip -->
