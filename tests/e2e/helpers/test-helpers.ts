@@ -6,7 +6,7 @@
  */
 
 import { expect } from '@playwright/test';
-import { PlaywrightPage, CesiumTestState } from '../types/playwright';
+import type { PlaywrightPage, CesiumTestState } from '../../types/playwright';
 import { 
   waitForCesiumReady as cesiumWaitForReady,
   setupCesiumForCI,

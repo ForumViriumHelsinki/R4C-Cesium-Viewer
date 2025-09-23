@@ -1,305 +1,243 @@
 <template>
-  <div
+  <v-card
 v-if="showPostalCodeView"
-id="postalCodeViewContainer"
+class="postal-code-panel"
+elevation="2"
 >
-  <p class="header">
-R4C Urban Heat risk demonstrator
-</p>
-  <v-btn
-v-if="showReturn"
-icon
-class="uiButton"
-style="color: red; float:right; cursor: pointer;"
-@click="returnToPostalCode"
-> 
-    <v-icon>mdi-arrow-left</v-icon>
-  </v-btn>
+    <!-- Header Section -->
+    <v-card-title class="panel-header">
+      <div class="header-content">
+        <v-icon
+class="mr-2"
+color="primary"
+>
+mdi-map-marker-multiple
+</v-icon>
+        <span class="header-title">Urban Heat Risk</span>
+      </div>
+      <div class="header-actions">
+        <v-btn
+          v-if="showReturn"
+          icon
+          size="small"
+          color="error"
+          variant="text"
+          @click="returnToPostalCode"
+        >
+          <v-icon>mdi-arrow-left</v-icon>
+        </v-btn>
+        <v-btn
+          icon
+          size="small"
+          color="error"
+          variant="text"
+          @click="reset"
+        >
+          <v-icon>mdi-refresh</v-icon>
+        </v-btn>
+      </div>
+    </v-card-title>
 
-  <v-btn
-icon
-class="uiButton"
-style="color: red; float:right; cursor: pointer;"
-@click="reset"
->
-    <v-icon>mdi-refresh</v-icon>
-  </v-btn>
-  <!-- showPlotSwitch-->
+    <v-divider />
 
-<label class="switch">
-  <input
-id="showPlotToggle"
-type="checkbox"
-value="showPlot"
-checked
+    <v-card-text class="panel-content">
+      <!-- View Mode Section -->
+      <div class="control-section">
+        <h4 class="section-title">
+          <v-icon
+class="mr-2"
+size="18"
 >
-  <span class="slider round"/>
-</label>
-<label
-for="showPlotToggle"
-class="label"
->Display plot</label>
+mdi-eye
+</v-icon>
+          View Mode
+        </h4>
+        
+        <v-switch
+          id="showPlotToggle"
+          v-model="showPlot"
+          label="Display plot"
+          color="primary"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="gridViewToggle"
+          v-model="gridView"
+          label="Grid view"
+          color="primary"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="capitalRegionViewToggle"
+          v-model="helsinkiView"
+          label="Helsinki view"
+          color="primary"
+          density="compact"
+          hide-details
+        />
+      </div>
 
-<label
-id="gridViewSwitch"
-class="switch"
->
-  <input
-id="gridViewToggle"
-type="checkbox"
-value="gridView"
->
-  <span class="slider round"/>
-</label>
-<label
-id="gridViewLabel"
-for="gridViewToggle"
-class="label"
->Grid view</label>  
+      <v-divider class="my-4" />
 
-<label
-id="capitalRegionSwitch"
-class="switch"
+      <!-- Data Layers Section -->
+      <div class="control-section">
+        <h4 class="section-title">
+          <v-icon
+class="mr-2"
+size="18"
 >
-  <input
-id="capitalRegionViewToggle"
-type="checkbox"
-value="capitalRegionView"
->
-  <span class="slider round"/>
-</label>
-<label
-id="capitalRegionViewLabel"
-for="capitalRegionViewToggle"
-class="label"
->Helsinki view</label>  
+mdi-layers
+</v-icon>
+          Data Layers
+        </h4>
+        
+        <v-switch
+          id="showVegetationToggle"
+          v-model="showVegetation"
+          label="Show vegetation"
+          color="green"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="showOtherNatureToggle"
+          v-model="showOtherNature"
+          label="Other nature"
+          color="green"
+          density="compact"
+          hide-details
+          style="display: none;"
+        />
+        
+        <v-switch
+          id="hideNewBuildingsToggle"
+          v-model="filterBuildings"
+          label="Built before summer 2018"
+          color="primary"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="hideNonSoteToggle"
+          v-model="hideNonSote"
+          label="Only sote buildings"
+          color="primary"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="hideLowToggle"
+          v-model="hideLow"
+          label="Only tall buildings"
+          color="primary"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="showTreesToggle"
+          v-model="showTrees"
+          label="Trees"
+          color="green"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="landCoverToggle"
+          v-model="landCover"
+          label="HSY land cover"
+          color="green"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="switchViewToggle"
+          v-model="switchView"
+          label="2D view"
+          color="primary"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="hideColdAreasToggle"
+          v-model="hideColdAreas"
+          label="Hide cold areas"
+          color="primary"
+          density="compact"
+          hide-details
+        />
+        
+        <v-switch
+          id="capitalRegionColdToggle"
+          v-model="capitalRegionCold"
+          label="Capital Region Cold"
+          color="blue"
+          density="compact"
+          hide-details
+        />
+      </div>
 
-  <!-- showVegetationSwitch-->
-<label
-id="showVegetationSwitch"
-class="switch"
-style="display:none;"
->
-	<input
-id="showVegetationToggle"
-type="checkbox"
-value="showVegetation"
->
-	<span class="slider round"/>
-</label>
-<label
-id="showVegetationLabel"
-for="showVegetationToggle"
-class="label"
-style="display:none;"
->Vegetation</label>
+      <v-divider class="my-4" />
 
-  <!-- showOtherNatureSwitch-->
-<label
-id="showOtherNatureSwitch"
-class="switch"
-style="display:none;"
+      <!-- External Resources Section -->
+      <div class="control-section">
+        <h4 class="section-title">
+          <v-icon
+class="mr-2"
+size="18"
 >
-  <input
-id="showOtherNatureToggle"
-type="checkbox"
-value="showOtherNature"
->
-  <span class="slider round"/>
-</label>
-<label
-id="showOtherNatureLabel"
-for="showOtherNatureToggle"
-class="label"
-style="display:none;"
->Other nature</label>
-
-  <!-- hideNewBuildingsSwitch-->
-<label
-id="hideNewBuildingsSwitch"
-class="switch"
-style="display:none;"
->
-  <input
-id="hideNewBuildingsToggle"
-type="checkbox"
-value="filterBuildings"
->
-  <span class="slider round"/>
-</label>
-<label
-id="hideNewBuildingsLabel"
-for="hideNewBuildings"
-class="label"
-style="display:none;"
->Built before summer 2018</label>
-
-  <!-- hideNonSoteSwitch-->
-<label
-id="hideNonSoteSwitch"
-class="switch"
-style="display:none;"
->
-	<input
-id="hideNonSoteToggle"
-type="checkbox"
-value="filterBuildings"
->
-	<span class="slider round"/>
-</label>
-<label
-id="hideNonSoteLabel"
-for="hideNonSote"
-class="label"
-style="display:none;"
->Only sote buildings</label>
-
-  <!--  hideLowSwitch-->
-<label
-id="hideLowSwitch"
-class="switch"
-style="display:none;"
->
-  <input
-id="hideLowToggle"
-type="checkbox"
-value="filterBuildings"
->
-  <span class="slider round"/>
-</label>
-<label
-id="hideLowLabel"
-for="hideLow"
-class="label"
-style="display:none;"
->Only tall buildings</label>
-
-  <!--  showTrees-->
-<label
-id="showTreesSwitch"
-class="switch"
-style="display:none;"
->
-  <input
-id="showTreesToggle"
-type="checkbox"
-value="showTrees"
->
-  <span class="slider round"/>
-</label>
-<label
-id="showTreesLabel"
-for="showTrees"
-class="label"
-style="display:none;"
->Trees</label>
-
-<!--  showLandCover-->
-<label
-id="landCoverSwitch"
-class="switch"
->
-  <input
-id="landCoverToggle"
-type="checkbox"
-value="getLandCover"
->
-  <span class="slider round"/>
-</label>
-<label
-id="landCoverLabel"
-for="getLandCover"
-class="label"
->HSY land cover</label>
-
-  <!--  switchView-->
-<label
-id="switchViewSwitch"
-class="switch"
-style="display:none;"
->
-  <input
-id="switchViewToggle"
-type="checkbox"
-value="switchView"
->
-  <span class="slider round"/>
-</label>
-<label
-id="switchViewLabel"
-for="switchView"
-class="label"
-style="display:none;"
->2D view</label>
-
-  <!-- hideColdAreasSwitch-->
-<label
-id="hideColdAreasSwitch"
-class="switch"
-style="display:none;"
->
-	<input
-id="hideColdAreasToggle"
-type="checkbox"
-value="hideColdAreas"
->
-	<span class="slider round"/>
-</label>
-<label
-id="hideColdAreasLabel"
-for="hideColdAreas"
-class="label"
-style="display:none;"
->Hide cold areas</label>
-
-  <!-- CapitalRegionColdSwitch-->
-<label
-id="capitalRegionColdSwitch"
-class="switch"
->
-	<input
-id="capitalRegionColdToggle"
-type="checkbox"
-value="capitalRegionCold"
->
-	<span class="slider round"/>
-</label>
-<label
-id="capitalRegionColdLabel"
-for="capitalRegionCold"
-class="label"
->Capital Region Cold</label>
-
-  <!--  sensor map Link-->
-  <a
-id="sensorMapLink"
-href="https://bri3.fvh.io/opendata/r4c/r4c_all.html"
-class="label"
-target="_blank"
-rel="noopener noreferrer"
-> Sensor map </a>
-
-  <!--  sensor dashboard-->
-  <a
-id="sensorDashboardLink"
-href="https://iot.fvh.fi/grafana/d/aduw70oqqdon4c/r4c-laajasalo-and-koivukyla?orgId=6&refresh=30m"
-class="label"
-target="_blank"
-rel="noopener noreferrer"
-> Sensor Dashboard </a>
-
-  <!--  flood Link-->
-  <a
-id="floodLink"
-href="https://geo.fvh.fi/r4c/6fkgOUqn3/"
-class="label"
-target="_blank"
-rel="noopener noreferrer"
-style="display:none;"
-> Experimental flood simulations </a>
-
-
-</div>
+mdi-link
+</v-icon>
+          External Resources
+        </h4>
+        
+        <div class="link-grid">
+          <v-btn
+            href="https://bri3.fvh.io/opendata/r4c/r4c_all.html"
+            target="_blank"
+            variant="outlined"
+            size="small"
+            prepend-icon="mdi-thermometer"
+            class="mb-2"
+          >
+            Sensor Map
+          </v-btn>
+          
+          <v-btn
+            href="https://iot.fvh.fi/grafana/d/aduw70oqqdon4c/r4c-laajasalo-and-koivukyla?orgId=6&refresh=30m"
+            target="_blank"
+            variant="outlined"
+            size="small"
+            prepend-icon="mdi-chart-line"
+            class="mb-2"
+          >
+            Sensor Dashboard
+          </v-btn>
+          
+          <v-btn
+            href="https://geo.fvh.fi/r4c/6fkgOUqn3/"
+            target="_blank"
+            variant="outlined"
+            size="small"
+            prepend-icon="mdi-water"
+            style="display: none;"
+          >
+            Flood Simulations
+          </v-btn>
+        </div>
+      </div>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -316,7 +254,8 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from '../services/eventEmitter.js';
 import ElementsDisplay from '../services/elementsDisplay.js';
 import { useToggleStore } from '../stores/toggleStore.js';
-import Featurepicker from '../services/featurepicker.js'; 
+import Featurepicker from '../services/featurepicker.js';
+import loadingCoordinator from '../services/loadingCoordinator.js';
 
 export default {
 	data() {
@@ -326,6 +265,20 @@ export default {
 			treeService: null,
 			showPostalCodeView: true,
 			showReturn: false,
+			// Vue reactive data for switches
+			showPlot: true,
+			gridView: false,
+			helsinkiView: false,
+			showVegetation: false,
+			showOtherNature: false,
+			filterBuildings: false,
+			hideNonSote: false,
+			hideLow: false,
+			showTrees: false,
+			landCover: false,
+			switchView: false,
+			hideColdAreas: false,
+			capitalRegionCold: false,
 		};
 	}, 
 	computed: {
@@ -335,8 +288,62 @@ export default {
 		}
 	},
 	watch: {
-		shouldShowReturn( newValue ) { // Watch for changes in computed property
-			this.showReturn = newValue; // Update data property if needed
+		// Sync Vue reactive data with toggle store
+		showPlot(newValue) {
+			this.toggleStore.setShowPlot(newValue);
+			newValue ? this.plotService.showAllPlots() : this.plotService.hideAllPlots();
+		},
+		gridView(newValue) {
+			this.toggleStore.setGridView(newValue);
+			newValue 
+				? (this.store.setView('grid'), this.showPostalCodeView = false, eventBus.emit('createPopulationGrid'))
+				: (this.store.setView('capitalRegion'), this.reset());
+		},
+		helsinkiView(newValue) {
+			this.toggleStore.setHelsinkiView(newValue);
+			this.capitalRegionViewEvent();
+		},
+		showVegetation(newValue) {
+			this.toggleStore.setShowVegetation(newValue);
+			this.loadVegetationEvent();
+		},
+		showOtherNature(newValue) {
+			this.toggleStore.setShowOtherNature(newValue);
+			this.loadOtherNatureEvent();
+		},
+		filterBuildings(newValue) {
+			this.filterBuildingsEvent();
+		},
+		hideNonSote(newValue) {
+			this.toggleStore.setHideNonSote(newValue);
+			this.filterBuildingsEvent();
+		},
+		hideLow(newValue) {
+			this.toggleStore.setHideLow(newValue);
+			this.filterBuildingsEvent();
+		},
+		showTrees(newValue) {
+			this.toggleStore.setShowTrees(newValue);
+			this.loadTreesEvent();
+		},
+		landCover(newValue) {
+			this.toggleStore.setLandCover(newValue);
+			this.getLandCoverEvent();
+		},
+		switchView(newValue) {
+			this.toggleStore.setSwitchView(newValue);
+			this.switchViewEvent();
+		},
+		hideColdAreas(newValue) {
+			// Add to toggle store if needed
+			// this.toggleStore.setHideColdAreas(newValue);
+		},
+		capitalRegionCold(newValue) {
+			this.toggleStore.setCapitalRegionCold(newValue);
+			this.toggleCold();
+		},
+		shouldShowReturn(newValue) {
+			this.showReturn = newValue;
 		}
 	},
 	mounted() {
@@ -351,7 +358,21 @@ export default {
 	},
 	methods: {
 		reset(){
-			location.reload();
+			// Smart reset instead of page reload
+			this.store.setLevel('start');
+			this.store.setPostalCode(null);
+			this.store.setNameOfZone(null);
+			this.store.setView('capitalRegion');
+			
+			// Reset camera to initial position
+			const camera = new Camera();
+			camera.init();
+			
+			// Hide tooltip
+			const tooltip = document.querySelector('.tooltip');
+			if (tooltip) {
+				tooltip.style.display = 'none';
+			}
 		},
 		returnToPostalCode( ) {
 			const featurepicker = new Featurepicker();
@@ -367,22 +388,11 @@ export default {
 			this.addEventListeners();
 		},
 		/**
- * Add EventListeners 
- */
+		 * Add EventListeners - now mostly handled by Vue watchers
+		 */
 		addEventListeners() {
-			document.getElementById( 'hideNewBuildingsToggle' ).addEventListener( 'change', this.filterBuildingsEvent );
-			document.getElementById( 'hideNonSoteToggle' ).addEventListener( 'change', this.filterBuildingsEvent );
-			document.getElementById( 'hideLowToggle' ).addEventListener( 'change', this.filterBuildingsEvent );
-			document.getElementById( 'showVegetationToggle' ).addEventListener( 'change', this.loadVegetationEvent );
-			document.getElementById( 'showOtherNatureToggle' ).addEventListener( 'change', this.loadOtherNatureEvent );
-			document.getElementById( 'switchViewToggle' ).addEventListener( 'change', this.switchViewEvent );
-			document.getElementById( 'showTreesToggle' ).addEventListener( 'change', this.loadTreesEvent );
-			document.getElementById( 'showPlotToggle' ).addEventListener( 'change', this.showPlotEvent );
-			document.getElementById( 'capitalRegionViewToggle' ).addEventListener( 'change', this.capitalRegionViewEvent );
-			document.getElementById( 'gridViewToggle' ).addEventListener( 'change', this.gridViewEvent );
-			document.getElementById( 'landCoverToggle' ).addEventListener( 'change', this.getLandCoverEvent );
-			document.getElementById( 'capitalRegionColdToggle' ).addEventListener( 'change', this.toggleCold );
-
+			// Most event listeners now handled by Vue watchers
+			// Keep any legacy handlers that are still needed
 		},
 
 		toggleCold() {
@@ -598,6 +608,94 @@ export default {
 
 			}
 
+		},
+
+		/**
+		 * Demonstration of harmonized loading - loads multiple layers smoothly
+		 * This shows how the new loading system can be used for coordinated layer loading
+		 */
+		async loadAllEnvironmentalLayers() {
+			if (!this.store.postalcode) {
+				console.warn('No postal code selected for environmental layer loading');
+				return;
+			}
+
+			try {
+				const sessionId = `environmental_${this.store.postalcode}`;
+				
+				// Define layer configurations for coordinated loading
+				const layerConfigs = [
+					{
+						layerId: 'vegetation',
+						url: this.urlStore.vegetation(this.store.postalcode),
+						type: 'geojson',
+						processor: (data, metadata) => {
+							const vegetationService = new Vegetation();
+							return vegetationService.addVegetationDataSource(data, metadata);
+						},
+						options: {
+							cache: true,
+							cacheTTL: 15 * 60 * 1000,
+							priority: 'normal',
+							retries: 2,
+							progressive: true
+						}
+					},
+					{
+						layerId: 'othernature',
+						url: this.urlStore.otherNature(this.store.postalcode),
+						type: 'geojson',
+						processor: (data, metadata) => {
+							const otherNatureService = new Othernature();
+							return otherNatureService.addOtherNatureDataSource(data, metadata);
+						},
+						options: {
+							cache: true,
+							cacheTTL: 20 * 60 * 1000,
+							priority: 'normal',
+							retries: 2,
+							progressive: true
+						}
+					},
+					{
+						layerId: 'trees',
+						// Trees would be handled by the Tree service's coordinated loading
+						processor: async () => {
+							const treeService = new Tree();
+							return treeService.loadTrees();
+						},
+						options: {
+							priority: 'high',
+							cache: true,
+							cacheTTL: 25 * 60 * 1000
+						}
+					}
+				];
+
+				console.log(`🌿 Starting coordinated environmental layer loading for ${this.store.postalcode}`);
+				
+				const results = await loadingCoordinator.startLoadingSession(sessionId, layerConfigs, {
+					priorityStrategy: 'balanced',
+					showGlobalProgress: false, // Don't show global progress for subset loading
+					allowInterruption: true
+				});
+				
+				// Report results
+				const successful = results.filter(r => r.status === 'fulfilled').length;
+				const failed = results.length - successful;
+				
+				if (failed === 0) {
+					console.log(`✅ All ${successful} environmental layers loaded successfully`);
+				} else {
+					console.warn(`⚠️ ${successful}/${results.length} environmental layers loaded, ${failed} failed`);
+				}
+				
+				return results;
+				
+			} catch (error) {
+				console.error('Failed to load environmental layers:', error);
+				throw error;
+			}
 		}
 	},
 };
@@ -719,5 +817,88 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+/* Modern Vuetify Card Styling */
+.postal-code-panel {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  width: 350px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1000;
+}
+
+.panel-header {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
+  padding: 16px 20px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.header-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.panel-content {
+  padding: 20px;
+  background: transparent;
+}
+
+.control-section {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.8);
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.link-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.link-grid .v-btn {
+  justify-content: flex-start;
+  text-transform: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .postal-code-panel {
+    width: calc(100vw - 48px);
+    left: 24px;
+    right: 24px;
+  }
 }
 </style>

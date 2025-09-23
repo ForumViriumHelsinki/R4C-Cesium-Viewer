@@ -25,8 +25,17 @@ export default class HSYBuilding {
         try {
             
             const url = bbox ? this.urlStore.hsyGridBuildings( bbox ) : this.urlStore.hsyBuildings( this.store.postalcode )
+            console.log('[HSYBuilding] 🏢 Loading HSY buildings for postal code:', this.store.postalcode);
+            console.log('[HSYBuilding] API URL:', url);
+            
             const response = await fetch( url );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const data = await response.json();
+            console.log('[HSYBuilding] ✅ Received', data.features?.length || 0, 'building features');
 
             // Only process grid attributes if we have a current grid cell
             if (this.store.currentGridCell) {
@@ -36,9 +45,10 @@ export default class HSYBuilding {
             let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Buildings ' + this.store.postalcode);
             this.setHSYBuildingAttributes(data, entities);
             
+            console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer');
             return entities;
         } catch (error) {
-            console.error('Error loading HSY buildings:', error);
+            console.error('[HSYBuilding] ❌ Error loading HSY buildings:', error);
             throw error;
         }
     }
@@ -161,9 +171,41 @@ export default class HSYBuilding {
             return;
         }
 
-        for (let i = 0; i < features.length; i++) {
+        console.log('[HSYBuilding] 🔄 Processing grid attributes for', features.length, 'features with progressive loading');
+        
+        // Use progressive loading with the unified loader if available
+        try {
+            const { unifiedLoader } = await import('./unifiedLoader.js');
+            
+            const processor = async (batch) => {
+                return this.processGridAttributeBatch(batch, geoJsonPolygon);
+            };
+            
+            await unifiedLoader.loadLayer({
+                layerId: 'grid-attributes',
+                data: features,
+                processor,
+                options: {
+                    batchSize: 2, // Very small batches for heavy Turf.js operations
+                    priority: 'high',
+                    enableYielding: true,
+                    yieldInterval: 1 // Yield after every batch
+                }
+            });
+            
+        } catch (error) {
+            console.warn('[HSYBuilding] Unified loader not available, falling back to legacy processing');
+            await this.processGridAttributesLegacy(features, geoJsonPolygon);
+        }
+        
+        console.log('[HSYBuilding] ✅ Grid attributes processing complete');
+    }
+
+    async processGridAttributeBatch(batch, geoJsonPolygon) {
+        const results = [];
+        
+        for (let feature of batch) {
             try {
-                let feature = features[i];
                 if (!feature.geometry) continue;
 
                 const featureGeoJson = {
@@ -179,9 +221,54 @@ export default class HSYBuilding {
                 } else {
                     this.approximateAttributesForIntersectingBuildings(feature);
                 }
+                
+                results.push(feature);
             } catch (error) {
-                console.warn(`Error processing feature ${i}:`, error);
+                console.warn(`Error processing feature:`, error);
                 continue;
+            }
+        }
+        
+        return results;
+    }
+
+    async processGridAttributesLegacy(features, geoJsonPolygon) {
+        const batchSize = 2; // Very small batches for heavy operations
+        
+        for (let i = 0; i < features.length; i += batchSize) {
+            const batch = features.slice(i, i + batchSize);
+            
+            // Process each feature individually with yielding
+            for (let feature of batch) {
+                try {
+                    if (!feature.geometry) continue;
+
+                    const featureGeoJson = {
+                        type: 'Feature',
+                        properties: feature.properties,
+                        geometry: feature.geometry
+                    };
+
+                    const isWithin = turf.booleanWithin(featureGeoJson, geoJsonPolygon);
+
+                    if (isWithin) {
+                        this.setGridAttributesForWithinBuilding(feature);
+                    } else {
+                        this.approximateAttributesForIntersectingBuildings(feature);
+                    }
+                } catch (error) {
+                    console.warn(`Error processing feature:`, error);
+                    continue;
+                }
+                
+                // Yield after each feature for responsive UI
+                await new Promise(resolve => requestIdleCallback ? requestIdleCallback(resolve) : setTimeout(resolve, 0));
+            }
+            
+            // Show progress for large datasets
+            if (features.length > 10) {
+                const progress = Math.round((i + batchSize) / features.length * 100);
+                console.log(`[HSYBuilding] ⏳ Progress: ${progress}% (${Math.min(i + batchSize, features.length)}/${features.length})`);
             }
         }
     }
