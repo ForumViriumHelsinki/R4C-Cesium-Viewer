@@ -362,6 +362,7 @@ export default {
       if (currentLevel.value === 'start') return false;
       
       if (currentLevel.value === 'postalCode' && currentView.value !== 'grid') {
+
         return (heatHistogramData.value && heatHistogramData.value.length > 0) ||
                showSosEco.value ||
                (currentView.value !== 'helsinki') ||
@@ -469,7 +470,7 @@ export default {
     const reset = () => {
       location.reload();
     };
-
+      
     // Rotate camera function
     const rotateCamera = () => {
       const camera = new Camera();
