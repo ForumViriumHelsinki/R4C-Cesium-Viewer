@@ -18,6 +18,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Docker/Kubernetes
 - `docker compose up` - Run with Docker (http://localhost:4173)
 - `skaffold dev --port-forward` - Run with Skaffold for Kubernetes development
+- `skaffold dev --profile=local-with-services --port-forward` - Full local development with database
+- `skaffold test -p migration-test` - Test database migrations
 - `skaffold delete` - Clean up Skaffold deployments
 
 ## Architecture Overview
@@ -79,6 +81,24 @@ The application uses multiple proxy endpoints in development:
 
 ### Data Sources
 Primary data from Helsinki Region Environmental Services (HSY), Statistics Finland, and various environmental monitoring systems for climate resilience research.
+
+## Database Performance Optimizations
+
+The project includes comprehensive database optimizations implemented via dbmate migrations:
+
+**Performance Features:**
+- Spatial indexes (GIST) for all geometry columns
+- Composite indexes for common query patterns
+- Covering indexes for index-only scans
+- Materialized view management with automated refresh functions
+- Query-specific optimizations for building and tree data
+
+**New Migrations Added:**
+- `20250626114521_optimize_tree_f_performance.sql` - Tree data query optimization
+- `20250807114107_optimize_building_table_performance.sql` - Building table indexes
+- `20250807123455_add_spatial_indexes.sql` - Spatial query optimization
+- `20250807124619_setup_materialized_view_management.sql` - MV refresh automation
+- `20250808064619_optimize_materialized_view_indexes.sql` - MV query optimization
 
 ## Available MCP Tools
 
