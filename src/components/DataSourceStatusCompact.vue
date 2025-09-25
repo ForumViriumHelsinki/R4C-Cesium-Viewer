@@ -1,24 +1,24 @@
 <template>
-  <v-card 
-    class="status-compact-card" 
+  <v-card
+    class="status-compact-card"
     :class="{ 'has-errors': hasErrors, 'has-warnings': hasWarnings }"
     elevation="4"
   >
     <!-- Status Summary Header -->
     <v-card-text class="status-header pa-2">
       <div class="status-summary">
-        <v-icon 
-          :color="overallStatusColor" 
-          size="16" 
+        <v-icon
+          :color="overallStatusColor"
+          size="16"
           class="status-icon"
         >
           {{ overallStatusIcon }}
         </v-icon>
-        
+
         <span class="status-text">
           {{ healthyCount }}/{{ totalSources }}
         </span>
-        
+
         <v-btn
           icon
           size="x-small"
@@ -32,7 +32,7 @@
         </v-btn>
       </div>
     </v-card-text>
-    
+
     <!-- Expandable Details -->
     <v-expand-transition>
       <div
@@ -40,11 +40,11 @@ v-if="showDetails"
 class="status-details"
 >
         <v-divider />
-        
+
         <v-card-text class="pa-2">
           <!-- Individual Source Status -->
-          <div 
-            v-for="source in dataSources" 
+          <div
+            v-for="source in dataSources"
             :key="source.id"
             class="source-item-compact"
           >
@@ -56,9 +56,9 @@ class="status-details"
               >
                 {{ getStatusIcon(source) }}
               </v-icon>
-              
+
               <span class="source-name-compact">{{ source.name }}</span>
-              
+
               <!-- Cache indicator -->
               <v-icon
                 v-if="source.cached"
@@ -68,17 +68,17 @@ class="status-details"
               >
                 mdi-cached
               </v-icon>
-              
+
               <!-- Response time -->
-              <span 
-                v-if="source.responseTime" 
+              <span
+                v-if="source.responseTime"
                 class="response-time"
                 :class="getResponseTimeClass(source.responseTime)"
               >
                 {{ source.responseTime }}ms
               </span>
             </div>
-            
+
             <!-- Error message -->
             <div
 v-if="source.status === 'error'"
@@ -87,7 +87,7 @@ class="error-msg"
               {{ source.message }}
             </div>
           </div>
-          
+
           <!-- Quick Actions -->
           <div class="quick-actions">
             <v-btn
@@ -105,7 +105,7 @@ mdi-refresh
 </v-icon>
               Refresh
             </v-btn>
-            
+
             <v-btn
               v-if="hasCachedData"
               size="x-small"
@@ -196,15 +196,15 @@ const dataSources = ref([
 // Computed properties
 const totalSources = computed(() => dataSources.value.length);
 
-const healthyCount = computed(() => 
+const healthyCount = computed(() =>
   dataSources.value.filter(s => s.status === 'healthy').length
 );
 
-const hasErrors = computed(() => 
+const hasErrors = computed(() =>
   dataSources.value.some(s => s.status === 'error')
 );
 
-const hasWarnings = computed(() => 
+const hasWarnings = computed(() =>
   dataSources.value.some(s => s.status === 'degraded')
 );
 
@@ -230,7 +230,7 @@ const overallStatusIcon = computed(() => {
 const getStatusColor = (status) => {
   const colors = {
     healthy: 'success',
-    degraded: 'warning', 
+    degraded: 'warning',
     error: 'error',
     loading: 'info',
     unknown: 'grey'
@@ -240,7 +240,7 @@ const getStatusColor = (status) => {
 
 const getStatusIcon = (source) => {
   if (source.loading) return 'mdi-loading';
-  
+
   const icons = {
     healthy: 'mdi-check',
     degraded: 'mdi-alert',
@@ -267,7 +267,7 @@ const checkHealth = async (sourceId) => {
     // Check cache first
     const cacheKey = `health-${sourceId}`;
     const cached = await cacheService.getData(cacheKey, 5 * 60 * 1000);
-    
+
     if (cached) {
       source.cached = true;
     }
@@ -283,7 +283,7 @@ const checkHealth = async (sourceId) => {
 
     if (response.ok) {
       const data = await response.json();
-      
+
       // Cache the response
       await cacheService.setData(cacheKey, data, {
         type: source.id,
@@ -313,7 +313,7 @@ const checkHealth = async (sourceId) => {
 
 const refreshAll = async () => {
   refreshing.value = true;
-  
+
   try {
     // Check all sources in parallel
     await Promise.all(dataSources.value.map(source => checkHealth(source.id)));
@@ -324,7 +324,7 @@ const refreshAll = async () => {
 
 const clearAllCache = async () => {
   await cacheService.clearAll();
-  
+
   dataSources.value.forEach(source => {
     source.cached = false;
   });
@@ -334,7 +334,7 @@ const clearAllCache = async () => {
 
 const startRefreshTimer = () => {
   if (refreshTimer.value) clearInterval(refreshTimer.value);
-  
+
   refreshTimer.value = setInterval(() => {
     if (!refreshing.value) {
       refreshAll();
@@ -485,11 +485,11 @@ onUnmounted(() => {
   .status-compact-card {
     font-size: 0.8rem;
   }
-  
+
   .source-name-compact {
     font-size: 0.7rem;
   }
-  
+
   .response-time {
     display: none; /* Hide on small screens */
   }

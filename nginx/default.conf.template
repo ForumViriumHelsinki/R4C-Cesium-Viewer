@@ -115,7 +115,9 @@ server {
 
     # FIXED: Environment variable handling for digitransit
     location /digitransit {
-        #proxy_set_header digitransit-subscription-key ${DIGITRANSIT_KEY};
+        # Use nginx environment variable substitution
+        set $digitransit_key "${VITE_DIGITRANSIT_KEY}";
+        proxy_set_header digitransit-subscription-key $digitransit_key;
 
         proxy_pass https://api.digitransit.fi;
         rewrite ^/digitransit(.*)$ $1 break;

@@ -82,7 +82,7 @@ variant="text"
                 {{ getStatusIcon(source) }}
               </v-icon>
               <span class="source-name">{{ source.name }}</span>
-              
+
               <!-- Cache Indicator -->
               <v-tooltip
 v-if="source.cached"
@@ -124,7 +124,7 @@ class="detail-value"
                   {{ source.message }}
                 </span>
               </div>
-              
+
               <div
 v-if="source.lastUpdated"
 class="detail-row"
@@ -132,7 +132,7 @@ class="detail-row"
                 <span class="detail-label">Updated:</span>
                 <span class="detail-value">{{ formatTimestamp(source.lastUpdated) }}</span>
               </div>
-              
+
               <div
 v-if="source.responseTime"
 class="detail-row"
@@ -147,7 +147,7 @@ class="detail-row"
 >
                 <span class="detail-label">Cache:</span>
                 <span class="detail-value cache-info">
-                  {{ formatCacheSize(source.cacheSize) }} 
+                  {{ formatCacheSize(source.cacheSize) }}
                   ({{ formatAge(source.cacheAge) }} old)
                 </span>
               </div>
@@ -215,7 +215,7 @@ mdi-dots-vertical
 </v-icon>
                 </v-btn>
               </template>
-              
+
               <v-list density="compact">
                 <v-list-item @click="checkHealth(source.id)">
                   <template #prepend>
@@ -225,7 +225,7 @@ mdi-heart-pulse
                   </template>
                   <v-list-item-title>Health Check</v-list-item-title>
                 </v-list-item>
-                
+
                 <v-list-item @click="preloadData(source.id)">
                   <template #prepend>
                     <v-icon size="16">
@@ -234,7 +234,7 @@ mdi-download
                   </template>
                   <v-list-item-title>Preload Data</v-list-item-title>
                 </v-list-item>
-                
+
                 <v-list-item @click="showDetails(source)">
                   <template #prepend>
                     <v-icon size="16">
@@ -265,26 +265,26 @@ mdi-database
 </v-icon>
             Cache Statistics
           </h4>
-          
+
           <div class="stats-grid">
             <div class="stat-item">
               <span class="stat-label">Total Entries:</span>
               <span class="stat-value">{{ cacheStats.totalEntries || 0 }}</span>
             </div>
-            
+
             <div class="stat-item">
               <span class="stat-label">Storage Used:</span>
               <span class="stat-value">
-                {{ formatCacheSize(cacheStats.totalSize || 0) }} / 
+                {{ formatCacheSize(cacheStats.totalSize || 0) }} /
                 {{ formatCacheSize(cacheStats.maxSize || 0) }}
               </span>
             </div>
-            
+
             <div class="stat-item">
               <span class="stat-label">Utilization:</span>
               <span class="stat-value">{{ Math.round(cacheStats.utilizationPercent || 0) }}%</span>
             </div>
-            
+
             <div class="stat-item">
               <span class="stat-label">Expired:</span>
               <span class="stat-value">{{ cacheStats.expiredCount || 0 }}</span>
@@ -318,9 +318,9 @@ size="16"
           </v-icon>
           {{ showCacheStats ? 'Hide' : 'Show' }} Cache Stats
         </v-btn>
-        
+
         <v-spacer />
-        
+
         <v-btn
           size="small"
           color="warning"
@@ -347,7 +347,7 @@ max-width="600"
         <v-card-title>
           {{ selectedSource.name }} Details
         </v-card-title>
-        
+
         <v-card-text>
           <div class="details-content">
             <div class="detail-section">
@@ -402,7 +402,7 @@ class="detail-section"
             </div>
           </div>
         </v-card-text>
-        
+
         <v-card-actions>
           <v-spacer />
           <v-btn @click="detailsDialog = false">
@@ -510,15 +510,15 @@ const dataSources = ref([
 ]);
 
 // Computed properties
-const healthyCount = computed(() => 
+const healthyCount = computed(() =>
   dataSources.value.filter(s => s.status === 'healthy').length
 );
 
-const degradedCount = computed(() => 
+const degradedCount = computed(() =>
   dataSources.value.filter(s => s.status === 'degraded').length
 );
 
-const errorCount = computed(() => 
+const errorCount = computed(() =>
   dataSources.value.filter(s => s.status === 'error').length
 );
 
@@ -547,7 +547,7 @@ const overallStatusText = computed(() => {
 const getStatusColor = (status) => {
   const colors = {
     healthy: 'success',
-    degraded: 'warning', 
+    degraded: 'warning',
     error: 'error',
     loading: 'info',
     unknown: 'grey'
@@ -557,7 +557,7 @@ const getStatusColor = (status) => {
 
 const getStatusIcon = (source) => {
   if (source.loading) return 'mdi-loading';
-  
+
   const icons = {
     healthy: 'mdi-check-circle',
     degraded: 'mdi-alert',
@@ -582,7 +582,7 @@ const checkHealth = async (sourceId) => {
     // Check cache first
     const cacheKey = `health-${sourceId}`;
     const cached = await cacheService.getData(cacheKey, 5 * 60 * 1000); // 5 minutes
-    
+
     if (cached) {
       source.cached = true;
       source.cacheAge = cached.age;
@@ -601,7 +601,7 @@ const checkHealth = async (sourceId) => {
 
     if (response.ok) {
       const data = await response.json();
-      
+
       // Cache the response
       await cacheService.setData(cacheKey, data, {
         type: source.type,
@@ -631,11 +631,11 @@ const checkHealth = async (sourceId) => {
 
 const refreshAll = async () => {
   refreshing.value = true;
-  
+
   try {
     // Update cache stats
     cacheStats.value = await cacheService.getCacheStats();
-    
+
     // Check all sources in parallel
     await Promise.all(dataSources.value.map(source => checkHealth(source.id)));
   } finally {
@@ -660,7 +660,7 @@ const clearCache = async (sourceId) => {
 
   const cacheKey = `health-${sourceId}`;
   await cacheService.removeData(cacheKey);
-  
+
   source.cached = false;
   source.cacheAge = null;
   source.cacheSize = null;
@@ -671,7 +671,7 @@ const clearCache = async (sourceId) => {
 const clearAllCache = async () => {
   await cacheService.clearAll();
   cacheStats.value = await cacheService.getCacheStats();
-  
+
   dataSources.value.forEach(source => {
     source.cached = false;
     source.cacheAge = null;
@@ -697,11 +697,11 @@ const formatTimestamp = (timestamp) => {
 
 const formatAge = (age) => {
   if (!age) return 'Unknown';
-  
+
   const seconds = Math.floor(age / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
-  
+
   if (hours > 0) return `${hours}h ${minutes % 60}m`;
   if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
   return `${seconds}s`;
@@ -709,16 +709,16 @@ const formatAge = (age) => {
 
 const formatCacheSize = (bytes) => {
   if (!bytes) return '0 B';
-  
+
   const units = ['B', 'KB', 'MB', 'GB'];
   let size = bytes;
   let unitIndex = 0;
-  
+
   while (size >= 1024 && unitIndex < units.length - 1) {
     size /= 1024;
     unitIndex++;
   }
-  
+
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 };
 
@@ -730,7 +730,7 @@ const getCacheUtilizationColor = (percent) => {
 
 const startRefreshTimer = () => {
   if (refreshTimer.value) clearInterval(refreshTimer.value);
-  
+
   refreshTimer.value = setInterval(() => {
     if (!refreshing.value) {
       refreshAll();
@@ -953,16 +953,16 @@ onUnmounted(() => {
     gap: 8px;
     align-items: flex-start;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .source-item {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .source-actions {
     align-self: flex-end;
   }
