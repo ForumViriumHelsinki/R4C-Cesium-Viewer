@@ -158,7 +158,7 @@ class="control-item"
 
     <!-- Building Filters -->
     <div
-v-if="postalCode"
+v-if="view !== 'grid'"
 class="control-group"
 >
       <h4 class="control-group-title">

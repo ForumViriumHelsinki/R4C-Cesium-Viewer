@@ -46,11 +46,6 @@ mdi-map-outline
         </h3>
         <BackgroundMapBrowser />
       </div>
-      
-      <!-- Graphics Settings -->
-      <div class="control-section">
-        <GraphicsSettingsDialog />
-      </div>
 
       <!-- Analysis Tools -->
       <div class="control-section">
@@ -309,8 +304,8 @@ import StatisticalGridOptions from '../components/StatisticalGridOptions.vue';
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue';
 import MapControls from '../components/MapControls.vue';
 import DataSourceStatus from '../components/DataSourceStatus.vue';
-import GraphicsSettingsDialog from '../components/GraphicsSettingsDialog.vue';
 import CoolingCenter from '../components/CoolingCenter.vue';
+import LandcoverToParks from '../components/LandcoverToParks.vue';
 import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue';
 import EstimatedImpacts from '../components/EstimatedImpacts.vue';
 import PostalCodeNDVI from '../views/PostalCodeNDVI.vue';
@@ -331,11 +326,11 @@ export default {
     BackgroundMapBrowser,
     MapControls,
     DataSourceStatus,
-    GraphicsSettingsDialog,
     CoolingCenter,
     CoolingCenterOptimiser,
     EstimatedImpacts,
     PostalCodeNDVI,
+    LandcoverToParks,
   },
   setup() {
     const globalStore = useGlobalStore();
@@ -366,7 +361,8 @@ export default {
     const hasAvailableAnalysis = computed(() => {
       if (currentLevel.value === 'start') return false;
       
-      if (currentLevel.value === 'postalCode') {
+      if (currentLevel.value === 'postalCode' && currentView.value !== 'grid') {
+
         return (heatHistogramData.value && heatHistogramData.value.length > 0) ||
                showSosEco.value ||
                (currentView.value !== 'helsinki') ||
@@ -474,7 +470,7 @@ export default {
     const reset = () => {
       location.reload();
     };
-
+      
     // Rotate camera function
     const rotateCamera = () => {
       const camera = new Camera();
