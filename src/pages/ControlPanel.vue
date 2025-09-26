@@ -45,9 +45,9 @@
                 </v-expansion-panel-title>
                 <v-expansion-panel-text class="pa-0">
                   <v-tabs v-model="adaptationTab" grow>
-                    <v-tab value="centers" :stacked="true">Centers</v-tab>
-                    <v-tab value="optimizer" :stacked="true">Optimizer</v-tab>
-                    <v-tab value="parks" :stacked="true">Parks</v-tab>
+                    <v-tab value="centers" :stacked="true" class="text-none">Cooling Centers</v-tab>
+                    <v-tab value="optimizer" :stacked="true" class="text-none">Optimizer</v-tab>
+                    <v-tab value="parks" :stacked="true" class="text-none">Parks</v-tab>
                   </v-tabs>
                   <v-window v-model="adaptationTab">
                     <v-window-item value="centers" class="pa-1">

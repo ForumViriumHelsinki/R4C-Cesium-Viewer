@@ -17,6 +17,7 @@
               :loading="isLoading"
               :class="{ 'active-btn': isSelectingGrid }"
               block
+              class="mt-2 text-none"
               @click="handlePrimaryButtonClick"
             >
               {{ primaryButtonText }}
@@ -26,6 +27,7 @@
             <v-btn
               color="error"
               block
+              class="mt-2 text-none"
               @click="handleResetOrCancel"
             >
               {{ resetOrCancelButtonText }}
