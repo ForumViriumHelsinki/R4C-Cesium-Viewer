@@ -14,6 +14,7 @@ declare module 'vue' {
     BuildingTreeChart: typeof import('./src/components/BuildingTreeChart.vue')['default']
     CameraControls: typeof import('./src/components/CameraControls.vue')['default']
     CategoricalSelect: typeof import('./src/components/CategoricalSelect.vue')['default']
+    ClimateAdaption: typeof import('./src/components/ClimateAdaption.vue')['default']
     CoolingCenter: typeof import('./src/components/CoolingCenter.vue')['default']
     CoolingCenterOptimiser: typeof import('./src/components/CoolingCenterOptimiser.vue')['default']
     DataSourceStatus: typeof import('./src/components/DataSourceStatus.vue')['default']

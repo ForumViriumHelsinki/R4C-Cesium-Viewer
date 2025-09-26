@@ -26,20 +26,22 @@ Cooling Center Capacity
         <v-row class="mt-4">
           <v-col cols="6">
             <v-btn
-color="primary"
-:class="{ 'active-btn': selectingGrid }"
-block
-@click="toggleGridSelection"
->
+              color="primary"
+              :class="{ 'active-btn': selectingGrid }"
+              block
+              class="text-none"
+              @click="toggleGridSelection"
+            >
               {{ selectingGrid ? 'Select' : 'Add' }}
             </v-btn>
           </v-col>
           <v-col cols="6">
             <v-btn
-color="error"
-block
-@click="resetCoolingCenters"
->
+              color="error"
+              block
+              class="text-none"
+              @click="resetCoolingCenters"
+            >
               Reset
             </v-btn>
           </v-col>
