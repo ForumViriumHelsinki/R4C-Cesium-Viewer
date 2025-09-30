@@ -1,0 +1,134 @@
+name: Database Migrations
+
+on:
+  pull_request:
+    paths:
+      - 'db/migrations/**'
+      - 'db/.dbmate.env'
+      - '.github/workflows/database-migrations.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'db/migrations/**'
+
+jobs:
+  test-migrations:
+    name: Test Database Migrations
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgis/postgis:15-3.3
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dbmate
+        run: |
+          curl -fsSL -o dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          sudo chmod +x dbmate
+          sudo mv dbmate /usr/local/bin/
+
+      - name: Verify dbmate installation
+        run: dbmate --version
+
+      - name: Set up environment
+        run: |
+          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/test_db" >> $GITHUB_ENV
+
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+      - name: Test migrations
+        run: |
+          # Test basic dbmate functionality
+          dbmate wait
+          
+          # Apply migrations
+          dbmate up
+          
+          # Verify schema_migrations table exists
+          psql "$DATABASE_URL" -c "SELECT version FROM schema_migrations ORDER BY version;"
+          
+          # Test rollback
+          dbmate rollback
+          
+          # Re-apply
+          dbmate up
+
+      - name: Run migration test script
+        run: ./scripts/test_migration.sh
+
+      - name: Validate pygeoapi-relevant tables
+        run: |
+          # Check that key pygeoapi tables exist
+          EXPECTED_TABLES=(
+            "adaptation_landcover"
+            "r4c_coldspot"
+            "tree_f"
+            "urban_heat_building_f"
+          )
+          
+          for table in "${EXPECTED_TABLES[@]}"; do
+            echo "Checking table: $table"
+            psql "$DATABASE_URL" -c "\\d $table"
+          done
+
+  lint-migrations:
+    name: Lint Migration Files
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check migration file naming
+        run: |
+          # Check that migration files follow proper naming convention
+          for file in db/migrations/*.sql; do
+            if [[ ! $(basename "$file") =~ ^[0-9]{14}_[a-z0-9_]+\.sql$ ]]; then
+              echo "❌ Migration file $file does not follow naming convention"
+              echo "Expected format: YYYYMMDDHHMMSS_descriptive_name.sql"
+              exit 1
+            fi
+          done
+          echo "✅ All migration files follow proper naming convention"
+
+      - name: Check migration structure
+        run: |
+          # Check that migrations have both up and down sections
+          for file in db/migrations/*.sql; do
+            if ! grep -q "-- migrate:up" "$file"; then
+              echo "❌ Migration $file missing '-- migrate:up' section"
+              exit 1
+            fi
+            if ! grep -q "-- migrate:down" "$file"; then
+              echo "❌ Migration $file missing '-- migrate:down' section"
+              exit 1
+            fi
+          done
+          echo "✅ All migration files have required up/down sections"
+
+      - name: Check for sensitive data
+        run: |
+          # Check for potential secrets or sensitive data in migrations
+          if grep -r -i "password\|secret\|key\|token" db/migrations/ --exclude="*.md"; then
+            echo "❌ Potential sensitive data found in migrations"
+            exit 1
+          fi
+          echo "✅ No sensitive data found in migrations"

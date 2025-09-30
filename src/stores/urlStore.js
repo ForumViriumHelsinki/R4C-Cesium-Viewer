@@ -67,7 +67,7 @@ export const useURLStore = defineStore('url', {
      * heatExposure(state)(500) // Returns first 500 heat exposure records
      */
     heatExposure: (state) => ( limit = 1000 ) => {
-      return `${state.pygeoapiBase}/heatexposure/items?f=json&limit=${limit}`; // New getter
+      return `${state.pygeoapiBase}/heatexposure_optimized/items?f=json&limit=${limit}`; // New getter
     },
     /**
      * Generates URL for Helsinki Region Transport (HSL) travel time matrix data
@@ -87,7 +87,7 @@ export const useURLStore = defineStore('url', {
      * hsyBuildings(state)('00100', 5000) // Returns buildings in postal code 00100
      */
     hsyBuildings: (state) => (postinumero, limit = 10000) => {
-      return `${state.pygeoapiBase}/hsy_buildings/items?f=json&limit=${limit}&postinumero=${postinumero}`;
+      return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&postinumero=${postinumero}`;
     },
     /**
      * Generates URL for HSY buildings filtered by bounding box (BBOX)
@@ -97,7 +97,7 @@ export const useURLStore = defineStore('url', {
      * hsyGridBuildings(state)('24.9,60.1,25.0,60.2', 2000) // Buildings in bbox
      */
     hsyGridBuildings: (state) => (bboxString, limit = 2000) => {
-      return `${state.pygeoapiBase}/hsy_buildings/items?f=json&limit=${limit}&bbox=${bboxString}`;
+      return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&bbox=${bboxString}`;
     },
     /**
      * Generates URL for landcover-to-parks adaptation scenario data

@@ -23,13 +23,13 @@ class BackgroundPreloader {
   async init() {
     // Load user behavior from cache
     await this.loadUserBehavior();
-    
+
     // Start preloading critical data
     this.startCriticalPreload();
-    
+
     // Set up idle preloading
     this.setupIdlePreloading();
-    
+
     console.log('Background preloader initialized');
   }
 
@@ -47,7 +47,7 @@ class BackgroundPreloader {
       },
       {
         key: 'heat-exposure-sample',
-        url: '/pygeoapi/collections/heatexposure/items?f=json&limit=100',
+        url: '/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=100',
         type: 'heat-exposure',
         priority: 'high',
         description: 'Sample heat exposure data'
@@ -116,7 +116,7 @@ class BackgroundPreloader {
    */
   async processPreloadQueue() {
     if (this.isPreloading) return;
-    
+
     this.isPreloading = true;
 
     try {
@@ -139,7 +139,7 @@ class BackgroundPreloader {
         }
 
         console.log(`Background preloading: ${item.description}`);
-        
+
         try {
           await this.preloadItem(item);
           this.preloadQueue.delete(item.key);
@@ -192,7 +192,7 @@ class BackgroundPreloader {
         }
 
         const data = await response.json();
-        
+
         await cacheService.setData(item.key, data, {
           type: item.type,
           postalCode: item.postalCode,
@@ -229,7 +229,7 @@ class BackgroundPreloader {
     }));
 
     preloadItems.forEach(item => this.addToPreloadQueue(item));
-    
+
     // Process queue if not already running
     if (!this.isPreloading) {
       this.processPreloadQueue();
@@ -244,7 +244,7 @@ class BackgroundPreloader {
       trees: '/pygeoapi/collections/trees/items',
       buildings: '/pygeoapi/collections/buildings/items',
       vegetation: '/pygeoapi/collections/vegetation/items',
-      'heat-exposure': '/pygeoapi/collections/heatexposure/items'
+      'heat-exposure': '/pygeoapi/collections/heatexposure_optimized/items'
     };
 
     const url = baseUrls[layer];
@@ -325,11 +325,11 @@ class BackgroundPreloader {
    */
   setupIdlePreloading() {
     let idleTimer;
-    
+
     const resetIdleTimer = () => {
       this.userBehavior.lastActivity = Date.now();
       clearTimeout(idleTimer);
-      
+
       idleTimer = setTimeout(() => {
         // User has been idle for 10 seconds, resume preloading
         if (this.preloadQueue.size > 0 && !this.isPreloading) {
