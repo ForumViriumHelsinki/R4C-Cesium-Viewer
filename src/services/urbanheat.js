@@ -34,6 +34,7 @@ import { useURLStore } from '../stores/urlStore.js';
 export default class Urbanheat {
 	/**
 	 * Creates an Urbanheat service instance
+	 * @constructor
 	 */
 	constructor( ) {
 		this.store = useGlobalStore();

@@ -33,6 +33,7 @@ export default class FeaturePicker {
 	/**
 	 * Creates a FeaturePicker service instance
 	 * Initializes all required service dependencies for entity interaction handling.
+	 * @constructor
 	 */
 	constructor( ) {
 		this.store = useGlobalStore();
@@ -59,6 +60,7 @@ export default class FeaturePicker {
 	 *
 	 * @param {MouseEvent} event - Browser mouse click event with x,y coordinates
 	 * @returns {void}
+	 * @fires pickEntity
 	 */
 	processClick( event ) {
 
@@ -74,7 +76,7 @@ export default class FeaturePicker {
 	 *
 	 * @param {Cesium.Cartesian2} windowPosition - Screen coordinates for entity picking
 	 * @returns {void}
-	 * @fires eventBus#entityPrintEvent - Emitted when a polygon entity is selected
+	 * @complexity O(1) for scene.pick, O(n) for subsequent property handling
 	 */
 	pickEntity( windowPosition ) {
 		console.log('[FeaturePicker] 🎯 Picking entity at window position:', windowPosition);
@@ -108,7 +110,10 @@ export default class FeaturePicker {
 	 * Clears existing data sources and loads region-specific elements based on Helsinki view mode.
 	 * Updates application level state and UI element visibility.
 	 *
+	 * @async
 	 * @returns {Promise<void>}
+	 * @fires helsinkiService.loadHelsinkiElements or capitalRegionService.loadCapitalRegionElements
+	 * @complexity O(n) where n is the number of buildings/entities to load
 	 */
 	async loadPostalCode() {
 
@@ -137,6 +142,7 @@ export default class FeaturePicker {
 	 * Searches through postal code entities to find matching postal code and extracts zone name.
 	 *
 	 * @returns {void}
+	 * @complexity O(n) where n is the number of postal code entities
 	 * @private
 	 */
 	setNameOfZone() {
@@ -160,14 +166,14 @@ if (Array.isArray(entitiesArray)) {
 	 * Updates application level to 'building', shows loading indicator, emits visibility events,
 	 * and creates building-specific charts. Manages loading state throughout the process.
 	 *
+	 * @async
 	 * @param {Object} properties - Building properties object containing building attributes
 	 * @param {string} properties._postinumero - Postal code of the building
 	 * @param {number} [properties.treeArea] - Nearby tree area
 	 * @param {number} [properties._avg_temp_c] - Average temperature
 	 * @returns {Promise<void>}
-	 * @fires eventBus#hideHelsinki - Emitted when switching away from Helsinki view
-	 * @fires eventBus#hideCapitalRegion - Emitted when switching away from Capital Region view
-	 * @fires eventBus#showBuilding - Emitted when building level view is activated
+	 * @fires eventBus#hideHelsinki|hideCapitalRegion
+	 * @fires eventBus#showBuilding
 	 */
 	async handleBuildingFeature( properties ) {
 		// Show loading indicator for building selection
@@ -210,6 +216,7 @@ if (Array.isArray(entitiesArray)) {
 	 *
 	 * @param {string} name - Name of entities to remove
 	 * @returns {void}
+	 * @complexity O(n) where n is the number of entities
 	 */
 	removeEntityByName( name ) {
 
@@ -225,10 +232,8 @@ if (Array.isArray(entitiesArray)) {
     
 	/**
      * Handles the feature with properties
-     *
+     * 
      * @param {Object} id - The ID of the picked entity
-     * @fires eventBus#createHeatFloodVulnerabilityChart - Emitted when grid cell with vulnerability data is selected
-     * @private
      */
 	handleFeatureWithProperties( id ) {       
         
@@ -327,6 +332,7 @@ if (Array.isArray(entitiesArray)) {
 	 *
 	 * @param {Cesium.Entity} id - Entity with polygon property
 	 * @returns {Object|null} Bounding box object with {minLon, maxLon, minLat, maxLat} in degrees, or null if no polygon
+	 * @complexity O(n) where n is the number of polygon vertices
 	 */
 	getBoundingBox( id ) {
 

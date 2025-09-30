@@ -1,5 +1,7 @@
 /**
+ * @file heatExposureStore.js
  * @module stores/heatExposureStore
+ * @description Heat Exposure Store - Pinia store for managing postal code heat exposure data.
  * Loads and stores aggregated heat exposure indices for all Capital Region postal codes.
  * Provides quick lookup of heat statistics by postal code ID.
  *
@@ -45,6 +47,7 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 		 * Fetches all heat exposure records and stores them in state.
 		 * Automatically uses the latest available heat data endpoint.
 		 *
+		 * @async
 		 * @returns {Promise<void>}
 		 * @throws {Error} If heat exposure data fetch fails
 		 *
@@ -72,6 +75,7 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 		 * Fetches all heat exposure features from pygeoapi endpoint
 		 * Internal method used by loadHeatExposure action.
 		 *
+		 * @async
 		 * @private
 		 * @param {string} requestUrl - Pygeoapi heatexposure collection URL
 		 * @returns {Promise<Array<Object>>} Array of heat exposure GeoJSON features

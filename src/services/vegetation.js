@@ -27,6 +27,7 @@ import unifiedLoader from './unifiedLoader.js';
 export default class Vegetation {
 	/**
 	 * Creates a Vegetation service instance
+	 * @constructor
 	 */
 	constructor( ) {
 		this.datasourceService = new Datasource();

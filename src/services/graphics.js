@@ -20,6 +20,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 export default class Graphics {
 	/**
 	 * Creates a Graphics service instance
+	 * @constructor
 	 */
 	constructor() {
 		this.store = useGlobalStore();

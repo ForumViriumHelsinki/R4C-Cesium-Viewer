@@ -1,5 +1,7 @@
 /**
+ * @file buildingStore.js
  * @module stores/buildingStore
+ * @description Building Store - Pinia store for managing building-specific data and selections.
  * Stores currently selected building features and controls temporal heat exposure visualization.
  *
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}

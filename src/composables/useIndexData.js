@@ -1,5 +1,7 @@
 /**
+ * @file useIndexData.js
  * @module composables/useIndexData
+ * @description Vue 3 composable providing vulnerability index definitions and metadata.
  * Centralizes all social vulnerability index descriptions, labels, and configurations
  * used throughout the application for heat and flood resilience analysis.
  */
@@ -18,6 +20,7 @@ import { ref } from 'vue';
  * - Environmental: green space, Landsat surface heat
  * - Combined visualizations: Multi-factor composite indices
  *
+ * @constant {import('vue').Ref<Array<{text: string, value: string, description: string}>>}
  */
 const indexOptions = ref([
 	{ text: 'Heat Vulnerability', value: 'heat_index', description: 'Total social vulnerability to high temperatures. Includes factors like age, income, and housing conditions.' },
@@ -62,6 +65,7 @@ export function useIndexData() {
      * Retrieves full index information by value key
      * @param {string} indexValue - Index identifier (e.g., 'heat_index', 'flood_index')
      * @returns {{text: string, value: string, description: string}|undefined} Index metadata object or undefined if not found
+     * @complexity O(n) where n is the number of indices (typically ~20)
      */
     const getIndexInfo = (indexValue) => {
         return indexOptions.value.find(option => option.value === indexValue);

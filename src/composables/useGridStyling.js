@@ -1,5 +1,7 @@
 /**
+ * @file useGridStyling.js
  * @module composables/useGridStyling
+ * @description Vue 3 composable for centralized 250m statistical grid styling and color management.
  * Handles heat vulnerability, flood vulnerability, social indices, and combined visualizations
  * with dynamic color schemes and 3D extrusion based on selected indices.
  */
@@ -13,6 +15,7 @@ import * as Cesium from 'cesium';
 
 /**
  * Heat vulnerability color scale (white → dark red)
+ * @constant {Array<{color: string, range: string}>}
  */
 export const heatColors = [
     { color: '#ffffff', range: 'Incomplete data' },
@@ -92,6 +95,7 @@ export const indexToColorScheme = {
  * - Gradient and stripe material patterns
  *
  * @returns {{updateGridColors: Function}} Grid styling functions
+ * @complexity O(n) where n is the number of grid cells (typically ~1000-5000 per postal code)
  *
  * @example
  * import { useGridStyling } from '@/composables/useGridStyling';

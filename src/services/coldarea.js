@@ -24,6 +24,7 @@ import { useURLStore } from '../stores/urlStore.js';
 export default class ColdArea {
 	/**
 	 * Creates a ColdArea service instance
+	 * @constructor
 	 */
 	constructor( ) {
 		this.datasourceService = new Datasource();

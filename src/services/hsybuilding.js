@@ -34,6 +34,7 @@ import { useURLStore } from '../stores/urlStore.js';
 export default class HSYBuilding {
 	/**
 	 * Creates an HSYBuilding service instance
+	 * @constructor
 	 */
     constructor() {
         this.store = useGlobalStore();
@@ -398,17 +399,6 @@ export default class HSYBuilding {
     }
 }
 
-/**
- * Sets building properties in stores and emits Capital Region visibility event
- * Updates scatter plot entities, heat timeseries, histogram data, and building features.
- *
- * @param {Array<Cesium.Entity>} entities - Building entities for scatter plot
- * @param {Array} heatExposureData - Heat exposure timeseries data array
- * @param {Array<number>} avg_temp_cList - Average temperature values for histogram
- * @param {Object} data - Raw building feature data
- * @fires eventBus#showCapitalRegion - Emitted when Capital Region data is loaded
- * @private
- */
 const setBuildingPropsAndEmitEvent = (entities, heatExposureData, avg_temp_cList, data) => {
     const propsStore = usePropsStore();
     propsStore.setScatterPlotEntities(entities);

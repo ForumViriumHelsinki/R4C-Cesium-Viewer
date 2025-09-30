@@ -1,5 +1,7 @@
 /**
+ * @file mitigationStore.js
  * @module stores/mitigationStore
+ * @description Mitigation Store - Pinia store for urban heat mitigation scenario modeling.
  * Calculates heat reduction impacts from cooling centers and green infrastructure (parks).
  * Implements spatial decay models, neighbor influence algorithms, and cumulative impact tracking
  * for climate adaptation planning in the Helsinki Capital Region.

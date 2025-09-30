@@ -26,6 +26,7 @@ import { useToggleStore } from '../stores/toggleStore.js';
 export default class Populationgrid {
 	/**
 	 * Creates a Populationgrid service instance
+	 * @constructor
 	 */
 	constructor( ) {
 		this.store = useGlobalStore();

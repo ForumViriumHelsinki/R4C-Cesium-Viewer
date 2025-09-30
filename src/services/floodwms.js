@@ -1,5 +1,7 @@
 /**
+ * @file floodwms.js
  * @module services/floodwms
+ * @description Flood risk WMS layer management utilities.
  * Provides functions for adding and removing flood hazard map layers from
  * OGC Web Map Service (WMS) endpoints. Supports visualization of flood risk
  * zones, inundation depths, and flood probability scenarios.
@@ -21,6 +23,7 @@ import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
  * Creates and adds a flood risk WMS imagery layer to the Cesium viewer
  * Loads transparent PNG flood overlay from WMS endpoint with proxy support.
  *
+ * @async
  * @param {string} url - WMS service base URL (without query parameters)
  * @param {string} layerName - WMS layer name to request
  * @returns {Promise<void>}

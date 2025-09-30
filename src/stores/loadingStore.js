@@ -1,5 +1,7 @@
 /**
+ * @file loadingStore.js
  * @module stores/loadingStore
+ * @description Loading Store - Pinia store for comprehensive loading state management.
  * Tracks loading progress, cache status, and data source health for all map layers.
  * Integrates with cacheService for intelligent data caching and performance metrics.
  *

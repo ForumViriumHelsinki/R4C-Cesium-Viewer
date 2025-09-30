@@ -12,6 +12,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 export default class Camera {
 	/**
 	 * Creates a Camera service instance
+	 * @constructor
 	 */
 	constructor( ) {
 		this.store = useGlobalStore();
@@ -42,6 +43,7 @@ export default class Camera {
 	 * Searches for postal code entity in PostCodes data source.
 	 *
 	 * @returns {void}
+	 * @complexity O(n) where n is the number of postal code entities
 	 */
 	switchTo2DView() {
 
@@ -80,6 +82,8 @@ export default class Camera {
 	 * Applies slight latitude offset for better framing.
 	 *
 	 * @returns {void}
+	 * @complexity O(n) where n is the number of postal code entities
+	 * @todo Create function that considers postal code area size and sea proximity for optimal positioning
 	 */
 	switchTo3DView() {
 		// Find the data source for postcodes
@@ -197,6 +201,7 @@ switchTo3DGrid() {
 	 *
 	 * @param {number} multiplier - Zoom factor (>1 zooms in, <1 zooms out, 1 = no change)
 	 * @returns {void}
+	 * @complexity O(1)
 	 */
 	zoom(multiplier) {
 		if (multiplier > 1) {
@@ -249,6 +254,7 @@ switchTo3DGrid() {
 	 *
 	 * @param {string|number} postalCode - Postal code to focus on
 	 * @returns {void}
+	 * @complexity O(n) where n is the number of postal code entities
 	 */
 	focusOnPostalCode(postalCode) {
 		// Find the PostCodes data source
@@ -291,6 +297,7 @@ switchTo3DGrid() {
 	 * Toggles rotation state in global store for tracking.
 	 *
 	 * @returns {void}
+	 * @complexity O(1)
 	 */
 	rotate180Degrees() {
 		const camera = this.viewer.camera;

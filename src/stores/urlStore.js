@@ -1,5 +1,7 @@
 /**
+ * @file urlStore.js
  * @module stores/urlStore
+ * @description URL Store - Pinia store for managing API endpoint URLs and data source paths.
  * Provides centralized URL generation for all pygeoapi collections, WMS services, and imagery.
  * All endpoints are accessed through development proxies to handle CORS and authentication.
  *

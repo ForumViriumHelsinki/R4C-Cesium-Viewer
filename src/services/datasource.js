@@ -11,6 +11,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 export default class DataSource {
 	/**
 	 * Creates a DataSource service instance
+	 * @constructor
 	 */
 	constructor( ) {
 		this.store = useGlobalStore();
@@ -21,6 +22,7 @@ export default class DataSource {
 	 * Iterates through all data sources and sets their visibility to true.
 	 *
 	 * @returns {void}
+	 * @complexity O(n) where n is the number of data sources
 	 */
 	showAllDataSources() {
 		this.store.cesiumViewer.dataSources._dataSources.forEach( ( dataSource ) => {
@@ -35,6 +37,7 @@ export default class DataSource {
 	 * @param {string} name - Name prefix to match data sources against
 	 * @param {boolean} show - Visibility state to set (true to show, false to hide)
 	 * @returns {Promise<void>}
+	 * @complexity O(n) where n is the number of data sources
 	 */
 	async changeDataSourceShowByName( name, show ) {
 		this.store.cesiumViewer.dataSources._dataSources.forEach( ( dataSource ) => {
@@ -50,6 +53,7 @@ export default class DataSource {
 	 * Useful for complete scene reset operations.
 	 *
 	 * @returns {Promise<void>}
+	 * @complexity O(n + m) where n is data sources and m is entities
 	 */
 	async removeDataSourcesAndEntities() {
 
@@ -63,6 +67,7 @@ export default class DataSource {
 	 *
 	 * @param {string} name - Exact name of the data source to find
 	 * @returns {Cesium.DataSource|undefined} The matching data source, or undefined if not found
+	 * @complexity O(n) where n is the number of data sources
 	 */
 	getDataSourceByName( name ) {
 		return this.store.cesiumViewer.dataSources._dataSources.find( ( ds ) => ds.name === name );
@@ -75,6 +80,7 @@ export default class DataSource {
 	 *
 	 * @param {string} namePrefix - Prefix to match against data source names
 	 * @returns {Promise<void>} Resolves when all matching data sources are removed
+	 * @complexity O(n*m) where n is number of data sources and m is average removal time
 	 */
 	async removeDataSourcesByNamePrefix( namePrefix ) {
 		return new Promise( ( resolve, reject ) => {
@@ -118,6 +124,7 @@ export default class DataSource {
 	 * @param {string} name - Name to assign to the created data source
 	 * @returns {Promise<Array<Cesium.Entity>>} Promise resolving to array of created entities
 	 * @throws {Error} If GeoJSON loading fails
+	 * @complexity O(n) where n is the number of features in GeoJSON
 	 */
 	async loadGeoJsonDataSource( opacity, url, name ) {
 		return new Promise( ( resolve, reject ) => {
@@ -148,6 +155,7 @@ export default class DataSource {
 	 * @param {Object|string} data - GeoJSON data object or URL string
 	 * @param {string} name - Name for the data source
 	 * @returns {Promise<Array<Cesium.Entity>>} Promise resolving to array of entities
+	 * @complexity O(n) where n is the number of entities in the GeoJSON
 	 */
 	async addDataSourceWithPolygonFix( data, name ) {
 		return new Promise( ( resolve ) => {
@@ -187,6 +195,7 @@ export default class DataSource {
 	 * @param {string} datasource - Name of the data source to analyze
 	 * @param {string} property - Property name to sum
 	 * @returns {number} Total sum of the property values, or 0 if data source not found
+	 * @complexity O(n) where n is the number of entities
 	 */
 	calculateDataSourcePropertyTotal( datasource, property ) {
 		// Find the data source 
@@ -222,6 +231,7 @@ export default class DataSource {
 	 * Useful for cleaning up after multiple data loads or state changes.
 	 *
 	 * @returns {Promise<void>} Promise that resolves when operation completes
+	 * @complexity O(n) where n is the number of data sources
 	 */
 	async removeDuplicateDataSources() {
 		return new Promise( ( resolve, reject ) => {
@@ -269,6 +279,7 @@ export default class DataSource {
 	 *
 	 * @param {string} name - Exact name of the data source to remove
 	 * @returns {Promise<void>}
+	 * @complexity O(n) where n is the number of data sources (for the search)
 	 */
 	async removeDataSourceByName( name ) {
 		// Find the data source named 'MajorDistricts' in the viewer

@@ -1,5 +1,7 @@
 /**
+ * @file landcover.js
  * @module services/landcover
+ * @description HSY landcover WMS layer management utilities.
  * Provides functions for adding and removing HSY (Helsinki Region Environmental Services)
  * landcover imagery layers from the CesiumJS viewer. Supports multi-year landcover data
  * with 13 different land classification types.
@@ -27,6 +29,7 @@ import { useURLStore } from '../stores/urlStore.js';
  * Loads multi-layer landcover data from HSY WMS with year-specific layer names.
  * Supports custom layer lists or auto-generates all 13 landcover types.
  *
+ * @async
  * @param {string} [newLayers] - Optional comma-separated WMS layer names. If not provided, loads all landcover layers for selected year.
  * @returns {Promise<void>}
  * @throws {Error} If WMS provider initialization fails

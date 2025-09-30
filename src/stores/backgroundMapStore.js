@@ -1,5 +1,7 @@
 /**
+ * @file backgroundMapStore.js
  * @module stores/backgroundMapStore
+ * @description Background Map Store - Pinia store for managing background imagery layers.
  * Controls WMS layers, landcover data, NDVI vegetation index imagery, and flood risk maps.
  * Maintains layer references for cleanup and temporal navigation.
  *

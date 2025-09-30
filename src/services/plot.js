@@ -24,6 +24,7 @@ export default class Plot {
 
 	/**
 	 * Creates a Plot service instance
+	 * @constructor
 	 */
 	constructor() {
 		this.store = useGlobalStore();
@@ -32,13 +33,9 @@ export default class Plot {
   
 
 	/**
-	 * Shows all plots and select elements
-	 * Emits visibility events based on current view level (postalCode or building).
-	 *
-	 * @fires eventBus#showHelsinki - Emitted when showing Helsinki postal code view
-	 * @fires eventBus#showCapitalRegion - Emitted when showing Capital Region postal code view
-	 * @fires eventBus#showBuilding - Emitted when showing building level view
-	 */
+ * Shows all plots and select elements
+ * 
+ * */
 	showAllPlots() {
 
 		switch ( this.store.level ) {
@@ -48,19 +45,15 @@ export default class Plot {
   			case 'building':
     			eventBus.emit( 'showBuilding' );
     			break;
-
-		}
+				
+		} 
 
 	}
 
 	/**
-	 * Hides all plots and select elements
-	 * Emits hide events based on current view level (postalCode or building).
-	 *
-	 * @fires eventBus#hideHelsinki - Emitted when hiding Helsinki postal code view
-	 * @fires eventBus#hideCapitalRegion - Emitted when hiding Capital Region postal code view
-	 * @fires eventBus#hideBuilding - Emitted when hiding building level view
-	 */
+ * Hides all plots and select elements
+ * 
+ * */
 	hideAllPlots() {
 
 		switch ( this.store.level ) {
@@ -133,11 +126,12 @@ export default class Plot {
 
 	/**
  * Adds a title to plot
- *
- * @param {Object} svg - D3 SVG selection to add title to
- * @param {string} title - Title text to display
- * @param {number} left - Horizontal offset from left edge
- * @param {number} top - Vertical offset from top edge
+ * 
+ * @param {string} svg 
+ * @param {string} title 
+ * @param {number} width 
+ * @param {number} margin
+
  */
 	addTitle( svg, title, left, top ){
 		// Title doesn't need splitting

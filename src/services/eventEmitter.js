@@ -34,5 +34,6 @@ import mitt from 'mitt';
  * - 'entityPrintEvent' - Emitted when an entity is selected for printing
  *
  * @type {import('mitt').Emitter}
+ * @constant
  */
 export const eventBus = mitt();

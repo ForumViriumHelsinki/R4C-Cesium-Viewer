@@ -25,6 +25,7 @@ import { eventBus } from './eventEmitter.js';
 export default class Geocoding {
 	/**
 	 * Creates a Geocoding service instance
+	 * @constructor
 	 */
 	constructor( ) {
 		this.store = useGlobalStore();
@@ -189,15 +190,7 @@ export default class Geocoding {
 
 	}
 
-	/**
-	 * Moves camera to specified latitude, longitude coordinates
-	 * Centers the camera view and emits geocoding event, then loads postal code data.
-	 *
-	 * @param {number} longitude - Longitude coordinate
-	 * @param {number} latitude - Latitude coordinate
-	 * @fires eventBus#geocodingPrintEvent - Emitted when camera moves to geocoded location
-	 * @private
-	 */
+	// Moves camera to specified latitude, longitude coordinates
 	moveCameraAndReset( longitude, latitude ) {
 
 		this.cameraService.setCameraView( longitude, latitude );

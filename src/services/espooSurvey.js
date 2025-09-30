@@ -30,6 +30,7 @@ import { useURLStore } from '../stores/urlStore.js';
 export default class EspooSurvey {
 	/**
 	 * Creates an EspooSurvey service instance
+	 * @constructor
 	 */
 	constructor() {
 		this.store = useGlobalStore();
@@ -53,14 +54,11 @@ export default class EspooSurvey {
 	}
 
 	/**
-	 * Adds a survey data source to the viewer
-	 * Processes survey data, adds entities with color coding, and triggers scatter plot visualization.
-	 *
-	 * @param {Object} data - The survey data to be added as a data source
-	 * @param {String} collection - The name of survey collection to be added as a data source
-	 * @fires eventBus#newSurveyScatterPlot - Emitted when survey data is ready for visualization
-	 * @private
-	 */
+ * Adds a survey data source to the viewer
+ * 
+ * @param {Object} data - The survey data to be added as a data source
+ * @param {String} collection - The name of survey collection to be added as a data source
+ */
 	async addSurveyDataSource( data, collection ) {
 
 		this.setAvgTempInCelsius( data.features );
@@ -81,6 +79,7 @@ export default class EspooSurvey {
 	 *
 	 * @param {Array<Object>} features - GeoJSON features with heatexposure property
 	 * @returns {void}
+	 * @modifies Adds avg_temp_c property to each feature
 	 *
 	 * @example
 	 * // Feature with normalized heat exposure 0.7
@@ -114,6 +113,7 @@ export default class EspooSurvey {
 	 *
 	 * @param {Array<Object>} entities - Cesium entities to style
 	 * @returns {void}
+	 * @modifies Sets point graphics and hides billboard for each entity
 	 */
 	setColorAndLabelForPointEntities( entities ) {
 

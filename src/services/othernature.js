@@ -26,6 +26,7 @@ import unifiedLoader from './unifiedLoader.js';
 export default class Othernature {
 	/**
 	 * Creates an Othernature service instance
+	 * @constructor
 	 */
 	constructor( ) {
 		this.store = useGlobalStore();
