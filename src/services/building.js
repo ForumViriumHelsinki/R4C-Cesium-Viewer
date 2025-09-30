@@ -7,7 +7,28 @@ import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { eventBus } from './eventEmitter.js';
 
+/**
+ * Building Service
+ * Manages building entity visualization, heat exposure data, and user interactions.
+ * Handles building filtering, highlighting, color coding by heat exposure,
+ * and integration with tree coverage and urban heat data.
+ *
+ * Key responsibilities:
+ * - Building entity polygon styling based on heat exposure
+ * - Building height extrusion from floor count or measured height
+ * - Building filtering (by purpose, construction date, floor count)
+ * - Building selection and highlighting with outline effects
+ * - Heat exposure data visualization and histogram updates
+ * - Integration with tree coverage effects
+ *
+ * @class Building
+ */
 export default class Building {
+	/**
+	 * Creates a Building service instance
+	 * Initializes service dependencies for data sources, urban heat, and tree coverage.
+	 * @constructor
+	 */
 	constructor() {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
@@ -20,22 +41,27 @@ export default class Building {
 
 
 	/**
- * Set building entities heat exposure to original
- *
- * @param { Object } entities Cesium entities
- */
+	 * Removes nearby tree coverage effects from building entities
+	 * Resets building polygon colors to original heat exposure values.
+	 * Processes entities in batches to prevent UI blocking on large datasets.
+	 *
+	 * @async
+	 * @param {Array<Cesium.Entity>} entities - Building entities to process
+	 * @returns {Promise<void>}
+	 * @complexity O(n) where n is the number of entities, with UI-friendly batching
+	 */
 	async removeNearbyTreeEffect( entities ) {
 		const batchSize = 25; // Process 25 entities at a time
-		
+
 		for ( let i = 0; i < entities.length; i += batchSize ) {
 			const batch = entities.slice(i, i + batchSize);
-			
+
 			// Process batch synchronously
 			for ( let j = 0; j < batch.length; j++ ) {
 				this.setBuildingEntityPolygon( batch[j] );
 			}
-			
-			// Yield control to prevent UI blocking
+
+			// Yield control to browser to prevent UI blocking
 			if ( i + batchSize < entities.length ) {
 				await new Promise(resolve => requestIdleCallback(resolve));
 			}
@@ -43,22 +69,27 @@ export default class Building {
 	}
 
 	/**
- * Set building entities heat exposure
- *
- * @param { Object } entities Cesium entities
- */
+	 * Applies heat exposure visualization to building entities
+	 * Updates building polygon colors based on heat exposure data.
+	 * Uses batched processing for performance optimization.
+	 *
+	 * @async
+	 * @param {Array<Cesium.Entity>} entities - Building entities to style
+	 * @returns {Promise<void>}
+	 * @complexity O(n) where n is the number of entities, with batching for UI responsiveness
+	 */
 	async setHeatExposureToBuildings( entities ) {
 		const batchSize = 25; // Process 25 entities at a time
-		
+
 		for ( let i = 0; i < entities.length; i += batchSize ) {
 			const batch = entities.slice(i, i + batchSize);
-			
+
 			// Process batch synchronously
 			for ( let j = 0; j < batch.length; j++ ) {
 				this.setBuildingEntityPolygon( batch[j] );
 			}
-			
-			// Yield control to prevent UI blocking
+
+			// Yield control to browser to maintain responsiveness
 			if ( i + batchSize < entities.length ) {
 				await new Promise(resolve => requestIdleCallback(resolve));
 			}
@@ -67,31 +98,39 @@ export default class Building {
 
 
 	/**
- * Submits events for creating building charts
- *  
- * @param { Number } treeArea nearby tree area of building
- * @param { Number } avg_temp_c average surface temperature of building in Celsius
- * @param { Object } buildingProps 
-
- */
+	 * Creates and emits events for building-specific data visualizations
+	 * Processes building heat timeseries data, tree coverage, and heat exposure values.
+	 * Emits events to trigger chart updates in UI components.
+	 *
+	 * @async
+	 * @param {number} treeArea - Nearby tree coverage area in square meters
+	 * @param {number} avg_temp_c - Average surface temperature in Celsius (unused in current implementation)
+	 * @param {Object} buildingProps - Building properties object containing heat and structural data
+	 * @param {Object} buildingProps.heat_timeseries - Time series heat exposure data
+	 * @param {Object} buildingProps._avgheatexposuretobuilding - Average heat exposure value
+	 * @returns {Promise<void>}
+	 * @fires eventBus#newBuildingHeat
+	 */
 	async createBuildingCharts( treeArea, avg_temp_c, buildingProps ) {
 
 		this.store.view === 'grid' && this.propsStore.setGridBuildingProps( buildingProps );
 
-		// Process heat timeseries asynchronously to avoid blocking
+		// Process heat timeseries asynchronously to avoid blocking UI
 		await new Promise(resolve => {
 			filterHeatTimeseries( buildingProps );
 			requestIdleCallback ? requestIdleCallback(resolve) : setTimeout(resolve, 0);
 		});
 
+		// Set tree area if tree layer is visible and data exists
 		( this.toggleStore.showTrees && treeArea ) &&
       ( this.propsStore.setTreeArea( treeArea ) );
 
-		this.toggleStore.helsinkiView 
+		// Set heat exposure data based on view mode (Helsinki vs Capital Region)
+		this.toggleStore.helsinkiView
     		? ( this.propsStore.setBuildingHeatExposure( buildingProps._avgheatexposuretobuilding._value ), eventBus.emit( 'newBuildingHeat' ) )
-    		: ( !this.toggleStore.helsinkiView 
-        		? ( buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) ) 
-        		: ( this.propsStore.setGridBuildingProps( buildingProps ) ) );       
+    		: ( !this.toggleStore.helsinkiView
+        		? ( buildingProps.heat_timeseries && this.propsStore.setBuildingHeatTimeseries( buildingProps.heat_timeseries._value ) )
+        		: ( this.propsStore.setGridBuildingProps( buildingProps ) ) );
 	}
 
 	/**

@@ -1,5 +1,27 @@
+/**
+ * @file useIndexData.js
+ * @module composables/useIndexData
+ * @description Vue 3 composable providing vulnerability index definitions and metadata.
+ * Centralizes all social vulnerability index descriptions, labels, and configurations
+ * used throughout the application for heat and flood resilience analysis.
+ */
+
 import { ref } from 'vue';
 
+/**
+ * Comprehensive list of social vulnerability indices with metadata
+ * Includes heat vulnerability, flood vulnerability, social factors, and combined indices.
+ * Each index has a user-friendly label, unique value key, and detailed description.
+ *
+ * Index categories:
+ * - Primary vulnerabilities: heat_index, flood_index
+ * - Component indices: sensitivity, exposure, preparedness, response, recovery
+ * - Social factors: age, income, information, tenure, social networks, overcrowding
+ * - Environmental: green space, Landsat surface heat
+ * - Combined visualizations: Multi-factor composite indices
+ *
+ * @constant {import('vue').Ref<Array<{text: string, value: string, description: string}>>}
+ */
 const indexOptions = ref([
 	{ text: 'Heat Vulnerability', value: 'heat_index', description: 'Total social vulnerability to high temperatures. Includes factors like age, income, and housing conditions.' },
 	{ text: 'Flood Vulnerability', value: 'flood_index', description: 'Total social vulnerability to flooding. Considers factors such as age, income, overcrowding, and green space.' },
@@ -25,13 +47,34 @@ const indexOptions = ref([
     { text: 'Combined Indices (Heat/Flood/Green)', value: 'combined_heat_flood_green', description: 'Combined heat and flood vulnerability, colored by heat and flood, height by green space.' },
 ]);
 
+/**
+ * Vue 3 composable for vulnerability index metadata access
+ * Provides centralized access to index definitions and lookup utilities.
+ * Used for UI labels, descriptions, tooltips, and legend generation.
+ *
+ * @returns {{indexOptions: import('vue').Ref<Array>, getIndexInfo: Function}} Index data and lookup function
+ *
+ * @example
+ * import { useIndexData } from '@/composables/useIndexData';
+ * const { indexOptions, getIndexInfo } = useIndexData();
+ * const heatInfo = getIndexInfo('heat_index');
+ * console.log(heatInfo.description); // "Total social vulnerability to high temperatures..."
+ */
 export function useIndexData() {
+    /**
+     * Retrieves full index information by value key
+     * @param {string} indexValue - Index identifier (e.g., 'heat_index', 'flood_index')
+     * @returns {{text: string, value: string, description: string}|undefined} Index metadata object or undefined if not found
+     * @complexity O(n) where n is the number of indices (typically ~20)
+     */
     const getIndexInfo = (indexValue) => {
         return indexOptions.value.find(option => option.value === indexValue);
     };
 
     return {
+        /** Reactive array of all vulnerability index definitions */
         indexOptions,
+        /** Lookup function to retrieve index metadata by value */
         getIndexInfo,
     };
 }

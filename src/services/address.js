@@ -51,12 +51,31 @@ const removeNulls = ( str ) => {
 	return stringValue.replace( /null/g, '' ).replace(/^\s+|\s+$/g, '');
 };
 
-// Helper function to fetch the value from properties, preferring non-prefixed over prefixed
+/**
+ * Retrieves property value from building properties object
+ * Checks for both non-prefixed and underscore-prefixed property names.
+ * Prefers non-prefixed version if both exist.
+ *
+ * @param {Object} properties - Building properties object
+ * @param {string} key - Property key to look up
+ * @returns {*} Property value, or undefined if not found
+ * @complexity O(1)
+ * @private
+ */
 const getProperty = ( properties, key ) => {
 	return properties[key] ?? properties[`_${key}`];
 };
 
-// Helper function to check if a value is valid for address building
+/**
+ * Validates if a value is suitable for address construction
+ * Accepts all values except null, undefined, and empty strings.
+ * Explicitly allows boolean false and numeric zero.
+ *
+ * @param {*} value - Value to validate
+ * @returns {boolean} True if value is valid for address building
+ * @complexity O(1)
+ * @private
+ */
 const isValidValue = ( value ) => {
 	// Include boolean false, but exclude null, undefined, and empty strings
 	return value !== null && value !== undefined && value !== '';

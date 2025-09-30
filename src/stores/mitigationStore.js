@@ -1,5 +1,45 @@
+/**
+ * @file mitigationStore.js
+ * @module stores/mitigationStore
+ * @description Mitigation Store - Pinia store for urban heat mitigation scenario modeling.
+ * Calculates heat reduction impacts from cooling centers and green infrastructure (parks).
+ * Implements spatial decay models, neighbor influence algorithms, and cumulative impact tracking
+ * for climate adaptation planning in the Helsinki Capital Region.
+ *
+ * Mitigation strategies:
+ * - **Cooling Centers**: Point-based interventions (e.g., air-conditioned public spaces)
+ *   - Linear distance decay: Max 20% reduction at source → 4% at 1km radius
+ *   - Additive effects from multiple centers
+ *   - Based on R4C empirical cooling center data
+ *
+ * - **Parks/Green Space**: Area-based interventions (landcover conversion to vegetation)
+ *   - Park cooling constant: 0.177 (derived from 2022 Helsinki park analysis)
+ *   - Spatial influence: Affects source cell + up to 8 neighboring cells
+ *   - Effect scales with park area (larger parks = wider influence)
+ *   - Distance-weighted neighbor reduction (50% for adjacent, 25% for diagonal)
+ *
+ * Spatial model:
+ * - Grid system: 250m × 250m cells (62,500 m² per cell)
+ * - Coordinate system: EUREF-FIN (Finnish National Coordinate System)
+ * - Neighbor search: 8-direction queen's case adjacency
+ * - Cooling radius: Dynamically calculated from park area and influence factor
+ *
+ * Impact calculation:
+ * - Heat index values: Normalized 0-1 scale
+ * - Reduction formula: new_index = max(0, original_index - cooling_effect)
+ * - Cumulative tracking: Total cooling area and heat reduction
+ * - Modified indices stored per grid_id for visualization
+ *
+ * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
+ */
+
 import { defineStore } from 'pinia';
 
+/**
+ * Mitigation Pinia Store
+ * Models heat mitigation impacts with spatial decay and cumulative tracking.
+ * Many methods already have inline JSDoc comments.
+ */
 export const useMitigationStore = defineStore( 'mitigation', {
     state: () => ( {
         coolingCenters: [],	

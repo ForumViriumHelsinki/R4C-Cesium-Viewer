@@ -1,8 +1,27 @@
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 
+/**
+ * Sensor Service
+ * Manages real-time environmental sensor data visualization from R4C monitoring network.
+ * Loads GeoJSON sensor data and displays temperature, humidity, and timing information
+ * as Cesium labels at sensor locations.
+ *
+ * Data source: bri3.fvh.io R4C open data endpoint (latest measurements)
+ *
+ * Visualizes:
+ * - Air temperature (temp_air) in Celsius
+ * - Relative humidity (rh_air) in percentage
+ * - Measurement timestamp
+ *
+ * @class Sensor
+ */
 export default class Vegetation {
+	/**
+	 * Creates a Sensor service instance
+	 * @constructor
+	 */
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;

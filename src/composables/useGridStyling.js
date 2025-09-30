@@ -1,3 +1,11 @@
+/**
+ * @file useGridStyling.js
+ * @module composables/useGridStyling
+ * @description Vue 3 composable for centralized 250m statistical grid styling and color management.
+ * Handles heat vulnerability, flood vulnerability, social indices, and combined visualizations
+ * with dynamic color schemes and 3D extrusion based on selected indices.
+ */
+
 import { computed } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
@@ -5,7 +13,10 @@ import { useToggleStore } from '../stores/toggleStore.js';
 import { useMitigationStore } from '../stores/mitigationStore.js';
 import * as Cesium from 'cesium';
 
-// --- CENTRALIZED STYLING CONSTANTS ---
+/**
+ * Heat vulnerability color scale (white → dark red)
+ * @constant {Array<{color: string, range: string}>}
+ */
 export const heatColors = [
     { color: '#ffffff', range: 'Incomplete data' },
     { color: '#A9A9A9', range: 'Missing values' },
@@ -69,7 +80,27 @@ export const indexToColorScheme = {
 };
 
 /**
- * Composable that centralizes all logic for styling the main statistical grid.
+ * Vue 3 composable for 250m statistical grid visualization styling
+ * Centralizes all color scheme logic, index-based styling, and 3D extrusion.
+ * Supports heat/flood vulnerability indices, social vulnerability factors,
+ * combined visualizations, and mitigation impact calculations.
+ *
+ * Features:
+ * - 17+ vulnerability index types
+ * - Dynamic color schemes per index
+ * - 3D extrusion for combined visualizations
+ * - NDVI-aware opacity adjustment
+ * - Missing data handling
+ * - Mitigation impact integration
+ * - Gradient and stripe material patterns
+ *
+ * @returns {{updateGridColors: Function}} Grid styling functions
+ * @complexity O(n) where n is the number of grid cells (typically ~1000-5000 per postal code)
+ *
+ * @example
+ * import { useGridStyling } from '@/composables/useGridStyling';
+ * const { updateGridColors } = useGridStyling();
+ * updateGridColors('heat_index'); // Apply heat vulnerability colors
  */
 export function useGridStyling() {
     // --- STATE MANAGEMENT ---

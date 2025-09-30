@@ -1,4 +1,4 @@
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
@@ -6,7 +6,33 @@ import { eventBus } from '../services/eventEmitter.js';
 import { useURLStore } from '../stores/urlStore.js';
 import unifiedLoader from './unifiedLoader.js';
 
+/**
+ * Tree Service
+ * Manages tree coverage data loading, visualization, and cooling effect analysis.
+ * Handles 4 tree height categories (2-10m, 10-15m, 15-20m, >20m) with coordinated
+ * parallel loading and optimized batch processing.
+ *
+ * Tree height categories (koodi codes):
+ * - 221: >20m (tallest, darkest green)
+ * - 222: 15-20m
+ * - 223: 10-15m
+ * - 224: 2-10m (shortest, lightest green)
+ *
+ * Features:
+ * - Parallel loading of all height categories via unifiedLoader
+ * - Adaptive batch processing for large datasets
+ * - Color-coded visualization by tree height
+ * - 3D tree extrusion based on average height
+ * - Building cooling effect distance analysis
+ * - Cache support for improved performance
+ *
+ * @class Tree
+ */
 export default class Tree {
+	/**
+	 * Creates a Tree service instance
+	 * @constructor
+	 */
 	constructor( ) {
 		this.datasourceService = new Datasource();
 		this.store = useGlobalStore();

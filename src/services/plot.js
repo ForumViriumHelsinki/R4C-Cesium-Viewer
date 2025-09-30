@@ -1,11 +1,31 @@
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { eventBus } from './eventEmitter.js';
-import * as d3 from 'd3'; // Import D3.js
+import * as d3 from 'd3';
 
+/**
+ * Plot Service
+ * Provides D3.js-based plotting utilities for data visualization throughout the application.
+ * Manages plot containers, SVG creation, scales, axes, tooltips, and interactive chart elements.
+ * Handles visibility control for level-specific (postal code vs building) visualizations.
+ *
+ * Key capabilities:
+ * - SVG element creation and initialization
+ * - Linear and band scale generation
+ * - Tooltip management for interactive charts
+ * - Axis setup and configuration
+ * - Plot container lifecycle management
+ * - Tree bearing switch controls
+ *
+ * @class Plot
+ * @see {@link https://d3js.org/|D3.js Documentation}
+ */
 export default class Plot {
 
-
+	/**
+	 * Creates a Plot service instance
+	 * @constructor
+	 */
 	constructor() {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();

@@ -10,7 +10,32 @@ import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 import { useURLStore } from '../stores/urlStore.js';
 
+/**
+ * HSY Building Service
+ * Manages building data from Helsinki Region Environmental Services (HSY) WFS.
+ * Handles Capital Region building loading, grid cell intersection calculations,
+ * and attribute enrichment with spatial analysis using Turf.js.
+ *
+ * Data sources:
+ * - HSY WFS building footprints (Capital Region)
+ * - Spatial filtering by postal code or bounding box
+ * - Grid cell overlap calculations for statistical aggregation
+ *
+ * Features:
+ * - WFS-based building loading with bbox filtering
+ * - Turf.js spatial analysis for grid/building intersections
+ * - GeoJSON polygon generation from Cesium entities
+ * - Grid cell attribute calculations (floor area, building count)
+ * - Building attribute enrichment
+ *
+ * @class HSYBuilding
+ * @see {@link https://hsy.fi/en/environmental-information/open-data/|HSY Open Data}
+ */
 export default class HSYBuilding {
+	/**
+	 * Creates an HSYBuilding service instance
+	 * @constructor
+	 */
     constructor() {
         this.store = useGlobalStore();
         this.viewer = this.store.cesiumViewer;

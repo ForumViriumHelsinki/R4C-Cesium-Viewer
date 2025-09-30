@@ -1,6 +1,41 @@
+/**
+ * @file loadingStore.js
+ * @module stores/loadingStore
+ * @description Loading Store - Pinia store for comprehensive loading state management.
+ * Tracks loading progress, cache status, and data source health for all map layers.
+ * Integrates with cacheService for intelligent data caching and performance metrics.
+ *
+ * Features:
+ * - **Per-layer progress tracking**: Monitor loading of individual layers (trees, buildings, etc.)
+ * - **Cache integration**: Check cache status, age, and size for each layer
+ * - **Data source health**: Track response times and availability of external APIs
+ * - **Performance metrics**: Record load times for optimization analysis
+ * - **Error tracking**: Detailed error messages per layer with retry support
+ *
+ * Managed layers:
+ * - Vegetation layers (trees, vegetation, otherNature)
+ * - Building data (buildings, postalCodes)
+ * - Background layers (landcover, NDVI, populationGrid)
+ * - Environmental data (heatData)
+ *
+ * Data sources monitored:
+ * - **pygeoapi**: Finland's geospatial API portal
+ * - **hsyAction**: Helsinki Region Environmental Services
+ * - **paavo**: Statistics Finland postal code data
+ * - **digitransit**: Public transport API
+ * - **terrain**: Helsinki 3D terrain service
+ *
+ * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
+ */
+
 import { defineStore } from 'pinia'
 import cacheService from '../services/cacheService.js'
 
+/**
+ * Loading Pinia Store
+ * Comprehensive loading state management with cache integration and health monitoring.
+ * All methods already documented with JSDoc.
+ */
 export const useLoadingStore = defineStore('loading', {
   state: () => ({
     // Global loading state

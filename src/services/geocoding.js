@@ -1,15 +1,35 @@
-import Camera from './camera.js'; 
-import FeaturePicker from './featurepicker.js'; 
+import Camera from './camera.js';
+import FeaturePicker from './featurepicker.js';
 import View from './camera.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
-import Landcover from './landcover.js'; 
+import Landcover from './landcover.js';
 import { eventBus } from './eventEmitter.js';
 
+/**
+ * Geocoding Service
+ * Provides address search and geocoding functionality using Digitransit API.
+ * Handles autocomplete search, address filtering, camera navigation to locations,
+ * and postal code resolution. Integrates with Helsinki/Capital Region view modes.
+ *
+ * Features:
+ * - Real-time address autocomplete (3+ characters)
+ * - Geocoding via Digitransit geocoding API
+ * - Camera movement to selected addresses
+ * - Postal code extraction and zone name resolution
+ * - Helsinki-specific filtering option
+ *
+ * @class Geocoding
+ * @see {@link https://digitransit.fi/en/developers/apis/2-geocoding-api/|Digitransit Geocoding API}
+ */
 export default class Geocoding {
+	/**
+	 * Creates a Geocoding service instance
+	 * @constructor
+	 */
 	constructor( ) {
 		this.store = useGlobalStore();
-		this.viewer = this.store.cesiumViewer;
+		this.viewer = this.store.cesiumViewer();
 		this.cameraService = new Camera();
 		this.featurePicker = new FeaturePicker();
 		this.addressData = null;
