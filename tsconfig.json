@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    // Enable JavaScript file processing
+    "allowJs": true,
+    // Don't type-check, just extract documentation
+    "checkJs": false,
+
+    // Target modern JavaScript to match Vite config
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+
+    // Allow default imports from modules with no default export
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    // Skip type checking of declaration files
+    "skipLibCheck": true,
+
+    // Enable all strict type-checking options (helpful for JSDoc)
+    "strict": false,
+
+    // Resolve JSON modules
+    "resolveJsonModule": true,
+
+    // Ensure consistent casing in imports
+    "forceConsistentCasingInFileNames": true,
+
+    // Match Vite's path alias configuration
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    // Library types
+    "lib": ["ES2020", "DOM", "DOM.Iterable"]
+  },
+  "include": [
+    "src/**/*.js",
+    "src/**/*.vue"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests",
+    "**/*.spec.js",
+    "**/*.test.js"
+  ]
+}

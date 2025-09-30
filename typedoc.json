@@ -1,0 +1,80 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+
+  // Project Information
+  "name": "R4C Cesium Viewer API Documentation",
+  "includeVersion": true,
+
+  // Input Options
+  "entryPointStrategy": "expand",
+  "entryPoints": [
+    "./src/services",
+    "./src/stores",
+    "./src/composables"
+  ],
+  "exclude": [
+    "**/*.vue",
+    "**/*.spec.js",
+    "**/*.test.js",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/tests/**"
+  ],
+
+  // Output Options
+  "out": "docs",
+  "cleanOutputDir": true,
+
+  // Comment Options
+  "jsDocCompatibility": true,
+  "commentStyle": "jsdoc",
+
+  // Organization Options
+  "categorizeByGroup": true,
+  "defaultCategory": "Other",
+  "categoryOrder": [
+    "Services",
+    "Stores",
+    "Composables",
+    "*"
+  ],
+  "sort": ["source-order"],
+  "kindSortOrder": [
+    "Class",
+    "Function",
+    "Variable",
+    "Property",
+    "Method"
+  ],
+
+  // Validation Options
+  "validation": {
+    "notExported": false,
+    "notDocumented": false,
+    "invalidLink": true
+  },
+
+  // External Dependencies
+  "excludeExternals": true,
+  "excludeNotDocumented": false,
+  "excludePrivate": false,
+  "excludeProtected": false,
+  "excludeInternal": true,
+
+  // Navigation Options
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+
+  // README
+  "readme": "none",
+
+  // Additional Options
+  "skipErrorChecking": false,
+  "treatWarningsAsErrors": false,
+  "treatValidationWarningsAsErrors": false,
+
+  // Plugin Options
+  "plugin": []
+}
