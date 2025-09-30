@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/helm-r4c-v0.6.0...helm-r4c-v0.7.0) (2025-09-30)
+
+
+### Features
+
+* Database infrastructure, performance optimizations ([#209](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/209)) ([7eb3bde](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7eb3bdea69c725bc0b56f206f9de770af2ba7ad5))
+
+
+### Bug Fixes
+
+* resolve nginx configuration syntax error in pygeoapi proxy ([#201](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/201)) ([8655cca](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8655cca25e0a4ad4f9fdce66e037f539cb47a9d8))
+
 ## [0.6.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/helm-r4c-v0.5.0...helm-r4c-v0.6.0) (2025-01-10)
 
 
