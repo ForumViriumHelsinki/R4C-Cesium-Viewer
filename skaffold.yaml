@@ -16,10 +16,11 @@ build:
 deploy:
   helm:
     releases:
+      # Main webapp (R4C Cesium Viewer)
       - name: helm-r4c
         chartPath: helm
-        valuesFiles:
-          - helm/values.yaml
+        # valuesFiles:
+        #   - helm/values.yaml
         setValueTemplates:
           image.repository: "{{.IMAGE_REPO_frontend}}"
           image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
@@ -28,3 +29,56 @@ deploy:
           sentry:
             dsn: "{{.SENTRY_DSN}}"
             auth_token: "{{.SENTRY_AUTH_TOKEN}}"
+profiles:
+  - name: local-with-services
+    deploy:
+      helm:
+        releases:
+          # PostgreSQL with PostGIS
+          - name: postgresql
+            remoteChart: postgresql
+            repo: https://charts.bitnami.com/bitnami
+            version: "16.7.14"
+            namespace: default
+            valuesFiles:
+              - skaffold/postgresql-values.yaml
+
+          # Main webapp (R4C Cesium Viewer)
+          - name: helm-r4c
+            chartPath: helm
+            # valuesFiles:
+            #   - helm/values.yaml
+            #   - helm/values-local.yaml
+            setValueTemplates:
+              image.repository: "{{.IMAGE_REPO_frontend}}"
+              image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
+              vite:
+                digitransit_key: "{{.DIGITRANSIT_KEY}}"
+              sentry:
+                dsn: "{{.SENTRY_DSN}}"
+                auth_token: "{{.SENTRY_AUTH_TOKEN}}"
+    manifests:
+      rawYaml:
+        - skaffold/pygeoapi-deployment.yaml
+
+  - name: migration-test
+    deploy:
+      helm:
+        releases:
+          # PostgreSQL with PostGIS for testing
+          - name: postgresql
+            remoteChart: postgresql
+            repo: https://charts.bitnami.com/bitnami
+            version: "16.7.14"
+            namespace: default
+            valuesFiles:
+              - skaffold/postgresql-values.yaml
+    test:
+      - image: amacneil/dbmate:v2.13.0
+        custom:
+          - command: "sh -c 'apk add --no-cache postgresql-client && /scripts/test_migration.sh'"
+            timeoutSeconds: 600
+            dependencies:
+              paths:
+                - "db/migrations/*.sql"
+                - "scripts/test_migration.sh"
