@@ -22,7 +22,6 @@ export default class Decoding {
 	 *
 	 * @param {string} kayttotarkoitus - 3-digit building purpose code
 	 * @returns {string} Finnish description of building purpose, or original code if not found
-	 * @complexity O(1) - Switch statement lookup
 	 * @see {@link https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf|Code list documentation}
 	 *
 	 * @example
@@ -198,7 +197,6 @@ export default class Decoding {
 	 *
 	 * @param {string} material - Single digit material code (1-5)
 	 * @returns {string} English material description ('concrete', 'brick', 'steel', 'wood', 'other'), or original code if invalid
-	 * @complexity O(1) - Switch statement lookup
 	 * @see {@link https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf|Material codes documentation}
 	 *
 	 * @example
@@ -230,7 +228,6 @@ export default class Decoding {
 	 *
 	 * @param {string} heatingMethod - Single digit heating method code (1-5)
 	 * @returns {string} English heating method description, or original code if invalid
-	 * @complexity O(1) - Switch statement lookup
 	 *
 	 * @example
 	 * decodeHeatingMethod('1') // Returns 'central water'
@@ -261,7 +258,6 @@ export default class Decoding {
 	 *
 	 * @param {string} heatingSource - Heating source code (1-10)
 	 * @returns {string} English heating source description, or original code if invalid
-	 * @complexity O(1) - Switch statement lookup
 	 *
 	 * @example
 	 * decodeHeatingSource('1') // Returns 'district'
@@ -302,7 +298,6 @@ export default class Decoding {
 	 *
 	 * @param {string} facade - Single digit facade material code (1-7)
 	 * @returns {string} English facade material description ('concrete', 'brick', 'metal', 'stone', 'wood', 'glass', 'other'), or original code if invalid
-	 * @complexity O(1) - Switch statement lookup
 	 * @see {@link https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf|Facade material codes}
 	 *
 	 * @example
@@ -339,7 +334,6 @@ export default class Decoding {
 	 *
 	 * @param {string} key - CSS color name (e.g., 'aliceblue', 'crimson', 'steelblue')
 	 * @returns {string|null} Normalized color name from reduced palette, or null if not found
-	 * @complexity O(1) - Object property lookup
 	 *
 	 * @example
 	 * getColorValue('aliceblue') // Returns 'seashell'

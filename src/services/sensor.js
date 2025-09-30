@@ -20,7 +20,6 @@ import { useGlobalStore } from '../stores/globalStore.js';
 export default class Vegetation {
 	/**
 	 * Creates a Sensor service instance
-	 * @constructor
 	 */
 	constructor( ) {
 		this.store = useGlobalStore();

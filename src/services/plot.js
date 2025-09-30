@@ -24,7 +24,6 @@ export default class Plot {
 
 	/**
 	 * Creates a Plot service instance
-	 * @constructor
 	 */
 	constructor() {
 		this.store = useGlobalStore();
@@ -126,12 +125,11 @@ export default class Plot {
 
 	/**
  * Adds a title to plot
- * 
- * @param {string} svg 
- * @param {string} title 
- * @param {number} width 
- * @param {number} margin
-
+ *
+ * @param {Object} svg - D3 SVG selection to add title to
+ * @param {string} title - Title text to display
+ * @param {number} left - Horizontal offset from left edge
+ * @param {number} top - Vertical offset from top edge
  */
 	addTitle( svg, title, left, top ){
 		// Title doesn't need splitting

@@ -30,7 +30,6 @@ export default class CapitalRegion {
 	/**
 	 * Creates a CapitalRegion service instance
 	 * Initializes Capital Region-specific service dependencies.
-	 * @constructor
 	 */
 	constructor( ) {
 		this.toggleStore = useToggleStore();
@@ -47,7 +46,6 @@ export default class CapitalRegion {
 	 * Loads HSY building data and conditionally shows tree layer controls
 	 * for postal codes with available tree data (postal codes < 1000).
 	 *
-	 * @async
 	 * @returns {Promise<void>}
 	 */
 	async loadCapitalRegionElements( ) {
@@ -67,7 +65,6 @@ export default class CapitalRegion {
 	 * Stores postal code boundary data source in Pinia store
 	 * Retrieves PostCodes data source and saves reference for later use.
 	 *
-	 * @async
 	 * @returns {Promise<void>}
 	 */
 	async addPostalCodeDataToPinia( ) {

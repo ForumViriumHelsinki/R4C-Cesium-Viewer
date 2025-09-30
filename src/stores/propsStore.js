@@ -1,7 +1,5 @@
 /**
- * @file propsStore.js
  * @module stores/propsStore
- * @description Props Store - Pinia store for managing visualization properties and analysis data.
  * Centralized storage for chart data, plot configurations, and analytical visualizations.
  * Acts as a data bridge between services and Vue components for complex visualizations.
  *

@@ -1,7 +1,5 @@
 /**
- * @file tiffImagery.js
  * @module services/tiffImagery
- * @description NDVI (Normalized Difference Vegetation Index) TIFF imagery layer management.
  * Provides utilities for loading and displaying Cloud Optimized GeoTIFF (COG) vegetation
  * index data with custom color gradients. NDVI values range from -1 to 1, where higher
  * values indicate healthier, denser vegetation.
@@ -33,7 +31,6 @@ import { useURLStore } from '../stores/urlStore.js';
  * for smooth temporal transitions. Uses Cloud Optimized GeoTIFF format
  * for efficient tile-based streaming.
  *
- * @async
  * @returns {Promise<void>}
  * @throws {Error} If TIFF loading or provider initialization fails
  *
@@ -101,7 +98,6 @@ export const changeTIFF = async ( ) => {
  * Clears the layer cache and safely removes all tracked TIFF layers.
  * Handles cleanup gracefully even if layers are already removed.
  *
- * @async
  * @returns {Promise<void>}
  *
  * @example

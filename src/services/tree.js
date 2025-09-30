@@ -31,7 +31,6 @@ import unifiedLoader from './unifiedLoader.js';
 export default class Tree {
 	/**
 	 * Creates a Tree service instance
-	 * @constructor
 	 */
 	constructor( ) {
 		this.datasourceService = new Datasource();

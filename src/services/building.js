@@ -27,7 +27,6 @@ export default class Building {
 	/**
 	 * Creates a Building service instance
 	 * Initializes service dependencies for data sources, urban heat, and tree coverage.
-	 * @constructor
 	 */
 	constructor() {
 		this.store = useGlobalStore();
@@ -45,10 +44,8 @@ export default class Building {
 	 * Resets building polygon colors to original heat exposure values.
 	 * Processes entities in batches to prevent UI blocking on large datasets.
 	 *
-	 * @async
 	 * @param {Array<Cesium.Entity>} entities - Building entities to process
 	 * @returns {Promise<void>}
-	 * @complexity O(n) where n is the number of entities, with UI-friendly batching
 	 */
 	async removeNearbyTreeEffect( entities ) {
 		const batchSize = 25; // Process 25 entities at a time
@@ -73,10 +70,8 @@ export default class Building {
 	 * Updates building polygon colors based on heat exposure data.
 	 * Uses batched processing for performance optimization.
 	 *
-	 * @async
 	 * @param {Array<Cesium.Entity>} entities - Building entities to style
 	 * @returns {Promise<void>}
-	 * @complexity O(n) where n is the number of entities, with batching for UI responsiveness
 	 */
 	async setHeatExposureToBuildings( entities ) {
 		const batchSize = 25; // Process 25 entities at a time
@@ -102,14 +97,12 @@ export default class Building {
 	 * Processes building heat timeseries data, tree coverage, and heat exposure values.
 	 * Emits events to trigger chart updates in UI components.
 	 *
-	 * @async
 	 * @param {number} treeArea - Nearby tree coverage area in square meters
 	 * @param {number} avg_temp_c - Average surface temperature in Celsius (unused in current implementation)
 	 * @param {Object} buildingProps - Building properties object containing heat and structural data
 	 * @param {Object} buildingProps.heat_timeseries - Time series heat exposure data
 	 * @param {Object} buildingProps._avgheatexposuretobuilding - Average heat exposure value
 	 * @returns {Promise<void>}
-	 * @fires eventBus#newBuildingHeat
 	 */
 	async createBuildingCharts( treeArea, avg_temp_c, buildingProps ) {
 

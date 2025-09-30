@@ -30,7 +30,6 @@ import { useURLStore } from '../stores/urlStore.js';
 export default class EspooSurvey {
 	/**
 	 * Creates an EspooSurvey service instance
-	 * @constructor
 	 */
 	constructor() {
 		this.store = useGlobalStore();
@@ -79,7 +78,6 @@ export default class EspooSurvey {
 	 *
 	 * @param {Array<Object>} features - GeoJSON features with heatexposure property
 	 * @returns {void}
-	 * @modifies Adds avg_temp_c property to each feature
 	 *
 	 * @example
 	 * // Feature with normalized heat exposure 0.7
@@ -113,7 +111,6 @@ export default class EspooSurvey {
 	 *
 	 * @param {Array<Object>} entities - Cesium entities to style
 	 * @returns {void}
-	 * @modifies Sets point graphics and hides billboard for each entity
 	 */
 	setColorAndLabelForPointEntities( entities ) {
 

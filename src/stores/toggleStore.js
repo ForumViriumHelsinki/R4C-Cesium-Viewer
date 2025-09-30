@@ -1,7 +1,5 @@
 /**
- * @file toggleStore.js
  * @module stores/toggleStore
- * @description Toggle Store - Pinia store for managing UI layer visibility and feature toggles.
  * Controls visibility of all map layers, data overlays, and UI components.
  * Provides centralized boolean state management for the entire application.
  *

@@ -1,7 +1,5 @@
 /**
- * @file globalStore.js
  * @module stores/globalStore
- * @description Global Store - Core Pinia store for application-wide state management.
  * Manages navigation hierarchy, view modes, current selections, and Cesium viewer reference.
  * Acts as the central state hub for the entire R4C climate adaptation application.
  *

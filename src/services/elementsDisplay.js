@@ -19,7 +19,6 @@ import { useToggleStore } from '../stores/toggleStore.js';
 export default class ElementsDisplay {
 	/**
 	 * Creates an ElementsDisplay service instance
-	 * @constructor
 	 */
 	constructor() {
 		this.toggleStore = useToggleStore();

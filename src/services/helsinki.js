@@ -27,7 +27,6 @@ export default class Helsinki {
 	/**
 	 * Creates a Helsinki service instance
 	 * Initializes all Helsinki-specific service dependencies.
-	 * @constructor
 	 */
 	constructor( ) {
 		this.toggleStore = useToggleStore();
@@ -46,9 +45,7 @@ export default class Helsinki {
 	 * Orchestrates loading of buildings, postal code boundaries, and nature layers.
 	 * Shows Helsinki-specific UI controls and emits visibility event.
 	 *
-	 * @async
 	 * @returns {Promise<void>}
-	 * @fires eventBus#showHelsinki
 	 */
 	async loadHelsinkiElements( ) {
 
@@ -65,7 +62,6 @@ export default class Helsinki {
 	 * Checks toggleStore settings for vegetation, trees, and other nature layers.
 	 * Each layer loads only if its corresponding toggle is enabled.
 	 *
-	 * @async
 	 * @returns {Promise<void>}
 	 */
 	async loadHelsinkiGreenElements( ) {

@@ -1,7 +1,5 @@
 /**
- * @file graphicsStore.js
  * @module stores/graphicsStore
- * @description Graphics Store - Pinia store for managing Cesium rendering quality and performance settings.
  * Controls anti-aliasing (MSAA, FXAA), HDR, ambient occlusion, and render modes.
  * Provides hardware capability detection and preset quality profiles for optimized visualization.
  *

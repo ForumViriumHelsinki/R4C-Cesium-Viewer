@@ -12,7 +12,6 @@ import { useURLStore } from '../stores/urlStore.js';
 export default class Wms {
 	/**
 	 * Creates a WMS service instance
-	 * @constructor
 	 */
 	constructor() {
 
@@ -25,7 +24,6 @@ export default class Wms {
 	 *
 	 * @param {string} layerName - WMS layer identifier (e.g., 'avoindata:Rakennukset_alue_rekisteritiedot')
 	 * @returns {Cesium.ImageryLayer} Configured imagery layer ready to be added to viewer
-	 * @complexity O(1)
 	 *
 	 * @example
 	 * const layer = wmsService.createHelsinkiImageryLayer('avoindata:Rakennukset_alue');

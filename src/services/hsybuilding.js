@@ -34,7 +34,6 @@ import { useURLStore } from '../stores/urlStore.js';
 export default class HSYBuilding {
 	/**
 	 * Creates an HSYBuilding service instance
-	 * @constructor
 	 */
     constructor() {
         this.store = useGlobalStore();

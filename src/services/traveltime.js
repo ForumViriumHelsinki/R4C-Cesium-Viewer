@@ -28,7 +28,6 @@ import { useURLStore } from '../stores/urlStore.js';
 export default class Traveltime {
 	/**
 	 * Creates a Traveltime service instance
-	 * @constructor
 	 */
 	constructor( ) {
 		this.toggleStore = useToggleStore();
@@ -45,7 +44,6 @@ export default class Traveltime {
 	 * Fetches HSL travel time matrix data showing average public transport
 	 * journey times from the origin cell to all other grid cells.
 	 *
-	 * @async
 	 * @param {number} from_id - Origin grid cell ID (250m population grid)
 	 * @returns {Promise<void>}
 	 * @throws {Error} If travel time API request fails
@@ -75,7 +73,6 @@ export default class Traveltime {
 	 *
 	 * @param {Array<Object>} traveldata - Travel time records with to_id and pt_m_walk_avg
 	 * @returns {void}
-	 * @complexity O(n×m) where n = grid entities, m = travel records
 	 *
 	 * @example
 	 * // traveldata format:
@@ -149,7 +146,6 @@ export default class Traveltime {
 	 * Removes temporary travel time grid, recreates population grid, and overlays
 	 * green space coverage visualization (water + vegetation + trees).
 	 *
-	 * @async
 	 * @returns {Promise<void>}
 	 */
 	async removeTravelTimeGridAndAddDataGrid() {

@@ -59,7 +59,6 @@ const removeNulls = ( str ) => {
  * @param {Object} properties - Building properties object
  * @param {string} key - Property key to look up
  * @returns {*} Property value, or undefined if not found
- * @complexity O(1)
  * @private
  */
 const getProperty = ( properties, key ) => {
@@ -73,7 +72,6 @@ const getProperty = ( properties, key ) => {
  *
  * @param {*} value - Value to validate
  * @returns {boolean} True if value is valid for address building
- * @complexity O(1)
  * @private
  */
 const isValidValue = ( value ) => {

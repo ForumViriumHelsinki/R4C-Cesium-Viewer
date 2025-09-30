@@ -25,7 +25,6 @@ import { eventBus } from './eventEmitter.js';
 export default class Geocoding {
 	/**
 	 * Creates a Geocoding service instance
-	 * @constructor
 	 */
 	constructor( ) {
 		this.store = useGlobalStore();

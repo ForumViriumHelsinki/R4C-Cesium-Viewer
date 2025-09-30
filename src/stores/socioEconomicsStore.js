@@ -1,7 +1,5 @@
 /**
- * @file socioEconomicsStore.js
  * @module stores/socioEconomicsStore
- * @description Socio-Economics Store - Pinia store for Statistics Finland (Paavo) postal code data.
  * Manages demographic, housing, and socioeconomic indicators for Helsinki Capital Region.
  * Provides statistical aggregations, regional comparisons, and Helsinki-specific subsets.
  *
@@ -90,7 +88,6 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		 * Fetches all Capital Region postal code statistics and calculates min/max values.
 		 * Automatically filters excluded postal codes and adds "Whole Region" aggregate entry.
 		 *
-		 * @async
 		 * @returns {Promise<void>}
 		 * @throws {Error} If Paavo data fetch fails
 		 */
@@ -111,7 +108,6 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 
 		/**
 		 * Fetches all Paavo features from proxied endpoint
-		 * @async
 		 * @private
 		 * @param {string} requestUrl - Paavo API endpoint URL
 		 * @returns {Promise<Object>} GeoJSON feature collection
@@ -139,7 +135,6 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		 *
 		 * @param {Object} data - GeoJSON feature collection from Paavo API
 		 * @returns {void}
-		 * @modifies Sets this.data, this.regionStatistics, this.helsinkiStatistics
 		 */
 		addPaavoDataToStore( data ) {
 			// Filter out rows where postinumeroalue is "00230", then map the rest
@@ -194,7 +189,6 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		 * Computes normalization bounds for income (ra_as_kpa) and household size (hr_ktu).
 		 *
 		 * @returns {void}
-		 * @modifies Sets this.regionStatistics with min/max values
 		 */
 		addRegionStatisticsToStore() {
 			// Example statistics calculation (adjust according to actual data attributes)
@@ -217,7 +211,6 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		 * Computes normalization bounds for Helsinki municipality only (kunta === '091').
 		 *
 		 * @returns {void}
-		 * @modifies Sets this.helsinkiStatistics with min/max values
 		 */
 		addHelsinkiStatisticsToStore() {
 			// Filter data for Helsinki (kunta = "091")
@@ -248,7 +241,6 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		 * Result: Appends entry with postinumeroalue='99999', nimi='Whole Region'
 		 *
 		 * @returns {void}
-		 * @modifies Appends aggregate entry to this.data array
 		 */
 		calculateRegionTotal() {
     if (!this.data || this.data.length === 0) return;
