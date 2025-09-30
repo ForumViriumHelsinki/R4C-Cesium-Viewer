@@ -22,7 +22,7 @@
       <v-col cols="12">    
         <v-btn
           color="success"
-          class="mt-2"
+          class="mt-2 text-none"
           @click="findOptimalCoolingCenters"
         >
           Optimise Locations
