@@ -25,6 +25,7 @@
 * hide postal code functionalities when switching to grid view [#203](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/203) ([#210](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/210)) ([283afb0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/283afb055e4b6a6ccd46c5f7f3f6d59acff1aca7))
 * resolve nginx configuration syntax error in pygeoapi proxy ([#201](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/201)) ([8655cca](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8655cca25e0a4ad4f9fdce66e037f539cb47a9d8))
 
+
 ## [1.22.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.21.0...r4c-cesium-viewer-v1.22.0) (2025-08-29)
 
 
