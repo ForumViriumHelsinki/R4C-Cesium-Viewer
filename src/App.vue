@@ -20,7 +20,7 @@ class="d-flex align-center py-0"
 					>
 						<v-icon>mdi-arrow-left</v-icon>
 					</v-btn>
-					
+
 					<v-btn
 						icon
 						size="small"
@@ -29,7 +29,7 @@ class="d-flex align-center py-0"
 					>
 						<v-icon>mdi-logout</v-icon>
 					</v-btn>
-					
+
 					<v-btn
 						v-if="currentLevel !== 'start'"
 						icon
@@ -39,6 +39,9 @@ class="d-flex align-center py-0"
 					>
 						<v-icon>mdi-compass</v-icon>
 					</v-btn>
+
+					<!-- Feature Flags Panel -->
+					<FeatureFlagsPanel />
 				</div>
 				
 				<v-spacer />
@@ -103,8 +106,10 @@ import SosEco250mGrid from './components/SosEco250mGrid.vue';
 import LoadingIndicator from './components/LoadingIndicator.vue';
 import DataSourceStatusCompact from './components/DataSourceStatusCompact.vue';
 import ViewModeCompact from './components/ViewModeCompact.vue';
+import FeatureFlagsPanel from './components/FeatureFlagsPanel.vue';
 import { useToggleStore } from './stores/toggleStore.js';
 import { useGlobalStore } from './stores/globalStore.js';
+import { useFeatureFlagStore } from './stores/featureFlagStore.js';
 import { computed, ref, onMounted } from 'vue';
 import Tree from './services/tree';
 import Featurepicker from './services/featurepicker';
@@ -115,6 +120,7 @@ import backgroundPreloader from './services/backgroundPreloader.js';
 const toggleStore = useToggleStore();
 const globalStore = useGlobalStore();
 const loadingStore = useLoadingStore();
+const featureFlagStore = useFeatureFlagStore();
 
 const grid250m = computed(() => toggleStore.grid250m);
 const currentLevel = computed(() => globalStore.level);
@@ -204,15 +210,18 @@ const handleDataPreload = (sourceId) => {
 // Initialize services on mount
 onMounted(async () => {
 	try {
+		// Load feature flag overrides from localStorage
+		featureFlagStore.loadOverrides();
+
 		// Initialize background preloader
 		await backgroundPreloader.init();
 		console.log('Background preloader initialized');
-		
+
 		// Check cache status for all layers on app start
 		Object.keys(loadingStore.cacheStatus).forEach(layer => {
 			loadingStore.checkLayerCache(layer);
 		});
-		
+
 	} catch (error) {
 		console.warn('Failed to initialize caching services:', error);
 	}
