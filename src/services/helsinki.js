@@ -46,6 +46,7 @@ export default class Helsinki {
 	 * Shows Helsinki-specific UI controls and emits visibility event.
 	 *
 	 * @returns {Promise<void>}
+	 * @fires eventBus#showHelsinki - Emitted when Helsinki view elements are loaded
 	 */
 	async loadHelsinkiElements( ) {
 

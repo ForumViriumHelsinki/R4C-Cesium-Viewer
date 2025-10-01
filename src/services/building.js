@@ -43,6 +43,7 @@ export default class Building {
 	 * Removes nearby tree coverage effects from building entities
 	 * Resets building polygon colors to original heat exposure values.
 	 * Processes entities in batches to prevent UI blocking on large datasets.
+	 * Performance: O(n) where n is the number of entities, with UI-friendly batching
 	 *
 	 * @param {Array<Cesium.Entity>} entities - Building entities to process
 	 * @returns {Promise<void>}
@@ -69,6 +70,7 @@ export default class Building {
 	 * Applies heat exposure visualization to building entities
 	 * Updates building polygon colors based on heat exposure data.
 	 * Uses batched processing for performance optimization.
+	 * Performance: O(n) where n is the number of entities, with batching for UI responsiveness
 	 *
 	 * @param {Array<Cesium.Entity>} entities - Building entities to style
 	 * @returns {Promise<void>}
@@ -103,6 +105,7 @@ export default class Building {
 	 * @param {Object} buildingProps.heat_timeseries - Time series heat exposure data
 	 * @param {Object} buildingProps._avgheatexposuretobuilding - Average heat exposure value
 	 * @returns {Promise<void>}
+	 * @fires eventBus#newBuildingHeat - Emitted when building heat exposure data is updated
 	 */
 	async createBuildingCharts( treeArea, avg_temp_c, buildingProps ) {
 
@@ -311,6 +314,14 @@ export default class Building {
 
 	}
 
+	/**
+	 * Updates heat histogram data after filtering buildings
+	 * Extracts heat exposure values from visible entities and emits update event.
+	 *
+	 * @param {Array<Cesium.Entity>} entities - Building entities to process
+	 * @fires eventBus#newHeatHistogram - Emitted when histogram data is recalculated
+	 * @private
+	 */
 	updateHeatHistogramDataAfterFilter( entities ) {
 
   		// Add the condition to filter only entities with show === true
@@ -331,6 +342,13 @@ export default class Building {
 
 	}
 
+	/**
+	 * Filters buildings to show only social/healthcare facilities
+	 * Filters by building purpose codes for hospitals, schools, and public buildings.
+	 *
+	 * @param {Cesium.Entity} entity - Building entity to filter
+	 * @private
+	 */
 	soteBuildings( entity ) {
 
 		const kayttotark = this.toggleStore.helsinkiView
@@ -343,6 +361,13 @@ export default class Building {
 
 	}
 
+	/**
+	 * Hides buildings with 6 or fewer floors
+	 * Used to filter out low-rise buildings from visualization.
+	 *
+	 * @param {Cesium.Entity} entity - Building entity to filter
+	 * @private
+	 */
 	lowBuildings( entity ) {
 
 		( entity._properties?.[this.toggleStore.helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']?._value <= 6 ) && ( entity.show = false );
@@ -432,6 +457,16 @@ export default class Building {
 		}
 	}
 
+	/**
+	 * Outlines a building entity by matching a property value
+	 * Highlights matching entity with yellow outline and emits print event.
+	 *
+	 * @param {Cesium.Entity} entity - Building entity to check
+	 * @param {string} property - Property name to match
+	 * @param {string|number} id - Value to match against property
+	 * @fires eventBus#entityPrintEvent - Emitted when entity is selected for display
+	 * @private
+	 */
 	outlineById( entity, property, id ) {
 
 		entity._properties[property] && entity._properties[property]._value === id
@@ -440,6 +475,13 @@ export default class Building {
 
 	}
 
+	/**
+	 * Sets building polygon outline to yellow highlight
+	 * Used to visually highlight selected buildings.
+	 *
+	 * @param {Cesium.Entity} entity - Building entity to highlight
+	 * @private
+	 */
 	polygonOutlineToYellow( entity ) {
 
 		entity.polygon.outline = true;
@@ -448,6 +490,13 @@ export default class Building {
 
 	}
 
+	/**
+	 * Resets building polygon outline to default black
+	 * Removes visual highlighting from buildings.
+	 *
+	 * @param {Cesium.Entity} entity - Building entity to reset
+	 * @private
+	 */
 	polygonOutlineToBlack( entity ) {
 
 		entity.polygon.outlineColor = Cesium.Color.BLACK;
@@ -456,6 +505,15 @@ export default class Building {
 	}
 }
 
+/**
+ * Filters heat timeseries data by construction year cutoff
+ * Removes historical data predating the building's construction year.
+ *
+ * @param {Object} buildingProps - Building properties object
+ * @param {Object} buildingProps._kavu - Construction year property
+ * @param {Object} buildingProps._heat_timeseries - Heat timeseries array
+ * @private
+ */
 const filterHeatTimeseries = ( buildingProps ) => {
 	if ( buildingProps._kavu && typeof buildingProps._kavu._value === 'number' ) {
 		const cutoffYear = buildingProps._kavu._value;

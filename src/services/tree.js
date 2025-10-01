@@ -214,6 +214,17 @@ export default class Tree {
 			} );
 	}
 	
+	/**
+	 * Sets tree-building distance properties in store and emits visualization events
+	 * Updates props store with tree data and triggers UI updates for tree diagrams.
+	 *
+	 * @param {Object} data - Tree distance data from API
+	 * @param {Array<Cesium.Entity>} entities - Tree entities
+	 * @param {Cesium.DataSource} buildingsDataSource - Buildings data source
+	 * @fires eventBus#hideBuildingScatterPlot - Hides building scatter plot
+	 * @fires eventBus#newNearbyTreeDiagram - Triggers tree proximity diagram update
+	 * @private
+	 */
 	setPropertiesAndEmitEvent( data, entities, buildingsDataSource ) {
 
 		const propsStore = usePropsStore();

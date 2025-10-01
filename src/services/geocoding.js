@@ -189,7 +189,15 @@ export default class Geocoding {
 
 	}
 
-	// Moves camera to specified latitude, longitude coordinates
+	/**
+	 * Moves camera to specified latitude, longitude coordinates
+	 * Centers the camera view and emits geocoding event, then loads postal code data.
+	 *
+	 * @param {number} longitude - Longitude coordinate
+	 * @param {number} latitude - Latitude coordinate
+	 * @fires eventBus#geocodingPrintEvent - Emitted when camera moves to geocoded location
+	 * @private
+	 */
 	moveCameraAndReset( longitude, latitude ) {
 
 		this.cameraService.setCameraView( longitude, latitude );

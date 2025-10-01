@@ -32,9 +32,13 @@ export default class Plot {
   
 
 	/**
- * Shows all plots and select elements
- * 
- * */
+	 * Shows all plots and select elements
+	 * Emits visibility events based on current view level (postalCode or building).
+	 *
+	 * @fires eventBus#showHelsinki - Emitted when showing Helsinki postal code view
+	 * @fires eventBus#showCapitalRegion - Emitted when showing Capital Region postal code view
+	 * @fires eventBus#showBuilding - Emitted when showing building level view
+	 */
 	showAllPlots() {
 
 		switch ( this.store.level ) {
@@ -44,15 +48,19 @@ export default class Plot {
   			case 'building':
     			eventBus.emit( 'showBuilding' );
     			break;
-				
-		} 
+
+		}
 
 	}
 
 	/**
- * Hides all plots and select elements
- * 
- * */
+	 * Hides all plots and select elements
+	 * Emits hide events based on current view level (postalCode or building).
+	 *
+	 * @fires eventBus#hideHelsinki - Emitted when hiding Helsinki postal code view
+	 * @fires eventBus#hideCapitalRegion - Emitted when hiding Capital Region postal code view
+	 * @fires eventBus#hideBuilding - Emitted when hiding building level view
+	 */
 	hideAllPlots() {
 
 		switch ( this.store.level ) {

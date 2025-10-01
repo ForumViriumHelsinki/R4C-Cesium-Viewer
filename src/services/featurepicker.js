@@ -74,6 +74,7 @@ export default class FeaturePicker {
 	 *
 	 * @param {Cesium.Cartesian2} windowPosition - Screen coordinates for entity picking
 	 * @returns {void}
+	 * @fires eventBus#entityPrintEvent - Emitted when a polygon entity is selected
 	 */
 	pickEntity( windowPosition ) {
 		console.log('[FeaturePicker] 🎯 Picking entity at window position:', windowPosition);
@@ -164,6 +165,9 @@ if (Array.isArray(entitiesArray)) {
 	 * @param {number} [properties.treeArea] - Nearby tree area
 	 * @param {number} [properties._avg_temp_c] - Average temperature
 	 * @returns {Promise<void>}
+	 * @fires eventBus#hideHelsinki - Emitted when switching away from Helsinki view
+	 * @fires eventBus#hideCapitalRegion - Emitted when switching away from Capital Region view
+	 * @fires eventBus#showBuilding - Emitted when building level view is activated
 	 */
 	async handleBuildingFeature( properties ) {
 		// Show loading indicator for building selection
@@ -221,8 +225,10 @@ if (Array.isArray(entitiesArray)) {
     
 	/**
      * Handles the feature with properties
-     * 
+     *
      * @param {Object} id - The ID of the picked entity
+     * @fires eventBus#createHeatFloodVulnerabilityChart - Emitted when grid cell with vulnerability data is selected
+     * @private
      */
 	handleFeatureWithProperties( id ) {       
         
