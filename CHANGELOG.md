@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.23.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.23.0...r4c-cesium-viewer-v1.23.1) (2025-10-01)
+
+
+### Bug Fixes
+
+* enable TypeScript strict mode for better JSDoc inference ([#217](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/217)) ([f1e070e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f1e070ee283264ab392fb2e6d707644b25a3369e)), closes [#214](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/214)
+* Prevent HSY background map clicks from triggering postal code selection ([#212](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/212)) ([2e88816](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2e8881601ffaeb5b4bfdbfcc071a220edb803a92)), closes [#102](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/102)
+* replace deprecated deps.inline with deps.optimizer.web.include ([#216](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/216)) ([9f33149](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9f33149a01fc64591732aba322df1d84e36ae9bc)), closes [#215](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/215)
+
 ## [1.23.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.0...r4c-cesium-viewer-v1.23.0) (2025-09-30)
 
 
