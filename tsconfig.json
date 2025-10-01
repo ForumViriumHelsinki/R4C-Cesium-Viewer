@@ -18,7 +18,7 @@
     "skipLibCheck": true,
 
     // Enable all strict type-checking options (helpful for JSDoc)
-    "strict": false,
+    "strict": true,
 
     // Resolve JSON modules
     "resolveJsonModule": true,
