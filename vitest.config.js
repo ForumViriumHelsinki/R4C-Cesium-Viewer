@@ -14,7 +14,11 @@ export default defineConfig({
       include: []
     },
     deps: {
-      inline: ['vuetify']
+      optimizer: {
+        web: {
+          include: ['vuetify']
+        }
+      }
     },
     coverage: {
       provider: 'v8',
