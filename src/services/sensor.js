@@ -61,8 +61,7 @@ export default class Vegetation {
 	/**
  * Adds the data to viewer's datasources
  *
- * @param { Array<Object> }  data 
- * 
+ * @param {Array<Object>} data - Sensor data array
  */
 	async addSensorDataSource( data ) {
 

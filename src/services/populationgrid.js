@@ -40,7 +40,7 @@ export default class Populationgrid {
 	/**
  * Set population grid entities heat exposure
  *
- * @param { Object } entities Cesium entities
+ * @param {Object} entities - Cesium entities
  */
 	setHeatExposureToGrid( entities ) {
 
@@ -55,7 +55,7 @@ export default class Populationgrid {
 	/**
  * Set grid entity polygon
  *
- * @param { Object } entity grid entity
+ * @param {Object} entity - Grid entity
  */
 	setGridEntityPolygon( entity ) {
 
@@ -77,7 +77,7 @@ export default class Populationgrid {
 	/**
  * Set grid entity polygon
  *
- * @param { Object } entity grid entity
+ * @param {Object} entity - Grid entity
  */
 	setGridEntityPolygonToGreen( entity ) {
 

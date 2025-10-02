@@ -175,7 +175,7 @@ export default class Tree {
 	/**
  * Fetch tree distance data from the provided URL and create a new dataset for plot that presents the cooldown effect on trees on buildings
  *
- * @param { Object } entities - The postal code area tree entities
+ * @param {Object} entities - The postal code area tree entities
  */
 	fetchAndAddTreeDistanceData( entities ) {
 
@@ -237,9 +237,9 @@ export default class Tree {
 
 	/**
  * Set the polygon material color and extruded height for a given tree entity based on its description
- * 
- * @param { object } entity tree entity
- * @param { String } description description of tree entity
+ *
+ * @param {Object} entity - Tree entity
+ * @param {string} description - Description of tree entity
  */
 	setTreePolygonMaterialColor( entity, description ) {
 

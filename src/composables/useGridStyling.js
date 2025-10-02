@@ -91,7 +91,7 @@ export const indexToColorScheme = {
  * - Mitigation impact integration
  * - Gradient and stripe material patterns
  *
- * @returns {{updateGridColors: Function}} Grid styling functions
+ * @returns {{updateGridColors: (selectedIndex: string) => void}} Grid styling functions
  *
  * @example
  * import { useGridStyling } from '@/composables/useGridStyling';

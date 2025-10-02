@@ -29,7 +29,7 @@ export const useHeatExposureStore = defineStore( 'heatExposure', {
 		/**
 		 * Retrieves heat exposure data for a specific postal code
 		 * @param {Object} state - Pinia state
-		 * @returns {Function} Function accepting (postcode) and returning feature data
+		 * @returns {(postcode: string) => Object|undefined} Function accepting postcode and returning feature data
 		 *
 		 * @example
 		 * const heatData = getDataById('00100');

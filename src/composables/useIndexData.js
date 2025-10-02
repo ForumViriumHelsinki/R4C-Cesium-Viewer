@@ -49,7 +49,7 @@ const indexOptions = ref([
  * Provides centralized access to index definitions and lookup utilities.
  * Used for UI labels, descriptions, tooltips, and legend generation.
  *
- * @returns {{indexOptions: import('vue').Ref<Array>, getIndexInfo: Function}} Index data and lookup function
+ * @returns {{indexOptions: import('vue').Ref<Array<{text: string, value: string, description: string}>>, getIndexInfo: (indexValue: string) => {text: string, value: string, description: string}|undefined}} Index data and lookup function
  *
  * @example
  * import { useIndexData } from '@/composables/useIndexData';

@@ -68,8 +68,8 @@ export default class Geocoding {
 	/**
  * Processes the data found with geocoding API. Only results from Helsinki are included and only data useful for app is left in
  *
- * @param { object } data found data
- * @return { object } processed data
+ * @param {Object} data - Found data
+ * @returns {Object} Processed data
  */
 	processAddressData = ( data ) => {
 
@@ -129,7 +129,7 @@ export default class Geocoding {
 	/**
   * Finds coordinates for street address / search term and moves camera to the found coordinates
   *
-  * @param { object } e event object from UI
+  * @param {Object} e - Event object from UI
   */
 	moveCameraToLocation = ( e ) => {
 
@@ -164,7 +164,7 @@ export default class Geocoding {
 	/**
  * Renders autocomplete search result
  *
- * @param { Array<String> } addresses shown to user
+ * @param {Array<string>} addresses - Addresses shown to user
  */
 	renderSearchResult ( addresses ) {
 
@@ -220,7 +220,7 @@ export default class Geocoding {
 	/**
   * Finds name of the new zone based on it's postal code
   *
-  * @param { string } postalcode postal code of new zone
+  * @param {string} postalcode - Postal code of new zone
   */
 	findNameOfZone( postalcode ) {
 

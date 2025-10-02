@@ -132,7 +132,7 @@ export default class Building {
 	/**
  * Set building entity polygon
  *
- * @param { Object } entity building entity
+ * @param {Object} entity - Building entity
  */
 	setBuildingEntityPolygon( entity ) {
 		const { properties, polygon } = entity;
@@ -171,7 +171,7 @@ export default class Building {
 	/**
  * If hideNonSote switch is checked this function hides buildings based on value of c_kayttark
  *
- * @param { Object } entity Cesium entity
+ * @param {Object} entity - Cesium entity
  */
 	hideNonSoteBuilding( entity ) {
 
@@ -187,7 +187,7 @@ export default class Building {
 	/**
  * If hideLow switch is checked this function hides buildings based on their floor count
  *
- * @param { Object } entity Cesium entity
+ * @param {Object} entity - Cesium entity
  */
 	hideLowBuilding( entity ) {
 

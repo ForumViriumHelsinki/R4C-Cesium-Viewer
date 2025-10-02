@@ -47,7 +47,7 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		/**
 		 * Retrieves socioeconomic data for a specific postal code
 		 * @param {Object} state - Pinia state
-		 * @returns {Function} Function accepting (postcode) and returning Paavo data
+		 * @returns {(postcode: string) => Object|undefined} Function accepting postcode and returning Paavo data
 		 * @example
 		 * const data = getDataByPostcode('00100');
 		 * console.log(data.he_vakiy); // Total population
@@ -58,7 +58,7 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		/**
 		 * Retrieves socioeconomic data by area name
 		 * @param {Object} state - Pinia state
-		 * @returns {Function} Function accepting (nimi) and returning Paavo data
+		 * @returns {(nimi: string) => Object|undefined} Function accepting area name and returning Paavo data
 		 * @example
 		 * const data = getDataByNimi('Alppila - Vallila');
 		 */
@@ -68,7 +68,7 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		/**
 		 * Gets sorted list of all area names in Capital Region
 		 * @param {Object} state - Pinia state
-		 * @returns {Function} Function returning sorted array of area names
+		 * @returns {() => Array<string>} Function returning sorted array of area names
 		 */
 		getNimiForCapital: ( state ) => () => {
 			return state.data.map( item => item.nimi ).sort();
@@ -76,7 +76,7 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		/**
 		 * Gets sorted list of area names in Helsinki only (kunta === '091')
 		 * @param {Object} state - Pinia state
-		 * @returns {Function} Function returning sorted array of Helsinki area names
+		 * @returns {() => Array<string>} Function returning sorted array of Helsinki area names
 		 */
 		getNimiForHelsinki: ( state ) => () => {
 			return state.data.filter( item => item.kunta === '091' ).map( item => item.nimi ).sort();
