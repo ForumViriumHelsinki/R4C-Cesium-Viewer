@@ -179,6 +179,24 @@
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
+
+	<!-- Snackbar for notifications -->
+	<v-snackbar
+		v-model="snackbar"
+		:color="snackbarColor"
+		:timeout="4000"
+		location="bottom"
+	>
+		{{ snackbarMessage }}
+		<template #actions>
+			<v-btn
+				variant="text"
+				@click="snackbar = false"
+			>
+				Close
+			</v-btn>
+		</template>
+	</v-snackbar>
 </template>
 
 <script setup>
@@ -192,6 +210,9 @@ const graphicsStore = useGraphicsStore();
 const dialog = ref(false);
 const importDialog = ref(false);
 const importJson = ref('');
+const snackbar = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('error');
 
 const categories = computed(() => featureFlagStore.categories);
 
@@ -249,14 +270,15 @@ function resetAllFlags() {
 
 function checkHardwareSupport(flag) {
 	// Check hardware support based on graphics store
+	// Use optional chaining for defensive coding
 	if (flag.name === 'hdrRendering') {
-		return graphicsStore.hdrSupported;
+		return graphicsStore?.hdrSupported ?? false;
 	}
 	if (flag.name === 'ambientOcclusion') {
-		return graphicsStore.ambientOcclusionSupported;
+		return graphicsStore?.ambientOcclusionSupported ?? false;
 	}
 	if (flag.name === 'msaaOptions') {
-		return graphicsStore.msaaSupported;
+		return graphicsStore?.msaaSupported ?? false;
 	}
 	return true;
 }
@@ -288,10 +310,17 @@ function doImport() {
 		featureFlagStore.importConfig(config);
 		importDialog.value = false;
 		importJson.value = '';
+		showSnackbar('Configuration imported successfully', 'success');
 	} catch (error) {
-		alert('Invalid JSON format. Please check your input and try again.');
+		showSnackbar('Invalid JSON format. Please check your input and try again.', 'error');
 		console.error('Import error:', error);
 	}
+}
+
+function showSnackbar(message, color = 'error') {
+	snackbarMessage.value = message;
+	snackbarColor.value = color;
+	snackbar.value = true;
 }
 </script>
 
