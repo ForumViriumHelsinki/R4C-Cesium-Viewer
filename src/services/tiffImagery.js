@@ -1,8 +1,43 @@
+/**
+ * @module services/tiffImagery
+ * Provides utilities for loading and displaying Cloud Optimized GeoTIFF (COG) vegetation
+ * index data with custom color gradients. NDVI values range from -1 to 1, where higher
+ * values indicate healthier, denser vegetation.
+ *
+ * NDVI Color Scale:
+ * - -1.0 to -0.5: Non-vegetated (dark gray) - water, urban
+ * - -0.5 to 0.0: Barren (light gray to tan) - bare soil, rock
+ * - 0.0 to 0.3: Low vegetation (yellow-green) - sparse grass, stressed plants
+ * - 0.3 to 0.6: Moderate vegetation (darker green) - healthy grasslands, crops
+ * - 0.6 to 1.0: Dense vegetation (very dark green) - forests, dense canopy
+ *
+ * Features:
+ * - Cloud Optimized GeoTIFF (COG) support for efficient streaming
+ * - Multi-date NDVI time series
+ * - Maximum 2 layer cache for smooth transitions
+ * - Custom color gradient visualization
+ *
+ * @see {@link https://github.com/hongfaqiu/TIFFImageryProvider|TIFFImageryProvider}
+ */
+
 import TIFFImageryProvider from "tiff-imagery-provider";
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
 import { useURLStore } from '../stores/urlStore.js';
 
+/**
+ * Loads and displays NDVI TIFF imagery layer with custom color gradient
+ * Automatically manages layer cache to maintain only 2 most recent layers
+ * for smooth temporal transitions. Uses Cloud Optimized GeoTIFF format
+ * for efficient tile-based streaming.
+ *
+ * @returns {Promise<void>}
+ * @throws {Error} If TIFF loading or provider initialization fails
+ *
+ * @example
+ * // Load NDVI layer for currently selected date
+ * await changeTIFF();
+ */
 export const changeTIFF = async ( ) => {
     const store = useGlobalStore();
     const urlStore = useURLStore();
@@ -58,6 +93,16 @@ export const changeTIFF = async ( ) => {
     }
 
 
+/**
+ * Removes all NDVI TIFF imagery layers from the Cesium viewer
+ * Clears the layer cache and safely removes all tracked TIFF layers.
+ * Handles cleanup gracefully even if layers are already removed.
+ *
+ * @returns {Promise<void>}
+ *
+ * @example
+ * await removeTIFF(); // Removes all NDVI TIFF layers
+ */
 export const removeTIFF = async ( ) => {
   const store = useGlobalStore();
   const backgroundMapStore = useBackgroundMapStore();

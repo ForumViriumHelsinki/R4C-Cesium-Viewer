@@ -1,11 +1,34 @@
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import Populationgrid from './populationgrid.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useURLStore } from '../stores/urlStore.js';
 
+/**
+ * Travel Time Service
+ * Manages public transport accessibility visualization using 250m grid travel times.
+ * Displays average travel times from a selected location to all other grid cells
+ * using public transport (walking + metro/bus/tram). Part of accessibility analysis
+ * for urban planning and equity assessment.
+ *
+ * Data source: Helsinki Region Transport (HSL) travel time matrix
+ * Grid system: 250m × 250m population grid cells
+ * Transport modes: Walking + public transport (metro, bus, tram)
+ * Metric: Average travel time in minutes (pt_m_walk_avg)
+ *
+ * Visualization features:
+ * - Grid cell labels showing travel time in minutes
+ * - Green space overlay on population grid
+ * - Current location marker (black point)
+ * - Distance-based label scaling
+ *
+ * @class Traveltime
+ */
 export default class Traveltime {
+	/**
+	 * Creates a Traveltime service instance
+	 */
 	constructor( ) {
 		this.toggleStore = useToggleStore();
 		this.store = useGlobalStore();
@@ -17,10 +40,18 @@ export default class Traveltime {
 
 
 	/**
- * Fetches data from API Features based on grid from_id value
- * 
- * @param { NUmber } from_id
- */
+	 * Loads travel time data from a specific grid cell origin
+	 * Fetches HSL travel time matrix data showing average public transport
+	 * journey times from the origin cell to all other grid cells.
+	 *
+	 * @param {number} from_id - Origin grid cell ID (250m population grid)
+	 * @returns {Promise<void>}
+	 * @throws {Error} If travel time API request fails
+	 *
+	 * @example
+	 * // Load travel times from grid cell 5975375
+	 * await travelTimeService.loadTravelTimeData(5975375);
+	 */
 	async loadTravelTimeData( from_id ) {
 
 		fetch( this.urlStore.hkiTravelTime( from_id ) )
@@ -35,6 +66,18 @@ export default class Traveltime {
 			} );
 	}
 
+	/**
+	 * Creates labeled point markers showing travel times at grid cell centers
+	 * Matches travel time data to grid entities and creates centered labels.
+	 * Calculates polygon centroids using bounding sphere method.
+	 *
+	 * @param {Array<Object>} traveldata - Travel time records with to_id and pt_m_walk_avg
+	 * @returns {void}
+	 *
+	 * @example
+	 * // traveldata format:
+	 * [{ to_id: 5975376, pt_m_walk_avg: 12.5 }, ...]
+	 */
 	addTravelTimeLabels( traveldata ) {
 
 		const geoJsonData = {
@@ -98,6 +141,13 @@ export default class Traveltime {
 
 	}
 
+	/**
+	 * Replaces travel time grid with population grid and applies green space styling
+	 * Removes temporary travel time grid, recreates population grid, and overlays
+	 * green space coverage visualization (water + vegetation + trees).
+	 *
+	 * @returns {Promise<void>}
+	 */
 	async removeTravelTimeGridAndAddDataGrid() {
 
 		this.datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
@@ -130,11 +180,19 @@ export default class Traveltime {
 
 
 	/**
- * Adds the data to viewer's datasources
- *
- * @param { Array<Object> }  data 
- * 
- */
+	 * Adds travel time labels as a GeoJSON data source
+	 * Creates text labels at grid cell centers showing average travel times.
+	 * Labels scale with camera distance for readability.
+	 *
+	 * @param {Object} data - GeoJSON FeatureCollection with point features
+	 * @returns {void}
+	 *
+	 * Label styling:
+	 * - Font: 24px sans-serif
+	 * - Color: Black text
+	 * - Scale: 1.0 at 4km, 0.0 at 80km (distance-based fade)
+	 * - Eye offset: Elevated above ground for visibility
+	 */
 	addTravelLabelDataSource( data ) {
 
 		var dataSource = new Cesium.GeoJsonDataSource();
@@ -193,8 +251,21 @@ export default class Traveltime {
 
 	}
 
+	/**
+	 * Marks the origin grid cell with a prominent black point marker
+	 * Calculates polygon center and adds a large, distance-scaled marker
+	 * to indicate the travel time origin location.
+	 *
+	 * @param {Object} entity - Grid cell entity to mark as origin
+	 * @returns {void}
+	 *
+	 * Marker styling:
+	 * - Color: Black (42px with 14px outline)
+	 * - Scale: 1.0 at 4km, 0.0 at 40km
+	 * - Eye offset: Elevated for visibility
+	 */
 	markCurrentLocation( entity ) {
-    
+
 		const hierarchy = entity.polygon.hierarchy.getValue().positions;
     
 		// Calculate the center of the polygon's vertices

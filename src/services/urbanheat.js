@@ -1,11 +1,40 @@
 import Decoding from './decoding.js';
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 import { useURLStore } from '../stores/urlStore.js';
 
+/**
+ * Urban Heat Service
+ * Manages urban heat island effect data integration and building heat exposure calculations.
+ * Merges building geometry from city WFS with heat exposure data from pygeoapi.
+ * Calculates aggregate heat statistics and prepares data for visualization.
+ *
+ * Data Integration:
+ * - Building geometry: Helsinki WFS (kartta.hel.fi)
+ * - Heat exposure: Pygeoapi R4C dataset
+ * - Matching: By building ID (kiitun/feature ID)
+ * - Time series: Historical heat exposure measurements
+ *
+ * Calculations:
+ * - Average heat exposure per postal code
+ * - Heat histogram data for distribution visualization
+ * - Scatter plot preparation for building analysis
+ * - Heat timeseries filtering by building construction date
+ *
+ * Features:
+ * - Batched attribute matching for performance
+ * - Missing data handling (orphan heat polygons)
+ * - Date-specific heat exposure extraction
+ * - Helsinki vs Capital Region mode support
+ *
+ * @class Urbanheat
+ */
 export default class Urbanheat {
+	/**
+	 * Creates an Urbanheat service instance
+	 */
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
@@ -16,7 +45,7 @@ export default class Urbanheat {
 	/**
  * Calculate average Urban Heat exposure to buildings in postal code area
  *
- * @param { Object } features buildings in postal code area
+ * @param {Object} features - Buildings in postal code area
  */
 	calculateAverageExposure( features ) {
 
@@ -79,7 +108,7 @@ export default class Urbanheat {
 	/**
  * Fetches heat exposure data from pygeoapi for postal code.
  * 
- * @param { object } data of buildings from city wfs
+ * @param {Object} data - Data of buildings from city WFS
  */
 	async findUrbanHeatData( data ) {
 
@@ -116,8 +145,8 @@ export default class Urbanheat {
 /**
  * Adds urban heat exposure data that did not match in previous phase.
  * 
- * @param { object } features the buildings from city wfs
- * @param { object } heat urban heat exposure data from pygeoapi
+ * @param {Object} features - The buildings from city WFS
+ * @param {Object} heat - Urban heat exposure data from pygeoapi
  */
 
 const addMissingHeatData = ( features, heat ) => {
@@ -136,8 +165,8 @@ const addMissingHeatData = ( features, heat ) => {
  * Finds the purpose of a building in Helsinki based on code included in wfs source data
  * Code list: https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf
  *
- * @param { Object } properties of a building
- * @param { Object } features Urban Heat Exposure buildings dataset
+ * @param {Object} properties - Properties of a building
+ * @param {Object} features - Urban Heat Exposure buildings dataset
  */
 const setAttributesFromApiToBuilding = async ( properties, features ) => {
 

@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import Building from './building.js';
 import Plot from './plot.js';
 import Traveltime from './traveltime.js';
@@ -16,7 +16,24 @@ import Camera from './camera.js';
 import ColdArea from './coldarea.js';
 import { eventBus } from '../services/eventEmitter.js';
 
+/**
+ * FeaturePicker Service
+ * Handles user interactions with map entities including click events, entity selection,
+ * and navigation between geographic levels (region → postal code → building).
+ * Coordinates data loading and view updates across multiple service dependencies.
+ *
+ * Manages three primary interaction levels:
+ * - Start: Capital region overview
+ * - PostalCode: Zoom into specific postal code area
+ * - Building: Individual building details
+ *
+ * @class FeaturePicker
+ */
 export default class FeaturePicker {
+	/**
+	 * Creates a FeaturePicker service instance
+	 * Initializes all required service dependencies for entity interaction handling.
+	 */
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
@@ -27,35 +44,38 @@ export default class FeaturePicker {
 		this.helsinkiService = new Helsinki();
 		this.capitalRegionService = new CapitalRegion();
 		this.sensorService = new Sensor();
-		this.buildingService = new Building();
 		this.plotService = new Plot();
 		this.traveltimeService = new Traveltime();
 		this.hSYBuildingService = new HSYBuilding();
 		this.elementsDisplayService = new ElementsDisplay();
 		this.cameraService = new Camera();
 		this.coldAreaService = new ColdArea();
-
 	}
   
 	/**
-    * Processes the click event on the viewer
-    * 
-    * @param {Cesium.Viewer} viewer - The Cesium viewer object
-    * @param {MouseEvent} event - The click event
-    */
+	 * Processes mouse click events on the Cesium viewer
+	 * Entry point for all entity selection interactions.
+	 * Converts screen coordinates to Cartesian2 and delegates to pickEntity.
+	 *
+	 * @param {MouseEvent} event - Browser mouse click event with x,y coordinates
+	 * @returns {void}
+	 */
 	processClick( event ) {
 
 		console.log('[FeaturePicker] 🖱️ Processing click at coordinates:', event.x, event.y);
     	this.pickEntity( new Cesium.Cartesian2( event.x, event.y ) );
-  	
-	}    
-    
+
+	}
+
 	/**
-    * Picks the entity at the given window position in the viewer
-    * 
-    * @param { String } viewer - The Cesium viewer object
-    * @param { String } windowPosition - The window position to pick the entity
-    */
+	 * Picks and processes the entity at specified screen position
+	 * Uses Cesium scene.pick() to identify clicked entity and routes to appropriate handler.
+	 * Handles both direct entities and primitives with associated entity IDs.
+	 *
+	 * @param {Cesium.Cartesian2} windowPosition - Screen coordinates for entity picking
+	 * @returns {void}
+	 * @fires eventBus#entityPrintEvent - Emitted when a polygon entity is selected
+	 */
 	pickEntity( windowPosition ) {
 		console.log('[FeaturePicker] 🎯 Picking entity at window position:', windowPosition);
 		let picked = this.viewer.scene.pick( windowPosition );
@@ -83,35 +103,42 @@ export default class FeaturePicker {
 		}
 	}
   
+	/**
+	 * Loads data and visualizations for the currently selected postal code
+	 * Clears existing data sources and loads region-specific elements based on Helsinki view mode.
+	 * Updates application level state and UI element visibility.
+	 *
+	 * @returns {Promise<void>}
+	 */
 	async loadPostalCode() {
-		
+
 		console.log('[FeaturePicker] 🚀 Loading postal code:', this.store.postalcode);
 		console.log('[FeaturePicker] Helsinki view mode:', this.toggleStore.helsinkiView);
 
 		this.setNameOfZone();
-		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );    
+		this.elementsDisplayService.setSwitchViewElementsDisplay( 'inline-block' );
 		this.datasourceService.removeDataSourcesAndEntities();
 
+		// Load region-specific data based on view mode
 		if ( !this.toggleStore.helsinkiView ) {
-
-		//	this.elementsDisplayService.setHelsinkiElementsDisplay( 'none' );
-		//	this.elementsDisplayService.setCapitalRegionElementsDisplay( 'inline-block' );
 			console.log('[FeaturePicker] Loading Capital Region elements (including buildings)...');
 			await this.capitalRegionService.loadCapitalRegionElements();
-
 		} else {
-        
 			console.log('[FeaturePicker] Loading Helsinki elements (including buildings)...');
 			this.helsinkiService.loadHelsinkiElements();
-    
 		}
 
 		this.store.setLevel( 'postalCode' );
 		console.log('[FeaturePicker] ✅ Postal code loading complete');
-
-  
 	}
 
+	/**
+	 * Sets the name of the current zone from postal code data
+	 * Searches through postal code entities to find matching postal code and extracts zone name.
+	 *
+	 * @returns {void}
+	 * @private
+	 */
 	setNameOfZone() {
 		
 		const entitiesArray = this.propStore.postalCodeData ._entityCollection?._entities._array;
@@ -128,6 +155,20 @@ if (Array.isArray(entitiesArray)) {
 
 	}
     
+	/**
+	 * Handles building feature selection and visualization
+	 * Updates application level to 'building', shows loading indicator, emits visibility events,
+	 * and creates building-specific charts. Manages loading state throughout the process.
+	 *
+	 * @param {Object} properties - Building properties object containing building attributes
+	 * @param {string} properties._postinumero - Postal code of the building
+	 * @param {number} [properties.treeArea] - Nearby tree area
+	 * @param {number} [properties._avg_temp_c] - Average temperature
+	 * @returns {Promise<void>}
+	 * @fires eventBus#hideHelsinki - Emitted when switching away from Helsinki view
+	 * @fires eventBus#hideCapitalRegion - Emitted when switching away from Capital Region view
+	 * @fires eventBus#showBuilding - Emitted when building level view is activated
+	 */
 	async handleBuildingFeature( properties ) {
 		// Show loading indicator for building selection
 		try {
@@ -139,13 +180,14 @@ if (Array.isArray(entitiesArray)) {
 		}
 
 		try {
+			// Update application state to building level
 			this.store.setLevel( 'building' );
 			this.store.setPostalCode( properties._postinumero._value );
 			this.toggleStore.helsinkiView ? eventBus.emit( 'hideHelsinki' ) : eventBus.emit( 'hideCapitalRegion' );
 			eventBus.emit( 'showBuilding' );
 			this.elementsDisplayService.setBuildingDisplay( 'none' );
 			this.buildingService.resetBuildingOutline();
-			
+
 			// Process building charts asynchronously
 			await this.buildingService.createBuildingCharts( properties.treeArea, properties._avg_temp_c, properties );
 		} catch (error) {
@@ -162,6 +204,13 @@ if (Array.isArray(entitiesArray)) {
 		}
 	}
 
+	/**
+	 * Removes entities from viewer by name
+	 * Iterates through all entities and removes those matching the specified name.
+	 *
+	 * @param {string} name - Name of entities to remove
+	 * @returns {void}
+	 */
 	removeEntityByName( name ) {
 
 		this.viewer.entities._entities._array.forEach( ( entity ) => {
@@ -176,8 +225,10 @@ if (Array.isArray(entitiesArray)) {
     
 	/**
      * Handles the feature with properties
-     * 
+     *
      * @param {Object} id - The ID of the picked entity
+     * @fires eventBus#createHeatFloodVulnerabilityChart - Emitted when grid cell with vulnerability data is selected
+     * @private
      */
 	handleFeatureWithProperties( id ) {       
         
@@ -269,23 +320,29 @@ if (Array.isArray(entitiesArray)) {
     
 	}
 
+	/**
+	 * Calculates bounding box (geographic extent) for a polygon entity
+	 * Extracts polygon positions, converts to geographic coordinates, and finds min/max bounds.
+	 * Hides the entity after calculating its bounding box.
+	 *
+	 * @param {Cesium.Entity} id - Entity with polygon property
+	 * @returns {Object|null} Bounding box object with {minLon, maxLon, minLat, maxLat} in degrees, or null if no polygon
+	 */
 	getBoundingBox( id ) {
 
-		// Assuming `entity` is your Cesium Entity
 		let boundingBox = null;
 
 		if ( id.polygon ) {
-			// Access the hierarchy of the polygon to get the positions
+			// Access the polygon hierarchy to get vertex positions
 			const hierarchy = id.polygon.hierarchy.getValue();
 
-			// Cesium entities may have positions defined in various ways; this example assumes a simple polygon
 			if ( hierarchy ) {
 				const positions = hierarchy.positions;
 
-				// Convert positions to Cartographic to get longitude and latitude
+				// Convert Cartesian positions to geographic coordinates (latitude/longitude)
 				const cartographics = positions.map( position => Cesium.Cartographic.fromCartesian( position ) );
-        
-				// Find the minimum and maximum longitude and latitude
+
+				// Find the geographic extent (bounding box)
 				let minLon = Number.POSITIVE_INFINITY, maxLon = Number.NEGATIVE_INFINITY;
 				let minLat = Number.POSITIVE_INFINITY, maxLat = Number.NEGATIVE_INFINITY;
 
@@ -296,13 +353,12 @@ if (Array.isArray(entitiesArray)) {
 					maxLat = Math.max( maxLat, cartographic.latitude );
 				} );
 
-				// Convert back to degrees
+				// Convert radians to degrees
 				minLon = Cesium.Math.toDegrees( minLon );
 				maxLon = Cesium.Math.toDegrees( maxLon );
 				minLat = Cesium.Math.toDegrees( minLat );
 				maxLat = Cesium.Math.toDegrees( maxLat );
 
-				// Now you have the bounding box corners
 				boundingBox = {
 					minLon: minLon,
 					maxLon: maxLon,
@@ -310,11 +366,11 @@ if (Array.isArray(entitiesArray)) {
 					maxLat: maxLat
 				};
 
+				// Hide entity after extracting bounds
 				id.show = false;
 			}
 		}
 
 		return boundingBox;
-
 	}
 }

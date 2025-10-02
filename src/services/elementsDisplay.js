@@ -1,13 +1,36 @@
 import { useToggleStore } from '../stores/toggleStore.js';
 
+/**
+ * Elements Display Service
+ * Manages UI element visibility based on view mode and application state.
+ * Controls display of layer toggles, filters, and mode-specific controls
+ * for Helsinki view, Capital Region view, grid view, and postal code view.
+ *
+ * Manages visibility for:
+ * - Building filters (age, purpose, floor count)
+ * - Nature layers (trees, vegetation, other nature)
+ * - View mode controls (grid, 2D/3D switch)
+ * - Flood data links
+ * - Travel time controls
+ * - Cold area overlays
+ *
+ * @class ElementsDisplay
+ */
 export default class ElementsDisplay {
+	/**
+	 * Creates an ElementsDisplay service instance
+	 */
 	constructor() {
 		this.toggleStore = useToggleStore();
 	}
 
 	/**
-     * Changes the display of helsinki elements when user switches between postal code and grid view
-    */
+	 * Controls visibility of Helsinki-specific UI elements
+	 * Shows/hides vegetation, trees, and building filter controls.
+	 *
+	 * @param {string} display - CSS display value ('none', 'block', 'inline-block', etc.)
+	 * @returns {void}
+	 */
 	setHelsinkiElementsDisplay( display ) {
 		const elements = [
 			'showVegetationSwitch',

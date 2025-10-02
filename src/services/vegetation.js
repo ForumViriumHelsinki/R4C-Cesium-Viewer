@@ -1,10 +1,33 @@
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useURLStore } from '../stores/urlStore.js';
 import unifiedLoader from './unifiedLoader.js';
 
+/**
+ * Vegetation Service
+ * Manages low-ground vegetation layer visualization (grass, shrubs, water bodies).
+ * Loads and renders vegetation data from HSY datasets with category-specific styling.
+ *
+ * Vegetation categories (koodi codes):
+ * - 212: Low vegetation (<2m grass/shrubs) - Light green, 0.1m extrusion
+ * - 211: Taller vegetation (2m vegetation) - Yellow-green, 0.5m extrusion
+ * - 510: Water bodies - Deep sky blue
+ * - 520: Other water features - Dodger blue
+ *
+ * Features:
+ * - Unified loader integration with caching (15min TTL)
+ * - Batched processing for large datasets
+ * - Color-coded visualization by vegetation type
+ * - Small 3D extrusion for vegetation layers
+ * - Progressive loading support
+ *
+ * @class Vegetation
+ */
 export default class Vegetation {
+	/**
+	 * Creates a Vegetation service instance
+	 */
 	constructor( ) {
 		this.datasourceService = new Datasource();
 		this.store = useGlobalStore();

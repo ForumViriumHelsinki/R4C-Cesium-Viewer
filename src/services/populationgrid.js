@@ -1,23 +1,46 @@
 import * as Cesium from 'cesium';
-import Datasource from './datasource.js'; 
-import Camera from './camera.js'; 
+import Datasource from './datasource.js';
+import Camera from './camera.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 
+/**
+ * Population Grid Service
+ * Manages 250m × 250m statistical grid visualization for the Capital Region.
+ * Handles grid cell styling based on heat exposure, green space coverage, and population data.
+ * Supports multiple visualization modes including heat gradients and green space percentages.
+ *
+ * Grid specifications:
+ * - Cell size: 250m × 250m (62,500 m² area)
+ * - Data source: Statistics Finland (Paavo postal code statistics)
+ * - Coverage: Helsinki Capital Region
+ * - Attributes: Population, heat exposure, green space, water, vegetation, trees
+ *
+ * Visualization modes:
+ * - Heat exposure (red-yellow gradient)
+ * - Green space coverage (normalized by grid area)
+ * - Combined indices with 3D extrusion
+ *
+ * @class Populationgrid
+ */
 export default class Populationgrid {
+	/**
+	 * Creates a Populationgrid service instance
+	 */
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource( );
 		this.cameraService = new Camera( );
+		/** @type {number} Standard grid cell area in square meters (250m × 250m) */
 		this.gridArea = 62500;
 	}
 
 	/**
  * Set population grid entities heat exposure
  *
- * @param { Object } entities Cesium entities
+ * @param {Object} entities - Cesium entities
  */
 	setHeatExposureToGrid( entities ) {
 
@@ -32,7 +55,7 @@ export default class Populationgrid {
 	/**
  * Set grid entity polygon
  *
- * @param { Object } entity grid entity
+ * @param {Object} entity - Grid entity
  */
 	setGridEntityPolygon( entity ) {
 
@@ -54,7 +77,7 @@ export default class Populationgrid {
 	/**
  * Set grid entity polygon
  *
- * @param { Object } entity grid entity
+ * @param {Object} entity - Grid entity
  */
 	setGridEntityPolygonToGreen( entity ) {
 

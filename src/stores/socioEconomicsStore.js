@@ -1,6 +1,42 @@
-import { defineStore } from 'pinia';
-null
+/**
+ * @module stores/socioEconomicsStore
+ * Manages demographic, housing, and socioeconomic indicators for Helsinki Capital Region.
+ * Provides statistical aggregations, regional comparisons, and Helsinki-specific subsets.
+ *
+ * Data source: Statistics Finland Paavo postal code statistics
+ * Coverage: Helsinki, Espoo, Vantaa, Kauniainen (Capital Region)
+ * Temporal scope: Annual updates (latest year data)
+ *
+ * Key indicators:
+ * - **Demographics**: Age groups (he_0_2, he_3_6, he_7_12, he_65_69, he_70_74, he_80_84, he_85_)
+ * - **Population**: Total population (he_vakiy)
+ * - **Employment**: Unemployment rate (pt_tyott)
+ * - **Education**: Education level (ko_perus, ko_ika18y)
+ * - **Housing**: Household types (te_taly), rented dwellings (te_vuok_as)
+ * - **Income**: Average income per capita (ra_as_kpa)
+ * - **Household size**: Persons per household (hr_ktu)
+ *
+ * Statistical processing:
+ * - Region-wide min/max for normalization
+ * - Helsinki-specific statistics (kunta === '091')
+ * - "Whole Region" aggregated entry for Capital Region totals
+ * - Filtered postal codes (excludes: 00230, 02290, 01770)
+ *
+ * @see {@link https://www.stat.fi/org/avoindata/paikkatietoaineistot/paavo_en.html|Paavo Documentation}
+ * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
+ */
 
+import { defineStore } from 'pinia';
+
+/**
+ * Socio-Economics Pinia Store
+ * Manages Paavo postal code statistics with regional and Helsinki-specific aggregations.
+ *
+ * @typedef {Object} SocioEconomicsState
+ * @property {Array<Object>|null} data - Paavo postal code statistics (filtered)
+ * @property {Object|null} regionStatistics - Min/max values for Capital Region
+ * @property {Object|null} helsinkiStatistics - Min/max values for Helsinki only
+ */
 export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 	state: () => ( {
 		data: null, // Stores the raw Paavo data
@@ -8,21 +44,53 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 		helsinkiStatistics: null
 	} ),
 	getters: {
+		/**
+		 * Retrieves socioeconomic data for a specific postal code
+		 * @param {Object} state - Pinia state
+		 * @returns {(postcode: string) => Object|undefined} Function accepting postcode and returning Paavo data
+		 * @example
+		 * const data = getDataByPostcode('00100');
+		 * console.log(data.he_vakiy); // Total population
+		 */
 		getDataByPostcode: ( state ) => ( postcode ) => {
 			return state.data.find( ( item ) => item.postinumeroalue === postcode );
 		},
+		/**
+		 * Retrieves socioeconomic data by area name
+		 * @param {Object} state - Pinia state
+		 * @returns {(nimi: string) => Object|undefined} Function accepting area name and returning Paavo data
+		 * @example
+		 * const data = getDataByNimi('Alppila - Vallila');
+		 */
 		getDataByNimi: ( state ) => ( nimi ) => {
 			return state.data.find( ( item ) => item.nimi === nimi );
-		},    
+		},
+		/**
+		 * Gets sorted list of all area names in Capital Region
+		 * @param {Object} state - Pinia state
+		 * @returns {() => Array<string>} Function returning sorted array of area names
+		 */
 		getNimiForCapital: ( state ) => () => {
 			return state.data.map( item => item.nimi ).sort();
 		},
+		/**
+		 * Gets sorted list of area names in Helsinki only (kunta === '091')
+		 * @param {Object} state - Pinia state
+		 * @returns {() => Array<string>} Function returning sorted array of Helsinki area names
+		 */
 		getNimiForHelsinki: ( state ) => () => {
 			return state.data.filter( item => item.kunta === '091' ).map( item => item.nimi ).sort();
 		},
 	},
 	actions: {
-		// Function to load Paavo data
+		/**
+		 * Loads Paavo socioeconomic data from proxied endpoint
+		 * Fetches all Capital Region postal code statistics and calculates min/max values.
+		 * Automatically filters excluded postal codes and adds "Whole Region" aggregate entry.
+		 *
+		 * @returns {Promise<void>}
+		 * @throws {Error} If Paavo data fetch fails
+		 */
 		async loadPaavo() {
 			try {
 				const response = await fetch( '/paavo' );
@@ -38,7 +106,13 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 			}
 		},
 
-		// Function to fetch all Paavo data
+		/**
+		 * Fetches all Paavo features from proxied endpoint
+		 * @private
+		 * @param {string} requestUrl - Paavo API endpoint URL
+		 * @returns {Promise<Object>} GeoJSON feature collection
+		 * @throws {Error} If HTTP request fails or data structure is invalid
+		 */
 		async getAllPaavoData( requestUrl ) {
 			try {
 				const response = await fetch( requestUrl );
@@ -52,7 +126,16 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
 			}
 		},
 
-		// Function to add data to store and calculate statistics
+		/**
+		 * Processes and stores Paavo data with statistical calculations
+		 * Filters excluded postal codes, calculates min/max for both Capital Region
+		 * and Helsinki-only subsets for income and household size indicators.
+		 *
+		 * Excluded postal codes: 00230, 02290, 01770
+		 *
+		 * @param {Object} data - GeoJSON feature collection from Paavo API
+		 * @returns {void}
+		 */
 		addPaavoDataToStore( data ) {
 			// Filter out rows where postinumeroalue is "00230", then map the rest
 			this.data = data.features.filter( feature => ![ '00230', '02290', '01770' ].includes( feature.properties.postinumeroalue ) ).map( feature => feature.properties );
@@ -88,13 +171,25 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
       
 		},
 
+		/**
+		 * Stores filtered Paavo data without calculations
+		 * Simple data storage step excluding problematic postal codes.
+		 *
+		 * @param {Object} data - GeoJSON feature collection
+		 * @returns {void}
+		 */
 		addDataToStore( data ) {
 			// Filter out rows where postinumeroalue is "00230", "02290", "01770", then map the rest
 			this.data = data.features.filter( feature => ![ '00230', '02290', '01770' ].includes( feature.properties.postinumeroalue ) ).map( feature => feature.properties );
-        
+
 		},
 
-		// Function to add data to store and calculate statistics
+		/**
+		 * Calculates Capital Region-wide min/max statistics
+		 * Computes normalization bounds for income (ra_as_kpa) and household size (hr_ktu).
+		 *
+		 * @returns {void}
+		 */
 		addRegionStatisticsToStore() {
 			// Example statistics calculation (adjust according to actual data attributes)
 			this.regionStatistics = {
@@ -111,7 +206,12 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
               
 		},
 
-		// Function to add data to store and calculate statistics
+		/**
+		 * Calculates Helsinki-specific min/max statistics
+		 * Computes normalization bounds for Helsinki municipality only (kunta === '091').
+		 *
+		 * @returns {void}
+		 */
 		addHelsinkiStatisticsToStore() {
 			// Filter data for Helsinki (kunta = "091")
 			const helsinkiData = this.data.filter( item => item.kunta === '091' );
@@ -130,6 +230,18 @@ export const useSocioEconomicsStore = defineStore( 'socioEconomics', {
               
 		},
 
+		/**
+		 * Calculates and appends "Whole Region" aggregate entry
+		 * Sums demographic/housing indicators and averages income/household size
+		 * across all postal codes to create Capital Region total entry.
+		 *
+		 * Summed attributes: Population groups, unemployment, education, housing types
+		 * Averaged attributes: Income per capita (ra_as_kpa), household size (hr_ktu)
+		 *
+		 * Result: Appends entry with postinumeroalue='99999', nimi='Whole Region'
+		 *
+		 * @returns {void}
+		 */
 		calculateRegionTotal() {
     if (!this.data || this.data.length === 0) return;
 
