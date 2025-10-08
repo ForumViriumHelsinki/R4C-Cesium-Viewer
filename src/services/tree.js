@@ -1,4 +1,4 @@
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
@@ -6,7 +6,32 @@ import { eventBus } from '../services/eventEmitter.js';
 import { useURLStore } from '../stores/urlStore.js';
 import unifiedLoader from './unifiedLoader.js';
 
+/**
+ * Tree Service
+ * Manages tree coverage data loading, visualization, and cooling effect analysis.
+ * Handles 4 tree height categories (2-10m, 10-15m, 15-20m, >20m) with coordinated
+ * parallel loading and optimized batch processing.
+ *
+ * Tree height categories (koodi codes):
+ * - 221: >20m (tallest, darkest green)
+ * - 222: 15-20m
+ * - 223: 10-15m
+ * - 224: 2-10m (shortest, lightest green)
+ *
+ * Features:
+ * - Parallel loading of all height categories via unifiedLoader
+ * - Adaptive batch processing for large datasets
+ * - Color-coded visualization by tree height
+ * - 3D tree extrusion based on average height
+ * - Building cooling effect distance analysis
+ * - Cache support for improved performance
+ *
+ * @class Tree
+ */
 export default class Tree {
+	/**
+	 * Creates a Tree service instance
+	 */
 	constructor( ) {
 		this.datasourceService = new Datasource();
 		this.store = useGlobalStore();
@@ -150,7 +175,7 @@ export default class Tree {
 	/**
  * Fetch tree distance data from the provided URL and create a new dataset for plot that presents the cooldown effect on trees on buildings
  *
- * @param { Object } entities - The postal code area tree entities
+ * @param {Object} entities - The postal code area tree entities
  */
 	fetchAndAddTreeDistanceData( entities ) {
 
@@ -189,6 +214,17 @@ export default class Tree {
 			} );
 	}
 	
+	/**
+	 * Sets tree-building distance properties in store and emits visualization events
+	 * Updates props store with tree data and triggers UI updates for tree diagrams.
+	 *
+	 * @param {Object} data - Tree distance data from API
+	 * @param {Array<Cesium.Entity>} entities - Tree entities
+	 * @param {Cesium.DataSource} buildingsDataSource - Buildings data source
+	 * @fires eventBus#hideBuildingScatterPlot - Hides building scatter plot
+	 * @fires eventBus#newNearbyTreeDiagram - Triggers tree proximity diagram update
+	 * @private
+	 */
 	setPropertiesAndEmitEvent( data, entities, buildingsDataSource ) {
 
 		const propsStore = usePropsStore();
@@ -201,9 +237,9 @@ export default class Tree {
 
 	/**
  * Set the polygon material color and extruded height for a given tree entity based on its description
- * 
- * @param { object } entity tree entity
- * @param { String } description description of tree entity
+ *
+ * @param {Object} entity - Tree entity
+ * @param {string} description - Description of tree entity
  */
 	setTreePolygonMaterialColor( entity, description ) {
 

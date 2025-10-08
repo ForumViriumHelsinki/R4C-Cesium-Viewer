@@ -8,7 +8,26 @@ import Vegetation from './vegetation.js';
 import OtherNature from './othernature.js';
 import Tree from './tree.js';
 
+/**
+ * Helsinki Service
+ * Orchestrates loading of Helsinki-specific data layers and visualizations.
+ * Coordinates building data, postal code boundaries, vegetation, trees, and other nature layers.
+ * Manages Helsinki view mode UI elements and layer visibility based on toggle states.
+ *
+ * Helsinki-specific features:
+ * - Building heat exposure data from Helsinki WFS
+ * - High-resolution nature layers (vegetation, trees, other nature)
+ * - Postal code boundaries from local GeoJSON
+ * - Coordinated multi-layer loading
+ * - Toggle-driven layer management
+ *
+ * @class Helsinki
+ */
 export default class Helsinki {
+	/**
+	 * Creates a Helsinki service instance
+	 * Initializes all Helsinki-specific service dependencies.
+	 */
 	constructor( ) {
 		this.toggleStore = useToggleStore();
 		this.store = useGlobalStore();
@@ -22,23 +41,30 @@ export default class Helsinki {
 	}
 
 	/**
-    * Load Helsinki elements depending on toggle values
-    * 
-    */
+	 * Loads all Helsinki-specific map elements for the current postal code
+	 * Orchestrates loading of buildings, postal code boundaries, and nature layers.
+	 * Shows Helsinki-specific UI controls and emits visibility event.
+	 *
+	 * @returns {Promise<void>}
+	 * @fires eventBus#showHelsinki - Emitted when Helsinki view elements are loaded
+	 */
 	async loadHelsinkiElements( ) {
 
 		this.elementsDisplayService.setHelsinkiElementsDisplay( 'inline-block' );
-		await this.buildingService.loadBuildings( );	
+		await this.buildingService.loadBuildings( );
 		await this.datasourceService.loadGeoJsonDataSource( 0.0, './assets/data/hki_po_clipped.json', 'PostCodes' );
 		this.loadHelsinkiGreenElements( );
 		eventBus.emit( 'showHelsinki' );
 
-	} 
+	}
 
 	/**
-    * Load Helsinki Green elements depending on toggle values
-    * 
-    */
+	 * Conditionally loads Helsinki green/nature layers based on toggle states
+	 * Checks toggleStore settings for vegetation, trees, and other nature layers.
+	 * Each layer loads only if its corresponding toggle is enabled.
+	 *
+	 * @returns {Promise<void>}
+	 */
 	async loadHelsinkiGreenElements( ) {
 
 		if ( this.toggleStore.showVegetation ) {

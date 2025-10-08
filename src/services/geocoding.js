@@ -1,15 +1,34 @@
-import Camera from './camera.js'; 
-import FeaturePicker from './featurepicker.js'; 
+import Camera from './camera.js';
+import FeaturePicker from './featurepicker.js';
 import View from './camera.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
-import Landcover from './landcover.js'; 
+import Landcover from './landcover.js';
 import { eventBus } from './eventEmitter.js';
 
+/**
+ * Geocoding Service
+ * Provides address search and geocoding functionality using Digitransit API.
+ * Handles autocomplete search, address filtering, camera navigation to locations,
+ * and postal code resolution. Integrates with Helsinki/Capital Region view modes.
+ *
+ * Features:
+ * - Real-time address autocomplete (3+ characters)
+ * - Geocoding via Digitransit geocoding API
+ * - Camera movement to selected addresses
+ * - Postal code extraction and zone name resolution
+ * - Helsinki-specific filtering option
+ *
+ * @class Geocoding
+ * @see {@link https://digitransit.fi/en/developers/apis/2-geocoding-api/|Digitransit Geocoding API}
+ */
 export default class Geocoding {
+	/**
+	 * Creates a Geocoding service instance
+	 */
 	constructor( ) {
 		this.store = useGlobalStore();
-		this.viewer = this.store.cesiumViewer;
+		this.viewer = this.store.cesiumViewer();
 		this.cameraService = new Camera();
 		this.featurePicker = new FeaturePicker();
 		this.addressData = null;
@@ -49,8 +68,8 @@ export default class Geocoding {
 	/**
  * Processes the data found with geocoding API. Only results from Helsinki are included and only data useful for app is left in
  *
- * @param { object } data found data
- * @return { object } processed data
+ * @param {Object} data - Found data
+ * @returns {Object} Processed data
  */
 	processAddressData = ( data ) => {
 
@@ -110,7 +129,7 @@ export default class Geocoding {
 	/**
   * Finds coordinates for street address / search term and moves camera to the found coordinates
   *
-  * @param { object } e event object from UI
+  * @param {Object} e - Event object from UI
   */
 	moveCameraToLocation = ( e ) => {
 
@@ -145,7 +164,7 @@ export default class Geocoding {
 	/**
  * Renders autocomplete search result
  *
- * @param { Array<String> } addresses shown to user
+ * @param {Array<string>} addresses - Addresses shown to user
  */
 	renderSearchResult ( addresses ) {
 
@@ -170,7 +189,15 @@ export default class Geocoding {
 
 	}
 
-	// Moves camera to specified latitude, longitude coordinates
+	/**
+	 * Moves camera to specified latitude, longitude coordinates
+	 * Centers the camera view and emits geocoding event, then loads postal code data.
+	 *
+	 * @param {number} longitude - Longitude coordinate
+	 * @param {number} latitude - Latitude coordinate
+	 * @fires eventBus#geocodingPrintEvent - Emitted when camera moves to geocoded location
+	 * @private
+	 */
 	moveCameraAndReset( longitude, latitude ) {
 
 		this.cameraService.setCameraView( longitude, latitude );
@@ -193,7 +220,7 @@ export default class Geocoding {
 	/**
   * Finds name of the new zone based on it's postal code
   *
-  * @param { string } postalcode postal code of new zone
+  * @param {string} postalcode - Postal code of new zone
   */
 	findNameOfZone( postalcode ) {
 

@@ -2,7 +2,25 @@ import * as Cesium from 'cesium';
 import { useGraphicsStore } from '../stores/graphicsStore.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 
+/**
+ * Graphics Quality Management Service
+ * Manages CesiumJS rendering quality settings including anti-aliasing (MSAA, FXAA),
+ * HDR rendering, ambient occlusion, and performance optimization modes.
+ * Provides hardware capability detection and reactive settings management.
+ *
+ * Supported graphics features:
+ * - MSAA (Multi-Sample Anti-Aliasing): Hardware-based anti-aliasing (2x, 4x, 8x)
+ * - FXAA (Fast Approximate Anti-Aliasing): Shader-based anti-aliasing
+ * - HDR (High Dynamic Range): Enhanced lighting and color range
+ * - Ambient Occlusion: Realistic shadow effects in crevices
+ * - Request Render Mode: On-demand rendering for performance
+ *
+ * @class Graphics
+ */
 export default class Graphics {
+	/**
+	 * Creates a Graphics service instance
+	 */
 	constructor() {
 		this.store = useGlobalStore();
 		this.graphicsStore = useGraphicsStore();
@@ -11,7 +29,11 @@ export default class Graphics {
 	}
 
 	/**
-	 * Initialize graphics quality settings for the viewer
+	 * Initializes graphics quality settings for the Cesium viewer
+	 * Detects hardware support, applies initial settings, and sets up reactive watchers.
+	 *
+	 * @param {Cesium.Viewer} viewer - CesiumJS viewer instance
+	 * @returns {void}
 	 */
 	init(viewer) {
 		this.viewer = viewer;

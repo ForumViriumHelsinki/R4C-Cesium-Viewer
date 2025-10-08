@@ -1,10 +1,32 @@
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useURLStore } from '../stores/urlStore.js';
 import unifiedLoader from './unifiedLoader.js';
 
+/**
+ * Other Nature Service
+ * Manages miscellaneous natural surface layers (rock, sand, bare soil).
+ * Complements vegetation and tree layers with additional land cover types
+ * from HSY environmental data.
+ *
+ * Nature categories (koodi codes):
+ * - 310: Rock surfaces (kallio) - Light grey
+ * - 410: Sand/beaches (hiekka) - Sandy brown
+ * - 130: Bare soil/exposed ground (paljas maa) - Rosy brown
+ *
+ * Features:
+ * - Unified loader integration with caching (20min TTL)
+ * - Batched processing for performance
+ * - Color-coded visualization by surface type
+ * - Progressive loading support
+ *
+ * @class Othernature
+ */
 export default class Othernature {
+	/**
+	 * Creates an Othernature service instance
+	 */
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.urlStore = useURLStore();

@@ -1,5 +1,33 @@
+/**
+ * @module stores/graphicsStore
+ * Controls anti-aliasing (MSAA, FXAA), HDR, ambient occlusion, and render modes.
+ * Provides hardware capability detection and preset quality profiles for optimized visualization.
+ *
+ * Graphics features:
+ * - **MSAA**: Multi-sample anti-aliasing (1x, 2x, 4x, 8x samples) - Best quality, hardware-dependent
+ * - **FXAA**: Fast approximate anti-aliasing - Lower quality, always available
+ * - **HDR**: High Dynamic Range rendering - Enhanced color depth
+ * - **Ambient Occlusion**: Realistic shadowing in crevices
+ * - **Request Render Mode**: On-demand rendering for battery/performance savings
+ *
+ * Quality presets:
+ * - **Ultra**: MSAA 8x + HDR + AO (highest quality, demanding)
+ * - **High**: MSAA 4x + AO (balanced quality/performance)
+ * - **Medium**: MSAA 2x (good quality, moderate performance)
+ * - **Low**: FXAA only (basic quality, good performance)
+ * - **Performance**: All off + request render (maximum performance)
+ *
+ * @see {@link https://cesium.com/|CesiumJS Documentation}
+ * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
+ */
+
 import { defineStore } from 'pinia';
 
+/**
+ * Graphics Pinia Store
+ * Manages Cesium rendering quality settings with hardware capability detection.
+ * All methods already documented with JSDoc.
+ */
 export const useGraphicsStore = defineStore('graphics', {
 	state: () => ({
 		// Anti-aliasing settings

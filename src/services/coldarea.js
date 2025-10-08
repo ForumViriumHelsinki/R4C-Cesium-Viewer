@@ -1,10 +1,30 @@
 import * as Cesium from 'cesium';
-import Datasource from './datasource.js'; 
+import Datasource from './datasource.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import ElementsDisplay from './elementsDisplay.js';
 import { useURLStore } from '../stores/urlStore.js';
 
+/**
+ * Cold Area Service
+ * Manages visualization of cooling zones and shaded areas with lower heat exposure.
+ * Identifies and displays areas under 40°C surface temperature as potential cooling refuges.
+ * Part of urban heat mitigation strategy for Helsinki region.
+ *
+ * Features:
+ * - Cold spot marker placement (locations <40°C)
+ * - Cold area polygon visualization
+ * - Heat exposure gradient coloring
+ * - Integration with building heat exposure data
+ *
+ * Cold areas are defined as locations with significantly lower surface temperatures,
+ * typically caused by tree canopy shade, water bodies, or building shadows.
+ *
+ * @class ColdArea
+ */
 export default class ColdArea {
+	/**
+	 * Creates a ColdArea service instance
+	 */
 	constructor( ) {
 		this.datasourceService = new Datasource();
 		this.elementsDisplayService = new ElementsDisplay();
@@ -12,22 +32,33 @@ export default class ColdArea {
         this.urlStore = useURLStore();
 	}
 
+	/**
+	 * Adds a cold spot marker to the map at specified coordinates
+	 * Creates a blue point entity to mark locations with temperature <40°C.
+	 * Used to highlight cooling refuges near selected buildings.
+	 *
+	 * @param {string} location - Comma-separated coordinates "lat,lon"
+	 * @returns {void}
+	 *
+	 * @example
+	 * coldAreaService.addColdPoint("60.1699,24.9384"); // Adds marker at Helsinki
+	 */
 	addColdPoint( location ) {
-    
-		const coordinates = location.split( ',' ); 
-    
+
+		const coordinates = location.split( ',' );
+
 		this.store.cesiumViewer.entities.add( {
 			position: Cesium.Cartesian3.fromDegrees( Number( coordinates[ 1 ] ), Number( coordinates[ 0 ] ) ),
 			name: 'coldpoint',
 			point: {
-				show: true, 
-				color: Cesium.Color.ROYALBLUE, 
-				pixelSize: 15, 
-				outlineColor: Cesium.Color.LIGHTYELLOW, 
-				outlineWidth: 5, 
+				show: true,
+				color: Cesium.Color.ROYALBLUE,
+				pixelSize: 15,
+				outlineColor: Cesium.Color.LIGHTYELLOW,
+				outlineWidth: 5,
 			},
 		} );
-    
+
 	}
 
 	/**

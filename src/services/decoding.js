@@ -1,13 +1,34 @@
 
+/**
+ * Decoding Service
+ * Provides lookup and decoding functions for Helsinki building registry codes.
+ * Converts numeric/coded values to human-readable text descriptions for:
+ * - Building purposes (käyttötarkoitus)
+ * - Building materials
+ * - Heating methods and sources
+ * - Facade materials
+ * - Color normalization/mapping
+ *
+ * @class Decoding
+ * @see {@link https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf|Building Registry Metadata}
+ * @see {@link https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf|Building Material Codes}
+ */
 export default class Decoding {
 
 	/**
- * Finds the purpose of a building in Helsinki based on code included in wfs source data
- * Code list: https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf
- *
- * @param { String } kayttotarkoitus code for purpose
- * @return { String } purpose of building
- */
+	 * Decodes Helsinki building purpose codes to Finnish text descriptions
+	 * Maps official building registry codes (e.g., '011', '131', '511') to purpose categories.
+	 * Covers residential, commercial, institutional, industrial, and agricultural building types.
+	 *
+	 * @param {string} kayttotarkoitus - 3-digit building purpose code
+	 * @returns {string} Finnish description of building purpose, or original code if not found
+	 * @see {@link https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf|Code list documentation}
+	 *
+	 * @example
+	 * decodeKayttotarkoitusHKI('011') // Returns 'Yhden asunnon talot' (Single-family houses)
+	 * decodeKayttotarkoitusHKI('131') // Returns 'Asuntolat, vanhusten yms' (Dormitories, elderly homes, etc.)
+	 * decodeKayttotarkoitusHKI('511') // Returns 'Peruskoulut, lukiot ja muut' (Primary schools, high schools, etc.)
+	 */
 	decodeKayttotarkoitusHKI( kayttotarkoitus ) {
 
 		switch ( kayttotarkoitus ) {
@@ -171,84 +192,118 @@ export default class Decoding {
 
 
 	/**
- * Decodes building material https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf
- *
- * @param { String } material value code for building material.'
- * @return { String } building material
- */
+	 * Decodes building material codes to English descriptions
+	 * Maps numeric codes (1-5) to primary structural material types.
+	 *
+	 * @param {string} material - Single digit material code (1-5)
+	 * @returns {string} English material description ('concrete', 'brick', 'steel', 'wood', 'other'), or original code if invalid
+	 * @see {@link https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf|Material codes documentation}
+	 *
+	 * @example
+	 * decodeMaterial('1') // Returns 'concrete'
+	 * decodeMaterial('4') // Returns 'wood'
+	 */
 	decodeMaterial( material ) {
 
 		switch ( material ) {
-		case '1': 
+		case '1':
 			return 'concrete';
-		case '2': 
+		case '2':
 			return 'brick';
-		case '3': 
+		case '3':
 			return 'steel';
-		case '4': 
+		case '4':
 			return 'wood';
-		case '5': 
+		case '5':
 			return 'other';
 		default:
-			return material;  		
-		}
-
-	}
-
-	decodeHeatingMethod( heatingMethod ) {
-
-		switch ( heatingMethod ) {
-		case '1': 
-			return 'central water';
-		case '2': 
-			return 'central air';
-		case '3': 
-			return 'electricity';
-		case '4': 
-			return 'oven';
-		case '5': 
-			return 'no fixed heating';			
-		default:
-			return heatingMethod;  
-		}
-
-	}
-
-	decodeHeatingSource( heatingSource ) {
-
-		switch ( heatingSource ) {
-		case '1': 
-			return 'district';
-		case '2': 
-			return 'light fuel oil';
-		case '3': 
-			return 'heavy fuel oil';
-		case '4': 
-			return 'electricity';
-		case '5': 
-			return 'gas';		
-		case '6': 
-			return 'coal';
-		case '7': 
-			return 'wood';
-		case '8': 
-			return 'peat';
-		case '9': 
-			return 'ground-source';
-		case '10': 
-			return 'other';					
-		default:
-			return heatingSource;  
+			return material;
 		}
 
 	}
 
 	/**
- * Decodes facade material https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf
- *
- * @param { String } facade value code for facade material.'
- * @return { String } face material
- */
+	 * Decodes building heating method codes to English descriptions
+	 * Maps codes (1-5) to heating distribution systems.
+	 *
+	 * @param {string} heatingMethod - Single digit heating method code (1-5)
+	 * @returns {string} English heating method description, or original code if invalid
+	 *
+	 * @example
+	 * decodeHeatingMethod('1') // Returns 'central water'
+	 * decodeHeatingMethod('3') // Returns 'electricity'
+	 */
+	decodeHeatingMethod( heatingMethod ) {
+
+		switch ( heatingMethod ) {
+		case '1':
+			return 'central water';
+		case '2':
+			return 'central air';
+		case '3':
+			return 'electricity';
+		case '4':
+			return 'oven';
+		case '5':
+			return 'no fixed heating';
+		default:
+			return heatingMethod;
+		}
+
+	}
+
+	/**
+	 * Decodes heating source/fuel type codes to English descriptions
+	 * Maps codes (1-10) to energy sources used for heating.
+	 *
+	 * @param {string} heatingSource - Heating source code (1-10)
+	 * @returns {string} English heating source description, or original code if invalid
+	 *
+	 * @example
+	 * decodeHeatingSource('1') // Returns 'district'
+	 * decodeHeatingSource('9') // Returns 'ground-source'
+	 */
+	decodeHeatingSource( heatingSource ) {
+
+		switch ( heatingSource ) {
+		case '1':
+			return 'district';
+		case '2':
+			return 'light fuel oil';
+		case '3':
+			return 'heavy fuel oil';
+		case '4':
+			return 'electricity';
+		case '5':
+			return 'gas';
+		case '6':
+			return 'coal';
+		case '7':
+			return 'wood';
+		case '8':
+			return 'peat';
+		case '9':
+			return 'ground-source';
+		case '10':
+			return 'other';
+		default:
+			return heatingSource;
+		}
+
+	}
+
+	/**
+	 * Decodes facade material codes to English descriptions
+	 * Maps numeric codes (1-7) to exterior building material types.
+	 *
+	 * @param {string} facade - Single digit facade material code (1-7)
+	 * @returns {string} English facade material description ('concrete', 'brick', 'metal', 'stone', 'wood', 'glass', 'other'), or original code if invalid
+	 * @see {@link https://kartta.hel.fi/avoindata/dokumentit/2017-01-10_Rakennusaineisto_avoindata_koodistot.pdf|Facade material codes}
+	 *
+	 * @example
+	 * decodeFacade('2') // Returns 'brick'
+	 * decodeFacade('6') // Returns 'glass'
+	 */
 	decodeFacade( facade ) {
 
 		switch ( facade ) {
@@ -273,12 +328,18 @@ export default class Decoding {
 	}
 
 	/**
- * Get the closest color value for a given key using a pre-defined color mapping.
- * The mapping was created from webcolors using K-means clustering.
- * 
- * @param { String } key original color
- * @return { String } reduced value for original color
- */
+	 * Maps CSS color names to normalized color palette using K-means clustering
+	 * Reduces 140+ web colors to ~40 representative colors for consistent visualization.
+	 * Mapping generated from webcolors library using K-means clustering algorithm.
+	 *
+	 * @param {string} key - CSS color name (e.g., 'aliceblue', 'crimson', 'steelblue')
+	 * @returns {string|null} Normalized color name from reduced palette, or null if not found
+	 *
+	 * @example
+	 * getColorValue('aliceblue') // Returns 'seashell'
+	 * getColorValue('crimson') // Returns 'red'
+	 * getColorValue('steelblue') // Returns 'steelblue'
+	 */
 	getColorValue( key ) {
 		const colorMap = {
 			aliceblue: 'seashell',

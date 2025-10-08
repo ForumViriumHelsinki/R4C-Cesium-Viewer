@@ -1,13 +1,30 @@
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 
+/**
+ * Camera Service
+ * Manages CesiumJS camera operations including view modes, navigation, zoom, rotation,
+ * and focus on geographic areas. Provides utilities for 2D/3D view transitions
+ * and postal code-based camera positioning.
+ *
+ * @class Camera
+ */
 export default class Camera {
+	/**
+	 * Creates a Camera service instance
+	 */
 	constructor( ) {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
-		this.isRotated = false;  // Keep track of rotation state
+		this.isRotated = false;  // Track rotation state for 180° rotations
 	}
 
+	/**
+	 * Initializes the camera to default Helsinki region view
+	 * Sets camera position to Helsinki capital region with top-down perspective.
+	 *
+	 * @returns {void}
+	 */
 	init() {
 		this.viewer.camera.setView( {
 			destination: Cesium.Cartesian3.fromDegrees( 24.931745, 60.190464, 35000 ),
@@ -19,7 +36,13 @@ export default class Camera {
 		} );
 	}
 
-	// Function to switch to 2D view
+	/**
+	 * Switches camera to 2D top-down view of the current postal code
+	 * Flies camera to postal code center with 90° pitch (directly overhead).
+	 * Searches for postal code entity in PostCodes data source.
+	 *
+	 * @returns {void}
+	 */
 	switchTo2DView() {
 
 		// Find the data source for postcodes
@@ -51,20 +74,26 @@ export default class Camera {
 
 	}
   
-	// Function to switch back to 3D view
+	/**
+	 * Switches camera to 3D perspective view of the current postal code
+	 * Flies camera to postal code center with 35° pitch (angled perspective).
+	 * Applies slight latitude offset for better framing.
+	 *
+	 * @returns {void}
+	 */
 	switchTo3DView() {
 		// Find the data source for postcodes
 		const postCodesDataSource = this.viewer.dataSources._dataSources.find( ds => ds.name === 'PostCodes' );
-    
-		// Iterate over all entities in the postcodes data source.
+
+		// Iterate over all entities in the postcodes data source
 		for ( let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++ ) {
-        
+
 			let entity = postCodesDataSource._entityCollection._entities._array[ i ];
-        
-			// Check if the entity posno property matches the postalcode.
+
+			// Check if entity postal code matches current selected postal code
 			if ( entity._properties._posno._value  == this.store.postalcode ) {
-        
-				// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
+
+				// Fly to postal code with 3D perspective
 				this.viewer.camera.flyTo( {
 					destination: Cesium.Cartesian3.fromDegrees( entity._properties._center_x._value, entity._properties._center_y._value - 0.025, 2000 ),
 					orientation: {
@@ -74,15 +103,18 @@ export default class Camera {
 					},
 					duration: 3
 				} );
-            
+
 			}
 		}
-
-		// change label
-		// this.changeLabel( 'switchViewLabel', '2D view' );
-
 	}
 
+	/**
+	 * Switches to 3D grid view mode
+	 * Either flies to default Helsinki position (start level) or maintains current position
+	 * while adjusting orientation. Preserves altitude and resets level state.
+	 *
+	 * @returns {void}
+	 */
 switchTo3DGrid() {
 
   if ( this.store.level === 'start' ) {
@@ -115,6 +147,15 @@ switchTo3DGrid() {
 }
 
 
+	/**
+	 * Flies camera to specified coordinates in 3D perspective mode
+	 * Quick 1-second animation to geographic position with default 3D orientation.
+	 *
+	 * @param {number} lat - Latitude in degrees
+	 * @param {number} long - Longitude in degrees
+	 * @param {number} z - Altitude/height in meters
+	 * @returns {void}
+	 */
 	flyCamera3D( lat, long , z ) {
 
 		this.viewer.camera.flyTo( {
@@ -127,7 +168,16 @@ switchTo3DGrid() {
 			duration: 1
 		} );
 	}
-	
+
+	/**
+	 * Sets camera view to specific coordinates instantly (no animation)
+	 * Positions camera at building-level altitude (500m) with slight latitude offset.
+	 * Uses immediate setView rather than animated flyTo.
+	 *
+	 * @param {number} longitude - Longitude in degrees
+	 * @param {number} latitude - Latitude in degrees
+	 * @returns {void}
+	 */
 	setCameraView( longitude,  latitude ) {
 
 		const store = useGlobalStore();
@@ -142,20 +192,28 @@ switchTo3DGrid() {
 	}
 
 	/**
-	 * Zooms the camera in or out.
-	 * @param {number} multiplier - A value > 1 zooms in, < 1 zooms out.
+	 * Zooms the camera in or out based on multiplier value
+	 * Calculates zoom distance based on current altitude and multiplier.
+	 *
+	 * @param {number} multiplier - Zoom factor (>1 zooms in, <1 zooms out, 1 = no change)
+	 * @returns {void}
 	 */
 	zoom(multiplier) {
 		if (multiplier > 1) {
+			// Zoom in: move camera closer to ground
 			this.viewer.camera.zoomIn(this.viewer.camera.positionCartographic.height * (1 - 1 / multiplier));
 		} else {
+			// Zoom out: move camera further from ground
 			this.viewer.camera.zoomOut(this.viewer.camera.positionCartographic.height * (1 - multiplier));
 		}
 	}
 
 	/**
-	 * Rotates the camera to a specific heading (azimuth).
-	 * @param {number} headingInDegrees - The target heading in degrees (0 = North, 90 = East).
+	 * Rotates camera to specific compass heading with animation
+	 * Maintains current position, pitch, and roll while changing heading.
+	 *
+	 * @param {number} headingInDegrees - Target heading (0° = North, 90° = East, 180° = South, 270° = West)
+	 * @returns {void}
 	 */
 	setHeading(headingInDegrees) {
 		this.viewer.camera.flyTo({
@@ -184,27 +242,34 @@ switchTo3DGrid() {
 		});
 	}	
 
-	// Focus camera on a specific postal code
+	/**
+	 * Focuses camera on a specific postal code area
+	 * Searches PostCodes data source for matching postal code and flies camera to its center.
+	 * Applies latitude offset for better framing and uses 45° pitch.
+	 *
+	 * @param {string|number} postalCode - Postal code to focus on
+	 * @returns {void}
+	 */
 	focusOnPostalCode(postalCode) {
-		// Find the data source for postcodes
+		// Find the PostCodes data source
 		const postCodesDataSource = this.viewer.dataSources._dataSources.find(ds => ds.name === 'PostCodes');
-		
+
 		if (!postCodesDataSource) {
 			console.warn('PostCodes data source not found');
 			return;
 		}
-		
-		// Find the entity with matching postal code
+
+		// Search for entity with matching postal code
 		const entity = postCodesDataSource._entityCollection._entities._array.find(
 			entity => entity._properties._posno._value == postalCode
 		);
-		
+
 		if (entity) {
-			// Fly to the postal code area
+			// Fly to postal code area with 2-second animation
 			this.viewer.camera.flyTo({
 				destination: Cesium.Cartesian3.fromDegrees(
-					entity._properties._center_x._value, 
-					entity._properties._center_y._value - 0.015, 
+					entity._properties._center_x._value,
+					entity._properties._center_y._value - 0.015,
 					2500
 				),
 				orientation: {
@@ -219,6 +284,14 @@ switchTo3DGrid() {
 		}
 	}
 
+	/**
+	 * Rotates camera 180 degrees around the screen center point
+	 * Calculates ellipsoid intersection at screen center and rotates around that point.
+	 * Adjusts latitude based on rotation state to maintain proper framing.
+	 * Toggles rotation state in global store for tracking.
+	 *
+	 * @returns {void}
+	 */
 	rotate180Degrees() {
 		const camera = this.viewer.camera;
 		const scene = this.viewer.scene;
@@ -267,7 +340,13 @@ switchTo3DGrid() {
 		}
 	}
 
-	// Add rotateCamera method alias for backward compatibility
+	/**
+	 * Alias for rotate180Degrees() method
+	 * Maintained for backward compatibility with existing code.
+	 *
+	 * @returns {void}
+	 * @deprecated Use rotate180Degrees() instead
+	 */
 	rotateCamera() {
 		this.rotate180Degrees();
 	}
