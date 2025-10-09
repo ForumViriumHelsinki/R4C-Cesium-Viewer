@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.23.1...r4c-cesium-viewer-v1.24.0) (2025-10-08)
+
+
+### Features
+
+* Implement runtime configuration feature flags (Strategy 2) ([#221](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/221)) ([0f95c49](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0f95c49c6ac892c3291d3f3d2b17d664536cb011))
+
 ## [1.23.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.23.0...r4c-cesium-viewer-v1.23.1) (2025-10-01)
 
 

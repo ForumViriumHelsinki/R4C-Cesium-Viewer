@@ -10,9 +10,7 @@ export default defineConfig({
     setupFiles: ['./tests/setup.js'],
     include: ['tests/unit/**/*.test.js', 'tests/integration/**/*.test.js'],
     exclude: ['tests/**/*.spec.ts', 'tests/e2e/**/*', 'tests/performance/**/*'],
-    css: {
-      include: []
-    },
+    css: true,
     deps: {
       optimizer: {
         web: {
