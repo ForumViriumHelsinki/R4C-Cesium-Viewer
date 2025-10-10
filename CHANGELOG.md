@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.24.0...r4c-cesium-viewer-v1.24.1) (2025-10-10)
+
+
+### Bug Fixes
+
+* correct Vitest deps configuration and improve test infrastructure ([#229](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/229)) ([20d3736](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/20d373629cb5c55dfdfc1b102019fa07cae2f67e))
+
 ## [1.24.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.23.1...r4c-cesium-viewer-v1.24.0) (2025-10-08)
 
 
