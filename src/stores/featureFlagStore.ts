@@ -1,6 +1,94 @@
 import { defineStore } from 'pinia';
 
 /**
+ * Feature flag category types
+ */
+export type FeatureFlagCategory =
+	| 'data-layers'
+	| 'graphics'
+	| 'analysis'
+	| 'ui'
+	| 'integration'
+	| 'developer';
+
+/**
+ * Feature flag names
+ */
+export type FeatureFlagName =
+	// Data layers
+	| 'ndvi'
+	| 'floodLayers'
+	| 'grid250m'
+	| 'treeCoverage'
+	| 'landCover'
+	// Graphics & Performance
+	| 'hdrRendering'
+	| 'ambientOcclusion'
+	| 'msaaOptions'
+	| 'fxaaOptions'
+	| 'requestRenderMode'
+	| 'terrain3d'
+	// Analysis tools
+	| 'heatHistogram'
+	| 'buildingScatterPlot'
+	| 'coolingOptimizer'
+	| 'ndviAnalysis'
+	| 'socioeconomicViz'
+	// UI/UX
+	| 'compactView'
+	| 'mobileOptimized'
+	| 'controlPanelDefault'
+	| 'dataSourceStatus'
+	| 'loadingPerformanceInfo'
+	| 'backgroundPreload'
+	// Integration
+	| 'sentryErrorTracking'
+	| 'digitransitIntegration'
+	| 'backgroundMapProviders'
+	// Developer
+	| 'debugMode'
+	| 'performanceMonitoring'
+	| 'cacheVisualization'
+	| 'healthChecks';
+
+/**
+ * Feature flag configuration
+ */
+export interface FeatureFlagConfig {
+	enabled: boolean;
+	category: FeatureFlagCategory;
+	label: string;
+	description: string;
+	experimental?: boolean;
+	requiresSupport?: boolean;
+}
+
+/**
+ * Feature flags map
+ */
+export type FeatureFlagsMap = Record<FeatureFlagName, FeatureFlagConfig>;
+
+/**
+ * User overrides map
+ */
+export type UserOverridesMap = Partial<Record<FeatureFlagName, boolean>>;
+
+/**
+ * Feature flag with name
+ */
+export interface FeatureFlagWithName extends FeatureFlagConfig {
+	name: FeatureFlagName;
+}
+
+/**
+ * Store state
+ */
+interface FeatureFlagState {
+	flags: FeatureFlagsMap;
+	userOverrides: UserOverridesMap;
+}
+
+/**
  * Feature Flag Store
  *
  * Manages feature flags with runtime toggling capability.
@@ -8,7 +96,7 @@ import { defineStore } from 'pinia';
  * User overrides are persisted to localStorage.
  */
 export const useFeatureFlagStore = defineStore('featureFlags', {
-	state: () => ({
+	state: (): FeatureFlagState => ({
 		// Initialize from env vars with runtime override capability
 		flags: {
 			// Data layers
@@ -236,13 +324,11 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 	getters: {
 		/**
 		 * Check if a feature flag is enabled
-		 * @param {string} flagName - The name of the feature flag
-		 * @returns {boolean} Whether the feature is enabled
 		 */
-		isEnabled: (state) => (flagName) => {
+		isEnabled: (state) => (flagName: FeatureFlagName): boolean => {
 			// Check user override first
 			if (state.userOverrides[flagName] !== undefined) {
-				return state.userOverrides[flagName];
+				return state.userOverrides[flagName]!;
 			}
 
 			// Fall back to default flag value
@@ -251,31 +337,27 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Get all flags in a specific category
-		 * @param {string} category - The category name
-		 * @returns {Array} Array of flag objects with name
 		 */
-		flagsByCategory: (state) => (category) => {
+		flagsByCategory: (state) => (category: FeatureFlagCategory): FeatureFlagWithName[] => {
 			return Object.entries(state.flags)
 				.filter(([_, flag]) => flag.category === category)
-				.map(([name, flag]) => ({ name, ...flag }));
+				.map(([name, flag]) => ({ name: name as FeatureFlagName, ...flag }));
 		},
 
 		/**
 		 * Get all experimental flags
-		 * @returns {Array} Array of experimental flag objects
 		 */
-		experimentalFlags: (state) => {
+		experimentalFlags: (state): FeatureFlagWithName[] => {
 			return Object.entries(state.flags)
 				.filter(([_, flag]) => flag.experimental)
-				.map(([name, flag]) => ({ name, ...flag }));
+				.map(([name, flag]) => ({ name: name as FeatureFlagName, ...flag }));
 		},
 
 		/**
 		 * Get all available categories
-		 * @returns {Array} Array of unique category names
 		 */
-		categories: (state) => {
-			const cats = new Set();
+		categories: (state): FeatureFlagCategory[] => {
+			const cats = new Set<FeatureFlagCategory>();
 			Object.values(state.flags).forEach(flag => {
 				cats.add(flag.category);
 			});
@@ -284,10 +366,9 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Get count of enabled flags
-		 * @returns {number} Number of enabled flags
 		 */
-		enabledCount: (state) => {
-			return Object.keys(state.flags).filter(name => {
+		enabledCount: (state): number => {
+			return (Object.keys(state.flags) as FeatureFlagName[]).filter(name => {
 				if (state.userOverrides[name] !== undefined) {
 					return state.userOverrides[name];
 				}
@@ -297,10 +378,8 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Check if a flag has been overridden by the user
-		 * @param {string} flagName - The name of the feature flag
-		 * @returns {boolean} Whether the flag has a user override
 		 */
-		hasOverride: (state) => (flagName) => {
+		hasOverride: (state) => (flagName: FeatureFlagName): boolean => {
 			return state.userOverrides[flagName] !== undefined;
 		},
 	},
@@ -308,10 +387,8 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 	actions: {
 		/**
 		 * Set a feature flag state
-		 * @param {string} flagName - The name of the feature flag
-		 * @param {boolean} enabled - Whether to enable the feature
 		 */
-		setFlag(flagName, enabled) {
+		setFlag(flagName: FeatureFlagName, enabled: boolean): void {
 			if (this.flags[flagName]) {
 				this.userOverrides[flagName] = enabled;
 				this.persistOverrides();
@@ -320,9 +397,8 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Reset a feature flag to its default value
-		 * @param {string} flagName - The name of the feature flag
 		 */
-		resetFlag(flagName) {
+		resetFlag(flagName: FeatureFlagName): void {
 			delete this.userOverrides[flagName];
 			this.persistOverrides();
 		},
@@ -330,7 +406,7 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 		/**
 		 * Reset all feature flags to default values
 		 */
-		resetAllFlags() {
+		resetAllFlags(): void {
 			this.userOverrides = {};
 			this.persistOverrides();
 		},
@@ -338,7 +414,7 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 		/**
 		 * Persist user overrides to localStorage
 		 */
-		persistOverrides() {
+		persistOverrides(): void {
 			try {
 				localStorage.setItem('featureFlags', JSON.stringify(this.userOverrides));
 			} catch (error) {
@@ -349,11 +425,11 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 		/**
 		 * Load user overrides from localStorage
 		 */
-		loadOverrides() {
+		loadOverrides(): void {
 			try {
 				const stored = localStorage.getItem('featureFlags');
 				if (stored) {
-					this.userOverrides = JSON.parse(stored);
+					this.userOverrides = JSON.parse(stored) as UserOverridesMap;
 				}
 			} catch (error) {
 				console.warn('Failed to load feature flag overrides:', error);
@@ -362,10 +438,8 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Check hardware support for a feature and disable if not supported
-		 * @param {string} flagName - The name of the feature flag
-		 * @param {boolean} isSupported - Whether the hardware supports this feature
 		 */
-		checkHardwareSupport(flagName, isSupported) {
+		checkHardwareSupport(flagName: FeatureFlagName, isSupported: boolean): void {
 			const flag = this.flags[flagName];
 			if (flag && flag.requiresSupport && !isSupported) {
 				this.flags[flagName].enabled = false;
@@ -375,33 +449,30 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Get feature flag metadata
-		 * @param {string} flagName - The name of the feature flag
-		 * @returns {Object|null} Flag metadata or null if not found
 		 */
-		getFlagMetadata(flagName) {
+		getFlagMetadata(flagName: FeatureFlagName): FeatureFlagConfig | null {
 			return this.flags[flagName] || null;
 		},
 
 		/**
 		 * Export current configuration as JSON
-		 * @returns {Object} Current flag configuration
 		 */
-		exportConfig() {
-			const config = {};
-			Object.keys(this.flags).forEach(name => {
+		exportConfig(): Record<FeatureFlagName, boolean> {
+			const config: Partial<Record<FeatureFlagName, boolean>> = {};
+			(Object.keys(this.flags) as FeatureFlagName[]).forEach(name => {
 				config[name] = this.isEnabled(name);
 			});
-			return config;
+			return config as Record<FeatureFlagName, boolean>;
 		},
 
 		/**
 		 * Import configuration from JSON
-		 * @param {Object} config - Configuration object
 		 */
-		importConfig(config) {
+		importConfig(config: Partial<Record<FeatureFlagName, boolean>>): void {
 			Object.entries(config).forEach(([name, enabled]) => {
-				if (this.flags[name]) {
-					this.setFlag(name, enabled);
+				const flagName = name as FeatureFlagName;
+				if (this.flags[flagName] && typeof enabled === 'boolean') {
+					this.setFlag(flagName, enabled);
 				}
 			});
 		},

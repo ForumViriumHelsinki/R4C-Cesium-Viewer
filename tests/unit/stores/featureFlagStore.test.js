@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { useFeatureFlagStore } from '@/stores/featureFlagStore.js';
+import { useFeatureFlagStore } from '@/stores/featureFlagStore';
 
 describe('featureFlagStore', () => {
 	let store;

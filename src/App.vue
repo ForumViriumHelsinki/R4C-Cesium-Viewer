@@ -109,7 +109,7 @@ import ViewModeCompact from './components/ViewModeCompact.vue';
 import FeatureFlagsPanel from './components/FeatureFlagsPanel.vue';
 import { useToggleStore } from './stores/toggleStore.js';
 import { useGlobalStore } from './stores/globalStore.js';
-import { useFeatureFlagStore } from './stores/featureFlagStore.js';
+import { useFeatureFlagStore } from './stores/featureFlagStore';
 import { computed, ref, onMounted } from 'vue';
 import Tree from './services/tree';
 import Featurepicker from './services/featurepicker';
