@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.24.1...r4c-cesium-viewer-v1.25.0) (2025-10-10)
+
+
+### Features
+
+* add isolatedModules to tsconfig.json ([#231](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/231)) ([5b34656](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5b34656a51d609f626db712ec8756a86528e2dc7)), closes [#219](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/219)
+
 ## [1.24.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.24.0...r4c-cesium-viewer-v1.24.1) (2025-10-10)
 
 
