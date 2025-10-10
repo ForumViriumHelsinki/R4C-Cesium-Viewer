@@ -8,7 +8,7 @@
       density="compact"
       class="view-toggle-group"
     >
-      <v-btn 
+      <v-btn
         value="capitalRegionView"
         size="small"
         @click="onToggleChange('capitalRegionView')"
@@ -21,8 +21,8 @@ mdi-city
 </v-icon>
         Capital Region
       </v-btn>
-      
-      <v-btn 
+
+      <v-btn
         value="gridView"
         size="small"
         @click="onToggleChange('gridView')"
@@ -35,12 +35,12 @@ mdi-grid
 </v-icon>
         Statistical Grid
       </v-btn>
-      
+
     </v-btn-toggle>
 
     <!-- Contextual Info Chip -->
-    <v-chip 
-      size="small" 
+    <v-chip
+      size="small"
       :color="getViewModeColor()"
       variant="tonal"
       class="coverage-chip"
@@ -64,7 +64,7 @@ export default {
   setup() {
     const activeViewMode = ref('capitalRegionView');
     const toggleStore = useToggleStore();
-    const store = useGlobalStore(); 
+    const store = useGlobalStore();
     const dataSourceService = new Datasource();
     const featurePicker = new FeaturePicker();
 
@@ -112,7 +112,7 @@ export default {
           break;
         case 'helsinkiHeat':
           helsinkiHeat();
-          break;  
+          break;
         default:
           break;
       }
@@ -124,7 +124,7 @@ export default {
       setCapitalRegion();
     };
 
-    const setCapitalRegion = async () => {       
+    const setCapitalRegion = async () => {
       store.setView('capitalRegion');
       toggleStore.setHelsinkiView(false);
       store.level === 'start' && toggleStore.reset() && await clearLandCover();
@@ -133,7 +133,7 @@ export default {
         0.2,
         './assets/data/hsy_po.json',
         'PostCodes'
-      ); 
+      );
 
       store.postalcode && featurePicker.loadPostalCode();
       toggleStore.showTrees && await loadTrees();
@@ -167,7 +167,7 @@ export default {
         'PostCodes'
       );
 
-      store.postalcode && featurePicker.loadPostalCode(); 
+      store.postalcode && featurePicker.loadPostalCode();
     };
 
     const gridView = () => {
@@ -226,12 +226,12 @@ export default {
     flex-direction: column;
     gap: 6px;
   }
-  
+
   .view-toggle-group :deep(.v-btn) {
     font-size: 0.75rem;
     padding: 0 8px;
   }
-  
+
   .view-toggle-group :deep(.v-btn .v-icon) {
     font-size: 14px;
   }
@@ -242,17 +242,17 @@ export default {
     min-width: 0;
     padding: 0 6px;
   }
-  
+
   .view-toggle-group :deep(.v-btn .mdi-city::before) {
     content: '🏙️';
     font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
   }
-  
+
   .view-toggle-group :deep(.v-btn .mdi-grid::before) {
     content: '📊';
     font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
   }
-  
+
   .view-toggle-group :deep(.v-btn .mdi-city-variant::before) {
     content: '🌆';
     font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;

@@ -12,7 +12,7 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
+import { defineStore } from "pinia";
 
 /**
  * Toggle Pinia Store
@@ -41,7 +41,7 @@ import { defineStore } from 'pinia';
  * @property {boolean} grid250m - Show/hide 250m population grid
  * @property {boolean} ndvi - Show/hide NDVI vegetation index imagery
  */
-export const useToggleStore = defineStore('toggle', {
+export const useToggleStore = defineStore("toggle", {
   state: () => ({
     postalCode: false,
     natureGrid: false,
@@ -62,7 +62,7 @@ export const useToggleStore = defineStore('toggle', {
     switchView: false,
     surveyPlaces: false,
     capitalRegionCold: false,
-	  grid250m: false,
+    grid250m: false,
     ndvi: false,
   }),
   actions: {
@@ -220,6 +220,6 @@ export const useToggleStore = defineStore('toggle', {
      */
     reset() {
       this.$reset(); // Pinia has a built-in $reset function which resets state to initial values
-    }
+    },
   },
 });

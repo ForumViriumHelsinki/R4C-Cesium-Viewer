@@ -17,7 +17,7 @@ export default {
     const buildingContainerId = 'buildingGridChartContainer';
 
     const createBuildingGridChart = (buildingProps) => {
-	
+
       	plotService.initializePlotContainer(buildingContainerId);
       	const margin = { top: 30, right: 40, bottom: 55, left: 40 };
       	const width = globalStore.navbarWidth - margin.left - margin.right;
@@ -84,7 +84,7 @@ export default {
     onMounted(() => {
       if (propsStore.gridBuildingProps) {
         createBuildingGridChart(propsStore.gridBuildingProps);
-      }     
+      }
 	});
 
     return {

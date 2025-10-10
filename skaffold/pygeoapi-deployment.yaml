@@ -27,7 +27,7 @@ spec:
         - |
           set -e
           echo "🔍 Waiting for database to be fully initialized and migrated..."
-          
+
           # Wait for PostgreSQL to be ready
           echo "   Checking PostgreSQL availability..."
           until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
@@ -35,19 +35,19 @@ spec:
             sleep 2
           done
           echo "✅ PostgreSQL is ready"
-          
+
           # Wait for migrations to complete by checking schema_migrations table
           echo "   Checking for completed migrations..."
           MAX_ATTEMPTS=60  # 5 minutes max wait
           ATTEMPT=1
-          
+
           until [ $ATTEMPT -gt $MAX_ATTEMPTS ]; do
             # Check if schema_migrations table exists and has entries
             MIGRATION_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM schema_migrations;" 2>/dev/null | tr -d ' ' || echo "0")
-            
+
             if [ "$MIGRATION_COUNT" -gt "0" ]; then
               echo "✅ Found $MIGRATION_COUNT applied migrations"
-              
+
               # Verify critical table exists
               if psql "$DATABASE_URL" -c "SELECT 1 FROM r4c_hsy_building_current LIMIT 1;" > /dev/null 2>&1; then
                 echo "✅ r4c_hsy_building_current table exists and is accessible"
@@ -58,12 +58,12 @@ spec:
                 exit 1
               fi
             fi
-            
+
             echo "   Migrations not yet complete (attempt $ATTEMPT/$MAX_ATTEMPTS). Waiting..."
             sleep 5
             ATTEMPT=$((ATTEMPT + 1))
           done
-          
+
           echo "❌ Timeout waiting for database migrations to complete"
           echo "ℹ️  Check migration job logs for details"
           exit 1

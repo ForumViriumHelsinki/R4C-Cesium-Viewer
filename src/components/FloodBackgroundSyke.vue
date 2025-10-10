@@ -13,7 +13,7 @@
       <v-radio
         label="Stormwater flood map water depth 80 mm rainfall in 1 hour"
         value="HulevesitulvaVesisyvyysSade80mmMallinnettuAlue"
-      />              
+      />
       <v-radio
         label="Flood hazard areas under different emission scenarios"
         value="SSP585_re_with_SSP245_with_SSP126_with_current"
@@ -45,7 +45,7 @@
       <v-radio
         label="none"
         value="none"
-      />      
+      />
     </v-radio-group>
 
     <div class="legend-container">
@@ -93,7 +93,7 @@ const legendItemsSea = ref([
 ]);
 
 const legendItemsStormwater = ref([
-  { color: '#82CFFF', text: 'water/sea area'},  
+  { color: '#82CFFF', text: 'water/sea area'},
   { color: '#4589FF', text: '0.1 m' }, // Light blue
   { color: '#0F62FE', text: '0.3 m' }, // Blue
   { color: '#0059C9', text: '0.5 m' }, // Dark blue

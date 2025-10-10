@@ -10,21 +10,21 @@ Convert raster dataset into polygon features
 Filter out polygons where heat exposure 0 <= index > 0.4
 
 ### Spatial Relation with Postal Code Areas:
-Read postal code area dataset 
-Find matching postal code zones for each polygon 
+Read postal code area dataset
+Find matching postal code zones for each polygon
 Add postal code (posno) for each polygon
 
 ### Form new dataset:
-Create new dataset containing polygons 
+Create new dataset containing polygons
 Include joined posno and heat exposure index
 Calculate and include temperature in celsius from heatexposure, raster min and max temperature
 Include date of satellite image
 
 ### Save Results to Database:
-Connect to Spatial database management system 
+Connect to Spatial database management system
 Insert processed data (posno, heatexposure, temp_c, date) into database table
 
 ### Expose Data Behind REST API:
-Configure REST API to serve processed geospatial data 
-Define datasets and metadata 
+Configure REST API to serve processed geospatial data
+Define datasets and metadata
 Start REST API server to expose data through RESTful APIs

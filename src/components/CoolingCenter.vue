@@ -116,7 +116,7 @@ const getEntityCentroid = (entity) => {
 };
 
 const addCoolingCenter = (entity) => {
-  
+
   const gridId = entity.properties.grid_id?.getValue();
   if (mitigationStore.getCoolingCenterCount(gridId) >= 5) {
     alert("Maximum 5 cooling centers per grid reached!");
@@ -136,7 +136,7 @@ const addCoolingCenter = (entity) => {
     [100, 80],
     [100, -80]
   ];
-  
+
   const offset = offsets[coolingCentersCount - 1];
   const newPosition = Cesium.Cartesian3.fromDegrees(
     Cesium.Math.toDegrees(Cesium.Cartographic.fromCartesian(cartesianPosition).longitude) + offset[0] / 111320,
@@ -161,7 +161,7 @@ const addCoolingCenter = (entity) => {
       verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
       pixelOffset: new Cesium.Cartesian2(0, -30)
     },
-    allowPicking: false 
+    allowPicking: false
   });
 };
 
@@ -173,8 +173,8 @@ onMounted(() => {
 
   if ( !coolingCentersDataSource ) {
     coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers');
-  } 
-  
+  }
+
   viewer.value.dataSources.add( coolingCentersDataSource );
 
   viewer.value.screenSpaceEventHandler.setInputAction(

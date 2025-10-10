@@ -3,19 +3,19 @@ name: Database Migrations
 on:
   pull_request:
     paths:
-      - 'db/migrations/**'
-      - 'db/.dbmate.env'
-      - '.github/workflows/database-migrations.yml'
+      - "db/migrations/**"
+      - "db/.dbmate.env"
+      - ".github/workflows/database-migrations.yml"
   push:
     branches: [main]
     paths:
-      - 'db/migrations/**'
+      - "db/migrations/**"
 
 jobs:
   test-migrations:
     name: Test Database Migrations
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgis/postgis:15-3.3
@@ -58,16 +58,16 @@ jobs:
         run: |
           # Test basic dbmate functionality
           dbmate wait
-          
+
           # Apply migrations
           dbmate up
-          
+
           # Verify schema_migrations table exists
           psql "$DATABASE_URL" -c "SELECT version FROM schema_migrations ORDER BY version;"
-          
+
           # Test rollback
           dbmate rollback
-          
+
           # Re-apply
           dbmate up
 
@@ -83,7 +83,7 @@ jobs:
             "tree_f"
             "urban_heat_building_f"
           )
-          
+
           for table in "${EXPECTED_TABLES[@]}"; do
             echo "Checking table: $table"
             psql "$DATABASE_URL" -c "\\d $table"
@@ -92,7 +92,7 @@ jobs:
   lint-migrations:
     name: Lint Migration Files
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

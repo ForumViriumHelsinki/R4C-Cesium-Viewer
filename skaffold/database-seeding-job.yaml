@@ -16,31 +16,31 @@ spec:
       containers:
       - name: seeding
         image: python:3.11-slim
-        command: 
+        command:
         - /bin/bash
         - -c
         - |
           set -e
           echo "🌱 Starting database seeding job..."
-          
+
           # Install required packages
           pip install psycopg2-binary
-          
+
           # Wait for PostgreSQL to be ready
           echo "📡 Waiting for PostgreSQL..."
           until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
             echo "Waiting for PostgreSQL..."
             sleep 2
           done
-          
+
           echo "✅ PostgreSQL is ready, starting seeding..."
-          
+
           # Run the seeding script
           python3 /scripts/seed-dev-data.py \
             --database-url "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate" \
             --clear-first \
             --num-records 100
-          
+
           echo "🎉 Database seeding completed!"
         env:
         - name: PGPASSWORD
@@ -130,10 +130,10 @@ data:
         # Create a small rectangle
         center_lat = random.uniform(HELSINKI_BBOX['min_lat'], HELSINKI_BBOX['max_lat'])
         center_lon = random.uniform(HELSINKI_BBOX['min_lon'], HELSINKI_BBOX['max_lon'])
-        
+
         # Small offset for polygon corners (about 100m)
         offset = 0.001
-        
+
         points = [
             f"{center_lon - offset} {center_lat - offset}",
             f"{center_lon + offset} {center_lat - offset}",
@@ -141,65 +141,65 @@ data:
             f"{center_lon - offset} {center_lat + offset}",
             f"{center_lon - offset} {center_lat - offset}"  # Close the polygon
         ]
-        
+
         return f"POLYGON(({', '.join(points)}))"
 
     def seed_adaptation_landcover(conn, num_records=100):
         """Seed adaptation_landcover table."""
         print(f"🌱 Seeding adaptation_landcover with {num_records} records...")
-        
+
         cur = conn.cursor()
-        
+
         # Land cover codes (simplified)
         land_cover_codes = ["FOREST", "WATER", "URBAN", "GRASS", "AGRICULTURAL", "BARE"]
-        
+
         for i in range(num_records):
             grid_id = f"GRID_{i:06d}"
             area_m2 = random.uniform(100, 10000)
             year = random.choice([2020, 2021, 2022, 2023, 2024])
             koodi = random.choice(land_cover_codes)
             geom = random_polygon_in_helsinki()
-            
+
             cur.execute("""
                 INSERT INTO adaptation_landcover (grid_id, area_m2, year, koodi, geom)
                 VALUES (%s, %s, %s, %s, ST_GeomFromText(%s, 4326))
             """, (grid_id, area_m2, year, koodi, geom))
-        
+
         conn.commit()
         print(f"✅ Seeded {num_records} adaptation_landcover records")
 
     def seed_r4c_coldspot(conn, num_records=50):
         """Seed r4c_coldspot table."""
         print(f"🌱 Seeding r4c_coldspot with {num_records} records...")
-        
+
         cur = conn.cursor()
-        
+
         for i in range(num_records):
             posno = random.choice(HELSINKI_POSTAL_CODES)
             heatexposure = random.uniform(0.0, 0.4)  # Cold spots have low heat exposure
             temp_c = random.uniform(15.0, 25.0)
             date_val = date.today() - timedelta(days=random.randint(0, 365))
             geom = random_point_in_helsinki()
-            
+
             cur.execute("""
                 INSERT INTO r4c_coldspot (posno, heatexposure, temp_c, date, geom)
                 VALUES (%s, %s, %s, %s, ST_GeomFromText(%s, 4326))
             """, (posno, heatexposure, temp_c, date_val, geom))
-        
+
         conn.commit()
         print(f"✅ Seeded {num_records} r4c_coldspot records")
 
     def clear_existing_data(conn):
         """Clear existing test data."""
         print("🧹 Clearing existing test data...")
-        
+
         cur = conn.cursor()
-        
+
         tables_to_clear = [
             'r4c_coldspot',
             'adaptation_landcover'
         ]
-        
+
         for table in tables_to_clear:
             try:
                 cur.execute(f"DELETE FROM {table}")
@@ -207,7 +207,7 @@ data:
             except Exception as e:
                 print(f"  ⚠️ Could not clear {table}: {e}")
                 conn.rollback()
-        
+
         conn.commit()
         print("✅ Cleared existing test data")
 
@@ -216,20 +216,20 @@ data:
         parser.add_argument('--database-url', help='Database connection URL')
         parser.add_argument('--clear-first', action='store_true', help='Clear existing data first')
         parser.add_argument('--num-records', type=int, default=100, help='Number of records to create per table')
-        
+
         args = parser.parse_args()
-        
+
         print("🌱 Starting database seeding...")
-        
+
         conn = get_db_connection(args.database_url)
-        
+
         if args.clear_first:
             clear_existing_data(conn)
-        
+
         # Seed core tables
         seed_adaptation_landcover(conn, args.num_records)
         seed_r4c_coldspot(conn, args.num_records // 2)
-        
+
         conn.close()
         print("🎉 Database seeding completed!")
 

@@ -6,9 +6,9 @@ mdi-palette
 </v-icon>
       Graphics Quality
       <v-spacer/>
-      <v-chip 
-        :color="qualityColor" 
-        size="small" 
+      <v-chip
+        :color="qualityColor"
+        size="small"
         variant="flat"
       >
         {{ graphicsStore.qualityLevel }}
@@ -73,7 +73,7 @@ size="small"
           <v-label class="text-caption text-medium-emphasis mb-2">
 Anti-Aliasing
 </v-label>
-          
+
           <!-- MSAA Settings -->
           <div class="mb-3">
             <v-row
@@ -163,7 +163,7 @@ location="top"
           <v-label class="text-caption text-medium-emphasis mb-2">
 Advanced Rendering
 </v-label>
-          
+
           <!-- HDR -->
           <v-switch
             v-model="hdrEnabled"
@@ -176,10 +176,10 @@ Advanced Rendering
             <template #label>
               <div class="d-flex align-center">
                 <span class="text-body-2">HDR</span>
-                <v-icon 
-                  v-if="!graphicsStore.hdrSupported" 
-                  color="warning" 
-                  size="small" 
+                <v-icon
+                  v-if="!graphicsStore.hdrSupported"
+                  color="warning"
+                  size="small"
                   class="ml-1"
                 >
                   mdi-alert
@@ -206,10 +206,10 @@ location="top"
             <template #label>
               <div class="d-flex align-center">
                 <span class="text-body-2">Ambient Occlusion</span>
-                <v-icon 
-                  v-if="!graphicsStore.ambientOcclusionSupported" 
-                  color="warning" 
-                  size="small" 
+                <v-icon
+                  v-if="!graphicsStore.ambientOcclusionSupported"
+                  color="warning"
+                  size="small"
                   class="ml-1"
                 >
                   mdi-alert
@@ -258,7 +258,7 @@ location="top"
           >
             High quality settings may impact performance on slower devices
           </v-alert>
-          
+
           <div class="text-caption text-medium-emphasis d-flex align-center">
             <v-icon
 size="small"
@@ -334,14 +334,14 @@ export default {
     });
 
     const canUseUltra = computed(() => {
-      return graphicsStore.msaaSupported && 
-             graphicsStore.hdrSupported && 
+      return graphicsStore.msaaSupported &&
+             graphicsStore.hdrSupported &&
              graphicsStore.ambientOcclusionSupported;
     });
 
     const showPerformanceWarning = computed(() => {
-      return (msaaEnabled.value && msaaSamples.value >= 4) || 
-             hdrEnabled.value || 
+      return (msaaEnabled.value && msaaSamples.value >= 4) ||
+             hdrEnabled.value ||
              ambientOcclusionEnabled.value;
     });
 
@@ -381,42 +381,42 @@ export default {
 
     const detectCurrentPreset = () => {
       const state = graphicsStore;
-      
+
       // Ultra preset
-      if (state.msaaEnabled && state.msaaSamples === 8 && 
-          !state.fxaaEnabled && state.hdrEnabled && 
+      if (state.msaaEnabled && state.msaaSamples === 8 &&
+          !state.fxaaEnabled && state.hdrEnabled &&
           state.ambientOcclusionEnabled && !state.requestRenderMode) {
         return 'ultra';
       }
-      
+
       // High preset
-      if (state.msaaEnabled && state.msaaSamples === 4 && 
-          !state.fxaaEnabled && !state.hdrEnabled && 
+      if (state.msaaEnabled && state.msaaSamples === 4 &&
+          !state.fxaaEnabled && !state.hdrEnabled &&
           state.ambientOcclusionEnabled && !state.requestRenderMode) {
         return 'high';
       }
-      
+
       // Medium preset
-      if (state.msaaEnabled && state.msaaSamples === 2 && 
-          !state.fxaaEnabled && !state.hdrEnabled && 
+      if (state.msaaEnabled && state.msaaSamples === 2 &&
+          !state.fxaaEnabled && !state.hdrEnabled &&
           !state.ambientOcclusionEnabled && !state.requestRenderMode) {
         return 'medium';
       }
-      
+
       // Low preset
-      if (!state.msaaEnabled && state.fxaaEnabled && 
-          !state.hdrEnabled && !state.ambientOcclusionEnabled && 
+      if (!state.msaaEnabled && state.fxaaEnabled &&
+          !state.hdrEnabled && !state.ambientOcclusionEnabled &&
           !state.requestRenderMode) {
         return 'low';
       }
-      
+
       // Performance preset
-      if (!state.msaaEnabled && !state.fxaaEnabled && 
-          !state.hdrEnabled && !state.ambientOcclusionEnabled && 
+      if (!state.msaaEnabled && !state.fxaaEnabled &&
+          !state.hdrEnabled && !state.ambientOcclusionEnabled &&
           state.requestRenderMode) {
         return 'performance';
       }
-      
+
       return null; // Custom settings
     };
 

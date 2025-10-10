@@ -2,7 +2,7 @@
  * TypeScript interfaces for Playwright testing
  */
 
-import type { Page } from '@playwright/test';
+import type { Page } from "@playwright/test";
 
 // Type-only export for Page
 export type { Page };

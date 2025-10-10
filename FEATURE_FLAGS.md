@@ -24,15 +24,16 @@ The feature flag system is implemented using:
 
 ### Data Layers
 
-| Flag | Default | Description | Experimental |
-|------|---------|-------------|--------------|
-| `ndvi` | `true` | NDVI Vegetation Index visualization for vegetation health analysis | No |
-| `floodLayers` | `false` | SYKE flood risk data visualization | Yes |
-| `grid250m` | `true` | Fine-grained socioeconomic data overlay at 250m resolution | No |
-| `treeCoverage` | `true` | Display tree coverage and canopy data | No |
-| `landCover` | `true` | Land cover classification and analysis tools | No |
+| Flag           | Default | Description                                                        | Experimental |
+| -------------- | ------- | ------------------------------------------------------------------ | ------------ |
+| `ndvi`         | `true`  | NDVI Vegetation Index visualization for vegetation health analysis | No           |
+| `floodLayers`  | `false` | SYKE flood risk data visualization                                 | Yes          |
+| `grid250m`     | `true`  | Fine-grained socioeconomic data overlay at 250m resolution         | No           |
+| `treeCoverage` | `true`  | Display tree coverage and canopy data                              | No           |
+| `landCover`    | `true`  | Land cover classification and analysis tools                       | No           |
 
 **Environment Variables:**
+
 ```bash
 VITE_FEATURE_NDVI=true
 VITE_FEATURE_FLOOD_LAYERS=false
@@ -43,16 +44,17 @@ VITE_FEATURE_LAND_COVER=true
 
 ### Graphics & Performance
 
-| Flag | Default | Description | Experimental | Hardware Check |
-|------|---------|-------------|--------------|----------------|
-| `hdrRendering` | `false` | High Dynamic Range rendering for better lighting | Yes | Yes |
-| `ambientOcclusion` | `false` | Screen Space Ambient Occlusion for depth perception | Yes | Yes |
-| `msaaOptions` | `true` | Multi-Sample Anti-Aliasing options | No | No |
-| `fxaaOptions` | `true` | Fast Approximate Anti-Aliasing | No | No |
-| `requestRenderMode` | `false` | Performance optimization - only render when scene changes | Yes | No |
-| `terrain3d` | `true` | Helsinki 3D terrain rendering | No | No |
+| Flag                | Default | Description                                               | Experimental | Hardware Check |
+| ------------------- | ------- | --------------------------------------------------------- | ------------ | -------------- |
+| `hdrRendering`      | `false` | High Dynamic Range rendering for better lighting          | Yes          | Yes            |
+| `ambientOcclusion`  | `false` | Screen Space Ambient Occlusion for depth perception       | Yes          | Yes            |
+| `msaaOptions`       | `true`  | Multi-Sample Anti-Aliasing options                        | No           | No             |
+| `fxaaOptions`       | `true`  | Fast Approximate Anti-Aliasing                            | No           | No             |
+| `requestRenderMode` | `false` | Performance optimization - only render when scene changes | Yes          | No             |
+| `terrain3d`         | `true`  | Helsinki 3D terrain rendering                             | No           | No             |
 
 **Environment Variables:**
+
 ```bash
 VITE_FEATURE_HDR=false
 VITE_FEATURE_AO=false
@@ -66,15 +68,16 @@ VITE_FEATURE_3D_TERRAIN=true
 
 ### Analysis Tools
 
-| Flag | Default | Description | Experimental |
-|------|---------|-------------|--------------|
-| `heatHistogram` | `true` | Temperature distribution histogram visualization | No |
-| `buildingScatterPlot` | `true` | Building attribute correlation analysis | No |
-| `coolingOptimizer` | `true` | Tool to optimize cooling center placement | No |
-| `ndviAnalysis` | `true` | Vegetation analysis and health monitoring | No |
-| `socioeconomicViz` | `true` | Demographic and economic data overlays | No |
+| Flag                  | Default | Description                                      | Experimental |
+| --------------------- | ------- | ------------------------------------------------ | ------------ |
+| `heatHistogram`       | `true`  | Temperature distribution histogram visualization | No           |
+| `buildingScatterPlot` | `true`  | Building attribute correlation analysis          | No           |
+| `coolingOptimizer`    | `true`  | Tool to optimize cooling center placement        | No           |
+| `ndviAnalysis`        | `true`  | Vegetation analysis and health monitoring        | No           |
+| `socioeconomicViz`    | `true`  | Demographic and economic data overlays           | No           |
 
 **Environment Variables:**
+
 ```bash
 VITE_FEATURE_HEAT_HISTOGRAM=true
 VITE_FEATURE_BUILDING_SCATTER=true
@@ -85,16 +88,17 @@ VITE_FEATURE_SOCIOECONOMIC=true
 
 ### UI & UX
 
-| Flag | Default | Description | Experimental |
-|------|---------|-------------|--------------|
-| `compactView` | `false` | Reduced UI elements for smaller screens | No |
-| `mobileOptimized` | `false` | Touch-optimized controls and layouts | Yes |
-| `controlPanelDefault` | `true` | Show control panel on load | No |
-| `dataSourceStatus` | `true` | Show connection status for data sources | No |
-| `loadingPerformanceInfo` | `false` | Display detailed performance metrics during loading | Yes |
-| `backgroundPreload` | `false` | Preload data in background for faster transitions | Yes |
+| Flag                     | Default | Description                                         | Experimental |
+| ------------------------ | ------- | --------------------------------------------------- | ------------ |
+| `compactView`            | `false` | Reduced UI elements for smaller screens             | No           |
+| `mobileOptimized`        | `false` | Touch-optimized controls and layouts                | Yes          |
+| `controlPanelDefault`    | `true`  | Show control panel on load                          | No           |
+| `dataSourceStatus`       | `true`  | Show connection status for data sources             | No           |
+| `loadingPerformanceInfo` | `false` | Display detailed performance metrics during loading | Yes          |
+| `backgroundPreload`      | `false` | Preload data in background for faster transitions   | Yes          |
 
 **Environment Variables:**
+
 ```bash
 VITE_FEATURE_COMPACT_VIEW=false
 VITE_FEATURE_MOBILE_OPTIMIZED=false
@@ -106,13 +110,14 @@ VITE_FEATURE_BACKGROUND_PRELOAD=false
 
 ### Integrations
 
-| Flag | Default | Description | Experimental |
-|------|---------|-------------|--------------|
-| `sentryErrorTracking` | auto | Error monitoring and reporting via Sentry (auto-enabled if `VITE_SENTRY_DSN` is set) | No |
-| `digitransitIntegration` | auto | Public transport route integration (auto-enabled if `VITE_DIGITRANSIT_KEY` is set) | No |
-| `backgroundMapProviders` | `true` | Switch between different base map providers | No |
+| Flag                     | Default | Description                                                                          | Experimental |
+| ------------------------ | ------- | ------------------------------------------------------------------------------------ | ------------ |
+| `sentryErrorTracking`    | auto    | Error monitoring and reporting via Sentry (auto-enabled if `VITE_SENTRY_DSN` is set) | No           |
+| `digitransitIntegration` | auto    | Public transport route integration (auto-enabled if `VITE_DIGITRANSIT_KEY` is set)   | No           |
+| `backgroundMapProviders` | `true`  | Switch between different base map providers                                          | No           |
 
 **Environment Variables:**
+
 ```bash
 # Sentry and Digitransit are automatically enabled when their API keys are present
 VITE_SENTRY_DSN=your-sentry-dsn
@@ -123,14 +128,15 @@ VITE_FEATURE_BG_MAP_PROVIDERS=true
 
 ### Developer Tools
 
-| Flag | Default | Description | Experimental |
-|------|---------|-------------|--------------|
-| `debugMode` | auto | Enable debug logging and developer tools (auto-enabled in development mode) | No |
-| `performanceMonitoring` | `false` | Real-time performance metrics and profiling | No |
-| `cacheVisualization` | `false` | Visualize data cache status and usage | Yes |
-| `healthChecks` | `false` | Show system health check results | Yes |
+| Flag                    | Default | Description                                                                 | Experimental |
+| ----------------------- | ------- | --------------------------------------------------------------------------- | ------------ |
+| `debugMode`             | auto    | Enable debug logging and developer tools (auto-enabled in development mode) | No           |
+| `performanceMonitoring` | `false` | Real-time performance metrics and profiling                                 | No           |
+| `cacheVisualization`    | `false` | Visualize data cache status and usage                                       | Yes          |
+| `healthChecks`          | `false` | Show system health check results                                            | Yes          |
 
 **Environment Variables:**
+
 ```bash
 # Debug mode is automatically enabled in development
 VITE_FEATURE_PERF_MONITOR=false
@@ -154,15 +160,15 @@ VITE_FEATURE_HEALTH_CHECKS=false
 </template>
 
 <script setup>
-import { useFeatureFlagStore } from '@/stores/featureFlagStore';
+import { useFeatureFlagStore } from "@/stores/featureFlagStore";
 
 const featureFlagStore = useFeatureFlagStore();
 
 // Check if a feature is enabled
-const isNdviEnabled = featureFlagStore.isEnabled('ndvi');
+const isNdviEnabled = featureFlagStore.isEnabled("ndvi");
 
 // Get feature metadata
-const ndviMetadata = featureFlagStore.getFlagMetadata('ndvi');
+const ndviMetadata = featureFlagStore.getFlagMetadata("ndvi");
 console.log(ndviMetadata.description);
 </script>
 ```
@@ -170,15 +176,15 @@ console.log(ndviMetadata.description);
 ### In JavaScript/TypeScript
 
 ```javascript
-import { useFeatureFlagStore } from '@/stores/featureFlagStore';
+import { useFeatureFlagStore } from "@/stores/featureFlagStore";
 
 const featureFlagStore = useFeatureFlagStore();
 
-if (featureFlagStore.isEnabled('performanceMonitoring')) {
+if (featureFlagStore.isEnabled("performanceMonitoring")) {
   // Start performance monitoring
-  console.time('operation');
+  console.time("operation");
   // ... do work ...
-  console.timeEnd('operation');
+  console.timeEnd("operation");
 }
 ```
 
@@ -186,16 +192,16 @@ if (featureFlagStore.isEnabled('performanceMonitoring')) {
 
 ```javascript
 // Set a flag
-featureFlagStore.setFlag('ndvi', true);
+featureFlagStore.setFlag("ndvi", true);
 
 // Reset a flag to default
-featureFlagStore.resetFlag('ndvi');
+featureFlagStore.resetFlag("ndvi");
 
 // Reset all flags
 featureFlagStore.resetAllFlags();
 
 // Check if a flag has been overridden
-const hasOverride = featureFlagStore.hasOverride('ndvi');
+const hasOverride = featureFlagStore.hasOverride("ndvi");
 
 // Export configuration
 const config = featureFlagStore.exportConfig();
@@ -209,14 +215,17 @@ featureFlagStore.importConfig(config);
 For features that require specific hardware support (like HDR rendering):
 
 ```javascript
-import { useFeatureFlagStore } from '@/stores/featureFlagStore';
-import { useGraphicsStore } from '@/stores/graphicsStore';
+import { useFeatureFlagStore } from "@/stores/featureFlagStore";
+import { useGraphicsStore } from "@/stores/graphicsStore";
 
 const featureFlagStore = useFeatureFlagStore();
 const graphicsStore = useGraphicsStore();
 
 // Check if HDR is supported by hardware
-featureFlagStore.checkHardwareSupport('hdrRendering', graphicsStore.hdrSupported);
+featureFlagStore.checkHardwareSupport(
+  "hdrRendering",
+  graphicsStore.hdrSupported,
+);
 ```
 
 ## UI Panel
@@ -300,16 +309,16 @@ When deprecating a feature flag:
 Always test features in both enabled and disabled states:
 
 ```javascript
-describe('NDVI Feature', () => {
-  it('should show NDVI controls when flag is enabled', () => {
+describe("NDVI Feature", () => {
+  it("should show NDVI controls when flag is enabled", () => {
     const featureFlagStore = useFeatureFlagStore();
-    featureFlagStore.setFlag('ndvi', true);
+    featureFlagStore.setFlag("ndvi", true);
     // ... test with flag enabled
   });
 
-  it('should hide NDVI controls when flag is disabled', () => {
+  it("should hide NDVI controls when flag is disabled", () => {
     const featureFlagStore = useFeatureFlagStore();
-    featureFlagStore.setFlag('ndvi', false);
+    featureFlagStore.setFlag("ndvi", false);
     // ... test with flag disabled
   });
 });
@@ -329,6 +338,7 @@ describe('NDVI Feature', () => {
 If you have existing toggle logic (e.g., in `toggleStore`), you can gradually migrate to feature flags:
 
 **Before:**
+
 ```vue
 <template>
   <div v-if="toggleStore.ndvi">
@@ -337,12 +347,13 @@ If you have existing toggle logic (e.g., in `toggleStore`), you can gradually mi
 </template>
 
 <script setup>
-import { useToggleStore } from '@/stores/toggleStore';
+import { useToggleStore } from "@/stores/toggleStore";
 const toggleStore = useToggleStore();
 </script>
 ```
 
 **After:**
+
 ```vue
 <template>
   <div v-if="featureFlagStore.isEnabled('ndvi') && toggleStore.ndvi">
@@ -351,8 +362,8 @@ const toggleStore = useToggleStore();
 </template>
 
 <script setup>
-import { useFeatureFlagStore } from '@/stores/featureFlagStore';
-import { useToggleStore } from '@/stores/toggleStore';
+import { useFeatureFlagStore } from "@/stores/featureFlagStore";
+import { useToggleStore } from "@/stores/toggleStore";
 
 const featureFlagStore = useFeatureFlagStore();
 const toggleStore = useToggleStore();
@@ -360,6 +371,7 @@ const toggleStore = useToggleStore();
 ```
 
 **Note:** The difference between `toggleStore` and `featureFlagStore`:
+
 - **`toggleStore`** manages user-facing runtime toggles (visibility, on/off states)
 - **`featureFlagStore`** manages feature availability (whether features exist at all)
 

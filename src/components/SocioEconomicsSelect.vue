@@ -18,8 +18,8 @@ import { eventBus } from '../services/eventEmitter.js';
 export default {
 	setup() {
 		const socioEconomicsStore = useSocioEconomicsStore();
-		const toggleStore = useToggleStore(); 
-		const propsStore = usePropsStore(); 
+		const toggleStore = useToggleStore();
+		const propsStore = usePropsStore();
 		const selectedArea = ref( '' );
 		const areaOptions = ref( [] );
 

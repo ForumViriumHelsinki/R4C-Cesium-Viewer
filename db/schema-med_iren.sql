@@ -144,4 +144,3 @@ CREATE INDEX idx_spotted_ndvi_range_suurpiiri ON public.spotted_ndvi_range USING
 --
 -- Dbmate schema migrations
 --
-

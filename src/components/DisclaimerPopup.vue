@@ -22,7 +22,7 @@ class="title-text"
           R4C Climate Demo
         </h1>
       </v-card-title>
-      
+
       <v-card-text
 id="disclaimer-content"
 class="compact-content"
@@ -30,7 +30,7 @@ class="compact-content"
         <p class="description">
           Climate adaptation visualization tool for heat risk and green infrastructure planning.
         </p>
-        
+
         <div class="disclaimer-box">
           <v-icon
 size="16"
@@ -44,7 +44,7 @@ mdi-alert
           </span>
         </div>
       </v-card-text>
-      
+
       <v-card-actions class="compact-actions">
         <v-spacer/>
         <v-btn
@@ -144,27 +144,27 @@ export default {
 	.compact-disclaimer-card {
 		margin: 16px;
 	}
-	
+
 	.compact-title {
 		padding: 12px 16px 8px 16px;
 	}
-	
+
 	.title-text {
 		font-size: 1rem;
 	}
-	
+
 	.compact-content {
 		padding: 16px;
 	}
-	
+
 	.description {
 		font-size: 0.85rem;
 	}
-	
+
 	.disclaimer-note {
 		font-size: 0.8rem;
 	}
-	
+
 	.compact-actions {
 		padding: 8px 16px 16px 16px;
 	}

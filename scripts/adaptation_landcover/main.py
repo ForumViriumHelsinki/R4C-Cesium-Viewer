@@ -163,7 +163,7 @@ def adaptation_landcover(request):
                     # If any batch fails, stop and report the error
                     return jsonify({"status": "error", "message": f"Database insert failed on a batch: {status_message}", "total_features_inserted_before_error": total_inserted}), 500
                 total_inserted += inserted_count
-                
+
                 # Clear the list for the next batch
                 newly_created_features = []
 

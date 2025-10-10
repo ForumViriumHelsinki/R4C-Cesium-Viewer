@@ -43,7 +43,7 @@ export default {
 .socio-economics-container {
 	position: relative;
   	width: 100%;
-  	height: 250px; 
+  	height: 250px;
   	background-color: white;
   	z-index: 10; /* Ensure it is on top */
 }

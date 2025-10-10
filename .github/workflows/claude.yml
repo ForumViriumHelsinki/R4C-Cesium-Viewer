@@ -23,9 +23,9 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Changed to write to allow Claude to modify files
-      pull-requests: write  # Changed to write to allow Claude to comment on PRs
-      issues: write  # Changed to write to allow Claude to comment on issues
+      contents: write # Changed to write to allow Claude to modify files
+      pull-requests: write # Changed to write to allow Claude to comment on PRs
+      issues: write # Changed to write to allow Claude to comment on issues
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
@@ -39,7 +39,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          
+
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
@@ -51,4 +51,3 @@ jobs:
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://docs.anthropic.com/en/docs/claude-code/sdk#command-line for available options
           claude_args: '--allowed-tools "Edit,MultiEdit,Write,Read,Glob,Grep,LS,Bash(npm test:*),Bash(npx playwright:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*)"'
-

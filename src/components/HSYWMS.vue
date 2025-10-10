@@ -64,7 +64,7 @@ export default {
     const fetchLayers = async () => {
       try {
         const response = await axios.get('/wms/layers');
-        
+
         if (response.data) {
           const parser = new XMLParser({
             ignoreAttributes: false,

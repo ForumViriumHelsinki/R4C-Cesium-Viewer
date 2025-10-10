@@ -29,6 +29,7 @@ skaffold dev --profile=local-with-services
 ```
 
 This command will:
+
 - ✅ Deploy PostgreSQL with PostGIS extensions
 - ✅ Deploy pygeoapi configured to connect to PostgreSQL
 - ✅ Build and deploy your R4C Cesium Viewer webapp
@@ -50,20 +51,25 @@ This command will:
 ## Development Profiles
 
 ### Default Profile (webapp only)
+
 ```bash
 skaffold dev
 ```
+
 Uses your existing helm chart configuration, connects to external services.
 
 ### Local Services Profile (full stack)
+
 ```bash
 skaffold dev --profile=local-with-services
 ```
+
 Deploys PostgreSQL + pygeoapi + webapp locally.
 
 ## Database Management
 
 ### Connection Details (Local)
+
 ```bash
 export DATABASE_URL="postgres://regions4climate_user:regions4climate_pass@localhost:5432/regions4climate"
 ```
@@ -92,13 +98,16 @@ psql "$DATABASE_URL"
 After migrations, you can populate the database with realistic mock data:
 
 #### Automatic Seeding (Recommended)
+
 The initialization script will offer to seed data automatically:
+
 ```bash
 ./scripts/init-local-db.sh
 # Answer 'y' when prompted to seed data
 ```
 
 #### Manual Seeding
+
 ```bash
 # Install Python dependencies
 pip install -r scripts/requirements-seeding.txt
@@ -124,13 +133,16 @@ The local development setup mirrors production:
 ```
 
 ### Database Schema
+
 - **regions4climate**: Main database with R4C data
 - **med_iren**: Secondary database (for NDVI and other data)
 
 ### pygeoapi Collections
+
 All collections from `configmap.yaml` are available locally, including:
+
 - `adaptation_landcover`
-- `hsy_buildings` 
+- `hsy_buildings`
 - `coldarea`
 - `tree`
 - `vegetation`
@@ -139,6 +151,7 @@ All collections from `configmap.yaml` are available locally, including:
 ## Troubleshooting
 
 ### PostgreSQL Won't Start
+
 ```bash
 # Check pod status
 kubectl get pods
@@ -153,6 +166,7 @@ skaffold dev --profile=local-with-services
 ```
 
 ### pygeoapi Can't Connect to Database
+
 ```bash
 # Check database is ready
 kubectl port-forward svc/postgresql 5432:5432 &
@@ -166,6 +180,7 @@ kubectl rollout restart deployment/pygeoapi
 ```
 
 ### Migration Failures
+
 ```bash
 # Check database connection
 ./scripts/init-local-db.sh
@@ -177,6 +192,7 @@ dbmate up -v  # verbose output
 ```
 
 ### Port Conflicts
+
 ```bash
 # If ports are in use, use different ports
 kubectl port-forward svc/postgresql 15432:5432  # Use port 15432 instead
@@ -186,6 +202,7 @@ export DATABASE_URL="postgres://regions4climate_user:regions4climate_pass@localh
 ## Advanced Usage
 
 ### Custom PostgreSQL Configuration
+
 Edit `skaffold.yaml` to modify PostgreSQL settings:
 
 ```yaml
@@ -197,6 +214,7 @@ setValues:
 ```
 
 ### Additional pygeoapi Configuration
+
 The pygeoapi deployment uses your `configmap.yaml` file. To modify collections, edit that file and restart:
 
 ```bash
@@ -204,6 +222,7 @@ kubectl rollout restart deployment/pygeoapi
 ```
 
 ### Production-like Testing
+
 To test with production-like resource constraints:
 
 ```bash

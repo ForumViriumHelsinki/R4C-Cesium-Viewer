@@ -18,7 +18,7 @@ export default {
 		const propsStore = usePropsStore();
 		const plotService = new Plot();
 		const showChart = ref( false );
-  
+
 		const setTreeArea = () => {
 			return propsStore.treeArea || 0;
 		};

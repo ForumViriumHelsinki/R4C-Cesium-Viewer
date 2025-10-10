@@ -1,10 +1,14 @@
-import { test as base, Page } from '@playwright/test';
-import { waitForCesiumReady, setupCesiumForCI, waitForAppReady } from '../e2e/helpers/cesium-helper';
-import { createCesiumMock } from '../mocks/cesium-mock';
+import { test as base, Page } from "@playwright/test";
+import {
+  waitForCesiumReady,
+  setupCesiumForCI,
+  waitForAppReady,
+} from "../e2e/helpers/cesium-helper";
+import { createCesiumMock } from "../mocks/cesium-mock";
 
 /**
  * Cesium Test Fixture
- * 
+ *
  * Provides optimized Cesium initialization for tests by:
  * - Using a mock Cesium implementation in CI to avoid WebGL issues
  * - Pre-initializing Cesium viewer once per test
@@ -19,11 +23,11 @@ export interface CesiumFixtures {
 
 /**
  * Extended test with Cesium fixture
- * 
+ *
  * Usage in tests:
  * ```typescript
  * import { cesiumTest } from '../fixtures/cesium-fixture';
- * 
+ *
  * cesiumTest('my test', async ({ cesiumPage }) => {
  *   // Cesium is already initialized
  *   await cesiumPage.click('.some-button');
@@ -34,26 +38,26 @@ export const cesiumTest = base.extend<CesiumFixtures>({
   cesiumPage: async ({ page }, use) => {
     // In CI, use the mock instead of real Cesium
     if (process.env.CI) {
-      console.log('CI environment detected - using Cesium mock');
-      
+      console.log("CI environment detected - using Cesium mock");
+
       // Inject the mock implementation directly
       await page.addInitScript(() => {
         // Inject Cesium mock implementation inline
-        console.log('Injecting Cesium mock...');
-        
+        console.log("Injecting Cesium mock...");
+
         // Mock implementation embedded directly
         function createCesiumMock() {
           // Mock entity collection
           class MockEntityCollection {
             _entities = { _array: [] };
             values = [];
-            
+
             add(entity) {
               this.values.push(entity);
               this._entities._array.push(entity);
               return entity;
             }
-            
+
             remove(entity) {
               const index = this.values.indexOf(entity);
               if (index > -1) {
@@ -65,12 +69,12 @@ export const cesiumTest = base.extend<CesiumFixtures>({
               }
               return true;
             }
-            
+
             removeAll() {
               this.values = [];
               this._entities._array = [];
             }
-            
+
             getById(id) {
               return this.values.find((e) => e.id === id);
             }
@@ -79,12 +83,12 @@ export const cesiumTest = base.extend<CesiumFixtures>({
           // Mock data source collection
           class MockDataSourceCollection {
             _dataSources = [];
-            
+
             add(dataSource) {
               this._dataSources.push(dataSource);
               return Promise.resolve(dataSource);
             }
-            
+
             remove(dataSource) {
               const index = this._dataSources.indexOf(dataSource);
               if (index > -1) {
@@ -92,11 +96,11 @@ export const cesiumTest = base.extend<CesiumFixtures>({
               }
               return true;
             }
-            
+
             getByName(name) {
-              return this._dataSources.filter(ds => ds.name === name);
+              return this._dataSources.filter((ds) => ds.name === name);
             }
-            
+
             get length() {
               return this._dataSources.length;
             }
@@ -112,45 +116,48 @@ export const cesiumTest = base.extend<CesiumFixtures>({
               fov: Math.PI / 3,
               aspectRatio: 1,
               near: 1,
-              far: 10000000
+              far: 10000000,
             };
             positionCartographic = {
               longitude: 0.4366,
               latitude: 1.0472,
-              height: 1000000
+              height: 1000000,
             };
             heading = 0;
             pitch = -Math.PI / 2;
             roll = 0;
-            
+
             setView(options) {
               if (options.destination) {
                 this.position = options.destination;
               }
               if (options.orientation) {
-                if (options.orientation.heading !== undefined) this.heading = options.orientation.heading;
-                if (options.orientation.pitch !== undefined) this.pitch = options.orientation.pitch;
-                if (options.orientation.roll !== undefined) this.roll = options.orientation.roll;
+                if (options.orientation.heading !== undefined)
+                  this.heading = options.orientation.heading;
+                if (options.orientation.pitch !== undefined)
+                  this.pitch = options.orientation.pitch;
+                if (options.orientation.roll !== undefined)
+                  this.roll = options.orientation.roll;
               }
             }
-            
+
             flyTo(options) {
               this.setView(options);
               return Promise.resolve();
             }
-            
+
             zoomIn(amount) {
               this.positionCartographic.height -= amount || 100000;
             }
-            
+
             zoomOut(amount) {
               this.positionCartographic.height += amount || 100000;
             }
-            
+
             lookAt(target, offset) {
               // Mock implementation
             }
-            
+
             flyToBoundingSphere(boundingSphere, options) {
               return Promise.resolve();
             }
@@ -158,7 +165,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 
           // Mock scene
           class MockScene {
-            canvas = document.createElement('canvas');
+            canvas = document.createElement("canvas");
             camera = new MockCamera();
             globe = {
               enableLighting: false,
@@ -166,12 +173,12 @@ export const cesiumTest = base.extend<CesiumFixtures>({
               showWaterEffect: false,
               depthTestAgainstTerrain: false,
               show: true,
-              baseColor: { red: 1, green: 1, blue: 1, alpha: 1 }
+              baseColor: { red: 1, green: 1, blue: 1, alpha: 1 },
             };
             primitives = {
               add: () => ({}),
               remove: () => true,
-              removeAll: () => {}
+              removeAll: () => {},
             };
             skyBox = { show: false };
             sun = { show: false };
@@ -181,37 +188,43 @@ export const cesiumTest = base.extend<CesiumFixtures>({
             debugShowFramesPerSecond = false;
             frameState = {
               creditDisplay: {
-                _currentFrameCredits: { screenCredits: [] }
+                _currentFrameCredits: { screenCredits: [] },
               },
               passes: {
-                render: true
-              }
+                render: true,
+              },
             };
-            
+
             constructor() {
               // Set canvas dimensions for tests
-              Object.defineProperty(this.canvas, 'offsetWidth', { value: 800, writable: true });
-              Object.defineProperty(this.canvas, 'offsetHeight', { value: 600, writable: true });
-              this.canvas.classList.add('cesium-widget-canvas');
+              Object.defineProperty(this.canvas, "offsetWidth", {
+                value: 800,
+                writable: true,
+              });
+              Object.defineProperty(this.canvas, "offsetHeight", {
+                value: 600,
+                writable: true,
+              });
+              this.canvas.classList.add("cesium-widget-canvas");
             }
-            
+
             pick(windowPosition) {
               // Return a mock picked object for testing
               return {
-                id: { id: 'mock-entity-1', name: 'Mock Entity' },
+                id: { id: "mock-entity-1", name: "Mock Entity" },
                 primitive: {},
-                position: windowPosition
+                position: windowPosition,
               };
             }
-            
+
             drillPick(windowPosition) {
               return [this.pick(windowPosition)];
             }
-            
+
             requestRender() {
               // Mock render request
             }
-            
+
             render() {
               // Mock render
             }
@@ -230,39 +243,41 @@ export const cesiumTest = base.extend<CesiumFixtures>({
               startTime: { dayNumber: 2458119, secondsOfDay: 0 },
               stopTime: { dayNumber: 2458120, secondsOfDay: 0 },
               shouldAnimate: false,
-              multiplier: 1
+              multiplier: 1,
             };
             imageryLayers = {
               addImageryProvider: () => ({}),
               remove: () => true,
-              removeAll: () => {}
+              removeAll: () => {},
             };
             terrainProvider = {};
             cesiumWidget = {
-              creditContainer: document.createElement('div')
+              creditContainer: document.createElement("div"),
             };
             selectedEntity = null;
             trackedEntity = null;
             screenSpaceEventHandler = {
               setInputAction: () => {},
               removeInputAction: () => {},
-              destroy: () => {}
+              destroy: () => {},
             };
-            
+
             constructor(container, options) {
-              if (typeof container === 'string') {
-                this.container = document.getElementById(container) || document.createElement('div');
+              if (typeof container === "string") {
+                this.container =
+                  document.getElementById(container) ||
+                  document.createElement("div");
               } else {
                 this.container = container;
               }
-              
+
               // Append canvas to container
               this.container.appendChild(this.canvas);
-              
+
               // Store reference globally
               window.viewer = this;
             }
-            
+
             destroy() {
               if (this.container && this.canvas && this.canvas.parentNode) {
                 this.canvas.parentNode.removeChild(this.canvas);
@@ -273,15 +288,15 @@ export const cesiumTest = base.extend<CesiumFixtures>({
                 delete window.viewer;
               }
             }
-            
+
             zoomTo(target, offset) {
               return Promise.resolve();
             }
-            
+
             flyTo(target, options) {
               return Promise.resolve();
             }
-            
+
             resize() {
               // Mock resize
             }
@@ -294,15 +309,15 @@ export const cesiumTest = base.extend<CesiumFixtures>({
               this.y = y;
               this.z = z;
             }
-            
+
             static fromDegrees(longitude, latitude, height = 0) {
               return new MockCartesian3(longitude, latitude, height);
             }
-            
+
             static fromRadians(longitude, latitude, height = 0) {
               return new MockCartesian3(longitude, latitude, height);
             }
-            
+
             static ZERO = new MockCartesian3(0, 0, 0);
           }
 
@@ -314,14 +329,14 @@ export const cesiumTest = base.extend<CesiumFixtures>({
               this.blue = blue;
               this.alpha = alpha;
             }
-            
+
             static WHITE = new MockColor(1, 1, 1, 1);
             static BLACK = new MockColor(0, 0, 0, 1);
             static RED = new MockColor(1, 0, 0, 1);
             static GREEN = new MockColor(0, 1, 0, 1);
             static BLUE = new MockColor(0, 0, 1, 1);
             static TRANSPARENT = new MockColor(1, 1, 1, 0);
-            
+
             static fromCssColorString(color) {
               return new MockColor();
             }
@@ -329,9 +344,9 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 
           // Mock GeoJsonDataSource
           class MockGeoJsonDataSource {
-            name = '';
+            name = "";
             entities = new MockEntityCollection();
-            
+
             static load(data, options) {
               const dataSource = new MockGeoJsonDataSource();
               if (options?.clampToGround) {
@@ -348,14 +363,14 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 
           const MockFeatureDetection = {
             supportsWebGL: () => true,
-            supportsImageRenderingPixelated: () => true
+            supportsImageRenderingPixelated: () => true,
           };
 
           const MockShadowMode = {
             DISABLED: 0,
             ENABLED: 1,
             CAST_ONLY: 2,
-            RECEIVE_ONLY: 3
+            RECEIVE_ONLY: 3,
           };
 
           const MockScreenSpaceEventType = {
@@ -370,7 +385,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
             WHEEL: 8,
             PINCH_START: 9,
             PINCH_END: 10,
-            PINCH_MOVE: 11
+            PINCH_MOVE: 11,
           };
 
           const MockScreenSpaceEventHandler = class {
@@ -393,12 +408,12 @@ export const cesiumTest = base.extend<CesiumFixtures>({
             ScreenSpaceEventType: MockScreenSpaceEventType,
             ScreenSpaceEventHandler: MockScreenSpaceEventHandler,
             Ion: {
-              defaultAccessToken: 'mock-token'
+              defaultAccessToken: "mock-token",
             },
             defined: (value) => value !== undefined && value !== null,
             Math: {
-              toDegrees: (radians) => radians * 180 / Math.PI,
-              toRadians: (degrees) => degrees * Math.PI / 180
+              toDegrees: (radians) => (radians * 180) / Math.PI,
+              toRadians: (degrees) => (degrees * Math.PI) / 180,
             },
             Rectangle: class {
               constructor(west = 0, south = 0, east = 0, north = 0) {
@@ -442,80 +457,85 @@ export const cesiumTest = base.extend<CesiumFixtures>({
                 this.center = center || new MockCartesian3();
                 this.radius = radius;
               }
-            }
+            },
           };
 
           return CesiumMock;
         }
-        
+
         // Inject the mock
         window.Cesium = createCesiumMock();
-        window.CESIUM_BASE_URL = '/cesium';
-        console.log('Cesium mock injected successfully');
+        window.CESIUM_BASE_URL = "/cesium";
+        console.log("Cesium mock injected successfully");
       });
-      
+
       // Navigate to the application
-      await page.goto('/');
-      
+      await page.goto("/");
+
       // Wait for app to be ready (but not for real Cesium)
       await waitForAppReady(page, 30000);
-      
+
       // Initialize mock viewer if not already created
       await page.evaluate(() => {
         if (!(window as any).viewer) {
-          const container = document.getElementById('cesiumContainer') || 
-                           document.querySelector('.cesium-container');
+          const container =
+            document.getElementById("cesiumContainer") ||
+            document.querySelector(".cesium-container");
           if (container && (window as any).Cesium) {
-            (window as any).viewer = new (window as any).Cesium.Viewer(container);
-            console.log('Mock viewer created');
+            (window as any).viewer = new (window as any).Cesium.Viewer(
+              container,
+            );
+            console.log("Mock viewer created");
           }
         }
       });
-      
+
       // Use the page with mock Cesium
       await use(page);
-      
+
       // Cleanup
-      await page.evaluate(() => {
-        if ((window as any).viewer) {
-          try {
-            (window as any).viewer.destroy();
-          } catch (e) {
-            console.warn('Failed to destroy mock viewer:', e);
+      await page
+        .evaluate(() => {
+          if ((window as any).viewer) {
+            try {
+              (window as any).viewer.destroy();
+            } catch (e) {
+              console.warn("Failed to destroy mock viewer:", e);
+            }
           }
-        }
-      }).catch(() => {});
-      
+        })
+        .catch(() => {});
+
       return;
     }
-    
+
     // Original implementation for non-CI environments
     // Setup Cesium for CI if needed
     await setupCesiumForCI(page);
-    
+
     // Navigate to the application
-    await page.goto('/');
-    
+    await page.goto("/");
+
     // Pre-initialize Cesium with optimized settings
     await page.evaluate(() => {
       // Set performance-optimized defaults before Cesium loads
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         // Store original settings to restore later
         (window as any).__originalCesiumSettings = {};
-        
+
         // Configure Cesium for test environment
-        (window as any).CESIUM_BASE_URL = '/cesium';
-        
+        (window as any).CESIUM_BASE_URL = "/cesium";
+
         // Wait for Cesium to be available and configure it
         const configureCesium = () => {
           if ((window as any).Cesium) {
             const Cesium = (window as any).Cesium;
-            
+
             // Store viewer creation function
             const originalViewer = Cesium.Viewer;
-            
+
             // Override Viewer constructor with test-optimized settings
-            Cesium.Viewer = function(container: any, options: any = {}) {
+            Cesium.Viewer = function (container: any, options: any = {}) {
               // Merge with performance-optimized defaults
               const testOptions = {
                 ...options,
@@ -523,7 +543,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
                 requestRenderMode: true, // Only render on demand
                 maximumRenderTimeChange: Infinity, // Disable time-based rendering
                 targetFrameRate: 10, // Lower frame rate for tests
-                
+
                 // Disable unnecessary widgets
                 animation: false,
                 baseLayerPicker: false,
@@ -536,77 +556,77 @@ export const cesiumTest = base.extend<CesiumFixtures>({
                 timeline: false,
                 navigationHelpButton: false,
                 navigationInstructionsInitiallyVisible: false,
-                
+
                 // Simplify scene
                 scene3DOnly: true,
                 shadows: false,
                 terrainShadows: Cesium.ShadowMode.DISABLED,
-                
+
                 // Optimize rendering
                 msaaSamples: 1, // Minimal anti-aliasing
                 useBrowserRecommendedResolution: false,
                 resolutionScale: 0.5, // Lower resolution for tests
-                
+
                 // Disable globe features we don't need for tests
                 globe: {
                   ...((options.globe as any) || {}),
                   enableLighting: false,
                   showGroundAtmosphere: false,
                   showWaterEffect: false,
-                  depthTestAgainstTerrain: false
+                  depthTestAgainstTerrain: false,
                 },
-                
+
                 // Use simple imagery provider
                 imageryProvider: false,
-                terrainProvider: new Cesium.EllipsoidTerrainProvider()
+                terrainProvider: new Cesium.EllipsoidTerrainProvider(),
               };
-              
+
               // Create viewer with optimized settings
               const viewer = originalViewer.call(this, container, testOptions);
-              
+
               // Store reference for tests
               (window as any).viewer = viewer;
-              
+
               // Disable animations and effects
               if (viewer.scene) {
                 viewer.scene.debugShowFramesPerSecond = false;
                 viewer.scene.requestRenderMode = true;
                 viewer.scene.maximumRenderTimeChange = Infinity;
-                
+
                 if (viewer.scene.globe) {
                   viewer.scene.globe.enableLighting = false;
                   viewer.scene.globe.showGroundAtmosphere = false;
                 }
-                
+
                 if (viewer.scene.skyBox) {
                   viewer.scene.skyBox.show = false;
                 }
-                
+
                 if (viewer.scene.sun) {
                   viewer.scene.sun.show = false;
                 }
-                
+
                 if (viewer.scene.moon) {
                   viewer.scene.moon.show = false;
                 }
               }
-              
+
               return viewer;
             };
-            
+
             // Copy static properties
-            Object.keys(originalViewer).forEach(key => {
+            Object.keys(originalViewer).forEach((key) => {
               Cesium.Viewer[key] = originalViewer[key];
             });
-            
+
             // Mark as configured
             (window as any).__cesiumConfigured = true;
           }
         };
-        
+
         // Try to configure immediately if Cesium is already loaded
         configureCesium();
-        
+
         // Also set up observer for when Cesium loads
         if (!(window as any).Cesium) {
           const observer = new MutationObserver(() => {
@@ -615,68 +635,75 @@ export const cesiumTest = base.extend<CesiumFixtures>({
               observer.disconnect();
             }
           });
-          
+
           observer.observe(document, {
             childList: true,
-            subtree: true
+            subtree: true,
           });
-          
+
           // Disconnect observer after timeout
           setTimeout(() => observer.disconnect(), 30000);
         }
       }
     });
-    
+
     // Wait for app to be ready
     await waitForAppReady(page, process.env.CI ? 60000 : 30000);
-    
+
     // Wait for Cesium to be ready with extended timeout for CI
     await waitForCesiumReady(page, process.env.CI ? 60000 : 30000);
-    
+
     // Ensure viewer is initialized with our settings
     await page.evaluate(() => {
       // If viewer doesn't exist, try to trigger its creation
       if (!(window as any).viewer) {
         // Look for cesium container
-        const container = document.getElementById('cesiumContainer') || 
-                         document.querySelector('.cesium-container');
-        
+        const container =
+          document.getElementById("cesiumContainer") ||
+          document.querySelector(".cesium-container");
+
         if (container && (window as any).Cesium) {
           (window as any).viewer = new (window as any).Cesium.Viewer(container);
         }
       }
-      
+
       // Force initial render
       if ((window as any).viewer?.scene) {
         (window as any).viewer.scene.requestRender();
       }
     });
-    
+
     // Use the page with pre-initialized Cesium
     await use(page);
-    
+
     // Cleanup
-    await page.evaluate(() => {
-      // Destroy viewer if it exists
-      if ((window as any).viewer) {
-        try {
-          (window as any).viewer.destroy();
-        } catch (e) {
-          console.warn('Failed to destroy viewer:', e);
+    await page
+      .evaluate(() => {
+        // Destroy viewer if it exists
+        if ((window as any).viewer) {
+          try {
+            (window as any).viewer.destroy();
+          } catch (e) {
+            console.warn("Failed to destroy viewer:", e);
+          }
+          delete (window as any).viewer;
         }
-        delete (window as any).viewer;
-      }
-      
-      // Restore original settings
-      if ((window as any).__originalCesiumSettings) {
-        Object.keys((window as any).__originalCesiumSettings).forEach(key => {
-          (window as any)[key] = (window as any).__originalCesiumSettings[key];
-        });
-      }
-    }).catch(() => {
-      // Cleanup errors are not critical
-    });
-  }
+
+        // Restore original settings
+        if ((window as any).__originalCesiumSettings) {
+          Object.keys((window as any).__originalCesiumSettings).forEach(
+            (key) => {
+              (window as any)[key] = (window as any).__originalCesiumSettings[
+                key
+              ];
+            },
+          );
+        }
+      })
+      .catch(() => {
+        // Cleanup errors are not critical
+      });
+  },
 });
 
 /**
@@ -692,23 +719,25 @@ export const cesiumDescribe = (title: string, fn: () => void) => {
       cesiumTest.beforeAll(async ({ browser }) => {
         const context = await browser.newContext();
         const page = await context.newPage();
-        
+
         const hasWebGL = await page.evaluate(() => {
           try {
-            const canvas = document.createElement('canvas');
-            return !!(canvas.getContext('webgl') || canvas.getContext('webgl2'));
+            const canvas = document.createElement("canvas");
+            return !!(
+              canvas.getContext("webgl") || canvas.getContext("webgl2")
+            );
           } catch {
             return false;
           }
         });
-        
+
         await context.close();
-        
+
         if (!hasWebGL) {
           cesiumTest.skip();
         }
       });
-      
+
       fn();
     });
   }

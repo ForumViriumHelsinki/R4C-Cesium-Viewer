@@ -5,21 +5,21 @@
       class="pa-4"
     >
       <v-card-title>Cooling Center <br> Optimization</v-card-title>
-      
+
       <v-label class="mb-2">
         Number of Cooling Centers
       </v-label>
       <br><br>
-      <v-slider 
+      <v-slider
         v-model="numCoolingCenters"
         min="1"
         max="50"
         step="1"
         thumb-label="always"
         class="mt-2"
-      />  
-    
-      <v-col cols="12">    
+      />
+
+      <v-col cols="12">
         <v-btn
           color="success"
           class="mt-2 text-none"
@@ -85,7 +85,7 @@ const findOptimalCoolingCenters = async () => {
 
         if (bestCell) {
             if (!isCoolingCenterTooClose(bestCell)) {
-                addCoolingCenter(bestCell.entity); 
+                addCoolingCenter(bestCell.entity);
                 availableGrids.splice(availableGrids.indexOf(bestCell), 1);
             } else {
                 availableGrids.splice(availableGrids.indexOf(bestCell), 1);
@@ -116,7 +116,7 @@ const getEntityCentroid = (entity) => {
     if (coordinates.length > 0 && (coordinates[0][0] !== coordinates[coordinates.length - 1][0] || coordinates[0][1] !== coordinates[coordinates.length - 1][1])) {
         coordinates.push(coordinates[0]);
     }
-    
+
     const polygon = turf.polygon([coordinates]);
     const centroid = turf.centroid(polygon);
     const [longitude, latitude] = centroid.geometry.coordinates;

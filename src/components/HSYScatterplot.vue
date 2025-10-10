@@ -23,7 +23,7 @@ export default {
 		// Function to add plot elements
 		const addPlotElements = ( svg, heatData, xScale, yScale, colorScale ) => {
 			const tooltip = plotService.createTooltip( '#scatterPlotContainerHSY' );
-      
+
 			svg.append( 'g' )
 				.selectAll( 'dot' )
 				.data( heatData )
@@ -33,12 +33,12 @@ export default {
 				.attr( 'cy', d => yScale( d.yData ) )
 				.attr( 'r', 2 )
 				.style( 'fill', d => colorScale( d.name ) )
-				.on( 'mouseover', ( event, d ) => 
+				.on( 'mouseover', ( event, d ) =>
 					plotService.handleMouseover(
-						tooltip, 
-						'scatterPlotContainerHSY', 
-						event, 
-						d, 
+						tooltip,
+						'scatterPlotContainerHSY',
+						event,
+						d,
 						( data ) => `${ propsStore.numericalSelect.text }: ${ data.xData.toFixed( 2 ) }<br>Temperature: ${ data.yData.toFixed( 2 ) }°C<br>${ propsStore.categoricalSelect.text }: ${ data.name }
             <br>Left click highlights the building on map`
 					)
@@ -137,7 +137,7 @@ export default {
 			const legend = svg.append( 'g' )
 				.attr( 'class', 'legend' )
 				.attr( 'transform', `translate( ${ width },${ -10 } )` );
-  
+
 			legend.selectAll( '.legend-color' )
 				.data( values )
 				.enter()
@@ -147,7 +147,7 @@ export default {
 				.attr( 'width', 9 )
 				.attr( 'height', 9 )
 				.style( 'fill', d => colorScale( d ) );
-  
+
   			legend.selectAll('.legend-label')
     			.data(labelsWithAverage)
     			.enter()
@@ -155,7 +155,7 @@ export default {
     			.attr('x', 0)
     			.attr('y', (_, i) => i * 40 )
     			.each(function(_, i) {  // Iterate over each label
-      		
+
 					const label = d3.select(this);
       				const labelText = labelsWithAverage[i];
 

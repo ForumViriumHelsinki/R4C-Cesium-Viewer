@@ -11,7 +11,7 @@ style="color: red; float:right; cursor: pointer;"
 @click="reset"
 >
     <v-icon>mdi-refresh</v-icon>
-  </v-btn>        
+  </v-btn>
         <label class="switch">
             <input
 id="postalCodeToggle"
@@ -24,7 +24,7 @@ value="postalCode"
 id="postalCodeLabel"
 for="postalCodeToggle"
 class="label"
->Postalcode view</label> 
+>Postalcode view</label>
 
           <!--  natureGrid-->
         <label
@@ -62,7 +62,7 @@ value="travelTime"
 id="travelTimeLabel"
 for="travelTime"
 class="label"
->Travel time grid</label> 
+>Travel time grid</label>
 
         <!--  resetGrid-->
         <label
@@ -80,7 +80,7 @@ value="resetGrid"
 id="resetGridLabel"
 for="resetGrid"
 class="label"
->Reset grid</label> 
+>Reset grid</label>
 
 		<!--  surveyPlaces-->
         <label
@@ -116,14 +116,14 @@ value="250mGrid"
 id="250mGridLabel"
 for="250mGrid"
 class="label"
->250m grid</label>		
+>250m grid</label>
     </div>
     <BuildingGridChart />
 	<SosEco250mGrid />
 	<SurveyScatterPlot />
 
 </template>
-  
+
 <script>
 
 import { eventBus } from '../services/eventEmitter.js';
@@ -158,10 +158,10 @@ export default {
 		this.datasourceService = new Datasource();
 		this.addEventListeners();
 
-	}, 	
+	},
 	beforeUnmount() {
 		this.unsubscribe();
-	},    
+	},
 	methods: {
 		reset(){
 			// Smart reset instead of page reload
@@ -169,7 +169,7 @@ export default {
 			this.store.setPostalCode(null);
 			this.store.setNameOfZone(null);
 			this.store.setView('capitalRegion');
-			
+
 			// Reset camera to initial position
 			const camera = new Camera();
 			camera.init();
@@ -180,10 +180,10 @@ export default {
 
 		},
 		/**
-        * Add EventListeners 
+        * Add EventListeners
         */
 		addEventListeners() {
-            
+
 			document.getElementById( 'postalCodeToggle' ).addEventListener( 'change', this.postalCodeViewEvent.bind( this ) );
 			document.getElementById( 'travelTimeToggle' ).addEventListener( 'change', this.travelTimeEvent.bind( this ) );
 			document.getElementById( 'natureGridToggle' ).addEventListener( 'change', this.natureGridEvent.bind( this ) );
@@ -211,10 +211,10 @@ export default {
 				document.getElementById( 'bar-chart-container' ).style.visibility = 'hidden';
 				document.getElementById( 'legend' ).style.visibility = 'hidden';
 				this.datasourceService.changeDataSourceShowByName( 'PopulationGrid', true );
-	
+
 			}
 
-		},			
+		},
 
 		/**
         * This function handles the toggle event for switching to postal code view
@@ -227,15 +227,15 @@ export default {
 			if ( surveyPlaces ) {
 				const espooSurveyService = new EspooSurvey();
 				espooSurveyService.loadSurveyFeatures( 'places_in_everyday_life' );
-        
+
 			} else {
-				
+
 				this.datasourceService.removeDataSourcesByNamePrefix( 'Survey ' );
 				document.getElementById( 'surveyScatterPlot' ).style.visibility = 'hidden';
-				
+
 			}
 
-		},		
+		},
 
 		/**
         * This function handles the toggle event for switching to postal code view
@@ -249,8 +249,8 @@ export default {
 
 				this.store.setView( 'capitalRegion' );
 				this.reset();
-        
-			} 
+
+			}
 
 		},
 
@@ -265,10 +265,10 @@ export default {
 			if ( resetGrid ) {
 
 				const populationgridService = new Populationgrid();
-				populationgridService.createPopulationGrid();        
-			} 
+				populationgridService.createPopulationGrid();
+			}
 
-		},        
+		},
 
 		/**
         * This function to switch between population grid and travel time grid view
@@ -289,7 +289,7 @@ export default {
 				this.datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
 
 				if ( travelTime ) {
-                   
+
 					// await datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
 					await this.datasourceService.loadGeoJsonDataSource( 0.1, 'assets/data/travel_time_grid.json', 'TravelTimeGrid' );
 				} else {
@@ -335,7 +335,7 @@ export default {
 
 				document.getElementById( 'travelTimeToggle' ).checked = false;
 
-			} else { 
+			} else {
 
 				this.datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
 				this.createPopulationGrid( );
@@ -352,16 +352,16 @@ export default {
 <style>
 .uiButton {
 	background-color: white;
-	border: 0px solid black; 
+	border: 0px solid black;
 
 	font-family: sans-serif;
 	font-size: small;
 	text-align: middle;
 	padding: 5px;
 	margin: 5px;
-	
+
 	float: left;
-	
+
 	text-decoration: underline;
   height: 18px !important; /* Set a smaller height */
   width: 18px !important;  /* Set a smaller width */
@@ -378,29 +378,29 @@ export default {
 
 .label {
 	background-color: white;
-	border: 0px solid black; 
+	border: 0px solid black;
 
 	font-family: sans-serif;
 	text-align: middle;
-	
+
 	text-decoration: none;
 	font-size: small;
 }
 
 #gridviewContainer{
-	top: 10px; 
-	left: 0px; 
+	top: 10px;
+	left: 0px;
 
-	position: fixed; 
-	border: 1px solid black; 
-	box-shadow: 3px 5px 5px black; 
+	position: fixed;
+	border: 1px solid black;
+	box-shadow: 3px 5px 5px black;
 	visibility: visible;
-	
+
 	background: white;
 	padding: 5px;
-	
+
 	min-height: 25px;
-	
+
 	width: 100%;
 }
 

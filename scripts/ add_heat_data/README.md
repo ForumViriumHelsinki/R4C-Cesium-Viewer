@@ -29,27 +29,27 @@ gcloud functions call calculate-heat-data --region <YOUR_REGION> --data '{"date"
 
 The function expects the following parameters in the JSON payload:
 
-* **`date`**: The date of the heat data (YYYY-MM-DD).
-* **`bucket`**: The name of the GCS bucket containing the normalized raster data.
-* **`posno`**: A single postal code or a list of postal codes to filter buildings.
+- **`date`**: The date of the heat data (YYYY-MM-DD).
+- **`bucket`**: The name of the GCS bucket containing the normalized raster data.
+- **`posno`**: A single postal code or a list of postal codes to filter buildings.
 
 ## Implementation Details
 
 ### Data Retrieval
 
-* The `fetch_buildings_from_db` function retrieves building data from the PostgreSQL database based on the provided postal codes.
-* The normalized Landsat raster is downloaded from the specified GCS bucket.
+- The `fetch_buildings_from_db` function retrieves building data from the PostgreSQL database based on the provided postal codes.
+- The normalized Landsat raster is downloaded from the specified GCS bucket.
 
 ### Heat Exposure Calculation
 
-* The `calculate_heat_exp` function calculates the average heat exposure for each building by intersecting the building geometries with the raster data.
-* The function accounts for no-data values and partial cell intersections to ensure accurate calculations.
+- The `calculate_heat_exp` function calculates the average heat exposure for each building by intersecting the building geometries with the raster data.
+- The function accounts for no-data values and partial cell intersections to ensure accurate calculations.
 
 ### Database Insertion
 
-* The `insert_to_db` function inserts the calculated heat exposure data into the specified table in the PostgreSQL database.
-* The function also retrieves temperature metadata from GCS to calculate the average temperature in Celsius.
-* Environment variables are used to store database connection details.
+- The `insert_to_db` function inserts the calculated heat exposure data into the specified table in the PostgreSQL database.
+- The function also retrieves temperature metadata from GCS to calculate the average temperature in Celsius.
+- Environment variables are used to store database connection details.
 
 ## Response
 
@@ -64,10 +64,10 @@ The function returns a JSON response indicating the number of features inserted 
 
 ## Additional Functions
 
-* **`calculate_temp_in_c`**: Calculates the temperature in Celsius from the normalized heat exposure value and temperature metadata.
-* **`get_temperature_from_metadata`**: Reads temperature metadata from a JSON file in GCS.
+- **`calculate_temp_in_c`**: Calculates the temperature in Celsius from the normalized heat exposure value and temperature metadata.
+- **`get_temperature_from_metadata`**: Reads temperature metadata from a JSON file in GCS.
 
 ## Error Handling
 
-* The functions include error handling for database connection and query errors.
-* The `get_temperature_from_metadata` function handles file not found and JSON decode errors.
+- The functions include error handling for database connection and query errors.
+- The `get_temperature_from_metadata` function handles file not found and JSON decode errors.

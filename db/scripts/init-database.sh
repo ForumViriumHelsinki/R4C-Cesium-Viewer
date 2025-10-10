@@ -30,7 +30,7 @@ while [ $attempt -le $max_attempts ]; do
         echo "PostGIS is ready! Version: $POSTGIS_VERSION"
         break
     fi
-    
+
     if [ $attempt -eq $max_attempts ]; then
         echo "ERROR: PostGIS not available after $max_attempts attempts"
         echo "Checking if PostGIS extension exists..."
@@ -39,7 +39,7 @@ while [ $attempt -le $max_attempts ]; do
         psql "$DATABASE_URL" -c "SELECT typname FROM pg_type WHERE typname LIKE '%geometry%';" || true
         exit 1
     fi
-    
+
     echo "PostGIS not ready yet. Attempt $attempt/$max_attempts - waiting..."
     sleep 3
     ((attempt++))
@@ -77,7 +77,7 @@ except Exception as e:
 
 if [ "$SEED_CHECK" = "0" ]; then
     echo "Database appears to be empty. Loading seed data..."
-    
+
     # Check if seeding script exists
     if [ ! -f "db/scripts/seed-dev-data.py" ]; then
         echo "WARNING: Seeding script not found at db/scripts/seed-dev-data.py"

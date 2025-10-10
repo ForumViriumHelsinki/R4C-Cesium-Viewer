@@ -19,6 +19,7 @@ The PygeoAPI host can be configured via environment variable:
   - For localhost with port (e.g., `localhost:5000`), HTTP protocol is used automatically
 
 For development, you can point to a local PygeoAPI instance:
+
 ```bash
 VITE_PYGEOAPI_HOST=localhost:5000
 ```
@@ -28,6 +29,7 @@ VITE_PYGEOAPI_HOST=localhost:5000
 ```
 npm run dev
 ```
+
 The application should now be running at [http://localhost:5173](http://localhost:5173).
 
 ## Run with Docker
@@ -35,16 +37,19 @@ The application should now be running at [http://localhost:5173](http://localhos
 ```
 docker compose up
 ```
+
 The application should now be running at [http://localhost:4173](http://localhost:4173).
 
 ## Run with Skaffold
 
 ### Frontend Only
+
 ```bash
 skaffold dev --port-forward
 ```
 
 ### Full Stack (with PostgreSQL + pygeoapi)
+
 ```bash
 skaffold dev --profile=local-with-services
 ```
@@ -80,16 +85,19 @@ For complete database documentation, see [db/README.md](./db/README.md).
 ## Testing with Playwright
 
 Run tests:
+
 ```
 npx playwright test
 ```
 
 Run tests in interactive UI mode:
+
 ```
 npx playwright test --ui
 ```
 
 Run tests in headed browsers (default: headless):
+
 ```
 npx playwright test --headed
 ```

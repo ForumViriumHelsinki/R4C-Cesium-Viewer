@@ -43,14 +43,14 @@ class="d-flex align-center py-0"
 					<!-- Feature Flags Panel -->
 					<FeatureFlagsPanel />
 				</div>
-				
+
 				<v-spacer />
-				
+
 				<!-- View Mode Selector -->
 				<ViewModeCompact />
-				
+
 				<v-spacer />
-				
+
 				<!-- Control Panel Toggle -->
 				<v-btn
 					variant="outlined"
@@ -63,32 +63,32 @@ class="d-flex align-center py-0"
 				</v-btn>
 			</v-container>
 		</v-app-bar>
-		
+
 		<!-- Enhanced Control Panel -->
 		<ControlPanel v-if="sidebarVisible" />
-		
+
 		<v-main>
 			<CesiumViewer />
 			<SosEco250mGrid v-if="grid250m" />
-			
+
 			<!-- Loading Indicator -->
-			<LoadingIndicator 
-				mode="both" 
+			<LoadingIndicator
+				mode="both"
 				:show-performance-info="false"
 				@retry-layer="handleRetryLayer"
 			/>
-			
+
 			<!-- Data Source Status - Bottom Right Corner -->
-			<div 
+			<div
 				class="status-indicator-container"
 				:class="{ 'sidebar-open': sidebarVisible }"
 			>
-				<DataSourceStatusCompact 
+				<DataSourceStatusCompact
 					@source-retry="handleSourceRetry"
 					@cache-cleared="handleCacheCleared"
 				/>
 			</div>
-			
+
 			<!-- Minimal disclaimer -->
 			<div class="minimal-disclaimer">
 				<span class="disclaimer-text">
@@ -125,7 +125,7 @@ const featureFlagStore = useFeatureFlagStore();
 const grid250m = computed(() => toggleStore.grid250m);
 const currentLevel = computed(() => globalStore.level);
 
-// UI state  
+// UI state
 const sidebarVisible = ref(true); // Show sidebar by default for better discoverability
 
 // Navigation functions
@@ -139,17 +139,17 @@ const smartReset = () => {
 	globalStore.setPostalCode(null);
 	globalStore.setNameOfZone(null);
 	globalStore.setView('capitalRegion');
-	
+
 	// Reset toggle states
 	toggleStore.setShowTrees(false);
 	toggleStore.setShowPlot(true);
 	toggleStore.setGridView(false);
 	toggleStore.setHelsinkiView(false);
-	
+
 	// Reset camera to initial position
 	const camera = new Camera();
 	camera.init();
-	
+
 	// Hide tooltip
 	hideTooltip();
 };
@@ -178,7 +178,7 @@ const rotateCamera = () => {
 const handleRetryLayer = (layerName) => {
 	// Clear the error and attempt to reload the layer
 	loadingStore.retryLayerLoading(layerName);
-	
+
 	// You would implement the actual retry logic here
 	// For now, we'll just log it
 	console.log(`Retrying layer: ${layerName}`);
@@ -295,18 +295,18 @@ onMounted(async () => {
 		bottom: 6px;
 		left: 8px;
 	}
-	
+
 	.disclaimer-text {
 		font-size: 0.55rem;
 		padding: 1px 4px;
 	}
-	
+
 	.status-indicator-container {
 		bottom: 8px;
 		right: 8px;
 		max-width: 250px;
 	}
-	
+
 	/* On mobile, sidebar covers full screen so keep indicator on right */
 	.status-indicator-container.sidebar-open {
 		right: 8px;

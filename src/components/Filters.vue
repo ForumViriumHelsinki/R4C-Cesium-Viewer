@@ -95,7 +95,7 @@ export default {
             }
 
             eventBus.emit('updateScatterPlot');
-            
+
       }
     };
 
@@ -207,4 +207,3 @@ input:checked + .slider:before {
   font-family: Arial, sans-serif;
 }
 </style>
-

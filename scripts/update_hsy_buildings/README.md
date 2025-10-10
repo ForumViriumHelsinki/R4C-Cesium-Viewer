@@ -30,15 +30,15 @@ The function can also be run for multiple `posno` values using the `update_all_p
 
 ### Fetching WFS Data
 
-* The function queries the HSY WFS endpoint for building data associated with the given `posno`.
-* The data is returned in GeoJSON format and filtered to remove duplicate `vtj_prt` records.
+- The function queries the HSY WFS endpoint for building data associated with the given `posno`.
+- The data is returned in GeoJSON format and filtered to remove duplicate `vtj_prt` records.
 
 ### Updating Google Cloud SQL
 
-* The function connects to a PostgreSQL database hosted on Google Cloud SQL.
-* It compares existing records with the new data.
-* New records are inserted, and existing ones are updated in bulk.
-* Geometries are processed using PostGIS functions.
+- The function connects to a PostgreSQL database hosted on Google Cloud SQL.
+- It compares existing records with the new data.
+- New records are inserted, and existing ones are updated in bulk.
+- Geometries are processed using PostGIS functions.
 
 ### Response
 

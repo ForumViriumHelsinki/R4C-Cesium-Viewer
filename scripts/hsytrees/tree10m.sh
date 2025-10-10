@@ -7,7 +7,7 @@ JSON_PATH="NDVI/vector_data/hsy_po.json"
 LOWER_HEIGHT=0
 while (( $(echo "$LOWER_HEIGHT <= 21" | bc -l) )); do
     UPPER_HEIGHT=$(echo "$LOWER_HEIGHT + 0.5" | bc)
-    
+
     LOWER_HEIGHT_FMT=$(printf "%.1f" "$LOWER_HEIGHT")
     UPPER_HEIGHT_FMT=$(printf "%.1f" "$UPPER_HEIGHT")
 

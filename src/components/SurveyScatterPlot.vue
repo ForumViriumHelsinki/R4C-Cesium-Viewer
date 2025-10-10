@@ -1,14 +1,14 @@
 <template>
     <div id="surveyScatterPlot"/>
   </template>
-  
+
 <script>
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
-import Plot from '../services/plot.js'; 
+import Plot from '../services/plot.js';
 import { usePropsStore } from '../stores/propsStore';
 import { useGlobalStore } from '../stores/globalStore';
-  
+
 export default {
 	mounted() {
 		this.unsubscribe = eventBus.on( 'newSurveyScatterPlot', this.newSurveyScatterPlot );
@@ -47,8 +47,8 @@ export default {
 
 			// Creating scales with correct access to nested properties and adjusted yScale
 			const xScale = this.plotService.createScaleLinear(
-				d3.min( xValues ), 
-				d3.max( xValues ), 
+				d3.min( xValues ),
+				d3.max( xValues ),
 				[ 0, width ]
 			);
 
@@ -95,18 +95,18 @@ export default {
 	},
 };
 </script>
-  
+
   <style>
   #surveyScatterPlot {
     position: fixed;
     top: 90px;
     right: 10px;
     width: 500px;
-    height: 300px; 
+    height: 300px;
     visibility: hidden;
     font-size: smaller;
     border: 1px solid black;
-    box-shadow: 3px 5px 5px black; 
+    box-shadow: 3px 5px 5px black;
     background-color: white;
   }
   </style>

@@ -47,15 +47,15 @@ def fetch_wfs_data(typename):
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
-    
+
     # Request to WFS and process response
     try:
         response = urllib.request.urlopen(request_url, context=ssl_context)
         data = json.loads(response.read())
-        return data                                                                                                                                                                                                                  
+        return data
     except Exception as e:
         print(f"An error occurred: {e}")
-        
+
 def calculate_cell_area(transform, latitude):
     """
     Calculate the area of a cell in square meters for a raster in geographic coordinates,
@@ -99,7 +99,7 @@ def calculate_heat_exp(geojson_data, raster_path, output_column_name):
         geometry = geom.geometry.__geo_interface__
         out_image, out_transform = mask(src, [geometry], crop=True, all_touched=True, filled=True)
         out_image = out_image[0]  # Assuming a single band
-    
+
         # Create an Affine transform for the masked region
         masked_transform = Affine(out_transform[0], out_transform[1], out_transform[2],out_transform[3], out_transform[4], out_transform[5])
 
@@ -125,10 +125,10 @@ def calculate_heat_exp(geojson_data, raster_path, output_column_name):
         weighted_avg_values.append(avg_value)
 
     # Add weighted average heat values to the GeoDataFrame
-    gdf[output_column_name] = weighted_avg_values 
-    
-    return gdf       
-    
+    gdf[output_column_name] = weighted_avg_values
+
+    return gdf
+
 def insert_to_db(buildings_gdf):
     """
     Compare fetched WFS data with postal code GeoJSON file, join posno, and save to PostgreSQL table.
@@ -138,7 +138,7 @@ def insert_to_db(buildings_gdf):
         - postal_code_geojson_path (str): Path to the postal code GeoJSON file.
     """
     # Read postal code data
-    
+
     # Read environment variables (ensure they are set properly)
     DB_HOST = env_vars["DB_HOST"]
     DB_PORT = env_vars["DB_PORT"]
@@ -192,7 +192,7 @@ def calculate_temp_in_c(heatexposure):
     return temp_c
 
 typename = 'asuminen_ja_maankaytto:pks_rakennukset_paivittyva'
-raster_path = env_vars["RASTER"] 
+raster_path = env_vars["RASTER"]
 wfs_json = fetch_wfs_data(typename)
 gdf = calculate_heat_exp(wfs_json, raster_path, 'avgheatexposure' )
 print(f"Number of filtered features: {len(gdf)}")

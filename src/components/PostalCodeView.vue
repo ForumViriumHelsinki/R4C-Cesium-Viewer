@@ -52,7 +52,7 @@ mdi-eye
 </v-icon>
           View Mode
         </h4>
-        
+
         <v-switch
           id="showPlotToggle"
           v-model="showPlot"
@@ -61,7 +61,7 @@ mdi-eye
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="gridViewToggle"
           v-model="gridView"
@@ -70,7 +70,7 @@ mdi-eye
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="capitalRegionViewToggle"
           v-model="helsinkiView"
@@ -94,7 +94,7 @@ mdi-layers
 </v-icon>
           Data Layers
         </h4>
-        
+
         <v-switch
           id="showVegetationToggle"
           v-model="showVegetation"
@@ -103,7 +103,7 @@ mdi-layers
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="showOtherNatureToggle"
           v-model="showOtherNature"
@@ -113,7 +113,7 @@ mdi-layers
           hide-details
           style="display: none;"
         />
-        
+
         <v-switch
           id="hideNewBuildingsToggle"
           v-model="filterBuildings"
@@ -122,7 +122,7 @@ mdi-layers
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="hideNonSoteToggle"
           v-model="hideNonSote"
@@ -131,7 +131,7 @@ mdi-layers
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="hideLowToggle"
           v-model="hideLow"
@@ -140,7 +140,7 @@ mdi-layers
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="showTreesToggle"
           v-model="showTrees"
@@ -149,7 +149,7 @@ mdi-layers
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="landCoverToggle"
           v-model="landCover"
@@ -158,7 +158,7 @@ mdi-layers
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="switchViewToggle"
           v-model="switchView"
@@ -167,7 +167,7 @@ mdi-layers
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="hideColdAreasToggle"
           v-model="hideColdAreas"
@@ -176,7 +176,7 @@ mdi-layers
           density="compact"
           hide-details
         />
-        
+
         <v-switch
           id="capitalRegionColdToggle"
           v-model="capitalRegionCold"
@@ -200,7 +200,7 @@ mdi-link
 </v-icon>
           External Resources
         </h4>
-        
+
         <div class="link-grid">
           <v-btn
             href="https://bri3.fvh.io/opendata/r4c/r4c_all.html"
@@ -212,7 +212,7 @@ mdi-link
           >
             Sensor Map
           </v-btn>
-          
+
           <v-btn
             href="https://iot.fvh.fi/grafana/d/aduw70oqqdon4c/r4c-laajasalo-and-koivukyla?orgId=6&refresh=30m"
             target="_blank"
@@ -223,7 +223,7 @@ mdi-link
           >
             Sensor Dashboard
           </v-btn>
-          
+
           <v-btn
             href="https://geo.fvh.fi/r4c/6fkgOUqn3/"
             target="_blank"
@@ -244,8 +244,8 @@ mdi-link
 
 import Datasource from '../services/datasource.js';
 import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
-import Tree from '../services/tree.js'; 
-import Building from '../services/building.js'; 
+import Tree from '../services/tree.js';
+import Building from '../services/building.js';
 import Vegetation from '../services/vegetation.js';
 import Othernature from '../services/othernature.js';
 import Plot from '../services/plot.js';
@@ -280,7 +280,7 @@ export default {
 			hideColdAreas: false,
 			capitalRegionCold: false,
 		};
-	}, 
+	},
 	computed: {
 		shouldShowReturn() {
 			const store = useGlobalStore(); // Get access to the global store
@@ -295,7 +295,7 @@ export default {
 		},
 		gridView(newValue) {
 			this.toggleStore.setGridView(newValue);
-			newValue 
+			newValue
 				? (this.store.setView('grid'), this.showPostalCodeView = false, eventBus.emit('createPopulationGrid'))
 				: (this.store.setView('capitalRegion'), this.reset());
 		},
@@ -363,11 +363,11 @@ export default {
 			this.store.setPostalCode(null);
 			this.store.setNameOfZone(null);
 			this.store.setView('capitalRegion');
-			
+
 			// Reset camera to initial position
 			const camera = new Camera();
 			camera.init();
-			
+
 			// Hide tooltip
 			const tooltip = document.querySelector('.tooltip');
 			if (tooltip) {
@@ -427,7 +427,7 @@ export default {
 
 				this.store.setView( 'capitalRegion' );
 				this.reset();
-  
+
 			}
 
 		},
@@ -440,8 +440,8 @@ export default {
 			const landcover = document.getElementById( 'landCoverToggle' ).checked;
 			this.toggleStore.setLandCover( landcover );
 
-			landcover 
-    			? ( this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true ), createHSYImageryLayer( ) ) 
+			landcover
+    			? ( this.viewer.imageryLayers.remove( 'avoindata:Karttasarja_PKS', true ), createHSYImageryLayer( ) )
     			: removeLandcover( );
 
 		},
@@ -454,7 +454,7 @@ export default {
 			const gridView = document.getElementById( 'gridViewToggle' ).checked;
 			this.toggleStore.setGridView( gridView );
 
-			gridView 
+			gridView
     			? ( this.store.setView( 'grid' ), this.showPostalCodeView = false, eventBus.emit( 'createPopulationGrid' ) )
     			: ( this.store.setView( 'capitalRegion' ), this.reset() );
 
@@ -484,8 +484,8 @@ export default {
 			const showTrees = document.getElementById( 'showTreesToggle' ).checked;
 			this.toggleStore.setShowTrees( showTrees );
 
-			showTrees 
-    			? ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'Trees' ) 
+			showTrees
+    			? ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'Trees' )
         		? this.treeService.loadTrees( this.store.postalcode )
         		: ( this.dataSourceService.changeDataSourceShowByName( 'Trees', true ) ) )
     			: ( this.dataSourceService.changeDataSourceShowByName( 'Trees', false ), this.plotService.showAllPlots(), this.buildingService.resetBuildingEntities() );
@@ -510,11 +510,11 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'OtherNature' ) ) {
 
-					const otherNatureService = new Othernature();        
+					const otherNatureService = new Othernature();
 					otherNatureService.loadOtherNature( this.store.postalcode );
 
 				} else {
-            
+
 					this.dataSourceService.changeDataSourceShowByName( 'OtherNature', true );
 				}
 
@@ -545,11 +545,11 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if ( this.store.postalcode && !this.dataSourceService.getDataSourceByName( 'Vegetation' ) ) {
 
-					const vegetationService = new Vegetation( );         
+					const vegetationService = new Vegetation( );
 					vegetationService.loadVegetation( this.store.postalcode );
 
 				} else {
-            
+
 					this.dataSourceService.changeDataSourceShowByName( 'Vegetation', true );
 
 				}
@@ -570,18 +570,18 @@ export default {
 			this.toggleStore.setHideNonSote( hideNonSote );
 			this.toggleStore.setHideNewBuildings( hideNewBuildings );
 			this.toggleStore.setHideLow( hideLow );
-			
+
 			if ( this.dataSourceService ) {
-    		
+
 				const buildingsDataSource = this.dataSourceService.getDataSourceByName( `Buildings ${this.store.postalcode}` );
 
     			if ( buildingsDataSource ) {
-        			( hideNonSote || hideNewBuildings || hideLow ) 
-            			? this.buildingService.filterBuildings( buildingsDataSource ) 
+        			( hideNonSote || hideNewBuildings || hideLow )
+            			? this.buildingService.filterBuildings( buildingsDataSource )
             			: this.buildingService.showAllBuildings( buildingsDataSource );
 
         			!this.toggleStore.helsinkiView && eventBus.emit( 'updateScatterPlot' );
-				
+
 				}
 			}
 		},
@@ -595,7 +595,7 @@ export default {
 			// Get the status of the "switch view" toggle button.
 			const switchView = document.getElementById( 'switchViewToggle' ).checked;
 			this.toggleStore.setSwitchView( switchView );
-			const viewService = new Camera( );        
+			const viewService = new Camera( );
 			// If the "switch view" toggle button is checked.
 			if ( switchView ) {
 
@@ -622,7 +622,7 @@ export default {
 
 			try {
 				const sessionId = `environmental_${this.store.postalcode}`;
-				
+
 				// Define layer configurations for coordinated loading
 				const layerConfigs = [
 					{
@@ -673,25 +673,25 @@ export default {
 				];
 
 				console.log(`🌿 Starting coordinated environmental layer loading for ${this.store.postalcode}`);
-				
+
 				const results = await loadingCoordinator.startLoadingSession(sessionId, layerConfigs, {
 					priorityStrategy: 'balanced',
 					showGlobalProgress: false, // Don't show global progress for subset loading
 					allowInterruption: true
 				});
-				
+
 				// Report results
 				const successful = results.filter(r => r.status === 'fulfilled').length;
 				const failed = results.length - successful;
-				
+
 				if (failed === 0) {
 					console.log(`✅ All ${successful} environmental layers loaded successfully`);
 				} else {
 					console.warn(`⚠️ ${successful}/${results.length} environmental layers loaded, ${failed} failed`);
 				}
-				
+
 				return results;
-				
+
 			} catch (error) {
 				console.error('Failed to load environmental layers:', error);
 				throw error;
@@ -704,16 +704,16 @@ export default {
 <style>
 .uiButton {
 	background-color: white;
-	border: 0px solid black; 
+	border: 0px solid black;
 
 	font-family: sans-serif;
 	font-size: small;
 	text-align: middle;
 	padding: 5px;
 	margin: 5px;
-	
+
 	float: left;
-	
+
 	text-decoration: underline;
   height: 18px !important; /* Set a smaller height */
   width: 18px !important;  /* Set a smaller width */
@@ -730,29 +730,29 @@ export default {
 
 .label {
 	background-color: white;
-	border: 0px solid black; 
+	border: 0px solid black;
 
 	font-family: sans-serif;
 	text-align: middle;
-	
+
 	text-decoration: none;
 	font-size: small;
 }
 
 #postalCodeViewContainer{
-	top: 10px; 
-	left: 0px; 
+	top: 10px;
+	left: 0px;
 
-	position: fixed; 
-	border: 1px solid black; 
-	box-shadow: 3px 5px 5px black; 
+	position: fixed;
+	border: 1px solid black;
+	box-shadow: 3px 5px 5px black;
 	visibility: visible;
-	
+
 	background: white;
 	padding: 5px;
-	
+
 	min-height: 25px;
-	
+
 	width: 100%;
 }
 

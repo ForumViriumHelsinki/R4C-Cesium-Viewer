@@ -8,8 +8,8 @@
 		<Timeline v-if="store.level === 'postalCode' || store.level === 'building' "/>
     	<!-- Disclaimer Popup -->
     	<DisclaimerPopup class="disclaimer-popup" />
-    	<BuildingInformation 
-      		v-if="shouldShowBuildingInformation"  
+    	<BuildingInformation
+      		v-if="shouldShowBuildingInformation"
     	/>
 	</div>
 </template>
@@ -18,11 +18,11 @@
 import { ref, onMounted, computed } from 'vue';
 import * as Cesium from 'cesium';
 import 'cesium/Source/Widgets/widgets.css';
-import Datasource from '../services/datasource.js'; 
-import WMS from '../services/wms.js'; 
+import Datasource from '../services/datasource.js';
+import WMS from '../services/wms.js';
 import Featurepicker from '../services/featurepicker.js';
 import Camera from '../services/camera.js';
-import Graphics from '../services/graphics.js'; 
+import Graphics from '../services/graphics.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
@@ -131,7 +131,7 @@ export default {
 			const cesiumContainer = document.getElementById('cesiumContainer');
 			const featurepicker = new Featurepicker();
 			console.log('[CesiumViewer] ✅ FeaturePicker click handler added');
-			
+
 			cesiumContainer.addEventListener('click', (event) => {
   				const controlPanelElement = document.querySelector('.control-panel-main');
 				const timeSeriesElement = document.querySelector('#heatTimeseriesContainer');
@@ -151,7 +151,7 @@ export default {
       				lastPickTime = currentTime; // Update the last pick time
       				setTimeout( () => {
 						store.setShowBuildingInfo( true );
-      				}, 1000 );					
+      				}, 1000 );
     			} else {
 					console.log('[CesiumViewer] ⚠️ Click ignored due to conditions');
 				}
