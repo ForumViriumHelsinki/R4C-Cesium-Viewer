@@ -180,6 +180,21 @@
 		</v-card>
 	</v-dialog>
 
+	<!-- Reset confirmation dialog -->
+	<v-dialog v-model="resetConfirmDialog" max-width="500">
+		<v-card>
+			<v-card-title>Reset All Feature Flags?</v-card-title>
+			<v-card-text>
+				Are you sure you want to reset all feature flags to their default values? This action cannot be undone.
+			</v-card-text>
+			<v-card-actions>
+				<v-spacer />
+				<v-btn @click="resetConfirmDialog = false" variant="text">Cancel</v-btn>
+				<v-btn @click="confirmResetAll" color="warning" variant="elevated">Reset All</v-btn>
+			</v-card-actions>
+		</v-card>
+	</v-dialog>
+
 	<!-- Snackbar for notifications -->
 	<v-snackbar
 		v-model="snackbar"
@@ -209,6 +224,7 @@ const graphicsStore = useGraphicsStore();
 
 const dialog = ref(false);
 const importDialog = ref(false);
+const resetConfirmDialog = ref(false);
 const importJson = ref('');
 const snackbar = ref(false);
 const snackbarMessage = ref('');
@@ -263,9 +279,13 @@ function resetFlag(flagName) {
 }
 
 function resetAllFlags() {
-	if (confirm('Are you sure you want to reset all feature flags to their default values?')) {
-		featureFlagStore.resetAllFlags();
-	}
+	resetConfirmDialog.value = true;
+}
+
+function confirmResetAll() {
+	featureFlagStore.resetAllFlags();
+	resetConfirmDialog.value = false;
+	showSnackbar('All feature flags have been reset to defaults', 'success');
 }
 
 function checkHardwareSupport(flag) {
