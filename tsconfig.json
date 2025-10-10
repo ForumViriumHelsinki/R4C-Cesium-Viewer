@@ -4,6 +4,8 @@
     "allowJs": true,
     // Don't type-check, just extract documentation
     "checkJs": false,
+    // Recommended for Vite - ensures each file can be safely transpiled in isolation
+    "isolatedModules": true,
 
     // Target modern JavaScript to match Vite config
     "target": "ES2020",
