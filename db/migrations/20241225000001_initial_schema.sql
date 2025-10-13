@@ -2,6 +2,7 @@
 
 -- Note: PostGIS extension is created by PostgreSQL initdb scripts with superuser privileges
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
+DROP FUNCTION IF EXISTS public.update_updated_at_column() CASCADE;
 CREATE OR REPLACE FUNCTION public.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -28,7 +29,16 @@ CREATE SEQUENCE IF NOT EXISTS public.adaptation_landcover_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: adaptation_landcover_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.adaptation_landcover_id_seq OWNED BY public.adaptation_landcover.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.adaptation_landcover'::regclass
+        AND objid = 'public.adaptation_landcover_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.adaptation_landcover_id_seq OWNED BY public.adaptation_landcover.id;
+    END IF;
+END $$;
 -- Name: building_tree; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.building_tree (
     tree_id text,
@@ -83,7 +93,16 @@ CREATE SEQUENCE IF NOT EXISTS public.flood_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: flood_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.flood_id_seq OWNED BY public.flood.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.flood'::regclass
+        AND objid = 'public.flood_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.flood_id_seq OWNED BY public.flood.id;
+    END IF;
+END $$;
 -- Name: heat_vulnerable_demographic; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.heat_vulnerable_demographic (
     id bigint NOT NULL,
@@ -123,7 +142,16 @@ CREATE SEQUENCE IF NOT EXISTS public.heat_vulnerable_demographic_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: heat_vulnerable_demographic_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.heat_vulnerable_demographic_id_seq OWNED BY public.heat_vulnerable_demographic.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.heat_vulnerable_demographic'::regclass
+        AND objid = 'public.heat_vulnerable_demographic_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.heat_vulnerable_demographic_id_seq OWNED BY public.heat_vulnerable_demographic.id;
+    END IF;
+END $$;
 -- Name: hki_roof_colors; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.hki_roof_colors (
     r_median double precision,
@@ -247,7 +275,16 @@ CREATE SEQUENCE IF NOT EXISTS public.hki_travel_time_r4c_f_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: hki_travel_time_r4c_f_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.hki_travel_time_r4c_f_id_seq OWNED BY public.hki_travel_time_r4c_f.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.hki_travel_time_r4c_f'::regclass
+        AND objid = 'public.hki_travel_time_r4c_f_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.hki_travel_time_r4c_f_id_seq OWNED BY public.hki_travel_time_r4c_f.id;
+    END IF;
+END $$;
 -- Name: hki_urbanheat; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.hki_urbanheat (
     postinumero text,
@@ -270,7 +307,16 @@ CREATE SEQUENCE IF NOT EXISTS public.hsy_building_heat_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: hsy_building_heat_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.hsy_building_heat_id_seq OWNED BY public.hsy_building_heat.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.hsy_building_heat'::regclass
+        AND objid = 'public.hsy_building_heat_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.hsy_building_heat_id_seq OWNED BY public.hsy_building_heat.id;
+    END IF;
+END $$;
 -- Name: hsy_building_spotted_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 CREATE SEQUENCE IF NOT EXISTS public.hsy_building_spotted_id_seq
     AS integer
@@ -295,7 +341,16 @@ CREATE SEQUENCE IF NOT EXISTS public.kafka_finest_station_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: kafka_finest_station_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.kafka_finest_station_id_seq OWNED BY public.kafka_finest_station.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.kafka_finest_station'::regclass
+        AND objid = 'public.kafka_finest_station_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.kafka_finest_station_id_seq OWNED BY public.kafka_finest_station.id;
+    END IF;
+END $$;
 -- Name: keharist_catalogue; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.keharist_catalogue (
     loc text,
@@ -421,7 +476,16 @@ CREATE SEQUENCE IF NOT EXISTS public.nature_area_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: nature_area_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.nature_area_id_seq OWNED BY public.nature_area.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.nature_area'::regclass
+        AND objid = 'public.nature_area_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.nature_area_id_seq OWNED BY public.nature_area.id;
+    END IF;
+END $$;
 -- Name: other_nature_r4c; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.other_nature_r4c (
     gml_id text,
@@ -447,7 +511,16 @@ CREATE SEQUENCE IF NOT EXISTS public.other_nature_r4c_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: other_nature_r4c_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.other_nature_r4c_id_seq OWNED BY public.other_nature_r4c.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.other_nature_r4c'::regclass
+        AND objid = 'public.other_nature_r4c_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.other_nature_r4c_id_seq OWNED BY public.other_nature_r4c.id;
+    END IF;
+END $$;
 -- Name: r4c_coldspot; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.r4c_coldspot (
     id integer NOT NULL,
@@ -466,7 +539,16 @@ CREATE SEQUENCE IF NOT EXISTS public.r4c_coldspot_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: r4c_coldspot_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.r4c_coldspot_id_seq OWNED BY public.r4c_coldspot.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.r4c_coldspot'::regclass
+        AND objid = 'public.r4c_coldspot_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.r4c_coldspot_id_seq OWNED BY public.r4c_coldspot.id;
+    END IF;
+END $$;
 -- Name: r4c_heat_timeseries; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.r4c_heat_timeseries (
     avgheatexposure double precision,
@@ -662,7 +744,16 @@ CREATE SEQUENCE IF NOT EXISTS public.r4c_paavo_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: r4c_paavo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.r4c_paavo_id_seq OWNED BY public.r4c_paavo.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.r4c_paavo'::regclass
+        AND objid = 'public.r4c_paavo_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.r4c_paavo_id_seq OWNED BY public.r4c_paavo.id;
+    END IF;
+END $$;
 -- Name: r4c_postalcode; Type: VIEW; Schema: public; Owner: -
 CREATE OR REPLACE VIEW public.r4c_postalcode AS
  WITH avg_heat AS (
@@ -748,7 +839,16 @@ CREATE SEQUENCE IF NOT EXISTS public.r4c_users_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: r4c_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.r4c_users_id_seq OWNED BY public.r4c_users.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.r4c_users'::regclass
+        AND objid = 'public.r4c_users_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.r4c_users_id_seq OWNED BY public.r4c_users.id;
+    END IF;
+END $$;
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.schema_migrations (
     version character varying NOT NULL
@@ -773,7 +873,16 @@ CREATE SEQUENCE IF NOT EXISTS public.tree_building_distance_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: tree_building_distance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.tree_building_distance_id_seq OWNED BY public.tree_building_distance.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.tree_building_distance'::regclass
+        AND objid = 'public.tree_building_distance_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.tree_building_distance_id_seq OWNED BY public.tree_building_distance.id;
+    END IF;
+END $$;
 -- Name: tree_distance_building; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.tree_distance_building (
     id integer NOT NULL,
@@ -793,7 +902,16 @@ CREATE SEQUENCE IF NOT EXISTS public.tree_distance_building_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: tree_distance_building_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.tree_distance_building_id_seq OWNED BY public.tree_distance_building.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.tree_distance_building'::regclass
+        AND objid = 'public.tree_distance_building_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.tree_distance_building_id_seq OWNED BY public.tree_distance_building.id;
+    END IF;
+END $$;
 -- Name: tree_f_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 CREATE SEQUENCE IF NOT EXISTS public.tree_f_id_seq
     START WITH 1
@@ -877,7 +995,16 @@ CREATE SEQUENCE IF NOT EXISTS public.urban_heat_building_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: urban_heat_building_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.urban_heat_building_id_seq OWNED BY public.urban_heat_building.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.urban_heat_building'::regclass
+        AND objid = 'public.urban_heat_building_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.urban_heat_building_id_seq OWNED BY public.urban_heat_building.id;
+    END IF;
+END $$;
 -- Name: urbanheattest; Type: TABLE; Schema: public; Owner: -
 CREATE TABLE IF NOT EXISTS public.urbanheattest (
     ratu integer,
@@ -917,7 +1044,16 @@ CREATE SEQUENCE IF NOT EXISTS public.vegetation_r4c_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: vegetation_r4c_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
-ALTER SEQUENCE public.vegetation_r4c_id_seq OWNED BY public.vegetation_r4c.id;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_depend
+        WHERE refobjid = 'public.vegetation_r4c'::regclass
+        AND objid = 'public.vegetation_r4c_id_seq'::regclass
+    ) THEN
+        ALTER SEQUENCE public.vegetation_r4c_id_seq OWNED BY public.vegetation_r4c.id;
+    END IF;
+END $$;
 -- Name: adaptation_landcover id; Type: DEFAULT; Schema: public; Owner: -
 ALTER TABLE ONLY public.adaptation_landcover ALTER COLUMN id SET DEFAULT nextval('public.adaptation_landcover_id_seq'::regclass);
 -- Name: flood id; Type: DEFAULT; Schema: public; Owner: -
