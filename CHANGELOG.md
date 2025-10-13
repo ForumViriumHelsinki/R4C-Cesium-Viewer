@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.25.0...r4c-cesium-viewer-v1.26.0) (2025-10-13)
+
+
+### Features
+
+* migrate feature flag system to TypeScript ([#235](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/235)) ([66feb77](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/66feb7796108c0ffe4ba97e1472c1b1ab03f12d3)), closes [#224](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/224)
+
 ## [1.25.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.24.1...r4c-cesium-viewer-v1.25.0) (2025-10-10)
 
 ### Features
