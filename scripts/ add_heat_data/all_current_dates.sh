@@ -18,5 +18,5 @@ for DATE in "${dates[@]}"; do
         }'
 
     echo "Finished processing date: $DATE"
-    sleep 2  
+    sleep 2
 done

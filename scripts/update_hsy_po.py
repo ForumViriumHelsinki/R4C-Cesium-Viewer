@@ -50,7 +50,7 @@ def calculate_building_center(posno):
 
 def update_geojson(geojson_file, output_file):
   """
-  Updates the center_x and center_y attributes in a GeoJSON file to be the 
+  Updates the center_x and center_y attributes in a GeoJSON file to be the
   center of buildings for each feature.
 
   Args:

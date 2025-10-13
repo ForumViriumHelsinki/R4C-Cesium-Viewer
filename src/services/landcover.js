@@ -17,10 +17,10 @@
  * - Water (vesi)
  */
 
-import { useGlobalStore } from '../stores/globalStore.js';
-import * as Cesium from 'cesium';
-import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
-import { useURLStore } from '../stores/urlStore.js';
+import { useGlobalStore } from "../stores/globalStore.js";
+import * as Cesium from "cesium";
+import { useBackgroundMapStore } from "../stores/backgroundMapStore.js";
+import { useURLStore } from "../stores/urlStore.js";
 
 /**
  * Creates and adds HSY landcover WMS imagery layer to the Cesium viewer
@@ -39,12 +39,14 @@ import { useURLStore } from '../stores/urlStore.js';
  * // Load specific layers
  * await createHSYImageryLayer('asuminen_ja_maankaytto:maanpeite_vesi_2023');
  */
-export const createHSYImageryLayer = async ( newLayers ) => {
+export const createHSYImageryLayer = async (newLayers) => {
   const store = useGlobalStore();
   const urlStore = useURLStore();
 
   const backgroundMapStore = useBackgroundMapStore();
-  const layersList = newLayers ? newLayers : createLayersForHsyLandcover( backgroundMapStore );
+  const layersList = newLayers
+    ? newLayers
+    : createLayersForHsyLandcover(backgroundMapStore);
 
   const provider = new Cesium.WebMapServiceImageryProvider({
     url: urlStore.wmsProxy,
@@ -54,9 +56,9 @@ export const createHSYImageryLayer = async ( newLayers ) => {
   await provider.readyPromise;
 
   // Add the new layer and update store
-  const addedLayer = store.cesiumViewer.imageryLayers.addImageryProvider( provider );
-  backgroundMapStore.landcoverLayers.push( addedLayer );
-
+  const addedLayer =
+    store.cesiumViewer.imageryLayers.addImageryProvider(provider);
+  backgroundMapStore.landcoverLayers.push(addedLayer);
 };
 
 /**
@@ -74,7 +76,10 @@ export const removeLandcover = () => {
   const backgroundMapStore = useBackgroundMapStore();
 
   try {
-    if (Array.isArray(backgroundMapStore.landcoverLayers) && backgroundMapStore.landcoverLayers.length > 0) {
+    if (
+      Array.isArray(backgroundMapStore.landcoverLayers) &&
+      backgroundMapStore.landcoverLayers.length > 0
+    ) {
       // Remove each layer from the viewer
       backgroundMapStore.landcoverLayers.forEach((layer) => {
         if (store.cesiumViewer.imageryLayers.contains(layer)) {
@@ -103,23 +108,23 @@ export const removeLandcover = () => {
  * // Returns: "asuminen_ja_maankaytto:maanpeite_avokalliot_2023,..."
  * const layers = createLayersForHsyLandcover(backgroundMapStore);
  */
-const createLayersForHsyLandcover = ( backgroundMapStore ) => {
+const createLayersForHsyLandcover = (backgroundMapStore) => {
   const year = backgroundMapStore.hsyYear;
   const layerNames = [
-    'asuminen_ja_maankaytto:maanpeite_avokalliot',
-    'asuminen_ja_maankaytto:maanpeite_merialue',
-    'asuminen_ja_maankaytto:maanpeite_muu_avoin_matala_kasvillisuus',
-    'asuminen_ja_maankaytto:maanpeite_muu_vetta_lapaisematon_pinta',
-    'asuminen_ja_maankaytto:maanpeite_paallystamaton_tie',
-    'asuminen_ja_maankaytto:maanpeite_paallystetty_tie',
-    'asuminen_ja_maankaytto:maanpeite_paljas_maa',
-    'asuminen_ja_maankaytto:maanpeite_pellot',
-    'asuminen_ja_maankaytto:maanpeite_puusto_10_15m',
-    'asuminen_ja_maankaytto:maanpeite_puusto_15_20m',
-    'asuminen_ja_maankaytto:maanpeite_puusto_2_10m',
-    'asuminen_ja_maankaytto:maanpeite_puusto_yli20m',
-    'asuminen_ja_maankaytto:maanpeite_vesi'
+    "asuminen_ja_maankaytto:maanpeite_avokalliot",
+    "asuminen_ja_maankaytto:maanpeite_merialue",
+    "asuminen_ja_maankaytto:maanpeite_muu_avoin_matala_kasvillisuus",
+    "asuminen_ja_maankaytto:maanpeite_muu_vetta_lapaisematon_pinta",
+    "asuminen_ja_maankaytto:maanpeite_paallystamaton_tie",
+    "asuminen_ja_maankaytto:maanpeite_paallystetty_tie",
+    "asuminen_ja_maankaytto:maanpeite_paljas_maa",
+    "asuminen_ja_maankaytto:maanpeite_pellot",
+    "asuminen_ja_maankaytto:maanpeite_puusto_10_15m",
+    "asuminen_ja_maankaytto:maanpeite_puusto_15_20m",
+    "asuminen_ja_maankaytto:maanpeite_puusto_2_10m",
+    "asuminen_ja_maankaytto:maanpeite_puusto_yli20m",
+    "asuminen_ja_maankaytto:maanpeite_vesi",
   ];
 
-  return layerNames.map(name => `${name}_${year}`).join(',');
+  return layerNames.map((name) => `${name}_${year}`).join(",");
 };

@@ -33,7 +33,7 @@ spec:
             sleep 5
           done
           echo "✅ PostgreSQL is ready"
-          
+
           echo "🔍 Checking database connectivity..."
           export PGPASSWORD="${DB_PASSWORD}"
           until psql -h {{ .Values.migration.database.host }} -p {{ .Values.migration.database.port }} -U {{ .Values.migration.database.username }} -d {{ .Values.migration.database.name }} -c "SELECT 1;" > /dev/null 2>&1; do
@@ -59,12 +59,12 @@ spec:
           echo "📋 Database: {{ .Values.migration.database.name }}"
           echo "📋 Host: {{ .Values.migration.database.host }}:{{ .Values.migration.database.port }}"
           echo "📋 Migrations directory: /migrations"
-          
+
           # Ensure PostGIS extensions exist
           echo "🔧 Ensuring PostGIS extensions..."
           psql "$DATABASE_URL_ADMIN" -c "CREATE EXTENSION IF NOT EXISTS postgis;" || echo "⚠️  PostGIS extension creation failed (may already exist)"
           psql "$DATABASE_URL_ADMIN" -c "CREATE EXTENSION IF NOT EXISTS postgis_topology;" || echo "⚠️  PostGIS topology extension creation failed (may already exist)"
-          
+
           # Run migrations
           echo "⬆️  Running database migrations..."
           if dbmate status; then
@@ -73,16 +73,16 @@ spec:
           else
             echo "🆕 No migration history found, will create schema_migrations table"
           fi
-          
+
           if dbmate up; then
             echo "✅ Migrations applied successfully"
             echo "📊 Final migration status:"
             dbmate status
-            
+
             # Verify key tables exist
             echo "🔍 Verifying critical tables exist..."
             psql "$DATABASE_URL" -c "SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" | grep -E "table_count|[0-9]+"
-            
+
             # Check specific table that pygeoapi needs
             if psql "$DATABASE_URL" -c "SELECT 1 FROM r4c_hsy_building_current LIMIT 1;" > /dev/null 2>&1; then
               echo "✅ r4c_hsy_building_current table exists and is accessible"
@@ -94,7 +94,7 @@ spec:
             echo "❌ Migration failed"
             exit 1
           fi
-          
+
           echo "🎉 Database migration completed successfully"
         env:
         - name: DATABASE_URL

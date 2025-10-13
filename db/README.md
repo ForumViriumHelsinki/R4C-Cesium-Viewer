@@ -5,6 +5,7 @@ This directory contains database schema management using [dbmate](https://github
 ## Overview
 
 We use dbmate to manage database schema migrations for the **regions4climate** PostgreSQL database. This provides:
+
 - ✅ Version-controlled schema changes
 - ✅ Reproducible database setup
 - ✅ Safe rollback capabilities
@@ -37,11 +38,13 @@ cp .env.example .env
 ### 2. Database Connection
 
 Set your database URL in `.env`:
+
 ```bash
 DATABASE_URL=postgres://username:password@localhost:5432/regions4climate
 ```
 
 For Google Cloud SQL with cloud-sql-proxy (production):
+
 ```bash
 DATABASE_URL=postgres://username:password@127.0.0.1:5432/regions4climate
 ```
@@ -59,6 +62,7 @@ dbmate status
 ## Common Commands
 
 ### Migration Management
+
 ```bash
 # Create a new migration
 dbmate new add_new_feature
@@ -77,6 +81,7 @@ dbmate dump > db/schema-current.sql
 ```
 
 ### Database Management
+
 ```bash
 # Create database (if needed)
 dbmate create
@@ -93,6 +98,7 @@ dbmate wait
 ### Understanding dbmate Rollbacks
 
 Each migration consists of two sections that are essential for rollback functionality:
+
 - `-- migrate:up`: Applied when running migrations forward
 - `-- migrate:down`: Applied when rolling back migrations
 
@@ -116,6 +122,7 @@ dbmate up
 ### Safe Rollback Practices
 
 #### 1. **Pre-Rollback Checks**
+
 ```bash
 # Always check current migration status first
 dbmate status
@@ -125,11 +132,13 @@ cat db/migrations/$(ls -1 db/migrations | tail -1)
 ```
 
 #### 2. **Data Loss Prevention**
+
 - **WARNING**: Rollbacks that drop tables will lose all data in those tables
 - Always backup critical data before rolling back destructive migrations
 - Consider using transactions for complex rollbacks
 
 #### 3. **Production Rollback Procedure**
+
 ```bash
 # 1. Create a database backup
 pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
@@ -149,7 +158,9 @@ dbmate status
 ```
 
 #### 4. **Rollback Testing in CI**
+
 The CI workflow includes automated rollback testing:
+
 ```yaml
 # From .github/workflows/database-migrations.yml
 - name: Test rollback
@@ -160,7 +171,9 @@ The CI workflow includes automated rollback testing:
 ```
 
 #### 5. **Emergency Rollback**
+
 For urgent production rollbacks:
+
 ```bash
 # Rollback with logging
 dbmate rollback 2>&1 | tee rollback_$(date +%Y%m%d_%H%M%S).log
@@ -173,13 +186,16 @@ psql $DATABASE_URL -f emergency_rollback.sql
 ### Rollback Considerations by Migration Type
 
 #### **Index Operations**
+
 - Use `CONCURRENTLY` to avoid locking (already implemented in our migrations)
 - Rollbacks are generally safe but may impact query performance
 
 #### **Table Drops**
+
 - Most destructive type of rollback
 - Always backup data first
 - Consider adding safety checks:
+
 ```sql
 -- migrate:down
 DO $$
@@ -192,6 +208,7 @@ DROP TABLE IF EXISTS table_name;
 ```
 
 #### **Data Migrations**
+
 - May not be fully reversible
 - Document any data transformations that cannot be undone
 - Consider keeping backups of transformed data
@@ -199,11 +216,13 @@ DROP TABLE IF EXISTS table_name;
 ## Creating New Migrations
 
 ### 1. Generate Migration File
+
 ```bash
 dbmate new descriptive_migration_name
 ```
 
 ### 2. Edit Migration File
+
 ```sql
 -- migrate:up
 CREATE TABLE public.new_table (
@@ -219,6 +238,7 @@ DROP TABLE IF EXISTS public.new_table;
 ```
 
 ### 3. Test Migration
+
 ```bash
 # Apply migration
 dbmate up
@@ -243,6 +263,7 @@ dbmate up
 ### PostGIS Considerations
 
 When working with spatial data:
+
 ```sql
 -- Create table with geometry column
 CREATE TABLE public.spatial_table (
@@ -255,8 +276,8 @@ CREATE TABLE public.spatial_table (
 CREATE INDEX idx_spatial_table_geom ON public.spatial_table USING GIST (geom);
 
 -- Add constraints if needed
-ALTER TABLE public.spatial_table 
-    ADD CONSTRAINT enforce_srid_geom 
+ALTER TABLE public.spatial_table
+    ADD CONSTRAINT enforce_srid_geom
     CHECK (ST_SRID(geom) = 4326);
 ```
 
@@ -269,6 +290,7 @@ When adding new tables that will be exposed via pygeoapi:
    - `geom` for spatial column (can be customized in pygeoapi config)
 
 2. **Update pygeoapi configuration** (`configmap.yaml`):
+
    ```yaml
    new_collection:
      type: collection
@@ -305,6 +327,7 @@ Migrations are automatically applied in the deployment pipeline:
 We've integrated database migration testing with Skaffold's native testing capabilities:
 
 ### Local Testing
+
 ```bash
 # Test migrations using Skaffold (requires running PostgreSQL)
 skaffold test -p migration-test
@@ -317,13 +340,16 @@ skaffold run -p migration-test
 ```
 
 ### How It Works
+
 - **Test Profile**: The `migration-test` profile in `skaffold.yaml` sets up a PostgreSQL instance and runs migration tests
 - **Isolated Testing**: Tests run against temporary test databases, leaving your main database untouched
 - **File Watching**: During `skaffold dev`, tests automatically re-run when migration files change
 - **Container-based**: Tests run inside the same `db-init` container used for production migrations
 
 ### Test Configuration
+
 The test setup includes:
+
 - PostgreSQL with PostGIS extensions
 - All database migration files
 - Comprehensive up/down migration testing
@@ -334,11 +360,13 @@ The test setup includes:
 ### Common Issues
 
 **Connection refused**:
+
 - Check database credentials in `.env`
 - Ensure cloud-sql-proxy is running (production)
 - Verify network connectivity
 
 **Migration failed**:
+
 ```bash
 # Check current state
 dbmate status
@@ -351,6 +379,7 @@ dbmate up
 ```
 
 **Schema drift**:
+
 ```bash
 # Compare current schema with expected
 dbmate dump > db/schema-current.sql

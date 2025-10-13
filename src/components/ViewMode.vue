@@ -2,7 +2,7 @@
   <div class="view-mode-selector">
     <div class="view-mode-cards">
       <!-- Capital Region Heat View -->
-      <div 
+      <div
         class="view-mode-card"
         :class="{ 'active': activeViewMode === 'capitalRegionView' }"
         @click="onToggleChange('capitalRegionView')"
@@ -25,11 +25,11 @@ color="primary"
             mdi-check-circle
           </v-icon>
         </div>
-        
+
         <p class="mode-description">
           Explore urban heat patterns across the entire Helsinki metropolitan area (~200 postal codes)
         </p>
-        
+
         <div class="mode-features">
           <v-chip
 size="x-small"
@@ -71,7 +71,7 @@ mdi-leaf
       </div>
 
       <!-- Statistical Grid View -->
-      <div 
+      <div
         class="view-mode-card"
         :class="{ 'active': activeViewMode === 'gridView' }"
         @click="onToggleChange('gridView')"
@@ -94,11 +94,11 @@ color="primary"
             mdi-check-circle
           </v-icon>
         </div>
-        
+
         <p class="mode-description">
           Analyze data using standardized 250m × 250m statistical grid cells for precise spatial analysis
         </p>
-        
+
         <div class="mode-features">
           <v-chip
 size="x-small"
@@ -140,7 +140,7 @@ mdi-chart-line
       </div>
 
       <!-- Helsinki Heat View (conditionally shown) -->
-      <div 
+      <div
         v-if="showHelsinkiHeat"
         class="view-mode-card"
         :class="{ 'active': activeViewMode === 'helsinkiHeat' }"
@@ -164,11 +164,11 @@ color="primary"
             mdi-check-circle
           </v-icon>
         </div>
-        
+
         <p class="mode-description">
           Detailed analysis focused on Helsinki city with enhanced vegetation and social infrastructure data
         </p>
-        
+
         <div class="mode-features">
           <v-chip
 size="x-small"
@@ -222,10 +222,10 @@ mdi-information
 </v-icon>
         <span class="info-text">{{ currentViewInfo }}</span>
       </div>
-      
+
       <div class="coverage-info">
-        <v-chip 
-          size="small" 
+        <v-chip
+          size="small"
           :color="getViewModeColor()"
           variant="tonal"
         >
@@ -250,7 +250,7 @@ export default {
   setup() {
     const activeViewMode = ref('capitalRegionView'); // Default view mode
     const toggleStore = useToggleStore();
-    const store = useGlobalStore(); 
+    const store = useGlobalStore();
     const dataSourceService = new Datasource();
     const featurePicker = new FeaturePicker();
 
@@ -305,7 +305,7 @@ export default {
           break;
         case 'helsinkiHeat':
           helsinkiHeat();
-          break;  
+          break;
         default:
           break;
       }
@@ -317,7 +317,7 @@ export default {
       setCapitalRegion();
     };
 
-    const setCapitalRegion = async () => {       
+    const setCapitalRegion = async () => {
       store.setView('capitalRegion');
       toggleStore.setHelsinkiView(false);
       store.level === 'start' && toggleStore.reset() && await clearLandCover();
@@ -326,7 +326,7 @@ export default {
         0.2,
         './assets/data/hsy_po.json',
         'PostCodes'
-      ); 
+      );
 
       store.postalcode && featurePicker.loadPostalCode();
       toggleStore.showTrees && await loadTrees();
@@ -360,7 +360,7 @@ export default {
         'PostCodes'
       );
 
-      store.postalcode && featurePicker.loadPostalCode(); 
+      store.postalcode && featurePicker.loadPostalCode();
     };
 
     const gridView = () => {
@@ -503,19 +503,19 @@ export default {
   .view-mode-card {
     padding: 12px;
   }
-  
+
   .mode-title {
     font-size: 0.9rem;
   }
-  
+
   .mode-description {
     font-size: 0.8rem;
   }
-  
+
   .mode-features {
     gap: 2px;
   }
-  
+
   .feature-chip {
     font-size: 0.7rem;
   }
@@ -526,7 +526,7 @@ export default {
   .view-mode-card {
     border-width: 3px;
   }
-  
+
   .view-mode-card.active {
     background: rgba(25, 118, 210, 0.1);
   }
@@ -550,7 +550,7 @@ export default {
     transition: none;
     transform: none;
   }
-  
+
   .view-mode-card:active,
   .view-mode-card.active {
     transform: none;

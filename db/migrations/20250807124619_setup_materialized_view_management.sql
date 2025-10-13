@@ -12,14 +12,14 @@ DECLARE
     view_name TEXT;
 BEGIN
     -- Refresh each materialized view in dependency order
-    
+
     -- First refresh the base materialized views
     RAISE NOTICE 'Refreshing r4c_hsy_building_mat...';
     REFRESH MATERIALIZED VIEW public.r4c_hsy_building_mat;
-    
+
     RAISE NOTICE 'Refreshing r4c_postalcode_mat...';
     REFRESH MATERIALIZED VIEW public.r4c_postalcode_mat;
-    
+
     RAISE NOTICE 'All materialized views refreshed successfully';
 END;
 $$;
@@ -34,15 +34,15 @@ DECLARE
     end_time TIMESTAMP;
 BEGIN
     start_time := clock_timestamp();
-    
+
     RAISE NOTICE 'Starting refresh of materialized view: %', view_name;
-    
+
     EXECUTE format('REFRESH MATERIALIZED VIEW %I', view_name);
-    
+
     end_time := clock_timestamp();
-    
+
     RAISE NOTICE 'Successfully refreshed % in %', view_name, (end_time - start_time);
-    
+
     return TRUE;
 EXCEPTION WHEN OTHERS THEN
     RAISE WARNING 'Failed to refresh materialized view %: %', view_name, SQLERRM;
@@ -63,24 +63,24 @@ AS $$
 BEGIN
     RETURN QUERY
     WITH mv_info AS (
-        SELECT 
+        SELECT
             schemaname || '.' || matviewname as mv_name,
             schemaname,
             matviewname
-        FROM pg_matviews 
+        FROM pg_matviews
         WHERE schemaname = 'public'
     ),
     size_info AS (
-        SELECT 
+        SELECT
             schemaname || '.' || tablename as table_name,
             pg_total_relation_size(schemaname||'.'||tablename) as size_bytes
-        FROM pg_tables 
+        FROM pg_tables
         WHERE schemaname = 'public'
         AND tablename IN (
             SELECT matviewname FROM pg_matviews WHERE schemaname = 'public'
         )
     )
-    SELECT 
+    SELECT
         mv.mv_name::TEXT,
         (SELECT count(*)::BIGINT FROM r4c_hsy_building_mat) as row_count,
         COALESCE(si.size_bytes, 0)::BIGINT,
@@ -88,10 +88,10 @@ BEGIN
     FROM mv_info mv
     LEFT JOIN size_info si ON mv.mv_name = si.table_name
     WHERE mv.matviewname = 'r4c_hsy_building_mat'
-    
+
     UNION ALL
-    
-    SELECT 
+
+    SELECT
         mv.mv_name::TEXT,
         (SELECT count(*)::BIGINT FROM r4c_postalcode_mat) as row_count,
         COALESCE(si.size_bytes, 0)::BIGINT,
@@ -126,46 +126,46 @@ DECLARE
     row_count BIGINT;
 BEGIN
     start_time := clock_timestamp();
-    
+
     -- Insert log entry
     INSERT INTO public.materialized_view_refresh_log (view_name, refresh_started_at)
     VALUES (view_name, start_time)
     RETURNING id INTO log_id;
-    
+
     -- Refresh the materialized view
     EXECUTE format('REFRESH MATERIALIZED VIEW %I', view_name);
-    
+
     -- Get row count
     EXECUTE format('SELECT count(*) FROM %I', view_name) INTO row_count;
-    
+
     end_time := clock_timestamp();
-    
+
     -- Update log entry with success
-    UPDATE public.materialized_view_refresh_log 
-    SET 
+    UPDATE public.materialized_view_refresh_log
+    SET
         refresh_completed_at = end_time,
         success = TRUE,
         rows_affected = row_count,
         duration_seconds = EXTRACT(EPOCH FROM (end_time - start_time))
     WHERE id = log_id;
-    
-    RAISE NOTICE 'Successfully refreshed % (%s rows) in %s seconds', 
+
+    RAISE NOTICE 'Successfully refreshed % (%s rows) in %s seconds',
                  view_name, row_count, EXTRACT(EPOCH FROM (end_time - start_time));
-    
+
     RETURN TRUE;
-    
+
 EXCEPTION WHEN OTHERS THEN
     end_time := clock_timestamp();
-    
+
     -- Update log entry with failure
-    UPDATE public.materialized_view_refresh_log 
-    SET 
+    UPDATE public.materialized_view_refresh_log
+    SET
         refresh_completed_at = end_time,
         success = FALSE,
         error_message = SQLERRM,
         duration_seconds = EXTRACT(EPOCH FROM (end_time - start_time))
     WHERE id = log_id;
-    
+
     RAISE WARNING 'Failed to refresh materialized view %: %', view_name, SQLERRM;
     RETURN FALSE;
 END;
@@ -179,22 +179,22 @@ AS $$
 BEGIN
     RETURN QUERY
     WITH refresh_results AS (
-        SELECT 'r4c_hsy_building_mat'::TEXT as mv_name, 
+        SELECT 'r4c_hsy_building_mat'::TEXT as mv_name,
                public.refresh_materialized_view_with_logging('r4c_hsy_building_mat') as success
         UNION ALL
-        SELECT 'r4c_postalcode_mat'::TEXT as mv_name, 
+        SELECT 'r4c_postalcode_mat'::TEXT as mv_name,
                public.refresh_materialized_view_with_logging('r4c_postalcode_mat') as success
     )
-    SELECT 
+    SELECT
         rr.mv_name,
         rr.success,
         COALESCE(mvrl.duration_seconds, 0) as duration_seconds
     FROM refresh_results rr
     LEFT JOIN public.materialized_view_refresh_log mvrl ON (
-        mvrl.view_name = rr.mv_name 
+        mvrl.view_name = rr.mv_name
         AND mvrl.refresh_started_at = (
-            SELECT MAX(refresh_started_at) 
-            FROM public.materialized_view_refresh_log 
+            SELECT MAX(refresh_started_at)
+            FROM public.materialized_view_refresh_log
             WHERE view_name = rr.mv_name
         )
     );

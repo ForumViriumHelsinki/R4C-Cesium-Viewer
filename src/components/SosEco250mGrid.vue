@@ -3,7 +3,7 @@
 <script setup>
 import { watch, computed, onMounted } from 'vue';
 import DataSource from '../services/datasource.js';
-import Camera from '../services/camera.js'; 
+import Camera from '../services/camera.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useMitigationStore } from '../stores/mitigationStore.js';
@@ -51,7 +51,7 @@ const loadGrid = async () => {
 
 const prepareMitigation = () => {
     const dataSource = dataSourceService.getDataSourceByName('250m_grid');
-    mitigationStore.setGridCells(dataSource); 
+    mitigationStore.setGridCells(dataSource);
     mitigationStore.preCalculateGridImpacts();
 };
 

@@ -5,7 +5,7 @@
 // Timeout constants (in milliseconds)
 export const TIMEOUTS = {
   SHORT: 1000,
-  MEDIUM: 2000, 
+  MEDIUM: 2000,
   LONG: 3000,
   VERY_LONG: 5000,
   ELEMENT_WAIT: 10000,

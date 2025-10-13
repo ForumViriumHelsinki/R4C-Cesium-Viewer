@@ -5,7 +5,7 @@
       <h4 class="control-group-title">
 Data Layers
 </h4>
-      
+
       <!-- Trees -->
       <v-tooltip
         v-if="view !== 'grid' && postalCode"
@@ -164,7 +164,7 @@ class="control-group"
       <h4 class="control-group-title">
 Building Filters
 </h4>
-      
+
       <!-- Public/Social Buildings Filter -->
       <v-tooltip
 location="left"
@@ -188,7 +188,7 @@ class="control-item"
           </div>
         </template>
         <span>
-          {{ helsinkiView 
+          {{ helsinkiView
             ? 'Show only social services and healthcare buildings'
             : 'Show only public and municipal buildings' }}
         </span>
@@ -332,9 +332,9 @@ const loadVegetation = async () => {
         message: 'Loading vegetation areas...',
         total: 1
       });
-      
+
       try {
-        const vegetationService = new Vegetation();         
+        const vegetationService = new Vegetation();
         await vegetationService.loadVegetation(store.postalcode);
         loadingStore.completeLayerLoading('vegetation', true);
       } catch (error) {
@@ -361,60 +361,60 @@ const loadTrees = async () => {
         postalCode: store.postalcode,
         cacheKey
       });
-      
+
       if (cached) {
         // Use cached data - data source service would need to be updated to accept cached data
         console.log('Using cached tree data');
         return;
       }
-      
+
       // Use enhanced loading methods with progress tracking
       loadingStore.startLayerLoading('trees', {
         message: 'Loading trees by height categories...',
         total: 4 // 4 height categories
       });
-      
+
       try {
         const treeService = new Tree();
-        
+
         // Create a promise-based wrapper for the tree loading
         const treeData = await new Promise((resolve, reject) => {
           const originalLoadTrees = treeService.loadTrees.bind(treeService);
-          
+
           // Override the tree service to provide progress updates
           let completedCategories = 0;
           const categories = [221, 222, 223, 224];
-          
+
           categories.forEach((category, index) => {
             // This is a simplified approach - the actual implementation would need
             // to modify the tree service to support progress callbacks
             setTimeout(() => {
               completedCategories++;
-              loadingStore.updateLayerProgress('trees', completedCategories, 
+              loadingStore.updateLayerProgress('trees', completedCategories,
                 `Loading trees: category ${category} (${completedCategories}/4)`);
-              
+
               if (completedCategories === 4) {
                 resolve({ categories, postalCode: store.postalcode });
               }
             }, (index + 1) * 500); // Simulate progressive loading
           });
-          
+
           // Call the original method
           originalLoadTrees();
         });
-        
+
         // Cache the loaded data
         await loadingStore.cacheLayerData('trees', treeData, {
           postalCode: store.postalcode,
           cacheKey,
           ttl: 60 * 60 * 1000 // 1 hour for tree data
         });
-        
+
         loadingStore.completeLayerLoading('trees', true);
-        
+
         // Track usage for background preloader
         backgroundPreloader.trackLayerUsage('trees');
-        
+
       } catch (error) {
         loadingStore.setLayerError('trees', error.message || 'Failed to load tree data');
       }
@@ -432,7 +432,7 @@ const loadOtherNature = () => {
 
   if (showOtherNature.value) {
     if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
-      const otherNatureService = new Othernature();        
+      const otherNatureService = new Othernature();
       otherNatureService.loadOtherNature();
     } else {
       dataSourceService.changeDataSourceShowByName('OtherNature', true);
@@ -444,7 +444,7 @@ const loadOtherNature = () => {
 
 const addLandCover = () => {
   if (landCover.value && ndvi.value) disableOtherLayer('landcover');
-  
+
   toggleStore.setLandCover(landCover.value);
   if (landCover.value) {
     createHSYImageryLayer();
@@ -470,9 +470,9 @@ const filterBuildings = () => {
   toggleStore.setHideNonSote(hideNonSote.value);
   toggleStore.setHideNewBuildings(hideNewBuildings.value);
   toggleStore.setHideLow(hideLow.value);
-  
+
   const buildingsDataSource = store?.cesiumViewer?.dataSources?.getByName(`Buildings ${store.postalcode}`)[0];
-  
+
   if (buildingsDataSource) {
     if (hideNonSote.value || hideNewBuildings.value || hideLow.value) {
       buildingService.filterBuildings(buildingsDataSource);
@@ -579,11 +579,11 @@ onMounted(() => {
     font-size: 0.8rem;
     padding: 10px 12px 6px 12px;
   }
-  
+
   .control-item {
     padding: 6px 12px;
   }
-  
+
   .control-label {
     font-size: 0.8rem;
     margin-left: 8px;
@@ -595,7 +595,7 @@ onMounted(() => {
   .control-group {
     border-width: 2px;
   }
-  
+
   .control-item:hover {
     background-color: rgba(0, 0, 0, 0.1);
   }

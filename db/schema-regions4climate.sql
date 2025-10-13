@@ -1681,4 +1681,3 @@ CREATE TRIGGER trigger_update_updated_at BEFORE UPDATE ON public.r4c_hsy_buildin
 --
 -- Dbmate schema migrations
 --
-

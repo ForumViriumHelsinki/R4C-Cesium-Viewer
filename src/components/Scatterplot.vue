@@ -58,16 +58,16 @@ heating source
 </option>
 </select>
 </template>
-  
+
 <script>
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
-import Plot from '../services/plot.js'; 
+import Plot from '../services/plot.js';
 import Building from '../services/building.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { usePropsStore } from '../stores/propsStore';
-  
+
 export default {
 	mounted() {
 		this.store = useGlobalStore();
@@ -76,7 +76,7 @@ export default {
 
 		const numericalSelect = document.getElementById( 'numericalSelect' );
 		numericalSelect.addEventListener( 'change', this.handleSelectChange );
-      
+
 		const categoricalSelect = document.getElementById( 'categoricalSelect' );
 		categoricalSelect.addEventListener( 'change', this.handleSelectChange );
 
@@ -101,7 +101,7 @@ export default {
 		},
 		/**
        * * A function to handle change of categorical or numerical value in the scatter plot
-       * 
+       *
        * */
 		selectAttributeForScatterPlot() {
 
@@ -114,7 +114,7 @@ export default {
 		},
 		/**
  * A function to process entities for scatter plot data
- * 
+ *
  * @param { Array } urbanHeatDataAndMaterial - Array to store scatter plot data
  */
 		processEntitiesForScatterPlot( urbanHeatDataAndMaterial ) {
@@ -194,7 +194,7 @@ export default {
  * @param { String } numericalName name of numerical attribute in registery
  */
 		addDataForScatterPlot( urbanHeatDataAndMaterial, entity, categorical, numerical, categoricalName, numericalName ) {
-    
+
 			// Check if entity has the required properties.
 			if ( entity._properties.avgheatexposuretobuilding && entity._properties[ categoricalName ] && entity._properties[ numericalName ] && entity._properties[ categoricalName ]._value ) {
 
@@ -222,7 +222,7 @@ export default {
 
 		/**
  * Returns the selected text of a dropdown menu with the given element ID.
- * 
+ *
  * @param { string } elementId - The ID of the HTML element that represents the dropdown menu.
  * @returns { string } The selected text of the dropdown menu, or null if no option is selected.
  */
@@ -253,7 +253,7 @@ export default {
 
 			for ( let i = 0; i < features.length; i++ ) {
 
-				let value = features[ i ][ category ]; 
+				let value = features[ i ][ category ];
 
 				if ( !uniqueValues.includes( value ) ) {
 
@@ -267,7 +267,7 @@ export default {
 
 		},
 		/**
- * The function adds heat exposure data for given category value. 
+ * The function adds heat exposure data for given category value.
  *
  * @param { String } valeu value of category
  * @param { object } features dataset that contains building heat exposure and attributes of the building
@@ -344,10 +344,10 @@ export default {
 				.attr( 'cy', d => yScale( d.yData ) )
 				.attr( 'r', 2 )
 				.style( 'fill', d => colorScale( d.name ) )
-				.on( 'mouseover', ( event, d ) => 
-					this.plotService.handleMouseover( tooltip, 'scatterPlotContainer', event, d, 
+				.on( 'mouseover', ( event, d ) =>
+					this.plotService.handleMouseover( tooltip, 'scatterPlotContainer', event, d,
 						( data ) => `${numerical}: ${data.xData}<br>heat exposure index: ${data.yData}<br>${categorical}: ${data.name}` ) )
-				.on( 'mouseout', () => 
+				.on( 'mouseout', () =>
 					this.plotService.handleMouseout( tooltip ) )
 				.on( 'click', ( event, d ) => {
 					// Assume each data point includes a building ID or some identifier
@@ -452,7 +452,7 @@ createLegend(svg, width, margin, values, labelsWithAverage, colorScale) {
 	},
 };
 </script>
-  
+
   <style>
 #scatterPlotContainer {
   	position: relative;

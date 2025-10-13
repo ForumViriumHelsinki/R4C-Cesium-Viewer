@@ -59,9 +59,9 @@ const createPieChart = ( ) => {
 	const tooltip = plotService.createTooltip( '#pieChartContainer' );
 	createPie( svg, '.firstPie', firstPieData, colors, arc, xOffsetFirstPie, yOffset, tooltip, plotService );
 	createPie( svg, '.secondPie', secondPieData, colors, arc, xOffsetSecondPie, yOffset, tooltip, plotService );
-	plotService.addTitleWithLink(     
+	plotService.addTitleWithLink(
 		svg,
-    	`Compare <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/helsinki-region-land-cover-dataset/" 
+    	`Compare <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/helsinki-region-land-cover-dataset/"
         	target="_blank">HSY landcover</a> in ${nameOfZone} to:`,
     	margin.left,
     	margin.top
@@ -75,28 +75,28 @@ const clearPieChart = ()  => {
 };
         		/**
  * Get total area of district properties by district data source name and district id and list of property keys
- * 
+ *
  * @param { Number } id Id of the district
  * @param { Array } propertyKeys - List of property keys to calculate the total area
  * @param { Number } year user selected year
  * @param { Object } datasource postalcode datasource
- * 
- * @returns { Number } The total area 
+ *
+ * @returns { Number } The total area
 */
-const getTotalAreaByNameAndPropertyKeys = ( name, propertyKeys, year, datasource ) => 
+const getTotalAreaByNameAndPropertyKeys = ( name, propertyKeys, year, datasource ) =>
 	datasource._entityCollection._entities._array
 		.filter( ( { _properties } ) => _properties._nimi._value === name )
-		.reduce( ( total, { _properties } ) => 
-			total + propertyKeys.reduce( ( sum, key ) => 
+		.reduce( ( total, { _properties } ) =>
+			total + propertyKeys.reduce( ( sum, key ) =>
 				sum + ( _properties[`${ key }_${ year }`]?._value || 0 ), 0 ), 0 );
- 
+
 /**
  * Get landcover data array for a specific area
- * 
+ *
  * @param { string } name - name of the area
  * @param { Number } year user selected year
  * @param { Object } datasource postalcode datasource
- * 
+ *
  * @returns { Array } Data array for the specified area
  */
 const getLandCoverDataForArea = ( name, year, datasource ) => {
@@ -121,7 +121,7 @@ const createPie = ( svg, name, data, colors, arc, xOffset, yOffset, tooltip, plo
 		.attr( 'd', arc )
 		.attr( 'transform', `translate(${xOffset}, ${yOffset})` ) // Adjusted positioning
 		.on( 'mouseover', ( event, d ) => {
-			plotService.handleMouseover( tooltip, 'pieChartContainer', event, d, 
+			plotService.handleMouseover( tooltip, 'pieChartContainer', event, d,
 				( data ) => `${data.data.label} cover ${ ( 100 * data.value ).toFixed( 1 ) } % of the land in ${data.data.zone}` );
 		} )
 		.on( 'mouseout', () => plotService.handleMouseout( tooltip ) );

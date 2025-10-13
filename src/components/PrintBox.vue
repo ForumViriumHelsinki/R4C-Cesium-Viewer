@@ -65,9 +65,9 @@ export default {
 			let idLength = String(entity._id).length;
 
 			if ( idLength == 10 ) {
-				
+
 				toPrint = addVtjPrtToPrint( entity, toPrint );
-			
+
 			}
 
 			for ( let i = 0; i < length; ++i ) {
@@ -75,11 +75,11 @@ export default {
 					let value = entity._properties[entity._properties._propertyNames[i]]._value;
 
 					// Check if the value is an object (like heat_timeseries)
-					if ( typeof value === 'object' ) {  
+					if ( typeof value === 'object' ) {
 						// If it's an object, skip it or handle it differently
 						continue; // This will skip printing the object
 					}
-      
+
 					toPrint += `${entity._properties._propertyNames[i]}: ${
 						typeof value === 'number' ? value.toFixed( 2 ) : value
 					}<br/>`;
@@ -105,7 +105,7 @@ export default {
 		};
 
 		const addToPrint = ( toPrint, postno, view ) => {
-	
+
 			if ( store.heatDataDate === '2023-06-23' ) {
 
 				toPrint += '<br/><br/><i>If average urban heat exposure of building is over 0.5, the areas with under 0.4 heat exposure are shown on map.</i>';

@@ -40,7 +40,7 @@
           </v-text-field>
         </div>
       </template>
-      
+
       <v-card
 v-if="hasResults"
 class="results-card"
@@ -233,7 +233,7 @@ const currentSelection = computed(() => {
 const postalCodeData = computed(() => {
   const data = propsStore.postalCodeData;
   if (!data || !data.entities) return [];
-  
+
   const entities = data.entities.values;
   return entities.map(entity => {
     const properties = entity.properties;
@@ -251,12 +251,12 @@ const postalCodeData = computed(() => {
 // Filter postal codes based on search query
 const postalCodeResults = computed(() => {
   if (!searchQuery.value || searchQuery.value.length < 2) return [];
-  
+
   const query = searchQuery.value.toLowerCase();
-  
+
   // Check if query is numeric (postal code search)
   const isNumericSearch = /^\d+$/.test(query);
-  
+
   return postalCodeData.value.filter(item => {
     if (isNumericSearch) {
       // For numeric searches, prioritize postal code matches
@@ -294,7 +294,7 @@ const handleSearch = async () => {
   }
 
   showResults.value = true;
-  
+
   // If it looks like a postal code, don't fetch addresses
   if (isPostalCodeQuery(searchQuery.value)) {
     addressResults.value = [];
@@ -308,14 +308,14 @@ const handleSearch = async () => {
 // Fetch address results from geocoding API
 const fetchAddressResults = async () => {
   if (searchQuery.value.length < 3) return;
-  
+
   try {
     isLoading.value = true;
     const response = await fetch(
       `/digitransit/geocoding/v1/autocomplete?text=${searchQuery.value}`
     );
     const data = await response.json();
-    
+
     addressResults.value = processAddressData(data.features);
   } catch (error) {
     console.error('Geocoding error:', error);
@@ -366,15 +366,15 @@ const selectAddress = (address) => {
 const selectPostalCode = async (area) => {
   try {
     isLoading.value = true;
-    
+
     // Update global store
     globalStore.setPostalCode(area.posno);
     globalStore.setNameOfZone(area.nimi);
-    
+
     // Load postal code data and focus camera
     await featurePicker.loadPostalCode();
     await focusOnPostalCode(area.posno);
-    
+
     searchQuery.value = `${area.nimi} (${area.posno})`;
     showResults.value = false;
   } catch (error) {
@@ -502,7 +502,7 @@ watch(() => globalStore.view, () => {
   .results-card {
     max-height: 300px;
   }
-  
+
   .no-results,
   .search-tips {
     padding: 16px;

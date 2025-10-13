@@ -15,14 +15,14 @@ def fetch_wfs_data(posno):
 
     # Base URL for the WFS server
     wfs_url = 'https://kartta.hsy.fi/geoserver/wfs'
-    
+
     # Ensure posno is properly formatted for CQL_FILTER
-    if isinstance(posno, list):  
+    if isinstance(posno, list):
         posno_str = ",".join(f"'{p}'" for p in posno)  # Format as 'value1','value2'
         cql_filter = f"posno IN ({posno_str})"
     else:
         cql_filter = f"posno = '{posno}'"  # Single value case
-    
+
     # Parameters for the WFS request
     params = {
         'service': 'WFS',
@@ -47,7 +47,7 @@ def fetch_wfs_data(posno):
 
     try:
         response = urllib.request.urlopen(request_url, context=ssl_context)
-        
+
         # Read the response content
         response_content = response.read()
 
@@ -71,7 +71,7 @@ def fetch_wfs_data(posno):
 
                 if vtj_prt:
                     # Keep only the latest or first encountered vtj_prt
-                    unique_features[vtj_prt] = feature  
+                    unique_features[vtj_prt] = feature
 
             # ✅ Convert back to list
             data['features'] = list(unique_features.values())
@@ -79,7 +79,7 @@ def fetch_wfs_data(posno):
             print(f"Filtered {len(data['features'])} unique records from WFS data.")
 
             return data
-        
+
         except json.JSONDecodeError:
             print(f"Failed to parse JSON. Response content:\n{response_content.decode('utf-8')}")
             return None
@@ -123,10 +123,10 @@ def update_google_sql(data, posno):
     insert_values = []
 
     fields = [
-        'kunta', 'vtj_prt', 'raktun', 'kiitun', 'katu', 'osno1', 'oski1', 
-        'osno2', 'oski2', 'posno', 'kavu', 'kayttarks', 'kerala', 'korala', 
-        'kohala', 'ashala', 'asuntojen_lkm', 'kerrosten_lkm', 'rakennusaine_s', 
-        'julkisivu_s', 'lammitystapa_s', 'lammitysaine_s', 'viemari', 'vesijohto', 
+        'kunta', 'vtj_prt', 'raktun', 'kiitun', 'katu', 'osno1', 'oski1',
+        'osno2', 'oski2', 'posno', 'kavu', 'kayttarks', 'kerala', 'korala',
+        'kohala', 'ashala', 'asuntojen_lkm', 'kerrosten_lkm', 'rakennusaine_s',
+        'julkisivu_s', 'lammitystapa_s', 'lammitysaine_s', 'viemari', 'vesijohto',
         'olotila_s', 'poimintapvm', 'kokotun'
     ]
 
@@ -142,7 +142,7 @@ def update_google_sql(data, posno):
     try:
         conn = getconn()
         cursor = conn.cursor()
-        
+
         # Fetch existing vtj_prt values for this posno
         existing_vtj_prt_set = fetch_existing_vtj_prt(conn, posno, table_name)
 
@@ -167,8 +167,8 @@ def update_google_sql(data, posno):
         if insert_values:
             insert_sql = f"""
                 INSERT INTO {table_name} ({', '.join(fields)}, geom, area_m2)
-                VALUES ({', '.join(['%s'] * len(fields))}, 
-                    ST_MakeValid(ST_GeomFromGeoJSON(%s)), 
+                VALUES ({', '.join(['%s'] * len(fields))},
+                    ST_MakeValid(ST_GeomFromGeoJSON(%s)),
                     ST_Area(ST_Transform(ST_MakeValid(ST_GeomFromGeoJSON(%s)), 3857)))
             """
             cursor.executemany(insert_sql, insert_values)
@@ -178,7 +178,7 @@ def update_google_sql(data, posno):
         if update_values:
             update_sql = f"""
                 UPDATE {table_name}
-                SET {', '.join([f"{field} = %s" for field in fields])}, 
+                SET {', '.join([f"{field} = %s" for field in fields])},
                     geom = ST_MakeValid(ST_GeomFromGeoJSON(%s)),
                     area_m2 = ST_Area(ST_Transform(ST_MakeValid(ST_GeomFromGeoJSON(%s)), 3857))
                 WHERE vtj_prt = %s

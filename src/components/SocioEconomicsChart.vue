@@ -118,7 +118,7 @@ export default {
 				.on( 'mouseover', ( event, d ) => {
 					// Get the description for the label
 					const description = labelDescriptions[d.label] || d.label;
-      
+
 					plotService.handleMouseover(
 						tooltip,
 						'socioeonomicsContainer',
@@ -186,7 +186,7 @@ export default {
 				const xOffsetForCompareData = xScale.bandwidth() / 2.5; // Adjust as needed for proper spacing
 				createBars( svg, compareBarData, xScale, yScale, height, tooltip, xOffsetForCompareData, 'orange', selectedNimi );
 
-				plotService.addTitleWithLink( svg, `Compare <a href="https://stat.fi/tup/paavo/index_en.html" 
+				plotService.addTitleWithLink( svg, `Compare <a href="https://stat.fi/tup/paavo/index_en.html"
 		      target="_blank">socioeconomic statistics</a> and heat data of ${globalStore.nameOfZone} to:`, margin.left, margin.top );
 			}
 		};

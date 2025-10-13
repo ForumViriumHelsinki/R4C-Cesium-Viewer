@@ -1,5 +1,5 @@
-import cacheService from './cacheService.js';
-import progressiveLoader from './progressiveLoader.js';
+import cacheService from "./cacheService.js";
+import progressiveLoader from "./progressiveLoader.js";
 
 /**
  * Background Preloader Service
@@ -13,7 +13,7 @@ class BackgroundPreloader {
     this.userBehavior = {
       visitedPostalCodes: new Set(),
       frequentLayers: new Map(),
-      lastActivity: Date.now()
+      lastActivity: Date.now(),
     };
   }
 
@@ -30,7 +30,7 @@ class BackgroundPreloader {
     // Set up idle preloading
     this.setupIdlePreloading();
 
-    console.log('Background preloader initialized');
+    console.log("Background preloader initialized");
   }
 
   /**
@@ -39,26 +39,26 @@ class BackgroundPreloader {
   async startCriticalPreload() {
     const criticalData = [
       {
-        key: 'postal-codes-helsinki',
-        url: '/paavo',
-        type: 'postal-codes',
-        priority: 'high',
-        description: 'Helsinki postal code boundaries'
+        key: "postal-codes-helsinki",
+        url: "/paavo",
+        type: "postal-codes",
+        priority: "high",
+        description: "Helsinki postal code boundaries",
       },
       {
-        key: 'heat-exposure-sample',
-        url: '/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=100',
-        type: 'heat-exposure',
-        priority: 'high',
-        description: 'Sample heat exposure data'
+        key: "heat-exposure-sample",
+        url: "/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=100",
+        type: "heat-exposure",
+        priority: "high",
+        description: "Sample heat exposure data",
       },
       {
-        key: 'hsy-layer-info',
-        url: '/hsy-action?action_route=GetHierarchicalMapLayerGroups',
-        type: 'layer-info',
-        priority: 'medium',
-        description: 'HSY environmental layer information'
-      }
+        key: "hsy-layer-info",
+        url: "/hsy-action?action_route=GetHierarchicalMapLayerGroups",
+        type: "layer-info",
+        priority: "medium",
+        description: "HSY environmental layer information",
+      },
     ];
 
     for (const data of criticalData) {
@@ -86,20 +86,24 @@ class BackgroundPreloader {
 
     // Base priority scores
     const priorityScores = {
-      'high': 100,
-      'medium': 50,
-      'low': 25
+      high: 100,
+      medium: 50,
+      low: 25,
     };
     score += priorityScores[item.priority] || 25;
 
     // User behavior influence
-    if (item.type === 'trees' || item.type === 'buildings') {
-      const layerFrequency = this.userBehavior.frequentLayers.get(item.type) || 0;
+    if (item.type === "trees" || item.type === "buildings") {
+      const layerFrequency =
+        this.userBehavior.frequentLayers.get(item.type) || 0;
       score += layerFrequency * 10;
     }
 
     // Postal code relevance
-    if (item.postalCode && this.userBehavior.visitedPostalCodes.has(item.postalCode)) {
+    if (
+      item.postalCode &&
+      this.userBehavior.visitedPostalCodes.has(item.postalCode)
+    ) {
       score += 30;
     }
 
@@ -121,8 +125,9 @@ class BackgroundPreloader {
 
     try {
       // Sort queue by priority
-      const sortedItems = Array.from(this.preloadQueue.values())
-        .sort((a, b) => b.calculatedPriority - a.calculatedPriority);
+      const sortedItems = Array.from(this.preloadQueue.values()).sort(
+        (a, b) => b.calculatedPriority - a.calculatedPriority,
+      );
 
       for (const item of sortedItems) {
         // Check if user is active (pause preloading during active use)
@@ -165,13 +170,13 @@ class BackgroundPreloader {
 
     try {
       // Use progressive loader for chunked data
-      if (item.type === 'trees' || item.type === 'buildings') {
+      if (item.type === "trees" || item.type === "buildings") {
         const data = await progressiveLoader.loadChunked({
           layerName: `preload-${item.key}`,
           baseUrl: item.url,
           params: item.params || {},
           chunkSize: 200, // Smaller chunks for background loading
-          processor: item.processor
+          processor: item.processor,
         });
 
         await cacheService.setData(item.key, data, {
@@ -181,8 +186,8 @@ class BackgroundPreloader {
           metadata: {
             preloaded: true,
             preloadTime: Date.now(),
-            loadDuration: Date.now() - startTime
-          }
+            loadDuration: Date.now() - startTime,
+          },
         });
       } else {
         // Simple fetch for other data types
@@ -200,12 +205,14 @@ class BackgroundPreloader {
           metadata: {
             preloaded: true,
             preloadTime: Date.now(),
-            loadDuration: Date.now() - startTime
-          }
+            loadDuration: Date.now() - startTime,
+          },
         });
       }
 
-      console.log(`Successfully preloaded ${item.key} in ${Date.now() - startTime}ms`);
+      console.log(
+        `Successfully preloaded ${item.key} in ${Date.now() - startTime}ms`,
+      );
     } catch (error) {
       console.error(`Preload failed for ${item.key}:`, error);
       throw error;
@@ -215,20 +222,23 @@ class BackgroundPreloader {
   /**
    * Preload data for a specific postal code
    */
-  async preloadPostalCodeData(postalCode, layers = ['trees', 'buildings', 'vegetation']) {
+  async preloadPostalCodeData(
+    postalCode,
+    layers = ["trees", "buildings", "vegetation"],
+  ) {
     this.trackPostalCodeVisit(postalCode);
 
-    const preloadItems = layers.map(layer => ({
+    const preloadItems = layers.map((layer) => ({
       key: `${layer}-${postalCode}`,
       url: this.getLayerUrl(layer, postalCode),
       type: layer,
       postalCode: postalCode,
       priority: this.getLayerPriority(layer),
       description: `${layer} data for postal code ${postalCode}`,
-      params: { postalCode }
+      params: { postalCode },
     }));
 
-    preloadItems.forEach(item => this.addToPreloadQueue(item));
+    preloadItems.forEach((item) => this.addToPreloadQueue(item));
 
     // Process queue if not already running
     if (!this.isPreloading) {
@@ -241,22 +251,22 @@ class BackgroundPreloader {
    */
   getLayerUrl(layer, postalCode) {
     const baseUrls = {
-      trees: '/pygeoapi/collections/trees/items',
-      buildings: '/pygeoapi/collections/buildings/items',
-      vegetation: '/pygeoapi/collections/vegetation/items',
-      'heat-exposure': '/pygeoapi/collections/heatexposure_optimized/items'
+      trees: "/pygeoapi/collections/trees/items",
+      buildings: "/pygeoapi/collections/buildings/items",
+      vegetation: "/pygeoapi/collections/vegetation/items",
+      "heat-exposure": "/pygeoapi/collections/heatexposure_optimized/items",
     };
 
     const url = baseUrls[layer];
     if (!url) return null;
 
     const params = new URLSearchParams({
-      f: 'json',
-      limit: 1000
+      f: "json",
+      limit: 1000,
     });
 
     if (postalCode) {
-      params.append('filter', `postalCode=${postalCode}`);
+      params.append("filter", `postalCode=${postalCode}`);
     }
 
     return `${url}?${params.toString()}`;
@@ -267,14 +277,14 @@ class BackgroundPreloader {
    */
   getLayerPriority(layer) {
     const priorities = {
-      buildings: 'high',
-      trees: 'medium',
-      vegetation: 'medium',
-      'heat-exposure': 'high',
-      'other-nature': 'low'
+      buildings: "high",
+      trees: "medium",
+      vegetation: "medium",
+      "heat-exposure": "high",
+      "other-nature": "low",
     };
 
-    return priorities[layer] || 'low';
+    return priorities[layer] || "low";
   }
 
   /**
@@ -308,7 +318,7 @@ class BackgroundPreloader {
    * Wait for user to become idle
    */
   async waitForUserIdle() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const checkIdle = () => {
         if (!this.isUserActive()) {
           resolve();
@@ -333,16 +343,18 @@ class BackgroundPreloader {
       idleTimer = setTimeout(() => {
         // User has been idle for 10 seconds, resume preloading
         if (this.preloadQueue.size > 0 && !this.isPreloading) {
-          console.log('User idle, resuming background preloading');
+          console.log("User idle, resuming background preloading");
           this.processPreloadQueue();
         }
       }, 10000);
     };
 
     // Listen for user activity
-    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
-      document.addEventListener(event, resetIdleTimer, { passive: true });
-    });
+    ["mousedown", "mousemove", "keypress", "scroll", "touchstart"].forEach(
+      (event) => {
+        document.addEventListener(event, resetIdleTimer, { passive: true });
+      },
+    );
 
     resetIdleTimer();
   }
@@ -352,16 +364,16 @@ class BackgroundPreloader {
    */
   async loadUserBehavior() {
     try {
-      const stored = await cacheService.getMetadata('userBehavior');
+      const stored = await cacheService.getMetadata("userBehavior");
       if (stored) {
         this.userBehavior = {
           visitedPostalCodes: new Set(stored.visitedPostalCodes || []),
           frequentLayers: new Map(stored.frequentLayers || []),
-          lastActivity: Date.now()
+          lastActivity: Date.now(),
         };
       }
     } catch (error) {
-      console.warn('Failed to load user behavior:', error);
+      console.warn("Failed to load user behavior:", error);
     }
   }
 
@@ -370,13 +382,13 @@ class BackgroundPreloader {
    */
   async saveUserBehavior() {
     try {
-      await cacheService.setMetadata('userBehavior', {
+      await cacheService.setMetadata("userBehavior", {
         visitedPostalCodes: Array.from(this.userBehavior.visitedPostalCodes),
         frequentLayers: Array.from(this.userBehavior.frequentLayers.entries()),
-        lastActivity: this.userBehavior.lastActivity
+        lastActivity: this.userBehavior.lastActivity,
       });
     } catch (error) {
-      console.warn('Failed to save user behavior:', error);
+      console.warn("Failed to save user behavior:", error);
     }
   }
 
@@ -385,7 +397,7 @@ class BackgroundPreloader {
    */
   pause() {
     this.isPreloading = false;
-    console.log('Background preloading paused');
+    console.log("Background preloading paused");
   }
 
   /**
@@ -393,7 +405,7 @@ class BackgroundPreloader {
    */
   resume() {
     if (this.preloadQueue.size > 0 && !this.isPreloading) {
-      console.log('Background preloading resumed');
+      console.log("Background preloading resumed");
       this.processPreloadQueue();
     }
   }
@@ -407,7 +419,7 @@ class BackgroundPreloader {
       queueSize: this.preloadQueue.size,
       visitedPostalCodes: this.userBehavior.visitedPostalCodes.size,
       frequentLayers: Object.fromEntries(this.userBehavior.frequentLayers),
-      lastActivity: this.userBehavior.lastActivity
+      lastActivity: this.userBehavior.lastActivity,
     };
   }
 
@@ -421,17 +433,17 @@ class BackgroundPreloader {
     this.userBehavior = {
       visitedPostalCodes: new Set(),
       frequentLayers: new Map(),
-      lastActivity: Date.now()
+      lastActivity: Date.now(),
     };
     await this.saveUserBehavior();
-    console.log('Background preloader reset');
+    console.log("Background preloader reset");
   }
 
   /**
    * Utility delay function
    */
   delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

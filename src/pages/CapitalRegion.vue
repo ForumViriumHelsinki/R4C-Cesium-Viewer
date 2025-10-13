@@ -116,13 +116,13 @@ export default {
 
 		// Watch landCover toggle to control mutual exclusivity
 		watch( () => toggleStore.landCover, ( newValue ) => {
-			showLandcover.value = toggleStore.helsinkiView ? showLandcover.value : !!newValue; 
+			showLandcover.value = toggleStore.helsinkiView ? showLandcover.value : !!newValue;
 			showHSYWMS.value = !showLandcover.value;
 		} );
 
 		// Separate control for HSYWMS based on postalcode and landcover visibility
 		watch( () => store.postalcode, ( newPostalCode ) => {
-			( !showLandcover.value && newPostalCode ) && ( showHSYWMS.value = true ); 
+			( !showLandcover.value && newPostalCode ) && ( showHSYWMS.value = true );
 		} );
 
 		return {

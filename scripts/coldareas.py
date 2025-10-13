@@ -53,7 +53,7 @@ def spatial_relation_with_postal_code_areas_and_save_to_db(polygons_gdf, postal_
 
                 # Prepare the insert query
                 insert_query = f"INSERT INTO {tableName} (posno, heatexposure, geom, temp_c, date) VALUES (%s, %s, ST_GeomFromGeoJSON(%s), %s, %s)"
-                
+
                 # Execute the insert query with the values
                 cur.execute(insert_query, (row['posno'], polygon['heatexposure'], json.dumps(polygon['geometry']), temp_c, imageDate))
                 conn.commit()

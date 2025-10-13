@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium';
-import Datasource from './datasource.js';
-import Camera from './camera.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
+import * as Cesium from "cesium";
+import Datasource from "./datasource.js";
+import Camera from "./camera.js";
+import { useGlobalStore } from "../stores/globalStore.js";
+import { useToggleStore } from "../stores/toggleStore.js";
 
 /**
  * Population Grid Service
@@ -24,137 +24,116 @@ import { useToggleStore } from '../stores/toggleStore.js';
  * @class Populationgrid
  */
 export default class Populationgrid {
-	/**
-	 * Creates a Populationgrid service instance
-	 */
-	constructor( ) {
-		this.store = useGlobalStore();
-		this.toggleStore = useToggleStore();
-		this.viewer = this.store.cesiumViewer;
-		this.datasourceService = new Datasource( );
-		this.cameraService = new Camera( );
-		/** @type {number} Standard grid cell area in square meters (250m × 250m) */
-		this.gridArea = 62500;
-	}
+  /**
+   * Creates a Populationgrid service instance
+   */
+  constructor() {
+    this.store = useGlobalStore();
+    this.toggleStore = useToggleStore();
+    this.viewer = this.store.cesiumViewer;
+    this.datasourceService = new Datasource();
+    this.cameraService = new Camera();
+    /** @type {number} Standard grid cell area in square meters (250m × 250m) */
+    this.gridArea = 62500;
+  }
 
-	/**
- * Set population grid entities heat exposure
- *
- * @param {Object} entities - Cesium entities
- */
-	setHeatExposureToGrid( entities ) {
+  /**
+   * Set population grid entities heat exposure
+   *
+   * @param {Object} entities - Cesium entities
+   */
+  setHeatExposureToGrid(entities) {
+    for (let i = 0; i < entities.length; i++) {
+      let entity = entities[i];
+      this.setGridEntityPolygon(entity);
+    }
+  }
 
-		for ( let i = 0; i < entities.length; i++ ) {
+  /**
+   * Set grid entity polygon
+   *
+   * @param {Object} entity - Grid entity
+   */
+  setGridEntityPolygon(entity) {
+    if (entity.properties.averageheatexposure && entity.polygon) {
+      entity.polygon.material = new Cesium.Color(
+        1,
+        1 - entity.properties.averageheatexposure._value,
+        0,
+        entity.properties.averageheatexposure._value,
+      );
+    } else {
+      if (entity.polygon) {
+        entity.show = false;
+      }
+    }
+  }
 
-			let entity = entities[ i ];
-			this.setGridEntityPolygon( entity );
+  /**
+   * Set grid entity polygon
+   *
+   * @param {Object} entity - Grid entity
+   */
+  setGridEntityPolygonToGreen(entity) {
+    let water = 0;
+    let vegetation = 0;
+    let trees = 0;
 
-		}
-	}
+    if (entity.properties.water_m2) {
+      water = entity.properties.water_m2._value;
+    }
 
-	/**
- * Set grid entity polygon
- *
- * @param {Object} entity - Grid entity
- */
-	setGridEntityPolygon( entity ) {
+    if (entity.properties.vegetation_m2) {
+      vegetation = entity.properties.vegetation_m2._value;
+    }
 
-		if ( entity.properties.averageheatexposure && entity.polygon ) {
+    if (entity.properties.tree_cover_m2) {
+      trees = entity.properties.tree_cover_m2._value;
+    }
 
-			entity.polygon.material = new Cesium.Color( 1, 1 - entity.properties.averageheatexposure._value, 0, entity.properties.averageheatexposure._value );
+    const greenIndex = (water + vegetation + trees) / this.gridArea;
+    entity.polygon.material = new Cesium.Color(
+      1 - greenIndex,
+      1,
+      0,
+      greenIndex,
+    );
+  }
 
-		} else {
+  setGridHeight(entities) {
+    for (let i = 0; i < entities.length; i++) {
+      let entity = entities[i];
 
-			if ( entity.polygon ) {
-			
-				entity.show = false;
+      if (entity.polygon) {
+        if (entity.properties.asukkaita) {
+          entity.polygon.extrudedHeight =
+            entity.properties.asukkaita._value / 4;
+        }
+      }
+    }
+  }
 
-			}
-		}
+  async createPopulationGrid() {
+    this.datasourceService.removeDataSourcesAndEntities();
+    this.cameraService.switchTo3DGrid();
 
-	}
+    try {
+      await this.datasourceService.removeDataSourcesByNamePrefix("250m_grid");
+      const entities = await this.datasourceService.loadGeoJsonDataSource(
+        0.1,
+        "assets/data/hsy_populationgrid.json",
+        "PopulationGrid",
+      );
 
-	/**
- * Set grid entity polygon
- *
- * @param {Object} entity - Grid entity
- */
-	setGridEntityPolygonToGreen( entity ) {
+      this.setHeatExposureToGrid(entities);
 
-		let water = 0;
-		let vegetation = 0;
-		let trees = 0;
-
-		if ( entity.properties.water_m2 ) {
-
-			water = entity.properties.water_m2._value;
-
-		} 
-
-		if ( entity.properties.vegetation_m2 ) {
-
-			vegetation = entity.properties.vegetation_m2._value;
-
-		} 
-
-		if ( entity.properties.tree_cover_m2 ) {
-
-			trees = entity.properties.tree_cover_m2._value;
-
-		}
-
-		const greenIndex = ( water + vegetation + trees ) / this.gridArea;
-		entity.polygon.material = new Cesium.Color( 1 - greenIndex, 1, 0, greenIndex );
-
-	}
-
-	setGridHeight( entities ) {
-
-		for ( let i = 0; i < entities.length; i++ ) {
-
-			let entity = entities[ i ];
-
-			if ( entity.polygon ) {
-
-				if ( entity.properties.asukkaita ) {
-
-					entity.polygon.extrudedHeight = entity.properties.asukkaita._value / 4;
-	
-				} 
-			}
-		}
-	}
-
-	async createPopulationGrid() {
-
-		this.datasourceService.removeDataSourcesAndEntities();
-		this.cameraService.switchTo3DGrid();
-
-		try {
-
-			await this.datasourceService.removeDataSourcesByNamePrefix( '250m_grid' );
-			const entities = await this.datasourceService.loadGeoJsonDataSource(
-				0.1,
-				'assets/data/hsy_populationgrid.json',
-				'PopulationGrid'
-			);
-        
-			this.setHeatExposureToGrid( entities );
-
-			if ( !this.toggleStore.travelTime ) {
-    
-				this.setGridHeight( entities );
-
-			} else {
-
-				this.toggleStore.travelTime = false;
-
-			}
-
-		} catch ( error ) {
-        
-			console.error( error );
-		}
-	}
-
+      if (!this.toggleStore.travelTime) {
+        this.setGridHeight(entities);
+      } else {
+        this.toggleStore.travelTime = false;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }

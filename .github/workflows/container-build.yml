@@ -3,9 +3,9 @@ name: Build and push container image
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - 'r4c-cesium-viewer-v*.*.*'
+      - "r4c-cesium-viewer-v*.*.*"
 
 env:
   REGISTRY: ghcr.io

@@ -28,7 +28,7 @@ Choose a postal code area to explore climate data
 
     <!-- View Mode Info -->
     <div class="view-info">
-      <v-chip 
+      <v-chip
         :color="currentView === 'helsinki' ? 'blue' : 'green'"
         size="small"
         class="mb-3"
@@ -66,7 +66,7 @@ Choose a postal code area to explore climate data
             <v-list-item-title class="area-name">
               {{ item.nimi }}
             </v-list-item-title>
-            
+
             <v-list-item-subtitle class="area-details">
               <div class="postal-code-badge">
 {{ item.posno }}
@@ -91,8 +91,8 @@ Choose a postal code area to explore climate data
                   </template>
                   <span>Vegetation Coverage</span>
                 </v-tooltip>
-                
-                <v-icon 
+
+                <v-icon
                   v-if="item.posno === currentPostalCode"
                   color="primary"
                   size="small"
@@ -150,7 +150,7 @@ No areas found matching "{{ searchQuery }}"
       >
         Focus on {{ currentAreaName }}
       </v-btn>
-      
+
       <v-btn
         block
         variant="text"
@@ -176,19 +176,19 @@ export default {
   setup() {
     const globalStore = useGlobalStore();
     const propsStore = usePropsStore();
-    
+
     const searchQuery = ref('');
     const isLoading = ref(false);
-    
+
     const currentView = computed(() => globalStore.view);
     const currentPostalCode = computed(() => globalStore.postalcode);
     const currentAreaName = computed(() => globalStore.nameOfZone);
-    
+
     // Get postal code data from the loaded data source
     const postalCodeData = computed(() => {
       const data = propsStore.postalCodeData;
       if (!data || !data.entities) return [];
-      
+
       const entities = data.entities.values;
       return entities.map(entity => {
         const properties = entity.properties;
@@ -203,61 +203,61 @@ export default {
         };
       }).filter(item => item.posno && item.nimi);
     });
-    
+
     // Filter postal codes based on search query
     const filteredPostalCodes = computed(() => {
       if (!searchQuery.value) return postalCodeData.value;
-      
+
       const query = searchQuery.value.toLowerCase();
-      return postalCodeData.value.filter(item => 
+      return postalCodeData.value.filter(item =>
         item.nimi.toLowerCase().includes(query) ||
         item.posno.includes(query) ||
         item.kunta.toLowerCase().includes(query)
       );
     });
-    
+
     // Get vegetation color based on percentage
     const getVegetationColor = (percentage) => {
       if (percentage >= 50) return 'green';
       if (percentage >= 30) return 'orange';
       return 'red';
     };
-    
+
     // Select a postal code
     const selectPostalCode = async (item) => {
       isLoading.value = true;
-      
+
       try {
         // Update global store
         globalStore.setPostalCode(item.posno);
         globalStore.setNameOfZone(item.nimi);
-        
+
         // Use featurepicker to load the postal code (this handles map updates)
         const featurepicker = new Featurepicker();
         await featurepicker.loadPostalCode();
-        
+
         // Focus camera on the selected area
         await focusOnCurrentArea();
-        
+
       } catch (error) {
         console.error('Error selecting postal code:', error);
       } finally {
         isLoading.value = false;
       }
     };
-    
+
     // Focus camera on current area
     const focusOnCurrentArea = async () => {
       if (!currentPostalCode.value) return;
-      
+
       try {
         const camera = new Camera();
-        
+
         // Find the selected postal code in the data
         const selectedArea = postalCodeData.value.find(
           item => item.posno === currentPostalCode.value
         );
-        
+
         if (selectedArea) {
           // Use the camera service to focus on the area
           // This may need adjustment based on how the Camera service works
@@ -267,29 +267,29 @@ export default {
         console.error('Error focusing on area:', error);
       }
     };
-    
+
     // Reset selection
     const resetSelection = () => {
       globalStore.setPostalCode(null);
       globalStore.setNameOfZone(null);
       globalStore.setLevel('start');
       searchQuery.value = '';
-      
+
       // Reset camera to initial position
       const camera = new Camera();
       camera.init();
     };
-    
+
     // Watch for view changes to update data
     watch(currentView, () => {
       // Data will be updated by the parent component when view changes
       searchQuery.value = '';
     });
-    
+
     onMounted(() => {
       // Data should already be loaded by the time this component mounts
     });
-    
+
     return {
       searchQuery,
       isLoading,
@@ -417,11 +417,11 @@ export default {
   .picker-title {
     font-size: 0.9rem;
   }
-  
+
   .picker-subtitle {
     font-size: 0.8rem;
   }
-  
+
   .postal-codes-list {
     height: 250px;
   }

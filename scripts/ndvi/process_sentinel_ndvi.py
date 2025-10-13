@@ -46,7 +46,7 @@ def process_sentinel_ndvi(request):
 
     # Calculate NDVI
     np.seterr(divide='ignore', invalid='ignore')  # Ignore divide by zero warnings
-    ndvi = np.where((nir_band + red_band) == 0, 0, 
+    ndvi = np.where((nir_band + red_band) == 0, 0,
                     (nir_band.astype(float) - red_band.astype(float)) / (nir_band + red_band))
     ndvi = np.nan_to_num(ndvi)  # Replace NaN values with 0
 

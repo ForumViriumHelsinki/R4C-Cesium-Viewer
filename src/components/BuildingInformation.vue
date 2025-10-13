@@ -20,7 +20,7 @@ class="tooltip-content"
 Building Details
 </div>
       </div>
-      
+
       <!-- Compact data grid -->
       <div class="data-grid">
         <div
@@ -146,7 +146,7 @@ export default {
 				if ( pickedEntity && pickedEntity.id ) {
 
 					fetchBuildingInfo( pickedEntity.id );
-  	
+
 				} else {
 					showTooltip.value = false;
 				}
@@ -173,7 +173,7 @@ export default {
 			viewer.screenSpaceEventHandler.removeInputAction(
 				Cesium.ScreenSpaceEventType.MOUSE_MOVE
 			);
-			
+
 		} );
 
 		return {
@@ -267,12 +267,12 @@ export default {
     background: #000000 !important;
     border: 2px solid #ffffff;
   }
-  
+
   .building-title,
   .data-value {
     color: #ffffff;
   }
-  
+
   .temp-value {
     color: #ffffff;
   }
@@ -291,7 +291,7 @@ export default {
     max-width: 240px;
     font-size: 12px;
   }
-  
+
   .building-icon {
     font-size: 14px;
   }

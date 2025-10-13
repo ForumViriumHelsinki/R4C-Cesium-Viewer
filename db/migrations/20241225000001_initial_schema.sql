@@ -2,7 +2,7 @@
 
 -- Note: PostGIS extension is created by PostgreSQL initdb scripts with superuser privileges
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
-CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -11,7 +11,7 @@ BEGIN
 END;
 $$;
 -- Name: adaptation_landcover; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.adaptation_landcover (
+CREATE TABLE IF NOT EXISTS public.adaptation_landcover (
     id integer NOT NULL,
     grid_id character varying(50),
     area_m2 double precision,
@@ -20,7 +20,7 @@ CREATE TABLE public.adaptation_landcover (
     geom public.geometry(Geometry,4326)
 );
 -- Name: adaptation_landcover_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.adaptation_landcover_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.adaptation_landcover_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -30,7 +30,7 @@ CREATE SEQUENCE public.adaptation_landcover_id_seq
 -- Name: adaptation_landcover_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.adaptation_landcover_id_seq OWNED BY public.adaptation_landcover.id;
 -- Name: building_tree; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.building_tree (
+CREATE TABLE IF NOT EXISTS public.building_tree (
     tree_id text,
     building_id bigint,
     geom_tree jsonb,
@@ -39,7 +39,7 @@ CREATE TABLE public.building_tree (
     geom_building jsonb
 );
 -- Name: building_tree_for_bearing; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.building_tree_for_bearing (
+CREATE TABLE IF NOT EXISTS public.building_tree_for_bearing (
     distance double precision,
     building_id integer,
     id integer,
@@ -50,7 +50,7 @@ CREATE TABLE public.building_tree_for_bearing (
     postinumero text
 );
 -- Name: building_tree_undone; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.building_tree_undone (
+CREATE TABLE IF NOT EXISTS public.building_tree_undone (
     building_id bigint,
     geom_tree jsonb,
     geom_building jsonb,
@@ -59,7 +59,7 @@ CREATE TABLE public.building_tree_undone (
     postinumero text
 );
 -- Name: flood; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.flood (
+CREATE TABLE IF NOT EXISTS public.flood (
     material text,
     water text,
     geometry text,
@@ -67,7 +67,7 @@ CREATE TABLE public.flood (
     id integer NOT NULL
 );
 -- Name: flood_f; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.flood_f (
+CREATE TABLE IF NOT EXISTS public.flood_f (
     id integer,
     geom public.geometry,
     water text,
@@ -75,7 +75,7 @@ CREATE TABLE public.flood_f (
     postinumero text
 );
 -- Name: flood_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.flood_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.flood_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -85,7 +85,7 @@ CREATE SEQUENCE public.flood_id_seq
 -- Name: flood_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.flood_id_seq OWNED BY public.flood.id;
 -- Name: heat_vulnerable_demographic; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.heat_vulnerable_demographic (
+CREATE TABLE IF NOT EXISTS public.heat_vulnerable_demographic (
     id bigint NOT NULL,
     postinumero text,
     vulnerable_pop integer,
@@ -116,7 +116,7 @@ CREATE TABLE public.heat_vulnerable_demographic (
     income double precision
 );
 -- Name: heat_vulnerable_demographic_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.heat_vulnerable_demographic_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.heat_vulnerable_demographic_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -125,7 +125,7 @@ CREATE SEQUENCE public.heat_vulnerable_demographic_id_seq
 -- Name: heat_vulnerable_demographic_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.heat_vulnerable_demographic_id_seq OWNED BY public.heat_vulnerable_demographic.id;
 -- Name: hki_roof_colors; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.hki_roof_colors (
+CREATE TABLE IF NOT EXISTS public.hki_roof_colors (
     r_median double precision,
     g_median double precision,
     b_median double precision,
@@ -180,7 +180,7 @@ CREATE TABLE public.hki_roof_colors (
     url text
 );
 -- Name: hki_roof_colors_f; Type: VIEW; Schema: public; Owner: -
-CREATE VIEW public.hki_roof_colors_f AS
+CREATE OR REPLACE VIEW public.hki_roof_colors_f AS
  SELECT id AS hki_id,
     r_median,
     g_median,
@@ -232,14 +232,14 @@ CREATE VIEW public.hki_roof_colors_f AS
     public.st_geomfromgeojson(location) AS geom
    FROM public.hki_roof_colors f;
 -- Name: hki_travel_time_r4c_f; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.hki_travel_time_r4c_f (
+CREATE TABLE IF NOT EXISTS public.hki_travel_time_r4c_f (
     from_id integer,
     travel_data jsonb,
     geom public.geometry,
     id integer NOT NULL
 );
 -- Name: hki_travel_time_r4c_f_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.hki_travel_time_r4c_f_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.hki_travel_time_r4c_f_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -249,12 +249,12 @@ CREATE SEQUENCE public.hki_travel_time_r4c_f_id_seq
 -- Name: hki_travel_time_r4c_f_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.hki_travel_time_r4c_f_id_seq OWNED BY public.hki_travel_time_r4c_f.id;
 -- Name: hki_urbanheat; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.hki_urbanheat (
+CREATE TABLE IF NOT EXISTS public.hki_urbanheat (
     postinumero text,
     hki_avgheatexposure double precision
 );
 -- Name: hsy_building_heat; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.hsy_building_heat (
+CREATE TABLE IF NOT EXISTS public.hsy_building_heat (
     id bigint NOT NULL,
     avgheatexposure double precision,
     date date,
@@ -263,7 +263,7 @@ CREATE TABLE public.hsy_building_heat (
     posno text
 );
 -- Name: hsy_building_heat_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.hsy_building_heat_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.hsy_building_heat_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -272,7 +272,7 @@ CREATE SEQUENCE public.hsy_building_heat_id_seq
 -- Name: hsy_building_heat_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.hsy_building_heat_id_seq OWNED BY public.hsy_building_heat.id;
 -- Name: hsy_building_spotted_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.hsy_building_spotted_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.hsy_building_spotted_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -280,7 +280,7 @@ CREATE SEQUENCE public.hsy_building_spotted_id_seq
     NO MAXVALUE
     CACHE 1;
 -- Name: kafka_finest_station; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.kafka_finest_station (
+CREATE TABLE IF NOT EXISTS public.kafka_finest_station (
     id bigint NOT NULL,
     name text,
     description text,
@@ -288,7 +288,7 @@ CREATE TABLE public.kafka_finest_station (
     properties jsonb
 );
 -- Name: kafka_finest_station_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.kafka_finest_station_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.kafka_finest_station_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -297,7 +297,7 @@ CREATE SEQUENCE public.kafka_finest_station_id_seq
 -- Name: kafka_finest_station_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.kafka_finest_station_id_seq OWNED BY public.kafka_finest_station.id;
 -- Name: keharist_catalogue; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.keharist_catalogue (
+CREATE TABLE IF NOT EXISTS public.keharist_catalogue (
     loc text,
     url text,
     type text,
@@ -333,7 +333,7 @@ CREATE TABLE public.keharist_catalogue (
     geom public.geometry(Geometry,4326)
 );
 -- Name: keharist_data; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.keharist_data (
+CREATE TABLE IF NOT EXISTS public.keharist_data (
     loc text,
     url text,
     type text,
@@ -369,7 +369,7 @@ CREATE TABLE public.keharist_data (
     geom public.geometry(Geometry,4326)
 );
 -- Name: nature_area; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.nature_area (
+CREATE TABLE IF NOT EXISTS public.nature_area (
     gml_id text,
     kunta text,
     tunnus text,
@@ -398,7 +398,7 @@ CREATE TABLE public.nature_area (
     id integer NOT NULL
 );
 -- Name: nature_area_f; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.nature_area_f (
+CREATE TABLE IF NOT EXISTS public.nature_area_f (
     gml_id text,
     kohde_id text,
     kunta text,
@@ -413,7 +413,7 @@ CREATE TABLE public.nature_area_f (
     id integer
 );
 -- Name: nature_area_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.nature_area_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.nature_area_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -423,7 +423,7 @@ CREATE SEQUENCE public.nature_area_id_seq
 -- Name: nature_area_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.nature_area_id_seq OWNED BY public.nature_area.id;
 -- Name: other_nature_r4c; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.other_nature_r4c (
+CREATE TABLE IF NOT EXISTS public.other_nature_r4c (
     gml_id text,
     kohde_id text,
     kunta text,
@@ -439,7 +439,7 @@ CREATE TABLE public.other_nature_r4c (
     geom public.geometry(Geometry,4326)
 );
 -- Name: other_nature_r4c_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.other_nature_r4c_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.other_nature_r4c_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -449,7 +449,7 @@ CREATE SEQUENCE public.other_nature_r4c_id_seq
 -- Name: other_nature_r4c_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.other_nature_r4c_id_seq OWNED BY public.other_nature_r4c.id;
 -- Name: r4c_coldspot; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.r4c_coldspot (
+CREATE TABLE IF NOT EXISTS public.r4c_coldspot (
     id integer NOT NULL,
     posno text,
     heatexposure double precision,
@@ -458,7 +458,7 @@ CREATE TABLE public.r4c_coldspot (
     date date
 );
 -- Name: r4c_coldspot_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.r4c_coldspot_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.r4c_coldspot_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -468,14 +468,14 @@ CREATE SEQUENCE public.r4c_coldspot_id_seq
 -- Name: r4c_coldspot_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.r4c_coldspot_id_seq OWNED BY public.r4c_coldspot.id;
 -- Name: r4c_heat_timeseries; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.r4c_heat_timeseries (
+CREATE TABLE IF NOT EXISTS public.r4c_heat_timeseries (
     avgheatexposure double precision,
     date text,
     vtj_prt text,
     avg_temp_c double precision
 );
 -- Name: r4c_hsy_building_current; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.r4c_hsy_building_current (
+CREATE TABLE IF NOT EXISTS public.r4c_hsy_building_current (
     kunta text,
     vtj_prt text NOT NULL,
     raktun text,
@@ -509,7 +509,7 @@ CREATE TABLE public.r4c_hsy_building_current (
     updated_at date DEFAULT CURRENT_DATE
 );
 -- Name: r4c_hsy_building; Type: VIEW; Schema: public; Owner: -
-CREATE VIEW public.r4c_hsy_building AS
+CREATE OR REPLACE VIEW public.r4c_hsy_building AS
  SELECT b.kunta,
     b.vtj_prt,
     b.raktun,
@@ -546,7 +546,7 @@ CREATE VIEW public.r4c_hsy_building AS
      LEFT JOIN public.hsy_building_heat h ON ((b.vtj_prt = h.vtj_prt)))
   GROUP BY b.kunta, b.vtj_prt, b.raktun, b.kiitun, b.katu, b.osno1, b.oski1, b.osno2, b.oski2, b.posno, b.kavu, b.kayttarks, b.kerala, b.korala, b.kohala, b.ashala, b.asuntojen_lkm, b.kerrosten_lkm, b.rakennusaine_s, b.julkisivu_s, b.lammitystapa_s, b.lammitysaine_s, b.viemari, b.vesijohto, b.olotila_s, b.poimintapvm, b.kokotun, b.area_m2, b.geom, b.created_at, b.updated_at;
 -- Name: r4c_hsy_building_backup; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.r4c_hsy_building_backup (
+CREATE TABLE IF NOT EXISTS public.r4c_hsy_building_backup (
     vtj_prt text,
     heatexposure230623v1 double precision,
     tempincelsius230623v1 double precision,
@@ -554,7 +554,7 @@ CREATE TABLE public.r4c_hsy_building_backup (
     tempincelsius230623v2 double precision
 );
 -- Name: r4c_hsy_building_copy; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.r4c_hsy_building_copy (
+CREATE TABLE IF NOT EXISTS public.r4c_hsy_building_copy (
     kunta text,
     vtj_prt text,
     raktun text,
@@ -592,7 +592,7 @@ CREATE TABLE public.r4c_hsy_building_copy (
     updated_at date
 );
 -- Name: r4c_hsy_building_mat; Type: MATERIALIZED VIEW; Schema: public; Owner: -
-CREATE MATERIALIZED VIEW public.r4c_hsy_building_mat AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.r4c_hsy_building_mat AS
  SELECT b.kunta,
     b.vtj_prt,
     b.raktun,
@@ -630,7 +630,7 @@ CREATE MATERIALIZED VIEW public.r4c_hsy_building_mat AS
   GROUP BY b.kunta, b.vtj_prt, b.raktun, b.kiitun, b.katu, b.osno1, b.oski1, b.osno2, b.oski2, b.posno, b.kavu, b.kayttarks, b.kerala, b.korala, b.kohala, b.ashala, b.asuntojen_lkm, b.kerrosten_lkm, b.rakennusaine_s, b.julkisivu_s, b.lammitystapa_s, b.lammitysaine_s, b.viemari, b.vesijohto, b.olotila_s, b.poimintapvm, b.kokotun, b.area_m2, b.geom, b.created_at, b.updated_at
   WITH NO DATA;
 -- Name: r4c_paavo; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.r4c_paavo (
+CREATE TABLE IF NOT EXISTS public.r4c_paavo (
     id integer NOT NULL,
     pinta_ala integer,
     he_vakiy integer,
@@ -654,7 +654,7 @@ CREATE TABLE public.r4c_paavo (
     geom public.geometry
 );
 -- Name: r4c_paavo_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.r4c_paavo_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.r4c_paavo_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -664,7 +664,7 @@ CREATE SEQUENCE public.r4c_paavo_id_seq
 -- Name: r4c_paavo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.r4c_paavo_id_seq OWNED BY public.r4c_paavo.id;
 -- Name: r4c_postalcode; Type: VIEW; Schema: public; Owner: -
-CREATE VIEW public.r4c_postalcode AS
+CREATE OR REPLACE VIEW public.r4c_postalcode AS
  WITH avg_heat AS (
          SELECT avg(
                 CASE
@@ -698,7 +698,7 @@ UNION ALL
     NULL::double precision AS hki_avgheatexposure
    FROM avg_heat;
 -- Name: r4c_postalcode_mat; Type: MATERIALIZED VIEW; Schema: public; Owner: -
-CREATE MATERIALIZED VIEW public.r4c_postalcode_mat AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.r4c_postalcode_mat AS
  WITH avg_heat AS (
          SELECT avg(
                 CASE
@@ -734,13 +734,13 @@ UNION ALL
    FROM avg_heat
   WITH NO DATA;
 -- Name: r4c_users; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.r4c_users (
+CREATE TABLE IF NOT EXISTS public.r4c_users (
     id integer NOT NULL,
     email text NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 -- Name: r4c_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.r4c_users_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.r4c_users_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -750,11 +750,11 @@ CREATE SEQUENCE public.r4c_users_id_seq
 -- Name: r4c_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.r4c_users_id_seq OWNED BY public.r4c_users.id;
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.schema_migrations (
+CREATE TABLE IF NOT EXISTS public.schema_migrations (
     version character varying NOT NULL
 );
 -- Name: tree_building_distance; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.tree_building_distance (
+CREATE TABLE IF NOT EXISTS public.tree_building_distance (
     id integer NOT NULL,
     tree_id text,
     building_id integer,
@@ -765,7 +765,7 @@ CREATE TABLE public.tree_building_distance (
     bearing integer
 );
 -- Name: tree_building_distance_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.tree_building_distance_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.tree_building_distance_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -775,7 +775,7 @@ CREATE SEQUENCE public.tree_building_distance_id_seq
 -- Name: tree_building_distance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.tree_building_distance_id_seq OWNED BY public.tree_building_distance.id;
 -- Name: tree_distance_building; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.tree_distance_building (
+CREATE TABLE IF NOT EXISTS public.tree_distance_building (
     id integer NOT NULL,
     tree_id text,
     building_id integer,
@@ -785,7 +785,7 @@ CREATE TABLE public.tree_distance_building (
     geom_tree jsonb
 );
 -- Name: tree_distance_building_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.tree_distance_building_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.tree_distance_building_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -795,14 +795,14 @@ CREATE SEQUENCE public.tree_distance_building_id_seq
 -- Name: tree_distance_building_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.tree_distance_building_id_seq OWNED BY public.tree_distance_building.id;
 -- Name: tree_f_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.tree_f_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.tree_f_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
 -- Name: tree_f; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.tree_f (
+CREATE TABLE IF NOT EXISTS public.tree_f (
     kohde_id text,
     kunta text,
     koodi text,
@@ -814,7 +814,7 @@ CREATE TABLE public.tree_f (
     korkeus_ka_m numeric
 );
 -- Name: tree_f_test; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.tree_f_test (
+CREATE TABLE IF NOT EXISTS public.tree_f_test (
     kohde_id text,
     kunta text,
     koodi text,
@@ -826,7 +826,7 @@ CREATE TABLE public.tree_f_test (
     korkeus_ka_m numeric
 );
 -- Name: urban_heat_building; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.urban_heat_building (
+CREATE TABLE IF NOT EXISTS public.urban_heat_building (
     ratu integer,
     geometry jsonb,
     c_kayttark text,
@@ -848,7 +848,7 @@ CREATE TABLE public.urban_heat_building (
     green_roof text
 );
 -- Name: urban_heat_building_f; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.urban_heat_building_f (
+CREATE TABLE IF NOT EXISTS public.urban_heat_building_f (
     id integer,
     ratu integer,
     geom public.geometry,
@@ -869,7 +869,7 @@ CREATE TABLE public.urban_heat_building_f (
     area_m2 double precision
 );
 -- Name: urban_heat_building_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.urban_heat_building_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.urban_heat_building_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -879,7 +879,7 @@ CREATE SEQUENCE public.urban_heat_building_id_seq
 -- Name: urban_heat_building_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 ALTER SEQUENCE public.urban_heat_building_id_seq OWNED BY public.urban_heat_building.id;
 -- Name: urbanheattest; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.urbanheattest (
+CREATE TABLE IF NOT EXISTS public.urbanheattest (
     ratu integer,
     geometry jsonb,
     c_kayttark text,
@@ -894,7 +894,7 @@ CREATE TABLE public.urbanheattest (
     id integer
 );
 -- Name: vegetation_r4c; Type: TABLE; Schema: public; Owner: -
-CREATE TABLE public.vegetation_r4c (
+CREATE TABLE IF NOT EXISTS public.vegetation_r4c (
     gml_id text,
     kohde_id text,
     kunta text,
@@ -909,7 +909,7 @@ CREATE TABLE public.vegetation_r4c (
     id integer NOT NULL
 );
 -- Name: vegetation_r4c_id_seq; Type: SEQUENCE; Schema: public; Owner: -
-CREATE SEQUENCE public.vegetation_r4c_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.vegetation_r4c_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -948,88 +948,93 @@ ALTER TABLE ONLY public.tree_distance_building ALTER COLUMN id SET DEFAULT nextv
 ALTER TABLE ONLY public.urban_heat_building ALTER COLUMN id SET DEFAULT nextval('public.urban_heat_building_id_seq'::regclass);
 -- Name: vegetation_r4c id; Type: DEFAULT; Schema: public; Owner: -
 ALTER TABLE ONLY public.vegetation_r4c ALTER COLUMN id SET DEFAULT nextval('public.vegetation_r4c_id_seq'::regclass);
--- Name: adaptation_landcover adaptation_landcover_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.adaptation_landcover
-    ADD CONSTRAINT adaptation_landcover_pkey PRIMARY KEY (id);
--- Name: flood flood_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.flood
-    ADD CONSTRAINT flood_pkey PRIMARY KEY (id);
--- Name: heat_vulnerable_demographic heat_vulnerable_demographic_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.heat_vulnerable_demographic
-    ADD CONSTRAINT heat_vulnerable_demographic_pkey PRIMARY KEY (id);
--- Name: hki_travel_time_r4c_f hki_travel_time_r4c_f_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.hki_travel_time_r4c_f
-    ADD CONSTRAINT hki_travel_time_r4c_f_pkey PRIMARY KEY (id);
--- Name: hsy_building_heat hsy_building_heat_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.hsy_building_heat
-    ADD CONSTRAINT hsy_building_heat_pkey PRIMARY KEY (id);
--- Name: kafka_finest_station kafka_finest_station_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.kafka_finest_station
-    ADD CONSTRAINT kafka_finest_station_pkey PRIMARY KEY (id);
--- Name: nature_area nature_area_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.nature_area
-    ADD CONSTRAINT nature_area_pkey PRIMARY KEY (id);
--- Name: other_nature_r4c other_nature_r4c_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.other_nature_r4c
-    ADD CONSTRAINT other_nature_r4c_pkey PRIMARY KEY (id);
--- Name: r4c_coldspot r4c_coldspot_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.r4c_coldspot
-    ADD CONSTRAINT r4c_coldspot_pkey PRIMARY KEY (id);
--- Name: r4c_hsy_building_current r4c_hsy_building_test_vtj_prt_key; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.r4c_hsy_building_current
-    ADD CONSTRAINT r4c_hsy_building_test_vtj_prt_key UNIQUE (vtj_prt);
--- Name: r4c_paavo r4c_paavo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.r4c_paavo
-    ADD CONSTRAINT r4c_paavo_pkey PRIMARY KEY (id);
--- Name: r4c_users r4c_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.r4c_users
-    ADD CONSTRAINT r4c_users_pkey PRIMARY KEY (id);
--- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.schema_migrations
-    ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
--- Name: tree_building_distance tree_building_distance_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.tree_building_distance
-    ADD CONSTRAINT tree_building_distance_pkey PRIMARY KEY (id);
--- Name: tree_distance_building tree_distance_building_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.tree_distance_building
-    ADD CONSTRAINT tree_distance_building_pkey PRIMARY KEY (id);
--- Name: urban_heat_building urban_heat_building_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.urban_heat_building
-    ADD CONSTRAINT urban_heat_building_pkey PRIMARY KEY (id);
--- Name: vegetation_r4c vegetation_r4c_pkey; Type: CONSTRAINT; Schema: public; Owner: -
-ALTER TABLE ONLY public.vegetation_r4c
-    ADD CONSTRAINT vegetation_r4c_pkey PRIMARY KEY (id);
+-- Idempotent constraint creation using DO blocks
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'adaptation_landcover_pkey') THEN
+        ALTER TABLE ONLY public.adaptation_landcover ADD CONSTRAINT adaptation_landcover_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'flood_pkey') THEN
+        ALTER TABLE ONLY public.flood ADD CONSTRAINT flood_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'heat_vulnerable_demographic_pkey') THEN
+        ALTER TABLE ONLY public.heat_vulnerable_demographic ADD CONSTRAINT heat_vulnerable_demographic_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'hki_travel_time_r4c_f_pkey') THEN
+        ALTER TABLE ONLY public.hki_travel_time_r4c_f ADD CONSTRAINT hki_travel_time_r4c_f_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'hsy_building_heat_pkey') THEN
+        ALTER TABLE ONLY public.hsy_building_heat ADD CONSTRAINT hsy_building_heat_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'kafka_finest_station_pkey') THEN
+        ALTER TABLE ONLY public.kafka_finest_station ADD CONSTRAINT kafka_finest_station_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'nature_area_pkey') THEN
+        ALTER TABLE ONLY public.nature_area ADD CONSTRAINT nature_area_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'other_nature_r4c_pkey') THEN
+        ALTER TABLE ONLY public.other_nature_r4c ADD CONSTRAINT other_nature_r4c_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'r4c_coldspot_pkey') THEN
+        ALTER TABLE ONLY public.r4c_coldspot ADD CONSTRAINT r4c_coldspot_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'r4c_hsy_building_test_vtj_prt_key') THEN
+        ALTER TABLE ONLY public.r4c_hsy_building_current ADD CONSTRAINT r4c_hsy_building_test_vtj_prt_key UNIQUE (vtj_prt);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'r4c_paavo_pkey') THEN
+        ALTER TABLE ONLY public.r4c_paavo ADD CONSTRAINT r4c_paavo_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'r4c_users_pkey') THEN
+        ALTER TABLE ONLY public.r4c_users ADD CONSTRAINT r4c_users_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'schema_migrations_pkey') THEN
+        ALTER TABLE ONLY public.schema_migrations ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tree_building_distance_pkey') THEN
+        ALTER TABLE ONLY public.tree_building_distance ADD CONSTRAINT tree_building_distance_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tree_distance_building_pkey') THEN
+        ALTER TABLE ONLY public.tree_distance_building ADD CONSTRAINT tree_distance_building_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'urban_heat_building_pkey') THEN
+        ALTER TABLE ONLY public.urban_heat_building ADD CONSTRAINT urban_heat_building_pkey PRIMARY KEY (id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'vegetation_r4c_pkey') THEN
+        ALTER TABLE ONLY public.vegetation_r4c ADD CONSTRAINT vegetation_r4c_pkey PRIMARY KEY (id);
+    END IF;
+END $$;
 -- Name: idx_adaptation_landcover_geom; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_adaptation_landcover_geom ON public.adaptation_landcover USING gist (geom);
+CREATE INDEX IF NOT EXISTS idx_adaptation_landcover_geom ON public.adaptation_landcover USING gist (geom);
 -- Name: idx_adaptation_landcover_grid_id; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_adaptation_landcover_grid_id ON public.adaptation_landcover USING btree (grid_id);
+CREATE INDEX IF NOT EXISTS idx_adaptation_landcover_grid_id ON public.adaptation_landcover USING btree (grid_id);
 -- Name: idx_flood_f_postinumero; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_flood_f_postinumero ON public.flood_f USING btree (postinumero);
+CREATE INDEX IF NOT EXISTS idx_flood_f_postinumero ON public.flood_f USING btree (postinumero);
 -- Name: idx_hki_urbanheat_postinumero; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_hki_urbanheat_postinumero ON public.hki_urbanheat USING btree (postinumero);
+CREATE INDEX IF NOT EXISTS idx_hki_urbanheat_postinumero ON public.hki_urbanheat USING btree (postinumero);
 -- Name: idx_hsy_building_heat_vtj_prt; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_hsy_building_heat_vtj_prt ON public.hsy_building_heat USING btree (vtj_prt);
+CREATE INDEX IF NOT EXISTS idx_hsy_building_heat_vtj_prt ON public.hsy_building_heat USING btree (vtj_prt);
 -- Name: idx_posno; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_posno ON public.r4c_coldspot USING btree (posno);
+CREATE INDEX IF NOT EXISTS idx_posno ON public.r4c_coldspot USING btree (posno);
 -- Name: idx_r4c_hsy_building_mat_geom_gist; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_r4c_hsy_building_mat_geom_gist ON public.r4c_hsy_building_mat USING gist (geom);
+CREATE INDEX IF NOT EXISTS idx_r4c_hsy_building_mat_geom_gist ON public.r4c_hsy_building_mat USING gist (geom);
 -- Name: idx_r4c_hsy_building_mat_postinumero; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_r4c_hsy_building_mat_postinumero ON public.r4c_hsy_building_mat USING btree (postinumero);
+CREATE INDEX IF NOT EXISTS idx_r4c_hsy_building_mat_postinumero ON public.r4c_hsy_building_mat USING btree (postinumero);
 -- Name: idx_r4c_hsy_building_mat_vtj_prt; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_r4c_hsy_building_mat_vtj_prt ON public.r4c_hsy_building_mat USING btree (vtj_prt);
+CREATE INDEX IF NOT EXISTS idx_r4c_hsy_building_mat_vtj_prt ON public.r4c_hsy_building_mat USING btree (vtj_prt);
 -- Name: idx_r4c_hsy_building_test_posno; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_r4c_hsy_building_test_posno ON public.r4c_hsy_building_current USING btree (posno);
+CREATE INDEX IF NOT EXISTS idx_r4c_hsy_building_test_posno ON public.r4c_hsy_building_current USING btree (posno);
 -- Name: idx_r4c_hsy_building_test_vtj_prt_posno; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_r4c_hsy_building_test_vtj_prt_posno ON public.r4c_hsy_building_current USING btree (vtj_prt, posno);
+CREATE INDEX IF NOT EXISTS idx_r4c_hsy_building_test_vtj_prt_posno ON public.r4c_hsy_building_current USING btree (vtj_prt, posno);
 -- Name: idx_r4c_postalcode_mat_geom_gist; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_r4c_postalcode_mat_geom_gist ON public.r4c_postalcode_mat USING gist (geom);
+CREATE INDEX IF NOT EXISTS idx_r4c_postalcode_mat_geom_gist ON public.r4c_postalcode_mat USING gist (geom);
 -- Name: idx_r4c_postalcode_mat_postinumero; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX idx_r4c_postalcode_mat_postinumero ON public.r4c_postalcode_mat USING btree (postinumero);
+CREATE INDEX IF NOT EXISTS idx_r4c_postalcode_mat_postinumero ON public.r4c_postalcode_mat USING btree (postinumero);
 -- Name: keharist_catalogue_geom_1657115388778116000; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX keharist_catalogue_geom_1657115388778116000 ON public.keharist_catalogue USING gist (geom);
+CREATE INDEX IF NOT EXISTS keharist_catalogue_geom_1657115388778116000 ON public.keharist_catalogue USING gist (geom);
 -- Name: keharist_data_geom_1657115103429589000; Type: INDEX; Schema: public; Owner: -
-CREATE INDEX keharist_data_geom_1657115103429589000 ON public.keharist_data USING gist (geom);
+CREATE INDEX IF NOT EXISTS keharist_data_geom_1657115103429589000 ON public.keharist_data USING gist (geom);
 -- Name: r4c_hsy_building_current trigger_update_updated_at; Type: TRIGGER; Schema: public; Owner: -
+DROP TRIGGER IF EXISTS trigger_update_updated_at ON public.r4c_hsy_building_current;
 CREATE TRIGGER trigger_update_updated_at BEFORE UPDATE ON public.r4c_hsy_building_current FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 -- PostgreSQL database dump complete
 -- Dbmate schema migrations

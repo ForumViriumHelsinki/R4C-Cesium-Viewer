@@ -22,7 +22,7 @@ for i in range(2, 241):
     if "id" not in gdf.columns:
         print(f"Skipping file {i}: id column not found")
         continue
-    
+
     # Ensure geometries match by reindexing
     gdf = gdf.set_index("id")
     if not base_gdf.geometry.equals(gdf.geometry):
@@ -31,7 +31,7 @@ for i in range(2, 241):
     # Append water_depth and discharge to the respective lists, for each feature
     for j in range(len(gdf)):
         all_water_depth[j].append(gdf["water_depth"].iloc[j])  # Feature-wise append
-        all_discharge[j].append(gdf["discharge"].iloc[j])     
+        all_discharge[j].append(gdf["discharge"].iloc[j])
 
 # Create GeoDataFrame from the base geometry and joined data
 final_gdf = base_gdf.copy()  # Create a copy to avoid modifying the original

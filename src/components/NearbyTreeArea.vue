@@ -108,17 +108,17 @@ class="label"
   </div>
 
 </template>
-  
+
 <script>
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import * as Cesium from 'cesium';
-import Plot from '../services/plot.js'; 
-import Tree from '../services/tree.js'; 
-import Building from '../services/building.js'; 
-  
+import Plot from '../services/plot.js';
+import Tree from '../services/tree.js';
+import Building from '../services/building.js';
+
 export default {
 	mounted() {
 		this.unsubscribe = eventBus.on( 'newNearbyTreeDiagram', this.newNearbyTreeDiagram );
@@ -152,7 +152,7 @@ export default {
  * Extracts heat expsoure and calculates average tree_area from the heatTreeAverageMap.
  *
  * @param { Map } heatTreeAverageMap - The map containing heat exposure values as keys and tree_area/count as values.
- * 
+ *
  * @return { Array } An array containing three sub-arrays. The first sub-array contains all the keys from the map, and the second sub-array contains the calculated average tree_area for each key. Third one contains the count of buildings for the heat exposure value.
  */
 		extractKeysAndAverageTreeArea( heatTreeAverageMap ) {
@@ -164,7 +164,7 @@ export default {
 				heatExpArray.push( key );
 
 				if ( value.tree_area == 0 ) {
-	
+
 					// setting the value to 1 if there is no tree area nearby
 					averageTreeAreaArray.push( 1 );
 
@@ -177,7 +177,7 @@ export default {
 				buildingCounts.push( value.count );
 
 			} );
-  
+
 			return [ heatExpArray, averageTreeAreaArray, buildingCounts ];
 
 		},
@@ -187,7 +187,7 @@ export default {
  *
  * @param { Map } sumPAlaM2Map - The dataset containing tree information, mapped to building IDs.
  * @param { Map } buildingsDataSource - The datasource containing buildings data of the postal code area.
- * 
+ *
  * @return { Map } A map for plotting that contains the aggregated tree_area and count of buildings for each heat exposure value.
  */
 		createTreeBuildingPlotMap( sumPAlaM2Map, buildingsDataSource ) {
@@ -199,15 +199,15 @@ export default {
 
 			let maxTreeArea = 0;
 			let maxTreeAreaBuilding = null;
-	
+
 			// Iterate over all entities in data source
 			for ( let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++ ) {
-	
-				let entity = buildingsDataSource._entityCollection._entities._array[ i ];	
+
+				let entity = buildingsDataSource._entityCollection._entities._array[ i ];
 				// If entity has a heat exposure value, add it to the urbanHeatData array and add data for the scatter plot
 
 				if ( !this.toggleStore.helsinkiView ) {
-					
+
 					if ( entity._properties.avgheatexposuretobuilding && entity._properties._id && entity._properties._area_m2 && Number( entity._properties._area_m2._value ) > 225 ) {
 
 						const building_id = entity._properties._id._value;
@@ -220,7 +220,7 @@ export default {
 							tree_area = 0;
 
 						}
-			
+
 						if ( heatTreeAverageMap.has( heatExposure ) ) {
 
 							let storedValues = heatTreeAverageMap.get( heatExposure );
@@ -229,16 +229,16 @@ export default {
 
 
 							heatTreeAverageMap.set( heatExposure, storedValues );
-			
+
 						} else {
-				
+
 							heatTreeAverageMap.set( heatExposure, { tree_area: tree_area, count: 1 } );
 
 						}
 
 						// Set tree_area as a property of the entity
 						entity._properties.treeArea = tree_area;
-			
+
 						if ( tree_area > 225 ) {
 
 							// Highlight the building entity edges by changing its outlineColor and outlineWidth
@@ -257,7 +257,7 @@ export default {
 
 							}
 
-						} 
+						}
 
 						// for calculating postal code average
 						totalTreeArea += tree_area;
@@ -279,7 +279,7 @@ export default {
 							tree_area = 0;
 
 						}
-			
+
 						if ( heatTreeAverageMap.has( heatExposure ) ) {
 
 							let storedValues = heatTreeAverageMap.get( heatExposure );
@@ -288,16 +288,16 @@ export default {
 
 
 							heatTreeAverageMap.set( heatExposure, storedValues );
-			
+
 						} else {
-				
+
 							heatTreeAverageMap.set( heatExposure, { tree_area: tree_area, count: 1 } );
 
 						}
 
 						// Set tree_area as a property of the entity
 						entity._properties.treeArea = tree_area;
-			
+
 						if ( tree_area > 225 ) {
 
 							// Highlight the building entity edges by changing its outlineColor and outlineWidth
@@ -316,7 +316,7 @@ export default {
 
 							}
 
-						} 
+						}
 
 						// for calculating postal code average
 						totalTreeArea += tree_area;
@@ -341,20 +341,20 @@ export default {
  *
  * @param { object } entityId - Id of Cesium entity
  * @param { object } datasource - The datasource the entity is located in
- * 
+ *
  */
 		setEntityColorToGreen( entityId, datasource ) {
-	
+
 			// Iterate over all entities in data source
 			for ( let i = 0; i < datasource._entityCollection._entities._array.length; i++ ) {
-	
+
 				const entity = datasource._entityCollection._entities._array[ i ];
 
 				if ( entity._properties._id && entity._properties._id._value == entityId ) {
 
 					entity.polygon.material = Cesium.Color.FORESTGREEN;
 					entity.polygon.outlineColor = Cesium.Color.RED; // Set outline color to red
-			
+
 				}
 			}
 
@@ -365,7 +365,7 @@ export default {
  *
  * @param { object } distanceData - The dataset containing distance information
  * @param { object } entities - The dataset containing tree information
- * 
+ *
  * @return { object } mapped data for plotting
  */
 		combineDistanceAndTreeData( distanceData, entities ) {
@@ -386,9 +386,9 @@ export default {
 					const tree_id = distanceData.features[ i ].properties.tree_id;
 
 					for ( let i = 0; i < entities.length; i++ ) {
-        
+
 						let entity = entities[ i ];
-				
+
 						// Check if the entity posno property matches the postalcode.
 						if ( entity._properties._kohde_id._value === tree_id ) {
 
@@ -397,19 +397,19 @@ export default {
 							entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
 
 							const p_ala_m2 = entity._properties._p_ala_m2._value ;
-	
+
 							if ( sumPAlaM2Map.has( building_id ) ) {
-	
+
 								sumPAlaM2Map.set( building_id, sumPAlaM2Map.get( building_id ) + p_ala_m2 );
-					
+
 							} else {
-						
+
 								sumPAlaM2Map.set( building_id, p_ala_m2 );
-	
+
 							}
 
 						}
-					}	
+					}
 				}
 			}
 
@@ -422,8 +422,8 @@ export default {
  *
  * @param { Number } bearing - The bearing of tree to building
  * @param { String } selectedBearingValue - The selected bearing value by user
- * 
-* @return { Boolean } 
+ *
+* @return { Boolean }
  */
 		checkBearing( bearing, selectedBearingValue ) {
 
@@ -453,7 +453,7 @@ export default {
 
 			default:
 				return false;
-			}	
+			}
 
 
 		},
@@ -468,26 +468,26 @@ export default {
 				.attr( 'width', width / data.length )
 				.attr( 'height', d => height - yScale( d ) )
 				.attr( 'fill', color )
-				.on( 'mouseover', ( event, d, i ) => this.plotService.handleMouseover( tooltip, containerId, event, d, 
+				.on( 'mouseover', ( event, d, i ) => this.plotService.handleMouseover( tooltip, containerId, event, d,
 					() => `Heat Exposure: ${heatExps[i]}<br>Tree Area: ${d}` ) )
 				.on( 'mouseout', () => this.plotService.handleMouseout( tooltip ) );
 		},
 		/**
- * This function iterates through each direction using the switches array. 
- * For each direction, function gets the corresponding switch container and the associated toggle input element. 
+ * This function iterates through each direction using the switches array.
+ * For each direction, function gets the corresponding switch container and the associated toggle input element.
  * If the toggle is checked (meaning the switch is turned on), the function return its value
  *
  */
 		findSelectedBearingValue() {
 			const switches = [ 'All', 'South', 'West', 'East', 'North' ];
-  
+
 			for ( const direction of switches ) {
 
 				const switchContainer = document.getElementById( `bearing${ direction }SwitchContainer` );
 				const toggle = switchContainer.querySelector( `#bearing${ direction }Toggle` );
 
 				if ( toggle.checked ) {
-					
+
 					return toggle.value;
 
 				}
@@ -534,14 +534,14 @@ export default {
 
 const setupBearingSwitches = ( postalcode ) => {
 	const switches = [ 'All', 'South', 'West', 'East', 'North' ];
-  
+
 	for ( const currentDirection of switches ) {
 
 		const switchContainer = document.getElementById( `bearing${ currentDirection }SwitchContainer` );
 		const toggle = switchContainer.querySelector( `#bearing${ currentDirection }Toggle` );
-      
+
 		toggle.addEventListener( 'click', () => {
-					
+
 			updateBearingSwitches( switches, currentDirection );
 			const treeService = new Tree( );
 			const buildingService = new Building( );
@@ -550,7 +550,7 @@ const setupBearingSwitches = ( postalcode ) => {
 			treeService.fetchAndAddTreeDistanceData( postalcode );
 
 		} );
-  
+
 		// Set the 'All' switch to checked by default
 		if ( currentDirection === 'All' ) {
 			toggle.checked = true;
@@ -560,7 +560,7 @@ const setupBearingSwitches = ( postalcode ) => {
 
 const updateBearingSwitches = ( switches, currentDirection ) => {  // Use an arrow function with const
 	for ( const otherDirection of switches ) {
-    
+
 		if ( currentDirection !== otherDirection ) {
 
 			const otherSwitchContainer = document.getElementById( `bearing${ otherDirection }SwitchContainer` );
@@ -587,7 +587,7 @@ const updateBearingSwitches = ( switches, currentDirection ) => {  // Use an arr
     background-color: white;
     margin: 20px; /* Add margins to the container */
 }
-#bearingAllSwitchContainer 
+#bearingAllSwitchContainer
 {
     position: fixed;
     bottom: 65px;
@@ -595,7 +595,7 @@ const updateBearingSwitches = ( switches, currentDirection ) => {  // Use an arr
 	visibility: hidden;
 }
 
-#bearingSouthSwitchContainer 
+#bearingSouthSwitchContainer
 {
     position: fixed;
     bottom: 65px;
@@ -603,7 +603,7 @@ const updateBearingSwitches = ( switches, currentDirection ) => {  // Use an arr
 	visibility: hidden;
 }
 
-#bearingWestSwitchContainer 
+#bearingWestSwitchContainer
 {
     position: fixed;
     bottom: 65px;
@@ -611,7 +611,7 @@ const updateBearingSwitches = ( switches, currentDirection ) => {  // Use an arr
 	visibility: hidden;
 }
 
-#bearingEastSwitchContainer 
+#bearingEastSwitchContainer
 {
     position: fixed;
     bottom: 65px;
@@ -619,7 +619,7 @@ const updateBearingSwitches = ( switches, currentDirection ) => {  // Use an arr
 	visibility: hidden;
 }
 
-#bearingNorthSwitchContainer 
+#bearingNorthSwitchContainer
 {
     position: fixed;
     bottom: 65px;

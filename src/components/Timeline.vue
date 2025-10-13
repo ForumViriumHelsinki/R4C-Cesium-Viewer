@@ -22,7 +22,7 @@ variant="tonal"
           {{ selectedDate }}
         </v-chip>
       </div>
-    
+
     <div class="date-labels">
       <span
         v-for="(date, index) in dates"
@@ -33,7 +33,7 @@ variant="tonal"
         {{ formatDate(date) }}
       </span>
     </div>
-    
+
     <div class="slider-container">
       <v-slider
         v-model="currentPropertyIndex"
@@ -48,7 +48,7 @@ variant="tonal"
         thumb-color="primary"
       />
     </div>
-    
+
       <div class="timeline-info">
         <span class="info-text">
           <v-icon
@@ -92,16 +92,16 @@ export default {
       '2025-07-14'
     ];
 
-    const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)); // Set default index    
+    const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)); // Set default index
 
     // Format date for display
     const formatDate = (dateString) => {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        year: '2-digit', 
-        month: 'short' 
+      return date.toLocaleDateString('en-US', {
+        year: '2-digit',
+        month: 'short'
       });
-    };	
+    };
 
     const updateViewAndPlots = () => {
         const buildingsDataSource = dataSourceService.getDataSourceByName( 'Buildings ' + globalStore.postalcode );
@@ -113,7 +113,7 @@ export default {
         buildingService.updateHeatHistogramDataAfterFilter( entities) ;
         propsStore.setScatterPlotEntities( entities );
   		  eventBus.emit('updateScatterPlot');
-    };    
+    };
 
     onMounted(() => {
       	timelineLength.value = dates.length; // Set the timeline length when mounted
@@ -230,24 +230,24 @@ export default {
     left: 16px;
     right: 16px;
   }
-  
+
   .timeline-card {
     min-width: auto;
     padding: 12px 16px;
   }
-  
+
   .timeline-title {
     font-size: 13px;
   }
-  
+
   .date-labels {
     padding: 0 8px;
   }
-  
+
   .date-label {
     font-size: 0.7rem;
   }
-  
+
   .info-text {
     font-size: 0.7rem;
   }

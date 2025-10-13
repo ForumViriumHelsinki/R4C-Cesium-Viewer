@@ -8,7 +8,7 @@ import * as d3 from 'd3'; // Import D3.js
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
-import Plot from '../services/plot.js'; 
+import Plot from '../services/plot.js';
 import Building from '../services/building.js';
 
 export default {
@@ -70,14 +70,14 @@ export default {
 
 		const createHistogram = () => {
 			const urbanHeatData = propsStore.heatHistogramData;
-      
+
 			plotService.initializePlotContainerForGrid( 'heatHistogramContainer' );
 
 			// Get the container's actual width and height dynamically
 			const margin = { top: 30, right: 50, bottom: 34, left: 30 };
 			const width = store.navbarWidth - margin.left - margin.right; // Use container width
 			const height = 250 - margin.top - margin.bottom; // Use container height
-  
+
 			const svg = plotService.createSVGElement( margin, width, height, '#heatHistogramContainer' );
 
 			const minDataValue = d3.min( urbanHeatData ) - 0.02;
@@ -125,7 +125,7 @@ export default {
 			nextTick( () => {
 				newHeatHistogram();
 			} );
-			
+
 			eventBus.on( 'newHeatHistogram', createHistogram );
 		} );
 
@@ -141,7 +141,7 @@ export default {
 <style scoped>
 #heatHistogramContainer {
   	height: 220px;
-  	width: 100%; 
+  	width: 100%;
 	position: relative;
 	background-color: white;
 }

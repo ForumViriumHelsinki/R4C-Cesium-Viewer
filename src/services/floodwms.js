@@ -13,9 +13,9 @@
  * @see {@link https://www.ogc.org/standards/wms|OGC WMS Standard}
  */
 
-import { useGlobalStore } from '../stores/globalStore.js';
-import * as Cesium from 'cesium';
-import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
+import { useGlobalStore } from "../stores/globalStore.js";
+import * as Cesium from "cesium";
+import { useBackgroundMapStore } from "../stores/backgroundMapStore.js";
 
 /**
  * Creates and adds a flood risk WMS imagery layer to the Cesium viewer
@@ -41,14 +41,13 @@ export const createFloodImageryLayer = async (url, layerName) => {
     const provider = new Cesium.WebMapServiceImageryProvider({
       url: `${url}&format=image/png&transparent=true`,
       layers: layerName,
-      proxy: new Cesium.DefaultProxy('/proxy/'),
+      proxy: new Cesium.DefaultProxy("/proxy/"),
     });
 
     await provider.readyPromise;
     const addedLayer = viewer.imageryLayers.addImageryProvider(provider);
     addedLayer.alpha = 1;
-    backgroundMapStore.floodLayers.push( addedLayer );
-  
+    backgroundMapStore.floodLayers.push(addedLayer);
   } catch (error) {
     console.error("Error creating WMS layer:", error);
   }
@@ -70,20 +69,20 @@ export const removeFloodLayers = () => {
   const viewer = store.cesiumViewer;
 
   try {
-    if (Array.isArray(backgroundMapStore.floodLayers) && backgroundMapStore.floodLayers.length > 0) {
-    
-    // Remove each layer from the Cesium viewer
-    backgroundMapStore.floodLayers.forEach(layer => {
-      if (viewer.imageryLayers.contains(layer)) {
-         viewer.imageryLayers.remove(layer);
-      }
-    });
+    if (
+      Array.isArray(backgroundMapStore.floodLayers) &&
+      backgroundMapStore.floodLayers.length > 0
+    ) {
+      // Remove each layer from the Cesium viewer
+      backgroundMapStore.floodLayers.forEach((layer) => {
+        if (viewer.imageryLayers.contains(layer)) {
+          viewer.imageryLayers.remove(layer);
+        }
+      });
 
-    backgroundMapStore.floodLayers = [ ];
-
+      backgroundMapStore.floodLayers = [];
     }
   } catch (error) {
     console.error("Error removing floodlayer:", error);
   }
-  
 };

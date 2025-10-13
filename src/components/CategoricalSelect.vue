@@ -4,7 +4,7 @@
     :items="categoricalOptions"
     label="Select Property"
     item-title="text"
-    item-value="value"    
+    item-value="value"
     density="compact"
     variant="underlined"
   />
