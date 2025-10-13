@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.26.0...r4c-cesium-viewer-v1.26.1) (2025-10-13)
+
+
+### Bug Fixes
+
+* make initial schema migration fully idempotent ([#242](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/242)) ([aff058d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/aff058d4d0c1719908dd1c56be170d0889b64b58))
+
 ## [1.26.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.25.0...r4c-cesium-viewer-v1.26.0) (2025-10-13)
 
 
