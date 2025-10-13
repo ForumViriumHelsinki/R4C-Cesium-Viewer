@@ -12,7 +12,7 @@ def health_check():
 
 # Load the NDVI raster and GeoJSON
 def calculate_average_ndvi(request):
-    
+
     # Access data from the request arguments
     request_json = request.get_json(silent=True)
 
@@ -20,7 +20,7 @@ def calculate_average_ndvi(request):
     bucket_name = request_json['bucket']
     json_input = request_json['json_input']
     json_output = request_json['json_output']
-    
+
     # Check if both date and bucket are provided
     if not date_str or not bucket_name:
         return "Error: Missing 'date' or 'bucket' parameter", 400
@@ -30,15 +30,15 @@ def calculate_average_ndvi(request):
 
     # Folder path where TIFF files are located in the bucket
     json_path = f'NDVI/vector_data/{json_input}'
-    
+
     # Create a Google Cloud Storage client
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
-    
+
     # Download raster file
     raster_blob = bucket.blob(raster_path)
     raster_blob.download_to_filename('/tmp/ndvi.tiff')
-    
+
     # Download vector file
     vector_blob = bucket.blob(json_path)
     vector_blob.download_to_filename('/tmp/vector.geojson')
@@ -77,7 +77,7 @@ def calculate_average_ndvi(request):
                 # Ignore no-data values
                 if pixel_value < 0:
                     continue
-                
+
                 # Get the four corner coordinates of the pixel
                 top_left = out_transform * (col, row)
                 top_right = out_transform * (col + 1, row)
@@ -89,7 +89,7 @@ def calculate_average_ndvi(request):
 
                 # Compute the intersection area
                 intersection = polygon.intersection(cell_geom)
-                
+
                 if not intersection.is_empty:
                     intersection_area = intersection.area
                     total_value += pixel_value * intersection_area
@@ -116,7 +116,7 @@ def calculate_average_ndvi(request):
 
     # Close the raster file
     src.close()
-    
+
     message = f"NDVI calculated and saved to: gs://{bucket_name}/NDVI/vector_data/{json_output}"
 
     # Return success response

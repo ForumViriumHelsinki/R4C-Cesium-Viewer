@@ -22,7 +22,7 @@
  * eventBus.on('event', handler);
  * eventBus.off('event', handler);
  */
-import mitt from 'mitt';
+import mitt from "mitt";
 
 /**
  * Global event bus instance

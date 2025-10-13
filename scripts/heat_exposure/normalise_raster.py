@@ -21,13 +21,13 @@ with rasterio.open(input_raster) as src:
     # The mask function returns a masked array, we need the first band
     band = out_image[0]
     src_profile = src.profile
-    
+
     # Exclude no-data values from the normalization calculation
     # Assuming no-data values are represented by 0
     valid_pixels = band[band > 0]
     actual_min = np.min(valid_pixels)
     actual_max = np.max(valid_pixels)
-    
+
     # Normalize only valid pixel values
     # Set invalid (0 or no-data) pixels to a specific value or keep as is
     normalized_band = (band.astype(float) - actual_min) / (actual_max - actual_min)

@@ -142,7 +142,7 @@ const filterSearchResults = async () => {
 
       // Store the full address objects in addressData
       addressData.value = processAddressData(data.features);
-      
+
       // Now store the filtered address objects (not just strings) in filteredAddresses
       filteredAddresses.value = addressData.value;
 
@@ -195,4 +195,3 @@ watch(searchQuery, filterSearchResults);
   background-color: #f5f5f5;
 }
 </style>
-

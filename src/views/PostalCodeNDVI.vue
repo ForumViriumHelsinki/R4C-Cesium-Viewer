@@ -70,7 +70,7 @@ export default {
 
     onBeforeUnmount(() => {
       eventBus.off("addNDVI", updateImage);
-    });    
+    });
 
     return { selectedDate, availableDates, updateImage, ndvi };
   },

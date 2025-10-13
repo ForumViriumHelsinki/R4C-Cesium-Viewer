@@ -1,14 +1,14 @@
-import Datasource from './datasource.js';
-import Building from './building.js';
-import UrbanHeat from './urbanheat.js';
-import { eventBus } from './eventEmitter.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import * as turf from '@turf/turf';
-import * as Cesium from 'cesium';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useBuildingStore } from '../stores/buildingStore.js';
-import { useURLStore } from '../stores/urlStore.js';
+import Datasource from "./datasource.js";
+import Building from "./building.js";
+import UrbanHeat from "./urbanheat.js";
+import { eventBus } from "./eventEmitter.js";
+import { useGlobalStore } from "../stores/globalStore.js";
+import { usePropsStore } from "../stores/propsStore.js";
+import * as turf from "@turf/turf";
+import * as Cesium from "cesium";
+import { useToggleStore } from "../stores/toggleStore.js";
+import { useBuildingStore } from "../stores/buildingStore.js";
+import { useURLStore } from "../stores/urlStore.js";
 
 /**
  * HSY Building Service
@@ -32,370 +32,462 @@ import { useURLStore } from '../stores/urlStore.js';
  * @see {@link https://hsy.fi/en/environmental-information/open-data/|HSY Open Data}
  */
 export default class HSYBuilding {
-	/**
-	 * Creates an HSYBuilding service instance
-	 */
-    constructor() {
-        this.store = useGlobalStore();
-        this.viewer = this.store.cesiumViewer;
-        this.datasourceService = new Datasource();
-        this.buildingService = new Building();
-        this.urbanHeatService = new UrbanHeat();
-        this.toggleStore = useToggleStore();
-        this.urlStore = useURLStore();
+  /**
+   * Creates an HSYBuilding service instance
+   */
+  constructor() {
+    this.store = useGlobalStore();
+    this.viewer = this.store.cesiumViewer;
+    this.datasourceService = new Datasource();
+    this.buildingService = new Building();
+    this.urbanHeatService = new UrbanHeat();
+    this.toggleStore = useToggleStore();
+    this.urlStore = useURLStore();
+  }
+
+  async loadHSYBuildings(bbox) {
+    try {
+      const url = bbox
+        ? this.urlStore.hsyGridBuildings(bbox)
+        : this.urlStore.hsyBuildings(this.store.postalcode);
+      console.log(
+        "[HSYBuilding] 🏢 Loading HSY buildings for postal code:",
+        this.store.postalcode,
+      );
+      console.log("[HSYBuilding] API URL:", url);
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log(
+        "[HSYBuilding] ✅ Received",
+        data.features?.length || 0,
+        "building features",
+      );
+
+      // Only process grid attributes if we have a current grid cell
+      if (this.store.currentGridCell) {
+        await this.setGridAttributes(data.features);
+      }
+
+      let entities = await this.datasourceService.addDataSourceWithPolygonFix(
+        data,
+        "Buildings " + this.store.postalcode,
+      );
+      this.setHSYBuildingAttributes(data, entities);
+
+      console.log(
+        "[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer",
+      );
+      return entities;
+    } catch (error) {
+      console.error("[HSYBuilding] ❌ Error loading HSY buildings:", error);
+      throw error;
     }
+  }
 
-    async loadHSYBuildings( bbox ) {
-        try {
-            
-            const url = bbox ? this.urlStore.hsyGridBuildings( bbox ) : this.urlStore.hsyBuildings( this.store.postalcode )
-            console.log('[HSYBuilding] 🏢 Loading HSY buildings for postal code:', this.store.postalcode);
-            console.log('[HSYBuilding] API URL:', url);
-            
-            const response = await fetch( url );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            console.log('[HSYBuilding] ✅ Received', data.features?.length || 0, 'building features');
+  createGeoJsonPolygon() {
+    try {
+      if (!this.store.currentGridCell?.polygon?.hierarchy) {
+        console.warn("No valid grid cell polygon found");
+        return null;
+      }
 
-            // Only process grid attributes if we have a current grid cell
-            if (this.store.currentGridCell) {
-                await this.setGridAttributes(data.features);
-            }
+      const cesiumPolygon =
+        this.store.currentGridCell.polygon.hierarchy.getValue(
+          Cesium.JulianDate.now(),
+        );
 
-            let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Buildings ' + this.store.postalcode);
-            this.setHSYBuildingAttributes(data, entities);
-            
-            console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer');
-            return entities;
-        } catch (error) {
-            console.error('[HSYBuilding] ❌ Error loading HSY buildings:', error);
-            throw error;
+      return {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            cesiumPolygon.positions.map((cartesian) => {
+              const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+              return [
+                Cesium.Math.toDegrees(cartographic.longitude),
+                Cesium.Math.toDegrees(cartographic.latitude),
+              ];
+            }),
+          ],
+        },
+      };
+    } catch (error) {
+      console.error("Error creating GeoJSON polygon:", error);
+      return null;
+    }
+  }
+
+  setInitialAttributesForIntersectingBuilding(feature, weight, cellProps) {
+    if (!cellProps?.asukkaita) return;
+
+    const asukkaita = cellProps.asukkaita;
+    feature.properties.pop_d_0_9 =
+      weight * (cellProps.ika0_9 / asukkaita).toFixed(4);
+    feature.properties.pop_d_10_19 =
+      weight * (cellProps.ika10_19 / asukkaita).toFixed(4);
+    feature.properties.pop_d_20_29 =
+      weight * (cellProps.ika20_29 / asukkaita).toFixed(4);
+    feature.properties.pop_d_30_39 =
+      weight * (cellProps.ika30_39 / asukkaita).toFixed(4);
+    feature.properties.pop_d_40_49 =
+      weight * (cellProps.ika40_49 / asukkaita).toFixed(4);
+    feature.properties.pop_d_50_59 =
+      weight * (cellProps.ika50_59 / asukkaita).toFixed(4);
+    feature.properties.pop_d_60_69 =
+      weight * (cellProps.ika60_69 / asukkaita).toFixed(4);
+    feature.properties.pop_d_70_79 =
+      weight * (cellProps.ika70_79 / asukkaita).toFixed(4);
+    feature.properties.pop_d_over80 =
+      weight * (cellProps.ika_yli80 / asukkaita).toFixed(4);
+  }
+
+  approximateOtherAttributesForIntersectingBuilding(
+    feature,
+    weight,
+    gridProps,
+  ) {
+    for (let i = 0; i < gridProps.length; i++) {
+      const props = gridProps[i];
+      if (!props?.asukkaita) continue;
+
+      const asukkaita = props.asukkaita;
+      feature.properties.pop_d_0_9 +=
+        weight * (props.ika0_9 / asukkaita).toFixed(4);
+      feature.properties.pop_d_10_19 +=
+        weight * (props.ika10_19 / asukkaita).toFixed(4);
+      feature.properties.pop_d_20_29 +=
+        weight * (props.ika20_29 / asukkaita).toFixed(4);
+      feature.properties.pop_d_30_39 +=
+        weight * (props.ika30_39 / asukkaita).toFixed(4);
+      feature.properties.pop_d_40_49 +=
+        weight * (props.ika40_49 / asukkaita).toFixed(4);
+      feature.properties.pop_d_50_59 +=
+        weight * (props.ika50_59 / asukkaita).toFixed(4);
+      feature.properties.pop_d_60_69 +=
+        weight * (props.ika60_69 / asukkaita).toFixed(4);
+      feature.properties.pop_d_70_79 +=
+        weight * (props.ika70_79 / asukkaita).toFixed(4);
+      feature.properties.pop_d_over80 +=
+        weight * (props.ika_yli80 / asukkaita).toFixed(4);
+    }
+  }
+
+  approximateAttributesForIntersectingBuildings(feature) {
+    try {
+      const cellProps = this.store.currentGridCell.properties;
+      if (!feature.geometry) return;
+
+      const featureBBox = turf.bbox(feature);
+      const bboxPolygon = turf.bboxPolygon(featureBBox);
+      let gridProps = [];
+
+      const populationGridDataSource =
+        this.datasourceService.getDataSourceByName("PopulationGrid");
+      if (!populationGridDataSource) return;
+
+      const entities = populationGridDataSource.entities.values;
+
+      for (let i = 0; i < entities.length; i++) {
+        const entity = entities[i];
+        if (entity.properties._index._value !== cellProps._index._value) {
+          const entityGeoJson = this.entityToGeoJson(entity);
+          if (
+            entityGeoJson &&
+            turf.booleanIntersects(bboxPolygon, entityGeoJson)
+          ) {
+            gridProps.push(entityGeoJson.properties);
+          }
         }
+      }
+
+      const weight = this.getWeight(gridProps.length);
+      this.setInitialAttributesForIntersectingBuilding(
+        feature,
+        weight,
+        cellProps,
+      );
+      this.approximateOtherAttributesForIntersectingBuilding(
+        feature,
+        weight,
+        gridProps,
+      );
+    } catch (error) {
+      console.error("Error approximating attributes:", error);
+    }
+  }
+
+  setGridAttributesForWithinBuilding(feature) {
+    const cellProps = this.store.currentGridCell.properties;
+    if (!cellProps?.asukkaita) return;
+
+    const asukkaita = cellProps.asukkaita;
+    feature.properties.pop_d_0_9 = (cellProps.ika0_9 / asukkaita).toFixed(4);
+    feature.properties.pop_d_10_19 = (cellProps.ika10_19 / asukkaita).toFixed(
+      4,
+    );
+    feature.properties.pop_d_20_29 = (cellProps.ika20_29 / asukkaita).toFixed(
+      4,
+    );
+    feature.properties.pop_d_30_39 = (cellProps.ika30_39 / asukkaita).toFixed(
+      4,
+    );
+    feature.properties.pop_d_40_49 = (cellProps.ika40_49 / asukkaita).toFixed(
+      4,
+    );
+    feature.properties.pop_d_50_59 = (cellProps.ika50_59 / asukkaita).toFixed(
+      4,
+    );
+    feature.properties.pop_d_60_69 = (cellProps.ika60_69 / asukkaita).toFixed(
+      4,
+    );
+    feature.properties.pop_d_70_79 = (cellProps.ika70_79 / asukkaita).toFixed(
+      4,
+    );
+    feature.properties.pop_d_over80 = (cellProps.ika_yli80 / asukkaita).toFixed(
+      4,
+    );
+  }
+
+  async setGridAttributes(features) {
+    const geoJsonPolygon = this.createGeoJsonPolygon();
+
+    if (!geoJsonPolygon) {
+      console.warn("Skipping grid attributes - no valid polygon");
+      return;
     }
 
-    createGeoJsonPolygon() {
-        try {
-            if (!this.store.currentGridCell?.polygon?.hierarchy) {
-                console.warn('No valid grid cell polygon found');
-                return null;
-            }
+    console.log(
+      "[HSYBuilding] 🔄 Processing grid attributes for",
+      features.length,
+      "features with progressive loading",
+    );
 
-            const cesiumPolygon = this.store.currentGridCell.polygon.hierarchy.getValue(Cesium.JulianDate.now());
-            
-            return {
-                type: 'Feature',
-                properties: {},
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [cesiumPolygon.positions.map(cartesian => {
-                        const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                        return [
-                            Cesium.Math.toDegrees(cartographic.longitude),
-                            Cesium.Math.toDegrees(cartographic.latitude)
-                        ];
-                    })]
-                }
-            };
-        } catch (error) {
-            console.error('Error creating GeoJSON polygon:', error);
-            return null;
-        }
+    // Use progressive loading with the unified loader if available
+    try {
+      const { unifiedLoader } = await import("./unifiedLoader.js");
+
+      const processor = async (batch) => {
+        return this.processGridAttributeBatch(batch, geoJsonPolygon);
+      };
+
+      await unifiedLoader.loadLayer({
+        layerId: "grid-attributes",
+        data: features,
+        processor,
+        options: {
+          batchSize: 2, // Very small batches for heavy Turf.js operations
+          priority: "high",
+          enableYielding: true,
+          yieldInterval: 1, // Yield after every batch
+        },
+      });
+    } catch (error) {
+      console.warn(
+        "[HSYBuilding] Unified loader not available, falling back to legacy processing",
+      );
+      await this.processGridAttributesLegacy(features, geoJsonPolygon);
     }
 
-    setInitialAttributesForIntersectingBuilding(feature, weight, cellProps) {
-        if (!cellProps?.asukkaita) return;
+    console.log("[HSYBuilding] ✅ Grid attributes processing complete");
+  }
 
-        const asukkaita = cellProps.asukkaita;
-        feature.properties.pop_d_0_9 = weight * (cellProps.ika0_9 / asukkaita).toFixed(4);
-        feature.properties.pop_d_10_19 = weight * (cellProps.ika10_19 / asukkaita).toFixed(4);
-        feature.properties.pop_d_20_29 = weight * (cellProps.ika20_29 / asukkaita).toFixed(4);
-        feature.properties.pop_d_30_39 = weight * (cellProps.ika30_39 / asukkaita).toFixed(4);
-        feature.properties.pop_d_40_49 = weight * (cellProps.ika40_49 / asukkaita).toFixed(4);
-        feature.properties.pop_d_50_59 = weight * (cellProps.ika50_59 / asukkaita).toFixed(4);
-        feature.properties.pop_d_60_69 = weight * (cellProps.ika60_69 / asukkaita).toFixed(4);
-        feature.properties.pop_d_70_79 = weight * (cellProps.ika70_79 / asukkaita).toFixed(4);
-        feature.properties.pop_d_over80 = weight * (cellProps.ika_yli80 / asukkaita).toFixed(4);
-    }
+  async processGridAttributeBatch(batch, geoJsonPolygon) {
+    const results = [];
 
-    approximateOtherAttributesForIntersectingBuilding(feature, weight, gridProps) {
-        for (let i = 0; i < gridProps.length; i++) {
-            const props = gridProps[i];
-            if (!props?.asukkaita) continue;
+    for (let feature of batch) {
+      try {
+        if (!feature.geometry) continue;
 
-            const asukkaita = props.asukkaita;
-            feature.properties.pop_d_0_9 += weight * (props.ika0_9 / asukkaita).toFixed(4);
-            feature.properties.pop_d_10_19 += weight * (props.ika10_19 / asukkaita).toFixed(4);
-            feature.properties.pop_d_20_29 += weight * (props.ika20_29 / asukkaita).toFixed(4);
-            feature.properties.pop_d_30_39 += weight * (props.ika30_39 / asukkaita).toFixed(4);
-            feature.properties.pop_d_40_49 += weight * (props.ika40_49 / asukkaita).toFixed(4);
-            feature.properties.pop_d_50_59 += weight * (props.ika50_59 / asukkaita).toFixed(4);
-            feature.properties.pop_d_60_69 += weight * (props.ika60_69 / asukkaita).toFixed(4);
-            feature.properties.pop_d_70_79 += weight * (props.ika70_79 / asukkaita).toFixed(4);
-            feature.properties.pop_d_over80 += weight * (props.ika_yli80 / asukkaita).toFixed(4);
-        }
-    }
-
-    approximateAttributesForIntersectingBuildings(feature) {
-        try {
-            const cellProps = this.store.currentGridCell.properties;
-            if (!feature.geometry) return;
-
-            const featureBBox = turf.bbox(feature);
-            const bboxPolygon = turf.bboxPolygon(featureBBox);
-            let gridProps = [];
-
-            const populationGridDataSource = this.datasourceService.getDataSourceByName('PopulationGrid');
-            if (!populationGridDataSource) return;
-
-            const entities = populationGridDataSource.entities.values;
-
-            for (let i = 0; i < entities.length; i++) {
-                const entity = entities[i];
-                if (entity.properties._index._value !== cellProps._index._value) {
-                    const entityGeoJson = this.entityToGeoJson(entity);
-                    if (entityGeoJson && turf.booleanIntersects(bboxPolygon, entityGeoJson)) {
-                        gridProps.push(entityGeoJson.properties);
-                    }
-                }
-            }
-
-            const weight = this.getWeight(gridProps.length);
-            this.setInitialAttributesForIntersectingBuilding(feature, weight, cellProps);
-            this.approximateOtherAttributesForIntersectingBuilding(feature, weight, gridProps);
-        } catch (error) {
-            console.error('Error approximating attributes:', error);
-        }
-    }
-
-    setGridAttributesForWithinBuilding(feature) {
-        const cellProps = this.store.currentGridCell.properties;
-        if (!cellProps?.asukkaita) return;
-
-        const asukkaita = cellProps.asukkaita;
-        feature.properties.pop_d_0_9 = (cellProps.ika0_9 / asukkaita).toFixed(4);
-        feature.properties.pop_d_10_19 = (cellProps.ika10_19 / asukkaita).toFixed(4);
-        feature.properties.pop_d_20_29 = (cellProps.ika20_29 / asukkaita).toFixed(4);
-        feature.properties.pop_d_30_39 = (cellProps.ika30_39 / asukkaita).toFixed(4);
-        feature.properties.pop_d_40_49 = (cellProps.ika40_49 / asukkaita).toFixed(4);
-        feature.properties.pop_d_50_59 = (cellProps.ika50_59 / asukkaita).toFixed(4);
-        feature.properties.pop_d_60_69 = (cellProps.ika60_69 / asukkaita).toFixed(4);
-        feature.properties.pop_d_70_79 = (cellProps.ika70_79 / asukkaita).toFixed(4);
-        feature.properties.pop_d_over80 = (cellProps.ika_yli80 / asukkaita).toFixed(4);
-    }
-
-    async setGridAttributes(features) {
-        const geoJsonPolygon = this.createGeoJsonPolygon();
-        
-        if (!geoJsonPolygon) {
-            console.warn('Skipping grid attributes - no valid polygon');
-            return;
-        }
-
-        console.log('[HSYBuilding] 🔄 Processing grid attributes for', features.length, 'features with progressive loading');
-        
-        // Use progressive loading with the unified loader if available
-        try {
-            const { unifiedLoader } = await import('./unifiedLoader.js');
-            
-            const processor = async (batch) => {
-                return this.processGridAttributeBatch(batch, geoJsonPolygon);
-            };
-            
-            await unifiedLoader.loadLayer({
-                layerId: 'grid-attributes',
-                data: features,
-                processor,
-                options: {
-                    batchSize: 2, // Very small batches for heavy Turf.js operations
-                    priority: 'high',
-                    enableYielding: true,
-                    yieldInterval: 1 // Yield after every batch
-                }
-            });
-            
-        } catch (error) {
-            console.warn('[HSYBuilding] Unified loader not available, falling back to legacy processing');
-            await this.processGridAttributesLegacy(features, geoJsonPolygon);
-        }
-        
-        console.log('[HSYBuilding] ✅ Grid attributes processing complete');
-    }
-
-    async processGridAttributeBatch(batch, geoJsonPolygon) {
-        const results = [];
-        
-        for (let feature of batch) {
-            try {
-                if (!feature.geometry) continue;
-
-                const featureGeoJson = {
-                    type: 'Feature',
-                    properties: feature.properties,
-                    geometry: feature.geometry
-                };
-
-                const isWithin = turf.booleanWithin(featureGeoJson, geoJsonPolygon);
-
-                if (isWithin) {
-                    this.setGridAttributesForWithinBuilding(feature);
-                } else {
-                    this.approximateAttributesForIntersectingBuildings(feature);
-                }
-                
-                results.push(feature);
-            } catch (error) {
-                console.warn(`Error processing feature:`, error);
-                continue;
-            }
-        }
-        
-        return results;
-    }
-
-    async processGridAttributesLegacy(features, geoJsonPolygon) {
-        const batchSize = 2; // Very small batches for heavy operations
-        
-        for (let i = 0; i < features.length; i += batchSize) {
-            const batch = features.slice(i, i + batchSize);
-            
-            // Process each feature individually with yielding
-            for (let feature of batch) {
-                try {
-                    if (!feature.geometry) continue;
-
-                    const featureGeoJson = {
-                        type: 'Feature',
-                        properties: feature.properties,
-                        geometry: feature.geometry
-                    };
-
-                    const isWithin = turf.booleanWithin(featureGeoJson, geoJsonPolygon);
-
-                    if (isWithin) {
-                        this.setGridAttributesForWithinBuilding(feature);
-                    } else {
-                        this.approximateAttributesForIntersectingBuildings(feature);
-                    }
-                } catch (error) {
-                    console.warn(`Error processing feature:`, error);
-                    continue;
-                }
-                
-                // Yield after each feature for responsive UI
-                await new Promise(resolve => requestIdleCallback ? requestIdleCallback(resolve) : setTimeout(resolve, 0));
-            }
-            
-            // Show progress for large datasets
-            if (features.length > 10) {
-                const progress = Math.round((i + batchSize) / features.length * 100);
-                console.log(`[HSYBuilding] ⏳ Progress: ${progress}% (${Math.min(i + batchSize, features.length)}/${features.length})`);
-            }
-        }
-    }
-
-    getWeight(length) {
-        const weights = {
-            0: 1,
-            1: 1/2,
-            2: 1/3,
-            3: 1/4
+        const featureGeoJson = {
+          type: "Feature",
+          properties: feature.properties,
+          geometry: feature.geometry,
         };
-        return weights[length] || 1;
+
+        const isWithin = turf.booleanWithin(featureGeoJson, geoJsonPolygon);
+
+        if (isWithin) {
+          this.setGridAttributesForWithinBuilding(feature);
+        } else {
+          this.approximateAttributesForIntersectingBuildings(feature);
+        }
+
+        results.push(feature);
+      } catch (error) {
+        console.warn(`Error processing feature:`, error);
+        continue;
+      }
     }
 
-    entityToGeoJson(entity) {
+    return results;
+  }
+
+  async processGridAttributesLegacy(features, geoJsonPolygon) {
+    const batchSize = 2; // Very small batches for heavy operations
+
+    for (let i = 0; i < features.length; i += batchSize) {
+      const batch = features.slice(i, i + batchSize);
+
+      // Process each feature individually with yielding
+      for (let feature of batch) {
         try {
-            if (!entity?.polygon?.hierarchy) return null;
+          if (!feature.geometry) continue;
 
-            const positions = entity.polygon.hierarchy.getValue(Cesium.JulianDate.now()).positions;
-            const coordinates = positions.map(position => {
-                const cartographic = Cesium.Cartographic.fromCartesian(position);
-                return [
-                    Cesium.Math.toDegrees(cartographic.longitude),
-                    Cesium.Math.toDegrees(cartographic.latitude)
-                ];
-            });
+          const featureGeoJson = {
+            type: "Feature",
+            properties: feature.properties,
+            geometry: feature.geometry,
+          };
 
-            if (coordinates.length > 0 && 
-                (coordinates[0][0] !== coordinates[coordinates.length - 1][0] || 
-                 coordinates[0][1] !== coordinates[coordinates.length - 1][1])) {
-                coordinates.push(coordinates[0]);
-            }
+          const isWithin = turf.booleanWithin(featureGeoJson, geoJsonPolygon);
 
-            return {
-                type: 'Feature',
-                properties: entity.properties,
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [coordinates]
-                }
-            };
+          if (isWithin) {
+            this.setGridAttributesForWithinBuilding(feature);
+          } else {
+            this.approximateAttributesForIntersectingBuildings(feature);
+          }
         } catch (error) {
-            console.error('Error converting entity to GeoJSON:', error);
-            return null;
+          console.warn(`Error processing feature:`, error);
+          continue;
         }
+
+        // Yield after each feature for responsive UI
+        await new Promise((resolve) =>
+          requestIdleCallback
+            ? requestIdleCallback(resolve)
+            : setTimeout(resolve, 0),
+        );
+      }
+
+      // Show progress for large datasets
+      if (features.length > 10) {
+        const progress = Math.round(((i + batchSize) / features.length) * 100);
+        console.log(
+          `[HSYBuilding] ⏳ Progress: ${progress}% (${Math.min(i + batchSize, features.length)}/${features.length})`,
+        );
+      }
     }
+  }
 
-    setHSYBuildingsHeight(entities) {
-        for (const entity of entities) {
-            if (!entity.polygon) continue;
+  getWeight(length) {
+    const weights = {
+      0: 1,
+      1: 1 / 2,
+      2: 1 / 3,
+      3: 1 / 4,
+    };
+    return weights[length] || 1;
+  }
 
-            const floorCount = entity.properties?.kerrosten_lkm?._value;
-            entity.polygon.extrudedHeight = (floorCount != null && floorCount < 999) 
-                ? floorCount * 3.2 
-                : 2.7;
-        }
+  entityToGeoJson(entity) {
+    try {
+      if (!entity?.polygon?.hierarchy) return null;
+
+      const positions = entity.polygon.hierarchy.getValue(
+        Cesium.JulianDate.now(),
+      ).positions;
+      const coordinates = positions.map((position) => {
+        const cartographic = Cesium.Cartographic.fromCartesian(position);
+        return [
+          Cesium.Math.toDegrees(cartographic.longitude),
+          Cesium.Math.toDegrees(cartographic.latitude),
+        ];
+      });
+
+      if (
+        coordinates.length > 0 &&
+        (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
+          coordinates[0][1] !== coordinates[coordinates.length - 1][1])
+      ) {
+        coordinates.push(coordinates[0]);
+      }
+
+      return {
+        type: "Feature",
+        properties: entity.properties,
+        geometry: {
+          type: "Polygon",
+          coordinates: [coordinates],
+        },
+      };
+    } catch (error) {
+      console.error("Error converting entity to GeoJSON:", error);
+      return null;
     }
+  }
 
-    async calculateHSYUrbanHeatData(data, entities) {
-        const heatExposureData = this.urbanHeatService.calculateAverageExposure(data.features);
-		const targetDate = this.store.heatDataDate;
+  setHSYBuildingsHeight(entities) {
+    for (const entity of entities) {
+      if (!entity.polygon) continue;
 
-        const avgTempCList = entities
-            .map(entity => {
-                // Get the actual array from ConstantProperty
-                const heatTimeseries = entity.properties.heat_timeseries?.getValue() || []; 
-
-                if (!Array.isArray(heatTimeseries)) return null;
-
-                // Find the entry that matches the target date
-                const foundEntry = heatTimeseries.find(({ date }) => date === targetDate);
-                return foundEntry ? foundEntry.avg_temp_c : null;
-            })
-            .filter(temp => temp !== null); // Keep only valid temperature values
-
-        setBuildingPropsAndEmitEvent(entities, heatExposureData, avgTempCList, data);
+      const floorCount = entity.properties?.kerrosten_lkm?._value;
+      entity.polygon.extrudedHeight =
+        floorCount != null && floorCount < 999 ? floorCount * 3.2 : 2.7;
     }
+  }
 
-    setHSYBuildingAttributes(data, entities) {
-        this.buildingService.setHeatExposureToBuildings(entities);
-        this.setHSYBuildingsHeight(entities);
-        if (this.store.postalcode) {
-            this.calculateHSYUrbanHeatData(data, entities);
-        }
+  async calculateHSYUrbanHeatData(data, entities) {
+    const heatExposureData = this.urbanHeatService.calculateAverageExposure(
+      data.features,
+    );
+    const targetDate = this.store.heatDataDate;
+
+    const avgTempCList = entities
+      .map((entity) => {
+        // Get the actual array from ConstantProperty
+        const heatTimeseries =
+          entity.properties.heat_timeseries?.getValue() || [];
+
+        if (!Array.isArray(heatTimeseries)) return null;
+
+        // Find the entry that matches the target date
+        const foundEntry = heatTimeseries.find(
+          ({ date }) => date === targetDate,
+        );
+        return foundEntry ? foundEntry.avg_temp_c : null;
+      })
+      .filter((temp) => temp !== null); // Keep only valid temperature values
+
+    setBuildingPropsAndEmitEvent(
+      entities,
+      heatExposureData,
+      avgTempCList,
+      data,
+    );
+  }
+
+  setHSYBuildingAttributes(data, entities) {
+    this.buildingService.setHeatExposureToBuildings(entities);
+    this.setHSYBuildingsHeight(entities);
+    if (this.store.postalcode) {
+      this.calculateHSYUrbanHeatData(data, entities);
     }
+  }
 
-    hideNonSoteBuilding(entity) {
-        if (!this.toggleStore.hideNonSote) return;
+  hideNonSoteBuilding(entity) {
+    if (!this.toggleStore.hideNonSote) return;
 
-        const kayttotark = entity._properties?.kayttarks?._value;
-        if (!kayttotark || kayttotark !== 'Yleinen rakennus') {
-            entity.show = false;
-        }
+    const kayttotark = entity._properties?.kayttarks?._value;
+    if (!kayttotark || kayttotark !== "Yleinen rakennus") {
+      entity.show = false;
     }
+  }
 
-    hideLowBuilding(entity) {
-        if (!this.toggleStore.hideLow) return;
+  hideLowBuilding(entity) {
+    if (!this.toggleStore.hideLow) return;
 
-        const floorCount = Number(entity._properties?.kerrosten_lkm?._value);
-        if (!floorCount || floorCount < 7) {
-            entity.show = false;
-        }
+    const floorCount = Number(entity._properties?.kerrosten_lkm?._value);
+    if (!floorCount || floorCount < 7) {
+      entity.show = false;
     }
+  }
 }
 
 /**
@@ -409,12 +501,17 @@ export default class HSYBuilding {
  * @fires eventBus#showCapitalRegion - Emitted when Capital Region data is loaded
  * @private
  */
-const setBuildingPropsAndEmitEvent = (entities, heatExposureData, avg_temp_cList, data) => {
-    const propsStore = usePropsStore();
-    propsStore.setScatterPlotEntities(entities);
-    propsStore.setPostalcodeHeatTimeseries(heatExposureData[1]);
-    propsStore.setHeatHistogramData(avg_temp_cList);
-    const buildingStore = useBuildingStore();
-    buildingStore.setBuildingFeatures(data);
-    eventBus.emit('showCapitalRegion');
+const setBuildingPropsAndEmitEvent = (
+  entities,
+  heatExposureData,
+  avg_temp_cList,
+  data,
+) => {
+  const propsStore = usePropsStore();
+  propsStore.setScatterPlotEntities(entities);
+  propsStore.setPostalcodeHeatTimeseries(heatExposureData[1]);
+  propsStore.setHeatHistogramData(avg_temp_cList);
+  const buildingStore = useBuildingStore();
+  buildingStore.setBuildingFeatures(data);
+  eventBus.emit("showCapitalRegion");
 };

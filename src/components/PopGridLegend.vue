@@ -84,7 +84,7 @@ class="color-box"
 />
                   <span>{{ item.range }}</span>
                 </div>
-              </div>        
+              </div>
             </div>
           </div>
         </div>
@@ -385,7 +385,7 @@ const selectedIndexDescription = computed( () => {
 .gradient-bar {
   width: 100%;
   height: 20px;
-  background: linear-gradient(to right, 
+  background: linear-gradient(to right,
     #ffffcc,  /* Color for < 0.2 */
     #ffeda0,  /* Color for 0.2 - 0.4 */
     #feb24c,  /* Color for 0.4 - 0.6 */

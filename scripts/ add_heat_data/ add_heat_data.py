@@ -14,10 +14,10 @@ import os
 def fetch_buildings_from_db(posno):
     """
     Fetches buildings from the PostgreSQL database filtered by posno.
-    
+
     Args:
         posno (str or list): A single postal code or a list of postal codes.
-    
+
     Returns:
         dict: GeoJSON-like dictionary of features.
     """
@@ -107,7 +107,7 @@ def calculate_heat_exp(geojson, src):
                 # Ignore no-data values
                 if pixel_value < 0:
                     continue
-                
+
                 # Get the four corner coordinates of the pixel
                 top_left = out_transform * (col, row)
                 top_right = out_transform * (col + 1, row)
@@ -119,7 +119,7 @@ def calculate_heat_exp(geojson, src):
 
                 # Compute the intersection area
                 intersection = polygon.intersection(cell_geom)
-                
+
                 if not intersection.is_empty:
                     intersection_area = intersection.area
                     total_value += pixel_value * intersection_area
@@ -134,10 +134,10 @@ def calculate_heat_exp(geojson, src):
         weighted_avg_values.append(avg_value)
 
     # Add weighted average heat values to the GeoDataFrame
-    gdf['avgheatexposure'] = weighted_avg_values 
-    
-    return gdf       
-    
+    gdf['avgheatexposure'] = weighted_avg_values
+
+    return gdf
+
 def insert_to_db(buildings_gdf, date_str):
     """
     Inserts full building polygons (GeoJSON) into Google Cloud SQL PostgreSQL.
@@ -148,7 +148,7 @@ def insert_to_db(buildings_gdf, date_str):
     if max_temp_k is None or min_temp_k is None:
         print(f"Temperature data for {date_str} not found.")
         return
-    
+
     # Database connection details
     instance_connection_name = os.getenv("INSTANCE_NAME")
     db_name = os.getenv("DB_NAME")
@@ -183,10 +183,10 @@ def insert_to_db(buildings_gdf, date_str):
         for _, row in buildings_gdf.iterrows():
             if row.avgheatexposure >= 0 and row.geometry:  # Ensure valid geometry
                 avg_temp_c = calculate_temp_in_c(row.avgheatexposure, max_temp_k, min_temp_k)
-                
+
                 # Convert geometry to GeoJSON
                 # geom_json = json.dumps(row.geometry.__geo_interface__)  # Convert geometry to GeoJSON format
-                
+
                 data_to_insert.append((
                     row.avgheatexposure, date_str, row.vtj_prt, avg_temp_c, row.posno
                 ))
@@ -200,11 +200,11 @@ def insert_to_db(buildings_gdf, date_str):
 
     except Exception as e:
         print(f"Database insert error: {e}")
-    
+
     finally:
         cursor.close()
         connector.close()
-        
+
     return inserted_count  # Return the number of inserted records
 
 def calculate_temp_in_c(heatexposure, max_temp_k, min_temp_k):
@@ -226,7 +226,7 @@ def calculate_temp_in_c(heatexposure, max_temp_k, min_temp_k):
 def get_temperature_from_metadata(date_str):
     """
     Reads heat_metadata.json and retrieves max and min temperature for the given date.
-    
+
     :param date_str: The date for which temperature data is needed.
     :return: (max_temp_k, min_temp_k) if found, otherwise (None, None)
     """
@@ -236,7 +236,7 @@ def get_temperature_from_metadata(date_str):
     try:
         with open(metadata_path, "r") as f:
             metadata = json.load(f)
-        
+
         # Search for matching date entry
         for entry in metadata.get("heat_metadata", []):
             if entry["date"] == date_str:
@@ -249,40 +249,40 @@ def get_temperature_from_metadata(date_str):
 
 
 def calculate_heat_data( request ):
-    
+
     # Access data from the request arguments
     request_json = request.get_json(silent=True)
 
     date_str = request_json['date']
     posno = request_json['posno']
     bucket_name = request_json['bucket']
-    
+
     buildings_json = fetch_buildings_from_db(posno)
-    
+
     # Folder path where TIFF filee
     raster_path = f'Thermal/raster_data/{date_str}/{date_str}_normalised.tiff'
-    
+
     # Create a Google Cloud Storage client
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
-    
+
     # Download raster file
     raster_blob = bucket.blob(raster_path)
     raster_blob.download_to_filename('/tmp/normalised.tiff')
-    
+
     # Open the raster and vector files
     src = rasterio.open('/tmp/normalised.tiff')
-    
+
     # Perform heat exposure calculation
     gdf = calculate_heat_exp(buildings_json, src)
-    
+
     # Download metadata file
     metadata_path = "Thermal/heat_metadata.json"
     metadata_blob = bucket.blob(metadata_path)
     metadata_blob.download_to_filename('/tmp/heat_metadata.json')
-    
+
     # Insert data into database and get the count of inserted records
     inserted_count = insert_to_db(gdf, date_str)
-    
+
     # Return response with the number of inserted features
     return jsonify({"status": "success", "features_inserted": inserted_count})

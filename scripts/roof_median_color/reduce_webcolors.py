@@ -34,12 +34,12 @@ def find_closest_color_name(rgb_value):
     distances = cdist([rgb_value], cluster_centers)
     closest_color_index = np.argmin(distances)
     closest_color_hex = webcolors.rgb_to_hex(tuple(cluster_centers[closest_color_index]))
-    
+
     try:
         closest_color_name = webcolors.hex_to_name(closest_color_hex, spec='css3')
     except ValueError:
         closest_color_name = find_nearest_color_name(closest_color_hex)
-    
+
     return closest_color_name
 
 # Helper function to find the nearest color name from the original colors

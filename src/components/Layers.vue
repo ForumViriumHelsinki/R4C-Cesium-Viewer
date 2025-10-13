@@ -94,7 +94,7 @@ type="checkbox"
 for="ndvi"
 class="label"
 >NDVI</label>
-    </div>    
+    </div>
   </div>
 </template>
 
@@ -182,11 +182,11 @@ export default {
 			// If there is a postal code available, load the nature areas for that area.
 			if ( store.postalcode && !dataSourceService.getDataSourceByName( 'Vegetation' ) ) {
 
-				const vegetationService = new Vegetation( );         
+				const vegetationService = new Vegetation( );
 				vegetationService.loadVegetation( store.postalcode );
 
 			} else {
-            
+
 				dataSourceService.changeDataSourceShowByName( 'Vegetation', true );
 
 			}
@@ -207,8 +207,8 @@ export default {
 		toggleStore.setShowTrees( showTrees.value );
 		const treeService = new Tree();
 
-		showTrees.value 
-    		? ( store.postalcode && !dataSourceService.getDataSourceByName( 'Trees' ) 
+		showTrees.value
+    		? ( store.postalcode && !dataSourceService.getDataSourceByName( 'Trees' )
         	? treeService.loadTrees( )
         	: ( dataSourceService.changeDataSourceShowByName( 'Trees', true ) ) )
     		: ( dataSourceService.changeDataSourceShowByName( 'Trees', false ), buildingService.resetBuildingEntities() );
@@ -269,11 +269,11 @@ const toggleNDVI = () => {
 			// If there is a postal code available, load the nature areas for that area.
 			if ( store.postalcode && !dataSourceService.getDataSourceByName( 'OtherNature' ) ) {
 
-				const otherNatureService = new Othernature();        
+				const otherNatureService = new Othernature();
 				otherNatureService.loadOtherNature( );
 
 			} else {
-            
+
 				dataSourceService.changeDataSourceShowByName( 'OtherNature', true );
 			}
 
@@ -296,7 +296,7 @@ const toggleNDVI = () => {
 
   // Watch for view mode changes and reset layers
   watch(() => store.view, resetLayers);
-		      
+
 
     onMounted(() => {
         buildingService = new Building();

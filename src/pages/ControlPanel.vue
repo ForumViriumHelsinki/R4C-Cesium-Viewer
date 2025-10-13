@@ -35,7 +35,7 @@
           <template v-if="currentLevel === 'building'">
             <v-btn block variant="outlined" prepend-icon="mdi-thermometer" class="mb-2" @click="openAnalysisPanel('building-heat')">Building Heat Data</v-btn>
           </template>
-          
+
           <template v-if="currentView === 'grid'">
             <v-expansion-panels v-if="statsIndex === 'heat_index'" variant="outlined" class="mb-2">
               <v-expansion-panel>
@@ -66,10 +66,10 @@
                 </v-expansion-panel-text>
               </v-expansion-panel>
             </v-expansion-panels>
-            
-            <v-btn 
-              block 
-              variant="outlined" 
+
+            <v-btn
+              block
+              variant="outlined"
               prepend-icon="mdi-grid"
               class="mb-2"
               @click="openAnalysisPanel('grid-options')"
@@ -77,14 +77,14 @@
               Grid Options
             </v-btn>
           </template>
-          
+
           <div v-if="!hasAvailableAnalysis" class="no-analysis-message">
             <v-icon class="mb-2">mdi-information-outline</v-icon>
             <p class="text-body-2 text-center">{{ currentLevel === 'start' ? 'Select a postal code area to access analysis tools' : 'No analysis tools available for current selection' }}</p>
           </div>
         </div>
       </div>
-      
+
       <div v-if="currentLevel !== 'start'" class="control-section">
         <h3 class="section-subtitle"><v-icon class="mr-2">mdi-information</v-icon>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}</h3>
         <PrintBox />
@@ -92,8 +92,8 @@
     </div>
   </v-navigation-drawer>
 
-  <v-dialog 
-    v-model="analysisDialog" 
+  <v-dialog
+    v-model="analysisDialog"
     :width="analysisDialogWidth"
     :height="analysisDialogHeight"
     scrollable
@@ -185,11 +185,11 @@ export default {
     const heatExposureStore = useHeatExposureStore();
     const socioEconomicsStore = useSocioEconomicsStore();
     const toggleStore = useToggleStore();
-    
+
     const currentLevel = computed(() => globalStore.level);
     const currentView = computed(() => globalStore.view);
     const { ndvi } = storeToRefs(toggleStore);
-    
+
     // State for the simple dialog
     const analysisDialog = ref(false);
     const currentAnalysis = ref('');

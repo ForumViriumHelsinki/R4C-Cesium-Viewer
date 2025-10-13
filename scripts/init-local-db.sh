@@ -36,13 +36,13 @@ while [ $attempt -le $max_attempts ]; do
         echo -e "${GREEN}✅ PostgreSQL is ready${NC}"
         break
     fi
-    
+
     if [ $attempt -eq $max_attempts ]; then
         echo -e "${RED}❌ PostgreSQL not ready after $max_attempts attempts${NC}"
         echo "Make sure PostgreSQL is running and accessible at $LOCAL_DB_HOST:$LOCAL_DB_PORT"
         exit 1
     fi
-    
+
     echo -e "${YELLOW}   Attempt $attempt/$max_attempts - waiting...${NC}"
     sleep 2
     ((attempt++))
@@ -106,7 +106,7 @@ read -r SEED_DATA
 
 if [[ "$SEED_DATA" =~ ^[Yy]$ ]]; then
     echo -e "${YELLOW}🌱 Seeding database with mock data...${NC}"
-    
+
     # Check if Python script exists
     if [ -f "./db/scripts/seed-dev-data.py" ]; then
         # Install required Python packages if not already installed
@@ -114,18 +114,18 @@ if [[ "$SEED_DATA" =~ ^[Yy]$ ]]; then
             echo -e "${YELLOW}📦 Installing required Python packages...${NC}"
             pip install psycopg2-binary || pip3 install psycopg2-binary
         }
-        
+
         # Run the seeding script
         python3 ./db/scripts/seed-dev-data.py --database-url "$DATABASE_URL" --clear-first --num-records 100
-        
+
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}✅ Mock data seeded successfully${NC}"
-            
+
             # Show some sample data
             echo -e "${BLUE}📋 Sample data counts:${NC}"
             psql "$DATABASE_URL" -c "
-                SELECT 
-                    'adaptation_landcover' as table_name, COUNT(*) as records 
+                SELECT
+                    'adaptation_landcover' as table_name, COUNT(*) as records
                 FROM adaptation_landcover
                 UNION ALL
                 SELECT 'r4c_coldspot', COUNT(*) FROM r4c_coldspot

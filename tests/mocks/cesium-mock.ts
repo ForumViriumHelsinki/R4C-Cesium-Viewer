@@ -1,6 +1,6 @@
 /**
  * Cesium Mock for Testing
- * 
+ *
  * This mock provides a lightweight implementation of Cesium's API
  * for testing purposes, avoiding WebGL initialization issues in CI.
  * It simulates the core Cesium functionality needed by the application
@@ -12,13 +12,13 @@ export function createCesiumMock() {
   class MockEntityCollection {
     _entities = { _array: [] };
     values = [];
-    
+
     add(entity: any) {
       this.values.push(entity);
       this._entities._array.push(entity);
       return entity;
     }
-    
+
     remove(entity: any) {
       const index = this.values.indexOf(entity);
       if (index > -1) {
@@ -30,12 +30,12 @@ export function createCesiumMock() {
       }
       return true;
     }
-    
+
     removeAll() {
       this.values = [];
       this._entities._array = [];
     }
-    
+
     getById(id: string) {
       return this.values.find((e: any) => e.id === id);
     }
@@ -44,12 +44,12 @@ export function createCesiumMock() {
   // Mock data source collection
   class MockDataSourceCollection {
     _dataSources: any[] = [];
-    
+
     add(dataSource: any) {
       this._dataSources.push(dataSource);
       return Promise.resolve(dataSource);
     }
-    
+
     remove(dataSource: any) {
       const index = this._dataSources.indexOf(dataSource);
       if (index > -1) {
@@ -57,11 +57,11 @@ export function createCesiumMock() {
       }
       return true;
     }
-    
+
     getByName(name: string) {
-      return this._dataSources.filter(ds => ds.name === name);
+      return this._dataSources.filter((ds) => ds.name === name);
     }
-    
+
     get length() {
       return this._dataSources.length;
     }
@@ -77,45 +77,48 @@ export function createCesiumMock() {
       fov: Math.PI / 3,
       aspectRatio: 1,
       near: 1,
-      far: 10000000
+      far: 10000000,
     };
     positionCartographic = {
       longitude: 0.4366,
       latitude: 1.0472,
-      height: 1000000
+      height: 1000000,
     };
     heading = 0;
     pitch = -Math.PI / 2;
     roll = 0;
-    
+
     setView(options: any) {
       if (options.destination) {
         this.position = options.destination;
       }
       if (options.orientation) {
-        if (options.orientation.heading !== undefined) this.heading = options.orientation.heading;
-        if (options.orientation.pitch !== undefined) this.pitch = options.orientation.pitch;
-        if (options.orientation.roll !== undefined) this.roll = options.orientation.roll;
+        if (options.orientation.heading !== undefined)
+          this.heading = options.orientation.heading;
+        if (options.orientation.pitch !== undefined)
+          this.pitch = options.orientation.pitch;
+        if (options.orientation.roll !== undefined)
+          this.roll = options.orientation.roll;
       }
     }
-    
+
     flyTo(options: any) {
       this.setView(options);
       return Promise.resolve();
     }
-    
+
     zoomIn(amount?: number) {
       this.positionCartographic.height -= amount || 100000;
     }
-    
+
     zoomOut(amount?: number) {
       this.positionCartographic.height += amount || 100000;
     }
-    
+
     lookAt(target: any, offset: any) {
       // Mock implementation
     }
-    
+
     flyToBoundingSphere(boundingSphere: any, options?: any) {
       return Promise.resolve();
     }
@@ -123,7 +126,7 @@ export function createCesiumMock() {
 
   // Mock scene
   class MockScene {
-    canvas = document.createElement('canvas');
+    canvas = document.createElement("canvas");
     camera = new MockCamera();
     globe = {
       enableLighting: false,
@@ -131,12 +134,12 @@ export function createCesiumMock() {
       showWaterEffect: false,
       depthTestAgainstTerrain: false,
       show: true,
-      baseColor: { red: 1, green: 1, blue: 1, alpha: 1 }
+      baseColor: { red: 1, green: 1, blue: 1, alpha: 1 },
     };
     primitives = {
       add: () => ({}),
       remove: () => true,
-      removeAll: () => {}
+      removeAll: () => {},
     };
     skyBox = { show: false };
     sun = { show: false };
@@ -146,37 +149,43 @@ export function createCesiumMock() {
     debugShowFramesPerSecond = false;
     frameState = {
       creditDisplay: {
-        _currentFrameCredits: { screenCredits: [] }
+        _currentFrameCredits: { screenCredits: [] },
       },
       passes: {
-        render: true
-      }
+        render: true,
+      },
     };
-    
+
     constructor() {
       // Set canvas dimensions for tests
-      Object.defineProperty(this.canvas, 'offsetWidth', { value: 800, writable: true });
-      Object.defineProperty(this.canvas, 'offsetHeight', { value: 600, writable: true });
-      this.canvas.classList.add('cesium-widget-canvas');
+      Object.defineProperty(this.canvas, "offsetWidth", {
+        value: 800,
+        writable: true,
+      });
+      Object.defineProperty(this.canvas, "offsetHeight", {
+        value: 600,
+        writable: true,
+      });
+      this.canvas.classList.add("cesium-widget-canvas");
     }
-    
+
     pick(windowPosition: any) {
       // Return a mock picked object for testing
       return {
-        id: { id: 'mock-entity-1', name: 'Mock Entity' },
+        id: { id: "mock-entity-1", name: "Mock Entity" },
         primitive: {},
-        position: windowPosition
+        position: windowPosition,
       };
     }
-    
+
     drillPick(windowPosition: any) {
       return [this.pick(windowPosition)];
     }
-    
+
     requestRender() {
       // Mock render request
     }
-    
+
     render() {
       // Mock render
     }
@@ -195,39 +204,40 @@ export function createCesiumMock() {
       startTime: { dayNumber: 2458119, secondsOfDay: 0 },
       stopTime: { dayNumber: 2458120, secondsOfDay: 0 },
       shouldAnimate: false,
-      multiplier: 1
+      multiplier: 1,
     };
     imageryLayers = {
       addImageryProvider: () => ({}),
       remove: () => true,
-      removeAll: () => {}
+      removeAll: () => {},
     };
     terrainProvider = {};
     cesiumWidget = {
-      creditContainer: document.createElement('div')
+      creditContainer: document.createElement("div"),
     };
     selectedEntity = null;
     trackedEntity = null;
     screenSpaceEventHandler = {
       setInputAction: () => {},
       removeInputAction: () => {},
-      destroy: () => {}
+      destroy: () => {},
     };
-    
+
     constructor(container: string | HTMLElement, options?: any) {
-      if (typeof container === 'string') {
-        this.container = document.getElementById(container) || document.createElement('div');
+      if (typeof container === "string") {
+        this.container =
+          document.getElementById(container) || document.createElement("div");
       } else {
         this.container = container;
       }
-      
+
       // Append canvas to container
       this.container.appendChild(this.canvas);
-      
+
       // Store reference globally
       (window as any).viewer = this;
     }
-    
+
     destroy() {
       if (this.container && this.canvas && this.canvas.parentNode) {
         this.canvas.parentNode.removeChild(this.canvas);
@@ -238,15 +248,15 @@ export function createCesiumMock() {
         delete (window as any).viewer;
       }
     }
-    
+
     zoomTo(target: any, offset?: any) {
       return Promise.resolve();
     }
-    
+
     flyTo(target: any, options?: any) {
       return Promise.resolve();
     }
-    
+
     resize() {
       // Mock resize
     }
@@ -257,21 +267,21 @@ export function createCesiumMock() {
     x: number;
     y: number;
     z: number;
-    
+
     constructor(x = 0, y = 0, z = 0) {
       this.x = x;
       this.y = y;
       this.z = z;
     }
-    
+
     static fromDegrees(longitude: number, latitude: number, height = 0) {
       return new MockCartesian3(longitude, latitude, height);
     }
-    
+
     static fromRadians(longitude: number, latitude: number, height = 0) {
       return new MockCartesian3(longitude, latitude, height);
     }
-    
+
     static ZERO = new MockCartesian3(0, 0, 0);
   }
 
@@ -281,21 +291,21 @@ export function createCesiumMock() {
     green: number;
     blue: number;
     alpha: number;
-    
+
     constructor(red = 1, green = 1, blue = 1, alpha = 1) {
       this.red = red;
       this.green = green;
       this.blue = blue;
       this.alpha = alpha;
     }
-    
+
     static WHITE = new MockColor(1, 1, 1, 1);
     static BLACK = new MockColor(0, 0, 0, 1);
     static RED = new MockColor(1, 0, 0, 1);
     static GREEN = new MockColor(0, 1, 0, 1);
     static BLUE = new MockColor(0, 0, 1, 1);
     static TRANSPARENT = new MockColor(1, 1, 1, 0);
-    
+
     static fromCssColorString(color: string) {
       return new MockColor();
     }
@@ -303,9 +313,9 @@ export function createCesiumMock() {
 
   // Mock GeoJsonDataSource
   class MockGeoJsonDataSource {
-    name = '';
+    name = "";
     entities = new MockEntityCollection();
-    
+
     static load(data: any, options?: any) {
       const dataSource = new MockGeoJsonDataSource();
       if (options?.clampToGround) {
@@ -322,14 +332,14 @@ export function createCesiumMock() {
 
   const MockFeatureDetection = {
     supportsWebGL: () => true,
-    supportsImageRenderingPixelated: () => true
+    supportsImageRenderingPixelated: () => true,
   };
 
   const MockShadowMode = {
     DISABLED: 0,
     ENABLED: 1,
     CAST_ONLY: 2,
-    RECEIVE_ONLY: 3
+    RECEIVE_ONLY: 3,
   };
 
   const MockScreenSpaceEventType = {
@@ -344,7 +354,7 @@ export function createCesiumMock() {
     WHEEL: 8,
     PINCH_START: 9,
     PINCH_END: 10,
-    PINCH_MOVE: 11
+    PINCH_MOVE: 11,
   };
 
   const MockScreenSpaceEventHandler = class {
@@ -367,12 +377,12 @@ export function createCesiumMock() {
     ScreenSpaceEventType: MockScreenSpaceEventType,
     ScreenSpaceEventHandler: MockScreenSpaceEventHandler,
     Ion: {
-      defaultAccessToken: 'mock-token'
+      defaultAccessToken: "mock-token",
     },
     defined: (value: any) => value !== undefined && value !== null,
     Math: {
-      toDegrees: (radians: number) => radians * 180 / Math.PI,
-      toRadians: (degrees: number) => degrees * Math.PI / 180
+      toDegrees: (radians: number) => (radians * 180) / Math.PI,
+      toRadians: (degrees: number) => (degrees * Math.PI) / 180,
     },
     // Add more mocked classes/functions as needed
     Rectangle: class {
@@ -386,7 +396,12 @@ export function createCesiumMock() {
         this.east = east;
         this.north = north;
       }
-      static fromDegrees(west: number, south: number, east: number, north: number) {
+      static fromDegrees(
+        west: number,
+        south: number,
+        east: number,
+        north: number,
+      ) {
         return new this(west, south, east, north);
       }
     },
@@ -428,7 +443,7 @@ export function createCesiumMock() {
         this.center = center;
         this.radius = radius;
       }
-    }
+    },
   };
 
   return CesiumMock;
@@ -438,9 +453,9 @@ export function createCesiumMock() {
 export function injectCesiumMock() {
   const mock = createCesiumMock();
   (window as any).Cesium = mock;
-  
+
   // Also set CESIUM_BASE_URL
-  (window as any).CESIUM_BASE_URL = '/cesium';
-  
+  (window as any).CESIUM_BASE_URL = "/cesium";
+
   return mock;
 }

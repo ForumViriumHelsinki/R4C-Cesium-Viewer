@@ -12,7 +12,7 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
+import { defineStore } from "pinia";
 
 /**
  * Background Map Pinia Store
@@ -27,65 +27,65 @@ import { defineStore } from 'pinia';
  * @property {Array<Object>} landcoverLayers - Active HSY landcover WMS layers
  * @property {Array<Object>} floodLayers - Active flood risk WMS layers
  */
-export const useBackgroundMapStore = defineStore( 'backgroundMap', {
-	state: () => ( {
-		hsyYear: 2024,
-		hsySelectArea: 'Askisto',
-		hSYWMSLayers: null,
-        ndviDate: '2022-06-26',
-		tiffLayers: [],
-		landcoverLayers: [],
-		floodLayers: [],
-	} ),
-	actions: {
-		/**
-		 * Sets flood risk WMS layer references
-		 * @param {Array<Object>} layers - Cesium imagery layer objects
-		 */
-		setFloodLayers( layers ){
-			this.floodLayers = layers;
-		},
-		/**
-		 * Sets HSY landcover WMS layer references
-		 * @param {Array<Object>} layers - Cesium imagery layer objects
-		 */
-		setLandcoverLayers( layers ){
-			this.landcoverLayers = layers;
-		},
-		/**
-		 * Sets NDVI TIFF imagery layer references
-		 * @param {Array<Object>} layers - Cesium imagery layer objects with TIFF providers
-		 */
-		setTiffLayers( layers ){
-			this.tiffLayers = layers;
-		},
-		/**
-		 * Sets the selected date for NDVI vegetation imagery
-		 * @param {string} date - Date string in YYYY-MM-DD format
-		 */
-		setNdviDate( date ){
-			this.ndviDate = date;
-		},
-		/**
-		 * Sets HSY WMS layer references
-		 * @param {Object} layers - HSY WMS layer configuration object
-		 */
-		setHSYWMSLayers( layers ) {
-			this.hSYWMSLayers = layers;
-		},
-		/**
-		 * Sets the selected HSY region area
-		 * @param {string} area - Region name (e.g., 'Askisto')
-		 */
-		setHSYSelectArea( area ) {
-			this.hsySelectArea = area;
-		},
-		/**
-		 * Sets the selected year for HSY landcover data
-		 * @param {number} year - Year (2015-2024)
-		 */
-		setHSYYear( year ) {
-			this.hsyYear = year;
-		},
-	},
-} );
+export const useBackgroundMapStore = defineStore("backgroundMap", {
+  state: () => ({
+    hsyYear: 2024,
+    hsySelectArea: "Askisto",
+    hSYWMSLayers: null,
+    ndviDate: "2022-06-26",
+    tiffLayers: [],
+    landcoverLayers: [],
+    floodLayers: [],
+  }),
+  actions: {
+    /**
+     * Sets flood risk WMS layer references
+     * @param {Array<Object>} layers - Cesium imagery layer objects
+     */
+    setFloodLayers(layers) {
+      this.floodLayers = layers;
+    },
+    /**
+     * Sets HSY landcover WMS layer references
+     * @param {Array<Object>} layers - Cesium imagery layer objects
+     */
+    setLandcoverLayers(layers) {
+      this.landcoverLayers = layers;
+    },
+    /**
+     * Sets NDVI TIFF imagery layer references
+     * @param {Array<Object>} layers - Cesium imagery layer objects with TIFF providers
+     */
+    setTiffLayers(layers) {
+      this.tiffLayers = layers;
+    },
+    /**
+     * Sets the selected date for NDVI vegetation imagery
+     * @param {string} date - Date string in YYYY-MM-DD format
+     */
+    setNdviDate(date) {
+      this.ndviDate = date;
+    },
+    /**
+     * Sets HSY WMS layer references
+     * @param {Object} layers - HSY WMS layer configuration object
+     */
+    setHSYWMSLayers(layers) {
+      this.hSYWMSLayers = layers;
+    },
+    /**
+     * Sets the selected HSY region area
+     * @param {string} area - Region name (e.g., 'Askisto')
+     */
+    setHSYSelectArea(area) {
+      this.hsySelectArea = area;
+    },
+    /**
+     * Sets the selected year for HSY landcover data
+     * @param {number} year - Year (2015-2024)
+     */
+    setHSYYear(year) {
+      this.hsyYear = year;
+    },
+  },
+});

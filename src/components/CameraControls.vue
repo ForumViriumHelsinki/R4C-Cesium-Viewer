@@ -111,11 +111,11 @@ const viewerReady = ref(false);
 watch(() => store.cesiumViewer, (newViewer) => {
   if (newViewer && !cameraService) {
     cameraService = new Camera();
-    
+
     newViewer.camera.changed.addEventListener(updateHeading);
     newViewer.camera.moveEnd.addEventListener(updateHeading);
     updateHeading();
-    
+
     viewerReady.value = true;
   }
 }, { immediate: true });

@@ -13,7 +13,7 @@ def insert_to_db(trees_gdf):
     """
     Inserts full building polygons (GeoJSON) into Google Cloud SQL PostgreSQL.
     """
-    
+
     # Database connection details
     instance_connection_name = os.getenv("INSTANCE_NAME")
     db_name = os.getenv("DB_NAME")
@@ -47,7 +47,7 @@ def insert_to_db(trees_gdf):
         data_to_insert = []
         for _, row in trees_gdf.iterrows():
             if row.geometry:  # Ensure valid geometry
-                
+
                 data_to_insert.append((
                     row.postinumero, row.korkeus_ka_m, row.kohde_id, row.kunta, row.koodi, row.kuvaus, row.geometry.wkt
                 ))
@@ -61,18 +61,18 @@ def insert_to_db(trees_gdf):
 
     except Exception as e:
         print(f"Database insert error: {e}")
-    
+
     finally:
         cursor.close()
         connector.close()
-        
+
     return inserted_count  # Return the number of inserted records
 
 
 def fetch_wfs_data(typename, city, lowerHeight=None, upperHeight=None):
     """
     Fetches data from a WFS server with optional height filtering.
-    
+
     :param typename: The name of the feature type in WFS.
     :param city: The city name to filter data.
     :param lowerHeight: (Optional) The lower bound for height filtering (must be provided together with upperHeight).
@@ -112,7 +112,7 @@ def fetch_wfs_data(typename, city, lowerHeight=None, upperHeight=None):
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
-    
+
     # Request to WFS and process response
     try:
         response = urllib.request.urlopen(request_url, context=ssl_context)
@@ -122,10 +122,10 @@ def fetch_wfs_data(typename, city, lowerHeight=None, upperHeight=None):
             print("No data found from WFS with the given parameters.")
             return None  # Return None if no data
 
-        return data                                                                                                                                                                                                                 
+        return data
     except Exception as e:
         print(f"An error occurred: {e}")
-    
+
 def spatial_relation_with_postal_code_areas(wfs_json, postal_code_gdf):
     """
     Clips WFS features by postal code areas and assigns the postal code (postinumero).
@@ -165,10 +165,10 @@ def spatial_relation_with_postal_code_areas(wfs_json, postal_code_gdf):
 
     print(f"Number of split features with assigned postal codes: {len(split_gdf)}")
 
-    return split_gdf              
+    return split_gdf
 
 def add_hsy_trees(request):
-    
+
     # Access data from the request arguments
     request_json = request.get_json(silent=True) or {}
 
@@ -191,7 +191,7 @@ def add_hsy_trees(request):
     # Create a Google Cloud Storage client
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
-    
+
     # Download vector file
     vector_blob = bucket.blob(json_path)
     vector_blob.download_to_filename('/tmp/vector.geojson')
@@ -199,7 +199,7 @@ def add_hsy_trees(request):
     gdf = gpd.read_file('/tmp/vector.geojson')
 
     wfs_json = fetch_wfs_data(typename, city, lowerHeight, upperHeight)
-    
+
         # Check if no data was found
     if wfs_json is None:
         return jsonify({"status": "no_data", "message": "No data found from WFS with the given parameters."}), 200
@@ -208,6 +208,6 @@ def add_hsy_trees(request):
 
     # Insert data into database and get the count of inserted records
     inserted_count = insert_to_db(wfs_gdf)
-    
+
     # Return response with the number of inserted features
     return jsonify({"status": "success", "features_inserted": inserted_count})

@@ -13,13 +13,13 @@ class="chart-controls"
         @change="hideColdAreas"
       />
     </div>
-    
+
     <!-- Container for the HSY Building Chart -->
     <div
 id="hsyBuildingChartContainer"
 class="chart-container"
 />
-    
+
     <!-- Timeline Controls -->
     <div class="timeline-section">
       <Timeline />
@@ -47,7 +47,7 @@ export default {
     const toggleStore = useToggleStore();
     const plotService = new Plot();
     const coldAreaService = new ColdArea();
-    
+
     const hideColdAreasChecked = ref(toggleStore.hideColdAreas);
     const coldAreasLoaded = ref(false); // To track if cold areas are loaded
 

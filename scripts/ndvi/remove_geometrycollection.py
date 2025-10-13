@@ -14,7 +14,7 @@ def remove_geometry_collection(geojson_data):
     for feature in geojson_data['features']:
         if feature['geometry']['type'] == 'GeometryCollection':
             # Assuming GeometryCollection contains only one MultiPolygon
-            feature['geometry'] = feature['geometry']['geometries'][0]  
+            feature['geometry'] = feature['geometry']['geometries'][0]
     return geojson_data
 
 # Load the GeoJSON data

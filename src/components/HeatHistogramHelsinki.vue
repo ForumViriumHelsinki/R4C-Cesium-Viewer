@@ -9,7 +9,7 @@ import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
-import Plot from '../services/plot.js'; 
+import Plot from '../services/plot.js';
 import Building from '../services/building.js';
 
 export default {
@@ -77,7 +77,7 @@ export default {
 
 		const createHistogram = () => {
 			const urbanHeatData = propsStore.heatHistogramData;
-      
+
 			plotService.initializePlotContainer( 'heatHistogramContainer' );
 
 			const margin = { top: 30, right: 30, bottom: 30, left: 30 };

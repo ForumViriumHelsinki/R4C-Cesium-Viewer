@@ -14,7 +14,7 @@ This project uses a comprehensive testing strategy with multiple types of tests 
                   /E2E \     <- Few, expensive, high confidence
                  /______\
                 /        \
-               /Integration\ <- Some, moderate cost, good confidence  
+               /Integration\ <- Some, moderate cost, good confidence
               /____________\
              /              \
             /   Unit Tests   \ <- Many, cheap, fast, focused
@@ -35,20 +35,24 @@ This project uses a comprehensive testing strategy with multiple types of tests 
 Test individual components, services, and stores in isolation.
 
 #### Store Tests
+
 - **GlobalStore**: State management, actions, mutations
 - **ToggleStore**: UI toggle states, reset functionality
 - Coverage includes edge cases, error handling, and state transitions
 
-#### Service Tests  
+#### Service Tests
+
 - **Address Service**: Building address resolution logic
 - **Camera Service**: 3D camera controls and positioning
 - Mock external dependencies (Cesium, APIs)
 
 #### Component Tests
+
 - **Loading Component**: Reactivity, store integration
 - Vue component rendering and behavior
 
 **Run unit tests:**
+
 ```bash
 npm run test:unit
 npm run test:coverage  # With coverage report
@@ -59,17 +63,20 @@ npm run test:coverage  # With coverage report
 Test interactions between multiple components and services.
 
 #### API Integration
+
 - External service integration (Geocoding, WMS)
 - Store-to-store communication
 - Component-store integration
 - Data processing workflows
 
 #### Error Handling
+
 - Cascading failure scenarios
 - Network timeout handling
 - User-friendly error messages
 
 **Run integration tests:**
+
 ```bash
 npm run test:integration
 ```
@@ -79,23 +86,27 @@ npm run test:integration
 Test complete user workflows and application functionality.
 
 #### Core Functionality
+
 - Application loading and initialization
 - Map navigation and interaction
 - Building information display
 - Statistical grid interaction
 
 #### Advanced Features
+
 - HSY Background Maps integration
 - Heat vulnerability visualization
 - WMS layer management
 - Timeline functionality
 
 #### Cross-browser Testing
+
 - Chromium, Firefox, WebKit
 - Mobile viewport testing
 - Responsive design validation
 
 **Run E2E tests:**
+
 ```bash
 npm run test:e2e
 npm run test:e2e -- --headed  # With browser UI
@@ -107,21 +118,25 @@ npm run test:e2e -- --debug   # Debug mode
 Measure and validate application performance characteristics.
 
 #### Load Performance
+
 - Page load times
 - Core Web Vitals (FCP, LCP, CLS)
 - Resource loading efficiency
 
 #### Runtime Performance
+
 - Frame rate during interactions
 - Memory usage patterns
 - Response time under load
 
 #### Network Performance
+
 - Slow network adaptation
 - Resource caching effectiveness
 - Concurrent request handling
 
 **Run performance tests:**
+
 ```bash
 npm run test:performance
 ```
@@ -131,16 +146,19 @@ npm run test:performance
 Test Express.js API endpoints and server functionality.
 
 #### API Endpoints
+
 - Cache management (`/api/cache/*`)
 - WMS proxy (`/wms/proxy`)
 - Paavo data (`/paavo`)
 
 #### Error Scenarios
+
 - Redis connection failures
 - External API timeouts
 - Malformed requests
 
 **Run backend tests:**
+
 ```bash
 cd backend
 npm test
@@ -155,20 +173,20 @@ npm run test:coverage
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./tests/setup.js'],
+    environment: "jsdom",
+    setupFiles: ["./tests/setup.js"],
     coverage: {
-      provider: 'v8',
+      provider: "v8",
       thresholds: {
         global: {
           branches: 70,
           functions: 70,
           lines: 70,
-          statements: 70
-        }
-      }
-    }
-  }
+          statements: 70,
+        },
+      },
+    },
+  },
 });
 ```
 
@@ -176,18 +194,18 @@ export default defineConfig({
 
 ```typescript
 export default defineConfig({
-  testDir: './tests',
+  testDir: "./tests",
   fullyParallel: true,
   retries: process.env.CI ? 2 : 0,
   use: {
-    baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
+    baseURL: "http://localhost:5173",
+    trace: "on-first-retry",
   },
   projects: [
-    { name: 'chromium', use: devices['Desktop Chrome'] },
-    { name: 'firefox', use: devices['Desktop Firefox'] },
-    { name: 'webkit', use: devices['Desktop Safari'] }
-  ]
+    { name: "chromium", use: devices["Desktop Chrome"] },
+    { name: "firefox", use: devices["Desktop Firefox"] },
+    { name: "webkit", use: devices["Desktop Safari"] },
+  ],
 });
 ```
 
@@ -215,6 +233,7 @@ npm run test:coverage
 ### CI/CD Pipeline
 
 Tests run automatically on:
+
 - Push to `main` or `develop` branches
 - Pull requests
 - Performance tests on main branch only
@@ -228,14 +247,14 @@ npm run test:ci
 
 The following environment variables are required for running tests in CI/CD:
 
-| Variable | Description | Required For | Example |
-|----------|-------------|--------------|---------|
-| `NODE_ENV` | Environment mode | All tests | `test` |
-| `CI` | Indicates CI environment | All tests | `true` |
-| `NODE_OPTIONS` | Node.js runtime options | All tests | `--max-old-space-size=4096` |
-| `SENTRY_AUTH_TOKEN` | Sentry authentication token | Build & Integration tests | `secret` |
-| `VITE_SENTRY_DSN` | Sentry DSN for error tracking | Build & Integration tests | `https://...@sentry.io/...` |
-| `VITE_DIGITRANSIT_KEY` | Digitransit API key | Build & Integration tests | `your-api-key` |
+| Variable               | Description                   | Required For              | Example                     |
+| ---------------------- | ----------------------------- | ------------------------- | --------------------------- |
+| `NODE_ENV`             | Environment mode              | All tests                 | `test`                      |
+| `CI`                   | Indicates CI environment      | All tests                 | `true`                      |
+| `NODE_OPTIONS`         | Node.js runtime options       | All tests                 | `--max-old-space-size=4096` |
+| `SENTRY_AUTH_TOKEN`    | Sentry authentication token   | Build & Integration tests | `secret`                    |
+| `VITE_SENTRY_DSN`      | Sentry DSN for error tracking | Build & Integration tests | `https://...@sentry.io/...` |
+| `VITE_DIGITRANSIT_KEY` | Digitransit API key           | Build & Integration tests | `your-api-key`              |
 
 **Setting up for local testing:**
 
@@ -257,6 +276,7 @@ source .env.test
 **GitHub Actions Secrets:**
 
 These secrets must be configured in GitHub repository settings:
+
 - `SENTRY_AUTH_TOKEN` - Required for source map uploads
 - `SENTRY_DSN` - Error tracking endpoint
 - `DIGITRANSIT_KEY` - Transit data API access
@@ -266,24 +286,30 @@ These secrets must be configured in GitHub repository settings:
 ### Mock Strategy
 
 #### Cesium Mocking
+
 Heavy 3D library mocked to avoid loading in tests:
+
 ```javascript
-vi.mock('cesium', () => ({
+vi.mock("cesium", () => ({
   Viewer: vi.fn(),
-  Cartesian3: { fromDegrees: vi.fn() }
+  Cartesian3: { fromDegrees: vi.fn() },
 }));
 ```
 
 #### API Mocking
+
 External APIs mocked for reliable testing:
+
 ```javascript
 axios.get.mockResolvedValue({
-  data: mockGeoData
+  data: mockGeoData,
 });
 ```
 
 #### Store Mocking
+
 Pinia stores initialized fresh for each test:
+
 ```javascript
 beforeEach(() => {
   setActivePinia(createPinia());
@@ -293,8 +319,9 @@ beforeEach(() => {
 ## Coverage Thresholds
 
 Minimum coverage requirements:
+
 - **Branches**: 70%
-- **Functions**: 70% 
+- **Functions**: 70%
 - **Lines**: 70%
 - **Statements**: 70%
 
@@ -303,6 +330,7 @@ Coverage reports generated in `coverage/` directory.
 ## Performance Benchmarks
 
 ### Target Metrics
+
 - **Initial Load**: < 3 seconds
 - **First Contentful Paint**: < 2 seconds
 - **Frame Rate**: > 30 FPS during interactions
@@ -312,6 +340,7 @@ Coverage reports generated in `coverage/` directory.
 ### Performance Monitoring
 
 Tests track:
+
 - Page load times
 - Network request patterns
 - Memory usage patterns
@@ -323,34 +352,39 @@ Tests track:
 ### Writing Tests
 
 1. **Test Behavior, Not Implementation**
+
    ```javascript
    // Good: Test user-visible behavior
-   expect(wrapper.find('.loading-message').text()).toBe('Loading data, please wait');
-   
+   expect(wrapper.find(".loading-message").text()).toBe(
+     "Loading data, please wait",
+   );
+
    // Bad: Test implementation details
    expect(component.isLoadingData).toBe(true);
    ```
 
 2. **Use Descriptive Test Names**
+
    ```javascript
    // Good
-   it('should display building information when valid building is selected')
-   
+   it("should display building information when valid building is selected");
+
    // Bad
-   it('should work')
+   it("should work");
    ```
 
 3. **Arrange-Act-Assert Pattern**
+
    ```javascript
-   it('should calculate correct address', () => {
+   it("should calculate correct address", () => {
      // Arrange
-     const properties = { katunimi_suomi: 'Test Street', osoitenumero: '123' };
-     
+     const properties = { katunimi_suomi: "Test Street", osoitenumero: "123" };
+
      // Act
      const result = findAddressForBuilding(properties);
-     
+
      // Assert
-     expect(result).toBe('Test Street 123');
+     expect(result).toBe("Test Street 123");
    });
    ```
 
@@ -382,6 +416,7 @@ Tests track:
 ## Debugging Tests
 
 ### Unit Tests
+
 ```bash
 # Run specific test file
 npx vitest tests/unit/stores/globalStore.test.js
@@ -391,6 +426,7 @@ npx vitest --reporter=verbose --run tests/unit/stores/globalStore.test.js
 ```
 
 ### E2E Tests
+
 ```bash
 # Run with browser UI
 npx playwright test --headed
@@ -403,6 +439,7 @@ npx playwright show-trace trace.zip
 ```
 
 ### Performance Tests
+
 ```bash
 # Verbose output
 npx vitest --reporter=verbose tests/performance/load.test.js
@@ -413,6 +450,7 @@ npx vitest --reporter=verbose tests/performance/load.test.js
 ### GitHub Actions Workflow
 
 The CI pipeline runs:
+
 1. **Unit Tests** (Node 18, 20)
 2. **Integration Tests** (with Redis)
 3. **E2E Tests** (with backend + frontend)
@@ -420,6 +458,7 @@ The CI pipeline runs:
 5. **Security Scan** (npm audit)
 
 ### Test Artifacts
+
 - Coverage reports
 - Playwright test results
 - Performance metrics
@@ -428,6 +467,7 @@ The CI pipeline runs:
 ## Test Maintenance
 
 ### Regular Tasks
+
 1. **Update dependencies** monthly
 2. **Review and update test data** quarterly
 3. **Adjust performance thresholds** as needed
@@ -435,6 +475,7 @@ The CI pipeline runs:
 5. **Remove/update tests for deprecated features**
 
 ### Monitoring
+
 - Track test execution time
 - Monitor flaky tests
 - Review coverage trends
@@ -445,19 +486,22 @@ The CI pipeline runs:
 ### Common Issues
 
 #### Cesium Loading Errors
+
 ```javascript
 // Solution: Proper mocking in setup.js
 vi.mock('cesium', () => ({...}));
 ```
 
 #### Async Test Failures
+
 ```javascript
 // Solution: Proper await usage
 await nextTick();
-await page.waitForSelector('canvas');
+await page.waitForSelector("canvas");
 ```
 
 #### Memory Leaks in Tests
+
 ```javascript
 // Solution: Proper cleanup
 afterEach(() => {
@@ -466,9 +510,10 @@ afterEach(() => {
 ```
 
 #### Flaky E2E Tests
+
 ```javascript
 // Solution: Better wait strategies
-await page.waitForLoadState('networkidle');
+await page.waitForLoadState("networkidle");
 await page.waitForTimeout(1000);
 ```
 

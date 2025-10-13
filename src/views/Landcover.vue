@@ -119,7 +119,7 @@ export default {
   width: 80px;
 }
 
-.land-cover-checkbox { 
+.land-cover-checkbox {
   position: absolute;
   top: 190px;
   display: flex;

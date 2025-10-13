@@ -40,7 +40,7 @@ def fetch_wfs_data():
     # Request to WFS and process response
     try:
         response = urllib.request.urlopen(request_url, context=ssl_context)
-        
+
         # Read the response content
         response_content = response.read()
 
@@ -77,11 +77,11 @@ def update_google_sql(data):
     db_password = os.environ.get("DB_PASSWORD")
 
     connector = Connector()
-    
+
     # Counters for inserts and updates
     update_count = 0
-    insert_count = 0    
-    
+    insert_count = 0
+
     def getconn() -> pg8000.dbapi.Connection:
         conn: pg8000.dbapi.Connection = connector.connect(
             instance_connection_name,
@@ -91,25 +91,25 @@ def update_google_sql(data):
             db=db_name,
         )
         return conn
-    
+
     try:
         conn = getconn()
         cursor = conn.cursor()
 
         for feature in data['features']:
             properties = feature['properties']
-            
+
             # Skip features where 'geometria' property equals 'piste'
             if properties.get('geometria') == 'piste':
                 continue
-            
+
             geom = json.dumps(feature['geometry'])
-    
+
             fields = [
-                'kunta', 'vtj_prt', 'raktun', 'kiitun', 'katu', 'osno1', 'oski1', 
-                'osno2', 'oski2', 'postinumero', 'kavu', 'kayttarks', 'kerala', 'korala', 
-                'kohala', 'ashala', 'asuntojen_lkm', 'kerrosten_lkm', 'rakennusaine_s', 
-                'julkisivu_s', 'lammitystapa_s', 'lammitysaine_s', 'viemari', 'vesijohto', 
+                'kunta', 'vtj_prt', 'raktun', 'kiitun', 'katu', 'osno1', 'oski1',
+                'osno2', 'oski2', 'postinumero', 'kavu', 'kayttarks', 'kerala', 'korala',
+                'kohala', 'ashala', 'asuntojen_lkm', 'kerrosten_lkm', 'rakennusaine_s',
+                'julkisivu_s', 'lammitystapa_s', 'lammitysaine_s', 'viemari', 'vesijohto',
                 'olotila_s', 'poimintapvm', 'kokotun'
             ]
 
@@ -120,7 +120,7 @@ def update_google_sql(data):
 
             cursor.execute("SELECT 1 FROM r4c_hsy_building_test WHERE vtj_prt = %s", (properties.get('vtj_prt'),))
             existing_record = cursor.fetchone()
-                        
+
             if existing_record:
                 update_sql = f"""
                     UPDATE r4c_hsy_building_test

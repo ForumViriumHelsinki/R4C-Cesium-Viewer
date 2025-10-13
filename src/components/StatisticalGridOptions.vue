@@ -188,7 +188,7 @@ watch(() => propsStore.statsIndex, (newGlobalIndex) => {
 
 <style scoped>
 #legend {
-  width: 100%; 
+  width: 100%;
   position: relative;
   background-color: white;
 }

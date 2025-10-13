@@ -60,10 +60,10 @@ def random_polygon_in_helsinki():
     # Create a small rectangle
     center_lat = random.uniform(HELSINKI_BBOX['min_lat'], HELSINKI_BBOX['max_lat'])
     center_lon = random.uniform(HELSINKI_BBOX['min_lon'], HELSINKI_BBOX['max_lon'])
-    
+
     # Small offset for polygon corners (about 100m)
     offset = 0.001
-    
+
     points = [
         f"{center_lon - offset} {center_lat - offset}",
         f"{center_lon + offset} {center_lat - offset}",
@@ -71,62 +71,62 @@ def random_polygon_in_helsinki():
         f"{center_lon - offset} {center_lat + offset}",
         f"{center_lon - offset} {center_lat - offset}"  # Close the polygon
     ]
-    
+
     return f"POLYGON(({', '.join(points)}))"
 
 def seed_adaptation_landcover(conn, num_records=100):
     """Seed adaptation_landcover table."""
     print(f"🌱 Seeding adaptation_landcover with {num_records} records...")
-    
+
     cur = conn.cursor()
-    
+
     # Land cover codes (simplified)
     land_cover_codes = ["FOREST", "WATER", "URBAN", "GRASS", "AGRICULTURAL", "BARE"]
-    
+
     for i in range(num_records):
         grid_id = f"GRID_{i:06d}"
         area_m2 = random.uniform(100, 10000)
         year = random.choice([2020, 2021, 2022, 2023, 2024])
         koodi = random.choice(land_cover_codes)
         geom = random_polygon_in_helsinki()
-        
+
         cur.execute("""
             INSERT INTO adaptation_landcover (grid_id, area_m2, year, koodi, geom)
             VALUES (%s, %s, %s, %s, ST_GeomFromText(%s, 4326))
         """, (grid_id, area_m2, year, koodi, geom))
-    
+
     conn.commit()
     print(f"✅ Seeded {num_records} adaptation_landcover records")
 
 def seed_r4c_coldspot(conn, num_records=50):
     """Seed r4c_coldspot table."""
     print(f"🌱 Seeding r4c_coldspot with {num_records} records...")
-    
+
     cur = conn.cursor()
-    
+
     for i in range(num_records):
         posno = random.choice(HELSINKI_POSTAL_CODES)
         heatexposure = random.uniform(0.0, 0.4)  # Cold spots have low heat exposure
         temp_c = random.uniform(15.0, 25.0)
         date_val = date.today() - timedelta(days=random.randint(0, 365))
         geom = random_point_in_helsinki()
-        
+
         cur.execute("""
             INSERT INTO r4c_coldspot (posno, heatexposure, temp_c, date, geom)
             VALUES (%s, %s, %s, %s, ST_GeomFromText(%s, 4326))
         """, (posno, heatexposure, temp_c, date_val, geom))
-    
+
     conn.commit()
     print(f"✅ Seeded {num_records} r4c_coldspot records")
 
 def seed_tree_f(conn, num_records=200):
     """Seed tree_f table."""
     print(f"🌱 Seeding tree_f with {num_records} records...")
-    
+
     cur = conn.cursor()
-    
+
     tree_types = ["DECIDUOUS", "CONIFEROUS", "MIXED"]
-    
+
     for i in range(num_records):
         kohde_id = f"TREE_{i:06d}"
         kunta = "Helsinki"
@@ -136,63 +136,63 @@ def seed_tree_f(conn, num_records=200):
         postinumero = random.choice(HELSINKI_POSTAL_CODES)
         korkeus_ka_m = random.uniform(5.0, 25.0)
         geom = random_polygon_in_helsinki()
-        
+
         cur.execute("""
             INSERT INTO tree_f (kohde_id, kunta, koodi, kuvaus, p_ala_m2, postinumero, korkeus_ka_m, geom)
             VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326))
         """, (kohde_id, kunta, koodi, kuvaus, p_ala_m2, postinumero, korkeus_ka_m, geom))
-    
+
     conn.commit()
     print(f"✅ Seeded {num_records} tree_f records")
 
 def seed_hsy_building_heat(conn, num_records=150):
     """Seed hsy_building_heat table."""
     print(f"🌱 Seeding hsy_building_heat with {num_records} records...")
-    
+
     cur = conn.cursor()
-    
+
     # Generate some buildings first in r4c_hsy_building_current if it doesn't exist
     buildings_exist = False
     cur.execute("SELECT COUNT(*) FROM r4c_hsy_building_current LIMIT 1")
     if cur.fetchone()[0] > 0:
         buildings_exist = True
-    
+
     if not buildings_exist:
         print("🏢 Creating sample buildings first...")
         seed_r4c_hsy_building_current(conn, 50)
-    
+
     # Get existing building IDs
     cur.execute("SELECT vtj_prt FROM r4c_hsy_building_current LIMIT 50")
     building_ids = [row[0] for row in cur.fetchall()]
-    
+
     if not building_ids:
         print("⚠️ No buildings found, creating sample building IDs")
         building_ids = [f"BUILD_{i:06d}" for i in range(50)]
-    
+
     for i in range(num_records):
         vtj_prt = random.choice(building_ids)
         avgheatexposure = random.uniform(0.2, 0.8)
         date_val = date.today() - timedelta(days=random.randint(0, 365))
         avg_temp_c = random.uniform(18.0, 32.0)
         posno = random.choice(HELSINKI_POSTAL_CODES)
-        
+
         cur.execute("""
             INSERT INTO hsy_building_heat (avgheatexposure, date, vtj_prt, avg_temp_c, posno)
             VALUES (%s, %s, %s, %s, %s)
         """, (avgheatexposure, date_val, vtj_prt, avg_temp_c, posno))
-    
+
     conn.commit()
     print(f"✅ Seeded {num_records} hsy_building_heat records")
 
 def seed_r4c_hsy_building_current(conn, num_records=100):
     """Seed r4c_hsy_building_current table."""
     print(f"🌱 Seeding r4c_hsy_building_current with {num_records} records...")
-    
+
     cur = conn.cursor()
-    
+
     building_types = ["RESIDENTIAL", "COMMERCIAL", "INDUSTRIAL", "PUBLIC"]
     heating_types = ["DISTRICT_HEATING", "ELECTRIC", "OIL", "GAS"]
-    
+
     for i in range(num_records):
         kunta = "Helsinki"
         vtj_prt = f"BUILD_{i:06d}"
@@ -212,14 +212,14 @@ def seed_r4c_hsy_building_current(conn, num_records=100):
         lammitystapa_s = random.choice(heating_types)
         area_m2 = random.uniform(40, 900)
         geom = random_polygon_in_helsinki()
-        
+
         try:
             cur.execute("""
-                INSERT INTO r4c_hsy_building_current 
-                (kunta, vtj_prt, raktun, kiitun, katu, osno1, posno, kavu, kayttarks, 
-                 kerala, korala, kohala, ashala, asuntojen_lkm, kerrosten_lkm, 
+                INSERT INTO r4c_hsy_building_current
+                (kunta, vtj_prt, raktun, kiitun, katu, osno1, posno, kavu, kayttarks,
+                 kerala, korala, kohala, ashala, asuntojen_lkm, kerrosten_lkm,
                  lammitystapa_s, area_m2, geom)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                         ST_GeomFromText(%s, 4326))
             """, (kunta, vtj_prt, raktun, kiitun, katu, osno1, posno, kavu, kayttarks,
                   kerala, korala, kohala, ashala, asuntojen_lkm, kerrosten_lkm,
@@ -228,18 +228,18 @@ def seed_r4c_hsy_building_current(conn, num_records=100):
             # Skip duplicates
             conn.rollback()
             continue
-    
+
     conn.commit()
     print(f"✅ Seeded buildings in r4c_hsy_building_current")
 
 def seed_urban_heat_building_f(conn, num_records=80):
     """Seed urban_heat_building_f table."""
     print(f"🌱 Seeding urban_heat_building_f with {num_records} records...")
-    
+
     cur = conn.cursor()
-    
+
     building_uses = ["RESIDENTIAL", "OFFICE", "RETAIL", "INDUSTRIAL", "SCHOOL", "HOSPITAL"]
-    
+
     for i in range(num_records):
         ratu = random.randint(100000, 999999)
         geom = random_polygon_in_helsinki()
@@ -255,9 +255,9 @@ def seed_urban_heat_building_f(conn, num_records=80):
         avgheatexposuretobuilding = random.uniform(0.1, 0.9)
         hki_id = random.randint(1000000, 9999999)
         area_m2 = random.uniform(50, 2000)
-        
+
         cur.execute("""
-            INSERT INTO urban_heat_building_f 
+            INSERT INTO urban_heat_building_f
             (ratu, geom, distancetounder40, c_kayttark, katunimi_suomi, katunimi_ruotsi,
              osoitenumero, postinumero, year_of_construction, measured_height, roof_type,
              avgheatexposuretobuilding, hki_id, area_m2)
@@ -265,16 +265,16 @@ def seed_urban_heat_building_f(conn, num_records=80):
         """, (ratu, geom, distancetounder40, c_kayttark, katunimi_suomi, katunimi_ruotsi,
               osoitenumero, postinumero, year_of_construction, measured_height, roof_type,
               avgheatexposuretobuilding, hki_id, area_m2))
-    
+
     conn.commit()
     print(f"✅ Seeded {num_records} urban_heat_building_f records")
 
 def seed_r4c_paavo(conn, num_records=30):
     """Seed r4c_paavo (postal code statistics) table."""
     print(f"🌱 Seeding r4c_paavo with {num_records} records...")
-    
+
     cur = conn.cursor()
-    
+
     for i, posno in enumerate(HELSINKI_POSTAL_CODES[:num_records]):
         pinta_ala = random.randint(100000, 5000000)  # Area in m²
         he_vakiy = random.randint(1000, 15000)  # Population
@@ -295,12 +295,12 @@ def seed_r4c_paavo(conn, num_records=30):
         postinumeroalue = posno
         kunta = "Helsinki"
         nimi = f"Helsinki {posno}"
-        
+
         # Create a polygon for the postal code area
         geom = random_polygon_in_helsinki()
-        
+
         cur.execute("""
-            INSERT INTO r4c_paavo 
+            INSERT INTO r4c_paavo
             (pinta_ala, he_vakiy, he_0_2, he_3_6, he_7_12, he_65_69, he_70_74, he_75_79,
              he_80_84, he_85_, ko_koul, ra_as_kpa, hr_ktu, ko_ika18y, ko_al_kork, vuosi,
              postinumeroalue, kunta, nimi, geom)
@@ -309,26 +309,26 @@ def seed_r4c_paavo(conn, num_records=30):
         """, (pinta_ala, he_vakiy, he_0_2, he_3_6, he_7_12, he_65_69, he_70_74, he_75_79,
               he_80_84, he_85_, ko_koul, ra_as_kpa, hr_ktu, ko_ika18y, ko_al_kork, vuosi,
               postinumeroalue, kunta, nimi, geom))
-    
+
     conn.commit()
     print(f"✅ Seeded {num_records} r4c_paavo records")
 
 def clear_existing_data(conn):
     """Clear existing test data."""
     print("🧹 Clearing existing test data...")
-    
+
     cur = conn.cursor()
-    
+
     tables_to_clear = [
         'hsy_building_heat',
-        'r4c_hsy_building_current', 
+        'r4c_hsy_building_current',
         'urban_heat_building_f',
         'tree_f',
         'r4c_coldspot',
         'adaptation_landcover',
         'r4c_paavo'
     ]
-    
+
     for table in tables_to_clear:
         try:
             cur.execute(f"DELETE FROM {table}")
@@ -336,7 +336,7 @@ def clear_existing_data(conn):
         except Exception as e:
             print(f"  ⚠️ Could not clear {table}: {e}")
             conn.rollback()
-    
+
     conn.commit()
     print("✅ Cleared existing test data")
 
@@ -345,22 +345,22 @@ def main():
     parser.add_argument('--database-url', help='Database connection URL')
     parser.add_argument('--clear-first', action='store_true', help='Clear existing data first')
     parser.add_argument('--num-records', type=int, default=100, help='Number of records to create per table')
-    parser.add_argument('--tables', nargs='+', help='Specific tables to seed', 
-                       choices=['adaptation_landcover', 'r4c_coldspot', 'tree_f', 
-                               'hsy_building_heat', 'r4c_hsy_building_current', 
+    parser.add_argument('--tables', nargs='+', help='Specific tables to seed',
+                       choices=['adaptation_landcover', 'r4c_coldspot', 'tree_f',
+                               'hsy_building_heat', 'r4c_hsy_building_current',
                                'urban_heat_building_f', 'r4c_paavo', 'all'])
-    
+
     args = parser.parse_args()
-    
+
     print("🌱 Starting database seeding...")
-    
+
     conn = get_db_connection(args.database_url)
-    
+
     if args.clear_first:
         clear_existing_data(conn)
-    
+
     tables_to_seed = args.tables or ['all']
-    
+
     if 'all' in tables_to_seed:
         # Seed in dependency order
         seed_r4c_paavo(conn, min(30, args.num_records))
@@ -386,7 +386,7 @@ def main():
             seed_tree_f(conn, args.num_records)
         if 'urban_heat_building_f' in tables_to_seed:
             seed_urban_heat_building_f(conn, args.num_records)
-    
+
     conn.close()
     print("🎉 Database seeding completed!")
 

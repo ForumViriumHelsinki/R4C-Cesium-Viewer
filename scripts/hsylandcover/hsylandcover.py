@@ -111,7 +111,7 @@ def process_land_cover(bucket_name, geojson_path, year, index_column):
     for layer in landcover_layers:
         typename = f"asuminen_ja_maankaytto:{layer}_{year}"
         hsylandcover = fetch_wfs_data(typename)
-        
+
         if hsylandcover is None:
             continue
 

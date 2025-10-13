@@ -7,8 +7,8 @@
         mandatory
         class="category-chips"
       >
-        <v-chip 
-          v-for="category in categories" 
+        <v-chip
+          v-for="category in categories"
           :key="category.key"
           :value="category.key"
           size="small"
@@ -33,7 +33,7 @@ Flood Risk Scenarios
       <p class="flood-disclaimer">
 ⚠️ Map contains significant errors. Not for building-specific evaluation!
 </p>
-      
+
       <div class="flood-categories">
         <!-- Stormwater Floods -->
         <div class="flood-category">
@@ -181,17 +181,17 @@ class="hsy-layer-list"
                 mdi-layers
               </v-icon>
             </template>
-            
+
             <v-list-item-title class="layer-title">
               {{ layer.title }}
             </v-list-item-title>
-            
+
             <v-list-item-subtitle class="layer-subtitle">
               Updated: {{ formatDate(layer.date_updated) }}
             </v-list-item-subtitle>
           </v-list-item>
         </v-list>
-        
+
         <div
 v-if="filteredHSYLayers.length > 10"
 class="more-results"
@@ -232,7 +232,7 @@ class="basic-maps"
               {{ basicMap.icon }}
             </v-icon>
           </template>
-          
+
           <v-list-item-title>{{ basicMap.title }}</v-list-item-title>
           <v-list-item-subtitle>{{ basicMap.description }}</v-list-item-subtitle>
         </v-list-item>
@@ -275,7 +275,7 @@ export default {
   name: 'BackgroundMapBrowser',
   setup() {
     const backgroundMapStore = useBackgroundMapStore();
-    
+
     // Category management
     const selectedCategory = ref('basic');
     const categories = [
@@ -318,7 +318,7 @@ export default {
         return hsyLayers.value.slice(0, 20); // Show top 20 by default
       }
       const query = hsySearchQuery.value.toLowerCase();
-      return hsyLayers.value.filter(layer => 
+      return hsyLayers.value.filter(layer =>
         layer.title.toLowerCase().includes(query) ||
         layer.name.toLowerCase().includes(query)
       );
@@ -326,7 +326,7 @@ export default {
 
     // Flood risk maps
     const selectedFloodLayer = ref('none');
-    
+
     const floodLegends = {
       stormwater: [
         { color: '#82CFFF', text: 'Water/sea area' },
@@ -398,14 +398,14 @@ export default {
       try {
         const response = await fetch('/hsy-action?action_route=GetHierarchicalMapLayerGroups');
         const data = await response.json();
-        
+
         // Extract and flatten all layers
         const extractLayers = (groups) => {
           if (!Array.isArray(groups)) {
             console.warn('Expected groups to be an array, got:', typeof groups);
             return [];
           }
-          
+
           let layers = [];
           groups.forEach(group => {
             if (group.layers) {
@@ -423,7 +423,7 @@ export default {
           });
           return layers;
         };
-        
+
         // Handle different possible response structures
         let groupsToProcess = data;
         if (data.groups) {
@@ -433,7 +433,7 @@ export default {
         } else if (data.result) {
           groupsToProcess = data.result;
         }
-        
+
         hsyLayers.value = extractLayers(groupsToProcess);
       } catch (error) {
         console.error('Failed to load HSY layers:', error);
@@ -675,7 +675,7 @@ export default {
   .flood-buttons .v-btn {
     font-size: 0.75rem;
   }
-  
+
   .category-chips {
     flex-wrap: wrap;
   }

@@ -1,9 +1,9 @@
 <template>
   <div class="loading-indicator-container">
     <!-- Global Loading Overlay -->
-    <v-overlay 
-      v-model="showGlobalOverlay" 
-      persistent 
+    <v-overlay
+      v-model="showGlobalOverlay"
+      persistent
       class="loading-overlay"
     >
       <v-card
@@ -17,7 +17,7 @@ mdi-loading
 </v-icon>
           Loading Data
         </v-card-title>
-        
+
         <v-card-text>
           <!-- Overall Progress -->
           <div class="progress-section">
@@ -33,11 +33,11 @@ mdi-loading
               class="mb-4"
             />
           </div>
-          
+
           <!-- Individual Layer Progress -->
           <div class="layers-progress">
-            <div 
-              v-for="layer in activeLoadingLayers" 
+            <div
+              v-for="layer in activeLoadingLayers"
               :key="layer"
               class="layer-progress"
             >
@@ -54,7 +54,7 @@ class="mr-2"
                 </div>
                 <span class="layer-percentage">{{ getLayerProgress(layer) }}%</span>
               </div>
-              
+
               <v-progress-linear
                 :model-value="getLayerProgress(layer)"
                 :color="getLayerColor(layer)"
@@ -62,13 +62,13 @@ class="mr-2"
                 rounded
                 class="layer-progress-bar"
               />
-              
+
               <div class="layer-message">
                 {{ getLoadingMessage(layer) }}
               </div>
             </div>
           </div>
-          
+
           <!-- Error Messages -->
           <div
 v-if="hasErrors"
@@ -102,7 +102,7 @@ mdi-alert-circle
             </v-alert>
           </div>
         </v-card-text>
-        
+
         <!-- Performance Info (Debug) -->
         <v-card-actions v-if="showPerformanceInfo">
           <v-btn
@@ -121,7 +121,7 @@ mdi-speedometer
         </v-card-actions>
       </v-card>
     </v-overlay>
-    
+
     <!-- Compact Loading Indicator (when not using overlay) -->
     <v-snackbar
       v-model="showCompactIndicator"
@@ -139,7 +139,7 @@ mdi-speedometer
         />
         <span>{{ getCompactMessage() }}</span>
       </div>
-      
+
       <template #actions>
         <v-btn
           icon
@@ -152,7 +152,7 @@ mdi-arrow-expand
         </v-btn>
       </template>
     </v-snackbar>
-    
+
     <!-- Performance Dialog -->
     <v-dialog
 v-model="showPerformanceDialog"
@@ -218,8 +218,8 @@ const showGlobalOverlay = computed({
 });
 
 const showCompactIndicator = computed(() => {
-  return (props.mode === 'compact' || props.mode === 'both') && 
-         loadingStore.hasActiveLoading && 
+  return (props.mode === 'compact' || props.mode === 'both') &&
+         loadingStore.hasActiveLoading &&
          !showGlobalOverlay.value;
 });
 
@@ -467,7 +467,7 @@ watch(() => loadingStore.hasActiveLoading, (isLoading) => {
     max-height: 80vh;
     overflow-y: auto;
   }
-  
+
   .layers-progress {
     max-height: 200px;
   }

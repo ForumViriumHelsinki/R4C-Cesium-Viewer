@@ -2,14 +2,14 @@ name: Test Suite
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 env:
   # Common environment variables for all jobs
   CI: true
-  NODE_OPTIONS: '--max-old-space-size=4096'
+  NODE_OPTIONS: "--max-old-space-size=4096"
   # Build-time environment variables
   SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
   VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
@@ -32,7 +32,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -61,8 +61,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -84,8 +84,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -102,9 +102,9 @@ jobs:
         uses: ./.github/actions/start-server-with-healthcheck
         id: server
         with:
-          server-command: 'npm run preview'
-          server-url: 'http://localhost:4173'
-          timeout: '30'
+          server-command: "npm run preview"
+          server-url: "http://localhost:4173"
+          timeout: "30"
 
       - name: Run Playwright tests
         run: npm run test:e2e
@@ -155,8 +155,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -173,30 +173,30 @@ jobs:
         uses: ./.github/actions/start-server-with-healthcheck
         id: server
         with:
-          server-command: 'npm run preview'
-          server-url: 'http://localhost:4173'
-          timeout: '30'
+          server-command: "npm run preview"
+          server-url: "http://localhost:4173"
+          timeout: "30"
 
       - name: Run accessibility tests - Desktop
         run: timeout 600 npm run test:accessibility:desktop -- --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
-          NODE_OPTIONS: '--max-old-space-size=4096'
-          DEBUG: 'pw:api'
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          DEBUG: "pw:api"
 
       - name: Run accessibility tests - Tablet
         run: timeout 600 npm run test:accessibility:tablet -- --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
-          NODE_OPTIONS: '--max-old-space-size=4096'
-          DEBUG: 'pw:api'
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          DEBUG: "pw:api"
 
       - name: Run accessibility tests - Mobile
         run: timeout 600 npm run test:accessibility:mobile -- --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
-          NODE_OPTIONS: '--max-old-space-size=4096'
-          DEBUG: 'pw:api'
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          DEBUG: "pw:api"
 
       - name: Cleanup server process
         if: always()
@@ -246,8 +246,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -262,9 +262,9 @@ jobs:
         uses: ./.github/actions/start-server-with-healthcheck
         id: server
         with:
-          server-command: 'npm run preview'
-          server-url: 'http://localhost:4173'
-          timeout: '30'
+          server-command: "npm run preview"
+          server-url: "http://localhost:4173"
+          timeout: "30"
 
       - name: Run performance tests
         run: npm run test:performance
@@ -302,7 +302,6 @@ jobs:
           path: performance-results/
           retention-days: 7
 
-
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -315,8 +314,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -328,7 +327,14 @@ jobs:
     name: Test Summary
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [unit-tests, integration-tests, e2e-tests, accessibility-tests, security-scan]
+    needs:
+      [
+        unit-tests,
+        integration-tests,
+        e2e-tests,
+        accessibility-tests,
+        security-scan,
+      ]
     if: always()
 
     steps:
