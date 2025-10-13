@@ -199,26 +199,26 @@
 	</v-snackbar>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useFeatureFlagStore } from '@/stores/featureFlagStore';
+import { useFeatureFlagStore, type FeatureFlagCategory, type FeatureFlagWithName, type FeatureFlagName } from '@/stores/featureFlagStore';
 import { useGraphicsStore } from '@/stores/graphicsStore';
 
 const featureFlagStore = useFeatureFlagStore();
 const graphicsStore = useGraphicsStore();
 
-const dialog = ref(false);
-const importDialog = ref(false);
-const importJson = ref('');
-const snackbar = ref(false);
-const snackbarMessage = ref('');
-const snackbarColor = ref('error');
+const dialog = ref<boolean>(false);
+const importDialog = ref<boolean>(false);
+const importJson = ref<string>('');
+const snackbar = ref<boolean>(false);
+const snackbarMessage = ref<string>('');
+const snackbarColor = ref<'error' | 'success'>('error');
 
 const categories = computed(() => featureFlagStore.categories);
 
 const totalFlags = computed(() => Object.keys(featureFlagStore.flags).length);
 
-const categoryLabels = {
+const categoryLabels: Record<FeatureFlagCategory, string> = {
 	'data-layers': 'Data Layers',
 	'graphics': 'Graphics & Performance',
 	'analysis': 'Analysis Tools',
@@ -227,7 +227,7 @@ const categoryLabels = {
 	'developer': 'Developer Tools',
 };
 
-const categoryIcons = {
+const categoryIcons: Record<FeatureFlagCategory, string> = {
 	'data-layers': 'mdi-layers',
 	'graphics': 'mdi-chart-line',
 	'analysis': 'mdi-chart-box',
@@ -236,39 +236,39 @@ const categoryIcons = {
 	'developer': 'mdi-code-braces',
 };
 
-function getCategoryLabel(category) {
+function getCategoryLabel(category: FeatureFlagCategory): string {
 	return categoryLabels[category] || category;
 }
 
-function getCategoryIcon(category) {
+function getCategoryIcon(category: FeatureFlagCategory): string {
 	return categoryIcons[category] || 'mdi-flag';
 }
 
-function getCategoryEnabledCount(category) {
+function getCategoryEnabledCount(category: FeatureFlagCategory): number {
 	return featureFlagStore.flagsByCategory(category).filter(flag =>
 		featureFlagStore.isEnabled(flag.name)
 	).length;
 }
 
-function getCategoryTotalCount(category) {
+function getCategoryTotalCount(category: FeatureFlagCategory): number {
 	return featureFlagStore.flagsByCategory(category).length;
 }
 
-function setFlag(flagName, enabled) {
+function setFlag(flagName: FeatureFlagName, enabled: boolean): void {
 	featureFlagStore.setFlag(flagName, enabled);
 }
 
-function resetFlag(flagName) {
+function resetFlag(flagName: FeatureFlagName): void {
 	featureFlagStore.resetFlag(flagName);
 }
 
-function resetAllFlags() {
+function resetAllFlags(): void {
 	if (confirm('Are you sure you want to reset all feature flags to their default values?')) {
 		featureFlagStore.resetAllFlags();
 	}
 }
 
-function checkHardwareSupport(flag) {
+function checkHardwareSupport(flag: FeatureFlagWithName): boolean {
 	// Check hardware support based on graphics store
 	// Use optional chaining for defensive coding
 	if (flag.name === 'hdrRendering') {
@@ -283,7 +283,7 @@ function checkHardwareSupport(flag) {
 	return true;
 }
 
-function exportConfig() {
+function exportConfig(): void {
 	const config = featureFlagStore.exportConfig();
 	const json = JSON.stringify(config, null, 2);
 
@@ -299,12 +299,12 @@ function exportConfig() {
 	URL.revokeObjectURL(url);
 }
 
-function importConfig() {
+function importConfig(): void {
 	importJson.value = '';
 	importDialog.value = true;
 }
 
-function doImport() {
+function doImport(): void {
 	try {
 		const config = JSON.parse(importJson.value);
 		featureFlagStore.importConfig(config);
@@ -317,7 +317,7 @@ function doImport() {
 	}
 }
 
-function showSnackbar(message, color = 'error') {
+function showSnackbar(message: string, color: 'error' | 'success' = 'error'): void {
 	snackbarMessage.value = message;
 	snackbarColor.value = color;
 	snackbar.value = true;

@@ -16,7 +16,7 @@ Feature flags allow you to enable or disable specific features at build time (vi
 
 The feature flag system is implemented using:
 
-- **Pinia Store** (`src/stores/featureFlagStore.js`) - Core state management
+- **Pinia Store** (`src/stores/featureFlagStore.ts`) - Core state management with TypeScript type safety
 - **Vue Component** (`src/components/FeatureFlagsPanel.vue`) - UI for managing flags
 - **Environment Variables** (`.env` files) - Default configuration
 
@@ -293,7 +293,7 @@ VITE_FEATURE_BACKGROUND_PRELOAD=true
 
 When adding a new feature flag:
 
-1. Add it to `featureFlagStore.js` with appropriate metadata
+1. Add it to `featureFlagStore.ts` with appropriate metadata (see `FeatureFlagName` type for all flag names)
 2. Add the environment variable to `.env.example`
 3. Document it in this file
 4. Use it in your components with `v-if` or programmatic checks
@@ -379,7 +379,7 @@ const toggleStore = useToggleStore();
 
 ### Flag Not Working
 
-1. Check if the flag is properly defined in `featureFlagStore.js`
+1. Check if the flag is properly defined in `featureFlagStore.ts`
 2. Verify the environment variable is set correctly in `.env`
 3. Clear localStorage and restart: `localStorage.removeItem('featureFlags')`
 4. Check browser console for warnings
