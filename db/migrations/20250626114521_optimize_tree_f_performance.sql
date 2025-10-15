@@ -1,4 +1,4 @@
--- migrate:up
+-- migrate:up transaction:false
 
 -- Performance optimization for tree_f table
 -- This migration adds indexes to improve query performance for common WHERE clauses
@@ -34,7 +34,7 @@ INCLUDE (id, kuvaus, p_ala_m2, korkeus_ka_m);
 -- Update table statistics to help query planner make better decisions
 ANALYZE public.tree_f;
 
--- migrate:down
+-- migrate:down transaction:false
 
 -- Remove the indexes created in the up migration
 DROP INDEX CONCURRENTLY IF EXISTS public.idx_tree_f_covering;

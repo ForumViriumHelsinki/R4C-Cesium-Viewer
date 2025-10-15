@@ -1,4 +1,4 @@
--- migrate:up
+-- migrate:up transaction:false
 
 -- Optimize materialized view indexes
 -- Ensure materialized views have proper indexes for fast querying
@@ -77,7 +77,7 @@ FROM public.r4c_postalcode_mat;
 ANALYZE public.r4c_hsy_building_mat;
 ANALYZE public.r4c_postalcode_mat;
 
--- migrate:down
+-- migrate:down transaction:false
 
 -- Remove additional statistics
 DROP STATISTICS IF EXISTS public.stat_r4c_postalcode_mat_multi;

@@ -2,17 +2,15 @@
 
 ## [1.26.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.26.0...r4c-cesium-viewer-v1.26.1) (2025-10-13)
 
-
 ### Bug Fixes
 
-* make initial schema migration fully idempotent ([#242](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/242)) ([aff058d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/aff058d4d0c1719908dd1c56be170d0889b64b58))
+- make initial schema migration fully idempotent ([#242](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/242)) ([aff058d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/aff058d4d0c1719908dd1c56be170d0889b64b58))
 
 ## [1.26.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.25.0...r4c-cesium-viewer-v1.26.0) (2025-10-13)
 
-
 ### Features
 
-* migrate feature flag system to TypeScript ([#235](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/235)) ([66feb77](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/66feb7796108c0ffe4ba97e1472c1b1ab03f12d3)), closes [#224](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/224)
+- migrate feature flag system to TypeScript ([#235](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/235)) ([66feb77](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/66feb7796108c0ffe4ba97e1472c1b1ab03f12d3)), closes [#224](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/224)
 
 ## [1.25.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.24.1...r4c-cesium-viewer-v1.25.0) (2025-10-10)
 
