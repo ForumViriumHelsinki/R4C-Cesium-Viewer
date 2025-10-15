@@ -1,4 +1,4 @@
--- migrate:up
+-- migrate:up transaction:false
 
 -- Add missing spatial indexes for geometry-heavy tables
 -- These indexes are critical for spatial queries and joins
@@ -60,7 +60,7 @@ ANALYZE public.tree_building_distance;
 ANALYZE public.flood_f;
 ANALYZE public.hki_travel_time_r4c_f;
 
--- migrate:down
+-- migrate:down transaction:false
 
 -- Remove all spatial indexes added in the up migration
 DROP INDEX CONCURRENTLY IF EXISTS public.idx_r4c_coldspot_date_geom;

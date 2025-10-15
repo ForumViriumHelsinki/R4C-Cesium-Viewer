@@ -1,4 +1,4 @@
--- migrate:up
+-- migrate:up transaction:false
 
 -- Performance optimization for r4c_hsy_building_current table
 -- This table is heavily used for building queries and joins with heat data
@@ -39,7 +39,7 @@ ON public.r4c_hsy_building_current (kunta);
 -- Update table statistics for better query planning
 ANALYZE public.r4c_hsy_building_current;
 
--- migrate:down
+-- migrate:down transaction:false
 
 -- Remove the indexes created in the up migration
 DROP INDEX CONCURRENTLY IF EXISTS public.idx_r4c_hsy_building_current_kunta;
