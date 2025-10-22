@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.27.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.26.2...r4c-cesium-viewer-v1.27.0) (2025-10-22)
+
+
+### Features
+
+* add import validation warnings for unknown feature flags ([#246](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/246)) ([7660a26](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7660a26218cd17acf6085b7b3baca92982514143))
+
+
+### Bug Fixes
+
+* split concurrent index migrations for dbmate compatibility ([#248](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/248)) ([0f17e85](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0f17e85c96cc086f149d61dd0dc4fad25ed5e959))
+
 ## [1.26.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.26.1...r4c-cesium-viewer-v1.26.2) (2025-10-15)
 
 ### Bug Fixes
