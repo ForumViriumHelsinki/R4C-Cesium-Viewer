@@ -537,6 +537,49 @@ describe("featureFlagStore", () => {
         expect(store.userOverrides.nonExistentFlag).toBeUndefined();
       });
 
+      it("should warn about unknown flags in import", () => {
+        const warnSpy = vi.spyOn(console, "warn");
+        const config = {
+          ndvi: false,
+          unknownFlag: true,
+          anotherUnknown: false,
+        };
+
+        store.importConfig(config);
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Unknown feature flag "unknownFlag" in imported configuration',
+        );
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Unknown feature flag "anotherUnknown" in imported configuration',
+        );
+        expect(warnSpy).toHaveBeenCalledTimes(2);
+        warnSpy.mockRestore();
+      });
+
+      it("should warn about invalid value types in import", () => {
+        const warnSpy = vi.spyOn(console, "warn");
+        const config = {
+          ndvi: "true", // string instead of boolean
+          heatHistogram: 1, // number instead of boolean
+          debugMode: null, // null instead of boolean
+        };
+
+        store.importConfig(config);
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Invalid value for feature flag "ndvi": expected boolean, got string',
+        );
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Invalid value for feature flag "heatHistogram": expected boolean, got number',
+        );
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Invalid value for feature flag "debugMode": expected boolean, got object',
+        );
+        expect(warnSpy).toHaveBeenCalledTimes(3);
+        warnSpy.mockRestore();
+      });
+
       it("should persist imported configuration", () => {
         const config = {
           ndvi: false,
