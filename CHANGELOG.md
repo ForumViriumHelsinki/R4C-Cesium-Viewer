@@ -2,10 +2,9 @@
 
 ## [1.26.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.26.1...r4c-cesium-viewer-v1.26.2) (2025-10-15)
 
-
 ### Bug Fixes
 
-* disable transactions for concurrent index migrations ([#244](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/244)) ([a3a198a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a3a198a0acab40defe19e8e9579f07f5407ed918))
+- disable transactions for concurrent index migrations ([#244](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/244)) ([a3a198a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a3a198a0acab40defe19e8e9579f07f5407ed918))
 
 ## [1.26.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.26.0...r4c-cesium-viewer-v1.26.1) (2025-10-13)
 
