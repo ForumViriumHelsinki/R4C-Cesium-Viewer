@@ -494,6 +494,8 @@ export const useFeatureFlagStore = defineStore("featureFlags", {
           this.setFlag(flagName, enabled);
         } else if (!this.flags[flagName]) {
           console.warn(`Unknown feature flag "${name}" in imported configuration`);
+        } else if (typeof enabled !== "boolean") {
+          console.warn(`Invalid value for feature flag "${name}": expected boolean, got ${typeof enabled}`);
         }
       });
     },
