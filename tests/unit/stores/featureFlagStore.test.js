@@ -537,6 +537,25 @@ describe("featureFlagStore", () => {
         expect(store.userOverrides.nonExistentFlag).toBeUndefined();
       });
 
+      it("should warn about unknown flags in import", () => {
+        const warnSpy = vi.spyOn(console, "warn");
+        const config = {
+          ndvi: false,
+          unknownFlag: true,
+          anotherUnknown: false,
+        };
+
+        store.importConfig(config);
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Unknown feature flag "unknownFlag" in imported configuration',
+        );
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Unknown feature flag "anotherUnknown" in imported configuration',
+        );
+        expect(warnSpy).toHaveBeenCalledTimes(2);
+      });
+
       it("should persist imported configuration", () => {
         const config = {
           ndvi: false,
