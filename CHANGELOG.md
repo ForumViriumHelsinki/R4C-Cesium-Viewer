@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.1...r4c-cesium-viewer-v1.27.2) (2025-10-24)
+
+
+### Bug Fixes
+
+* bypass dotenvx in Docker build to resolve build failure ([#253](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/253)) ([2d9164a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2d9164abacefd742bce0a5877f4dd560776e3b11)), closes [#252](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/252)
+
 ## [1.27.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.0...r4c-cesium-viewer-v1.27.1) (2025-10-24)
 
 
