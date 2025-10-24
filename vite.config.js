@@ -23,7 +23,9 @@ export default defineConfig(() => {
       },
     },
     plugins: [
-      eslint(),
+      // Only run ESLint during development, not in production builds
+      // ESLint checks are handled by pre-commit hooks and CI linting steps
+      ...(process.env.NODE_ENV !== "production" ? [eslint()] : []),
       Vue({
         template: { transformAssetUrls },
       }),
