@@ -13,7 +13,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npx vite build && npx vite optimize
+RUN npm run build
 
 FROM nginx:1.27
 
