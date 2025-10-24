@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.2...r4c-cesium-viewer-v1.27.3) (2025-10-24)
+
+
+### Bug Fixes
+
+* disable ESLint plugin during production builds to resolve container build failure ([#256](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/256)) ([231f916](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/231f916b9c9e1c2b8d2d761660dad725981338fb))
+
 ## [1.27.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.1...r4c-cesium-viewer-v1.27.2) (2025-10-24)
 
 

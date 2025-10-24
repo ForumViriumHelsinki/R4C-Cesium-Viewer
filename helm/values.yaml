@@ -125,7 +125,9 @@ migration:
     name: regions4climate
     username: regions4climate_user
     password: regions4climate_pass
-    postgresPassword: postgres
+    # Admin user for ownership transfers (postgres for local, cloudsqladmin for Cloud SQL)
+    adminUsername: postgres
+    adminPassword: postgres
   migrationsPath: /migrations
   resources:
     limits:
