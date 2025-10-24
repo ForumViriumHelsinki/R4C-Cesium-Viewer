@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.0...r4c-cesium-viewer-v1.27.1) (2025-10-24)
+
+
+### Bug Fixes
+
+* remove invalid vite optimize command from Dockerfile ([#250](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/250)) ([7a684ba](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7a684ba03f038dcc872d17da44d3aba806c80e5d)), closes [#249](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/249)
+
 ## [1.27.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.26.2...r4c-cesium-viewer-v1.27.0) (2025-10-22)
 
 
