@@ -13,7 +13,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build
+RUN ./node_modules/.bin/vite build
 
 FROM nginx:1.27
 
