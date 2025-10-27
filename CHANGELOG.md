@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.4...r4c-cesium-viewer-v1.27.5) (2025-10-27)
+
+
+### Bug Fixes
+
+* resolve Docker build failure from esbuild version conflict ([#265](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/265)) ([983e78e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/983e78e5f92e2672b75348ebb0c203f3296129a5))
+
 ## [1.27.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.3...r4c-cesium-viewer-v1.27.4) (2025-10-27)
 
 ### Bug Fixes
