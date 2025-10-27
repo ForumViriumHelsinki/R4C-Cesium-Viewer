@@ -4,7 +4,8 @@
 !vite.config.js
 !eslint.config.js
 !public
-!package*.json
+!package.json
+!package-lock.json
 !index.html
 !db
 !scripts
