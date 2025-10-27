@@ -2,11 +2,10 @@
 
 ## [1.27.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.3...r4c-cesium-viewer-v1.27.4) (2025-10-27)
 
-
 ### Bug Fixes
 
-* add missing checkout step to container-build workflow ([#264](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/264)) ([cfa4bb9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/cfa4bb9b7b19f54dfaea7324de6239175226b8ff))
-* correct COPY destination path in Dockerfile ([#262](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/262)) ([aaa734a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/aaa734a77dedd182eb9a700e509cad724d71d900)), closes [#261](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/261)
+- add missing checkout step to container-build workflow ([#264](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/264)) ([cfa4bb9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/cfa4bb9b7b19f54dfaea7324de6239175226b8ff))
+- correct COPY destination path in Dockerfile ([#262](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/262)) ([aaa734a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/aaa734a77dedd182eb9a700e509cad724d71d900)), closes [#261](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/261)
 
 ## [1.27.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.2...r4c-cesium-viewer-v1.27.3) (2025-10-24)
 
