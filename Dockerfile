@@ -13,7 +13,7 @@ RUN npm ci
 
 COPY . .
 
-RUN ./node_modules/.bin/vite build
+RUN NODE_ENV=production ./node_modules/.bin/vite build
 
 FROM nginx:1.27
 

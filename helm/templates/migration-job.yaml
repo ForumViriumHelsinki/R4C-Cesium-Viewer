@@ -65,6 +65,91 @@ spec:
           psql "$DATABASE_URL_ADMIN" -c "CREATE EXTENSION IF NOT EXISTS postgis;" || echo "⚠️  PostGIS extension creation failed (may already exist)"
           psql "$DATABASE_URL_ADMIN" -c "CREATE EXTENSION IF NOT EXISTS postgis_topology;" || echo "⚠️  PostGIS topology extension creation failed (may already exist)"
 
+          # Transfer ownership of all existing tables to migration user
+          echo "🔑 Transferring table ownership to migration user..."
+          psql "$DATABASE_URL_ADMIN" <<'EOSQL' || echo "⚠️  Table ownership transfer failed or no tables exist yet"
+DO $$
+DECLARE
+    migration_user TEXT := '{{ .Values.migration.database.username }}';
+    tbl RECORD;
+    owner_role TEXT;
+BEGIN
+    -- First, grant admin user membership in all table owner roles (for Cloud SQL IAM users)
+    FOR owner_role IN
+        SELECT DISTINCT tableowner
+        FROM pg_tables
+        WHERE schemaname = 'public'
+        AND tableowner != migration_user
+        AND tableowner != CURRENT_USER
+    LOOP
+        BEGIN
+            EXECUTE format('GRANT %I TO CURRENT_USER', owner_role);
+            RAISE NOTICE 'Granted role % to admin user for ownership transfer', owner_role;
+        EXCEPTION
+            WHEN OTHERS THEN
+                RAISE WARNING 'Could not grant role %: %', owner_role, SQLERRM;
+        END;
+    END LOOP;
+
+    -- Transfer ownership of all tables
+    FOR tbl IN
+        SELECT schemaname, tablename, tableowner
+        FROM pg_tables
+        WHERE schemaname = 'public'
+        AND tableowner != migration_user
+    LOOP
+        BEGIN
+            EXECUTE format('ALTER TABLE %I.%I OWNER TO %I',
+                tbl.schemaname, tbl.tablename, migration_user);
+            RAISE NOTICE 'Transferred ownership of %.% from % to %',
+                tbl.schemaname, tbl.tablename, tbl.tableowner, migration_user;
+        EXCEPTION
+            WHEN OTHERS THEN
+                RAISE WARNING 'Could not transfer table %.%: %',
+                    tbl.schemaname, tbl.tablename, SQLERRM;
+        END;
+    END LOOP;
+
+    -- Transfer ownership of all sequences
+    FOR tbl IN
+        SELECT schemaname, sequencename, sequenceowner
+        FROM pg_sequences
+        WHERE schemaname = 'public'
+        AND sequenceowner != migration_user
+    LOOP
+        BEGIN
+            EXECUTE format('ALTER SEQUENCE %I.%I OWNER TO %I',
+                tbl.schemaname, tbl.sequencename, migration_user);
+            RAISE NOTICE 'Transferred ownership of sequence %.% to %',
+                tbl.schemaname, tbl.sequencename, migration_user;
+        EXCEPTION
+            WHEN OTHERS THEN
+                RAISE WARNING 'Could not transfer sequence %.%: %',
+                    tbl.schemaname, tbl.sequencename, SQLERRM;
+        END;
+    END LOOP;
+
+    -- Transfer ownership of all materialized views
+    FOR tbl IN
+        SELECT schemaname, matviewname, matviewowner
+        FROM pg_matviews
+        WHERE schemaname = 'public'
+        AND matviewowner != migration_user
+    LOOP
+        BEGIN
+            EXECUTE format('ALTER MATERIALIZED VIEW %I.%I OWNER TO %I',
+                tbl.schemaname, tbl.matviewname, migration_user);
+            RAISE NOTICE 'Transferred ownership of materialized view %.% to %',
+                tbl.schemaname, tbl.matviewname, migration_user;
+        EXCEPTION
+            WHEN OTHERS THEN
+                RAISE WARNING 'Could not transfer materialized view %.%: %',
+                    tbl.schemaname, tbl.matviewname, SQLERRM;
+        END;
+    END LOOP;
+END $$;
+EOSQL
+
           # Run migrations
           echo "⬆️  Running database migrations..."
           if dbmate status; then
@@ -100,17 +185,17 @@ spec:
         - name: DATABASE_URL
           value: "postgres://{{ .Values.migration.database.username }}:{{ .Values.migration.database.password }}@{{ .Values.migration.database.host }}:{{ .Values.migration.database.port }}/{{ .Values.migration.database.name }}?sslmode=disable"
         - name: DATABASE_URL_ADMIN
-          value: "postgres://postgres:{{ .Values.migration.database.postgresPassword }}@{{ .Values.migration.database.host }}:{{ .Values.migration.database.port }}/{{ .Values.migration.database.name }}?sslmode=disable"
+          value: "postgres://{{ .Values.migration.database.adminUsername }}:{{ .Values.migration.database.adminPassword }}@{{ .Values.migration.database.host }}:{{ .Values.migration.database.port }}/{{ .Values.migration.database.name }}?sslmode=disable"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ include "helm-r4c.fullname" . }}-migration-secret
               key: password
-        - name: POSTGRES_PASSWORD
+        - name: ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ include "helm-r4c.fullname" . }}-migration-secret
-              key: postgres-password
+              key: admin-password
         - name: DBMATE_MIGRATIONS_DIR
           value: /migrations
         - name: DBMATE_NO_DUMP_SCHEMA

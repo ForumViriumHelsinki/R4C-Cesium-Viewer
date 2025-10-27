@@ -1,30 +1,32 @@
 # Changelog
 
-## [1.27.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.1...r4c-cesium-viewer-v1.27.2) (2025-10-24)
-
+## [1.27.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.2...r4c-cesium-viewer-v1.27.3) (2025-10-24)
 
 ### Bug Fixes
 
-* bypass dotenvx in Docker build to resolve build failure ([#253](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/253)) ([2d9164a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2d9164abacefd742bce0a5877f4dd560776e3b11)), closes [#252](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/252)
+- disable ESLint plugin during production builds to resolve container build failure ([#256](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/256)) ([231f916](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/231f916b9c9e1c2b8d2d761660dad725981338fb))
+
+## [1.27.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.1...r4c-cesium-viewer-v1.27.2) (2025-10-24)
+
+### Bug Fixes
+
+- bypass dotenvx in Docker build to resolve build failure ([#253](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/253)) ([2d9164a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2d9164abacefd742bce0a5877f4dd560776e3b11)), closes [#252](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/252)
 
 ## [1.27.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.0...r4c-cesium-viewer-v1.27.1) (2025-10-24)
 
-
 ### Bug Fixes
 
-* remove invalid vite optimize command from Dockerfile ([#250](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/250)) ([7a684ba](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7a684ba03f038dcc872d17da44d3aba806c80e5d)), closes [#249](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/249)
+- remove invalid vite optimize command from Dockerfile ([#250](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/250)) ([7a684ba](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7a684ba03f038dcc872d17da44d3aba806c80e5d)), closes [#249](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/249)
 
 ## [1.27.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.26.2...r4c-cesium-viewer-v1.27.0) (2025-10-22)
 
-
 ### Features
 
-* add import validation warnings for unknown feature flags ([#246](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/246)) ([7660a26](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7660a26218cd17acf6085b7b3baca92982514143))
-
+- add import validation warnings for unknown feature flags ([#246](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/246)) ([7660a26](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7660a26218cd17acf6085b7b3baca92982514143))
 
 ### Bug Fixes
 
-* split concurrent index migrations for dbmate compatibility ([#248](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/248)) ([0f17e85](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0f17e85c96cc086f149d61dd0dc4fad25ed5e959))
+- split concurrent index migrations for dbmate compatibility ([#248](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/248)) ([0f17e85](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0f17e85c96cc086f149d61dd0dc4fad25ed5e959))
 
 ## [1.26.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.26.1...r4c-cesium-viewer-v1.26.2) (2025-10-15)
 
