@@ -15,6 +15,9 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
