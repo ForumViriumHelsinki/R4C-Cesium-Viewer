@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/helm-r4c-v0.7.0...helm-r4c-v0.8.0) (2025-10-27)
+
+
+### Features
+
+* update importConfig() logging messages for clarity ([#259](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/259)) ([7c5d835](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7c5d835b3ad640dc612de7448946a915dd408cfb)), closes [#237](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/237)
+
 ## [0.7.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/helm-r4c-v0.6.0...helm-r4c-v0.7.0) (2025-09-30)
 
 ### Features
