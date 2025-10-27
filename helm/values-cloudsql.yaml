@@ -1,0 +1,53 @@
+# Cloud SQL specific configuration
+# Use with: helm install --values values.yaml --values values-cloudsql.yaml
+
+# Enable database migrations for Cloud SQL
+migration:
+  enabled: true
+  database:
+    # Cloud SQL connection details
+    # Note: Use cloud-sql-proxy sidecar or configure connection appropriately
+    host: 127.0.0.1 # When using cloud-sql-proxy sidecar
+    port: 5432
+    name: regions4climate
+    username: regions4climate_user
+    password: "" # Set via --set migration.database.password=xxx or secret
+
+    # Cloud SQL uses cloudsqladmin as superuser, not postgres
+    adminUsername: cloudsqladmin
+    adminPassword: "" # Set via --set migration.database.adminPassword=xxx or secret
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+# Example deployment with cloud-sql-proxy:
+# Add this to your deployment spec to use Cloud SQL proxy sidecar:
+#
+# podAnnotations:
+#   # If using Workload Identity
+#   iam.gke.io/gcp-service-account: "YOUR_GSA@YOUR_PROJECT.iam.gserviceaccount.com"
+#
+# volumes:
+# - name: cloudsql-proxy
+#   emptyDir: {}
+#
+# containers:
+# - name: cloud-sql-proxy
+#   image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+#   args:
+#   - "--structured-logs"
+#   - "--port=5432"
+#   - "YOUR_PROJECT:REGION:INSTANCE_NAME"
+#   securityContext:
+#     runAsNonRoot: true
+#   resources:
+#     requests:
+#       memory: "128Mi"
+#       cpu: "100m"
+#     limits:
+#       memory: "256Mi"
+#       cpu: "200m"
