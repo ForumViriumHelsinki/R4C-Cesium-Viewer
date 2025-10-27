@@ -52,7 +52,6 @@
     "@vitejs/plugin-vue": "^6.0.1",
     "@vitest/coverage-v8": "^4.0.3",
     "@vue/test-utils": "^2.4.6",
-    "esbuild": "^0.25.11",
     "eslint-plugin-vue": "^10.5.1",
     "globals": "^16.4.0",
     "jsdom": "^27.0.1",
@@ -64,6 +63,6 @@
     "vitest": "^4.0.3"
   },
   "overrides": {
-    "esbuild": "^0.25.9"
+    "esbuild": "^0.25.11"
   }
 }
