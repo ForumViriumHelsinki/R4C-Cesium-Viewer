@@ -8,7 +8,7 @@ ENV VITE_PYGEOAPI_HOST=${VITE_PYGEOAPI_HOST}
 
 WORKDIR /app
 
-COPY package*.json .
+COPY package*.json ./
 RUN npm ci
 
 COPY . .
