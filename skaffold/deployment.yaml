@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: r4c-cesium-viewer
+  labels:
+    app.kubernetes.io/name: r4c-cesium-viewer
+    app.kubernetes.io/instance: r4c-cesium-viewer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: r4c-cesium-viewer
+      app.kubernetes.io/instance: r4c-cesium-viewer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: r4c-cesium-viewer
+        app.kubernetes.io/instance: r4c-cesium-viewer
+    spec:
+      serviceAccountName: r4c-cesium-viewer
+      containers:
+        - name: r4c-cesium-viewer
+          image: frontend  # This will be replaced by Skaffold
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          envFrom:
+          - configMapRef:
+              name: r4c-cesium-viewer-config
+          - secretRef:
+              name: r4c-cesium-viewer-secrets

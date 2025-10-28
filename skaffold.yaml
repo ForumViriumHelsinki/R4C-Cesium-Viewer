@@ -14,24 +14,28 @@ build:
       docker:
         dockerfile: Dockerfile
 deploy:
-  helm:
-    releases:
-      # Main webapp (R4C Cesium Viewer)
-      - name: helm-r4c
-        chartPath: helm
-        # valuesFiles:
-        #   - helm/values.yaml
-        setValueTemplates:
-          image.repository: "{{.IMAGE_REPO_frontend}}"
-          image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
-          vite:
-            digitransit_key: "{{.DIGITRANSIT_KEY}}"
-          sentry:
-            dsn: "{{.SENTRY_DSN}}"
-            auth_token: "{{.SENTRY_AUTH_TOKEN}}"
+  kubectl:
+    manifests:
+      - skaffold/serviceaccount.yaml
+      - skaffold/configmap.yaml
+      - skaffold/secrets.yaml
+      - skaffold/deployment.yaml
+      - skaffold/service.yaml
+      - skaffold/ingress.yaml
 profiles:
   - name: local-with-services
     deploy:
+      kubectl:
+        manifests:
+          - skaffold/serviceaccount.yaml
+          - skaffold/configmap.yaml
+          - skaffold/secrets.yaml
+          - skaffold/migration-secret.yaml
+          - skaffold/migration-job.yaml
+          - skaffold/deployment.yaml
+          - skaffold/service.yaml
+          - skaffold/ingress.yaml
+          - skaffold/pygeoapi-deployment.yaml
       helm:
         releases:
           # PostgreSQL with PostGIS
@@ -42,24 +46,6 @@ profiles:
             namespace: default
             valuesFiles:
               - skaffold/postgresql-values.yaml
-
-          # Main webapp (R4C Cesium Viewer)
-          - name: helm-r4c
-            chartPath: helm
-            # valuesFiles:
-            #   - helm/values.yaml
-            #   - helm/values-local.yaml
-            setValueTemplates:
-              image.repository: "{{.IMAGE_REPO_frontend}}"
-              image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
-              vite:
-                digitransit_key: "{{.DIGITRANSIT_KEY}}"
-              sentry:
-                dsn: "{{.SENTRY_DSN}}"
-                auth_token: "{{.SENTRY_AUTH_TOKEN}}"
-    manifests:
-      rawYaml:
-        - skaffold/pygeoapi-deployment.yaml
 
   - name: migration-test
     deploy:

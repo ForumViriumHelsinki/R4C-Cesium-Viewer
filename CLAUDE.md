@@ -20,10 +20,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Docker/Kubernetes
 
 - `docker compose up` - Run with Docker (http://localhost:4173)
-- `skaffold dev --port-forward` - Run with Skaffold for Kubernetes development
+- `skaffold dev --port-forward` - Run with Skaffold using plain K8s manifests (no Helm required)
 - `skaffold dev --profile=local-with-services --port-forward` - Full local development with database
 - `skaffold test -p migration-test` - Test database migrations
 - `skaffold delete` - Clean up Skaffold deployments
+
+**Note**: Local development uses plain Kubernetes manifests in `skaffold/` directory for simplicity. The Helm chart in `helm/` is used only for production deployments.
 
 ## Architecture Overview
 

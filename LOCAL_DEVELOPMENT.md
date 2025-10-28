@@ -7,7 +7,7 @@ This guide explains how to run the complete R4C Cesium Viewer stack locally usin
 - [Docker](https://docs.docker.com/get-docker/)
 - [Kubernetes](https://kubernetes.io/docs/setup/) (Docker Desktop includes Kubernetes)
 - [Skaffold](https://skaffold.dev/docs/install/)
-- [Helm](https://helm.sh/docs/intro/install/)
+- [Helm](https://helm.sh/docs/intro/install/) (only needed for `local-with-services` profile which deploys PostgreSQL)
 - [dbmate](https://github.com/amacneil/dbmate#installation)
 - [PostgreSQL client tools](https://www.postgresql.org/download/) (for `psql` and `pg_isready`)
 
@@ -53,18 +53,20 @@ This command will:
 ### Default Profile (webapp only)
 
 ```bash
-skaffold dev
+skaffold dev --port-forward
 ```
 
-Uses your existing helm chart configuration, connects to external services.
+Deploys the webapp using plain Kubernetes manifests (no Helm required), connects to external services.
 
 ### Local Services Profile (full stack)
 
 ```bash
-skaffold dev --profile=local-with-services
+skaffold dev --profile=local-with-services --port-forward
 ```
 
-Deploys PostgreSQL + pygeoapi + webapp locally.
+Deploys PostgreSQL (via Helm) + pygeoapi + webapp locally using plain K8s manifests.
+
+> **Note**: Local development now uses plain Kubernetes manifests in the `skaffold/` directory for simpler deployment. The Helm chart in `helm/` is reserved for production use. See `skaffold/README.md` for details.
 
 ## Database Management
 
