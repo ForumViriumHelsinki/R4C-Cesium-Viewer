@@ -46,7 +46,7 @@ spec:
               key: password
       containers:
       - name: dbmate
-        image: frontend  # This will be replaced by Skaffold
+        image: amacneil/dbmate:v2.13.0
         command:
         - sh
         - -c
@@ -179,10 +179,6 @@ EOSQL
 
           echo "🎉 Database migration completed successfully"
         env:
-        - name: DATABASE_URL
-          value: "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate?sslmode=disable"
-        - name: DATABASE_URL_ADMIN
-          value: "postgres://postgres:postgres@postgresql:5432/regions4climate?sslmode=disable"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -193,6 +189,10 @@ EOSQL
             secretKeyRef:
               name: r4c-cesium-viewer-migration-secret
               key: admin-password
+        - name: DATABASE_URL
+          value: "postgres://regions4climate_user:$(DB_PASSWORD)@postgresql:5432/regions4climate?sslmode=disable"
+        - name: DATABASE_URL_ADMIN
+          value: "postgres://postgres:$(ADMIN_PASSWORD)@postgresql:5432/regions4climate?sslmode=disable"
         - name: DBMATE_MIGRATIONS_DIR
           value: /migrations
         - name: DBMATE_NO_DUMP_SCHEMA

@@ -115,7 +115,9 @@ These can be adjusted based on your local environment's available resources.
 
 ## Common Issues
 
-### Migration Job Cleanup
+### Migration Job Troubleshooting
+
+#### Re-running Migrations
 Unlike Helm deployments with hooks, the migration Job must be manually deleted and recreated if you need to re-run migrations:
 ```bash
 kubectl delete job r4c-cesium-viewer-migration
@@ -123,3 +125,64 @@ skaffold dev --profile=local-with-services --port-forward
 ```
 
 The Job has `ttlSecondsAfterFinished: 300` set, so completed jobs are automatically cleaned up after 5 minutes.
+
+#### Migration Job Failed
+If the migration job fails, you can check the logs to diagnose the issue:
+
+```bash
+# View logs from the migration job
+kubectl logs job/r4c-cesium-viewer-migration
+
+# View logs from the init container (PostgreSQL readiness check)
+kubectl logs job/r4c-cesium-viewer-migration -c wait-for-postgres
+
+# Describe the job to see events
+kubectl describe job r4c-cesium-viewer-migration
+```
+
+**Common failure causes:**
+1. **PostgreSQL not ready** - The init container waits for PostgreSQL to be ready. If it's taking too long, check PostgreSQL status:
+   ```bash
+   kubectl get pods -l app.kubernetes.io/name=postgresql
+   kubectl logs -l app.kubernetes.io/name=postgresql
+   ```
+
+2. **Database credentials incorrect** - Verify the migration secret is correct:
+   ```bash
+   kubectl get secret r4c-cesium-viewer-migration-secret -o yaml
+   ```
+
+3. **Migration files not found** - The dbmate image needs access to migration files. Ensure your Skaffold configuration mounts the migrations directory correctly.
+
+4. **PostGIS extension error** - If the admin user doesn't have superuser privileges, the PostGIS extension creation may fail. This is usually fine if the extensions already exist.
+
+#### Debugging Migration Job
+To run an interactive shell in the same environment as the migration job:
+
+```bash
+# Run a debug pod with the same configuration
+kubectl run dbmate-debug --rm -it \
+  --image=amacneil/dbmate:v2.13.0 \
+  --env="DATABASE_URL=postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate?sslmode=disable" \
+  -- sh
+
+# Inside the pod, you can run dbmate commands manually:
+# dbmate status
+# dbmate up
+# psql $DATABASE_URL
+```
+
+#### Migration Job Stuck
+If the job appears stuck in a pending or running state:
+
+1. Check if the PostgreSQL dependency is available:
+   ```bash
+   kubectl get svc postgresql
+   ```
+
+2. Delete the stuck job and retry:
+   ```bash
+   kubectl delete job r4c-cesium-viewer-migration --force --grace-period=0
+   ```
+
+3. If problems persist, check the backoff limit (set to 10 in the job). The job will fail permanently after 10 retry attempts.
