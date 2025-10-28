@@ -15,7 +15,12 @@ export default [
 
   js.configs.recommended,
   ...pluginVue.configs["flat/recommended"],
-  ...tseslint.configs.recommended,
+
+  // Apply TypeScript rules only to TypeScript files
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    ...tseslint.configs.recommended[0],
+  },
 
   {
     files: ["**/*.vue"],
@@ -24,6 +29,7 @@ export default [
         parser: tseslint.parser,
         ecmaVersion: "latest",
         sourceType: "module",
+        extraFileExtensions: [".vue"],
       },
     },
   },
@@ -57,6 +63,25 @@ export default [
         document: "readonly",
         console: "readonly",
         fetch: "readonly",
+        indexedDB: "readonly",
+        Blob: "readonly",
+        requestIdleCallback: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+        AbortController: "readonly",
+        btoa: "readonly",
+        atob: "readonly",
+        Event: "readonly",
+        performance: "readonly",
+        localStorage: "readonly",
+        sessionStorage: "readonly",
+        URLSearchParams: "readonly",
+        URL: "readonly",
+        alert: "readonly",
+        navigator: "readonly",
+        location: "readonly",
         // Vite specific
         import: "readonly",
       },
@@ -73,6 +98,7 @@ export default [
       // TypeScript-specific rules
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
     },
   },
 ];

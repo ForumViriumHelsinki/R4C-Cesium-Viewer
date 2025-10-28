@@ -20,10 +20,16 @@
         id="climate-adaptation-title"
         class="d-flex align-center"
       >
-        <span class="sr-only" id="climate-adaptation-description">
+        <span
+id="climate-adaptation-description"
+class="sr-only"
+>
           Climate adaptation tools for analyzing cooling centers and green spaces. Use Tab key to navigate between sections.
         </span>
-        <v-icon class="mr-2" aria-hidden="true">
+        <v-icon
+class="mr-2"
+aria-hidden="true"
+>
           mdi-shield-sun
         </v-icon>
         Climate Adaptation
@@ -71,11 +77,14 @@
 
       <!-- Content -->
       <v-card-text class="flex-grow-1 overflow-y-auto">
-        <v-window v-model="tab" role="tabpanel">
+        <v-window
+v-model="tab"
+role="tabpanel"
+>
           <v-window-item
+            id="tab-panel-centers"
             value="centers"
             class="pa-1"
-            id="tab-panel-centers"
             role="tabpanel"
             :aria-hidden="tab !== 'centers'"
             aria-labelledby="tab-centers"
@@ -84,9 +93,9 @@
             <CoolingCenter />
           </v-window-item>
           <v-window-item
+            id="tab-panel-optimizer"
             value="optimizer"
             class="pa-1"
-            id="tab-panel-optimizer"
             role="tabpanel"
             :aria-hidden="tab !== 'optimizer'"
             aria-labelledby="tab-optimizer"
@@ -95,9 +104,9 @@
             <CoolingCenterOptimiser />
           </v-window-item>
           <v-window-item
+            id="tab-panel-parks"
             value="parks"
             class="pa-1"
-            id="tab-panel-parks"
             role="tabpanel"
             :aria-hidden="tab !== 'parks'"
             aria-labelledby="tab-parks"
