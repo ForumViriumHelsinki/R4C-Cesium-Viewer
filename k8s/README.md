@@ -1,10 +1,10 @@
-# Skaffold Kubernetes Manifests
+# Kubernetes Manifests for Local Development
 
 This directory contains plain Kubernetes manifests for local development with Skaffold.
 
 ## Overview
 
-The application deployment has been simplified from Helm charts to plain Kubernetes manifests for easier local development and testing. The Helm chart in the `helm/` directory is still used for production deployments.
+The application deployment uses plain Kubernetes manifests for easier local development and testing. Production deployments should use proper Helm charts or other production-ready deployment methods.
 
 ## Files
 
@@ -66,7 +66,7 @@ The following environment variables can be configured:
 
 To set these values for local development, you can either:
 
-1. Edit `skaffold/secrets.yaml` directly (not recommended for sensitive values)
+1. Edit `k8s/secrets.yaml` directly (not recommended for sensitive values)
 2. Create a Kubernetes secret before running Skaffold:
    ```bash
    kubectl create secret generic r4c-cesium-viewer-secrets \
@@ -74,31 +74,52 @@ To set these values for local development, you can either:
      --from-literal=SENTRY_AUTH_TOKEN="your-token" \
      --from-literal=SENTRY_DSN="your-dsn"
    ```
+3. Use environment variables with `envsubst` (requires manual setup)
+
+**Note:** The current manifests deploy empty secrets by default. You need to set these values manually for full functionality.
 
 ### Database Migration Credentials
 
-For the `local-with-services` profile, database migration credentials are set in `migration-secret.yaml`. Default values:
+For the `local-with-services` profile, database migration credentials are set in `migration-secret.yaml`.
+
+⚠️ **Security Warning:** The default credentials in `migration-secret.yaml` are for LOCAL DEVELOPMENT ONLY:
 - Database user password: `regions4climate_pass`
 - Admin password: `postgres`
 
-## Differences from Helm
+**DO NOT** use these credentials in production or commit custom credentials to git. For production deployments, create a separate secret with secure credentials.
 
-The main differences from the Helm deployment:
+## Benefits of Plain Manifests
+
+Using plain Kubernetes manifests for local development provides:
 
 1. **No templating** - All values are plain YAML, making it easier to understand and debug
 2. **Fixed naming** - Resources use consistent names (e.g., `r4c-cesium-viewer`) instead of generated names
 3. **Direct configuration** - Environment variables and settings are directly in the manifests
 4. **Simpler deployment** - No Helm hooks or complex templating logic
+5. **Easier troubleshooting** - Helps identify whether issues are Helm-specific or application-related
 
-## Production Deployment
+## Technical Details
 
-Production deployments still use the Helm chart in the `helm/` directory, which provides:
-- Flexible configuration through values files
-- Helm hooks for migrations
-- Integration with existing CI/CD pipelines
-- Advanced features like HPA, resource limits, etc.
+### Container Port Configuration
+The application uses Vite's preview server which runs on **port 4173**:
+- Container exposes port 4173
+- Service maps external port 80 to container port 4173
+- This matches the production build behavior (`npm run preview`)
 
-This separation allows:
-- Simple, straightforward local development with plain manifests
-- Robust, configurable production deployments with Helm
-- Easier identification of issues caused by Helm templating vs. application code
+### Resource Limits
+The deployment includes sensible resource limits for local development:
+- **Limits:** 500m CPU, 512Mi memory
+- **Requests:** 100m CPU, 128Mi memory
+
+These can be adjusted based on your local environment's available resources.
+
+## Common Issues
+
+### Migration Job Cleanup
+Unlike Helm deployments with hooks, the migration Job must be manually deleted and recreated if you need to re-run migrations:
+```bash
+kubectl delete job r4c-cesium-viewer-migration
+skaffold dev --profile=local-with-services --port-forward
+```
+
+The Job has `ttlSecondsAfterFinished: 300` set, so completed jobs are automatically cleaned up after 5 minutes.

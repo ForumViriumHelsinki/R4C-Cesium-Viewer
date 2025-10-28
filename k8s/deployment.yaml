@@ -24,7 +24,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 4173  # Vite preview server port
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -34,6 +34,13 @@ spec:
             httpGet:
               path: /
               port: http
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
           envFrom:
           - configMapRef:
               name: r4c-cesium-viewer-config

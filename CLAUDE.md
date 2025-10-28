@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `skaffold test -p migration-test` - Test database migrations
 - `skaffold delete` - Clean up Skaffold deployments
 
-**Note**: Local development uses plain Kubernetes manifests in `skaffold/` directory for simplicity. The Helm chart in `helm/` is used only for production deployments.
+**Note**: Local development uses plain Kubernetes manifests in `k8s/` directory for simplicity.
 
 ## Architecture Overview
 

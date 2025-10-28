@@ -66,7 +66,7 @@ skaffold dev --profile=local-with-services --port-forward
 
 Deploys PostgreSQL (via Helm) + pygeoapi + webapp locally using plain K8s manifests.
 
-> **Note**: Local development now uses plain Kubernetes manifests in the `skaffold/` directory for simpler deployment. The Helm chart in `helm/` is reserved for production use. See `skaffold/README.md` for details.
+> **Note**: Local development uses plain Kubernetes manifests in the `k8s/` directory for simpler deployment. See `k8s/README.md` for details.
 
 ## Database Management
 
@@ -205,15 +205,7 @@ export DATABASE_URL="postgres://regions4climate_user:regions4climate_pass@localh
 
 ### Custom PostgreSQL Configuration
 
-Edit `skaffold.yaml` to modify PostgreSQL settings:
-
-```yaml
-setValues:
-  primary.extendedConfiguration: |
-    shared_preload_libraries = 'postgis-3'
-    max_connections = 200
-    shared_buffers = 256MB
-```
+Edit `k8s/postgresql-values.yaml` to modify PostgreSQL settings.
 
 ### Additional pygeoapi Configuration
 
@@ -223,17 +215,9 @@ The pygeoapi deployment uses your `configmap.yaml` file. To modify collections, 
 kubectl rollout restart deployment/pygeoapi
 ```
 
-### Production-like Testing
+### Resource Constraints
 
-To test with production-like resource constraints:
-
-```bash
-# Edit helm/values-local.yaml to reduce resources
-resources:
-  limits:
-    cpu: 100m
-    memory: 128Mi
-```
+To adjust resource constraints, edit the `resources` section in `k8s/deployment.yaml`.
 
 ## Integration with CI/CD
 
@@ -256,7 +240,7 @@ skaffold dev --profile=local-with-services
 
 ## Performance Tips
 
-1. **Use resource limits** in `helm/values-local.yaml` to prevent resource contention
+1. **Resource limits** are configured in `k8s/deployment.yaml` (500m CPU, 512Mi memory)
 2. **Pre-pull images** with `docker pull postgis/postgis:15-3.3`
 3. **Allocate sufficient memory** to Docker Desktop (8GB+ recommended)
 4. **Use SSD storage** for better PostgreSQL performance

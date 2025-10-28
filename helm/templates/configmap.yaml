@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Release.Name }}-configmap
-data:
-  VITE_PYGEOAPI_HOST: {{ .Values.vite.pygeoapi_host | default "pygeoapi.dataportal.fi" }}

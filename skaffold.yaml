@@ -16,26 +16,26 @@ build:
 deploy:
   kubectl:
     manifests:
-      - skaffold/serviceaccount.yaml
-      - skaffold/configmap.yaml
-      - skaffold/secrets.yaml
-      - skaffold/deployment.yaml
-      - skaffold/service.yaml
-      - skaffold/ingress.yaml
+      - k8s/serviceaccount.yaml
+      - k8s/configmap.yaml
+      - k8s/secrets.yaml
+      - k8s/deployment.yaml
+      - k8s/service.yaml
+      - k8s/ingress.yaml
 profiles:
   - name: local-with-services
     deploy:
       kubectl:
         manifests:
-          - skaffold/serviceaccount.yaml
-          - skaffold/configmap.yaml
-          - skaffold/secrets.yaml
-          - skaffold/migration-secret.yaml
-          - skaffold/migration-job.yaml
-          - skaffold/deployment.yaml
-          - skaffold/service.yaml
-          - skaffold/ingress.yaml
-          - skaffold/pygeoapi-deployment.yaml
+          - k8s/serviceaccount.yaml
+          - k8s/configmap.yaml
+          - k8s/secrets.yaml
+          - k8s/migration-secret.yaml
+          - k8s/migration-job.yaml
+          - k8s/deployment.yaml
+          - k8s/service.yaml
+          - k8s/ingress.yaml
+          - k8s/pygeoapi-deployment.yaml
       helm:
         releases:
           # PostgreSQL with PostGIS
@@ -45,7 +45,7 @@ profiles:
             version: "16.7.14"
             namespace: default
             valuesFiles:
-              - skaffold/postgresql-values.yaml
+              - k8s/postgresql-values.yaml
 
   - name: migration-test
     deploy:
@@ -58,7 +58,7 @@ profiles:
             version: "16.7.14"
             namespace: default
             valuesFiles:
-              - skaffold/postgresql-values.yaml
+              - k8s/postgresql-values.yaml
     test:
       - image: amacneil/dbmate:v2.13.0
         custom:
