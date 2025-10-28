@@ -8,55 +8,163 @@
   >
     <div class="sidebar-content">
       <div class="control-section">
-        <h3 class="section-subtitle"><v-icon class="mr-2">mdi-magnify</v-icon>Search & Navigate</h3>
-        <p class="search-description">Find locations by address, postal code, or area name</p>
+        <h3 class="section-subtitle">
+<v-icon class="mr-2">
+mdi-magnify
+</v-icon>Search & Navigate
+</h3>
+        <p class="search-description">
+Find locations by address, postal code, or area name
+</p>
         <UnifiedSearch />
       </div>
       <div class="control-section">
-        <h3 class="section-subtitle"><v-icon class="mr-2">mdi-layers</v-icon>Map Controls</h3>
-        <p class="search-description">Toggle data layers and apply filters</p>
+        <h3 class="section-subtitle">
+<v-icon class="mr-2">
+mdi-layers
+</v-icon>Map Controls
+</h3>
+        <p class="search-description">
+Toggle data layers and apply filters
+</p>
         <MapControls />
       </div>
       <div class="control-section">
-        <h3 class="section-subtitle"><v-icon class="mr-2">mdi-map-outline</v-icon>Background Maps</h3>
+        <h3 class="section-subtitle">
+<v-icon class="mr-2">
+mdi-map-outline
+</v-icon>Background Maps
+</h3>
         <BackgroundMapBrowser />
       </div>
 
       <div class="control-section">
-        <h3 class="section-subtitle"><v-icon class="mr-2">mdi-chart-line</v-icon>Analysis Tools</h3>
+        <h3 class="section-subtitle">
+<v-icon class="mr-2">
+mdi-chart-line
+</v-icon>Analysis Tools
+</h3>
         <div class="analysis-buttons">
           <template v-if="currentLevel === 'postalCode'">
-            <v-btn v-if="heatHistogramData && heatHistogramData.length > 0" block variant="outlined" prepend-icon="mdi-chart-histogram" class="mb-2" @click="openAnalysisPanel('heat-histogram')">Heat Distribution</v-btn>
-            <v-btn v-if="showSosEco" block variant="outlined" prepend-icon="mdi-account-group" class="mb-2" @click="openAnalysisPanel('socioeconomics')">Socioeconomics</v-btn>
-            <v-btn v-if="currentView !== 'helsinki'" block variant="outlined" prepend-icon="mdi-leaf" class="mb-2" @click="openAnalysisPanel('landcover')">Land Cover</v-btn>
-            <v-btn block variant="outlined" prepend-icon="mdi-chart-scatter-plot" class="mb-2" @click="openAnalysisPanel('scatter-plot')">Building Analysis</v-btn>
-            <v-btn v-if="hasNDVIData" block variant="outlined" prepend-icon="mdi-leaf" class="mb-2" @click="openAnalysisPanel('ndvi-analysis')">NDVI Vegetation</v-btn>
+            <v-btn
+v-if="heatHistogramData && heatHistogramData.length > 0"
+block
+variant="outlined"
+prepend-icon="mdi-chart-histogram"
+class="mb-2"
+@click="openAnalysisPanel('heat-histogram')"
+>
+Heat Distribution
+</v-btn>
+            <v-btn
+v-if="showSosEco"
+block
+variant="outlined"
+prepend-icon="mdi-account-group"
+class="mb-2"
+@click="openAnalysisPanel('socioeconomics')"
+>
+Socioeconomics
+</v-btn>
+            <v-btn
+v-if="currentView !== 'helsinki'"
+block
+variant="outlined"
+prepend-icon="mdi-leaf"
+class="mb-2"
+@click="openAnalysisPanel('landcover')"
+>
+Land Cover
+</v-btn>
+            <v-btn
+block
+variant="outlined"
+prepend-icon="mdi-chart-scatter-plot"
+class="mb-2"
+@click="openAnalysisPanel('scatter-plot')"
+>
+Building Analysis
+</v-btn>
+            <v-btn
+v-if="hasNDVIData"
+block
+variant="outlined"
+prepend-icon="mdi-leaf"
+class="mb-2"
+@click="openAnalysisPanel('ndvi-analysis')"
+>
+NDVI Vegetation
+</v-btn>
           </template>
           <template v-if="currentLevel === 'building'">
-            <v-btn block variant="outlined" prepend-icon="mdi-thermometer" class="mb-2" @click="openAnalysisPanel('building-heat')">Building Heat Data</v-btn>
+            <v-btn
+block
+variant="outlined"
+prepend-icon="mdi-thermometer"
+class="mb-2"
+@click="openAnalysisPanel('building-heat')"
+>
+Building Heat Data
+</v-btn>
           </template>
 
           <template v-if="currentView === 'grid'">
-            <v-expansion-panels v-if="statsIndex === 'heat_index'" variant="outlined" class="mb-2">
+            <v-expansion-panels
+v-if="statsIndex === 'heat_index'"
+variant="outlined"
+class="mb-2"
+>
               <v-expansion-panel>
                 <v-expansion-panel-title>
-                  <v-icon class="mr-2">mdi-shield-sun</v-icon>
+                  <v-icon class="mr-2">
+mdi-shield-sun
+</v-icon>
                   Climate Adaptation
                 </v-expansion-panel-title>
                 <v-expansion-panel-text class="pa-0">
-                  <v-tabs v-model="adaptationTab" grow>
-                    <v-tab value="centers" :stacked="true" class="text-none">Cooling Centers</v-tab>
-                    <v-tab value="optimizer" :stacked="true" class="text-none">Optimizer</v-tab>
-                    <v-tab value="parks" :stacked="true" class="text-none">Parks</v-tab>
+                  <v-tabs
+v-model="adaptationTab"
+grow
+>
+                    <v-tab
+value="centers"
+:stacked="true"
+class="text-none"
+>
+Cooling Centers
+</v-tab>
+                    <v-tab
+value="optimizer"
+:stacked="true"
+class="text-none"
+>
+Optimizer
+</v-tab>
+                    <v-tab
+value="parks"
+:stacked="true"
+class="text-none"
+>
+Parks
+</v-tab>
                   </v-tabs>
                   <v-window v-model="adaptationTab">
-                    <v-window-item value="centers" class="pa-1">
+                    <v-window-item
+value="centers"
+class="pa-1"
+>
                       <CoolingCenter />
                     </v-window-item>
-                    <v-window-item value="optimizer" class="pa-1">
+                    <v-window-item
+value="optimizer"
+class="pa-1"
+>
                       <CoolingCenterOptimiser />
                     </v-window-item>
-                    <v-window-item value="parks" class="pa-1">
+                    <v-window-item
+value="parks"
+class="pa-1"
+>
                       <LandcoverToParks />
                     </v-window-item>
                   </v-window>
@@ -78,15 +186,29 @@
             </v-btn>
           </template>
 
-          <div v-if="!hasAvailableAnalysis" class="no-analysis-message">
-            <v-icon class="mb-2">mdi-information-outline</v-icon>
-            <p class="text-body-2 text-center">{{ currentLevel === 'start' ? 'Select a postal code area to access analysis tools' : 'No analysis tools available for current selection' }}</p>
+          <div
+v-if="!hasAvailableAnalysis"
+class="no-analysis-message"
+>
+            <v-icon class="mb-2">
+mdi-information-outline
+</v-icon>
+            <p class="text-body-2 text-center">
+{{ currentLevel === 'start' ? 'Select a postal code area to access analysis tools' : 'No analysis tools available for current selection' }}
+</p>
           </div>
         </div>
       </div>
 
-      <div v-if="currentLevel !== 'start'" class="control-section">
-        <h3 class="section-subtitle"><v-icon class="mr-2">mdi-information</v-icon>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}</h3>
+      <div
+v-if="currentLevel !== 'start'"
+class="control-section"
+>
+        <h3 class="section-subtitle">
+<v-icon class="mr-2">
+mdi-information
+</v-icon>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
+</h3>
         <PrintBox />
       </div>
     </div>
@@ -100,19 +222,40 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">{{ currentAnalysisIcon }}</v-icon>
+        <v-icon class="mr-2">
+{{ currentAnalysisIcon }}
+</v-icon>
         {{ currentAnalysisTitle }}
         <v-spacer />
-        <v-btn icon @click="analysisDialog = false"><v-icon>mdi-close</v-icon></v-btn>
+        <v-btn
+icon
+@click="analysisDialog = false"
+>
+<v-icon>mdi-close</v-icon>
+</v-btn>
       </v-card-title>
       <v-card-text class="analysis-content">
-        <div v-if="currentAnalysis === 'heat-histogram'"><HeatHistogram /></div>
-        <div v-if="currentAnalysis === 'socioeconomics'"><SocioEconomics /></div>
-        <div v-if="currentAnalysis === 'landcover'"><Landcover /></div>
-        <div v-if="currentAnalysis === 'scatter-plot'"><BuildingScatterPlot v-if="currentView !== 'helsinki'" /><Scatterplot v-if="currentView === 'helsinki' && scatterPlotEntities" /></div>
-        <div v-if="currentAnalysis === 'building-heat'"><HSYBuildingHeatChart v-if="currentView !== 'helsinki' && currentView !== 'grid'" /><BuildingHeatChart v-if="currentView === 'helsinki' && currentView !== 'grid'" /><BuildingGridChart v-if="currentView === 'grid'" /></div>
-        <div v-if="currentAnalysis === 'grid-options'"><StatisticalGridOptions /></div>
-        <div v-if="currentAnalysis === 'ndvi-analysis'"><PostalCodeNDVI /></div>
+        <div v-if="currentAnalysis === 'heat-histogram'">
+<HeatHistogram />
+</div>
+        <div v-if="currentAnalysis === 'socioeconomics'">
+<SocioEconomics />
+</div>
+        <div v-if="currentAnalysis === 'landcover'">
+<Landcover />
+</div>
+        <div v-if="currentAnalysis === 'scatter-plot'">
+<BuildingScatterPlot v-if="currentView !== 'helsinki'" /><Scatterplot v-if="currentView === 'helsinki' && scatterPlotEntities" />
+</div>
+        <div v-if="currentAnalysis === 'building-heat'">
+<HSYBuildingHeatChart v-if="currentView !== 'helsinki' && currentView !== 'grid'" /><BuildingHeatChart v-if="currentView === 'helsinki' && currentView !== 'grid'" /><BuildingGridChart v-if="currentView === 'grid'" />
+</div>
+        <div v-if="currentAnalysis === 'grid-options'">
+<StatisticalGridOptions />
+</div>
+        <div v-if="currentAnalysis === 'ndvi-analysis'">
+<PostalCodeNDVI />
+</div>
       </v-card-text>
     </v-card>
   </v-dialog>

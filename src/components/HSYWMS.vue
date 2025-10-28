@@ -1,5 +1,8 @@
 <template>
-  <div class="wms-layer-switcher" @click.stop>
+  <div
+class="wms-layer-switcher"
+@click.stop
+>
     <!-- Added upper margin with link to HSY map service -->
 
     <div class="search-and-restore">

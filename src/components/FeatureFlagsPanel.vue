@@ -1,5 +1,9 @@
 <template>
-	<v-dialog v-model="dialog" max-width="800" scrollable>
+	<v-dialog
+v-model="dialog"
+max-width="800"
+scrollable
+>
 		<template #activator="{ props }">
 			<v-btn
 				v-bind="props"
@@ -14,10 +18,18 @@
 
 		<v-card>
 			<v-card-title class="d-flex align-center">
-				<v-icon left class="mr-2">mdi-flag-variant</v-icon>
+				<v-icon
+left
+class="mr-2"
+>
+mdi-flag-variant
+</v-icon>
 				Feature Flags
 				<v-spacer />
-				<v-chip size="small" color="primary">
+				<v-chip
+size="small"
+color="primary"
+>
 					{{ featureFlagStore.enabledCount }} / {{ totalFlags }} enabled
 				</v-chip>
 			</v-card-title>
@@ -37,7 +49,10 @@
 					>
 						<v-expansion-panel-title>
 							<div class="d-flex align-center">
-								<v-icon :icon="getCategoryIcon(category)" class="mr-2" />
+								<v-icon
+:icon="getCategoryIcon(category)"
+class="mr-2"
+/>
 								<span class="text-subtitle-1 font-weight-medium">
 									{{ getCategoryLabel(category) }}
 								</span>
@@ -61,10 +76,10 @@
 									<template #prepend>
 										<v-switch
 											:model-value="featureFlagStore.isEnabled(flag.name)"
-											@update:model-value="setFlag(flag.name, $event)"
 											color="primary"
 											hide-details
 											:disabled="flag.requiresSupport && !checkHardwareSupport(flag)"
+											@update:model-value="setFlag(flag.name, $event)"
 										/>
 									</template>
 
@@ -106,10 +121,12 @@
 											icon
 											size="x-small"
 											variant="text"
-											@click="resetFlag(flag.name)"
 											title="Reset to default"
+											@click="resetFlag(flag.name)"
 										>
-											<v-icon size="small">mdi-restore</v-icon>
+											<v-icon size="small">
+mdi-restore
+</v-icon>
 										</v-btn>
 									</template>
 								</v-list-item>
@@ -123,10 +140,10 @@
 
 			<v-card-actions>
 				<v-btn
-					@click="resetAllFlags"
 					color="warning"
 					variant="text"
 					prepend-icon="mdi-restore"
+					@click="resetAllFlags"
 				>
 					Reset All to Defaults
 				</v-btn>
@@ -134,25 +151,25 @@
 				<v-spacer />
 
 				<v-btn
-					@click="exportConfig"
 					variant="text"
 					prepend-icon="mdi-download"
+					@click="exportConfig"
 				>
 					Export
 				</v-btn>
 
 				<v-btn
-					@click="importConfig"
 					variant="text"
 					prepend-icon="mdi-upload"
+					@click="importConfig"
 				>
 					Import
 				</v-btn>
 
 				<v-btn
-					@click="dialog = false"
 					color="primary"
 					variant="elevated"
+					@click="dialog = false"
 				>
 					Close
 				</v-btn>
@@ -161,7 +178,10 @@
 	</v-dialog>
 
 	<!-- Reset confirmation dialog -->
-	<v-dialog v-model="resetConfirmDialog" max-width="500">
+	<v-dialog
+v-model="resetConfirmDialog"
+max-width="500"
+>
 		<v-card>
 			<v-card-title>Reset All Feature Flags</v-card-title>
 			<v-card-text>
@@ -169,14 +189,28 @@
 			</v-card-text>
 			<v-card-actions>
 				<v-spacer />
-				<v-btn @click="resetConfirmDialog = false" variant="text">Cancel</v-btn>
-				<v-btn @click="confirmResetAll" color="warning" variant="elevated">Reset All</v-btn>
+				<v-btn
+variant="text"
+@click="resetConfirmDialog = false"
+>
+Cancel
+</v-btn>
+				<v-btn
+color="warning"
+variant="elevated"
+@click="confirmResetAll"
+>
+Reset All
+</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
 
 	<!-- Import dialog -->
-	<v-dialog v-model="importDialog" max-width="500">
+	<v-dialog
+v-model="importDialog"
+max-width="500"
+>
 		<v-card>
 			<v-card-title>Import Configuration</v-card-title>
 			<v-card-text>
@@ -184,13 +218,24 @@
 					v-model="importJson"
 					label="Paste JSON configuration"
 					rows="10"
-					placeholder='{"ndvi": true, "hdrRendering": false, ...}'
+					placeholder="{&quot;ndvi&quot;: true, &quot;hdrRendering&quot;: false, ...}"
 				/>
 			</v-card-text>
 			<v-card-actions>
 				<v-spacer />
-				<v-btn @click="importDialog = false" variant="text">Cancel</v-btn>
-				<v-btn @click="doImport" color="primary" variant="elevated">Import</v-btn>
+				<v-btn
+variant="text"
+@click="importDialog = false"
+>
+Cancel
+</v-btn>
+				<v-btn
+color="primary"
+variant="elevated"
+@click="doImport"
+>
+Import
+</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
