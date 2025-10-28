@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/helm-r4c-v0.8.1...helm-r4c-v0.8.2) (2025-10-28)
+
+
+### Bug Fixes
+
+* remove geometry columns from B-tree indexes to prevent row size error ([#267](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/267)) ([63462cc](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/63462cc74e27e3f8462259bbb3dcc3ba58e26887))
+
 ## [0.8.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/helm-r4c-v0.8.0...helm-r4c-v0.8.1) (2025-10-27)
 
 ### Bug Fixes
