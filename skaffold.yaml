@@ -14,24 +14,28 @@ build:
       docker:
         dockerfile: Dockerfile
 deploy:
-  helm:
-    releases:
-      # Main webapp (R4C Cesium Viewer)
-      - name: helm-r4c
-        chartPath: helm
-        # valuesFiles:
-        #   - helm/values.yaml
-        setValueTemplates:
-          image.repository: "{{.IMAGE_REPO_frontend}}"
-          image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
-          vite:
-            digitransit_key: "{{.DIGITRANSIT_KEY}}"
-          sentry:
-            dsn: "{{.SENTRY_DSN}}"
-            auth_token: "{{.SENTRY_AUTH_TOKEN}}"
+  kubectl:
+    manifests:
+      - k8s/serviceaccount.yaml
+      - k8s/configmap.yaml
+      - k8s/secrets.yaml
+      - k8s/deployment.yaml
+      - k8s/service.yaml
+      - k8s/ingress.yaml
 profiles:
   - name: local-with-services
     deploy:
+      kubectl:
+        manifests:
+          - k8s/serviceaccount.yaml
+          - k8s/configmap.yaml
+          - k8s/secrets.yaml
+          - k8s/migration-secret.yaml
+          - k8s/migration-job.yaml
+          - k8s/deployment.yaml
+          - k8s/service.yaml
+          - k8s/ingress.yaml
+          - k8s/pygeoapi-deployment.yaml
       helm:
         releases:
           # PostgreSQL with PostGIS
@@ -41,25 +45,7 @@ profiles:
             version: "16.7.14"
             namespace: default
             valuesFiles:
-              - skaffold/postgresql-values.yaml
-
-          # Main webapp (R4C Cesium Viewer)
-          - name: helm-r4c
-            chartPath: helm
-            # valuesFiles:
-            #   - helm/values.yaml
-            #   - helm/values-local.yaml
-            setValueTemplates:
-              image.repository: "{{.IMAGE_REPO_frontend}}"
-              image.tag: "{{.IMAGE_TAG_frontend}}@{{.IMAGE_DIGEST_frontend}}"
-              vite:
-                digitransit_key: "{{.DIGITRANSIT_KEY}}"
-              sentry:
-                dsn: "{{.SENTRY_DSN}}"
-                auth_token: "{{.SENTRY_AUTH_TOKEN}}"
-    manifests:
-      rawYaml:
-        - skaffold/pygeoapi-deployment.yaml
+              - k8s/postgresql-values.yaml
 
   - name: migration-test
     deploy:
@@ -72,7 +58,7 @@ profiles:
             version: "16.7.14"
             namespace: default
             valuesFiles:
-              - skaffold/postgresql-values.yaml
+              - k8s/postgresql-values.yaml
     test:
       - image: amacneil/dbmate:v2.13.0
         custom:

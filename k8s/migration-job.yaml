@@ -1,22 +1,19 @@
-{{- if .Values.migration.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "helm-r4c.fullname" . }}-migration
+  name: r4c-cesium-viewer-migration
   labels:
-    {{- include "helm-r4c.labels" . | nindent 4 }}
+    app.kubernetes.io/name: r4c-cesium-viewer
+    app.kubernetes.io/instance: r4c-cesium-viewer
     app.kubernetes.io/component: migration
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-5"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   ttlSecondsAfterFinished: 300
   backoffLimit: 10
   template:
     metadata:
       labels:
-        {{- include "helm-r4c.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/name: r4c-cesium-viewer
+        app.kubernetes.io/instance: r4c-cesium-viewer
         app.kubernetes.io/component: migration
     spec:
       restartPolicy: Never
@@ -28,7 +25,7 @@ spec:
         - -c
         - |
           echo "🔍 Waiting for PostgreSQL to be ready..."
-          until pg_isready -h {{ .Values.migration.database.host }} -p {{ .Values.migration.database.port }} -U {{ .Values.migration.database.username }}; do
+          until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
             echo "   PostgreSQL not ready, waiting..."
             sleep 5
           done
@@ -36,7 +33,7 @@ spec:
 
           echo "🔍 Checking database connectivity..."
           export PGPASSWORD="${DB_PASSWORD}"
-          until psql -h {{ .Values.migration.database.host }} -p {{ .Values.migration.database.port }} -U {{ .Values.migration.database.username }} -d {{ .Values.migration.database.name }} -c "SELECT 1;" > /dev/null 2>&1; do
+          until psql -h postgresql -p 5432 -U regions4climate_user -d regions4climate -c "SELECT 1;" > /dev/null 2>&1; do
             echo "   Database not accessible, waiting..."
             sleep 5
           done
@@ -45,19 +42,19 @@ spec:
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "helm-r4c.fullname" . }}-migration-secret
+              name: r4c-cesium-viewer-migration-secret
               key: password
       containers:
       - name: dbmate
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        image: amacneil/dbmate:v2.13.0
         command:
         - sh
         - -c
         - |
           set -e
           echo "🚀 Starting database migration..."
-          echo "📋 Database: {{ .Values.migration.database.name }}"
-          echo "📋 Host: {{ .Values.migration.database.host }}:{{ .Values.migration.database.port }}"
+          echo "📋 Database: regions4climate"
+          echo "📋 Host: postgresql:5432"
           echo "📋 Migrations directory: /migrations"
 
           # Ensure PostGIS extensions exist
@@ -70,7 +67,7 @@ spec:
           psql "$DATABASE_URL_ADMIN" <<'EOSQL' || echo "⚠️  Table ownership transfer failed or no tables exist yet"
 DO $$
 DECLARE
-    migration_user TEXT := '{{ .Values.migration.database.username }}';
+    migration_user TEXT := 'regions4climate_user';
     tbl RECORD;
     owner_role TEXT;
 BEGIN
@@ -182,24 +179,28 @@ EOSQL
 
           echo "🎉 Database migration completed successfully"
         env:
-        - name: DATABASE_URL
-          value: "postgres://{{ .Values.migration.database.username }}:{{ .Values.migration.database.password }}@{{ .Values.migration.database.host }}:{{ .Values.migration.database.port }}/{{ .Values.migration.database.name }}?sslmode=disable"
-        - name: DATABASE_URL_ADMIN
-          value: "postgres://{{ .Values.migration.database.adminUsername }}:{{ .Values.migration.database.adminPassword }}@{{ .Values.migration.database.host }}:{{ .Values.migration.database.port }}/{{ .Values.migration.database.name }}?sslmode=disable"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "helm-r4c.fullname" . }}-migration-secret
+              name: r4c-cesium-viewer-migration-secret
               key: password
         - name: ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "helm-r4c.fullname" . }}-migration-secret
+              name: r4c-cesium-viewer-migration-secret
               key: admin-password
+        - name: DATABASE_URL
+          value: "postgres://regions4climate_user:$(DB_PASSWORD)@postgresql:5432/regions4climate?sslmode=disable"
+        - name: DATABASE_URL_ADMIN
+          value: "postgres://postgres:$(ADMIN_PASSWORD)@postgresql:5432/regions4climate?sslmode=disable"
         - name: DBMATE_MIGRATIONS_DIR
           value: /migrations
         - name: DBMATE_NO_DUMP_SCHEMA
           value: "true"
         resources:
-          {{- toYaml .Values.migration.resources | nindent 10 }}
-{{- end }}
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
