@@ -2,10 +2,9 @@
 
 ## [0.8.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/helm-r4c-v0.8.0...helm-r4c-v0.8.1) (2025-10-27)
 
-
 ### Bug Fixes
 
-* resolve Docker build failure from esbuild version conflict ([#265](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/265)) ([983e78e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/983e78e5f92e2672b75348ebb0c203f3296129a5))
+- resolve Docker build failure from esbuild version conflict ([#265](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/265)) ([983e78e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/983e78e5f92e2672b75348ebb0c203f3296129a5))
 
 ## [0.8.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/helm-r4c-v0.7.0...helm-r4c-v0.8.0) (2025-10-27)
 
