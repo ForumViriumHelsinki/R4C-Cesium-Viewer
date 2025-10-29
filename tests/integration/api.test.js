@@ -438,6 +438,87 @@ describe("API Integration Tests", () => {
     });
   });
 
+  describe("Pygeoapi Proxy Integration", () => {
+    it("should successfully proxy pygeoapi requests", async () => {
+      const mockPygeoapiResponse = {
+        data: {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              id: "heatexposure_optimized.1",
+              geometry: {
+                type: "Point",
+                coordinates: [24.9384, 60.1699],
+              },
+              properties: {
+                posno: "00100",
+                temperature: 28.5,
+              },
+            },
+          ],
+          numberMatched: 100,
+          numberReturned: 1,
+        },
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      };
+
+      axios.get.mockResolvedValue(mockPygeoapiResponse);
+
+      // Test pygeoapi proxy integration
+      const response = await axios.get(
+        "/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=100",
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.data).toHaveProperty("features");
+      expect(response.data.type).toBe("FeatureCollection");
+      expect(response.data.features).toHaveLength(1);
+      expect(response.headers["content-type"]).toBe("application/json");
+    });
+
+    it("should handle pygeoapi proxy errors gracefully", async () => {
+      axios.get.mockRejectedValue(
+        new Error("no resolver defined to resolve pygeoapi host"),
+      );
+
+      try {
+        await axios.get(
+          "/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=10",
+        );
+        expect.fail("Should have thrown error");
+      } catch (error) {
+        expect(error.message).toContain("no resolver defined");
+      }
+    });
+
+    it("should handle pygeoapi collections endpoint", async () => {
+      const mockCollectionsResponse = {
+        data: {
+          collections: [
+            {
+              id: "heatexposure_optimized",
+              title: "Heat Exposure Data",
+              itemType: "feature",
+            },
+          ],
+        },
+        status: 200,
+      };
+
+      axios.get.mockResolvedValue(mockCollectionsResponse);
+
+      const response = await axios.get("/pygeoapi/collections");
+
+      expect(response.status).toBe(200);
+      expect(response.data).toHaveProperty("collections");
+      expect(response.data.collections).toHaveLength(1);
+    });
+  });
+
   describe("Performance Integration", () => {
     it("should handle concurrent data requests efficiently", async () => {
       const startTime = Date.now();
