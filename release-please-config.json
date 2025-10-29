@@ -2,18 +2,7 @@
   "plugins": ["node-workspace"],
   "packages": {
     ".": {
-      "release-type": "node",
-      "exclude-paths": ["helm"],
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "helm/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        }
-      ]
-    },
-    "helm": {
-      "release-type": "helm"
+      "release-type": "node"
     }
   }
 }
