@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.27.7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.6...r4c-cesium-viewer-v1.27.7) (2025-10-29)
+
+
+### Bug Fixes
+
+* add optional chaining to prevent TypeError in featurepicker ([#276](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/276)) ([d238c36](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d238c367aa033150a03d555e17c7727b24778336)), closes [#274](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/274)
+* optimize Cesium.js loading to prevent render blocking ([#279](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/279)) ([fbd84b9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fbd84b9308b04ec0de29a748e6e4857de6bdffe9))
+
 ## [1.27.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.5...r4c-cesium-viewer-v1.27.6) (2025-10-28)
 
 
