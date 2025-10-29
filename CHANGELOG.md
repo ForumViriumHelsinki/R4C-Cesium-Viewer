@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.7...r4c-cesium-viewer-v1.27.8) (2025-10-29)
+
+
+### Bug Fixes
+
+* **nginx:** add DNS resolver for dynamic proxy_pass resolution ([#284](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/284)) ([c32de76](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c32de76404c6fdd17292573a9a0d1f4fd976d039))
+
 ## [1.27.7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.6...r4c-cesium-viewer-v1.27.7) (2025-10-29)
 
 
