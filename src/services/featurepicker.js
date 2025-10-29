@@ -87,7 +87,7 @@ export default class FeaturePicker {
     console.log("[FeaturePicker] Picked object:", picked);
 
     if (picked) {
-      let id = Cesium.defaultValue(picked.id, picked.primitive.id);
+      let id = Cesium.defaultValue(picked.id, picked.primitive?.id);
 
       if (picked.id._polygon) {
         if (id instanceof Cesium.Entity) {
