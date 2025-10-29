@@ -7,6 +7,9 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # DNS resolver for Kubernetes service discovery
+    resolver kube-dns.kube-system.svc.cluster.local valid=10s;
+
     # Global proxy settings
     proxy_cache global_cache;
     proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
