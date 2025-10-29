@@ -42,6 +42,8 @@ The application should now be running at [http://localhost:4173](http://localhos
 
 ## Run with Skaffold
 
+**Note:** Skaffold automatically generates Kubernetes secrets from your `.env` file on deployment. Make sure you've copied `.env.example` to `.env` first.
+
 ### Frontend Only
 
 ```bash
@@ -54,7 +56,7 @@ skaffold dev --port-forward
 skaffold dev --profile=local-with-services
 ```
 
-For detailed local development setup including database migrations and mock data seeding, see [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
+For detailed local development setup including database migrations and mock data seeding, see [LOCAL_DEVELOPMENT.md](./docs/LOCAL_DEVELOPMENT.md).
 
 ## Database Management
 
@@ -111,7 +113,7 @@ docker system --prune --all
 
 ## Project Documentation
 
-- [Local Development Guide](./LOCAL_DEVELOPMENT.md) - Complete setup with PostgreSQL + pygeoapi
+- [Local Development Guide](./docs/LOCAL_DEVELOPMENT.md) - Complete setup with PostgreSQL + pygeoapi
 - [Database Migrations](./db/README.md) - Schema management with dbmate
 - [Database Seeding](./docs/DATABASE_SEEDING.md) - Mock data for testing
 - [pygeoapi Integration](./db/PYGEOAPI_ALIGNMENT.md) - API endpoint documentation

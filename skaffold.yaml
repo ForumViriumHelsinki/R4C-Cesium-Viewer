@@ -15,6 +15,11 @@ build:
         dockerfile: Dockerfile
 deploy:
   kubectl:
+    hooks:
+      before:
+        - host:
+            command:
+              ["sh", "-c", "dotenvx run -- sh scripts/generate-secrets.sh"]
     manifests:
       - k8s/serviceaccount.yaml
       - k8s/configmap.yaml
@@ -26,6 +31,11 @@ profiles:
   - name: local-with-services
     deploy:
       kubectl:
+        hooks:
+          before:
+            - host:
+                command:
+                  ["sh", "-c", "dotenvx run -- sh scripts/generate-secrets.sh"]
         manifests:
           - k8s/serviceaccount.yaml
           - k8s/configmap.yaml

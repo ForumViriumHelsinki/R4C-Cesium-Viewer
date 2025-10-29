@@ -12,7 +12,7 @@
     "**/dist/**",
     "**/tests/**"
   ],
-  "out": "docs",
+  "out": "api-docs",
   "cleanOutputDir": true,
   "jsDocCompatibility": true,
   "commentStyle": "jsdoc",

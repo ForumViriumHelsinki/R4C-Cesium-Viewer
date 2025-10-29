@@ -46,12 +46,12 @@ python3 scripts/seed-dev-data.py [OPTIONS]
 
 ### Available Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--database-url` | Database connection URL | Uses `DATABASE_URL` env var |
-| `--clear-first` | Clear existing data before seeding | False |
-| `--num-records` | Number of records per table | 100 |
-| `--tables` | Specific tables to seed | All tables |
+| Option           | Description                        | Default                     |
+| ---------------- | ---------------------------------- | --------------------------- |
+| `--database-url` | Database connection URL            | Uses `DATABASE_URL` env var |
+| `--clear-first`  | Clear existing data before seeding | False                       |
+| `--num-records`  | Number of records per table        | 100                         |
+| `--tables`       | Specific tables to seed            | All tables                  |
 
 ### Examples
 
@@ -77,6 +77,7 @@ python3 scripts/seed-dev-data.py --database-url "postgres://user:pass@localhost:
 ### Geographic Data
 
 All seeded data uses **realistic Helsinki coordinates**:
+
 - **Latitude**: 60.1 to 60.3 degrees North
 - **Longitude**: 24.8 to 25.3 degrees East
 - **Postal Codes**: Real Helsinki postal codes (00100-00990)
@@ -84,27 +85,32 @@ All seeded data uses **realistic Helsinki coordinates**:
 ### Data Types
 
 #### Land Cover (`adaptation_landcover`)
+
 - **Grid IDs**: Sequential format `GRID_000001`
 - **Area**: 100-10,000 m²
 - **Types**: FOREST, WATER, URBAN, GRASS, AGRICULTURAL, BARE
 - **Years**: 2020-2024
 
 #### Cold Spots (`r4c_coldspot`)
+
 - **Heat Exposure**: 0.0-0.4 (low values for cold spots)
 - **Temperature**: 15-25°C
 - **Dates**: Random dates within last year
 
 #### Trees (`tree_f`)
+
 - **Types**: DECIDUOUS, CONIFEROUS, MIXED
 - **Area**: 10-500 m²
 - **Height**: 5-25 meters
 
 #### Buildings (`r4c_hsy_building_current`)
+
 - **Types**: RESIDENTIAL, COMMERCIAL, INDUSTRIAL, PUBLIC
 - **Heating**: DISTRICT_HEATING, ELECTRIC, OIL, GAS
 - **Size**: Realistic building dimensions
 
 #### Demographics (`r4c_paavo`)
+
 - **Population**: 1,000-15,000 per postal code
 - **Age Groups**: Realistic distribution
 - **Income/Education**: Statistical ranges
@@ -125,6 +131,7 @@ kubectl logs job/database-seeding
 ```
 
 The job will:
+
 1. Wait for PostgreSQL to be ready
 2. Install required Python packages
 3. Run the seeding script
@@ -170,6 +177,7 @@ curl "http://localhost:8080/collections/tree/items?limit=20"
 ### Common Issues
 
 **Python dependencies missing**:
+
 ```bash
 pip install psycopg2-binary
 # or
@@ -177,6 +185,7 @@ pip install -r scripts/requirements-seeding.txt
 ```
 
 **Database connection failed**:
+
 ```bash
 # Check if PostgreSQL is running
 kubectl get pods
@@ -187,6 +196,7 @@ psql "postgres://regions4climate_user:regions4climate_pass@localhost:5432/region
 ```
 
 **Seeding script fails**:
+
 ```bash
 # Run with verbose output
 python3 scripts/seed-dev-data.py --clear-first --num-records 10
@@ -208,6 +218,7 @@ psql "$DATABASE_URL" -c "\dt adaptation_landcover"
 To seed additional tables, edit `scripts/seed-dev-data.py`:
 
 1. **Add seeding function**:
+
 ```python
 def seed_my_table(conn, num_records=50):
     print(f"🌱 Seeding my_table with {num_records} records...")
@@ -215,6 +226,7 @@ def seed_my_table(conn, num_records=50):
 ```
 
 2. **Call in main()**:
+
 ```python
 if 'all' in tables_to_seed:
     seed_my_table(conn, args.num_records)
@@ -239,6 +251,6 @@ You can modify the data generation patterns:
 
 ## Related Documentation
 
-- [Local Development Setup](../LOCAL_DEVELOPMENT.md)
+- [Local Development Setup](./LOCAL_DEVELOPMENT.md)
 - [Database Migrations](../db/README.md)
 - [pygeoapi Collection Mapping](../db/PYGEOAPI_ALIGNMENT.md)

@@ -31,7 +31,11 @@ pnpm-debug.log*
 /coverage/
 
 # TypeDoc generated documentation
-/docs/
+/api-docs/
+
+# Generated Kubernetes secrets (created from templates by envsubst)
+k8s/secrets.yaml
+k8s/migration-secret.yaml
 
 # Sentry Config File
 .env.sentry-build-plugin

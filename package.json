@@ -29,7 +29,6 @@
     "test:ci:accessibility": "npm run test:accessibility:all-viewports"
   },
   "dependencies": {
-    "@dotenvx/dotenvx": "^1.51.0",
     "@sentry/browser": "^10.22.0",
     "@sentry/vite-plugin": "^4.5.0",
     "@sentry/vue": "^10.22.0",
@@ -48,6 +47,7 @@
     "vite-plugin-vuetify": "^2.1.2"
   },
   "devDependencies": {
+    "@dotenvx/dotenvx": "^1.51.0",
     "@playwright/test": "^1.56.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vitest/coverage-v8": "^4.0.3",
