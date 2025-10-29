@@ -16,7 +16,6 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import * as Cesium from 'cesium';
 import 'cesium/Source/Widgets/widgets.css';
 import Datasource from '../services/datasource.js';
 import WMS from '../services/wms.js';
@@ -57,10 +56,17 @@ export default {
       		return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading;
     	});
 		const viewer = ref(null);
-		Cesium.Ion.defaultAccessToken = null;
 		let lastPickTime = 0;
+		let Cesium = null;
 
-		const initViewer = () => {
+		const initViewer = async () => {
+			// Dynamically import Cesium to avoid blocking initial render
+			if (!Cesium) {
+				Cesium = await import('cesium');
+			}
+
+			// Set Ion token after loading
+			Cesium.Ion.defaultAccessToken = null;
 			// Create viewer with enhanced graphics options
 			const viewerOptions = {
 				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
@@ -158,8 +164,8 @@ export default {
   			});
 		};
 
-		onMounted(() => {
-			initViewer();
+		onMounted(async () => {
+			await initViewer();
 			socioEconomicsStore.loadPaavo();
 			heatExposureStore.loadHeatExposure();
 		});
