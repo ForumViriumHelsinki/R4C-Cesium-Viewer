@@ -42,6 +42,8 @@ The application should now be running at [http://localhost:4173](http://localhos
 
 ## Run with Skaffold
 
+**Note:** Skaffold automatically generates Kubernetes secrets from your `.env` file on deployment. Make sure you've copied `.env.example` to `.env` first.
+
 ### Frontend Only
 
 ```bash
