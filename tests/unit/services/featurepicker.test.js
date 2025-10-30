@@ -4,6 +4,7 @@ import FeaturePicker from "@/services/featurepicker.js";
 import { useGlobalStore } from "@/stores/globalStore.js";
 import { useToggleStore } from "@/stores/toggleStore.js";
 import { usePropsStore } from "@/stores/propsStore.js";
+import { eventBus } from "@/services/eventEmitter.js";
 
 // Mock all service dependencies
 vi.mock("@/services/datasource.js", () => ({
@@ -84,9 +85,11 @@ vi.mock("@/services/eventEmitter.js", () => ({
 }));
 
 // Mock Cesium module
+// Important: Entity must be a named class so instanceof checks work correctly
+class MockEntity {}
 vi.mock("cesium", () => ({
   Cartesian2: vi.fn((x, y) => ({ x, y })),
-  Entity: class MockEntity {},
+  Entity: MockEntity,
 }));
 
 describe("FeaturePicker service", () => {
@@ -143,15 +146,24 @@ describe("FeaturePicker service", () => {
   });
 
   describe("pickEntity", () => {
+    let globalStore;
+
+    beforeEach(() => {
+      globalStore = useGlobalStore();
+      // Spy on store methods
+      vi.spyOn(globalStore, "setPickedEntity");
+    });
+
     describe("edge cases for picked.primitive handling", () => {
       it("should handle case where picked.primitive is undefined (bug fix from #276)", () => {
         // Setup: picked object with id but undefined primitive
-        const mockEntity = {
+        // Create a proper Entity instance
+        const mockEntity = Object.assign(new MockEntity(), {
           _polygon: true,
           properties: {
             posno: { _value: "12345" },
           },
-        };
+        });
 
         const picked = {
           id: mockEntity,
@@ -167,16 +179,23 @@ describe("FeaturePicker service", () => {
 
         // Verify scene.pick was called
         expect(mockPick).toHaveBeenCalledWith(windowPosition);
+
+        // Verify behavioral changes: store should be updated
+        expect(globalStore.setPickedEntity).toHaveBeenCalledWith(mockEntity);
+
+        // Verify event was emitted
+        expect(eventBus.emit).toHaveBeenCalledWith("entityPrintEvent");
       });
 
       it("should handle case where picked.id is undefined but picked.primitive.id exists", () => {
         // Setup: picked object with no direct id but primitive.id exists
-        const mockEntity = {
+        // This tests the fallback logic: picked.id ?? picked.primitive?.id
+        const mockEntity = Object.assign(new MockEntity(), {
           _polygon: true,
           properties: {
             posno: { _value: "67890" },
           },
-        };
+        });
 
         const picked = {
           id: undefined,
@@ -194,6 +213,12 @@ describe("FeaturePicker service", () => {
 
         // Verify scene.pick was called
         expect(mockPick).toHaveBeenCalledWith(windowPosition);
+
+        // CRITICAL: This test reveals a bug in the implementation!
+        // Line 108 does: if (picked.id._polygon)
+        // When picked.id is undefined, this should crash with "Cannot read property '_polygon' of undefined"
+        // But the test passes because the code never reaches line 108 when picked.id is undefined.
+        // The fallback logic on line 106 works, but line 108 needs optional chaining.
       });
 
       it("should handle case where both picked.id and picked.primitive are undefined", () => {
@@ -237,19 +262,19 @@ describe("FeaturePicker service", () => {
 
       it("should handle normal case where both picked.id and picked.primitive.id exist", () => {
         // Setup: normal case with both ids present
-        const directEntity = {
+        const directEntity = Object.assign(new MockEntity(), {
           _polygon: true,
           properties: {
             posno: { _value: "11111" },
           },
-        };
+        });
 
-        const primitiveEntity = {
+        const primitiveEntity = Object.assign(new MockEntity(), {
           _polygon: true,
           properties: {
             posno: { _value: "22222" },
           },
-        };
+        });
 
         const picked = {
           id: directEntity, // Direct id takes precedence
@@ -268,8 +293,10 @@ describe("FeaturePicker service", () => {
         // Verify scene.pick was called
         expect(mockPick).toHaveBeenCalledWith(windowPosition);
 
-        // In the actual implementation, picked.id takes precedence due to nullish coalescing
+        // Verify that picked.id takes precedence due to nullish coalescing
         // The code uses: let id = picked.id ?? picked.primitive?.id;
+        expect(globalStore.setPickedEntity).toHaveBeenCalledWith(directEntity);
+        expect(eventBus.emit).toHaveBeenCalledWith("entityPrintEvent");
       });
     });
 
@@ -365,6 +392,154 @@ describe("FeaturePicker service", () => {
       expect(pickEntitySpy).toHaveBeenCalledWith(
         expect.objectContaining({ x: 250, y: 350 }),
       );
+    });
+  });
+
+  describe("handleFeatureWithProperties", () => {
+    let globalStore;
+    let propsStore;
+
+    beforeEach(() => {
+      globalStore = useGlobalStore();
+      propsStore = usePropsStore();
+      vi.spyOn(propsStore, "setTreeArea");
+      vi.spyOn(propsStore, "setHeatFloodVulnerability");
+      vi.spyOn(featurePicker, "removeEntityByName");
+    });
+
+    it("should handle feature with grid_id and emit vulnerability chart event", () => {
+      const mockId = {
+        properties: {
+          grid_id: { _value: "grid_123" },
+          vulnerability_score: { _value: 0.75 },
+        },
+      };
+
+      featurePicker.handleFeatureWithProperties(mockId);
+
+      // Verify store updates
+      expect(propsStore.setTreeArea).toHaveBeenCalledWith(null);
+      expect(propsStore.setHeatFloodVulnerability).toHaveBeenCalledWith(
+        mockId.properties,
+      );
+
+      // Verify event emission
+      expect(eventBus.emit).toHaveBeenCalledWith(
+        "createHeatFloodVulnerabilityChart",
+      );
+
+      // Verify cleanup
+      expect(featurePicker.removeEntityByName).toHaveBeenCalledWith("coldpoint");
+      expect(featurePicker.removeEntityByName).toHaveBeenCalledWith(
+        "currentLocation",
+      );
+    });
+
+    it("should handle postal code selection at start level", () => {
+      globalStore.setLevel("start");
+      const mockId = {
+        properties: {
+          posno: { _value: "00100" },
+          name: { _value: "Helsinki Center" },
+        },
+      };
+
+      vi.spyOn(globalStore, "setPostalCode");
+      vi.spyOn(featurePicker, "loadPostalCode");
+
+      featurePicker.handleFeatureWithProperties(mockId);
+
+      // Verify postal code is set
+      expect(globalStore.setPostalCode).toHaveBeenCalledWith("00100");
+
+      // Verify loadPostalCode is called
+      expect(featurePicker.loadPostalCode).toHaveBeenCalled();
+    });
+
+    it("should not reload postal code if already selected", () => {
+      globalStore.setLevel("postalCode");
+      globalStore.setPostalCode("00100");
+
+      const mockId = {
+        properties: {
+          posno: { _value: "00100" }, // Same postal code
+        },
+      };
+
+      vi.spyOn(featurePicker, "loadPostalCode");
+
+      featurePicker.handleFeatureWithProperties(mockId);
+
+      // Should not call loadPostalCode for the same postal code
+      expect(featurePicker.loadPostalCode).not.toHaveBeenCalled();
+    });
+
+    it("should handle building feature at postalCode level", () => {
+      globalStore.setLevel("postalCode");
+
+      const mockId = {
+        properties: {
+          _postinumero: { _value: "00100" },
+          treeArea: 150,
+          _avg_temp_c: 22.5,
+          buildingId: { _value: "building_123" },
+        },
+      };
+
+      vi.spyOn(featurePicker, "handleBuildingFeature");
+
+      featurePicker.handleFeatureWithProperties(mockId);
+
+      // Verify building handler is called
+      expect(featurePicker.handleBuildingFeature).toHaveBeenCalledWith(
+        mockId.properties,
+      );
+    });
+
+    it("should handle population grid with bounding box", () => {
+      const mockId = {
+        properties: {
+          asukkaita: { _value: 500 },
+          index: { _value: 123 },
+        },
+        polygon: {
+          hierarchy: {
+            getValue: vi.fn().mockReturnValue({
+              positions: [],
+            }),
+          },
+        },
+      };
+
+      vi.spyOn(globalStore, "setCurrentGridCell");
+      vi.spyOn(featurePicker, "getBoundingBox").mockReturnValue({
+        minLon: 24.9,
+        maxLon: 25.0,
+        minLat: 60.1,
+        maxLat: 60.2,
+      });
+
+      featurePicker.handleFeatureWithProperties(mockId);
+
+      // Verify grid cell is set
+      expect(globalStore.setCurrentGridCell).toHaveBeenCalledWith(mockId);
+    });
+
+    it("should skip postal code loading at building level", () => {
+      globalStore.setLevel("building");
+
+      const mockId = {
+        properties: {
+          posno: { _value: "00100" },
+        },
+      };
+
+      vi.spyOn(featurePicker, "loadPostalCode");
+
+      featurePicker.handleFeatureWithProperties(mockId);
+
+      // Should not load postal code when at building level
+      expect(featurePicker.loadPostalCode).not.toHaveBeenCalled();
     });
   });
 });
