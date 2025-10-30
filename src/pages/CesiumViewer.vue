@@ -16,12 +16,13 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import 'cesium/Source/Widgets/widgets.css';
-import Datasource from '../services/datasource.js';
-import WMS from '../services/wms.js';
-import Featurepicker from '../services/featurepicker.js';
-import Camera from '../services/camera.js';
-import Graphics from '../services/graphics.js';
+
+import DisclaimerPopup from '../components/DisclaimerPopup.vue';
+import Loading from '../components/Loading.vue';
+import BuildingInformation from '../components/BuildingInformation.vue';
+import Timeline from '../components/Timeline.vue';
+import CameraControls from '../components/CameraControls.vue';
+
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
 import { useHeatExposureStore } from '../stores/heatExposureStore.js';
@@ -29,12 +30,6 @@ import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 import { useGraphicsStore } from '../stores/graphicsStore.js';
-
-import DisclaimerPopup from '../components/DisclaimerPopup.vue';
-import Loading from '../components/Loading.vue';
-import BuildingInformation from '../components/BuildingInformation.vue';
-import Timeline from '../components/Timeline.vue';
-import CameraControls from '../components/CameraControls.vue';
 
 export default {
 	components: {
@@ -58,11 +53,36 @@ export default {
 		const viewer = ref(null);
 		let lastPickTime = 0;
 		let Cesium = null;
+		let Datasource = null;
+		let WMS = null;
+		let Featurepicker = null;
+		let Camera = null;
+		let Graphics = null;
 
 		const initViewer = async () => {
-			// Dynamically import Cesium to avoid blocking initial render
+			// Dynamically import Cesium and its dependencies to avoid blocking initial render
 			if (!Cesium) {
-				Cesium = await import('cesium');
+				// Load Cesium module and CSS in parallel
+				const [cesiumModule] = await Promise.all([
+					import('cesium'),
+					import('cesium/Source/Widgets/widgets.css')
+				]);
+				Cesium = cesiumModule;
+
+				// Load service modules that depend on Cesium
+				const [DatasourceModule, WMSModule, FeaturepickerModule, CameraModule, GraphicsModule] = await Promise.all([
+					import('../services/datasource.js'),
+					import('../services/wms.js'),
+					import('../services/featurepicker.js'),
+					import('../services/camera.js'),
+					import('../services/graphics.js')
+				]);
+
+				Datasource = DatasourceModule.default;
+				WMS = WMSModule.default;
+				Featurepicker = FeaturepickerModule.default;
+				Camera = CameraModule.default;
+				Graphics = GraphicsModule.default;
 			}
 
 			// Set Ion token after loading
