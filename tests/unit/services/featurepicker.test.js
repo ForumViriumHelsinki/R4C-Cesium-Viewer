@@ -214,11 +214,10 @@ describe("FeaturePicker service", () => {
         // Verify scene.pick was called
         expect(mockPick).toHaveBeenCalledWith(windowPosition);
 
-        // CRITICAL: This test reveals a bug in the implementation!
-        // Line 108 does: if (picked.id._polygon)
-        // When picked.id is undefined, this should crash with "Cannot read property '_polygon' of undefined"
-        // But the test passes because the code never reaches line 108 when picked.id is undefined.
-        // The fallback logic on line 106 works, but line 108 needs optional chaining.
+        // This tests the fallback logic when picked.id is undefined
+        // The code uses optional chaining (picked.id?._polygon) to safely handle this case
+        // The fallback logic on line 106 (picked.id ?? picked.primitive?.id) ensures
+        // the correct entity is used even when picked.id is undefined
       });
 
       it("should handle case where both picked.id and picked.primitive are undefined", () => {
