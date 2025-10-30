@@ -83,6 +83,22 @@ export default class FeaturePicker {
       "[FeaturePicker] 🎯 Picking entity at window position:",
       windowPosition,
     );
+
+    // Guard: Check if viewer and scene are in a valid state
+    if (!this.viewer || !this.viewer.scene) {
+      console.warn("[FeaturePicker] ⚠️ Viewer or scene not available");
+      return;
+    }
+
+    // Guard: Check if the drawing buffer has valid dimensions
+    const canvas = this.viewer.scene.canvas;
+    if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+      console.warn(
+        "[FeaturePicker] ⚠️ Canvas has invalid dimensions, skipping pick",
+      );
+      return;
+    }
+
     let picked = this.viewer.scene.pick(windowPosition);
     console.log("[FeaturePicker] Picked object:", picked);
 
