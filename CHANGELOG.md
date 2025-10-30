@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.8...r4c-cesium-viewer-v1.27.9) (2025-10-30)
+
+
+### Bug Fixes
+
+* eliminate render blocking by making Cesium CSS and services load dynamically ([#286](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/286)) ([e095a02](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e095a02e74bd501021a1caa033de591c86cadf04)), closes [#275](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/275)
+
 ## [1.27.8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.7...r4c-cesium-viewer-v1.27.8) (2025-10-29)
 
 
