@@ -7,7 +7,6 @@ This guide explains how to run the complete R4C Cesium Viewer stack locally usin
 - [Docker](https://docs.docker.com/get-docker/)
 - [Kubernetes](https://kubernetes.io/docs/setup/) (Docker Desktop includes Kubernetes)
 - [Skaffold](https://skaffold.dev/docs/install/)
-- [Helm](https://helm.sh/docs/intro/install/) (only needed for `local-with-services` profile which deploys PostgreSQL)
 - [dbmate](https://github.com/amacneil/dbmate#installation)
 - [PostgreSQL client tools](https://www.postgresql.org/download/) (for `psql` and `pg_isready`)
 
@@ -205,7 +204,11 @@ export DATABASE_URL="postgres://regions4climate_user:regions4climate_pass@localh
 
 ### Custom PostgreSQL Configuration
 
-Edit `k8s/postgresql-values.yaml` to modify PostgreSQL settings.
+PostgreSQL configuration can be modified in the following files:
+
+- `k8s/postgresql-secret.yaml` - Database credentials and names
+- `k8s/postgresql-configmap.yaml` - Initialization scripts (PostGIS extensions, additional databases)
+- `k8s/postgresql-statefulset.yaml` - Resource limits, image version, storage size
 
 ### Additional pygeoapi Configuration
 

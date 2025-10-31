@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-init
+  labels:
+    app: postgresql
+data:
+  # PostgreSQL initialization scripts
+  # Files are executed in alphabetical order by the official postgres image
+  01-create-extensions.sql: |
+    -- Create PostGIS extensions in the main regions4climate database
+    -- Note: These will be created with superuser privileges during initdb
+    CREATE EXTENSION IF NOT EXISTS postgis;
+    CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+    -- Verify PostGIS is working
+    SELECT PostGIS_version();
+
+  02-create-med-iren-db.sql: |
+    -- Create secondary database for med_iren project
+    CREATE DATABASE med_iren;
+    \c med_iren;
+    CREATE EXTENSION IF NOT EXISTS postgis;
+    CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+    -- Verify PostGIS is working in med_iren
+    SELECT PostGIS_version();
+
+  99-database-ready-marker.sh: |
+    #!/bin/bash
+    set -e
+    echo "🎉 PostgreSQL initialization completed"
+    echo "📋 Database: regions4climate"
+    echo "📋 Extensions: PostGIS, PostGIS Topology"
+    echo "📋 Ready for migrations via dbmate"
