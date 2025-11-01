@@ -9,6 +9,7 @@ The application deployment uses plain Kubernetes manifests for easier local deve
 ## Files
 
 ### Core Application Manifests
+
 - `serviceaccount.yaml` - Service account for the application
 - `configmap.yaml` - Environment configuration (non-sensitive)
 - `secrets.yaml` - Secrets for API keys and Sentry configuration
@@ -17,14 +18,22 @@ The application deployment uses plain Kubernetes manifests for easier local deve
 - `ingress.yaml` - Ingress for local access
 
 ### Database Migration
+
 - `migration-secret.yaml` - Credentials for database migrations
 - `migration-job.yaml` - Kubernetes Job for running database migrations
 
+### PostgreSQL Database
+
+- `postgresql-secret.yaml` - PostgreSQL credentials and database configuration
+- `postgresql-configmap.yaml` - PostgreSQL initialization scripts (PostGIS extensions, database setup)
+- `postgresql-service.yaml` - PostgreSQL headless service and ClusterIP service
+- `postgresql-statefulset.yaml` - PostgreSQL StatefulSet using official postgis/postgis image
+
 ### Additional Services
+
 - `pygeoapi-deployment.yaml` - PyGeoAPI service deployment
 - `database-seeding-job.yaml` - Database seeding job
 - `db-test-job.yaml` - Database testing job
-- `postgresql-values.yaml` - Values for PostgreSQL Helm chart (used in profiles)
 
 ## Usage
 
@@ -47,7 +56,8 @@ skaffold dev --profile=local-with-services --port-forward
 ```
 
 This deploys:
-- PostgreSQL with PostGIS (via Helm chart)
+
+- PostgreSQL with PostGIS (using official postgis/postgis:16-3.4 image)
 - Database migrations
 - R4C Cesium Viewer application
 - PyGeoAPI service
@@ -57,9 +67,11 @@ This deploys:
 The following environment variables can be configured:
 
 **ConfigMap (`configmap.yaml`):**
+
 - `VITE_PYGEOAPI_HOST` - PyGeoAPI host (defaults to `pygeoapi.dataportal.fi`)
 
 **Secrets (`secrets.yaml`):**
+
 - `VITE_DIGITRANSIT_KEY` - Digitransit API key
 - `SENTRY_AUTH_TOKEN` - Sentry authentication token
 - `SENTRY_DSN` - Sentry DSN for error tracking
@@ -83,6 +95,7 @@ To set these values for local development, you can either:
 For the `local-with-services` profile, database migration credentials are set in `migration-secret.yaml`.
 
 ⚠️ **Security Warning:** The default credentials in `migration-secret.yaml` are for LOCAL DEVELOPMENT ONLY:
+
 - Database user password: `regions4climate_pass`
 - Admin password: `postgres`
 
@@ -101,13 +114,17 @@ Using plain Kubernetes manifests for local development provides:
 ## Technical Details
 
 ### Container Port Configuration
+
 The application uses Vite's preview server which runs on **port 4173**:
+
 - Container exposes port 4173
 - Service maps external port 80 to container port 4173
 - This matches the production build behavior (`npm run preview`)
 
 ### Resource Limits
+
 The deployment includes sensible resource limits for local development:
+
 - **Limits:** 500m CPU, 512Mi memory
 - **Requests:** 100m CPU, 128Mi memory
 
@@ -118,7 +135,9 @@ These can be adjusted based on your local environment's available resources.
 ### Migration Job Troubleshooting
 
 #### Re-running Migrations
+
 Unlike Helm deployments with hooks, the migration Job must be manually deleted and recreated if you need to re-run migrations:
+
 ```bash
 kubectl delete job r4c-cesium-viewer-migration
 skaffold dev --profile=local-with-services --port-forward
@@ -127,6 +146,7 @@ skaffold dev --profile=local-with-services --port-forward
 The Job has `ttlSecondsAfterFinished: 300` set, so completed jobs are automatically cleaned up after 5 minutes.
 
 #### Migration Job Failed
+
 If the migration job fails, you can check the logs to diagnose the issue:
 
 ```bash
@@ -141,13 +161,16 @@ kubectl describe job r4c-cesium-viewer-migration
 ```
 
 **Common failure causes:**
+
 1. **PostgreSQL not ready** - The init container waits for PostgreSQL to be ready. If it's taking too long, check PostgreSQL status:
+
    ```bash
    kubectl get pods -l app.kubernetes.io/name=postgresql
    kubectl logs -l app.kubernetes.io/name=postgresql
    ```
 
 2. **Database credentials incorrect** - Verify the migration secret is correct:
+
    ```bash
    kubectl get secret r4c-cesium-viewer-migration-secret -o yaml
    ```
@@ -157,6 +180,7 @@ kubectl describe job r4c-cesium-viewer-migration
 4. **PostGIS extension error** - If the admin user doesn't have superuser privileges, the PostGIS extension creation may fail. This is usually fine if the extensions already exist.
 
 #### Debugging Migration Job
+
 To run an interactive shell in the same environment as the migration job:
 
 ```bash
@@ -173,14 +197,17 @@ kubectl run dbmate-debug --rm -it \
 ```
 
 #### Migration Job Stuck
+
 If the job appears stuck in a pending or running state:
 
 1. Check if the PostgreSQL dependency is available:
+
    ```bash
    kubectl get svc postgresql
    ```
 
 2. Delete the stuck job and retry:
+
    ```bash
    kubectl delete job r4c-cesium-viewer-migration --force --grace-period=0
    ```
