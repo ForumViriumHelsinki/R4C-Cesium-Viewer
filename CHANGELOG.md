@@ -2,33 +2,29 @@
 
 ## [1.27.9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.8...r4c-cesium-viewer-v1.27.9) (2025-10-30)
 
-
 ### Bug Fixes
 
-* eliminate render blocking by making Cesium CSS and services load dynamically ([#286](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/286)) ([e095a02](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e095a02e74bd501021a1caa033de591c86cadf04)), closes [#275](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/275)
+- eliminate render blocking by making Cesium CSS and services load dynamically ([#286](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/286)) ([e095a02](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e095a02e74bd501021a1caa033de591c86cadf04)), closes [#275](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/275)
 
 ## [1.27.8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.7...r4c-cesium-viewer-v1.27.8) (2025-10-29)
 
-
 ### Bug Fixes
 
-* **nginx:** add DNS resolver for dynamic proxy_pass resolution ([#284](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/284)) ([c32de76](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c32de76404c6fdd17292573a9a0d1f4fd976d039))
+- **nginx:** add DNS resolver for dynamic proxy_pass resolution ([#284](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/284)) ([c32de76](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c32de76404c6fdd17292573a9a0d1f4fd976d039))
 
 ## [1.27.7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.6...r4c-cesium-viewer-v1.27.7) (2025-10-29)
 
-
 ### Bug Fixes
 
-* add optional chaining to prevent TypeError in featurepicker ([#276](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/276)) ([d238c36](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d238c367aa033150a03d555e17c7727b24778336)), closes [#274](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/274)
-* optimize Cesium.js loading to prevent render blocking ([#279](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/279)) ([fbd84b9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fbd84b9308b04ec0de29a748e6e4857de6bdffe9))
+- add optional chaining to prevent TypeError in featurepicker ([#276](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/276)) ([d238c36](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d238c367aa033150a03d555e17c7727b24778336)), closes [#274](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/274)
+- optimize Cesium.js loading to prevent render blocking ([#279](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/279)) ([fbd84b9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fbd84b9308b04ec0de29a748e6e4857de6bdffe9))
 
 ## [1.27.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.5...r4c-cesium-viewer-v1.27.6) (2025-10-28)
 
-
 ### Bug Fixes
 
-* remove geometry columns from B-tree indexes to prevent row size error ([#267](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/267)) ([63462cc](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/63462cc74e27e3f8462259bbb3dcc3ba58e26887))
-* resolve ESLint configuration errors ([#269](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/269)) ([40061d8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/40061d807a9c83741fc9734556319e2e645e4b4d))
+- remove geometry columns from B-tree indexes to prevent row size error ([#267](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/267)) ([63462cc](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/63462cc74e27e3f8462259bbb3dcc3ba58e26887))
+- resolve ESLint configuration errors ([#269](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/269)) ([40061d8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/40061d807a9c83741fc9734556319e2e645e4b4d))
 
 ## [1.27.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.4...r4c-cesium-viewer-v1.27.5) (2025-10-27)
 
