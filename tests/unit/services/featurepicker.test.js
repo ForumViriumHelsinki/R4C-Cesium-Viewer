@@ -1,3 +1,8 @@
+/**
+ * Unit tests for FeaturePicker service
+ * Tests entity picking, feature handling, and navigation between geographic levels
+ * @see {@link file://./src/services/featurepicker.js}
+ */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
 import FeaturePicker from "@/services/featurepicker.js";
@@ -5,6 +10,16 @@ import { useGlobalStore } from "@/stores/globalStore.js";
 import { useToggleStore } from "@/stores/toggleStore.js";
 import { usePropsStore } from "@/stores/propsStore.js";
 import { eventBus } from "@/services/eventEmitter.js";
+
+// Test constants for realistic test data
+const TEST_POSTAL_CODE_1 = "00100"; // Helsinki city center
+const TEST_POSTAL_CODE_2 = "67890";
+const TEST_GRID_ID = "grid_123";
+const TEST_BUILDING_ID = "building_123";
+const TEST_POPULATION = 500;
+const TEST_VULNERABILITY_SCORE = 0.75;
+const TEST_TREE_AREA = 150;
+const TEST_AVG_TEMP = 22.5;
 
 // Mock all service dependencies
 vi.mock("@/services/datasource.js", () => ({
@@ -161,7 +176,7 @@ describe("FeaturePicker service", () => {
         const mockEntity = Object.assign(new MockEntity(), {
           _polygon: true,
           properties: {
-            posno: { _value: "12345" },
+            posno: { _value: TEST_POSTAL_CODE_1 },
           },
         });
 
@@ -193,7 +208,7 @@ describe("FeaturePicker service", () => {
         const mockEntity = Object.assign(new MockEntity(), {
           _polygon: true,
           properties: {
-            posno: { _value: "67890" },
+            posno: { _value: TEST_POSTAL_CODE_2 },
           },
         });
 
@@ -214,10 +229,9 @@ describe("FeaturePicker service", () => {
         // Verify scene.pick was called
         expect(mockPick).toHaveBeenCalledWith(windowPosition);
 
-        // This tests the fallback logic when picked.id is undefined
-        // The code uses optional chaining (picked.id?._polygon) to safely handle this case
-        // The fallback logic on line 106 (picked.id ?? picked.primitive?.id) ensures
-        // the correct entity is used even when picked.id is undefined
+        // Verify that the fallback logic works: primitive.id should be used
+        expect(globalStore.setPickedEntity).toHaveBeenCalledWith(mockEntity);
+        expect(eventBus.emit).toHaveBeenCalledWith("entityPrintEvent");
       });
 
       it("should handle case where both picked.id and picked.primitive are undefined", () => {
@@ -236,6 +250,10 @@ describe("FeaturePicker service", () => {
 
         // Verify scene.pick was called
         expect(mockPick).toHaveBeenCalledWith(windowPosition);
+
+        // Should not update store or emit events when no entity is found
+        expect(globalStore.setPickedEntity).not.toHaveBeenCalled();
+        expect(eventBus.emit).not.toHaveBeenCalledWith("entityPrintEvent");
       });
 
       it("should handle case where picked.primitive exists but picked.primitive.id is undefined", () => {
@@ -257,6 +275,10 @@ describe("FeaturePicker service", () => {
 
         // Verify scene.pick was called
         expect(mockPick).toHaveBeenCalledWith(windowPosition);
+
+        // Should not update store or emit events when no valid entity is found
+        expect(globalStore.setPickedEntity).not.toHaveBeenCalled();
+        expect(eventBus.emit).not.toHaveBeenCalledWith("entityPrintEvent");
       });
 
       it("should handle normal case where both picked.id and picked.primitive.id exist", () => {
@@ -264,14 +286,14 @@ describe("FeaturePicker service", () => {
         const directEntity = Object.assign(new MockEntity(), {
           _polygon: true,
           properties: {
-            posno: { _value: "11111" },
+            posno: { _value: TEST_POSTAL_CODE_1 },
           },
         });
 
         const primitiveEntity = Object.assign(new MockEntity(), {
           _polygon: true,
           properties: {
-            posno: { _value: "22222" },
+            posno: { _value: TEST_POSTAL_CODE_2 },
           },
         });
 
@@ -409,8 +431,8 @@ describe("FeaturePicker service", () => {
     it("should handle feature with grid_id and emit vulnerability chart event", () => {
       const mockId = {
         properties: {
-          grid_id: { _value: "grid_123" },
-          vulnerability_score: { _value: 0.75 },
+          grid_id: { _value: TEST_GRID_ID },
+          vulnerability_score: { _value: TEST_VULNERABILITY_SCORE },
         },
       };
 
@@ -438,7 +460,7 @@ describe("FeaturePicker service", () => {
       globalStore.setLevel("start");
       const mockId = {
         properties: {
-          posno: { _value: "00100" },
+          posno: { _value: TEST_POSTAL_CODE_1 },
           name: { _value: "Helsinki Center" },
         },
       };
@@ -449,7 +471,7 @@ describe("FeaturePicker service", () => {
       featurePicker.handleFeatureWithProperties(mockId);
 
       // Verify postal code is set
-      expect(globalStore.setPostalCode).toHaveBeenCalledWith("00100");
+      expect(globalStore.setPostalCode).toHaveBeenCalledWith(TEST_POSTAL_CODE_1);
 
       // Verify loadPostalCode is called
       expect(featurePicker.loadPostalCode).toHaveBeenCalled();
@@ -457,11 +479,11 @@ describe("FeaturePicker service", () => {
 
     it("should not reload postal code if already selected", () => {
       globalStore.setLevel("postalCode");
-      globalStore.setPostalCode("00100");
+      globalStore.setPostalCode(TEST_POSTAL_CODE_1);
 
       const mockId = {
         properties: {
-          posno: { _value: "00100" }, // Same postal code
+          posno: { _value: TEST_POSTAL_CODE_1 }, // Same postal code
         },
       };
 
@@ -478,10 +500,10 @@ describe("FeaturePicker service", () => {
 
       const mockId = {
         properties: {
-          _postinumero: { _value: "00100" },
-          treeArea: 150,
-          _avg_temp_c: 22.5,
-          buildingId: { _value: "building_123" },
+          _postinumero: { _value: TEST_POSTAL_CODE_1 },
+          treeArea: TEST_TREE_AREA,
+          _avg_temp_c: TEST_AVG_TEMP,
+          buildingId: { _value: TEST_BUILDING_ID },
         },
       };
 
@@ -498,7 +520,7 @@ describe("FeaturePicker service", () => {
     it("should handle population grid with bounding box", () => {
       const mockId = {
         properties: {
-          asukkaita: { _value: 500 },
+          asukkaita: { _value: TEST_POPULATION },
           index: { _value: 123 },
         },
         polygon: {
@@ -529,7 +551,7 @@ describe("FeaturePicker service", () => {
 
       const mockId = {
         properties: {
-          posno: { _value: "00100" },
+          posno: { _value: TEST_POSTAL_CODE_1 },
         },
       };
 
@@ -539,6 +561,118 @@ describe("FeaturePicker service", () => {
 
       // Should not load postal code when at building level
       expect(featurePicker.loadPostalCode).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getBoundingBox", () => {
+    const MOCK_POSTAL_CODE = "00100";
+    const MOCK_GRID_ID = "grid_123";
+
+    it("should calculate correct bounding box for polygon entity", () => {
+      // Create mock positions in Cartesian3 format
+      const mockPositions = [
+        { x: 100, y: 200, z: 300 }, // Will be converted to cartographic
+        { x: 150, y: 250, z: 350 },
+        { x: 120, y: 220, z: 320 },
+      ];
+
+      const mockEntity = {
+        polygon: {
+          hierarchy: {
+            getValue: vi.fn().mockReturnValue({
+              positions: mockPositions,
+            }),
+          },
+        },
+        show: true,
+      };
+
+      // Mock Cesium.Cartographic.fromCartesian to return predictable values
+      const mockCartographics = [
+        { longitude: 0.4363, latitude: 1.0472 }, // ~25°E, ~60°N in radians
+        { longitude: 0.4538, latitude: 1.0647 }, // Slightly larger
+        { longitude: 0.4450, latitude: 1.0559 }, // In between
+      ];
+
+      vi.spyOn(Cesium.Cartographic, "fromCartesian").mockImplementation(
+        (position, result) => {
+          const index = mockPositions.indexOf(position);
+          return mockCartographics[index];
+        },
+      );
+
+      const boundingBox = featurePicker.getBoundingBox(mockEntity);
+
+      // Verify bounding box is calculated
+      expect(boundingBox).not.toBeNull();
+      expect(boundingBox).toHaveProperty("minLon");
+      expect(boundingBox).toHaveProperty("maxLon");
+      expect(boundingBox).toHaveProperty("minLat");
+      expect(boundingBox).toHaveProperty("maxLat");
+
+      // Verify min/max logic
+      expect(boundingBox.minLon).toBeLessThan(boundingBox.maxLon);
+      expect(boundingBox.minLat).toBeLessThan(boundingBox.maxLat);
+
+      // Verify entity is hidden after calculation
+      expect(mockEntity.show).toBe(false);
+    });
+
+    it("should return null when entity has no polygon", () => {
+      const mockEntity = {
+        polygon: undefined,
+        show: true,
+      };
+
+      const boundingBox = featurePicker.getBoundingBox(mockEntity);
+
+      expect(boundingBox).toBeNull();
+      // Entity should not be modified when there's no polygon
+      expect(mockEntity.show).toBe(true);
+    });
+
+    it("should handle empty polygon hierarchy", () => {
+      const mockEntity = {
+        polygon: {
+          hierarchy: {
+            getValue: vi.fn().mockReturnValue(null),
+          },
+        },
+        show: true,
+      };
+
+      const boundingBox = featurePicker.getBoundingBox(mockEntity);
+
+      expect(boundingBox).toBeNull();
+    });
+
+    it("should handle polygon with single position", () => {
+      const mockPositions = [{ x: 100, y: 200, z: 300 }];
+
+      const mockEntity = {
+        polygon: {
+          hierarchy: {
+            getValue: vi.fn().mockReturnValue({
+              positions: mockPositions,
+            }),
+          },
+        },
+        show: true,
+      };
+
+      const mockCartographic = { longitude: 0.4363, latitude: 1.0472 };
+
+      vi.spyOn(Cesium.Cartographic, "fromCartesian").mockReturnValue(
+        mockCartographic,
+      );
+
+      const boundingBox = featurePicker.getBoundingBox(mockEntity);
+
+      expect(boundingBox).not.toBeNull();
+      // With single position, min and max should be the same
+      expect(boundingBox.minLon).toBe(boundingBox.maxLon);
+      expect(boundingBox.minLat).toBe(boundingBox.maxLat);
+      expect(mockEntity.show).toBe(false);
     });
   });
 });
