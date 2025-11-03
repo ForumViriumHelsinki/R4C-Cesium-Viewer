@@ -10,6 +10,7 @@ import { useGlobalStore } from "@/stores/globalStore.js";
 import { useToggleStore } from "@/stores/toggleStore.js";
 import { usePropsStore } from "@/stores/propsStore.js";
 import { eventBus } from "@/services/eventEmitter.js";
+import * as Cesium from "cesium";
 
 // Test constants for realistic test data
 const TEST_POSTAL_CODE_1 = "00100"; // Helsinki city center
@@ -105,6 +106,12 @@ class MockEntity {}
 vi.mock("cesium", () => ({
   Cartesian2: vi.fn((x, y) => ({ x, y })),
   Entity: MockEntity,
+  Cartographic: {
+    fromCartesian: vi.fn(),
+  },
+  Math: {
+    toDegrees: vi.fn((radians) => radians * (180 / Math.PI)),
+  },
 }));
 
 describe("FeaturePicker service", () => {
@@ -124,32 +131,32 @@ describe("FeaturePicker service", () => {
     const toggleStore = useToggleStore();
     const propsStore = usePropsStore();
 
-    // Create mock canvas
+    // Create fresh mock canvas for each test
     mockCanvas = {
       clientWidth: 800,
       clientHeight: 600,
     };
 
-    // Create mock pick function
+    // Create fresh mock pick function for each test
     mockPick = vi.fn();
 
-    // Create mock scene
+    // Create fresh mock scene for each test
     mockScene = {
       canvas: mockCanvas,
       pick: mockPick,
     };
 
-    // Create mock viewer
+    // Create fresh mock viewer for each test
     mockViewer = {
       scene: mockScene,
       entities: {
         _entities: {
-          _array: [],
+          _array: [], // Fresh array for each test
         },
         remove: vi.fn(),
       },
       dataSources: {
-        _dataSources: [],
+        _dataSources: [], // Fresh array for each test
       },
     };
 
@@ -561,6 +568,108 @@ describe("FeaturePicker service", () => {
 
       // Should not load postal code when at building level
       expect(featurePicker.loadPostalCode).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("handleBuildingFeature", () => {
+    let globalStore;
+    let toggleStore;
+
+    beforeEach(() => {
+      globalStore = useGlobalStore();
+      toggleStore = useToggleStore();
+    });
+
+    it("should handle loading store import failure gracefully", async () => {
+      const mockProperties = {
+        _postinumero: { _value: TEST_POSTAL_CODE_1 },
+        treeArea: TEST_TREE_AREA,
+        _avg_temp_c: TEST_AVG_TEMP,
+      };
+
+      // Mock the dynamic import to fail
+      const originalImport = global.import;
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      await featurePicker.handleBuildingFeature(mockProperties);
+
+      // Verify the code continues despite loading store error
+      expect(globalStore.level).toBe("building");
+      expect(globalStore.postalcode).toBe(TEST_POSTAL_CODE_1);
+
+      vi.restoreAllMocks();
+    });
+
+    it("should handle createBuildingCharts error", async () => {
+      const mockProperties = {
+        _postinumero: { _value: TEST_POSTAL_CODE_1 },
+        treeArea: TEST_TREE_AREA,
+        _avg_temp_c: TEST_AVG_TEMP,
+      };
+
+      // Mock createBuildingCharts to throw an error
+      featurePicker.buildingService.createBuildingCharts = vi
+        .fn()
+        .mockRejectedValue(new Error("Chart creation failed"));
+
+      vi.spyOn(console, "error").mockImplementation(() => {});
+
+      // Should not throw, error is caught
+      await expect(
+        featurePicker.handleBuildingFeature(mockProperties),
+      ).resolves.not.toThrow();
+
+      // Verify error was logged
+      expect(console.error).toHaveBeenCalledWith(
+        "Error handling building feature:",
+        expect.any(Error),
+      );
+
+      vi.restoreAllMocks();
+    });
+
+    it("should update application state and emit events correctly", async () => {
+      const mockProperties = {
+        _postinumero: { _value: TEST_POSTAL_CODE_1 },
+        treeArea: TEST_TREE_AREA,
+        _avg_temp_c: TEST_AVG_TEMP,
+      };
+
+      toggleStore.helsinkiView = true;
+
+      await featurePicker.handleBuildingFeature(mockProperties);
+
+      // Verify state updates
+      expect(globalStore.level).toBe("building");
+      expect(globalStore.postalcode).toBe(TEST_POSTAL_CODE_1);
+
+      // Verify events emitted
+      expect(eventBus.emit).toHaveBeenCalledWith("hideHelsinki");
+      expect(eventBus.emit).toHaveBeenCalledWith("showBuilding");
+
+      // Verify building service methods called
+      expect(
+        featurePicker.buildingService.resetBuildingOutline,
+      ).toHaveBeenCalled();
+      expect(
+        featurePicker.buildingService.createBuildingCharts,
+      ).toHaveBeenCalledWith(TEST_TREE_AREA, TEST_AVG_TEMP, mockProperties);
+    });
+
+    it("should emit hideCapitalRegion when not in Helsinki view", async () => {
+      const mockProperties = {
+        _postinumero: { _value: TEST_POSTAL_CODE_1 },
+        treeArea: TEST_TREE_AREA,
+        _avg_temp_c: TEST_AVG_TEMP,
+      };
+
+      toggleStore.helsinkiView = false;
+
+      await featurePicker.handleBuildingFeature(mockProperties);
+
+      // Verify correct event for capital region view
+      expect(eventBus.emit).toHaveBeenCalledWith("hideCapitalRegion");
+      expect(eventBus.emit).toHaveBeenCalledWith("showBuilding");
     });
   });
 

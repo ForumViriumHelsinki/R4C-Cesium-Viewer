@@ -109,10 +109,10 @@ export default class FeaturePicker {
         if (id instanceof Cesium.Entity) {
           this.store.setPickedEntity(id);
           eventBus.emit("entityPrintEvent");
-        }
 
-        if (id?.properties) {
-          this.handleFeatureWithProperties(id);
+          if (id.properties) {
+            this.handleFeatureWithProperties(id);
+          }
         }
       }
     }
