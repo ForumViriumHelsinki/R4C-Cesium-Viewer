@@ -10,7 +10,9 @@ data:
   # Scripts run as postgres superuser
   01-create-user-and-database.sql: |
     -- Create application user (non-superuser)
-    -- Password is set here for local development only
+    -- IMPORTANT: Password must match postgresql-secret.yaml (password key)
+    -- This is a bootstrap password for local development only
+    -- For production, use secure credential management (e.g., External Secrets Operator)
     CREATE USER regions4climate_user WITH PASSWORD 'regions4climate_pass';
 
     -- Create main database owned by application user

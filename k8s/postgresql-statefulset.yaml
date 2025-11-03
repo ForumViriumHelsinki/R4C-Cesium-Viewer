@@ -35,6 +35,12 @@ spec:
             # Data directory configuration
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
+            # Performance tuning for local development
+            # WARNING: These settings reduce durability for faster performance
+            # NEVER use these in production - data loss may occur on crashes
+            # Uncomment for faster migrations and data seeding:
+            # - name: POSTGRES_INITDB_ARGS
+            #   value: "-c fsync=off -c synchronous_commit=off -c full_page_writes=off"
           livenessProbe:
             exec:
               command:
@@ -42,7 +48,7 @@ spec:
                 - -c
                 # Note: Using 'postgres' superuser for health checks
                 # This is the default superuser and will always exist
-                - pg_isready -U postgres
+                - pg_isready -U postgres -d postgres
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -54,7 +60,7 @@ spec:
                 - /bin/sh
                 - -c
                 # Note: Using 'postgres' superuser for health checks
-                - pg_isready -U postgres
+                - pg_isready -U postgres -d postgres
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
@@ -76,9 +82,10 @@ spec:
         - name: init-scripts
           configMap:
             name: postgresql-init
-            # SQL files don't need execute permission, they're passed to psql
-            # Shell scripts are sourced by the postgres entrypoint
-            defaultMode: 0644
+            # Scripts in /docker-entrypoint-initdb.d are executed in alphabetical order
+            # .sql files are passed to psql (don't need execute permission)
+            # .sh files are executed directly (need execute permission)
+            defaultMode: 0755
   volumeClaimTemplates:
     - metadata:
         name: data

@@ -130,6 +130,27 @@ The deployment includes sensible resource limits for local development:
 
 These can be adjusted based on your local environment's available resources.
 
+## PostgreSQL Data Persistence
+
+The PostgreSQL StatefulSet uses a PersistentVolumeClaim (PVC) for data storage:
+
+- **Data persists** across `skaffold delete` and pod restarts
+- **Data persists** when deleting the StatefulSet
+- To completely reset the database and start fresh, you must also delete the PVC:
+
+  ```bash
+  # Stop Skaffold
+  skaffold delete -p local-with-services
+
+  # Delete the PostgreSQL PVC
+  kubectl delete pvc data-postgresql-0
+
+  # Restart with clean database
+  skaffold dev -p local-with-services --port-forward
+  ```
+
+**Note:** This is useful when you want to test initialization scripts from scratch or reset to a clean state.
+
 ## Common Issues
 
 ### Migration Job Troubleshooting
