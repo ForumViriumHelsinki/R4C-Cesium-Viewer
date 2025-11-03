@@ -105,14 +105,14 @@ export default class FeaturePicker {
     if (picked) {
       let id = picked.id ?? picked.primitive?.id;
 
-      if (picked.id._polygon) {
+      if (id?._polygon) {
         if (id instanceof Cesium.Entity) {
           this.store.setPickedEntity(id);
           eventBus.emit("entityPrintEvent");
-        }
 
-        if (picked.id.properties) {
-          this.handleFeatureWithProperties(picked.id);
+          if (id.properties) {
+            this.handleFeatureWithProperties(id);
+          }
         }
       }
     }
