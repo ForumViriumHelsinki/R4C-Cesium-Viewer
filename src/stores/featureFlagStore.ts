@@ -89,6 +89,17 @@ interface FeatureFlagState {
 }
 
 /**
+ * Type predicate to check if a string is a valid FeatureFlagName
+ * Provides runtime validation for type safety
+ */
+function isFeatureFlagName(
+  key: string,
+  flags: FeatureFlagsMap,
+): key is FeatureFlagName {
+  return key in flags;
+}
+
+/**
  * Feature Flag Store
  *
  * Manages feature flags with runtime toggling capability.
@@ -351,8 +362,8 @@ export const useFeatureFlagStore = defineStore("featureFlags", {
       (state) =>
       (category: FeatureFlagCategory): FeatureFlagWithName[] => {
         return Object.entries(state.flags)
-          .filter(([_, flag]) => flag.category === category)
-          .map(([name, flag]) => ({ name: name as FeatureFlagName, ...flag }));
+          .filter(([name, flag]) => isFeatureFlagName(name, state.flags) && flag.category === category)
+          .map(([name, flag]) => ({ name, ...flag }));
       },
 
     /**
@@ -360,8 +371,8 @@ export const useFeatureFlagStore = defineStore("featureFlags", {
      */
     experimentalFlags: (state): FeatureFlagWithName[] => {
       return Object.entries(state.flags)
-        .filter(([_, flag]) => flag.experimental)
-        .map(([name, flag]) => ({ name: name as FeatureFlagName, ...flag }));
+        .filter(([name, flag]) => isFeatureFlagName(name, state.flags) && flag.experimental)
+        .map(([name, flag]) => ({ name, ...flag }));
     },
 
     /**
