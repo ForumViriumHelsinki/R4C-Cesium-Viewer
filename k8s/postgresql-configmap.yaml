@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-init
+  labels:
+    app: postgresql
+data:
+  # PostgreSQL initialization scripts
+  # Files are executed in alphabetical order by the official postgres image
+  # Scripts run as postgres superuser
+  01-create-user-and-database.sql: |
+    -- Create application user (non-superuser)
+    -- IMPORTANT: Password must match postgresql-secret.yaml (password key)
+    -- This is a bootstrap password for local development only
+    -- For production, use secure credential management (e.g., External Secrets Operator)
+    CREATE USER regions4climate_user WITH PASSWORD 'regions4climate_pass';
+
+    -- Create main database owned by application user
+    CREATE DATABASE regions4climate OWNER regions4climate_user;
+
+    -- Grant all privileges on the database
+    GRANT ALL PRIVILEGES ON DATABASE regions4climate TO regions4climate_user;
+
+  02-create-extensions.sql: |
+    -- Connect to regions4climate database to install extensions
+    -- Note: Must run as superuser to create extensions
+    \c regions4climate
+
+    -- Create PostGIS extensions
+    CREATE EXTENSION IF NOT EXISTS postgis;
+    CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+    -- Grant usage on PostGIS schemas to application user
+    GRANT ALL ON SCHEMA public TO regions4climate_user;
+    GRANT ALL ON ALL TABLES IN SCHEMA public TO regions4climate_user;
+    GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO regions4climate_user;
+    GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO regions4climate_user;
+
+    -- Set default privileges for future objects
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public
+      GRANT ALL ON TABLES TO regions4climate_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public
+      GRANT ALL ON SEQUENCES TO regions4climate_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public
+      GRANT ALL ON FUNCTIONS TO regions4climate_user;
+
+    -- Verify PostGIS is working
+    SELECT PostGIS_version();
+
+  03-create-med-iren-db.sql: |
+    -- Create secondary database for med_iren project
+    CREATE DATABASE med_iren OWNER regions4climate_user;
+
+    -- Grant privileges on med_iren database
+    GRANT ALL PRIVILEGES ON DATABASE med_iren TO regions4climate_user;
+
+  04-med-iren-extensions.sql: |
+    -- Connect to med_iren database to install extensions
+    \c med_iren
+
+    -- Create PostGIS extensions
+    CREATE EXTENSION IF NOT EXISTS postgis;
+    CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+    -- Grant usage on PostGIS schemas to application user
+    GRANT ALL ON SCHEMA public TO regions4climate_user;
+    GRANT ALL ON ALL TABLES IN SCHEMA public TO regions4climate_user;
+    GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO regions4climate_user;
+    GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO regions4climate_user;
+
+    -- Set default privileges for future objects
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public
+      GRANT ALL ON TABLES TO regions4climate_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public
+      GRANT ALL ON SEQUENCES TO regions4climate_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public
+      GRANT ALL ON FUNCTIONS TO regions4climate_user;
+
+    -- Verify PostGIS is working in med_iren
+    SELECT PostGIS_version();
+
+  99-database-ready-marker.sh: |
+    #!/bin/bash
+    set -e
+    echo "🎉 PostgreSQL initialization completed"
+    echo "📋 Database: regions4climate"
+    echo "📋 Extensions: PostGIS, PostGIS Topology"
+    echo "📋 Ready for migrations via dbmate"
