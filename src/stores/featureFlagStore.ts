@@ -362,7 +362,11 @@ export const useFeatureFlagStore = defineStore("featureFlags", {
       (state) =>
       (category: FeatureFlagCategory): FeatureFlagWithName[] => {
         return Object.entries(state.flags)
-          .filter(([name, flag]) => isFeatureFlagName(name, state.flags) && flag.category === category)
+          .filter(
+            ([name, flag]) =>
+              isFeatureFlagName(name, state.flags) &&
+              flag.category === category,
+          )
           .map(([name, flag]) => ({ name, ...flag }));
       },
 
@@ -371,7 +375,10 @@ export const useFeatureFlagStore = defineStore("featureFlags", {
      */
     experimentalFlags: (state): FeatureFlagWithName[] => {
       return Object.entries(state.flags)
-        .filter(([name, flag]) => isFeatureFlagName(name, state.flags) && flag.experimental)
+        .filter(
+          ([name, flag]) =>
+            isFeatureFlagName(name, state.flags) && flag.experimental,
+        )
         .map(([name, flag]) => ({ name, ...flag }));
     },
 
