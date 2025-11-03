@@ -2,6 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: r4c-cesium-viewer
+  namespace: regions4climate
   labels:
     app.kubernetes.io/name: r4c-cesium-viewer
     app.kubernetes.io/instance: r4c-cesium-viewer
