@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.27.10](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.9...r4c-cesium-viewer-v1.27.10) (2025-11-03)
+
+
+### Bug Fixes
+
+* add validation checks to prevent drawingBufferWidth error ([#289](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/289)) ([09a5b0c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/09a5b0c4acf5d192d6f8d5c34c422f436fdd5b61)), closes [#288](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/288)
+* replace Cesium.defaultValue with nullish coalescing operator ([#292](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/292)) ([0d9d8c2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0d9d8c231e8d1bc8168a962a75b64b18b2e662f0)), closes [#291](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/291)
+
 ## [1.27.9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.8...r4c-cesium-viewer-v1.27.9) (2025-10-30)
 
 
