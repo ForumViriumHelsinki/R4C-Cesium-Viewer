@@ -731,7 +731,11 @@ describe("featureFlagStore", () => {
       expect(store2.isEnabled("ndvi")).toBe(false);
     });
 
+    // Testing runtime behavior despite TypeScript type constraints
+    // In JavaScript, the store could receive non-boolean values from external sources
+    // or when type safety is bypassed at runtime
     it("should handle boolean coercion correctly", () => {
+      // These tests verify runtime behavior when type safety is bypassed
       store.userOverrides.ndvi = 0 as any;
       expect(store.isEnabled("ndvi")).toBe(0); // Returns the actual value
 
