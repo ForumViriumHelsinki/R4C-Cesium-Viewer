@@ -46,7 +46,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                # Use local socket connection (passwordless)
+                # Health check via local TCP (no credentials required)
                 - pg_isready -h localhost
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -58,7 +58,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                # Use local socket connection (passwordless)
+                # Health check via local TCP (no credentials required)
                 - pg_isready -h localhost
             initialDelaySeconds: 5
             periodSeconds: 10
