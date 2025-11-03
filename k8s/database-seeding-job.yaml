@@ -2,11 +2,11 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: database-seeding
-  namespace: default
+  namespace: regions4climate
   labels:
     app: database-seeding
 spec:
-  ttlSecondsAfterFinished: 300  # Clean up job after 5 minutes
+  ttlSecondsAfterFinished: 300 # Clean up job after 5 minutes
   template:
     metadata:
       labels:
@@ -14,58 +14,58 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-      - name: seeding
-        image: python:3.11-slim
-        command:
-        - /bin/bash
-        - -c
-        - |
-          set -e
-          echo "🌱 Starting database seeding job..."
+        - name: seeding
+          image: python:3.11-slim
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "🌱 Starting database seeding job..."
 
-          # Install required packages
-          pip install psycopg2-binary
+              # Install required packages
+              pip install psycopg2-binary
 
-          # Wait for PostgreSQL to be ready
-          echo "📡 Waiting for PostgreSQL..."
-          until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
-            echo "Waiting for PostgreSQL..."
-            sleep 2
-          done
+              # Wait for PostgreSQL to be ready
+              echo "📡 Waiting for PostgreSQL..."
+              until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
+                echo "Waiting for PostgreSQL..."
+                sleep 2
+              done
 
-          echo "✅ PostgreSQL is ready, starting seeding..."
+              echo "✅ PostgreSQL is ready, starting seeding..."
 
-          # Run the seeding script
-          python3 /scripts/seed-dev-data.py \
-            --database-url "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate" \
-            --clear-first \
-            --num-records 100
+              # Run the seeding script
+              python3 /scripts/seed-dev-data.py \
+                --database-url "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate" \
+                --clear-first \
+                --num-records 100
 
-          echo "🎉 Database seeding completed!"
-        env:
-        - name: PGPASSWORD
-          value: "regions4climate_pass"
-        volumeMounts:
-        - name: scripts
-          mountPath: /scripts
-        resources:
-          limits:
-            cpu: 500m
-            memory: 512Mi
-          requests:
-            cpu: 250m
-            memory: 256Mi
+              echo "🎉 Database seeding completed!"
+          env:
+            - name: PGPASSWORD
+              value: "regions4climate_pass"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
       volumes:
-      - name: scripts
-        configMap:
-          name: seeding-scripts
-          defaultMode: 0755
+        - name: scripts
+          configMap:
+            name: seeding-scripts
+            defaultMode: 0755
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: seeding-scripts
-  namespace: default
+  namespace: regions4climate
 data:
   seed-dev-data.py: |
     #!/usr/bin/env python3

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: r4c-cesium-viewer
+  namespace: regions4climate
   labels:
     app.kubernetes.io/name: r4c-cesium-viewer
     app.kubernetes.io/instance: r4c-cesium-viewer
@@ -20,11 +21,11 @@ spec:
       serviceAccountName: r4c-cesium-viewer
       containers:
         - name: r4c-cesium-viewer
-          image: frontend  # This will be replaced by Skaffold
+          image: frontend # This will be replaced by Skaffold
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 4173  # Vite preview server port
+              containerPort: 4173 # Vite preview server port
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -42,7 +43,7 @@ spec:
               cpu: 100m
               memory: 128Mi
           envFrom:
-          - configMapRef:
-              name: r4c-cesium-viewer-config
-          - secretRef:
-              name: r4c-cesium-viewer-secrets
+            - configMapRef:
+                name: r4c-cesium-viewer-config
+            - secretRef:
+                name: r4c-cesium-viewer-secrets
