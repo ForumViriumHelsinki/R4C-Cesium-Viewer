@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
-import { useFeatureFlagStore } from "@/stores/featureFlagStore";
+import {
+  useFeatureFlagStore,
+  type FeatureFlagName,
+  type FeatureFlagCategory,
+} from "@/stores/featureFlagStore";
 
 describe("featureFlagStore", () => {
-  let store;
+  let store: ReturnType<typeof useFeatureFlagStore>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -62,7 +66,9 @@ describe("featureFlagStore", () => {
       });
 
       it("should return false for non-existent flags", () => {
-        expect(store.isEnabled("nonExistentFlag")).toBe(false);
+        expect(store.isEnabled("nonExistentFlag" as FeatureFlagName)).toBe(
+          false,
+        );
       });
 
       it("should handle boolean false override correctly", () => {
@@ -88,12 +94,14 @@ describe("featureFlagStore", () => {
       });
 
       it("should return empty array for non-existent category", () => {
-        const flags = store.flagsByCategory("non-existent-category");
+        const flags = store.flagsByCategory(
+          "non-existent-category" as FeatureFlagCategory,
+        );
         expect(flags).toEqual([]);
       });
 
       it("should return all flags in each category", () => {
-        const categories = [
+        const categories: FeatureFlagCategory[] = [
           "data-layers",
           "graphics",
           "analysis",
@@ -163,9 +171,9 @@ describe("featureFlagStore", () => {
         const initialCount = store.enabledCount;
 
         // Disable a flag that's enabled
-        const enabledFlag = Object.keys(store.flags).find((name) =>
-          store.isEnabled(name),
-        );
+        const enabledFlag = (
+          Object.keys(store.flags) as FeatureFlagName[]
+        ).find((name) => store.isEnabled(name));
         if (enabledFlag) {
           store.userOverrides[enabledFlag] = false;
           expect(store.enabledCount).toBe(initialCount - 1);
@@ -173,14 +181,14 @@ describe("featureFlagStore", () => {
       });
 
       it("should handle all flags disabled", () => {
-        Object.keys(store.flags).forEach((name) => {
+        (Object.keys(store.flags) as FeatureFlagName[]).forEach((name) => {
           store.userOverrides[name] = false;
         });
         expect(store.enabledCount).toBe(0);
       });
 
       it("should handle all flags enabled", () => {
-        Object.keys(store.flags).forEach((name) => {
+        (Object.keys(store.flags) as FeatureFlagName[]).forEach((name) => {
           store.userOverrides[name] = true;
         });
         expect(store.enabledCount).toBe(Object.keys(store.flags).length);
@@ -204,7 +212,9 @@ describe("featureFlagStore", () => {
       });
 
       it("should return false for non-existent flags", () => {
-        expect(store.hasOverride("nonExistentFlag")).toBe(false);
+        expect(store.hasOverride("nonExistentFlag" as FeatureFlagName)).toBe(
+          false,
+        );
       });
     });
   });
@@ -241,13 +251,17 @@ describe("featureFlagStore", () => {
       });
 
       it("should not set override for non-existent flags", () => {
-        store.setFlag("nonExistentFlag", true);
-        expect(store.userOverrides.nonExistentFlag).toBeUndefined();
+        store.setFlag("nonExistentFlag" as FeatureFlagName, true);
+        expect(
+          store.userOverrides["nonExistentFlag" as FeatureFlagName],
+        ).toBeUndefined();
       });
 
       it("should persist changes immediately", () => {
         store.setFlag("ndvi", false);
-        const stored = JSON.parse(localStorage.getItem("featureFlags"));
+        const stored = JSON.parse(
+          localStorage.getItem("featureFlags") || "{}",
+        );
         expect(stored.ndvi).toBe(false);
       });
     });
@@ -268,7 +282,9 @@ describe("featureFlagStore", () => {
 
         store.resetFlag("ndvi");
 
-        const stored = JSON.parse(localStorage.getItem("featureFlags"));
+        const stored = JSON.parse(
+          localStorage.getItem("featureFlags") || "{}",
+        );
         expect(stored.ndvi).toBeUndefined();
         expect(stored.heatHistogram).toBe(false);
       });
@@ -278,7 +294,9 @@ describe("featureFlagStore", () => {
       });
 
       it("should handle resetting non-existent flags gracefully", () => {
-        expect(() => store.resetFlag("nonExistentFlag")).not.toThrow();
+        expect(() =>
+          store.resetFlag("nonExistentFlag" as FeatureFlagName),
+        ).not.toThrow();
       });
     });
 
@@ -337,7 +355,7 @@ describe("featureFlagStore", () => {
       });
 
       it("should handle null values in localStorage", () => {
-        localStorage.setItem("featureFlags", null);
+        localStorage.setItem("featureFlags", null as any);
 
         expect(() => store.loadOverrides()).not.toThrow();
       });
@@ -360,7 +378,9 @@ describe("featureFlagStore", () => {
         store.userOverrides = { ndvi: false, heatHistogram: true };
         store.persistOverrides();
 
-        const stored = JSON.parse(localStorage.getItem("featureFlags"));
+        const stored = JSON.parse(
+          localStorage.getItem("featureFlags") || "{}",
+        );
         expect(stored).toEqual({ ndvi: false, heatHistogram: true });
       });
 
@@ -432,7 +452,7 @@ describe("featureFlagStore", () => {
 
       it("should handle non-existent flags gracefully", () => {
         expect(() =>
-          store.checkHardwareSupport("nonExistentFlag", false),
+          store.checkHardwareSupport("nonExistentFlag" as FeatureFlagName, false),
         ).not.toThrow();
       });
     });
@@ -442,12 +462,14 @@ describe("featureFlagStore", () => {
         const metadata = store.getFlagMetadata("ndvi");
 
         expect(metadata).toBeDefined();
-        expect(metadata.label).toBe("NDVI Vegetation Index");
-        expect(metadata.category).toBe("data-layers");
+        expect(metadata?.label).toBe("NDVI Vegetation Index");
+        expect(metadata?.category).toBe("data-layers");
       });
 
       it("should return null for non-existent flags", () => {
-        const metadata = store.getFlagMetadata("nonExistentFlag");
+        const metadata = store.getFlagMetadata(
+          "nonExistentFlag" as FeatureFlagName,
+        );
         expect(metadata).toBeNull();
       });
 
@@ -534,7 +556,9 @@ describe("featureFlagStore", () => {
         store.importConfig(config);
 
         expect(store.isEnabled("ndvi")).toBe(false);
-        expect(store.userOverrides.nonExistentFlag).toBeUndefined();
+        expect(
+          store.userOverrides["nonExistentFlag" as FeatureFlagName],
+        ).toBeUndefined();
       });
 
       it("should warn about unknown flags in import", () => {
@@ -588,7 +612,9 @@ describe("featureFlagStore", () => {
 
         store.importConfig(config);
 
-        const stored = JSON.parse(localStorage.getItem("featureFlags"));
+        const stored = JSON.parse(
+          localStorage.getItem("featureFlags") || "{}",
+        );
         expect(stored.ndvi).toBe(false);
         expect(stored.heatHistogram).toBe(true);
       });
@@ -706,13 +732,13 @@ describe("featureFlagStore", () => {
     });
 
     it("should handle boolean coercion correctly", () => {
-      store.userOverrides.ndvi = 0;
+      store.userOverrides.ndvi = 0 as any;
       expect(store.isEnabled("ndvi")).toBe(0); // Returns the actual value
 
-      store.userOverrides.ndvi = "";
+      store.userOverrides.ndvi = "" as any;
       expect(store.isEnabled("ndvi")).toBe("");
 
-      store.userOverrides.ndvi = null;
+      store.userOverrides.ndvi = null as any;
       expect(store.isEnabled("ndvi")).toBeNull();
     });
   });
