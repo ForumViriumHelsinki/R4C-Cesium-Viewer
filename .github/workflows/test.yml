@@ -19,6 +19,8 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: fvh-arc-runners
+    container:
+      image: node:${{ matrix.node-version }}-alpine
 
     strategy:
       matrix:
@@ -27,12 +29,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -53,16 +49,12 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: fvh-arc-runners
+    container:
+      image: node:20-alpine
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -75,25 +67,19 @@ jobs:
   e2e-tests:
     name: End-to-End Tests
     runs-on: fvh-arc-runners
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+      options: --user 1001
     timeout-minutes: 15
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
       - name: Install dependencies
         run: npm ci
 
-      # SwiftShader is bundled with Playwright's Chromium, no system GL libraries needed
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+      # Playwright browsers are pre-installed in the container image
 
       - name: Build frontend
         run: npm run build
@@ -146,25 +132,19 @@ jobs:
   accessibility-tests:
     name: Accessibility Tests
     runs-on: fvh-arc-runners
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+      options: --user 1001
     timeout-minutes: 30
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
       - name: Install dependencies
         run: npm ci
 
-      # SwiftShader is bundled with Playwright's Chromium, no system GL libraries needed
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+      # Playwright browsers are pre-installed in the container image
 
       - name: Build frontend
         run: npm run build
@@ -237,23 +217,19 @@ jobs:
   performance-tests:
     name: Performance Tests
     runs-on: fvh-arc-runners
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+      options: --user 1001
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+      # Playwright browsers are pre-installed in the container image
 
       - name: Build frontend
         run: npm run build
