@@ -90,3 +90,18 @@ Object.defineProperty(window, "location", {
 
 // Mock fetch for API calls
 global.fetch = vi.fn();
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn((key) => null),
+  setItem: vi.fn((key, value) => null),
+  removeItem: vi.fn((key) => null),
+  clear: vi.fn(() => null),
+  key: vi.fn((index) => null),
+  length: 0,
+};
+global.localStorage = localStorageMock;
+Object.defineProperty(window, "localStorage", {
+  value: localStorageMock,
+  writable: true,
+});
