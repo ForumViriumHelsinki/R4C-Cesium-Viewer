@@ -1,4 +1,5 @@
 # Description
+
 This script automates the retrieval of tree data from the HSY (Helsinki Region Environmental Services Authority) WFS (Web Feature Service) and processes it to associate tree data with corresponding postal codes. The processed data is then saved to a PostgreSQL database for further analysis or visualization.
 
 ## Prerequisites

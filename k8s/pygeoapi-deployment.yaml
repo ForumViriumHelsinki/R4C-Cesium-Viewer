@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pygeoapi
-  namespace: default
+  namespace: regions4climate
   labels:
     app: pygeoapi
 spec:
@@ -16,116 +16,116 @@ spec:
         app: pygeoapi
     spec:
       initContainers:
-      - name: wait-for-db-init
-        image: postgres:15-alpine
-        env:
-        - name: DATABASE_URL
-          value: "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate?sslmode=disable"
-        command:
-        - sh
-        - -c
-        - |
-          set -e
-          echo "🔍 Waiting for database to be fully initialized and migrated..."
+        - name: wait-for-db-init
+          image: postgres:15-alpine
+          env:
+            - name: DATABASE_URL
+              value: "postgres://regions4climate_user:regions4climate_pass@postgresql:5432/regions4climate?sslmode=disable"
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              echo "🔍 Waiting for database to be fully initialized and migrated..."
 
-          # Wait for PostgreSQL to be ready
-          echo "   Checking PostgreSQL availability..."
-          until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
-            echo "   PostgreSQL is not ready yet. Waiting..."
-            sleep 2
-          done
-          echo "✅ PostgreSQL is ready"
+              # Wait for PostgreSQL to be ready
+              echo "   Checking PostgreSQL availability..."
+              until pg_isready -h postgresql -p 5432 -U regions4climate_user; do
+                echo "   PostgreSQL is not ready yet. Waiting..."
+                sleep 2
+              done
+              echo "✅ PostgreSQL is ready"
 
-          # Wait for migrations to complete by checking schema_migrations table
-          echo "   Checking for completed migrations..."
-          MAX_ATTEMPTS=60  # 5 minutes max wait
-          ATTEMPT=1
+              # Wait for migrations to complete by checking schema_migrations table
+              echo "   Checking for completed migrations..."
+              MAX_ATTEMPTS=60  # 5 minutes max wait
+              ATTEMPT=1
 
-          until [ $ATTEMPT -gt $MAX_ATTEMPTS ]; do
-            # Check if schema_migrations table exists and has entries
-            MIGRATION_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM schema_migrations;" 2>/dev/null | tr -d ' ' || echo "0")
+              until [ $ATTEMPT -gt $MAX_ATTEMPTS ]; do
+                # Check if schema_migrations table exists and has entries
+                MIGRATION_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM schema_migrations;" 2>/dev/null | tr -d ' ' || echo "0")
 
-            if [ "$MIGRATION_COUNT" -gt "0" ]; then
-              echo "✅ Found $MIGRATION_COUNT applied migrations"
+                if [ "$MIGRATION_COUNT" -gt "0" ]; then
+                  echo "✅ Found $MIGRATION_COUNT applied migrations"
 
-              # Verify critical table exists
-              if psql "$DATABASE_URL" -c "SELECT 1 FROM r4c_hsy_building_current LIMIT 1;" > /dev/null 2>&1; then
-                echo "✅ r4c_hsy_building_current table exists and is accessible"
-                echo "🎉 Database is fully ready for pygeoapi!"
-                exit 0
-              else
-                echo "❌ r4c_hsy_building_current table missing after migrations"
-                exit 1
-              fi
-            fi
+                  # Verify critical table exists
+                  if psql "$DATABASE_URL" -c "SELECT 1 FROM r4c_hsy_building_current LIMIT 1;" > /dev/null 2>&1; then
+                    echo "✅ r4c_hsy_building_current table exists and is accessible"
+                    echo "🎉 Database is fully ready for pygeoapi!"
+                    exit 0
+                  else
+                    echo "❌ r4c_hsy_building_current table missing after migrations"
+                    exit 1
+                  fi
+                fi
 
-            echo "   Migrations not yet complete (attempt $ATTEMPT/$MAX_ATTEMPTS). Waiting..."
-            sleep 5
-            ATTEMPT=$((ATTEMPT + 1))
-          done
+                echo "   Migrations not yet complete (attempt $ATTEMPT/$MAX_ATTEMPTS). Waiting..."
+                sleep 5
+                ATTEMPT=$((ATTEMPT + 1))
+              done
 
-          echo "❌ Timeout waiting for database migrations to complete"
-          echo "ℹ️  Check migration job logs for details"
-          exit 1
+              echo "❌ Timeout waiting for database migrations to complete"
+              echo "ℹ️  Check migration job logs for details"
+              exit 1
       containers:
-      - name: pygeoapi
-        image: geopython/pygeoapi:latest
-        ports:
-        - containerPort: 80
-        env:
-        - name: PYGEOAPI_CONFIG
-          value: /pygeoapi/local.config.yml
-        - name: DB_HOST
-          value: postgresql
-        - name: DB_NAME_R4C
-          value: regions4climate
-        - name: DB_NAME_MED_IREN
-          value: med_iren
-        - name: DB_USER
-          value: regions4climate_user
-        - name: DB_PASSWORD
-          value: regions4climate_pass
-        volumeMounts:
-        - name: config
-          mountPath: /pygeoapi/local.config.yml
-          subPath: local.config.yml
-        - name: data
-          mountPath: /pygeoapi/tests/data
-        resources:
-          limits:
-            cpu: 250m
-            memory: 512Mi
-          requests:
-            cpu: 250m
-            memory: 256Mi
+        - name: pygeoapi
+          image: geopython/pygeoapi:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: PYGEOAPI_CONFIG
+              value: /pygeoapi/local.config.yml
+            - name: DB_HOST
+              value: postgresql
+            - name: DB_NAME_R4C
+              value: regions4climate
+            - name: DB_NAME_MED_IREN
+              value: med_iren
+            - name: DB_USER
+              value: regions4climate_user
+            - name: DB_PASSWORD
+              value: regions4climate_pass
+          volumeMounts:
+            - name: config
+              mountPath: /pygeoapi/local.config.yml
+              subPath: local.config.yml
+            - name: data
+              mountPath: /pygeoapi/tests/data
+          resources:
+            limits:
+              cpu: 250m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
       volumes:
-      - name: config
-        configMap:
-          name: pygeoapi-config
-      - name: data
-        emptyDir: {}
+        - name: config
+          configMap:
+            name: pygeoapi-config
+        - name: data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: pygeoapi
-  namespace: default
+  namespace: regions4climate
   labels:
     app: pygeoapi
 spec:
   selector:
     app: pygeoapi
   ports:
-  - port: 80
-    targetPort: 80
-    protocol: TCP
+    - port: 80
+      targetPort: 80
+      protocol: TCP
   type: ClusterIP
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: pygeoapi-config
-  namespace: default
+  namespace: regions4climate
 data:
   local.config.yml: |
     server:

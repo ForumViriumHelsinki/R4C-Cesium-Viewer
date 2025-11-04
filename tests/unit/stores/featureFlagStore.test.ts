@@ -259,9 +259,7 @@ describe("featureFlagStore", () => {
 
       it("should persist changes immediately", () => {
         store.setFlag("ndvi", false);
-        const stored = JSON.parse(
-          localStorage.getItem("featureFlags") || "{}",
-        );
+        const stored = JSON.parse(localStorage.getItem("featureFlags") || "{}");
         expect(stored.ndvi).toBe(false);
       });
     });
@@ -282,9 +280,7 @@ describe("featureFlagStore", () => {
 
         store.resetFlag("ndvi");
 
-        const stored = JSON.parse(
-          localStorage.getItem("featureFlags") || "{}",
-        );
+        const stored = JSON.parse(localStorage.getItem("featureFlags") || "{}");
         expect(stored.ndvi).toBeUndefined();
         expect(stored.heatHistogram).toBe(false);
       });
@@ -378,9 +374,7 @@ describe("featureFlagStore", () => {
         store.userOverrides = { ndvi: false, heatHistogram: true };
         store.persistOverrides();
 
-        const stored = JSON.parse(
-          localStorage.getItem("featureFlags") || "{}",
-        );
+        const stored = JSON.parse(localStorage.getItem("featureFlags") || "{}");
         expect(stored).toEqual({ ndvi: false, heatHistogram: true });
       });
 
@@ -452,7 +446,10 @@ describe("featureFlagStore", () => {
 
       it("should handle non-existent flags gracefully", () => {
         expect(() =>
-          store.checkHardwareSupport("nonExistentFlag" as FeatureFlagName, false),
+          store.checkHardwareSupport(
+            "nonExistentFlag" as FeatureFlagName,
+            false,
+          ),
         ).not.toThrow();
       });
     });
@@ -612,9 +609,7 @@ describe("featureFlagStore", () => {
 
         store.importConfig(config);
 
-        const stored = JSON.parse(
-          localStorage.getItem("featureFlags") || "{}",
-        );
+        const stored = JSON.parse(localStorage.getItem("featureFlags") || "{}");
         expect(stored.ndvi).toBe(false);
         expect(stored.heatHistogram).toBe(true);
       });

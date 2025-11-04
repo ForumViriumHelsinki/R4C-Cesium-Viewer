@@ -35,6 +35,5 @@ serviceAccount:
 # Volume configuration (disable GCS volumes for local)
 volumes: []
 volumeMounts: []
-
 # Use the existing configmap from the root directory
 # The pygeoapi chart should pick up the configmap.yaml configuration

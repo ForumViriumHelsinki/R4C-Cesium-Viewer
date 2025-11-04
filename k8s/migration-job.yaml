@@ -2,6 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: r4c-cesium-viewer-migration
+  namespace: regions4climate
   labels:
     app.kubernetes.io/name: r4c-cesium-viewer
     app.kubernetes.io/instance: r4c-cesium-viewer
