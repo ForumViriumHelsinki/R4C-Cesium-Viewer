@@ -457,7 +457,9 @@ describe("FeaturePicker service", () => {
       );
 
       // Verify cleanup
-      expect(featurePicker.removeEntityByName).toHaveBeenCalledWith("coldpoint");
+      expect(featurePicker.removeEntityByName).toHaveBeenCalledWith(
+        "coldpoint",
+      );
       expect(featurePicker.removeEntityByName).toHaveBeenCalledWith(
         "currentLocation",
       );
@@ -478,7 +480,9 @@ describe("FeaturePicker service", () => {
       featurePicker.handleFeatureWithProperties(mockId);
 
       // Verify postal code is set
-      expect(globalStore.setPostalCode).toHaveBeenCalledWith(TEST_POSTAL_CODE_1);
+      expect(globalStore.setPostalCode).toHaveBeenCalledWith(
+        TEST_POSTAL_CODE_1,
+      );
 
       // Verify loadPostalCode is called
       expect(featurePicker.loadPostalCode).toHaveBeenCalled();
@@ -700,7 +704,7 @@ describe("FeaturePicker service", () => {
       const mockCartographics = [
         { longitude: 0.4363, latitude: 1.0472 }, // ~25°E, ~60°N in radians
         { longitude: 0.4538, latitude: 1.0647 }, // Slightly larger
-        { longitude: 0.4450, latitude: 1.0559 }, // In between
+        { longitude: 0.445, latitude: 1.0559 }, // In between
       ];
 
       vi.spyOn(Cesium.Cartographic, "fromCartesian").mockImplementation(

@@ -2,26 +2,23 @@
 
 ## [1.27.12](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.11...r4c-cesium-viewer-v1.27.12) (2025-11-05)
 
-
 ### Bug Fixes
 
-* resolve WebGL texture errors and Cesium proxy configuration issues ([#309](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/309)) ([dfc30c7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/dfc30c7825c7f56cdf56e4f498088ba4e7bc82bc))
+- resolve WebGL texture errors and Cesium proxy configuration issues ([#309](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/309)) ([dfc30c7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/dfc30c7825c7f56cdf56e4f498088ba4e7bc82bc))
 
 ## [1.27.11](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.10...r4c-cesium-viewer-v1.27.11) (2025-11-05)
 
-
 ### Bug Fixes
 
-* adjust Sentry sample rate to 0.1 to reduce quota usage ([#307](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/307)) ([98c70b2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/98c70b2c8f2dcfb58338c2d9c37576a45fc34702)), closes [#306](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/306)
-* **ci:** add container configurations for self-hosted runners and fix localStorage mock ([#302](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/302)) ([72b4bd7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/72b4bd7e1a4eb7839f40ea3bfc1cfa85367aaf73))
+- adjust Sentry sample rate to 0.1 to reduce quota usage ([#307](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/307)) ([98c70b2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/98c70b2c8f2dcfb58338c2d9c37576a45fc34702)), closes [#306](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/306)
+- **ci:** add container configurations for self-hosted runners and fix localStorage mock ([#302](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/302)) ([72b4bd7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/72b4bd7e1a4eb7839f40ea3bfc1cfa85367aaf73))
 
 ## [1.27.10](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.9...r4c-cesium-viewer-v1.27.10) (2025-11-03)
 
-
 ### Bug Fixes
 
-* add validation checks to prevent drawingBufferWidth error ([#289](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/289)) ([09a5b0c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/09a5b0c4acf5d192d6f8d5c34c422f436fdd5b61)), closes [#288](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/288)
-* replace Cesium.defaultValue with nullish coalescing operator ([#292](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/292)) ([0d9d8c2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0d9d8c231e8d1bc8168a962a75b64b18b2e662f0)), closes [#291](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/291)
+- add validation checks to prevent drawingBufferWidth error ([#289](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/289)) ([09a5b0c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/09a5b0c4acf5d192d6f8d5c34c422f436fdd5b61)), closes [#288](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/288)
+- replace Cesium.defaultValue with nullish coalescing operator ([#292](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/292)) ([0d9d8c2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0d9d8c231e8d1bc8168a962a75b64b18b2e662f0)), closes [#291](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/291)
 
 ## [1.27.9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.8...r4c-cesium-viewer-v1.27.9) (2025-10-30)
 
