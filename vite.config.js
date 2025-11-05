@@ -111,6 +111,13 @@ export default defineConfig(() => {
           secure: false,
           rewrite: (path) => path.replace(/^\/wms\/proxy/, "/geoserver/wms"),
         },
+        "/helsinki-wms": {
+          target: "https://kartta.hel.fi",
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) =>
+            path.replace(/^\/helsinki-wms/, "/ws/geoserver/avoindata/ows"),
+        },
         "/ndvi_public": {
           target: "https://storage.googleapis.com",
           changeOrigin: true,

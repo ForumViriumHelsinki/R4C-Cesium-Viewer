@@ -32,7 +32,6 @@ export default class Wms {
     const provider = new Cesium.WebMapServiceImageryProvider({
       url: urlStore.helsinkiWMS,
       layers: layerName,
-      proxy: new Cesium.DefaultProxy("/proxy/"),
     });
 
     return new Cesium.ImageryLayer(provider);
