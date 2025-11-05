@@ -9,7 +9,7 @@ on:
 env:
   # Common environment variables for all jobs
   CI: true
-  NODE_OPTIONS: "--max-old-space-size=1536"
+  NODE_OPTIONS: "--max-old-space-size=4096"
   # Build-time environment variables
   SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
   VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
@@ -161,21 +161,21 @@ jobs:
         run: timeout 600 npm run test:accessibility:desktop -- --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-desktop
-          NODE_OPTIONS: "--max-old-space-size=1536"
+          NODE_OPTIONS: "--max-old-space-size=4096"
           DEBUG: "pw:api"
 
       - name: Run accessibility tests - Tablet
         run: timeout 600 npm run test:accessibility:tablet -- --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-tablet
-          NODE_OPTIONS: "--max-old-space-size=1536"
+          NODE_OPTIONS: "--max-old-space-size=4096"
           DEBUG: "pw:api"
 
       - name: Run accessibility tests - Mobile
         run: timeout 600 npm run test:accessibility:mobile -- --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-mobile
-          NODE_OPTIONS: "--max-old-space-size=1536"
+          NODE_OPTIONS: "--max-old-space-size=4096"
           DEBUG: "pw:api"
 
       - name: Cleanup server process
