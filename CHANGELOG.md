@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.12](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.11...r4c-cesium-viewer-v1.27.12) (2025-11-05)
+
+
+### Bug Fixes
+
+* resolve WebGL texture errors and Cesium proxy configuration issues ([#309](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/309)) ([dfc30c7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/dfc30c7825c7f56cdf56e4f498088ba4e7bc82bc))
+
 ## [1.27.11](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.10...r4c-cesium-viewer-v1.27.11) (2025-11-05)
 
 
