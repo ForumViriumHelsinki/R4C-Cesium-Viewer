@@ -90,6 +90,7 @@ export default {
 			// Create viewer with enhanced graphics options
 			const viewerOptions = {
 				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+				imageryProvider: false, // Disable default imagery to prevent Ion API calls
 				animation: false,
 				fullscreenButton: false,
 				geocoder: false,

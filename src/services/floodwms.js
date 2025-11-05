@@ -41,7 +41,6 @@ export const createFloodImageryLayer = async (url, layerName) => {
     const provider = new Cesium.WebMapServiceImageryProvider({
       url: `${url}&format=image/png&transparent=true`,
       layers: layerName,
-      proxy: new Cesium.DefaultProxy("/proxy/"),
     });
 
     await provider.readyPromise;

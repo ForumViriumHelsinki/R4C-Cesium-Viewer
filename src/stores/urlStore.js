@@ -34,8 +34,7 @@ import { defineStore } from "pinia";
 export const useURLStore = defineStore("url", {
   state: () => ({
     imagesBase: "/ndvi_public",
-    helsinkiWMS:
-      "https://kartta.hel.fi/ws/geoserver/avoindata/ows?SERVICE=WMS&",
+    helsinkiWMS: "/helsinki-wms?SERVICE=WMS&",
     pygeoapiBase: "/pygeoapi/collections", // Base URL for pygeoapi collections (proxied through /pygeoapi)
     wmsProxy: "/wms/proxy",
   }),
