@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.27.11](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.10...r4c-cesium-viewer-v1.27.11) (2025-11-05)
+
+
+### Bug Fixes
+
+* adjust Sentry sample rate to 0.1 to reduce quota usage ([#307](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/307)) ([98c70b2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/98c70b2c8f2dcfb58338c2d9c37576a45fc34702)), closes [#306](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/306)
+* **ci:** add container configurations for self-hosted runners and fix localStorage mock ([#302](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/302)) ([72b4bd7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/72b4bd7e1a4eb7839f40ea3bfc1cfa85367aaf73))
+
 ## [1.27.10](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.9...r4c-cesium-viewer-v1.27.10) (2025-11-03)
 
 
