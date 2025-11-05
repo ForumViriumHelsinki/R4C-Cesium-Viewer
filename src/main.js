@@ -56,6 +56,9 @@ Sentry.init({
     Sentry.replayCanvasIntegration(),
   ],
 
+  // Sample 10% of error events to reduce quota usage
+  sampleRate: 0.1,
+
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
   tracesSampleRate: 1.0,
