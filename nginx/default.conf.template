@@ -98,6 +98,36 @@ server {
         rewrite ^/wms/proxy(.*)$ /geoserver/wms$1 break;
     }
 
+    # Helsinki city WMS (kartta.hel.fi)
+    location /helsinki-wms {
+        proxy_pass https://kartta.hel.fi;
+        proxy_cache_key $request_uri;
+
+        # Use WMS-specific cache
+        proxy_cache wms_cache;
+        proxy_cache_valid 200 7d;        # Cache successful responses for 7 days
+        proxy_cache_valid 404 60m;       # Cache not-found for 1 hour
+        proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
+        proxy_cache_background_update on;
+        proxy_cache_lock on;
+
+        # Optimize for tile delivery
+        proxy_buffers 8 256k;
+        proxy_buffer_size 256k;
+        proxy_busy_buffers_size 256k;
+        proxy_temp_file_write_size 256k;
+
+        # Increase timeouts for large tiles
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+
+        # Enable compression
+        gzip on;
+        gzip_types image/jpeg image/png image/gif;
+        rewrite ^/helsinki-wms(.*)$ /ws/geoserver/avoindata/ows$1 break;
+    }
+
     # ADDED: Missing NDVI proxy route
     location /ndvi_public {
         proxy_pass https://storage.googleapis.com;
