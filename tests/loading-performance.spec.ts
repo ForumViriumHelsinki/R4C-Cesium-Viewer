@@ -347,6 +347,10 @@ test.describe("Loading Performance and User Experience", () => {
 });
 
 test.describe("Bundle Size and Dynamic Import Performance", () => {
+  // Constants for test thresholds
+  const MIN_CESIUM_CHUNK_SIZE = 100000; // 100KB minimum for actual Cesium library
+  const MAX_MAIN_BUNDLE_SIZE = 500000; // 500KB budget (excludes ~5MB Cesium)
+
   test("should load Cesium as separate chunk (dynamic import)", async ({
     page,
   }) => {
@@ -357,13 +361,23 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
     page.on("response", async (response) => {
       const url = response.url();
       // Match Cesium chunks (case-insensitive, handles both dev and prod builds)
-      if (
-        url.toLowerCase().includes("cesium") ||
-        url.toLowerCase().includes("cesium.js")
-      ) {
+      if (url.toLowerCase().includes("cesium")) {
         const contentLength = response.headers()["content-length"];
-        const size = contentLength ? parseInt(contentLength) : 0;
-        cesiumResources.push({ url, size });
+        let size = 0;
+        if (contentLength) {
+          size = parseInt(contentLength);
+        } else {
+          // Fallback: read body size (for dev server without content-length)
+          try {
+            const buffer = await response.body();
+            size = buffer?.byteLength || 0;
+          } catch (e) {
+            console.warn("Could not determine response size:", url);
+          }
+        }
+        if (size > 0) {
+          cesiumResources.push({ url, size });
+        }
       }
     });
 
@@ -372,7 +386,14 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
 
     // Dismiss disclaimer to trigger full app initialization
     await page.getByRole("button", { name: "Explore Map" }).click();
-    await page.waitForTimeout(2000); // Allow time for dynamic imports
+
+    // Wait for Cesium chunk to actually load (event-driven, not fixed timeout)
+    await page.waitForResponse(
+      (response) =>
+        response.url().toLowerCase().includes("cesium") &&
+        response.status() === 200,
+      { timeout: 10000 },
+    );
 
     // Verify Cesium loaded as separate chunk
     expect(
@@ -382,11 +403,11 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
 
     // Verify at least one Cesium resource is substantial (dynamic import)
     const hasSizableCesiumChunk = cesiumResources.some(
-      (resource) => resource.size > 100000,
-    ); // > 100KB indicates real Cesium code
+      (resource) => resource.size > MIN_CESIUM_CHUNK_SIZE,
+    );
     expect(
       hasSizableCesiumChunk,
-      "Cesium chunk should be substantial (>100KB), indicating dynamic import",
+      `Cesium chunk should be substantial (>${MIN_CESIUM_CHUNK_SIZE / 1000}KB), indicating dynamic import`,
     ).toBe(true);
 
     console.log(
@@ -401,14 +422,21 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
 
     page.on("response", async (response) => {
       const url = response.url();
-      // Match main/index bundles but exclude Cesium chunks
-      if (
-        (url.includes("index") || url.includes("main")) &&
-        url.endsWith(".js") &&
-        !url.toLowerCase().includes("cesium")
-      ) {
+      // Capture all non-Cesium JavaScript bundles to ensure comprehensive monitoring
+      if (url.endsWith(".js") && !url.toLowerCase().includes("cesium")) {
         const contentLength = response.headers()["content-length"];
-        const size = contentLength ? parseInt(contentLength) : 0;
+        let size = 0;
+        if (contentLength) {
+          size = parseInt(contentLength);
+        } else {
+          // Fallback: read body size (for dev server without content-length)
+          try {
+            const buffer = await response.body();
+            size = buffer?.byteLength || 0;
+          } catch (e) {
+            console.warn("Could not determine response size:", url);
+          }
+        }
         if (size > 0) {
           mainBundles.push({ url, size });
         }
@@ -421,22 +449,26 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
     // Should have at least one main bundle
     expect(
       mainBundles.length,
-      "Should have at least one main/index bundle",
+      "Should have at least one JavaScript bundle",
     ).toBeGreaterThan(0);
 
     // Main bundle should be under 500KB budget (without Cesium)
+    // Check the largest single bundle to ensure no individual bundle exceeds budget
     const largestMainBundle = Math.max(...mainBundles.map((b) => b.size));
     expect(
       largestMainBundle,
-      "Main bundle should be < 500KB (Cesium excluded via dynamic import)",
-    ).toBeLessThan(500000); // 500KB budget
+      "Largest non-Cesium bundle should be < 500KB (Cesium excluded via dynamic import)",
+    ).toBeLessThan(MAX_MAIN_BUNDLE_SIZE);
 
     console.log(
-      `Main bundle size: ${largestMainBundle} bytes (${(largestMainBundle / 1024).toFixed(2)} KB)`,
+      `Largest non-Cesium bundle: ${largestMainBundle} bytes (${(largestMainBundle / 1024).toFixed(2)} KB)`,
     );
+    console.log(`Total non-Cesium bundles: ${mainBundles.length}`);
   });
 
-  test("should measure Web Vitals (FCP, LCP, TTI)", async ({ page }) => {
+  test("should measure Web Vitals (FCP, LCP, domInteractive)", async ({
+    page,
+  }) => {
     // Performance baseline: Post v1.27.7 optimization (#279)
     // Expected improvements: FCP 500ms-2s faster than v1.27.6
     await page.goto("/");
@@ -448,7 +480,7 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
         const metrics: {
           fcp?: number;
           lcp?: number;
-          tti?: number;
+          domInteractive?: number;
         } = {};
 
         // First Contentful Paint (FCP)
@@ -472,19 +504,22 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
         });
         observer.observe({ type: "largest-contentful-paint", buffered: true });
 
-        // Approximate TTI using load event + network idle heuristic
+        // DOM Interactive time (not true TTI, but a useful metric)
+        // Note: True TTI requires CPU idle time calculation after last long task
         const navigationEntry = performance.getEntriesByType(
           "navigation",
         )[0] as any;
         if (navigationEntry) {
-          metrics.tti = navigationEntry.domInteractive;
+          metrics.domInteractive = navigationEntry.domInteractive;
         }
 
-        // Wait a bit for LCP to settle
+        // LCP finalizes on user interaction or page visibility change
+        // Use longer timeout for CI environments to capture accurate LCP
+        const timeout = typeof process !== "undefined" && process.env?.CI ? 3000 : 1500;
         setTimeout(() => {
           observer.disconnect();
           resolve(metrics);
-        }, 1000);
+        }, timeout);
       });
     });
 
@@ -507,18 +542,21 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
       ).toBeLessThan(3000);
     }
 
-    // TTI: Time to Interactive should be < 5s
-    if (webVitals.tti) {
+    // DOM Interactive: Should be < 5s
+    // Note: This is domInteractive, not true TTI (which requires CPU idle time analysis)
+    if (webVitals.domInteractive) {
       expect(
-        webVitals.tti,
-        "Time to Interactive should be < 5000ms",
+        webVitals.domInteractive,
+        "DOM Interactive should be < 5000ms",
       ).toBeLessThan(5000);
     }
 
     // Log for tracking performance over time
     console.log(`FCP: ${webVitals.fcp?.toFixed(2)}ms`);
     console.log(`LCP: ${webVitals.lcp?.toFixed(2)}ms`);
-    console.log(`TTI: ${webVitals.tti?.toFixed(2)}ms`);
+    console.log(
+      `DOM Interactive: ${webVitals.domInteractive?.toFixed(2)}ms (Note: not true TTI)`,
+    );
   });
 
   test("should track total JavaScript bundle size", async ({ page }) => {
