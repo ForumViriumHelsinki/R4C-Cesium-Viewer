@@ -345,3 +345,221 @@ test.describe("Loading Performance and User Experience", () => {
     }
   });
 });
+
+test.describe("Bundle Size and Dynamic Import Performance", () => {
+  test("should load Cesium as separate chunk (dynamic import)", async ({
+    page,
+  }) => {
+    // Performance baseline: Post v1.27.7 optimization (#279)
+    // Cesium (~5MB) should load as a separate dynamically imported chunk
+    const cesiumResources: Array<{ url: string; size: number }> = [];
+
+    page.on("response", async (response) => {
+      const url = response.url();
+      // Match Cesium chunks (case-insensitive, handles both dev and prod builds)
+      if (
+        url.toLowerCase().includes("cesium") ||
+        url.toLowerCase().includes("cesium.js")
+      ) {
+        const contentLength = response.headers()["content-length"];
+        const size = contentLength ? parseInt(contentLength) : 0;
+        cesiumResources.push({ url, size });
+      }
+    });
+
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Dismiss disclaimer to trigger full app initialization
+    await page.getByRole("button", { name: "Explore Map" }).click();
+    await page.waitForTimeout(2000); // Allow time for dynamic imports
+
+    // Verify Cesium loaded as separate chunk
+    expect(
+      cesiumResources.length,
+      "Cesium should load as one or more separate chunks",
+    ).toBeGreaterThan(0);
+
+    // Verify at least one Cesium resource is substantial (dynamic import)
+    const hasSizableCesiumChunk = cesiumResources.some(
+      (resource) => resource.size > 100000,
+    ); // > 100KB indicates real Cesium code
+    expect(
+      hasSizableCesiumChunk,
+      "Cesium chunk should be substantial (>100KB), indicating dynamic import",
+    ).toBe(true);
+
+    console.log(
+      `Cesium resources loaded: ${cesiumResources.length} chunks, total size: ${cesiumResources.reduce((sum, r) => sum + r.size, 0)} bytes`,
+    );
+  });
+
+  test("main bundle should not include Cesium", async ({ page }) => {
+    // Performance baseline: Post v1.27.7 optimization (#279)
+    // Main bundle should be < 500KB (without Cesium's ~5MB)
+    const mainBundles: Array<{ url: string; size: number }> = [];
+
+    page.on("response", async (response) => {
+      const url = response.url();
+      // Match main/index bundles but exclude Cesium chunks
+      if (
+        (url.includes("index") || url.includes("main")) &&
+        url.endsWith(".js") &&
+        !url.toLowerCase().includes("cesium")
+      ) {
+        const contentLength = response.headers()["content-length"];
+        const size = contentLength ? parseInt(contentLength) : 0;
+        if (size > 0) {
+          mainBundles.push({ url, size });
+        }
+      }
+    });
+
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Should have at least one main bundle
+    expect(
+      mainBundles.length,
+      "Should have at least one main/index bundle",
+    ).toBeGreaterThan(0);
+
+    // Main bundle should be under 500KB budget (without Cesium)
+    const largestMainBundle = Math.max(...mainBundles.map((b) => b.size));
+    expect(
+      largestMainBundle,
+      "Main bundle should be < 500KB (Cesium excluded via dynamic import)",
+    ).toBeLessThan(500000); // 500KB budget
+
+    console.log(
+      `Main bundle size: ${largestMainBundle} bytes (${(largestMainBundle / 1024).toFixed(2)} KB)`,
+    );
+  });
+
+  test("should measure Web Vitals (FCP, LCP, TTI)", async ({ page }) => {
+    // Performance baseline: Post v1.27.7 optimization (#279)
+    // Expected improvements: FCP 500ms-2s faster than v1.27.6
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Measure Web Vitals using Performance API
+    const webVitals = await page.evaluate(() => {
+      return new Promise((resolve) => {
+        const metrics: {
+          fcp?: number;
+          lcp?: number;
+          tti?: number;
+        } = {};
+
+        // First Contentful Paint (FCP)
+        const paintEntries = performance.getEntriesByType(
+          "paint",
+        ) as PerformanceEntry[];
+        const fcpEntry = paintEntries.find(
+          (entry) => entry.name === "first-contentful-paint",
+        );
+        if (fcpEntry) {
+          metrics.fcp = fcpEntry.startTime;
+        }
+
+        // Largest Contentful Paint (LCP)
+        const observer = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          const lastEntry = entries[entries.length - 1] as any;
+          if (lastEntry) {
+            metrics.lcp = lastEntry.startTime;
+          }
+        });
+        observer.observe({ type: "largest-contentful-paint", buffered: true });
+
+        // Approximate TTI using load event + network idle heuristic
+        const navigationEntry = performance.getEntriesByType(
+          "navigation",
+        )[0] as any;
+        if (navigationEntry) {
+          metrics.tti = navigationEntry.domInteractive;
+        }
+
+        // Wait a bit for LCP to settle
+        setTimeout(() => {
+          observer.disconnect();
+          resolve(metrics);
+        }, 1000);
+      });
+    });
+
+    console.log("Web Vitals:", webVitals);
+
+    // Assert performance budgets
+    // FCP: First Contentful Paint should be < 2s (good UX)
+    if (webVitals.fcp) {
+      expect(
+        webVitals.fcp,
+        "First Contentful Paint should be < 2000ms",
+      ).toBeLessThan(2000);
+    }
+
+    // LCP: Largest Contentful Paint should be < 3s (good UX)
+    if (webVitals.lcp) {
+      expect(
+        webVitals.lcp,
+        "Largest Contentful Paint should be < 3000ms",
+      ).toBeLessThan(3000);
+    }
+
+    // TTI: Time to Interactive should be < 5s
+    if (webVitals.tti) {
+      expect(
+        webVitals.tti,
+        "Time to Interactive should be < 5000ms",
+      ).toBeLessThan(5000);
+    }
+
+    // Log for tracking performance over time
+    console.log(`FCP: ${webVitals.fcp?.toFixed(2)}ms`);
+    console.log(`LCP: ${webVitals.lcp?.toFixed(2)}ms`);
+    console.log(`TTI: ${webVitals.tti?.toFixed(2)}ms`);
+  });
+
+  test("should track total JavaScript bundle size", async ({ page }) => {
+    // Track all JavaScript resources to monitor bundle bloat
+    const jsResources: Array<{ url: string; size: number }> = [];
+
+    page.on("response", async (response) => {
+      const url = response.url();
+      if (url.endsWith(".js")) {
+        const contentLength = response.headers()["content-length"];
+        const size = contentLength ? parseInt(contentLength) : 0;
+        if (size > 0) {
+          jsResources.push({ url, size });
+        }
+      }
+    });
+
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Dismiss disclaimer to load all chunks
+    await page.getByRole("button", { name: "Explore Map" }).click();
+    await page.waitForTimeout(2000);
+
+    const totalSize = jsResources.reduce((sum, r) => sum + r.size, 0);
+    const totalMB = (totalSize / (1024 * 1024)).toFixed(2);
+
+    console.log(`Total JavaScript size: ${totalMB} MB`);
+    console.log(`Number of JS files: ${jsResources.length}`);
+
+    // Log largest bundles for tracking
+    const sortedBySize = [...jsResources].sort((a, b) => b.size - a.size);
+    console.log("Largest bundles:");
+    sortedBySize.slice(0, 5).forEach((resource, i) => {
+      const fileName = resource.url.split("/").pop() || resource.url;
+      const sizeMB = (resource.size / (1024 * 1024)).toFixed(2);
+      console.log(`  ${i + 1}. ${fileName}: ${sizeMB} MB`);
+    });
+
+    // Total should be reasonable (accounting for Cesium ~5MB + app code)
+    // This is a soft assertion for tracking, not a hard limit
+    expect(totalSize).toBeGreaterThan(0);
+  });
+});
