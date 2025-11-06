@@ -4,9 +4,9 @@
   "version": "1.28.0",
   "type": "module",
   "scripts": {
-    "dev": "./node_modules/.bin/dotenvx run -- vite --host",
-    "build": "./node_modules/.bin/dotenvx run -- vite build",
-    "preview": "./node_modules/.bin/dotenvx run -- vite preview --host",
+    "dev": "dotenvx run -- vite --host",
+    "build": "dotenvx run -- vite build",
+    "preview": "dotenvx run -- vite preview --host",
     "lint": "eslint --fix src/",
     "docs": "typedoc",
     "docs:serve": "npm run docs && npx http-server docs -p 8080 -o",
