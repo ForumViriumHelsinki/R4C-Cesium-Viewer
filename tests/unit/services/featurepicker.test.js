@@ -143,6 +143,15 @@ describe("FeaturePicker service", () => {
     const toggleStore = useToggleStore();
     const propsStore = usePropsStore();
 
+    // Initialize postalCodeData to prevent null access errors
+    propsStore.postalCodeData = {
+      _entityCollection: {
+        _entities: {
+          _array: [],
+        },
+      },
+    };
+
     // Create fresh mock canvas for each test
     mockCanvas = {
       clientWidth: 800,
