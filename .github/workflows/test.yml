@@ -15,34 +15,9 @@ env:
   CI: true
 
 jobs:
-  # Cache dependencies for reuse across jobs
-  install-deps:
-    name: Install Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "25"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Upload node_modules artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
-          retention-days: 1
-
   # Build once and share across all browser-based test jobs
   build:
     name: Build Frontend
-    needs: install-deps
     runs-on: ubuntu-latest
     env:
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -56,12 +31,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "25"
+          cache: "npm"
 
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build frontend
         run: npm run build
@@ -75,7 +48,6 @@ jobs:
 
   unit-tests:
     name: Unit Tests (Node ${{ matrix.node-version }})
-    needs: install-deps
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: "--max-old-space-size=512"
@@ -92,12 +64,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "npm"
 
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run unit tests with coverage
         run: npm run test:unit
@@ -112,7 +82,7 @@ jobs:
 
   integration-tests:
     name: Integration Tests
-    needs: [install-deps, unit-tests]
+    needs: unit-tests
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: "--max-old-space-size=512"
@@ -125,12 +95,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "25"
+          cache: "npm"
 
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run integration tests
         run: npm run test:integration
@@ -153,21 +121,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "25"
+          cache: "npm"
 
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
 
       - name: Start frontend server
         uses: ./.github/actions/start-server-with-healthcheck
@@ -212,21 +178,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "25"
+          cache: "npm"
 
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
 
       - name: Start frontend server
         uses: ./.github/actions/start-server-with-healthcheck
@@ -271,21 +235,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "25"
+          cache: "npm"
 
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
 
       - name: Start frontend server
         uses: ./.github/actions/start-server-with-healthcheck
@@ -311,7 +273,6 @@ jobs:
 
   security-scan:
     name: Security Scan
-    needs: install-deps
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -323,12 +284,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "25"
+          cache: "npm"
 
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run npm audit
         run: npm audit --audit-level moderate
