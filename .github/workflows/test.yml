@@ -18,12 +18,16 @@ jobs:
   # Cache dependencies for reuse across jobs
   install-deps:
     name: Install Dependencies
-    runs-on: fvh-arc-runners
-    container:
-      image: node:25-alpine
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -39,9 +43,7 @@ jobs:
   build:
     name: Build Frontend
     needs: install-deps
-    runs-on: fvh-arc-runners
-    container:
-      image: node:25-alpine
+    runs-on: ubuntu-latest
     env:
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
@@ -49,6 +51,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
 
       - name: Download node_modules
         uses: actions/download-artifact@v4
@@ -69,9 +76,7 @@ jobs:
   unit-tests:
     name: Unit Tests (Node ${{ matrix.node-version }})
     needs: install-deps
-    runs-on: fvh-arc-runners
-    container:
-      image: node:${{ matrix.node-version }}-alpine
+    runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: "--max-old-space-size=512"
 
@@ -82,6 +87,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
 
       - name: Download node_modules
         uses: actions/download-artifact@v4
@@ -103,15 +113,18 @@ jobs:
   integration-tests:
     name: Integration Tests
     needs: [install-deps, unit-tests]
-    runs-on: fvh-arc-runners
-    container:
-      image: node:25-alpine
+    runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: "--max-old-space-size=512"
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
 
       - name: Download node_modules
         uses: actions/download-artifact@v4
@@ -127,10 +140,7 @@ jobs:
   e2e-tests:
     name: End-to-End Tests
     needs: [build, unit-tests]
-    runs-on: fvh-arc-runners
-    container:
-      image: mcr.microsoft.com/playwright:v1.56.1-jammy
-      options: --user 1001
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       NODE_OPTIONS: "--max-old-space-size=2048"
@@ -138,6 +148,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
 
       - name: Download node_modules
         uses: actions/download-artifact@v4
@@ -150,6 +165,9 @@ jobs:
         with:
           name: dist
           path: dist/
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
       - name: Start frontend server
         uses: ./.github/actions/start-server-with-healthcheck
@@ -177,10 +195,7 @@ jobs:
   accessibility-tests:
     name: Accessibility Tests (${{ matrix.viewport }})
     needs: [build, unit-tests]
-    runs-on: fvh-arc-runners
-    container:
-      image: mcr.microsoft.com/playwright:v1.56.1-jammy
-      options: --user 1001
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       NODE_OPTIONS: "--max-old-space-size=2048"
@@ -193,6 +208,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
+
       - name: Download node_modules
         uses: actions/download-artifact@v4
         with:
@@ -204,6 +224,9 @@ jobs:
         with:
           name: dist
           path: dist/
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
       - name: Start frontend server
         uses: ./.github/actions/start-server-with-healthcheck
@@ -235,10 +258,7 @@ jobs:
   performance-tests:
     name: Performance Tests
     needs: [build, unit-tests]
-    runs-on: fvh-arc-runners
-    container:
-      image: mcr.microsoft.com/playwright:v1.56.1-jammy
-      options: --user 1001
+    runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     env:
       NODE_OPTIONS: "--max-old-space-size=2048"
@@ -246,6 +266,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
 
       - name: Download node_modules
         uses: actions/download-artifact@v4
@@ -258,6 +283,9 @@ jobs:
         with:
           name: dist
           path: dist/
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
       - name: Start frontend server
         uses: ./.github/actions/start-server-with-healthcheck
@@ -284,14 +312,17 @@ jobs:
   security-scan:
     name: Security Scan
     needs: install-deps
-    runs-on: fvh-arc-runners
-    container:
-      image: node:25-alpine
+    runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
 
       - name: Download node_modules
         uses: actions/download-artifact@v4
