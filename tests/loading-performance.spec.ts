@@ -350,6 +350,7 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
   // Constants for test thresholds
   const MIN_CESIUM_CHUNK_SIZE = 100000; // 100KB minimum for actual Cesium library
   const MAX_MAIN_BUNDLE_SIZE = 500000; // 500KB budget (excludes ~5MB Cesium)
+  const BYTES_PER_KB = 1000; // Conversion factor for bytes to kilobytes
 
   test("should load Cesium as separate chunk (dynamic import)", async ({
     page,
@@ -372,7 +373,7 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
             const buffer = await response.body();
             size = buffer?.byteLength || 0;
           } catch (e) {
-            console.warn("Could not determine response size:", url);
+            console.warn("Could not determine response size:", url, e);
           }
         }
         if (size > 0) {
@@ -407,7 +408,7 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
     );
     expect(
       hasSizableCesiumChunk,
-      `Cesium chunk should be substantial (>${MIN_CESIUM_CHUNK_SIZE / 1000}KB), indicating dynamic import`,
+      `Cesium chunk should be substantial (>${MIN_CESIUM_CHUNK_SIZE / BYTES_PER_KB}KB), indicating dynamic import`,
     ).toBe(true);
 
     console.log(
@@ -434,7 +435,7 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
             const buffer = await response.body();
             size = buffer?.byteLength || 0;
           } catch (e) {
-            console.warn("Could not determine response size:", url);
+            console.warn("Could not determine response size:", url, e);
           }
         }
         if (size > 0) {
@@ -474,8 +475,11 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
+    // Detect if we're in CI environment (pass from Node context)
+    const isCI = process.env.CI === "true";
+
     // Measure Web Vitals using Performance API
-    const webVitals = await page.evaluate(() => {
+    const webVitals = await page.evaluate((isCI) => {
       return new Promise((resolve) => {
         const metrics: {
           fcp?: number;
@@ -515,41 +519,47 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
 
         // LCP finalizes on user interaction or page visibility change
         // Use longer timeout for CI environments to capture accurate LCP
-        const timeout = typeof process !== "undefined" && process.env?.CI ? 3000 : 1500;
+        const timeout = isCI ? 3000 : 1500;
         setTimeout(() => {
           observer.disconnect();
           resolve(metrics);
         }, timeout);
       });
-    });
+    }, isCI);
 
     console.log("Web Vitals:", webVitals);
 
     // Assert performance budgets
     // FCP: First Contentful Paint should be < 2s (good UX)
-    if (webVitals.fcp) {
-      expect(
-        webVitals.fcp,
-        "First Contentful Paint should be < 2000ms",
-      ).toBeLessThan(2000);
-    }
+    expect(
+      webVitals.fcp,
+      "First Contentful Paint should be defined and < 2000ms",
+    ).toBeDefined();
+    expect(
+      webVitals.fcp,
+      "First Contentful Paint should be < 2000ms",
+    ).toBeLessThan(2000);
 
     // LCP: Largest Contentful Paint should be < 3s (good UX)
-    if (webVitals.lcp) {
-      expect(
-        webVitals.lcp,
-        "Largest Contentful Paint should be < 3000ms",
-      ).toBeLessThan(3000);
-    }
+    expect(
+      webVitals.lcp,
+      "Largest Contentful Paint should be defined and < 3000ms",
+    ).toBeDefined();
+    expect(
+      webVitals.lcp,
+      "Largest Contentful Paint should be < 3000ms",
+    ).toBeLessThan(3000);
 
     // DOM Interactive: Should be < 5s
     // Note: This is domInteractive, not true TTI (which requires CPU idle time analysis)
-    if (webVitals.domInteractive) {
-      expect(
-        webVitals.domInteractive,
-        "DOM Interactive should be < 5000ms",
-      ).toBeLessThan(5000);
-    }
+    expect(
+      webVitals.domInteractive,
+      "DOM Interactive should be defined and < 5000ms",
+    ).toBeDefined();
+    expect(
+      webVitals.domInteractive,
+      "DOM Interactive should be < 5000ms",
+    ).toBeLessThan(5000);
 
     // Log for tracking performance over time
     console.log(`FCP: ${webVitals.fcp?.toFixed(2)}ms`);
@@ -567,7 +577,18 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
       const url = response.url();
       if (url.endsWith(".js")) {
         const contentLength = response.headers()["content-length"];
-        const size = contentLength ? parseInt(contentLength) : 0;
+        let size = 0;
+        if (contentLength) {
+          size = parseInt(contentLength);
+        } else {
+          // Fallback: read body size (for dev server without content-length)
+          try {
+            const buffer = await response.body();
+            size = buffer?.byteLength || 0;
+          } catch (e) {
+            console.warn("Could not determine response size:", url, e);
+          }
+        }
         if (size > 0) {
           jsResources.push({ url, size });
         }
@@ -579,7 +600,14 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
 
     // Dismiss disclaimer to load all chunks
     await page.getByRole("button", { name: "Explore Map" }).click();
-    await page.waitForTimeout(2000);
+
+    // Wait for Cesium chunk to actually load (event-driven, not fixed timeout)
+    await page.waitForResponse(
+      (response) =>
+        response.url().toLowerCase().includes("cesium") &&
+        response.status() === 200,
+      { timeout: 10000 },
+    );
 
     const totalSize = jsResources.reduce((sum, r) => sum + r.size, 0);
     const totalMB = (totalSize / (1024 * 1024)).toFixed(2);
