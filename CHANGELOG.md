@@ -2,10 +2,9 @@
 
 ## [1.28.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.12...r4c-cesium-viewer-v1.28.0) (2025-11-05)
 
-
 ### Features
 
-* add Helsinki city WMS proxy endpoint ([#313](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/313)) ([d53bb0a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d53bb0aff71323bd2f280076165de50e600d9307))
+- add Helsinki city WMS proxy endpoint ([#313](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/313)) ([d53bb0a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d53bb0aff71323bd2f280076165de50e600d9307))
 
 ## [1.27.12](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.11...r4c-cesium-viewer-v1.27.12) (2025-11-05)
 

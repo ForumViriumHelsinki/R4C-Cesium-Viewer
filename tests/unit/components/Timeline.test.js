@@ -28,10 +28,12 @@ vi.mock("../../../src/stores/globalStore.js", () => ({
 // Mock Datasource service
 vi.mock("../../../src/services/datasource.js", () => {
   return {
-    default: vi.fn().mockImplementation(() => ({
-      loadSentinelHeatData: vi.fn(),
-      getDataSourceByName: vi.fn(() => null),
-    })),
+    default: vi.fn(function () {
+      return {
+        loadSentinelHeatData: vi.fn(),
+        getDataSourceByName: vi.fn(() => null),
+      };
+    }),
   };
 });
 

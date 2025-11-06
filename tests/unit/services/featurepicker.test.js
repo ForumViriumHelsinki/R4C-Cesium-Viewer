@@ -24,34 +24,34 @@ const TEST_AVG_TEMP = 22.5;
 
 // Mock all service dependencies
 vi.mock("@/services/datasource.js", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    removeDataSourcesAndEntities: vi.fn(),
-    removeDataSourcesByNamePrefix: vi.fn(),
-  })),
+  default: vi.fn(function () {
+    this.removeDataSourcesAndEntities = vi.fn();
+    this.removeDataSourcesByNamePrefix = vi.fn();
+  }),
 }));
 
 vi.mock("@/services/building.js", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    createBuildingCharts: vi.fn(),
-    resetBuildingOutline: vi.fn(),
-  })),
+  default: vi.fn(function () {
+    this.createBuildingCharts = vi.fn();
+    this.resetBuildingOutline = vi.fn();
+  }),
 }));
 
 vi.mock("@/services/plot.js", () => ({
-  default: vi.fn().mockImplementation(() => ({})),
+  default: vi.fn(function () {}),
 }));
 
 vi.mock("@/services/traveltime.js", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    loadTravelTimeData: vi.fn(),
-    markCurrentLocation: vi.fn(),
-  })),
+  default: vi.fn(function () {
+    this.loadTravelTimeData = vi.fn();
+    this.markCurrentLocation = vi.fn();
+  }),
 }));
 
 vi.mock("@/services/hsybuilding.js", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    loadHSYBuildings: vi.fn(),
-  })),
+  default: vi.fn(function () {
+    this.loadHSYBuildings = vi.fn();
+  }),
 }));
 
 vi.mock("@/services/address.js", () => ({
@@ -59,39 +59,39 @@ vi.mock("@/services/address.js", () => ({
 }));
 
 vi.mock("@/services/elementsDisplay.js", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    setSwitchViewElementsDisplay: vi.fn(),
-    setViewDisplay: vi.fn(),
-    setBuildingDisplay: vi.fn(),
-  })),
+  default: vi.fn(function () {
+    this.setSwitchViewElementsDisplay = vi.fn();
+    this.setViewDisplay = vi.fn();
+    this.setBuildingDisplay = vi.fn();
+  }),
 }));
 
 vi.mock("@/services/helsinki.js", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    loadHelsinkiElements: vi.fn(),
-  })),
+  default: vi.fn(function () {
+    this.loadHelsinkiElements = vi.fn();
+  }),
 }));
 
 vi.mock("@/services/capitalRegion.js", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    loadCapitalRegionElements: vi.fn(),
-  })),
+  default: vi.fn(function () {
+    this.loadCapitalRegionElements = vi.fn();
+  }),
 }));
 
 vi.mock("@/services/sensor.js", () => ({
-  default: vi.fn().mockImplementation(() => ({})),
+  default: vi.fn(function () {}),
 }));
 
 vi.mock("@/services/camera.js", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    switchTo3DView: vi.fn(),
-  })),
+  default: vi.fn(function () {
+    this.switchTo3DView = vi.fn();
+  }),
 }));
 
 vi.mock("@/services/coldarea.js", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    addColdPoint: vi.fn(),
-  })),
+  default: vi.fn(function () {
+    this.addColdPoint = vi.fn();
+  }),
 }));
 
 vi.mock("@/services/eventEmitter.js", () => ({
@@ -100,19 +100,31 @@ vi.mock("@/services/eventEmitter.js", () => ({
   },
 }));
 
+vi.mock("@/stores/loadingStore.js", () => ({
+  useLoadingStore: () => ({
+    startLoading: vi.fn(),
+    stopLoading: vi.fn(),
+  }),
+}));
+
 // Mock Cesium module
 // Important: Entity must be a named class so instanceof checks work correctly
-class MockEntity {}
-vi.mock("cesium", () => ({
-  Cartesian2: vi.fn((x, y) => ({ x, y })),
-  Entity: MockEntity,
-  Cartographic: {
-    fromCartesian: vi.fn(),
-  },
-  Math: {
-    toDegrees: vi.fn((radians) => radians * (180 / Math.PI)),
-  },
-}));
+vi.mock("cesium", () => {
+  class MockEntity {}
+  return {
+    Cartesian2: vi.fn(function (x, y) {
+      this.x = x;
+      this.y = y;
+    }),
+    Entity: MockEntity,
+    Cartographic: {
+      fromCartesian: vi.fn(),
+    },
+    Math: {
+      toDegrees: vi.fn((radians) => radians * (180 / Math.PI)),
+    },
+  };
+});
 
 describe("FeaturePicker service", () => {
   let featurePicker;
@@ -130,6 +142,15 @@ describe("FeaturePicker service", () => {
     const globalStore = useGlobalStore();
     const toggleStore = useToggleStore();
     const propsStore = usePropsStore();
+
+    // Initialize postalCodeData to prevent null access errors
+    propsStore.postalCodeData = {
+      _entityCollection: {
+        _entities: {
+          _array: [],
+        },
+      },
+    };
 
     // Create fresh mock canvas for each test
     mockCanvas = {
@@ -180,7 +201,7 @@ describe("FeaturePicker service", () => {
       it("should handle case where picked.primitive is undefined (bug fix from #276)", () => {
         // Setup: picked object with id but undefined primitive
         // Create a proper Entity instance
-        const mockEntity = Object.assign(new MockEntity(), {
+        const mockEntity = Object.assign(new Cesium.Entity(), {
           _polygon: true,
           properties: {
             posno: { _value: TEST_POSTAL_CODE_1 },
@@ -212,7 +233,7 @@ describe("FeaturePicker service", () => {
       it("should handle case where picked.id is undefined but picked.primitive.id exists", () => {
         // Setup: picked object with no direct id but primitive.id exists
         // This tests the fallback logic: picked.id ?? picked.primitive?.id
-        const mockEntity = Object.assign(new MockEntity(), {
+        const mockEntity = Object.assign(new Cesium.Entity(), {
           _polygon: true,
           properties: {
             posno: { _value: TEST_POSTAL_CODE_2 },
@@ -290,14 +311,14 @@ describe("FeaturePicker service", () => {
 
       it("should handle normal case where both picked.id and picked.primitive.id exist", () => {
         // Setup: normal case with both ids present
-        const directEntity = Object.assign(new MockEntity(), {
+        const directEntity = Object.assign(new Cesium.Entity(), {
           _polygon: true,
           properties: {
             posno: { _value: TEST_POSTAL_CODE_1 },
           },
         });
 
-        const primitiveEntity = Object.assign(new MockEntity(), {
+        const primitiveEntity = Object.assign(new Cesium.Entity(), {
           _polygon: true,
           properties: {
             posno: { _value: TEST_POSTAL_CODE_2 },
@@ -441,6 +462,17 @@ describe("FeaturePicker service", () => {
           grid_id: { _value: TEST_GRID_ID },
           vulnerability_score: { _value: TEST_VULNERABILITY_SCORE },
         },
+        entityCollection: {
+          _entities: {
+            _array: [
+              {
+                _properties: {
+                  _id: { _value: null },
+                },
+              },
+            ],
+          },
+        },
       };
 
       featurePicker.handleFeatureWithProperties(mockId);
@@ -516,6 +548,17 @@ describe("FeaturePicker service", () => {
           _avg_temp_c: TEST_AVG_TEMP,
           buildingId: { _value: TEST_BUILDING_ID },
         },
+        entityCollection: {
+          _entities: {
+            _array: [
+              {
+                _properties: {
+                  _id: { _value: null },
+                },
+              },
+            ],
+          },
+        },
       };
 
       vi.spyOn(featurePicker, "handleBuildingFeature");
@@ -533,6 +576,17 @@ describe("FeaturePicker service", () => {
         properties: {
           asukkaita: { _value: TEST_POPULATION },
           index: { _value: 123 },
+        },
+        entityCollection: {
+          _entities: {
+            _array: [
+              {
+                _properties: {
+                  _id: { _value: null },
+                },
+              },
+            ],
+          },
         },
         polygon: {
           hierarchy: {
