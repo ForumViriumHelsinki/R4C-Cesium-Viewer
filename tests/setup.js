@@ -48,18 +48,22 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+global.IntersectionObserver = vi.fn(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+global.ResizeObserver = vi.fn(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Set up global test configuration
 config.global.mocks = {
@@ -91,15 +95,33 @@ Object.defineProperty(window, "location", {
 // Mock fetch for API calls
 global.fetch = vi.fn();
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn((key) => null),
-  setItem: vi.fn((key, value) => null),
-  removeItem: vi.fn((key) => null),
-  clear: vi.fn(() => null),
-  key: vi.fn((index) => null),
-  length: 0,
+// Mock localStorage with actual storage functionality
+const createLocalStorageMock = () => {
+  const store = {};
+  return {
+    getItem: vi.fn((key) => store[key] || null),
+    setItem: vi.fn((key, value) => {
+      if (value != null) {
+        store[key] = value.toString();
+      }
+    }),
+    removeItem: vi.fn((key) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      Object.keys(store).forEach((key) => delete store[key]);
+    }),
+    key: vi.fn((index) => {
+      const keys = Object.keys(store);
+      return keys[index] || null;
+    }),
+    get length() {
+      return Object.keys(store).length;
+    },
+  };
 };
+
+const localStorageMock = createLocalStorageMock();
 global.localStorage = localStorageMock;
 Object.defineProperty(window, "localStorage", {
   value: localStorageMock,

@@ -35,7 +35,11 @@ vi.mock("cesium", () => {
   return {
     Color,
     Cartesian3: Object.assign(
-      vi.fn((x, y, z) => ({ x, y, z })),
+      vi.fn(function (x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+      }),
       {
         fromDegrees: vi.fn((lon, lat, height = 0) => ({
           x: lon,

@@ -57,7 +57,10 @@ vi.mock("cesium", () => ({
     toRadians: vi.fn((degrees) => (degrees * Math.PI) / 180),
     toDegrees: vi.fn((radians) => (radians * 180) / Math.PI),
   },
-  Cartesian2: vi.fn((x, y) => ({ x, y })),
+  Cartesian2: vi.fn(function (x, y) {
+    this.x = x;
+    this.y = y;
+  }),
   Cartographic: {
     fromCartesian: vi.fn((cartesian) => ({
       longitude: 0.4,
