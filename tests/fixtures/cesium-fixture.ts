@@ -475,6 +475,26 @@ export const cesiumTest = base.extend<CesiumFixtures>({
       // Wait for app to be ready (but not for real Cesium)
       await waitForAppReady(page, 30000);
 
+      // Close the disclaimer dialog if it appears
+      const dialogButton = page.getByRole("button", {
+        name: /close disclaimer|explore map/i,
+      });
+      const dialogVisible = await dialogButton.isVisible().catch(() => false);
+      if (dialogVisible) {
+        await dialogButton.click();
+        await page.waitForTimeout(500); // Wait for dialog to close
+      }
+
+      // Disable navigation drawer overlay in tests
+      // The drawer creates an overlay by default which blocks interactions
+      // We'll hide the overlay scrim via CSS instead of closing the drawer
+      await page.addStyleTag({
+        content: ".v-overlay__scrim { display: none !important; }",
+      });
+
+      // Wait a moment for any initial animations
+      await page.waitForTimeout(500);
+
       // Initialize mock viewer if not already created
       await page.evaluate(() => {
         if (!(window as any).viewer) {
@@ -649,6 +669,26 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 
     // Wait for app to be ready
     await waitForAppReady(page, process.env.CI ? 60000 : 30000);
+
+    // Close the disclaimer dialog if it appears
+    const dialogButton = page.getByRole("button", {
+      name: /close disclaimer|explore map/i,
+    });
+    const dialogVisible = await dialogButton.isVisible().catch(() => false);
+    if (dialogVisible) {
+      await dialogButton.click();
+      await page.waitForTimeout(500); // Wait for dialog to close
+    }
+
+    // Disable navigation drawer overlay in tests
+    // The drawer creates an overlay by default which blocks interactions
+    // We'll hide the overlay scrim via CSS instead of closing the drawer
+    await page.addStyleTag({
+      content: ".v-overlay__scrim { display: none !important; }",
+    });
+
+    // Wait a moment for any initial animations
+    await page.waitForTimeout(500);
 
     // Wait for Cesium to be ready with extended timeout for CI
     await waitForCesiumReady(page, process.env.CI ? 60000 : 30000);

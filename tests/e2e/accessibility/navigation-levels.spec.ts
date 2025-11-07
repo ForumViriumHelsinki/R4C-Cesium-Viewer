@@ -238,7 +238,7 @@ cesiumDescribe("Navigation Levels Accessibility", () => {
               cesiumPage.getByText("Statistical grid options"),
             ).toBeVisible();
           } else {
-            await expect(cesiumPage.getByText("HSY Land Cover")).toBeVisible();
+            await expect(cesiumPage.getByText("Land Cover")).toBeVisible();
           }
 
           // Timeline should be visible in both cases
@@ -527,9 +527,11 @@ cesiumDescribe("Navigation Levels Accessibility", () => {
       async ({ cesiumPage }) => {
         // At start level, filters should be visible but may not be functional
         await expect(
-          cesiumPage.getByText("Only public buildings"),
+          cesiumPage.getByText("Public Buildings", { exact: true }),
         ).toBeVisible();
-        await expect(cesiumPage.getByText("Only tall buildings")).toBeVisible();
+        await expect(
+          cesiumPage.getByText("Tall Buildings", { exact: true }),
+        ).toBeVisible();
 
         // Navigate to postal code level
         await helpers.drillToLevel("postalCode");

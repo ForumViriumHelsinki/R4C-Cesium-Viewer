@@ -5,7 +5,7 @@
  * - Vegetation (Helsinki view only)
  * - Other Nature (Helsinki view only)
  * - Trees (not grid view + postal code selected)
- * - HSY Land Cover (not Helsinki view)
+ * - Land Cover (not Helsinki view)
  * - NDVI (universal)
  *
  * Ensures all layer controls remain accessible and functional during interface overhaul.
@@ -101,14 +101,14 @@ cesiumDescribe("Layer Controls Accessibility", () => {
 
   cesiumTest.describe("View-Specific Layer Controls", () => {
     cesiumTest(
-      "should show HSY Land Cover only in non-Helsinki views",
+      "should show Land Cover only in non-Helsinki views",
       async ({ cesiumPage }) => {
         // Should be visible in Capital Region view (default)
         await helpers.navigateToView("capitalRegionView");
-        await expect(cesiumPage.getByText("HSY Land Cover")).toBeVisible();
+        await expect(cesiumPage.getByText("Land Cover")).toBeVisible();
 
         const landCoverToggle = cesiumPage
-          .getByText("HSY Land Cover")
+          .getByText("Land Cover")
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -120,7 +120,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
 
         // Should be visible in Grid view too
         await helpers.navigateToView("gridView");
-        await expect(cesiumPage.getByText("HSY Land Cover")).toBeVisible();
+        await expect(cesiumPage.getByText("Land Cover")).toBeVisible();
 
         // Note: Helsinki view testing would require navigation to Helsinki-specific postal codes
         // For comprehensive testing, we verify the conditional logic structure exists
@@ -153,9 +153,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         // Start with Capital Region
         await helpers.navigateToView("capitalRegionView");
 
-        // Enable HSY Land Cover
+        // Enable Land Cover
         const landCoverToggle = cesiumPage
-          .getByText("HSY Land Cover")
+          .getByText("Land Cover")
           .locator("..")
           .locator('input[type="checkbox"]');
         await landCoverToggle.check();
@@ -337,7 +337,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
         const landCoverToggle = cesiumPage
-          .getByText("HSY Land Cover")
+          .getByText("Land Cover")
           .locator("..")
           .locator('input[type="checkbox"]');
         const treesToggle = cesiumPage
@@ -370,13 +370,13 @@ cesiumDescribe("Layer Controls Accessibility", () => {
     cesiumTest(
       "should maintain layer states during navigation",
       async ({ cesiumPage }) => {
-        // Enable NDVI and HSY Land Cover
+        // Enable NDVI and Land Cover
         const ndviToggle = cesiumPage
           .getByText("NDVI")
           .locator("..")
           .locator('input[type="checkbox"]');
         const landCoverToggle = cesiumPage
-          .getByText("HSY Land Cover")
+          .getByText("Land Cover")
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -496,7 +496,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .catch(() => {});
 
         // Check that layer labels are descriptive
-        const layerLabels = ["NDVI", "HSY Land Cover", "Trees"];
+        const layerLabels = ["NDVI", "Land Cover", "Trees"];
 
         for (const labelText of layerLabels) {
           const label = cesiumPage.getByText(labelText);
@@ -588,7 +588,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
         const landCoverToggle = cesiumPage
-          .getByText("HSY Land Cover")
+          .getByText("Land Cover")
           .locator("..")
           .locator('input[type="checkbox"]');
 

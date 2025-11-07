@@ -2,9 +2,9 @@
  * Building Filters Accessibility Tests
  *
  * Tests all building filter controls and their conditional behavior:
- * - Only public buildings / Only social & healthcare buildings (label changes by view)
- * - Built before summer 2018 (Helsinki view only)
- * - Only tall buildings (universal)
+ * - Public Buildings / Social & Healthcare (label changes by view)
+ * - Pre-2018 (Helsinki view only)
+ * - Tall Buildings (universal)
  *
  * Ensures all building filter controls remain accessible during interface overhaul.
  */
@@ -23,13 +23,15 @@ cesiumDescribe("Building Filters Accessibility", () => {
 
   cesiumTest.describe("Universal Building Filters", () => {
     cesiumTest(
-      'should display "Only tall buildings" filter in all contexts',
+      'should display "Tall Buildings" filter in all contexts',
       async ({ cesiumPage }) => {
         // Should be visible in default view
-        await expect(cesiumPage.getByText("Only tall buildings")).toBeVisible();
+        await expect(
+          cesiumPage.getByText("Tall Buildings", { exact: true }),
+        ).toBeVisible();
 
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         await expect(tallBuildingsToggle).toBeVisible();
@@ -42,27 +44,30 @@ cesiumDescribe("Building Filters Accessibility", () => {
 
         // Should remain visible in grid view
         await helpers.navigateToView("gridView");
-        await expect(cesiumPage.getByText("Only tall buildings")).toBeVisible();
+        await expect(
+          cesiumPage.getByText("Tall Buildings", { exact: true }),
+        ).toBeVisible();
         await expect(tallBuildingsToggle).toBeVisible();
       },
     );
 
     cesiumTest(
-      "should display Filters section header consistently",
+      "should display Building Filters section header consistently",
       async ({ cesiumPage }) => {
         await expect(
-          cesiumPage.getByText("Filters", { exact: true }),
+          cesiumPage.getByText("Building Filters", { exact: true }),
         ).toBeVisible();
 
-        // Should remain visible across view changes
+        // Should NOT be visible in grid view (filters are hidden in grid view)
         await helpers.navigateToView("gridView");
         await expect(
-          cesiumPage.getByText("Filters", { exact: true }),
-        ).toBeVisible();
+          cesiumPage.getByText("Building Filters", { exact: true }),
+        ).not.toBeVisible();
 
+        // Should be visible again in capital region view
         await helpers.navigateToView("capitalRegionView");
         await expect(
-          cesiumPage.getByText("Filters", { exact: true }),
+          cesiumPage.getByText("Building Filters", { exact: true }),
         ).toBeVisible();
       },
     );
@@ -71,7 +76,7 @@ cesiumDescribe("Building Filters Accessibility", () => {
       "should maintain tall buildings filter state across contexts",
       async ({ cesiumPage }) => {
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -98,17 +103,17 @@ cesiumDescribe("Building Filters Accessibility", () => {
 
   cesiumTest.describe("Context-Adaptive Building Filters", () => {
     cesiumTest(
-      'should show "Only public buildings" in Capital Region view',
+      'should show "Public Buildings" in Capital Region view',
       async ({ cesiumPage }) => {
         await helpers.navigateToView("capitalRegionView");
 
-        // Should show "Only public buildings" label
+        // Should show "Public Buildings" label
         await expect(
-          cesiumPage.getByText("Only public buildings"),
+          cesiumPage.getByText("Public Buildings", { exact: true }),
         ).toBeVisible();
 
         const publicBuildingsToggle = cesiumPage
-          .getByText("Only public buildings")
+          .getByText("Public Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         await expect(publicBuildingsToggle).toBeVisible();
@@ -122,17 +127,17 @@ cesiumDescribe("Building Filters Accessibility", () => {
     );
 
     cesiumTest(
-      'should show "Only public buildings" in Grid view',
+      'should show "Public Buildings" in Grid view',
       async ({ cesiumPage }) => {
         await helpers.navigateToView("gridView");
 
-        // Should show "Only public buildings" label in grid view too
+        // Should show "Public Buildings" label in grid view too
         await expect(
-          cesiumPage.getByText("Only public buildings"),
+          cesiumPage.getByText("Public Buildings", { exact: true }),
         ).toBeVisible();
 
         const publicBuildingsToggle = cesiumPage
-          .getByText("Only public buildings")
+          .getByText("Public Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         await expect(publicBuildingsToggle).toBeVisible();
@@ -161,10 +166,10 @@ cesiumDescribe("Building Filters Accessibility", () => {
         // The actual label text depends on the view state
         // We verify the toggle is functional regardless of label
         const hasPublicLabel = await cesiumPage
-          .getByText("Only public buildings")
+          .getByText("Public Buildings", { exact: true })
           .isVisible();
         const hasSocialLabel = await cesiumPage
-          .getByText("Only social &")
+          .getByText("Social & Healthcare")
           .isVisible();
 
         expect(hasPublicLabel || hasSocialLabel).toBeTruthy();
@@ -174,19 +179,15 @@ cesiumDescribe("Building Filters Accessibility", () => {
 
   cesiumTest.describe("Helsinki-Specific Building Filters", () => {
     cesiumTest(
-      'should show "Built before summer 2018" only in Helsinki view',
+      'should show "Pre-2018" only in Helsinki view',
       async ({ cesiumPage }) => {
         // In default Capital Region view, this filter should not be visible
         await helpers.navigateToView("capitalRegionView");
-        await expect(
-          cesiumPage.getByText("Built before summer 2018"),
-        ).not.toBeVisible();
+        await expect(cesiumPage.getByText("Pre-2018")).not.toBeVisible();
 
         // In Grid view, this filter should not be visible
         await helpers.navigateToView("gridView");
-        await expect(
-          cesiumPage.getByText("Built before summer 2018"),
-        ).not.toBeVisible();
+        await expect(cesiumPage.getByText("Pre-2018")).not.toBeVisible();
 
         // Note: Testing actual Helsinki view would require:
         // 1. Setting helsinkiView store state to true
@@ -202,7 +203,7 @@ cesiumDescribe("Building Filters Accessibility", () => {
         // The filter should be functional when visible
 
         // Look for Helsinki-specific filter container
-        const helsinkiFilter = cesiumPage.getByText("Built before summer 2018");
+        const helsinkiFilter = cesiumPage.getByText("Pre-2018");
 
         // If it becomes visible (e.g., through state change), it should be functional
         if (await helsinkiFilter.isVisible()) {
@@ -225,11 +226,11 @@ cesiumDescribe("Building Filters Accessibility", () => {
       async ({ cesiumPage }) => {
         // Get available filters
         const publicBuildingsToggle = cesiumPage
-          .getByText("Only public buildings")
+          .getByText("Public Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -257,11 +258,11 @@ cesiumDescribe("Building Filters Accessibility", () => {
       async ({ cesiumPage }) => {
         // Enable filters in Capital Region
         const publicBuildingsToggle = cesiumPage
-          .getByText("Only public buildings")
+          .getByText("Public Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -288,11 +289,11 @@ cesiumDescribe("Building Filters Accessibility", () => {
       async ({ cesiumPage }) => {
         // Enable filters at start level
         const publicBuildingsToggle = cesiumPage
-          .getByText("Only public buildings")
+          .getByText("Public Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -323,7 +324,7 @@ cesiumDescribe("Building Filters Accessibility", () => {
         await cesiumPage.waitForTimeout(3000);
 
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -349,7 +350,7 @@ cesiumDescribe("Building Filters Accessibility", () => {
       "should handle rapid filter toggling without errors",
       async ({ cesiumPage }) => {
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -386,7 +387,7 @@ cesiumDescribe("Building Filters Accessibility", () => {
 
         // Immediately apply filters
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         await tallBuildingsToggle.check();
@@ -473,10 +474,10 @@ cesiumDescribe("Building Filters Accessibility", () => {
       "should have descriptive labels for screen readers",
       async ({ cesiumPage }) => {
         // Check that filter labels are meaningful
-        const filterLabels = ["Only public buildings", "Only tall buildings"];
+        const filterLabels = ["Public Buildings", "Tall Buildings"];
 
         for (const labelText of filterLabels) {
-          const label = cesiumPage.getByText(labelText);
+          const label = cesiumPage.getByText(labelText, { exact: true });
           if (await label.isVisible()) {
             await expect(label).toBeVisible();
 
@@ -494,11 +495,11 @@ cesiumDescribe("Building Filters Accessibility", () => {
       "should provide visual feedback for filter state changes",
       async ({ cesiumPage }) => {
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         const slider = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator(".slider");
 
@@ -535,11 +536,11 @@ cesiumDescribe("Building Filters Accessibility", () => {
 
           // Filters should remain accessible
           await expect(
-            cesiumPage.getByText("Only tall buildings"),
+            cesiumPage.getByText("Tall Buildings", { exact: true }),
           ).toBeVisible();
 
           const tallBuildingsToggle = cesiumPage
-            .getByText("Only tall buildings")
+            .getByText("Tall Buildings", { exact: true })
             .locator("..")
             .locator('input[type="checkbox"]');
 
@@ -564,7 +565,7 @@ cesiumDescribe("Building Filters Accessibility", () => {
 
         // Enable building filter
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         await tallBuildingsToggle.check();
@@ -592,11 +593,11 @@ cesiumDescribe("Building Filters Accessibility", () => {
       async ({ cesiumPage }) => {
         // Enable filters
         const publicBuildingsToggle = cesiumPage
-          .getByText("Only public buildings")
+          .getByText("Public Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
 

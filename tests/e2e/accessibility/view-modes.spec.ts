@@ -47,7 +47,7 @@ cesiumDescribe("View Modes Accessibility", () => {
         });
 
         // Verify layers specific to Capital Region
-        await expect(cesiumPage.getByText("HSY Land Cover")).toBeVisible();
+        await expect(cesiumPage.getByText("Land Cover")).toBeVisible();
         await expect(cesiumPage.getByText("NDVI")).toBeVisible();
 
         // Verify Helsinki-specific layers are not visible
@@ -187,7 +187,7 @@ cesiumDescribe("View Modes Accessibility", () => {
         await expect(gridRadio).not.toBeChecked();
 
         // Verify Capital Region content restored
-        await expect(cesiumPage.getByText("HSY Land Cover")).toBeVisible();
+        await expect(cesiumPage.getByText("Land Cover")).toBeVisible();
       },
     );
 
