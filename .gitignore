@@ -29,6 +29,7 @@ pnpm-debug.log*
 /blob-report/
 /playwright/.cache/
 /coverage/
+.vitest-reports/
 
 # TypeDoc generated documentation
 /api-docs/
