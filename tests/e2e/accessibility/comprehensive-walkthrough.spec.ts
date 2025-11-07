@@ -197,7 +197,7 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
         const landCoverToggle = cesiumPage
-          .getByText("HSY Land Cover")
+          .getByText("Land Cover")
           .locator("..")
           .locator('input[type="checkbox"]');
         const treesToggle = cesiumPage
@@ -213,11 +213,11 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
 
         // 3. Enable multiple filters
         const publicBuildingsToggle = cesiumPage
-          .getByText("Only public buildings")
+          .getByText("Public Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -261,7 +261,7 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
         const tallBuildingsToggle = cesiumPage
-          .getByText("Only tall buildings")
+          .getByText("Tall Buildings", { exact: true })
           .locator("..")
           .locator('input[type="checkbox"]');
 
@@ -566,11 +566,11 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
 
           // Layer controls
           "NDVI",
-          "HSY Land Cover",
+          "Land Cover",
 
           // Filter controls
-          "Only public buildings",
-          "Only tall buildings",
+          "Public Buildings",
+          "Tall Buildings",
 
           // Expansion panels
           "HSY Background maps",
@@ -586,11 +586,13 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
         await expect(cesiumPage.getByText("Capital Region Heat")).toBeVisible();
         await expect(cesiumPage.getByText("Statistical Grid")).toBeVisible();
         await expect(cesiumPage.getByText("NDVI")).toBeVisible();
-        await expect(cesiumPage.getByText("HSY Land Cover")).toBeVisible();
+        await expect(cesiumPage.getByText("Land Cover")).toBeVisible();
         await expect(
-          cesiumPage.getByText("Only public buildings"),
+          cesiumPage.getByText("Public Buildings", { exact: true }),
         ).toBeVisible();
-        await expect(cesiumPage.getByText("Only tall buildings")).toBeVisible();
+        await expect(
+          cesiumPage.getByText("Tall Buildings", { exact: true }),
+        ).toBeVisible();
         await expect(cesiumPage.getByText("HSY Background maps")).toBeVisible();
         await expect(
           cesiumPage.getByText("Syke Flood Background Maps"),

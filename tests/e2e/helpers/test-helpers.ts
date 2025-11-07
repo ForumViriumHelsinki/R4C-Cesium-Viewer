@@ -41,13 +41,13 @@ export class AccessibilityTestHelpers {
     const viewModes: Record<string, ViewMode> = {
       capitalRegionView: {
         id: "capitalRegionView",
-        label: "Capital Region Heat",
-        selector: 'input[value="capitalRegionView"]',
+        label: "Capital Region",
+        selector: '.view-mode-card:has-text("Capital Region")',
       },
       gridView: {
         id: "gridView",
         label: "Statistical Grid",
-        selector: 'input[value="gridView"]',
+        selector: '.view-mode-card:has-text("Statistical Grid")',
       },
     };
 
@@ -56,11 +56,16 @@ export class AccessibilityTestHelpers {
       throw new Error(`Unknown view mode: ${viewMode}`);
     }
 
-    // Wait for view mode container to be visible
-    await this.page.waitForSelector("#viewModeContainer");
+    // Wait for any overlays to close before attempting navigation
+    await this.waitForOverlaysToClose();
 
-    // Click the radio button for the target view
-    await this.page.check(targetView.selector);
+    // Wait for view mode selector to be visible
+    await this.page.waitForSelector(".view-mode-selector", {
+      state: "visible",
+    });
+
+    // Click the view mode card
+    await this.page.locator(targetView.selector).click();
 
     // Wait for view transition to complete by checking if the view is properly loaded
     await this.page.waitForFunction(
@@ -71,8 +76,8 @@ export class AccessibilityTestHelpers {
       { timeout: 10000 },
     );
 
-    // Verify the selection is active
-    await expect(this.page.locator(targetView.selector)).toBeChecked();
+    // Verify the selection is active by checking for active class
+    await expect(this.page.locator(targetView.selector)).toHaveClass(/active/);
   }
 
   /**
@@ -82,6 +87,9 @@ export class AccessibilityTestHelpers {
     targetLevel: "postalCode" | "building",
     identifier?: string,
   ): Promise<void> {
+    // Wait for any overlays to close before attempting drill-down
+    await this.waitForOverlaysToClose();
+
     switch (targetLevel) {
       case "postalCode":
         // Click on a postal code area - using Helsinki center as default
@@ -228,24 +236,24 @@ export class AccessibilityTestHelpers {
       await this.testToggle("Trees", false);
     }
 
-    // HSY Land Cover (not Helsinki view)
+    // Land Cover (not Helsinki view)
     if (currentView !== "helsinki") {
-      await this.testToggle("HSY Land Cover", true);
+      await this.testToggle("Land Cover", true);
     } else {
-      await this.testToggle("HSY Land Cover", false);
+      await this.testToggle("Land Cover", false);
     }
 
     // NDVI is universal
     await this.testToggle("NDVI", true);
 
     // Test filter toggles
-    await this.testToggle("Only public buildings", true);
-    await this.testToggle("Only tall buildings", true);
+    await this.testToggle("Public Buildings", true);
+    await this.testToggle("Tall Buildings", true);
 
     if (currentView === "helsinki") {
-      await this.testToggle("Built before summer 2018", true);
+      await this.testToggle("Pre-2018", true);
     } else {
-      await this.testToggle("Built before summer 2018", false);
+      await this.testToggle("Pre-2018", false);
     }
   }
 
@@ -476,6 +484,28 @@ export class AccessibilityTestHelpers {
       // Verify Cesium container adapts
       const cesiumContainer = this.page.locator("#cesiumContainer");
       await expect(cesiumContainer).toBeVisible();
+    }
+  }
+
+  /**
+   * Wait for Vuetify overlays to close before interactions
+   */
+  async waitForOverlaysToClose(): Promise<void> {
+    const overlay = this.page.locator(".v-overlay__scrim");
+    const overlayCount = await overlay.count();
+
+    if (overlayCount > 0) {
+      // Try pressing Escape to close any dialogs
+      await this.page.keyboard.press("Escape");
+      // Wait for overlays to disappear
+      await this.page
+        .waitForSelector(".v-overlay__scrim", {
+          state: "hidden",
+          timeout: 5000,
+        })
+        .catch(() => {
+          // If timeout, continue anyway - overlay might have closed
+        });
     }
   }
 }
