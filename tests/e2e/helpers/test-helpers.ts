@@ -59,6 +59,9 @@ export class AccessibilityTestHelpers {
     // Wait for any overlays to close before attempting navigation
     await this.waitForOverlaysToClose();
 
+    // Ensure the control panel is open
+    await this.ensureControlPanelOpen();
+
     // Wait for view mode selector to be visible
     await this.page.waitForSelector(".view-mode-selector", {
       state: "visible",
@@ -89,6 +92,9 @@ export class AccessibilityTestHelpers {
   ): Promise<void> {
     // Wait for any overlays to close before attempting drill-down
     await this.waitForOverlaysToClose();
+
+    // Ensure the control panel is open
+    await this.ensureControlPanelOpen();
 
     switch (targetLevel) {
       case "postalCode":
@@ -265,22 +271,29 @@ export class AccessibilityTestHelpers {
     shouldBeVisible: boolean,
   ): Promise<void> {
     const toggle = this.page
-      .getByText(toggleName)
+      .getByText(toggleName, { exact: true })
       .locator("..")
       .locator('input[type="checkbox"]');
 
     if (shouldBeVisible) {
-      await expect(this.page.getByText(toggleName)).toBeVisible();
+      await expect(
+        this.page.getByText(toggleName, { exact: true }),
+      ).toBeVisible();
+
+      // Scroll the toggle into view before interacting
+      await toggle.scrollIntoViewIfNeeded();
 
       // Test toggling on
-      await toggle.check();
+      await toggle.check({ force: true });
       await expect(toggle).toBeChecked();
 
       // Test toggling off
-      await toggle.uncheck();
+      await toggle.uncheck({ force: true });
       await expect(toggle).not.toBeChecked();
     } else {
-      await expect(this.page.getByText(toggleName)).not.toBeVisible();
+      await expect(
+        this.page.getByText(toggleName, { exact: true }),
+      ).not.toBeVisible();
     }
   }
 
@@ -506,6 +519,32 @@ export class AccessibilityTestHelpers {
         .catch(() => {
           // If timeout, continue anyway - overlay might have closed
         });
+    }
+  }
+
+  /**
+   * Ensure the control panel (navigation drawer) is open
+   */
+  async ensureControlPanelOpen(): Promise<void> {
+    // Check if the navigation drawer is visible
+    const drawer = this.page.locator(".v-navigation-drawer.analysis-sidebar");
+    const isVisible = await drawer.isVisible().catch(() => false);
+
+    if (!isVisible) {
+      // Find and click the toggle button to open the drawer
+      const toggleButton = this.page.getByRole("button", {
+        name: /toggle control panel/i,
+      });
+      await toggleButton.click();
+
+      // Wait for drawer to be visible
+      await this.page.waitForSelector(".v-navigation-drawer.analysis-sidebar", {
+        state: "visible",
+        timeout: 5000,
+      });
+
+      // Wait a moment for drawer animation
+      await this.page.waitForTimeout(300);
     }
   }
 }
