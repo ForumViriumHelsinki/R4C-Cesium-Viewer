@@ -59,9 +59,15 @@ server {
         # Store the host in a variable first
         set $pygeoapi_host "${VITE_PYGEOAPI_HOST}";
 
-        # Derive protocol based on port - use http for localhost development ports, https otherwise
+        # Derive protocol based on host type:
+        # - Use http for localhost development (localhost:port)
+        # - Use http for internal Kubernetes services (*.svc.cluster.local)
+        # - Use https for external services (pygeoapi.dataportal.fi, etc.)
         set $pygeoapi_protocol "https";
         if ($pygeoapi_host ~* "^localhost:[0-9]+$") {
+            set $pygeoapi_protocol "http";
+        }
+        if ($pygeoapi_host ~* "\.svc\.cluster\.local$") {
             set $pygeoapi_protocol "http";
         }
         proxy_pass $pygeoapi_protocol://$pygeoapi_host/;
