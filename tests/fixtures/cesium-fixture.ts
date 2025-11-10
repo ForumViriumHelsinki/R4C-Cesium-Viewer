@@ -607,6 +607,11 @@ export const cesiumTest = base.extend<CesiumFixtures>({
               // Store reference for tests
               (window as any).viewer = viewer;
 
+              // CRITICAL: Freeze clock to prevent time-based animations
+              if (viewer.clock) {
+                viewer.clock.shouldAnimate = false;
+              }
+
               // Disable animations and effects
               if (viewer.scene) {
                 viewer.scene.debugShowFramesPerSecond = false;
@@ -669,6 +674,23 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 
     // Wait for app to be ready
     await waitForAppReady(page, process.env.CI ? 60000 : 30000);
+
+    // Enable performance mode via graphics store
+    await page.evaluate(() => {
+      // Wait for store to be available and set performance preset
+      const checkStore = setInterval(() => {
+        if ((window as any).useGraphicsStore) {
+          const graphicsStore = (window as any).useGraphicsStore();
+          if (graphicsStore) {
+            graphicsStore.applyQualityPreset("performance");
+            console.log("[Test] Graphics store set to performance mode");
+            clearInterval(checkStore);
+          }
+        }
+      }, 100);
+      // Timeout after 5 seconds
+      setTimeout(() => clearInterval(checkStore), 5000);
+    });
 
     // Close the disclaimer dialog if it appears
     const dialogButton = page.getByRole("button", {

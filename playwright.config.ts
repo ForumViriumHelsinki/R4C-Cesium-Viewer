@@ -15,14 +15,14 @@ export default defineConfig({
   testDir: "./tests",
   /* Global setup for test environment */
   globalSetup: "./tests/setup/global-setup.ts",
-  /* Run tests in files in parallel */
-  fullyParallel: true,
+  /* Run tests SEQUENTIALLY to avoid multiple 3D renderers competing for resources */
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only - increased for flaky Cesium tests */
-  retries: process.env.CI ? 3 : 0,
-  /* Reduce parallel workers for accessibility tests to avoid resource contention */
-  workers: process.env.CI ? 2 : undefined,
+  /* Retry on CI only - reduced now that stability issues are fixed */
+  retries: process.env.CI ? 1 : 0,
+  /* Run ONE test at a time to prevent resource contention with WebGL */
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
     ? [
@@ -50,9 +50,9 @@ export default defineConfig({
     /* Video recording for critical tests */
     video: "retain-on-failure",
 
-    /* Extended timeouts for Cesium loading */
-    actionTimeout: 30000,
-    navigationTimeout: 30000,
+    /* Reduced timeouts - requestRenderMode makes elements stable quickly */
+    actionTimeout: 5000,
+    navigationTimeout: 10000,
 
     /* Explicitly run headless in CI */
     headless: process.env.CI ? true : undefined,
@@ -71,11 +71,11 @@ export default defineConfig({
     }),
   },
 
-  /* Test timeout extended for complex 3D interactions, increased for CI due to Cesium complexity */
-  timeout: process.env.CI ? 180000 : 60000, // 3 minutes in CI for accessibility tests
+  /* Test timeout reduced - requestRenderMode eliminates stability delays */
+  timeout: 20000, // 20 seconds should be plenty with stable elements
   expect: {
-    /* Timeout for assertions - increased for CI accessibility tests */
-    timeout: process.env.CI ? 30000 : 10000, // 30 seconds in CI for complex assertions
+    /* Timeout for assertions - reduced with stable rendering */
+    timeout: 5000,
   },
 
   /* Configure projects for major browsers */
