@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.1...r4c-cesium-viewer-v1.28.2) (2025-11-10)
+
+
+### Bug Fixes
+
+* update Node.js version to 24 in Dockerfile ([#331](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/331)) ([1ff765d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1ff765d7dc28bcf884c186853d18d66b9bd0990a)), closes [#330](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/330)
+
 ## [1.28.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.0...r4c-cesium-viewer-v1.28.1) (2025-11-10)
 
 
