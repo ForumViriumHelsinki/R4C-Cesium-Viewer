@@ -70,9 +70,14 @@ server {
         if ($pygeoapi_host ~* "\.svc\.cluster\.local$") {
             set $pygeoapi_protocol "http";
         }
-        proxy_pass $pygeoapi_protocol://$pygeoapi_host/;
-        proxy_set_header Host $pygeoapi_host;
+
+        # Rewrite must come BEFORE proxy_pass when using variables
+        # Strip /pygeoapi prefix: /pygeoapi/collections/foo -> /collections/foo
         rewrite ^/pygeoapi/(.*)$ /$1 break;
+
+        # proxy_pass without trailing slash preserves the rewritten path
+        proxy_pass $pygeoapi_protocol://$pygeoapi_host;
+        proxy_set_header Host $pygeoapi_host;
     }
 
     location /wms/proxy {
