@@ -1,4 +1,4 @@
-FROM node:23-alpine AS build
+FROM node:24-alpine AS build
 
 ARG SENTRY_AUTH_TOKEN
 ARG VITE_SENTRY_DSN
