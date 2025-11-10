@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.0...r4c-cesium-viewer-v1.28.1) (2025-11-10)
+
+
+### Bug Fixes
+
+* use HTTP for internal Kubernetes pygeoapi service ([#327](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/327)) ([073f35a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/073f35ad55644f12b87fb554d45b78b652f0aa07))
+
 ## [1.28.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.12...r4c-cesium-viewer-v1.28.0) (2025-11-05)
 
 ### Features
