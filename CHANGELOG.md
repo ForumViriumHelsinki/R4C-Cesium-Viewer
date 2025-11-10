@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.2...r4c-cesium-viewer-v1.28.3) (2025-11-10)
+
+
+### Bug Fixes
+
+* correct nginx proxy_pass path handling for pygeoapi ([#333](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/333)) ([fc61f2b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fc61f2bc7413600fb55691549c61daabcfa0c30c))
+
 ## [1.28.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.1...r4c-cesium-viewer-v1.28.2) (2025-11-10)
 
 
