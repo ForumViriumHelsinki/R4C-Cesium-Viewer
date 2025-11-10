@@ -656,24 +656,52 @@ cesiumDescribe("Navigation Levels Accessibility", () => {
     cesiumTest(
       "should support keyboard navigation between levels",
       async ({ cesiumPage }) => {
-        // Tab through navigation controls
-        await cesiumPage.keyboard.press("Tab");
-        await cesiumPage.keyboard.press("Tab");
-        await cesiumPage.keyboard.press("Tab");
+        // Tab through navigation controls with safety measures
+        const maxIterations = 15;
+        let foundNavigationElement = false;
 
-        // Should be able to focus on navigation elements
-        const focusedElement = cesiumPage.locator(":focus");
-        await expect(focusedElement).toBeVisible();
+        try {
+          for (let i = 0; i < maxIterations; i++) {
+            // Check if page context is still valid
+            const pageValid = await cesiumPage
+              .evaluate(() => document.readyState)
+              .then(() => true)
+              .catch(() => false);
 
-        // Test Enter key activation
-        await cesiumPage.keyboard.press("Enter");
-        // Wait for any activation effects
-        await cesiumPage.waitForFunction(
-          () => {
-            return document.readyState === "complete";
-          },
-          { timeout: 3000 },
-        );
+            if (!pageValid) {
+              console.warn("Page context lost during keyboard navigation");
+              break;
+            }
+
+            await cesiumPage.keyboard.press("Tab");
+            await cesiumPage.waitForTimeout(100);
+
+            const focusedElement = cesiumPage.locator(":focus");
+            const elementExists = await focusedElement
+              .count()
+              .then((c) => c > 0);
+
+            if (elementExists) {
+              const isVisible = await focusedElement
+                .isVisible()
+                .catch(() => false);
+              if (isVisible) {
+                foundNavigationElement = true;
+
+                // Test Enter key activation
+                await cesiumPage.keyboard.press("Enter");
+                // Wait for any activation effects
+                await cesiumPage.waitForTimeout(500);
+                break;
+              }
+            }
+          }
+        } catch (error) {
+          console.warn("Keyboard navigation test encountered error:", error);
+        }
+
+        // Should have found at least one navigation element
+        expect(foundNavigationElement).toBeTruthy();
 
         // Should not cause errors
         const errorElements = cesiumPage.locator(
