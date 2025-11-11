@@ -14,6 +14,7 @@
  */
 
 import { defineStore } from "pinia";
+import { markRaw } from "vue";
 
 /**
  * Props Pinia Store
@@ -100,16 +101,20 @@ export const usePropsStore = defineStore("props", {
     /**
      * Sets postal code boundary data source reference
      * @param {Object} data - Cesium postal code data source
+     * @note Uses markRaw to prevent Cesium data source from becoming reactive,
+     *       which would cause DataCloneError in Web Workers
      */
     setPostalCodeData(data) {
-      this.postalCodeData = data;
+      this.postalCodeData = markRaw(data);
     },
     /**
      * Sets the selected entity for heat/flood vulnerability analysis
      * @param {Object} entity - Cesium entity with vulnerability properties
+     * @note Uses markRaw to prevent Cesium entity from becoming reactive,
+     *       which would cause DataCloneError in Web Workers
      */
     setHeatFloodVulnerability(entity) {
-      this.heatFloodVulnerabilityEntity = entity;
+      this.heatFloodVulnerabilityEntity = markRaw(entity);
     },
     /**
      * Sets 250m grid cell building aggregation properties
@@ -156,16 +161,20 @@ export const usePropsStore = defineStore("props", {
     /**
      * Sets tree entity references for analysis
      * @param {Array<Object>} entities - Cesium tree canopy entities
+     * @note Uses markRaw to prevent Cesium entities from becoming reactive,
+     *       which would cause DataCloneError in Web Workers
      */
     setTreeEntities(entities) {
-      this.treeEntities = entities;
+      this.treeEntities = markRaw(entities);
     },
     /**
      * Sets buildings data source reference
      * @param {Object} datasource - Cesium buildings data source
+     * @note Uses markRaw to prevent Cesium datasource from becoming reactive,
+     *       which would cause DataCloneError in Web Workers
      */
     setBuildingsDatasource(datasource) {
-      this.buildingsDatasource = datasource;
+      this.buildingsDatasource = markRaw(datasource);
     },
     /**
      * Sets postal code-level heat exposure time-series data

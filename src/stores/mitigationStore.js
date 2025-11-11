@@ -32,6 +32,7 @@
  */
 
 import { defineStore } from "pinia";
+import { markRaw } from "vue";
 
 /**
  * Mitigation Pinia Store
@@ -64,6 +65,12 @@ export const useMitigationStore = defineStore("mitigation", {
     cumulativeHeatReduction: 0,
   }),
   actions: {
+    /**
+     * Sets grid cells with Cesium entity references
+     * @param {Object} datasource - Cesium data source containing grid entities
+     * @note Uses markRaw on entity objects to prevent them from becoming reactive,
+     *       which would cause DataCloneError when Cesium workers process geometry
+     */
     async setGridCells(datasource) {
       this.gridCells = datasource.entities.values
         .filter(
@@ -80,7 +87,7 @@ export const useMitigationStore = defineStore("mitigation", {
             id: gridId,
             x: entity.properties.euref_x.getValue(),
             y: entity.properties.euref_y.getValue(),
-            entity: entity,
+            entity: markRaw(entity),
           };
         });
     },
