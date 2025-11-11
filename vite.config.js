@@ -18,7 +18,7 @@ export default defineConfig(() => {
         output: {
           assetFileNames: `assets/[name].[hash].${version}.[ext]`,
           chunkFileNames: `assets/[name].[hash].${version}.js`,
-          entryFileNames: `assets/[name].${version}.js`,
+          entryFileNames: `assets/[name].[hash].${version}.js`,
           manualChunks: {
             // Split Cesium into its own chunk for better caching and async loading
             cesium: ["cesium"],
