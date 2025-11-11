@@ -344,6 +344,36 @@ test.describe("Loading Performance and User Experience", () => {
       await vegToggle.uncheck();
     }
   });
+
+  test("should limit WMS tile requests on page load", async ({ page }) => {
+    // Performance baseline: Post PR #340 optimization
+    // WMS requests should be reduced from ~600 to ~150 by optimizing tile size
+    const wmsRequests: string[] = [];
+
+    // Attach listener BEFORE navigation to capture all WMS requests
+    page.on("request", (request) => {
+      if (request.url().includes("/helsinki-wms")) {
+        wmsRequests.push(request.url());
+      }
+    });
+
+    await page.goto("/");
+
+    // Dismiss disclaimer to trigger full app initialization
+    await page.getByRole("button", { name: "Explore Map" }).click();
+
+    // Wait for map to fully load and WMS tiles to settle
+    await page.waitForTimeout(5000);
+
+    // Verify request count is below threshold (down from ~600 before optimization)
+    expect(
+      wmsRequests.length,
+      `WMS requests should be < 200 (optimization from PR #340)`,
+    ).toBeLessThan(200);
+
+    // Log actual count for monitoring and regression detection
+    console.log(`WMS tile requests: ${wmsRequests.length}`);
+  });
 });
 
 test.describe("Bundle Size and Dynamic Import Performance", () => {
