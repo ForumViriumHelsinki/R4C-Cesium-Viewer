@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.3...r4c-cesium-viewer-v1.28.4) (2025-11-11)
+
+
+### Bug Fixes
+
+* prevent DataCloneError by marking Cesium entities as non-reactive ([#336](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/336)) ([46e48f6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/46e48f67fdce47bf3c54727dfb1d278955aa55f1))
+
 ## [1.28.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.2...r4c-cesium-viewer-v1.28.3) (2025-11-10)
 
 
