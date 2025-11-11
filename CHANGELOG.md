@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.4...r4c-cesium-viewer-v1.29.0) (2025-11-11)
+
+
+### Features
+
+* add bundle size and Web Vitals performance tests ([#315](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/315)) ([5ea658f](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5ea658f28c8d6e450747e36611b772df024fbeb5))
+
 ## [1.28.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.3...r4c-cesium-viewer-v1.28.4) (2025-11-11)
 
 
