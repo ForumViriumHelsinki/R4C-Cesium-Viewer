@@ -68,7 +68,7 @@ export class AccessibilityTestHelpers {
         // Wait for page to be stable first
         await this.page
           .waitForLoadState("domcontentloaded", { timeout: 5000 })
-          .catch(() => {});
+          .catch((e) => console.warn("DOM content load wait failed:", e.message));
 
         // Multi-strategy selector detection with fallbacks
         let viewCardFound = false;
@@ -250,7 +250,9 @@ export class AccessibilityTestHelpers {
           // Try to reset page state
           await this.page
             .waitForLoadState("domcontentloaded", { timeout: 5000 })
-            .catch(() => {});
+            .catch((e) =>
+              console.warn("Page state reset failed:", e.message),
+            );
         }
       }
     }
@@ -342,7 +344,9 @@ export class AccessibilityTestHelpers {
             // Wait for map to finish loading
             await this.page
               .waitForLoadState("networkidle", { timeout: 3000 })
-              .catch(() => {});
+              .catch((e) =>
+                console.warn("Network idle wait failed:", e.message),
+              );
 
             // Simulate clicking on the center of the map where postal codes are
             // Use multiple click positions to increase success rate
@@ -384,7 +388,9 @@ export class AccessibilityTestHelpers {
               // Additional wait for data to load
               await this.page
                 .waitForLoadState("networkidle", { timeout: 5000 })
-                .catch(() => {});
+                .catch((e) =>
+                  console.warn("Data load network idle wait failed:", e.message),
+                );
 
               // Final stability wait
               await this.page.waitForTimeout(500);
@@ -458,7 +464,9 @@ export class AccessibilityTestHelpers {
             // Wait for map to finish loading
             await this.page
               .waitForLoadState("networkidle", { timeout: 3000 })
-              .catch(() => {});
+              .catch((e) =>
+                console.warn("Network idle wait failed:", e.message),
+              );
 
             // Click on a building (use multiple positions to increase success rate)
             const buildingPositions = [
@@ -500,7 +508,9 @@ export class AccessibilityTestHelpers {
               // Additional wait for data to load
               await this.page
                 .waitForLoadState("networkidle", { timeout: 5000 })
-                .catch(() => {});
+                .catch((e) =>
+                  console.warn("Data load network idle wait failed:", e.message),
+                );
 
               // Final stability wait
               await this.page.waitForTimeout(500);
@@ -947,8 +957,9 @@ export class AccessibilityTestHelpers {
     // Wait for any final initialization processes
     await this.page
       .waitForLoadState("networkidle", { timeout: 5000 })
-      .catch(() => {
+      .catch((e) => {
         // Network idle is optional - continue if it doesn't settle
+        console.warn("Final network idle wait failed:", e.message);
       });
   }
 

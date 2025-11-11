@@ -50,9 +50,10 @@ export default defineConfig({
     /* Video recording for critical tests */
     video: "retain-on-failure",
 
-    /* Reduced timeouts - requestRenderMode makes elements stable quickly */
-    actionTimeout: 5000,
-    navigationTimeout: 10000,
+    /* Reduced timeouts - requestRenderMode makes elements stable quickly
+     * CI gets slightly more generous timeouts to account for environment variability */
+    actionTimeout: process.env.CI ? 8000 : 5000,
+    navigationTimeout: process.env.CI ? 15000 : 10000,
 
     /* Explicitly run headless in CI */
     headless: process.env.CI ? true : undefined,
@@ -71,11 +72,13 @@ export default defineConfig({
     }),
   },
 
-  /* Test timeout reduced - requestRenderMode eliminates stability delays */
-  timeout: 20000, // 20 seconds should be plenty with stable elements
+  /* Test timeout reduced - requestRenderMode eliminates stability delays
+   * CI gets more time to account for slower/variable environments */
+  timeout: process.env.CI ? 30000 : 20000,
   expect: {
-    /* Timeout for assertions - reduced with stable rendering */
-    timeout: 5000,
+    /* Timeout for assertions - reduced with stable rendering
+     * CI gets slightly more time for slower execution */
+    timeout: process.env.CI ? 8000 : 5000,
   },
 
   /* Configure projects for major browsers */
