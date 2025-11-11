@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.29.0...r4c-cesium-viewer-v1.29.1) (2025-11-11)
+
+
+### Performance Improvements
+
+* Optimize WMS tile requests to reduce N+1 API calls by 75% ([#340](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/340)) ([c88c1bf](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c88c1bfeff569800b535207be920ce023a08a602))
+
 ## [1.29.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.4...r4c-cesium-viewer-v1.29.0) (2025-11-11)
 
 
