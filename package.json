@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "dotenvx run -- vite --host",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' dotenvx run -- vite build",
-    "build:analyze": "NODE_OPTIONS='--max-old-space-size=4096' dotenvx run -- vite build --mode analyze",
+    "build": "NODE_OPTIONS='--max-old-space-size=3072' dotenvx run -- vite build",
+    "build:analyze": "NODE_OPTIONS='--max-old-space-size=3072' dotenvx run -- vite build --mode analyze",
     "preview": "dotenvx run -- vite preview --host",
     "lint": "eslint --fix src/",
     "docs": "typedoc",

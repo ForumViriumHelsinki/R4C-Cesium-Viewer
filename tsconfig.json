@@ -19,13 +19,14 @@
     // Skip type checking of declaration files
     "skipLibCheck": true,
 
-    // Enable strict type-checking options for better code quality
-    "strict": false, // Disabled to avoid overwhelming errors in existing codebase
-    "noImplicitAny": false, // Will enable gradually
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictPropertyInitialization": false,
-    "noImplicitThis": true,
+    // Granular strict mode configuration for gradual adoption
+    // We enable specific strict checks while keeping 'strict' false to avoid breaking existing code
+    "strict": false, // Keep false - enables all strict flags at once, too aggressive for existing codebase
+    "noImplicitAny": false, // TODO: Enable once JSDoc types are added to critical functions
+    "strictNullChecks": true, // ENABLED: Catches null/undefined errors, high-value check
+    "strictFunctionTypes": true, // ENABLED: Ensures function parameter compatibility, low friction
+    "strictPropertyInitialization": false, // Disabled: Many Vue components don't initialize all properties
+    "noImplicitThis": true, // ENABLED: Prevents `this` binding errors in callbacks
 
     // Resolve JSON modules
     "resolveJsonModule": true,

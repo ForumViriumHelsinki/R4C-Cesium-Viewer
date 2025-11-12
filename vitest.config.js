@@ -57,17 +57,9 @@ export default defineConfig({
       },
     },
     testTimeout: 10000,
-    // Use threads for better performance with Vitest
+    // Use threads pool for better performance (default in Vitest)
+    // Tests run in parallel with proper isolation
     pool: "threads",
-    poolOptions: {
-      threads: {
-        singleThread: false, // Allow parallel test execution
-        isolate: true, // Ensure proper test isolation
-      },
-    },
-    // Enable concurrent test execution for better performance
-    // Tests are isolated so this should be safe
-    maxConcurrency: 4,
   },
   resolve: {
     alias: {
