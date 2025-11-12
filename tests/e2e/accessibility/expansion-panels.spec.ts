@@ -36,7 +36,9 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
 
         // Test expansion
         const hsyPanel = cesiumPage.getByText("HSY Background maps");
-        await helpers.scrollIntoViewportWithRetry(hsyPanel, { elementName: "HSY Background maps" });
+        await helpers.scrollIntoViewportWithRetry(hsyPanel, {
+          elementName: "HSY Background maps",
+        });
         await hsyPanel.click();
 
         // Should reveal background map options
@@ -44,7 +46,9 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         await expect(cesiumPage.getByText("Map")).toBeVisible();
 
         // Collapse again
-        await helpers.scrollIntoViewportWithRetry(hsyPanel, { elementName: "HSY Background maps" });
+        await helpers.scrollIntoViewportWithRetry(hsyPanel, {
+          elementName: "HSY Background maps",
+        });
         await hsyPanel.click();
         await expect(cesiumPage.getByText("Orthophoto")).toBeHidden();
       },
@@ -58,7 +62,9 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         ).toBeVisible();
 
         const sykePanel = cesiumPage.getByText("Syke Flood Background Maps");
-        await helpers.scrollIntoViewportWithRetry(sykePanel, { elementName: "Syke Flood Background Maps" });
+        await helpers.scrollIntoViewportWithRetry(sykePanel, {
+          elementName: "Syke Flood Background Maps",
+        });
         await sykePanel.click();
 
         // Should show flood scenario options
@@ -66,7 +72,9 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         await expect(cesiumPage.getByText("Flood: 1/20a, Sea")).toBeVisible();
         await expect(cesiumPage.getByText("Flood: 1/50a, Sea")).toBeVisible();
 
-        await helpers.scrollIntoViewportWithRetry(sykePanel, { elementName: "Syke Flood Background Maps" });
+        await helpers.scrollIntoViewportWithRetry(sykePanel, {
+          elementName: "Syke Flood Background Maps",
+        });
         await sykePanel.click();
         await expect(cesiumPage.getByText("Flood: 1/5a, Sea")).toBeHidden();
       },
@@ -78,7 +86,9 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         await expect(cesiumPage.getByText("Geocoding")).toBeVisible();
 
         const geocodingPanel = cesiumPage.getByText("Geocoding");
-        await helpers.scrollIntoViewportWithRetry(geocodingPanel, { elementName: "Geocoding" });
+        await helpers.scrollIntoViewportWithRetry(geocodingPanel, {
+          elementName: "Geocoding",
+        });
         await geocodingPanel.click();
 
         // Should show search input
@@ -91,7 +101,9 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         await searchInput.fill("Helsinki");
         await cesiumPage.keyboard.press("Enter");
 
-        await helpers.scrollIntoViewportWithRetry(geocodingPanel, { elementName: "Geocoding" });
+        await helpers.scrollIntoViewportWithRetry(geocodingPanel, {
+          elementName: "Geocoding",
+        });
         await geocodingPanel.click();
         await expect(searchInput).toBeHidden();
       },
@@ -119,13 +131,17 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         const gridOptionsPanel = cesiumPage.getByText(
           "Statistical grid options",
         );
-        await helpers.scrollIntoViewportWithRetry(gridOptionsPanel, { elementName: "Statistical grid options" });
+        await helpers.scrollIntoViewportWithRetry(gridOptionsPanel, {
+          elementName: "Statistical grid options",
+        });
         await gridOptionsPanel.click();
 
         // Should show grid configuration options
         await expect(cesiumPage.getByText("250m x 250m")).toBeVisible();
 
-        await helpers.scrollIntoViewportWithRetry(gridOptionsPanel, { elementName: "Statistical grid options" });
+        await helpers.scrollIntoViewportWithRetry(gridOptionsPanel, {
+          elementName: "Statistical grid options",
+        });
         await gridOptionsPanel.click();
         await expect(cesiumPage.getByText("250m x 250m")).toBeHidden();
       },
@@ -166,14 +182,18 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         await expect(cesiumPage.getByText("NDVI")).toBeVisible();
 
         const ndviPanel = cesiumPage.getByText("NDVI");
-        await helpers.scrollIntoViewportWithRetry(ndviPanel, { elementName: "NDVI panel" });
+        await helpers.scrollIntoViewportWithRetry(ndviPanel, {
+          elementName: "NDVI panel",
+        });
         await ndviPanel.click();
 
         // Should show NDVI options
         const ndviSlider = cesiumPage.locator(".ndvi-threshold-slider");
         await expect(ndviSlider).toBeVisible();
 
-        await helpers.scrollIntoViewportWithRetry(ndviPanel, { elementName: "NDVI panel" });
+        await helpers.scrollIntoViewportWithRetry(ndviPanel, {
+          elementName: "NDVI panel",
+        });
         await ndviPanel.click();
         await expect(ndviSlider).toBeHidden();
 
@@ -223,13 +243,17 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         // Should be visible
         const socioPanel = cesiumPage.getByText("Socioeconomics");
         if (await socioPanel.isVisible()) {
-          await helpers.scrollIntoViewportWithRetry(socioPanel, { elementName: "Socioeconomics panel" });
+          await helpers.scrollIntoViewportWithRetry(socioPanel, {
+            elementName: "Socioeconomics panel",
+          });
           await socioPanel.click();
 
           // Should show socioeconomic data
           await expect(cesiumPage.getByText("Population")).toBeVisible();
 
-          await helpers.scrollIntoViewportWithRetry(socioPanel, { elementName: "Socioeconomics panel" });
+          await helpers.scrollIntoViewportWithRetry(socioPanel, {
+            elementName: "Socioeconomics panel",
+          });
           await socioPanel.click();
           await expect(cesiumPage.getByText("Population")).toBeHidden();
         }
@@ -245,14 +269,18 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         // Land cover visibility depends on location
         const landCoverPanel = cesiumPage.getByText("Land cover");
         if (await landCoverPanel.isVisible()) {
-          await helpers.scrollIntoViewportWithRetry(landCoverPanel, { elementName: "Land Cover panel" });
+          await helpers.scrollIntoViewportWithRetry(landCoverPanel, {
+            elementName: "Land Cover panel",
+          });
           await landCoverPanel.click();
 
           // Should show land cover data
           const landCoverChart = cesiumPage.locator(".land-cover-chart");
           await expect(landCoverChart).toBeVisible();
 
-          await helpers.scrollIntoViewportWithRetry(landCoverPanel, { elementName: "Land Cover panel" });
+          await helpers.scrollIntoViewportWithRetry(landCoverPanel, {
+            elementName: "Land Cover panel",
+          });
           await landCoverPanel.click();
           await expect(landCoverChart).toBeHidden();
         }
@@ -276,14 +304,18 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         ).toBeVisible();
 
         const scatterPanel = cesiumPage.getByText("Building Scatter Plot");
-        await helpers.scrollIntoViewportWithRetry(scatterPanel, { elementName: "Building Scatter Plot panel" });
+        await helpers.scrollIntoViewportWithRetry(scatterPanel, {
+          elementName: "Building Scatter Plot panel",
+        });
         await scatterPanel.click();
 
         // Should show scatter plot
         const scatterChart = cesiumPage.locator(".building-scatter-chart");
         await expect(scatterChart).toBeVisible();
 
-        await helpers.scrollIntoViewportWithRetry(scatterPanel, { elementName: "Building Scatter Plot panel" });
+        await helpers.scrollIntoViewportWithRetry(scatterPanel, {
+          elementName: "Building Scatter Plot panel",
+        });
         await scatterPanel.click();
         await expect(scatterChart).toBeHidden();
       },
@@ -298,13 +330,17 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         // Should show area properties
         const areaProps = cesiumPage.getByText("Area properties");
         if (await areaProps.isVisible()) {
-          await helpers.scrollIntoViewportWithRetry(areaProps, { elementName: "Area properties panel" });
+          await helpers.scrollIntoViewportWithRetry(areaProps, {
+            elementName: "Area properties panel",
+          });
           await areaProps.click();
 
           // Should show property details
           await expect(cesiumPage.getByText("Total area")).toBeVisible();
 
-          await helpers.scrollIntoViewportWithRetry(areaProps, { elementName: "Area properties panel" });
+          await helpers.scrollIntoViewportWithRetry(areaProps, {
+            elementName: "Area properties panel",
+          });
           await areaProps.click();
           await expect(cesiumPage.getByText("Total area")).toBeHidden();
         }
@@ -320,13 +356,17 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         // Should show building properties
         const buildingProps = cesiumPage.getByText("Building properties");
         if (await buildingProps.isVisible()) {
-          await helpers.scrollIntoViewportWithRetry(buildingProps, { elementName: "Building properties panel" });
+          await helpers.scrollIntoViewportWithRetry(buildingProps, {
+            elementName: "Building properties panel",
+          });
           await buildingProps.click();
 
           // Should show property details
           await expect(cesiumPage.getByText("Building type")).toBeVisible();
 
-          await helpers.scrollIntoViewportWithRetry(buildingProps, { elementName: "Building properties panel" });
+          await helpers.scrollIntoViewportWithRetry(buildingProps, {
+            elementName: "Building properties panel",
+          });
           await buildingProps.click();
           await expect(cesiumPage.getByText("Building type")).toBeHidden();
         }
@@ -370,7 +410,9 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
       async ({ cesiumPage }) => {
         // Expand HSY panel
         const hsyPanel = cesiumPage.getByText("HSY Background maps");
-        await helpers.scrollIntoViewportWithRetry(hsyPanel, { elementName: "HSY Background maps" });
+        await helpers.scrollIntoViewportWithRetry(hsyPanel, {
+          elementName: "HSY Background maps",
+        });
         await hsyPanel.click();
         await expect(cesiumPage.getByText("Orthophoto")).toBeVisible();
 
@@ -396,11 +438,17 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         const sykePanel = cesiumPage.getByText("Syke Flood Background Maps");
         const geocodingPanel = cesiumPage.getByText("Geocoding");
 
-        await helpers.scrollIntoViewportWithRetry(hsyPanel, { elementName: "HSY Background maps" });
+        await helpers.scrollIntoViewportWithRetry(hsyPanel, {
+          elementName: "HSY Background maps",
+        });
         await hsyPanel.click();
-        await helpers.scrollIntoViewportWithRetry(sykePanel, { elementName: "Syke Flood Background Maps" });
+        await helpers.scrollIntoViewportWithRetry(sykePanel, {
+          elementName: "Syke Flood Background Maps",
+        });
         await sykePanel.click();
-        await helpers.scrollIntoViewportWithRetry(geocodingPanel, { elementName: "Geocoding" });
+        await helpers.scrollIntoViewportWithRetry(geocodingPanel, {
+          elementName: "Geocoding",
+        });
         await geocodingPanel.click();
 
         // All should be expanded
@@ -411,7 +459,9 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         ).toBeVisible();
 
         // Collapse one shouldn't affect others
-        await helpers.scrollIntoViewportWithRetry(hsyPanel, { elementName: "HSY Background maps" });
+        await helpers.scrollIntoViewportWithRetry(hsyPanel, {
+          elementName: "HSY Background maps",
+        });
         await hsyPanel.click();
         await expect(cesiumPage.getByText("Orthophoto")).toBeHidden();
         await expect(cesiumPage.getByText("Flood: 1/5a, Sea")).toBeVisible();
@@ -435,13 +485,17 @@ cesiumDescribe("Expansion Panels Accessibility", () => {
         expect(ariaExpanded).toBeDefined();
 
         // Expand and check state change
-        await helpers.scrollIntoViewportWithRetry(hsyPanel, { elementName: "HSY Background maps" });
+        await helpers.scrollIntoViewportWithRetry(hsyPanel, {
+          elementName: "HSY Background maps",
+        });
         await hsyPanel.click();
         const expandedState = await hsyButton.getAttribute("aria-expanded");
         expect(expandedState).toBe("true");
 
         // Collapse and check
-        await helpers.scrollIntoViewportWithRetry(hsyPanel, { elementName: "HSY Background maps" });
+        await helpers.scrollIntoViewportWithRetry(hsyPanel, {
+          elementName: "HSY Background maps",
+        });
         await hsyPanel.click();
         const collapsedState = await hsyButton.getAttribute("aria-expanded");
         expect(collapsedState).toBe("false");

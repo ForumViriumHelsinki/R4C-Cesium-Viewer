@@ -207,7 +207,9 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
-        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.checkWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
         if (await treesToggle.isVisible()) {
           await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
         }
@@ -222,8 +224,12 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        await helpers.checkWithRetry(publicBuildingsToggle, { elementName: "Public Buildings" });
-        await helpers.checkWithRetry(tallBuildingsToggle, { elementName: "Tall Buildings" });
+        await helpers.checkWithRetry(publicBuildingsToggle, {
+          elementName: "Public Buildings",
+        });
+        await helpers.checkWithRetry(tallBuildingsToggle, {
+          elementName: "Tall Buildings",
+        });
 
         // 4. Use timeline
         const slider = cesiumPage.locator(".timeline-slider input");
@@ -267,7 +273,9 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
-        await helpers.checkWithRetry(tallBuildingsToggle, { elementName: "Tall Buildings" });
+        await helpers.checkWithRetry(tallBuildingsToggle, {
+          elementName: "Tall Buildings",
+        });
 
         // 2. Switch to Grid view
         await helpers.navigateToView("gridView");
