@@ -24,6 +24,22 @@ See `docs/TESTING.md` for comprehensive testing documentation.
 
 **Development workflow:** Use focused testing for 5-8x faster iteration during test fixes. See `.claude/commands/test-focused.md` for details.
 
+**Testing by category (using tags):**
+
+Tests are categorized with tags for selective execution:
+
+- `npx playwright test --grep @accessibility` - Run accessibility tests
+- `npx playwright test --grep @performance` - Run performance tests
+- `npx playwright test --grep @e2e` - Run end-to-end tests
+- `npx playwright test --grep @smoke` - Run smoke tests
+- `npx playwright test --grep @wms` - Run WMS integration tests
+- `npx playwright test --grep @unit` - Run unit tests (Vitest)
+- `npx playwright test --grep @integration` - Run integration tests (Vitest)
+
+Tags can be combined: `npx playwright test --grep "@accessibility.*@smoke"`
+
+See `.claude/skills/test-categorization.md` for best practices on test organization and tagging.
+
 ### Docker/Kubernetes
 
 - `docker compose up` - Run with Docker (http://localhost:4173)
@@ -161,6 +177,7 @@ Specialized knowledge repositories for common patterns:
 - `test-pattern-library.md` - Proven patterns for fixing Playwright test failures
 - `playwright-accessibility-testing.md` - Accessibility testing best practices
 - `cesium-performance-testing.md` - CesiumJS performance optimization patterns
+- `test-categorization.md` - Test organization and tag-based categorization
 - `package-lock-management.md` - Keeping npm lock files in sync with package.json
 
 These skills are automatically available to Claude Code for reference when working on related tasks.
