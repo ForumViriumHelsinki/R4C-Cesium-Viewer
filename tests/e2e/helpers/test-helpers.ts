@@ -13,6 +13,7 @@ import {
   setupCesiumForCI,
   initializeCesiumWithRetry,
   waitForAppReady,
+  waitForSceneIdle,
 } from "./cesium-helper";
 
 /**
@@ -318,36 +319,16 @@ export class AccessibilityTestHelpers {
           }
         }
 
-        // Wait for view transition with multiple verification strategies
-        const transitionSuccess = await Promise.race([
-          // Strategy 1: Wait for canvas to be ready
-          this.page
-            .waitForFunction(
-              () => {
-                const canvas = document.querySelector("canvas");
-                return (
-                  canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0
-                );
-              },
-              { timeout: 8000 },
-            )
-            .then(() => true)
-            .catch(() => false),
-          // Strategy 2: Wait for network idle
-          this.page
-            .waitForLoadState("networkidle", { timeout: 5000 })
-            .then(() => true)
-            .catch(() => false),
-        ]);
+        // Wait for Cesium scene to be completely idle
+        // This ensures tiles are loaded, camera is stable, and frames are rendering consistently
+        await waitForSceneIdle(this.page, {
+          timeout: 8000,
+          idleFramesRequired: 2,
+          checkTiles: true,
+        });
 
-        if (!transitionSuccess) {
-          console.warn(
-            `View transition verification incomplete on attempt ${attempt}`,
-          );
-        }
-
-        // Additional stability wait
-        await this.page.waitForTimeout(500);
+        // Additional stability wait for UI updates
+        await this.page.waitForTimeout(300);
 
         // Verify the selection with multiple strategies
         const verificationResults = await Promise.all([

@@ -242,3 +242,91 @@ export async function initializeCesiumWithRetry(
 
   throw new Error("Failed to initialize Cesium after retries");
 }
+
+/**
+ * Wait for Cesium scene to be completely idle and ready for interaction
+ * Checks camera stability, tile loading, and frame stability
+ * @param page - Playwright page object
+ * @param options - Configuration options
+ * @returns Promise that resolves when scene is idle
+ */
+export async function waitForSceneIdle(
+  page: Page,
+  options: {
+    timeout?: number;
+    idleFramesRequired?: number;
+    checkTiles?: boolean;
+  } = {},
+): Promise<void> {
+  const { timeout = 8000, idleFramesRequired = 2, checkTiles = true } = options;
+
+  try {
+    await page.waitForFunction(
+      ({ idleFrames, checkTilesLoading }) => {
+        const viewer = window.__viewer;
+        if (!viewer) {
+          return false;
+        }
+
+        // Check if globe tiles are loaded (if requested)
+        if (checkTilesLoading) {
+          const globeTilesLoaded = viewer.scene?.globe?.tilesLoaded ?? true;
+          if (!globeTilesLoaded) {
+            return false;
+          }
+        }
+
+        // Track frame stability
+        if (!window.__sceneIdleState) {
+          window.__sceneIdleState = {
+            idleFrameCount: 0,
+            cameraMoving: false,
+            lastCheck: Date.now(),
+          };
+
+          // Set up camera event listeners
+          viewer.camera.moveStart.addEventListener(() => {
+            window.__sceneIdleState.cameraMoving = true;
+            window.__sceneIdleState.idleFrameCount = 0;
+          });
+
+          viewer.camera.moveEnd.addEventListener(() => {
+            window.__sceneIdleState.cameraMoving = false;
+          });
+        }
+
+        const state = window.__sceneIdleState;
+
+        // Check if camera is stable
+        if (state.cameraMoving) {
+          state.idleFrameCount = 0;
+          return false;
+        }
+
+        // Increment idle frame counter
+        state.idleFrameCount++;
+
+        // Scene is idle if we have enough stable frames
+        return state.idleFrameCount >= idleFrames;
+      },
+      { idleFrames: idleFramesRequired, checkTilesLoading: checkTiles },
+      { timeout },
+    );
+  } catch (error) {
+    console.warn(`Scene idle check timed out after ${timeout}ms`, error);
+    // Don't fail - proceed anyway to avoid blocking tests
+  }
+}
+
+/**
+ * Clean up scene idle detection state
+ * Should be called between tests or when no longer needed
+ * @param page - Playwright page object
+ */
+export async function cleanupSceneIdleState(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    if (window.__sceneIdleState) {
+      delete window.__sceneIdleState;
+    }
+  });
+}
