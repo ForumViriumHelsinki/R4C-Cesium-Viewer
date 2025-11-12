@@ -1,0 +1,153 @@
+# Example GitHub Actions Workflow with Performance Monitoring
+#
+# This file demonstrates how to integrate performance regression monitoring
+# into your CI workflow. Add these steps to your existing test workflow.
+#
+# NOTE: This is an example file for reference. Actual workflow modifications
+# must be done manually due to GitHub App permission restrictions.
+
+name: Tests with Performance Monitoring
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-with-performance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start preview server
+        run: |
+          npm run preview &
+          npx wait-on http://localhost:4173
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run accessibility tests with performance monitoring
+        run: npm run test:accessibility
+        # Performance reporter is automatically enabled in CI environments
+
+      - name: Check for performance regressions
+        run: npm run test:performance:check
+        # This will:
+        # - Analyze test-results/performance-report.json
+        # - Compare against baselines in tests/performance-baselines.json
+        # - Generate GitHub Actions summary
+        # - Exit with code 1 if critical regressions found (>30% slower)
+
+      - name: Upload performance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: test-results/performance-report.json
+          retention-days: 30
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Comment on PR with performance results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'test-results/performance-report.json';
+
+            if (!fs.existsSync(reportPath)) {
+              console.log('No performance report found');
+              return;
+            }
+
+            const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+
+            const criticalRegressions = report.regressions.filter(r => r.percentIncrease >= 30);
+            const warnings = report.regressions.filter(r => r.percentIncrease >= 20 && r.percentIncrease < 30);
+
+            let body = '## 📊 Performance Test Results\n\n';
+            body += `- **Total tests:** ${report.summary.totalTests}\n`;
+            body += `- **Average duration:** ${report.summary.avgDuration}ms\n`;
+            body += `- **Slowest test:** ${report.summary.slowestTest.name} (${report.summary.slowestTest.duration}ms)\n\n`;
+
+            if (criticalRegressions.length > 0) {
+              body += '### 🔴 Critical Performance Regressions\n\n';
+              body += '| Suite | Test | Baseline | Actual | Regression |\n';
+              body += '|-------|------|----------|--------|------------|\n';
+              criticalRegressions.forEach(r => {
+                body += `| ${r.suite} | ${r.test} | ${Math.round(r.baseline)}ms | ${Math.round(r.actual)}ms | +${Math.round(r.percentIncrease)}% |\n`;
+              });
+              body += '\n';
+            }
+
+            if (warnings.length > 0) {
+              body += '### ⚠️  Performance Warnings\n\n';
+              body += '| Suite | Test | Baseline | Actual | Regression |\n';
+              body += '|-------|------|----------|--------|------------|\n';
+              warnings.forEach(r => {
+                body += `| ${r.suite} | ${r.test} | ${Math.round(r.baseline)}ms | ${Math.round(r.actual)}ms | +${Math.round(r.percentIncrease)}% |\n`;
+              });
+              body += '\n';
+            }
+
+            if (report.regressions.length === 0) {
+              body += '### ✅ No Performance Regressions Detected\n\n';
+              body += 'All tests are performing within acceptable limits.\n';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+# Alternative: Simpler workflow for just checking regressions
+# without posting PR comments
+jobs:
+  simple-performance-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and test
+        run: |
+          npm run build
+          npm run preview &
+          npx wait-on http://localhost:4173
+          npx playwright install --with-deps chromium
+          npm run test:accessibility
+
+      - name: Check performance
+        run: npm run test:performance:check
+        # Fails the build if critical regressions detected
