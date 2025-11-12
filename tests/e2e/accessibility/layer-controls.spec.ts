@@ -14,8 +14,10 @@
 import { expect } from "@playwright/test";
 import { cesiumTest, cesiumDescribe } from "../../fixtures/cesium-fixture";
 import AccessibilityTestHelpers from "../helpers/test-helpers";
+import { VIEWPORTS } from "../../config/constants";
 
 cesiumDescribe("Layer Controls Accessibility", () => {
+  cesiumTest.use({ tag: ["@accessibility", "@e2e"] });
   let helpers: AccessibilityTestHelpers;
 
   cesiumTest.beforeEach(async ({ cesiumPage }) => {
@@ -743,9 +745,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
       "should handle layer toggles efficiently across viewports",
       async ({ cesiumPage }) => {
         const viewports = [
-          { width: 1920, height: 1080 },
-          { width: 768, height: 1024 },
-          { width: 375, height: 667 },
+          VIEWPORTS.DESKTOP_HD,
+          VIEWPORTS.TABLET,
+          VIEWPORTS.MOBILE,
         ];
 
         for (const viewport of viewports) {

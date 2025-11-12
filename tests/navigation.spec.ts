@@ -1,10 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { setupDigitransitMock } from "./setup/digitransit-mock";
+import { VIEWPORTS } from "./config/constants";
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
 
 test.describe("Navigation and App Layout", () => {
+  test.use({ tag: ["@e2e", "@navigation", "@layout"] });
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Dismiss the disclaimer popup if it appears
@@ -69,7 +71,7 @@ test.describe("Navigation and App Layout", () => {
 
   test("should handle responsive layout", async ({ page }) => {
     // Test mobile viewport
-    await page.setViewportSize({ width: 375, height: 667 });
+    await page.setViewportSize(VIEWPORTS.MOBILE);
 
     // Navigation should still be visible and functional
     await expect(page.locator(".top-nav")).toBeVisible();

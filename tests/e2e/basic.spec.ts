@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("Page load", async ({ page }) => {
+test("Page load", { tag: ["@e2e", "@smoke"] }, async ({ page }) => {
   await page.goto("/");
 
   // Wait for page to load and dismiss any modal if present
@@ -14,7 +14,7 @@ test("Page load", async ({ page }) => {
   await expect(page).toHaveTitle(/R4C Uusimaa Demo/);
 });
 
-test("HSY Background maps", async ({ page }) => {
+test("HSY Background maps", { tag: ["@e2e", "@wms"] }, async ({ page }) => {
   await page.goto("/");
 
   // Wait for page to load and dismiss any modal if present
@@ -76,7 +76,7 @@ test("HSY Background maps", async ({ page }) => {
   }
 });
 
-test("Building properties", async ({ page }) => {
+test("Building properties", { tag: ["@e2e", "@smoke"] }, async ({ page }) => {
   await page.goto("/");
 
   // Wait for page to load and dismiss any modal if present

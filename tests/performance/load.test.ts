@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { chromium, Browser, Page } from "playwright";
-import { TIMEOUTS, PERFORMANCE_THRESHOLDS } from "../config/constants";
+import { TIMEOUTS, PERFORMANCE_THRESHOLDS, API_ENDPOINTS } from "../config/constants";
 
-describe("Performance and Load Tests", () => {
+// Localhost URL for performance tests
+const LOCALHOST_URL = "http://localhost:5173";
+
+describe("Performance and Load Tests", { tags: ["@performance", "@integration"] }, () => {
   let browser: Browser;
 
   beforeAll(async () => {
@@ -38,7 +41,7 @@ describe("Performance and Load Tests", () => {
       const page = await browser.newPage();
 
       // Navigate and wait for load
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
       await page.waitForLoadState("networkidle");
 
       // Measure performance metrics
@@ -105,7 +108,7 @@ describe("Performance and Load Tests", () => {
         });
       });
 
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
       await page.waitForLoadState("networkidle");
 
       // Analyze resource loading
@@ -139,7 +142,7 @@ describe("Performance and Load Tests", () => {
   describe("Runtime Performance", () => {
     it("should maintain good FPS during map interactions", async () => {
       const page = await browser.newPage();
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
 
       // Wait for initial load and Cesium to be ready
       await page.waitForSelector("canvas", { state: "visible" });
@@ -211,7 +214,7 @@ describe("Performance and Load Tests", () => {
 
     it("should handle memory usage efficiently", async () => {
       const page = await browser.newPage();
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
       await page.waitForSelector("canvas", { state: "visible" });
 
       // Get initial memory usage
@@ -255,7 +258,7 @@ describe("Performance and Load Tests", () => {
 
     it("should handle rapid user interactions without blocking", async () => {
       const page = await browser.newPage();
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
       await page.waitForSelector("canvas", { state: "visible" });
 
       const startTime = Date.now();
@@ -298,7 +301,7 @@ describe("Performance and Load Tests", () => {
       });
 
       const startTime = Date.now();
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
 
       // Should still load within reasonable time even with slow network
       await page.waitForSelector("canvas", {
@@ -324,7 +327,7 @@ describe("Performance and Load Tests", () => {
         }
       });
 
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
       await page.waitForSelector("canvas", { state: "visible" });
 
       // Clear listeners and reload
@@ -348,7 +351,7 @@ describe("Performance and Load Tests", () => {
 
     it("should handle concurrent API requests efficiently", async () => {
       const page = await browser.newPage();
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
       await page.waitForSelector("canvas", { state: "visible" });
 
       const apiResponses: any[] = [];
@@ -409,7 +412,7 @@ describe("Performance and Load Tests", () => {
   describe("Stress Testing", () => {
     it("should handle extended usage without degradation", async () => {
       const page = await browser.newPage();
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
       await page.waitForSelector("canvas", { state: "visible" });
 
       // Extended interaction session
@@ -458,7 +461,7 @@ describe("Performance and Load Tests", () => {
         // Open multiple tabs
         for (let i = 0; i < 3; i++) {
           const page = await browser.newPage();
-          await page.goto("http://localhost:5173");
+          await page.goto(LOCALHOST_URL);
           await page.waitForSelector("canvas", {
             state: "visible",
             timeout: 10000,
@@ -499,7 +502,7 @@ describe("Performance and Load Tests", () => {
 
     it("should recover from temporary network failures", async () => {
       const page = await browser.newPage();
-      await page.goto("http://localhost:5173");
+      await page.goto(LOCALHOST_URL);
       await page.waitForSelector("canvas", { state: "visible" });
 
       // Simulate network failure for external requests

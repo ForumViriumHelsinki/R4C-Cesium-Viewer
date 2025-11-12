@@ -14,6 +14,7 @@ import { cesiumTest, cesiumDescribe } from "../../fixtures/cesium-fixture";
 import AccessibilityTestHelpers from "../helpers/test-helpers";
 
 cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
+  cesiumTest.use({ tag: ["@accessibility", "@e2e", "@comprehensive"] });
   let helpers: AccessibilityTestHelpers;
 
   cesiumTest.beforeEach(async ({ cesiumPage }) => {

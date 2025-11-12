@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Feature Flags Panel", () => {
+  test.use({ tag: ["@e2e", "@feature-flags"] });
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");

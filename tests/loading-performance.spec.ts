@@ -1,10 +1,17 @@
 import { test, expect } from "@playwright/test";
 import { setupDigitransitMock } from "./setup/digitransit-mock";
+import {
+  TIMEOUTS,
+  VIEWPORTS,
+  BUNDLE_SIZE_BUDGETS,
+  WEB_VITALS_BUDGETS,
+} from "./config/constants";
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
 
 test.describe("Loading Performance and User Experience", () => {
+  test.use({ tag: ["@performance"] });
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
   });
@@ -377,18 +384,7 @@ test.describe("Loading Performance and User Experience", () => {
 });
 
 test.describe("Bundle Size and Dynamic Import Performance", () => {
-  // Constants for test thresholds
-  const MIN_CESIUM_CHUNK_SIZE = 100000; // 100KB minimum for actual Cesium library
-  const MAX_MAIN_BUNDLE_SIZE = 500000; // 500KB budget for largest single bundle (excludes ~5MB Cesium)
-  const MAX_TOTAL_MAIN_BUNDLE_SIZE = 1000000; // 1MB total budget for all non-Cesium bundles
-  const BYTES_PER_KIB = 1024; // Conversion factor for bytes to kibibytes (KiB)
-
-  // Web Vitals performance budgets
-  const FCP_BUDGET_MS = 2000; // First Contentful Paint budget
-  const LCP_BUDGET_MS = 3000; // Largest Contentful Paint budget
-  const DOM_INTERACTIVE_BUDGET_MS = 5000; // DOM Interactive budget
-  const LCP_OBSERVATION_TIMEOUT_CI = 3000; // LCP timeout in CI
-  const LCP_OBSERVATION_TIMEOUT_LOCAL = 1500; // LCP timeout locally
+  test.use({ tag: ["@performance", "@bundle"] });
 
   /**
    * Helper function to get response size with fallback for dev server
@@ -451,16 +447,16 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
 
     // Verify at least one Cesium resource is substantial (dynamic import)
     const hasSizableCesiumChunk = cesiumResources.some(
-      (resource) => resource.size > MIN_CESIUM_CHUNK_SIZE,
+      (resource) => resource.size > BUNDLE_SIZE_BUDGETS.MIN_CESIUM_CHUNK,
     );
     expect(
       hasSizableCesiumChunk,
-      `Cesium chunk should be substantial (>${(MIN_CESIUM_CHUNK_SIZE / BYTES_PER_KIB).toFixed(0)}KiB), indicating dynamic import`,
+      `Cesium chunk should be substantial (>${(BUNDLE_SIZE_BUDGETS.MIN_CESIUM_CHUNK / BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB).toFixed(0)}KiB), indicating dynamic import`,
     ).toBe(true);
 
     const totalSize = cesiumResources.reduce((sum, r) => sum + r.size, 0);
     console.log(
-      `Cesium resources loaded: ${cesiumResources.length} chunks, total size: ${(totalSize / BYTES_PER_KIB).toFixed(2)} KiB`,
+      `Cesium resources loaded: ${cesiumResources.length} chunks, total size: ${(totalSize / BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB).toFixed(2)} KiB`,
     );
   });
 
@@ -494,21 +490,21 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
     const largestMainBundle = Math.max(...mainBundles.map((b) => b.size));
     expect(
       largestMainBundle,
-      `Largest non-Cesium bundle should be < ${MAX_MAIN_BUNDLE_SIZE / BYTES_PER_KIB}KiB (Cesium excluded via dynamic import)`,
-    ).toBeLessThan(MAX_MAIN_BUNDLE_SIZE);
+      `Largest non-Cesium bundle should be < ${BUNDLE_SIZE_BUDGETS.MAX_MAIN_BUNDLE / BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB}KiB (Cesium excluded via dynamic import)`,
+    ).toBeLessThan(BUNDLE_SIZE_BUDGETS.MAX_MAIN_BUNDLE);
 
     // Check total size of all main bundles to prevent multiple smaller bundles from bloating
     const totalMainSize = mainBundles.reduce((sum, b) => sum + b.size, 0);
     expect(
       totalMainSize,
-      `Total non-Cesium bundle size should be < ${MAX_TOTAL_MAIN_BUNDLE_SIZE / BYTES_PER_KIB}KiB`,
-    ).toBeLessThan(MAX_TOTAL_MAIN_BUNDLE_SIZE);
+      `Total non-Cesium bundle size should be < ${BUNDLE_SIZE_BUDGETS.MAX_TOTAL_MAIN_BUNDLE / BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB}KiB`,
+    ).toBeLessThan(BUNDLE_SIZE_BUDGETS.MAX_TOTAL_MAIN_BUNDLE);
 
     console.log(
-      `Largest non-Cesium bundle: ${(largestMainBundle / BYTES_PER_KIB).toFixed(2)} KiB`,
+      `Largest non-Cesium bundle: ${(largestMainBundle / BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB).toFixed(2)} KiB`,
     );
     console.log(
-      `Total non-Cesium bundle size: ${(totalMainSize / BYTES_PER_KIB).toFixed(2)} KiB`,
+      `Total non-Cesium bundle size: ${(totalMainSize / BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB).toFixed(2)} KiB`,
     );
     console.log(`Total non-Cesium bundles: ${mainBundles.length}`);
   });
@@ -578,8 +574,8 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
       },
       {
         isCI,
-        timeoutCI: LCP_OBSERVATION_TIMEOUT_CI,
-        timeoutLocal: LCP_OBSERVATION_TIMEOUT_LOCAL,
+        timeoutCI: WEB_VITALS_BUDGETS.LCP_OBSERVATION_TIMEOUT_CI,
+        timeoutLocal: WEB_VITALS_BUDGETS.LCP_OBSERVATION_TIMEOUT_LOCAL,
       },
     );
 
@@ -589,33 +585,33 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
     // FCP: First Contentful Paint should be < 2s (good UX)
     expect(
       webVitals.fcp,
-      `First Contentful Paint should be defined and < ${FCP_BUDGET_MS}ms`,
+      `First Contentful Paint should be defined and < ${WEB_VITALS_BUDGETS.FCP_BUDGET}ms`,
     ).toBeDefined();
     expect(
       webVitals.fcp,
-      `First Contentful Paint should be < ${FCP_BUDGET_MS}ms`,
-    ).toBeLessThan(FCP_BUDGET_MS);
+      `First Contentful Paint should be < ${WEB_VITALS_BUDGETS.FCP_BUDGET}ms`,
+    ).toBeLessThan(WEB_VITALS_BUDGETS.FCP_BUDGET);
 
     // LCP: Largest Contentful Paint should be < 3s (good UX)
     expect(
       webVitals.lcp,
-      `Largest Contentful Paint should be defined and < ${LCP_BUDGET_MS}ms`,
+      `Largest Contentful Paint should be defined and < ${WEB_VITALS_BUDGETS.LCP_BUDGET}ms`,
     ).toBeDefined();
     expect(
       webVitals.lcp,
-      `Largest Contentful Paint should be < ${LCP_BUDGET_MS}ms`,
-    ).toBeLessThan(LCP_BUDGET_MS);
+      `Largest Contentful Paint should be < ${WEB_VITALS_BUDGETS.LCP_BUDGET}ms`,
+    ).toBeLessThan(WEB_VITALS_BUDGETS.LCP_BUDGET);
 
     // DOM Interactive: Should be < 5s
     // Note: This is domInteractive, not true TTI (which requires CPU idle time analysis)
     expect(
       webVitals.domInteractive,
-      `DOM Interactive should be defined and < ${DOM_INTERACTIVE_BUDGET_MS}ms`,
+      `DOM Interactive should be defined and < ${WEB_VITALS_BUDGETS.DOM_INTERACTIVE_BUDGET}ms`,
     ).toBeDefined();
     expect(
       webVitals.domInteractive,
-      `DOM Interactive should be < ${DOM_INTERACTIVE_BUDGET_MS}ms`,
-    ).toBeLessThan(DOM_INTERACTIVE_BUDGET_MS);
+      `DOM Interactive should be < ${WEB_VITALS_BUDGETS.DOM_INTERACTIVE_BUDGET}ms`,
+    ).toBeLessThan(WEB_VITALS_BUDGETS.DOM_INTERACTIVE_BUDGET);
 
     // Log for tracking performance over time
     console.log(`FCP: ${webVitals.fcp?.toFixed(2)}ms`);
@@ -657,7 +653,10 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
     ]);
 
     const totalSize = jsResources.reduce((sum, r) => sum + r.size, 0);
-    const totalMiB = (totalSize / (BYTES_PER_KIB * BYTES_PER_KIB)).toFixed(2);
+    const totalMiB = (
+      totalSize /
+      (BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB * BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB)
+    ).toFixed(2);
 
     console.log(`Total JavaScript size: ${totalMiB} MiB`);
     console.log(`Number of JS files: ${jsResources.length}`);
@@ -667,9 +666,10 @@ test.describe("Bundle Size and Dynamic Import Performance", () => {
     console.log("Largest bundles:");
     sortedBySize.slice(0, 5).forEach((resource, i) => {
       const fileName = resource.url.split("/").pop() || resource.url;
-      const sizeMiB = (resource.size / (BYTES_PER_KIB * BYTES_PER_KIB)).toFixed(
-        2,
-      );
+      const sizeMiB = (
+        resource.size /
+        (BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB * BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB)
+      ).toFixed(2);
       console.log(`  ${i + 1}. ${fileName}: ${sizeMiB} MiB`);
     });
 

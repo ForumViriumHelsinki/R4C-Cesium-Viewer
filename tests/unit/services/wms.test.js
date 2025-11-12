@@ -3,6 +3,9 @@ import { createPinia, setActivePinia } from "pinia";
 import Wms from "@/services/wms.js";
 import * as Cesium from "cesium";
 
+// Test configuration
+const MOCK_WMS_URL = "https://mock-helsinki-wms.example.com/geoserver/wms";
+
 // Mock Cesium module
 vi.mock("cesium", () => ({
   WebMapServiceImageryProvider: vi.fn(function (options) {
@@ -26,11 +29,11 @@ vi.mock("cesium", () => ({
 // Mock URL store
 vi.mock("@/stores/urlStore.js", () => ({
   useURLStore: vi.fn(() => ({
-    helsinkiWMS: "https://mock-helsinki-wms.example.com/geoserver/wms",
+    helsinkiWMS: MOCK_WMS_URL,
   })),
 }));
 
-describe("Wms Service", () => {
+describe("Wms Service", { tags: ["@unit", "@wms"] }, () => {
   let wms;
 
   beforeEach(() => {
@@ -64,9 +67,7 @@ describe("Wms Service", () => {
       const layerName = "avoindata:Rakennukset_alue";
       const layer = wms.createHelsinkiImageryLayer(layerName);
 
-      expect(layer.imageryProvider.url).toBe(
-        "https://mock-helsinki-wms.example.com/geoserver/wms",
-      );
+      expect(layer.imageryProvider.url).toBe(MOCK_WMS_URL);
     });
 
     it("should use GeographicTilingScheme for EPSG:4326", () => {

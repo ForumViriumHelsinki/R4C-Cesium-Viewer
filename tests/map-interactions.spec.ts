@@ -5,6 +5,7 @@ import { setupDigitransitMock } from "./setup/digitransit-mock";
 setupDigitransitMock();
 
 test.describe("Map Interactions and Navigation", () => {
+  test.use({ tag: ["@e2e", "@map", "@navigation"] });
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Dismiss the disclaimer popup
