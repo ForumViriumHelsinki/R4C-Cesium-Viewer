@@ -87,6 +87,18 @@ export default {
 
 			// Set Ion token after loading
 			Cesium.Ion.defaultAccessToken = null;
+
+			// Detect E2E test environment
+			const isE2ETest = import.meta.env.VITE_E2E_TEST === 'true';
+
+			// Create offscreen element for hiding credits in test mode
+			let offscreenCreditContainer;
+			if (isE2ETest) {
+				offscreenCreditContainer = document.createElement('div');
+				offscreenCreditContainer.style.display = 'none';
+				document.body.appendChild(offscreenCreditContainer);
+			}
+
 			// Create viewer with enhanced graphics options
 			const viewerOptions = {
 				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
@@ -101,17 +113,35 @@ export default {
 				baseLayerPicker: false,
 				infoBox: false,
 				homeButton: false,
+				// Test mode: hide credit container to prevent click interception
+				creditContainer: isE2ETest ? offscreenCreditContainer : undefined,
 			};
 
-			// Add request render mode if enabled for performance
-			if (graphicsStore.requestRenderMode) {
+			// Add request render mode if enabled for performance OR in test mode
+			if (graphicsStore.requestRenderMode || isE2ETest) {
 				viewerOptions.requestRenderMode = true;
 				viewerOptions.maximumRenderTimeChange = Infinity;
+			}
+
+			// Test mode: disable camera inertia for deterministic behavior
+			if (isE2ETest) {
+				viewerOptions.screenSpaceCameraController = {
+					inertiaSpin: 0,
+					inertiaZoom: 0,
+					inertiaTranslate: 0,
+				};
 			}
 
 			viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions);
 
 			store.setCesiumViewer(viewer.value);
+
+			// Expose viewer to E2E test harness
+			if (isE2ETest) {
+				window.__viewer = viewer.value;
+				window.__cesium = Cesium;
+				console.log('[CesiumViewer] 🧪 Test mode enabled - viewer exposed to window');
+			}
 
 			// Initialize graphics quality settings
 			const graphics = new Graphics();
