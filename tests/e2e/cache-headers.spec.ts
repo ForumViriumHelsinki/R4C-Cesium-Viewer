@@ -44,7 +44,7 @@ function assertImmutableCacheHeaders(
 }
 
 test.describe("Cache Header Verification", () => {
-  test("index.html should have no-cache header", async ({ request }) => {
+  test("index.html should have no-cache header", { tag: ["@e2e", "@performance"] }, async ({ request }) => {
     // Test index.html cache control
     const response = await request.get("/");
     expect(response.status()).toBe(200);
@@ -54,7 +54,7 @@ test.describe("Cache Header Verification", () => {
     assertNoCacheHeaders(cacheControl);
   });
 
-  test("hashed assets should have immutable cache headers", async ({
+  test("hashed assets should have immutable cache headers", { tag: ["@e2e", "@performance"] }, async ({
     request,
   }) => {
     // First, we need to get the actual hashed asset filenames
@@ -104,7 +104,7 @@ test.describe("Cache Header Verification", () => {
     });
   });
 
-  test("assets should have hash in filename", async ({ request }) => {
+  test("assets should have hash in filename", { tag: ["@e2e", "@performance"] }, async ({ request }) => {
     // Get the index page
     const pageResponse = await request.get("/");
     const html = await pageResponse.text();
@@ -122,7 +122,7 @@ test.describe("Cache Header Verification", () => {
     ).toBe(true);
   });
 
-  test("CSS assets should also have proper cache headers", async ({
+  test("CSS assets should also have proper cache headers", { tag: ["@e2e", "@performance"] }, async ({
     request,
   }) => {
     // Get the page to find CSS assets
@@ -151,7 +151,7 @@ test.describe("Cache Header Verification", () => {
     assertImmutableCacheHeaders(cacheControl, cssPath);
   });
 
-  test("unhashed static assets should have no-cache header", async ({
+  test("unhashed static assets should have no-cache header", { tag: ["@e2e", "@performance"] }, async ({
     request,
   }) => {
     // Test vite.svg which is a known unhashed static file
