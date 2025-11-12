@@ -265,7 +265,9 @@ cesiumDescribe("View Modes Accessibility", () => {
         const resetButton = cesiumPage
           .getByRole("button")
           .filter({ has: cesiumPage.locator(".mdi-refresh") });
-        await helpers.scrollIntoViewportWithRetry(resetButton, { elementName: "Reset button" });
+        await helpers.scrollIntoViewportWithRetry(resetButton, {
+          elementName: "Reset button",
+        });
         await resetButton.click();
 
         // Wait for reset to complete
