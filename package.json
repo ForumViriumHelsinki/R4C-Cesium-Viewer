@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "dotenvx run -- vite --host",
+    "dev:test": "VITE_E2E_TEST=true dotenvx run -- vite --host",
     "build": "dotenvx run -- vite build",
     "preview": "dotenvx run -- vite preview --host",
     "lint": "eslint --fix src/",
