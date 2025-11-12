@@ -57,12 +57,9 @@ export default defineConfig({
       },
     },
     testTimeout: 10000,
-    pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    // Use threads pool for better performance (default in Vitest)
+    // Tests run in parallel with proper isolation
+    pool: "threads",
   },
   resolve: {
     alias: {

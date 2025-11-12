@@ -176,6 +176,7 @@ Repeatable workflows available as slash commands:
 
 - `/test-focused [filename]` - Run single test file with fail-fast mode for rapid iteration
 - `/test-debug [filename]` - Launch Playwright UI mode for visual debugging
+- `/stack-review` - Comprehensive stack configuration review against latest best practices
 
 ### Skills (`.claude/skills/`)
 

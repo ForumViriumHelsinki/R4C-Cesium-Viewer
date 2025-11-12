@@ -2,8 +2,8 @@
   "compilerOptions": {
     // Enable JavaScript file processing
     "allowJs": true,
-    // Don't type-check, just extract documentation
-    "checkJs": false,
+    // Enable type-checking for better DX and error catching
+    "checkJs": true,
     // Recommended for Vite - ensures each file can be safely transpiled in isolation
     "isolatedModules": true,
 
@@ -19,8 +19,14 @@
     // Skip type checking of declaration files
     "skipLibCheck": true,
 
-    // Enable all strict type-checking options (helpful for JSDoc)
-    "strict": true,
+    // Granular strict mode configuration for gradual adoption
+    // We enable specific strict checks while keeping 'strict' false to avoid breaking existing code
+    "strict": false, // Keep false - enables all strict flags at once, too aggressive for existing codebase
+    "noImplicitAny": false, // TODO: Enable once JSDoc types are added to critical functions
+    "strictNullChecks": true, // ENABLED: Catches null/undefined errors, high-value check
+    "strictFunctionTypes": true, // ENABLED: Ensures function parameter compatibility, low friction
+    "strictPropertyInitialization": false, // Disabled: Many Vue components don't initialize all properties
+    "noImplicitThis": true, // ENABLED: Prevents `this` binding errors in callbacks
 
     // Resolve JSON modules
     "resolveJsonModule": true,

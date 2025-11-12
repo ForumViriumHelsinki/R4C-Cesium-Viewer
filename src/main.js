@@ -7,9 +7,6 @@ import App from "./App.vue";
 // Vuetify
 import "vuetify/styles";
 import { createVuetify } from "vuetify";
-import * as components from "vuetify/components";
-import * as directives from "vuetify/directives";
-
 import { aliases, mdi } from "vuetify/iconsets/mdi";
 import { md1 } from "vuetify/blueprints";
 
@@ -18,9 +15,8 @@ import { version } from "../package.json";
 // If you're using one of our framework SDK packages, like `@sentry/react`,
 // substitute its name for `@sentry/browser` here
 
+// Vuetify configuration - components are auto-imported via vite-plugin-vuetify
 const vuetify = createVuetify({
-  components,
-  directives,
   blueprint: md1,
   icons: {
     defaultSet: "mdi",
@@ -56,8 +52,8 @@ Sentry.init({
     Sentry.replayCanvasIntegration(),
   ],
 
-  // Sample 10% of error events to reduce quota usage
-  sampleRate: 0.1,
+  // Sample error events - full capture in dev, 20% in production
+  sampleRate: import.meta.env.PROD ? 0.2 : 1.0,
 
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control

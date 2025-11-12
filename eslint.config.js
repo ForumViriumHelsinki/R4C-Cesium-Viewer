@@ -87,18 +87,35 @@ export default [
       },
     },
     rules: {
+      // Style rules - keep disabled for flexibility
       "vue/multi-word-component-names": "off",
-      "no-unused-vars": "off",
       "vue/html-indent": "off",
       "vue/no-ref-as-operand": "off",
       "vue/html-closing-bracket-spacing": "off",
       "vue/multiline-html-element-content-newline": "off",
-      "vue/no-unused-components": "off",
-      "no-fallthrough": "off",
-      // TypeScript-specific rules
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-expressions": "off",
+
+      // Code quality rules - enable as warnings to catch issues
+      "no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrors: "none",
+        },
+      ],
+      "vue/no-unused-components": "warn",
+      "no-fallthrough": "warn",
+
+      // TypeScript-specific rules - warnings for better code quality
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-expressions": "warn",
     },
   },
 ];

@@ -1,7 +1,9 @@
+import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import Vue from "@vitejs/plugin-vue";
 import Vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 import cesium from "vite-plugin-cesium-build";
+import { visualizer } from "rollup-plugin-visualizer";
 
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import eslint from "vite-plugin-eslint";
@@ -10,10 +12,12 @@ import { defineConfig } from "vite";
 import { fileURLToPath, URL } from "node:url";
 import { version } from "./package.json";
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
   return {
     build: {
       sourcemap: true, // Source map generation must be turned on
+      target: "es2020", // Modern browsers only for better optimization
+      minify: "esbuild", // Fast minification
       rollupOptions: {
         output: {
           assetFileNames: `assets/[name].[hash].${version}.[ext]`,
@@ -22,6 +26,12 @@ export default defineConfig(() => {
           manualChunks: {
             // Split Cesium into its own chunk for better caching and async loading
             cesium: ["cesium"],
+            // Split Vue ecosystem into separate chunks for optimal caching
+            "vue-vendor": ["vue", "pinia"],
+            "vuetify-vendor": ["vuetify"],
+            "d3-vendor": ["d3"],
+            // Split other heavy dependencies
+            "turf-vendor": ["@turf/turf"],
           },
         },
       },
@@ -30,16 +40,31 @@ export default defineConfig(() => {
       // Only run ESLint during development, not in production builds
       // ESLint checks are handled by pre-commit hooks and CI linting steps
       ...(process.env.NODE_ENV !== "production" ? [eslint()] : []),
+      // Auto-import Vue APIs for better DX and tree-shaking
+      // Generates src/auto-imports.d.ts for TypeScript and .eslintrc-auto-import.json
+      // After first build, import the ESLint config in eslint.config.js if needed
+      AutoImport({
+        imports: ["vue", "pinia"],
+        dts: "src/auto-imports.d.ts", // TypeScript declarations for IDE
+        eslintrc: {
+          enabled: true,
+          filepath: "./.eslintrc-auto-import.json", // ESLint globals
+        },
+        vueTemplate: true, // Enable auto-imports in Vue templates
+      }),
       Vue({
         template: { transformAssetUrls },
       }),
       Vuetify({
         autoImport: true,
+        // Uncomment when you create src/styles/settings.scss for custom theme
         // styles: {
-        //   configFile: 'src/styles/settings.scss',
+        //   configFile: "src/styles/settings.scss",
         // },
       }),
-      Components(),
+      Components({
+        dts: "src/components.d.ts",
+      }),
       cesium(),
       // Put the Sentry vite plugin after all other plugins
       sentryVitePlugin({
@@ -47,6 +72,17 @@ export default defineConfig(() => {
         org: "forum-virium-helsinki",
         project: "regions4climate",
       }),
+      // Bundle analyzer - only in analyze mode (triggered by --mode analyze)
+      ...(mode === "analyze"
+        ? [
+            visualizer({
+              open: true,
+              filename: "dist/stats.html",
+              gzipSize: true,
+              brotliSize: true,
+            }),
+          ]
+        : []),
     ],
     define: { "process.env": {} },
     resolve: {
@@ -54,6 +90,10 @@ export default defineConfig(() => {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
       },
       extensions: [".js", ".json", ".jsx", ".mjs", ".ts", ".tsx", ".vue"],
+    },
+    optimizeDeps: {
+      include: ["cesium", "vuetify", "d3", "pinia", "vue"],
+      exclude: ["vue-demi"], // Causes issues with Pinia
     },
     server: {
       proxy: {
