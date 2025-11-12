@@ -49,7 +49,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         await expect(cesiumPage.getByText("NDVI")).toBeVisible();
 
         // NDVI should be functional in grid view too
-        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI in grid view" });
+        await helpers.checkWithRetry(ndviToggle, {
+          elementName: "NDVI in grid view",
+        });
         await expect(ndviToggle).toBeChecked();
       },
     );
@@ -114,10 +116,14 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         // Test toggle functionality
-        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.checkWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
         await expect(landCoverToggle).toBeChecked();
 
-        await helpers.uncheckWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.uncheckWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
         await expect(landCoverToggle).not.toBeChecked();
 
         // Should be visible in Grid view too
@@ -161,7 +167,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.checkWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
         await expect(landCoverToggle).toBeChecked();
 
         // Switch to Grid view - should maintain state
@@ -169,7 +177,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         await expect(landCoverToggle).toBeChecked();
 
         // Disable in Grid view
-        await helpers.uncheckWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.uncheckWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
         await expect(landCoverToggle).not.toBeChecked();
 
         // Switch back - state should be maintained
@@ -304,7 +314,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         // Scroll into view once before rapid toggling
-        await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.scrollIntoViewportWithRetry(ndviToggle, {
+          elementName: "NDVI",
+        });
         await cesiumPage.waitForTimeout(300);
 
         // Rapidly toggle NDVI multiple times with viewport checks
@@ -314,7 +326,10 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           const isInViewport = box !== null && box.y >= 0 && box.x >= 0;
 
           if (!isInViewport) {
-            await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: "NDVI", maxRetries: 2 });
+            await helpers.scrollIntoViewportWithRetry(ndviToggle, {
+              elementName: "NDVI",
+              maxRetries: 2,
+            });
             await cesiumPage.waitForTimeout(200);
           }
 
@@ -363,7 +378,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
 
         // Enable all available layers
         await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
-        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.checkWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
         await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
 
         // Verify all are checked
@@ -373,7 +390,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
 
         // Disable all
         await helpers.uncheckWithRetry(ndviToggle, { elementName: "NDVI" });
-        await helpers.uncheckWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.uncheckWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
         await helpers.uncheckWithRetry(treesToggle, { elementName: "Trees" });
 
         // Verify all are unchecked
@@ -397,7 +416,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
-        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.checkWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
 
         // Navigate to postal code level
         await helpers.drillToLevel("postalCode");
@@ -559,7 +580,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         // Scroll into view before interaction
-        await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.scrollIntoViewportWithRetry(ndviToggle, {
+          elementName: "NDVI",
+        });
         await cesiumPage.waitForTimeout(300);
 
         // Initial state
@@ -659,7 +682,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
-        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.checkWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
 
         await expect(ndviToggle).toBeChecked();
         await expect(landCoverToggle).toBeChecked();

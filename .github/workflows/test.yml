@@ -167,6 +167,7 @@ jobs:
       NODE_OPTIONS: "--max-old-space-size=2048"
 
     strategy:
+      fail-fast: true
       matrix:
         viewport: [desktop, tablet, mobile]
 
@@ -201,7 +202,7 @@ jobs:
           timeout: "30"
 
       - name: Run accessibility tests
-        run: timeout 600 npm run test:accessibility:${{ matrix.viewport }} -- --reporter=list,json --trace=on-first-retry
+        run: timeout 600 npm run test:accessibility:${{ matrix.viewport }} -- -x --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-${{ matrix.viewport }}
 

@@ -58,13 +58,15 @@ export class AccessibilityTestHelpers {
    */
   async scrollIntoViewportWithRetry(
     locator: Locator,
-    options: { maxRetries?: number; elementName?: string } = {}
+    options: { maxRetries?: number; elementName?: string } = {},
   ): Promise<void> {
     const { maxRetries = 3, elementName = "element" } = options;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        await locator.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.SCROLL_INTO_VIEW });
+        await locator.scrollIntoViewIfNeeded({
+          timeout: TEST_TIMEOUTS.SCROLL_INTO_VIEW,
+        });
         const box = await locator.boundingBox();
         if (box && box.y >= 0 && box.x >= 0) {
           return; // Successfully in viewport
@@ -73,7 +75,9 @@ export class AccessibilityTestHelpers {
         if (attempt === maxRetries) {
           console.warn(`Scroll failed for ${elementName}, continuing anyway`);
         }
-        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt);
+        await this.page.waitForTimeout(
+          TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt,
+        );
       }
     }
   }
@@ -99,7 +103,7 @@ export class AccessibilityTestHelpers {
    */
   async checkWithRetry(
     locator: Locator,
-    options: { maxRetries?: number; elementName?: string } = {}
+    options: { maxRetries?: number; elementName?: string } = {},
   ): Promise<void> {
     await this.scrollIntoViewportWithRetry(locator, options);
     await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
@@ -116,9 +120,13 @@ export class AccessibilityTestHelpers {
         return;
       } catch {
         if (attempt === maxRetries) {
-          throw new Error(`Failed to check ${elementName} toggle after ${maxRetries} attempts`);
+          throw new Error(
+            `Failed to check ${elementName} toggle after ${maxRetries} attempts`,
+          );
         }
-        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+        await this.page.waitForTimeout(
+          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
+        );
       }
     }
   }
@@ -144,7 +152,7 @@ export class AccessibilityTestHelpers {
    */
   async uncheckWithRetry(
     locator: Locator,
-    options: { maxRetries?: number; elementName?: string } = {}
+    options: { maxRetries?: number; elementName?: string } = {},
   ): Promise<void> {
     await this.scrollIntoViewportWithRetry(locator, options);
     await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
@@ -161,9 +169,13 @@ export class AccessibilityTestHelpers {
         return;
       } catch {
         if (attempt === maxRetries) {
-          throw new Error(`Failed to uncheck ${elementName} toggle after ${maxRetries} attempts`);
+          throw new Error(
+            `Failed to uncheck ${elementName} toggle after ${maxRetries} attempts`,
+          );
         }
-        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+        await this.page.waitForTimeout(
+          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
+        );
       }
     }
   }
@@ -204,7 +216,9 @@ export class AccessibilityTestHelpers {
         // Wait for page to be stable first
         await this.page
           .waitForLoadState("domcontentloaded", { timeout: 5000 })
-          .catch((e) => console.warn("DOM content load wait failed:", e.message));
+          .catch((e) =>
+            console.warn("DOM content load wait failed:", e.message),
+          );
 
         // Multi-strategy selector detection with fallbacks
         let viewCardFound = false;
@@ -386,9 +400,7 @@ export class AccessibilityTestHelpers {
           // Try to reset page state
           await this.page
             .waitForLoadState("domcontentloaded", { timeout: 5000 })
-            .catch((e) =>
-              console.warn("Page state reset failed:", e.message),
-            );
+            .catch((e) => console.warn("Page state reset failed:", e.message));
         }
       }
     }
@@ -535,7 +547,10 @@ export class AccessibilityTestHelpers {
               await this.page
                 .waitForLoadState("networkidle", { timeout: 5000 })
                 .catch((e) =>
-                  console.warn("Data load network idle wait failed:", e.message),
+                  console.warn(
+                    "Data load network idle wait failed:",
+                    e.message,
+                  ),
                 );
 
               // Wait for timeline component to fully initialize (critical for timeline tests)
@@ -689,7 +704,10 @@ export class AccessibilityTestHelpers {
               await this.page
                 .waitForLoadState("networkidle", { timeout: 5000 })
                 .catch((e) =>
-                  console.warn("Data load network idle wait failed:", e.message),
+                  console.warn(
+                    "Data load network idle wait failed:",
+                    e.message,
+                  ),
                 );
 
               // Wait for timeline component to remain fully interactive (critical for timeline tests)

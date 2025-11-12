@@ -2,45 +2,39 @@
 
 ## [1.29.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.29.0...r4c-cesium-viewer-v1.29.1) (2025-11-11)
 
-
 ### Performance Improvements
 
-* Optimize WMS tile requests to reduce N+1 API calls by 75% ([#340](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/340)) ([c88c1bf](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c88c1bfeff569800b535207be920ce023a08a602))
+- Optimize WMS tile requests to reduce N+1 API calls by 75% ([#340](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/340)) ([c88c1bf](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c88c1bfeff569800b535207be920ce023a08a602))
 
 ## [1.29.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.4...r4c-cesium-viewer-v1.29.0) (2025-11-11)
 
-
 ### Features
 
-* add bundle size and Web Vitals performance tests ([#315](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/315)) ([5ea658f](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5ea658f28c8d6e450747e36611b772df024fbeb5))
+- add bundle size and Web Vitals performance tests ([#315](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/315)) ([5ea658f](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5ea658f28c8d6e450747e36611b772df024fbeb5))
 
 ## [1.28.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.3...r4c-cesium-viewer-v1.28.4) (2025-11-11)
 
-
 ### Bug Fixes
 
-* prevent DataCloneError by marking Cesium entities as non-reactive ([#336](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/336)) ([46e48f6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/46e48f67fdce47bf3c54727dfb1d278955aa55f1))
+- prevent DataCloneError by marking Cesium entities as non-reactive ([#336](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/336)) ([46e48f6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/46e48f67fdce47bf3c54727dfb1d278955aa55f1))
 
 ## [1.28.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.2...r4c-cesium-viewer-v1.28.3) (2025-11-10)
 
-
 ### Bug Fixes
 
-* correct nginx proxy_pass path handling for pygeoapi ([#333](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/333)) ([fc61f2b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fc61f2bc7413600fb55691549c61daabcfa0c30c))
+- correct nginx proxy_pass path handling for pygeoapi ([#333](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/333)) ([fc61f2b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fc61f2bc7413600fb55691549c61daabcfa0c30c))
 
 ## [1.28.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.1...r4c-cesium-viewer-v1.28.2) (2025-11-10)
 
-
 ### Bug Fixes
 
-* update Node.js version to 24 in Dockerfile ([#331](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/331)) ([1ff765d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1ff765d7dc28bcf884c186853d18d66b9bd0990a)), closes [#330](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/330)
+- update Node.js version to 24 in Dockerfile ([#331](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/331)) ([1ff765d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1ff765d7dc28bcf884c186853d18d66b9bd0990a)), closes [#330](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/330)
 
 ## [1.28.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.28.0...r4c-cesium-viewer-v1.28.1) (2025-11-10)
 
-
 ### Bug Fixes
 
-* use HTTP for internal Kubernetes pygeoapi service ([#327](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/327)) ([073f35a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/073f35ad55644f12b87fb554d45b78b652f0aa07))
+- use HTTP for internal Kubernetes pygeoapi service ([#327](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/327)) ([073f35a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/073f35ad55644f12b87fb554d45b78b652f0aa07))
 
 ## [1.28.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.27.12...r4c-cesium-viewer-v1.28.0) (2025-11-05)
 
