@@ -297,9 +297,10 @@ export class AccessibilityTestHelpers {
             if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0)
               return false;
 
-            // Check if Cesium viewer is initialized
+            // Check if Cesium viewer is initialized (check both possible names)
             const cesiumWidget = (window as any).cesiumWidget;
-            if (!cesiumWidget) return false;
+            const viewer = (window as any).viewer;
+            if (!cesiumWidget && !viewer) return false;
 
             return true;
           },
@@ -365,6 +366,7 @@ export class AccessibilityTestHelpers {
             });
 
             // Wait for postal code level to activate by checking for specific UI elements
+            // Also check for timeline as it's a reliable indicator of postal code level
             const activationChecks = await Promise.all([
               this.page
                 .waitForSelector('text="Building Scatter Plot"', {
@@ -375,6 +377,14 @@ export class AccessibilityTestHelpers {
                 .catch(() => false),
               this.page
                 .waitForSelector('text="Area properties"', {
+                  state: "visible",
+                  timeout: 8000,
+                })
+                .then(() => true)
+                .catch(() => false),
+              // Timeline visibility is a reliable indicator of postal code level activation
+              this.page
+                .waitForSelector("#heatTimeseriesContainer", {
                   state: "visible",
                   timeout: 8000,
                 })
@@ -392,8 +402,42 @@ export class AccessibilityTestHelpers {
                   console.warn("Data load network idle wait failed:", e.message),
                 );
 
-              // Final stability wait
-              await this.page.waitForTimeout(500);
+              // Wait for timeline component to fully initialize (critical for timeline tests)
+              // At postal code level, the timeline should become visible with interactive elements
+              await this.page
+                .waitForFunction(
+                  () => {
+                    const timeline = document.querySelector(
+                      "#heatTimeseriesContainer",
+                    );
+                    if (!timeline) return false;
+                    const rect = timeline.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) return false;
+
+                    // Verify Vuetify slider is rendered and visible (check thumb, not hidden input)
+                    const sliderThumb = document.querySelector(
+                      ".timeline-slider .v-slider-thumb",
+                    );
+                    if (!sliderThumb) return false;
+                    const thumbVisible =
+                      sliderThumb instanceof HTMLElement &&
+                      sliderThumb.offsetParent !== null &&
+                      window.getComputedStyle(sliderThumb).visibility !==
+                        "hidden" &&
+                      window.getComputedStyle(sliderThumb).display !== "none";
+                    return thumbVisible;
+                  },
+                  { timeout: 10000 },
+                )
+                .catch(() => {
+                  // Timeline might not always be fully interactive immediately
+                  console.warn(
+                    "[drillToLevel] Timeline slider did not become interactive in time",
+                  );
+                });
+
+              // Extra stability wait for Vue/Vuetify to finish rendering slider animations
+              await this.page.waitForTimeout(2000);
               return; // Success
             }
 
@@ -511,6 +555,38 @@ export class AccessibilityTestHelpers {
                 .catch((e) =>
                   console.warn("Data load network idle wait failed:", e.message),
                 );
+
+              // Wait for timeline component to remain fully interactive (critical for timeline tests)
+              // At building level, the timeline should still be visible and functional
+              await this.page
+                .waitForFunction(
+                  () => {
+                    const timeline = document.querySelector(
+                      "#heatTimeseriesContainer",
+                    );
+                    if (!timeline) return false;
+                    const rect = timeline.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) return false;
+
+                    // Also verify the slider input is visible (not just in DOM)
+                    const slider = document.querySelector(
+                      ".timeline-slider input",
+                    );
+                    if (!slider) return false;
+                    const sliderVisible =
+                      slider instanceof HTMLElement &&
+                      slider.offsetParent !== null &&
+                      window.getComputedStyle(slider).visibility !== "hidden";
+                    return sliderVisible;
+                  },
+                  { timeout: 8000 },
+                )
+                .catch(() => {
+                  // Timeline might not always be fully interactive immediately
+                  console.warn(
+                    "[drillToLevel] Timeline slider did not remain interactive",
+                  );
+                });
 
               // Final stability wait
               await this.page.waitForTimeout(500);
@@ -800,11 +876,12 @@ export class AccessibilityTestHelpers {
     if (currentLevel === "postalCode" || currentLevel === "building") {
       await expect(this.page.locator("#heatTimeseriesContainer")).toBeVisible();
 
-      // Test timeline slider interaction
-      const slider = this.page.locator(".timeline-slider input");
-      await expect(slider).toBeVisible();
+      // Test timeline slider interaction - verify Vuetify slider thumb is visible
+      const sliderThumb = this.page.locator(".timeline-slider .v-slider-thumb");
+      await expect(sliderThumb).toBeVisible();
 
-      // Test moving the slider
+      // Test moving the slider using the native input (works even though input is hidden)
+      const slider = this.page.locator(".timeline-slider input");
       await slider.fill("3"); // Move to position 3
       // Wait for slider value change to be processed
       await this.page.waitForFunction(

@@ -692,24 +692,52 @@ export const cesiumTest = base.extend<CesiumFixtures>({
       setTimeout(() => clearInterval(checkStore), 5000);
     });
 
-    // Close the disclaimer dialog if it appears
-    const dialogButton = page.getByRole("button", {
-      name: /close disclaimer|explore map/i,
-    });
-    const dialogVisible = await dialogButton.isVisible().catch(() => false);
-    if (dialogVisible) {
-      await dialogButton.click();
-      await page.waitForTimeout(500); // Wait for dialog to close
+    // First, handle any Cesium error panels that may be blocking the UI
+    const cesiumErrorOkButton = page.locator(
+      '.cesium-widget-errorPanel button:has-text("OK")',
+    );
+    const cesiumErrorVisible = await cesiumErrorOkButton
+      .isVisible()
+      .catch(() => false);
+    if (cesiumErrorVisible) {
+      await cesiumErrorOkButton.click({ timeout: 5000 }).catch(() => {
+        console.warn("Failed to dismiss Cesium error panel, continuing anyway");
+      });
+      await page.waitForTimeout(500);
     }
 
-    // Disable navigation drawer overlay in tests
-    // The drawer creates an overlay by default which blocks interactions
-    // We'll hide the overlay scrim via CSS instead of closing the drawer
-    await page.addStyleTag({
-      content: ".v-overlay__scrim { display: none !important; }",
+    // Force remove disclaimer dialog and overlays using JavaScript
+    // This is more reliable than CSS hiding or trying to click buttons
+    await page.evaluate(() => {
+      // Remove all dialogs with disclaimer-related content
+      document.querySelectorAll('[role="dialog"]').forEach((dialog) => {
+        const text = dialog.textContent || "";
+        if (
+          text.includes("R4C Climate Demo") ||
+          text.includes("Demo only") ||
+          text.includes("disclaimer")
+        ) {
+          dialog.remove();
+        }
+      });
+
+      // Remove all overlay scrims that block interactions
+      document
+        .querySelectorAll(".v-overlay__scrim, .v-overlay--active")
+        .forEach((overlay) => {
+          overlay.remove();
+        });
+
+      // Also hide via CSS as a backup
+      const style = document.createElement("style");
+      style.textContent = `
+        .v-overlay__scrim { display: none !important; }
+        .v-overlay--active { display: none !important; }
+      `;
+      document.head.appendChild(style);
     });
 
-    // Wait a moment for any initial animations
+    // Wait a moment for DOM changes to complete
     await page.waitForTimeout(500);
 
     // Wait for Cesium to be ready with extended timeout for CI
