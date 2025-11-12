@@ -30,14 +30,14 @@ import { useBackgroundMapStore } from "../stores/backgroundMapStore.js";
  * Larger tiles (512px) balance request reduction with download size, while zoom level
  * limit (18) provides sufficient detail for flood visualization without excessive tiles.
  *
- * @param {string} url - WMS service base URL (without query parameters)
+ * @param {string} url - WMS service base URL (with or without query parameters)
  * @param {string} layerName - WMS layer name to request
  * @returns {Promise<void>}
  * @throws {Error} If WMS provider initialization fails
  *
  * @example
  * await createFloodImageryLayer(
- *   'https://maps.example.com/wms',
+ *   'https://maps.example.com/wms?SERVICE=WMS&VERSION=1.3.0',
  *   'flood_risk_100yr'
  * );
  *
@@ -49,8 +49,13 @@ export const createFloodImageryLayer = async (url, layerName) => {
   const viewer = store.cesiumViewer;
 
   try {
+    // Construct URL with proper query parameter handling
+    const serviceUrl = new URL(url);
+    serviceUrl.searchParams.set('format', 'image/png');
+    serviceUrl.searchParams.set('transparent', 'true');
+
     const provider = new Cesium.WebMapServiceImageryProvider({
-      url: `${url}&format=image/png&transparent=true`,
+      url: serviceUrl.toString(),
       layers: layerName,
       // Performance optimization: Use larger tiles to reduce request count
       // 512x512 tiles reduce requests by ~75% compared to default 256x256
