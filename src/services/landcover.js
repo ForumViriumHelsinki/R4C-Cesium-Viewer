@@ -27,6 +27,15 @@ import { useURLStore } from "../stores/urlStore.js";
  * Loads multi-layer landcover data from HSY WMS with year-specific layer names.
  * Supports custom layer lists or auto-generates all 13 landcover types.
  *
+ * Performance optimizations:
+ * - Uses 512x512px tiles (default: 256x256) to reduce request count by ~75%
+ * - Limits maximum zoom level to 18 to prevent excessive tile requests
+ * - Uses GeographicTilingScheme for EPSG:4326 coordinate system
+ *
+ * These optimizations prevent N+1 API call issues similar to those resolved in PR #340.
+ * Larger tiles (512px) balance request reduction with download size, while zoom level
+ * limit (18) provides sufficient detail for landcover visualization without excessive tiles.
+ *
  * @param {string} [newLayers] - Optional comma-separated WMS layer names. If not provided, loads all landcover layers for selected year.
  * @returns {Promise<void>}
  * @throws {Error} If WMS provider initialization fails
@@ -38,6 +47,8 @@ import { useURLStore } from "../stores/urlStore.js";
  * @example
  * // Load specific layers
  * await createHSYImageryLayer('asuminen_ja_maankaytto:maanpeite_vesi_2023');
+ *
+ * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/pull/340|PR #340 - WMS Tile Optimization}
  */
 export const createHSYImageryLayer = async (newLayers) => {
   const store = useGlobalStore();
@@ -51,6 +62,15 @@ export const createHSYImageryLayer = async (newLayers) => {
   const provider = new Cesium.WebMapServiceImageryProvider({
     url: urlStore.wmsProxy,
     layers: layersList,
+    // Performance optimization: Use larger tiles to reduce request count
+    // 512x512 tiles reduce requests by ~75% compared to default 256x256
+    tileWidth: 512,
+    tileHeight: 512,
+    // Limit zoom levels to prevent excessive tile loading
+    minimumLevel: 0,
+    maximumLevel: 18,
+    // Use geographic tiling scheme for EPSG:4326 (WGS84)
+    tilingScheme: new Cesium.GeographicTilingScheme(),
   });
 
   await provider.readyPromise;

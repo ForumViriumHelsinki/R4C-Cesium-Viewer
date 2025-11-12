@@ -21,16 +21,27 @@ import { useBackgroundMapStore } from "../stores/backgroundMapStore.js";
  * Creates and adds a flood risk WMS imagery layer to the Cesium viewer
  * Loads transparent PNG flood overlay from WMS endpoint with proxy support.
  *
- * @param {string} url - WMS service base URL (without query parameters)
+ * Performance optimizations:
+ * - Uses 512x512px tiles (default: 256x256) to reduce request count by ~75%
+ * - Limits maximum zoom level to 18 to prevent excessive tile requests
+ * - Uses GeographicTilingScheme for EPSG:4326 coordinate system
+ *
+ * These optimizations prevent N+1 API call issues similar to those resolved in PR #340.
+ * Larger tiles (512px) balance request reduction with download size, while zoom level
+ * limit (18) provides sufficient detail for flood visualization without excessive tiles.
+ *
+ * @param {string} url - WMS service base URL (with or without query parameters)
  * @param {string} layerName - WMS layer name to request
  * @returns {Promise<void>}
  * @throws {Error} If WMS provider initialization fails
  *
  * @example
  * await createFloodImageryLayer(
- *   'https://maps.example.com/wms',
+ *   'https://maps.example.com/wms?SERVICE=WMS&VERSION=1.3.0',
  *   'flood_risk_100yr'
  * );
+ *
+ * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/pull/340|PR #340 - WMS Tile Optimization}
  */
 export const createFloodImageryLayer = async (url, layerName) => {
   const store = useGlobalStore();
@@ -38,9 +49,23 @@ export const createFloodImageryLayer = async (url, layerName) => {
   const viewer = store.cesiumViewer;
 
   try {
+    // Construct URL with proper query parameter handling
+    const serviceUrl = new URL(url);
+    serviceUrl.searchParams.set('format', 'image/png');
+    serviceUrl.searchParams.set('transparent', 'true');
+
     const provider = new Cesium.WebMapServiceImageryProvider({
-      url: `${url}&format=image/png&transparent=true`,
+      url: serviceUrl.toString(),
       layers: layerName,
+      // Performance optimization: Use larger tiles to reduce request count
+      // 512x512 tiles reduce requests by ~75% compared to default 256x256
+      tileWidth: 512,
+      tileHeight: 512,
+      // Limit zoom levels to prevent excessive tile loading
+      minimumLevel: 0,
+      maximumLevel: 18,
+      // Use geographic tiling scheme for EPSG:4326 (WGS84)
+      tilingScheme: new Cesium.GeographicTilingScheme(),
     });
 
     await provider.readyPromise;
