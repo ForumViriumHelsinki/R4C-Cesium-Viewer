@@ -30,12 +30,20 @@ export default defineConfig({
         ["json", { outputFile: "test-results/test-results.json" }],
         ["junit", { outputFile: "test-results/junit.xml" }],
         ["html", { open: "never" }],
+        ["./tests/reporters/performance-reporter.ts"], // Performance monitoring
       ]
-    : [
-        ["html"],
-        ["json", { outputFile: "test-results/test-results.json" }],
-        ["junit", { outputFile: "test-results/junit.xml" }],
-      ],
+    : process.env.PERFORMANCE_MONITORING === "true"
+      ? [
+          ["html"],
+          ["json", { outputFile: "test-results/test-results.json" }],
+          ["junit", { outputFile: "test-results/junit.xml" }],
+          ["./tests/reporters/performance-reporter.ts"], // Performance monitoring
+        ]
+      : [
+          ["html"],
+          ["json", { outputFile: "test-results/test-results.json" }],
+          ["junit", { outputFile: "test-results/junit.xml" }],
+        ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */

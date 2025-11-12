@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Testing
 
 See `docs/TESTING.md` for comprehensive testing documentation.
+See `docs/PERFORMANCE_MONITORING.md` for performance regression monitoring.
 
 **Quick commands:**
 
@@ -21,6 +22,12 @@ See `docs/TESTING.md` for comprehensive testing documentation.
 - `npm run test:accessibility` - Run all accessibility tests
 - `npx playwright test --ui` - Run tests in interactive UI mode
 - `npm run test:accessibility:report` - View HTML test report
+
+**Performance monitoring:**
+
+- `npm run test:performance:monitor` - Run tests with performance tracking
+- `npm run test:performance:check` - Check for performance regressions
+- `npm run test:performance:baseline` - Generate new performance baselines
 
 **Development workflow:** Use focused testing for 5-8x faster iteration during test fixes. See `.claude/commands/test-focused.md` for details.
 

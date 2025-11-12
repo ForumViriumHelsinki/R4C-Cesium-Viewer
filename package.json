@@ -35,7 +35,10 @@
     "test:comprehensive-walkthrough": "npm run test:accessibility:file tests/e2e/accessibility/comprehensive-walkthrough.spec.ts",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:ci": "npm run test:coverage && npm run test:e2e",
-    "test:ci:accessibility": "npm run test:accessibility:all-viewports"
+    "test:ci:accessibility": "npm run test:accessibility:all-viewports",
+    "test:performance:monitor": "PERFORMANCE_MONITORING=true playwright test tests/e2e/accessibility",
+    "test:performance:check": "node scripts/check-performance-regression.js",
+    "test:performance:baseline": "PERFORMANCE_MONITORING=true playwright test tests/e2e/accessibility && echo 'Baseline generated in tests/performance-baselines.json'"
   },
   "dependencies": {
     "@sentry/browser": "^10.23.0",
