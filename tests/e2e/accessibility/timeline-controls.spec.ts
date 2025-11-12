@@ -13,6 +13,7 @@ import { cesiumTest, cesiumDescribe } from "../../fixtures/cesium-fixture";
 import AccessibilityTestHelpers from "../helpers/test-helpers";
 
 cesiumDescribe("Timeline Controls Accessibility", () => {
+  cesiumTest.use({ tag: ["@accessibility", "@e2e"] });
   let helpers: AccessibilityTestHelpers;
 
   cesiumTest.beforeEach(async ({ cesiumPage }) => {

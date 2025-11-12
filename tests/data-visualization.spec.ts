@@ -5,6 +5,7 @@ import { setupDigitransitMock } from "./setup/digitransit-mock";
 setupDigitransitMock();
 
 test.describe("Data Visualization Components", () => {
+  test.use({ tag: ["@e2e", "@data", "@visual"] });
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Dismiss the disclaimer popup

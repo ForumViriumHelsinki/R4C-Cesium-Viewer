@@ -5,6 +5,7 @@ import { setupDigitransitMock } from "./setup/digitransit-mock";
 setupDigitransitMock();
 
 test.describe("Control Panel Functionality", () => {
+  test.use({ tag: ["@e2e", "@ui"] });
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Dismiss the disclaimer popup

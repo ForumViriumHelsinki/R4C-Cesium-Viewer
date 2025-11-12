@@ -1,15 +1,16 @@
 import { test, expect } from "@playwright/test";
 import { setupDigitransitMock } from "./setup/digitransit-mock";
+import { API_ENDPOINTS } from "./config/constants";
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
 
-test("Page load", async ({ page }) => {
+test("Page load", { tag: ["@e2e", "@smoke"] }, async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/R4C Uusimaa Demo/);
 });
 
-test("HSY Background maps", async ({ page }) => {
+test("HSY Background maps", { tag: ["@e2e", "@wms"] }, async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Close" }).click();
   await page.getByRole("button", { name: "HSY Background maps" }).click();

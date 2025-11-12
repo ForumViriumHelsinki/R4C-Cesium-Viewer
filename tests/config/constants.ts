@@ -71,3 +71,39 @@ export const POSTAL_CODE_RANGES = {
   MIN: 0,
   MAX: 1000,
 } as const;
+
+// API and service endpoint patterns
+export const API_ENDPOINTS = {
+  WMS_PROXY: "/helsinki-wms",
+  DIGITRANSIT: "/digitransit",
+  PAAVO: "/paavo",
+  PYGEOAPI: "/pygeoapi",
+  TERRAIN_PROXY: "/terrain-proxy",
+} as const;
+
+// Performance budgets (in bytes)
+export const BUNDLE_SIZE_BUDGETS = {
+  MIN_CESIUM_CHUNK: 100000, // 100KB minimum for actual Cesium library
+  MAX_MAIN_BUNDLE: 500000, // 500KB budget for largest single bundle (excludes ~5MB Cesium)
+  MAX_TOTAL_MAIN_BUNDLE: 1000000, // 1MB total budget for all non-Cesium bundles
+  BYTES_PER_KIB: 1024, // Conversion factor for bytes to kibibytes (KiB)
+} as const;
+
+// Web Vitals performance budgets (in milliseconds)
+export const WEB_VITALS_BUDGETS = {
+  FCP_BUDGET: 2000, // First Contentful Paint budget
+  LCP_BUDGET: 3000, // Largest Contentful Paint budget
+  DOM_INTERACTIVE_BUDGET: 5000, // DOM Interactive budget
+  LCP_OBSERVATION_TIMEOUT_CI: 3000, // LCP timeout in CI
+  LCP_OBSERVATION_TIMEOUT_LOCAL: 1500, // LCP timeout locally
+} as const;
+
+// Viewport dimensions for responsive testing
+export const VIEWPORTS = {
+  MOBILE_SMALL: { width: 320, height: 568 }, // iPhone SE
+  MOBILE: { width: 375, height: 667 }, // iPhone 8
+  TABLET: { width: 768, height: 1024 }, // iPad
+  TABLET_LANDSCAPE: { width: 1024, height: 768 }, // iPad Landscape
+  DESKTOP: { width: 1280, height: 720 }, // Desktop
+  DESKTOP_HD: { width: 1920, height: 1080 }, // Desktop HD
+} as const;

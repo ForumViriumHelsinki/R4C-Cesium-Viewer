@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { PlaywrightPage } from "../types/playwright";
+import { API_ENDPOINTS, VIEWPORTS } from "../config/constants";
 
 // Helper functions for common interactions
 async function dismissDisclaimer(page: PlaywrightPage) {
@@ -22,6 +23,8 @@ async function clickOnMap(page: PlaywrightPage, x: number, y: number) {
 }
 
 test.describe("R4C Climate Visualization Comprehensive Tests", () => {
+  test.use({ tag: ["@e2e", "@comprehensive"] });
+
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await dismissDisclaimer(page);
@@ -127,6 +130,8 @@ test.describe("R4C Climate Visualization Comprehensive Tests", () => {
   });
 
   test.describe("HSY Background Maps Integration", () => {
+    test.use({ tag: ["@wms"] });
+
     test("should load and interact with background maps", async ({ page }) => {
       // Try to access background maps functionality
       try {
@@ -435,7 +440,7 @@ test.describe("R4C Climate Visualization Comprehensive Tests", () => {
   test.describe("Mobile and Responsive Design", () => {
     test("should work on mobile viewport", async ({ page }) => {
       // Set mobile viewport
-      await page.setViewportSize({ width: 375, height: 667 });
+      await page.setViewportSize(VIEWPORTS.MOBILE);
       await page.waitForTimeout(1000);
 
       // Basic elements should still be visible
@@ -453,10 +458,10 @@ test.describe("R4C Climate Visualization Comprehensive Tests", () => {
 
     test("should adapt to different screen sizes", async ({ page }) => {
       const viewports = [
-        { width: 320, height: 568, name: "iPhone SE" },
-        { width: 768, height: 1024, name: "iPad" },
-        { width: 1024, height: 768, name: "iPad Landscape" },
-        { width: 1920, height: 1080, name: "Desktop HD" },
+        { ...VIEWPORTS.MOBILE_SMALL, name: "iPhone SE" },
+        { ...VIEWPORTS.TABLET, name: "iPad" },
+        { ...VIEWPORTS.TABLET_LANDSCAPE, name: "iPad Landscape" },
+        { ...VIEWPORTS.DESKTOP_HD, name: "Desktop HD" },
       ];
 
       for (const viewport of viewports) {
