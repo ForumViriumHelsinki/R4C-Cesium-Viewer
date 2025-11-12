@@ -13,9 +13,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Testing
 
-- `npx playwright test` - Run all tests
+See `docs/TESTING.md` for comprehensive testing documentation.
+
+**Quick commands:**
+
+- `npm run test:layer-controls` - Run single accessibility test file (fast iteration)
+- `npm run test:accessibility` - Run all accessibility tests
 - `npx playwright test --ui` - Run tests in interactive UI mode
-- `npx playwright test --headed` - Run tests in headed browsers
+- `npm run test:accessibility:report` - View HTML test report
+
+**Development workflow:** Use focused testing for 5-8x faster iteration during test fixes. See `.claude/commands/test-focused.md` for details.
 
 ### Docker/Kubernetes
 
@@ -137,3 +144,23 @@ Enhanced code analysis capabilities:
 - Code completion and IntelliSense
 - Hover information for functions and variables
 - Code actions and refactoring suggestions
+
+## Project-Specific Claude Resources
+
+### Slash Commands (`.claude/commands/`)
+
+Repeatable workflows available as slash commands:
+
+- `/test-focused [filename]` - Run single test file with fail-fast mode for rapid iteration
+- `/test-debug [filename]` - Launch Playwright UI mode for visual debugging
+
+### Skills (`.claude/skills/`)
+
+Specialized knowledge repositories for common patterns:
+
+- `test-pattern-library.md` - Proven patterns for fixing Playwright test failures
+- `playwright-accessibility-testing.md` - Accessibility testing best practices
+- `cesium-performance-testing.md` - CesiumJS performance optimization patterns
+- `package-lock-management.md` - Keeping npm lock files in sync with package.json
+
+These skills are automatically available to Claude Code for reference when working on related tasks.
