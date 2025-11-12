@@ -13,6 +13,36 @@
  */
 import { test, expect } from "@playwright/test";
 
+/**
+ * Helper function to assert no-cache headers
+ */
+function assertNoCacheHeaders(
+  cacheControl: string | undefined,
+  assetPath?: string,
+) {
+  const pathInfo = assetPath ? ` for ${assetPath}` : "";
+  expect(cacheControl, `Cache-Control header missing${pathInfo}`).toBeDefined();
+  expect(cacheControl).toContain("no-cache");
+  expect(cacheControl).toContain("no-store");
+  expect(cacheControl).toContain("must-revalidate");
+}
+
+/**
+ * Helper function to assert immutable cache headers for hashed assets
+ */
+function assertImmutableCacheHeaders(
+  cacheControl: string | undefined,
+  assetPath: string,
+) {
+  expect(
+    cacheControl,
+    `Cache-Control header missing for ${assetPath}`,
+  ).toBeDefined();
+  expect(cacheControl).toContain("immutable");
+  expect(cacheControl).toContain("max-age=31536000");
+  expect(cacheControl).toContain("public");
+}
+
 test.describe("Cache Header Verification", () => {
   test("index.html should have no-cache header", async ({ request }) => {
     // Test index.html cache control
@@ -20,11 +50,8 @@ test.describe("Cache Header Verification", () => {
     expect(response.status()).toBe(200);
 
     const cacheControl = response.headers()["cache-control"];
-    expect(cacheControl).toBeDefined();
     // Per nginx config line 58: "no-cache, no-store, must-revalidate"
-    expect(cacheControl).toContain("no-cache");
-    expect(cacheControl).toContain("no-store");
-    expect(cacheControl).toContain("must-revalidate");
+    assertNoCacheHeaders(cacheControl);
   });
 
   test("hashed assets should have immutable cache headers", async ({
@@ -40,9 +67,10 @@ test.describe("Cache Header Verification", () => {
 
     // Extract asset paths from the HTML
     // Look for patterns like: /assets/index.[hash].[version].js
-    // Pattern matches: [name].[hash].[version].[ext] per vite.config.js
+    // Pattern matches: [name].[hash].[version].[ext] per vite.config.js:19
+    // Version is semantic versioning format (e.g., 1.29.1) from package.json
     const assetMatches = html.matchAll(
-      /\/assets\/[\w-]+\.[a-f0-9]{8,}\.[0-9.]+\.(js|css)/g,
+      /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.(js|css)/g,
     );
     const assetPaths = Array.from(assetMatches, (match) => match[0]);
 
@@ -52,7 +80,8 @@ test.describe("Cache Header Verification", () => {
       "No hashed assets found. Ensure production build has been created with `npm run build`",
     ).toBeGreaterThan(0);
 
-    // Test the first few assets (to avoid testing too many)
+    // Test the first 3 assets to balance coverage vs. test duration
+    // Testing all assets would be redundant since they all use the same nginx config
     const assetsToTest = assetPaths.slice(0, 3);
 
     // Fetch all assets in parallel for better performance
@@ -71,15 +100,7 @@ test.describe("Cache Header Verification", () => {
 
       // Check cache control headers
       const cacheControl = assetResponse.headers()["cache-control"];
-      expect(
-        cacheControl,
-        `Cache-Control header missing for ${assetPath}`,
-      ).toBeDefined();
-
-      // Should have immutable and long max-age
-      expect(cacheControl).toContain("immutable");
-      expect(cacheControl).toContain("max-age=31536000");
-      expect(cacheControl).toContain("public");
+      assertImmutableCacheHeaders(cacheControl, assetPath);
     });
   });
 
@@ -89,9 +110,10 @@ test.describe("Cache Header Verification", () => {
     const html = await pageResponse.text();
 
     // Look for hashed asset filenames
-    // Pattern: /assets/[name].[hash].[version].[ext]
+    // Pattern: /assets/[name].[hash].[version].[ext] per vite.config.js:19
+    // Hash is 8 hex chars, version is semantic versioning (major.minor.patch)
     const hashedAssetPattern =
-      /\/assets\/[\w-]+\.[a-f0-9]{8,}\.[0-9.]+\.(js|css)/;
+      /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.(js|css)/;
     const hasMatch = hashedAssetPattern.test(html);
 
     expect(
@@ -107,9 +129,9 @@ test.describe("Cache Header Verification", () => {
     const pageResponse = await request.get("/");
     const html = await pageResponse.text();
 
-    // Find CSS asset paths
+    // Find CSS asset paths - same pattern as JS assets
     const cssMatches = html.matchAll(
-      /\/assets\/[\w-]+\.[a-f0-9]{8,}\.[0-9.]+\.css/g,
+      /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.css/g,
     );
     const cssPaths = Array.from(cssMatches, (match) => match[0]);
 
@@ -126,13 +148,7 @@ test.describe("Cache Header Verification", () => {
     expect(cssResponse.status(), `CSS asset ${cssPath} not found`).toBe(200);
 
     const cacheControl = cssResponse.headers()["cache-control"];
-    expect(
-      cacheControl,
-      `Cache-Control header missing for ${cssPath}`,
-    ).toBeDefined();
-    expect(cacheControl).toContain("immutable");
-    expect(cacheControl).toContain("max-age=31536000");
-    expect(cacheControl).toContain("public");
+    assertImmutableCacheHeaders(cacheControl, cssPath);
   });
 
   test("unhashed static assets should have no-cache header", async ({
@@ -145,11 +161,7 @@ test.describe("Cache Header Verification", () => {
     // Only test if the file exists (it may not in all environments)
     if (staticResponse.status() === 200) {
       const cacheControl = staticResponse.headers()["cache-control"];
-      expect(
-        cacheControl,
-        "Cache-Control header missing for unhashed static file",
-      ).toBeDefined();
-      expect(cacheControl).toContain("no-cache");
+      assertNoCacheHeaders(cacheControl, "/vite.svg");
     } else {
       // Skip if vite.svg doesn't exist - test is informational only
       test.skip(
