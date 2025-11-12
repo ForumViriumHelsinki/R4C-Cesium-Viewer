@@ -56,8 +56,8 @@ test.describe("Control Panel Functionality", () => {
       await searchInput.click();
       await searchInput.fill("Helsinki");
 
-      // Wait for potential search results
-      await page.waitForTimeout(1000);
+      // Wait for search results using DOM state
+      await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('DOM load timeout:', e.message));
 
       // Clear search
       await searchInput.clear();
@@ -92,19 +92,17 @@ test.describe("Control Panel Functionality", () => {
     if ((await backgroundMapButton.count()) > 0) {
       await backgroundMapButton.click();
 
-      // Wait for background map browser to open
-      await page.waitForTimeout(500);
-
-      // Check for search input in background map browser
+      // Wait for background map browser to open - check for search input
       const mapSearchInput = page.getByPlaceholder(
         /search.*layer|search.*map/i,
       );
       if ((await mapSearchInput.count()) > 0) {
+        await mapSearchInput.waitFor({ state: 'visible', timeout: 2000 }).catch((e) => console.warn('Map search input visibility timeout:', e.message));
         await expect(mapSearchInput).toBeVisible();
 
         // Test searching for a layer
         await mapSearchInput.fill("Kaupunginosat");
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('Layer search DOM load timeout:', e.message));
 
         // Clear search
         await mapSearchInput.clear();
@@ -135,7 +133,7 @@ test.describe("Control Panel Functionality", () => {
         const firstSetting = qualitySettings.first();
         if (await firstSetting.isVisible()) {
           await firstSetting.click();
-          await page.waitForTimeout(500);
+          // Playwright auto-waits for dropdown to appear
         }
       }
     }
@@ -147,13 +145,12 @@ test.describe("Control Panel Functionality", () => {
 
     if ((await gridCheckbox.count()) > 0) {
       await gridCheckbox.check();
-      await page.waitForTimeout(1000);
-
-      // Look for grid size options
+      // Wait for grid options to appear
       const gridOptions = page.locator(
         '[data-testid="grid-options"], .grid-options',
       );
       if ((await gridOptions.count()) > 0) {
+        await gridOptions.first().waitFor({ state: 'visible', timeout: 2000 }).catch((e) => console.warn('Grid options visibility timeout:', e.message));
         await expect(gridOptions.first()).toBeVisible();
       }
 
@@ -180,7 +177,7 @@ test.describe("Control Panel Functionality", () => {
         // Test toggle interaction
         const isChecked = await toggle.first().isChecked();
         await toggle.first().click();
-        await page.waitForTimeout(500);
+        // Playwright auto-waits for state change
 
         // Verify state changed
         const newState = await toggle.first().isChecked();
@@ -189,7 +186,7 @@ test.describe("Control Panel Functionality", () => {
         // Reset to original state
         if (isChecked !== newState) {
           await toggle.first().click();
-          await page.waitForTimeout(500);
+          // Playwright auto-waits for state change
         }
       }
     }
@@ -210,7 +207,15 @@ test.describe("Control Panel Functionality", () => {
 
         // Click to toggle
         await firstHeader.click();
-        await page.waitForTimeout(500);
+        // Wait for expansion animation using attribute change
+        await page.waitForFunction(
+          (initialState) => {
+            const el = document.querySelector("[aria-expanded]");
+            return el && el.getAttribute('aria-expanded') !== initialState;
+          },
+          initialExpanded,
+          { timeout: 2000 }
+        ).catch((e) => console.warn('Expansion animation timeout:', e.message));
 
         // Verify state changed
         const newExpanded = await firstHeader.getAttribute("aria-expanded");

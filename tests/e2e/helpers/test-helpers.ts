@@ -75,9 +75,10 @@ export class AccessibilityTestHelpers {
         if (attempt === maxRetries) {
           console.warn(`Scroll failed for ${elementName}, continuing anyway`);
         }
-        await this.page.waitForTimeout(
-          TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt,
-        );
+        // Wait for element to stabilize
+        await this.page.waitForLoadState('domcontentloaded', {
+          timeout: TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt
+        }).catch((e) => console.warn('Element stabilization timeout:', e.message));
       }
     }
   }
@@ -106,7 +107,6 @@ export class AccessibilityTestHelpers {
     options: { maxRetries?: number; elementName?: string } = {},
   ): Promise<void> {
     await this.scrollIntoViewportWithRetry(locator, options);
-    await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
 
     const { maxRetries = 3, elementName = "element" } = options;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -124,9 +124,8 @@ export class AccessibilityTestHelpers {
             `Failed to check ${elementName} toggle after ${maxRetries} attempts`,
           );
         }
-        await this.page.waitForTimeout(
-          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
-        );
+        // Wait with exponential backoff before retry
+        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
       }
     }
   }
@@ -155,7 +154,6 @@ export class AccessibilityTestHelpers {
     options: { maxRetries?: number; elementName?: string } = {},
   ): Promise<void> {
     await this.scrollIntoViewportWithRetry(locator, options);
-    await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
 
     const { maxRetries = 3, elementName = "element" } = options;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -173,9 +171,8 @@ export class AccessibilityTestHelpers {
             `Failed to uncheck ${elementName} toggle after ${maxRetries} attempts`,
           );
         }
-        await this.page.waitForTimeout(
-          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
-        );
+        // Wait with exponential backoff before retry
+        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
       }
     }
   }
