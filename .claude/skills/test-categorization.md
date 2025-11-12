@@ -48,6 +48,32 @@ describe("WMS Service", { tags: ["@unit", "@wms"] }, () => {
 });
 ```
 
+### Nested Tag Usage (Advanced Pattern)
+
+For complex test suites, you can apply tags at different nesting levels to add domain-specific categorization:
+
+```typescript
+test.describe("R4C Climate Visualization Comprehensive Tests", () => {
+  test.use({ tag: ["@e2e", "@comprehensive"] });
+
+  test.describe("HSY Background Maps Integration", () => {
+    test.use({ tag: ["@wms"] }); // Adds @wms to all tests in this block
+
+    test("should load WMS layers", async ({ page }) => {
+      // This test has tags: @e2e, @comprehensive, @wms
+    });
+  });
+});
+```
+
+**Benefits of nested tags:**
+- Apply base tags to entire test suite
+- Add domain-specific tags to test subsets
+- Avoid repetition in individual test declarations
+- Makes it easy to run all WMS tests: `npx playwright test --grep @wms`
+
+**Note:** Nested `test.use({ tag: [...] })` calls are additive in Playwright, merging tags from parent and child scopes.
+
 ### Selective Test Execution
 
 Run specific test categories using the `--grep` flag:

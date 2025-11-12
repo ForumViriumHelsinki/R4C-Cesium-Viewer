@@ -76,7 +76,7 @@ test("HSY Background maps", { tag: ["@e2e", "@wms"] }, async ({ page }) => {
   }
 });
 
-test("Building properties", async ({ page }) => {
+test("Building properties", { tag: ["@e2e", "@smoke"] }, async ({ page }) => {
   await page.goto("/");
 
   // Wait for page to load and dismiss any modal if present

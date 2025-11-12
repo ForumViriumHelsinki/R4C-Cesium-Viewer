@@ -1,5 +1,15 @@
 /**
- * Test configuration constants to avoid magic numbers
+ * Test Configuration Constants
+ *
+ * Quick Reference:
+ * - TIMEOUTS: Test wait times and delays
+ * - PERFORMANCE_THRESHOLDS: Load time budgets
+ * - API_ENDPOINTS: Service URLs for request matching
+ * - BUNDLE_SIZE_BUDGETS: JavaScript bundle size limits
+ * - WEB_VITALS_BUDGETS: Core Web Vitals thresholds
+ * - VIEWPORTS: Device screen dimensions for responsive testing
+ *
+ * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/blob/main/.claude/skills/test-categorization.md}
  */
 
 // Timeout constants (in milliseconds)
@@ -72,7 +82,11 @@ export const POSTAL_CODE_RANGES = {
   MAX: 1000,
 } as const;
 
-// API and service endpoint patterns
+/**
+ * API and service endpoint patterns for test request matching
+ * @example
+ * await page.waitForRequest(API_ENDPOINTS.WMS_PROXY);
+ */
 export const API_ENDPOINTS = {
   WMS_PROXY: "/helsinki-wms",
   DIGITRANSIT: "/digitransit",
@@ -81,7 +95,11 @@ export const API_ENDPOINTS = {
   TERRAIN_PROXY: "/terrain-proxy",
 } as const;
 
-// Performance budgets (in bytes)
+/**
+ * Performance budgets for JavaScript bundle sizes (in bytes)
+ * @example
+ * expect(bundleSize).toBeLessThan(BUNDLE_SIZE_BUDGETS.MAX_MAIN_BUNDLE);
+ */
 export const BUNDLE_SIZE_BUDGETS = {
   MIN_CESIUM_CHUNK: 100000, // 100KB minimum for actual Cesium library
   MAX_MAIN_BUNDLE: 500000, // 500KB budget for largest single bundle (excludes ~5MB Cesium)
@@ -89,7 +107,11 @@ export const BUNDLE_SIZE_BUDGETS = {
   BYTES_PER_KIB: 1024, // Conversion factor for bytes to kibibytes (KiB)
 } as const;
 
-// Web Vitals performance budgets (in milliseconds)
+/**
+ * Web Vitals performance budgets (in milliseconds)
+ * @example
+ * expect(fcpTime).toBeLessThan(WEB_VITALS_BUDGETS.FCP_BUDGET);
+ */
 export const WEB_VITALS_BUDGETS = {
   FCP_BUDGET: 2000, // First Contentful Paint budget
   LCP_BUDGET: 3000, // Largest Contentful Paint budget
@@ -98,7 +120,20 @@ export const WEB_VITALS_BUDGETS = {
   LCP_OBSERVATION_TIMEOUT_LOCAL: 1500, // LCP timeout locally
 } as const;
 
-// Viewport dimensions for responsive testing
+/**
+ * Viewport dimensions for responsive testing
+ *
+ * Sizes chosen based on:
+ * - MOBILE_SMALL: iPhone SE (smallest modern phone)
+ * - MOBILE: iPhone 8 (most common mobile size)
+ * - TABLET: iPad portrait (common tablet baseline)
+ * - TABLET_LANDSCAPE: iPad landscape
+ * - DESKTOP: Common laptop resolution
+ * - DESKTOP_HD: Full HD monitor (most common desktop resolution)
+ *
+ * @example
+ * await page.setViewportSize(VIEWPORTS.MOBILE);
+ */
 export const VIEWPORTS = {
   MOBILE_SMALL: { width: 320, height: 568 }, // iPhone SE
   MOBILE: { width: 375, height: 667 }, // iPhone 8

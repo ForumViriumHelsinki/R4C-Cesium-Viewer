@@ -4,7 +4,6 @@ import Wms from "@/services/wms.js";
 import * as Cesium from "cesium";
 
 // Test configuration
-const WMS_ENDPOINT_PATTERN = "/helsinki-wms";
 const MOCK_WMS_URL = "https://mock-helsinki-wms.example.com/geoserver/wms";
 
 // Mock Cesium module
