@@ -29,16 +29,16 @@ test("Building properties", async ({ page }) => {
       y: 394,
     },
   });
-  // Wait until map transition is complete
-  await page.waitForTimeout(3000);
+  // Wait for map transition to complete
+  await page.waitForLoadState("networkidle");
   await page.locator("canvas").click({
     position: {
       x: 674,
       y: 363,
     },
   });
-  // Wait until map transition is complete
-  await page.waitForTimeout(1000);
+  // Wait for building properties button to be available
+  await page.waitForSelector('button:has-text("Building properties")', { state: 'visible' });
   await page.getByRole("button", { name: "Building properties" }).click();
   await expect(page.locator("#printContainer")).toContainText("Talousrakennus");
   await expect(page.locator("canvas")).toBeVisible();

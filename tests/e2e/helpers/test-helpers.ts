@@ -75,9 +75,11 @@ export class AccessibilityTestHelpers {
         if (attempt === maxRetries) {
           console.warn(`Scroll failed for ${elementName}, continuing anyway`);
         }
-        await this.page.waitForTimeout(
-          TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt,
-        );
+        // Wait for element to stabilize using waitForFunction
+        await this.page.waitForFunction(
+          () => document.readyState === 'complete',
+          { timeout: TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt }
+        ).catch(() => {});
       }
     }
   }
@@ -106,7 +108,8 @@ export class AccessibilityTestHelpers {
     options: { maxRetries?: number; elementName?: string } = {},
   ): Promise<void> {
     await this.scrollIntoViewportWithRetry(locator, options);
-    await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
+    // Wait for element to be stable (visible and enabled)
+    await locator.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION }).catch(() => {});
 
     const { maxRetries = 3, elementName = "element" } = options;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -124,9 +127,8 @@ export class AccessibilityTestHelpers {
             `Failed to check ${elementName} toggle after ${maxRetries} attempts`,
           );
         }
-        await this.page.waitForTimeout(
-          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
-        );
+        // Wait for element state to settle
+        await locator.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt }).catch(() => {});
       }
     }
   }
@@ -155,7 +157,8 @@ export class AccessibilityTestHelpers {
     options: { maxRetries?: number; elementName?: string } = {},
   ): Promise<void> {
     await this.scrollIntoViewportWithRetry(locator, options);
-    await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
+    // Wait for element to be stable (visible and enabled)
+    await locator.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION }).catch(() => {});
 
     const { maxRetries = 3, elementName = "element" } = options;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -173,9 +176,8 @@ export class AccessibilityTestHelpers {
             `Failed to uncheck ${elementName} toggle after ${maxRetries} attempts`,
           );
         }
-        await this.page.waitForTimeout(
-          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
-        );
+        // Wait for element state to settle
+        await locator.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt }).catch(() => {});
       }
     }
   }
