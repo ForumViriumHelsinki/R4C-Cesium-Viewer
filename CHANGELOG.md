@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.30.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.29.1...r4c-cesium-viewer-v1.30.0) (2025-11-12)
+
+
+### Features
+
+* add e2e tests for cache header verification ([#362](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/362)) ([0a55a19](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0a55a19cbb7f23b7d78ad90487b6037d31933aed))
+* add error handling for dynamic Cesium import ([#370](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/370)) ([a082666](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a082666b5443d97d267dd11b3cab90d8630cfc74))
+* add performance regression monitoring for tests ([#354](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/354)) ([c42302d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c42302d7c71118e5eabc72153407bb456d1fd1f0))
+* Add test tags and extract URL patterns to constants ([#360](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/360)) ([1becdb6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1becdb645a189ae59a59cf1c6ed75a687f8128d4))
+* Configure comprehensive cache busting strategy ([#345](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/345)) ([08f13d8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/08f13d877f5502eb2c87fa66732f571e92bee4c9))
+
+
+### Bug Fixes
+
+* enhance accessibility test stability with viewport-aware interactions ([#350](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/350)) ([754d157](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/754d157e398b1f0baaccf9f2e503b08c291287ba))
+* Improve URL construction in floodwms.js ([fef6a21](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fef6a2158cebd47f5aac0eaeeae59e91d29d80a4))
+
+
+### Performance Improvements
+
+* Apply WMS tile optimization to flood and landcover services ([#357](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/357)) ([fef6a21](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fef6a2158cebd47f5aac0eaeeae59e91d29d80a4))
+
 ## [1.29.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.29.0...r4c-cesium-viewer-v1.29.1) (2025-11-11)
 
 ### Performance Improvements
