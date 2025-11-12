@@ -1229,19 +1229,14 @@ export class AccessibilityTestHelpers {
       let visibleOverlays: string[] = [];
 
       for (const selector of overlaySelectors) {
-        const count = await this.page.locator(selector).count();
-        if (count > 0) {
-          // Check if actually visible (not just in DOM)
-          const visible = await this.page
-            .locator(selector)
-            .first()
-            .isVisible()
-            .catch(() => false);
+        // Filter for visible elements only - this prevents counting DOM elements
+        // that are hidden via CSS injection (e.g., .v-overlay__scrim { display: none !important; })
+        const visibleLocator = this.page.locator(selector).locator("visible=true");
+        const count = await visibleLocator.count();
 
-          if (visible) {
-            overlayFound = true;
-            visibleOverlays.push(selector);
-          }
+        if (count > 0) {
+          overlayFound = true;
+          visibleOverlays.push(selector);
         }
       }
 
@@ -1291,13 +1286,14 @@ export class AccessibilityTestHelpers {
       // Wait for animations to complete
       await this.page.waitForTimeout(500);
 
-      // Verify overlays are gone
+      // Verify overlays are gone by checking for visible elements only
       const stillVisible = await Promise.all(
         overlaySelectors.map((selector) =>
           this.page
             .locator(selector)
-            .first()
-            .isVisible()
+            .locator("visible=true")
+            .count()
+            .then((count) => count > 0)
             .catch(() => false),
         ),
       );
@@ -1338,16 +1334,13 @@ export class AccessibilityTestHelpers {
         ".v-dialog--active",
         "[role='dialog']",
       ].map(async (selector) => {
-        const count = await this.page.locator(selector).count();
-        const visible =
-          count > 0
-            ? await this.page
-                .locator(selector)
-                .first()
-                .isVisible()
-                .catch(() => false)
-            : false;
-        return visible ? selector : null;
+        // Only check for visible elements, not just DOM presence
+        const count = await this.page
+          .locator(selector)
+          .locator("visible=true")
+          .count()
+          .catch(() => 0);
+        return count > 0 ? selector : null;
       }),
     );
 
