@@ -198,19 +198,25 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         // Start with Capital Region
         await helpers.navigateToView("capitalRegionView");
 
-        // Enable Land Cover
+        // Get Land Cover toggle
         let landCoverToggle = cesiumPage
           .getByText("Land Cover")
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Check current state first to avoid redundant operations
-        const isChecked = await landCoverToggle.isChecked();
-        if (!isChecked) {
-          await helpers.checkWithRetry(landCoverToggle, {
-            elementName: "Land Cover",
+        // Ensure we start from unchecked state for consistent test behavior
+        const initialState = await landCoverToggle.isChecked();
+        if (initialState) {
+          await helpers.uncheckWithRetry(landCoverToggle, {
+            elementName: "Land Cover initial state",
           });
         }
+        await expect(landCoverToggle).not.toBeChecked();
+
+        // Now enable Land Cover
+        await helpers.checkWithRetry(landCoverToggle, {
+          elementName: "Land Cover",
+        });
         await expect(landCoverToggle).toBeChecked();
 
         // Switch to Grid view - should maintain state
@@ -222,6 +228,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
+        // Land Cover should be checked (we ensured it was checked before navigating)
         await expect(landCoverToggle).toBeChecked();
 
         // Disable in Grid view
