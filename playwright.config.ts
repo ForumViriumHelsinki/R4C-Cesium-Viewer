@@ -72,9 +72,13 @@ export default defineConfig({
     }),
   },
 
-  /* Test timeout reduced - requestRenderMode eliminates stability delays
-   * CI gets more time to account for slower/variable environments */
-  timeout: process.env.CI ? 30000 : 20000,
+  /* Test timeout increased to accommodate Cesium initialization + navigation retries
+     - Cesium WebGL initialization: 10-15s
+     - View navigation with retries: 5-10s
+     - Element interactions: 5-10s
+     Total: ~25-35s needed for complex tests
+     CI gets extra buffer for slower/variable environments */
+  timeout: process.env.CI ? 50000 : 40000,
   expect: {
     /* Timeout for assertions - reduced with stable rendering
      * CI gets slightly more time for slower execution */

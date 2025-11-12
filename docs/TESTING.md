@@ -113,6 +113,121 @@ npm run test:e2e -- --headed  # With browser UI
 npm run test:e2e -- --debug   # Debug mode
 ```
 
+### 3a. Accessibility Tests (`tests/e2e/accessibility/`)
+
+Comprehensive accessibility testing for WCAG compliance and keyboard navigation.
+
+#### Test Files (118 tests total)
+
+- `layer-controls.spec.ts` (20 tests) - Layer visibility toggles
+- `building-filters.spec.ts` (21 tests) - Building selection/filtering
+- `navigation-levels.spec.ts` (22 tests) - Drill-down navigation
+- `expansion-panels.spec.ts` (18 tests) - Panel interactions
+- `timeline-controls.spec.ts` (9 tests) - Timeline controls
+- `view-modes.spec.ts` (17 tests) - View switching
+- `comprehensive-walkthrough.spec.ts` (11 tests) - End-to-end workflows
+
+#### Key Features Tested
+
+- **ARIA Attributes**: Proper roles, states, and labels
+- **Keyboard Navigation**: Tab order, Enter/Space activation, arrow keys
+- **Focus Management**: Focus trapping, restoration, visible indicators
+- **Screen Reader Support**: Accessible names and descriptions
+- **Toggle Interactions**: Switch controls with proper state management
+
+#### Focused Testing for Fast Iteration
+
+For rapid development cycles, use file-specific test scripts:
+
+```bash
+# Run single file with fail-fast mode (~2-5 min vs 17.5 min for full suite)
+npm run test:layer-controls
+npm run test:building-filters
+npm run test:navigation-levels
+npm run test:expansion-panels
+npm run test:timeline-controls
+npm run test:view-modes
+npm run test:comprehensive-walkthrough
+
+# Generic focused testing
+npm run test:accessibility:focused     # Stop on first failure
+npm run test:accessibility:file [path] # Run specific file
+```
+
+**Time Savings**: Focused mode provides 5-8x faster feedback (3 min vs 17.5 min).
+
+#### Development Workflow
+
+1. **Run focused test** on single file to identify first failure quickly
+2. **Apply fix patterns** from `.claude/skills/test-pattern-library.md`
+3. **Re-run immediately** to verify fix
+4. **Iterate** until file passes
+5. **Move to next file**
+
+Example:
+
+```bash
+# 1. Identify failure in ~3 minutes
+npm run test:layer-controls
+
+# 2. Fix based on error (e.g., add scroll-before-interact)
+
+# 3. Verify fix in ~3 minutes
+npm run test:layer-controls
+
+# Result: 6 min iteration vs 35 min with full suite
+```
+
+#### Critical Constraints
+
+**WebGL Resource Limit**: Must use `workers: 1` in playwright.config.ts
+
+```typescript
+// CRITICAL - Do not change
+workers: 1,           // WebGL context limitation
+fullyParallel: false  // Sequential execution required
+```
+
+**CesiumJS Performance Optimization**: Tests use request render mode to prevent continuous 60fps rendering:
+
+```typescript
+// In cesium-fixture.ts
+viewer.clock.shouldAnimate = false;
+viewer.scene.requestRenderMode = true;
+```
+
+This prevents Playwright stability issues caused by constantly changing pixels.
+
+#### Accessibility Test Patterns
+
+See `.claude/skills/test-pattern-library.md` for proven patterns:
+
+- **Scroll-before-interact**: Prevent click timeout errors
+- **Multi-selector fallback**: Handle DOM structure changes
+- **Retry logic**: Handle timing and overlay issues
+- **Viewport verification**: Ensure elements fully visible
+- **SPA navigation fix**: Use noWaitAfter for routing
+
+#### Debugging Accessibility Tests
+
+```bash
+# Visual debugging with UI mode
+npm run test:accessibility:watch
+
+# View HTML report with screenshots/traces
+npm run test:accessibility:report
+
+# Run with headed browser
+npx playwright test tests/e2e/accessibility/layer-controls.spec.ts --headed
+```
+
+**Run all accessibility tests:**
+
+```bash
+npm run test:accessibility                   # Desktop only (recommended)
+npm run test:accessibility:all-viewports     # Desktop + tablet + mobile
+```
+
 ### 4. Performance Tests (`tests/performance/`)
 
 Measure and validate application performance characteristics.

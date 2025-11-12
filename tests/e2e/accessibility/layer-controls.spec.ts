@@ -37,10 +37,11 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
         await expect(ndviToggle).toBeVisible();
 
-        // Test NDVI functionality
-        await ndviToggle.check();
+        // Test NDVI functionality with scroll-before-interact pattern
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).toBeChecked();
-        await ndviToggle.uncheck();
+
+        await helpers.uncheckWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).not.toBeChecked();
 
         // Test NDVI in Statistical Grid view
@@ -48,7 +49,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         await expect(cesiumPage.getByText("NDVI")).toBeVisible();
 
         // NDVI should be functional in grid view too
-        await ndviToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI in grid view" });
         await expect(ndviToggle).toBeChecked();
       },
     );
@@ -63,7 +64,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
 
         // Enable NDVI in Capital Region
         await helpers.navigateToView("capitalRegionView");
-        await ndviToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).toBeChecked();
 
         // Switch to Grid view
@@ -113,9 +114,10 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         // Test toggle functionality
-        await landCoverToggle.check();
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
         await expect(landCoverToggle).toBeChecked();
-        await landCoverToggle.uncheck();
+
+        await helpers.uncheckWithRetry(landCoverToggle, { elementName: "Land Cover" });
         await expect(landCoverToggle).not.toBeChecked();
 
         // Should be visible in Grid view too
@@ -158,7 +160,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .getByText("Land Cover")
           .locator("..")
           .locator('input[type="checkbox"]');
-        await landCoverToggle.check();
+
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
         await expect(landCoverToggle).toBeChecked();
 
         // Switch to Grid view - should maintain state
@@ -166,7 +169,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         await expect(landCoverToggle).toBeChecked();
 
         // Disable in Grid view
-        await landCoverToggle.uncheck();
+        await helpers.uncheckWithRetry(landCoverToggle, { elementName: "Land Cover" });
         await expect(landCoverToggle).not.toBeChecked();
 
         // Switch back - state should be maintained
@@ -200,9 +203,10 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         // Test Trees toggle functionality
-        await treesToggle.check();
+        await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
         await expect(treesToggle).toBeChecked();
-        await treesToggle.uncheck();
+
+        await helpers.uncheckWithRetry(treesToggle, { elementName: "Trees" });
         await expect(treesToggle).not.toBeChecked();
       },
     );
@@ -260,7 +264,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         // Enable Trees
-        await treesToggle.check();
+        await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
         await expect(treesToggle).toBeChecked();
 
         // Navigate to building level (Trees should still be available)
@@ -300,27 +304,25 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         // Scroll into view once before rapid toggling
-        await ndviToggle.scrollIntoViewIfNeeded().catch(() => {});
+        await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: "NDVI" });
         await cesiumPage.waitForTimeout(300);
 
         // Rapidly toggle NDVI multiple times with viewport checks
         for (let i = 0; i < 5; i++) {
           // Ensure element is still in viewport
-          const isInViewport = await ndviToggle
-            .boundingBox()
-            .then((box) => box !== null && box.y >= 0);
+          const box = await ndviToggle.boundingBox();
+          const isInViewport = box !== null && box.y >= 0 && box.x >= 0;
 
           if (!isInViewport) {
-            await ndviToggle.scrollIntoViewIfNeeded().catch(() => {});
+            await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: "NDVI", maxRetries: 2 });
             await cesiumPage.waitForTimeout(200);
           }
 
-          await ndviToggle.check({ timeout: 3000 });
-          // Wait for toggle state change
-          await expect(ndviToggle).toBeChecked();
-          await ndviToggle.uncheck({ timeout: 3000 });
-          // Wait for toggle state change
-          await expect(ndviToggle).not.toBeChecked();
+          // Use force option for rapid toggling after initial attempts
+          await ndviToggle.check({ timeout: 3000, force: i > 2 });
+          await cesiumPage.waitForTimeout(250);
+          await ndviToggle.uncheck({ timeout: 3000, force: i > 2 });
+          await cesiumPage.waitForTimeout(250);
         }
 
         // Final state should be consistent
@@ -360,9 +362,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         // Enable all available layers
-        await ndviToggle.check();
-        await landCoverToggle.check();
-        await treesToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
 
         // Verify all are checked
         await expect(ndviToggle).toBeChecked();
@@ -370,9 +372,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         await expect(treesToggle).toBeChecked();
 
         // Disable all
-        await ndviToggle.uncheck();
-        await landCoverToggle.uncheck();
-        await treesToggle.uncheck();
+        await helpers.uncheckWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.uncheckWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.uncheckWithRetry(treesToggle, { elementName: "Trees" });
 
         // Verify all are unchecked
         await expect(ndviToggle).not.toBeChecked();
@@ -394,8 +396,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        await ndviToggle.check();
-        await landCoverToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
 
         // Navigate to postal code level
         await helpers.drillToLevel("postalCode");
@@ -557,14 +559,16 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator('input[type="checkbox"]');
 
         // Scroll into view before interaction
-        await ndviToggle.scrollIntoViewIfNeeded().catch(() => {});
-        await cesiumPage.waitForTimeout(200);
+        await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: "NDVI" });
+        await cesiumPage.waitForTimeout(300);
 
         // Initial state
         const initialChecked = await ndviToggle.isChecked();
 
         // Toggle on
-        await ndviToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+        await cesiumPage.waitForTimeout(500);
+
         // Wait for toggle state change
         await expect(ndviToggle).toBeChecked();
 
@@ -578,6 +582,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           ".slider",
           ".switch .slider",
           '[class*="slider"]',
+          ".switch-slider",
         ];
 
         let sliderFound = false;
@@ -620,7 +625,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .getByText("NDVI")
           .locator("..")
           .locator('input[type="checkbox"]');
-        await ndviToggle.check();
+
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
 
         // Wait for loading to complete
         await cesiumPage
@@ -652,8 +658,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        await ndviToggle.check();
-        await landCoverToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
 
         await expect(ndviToggle).toBeChecked();
         await expect(landCoverToggle).toBeChecked();
@@ -674,7 +680,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         await expect(landCoverToggle).toBeVisible();
 
         // Test functionality is maintained
-        await ndviToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).toBeChecked();
       },
     );
@@ -688,7 +694,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        await ndviToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+
         // Wait for toggle state change
         await expect(ndviToggle).toBeChecked();
 
@@ -700,7 +707,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         expect(errorCount).toBe(0);
 
         // Toggle should remain functional
-        await ndviToggle.uncheck();
+        await helpers.uncheckWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).not.toBeChecked();
       },
     );
@@ -737,7 +744,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
 
           // Toggle should work efficiently
           const startTime = Date.now();
-          await ndviToggle.check();
+          await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
           const endTime = Date.now();
 
           expect(endTime - startTime).toBeLessThan(1000); // Should be responsive

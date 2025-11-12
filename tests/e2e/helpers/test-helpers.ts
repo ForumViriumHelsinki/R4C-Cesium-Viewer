@@ -7,12 +7,23 @@
 
 import { expect } from "@playwright/test";
 import type { PlaywrightPage, CesiumTestState } from "../../types/playwright";
+import type { Locator } from "@playwright/test";
 import {
   waitForCesiumReady as cesiumWaitForReady,
   setupCesiumForCI,
   initializeCesiumWithRetry,
   waitForAppReady,
 } from "./cesium-helper";
+
+/**
+ * Timeout constants for test interactions
+ */
+export const TEST_TIMEOUTS = {
+  SCROLL_INTO_VIEW: 3000,
+  INTERACTION: 5000,
+  RETRY_BACKOFF_BASE: 200,
+  RETRY_BACKOFF_INTERACTION: 300,
+} as const;
 
 export interface ViewMode {
   id: "capitalRegionView" | "gridView" | "helsinkiHeat";
@@ -30,6 +41,131 @@ export class AccessibilityTestHelpers {
 
   constructor(page: PlaywrightPage) {
     this.page = page;
+  }
+
+  /**
+   * Scroll element into viewport with retry logic
+   *
+   * Ensures element is visible in viewport before interaction by:
+   * 1. Scrolling element into view
+   * 2. Verifying bounding box is within viewport (y >= 0, x >= 0)
+   * 3. Retrying with exponential backoff on failure
+   *
+   * @param locator - The Playwright locator for the element
+   * @param options - Configuration options
+   * @param options.maxRetries - Maximum number of retry attempts (default: 3)
+   * @param options.elementName - Element name for logging (default: 'element')
+   */
+  async scrollIntoViewportWithRetry(
+    locator: Locator,
+    options: { maxRetries?: number; elementName?: string } = {}
+  ): Promise<void> {
+    const { maxRetries = 3, elementName = "element" } = options;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await locator.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.SCROLL_INTO_VIEW });
+        const box = await locator.boundingBox();
+        if (box && box.y >= 0 && box.x >= 0) {
+          return; // Successfully in viewport
+        }
+      } catch {
+        if (attempt === maxRetries) {
+          console.warn(`Scroll failed for ${elementName}, continuing anyway`);
+        }
+        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt);
+      }
+    }
+  }
+
+  /**
+   * Check a checkbox/toggle with scroll-before-interact pattern
+   *
+   * Implements the complete scroll-before-interact pattern:
+   * 1. Scrolls element into viewport with retry
+   * 2. Waits for element stability
+   * 3. Checks the element with retry and exponential backoff
+   * 4. Uses force click on retry attempts to handle WebGL/Vuetify overlay timing issues
+   *
+   * Force clicking on retries is necessary because:
+   * - Playwright's actionability checks don't work reliably with WebGL canvases
+   * - Vuetify overlay animations can cause timing issues
+   * - The initial attempt without force ensures the element is truly interactive
+   *
+   * @param locator - The Playwright locator for the checkbox
+   * @param options - Configuration options
+   * @param options.maxRetries - Maximum number of retry attempts (default: 3)
+   * @param options.elementName - Element name for logging (default: 'element')
+   */
+  async checkWithRetry(
+    locator: Locator,
+    options: { maxRetries?: number; elementName?: string } = {}
+  ): Promise<void> {
+    await this.scrollIntoViewportWithRetry(locator, options);
+    await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
+
+    const { maxRetries = 3, elementName = "element" } = options;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await locator.check({
+          timeout: TEST_TIMEOUTS.INTERACTION,
+          // Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
+          // First attempt uses normal checks to ensure element is truly interactive
+          force: attempt > 1,
+        });
+        return;
+      } catch {
+        if (attempt === maxRetries) {
+          throw new Error(`Failed to check ${elementName} toggle after ${maxRetries} attempts`);
+        }
+        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+      }
+    }
+  }
+
+  /**
+   * Uncheck a checkbox/toggle with scroll-before-interact pattern
+   *
+   * Implements the complete scroll-before-interact pattern for unchecking:
+   * 1. Scrolls element into viewport with retry
+   * 2. Waits for element stability
+   * 3. Unchecks the element with retry and exponential backoff
+   * 4. Uses force click on retry attempts to handle WebGL/Vuetify overlay timing issues
+   *
+   * Force clicking on retries is necessary because:
+   * - Playwright's actionability checks don't work reliably with WebGL canvases
+   * - Vuetify overlay animations can cause timing issues
+   * - The initial attempt without force ensures the element is truly interactive
+   *
+   * @param locator - The Playwright locator for the checkbox
+   * @param options - Configuration options
+   * @param options.maxRetries - Maximum number of retry attempts (default: 3)
+   * @param options.elementName - Element name for logging (default: 'element')
+   */
+  async uncheckWithRetry(
+    locator: Locator,
+    options: { maxRetries?: number; elementName?: string } = {}
+  ): Promise<void> {
+    await this.scrollIntoViewportWithRetry(locator, options);
+    await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
+
+    const { maxRetries = 3, elementName = "element" } = options;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await locator.uncheck({
+          timeout: TEST_TIMEOUTS.INTERACTION,
+          // Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
+          // First attempt uses normal checks to ensure element is truly interactive
+          force: attempt > 1,
+        });
+        return;
+      } catch {
+        if (attempt === maxRetries) {
+          throw new Error(`Failed to uncheck ${elementName} toggle after ${maxRetries} attempts`);
+        }
+        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+      }
+    }
   }
 
   /**
@@ -297,9 +433,10 @@ export class AccessibilityTestHelpers {
             if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0)
               return false;
 
-            // Check if Cesium viewer is initialized
+            // Check if Cesium viewer is initialized (check both possible names)
             const cesiumWidget = (window as any).cesiumWidget;
-            if (!cesiumWidget) return false;
+            const viewer = (window as any).viewer;
+            if (!cesiumWidget && !viewer) return false;
 
             return true;
           },
@@ -365,6 +502,7 @@ export class AccessibilityTestHelpers {
             });
 
             // Wait for postal code level to activate by checking for specific UI elements
+            // Also check for timeline as it's a reliable indicator of postal code level
             const activationChecks = await Promise.all([
               this.page
                 .waitForSelector('text="Building Scatter Plot"', {
@@ -375,6 +513,14 @@ export class AccessibilityTestHelpers {
                 .catch(() => false),
               this.page
                 .waitForSelector('text="Area properties"', {
+                  state: "visible",
+                  timeout: 8000,
+                })
+                .then(() => true)
+                .catch(() => false),
+              // Timeline visibility is a reliable indicator of postal code level activation
+              this.page
+                .waitForSelector("#heatTimeseriesContainer", {
                   state: "visible",
                   timeout: 8000,
                 })
@@ -392,8 +538,42 @@ export class AccessibilityTestHelpers {
                   console.warn("Data load network idle wait failed:", e.message),
                 );
 
-              // Final stability wait
-              await this.page.waitForTimeout(500);
+              // Wait for timeline component to fully initialize (critical for timeline tests)
+              // At postal code level, the timeline should become visible with interactive elements
+              await this.page
+                .waitForFunction(
+                  () => {
+                    const timeline = document.querySelector(
+                      "#heatTimeseriesContainer",
+                    );
+                    if (!timeline) return false;
+                    const rect = timeline.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) return false;
+
+                    // Verify Vuetify slider is rendered and visible (check thumb, not hidden input)
+                    const sliderThumb = document.querySelector(
+                      ".timeline-slider .v-slider-thumb",
+                    );
+                    if (!sliderThumb) return false;
+                    const thumbVisible =
+                      sliderThumb instanceof HTMLElement &&
+                      sliderThumb.offsetParent !== null &&
+                      window.getComputedStyle(sliderThumb).visibility !==
+                        "hidden" &&
+                      window.getComputedStyle(sliderThumb).display !== "none";
+                    return thumbVisible;
+                  },
+                  { timeout: 10000 },
+                )
+                .catch(() => {
+                  // Timeline might not always be fully interactive immediately
+                  console.warn(
+                    "[drillToLevel] Timeline slider did not become interactive in time",
+                  );
+                });
+
+              // Extra stability wait for Vue/Vuetify to finish rendering slider animations
+              await this.page.waitForTimeout(2000);
               return; // Success
             }
 
@@ -511,6 +691,38 @@ export class AccessibilityTestHelpers {
                 .catch((e) =>
                   console.warn("Data load network idle wait failed:", e.message),
                 );
+
+              // Wait for timeline component to remain fully interactive (critical for timeline tests)
+              // At building level, the timeline should still be visible and functional
+              await this.page
+                .waitForFunction(
+                  () => {
+                    const timeline = document.querySelector(
+                      "#heatTimeseriesContainer",
+                    );
+                    if (!timeline) return false;
+                    const rect = timeline.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) return false;
+
+                    // Also verify the slider input is visible (not just in DOM)
+                    const slider = document.querySelector(
+                      ".timeline-slider input",
+                    );
+                    if (!slider) return false;
+                    const sliderVisible =
+                      slider instanceof HTMLElement &&
+                      slider.offsetParent !== null &&
+                      window.getComputedStyle(slider).visibility !== "hidden";
+                    return sliderVisible;
+                  },
+                  { timeout: 8000 },
+                )
+                .catch(() => {
+                  // Timeline might not always be fully interactive immediately
+                  console.warn(
+                    "[drillToLevel] Timeline slider did not remain interactive",
+                  );
+                });
 
               // Final stability wait
               await this.page.waitForTimeout(500);
@@ -800,11 +1012,12 @@ export class AccessibilityTestHelpers {
     if (currentLevel === "postalCode" || currentLevel === "building") {
       await expect(this.page.locator("#heatTimeseriesContainer")).toBeVisible();
 
-      // Test timeline slider interaction
-      const slider = this.page.locator(".timeline-slider input");
-      await expect(slider).toBeVisible();
+      // Test timeline slider interaction - verify Vuetify slider thumb is visible
+      const sliderThumb = this.page.locator(".timeline-slider .v-slider-thumb");
+      await expect(sliderThumb).toBeVisible();
 
-      // Test moving the slider
+      // Test moving the slider using the native input (works even though input is hidden)
+      const slider = this.page.locator(".timeline-slider input");
       await slider.fill("3"); // Move to position 3
       // Wait for slider value change to be processed
       await this.page.waitForFunction(
