@@ -38,89 +38,18 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         await expect(ndviToggle).toBeVisible();
 
         // Test NDVI functionality with scroll-before-interact pattern
-        // Scroll into view with retry logic
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            if (scrollAttempt === 3) {
-              console.warn("Initial scroll failed for NDVI, continuing anyway");
-            }
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        // Check with retry logic
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to check NDVI toggle");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).toBeChecked();
 
-        // Scroll before uncheck
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        // Uncheck with retry logic
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.uncheck({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to uncheck NDVI toggle");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        await helpers.uncheckWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).not.toBeChecked();
 
         // Test NDVI in Statistical Grid view
         await helpers.navigateToView("gridView");
         await expect(cesiumPage.getByText("NDVI")).toBeVisible();
 
-        // NDVI should be functional in grid view too - scroll before check
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3)
-              throw new Error("Failed to check NDVI in grid view");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        // NDVI should be functional in grid view too
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI in grid view" });
         await expect(ndviToggle).toBeChecked();
       },
     );
@@ -135,30 +64,7 @@ cesiumDescribe("Layer Controls Accessibility", () => {
 
         // Enable NDVI in Capital Region
         await helpers.navigateToView("capitalRegionView");
-
-        // Scroll before check
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to check NDVI");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).toBeChecked();
 
         // Switch to Grid view
@@ -207,57 +113,11 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Test toggle functionality with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await landCoverToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await landCoverToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await landCoverToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to check Land Cover");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        // Test toggle functionality
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
         await expect(landCoverToggle).toBeChecked();
 
-        // Scroll before uncheck
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await landCoverToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await landCoverToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await landCoverToggle.uncheck({
-              timeout: 5000,
-              force: attempt > 1,
-            });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to uncheck Land Cover");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        await helpers.uncheckWithRetry(landCoverToggle, { elementName: "Land Cover" });
         await expect(landCoverToggle).not.toBeChecked();
 
         // Should be visible in Grid view too
@@ -301,61 +161,15 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Scroll before check
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await landCoverToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await landCoverToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await landCoverToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to check Land Cover");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
         await expect(landCoverToggle).toBeChecked();
 
         // Switch to Grid view - should maintain state
         await helpers.navigateToView("gridView");
         await expect(landCoverToggle).toBeChecked();
 
-        // Disable in Grid view with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await landCoverToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await landCoverToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await landCoverToggle.uncheck({
-              timeout: 5000,
-              force: attempt > 1,
-            });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to uncheck Land Cover");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        // Disable in Grid view
+        await helpers.uncheckWithRetry(landCoverToggle, { elementName: "Land Cover" });
         await expect(landCoverToggle).not.toBeChecked();
 
         // Switch back - state should be maintained
@@ -388,54 +202,11 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Test Trees toggle functionality with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await treesToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await treesToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await treesToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to check Trees");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        // Test Trees toggle functionality
+        await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
         await expect(treesToggle).toBeChecked();
 
-        // Scroll before uncheck
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await treesToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await treesToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await treesToggle.uncheck({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to uncheck Trees");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        await helpers.uncheckWithRetry(treesToggle, { elementName: "Trees" });
         await expect(treesToggle).not.toBeChecked();
       },
     );
@@ -492,29 +263,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Enable Trees with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await treesToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await treesToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await treesToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to check Trees");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        // Enable Trees
+        await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
         await expect(treesToggle).toBeChecked();
 
         // Navigate to building level (Trees should still be available)
@@ -553,22 +303,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Scroll into view once before rapid toggling with retry
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            if (scrollAttempt === 3) {
-              console.warn("Initial scroll failed, continuing anyway");
-            }
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-
+        // Scroll into view once before rapid toggling
+        await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: "NDVI" });
         await cesiumPage.waitForTimeout(300);
 
         // Rapidly toggle NDVI multiple times with viewport checks
@@ -578,18 +314,11 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           const isInViewport = box !== null && box.y >= 0 && box.x >= 0;
 
           if (!isInViewport) {
-            for (let scrollAttempt = 1; scrollAttempt <= 2; scrollAttempt++) {
-              try {
-                await ndviToggle.scrollIntoViewIfNeeded({ timeout: 2000 });
-                break;
-              } catch {
-                await cesiumPage.waitForTimeout(200);
-              }
-            }
+            await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: "NDVI", maxRetries: 2 });
             await cesiumPage.waitForTimeout(200);
           }
 
-          // Use force option for rapid toggling
+          // Use force option for rapid toggling after initial attempts
           await ndviToggle.check({ timeout: 3000, force: i > 2 });
           await cesiumPage.waitForTimeout(250);
           await ndviToggle.uncheck({ timeout: 3000, force: i > 2 });
@@ -632,147 +361,20 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Enable all available layers with scroll-before-interact
-        // NDVI
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
-
-        // Land Cover
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await landCoverToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await landCoverToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await landCoverToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
-
-        // Trees
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await treesToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await treesToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await treesToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        // Enable all available layers
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
 
         // Verify all are checked
         await expect(ndviToggle).toBeChecked();
         await expect(landCoverToggle).toBeChecked();
         await expect(treesToggle).toBeChecked();
 
-        // Disable all with scroll-before-interact
-        // NDVI
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.uncheck({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
-
-        // Land Cover
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await landCoverToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await landCoverToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await landCoverToggle.uncheck({
-              timeout: 5000,
-              force: attempt > 1,
-            });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
-
-        // Trees
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await treesToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await treesToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await treesToggle.uncheck({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        // Disable all
+        await helpers.uncheckWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.uncheckWithRetry(landCoverToggle, { elementName: "Land Cover" });
+        await helpers.uncheckWithRetry(treesToggle, { elementName: "Trees" });
 
         // Verify all are unchecked
         await expect(ndviToggle).not.toBeChecked();
@@ -794,49 +396,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Enable NDVI with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
-
-        // Enable Land Cover with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await landCoverToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await landCoverToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await landCoverToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
 
         // Navigate to postal code level
         await helpers.drillToLevel("postalCode");
@@ -997,38 +558,15 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Scroll into view before interaction with retry
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            if (scrollAttempt === 3) {
-              console.warn("Scroll failed, continuing anyway");
-            }
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-
+        // Scroll into view before interaction
+        await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: "NDVI" });
         await cesiumPage.waitForTimeout(300);
 
         // Initial state
         const initialChecked = await ndviToggle.isChecked();
 
-        // Toggle on with retry
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt === 3) throw new Error("Failed to check toggle");
-            await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
-
+        // Toggle on
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
         await cesiumPage.waitForTimeout(500);
 
         // Wait for toggle state change
@@ -1082,33 +620,13 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         // Try toggling during navigation/loading
         await helpers.drillToLevel("postalCode");
 
-        // Immediately try to toggle layers with scroll-before-interact
+        // Immediately try to toggle layers
         const ndviToggle = cesiumPage
           .getByText("NDVI")
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
 
         // Wait for loading to complete
         await cesiumPage
@@ -1140,49 +658,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Enable NDVI with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
-
-        // Enable Land Cover with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await landCoverToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await landCoverToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await landCoverToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
 
         await expect(ndviToggle).toBeChecked();
         await expect(landCoverToggle).toBeChecked();
@@ -1202,28 +679,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         await expect(ndviToggle).toBeVisible();
         await expect(landCoverToggle).toBeVisible();
 
-        // Test functionality is maintained with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        // Test functionality is maintained
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).toBeChecked();
       },
     );
@@ -1237,28 +694,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        // Check with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
 
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
         // Wait for toggle state change
         await expect(ndviToggle).toBeChecked();
 
@@ -1269,28 +706,8 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         const errorCount = await errorElements.count();
         expect(errorCount).toBe(0);
 
-        // Toggle should remain functional with scroll-before-interact
-        for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-          try {
-            await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-            const box = await ndviToggle.boundingBox();
-            if (box && box.y >= 0 && box.x >= 0) {
-              break;
-            }
-          } catch {
-            await cesiumPage.waitForTimeout(200 * scrollAttempt);
-          }
-        }
-        await cesiumPage.waitForTimeout(300);
-
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await ndviToggle.uncheck({ timeout: 5000, force: attempt > 1 });
-            break;
-          } catch {
-            if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-          }
-        }
+        // Toggle should remain functional
+        await helpers.uncheckWithRetry(ndviToggle, { elementName: "NDVI" });
         await expect(ndviToggle).not.toBeChecked();
       },
     );
@@ -1325,30 +742,9 @@ cesiumDescribe("Layer Controls Accessibility", () => {
             .locator("..")
             .locator('input[type="checkbox"]');
 
-          // Scroll before toggle
-          for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-            try {
-              await ndviToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
-              const box = await ndviToggle.boundingBox();
-              if (box && box.y >= 0 && box.x >= 0) {
-                break;
-              }
-            } catch {
-              await cesiumPage.waitForTimeout(200 * scrollAttempt);
-            }
-          }
-          await cesiumPage.waitForTimeout(300);
-
           // Toggle should work efficiently
           const startTime = Date.now();
-          for (let attempt = 1; attempt <= 3; attempt++) {
-            try {
-              await ndviToggle.check({ timeout: 5000, force: attempt > 1 });
-              break;
-            } catch {
-              if (attempt < 3) await cesiumPage.waitForTimeout(300 * attempt);
-            }
-          }
+          await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
           const endTime = Date.now();
 
           expect(endTime - startTime).toBeLessThan(1000); // Should be responsive

@@ -7,12 +7,23 @@
 
 import { expect } from "@playwright/test";
 import type { PlaywrightPage, CesiumTestState } from "../../types/playwright";
+import type { Locator } from "@playwright/test";
 import {
   waitForCesiumReady as cesiumWaitForReady,
   setupCesiumForCI,
   initializeCesiumWithRetry,
   waitForAppReady,
 } from "./cesium-helper";
+
+/**
+ * Timeout constants for test interactions
+ */
+export const TEST_TIMEOUTS = {
+  SCROLL_INTO_VIEW: 3000,
+  INTERACTION: 5000,
+  RETRY_BACKOFF_BASE: 200,
+  RETRY_BACKOFF_INTERACTION: 300,
+} as const;
 
 export interface ViewMode {
   id: "capitalRegionView" | "gridView" | "helsinkiHeat";
@@ -30,6 +41,131 @@ export class AccessibilityTestHelpers {
 
   constructor(page: PlaywrightPage) {
     this.page = page;
+  }
+
+  /**
+   * Scroll element into viewport with retry logic
+   *
+   * Ensures element is visible in viewport before interaction by:
+   * 1. Scrolling element into view
+   * 2. Verifying bounding box is within viewport (y >= 0, x >= 0)
+   * 3. Retrying with exponential backoff on failure
+   *
+   * @param locator - The Playwright locator for the element
+   * @param options - Configuration options
+   * @param options.maxRetries - Maximum number of retry attempts (default: 3)
+   * @param options.elementName - Element name for logging (default: 'element')
+   */
+  async scrollIntoViewportWithRetry(
+    locator: Locator,
+    options: { maxRetries?: number; elementName?: string } = {}
+  ): Promise<void> {
+    const { maxRetries = 3, elementName = "element" } = options;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await locator.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.SCROLL_INTO_VIEW });
+        const box = await locator.boundingBox();
+        if (box && box.y >= 0 && box.x >= 0) {
+          return; // Successfully in viewport
+        }
+      } catch {
+        if (attempt === maxRetries) {
+          console.warn(`Scroll failed for ${elementName}, continuing anyway`);
+        }
+        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt);
+      }
+    }
+  }
+
+  /**
+   * Check a checkbox/toggle with scroll-before-interact pattern
+   *
+   * Implements the complete scroll-before-interact pattern:
+   * 1. Scrolls element into viewport with retry
+   * 2. Waits for element stability
+   * 3. Checks the element with retry and exponential backoff
+   * 4. Uses force click on retry attempts to handle WebGL/Vuetify overlay timing issues
+   *
+   * Force clicking on retries is necessary because:
+   * - Playwright's actionability checks don't work reliably with WebGL canvases
+   * - Vuetify overlay animations can cause timing issues
+   * - The initial attempt without force ensures the element is truly interactive
+   *
+   * @param locator - The Playwright locator for the checkbox
+   * @param options - Configuration options
+   * @param options.maxRetries - Maximum number of retry attempts (default: 3)
+   * @param options.elementName - Element name for logging (default: 'element')
+   */
+  async checkWithRetry(
+    locator: Locator,
+    options: { maxRetries?: number; elementName?: string } = {}
+  ): Promise<void> {
+    await this.scrollIntoViewportWithRetry(locator, options);
+    await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
+
+    const { maxRetries = 3, elementName = "element" } = options;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await locator.check({
+          timeout: TEST_TIMEOUTS.INTERACTION,
+          // Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
+          // First attempt uses normal checks to ensure element is truly interactive
+          force: attempt > 1,
+        });
+        return;
+      } catch {
+        if (attempt === maxRetries) {
+          throw new Error(`Failed to check ${elementName} toggle after ${maxRetries} attempts`);
+        }
+        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+      }
+    }
+  }
+
+  /**
+   * Uncheck a checkbox/toggle with scroll-before-interact pattern
+   *
+   * Implements the complete scroll-before-interact pattern for unchecking:
+   * 1. Scrolls element into viewport with retry
+   * 2. Waits for element stability
+   * 3. Unchecks the element with retry and exponential backoff
+   * 4. Uses force click on retry attempts to handle WebGL/Vuetify overlay timing issues
+   *
+   * Force clicking on retries is necessary because:
+   * - Playwright's actionability checks don't work reliably with WebGL canvases
+   * - Vuetify overlay animations can cause timing issues
+   * - The initial attempt without force ensures the element is truly interactive
+   *
+   * @param locator - The Playwright locator for the checkbox
+   * @param options - Configuration options
+   * @param options.maxRetries - Maximum number of retry attempts (default: 3)
+   * @param options.elementName - Element name for logging (default: 'element')
+   */
+  async uncheckWithRetry(
+    locator: Locator,
+    options: { maxRetries?: number; elementName?: string } = {}
+  ): Promise<void> {
+    await this.scrollIntoViewportWithRetry(locator, options);
+    await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION);
+
+    const { maxRetries = 3, elementName = "element" } = options;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await locator.uncheck({
+          timeout: TEST_TIMEOUTS.INTERACTION,
+          // Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
+          // First attempt uses normal checks to ensure element is truly interactive
+          force: attempt > 1,
+        });
+        return;
+      } catch {
+        if (attempt === maxRetries) {
+          throw new Error(`Failed to uncheck ${elementName} toggle after ${maxRetries} attempts`);
+        }
+        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+      }
+    }
   }
 
   /**
