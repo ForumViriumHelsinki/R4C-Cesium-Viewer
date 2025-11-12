@@ -205,10 +205,10 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        await ndviToggle.check();
-        await landCoverToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.checkWithRetry(landCoverToggle, { elementName: "Land Cover" });
         if (await treesToggle.isVisible()) {
-          await treesToggle.check();
+          await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
         }
 
         // 3. Enable multiple filters
@@ -221,8 +221,8 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        await publicBuildingsToggle.check();
-        await tallBuildingsToggle.check();
+        await helpers.checkWithRetry(publicBuildingsToggle, { elementName: "Public Buildings" });
+        await helpers.checkWithRetry(tallBuildingsToggle, { elementName: "Tall Buildings" });
 
         // 4. Use timeline
         const slider = cesiumPage.locator(".timeline-slider input");
@@ -265,8 +265,8 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
           .locator("..")
           .locator('input[type="checkbox"]');
 
-        await ndviToggle.check();
-        await tallBuildingsToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+        await helpers.checkWithRetry(tallBuildingsToggle, { elementName: "Tall Buildings" });
 
         // 2. Switch to Grid view
         await helpers.navigateToView("gridView");
@@ -491,7 +491,7 @@ cesiumDescribe("Comprehensive Walkthrough Accessibility", () => {
           .getByText("NDVI")
           .locator("..")
           .locator('input[type="checkbox"]');
-        await ndviToggle.check();
+        await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
 
         await helpers.drillToLevel("building");
         // Wait for building level under load

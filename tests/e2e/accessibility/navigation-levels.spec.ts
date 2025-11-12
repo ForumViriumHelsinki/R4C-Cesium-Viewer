@@ -516,7 +516,7 @@ cesiumDescribe("Navigation Levels Accessibility", () => {
             .getByText("Trees")
             .locator("..")
             .locator('input[type="checkbox"]');
-          await treesToggle.check();
+          await helpers.checkWithRetry(treesToggle, { elementName: "Trees" });
           await expect(treesToggle).toBeChecked();
         }
       },
