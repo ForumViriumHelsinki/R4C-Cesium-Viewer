@@ -11,6 +11,36 @@
     	<BuildingInformation
       		v-if="shouldShowBuildingInformation"
     	/>
+		<!-- Error Snackbar -->
+		<v-snackbar
+			v-model="errorSnackbar"
+			:timeout="-1"
+			color="error"
+			location="top"
+			multi-line
+		>
+			<div class="d-flex align-center">
+				<v-icon class="mr-2">mdi-alert-circle</v-icon>
+				<div>
+					<div class="font-weight-bold">Failed to Load Map Viewer</div>
+					<div class="text-caption">{{ errorMessage }}</div>
+				</div>
+			</div>
+			<template v-slot:actions>
+				<v-btn
+					variant="text"
+					@click="retryInit"
+				>
+					Retry
+				</v-btn>
+				<v-btn
+					variant="text"
+					@click="errorSnackbar = false"
+				>
+					Close
+				</v-btn>
+			</template>
+		</v-snackbar>
 	</div>
 </template>
 
@@ -51,6 +81,8 @@ export default {
       		return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading;
     	});
 		const viewer = ref(null);
+		const errorSnackbar = ref(false);
+		const errorMessage = ref('');
 		let lastPickTime = 0;
 		let Cesium = null;
 		let Datasource = null;
@@ -62,27 +94,35 @@ export default {
 		const initViewer = async () => {
 			// Dynamically import Cesium and its dependencies to avoid blocking initial render
 			if (!Cesium) {
-				// Load Cesium module and CSS in parallel
-				const [cesiumModule] = await Promise.all([
-					import('cesium'),
-					import('cesium/Source/Widgets/widgets.css')
-				]);
-				Cesium = cesiumModule;
+				try {
+					// Load Cesium module and CSS in parallel
+					const [cesiumModule] = await Promise.all([
+						import('cesium'),
+						import('cesium/Source/Widgets/widgets.css')
+					]);
+					Cesium = cesiumModule;
 
-				// Load service modules that depend on Cesium
-				const [DatasourceModule, WMSModule, FeaturepickerModule, CameraModule, GraphicsModule] = await Promise.all([
-					import('../services/datasource.js'),
-					import('../services/wms.js'),
-					import('../services/featurepicker.js'),
-					import('../services/camera.js'),
-					import('../services/graphics.js')
-				]);
+					// Load service modules that depend on Cesium
+					const [DatasourceModule, WMSModule, FeaturepickerModule, CameraModule, GraphicsModule] = await Promise.all([
+						import('../services/datasource.js'),
+						import('../services/wms.js'),
+						import('../services/featurepicker.js'),
+						import('../services/camera.js'),
+						import('../services/graphics.js')
+					]);
 
-				Datasource = DatasourceModule.default;
-				WMS = WMSModule.default;
-				Featurepicker = FeaturepickerModule.default;
-				Camera = CameraModule.default;
-				Graphics = GraphicsModule.default;
+					Datasource = DatasourceModule.default;
+					WMS = WMSModule.default;
+					Featurepicker = FeaturepickerModule.default;
+					Camera = CameraModule.default;
+					Graphics = GraphicsModule.default;
+				} catch (error) {
+					console.error('Failed to load Cesium library:', error);
+					errorMessage.value = 'Unable to load the 3D map viewer. Please check your internet connection and try again.';
+					errorSnackbar.value = true;
+					store.setIsLoading(false);
+					return;
+				}
 			}
 
 			// Set Ion token after loading
@@ -185,6 +225,18 @@ export default {
   			});
 		};
 
+		const retryInit = async () => {
+			errorSnackbar.value = false;
+			errorMessage.value = '';
+			store.setIsLoading(true);
+			await initViewer();
+			if (!errorSnackbar.value) {
+				socioEconomicsStore.loadPaavo();
+				heatExposureStore.loadHeatExposure();
+			}
+			store.setIsLoading(false);
+		};
+
 		onMounted(async () => {
 			await initViewer();
 			socioEconomicsStore.loadPaavo();
@@ -196,7 +248,10 @@ export default {
 			toggleStore,
 			buildingStore,
 			viewer,
-			shouldShowBuildingInformation
+			shouldShowBuildingInformation,
+			errorSnackbar,
+			errorMessage,
+			retryInit
 		};
 	},
 };
