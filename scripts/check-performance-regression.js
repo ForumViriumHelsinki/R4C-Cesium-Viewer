@@ -15,8 +15,30 @@
 const fs = require("fs");
 const path = require("path");
 
-const CRITICAL_THRESHOLD = 30; // 30% slower is critical
-const WARNING_THRESHOLD = 20; // 20% slower is a warning
+// Import thresholds from shared config
+// Note: Using require for CommonJS compatibility
+const configPath = path.join(
+  process.cwd(),
+  "tests/performance-config.ts",
+);
+let CRITICAL_THRESHOLD = 30; // Default fallback
+let WARNING_THRESHOLD = 20; // Default fallback
+
+// Try to read config from TypeScript file (simple parsing)
+try {
+  const configContent = fs.readFileSync(configPath, "utf-8");
+  const criticalMatch = configContent.match(
+    /CRITICAL_THRESHOLD_PERCENT:\s*(\d+)/,
+  );
+  const warningMatch = configContent.match(/WARNING_THRESHOLD_PERCENT:\s*(\d+)/);
+
+  if (criticalMatch) CRITICAL_THRESHOLD = parseInt(criticalMatch[1]);
+  if (warningMatch) WARNING_THRESHOLD = parseInt(warningMatch[1]);
+} catch (error) {
+  console.warn(
+    "⚠️  Could not load config from performance-config.ts, using defaults",
+  );
+}
 
 function main() {
   const reportFile = path.join(
@@ -47,9 +69,13 @@ function main() {
   console.log(`\nReport timestamp: ${report.timestamp}`);
   console.log(`Total tests: ${report.summary.totalTests}`);
   console.log(`Average duration: ${report.summary.avgDuration}ms`);
-  console.log(
-    `Slowest test: ${report.summary.slowestTest.name} (${report.summary.slowestTest.duration}ms)`,
-  );
+
+  // Add null check for slowestTest
+  if (report.summary.slowestTest && report.summary.slowestTest.name) {
+    console.log(
+      `Slowest test: ${report.summary.slowestTest.name} (${report.summary.slowestTest.duration}ms)`,
+    );
+  }
 
   // Analyze regressions
   const criticalRegressions = report.regressions.filter(
@@ -64,6 +90,10 @@ function main() {
   if (report.regressions.length === 0) {
     console.log("\n✅ No performance regressions detected!");
     console.log("All tests are performing within acceptable limits.");
+
+    // Generate GitHub Actions summary if in CI (moved from bottom to run after main logic)
+    generateGitHubSummary(report);
+
     process.exit(0);
   }
 
@@ -107,6 +137,10 @@ function main() {
     );
     console.error("Please investigate and optimize before merging.");
     console.log("\n");
+
+    // Generate GitHub Actions summary if in CI (moved from bottom to run after main logic)
+    generateGitHubSummary(report);
+
     process.exit(1);
   }
 
@@ -119,6 +153,10 @@ function main() {
     "These are not blocking, but consider investigating if feasible.",
   );
   console.log("\n");
+
+  // Generate GitHub Actions summary if in CI (moved from bottom to run after main logic)
+  generateGitHubSummary(report);
+
   process.exit(0);
 }
 
@@ -138,7 +176,12 @@ function generateMarkdownSummary(report) {
   markdown += "### Summary\n\n";
   markdown += `- **Total tests:** ${report.summary.totalTests}\n`;
   markdown += `- **Average duration:** ${report.summary.avgDuration}ms\n`;
-  markdown += `- **Slowest test:** ${report.summary.slowestTest.name} (${report.summary.slowestTest.duration}ms)\n`;
+
+  // Add null check for slowestTest
+  if (report.summary.slowestTest && report.summary.slowestTest.name) {
+    markdown += `- **Slowest test:** ${report.summary.slowestTest.name} (${report.summary.slowestTest.duration}ms)\n`;
+  }
+
   markdown += `- **Timeouts:** ${report.summary.timeouts}\n\n`;
 
   if (criticalRegressions.length > 0) {
@@ -179,21 +222,20 @@ function generateMarkdownSummary(report) {
   return markdown;
 }
 
-// If GITHUB_STEP_SUMMARY is set, also write markdown summary
-if (process.env.GITHUB_STEP_SUMMARY) {
-  try {
-    const reportFile = path.join(
-      process.cwd(),
-      "test-results/performance-report.json",
-    );
-    if (fs.existsSync(reportFile)) {
-      const report = JSON.parse(fs.readFileSync(reportFile, "utf-8"));
+// Generate GitHub Actions summary if in CI
+// This is now called from within main() to ensure it runs after the report is analyzed
+function generateGitHubSummary(report) {
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    try {
       const markdown = generateMarkdownSummary(report);
       fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown);
       console.log("✅ GitHub Actions summary generated");
+    } catch (error) {
+      console.warn(
+        "⚠️  Failed to generate GitHub Actions summary:",
+        error.message,
+      );
     }
-  } catch (error) {
-    console.warn("⚠️  Failed to generate GitHub Actions summary:", error.message);
   }
 }
 

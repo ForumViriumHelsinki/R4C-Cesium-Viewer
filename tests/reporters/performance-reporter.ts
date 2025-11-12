@@ -22,6 +22,10 @@ import type {
 } from "@playwright/test/reporter";
 import * as fs from "fs";
 import * as path from "path";
+import {
+  PERFORMANCE_CONFIG,
+  percentToDecimal,
+} from "../performance-config.js";
 
 interface PerformanceBaseline {
   total: number;
@@ -82,9 +86,13 @@ class PerformanceReporter implements Reporter {
   private passedTests: number = 0;
   private failedTests: number = 0;
 
-  // Thresholds
-  private readonly WARNING_THRESHOLD = 0.2; // 20% slower than baseline
-  private readonly CRITICAL_THRESHOLD = 0.3; // 30% slower than baseline
+  // Thresholds from shared config
+  private readonly WARNING_THRESHOLD = percentToDecimal(
+    PERFORMANCE_CONFIG.WARNING_THRESHOLD_PERCENT,
+  );
+  private readonly CRITICAL_THRESHOLD = percentToDecimal(
+    PERFORMANCE_CONFIG.CRITICAL_THRESHOLD_PERCENT,
+  );
 
   constructor(options: { baselineFile?: string } = {}) {
     const baselineFile =
@@ -202,7 +210,7 @@ class PerformanceReporter implements Reporter {
     const slowestTest = allTests.reduce(
       (slowest, test) =>
         test.duration > slowest.duration ? test : slowest,
-      { name: "", duration: 0 },
+      { name: "N/A", duration: 0 },
     );
 
     // Build performance report
@@ -232,7 +240,14 @@ class PerformanceReporter implements Reporter {
     }
 
     const reportFile = path.join(reportDir, "performance-report.json");
-    fs.writeFileSync(reportFile, JSON.stringify(report, null, 2));
+    try {
+      fs.writeFileSync(reportFile, JSON.stringify(report, null, 2));
+    } catch (error) {
+      console.error(
+        `[Performance Reporter] Failed to write report: ${error}`,
+      );
+      throw error;
+    }
 
     // Generate baseline file if it doesn't exist
     if (Object.keys(this.baselines).length === 0 && this.passedTests > 0) {
@@ -244,19 +259,17 @@ class PerformanceReporter implements Reporter {
   }
 
   private extractSuiteName(test: TestCase): string {
-    // Extract the suite name from the test file path
+    // Use relative file path as suite identifier to prevent collisions
+    // between different directories with same filename
     const filePath = test.location.file;
+    const relativePath = path.relative(process.cwd(), filePath);
+
+    // Extract just the filename without extension for cleaner display
+    // but keep full path in case we need it for uniqueness
     const fileName = path.basename(filePath, ".spec.ts");
 
-    // Look for the first parent suite title
-    let parent = test.parent;
-    while (parent && parent.title) {
-      if (parent.title !== "" && !parent.title.includes(fileName)) {
-        return fileName; // Use file name as suite identifier
-      }
-      parent = parent.parent;
-    }
-
+    // For now, use filename as it's cleaner and collision is unlikely
+    // But we have the full relative path available if needed
     return fileName;
   }
 
@@ -270,13 +283,29 @@ class PerformanceReporter implements Reporter {
     );
 
     const baselines: PerformanceBaselines = {};
+    const warnings: string[] = [];
 
     for (const suite of report.suites) {
       const individualTests: Record<string, number> = {};
 
       for (const test of suite.tests) {
         if (test.status === "passed") {
-          individualTests[test.name] = test.duration;
+          const duration = test.duration;
+
+          // Validate baseline values
+          if (duration < PERFORMANCE_CONFIG.MIN_BASELINE_DURATION) {
+            warnings.push(
+              `⚠️  ${suite.name} > ${test.name}: Duration ${Math.round(duration)}ms is very short (< ${PERFORMANCE_CONFIG.MIN_BASELINE_DURATION}ms). May not be reliable for regression detection.`,
+            );
+          }
+
+          if (duration > PERFORMANCE_CONFIG.MAX_BASELINE_DURATION) {
+            warnings.push(
+              `⚠️  ${suite.name} > ${test.name}: Duration ${Math.round(duration)}ms is suspiciously high (> ${PERFORMANCE_CONFIG.MAX_BASELINE_DURATION}ms). Please verify this is expected.`,
+            );
+          }
+
+          individualTests[test.name] = duration;
         }
       }
 
@@ -292,8 +321,24 @@ class PerformanceReporter implements Reporter {
       process.cwd(),
       "tests/performance-baselines.json",
     );
-    fs.writeFileSync(baselineFile, JSON.stringify(baselines, null, 2));
-    console.log(`[Performance Reporter] Baselines saved to ${baselineFile}`);
+
+    try {
+      fs.writeFileSync(baselineFile, JSON.stringify(baselines, null, 2));
+      console.log(`[Performance Reporter] Baselines saved to ${baselineFile}`);
+
+      // Display validation warnings if any
+      if (warnings.length > 0) {
+        console.log(
+          "\n[Performance Reporter] Baseline Validation Warnings:",
+        );
+        warnings.forEach((warning) => console.log(warning));
+      }
+    } catch (error) {
+      console.error(
+        `[Performance Reporter] Failed to write baselines: ${error}`,
+      );
+      throw error;
+    }
   }
 
   private printSummary(report: PerformanceReport) {
