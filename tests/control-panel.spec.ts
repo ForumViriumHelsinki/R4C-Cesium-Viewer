@@ -56,7 +56,7 @@ test.describe("Control Panel Functionality", () => {
       await searchInput.fill("Helsinki");
 
       // Wait for search results using DOM state
-      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('DOM load timeout:', e.message));
 
       // Clear search
       await searchInput.clear();
@@ -96,12 +96,12 @@ test.describe("Control Panel Functionality", () => {
         /search.*layer|search.*map/i,
       );
       if ((await mapSearchInput.count()) > 0) {
-        await mapSearchInput.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await mapSearchInput.waitFor({ state: 'visible', timeout: 2000 }).catch((e) => console.warn('Map search input visibility timeout:', e.message));
         await expect(mapSearchInput).toBeVisible();
 
         // Test searching for a layer
         await mapSearchInput.fill("Kaupunginosat");
-        await page.waitForLoadState("domcontentloaded").catch(() => {});
+        await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('Layer search DOM load timeout:', e.message));
 
         // Clear search
         await mapSearchInput.clear();
@@ -149,7 +149,7 @@ test.describe("Control Panel Functionality", () => {
         '[data-testid="grid-options"], .grid-options',
       );
       if ((await gridOptions.count()) > 0) {
-        await gridOptions.first().waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await gridOptions.first().waitFor({ state: 'visible', timeout: 2000 }).catch((e) => console.warn('Grid options visibility timeout:', e.message));
         await expect(gridOptions.first()).toBeVisible();
       }
 
@@ -208,13 +208,13 @@ test.describe("Control Panel Functionality", () => {
         await firstHeader.click();
         // Wait for expansion animation using attribute change
         await page.waitForFunction(
-          (element, oldState) => {
-            const el = document.querySelector(`${element}`);
-            return el && el.getAttribute('aria-expanded') !== oldState;
+          (initialState) => {
+            const el = document.querySelector("[aria-expanded]");
+            return el && el.getAttribute('aria-expanded') !== initialState;
           },
-          { selector: "[aria-expanded]", initialState: initialExpanded },
+          initialExpanded,
           { timeout: 2000 }
-        ).catch(() => {});
+        ).catch((e) => console.warn('Expansion animation timeout:', e.message));
 
         // Verify state changed
         const newExpanded = await firstHeader.getAttribute("aria-expanded");

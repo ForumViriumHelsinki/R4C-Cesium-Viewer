@@ -53,7 +53,7 @@ test.describe("Loading Performance and User Experience", () => {
     }
 
     // Wait for loading to complete using network idle
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
 
     // Loading indicators should eventually disappear
     if ((await loadingIndicators.count()) > 0) {
@@ -73,7 +73,7 @@ test.describe("Loading Performance and User Experience", () => {
 
     // Navigate to postal code level
     await canvas.click({ position: { x: 400, y: 300 } });
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
 
     // Toggle vegetation layer and measure loading time
     const vegToggle = page.getByLabel(/vegetation/i);
@@ -83,7 +83,7 @@ test.describe("Loading Performance and User Experience", () => {
       await vegToggle.check();
 
       // Wait for layer to load using network idle
-      await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+      await page.waitForLoadState("networkidle", { timeout: 10000 }).catch((e) => console.warn('Layer load network idle timeout:', e.message));
 
       const loadTime = Date.now() - startTime;
 
@@ -96,7 +96,7 @@ test.describe("Loading Performance and User Experience", () => {
 
       // Clean up
       await vegToggle.uncheck();
-      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('DOM load after uncheck timeout:', e.message));
     }
   });
 
@@ -120,7 +120,7 @@ test.describe("Loading Performance and User Experience", () => {
         await expect(progress).toBeVisible();
 
         // Wait for progress to complete using network idle
-        await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+        await page.waitForLoadState("networkidle", { timeout: 5000 }).catch((e) => console.warn('Progress completion timeout:', e.message));
       }
     }
 
@@ -139,7 +139,7 @@ test.describe("Loading Performance and User Experience", () => {
 
     // Navigate to postal code level
     await canvas.click({ position: { x: 400, y: 300 } });
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
 
     // Enable multiple layers simultaneously
     const layers = [/vegetation/i, /tree/i, /nature/i];
@@ -156,7 +156,7 @@ test.describe("Loading Performance and User Experience", () => {
     }
 
     // Wait for all layers to load using network idle
-    await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 15000 }).catch((e) => console.warn('Multiple layers load timeout:', e.message));
 
     const totalLoadTime = Date.now() - startTime;
 
@@ -195,7 +195,7 @@ test.describe("Loading Performance and User Experience", () => {
     await canvas.click({ position: { x: 100, y: 100 } });
     await canvas.click({ position: { x: 200, y: 200 } });
     await canvas.click({ position: { x: 300, y: 300 } });
-    await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 5000 }).catch((e) => console.warn('Error state handling timeout:', e.message));
 
     // App should still be functional
     await expect(canvas).toBeVisible();
@@ -233,24 +233,24 @@ test.describe("Loading Performance and User Experience", () => {
 
     // Navigate to postal code
     await canvas.click({ position: { x: 400, y: 300 } });
-    await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 5000 }).catch((e) => console.warn('Postal code navigation timeout:', e.message));
 
     // Try to navigate to building
     await canvas.click({ position: { x: 420, y: 320 } });
-    await page.waitForLoadState("domcontentloaded").catch(() => {});
+    await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('Building navigation timeout:', e.message));
 
     // Navigate back if possible
     const returnButton = page.getByRole("button", { name: /return|back/i });
     if ((await returnButton.count()) > 0) {
       await returnButton.click();
-      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('Back navigation timeout:', e.message));
     }
 
     // Reset view
     const resetButton = page.getByRole("button", { name: /reset/i });
     if ((await resetButton.count()) > 0) {
       await resetButton.click();
-      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('Reset view timeout:', e.message));
     }
 
     const totalTime = Date.now() - startTime;
@@ -281,13 +281,13 @@ test.describe("Loading Performance and User Experience", () => {
 
     for (const position of interactions) {
       await canvas.click({ position });
-      await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+      await page.waitForLoadState("networkidle", { timeout: 5000 }).catch((e) => console.warn(`Position ${position.x},${position.y} load timeout:`, e.message));
 
       // Toggle some layers
       const vegToggle = page.getByLabel(/vegetation/i);
       if ((await vegToggle.count()) > 0) {
         await vegToggle.check();
-        await page.waitForLoadState("domcontentloaded").catch(() => {});
+        await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('Layer check timeout:', e.message));
         await vegToggle.uncheck();
         // Playwright auto-waits for actionability
       }
@@ -314,29 +314,29 @@ test.describe("Loading Performance and User Experience", () => {
 
     // First visit to an area
     await canvas.click({ position: { x: 400, y: 300 } });
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
 
     // Enable a layer
     const vegToggle = page.getByLabel(/vegetation/i);
     if ((await vegToggle.count()) > 0) {
       const firstLoadStart = Date.now();
       await vegToggle.check();
-      await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+      await page.waitForLoadState("networkidle", { timeout: 10000 }).catch((e) => console.warn('First layer load timeout:', e.message));
       const firstLoadTime = Date.now() - firstLoadStart;
 
       await vegToggle.uncheck();
-      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('Layer uncheck timeout:', e.message));
 
       // Navigate away and back
       await canvas.click({ position: { x: 200, y: 200 } });
-      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('Navigate away timeout:', e.message));
       await canvas.click({ position: { x: 400, y: 300 } });
-      await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+      await page.waitForLoadState("networkidle", { timeout: 5000 }).catch((e) => console.warn('Navigate back timeout:', e.message));
 
       // Second load should be faster (cached)
       const secondLoadStart = Date.now();
       await vegToggle.check();
-      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForLoadState("domcontentloaded").catch((e) => console.warn('Second layer load timeout:', e.message));
       const secondLoadTime = Date.now() - secondLoadStart;
 
       // Second load should be significantly faster
