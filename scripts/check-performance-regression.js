@@ -17,10 +17,7 @@ const path = require("path");
 
 // Import thresholds from shared config
 // Note: Using require for CommonJS compatibility
-const configPath = path.join(
-  process.cwd(),
-  "tests/performance-config.ts",
-);
+const configPath = path.join(process.cwd(), "tests/performance-config.ts");
 let CRITICAL_THRESHOLD = 30; // Default fallback
 let WARNING_THRESHOLD = 20; // Default fallback
 
@@ -30,7 +27,9 @@ try {
   const criticalMatch = configContent.match(
     /CRITICAL_THRESHOLD_PERCENT:\s*(\d+)/,
   );
-  const warningMatch = configContent.match(/WARNING_THRESHOLD_PERCENT:\s*(\d+)/);
+  const warningMatch = configContent.match(
+    /WARNING_THRESHOLD_PERCENT:\s*(\d+)/,
+  );
 
   if (criticalMatch) CRITICAL_THRESHOLD = parseInt(criticalMatch[1]);
   if (warningMatch) WARNING_THRESHOLD = parseInt(warningMatch[1]);
@@ -49,7 +48,9 @@ function main() {
   // Check if report exists
   if (!fs.existsSync(reportFile)) {
     console.error("❌ Performance report not found at:", reportFile);
-    console.error("Make sure to run tests with the performance reporter first.");
+    console.error(
+      "Make sure to run tests with the performance reporter first.",
+    );
     process.exit(2);
   }
 
