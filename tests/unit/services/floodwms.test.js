@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
-import { createFloodImageryLayer, removeFloodLayers } from "@/services/floodwms.js";
+import {
+  createFloodImageryLayer,
+  removeFloodLayers,
+} from "@/services/floodwms.js";
 import * as Cesium from "cesium";
 
 // Mock Cesium module
@@ -51,7 +54,8 @@ describe("Flood WMS Service", () => {
 
   describe("createFloodImageryLayer", () => {
     it("should create imagery layer with optimized tile configuration", async () => {
-      const mockUrl = "https://mock-flood-wms.example.com/wms?SERVICE=WMS&VERSION=1.3.0";
+      const mockUrl =
+        "https://mock-flood-wms.example.com/wms?SERVICE=WMS&VERSION=1.3.0";
       const mockLayerName = "flood:risk_100yr";
 
       await createFloodImageryLayer(mockUrl, mockLayerName);
@@ -64,7 +68,7 @@ describe("Flood WMS Service", () => {
           tileHeight: 512,
           maximumLevel: 18,
           minimumLevel: 0,
-        })
+        }),
       );
     });
 
@@ -86,13 +90,13 @@ describe("Flood WMS Service", () => {
       expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           url: expect.stringContaining("format=image/png"),
-        })
+        }),
       );
 
       expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           url: expect.stringContaining("transparent=true"),
-        })
+        }),
       );
     });
 
@@ -136,25 +140,28 @@ describe("Flood WMS Service", () => {
   describe("removeFloodLayers", () => {
     it("should remove all flood layers from viewer", () => {
       const { useGlobalStore } = require("@/stores/globalStore.js");
-      const { useBackgroundMapStore } = require("@/stores/backgroundMapStore.js");
+      const {
+        useBackgroundMapStore,
+      } = require("@/stores/backgroundMapStore.js");
 
       const mockStore = useGlobalStore();
       const mockBackgroundStore = useBackgroundMapStore();
 
       // Add mock layers
-      mockBackgroundStore.floodLayers = [
-        { id: "layer1" },
-        { id: "layer2" },
-      ];
+      mockBackgroundStore.floodLayers = [{ id: "layer1" }, { id: "layer2" }];
 
       removeFloodLayers();
 
-      expect(mockStore.cesiumViewer.imageryLayers.remove).toHaveBeenCalledTimes(2);
+      expect(mockStore.cesiumViewer.imageryLayers.remove).toHaveBeenCalledTimes(
+        2,
+      );
       expect(mockBackgroundStore.floodLayers).toEqual([]);
     });
 
     it("should handle empty flood layers array gracefully", () => {
-      const { useBackgroundMapStore } = require("@/stores/backgroundMapStore.js");
+      const {
+        useBackgroundMapStore,
+      } = require("@/stores/backgroundMapStore.js");
       const mockBackgroundStore = useBackgroundMapStore();
 
       mockBackgroundStore.floodLayers = [];

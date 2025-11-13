@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
-import { createHSYImageryLayer, removeLandcover } from "@/services/landcover.js";
+import {
+  createHSYImageryLayer,
+  removeLandcover,
+} from "@/services/landcover.js";
 import * as Cesium from "cesium";
 
 // Mock Cesium module
@@ -66,7 +69,7 @@ describe("Landcover Service", () => {
           tileHeight: 512,
           maximumLevel: 18,
           minimumLevel: 0,
-        })
+        }),
       );
     });
 
@@ -82,7 +85,7 @@ describe("Landcover Service", () => {
       expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           url: "https://mock-wms-proxy.example.com/wms",
-        })
+        }),
       );
     });
 
@@ -108,7 +111,7 @@ describe("Landcover Service", () => {
       expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           layers: customLayers,
-        })
+        }),
       );
     });
 
@@ -153,7 +156,9 @@ describe("Landcover Service", () => {
   describe("removeLandcover", () => {
     it("should remove all landcover layers from viewer", () => {
       const { useGlobalStore } = require("@/stores/globalStore.js");
-      const { useBackgroundMapStore } = require("@/stores/backgroundMapStore.js");
+      const {
+        useBackgroundMapStore,
+      } = require("@/stores/backgroundMapStore.js");
 
       const mockStore = useGlobalStore();
       const mockBackgroundStore = useBackgroundMapStore();
@@ -167,12 +172,16 @@ describe("Landcover Service", () => {
 
       removeLandcover();
 
-      expect(mockStore.cesiumViewer.imageryLayers.remove).toHaveBeenCalledTimes(3);
+      expect(mockStore.cesiumViewer.imageryLayers.remove).toHaveBeenCalledTimes(
+        3,
+      );
       expect(mockBackgroundStore.landcoverLayers).toEqual([]);
     });
 
     it("should handle empty landcover layers array gracefully", () => {
-      const { useBackgroundMapStore } = require("@/stores/backgroundMapStore.js");
+      const {
+        useBackgroundMapStore,
+      } = require("@/stores/backgroundMapStore.js");
       const mockBackgroundStore = useBackgroundMapStore();
 
       mockBackgroundStore.landcoverLayers = [];
