@@ -285,17 +285,9 @@ const toggleNDVI = () => {
 		}
     }
 
-    // Added this new reset function inside the script block
-  const resetLayers = () => {
-    showVegetation.value = false;
-    showOtherNature.value = false;
-    showTrees.value = false;
-    landCover.value = false;
-    grid250m.value = false;
-  };
-
-  // Watch for view mode changes and reset layers
-  watch(() => store.view, resetLayers);
+    // REMOVED: resetLayers watcher that was clearing layer state on view changes
+  // Layer state should persist across view changes for better user experience
+  // View-specific layer visibility is already handled by v-if conditions in the template
 
 
     onMounted(() => {
