@@ -11,6 +11,7 @@ The performance monitoring system tracks test execution times and compares them 
 ### 1. Performance Reporter (`tests/reporters/performance-reporter.ts`)
 
 A custom Playwright reporter that:
+
 - Tracks individual test duration
 - Tracks suite duration
 - Compares against historical baselines
@@ -39,6 +40,7 @@ A JSON file containing baseline performance metrics for each test suite and indi
 ### 3. Regression Check Script (`scripts/check-performance-regression.js`)
 
 A Node.js script that:
+
 - Analyzes performance reports
 - Identifies critical regressions (>30% slower)
 - Identifies warnings (20-30% slower)
@@ -187,6 +189,7 @@ The regression check script automatically generates a markdown summary when run 
 ## Metrics Tracked
 
 ### Test Execution Metrics
+
 - Individual test duration
 - Suite total duration
 - Test pass/fail rates
@@ -194,6 +197,7 @@ The regression check script automatically generates a markdown summary when run 
 - Timeout occurrences
 
 ### Performance Indicators
+
 - Average test duration
 - Slowest test identification
 - Percentage change from baseline
@@ -221,6 +225,7 @@ The following metrics are planned for future implementation:
 ### Missing Baseline
 
 If no baseline file exists, the reporter will:
+
 1. Run tests normally
 2. Generate a baseline file automatically from passing tests
 3. Use this baseline for future comparisons
@@ -228,6 +233,7 @@ If no baseline file exists, the reporter will:
 ### False Positives
 
 If tests are flagged incorrectly:
+
 - Ensure consistent CI environment (same runner type)
 - Check for external factors (network issues, resource contention)
 - Consider increasing thresholds if environment is inherently variable
@@ -262,9 +268,12 @@ If tests are flagged incorrectly:
 The performance reporter can be configured in `playwright.config.ts`:
 
 ```typescript
-["./tests/reporters/performance-reporter.ts", {
-  baselineFile: "./tests/performance-baselines.json"
-}]
+[
+  "./tests/reporters/performance-reporter.ts",
+  {
+    baselineFile: "./tests/performance-baselines.json",
+  },
+];
 ```
 
 ### Adjusting Thresholds
@@ -279,6 +288,7 @@ private readonly CRITICAL_THRESHOLD = 0.3; // 30% slower
 ## Support
 
 For questions or issues with the performance monitoring system:
+
 1. Check this documentation
 2. Review the performance report JSON for detailed metrics
 3. Open an issue with the `performance` label
