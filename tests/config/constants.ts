@@ -22,6 +22,17 @@ export const TIMEOUTS = {
   NETWORK_IDLE: 30000,
   CESIUM_READY: 30000,
   APP_READY: 45000,
+
+  // CesiumJS-specific timeouts
+  // These values are based on CesiumJS behavior with requestRenderMode enabled
+  // See: docs/TEST_INFRASTRUCTURE_LEARNINGS.md for detailed explanation
+  VIEW_NAVIGATION: 500, // Synchronous Pinia state changes (view switching)
+  DATA_LAYER: 800, // Additional rendering time for data layers
+  UI_STABILITY: 300, // UI element stability checks
+  SCROLL_INTO_VIEW: 3000, // Scrolling elements into viewport
+  INTERACTION: 5000, // Element interaction timeout
+  RETRY_BACKOFF_BASE: 200, // Base retry backoff
+  RETRY_BACKOFF_INTERACTION: 300, // Interaction retry backoff
 } as const;
 
 // Performance thresholds (in milliseconds)

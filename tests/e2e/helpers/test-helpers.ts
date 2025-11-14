@@ -8,6 +8,7 @@
 import { expect } from "@playwright/test";
 import type { PlaywrightPage, CesiumTestState } from "../../types/playwright";
 import type { Locator } from "@playwright/test";
+import { TIMEOUTS } from "../../config/constants";
 import {
   waitForCesiumReady as cesiumWaitForReady,
   setupCesiumForCI,
@@ -15,16 +16,6 @@ import {
   waitForAppReady,
   waitForSceneIdle,
 } from "./cesium-helper";
-
-/**
- * Timeout constants for test interactions
- */
-export const TEST_TIMEOUTS = {
-  SCROLL_INTO_VIEW: 3000,
-  INTERACTION: 5000,
-  RETRY_BACKOFF_BASE: 200,
-  RETRY_BACKOFF_INTERACTION: 300,
-} as const;
 
 export interface ViewMode {
   id: "capitalRegionView" | "gridView" | "helsinkiHeat";
@@ -66,7 +57,7 @@ export class AccessibilityTestHelpers {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await locator.scrollIntoViewIfNeeded({
-          timeout: TEST_TIMEOUTS.SCROLL_INTO_VIEW,
+          timeout: TIMEOUTS.SCROLL_INTO_VIEW,
         });
         const box = await locator.boundingBox();
         if (box && box.y >= 0 && box.x >= 0) {
@@ -79,7 +70,7 @@ export class AccessibilityTestHelpers {
         // Wait for element to stabilize
         await this.page
           .waitForLoadState("domcontentloaded", {
-            timeout: TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt,
+            timeout: TIMEOUTS.RETRY_BACKOFF_BASE * attempt,
           })
           .catch((e) =>
             console.warn("Element stabilization timeout:", e.message),
@@ -117,7 +108,7 @@ export class AccessibilityTestHelpers {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await locator.check({
-          timeout: TEST_TIMEOUTS.INTERACTION,
+          timeout: TIMEOUTS.INTERACTION,
           // Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
           // First attempt uses normal checks to ensure element is truly interactive
           force: attempt > 1,
@@ -131,7 +122,7 @@ export class AccessibilityTestHelpers {
         }
         // Wait with exponential backoff before retry
         await this.page.waitForTimeout(
-          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
+          TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
         );
       }
     }
@@ -166,7 +157,7 @@ export class AccessibilityTestHelpers {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await locator.uncheck({
-          timeout: TEST_TIMEOUTS.INTERACTION,
+          timeout: TIMEOUTS.INTERACTION,
           // Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
           // First attempt uses normal checks to ensure element is truly interactive
           force: attempt > 1,
@@ -180,7 +171,7 @@ export class AccessibilityTestHelpers {
         }
         // Wait with exponential backoff before retry
         await this.page.waitForTimeout(
-          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
+          TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
         );
       }
     }
@@ -292,7 +283,7 @@ export class AccessibilityTestHelpers {
         }
 
         // Wait for element stability with exponential backoff
-        await this.page.waitForTimeout(300 * attempt);
+        await this.page.waitForTimeout(TIMEOUTS.UI_STABILITY * attempt);
 
         // Verify element is in viewport before clicking
         const box = await viewCard.boundingBox();
@@ -328,7 +319,7 @@ export class AccessibilityTestHelpers {
         // Note: View switching is synchronous state changes in requestRenderMode,
         // so we just need a brief wait for the UI to reflect the new state
         // We don't wait for network idle because CesiumJS continuously loads tiles
-        await this.page.waitForTimeout(500);
+        await this.page.waitForTimeout(TIMEOUTS.VIEW_NAVIGATION);
 
         // Verify the selection with multiple strategies
         const verificationResults = await Promise.all([
@@ -361,7 +352,7 @@ export class AccessibilityTestHelpers {
         }
 
         // Success - additional wait for full stabilization
-        await this.page.waitForTimeout(300);
+        await this.page.waitForTimeout(TIMEOUTS.UI_STABILITY);
         return;
       } catch (error) {
         lastError = error as Error;
@@ -473,7 +464,7 @@ export class AccessibilityTestHelpers {
 
             // Wait for map to finish loading
             // Note: CesiumJS continuously loads tiles, so we use a simple timeout
-            await this.page.waitForTimeout(500);
+            await this.page.waitForTimeout(TIMEOUTS.VIEW_NAVIGATION);
 
             // Simulate clicking on the center of the map where postal codes are
             // Use multiple click positions to increase success rate
@@ -523,7 +514,7 @@ export class AccessibilityTestHelpers {
             if (activated) {
               // Additional wait for data to load
               // Note: CesiumJS continuously loads tiles, so we use a simple timeout
-              await this.page.waitForTimeout(800);
+              await this.page.waitForTimeout(TIMEOUTS.DATA_LAYER);
 
               // Wait for timeline component to fully initialize (critical for timeline tests)
               // At postal code level, the timeline should become visible with interactive elements
@@ -630,7 +621,7 @@ export class AccessibilityTestHelpers {
 
             // Wait for map to finish loading
             // Note: CesiumJS continuously loads tiles, so we use a simple timeout
-            await this.page.waitForTimeout(500);
+            await this.page.waitForTimeout(TIMEOUTS.VIEW_NAVIGATION);
 
             // Click on a building (use multiple positions to increase success rate)
             const buildingPositions = [
@@ -671,7 +662,7 @@ export class AccessibilityTestHelpers {
             if (activated) {
               // Additional wait for data to load
               // Note: CesiumJS continuously loads tiles, so we use a simple timeout
-              await this.page.waitForTimeout(800);
+              await this.page.waitForTimeout(TIMEOUTS.DATA_LAYER);
 
               // Wait for timeline component to remain fully interactive (critical for timeline tests)
               // At building level, the timeline should still be visible and functional
@@ -706,7 +697,7 @@ export class AccessibilityTestHelpers {
                 });
 
               // Final stability wait
-              await this.page.waitForTimeout(500);
+              await this.page.waitForTimeout(TIMEOUTS.VIEW_NAVIGATION);
               return; // Success
             }
 
@@ -895,7 +886,7 @@ export class AccessibilityTestHelpers {
       }
 
       // Wait for element stability
-      await this.page.waitForTimeout(300);
+      await this.page.waitForTimeout(TIMEOUTS.UI_STABILITY);
 
       // Verify element is clickable before interaction
       const isClickable = await toggle.isEnabled().catch(() => false);
@@ -919,7 +910,7 @@ export class AccessibilityTestHelpers {
             error,
           );
           if (attempt < 3) {
-            await this.page.waitForTimeout(300 * attempt);
+            await this.page.waitForTimeout(TIMEOUTS.UI_STABILITY * attempt);
           }
         }
       }
@@ -933,7 +924,7 @@ export class AccessibilityTestHelpers {
       await expect(toggle).toBeChecked();
 
       // Wait for any state changes to settle
-      await this.page.waitForTimeout(300);
+      await this.page.waitForTimeout(TIMEOUTS.UI_STABILITY);
 
       // Scroll again before unchecking (element might have moved)
       for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
@@ -954,7 +945,7 @@ export class AccessibilityTestHelpers {
       }
 
       // Wait for stability
-      await this.page.waitForTimeout(300);
+      await this.page.waitForTimeout(TIMEOUTS.UI_STABILITY);
 
       // Test toggling off with retry
       let uncheckSuccess = false;
@@ -969,7 +960,7 @@ export class AccessibilityTestHelpers {
             error,
           );
           if (attempt < 3) {
-            await this.page.waitForTimeout(300 * attempt);
+            await this.page.waitForTimeout(TIMEOUTS.UI_STABILITY * attempt);
           }
         }
       }
@@ -1150,7 +1141,7 @@ export class AccessibilityTestHelpers {
 
     // Wait for any final initialization processes
     // Note: CesiumJS continuously loads tiles, so we use a simple timeout
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(TIMEOUTS.VIEW_NAVIGATION);
   }
 
   /**

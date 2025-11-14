@@ -693,9 +693,6 @@ cesiumDescribe("Layer Controls Accessibility", () => {
         });
         await cesiumPage.waitForTimeout(300);
 
-        // Initial state
-        const initialChecked = await ndviToggle.isChecked();
-
         // Toggle on
         await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
         await cesiumPage.waitForTimeout(500);
@@ -867,6 +864,132 @@ cesiumDescribe("Layer Controls Accessibility", () => {
       },
     );
   });
+
+  cesiumTest.describe(
+    "Layer State Persistence Across Navigation Levels",
+    () => {
+      cesiumTest(
+        "should preserve layer state across all navigation levels",
+        async ({ cesiumPage }) => {
+          // This test verifies the fix for layer state being incorrectly reset
+          // when navigating between Capital Region, Postal Code, and Building views
+          // See PR #374 - removed resetLayers watcher that was clearing layer state
+
+          // Start in Capital Region view and enable multiple layers
+          await helpers.navigateToView("capitalRegionView");
+
+          let ndviToggle = cesiumPage
+            .getByText("NDVI")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+          let landCoverToggle = cesiumPage
+            .getByText("Land Cover")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+
+          // Enable both layers
+          const ndviChecked = await ndviToggle.isChecked();
+          if (!ndviChecked) {
+            await helpers.checkWithRetry(ndviToggle, { elementName: "NDVI" });
+          }
+          const landCoverChecked = await landCoverToggle.isChecked();
+          if (!landCoverChecked) {
+            await helpers.checkWithRetry(landCoverToggle, {
+              elementName: "Land Cover",
+            });
+          }
+
+          await expect(ndviToggle).toBeChecked();
+          await expect(landCoverToggle).toBeChecked();
+
+          // Navigate to Postal Code level
+          await helpers.drillToLevel("postalCode");
+          await cesiumPage
+            .waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+            .catch(() => {});
+
+          // Re-query locators after navigation
+          ndviToggle = cesiumPage
+            .getByText("NDVI")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+          landCoverToggle = cesiumPage
+            .getByText("Land Cover")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+
+          // Layers should still be enabled at Postal Code level
+          await expect(ndviToggle).toBeChecked();
+          await expect(landCoverToggle).toBeChecked();
+
+          // Navigate to Building level
+          await helpers.drillToLevel("building");
+          await cesiumPage
+            .waitForSelector('text="Building heat data"', { timeout: 15000 })
+            .catch(() => {});
+
+          // Re-query locators after navigation
+          ndviToggle = cesiumPage
+            .getByText("NDVI")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+          landCoverToggle = cesiumPage
+            .getByText("Land Cover")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+
+          // Layers should STILL be enabled at Building level
+          await expect(ndviToggle).toBeChecked();
+          await expect(landCoverToggle).toBeChecked();
+
+          // Navigate back to Postal Code level
+          const backButton = cesiumPage
+            .getByRole("button")
+            .filter({ has: cesiumPage.locator(".mdi-arrow-left") });
+          await backButton.click();
+          await cesiumPage
+            .waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+            .catch(() => {});
+
+          // Re-query locators after navigation back
+          ndviToggle = cesiumPage
+            .getByText("NDVI")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+          landCoverToggle = cesiumPage
+            .getByText("Land Cover")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+
+          // Layers should remain enabled when returning to Postal Code level
+          await expect(ndviToggle).toBeChecked();
+          await expect(landCoverToggle).toBeChecked();
+
+          // Reset to Capital Region
+          const resetButton = cesiumPage
+            .getByRole("button")
+            .filter({ has: cesiumPage.locator(".mdi-refresh") });
+          await resetButton.click();
+          await cesiumPage.waitForTimeout(1000);
+
+          // Re-query locators after reset
+          ndviToggle = cesiumPage
+            .getByText("NDVI")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+          landCoverToggle = cesiumPage
+            .getByText("Land Cover")
+            .locator("..")
+            .locator('input[type="checkbox"]');
+
+          // After reset, layers should maintain their enabled state
+          // This verifies that the layer state is properly preserved in the store
+          await expect(ndviToggle).toBeChecked();
+          await expect(landCoverToggle).toBeChecked();
+        },
+      );
+    },
+  );
 
   cesiumTest.describe("Layer Control Performance", () => {
     cesiumTest(
