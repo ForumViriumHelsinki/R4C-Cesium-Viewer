@@ -20,6 +20,17 @@ export default [
   {
     files: ["**/*.ts", "**/*.tsx"],
     ...tseslint.configs.recommended[0],
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-expressions": "warn",
+    },
   },
 
   {
@@ -105,17 +116,6 @@ export default [
       ],
       "vue/no-unused-components": "warn",
       "no-fallthrough": "warn",
-
-      // TypeScript-specific rules - warnings for better code quality
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-        },
-      ],
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-expressions": "warn",
     },
   },
 ];

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "vectorcode": {
+      "type": "stdio",
+      "command": "vectorcode-mcp-server",
+      "args": [],
+      "env": {}
+    }
+  }
+}

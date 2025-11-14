@@ -51,8 +51,8 @@ export const createFloodImageryLayer = async (url, layerName) => {
   try {
     // Construct URL with proper query parameter handling
     const serviceUrl = new URL(url);
-    serviceUrl.searchParams.set('format', 'image/png');
-    serviceUrl.searchParams.set('transparent', 'true');
+    serviceUrl.searchParams.set("format", "image/png");
+    serviceUrl.searchParams.set("transparent", "true");
 
     const provider = new Cesium.WebMapServiceImageryProvider({
       url: serviceUrl.toString(),

@@ -31,6 +31,7 @@ export async function waitForCesiumReady(
 
         // Check if viewer exists (common pattern in Cesium apps)
         const viewer =
+          window.__viewer ||
           window.viewer ||
           window.cesiumViewer ||
           document.querySelector(".cesium-viewer");
@@ -159,17 +160,10 @@ export async function waitForAppReady(
   // First wait for basic DOM readiness
   await page.waitForLoadState("domcontentloaded");
 
-  // Wait for network to be idle (but don't fail if it doesn't)
-  // In CI, use shorter timeout as the app might have continuous polling
-  const networkTimeout = process.env.CI ? 5000 : timeout / 2;
-  await page
-    .waitForLoadState("networkidle", { timeout: networkTimeout })
-    .catch(() => {
-      // This is expected for apps with continuous polling/WebGL updates
-      if (!process.env.CI) {
-        console.log("Network did not become idle, continuing...");
-      }
-    });
+  // Wait for initial page load to complete
+  // Note: CesiumJS continuously loads tiles, so we don't wait for network idle
+  // Instead we just ensure basic DOM is ready
+  await page.waitForTimeout(500);
 
   // Check for app-specific readiness indicators
   try {

@@ -99,7 +99,7 @@ export default {
       }
     };
 
-    // Added this new reset function inside the script block
+    // Reset function for explicit filter clearing (e.g., via reset button)
     const resetFilters = () => {
       hideNonSote.value = false;
       hideNewBuildings.value = false;
@@ -107,8 +107,10 @@ export default {
       filterBuildings(); // Apply reset
     };
 
-    // Watch for view mode changes and reset filters
-    watch(() => globalStore.view, resetFilters);
+    // REMOVED: resetFilters watcher that was clearing filter state on view changes
+    // Filter state should persist across view changes for better user experience
+    // View-specific visibility is already handled by v-if conditions in the template
+    // (e.g., hideNewBuildings only shown in helsinkiView)
 
     onMounted(() => {
       buildingService = new Building();
