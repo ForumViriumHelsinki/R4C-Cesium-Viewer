@@ -149,7 +149,7 @@ export default class FeaturePicker {
       console.log(
         "[FeaturePicker] Loading Helsinki elements (including buildings)...",
       );
-      this.helsinkiService.loadHelsinkiElements();
+      await this.helsinkiService.loadHelsinkiElements();
     }
 
     this.store.setLevel("postalCode");
@@ -296,15 +296,20 @@ export default class FeaturePicker {
     }
 
     //If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
-    if (id.properties.posno && this.store.level != "building") {
+    if (id.properties.posno) {
       const newPostalCode = id.properties.posno._value;
       const currentPostalCode = this.store.postalcode;
 
       console.log("[FeaturePicker] ✓ Postal code detected:", newPostalCode);
       console.log("[FeaturePicker] Current postal code:", currentPostalCode);
+      console.log("[FeaturePicker] Current level:", this.store.level);
 
-      // Allow switching between postal codes or loading a new one
-      if (newPostalCode !== currentPostalCode || this.store.level === "start") {
+      // Allow switching between postal codes or loading a new one from any level
+      if (
+        newPostalCode !== currentPostalCode ||
+        this.store.level === "start" ||
+        this.store.level === "building"
+      ) {
         console.log("[FeaturePicker] Triggering postal code loading...");
         this.store.setPostalCode(newPostalCode);
         this.cameraService.switchTo3DView();
@@ -312,13 +317,9 @@ export default class FeaturePicker {
         this.loadPostalCode();
       } else {
         console.log(
-          "[FeaturePicker] ⚠️ Same postal code already selected, skipping reload",
+          "[FeaturePicker] ⚠️ Same postal code already selected at postalCode level, skipping reload",
         );
       }
-    } else if (id.properties.posno) {
-      console.log(
-        "[FeaturePicker] ⚠️ Postal code found but current level is building, skipping load",
-      );
     } else {
       console.log(
         "[FeaturePicker] ⚠️ No postal code property (posno) found in clicked feature",
@@ -405,5 +406,153 @@ export default class FeaturePicker {
     }
 
     return boundingBox;
+  }
+
+  /**
+   * Gets all postal codes that intersect with the current viewport
+   * Performs spatial intersection check between viewport rectangle and postal code polygons.
+   *
+   * @param {Object} viewportRect - { west, south, east, north } in degrees
+   * @returns {Array<string>} Array of postal code strings that are visible
+   */
+  getVisiblePostalCodes(viewportRect) {
+    if (!viewportRect) {
+      console.warn("[FeaturePicker] Invalid viewport rectangle");
+      return [];
+    }
+
+    const postalCodeData = this.propStore.postalCodeData;
+    if (!postalCodeData || !postalCodeData._entityCollection) {
+      console.warn("[FeaturePicker] Postal code data not loaded");
+      return [];
+    }
+
+    const entities = postalCodeData._entityCollection._entities._array;
+    const visiblePostalCodes = [];
+
+    // Create Cesium Rectangle for viewport
+    const viewportRectangle = Cesium.Rectangle.fromDegrees(
+      viewportRect.west,
+      viewportRect.south,
+      viewportRect.east,
+      viewportRect.north,
+    );
+
+    for (const entity of entities) {
+      if (!entity.polygon || !entity.properties?.posno) continue;
+
+      // Get entity bounding rectangle
+      const hierarchy = entity.polygon.hierarchy.getValue();
+      if (!hierarchy || !hierarchy.positions) continue;
+
+      // Convert Cartesian positions to Rectangle
+      const cartographics = hierarchy.positions.map((pos) =>
+        Cesium.Cartographic.fromCartesian(pos),
+      );
+
+      const lons = cartographics.map((c) => c.longitude);
+      const lats = cartographics.map((c) => c.latitude);
+
+      const entityRectangle = new Cesium.Rectangle(
+        Math.min(...lons),
+        Math.min(...lats),
+        Math.max(...lons),
+        Math.max(...lats),
+      );
+
+      // Check if rectangles intersect
+      const intersection = Cesium.Rectangle.intersection(
+        viewportRectangle,
+        entityRectangle,
+      );
+
+      if (intersection) {
+        const postalCode = entity.properties.posno._value;
+        visiblePostalCodes.push(postalCode);
+      }
+    }
+
+    console.log(
+      "[FeaturePicker] Found",
+      visiblePostalCodes.length,
+      "visible postal codes:",
+      visiblePostalCodes,
+    );
+
+    return visiblePostalCodes;
+  }
+
+  /**
+   * Loads buildings for visible postal codes in viewport
+   * Only loads postal codes that don't already have building datasources.
+   * Prioritizes currently selected postal code.
+   *
+   * @param {Array<string>} visiblePostalCodes - Array of postal code strings
+   * @returns {Promise<void>}
+   */
+  async loadBuildingsForVisiblePostalCodes(visiblePostalCodes) {
+    const currentPostalCode = this.store.postalcode;
+
+    // Always prioritize the currently selected postal code
+    if (currentPostalCode && !visiblePostalCodes.includes(currentPostalCode)) {
+      visiblePostalCodes.unshift(currentPostalCode);
+    }
+
+    const postalCodesToLoad = [];
+
+    // Check which postal codes need building data loaded
+    for (const postalCode of visiblePostalCodes) {
+      const datasourceName = "Buildings " + postalCode;
+      const existingDatasource =
+        this.datasourceService.getDataSourceByName(datasourceName);
+
+      if (!existingDatasource) {
+        postalCodesToLoad.push(postalCode);
+      }
+    }
+
+    if (postalCodesToLoad.length === 0) {
+      console.log(
+        "[FeaturePicker] All visible postal codes already have buildings loaded",
+      );
+      return;
+    }
+
+    console.log(
+      "[FeaturePicker] Loading buildings for",
+      postalCodesToLoad.length,
+      "postal codes:",
+      postalCodesToLoad,
+    );
+
+    // Load buildings sequentially to avoid overwhelming the server
+    for (const postalCode of postalCodesToLoad) {
+      try {
+        // Temporarily set postal code in store for loading
+        const previousPostalCode = this.store.postalcode;
+        this.store.setPostalCode(postalCode);
+
+        // Load buildings based on view mode
+        if (this.toggleStore.helsinkiView) {
+          await this.buildingService.loadBuildings();
+        } else {
+          await this.hSYBuildingService.loadHSYBuildings();
+        }
+
+        // Restore original postal code
+        this.store.setPostalCode(previousPostalCode);
+
+        console.log(
+          "[FeaturePicker] ✅ Loaded buildings for postal code:",
+          postalCode,
+        );
+      } catch (error) {
+        console.error(
+          "[FeaturePicker] ❌ Failed to load buildings for",
+          postalCode,
+          error,
+        );
+      }
+    }
   }
 }

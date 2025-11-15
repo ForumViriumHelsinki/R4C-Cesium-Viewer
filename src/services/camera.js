@@ -375,4 +375,70 @@ export default class Camera {
   rotateCamera() {
     this.rotate180Degrees();
   }
+
+  /**
+   * Gets the current camera viewport rectangle in geographic coordinates
+   * Calculates viewport bounds by picking ellipsoid intersections at canvas corners.
+   * Returns null if camera is looking at space (no ellipsoid intersection).
+   *
+   * @returns {Object|null} { west, south, east, north } in degrees, or null if no ellipsoid intersection
+   */
+  getViewportRectangle() {
+    const camera = this.viewer.camera;
+    const canvas = this.viewer.scene.canvas;
+
+    // Get corner positions by picking ellipsoid at each canvas corner
+    const topLeft = camera.pickEllipsoid(
+      new Cesium.Cartesian2(0, 0),
+      this.viewer.scene.globe.ellipsoid,
+    );
+    const topRight = camera.pickEllipsoid(
+      new Cesium.Cartesian2(canvas.clientWidth, 0),
+      this.viewer.scene.globe.ellipsoid,
+    );
+    const bottomLeft = camera.pickEllipsoid(
+      new Cesium.Cartesian2(0, canvas.clientHeight),
+      this.viewer.scene.globe.ellipsoid,
+    );
+    const bottomRight = camera.pickEllipsoid(
+      new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight),
+      this.viewer.scene.globe.ellipsoid,
+    );
+
+    // Handle cases where camera is looking at space (no ellipsoid intersection)
+    if (!topLeft || !topRight || !bottomLeft || !bottomRight) {
+      console.warn(
+        "[Camera] Cannot determine viewport rectangle - camera looking at space",
+      );
+      return null;
+    }
+
+    // Convert to cartographic coordinates
+    const corners = [topLeft, topRight, bottomLeft, bottomRight].map((pos) =>
+      Cesium.Cartographic.fromCartesian(pos),
+    );
+
+    // Find bounding rectangle
+    const lons = corners.map((c) => Cesium.Math.toDegrees(c.longitude));
+    const lats = corners.map((c) => Cesium.Math.toDegrees(c.latitude));
+
+    return {
+      west: Math.min(...lons),
+      south: Math.min(...lats),
+      east: Math.max(...lons),
+      north: Math.max(...lats),
+    };
+  }
+
+  /**
+   * Gets the camera height above ground in meters
+   * Returns the ellipsoidal height of the camera position.
+   *
+   * @returns {number} Height in meters
+   */
+  getCameraHeight() {
+    const camera = this.viewer.camera;
+    const cartographic = Cesium.Cartographic.fromCartesian(camera.position);
+    return cartographic.height;
+  }
 }

@@ -148,7 +148,9 @@ export default {
 			// Create viewer with enhanced graphics options
 			const viewerOptions = {
 				terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-				imageryProvider: false, // Disable default imagery to prevent Ion API calls
+				imageryProvider: new Cesium.OpenStreetMapImageryProvider({
+					url: 'https://tile.openstreetmap.org/'
+				}), // Use OpenStreetMap as fallback to prevent gray chunks
 				animation: false,
 				fullscreenButton: false,
 				geocoder: false,
@@ -202,7 +204,22 @@ export default {
 
 			addPostalCodes();
 			addFeaturePicker();
+			addCameraMoveEndListener();
 			addAttribution();
+
+			// Optimize CPU usage: pause rendering when tab is hidden
+			document.addEventListener('visibilitychange', () => {
+				if (!viewer.value) return;
+
+				if (document.hidden) {
+					viewer.value.scene.requestRenderMode = true;
+					console.log('[CesiumViewer] ⏸ Rendering paused (tab hidden)');
+				} else {
+					viewer.value.scene.requestRenderMode = false;
+					viewer.value.scene.requestRender();
+					console.log('[CesiumViewer] ▶ Rendering resumed (tab visible)');
+				}
+			});
 		};
 
 		const addAttribution = () => {
@@ -259,6 +276,66 @@ export default {
 					console.log('[CesiumViewer] ⚠️ Click ignored due to conditions');
 				}
   			});
+		};
+
+		const addCameraMoveEndListener = () => {
+			let cameraMoveTimeout = null;
+			const DEBOUNCE_DELAY_MS = 500; // Wait 500ms after camera stops moving
+
+			viewer.value.camera.moveEnd.addEventListener(() => {
+				// Clear any pending timeout
+				if (cameraMoveTimeout) {
+					clearTimeout(cameraMoveTimeout);
+				}
+
+				// Set new timeout
+				cameraMoveTimeout = setTimeout(() => {
+					console.log('[CesiumViewer] 📷 Camera movement ended, checking viewport state...');
+					handleCameraSettled();
+				}, DEBOUNCE_DELAY_MS);
+			});
+
+			console.log('[CesiumViewer] ✅ Camera moveEnd listener added with', DEBOUNCE_DELAY_MS, 'ms debounce');
+		};
+
+		const handleCameraSettled = async () => {
+			const currentLevel = store.level;
+
+			console.log('[CesiumViewer] Current level:', currentLevel);
+
+			// Only handle viewport-based loading at postalCode level
+			// At 'start' level: user should click to select postal code
+			// At 'building' level: building detail view, no automatic loading
+			if (currentLevel !== 'postalCode') {
+				console.log('[CesiumViewer] Not at postalCode level, skipping viewport check');
+				return;
+			}
+
+			// Get camera utilities
+			const camera = new Camera();
+
+			// Get viewport rectangle
+			const viewportRect = camera.getViewportRectangle();
+			if (!viewportRect) {
+				console.warn('[CesiumViewer] Could not determine viewport rectangle');
+				return;
+			}
+
+			// Get camera height to determine if we should load buildings
+			const cameraHeight = camera.getCameraHeight();
+			const MAX_HEIGHT_FOR_BUILDING_LOAD = 50000; // 50km - only load buildings when zoomed in enough
+
+			if (cameraHeight > MAX_HEIGHT_FOR_BUILDING_LOAD) {
+				console.log('[CesiumViewer] Camera too high for building loading:', cameraHeight, 'm');
+				return;
+			}
+
+			console.log('[CesiumViewer] Camera height:', cameraHeight, 'm - proceeding with viewport-based building loading');
+
+			// Get visible postal codes and load their buildings
+			const featurepicker = new Featurepicker();
+			const visiblePostalCodes = featurepicker.getVisiblePostalCodes(viewportRect);
+			await featurepicker.loadBuildingsForVisiblePostalCodes(visiblePostalCodes);
 		};
 
 		const retryInit = async () => {
