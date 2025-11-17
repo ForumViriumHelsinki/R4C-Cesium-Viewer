@@ -1,0 +1,242 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-clone-from-gcs
+  namespace: regions4climate
+  labels:
+    app.kubernetes.io/name: r4c-cesium-viewer
+    app.kubernetes.io/instance: r4c-cesium-viewer
+    app.kubernetes.io/component: database-clone
+spec:
+  ttlSecondsAfterFinished: 600  # Keep job around for 10 minutes for debugging
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: r4c-cesium-viewer
+        app.kubernetes.io/instance: r4c-cesium-viewer
+        app.kubernetes.io/component: database-clone
+    spec:
+      restartPolicy: Never
+      # For GCS access via Workload Identity (production)
+      # Uncomment and configure for production use:
+      # serviceAccountName: database-clone-sa
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:15-alpine
+        command:
+        - sh
+        - -c
+        - |
+          echo "🔍 Waiting for PostgreSQL to be ready..."
+          until pg_isready -h postgresql -p 5432; do
+            echo "   PostgreSQL not ready, waiting..."
+            sleep 5
+          done
+          echo "✅ PostgreSQL is ready"
+        resources:
+          limits:
+            cpu: 100m
+            memory: 64Mi
+          requests:
+            cpu: 50m
+            memory: 32Mi
+      containers:
+      - name: gcs-restore
+        # Using Google Cloud SDK image for gcloud/gsutil access
+        image: google/cloud-sdk:alpine
+        command:
+        - sh
+        - -c
+        - |
+          set -e
+
+          echo "🗄️  Starting production database clone from GCS..."
+
+          # Install PostgreSQL client tools
+          apk add --no-cache postgresql15-client
+
+          # GCS bucket configuration
+          GCS_BUCKET="${GCS_BUCKET:-fvh-database-dumps}"
+          DUMP_PREFIX="${DUMP_PREFIX:-regions4climate}"
+
+          echo "📦 Bucket: gs://${GCS_BUCKET}"
+          echo "📁 Prefix: ${DUMP_PREFIX}"
+
+          # Find the latest dump file
+          echo "🔍 Finding latest database dump..."
+          LATEST_DUMP=$(gsutil ls -l "gs://${GCS_BUCKET}/${DUMP_PREFIX}*.sql.gz" | \
+                        grep -v TOTAL | \
+                        sort -k2 -r | \
+                        head -1 | \
+                        awk '{print $3}')
+
+          if [ -z "$LATEST_DUMP" ]; then
+            echo "❌ No dump files found in gs://${GCS_BUCKET}/${DUMP_PREFIX}*.sql.gz"
+            echo "Expected format: ${DUMP_PREFIX}-YYYY-MM-DD.sql.gz"
+            exit 1
+          fi
+
+          echo "✅ Found latest dump: $LATEST_DUMP"
+          DUMP_FILE=$(basename "$LATEST_DUMP")
+          DUMP_DATE=$(echo "$DUMP_FILE" | grep -oP '\d{4}-\d{2}-\d{2}' || echo "unknown")
+          echo "📅 Dump date: $DUMP_DATE"
+
+          # Download the dump
+          echo "⬇️  Downloading dump from GCS..."
+          gsutil -m cp "$LATEST_DUMP" /tmp/dump.sql.gz
+
+          DUMP_SIZE=$(du -h /tmp/dump.sql.gz | cut -f1)
+          echo "✅ Downloaded $DUMP_SIZE compressed dump"
+
+          # Decompress
+          echo "📦 Decompressing dump..."
+          gunzip /tmp/dump.sql.gz
+          UNCOMPRESSED_SIZE=$(du -h /tmp/dump.sql | cut -f1)
+          echo "✅ Decompressed to $UNCOMPRESSED_SIZE"
+
+          # Set up database connection
+          export PGHOST="postgresql"
+          export PGPORT="5432"
+          export PGUSER="postgres"
+          export PGPASSWORD="${DB_ADMIN_PASSWORD}"
+          export PGDATABASE="regions4climate"
+
+          # Wait for database to accept connections
+          echo "🔍 Verifying database connectivity..."
+          until psql -c "SELECT 1;" > /dev/null 2>&1; do
+            echo "   Database not ready, waiting..."
+            sleep 2
+          done
+
+          # Drop existing data (if exists) to ensure clean restore
+          echo "🧹 Preparing database for restore..."
+          psql <<'EOSQL'
+-- Terminate existing connections
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE datname = 'regions4climate' AND pid <> pg_backend_pid();
+
+-- Drop and recreate database for clean restore
+DROP DATABASE IF EXISTS regions4climate;
+CREATE DATABASE regions4climate;
+
+-- Connect to new database and enable PostGIS
+\c regions4climate
+
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+-- Create application user if it doesn't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'regions4climate_user') THEN
+    CREATE USER regions4climate_user WITH PASSWORD 'regions4climate_pass';
+  END IF;
+END
+$$;
+
+-- Grant permissions
+GRANT ALL PRIVILEGES ON DATABASE regions4climate TO regions4climate_user;
+ALTER DATABASE regions4climate OWNER TO regions4climate_user;
+EOSQL
+
+          echo "✅ Database prepared"
+
+          # Restore the dump
+          echo "📥 Restoring database from dump..."
+          echo "⏱️  This may take several minutes depending on database size..."
+
+          # Use single transaction for faster restore and atomicity
+          psql -v ON_ERROR_STOP=1 --single-transaction < /tmp/dump.sql
+
+          echo "✅ Database restored successfully"
+
+          # Verify restore
+          echo "🔍 Verifying database restore..."
+          TABLE_COUNT=$(psql -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';")
+          echo "📊 Restored $TABLE_COUNT tables"
+
+          # Check for critical tables
+          CRITICAL_TABLES=(
+            "r4c_hsy_building_current"
+            "r4c_paavo"
+            "tree_f"
+            "r4c_coldspot"
+          )
+
+          echo "🔍 Checking critical tables..."
+          for table in "${CRITICAL_TABLES[@]}"; do
+            if psql -t -c "SELECT 1 FROM information_schema.tables WHERE table_name = '$table';" | grep -q 1; then
+              ROW_COUNT=$(psql -t -c "SELECT COUNT(*) FROM $table;")
+              echo "  ✅ $table: $ROW_COUNT rows"
+            else
+              echo "  ⚠️  $table: NOT FOUND (may not exist in production dump)"
+            fi
+          done
+
+          # Ensure proper ownership
+          echo "🔑 Setting proper ownership..."
+          psql <<'EOSQL'
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    -- Transfer all table ownership
+    FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+    LOOP
+        EXECUTE 'ALTER TABLE public.' || quote_ident(r.tablename) || ' OWNER TO regions4climate_user';
+    END LOOP;
+
+    -- Transfer all sequence ownership
+    FOR r IN SELECT sequencename FROM pg_sequences WHERE schemaname = 'public'
+    LOOP
+        EXECUTE 'ALTER SEQUENCE public.' || quote_ident(r.sequencename) || ' OWNER TO regions4climate_user';
+    END LOOP;
+
+    -- Transfer all materialized view ownership
+    FOR r IN SELECT matviewname FROM pg_matviews WHERE schemaname = 'public'
+    LOOP
+        EXECUTE 'ALTER MATERIALIZED VIEW public.' || quote_ident(r.matviewname) || ' OWNER TO regions4climate_user';
+    END LOOP;
+END
+$$;
+
+-- Grant schema permissions
+GRANT ALL ON SCHEMA public TO regions4climate_user;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO regions4climate_user;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO regions4climate_user;
+EOSQL
+
+          echo "✅ Ownership configured"
+
+          # Analyze tables for query optimization
+          echo "📊 Analyzing tables for optimal query planning..."
+          psql -c "ANALYZE;"
+
+          # Clean up
+          echo "🧹 Cleaning up temporary files..."
+          rm -f /tmp/dump.sql
+
+          echo ""
+          echo "🎉 Database clone completed successfully!"
+          echo "📅 Restored from dump dated: $DUMP_DATE"
+          echo "📊 Total tables: $TABLE_COUNT"
+          echo ""
+        env:
+        - name: DB_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgresql
+              key: postgres-password
+        - name: GCS_BUCKET
+          value: "fvh-database-dumps"
+        - name: DUMP_PREFIX
+          value: "regions4climate"
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 500m
+            memory: 1Gi
