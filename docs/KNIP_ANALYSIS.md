@@ -4,6 +4,8 @@
 **Knip Version:** Latest
 **Purpose:** Evaluate code cleanup opportunities and identify unused dependencies
 
+> **⚠️ Note:** This report is a snapshot from the initial knip evaluation. As the codebase evolves, some findings may become outdated. For current dependency analysis, run `npm run lint:deps` locally or check the CI security-scan job results.
+
 ---
 
 ## Executive Summary
