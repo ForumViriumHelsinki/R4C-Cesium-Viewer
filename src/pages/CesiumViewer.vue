@@ -6,24 +6,47 @@
 		<!-- Loading Component -->
 		<Loading v-if="store.isLoading" />
 		<!-- Map Click Loading Overlay -->
-		<MapClickLoadingOverlay @cancel="handleCancelAnimation" @retry="handleRetryLoading" />
+		<MapClickLoadingOverlay
+@cancel="handleCancelAnimation"
+@retry="handleRetryLoading"
+/>
 		<!-- Disclaimer Popup -->
 		<DisclaimerPopup class="disclaimer-popup" />
 		<BuildingInformation v-if="shouldShowBuildingInformation" />
 		<!-- Error Snackbar -->
-		<v-snackbar v-model="errorSnackbar" :timeout="-1" color="error" location="top" multi-line>
+		<v-snackbar
+v-model="errorSnackbar"
+:timeout="-1"
+color="error"
+location="top"
+multi-line
+>
 			<div class="d-flex align-center">
-				<v-icon class="mr-2"> mdi-alert-circle </v-icon>
+				<v-icon class="mr-2">
+mdi-alert-circle
+</v-icon>
 				<div>
-					<div class="font-weight-bold">Failed to Load Map Viewer</div>
+					<div class="font-weight-bold">
+Failed to Load Map Viewer
+</div>
 					<div class="text-caption">
 						{{ errorMessage }}
 					</div>
 				</div>
 			</div>
 			<template #actions>
-				<v-btn variant="text" @click="retryInit"> Retry </v-btn>
-				<v-btn variant="text" @click="errorSnackbar = false"> Close </v-btn>
+				<v-btn
+variant="text"
+@click="retryInit"
+>
+Retry
+</v-btn>
+				<v-btn
+variant="text"
+@click="errorSnackbar = false"
+>
+Close
+</v-btn>
 			</template>
 		</v-snackbar>
 	</div>
