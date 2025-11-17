@@ -166,8 +166,8 @@ const zoomOut = () => {
 
 .compass-assembly {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
 }
 
 .compass-needle-container {
@@ -175,8 +175,8 @@ const zoomOut = () => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,9 +192,9 @@ const zoomOut = () => {
 
 .dir-btn {
   position: absolute;
-  min-width: 24px !important;
-  width: 24px;
-  height: 24px;
+  min-width: 32px !important;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.95);
   border: 1px solid #aaa;
@@ -205,13 +205,13 @@ const zoomOut = () => {
 }
 
 .dir-btn.north     { top: 0;      left: 50%;    transform: translateX(-50%); }
-.dir-btn.northeast { top: 5px;    right: 5px;   }
+.dir-btn.northeast { top: 8px;    right: 8px;   }
 .dir-btn.east      { top: 50%;    right: 0;     transform: translateY(-50%); }
-.dir-btn.southeast { bottom: 5px; right: 5px;   }
-.dir-btn.south     { bottom: 0;    left: 50%;    transform: translateX(-50%); }
-.dir-btn.southwest { bottom: 5px; left: 5px;    }
+.dir-btn.southeast { bottom: 8px; right: 8px;   }
+.dir-btn.south     { bottom: 0;   left: 50%;    transform: translateX(-50%); }
+.dir-btn.southwest { bottom: 8px; left: 8px;    }
 .dir-btn.west      { top: 50%;    left: 0;      transform: translateY(-50%); }
-.dir-btn.northwest { top: 5px;    left: 5px;    }
+.dir-btn.northwest { top: 8px;    left: 8px;    }
 
 .zoom-controls {
   display: flex;
@@ -229,5 +229,66 @@ const zoomOut = () => {
 
 .zoom-controls .v-btn:last-child {
   border-bottom: none;
+}
+
+/* Mobile and tablet responsiveness */
+@media (max-width: 768px) {
+  .camera-controls-container {
+    top: auto;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .compass-assembly {
+    width: 90px;
+    height: 90px;
+  }
+
+  .compass-needle-container {
+    width: 54px;
+    height: 54px;
+  }
+
+  /* Increase touch target size for mobile - WCAG 2.5.5 compliance */
+  .dir-btn {
+    min-width: 36px !important;
+    width: 36px;
+    height: 36px;
+    font-size: 11px;
+  }
+
+  .dir-btn.northeast { top: 6px;    right: 6px;   }
+  .dir-btn.southeast { bottom: 6px; right: 6px;   }
+  .dir-btn.southwest { bottom: 6px; left: 6px;    }
+  .dir-btn.northwest { top: 6px;    left: 6px;    }
+}
+
+/* Very small mobile - hide compass controls, keep zoom only */
+@media (max-width: 480px) {
+  .camera-controls-container {
+    bottom: 70px;
+    left: 20px;
+    transform: none;
+  }
+
+  .compass-assembly {
+    display: none;
+  }
+
+  .zoom-controls {
+    flex-direction: row;
+  }
+
+  .zoom-controls .v-btn {
+    border-bottom: none;
+    border-right: 1px solid #ccc;
+  }
+
+  .zoom-controls .v-btn:last-child {
+    border-right: none;
+  }
 }
 </style>
