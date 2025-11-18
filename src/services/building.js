@@ -2,6 +2,7 @@ import * as Cesium from 'cesium';
 import Datasource from './datasource.js';
 import Urbanheat from './urbanheat.js';
 import Tree from './tree.js';
+import unifiedLoader from './unifiedLoader.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
@@ -26,7 +27,7 @@ import { eventBus } from './eventEmitter.js';
 export default class Building {
 	/**
 	 * Creates a Building service instance
-	 * Initializes service dependencies for data sources, urban heat, and tree coverage.
+	 * Initializes service dependencies for data sources, urban heat, tree coverage, and caching.
 	 */
 	constructor() {
 		this.store = useGlobalStore();
@@ -36,6 +37,7 @@ export default class Building {
 		this.datasourceService = new Datasource();
 		this.treeService = new Tree();
 		this.urbanheatService = new Urbanheat();
+		this.unifiedLoader = unifiedLoader;
 	}
 
 	/**
@@ -237,42 +239,62 @@ export default class Building {
 		}
 	}
 
-	async loadBuildings() {
+	/**
+	 * Loads Helsinki buildings for a postal code with caching support.
+	 * Uses unifiedLoader for IndexedDB caching with 1-hour TTL.
+	 * Fetches building data from Helsinki WFS service and processes heat exposure data.
+	 *
+	 * @param {string} [postalCode] - Optional postal code to load buildings for. If not provided, uses current postal code from store.
+	 * @returns {Promise<void>}
+	 */
+	async loadBuildings(postalCode) {
+		const targetPostalCode = postalCode || this.store.postalcode;
 		const url =
 			'https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27' +
-			this.store.postalcode +
+			targetPostalCode +
 			'%27';
 
 		console.log(
 			'[HelsinkiBuilding] 🏢 Loading Helsinki buildings for postal code:',
-			this.store.postalcode
+			targetPostalCode
 		);
 		console.log('[HelsinkiBuilding] API URL:', url);
 
 		try {
-			const response = await fetch(url);
+			const loadingConfig = {
+				layerId: `helsinki_buildings_${targetPostalCode}`,
+				url: url,
+				type: 'geojson',
+				processor: async (data, metadata) => {
+					const fromCache = metadata?.fromCache;
+					console.log(
+						fromCache ? '[HelsinkiBuilding] ✓ Using cached data' : '[HelsinkiBuilding] ✅ Received',
+						data.features?.length || 0,
+						'building features'
+					);
 
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-			}
+					const entities = await this.urbanheatService.findUrbanHeatData(data, targetPostalCode);
+					await this.setHeatExposureToBuildings(entities);
+					await this.setHelsinkiBuildingsHeight(entities);
 
-			const data = await response.json();
-			console.log(
-				'[HelsinkiBuilding] ✅ Received',
-				data.features?.length || 0,
-				'building features'
-			);
+					console.log('[HelsinkiBuilding] ✅ Buildings processed and added to Cesium viewer');
+					return entities;
+				},
+				options: {
+					cache: true,
+					cacheTTL: 60 * 60 * 1000, // 1 hour (buildings data is relatively static)
+					retries: 2,
+					progressive: false,
+					priority: 'high',
+				},
+			};
 
-			const entities = await this.urbanheatService.findUrbanHeatData(data);
-			await this.setHeatExposureToBuildings(entities);
-			await this.setHelsinkiBuildingsHeight(entities);
-
-			console.log('[HelsinkiBuilding] ✅ Buildings processed and added to Cesium viewer');
+			await this.unifiedLoader.loadLayer(loadingConfig);
 		} catch (error) {
 			console.error('[HelsinkiBuilding] ❌ Error loading buildings:', error);
 		}
 
-		this.toggleStore.showTrees && this.treeService.loadTrees();
+		this.toggleStore.showTrees && this.treeService.loadTrees(targetPostalCode);
 	}
 
 	/**

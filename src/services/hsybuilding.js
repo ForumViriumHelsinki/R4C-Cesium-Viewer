@@ -1,6 +1,7 @@
 import Datasource from './datasource.js';
 import Building from './building.js';
 import UrbanHeat from './urbanheat.js';
+import unifiedLoader from './unifiedLoader.js';
 import { eventBus } from './eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
@@ -33,7 +34,7 @@ import { useURLStore } from '../stores/urlStore.js';
  */
 export default class HSYBuilding {
 	/**
-	 * Creates an HSYBuilding service instance
+	 * Creates an HSYBuilding service instance with caching support
 	 */
 	constructor() {
 		this.store = useGlobalStore();
@@ -43,38 +44,64 @@ export default class HSYBuilding {
 		this.urbanHeatService = new UrbanHeat();
 		this.toggleStore = useToggleStore();
 		this.urlStore = useURLStore();
+		this.unifiedLoader = unifiedLoader;
 	}
 
-	async loadHSYBuildings(bbox) {
+	/**
+	 * Loads HSY buildings for a postal code or bounding box with caching support.
+	 * Uses unifiedLoader for IndexedDB caching with 1-hour TTL.
+	 * Fetches building data from HSY WFS service and processes grid attributes if applicable.
+	 *
+	 * @param {string} [bbox] - Optional bounding box for grid-based queries. If not provided, uses postal code.
+	 * @param {string} [postalCode] - Optional postal code to load buildings for. If not provided, uses current postal code from store.
+	 * @returns {Promise<Array<Cesium.Entity>>} Building entities
+	 */
+	async loadHSYBuildings(bbox, postalCode) {
 		try {
+			const targetPostalCode = postalCode || this.store.postalcode;
 			const url = bbox
 				? this.urlStore.hsyGridBuildings(bbox)
-				: this.urlStore.hsyBuildings(this.store.postalcode);
-			console.log('[HSYBuilding] 🏢 Loading HSY buildings for postal code:', this.store.postalcode);
+				: this.urlStore.hsyBuildings(targetPostalCode);
+
+			console.log('[HSYBuilding] 🏢 Loading HSY buildings for postal code:', targetPostalCode);
 			console.log('[HSYBuilding] API URL:', url);
 
-			const response = await fetch(url);
+			const loadingConfig = {
+				layerId: `hsy_buildings_${targetPostalCode}${bbox ? '_grid' : ''}`,
+				url: url,
+				type: 'geojson',
+				processor: async (data, metadata) => {
+					const fromCache = metadata?.fromCache;
+					console.log(
+						fromCache ? '[HSYBuilding] ✓ Using cached data' : '[HSYBuilding] ✅ Received',
+						data.features?.length || 0,
+						'building features'
+					);
 
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-			}
+					// Only process grid attributes if we have a current grid cell
+					if (this.store.currentGridCell) {
+						await this.setGridAttributes(data.features);
+					}
 
-			const data = await response.json();
-			console.log('[HSYBuilding] ✅ Received', data.features?.length || 0, 'building features');
+					let entities = await this.datasourceService.addDataSourceWithPolygonFix(
+						data,
+						'Buildings ' + targetPostalCode
+					);
+					this.setHSYBuildingAttributes(data, entities);
 
-			// Only process grid attributes if we have a current grid cell
-			if (this.store.currentGridCell) {
-				await this.setGridAttributes(data.features);
-			}
+					console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer');
+					return entities;
+				},
+				options: {
+					cache: true,
+					cacheTTL: 60 * 60 * 1000, // 1 hour (buildings data is relatively static)
+					retries: 2,
+					progressive: false,
+					priority: 'high',
+				},
+			};
 
-			let entities = await this.datasourceService.addDataSourceWithPolygonFix(
-				data,
-				'Buildings ' + this.store.postalcode
-			);
-			this.setHSYBuildingAttributes(data, entities);
-
-			console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer');
-			return entities;
+			return await this.unifiedLoader.loadLayer(loadingConfig);
 		} catch (error) {
 			console.error('[HSYBuilding] ❌ Error loading HSY buildings:', error);
 			throw error;

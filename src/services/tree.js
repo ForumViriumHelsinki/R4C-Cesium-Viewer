@@ -41,18 +41,23 @@ export default class Tree {
 
 	/**
 	 * Asynchronously load tree data using unified loader with coordinated parallel loading
+	 * @param {string} postalCode - Optional postal code to load trees for. If not provided, uses global store.postalcode
 	 */
-	async loadTrees() {
+	async loadTrees(postalCode = null) {
+		// Use provided postal code or fall back to global store
+		const targetPostalCode = postalCode || this.store.postalcode;
+
 		try {
 			// Define all tree height categories
 			const koodis = ['221', '222', '223', '224'];
 
 			// Create loading configurations for parallel execution
 			const loadingConfigs = koodis.map((koodi) => ({
-				layerId: `trees_${koodi}`,
-				url: this.urlStore.tree(this.store.postalcode, koodi),
+				layerId: `trees_${koodi}_${targetPostalCode}`,
+				url: this.urlStore.tree(targetPostalCode, koodi),
 				type: 'geojson',
-				processor: (data, metadata) => this.addTreesDataSource(data, koodi, metadata),
+				processor: (data, metadata) =>
+					this.addTreesDataSource(data, koodi, targetPostalCode, metadata),
 				options: {
 					cache: true,
 					cacheTTL: 25 * 60 * 1000, // 25 minutes (trees change less frequently)
@@ -116,13 +121,14 @@ export default class Tree {
 	 *
 	 * @param {Object} data - Tree data from API
 	 * @param {string} koodi - Tree height category code
+	 * @param {string} postalCode - Postal code for this tree datasource
 	 * @param {Object} metadata - Loading metadata from unified loader
 	 */
-	async addTreesDataSource(data, koodi, metadata = {}) {
+	async addTreesDataSource(data, koodi, postalCode, metadata = {}) {
 		try {
 			const entities = await this.datasourceService.addDataSourceWithPolygonFix(
 				data,
-				'Trees' + koodi
+				'Trees' + koodi + '_' + postalCode
 			);
 
 			// Enhanced batch processing with adaptive batch sizes

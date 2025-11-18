@@ -11,8 +11,21 @@ import eslint from 'vite-plugin-eslint';
 import { defineConfig } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
 import { version } from './package.json';
+import { execSync } from 'child_process';
+
+// Get git commit hash at build time
+const getGitCommit = () => {
+	try {
+		return execSync('git rev-parse --short HEAD').toString().trim();
+	} catch {
+		return 'dev';
+	}
+};
 
 export default defineConfig(({ mode }) => {
+	const gitCommit = getGitCommit();
+	const buildTime = new Date().toISOString();
+
 	return {
 		build: {
 			sourcemap: true, // Source map generation must be turned on
@@ -84,7 +97,12 @@ export default defineConfig(({ mode }) => {
 					]
 				: []),
 		],
-		define: { 'process.env': {} },
+		define: {
+			'process.env': {},
+			'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
+			'import.meta.env.VITE_GIT_COMMIT': JSON.stringify(gitCommit),
+			'import.meta.env.VITE_BUILD_TIME': JSON.stringify(buildTime),
+		},
 		resolve: {
 			alias: {
 				'@': fileURLToPath(new URL('./src', import.meta.url)),
