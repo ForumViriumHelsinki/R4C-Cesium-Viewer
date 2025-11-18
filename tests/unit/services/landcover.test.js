@@ -5,6 +5,8 @@ import {
   removeLandcover,
 } from "@/services/landcover.js";
 import * as Cesium from "cesium";
+import { useGlobalStore } from "@/stores/globalStore.js";
+import { useBackgroundMapStore } from "@/stores/backgroundMapStore.js";
 
 // Mock Cesium module
 vi.mock("cesium", () => ({
@@ -155,11 +157,6 @@ describe("Landcover Service", () => {
 
   describe("removeLandcover", () => {
     it("should remove all landcover layers from viewer", () => {
-      const { useGlobalStore } = require("@/stores/globalStore.js");
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
-
       const mockStore = useGlobalStore();
       const mockBackgroundStore = useBackgroundMapStore();
 
@@ -179,9 +176,6 @@ describe("Landcover Service", () => {
     });
 
     it("should handle empty landcover layers array gracefully", () => {
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
       const mockBackgroundStore = useBackgroundMapStore();
 
       mockBackgroundStore.landcoverLayers = [];

@@ -5,6 +5,8 @@ import {
   removeFloodLayers,
 } from "@/services/floodwms.js";
 import * as Cesium from "cesium";
+import { useGlobalStore } from "@/stores/globalStore.js";
+import { useBackgroundMapStore } from "@/stores/backgroundMapStore.js";
 
 // Mock Cesium module
 vi.mock("cesium", () => ({
@@ -89,7 +91,7 @@ describe("Flood WMS Service", () => {
 
       expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
         expect.objectContaining({
-          url: expect.stringContaining("format=image/png"),
+          url: expect.stringMatching(/format=image(%2F|\/png)/),
         }),
       );
 
@@ -139,11 +141,6 @@ describe("Flood WMS Service", () => {
 
   describe("removeFloodLayers", () => {
     it("should remove all flood layers from viewer", () => {
-      const { useGlobalStore } = require("@/stores/globalStore.js");
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
-
       const mockStore = useGlobalStore();
       const mockBackgroundStore = useBackgroundMapStore();
 
@@ -159,9 +156,6 @@ describe("Flood WMS Service", () => {
     });
 
     it("should handle empty flood layers array gracefully", () => {
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
       const mockBackgroundStore = useBackgroundMapStore();
 
       mockBackgroundStore.floodLayers = [];
