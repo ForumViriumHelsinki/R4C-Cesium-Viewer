@@ -369,9 +369,10 @@ a {
 		padding: 0 4px;
 	}
 
+	/* Keep 44px minimum for WCAG 2.5.5 compliance even on very small screens */
 	.navigation-buttons .v-btn {
-		min-width: 40px;
-		min-height: 40px;
+		min-width: 44px;
+		min-height: 44px;
 	}
 }
 </style>

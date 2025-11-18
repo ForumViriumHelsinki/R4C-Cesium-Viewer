@@ -188,6 +188,7 @@ const zoomOut = () => {
 
 .compass-needle-container .v-icon {
   color: #c62828;
+  will-change: transform; /* Performance hint for smooth rotation animation */
 }
 
 .dir-btn {
@@ -202,6 +203,7 @@ const zoomOut = () => {
   font-weight: bold;
   padding: 0;
   color: #333;
+  touch-action: manipulation; /* Prevent double-tap zoom delay */
 }
 
 .dir-btn.north     { top: 0;      left: 50%;    transform: translateX(-50%); }
@@ -225,6 +227,7 @@ const zoomOut = () => {
 .zoom-controls .v-btn {
   border-radius: 0;
   border-bottom: 1px solid #ccc;
+  touch-action: manipulation; /* Prevent double-tap zoom delay */
 }
 
 .zoom-controls .v-btn:last-child {
