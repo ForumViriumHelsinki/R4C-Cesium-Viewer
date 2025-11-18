@@ -127,7 +127,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 			'should transition from Capital Region to Statistical Grid smoothly',
 			async ({ cesiumPage }) => {
 				// Start with Capital Region (default)
-				let capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]');
+				const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]');
 				await expect(capitalRegionRadio).toBeChecked();
 
 				// Switch to Statistical Grid
@@ -148,7 +148,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 			async ({ cesiumPage }) => {
 				// Switch to grid first
 				await helpers.navigateToView('gridView');
-				let gridRadio = cesiumPage.locator('input[value="gridView"]');
+				const gridRadio = cesiumPage.locator('input[value="gridView"]');
 				await expect(gridRadio).toBeChecked();
 
 				// Switch back to Capital Region
