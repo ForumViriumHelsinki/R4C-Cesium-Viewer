@@ -88,11 +88,11 @@ These files were flagged but need deeper investigation to determine if they're t
 8. **`src/composables/useIndexData.js`** - Check for dynamic imports
 
 ### Dependencies
-1. **`path`** (package.json:54) - Built-in Node.js module, shouldn't be in dependencies
-2. **`url`** (package.json:59) - Built-in Node.js module, shouldn't be in dependencies
-3. **`typescript-eslint`** (package.json:57) - May be duplicate of existing TypeScript ESLint packages
+1. ~~**`path`**~~ ✅ REMOVED - Built-in Node.js module
+2. ~~**`url`**~~ ✅ REMOVED - Built-in Node.js module
+3. ~~**`typescript-eslint`**~~ ✅ MOVED to devDependencies (correct location)
 4. **`supertest`** (devDependencies) - Check if API testing is actually implemented
-5. **`vite-plugin-cesium`** (devDependencies) - Using `vite-plugin-cesium-build` instead (line 5 of vite.config.js)
+5. ~~**`vite-plugin-cesium`**~~ ✅ REMOVED - Discontinued plugin, using `vite-plugin-cesium-build` instead
 
 ---
 
@@ -134,22 +134,22 @@ TypeScript interfaces/types that aren't imported elsewhere (may be intended for 
 
 ### Immediate (High Priority)
 
-1. **Add missing core dependencies:**
+1. ~~**Add missing core dependencies:**~~ ✅ COMPLETED
    ```bash
    npm install --save vue vuetify cesium
    ```
 
-2. **Remove Node.js built-ins from dependencies:**
+2. ~~**Remove Node.js built-ins from dependencies:**~~ ✅ COMPLETED
    ```bash
    npm uninstall path url
    ```
 
 ### Short-term (Medium Priority)
 
-3. **Investigate and potentially remove:**
-   - Verify `typescript-eslint` isn't duplicated
-   - Check if `supertest` is actually used for API testing
-   - Verify `vite-plugin-cesium` vs `vite-plugin-cesium-build` usage
+3. ~~**Investigate and potentially remove:**~~ ✅ COMPLETED
+   - ✅ Verified `typescript-eslint` is correctly in devDependencies
+   - 📋 Check if `supertest` is actually used for API testing (still TODO)
+   - ✅ Removed `vite-plugin-cesium` (discontinued plugin, using `vite-plugin-cesium-build`)
 
 4. **Review unused service files:**
    - Audit the 8 potentially unused services/stores/composables
@@ -203,24 +203,27 @@ Create a `knip.json` or `.knip.json` file to reduce false positives:
 
 ## 📊 Summary Statistics
 
-| Category | Count | Action |
-|----------|-------|--------|
-| **False Positives** | 28 | Keep (actually used) |
-| **Critical Issues** | 1 | Fix immediately |
-| **Safe to Remove** | 2 | Remove (path, url) |
-| **Needs Investigation** | 8 | Manual audit required |
-| **Code Quality Issues** | 2 | Refactor exports |
-| **Test Utilities** | 8 | Low priority cleanup |
+| Category | Count | Action | Status |
+|----------|-------|--------|--------|
+| **False Positives** | 28 | Keep (actually used) | ✅ Verified |
+| **Critical Issues** | 1 | Fix immediately | ✅ Fixed |
+| **Removed Dependencies** | 3 | Remove (path, url, vite-plugin-cesium) | ✅ Removed |
+| **Fixed Dependencies** | 1 | Move (typescript-eslint) | ✅ Moved to devDeps |
+| **Needs Investigation** | 7 | Manual audit required | 📋 TODO |
+| **Code Quality Issues** | 2 | Refactor exports | 📋 TODO |
+| **Test Utilities** | 8 | Low priority cleanup | 📋 TODO |
 
 ---
 
 ## 🎯 Next Steps
 
-1. ~~**Run the immediate fixes**~~ ✅ **COMPLETED** - Added vue/vuetify/cesium, removed path/url
+1. ~~**Run the immediate fixes**~~ ✅ **COMPLETED** - Added vue/vuetify/cesium, removed path/url, removed vite-plugin-cesium
 2. ~~**Set up knip configuration**~~ ✅ **COMPLETED** - Added `.knip.json` to reduce false positives
 3. ~~**Add a lint script**~~ ✅ **COMPLETED** - Added `"lint:deps": "knip"` to package.json
-4. **Schedule time to audit** the 8 potentially unused service files
-5. **Integrate into CI** to prevent future dependency drift (recommended for future PR)
+4. ~~**Fix dependency placement**~~ ✅ **COMPLETED** - Moved typescript-eslint to devDependencies
+5. ~~**Security fix**~~ ✅ **COMPLETED** - Fixed glob CLI command injection vulnerability
+6. **Schedule time to audit** the 7 remaining potentially unused service files
+7. **Integrate into CI** to prevent future dependency drift (recommended for future PR)
    - Add `npm run lint:deps` to `.github/workflows/test.yml` security-scan job
    - This will require workflow modification permissions
 
