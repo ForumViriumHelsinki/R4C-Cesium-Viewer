@@ -36,19 +36,19 @@ await element.click({ timeout: 2000 });
 ```typescript
 // Try multiple selector strategies in priority order
 const selectors = [
-  '[data-test-id="target"]', // Most reliable
-  'button[role="switch"]', // Semantic
-  ".slider.round", // Class-based
-  '[class*="slider"]', // Partial match
-  ".switch-slider", // Last resort
+	'[data-test-id="target"]', // Most reliable
+	'button[role="switch"]', // Semantic
+	'.slider.round', // Class-based
+	'[class*="slider"]', // Partial match
+	'.switch-slider', // Last resort
 ];
 
 for (const selector of selectors) {
-  const element = page.locator(selector);
-  if ((await element.count()) > 0) {
-    await element.first().click();
-    break;
-  }
+	const element = page.locator(selector);
+	if ((await element.count()) > 0) {
+		await element.first().click();
+		break;
+	}
 }
 ```
 
@@ -63,18 +63,18 @@ for (const selector of selectors) {
 ```typescript
 // Attempt 1: Normal click
 try {
-  await element.click({ timeout: 2000 });
+	await element.click({ timeout: 2000 });
 } catch (error) {
-  // Attempt 2: Force click (bypasses actionability checks)
-  try {
-    await element.click({ force: true, timeout: 2000 });
-  } catch (error) {
-    // Attempt 3: Mouse click fallback
-    const box = await element.boundingBox();
-    if (box) {
-      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-    }
-  }
+	// Attempt 2: Force click (bypasses actionability checks)
+	try {
+		await element.click({ force: true, timeout: 2000 });
+	} catch (error) {
+		// Attempt 3: Mouse click fallback
+		const box = await element.boundingBox();
+		if (box) {
+			await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+		}
+	}
 }
 ```
 
@@ -91,9 +91,9 @@ const box = await element.boundingBox();
 const viewport = page.viewportSize();
 
 if (box && (box.y < 0 || box.y + box.height > viewport.height)) {
-  // Element is out of viewport - scroll it
-  await element.scrollIntoViewIfNeeded({ timeout: 3000 });
-  await page.waitForTimeout(300);
+	// Element is out of viewport - scroll it
+	await element.scrollIntoViewIfNeeded({ timeout: 3000 });
+	await page.waitForTimeout(300);
 }
 
 // Now safe to interact
@@ -113,7 +113,7 @@ await element.click();
 await link.click({ noWaitAfter: true });
 
 // Wait for specific element instead of navigation event
-await page.locator('[data-test-id="new-view"]').waitFor({ state: "visible" });
+await page.locator('[data-test-id="new-view"]').waitFor({ state: 'visible' });
 ```
 
 **Reference**: `tests/e2e/helpers/test-helpers.ts` recent fixes
@@ -127,26 +127,26 @@ await page.locator('[data-test-id="new-view"]').waitFor({ state: "visible" });
 ```typescript
 // Wait for common overlays to be hidden
 const overlaySelectors = [
-  ".v-overlay--active",
-  ".v-dialog--active",
-  ".v-menu--active",
-  '[role="dialog"][aria-hidden="false"]',
-  ".v-overlay__scrim",
-  ".loading-overlay",
-  '[data-loading="true"]',
-  ".v-progress-circular",
+	'.v-overlay--active',
+	'.v-dialog--active',
+	'.v-menu--active',
+	'[role="dialog"][aria-hidden="false"]',
+	'.v-overlay__scrim',
+	'.loading-overlay',
+	'[data-loading="true"]',
+	'.v-progress-circular',
 ];
 
 for (const selector of overlaySelectors) {
-  await page
-    .locator(selector)
-    .waitFor({
-      state: "hidden",
-      timeout: 5000,
-    })
-    .catch(() => {
-      // Ignore if overlay doesn't exist
-    });
+	await page
+		.locator(selector)
+		.waitFor({
+			state: 'hidden',
+			timeout: 5000,
+		})
+		.catch(() => {
+			// Ignore if overlay doesn't exist
+		});
 }
 ```
 
@@ -160,7 +160,7 @@ for (const selector of overlaySelectors) {
 
 ```typescript
 // Don't assert immediately - wait for state
-await expect(toggle).toHaveAttribute("aria-checked", "true", { timeout: 5000 });
+await expect(toggle).toHaveAttribute('aria-checked', 'true', { timeout: 5000 });
 
 // For visibility checks, scroll first
 await element.scrollIntoViewIfNeeded();

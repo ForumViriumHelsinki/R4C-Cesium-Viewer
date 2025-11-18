@@ -1,43 +1,43 @@
 {
-  "$schema": "https://typedoc.org/schema.json",
-  "name": "R4C Cesium Viewer API Documentation",
-  "includeVersion": true,
-  "entryPointStrategy": "expand",
-  "entryPoints": ["./src/services", "./src/stores", "./src/composables"],
-  "exclude": [
-    "**/*.vue",
-    "**/*.spec.js",
-    "**/*.test.js",
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/tests/**"
-  ],
-  "out": "api-docs",
-  "cleanOutputDir": true,
-  "jsDocCompatibility": true,
-  "commentStyle": "jsdoc",
-  "categorizeByGroup": true,
-  "defaultCategory": "Other",
-  "categoryOrder": ["Services", "Stores", "Composables", "*"],
-  "sort": ["source-order"],
-  "kindSortOrder": ["Class", "Function", "Variable", "Property", "Method"],
-  "validation": {
-    "notExported": false,
-    "notDocumented": false,
-    "invalidLink": true
-  },
-  "excludeExternals": true,
-  "excludeNotDocumented": false,
-  "excludePrivate": false,
-  "excludeProtected": false,
-  "excludeInternal": true,
-  "navigation": {
-    "includeCategories": true,
-    "includeGroups": true
-  },
-  "readme": "none",
-  "skipErrorChecking": false,
-  "treatWarningsAsErrors": false,
-  "treatValidationWarningsAsErrors": false,
-  "plugin": []
+	"$schema": "https://typedoc.org/schema.json",
+	"name": "R4C Cesium Viewer API Documentation",
+	"includeVersion": true,
+	"entryPointStrategy": "expand",
+	"entryPoints": ["./src/services", "./src/stores", "./src/composables"],
+	"exclude": [
+		"**/*.vue",
+		"**/*.spec.js",
+		"**/*.test.js",
+		"**/node_modules/**",
+		"**/dist/**",
+		"**/tests/**"
+	],
+	"out": "api-docs",
+	"cleanOutputDir": true,
+	"jsDocCompatibility": true,
+	"commentStyle": "jsdoc",
+	"categorizeByGroup": true,
+	"defaultCategory": "Other",
+	"categoryOrder": ["Services", "Stores", "Composables", "*"],
+	"sort": ["source-order"],
+	"kindSortOrder": ["Class", "Function", "Variable", "Property", "Method"],
+	"validation": {
+		"notExported": false,
+		"notDocumented": false,
+		"invalidLink": true
+	},
+	"excludeExternals": true,
+	"excludeNotDocumented": false,
+	"excludePrivate": false,
+	"excludeProtected": false,
+	"excludeInternal": true,
+	"navigation": {
+		"includeCategories": true,
+		"includeGroups": true
+	},
+	"readme": "none",
+	"skipErrorChecking": false,
+	"treatWarningsAsErrors": false,
+	"treatValidationWarningsAsErrors": false,
+	"plugin": []
 }

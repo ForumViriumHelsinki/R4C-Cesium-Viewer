@@ -286,22 +286,22 @@ npm run test:coverage
 
 ```javascript
 export default defineConfig({
-  test: {
-    globals: true,
-    environment: "jsdom",
-    setupFiles: ["./tests/setup.js"],
-    coverage: {
-      provider: "v8",
-      thresholds: {
-        global: {
-          branches: 70,
-          functions: 70,
-          lines: 70,
-          statements: 70,
-        },
-      },
-    },
-  },
+	test: {
+		globals: true,
+		environment: 'jsdom',
+		setupFiles: ['./tests/setup.js'],
+		coverage: {
+			provider: 'v8',
+			thresholds: {
+				global: {
+					branches: 70,
+					functions: 70,
+					lines: 70,
+					statements: 70,
+				},
+			},
+		},
+	},
 });
 ```
 
@@ -309,18 +309,18 @@ export default defineConfig({
 
 ```typescript
 export default defineConfig({
-  testDir: "./tests",
-  fullyParallel: true,
-  retries: process.env.CI ? 2 : 0,
-  use: {
-    baseURL: "http://localhost:5173",
-    trace: "on-first-retry",
-  },
-  projects: [
-    { name: "chromium", use: devices["Desktop Chrome"] },
-    { name: "firefox", use: devices["Desktop Firefox"] },
-    { name: "webkit", use: devices["Desktop Safari"] },
-  ],
+	testDir: './tests',
+	fullyParallel: true,
+	retries: process.env.CI ? 2 : 0,
+	use: {
+		baseURL: 'http://localhost:5173',
+		trace: 'on-first-retry',
+	},
+	projects: [
+		{ name: 'chromium', use: devices['Desktop Chrome'] },
+		{ name: 'firefox', use: devices['Desktop Firefox'] },
+		{ name: 'webkit', use: devices['Desktop Safari'] },
+	],
 });
 ```
 
@@ -405,9 +405,9 @@ These secrets must be configured in GitHub repository settings:
 Heavy 3D library mocked to avoid loading in tests:
 
 ```javascript
-vi.mock("cesium", () => ({
-  Viewer: vi.fn(),
-  Cartesian3: { fromDegrees: vi.fn() },
+vi.mock('cesium', () => ({
+	Viewer: vi.fn(),
+	Cartesian3: { fromDegrees: vi.fn() },
 }));
 ```
 
@@ -417,7 +417,7 @@ External APIs mocked for reliable testing:
 
 ```javascript
 axios.get.mockResolvedValue({
-  data: mockGeoData,
+	data: mockGeoData,
 });
 ```
 
@@ -427,7 +427,7 @@ Pinia stores initialized fresh for each test:
 
 ```javascript
 beforeEach(() => {
-  setActivePinia(createPinia());
+	setActivePinia(createPinia());
 });
 ```
 
@@ -470,9 +470,7 @@ Tests track:
 
    ```javascript
    // Good: Test user-visible behavior
-   expect(wrapper.find(".loading-message").text()).toBe(
-     "Loading data, please wait",
-   );
+   expect(wrapper.find('.loading-message').text()).toBe('Loading data, please wait');
 
    // Bad: Test implementation details
    expect(component.isLoadingData).toBe(true);
@@ -482,24 +480,24 @@ Tests track:
 
    ```javascript
    // Good
-   it("should display building information when valid building is selected");
+   it('should display building information when valid building is selected');
 
    // Bad
-   it("should work");
+   it('should work');
    ```
 
 3. **Arrange-Act-Assert Pattern**
 
    ```javascript
-   it("should calculate correct address", () => {
-     // Arrange
-     const properties = { katunimi_suomi: "Test Street", osoitenumero: "123" };
+   it('should calculate correct address', () => {
+   	// Arrange
+   	const properties = { katunimi_suomi: 'Test Street', osoitenumero: '123' };
 
-     // Act
-     const result = findAddressForBuilding(properties);
+   	// Act
+   	const result = findAddressForBuilding(properties);
 
-     // Assert
-     expect(result).toBe("Test Street 123");
+   	// Assert
+   	expect(result).toBe('Test Street 123');
    });
    ```
 
@@ -612,7 +610,7 @@ vi.mock('cesium', () => ({...}));
 ```javascript
 // Solution: Proper await usage
 await nextTick();
-await page.waitForSelector("canvas");
+await page.waitForSelector('canvas');
 ```
 
 #### Memory Leaks in Tests
@@ -620,7 +618,7 @@ await page.waitForSelector("canvas");
 ```javascript
 // Solution: Proper cleanup
 afterEach(() => {
-  wrapper?.unmount();
+	wrapper?.unmount();
 });
 ```
 
@@ -628,7 +626,7 @@ afterEach(() => {
 
 ```javascript
 // Solution: Better wait strategies
-await page.waitForLoadState("networkidle");
+await page.waitForLoadState('networkidle');
 await page.waitForTimeout(1000);
 ```
 

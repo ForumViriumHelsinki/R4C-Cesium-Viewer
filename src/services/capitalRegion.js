@@ -1,10 +1,10 @@
-import { useToggleStore } from "../stores/toggleStore.js";
-import { useGlobalStore } from "../stores/globalStore.js";
-import { usePropsStore } from "../stores/propsStore.js";
-import { eventBus } from "../services/eventEmitter.js";
-import DataSource from "./datasource.js";
-import HSYBuilding from "./hsybuilding.js";
-import ElementsDisplay from "./elementsDisplay.js";
+import { useToggleStore } from '../stores/toggleStore.js';
+import { useGlobalStore } from '../stores/globalStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
+import { eventBus } from '../services/eventEmitter.js';
+import DataSource from './datasource.js';
+import HSYBuilding from './hsybuilding.js';
+import ElementsDisplay from './elementsDisplay.js';
 
 /**
  * Capital Region Service
@@ -26,44 +26,44 @@ import ElementsDisplay from "./elementsDisplay.js";
  * @class CapitalRegion
  */
 export default class CapitalRegion {
-  /**
-   * Creates a CapitalRegion service instance
-   * Initializes Capital Region-specific service dependencies.
-   */
-  constructor() {
-    this.toggleStore = useToggleStore();
-    this.store = useGlobalStore();
-    this.propsStore = usePropsStore();
-    this.viewer = this.store.cesiumViewer;
-    this.hSYBuildingService = new HSYBuilding();
-    this.datasourceService = new DataSource();
-    this.elementsDisplayService = new ElementsDisplay();
-  }
+	/**
+	 * Creates a CapitalRegion service instance
+	 * Initializes Capital Region-specific service dependencies.
+	 */
+	constructor() {
+		this.toggleStore = useToggleStore();
+		this.store = useGlobalStore();
+		this.propsStore = usePropsStore();
+		this.viewer = this.store.cesiumViewer;
+		this.hSYBuildingService = new HSYBuilding();
+		this.datasourceService = new DataSource();
+		this.elementsDisplayService = new ElementsDisplay();
+	}
 
-  /**
-   * Loads Capital Region map elements for the current postal code
-   * Loads HSY building data and conditionally shows tree layer controls
-   * for postal codes with available tree data (postal codes < 1000).
-   *
-   * @returns {Promise<void>}
-   */
-  async loadCapitalRegionElements() {
-    // Show tree controls only for postal codes with tree data availability
-    if (Number(this.store.postalcode) < 1000) {
-      this.elementsDisplayService.setTreeElementsDisplay("inline-block");
-    }
+	/**
+	 * Loads Capital Region map elements for the current postal code
+	 * Loads HSY building data and conditionally shows tree layer controls
+	 * for postal codes with available tree data (postal codes < 1000).
+	 *
+	 * @returns {Promise<void>}
+	 */
+	async loadCapitalRegionElements() {
+		// Show tree controls only for postal codes with tree data availability
+		if (Number(this.store.postalcode) < 1000) {
+			this.elementsDisplayService.setTreeElementsDisplay('inline-block');
+		}
 
-    this.hSYBuildingService.loadHSYBuildings();
-  }
+		this.hSYBuildingService.loadHSYBuildings();
+	}
 
-  /**
-   * Stores postal code boundary data source in Pinia store
-   * Retrieves PostCodes data source and saves reference for later use.
-   *
-   * @returns {Promise<void>}
-   */
-  async addPostalCodeDataToPinia() {
-    const dataSource = this.datasourceService.getDataSourceByName("PostCodes");
-    this.propsStore.setPostalCodeData(dataSource);
-  }
+	/**
+	 * Stores postal code boundary data source in Pinia store
+	 * Retrieves PostCodes data source and saves reference for later use.
+	 *
+	 * @returns {Promise<void>}
+	 */
+	async addPostalCodeDataToPinia() {
+		const dataSource = this.datasourceService.getDataSourceByName('PostCodes');
+		this.propsStore.setPostalCodeData(dataSource);
+	}
 }

@@ -25,7 +25,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 4173 # Vite preview server port
+              containerPort: 80 # nginx port
               protocol: TCP
           livenessProbe:
             httpGet:

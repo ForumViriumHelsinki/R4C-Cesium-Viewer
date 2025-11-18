@@ -137,32 +137,49 @@ data:
         encoding: utf-8
         gzip: false
         languages:
+            # First language is the default language
             - en-US
             - fr-CA
+        # cors: true
         pretty_print: true
-        limits:
+        limits:  # server limits on number of items to return.  This property can also be defined at the resource level to override global server settings
           default_items: 100
           max_items: 100000
           max_distance_x: 2500
           max_distance_y: 2500
           max_distance_units: m
+        # templates:
+          # path: /path/to/Jinja2/templates
+          # static: /path/to/static/folder # css/js/img
         map:
             url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
             attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    #    manager:
+    #        name: TinyDB
+    #        connection: /tmp/pygeoapi-process-manager.db
+    #        output_dir: /tmp/
+        # ogc_schemas_location: /opt/schemas.opengis.net
 
     logging:
         level: ERROR
+        #logfile: /tmp/pygeoapi.log
 
     metadata:
         identification:
             title:
-                en: pygeoapi local development instance
+                en: pygeoapi default instance
+                fr: instance par défaut de pygeoapi
             description:
                 en: pygeoapi provides an API to geospatial data
+                fr: pygeoapi fournit une API aux données géospatiales
             keywords:
                 en:
                     - geospatial
                     - data
+                    - api
+                fr:
+                    - géospatiale
+                    - données
                     - api
             keywords_type: theme
             terms_of_service: https://creativecommons.org/licenses/by/4.0/
@@ -174,8 +191,20 @@ data:
             name: Organization Name
             url: https://pygeoapi.io
         contact:
-            name: Developer
-            email: dev@example.org
+            name: Lastname, Firstname
+            position: Position Title
+            address: Mailing Address
+            city: City
+            stateorprovince: Administrative Area
+            postalcode: Zip or Postal Code
+            country: Country
+            phone: +xx-xxx-xxx-xxxx
+            fax: +xx-xxx-xxx-xxxx
+            email: you@example.org
+            url: Contact URL
+            hours: Mo-Fr 08:00-17:00
+            instructions: During hours of service. Off on weekends.
+            role: pointOfContact
 
     resources:
         adaptation_landcover:
@@ -187,6 +216,12 @@ data:
                 - Uusimaa
                 - Urban Heat
                 - HSY
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
             extents:
                 spatial:
                     bbox: [22.7497,59.689,26.65,60.84]
@@ -198,23 +233,29 @@ data:
                 - type: feature
                   name: PostgreSQL
                   data:
-                    host: postgresql
-                    dbname: regions4climate
-                    user: regions4climate_user
-                    password: regions4climate_pass
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
                   id_field: id
                   table: adaptation_landcover
                   geom_field: geom
 
-        r4c_coldspot:
+        hsy_buildings:
             type: collection
-            title: Cold areas
-            description: This collection contains Capital Region areas that have heatexposure index 0.4 or less
+            title: Buildings with Average Urban Heat Exposure
+            description: This collection contains HSY area buildings with Average Urban Heat Exposure indicator.
             keywords:
-                - Heat Exposure
+                - Buildings
                 - Uusimaa
                 - Urban Heat
-                - Capital Region
+                - HSY
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
             extents:
                 spatial:
                     bbox: [22.7497,59.689,26.65,60.84]
@@ -226,10 +267,639 @@ data:
                 - type: feature
                   name: PostgreSQL
                   data:
-                    host: postgresql
-                    dbname: regions4climate
-                    user: regions4climate_user
-                    password: regions4climate_pass
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: vtj_prt
+                  table: r4c_hsy_building
+                  geom_field: geom
+
+        coldarea:
+            type: collection
+            title: Cold areas
+            description: This collection contains Capital Region areas that have heatexposure index 0.4 or less
+            keywords:
+                - Heat Exposure
+                - Uusimaa
+                - Urban Heat
+                - Capital Region
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
                   id_field: id
                   table: r4c_coldspot
+                  geom_field: geom
+
+        urban_heat_building:
+            type: collection
+            title: Buildings with Average Urban Heat Exposure
+            description: This collection contains health and social care buildings with Average Urban Heat Exposure indicator.
+            keywords:
+                - Buildings
+                - Uusimaa
+                - Urban Heat
+                - Exposure
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: id
+                  table: urban_heat_building_f
+                  geom_field: geom
+
+        tree:
+            type: collection
+            title: Trees
+            description: This collection contains information of trees from Helsinki region land cover dataset.
+            keywords:
+                - HSY
+                - Helsinki
+                - Green area
+                - Tree
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: id
+                  table: tree_f
+                  geom_field: geom
+
+        vegetation:
+            type: collection
+            title: Vegetation
+            description: This collection contains information of green areas from Helsinki region land cover dataset.
+            keywords:
+                - HSY
+                - Helsinki
+                - Green area
+                - Land cover
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: id
+                  table: nature_area_f
+                  geom_field: geom
+
+        hki_roof_colors:
+            type: collection
+            title: Helsinki building roof colors
+            description: This collection contains information of the colors of the roofs of buildings in the city of Helsinki, Finland.
+            keywords:
+                - Helsinki
+                - Roof
+                - R4C
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: hki_id
+                  table: hki_roof_colors_f
+                  geom_field: geom
+
+        hsy_buildings_optimized:
+            type: collection
+            title: Buildings with Average Urban Heat Exposure (Optimized)
+            description: This collection contains HSY area buildings with Average Urban Heat Exposure indicator from optimized materialized view.
+            keywords:
+                - Buildings
+                - Uusimaa
+                - Urban Heat
+                - HSY
+                - Optimized
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: vtj_prt
+                  table: r4c_hsy_building_mat
+                  geom_field: geom
+
+        heatexposure_optimized:
+            type: collection
+            title: Capital Region Postal Codes with Urban Heat Exposure (Optimized)
+            description: This collection contains capital region postal code areas with average urban heat exposure from optimized materialized view.
+            keywords:
+                - Tilastokeskus
+                - Uusimaa
+                - Urban Heat
+                - HSY
+                - Optimized
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: postinumero
+                  table: r4c_postalcode_mat
+                  geom_field: geom
+
+        tree_building_distance:
+            type: collection
+            title: Tree Building distance
+            description: This collection contains the distance between trees and buildings city of Helsinki, Finland.
+            keywords:
+                - Helsinki
+                - Trees
+                - R4C
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: id
+                  table: tree_building_distance
+                  geom_field: geom
+
+        hki_travel_time:
+            type: collection
+            title: Helsinki travel times
+            description: This collection contains greatly simplified Helsinki travel time matrix. Only average travel times are included in the data.
+            keywords:
+                - Helsinki
+                - Travel Time Matrix
+                - R4C
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: id
+                  table: hki_travel_time_r4c_f
+                  geom_field: geom
+
+        othernature:
+            type: collection
+            title: Nature area
+            description: This collection contains information of other nature areas from Helsinki region land cover dataset.
+            keywords:
+                - HSY
+                - Helsinki
+                - Rocks
+                - Land cover
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: id
+                  table: other_nature_r4c
+                  geom_field: geom
+
+        populationgrid:
+            type: collection
+            title: HSY population grid land cover
+            description: HSY population grid with HSY land cover data
+            keywords:
+                - landcover
+                - Helsinki
+                - HSY
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [24.80, 60.10, 25.32, 60.30]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2024-10-30T08:57:29Z
+            providers:
+              - type: feature
+                name: GeoJSON
+                data: tests/data/populationgrid.json
+                id_field: index
+
+        capitalregion_postalcode:
+            type: collection
+            title: Helsinki Capital Region postalcodes with land cover
+            description: Helsinki Capital Region postalcodes with HSY land cover data
+            keywords:
+                - landcover
+                - Helsinki
+                - HSY
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [24.80, 60.10, 25.32, 60.30]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2024-10-30T08:57:29Z
+            providers:
+              - type: feature
+                name: GeoJSON
+                data: tests/data/hsy_po.json
+                id_field: posno
+
+        heatexposure:
+            type: collection
+            title: Capital Region Postal Codes with Urban Heat Exposure
+            description: This collection contains capital region postal code areas with average urban heat exposure
+            keywords:
+                - Tilastokeskus
+                - Uusimaa
+                - Urban Heat
+                - HSY
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [22.7497,59.689,26.65,60.84]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_R4C}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD}
+                  id_field: postinumero
+                  table: r4c_postalcode
+                  geom_field: geom
+
+        specific_places:
+            type: collection
+            title: Espoo specific places
+            description: Espoo on the map resident survey specific places with heat exposure
+            keywords:
+                - Espoo
+                - Resident
+                - Survey
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [24.80, 60.10, 25.32, 60.30]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2024-10-30T08:57:29Z
+            providers:
+              - type: feature
+                name: GeoJSON
+                data: tests/data/ErityisetPaikat_with_ndvi.geojson
+                id_field: fid
+
+        places_in_everyday_life:
+            type: collection
+            title: Espoo places in everyday life
+            description: Espoo on the map resident survey places in everyday life with heat exposure
+            keywords:
+                - Espoo
+                - Resident
+                - Survey
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [24.80, 60.10, 25.32, 60.30]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2024-10-30T08:57:29Z
+            providers:
+              - type: feature
+                name: GeoJSON
+                data: tests/data/ArjenPaikat_with_ndvi.geojson
+                id_field: fid
+
+        suitable_places_for_construction:
+            type: collection
+            title: Espoo suitable places for construction
+            description: Espoo on the map resident survey suitable places for construction with heat exposure
+            keywords:
+                - Espoo
+                - Resident
+                - Survey
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [24.80, 60.10, 25.32, 60.30]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2024-10-30T08:57:29Z
+            providers:
+              - type: feature
+                name: GeoJSON
+                data: tests/data/RakentamisenPaikat_with_ndvi.geojson
+                id_field: fid
+
+        centers:
+            type: collection
+            title: Espoo centers
+            description: Espoo on the map resident survey centers with heat exposure
+            keywords:
+                - Espoo
+                - Resident
+                - Survey
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [24.80, 60.10, 25.32, 60.30]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2024-10-30T08:57:29Z
+            providers:
+              - type: feature
+                name: GeoJSON
+                data: tests/data/Keskukset_with_ndvi.geojson
+                id_field: fid
+
+        development_ideas:
+            type: collection
+            title: Espoo development ideas
+            description: Espoo on the map resident survey development ideas with heat exposure
+            keywords:
+                - Espoo
+                - Resident
+                - Survey
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [24.80, 60.10, 25.32, 60.30]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2024-10-30T08:57:29Z
+            providers:
+              - type: feature
+                name: GeoJSON
+                data: tests/data/Kehittamisideat_with_ndvi.geojson
+                id_field: fid
+
+        ndvi_timeseries:
+            type: collection
+            title: Helsinki MajorDistrict NDVI timeseries
+            description:
+            keywords:
+                - NDVI
+                - Satellite data
+                - Timeseries
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [24.80, 60.10, 25.32, 60.30]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+            temporal:
+                    begin: 2016-10-30T18:24:39Z
+                    end: 2024-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_MED_IREN}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD_MED_IREN}
+                  id_field: id
+                  table: spotted_ndvi_range
+                  geom_field: geom
+
+        tree_spotted:
+            type: collection
+            title: Trees
+            description: This collection contains information of trees from Helsinki region land cover dataset. The major district information is added from City of Helsinki data.
+            keywords:
+                - HSY
+                - Tree
+                - Green area
+                - Land cover
+            links:
+                - type: text/html
+                  rel: canonical
+                  title: data
+                  href:
+                  hreflang: en-US
+            extents:
+                spatial:
+                    bbox: [24.80, 60.10, 25.32, 60.30]
+                    crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+                temporal:
+                    begin: 2000-10-30T18:24:39Z
+                    end: 2023-10-30T08:57:29Z
+            providers:
+                - type: feature
+                  name: PostgreSQL
+                  data:
+                    host: ${DB_HOST}
+                    dbname: ${DB_NAME_MED_IREN}
+                    user: ${DB_USER}
+                    password: ${DB_PASSWORD_MED_IREN}
+                  id_field: id
+                  table: hsy_tree_spotted
                   geom_field: geom

@@ -26,14 +26,14 @@ A JSON file containing baseline performance metrics for each test suite and indi
 
 ```json
 {
-  "suite-name": {
-    "total": 45000,
-    "cesiumInit": 8000,
-    "individualTests": {
-      "test name": 3500,
-      "another test": 4200
-    }
-  }
+	"suite-name": {
+		"total": 45000,
+		"cesiumInit": 8000,
+		"individualTests": {
+			"test name": 3500,
+			"another test": 4200
+		}
+	}
 }
 ```
 
@@ -269,10 +269,10 @@ The performance reporter can be configured in `playwright.config.ts`:
 
 ```typescript
 [
-  "./tests/reporters/performance-reporter.ts",
-  {
-    baselineFile: "./tests/performance-baselines.json",
-  },
+	'./tests/reporters/performance-reporter.ts',
+	{
+		baselineFile: './tests/performance-baselines.json',
+	},
 ];
 ```
 

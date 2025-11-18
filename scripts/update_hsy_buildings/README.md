@@ -46,9 +46,9 @@ The function returns a JSON response indicating the number of features inserted 
 
 ```json
 {
-  "status": "success",
-  "features_inserted": 10,
-  "features_updated": 5
+	"status": "success",
+	"features_inserted": 10,
+	"features_updated": 5
 }
 ```
 
@@ -56,7 +56,7 @@ If no data is returned from the WFS service, an error response is returned:
 
 ```json
 {
-  "status": "error",
-  "message": "No data returned from WFS"
+	"status": "error",
+	"message": "No data returned from WFS"
 }
 ```

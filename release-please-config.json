@@ -1,8 +1,8 @@
 {
-  "plugins": ["node-workspace"],
-  "packages": {
-    ".": {
-      "release-type": "node"
-    }
-  }
+	"plugins": ["node-workspace"],
+	"packages": {
+		".": {
+			"release-type": "node"
+		}
+	}
 }
