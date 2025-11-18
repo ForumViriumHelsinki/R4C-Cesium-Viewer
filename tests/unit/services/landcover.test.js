@@ -5,6 +5,8 @@ import {
   removeLandcover,
 } from "@/services/landcover.js";
 import * as Cesium from "cesium";
+import { useGlobalStore } from "@/stores/globalStore.js";
+import { useBackgroundMapStore } from "@/stores/backgroundMapStore.js";
 
 // Mock Cesium module
 vi.mock("cesium", () => ({
@@ -24,38 +26,51 @@ vi.mock("cesium", () => ({
   }),
 }));
 
+// Create shared mock store instances
+const mockRemove = vi.fn();
+const mockAddImageryProvider = vi.fn((provider) => ({
+  imageryProvider: provider,
+}));
+const mockContains = vi.fn(() => true);
+
+const mockGlobalStore = {
+  cesiumViewer: {
+    imageryLayers: {
+      addImageryProvider: mockAddImageryProvider,
+      contains: mockContains,
+      remove: mockRemove,
+    },
+  },
+};
+
+const mockBackgroundStore = {
+  landcoverLayers: [],
+  hsyYear: "2023",
+};
+
+const mockURLStore = {
+  wmsProxy: "https://mock-wms-proxy.example.com/wms",
+};
+
 // Mock stores
 vi.mock("@/stores/globalStore.js", () => ({
-  useGlobalStore: vi.fn(() => ({
-    cesiumViewer: {
-      imageryLayers: {
-        addImageryProvider: vi.fn((provider) => ({
-          imageryProvider: provider,
-        })),
-        contains: vi.fn(() => true),
-        remove: vi.fn(),
-      },
-    },
-  })),
+  useGlobalStore: vi.fn(() => mockGlobalStore),
 }));
 
 vi.mock("@/stores/backgroundMapStore.js", () => ({
-  useBackgroundMapStore: vi.fn(() => ({
-    landcoverLayers: [],
-    hsyYear: "2023",
-  })),
+  useBackgroundMapStore: vi.fn(() => mockBackgroundStore),
 }));
 
 vi.mock("@/stores/urlStore.js", () => ({
-  useURLStore: vi.fn(() => ({
-    wmsProxy: "https://mock-wms-proxy.example.com/wms",
-  })),
+  useURLStore: vi.fn(() => mockURLStore),
 }));
 
 describe("Landcover Service", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+    // Reset mock arrays
+    mockBackgroundStore.landcoverLayers = [];
   });
 
   describe("createHSYImageryLayer", () => {
@@ -155,11 +170,6 @@ describe("Landcover Service", () => {
 
   describe("removeLandcover", () => {
     it("should remove all landcover layers from viewer", () => {
-      const { useGlobalStore } = require("@/stores/globalStore.js");
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
-
       const mockStore = useGlobalStore();
       const mockBackgroundStore = useBackgroundMapStore();
 
@@ -179,9 +189,6 @@ describe("Landcover Service", () => {
     });
 
     it("should handle empty landcover layers array gracefully", () => {
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
       const mockBackgroundStore = useBackgroundMapStore();
 
       mockBackgroundStore.landcoverLayers = [];

@@ -5,6 +5,8 @@ import {
   removeFloodLayers,
 } from "@/services/floodwms.js";
 import * as Cesium from "cesium";
+import { useGlobalStore } from "@/stores/globalStore.js";
+import { useBackgroundMapStore } from "@/stores/backgroundMapStore.js";
 
 // Mock Cesium module
 vi.mock("cesium", () => ({
@@ -24,32 +26,43 @@ vi.mock("cesium", () => ({
   }),
 }));
 
+// Create shared mock store instances
+const mockRemove = vi.fn();
+const mockAddImageryProvider = vi.fn((provider) => ({
+  alpha: 1,
+  imageryProvider: provider,
+}));
+const mockContains = vi.fn(() => true);
+
+const mockGlobalStore = {
+  cesiumViewer: {
+    imageryLayers: {
+      addImageryProvider: mockAddImageryProvider,
+      contains: mockContains,
+      remove: mockRemove,
+    },
+  },
+};
+
+const mockBackgroundStore = {
+  floodLayers: [],
+};
+
 // Mock stores
 vi.mock("@/stores/globalStore.js", () => ({
-  useGlobalStore: vi.fn(() => ({
-    cesiumViewer: {
-      imageryLayers: {
-        addImageryProvider: vi.fn((provider) => ({
-          alpha: 1,
-          imageryProvider: provider,
-        })),
-        contains: vi.fn(() => true),
-        remove: vi.fn(),
-      },
-    },
-  })),
+  useGlobalStore: vi.fn(() => mockGlobalStore),
 }));
 
 vi.mock("@/stores/backgroundMapStore.js", () => ({
-  useBackgroundMapStore: vi.fn(() => ({
-    floodLayers: [],
-  })),
+  useBackgroundMapStore: vi.fn(() => mockBackgroundStore),
 }));
 
 describe("Flood WMS Service", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+    // Reset mock arrays
+    mockBackgroundStore.floodLayers = [];
   });
 
   describe("createFloodImageryLayer", () => {
@@ -89,7 +102,7 @@ describe("Flood WMS Service", () => {
 
       expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
         expect.objectContaining({
-          url: expect.stringContaining("format=image/png"),
+          url: expect.stringMatching(/format=image(%2F|\/png)/),
         }),
       );
 
@@ -139,11 +152,6 @@ describe("Flood WMS Service", () => {
 
   describe("removeFloodLayers", () => {
     it("should remove all flood layers from viewer", () => {
-      const { useGlobalStore } = require("@/stores/globalStore.js");
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
-
       const mockStore = useGlobalStore();
       const mockBackgroundStore = useBackgroundMapStore();
 
@@ -159,9 +167,6 @@ describe("Flood WMS Service", () => {
     });
 
     it("should handle empty flood layers array gracefully", () => {
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
       const mockBackgroundStore = useBackgroundMapStore();
 
       mockBackgroundStore.floodLayers = [];

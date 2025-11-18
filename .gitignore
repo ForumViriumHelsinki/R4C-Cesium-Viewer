@@ -49,3 +49,6 @@ k8s/migration-secret.yaml
 src/auto-imports.d.ts
 src/components.d.ts
 .eslintrc-auto-import.json
+
+# Knip analysis reports
+knip-report.json
