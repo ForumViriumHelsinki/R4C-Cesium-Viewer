@@ -26,32 +26,43 @@ vi.mock("cesium", () => ({
   }),
 }));
 
+// Create shared mock store instances
+const mockRemove = vi.fn();
+const mockAddImageryProvider = vi.fn((provider) => ({
+  alpha: 1,
+  imageryProvider: provider,
+}));
+const mockContains = vi.fn(() => true);
+
+const mockGlobalStore = {
+  cesiumViewer: {
+    imageryLayers: {
+      addImageryProvider: mockAddImageryProvider,
+      contains: mockContains,
+      remove: mockRemove,
+    },
+  },
+};
+
+const mockBackgroundStore = {
+  floodLayers: [],
+};
+
 // Mock stores
 vi.mock("@/stores/globalStore.js", () => ({
-  useGlobalStore: vi.fn(() => ({
-    cesiumViewer: {
-      imageryLayers: {
-        addImageryProvider: vi.fn((provider) => ({
-          alpha: 1,
-          imageryProvider: provider,
-        })),
-        contains: vi.fn(() => true),
-        remove: vi.fn(),
-      },
-    },
-  })),
+  useGlobalStore: vi.fn(() => mockGlobalStore),
 }));
 
 vi.mock("@/stores/backgroundMapStore.js", () => ({
-  useBackgroundMapStore: vi.fn(() => ({
-    floodLayers: [],
-  })),
+  useBackgroundMapStore: vi.fn(() => mockBackgroundStore),
 }));
 
 describe("Flood WMS Service", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+    // Reset mock arrays
+    mockBackgroundStore.floodLayers = [];
   });
 
   describe("createFloodImageryLayer", () => {
