@@ -45,6 +45,8 @@ import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 import { useGraphicsStore } from '../stores/graphicsStore.js';
 
+import cacheWarmer from '../services/cacheWarmer.js';
+
 export default {
 	components: {
 		DisclaimerPopup,
@@ -342,6 +344,22 @@ export default {
 			await initViewer();
 			socioEconomicsStore.loadPaavo();
 			heatExposureStore.loadHeatExposure();
+
+			// Start cache warming in background (non-blocking)
+			// Uses requestIdleCallback to run during browser idle time
+			if (typeof requestIdleCallback !== 'undefined') {
+				requestIdleCallback(
+					() => {
+						cacheWarmer.warmCriticalData();
+					},
+					{ timeout: 2000 }
+				); // 2 second timeout
+			} else {
+				// Fallback for browsers without requestIdleCallback
+				setTimeout(() => {
+					cacheWarmer.warmCriticalData();
+				}, 1000);
+			}
 		});
 
 		return {

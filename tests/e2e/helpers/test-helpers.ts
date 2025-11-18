@@ -1114,7 +1114,7 @@ export class AccessibilityTestHelpers {
 			];
 
 			let overlayFound = false;
-			let visibleOverlays: string[] = [];
+			const visibleOverlays: string[] = [];
 
 			for (const selector of overlaySelectors) {
 				// Filter for visible elements only - this prevents counting DOM elements
