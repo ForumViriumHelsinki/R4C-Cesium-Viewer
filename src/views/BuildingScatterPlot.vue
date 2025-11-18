@@ -1,34 +1,25 @@
 <template>
-  <v-container
-v-if="showComponents"
-fluid
->
-    <v-row
-no-gutters
-class="pa-0 ma-0"
->
-<v-col
-class="pa-0 ma-0"
-style="position: absolute; top: 85px; right: 10px; width: 160px; z-index: 20;"
->
-  <CategoricalSelect />
-</v-col>
-<v-col
-class="pa-0 ma-0"
-style="position: absolute; bottom: -23px; right: 10px; width: 124px; z-index: 20;"
->
-  <NumericalSelect />
-</v-col>
-    </v-row>
-    <v-row
-no-gutters
-class="pa-0 ma-0"
->
-      <v-col class="pa-0 ma-0">
-        <HSYScatterplot />
-      </v-col>
-    </v-row>
-  </v-container>
+	<v-container v-if="showComponents" fluid>
+		<v-row no-gutters class="pa-0 ma-0">
+			<v-col
+				class="pa-0 ma-0"
+				style="position: absolute; top: 85px; right: 10px; width: 160px; z-index: 20"
+			>
+				<CategoricalSelect />
+			</v-col>
+			<v-col
+				class="pa-0 ma-0"
+				style="position: absolute; bottom: -23px; right: 10px; width: 124px; z-index: 20"
+			>
+				<NumericalSelect />
+			</v-col>
+		</v-row>
+		<v-row no-gutters class="pa-0 ma-0">
+			<v-col class="pa-0 ma-0">
+				<HSYScatterplot />
+			</v-col>
+		</v-row>
+	</v-container>
 </template>
 
 <script>
@@ -44,7 +35,7 @@ export default {
 		HSYScatterplot,
 	},
 	setup() {
-		const showComponents = ref( true );
+		const showComponents = ref(true);
 
 		return {
 			showComponents,
@@ -56,10 +47,10 @@ export default {
 <style scoped>
 /* Ensuring the scatter plot has fixed positioning as required */
 #scatterPlotContainerHSY {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  background-color: white;
-  z-index: 10; /* Ensure it is on top */
+	position: relative;
+	width: 100%;
+	height: 300px;
+	background-color: white;
+	z-index: 10; /* Ensure it is on top */
 }
 </style>

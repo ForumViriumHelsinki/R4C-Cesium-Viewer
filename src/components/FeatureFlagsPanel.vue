@@ -1,9 +1,5 @@
 <template>
-	<v-dialog
-v-model="dialog"
-max-width="800"
-scrollable
->
+	<v-dialog v-model="dialog" max-width="800" scrollable>
 		<template #activator="{ props }">
 			<v-btn
 				v-bind="props"
@@ -18,18 +14,10 @@ scrollable
 
 		<v-card>
 			<v-card-title class="d-flex align-center">
-				<v-icon
-left
-class="mr-2"
->
-mdi-flag-variant
-</v-icon>
+				<v-icon left class="mr-2"> mdi-flag-variant </v-icon>
 				Feature Flags
 				<v-spacer />
-				<v-chip
-size="small"
-color="primary"
->
+				<v-chip size="small" color="primary">
 					{{ featureFlagStore.enabledCount }} / {{ totalFlags }} enabled
 				</v-chip>
 			</v-card-title>
@@ -42,25 +30,14 @@ color="primary"
 
 			<v-card-text style="max-height: 500px">
 				<v-expansion-panels variant="accordion">
-					<v-expansion-panel
-						v-for="category in categories"
-						:key="category"
-						:value="category"
-					>
+					<v-expansion-panel v-for="category in categories" :key="category" :value="category">
 						<v-expansion-panel-title>
 							<div class="d-flex align-center">
-								<v-icon
-:icon="getCategoryIcon(category)"
-class="mr-2"
-/>
+								<v-icon :icon="getCategoryIcon(category)" class="mr-2" />
 								<span class="text-subtitle-1 font-weight-medium">
 									{{ getCategoryLabel(category) }}
 								</span>
-								<v-chip
-									size="x-small"
-									color="grey"
-									class="ml-2"
-								>
+								<v-chip size="x-small" color="grey" class="ml-2">
 									{{ getCategoryEnabledCount(category) }} / {{ getCategoryTotalCount(category) }}
 								</v-chip>
 							</div>
@@ -85,12 +62,7 @@ class="mr-2"
 
 									<v-list-item-title>
 										{{ flag.label }}
-										<v-chip
-											v-if="flag.experimental"
-											size="x-small"
-											color="warning"
-											class="ml-2"
-										>
+										<v-chip v-if="flag.experimental" size="x-small" color="warning" class="ml-2">
 											Experimental
 										</v-chip>
 										<v-chip
@@ -124,9 +96,7 @@ class="mr-2"
 											title="Reset to default"
 											@click="resetFlag(flag.name)"
 										>
-											<v-icon size="small">
-mdi-restore
-</v-icon>
+											<v-icon size="small"> mdi-restore </v-icon>
 										</v-btn>
 									</template>
 								</v-list-item>
@@ -139,78 +109,39 @@ mdi-restore
 			<v-divider />
 
 			<v-card-actions>
-				<v-btn
-					color="warning"
-					variant="text"
-					prepend-icon="mdi-restore"
-					@click="resetAllFlags"
-				>
+				<v-btn color="warning" variant="text" prepend-icon="mdi-restore" @click="resetAllFlags">
 					Reset All to Defaults
 				</v-btn>
 
 				<v-spacer />
 
-				<v-btn
-					variant="text"
-					prepend-icon="mdi-download"
-					@click="exportConfig"
-				>
-					Export
-				</v-btn>
+				<v-btn variant="text" prepend-icon="mdi-download" @click="exportConfig"> Export </v-btn>
 
-				<v-btn
-					variant="text"
-					prepend-icon="mdi-upload"
-					@click="importConfig"
-				>
-					Import
-				</v-btn>
+				<v-btn variant="text" prepend-icon="mdi-upload" @click="importConfig"> Import </v-btn>
 
-				<v-btn
-					color="primary"
-					variant="elevated"
-					@click="dialog = false"
-				>
-					Close
-				</v-btn>
+				<v-btn color="primary" variant="elevated" @click="dialog = false"> Close </v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
 
 	<!-- Reset confirmation dialog -->
-	<v-dialog
-v-model="resetConfirmDialog"
-max-width="500"
->
+	<v-dialog v-model="resetConfirmDialog" max-width="500">
 		<v-card>
 			<v-card-title>Reset All Feature Flags</v-card-title>
 			<v-card-text>
-				Are you sure you want to reset all feature flags to their default values? This action cannot be undone.
+				Are you sure you want to reset all feature flags to their default values? This action cannot
+				be undone.
 			</v-card-text>
 			<v-card-actions>
 				<v-spacer />
-				<v-btn
-variant="text"
-@click="resetConfirmDialog = false"
->
-Cancel
-</v-btn>
-				<v-btn
-color="warning"
-variant="elevated"
-@click="confirmResetAll"
->
-Reset All
-</v-btn>
+				<v-btn variant="text" @click="resetConfirmDialog = false"> Cancel </v-btn>
+				<v-btn color="warning" variant="elevated" @click="confirmResetAll"> Reset All </v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
 
 	<!-- Import dialog -->
-	<v-dialog
-v-model="importDialog"
-max-width="500"
->
+	<v-dialog v-model="importDialog" max-width="500">
 		<v-card>
 			<v-card-title>Import Configuration</v-card-title>
 			<v-card-text>
@@ -218,50 +149,34 @@ max-width="500"
 					v-model="importJson"
 					label="Paste JSON configuration"
 					rows="10"
-					placeholder="{&quot;ndvi&quot;: true, &quot;hdrRendering&quot;: false, ...}"
+					placeholder='{"ndvi": true, "hdrRendering": false, ...}'
 				/>
 			</v-card-text>
 			<v-card-actions>
 				<v-spacer />
-				<v-btn
-variant="text"
-@click="importDialog = false"
->
-Cancel
-</v-btn>
-				<v-btn
-color="primary"
-variant="elevated"
-@click="doImport"
->
-Import
-</v-btn>
+				<v-btn variant="text" @click="importDialog = false"> Cancel </v-btn>
+				<v-btn color="primary" variant="elevated" @click="doImport"> Import </v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
 
 	<!-- Snackbar for notifications -->
-	<v-snackbar
-		v-model="snackbar"
-		:color="snackbarColor"
-		:timeout="4000"
-		location="bottom"
-	>
+	<v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="4000" location="bottom">
 		{{ snackbarMessage }}
 		<template #actions>
-			<v-btn
-				variant="text"
-				@click="snackbar = false"
-			>
-				Close
-			</v-btn>
+			<v-btn variant="text" @click="snackbar = false"> Close </v-btn>
 		</template>
 	</v-snackbar>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useFeatureFlagStore, type FeatureFlagCategory, type FeatureFlagWithName, type FeatureFlagName } from '@/stores/featureFlagStore';
+import {
+	useFeatureFlagStore,
+	type FeatureFlagCategory,
+	type FeatureFlagWithName,
+	type FeatureFlagName,
+} from '@/stores/featureFlagStore';
 import { useGraphicsStore } from '@/stores/graphicsStore';
 
 const featureFlagStore = useFeatureFlagStore();
@@ -281,20 +196,20 @@ const totalFlags = computed(() => Object.keys(featureFlagStore.flags).length);
 
 const categoryLabels: Record<FeatureFlagCategory, string> = {
 	'data-layers': 'Data Layers',
-	'graphics': 'Graphics & Performance',
-	'analysis': 'Analysis Tools',
-	'ui': 'UI & UX',
-	'integration': 'Integrations',
-	'developer': 'Developer Tools',
+	graphics: 'Graphics & Performance',
+	analysis: 'Analysis Tools',
+	ui: 'UI & UX',
+	integration: 'Integrations',
+	developer: 'Developer Tools',
 };
 
 const categoryIcons: Record<FeatureFlagCategory, string> = {
 	'data-layers': 'mdi-layers',
-	'graphics': 'mdi-chart-line',
-	'analysis': 'mdi-chart-box',
-	'ui': 'mdi-palette',
-	'integration': 'mdi-puzzle',
-	'developer': 'mdi-code-braces',
+	graphics: 'mdi-chart-line',
+	analysis: 'mdi-chart-box',
+	ui: 'mdi-palette',
+	integration: 'mdi-puzzle',
+	developer: 'mdi-code-braces',
 };
 
 function getCategoryLabel(category: FeatureFlagCategory): string {
@@ -306,9 +221,9 @@ function getCategoryIcon(category: FeatureFlagCategory): string {
 }
 
 function getCategoryEnabledCount(category: FeatureFlagCategory): number {
-	return featureFlagStore.flagsByCategory(category).filter(flag =>
-		featureFlagStore.isEnabled(flag.name)
-	).length;
+	return featureFlagStore
+		.flagsByCategory(category)
+		.filter((flag) => featureFlagStore.isEnabled(flag.name)).length;
 }
 
 function getCategoryTotalCount(category: FeatureFlagCategory): number {

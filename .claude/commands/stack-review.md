@@ -13,12 +13,14 @@ Perform a comprehensive review of your stack configuration, checking all major c
 ## What It Reviews
 
 ### 1. **Dependencies & Versions**
+
 - Check `package.json` for outdated or misconfigured packages
 - Verify latest stable versions of major frameworks
 - Identify security vulnerabilities
 - Review dependency tree for redundancy
 
 ### 2. **Build Configuration (Vite/Webpack)**
+
 - Build target and optimization settings
 - Vendor chunk splitting strategy
 - Source map configuration
@@ -27,6 +29,7 @@ Perform a comprehensive review of your stack configuration, checking all major c
 - Development vs production configs
 
 ### 3. **Vue/React Framework Setup**
+
 - Component auto-import configuration
 - API auto-import setup (unplugin-auto-import)
 - Tree-shaking optimization
@@ -34,6 +37,7 @@ Perform a comprehensive review of your stack configuration, checking all major c
 - State management configuration
 
 ### 4. **UI Framework (Vuetify/Material-UI/etc)**
+
 - Tree-shaking configuration
 - Component import strategy
 - Bundle size impact
@@ -41,6 +45,7 @@ Perform a comprehensive review of your stack configuration, checking all major c
 - Performance optimization
 
 ### 5. **Test Configuration**
+
 - Test framework setup (Playwright, Vitest, Jest)
 - Test isolation and parallelization
 - Mock strategy - **KEY CHECK**: Are tests overmocked?
@@ -49,18 +54,21 @@ Perform a comprehensive review of your stack configuration, checking all major c
 - CI/CD integration
 
 ### 6. **Code Quality Tools**
+
 - ESLint configuration and rule strictness
 - TypeScript type checking settings
 - Prettier/formatting setup
 - Pre-commit hooks
 
 ### 7. **Performance Monitoring**
+
 - Error tracking (Sentry, etc.) configuration
 - Bundle analysis tools
 - Performance metrics collection
 - Source map upload settings
 
 ### 8. **Backend/Database (if applicable)**
+
 - Connection pooling
 - Query optimization
 - Index strategy
@@ -96,6 +104,7 @@ Perform a comprehensive review of your stack configuration, checking all major c
 ## Review Process
 
 ### Phase 1: Quick Scan (5-10 min)
+
 1. Read `package.json` - check versions and scripts
 2. Read main config files:
    - `vite.config.js` or `webpack.config.js`
@@ -105,6 +114,7 @@ Perform a comprehensive review of your stack configuration, checking all major c
 3. Check main entry point (`main.js`, `main.ts`, `index.tsx`)
 
 ### Phase 2: Deep Dive (10-15 min)
+
 1. **Sample test files** - Check 2-3 examples:
    - E2E test: Look for excessive mocking
    - Unit test: Check if appropriately isolated
@@ -121,7 +131,9 @@ Perform a comprehensive review of your stack configuration, checking all major c
    - Angular: Optimization budget, lazy modules
 
 ### Phase 3: Document Findings (5-10 min)
+
 Create structured report with:
+
 - ✅ Excellent practices found
 - ⚠️ Issues discovered with priority (High/Med/Low)
 - 🚀 Quick wins (< 1 hour, high impact)
@@ -132,6 +144,7 @@ Create structured report with:
 
 ```markdown
 ## ✅ Excellent Practices Found
+
 - Test architecture: E2E tests use real interactions (not overmocked)
 - CesiumJS properly optimized with request render mode
 - Database has comprehensive spatial indexes
@@ -139,26 +152,30 @@ Create structured report with:
 ## ⚠️ Issues & Recommendations
 
 ### High Priority
+
 1. **Vuetify bundle not optimized** (Impact: ~150KB savings)
    - Current: Importing all components
    - Fix: Enable tree-shaking in vite.config.js
 
 ### Medium Priority
+
 2. **ESLint too permissive** (Impact: Code quality)
    - Current: no-unused-vars disabled
    - Fix: Enable as warnings
 
 ## 🚀 Quick Wins (< 1 hour)
+
 1. Fix Vuetify tree-shaking (10 min) - 150KB savings
 2. Add vendor chunk splitting (5 min) - Better caching
 3. Enable ESLint warnings (5 min) - Catch dead code
 
 ## 📊 Summary Scores
-| Category | Score | Notes |
-|----------|-------|-------|
-| Test Quality | 9/10 | Excellent, minimal overmocking |
-| Bundle Optimization | 7/10 | Good but missing vendor chunks |
-| Code Quality | 6/10 | ESLint too permissive |
+
+| Category            | Score | Notes                          |
+| ------------------- | ----- | ------------------------------ |
+| Test Quality        | 9/10  | Excellent, minimal overmocking |
+| Bundle Optimization | 7/10  | Good but missing vendor chunks |
+| Code Quality        | 6/10  | ESLint too permissive          |
 
 **Overall: 7.5/10** - Solid with specific opportunities
 ```
@@ -166,47 +183,59 @@ Create structured report with:
 ## Common Issues & Solutions
 
 ### Issue: Tests Run Too Slow
+
 **Check:**
+
 - Vitest using `singleFork: true` instead of parallel
 - Playwright running all browsers when not needed
 - No test sharding for large suites
 
 **Fix:**
+
 - Enable parallel execution where safe
 - Use tags to run subsets of tests
 - Configure appropriate worker count
 
 ### Issue: Large Bundle Size
+
 **Check:**
+
 - No vendor chunk splitting
 - Importing entire UI libraries
 - Not using tree-shaking
 - Including dev dependencies in production
 
 **Fix:**
+
 - Configure `manualChunks` in rollup options
 - Use auto-import plugins
 - Enable tree-shaking in configs
 - Check bundle analyzer output
 
 ### Issue: Tests Overmocked
+
 **Check:**
+
 - E2E tests mocking DOM/browser APIs
 - Unit tests with real database connections
 - Integration tests mocking everything
 
 **Fix:**
+
 - E2E: Use real DOM, real user interactions
 - Unit: Mock external dependencies only
 - Integration: Use test doubles, not full mocks
 
 ### Issue: Outdated Dependencies
+
 **Check:**
+
 - Run `npm outdated`
 - Check for major version updates
 - Look for deprecated packages
 
 **Fix:**
+
 - Update to latest stable versions
 - Test after each major update
 - Read migration guides
@@ -236,6 +265,7 @@ Create structured report with:
 ## Files to Review
 
 **Always check:**
+
 - `package.json` - Dependencies and scripts
 - `vite.config.js` or `webpack.config.js` - Build config
 - `vitest.config.js` or `jest.config.js` - Test config
@@ -245,11 +275,13 @@ Create structured report with:
 - `main.js/main.ts` - App entry point
 
 **Framework-specific:**
+
 - Vue: Check Vuetify/Quasar config, Pinia setup
 - React: Check MUI/Ant Design config, Redux/Zustand setup
 - Angular: Check angular.json, module imports
 
 **Sample tests:**
+
 - E2E test example (check for overmocking)
 - Unit test example (check isolation)
 - Integration test example (check balance)
@@ -257,11 +289,13 @@ Create structured report with:
 ## Time Estimate
 
 **Quick Review**: 20-30 minutes
+
 - Scan configs
 - Identify obvious issues
 - List quick wins
 
 **Comprehensive Review**: 1-2 hours
+
 - Full config analysis
 - Test sampling and analysis
 - Build output review

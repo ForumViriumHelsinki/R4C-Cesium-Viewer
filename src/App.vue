@@ -1,15 +1,8 @@
 <template>
 	<v-app>
 		<!-- Top Navigation Bar -->
-		<v-app-bar
-app
-elevation="2"
-class="top-nav"
->
-			<v-container
-fluid
-class="d-flex align-center py-0"
->
+		<v-app-bar app elevation="2" class="top-nav">
+			<v-container fluid class="d-flex align-center py-0">
 				<div class="navigation-buttons">
 					<v-btn
 						v-if="currentLevel === 'building'"
@@ -21,12 +14,7 @@ class="d-flex align-center py-0"
 						<v-icon>mdi-arrow-left</v-icon>
 					</v-btn>
 
-					<v-btn
-						icon
-						size="small"
-						aria-label="Sign out"
-						@click="signOut"
-					>
+					<v-btn icon size="small" aria-label="Sign out" @click="signOut">
 						<v-icon>mdi-logout</v-icon>
 					</v-btn>
 
@@ -79,10 +67,7 @@ class="d-flex align-center py-0"
 			/>
 
 			<!-- Data Source Status - Bottom Right Corner -->
-			<div
-				class="status-indicator-container"
-				:class="{ 'sidebar-open': sidebarVisible }"
-			>
+			<div class="status-indicator-container" :class="{ 'sidebar-open': sidebarVisible }">
 				<DataSourceStatusCompact
 					@source-retry="handleSourceRetry"
 					@cache-cleared="handleCacheCleared"
@@ -91,9 +76,7 @@ class="d-flex align-center py-0"
 
 			<!-- Minimal disclaimer -->
 			<div class="minimal-disclaimer">
-				<span class="disclaimer-text">
-					Data: HSY • Statistics Finland
-				</span>
+				<span class="disclaimer-text"> Data: HSY • Statistics Finland </span>
 			</div>
 		</v-main>
 	</v-app>
@@ -133,7 +116,7 @@ const signOut = () => {
 	window.location.href = '/oauth2/sign_out';
 };
 
-const smartReset = () => {
+const _smartReset = () => {
 	// Reset application state without page reload
 	globalStore.setLevel('start');
 	globalStore.setPostalCode(null);
@@ -159,7 +142,9 @@ const returnToPostalCode = () => {
 	const treeService = new Tree();
 	hideTooltip();
 	featurepicker.loadPostalCode();
-	toggleStore.showTrees && treeService.loadTrees();
+	if (toggleStore.showTrees) {
+		treeService.loadTrees();
+	}
 };
 
 const hideTooltip = () => {
@@ -195,14 +180,14 @@ const handleCacheCleared = (sourceId) => {
 	console.log(`Cache cleared for: ${sourceId}`);
 	if (sourceId === 'all') {
 		// Refresh cache status for all layers
-		Object.keys(loadingStore.cacheStatus).forEach(layer => {
+		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
 			loadingStore.checkLayerCache(layer);
 		});
 	}
 };
 
 // Handle data preloading requests
-const handleDataPreload = (sourceId) => {
+const _handleDataPreload = (sourceId) => {
 	console.log(`Preloading requested for: ${sourceId}`);
 	// Could trigger specific preloading for the source
 };
@@ -218,10 +203,9 @@ onMounted(async () => {
 		console.log('Background preloader initialized');
 
 		// Check cache status for all layers on app start
-		Object.keys(loadingStore.cacheStatus).forEach(layer => {
+		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
 			loadingStore.checkLayerCache(layer);
 		});
-
 	} catch (error) {
 		console.warn('Failed to initialize caching services:', error);
 	}

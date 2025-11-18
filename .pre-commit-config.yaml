@@ -9,7 +9,7 @@ repos:
       - id: check-json
         exclude: tsconfig\.json$
       - id: check-added-large-files
-        args: ["--maxkb=1000"]
+        args: ['--maxkb=1000']
       - id: check-merge-conflict
       - id: detect-private-key
 
@@ -24,19 +24,20 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        types_or: [javascript, jsx, ts, tsx, json, yaml, markdown, css, scss]
+        types_or: [javascript, jsx, ts, tsx, vue, json, yaml, markdown, css, scss]
         exclude: ^(helm/templates/|skaffold/|k8s/).*\.ya?ml$
 
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v9.17.0
     hooks:
       - id: eslint
-        files: \.jsx?$
+        files: \.(jsx?|vue)$
         types: [file]
         exclude: ^tests/.*\.spec\.ts$
         additional_dependencies:
           - eslint
           - eslint-config-prettier
+          - eslint-plugin-vue
 
   - repo: https://github.com/gruntwork-io/pre-commit
     rev: v0.1.23

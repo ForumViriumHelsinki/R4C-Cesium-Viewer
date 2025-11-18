@@ -170,9 +170,9 @@ npm install
 ```json
 // package.json - added new script only
 {
-  "scripts": {
-    "test:new": "vitest run tests/new" // New script
-  }
+	"scripts": {
+		"test:new": "vitest run tests/new" // New script
+	}
 }
 ```
 

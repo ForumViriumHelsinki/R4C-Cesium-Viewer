@@ -194,8 +194,8 @@ BEGIN
         mvrl.view_name = rr.mv_name
         AND mvrl.refresh_started_at = (
             SELECT MAX(refresh_started_at)
-            FROM public.materialized_view_refresh_log
-            WHERE view_name = rr.mv_name
+            FROM public.materialized_view_refresh_log mvrl2
+            WHERE mvrl2.view_name = rr.mv_name
         )
     );
 END;

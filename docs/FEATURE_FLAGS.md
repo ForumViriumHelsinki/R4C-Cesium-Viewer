@@ -150,25 +150,23 @@ VITE_FEATURE_HEALTH_CHECKS=false
 
 ```vue
 <template>
-  <div v-if="featureFlagStore.isEnabled('coolingOptimizer')">
-    <CoolingCenterOptimiser />
-  </div>
+	<div v-if="featureFlagStore.isEnabled('coolingOptimizer')">
+		<CoolingCenterOptimiser />
+	</div>
 
-  <v-btn v-if="featureFlagStore.isEnabled('ndvi')" @click="toggleNDVI">
-    Toggle NDVI
-  </v-btn>
+	<v-btn v-if="featureFlagStore.isEnabled('ndvi')" @click="toggleNDVI"> Toggle NDVI </v-btn>
 </template>
 
 <script setup>
-import { useFeatureFlagStore } from "@/stores/featureFlagStore";
+import { useFeatureFlagStore } from '@/stores/featureFlagStore';
 
 const featureFlagStore = useFeatureFlagStore();
 
 // Check if a feature is enabled
-const isNdviEnabled = featureFlagStore.isEnabled("ndvi");
+const isNdviEnabled = featureFlagStore.isEnabled('ndvi');
 
 // Get feature metadata
-const ndviMetadata = featureFlagStore.getFlagMetadata("ndvi");
+const ndviMetadata = featureFlagStore.getFlagMetadata('ndvi');
 console.log(ndviMetadata.description);
 </script>
 ```
@@ -176,15 +174,15 @@ console.log(ndviMetadata.description);
 ### In JavaScript/TypeScript
 
 ```javascript
-import { useFeatureFlagStore } from "@/stores/featureFlagStore";
+import { useFeatureFlagStore } from '@/stores/featureFlagStore';
 
 const featureFlagStore = useFeatureFlagStore();
 
-if (featureFlagStore.isEnabled("performanceMonitoring")) {
-  // Start performance monitoring
-  console.time("operation");
-  // ... do work ...
-  console.timeEnd("operation");
+if (featureFlagStore.isEnabled('performanceMonitoring')) {
+	// Start performance monitoring
+	console.time('operation');
+	// ... do work ...
+	console.timeEnd('operation');
 }
 ```
 
@@ -192,16 +190,16 @@ if (featureFlagStore.isEnabled("performanceMonitoring")) {
 
 ```javascript
 // Set a flag
-featureFlagStore.setFlag("ndvi", true);
+featureFlagStore.setFlag('ndvi', true);
 
 // Reset a flag to default
-featureFlagStore.resetFlag("ndvi");
+featureFlagStore.resetFlag('ndvi');
 
 // Reset all flags
 featureFlagStore.resetAllFlags();
 
 // Check if a flag has been overridden
-const hasOverride = featureFlagStore.hasOverride("ndvi");
+const hasOverride = featureFlagStore.hasOverride('ndvi');
 
 // Export configuration
 const config = featureFlagStore.exportConfig();
@@ -215,17 +213,14 @@ featureFlagStore.importConfig(config);
 For features that require specific hardware support (like HDR rendering):
 
 ```javascript
-import { useFeatureFlagStore } from "@/stores/featureFlagStore";
-import { useGraphicsStore } from "@/stores/graphicsStore";
+import { useFeatureFlagStore } from '@/stores/featureFlagStore';
+import { useGraphicsStore } from '@/stores/graphicsStore';
 
 const featureFlagStore = useFeatureFlagStore();
 const graphicsStore = useGraphicsStore();
 
 // Check if HDR is supported by hardware
-featureFlagStore.checkHardwareSupport(
-  "hdrRendering",
-  graphicsStore.hdrSupported,
-);
+featureFlagStore.checkHardwareSupport('hdrRendering', graphicsStore.hdrSupported);
 ```
 
 ## UI Panel
@@ -309,18 +304,18 @@ When deprecating a feature flag:
 Always test features in both enabled and disabled states:
 
 ```javascript
-describe("NDVI Feature", () => {
-  it("should show NDVI controls when flag is enabled", () => {
-    const featureFlagStore = useFeatureFlagStore();
-    featureFlagStore.setFlag("ndvi", true);
-    // ... test with flag enabled
-  });
+describe('NDVI Feature', () => {
+	it('should show NDVI controls when flag is enabled', () => {
+		const featureFlagStore = useFeatureFlagStore();
+		featureFlagStore.setFlag('ndvi', true);
+		// ... test with flag enabled
+	});
 
-  it("should hide NDVI controls when flag is disabled", () => {
-    const featureFlagStore = useFeatureFlagStore();
-    featureFlagStore.setFlag("ndvi", false);
-    // ... test with flag disabled
-  });
+	it('should hide NDVI controls when flag is disabled', () => {
+		const featureFlagStore = useFeatureFlagStore();
+		featureFlagStore.setFlag('ndvi', false);
+		// ... test with flag disabled
+	});
 });
 ```
 
@@ -341,13 +336,13 @@ If you have existing toggle logic (e.g., in `toggleStore`), you can gradually mi
 
 ```vue
 <template>
-  <div v-if="toggleStore.ndvi">
-    <NDVILayer />
-  </div>
+	<div v-if="toggleStore.ndvi">
+		<NDVILayer />
+	</div>
 </template>
 
 <script setup>
-import { useToggleStore } from "@/stores/toggleStore";
+import { useToggleStore } from '@/stores/toggleStore';
 const toggleStore = useToggleStore();
 </script>
 ```
@@ -356,14 +351,14 @@ const toggleStore = useToggleStore();
 
 ```vue
 <template>
-  <div v-if="featureFlagStore.isEnabled('ndvi') && toggleStore.ndvi">
-    <NDVILayer />
-  </div>
+	<div v-if="featureFlagStore.isEnabled('ndvi') && toggleStore.ndvi">
+		<NDVILayer />
+	</div>
 </template>
 
 <script setup>
-import { useFeatureFlagStore } from "@/stores/featureFlagStore";
-import { useToggleStore } from "@/stores/toggleStore";
+import { useFeatureFlagStore } from '@/stores/featureFlagStore';
+import { useToggleStore } from '@/stores/toggleStore';
 
 const featureFlagStore = useFeatureFlagStore();
 const toggleStore = useToggleStore();

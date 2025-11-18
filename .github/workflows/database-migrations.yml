@@ -3,13 +3,13 @@ name: Database Migrations
 on:
   pull_request:
     paths:
-      - "db/migrations/**"
-      - "db/.dbmate.env"
-      - ".github/workflows/database-migrations.yml"
+      - 'db/migrations/**'
+      - 'db/.dbmate.env'
+      - '.github/workflows/database-migrations.yml'
   push:
     branches: [main]
     paths:
-      - "db/migrations/**"
+      - 'db/migrations/**'
 
 jobs:
   test-migrations:

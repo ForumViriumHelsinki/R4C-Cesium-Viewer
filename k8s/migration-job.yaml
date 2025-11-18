@@ -47,7 +47,7 @@ spec:
               key: password
       containers:
       - name: dbmate
-        image: amacneil/dbmate:v2.13.0
+        image: amacneil/dbmate:2.28.0
         command:
         - sh
         - -c
@@ -66,87 +66,87 @@ spec:
           # Transfer ownership of all existing tables to migration user
           echo "🔑 Transferring table ownership to migration user..."
           psql "$DATABASE_URL_ADMIN" <<'EOSQL' || echo "⚠️  Table ownership transfer failed or no tables exist yet"
-DO $$
-DECLARE
-    migration_user TEXT := 'regions4climate_user';
-    tbl RECORD;
-    owner_role TEXT;
-BEGIN
-    -- First, grant admin user membership in all table owner roles (for Cloud SQL IAM users)
-    FOR owner_role IN
-        SELECT DISTINCT tableowner
-        FROM pg_tables
-        WHERE schemaname = 'public'
-        AND tableowner != migration_user
-        AND tableowner != CURRENT_USER
-    LOOP
-        BEGIN
-            EXECUTE format('GRANT %I TO CURRENT_USER', owner_role);
-            RAISE NOTICE 'Granted role % to admin user for ownership transfer', owner_role;
-        EXCEPTION
-            WHEN OTHERS THEN
-                RAISE WARNING 'Could not grant role %: %', owner_role, SQLERRM;
-        END;
-    END LOOP;
+          DO $$
+          DECLARE
+              migration_user TEXT := 'regions4climate_user';
+              tbl RECORD;
+              owner_role TEXT;
+          BEGIN
+              -- First, grant admin user membership in all table owner roles (for Cloud SQL IAM users)
+              FOR owner_role IN
+                  SELECT DISTINCT tableowner
+                  FROM pg_tables
+                  WHERE schemaname = 'public'
+                  AND tableowner != migration_user
+                  AND tableowner != CURRENT_USER
+              LOOP
+                  BEGIN
+                      EXECUTE format('GRANT %I TO CURRENT_USER', owner_role);
+                      RAISE NOTICE 'Granted role % to admin user for ownership transfer', owner_role;
+                  EXCEPTION
+                      WHEN OTHERS THEN
+                          RAISE WARNING 'Could not grant role %: %', owner_role, SQLERRM;
+                  END;
+              END LOOP;
 
-    -- Transfer ownership of all tables
-    FOR tbl IN
-        SELECT schemaname, tablename, tableowner
-        FROM pg_tables
-        WHERE schemaname = 'public'
-        AND tableowner != migration_user
-    LOOP
-        BEGIN
-            EXECUTE format('ALTER TABLE %I.%I OWNER TO %I',
-                tbl.schemaname, tbl.tablename, migration_user);
-            RAISE NOTICE 'Transferred ownership of %.% from % to %',
-                tbl.schemaname, tbl.tablename, tbl.tableowner, migration_user;
-        EXCEPTION
-            WHEN OTHERS THEN
-                RAISE WARNING 'Could not transfer table %.%: %',
-                    tbl.schemaname, tbl.tablename, SQLERRM;
-        END;
-    END LOOP;
+              -- Transfer ownership of all tables
+              FOR tbl IN
+                  SELECT schemaname, tablename, tableowner
+                  FROM pg_tables
+                  WHERE schemaname = 'public'
+                  AND tableowner != migration_user
+              LOOP
+                  BEGIN
+                      EXECUTE format('ALTER TABLE %I.%I OWNER TO %I',
+                          tbl.schemaname, tbl.tablename, migration_user);
+                      RAISE NOTICE 'Transferred ownership of %.% from % to %',
+                          tbl.schemaname, tbl.tablename, tbl.tableowner, migration_user;
+                  EXCEPTION
+                      WHEN OTHERS THEN
+                          RAISE WARNING 'Could not transfer table %.%: %',
+                              tbl.schemaname, tbl.tablename, SQLERRM;
+                  END;
+              END LOOP;
 
-    -- Transfer ownership of all sequences
-    FOR tbl IN
-        SELECT schemaname, sequencename, sequenceowner
-        FROM pg_sequences
-        WHERE schemaname = 'public'
-        AND sequenceowner != migration_user
-    LOOP
-        BEGIN
-            EXECUTE format('ALTER SEQUENCE %I.%I OWNER TO %I',
-                tbl.schemaname, tbl.sequencename, migration_user);
-            RAISE NOTICE 'Transferred ownership of sequence %.% to %',
-                tbl.schemaname, tbl.sequencename, migration_user;
-        EXCEPTION
-            WHEN OTHERS THEN
-                RAISE WARNING 'Could not transfer sequence %.%: %',
-                    tbl.schemaname, tbl.sequencename, SQLERRM;
-        END;
-    END LOOP;
+              -- Transfer ownership of all sequences
+              FOR tbl IN
+                  SELECT schemaname, sequencename, sequenceowner
+                  FROM pg_sequences
+                  WHERE schemaname = 'public'
+                  AND sequenceowner != migration_user
+              LOOP
+                  BEGIN
+                      EXECUTE format('ALTER SEQUENCE %I.%I OWNER TO %I',
+                          tbl.schemaname, tbl.sequencename, migration_user);
+                      RAISE NOTICE 'Transferred ownership of sequence %.% to %',
+                          tbl.schemaname, tbl.sequencename, migration_user;
+                  EXCEPTION
+                      WHEN OTHERS THEN
+                          RAISE WARNING 'Could not transfer sequence %.%: %',
+                              tbl.schemaname, tbl.sequencename, SQLERRM;
+                  END;
+              END LOOP;
 
-    -- Transfer ownership of all materialized views
-    FOR tbl IN
-        SELECT schemaname, matviewname, matviewowner
-        FROM pg_matviews
-        WHERE schemaname = 'public'
-        AND matviewowner != migration_user
-    LOOP
-        BEGIN
-            EXECUTE format('ALTER MATERIALIZED VIEW %I.%I OWNER TO %I',
-                tbl.schemaname, tbl.matviewname, migration_user);
-            RAISE NOTICE 'Transferred ownership of materialized view %.% to %',
-                tbl.schemaname, tbl.matviewname, migration_user;
-        EXCEPTION
-            WHEN OTHERS THEN
-                RAISE WARNING 'Could not transfer materialized view %.%: %',
-                    tbl.schemaname, tbl.matviewname, SQLERRM;
-        END;
-    END LOOP;
-END $$;
-EOSQL
+              -- Transfer ownership of all materialized views
+              FOR tbl IN
+                  SELECT schemaname, matviewname, matviewowner
+                  FROM pg_matviews
+                  WHERE schemaname = 'public'
+                  AND matviewowner != migration_user
+              LOOP
+                  BEGIN
+                      EXECUTE format('ALTER MATERIALIZED VIEW %I.%I OWNER TO %I',
+                          tbl.schemaname, tbl.matviewname, migration_user);
+                      RAISE NOTICE 'Transferred ownership of materialized view %.% to %',
+                          tbl.schemaname, tbl.matviewname, migration_user;
+                  EXCEPTION
+                      WHEN OTHERS THEN
+                          RAISE WARNING 'Could not transfer materialized view %.%: %',
+                              tbl.schemaname, tbl.matviewname, SQLERRM;
+                  END;
+              END LOOP;
+          END $$;
+          EOSQL
 
           # Run migrations
           echo "⬆️  Running database migrations..."
@@ -198,6 +198,9 @@ EOSQL
           value: /migrations
         - name: DBMATE_NO_DUMP_SCHEMA
           value: "true"
+        volumeMounts:
+        - name: migrations
+          mountPath: /migrations
         resources:
           limits:
             cpu: 200m
@@ -205,3 +208,8 @@ EOSQL
           requests:
             cpu: 100m
             memory: 64Mi
+      volumes:
+      - name: migrations
+        hostPath:
+          path: /Users/lgates/repos/R4C-Cesium-Viewer/db/migrations
+          type: Directory
