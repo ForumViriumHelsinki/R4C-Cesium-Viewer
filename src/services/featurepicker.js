@@ -15,6 +15,7 @@ import Sensor from './sensor.js';
 import Camera from './camera.js';
 import ColdArea from './coldarea.js';
 import { eventBus } from '../services/eventEmitter.js';
+import cacheWarmer from './cacheWarmer.js';
 
 /**
  * FeaturePicker Service
@@ -50,6 +51,8 @@ export default class FeaturePicker {
 		this.elementsDisplayService = new ElementsDisplay();
 		this.cameraService = new Camera();
 		this.coldAreaService = new ColdArea();
+		// Track which postal codes currently have visible buildings
+		this.visiblePostalCodes = new Set();
 	}
 
 	/**
@@ -456,6 +459,7 @@ export default class FeaturePicker {
 	 * Loads buildings for visible postal codes in viewport
 	 * Only loads postal codes that don't already have building datasources.
 	 * Prioritizes currently selected postal code.
+	 * Uses postal code parameters to avoid modifying global state during loading.
 	 *
 	 * @param {Array<string>} visiblePostalCodes - Array of postal code strings
 	 * @returns {Promise<void>}
@@ -468,20 +472,49 @@ export default class FeaturePicker {
 			visiblePostalCodes.unshift(currentPostalCode);
 		}
 
+		const newVisibleSet = new Set(visiblePostalCodes);
+
+		// Hide buildings AND trees for postal codes that left the viewport
+		for (const postalCode of this.visiblePostalCodes) {
+			if (!newVisibleSet.has(postalCode) && postalCode !== currentPostalCode) {
+				this.hideBuildingsForPostalCode(postalCode);
+				this.hideTreesForPostalCode(postalCode);
+			}
+		}
+
 		const postalCodesToLoad = [];
 
-		// Check which postal codes need building data loaded
+		// Check which postal codes need building/tree data loaded or shown
 		for (const postalCode of visiblePostalCodes) {
 			const datasourceName = 'Buildings ' + postalCode;
 			const existingDatasource = this.datasourceService.getDataSourceByName(datasourceName);
 
-			if (!existingDatasource) {
+			if (existingDatasource) {
+				// Buildings datasource exists, make sure it's visible
+				if (!existingDatasource.show) {
+					existingDatasource.show = true;
+					console.log('[FeaturePicker] 👁️ Showing buildings for postal code:', postalCode);
+				}
+
+				// Also show tree datasources if they exist
+				const koodis = ['221', '222', '223', '224'];
+				for (const koodi of koodis) {
+					const treeDatasourceName = 'Trees' + koodi + '_' + postalCode;
+					const treeDatasource = this.datasourceService.getDataSourceByName(treeDatasourceName);
+
+					if (treeDatasource && !treeDatasource.show) {
+						treeDatasource.show = true;
+					}
+				}
+			} else {
+				// Datasource doesn't exist, need to load it
 				postalCodesToLoad.push(postalCode);
 			}
 		}
 
 		if (postalCodesToLoad.length === 0) {
 			console.log('[FeaturePicker] All visible postal codes already have buildings loaded');
+			this.visiblePostalCodes = newVisibleSet;
 			return;
 		}
 
@@ -493,26 +526,78 @@ export default class FeaturePicker {
 		);
 
 		// Load buildings sequentially to avoid overwhelming the server
+		// Pass postal code as parameter instead of modifying global state
 		for (const postalCode of postalCodesToLoad) {
 			try {
-				// Temporarily set postal code in store for loading
-				const previousPostalCode = this.store.postalcode;
-				this.store.setPostalCode(postalCode);
+				console.log('[FeaturePicker] 🔄 Loading buildings for postal code:', postalCode);
 
-				// Load buildings based on view mode
+				// Load buildings based on view mode, passing postal code as parameter
 				if (this.toggleStore.helsinkiView) {
-					await this.buildingService.loadBuildings();
+					await this.buildingService.loadBuildings(postalCode);
 				} else {
-					await this.hSYBuildingService.loadHSYBuildings();
+					await this.hSYBuildingService.loadHSYBuildings(null, postalCode);
 				}
-
-				// Restore original postal code
-				this.store.setPostalCode(previousPostalCode);
 
 				console.log('[FeaturePicker] ✅ Loaded buildings for postal code:', postalCode);
 			} catch (error) {
 				console.error('[FeaturePicker] ❌ Failed to load buildings for', postalCode, error);
 			}
+		}
+
+		// Update tracked visible postal codes
+		this.visiblePostalCodes = newVisibleSet;
+
+		// Predictive warming: warm nearby postal codes in background
+		// This preloads building data for adjacent areas before user pans there
+		if (visiblePostalCodes.length > 0) {
+			cacheWarmer.warmNearbyPostalCodes(currentPostalCode, visiblePostalCodes);
+		}
+	}
+
+	/**
+	 * Hides buildings for a specific postal code by setting datasource.show to false
+	 * Keeps the datasource in memory (preserves cache) but makes it invisible.
+	 *
+	 * @param {string} postalCode - Postal code to hide buildings for
+	 * @returns {void}
+	 */
+	hideBuildingsForPostalCode(postalCode) {
+		const datasourceName = 'Buildings ' + postalCode;
+		const datasource = this.datasourceService.getDataSourceByName(datasourceName);
+
+		if (datasource && datasource.show !== false) {
+			datasource.show = false;
+			console.log('[FeaturePicker] 🙈 Hiding buildings for postal code:', postalCode);
+		}
+	}
+
+	/**
+	 * Hides trees for a specific postal code by setting all tree datasources.show to false
+	 * Trees are loaded in 4 height categories (221-224), so we need to hide all of them.
+	 * Keeps the datasources in memory (preserves cache) but makes them invisible.
+	 *
+	 * @param {string} postalCode - Postal code to hide trees for
+	 * @returns {void}
+	 */
+	hideTreesForPostalCode(postalCode) {
+		const koodis = ['221', '222', '223', '224'];
+		let hiddenCount = 0;
+
+		for (const koodi of koodis) {
+			const datasourceName = 'Trees' + koodi + '_' + postalCode;
+			const datasource = this.datasourceService.getDataSourceByName(datasourceName);
+
+			if (datasource && datasource.show !== false) {
+				datasource.show = false;
+				hiddenCount++;
+			}
+		}
+
+		if (hiddenCount > 0) {
+			console.log(
+				`[FeaturePicker] 🌳 Hiding ${hiddenCount} tree datasources for postal code:`,
+				postalCode
+			);
 		}
 	}
 }

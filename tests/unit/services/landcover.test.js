@@ -153,9 +153,7 @@ describe('Landcover Service', () => {
 	describe('removeLandcover', () => {
 		it('should remove all landcover layers from viewer', async () => {
 			const { useGlobalStore } = await import('@/stores/globalStore.js');
-			const { useBackgroundMapStore } = await import(
-				'@/stores/backgroundMapStore.js'
-			);
+			const { useBackgroundMapStore } = await import('@/stores/backgroundMapStore.js');
 
 			const mockStore = useGlobalStore();
 			const mockBackgroundStore = useBackgroundMapStore();
@@ -170,9 +168,7 @@ describe('Landcover Service', () => {
 		});
 
 		it('should handle empty landcover layers array gracefully', async () => {
-			const { useBackgroundMapStore } = await import(
-				'@/stores/backgroundMapStore.js'
-			);
+			const { useBackgroundMapStore } = await import('@/stores/backgroundMapStore.js');
 			const mockBackgroundStore = useBackgroundMapStore();
 
 			mockBackgroundStore.landcoverLayers = [];

@@ -97,10 +97,11 @@ export default class Urbanheat {
 	 * Fetches heat exposure data from pygeoapi for postal code.
 	 *
 	 * @param {Object} data - Data of buildings from city WFS
+	 * @param {string} [postalCode] - Optional postal code to use for data fetching. If not provided, uses current postal code from store.
 	 */
-	async findUrbanHeatData(data) {
+	async findUrbanHeatData(data, postalCode) {
 		const buildingStore = useBuildingStore();
-		const postcode = this.store.postalcode;
+		const postcode = postalCode || this.store.postalcode;
 		buildingStore.setBuildingFeatures(data);
 
 		try {
