@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import * as Sentry from '@sentry/vue';
 import { createSentryPiniaPlugin } from '@sentry/vue';
 import App from './App.vue';
+import './version.js'; // Log version info to console
 
 // Vuetify
 import 'vuetify/styles';

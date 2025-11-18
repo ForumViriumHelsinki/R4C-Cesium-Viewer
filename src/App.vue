@@ -69,6 +69,9 @@ class="d-flex align-center py-0"
 			<CesiumViewer />
 			<SosEco250mGrid v-if="grid250m" />
 
+			<!-- Version Badge -->
+			<VersionBadge />
+
 			<!-- Loading Indicator -->
 			<LoadingIndicator
 				mode="both"
@@ -105,6 +108,7 @@ import LoadingIndicator from './components/LoadingIndicator.vue';
 import DataSourceStatusCompact from './components/DataSourceStatusCompact.vue';
 import ViewModeCompact from './components/ViewModeCompact.vue';
 import FeatureFlagsPanel from './components/FeatureFlagsPanel.vue';
+import VersionBadge from './components/VersionBadge.vue';
 import { useToggleStore } from './stores/toggleStore.js';
 import { useGlobalStore } from './stores/globalStore.js';
 import { useFeatureFlagStore } from './stores/featureFlagStore';
