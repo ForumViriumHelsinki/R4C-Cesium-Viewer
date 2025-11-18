@@ -4,7 +4,7 @@
 **Knip Version:** Latest
 **Purpose:** Evaluate code cleanup opportunities and identify unused dependencies
 
-> **⚠️ Note:** This report is a snapshot from the initial knip evaluation. As the codebase evolves, some findings may become outdated. For current dependency analysis, run `npm run lint:deps` locally or check the CI security-scan job results.
+> **⚠️ Note:** This report is a snapshot from the initial knip evaluation. As the codebase evolves, some findings may become outdated. For current dependency analysis, run `npm run lint:deps` locally.
 
 ---
 
@@ -216,11 +216,13 @@ Create a `knip.json` or `.knip.json` file to reduce false positives:
 
 ## 🎯 Next Steps
 
-1. **Run the immediate fixes** (add vue/vuetify/cesium, remove path/url)
-2. **Set up knip configuration** to reduce false positives
-3. **Schedule time to audit** the 8 potentially unused service files
-4. **Add a lint script** to package.json: `"lint:deps": "knip"`
-5. **Integrate into CI** to prevent future dependency drift
+1. ~~**Run the immediate fixes**~~ ✅ **COMPLETED** - Added vue/vuetify/cesium, removed path/url
+2. ~~**Set up knip configuration**~~ ✅ **COMPLETED** - Added `.knip.json` to reduce false positives
+3. ~~**Add a lint script**~~ ✅ **COMPLETED** - Added `"lint:deps": "knip"` to package.json
+4. **Schedule time to audit** the 8 potentially unused service files
+5. **Integrate into CI** to prevent future dependency drift (recommended for future PR)
+   - Add `npm run lint:deps` to `.github/workflows/test.yml` security-scan job
+   - This will require workflow modification permissions
 
 ---
 
