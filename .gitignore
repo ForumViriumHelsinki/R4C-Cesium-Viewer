@@ -49,3 +49,13 @@ k8s/migration-secret.yaml
 src/auto-imports.d.ts
 src/components.d.ts
 .eslintrc-auto-import.json
+
+# LaTeX compilation artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
