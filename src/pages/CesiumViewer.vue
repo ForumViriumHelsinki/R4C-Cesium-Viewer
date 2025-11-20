@@ -20,13 +20,19 @@
 			multi-line
 		>
 			<div class="d-flex align-center">
-				<v-icon class="mr-2">mdi-alert-circle</v-icon>
+				<v-icon class="mr-2">
+mdi-alert-circle
+</v-icon>
 				<div>
-					<div class="font-weight-bold">Failed to Load Map Viewer</div>
-					<div class="text-caption">{{ errorMessage }}</div>
+					<div class="font-weight-bold">
+Failed to Load Map Viewer
+</div>
+					<div class="text-caption">
+{{ errorMessage }}
+</div>
 				</div>
 			</div>
-			<template v-slot:actions>
+			<template #actions>
 				<v-btn
 					variant="text"
 					@click="retryInit"

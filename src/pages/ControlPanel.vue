@@ -1,10 +1,13 @@
 <template>
   <v-navigation-drawer
+    v-model="drawerModel"
     role="navigation"
     aria-label="Analysis tools and data exploration"
     class="analysis-sidebar"
-    width="350"
+    :width="drawerWidth"
     location="right"
+    :temporary="isMobile"
+    :mobile-breakpoint="768"
   >
     <div class="sidebar-content">
       <div class="control-section">
@@ -263,6 +266,7 @@ icon
 
 <script>
 import { ref, computed } from 'vue';
+import { useDisplay } from 'vuetify';
 
 // Component Imports
 import UnifiedSearch from '../components/UnifiedSearch.vue';
@@ -318,7 +322,33 @@ export default {
     EstimatedImpacts,
     LandcoverToParks,
   },
-  setup() {
+  props: {
+    modelValue: {
+      type: Boolean,
+      default: true
+    }
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit }) {
+    // Responsive design setup
+    const { mobile, smAndDown, mdAndDown } = useDisplay();
+
+    // Drawer visibility model
+    const drawerModel = computed({
+      get: () => props.modelValue,
+      set: (value) => emit('update:modelValue', value)
+    });
+
+    // Responsive drawer width
+    const drawerWidth = computed(() => {
+      if (mobile.value) return '100%'; // Full width on mobile
+      if (smAndDown.value) return '90%'; // 90% on small tablets
+      if (mdAndDown.value) return 320; // Reduced width on medium screens
+      return 350; // Default width on desktop
+    });
+
+    // Mobile detection for temporary drawer
+    const isMobile = computed(() => mdAndDown.value); // Temporary drawer on medium and below
     // ## NEW: State for the new panel ##
     const adaptationTab = ref('centers');
 
@@ -394,6 +424,10 @@ export default {
     };
 
     return {
+      // Responsive design
+      drawerModel,
+      drawerWidth,
+      isMobile,
       // Existing returned values
       analysisDialog,
       currentAnalysis,
