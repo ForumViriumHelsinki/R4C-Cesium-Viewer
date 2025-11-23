@@ -49,11 +49,26 @@ See `.claude/skills/test-categorization.md` for best practices on test organizat
 
 ### Docker/Kubernetes
 
+See `docs/LOCAL_DEVELOPMENT_SKAFFOLD.md` for comprehensive local development documentation.
+See `docs/DATABASE_IMPORT.md` for importing production database dumps.
+
+**Quick start with persistent services (recommended):**
+
+```bash
+# 1. Deploy persistent services (PostgreSQL, pygeoapi)
+skaffold run -f skaffold-services.yaml --port-forward
+
+# 2. Develop frontend with hot reload
+skaffold dev --port-forward
+```
+
+**Other commands:**
+
 - `docker compose up` - Run with Docker (http://localhost:4173)
-- `skaffold dev --port-forward` - Run with Skaffold using plain K8s manifests (no Helm required)
-- `skaffold dev --profile=local-with-services --port-forward` - Full local development with database
+- `skaffold dev --profile=local-with-services --port-forward` - Full stack (services destroyed on exit)
 - `skaffold test -p migration-test` - Test database migrations
 - `skaffold delete` - Clean up Skaffold deployments
+- `skaffold delete -f skaffold-services.yaml` - Clean up persistent services
 
 **Note**: Local development uses plain Kubernetes manifests in `k8s/` directory for simplicity.
 
