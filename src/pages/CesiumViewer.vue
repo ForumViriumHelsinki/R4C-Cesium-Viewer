@@ -5,7 +5,8 @@
 		<CameraControls />
 		<!-- Loading Component -->
 		<Loading v-if="store.isLoading" />
-		<Timeline v-if="store.level === 'postalCode' || store.level === 'building'" />
+		<!-- Map Click Loading Overlay -->
+		<MapClickLoadingOverlay @cancel="handleCancelAnimation" @retry="handleRetryLoading" />
 		<!-- Disclaimer Popup -->
 		<DisclaimerPopup class="disclaimer-popup" />
 		<BuildingInformation v-if="shouldShowBuildingInformation" />
@@ -29,13 +30,13 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
-import Timeline from '../components/Timeline.vue';
 import CameraControls from '../components/CameraControls.vue';
+import MapClickLoadingOverlay from '../components/MapClickLoadingOverlay.vue';
 
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
@@ -53,7 +54,7 @@ export default {
 		CameraControls,
 		BuildingInformation,
 		Loading,
-		Timeline,
+		MapClickLoadingOverlay,
 	},
 	setup() {
 		const store = useGlobalStore();
@@ -69,6 +70,7 @@ export default {
 		const viewer = ref(null);
 		const errorSnackbar = ref(false);
 		const errorMessage = ref('');
+		const isLoadingBuildings = ref(false);
 		let lastPickTime = 0;
 		let Cesium = null;
 		let Datasource = null;
@@ -233,6 +235,15 @@ export default {
 			const featurepicker = new Featurepicker();
 			console.log('[CesiumViewer] ✅ FeaturePicker click handler added');
 
+			// Drag detection: track mouse position to differentiate clicks from drags
+			let mouseDownPosition = null;
+			const DRAG_THRESHOLD = 5; // pixels - movement beyond this is considered a drag
+
+			// Track mouse down position
+			cesiumContainer.addEventListener('mousedown', (event) => {
+				mouseDownPosition = { x: event.clientX, y: event.clientY };
+			});
+
 			cesiumContainer.addEventListener('click', (event) => {
 				const controlPanelElement = document.querySelector('.control-panel-main');
 				const timeSeriesElement = document.querySelector('#heatTimeseriesContainer');
@@ -246,10 +257,30 @@ export default {
 				console.log('[CesiumViewer] Click on time series:', isClickOnTimeSeries);
 				console.log('[CesiumViewer] Time since last pick:', currentTime - lastPickTime);
 
+				// Check if this was a drag (mouse moved significantly between mousedown and mouseup)
+				if (mouseDownPosition) {
+					const dx = event.clientX - mouseDownPosition.x;
+					const dy = event.clientY - mouseDownPosition.y;
+					const distance = Math.sqrt(dx * dx + dy * dy);
+
+					if (distance > DRAG_THRESHOLD) {
+						console.log(
+							'[CesiumViewer] ⚠️ Click ignored - detected as drag (moved',
+							distance.toFixed(1),
+							'px)'
+						);
+						mouseDownPosition = null;
+						return;
+					}
+				}
+				mouseDownPosition = null;
+
 				if (!isClickOnControlPanel && !isClickOnTimeSeries && currentTime - lastPickTime > 500) {
 					console.log('[CesiumViewer] ✅ Processing click through FeaturePicker');
 					store.setShowBuildingInfo(false);
-					!store.showBuildingInfo && featurepicker.processClick(event);
+					if (!store.showBuildingInfo) {
+						featurepicker.processClick(event);
+					}
 					lastPickTime = currentTime; // Update the last pick time
 					setTimeout(() => {
 						store.setShowBuildingInfo(true);
@@ -262,7 +293,7 @@ export default {
 
 		const addCameraMoveEndListener = () => {
 			let cameraMoveTimeout = null;
-			const DEBOUNCE_DELAY_MS = 500; // Wait 500ms after camera stops moving
+			const DEBOUNCE_DELAY_MS = 1500; // Wait 1500ms after camera stops moving to prevent blinking
 
 			viewer.value.camera.moveEnd.addEventListener(() => {
 				// Clear any pending timeout
@@ -285,6 +316,17 @@ export default {
 		};
 
 		const handleCameraSettled = async () => {
+			// Prevent overlapping calls to avoid visibility blinking
+			// Log camera settled event for visibility debugging
+			console.log(
+				`%c[VISIBILITY] Camera settled - triggering viewport check`,
+				'color: blue; font-weight: bold'
+			);
+			if (isLoadingBuildings.value) {
+				console.log('[CesiumViewer] Already loading buildings, skipping...');
+				return;
+			}
+
 			const currentLevel = store.level;
 
 			console.log('[CesiumViewer] Current level:', currentLevel);
@@ -322,10 +364,16 @@ export default {
 				'm - proceeding with viewport-based building loading'
 			);
 
-			// Get visible postal codes and load their buildings
-			const featurepicker = new Featurepicker();
-			const visiblePostalCodes = featurepicker.getVisiblePostalCodes(viewportRect);
-			await featurepicker.loadBuildingsForVisiblePostalCodes(visiblePostalCodes);
+			try {
+				isLoadingBuildings.value = true;
+
+				// Get visible postal codes and load their buildings
+				const featurepicker = new Featurepicker();
+				const visiblePostalCodes = featurepicker.getVisiblePostalCodes(viewportRect);
+				await featurepicker.loadBuildingsForVisiblePostalCodes(visiblePostalCodes);
+			} finally {
+				isLoadingBuildings.value = false;
+			}
 		};
 
 		const retryInit = async () => {
@@ -340,10 +388,79 @@ export default {
 			store.setIsLoading(false);
 		};
 
+		/**
+		 * Handles cancellation of camera animation via ESC key or button
+		 * Restores previous view state and resets click processing state.
+		 */
+		const handleCancelAnimation = () => {
+			console.log('[CesiumViewer] User requested animation cancellation');
+
+			if (!Camera) {
+				console.warn('[CesiumViewer] Camera module not loaded yet');
+				return;
+			}
+
+			const camera = new Camera();
+			const wasCancelled = camera.cancelFlight();
+
+			if (wasCancelled) {
+				console.log('[CesiumViewer] Animation cancelled successfully');
+				// Camera service handles state restoration via callbacks
+			} else {
+				console.warn('[CesiumViewer] No active flight to cancel');
+				// Still reset state to clear UI
+				store.resetClickProcessingState();
+			}
+		};
+
+		/**
+		 * Handles retry of failed postal code loading
+		 * Resets error state and re-triggers data loading.
+		 */
+		const handleRetryLoading = () => {
+			console.log('[CesiumViewer] User requested data loading retry');
+
+			const postalCode = store.clickProcessingState.postalCode;
+			if (!postalCode) {
+				console.warn('[CesiumViewer] No postal code to retry');
+				return;
+			}
+
+			if (!Featurepicker) {
+				console.warn('[CesiumViewer] Featurepicker module not loaded yet');
+				return;
+			}
+
+			// Reset error state and increment retry counter
+			store.setClickProcessingState({
+				error: null,
+				retryCount: store.clickProcessingState.retryCount + 1,
+				stage: 'loading',
+			});
+
+			// Retry loading through featurepicker
+			const featurepicker = new Featurepicker();
+			featurepicker.loadPostalCodeData(postalCode);
+		};
+
+		/**
+		 * Global ESC key handler for animation cancellation
+		 * Only active when canCancel is true to avoid interfering with other ESC key uses.
+		 */
+		const handleGlobalEscKey = (event) => {
+			if (event.key === 'Escape' && store.clickProcessingState.canCancel) {
+				handleCancelAnimation();
+			}
+		};
+
 		onMounted(async () => {
 			await initViewer();
 			socioEconomicsStore.loadPaavo();
 			heatExposureStore.loadHeatExposure();
+
+			// Register ESC key handler for animation cancellation
+			document.addEventListener('keydown', handleGlobalEscKey);
+			console.log('[CesiumViewer] ⌨️ ESC key handler registered');
 
 			// Start cache warming in background (non-blocking)
 			// Uses requestIdleCallback to run during browser idle time
@@ -362,6 +479,12 @@ export default {
 			}
 		});
 
+		onBeforeUnmount(() => {
+			// Clean up ESC key handler
+			document.removeEventListener('keydown', handleGlobalEscKey);
+			console.log('[CesiumViewer] 🧹 ESC key handler removed');
+		});
+
 		return {
 			store,
 			toggleStore,
@@ -371,7 +494,20 @@ export default {
 			errorSnackbar,
 			errorMessage,
 			retryInit,
+			handleCancelAnimation,
+			handleRetryLoading,
 		};
 	},
 };
 </script>
+
+<style scoped>
+#cesiumContainer {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+}
+</style>

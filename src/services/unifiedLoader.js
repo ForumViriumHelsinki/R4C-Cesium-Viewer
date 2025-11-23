@@ -104,7 +104,7 @@ class UnifiedLoader {
 			return data;
 		} catch (error) {
 			this.loadingStore.setLayerError(layerId, error.message);
-			console.error(`Failed to load layer ${layerId}:`, error);
+			console.error(`Failed to load layer ${layerId}:`, error?.message || error);
 			throw error;
 		}
 	}
@@ -115,7 +115,7 @@ class UnifiedLoader {
 	async checkCache(layerId, url, ttl) {
 		try {
 			const cacheKey = this.generateCacheKey(layerId, url);
-			const cached = await cacheService.get(cacheKey);
+			const cached = await cacheService.getData(cacheKey);
 
 			if (cached && this.isCacheValid(cached, ttl)) {
 				console.log(`✓ Using cached data for ${layerId}`);
@@ -123,7 +123,7 @@ class UnifiedLoader {
 				return cached.data;
 			}
 		} catch (error) {
-			console.warn(`Cache check failed for ${layerId}:`, error);
+			console.warn(`Cache check failed for ${layerId}:`, error?.message || error);
 		}
 		return null;
 	}
@@ -198,7 +198,7 @@ class UnifiedLoader {
 				await processor(data, metadata);
 			}
 		} catch (error) {
-			console.error(`Error processing data for ${layerId}:`, error);
+			console.error(`Error processing data for ${layerId}:`, error?.message || error);
 			throw error;
 		}
 	}
@@ -243,7 +243,7 @@ class UnifiedLoader {
 			// Brief yield for UI responsiveness
 			await new Promise((resolve) => setTimeout(resolve, 0));
 		} catch (error) {
-			console.error(`Error processing chunk for ${layerId}:`, error);
+			console.error(`Error processing chunk for ${layerId}:`, error?.message || error);
 		}
 	}
 
@@ -284,7 +284,7 @@ class UnifiedLoader {
 	async cacheData(layerId, url, data, ttl) {
 		try {
 			const cacheKey = this.generateCacheKey(layerId, url);
-			await cacheService.set(
+			await cacheService.setData(
 				cacheKey,
 				{
 					data,
@@ -292,12 +292,12 @@ class UnifiedLoader {
 					url,
 					layerId,
 				},
-				ttl
+				{ ttl }
 			);
 
 			this.loadingStore.updateCacheStatus(layerId, true, Date.now());
 		} catch (error) {
-			console.warn(`Failed to cache data for ${layerId}:`, error);
+			console.warn(`Failed to cache data for ${layerId}:`, error?.message || error);
 		}
 	}
 

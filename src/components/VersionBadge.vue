@@ -1,6 +1,6 @@
 <template>
 	<v-tooltip
-		location="top"
+		location="bottom"
 		:text="`Version ${versionInfo.version} (${versionInfo.commit})\nBuilt: ${formattedBuildTime}`"
 	>
 		<template #activator="{ props }">
@@ -37,8 +37,8 @@ export default {
 <style scoped>
 .version-badge {
 	position: fixed;
-	bottom: 8px;
-	left: 8px;
+	top: 8px;
+	right: 8px;
 	background: rgba(0, 0, 0, 0.6);
 	color: rgba(255, 255, 255, 0.8);
 	padding: 4px 8px;
