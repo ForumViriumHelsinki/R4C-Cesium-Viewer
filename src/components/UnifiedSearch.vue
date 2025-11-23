@@ -44,10 +44,10 @@
 			<v-card v-if="hasResults" class="results-card">
 				<!-- Address Results Section -->
 				<div v-if="addressResults.length > 0" class="results-section">
-					<v-subheader class="results-header">
+					<v-list-subheader class="results-header">
 						<v-icon class="mr-2" size="16"> mdi-map-marker </v-icon>
 						Addresses
-					</v-subheader>
+					</v-list-subheader>
 					<v-list density="compact">
 						<v-list-item
 							v-for="(address, index) in addressResults.slice(0, 5)"
@@ -68,10 +68,10 @@
 
 				<!-- Postal Code Results Section -->
 				<div v-if="postalCodeResults.length > 0" class="results-section">
-					<v-subheader class="results-header">
+					<v-list-subheader class="results-header">
 						<v-icon class="mr-2" size="16"> mdi-post </v-icon>
 						Postal Code Areas
-					</v-subheader>
+					</v-list-subheader>
 					<v-list density="compact">
 						<v-list-item
 							v-for="area in postalCodeResults.slice(0, 5)"

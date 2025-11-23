@@ -134,8 +134,12 @@ export default {
 			await dataSourceService.removeDataSourcesAndEntities();
 			await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes');
 
-			store.postalcode && featurePicker.loadPostalCode();
-			toggleStore.showTrees && (await loadTrees());
+			if (store.postalcode) {
+				featurePicker.loadPostalCode();
+			}
+			if (toggleStore.showTrees) {
+				await loadTrees();
+			}
 		};
 
 		const loadTrees = async () => {
@@ -166,7 +170,9 @@ export default {
 				'PostCodes'
 			);
 
-			store.postalcode && featurePicker.loadPostalCode();
+			if (store.postalcode) {
+				featurePicker.loadPostalCode();
+			}
 		};
 
 		const gridView = () => {

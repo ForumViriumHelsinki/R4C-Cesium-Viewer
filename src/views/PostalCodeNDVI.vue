@@ -29,6 +29,7 @@ import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
 import { storeToRefs } from 'pinia';
 import { eventBus } from '../services/eventEmitter.js';
 import { changeTIFF } from '../services/tiffImagery.js';
+import { AVAILABLE_NDVI_DATES, DEFAULT_NDVI_DATE } from '../constants/ndviDates.js';
 
 export default {
 	setup() {
@@ -38,18 +39,8 @@ export default {
 		// Make ndvi reactive
 		const { ndvi } = storeToRefs(toggleStore);
 
-		const selectedDate = ref('2022-06-26'); // Default date
-		const availableDates = [
-			'2017-06-04',
-			'2018-06-17',
-			'2019-07-27',
-			'2020-06-26',
-			'2021-06-18',
-			'2022-06-26',
-			'2023-06-23',
-			'2024-06-27',
-			'2025-06-20',
-		];
+		const selectedDate = ref(DEFAULT_NDVI_DATE);
+		const availableDates = AVAILABLE_NDVI_DATES;
 
 		const updateImage = async () => {
 			backgroundMapStore.setNdviDate(selectedDate.value);
