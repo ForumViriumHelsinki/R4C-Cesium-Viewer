@@ -13,9 +13,24 @@ build:
       context: .
       docker:
         dockerfile: Dockerfile
+        # Reuse layers from previous builds for faster rebuilds
+        cacheFrom:
+          - frontend:latest
+      # Sync source files to container without full rebuild during dev
+      sync:
+        manual:
+          - src: 'src/**/*.vue'
+            dest: /app/src
+          - src: 'src/**/*.js'
+            dest: /app/src
+          - src: 'src/**/*.css'
+            dest: /app/src
       hooks:
         before:
           - command: ['sh', '-c', 'dotenvx run -- sh scripts/generate-secrets.sh']
+            os: [darwin, linux]
+          # Run lint before build to catch errors early
+          - command: ['sh', '-c', 'npm run lint --silent || echo "Lint warnings found"']
             os: [darwin, linux]
 manifests:
   rawYaml:
@@ -31,6 +46,17 @@ deploy:
         - host:
             command: ['sh', '-c', 'kubectl apply -f k8s/secrets.yaml']
             os: [darwin, linux]
+  # Wait up to 180s for pods to be ready; tolerate init container restarts
+  statusCheck: true
+  statusCheckDeadlineSeconds: 180
+  tolerateFailuresUntilDeadline: true
+# Bind to localhost only for security
+portForward:
+  - resourceType: service
+    resourceName: r4c-cesium-viewer
+    port: 80
+    localPort: 4173
+    address: 127.0.0.1
 profiles:
   - name: local-with-services
     manifests:
