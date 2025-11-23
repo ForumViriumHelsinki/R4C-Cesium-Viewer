@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/vue';
 import { createSentryPiniaPlugin } from '@sentry/vue';
 import App from './App.vue';
 import './version.js'; // Log version info to console
+import { useGlobalStore } from './stores/globalStore.js';
 
 // Vuetify
 import 'vuetify/styles';
@@ -36,10 +37,10 @@ pinia.use(
 			// For propsStore, exclude deprecated Cesium entity properties
 			if (store.$id === 'props') {
 				const {
-					treeEntities,
-					buildingsDatasource,
-					postalCodeData,
-					heatFloodVulnerabilityEntity,
+					treeEntities: _treeEntities,
+					buildingsDatasource: _buildingsDatasource,
+					postalCodeData: _postalCodeData,
+					heatFloodVulnerabilityEntity: _heatFloodVulnerabilityEntity,
 					...serializable
 				} = state;
 				return serializable;
@@ -99,4 +100,15 @@ console.log(`Release: ${version}`);
 
 app.use(pinia);
 app.use(vuetify);
+
+// Expose store instance to window for E2E testing
+// Must be done BEFORE mounting so the store is available when components initialize
+if (import.meta.env.MODE === 'development' || import.meta.env.MODE === 'test') {
+	// Initialize the store and expose the instance
+	const globalStore = useGlobalStore();
+	window.globalStore = globalStore;
+	// Also expose the function for backwards compatibility
+	window.useGlobalStore = () => globalStore;
+}
+
 app.mount('#app');
