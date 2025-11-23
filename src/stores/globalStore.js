@@ -47,6 +47,18 @@ import { defineStore } from 'pinia';
  * @property {boolean} showBuildingInfo - Toggle building info panel visibility
  * @property {boolean} isCameraRotated - Camera 180° rotation state flag
  * @property {number} navbarWidth - Navigation drawer width in pixels (responsive, 400-800px)
+ * @property {Object} clickProcessingState - Map click processing lifecycle state (Phase 3 enhanced)
+ * @property {boolean} clickProcessingState.isProcessing - Whether a click is being processed
+ * @property {string|null} clickProcessingState.postalCode - Target postal code being loaded
+ * @property {string|null} clickProcessingState.postalCodeName - Display name for the postal code
+ * @property {string|null} clickProcessingState.stage - Current processing stage ('loading'|'animating'|'complete')
+ * @property {number|null} clickProcessingState.startTime - Performance timestamp when processing started
+ * @property {boolean} clickProcessingState.canCancel - Whether user can interrupt the animation
+ * @property {Object|null} clickProcessingState.error - Error object if loading failed
+ * @property {Object|null} clickProcessingState.partialData - Successfully loaded data if partial failure
+ * @property {number} clickProcessingState.retryCount - Number of retry attempts for failed loads
+ * @property {Object|null} clickProcessingState.previousViewState - Captured state for restoration on cancel
+ * @property {Object|null} clickProcessingState.loadingProgress - Progressive loading progress {current, total}
  */
 export const useGlobalStore = defineStore('global', {
 	state: () => ({
@@ -77,6 +89,19 @@ export const useGlobalStore = defineStore('global', {
 		showBuildingInfo: true,
 		isCameraRotated: false,
 		navbarWidth: Math.min(Math.max(window.innerWidth * 0.375, 400), 800),
+		clickProcessingState: {
+			isProcessing: false,
+			postalCode: null,
+			postalCodeName: null,
+			stage: null,
+			startTime: null,
+			canCancel: false,
+			error: null,
+			partialData: null,
+			retryCount: 0,
+			previousViewState: null,
+			loadingProgress: null, // { current: number, total: number } for progressive updates (FR-3.2)
+		},
 	}),
 	actions: {
 		/**
@@ -182,6 +207,113 @@ export const useGlobalStore = defineStore('global', {
 		 */
 		toggleCameraRotation() {
 			this.isCameraRotated = !this.isCameraRotated;
+		},
+		/**
+		 * Updates the click processing state with new values
+		 * Merges provided state with existing state to allow partial updates.
+		 * @param {Object} newState - Partial state object to merge
+		 */
+		setClickProcessingState(newState) {
+			this.clickProcessingState = {
+				...this.clickProcessingState,
+				...newState,
+			};
+
+			// Track metrics for performance monitoring
+			if (newState.stage === 'loading' && newState.startTime) {
+				performance.mark('map-click-start');
+			}
+
+			if (newState.stage === 'complete') {
+				performance.mark('map-click-complete');
+
+				// Only measure if the start mark exists
+				const startMark = performance.getEntriesByName('map-click-start', 'mark')[0];
+				if (startMark) {
+					performance.measure('map-click-interaction', 'map-click-start', 'map-click-complete');
+
+					const measure = performance.getEntriesByName('map-click-interaction')[0];
+					if (measure) {
+						console.log(
+							`[GlobalStore] Map click completed in ${measure.duration.toFixed(2)}ms for postal code ${this.clickProcessingState.postalCode}`
+						);
+					}
+
+					// Clean up performance entries
+					performance.clearMarks('map-click-start');
+					performance.clearMarks('map-click-complete');
+					performance.clearMeasures('map-click-interaction');
+				}
+			}
+		},
+		/**
+		 * Resets click processing state to initial values
+		 * Called after processing is complete or cancelled.
+		 */
+		resetClickProcessingState() {
+			this.clickProcessingState = {
+				isProcessing: false,
+				postalCode: null,
+				postalCodeName: null,
+				stage: null,
+				startTime: null,
+				canCancel: false,
+				error: null,
+				partialData: null,
+				retryCount: 0,
+				previousViewState: null,
+				loadingProgress: null,
+			};
+		},
+		/**
+		 * Captures current view state for restoration if animation is cancelled
+		 * Stores camera position, orientation, and UI state.
+		 */
+		captureViewState() {
+			if (!this.cesiumViewer) {
+				console.warn('[GlobalStore] Cannot capture view state: Cesium viewer not initialized');
+				return;
+			}
+
+			const camera = this.cesiumViewer.camera;
+			this.clickProcessingState.previousViewState = {
+				position: camera.position.clone(),
+				orientation: {
+					heading: camera.heading,
+					pitch: camera.pitch,
+					roll: camera.roll,
+				},
+				showBuildingInfo: this.showBuildingInfo,
+				buildingAddress: this.buildingAddress,
+			};
+
+			console.log('[GlobalStore] View state captured for potential restoration');
+		},
+		/**
+		 * Restores previously captured view state
+		 * Used when user cancels camera animation to return to previous view.
+		 */
+		restorePreviousViewState() {
+			const prevState = this.clickProcessingState.previousViewState;
+			if (!prevState) {
+				console.warn('[GlobalStore] No previous view state to restore');
+				return;
+			}
+
+			if (!this.cesiumViewer) {
+				console.warn('[GlobalStore] Cannot restore view state: Cesium viewer not initialized');
+				return;
+			}
+
+			this.cesiumViewer.camera.setView({
+				destination: prevState.position,
+				orientation: prevState.orientation,
+			});
+
+			this.showBuildingInfo = prevState.showBuildingInfo;
+			this.buildingAddress = prevState.buildingAddress;
+
+			console.log('[GlobalStore] Previous view state restored');
 		},
 	},
 });

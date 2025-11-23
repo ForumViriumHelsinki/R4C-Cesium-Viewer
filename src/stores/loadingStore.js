@@ -285,7 +285,7 @@ export const useLoadingStore = defineStore('loading', {
 					return null;
 				}
 			} catch (error) {
-				console.warn(`Cache check failed for ${layerName}:`, error);
+				console.warn(`Cache check failed for ${layerName}:`, error?.message || error);
 				return null;
 			}
 		},
@@ -309,7 +309,7 @@ export const useLoadingStore = defineStore('loading', {
 
 				return true;
 			} catch (error) {
-				console.warn(`Cache storage failed for ${layerName}:`, error);
+				console.warn(`Cache storage failed for ${layerName}:`, error?.message || error);
 				return false;
 			}
 		},
@@ -326,7 +326,7 @@ export const useLoadingStore = defineStore('loading', {
 				};
 				return true;
 			} catch (error) {
-				console.warn(`Cache clear failed for ${layerName}:`, error);
+				console.warn(`Cache clear failed for ${layerName}:`, error?.message || error);
 				return false;
 			}
 		},
