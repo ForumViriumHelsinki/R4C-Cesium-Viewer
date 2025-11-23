@@ -7,6 +7,11 @@ import { useGlobalStore } from '../stores/globalStore.js';
  * and focus on geographic areas. Provides utilities for 2D/3D view transitions
  * and postal code-based camera positioning.
  *
+ * Features:
+ * - Supports cancellable camera animations (ESC key support)
+ * - State tracking for click processing integration
+ * - View state capture and restoration
+ *
  * @class Camera
  */
 export default class Camera {
@@ -17,6 +22,116 @@ export default class Camera {
 		this.store = useGlobalStore();
 		this.viewer = this.store.cesiumViewer;
 		this.isRotated = false; // Track rotation state for 180° rotations
+		this.currentFlight = null; // Track active camera flight for cancellation
+		this.flightCancelRequested = false; // Flag indicating cancellation was requested
+		this.previousCameraState = null; // Captured camera state for restoration
+	}
+
+	/**
+	 * Cancels the current camera flight animation
+	 * Sets the cancelFlight property on the active flight promise if one exists.
+	 *
+	 * @returns {boolean} True if cancellation was initiated, false if no active flight
+	 */
+	cancelFlight() {
+		if (this.currentFlight && !this.flightCancelRequested) {
+			this.currentFlight.cancelFlight = true;
+			this.flightCancelRequested = true;
+			console.log('[Camera] Flight cancellation requested');
+			return true;
+		}
+		console.log('[Camera] No active flight to cancel');
+		return false;
+	}
+
+	/**
+	 * Captures current camera state for potential restoration
+	 * Stores position and orientation for use if flight is cancelled.
+	 */
+	captureCurrentState() {
+		if (!this.viewer) {
+			console.warn('[Camera] Cannot capture camera state: Viewer not initialized');
+			return;
+		}
+
+		const camera = this.viewer.camera;
+		this.previousCameraState = {
+			position: camera.position.clone(),
+			heading: camera.heading,
+			pitch: camera.pitch,
+			roll: camera.roll,
+		};
+
+		console.log('[Camera] Camera state captured for restoration');
+	}
+
+	/**
+	 * Restores previously captured camera state
+	 * Used when camera flight is cancelled to return to previous view.
+	 */
+	restoreCapturedState() {
+		if (!this.previousCameraState) {
+			console.warn('[Camera] No previous camera state to restore');
+			return;
+		}
+
+		if (!this.viewer) {
+			console.warn('[Camera] Cannot restore camera state: Viewer not initialized');
+			return;
+		}
+
+		this.viewer.camera.setView({
+			destination: this.previousCameraState.position,
+			orientation: {
+				heading: this.previousCameraState.heading,
+				pitch: this.previousCameraState.pitch,
+				roll: this.previousCameraState.roll,
+			},
+		});
+
+		console.log('[Camera] Previous camera state restored');
+	}
+
+	/**
+	 * Handles flight completion callback
+	 * Cleans up flight tracking and resets cancellation flags.
+	 * @private
+	 */
+	onFlightComplete() {
+		console.log('[Camera] Flight completed');
+		this.currentFlight = null;
+		this.flightCancelRequested = false;
+		this.previousCameraState = null;
+
+		// Update store state if click processing is active
+		if (this.store.clickProcessingState.isProcessing) {
+			this.store.setClickProcessingState({
+				stage: 'complete',
+				canCancel: false,
+			});
+		}
+	}
+
+	/**
+	 * Handles flight cancellation callback
+	 * Restores previous view state and updates store.
+	 * @private
+	 */
+	onFlightCancelled() {
+		console.log('[Camera] Flight cancelled');
+
+		// Restore camera position
+		this.restoreCapturedState();
+
+		// Restore application state
+		this.store.restorePreviousViewState();
+
+		// Clean up
+		this.currentFlight = null;
+		this.flightCancelRequested = false;
+
+		// Reset click processing state
+		this.store.resetClickProcessingState();
 	}
 
 	/**
@@ -27,10 +142,10 @@ export default class Camera {
 	 */
 	init() {
 		this.viewer.camera.setView({
-			destination: Cesium.Cartesian3.fromDegrees(24.931745, 60.190464, 35000),
+			destination: Cesium.Cartesian3.fromDegrees(24.9384, 60.1695, 15000),
 			orientation: {
 				heading: Cesium.Math.toRadians(0.0),
-				pitch: Cesium.Math.toRadians(-85.0),
+				pitch: Cesium.Math.toRadians(-45.0),
 				roll: 0.0,
 			},
 		});
@@ -79,10 +194,14 @@ export default class Camera {
 	 * Switches camera to 3D perspective view of the current postal code
 	 * Flies camera to postal code center with 35° pitch (angled perspective).
 	 * Applies slight latitude offset for better framing.
+	 * Supports cancellation and state tracking for UX improvements.
 	 *
 	 * @returns {void}
 	 */
 	switchTo3DView() {
+		// Capture current camera state before starting flight
+		this.captureCurrentState();
+
 		// Find the data source for postcodes
 		const postCodesDataSource = this.viewer.dataSources._dataSources.find(
 			(ds) => ds.name === 'PostCodes'
@@ -94,8 +213,16 @@ export default class Camera {
 
 			// Check if entity postal code matches current selected postal code
 			if (entity._properties._posno._value == this.store.postalcode) {
+				// Update state to animating stage
+				if (this.store.clickProcessingState.isProcessing) {
+					this.store.setClickProcessingState({
+						stage: 'animating',
+						canCancel: true,
+					});
+				}
+
 				// Fly to postal code with 3D perspective
-				this.viewer.camera.flyTo({
+				this.currentFlight = this.viewer.camera.flyTo({
 					destination: Cesium.Cartesian3.fromDegrees(
 						entity._properties._center_x._value,
 						entity._properties._center_y._value - 0.025,
@@ -107,7 +234,12 @@ export default class Camera {
 						roll: 0.0,
 					},
 					duration: 3,
+					complete: () => this.onFlightComplete(),
+					cancel: () => this.onFlightCancelled(),
 				});
+
+				console.log('[Camera] 3D view flight initiated');
+				return;
 			}
 		}
 	}

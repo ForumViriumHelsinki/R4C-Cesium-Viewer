@@ -1,5 +1,6 @@
 import cacheService from './cacheService.js';
 import progressiveLoader from './progressiveLoader.js';
+import { getRecentNDVIDates } from '../constants/ndviDates.js';
 
 /**
  * Background Preloader Service
@@ -66,13 +67,8 @@ class BackgroundPreloader {
 		}
 
 		// Preload recent NDVI dates in background
-		const currentYear = new Date().getFullYear();
-		const ndviDates = [
-			`${currentYear}-08-01`, // Summer (peak vegetation)
-			`${currentYear}-06-01`, // Early summer
-			`${currentYear}-07-01`, // Mid summer
-			`${currentYear - 1}-08-01`, // Previous year for comparison
-		];
+		// Use actual available dates instead of calculated dates
+		const ndviDates = getRecentNDVIDates(4);
 		await this.preloadNDVI(ndviDates, 'low'); // Low priority, background only
 
 		// Start processing the queue
@@ -155,7 +151,7 @@ class BackgroundPreloader {
 					await this.preloadItem(item);
 					this.preloadQueue.delete(item.key);
 				} catch (error) {
-					console.warn(`Failed to preload ${item.key}:`, error);
+					console.warn(`Failed to preload ${item.key}:`, error?.message || error);
 					// Keep in queue but lower priority
 					item.calculatedPriority *= 0.5;
 				}
@@ -264,7 +260,7 @@ class BackgroundPreloader {
 
 			console.log(`Successfully preloaded ${item.key} in ${Date.now() - startTime}ms`);
 		} catch (error) {
-			console.error(`Preload failed for ${item.key}:`, error);
+			console.error(`Preload failed for ${item.key}:`, error?.message || error);
 			throw error;
 		}
 	}
@@ -448,7 +444,7 @@ class BackgroundPreloader {
 				};
 			}
 		} catch (error) {
-			console.warn('Failed to load user behavior:', error);
+			console.warn('Failed to load user behavior:', error?.message || error);
 		}
 	}
 
@@ -463,7 +459,7 @@ class BackgroundPreloader {
 				lastActivity: this.userBehavior.lastActivity,
 			});
 		} catch (error) {
-			console.warn('Failed to save user behavior:', error);
+			console.warn('Failed to save user behavior:', error?.message || error);
 		}
 	}
 

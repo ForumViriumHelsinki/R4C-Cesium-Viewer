@@ -79,7 +79,7 @@ class CacheWarmer {
 
 			console.log('[CacheWarmer] ✅ Cache warming complete');
 		} catch (error) {
-			console.warn('[CacheWarmer] ⚠️ Cache warming encountered error:', error);
+			console.warn('[CacheWarmer] ⚠️ Cache warming encountered error:', error?.message || error);
 		} finally {
 			this.warmingInProgress = false;
 		}

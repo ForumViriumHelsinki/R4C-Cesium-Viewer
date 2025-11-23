@@ -83,7 +83,7 @@ export default class Tree {
 
 			return results;
 		} catch (error) {
-			console.error('Failed to load tree data:', error);
+			console.error('Failed to load tree data:', error?.message || error);
 			throw error;
 		}
 	}
@@ -111,7 +111,7 @@ export default class Tree {
 			console.log(`✓ Loaded trees for height category ${koodi}`);
 			return data;
 		} catch (error) {
-			console.error(`Failed to load trees for koodi ${koodi}:`, error);
+			console.error(`Failed to load trees for koodi ${koodi}:`, error?.message || error);
 			throw error;
 		}
 	}
@@ -174,7 +174,7 @@ export default class Tree {
 				console.log(`✓ Restored ${processed} trees from cache for category ${koodi}`);
 			}
 		} catch (error) {
-			console.error(`Error processing tree data for koodi ${koodi}:`, error);
+			console.error(`Error processing tree data for koodi ${koodi}:`, error?.message || error);
 			throw error;
 		}
 	}

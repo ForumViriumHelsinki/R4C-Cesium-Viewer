@@ -1,3 +1,4 @@
+import { logVisibilityChange } from './visibilityLogger.js';
 import * as Cesium from 'cesium';
 import Datasource from './datasource.js';
 import Urbanheat from './urbanheat.js';
@@ -38,6 +39,8 @@ export default class Building {
 		this.treeService = new Tree();
 		this.urbanheatService = new Urbanheat();
 		this.unifiedLoader = unifiedLoader;
+		// Track last filter state to prevent redundant re-application
+		this.lastFilterState = null;
 	}
 
 	/**
@@ -167,6 +170,13 @@ export default class Building {
 						);
 					}
 				} else {
+					logVisibilityChange(
+						'entity',
+						entity.id || 'building',
+						entity.show,
+						false,
+						'setBuildingEntityPolygon-noHeatData'
+					);
 					entity.show = false;
 					polygon.material = new Cesium.Color(0, 0, 0, 0); // Set color to 0 0 0 0 if no entry is found
 				}
@@ -177,7 +187,14 @@ export default class Building {
 			(this.hideNonSoteBuilding(entity), this.hideLowBuilding(entity));
 		this.store.view === 'grid' &&
 			entity._properties?._kayttarks?._value !== 'Asuinrakennus' &&
-			(entity.show = false);
+			(logVisibilityChange(
+				'entity',
+				entity.id || 'building',
+				entity.show,
+				false,
+				'setBuildingEntityPolygon-gridNonResidential'
+			),
+			(entity.show = false));
 	}
 
 	/**
@@ -194,6 +211,13 @@ export default class Building {
 				(![511, 131].includes(Number(kayttotark)) &&
 					!(Number(kayttotark) > 212 && Number(kayttotark) < 240))
 			) {
+				logVisibilityChange(
+					'entity',
+					entity.id || 'building',
+					entity.show,
+					false,
+					'hideNonSoteBuilding'
+				);
 				entity.show = false;
 			}
 		}
@@ -208,7 +232,14 @@ export default class Building {
 		this.toggleStore.hideLow &&
 			(!Number(entity._properties.i_kerrlkm?._value) ||
 				Number(entity._properties.i_kerrlkm?._value) < 7) &&
-			(entity.show = false);
+			(logVisibilityChange(
+				'entity',
+				entity.id || 'building',
+				entity.show,
+				false,
+				'hideLowBuilding'
+			),
+			(entity.show = false));
 	}
 
 	async setHelsinkiBuildingsHeight(entities) {
@@ -335,7 +366,9 @@ export default class Building {
 
 	/**
 	 * Filter buildings from the given data source based on UI toggle switches.
+	 * Optimized to prevent redundant re-application and batch visibility changes.
 	 *
+	 * @param {Cesium.DataSource} buildingsDataSource - Data source containing building entities
 	 */
 	filterBuildings(buildingsDataSource) {
 		// If the data source isn't found, exit the function
@@ -345,16 +378,109 @@ export default class Building {
 		const hideNonSote = this.toggleStore.hideNonSote;
 		const hideLow = this.toggleStore.hideLow;
 
-		buildingsDataSource.entities.values.forEach((entity) => {
-			hideNewBuildings &&
-				entity._properties?._c_valmpvm?._value &&
-				new Date(entity._properties._c_valmpvm._value).getTime() >=
-					new Date('2018-06-01T00:00:00').getTime() &&
-				(entity.show = false);
+		// Get current filter state
+		const currentState = {
+			hideNewBuildings,
+			hideNonSote,
+			hideLow,
+		};
 
-			hideNonSote && this.soteBuildings(entity);
-			hideLow && this.lowBuildings(entity);
-		});
+		// Skip if state unchanged to prevent redundant re-application
+		if (
+			this.lastFilterState &&
+			JSON.stringify(this.lastFilterState) === JSON.stringify(currentState)
+		) {
+			return;
+		}
+		this.lastFilterState = currentState;
+
+		// Pre-calculate the cutoff date for hideNewBuildings filter
+		const cutoffDate = new Date('2018-06-01T00:00:00').getTime();
+
+		// Batch entity visibility changes
+		const entitiesToHide = [];
+		const entitiesToShow = [];
+
+		// Single pass through all entities with all filter checks
+		const entities = buildingsDataSource.entities.values;
+		for (let i = 0; i < entities.length; i++) {
+			const entity = entities[i];
+			let shouldHide = false;
+
+			// Check hideNewBuildings filter
+			if (hideNewBuildings) {
+				const completionDate = entity._properties?._c_valmpvm?._value;
+				if (completionDate && new Date(completionDate).getTime() >= cutoffDate) {
+					shouldHide = true;
+				}
+			}
+
+			// Check hideNonSote filter (social/healthcare buildings)
+			if (!shouldHide && hideNonSote) {
+				const kayttotark = this.toggleStore.helsinkiView
+					? entity._properties?._c_kayttark?._value
+						? Number(entity._properties.c_kayttark._value)
+						: null
+					: entity._properties?._kayttarks?._value;
+
+				const isSoteBuilding = this.toggleStore.helsinkiView
+					? kayttotark &&
+						([511, 131].includes(kayttotark) || (kayttotark > 210 && kayttotark < 240))
+					: kayttotark === 'Yleinen rakennus';
+
+				if (!isSoteBuilding) {
+					shouldHide = true;
+				}
+			}
+
+			// Check hideLow filter (buildings with <= 6 floors)
+			if (!shouldHide && hideLow) {
+				const floorCount =
+					entity._properties?.[this.toggleStore.helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']
+						?._value;
+				if (!floorCount || floorCount <= 6) {
+					shouldHide = true;
+				}
+			}
+
+			// Collect entities by visibility state
+			if (shouldHide) {
+				entitiesToHide.push(entity);
+			} else {
+				entitiesToShow.push(entity);
+			}
+		}
+
+		// Apply visibility changes in batches to minimize render cycles
+		for (let i = 0; i < entitiesToHide.length; i++) {
+			if (entitiesToHide[i].show) {
+				logVisibilityChange(
+					'entity',
+					entitiesToHide[i].id || 'building',
+					true,
+					false,
+					'filterBuildings-hide'
+				);
+				entitiesToHide[i].show = false;
+			}
+		}
+		for (let i = 0; i < entitiesToShow.length; i++) {
+			if (!entitiesToShow[i].show) {
+				logVisibilityChange(
+					'entity',
+					entitiesToShow[i].id || 'building',
+					false,
+					true,
+					'filterBuildings-show'
+				);
+				entitiesToShow[i].show = true;
+			}
+		}
+
+		// Request render after batch updates
+		if (this.viewer) {
+			this.viewer.scene.requestRender();
+		}
 
 		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities._entities._array);
 	}
@@ -420,15 +546,38 @@ export default class Building {
 	/**
 	 * Shows all buildings and updates the histograms and scatter plot
 	 *
+	 * @param {Cesium.DataSource} buildingsDataSource - Data source containing building entities
 	 */
 	showAllBuildings(buildingsDataSource) {
 		// If the data source isn't found, exit the function
 		if (!buildingsDataSource) return;
 
+		// Reset filter state tracking since we're showing all buildings
+		this.lastFilterState = null;
+
+		// Batch visibility changes
+		const entities = buildingsDataSource._entityCollection._entities._array;
+		let hasChanges = false;
+
 		// Iterate over all entities in data source
-		for (let i = 0; i < buildingsDataSource._entityCollection._entities._array.length; i++) {
-			// Show the entity
-			buildingsDataSource._entityCollection._entities._array[i].show = true;
+		for (let i = 0; i < entities.length; i++) {
+			// Only update if needed to minimize render cycles
+			if (!entities[i].show) {
+				logVisibilityChange(
+					'entity',
+					entities[i].id || 'building',
+					false,
+					true,
+					'showAllBuildings'
+				);
+				entities[i].show = true;
+				hasChanges = true;
+			}
+		}
+
+		// Request render after batch updates if there were changes
+		if (hasChanges && this.viewer) {
+			this.viewer.scene.requestRender();
 		}
 
 		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities._entities._array);

@@ -1,3 +1,4 @@
+import { logVisibilityChange } from './visibilityLogger.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 
@@ -24,6 +25,13 @@ export default class DataSource {
 	 */
 	showAllDataSources() {
 		this.store.cesiumViewer.dataSources._dataSources.forEach((dataSource) => {
+			logVisibilityChange(
+				'datasource',
+				dataSource.name,
+				dataSource.show,
+				true,
+				'showAllDataSources'
+			);
 			dataSource.show = true;
 		});
 	}
@@ -39,6 +47,13 @@ export default class DataSource {
 	async changeDataSourceShowByName(name, show) {
 		this.store.cesiumViewer.dataSources._dataSources.forEach((dataSource) => {
 			if (dataSource.name.startsWith(name)) {
+				logVisibilityChange(
+					'datasource',
+					dataSource.name,
+					dataSource.show,
+					show,
+					'changeDataSourceShowByName-' + name
+				);
 				dataSource.show = show;
 			}
 		});

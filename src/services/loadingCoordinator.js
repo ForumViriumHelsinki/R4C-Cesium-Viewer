@@ -221,7 +221,7 @@ class LoadingCoordinator {
 				// Brief pause to allow UI updates
 				await new Promise((resolve) => setTimeout(resolve, 10));
 			} catch (error) {
-				console.error(`❌ Failed to load layer: ${config.layerId}`, error);
+				console.error(`❌ Failed to load layer: ${config.layerId}`, error?.message || error);
 				results.push({ status: 'rejected', reason: error, config });
 			}
 		}
@@ -261,7 +261,10 @@ class LoadingCoordinator {
 						},
 					});
 				} catch (error) {
-					console.warn(`Background loading failed for ${configs[index].layerId}:`, error);
+					console.warn(
+						`Background loading failed for ${configs[index].layerId}:`,
+						error?.message || error
+					);
 				}
 
 				// Schedule next layer
@@ -344,7 +347,7 @@ class LoadingCoordinator {
 	 * Handle session errors
 	 */
 	handleSessionError(sessionId, error) {
-		console.error(`❌ Loading session ${sessionId} failed:`, error);
+		console.error(`❌ Loading session ${sessionId} failed:`, error?.message || error);
 		this.activeSessions.delete(sessionId);
 	}
 
