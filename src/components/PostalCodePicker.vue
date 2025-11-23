@@ -24,7 +24,11 @@
 
 		<!-- View Mode Info -->
 		<div class="view-info">
-			<v-chip :color="currentView === 'helsinki' ? 'blue' : 'green'" size="small" class="mb-3">
+			<v-chip
+				:color="currentView === 'helsinki' ? 'blue' : 'green'"
+				size="small"
+				class="mb-3"
+			>
 				{{ currentView === 'helsinki' ? 'Helsinki Only' : 'Capital Region' }}
 				({{ filteredPostalCodes.length }} areas)
 			</v-chip>
@@ -32,7 +36,11 @@
 
 		<!-- Postal Code List -->
 		<div class="postal-codes-list">
-			<v-virtual-scroll :items="filteredPostalCodes" height="300" item-height="60">
+			<v-virtual-scroll
+				:items="filteredPostalCodes"
+				height="300"
+				item-height="60"
+			>
 				<template #default="{ item }">
 					<v-list-item
 						:key="item.posno"
@@ -80,7 +88,11 @@
 									<span>Vegetation Coverage</span>
 								</v-tooltip>
 
-								<v-icon v-if="item.posno === currentPostalCode" color="primary" size="small">
+								<v-icon
+									v-if="item.posno === currentPostalCode"
+									color="primary"
+									size="small"
+								>
 									mdi-check-circle
 								</v-icon>
 							</div>
@@ -91,16 +103,31 @@
 		</div>
 
 		<!-- Loading State -->
-		<div v-if="isLoading" class="loading-state">
-			<v-progress-circular indeterminate size="24" />
+		<div
+			v-if="isLoading"
+			class="loading-state"
+		>
+			<v-progress-circular
+				indeterminate
+				size="24"
+			/>
 			<span class="ml-2">Loading postal code areas...</span>
 		</div>
 
 		<!-- No Results -->
-		<div v-if="!isLoading && filteredPostalCodes.length === 0" class="no-results">
+		<div
+			v-if="!isLoading && filteredPostalCodes.length === 0"
+			class="no-results"
+		>
 			<v-icon class="mb-2"> mdi-map-search </v-icon>
 			<p class="text-body-2">No areas found matching "{{ searchQuery }}"</p>
-			<v-btn variant="text" size="small" @click="searchQuery = ''"> Clear Search </v-btn>
+			<v-btn
+				variant="text"
+				size="small"
+				@click="searchQuery = ''"
+			>
+				Clear Search
+			</v-btn>
 		</div>
 
 		<!-- Quick Actions -->
@@ -116,7 +143,13 @@
 				Focus on {{ currentAreaName }}
 			</v-btn>
 
-			<v-btn block variant="text" prepend-icon="mdi-refresh" size="small" @click="resetSelection">
+			<v-btn
+				block
+				variant="text"
+				prepend-icon="mdi-refresh"
+				size="small"
+				@click="resetSelection"
+			>
 				Reset Selection
 			</v-btn>
 		</div>

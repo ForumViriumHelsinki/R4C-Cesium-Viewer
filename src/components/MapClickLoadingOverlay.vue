@@ -18,7 +18,13 @@
 		>
 			<!-- Header -->
 			<div class="d-flex align-center mb-4">
-				<v-progress-circular indeterminate color="primary" size="32" :width="3" class="mr-4" />
+				<v-progress-circular
+					indeterminate
+					color="primary"
+					size="32"
+					:width="3"
+					class="mr-4"
+				/>
 				<div>
 					<h3 class="text-h6">
 						{{ stageText }}
@@ -39,7 +45,10 @@
 			/>
 
 			<!-- Progressive loading status text (FR-3.2) -->
-			<div v-if="showProgress && currentDataset" class="text-caption text-medium-emphasis mb-3">
+			<div
+				v-if="showProgress && currentDataset"
+				class="text-caption text-medium-emphasis mb-3"
+			>
 				{{ currentDataset }}
 			</div>
 
@@ -68,7 +77,13 @@
 			>
 				<div class="d-flex align-center justify-space-between">
 					<span>{{ error.message }}</span>
-					<v-btn size="small" variant="text" @click="handleRetry"> Retry </v-btn>
+					<v-btn
+						size="small"
+						variant="text"
+						@click="handleRetry"
+					>
+						Retry
+					</v-btn>
 				</div>
 			</v-alert>
 		</v-card>

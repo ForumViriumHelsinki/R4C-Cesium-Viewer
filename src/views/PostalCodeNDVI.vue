@@ -3,7 +3,12 @@
 		<v-row>
 			<!-- Left: Radio Buttons -->
 			<v-col cols="4">
-				<v-radio-group v-model="selectedDate" dense :disabled="!ndvi" @change="updateImage">
+				<v-radio-group
+					v-model="selectedDate"
+					dense
+					:disabled="!ndvi"
+					@change="updateImage"
+				>
 					<v-radio
 						v-for="date in availableDates"
 						:key="date"

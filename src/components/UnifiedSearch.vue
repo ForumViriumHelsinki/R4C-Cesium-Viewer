@@ -41,11 +41,22 @@
 				</div>
 			</template>
 
-			<v-card v-if="hasResults" class="results-card">
+			<v-card
+				v-if="hasResults"
+				class="results-card"
+			>
 				<!-- Address Results Section -->
-				<div v-if="addressResults.length > 0" class="results-section">
+				<div
+					v-if="addressResults.length > 0"
+					class="results-section"
+				>
 					<v-list-subheader class="results-header">
-						<v-icon class="mr-2" size="16"> mdi-map-marker </v-icon>
+						<v-icon
+							class="mr-2"
+							size="16"
+						>
+							mdi-map-marker
+						</v-icon>
 						Addresses
 					</v-list-subheader>
 					<v-list density="compact">
@@ -56,7 +67,12 @@
 							@click="selectAddress(address)"
 						>
 							<template #prepend>
-								<v-icon class="result-icon" color="blue"> mdi-map-marker </v-icon>
+								<v-icon
+									class="result-icon"
+									color="blue"
+								>
+									mdi-map-marker
+								</v-icon>
 							</template>
 							<v-list-item-title>{{ address.address }}</v-list-item-title>
 							<v-list-item-subtitle v-if="address.postalcode">
@@ -67,9 +83,17 @@
 				</div>
 
 				<!-- Postal Code Results Section -->
-				<div v-if="postalCodeResults.length > 0" class="results-section">
+				<div
+					v-if="postalCodeResults.length > 0"
+					class="results-section"
+				>
 					<v-list-subheader class="results-header">
-						<v-icon class="mr-2" size="16"> mdi-post </v-icon>
+						<v-icon
+							class="mr-2"
+							size="16"
+						>
+							mdi-post
+						</v-icon>
 						Postal Code Areas
 					</v-list-subheader>
 					<v-list density="compact">
@@ -80,7 +104,10 @@
 							@click="selectPostalCode(area)"
 						>
 							<template #prepend>
-								<v-avatar size="28" :color="getVegetationColor(area.vegetation_percentage)">
+								<v-avatar
+									size="28"
+									:color="getVegetationColor(area.vegetation_percentage)"
+								>
 									<span class="text-caption font-weight-bold">{{ area.posno }}</span>
 								</v-avatar>
 							</template>
@@ -101,26 +128,55 @@
 				</div>
 
 				<!-- No Results -->
-				<div v-if="searchQuery.length > 2 && !hasResults" class="no-results">
+				<div
+					v-if="searchQuery.length > 2 && !hasResults"
+					class="no-results"
+				>
 					<v-icon class="mb-2"> mdi-map-search </v-icon>
 					<p class="text-body-2">No results found for "{{ searchQuery }}"</p>
 					<p class="text-caption">Try searching by address, postal code, or area name</p>
 				</div>
 
 				<!-- Search Tips -->
-				<div v-if="searchQuery.length <= 2" class="search-tips">
+				<div
+					v-if="searchQuery.length <= 2"
+					class="search-tips"
+				>
 					<v-icon class="mb-2"> mdi-lightbulb-outline </v-icon>
 					<p class="text-body-2">Search examples:</p>
-					<v-chip size="small" class="ma-1"> 00100 </v-chip>
-					<v-chip size="small" class="ma-1"> Keskusta </v-chip>
-					<v-chip size="small" class="ma-1"> Helsinki Central Station </v-chip>
+					<v-chip
+						size="small"
+						class="ma-1"
+					>
+						00100
+					</v-chip>
+					<v-chip
+						size="small"
+						class="ma-1"
+					>
+						Keskusta
+					</v-chip>
+					<v-chip
+						size="small"
+						class="ma-1"
+					>
+						Helsinki Central Station
+					</v-chip>
 				</div>
 			</v-card>
 		</v-menu>
 
 		<!-- Quick Actions -->
-		<div v-if="currentSelection" class="quick-actions">
-			<v-btn variant="text" size="small" prepend-icon="mdi-target" @click="focusOnCurrent">
+		<div
+			v-if="currentSelection"
+			class="quick-actions"
+		>
+			<v-btn
+				variant="text"
+				size="small"
+				prepend-icon="mdi-target"
+				@click="focusOnCurrent"
+			>
 				Focus on {{ currentSelection.name }}
 			</v-btn>
 		</div>

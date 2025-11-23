@@ -7,8 +7,14 @@
 		style="position: relative; z-index: 10; height: 100vh"
 	>
 		<!-- Row 7 -->
-		<v-row no-gutters class="pa-0 ma-0">
-			<v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20">
+		<v-row
+			no-gutters
+			class="pa-0 ma-0"
+		>
+			<v-col
+				class="d-flex flex-column pa-0 ma-0"
+				style="z-index: 20"
+			>
 				<HeatHistogram v-if="propsStore.heatHistogramData" />
 			</v-col>
 			<v-col
@@ -23,16 +29,28 @@
 		<v-spacer />
 
 		<!-- Row 6 -->
-		<v-row no-gutters class="pa-0 ma-0">
-			<v-col class="d-flex align-start pa-0 ma-0" style="z-index: 20" />
+		<v-row
+			no-gutters
+			class="pa-0 ma-0"
+		>
+			<v-col
+				class="d-flex align-start pa-0 ma-0"
+				style="z-index: 20"
+			/>
 		</v-row>
 
 		<v-spacer />
 		<!-- Conditionally render BuildingInformation when there is buildings to be shown -->
 
 		<!-- Row 1 -->
-		<v-row no-gutters class="pa-0 ma-0">
-			<v-col class="d-flex flex-column pa-0 ma-0" style="z-index: 20">
+		<v-row
+			no-gutters
+			class="pa-0 ma-0"
+		>
+			<v-col
+				class="d-flex flex-column pa-0 ma-0"
+				style="z-index: 20"
+			>
 				<Scatterplot v-if="propsStore.scatterPlotEntities" />
 				<NearbyTreeArea />
 			</v-col>

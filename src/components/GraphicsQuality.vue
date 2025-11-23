@@ -4,7 +4,11 @@
 			<v-icon class="mr-2"> mdi-palette </v-icon>
 			Graphics Quality
 			<v-spacer />
-			<v-chip :color="qualityColor" size="small" variant="flat">
+			<v-chip
+				:color="qualityColor"
+				size="small"
+				variant="flat"
+			>
 				{{ graphicsStore.qualityLevel }}
 			</v-chip>
 		</v-card-title>
@@ -22,11 +26,37 @@
 						class="w-100"
 						@update:model-value="applyPreset"
 					>
-						<v-btn value="ultra" size="small" :disabled="!canUseUltra"> Ultra </v-btn>
-						<v-btn value="high" size="small"> High </v-btn>
-						<v-btn value="medium" size="small"> Medium </v-btn>
-						<v-btn value="low" size="small"> Low </v-btn>
-						<v-btn value="performance" size="small"> Performance </v-btn>
+						<v-btn
+							value="ultra"
+							size="small"
+							:disabled="!canUseUltra"
+						>
+							Ultra
+						</v-btn>
+						<v-btn
+							value="high"
+							size="small"
+						>
+							High
+						</v-btn>
+						<v-btn
+							value="medium"
+							size="small"
+						>
+							Medium
+						</v-btn>
+						<v-btn
+							value="low"
+							size="small"
+						>
+							Low
+						</v-btn>
+						<v-btn
+							value="performance"
+							size="small"
+						>
+							Performance
+						</v-btn>
 					</v-btn-toggle>
 				</v-col>
 			</v-row>
@@ -40,7 +70,10 @@
 
 					<!-- MSAA Settings -->
 					<div class="mb-3">
-						<v-row align="center" no-gutters>
+						<v-row
+							align="center"
+							no-gutters
+						>
 							<v-col>
 								<v-switch
 									v-model="msaaEnabled"
@@ -52,15 +85,26 @@
 									<template #label>
 										<span class="text-body-2">
 											MSAA
-											<v-tooltip activator="parent" location="top">
+											<v-tooltip
+												activator="parent"
+												location="top"
+											>
 												Multi-Sample Anti-Aliasing - Hardware-based edge smoothing
 											</v-tooltip>
 										</span>
 									</template>
 								</v-switch>
 							</v-col>
-							<v-col v-if="!graphicsStore.msaaSupported" cols="auto">
-								<v-icon color="warning" size="small"> mdi-alert </v-icon>
+							<v-col
+								v-if="!graphicsStore.msaaSupported"
+								cols="auto"
+							>
+								<v-icon
+									color="warning"
+									size="small"
+								>
+									mdi-alert
+								</v-icon>
 							</v-col>
 						</v-row>
 
@@ -84,11 +128,19 @@
 					</div>
 
 					<!-- FXAA Settings -->
-					<v-switch v-model="fxaaEnabled" color="primary" density="compact" hide-details>
+					<v-switch
+						v-model="fxaaEnabled"
+						color="primary"
+						density="compact"
+						hide-details
+					>
 						<template #label>
 							<span class="text-body-2">
 								FXAA
-								<v-tooltip activator="parent" location="top">
+								<v-tooltip
+									activator="parent"
+									location="top"
+								>
 									Fast Approximate Anti-Aliasing - Post-processing edge smoothing
 								</v-tooltip>
 							</span>
@@ -124,7 +176,10 @@
 								>
 									mdi-alert
 								</v-icon>
-								<v-tooltip activator="parent" location="top">
+								<v-tooltip
+									activator="parent"
+									location="top"
+								>
 									High Dynamic Range rendering for better lighting
 								</v-tooltip>
 							</div>
@@ -151,7 +206,10 @@
 								>
 									mdi-alert
 								</v-icon>
-								<v-tooltip activator="parent" location="top">
+								<v-tooltip
+									activator="parent"
+									location="top"
+								>
 									Enhanced shadows and depth for 3D buildings
 								</v-tooltip>
 							</div>
@@ -159,11 +217,19 @@
 					</v-switch>
 
 					<!-- Performance Mode -->
-					<v-switch v-model="requestRenderMode" color="primary" density="compact" hide-details>
+					<v-switch
+						v-model="requestRenderMode"
+						color="primary"
+						density="compact"
+						hide-details
+					>
 						<template #label>
 							<span class="text-body-2">
 								Performance Mode
-								<v-tooltip activator="parent" location="top">
+								<v-tooltip
+									activator="parent"
+									location="top"
+								>
 									Only render when scene changes (saves battery/CPU)
 								</v-tooltip>
 							</span>
@@ -186,7 +252,12 @@
 					</v-alert>
 
 					<div class="text-caption text-medium-emphasis d-flex align-center">
-						<v-icon size="small" class="mr-1"> mdi-information </v-icon>
+						<v-icon
+							size="small"
+							class="mr-1"
+						>
+							mdi-information
+						</v-icon>
 						Anti-aliasing: {{ antiAliasingStatus }}
 					</div>
 				</v-col>

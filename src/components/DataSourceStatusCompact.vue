@@ -7,7 +7,11 @@
 		<!-- Status Summary Header -->
 		<v-card-text class="status-header pa-2">
 			<div class="status-summary">
-				<v-icon :color="overallStatusColor" size="16" class="status-icon">
+				<v-icon
+					:color="overallStatusColor"
+					size="16"
+					class="status-icon"
+				>
 					{{ overallStatusIcon }}
 				</v-icon>
 
@@ -29,21 +33,37 @@
 
 		<!-- Expandable Details -->
 		<v-expand-transition>
-			<div v-if="showDetails" class="status-details">
+			<div
+				v-if="showDetails"
+				class="status-details"
+			>
 				<v-divider />
 
 				<v-card-text class="pa-2">
 					<!-- Individual Source Status -->
-					<div v-for="source in dataSources" :key="source.id" class="source-item-compact">
+					<div
+						v-for="source in dataSources"
+						:key="source.id"
+						class="source-item-compact"
+					>
 						<div class="source-info-compact">
-							<v-icon :color="getStatusColor(source.status)" size="12" class="source-status-icon">
+							<v-icon
+								:color="getStatusColor(source.status)"
+								size="12"
+								class="source-status-icon"
+							>
 								{{ getStatusIcon(source) }}
 							</v-icon>
 
 							<span class="source-name-compact">{{ source.name }}</span>
 
 							<!-- Cache indicator -->
-							<v-icon v-if="source.cached" size="10" color="blue" class="cache-icon">
+							<v-icon
+								v-if="source.cached"
+								size="10"
+								color="blue"
+								class="cache-icon"
+							>
 								mdi-cached
 							</v-icon>
 
@@ -58,7 +78,10 @@
 						</div>
 
 						<!-- Error message -->
-						<div v-if="source.status === 'error'" class="error-msg">
+						<div
+							v-if="source.status === 'error'"
+							class="error-msg"
+						>
 							{{ source.message }}
 						</div>
 					</div>
@@ -72,7 +95,12 @@
 							class="action-btn"
 							@click="refreshAll"
 						>
-							<v-icon size="12" class="mr-1"> mdi-refresh </v-icon>
+							<v-icon
+								size="12"
+								class="mr-1"
+							>
+								mdi-refresh
+							</v-icon>
 							Refresh
 						</v-btn>
 
@@ -84,7 +112,12 @@
 							class="action-btn"
 							@click="clearAllCache"
 						>
-							<v-icon size="12" class="mr-1"> mdi-delete-sweep </v-icon>
+							<v-icon
+								size="12"
+								class="mr-1"
+							>
+								mdi-delete-sweep
+							</v-icon>
 							Clear Cache
 						</v-btn>
 					</div>

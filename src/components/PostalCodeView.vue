@@ -1,9 +1,18 @@
 <template>
-	<v-card v-if="showPostalCodeView" class="postal-code-panel" elevation="2">
+	<v-card
+		v-if="showPostalCodeView"
+		class="postal-code-panel"
+		elevation="2"
+	>
 		<!-- Header Section -->
 		<v-card-title class="panel-header">
 			<div class="header-content">
-				<v-icon class="mr-2" color="primary"> mdi-map-marker-multiple </v-icon>
+				<v-icon
+					class="mr-2"
+					color="primary"
+				>
+					mdi-map-marker-multiple
+				</v-icon>
 				<span class="header-title">Urban Heat Risk</span>
 			</div>
 			<div class="header-actions">
@@ -17,7 +26,13 @@
 				>
 					<v-icon>mdi-arrow-left</v-icon>
 				</v-btn>
-				<v-btn icon size="small" color="error" variant="text" @click="reset">
+				<v-btn
+					icon
+					size="small"
+					color="error"
+					variant="text"
+					@click="reset"
+				>
 					<v-icon>mdi-refresh</v-icon>
 				</v-btn>
 			</div>
@@ -29,7 +44,12 @@
 			<!-- View Mode Section -->
 			<div class="control-section">
 				<h4 class="section-title">
-					<v-icon class="mr-2" size="18"> mdi-eye </v-icon>
+					<v-icon
+						class="mr-2"
+						size="18"
+					>
+						mdi-eye
+					</v-icon>
 					View Mode
 				</h4>
 
@@ -66,7 +86,12 @@
 			<!-- Data Layers Section -->
 			<div class="control-section">
 				<h4 class="section-title">
-					<v-icon class="mr-2" size="18"> mdi-layers </v-icon>
+					<v-icon
+						class="mr-2"
+						size="18"
+					>
+						mdi-layers
+					</v-icon>
 					Data Layers
 				</h4>
 
@@ -167,7 +192,12 @@
 			<!-- External Resources Section -->
 			<div class="control-section">
 				<h4 class="section-title">
-					<v-icon class="mr-2" size="18"> mdi-link </v-icon>
+					<v-icon
+						class="mr-2"
+						size="18"
+					>
+						mdi-link
+					</v-icon>
 					External Resources
 				</h4>
 

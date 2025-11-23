@@ -1,7 +1,13 @@
 <template>
-	<div v-if="legendData.length > 0 && legendVisible" id="legend">
+	<div
+		v-if="legendData.length > 0 && legendVisible"
+		id="legend"
+	>
 		<!-- Toggle button to minimize or expand the legend -->
-		<v-icon class="toggle-icon" @click="toggleLegend">
+		<v-icon
+			class="toggle-icon"
+			@click="toggleLegend"
+		>
 			{{ legendExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
 		</v-icon>
 
@@ -30,7 +36,10 @@
 			</div>
 
 			<!-- Custom striped legend for combined_heat_flood_green, simplified to combined heat and flood -->
-			<div v-else-if="localSelectedIndex === 'combined_heat_flood_green'" class="striped-legend">
+			<div
+				v-else-if="localSelectedIndex === 'combined_heat_flood_green'"
+				class="striped-legend"
+			>
 				<div class="legend-container">
 					<!-- Combined Legend for Heat and Flood -->
 					<div class="combined-legend">
@@ -42,7 +51,10 @@
 									:key="item.range"
 									class="swatch"
 								>
-									<div class="color-box" :style="{ backgroundColor: item.color }" />
+									<div
+										class="color-box"
+										:style="{ backgroundColor: item.color }"
+									/>
 									<span>{{ item.range }}</span>
 								</div>
 							</div>
@@ -54,15 +66,25 @@
 									:key="item.range"
 									class="swatch"
 								>
-									<div class="color-box" :style="{ backgroundColor: item.color }" />
+									<div
+										class="color-box"
+										:style="{ backgroundColor: item.color }"
+									/>
 									<span>{{ item.range }}</span>
 								</div>
 							</div>
 
 							<div class="missing-legend">
 								<h5>Incomplete Data</h5>
-								<div v-for="item in indexToColorScheme.both" :key="item.range" class="swatch">
-									<div class="color-box" :style="{ backgroundColor: item.color }" />
+								<div
+									v-for="item in indexToColorScheme.both"
+									:key="item.range"
+									class="swatch"
+								>
+									<div
+										class="color-box"
+										:style="{ backgroundColor: item.color }"
+									/>
 									<span>{{ item.range }}</span>
 								</div>
 							</div>
@@ -80,8 +102,15 @@
 
 			<!-- Default legend display for non-gradient indices -->
 			<div v-else>
-				<div v-for="item in legendData" :key="item.range" class="swatch">
-					<div class="color-box" :style="{ backgroundColor: item.color }" />
+				<div
+					v-for="item in legendData"
+					:key="item.range"
+					class="swatch"
+				>
+					<div
+						class="color-box"
+						:style="{ backgroundColor: item.color }"
+					/>
 					<span>{{ item.range }}</span>
 				</div>
 			</div>
@@ -150,9 +179,16 @@
 			</template>
 		</v-tooltip>
 
-		<div v-if="legendExpanded" class="source-note">
+		<div
+			v-if="legendExpanded"
+			class="source-note"
+		>
 			Socioeconomic source data by<br />
-			<a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a><br />
+			<a
+				href="https://stat.fi/index_en.html"
+				target="_blank"
+				>Statistics Finland</a
+			><br />
 			<a
 				href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf"
 				target="_blank"

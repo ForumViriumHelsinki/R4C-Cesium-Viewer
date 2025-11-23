@@ -1,5 +1,9 @@
 <template>
-	<v-menu :close-on-content-click="false" location="bottom end" :offset="8">
+	<v-menu
+		:close-on-content-click="false"
+		location="bottom end"
+		:offset="8"
+	>
 		<template #activator="{ props }">
 			<v-badge
 				:color="overallStatusColor"
@@ -16,33 +20,60 @@
 					class="status-badge-btn"
 					aria-label="Data source status"
 				>
-					<v-icon :color="overallStatusColor" :size="20">
+					<v-icon
+						:color="overallStatusColor"
+						:size="20"
+					>
 						{{ overallStatusIcon }}
 					</v-icon>
 				</v-btn>
 			</v-badge>
 		</template>
 
-		<v-card class="status-menu-card" :min-width="280" :max-width="320">
+		<v-card
+			class="status-menu-card"
+			:min-width="280"
+			:max-width="320"
+		>
 			<v-card-title class="d-flex align-center justify-space-between pa-3">
 				<span class="text-subtitle-2">Data Sources</span>
-				<v-chip size="x-small" :color="overallStatusColor" variant="flat">
+				<v-chip
+					size="x-small"
+					:color="overallStatusColor"
+					variant="flat"
+				>
 					{{ healthyCount }}/{{ totalSources }}
 				</v-chip>
 			</v-card-title>
 
 			<v-divider />
 
-			<v-card-text class="pa-2" style="max-height: 240px; overflow-y: auto">
-				<div v-for="source in dataSources" :key="source.id" class="source-item mb-2">
+			<v-card-text
+				class="pa-2"
+				style="max-height: 240px; overflow-y: auto"
+			>
+				<div
+					v-for="source in dataSources"
+					:key="source.id"
+					class="source-item mb-2"
+				>
 					<div class="d-flex align-center gap-2">
-						<v-icon :color="getStatusColor(source.status)" :size="14">
+						<v-icon
+							:color="getStatusColor(source.status)"
+							:size="14"
+						>
 							{{ getStatusIcon(source) }}
 						</v-icon>
 
 						<span class="text-caption flex-grow-1">{{ source.name }}</span>
 
-						<v-icon v-if="source.cached" :size="12" color="blue"> mdi-cached </v-icon>
+						<v-icon
+							v-if="source.cached"
+							:size="12"
+							color="blue"
+						>
+							mdi-cached
+						</v-icon>
 
 						<span
 							v-if="source.responseTime"
@@ -53,7 +84,10 @@
 						</span>
 					</div>
 
-					<div v-if="source.status === 'error'" class="text-caption error-msg ml-6">
+					<div
+						v-if="source.status === 'error'"
+						class="text-caption error-msg ml-6"
+					>
 						{{ source.message }}
 					</div>
 				</div>

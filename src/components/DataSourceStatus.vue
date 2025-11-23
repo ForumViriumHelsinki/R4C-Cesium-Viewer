@@ -1,29 +1,62 @@
 <template>
-	<v-card class="data-source-status" :class="{ compact: compactMode }">
-		<v-card-title v-if="!compactMode" class="status-title">
+	<v-card
+		class="data-source-status"
+		:class="{ compact: compactMode }"
+	>
+		<v-card-title
+			v-if="!compactMode"
+			class="status-title"
+		>
 			<v-icon class="mr-2"> mdi-database-check </v-icon>
 			Data Sources
 			<v-spacer />
-			<v-btn icon size="small" :loading="refreshing" @click="refreshAll">
+			<v-btn
+				icon
+				size="small"
+				:loading="refreshing"
+				@click="refreshAll"
+			>
 				<v-icon>mdi-refresh</v-icon>
 			</v-btn>
 		</v-card-title>
 
 		<v-card-text :class="{ 'pa-2': compactMode }">
 			<!-- Overall Status Summary -->
-			<div v-if="!compactMode" class="status-summary mb-4">
+			<div
+				v-if="!compactMode"
+				class="status-summary mb-4"
+			>
 				<div class="summary-item">
-					<v-icon :color="overallStatusColor" class="mr-1">
+					<v-icon
+						:color="overallStatusColor"
+						class="mr-1"
+					>
 						{{ overallStatusIcon }}
 					</v-icon>
 					<span class="summary-text">{{ overallStatusText }}</span>
 				</div>
 				<div class="summary-stats">
-					<v-chip size="small" color="success" variant="text"> {{ healthyCount }} healthy </v-chip>
-					<v-chip size="small" color="warning" variant="text">
+					<v-chip
+						size="small"
+						color="success"
+						variant="text"
+					>
+						{{ healthyCount }} healthy
+					</v-chip>
+					<v-chip
+						size="small"
+						color="warning"
+						variant="text"
+					>
 						{{ degradedCount }} degraded
 					</v-chip>
-					<v-chip size="small" color="error" variant="text"> {{ errorCount }} error </v-chip>
+					<v-chip
+						size="small"
+						color="error"
+						variant="text"
+					>
+						{{ errorCount }} error
+					</v-chip>
 				</div>
 			</div>
 
@@ -49,9 +82,17 @@
 							<span class="source-name">{{ source.name }}</span>
 
 							<!-- Cache Indicator -->
-							<v-tooltip v-if="source.cached" location="top">
+							<v-tooltip
+								v-if="source.cached"
+								location="top"
+							>
 								<template #activator="{ props: tooltipProps }">
-									<v-icon v-bind="tooltipProps" size="12" color="blue" class="ml-1 cache-indicator">
+									<v-icon
+										v-bind="tooltipProps"
+										size="12"
+										color="blue"
+										class="ml-1 cache-indicator"
+									>
 										mdi-cached
 									</v-icon>
 								</template>
@@ -60,30 +101,48 @@
 						</div>
 
 						<!-- Compact Mode Details -->
-						<div v-if="compactMode && source.status !== 'healthy'" class="compact-details">
+						<div
+							v-if="compactMode && source.status !== 'healthy'"
+							class="compact-details"
+						>
 							<span class="status-message">{{ source.message }}</span>
 						</div>
 
 						<!-- Full Mode Details -->
-						<div v-if="!compactMode" class="source-details">
+						<div
+							v-if="!compactMode"
+							class="source-details"
+						>
 							<div class="detail-row">
 								<span class="detail-label">Status:</span>
-								<span class="detail-value" :class="getStatusClass(source.status)">
+								<span
+									class="detail-value"
+									:class="getStatusClass(source.status)"
+								>
 									{{ source.message }}
 								</span>
 							</div>
 
-							<div v-if="source.lastUpdated" class="detail-row">
+							<div
+								v-if="source.lastUpdated"
+								class="detail-row"
+							>
 								<span class="detail-label">Updated:</span>
 								<span class="detail-value">{{ formatTimestamp(source.lastUpdated) }}</span>
 							</div>
 
-							<div v-if="source.responseTime" class="detail-row">
+							<div
+								v-if="source.responseTime"
+								class="detail-row"
+							>
 								<span class="detail-label">Response:</span>
 								<span class="detail-value">{{ source.responseTime }}ms</span>
 							</div>
 
-							<div v-if="source.cached" class="detail-row">
+							<div
+								v-if="source.cached"
+								class="detail-row"
+							>
 								<span class="detail-label">Cache:</span>
 								<span class="detail-value cache-info">
 									{{ formatCacheSize(source.cacheSize) }}
@@ -95,7 +154,10 @@
 
 					<!-- Actions -->
 					<div class="source-actions">
-						<v-tooltip v-if="source.status === 'error'" location="top">
+						<v-tooltip
+							v-if="source.status === 'error'"
+							location="top"
+						>
 							<template #activator="{ props: tooltipProps }">
 								<v-btn
 									v-bind="tooltipProps"
@@ -112,7 +174,10 @@
 							<span>Retry connection</span>
 						</v-tooltip>
 
-						<v-tooltip v-if="source.cached" location="top">
+						<v-tooltip
+							v-if="source.cached"
+							location="top"
+						>
 							<template #activator="{ props: tooltipProps }">
 								<v-btn
 									v-bind="tooltipProps"
@@ -128,9 +193,17 @@
 							<span>Clear cached data</span>
 						</v-tooltip>
 
-						<v-menu v-if="!compactMode" location="bottom end">
+						<v-menu
+							v-if="!compactMode"
+							location="bottom end"
+						>
 							<template #activator="{ props: menuProps }">
-								<v-btn v-bind="menuProps" icon size="x-small" variant="text">
+								<v-btn
+									v-bind="menuProps"
+									icon
+									size="x-small"
+									variant="text"
+								>
 									<v-icon size="14"> mdi-dots-vertical </v-icon>
 								</v-btn>
 							</template>
@@ -164,10 +237,18 @@
 
 			<!-- Cache Statistics -->
 			<v-expand-transition>
-				<div v-if="showCacheStats && !compactMode" class="cache-stats mt-4">
+				<div
+					v-if="showCacheStats && !compactMode"
+					class="cache-stats mt-4"
+				>
 					<v-divider class="mb-3" />
 					<h4 class="cache-stats-title">
-						<v-icon class="mr-1" size="16"> mdi-database </v-icon>
+						<v-icon
+							class="mr-1"
+							size="16"
+						>
+							mdi-database
+						</v-icon>
 						Cache Statistics
 					</h4>
 
@@ -206,9 +287,19 @@
 			</v-expand-transition>
 
 			<!-- Actions Row -->
-			<div v-if="!compactMode" class="actions-row mt-4">
-				<v-btn size="small" variant="text" @click="showCacheStats = !showCacheStats">
-					<v-icon class="mr-1" size="16">
+			<div
+				v-if="!compactMode"
+				class="actions-row mt-4"
+			>
+				<v-btn
+					size="small"
+					variant="text"
+					@click="showCacheStats = !showCacheStats"
+				>
+					<v-icon
+						class="mr-1"
+						size="16"
+					>
 						{{ showCacheStats ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
 					</v-icon>
 					{{ showCacheStats ? 'Hide' : 'Show' }} Cache Stats
@@ -216,15 +307,28 @@
 
 				<v-spacer />
 
-				<v-btn size="small" color="warning" variant="text" @click="clearAllCache">
-					<v-icon class="mr-1" size="16"> mdi-delete-sweep </v-icon>
+				<v-btn
+					size="small"
+					color="warning"
+					variant="text"
+					@click="clearAllCache"
+				>
+					<v-icon
+						class="mr-1"
+						size="16"
+					>
+						mdi-delete-sweep
+					</v-icon>
 					Clear Cache
 				</v-btn>
 			</div>
 		</v-card-text>
 
 		<!-- Details Dialog -->
-		<v-dialog v-model="detailsDialog" max-width="600">
+		<v-dialog
+			v-model="detailsDialog"
+			max-width="600"
+		>
 			<v-card v-if="selectedSource">
 				<v-card-title> {{ selectedSource.name }} Details </v-card-title>
 
@@ -258,7 +362,10 @@
 							</v-table>
 						</div>
 
-						<div v-if="selectedSource.cached" class="detail-section">
+						<div
+							v-if="selectedSource.cached"
+							class="detail-section"
+						>
 							<h4>Cache Information</h4>
 							<v-table density="compact">
 								<tbody>

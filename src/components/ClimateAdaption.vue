@@ -10,14 +10,29 @@
 		aria-labelledby="climate-adaptation-title"
 		aria-describedby="climate-adaptation-description"
 	>
-		<v-card flat class="d-flex flex-column" style="height: 100%">
+		<v-card
+			flat
+			class="d-flex flex-column"
+			style="height: 100%"
+		>
 			<!-- Header -->
-			<v-card-title id="climate-adaptation-title" class="d-flex align-center">
-				<span id="climate-adaptation-description" class="sr-only">
+			<v-card-title
+				id="climate-adaptation-title"
+				class="d-flex align-center"
+			>
+				<span
+					id="climate-adaptation-description"
+					class="sr-only"
+				>
 					Climate adaptation tools for analyzing cooling centers and green spaces. Use Tab key to
 					navigate between sections.
 				</span>
-				<v-icon class="mr-2" aria-hidden="true"> mdi-shield-sun </v-icon>
+				<v-icon
+					class="mr-2"
+					aria-hidden="true"
+				>
+					mdi-shield-sun
+				</v-icon>
 				Climate Adaptation
 				<v-spacer />
 				<v-btn
@@ -29,7 +44,12 @@
 			</v-card-title>
 
 			<!-- Tabs -->
-			<v-tabs v-model="tab" grow role="tablist" aria-label="Climate adaptation tool sections">
+			<v-tabs
+				v-model="tab"
+				grow
+				role="tablist"
+				aria-label="Climate adaptation tool sections"
+			>
 				<v-tab
 					value="centers"
 					role="tab"
@@ -58,7 +78,10 @@
 
 			<!-- Content -->
 			<v-card-text class="flex-grow-1 overflow-y-auto">
-				<v-window v-model="tab" role="tabpanel">
+				<v-window
+					v-model="tab"
+					role="tabpanel"
+				>
 					<v-window-item
 						id="tab-panel-centers"
 						value="centers"

@@ -1,6 +1,11 @@
 <template>
 	<div class="timeline-compact">
-		<v-chip size="x-small" color="primary" variant="flat" class="date-chip">
+		<v-chip
+			size="x-small"
+			color="primary"
+			variant="flat"
+			class="date-chip"
+		>
 			{{ formatYear(selectedDate) }}
 		</v-chip>
 

@@ -4,8 +4,16 @@
 		:text="`Version ${versionInfo.version} (${versionInfo.commit})\nBuilt: ${formattedBuildTime}`"
 	>
 		<template #activator="{ props }">
-			<div v-bind="props" class="version-badge">
-				<v-icon size="x-small" class="mr-1"> mdi-information-outline </v-icon>
+			<div
+				v-bind="props"
+				class="version-badge"
+			>
+				<v-icon
+					size="x-small"
+					class="mr-1"
+				>
+					mdi-information-outline
+				</v-icon>
 				<span class="version-text">v{{ versionInfo.version }}</span>
 			</div>
 		</template>

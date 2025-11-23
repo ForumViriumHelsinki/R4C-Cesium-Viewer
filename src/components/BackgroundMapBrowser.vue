@@ -2,7 +2,11 @@
 	<div class="background-map-browser">
 		<!-- Map Categories -->
 		<div class="category-tabs">
-			<v-chip-group v-model="selectedCategory" mandatory class="category-chips">
+			<v-chip-group
+				v-model="selectedCategory"
+				mandatory
+				class="category-chips"
+			>
 				<v-chip
 					v-for="category in categories"
 					:key="category.key"
@@ -19,7 +23,10 @@
 		</div>
 
 		<!-- Quick Flood Risk Selection -->
-		<div v-if="selectedCategory === 'flood'" class="flood-quick-select">
+		<div
+			v-if="selectedCategory === 'flood'"
+			class="flood-quick-select"
+		>
 			<h5 class="flood-title">Flood Risk Scenarios</h5>
 			<p class="flood-disclaimer">
 				⚠️ Map contains significant errors. Not for building-specific evaluation!
@@ -35,11 +42,22 @@
 						variant="outlined"
 						class="flood-buttons"
 					>
-						<v-btn value="none" size="small"> None </v-btn>
-						<v-btn value="HulevesitulvaVesisyvyysSade52mmMallinnettuAlue" size="small">
+						<v-btn
+							value="none"
+							size="small"
+						>
+							None
+						</v-btn>
+						<v-btn
+							value="HulevesitulvaVesisyvyysSade52mmMallinnettuAlue"
+							size="small"
+						>
 							52mm/hour
 						</v-btn>
-						<v-btn value="HulevesitulvaVesisyvyysSade80mmMallinnettuAlue" size="small">
+						<v-btn
+							value="HulevesitulvaVesisyvyysSade80mmMallinnettuAlue"
+							size="small"
+						>
 							80mm/hour
 						</v-btn>
 					</v-btn-toggle>
@@ -54,17 +72,34 @@
 						variant="outlined"
 						class="flood-buttons"
 					>
-						<v-btn value="none" size="small"> None </v-btn>
-						<v-btn value="SSP585_re_with_SSP245_with_SSP126_with_current" size="small">
+						<v-btn
+							value="none"
+							size="small"
+						>
+							None
+						</v-btn>
+						<v-btn
+							value="SSP585_re_with_SSP245_with_SSP126_with_current"
+							size="small"
+						>
 							Combined
 						</v-btn>
-						<v-btn value="coastal_flood_SSP126_2050_0020_with_protected" size="small">
+						<v-btn
+							value="coastal_flood_SSP126_2050_0020_with_protected"
+							size="small"
+						>
 							SSP126 2050
 						</v-btn>
-						<v-btn value="coastal_flood_SSP245_2050_0020_with_protected" size="small">
+						<v-btn
+							value="coastal_flood_SSP245_2050_0020_with_protected"
+							size="small"
+						>
 							SSP245 2050
 						</v-btn>
-						<v-btn value="coastal_flood_SSP585_2050_0020_with_protected" size="small">
+						<v-btn
+							value="coastal_flood_SSP585_2050_0020_with_protected"
+							size="small"
+						>
 							SSP585 2050
 						</v-btn>
 					</v-btn-toggle>
@@ -72,11 +107,21 @@
 			</div>
 
 			<!-- Flood Legend -->
-			<div v-if="selectedFloodLayer && selectedFloodLayer !== 'none'" class="flood-legend">
+			<div
+				v-if="selectedFloodLayer && selectedFloodLayer !== 'none'"
+				class="flood-legend"
+			>
 				<h6 class="legend-title">Legend</h6>
 				<div class="legend-items">
-					<div v-for="item in currentFloodLegend" :key="item.color" class="legend-item">
-						<div class="legend-color" :style="{ backgroundColor: item.color }" />
+					<div
+						v-for="item in currentFloodLegend"
+						:key="item.color"
+						class="legend-item"
+					>
+						<div
+							class="legend-color"
+							:style="{ backgroundColor: item.color }"
+						/>
 						<span class="legend-text">{{ item.text }}</span>
 					</div>
 				</div>
@@ -84,7 +129,10 @@
 		</div>
 
 		<!-- HSY Environmental Maps -->
-		<div v-else-if="selectedCategory === 'environmental'" class="hsy-maps">
+		<div
+			v-else-if="selectedCategory === 'environmental'"
+			class="hsy-maps"
+		>
 			<div class="search-section">
 				<v-text-field
 					v-model="hsySearchQuery"
@@ -98,12 +146,21 @@
 				/>
 			</div>
 
-			<div v-if="isLoadingHSY" class="loading-state">
-				<v-progress-circular indeterminate size="20" />
+			<div
+				v-if="isLoadingHSY"
+				class="loading-state"
+			>
+				<v-progress-circular
+					indeterminate
+					size="20"
+				/>
 				<span class="ml-2">Loading HSY layers...</span>
 			</div>
 
-			<div v-else-if="filteredHSYLayers.length > 0" class="hsy-layer-list">
+			<div
+				v-else-if="filteredHSYLayers.length > 0"
+				class="hsy-layer-list"
+			>
 				<v-list density="compact">
 					<v-list-item
 						v-for="layer in filteredHSYLayers.slice(0, 10)"
@@ -127,19 +184,28 @@
 					</v-list-item>
 				</v-list>
 
-				<div v-if="filteredHSYLayers.length > 10" class="more-results">
+				<div
+					v-if="filteredHSYLayers.length > 10"
+					class="more-results"
+				>
 					<p class="text-caption">Showing first 10 of {{ filteredHSYLayers.length }} results</p>
 				</div>
 			</div>
 
-			<div v-else-if="hsySearchQuery && !isLoadingHSY" class="no-results">
+			<div
+				v-else-if="hsySearchQuery && !isLoadingHSY"
+				class="no-results"
+			>
 				<v-icon class="mb-2"> mdi-map-search </v-icon>
 				<p class="text-body-2">No layers found matching "{{ hsySearchQuery }}"</p>
 			</div>
 		</div>
 
 		<!-- Basic Maps -->
-		<div v-else-if="selectedCategory === 'basic'" class="basic-maps">
+		<div
+			v-else-if="selectedCategory === 'basic'"
+			class="basic-maps"
+		>
 			<v-list density="compact">
 				<v-list-item
 					v-for="basicMap in basicMaps"
@@ -160,12 +226,25 @@
 		</div>
 
 		<!-- Current Selection Display -->
-		<div v-if="hasSelection" class="current-selection">
+		<div
+			v-if="hasSelection"
+			class="current-selection"
+		>
 			<v-divider class="my-3" />
 			<div class="selection-info">
-				<v-icon class="mr-2" color="primary"> mdi-check-circle </v-icon>
+				<v-icon
+					class="mr-2"
+					color="primary"
+				>
+					mdi-check-circle
+				</v-icon>
 				<span class="selection-text">{{ currentSelectionText }}</span>
-				<v-btn icon size="x-small" class="ml-2" @click="clearSelection">
+				<v-btn
+					icon
+					size="x-small"
+					class="ml-2"
+					@click="clearSelection"
+				>
 					<v-icon>mdi-close</v-icon>
 				</v-btn>
 			</div>

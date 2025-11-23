@@ -1,5 +1,8 @@
 <template>
-	<div v-if="legendData.length > 0 && legendVisible" id="legend">
+	<div
+		v-if="legendData.length > 0 && legendVisible"
+		id="legend"
+	>
 		<div v-if="legendExpanded">
 			<h3>Statistical grid options</h3>
 			<div
@@ -23,7 +26,10 @@
 				</div>
 			</div>
 
-			<div v-else-if="localSelectedIndex === 'combined_heat_flood_green'" class="striped-legend">
+			<div
+				v-else-if="localSelectedIndex === 'combined_heat_flood_green'"
+				class="striped-legend"
+			>
 				<div class="legend-container">
 					<div class="combined-legend">
 						<div class="legend-section">
@@ -34,7 +40,10 @@
 									:key="item.range"
 									class="swatch"
 								>
-									<div class="color-box" :style="{ backgroundColor: item.color }" />
+									<div
+										class="color-box"
+										:style="{ backgroundColor: item.color }"
+									/>
 									<span>{{ item.range }}</span>
 								</div>
 							</div>
@@ -45,14 +54,24 @@
 									:key="item.range"
 									class="swatch"
 								>
-									<div class="color-box" :style="{ backgroundColor: item.color }" />
+									<div
+										class="color-box"
+										:style="{ backgroundColor: item.color }"
+									/>
 									<span>{{ item.range }}</span>
 								</div>
 							</div>
 							<div class="missing-legend">
 								<h5>Incomplete Data</h5>
-								<div v-for="item in indexToColorScheme.both" :key="item.range" class="swatch">
-									<div class="color-box" :style="{ backgroundColor: item.color }" />
+								<div
+									v-for="item in indexToColorScheme.both"
+									:key="item.range"
+									class="swatch"
+								>
+									<div
+										class="color-box"
+										:style="{ backgroundColor: item.color }"
+									/>
 									<span>{{ item.range }}</span>
 								</div>
 							</div>
@@ -68,14 +87,24 @@
 			</div>
 
 			<div v-else>
-				<div v-for="item in legendData" :key="item.range" class="swatch">
-					<div class="color-box" :style="{ backgroundColor: item.color }" />
+				<div
+					v-for="item in legendData"
+					:key="item.range"
+					class="swatch"
+				>
+					<div
+						class="color-box"
+						:style="{ backgroundColor: item.color }"
+					/>
 					<span>{{ item.range }}</span>
 				</div>
 			</div>
 		</div>
 
-		<div v-if="legendExpanded && extrusionNote" class="extrusion-note">
+		<div
+			v-if="legendExpanded && extrusionNote"
+			class="extrusion-note"
+		>
 			<span>{{ extrusionNote }}</span>
 		</div>
 
@@ -100,9 +129,16 @@
 			</template>
 		</v-tooltip>
 
-		<div v-if="legendExpanded" class="source-note">
+		<div
+			v-if="legendExpanded"
+			class="source-note"
+		>
 			Socioeconomic source data by<br />
-			<a href="https://stat.fi/index_en.html" target="_blank">Statistics Finland</a><br />
+			<a
+				href="https://stat.fi/index_en.html"
+				target="_blank"
+				>Statistics Finland</a
+			><br />
 			<a
 				href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf"
 				target="_blank"

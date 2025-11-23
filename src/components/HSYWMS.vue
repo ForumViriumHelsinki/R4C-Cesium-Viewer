@@ -1,5 +1,8 @@
 <template>
-	<div class="wms-layer-switcher" @click.stop>
+	<div
+		class="wms-layer-switcher"
+		@click.stop
+	>
 		<!-- Added upper margin with link to HSY map service -->
 
 		<div class="search-and-restore">
@@ -17,12 +20,22 @@
 				@click:append.stop="onSearchClick"
 				@click.stop
 			/>
-			<v-btn class="restore-btn" @click.stop="restoreDefaultLayer"> Restore Default </v-btn>
+			<v-btn
+				class="restore-btn"
+				@click.stop="restoreDefaultLayer"
+			>
+				Restore Default
+			</v-btn>
 		</div>
 
 		<div class="hsy-link">
 			All Background Map options can be found at
-			<a href="https://kartta.hsy.fi/" target="_blank">HSY map service</a> under 'karttatasot'.
+			<a
+				href="https://kartta.hsy.fi/"
+				target="_blank"
+				>HSY map service</a
+			>
+			under 'karttatasot'.
 		</div>
 
 		<v-list v-if="filteredLayers.length > 0">

@@ -1,8 +1,17 @@
 <template>
-	<v-container v-if="showComponents" fluid>
+	<v-container
+		v-if="showComponents"
+		fluid
+	>
 		<!-- Vuetify Checkbox for toggling land cover -->
-		<v-row no-gutters class="pa-0 ma-0">
-			<v-col cols="3" class="pa-0 ma-0">
+		<v-row
+			no-gutters
+			class="pa-0 ma-0"
+		>
+			<v-col
+				cols="3"
+				class="pa-0 ma-0"
+			>
 				<div class="pie-chart-container">
 					<PieChart />
 					<div class="hsy-area-select">
@@ -18,7 +27,12 @@
 							@change="toggleLandCover"
 						/>
 						<!-- Custom label for the checkbox with better alignment -->
-						<label for="landcover" class="landcover-label"> Landcover as background map </label>
+						<label
+							for="landcover"
+							class="landcover-label"
+						>
+							Landcover as background map
+						</label>
 					</div>
 					<div class="hsy-year-select">
 						<HSYYearSelect />

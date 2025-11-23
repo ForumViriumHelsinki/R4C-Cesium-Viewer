@@ -1,7 +1,10 @@
 <template>
 	<div class="heat-chart-container">
 		<!-- Toggle for hiding cold areas (only visible if cold areas are loaded) -->
-		<div v-if="coldAreasLoaded" class="chart-controls">
+		<div
+			v-if="coldAreasLoaded"
+			class="chart-controls"
+		>
 			<v-switch
 				v-model="hideColdAreasChecked"
 				label="Hide Cold Areas"
@@ -12,7 +15,10 @@
 		</div>
 
 		<!-- Container for the HSY Building Chart -->
-		<div id="hsyBuildingChartContainer" class="chart-container" />
+		<div
+			id="hsyBuildingChartContainer"
+			class="chart-container"
+		/>
 
 		<!-- Timeline Controls -->
 		<div class="timeline-section">

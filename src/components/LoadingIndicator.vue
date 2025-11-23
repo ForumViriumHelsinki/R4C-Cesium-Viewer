@@ -1,8 +1,16 @@
 <template>
 	<div class="loading-indicator-container">
 		<!-- Global Loading Overlay -->
-		<v-overlay v-model="showGlobalOverlay" persistent class="loading-overlay">
-			<v-card class="loading-card" min-width="320" max-width="400">
+		<v-overlay
+			v-model="showGlobalOverlay"
+			persistent
+			class="loading-overlay"
+		>
+			<v-card
+				class="loading-card"
+				min-width="320"
+				max-width="400"
+			>
 				<v-card-title class="loading-title">
 					<v-icon class="mr-2 rotating"> mdi-loading </v-icon>
 					Loading Data
@@ -26,10 +34,18 @@
 
 					<!-- Individual Layer Progress -->
 					<div class="layers-progress">
-						<div v-for="layer in activeLoadingLayers" :key="layer" class="layer-progress">
+						<div
+							v-for="layer in activeLoadingLayers"
+							:key="layer"
+							class="layer-progress"
+						>
 							<div class="layer-header">
 								<div class="layer-info">
-									<v-icon :color="getLayerColor(layer)" size="16" class="mr-2">
+									<v-icon
+										:color="getLayerColor(layer)"
+										size="16"
+										class="mr-2"
+									>
 										{{ getLayerIcon(layer) }}
 									</v-icon>
 									<span class="layer-name">{{ formatLayerName(layer) }}</span>
@@ -52,7 +68,10 @@
 					</div>
 
 					<!-- Error Messages -->
-					<div v-if="hasErrors" class="error-section">
+					<div
+						v-if="hasErrors"
+						class="error-section"
+					>
 						<v-alert
 							v-for="(error, layer) in layerErrors"
 							:key="layer"
@@ -83,8 +102,17 @@
 
 				<!-- Performance Info (Debug) -->
 				<v-card-actions v-if="showPerformanceInfo">
-					<v-btn variant="text" size="small" @click="showPerformanceDialog = true">
-						<v-icon class="mr-1" size="16"> mdi-speedometer </v-icon>
+					<v-btn
+						variant="text"
+						size="small"
+						@click="showPerformanceDialog = true"
+					>
+						<v-icon
+							class="mr-1"
+							size="16"
+						>
+							mdi-speedometer
+						</v-icon>
 						Performance
 					</v-btn>
 				</v-card-actions>
@@ -99,23 +127,40 @@
 			class="compact-loading"
 		>
 			<div class="compact-content">
-				<v-progress-circular size="20" width="2" color="white" indeterminate class="mr-2" />
+				<v-progress-circular
+					size="20"
+					width="2"
+					color="white"
+					indeterminate
+					class="mr-2"
+				/>
 				<span>{{ getCompactMessage() }}</span>
 			</div>
 
 			<template #actions>
-				<v-btn icon size="small" @click="showGlobalOverlay = true">
+				<v-btn
+					icon
+					size="small"
+					@click="showGlobalOverlay = true"
+				>
 					<v-icon size="16"> mdi-arrow-expand </v-icon>
 				</v-btn>
 			</template>
 		</v-snackbar>
 
 		<!-- Performance Dialog -->
-		<v-dialog v-model="showPerformanceDialog" max-width="500">
+		<v-dialog
+			v-model="showPerformanceDialog"
+			max-width="500"
+		>
 			<v-card>
 				<v-card-title>Loading Performance</v-card-title>
 				<v-card-text>
-					<div v-for="metric in performanceMetrics" :key="metric.layer" class="performance-item">
+					<div
+						v-for="metric in performanceMetrics"
+						:key="metric.layer"
+						class="performance-item"
+					>
 						<div class="performance-header">
 							<span class="performance-layer">{{ formatLayerName(metric.layer) }}</span>
 							<span class="performance-time">{{ formatDuration(metric.duration) }}</span>

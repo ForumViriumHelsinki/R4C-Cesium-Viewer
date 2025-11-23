@@ -1,5 +1,8 @@
 <template>
-	<div v-if="coolingCenters.length" class="mt-4">
+	<div
+		v-if="coolingCenters.length"
+		class="mt-4"
+	>
 		<v-divider class="my-4" />
 		<h3>Estimated Impacts</h3>
 		<p>Total Centers Added: {{ coolingCenters.length }}</p>

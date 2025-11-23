@@ -9,17 +9,36 @@
 	>
 		<v-card class="compact-disclaimer-card">
 			<v-card-title class="compact-title">
-				<v-icon class="mr-2" color="primary"> mdi-information </v-icon>
-				<h1 id="disclaimer-title" class="title-text">R4C Climate Demo</h1>
+				<v-icon
+					class="mr-2"
+					color="primary"
+				>
+					mdi-information
+				</v-icon>
+				<h1
+					id="disclaimer-title"
+					class="title-text"
+				>
+					R4C Climate Demo
+				</h1>
 			</v-card-title>
 
-			<v-card-text id="disclaimer-content" class="compact-content">
+			<v-card-text
+				id="disclaimer-content"
+				class="compact-content"
+			>
 				<p class="description">
 					Climate adaptation visualization tool for heat risk and green infrastructure planning.
 				</p>
 
 				<div class="disclaimer-box">
-					<v-icon size="16" color="warning" class="mr-1"> mdi-alert </v-icon>
+					<v-icon
+						size="16"
+						color="warning"
+						class="mr-1"
+					>
+						mdi-alert
+					</v-icon>
 					<span class="disclaimer-note">
 						<strong>Demo only:</strong> Data is for development use - not for planning decisions.
 					</span>
@@ -36,7 +55,12 @@
 					autofocus
 					@click="closePopup"
 				>
-					<v-icon class="mr-1" size="16"> mdi-map </v-icon>
+					<v-icon
+						class="mr-1"
+						size="16"
+					>
+						mdi-map
+					</v-icon>
 					Explore Map
 				</v-btn>
 			</v-card-actions>

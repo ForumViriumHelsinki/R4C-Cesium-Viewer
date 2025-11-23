@@ -1,6 +1,9 @@
 <template>
 	<v-container class="cooling-center">
-		<v-card elevation="2" class="pa-4">
+		<v-card
+			elevation="2"
+			class="pa-4"
+		>
 			<v-card-title
 				>Add Cooling <br />
 				Centers</v-card-title
@@ -34,7 +37,12 @@
 						</v-btn>
 					</v-col>
 					<v-col cols="6">
-						<v-btn color="error" block class="text-none" @click="resetCoolingCenters">
+						<v-btn
+							color="error"
+							block
+							class="text-none"
+							@click="resetCoolingCenters"
+						>
 							Reset
 						</v-btn>
 					</v-col>

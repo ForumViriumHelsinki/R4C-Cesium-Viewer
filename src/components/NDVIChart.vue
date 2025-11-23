@@ -9,11 +9,19 @@
 			</a>
 			Distribution for {{ selectedDate }}
 		</h3>
-		<svg ref="chart" width="400" height="250" />
+		<svg
+			ref="chart"
+			width="400"
+			height="250"
+		/>
 
 		<!-- Updated Legend with text below -->
 		<div class="legend">
-			<div v-for="(color, index) in ndviColors" :key="index" class="legend-item">
+			<div
+				v-for="(color, index) in ndviColors"
+				:key="index"
+				class="legend-item"
+			>
 				<span :style="{ backgroundColor: color }" />
 				<small>{{ labels[index] }}</small>
 			</div>

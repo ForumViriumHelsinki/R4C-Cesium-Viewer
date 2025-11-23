@@ -1,5 +1,9 @@
 <template>
-	<v-dialog v-model="dialog" max-width="800" scrollable>
+	<v-dialog
+		v-model="dialog"
+		max-width="800"
+		scrollable
+	>
 		<template #activator="{ props }">
 			<v-btn
 				v-bind="props"
@@ -14,10 +18,18 @@
 
 		<v-card>
 			<v-card-title class="d-flex align-center">
-				<v-icon left class="mr-2"> mdi-flag-variant </v-icon>
+				<v-icon
+					left
+					class="mr-2"
+				>
+					mdi-flag-variant
+				</v-icon>
 				Feature Flags
 				<v-spacer />
-				<v-chip size="small" color="primary">
+				<v-chip
+					size="small"
+					color="primary"
+				>
 					{{ featureFlagStore.enabledCount }} / {{ totalFlags }} enabled
 				</v-chip>
 			</v-card-title>
@@ -30,14 +42,25 @@
 
 			<v-card-text style="max-height: 500px">
 				<v-expansion-panels variant="accordion">
-					<v-expansion-panel v-for="category in categories" :key="category" :value="category">
+					<v-expansion-panel
+						v-for="category in categories"
+						:key="category"
+						:value="category"
+					>
 						<v-expansion-panel-title>
 							<div class="d-flex align-center">
-								<v-icon :icon="getCategoryIcon(category)" class="mr-2" />
+								<v-icon
+									:icon="getCategoryIcon(category)"
+									class="mr-2"
+								/>
 								<span class="text-subtitle-1 font-weight-medium">
 									{{ getCategoryLabel(category) }}
 								</span>
-								<v-chip size="x-small" color="grey" class="ml-2">
+								<v-chip
+									size="x-small"
+									color="grey"
+									class="ml-2"
+								>
 									{{ getCategoryEnabledCount(category) }} / {{ getCategoryTotalCount(category) }}
 								</v-chip>
 							</div>
@@ -62,7 +85,12 @@
 
 									<v-list-item-title>
 										{{ flag.label }}
-										<v-chip v-if="flag.experimental" size="x-small" color="warning" class="ml-2">
+										<v-chip
+											v-if="flag.experimental"
+											size="x-small"
+											color="warning"
+											class="ml-2"
+										>
 											Experimental
 										</v-chip>
 										<v-chip
@@ -109,23 +137,49 @@
 			<v-divider />
 
 			<v-card-actions>
-				<v-btn color="warning" variant="text" prepend-icon="mdi-restore" @click="resetAllFlags">
+				<v-btn
+					color="warning"
+					variant="text"
+					prepend-icon="mdi-restore"
+					@click="resetAllFlags"
+				>
 					Reset All to Defaults
 				</v-btn>
 
 				<v-spacer />
 
-				<v-btn variant="text" prepend-icon="mdi-download" @click="exportConfig"> Export </v-btn>
+				<v-btn
+					variant="text"
+					prepend-icon="mdi-download"
+					@click="exportConfig"
+				>
+					Export
+				</v-btn>
 
-				<v-btn variant="text" prepend-icon="mdi-upload" @click="importConfig"> Import </v-btn>
+				<v-btn
+					variant="text"
+					prepend-icon="mdi-upload"
+					@click="importConfig"
+				>
+					Import
+				</v-btn>
 
-				<v-btn color="primary" variant="elevated" @click="dialog = false"> Close </v-btn>
+				<v-btn
+					color="primary"
+					variant="elevated"
+					@click="dialog = false"
+				>
+					Close
+				</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
 
 	<!-- Reset confirmation dialog -->
-	<v-dialog v-model="resetConfirmDialog" max-width="500">
+	<v-dialog
+		v-model="resetConfirmDialog"
+		max-width="500"
+	>
 		<v-card>
 			<v-card-title>Reset All Feature Flags</v-card-title>
 			<v-card-text>
@@ -134,14 +188,28 @@
 			</v-card-text>
 			<v-card-actions>
 				<v-spacer />
-				<v-btn variant="text" @click="resetConfirmDialog = false"> Cancel </v-btn>
-				<v-btn color="warning" variant="elevated" @click="confirmResetAll"> Reset All </v-btn>
+				<v-btn
+					variant="text"
+					@click="resetConfirmDialog = false"
+				>
+					Cancel
+				</v-btn>
+				<v-btn
+					color="warning"
+					variant="elevated"
+					@click="confirmResetAll"
+				>
+					Reset All
+				</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
 
 	<!-- Import dialog -->
-	<v-dialog v-model="importDialog" max-width="500">
+	<v-dialog
+		v-model="importDialog"
+		max-width="500"
+	>
 		<v-card>
 			<v-card-title>Import Configuration</v-card-title>
 			<v-card-text>
@@ -154,17 +222,38 @@
 			</v-card-text>
 			<v-card-actions>
 				<v-spacer />
-				<v-btn variant="text" @click="importDialog = false"> Cancel </v-btn>
-				<v-btn color="primary" variant="elevated" @click="doImport"> Import </v-btn>
+				<v-btn
+					variant="text"
+					@click="importDialog = false"
+				>
+					Cancel
+				</v-btn>
+				<v-btn
+					color="primary"
+					variant="elevated"
+					@click="doImport"
+				>
+					Import
+				</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
 
 	<!-- Snackbar for notifications -->
-	<v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="4000" location="bottom">
+	<v-snackbar
+		v-model="snackbar"
+		:color="snackbarColor"
+		:timeout="4000"
+		location="bottom"
+	>
 		{{ snackbarMessage }}
 		<template #actions>
-			<v-btn variant="text" @click="snackbar = false"> Close </v-btn>
+			<v-btn
+				variant="text"
+				@click="snackbar = false"
+			>
+				Close
+			</v-btn>
 		</template>
 	</v-snackbar>
 </template>

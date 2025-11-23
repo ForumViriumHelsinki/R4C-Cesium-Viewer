@@ -42,18 +42,31 @@
 				label="SSP126, year 2100, recurrence 1/0020 years"
 				value="coastal_flood_SSP126_2100_0020_with_protected"
 			/>
-			<v-radio label="none" value="none" />
+			<v-radio
+				label="none"
+				value="none"
+			/>
 		</v-radio-group>
 
 		<div class="legend-container">
-			<div v-for="item in currentLegend" :key="item.color">
-				<div class="color-square" :style="{ backgroundColor: item.color }" />
+			<div
+				v-for="item in currentLegend"
+				:key="item.color"
+			>
+				<div
+					class="color-square"
+					:style="{ backgroundColor: item.color }"
+				/>
 				<span class="legend-text">{{ item.text }}</span>
 			</div>
 			<div class="reference">
 				Open data distributed by
-				<a href="https://www.syke.fi/en" target="_blank">Finnish Environment Institute (Syke)</a> is
-				licensed under Creative Commons Attribution 4.0 International licence.
+				<a
+					href="https://www.syke.fi/en"
+					target="_blank"
+					>Finnish Environment Institute (Syke)</a
+				>
+				is licensed under Creative Commons Attribution 4.0 International licence.
 			</div>
 		</div>
 	</div>

@@ -1,7 +1,13 @@
 <template>
 	<v-container v-if="showComponents">
-		<v-row no-gutters class="pa-0 ma-0">
-			<v-col cols="3" class="pa-0 ma-0">
+		<v-row
+			no-gutters
+			class="pa-0 ma-0"
+		>
+			<v-col
+				cols="3"
+				class="pa-0 ma-0"
+			>
 				<div class="socio-economics-container">
 					<SocioEconomicsChart />
 					<div class="socio-economics-select">

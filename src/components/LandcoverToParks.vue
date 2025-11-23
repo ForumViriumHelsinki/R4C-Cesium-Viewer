@@ -1,6 +1,9 @@
 <template>
 	<v-container class="landcover-to-parks">
-		<v-card elevation="2" class="pa-4">
+		<v-card
+			elevation="2"
+			class="pa-4"
+		>
 			<v-card-title>Create Parks</v-card-title>
 			<v-card-text>
 				<p class="text-caption mb-4">
@@ -22,16 +25,27 @@
 						</v-btn>
 					</v-col>
 					<v-col cols="6">
-						<v-btn color="error" block class="mt-2 text-none" @click="handleResetOrCancel">
+						<v-btn
+							color="error"
+							block
+							class="mt-2 text-none"
+							@click="handleResetOrCancel"
+						>
 							{{ resetOrCancelButtonText }}
 						</v-btn>
 					</v-col>
 				</v-row>
 
-				<div v-if="calculationResults" class="mt-4">
+				<div
+					v-if="calculationResults"
+					class="mt-4"
+				>
 					<v-divider class="mb-3" />
 					<p class="text-subtitle-2">Estimated Impact</p>
-					<v-table density="compact" class="mt-2">
+					<v-table
+						density="compact"
+						class="mt-2"
+					>
 						<tbody>
 							<tr>
 								<td>{{ calculationResults.selectedIndexName }} (Initial)</td>
