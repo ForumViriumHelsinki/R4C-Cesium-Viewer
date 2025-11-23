@@ -167,6 +167,238 @@ describe('globalStore', () => {
 		});
 	});
 
+	describe('clickProcessingState', () => {
+		it('should have correct initial clickProcessingState', () => {
+			const store = useGlobalStore();
+
+			expect(store.clickProcessingState).toEqual({
+				isProcessing: false,
+				postalCode: null,
+				postalCodeName: null,
+				stage: null,
+				startTime: null,
+				canCancel: false,
+				error: null,
+				partialData: null,
+				retryCount: 0,
+				previousViewState: null,
+				loadingProgress: null,
+			});
+		});
+
+		it('should update click processing state', () => {
+			const store = useGlobalStore();
+
+			store.setClickProcessingState({
+				isProcessing: true,
+				postalCode: '00100',
+				postalCodeName: 'Helsinki Center',
+				stage: 'loading',
+				startTime: performance.now(),
+			});
+
+			expect(store.clickProcessingState.isProcessing).toBe(true);
+			expect(store.clickProcessingState.postalCode).toBe('00100');
+			expect(store.clickProcessingState.postalCodeName).toBe('Helsinki Center');
+			expect(store.clickProcessingState.stage).toBe('loading');
+			expect(store.clickProcessingState.startTime).toBeGreaterThan(0);
+		});
+
+		it('should merge partial state updates', () => {
+			const store = useGlobalStore();
+
+			// Initial state
+			store.setClickProcessingState({
+				isProcessing: true,
+				postalCode: '00100',
+				stage: 'loading',
+			});
+
+			// Partial update
+			store.setClickProcessingState({
+				stage: 'animating',
+				canCancel: true,
+			});
+
+			// Should preserve previous values
+			expect(store.clickProcessingState.isProcessing).toBe(true);
+			expect(store.clickProcessingState.postalCode).toBe('00100');
+			// Should update new values
+			expect(store.clickProcessingState.stage).toBe('animating');
+			expect(store.clickProcessingState.canCancel).toBe(true);
+		});
+
+		it('should reset click processing state', () => {
+			const store = useGlobalStore();
+
+			// Set some state
+			store.setClickProcessingState({
+				isProcessing: true,
+				postalCode: '00100',
+				stage: 'animating',
+				error: { message: 'Test error' },
+			});
+
+			// Reset
+			store.resetClickProcessingState();
+
+			// Should be back to initial state
+			expect(store.clickProcessingState).toEqual({
+				isProcessing: false,
+				postalCode: null,
+				postalCodeName: null,
+				stage: null,
+				startTime: null,
+				canCancel: false,
+				error: null,
+				partialData: null,
+				retryCount: 0,
+				previousViewState: null,
+				loadingProgress: null,
+			});
+		});
+
+		it('should handle error state', () => {
+			const store = useGlobalStore();
+
+			store.setClickProcessingState({
+				error: {
+					message: 'Failed to load postal code',
+					details: 'Network error',
+				},
+			});
+
+			expect(store.clickProcessingState.error).toEqual({
+				message: 'Failed to load postal code',
+				details: 'Network error',
+			});
+		});
+
+		it('should track retry count', () => {
+			const store = useGlobalStore();
+
+			store.setClickProcessingState({ retryCount: 1 });
+			expect(store.clickProcessingState.retryCount).toBe(1);
+
+			store.setClickProcessingState({ retryCount: 2 });
+			expect(store.clickProcessingState.retryCount).toBe(2);
+		});
+
+		it('should capture view state', () => {
+			const store = useGlobalStore();
+
+			// Mock Cesium viewer
+			const mockViewer = {
+				camera: {
+					position: { clone: () => ({ x: 1, y: 2, z: 3 }) },
+					heading: 0.5,
+					pitch: -0.5,
+					roll: 0,
+				},
+			};
+
+			store.setCesiumViewer(mockViewer);
+			store.setShowBuildingInfo(true);
+			store.setBuildingAddress('Test Street 1');
+
+			// Capture state
+			store.captureViewState();
+
+			expect(store.clickProcessingState.previousViewState).toBeDefined();
+			expect(store.clickProcessingState.previousViewState.position).toEqual({ x: 1, y: 2, z: 3 });
+			expect(store.clickProcessingState.previousViewState.orientation).toEqual({
+				heading: 0.5,
+				pitch: -0.5,
+				roll: 0,
+			});
+			expect(store.clickProcessingState.previousViewState.showBuildingInfo).toBe(true);
+			expect(store.clickProcessingState.previousViewState.buildingAddress).toBe('Test Street 1');
+		});
+
+		it('should restore previous view state', () => {
+			const store = useGlobalStore();
+
+			// Mock Cesium viewer with setView method
+			const mockViewer = {
+				camera: {
+					position: { clone: () => ({ x: 1, y: 2, z: 3 }) },
+					heading: 0.5,
+					pitch: -0.5,
+					roll: 0,
+					setView: () => {}, // Mock setView
+				},
+			};
+
+			store.setCesiumViewer(mockViewer);
+
+			// Set up previous state
+			store.clickProcessingState.previousViewState = {
+				position: { x: 10, y: 20, z: 30 },
+				orientation: { heading: 1.0, pitch: -1.0, roll: 0.1 },
+				showBuildingInfo: false,
+				buildingAddress: 'Old Street 1',
+			};
+
+			// Restore
+			store.restorePreviousViewState();
+
+			// Verify UI state was restored
+			expect(store.showBuildingInfo).toBe(false);
+			expect(store.buildingAddress).toBe('Old Street 1');
+		});
+
+		it('should handle missing viewer when capturing state', () => {
+			const store = useGlobalStore();
+
+			// No viewer set
+			store.captureViewState();
+
+			// Should not crash, state should remain unchanged
+			expect(store.clickProcessingState.previousViewState).toBeNull();
+		});
+
+		it('should handle missing viewer when restoring state', () => {
+			const store = useGlobalStore();
+
+			// Set initial UI state
+			store.setShowBuildingInfo(true);
+			store.setBuildingAddress('Current Street 1');
+
+			// Set up previous state
+			store.clickProcessingState.previousViewState = {
+				position: { x: 10, y: 20, z: 30 },
+				orientation: { heading: 1.0, pitch: -1.0, roll: 0.1 },
+				showBuildingInfo: false,
+				buildingAddress: 'Old Street 1',
+			};
+
+			// Try to restore without viewer - should return early and not crash
+			store.restorePreviousViewState();
+
+			// UI state should NOT be restored when viewer is missing (early return)
+			expect(store.showBuildingInfo).toBe(true); // Stays at current value
+			expect(store.buildingAddress).toBe('Current Street 1'); // Stays at current value
+		});
+
+		it('should handle missing previous state when restoring', () => {
+			const store = useGlobalStore();
+
+			const mockViewer = {
+				camera: {
+					setView: () => {},
+				},
+			};
+
+			store.setCesiumViewer(mockViewer);
+
+			// No previous state
+			store.restorePreviousViewState();
+
+			// Should not crash
+			expect(store.clickProcessingState.previousViewState).toBeNull();
+		});
+	});
+
 	describe('edge cases', () => {
 		it('should handle null and undefined values', () => {
 			const store = useGlobalStore();

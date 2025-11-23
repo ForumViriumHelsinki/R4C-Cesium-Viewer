@@ -712,16 +712,19 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 				}
 			});
 
-			// Remove all overlay scrims that block interactions
-			document.querySelectorAll('.v-overlay__scrim, .v-overlay--active').forEach((overlay) => {
-				overlay.remove();
+			// Remove overlay scrims that block interactions (but NOT the MapClickLoadingOverlay)
+			document.querySelectorAll('.v-overlay__scrim').forEach((scrim) => {
+				// Only remove scrims that aren't part of the map click loading overlay
+				const parent = scrim.closest('.map-click-loading-overlay');
+				if (!parent) {
+					scrim.remove();
+				}
 			});
 
-			// Also hide via CSS as a backup
+			// Also hide scrims via CSS as a backup (but allow map-click-loading-overlay to display)
 			const style = document.createElement('style');
 			style.textContent = `
-        .v-overlay__scrim { display: none !important; }
-        .v-overlay--active { display: none !important; }
+        .v-overlay__scrim:not(.map-click-loading-overlay .v-overlay__scrim) { display: none !important; }
       `;
 			document.head.appendChild(style);
 		});

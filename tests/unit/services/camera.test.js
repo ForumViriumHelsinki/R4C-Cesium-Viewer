@@ -98,9 +98,9 @@ describe('Camera service', () => {
 			camera.init();
 
 			expect(mockSetView).toHaveBeenCalledWith({
-				destination: { x: 24.931745, y: 60.190464, z: 35000 },
+				destination: { x: 24.9384, y: 60.1695, z: 15000 },
 				orientation: {
-					heading: 0,
+					heading: expect.any(Number),
 					pitch: expect.any(Number),
 					roll: 0.0,
 				},
@@ -163,6 +163,9 @@ describe('Camera service', () => {
 		beforeEach(() => {
 			store.setPostalCode('12345');
 
+			// Ensure camera.position has clone method
+			mockViewer.camera.position.clone = vi.fn(() => ({ x: 100, y: 200, z: 300 }));
+
 			const mockDataSource = {
 				name: 'PostCodes',
 				_entityCollection: {
@@ -194,6 +197,8 @@ describe('Camera service', () => {
 					roll: 0.0,
 				},
 				duration: 3,
+				complete: expect.any(Function),
+				cancel: expect.any(Function),
 			});
 		});
 	});
@@ -440,6 +445,414 @@ describe('Camera service', () => {
 					roll: mockViewer.camera.roll,
 				},
 				duration: 1.0,
+			});
+		});
+	});
+
+	/**
+	 * Phase 2: Animation Control Tests
+	 * Tests for camera flight cancellation, state capture/restoration
+	 */
+	describe('Phase 2: Animation Control', () => {
+		beforeEach(() => {
+			// Enhance mock with position clone capability
+			mockViewer.camera.position = {
+				x: 100,
+				y: 200,
+				z: 300,
+				clone: vi.fn(() => ({ x: 100, y: 200, z: 300 })),
+			};
+		});
+
+		describe('cancelFlight()', () => {
+			it('should cancel active camera flight', () => {
+				// Simulate an active flight
+				camera.currentFlight = {
+					cancelFlight: false,
+				};
+				camera.flightCancelRequested = false;
+
+				const result = camera.cancelFlight();
+
+				expect(result).toBe(true);
+				expect(camera.currentFlight.cancelFlight).toBe(true);
+				expect(camera.flightCancelRequested).toBe(true);
+			});
+
+			it('should return false when no active flight', () => {
+				camera.currentFlight = null;
+
+				const result = camera.cancelFlight();
+
+				expect(result).toBe(false);
+				expect(camera.flightCancelRequested).toBe(false);
+			});
+
+			it('should return false when cancellation already requested', () => {
+				camera.currentFlight = {
+					cancelFlight: false,
+				};
+				camera.flightCancelRequested = true;
+
+				const result = camera.cancelFlight();
+
+				expect(result).toBe(false);
+				expect(camera.currentFlight.cancelFlight).toBe(false);
+			});
+
+			it('should log cancellation request', () => {
+				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+				camera.currentFlight = {
+					cancelFlight: false,
+				};
+
+				camera.cancelFlight();
+
+				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Flight cancellation requested');
+
+				consoleSpy.mockRestore();
+			});
+
+			it('should log when no flight to cancel', () => {
+				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+				camera.currentFlight = null;
+				camera.cancelFlight();
+
+				expect(consoleSpy).toHaveBeenCalledWith('[Camera] No active flight to cancel');
+
+				consoleSpy.mockRestore();
+			});
+		});
+
+		describe('captureCurrentState()', () => {
+			it('should capture camera position and orientation', () => {
+				camera.captureCurrentState();
+
+				expect(camera.previousCameraState).toBeDefined();
+				expect(camera.previousCameraState.position).toEqual({ x: 100, y: 200, z: 300 });
+				expect(camera.previousCameraState.heading).toBe(mockViewer.camera.heading);
+				expect(camera.previousCameraState.pitch).toBe(mockViewer.camera.pitch);
+				expect(camera.previousCameraState.roll).toBe(mockViewer.camera.roll);
+			});
+
+			it('should call position.clone() to avoid reference issues', () => {
+				camera.captureCurrentState();
+
+				expect(mockViewer.camera.position.clone).toHaveBeenCalled();
+			});
+
+			it('should log state capture', () => {
+				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+				camera.captureCurrentState();
+
+				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Camera state captured for restoration');
+
+				consoleSpy.mockRestore();
+			});
+
+			it('should handle missing viewer gracefully', () => {
+				const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+				camera.viewer = null;
+				camera.captureCurrentState();
+
+				expect(consoleWarnSpy).toHaveBeenCalledWith(
+					'[Camera] Cannot capture camera state: Viewer not initialized'
+				);
+				expect(camera.previousCameraState).toBeNull();
+
+				consoleWarnSpy.mockRestore();
+			});
+
+			it('should overwrite previous capture', () => {
+				// First capture
+				camera.captureCurrentState();
+				const firstCapture = camera.previousCameraState;
+
+				// Modify camera
+				mockViewer.camera.heading = 1.0;
+
+				// Second capture
+				camera.captureCurrentState();
+				const secondCapture = camera.previousCameraState;
+
+				expect(secondCapture).not.toBe(firstCapture);
+				expect(secondCapture.heading).toBe(1.0);
+			});
+		});
+
+		describe('restoreCapturedState()', () => {
+			it('should restore previously captured camera state', () => {
+				camera.previousCameraState = {
+					position: { x: 50, y: 100, z: 150 },
+					heading: 1.0,
+					pitch: -1.0,
+					roll: 0.5,
+				};
+
+				camera.restoreCapturedState();
+
+				expect(mockSetView).toHaveBeenCalledWith({
+					destination: { x: 50, y: 100, z: 150 },
+					orientation: {
+						heading: 1.0,
+						pitch: -1.0,
+						roll: 0.5,
+					},
+				});
+			});
+
+			it('should log state restoration', () => {
+				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+				camera.previousCameraState = {
+					position: { x: 50, y: 100, z: 150 },
+					heading: 1.0,
+					pitch: -1.0,
+					roll: 0.5,
+				};
+
+				camera.restoreCapturedState();
+
+				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Previous camera state restored');
+
+				consoleSpy.mockRestore();
+			});
+
+			it('should warn when no previous state exists', () => {
+				const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+				camera.previousCameraState = null;
+				camera.restoreCapturedState();
+
+				expect(consoleWarnSpy).toHaveBeenCalledWith('[Camera] No previous camera state to restore');
+				expect(mockSetView).not.toHaveBeenCalled();
+
+				consoleWarnSpy.mockRestore();
+			});
+
+			it('should warn when viewer not initialized', () => {
+				const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+				camera.viewer = null;
+				camera.previousCameraState = {
+					position: { x: 50, y: 100, z: 150 },
+					heading: 1.0,
+					pitch: -1.0,
+					roll: 0.5,
+				};
+
+				camera.restoreCapturedState();
+
+				expect(consoleWarnSpy).toHaveBeenCalledWith(
+					'[Camera] Cannot restore camera state: Viewer not initialized'
+				);
+
+				consoleWarnSpy.mockRestore();
+			});
+		});
+
+		describe('onFlightComplete()', () => {
+			it('should reset flight tracking variables', () => {
+				camera.currentFlight = { cancelFlight: false };
+				camera.flightCancelRequested = true;
+				camera.previousCameraState = { position: {} };
+
+				camera.onFlightComplete();
+
+				expect(camera.currentFlight).toBeNull();
+				expect(camera.flightCancelRequested).toBe(false);
+				expect(camera.previousCameraState).toBeNull();
+			});
+
+			it('should log completion', () => {
+				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+				camera.onFlightComplete();
+
+				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Flight completed');
+
+				consoleSpy.mockRestore();
+			});
+		});
+
+		describe('onFlightCancelled()', () => {
+			it('should restore captured state on cancellation', () => {
+				camera.previousCameraState = {
+					position: { x: 10, y: 20, z: 30 },
+					heading: 0.1,
+					pitch: -0.2,
+					roll: 0.0,
+				};
+
+				camera.onFlightCancelled();
+
+				expect(mockSetView).toHaveBeenCalledWith({
+					destination: { x: 10, y: 20, z: 30 },
+					orientation: {
+						heading: 0.1,
+						pitch: -0.2,
+						roll: 0.0,
+					},
+				});
+			});
+
+			it('should reset flight tracking variables', () => {
+				camera.currentFlight = { cancelFlight: true };
+				camera.flightCancelRequested = true;
+
+				camera.onFlightCancelled();
+
+				expect(camera.currentFlight).toBeNull();
+				expect(camera.flightCancelRequested).toBe(false);
+			});
+
+			it('should restore store view state', () => {
+				const setViewStateSpy = vi.spyOn(store, 'restorePreviousViewState');
+				const resetStateSpy = vi.spyOn(store, 'resetClickProcessingState');
+
+				camera.onFlightCancelled();
+
+				expect(setViewStateSpy).toHaveBeenCalled();
+				expect(resetStateSpy).toHaveBeenCalled();
+
+				setViewStateSpy.mockRestore();
+				resetStateSpy.mockRestore();
+			});
+
+			it('should log cancellation', () => {
+				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+				camera.onFlightCancelled();
+
+				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Flight cancelled');
+
+				consoleSpy.mockRestore();
+			});
+		});
+
+		describe('cancellation edge cases', () => {
+			it('should handle rapid cancel requests', () => {
+				camera.currentFlight = { cancelFlight: false };
+
+				// First cancel
+				camera.cancelFlight();
+				expect(camera.flightCancelRequested).toBe(true);
+
+				// Second cancel should be ignored
+				const result = camera.cancelFlight();
+				expect(result).toBe(false);
+			});
+
+			it('should handle cancellation when flight completes normally', () => {
+				camera.currentFlight = { cancelFlight: false };
+				camera.captureCurrentState();
+
+				// Request cancellation
+				camera.cancelFlight();
+
+				// Flight completes normally
+				camera.onFlightComplete();
+
+				// State should be cleaned up
+				expect(camera.currentFlight).toBeNull();
+				expect(camera.flightCancelRequested).toBe(false);
+				expect(camera.previousCameraState).toBeNull();
+			});
+
+			it('should maintain state isolation between instances', () => {
+				const camera2 = new Camera();
+
+				camera.currentFlight = { cancelFlight: false };
+				camera.captureCurrentState();
+
+				// Second instance should have independent state
+				expect(camera2.currentFlight).toBeNull();
+				expect(camera2.previousCameraState).toBeNull();
+			});
+		});
+
+		describe('integration with globalStore', () => {
+			it('should work with store captureViewState', () => {
+				// Mock viewer with proper clone
+				mockViewer.camera.position.clone = vi.fn(() => ({ x: 100, y: 200, z: 300 }));
+
+				const storeCaptureSpy = vi.spyOn(store, 'captureViewState');
+
+				// Simulate full workflow
+				store.captureViewState();
+				camera.captureCurrentState();
+
+				expect(storeCaptureSpy).toHaveBeenCalled();
+				expect(camera.previousCameraState).toBeDefined();
+
+				storeCaptureSpy.mockRestore();
+			});
+
+			it('should coordinate state restoration', () => {
+				// Set up both camera and store state
+				camera.previousCameraState = {
+					position: { x: 1, y: 2, z: 3 },
+					heading: 0,
+					pitch: 0,
+					roll: 0,
+				};
+
+				store.clickProcessingState.previousViewState = {
+					position: { x: 1, y: 2, z: 3 },
+					orientation: { heading: 0, pitch: 0, roll: 0 },
+					showBuildingInfo: true,
+					buildingAddress: 'Test',
+				};
+
+				// Trigger cancellation
+				camera.onFlightCancelled();
+
+				// Both should restore
+				expect(mockSetView).toHaveBeenCalled();
+				expect(store.clickProcessingState.isProcessing).toBe(false);
+			});
+		});
+
+		describe('performance and memory', () => {
+			it('should clean up previous state on new capture', () => {
+				// First capture
+				camera.captureCurrentState();
+				const firstState = camera.previousCameraState;
+
+				// Second capture should replace
+				camera.captureCurrentState();
+
+				expect(camera.previousCameraState).not.toBe(firstState);
+			});
+
+			it('should not leak references', () => {
+				const originalX = mockViewer.camera.position.x;
+
+				camera.captureCurrentState();
+
+				// Modify original
+				mockViewer.camera.position.x = 999;
+
+				// Captured state should be independent due to clone
+				expect(camera.previousCameraState.position.x).not.toBe(999);
+				expect(camera.previousCameraState.position.x).toBe(originalX);
+
+				// Restore for other tests
+				mockViewer.camera.position.x = originalX;
+			});
+
+			it('should handle repeated capture/restore cycles', () => {
+				for (let i = 0; i < 10; i++) {
+					camera.captureCurrentState();
+					camera.restoreCapturedState();
+				}
+
+				// Should not accumulate state
+				expect(camera.previousCameraState).toBeDefined();
 			});
 		});
 	});

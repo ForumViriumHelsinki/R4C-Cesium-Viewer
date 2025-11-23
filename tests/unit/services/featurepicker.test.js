@@ -170,6 +170,14 @@ describe('FeaturePicker service', () => {
 		// Create fresh mock viewer for each test
 		mockViewer = {
 			scene: mockScene,
+			camera: {
+				position: {
+					clone: vi.fn(() => ({ x: 100, y: 200, z: 300 })),
+				},
+				heading: 0,
+				pitch: -0.5,
+				roll: 0,
+			},
 			entities: {
 				_entities: {
 					_array: [], // Fresh array for each test
@@ -487,25 +495,28 @@ describe('FeaturePicker service', () => {
 			expect(featurePicker.removeEntityByName).toHaveBeenCalledWith('currentLocation');
 		});
 
-		it('should handle postal code selection at start level', () => {
+		it('should handle postal code selection at start level', async () => {
 			globalStore.setLevel('start');
 			const mockId = {
 				properties: {
 					posno: { _value: TEST_POSTAL_CODE_1 },
-					name: { _value: 'Helsinki Center' },
+					nimi: { _value: 'Helsinki Center' },
 				},
 			};
 
-			vi.spyOn(globalStore, 'setPostalCode');
-			vi.spyOn(featurePicker, 'loadPostalCode');
+			// Create spy and stub before calling
+			const setPostalCodeSpy = vi.spyOn(globalStore, 'setPostalCode');
+			const loadPostalCodeStub = vi
+				.spyOn(featurePicker, 'loadPostalCodeWithParallelStrategy')
+				.mockResolvedValue();
 
-			featurePicker.handleFeatureWithProperties(mockId);
+			await featurePicker.handleFeatureWithProperties(mockId);
 
 			// Verify postal code is set
-			expect(globalStore.setPostalCode).toHaveBeenCalledWith(TEST_POSTAL_CODE_1);
+			expect(setPostalCodeSpy).toHaveBeenCalledWith(TEST_POSTAL_CODE_1);
 
-			// Verify loadPostalCode is called
-			expect(featurePicker.loadPostalCode).toHaveBeenCalled();
+			// Verify loadPostalCodeWithParallelStrategy is called
+			expect(loadPostalCodeStub).toHaveBeenCalled();
 		});
 
 		it('should not reload postal code if already selected', () => {
