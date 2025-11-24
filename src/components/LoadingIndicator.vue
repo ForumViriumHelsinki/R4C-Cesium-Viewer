@@ -10,17 +10,40 @@
 				class="loading-card"
 				min-width="320"
 				max-width="400"
+				role="alertdialog"
+				aria-modal="true"
+				aria-labelledby="loading-dialog-title"
+				aria-describedby="loading-dialog-description"
 			>
-				<v-card-title class="loading-title">
-					<v-icon class="mr-2 rotating"> mdi-loading </v-icon>
+				<v-card-title
+					id="loading-dialog-title"
+					class="loading-title"
+				>
+					<v-icon
+						class="mr-2 rotating"
+						aria-hidden="true"
+					>
+						mdi-loading
+					</v-icon>
 					Loading Data
 				</v-card-title>
+				<!-- Hidden description for screen readers -->
+				<span
+					id="loading-dialog-description"
+					class="sr-only"
+				>
+					Loading map data. Overall progress {{ overallProgress }} percent.
+					{{ activeLoadingLayers.length }} layers currently loading.
+				</span>
 
 				<v-card-text>
 					<!-- Overall Progress -->
 					<div class="progress-section">
 						<div class="progress-header">
-							<span class="progress-text">Overall Progress</span>
+							<span
+								id="overall-progress-label"
+								class="progress-text"
+							>Overall Progress</span>
 							<span class="progress-percentage">{{ overallProgress }}%</span>
 						</div>
 						<v-progress-linear
@@ -29,6 +52,11 @@
 							height="8"
 							rounded
 							class="mb-4"
+							role="progressbar"
+							:aria-valuenow="overallProgress"
+							:aria-valuemin="0"
+							:aria-valuemax="100"
+							aria-labelledby="overall-progress-label"
 						/>
 					</div>
 
@@ -59,6 +87,11 @@
 								height="4"
 								rounded
 								class="layer-progress-bar"
+								role="progressbar"
+								:aria-valuenow="getLayerProgress(layer)"
+								:aria-valuemin="0"
+								:aria-valuemax="100"
+								:aria-label="`${formatLayerName(layer)} loading progress`"
 							/>
 
 							<div class="layer-message">
@@ -81,11 +114,12 @@
 							class="mb-2"
 						>
 							<template #prepend>
-								<v-icon size="16"> mdi-alert-circle </v-icon>
+								<v-icon size="16">
+mdi-alert-circle
+</v-icon>
 							</template>
 							<div class="error-content">
-								<strong>{{ formatLayerName(layer) }}</strong
-								>: {{ error }}
+								<strong>{{ formatLayerName(layer) }}</strong>: {{ error }}
 								<v-btn
 									size="x-small"
 									variant="text"
@@ -143,7 +177,9 @@
 					size="small"
 					@click="showGlobalOverlay = true"
 				>
-					<v-icon size="16"> mdi-arrow-expand </v-icon>
+					<v-icon size="16">
+mdi-arrow-expand
+</v-icon>
 				</v-btn>
 			</template>
 		</v-snackbar>
@@ -169,7 +205,9 @@
 				</v-card-text>
 				<v-card-actions>
 					<v-spacer />
-					<v-btn @click="showPerformanceDialog = false"> Close </v-btn>
+					<v-btn @click="showPerformanceDialog = false">
+Close
+</v-btn>
 				</v-card-actions>
 			</v-card>
 		</v-dialog>
@@ -470,6 +508,19 @@ watch(
 	color: rgba(0, 0, 0, 0.7);
 }
 
+/* Screen reader only class */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
 	.loading-card {
@@ -480,6 +531,18 @@ watch(
 
 	.layers-progress {
 		max-height: 200px;
+	}
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+	.rotating {
+		animation: none;
+	}
+
+	.v-progress-linear,
+	.v-progress-circular {
+		animation: none;
 	}
 }
 </style>
