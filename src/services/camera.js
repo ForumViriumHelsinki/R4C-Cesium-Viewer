@@ -142,10 +142,10 @@ export default class Camera {
 	 */
 	init() {
 		this.viewer.camera.setView({
-			destination: Cesium.Cartesian3.fromDegrees(24.9384, 60.1695, 15000),
+			destination: Cesium.Cartesian3.fromDegrees(24.991745, 60.045, 12000),
 			orientation: {
 				heading: Cesium.Math.toRadians(0.0),
-				pitch: Cesium.Math.toRadians(-45.0),
+				pitch: Cesium.Math.toRadians(-35.0),
 				roll: 0.0,
 			},
 		});
@@ -159,17 +159,28 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	switchTo2DView() {
+		// Guard: Check viewer is initialized
+		if (!this.viewer || !this.viewer.dataSources) {
+			console.warn('[Camera] Cannot switch to 2D view: Viewer not initialized');
+			return;
+		}
+
 		// Find the data source for postcodes
 		const postCodesDataSource = this.viewer.dataSources._dataSources.find(
 			(ds) => ds.name === 'PostCodes'
 		);
+
+		if (!postCodesDataSource || !postCodesDataSource._entityCollection) {
+			console.warn('[Camera] PostCodes data source not found');
+			return;
+		}
 
 		// Iterate over all entities in the postcodes data source.
 		for (let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++) {
 			let entity = postCodesDataSource._entityCollection._entities._array[i];
 
 			// Check if the entity posno property matches the postalcode.
-			if (entity._properties._posno._value == this.store.postalcode) {
+			if (entity._properties && entity._properties._posno && entity._properties._posno._value == this.store.postalcode) {
 				// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
 				this.viewer.camera.flyTo({
 					destination: Cesium.Cartesian3.fromDegrees(
@@ -183,11 +194,11 @@ export default class Camera {
 					},
 					duration: 3,
 				});
+				return;
 			}
 		}
 
-		// change label
-		// this.changeLabel( 'switchViewLabel', '2D view' );
+		console.warn(`[Camera] Postal code ${this.store.postalcode} not found for 2D view`);
 	}
 
 	/**
@@ -199,6 +210,12 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	switchTo3DView() {
+		// Guard: Check viewer is initialized
+		if (!this.viewer || !this.viewer.dataSources) {
+			console.warn('[Camera] Cannot switch to 3D view: Viewer not initialized');
+			return;
+		}
+
 		// Capture current camera state before starting flight
 		this.captureCurrentState();
 
@@ -207,12 +224,17 @@ export default class Camera {
 			(ds) => ds.name === 'PostCodes'
 		);
 
+		if (!postCodesDataSource || !postCodesDataSource._entityCollection) {
+			console.warn('[Camera] PostCodes data source not found');
+			return;
+		}
+
 		// Iterate over all entities in the postcodes data source
 		for (let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++) {
 			let entity = postCodesDataSource._entityCollection._entities._array[i];
 
 			// Check if entity postal code matches current selected postal code
-			if (entity._properties._posno._value == this.store.postalcode) {
+			if (entity._properties && entity._properties._posno && entity._properties._posno._value == this.store.postalcode) {
 				// Update state to animating stage
 				if (this.store.clickProcessingState.isProcessing) {
 					this.store.setClickProcessingState({
@@ -242,6 +264,8 @@ export default class Camera {
 				return;
 			}
 		}
+
+		console.warn(`[Camera] Postal code ${this.store.postalcode} not found for 3D view`);
 	}
 
 	/**
@@ -349,18 +373,30 @@ export default class Camera {
 	 * Maintains current position, pitch, and roll while changing heading.
 	 *
 	 * @param {number} headingInDegrees - Target heading (0° = North, 90° = East, 180° = South, 270° = West)
+	 * @param {boolean} reduceMotion - If true, use instant view change instead of animation
 	 * @returns {void}
 	 */
-	setHeading(headingInDegrees) {
-		this.viewer.camera.flyTo({
-			destination: this.viewer.camera.position,
-			orientation: {
-				heading: Cesium.Math.toRadians(headingInDegrees),
-				pitch: this.viewer.camera.pitch, // Keep current pitch
-				roll: this.viewer.camera.roll, // Keep current roll
-			},
-			duration: 1.0, // Animation duration in seconds
-		});
+	setHeading(headingInDegrees, reduceMotion = false) {
+		const orientation = {
+			heading: Cesium.Math.toRadians(headingInDegrees),
+			pitch: this.viewer.camera.pitch, // Keep current pitch
+			roll: this.viewer.camera.roll, // Keep current roll
+		};
+
+		if (reduceMotion) {
+			// Instant change for users who prefer reduced motion
+			this.viewer.camera.setView({
+				destination: this.viewer.camera.position,
+				orientation,
+			});
+		} else {
+			// Animated transition for standard users
+			this.viewer.camera.flyTo({
+				destination: this.viewer.camera.position,
+				orientation,
+				duration: 1.0, // Animation duration in seconds
+			});
+		}
 	}
 
 	/**
@@ -387,22 +423,46 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	focusOnPostalCode(postalCode) {
+		// Guard: Check viewer is initialized
+		if (!this.viewer) {
+			console.warn('[Camera] Cannot focus on postal code: Viewer not initialized');
+			return;
+		}
+
+		// Guard: Check dataSources are available
+		if (!this.viewer.dataSources || !this.viewer.dataSources._dataSources) {
+			console.warn('[Camera] Cannot focus on postal code: DataSources not available');
+			return;
+		}
+
 		// Find the PostCodes data source
 		const postCodesDataSource = this.viewer.dataSources._dataSources.find(
 			(ds) => ds.name === 'PostCodes'
 		);
 
 		if (!postCodesDataSource) {
-			console.warn('PostCodes data source not found');
+			console.warn('[Camera] PostCodes data source not found');
+			return;
+		}
+
+		// Guard: Check entity collection is available
+		if (!postCodesDataSource._entityCollection || !postCodesDataSource._entityCollection._entities) {
+			console.warn('[Camera] PostCodes entity collection not available');
 			return;
 		}
 
 		// Search for entity with matching postal code
 		const entity = postCodesDataSource._entityCollection._entities._array.find(
-			(entity) => entity._properties._posno._value == postalCode
+			(entity) => entity._properties && entity._properties._posno && entity._properties._posno._value == postalCode
 		);
 
 		if (entity) {
+			// Verify entity has required center coordinates
+			if (!entity._properties._center_x || !entity._properties._center_y) {
+				console.warn(`[Camera] Postal code ${postalCode} missing center coordinates`);
+				return;
+			}
+
 			// Fly to postal code area with 2-second animation
 			this.viewer.camera.flyTo({
 				destination: Cesium.Cartesian3.fromDegrees(
@@ -417,8 +477,9 @@ export default class Camera {
 				},
 				duration: 2,
 			});
+			console.log(`[Camera] Focusing on postal code: ${postalCode}`);
 		} else {
-			console.warn(`Postal code ${postalCode} not found in data source`);
+			console.warn(`[Camera] Postal code ${postalCode} not found in data source`);
 		}
 	}
 
