@@ -27,7 +27,9 @@
 			v-if="selectedCategory === 'flood'"
 			class="flood-quick-select"
 		>
-			<h5 class="flood-title">Flood Risk Scenarios</h5>
+			<h5 class="flood-title">
+Flood Risk Scenarios
+</h5>
 			<p class="flood-disclaimer">
 				⚠️ Map contains significant errors. Not for building-specific evaluation!
 			</p>
@@ -35,7 +37,9 @@
 			<div class="flood-categories">
 				<!-- Stormwater Floods -->
 				<div class="flood-category">
-					<h6 class="flood-category-title">Stormwater Floods</h6>
+					<h6 class="flood-category-title">
+Stormwater Floods
+</h6>
 					<v-btn-toggle
 						v-model="selectedFloodLayer"
 						mandatory
@@ -65,7 +69,9 @@
 
 				<!-- Coastal Floods -->
 				<div class="flood-category">
-					<h6 class="flood-category-title">Coastal Flood Scenarios</h6>
+					<h6 class="flood-category-title">
+Coastal Flood Scenarios
+</h6>
 					<v-btn-toggle
 						v-model="selectedFloodLayer"
 						mandatory
@@ -111,7 +117,9 @@
 				v-if="selectedFloodLayer && selectedFloodLayer !== 'none'"
 				class="flood-legend"
 			>
-				<h6 class="legend-title">Legend</h6>
+				<h6 class="legend-title">
+Legend
+</h6>
 				<div class="legend-items">
 					<div
 						v-for="item in currentFloodLegend"
@@ -188,7 +196,9 @@
 					v-if="filteredHSYLayers.length > 10"
 					class="more-results"
 				>
-					<p class="text-caption">Showing first 10 of {{ filteredHSYLayers.length }} results</p>
+					<p class="text-caption">
+Showing first 10 of {{ filteredHSYLayers.length }} results
+</p>
 				</div>
 			</div>
 
@@ -196,8 +206,12 @@
 				v-else-if="hsySearchQuery && !isLoadingHSY"
 				class="no-results"
 			>
-				<v-icon class="mb-2"> mdi-map-search </v-icon>
-				<p class="text-body-2">No layers found matching "{{ hsySearchQuery }}"</p>
+				<v-icon class="mb-2">
+mdi-map-search
+</v-icon>
+				<p class="text-body-2">
+No layers found matching "{{ hsySearchQuery }}"
+</p>
 			</div>
 		</div>
 

@@ -15,6 +15,7 @@
 			role="status"
 			aria-live="polite"
 			aria-atomic="true"
+			:aria-label="accessibleDescription"
 		>
 			<!-- Header -->
 			<div class="d-flex align-center mb-4">
@@ -62,7 +63,9 @@
 				@click="handleCancel"
 				@keydown.esc="handleCancel"
 			>
-				<v-icon start> mdi-close </v-icon>
+				<v-icon start>
+mdi-close
+</v-icon>
 				Press ESC to Cancel
 			</v-btn>
 
@@ -200,6 +203,17 @@ export default {
 		});
 
 		/**
+		 * Provides accessible description for screen readers
+		 * @returns {string} Full description of current loading state
+		 */
+		const accessibleDescription = computed(() => {
+			if (error.value) {
+				return `Error loading ${postalCodeName.value}: ${error.value.message}. Retry button available.`;
+			}
+			return `${stageText.value} for ${postalCodeName.value}. ${loadingProgress.value}% complete.${canCancel.value ? ' Press Escape to cancel.' : ''}`;
+		});
+
+		/**
 		 * Handles cancellation request from user
 		 * Emits cancel event for parent component to handle
 		 */
@@ -227,6 +241,7 @@ export default {
 			showProgress,
 			loadingProgress,
 			currentDataset,
+			accessibleDescription,
 			handleCancel,
 			handleRetry,
 		};

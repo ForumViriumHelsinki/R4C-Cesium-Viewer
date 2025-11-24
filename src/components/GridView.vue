@@ -1,6 +1,8 @@
 <template>
 	<div id="gridviewContainer">
-		<p class="header">R4C Urban Heat risk demonstrator</p>
+		<p class="header">
+R4C Urban Heat risk demonstrator
+</p>
 		<v-btn
 			icon
 			class="uiButton"
@@ -14,15 +16,14 @@
 				id="postalCodeToggle"
 				type="checkbox"
 				value="postalCode"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			id="postalCodeLabel"
 			for="postalCodeToggle"
 			class="label"
-			>Postalcode view</label
-		>
+			>Postalcode view</label>
 
 		<!--  natureGrid-->
 		<label
@@ -34,7 +35,7 @@
 				id="natureGridToggle"
 				type="checkbox"
 				value="natureGrid"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
@@ -42,8 +43,7 @@
 			for="natureGrid"
 			class="label"
 			style="display: none"
-			>Nature grid</label
-		>
+			>Nature grid</label>
 
 		<!--  travelTime-->
 		<label
@@ -54,15 +54,14 @@
 				id="travelTimeToggle"
 				type="checkbox"
 				value="travelTime"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			id="travelTimeLabel"
 			for="travelTime"
 			class="label"
-			>Travel time grid</label
-		>
+			>Travel time grid</label>
 
 		<!--  resetGrid-->
 		<label
@@ -73,15 +72,14 @@
 				id="resetGridToggle"
 				type="checkbox"
 				value="resetGrid"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			id="resetGridLabel"
 			for="resetGrid"
 			class="label"
-			>Reset grid</label
-		>
+			>Reset grid</label>
 
 		<!--  surveyPlaces-->
 		<label
@@ -92,15 +90,14 @@
 				id="surveyPlacesToggle"
 				type="checkbox"
 				value="surveyPlaces"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			id="surveyPlacesLabel"
 			for="surveyPlaces"
 			class="label"
-			>Espoo resident survey places</label
-		>
+			>Espoo resident survey places</label>
 
 		<!--  250mGrid-->
 		<label
@@ -111,15 +108,14 @@
 				id="250mGridToggle"
 				type="checkbox"
 				value="250mGrid"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			id="250mGridLabel"
 			for="250mGrid"
 			class="label"
-			>250m grid</label
-		>
+			>250m grid</label>
 	</div>
 	<BuildingGridChart />
 	<SosEco250mGrid />

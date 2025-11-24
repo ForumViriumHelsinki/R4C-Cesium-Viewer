@@ -1,7 +1,9 @@
 <template>
 	<v-card class="graphics-quality-card">
 		<v-card-title class="d-flex align-center">
-			<v-icon class="mr-2"> mdi-palette </v-icon>
+			<v-icon class="mr-2">
+mdi-palette
+</v-icon>
 			Graphics Quality
 			<v-spacer />
 			<v-chip
@@ -17,7 +19,9 @@
 			<!-- Quality Presets -->
 			<v-row class="mb-3">
 				<v-col cols="12">
-					<v-label class="text-caption text-medium-emphasis mb-2"> Quick Presets </v-label>
+					<v-label class="text-caption text-medium-emphasis mb-2">
+Quick Presets
+</v-label>
 					<v-btn-toggle
 						v-model="selectedPreset"
 						color="primary"
@@ -66,7 +70,9 @@
 			<!-- Anti-Aliasing Settings -->
 			<v-row>
 				<v-col cols="12">
-					<v-label class="text-caption text-medium-emphasis mb-2"> Anti-Aliasing </v-label>
+					<v-label class="text-caption text-medium-emphasis mb-2">
+Anti-Aliasing
+</v-label>
 
 					<!-- MSAA Settings -->
 					<div class="mb-3">
@@ -154,7 +160,9 @@
 			<!-- Advanced Settings -->
 			<v-row>
 				<v-col cols="12">
-					<v-label class="text-caption text-medium-emphasis mb-2"> Advanced Rendering </v-label>
+					<v-label class="text-caption text-medium-emphasis mb-2">
+Advanced Rendering
+</v-label>
 
 					<!-- HDR -->
 					<v-switch

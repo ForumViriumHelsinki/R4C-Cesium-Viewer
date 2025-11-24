@@ -13,8 +13,12 @@
 		>
 			<!-- Header with building icon -->
 			<div class="tooltip-header">
-				<div class="building-icon">🏢</div>
-				<div class="building-title">Building Details</div>
+				<div class="building-icon">
+🏢
+</div>
+				<div class="building-title">
+Building Details
+</div>
 			</div>
 
 			<!-- Compact data grid -->
@@ -23,7 +27,9 @@
 					v-if="buildingAttributes.address"
 					class="data-item"
 				>
-					<div class="data-label">📍</div>
+					<div class="data-label">
+📍
+</div>
 					<div class="data-value">
 						{{ buildingAttributes.address }}
 					</div>
@@ -32,7 +38,9 @@
 					v-if="buildingAttributes.rakennusaine_s"
 					class="data-item"
 				>
-					<div class="data-label">🧱</div>
+					<div class="data-label">
+🧱
+</div>
 					<div class="data-value">
 						{{ buildingAttributes.rakennusaine_s }}
 					</div>
@@ -41,7 +49,9 @@
 					v-if="buildingAttributes.avg_temp_c"
 					class="data-item"
 				>
-					<div class="data-label">🌡️</div>
+					<div class="data-label">
+🌡️
+</div>
 					<div class="data-value">
 						<span class="temp-value">{{ buildingAttributes.avg_temp_c }}°C</span>
 						<span class="temp-date">({{ store.heatDataDate }})</span>

@@ -5,29 +5,27 @@
 		:offset="8"
 	>
 		<template #activator="{ props }">
-			<v-badge
-				:color="overallStatusColor"
-				:content="healthyCount + '/' + totalSources"
-				overlap
-				:offset-x="12"
-				:offset-y="12"
+			<v-btn
+				v-bind="props"
+				size="small"
+				variant="text"
+				class="status-badge-btn"
+				aria-label="Data source status"
 			>
-				<v-btn
-					v-bind="props"
-					icon
-					size="small"
-					variant="text"
-					class="status-badge-btn"
-					aria-label="Data source status"
+				<v-icon
+					:color="overallStatusColor"
+					:size="18"
+					class="status-icon"
 				>
-					<v-icon
-						:color="overallStatusColor"
-						:size="20"
-					>
-						{{ overallStatusIcon }}
-					</v-icon>
-				</v-btn>
-			</v-badge>
+					{{ overallStatusIcon }}
+				</v-icon>
+				<span
+					class="status-count"
+					:class="`text-${overallStatusColor}`"
+				>
+					{{ healthyCount }}/{{ totalSources }}
+				</span>
+			</v-btn>
 		</template>
 
 		<v-card
@@ -335,10 +333,22 @@ onUnmounted(() => {
 .status-badge-btn {
 	opacity: 0.9;
 	transition: opacity 0.2s;
+	gap: 4px;
 }
 
 .status-badge-btn:hover {
 	opacity: 1;
+}
+
+.status-icon {
+	flex-shrink: 0;
+}
+
+.status-count {
+	font-size: 0.75rem;
+	font-weight: 600;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
 }
 
 .status-menu-card {

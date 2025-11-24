@@ -6,8 +6,8 @@
 import { eventBus } from '../services/eventEmitter.js';
 import * as d3 from 'd3'; // Import D3.js
 import Plot from '../services/plot.js';
-import { usePropsStore } from '../stores/propsStore';
 import { useGlobalStore } from '../stores/globalStore';
+import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
 
 export default {
 	mounted() {
@@ -28,8 +28,8 @@ export default {
 		},
 
 		createSurveyScatterPlot() {
-			const propsStore = usePropsStore();
-			const entities = propsStore.scatterPlotEntities;
+			// Get entities from cesiumEntityManager instead of propsStore
+			const entities = cesiumEntityManager.getAllBuildingEntities();
 			const containerId = 'surveyScatterPlot';
 			this.plotService.initializePlotContainerForGrid(containerId);
 

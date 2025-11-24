@@ -7,7 +7,9 @@
 			v-if="!compactMode"
 			class="status-title"
 		>
-			<v-icon class="mr-2"> mdi-database-check </v-icon>
+			<v-icon class="mr-2">
+mdi-database-check
+</v-icon>
 			Data Sources
 			<v-spacer />
 			<v-btn
@@ -168,7 +170,9 @@
 									:loading="source.retrying"
 									@click="retrySource(source.id)"
 								>
-									<v-icon size="14"> mdi-refresh </v-icon>
+									<v-icon size="14">
+mdi-refresh
+</v-icon>
 								</v-btn>
 							</template>
 							<span>Retry connection</span>
@@ -187,7 +191,9 @@
 									variant="text"
 									@click="clearCache(source.id)"
 								>
-									<v-icon size="14"> mdi-delete-variant </v-icon>
+									<v-icon size="14">
+mdi-delete-variant
+</v-icon>
 								</v-btn>
 							</template>
 							<span>Clear cached data</span>
@@ -204,28 +210,36 @@
 									size="x-small"
 									variant="text"
 								>
-									<v-icon size="14"> mdi-dots-vertical </v-icon>
+									<v-icon size="14">
+mdi-dots-vertical
+</v-icon>
 								</v-btn>
 							</template>
 
 							<v-list density="compact">
 								<v-list-item @click="checkHealth(source.id)">
 									<template #prepend>
-										<v-icon size="16"> mdi-heart-pulse </v-icon>
+										<v-icon size="16">
+mdi-heart-pulse
+</v-icon>
 									</template>
 									<v-list-item-title>Health Check</v-list-item-title>
 								</v-list-item>
 
 								<v-list-item @click="preloadData(source.id)">
 									<template #prepend>
-										<v-icon size="16"> mdi-download </v-icon>
+										<v-icon size="16">
+mdi-download
+</v-icon>
 									</template>
 									<v-list-item-title>Preload Data</v-list-item-title>
 								</v-list-item>
 
 								<v-list-item @click="showDetails(source)">
 									<template #prepend>
-										<v-icon size="16"> mdi-information </v-icon>
+										<v-icon size="16">
+mdi-information
+</v-icon>
 									</template>
 									<v-list-item-title>View Details</v-list-item-title>
 								</v-list-item>
@@ -389,7 +403,9 @@
 
 				<v-card-actions>
 					<v-spacer />
-					<v-btn @click="detailsDialog = false"> Close </v-btn>
+					<v-btn @click="detailsDialog = false">
+Close
+</v-btn>
 				</v-card-actions>
 			</v-card>
 		</v-dialog>

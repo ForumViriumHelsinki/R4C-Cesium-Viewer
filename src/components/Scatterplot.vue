@@ -11,9 +11,15 @@
 		>
 			height
 		</option>
-		<option value="c_valmpvm">age</option>
-		<option value="area_m2">area</option>
-		<option value="i_raktilav">volume</option>
+		<option value="c_valmpvm">
+age
+</option>
+		<option value="area_m2">
+area
+</option>
+		<option value="i_raktilav">
+volume
+</option>
 	</select>
 
 	<select
@@ -26,14 +32,30 @@
 		>
 			facade material
 		</option>
-		<option value="c_rakeaine">building material</option>
-		<option value="roof_type">roof type</option>
-		<option value="roof_median_color">roof median color</option>
-		<option value="roof_mode_color">roof mode color</option>
-		<option value="kayttotarkoitus">usage</option>
-		<option value="tyyppi">type</option>
-		<option value="c_lammtapa">heating method</option>
-		<option value="c_poltaine">heating source</option>
+		<option value="c_rakeaine">
+building material
+</option>
+		<option value="roof_type">
+roof type
+</option>
+		<option value="roof_median_color">
+roof median color
+</option>
+		<option value="roof_mode_color">
+roof mode color
+</option>
+		<option value="kayttotarkoitus">
+usage
+</option>
+		<option value="tyyppi">
+type
+</option>
+		<option value="c_lammtapa">
+heating method
+</option>
+		<option value="c_poltaine">
+heating source
+</option>
 	</select>
 </template>
 
@@ -44,7 +66,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import Plot from '../services/plot.js';
 import Building from '../services/building.js';
 import { useToggleStore } from '../stores/toggleStore.js';
-import { usePropsStore } from '../stores/propsStore';
+import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
 
 export default {
 	mounted() {
@@ -103,8 +125,8 @@ export default {
 			const hideNonSote = this.toggleStore.hideNonSote;
 			const hideLowToggle = this.toggleStore.hideLow;
 			const hideNew = this.toggleStore.hideNew;
-			const propsStore = usePropsStore();
-			const entities = propsStore.scatterPlotEntities;
+			// Get entities from cesiumEntityManager instead of propsStore
+			const entities = cesiumEntityManager.getAllBuildingEntities();
 
 			entities.forEach((entity) => {
 				let addDataToScatterPlot = true;

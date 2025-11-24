@@ -4,13 +4,13 @@
 			elevation="2"
 			class="pa-4"
 		>
-			<v-card-title
-				>Cooling Center <br />
-				Optimization</v-card-title
-			>
+			<v-card-title>Cooling Center <br >
+				Optimization</v-card-title>
 
-			<v-label class="mb-2"> Number of Cooling Centers </v-label>
-			<br /><br />
+			<v-label class="mb-2">
+Number of Cooling Centers
+</v-label>
+			<br ><br >
 			<v-slider
 				v-model="numCoolingCenters"
 				min="1"

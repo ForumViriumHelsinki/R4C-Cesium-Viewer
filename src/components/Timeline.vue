@@ -63,17 +63,16 @@ class="mr-1"
 </template>
 
 <script>
-import { onMounted, ref, computed, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
 import Datasource from '../services/datasource.js';
 import Building from '../services/building.js';
 import { eventBus } from '../services/eventEmitter.js';
+import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
 
 export default {
 	setup() {
 		const globalStore = useGlobalStore();
-		const propsStore = usePropsStore();
 		const dataSourceService = new Datasource();
 		const buildingService = new Building();
 
@@ -113,7 +112,8 @@ export default {
 			const entities = buildingsDataSource.entities.values;
 			buildingService.setHeatExposureToBuildings(entities);
 			buildingService.updateHeatHistogramDataAfterFilter(entities);
-			propsStore.setScatterPlotEntities(entities);
+			// Register entities with cesiumEntityManager for non-reactive entity management
+			cesiumEntityManager.registerBuildingEntities(entities);
 			eventBus.emit('updateScatterPlot');
 		};
 

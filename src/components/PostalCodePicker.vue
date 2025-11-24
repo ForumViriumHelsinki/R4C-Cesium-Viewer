@@ -2,10 +2,14 @@
 	<div class="postal-code-picker">
 		<div class="picker-header">
 			<h4 class="picker-title">
-				<v-icon class="mr-2"> mdi-map-marker </v-icon>
+				<v-icon class="mr-2">
+mdi-map-marker
+</v-icon>
 				Select Area to Analyze
 			</h4>
-			<p class="picker-subtitle">Choose a postal code area to explore climate data</p>
+			<p class="picker-subtitle">
+Choose a postal code area to explore climate data
+</p>
 		</div>
 
 		<!-- Search Filter -->
@@ -119,8 +123,12 @@
 			v-if="!isLoading && filteredPostalCodes.length === 0"
 			class="no-results"
 		>
-			<v-icon class="mb-2"> mdi-map-search </v-icon>
-			<p class="text-body-2">No areas found matching "{{ searchQuery }}"</p>
+			<v-icon class="mb-2">
+mdi-map-search
+</v-icon>
+			<p class="text-body-2">
+No areas found matching "{{ searchQuery }}"
+</p>
 			<v-btn
 				variant="text"
 				size="small"
@@ -247,16 +255,14 @@ export default {
 			try {
 				const camera = new Camera();
 
-				// Find the selected postal code in the data
-				const selectedArea = postalCodeData.value.find(
-					(item) => item.posno === currentPostalCode.value
-				);
-
-				if (selectedArea) {
-					// Use the camera service to focus on the area
-					// This may need adjustment based on how the Camera service works
-					await camera.focusOnPostalCode(currentPostalCode.value);
+				// Verify camera has access to the viewer
+				if (!camera.viewer) {
+					console.warn('[PostalCodePicker] Camera viewer not initialized');
+					return;
 				}
+
+				// Use the camera service to focus on the postal code
+				camera.focusOnPostalCode(currentPostalCode.value);
 			} catch (error) {
 				console.error('Error focusing on area:', error);
 			}

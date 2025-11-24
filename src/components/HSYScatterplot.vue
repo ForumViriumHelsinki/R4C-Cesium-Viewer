@@ -11,6 +11,7 @@ import Building from '../services/building.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
 
 export default {
 	setup() {
@@ -90,7 +91,8 @@ export default {
 		};
 
 		const processEntitiesForHSYScatterPlot = (urbanHeatDataAndMaterial) => {
-			const entities = propsStore.scatterPlotEntities;
+			// Get entities from cesiumEntityManager instead of propsStore
+			const entities = cesiumEntityManager.getAllBuildingEntities();
 
 			entities.forEach((entity) => {
 				let addData = true;

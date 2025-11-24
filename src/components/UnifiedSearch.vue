@@ -132,9 +132,15 @@
 					v-if="searchQuery.length > 2 && !hasResults"
 					class="no-results"
 				>
-					<v-icon class="mb-2"> mdi-map-search </v-icon>
-					<p class="text-body-2">No results found for "{{ searchQuery }}"</p>
-					<p class="text-caption">Try searching by address, postal code, or area name</p>
+					<v-icon class="mb-2">
+mdi-map-search
+</v-icon>
+					<p class="text-body-2">
+No results found for "{{ searchQuery }}"
+</p>
+					<p class="text-caption">
+Try searching by address, postal code, or area name
+</p>
 				</div>
 
 				<!-- Search Tips -->
@@ -142,8 +148,12 @@
 					v-if="searchQuery.length <= 2"
 					class="search-tips"
 				>
-					<v-icon class="mb-2"> mdi-lightbulb-outline </v-icon>
-					<p class="text-body-2">Search examples:</p>
+					<v-icon class="mb-2">
+mdi-lightbulb-outline
+</v-icon>
+					<p class="text-body-2">
+Search examples:
+</p>
 					<v-chip
 						size="small"
 						class="ma-1"
@@ -368,7 +378,7 @@ const selectPostalCode = async (area) => {
 
 		// Load postal code data and focus camera
 		await featurePicker.loadPostalCode();
-		await focusOnPostalCode(area.posno);
+		focusOnPostalCode(area.posno);
 
 		searchQuery.value = `${area.nimi} (${area.posno})`;
 		showResults.value = false;
@@ -387,11 +397,18 @@ const moveCameraAndLoad = (longitude, latitude) => {
 };
 
 // Focus camera on postal code area
-const focusOnPostalCode = async (postalCode) => {
+const focusOnPostalCode = (postalCode) => {
 	try {
 		const camera = new Camera();
-		// This may need adjustment based on Camera service implementation
-		await camera.focusOnPostalCode(postalCode);
+
+		// Verify camera has access to the viewer
+		if (!camera.viewer) {
+			console.warn('[UnifiedSearch] Camera viewer not initialized');
+			return;
+		}
+
+		// Focus on the postal code (synchronous call)
+		camera.focusOnPostalCode(postalCode);
 	} catch (error) {
 		console.error('Error focusing on postal code:', error);
 	}

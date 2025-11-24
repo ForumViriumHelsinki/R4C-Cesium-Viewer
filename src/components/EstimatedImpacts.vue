@@ -8,7 +8,9 @@
 		<p>Total Centers Added: {{ coolingCenters.length }}</p>
 		<p>Total Cells Affected: {{ affectedCells.length }}</p>
 		<p>Total Heat Vulnerability impact: {{ impact }}</p>
-		<p v-if="optimised">In optimization the minimum distance between two cooling centers is 500m</p>
+		<p v-if="optimised">
+In optimization the minimum distance between two cooling centers is 500m
+</p>
 	</div>
 </template>
 
