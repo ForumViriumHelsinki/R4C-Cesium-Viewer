@@ -250,7 +250,7 @@ icon
 				</div>
 				<div v-if="currentAnalysis === 'scatter-plot'">
 					<BuildingScatterPlot v-if="currentView !== 'helsinki'" /><Scatterplot
-						v-if="currentView === 'helsinki' && scatterPlotEntities"
+						v-if="currentView === 'helsinki'"
 					/>
 				</div>
 				<div v-if="currentAnalysis === 'building-heat'">
@@ -349,7 +349,6 @@ export default {
 
 		const heatHistogramData = computed(() => propsStore.heatHistogramData);
 		const statsIndex = computed(() => propsStore.statsIndex);
-		const scatterPlotEntities = computed(() => propsStore.scatterPlotEntities);
 		const showSosEco = computed(() => socioEconomicsStore.data && heatExposureStore.data);
 		const hasNDVIData = computed(() => toggleStore.ndvi);
 
@@ -463,7 +462,6 @@ export default {
 			currentLevel,
 			currentView,
 			heatHistogramData,
-			scatterPlotEntities,
 			showSosEco,
 			statsIndex,
 			hasAvailableAnalysis,

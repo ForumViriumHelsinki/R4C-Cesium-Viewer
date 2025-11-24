@@ -51,7 +51,7 @@
 				class="d-flex flex-column pa-0 ma-0"
 				style="z-index: 20"
 			>
-				<Scatterplot v-if="propsStore.scatterPlotEntities" />
+				<Scatterplot />
 				<NearbyTreeArea />
 			</v-col>
 		</v-row>

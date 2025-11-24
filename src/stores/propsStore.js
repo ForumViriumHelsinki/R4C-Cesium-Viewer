@@ -25,7 +25,6 @@ import { markRaw } from 'vue';
  * @property {number|null} treeArea - Total tree canopy area in square meters
  * @property {number|null} buildingHeatExposure - Selected building heat exposure index (0-1)
  * @property {Array|null} heatHistogramData - Heat exposure frequency distribution data
- * @property {Array|null} scatterPlotEntities - Entities for scatter plot visualizations
  * @property {Array|null} treeBuildingDistanceData - Tree proximity analysis data
  * @property {Map|null} treeAreasByBuildingId - Map of building IDs to tree area calculations (serializable)
  * @property {Array|null} treeData - Serializable tree data (kohde_id, p_ala_m2) for analysis
@@ -47,7 +46,6 @@ export const usePropsStore = defineStore('props', {
 		treeArea: null,
 		buildingHeatExposure: null,
 		heatHistogramData: null,
-		scatterPlotEntities: null,
 		treeBuildingDistanceData: null,
 		treeAreasByBuildingId: null,
 		treeData: null,
@@ -149,20 +147,6 @@ export const usePropsStore = defineStore('props', {
 		 */
 		setHeatHistogramData(data) {
 			this.heatHistogramData = data;
-		},
-		/**
-		 * Sets entities for scatter plot visualizations
-		 * @param {Array<Object>} entities - Cesium entities with plot properties
-		 * @note Uses markRaw to prevent Cesium entities from becoming reactive,
-		 *       which would cause DataCloneError in Web Workers
-		 */
-		setScatterPlotEntities(entities) {
-			// DISABLED: Do not store Cesium entities in Pinia - causes DataCloneError
-			// Use cesiumEntityManager for entity references instead
-			this.scatterPlotEntities = null;
-			console.warn(
-				'[propsStore] setScatterPlotEntities called but not storing entities - use cesiumEntityManager'
-			);
 		},
 		/**
 		 * Sets tree-to-building distance analysis data

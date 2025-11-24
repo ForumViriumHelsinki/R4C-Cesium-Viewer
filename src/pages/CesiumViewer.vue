@@ -7,9 +7,17 @@
 		<Loading v-if="store.isLoading" />
 		<!-- Map Click Loading Overlay -->
 		<MapClickLoadingOverlay
-@cancel="handleCancelAnimation"
-@retry="handleRetryLoading"
-/>
+			@cancel="handleCancelAnimation"
+			@retry="handleRetryLoading"
+		/>
+		<!-- Viewport-based Building Loading Indicator -->
+		<ViewportLoadingIndicator
+			:is-loading-buildings="isLoadingBuildings"
+			:postal-codes-loading="viewportLoadingProgress.current"
+			:postal-codes-total="viewportLoadingProgress.total"
+			:error="viewportLoadingError"
+			@retry="handleRetryViewportLoading"
+		/>
 		<!-- Disclaimer Popup -->
 		<DisclaimerPopup class="disclaimer-popup" />
 		<BuildingInformation v-if="shouldShowBuildingInformation" />
@@ -60,6 +68,7 @@ import Loading from '../components/Loading.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
 import CameraControls from '../components/CameraControls.vue';
 import MapClickLoadingOverlay from '../components/MapClickLoadingOverlay.vue';
+import ViewportLoadingIndicator from '../components/ViewportLoadingIndicator.vue';
 
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
@@ -78,6 +87,7 @@ export default {
 		BuildingInformation,
 		Loading,
 		MapClickLoadingOverlay,
+		ViewportLoadingIndicator,
 	},
 	setup() {
 		const store = useGlobalStore();
@@ -94,6 +104,9 @@ export default {
 		const errorSnackbar = ref(false);
 		const errorMessage = ref('');
 		const isLoadingBuildings = ref(false);
+		// Viewport loading progress tracking
+		const viewportLoadingProgress = ref({ current: 0, total: 0 });
+		const viewportLoadingError = ref(null);
 		let lastPickTime = 0;
 		let Cesium = null;
 		let Datasource = null;
@@ -101,6 +114,9 @@ export default {
 		let Featurepicker = null;
 		let Camera = null;
 		let Graphics = null;
+		// Persistent FeaturePicker instance for viewport-based loading
+		// Reusing the same instance maintains visiblePostalCodes state across camera moves
+		let viewportFeaturepicker = null;
 
 		const initViewer = async () => {
 			// Dynamically import Cesium and its dependencies to avoid blocking initial render
@@ -389,14 +405,43 @@ export default {
 
 			try {
 				isLoadingBuildings.value = true;
+				viewportLoadingError.value = null;
 
-				// Get visible postal codes and load their buildings
-				const featurepicker = new Featurepicker();
-				const visiblePostalCodes = featurepicker.getVisiblePostalCodes(viewportRect);
-				await featurepicker.loadBuildingsForVisiblePostalCodes(visiblePostalCodes);
+				// Reuse the same FeaturePicker instance to maintain visiblePostalCodes state
+				if (!viewportFeaturepicker) {
+					viewportFeaturepicker = new Featurepicker();
+				}
+				const visiblePostalCodes = viewportFeaturepicker.getVisiblePostalCodes(viewportRect);
+
+				// Update progress tracking
+				viewportLoadingProgress.value = {
+					current: 0,
+					total: visiblePostalCodes.length,
+				};
+
+				// Load buildings for visible postal codes
+				await viewportFeaturepicker.loadBuildingsForVisiblePostalCodes(visiblePostalCodes);
+
+				// Update to complete
+				viewportLoadingProgress.value = {
+					current: visiblePostalCodes.length,
+					total: visiblePostalCodes.length,
+				};
+			} catch (error) {
+				console.error('[CesiumViewer] Error loading buildings:', error?.message || error);
+				viewportLoadingError.value = error?.message || 'Failed to load buildings';
 			} finally {
 				isLoadingBuildings.value = false;
 			}
+		};
+
+		/**
+		 * Handles retry of viewport-based building loading after an error
+		 */
+		const handleRetryViewportLoading = async () => {
+			console.log('[CesiumViewer] Retrying viewport building loading');
+			viewportLoadingError.value = null;
+			await handleCameraSettled();
 		};
 
 		const retryInit = async () => {
@@ -519,6 +564,11 @@ export default {
 			retryInit,
 			handleCancelAnimation,
 			handleRetryLoading,
+			// Viewport loading state
+			isLoadingBuildings,
+			viewportLoadingProgress,
+			viewportLoadingError,
+			handleRetryViewportLoading,
 		};
 	},
 };
