@@ -72,6 +72,7 @@ class UnifiedLoader {
 				if (cached) {
 					await this.processData(cached, processor, layerId, {
 						fromCache: true,
+						progressive,
 					});
 					this.loadingStore.completeLayerLoading(layerId);
 					return cached;
@@ -92,7 +93,7 @@ class UnifiedLoader {
 
 			// Process the loaded data
 			if (processor && data) {
-				await this.processData(data, processor, layerId, { fromCache: false });
+				await this.processData(data, processor, layerId, { fromCache: false, progressive });
 			}
 
 			// Cache the data if enabled
@@ -192,7 +193,10 @@ class UnifiedLoader {
 
 		try {
 			// For large datasets, process in batches to avoid blocking
-			if (data.features && data.features.length > 100) {
+			// Only batch if progressive mode is enabled - non-progressive processors
+			// are not designed for batched data and will fail
+			const shouldBatch = metadata.progressive && data.features && data.features.length > 100;
+			if (shouldBatch) {
 				await this.processBatchedData(data, processor, layerId);
 			} else {
 				await processor(data, metadata);

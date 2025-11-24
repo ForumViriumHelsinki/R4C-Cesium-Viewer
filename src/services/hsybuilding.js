@@ -10,6 +10,7 @@ import * as Cesium from 'cesium';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 import { useURLStore } from '../stores/urlStore.js';
+import { cesiumEntityManager } from './cesiumEntityManager.js';
 
 /**
  * HSY Building Service
@@ -454,7 +455,8 @@ export default class HSYBuilding {
  */
 const setBuildingPropsAndEmitEvent = (entities, heatExposureData, avg_temp_cList, data) => {
 	const propsStore = usePropsStore();
-	propsStore.setScatterPlotEntities(entities);
+	// Register entities with cesiumEntityManager for non-reactive entity management
+	cesiumEntityManager.registerBuildingEntities(entities);
 	propsStore.setPostalcodeHeatTimeseries(heatExposureData[1]);
 	propsStore.setHeatHistogramData(avg_temp_cList);
 	const buildingStore = useBuildingStore();

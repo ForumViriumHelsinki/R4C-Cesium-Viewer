@@ -4,6 +4,7 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 import { useURLStore } from '../stores/urlStore.js';
+import { cesiumEntityManager } from './cesiumEntityManager.js';
 
 /**
  * Urban Heat Service
@@ -90,7 +91,8 @@ export default class Urbanheat {
 		const propsStore = usePropsStore();
 		const heatData = this.calculateAverageExposure(features);
 		propsStore.setHeatHistogramData(heatData[0]);
-		propsStore.setScatterPlotEntities(entities);
+		// Register entities with cesiumEntityManager for non-reactive entity management
+		cesiumEntityManager.registerBuildingEntities(entities);
 	}
 
 	/**

@@ -2,8 +2,8 @@ import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { eventBus } from './eventEmitter.js';
-import { usePropsStore } from '../stores/propsStore.js';
 import { useURLStore } from '../stores/urlStore.js';
+import { cesiumEntityManager } from './cesiumEntityManager.js';
 
 /**
  * Espoo Survey Service
@@ -71,8 +71,8 @@ export default class EspooSurvey {
 			'Survey ' + collection
 		);
 		this.setColorAndLabelForPointEntities(entities);
-		const propsStore = usePropsStore();
-		propsStore.setScatterPlotEntities(entities);
+		// Register entities with cesiumEntityManager for non-reactive entity management
+		cesiumEntityManager.registerBuildingEntities(entities);
 		eventBus.emit('newSurveyScatterPlot');
 	}
 
