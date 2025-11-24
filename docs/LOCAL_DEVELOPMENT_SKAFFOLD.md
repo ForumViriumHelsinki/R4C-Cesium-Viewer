@@ -1,34 +1,67 @@
 # Local Development with Skaffold
 
-This guide covers local Kubernetes development using Skaffold with persistent services.
+This guide covers local Kubernetes development using Skaffold.
 
 ## Overview
 
-The project uses a split configuration for efficient local development:
+The project uses two main development workflows:
 
-- **`skaffold-services.yaml`** - Persistent backend services (PostgreSQL, pygeoapi)
-- **`skaffold.yaml`** - Frontend application with hot reload
-
-This separation allows you to keep database and API services running while rapidly iterating on the frontend.
+- **Full Stack (default)** - All services including frontend in containers
+- **Services Only** - Backend services with local frontend development (faster iteration)
 
 ## Quick Start
 
-```bash
-# 1. Deploy persistent services (run once)
-skaffold run -f skaffold-services.yaml --port-forward
+### Full Stack Development (Recommended for most cases)
 
-# 2. Develop frontend with hot reload
+```bash
+# Deploy everything with hot reload
 skaffold dev --port-forward
 ```
 
-## Workflow Details
+Access the application at: http://localhost:4173
 
-### Step 1: Deploy Persistent Services
-
-Start PostgreSQL and pygeoapi services that persist between development sessions:
+### Services Only + Local Frontend (Faster iteration)
 
 ```bash
-skaffold run -f skaffold-services.yaml --port-forward
+# 1. Deploy backend services
+skaffold run -p services-only --port-forward
+
+# 2. Run frontend locally with hot reload
+npm run dev
+```
+
+Access the application at: http://localhost:5173
+
+## Workflow Details
+
+### Full Stack Development
+
+The default configuration deploys the complete stack:
+
+```bash
+skaffold dev --port-forward
+```
+
+This deploys:
+
+- PostgreSQL with PostGIS extension
+- pygeoapi OGC API server
+- Database migrations
+- Frontend application
+
+Features:
+
+- Watches for file changes and automatically rebuilds
+- Port-forwards frontend to localhost:4173
+- Cleans up all resources on exit (Ctrl+C)
+
+### Services Only Development
+
+For faster frontend iteration using local Vite dev server:
+
+```bash
+# Start backend services (persistent)
+skaffold run -p services-only --port-forward
 ```
 
 This deploys:
@@ -37,13 +70,20 @@ This deploys:
 - pygeoapi OGC API server
 - Database migrations
 
-Wait for all pods to be ready:
+Port forwards:
+
+- PostgreSQL: localhost:5432
+- pygeoapi: localhost:5000
+
+Then run the frontend locally:
 
 ```bash
-kubectl get pods -n regions4climate -w
+npm run dev
 ```
 
-### Step 2: Import Production Data (Optional)
+Access at: http://localhost:5173
+
+### Import Production Data (Optional)
 
 If you need production data for testing, see [DATABASE_IMPORT.md](DATABASE_IMPORT.md) for instructions on importing a database dump.
 
@@ -58,53 +98,42 @@ kubectl exec -i -n regions4climate postgresql-0 -- \
   psql -U regions4climate_user -d regions4climate < tmp/database-export.sql
 ```
 
-### Step 3: Develop the Frontend
-
-Start the frontend with hot reload:
+### Clean Up
 
 ```bash
-skaffold dev --port-forward
+# Stop full stack (Ctrl+C in skaffold dev terminal)
+
+# Or delete services-only deployment
+skaffold delete -p services-only
+
+# Delete default deployment (if used with skaffold run)
+skaffold delete
 ```
-
-This:
-
-- Builds and deploys the frontend container
-- Watches for file changes and automatically rebuilds
-- Port-forwards to localhost
-- Cleans up the frontend on exit (services remain)
-
-Access the application at: http://localhost:4173
-
-### Step 4: Clean Up
-
-When finished with development:
-
-```bash
-# Stop frontend (Ctrl+C in skaffold dev terminal)
-
-# Remove services when no longer needed
-skaffold delete -f skaffold-services.yaml
-```
-
-## Alternative: Full Stack Development
-
-If you prefer to deploy everything together (services are destroyed on exit):
-
-```bash
-skaffold dev --profile=local-with-services --port-forward
-```
-
-This is simpler but requires redeploying services and re-importing data each session.
 
 ## Port Forwarding
 
 Default port forwards when using `--port-forward`:
 
-| Service    | Local Port | Description                            |
-| ---------- | ---------- | -------------------------------------- |
-| Frontend   | 4173       | Vue application                        |
-| PostgreSQL | 5432       | Database (if needed for direct access) |
-| pygeoapi   | 80         | OGC API endpoints                      |
+### Full Stack (default)
+
+| Service  | Local Port | Description     |
+| -------- | ---------- | --------------- |
+| Frontend | 4173       | Vue application |
+
+### Services Only Profile
+
+| Service    | Local Port | Description        |
+| ---------- | ---------- | ------------------ |
+| PostgreSQL | 5432       | Database access    |
+| pygeoapi   | 5000       | OGC API endpoints  |
+
+## Available Profiles
+
+| Profile          | Description                                      |
+| ---------------- | ------------------------------------------------ |
+| (default)        | Full stack with frontend                         |
+| `services-only`  | PostgreSQL + pygeoapi + migrations (no frontend) |
+| `migration-test` | Test database migrations                         |
 
 ## Useful Commands
 
