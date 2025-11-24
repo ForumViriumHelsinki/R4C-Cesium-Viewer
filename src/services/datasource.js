@@ -95,21 +95,39 @@ export default class DataSource {
 			const dataSources = this.store.cesiumViewer.dataSources._dataSources;
 			const removalPromises = [];
 
-			for (const dataSource of dataSources) {
+			// Create a copy of the array to avoid issues with iteration during removal
+			const dataSourcesCopy = [...dataSources];
+
+			for (const dataSource of dataSourcesCopy) {
 				if (dataSource.name.startsWith(namePrefix)) {
 					const removalPromise = new Promise((resolveRemove) => {
 						// Use arrow function to preserve 'this' context
-						const onDataSourceRemoved = () => {
+						const onDataSourceRemoved = (removedDataSource) => {
+							// Only resolve when OUR datasource is removed
+							if (removedDataSource === dataSource) {
+								this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
+									onDataSourceRemoved
+								);
+								resolveRemove();
+							}
+						};
+
+						// Add listener BEFORE calling remove to avoid race condition
+						this.store.cesiumViewer.dataSources.dataSourceRemoved.addEventListener(
+							onDataSourceRemoved
+						);
+
+						// Call remove and check if it succeeded
+						const wasRemoved = this.store.cesiumViewer.dataSources.remove(dataSource, true);
+
+						// If removal failed (data source not in collection), resolve immediately
+						// and clean up the listener to avoid memory leaks
+						if (!wasRemoved) {
 							this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
 								onDataSourceRemoved
 							);
 							resolveRemove();
-						};
-
-						this.store.cesiumViewer.dataSources.remove(dataSource, true);
-						this.store.cesiumViewer.dataSources.dataSourceRemoved.addEventListener(
-							onDataSourceRemoved
-						);
+						}
 					});
 
 					removalPromises.push(removalPromise);
@@ -168,32 +186,56 @@ export default class DataSource {
 	 * @returns {Promise<Array<Cesium.Entity>>} Promise resolving to array of entities
 	 */
 	async addDataSourceWithPolygonFix(data, name) {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
+			// DIAGNOSTIC: Log incoming data
+			console.log(
+				`%c[DATASOURCE CREATE] Creating datasource "${name}" with ${data.features?.length || 0} features`,
+				'color: green; font-weight: bold'
+			);
+
 			Cesium.GeoJsonDataSource.load(data, {
 				stroke: Cesium.Color.BLACK,
 				fill: Cesium.Color.CRIMSON,
 				strokeWidth: 3,
 				clampToGround: true,
 			})
-				.then((data) => {
+				.then(async (loadedData) => {
+					// DIAGNOSTIC: Check for existing datasources before removal
+					const existingDatasources = this.store.cesiumViewer?.dataSources?._dataSources?.filter(
+						ds => ds.name?.startsWith(name)
+					) || [];
+
+					if (existingDatasources.length > 0) {
+						console.log(
+							`[DATASOURCE CREATE] ⚠️ Removing ${existingDatasources.length} existing datasource(s): [${existingDatasources.map(ds => ds.name).join(', ')}]`
+						);
+					}
+
 					// Remove previous datasource with same name to avoid duplicates
-					this.removeDataSourcesByNamePrefix(name);
-					data.name = name;
+					await this.removeDataSourcesByNamePrefix(name);
+					loadedData.name = name;
 
 					// Fix polygon rendering by setting geodesic arc type
-					for (let i = 0; i < data.entities.values.length; i++) {
-						let entity = data.entities.values[i];
+					for (let i = 0; i < loadedData.entities.values.length; i++) {
+						let entity = loadedData.entities.values[i];
 
 						if (Cesium.defined(entity.polygon)) {
 							entity.polygon.arcType = Cesium.ArcType.GEODESIC;
 						}
 					}
 
-					this.store.cesiumViewer.dataSources.add(data);
-					resolve(data.entities.values);
+					this.store.cesiumViewer.dataSources.add(loadedData);
+
+					// DIAGNOSTIC: Confirm datasource added
+					console.log(
+						`[DATASOURCE CREATE] ✅ Added "${name}" with ${loadedData.entities.values.length} entities, show=${loadedData.show}`
+					);
+
+					resolve(loadedData.entities.values);
 				})
 				.catch((error) => {
-					console.log(error);
+					console.error(`[DATASOURCE CREATE] ❌ Failed to create "${name}":`, error);
+					reject(error);
 				});
 		});
 	}

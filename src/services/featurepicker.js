@@ -725,6 +725,13 @@ export default class FeaturePicker {
 			viewportRect.north
 		);
 
+		// DIAGNOSTIC: Log viewport bounds
+		console.log(
+			`%c[VIEWPORT DEBUG] Viewport bounds: W=${viewportRect.west.toFixed(4)}, S=${viewportRect.south.toFixed(4)}, E=${viewportRect.east.toFixed(4)}, N=${viewportRect.north.toFixed(4)}`,
+			'color: orange; font-weight: bold'
+		);
+		console.log(`[VIEWPORT DEBUG] Total postal code entities to check: ${entities.length}`);
+
 		for (const entity of entities) {
 			if (!entity.polygon || !entity.properties?.posno) continue;
 
@@ -794,6 +801,16 @@ export default class FeaturePicker {
 			}
 
 			const newVisibleSet = new Set(visiblePostalCodes);
+
+			// DIAGNOSTIC: Compare previous vs new visible postal codes
+			const previousCodes = Array.from(this.visiblePostalCodes);
+			console.log(
+				`%c[STATE DEBUG] Visibility transition:`,
+				'color: cyan; font-weight: bold'
+			);
+			console.log(`  Previous visible: [${previousCodes.join(', ')}] (${previousCodes.length} codes)`);
+			console.log(`  New visible: [${visiblePostalCodes.join(', ')}] (${visiblePostalCodes.length} codes)`);
+			console.log(`  Current selected: ${currentPostalCode || 'none'}`);
 
 			// Collect all visibility changes to batch them
 			const visibilityChanges = [];
@@ -899,6 +916,8 @@ export default class FeaturePicker {
 			if (postalCodesToLoad.length === 0) {
 				console.log('[FeaturePicker] All visible postal codes already have buildings loaded');
 				this.visiblePostalCodes = newVisibleSet;
+				// DIAGNOSTIC: Still dump state even on early return
+				this._dumpBuildingDatasourceState();
 				return;
 			}
 
@@ -940,9 +959,57 @@ export default class FeaturePicker {
 			if (visiblePostalCodes.length > 0) {
 				cacheWarmer.warmNearbyPostalCodes(currentPostalCode, visiblePostalCodes);
 			}
+
+			// DIAGNOSTIC: Dump final state of all building datasources
+			this._dumpBuildingDatasourceState();
 		} finally {
 			// Always release the loading lock
 			this._isLoadingVisiblePostalCodes = false;
+		}
+	}
+
+	/**
+	 * DIAGNOSTIC: Dumps current state of all building datasources
+	 * @private
+	 */
+	_dumpBuildingDatasourceState() {
+		const allDatasources = this.viewer?.dataSources?._dataSources || [];
+		const buildingDatasources = allDatasources.filter(ds => ds.name?.startsWith('Buildings '));
+
+		console.log(
+			`%c[DATASOURCE STATE] Total building datasources: ${buildingDatasources.length}`,
+			'color: magenta; font-weight: bold'
+		);
+
+		const visible = [];
+		const hidden = [];
+
+		for (const ds of buildingDatasources) {
+			const postalCode = ds.name.replace('Buildings ', '');
+			const entityCount = ds.entities?.values?.length || 0;
+
+			if (ds.show) {
+				visible.push(`${postalCode}(${entityCount})`);
+			} else {
+				hidden.push(`${postalCode}(${entityCount})`);
+			}
+		}
+
+		console.log(`  Visible: [${visible.join(', ')}]`);
+		console.log(`  Hidden: [${hidden.join(', ')}]`);
+		console.log(`  Tracked as visible: [${Array.from(this.visiblePostalCodes).join(', ')}]`);
+
+		// Check for mismatches
+		const trackedSet = this.visiblePostalCodes;
+		const actualVisible = buildingDatasources.filter(ds => ds.show).map(ds => ds.name.replace('Buildings ', ''));
+		const mismatches = actualVisible.filter(code => !trackedSet.has(code));
+		const missing = Array.from(trackedSet).filter(code => !actualVisible.includes(code));
+
+		if (mismatches.length > 0 || missing.length > 0) {
+			console.warn(
+				`%c[STATE MISMATCH!] Visible but not tracked: [${mismatches.join(', ')}], Tracked but not visible: [${missing.join(', ')}]`,
+				'color: red; font-weight: bold'
+			);
 		}
 	}
 
