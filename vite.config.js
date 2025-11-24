@@ -13,17 +13,44 @@ import { fileURLToPath, URL } from 'node:url';
 import { version } from './package.json';
 import { execSync } from 'child_process';
 
-// Get git commit hash at build time
-const getGitCommit = () => {
+// Get git information at build time
+const getGitInfo = () => {
+	const gitInfo = {
+		commitShort: 'dev',
+		commitFull: 'development',
+		commitDate: new Date().toISOString(),
+		branch: 'local',
+	};
+
 	try {
-		return execSync('git rev-parse --short HEAD').toString().trim();
+		gitInfo.commitShort = execSync('git rev-parse --short HEAD').toString().trim();
 	} catch {
-		return 'dev';
+		// Use defaults
 	}
+
+	try {
+		gitInfo.commitFull = execSync('git rev-parse HEAD').toString().trim();
+	} catch {
+		// Use defaults
+	}
+
+	try {
+		gitInfo.commitDate = execSync('git log -1 --format=%ci').toString().trim();
+	} catch {
+		// Use defaults
+	}
+
+	try {
+		gitInfo.branch = execSync('git branch --show-current').toString().trim() || 'detached';
+	} catch {
+		// Use defaults
+	}
+
+	return gitInfo;
 };
 
 export default defineConfig(({ mode }) => {
-	const gitCommit = getGitCommit();
+	const gitInfo = getGitInfo();
 	const buildTime = new Date().toISOString();
 
 	return {
@@ -100,7 +127,10 @@ export default defineConfig(({ mode }) => {
 		define: {
 			'process.env': {},
 			'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
-			'import.meta.env.VITE_GIT_COMMIT': JSON.stringify(gitCommit),
+			'import.meta.env.VITE_GIT_COMMIT': JSON.stringify(gitInfo.commitShort),
+			'import.meta.env.VITE_GIT_COMMIT_FULL': JSON.stringify(gitInfo.commitFull),
+			'import.meta.env.VITE_GIT_COMMIT_DATE': JSON.stringify(gitInfo.commitDate),
+			'import.meta.env.VITE_GIT_BRANCH': JSON.stringify(gitInfo.branch),
 			'import.meta.env.VITE_BUILD_TIME': JSON.stringify(buildTime),
 		},
 		resolve: {

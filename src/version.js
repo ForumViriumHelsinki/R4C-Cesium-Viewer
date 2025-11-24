@@ -4,6 +4,9 @@
 export const VERSION_INFO = {
 	version: import.meta.env.VITE_APP_VERSION || 'dev',
 	commit: import.meta.env.VITE_GIT_COMMIT || 'local',
+	commitFull: import.meta.env.VITE_GIT_COMMIT_FULL || 'development',
+	commitDate: import.meta.env.VITE_GIT_COMMIT_DATE || new Date().toISOString(),
+	branch: import.meta.env.VITE_GIT_BRANCH || 'local',
 	buildTime: import.meta.env.VITE_BUILD_TIME || new Date().toISOString(),
 };
 
