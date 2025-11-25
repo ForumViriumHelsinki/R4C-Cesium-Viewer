@@ -1,20 +1,23 @@
-import * as Cesium from "cesium";
-import Datasource from "./datasource.js";
-import Building from "./building.js";
-import Plot from "./plot.js";
-import Traveltime from "./traveltime.js";
-import HSYBuilding from "./hsybuilding.js";
-import { findAddressForBuilding } from "./address.js";
-import ElementsDisplay from "./elementsDisplay.js";
-import { useGlobalStore } from "../stores/globalStore.js";
-import { useToggleStore } from "../stores/toggleStore.js";
-import { usePropsStore } from "../stores/propsStore.js";
-import Helsinki from "./helsinki.js";
-import CapitalRegion from "./capitalRegion.js";
-import Sensor from "./sensor.js";
-import Camera from "./camera.js";
-import ColdArea from "./coldarea.js";
-import { eventBus } from "../services/eventEmitter.js";
+import { logVisibilityChange } from './visibilityLogger.js';
+import * as Cesium from 'cesium';
+import Datasource from './datasource.js';
+import Building from './building.js';
+import Plot from './plot.js';
+import Traveltime from './traveltime.js';
+import HSYBuilding from './hsybuilding.js';
+import { findAddressForBuilding } from './address.js';
+import ElementsDisplay from './elementsDisplay.js';
+import { useGlobalStore } from '../stores/globalStore.js';
+import { useToggleStore } from '../stores/toggleStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
+import { useBuildingStore } from '../stores/buildingStore.js';
+import Helsinki from './helsinki.js';
+import CapitalRegion from './capitalRegion.js';
+import Sensor from './sensor.js';
+import Camera from './camera.js';
+import ColdArea from './coldarea.js';
+import { eventBus } from '../services/eventEmitter.js';
+import cacheWarmer from './cacheWarmer.js';
 
 /**
  * FeaturePicker Service
@@ -30,380 +33,1038 @@ import { eventBus } from "../services/eventEmitter.js";
  * @class FeaturePicker
  */
 export default class FeaturePicker {
-  /**
-   * Creates a FeaturePicker service instance
-   * Initializes all required service dependencies for entity interaction handling.
-   */
-  constructor() {
-    this.store = useGlobalStore();
-    this.toggleStore = useToggleStore();
-    this.propStore = usePropsStore();
-    this.viewer = this.store.cesiumViewer;
-    this.datasourceService = new Datasource();
-    this.buildingService = new Building();
-    this.helsinkiService = new Helsinki();
-    this.capitalRegionService = new CapitalRegion();
-    this.sensorService = new Sensor();
-    this.plotService = new Plot();
-    this.traveltimeService = new Traveltime();
-    this.hSYBuildingService = new HSYBuilding();
-    this.elementsDisplayService = new ElementsDisplay();
-    this.cameraService = new Camera();
-    this.coldAreaService = new ColdArea();
-  }
+	/**
+	 * Creates a FeaturePicker service instance
+	 * Initializes all required service dependencies for entity interaction handling.
+	 */
+	constructor() {
+		this.store = useGlobalStore();
+		this.toggleStore = useToggleStore();
+		this.propStore = usePropsStore();
+		this.viewer = this.store.cesiumViewer;
+		this.datasourceService = new Datasource();
+		this.buildingService = new Building();
+		this.helsinkiService = new Helsinki();
+		this.capitalRegionService = new CapitalRegion();
+		this.sensorService = new Sensor();
+		this.plotService = new Plot();
+		this.traveltimeService = new Traveltime();
+		this.hSYBuildingService = new HSYBuilding();
+		this.elementsDisplayService = new ElementsDisplay();
+		this.cameraService = new Camera();
+		this.coldAreaService = new ColdArea();
+		// Track which postal codes currently have visible buildings
+		this.visiblePostalCodes = new Set();
+		// Loading lock to prevent concurrent loads causing visibility race conditions
+		this._isLoadingVisiblePostalCodes = false;
+	}
 
-  /**
-   * Processes mouse click events on the Cesium viewer
-   * Entry point for all entity selection interactions.
-   * Converts screen coordinates to Cartesian2 and delegates to pickEntity.
-   *
-   * @param {MouseEvent} event - Browser mouse click event with x,y coordinates
-   * @returns {void}
-   */
-  processClick(event) {
-    console.log(
-      "[FeaturePicker] 🖱️ Processing click at coordinates:",
-      event.x,
-      event.y,
-    );
-    this.pickEntity(new Cesium.Cartesian2(event.x, event.y));
-  }
+	/**
+	 * Processes mouse click events on the Cesium viewer
+	 * Entry point for all entity selection interactions.
+	 * Converts screen coordinates to Cartesian2 and delegates to pickEntity.
+	 *
+	 * @param {MouseEvent} event - Browser mouse click event with x,y coordinates
+	 * @returns {void}
+	 */
+	processClick(event) {
+		console.log('[FeaturePicker] 🖱️ Processing click at coordinates:', event.x, event.y);
+		this.pickEntity(new Cesium.Cartesian2(event.x, event.y));
+	}
 
-  /**
-   * Picks and processes the entity at specified screen position
-   * Uses Cesium scene.pick() to identify clicked entity and routes to appropriate handler.
-   * Handles both direct entities and primitives with associated entity IDs.
-   *
-   * @param {Cesium.Cartesian2} windowPosition - Screen coordinates for entity picking
-   * @returns {void}
-   * @fires eventBus#entityPrintEvent - Emitted when a polygon entity is selected
-   */
-  pickEntity(windowPosition) {
-    console.log(
-      "[FeaturePicker] 🎯 Picking entity at window position:",
-      windowPosition,
-    );
+	/**
+	 * Picks and processes the entity at specified screen position
+	 * Uses Cesium scene.pick() to identify clicked entity and routes to appropriate handler.
+	 * Handles both direct entities and primitives with associated entity IDs.
+	 *
+	 * @param {Cesium.Cartesian2} windowPosition - Screen coordinates for entity picking
+	 * @returns {void}
+	 * @fires eventBus#entityPrintEvent - Emitted when a polygon entity is selected
+	 */
+	pickEntity(windowPosition) {
+		console.log('[FeaturePicker] 🎯 Picking entity at window position:', windowPosition);
 
-    // Guard: Check if viewer and scene are in a valid state
-    if (!this.viewer || !this.viewer.scene) {
-      console.warn("[FeaturePicker] ⚠️ Viewer or scene not available");
-      return;
-    }
+		// Guard: Check if viewer and scene are in a valid state
+		if (!this.viewer || !this.viewer.scene) {
+			console.warn('[FeaturePicker] ⚠️ Viewer or scene not available');
+			return;
+		}
 
-    // Guard: Check if the drawing buffer has valid dimensions
-    const canvas = this.viewer.scene.canvas;
-    if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) {
-      console.warn(
-        "[FeaturePicker] ⚠️ Canvas has invalid dimensions, skipping pick",
-      );
-      return;
-    }
+		// Guard: Check if the drawing buffer has valid dimensions
+		const canvas = this.viewer.scene.canvas;
+		if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+			console.warn('[FeaturePicker] ⚠️ Canvas has invalid dimensions, skipping pick');
+			return;
+		}
 
-    let picked = this.viewer.scene.pick(windowPosition);
-    console.log("[FeaturePicker] Picked object:", picked);
+		let picked = this.viewer.scene.pick(windowPosition);
+		console.log('[FeaturePicker] Picked object:', picked);
 
-    if (picked) {
-      let id = picked.id ?? picked.primitive?.id;
+		if (picked) {
+			let id = picked.id ?? picked.primitive?.id;
 
-      if (id?._polygon) {
-        if (id instanceof Cesium.Entity) {
-          this.store.setPickedEntity(id);
-          eventBus.emit("entityPrintEvent");
+			if (id?._polygon) {
+				if (id instanceof Cesium.Entity) {
+					this.store.setPickedEntity(id);
+					eventBus.emit('entityPrintEvent');
 
-          if (id.properties) {
-            this.handleFeatureWithProperties(id);
-          }
-        }
-      }
-    }
-  }
+					if (id.properties) {
+						this.handleFeatureWithProperties(id);
+					}
+				}
+			}
+		}
+	}
 
-  /**
-   * Loads data and visualizations for the currently selected postal code
-   * Clears existing data sources and loads region-specific elements based on Helsinki view mode.
-   * Updates application level state and UI element visibility.
-   *
-   * @returns {Promise<void>}
-   */
-  async loadPostalCode() {
-    console.log(
-      "[FeaturePicker] 🚀 Loading postal code:",
-      this.store.postalcode,
-    );
-    console.log(
-      "[FeaturePicker] Helsinki view mode:",
-      this.toggleStore.helsinkiView,
-    );
+	/**
+	 * Loads data and visualizations for the currently selected postal code
+	 * Clears existing data sources and loads region-specific elements based on Helsinki view mode.
+	 * Updates application level state and UI element visibility.
+	 *
+	 * @returns {Promise<void>}
+	 */
+	async loadPostalCode() {
+		console.log('[FeaturePicker] 🚀 Loading postal code:', this.store.postalcode);
+		console.log('[FeaturePicker] Helsinki view mode:', this.toggleStore.helsinkiView);
 
-    this.setNameOfZone();
-    this.elementsDisplayService.setSwitchViewElementsDisplay("inline-block");
-    this.datasourceService.removeDataSourcesAndEntities();
+		this.setNameOfZone();
+		this.elementsDisplayService.setSwitchViewElementsDisplay('inline-block');
+		this.datasourceService.removeDataSourcesAndEntities();
 
-    // Load region-specific data based on view mode
-    if (!this.toggleStore.helsinkiView) {
-      console.log(
-        "[FeaturePicker] Loading Capital Region elements (including buildings)...",
-      );
-      await this.capitalRegionService.loadCapitalRegionElements();
-    } else {
-      console.log(
-        "[FeaturePicker] Loading Helsinki elements (including buildings)...",
-      );
-      this.helsinkiService.loadHelsinkiElements();
-    }
+		// Load region-specific data based on view mode
+		if (!this.toggleStore.helsinkiView) {
+			console.log('[FeaturePicker] Loading Capital Region elements (including buildings)...');
+			await this.capitalRegionService.loadCapitalRegionElements();
+		} else {
+			console.log('[FeaturePicker] Loading Helsinki elements (including buildings)...');
+			await this.helsinkiService.loadHelsinkiElements();
+		}
 
-    this.store.setLevel("postalCode");
-    console.log("[FeaturePicker] ✅ Postal code loading complete");
-  }
+		this.store.setLevel('postalCode');
+		console.log('[FeaturePicker] ✅ Postal code loading complete');
+	}
 
-  /**
-   * Sets the name of the current zone from postal code data
-   * Searches through postal code entities to find matching postal code and extracts zone name.
-   *
-   * @returns {void}
-   * @private
-   */
-  setNameOfZone() {
-    const entitiesArray =
-      this.propStore.postalCodeData._entityCollection?._entities._array;
+	/**
+	 * Loads postal code data for a specific postal code (used for retry functionality)
+	 * Public method that can be called from external components to reload postal code data.
+	 *
+	 * @param {string} postalCode - Postal code to load
+	 * @returns {Promise<void>}
+	 */
+	async loadPostalCodeData(postalCode) {
+		console.log('[FeaturePicker] 📦 Loading postal code data:', postalCode);
 
-    if (Array.isArray(entitiesArray)) {
-      for (let i = 0; i < entitiesArray.length; i++) {
-        const entity = entitiesArray[i];
-        if (
-          entity &&
-          entity._properties &&
-          entity._properties._nimi &&
-          typeof entity._properties._nimi._value !== "undefined" &&
-          entity._properties._posno._value === this.store.postalcode
-        ) {
-          this.store.setNameOfZone(entity._properties._nimi);
-          break; // Exit the loop after finding the first match
-        }
-      }
-    }
-  }
+		// Set the postal code in store
+		this.store.setPostalCode(postalCode);
 
-  /**
-   * Handles building feature selection and visualization
-   * Updates application level to 'building', shows loading indicator, emits visibility events,
-   * and creates building-specific charts. Manages loading state throughout the process.
-   *
-   * @param {Object} properties - Building properties object containing building attributes
-   * @param {string} properties._postinumero - Postal code of the building
-   * @param {number} [properties.treeArea] - Nearby tree area
-   * @param {number} [properties._avg_temp_c] - Average temperature
-   * @returns {Promise<void>}
-   * @fires eventBus#hideHelsinki - Emitted when switching away from Helsinki view
-   * @fires eventBus#hideCapitalRegion - Emitted when switching away from Capital Region view
-   * @fires eventBus#showBuilding - Emitted when building level view is activated
-   */
-  async handleBuildingFeature(properties) {
-    // Show loading indicator for building selection
-    try {
-      const { useLoadingStore } = await import("../stores/loadingStore.js");
-      const loadingStore = useLoadingStore();
-      loadingStore.startLoading(
-        "building-selection",
-        "Loading building information...",
-      );
-    } catch (error) {
-      console.warn("Loading store not available:", error);
-    }
+		// Load the postal code data
+		await this.loadPostalCode();
+	}
 
-    try {
-      // Update application state to building level
-      this.store.setLevel("building");
-      this.store.setPostalCode(properties._postinumero._value);
-      this.toggleStore.helsinkiView
-        ? eventBus.emit("hideHelsinki")
-        : eventBus.emit("hideCapitalRegion");
-      eventBus.emit("showBuilding");
-      this.elementsDisplayService.setBuildingDisplay("none");
-      this.buildingService.resetBuildingOutline();
+	/**
+	 * Loads postal code with parallel camera animation and data loading (Phase 3)
+	 * Implements FR-3.1 (Parallel Loading), FR-3.3 (Performance Optimization), FR-3.4 (Error Handling)
+	 *
+	 * Performance optimizations:
+	 * - Checks cacheWarmer for preloaded data before network requests
+	 * - Runs camera animation and data loading in parallel using Promise.allSettled
+	 * - Implements retry logic with exponential backoff for failed requests
+	 * - Shows partial data if some datasets load successfully
+	 *
+	 * @param {string} postalCode - Postal code to load
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	async loadPostalCodeWithParallelStrategy(postalCode) {
+		performance.mark('parallel-load-start');
 
-      // Process building charts asynchronously
-      await this.buildingService.createBuildingCharts(
-        properties.treeArea,
-        properties._avg_temp_c,
-        properties,
-      );
-    } catch (error) {
-      console.error("Error handling building feature:", error);
-    } finally {
-      // Hide loading indicator
-      try {
-        const { useLoadingStore } = await import("../stores/loadingStore.js");
-        const loadingStore = useLoadingStore();
-        loadingStore.stopLoading("building-selection");
-      } catch (error) {
-        console.warn("Loading store not available for cleanup:", error);
-      }
-    }
-  }
+		// Start camera animation immediately (will update state to 'animating')
+		const cameraPromise = this.startCameraAnimation();
 
-  /**
-   * Removes entities from viewer by name
-   * Iterates through all entities and removes those matching the specified name.
-   *
-   * @param {string} name - Name of entities to remove
-   * @returns {void}
-   */
-  removeEntityByName(name) {
-    this.viewer.entities._entities._array.forEach((entity) => {
-      if (entity.name === name) {
-        this.viewer.entities.remove(entity);
-      }
-    });
-  }
+		// Check cache first for instant loading (FR-3.3 optimization)
+		const cacheKey = `buildings_${postalCode}_${this.toggleStore.helsinkiView ? 'helsinki' : 'capital'}`;
+		const cachedData = await this.checkCacheForPostalCode(cacheKey);
 
-  /**
-   * Handles the feature with properties
-   *
-   * @param {Object} id - The ID of the picked entity
-   * @fires eventBus#createHeatFloodVulnerabilityChart - Emitted when grid cell with vulnerability data is selected
-   * @private
-   */
-  handleFeatureWithProperties(id) {
-    console.log("[FeaturePicker] Clicked feature properties:", id.properties);
-    console.log("[FeaturePicker] Current level:", this.store.level);
+		let dataPromise;
+		if (cachedData) {
+			console.log('[FeaturePicker] ⚡ Using cached data for instant loading');
+			// Wrap cached data in Promise.resolve for consistent handling
+			dataPromise = Promise.resolve({ data: cachedData, fromCache: true });
 
-    this.removeEntityByName("coldpoint");
-    this.removeEntityByName("currentLocation");
-    this.datasourceService.removeDataSourcesByNamePrefix("TravelLabel");
+			// Update progress immediately
+			this.updateLoadingProgress(1, 2);
+		} else {
+			console.log('[FeaturePicker] 🌐 Loading data from network');
+			// Load from network with retry logic
+			dataPromise = this.loadPostalCodeDataWithRetry(postalCode);
+		}
 
-    this.propStore.setTreeArea(null);
-    this.propStore.setHeatFloodVulnerability(id.properties ?? null);
+		// Wait for both camera and data loading to complete (FR-3.1 parallel loading)
+		const results = await Promise.allSettled([cameraPromise, dataPromise]);
 
-    if (id.properties.grid_id) {
-      this.propStore.setHeatFloodVulnerability(id.properties);
-      eventBus.emit("createHeatFloodVulnerabilityChart");
-    }
+		// Process results with comprehensive error handling (FR-3.4)
+		this.processParallelLoadingResults(results, postalCode);
 
-    //See if we can find building floor areas
-    if (this.store.level == "postalCode") {
-      this.store.setBuildingAddress(findAddressForBuilding(id.properties));
+		performance.mark('parallel-load-complete');
+		performance.measure('parallel-load-total', 'parallel-load-start', 'parallel-load-complete');
 
-      if (id.properties._locationUnder40) {
-        if (id.properties._locationUnder40._value) {
-          this.coldAreaService.addColdPoint(
-            id.properties._locationUnder40._value,
-          );
-        }
-      }
+		const measure = performance.getEntriesByName('parallel-load-total')[0];
+		console.log(
+			`[FeaturePicker] ⏱️ Parallel loading completed in ${measure.duration.toFixed(2)}ms`
+		);
 
-      this.handleBuildingFeature(id.properties);
-    }
+		performance.clearMarks('parallel-load-start');
+		performance.clearMarks('parallel-load-complete');
+		performance.clearMeasures('parallel-load-total');
+	}
 
-    //If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
-    if (id.properties.posno && this.store.level != "building") {
-      const newPostalCode = id.properties.posno._value;
-      const currentPostalCode = this.store.postalcode;
+	/**
+	 * Checks cache for preloaded postal code data (FR-3.3 optimization)
+	 * @param {string} cacheKey - Cache key to check
+	 * @returns {Promise<Object|null>} Cached data or null
+	 * @private
+	 */
+	async checkCacheForPostalCode(cacheKey) {
+		try {
+			// Check if cacheWarmer has preloaded this data
+			const warmed = cacheWarmer.warmedPostalCodes.has(this.store.postalcode);
+			if (warmed) {
+				console.log('[FeaturePicker] ✓ Cache warmer preloaded this postal code');
+			}
 
-      console.log("[FeaturePicker] ✓ Postal code detected:", newPostalCode);
-      console.log("[FeaturePicker] Current postal code:", currentPostalCode);
+			// Check IndexedDB cache via unifiedLoader
+			// The unifiedLoader will check cache automatically when we call loadLayer
+			return null; // Let unifiedLoader handle cache checking
+		} catch (error) {
+			console.warn('[FeaturePicker] Cache check failed:', error?.message || error);
+			return null;
+		}
+	}
 
-      // Allow switching between postal codes or loading a new one
-      if (newPostalCode !== currentPostalCode || this.store.level === "start") {
-        console.log("[FeaturePicker] Triggering postal code loading...");
-        this.store.setPostalCode(newPostalCode);
-        this.cameraService.switchTo3DView();
-        this.elementsDisplayService.setViewDisplay("none");
-        this.loadPostalCode();
-      } else {
-        console.log(
-          "[FeaturePicker] ⚠️ Same postal code already selected, skipping reload",
-        );
-      }
-    } else if (id.properties.posno) {
-      console.log(
-        "[FeaturePicker] ⚠️ Postal code found but current level is building, skipping load",
-      );
-    } else {
-      console.log(
-        "[FeaturePicker] ⚠️ No postal code property (posno) found in clicked feature",
-      );
-    }
+	/**
+	 * Starts camera animation and returns a promise
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	async startCameraAnimation() {
+		return new Promise((resolve, reject) => {
+			try {
+				// Update state to animating
+				this.store.setClickProcessingState({
+					stage: 'animating',
+					canCancel: true,
+				});
 
-    if (id.properties.asukkaita) {
-      const boundingBox = this.getBoundingBox(id);
-      this.store.setCurrentGridCell(id);
+				// Start camera animation
+				this.cameraService.switchTo3DView();
 
-      // Construct the URL for the WFS request with the bounding box
-      if (boundingBox) {
-        const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`;
+				// Camera animation is 3 seconds, resolve after that
+				// In a real implementation, we'd hook into the camera completion callback
+				setTimeout(() => {
+					console.log('[FeaturePicker] ✓ Camera animation completed');
+					this.updateLoadingProgress(1, 2);
+					resolve();
+				}, 3000);
+			} catch (error) {
+				console.error('[FeaturePicker] ❌ Camera animation failed:', error?.message || error);
+				reject(error);
+			}
+		});
+	}
 
-        // Now you can use this URL to make your WFS request
-        this.hSYBuildingService.loadHSYBuildings(bboxString);
-      }
+	/**
+	 * Loads postal code data with retry logic (FR-3.4 error handling)
+	 * Implements exponential backoff for transient failures.
+	 *
+	 * @param {string} postalCode - Postal code to load
+	 * @param {number} retryCount - Current retry attempt (default 0)
+	 * @returns {Promise<Object>} Loaded data
+	 * @private
+	 */
+	async loadPostalCodeDataWithRetry(postalCode, retryCount = 0) {
+		const maxRetries = 3;
+		const baseDelay = 1000; // 1 second
 
-      //createDiagramForPopulationGrid( id.properties.index, id.properties.asukkaita );
-    }
+		try {
+			// Set zone name and prepare UI
+			this.setNameOfZone();
+			this.elementsDisplayService.setSwitchViewElementsDisplay('inline-block');
+			this.elementsDisplayService.setViewDisplay('none');
 
-    if (
-      !id.properties.posno &&
-      id.entityCollection._entities._array[0]._properties._id &&
-      id.entityCollection._entities._array[0]._properties._id._value == 5879932
-    ) {
-      this.traveltimeService.loadTravelTimeData(id.properties.id._value);
-      this.traveltimeService.markCurrentLocation(id);
-    }
-  }
+			// Clean up previous data sources and building features
+			this.datasourceService.removeDataSourcesAndEntities();
+			const buildingStore = useBuildingStore();
+			buildingStore.clearBuildingFeatures();
 
-  /**
-   * Calculates bounding box (geographic extent) for a polygon entity
-   * Extracts polygon positions, converts to geographic coordinates, and finds min/max bounds.
-   * Hides the entity after calculating its bounding box.
-   *
-   * @param {Cesium.Entity} id - Entity with polygon property
-   * @returns {Object|null} Bounding box object with {minLon, maxLon, minLat, maxLat} in degrees, or null if no polygon
-   */
-  getBoundingBox(id) {
-    let boundingBox = null;
+			// Load region-specific data with performance tracking
+			performance.mark('data-load-start');
 
-    if (id.polygon) {
-      // Access the polygon hierarchy to get vertex positions
-      const hierarchy = id.polygon.hierarchy.getValue();
+			if (!this.toggleStore.helsinkiView) {
+				console.log('[FeaturePicker] Loading Capital Region elements...');
+				await this.capitalRegionService.loadCapitalRegionElements();
+			} else {
+				console.log('[FeaturePicker] Loading Helsinki elements...');
+				await this.helsinkiService.loadHelsinkiElements();
+			}
 
-      if (hierarchy) {
-        const positions = hierarchy.positions;
+			performance.mark('data-load-complete');
+			performance.measure('data-load-duration', 'data-load-start', 'data-load-complete');
 
-        // Convert Cartesian positions to geographic coordinates (latitude/longitude)
-        const cartographics = positions.map((position) =>
-          Cesium.Cartographic.fromCartesian(position),
-        );
+			const measure = performance.getEntriesByName('data-load-duration')[0];
+			console.log(`[FeaturePicker] Data loaded in ${measure.duration.toFixed(2)}ms`);
 
-        // Find the geographic extent (bounding box)
-        let minLon = Number.POSITIVE_INFINITY,
-          maxLon = Number.NEGATIVE_INFINITY;
-        let minLat = Number.POSITIVE_INFINITY,
-          maxLat = Number.NEGATIVE_INFINITY;
+			performance.clearMarks('data-load-start');
+			performance.clearMarks('data-load-complete');
+			performance.clearMeasures('data-load-duration');
 
-        cartographics.forEach((cartographic) => {
-          minLon = Math.min(minLon, cartographic.longitude);
-          maxLon = Math.max(maxLon, cartographic.longitude);
-          minLat = Math.min(minLat, cartographic.latitude);
-          maxLat = Math.max(maxLat, cartographic.latitude);
-        });
+			// Update level
+			this.store.setLevel('postalCode');
 
-        // Convert radians to degrees
-        minLon = Cesium.Math.toDegrees(minLon);
-        maxLon = Cesium.Math.toDegrees(maxLon);
-        minLat = Cesium.Math.toDegrees(minLat);
-        maxLat = Cesium.Math.toDegrees(maxLat);
+			this.updateLoadingProgress(2, 2);
 
-        boundingBox = {
-          minLon: minLon,
-          maxLon: maxLon,
-          minLat: minLat,
-          maxLat: maxLat,
-        };
+			return { success: true, fromCache: false };
+		} catch (error) {
+			console.error(`[FeaturePicker] ❌ Data loading failed (attempt ${retryCount + 1}):`, error);
 
-        // Hide entity after extracting bounds
-        id.show = false;
-      }
-    }
+			// Retry with exponential backoff for transient failures
+			if (retryCount < maxRetries && this.isRetriableError(error)) {
+				const delay = baseDelay * Math.pow(2, retryCount);
+				console.log(`[FeaturePicker] 🔄 Retrying in ${delay}ms...`);
 
-    return boundingBox;
-  }
+				// Update retry count in state
+				this.store.setClickProcessingState({
+					retryCount: retryCount + 1,
+				});
+
+				await new Promise((resolve) => setTimeout(resolve, delay));
+				return this.loadPostalCodeDataWithRetry(postalCode, retryCount + 1);
+			}
+
+			// Max retries exceeded or non-retriable error
+			throw error;
+		}
+	}
+
+	/**
+	 * Determines if an error is retriable (network/timeout vs. permanent failure)
+	 * @param {Error} error - Error to check
+	 * @returns {boolean} True if error is retriable
+	 * @private
+	 */
+	isRetriableError(error) {
+		// Network errors, timeouts, and 5xx server errors are retriable
+		const errorString = error.toString().toLowerCase();
+		return (
+			errorString.includes('network') ||
+			errorString.includes('timeout') ||
+			errorString.includes('fetch') ||
+			errorString.includes('500') ||
+			errorString.includes('502') ||
+			errorString.includes('503') ||
+			errorString.includes('504')
+		);
+	}
+
+	/**
+	 * Updates loading progress for progressive UI updates (FR-3.2)
+	 * @param {number} current - Current completed tasks
+	 * @param {number} total - Total tasks
+	 * @private
+	 */
+	updateLoadingProgress(current, total) {
+		this.store.setClickProcessingState({
+			loadingProgress: { current, total },
+		});
+
+		const percentage = Math.round((current / total) * 100);
+		console.log(`[FeaturePicker] 📊 Loading progress: ${current}/${total} (${percentage}%)`);
+	}
+
+	/**
+	 * Processes results from parallel loading with error handling (FR-3.4)
+	 * Handles partial success (one operation succeeds, other fails).
+	 *
+	 * @param {Array<PromiseSettledResult>} results - Results from Promise.allSettled
+	 * @param {string} postalCode - Postal code being loaded
+	 * @private
+	 */
+	processParallelLoadingResults(results, postalCode) {
+		const [cameraResult, dataResult] = results;
+
+		const cameraSuccess = cameraResult.status === 'fulfilled';
+		const dataSuccess = dataResult.status === 'fulfilled';
+
+		console.log('[FeaturePicker] Results:', {
+			camera: cameraSuccess ? '✓' : '✗',
+			data: dataSuccess ? '✓' : '✗',
+		});
+
+		// Handle error scenarios
+		if (!cameraSuccess) {
+			console.error('[FeaturePicker] ❌ Camera animation failed:', cameraResult.reason);
+			// Camera failure is not critical - data can still be shown
+		}
+
+		if (!dataSuccess) {
+			console.error('[FeaturePicker] ❌ Data loading failed:', dataResult.reason);
+
+			// Set error state for user feedback
+			this.store.setClickProcessingState({
+				stage: 'complete',
+				error: {
+					message: 'Failed to load postal code data',
+					details: dataResult.reason?.message || 'Unknown error',
+					canRetry: this.isRetriableError(dataResult.reason),
+				},
+			});
+
+			// Keep error state visible for user to see retry option
+			// Don't auto-reset in this case
+			return;
+		}
+
+		// Success path - both operations completed
+		this.store.setClickProcessingState({
+			stage: 'complete',
+			error: null,
+		});
+
+		// Reset state after brief delay to allow UI transition
+		setTimeout(() => {
+			this.store.resetClickProcessingState();
+		}, 500);
+
+		console.log('[FeaturePicker] ✅ Postal code loading complete:', postalCode);
+	}
+
+	/**
+	 * Sets the name of the current zone from postal code data
+	 * Searches through postal code entities to find matching postal code and extracts zone name.
+	 *
+	 * @returns {void}
+	 * @private
+	 */
+	setNameOfZone() {
+		const entitiesArray = this.propStore.postalCodeData._entityCollection?._entities._array;
+
+		if (Array.isArray(entitiesArray)) {
+			for (let i = 0; i < entitiesArray.length; i++) {
+				const entity = entitiesArray[i];
+				if (
+					entity &&
+					entity._properties &&
+					entity._properties._nimi &&
+					typeof entity._properties._nimi._value !== 'undefined' &&
+					entity._properties._posno._value === this.store.postalcode
+				) {
+					this.store.setNameOfZone(entity._properties._nimi);
+					break; // Exit the loop after finding the first match
+				}
+			}
+		}
+	}
+
+	/**
+	 * Handles building feature selection and visualization
+	 * Updates application level to 'building', shows loading indicator, emits visibility events,
+	 * and creates building-specific charts. Manages loading state throughout the process.
+	 *
+	 * @param {Object} properties - Building properties object containing building attributes
+	 * @param {string} properties._postinumero - Postal code of the building
+	 * @param {number} [properties.treeArea] - Nearby tree area
+	 * @param {number} [properties._avg_temp_c] - Average temperature
+	 * @returns {Promise<void>}
+	 * @fires eventBus#hideHelsinki - Emitted when switching away from Helsinki view
+	 * @fires eventBus#hideCapitalRegion - Emitted when switching away from Capital Region view
+	 * @fires eventBus#showBuilding - Emitted when building level view is activated
+	 */
+	async handleBuildingFeature(properties) {
+		// Show loading indicator for building selection
+		try {
+			const { useLoadingStore } = await import('../stores/loadingStore.js');
+			const loadingStore = useLoadingStore();
+			loadingStore.startLoading('building-selection', 'Loading building information...');
+		} catch (error) {
+			console.warn('Loading store not available:', error?.message || error);
+		}
+
+		try {
+			// Update application state to building level
+			this.store.setLevel('building');
+			this.store.setPostalCode(properties._postinumero._value);
+			this.toggleStore.helsinkiView
+				? eventBus.emit('hideHelsinki')
+				: eventBus.emit('hideCapitalRegion');
+			eventBus.emit('showBuilding');
+			this.elementsDisplayService.setBuildingDisplay('none');
+			this.buildingService.resetBuildingOutline();
+
+			// Process building charts asynchronously
+			await this.buildingService.createBuildingCharts(
+				properties.treeArea,
+				properties._avg_temp_c,
+				properties
+			);
+		} catch (error) {
+			console.error('Error handling building feature:', error?.message || error);
+		} finally {
+			// Hide loading indicator
+			try {
+				const { useLoadingStore } = await import('../stores/loadingStore.js');
+				const loadingStore = useLoadingStore();
+				loadingStore.stopLoading('building-selection');
+			} catch (error) {
+				console.warn('Loading store not available for cleanup:', error?.message || error);
+			}
+		}
+	}
+
+	/**
+	 * Removes entities from viewer by name
+	 * Iterates through all entities and removes those matching the specified name.
+	 *
+	 * @param {string} name - Name of entities to remove
+	 * @returns {void}
+	 */
+	removeEntityByName(name) {
+		this.viewer.entities._entities._array.forEach((entity) => {
+			if (entity.name === name) {
+				this.viewer.entities.remove(entity);
+			}
+		});
+	}
+
+	/**
+	 * Handles the feature with properties
+	 *
+	 * @param {Object} id - The ID of the picked entity
+	 * @fires eventBus#createHeatFloodVulnerabilityChart - Emitted when grid cell with vulnerability data is selected
+	 * @private
+	 */
+	handleFeatureWithProperties(id) {
+		console.log('[FeaturePicker] Clicked feature properties:', id.properties);
+		console.log('[FeaturePicker] Current level:', this.store.level);
+
+		this.removeEntityByName('coldpoint');
+		this.removeEntityByName('currentLocation');
+		this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
+
+		this.propStore.setTreeArea(null);
+		this.propStore.setHeatFloodVulnerability(id.properties ?? null);
+
+		if (id.properties.grid_id) {
+			this.propStore.setHeatFloodVulnerability(id.properties);
+			eventBus.emit('createHeatFloodVulnerabilityChart');
+		}
+
+		//See if we can find building floor areas
+		if (this.store.level == 'postalCode') {
+			this.store.setBuildingAddress(findAddressForBuilding(id.properties));
+
+			if (id.properties._locationUnder40) {
+				if (id.properties._locationUnder40._value) {
+					this.coldAreaService.addColdPoint(id.properties._locationUnder40._value);
+				}
+			}
+
+			this.handleBuildingFeature(id.properties);
+		}
+
+		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
+		if (id.properties.posno) {
+			const newPostalCode = id.properties.posno._value;
+			const postalCodeName = id.properties.nimi?._value || `Postal Code ${newPostalCode}`;
+			const currentPostalCode = this.store.postalcode;
+
+			console.log('[FeaturePicker] ✓ Postal code detected:', newPostalCode);
+			console.log('[FeaturePicker] Current postal code:', currentPostalCode);
+			console.log('[FeaturePicker] Current level:', this.store.level);
+
+			// Allow switching between postal codes or loading a new one from any level
+			if (
+				newPostalCode !== currentPostalCode ||
+				this.store.level === 'start' ||
+				this.store.level === 'building'
+			) {
+				console.log('[FeaturePicker] Triggering postal code loading with parallel strategy...');
+
+				// Capture view state before any changes
+				this.store.captureViewState();
+
+				// Set loading state immediately for instant visual feedback
+				this.store.setClickProcessingState({
+					isProcessing: true,
+					postalCode: newPostalCode,
+					postalCodeName: postalCodeName,
+					stage: 'loading',
+					startTime: performance.now(),
+					canCancel: false,
+					loadingProgress: { current: 0, total: 2 }, // Track camera + data loading
+				});
+
+				// Update postal code in store
+				this.store.setPostalCode(newPostalCode);
+
+				// PHASE 3: Parallel loading - camera animation and data load simultaneously
+				this.loadPostalCodeWithParallelStrategy(newPostalCode);
+			} else {
+				console.log(
+					'[FeaturePicker] ⚠️ Same postal code already selected at postalCode level, skipping reload'
+				);
+			}
+		} else {
+			console.log('[FeaturePicker] ⚠️ No postal code property (posno) found in clicked feature');
+		}
+
+		if (id.properties.asukkaita) {
+			const boundingBox = this.getBoundingBox(id);
+			this.store.setCurrentGridCell(id);
+
+			// Construct the URL for the WFS request with the bounding box
+			if (boundingBox) {
+				const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`;
+
+				// Now you can use this URL to make your WFS request
+				this.hSYBuildingService.loadHSYBuildings(bboxString);
+			}
+
+			//createDiagramForPopulationGrid( id.properties.index, id.properties.asukkaita );
+		}
+
+		if (
+			!id.properties.posno &&
+			id.entityCollection._entities._array[0]._properties._id &&
+			id.entityCollection._entities._array[0]._properties._id._value == 5879932
+		) {
+			this.traveltimeService.loadTravelTimeData(id.properties.id._value);
+			this.traveltimeService.markCurrentLocation(id);
+		}
+	}
+
+	/**
+	 * Calculates bounding box (geographic extent) for a polygon entity
+	 * Extracts polygon positions, converts to geographic coordinates, and finds min/max bounds.
+	 * Hides the entity after calculating its bounding box.
+	 *
+	 * @param {Cesium.Entity} id - Entity with polygon property
+	 * @returns {Object|null} Bounding box object with {minLon, maxLon, minLat, maxLat} in degrees, or null if no polygon
+	 */
+	getBoundingBox(id) {
+		let boundingBox = null;
+
+		if (id.polygon) {
+			// Access the polygon hierarchy to get vertex positions
+			const hierarchy = id.polygon.hierarchy.getValue();
+
+			if (hierarchy) {
+				const positions = hierarchy.positions;
+
+				// Convert Cartesian positions to geographic coordinates (latitude/longitude)
+				const cartographics = positions.map((position) =>
+					Cesium.Cartographic.fromCartesian(position)
+				);
+
+				// Find the geographic extent (bounding box)
+				let minLon = Number.POSITIVE_INFINITY,
+					maxLon = Number.NEGATIVE_INFINITY;
+				let minLat = Number.POSITIVE_INFINITY,
+					maxLat = Number.NEGATIVE_INFINITY;
+
+				cartographics.forEach((cartographic) => {
+					minLon = Math.min(minLon, cartographic.longitude);
+					maxLon = Math.max(maxLon, cartographic.longitude);
+					minLat = Math.min(minLat, cartographic.latitude);
+					maxLat = Math.max(maxLat, cartographic.latitude);
+				});
+
+				// Convert radians to degrees
+				minLon = Cesium.Math.toDegrees(minLon);
+				maxLon = Cesium.Math.toDegrees(maxLon);
+				minLat = Cesium.Math.toDegrees(minLat);
+				maxLat = Cesium.Math.toDegrees(maxLat);
+
+				boundingBox = {
+					minLon: minLon,
+					maxLon: maxLon,
+					minLat: minLat,
+					maxLat: maxLat,
+				};
+
+				// Hide entity after extracting bounds
+				id.show = false;
+			}
+		}
+
+		return boundingBox;
+	}
+
+	/**
+	 * Gets all postal codes that intersect with the current viewport
+	 * Performs spatial intersection check between viewport rectangle and postal code polygons.
+	 *
+	 * @param {Object} viewportRect - { west, south, east, north } in degrees
+	 * @returns {Array<string>} Array of postal code strings that are visible
+	 */
+	getVisiblePostalCodes(viewportRect) {
+		if (!viewportRect) {
+			console.warn('[FeaturePicker] Invalid viewport rectangle');
+			return [];
+		}
+
+		const postalCodeData = this.propStore.postalCodeData;
+		if (!postalCodeData || !postalCodeData._entityCollection) {
+			console.warn('[FeaturePicker] Postal code data not loaded');
+			return [];
+		}
+
+		const entities = postalCodeData._entityCollection._entities._array;
+		const visiblePostalCodes = [];
+
+		// Create Cesium Rectangle for viewport
+		const viewportRectangle = Cesium.Rectangle.fromDegrees(
+			viewportRect.west,
+			viewportRect.south,
+			viewportRect.east,
+			viewportRect.north
+		);
+
+		// DIAGNOSTIC: Log viewport bounds
+		console.log(
+			`%c[VIEWPORT DEBUG] Viewport bounds: W=${viewportRect.west.toFixed(4)}, S=${viewportRect.south.toFixed(4)}, E=${viewportRect.east.toFixed(4)}, N=${viewportRect.north.toFixed(4)}`,
+			'color: orange; font-weight: bold'
+		);
+		console.log(`[VIEWPORT DEBUG] Total postal code entities to check: ${entities.length}`);
+
+		for (const entity of entities) {
+			if (!entity.polygon || !entity.properties?.posno) continue;
+
+			// Get entity bounding rectangle
+			const hierarchy = entity.polygon.hierarchy.getValue();
+			if (!hierarchy || !hierarchy.positions) continue;
+
+			// Convert Cartesian positions to Rectangle
+			const cartographics = hierarchy.positions.map((pos) =>
+				Cesium.Cartographic.fromCartesian(pos)
+			);
+
+			const lons = cartographics.map((c) => c.longitude);
+			const lats = cartographics.map((c) => c.latitude);
+
+			const entityRectangle = new Cesium.Rectangle(
+				Math.min(...lons),
+				Math.min(...lats),
+				Math.max(...lons),
+				Math.max(...lats)
+			);
+
+			// Check if rectangles intersect
+			const intersection = Cesium.Rectangle.intersection(viewportRectangle, entityRectangle);
+
+			if (intersection) {
+				const postalCode = entity.properties.posno._value;
+				visiblePostalCodes.push(postalCode);
+			}
+		}
+
+		console.log(
+			'[FeaturePicker] Found',
+			visiblePostalCodes.length,
+			'visible postal codes:',
+			visiblePostalCodes
+		);
+
+		return visiblePostalCodes;
+	}
+
+	/**
+	 * Loads buildings for visible postal codes in viewport
+	 * Only loads postal codes that don't already have building datasources.
+	 * Prioritizes currently selected postal code.
+	 * Uses postal code parameters to avoid modifying global state during loading.
+	 * Implements visibility state tracking and batching to prevent blinking.
+	 *
+	 * @param {Array<string>} visiblePostalCodes - Array of postal code strings
+	 * @returns {Promise<void>}
+	 */
+	async loadBuildingsForVisiblePostalCodes(visiblePostalCodes) {
+		// Prevent concurrent loads that cause visibility race conditions
+		if (this._isLoadingVisiblePostalCodes) {
+			console.log('[FeaturePicker] ⏳ Skipping load - already loading visible postal codes');
+			return;
+		}
+
+		this._isLoadingVisiblePostalCodes = true;
+
+		try {
+			const currentPostalCode = this.store.postalcode;
+
+			// Always prioritize the currently selected postal code
+			if (currentPostalCode && !visiblePostalCodes.includes(currentPostalCode)) {
+				visiblePostalCodes.unshift(currentPostalCode);
+			}
+
+			const newVisibleSet = new Set(visiblePostalCodes);
+
+			// DIAGNOSTIC: Compare previous vs new visible postal codes
+			const previousCodes = Array.from(this.visiblePostalCodes);
+			console.log(`%c[STATE DEBUG] Visibility transition:`, 'color: cyan; font-weight: bold');
+			console.log(
+				`  Previous visible: [${previousCodes.join(', ')}] (${previousCodes.length} codes)`
+			);
+			console.log(
+				`  New visible: [${visiblePostalCodes.join(', ')}] (${visiblePostalCodes.length} codes)`
+			);
+			console.log(`  Current selected: ${currentPostalCode || 'none'}`);
+
+			// Collect all visibility changes to batch them
+			const visibilityChanges = [];
+
+			// Hide buildings AND trees for postal codes that left the viewport
+			for (const postalCode of this.visiblePostalCodes) {
+				if (!newVisibleSet.has(postalCode) && postalCode !== currentPostalCode) {
+					// Collect building hide changes
+					const buildingDatasourceName = 'Buildings ' + postalCode;
+					const buildingDatasource =
+						this.datasourceService.getDataSourceByName(buildingDatasourceName);
+					if (buildingDatasource && buildingDatasource.show !== false) {
+						visibilityChanges.push({
+							datasource: buildingDatasource,
+							visible: false,
+							type: 'building',
+							postalCode,
+						});
+					}
+
+					// Collect tree hide changes
+					const koodis = ['221', '222', '223', '224'];
+					for (const koodi of koodis) {
+						const treeDatasourceName = 'Trees' + koodi + '_' + postalCode;
+						const treeDatasource = this.datasourceService.getDataSourceByName(treeDatasourceName);
+						if (treeDatasource && treeDatasource.show !== false) {
+							visibilityChanges.push({
+								datasource: treeDatasource,
+								visible: false,
+								type: 'tree',
+								postalCode,
+							});
+						}
+					}
+				}
+			}
+
+			const postalCodesToLoad = [];
+
+			// Check which postal codes need building/tree data loaded or shown
+			for (const postalCode of visiblePostalCodes) {
+				const datasourceName = 'Buildings ' + postalCode;
+				const existingDatasource = this.datasourceService.getDataSourceByName(datasourceName);
+
+				if (existingDatasource) {
+					// Buildings datasource exists, collect show change if needed
+					if (!existingDatasource.show) {
+						visibilityChanges.push({
+							datasource: existingDatasource,
+							visible: true,
+							type: 'building',
+							postalCode,
+						});
+					}
+
+					// Also collect tree datasource show changes if they exist
+					const koodis = ['221', '222', '223', '224'];
+					for (const koodi of koodis) {
+						const treeDatasourceName = 'Trees' + koodi + '_' + postalCode;
+						const treeDatasource = this.datasourceService.getDataSourceByName(treeDatasourceName);
+						if (treeDatasource && !treeDatasource.show) {
+							visibilityChanges.push({
+								datasource: treeDatasource,
+								visible: true,
+								type: 'tree',
+								postalCode,
+							});
+						}
+					}
+				} else {
+					// Datasource doesn't exist, need to load it
+					postalCodesToLoad.push(postalCode);
+				}
+			}
+
+			// Apply all visibility changes in a single batch to reduce render thrashing
+			if (visibilityChanges.length > 0) {
+				const showCount = visibilityChanges.filter((c) => c.visible).length;
+				const hideCount = visibilityChanges.filter((c) => !c.visible).length;
+				console.log(
+					`[FeaturePicker] 🔄 Batching ${visibilityChanges.length} visibility changes (show: ${showCount}, hide: ${hideCount})`
+				);
+
+				// Apply all changes
+				for (const change of visibilityChanges) {
+					const oldValue = change.datasource.show;
+					logVisibilityChange(
+						'datasource',
+						change.postalCode + ' (' + change.type + ')',
+						oldValue,
+						change.visible,
+						'loadBuildingsForVisiblePostalCodes'
+					);
+					change.datasource.show = change.visible;
+				}
+
+				// Request single render after batch update
+				if (this.viewer?.scene) {
+					this.viewer.scene.requestRender();
+				}
+			}
+
+			if (postalCodesToLoad.length === 0) {
+				console.log('[FeaturePicker] All visible postal codes already have buildings loaded');
+				this.visiblePostalCodes = newVisibleSet;
+				// DIAGNOSTIC: Still dump state even on early return
+				this._dumpBuildingDatasourceState();
+				return;
+			}
+
+			console.log(
+				'[FeaturePicker] Loading buildings for',
+				postalCodesToLoad.length,
+				'postal codes:',
+				postalCodesToLoad
+			);
+
+			// Load buildings sequentially to avoid overwhelming the server
+			// Pass postal code as parameter instead of modifying global state
+			for (const postalCode of postalCodesToLoad) {
+				try {
+					console.log('[FeaturePicker] 🔄 Loading buildings for postal code:', postalCode);
+
+					// Load buildings based on view mode, passing postal code as parameter
+					if (this.toggleStore.helsinkiView) {
+						await this.buildingService.loadBuildings(postalCode);
+					} else {
+						await this.hSYBuildingService.loadHSYBuildings(null, postalCode);
+					}
+
+					console.log('[FeaturePicker] ✅ Loaded buildings for postal code:', postalCode);
+				} catch (error) {
+					console.error(
+						'[FeaturePicker] ❌ Failed to load buildings for',
+						postalCode,
+						error?.message || error
+					);
+				}
+			}
+
+			// Update tracked visible postal codes
+			this.visiblePostalCodes = newVisibleSet;
+
+			// Predictive warming: warm nearby postal codes in background
+			// This preloads building data for adjacent areas before user pans there
+			if (visiblePostalCodes.length > 0) {
+				cacheWarmer.warmNearbyPostalCodes(currentPostalCode, visiblePostalCodes);
+			}
+
+			// DIAGNOSTIC: Dump final state of all building datasources
+			this._dumpBuildingDatasourceState();
+		} finally {
+			// Always release the loading lock
+			this._isLoadingVisiblePostalCodes = false;
+		}
+	}
+
+	/**
+	 * DIAGNOSTIC: Dumps current state of all building datasources
+	 * @private
+	 */
+	_dumpBuildingDatasourceState() {
+		const allDatasources = this.viewer?.dataSources?._dataSources || [];
+		const buildingDatasources = allDatasources.filter((ds) => ds.name?.startsWith('Buildings '));
+
+		console.log(
+			`%c[DATASOURCE STATE] Total building datasources: ${buildingDatasources.length}`,
+			'color: magenta; font-weight: bold'
+		);
+
+		const visible = [];
+		const hidden = [];
+
+		for (const ds of buildingDatasources) {
+			const postalCode = ds.name.replace('Buildings ', '');
+			const entityCount = ds.entities?.values?.length || 0;
+
+			if (ds.show) {
+				visible.push(`${postalCode}(${entityCount})`);
+			} else {
+				hidden.push(`${postalCode}(${entityCount})`);
+			}
+		}
+
+		console.log(`  Visible: [${visible.join(', ')}]`);
+		console.log(`  Hidden: [${hidden.join(', ')}]`);
+		console.log(`  Tracked as visible: [${Array.from(this.visiblePostalCodes).join(', ')}]`);
+
+		// Check for mismatches
+		const trackedSet = this.visiblePostalCodes;
+		const actualVisible = buildingDatasources
+			.filter((ds) => ds.show)
+			.map((ds) => ds.name.replace('Buildings ', ''));
+		const mismatches = actualVisible.filter((code) => !trackedSet.has(code));
+		const missing = Array.from(trackedSet).filter((code) => !actualVisible.includes(code));
+
+		if (mismatches.length > 0 || missing.length > 0) {
+			console.warn(
+				`%c[STATE MISMATCH!] Visible but not tracked: [${mismatches.join(', ')}], Tracked but not visible: [${missing.join(', ')}]`,
+				'color: red; font-weight: bold'
+			);
+		}
+	}
+
+	/**
+	 * Hides buildings for a specific postal code by setting datasource.show to false
+	 * Keeps the datasource in memory (preserves cache) but makes it invisible.
+	 *
+	 * @param {string} postalCode - Postal code to hide buildings for
+	 * @returns {void}
+	 */
+	hideBuildingsForPostalCode(postalCode) {
+		const datasourceName = 'Buildings ' + postalCode;
+		const datasource = this.datasourceService.getDataSourceByName(datasourceName);
+
+		if (datasource && datasource.show !== false) {
+			logVisibilityChange('datasource', datasourceName, true, false, 'hideBuildingsForPostalCode');
+			datasource.show = false;
+			console.log('[FeaturePicker] 🙈 Hiding buildings for postal code:', postalCode);
+		}
+	}
+
+	/**
+	 * Hides trees for a specific postal code by setting all tree datasources.show to false
+	 * Trees are loaded in 4 height categories (221-224), so we need to hide all of them.
+	 * Keeps the datasources in memory (preserves cache) but makes them invisible.
+	 *
+	 * @param {string} postalCode - Postal code to hide trees for
+	 * @returns {void}
+	 */
+	hideTreesForPostalCode(postalCode) {
+		const koodis = ['221', '222', '223', '224'];
+		let hiddenCount = 0;
+
+		for (const koodi of koodis) {
+			const datasourceName = 'Trees' + koodi + '_' + postalCode;
+			const datasource = this.datasourceService.getDataSourceByName(datasourceName);
+
+			if (datasource && datasource.show !== false) {
+				logVisibilityChange('datasource', datasourceName, true, false, 'hideTreesForPostalCode');
+				datasource.show = false;
+				hiddenCount++;
+			}
+		}
+
+		if (hiddenCount > 0) {
+			console.log(
+				`[FeaturePicker] 🌳 Hiding ${hiddenCount} tree datasources for postal code:`,
+				postalCode
+			);
+		}
+	}
 }

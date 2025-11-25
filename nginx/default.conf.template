@@ -7,12 +7,11 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # DNS resolver for Kubernetes service discovery
-    # Primary: kube-dns for K8s services (10s TTL for dynamic service discovery)
-    # Fallback: 127.0.0.11 for Docker Compose local development
-    # Note: In K8s, this enables resolution of internal services like pygeoapi-helm-webapp.pygeoapi.svc.cluster.local
-    # In Docker Compose, 127.0.0.11 is Docker's embedded DNS server
-    resolver kube-dns.kube-system.svc.cluster.local valid=30s 127.0.0.11 valid=30s ipv6=off;
+    # DNS resolver for service discovery
+    # Uses NGINX_DNS_RESOLVER env var, defaults to 127.0.0.11 (Docker's embedded DNS)
+    # For Kubernetes: set to kube-dns ClusterIP (e.g., 10.96.0.10 or check your cluster)
+    # For Docker Compose: leave default (127.0.0.11)
+    resolver ${NGINX_DNS_RESOLVER} valid=30s ipv6=off;
 
     # Global proxy settings
     proxy_cache global_cache;
@@ -95,13 +94,17 @@ server {
 
         # Derive protocol based on host type:
         # - Use http for localhost development (localhost:port)
-        # - Use http for internal Kubernetes services (*.svc.cluster.local)
+        # - Use http for internal Kubernetes services (short names without dots, or *.svc.cluster.local)
         # - Use https for external services (pygeoapi.dataportal.fi, etc.)
         set $pygeoapi_protocol "https";
         if ($pygeoapi_host ~* "^localhost:[0-9]+$") {
             set $pygeoapi_protocol "http";
         }
         if ($pygeoapi_host ~* "\.svc\.cluster\.local$") {
+            set $pygeoapi_protocol "http";
+        }
+        # Short K8s service names (no dots) are internal services using HTTP
+        if ($pygeoapi_host ~* "^[^.]+$") {
             set $pygeoapi_protocol "http";
         }
 

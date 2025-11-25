@@ -1,10 +1,11 @@
-import Datasource from "./datasource.js";
-import * as Cesium from "cesium";
-import { useGlobalStore } from "../stores/globalStore.js";
-import { usePropsStore } from "../stores/propsStore.js";
-import { eventBus } from "../services/eventEmitter.js";
-import { useURLStore } from "../stores/urlStore.js";
-import unifiedLoader from "./unifiedLoader.js";
+import Datasource from './datasource.js';
+import * as Cesium from 'cesium';
+import { useGlobalStore } from '../stores/globalStore.js';
+import { usePropsStore } from '../stores/propsStore.js';
+import { eventBus } from '../services/eventEmitter.js';
+import { useURLStore } from '../stores/urlStore.js';
+import unifiedLoader from './unifiedLoader.js';
+import { cesiumEntityManager } from './cesiumEntityManager.js';
 
 /**
  * Tree Service
@@ -29,294 +30,313 @@ import unifiedLoader from "./unifiedLoader.js";
  * @class Tree
  */
 export default class Tree {
-  /**
-   * Creates a Tree service instance
-   */
-  constructor() {
-    this.datasourceService = new Datasource();
-    this.store = useGlobalStore();
-    this.urlStore = useURLStore();
-  }
+	/**
+	 * Creates a Tree service instance
+	 */
+	constructor() {
+		this.datasourceService = new Datasource();
+		this.store = useGlobalStore();
+		this.urlStore = useURLStore();
+	}
 
-  /**
-   * Asynchronously load tree data using unified loader with coordinated parallel loading
-   */
-  async loadTrees() {
-    try {
-      // Define all tree height categories
-      const koodis = ["221", "222", "223", "224"];
+	/**
+	 * Asynchronously load tree data using unified loader with coordinated parallel loading
+	 * @param {string} postalCode - Optional postal code to load trees for. If not provided, uses global store.postalcode
+	 */
+	async loadTrees(postalCode = null) {
+		// Use provided postal code or fall back to global store
+		const targetPostalCode = postalCode || this.store.postalcode;
 
-      // Create loading configurations for parallel execution
-      const loadingConfigs = koodis.map((koodi) => ({
-        layerId: `trees_${koodi}`,
-        url: this.urlStore.tree(this.store.postalcode, koodi),
-        type: "geojson",
-        processor: (data, metadata) =>
-          this.addTreesDataSource(data, koodi, metadata),
-        options: {
-          cache: true,
-          cacheTTL: 25 * 60 * 1000, // 25 minutes (trees change less frequently)
-          retries: 2,
-          batchSize: 30,
-          progressive: true,
-          priority: "high", // Trees are important for cooling analysis
-        },
-      }));
+		try {
+			// Define all tree height categories
+			const koodis = ['221', '222', '223', '224'];
 
-      // Load all tree types in parallel using unified loader
-      const results = await unifiedLoader.loadLayers(loadingConfigs);
+			// Create loading configurations for parallel execution
+			const loadingConfigs = koodis.map((koodi) => ({
+				layerId: `trees_${koodi}_${targetPostalCode}`,
+				url: this.urlStore.tree(targetPostalCode, koodi),
+				type: 'geojson',
+				processor: (data, metadata) =>
+					this.addTreesDataSource(data, koodi, targetPostalCode, metadata),
+				options: {
+					cache: true,
+					cacheTTL: 25 * 60 * 1000, // 25 minutes (trees change less frequently)
+					retries: 2,
+					batchSize: 30,
+					progressive: true,
+					priority: 'high', // Trees are important for cooling analysis
+				},
+			}));
 
-      // Check results and log success/failures
-      const successful = results.filter((r) => r.status === "fulfilled").length;
-      const failed = results.length - successful;
+			// Load all tree types in parallel using unified loader
+			const results = await unifiedLoader.loadLayers(loadingConfigs);
 
-      if (failed === 0) {
-        console.log(
-          `✓ All ${successful} tree height categories loaded successfully`,
-        );
-      } else {
-        console.warn(
-          `⚠ ${successful}/${results.length} tree categories loaded, ${failed} failed`,
-        );
-      }
+			// Check results and log success/failures
+			const successful = results.filter((r) => r.status === 'fulfilled').length;
+			const failed = results.length - successful;
 
-      return results;
-    } catch (error) {
-      console.error("Failed to load tree data:", error);
-      throw error;
-    }
-  }
+			if (failed === 0) {
+				console.log(`✓ All ${successful} tree height categories loaded successfully`);
+			} else {
+				console.warn(`⚠ ${successful}/${results.length} tree categories loaded, ${failed} failed`);
+			}
 
-  /**
-   * Legacy method maintained for backward compatibility
-   * @deprecated Use loadTrees() instead for unified loading
-   */
-  async loadTreesWithKoodi(koodi) {
-    console.warn("loadTreesWithKoodi is deprecated, use loadTrees() instead");
+			return results;
+		} catch (error) {
+			console.error('Failed to load tree data:', error?.message || error);
+			throw error;
+		}
+	}
 
-    try {
-      const data = await unifiedLoader.loadLayer({
-        layerId: `trees_${koodi}`,
-        url: this.urlStore.tree(this.store.postalcode, koodi),
-        type: "geojson",
-        processor: (data, metadata) =>
-          this.addTreesDataSource(data, koodi, metadata),
-        options: {
-          cache: true,
-          retries: 2,
-          batchSize: 30,
-        },
-      });
+	/**
+	 * Legacy method maintained for backward compatibility
+	 * @deprecated Use loadTrees() instead for unified loading
+	 */
+	async loadTreesWithKoodi(koodi) {
+		console.warn('loadTreesWithKoodi is deprecated, use loadTrees() instead');
 
-      console.log(`✓ Loaded trees for height category ${koodi}`);
-      return data;
-    } catch (error) {
-      console.error(`Failed to load trees for koodi ${koodi}:`, error);
-      throw error;
-    }
-  }
+		try {
+			const data = await unifiedLoader.loadLayer({
+				layerId: `trees_${koodi}`,
+				url: this.urlStore.tree(this.store.postalcode, koodi),
+				type: 'geojson',
+				processor: (data, metadata) => this.addTreesDataSource(data, koodi, metadata),
+				options: {
+					cache: true,
+					retries: 2,
+					batchSize: 30,
+				},
+			});
 
-  /**
-   * Add the tree data as a new data source to Cesium with optimized batch processing
-   *
-   * @param {Object} data - Tree data from API
-   * @param {string} koodi - Tree height category code
-   * @param {Object} metadata - Loading metadata from unified loader
-   */
-  async addTreesDataSource(data, koodi, metadata = {}) {
-    try {
-      const entities = await this.datasourceService.addDataSourceWithPolygonFix(
-        data,
-        "Trees" + koodi,
-      );
+			console.log(`✓ Loaded trees for height category ${koodi}`);
+			return data;
+		} catch (error) {
+			console.error(`Failed to load trees for koodi ${koodi}:`, error?.message || error);
+			throw error;
+		}
+	}
 
-      // Enhanced batch processing with adaptive batch sizes
-      const adaptiveBatchSize = entities.length > 1000 ? 15 : 25;
-      let processed = 0;
+	/**
+	 * Add the tree data as a new data source to Cesium with optimized batch processing
+	 *
+	 * @param {Object} data - Tree data from API
+	 * @param {string} koodi - Tree height category code
+	 * @param {string} postalCode - Postal code for this tree datasource
+	 * @param {Object} metadata - Loading metadata from unified loader
+	 */
+	async addTreesDataSource(data, koodi, postalCode, metadata = {}) {
+		try {
+			const entities = await this.datasourceService.addDataSourceWithPolygonFix(
+				data,
+				'Trees' + koodi + '_' + postalCode
+			);
 
-      for (let i = 0; i < entities.length; i += adaptiveBatchSize) {
-        const batch = entities.slice(i, i + adaptiveBatchSize);
+			// Enhanced batch processing with adaptive batch sizes
+			const adaptiveBatchSize = entities.length > 1000 ? 15 : 25;
+			let processed = 0;
 
-        // Process batch with improved error handling
-        for (const entity of batch) {
-          try {
-            const description = entity.properties._kuvaus?._value;
-            if (description) {
-              this.setTreePolygonMaterialColor(entity, description);
-            }
-            processed++;
-          } catch (entityError) {
-            console.warn(
-              `Error processing tree entity in koodi ${koodi}:`,
-              entityError,
-            );
-          }
-        }
+			for (let i = 0; i < entities.length; i += adaptiveBatchSize) {
+				const batch = entities.slice(i, i + adaptiveBatchSize);
 
-        // Yield control with improved scheduling
-        if (i + adaptiveBatchSize < entities.length) {
-          await new Promise((resolve) => {
-            if (window.requestIdleCallback) {
-              requestIdleCallback(resolve, { timeout: 50 });
-            } else {
-              setTimeout(resolve, 0);
-            }
-          });
-        }
-      }
+				// Process batch with improved error handling
+				for (const entity of batch) {
+					try {
+						const description = entity.properties._kuvaus?._value;
+						if (description) {
+							this.setTreePolygonMaterialColor(entity, description);
+						}
+						processed++;
+					} catch (entityError) {
+						console.warn(`Error processing tree entity in koodi ${koodi}:`, entityError);
+					}
+				}
 
-      // Handle Helsinki-specific tree distance data
-      if (this.store.view === "helsinki") {
-        this.fetchAndAddTreeDistanceData(entities);
-      }
+				// Yield control with improved scheduling
+				if (i + adaptiveBatchSize < entities.length) {
+					await new Promise((resolve) => {
+						if (window.requestIdleCallback) {
+							requestIdleCallback(resolve, { timeout: 50 });
+						} else {
+							setTimeout(resolve, 0);
+						}
+					});
+				}
+			}
 
-      if (!metadata.fromCache) {
-        console.log(
-          `✓ Processed ${processed} trees for height category ${koodi}`,
-        );
-      } else {
-        console.log(
-          `✓ Restored ${processed} trees from cache for category ${koodi}`,
-        );
-      }
-    } catch (error) {
-      console.error(`Error processing tree data for koodi ${koodi}:`, error);
-      throw error;
-    }
-  }
+			// Handle Helsinki-specific tree distance data
+			if (this.store.view === 'helsinki') {
+				this.fetchAndAddTreeDistanceData(entities);
+			}
 
-  /**
-   * Fetch tree distance data from the provided URL and create a new dataset for plot that presents the cooldown effect on trees on buildings
-   *
-   * @param {Object} entities - The postal code area tree entities
-   */
-  fetchAndAddTreeDistanceData(entities) {
-    if (!entities) {
-      // Find the data source for buildings
-      const treeDataSource =
-        this.datasourceService.getDataSourceByName("Trees");
+			if (!metadata.fromCache) {
+				console.log(`✓ Processed ${processed} trees for height category ${koodi}`);
+			} else {
+				console.log(`✓ Restored ${processed} trees from cache for category ${koodi}`);
+			}
+		} catch (error) {
+			console.error(`Error processing tree data for koodi ${koodi}:`, error?.message || error);
+			throw error;
+		}
+	}
 
-      // If the data source isn't found, exit the function
-      if (!treeDataSource) {
-        return;
-      }
+	/**
+	 * Fetch tree distance data from the provided URL and create a new dataset for plot that presents the cooldown effect on trees on buildings
+	 *
+	 * @param {Object} entities - The postal code area tree entities
+	 */
+	fetchAndAddTreeDistanceData(entities) {
+		if (!entities) {
+			// Find the data source for buildings
+			const treeDataSource = this.datasourceService.getDataSourceByName('Trees');
 
-      entities = treeDataSource.entities.values;
-    }
+			// If the data source isn't found, exit the function
+			if (!treeDataSource) {
+				return;
+			}
 
-    // Find the data source for buildings
-    const buildingsDataSource = this.datasourceService.getDataSourceByName(
-      "Buildings " + this.store.postalcode,
-    );
+			entities = treeDataSource.entities.values;
+		}
 
-    // If the data source isn't found, exit the function
-    if (!buildingsDataSource) {
-      return;
-    }
+		// Find the data source for buildings
+		const buildingsDataSource = this.datasourceService.getDataSourceByName(
+			'Buildings ' + this.store.postalcode
+		);
 
-    fetch(this.urlStore.treeBuildingDistance(this.store.postalcode))
-      .then((response) => response.json())
-      .then((data) => {
-        this.setPropertiesAndEmitEvent(data, entities, buildingsDataSource);
-      })
-      .catch((error) => {
-        // Log any errors encountered while fetching the data
-        console.log("Error fetching tree distance data:", error);
-      });
-  }
+		// If the data source isn't found, exit the function
+		if (!buildingsDataSource) {
+			return;
+		}
 
-  /**
-   * Sets tree-building distance properties in store and emits visualization events
-   * Updates props store with tree data and triggers UI updates for tree diagrams.
-   *
-   * @param {Object} data - Tree distance data from API
-   * @param {Array<Cesium.Entity>} entities - Tree entities
-   * @param {Cesium.DataSource} buildingsDataSource - Buildings data source
-   * @fires eventBus#hideBuildingScatterPlot - Hides building scatter plot
-   * @fires eventBus#newNearbyTreeDiagram - Triggers tree proximity diagram update
-   * @private
-   */
-  setPropertiesAndEmitEvent(data, entities, buildingsDataSource) {
-    const propsStore = usePropsStore();
-    propsStore.setTreeBuildingDistanceData(data);
-    propsStore.setTreeEntities(entities);
-    propsStore.setBuildingsDatasource(buildingsDataSource);
-    eventBus.emit("hideBuildingScatterPlot");
-    eventBus.emit("newNearbyTreeDiagram");
-  }
+		fetch(this.urlStore.treeBuildingDistance(this.store.postalcode))
+			.then((response) => response.json())
+			.then((data) => {
+				this.setPropertiesAndEmitEvent(data, entities, buildingsDataSource);
+			})
+			.catch((error) => {
+				// Log any errors encountered while fetching the data
+				console.log('Error fetching tree distance data:', error);
+			});
+	}
 
-  /**
-   * Set the polygon material color and extruded height for a given tree entity based on its description
-   *
-   * @param {Object} entity - Tree entity
-   * @param {string} description - Description of tree entity
-   */
-  setTreePolygonMaterialColor(entity, description) {
-    const height = entity._properties._korkeus_ka_m;
+	/**
+	 * Sets tree-building distance properties in store and emits visualization events
+	 * Updates props store with tree data and triggers UI updates for tree diagrams.
+	 * Extracts serializable data to prevent DataCloneError in Web Workers.
+	 *
+	 * @param {Object} data - Tree distance data from API
+	 * @param {Array<Cesium.Entity>} entities - Tree entities
+	 * @param {Cesium.DataSource} buildingsDataSource - Buildings data source
+	 * @fires eventBus#hideBuildingScatterPlot - Hides building scatter plot
+	 * @fires eventBus#newNearbyTreeDiagram - Triggers tree proximity diagram update
+	 * @private
+	 */
+	setPropertiesAndEmitEvent(data, entities, buildingsDataSource) {
+		const propsStore = usePropsStore();
 
-    switch (description) {
-      case "Puusto yli 20 m":
-        entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.7);
-        height
-          ? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
-          : extrudeTree(entity, 22.5);
-        break;
-      case "puusto, 15 m - 20 m":
-        entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.6);
-        height
-          ? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
-          : extrudeTree(entity, 17.5);
-        break;
-      case "puusto, 10 m - 15 m":
-        entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.55);
-        height
-          ? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
-          : extrudeTree(entity, 12.5);
-        break;
-      case "puusto, 2 m - 10 m":
-        entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.5);
-        height
-          ? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
-          : extrudeTree(entity, 6);
-        break;
-    }
-  }
+		// Extract serializable tree data (prevents DataCloneError)
+		const treeData = entities.map((entity) => ({
+			kohde_id: entity._properties?._kohde_id?._value,
+			p_ala_m2: entity._properties?._p_ala_m2?._value,
+		}));
 
-  /**
-   * Finds building datasource and resets tree entities polygon
-   *
-   */
-  resetTreeEntities() {
-    // Find the data source for trees
-    const treeDataSource = this.datasourceService.getDataSourceByName("Trees");
+		// Extract serializable building data (prevents DataCloneError)
+		const buildingData = new Map();
+		const buildingEntities = buildingsDataSource.entities.values;
+		for (const entity of buildingEntities) {
+			const id = entity._properties?._id?._value || entity._properties?._hki_id?._value;
+			if (id) {
+				buildingData.set(id, {
+					heatExposure: entity._properties?.avgheatexposuretobuilding?._value,
+					area_m2: entity._properties?._area_m2?._value,
+					hki_id: entity._properties?._hki_id?._value,
+				});
+			}
+		}
 
-    // If the data source isn't found, exit the function
-    if (!treeDataSource) {
-      return;
-    }
+		// Store serializable data in Pinia (safe for Web Workers)
+		propsStore.setTreeBuildingDistanceData(data);
+		propsStore.setTreeData(treeData);
+		propsStore.setBuildingData(buildingData);
 
-    for (
-      let i = 0;
-      i < treeDataSource._entityCollection._entities._array.length;
-      i++
-    ) {
-      let entity = treeDataSource._entityCollection._entities._array[i];
+		// Register entities in non-reactive manager for visual manipulation
+		cesiumEntityManager.registerTreeEntities(entities);
+		cesiumEntityManager.registerBuildingEntities(buildingEntities);
+		cesiumEntityManager.setBuildingsDataSource(buildingsDataSource);
 
-      entity.polygon.outlineColor = Cesium.Color.BLACK;
-      entity.polygon.outlineWidth = 3;
+		console.log(
+			`[Tree Service] Stored ${treeData.length} tree data items, ${buildingData.size} building data items`
+		);
 
-      if (entity._properties._description && entity.polygon) {
-        this.setTreePolygonMaterialColor(
-          entity,
-          entity._properties._description._value,
-        );
-      }
-    }
-  }
+		eventBus.emit('hideBuildingScatterPlot');
+		eventBus.emit('newNearbyTreeDiagram');
+	}
+
+	/**
+	 * Set the polygon material color and extruded height for a given tree entity based on its description
+	 *
+	 * @param {Object} entity - Tree entity
+	 * @param {string} description - Description of tree entity
+	 */
+	setTreePolygonMaterialColor(entity, description) {
+		const height = entity._properties._korkeus_ka_m;
+
+		switch (description) {
+			case 'Puusto yli 20 m':
+				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.7);
+				height
+					? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
+					: extrudeTree(entity, 22.5);
+				break;
+			case 'puusto, 15 m - 20 m':
+				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.6);
+				height
+					? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
+					: extrudeTree(entity, 17.5);
+				break;
+			case 'puusto, 10 m - 15 m':
+				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.55);
+				height
+					? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
+					: extrudeTree(entity, 12.5);
+				break;
+			case 'puusto, 2 m - 10 m':
+				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.5);
+				height
+					? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
+					: extrudeTree(entity, 6);
+				break;
+		}
+	}
+
+	/**
+	 * Finds building datasource and resets tree entities polygon
+	 *
+	 */
+	resetTreeEntities() {
+		// Find the data source for trees
+		const treeDataSource = this.datasourceService.getDataSourceByName('Trees');
+
+		// If the data source isn't found, exit the function
+		if (!treeDataSource) {
+			return;
+		}
+
+		const treeEntities = treeDataSource.entities.values;
+		for (let i = 0; i < treeEntities.length; i++) {
+			let entity = treeEntities[i];
+
+			entity.polygon.outlineColor = Cesium.Color.BLACK;
+			entity.polygon.outlineWidth = 3;
+
+			if (entity._properties._description && entity.polygon) {
+				this.setTreePolygonMaterialColor(entity, entity._properties._description._value);
+			}
+		}
+	}
 }
 
 const extrudeTree = (entity, heightValue) => {
-  if (heightValue) {
-    entity.polygon.extrudedHeight = heightValue;
-  }
+	if (heightValue) {
+		entity.polygon.extrudedHeight = heightValue;
+	}
 };

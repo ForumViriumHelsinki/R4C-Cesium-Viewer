@@ -94,11 +94,10 @@ Apply low-quality graphics settings to speed up rendering:
 ```typescript
 // In cesium-fixture.ts
 await cesiumPage.evaluate(() => {
-  const graphicsStore =
-    window.$app?.config?.globalProperties?.$pinia?.state?.value?.graphics;
-  if (graphicsStore) {
-    graphicsStore.applyQualityPreset("performance");
-  }
+	const graphicsStore = window.$app?.config?.globalProperties?.$pinia?.state?.value?.graphics;
+	if (graphicsStore) {
+		graphicsStore.applyQualityPreset('performance');
+	}
 });
 ```
 
@@ -128,12 +127,12 @@ await cesiumPage.evaluate(() => {
 ```typescript
 // Fast mock injection - no WebGL
 if (process.env.CI) {
-  await page.addInitScript(() => {
-    // Inject mock Cesium (464 lines)
-    window.Cesium = {
-      /* mock implementation */
-    };
-  });
+	await page.addInitScript(() => {
+		// Inject mock Cesium (464 lines)
+		window.Cesium = {
+			/* mock implementation */
+		};
+	});
 }
 // Init time: ~2-3 seconds
 ```
@@ -143,10 +142,10 @@ if (process.env.CI) {
 ```typescript
 // Real WebGL initialization with optimizations
 if (!process.env.CI) {
-  await page.goto("/");
-  await waitForCesiumReady(page, 60000);
-  // Apply performance optimizations
-  viewer.scene.requestRenderMode = true;
+	await page.goto('/');
+	await waitForCesiumReady(page, 60000);
+	// Apply performance optimizations
+	viewer.scene.requestRenderMode = true;
 }
 // Init time: ~10-15 seconds (with optimizations)
 // Without optimizations: ~30-40 seconds
@@ -185,7 +184,7 @@ if (!process.env.CI) {
 ❌ **BAD**: Masking performance issues
 
 ```typescript
-await page.waitForSelector("#map", { timeout: 60000 }); // Why so long?
+await page.waitForSelector('#map', { timeout: 60000 }); // Why so long?
 ```
 
 ✅ **GOOD**: Fix the root cause
@@ -193,7 +192,7 @@ await page.waitForSelector("#map", { timeout: 60000 }); // Why so long?
 ```typescript
 // Ensure Cesium initialized with optimizations
 await waitForCesiumReady(page, 10000); // Fast with requestRenderMode
-await page.waitForSelector("#map", { timeout: 5000 });
+await page.waitForSelector('#map', { timeout: 5000 });
 ```
 
 ## Cesium Readiness Detection
@@ -202,18 +201,15 @@ await page.waitForSelector("#map", { timeout: 5000 });
 
 ```typescript
 async function waitForCesiumReady(page, timeout = 60000) {
-  await page.waitForFunction(
-    () => {
-      const viewer = window.viewer;
-      return (
-        viewer &&
-        viewer.scene &&
-        viewer.scene.globe &&
-        viewer.scene.globe.tilesLoaded === true
-      );
-    },
-    { timeout },
-  );
+	await page.waitForFunction(
+		() => {
+			const viewer = window.viewer;
+			return (
+				viewer && viewer.scene && viewer.scene.globe && viewer.scene.globe.tilesLoaded === true
+			);
+		},
+		{ timeout }
+	);
 }
 ```
 
@@ -247,7 +243,7 @@ Vuetify overlays (dialogs, loading spinners) can remain in DOM even when hidden:
 ```typescript
 // Force hide overlays via CSS (more reliable than DOM check)
 await page.addStyleTag({
-  content: `
+	content: `
     .v-overlay--active { display: none !important; }
     .v-dialog--active { display: none !important; }
     .loading-overlay { display: none !important; }
@@ -314,14 +310,14 @@ viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
 ```typescript
 // In cesium-fixture.ts cleanup
 test.afterEach(async ({ cesiumPage }) => {
-  if (cesiumPage.viewer) {
-    cesiumPage.viewer.destroy();
-    cesiumPage.viewer = null;
-  }
-  // Force garbage collection (if available)
-  if (global.gc) {
-    global.gc();
-  }
+	if (cesiumPage.viewer) {
+		cesiumPage.viewer.destroy();
+		cesiumPage.viewer = null;
+	}
+	// Force garbage collection (if available)
+	if (global.gc) {
+		global.gc();
+	}
 });
 ```
 
@@ -368,13 +364,13 @@ npm run test:accessibility:report
 ### Console Performance Logs
 
 ```typescript
-test("performance monitoring", async ({ page }) => {
-  page.on("metrics", (metrics) => {
-    console.log("CPU Usage:", metrics.TaskDuration);
-    console.log("JS Heap:", metrics.JSHeapUsedSize);
-  });
+test('performance monitoring', async ({ page }) => {
+	page.on('metrics', (metrics) => {
+		console.log('CPU Usage:', metrics.TaskDuration);
+		console.log('JS Heap:', metrics.JSHeapUsedSize);
+	});
 
-  // Run test...
+	// Run test...
 });
 ```
 
@@ -385,8 +381,8 @@ test("performance monitoring", async ({ page }) => {
 viewer.scene.debugShowFramesPerSecond = true;
 
 // Log render statistics
-console.log("Tiles rendered:", viewer.scene.globe.tilesRendered);
-console.log("Entities:", viewer.entities.values.length);
+console.log('Tiles rendered:', viewer.scene.globe.tilesRendered);
+console.log('Entities:', viewer.entities.values.length);
 ```
 
 ## Best Practices Summary

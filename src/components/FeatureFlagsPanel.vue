@@ -1,9 +1,9 @@
 <template>
 	<v-dialog
-v-model="dialog"
-max-width="800"
-scrollable
->
+		v-model="dialog"
+		max-width="800"
+		scrollable
+	>
 		<template #activator="{ props }">
 			<v-btn
 				v-bind="props"
@@ -19,17 +19,17 @@ scrollable
 		<v-card>
 			<v-card-title class="d-flex align-center">
 				<v-icon
-left
-class="mr-2"
->
-mdi-flag-variant
-</v-icon>
+					left
+					class="mr-2"
+				>
+					mdi-flag-variant
+				</v-icon>
 				Feature Flags
 				<v-spacer />
 				<v-chip
-size="small"
-color="primary"
->
+					size="small"
+					color="primary"
+				>
 					{{ featureFlagStore.enabledCount }} / {{ totalFlags }} enabled
 				</v-chip>
 			</v-card-title>
@@ -50,9 +50,9 @@ color="primary"
 						<v-expansion-panel-title>
 							<div class="d-flex align-center">
 								<v-icon
-:icon="getCategoryIcon(category)"
-class="mr-2"
-/>
+									:icon="getCategoryIcon(category)"
+									class="mr-2"
+								/>
 								<span class="text-subtitle-1 font-weight-medium">
 									{{ getCategoryLabel(category) }}
 								</span>
@@ -179,38 +179,39 @@ mdi-restore
 
 	<!-- Reset confirmation dialog -->
 	<v-dialog
-v-model="resetConfirmDialog"
-max-width="500"
->
+		v-model="resetConfirmDialog"
+		max-width="500"
+	>
 		<v-card>
 			<v-card-title>Reset All Feature Flags</v-card-title>
 			<v-card-text>
-				Are you sure you want to reset all feature flags to their default values? This action cannot be undone.
+				Are you sure you want to reset all feature flags to their default values? This action cannot
+				be undone.
 			</v-card-text>
 			<v-card-actions>
 				<v-spacer />
 				<v-btn
-variant="text"
-@click="resetConfirmDialog = false"
->
-Cancel
-</v-btn>
+					variant="text"
+					@click="resetConfirmDialog = false"
+				>
+					Cancel
+				</v-btn>
 				<v-btn
-color="warning"
-variant="elevated"
-@click="confirmResetAll"
->
-Reset All
-</v-btn>
+					color="warning"
+					variant="elevated"
+					@click="confirmResetAll"
+				>
+					Reset All
+				</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
 
 	<!-- Import dialog -->
 	<v-dialog
-v-model="importDialog"
-max-width="500"
->
+		v-model="importDialog"
+		max-width="500"
+	>
 		<v-card>
 			<v-card-title>Import Configuration</v-card-title>
 			<v-card-text>
@@ -224,18 +225,18 @@ max-width="500"
 			<v-card-actions>
 				<v-spacer />
 				<v-btn
-variant="text"
-@click="importDialog = false"
->
-Cancel
-</v-btn>
+					variant="text"
+					@click="importDialog = false"
+				>
+					Cancel
+				</v-btn>
 				<v-btn
-color="primary"
-variant="elevated"
-@click="doImport"
->
-Import
-</v-btn>
+					color="primary"
+					variant="elevated"
+					@click="doImport"
+				>
+					Import
+				</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
@@ -261,7 +262,12 @@ Import
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useFeatureFlagStore, type FeatureFlagCategory, type FeatureFlagWithName, type FeatureFlagName } from '@/stores/featureFlagStore';
+import {
+	useFeatureFlagStore,
+	type FeatureFlagCategory,
+	type FeatureFlagWithName,
+	type FeatureFlagName,
+} from '@/stores/featureFlagStore';
 import { useGraphicsStore } from '@/stores/graphicsStore';
 
 const featureFlagStore = useFeatureFlagStore();
@@ -281,20 +287,20 @@ const totalFlags = computed(() => Object.keys(featureFlagStore.flags).length);
 
 const categoryLabels: Record<FeatureFlagCategory, string> = {
 	'data-layers': 'Data Layers',
-	'graphics': 'Graphics & Performance',
-	'analysis': 'Analysis Tools',
-	'ui': 'UI & UX',
-	'integration': 'Integrations',
-	'developer': 'Developer Tools',
+	graphics: 'Graphics & Performance',
+	analysis: 'Analysis Tools',
+	ui: 'UI & UX',
+	integration: 'Integrations',
+	developer: 'Developer Tools',
 };
 
 const categoryIcons: Record<FeatureFlagCategory, string> = {
 	'data-layers': 'mdi-layers',
-	'graphics': 'mdi-chart-line',
-	'analysis': 'mdi-chart-box',
-	'ui': 'mdi-palette',
-	'integration': 'mdi-puzzle',
-	'developer': 'mdi-code-braces',
+	graphics: 'mdi-chart-line',
+	analysis: 'mdi-chart-box',
+	ui: 'mdi-palette',
+	integration: 'mdi-puzzle',
+	developer: 'mdi-code-braces',
 };
 
 function getCategoryLabel(category: FeatureFlagCategory): string {
@@ -306,9 +312,9 @@ function getCategoryIcon(category: FeatureFlagCategory): string {
 }
 
 function getCategoryEnabledCount(category: FeatureFlagCategory): number {
-	return featureFlagStore.flagsByCategory(category).filter(flag =>
-		featureFlagStore.isEnabled(flag.name)
-	).length;
+	return featureFlagStore
+		.flagsByCategory(category)
+		.filter((flag) => featureFlagStore.isEnabled(flag.name)).length;
 }
 
 function getCategoryTotalCount(category: FeatureFlagCategory): number {

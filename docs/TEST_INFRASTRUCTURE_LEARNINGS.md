@@ -33,9 +33,9 @@ Application code uses `window.__viewer` (with double underscore prefix), but tes
 - **Test Helper:** `tests/e2e/helpers/cesium-helper.ts:34` (before fix)
   ```typescript
   const viewer =
-    window.viewer || // ❌ Wrong - missing __ prefix
-    window.cesiumViewer ||
-    document.querySelector(".cesium-viewer");
+  	window.viewer || // ❌ Wrong - missing __ prefix
+  	window.cesiumViewer ||
+  	document.querySelector('.cesium-viewer');
   ```
 
 ### Impact
@@ -50,10 +50,10 @@ Add `window.__viewer` as the primary check:
 
 ```typescript
 const viewer =
-  window.__viewer || // ✅ Correct - matches app code
-  window.viewer || // Fallback for compatibility
-  window.cesiumViewer || // Additional fallback
-  document.querySelector(".cesium-viewer");
+	window.__viewer || // ✅ Correct - matches app code
+	window.viewer || // Fallback for compatibility
+	window.cesiumViewer || // Additional fallback
+	document.querySelector('.cesium-viewer');
 ```
 
 **Fixed in:** `tests/e2e/helpers/cesium-helper.ts:34`
@@ -101,7 +101,7 @@ CesiumJS continuously loads tiles in the background. **Network NEVER becomes tru
 
 ```typescript
 // ❌ WRONG - will always timeout with CesiumJS
-await page.waitForLoadState("networkidle", { timeout: 5000 });
+await page.waitForLoadState('networkidle', { timeout: 5000 });
 
 // ✅ CORRECT - simple deterministic wait
 // Note: CesiumJS continuously loads tiles, so we use a simple timeout
@@ -157,22 +157,22 @@ Camera move events (`moveStart`, `moveEnd`) don't fire reliably with `requestRen
 
 ```typescript
 export async function waitForSceneIdle(page: Page, options = {}) {
-  await page.waitForFunction(({ idleFrames }) => {
-    const viewer = window.__viewer;
+	await page.waitForFunction(({ idleFrames }) => {
+		const viewer = window.__viewer;
 
-    if (!window.__sceneIdleState) {
-      // ❌ Sets up event listeners inside polling function
-      viewer.camera.moveStart.addEventListener(() => {
-        window.__sceneIdleState.cameraMoving = true;
-      });
-      viewer.camera.moveEnd.addEventListener(() => {
-        window.__sceneIdleState.cameraMoving = false;
-      });
-    }
+		if (!window.__sceneIdleState) {
+			// ❌ Sets up event listeners inside polling function
+			viewer.camera.moveStart.addEventListener(() => {
+				window.__sceneIdleState.cameraMoving = true;
+			});
+			viewer.camera.moveEnd.addEventListener(() => {
+				window.__sceneIdleState.cameraMoving = false;
+			});
+		}
 
-    // ❌ Events never fire with requestRenderMode
-    return state.idleFrameCount >= idleFrames;
-  });
+		// ❌ Events never fire with requestRenderMode
+		return state.idleFrameCount >= idleFrames;
+	});
 }
 ```
 
@@ -272,7 +272,7 @@ await page.waitForTimeout(500);
 3. **Use specific element visibility checks:**
 
    ```typescript
-   await page.waitForSelector(".cesium-viewer", { state: "visible" });
+   await page.waitForSelector('.cesium-viewer', { state: 'visible' });
    ```
 
 4. **Wait for specific conditions, not network state:**
@@ -286,7 +286,7 @@ await page.waitForTimeout(500);
 
    ```typescript
    // ❌ Will always timeout or cause unnecessary delays
-   await page.waitForLoadState("networkidle");
+   await page.waitForLoadState('networkidle');
    ```
 
 2. **NEVER rely on camera events with `requestRenderMode`:**

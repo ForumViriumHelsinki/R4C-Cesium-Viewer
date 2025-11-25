@@ -10,7 +10,7 @@ spec:
   type: ClusterIP
   ports:
     - port: 80
-      targetPort: 4173 # Maps to Vite preview server port
+      targetPort: 80 # Maps to nginx port
       protocol: TCP
       name: http
   selector:

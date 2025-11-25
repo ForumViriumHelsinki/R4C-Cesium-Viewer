@@ -38,18 +38,18 @@ The syntax differs between Playwright and Vitest:
 **Playwright tests** (use `tag` - singular):
 
 ```typescript
-test("Page load", { tag: ["@e2e", "@smoke"] }, async ({ page }) => {
-  // Test implementation
+test('Page load', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
+	// Test implementation
 });
 ```
 
 **Vitest tests** (use `tags` - plural):
 
 ```typescript
-describe("WMS Service", { tags: ["@unit", "@wms"] }, () => {
-  it("should handle requests", () => {
-    // Test implementation
-  });
+describe('WMS Service', { tags: ['@unit', '@wms'] }, () => {
+	it('should handle requests', () => {
+		// Test implementation
+	});
 });
 ```
 
@@ -58,16 +58,16 @@ describe("WMS Service", { tags: ["@unit", "@wms"] }, () => {
 For complex test suites, you can apply tags at different nesting levels to add domain-specific categorization:
 
 ```typescript
-test.describe("R4C Climate Visualization Comprehensive Tests", () => {
-  test.use({ tag: ["@e2e", "@comprehensive"] });
+test.describe('R4C Climate Visualization Comprehensive Tests', () => {
+	test.use({ tag: ['@e2e', '@comprehensive'] });
 
-  test.describe("HSY Background Maps Integration", () => {
-    test.use({ tag: ["@wms"] }); // Adds @wms to all tests in this block
+	test.describe('HSY Background Maps Integration', () => {
+		test.use({ tag: ['@wms'] }); // Adds @wms to all tests in this block
 
-    test("should load WMS layers", async ({ page }) => {
-      // This test has tags: @e2e, @comprehensive, @wms
-    });
-  });
+		test('should load WMS layers', async ({ page }) => {
+			// This test has tags: @e2e, @comprehensive, @wms
+		});
+	});
 });
 ```
 
@@ -123,7 +123,7 @@ All test constants are centralized in: `tests/config/constants.ts`
 #### 1. API Endpoints
 
 ```typescript
-import { API_ENDPOINTS } from "../config/constants";
+import { API_ENDPOINTS } from '../config/constants';
 
 // Usage in tests
 await page.waitForRequest(API_ENDPOINTS.WMS_PROXY);
@@ -141,7 +141,7 @@ Available endpoints:
 #### 2. Bundle Size Budgets
 
 ```typescript
-import { BUNDLE_SIZE_BUDGETS } from "../config/constants";
+import { BUNDLE_SIZE_BUDGETS } from '../config/constants';
 
 // Usage in performance tests
 expect(bundleSize).toBeLessThan(BUNDLE_SIZE_BUDGETS.MAX_MAIN_BUNDLE);
@@ -157,7 +157,7 @@ Available budgets:
 #### 3. Web Vitals Budgets
 
 ```typescript
-import { WEB_VITALS_BUDGETS } from "../config/constants";
+import { WEB_VITALS_BUDGETS } from '../config/constants';
 
 // Usage in performance tests
 expect(fcpTime).toBeLessThan(WEB_VITALS_BUDGETS.FCP_MAX);
@@ -173,7 +173,7 @@ Available budgets:
 #### 4. Viewports
 
 ```typescript
-import { VIEWPORTS } from "../config/constants";
+import { VIEWPORTS } from '../config/constants';
 
 // Usage in responsive tests
 await page.setViewportSize(VIEWPORTS.MOBILE);
@@ -200,12 +200,12 @@ Example:
 
 ```typescript
 test(
-  "Layer controls are keyboard accessible",
-  { tag: ["@e2e", "@accessibility", "@smoke"] },
-  async ({ page }) => {
-    await page.goto(API_ENDPOINTS.BASE_URL);
-    // Test implementation
-  },
+	'Layer controls are keyboard accessible',
+	{ tag: ['@e2e', '@accessibility', '@smoke'] },
+	async ({ page }) => {
+		await page.goto(API_ENDPOINTS.BASE_URL);
+		// Test implementation
+	}
 );
 ```
 
@@ -220,8 +220,8 @@ Example:
 
 ```typescript
 export const NEW_BUDGETS = {
-  MAX_RESPONSE_TIME: 1000, // 1s maximum API response time
-  MIN_FPS: 30, // Minimum acceptable frame rate for animations
+	MAX_RESPONSE_TIME: 1000, // 1s maximum API response time
+	MIN_FPS: 30, // Minimum acceptable frame rate for animations
 } as const;
 ```
 
@@ -266,14 +266,10 @@ Tags enable selective test execution in CI/CD:
 Quick validation of critical functionality:
 
 ```typescript
-test(
-  "App loads successfully",
-  { tag: ["@e2e", "@smoke"] },
-  async ({ page }) => {
-    await page.goto("/");
-    await expect(page.locator("#cesium-container")).toBeVisible();
-  },
-);
+test('App loads successfully', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
+	await page.goto('/');
+	await expect(page.locator('#cesium-container')).toBeVisible();
+});
 ```
 
 ### Pattern 2: Accessibility Tests
@@ -282,14 +278,14 @@ ARIA and keyboard navigation validation:
 
 ```typescript
 test(
-  "Layer controls keyboard navigation",
-  { tag: ["@e2e", "@accessibility"] },
-  async ({ page }) => {
-    const toggle = page.getByRole("switch", { name: "Buildings" });
-    await toggle.focus();
-    await page.keyboard.press("Space");
-    await expect(toggle).toHaveAttribute("aria-checked", "true");
-  },
+	'Layer controls keyboard navigation',
+	{ tag: ['@e2e', '@accessibility'] },
+	async ({ page }) => {
+		const toggle = page.getByRole('switch', { name: 'Buildings' });
+		await toggle.focus();
+		await page.keyboard.press('Space');
+		await expect(toggle).toHaveAttribute('aria-checked', 'true');
+	}
 );
 ```
 
@@ -298,14 +294,10 @@ test(
 Using constants for performance budgets:
 
 ```typescript
-test(
-  "Bundle size within budget",
-  { tag: ["@performance", "@e2e"] },
-  async () => {
-    const stats = await getBuildStats();
-    expect(stats.mainBundle).toBeLessThan(BUNDLE_SIZE_BUDGETS.MAX_MAIN_BUNDLE);
-  },
-);
+test('Bundle size within budget', { tag: ['@performance', '@e2e'] }, async () => {
+	const stats = await getBuildStats();
+	expect(stats.mainBundle).toBeLessThan(BUNDLE_SIZE_BUDGETS.MAX_MAIN_BUNDLE);
+});
 ```
 
 ### Pattern 4: WMS Integration Tests
@@ -313,11 +305,11 @@ test(
 API endpoint testing with constants:
 
 ```typescript
-describe("WMS Service", { tags: ["@unit", "@wms"] }, () => {
-  it("should construct correct URL", () => {
-    const url = buildWmsUrl(params);
-    expect(url).toContain(API_ENDPOINTS.WMS_PROXY);
-  });
+describe('WMS Service', { tags: ['@unit', '@wms'] }, () => {
+	it('should construct correct URL', () => {
+		const url = buildWmsUrl(params);
+		expect(url).toContain(API_ENDPOINTS.WMS_PROXY);
+	});
 });
 ```
 
@@ -335,29 +327,23 @@ When updating old tests to use tags and constants:
 **Before:**
 
 ```typescript
-test("Page loads", async ({ page }) => {
-  await page.goto("/");
-  await page.setViewportSize({ width: 1920, height: 1080 });
-  const response = await page.waitForRequest("/helsinki-wms");
-  expect(response.timing().responseEnd).toBeLessThan(3000);
+test('Page loads', async ({ page }) => {
+	await page.goto('/');
+	await page.setViewportSize({ width: 1920, height: 1080 });
+	const response = await page.waitForRequest('/helsinki-wms');
+	expect(response.timing().responseEnd).toBeLessThan(3000);
 });
 ```
 
 **After:**
 
 ```typescript
-test(
-  "Page loads",
-  { tag: ["@e2e", "@performance", "@smoke"] },
-  async ({ page }) => {
-    await page.goto("/");
-    await page.setViewportSize(VIEWPORTS.DESKTOP_HD);
-    const response = await page.waitForRequest(API_ENDPOINTS.WMS_PROXY);
-    expect(response.timing().responseEnd).toBeLessThan(
-      WEB_VITALS_BUDGETS.LCP_MAX,
-    );
-  },
-);
+test('Page loads', { tag: ['@e2e', '@performance', '@smoke'] }, async ({ page }) => {
+	await page.goto('/');
+	await page.setViewportSize(VIEWPORTS.DESKTOP_HD);
+	const response = await page.waitForRequest(API_ENDPOINTS.WMS_PROXY);
+	expect(response.timing().responseEnd).toBeLessThan(WEB_VITALS_BUDGETS.LCP_MAX);
+});
 ```
 
 ## Benefits

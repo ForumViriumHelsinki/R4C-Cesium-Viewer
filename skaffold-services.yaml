@@ -1,0 +1,33 @@
+# Persistent services module - PostgreSQL and pygeoapi
+#
+# Usage:
+#   skaffold run -f skaffold-services.yaml    # Deploy services (persist after exit)
+#   skaffold delete -f skaffold-services.yaml # Clean up services
+#
+# Then develop the app with:
+#   skaffold dev --port-forward
+#
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: r4c-services
+manifests:
+  rawYaml:
+    - k8s/namespace.yaml
+    # PostgreSQL with PostGIS
+    - k8s/postgresql-secret.yaml
+    - k8s/postgresql-configmap.yaml
+    - k8s/postgresql-headless-service.yaml
+    - k8s/postgresql-service.yaml
+    - k8s/postgresql-statefulset.yaml
+    # PyGeoAPI
+    - k8s/pygeoapi-deployment.yaml
+    # Migrations
+    - k8s/migration-job.yaml
+deploy:
+  kubectl:
+    hooks:
+      after:
+        - host:
+            command: ['sh', '-c', 'kubectl apply -f k8s/migration-secret.yaml']
+            os: [darwin, linux]

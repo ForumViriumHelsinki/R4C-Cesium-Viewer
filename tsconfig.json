@@ -1,48 +1,48 @@
 {
-  "compilerOptions": {
-    // Enable JavaScript file processing
-    "allowJs": true,
-    // Enable type-checking for better DX and error catching
-    "checkJs": true,
-    // Recommended for Vite - ensures each file can be safely transpiled in isolation
-    "isolatedModules": true,
+	"compilerOptions": {
+		// Enable JavaScript file processing
+		"allowJs": true,
+		// Enable type-checking for better DX and error catching
+		"checkJs": true,
+		// Recommended for Vite - ensures each file can be safely transpiled in isolation
+		"isolatedModules": true,
 
-    // Target modern JavaScript to match Vite config
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+		// Target modern JavaScript to match Vite config
+		"target": "ES2020",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
 
-    // Allow default imports from modules with no default export
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+		// Allow default imports from modules with no default export
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
 
-    // Skip type checking of declaration files
-    "skipLibCheck": true,
+		// Skip type checking of declaration files
+		"skipLibCheck": true,
 
-    // Granular strict mode configuration for gradual adoption
-    // We enable specific strict checks while keeping 'strict' false to avoid breaking existing code
-    "strict": false, // Keep false - enables all strict flags at once, too aggressive for existing codebase
-    "noImplicitAny": false, // TODO: Enable once JSDoc types are added to critical functions
-    "strictNullChecks": true, // ENABLED: Catches null/undefined errors, high-value check
-    "strictFunctionTypes": true, // ENABLED: Ensures function parameter compatibility, low friction
-    "strictPropertyInitialization": false, // Disabled: Many Vue components don't initialize all properties
-    "noImplicitThis": true, // ENABLED: Prevents `this` binding errors in callbacks
+		// Granular strict mode configuration for gradual adoption
+		// We enable specific strict checks while keeping 'strict' false to avoid breaking existing code
+		"strict": false, // Keep false - enables all strict flags at once, too aggressive for existing codebase
+		"noImplicitAny": false, // TODO: Enable once JSDoc types are added to critical functions
+		"strictNullChecks": true, // ENABLED: Catches null/undefined errors, high-value check
+		"strictFunctionTypes": true, // ENABLED: Ensures function parameter compatibility, low friction
+		"strictPropertyInitialization": false, // Disabled: Many Vue components don't initialize all properties
+		"noImplicitThis": true, // ENABLED: Prevents `this` binding errors in callbacks
 
-    // Resolve JSON modules
-    "resolveJsonModule": true,
+		// Resolve JSON modules
+		"resolveJsonModule": true,
 
-    // Ensure consistent casing in imports
-    "forceConsistentCasingInFileNames": true,
+		// Ensure consistent casing in imports
+		"forceConsistentCasingInFileNames": true,
 
-    // Match Vite's path alias configuration
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+		// Match Vite's path alias configuration
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		},
 
-    // Library types
-    "lib": ["ES2020", "DOM", "DOM.Iterable"]
-  },
-  "include": ["src/**/*.js", "src/**/*.vue"],
-  "exclude": ["node_modules", "dist", "tests", "**/*.spec.js", "**/*.test.js"]
+		// Library types
+		"lib": ["ES2020", "DOM", "DOM.Iterable"]
+	},
+	"include": ["src/**/*.js", "src/**/*.vue"],
+	"exclude": ["node_modules", "dist", "tests", "**/*.spec.js", "**/*.test.js"]
 }
