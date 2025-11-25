@@ -88,6 +88,13 @@ export default class HSYBuilding {
 						data,
 						'Buildings ' + targetPostalCode
 					);
+
+					// Handle empty results gracefully
+					if (!entities || entities.length === 0) {
+						console.log(`[HSYBuilding] ℹ️ No buildings found for postal code ${targetPostalCode}`);
+						return [];
+					}
+
 					this.setHSYBuildingAttributes(data, entities);
 
 					console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer');

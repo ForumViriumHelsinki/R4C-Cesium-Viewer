@@ -187,6 +187,48 @@ export default class DataSource {
 	 */
 	async addDataSourceWithPolygonFix(data, name) {
 		return new Promise((resolve, reject) => {
+			// Validate data is not null/undefined
+			if (!data) {
+				console.warn(`[DATASOURCE CREATE] No data provided for "${name}", returning empty array`);
+				resolve([]);
+				return;
+			}
+
+			// Validate GeoJSON structure has required 'type' property
+			if (!data.type) {
+				console.error(
+					`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": missing 'type' property`,
+					data
+				);
+				reject(
+					new Error(`Invalid GeoJSON structure: missing 'type' property for data source "${name}"`)
+				);
+				return;
+			}
+
+			// Validate GeoJSON has features array
+			if (!Array.isArray(data.features)) {
+				console.error(
+					`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": 'features' is not an array`,
+					data
+				);
+				reject(
+					new Error(
+						`Invalid GeoJSON structure: 'features' must be an array for data source "${name}"`
+					)
+				);
+				return;
+			}
+
+			// Handle empty features array - log and return gracefully
+			if (data.features.length === 0) {
+				console.warn(
+					`[DATASOURCE CREATE] No features in GeoJSON for "${name}", returning empty array`
+				);
+				resolve([]);
+				return;
+			}
+
 			// DIAGNOSTIC: Log incoming data
 			console.log(
 				`%c[DATASOURCE CREATE] Creating datasource "${name}" with ${data.features?.length || 0} features`,
@@ -201,13 +243,14 @@ export default class DataSource {
 			})
 				.then(async (loadedData) => {
 					// DIAGNOSTIC: Check for existing datasources before removal
-					const existingDatasources = this.store.cesiumViewer?.dataSources?._dataSources?.filter(
-						ds => ds.name?.startsWith(name)
-					) || [];
+					const existingDatasources =
+						this.store.cesiumViewer?.dataSources?._dataSources?.filter((ds) =>
+							ds.name?.startsWith(name)
+						) || [];
 
 					if (existingDatasources.length > 0) {
 						console.log(
-							`[DATASOURCE CREATE] ⚠️ Removing ${existingDatasources.length} existing datasource(s): [${existingDatasources.map(ds => ds.name).join(', ')}]`
+							`[DATASOURCE CREATE] ⚠️ Removing ${existingDatasources.length} existing datasource(s): [${existingDatasources.map((ds) => ds.name).join(', ')}]`
 						);
 					}
 

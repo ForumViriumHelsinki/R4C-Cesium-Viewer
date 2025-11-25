@@ -191,6 +191,14 @@ class UnifiedLoader {
 	async processData(data, processor, layerId, metadata = {}) {
 		if (!processor || !data) return;
 
+		// Auto-fix GeoJSON missing type property
+		if (data.features && !data.type) {
+			console.warn(
+				`[UnifiedLoader] GeoJSON data for ${layerId} missing 'type' property, auto-fixing to 'FeatureCollection'`
+			);
+			data.type = 'FeatureCollection';
+		}
+
 		try {
 			// For large datasets, process in batches to avoid blocking
 			// Only batch if progressive mode is enabled - non-progressive processors
