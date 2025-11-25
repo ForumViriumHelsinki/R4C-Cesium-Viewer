@@ -132,15 +132,9 @@
 					v-if="searchQuery.length > 2 && !hasResults"
 					class="no-results"
 				>
-					<v-icon class="mb-2">
-mdi-map-search
-</v-icon>
-					<p class="text-body-2">
-No results found for "{{ searchQuery }}"
-</p>
-					<p class="text-caption">
-Try searching by address, postal code, or area name
-</p>
+					<v-icon class="mb-2"> mdi-map-search </v-icon>
+					<p class="text-body-2">No results found for "{{ searchQuery }}"</p>
+					<p class="text-caption">Try searching by address, postal code, or area name</p>
 				</div>
 
 				<!-- Search Tips -->
@@ -148,12 +142,8 @@ Try searching by address, postal code, or area name
 					v-if="searchQuery.length <= 2"
 					class="search-tips"
 				>
-					<v-icon class="mb-2">
-mdi-lightbulb-outline
-</v-icon>
-					<p class="text-body-2">
-Search examples:
-</p>
+					<v-icon class="mb-2"> mdi-lightbulb-outline </v-icon>
+					<p class="text-body-2">Search examples:</p>
 					<v-chip
 						size="small"
 						class="ma-1"
@@ -194,6 +184,56 @@ Search examples:
 </template>
 
 <script setup>
+/**
+ * @component UnifiedSearch
+ * @description Unified search interface with Digitransit API integration for address and postal code search.
+ *
+ * Provides a comprehensive search experience that handles both address geocoding via Digitransit API
+ * and local postal code area search from cached data. Features intelligent search type detection,
+ * real-time results, and visual indicators for vegetation coverage in postal code areas.
+ *
+ * **Features:**
+ * - Dual search modes: Address (via Digitransit API) and Postal Code (local data)
+ * - Intelligent query type detection (numeric vs text)
+ * - Real-time search results with debouncing
+ * - Keyboard navigation (Enter to select first result)
+ * - Visual vegetation indicators for postal code areas
+ * - View-specific filtering (Helsinki vs Capital Region)
+ * - Quick focus action for current selection
+ * - Search tips and examples
+ * - No results fallback messaging
+ *
+ * **Search Modes:**
+ * - **Address Search**: Geocodes addresses using Digitransit API, returns coordinates and postal codes
+ * - **Postal Code Search**: Searches local postal code data with vegetation statistics
+ * - **Area Name Search**: Searches by postal code area names (e.g., "Keskusta")
+ *
+ * **Digitransit Integration:**
+ * Uses `/digitransit/geocoding/v1/autocomplete` endpoint for address suggestions.
+ * Results are filtered based on current view (Helsinki vs Capital Region).
+ *
+ * **Store Integration:**
+ * - `globalStore` - Postal code, zone name, view state
+ * - `toggleStore` - Helsinki view flag for result filtering
+ * - `propsStore` - Postal code data with vegetation statistics
+ *
+ * **Service Integration:**
+ * - `Camera` - Camera positioning for selected locations
+ * - `FeaturePicker` - Postal code data loading and selection
+ *
+ * **Event Emissions:**
+ * - Listens: None
+ * - Emits: 'geocodingPrintEvent' (via eventBus) - When address is selected
+ *
+ * **Vegetation Color Coding:**
+ * - Green: ≥50% vegetation coverage
+ * - Orange: 30-49% vegetation coverage
+ * - Red: <30% vegetation coverage
+ *
+ * @example
+ * <UnifiedSearch />
+ */
+
 import { ref, computed, watch } from 'vue';
 import { useGlobalStore } from '../stores/globalStore';
 import { useToggleStore } from '../stores/toggleStore';
@@ -202,10 +242,28 @@ import Camera from '../services/camera';
 import FeaturePicker from '../services/featurepicker';
 import { eventBus } from '../services/eventEmitter';
 
-// State
+/**
+ * Search query state
+ * @type {import('vue').Ref<string>}
+ */
 const searchQuery = ref('');
+
+/**
+ * Results dropdown visibility
+ * @type {import('vue').Ref<boolean>}
+ */
 const showResults = ref(false);
+
+/**
+ * Address search results from Digitransit API
+ * @type {import('vue').Ref<Array>}
+ */
 const addressResults = ref([]);
+
+/**
+ * Loading state for API requests
+ * @type {import('vue').Ref<boolean>}
+ */
 const isLoading = ref(false);
 
 // Stores and services
@@ -215,11 +273,18 @@ const propsStore = usePropsStore();
 const cameraService = new Camera();
 const featurePicker = new FeaturePicker();
 
-// Computed properties
+/**
+ * Dynamic search placeholder text
+ * @type {import('vue').ComputedRef<string>}
+ */
 const searchPlaceholder = computed(() => {
 	return 'Search by address, postal code, or area name...';
 });
 
+/**
+ * Current selection summary for quick actions
+ * @type {import('vue').ComputedRef<{name: string} | null>}
+ */
 const currentSelection = computed(() => {
 	const postalCode = globalStore.postalcode;
 	const areaName = globalStore.nameOfZone;
@@ -229,7 +294,14 @@ const currentSelection = computed(() => {
 	return null;
 });
 
-// Get postal code data from store
+/**
+ * Extracts postal code data from store entities
+ *
+ * Transforms Cesium entity properties into searchable postal code objects
+ * with vegetation and area statistics.
+ *
+ * @type {import('vue').ComputedRef<Array<{posno: string, nimi: string, kunta: string, vegetation_percentage: number, trees_percentage: number, building_percentage: number}>>}
+ */
 const postalCodeData = computed(() => {
 	const data = propsStore.postalCodeData;
 	if (!data || !data.entities) return [];
@@ -250,7 +322,14 @@ const postalCodeData = computed(() => {
 		.filter((item) => item.posno && item.nimi);
 });
 
-// Filter postal codes based on search query
+/**
+ * Filters postal code results based on search query
+ *
+ * Supports numeric postal code search and text-based area name search.
+ * Prioritizes postal code matches for numeric queries.
+ *
+ * @type {import('vue').ComputedRef<Array>}
+ */
 const postalCodeResults = computed(() => {
 	if (!searchQuery.value || searchQuery.value.length < 2) return [];
 
@@ -276,23 +355,45 @@ const postalCodeResults = computed(() => {
 		.slice(0, 10); // Limit results
 });
 
+/**
+ * Checks if any results are available
+ * @type {import('vue').ComputedRef<boolean>}
+ */
 const hasResults = computed(() => {
 	return addressResults.value.length > 0 || postalCodeResults.value.length > 0;
 });
 
-// Get vegetation color for postal code avatars
+/**
+ * Returns color code based on vegetation percentage
+ *
+ * @param {number} percentage - Vegetation coverage percentage (0-100)
+ * @returns {string} Vuetify color name
+ */
 const getVegetationColor = (percentage) => {
 	if (percentage >= 50) return 'green';
 	if (percentage >= 30) return 'orange';
 	return 'red';
 };
 
-// Determine if input is likely a postal code
+/**
+ * Determines if query looks like a postal code
+ *
+ * @param {string} query - Search query
+ * @returns {boolean} True if query matches postal code pattern (4-5 digits)
+ */
 const isPostalCodeQuery = (query) => {
 	return /^\d{4,5}$/.test(query.trim());
 };
 
-// Handle search input
+/**
+ * Handles search input changes
+ *
+ * Routes to address search for text queries, skips API call for postal code queries.
+ * Shows results dropdown when query is long enough.
+ *
+ * @async
+ * @returns {Promise<void>}
+ */
 const handleSearch = async () => {
 	if (searchQuery.value.length < 2) {
 		showResults.value = false;
@@ -311,7 +412,15 @@ const handleSearch = async () => {
 	await fetchAddressResults();
 };
 
-// Fetch address results from geocoding API
+/**
+ * Fetches address results from Digitransit geocoding API
+ *
+ * Makes autocomplete requests to Digitransit API with the current search query.
+ * Results are filtered based on view context (Helsinki vs Capital Region).
+ *
+ * @async
+ * @returns {Promise<void>}
+ */
 const fetchAddressResults = async () => {
 	if (searchQuery.value.length < 3) return;
 
@@ -331,7 +440,15 @@ const fetchAddressResults = async () => {
 	}
 };
 
-// Process geocoding API response
+/**
+ * Processes geocoding API response features
+ *
+ * Transforms Digitransit API results into internal format and applies
+ * view-specific filtering (Helsinki only vs all regions).
+ *
+ * @param {Array} features - GeoJSON features from Digitransit API
+ * @returns {Array<{address: string, latitude: number, longitude: number, postalcode: string}>} Processed address results
+ */
 const processAddressData = (features) => {
 	let results = [];
 	features.forEach((item) => {
@@ -358,7 +475,16 @@ const processAddressData = (features) => {
 	return results.slice(0, 10); // Limit results
 };
 
-// Select address result
+/**
+ * Handles address result selection
+ *
+ * Updates global store with postal code, moves camera to location,
+ * and loads postal code data.
+ *
+ * @param {{address: string, latitude: number, longitude: number, postalcode: string}} address - Selected address object
+ * @returns {void}
+ * @fires eventBus#geocodingPrintEvent
+ */
 const selectAddress = (address) => {
 	const { latitude, longitude, postalcode } = address;
 	globalStore.setPostalCode(postalcode);
@@ -367,7 +493,15 @@ const selectAddress = (address) => {
 	showResults.value = false;
 };
 
-// Select postal code result
+/**
+ * Handles postal code area selection
+ *
+ * Updates global store, loads postal code data, and focuses camera on the area.
+ *
+ * @async
+ * @param {{posno: string, nimi: string, kunta: string}} area - Selected postal code area
+ * @returns {Promise<void>}
+ */
 const selectPostalCode = async (area) => {
 	try {
 		isLoading.value = true;
@@ -389,14 +523,26 @@ const selectPostalCode = async (area) => {
 	}
 };
 
-// Move camera and load postal code data
+/**
+ * Moves camera to coordinates and loads postal code data
+ *
+ * @param {number} longitude - Target longitude
+ * @param {number} latitude - Target latitude
+ * @returns {void}
+ * @fires eventBus#geocodingPrintEvent
+ */
 const moveCameraAndLoad = (longitude, latitude) => {
 	cameraService.setCameraView(longitude, latitude);
 	eventBus.emit('geocodingPrintEvent');
 	featurePicker.loadPostalCode();
 };
 
-// Focus camera on postal code area
+/**
+ * Focuses camera on postal code area
+ *
+ * @param {string} postalCode - Postal code to focus on
+ * @returns {void}
+ */
 const focusOnPostalCode = (postalCode) => {
 	try {
 		const camera = new Camera();
@@ -414,7 +560,13 @@ const focusOnPostalCode = (postalCode) => {
 	}
 };
 
-// Select first result when Enter is pressed
+/**
+ * Selects first available result when Enter is pressed
+ *
+ * Prioritizes address results over postal code results.
+ *
+ * @returns {void}
+ */
 const selectFirstResult = () => {
 	if (addressResults.value.length > 0) {
 		selectAddress(addressResults.value[0]);
@@ -423,19 +575,31 @@ const selectFirstResult = () => {
 	}
 };
 
-// Focus on current selection
+/**
+ * Focuses on currently selected area
+ *
+ * @returns {void}
+ */
 const focusOnCurrent = () => {
 	if (globalStore.postalcode) {
 		focusOnPostalCode(globalStore.postalcode);
 	}
 };
 
-// Close results when clicking outside
+/**
+ * Closes results dropdown (unused - placeholder for click-outside handler)
+ *
+ * @returns {void}
+ */
 const handleClickOutside = () => {
 	showResults.value = false;
 };
 
-// Watch for view changes
+/**
+ * Watches for view changes and refreshes search results
+ *
+ * Re-executes search when view changes to apply new filtering context.
+ */
 watch(
 	() => globalStore.view,
 	() => {

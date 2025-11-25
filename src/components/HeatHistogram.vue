@@ -11,12 +11,69 @@ import { usePropsStore } from '../stores/propsStore.js';
 import Plot from '../services/plot.js';
 import Building from '../services/building.js';
 
+/**
+ * @component HeatHistogram
+ * @description D3.js-powered heat distribution histogram visualization component.
+ *
+ * Creates an interactive histogram that displays the distribution of building heat exposure
+ * or surface temperatures across the selected postal code area. Uses D3.js for data visualization
+ * with dynamic color coding based on temperature ranges.
+ *
+ * **Features:**
+ * - Interactive histogram with 20 bins for temperature distribution
+ * - Color-coded bars (warm/cold palettes) based on data type and date
+ * - Clickable bars to highlight corresponding buildings on the 3D map
+ * - Tooltip on hover showing temperature ranges and building counts
+ * - Dynamic title with hyperlink to data source information
+ * - Responsive sizing based on navbar width
+ * - Automatic updates via event bus
+ *
+ * **Data Modes:**
+ * - Heat Exposure Index (0-1 range) - For capital region view
+ * - Surface Temperature (°C) - For postal code level with specific dates
+ * - Cold wave data (2021-02-18) - Uses inverted color palette
+ *
+ * **Store Integration:**
+ * - `globalStore` - View level, navbar width, heat data date, temperature ranges
+ * - `propsStore` - Heat histogram data (temperature values for all buildings)
+ *
+ * **Service Integration:**
+ * - `Plot` - D3.js chart creation and styling utilities
+ * - `Building` - Building highlighting on map interaction
+ *
+ * **Event Emissions:**
+ * - Listens: 'newHeatHistogram' (via eventBus) - Triggers histogram recreation
+ * - Emits: None
+ *
+ * **Visibility:**
+ * Only renders when `store.level === 'postalCode'` and histogram data is available.
+ *
+ * @example
+ * <HeatHistogram />
+ */
+
 export default {
 	setup() {
 		const store = useGlobalStore();
 		const plotService = new Plot();
 		const propsStore = usePropsStore();
 
+		/**
+		 * Creates histogram bars with D3.js
+		 *
+		 * Renders the histogram bars with color coding, tooltips, and click handlers
+		 * for building selection on the map.
+		 *
+		 * @param {d3.Selection} svg - D3 SVG selection
+		 * @param {Array} data - Binned histogram data from d3.histogram()
+		 * @param {d3.ScaleLinear} xScale - D3 scale for x-axis positioning
+		 * @param {d3.ScaleLinear} yScale - D3 scale for y-axis (bar heights)
+		 * @param {number} height - Chart height in pixels
+		 * @param {d3.Selection} tooltip - D3 tooltip element
+		 * @param {string} containerId - Container element ID for positioning
+		 * @param {Function} dataFormatter - Function to format tooltip content
+		 * @returns {void}
+		 */
 		const createBars = (svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter) => {
 			svg
 				.selectAll('.bar')
@@ -40,6 +97,15 @@ export default {
 				});
 		};
 
+		/**
+		 * Determines bar color based on temperature data
+		 *
+		 * Calculates the appropriate color for histogram bars using warm or cold
+		 * color palettes depending on the data type and selected date.
+		 *
+		 * @param {Object} data - Histogram bin data containing temperature values
+		 * @returns {string} RGBA color string
+		 */
 		const rgbColor = (data) => {
 			const average = calculateAverage(data);
 			const isCold = store.heatDataDate === '2021-02-18';
@@ -55,27 +121,72 @@ export default {
 			return isCold ? getColdColor(index) : getWarmColor(index);
 		};
 
+		/**
+		 * Calculates average value from histogram bin data
+		 *
+		 * @param {Array} data - Array of temperature values in the bin
+		 * @returns {number} Average temperature value, or 0 if data is empty
+		 */
 		const calculateAverage = (data) => {
 			if (!data || data.length === 0) return 0;
 			return data.reduce((sum, value) => sum + value, 0) / data.length;
 		};
 
+		/**
+		 * Calculates normalized index from temperature value
+		 *
+		 * Converts Celsius to Kelvin and normalizes to 0-1 range based on
+		 * min/max temperatures for the selected date.
+		 *
+		 * @param {number} average - Average temperature in Celsius
+		 * @param {number} minKelvin - Minimum temperature in Kelvin for date
+		 * @param {number} maxKelvin - Maximum temperature in Kelvin for date
+		 * @returns {number} Normalized index (0-1)
+		 */
 		const calculateIndex = (average, minKelvin, maxKelvin) => {
 			return (average + 273.15 - minKelvin) / (maxKelvin - minKelvin);
 		};
 
+		/**
+		 * Generates warm color palette for heat visualization
+		 *
+		 * Creates gradient from yellow to red based on temperature index.
+		 *
+		 * @param {number} index - Normalized temperature index (0-1)
+		 * @returns {string} RGBA color string
+		 */
 		const getWarmColor = (index) => {
 			const g = 255 - index * 255;
 			const a = 255 * index;
 			return `rgba(255, ${g}, 0, ${a / 255})`;
 		};
 
+		/**
+		 * Generates cold color palette for cold wave visualization
+		 *
+		 * Creates gradient from blue to cyan for cold temperature data.
+		 *
+		 * @param {number} index - Normalized temperature index (0-1)
+		 * @returns {string} RGBA color string
+		 */
 		const getColdColor = (index) => {
 			const g = 255 - (255 - index * 255);
 			const a = 1 - index;
 			return `rgba(0, ${g}, 255, ${a})`;
 		};
 
+		/**
+		 * Creates the histogram chart
+		 *
+		 * Main histogram rendering function that:
+		 * 1. Initializes the plot container
+		 * 2. Creates SVG element with proper dimensions
+		 * 3. Sets up scales and bins the data (20 bins)
+		 * 4. Creates axes and bars
+		 * 5. Adds title with data source link
+		 *
+		 * @returns {void}
+		 */
 		const createHistogram = () => {
 			const urbanHeatData = propsStore.heatHistogramData;
 
@@ -140,10 +251,23 @@ export default {
 			}
 		};
 
+		/**
+		 * Removes the histogram from the DOM
+		 *
+		 * @returns {void}
+		 */
 		const clearHistogram = () => {
 			d3.select('#heatHistogramContainer').select('svg').remove();
 		};
 
+		/**
+		 * Creates or clears histogram based on view level
+		 *
+		 * Only displays histogram when viewing postal code level data
+		 * with available heat histogram data.
+		 *
+		 * @returns {void}
+		 */
 		const newHeatHistogram = () => {
 			if (store.level === 'postalCode' && propsStore.heatHistogramData) {
 				createHistogram();

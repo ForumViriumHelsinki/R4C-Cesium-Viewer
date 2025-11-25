@@ -154,7 +154,12 @@ VITE_FEATURE_HEALTH_CHECKS=false
 		<CoolingCenterOptimiser />
 	</div>
 
-	<v-btn v-if="featureFlagStore.isEnabled('ndvi')" @click="toggleNDVI"> Toggle NDVI </v-btn>
+	<v-btn
+		v-if="featureFlagStore.isEnabled('ndvi')"
+		@click="toggleNDVI"
+	>
+		Toggle NDVI
+	</v-btn>
 </template>
 
 <script setup>
