@@ -13,12 +13,8 @@
 		>
 			<!-- Header with building icon -->
 			<div class="tooltip-header">
-				<div class="building-icon">
-🏢
-</div>
-				<div class="building-title">
-Building Details
-</div>
+				<div class="building-icon">🏢</div>
+				<div class="building-title">Building Details</div>
 			</div>
 
 			<!-- Compact data grid -->
@@ -27,9 +23,7 @@ Building Details
 					v-if="buildingAttributes.address"
 					class="data-item"
 				>
-					<div class="data-label">
-📍
-</div>
+					<div class="data-label">📍</div>
 					<div class="data-value">
 						{{ buildingAttributes.address }}
 					</div>
@@ -38,9 +32,7 @@ Building Details
 					v-if="buildingAttributes.rakennusaine_s"
 					class="data-item"
 				>
-					<div class="data-label">
-🧱
-</div>
+					<div class="data-label">🧱</div>
 					<div class="data-value">
 						{{ buildingAttributes.rakennusaine_s }}
 					</div>
@@ -49,12 +41,10 @@ Building Details
 					v-if="buildingAttributes.avg_temp_c"
 					class="data-item"
 				>
-					<div class="data-label">
-🌡️
-</div>
+					<div class="data-label">🌡️</div>
 					<div class="data-value">
 						<span class="temp-value">{{ buildingAttributes.avg_temp_c }}°C</span>
-						<span class="temp-date">({{ store.heatDataDate }})</span>
+						<span class="temp-date">({{ heatDataDate }})</span>
 					</div>
 				</div>
 			</div>
@@ -63,25 +53,26 @@ Building Details
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
-import { findAddressForBuilding } from '../services/address.js'; // Import the updated address function
-import * as Cesium from 'cesium';
+import { findAddressForBuilding } from '../services/address.js';
+import { Cartesian2, ScreenSpaceEventType } from 'cesium';
 
 export default {
 	setup() {
-		const store = useGlobalStore(); // Access Cesium viewer via global store
+		const store = useGlobalStore();
 		const viewer = store.cesiumViewer;
-		const buildingStore = useBuildingStore(); // Access Cesium viewer via global store
-		const showTooltip = ref(false); // State for whether to show the tooltip
-		const mousePosition = ref({ x: 0, y: 0 }); // Mouse cursor position
-		const buildingAttributes = ref(null); // Stores building data when hovering
-		const pickPending = ref(false); // Throttle flag for scene.pick operations
+		const buildingStore = useBuildingStore();
+		const showTooltip = ref(false);
+		const mousePosition = ref({ x: 0, y: 0 });
+		const buildingAttributes = ref(null);
+		const pickPending = ref(false);
+		const handlerRegistered = ref(false);
 
 		const tooltipStyle = computed(() => ({
 			position: 'absolute',
-			top: `${mousePosition.value.y + 15}px`, // Offset to avoid overlapping cursor
+			top: `${mousePosition.value.y + 15}px`,
 			left: `${mousePosition.value.x + 15}px`,
 			background: 'rgba(30, 30, 30, 0.95)',
 			color: 'white',
@@ -92,6 +83,14 @@ export default {
 			border: '1px solid rgba(255, 255, 255, 0.1)',
 		}));
 
+		// Computed property to check if building features are available
+		// This avoids deep-tracking the entire GeoJSON object which can cause stack overflow
+		const hasBuildingFeatures = computed(() => Boolean(buildingStore.buildingFeatures));
+
+		// Expose only the specific store property needed in the template
+		// Avoids exposing the entire store which contains circular references (cesiumViewer)
+		const heatDataDate = computed(() => store.heatDataDate);
+
 		// Function to fetch building information based on the hovered entity
 		const fetchBuildingInfo = async (entity) => {
 			try {
@@ -100,7 +99,7 @@ export default {
 				const validIdPattern = /^[0-9]{9}[A-Z]$/;
 
 				if (!entity._id || !validIdPattern.test(entity._id)) {
-					return; // Exit if the ID is invalid
+					return;
 				}
 
 				if (features) {
@@ -112,7 +111,7 @@ export default {
 						buildingAttributes.value = {
 							avg_temp_c: findAverageTempC(properties),
 							rakennusaine_s: properties.rakennusaine_s,
-							address: findAddressForBuilding(properties), // Use the updated address function
+							address: findAddressForBuilding(properties),
 						};
 						showTooltip.value = true;
 					} else {
@@ -127,28 +126,23 @@ export default {
 		const findAverageTempC = (properties) => {
 			const heatTimeseries = properties.heat_timeseries;
 			const foundEntry = heatTimeseries.find(({ date }) => date === store.heatDataDate);
-			return foundEntry ? foundEntry.avg_temp_c.toFixed(2) : 'n/a'; // Return 'n/a' if no entry is found
+			return foundEntry ? foundEntry.avg_temp_c.toFixed(2) : 'n/a';
 		};
 
 		// Handle mouse movement and check if the user is hovering over a building entity
 		// THROTTLED: Uses requestAnimationFrame to prevent DataCloneError from excessive scene.pick calls
 		const onMouseMove = (event) => {
-			// Skip if a pick operation is already queued for the next frame
 			if (pickPending.value) return;
 
 			pickPending.value = true;
 			requestAnimationFrame(() => {
 				pickPending.value = false;
 
-				const endPosition = event.endPosition; // Get endPosition from the event
-
-				// Update mouse position for tooltip
+				const endPosition = event.endPosition;
 				mousePosition.value = { x: endPosition.x, y: endPosition.y };
 
 				if (buildingStore.buildingFeatures && viewer) {
-					const pickedEntity = viewer.scene.pick(
-						new Cesium.Cartesian2(endPosition.x, endPosition.y)
-					);
+					const pickedEntity = viewer.scene.pick(new Cartesian2(endPosition.x, endPosition.y));
 
 					if (pickedEntity && pickedEntity.id) {
 						fetchBuildingInfo(pickedEntity.id);
@@ -159,29 +153,60 @@ export default {
 			});
 		};
 
-		// Set up Cesium mouse events
+		// Function to register the mouse move handler
+		const registerMouseMoveHandler = () => {
+			if (handlerRegistered.value || !viewer || !viewer.screenSpaceEventHandler) {
+				return;
+			}
+
+			viewer.screenSpaceEventHandler.setInputAction(onMouseMove, ScreenSpaceEventType.MOUSE_MOVE);
+			handlerRegistered.value = true;
+			console.log('[BuildingInformation] MOUSE_MOVE handler registered');
+		};
+
+		// Function to unregister the mouse move handler
+		const unregisterMouseMoveHandler = () => {
+			if (!handlerRegistered.value || !viewer || !viewer.screenSpaceEventHandler) {
+				return;
+			}
+
+			viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
+			handlerRegistered.value = false;
+			console.log('[BuildingInformation] MOUSE_MOVE handler unregistered');
+		};
+
+		// Watch for buildingFeatures to become available and register handler
+		// Using computed boolean to avoid deep-tracking large GeoJSON objects
+		watch(
+			hasBuildingFeatures,
+			(hasFeatures) => {
+				if (hasFeatures && !handlerRegistered.value) {
+					setTimeout(() => {
+						registerMouseMoveHandler();
+					}, 100);
+				}
+			},
+			{ immediate: true }
+		);
+
+		// Set up Cesium mouse events on mount if buildingFeatures already exists
 		onMounted(() => {
-			setTimeout(() => {
-				nextTick(() => {
-					if (buildingStore.buildingFeatures) {
-						viewer.screenSpaceEventHandler.setInputAction(
-							onMouseMove,
-							Cesium.ScreenSpaceEventType.MOUSE_MOVE
-						);
-					}
-				});
-			}, 1000); // 1000 milliseconds = 1 second delay
+			if (buildingStore.buildingFeatures) {
+				setTimeout(() => {
+					registerMouseMoveHandler();
+				}, 100);
+			}
 		});
 
 		// Clean up Cesium mouse events
 		onUnmounted(() => {
-			viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+			unregisterMouseMoveHandler();
 		});
 
 		return {
 			showTooltip,
 			tooltipStyle,
-			store,
+			heatDataDate,
 			buildingAttributes,
 		};
 	},
