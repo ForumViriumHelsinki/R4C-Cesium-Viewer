@@ -296,16 +296,12 @@ class UnifiedLoader {
 	async cacheData(layerId, url, data, ttl) {
 		try {
 			const cacheKey = this.generateCacheKey(layerId, url);
-			await cacheService.setData(
-				cacheKey,
-				{
-					data,
-					timestamp: Date.now(),
-					url,
-					layerId,
-				},
-				{ ttl }
-			);
+			// Pass raw data directly - cacheService handles its own metadata (timestamp, etc.)
+			// Avoid double-wrapping which caused GeoJSON validation failures
+			await cacheService.setData(cacheKey, data, {
+				ttl,
+				metadata: { url, layerId },
+			});
 
 			this.loadingStore.updateCacheStatus(layerId, true, Date.now());
 		} catch (error) {
