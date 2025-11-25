@@ -14,6 +14,25 @@
 import { test, expect } from "@playwright/test";
 
 /**
+ * Matches Vite build output pattern: /assets/[name].[8-char-hex-hash].[semver].[ext]
+ * This pattern is tightly coupled to vite.config.js build.rollupOptions.output (lines 23-25).
+ * Update this constant if the hash length or format changes in the Vite configuration.
+ *
+ * Pattern breakdown:
+ * - /assets/ - Asset directory prefix
+ * - [\w-]+ - Asset name (word characters and hyphens)
+ * - \.[a-f0-9]{8} - 8-character hexadecimal hash (content-based)
+ * - \.\d+\.\d+\.\d+ - Semantic version from package.json (major.minor.patch)
+ * - \.(js|css) - File extension (JavaScript or CSS)
+ */
+const HASHED_ASSET_PATTERN = /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.(js|css)/g;
+
+/**
+ * CSS-only variant of HASHED_ASSET_PATTERN for CSS-specific tests
+ */
+const HASHED_CSS_PATTERN = /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.css/g;
+
+/**
  * Helper function to assert no-cache headers
  */
 function assertNoCacheHeaders(
@@ -74,9 +93,7 @@ test.describe("Cache Header Verification", () => {
       // Look for patterns like: /assets/index.[hash].[version].js
       // Pattern matches: [name].[hash].[version].[ext] per vite.config.js:19
       // Version is semantic versioning format (e.g., 1.29.1) from package.json
-      const assetMatches = html.matchAll(
-        /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.(js|css)/g,
-      );
+      const assetMatches = html.matchAll(HASHED_ASSET_PATTERN);
       const assetPaths = Array.from(assetMatches, (match) => match[0]);
 
       // We should have at least one asset
@@ -98,9 +115,10 @@ test.describe("Cache Header Verification", () => {
         const assetPath = assetsToTest[idx];
 
         // Asset should exist
-        expect(assetResponse.status(), `Asset ${assetPath} not found`).toBe(
-          200,
-        );
+        expect(
+          assetResponse.status(),
+          `Asset ${assetPath} not found`,
+        ).toBe(200);
 
         // Check cache control headers
         const cacheControl = assetResponse.headers()["cache-control"];
@@ -120,9 +138,7 @@ test.describe("Cache Header Verification", () => {
       // Look for hashed asset filenames
       // Pattern: /assets/[name].[hash].[version].[ext] per vite.config.js:19
       // Hash is 8 hex chars, version is semantic versioning (major.minor.patch)
-      const hashedAssetPattern =
-        /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.(js|css)/;
-      const hasMatch = hashedAssetPattern.test(html);
+      const hasMatch = HASHED_ASSET_PATTERN.test(html);
 
       expect(
         hasMatch,
@@ -139,10 +155,8 @@ test.describe("Cache Header Verification", () => {
       const pageResponse = await request.get("/");
       const html = await pageResponse.text();
 
-      // Find CSS asset paths - same pattern as JS assets
-      const cssMatches = html.matchAll(
-        /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.css/g,
-      );
+      // Find CSS asset paths - CSS-specific pattern
+      const cssMatches = html.matchAll(HASHED_CSS_PATTERN);
       const cssPaths = Array.from(cssMatches, (match) => match[0]);
 
       // CSS files should exist in production build
