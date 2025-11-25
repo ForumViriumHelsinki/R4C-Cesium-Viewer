@@ -681,7 +681,10 @@ EMOTIONAL STATE: Confident, in control, efficient
   ```vue
   <template>
   	<div class="loading-progress">
-  		<v-progress-linear :model-value="loadingProgress" color="primary" />
+  		<v-progress-linear
+  			:model-value="loadingProgress"
+  			color="primary"
+  		/>
   		<span>Loading {{ currentDataset }}...</span>
   	</div>
   </template>
@@ -1298,7 +1301,12 @@ async loadPostalCodeData(postalCode) {
 
 ```vue
 <template>
-	<v-overlay :model-value="isVisible" persistent class="map-click-loading-overlay" :z-index="1000">
+	<v-overlay
+		:model-value="isVisible"
+		persistent
+		class="map-click-loading-overlay"
+		:z-index="1000"
+	>
 		<v-card
 			class="loading-card pa-6"
 			elevation="8"
@@ -1309,7 +1317,13 @@ async loadPostalCodeData(postalCode) {
 		>
 			<!-- Header -->
 			<div class="d-flex align-center mb-4">
-				<v-progress-circular indeterminate color="primary" size="32" :width="3" class="mr-4" />
+				<v-progress-circular
+					indeterminate
+					color="primary"
+					size="32"
+					:width="3"
+					class="mr-4"
+				/>
 				<div>
 					<h3 class="text-h6">
 						{{ stageText }}
@@ -1344,10 +1358,21 @@ async loadPostalCodeData(postalCode) {
 			</v-btn>
 
 			<!-- Error state -->
-			<v-alert v-if="error" type="error" variant="tonal" class="mt-4">
+			<v-alert
+				v-if="error"
+				type="error"
+				variant="tonal"
+				class="mt-4"
+			>
 				<div class="d-flex align-center justify-space-between">
 					<span>{{ error.message }}</span>
-					<v-btn size="small" variant="text" @click="handleRetry"> Retry </v-btn>
+					<v-btn
+						size="small"
+						variant="text"
+						@click="handleRetry"
+					>
+						Retry
+					</v-btn>
 				</div>
 			</v-alert>
 		</v-card>
@@ -1475,7 +1500,10 @@ export default {
 		<Loading v-if="store.isLoading" />
 
 		<!-- NEW: Map Click Loading Overlay -->
-		<MapClickLoadingOverlay @cancel="handleCancelAnimation" @retry="handleRetryLoading" />
+		<MapClickLoadingOverlay
+			@cancel="handleCancelAnimation"
+			@retry="handleRetryLoading"
+		/>
 
 		<!-- Disclaimer Popup -->
 		<DisclaimerPopup class="disclaimer-popup" />
@@ -2786,13 +2814,13 @@ Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 (linear dependencies)
 
 **Awaiting Approval:**
 
-| Role                     | Name               | Approval Date  | Signature      |
-| ------------------------ | ------------------ | -------------- | -------------- |
-| Product Owner            | ******\_\_\_****** | ****\_\_\_**** | ****\_\_\_**** |
-| UX Designer              | ******\_\_\_****** | ****\_\_\_**** | ****\_\_\_**** |
-| Engineering Lead         | ******\_\_\_****** | ****\_\_\_**** | ****\_\_\_**** |
-| QA Lead                  | ******\_\_\_****** | ****\_\_\_**** | ****\_\_\_**** |
-| Accessibility Specialist | ******\_\_\_****** | ****\_\_\_**** | ****\_\_\_**** |
+| Role                     | Name                   | Approval Date      | Signature          |
+| ------------------------ | ---------------------- | ------------------ | ------------------ |
+| Product Owner            | **\*\***\_\_\_**\*\*** | \***\*\_\_\_\*\*** | \***\*\_\_\_\*\*** |
+| UX Designer              | **\*\***\_\_\_**\*\*** | \***\*\_\_\_\*\*** | \***\*\_\_\_\*\*** |
+| Engineering Lead         | **\*\***\_\_\_**\*\*** | \***\*\_\_\_\*\*** | \***\*\_\_\_\*\*** |
+| QA Lead                  | **\*\***\_\_\_**\*\*** | \***\*\_\_\_\*\*** | \***\*\_\_\_\*\*** |
+| Accessibility Specialist | **\*\***\_\_\_**\*\*** | \***\*\_\_\_\*\*** | \***\*\_\_\_\*\*** |
 
 ---
 

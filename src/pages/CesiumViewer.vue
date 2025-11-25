@@ -23,20 +23,16 @@
 		<BuildingInformation v-if="shouldShowBuildingInformation" />
 		<!-- Error Snackbar -->
 		<v-snackbar
-v-model="errorSnackbar"
-:timeout="-1"
-color="error"
-location="top"
-multi-line
->
+			v-model="errorSnackbar"
+			:timeout="-1"
+			color="error"
+			location="top"
+			multi-line
+		>
 			<div class="d-flex align-center">
-				<v-icon class="mr-2">
-mdi-alert-circle
-</v-icon>
+				<v-icon class="mr-2"> mdi-alert-circle </v-icon>
 				<div>
-					<div class="font-weight-bold">
-Failed to Load Map Viewer
-</div>
+					<div class="font-weight-bold">Failed to Load Map Viewer</div>
 					<div class="text-caption">
 						{{ errorMessage }}
 					</div>
@@ -44,23 +40,58 @@ Failed to Load Map Viewer
 			</div>
 			<template #actions>
 				<v-btn
-variant="text"
-@click="retryInit"
->
-Retry
-</v-btn>
+					variant="text"
+					@click="retryInit"
+				>
+					Retry
+				</v-btn>
 				<v-btn
-variant="text"
-@click="errorSnackbar = false"
->
-Close
-</v-btn>
+					variant="text"
+					@click="errorSnackbar = false"
+				>
+					Close
+				</v-btn>
 			</template>
 		</v-snackbar>
 	</div>
 </template>
 
 <script>
+/**
+ * @component CesiumViewer
+ * @description Core 3D map interface using CesiumJS for climate data visualization.
+ * This is the main application entry point that initializes the Cesium viewer,
+ * handles map interactions, manages data loading, and coordinates camera movements.
+ *
+ * Features:
+ * - Lazy loading of Cesium library for better initial performance
+ * - Dynamic building loading based on viewport position and zoom level
+ * - Click and drag detection for map interaction
+ * - Camera animation with cancellation support
+ * - Viewport-based postal code detection and data loading
+ * - E2E test mode with deterministic rendering
+ * - Automatic rendering optimization when tab is hidden
+ *
+ * @example
+ * <CesiumViewer />
+ *
+ * Store Integration:
+ * - globalStore: Main application state, viewer instance, loading states
+ * - buildingStore: Building features and selection state
+ * - propsStore: Postal code data and properties
+ * - toggleStore: UI toggle states and layer visibility
+ * - socioEconomicsStore: Socioeconomic data
+ * - heatExposureStore: Heat exposure calculations
+ * - graphicsStore: Graphics quality settings
+ *
+ * Services Used:
+ * - Datasource: GeoJSON data source management
+ * - WMS: Web Map Service layer integration
+ * - Featurepicker: Entity selection and picking logic
+ * - Camera: Camera controls and positioning
+ * - Graphics: Graphics quality initialization
+ * - cacheWarmer: Background data preloading
+ */
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
@@ -118,6 +149,22 @@ export default {
 		// Reusing the same instance maintains visiblePostalCodes state across camera moves
 		let viewportFeaturepicker = null;
 
+		/**
+		 * Initializes the Cesium viewer with dynamic module loading.
+		 * Loads Cesium library and dependencies asynchronously to prevent blocking initial render.
+		 * Sets up terrain, imagery layers, camera controls, and event handlers.
+		 *
+		 * Features:
+		 * - Parallel loading of Cesium module and CSS
+		 * - Service module loading after Cesium initialization
+		 * - E2E test mode detection and configuration
+		 * - Graphics quality settings integration
+		 * - Request render mode for performance optimization
+		 * - Visibility change detection for CPU optimization
+		 *
+		 * @async
+		 * @returns {Promise<void>}
+		 */
 		const initViewer = async () => {
 			// Dynamically import Cesium and its dependencies to avoid blocking initial render
 			if (!Cesium) {
@@ -245,6 +292,12 @@ export default {
 			});
 		};
 
+		/**
+		 * Adds data source attributions to the Cesium credit display.
+		 * Credits include Helsinki Region Infoshare (HRI) and Statistics Finland.
+		 *
+		 * @returns {void}
+		 */
 		const addAttribution = () => {
 			const hriCredit = new Cesium.Credit(
 				'<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>'
@@ -256,6 +309,13 @@ export default {
 			store.cesiumViewer.creditDisplay.addStaticCredit(statsCredit);
 		};
 
+		/**
+		 * Loads postal code area boundaries from GeoJSON data.
+		 * Postal code polygons are rendered with 0.2 opacity.
+		 *
+		 * @async
+		 * @returns {Promise<void>}
+		 */
 		const addPostalCodes = async () => {
 			console.log('[CesiumViewer] 📮 Loading postal codes...');
 			const dataSourceService = new Datasource();
@@ -269,6 +329,23 @@ export default {
 			propsStore.setPostalCodeData(dataSource);
 		};
 
+		/**
+		 * Registers click event handler for feature picking on the map.
+		 * Implements drag detection to differentiate clicks from pans.
+		 * Debounces clicks to prevent rapid-fire selections.
+		 *
+		 * Drag Detection:
+		 * - Tracks mousedown position
+		 * - Calculates distance moved between mousedown and mouseup
+		 * - Ignores events where movement exceeds 5px threshold
+		 *
+		 * Click Filtering:
+		 * - Ignores clicks on control panel and time series elements
+		 * - Enforces 500ms minimum interval between picks
+		 * - Temporarily hides building info during processing
+		 *
+		 * @returns {void}
+		 */
 		const addFeaturePicker = () => {
 			const cesiumContainer = document.getElementById('cesiumContainer');
 			const featurepicker = new Featurepicker();
@@ -330,6 +407,13 @@ export default {
 			});
 		};
 
+		/**
+		 * Registers camera moveEnd event listener with debouncing.
+		 * Prevents rapid-fire viewport checks by waiting for camera to settle.
+		 * Uses 1500ms debounce delay to avoid flickering during navigation.
+		 *
+		 * @returns {void}
+		 */
 		const addCameraMoveEndListener = () => {
 			let cameraMoveTimeout = null;
 			const DEBOUNCE_DELAY_MS = 1500; // Wait 1500ms after camera stops moving to prevent blinking
@@ -354,6 +438,21 @@ export default {
 			);
 		};
 
+		/**
+		 * Handles viewport-based building loading after camera stops moving.
+		 * Only triggers at postalCode level when zoomed in sufficiently.
+		 *
+		 * Viewport Loading Logic:
+		 * - Only active at 'postalCode' level (not 'start' or 'building')
+		 * - Requires camera height below 50km threshold
+		 * - Detects visible postal codes in viewport
+		 * - Loads buildings for all visible postal codes
+		 * - Reuses FeaturePicker instance to maintain state
+		 * - Tracks loading progress and errors
+		 *
+		 * @async
+		 * @returns {Promise<void>}
+		 */
 		const handleCameraSettled = async () => {
 			// Prevent overlapping calls to avoid visibility blinking
 			// Log camera settled event for visibility debugging
@@ -436,7 +535,11 @@ export default {
 		};
 
 		/**
-		 * Handles retry of viewport-based building loading after an error
+		 * Handles retry of viewport-based building loading after an error.
+		 * Clears error state and re-triggers camera settled handler.
+		 *
+		 * @async
+		 * @returns {Promise<void>}
 		 */
 		const handleRetryViewportLoading = async () => {
 			console.log('[CesiumViewer] Retrying viewport building loading');
@@ -444,6 +547,13 @@ export default {
 			await handleCameraSettled();
 		};
 
+		/**
+		 * Retries viewer initialization after an error.
+		 * Clears error state and reloads Cesium viewer and external data.
+		 *
+		 * @async
+		 * @returns {Promise<void>}
+		 */
 		const retryInit = async () => {
 			errorSnackbar.value = false;
 			errorMessage.value = '';
@@ -457,8 +567,10 @@ export default {
 		};
 
 		/**
-		 * Handles cancellation of camera animation via ESC key or button
+		 * Handles cancellation of camera animation via ESC key or button.
 		 * Restores previous view state and resets click processing state.
+		 *
+		 * @returns {void}
 		 */
 		const handleCancelAnimation = () => {
 			console.log('[CesiumViewer] User requested animation cancellation');
@@ -482,8 +594,10 @@ export default {
 		};
 
 		/**
-		 * Handles retry of failed postal code loading
-		 * Resets error state and re-triggers data loading.
+		 * Handles retry of failed postal code loading.
+		 * Resets error state and re-triggers data loading through FeaturePicker.
+		 *
+		 * @returns {void}
 		 */
 		const handleRetryLoading = () => {
 			console.log('[CesiumViewer] User requested data loading retry');
@@ -512,8 +626,11 @@ export default {
 		};
 
 		/**
-		 * Global ESC key handler for animation cancellation
+		 * Global ESC key handler for animation cancellation.
 		 * Only active when canCancel is true to avoid interfering with other ESC key uses.
+		 *
+		 * @param {KeyboardEvent} event - Keyboard event
+		 * @returns {void}
 		 */
 		const handleGlobalEscKey = (event) => {
 			if (event.key === 'Escape' && store.clickProcessingState.canCancel) {

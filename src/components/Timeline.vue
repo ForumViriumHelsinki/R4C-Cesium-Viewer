@@ -1,24 +1,24 @@
 <template>
 	<div
-id="heatTimeseriesContainer"
-class="timeline-overlay"
->
+		id="heatTimeseriesContainer"
+		class="timeline-overlay"
+	>
 		<div class="timeline-card">
 			<div class="timeline-header">
 				<div class="timeline-title">
 					<v-icon
-class="mr-2"
-size="16"
->
-mdi-clock-outline
-</v-icon>
+						class="mr-2"
+						size="16"
+					>
+						mdi-clock-outline
+					</v-icon>
 					<span>Heat Timeline</span>
 				</div>
 				<v-chip
-size="small"
-color="primary"
-variant="tonal"
->
+					size="small"
+					color="primary"
+					variant="tonal"
+				>
 					{{ selectedDate }}
 				</v-chip>
 			</div>
@@ -52,9 +52,10 @@ variant="tonal"
 			<div class="timeline-info">
 				<span class="info-text">
 					<v-icon
-size="14"
-class="mr-1"
->mdi-information-outline</v-icon>
+						size="14"
+						class="mr-1"
+						>mdi-information-outline</v-icon
+					>
 					Use the slider to explore heat data across different time periods
 				</span>
 			</div>
@@ -70,14 +71,67 @@ import Building from '../services/building.js';
 import { eventBus } from '../services/eventEmitter.js';
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
 
+/**
+ * @component Timeline
+ * @description Temporal data selection component with glassmorphism design for exploring heat data across different time periods.
+ *
+ * Provides an interactive slider interface to navigate through historical heat exposure data from 2015 to 2025,
+ * with one projected future date (2025-07-14). Updates building heat visualizations and histograms when the
+ * selected date changes.
+ *
+ * **Features:**
+ * - Interactive timeline slider with visual date indicators
+ * - Glassmorphism card design for modern UI aesthetic
+ * - Real-time synchronization with building heat data
+ * - Automatic histogram and scatter plot updates
+ * - Responsive design with mobile support
+ * - High contrast accessibility support
+ *
+ * **Store Integration:**
+ * - `globalStore` - Heat data date management, postal code, view state
+ *
+ * **Service Integration:**
+ * - `Datasource` - Building data source management
+ * - `Building` - Heat exposure calculations and histogram updates
+ * - `cesiumEntityManager` - Entity registration for non-reactive management
+ *
+ * **Event Emissions:**
+ * - Listens: None
+ * - Emits: 'updateScatterPlot' (via eventBus) - Triggers scatter plot refresh
+ *
+ * **Available Dates:**
+ * Historical satellite data from Landsat Collection 2:
+ * - 2015-07-03 through 2024-06-26 (summer heat events)
+ * - 2025-07-14 (projected/future scenario)
+ *
+ * @example
+ * <Timeline />
+ */
+
 export default {
 	setup() {
 		const globalStore = useGlobalStore();
 		const dataSourceService = new Datasource();
 		const buildingService = new Building();
 
+		/**
+		 * Current selected date for heat data visualization
+		 * @type {import('vue').Ref<string>}
+		 * @default '2022-06-28'
+		 */
 		const selectedDate = ref('2022-06-28'); // Set default date
+
+		/**
+		 * Total number of available time points in the timeline
+		 * @type {import('vue').Ref<number>}
+		 */
 		const timelineLength = ref(0);
+
+		/**
+		 * Available heat data dates from historical satellite imagery
+		 * @type {string[]}
+		 * @const
+		 */
 		const dates = [
 			'2015-07-03',
 			'2016-06-03',
@@ -91,9 +145,21 @@ export default {
 			'2025-07-14',
 		];
 
+		/**
+		 * Current selected index in the dates array
+		 * @type {import('vue').Ref<number>}
+		 */
 		const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)); // Set default index
 
-		// Format date for display
+		/**
+		 * Formats ISO date string to localized short format
+		 *
+		 * @param {string} dateString - ISO date string (YYYY-MM-DD)
+		 * @returns {string} Formatted date (e.g., "Jun '22")
+		 *
+		 * @example
+		 * formatDate('2022-06-28') // Returns "Jun '22"
+		 */
 		const formatDate = (dateString) => {
 			const date = new Date(dateString);
 			return date.toLocaleDateString('en-US', {
@@ -102,6 +168,17 @@ export default {
 			});
 		};
 
+		/**
+		 * Updates building heat exposure visualization and related plots
+		 *
+		 * Retrieves the current building data source, applies heat exposure calculations,
+		 * updates the heat histogram, registers entities with the entity manager, and
+		 * triggers scatter plot updates.
+		 *
+		 * @fires eventBus#updateScatterPlot
+		 *
+		 * @returns {void}
+		 */
 		const updateViewAndPlots = () => {
 			const buildingsDataSource = dataSourceService.getDataSourceByName(
 				'Buildings ' + globalStore.postalcode
@@ -121,7 +198,17 @@ export default {
 			timelineLength.value = dates.length; // Set the timeline length when mounted
 		});
 
-		// Watch for changes in currentPropertyIndex
+		/**
+		 * Watches for changes in timeline slider position
+		 *
+		 * When the user changes the timeline position:
+		 * 1. Hides building info panel temporarily
+		 * 2. Updates the selected date in global store
+		 * 3. Refreshes building visualizations and plots
+		 * 4. Restores building info panel
+		 *
+		 * @listens currentPropertyIndex
+		 */
 		watch(currentPropertyIndex, (newIndex) => {
 			globalStore.setShowBuildingInfo(false);
 

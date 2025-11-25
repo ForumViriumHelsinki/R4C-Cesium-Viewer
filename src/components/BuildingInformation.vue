@@ -53,6 +53,35 @@
 </template>
 
 <script>
+/**
+ * @component BuildingInformation
+ * @description Displays a tooltip with building details when hovering over buildings in the 3D map.
+ * Shows address, construction material, and heat temperature data for hovered buildings.
+ *
+ * Features:
+ * - Mouse position tracking with throttling via requestAnimationFrame
+ * - Automatic feature lookup from building GeoJSON data
+ * - Dynamic tooltip positioning based on cursor
+ * - Validates building ID format before lookup (9 digits + letter)
+ * - Extracts temperature data from heat time series
+ * - Accessible tooltip with ARIA attributes
+ *
+ * Performance Optimizations:
+ * - Throttles scene.pick calls to prevent DataCloneError
+ * - Uses computed boolean to avoid deep-tracking large GeoJSON
+ * - Delayed handler registration to ensure Cesium is ready
+ *
+ * @example
+ * <BuildingInformation v-if="shouldShowBuildingInformation" />
+ *
+ * Store Integration:
+ * - globalStore: Cesium viewer instance, heat data date
+ * - buildingStore: Building features GeoJSON data
+ *
+ * Service Integration:
+ * - address: Finds building address from properties
+ * - Cesium: Scene picking and screen space events
+ */
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
@@ -72,6 +101,12 @@ export default {
 
 		console.log('[BuildingInformation] 🎬 Component setup started');
 
+		/**
+		 * Computed style for tooltip positioning and appearance.
+		 * Positions tooltip near cursor with offset to avoid obscuring the building.
+		 *
+		 * @type {import('vue').ComputedRef<Object>}
+		 */
 		const tooltipStyle = computed(() => ({
 			position: 'absolute',
 			top: `${mousePosition.value.y + 15}px`,
@@ -85,8 +120,12 @@ export default {
 			border: '1px solid rgba(255, 255, 255, 0.1)',
 		}));
 
-		// Computed property to check if building features are available
-		// This avoids deep-tracking the entire GeoJSON object which can cause stack overflow
+		/**
+		 * Computed property to check if building features are available.
+		 * Avoids deep-tracking the entire GeoJSON object which can cause stack overflow.
+		 *
+		 * @type {import('vue').ComputedRef<boolean>}
+		 */
 		const hasBuildingFeatures = computed(() => {
 			const hasFeatures = Boolean(buildingStore.buildingFeatures);
 			console.log('[BuildingInformation] 🔍 hasBuildingFeatures computed:', {
@@ -96,11 +135,31 @@ export default {
 			return hasFeatures;
 		});
 
-		// Expose only the specific store property needed in the template
-		// Avoids exposing the entire store which contains circular references (cesiumViewer)
+		/**
+		 * Exposes heat data date from store.
+		 * Avoids exposing the entire store which contains circular references (cesiumViewer).
+		 *
+		 * @type {import('vue').ComputedRef<string>}
+		 */
 		const heatDataDate = computed(() => store.heatDataDate);
 
-		// Function to fetch building information based on the hovered entity
+		/**
+		 * Fetches building information based on the hovered entity.
+		 * Validates entity ID, finds matching feature in GeoJSON, and extracts properties.
+		 *
+		 * ID Validation:
+		 * - Must match pattern: 9 digits followed by 1 uppercase letter
+		 * - Example: 123456789A
+		 *
+		 * Extracted Properties:
+		 * - avg_temp_c: Average temperature from heat timeseries
+		 * - rakennusaine_s: Building construction material
+		 * - address: Formatted address from properties
+		 *
+		 * @async
+		 * @param {Object} entity - Cesium entity from scene pick
+		 * @returns {Promise<void>}
+		 */
 		const fetchBuildingInfo = async (entity) => {
 			try {
 				console.log('[BuildingInformation] 🔎 fetchBuildingInfo called for entity:', entity._id);
@@ -147,14 +206,31 @@ export default {
 			}
 		};
 
+		/**
+		 * Finds average temperature from heat timeseries for the current date.
+		 * Returns formatted temperature or 'n/a' if data unavailable.
+		 *
+		 * @param {Object} properties - Building feature properties
+		 * @returns {string} Temperature in Celsius (fixed to 2 decimals) or 'n/a'
+		 */
 		const findAverageTempC = (properties) => {
 			const heatTimeseries = properties.heat_timeseries;
 			const foundEntry = heatTimeseries.find(({ date }) => date === store.heatDataDate);
 			return foundEntry ? foundEntry.avg_temp_c.toFixed(2) : 'n/a';
 		};
 
-		// Handle mouse movement and check if the user is hovering over a building entity
-		// THROTTLED: Uses requestAnimationFrame to prevent DataCloneError from excessive scene.pick calls
+		/**
+		 * Handles mouse movement and checks if the user is hovering over a building entity.
+		 * THROTTLED: Uses requestAnimationFrame to prevent DataCloneError from excessive scene.pick calls.
+		 *
+		 * Throttling Strategy:
+		 * - Sets pickPending flag to true
+		 * - Schedules pick for next animation frame
+		 * - Ignores additional move events until pick completes
+		 *
+		 * @param {Object} event - Cesium screen space event with endPosition
+		 * @returns {void}
+		 */
 		const onMouseMove = (event) => {
 			if (pickPending.value) return;
 
@@ -177,7 +253,12 @@ export default {
 			});
 		};
 
-		// Function to register the mouse move handler
+		/**
+		 * Registers the mouse move handler with Cesium's screen space event handler.
+		 * Includes safety checks to ensure viewer and handler are ready.
+		 *
+		 * @returns {void}
+		 */
 		const registerMouseMoveHandler = () => {
 			if (handlerRegistered.value || !viewer || !viewer.screenSpaceEventHandler) {
 				console.log('[BuildingInformation] ⚠️ Cannot register handler:', {
@@ -193,7 +274,11 @@ export default {
 			console.log('[BuildingInformation] ✅ MOUSE_MOVE handler registered successfully');
 		};
 
-		// Function to unregister the mouse move handler
+		/**
+		 * Unregisters the mouse move handler from Cesium's screen space event handler.
+		 *
+		 * @returns {void}
+		 */
 		const unregisterMouseMoveHandler = () => {
 			if (!handlerRegistered.value || !viewer || !viewer.screenSpaceEventHandler) {
 				return;
@@ -204,8 +289,12 @@ export default {
 			console.log('[BuildingInformation] 🗑️ MOUSE_MOVE handler unregistered');
 		};
 
-		// Watch for buildingFeatures to become available and register handler
-		// Using computed boolean to avoid deep-tracking large GeoJSON objects
+		/**
+		 * Watches for buildingFeatures to become available and registers handler.
+		 * Using computed boolean to avoid deep-tracking large GeoJSON objects.
+		 *
+		 * Includes 100ms delay to ensure Cesium viewer is fully initialized.
+		 */
 		watch(
 			hasBuildingFeatures,
 			(hasFeatures) => {
@@ -226,7 +315,10 @@ export default {
 			{ immediate: true }
 		);
 
-		// Set up Cesium mouse events on mount if buildingFeatures already exists
+		/**
+		 * Sets up Cesium mouse events on mount if buildingFeatures already exists.
+		 * Includes 100ms delay for Cesium viewer initialization.
+		 */
 		onMounted(() => {
 			console.log(
 				'[BuildingInformation] 🔧 Component mounted. buildingFeatures exists:',
@@ -243,7 +335,9 @@ export default {
 			}
 		});
 
-		// Clean up Cesium mouse events
+		/**
+		 * Cleans up Cesium mouse events on component unmount.
+		 */
 		onUnmounted(() => {
 			console.log('[BuildingInformation] 🧹 Component unmounted');
 			unregisterMouseMoveHandler();

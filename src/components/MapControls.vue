@@ -2,16 +2,14 @@
 	<div class="map-controls">
 		<!-- Data Layers -->
 		<div class="control-group">
-			<h4 class="control-group-title">
-Data Layers
-</h4>
+			<h4 class="control-group-title">Data Layers</h4>
 
 			<!-- Trees -->
 			<v-tooltip
-v-if="view !== 'grid' && postalCode"
-location="left"
-max-width="200"
->
+				v-if="view !== 'grid' && postalCode"
+				location="left"
+				max-width="200"
+			>
 				<template #activator="{ props }">
 					<div
 						v-bind="props"
@@ -52,15 +50,15 @@ max-width="200"
 
 			<!-- Vegetation (Helsinki only) -->
 			<v-tooltip
-v-if="helsinkiView"
-location="left"
-max-width="200"
->
+				v-if="helsinkiView"
+				location="left"
+				max-width="200"
+			>
 				<template #activator="{ props }">
 					<div
-v-bind="props"
-class="control-item"
->
+						v-bind="props"
+						class="control-item"
+					>
 						<v-switch
 							v-model="showVegetation"
 							color="green"
@@ -86,15 +84,15 @@ class="control-item"
 
 			<!-- Other Nature (Helsinki only) -->
 			<v-tooltip
-v-if="helsinkiView"
-location="left"
-max-width="200"
->
+				v-if="helsinkiView"
+				location="left"
+				max-width="200"
+			>
 				<template #activator="{ props }">
 					<div
-v-bind="props"
-class="control-item"
->
+						v-bind="props"
+						class="control-item"
+					>
 						<v-switch
 							v-model="showOtherNature"
 							color="green"
@@ -110,15 +108,15 @@ class="control-item"
 
 			<!-- HSY Land Cover -->
 			<v-tooltip
-v-if="!helsinkiView"
-location="left"
-max-width="200"
->
+				v-if="!helsinkiView"
+				location="left"
+				max-width="200"
+			>
 				<template #activator="{ props }">
 					<div
-v-bind="props"
-class="control-item"
->
+						v-bind="props"
+						class="control-item"
+					>
 						<v-switch
 							v-model="landCover"
 							color="brown"
@@ -134,14 +132,14 @@ class="control-item"
 
 			<!-- NDVI -->
 			<v-tooltip
-location="left"
-max-width="200"
->
+				location="left"
+				max-width="200"
+			>
 				<template #activator="{ props }">
 					<div
-v-bind="props"
-class="control-item"
->
+						v-bind="props"
+						class="control-item"
+					>
 						<v-switch
 							v-model="ndvi"
 							color="green"
@@ -158,23 +156,21 @@ class="control-item"
 
 		<!-- Building Filters -->
 		<div
-v-if="view !== 'grid'"
-class="control-group"
->
-			<h4 class="control-group-title">
-Building Filters
-</h4>
+			v-if="view !== 'grid'"
+			class="control-group"
+		>
+			<h4 class="control-group-title">Building Filters</h4>
 
 			<!-- Public/Social Buildings Filter -->
 			<v-tooltip
-location="left"
-max-width="200"
->
+				location="left"
+				max-width="200"
+			>
 				<template #activator="{ props }">
 					<div
-v-bind="props"
-class="control-item"
->
+						v-bind="props"
+						class="control-item"
+					>
 						<v-switch
 							v-model="hideNonSote"
 							color="blue"
@@ -198,15 +194,15 @@ class="control-item"
 
 			<!-- Building Age Filter (Helsinki only) -->
 			<v-tooltip
-v-if="helsinkiView"
-location="left"
-max-width="200"
->
+				v-if="helsinkiView"
+				location="left"
+				max-width="200"
+			>
 				<template #activator="{ props }">
 					<div
-v-bind="props"
-class="control-item"
->
+						v-bind="props"
+						class="control-item"
+					>
 						<v-switch
 							v-model="hideNewBuildings"
 							color="orange"
@@ -222,14 +218,14 @@ class="control-item"
 
 			<!-- Building Height Filter -->
 			<v-tooltip
-location="left"
-max-width="200"
->
+				location="left"
+				max-width="200"
+			>
 				<template #activator="{ props }">
 					<div
-v-bind="props"
-class="control-item"
->
+						v-bind="props"
+						class="control-item"
+					>
 						<v-switch
 							v-model="hideLow"
 							color="purple"
@@ -253,9 +249,7 @@ class="control-item"
 			class="layer-warning"
 		>
 			<template #prepend>
-				<v-icon size="small">
-mdi-alert
-</v-icon>
+				<v-icon size="small"> mdi-alert </v-icon>
 			</template>
 			NDVI and Land Cover cannot be active simultaneously
 		</v-alert>
@@ -263,6 +257,70 @@ mdi-alert
 </template>
 
 <script setup>
+/**
+ * @component MapControls
+ * @description Comprehensive map layer and building filter controls component.
+ *
+ * Provides an organized interface for toggling various data layers (trees, vegetation, land cover, NDVI)
+ * and applying building filters (public buildings, age, height). Includes intelligent layer conflict
+ * detection and resolution, progressive loading indicators, and caching support.
+ *
+ * **Features:**
+ * - Data layer toggles (Trees, Vegetation, Other Nature, Land Cover, NDVI)
+ * - Building filters (Public/Social, Age, Height)
+ * - Layer conflict detection and auto-resolution (NDVI vs Land Cover)
+ * - Progressive loading indicators with progress tracking
+ * - Cache status indicators for faster subsequent loads
+ * - View-specific layer visibility (Helsinki vs Capital Region)
+ * - Tooltips with detailed descriptions
+ * - Responsive design with mobile support
+ * - High contrast accessibility support
+ *
+ * **Data Layers:**
+ * - **Trees**: Individual tree entities by height categories (postal code level)
+ * - **Vegetation**: Vegetation areas and green spaces (Helsinki only)
+ * - **Other Nature**: Parks, forests, natural areas (Helsinki only)
+ * - **Land Cover**: HSY land use classification (Capital Region)
+ * - **NDVI**: Normalized Difference Vegetation Index satellite imagery
+ *
+ * **Building Filters:**
+ * - **Public/Social**: Filter for public buildings or social/healthcare facilities
+ * - **Pre-2018**: Show only buildings constructed before summer 2018 (Helsinki only)
+ * - **Tall Buildings**: Filter out low-rise structures
+ *
+ * **Store Integration:**
+ * - `toggleStore` - Layer and filter toggle states
+ * - `globalStore` - View state, postal code, cesium viewer reference
+ * - `loadingStore` - Layer loading state, progress, cache status
+ *
+ * **Service Integration:**
+ * - `Datasource` - Data source visibility management
+ * - `Building` - Building filtering and entity management
+ * - `Tree` - Tree data loading and visualization
+ * - `Vegetation` - Vegetation area loading
+ * - `Othernature` - Natural area loading
+ * - `Wms` - WMS layer management
+ * - `landcover` - HSY land cover layer management
+ * - `tiffImagery` - NDVI GeoTIFF layer management
+ * - `backgroundPreloader` - Layer usage tracking for preloading
+ *
+ * **Event Emissions:**
+ * - Listens: None
+ * - Emits: 'updateScatterPlot' (via eventBus) - When building filters change
+ * - Emits: 'addNDVI' (via eventBus) - When NDVI layer is enabled
+ *
+ * **Layer Conflicts:**
+ * NDVI and Land Cover layers cannot be active simultaneously. When one is enabled,
+ * the other is automatically disabled with proper cleanup.
+ *
+ * **Caching:**
+ * Tree and vegetation data are cached per postal code for faster subsequent loads.
+ * Cache indicators show when cached data is available.
+ *
+ * @example
+ * <MapControls />
+ */
+
 import { ref, computed, onMounted, watch } from 'vue';
 import { useToggleStore } from '../stores/toggleStore';
 import { useGlobalStore } from '../stores/globalStore';
@@ -283,24 +341,35 @@ const toggleStore = useToggleStore();
 const store = useGlobalStore();
 const loadingStore = useLoadingStore();
 
-// Reactive refs for layer toggles
+/**
+ * Reactive state for data layer toggles
+ * Synchronized with toggleStore for persistence
+ */
 const showVegetation = ref(toggleStore.showVegetation);
 const showOtherNature = ref(toggleStore.showOtherNature);
 const showTrees = ref(toggleStore.showTrees);
 const landCover = ref(toggleStore.landCover);
 const ndvi = ref(toggleStore.ndvi);
 
-// Reactive refs for building filters
+/**
+ * Reactive state for building filter toggles
+ * Synchronized with toggleStore for persistence
+ */
 const hideNonSote = ref(toggleStore.hideNonSote);
 const hideNewBuildings = ref(toggleStore.hideNewBuildings);
 const hideLow = ref(toggleStore.hideLow);
 
-// Computed properties
+/**
+ * Computed properties for view-specific features
+ */
 const helsinkiView = computed(() => toggleStore.helsinkiView);
 const view = computed(() => store.view);
 const postalCode = computed(() => store.postalcode);
 
-// Layer conflict detection
+/**
+ * Detects if NDVI and Land Cover are both active
+ * @type {import('vue').ComputedRef<boolean>}
+ */
 const hasLayerConflict = computed(() => {
 	return landCover.value && ndvi.value;
 });
@@ -309,7 +378,16 @@ const hasLayerConflict = computed(() => {
 let buildingService = null;
 let dataSourceService = null;
 
-// Layer management functions
+/**
+ * Disables conflicting layer when a new layer is activated
+ *
+ * NDVI and Land Cover layers cannot be active simultaneously. This function
+ * ensures only one is active at a time by disabling the conflicting layer
+ * and cleaning up its imagery.
+ *
+ * @param {'ndvi' | 'landcover'} layer - The layer being activated
+ * @returns {void}
+ */
 const disableOtherLayer = (layer) => {
 	if (layer === 'ndvi') {
 		landCover.value = false;
@@ -325,6 +403,16 @@ const disableOtherLayer = (layer) => {
 	}
 };
 
+/**
+ * Loads or toggles vegetation layer visibility
+ *
+ * For Helsinki view only. Loads vegetation areas for the current postal code
+ * on first activation, then toggles visibility on subsequent activations.
+ * Includes cache support and loading indicators.
+ *
+ * @async
+ * @returns {Promise<void>}
+ */
 const loadVegetation = async () => {
 	toggleStore.setShowVegetation(showVegetation.value);
 
@@ -350,6 +438,22 @@ const loadVegetation = async () => {
 	}
 };
 
+/**
+ * Loads or toggles tree layer visibility
+ *
+ * Loads individual tree entities categorized by height (4 categories: 221-224)
+ * on first activation, then toggles visibility on subsequent activations.
+ * Includes progressive loading indicators, cache support, and background preloading tracking.
+ *
+ * **Tree Height Categories:**
+ * - 221: Very short trees
+ * - 222: Short trees
+ * - 223: Medium trees
+ * - 224: Tall trees
+ *
+ * @async
+ * @returns {Promise<void>}
+ */
 const loadTrees = async () => {
 	toggleStore.setShowTrees(showTrees.value);
 
@@ -434,6 +538,14 @@ const loadTrees = async () => {
 	}
 };
 
+/**
+ * Loads or toggles other nature layer visibility
+ *
+ * For Helsinki view only. Loads parks, forests, and other natural areas
+ * for the current postal code on first activation.
+ *
+ * @returns {void}
+ */
 const loadOtherNature = () => {
 	toggleStore.setShowOtherNature(showOtherNature.value);
 
@@ -449,6 +561,14 @@ const loadOtherNature = () => {
 	}
 };
 
+/**
+ * Toggles HSY land cover layer
+ *
+ * For Capital Region view. Shows land use classification with different
+ * surface types. Automatically disables NDVI if active (conflict resolution).
+ *
+ * @returns {void}
+ */
 const addLandCover = () => {
 	if (landCover.value && ndvi.value) disableOtherLayer('landcover');
 
@@ -460,6 +580,15 @@ const addLandCover = () => {
 	}
 };
 
+/**
+ * Toggles NDVI satellite imagery layer
+ *
+ * Normalized Difference Vegetation Index shows vegetation density from satellite data.
+ * Automatically disables Land Cover if active (conflict resolution).
+ *
+ * @fires eventBus#addNDVI
+ * @returns {void}
+ */
 const toggleNDVI = () => {
 	if (ndvi.value && landCover.value) disableOtherLayer('ndvi');
 
@@ -473,6 +602,19 @@ const toggleNDVI = () => {
 	}
 };
 
+/**
+ * Applies building filters to the current postal code
+ *
+ * Filters buildings based on active filter criteria:
+ * - Public/Social buildings (SOTE)
+ * - Building age (Pre-2018)
+ * - Building height (Tall buildings)
+ *
+ * Updates scatter plot after filtering.
+ *
+ * @fires eventBus#updateScatterPlot
+ * @returns {void}
+ */
 const filterBuildings = () => {
 	toggleStore.setHideNonSote(hideNonSote.value);
 	toggleStore.setHideNewBuildings(hideNewBuildings.value);
@@ -492,7 +634,11 @@ const filterBuildings = () => {
 	}
 };
 
-// Reset functions
+/**
+ * Resets all building filters to default (all visible)
+ *
+ * @returns {void}
+ */
 const resetFilters = () => {
 	hideNonSote.value = false;
 	hideNewBuildings.value = false;
@@ -500,9 +646,12 @@ const resetFilters = () => {
 	filterBuildings();
 };
 
-// Watchers
-// Only reset building filters on view change - layer states are preserved
-// View-specific visibility is handled by v-if directives in the template
+/**
+ * Watches for view changes and resets building filters
+ *
+ * Layer states are preserved across view changes - only building filters are reset.
+ * View-specific layer visibility is handled by v-if directives in the template.
+ */
 watch(
 	() => store.view,
 	() => {
@@ -510,7 +659,11 @@ watch(
 	}
 );
 
-// Sync with store changes
+/**
+ * Synchronizes local landCover state with store changes
+ *
+ * Ensures the UI stays in sync with store state when changed externally.
+ */
 watch(
 	() => toggleStore.landCover,
 	(newValue) => {

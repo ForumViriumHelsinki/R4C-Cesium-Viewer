@@ -1,15 +1,37 @@
 /**
+ * @module services/cacheWarmer
  * Cache Warmer Service
+ *
  * Proactively preloads frequently-accessed data into IndexedDB cache
  * to provide instant loading for common user workflows.
  *
- * Strategy:
- * - Warm critical data on app startup (non-blocking)
- * - Predictively warm nearby postal codes during navigation
- * - Prioritize popular areas (Helsinki city center)
- * - Use low-priority background requests
+ * Features:
+ * - Proactive cache warming on app startup (non-blocking)
+ * - Predictive warming of nearby postal codes during navigation
+ * - Popular area prioritization (Helsinki city center focus)
+ * - Low-priority background requests using requestIdleCallback
+ * - Duplicate warming prevention via tracking
  *
- * @class CacheWarmer
+ * Strategy:
+ * - **Startup warming**: Popular postal codes (00100, 00150, 00170, etc.)
+ * - **Predictive warming**: Adjacent postal codes when user navigates
+ * - **Background loading**: Uses idle time to avoid UI impact
+ * - **Smart tracking**: Prevents redundant warming of same areas
+ *
+ * Performance Considerations:
+ * - Uses requestIdleCallback for minimal UI impact (5-second timeout)
+ * - Falls back to setTimeout for browser compatibility
+ * - Silent failure for background operations (logs debug, doesn't throw)
+ * - Tracks warmed postal codes to prevent duplicate requests
+ *
+ * Integration:
+ * - Works with unifiedLoader for actual data loading
+ * - Coordinates with urlStore for correct WFS endpoint selection
+ * - Respects toggleStore helsinkiView setting
+ *
+ * @see {@link module:services/unifiedLoader}
+ * @see {@link module:stores/urlStore}
+ * @see {@link module:stores/toggleStore}
  */
 
 import unifiedLoader from './unifiedLoader.js';
@@ -17,16 +39,43 @@ import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useURLStore } from '../stores/urlStore.js';
 
+/**
+ * Warming result object
+ * @typedef {Object} WarmingResult
+ * @property {string} type - Data type warmed ('buildings', 'trees', etc.)
+ * @property {string} postalCode - Postal code warmed
+ * @property {boolean} cached - Whether data was successfully cached
+ * @property {number} [age] - Age of existing cache in milliseconds (if already cached)
+ */
+
+/**
+ * CacheWarmer Class
+ * Manages proactive cache warming for frequently-accessed geospatial data.
+ *
+ * @class CacheWarmer
+ */
 class CacheWarmer {
+	/**
+	 * Creates a CacheWarmer instance
+	 * Initializes store references and defines popular postal codes for warming.
+	 */
 	constructor() {
+		/** @type {Object|null} Lazy-loaded global store instance */
 		this._store = null;
+		/** @type {Object|null} Lazy-loaded toggle store instance */
 		this._toggleStore = null;
+		/** @type {Object|null} Lazy-loaded URL store instance */
 		this._urlStore = null;
+		/** @type {boolean} Flag to prevent concurrent warming operations */
 		this.warmingInProgress = false;
+		/** @type {Set<string>} Tracking set of already-warmed postal codes */
 		this.warmedPostalCodes = new Set();
 
-		// Most popular postal codes in Helsinki (based on typical usage patterns)
-		// These will be warmed on app startup
+		/**
+		 * Most popular postal codes in Helsinki (based on typical usage patterns)
+		 * These will be warmed on app startup for instant loading.
+		 * @type {string[]}
+		 */
 		this.popularPostalCodes = [
 			'00100', // Helsinki center (Keskusta)
 			'00150', // Punavuori
@@ -40,18 +89,30 @@ class CacheWarmer {
 	}
 
 	/**
-	 * Lazy-loaded store getters to avoid initialization issues
+	 * Get global store instance (lazy-loaded to avoid initialization issues)
+	 * @returns {Object} Global store instance
+	 * @private
 	 */
 	get store() {
 		if (!this._store) this._store = useGlobalStore();
 		return this._store;
 	}
 
+	/**
+	 * Get toggle store instance (lazy-loaded to avoid initialization issues)
+	 * @returns {Object} Toggle store instance
+	 * @private
+	 */
 	get toggleStore() {
 		if (!this._toggleStore) this._toggleStore = useToggleStore();
 		return this._toggleStore;
 	}
 
+	/**
+	 * Get URL store instance (lazy-loaded to avoid initialization issues)
+	 * @returns {Object} URL store instance
+	 * @private
+	 */
 	get urlStore() {
 		if (!this._urlStore) this._urlStore = useURLStore();
 		return this._urlStore;
@@ -60,9 +121,20 @@ class CacheWarmer {
 	/**
 	 * Warm critical data caches on app startup
 	 * Runs in background using requestIdleCallback to avoid blocking UI.
-	 * Loads building data for most popular postal codes.
+	 * Loads building data for most popular postal codes into IndexedDB.
+	 *
+	 * Warming Strategy:
+	 * - Loads building data only (most frequently accessed)
+	 * - Uses low-priority background loading
+	 * - 1-hour cache TTL (shorter than normal for freshness)
+	 * - Continues on failure (doesn't block app startup)
 	 *
 	 * @returns {Promise<void>}
+	 *
+	 * @example
+	 * // Call on app initialization
+	 * import cacheWarmer from './services/cacheWarmer.js';
+	 * cacheWarmer.warmCriticalData();
 	 */
 	async warmCriticalData() {
 		if (this.warmingInProgress) {
@@ -87,9 +159,11 @@ class CacheWarmer {
 
 	/**
 	 * Preload building data for most popular postal codes
-	 * Loads data into cache only (doesn't process or display)
+	 * Loads data into cache only (doesn't process or display).
+	 * Uses Promise.allSettled to continue warming even if some areas fail.
 	 *
 	 * @returns {Promise<void>}
+	 * @private
 	 */
 	async warmPopularBuildingData() {
 		console.log(
@@ -112,9 +186,25 @@ class CacheWarmer {
 	/**
 	 * Warm building data for a specific postal code
 	 * Loads data into cache without processing or displaying.
+	 * Automatically selects correct WFS endpoint based on helsinkiView setting.
 	 *
-	 * @param {string} postalCode - Postal code to warm
+	 * Data Sources:
+	 * - **Helsinki view**: Helsinki WFS (kartta.hel.fi/ws/geoserver)
+	 * - **Capital Region view**: HSY buildings via urlStore
+	 *
+	 * Cache Configuration:
+	 * - 1-hour TTL (shorter for frequently-accessed data)
+	 * - Single retry attempt (background operation)
+	 * - Low priority, background mode
+	 * - Null processor (cache only, no rendering)
+	 *
+	 * @param {string} postalCode - Postal code to warm (e.g., '00100')
 	 * @returns {Promise<void>}
+	 * @throws {Error} If warming fails (re-thrown for Promise.allSettled tracking)
+	 *
+	 * @example
+	 * // Warm specific postal code
+	 * await cacheWarmer.warmBuildingsForPostalCode('00100');
 	 */
 	async warmBuildingsForPostalCode(postalCode) {
 		// Skip if already warmed
@@ -175,11 +265,23 @@ class CacheWarmer {
 
 	/**
 	 * Predictive warming: preload buildings for nearby postal codes
-	 * Called when user navigates to a postal code, warms adjacent areas.
+	 * Called when user navigates to a postal code, warms adjacent areas
+	 * for instant loading if user navigates nearby.
+	 *
+	 * Warming Strategy:
+	 * - Filters out current and already-warmed postal codes
+	 * - Uses requestIdleCallback for zero UI impact
+	 * - 5-second timeout guarantee (falls back if idle time unavailable)
+	 * - Falls back to 100ms setTimeout for unsupported browsers
+	 * - Silent failure (debug logs only)
 	 *
 	 * @param {string} currentPostalCode - Currently selected postal code
-	 * @param {Array<string>} nearbyPostalCodes - Nearby postal codes to warm
+	 * @param {string[]} nearbyPostalCodes - Nearby postal codes to warm
 	 * @returns {void}
+	 *
+	 * @example
+	 * // Warm adjacent areas when user selects postal code
+	 * cacheWarmer.warmNearbyPostalCodes('00100', ['00150', '00170', '00180']);
 	 */
 	warmNearbyPostalCodes(currentPostalCode, nearbyPostalCodes) {
 		console.log('[CacheWarmer] 🎯 Predictively warming nearby postal codes...');
@@ -226,9 +328,17 @@ class CacheWarmer {
 
 	/**
 	 * Clear warmed postal codes tracking
-	 * Useful when switching between Helsinki/Capital Region views.
+	 * Resets the internal tracking set, allowing postal codes to be warmed again.
+	 * Useful when switching between Helsinki/Capital Region views since
+	 * data sources are different.
 	 *
 	 * @returns {void}
+	 *
+	 * @example
+	 * // Clear tracking when view mode changes
+	 * watch(() => toggleStore.helsinkiView, () => {
+	 *   cacheWarmer.clearWarmedTracking();
+	 * });
 	 */
 	clearWarmedTracking() {
 		console.log('[CacheWarmer] 🧹 Clearing warmed postal codes tracking');
