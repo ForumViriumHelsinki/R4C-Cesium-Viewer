@@ -2,10 +2,7 @@
 	"mcpServers": {
 		"github": {
 			"command": "go",
-			"args": ["run", "github.com/github/github-mcp-server/cmd/github-mcp-server@latest", "stdio"],
-			"env": {
-				"GITHUB_TOKEN": "${GITHUB_TOKEN}"
-			}
+			"args": ["run", "github.com/github/github-mcp-server/cmd/github-mcp-server@latest", "stdio"]
 		},
 		"sentry": {
 			"command": "npx",
@@ -36,10 +33,7 @@
 		},
 		"graphiti-memory": {
 			"command": "npx",
-			"args": ["-y", "@getzep/graphiti-mcp-server"],
-			"env": {
-				"GRAPHITI_API_KEY": "${GRAPHITI_API_KEY}"
-			}
+			"args": ["-y", "@getzep/graphiti-mcp-server"]
 		},
 		"sequential-thinking": {
 			"command": "npx",
