@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.30.0...r4c-cesium-viewer-v1.31.0) (2025-11-25)
+
+
+### Features
+
+* UI improvements with enhanced accessibility and loading states ([#380](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/380)) ([d2625af](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d2625af06c83475765db484c7c2cd0a91d4358ca))
+
 ## [1.30.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.29.1...r4c-cesium-viewer-v1.30.0) (2025-11-12)
 
 ### Features
