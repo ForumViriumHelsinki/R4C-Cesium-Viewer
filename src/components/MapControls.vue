@@ -484,13 +484,6 @@ const filterBuildings = () => {
 };
 
 // Reset functions
-const resetLayers = () => {
-  showVegetation.value = false;
-  showOtherNature.value = false;
-  showTrees.value = false;
-  landCover.value = false;
-};
-
 const resetFilters = () => {
   hideNonSote.value = false;
   hideNewBuildings.value = false;
@@ -499,8 +492,9 @@ const resetFilters = () => {
 };
 
 // Watchers
+// Only reset building filters on view change - layer states are preserved
+// View-specific visibility is handled by v-if directives in the template
 watch(() => store.view, () => {
-  resetLayers();
   resetFilters();
 });
 

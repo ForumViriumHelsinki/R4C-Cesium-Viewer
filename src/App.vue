@@ -14,7 +14,6 @@ class="d-flex align-center py-0"
 					<v-btn
 						v-if="currentLevel === 'building'"
 						icon
-						size="small"
 						aria-label="Return to postal code level"
 						@click="returnToPostalCode"
 					>
@@ -23,7 +22,6 @@ class="d-flex align-center py-0"
 
 					<v-btn
 						icon
-						size="small"
 						aria-label="Sign out"
 						@click="signOut"
 					>
@@ -33,7 +31,6 @@ class="d-flex align-center py-0"
 					<v-btn
 						v-if="currentLevel !== 'start'"
 						icon
-						size="small"
 						aria-label="Rotate camera view 180 degrees"
 						@click="rotateCamera"
 					>
@@ -54,18 +51,19 @@ class="d-flex align-center py-0"
 				<!-- Control Panel Toggle -->
 				<v-btn
 					variant="outlined"
-					size="small"
 					aria-label="Toggle control panel"
 					prepend-icon="mdi-tune"
+					class="control-panel-toggle"
 					@click="sidebarVisible = !sidebarVisible"
 				>
-					{{ sidebarVisible ? 'Hide' : 'Show' }} Controls
+					<span class="d-none d-sm-inline">{{ sidebarVisible ? 'Hide' : 'Show' }} Controls</span>
+					<span class="d-inline d-sm-none">{{ sidebarVisible ? 'Hide' : 'Show' }}</span>
 				</v-btn>
 			</v-container>
 		</v-app-bar>
 
 		<!-- Enhanced Control Panel -->
-		<ControlPanel v-if="sidebarVisible" />
+		<ControlPanel v-model="sidebarVisible" />
 
 		<v-main>
 			<CesiumViewer />
@@ -289,6 +287,46 @@ onMounted(async () => {
 	right: 296px; /* 280px sidebar width + 16px margin */
 }
 
+/* Navigation buttons - ensure touch targets meet WCAG 2.5.5 */
+.navigation-buttons {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.navigation-buttons .v-btn {
+	/* Default Vuetify icon button is 40px, which is close to 44px minimum */
+	min-width: 44px;
+	min-height: 44px;
+}
+
+.control-panel-toggle {
+	min-height: 44px;
+}
+
+/* Focus visible styles for accessibility */
+.v-btn:focus-visible {
+	outline: 2px solid #1976d2;
+	outline-offset: 2px;
+}
+
+/* Touch optimization - prevent double-tap zoom delays */
+.v-btn,
+.v-slider,
+.v-checkbox,
+.v-switch,
+.v-radio,
+button,
+a {
+	touch-action: manipulation;
+}
+
+/* Allow pinch-zoom on the map but prevent double-tap zoom */
+.cesium-viewer,
+.cesium-widget {
+	touch-action: pan-x pan-y pinch-zoom;
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
 	.minimal-disclaimer {
@@ -310,6 +348,31 @@ onMounted(async () => {
 	/* On mobile, sidebar covers full screen so keep indicator on right */
 	.status-indicator-container.sidebar-open {
 		right: 8px;
+	}
+
+	/* Reduce gap on mobile for space efficiency */
+	.navigation-buttons {
+		gap: 2px;
+	}
+
+	/* Ensure control panel toggle is touch-friendly */
+	.control-panel-toggle {
+		min-width: 44px;
+		padding-left: 8px;
+		padding-right: 8px;
+	}
+}
+
+/* Very small mobile - further optimize */
+@media (max-width: 480px) {
+	.top-nav {
+		padding: 0 4px;
+	}
+
+	/* Keep 44px minimum for WCAG 2.5.5 compliance even on very small screens */
+	.navigation-buttons .v-btn {
+		min-width: 44px;
+		min-height: 44px;
 	}
 }
 </style>

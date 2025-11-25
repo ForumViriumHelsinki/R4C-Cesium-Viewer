@@ -22,10 +22,7 @@ import type {
 } from "@playwright/test/reporter";
 import * as fs from "fs";
 import * as path from "path";
-import {
-  PERFORMANCE_CONFIG,
-  percentToDecimal,
-} from "../performance-config.js";
+import { PERFORMANCE_CONFIG, percentToDecimal } from "../performance-config.js";
 
 interface PerformanceBaseline {
   total: number;
@@ -170,8 +167,7 @@ class PerformanceReporter implements Reporter {
     const baseline = this.baselines[suiteName];
     if (baseline && baseline.individualTests[testName]) {
       const baselineDuration = baseline.individualTests[testName];
-      const percentIncrease =
-        (duration - baselineDuration) / baselineDuration;
+      const percentIncrease = (duration - baselineDuration) / baselineDuration;
 
       if (percentIncrease > this.WARNING_THRESHOLD) {
         const regression = {
@@ -208,8 +204,7 @@ class PerformanceReporter implements Reporter {
         : 0;
 
     const slowestTest = allTests.reduce(
-      (slowest, test) =>
-        test.duration > slowest.duration ? test : slowest,
+      (slowest, test) => (test.duration > slowest.duration ? test : slowest),
       { name: "N/A", duration: 0 },
     );
 
@@ -243,9 +238,7 @@ class PerformanceReporter implements Reporter {
     try {
       fs.writeFileSync(reportFile, JSON.stringify(report, null, 2));
     } catch (error) {
-      console.error(
-        `[Performance Reporter] Failed to write report: ${error}`,
-      );
+      console.error(`[Performance Reporter] Failed to write report: ${error}`);
       throw error;
     }
 
@@ -328,9 +321,7 @@ class PerformanceReporter implements Reporter {
 
       // Display validation warnings if any
       if (warnings.length > 0) {
-        console.log(
-          "\n[Performance Reporter] Baseline Validation Warnings:",
-        );
+        console.log("\n[Performance Reporter] Baseline Validation Warnings:");
         warnings.forEach((warning) => console.log(warning));
       }
     } catch (error) {
@@ -346,7 +337,9 @@ class PerformanceReporter implements Reporter {
     console.log("PERFORMANCE REPORT");
     console.log("=".repeat(80));
 
-    console.log(`\nTotal Duration: ${Math.round(report.totalDuration / 1000)}s`);
+    console.log(
+      `\nTotal Duration: ${Math.round(report.totalDuration / 1000)}s`,
+    );
     console.log(`Total Tests: ${report.summary.totalTests}`);
     console.log(`Passed: ${report.summary.passedTests}`);
     console.log(`Failed: ${report.summary.failedTests}`);
@@ -365,9 +358,7 @@ class PerformanceReporter implements Reporter {
         const isCritical =
           regression.percentIncrease > this.CRITICAL_THRESHOLD * 100;
         const indicator = isCritical ? "🔴" : "🟡";
-        console.log(
-          `${indicator} ${regression.suite} > ${regression.test}`,
-        );
+        console.log(`${indicator} ${regression.suite} > ${regression.test}`);
         console.log(
           `   Baseline: ${Math.round(regression.baseline)}ms | Actual: ${Math.round(regression.actual)}ms | +${Math.round(regression.percentIncrease)}%`,
         );
@@ -396,9 +387,7 @@ class PerformanceReporter implements Reporter {
       console.log("\n✅ No performance regressions detected.");
     }
 
-    console.log(
-      `\nDetailed report: test-results/performance-report.json\n`,
-    );
+    console.log(`\nDetailed report: test-results/performance-report.json\n`);
   }
 }
 

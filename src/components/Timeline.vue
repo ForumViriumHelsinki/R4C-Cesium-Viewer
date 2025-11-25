@@ -156,7 +156,7 @@ export default {
   padding: 16px 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(0, 0, 0, 0.1);
-  min-width: 400px;
+  min-width: min(400px, calc(100vw - 32px));
   max-width: 500px;
   pointer-events: auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

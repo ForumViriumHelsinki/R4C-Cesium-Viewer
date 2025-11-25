@@ -77,9 +77,13 @@ export class AccessibilityTestHelpers {
           console.warn(`Scroll failed for ${elementName}, continuing anyway`);
         }
         // Wait for element to stabilize
-        await this.page.waitForLoadState('domcontentloaded', {
-          timeout: TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt
-        }).catch((e) => console.warn('Element stabilization timeout:', e.message));
+        await this.page
+          .waitForLoadState("domcontentloaded", {
+            timeout: TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt,
+          })
+          .catch((e) =>
+            console.warn("Element stabilization timeout:", e.message),
+          );
       }
     }
   }
@@ -126,7 +130,9 @@ export class AccessibilityTestHelpers {
           );
         }
         // Wait with exponential backoff before retry
-        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+        await this.page.waitForTimeout(
+          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
+        );
       }
     }
   }
@@ -173,7 +179,9 @@ export class AccessibilityTestHelpers {
           );
         }
         // Wait with exponential backoff before retry
-        await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+        await this.page.waitForTimeout(
+          TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt,
+        );
       }
     }
   }
@@ -316,16 +324,11 @@ export class AccessibilityTestHelpers {
           }
         }
 
-        // Wait for Cesium scene to be completely idle
-        // This ensures tiles are loaded, camera is stable, and frames are rendering consistently
-        await waitForSceneIdle(this.page, {
-          timeout: 8000,
-          idleFramesRequired: 2,
-          checkTiles: true,
-        });
-
-        // Additional stability wait for UI updates
-        await this.page.waitForTimeout(300);
+        // Wait for UI to update after view switch
+        // Note: View switching is synchronous state changes in requestRenderMode,
+        // so we just need a brief wait for the UI to reflect the new state
+        // We don't wait for network idle because CesiumJS continuously loads tiles
+        await this.page.waitForTimeout(500);
 
         // Verify the selection with multiple strategies
         const verificationResults = await Promise.all([
@@ -469,11 +472,8 @@ export class AccessibilityTestHelpers {
             await this.page.waitForTimeout(500 * attempt);
 
             // Wait for map to finish loading
-            await this.page
-              .waitForLoadState("networkidle", { timeout: 3000 })
-              .catch((e) =>
-                console.warn("Network idle wait failed:", e.message),
-              );
+            // Note: CesiumJS continuously loads tiles, so we use a simple timeout
+            await this.page.waitForTimeout(500);
 
             // Simulate clicking on the center of the map where postal codes are
             // Use multiple click positions to increase success rate
@@ -522,14 +522,8 @@ export class AccessibilityTestHelpers {
 
             if (activated) {
               // Additional wait for data to load
-              await this.page
-                .waitForLoadState("networkidle", { timeout: 5000 })
-                .catch((e) =>
-                  console.warn(
-                    "Data load network idle wait failed:",
-                    e.message,
-                  ),
-                );
+              // Note: CesiumJS continuously loads tiles, so we use a simple timeout
+              await this.page.waitForTimeout(800);
 
               // Wait for timeline component to fully initialize (critical for timeline tests)
               // At postal code level, the timeline should become visible with interactive elements
@@ -635,11 +629,8 @@ export class AccessibilityTestHelpers {
             await this.page.waitForTimeout(500 * attempt);
 
             // Wait for map to finish loading
-            await this.page
-              .waitForLoadState("networkidle", { timeout: 3000 })
-              .catch((e) =>
-                console.warn("Network idle wait failed:", e.message),
-              );
+            // Note: CesiumJS continuously loads tiles, so we use a simple timeout
+            await this.page.waitForTimeout(500);
 
             // Click on a building (use multiple positions to increase success rate)
             const buildingPositions = [
@@ -679,14 +670,8 @@ export class AccessibilityTestHelpers {
 
             if (activated) {
               // Additional wait for data to load
-              await this.page
-                .waitForLoadState("networkidle", { timeout: 5000 })
-                .catch((e) =>
-                  console.warn(
-                    "Data load network idle wait failed:",
-                    e.message,
-                  ),
-                );
+              // Note: CesiumJS continuously loads tiles, so we use a simple timeout
+              await this.page.waitForTimeout(800);
 
               // Wait for timeline component to remain fully interactive (critical for timeline tests)
               // At building level, the timeline should still be visible and functional
@@ -1164,12 +1149,8 @@ export class AccessibilityTestHelpers {
     });
 
     // Wait for any final initialization processes
-    await this.page
-      .waitForLoadState("networkidle", { timeout: 5000 })
-      .catch((e) => {
-        // Network idle is optional - continue if it doesn't settle
-        console.warn("Final network idle wait failed:", e.message);
-      });
+    // Note: CesiumJS continuously loads tiles, so we use a simple timeout
+    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -1231,7 +1212,9 @@ export class AccessibilityTestHelpers {
       for (const selector of overlaySelectors) {
         // Filter for visible elements only - this prevents counting DOM elements
         // that are hidden via CSS injection (e.g., .v-overlay__scrim { display: none !important; })
-        const visibleLocator = this.page.locator(selector).locator("visible=true");
+        const visibleLocator = this.page
+          .locator(selector)
+          .locator("visible=true");
         const count = await visibleLocator.count();
 
         if (count > 0) {

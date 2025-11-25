@@ -39,7 +39,9 @@ test("Building properties", async ({ page }) => {
     },
   });
   // Wait for building properties button to be available
-  await page.waitForSelector('button:has-text("Building properties")', { state: 'visible' });
+  await page.waitForSelector('button:has-text("Building properties")', {
+    state: "visible",
+  });
   await page.getByRole("button", { name: "Building properties" }).click();
   await expect(page.locator("#printContainer")).toContainText("Talousrakennus");
   await expect(page.locator("canvas")).toBeVisible();

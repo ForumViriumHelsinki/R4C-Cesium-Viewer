@@ -320,7 +320,11 @@ export default {
     const setCapitalRegion = async () => {
       store.setView('capitalRegion');
       toggleStore.setHelsinkiView(false);
-      store.level === 'start' && toggleStore.reset() && await clearLandCover();
+      // Don't reset all toggles - preserve data layer states (landCover, ndvi, etc.)
+      // Only clear landCover imagery if at start level
+      if (store.level === 'start') {
+        await clearLandCover();
+      }
       await dataSourceService.removeDataSourcesAndEntities();
       await dataSourceService.loadGeoJsonDataSource(
         0.2,
@@ -349,7 +353,7 @@ export default {
 
     const helsinkiHeat = async () => {
       const checked = activeViewMode.value === 'helsinkiHeat';
-      toggleStore.reset();
+      // Don't reset all toggles - preserve data layer states (landCover, ndvi, etc.)
       toggleStore.setHelsinkiView(checked);
       toggleStore.setCapitalRegionCold(false);
       store.setView('helsinki');
