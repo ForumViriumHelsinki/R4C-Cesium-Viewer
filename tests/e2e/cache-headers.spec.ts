@@ -28,6 +28,11 @@ import { test, expect } from "@playwright/test";
 const HASHED_ASSET_PATTERN = /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.(js|css)/g;
 
 /**
+ * CSS-only variant of HASHED_ASSET_PATTERN for CSS-specific tests
+ */
+const HASHED_CSS_PATTERN = /\/assets\/[\w-]+\.[a-f0-9]{8}\.\d+\.\d+\.\d+\.css/g;
+
+/**
  * Helper function to assert no-cache headers
  */
 function assertNoCacheHeaders(
@@ -150,8 +155,8 @@ test.describe("Cache Header Verification", () => {
       const pageResponse = await request.get("/");
       const html = await pageResponse.text();
 
-      // Find CSS asset paths - same pattern as JS assets
-      const cssMatches = html.matchAll(HASHED_ASSET_PATTERN);
+      // Find CSS asset paths - CSS-specific pattern
+      const cssMatches = html.matchAll(HASHED_CSS_PATTERN);
       const cssPaths = Array.from(cssMatches, (match) => match[0]);
 
       // CSS files should exist in production build
