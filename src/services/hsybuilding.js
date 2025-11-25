@@ -84,9 +84,21 @@ export default class HSYBuilding {
 						await this.setGridAttributes(data.features);
 					}
 
+					// Determine initial visibility:
+					// - If loading for the currently selected postal code, show immediately (user clicked it)
+					// - If loading for viewport-based preloading (different postal code), start hidden
+					//   and let viewport culling logic control visibility
+					const isSelectedPostalCode = targetPostalCode === this.store.postalcode;
+					const initialVisibility = isSelectedPostalCode;
+
+					console.log(
+						`[HSYBuilding] 📍 Loading buildings for ${targetPostalCode}, selected=${this.store.postalcode}, initialVisibility=${initialVisibility}`
+					);
+
 					let entities = await this.datasourceService.addDataSourceWithPolygonFix(
 						data,
-						'Buildings ' + targetPostalCode
+						'Buildings ' + targetPostalCode,
+						initialVisibility
 					);
 
 					// Handle empty results gracefully
@@ -95,6 +107,11 @@ export default class HSYBuilding {
 						return [];
 					}
 
+					console.log(
+						'[HSYBuilding] 🔧 Calling setHSYBuildingAttributes with',
+						entities.length,
+						'entities'
+					);
 					this.setHSYBuildingAttributes(data, entities);
 
 					console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer');
@@ -403,6 +420,8 @@ export default class HSYBuilding {
 	}
 
 	async calculateHSYUrbanHeatData(data, entities) {
+		console.log('[HSYBuilding] 🌡️ Calculating urban heat data for', entities.length, 'entities');
+
 		const heatExposureData = this.urbanHeatService.calculateAverageExposure(data.features);
 		const targetDate = this.store.heatDataDate;
 
@@ -419,14 +438,40 @@ export default class HSYBuilding {
 			})
 			.filter((temp) => temp !== null); // Keep only valid temperature values
 
+		console.log('[HSYBuilding] 📊 Calling setBuildingPropsAndEmitEvent with data:', {
+			entities: entities.length,
+			heatExposureData: heatExposureData.length,
+			avgTempCList: avgTempCList.length,
+			dataFeatures: data.features?.length || 0,
+		});
+
 		setBuildingPropsAndEmitEvent(entities, heatExposureData, avgTempCList, data);
 	}
 
 	setHSYBuildingAttributes(data, entities) {
+		console.log('[HSYBuilding] 🏗️ setHSYBuildingAttributes called with:', {
+			dataFeatures: data.features?.length || 0,
+			entities: entities.length,
+			hasPostalCode: Boolean(this.store.postalcode),
+			postalCode: this.store.postalcode,
+		});
+
 		this.buildingService.setHeatExposureToBuildings(entities);
 		this.setHSYBuildingsHeight(entities);
+
+		// Always set buildingFeatures for hover tooltip functionality
+		// This was previously only set inside calculateHSYUrbanHeatData which required postal code
+		const buildingStore = useBuildingStore();
+		console.log('[HSYBuilding] 🎯 Setting buildingFeatures in store (always, for hover support)');
+		buildingStore.setBuildingFeatures(data);
+
 		if (this.store.postalcode) {
+			console.log('[HSYBuilding] ✓ Postal code exists, calling calculateHSYUrbanHeatData');
 			this.calculateHSYUrbanHeatData(data, entities);
+		} else {
+			console.log(
+				'[HSYBuilding] ⚠️ No postal code, skipping calculateHSYUrbanHeatData (but buildingFeatures is set)'
+			);
 		}
 	}
 
@@ -461,12 +506,34 @@ export default class HSYBuilding {
  * @private
  */
 const setBuildingPropsAndEmitEvent = (entities, heatExposureData, avg_temp_cList, data) => {
+	console.log('[HSYBuilding] 💾 setBuildingPropsAndEmitEvent called with:', {
+		entities: entities.length,
+		heatExposureDataLength: heatExposureData.length,
+		avgTempCListLength: avg_temp_cList.length,
+		dataType: data?.type,
+		dataFeaturesLength: data?.features?.length || 0,
+	});
+
 	const propsStore = usePropsStore();
 	// Register entities with cesiumEntityManager for non-reactive entity management
 	cesiumEntityManager.registerBuildingEntities(entities);
 	propsStore.setPostalcodeHeatTimeseries(heatExposureData[1]);
 	propsStore.setHeatHistogramData(avg_temp_cList);
+
 	const buildingStore = useBuildingStore();
+	console.log('[HSYBuilding] 🎯 Setting buildingFeatures in store. Data structure:', {
+		type: data?.type,
+		featuresCount: data?.features?.length,
+		firstFeatureId: data?.features?.[0]?.id,
+		firstFeatureProps: Object.keys(data?.features?.[0]?.properties || {}),
+	});
+
 	buildingStore.setBuildingFeatures(data);
+
+	console.log('[HSYBuilding] ✅ buildingFeatures set in store. Verifying:', {
+		storeHasFeatures: Boolean(buildingStore.buildingFeatures),
+		storeFeaturesCount: buildingStore.buildingFeatures?.features?.length,
+	});
+
 	eventBus.emit('showCapitalRegion');
 };

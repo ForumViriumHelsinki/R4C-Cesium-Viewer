@@ -183,9 +183,10 @@ export default class DataSource {
 	 *
 	 * @param {Object|string} data - GeoJSON data object or URL string
 	 * @param {string} name - Name for the data source
+	 * @param {boolean} [initialVisibility=true] - Initial visibility state for the datasource. Set to false for viewport-culled layers.
 	 * @returns {Promise<Array<Cesium.Entity>>} Promise resolving to array of entities
 	 */
-	async addDataSourceWithPolygonFix(data, name) {
+	async addDataSourceWithPolygonFix(data, name, initialVisibility = true) {
 		return new Promise((resolve, reject) => {
 			// Validate data is not null/undefined
 			if (!data) {
@@ -269,9 +270,12 @@ export default class DataSource {
 
 					this.store.cesiumViewer.dataSources.add(loadedData);
 
+					// Set initial visibility (for viewport-based culling, buildings start hidden)
+					loadedData.show = initialVisibility;
+
 					// DIAGNOSTIC: Confirm datasource added
 					console.log(
-						`[DATASOURCE CREATE] ✅ Added "${name}" with ${loadedData.entities.values.length} entities, show=${loadedData.show}`
+						`[DATASOURCE CREATE] ✅ Added "${name}" with ${loadedData.entities.values.length} entities, show=${loadedData.show} (initialVisibility=${initialVisibility})`
 					);
 
 					resolve(loadedData.entities.values);

@@ -10,6 +10,7 @@ import ElementsDisplay from './elementsDisplay.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
+import { useBuildingStore } from '../stores/buildingStore.js';
 import Helsinki from './helsinki.js';
 import CapitalRegion from './capitalRegion.js';
 import Sensor from './sensor.js';
@@ -290,8 +291,10 @@ export default class FeaturePicker {
 			this.elementsDisplayService.setSwitchViewElementsDisplay('inline-block');
 			this.elementsDisplayService.setViewDisplay('none');
 
-			// Clean up previous data sources
+			// Clean up previous data sources and building features
 			this.datasourceService.removeDataSourcesAndEntities();
+			const buildingStore = useBuildingStore();
+			buildingStore.clearBuildingFeatures();
 
 			// Load region-specific data with performance tracking
 			performance.mark('data-load-start');
@@ -804,12 +807,13 @@ export default class FeaturePicker {
 
 			// DIAGNOSTIC: Compare previous vs new visible postal codes
 			const previousCodes = Array.from(this.visiblePostalCodes);
+			console.log(`%c[STATE DEBUG] Visibility transition:`, 'color: cyan; font-weight: bold');
 			console.log(
-				`%c[STATE DEBUG] Visibility transition:`,
-				'color: cyan; font-weight: bold'
+				`  Previous visible: [${previousCodes.join(', ')}] (${previousCodes.length} codes)`
 			);
-			console.log(`  Previous visible: [${previousCodes.join(', ')}] (${previousCodes.length} codes)`);
-			console.log(`  New visible: [${visiblePostalCodes.join(', ')}] (${visiblePostalCodes.length} codes)`);
+			console.log(
+				`  New visible: [${visiblePostalCodes.join(', ')}] (${visiblePostalCodes.length} codes)`
+			);
 			console.log(`  Current selected: ${currentPostalCode || 'none'}`);
 
 			// Collect all visibility changes to batch them
@@ -974,7 +978,7 @@ export default class FeaturePicker {
 	 */
 	_dumpBuildingDatasourceState() {
 		const allDatasources = this.viewer?.dataSources?._dataSources || [];
-		const buildingDatasources = allDatasources.filter(ds => ds.name?.startsWith('Buildings '));
+		const buildingDatasources = allDatasources.filter((ds) => ds.name?.startsWith('Buildings '));
 
 		console.log(
 			`%c[DATASOURCE STATE] Total building datasources: ${buildingDatasources.length}`,
@@ -1001,9 +1005,11 @@ export default class FeaturePicker {
 
 		// Check for mismatches
 		const trackedSet = this.visiblePostalCodes;
-		const actualVisible = buildingDatasources.filter(ds => ds.show).map(ds => ds.name.replace('Buildings ', ''));
-		const mismatches = actualVisible.filter(code => !trackedSet.has(code));
-		const missing = Array.from(trackedSet).filter(code => !actualVisible.includes(code));
+		const actualVisible = buildingDatasources
+			.filter((ds) => ds.show)
+			.map((ds) => ds.name.replace('Buildings ', ''));
+		const mismatches = actualVisible.filter((code) => !trackedSet.has(code));
+		const missing = Array.from(trackedSet).filter((code) => !actualVisible.includes(code));
 
 		if (mismatches.length > 0 || missing.length > 0) {
 			console.warn(

@@ -329,8 +329,10 @@ export default class Building {
 	}
 
 	/**
-	 * Finds building datasource and resets building entities polygon
-	 *
+	 * Finds building datasource and resets building entities polygon styling.
+	 * Uses setBuildingEntityPolygon() to properly handle both Helsinki and Capital Region views,
+	 * preventing wireframe appearance that occurred when Capital Region buildings
+	 * (without _avgheatexposuretobuilding property) were set to transparent color.
 	 */
 	resetBuildingEntities() {
 		// Find the data source for buildings
@@ -341,27 +343,28 @@ export default class Building {
 		// If the data source isn't found, exit the function
 		if (!buildingDataSource) return;
 
+		console.log(
+			'[Building] 🔄 Resetting building entities for postal code:',
+			this.store.postalcode
+		);
+
 		const buildingEntities = buildingDataSource.entities.values;
 		for (let i = 0; i < buildingEntities.length; i++) {
 			let entity = buildingEntities[i];
 
+			// Reset outline styling
 			entity.polygon.outlineColor = Cesium.Color.BLACK;
 			entity.polygon.outlineWidth = 3;
 
-			if (entity.polygon) {
-				const color = entity._properties._avgheatexposuretobuilding
-					? new Cesium.Color(
-							1,
-							1 - entity._properties._avgheatexposuretobuilding._value,
-							0,
-							entity._properties._avgheatexposuretobuilding._value
-						)
-					: new Cesium.Color(0, 0, 0, 0);
+			// Ensure fill is enabled to prevent wireframe appearance
+			entity.polygon.fill = true;
 
-				entity.polygon.fill = true; // Ensure fill is enabled to prevent wireframe appearance
-				entity.polygon.material = color;
-			}
+			// Use the proper method that handles both Helsinki and Capital Region views
+			// This fixes the wireframe issue where Capital Region buildings were set to transparent
+			this.setBuildingEntityPolygon(entity);
 		}
+
+		console.log('[Building] ✅ Reset', buildingEntities.length, 'building entities');
 	}
 
 	/**

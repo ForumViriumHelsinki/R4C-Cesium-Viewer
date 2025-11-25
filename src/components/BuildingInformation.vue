@@ -70,6 +70,8 @@ export default {
 		const pickPending = ref(false);
 		const handlerRegistered = ref(false);
 
+		console.log('[BuildingInformation] 🎬 Component setup started');
+
 		const tooltipStyle = computed(() => ({
 			position: 'absolute',
 			top: `${mousePosition.value.y + 15}px`,
@@ -85,7 +87,14 @@ export default {
 
 		// Computed property to check if building features are available
 		// This avoids deep-tracking the entire GeoJSON object which can cause stack overflow
-		const hasBuildingFeatures = computed(() => Boolean(buildingStore.buildingFeatures));
+		const hasBuildingFeatures = computed(() => {
+			const hasFeatures = Boolean(buildingStore.buildingFeatures);
+			console.log('[BuildingInformation] 🔍 hasBuildingFeatures computed:', {
+				hasFeatures,
+				featuresCount: buildingStore.buildingFeatures?.features?.length,
+			});
+			return hasFeatures;
+		});
 
 		// Expose only the specific store property needed in the template
 		// Avoids exposing the entire store which contains circular references (cesiumViewer)
@@ -94,18 +103,25 @@ export default {
 		// Function to fetch building information based on the hovered entity
 		const fetchBuildingInfo = async (entity) => {
 			try {
+				console.log('[BuildingInformation] 🔎 fetchBuildingInfo called for entity:', entity._id);
+
 				const features = buildingStore.buildingFeatures.features;
 
 				const validIdPattern = /^[0-9]{9}[A-Z]$/;
 
 				if (!entity._id || !validIdPattern.test(entity._id)) {
+					console.log('[BuildingInformation] ⚠️ Entity ID does not match pattern:', entity._id);
 					return;
 				}
+
+				console.log('[BuildingInformation] ✓ Entity ID matches pattern:', entity._id);
+				console.log('[BuildingInformation] 📦 Searching in', features?.length || 0, 'features');
 
 				if (features) {
 					const matchingFeature = features.find((feature) => feature.id === entity._id);
 
 					if (matchingFeature) {
+						console.log('[BuildingInformation] ✅ Found matching feature:', matchingFeature.id);
 						const properties = matchingFeature.properties;
 
 						buildingAttributes.value = {
@@ -114,12 +130,20 @@ export default {
 							address: findAddressForBuilding(properties),
 						};
 						showTooltip.value = true;
+						console.log(
+							'[BuildingInformation] 🎯 Tooltip displayed with:',
+							buildingAttributes.value
+						);
 					} else {
-						console.warn('No matching feature found for Id:', entity._id);
+						console.warn('[BuildingInformation] ❌ No matching feature found for Id:', entity._id);
+						console.log(
+							'[BuildingInformation] Sample feature IDs:',
+							features.slice(0, 5).map((f) => f.id)
+						);
 					}
 				}
 			} catch (error) {
-				console.error('Failed to fetch building data', error);
+				console.error('[BuildingInformation] ❌ Failed to fetch building data', error);
 			}
 		};
 
@@ -156,12 +180,17 @@ export default {
 		// Function to register the mouse move handler
 		const registerMouseMoveHandler = () => {
 			if (handlerRegistered.value || !viewer || !viewer.screenSpaceEventHandler) {
+				console.log('[BuildingInformation] ⚠️ Cannot register handler:', {
+					alreadyRegistered: handlerRegistered.value,
+					hasViewer: Boolean(viewer),
+					hasHandler: Boolean(viewer?.screenSpaceEventHandler),
+				});
 				return;
 			}
 
 			viewer.screenSpaceEventHandler.setInputAction(onMouseMove, ScreenSpaceEventType.MOUSE_MOVE);
 			handlerRegistered.value = true;
-			console.log('[BuildingInformation] MOUSE_MOVE handler registered');
+			console.log('[BuildingInformation] ✅ MOUSE_MOVE handler registered successfully');
 		};
 
 		// Function to unregister the mouse move handler
@@ -172,7 +201,7 @@ export default {
 
 			viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
 			handlerRegistered.value = false;
-			console.log('[BuildingInformation] MOUSE_MOVE handler unregistered');
+			console.log('[BuildingInformation] 🗑️ MOUSE_MOVE handler unregistered');
 		};
 
 		// Watch for buildingFeatures to become available and register handler
@@ -180,7 +209,15 @@ export default {
 		watch(
 			hasBuildingFeatures,
 			(hasFeatures) => {
+				console.log(
+					'[BuildingInformation] 👀 Watcher triggered. hasFeatures:',
+					hasFeatures,
+					'handlerRegistered:',
+					handlerRegistered.value
+				);
+
 				if (hasFeatures && !handlerRegistered.value) {
+					console.log('[BuildingInformation] ⏰ Scheduling handler registration in 100ms');
 					setTimeout(() => {
 						registerMouseMoveHandler();
 					}, 100);
@@ -191,7 +228,15 @@ export default {
 
 		// Set up Cesium mouse events on mount if buildingFeatures already exists
 		onMounted(() => {
+			console.log(
+				'[BuildingInformation] 🔧 Component mounted. buildingFeatures exists:',
+				Boolean(buildingStore.buildingFeatures)
+			);
+
 			if (buildingStore.buildingFeatures) {
+				console.log(
+					'[BuildingInformation] ⏰ Scheduling handler registration in 100ms (onMounted)'
+				);
 				setTimeout(() => {
 					registerMouseMoveHandler();
 				}, 100);
@@ -200,6 +245,7 @@ export default {
 
 		// Clean up Cesium mouse events
 		onUnmounted(() => {
+			console.log('[BuildingInformation] 🧹 Component unmounted');
 			unregisterMouseMoveHandler();
 		});
 
