@@ -64,6 +64,7 @@ describe('EspooSurvey Service - Error Handling', { tags: ['@unit', '@espooSurvey
 		setActivePinia(createPinia());
 		vi.clearAllMocks();
 		global.fetch.mockClear();
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		espooSurvey = new EspooSurvey();
 	});

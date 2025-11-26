@@ -50,6 +50,7 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 		setActivePinia(createPinia());
 		vi.clearAllMocks();
 		global.fetch.mockClear();
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		sensor = new Sensor();
 	});
@@ -88,15 +89,19 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 			await expect(sensor.loadSensorData()).rejects.toThrow('Failed to fetch');
 		});
 
-		it('should handle API unavailability (503)', async () => {
+		it.each([
+			[404, 'Not found'],
+			[500, 'Server error'],
+			[503, 'Service unavailable'],
+		])('should handle %i HTTP error (%s)', async (status, message) => {
 			// Arrange
 			global.fetch.mockResolvedValue({
-				status: 503,
-				json: vi.fn().mockRejectedValue(new Error('Service unavailable')),
+				status,
+				json: vi.fn().mockRejectedValue(new Error(message)),
 			});
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow('Service unavailable');
+			await expect(sensor.loadSensorData()).rejects.toThrow(message);
 		});
 
 		it('should handle connection timeout', async () => {

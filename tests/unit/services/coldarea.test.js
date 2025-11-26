@@ -59,6 +59,7 @@ describe('ColdArea Service - Error Handling', { tags: ['@unit', '@coldarea'] }, 
 		setActivePinia(createPinia());
 		vi.clearAllMocks();
 		global.fetch.mockClear();
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		coldArea = new ColdArea();
 		mockStore = coldArea.store;
@@ -100,25 +101,15 @@ describe('ColdArea Service - Error Handling', { tags: ['@unit', '@coldarea'] }, 
 			expect(mockStore.setIsLoading).toHaveBeenCalledWith(false);
 		});
 
-		it('should handle 404 response', async () => {
-			// Arrange: Mock fetch to return 404
+		it.each([
+			[404, 'Not found'],
+			[500, 'Internal server error'],
+			[503, 'Service unavailable'],
+		])('should handle %i HTTP error (%s)', async (status, message) => {
+			// Arrange: Mock fetch to return HTTP error
 			global.fetch.mockResolvedValue({
-				status: 404,
-				json: vi.fn().mockResolvedValue({ error: 'Not found' }),
-			});
-
-			// Act: Should not throw if JSON parsing succeeds
-			await coldArea.loadColdAreas();
-
-			// Assert: Loading state was cleaned up
-			expect(mockStore.setIsLoading).toHaveBeenCalledWith(false);
-		});
-
-		it('should handle 500 server error', async () => {
-			// Arrange: Mock fetch to return 500 error
-			global.fetch.mockResolvedValue({
-				status: 500,
-				json: vi.fn().mockResolvedValue({ error: 'Internal server error' }),
+				status,
+				json: vi.fn().mockResolvedValue({ error: message }),
 			});
 
 			// Act: Should not throw if JSON parsing succeeds
@@ -151,6 +142,8 @@ describe('ColdArea Service - Error Handling', { tags: ['@unit', '@coldarea'] }, 
 
 			// Verify finally block executed
 			expect(mockStore.setIsLoading).toHaveBeenCalledWith(false);
+			// Verify error was logged
+			expect(console.error).toHaveBeenCalledWith('Error loading cold areas:', expect.any(Error));
 		});
 	});
 

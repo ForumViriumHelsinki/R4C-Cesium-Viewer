@@ -109,6 +109,7 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 		setActivePinia(createPinia());
 		vi.clearAllMocks();
 		global.fetch.mockClear();
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		traveltime = new Traveltime();
 	});
@@ -155,6 +156,24 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 			await expect(traveltime.loadTravelTimeData(5975375)).rejects.toThrow();
 		});
 
+		it('should handle travel_data with empty array', async () => {
+			// Arrange: Return data with empty travel_data array
+			const mockData = {
+				type: 'FeatureCollection',
+				features: [{ properties: { travel_data: [] } }], // Empty but present
+			};
+			global.fetch.mockResolvedValue({
+				json: vi.fn().mockResolvedValue(mockData),
+			});
+			traveltime.addTravelTimeLabels = vi.fn();
+
+			// Act: Should not throw
+			await expect(traveltime.loadTravelTimeData(5975375)).resolves.not.toThrow();
+
+			// Assert: addTravelTimeLabels should be called with empty array
+			expect(traveltime.addTravelTimeLabels).toHaveBeenCalledWith([]);
+		});
+
 		it('should handle empty features array', async () => {
 			// Arrange
 			global.fetch.mockResolvedValue({
@@ -168,15 +187,19 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 			await expect(traveltime.loadTravelTimeData(5975375)).rejects.toThrow();
 		});
 
-		it('should handle server errors (500)', async () => {
+		it.each([
+			[404, 'Not found'],
+			[500, 'Server error'],
+			[503, 'Service unavailable'],
+		])('should handle %i HTTP error (%s)', async (status, message) => {
 			// Arrange
 			global.fetch.mockResolvedValue({
-				status: 500,
-				json: vi.fn().mockRejectedValue(new Error('Server error')),
+				status,
+				json: vi.fn().mockRejectedValue(new Error(message)),
 			});
 
 			// Act & Assert
-			await expect(traveltime.loadTravelTimeData(5975375)).rejects.toThrow('Server error');
+			await expect(traveltime.loadTravelTimeData(5975375)).rejects.toThrow(message);
 		});
 
 		it('should handle invalid from_id parameter', async () => {
