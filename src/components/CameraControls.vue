@@ -100,45 +100,50 @@
 			</div>
 
 			<!-- Directional buttons around the compass -->
-			<button
+			<v-btn
 				v-for="dir in directions"
 				:key="dir.name"
 				class="dir-btn"
-				:class="[dir.position, { active: isActiveDirection(dir.degrees) }]"
+				:class="[dir.position]"
+				:color="getButtonColor(dir)"
+				:variant="isActiveDirection(dir.degrees) ? 'flat' : 'outlined'"
 				:disabled="!viewerReady"
 				:aria-label="`Face ${dir.label}`"
 				:title="`Face ${dir.label}`"
+				size="x-small"
+				icon
 				@click.stop="setHeading(dir.degrees)"
 			>
 				{{ dir.name }}
-			</button>
+			</v-btn>
 		</div>
 
 		<!-- Zoom Controls -->
-		<div
+		<v-btn-group
+			divided
+			density="compact"
+			elevation="2"
+			rounded="lg"
 			class="zoom-controls"
-			role="group"
 			aria-label="Zoom controls"
 		>
-			<button
-				class="zoom-btn"
+			<v-btn
 				:disabled="!viewerReady"
 				aria-label="Zoom in"
 				title="Zoom in"
+				icon="mdi-plus"
+				size="small"
 				@click.stop="zoomIn"
-			>
-				<v-icon size="small"> mdi-plus </v-icon>
-			</button>
-			<button
-				class="zoom-btn"
+			/>
+			<v-btn
 				:disabled="!viewerReady"
 				aria-label="Zoom out"
 				title="Zoom out"
+				icon="mdi-minus"
+				size="small"
 				@click.stop="zoomOut"
-			>
-				<v-icon size="small"> mdi-minus </v-icon>
-			</button>
-		</div>
+			/>
+		</v-btn-group>
 	</div>
 </template>
 
@@ -228,6 +233,14 @@ const isActiveDirection = (degrees) => {
 	const diff = Math.abs(heading - degrees);
 	// Consider active if within 22.5 degrees (half of 45-degree sector)
 	return diff < 22.5 || diff > 337.5;
+};
+
+// Get button color based on direction and active state
+const getButtonColor = (dir) => {
+	if (dir.name === 'N') {
+		return isActiveDirection(dir.degrees) ? 'error' : undefined;
+	}
+	return isActiveDirection(dir.degrees) ? 'primary' : undefined;
 };
 
 // Compass ring rotates opposite to heading to show current orientation
@@ -350,68 +363,11 @@ const zoomOut = () => {
 	stroke-width: 1;
 }
 
-/* Directional buttons */
+/* Directional button positions */
 .dir-btn {
 	position: absolute;
-	width: 28px;
-	height: 28px;
-	border-radius: 50%;
-	border: 1.5px solid #bdbdbd;
-	background: linear-gradient(145deg, #ffffff, #f5f5f5);
-	color: #424242;
-	font-size: 9px;
-	font-weight: 600;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0;
-	transition: all 0.15s ease;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.dir-btn:hover:not(:disabled) {
-	background: linear-gradient(145deg, #e0e0e0, #d5d5d5);
-	border-color: #757575;
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.dir-btn:active:not(:disabled) {
-	background: linear-gradient(145deg, #d0d0d0, #c8c8c8);
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.dir-btn:focus-visible {
-	outline: 2px solid #1976d2;
-	outline-offset: 2px;
-}
-
-.dir-btn:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
-
-/* Active direction indicator */
-.dir-btn.active {
-	background: linear-gradient(145deg, #e3f2fd, #bbdefb);
-	border-color: #1976d2;
-	color: #1565c0;
-}
-
-/* North button special styling */
-.dir-btn.north {
-	color: #b71c1c;
-	font-weight: 700;
-}
-
-.dir-btn.north.active {
-	background: linear-gradient(145deg, #ffebee, #ffcdd2);
-	border-color: #c62828;
-	color: #b71c1c;
-}
-
-/* Button positions */
 .dir-btn.north {
 	top: 0;
 	left: 50%;
@@ -453,46 +409,6 @@ const zoomOut = () => {
 .zoom-controls {
 	display: flex;
 	flex-direction: column;
-	border-radius: 16px;
-	overflow: hidden;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-	background: linear-gradient(145deg, #ffffff, #f5f5f5);
-	border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.zoom-btn {
-	width: 36px;
-	height: 36px;
-	border: none;
-	background: transparent;
-	color: #424242;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: background-color 0.15s ease;
-}
-
-.zoom-btn:first-child {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.zoom-btn:hover:not(:disabled) {
-	background-color: rgba(0, 0, 0, 0.04);
-}
-
-.zoom-btn:active:not(:disabled) {
-	background-color: rgba(0, 0, 0, 0.08);
-}
-
-.zoom-btn:focus-visible {
-	outline: 2px solid #1976d2;
-	outline-offset: -2px;
-}
-
-.zoom-btn:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
 }
 
 /* Touch device adjustments - larger targets */
@@ -505,12 +421,6 @@ const zoomOut = () => {
 	.compass-visual {
 		width: 58px;
 		height: 58px;
-	}
-
-	.dir-btn {
-		width: 34px;
-		height: 34px;
-		font-size: 10px;
 	}
 
 	.dir-btn.northeast {
@@ -529,34 +439,17 @@ const zoomOut = () => {
 		top: 14px;
 		left: 14px;
 	}
-
-	.zoom-btn {
-		width: 44px;
-		height: 44px;
-	}
 }
 
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-	.compass-ring,
-	.dir-btn,
-	.zoom-btn {
+	.compass-ring {
 		transition: none;
 	}
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-	.dir-btn {
-		border-width: 2px;
-		border-color: #000000;
-	}
-
-	.dir-btn.active {
-		background: #000000;
-		color: #ffffff;
-	}
-
 	.compass-cardinal {
 		fill: #000000;
 	}
