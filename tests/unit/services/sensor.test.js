@@ -40,6 +40,7 @@ vi.mock('@/stores/globalStore.js', () => ({
 				add: vi.fn(),
 			},
 		},
+		showError: vi.fn(),
 	})),
 }));
 

@@ -43,6 +43,7 @@ vi.mock('@/stores/globalStore.js', () => ({
 	useGlobalStore: vi.fn(() => ({
 		postalcode: '00100',
 		setIsLoading: vi.fn(),
+		showError: vi.fn(),
 		cesiumViewer: {
 			entities: {
 				add: vi.fn(),

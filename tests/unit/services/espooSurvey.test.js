@@ -54,6 +54,7 @@ vi.mock('@/stores/globalStore.js', () => ({
 		minMaxKelvin: {
 			'2023-06-23': { min: 288.9166564941, max: 324.6862182617 },
 		},
+		showError: vi.fn(),
 	})),
 }));
 
