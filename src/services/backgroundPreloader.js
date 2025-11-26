@@ -3,8 +3,37 @@ import progressiveLoader from './progressiveLoader.js';
 import { getRecentNDVIDates } from '../constants/ndviDates.js';
 
 /**
- * Background Preloader Service
- * Handles intelligent preloading of data based on user behavior and priorities
+ * Background Preloader Service (Singleton)
+ * Handles intelligent preloading of data based on user behavior and priorities.
+ * Manages background loading of map layers, postal codes, and NDVI data when
+ * the browser is idle to improve perceived performance.
+ *
+ * **Lifecycle Management:**
+ * - Created: Singleton instance exported by this module
+ * - Initialized: When CesiumViewer mounts (via init() or start())
+ * - Destroyed: When CesiumViewer/application unmounts
+ * - **Cleanup responsibility:** CesiumViewer MUST call destroy() in beforeUnmount hook
+ *
+ * **Resources Managed:**
+ * - 5 document-level event listeners (visibilitychange, focus, blur, mousemove, keypress)
+ * - Idle timer (setTimeout) for detecting user inactivity
+ * - Map collections (landcoverLayersMap, floodLayersMap) for layer caching
+ * - Preload queue and priority maps
+ *
+ * @class BackgroundPreloader
+ * @see {@link ../../docs/SERVICE_LIFECYCLE.md|Service Lifecycle Documentation}
+ *
+ * @example
+ * // In CesiumViewer.vue
+ * import cacheWarmer from '@/services/cacheWarmer.js';
+ *
+ * onMounted(async () => {
+ *   await cacheWarmer.start();
+ * });
+ *
+ * onBeforeUnmount(() => {
+ *   cacheWarmer.destroy();
+ * });
  */
 class BackgroundPreloader {
 	constructor() {
@@ -535,7 +564,22 @@ class BackgroundPreloader {
 	}
 
 	/**
-	 * Cleanup method to destroy the preloader and remove all listeners
+	 * Cleanup method to prevent memory leaks
+	 * MUST be called by CesiumViewer in beforeUnmount hook.
+	 *
+	 * Cleans up:
+	 * - Pauses all background loading operations
+	 * - Removes 5 document-level event listeners
+	 * - Clears idle timer
+	 * - Clears preload queue and priority maps
+	 * - Clears layer cache maps
+	 *
+	 * @returns {void}
+	 *
+	 * @example
+	 * onBeforeUnmount(() => {
+	 *   cacheWarmer.destroy();
+	 * });
 	 */
 	destroy() {
 		this.pause();
