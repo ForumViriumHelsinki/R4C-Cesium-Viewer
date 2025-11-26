@@ -2,14 +2,17 @@
 	<v-app>
 		<!-- Top Navigation Bar -->
 		<v-app-bar
-app
-elevation="2"
-class="top-nav"
->
+			app
+			elevation="2"
+			class="top-nav"
+		>
 			<v-container
-fluid
-class="d-flex align-center py-0"
->
+				fluid
+				class="d-flex align-center py-0"
+			>
+				<!-- App Title with Version Info -->
+				<AppTitle class="mr-4" />
+
 				<div class="navigation-buttons">
 					<v-btn
 						v-if="currentLevel === 'building'"
@@ -45,6 +48,12 @@ class="d-flex align-center py-0"
 
 				<!-- View Mode Selector -->
 				<ViewModeCompact />
+
+				<!-- Heat Timeline (shown at postalCode and building levels) -->
+				<TimelineCompact
+					v-if="currentLevel === 'postalCode' || currentLevel === 'building'"
+					class="ml-4"
+				/>
 
 				<v-spacer />
 
@@ -92,9 +101,7 @@ class="d-flex align-center py-0"
 
 			<!-- Minimal disclaimer -->
 			<div class="minimal-disclaimer">
-				<span class="disclaimer-text">
-					Data: HSY • Statistics Finland
-				</span>
+				<span class="disclaimer-text"> Data: HSY • Statistics Finland </span>
 			</div>
 		</v-main>
 	</v-app>
@@ -106,9 +113,11 @@ import CesiumViewer from './pages/CesiumViewer.vue';
 import SosEco250mGrid from './components/SosEco250mGrid.vue';
 import LoadingIndicator from './components/LoadingIndicator.vue';
 import DataSourceStatusCompact from './components/DataSourceStatusCompact.vue';
+import TimelineCompact from './components/TimelineCompact.vue';
 import ViewModeCompact from './components/ViewModeCompact.vue';
 import FeatureFlagsPanel from './components/FeatureFlagsPanel.vue';
 import VersionBadge from './components/VersionBadge.vue';
+import AppTitle from './components/AppTitle.vue';
 import { useToggleStore } from './stores/toggleStore.js';
 import { useGlobalStore } from './stores/globalStore.js';
 import { useFeatureFlagStore } from './stores/featureFlagStore';
@@ -197,7 +206,7 @@ const handleCacheCleared = (sourceId) => {
 	console.log(`Cache cleared for: ${sourceId}`);
 	if (sourceId === 'all') {
 		// Refresh cache status for all layers
-		Object.keys(loadingStore.cacheStatus).forEach(layer => {
+		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
 			loadingStore.checkLayerCache(layer);
 		});
 	}
@@ -220,10 +229,9 @@ onMounted(async () => {
 		console.log('Background preloader initialized');
 
 		// Check cache status for all layers on app start
-		Object.keys(loadingStore.cacheStatus).forEach(layer => {
+		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
 			loadingStore.checkLayerCache(layer);
 		});
-
 	} catch (error) {
 		console.warn('Failed to initialize caching services:', error);
 	}

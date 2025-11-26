@@ -8,15 +8,13 @@
 				v-bind="props"
 				class="app-title-container"
 			>
-				<span class="app-title">R4C-Cesium-Viewer</span>
+				<span class="app-title">Regions4Climate</span>
 				<span class="app-version">v{{ versionInfo.version }}</span>
 			</div>
 		</template>
 		<template #default>
 			<div class="tooltip-content">
-				<div class="tooltip-header">
-Version Information
-</div>
+				<div class="tooltip-header">Version Information</div>
 				<v-divider class="my-2" />
 				<div class="tooltip-row">
 					<span class="tooltip-label">Version:</span>
@@ -74,7 +72,7 @@ const formattedBuildTime = computed(() => {
 .app-title-container {
 	display: flex;
 	flex-direction: column;
-	align-items: flex-end;
+	align-items: flex-start;
 	cursor: help;
 	padding: 4px 8px;
 	border-radius: 4px;
@@ -93,8 +91,8 @@ const formattedBuildTime = computed(() => {
 }
 
 .app-version {
-	font-size: 0.65rem;
-	color: rgba(0, 0, 0, 0.4);
+	font-size: 0.75rem;
+	color: rgba(0, 0, 0, 0.5);
 	font-family: 'Courier New', monospace;
 	line-height: 1.2;
 }
