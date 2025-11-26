@@ -56,9 +56,11 @@
 		<!-- Global Data Loading Error Snackbar -->
 		<v-snackbar
 			v-model="store.errorNotification.show"
-			:timeout="6000"
+			:timeout="10000"
 			color="error"
 			location="bottom"
+			role="alert"
+			aria-live="assertive"
 		>
 			<div class="d-flex align-center">
 				<v-icon class="mr-2"> mdi-alert </v-icon>

@@ -399,6 +399,73 @@ describe('globalStore', () => {
 		});
 	});
 
+	describe('errorNotification', () => {
+		it('should have correct initial error notification state', () => {
+			const store = useGlobalStore();
+
+			expect(store.errorNotification).toEqual({
+				show: false,
+				message: '',
+				context: '',
+			});
+		});
+
+		it('should show error notification with message', () => {
+			const store = useGlobalStore();
+
+			store.showError('Test error message');
+
+			expect(store.errorNotification.show).toBe(true);
+			expect(store.errorNotification.message).toBe('Test error message');
+			expect(store.errorNotification.context).toBe('');
+		});
+
+		it('should show error notification with message and context', () => {
+			const store = useGlobalStore();
+
+			store.showError('Unable to load data', 'Network error at /api/endpoint');
+
+			expect(store.errorNotification.show).toBe(true);
+			expect(store.errorNotification.message).toBe('Unable to load data');
+			expect(store.errorNotification.context).toBe('Network error at /api/endpoint');
+		});
+
+		it('should hide error notification', () => {
+			const store = useGlobalStore();
+
+			// Show error first
+			store.showError('Test error', 'Test context');
+			expect(store.errorNotification.show).toBe(true);
+
+			// Hide error
+			store.hideError();
+
+			expect(store.errorNotification.show).toBe(false);
+			expect(store.errorNotification.message).toBe('');
+			expect(store.errorNotification.context).toBe('');
+		});
+
+		it('should handle multiple consecutive error notifications', () => {
+			const store = useGlobalStore();
+
+			store.showError('First error');
+			expect(store.errorNotification.message).toBe('First error');
+
+			store.showError('Second error');
+			expect(store.errorNotification.message).toBe('Second error');
+		});
+
+		it('should handle empty context parameter', () => {
+			const store = useGlobalStore();
+
+			store.showError('Error without context', '');
+
+			expect(store.errorNotification.show).toBe(true);
+			expect(store.errorNotification.message).toBe('Error without context');
+			expect(store.errorNotification.context).toBe('');
+		});
+	});
+
 	describe('edge cases', () => {
 		it('should handle null and undefined values', () => {
 			const store = useGlobalStore();

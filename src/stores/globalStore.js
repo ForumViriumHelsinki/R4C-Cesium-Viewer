@@ -327,6 +327,7 @@ export const useGlobalStore = defineStore('global', {
 		/**
 		 * Shows a user-facing error notification
 		 * Displays error messages in the UI for network failures or data loading issues.
+		 * Logs technical context to console for debugging.
 		 *
 		 * @param {string} message - User-friendly error message to display
 		 * @param {string} [context=''] - Technical context for debugging (optional)
@@ -335,6 +336,11 @@ export const useGlobalStore = defineStore('global', {
 		 * store.showError('Unable to load cold area data. Please try again.', 'Network error at /api/coldareas/00100');
 		 */
 		showError(message, context = '') {
+			// Log technical context for debugging
+			if (context) {
+				console.error('[Error Notification]', context);
+			}
+
 			this.errorNotification = {
 				show: true,
 				message,
