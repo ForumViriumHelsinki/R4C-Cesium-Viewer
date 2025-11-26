@@ -52,3 +52,5 @@ src/components.d.ts
 
 # Knip analysis reports
 knip-report.json
+
+/tmp
