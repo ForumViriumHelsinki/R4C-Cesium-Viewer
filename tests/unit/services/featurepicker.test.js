@@ -672,10 +672,10 @@ describe('FeaturePicker service', () => {
 			// Should not throw, error is caught
 			await expect(featurePicker.handleBuildingFeature(mockProperties)).resolves.not.toThrow();
 
-			// Verify error was logged
+			// Verify error was logged (error.message is extracted in the actual code)
 			expect(console.error).toHaveBeenCalledWith(
 				'Error handling building feature:',
-				expect.any(Error)
+				'Chart creation failed'
 			);
 
 			vi.restoreAllMocks();

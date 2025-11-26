@@ -105,7 +105,7 @@ export const removeLandcover = () => {
 			});
 
 			// Clear the tracking array
-			backgroundMapStore.landcoverLayers = [];
+			backgroundMapStore.clearLandcoverLayers();
 		}
 	} catch (error) {
 		console.error('Error removing landcover:', error);

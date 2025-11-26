@@ -16,6 +16,10 @@ class BackgroundPreloader {
 			frequentLayers: new Map(),
 			lastActivity: Date.now(),
 		};
+		// Store references for cleanup
+		this.idleTimer = null;
+		this.boundResetIdleTimer = null;
+		this.eventListenersAttached = false;
 	}
 
 	/**
@@ -407,13 +411,12 @@ class BackgroundPreloader {
 	 * Setup idle detection for background preloading
 	 */
 	setupIdlePreloading() {
-		let idleTimer;
-
-		const resetIdleTimer = () => {
+		// Create bound function reference for cleanup
+		this.boundResetIdleTimer = () => {
 			this.userBehavior.lastActivity = Date.now();
-			clearTimeout(idleTimer);
+			clearTimeout(this.idleTimer);
 
-			idleTimer = setTimeout(() => {
+			this.idleTimer = setTimeout(() => {
 				// User has been idle for 10 seconds, resume preloading
 				if (this.preloadQueue.size > 0 && !this.isPreloading) {
 					console.log('User idle, resuming background preloading');
@@ -424,10 +427,28 @@ class BackgroundPreloader {
 
 		// Listen for user activity
 		['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach((event) => {
-			document.addEventListener(event, resetIdleTimer, { passive: true });
+			document.addEventListener(event, this.boundResetIdleTimer, { passive: true });
 		});
 
-		resetIdleTimer();
+		this.eventListenersAttached = true;
+		this.boundResetIdleTimer();
+	}
+
+	/**
+	 * Remove idle detection event listeners
+	 */
+	removeIdleDetection() {
+		if (this.eventListenersAttached && this.boundResetIdleTimer) {
+			['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach((event) => {
+				document.removeEventListener(event, this.boundResetIdleTimer, { passive: true });
+			});
+			this.eventListenersAttached = false;
+		}
+
+		if (this.idleTimer) {
+			clearTimeout(this.idleTimer);
+			this.idleTimer = null;
+		}
 	}
 
 	/**
@@ -468,6 +489,9 @@ class BackgroundPreloader {
 	 */
 	pause() {
 		this.isPreloading = false;
+		if (this.idleTimer) {
+			clearTimeout(this.idleTimer);
+		}
 		console.log('Background preloading paused');
 	}
 
@@ -508,6 +532,17 @@ class BackgroundPreloader {
 		};
 		await this.saveUserBehavior();
 		console.log('Background preloader reset');
+	}
+
+	/**
+	 * Cleanup method to destroy the preloader and remove all listeners
+	 */
+	destroy() {
+		this.pause();
+		this.removeIdleDetection();
+		this.preloadQueue.clear();
+		this.preloadPriorities.clear();
+		console.log('Background preloader destroyed');
 	}
 
 	/**

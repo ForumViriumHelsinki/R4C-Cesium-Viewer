@@ -124,7 +124,7 @@ export default class Populationgrid {
 			if (!this.toggleStore.travelTime) {
 				this.setGridHeight(entities);
 			} else {
-				this.toggleStore.travelTime = false;
+				this.toggleStore.setTravelTime(false);
 			}
 		} catch (error) {
 			console.error(error);

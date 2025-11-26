@@ -52,16 +52,14 @@ export default class Traveltime {
 	 * await travelTimeService.loadTravelTimeData(5975375);
 	 */
 	async loadTravelTimeData(from_id) {
-		fetch(this.urlStore.hkiTravelTime(from_id))
-			.then((response) => {
-				return response.json();
-			})
-			.then((traveltimedata) => {
-				this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data);
-			})
-			.catch((e) => {
-				console.log('something went wrong', e);
-			});
+		try {
+			const response = await fetch(this.urlStore.hkiTravelTime(from_id));
+			const traveltimedata = await response.json();
+			this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data);
+		} catch (error) {
+			console.error('Error loading travel time data:', error);
+			throw error; // Re-throw so callers know it failed
+		}
 	}
 
 	/**
@@ -163,7 +161,7 @@ export default class Traveltime {
 				this.populationGridService.setGridEntityPolygonToGreen(entity);
 			}
 
-			this.toggleStore.travelTime = false;
+			this.toggleStore.setTravelTime(false);
 		}
 	}
 

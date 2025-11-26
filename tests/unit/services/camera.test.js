@@ -98,11 +98,11 @@ describe('Camera service', () => {
 			camera.init();
 
 			expect(mockSetView).toHaveBeenCalledWith({
-				destination: { x: 24.9384, y: 60.1695, z: 15000 },
+				destination: { x: 24.991745, y: 60.045, z: 12000 },
 				orientation: {
 					heading: expect.any(Number),
 					pitch: expect.any(Number),
-					roll: 0.0,
+					roll: 0,
 				},
 			});
 		});
@@ -147,15 +147,26 @@ describe('Camera service', () => {
 
 		it('should handle missing postal code data source', () => {
 			mockViewer.dataSources._dataSources = [];
+			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-			expect(() => camera.switchTo2DView()).toThrow();
+			expect(() => camera.switchTo2DView()).not.toThrow();
+			expect(mockFlyTo).not.toHaveBeenCalled();
+			expect(consoleWarnSpy).toHaveBeenCalledWith('[Camera] PostCodes data source not found');
+
+			consoleWarnSpy.mockRestore();
 		});
 
 		it('should handle postal code not found in entities', () => {
 			store.setPostalCode('99999');
+			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 			expect(() => camera.switchTo2DView()).not.toThrow();
 			expect(mockFlyTo).not.toHaveBeenCalled();
+			expect(consoleWarnSpy).toHaveBeenCalledWith(
+				'[Camera] Postal code 99999 not found for 2D view'
+			);
+
+			consoleWarnSpy.mockRestore();
 		});
 	});
 

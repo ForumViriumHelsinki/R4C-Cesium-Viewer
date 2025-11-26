@@ -87,5 +87,19 @@ export const useBackgroundMapStore = defineStore('backgroundMap', {
 		setHSYYear(year) {
 			this.hsyYear = year;
 		},
+		/**
+		 * Clears all HSY landcover WMS layer references
+		 * Resets the landcover layers array to empty state
+		 */
+		clearLandcoverLayers() {
+			this.landcoverLayers = [];
+		},
+		/**
+		 * Clears all flood risk WMS layer references
+		 * Resets the flood layers array to empty state
+		 */
+		clearFloodLayers() {
+			this.floodLayers = [];
+		},
 	},
 });

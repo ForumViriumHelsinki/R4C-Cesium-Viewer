@@ -104,7 +104,7 @@ export const removeFloodLayers = () => {
 				}
 			});
 
-			backgroundMapStore.floodLayers = [];
+			backgroundMapStore.clearFloodLayers();
 		}
 	} catch (error) {
 		console.error('Error removing floodlayer:', error);

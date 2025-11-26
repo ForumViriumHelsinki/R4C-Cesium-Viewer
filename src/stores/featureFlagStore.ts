@@ -1,7 +1,51 @@
+/**
+ * @module stores/featureFlagStore
+ * Manages runtime feature toggles with environment variable initialization and localStorage persistence.
+ * Provides centralized control for experimental features, integration toggles, and developer tools.
+ *
+ * Feature flag architecture:
+ * - **Environment-based defaults**: Initialized from VITE_FEATURE_* environment variables
+ * - **Runtime overrides**: User can toggle flags during runtime via UI or programmatically
+ * - **LocalStorage persistence**: User overrides persisted across sessions
+ * - **Hardware validation**: Flags with requiresSupport disabled if hardware doesn't support them
+ * - **Category organization**: Flags grouped into logical categories for management
+ *
+ * Categories:
+ * - **data-layers**: NDVI, flood layers, 250m grid, tree coverage, land cover
+ * - **graphics**: HDR, ambient occlusion, MSAA, FXAA, request render mode, 3D terrain
+ * - **analysis**: Heat histogram, building scatter plot, cooling optimizer, NDVI analysis, socioeconomic viz
+ * - **ui**: Compact view, mobile optimization, control panel, data source status, loading performance info
+ * - **integration**: Sentry error tracking, Digitransit transport, background map providers
+ * - **developer**: Debug mode, performance monitoring, cache visualization, health checks
+ *
+ * Usage patterns:
+ * ```typescript
+ * const featureFlagStore = useFeatureFlagStore();
+ *
+ * // Check if feature is enabled
+ * if (featureFlagStore.isEnabled('ndvi')) {
+ *   // Show NDVI layer controls
+ * }
+ *
+ * // Toggle feature at runtime
+ * featureFlagStore.setFlag('debugMode', true);
+ *
+ * // Get all experimental features
+ * const experimental = featureFlagStore.experimentalFlags;
+ *
+ * // Export/import configuration
+ * const config = featureFlagStore.exportConfig();
+ * featureFlagStore.importConfig(config);
+ * ```
+ *
+ * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
+ */
+
 import { defineStore } from 'pinia';
 
 /**
- * Feature flag category types
+ * Feature flag category types for organizational grouping
+ * @typedef {'data-layers' | 'graphics' | 'analysis' | 'ui' | 'integration' | 'developer'} FeatureFlagCategory
  */
 export type FeatureFlagCategory =
 	| 'data-layers'
@@ -12,7 +56,12 @@ export type FeatureFlagCategory =
 	| 'developer';
 
 /**
- * Feature flag names
+ * Feature flag names - comprehensive list of all available feature toggles
+ *
+ * Naming convention: camelCase descriptive names
+ * Environment variable mapping: VITE_FEATURE_<SCREAMING_SNAKE_CASE>
+ *
+ * @typedef {string} FeatureFlagName
  */
 export type FeatureFlagName =
 	// Data layers
@@ -52,7 +101,15 @@ export type FeatureFlagName =
 	| 'healthChecks';
 
 /**
- * Feature flag configuration
+ * Feature flag configuration object
+ *
+ * @interface FeatureFlagConfig
+ * @property {boolean} enabled - Whether the feature is currently enabled
+ * @property {FeatureFlagCategory} category - Category for grouping and filtering
+ * @property {string} label - Human-readable display name
+ * @property {string} description - Detailed explanation of the feature's purpose
+ * @property {boolean} [experimental] - If true, marks feature as experimental/unstable
+ * @property {boolean} [requiresSupport] - If true, requires hardware/browser support validation
  */
 export interface FeatureFlagConfig {
 	enabled: boolean;
@@ -64,24 +121,34 @@ export interface FeatureFlagConfig {
 }
 
 /**
- * Feature flags map
+ * Complete feature flags map with all flag configurations
+ * @typedef {Record<FeatureFlagName, FeatureFlagConfig>} FeatureFlagsMap
  */
 export type FeatureFlagsMap = Record<FeatureFlagName, FeatureFlagConfig>;
 
 /**
- * User overrides map
+ * User runtime overrides for feature flags (persisted to localStorage)
+ * @typedef {Partial<Record<FeatureFlagName, boolean>>} UserOverridesMap
  */
 export type UserOverridesMap = Partial<Record<FeatureFlagName, boolean>>;
 
 /**
- * Feature flag with name
+ * Feature flag with name attached (for iteration/display purposes)
+ *
+ * @interface FeatureFlagWithName
+ * @extends FeatureFlagConfig
+ * @property {FeatureFlagName} name - The flag's identifier
  */
 export interface FeatureFlagWithName extends FeatureFlagConfig {
 	name: FeatureFlagName;
 }
 
 /**
- * Store state
+ * Pinia store state shape
+ *
+ * @interface FeatureFlagState
+ * @property {FeatureFlagsMap} flags - All feature flag configurations
+ * @property {UserOverridesMap} userOverrides - Runtime user toggles (persisted to localStorage)
  */
 interface FeatureFlagState {
 	flags: FeatureFlagsMap;
@@ -90,18 +157,50 @@ interface FeatureFlagState {
 
 /**
  * Type predicate to check if a string is a valid FeatureFlagName
- * Provides runtime validation for type safety
+ * Provides runtime validation for type safety.
+ *
+ * @param {string} key - The key to validate
+ * @param {FeatureFlagsMap} flags - The flags map to check against
+ * @returns {boolean} True if key is a valid feature flag name
  */
 function isFeatureFlagName(key: string, flags: FeatureFlagsMap): key is FeatureFlagName {
 	return key in flags;
 }
 
 /**
- * Feature Flag Store
+ * Feature Flag Pinia Store
  *
- * Manages feature flags with runtime toggling capability.
- * Flags can be initialized from environment variables and overridden at runtime.
- * User overrides are persisted to localStorage.
+ * Manages runtime feature toggles with environment variable initialization and localStorage persistence.
+ * Provides centralized control over experimental features, integrations, and developer tools.
+ *
+ * Initialization flow:
+ * 1. State initialized from VITE_FEATURE_* environment variables
+ * 2. User overrides loaded from localStorage (if any)
+ * 3. Hardware support checked for flags with requiresSupport=true
+ * 4. Features enabled/disabled based on combined configuration
+ *
+ * Persistence:
+ * - User overrides automatically saved to localStorage on change
+ * - Overrides take precedence over environment variable defaults
+ * - Can reset individual flags or all flags to defaults
+ *
+ * @example
+ * // Basic usage
+ * const store = useFeatureFlagStore();
+ * store.loadOverrides(); // Load saved overrides from localStorage
+ *
+ * if (store.isEnabled('ndvi')) {
+ *   // Show NDVI controls
+ * }
+ *
+ * // Runtime toggle
+ * store.setFlag('debugMode', true);
+ *
+ * // Category filtering
+ * const graphicsFlags = store.flagsByCategory('graphics');
+ *
+ * // Hardware validation
+ * store.checkHardwareSupport('hdrRendering', viewer.scene.highDynamicRangeSupported);
  */
 export const useFeatureFlagStore = defineStore('featureFlags', {
 	state: (): FeatureFlagState => ({
@@ -336,6 +435,15 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 	getters: {
 		/**
 		 * Check if a feature flag is enabled
+		 * User overrides take precedence over default flag values.
+		 *
+		 * @param {Object} state - Pinia state
+		 * @returns {(flagName: FeatureFlagName) => boolean} Function that returns true if flag is enabled
+		 *
+		 * @example
+		 * if (store.isEnabled('ndvi')) {
+		 *   // Show NDVI controls
+		 * }
 		 */
 		isEnabled:
 			(state) =>
@@ -351,6 +459,16 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Get all flags in a specific category
+		 * Useful for building category-based settings panels.
+		 *
+		 * @param {Object} state - Pinia state
+		 * @returns {(category: FeatureFlagCategory) => FeatureFlagWithName[]} Function that returns array of flags in category
+		 *
+		 * @example
+		 * const graphicsFlags = store.flagsByCategory('graphics');
+		 * graphicsFlags.forEach(flag => {
+		 *   console.log(flag.name, flag.label, flag.enabled);
+		 * });
 		 */
 		flagsByCategory:
 			(state) =>
@@ -364,6 +482,16 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Get all experimental flags
+		 * Returns flags marked as experimental, useful for showing beta feature warnings.
+		 *
+		 * @param {Object} state - Pinia state
+		 * @returns {FeatureFlagWithName[]} Array of experimental flags
+		 *
+		 * @example
+		 * const betaFeatures = store.experimentalFlags;
+		 * if (betaFeatures.some(f => store.isEnabled(f.name))) {
+		 *   showExperimentalWarning();
+		 * }
 		 */
 		experimentalFlags: (state): FeatureFlagWithName[] => {
 			return Object.entries(state.flags)
@@ -373,6 +501,14 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Get all available categories
+		 * Returns sorted list of all unique categories in the feature flag system.
+		 *
+		 * @param {Object} state - Pinia state
+		 * @returns {FeatureFlagCategory[]} Sorted array of category names
+		 *
+		 * @example
+		 * const categories = store.categories;
+		 * // ['analysis', 'data-layers', 'developer', 'graphics', 'integration', 'ui']
 		 */
 		categories: (state): FeatureFlagCategory[] => {
 			const cats = new Set<FeatureFlagCategory>();
@@ -384,6 +520,13 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Get count of enabled flags
+		 * Counts flags considering both default values and user overrides.
+		 *
+		 * @param {Object} state - Pinia state
+		 * @returns {number} Number of currently enabled flags
+		 *
+		 * @example
+		 * console.log(`${store.enabledCount} of ${Object.keys(store.flags).length} features enabled`);
 		 */
 		enabledCount: (state): number => {
 			return (Object.keys(state.flags) as FeatureFlagName[]).filter((name) => {
@@ -396,6 +539,15 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Check if a flag has been overridden by the user
+		 * Useful for UI to show which flags differ from defaults.
+		 *
+		 * @param {Object} state - Pinia state
+		 * @returns {(flagName: FeatureFlagName) => boolean} Function that returns true if flag has user override
+		 *
+		 * @example
+		 * if (store.hasOverride('debugMode')) {
+		 *   // Show "reset to default" button
+		 * }
 		 */
 		hasOverride:
 			(state) =>
@@ -406,7 +558,15 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 	actions: {
 		/**
-		 * Set a feature flag state
+		 * Set a feature flag state at runtime
+		 * Creates a user override and persists to localStorage.
+		 *
+		 * @param {FeatureFlagName} flagName - Name of the feature flag
+		 * @param {boolean} enabled - True to enable, false to disable
+		 *
+		 * @example
+		 * store.setFlag('debugMode', true);
+		 * // Flag is now enabled and saved to localStorage
 		 */
 		setFlag(flagName: FeatureFlagName, enabled: boolean): void {
 			if (this.flags[flagName]) {
@@ -417,6 +577,13 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Reset a feature flag to its default value
+		 * Removes user override and persists change to localStorage.
+		 *
+		 * @param {FeatureFlagName} flagName - Name of the feature flag
+		 *
+		 * @example
+		 * store.resetFlag('debugMode');
+		 * // Flag now uses environment variable default
 		 */
 		resetFlag(flagName: FeatureFlagName): void {
 			delete this.userOverrides[flagName];
@@ -425,6 +592,11 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Reset all feature flags to default values
+		 * Clears all user overrides and persists to localStorage.
+		 *
+		 * @example
+		 * store.resetAllFlags();
+		 * // All flags now use environment variable defaults
 		 */
 		resetAllFlags(): void {
 			this.userOverrides = {};
@@ -433,6 +605,9 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Persist user overrides to localStorage
+		 * Automatically called by setFlag/resetFlag actions.
+		 *
+		 * @private
 		 */
 		persistOverrides(): void {
 			try {
@@ -444,6 +619,11 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Load user overrides from localStorage
+		 * Should be called during application initialization.
+		 *
+		 * @example
+		 * const store = useFeatureFlagStore();
+		 * store.loadOverrides(); // Restore saved user preferences
 		 */
 		loadOverrides(): void {
 			try {
@@ -458,6 +638,15 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Check hardware support for a feature and disable if not supported
+		 * For flags with requiresSupport=true, validates hardware capability.
+		 *
+		 * @param {FeatureFlagName} flagName - Name of the feature flag
+		 * @param {boolean} isSupported - True if hardware supports the feature
+		 *
+		 * @example
+		 * const viewer = new Cesium.Viewer(...);
+		 * store.checkHardwareSupport('hdrRendering', viewer.scene.highDynamicRangeSupported);
+		 * store.checkHardwareSupport('ambientOcclusion', viewer.scene.postProcessStages.ambientOcclusion);
 		 */
 		checkHardwareSupport(flagName: FeatureFlagName, isSupported: boolean): void {
 			const flag = this.flags[flagName];
@@ -469,6 +658,14 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Get feature flag metadata
+		 * Returns the full configuration object for a flag.
+		 *
+		 * @param {FeatureFlagName} flagName - Name of the feature flag
+		 * @returns {FeatureFlagConfig | null} Flag configuration or null if not found
+		 *
+		 * @example
+		 * const metadata = store.getFlagMetadata('ndvi');
+		 * console.log(metadata.label, metadata.description, metadata.category);
 		 */
 		getFlagMetadata(flagName: FeatureFlagName): FeatureFlagConfig | null {
 			return this.flags[flagName] || null;
@@ -476,6 +673,14 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Export current configuration as JSON
+		 * Returns effective state (defaults + overrides) for all flags.
+		 *
+		 * @returns {Record<FeatureFlagName, boolean>} Complete flag state map
+		 *
+		 * @example
+		 * const config = store.exportConfig();
+		 * // Save to file or send to server
+		 * downloadJSON(config, 'feature-flags.json');
 		 */
 		exportConfig(): Record<FeatureFlagName, boolean> {
 			const config: Partial<Record<FeatureFlagName, boolean>> = {};
@@ -487,6 +692,15 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 
 		/**
 		 * Import configuration from JSON
+		 * Sets user overrides based on imported configuration.
+		 * Validates flag names and value types before importing.
+		 *
+		 * @param {Partial<Record<FeatureFlagName, boolean>>} config - Configuration to import
+		 *
+		 * @example
+		 * const config = await fetch('/api/feature-flags').then(r => r.json());
+		 * store.importConfig(config);
+		 * // User overrides updated and persisted
 		 */
 		importConfig(config: Partial<Record<FeatureFlagName, boolean>>): void {
 			Object.entries(config).forEach(([name, enabled]) => {
