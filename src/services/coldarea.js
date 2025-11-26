@@ -66,15 +66,16 @@ export default class ColdArea {
 	 */
 	async loadColdAreas() {
 		this.store.setIsLoading(true);
-
-		fetch(this.urlStore.coldAreas(this.store.postalcode))
-			.then((response) => response.json())
-			.then((data) => {
-				this.addColdAreaDataSource(data);
-			})
-			.catch((error) => {
-				console.log('Error loading ColdAreas:', error);
-			});
+		try {
+			const response = await fetch(this.urlStore.coldAreas(this.store.postalcode));
+			const data = await response.json();
+			await this.addColdAreaDataSource(data);
+		} catch (error) {
+			console.error('Error loading cold areas:', error);
+			throw error; // Re-throw so callers know it failed
+		} finally {
+			this.store.setIsLoading(false);
+		}
 	}
 
 	/**
@@ -102,7 +103,5 @@ export default class ColdArea {
 				}
 			}
 		}
-
-		this.store.setIsLoading(false);
 	}
 }

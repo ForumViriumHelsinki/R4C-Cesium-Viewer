@@ -11,15 +11,9 @@
 		>
 			height
 		</option>
-		<option value="c_valmpvm">
-age
-</option>
-		<option value="area_m2">
-area
-</option>
-		<option value="i_raktilav">
-volume
-</option>
+		<option value="c_valmpvm">age</option>
+		<option value="area_m2">area</option>
+		<option value="i_raktilav">volume</option>
 	</select>
 
 	<select
@@ -32,30 +26,14 @@ volume
 		>
 			facade material
 		</option>
-		<option value="c_rakeaine">
-building material
-</option>
-		<option value="roof_type">
-roof type
-</option>
-		<option value="roof_median_color">
-roof median color
-</option>
-		<option value="roof_mode_color">
-roof mode color
-</option>
-		<option value="kayttotarkoitus">
-usage
-</option>
-		<option value="tyyppi">
-type
-</option>
-		<option value="c_lammtapa">
-heating method
-</option>
-		<option value="c_poltaine">
-heating source
-</option>
+		<option value="c_rakeaine">building material</option>
+		<option value="roof_type">roof type</option>
+		<option value="roof_median_color">roof median color</option>
+		<option value="roof_mode_color">roof mode color</option>
+		<option value="kayttotarkoitus">usage</option>
+		<option value="tyyppi">type</option>
+		<option value="c_lammtapa">heating method</option>
+		<option value="c_poltaine">heating source</option>
 	</select>
 </template>
 
@@ -69,20 +47,54 @@ import { useToggleStore } from '../stores/toggleStore.js';
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
 
 export default {
+	data() {
+		return {
+			// Store bound function references for cleanup
+			boundHandleSelectChange: null,
+			boundSelectAttributeForScatterPlot: null,
+			// Store DOM element references
+			numericalSelect: null,
+			categoricalSelect: null,
+		};
+	},
 	mounted() {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
 		this.plotService = new Plot();
 
-		const numericalSelect = document.getElementById('numericalSelect');
-		numericalSelect.addEventListener('change', this.handleSelectChange);
+		// Create bound function references
+		this.boundHandleSelectChange = this.handleSelectChange.bind(this);
+		this.boundSelectAttributeForScatterPlot = this.selectAttributeForScatterPlot.bind(this);
 
-		const categoricalSelect = document.getElementById('categoricalSelect');
-		categoricalSelect.addEventListener('change', this.handleSelectChange);
+		this.numericalSelect = document.getElementById('numericalSelect');
+		this.categoricalSelect = document.getElementById('categoricalSelect');
 
-		eventBus.on('updateScatterPlot', this.selectAttributeForScatterPlot);
+		if (this.numericalSelect) {
+			this.numericalSelect.addEventListener('change', this.boundHandleSelectChange);
+		}
+		if (this.categoricalSelect) {
+			this.categoricalSelect.addEventListener('change', this.boundHandleSelectChange);
+		}
+
+		eventBus.on('updateScatterPlot', this.boundSelectAttributeForScatterPlot);
 
 		this.newScatterPlot();
+	},
+	beforeUnmount() {
+		// Remove DOM event listeners
+		if (this.numericalSelect) {
+			this.numericalSelect.removeEventListener('change', this.boundHandleSelectChange);
+		}
+		if (this.categoricalSelect) {
+			this.categoricalSelect.removeEventListener('change', this.boundHandleSelectChange);
+		}
+
+		// Remove eventBus listener
+		eventBus.off('updateScatterPlot', this.boundSelectAttributeForScatterPlot);
+
+		// Clean up references
+		this.numericalSelect = null;
+		this.categoricalSelect = null;
 	},
 	methods: {
 		newScatterPlot() {
@@ -307,7 +319,8 @@ export default {
 
 		initializePlotContainer(containerId) {
 			const container = document.getElementById(containerId);
-			container.innerHTML = '';
+			// Use textContent for safe clearing (prevents potential XSS)
+			container.textContent = '';
 			container.style.visibility = this.toggleStore.showPlot ? 'visible' : 'hidden';
 		},
 

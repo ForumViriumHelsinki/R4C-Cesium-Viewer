@@ -52,21 +52,28 @@ export default {
 			}
 		};
 
-		const addVtjPrtToPrint = (entity, toPrint) => {
-			toPrint += `vtj_prt: ${entity._id}<br/>`;
-
-			return toPrint;
-		};
-
 		const printEntity = (entity, postno, view) => {
-			let toPrint = '<u>Found following properties & values:</u><br/>';
-			let length = entity._properties._propertyNames.length;
-			let idLength = String(entity._id).length;
+			const container = document.getElementById('printContainer');
 
+			// Clear existing content safely
+			container.textContent = '';
+
+			// Create heading
+			const heading = document.createElement('u');
+			heading.textContent = 'Found following properties & values:';
+			container.appendChild(heading);
+			container.appendChild(document.createElement('br'));
+
+			// Add vtj_prt if applicable
+			let idLength = String(entity._id).length;
 			if (idLength == 10) {
-				toPrint = addVtjPrtToPrint(entity, toPrint);
+				const vtjLine = document.createElement('div');
+				vtjLine.textContent = `vtj_prt: ${entity._id}`;
+				container.appendChild(vtjLine);
 			}
 
+			// Add entity properties
+			let length = entity._properties._propertyNames.length;
 			for (let i = 0; i < length; ++i) {
 				if (goodForPrint(entity._properties, i)) {
 					let value = entity._properties[entity._properties._propertyNames[i]]._value;
@@ -77,13 +84,15 @@ export default {
 						continue; // This will skip printing the object
 					}
 
-					toPrint += `${entity._properties._propertyNames[i]}: ${
+					const propertyLine = document.createElement('div');
+					propertyLine.textContent = `${entity._properties._propertyNames[i]}: ${
 						typeof value === 'number' ? value.toFixed(2) : value
-					}<br/>`;
+					}`;
+					container.appendChild(propertyLine);
 				}
 			}
 
-			addToPrint(toPrint, postno, view);
+			addFooterNote(postno, view);
 		};
 
 		const goodForPrint = (properties, i) => {
@@ -101,14 +110,18 @@ export default {
 			);
 		};
 
-		const addToPrint = (toPrint, postno, view) => {
+		const addFooterNote = (postno, view) => {
+			const container = document.getElementById('printContainer');
+
 			if (store.heatDataDate === '2023-06-23') {
-				toPrint +=
-					'<br/><br/><i>If average urban heat exposure of building is over 0.5, the areas with under 0.4 heat exposure are shown on map.</i>';
+				container.appendChild(document.createElement('br'));
+				container.appendChild(document.createElement('br'));
+				const note = document.createElement('i');
+				note.textContent =
+					'If average urban heat exposure of building is over 0.5, the areas with under 0.4 heat exposure are shown on map.';
+				container.appendChild(note);
 			}
 
-			const container = document.getElementById('printContainer');
-			container.innerHTML = toPrint;
 			container.scroll({
 				top: 1000,
 				behavior: 'smooth',

@@ -1,8 +1,6 @@
 <template>
 	<div id="gridviewContainer">
-		<p class="header">
-R4C Urban Heat risk demonstrator
-</p>
+		<p class="header">R4C Urban Heat risk demonstrator</p>
 		<v-btn
 			icon
 			class="uiButton"
@@ -16,14 +14,15 @@ R4C Urban Heat risk demonstrator
 				id="postalCodeToggle"
 				type="checkbox"
 				value="postalCode"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="postalCodeLabel"
 			for="postalCodeToggle"
 			class="label"
-			>Postalcode view</label>
+			>Postalcode view</label
+		>
 
 		<!--  natureGrid-->
 		<label
@@ -35,7 +34,7 @@ R4C Urban Heat risk demonstrator
 				id="natureGridToggle"
 				type="checkbox"
 				value="natureGrid"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
@@ -43,7 +42,8 @@ R4C Urban Heat risk demonstrator
 			for="natureGrid"
 			class="label"
 			style="display: none"
-			>Nature grid</label>
+			>Nature grid</label
+		>
 
 		<!--  travelTime-->
 		<label
@@ -54,14 +54,15 @@ R4C Urban Heat risk demonstrator
 				id="travelTimeToggle"
 				type="checkbox"
 				value="travelTime"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="travelTimeLabel"
 			for="travelTime"
 			class="label"
-			>Travel time grid</label>
+			>Travel time grid</label
+		>
 
 		<!--  resetGrid-->
 		<label
@@ -72,14 +73,15 @@ R4C Urban Heat risk demonstrator
 				id="resetGridToggle"
 				type="checkbox"
 				value="resetGrid"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="resetGridLabel"
 			for="resetGrid"
 			class="label"
-			>Reset grid</label>
+			>Reset grid</label
+		>
 
 		<!--  surveyPlaces-->
 		<label
@@ -90,14 +92,15 @@ R4C Urban Heat risk demonstrator
 				id="surveyPlacesToggle"
 				type="checkbox"
 				value="surveyPlaces"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="surveyPlacesLabel"
 			for="surveyPlaces"
 			class="label"
-			>Espoo resident survey places</label>
+			>Espoo resident survey places</label
+		>
 
 		<!--  250mGrid-->
 		<label
@@ -108,14 +111,15 @@ R4C Urban Heat risk demonstrator
 				id="250mGridToggle"
 				type="checkbox"
 				value="250mGrid"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="250mGridLabel"
 			for="250mGrid"
 			class="label"
-			>250m grid</label>
+			>250m grid</label
+		>
 	</div>
 	<BuildingGridChart />
 	<SosEco250mGrid />
@@ -145,6 +149,13 @@ export default {
 	data() {
 		return {
 			viewer: null,
+			// Store bound function references for cleanup
+			boundPostalCodeViewEvent: null,
+			boundTravelTimeEvent: null,
+			boundNatureGridEvent: null,
+			boundResetGridViewEvent: null,
+			boundSurveyPlacesEvent: null,
+			boundActivate250mGridEvent: null,
 		};
 	},
 	mounted() {
@@ -153,10 +164,20 @@ export default {
 		this.toggleStore = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
+
+		// Create bound function references
+		this.boundPostalCodeViewEvent = this.postalCodeViewEvent.bind(this);
+		this.boundTravelTimeEvent = this.travelTimeEvent.bind(this);
+		this.boundNatureGridEvent = this.natureGridEvent.bind(this);
+		this.boundResetGridViewEvent = this.resetGridViewEvent.bind(this);
+		this.boundSurveyPlacesEvent = this.surveyPlacesEvent.bind(this);
+		this.boundActivate250mGridEvent = this.activate250mGridEvent.bind(this);
+
 		this.addEventListeners();
 	},
 	beforeUnmount() {
 		this.unsubscribe();
+		this.removeEventListeners();
 	},
 	methods: {
 		reset() {
@@ -178,24 +199,62 @@ export default {
 		 * Add EventListeners
 		 */
 		addEventListeners() {
-			document
-				.getElementById('postalCodeToggle')
-				.addEventListener('change', this.postalCodeViewEvent.bind(this));
-			document
-				.getElementById('travelTimeToggle')
-				.addEventListener('change', this.travelTimeEvent.bind(this));
-			document
-				.getElementById('natureGridToggle')
-				.addEventListener('change', this.natureGridEvent.bind(this));
-			document
-				.getElementById('resetGridToggle')
-				.addEventListener('change', this.resetGridViewEvent.bind(this));
-			document
-				.getElementById('surveyPlacesToggle')
-				.addEventListener('change', this.surveyPlacesEvent.bind(this));
-			document
-				.getElementById('250mGridToggle')
-				.addEventListener('change', this.activate250mGridEvent.bind(this));
+			const postalCodeToggle = document.getElementById('postalCodeToggle');
+			const travelTimeToggle = document.getElementById('travelTimeToggle');
+			const natureGridToggle = document.getElementById('natureGridToggle');
+			const resetGridToggle = document.getElementById('resetGridToggle');
+			const surveyPlacesToggle = document.getElementById('surveyPlacesToggle');
+			const grid250mToggle = document.getElementById('250mGridToggle');
+
+			if (postalCodeToggle) {
+				postalCodeToggle.addEventListener('change', this.boundPostalCodeViewEvent);
+			}
+			if (travelTimeToggle) {
+				travelTimeToggle.addEventListener('change', this.boundTravelTimeEvent);
+			}
+			if (natureGridToggle) {
+				natureGridToggle.addEventListener('change', this.boundNatureGridEvent);
+			}
+			if (resetGridToggle) {
+				resetGridToggle.addEventListener('change', this.boundResetGridViewEvent);
+			}
+			if (surveyPlacesToggle) {
+				surveyPlacesToggle.addEventListener('change', this.boundSurveyPlacesEvent);
+			}
+			if (grid250mToggle) {
+				grid250mToggle.addEventListener('change', this.boundActivate250mGridEvent);
+			}
+		},
+
+		/**
+		 * Remove EventListeners to prevent memory leaks
+		 */
+		removeEventListeners() {
+			const postalCodeToggle = document.getElementById('postalCodeToggle');
+			const travelTimeToggle = document.getElementById('travelTimeToggle');
+			const natureGridToggle = document.getElementById('natureGridToggle');
+			const resetGridToggle = document.getElementById('resetGridToggle');
+			const surveyPlacesToggle = document.getElementById('surveyPlacesToggle');
+			const grid250mToggle = document.getElementById('250mGridToggle');
+
+			if (postalCodeToggle) {
+				postalCodeToggle.removeEventListener('change', this.boundPostalCodeViewEvent);
+			}
+			if (travelTimeToggle) {
+				travelTimeToggle.removeEventListener('change', this.boundTravelTimeEvent);
+			}
+			if (natureGridToggle) {
+				natureGridToggle.removeEventListener('change', this.boundNatureGridEvent);
+			}
+			if (resetGridToggle) {
+				resetGridToggle.removeEventListener('change', this.boundResetGridViewEvent);
+			}
+			if (surveyPlacesToggle) {
+				surveyPlacesToggle.removeEventListener('change', this.boundSurveyPlacesEvent);
+			}
+			if (grid250mToggle) {
+				grid250mToggle.removeEventListener('change', this.boundActivate250mGridEvent);
+			}
 		},
 
 		/**

@@ -45,14 +45,14 @@ export default class EspooSurvey {
 	 * @returns {Promise} - A promise that resolves once the data has been loaded
 	 */
 	async loadSurveyFeatures(collection) {
-		fetch(this.urlStore.collectionUrl(collection))
-			.then((response) => response.json())
-			.then((data) => {
-				this.addSurveyDataSource(data, collection);
-			})
-			.catch((error) => {
-				console.log('Error loading other nature data:', error);
-			});
+		try {
+			const response = await fetch(this.urlStore.collectionUrl(collection));
+			const data = await response.json();
+			await this.addSurveyDataSource(data, collection);
+		} catch (error) {
+			console.error('Error loading survey features:', error);
+			throw error; // Re-throw so callers know it failed
+		}
 	}
 
 	/**

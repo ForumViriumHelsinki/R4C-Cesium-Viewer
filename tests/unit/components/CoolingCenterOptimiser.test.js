@@ -188,6 +188,23 @@ const mockMitigationStore = {
 	}),
 	getCoolingCenterCount: vi.fn(() => 1),
 	optimalEffect: 7,
+	// Add new store actions from refactoring
+	setOptimised: vi.fn(function (value) {
+		this.optimised = value;
+	}),
+	setImpact: vi.fn(function (value) {
+		this.impact = value;
+	}),
+	setAffected: vi.fn(function (array) {
+		this.affected = array;
+	}),
+	resetMitigationState: vi.fn(function () {
+		this.impact = 0;
+		this.affected = [];
+		this.optimised = false;
+	}),
+	impact: 0,
+	affected: [],
 };
 
 vi.mock('../../../src/stores/globalStore.js', () => ({
@@ -212,8 +229,15 @@ describe('CoolingCenterOptimiser Component', () => {
 
 		// Reset mock state
 		mockMitigationStore.coolingCenters = [];
+		mockMitigationStore.optimised = false;
+		mockMitigationStore.impact = 0;
+		mockMitigationStore.affected = [];
 		mockMitigationStore.resetStore.mockClear();
 		mockMitigationStore.addCoolingCenter.mockClear();
+		mockMitigationStore.setOptimised.mockClear();
+		mockMitigationStore.setImpact.mockClear();
+		mockMitigationStore.setAffected.mockClear();
+		mockMitigationStore.resetMitigationState.mockClear();
 
 		wrapper = mount(CoolingCenterOptimiser, {
 			global: {

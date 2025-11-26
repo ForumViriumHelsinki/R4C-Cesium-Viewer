@@ -100,7 +100,8 @@ export default class Plot {
 	 */
 	initializePlotContainerForGrid(containerId) {
 		const container = document.getElementById(containerId);
-		container.innerHTML = '';
+		// Use textContent for safe clearing (prevents potential XSS)
+		container.textContent = '';
 
 		container.style.visibility = 'visible';
 	}
@@ -112,7 +113,8 @@ export default class Plot {
 	 */
 	initializePlotContainer(containerId) {
 		const container = document.getElementById(containerId);
-		container.innerHTML = '';
+		// Use textContent for safe clearing (prevents potential XSS)
+		container.textContent = '';
 
 		container.style.visibility = this.toggleStore.showPlot ? 'visible' : 'hidden';
 	}

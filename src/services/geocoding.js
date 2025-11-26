@@ -34,19 +34,56 @@ export default class Geocoding {
 		this.addressData = null;
 		this.viewService = new View();
 		this.toggleStore = useToggleStore();
+
+		// Track DOM elements for cleanup
+		this.searchField = null;
+		this.searchButton = null;
+		this.addressResult = null;
 	}
 
 	/**
 	 * Adds event listeners for user interactions
 	 */
 	addGeocodingEventListeners() {
-		const searchField = document.getElementById('searchInput');
-		const searchButton = document.getElementById('searchButton');
-		const addressResult = document.getElementById('searchresults');
+		this.searchField = document.getElementById('searchInput');
+		this.searchButton = document.getElementById('searchButton');
+		this.addressResult = document.getElementById('searchresults');
 
-		searchButton.addEventListener('click', this.checkSearch);
-		searchField.addEventListener('keyup', this.filterSearchResults);
-		addressResult.addEventListener('click', this.moveCameraToLocation);
+		if (this.searchButton) {
+			this.searchButton.addEventListener('click', this.checkSearch);
+		}
+		if (this.searchField) {
+			this.searchField.addEventListener('keyup', this.filterSearchResults);
+		}
+		if (this.addressResult) {
+			this.addressResult.addEventListener('click', this.moveCameraToLocation);
+		}
+	}
+
+	/**
+	 * Removes event listeners to prevent memory leaks
+	 */
+	removeGeocodingEventListeners() {
+		if (this.searchButton) {
+			this.searchButton.removeEventListener('click', this.checkSearch);
+		}
+		if (this.searchField) {
+			this.searchField.removeEventListener('keyup', this.filterSearchResults);
+		}
+		if (this.addressResult) {
+			this.addressResult.removeEventListener('click', this.moveCameraToLocation);
+		}
+	}
+
+	/**
+	 * Cleanup method to be called when service is destroyed
+	 */
+	destroy() {
+		this.removeGeocodingEventListeners();
+		this.searchField = null;
+		this.searchButton = null;
+		this.addressResult = null;
+		this.addressData = null;
 	}
 
 	/**
@@ -56,7 +93,9 @@ export default class Geocoding {
 		if (this.addressData.length === 1) {
 			this.store.setPostalCode(this.addressData[0].postalcode);
 			this.moveCameraAndReset(this.addressData[0].longitude, this.addressData[0].latitude);
-			document.getElementById('searchresults').innerHTML = '';
+			// Clear search results safely using textContent
+			const searchResultsElement = document.getElementById('searchresults');
+			searchResultsElement.textContent = '';
 		}
 	};
 
@@ -144,7 +183,9 @@ export default class Geocoding {
 
 		this.findNameOfZone(postcode);
 		this.moveCameraAndReset(long, lat);
-		document.getElementById('searchresults').innerHTML = '';
+		// Clear search results safely using textContent
+		const searchResultsElement = document.getElementById('searchresults');
+		searchResultsElement.textContent = '';
 		document.getElementById('searchInput').value = 'enter place or address';
 		const searchresultscontainer = document.getElementById('searchresultscontainer');
 		searchresultscontainer.style.display = 'none';
@@ -156,20 +197,21 @@ export default class Geocoding {
 	 * @param {Array<string>} addresses - Addresses shown to user
 	 */
 	renderSearchResult(addresses) {
-		let liElemet = '';
-
-		for (let i = 0; i < addresses.length; i++) {
-			liElemet += `<dt>${addresses[i]}</dt>`;
-		}
+		const searchResultsElement = document.getElementById('searchresults');
 		const searchresultscontainer = document.getElementById('searchresultscontainer');
+
+		// Clear existing results safely
+		searchResultsElement.textContent = '';
+
+		// Create DOM elements for each address (prevents XSS)
+		addresses.forEach((address) => {
+			const dt = document.createElement('dt');
+			dt.textContent = address; // Safe - no HTML parsing
+			searchResultsElement.appendChild(dt);
+		});
+
 		searchresultscontainer.style.display = 'block';
-		searchresultscontainer.style.visibility = 'visible';
-
-		if (liElemet == '') {
-			searchresultscontainer.style.visibility = 'hidden';
-		}
-
-		document.getElementById('searchresults').innerHTML = liElemet;
+		searchresultscontainer.style.visibility = addresses.length > 0 ? 'visible' : 'hidden';
 	}
 
 	/**

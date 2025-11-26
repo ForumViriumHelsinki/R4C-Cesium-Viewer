@@ -264,6 +264,36 @@ export const useMitigationStore = defineStore('mitigation', {
 			this.cumulativeCoolingArea = 0;
 			this.cumulativeHeatReduction = 0;
 		},
+		/**
+		 * Sets the total heat reduction impact value
+		 * @param {number} value - Impact value to set
+		 */
+		setImpact(value) {
+			this.impact = value;
+		},
+		/**
+		 * Sets the array of affected grid cell IDs
+		 * @param {Array<number|string>} array - Array of grid cell IDs affected by mitigation
+		 */
+		setAffected(array) {
+			this.affected = array;
+		},
+		/**
+		 * Sets the optimization state flag
+		 * @param {boolean} value - True if cooling centers have been optimized
+		 */
+		setOptimised(value) {
+			this.optimised = value;
+		},
+		/**
+		 * Resets mitigation state to default values
+		 * Clears impact, affected cells, and optimization flag
+		 */
+		resetMitigationState() {
+			this.impact = 0;
+			this.affected = [];
+			this.optimised = false;
+		},
 		getCoolingCenterCount(gridId) {
 			return this.coolingCenters.filter((center) => center.grid_id === gridId).length;
 		},

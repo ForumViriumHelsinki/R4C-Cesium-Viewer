@@ -32,25 +32,24 @@ export default class Vegetation {
 	 *
 	 */
 	async loadSensorData() {
-		fetch('https://bri3.fvh.io/opendata/r4c/r4c_last.geojson')
-			.then((response) => response.json())
-			.then((data) => {
-				// Create a Cesium data source
-				let dataSource = new Cesium.GeoJsonDataSource();
+		try {
+			const response = await fetch('https://bri3.fvh.io/opendata/r4c/r4c_last.geojson');
+			const data = await response.json();
 
-				// Load the GeoJSON data into the data source
-				dataSource.load(data, {
-					markerColor: Cesium.Color.ORANGE, // Customize the marker color if desired
-					clampToGround: true, // Set to true to clamp entities to the ground
-				});
+			// Create a Cesium data source
+			let dataSource = new Cesium.GeoJsonDataSource();
 
-				this.addSensorDataSource(data);
-
-				//	return response.json();
-			})
-			.catch((e) => {
-				console.log('something went wrong', e);
+			// Load the GeoJSON data into the data source
+			dataSource.load(data, {
+				markerColor: Cesium.Color.ORANGE, // Customize the marker color if desired
+				clampToGround: true, // Set to true to clamp entities to the ground
 			});
+
+			await this.addSensorDataSource(data);
+		} catch (error) {
+			console.error('Error loading sensor data:', error);
+			throw error; // Re-throw so callers know it failed
+		}
 	}
 
 	/**
