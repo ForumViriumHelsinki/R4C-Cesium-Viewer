@@ -110,21 +110,20 @@
 				:disabled="!viewerReady"
 				:aria-label="`Face ${dir.label}`"
 				:title="`Face ${dir.label}`"
-				size="x-small"
-				icon
+				density="compact"
+				min-width="28"
+				height="28"
+				rounded="circle"
 				@click.stop="setHeading(dir.degrees)"
 			>
-				{{ dir.name }}
+				<span class="dir-label">{{ dir.name }}</span>
 			</v-btn>
 		</div>
 
 		<!-- Zoom Controls -->
-		<v-btn-group
-			divided
-			density="compact"
-			elevation="2"
-			rounded="lg"
+		<div
 			class="zoom-controls"
+			role="group"
 			aria-label="Zoom controls"
 		>
 			<v-btn
@@ -133,6 +132,9 @@
 				title="Zoom in"
 				icon="mdi-plus"
 				size="small"
+				variant="flat"
+				color="surface"
+				class="zoom-btn"
 				@click.stop="zoomIn"
 			/>
 			<v-btn
@@ -141,9 +143,12 @@
 				title="Zoom out"
 				icon="mdi-minus"
 				size="small"
+				variant="flat"
+				color="surface"
+				class="zoom-btn"
 				@click.stop="zoomOut"
 			/>
-		</v-btn-group>
+		</div>
 	</div>
 </template>
 
@@ -366,6 +371,31 @@ const zoomOut = () => {
 /* Directional button positions */
 .dir-btn {
 	position: absolute;
+	padding: 0 !important;
+	min-width: 28px !important;
+	background-color: white !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.dir-label {
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 1;
+	color: #424242;
+}
+
+/* Active state - colored background with white text */
+.dir-btn.v-btn--variant-flat {
+	background-color: rgb(var(--v-theme-primary)) !important;
+}
+
+.dir-btn.v-btn--variant-flat .dir-label {
+	color: white;
+}
+
+/* North button active state */
+.dir-btn.north.v-btn--variant-flat {
+	background-color: rgb(var(--v-theme-error)) !important;
 }
 
 .dir-btn.north {
@@ -409,35 +439,56 @@ const zoomOut = () => {
 .zoom-controls {
 	display: flex;
 	flex-direction: column;
+	border-radius: 20px;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	background: white;
+}
+
+.zoom-btn {
+	border-radius: 0 !important;
+}
+
+.zoom-btn:first-child {
+	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* Touch device adjustments - larger targets */
 @media (pointer: coarse) {
 	.compass-assembly {
-		width: 130px;
-		height: 130px;
+		width: 140px;
+		height: 140px;
 	}
 
 	.compass-visual {
-		width: 58px;
-		height: 58px;
+		width: 60px;
+		height: 60px;
+	}
+
+	.dir-btn {
+		min-width: 34px !important;
+		height: 34px !important;
+	}
+
+	.dir-label {
+		font-size: 11px;
 	}
 
 	.dir-btn.northeast {
-		top: 14px;
-		right: 14px;
+		top: 16px;
+		right: 16px;
 	}
 	.dir-btn.southeast {
-		bottom: 14px;
-		right: 14px;
+		bottom: 16px;
+		right: 16px;
 	}
 	.dir-btn.southwest {
-		bottom: 14px;
-		left: 14px;
+		bottom: 16px;
+		left: 16px;
 	}
 	.dir-btn.northwest {
-		top: 14px;
-		left: 14px;
+		top: 16px;
+		left: 16px;
 	}
 }
 
