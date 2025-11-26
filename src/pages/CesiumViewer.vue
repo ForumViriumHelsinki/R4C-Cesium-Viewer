@@ -21,7 +21,7 @@
 		<!-- Disclaimer Popup -->
 		<DisclaimerPopup class="disclaimer-popup" />
 		<BuildingInformation v-if="shouldShowBuildingInformation" />
-		<!-- Error Snackbar -->
+		<!-- Initialization Error Snackbar -->
 		<v-snackbar
 			v-model="errorSnackbar"
 			:timeout="-1"
@@ -48,6 +48,28 @@
 				<v-btn
 					variant="text"
 					@click="errorSnackbar = false"
+				>
+					Close
+				</v-btn>
+			</template>
+		</v-snackbar>
+		<!-- Global Data Loading Error Snackbar -->
+		<v-snackbar
+			v-model="store.errorNotification.show"
+			:timeout="6000"
+			color="error"
+			location="bottom"
+		>
+			<div class="d-flex align-center">
+				<v-icon class="mr-2"> mdi-alert </v-icon>
+				<div>
+					{{ store.errorNotification.message }}
+				</div>
+			</div>
+			<template #actions>
+				<v-btn
+					variant="text"
+					@click="store.hideError()"
 				>
 					Close
 				</v-btn>

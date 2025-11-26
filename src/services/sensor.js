@@ -48,6 +48,10 @@ export default class Vegetation {
 			await this.addSensorDataSource(data);
 		} catch (error) {
 			console.error('Error loading sensor data:', error);
+			this.store.showError(
+				'Unable to load sensor data. Please try again.',
+				`Failed to fetch sensor data from R4C API: ${error.message}`
+			);
 			throw error; // Re-throw so callers know it failed
 		}
 	}
