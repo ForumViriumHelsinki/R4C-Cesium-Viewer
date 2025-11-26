@@ -19,8 +19,36 @@ import { eventBus } from './eventEmitter.js';
  * - Postal code extraction and zone name resolution
  * - Helsinki-specific filtering option
  *
+ * **Lifecycle Management:**
+ * - Created: When UnifiedSearch component mounts
+ * - Destroyed: When UnifiedSearch component unmounts
+ * - **Cleanup responsibility:** Parent component MUST call destroy() in beforeUnmount hook
+ *
+ * **Resources Managed:**
+ * - 3 DOM event listeners (search input, search button, results list)
+ * - DOM element references (searchField, searchButton, addressResult)
+ *
  * @class Geocoding
  * @see {@link https://digitransit.fi/en/developers/apis/2-geocoding-api/|Digitransit Geocoding API}
+ * @see {@link ../../docs/SERVICE_LIFECYCLE.md|Service Lifecycle Documentation}
+ *
+ * @example
+ * // In component
+ * import Geocoding from '@/services/geocoding.js';
+ *
+ * let geocodingService = null;
+ *
+ * onMounted(() => {
+ *   geocodingService = new Geocoding();
+ *   geocodingService.addGeocodingEventListeners();
+ * });
+ *
+ * onBeforeUnmount(() => {
+ *   if (geocodingService) {
+ *     geocodingService.destroy();
+ *     geocodingService = null;
+ *   }
+ * });
  */
 export default class Geocoding {
 	/**
@@ -76,7 +104,20 @@ export default class Geocoding {
 	}
 
 	/**
-	 * Cleanup method to be called when service is destroyed
+	 * Cleanup method to prevent memory leaks
+	 * MUST be called by parent component in beforeUnmount hook.
+	 *
+	 * Cleans up:
+	 * - Removes all event listeners (search input, button, results)
+	 * - Nullifies DOM element references
+	 * - Clears cached address data
+	 *
+	 * @returns {void}
+	 *
+	 * @example
+	 * onBeforeUnmount(() => {
+	 *   geocodingService.destroy();
+	 * });
 	 */
 	destroy() {
 		this.removeGeocodingEventListeners();
