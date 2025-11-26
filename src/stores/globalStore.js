@@ -62,7 +62,7 @@ import { defineStore } from 'pinia';
  * @property {Object} errorNotification - Error notification state for user-facing error messages
  * @property {boolean} errorNotification.show - Whether error notification is visible
  * @property {string} errorNotification.message - User-friendly error message
- * @property {string} errorNotification.context - Technical context for debugging
+ * @property {string} errorNotification.context - Technical context for debugging (logged to console)
  */
 export const useGlobalStore = defineStore('global', {
 	state: () => ({
@@ -327,9 +327,10 @@ export const useGlobalStore = defineStore('global', {
 		/**
 		 * Shows a user-facing error notification
 		 * Displays error messages in the UI for network failures or data loading issues.
+		 * Technical context is logged to console for debugging purposes.
 		 *
 		 * @param {string} message - User-friendly error message to display
-		 * @param {string} [context=''] - Technical context for debugging (optional)
+		 * @param {string} [context=''] - Technical context for debugging (logged to console)
 		 *
 		 * @example
 		 * store.showError('Unable to load cold area data. Please try again.', 'Network error at /api/coldareas/00100');
@@ -340,6 +341,11 @@ export const useGlobalStore = defineStore('global', {
 				message,
 				context,
 			};
+
+			// Log technical context to console for developer debugging
+			if (context) {
+				console.error('[GlobalStore] Error context:', context);
+			}
 		},
 		/**
 		 * Hides the error notification

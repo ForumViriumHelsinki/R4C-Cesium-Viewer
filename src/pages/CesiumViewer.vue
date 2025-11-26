@@ -21,13 +21,20 @@
 		<!-- Disclaimer Popup -->
 		<DisclaimerPopup class="disclaimer-popup" />
 		<BuildingInformation v-if="shouldShowBuildingInformation" />
-		<!-- Initialization Error Snackbar -->
+		<!--
+			Initialization Error Snackbar
+			Purpose: Critical Cesium library loading failures (e.g., network errors during startup)
+			Behavior: Persistent (no auto-dismiss), shown at top, includes retry button
+			Use case: Viewer failed to initialize, user cannot proceed without retry
+		-->
 		<v-snackbar
 			v-model="errorSnackbar"
 			:timeout="-1"
 			color="error"
 			location="top"
 			multi-line
+			role="alert"
+			aria-live="assertive"
 		>
 			<div class="d-flex align-center">
 				<v-icon class="mr-2"> mdi-alert-circle </v-icon>
@@ -53,12 +60,19 @@
 				</v-btn>
 			</template>
 		</v-snackbar>
-		<!-- Global Data Loading Error Snackbar -->
+		<!--
+			Runtime Data Loading Error Snackbar
+			Purpose: Non-critical async service failures (e.g., cold areas, sensors, surveys)
+			Behavior: Auto-dismisses after 6 seconds, shown at bottom
+			Use case: Optional data failed to load, viewer remains functional
+		-->
 		<v-snackbar
 			v-model="store.errorNotification.show"
 			:timeout="6000"
 			color="error"
 			location="bottom"
+			role="alert"
+			aria-live="assertive"
 		>
 			<div class="d-flex align-center">
 				<v-icon class="mr-2"> mdi-alert </v-icon>

@@ -399,6 +399,84 @@ describe('globalStore', () => {
 		});
 	});
 
+	describe('errorNotification', () => {
+		it('should have correct initial errorNotification state', () => {
+			const store = useGlobalStore();
+
+			expect(store.errorNotification).toEqual({
+				show: false,
+				message: '',
+				context: '',
+			});
+		});
+
+		it('should show error with message and context', () => {
+			const store = useGlobalStore();
+			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+			store.showError('Test error message', 'Technical context details');
+
+			expect(store.errorNotification.show).toBe(true);
+			expect(store.errorNotification.message).toBe('Test error message');
+			expect(store.errorNotification.context).toBe('Technical context details');
+			expect(consoleSpy).toHaveBeenCalledWith('[GlobalStore] Error context:', 'Technical context details');
+
+			consoleSpy.mockRestore();
+		});
+
+		it('should show error without context', () => {
+			const store = useGlobalStore();
+			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+			store.showError('Test error message');
+
+			expect(store.errorNotification.show).toBe(true);
+			expect(store.errorNotification.message).toBe('Test error message');
+			expect(store.errorNotification.context).toBe('');
+			expect(consoleSpy).not.toHaveBeenCalled();
+
+			consoleSpy.mockRestore();
+		});
+
+		it('should hide error notification', () => {
+			const store = useGlobalStore();
+
+			// First show an error
+			store.showError('Test error', 'Test context');
+			expect(store.errorNotification.show).toBe(true);
+
+			// Then hide it
+			store.hideError();
+
+			expect(store.errorNotification.show).toBe(false);
+			expect(store.errorNotification.message).toBe('');
+			expect(store.errorNotification.context).toBe('');
+		});
+
+		it('should handle multiple error notifications', () => {
+			const store = useGlobalStore();
+
+			store.showError('First error', 'First context');
+			expect(store.errorNotification.message).toBe('First error');
+
+			store.showError('Second error', 'Second context');
+			expect(store.errorNotification.message).toBe('Second error');
+			expect(store.errorNotification.context).toBe('Second context');
+		});
+
+		it('should handle empty context string (not log to console)', () => {
+			const store = useGlobalStore();
+			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+			store.showError('Error message', '');
+
+			expect(store.errorNotification.context).toBe('');
+			expect(consoleSpy).not.toHaveBeenCalled();
+
+			consoleSpy.mockRestore();
+		});
+	});
+
 	describe('edge cases', () => {
 		it('should handle null and undefined values', () => {
 			const store = useGlobalStore();
