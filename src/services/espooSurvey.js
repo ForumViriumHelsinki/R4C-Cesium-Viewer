@@ -51,6 +51,10 @@ export default class EspooSurvey {
 			await this.addSurveyDataSource(data, collection);
 		} catch (error) {
 			console.error('Error loading survey features:', error);
+			this.store.showError(
+				'Unable to load survey data. Please try again.',
+				`Failed to fetch survey collection ${collection}: ${error.message}`
+			);
 			throw error; // Re-throw so callers know it failed
 		}
 	}

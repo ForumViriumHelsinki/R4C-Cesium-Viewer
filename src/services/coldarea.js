@@ -72,6 +72,10 @@ export default class ColdArea {
 			await this.addColdAreaDataSource(data);
 		} catch (error) {
 			console.error('Error loading cold areas:', error);
+			this.store.showError(
+				'Unable to load cold area data. Please try again.',
+				`Failed to fetch cold areas for postal code ${this.store.postalcode}: ${error.message}`
+			);
 			throw error; // Re-throw so callers know it failed
 		} finally {
 			this.store.setIsLoading(false);

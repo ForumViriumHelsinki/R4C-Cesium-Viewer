@@ -58,6 +58,10 @@ export default class Traveltime {
 			this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data);
 		} catch (error) {
 			console.error('Error loading travel time data:', error);
+			this.store.showError(
+				'Unable to load travel time data. Please try again.',
+				`Failed to fetch travel times from grid cell ${from_id}: ${error.message}`
+			);
 			throw error; // Re-throw so callers know it failed
 		}
 	}

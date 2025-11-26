@@ -59,6 +59,10 @@ import { defineStore } from 'pinia';
  * @property {number} clickProcessingState.retryCount - Number of retry attempts for failed loads
  * @property {Object|null} clickProcessingState.previousViewState - Captured state for restoration on cancel
  * @property {Object|null} clickProcessingState.loadingProgress - Progressive loading progress {current, total}
+ * @property {Object} errorNotification - Error notification state for user-facing error messages
+ * @property {boolean} errorNotification.show - Whether error notification is visible
+ * @property {string} errorNotification.message - User-friendly error message
+ * @property {string} errorNotification.context - Technical context for debugging (logged to console)
  */
 export const useGlobalStore = defineStore('global', {
 	state: () => ({
@@ -68,6 +72,11 @@ export const useGlobalStore = defineStore('global', {
 		averageHeatExposure: 0,
 		averageTreeArea: 0,
 		level: 'start',
+		errorNotification: {
+			show: false,
+			message: '',
+			context: '',
+		},
 		minMaxKelvin: {
 			'2015-07-03': { min: 285.7481384277, max: 323.753112793 },
 			'2016-06-03': { min: 273.0023498535, max: 326.4089050293 },
@@ -314,6 +323,40 @@ export const useGlobalStore = defineStore('global', {
 			this.buildingAddress = prevState.buildingAddress;
 
 			console.log('[GlobalStore] Previous view state restored');
+		},
+		/**
+		 * Shows a user-facing error notification
+		 * Displays error messages in the UI for network failures or data loading issues.
+		 * Technical context is logged to console for debugging purposes.
+		 *
+		 * @param {string} message - User-friendly error message to display
+		 * @param {string} [context=''] - Technical context for debugging (logged to console)
+		 *
+		 * @example
+		 * store.showError('Unable to load cold area data. Please try again.', 'Network error at /api/coldareas/00100');
+		 */
+		showError(message, context = '') {
+			this.errorNotification = {
+				show: true,
+				message,
+				context,
+			};
+
+			// Log technical context to console for developer debugging
+			if (context) {
+				console.error('[GlobalStore] Error context:', context);
+			}
+		},
+		/**
+		 * Hides the error notification
+		 * Clears error state when user dismisses the notification.
+		 */
+		hideError() {
+			this.errorNotification = {
+				show: false,
+				message: '',
+				context: '',
+			};
 		},
 	},
 });
