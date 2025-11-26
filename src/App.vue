@@ -3,72 +3,71 @@
 		<!-- Top Navigation Bar -->
 		<v-app-bar
 			app
-			elevation="2"
-			class="top-nav"
+			:elevation="2"
+			height="64"
+			color="surface"
 		>
-			<v-container
-				fluid
-				class="d-flex align-center py-0"
-			>
-				<!-- App Title with Version Info -->
-				<AppTitle class="mr-4" />
+			<!-- Left section: Title + Navigation -->
+			<AppTitle class="ml-4 mr-4" />
 
-				<div class="navigation-buttons">
-					<v-btn
-						v-if="currentLevel === 'building'"
-						icon
-						aria-label="Return to postal code level"
-						@click="returnToPostalCode"
-					>
-						<v-icon>mdi-arrow-left</v-icon>
-					</v-btn>
-
-					<v-btn
-						icon
-						aria-label="Sign out"
-						@click="signOut"
-					>
-						<v-icon>mdi-logout</v-icon>
-					</v-btn>
-
-					<v-btn
-						v-if="currentLevel !== 'start'"
-						icon
-						aria-label="Rotate camera view 180 degrees"
-						@click="rotateCamera"
-					>
-						<v-icon>mdi-compass</v-icon>
-					</v-btn>
-
-					<!-- Feature Flags Panel -->
-					<FeatureFlagsPanel />
-				</div>
-
-				<v-spacer />
-
-				<!-- View Mode Selector -->
-				<ViewModeCompact />
-
-				<!-- Heat Timeline (shown at postalCode and building levels) -->
-				<TimelineCompact
-					v-if="currentLevel === 'postalCode' || currentLevel === 'building'"
-					class="ml-4"
-				/>
-
-				<v-spacer />
-
-				<!-- Control Panel Toggle -->
+			<div class="d-flex align-center ga-1">
 				<v-btn
-					variant="outlined"
-					aria-label="Toggle control panel"
-					prepend-icon="mdi-tune"
-					class="control-panel-toggle"
-					@click="sidebarVisible = !sidebarVisible"
+					v-if="currentLevel === 'building'"
+					icon
+					variant="text"
+					aria-label="Return to postal code level"
+					@click="returnToPostalCode"
 				>
-					<span class="d-none d-sm-inline">{{ sidebarVisible ? 'Hide' : 'Show' }} Controls</span>
-					<span class="d-inline d-sm-none">{{ sidebarVisible ? 'Hide' : 'Show' }}</span>
+					<v-icon>mdi-arrow-left</v-icon>
 				</v-btn>
-			</v-container>
+
+				<v-btn
+					icon
+					variant="text"
+					aria-label="Sign out"
+					@click="signOut"
+				>
+					<v-icon>mdi-logout</v-icon>
+				</v-btn>
+
+				<v-btn
+					v-if="currentLevel !== 'start'"
+					icon
+					variant="text"
+					aria-label="Rotate camera view 180 degrees"
+					@click="rotateCamera"
+				>
+					<v-icon>mdi-compass</v-icon>
+				</v-btn>
+
+				<!-- Feature Flags Panel -->
+				<FeatureFlagsPanel />
+			</div>
+
+			<v-spacer />
+
+			<!-- Center section -->
+			<ViewModeCompact />
+
+			<!-- Heat Timeline (shown at postalCode and building levels) -->
+			<TimelineCompact
+				v-if="currentLevel === 'postalCode' || currentLevel === 'building'"
+				class="ml-4"
+			/>
+
+			<v-spacer />
+
+			<!-- Right section -->
+			<v-btn
+				variant="outlined"
+				aria-label="Toggle control panel"
+				prepend-icon="mdi-tune"
+				class="mr-4"
+				@click="sidebarVisible = !sidebarVisible"
+			>
+				<span class="d-none d-sm-inline">{{ sidebarVisible ? 'Hide' : 'Show' }} Controls</span>
+				<span class="d-inline d-sm-none">{{ sidebarVisible ? 'Hide' : 'Show' }}</span>
+			</v-btn>
 		</v-app-bar>
 
 		<!-- Enhanced Control Panel -->
@@ -239,18 +238,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.top-nav {
-	height: 64px;
-	background: white;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-.navigation-buttons {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-}
-
 .minimal-disclaimer {
 	position: fixed;
 	bottom: 8px;
@@ -300,19 +287,13 @@ onMounted(async () => {
 }
 
 /* Navigation buttons - ensure touch targets meet WCAG 2.5.5 */
-.navigation-buttons {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.navigation-buttons .v-btn {
+.v-app-bar .v-btn--icon {
 	/* Default Vuetify icon button is 40px, which is close to 44px minimum */
 	min-width: 44px;
 	min-height: 44px;
 }
 
-.control-panel-toggle {
+.v-app-bar .v-btn:not(.v-btn--icon) {
 	min-height: 44px;
 }
 
@@ -361,28 +342,12 @@ a {
 	.status-indicator-container.sidebar-open {
 		right: 8px;
 	}
-
-	/* Reduce gap on mobile for space efficiency */
-	.navigation-buttons {
-		gap: 2px;
-	}
-
-	/* Ensure control panel toggle is touch-friendly */
-	.control-panel-toggle {
-		min-width: 44px;
-		padding-left: 8px;
-		padding-right: 8px;
-	}
 }
 
 /* Very small mobile - further optimize */
 @media (max-width: 480px) {
-	.top-nav {
-		padding: 0 4px;
-	}
-
 	/* Keep 44px minimum for WCAG 2.5.5 compliance even on very small screens */
-	.navigation-buttons .v-btn {
+	.v-app-bar .v-btn--icon {
 		min-width: 44px;
 		min-height: 44px;
 	}
