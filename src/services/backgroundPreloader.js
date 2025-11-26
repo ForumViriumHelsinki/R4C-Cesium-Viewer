@@ -15,9 +15,8 @@ import { getRecentNDVIDates } from '../constants/ndviDates.js';
  * - **Cleanup responsibility:** CesiumViewer MUST call destroy() in beforeUnmount hook
  *
  * **Resources Managed:**
- * - 5 document-level event listeners (visibilitychange, focus, blur, mousemove, keypress)
+ * - 5 document-level event listeners (mousedown, mousemove, keypress, scroll, touchstart)
  * - Idle timer (setTimeout) for detecting user inactivity
- * - Map collections (landcoverLayersMap, floodLayersMap) for layer caching
  * - Preload queue and priority maps
  *
  * @class BackgroundPreloader
@@ -569,10 +568,9 @@ class BackgroundPreloader {
 	 *
 	 * Cleans up:
 	 * - Pauses all background loading operations
-	 * - Removes 5 document-level event listeners
+	 * - Removes 5 document-level event listeners (mousedown, mousemove, keypress, scroll, touchstart)
 	 * - Clears idle timer
 	 * - Clears preload queue and priority maps
-	 * - Clears layer cache maps
 	 *
 	 * @returns {void}
 	 *

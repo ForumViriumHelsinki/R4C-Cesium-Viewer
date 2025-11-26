@@ -14,94 +14,76 @@ Several services in the application implement `destroy()` methods to clean up re
 
 ### geocoding.js
 
-**Resources managed:**
-- 3 event listeners (keyup, click, input)
-- DOM element references (searchInput, searchButton, searchResults)
+**⚠️ Note:** The Geocoding class in `src/services/geocoding.js` appears to be legacy code. The current UnifiedSearch component (Vue 3 Composition API) implements geocoding functionality inline using the Digitransit API directly, without instantiating the Geocoding class.
 
-**Lifecycle:**
-- **Created:** When UnifiedSearch component mounts
-- **Destroyed:** When UnifiedSearch component unmounts
+**Resources managed by Geocoding class:**
+- 3 event listeners (keyup, click, input)
+- DOM element references (searchInput, searchButton, addressResult)
 
 **Cleanup method:**
 ```javascript
 destroy() {
-  if (this.searchInput) {
-    this.searchInput.removeEventListener('keyup', this.boundHandleSearch);
-  }
-  if (this.searchButton) {
-    this.searchButton.removeEventListener('click', this.boundHandleSearch);
-  }
-  if (this.searchResults) {
-    this.searchResults.removeEventListener('input', this.boundHandleSelection);
-  }
-
-  // Nullify references
-  this.searchInput = null;
+  this.removeGeocodingEventListeners();
+  this.searchField = null;
   this.searchButton = null;
-  this.searchResults = null;
+  this.addressResult = null;
+  this.addressData = null;
 }
 ```
 
-**Implementation in component:**
+**Current UnifiedSearch.vue implementation:**
+The component uses Vue's built-in lifecycle and doesn't require explicit destroy():
 ```vue
 <!-- src/components/UnifiedSearch.vue -->
-<script>
-import Geocoding from '@/services/geocoding.js';
+<script setup>
+import { ref } from 'vue';
+import Camera from '../services/camera';
+import FeaturePicker from '../services/featurepicker';
 
-export default {
-  setup() {
-    let geocodingService = null;
+// Uses reactive refs and fetch API directly
+const searchQuery = ref('');
+const addressResults = ref([]);
 
-    onMounted(() => {
-      geocodingService = new Geocoding();
-      // Use the service...
-    });
+// Geocoding via Digitransit API
+const fetchAddressResults = async () => {
+  const response = await fetch(
+    `/digitransit/geocoding/v1/autocomplete?text=${searchQuery.value}`
+  );
+  const data = await response.json();
+  addressResults.value = processAddressData(data.features);
+};
 
-    onBeforeUnmount(() => {
-      if (geocodingService) {
-        geocodingService.destroy();
-        geocodingService = null;
-      }
-    });
-  }
-}
+// Vue handles cleanup automatically when component unmounts
 </script>
 ```
+
+**No explicit cleanup needed** - UnifiedSearch uses Vue's Composition API with reactive refs that are automatically cleaned up on component unmount.
 
 ### backgroundPreloader.js
 
 **Resources managed:**
-- 5 document-level event listeners
+- 5 document-level event listeners (mousedown, mousemove, keypress, scroll, touchstart)
 - Idle timer (setTimeout)
-- Map collections (landcoverLayersMap, floodLayersMap)
+- Preload queue and priority maps
 
 **Lifecycle:**
-- **Created:** During application initialization in CesiumViewer
+- **Created:** Singleton instance exported by module
+- **Initialized:** When CesiumViewer mounts (via warmCriticalData())
 - **Destroyed:** When application unmounts (page navigation, tab close)
+- **Note:** Currently, CesiumViewer does NOT call destroy() - this is a known gap
 
 **Cleanup method:**
 ```javascript
 destroy() {
-  this.stopBackgroundLoading();
-
-  if (this.idleTimer) {
-    clearTimeout(this.idleTimer);
-    this.idleTimer = null;
-  }
-
-  // Remove all event listeners
-  document.removeEventListener('visibilitychange', this.handleVisibilityChange);
-  document.removeEventListener('focus', this.resetIdleTimer);
-  document.removeEventListener('blur', this.pauseLoading);
-  // ... (additional listeners)
-
-  // Clear map collections
-  this.landcoverLayersMap.clear();
-  this.floodLayersMap.clear();
+  this.pause();
+  this.removeIdleDetection();
+  this.preloadQueue.clear();
+  this.preloadPriorities.clear();
+  console.log('Background preloader destroyed');
 }
 ```
 
-**Implementation in component:**
+**Current implementation in CesiumViewer.vue:**
 ```vue
 <!-- src/pages/CesiumViewer.vue -->
 <script>
@@ -109,18 +91,33 @@ import cacheWarmer from '@/services/cacheWarmer.js';
 
 export default {
   setup() {
-    onMounted(async () => {
-      // cacheWarmer is singleton, initialized during mount
-      await cacheWarmer.start();
+    onMounted(() => {
+      // cacheWarmer is singleton, called during mount
+      // Uses requestIdleCallback for non-blocking initialization
+      requestIdleCallback(() => {
+        cacheWarmer.warmCriticalData();
+      }, { timeout: 2000 });
     });
 
     onBeforeUnmount(() => {
-      // Clean up when page/app unmounts
-      cacheWarmer.destroy();
+      // ⚠️ MISSING: Should call cacheWarmer.destroy() here
+      // Currently only cleans up ESC key handler
+      document.removeEventListener('keydown', handleGlobalEscKey);
     });
   }
 }
 </script>
+```
+
+**Recommended fix:**
+```vue
+onBeforeUnmount(() => {
+  // Clean up ESC key handler
+  document.removeEventListener('keydown', handleGlobalEscKey);
+
+  // Clean up background preloader
+  cacheWarmer.destroy();
+});
 ```
 
 ## Vue Component Lifecycle Integration
@@ -198,25 +195,46 @@ onBeforeUnmount(() => cacheWarmer.destroy());
 **When to use:** Services that are scoped to a single component's lifecycle.
 
 **Examples:**
-- Geocoding service in UnifiedSearch
+- Custom chart renderers
+- Component-specific animation controllers
+- Specialized data processors
 
 **Pattern:**
 ```javascript
 // Service file exports class
-export default class Geocoding { ... }
+export default class ChartRenderer {
+  constructor(canvasElement) {
+    this.canvas = canvasElement;
+    this.animationFrame = null;
+  }
+
+  start() {
+    this.animationFrame = requestAnimationFrame(this.render.bind(this));
+  }
+
+  destroy() {
+    if (this.animationFrame) {
+      cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = null;
+    }
+    this.canvas = null;
+  }
+}
 
 // In component
-import Geocoding from '@/services/geocoding.js';
+import ChartRenderer from '@/services/chartRenderer.js';
 
-let geocodingService = null;
+let renderer = null;
 
 onMounted(() => {
-  geocodingService = new Geocoding();
+  const canvas = document.getElementById('chart');
+  renderer = new ChartRenderer(canvas);
+  renderer.start();
 });
 
 onBeforeUnmount(() => {
-  geocodingService?.destroy();
-  geocodingService = null;
+  renderer?.destroy();
+  renderer = null;
 });
 ```
 
@@ -381,12 +399,13 @@ Use Chrome DevTools to verify cleanup:
 
 ## Service Cleanup Summary Table
 
-| Service | Resources | Created By | Destroyed By | Pattern |
-|---------|-----------|------------|--------------|---------|
-| geocoding.js | 3 event listeners | UnifiedSearch | UnifiedSearch.beforeUnmount() | Per-component |
-| backgroundPreloader.js | 5 listeners + timer | CesiumViewer | CesiumViewer.beforeUnmount() | Singleton |
-| GridView.vue | 6 DOM listeners | GridView (self) | GridView.beforeUnmount() | Component-managed |
-| Scatterplot.vue | 2 DOM + 1 eventBus | Scatterplot (self) | Scatterplot.beforeUnmount() | Component-managed |
+| Service | Resources | Created By | Destroyed By | Pattern | Status |
+|---------|-----------|------------|--------------|---------|--------|
+| geocoding.js | 3 event listeners | (Legacy - unused) | N/A | Per-component | ⚠️ Legacy code |
+| backgroundPreloader.js | 5 listeners + timer | CesiumViewer | ⚠️ NOT called (should be) | Singleton | ⚠️ Missing cleanup |
+| GridView.vue | 6 DOM listeners | GridView (self) | GridView.beforeUnmount() | Component-managed | ✅ Implemented |
+| Scatterplot.vue | 2 DOM + 1 eventBus | Scatterplot (self) | Scatterplot.beforeUnmount() | Component-managed | ✅ Implemented |
+| UnifiedSearch.vue | None (uses Vue refs) | UnifiedSearch (self) | Auto (Vue lifecycle) | Component-managed | ✅ No cleanup needed |
 
 ## Questions?
 
@@ -402,4 +421,4 @@ If you're unsure whether your service needs a `destroy()` method, ask:
 
 - [Memory Management Best Practices](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management)
 - [Vue Lifecycle Hooks](https://vuejs.org/guide/essentials/lifecycle.html)
-- [Testing Memory Leaks](../TESTING.md#memory-leak-testing)
+- [Testing Documentation](core/TESTING.md)
