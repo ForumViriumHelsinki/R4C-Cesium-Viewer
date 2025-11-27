@@ -82,45 +82,48 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			expect(style).toContain('rotate');
 		});
 
-		cesiumTest('should update compass rotation when camera heading changes', async ({ cesiumPage }) => {
-			const compassRing = cesiumPage.locator('.compass-ring');
-			await expect(compassRing).toBeVisible();
+		cesiumTest(
+			'should update compass rotation when camera heading changes',
+			async ({ cesiumPage }) => {
+				const compassRing = cesiumPage.locator('.compass-ring');
+				await expect(compassRing).toBeVisible();
 
-			// Get initial rotation
-			const initialStyle = await compassRing.getAttribute('style');
-			const initialRotation = initialStyle?.match(/rotate\(([^)]+)\)/)?.[1];
+				// Get initial rotation
+				const initialStyle = await compassRing.getAttribute('style');
+				const initialRotation = initialStyle?.match(/rotate\(([^)]+)\)/)?.[1];
 
-			// Simulate camera heading change via JavaScript
-			await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer;
-				if (viewer && viewer.camera) {
-					// Change camera heading to 90 degrees (East)
-					const Cesium = (window as any).Cesium;
-					if (Cesium) {
-						viewer.camera.flyTo({
-							destination: viewer.camera.position,
-							orientation: {
-								heading: Cesium.Math.toRadians(90),
-								pitch: viewer.camera.pitch,
-								roll: viewer.camera.roll,
-							},
-							duration: 0, // Instant for testing
-						});
+				// Simulate camera heading change via JavaScript
+				await cesiumPage.evaluate(() => {
+					const viewer = (window as any).viewer;
+					if (viewer && viewer.camera) {
+						// Change camera heading to 90 degrees (East)
+						const Cesium = (window as any).Cesium;
+						if (Cesium) {
+							viewer.camera.flyTo({
+								destination: viewer.camera.position,
+								orientation: {
+									heading: Cesium.Math.toRadians(90),
+									pitch: viewer.camera.pitch,
+									roll: viewer.camera.roll,
+								},
+								duration: 0, // Instant for testing
+							});
+						}
 					}
-				}
-			});
+				});
 
-			// Wait for compass to update
-			await cesiumPage.waitForTimeout(500);
+				// Wait for compass to update
+				await cesiumPage.waitForTimeout(500);
 
-			// Check if rotation changed
-			const updatedStyle = await compassRing.getAttribute('style');
-			const updatedRotation = updatedStyle?.match(/rotate\(([^)]+)\)/)?.[1];
+				// Check if rotation changed
+				const updatedStyle = await compassRing.getAttribute('style');
+				const updatedRotation = updatedStyle?.match(/rotate\(([^)]+)\)/)?.[1];
 
-			// If viewer is available, rotation should change
-			// Note: In mock mode, this may not change
-			expect(updatedStyle).toContain('rotate');
-		});
+				// If viewer is available, rotation should change
+				// Note: In mock mode, this may not change
+				expect(updatedStyle).toContain('rotate');
+			}
+		);
 	});
 
 	cesiumTest.describe('Click Functionality', () => {
@@ -131,12 +134,12 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Click compass to reset to North
 			await helpers.scrollIntoViewportWithRetry(compassControl, { elementName: 'compass' });
-			await cesiumPage.waitForTimeout(300);
+			await compassControl.waitFor({ state: 'visible' });
 
 			await compassControl.click({ timeout: 5000 });
 
-			// Wait for any camera animation
-			await cesiumPage.waitForTimeout(1200); // Animation duration is 1 second
+			// Wait for camera animation to complete - use network idle or state check
+			await cesiumPage.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
 
 			// Verify camera heading is reset (in mock mode, check function was called)
 			const headingReset = await cesiumPage.evaluate(() => {
@@ -195,9 +198,11 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			// Tooltip may or may not be visible depending on delay settings
 			// At minimum, verify compass has tooltip activation props
 			const hasTooltipProps = await compassControl.evaluate((el) => {
-				return el.getAttribute('aria-describedby') !== null ||
-				       el.closest('[role="tooltip"]') !== null ||
-				       true; // Tooltip wrapper exists
+				return (
+					el.getAttribute('aria-describedby') !== null ||
+					el.closest('[role="tooltip"]') !== null ||
+					true
+				); // Tooltip wrapper exists
 			});
 			expect(hasTooltipProps).toBeTruthy();
 		});
@@ -331,22 +336,25 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			expect(headingReset).toBeTruthy();
 		});
 
-		cesiumTest('should not scroll page when Space is pressed on focused compass', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control');
-			await expect(compassControl).toBeVisible();
+		cesiumTest(
+			'should not scroll page when Space is pressed on focused compass',
+			async ({ cesiumPage }) => {
+				const compassControl = cesiumPage.locator('.compass-control');
+				await expect(compassControl).toBeVisible();
 
-			// Get initial scroll position
-			const initialScroll = await cesiumPage.evaluate(() => window.scrollY);
+				// Get initial scroll position
+				const initialScroll = await cesiumPage.evaluate(() => window.scrollY);
 
-			// Focus compass and press Space
-			await compassControl.focus();
-			await cesiumPage.keyboard.press(' ');
-			await cesiumPage.waitForTimeout(500);
+				// Focus compass and press Space
+				await compassControl.focus();
+				await cesiumPage.keyboard.press(' ');
+				await cesiumPage.waitForTimeout(500);
 
-			// Scroll position should not change (event.preventDefault)
-			const finalScroll = await cesiumPage.evaluate(() => window.scrollY);
-			expect(finalScroll).toBe(initialScroll);
-		});
+				// Scroll position should not change (event.preventDefault)
+				const finalScroll = await cesiumPage.evaluate(() => window.scrollY);
+				expect(finalScroll).toBe(initialScroll);
+			}
+		);
 	});
 
 	cesiumTest.describe('ARIA and Accessibility Attributes', () => {
@@ -445,17 +453,20 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			expect(updatedLabel?.toLowerCase()).toContain('compass');
 		});
 
-		cesiumTest('should be disabled with appropriate attributes when viewer not ready', async ({ cesiumPage }) => {
-			// This test verifies the disabled state attributes
-			const compassControl = cesiumPage.locator('.compass-control');
+		cesiumTest(
+			'should be disabled with appropriate attributes when viewer not ready',
+			async ({ cesiumPage }) => {
+				// This test verifies the disabled state attributes
+				const compassControl = cesiumPage.locator('.compass-control');
 
-			// When viewer IS ready (normal state)
-			await expect(compassControl).toBeVisible();
+				// When viewer IS ready (normal state)
+				await expect(compassControl).toBeVisible();
 
-			// Should not be disabled when viewer is ready
-			const isDisabled = await compassControl.isDisabled();
-			expect(isDisabled).toBeFalsy();
-		});
+				// Should not be disabled when viewer is ready
+				const isDisabled = await compassControl.isDisabled();
+				expect(isDisabled).toBeFalsy();
+			}
+		);
 	});
 
 	cesiumTest.describe('Zoom Controls', () => {
@@ -663,22 +674,25 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 	});
 
 	cesiumTest.describe('Integration with Viewer State', () => {
-		cesiumTest('should position correctly within camera controls container', async ({ cesiumPage }) => {
-			const container = cesiumPage.locator('.camera-controls-container');
-			await expect(container).toBeVisible();
+		cesiumTest(
+			'should position correctly within camera controls container',
+			async ({ cesiumPage }) => {
+				const container = cesiumPage.locator('.camera-controls-container');
+				await expect(container).toBeVisible();
 
-			// Container should have correct positioning (absolute, top-left)
-			const containerStyles = await container.evaluate((el) => {
-				const computed = window.getComputedStyle(el);
-				return {
-					position: computed.position,
-					top: computed.top,
-					left: computed.left,
-				};
-			});
+				// Container should have correct positioning (absolute, top-left)
+				const containerStyles = await container.evaluate((el) => {
+					const computed = window.getComputedStyle(el);
+					return {
+						position: computed.position,
+						top: computed.top,
+						left: computed.left,
+					};
+				});
 
-			expect(containerStyles.position).toBe('absolute');
-		});
+				expect(containerStyles.position).toBe('absolute');
+			}
+		);
 
 		cesiumTest('should maintain z-index above other UI elements', async ({ cesiumPage }) => {
 			const container = cesiumPage.locator('.camera-controls-container');
@@ -763,24 +777,27 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			await expect(compassControl).toBeEnabled();
 		});
 
-		cesiumTest('should be accessible after drilling to postal code level', async ({ cesiumPage }) => {
-			// Navigate to postal code level
-			await helpers.drillToLevel('postalCode');
+		cesiumTest(
+			'should be accessible after drilling to postal code level',
+			async ({ cesiumPage }) => {
+				// Navigate to postal code level
+				await helpers.drillToLevel('postalCode');
 
-			// Compass should still be accessible and functional
-			const compassControl = cesiumPage.locator('.compass-control');
-			await expect(compassControl).toBeVisible();
-			await expect(compassControl).toBeEnabled();
+				// Compass should still be accessible and functional
+				const compassControl = cesiumPage.locator('.compass-control');
+				await expect(compassControl).toBeVisible();
+				await expect(compassControl).toBeEnabled();
 
-			// Click should still work
-			await compassControl.click();
-			await cesiumPage.waitForTimeout(1200);
+				// Click should still work
+				await compassControl.click();
+				await cesiumPage.waitForTimeout(1200);
 
-			// No errors
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]');
-			const errorCount = await errorElements.count();
-			expect(errorCount).toBe(0);
-		});
+				// No errors
+				const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]');
+				const errorCount = await errorElements.count();
+				expect(errorCount).toBe(0);
+			}
+		);
 	});
 
 	cesiumTest.describe('Reduced Motion Preference', () => {

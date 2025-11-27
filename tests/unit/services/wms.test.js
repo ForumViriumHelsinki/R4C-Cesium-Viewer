@@ -42,6 +42,10 @@ describe('Wms Service', { tags: ['@unit', '@wms'] }, () => {
 		wms = new Wms();
 	});
 
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
+
 	describe('constructor', () => {
 		it('should create a new Wms instance', () => {
 			expect(wms).toBeInstanceOf(Wms);

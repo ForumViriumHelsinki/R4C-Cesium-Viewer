@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from './setup/digitransit-mock';
+import {
+	dismissModalIfPresent,
+	clickOnMap,
+	waitForMapViewTransition,
+	waitForCesiumReady,
+} from './helpers/test-helpers';
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
@@ -9,23 +15,22 @@ test.describe('Data Visualization Components', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
 		// Dismiss the disclaimer popup
-		await page.getByRole('button', { name: 'Explore Map' }).click();
-		await page.waitForTimeout(2000);
+		await dismissModalIfPresent(page, 'Explore Map');
+		await waitForCesiumReady(page);
 	});
 
 	test('should display charts and visualization components', async ({ page }) => {
-		const canvas = page.locator('canvas');
-
 		// Navigate to get some data loaded
-		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await clickOnMap(page, 400, 300);
+		await waitForMapViewTransition(page);
 
 		// Look for various chart components
 		const chartContainers = page.locator(
 			'[id*="chart"], [id*="plot"], .chart-container, .plot-container'
 		);
 
-		if ((await chartContainers.count()) > 0) {
+		const chartCount = await chartContainers.count();
+		if (chartCount > 0) {
 			// Check that at least one chart container is visible
 			const visibleCharts = await chartContainers.filter({ hasText: /./ }).count();
 			if (visibleCharts > 0) {
@@ -35,36 +40,34 @@ test.describe('Data Visualization Components', () => {
 	});
 
 	test('should handle heat histogram visualization', async ({ page }) => {
-		const canvas = page.locator('canvas');
-
 		// Navigate to postal code to load heat data
-		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await clickOnMap(page, 400, 300);
+		await waitForMapViewTransition(page);
 
 		// Look for heat histogram
 		const heatHistogram = page.locator('#heatHistogramContainer, [data-testid="heat-histogram"]');
 
-		if ((await heatHistogram.count()) > 0) {
+		const histogramCount = await heatHistogram.count();
+		if (histogramCount > 0) {
 			await expect(heatHistogram.first()).toBeVisible();
 
 			// Check for SVG chart content
 			const svg = heatHistogram.locator('svg');
-			if ((await svg.count()) > 0) {
+			const svgCount = await svg.count();
+			if (svgCount > 0) {
 				await expect(svg.first()).toBeVisible();
 			}
 		}
 	});
 
 	test('should display building information charts', async ({ page }) => {
-		const canvas = page.locator('canvas');
-
 		// Navigate to building level
-		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await clickOnMap(page, 400, 300);
+		await waitForMapViewTransition(page);
 
 		// Try to select a building
-		await canvas.click({ position: { x: 420, y: 320 } });
-		await page.waitForTimeout(2000);
+		await clickOnMap(page, 420, 320);
+		await waitForMapViewTransition(page);
 
 		// Look for building charts
 		const buildingCharts = page.locator(

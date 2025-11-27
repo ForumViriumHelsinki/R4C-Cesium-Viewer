@@ -3,50 +3,13 @@ import { createPinia, setActivePinia } from 'pinia';
 import Camera from '@/services/camera.js';
 import { useGlobalStore } from '@/stores/globalStore.js';
 
-// Mock Cesium additional methods
-const mockFlyTo = vi.fn();
-const mockSetView = vi.fn();
-const mockZoomIn = vi.fn();
-const mockZoomOut = vi.fn();
-const mockPickEllipsoid = vi.fn();
-
-const mockViewer = {
-	camera: {
-		setView: mockSetView,
-		flyTo: mockFlyTo,
-		zoomIn: mockZoomIn,
-		zoomOut: mockZoomOut,
-		pickEllipsoid: mockPickEllipsoid,
-		position: { x: 1000, y: 2000, z: 3000 },
-		pitch: -0.5,
-		roll: 0.0,
-		heading: 0.0,
-		positionCartographic: {
-			longitude: 0.4,
-			latitude: 1.0,
-			height: 1000,
-		},
-	},
-	scene: {
-		camera: {
-			positionCartographic: {
-				longitude: 0.4,
-				latitude: 1.0,
-				height: 1000,
-			},
-		},
-		globe: {
-			ellipsoid: {},
-		},
-		canvas: {
-			clientWidth: 800,
-			clientHeight: 600,
-		},
-	},
-	dataSources: {
-		_dataSources: [],
-	},
-};
+// Mock Cesium additional methods - will be initialized in beforeEach
+let mockFlyTo;
+let mockSetView;
+let mockZoomIn;
+let mockZoomOut;
+let mockPickEllipsoid;
+let mockViewer;
 
 // Mock Cesium module
 vi.mock('cesium', () => ({
@@ -76,13 +39,61 @@ describe('Camera service', () => {
 
 	beforeEach(() => {
 		setActivePinia(createPinia());
+		vi.clearAllMocks();
+
+		// Initialize fresh mocks for each test
+		mockFlyTo = vi.fn();
+		mockSetView = vi.fn();
+		mockZoomIn = vi.fn();
+		mockZoomOut = vi.fn();
+		mockPickEllipsoid = vi.fn();
+
+		mockViewer = {
+			camera: {
+				setView: mockSetView,
+				flyTo: mockFlyTo,
+				zoomIn: mockZoomIn,
+				zoomOut: mockZoomOut,
+				pickEllipsoid: mockPickEllipsoid,
+				position: { x: 1000, y: 2000, z: 3000 },
+				pitch: -0.5,
+				roll: 0.0,
+				heading: 0.0,
+				positionCartographic: {
+					longitude: 0.4,
+					latitude: 1.0,
+					height: 1000,
+				},
+			},
+			scene: {
+				camera: {
+					positionCartographic: {
+						longitude: 0.4,
+						latitude: 1.0,
+						height: 1000,
+					},
+				},
+				globe: {
+					ellipsoid: {},
+				},
+				canvas: {
+					clientWidth: 800,
+					clientHeight: 600,
+				},
+			},
+			dataSources: {
+				_dataSources: [],
+			},
+		};
+
 		store = useGlobalStore();
 		store.setCesiumViewer(mockViewer);
 
-		// Reset all mocks
-		vi.clearAllMocks();
-
 		camera = new Camera();
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
 	});
 
 	describe('constructor', () => {

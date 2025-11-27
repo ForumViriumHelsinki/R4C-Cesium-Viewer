@@ -105,6 +105,7 @@
  * - Click and drag detection for map interaction
  * - Camera animation with cancellation support
  * - Viewport-based postal code detection and data loading
+ * - Tile-based viewport building streaming (optional, toggleable)
  * - E2E test mode with deterministic rendering
  * - Automatic rendering optimization when tab is hidden
  *
@@ -115,7 +116,7 @@
  * - globalStore: Main application state, viewer instance, loading states
  * - buildingStore: Building features and selection state
  * - propsStore: Postal code data and properties
- * - toggleStore: UI toggle states and layer visibility
+ * - toggleStore: UI toggle states and layer visibility (includes viewportTileMode)
  * - socioEconomicsStore: Socioeconomic data
  * - heatExposureStore: Heat exposure calculations
  * - graphicsStore: Graphics quality settings
@@ -127,8 +128,9 @@
  * - Camera: Camera controls and positioning
  * - Graphics: Graphics quality initialization
  * - cacheWarmer: Background data preloading
+ * - ViewportBuildingLoader: Tile-based viewport building streaming
  */
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 
 import DisclaimerPopup from '../components/DisclaimerPopup.vue';
 import Loading from '../components/Loading.vue';
@@ -146,6 +148,7 @@ import { useBuildingStore } from '../stores/buildingStore.js';
 import { useGraphicsStore } from '../stores/graphicsStore.js';
 
 import cacheWarmer from '../services/cacheWarmer.js';
+import ViewportBuildingLoader from '../services/viewportBuildingLoader.js';
 
 export default {
 	components: {
@@ -184,6 +187,9 @@ export default {
 		// Persistent FeaturePicker instance for viewport-based loading
 		// Reusing the same instance maintains visiblePostalCodes state across camera moves
 		let viewportFeaturepicker = null;
+		// ViewportBuildingLoader instance for tile-based building streaming
+		// This is an alternative to postal code-based loading (via viewportFeaturepicker)
+		let viewportBuildingLoader = null;
 
 		/**
 		 * Initializes the Cesium viewer with dynamic module loading.
@@ -312,6 +318,15 @@ export default {
 			addFeaturePicker();
 			addCameraMoveEndListener();
 			addAttribution();
+
+			// Initialize viewport-based building loader if tile mode is enabled
+			// By default, uses postal code-based viewport loading (handleCameraSettled)
+			// Enable toggleStore.viewportTileMode to use tile-based spatial grid loading
+			if (toggleStore.viewportTileMode) {
+				viewportBuildingLoader = new ViewportBuildingLoader();
+				viewportBuildingLoader.initialize(viewer.value);
+				console.log('[CesiumViewer] ✅ ViewportBuildingLoader initialized (tile-based mode)');
+			}
 
 			// Optimize CPU usage: pause rendering when tab is hidden
 			document.addEventListener('visibilitychange', () => {
@@ -485,11 +500,18 @@ export default {
 		 * - Loads buildings for all visible postal codes
 		 * - Reuses FeaturePicker instance to maintain state
 		 * - Tracks loading progress and errors
+		 * - Skipped when toggleStore.viewportTileMode is enabled (tile-based loading active)
 		 *
 		 * @async
 		 * @returns {Promise<void>}
 		 */
 		const handleCameraSettled = async () => {
+			// Skip postal code-based viewport loading if tile mode is active
+			if (toggleStore.viewportTileMode) {
+				console.log('[CesiumViewer] Tile mode active, skipping postal code-based viewport loading');
+				return;
+			}
+
 			// Prevent overlapping calls to avoid visibility blinking
 			// Log camera settled event for visibility debugging
 			console.log(
@@ -674,6 +696,32 @@ export default {
 			}
 		};
 
+		/**
+		 * Watch for changes to viewport tile mode toggle
+		 * Dynamically enables/disables tile-based viewport loading at runtime.
+		 */
+		watch(
+			() => toggleStore.viewportTileMode,
+			async (newValue, _oldValue) => {
+				if (!viewer.value) {
+					console.warn('[CesiumViewer] Viewer not initialized, cannot toggle viewport tile mode');
+					return;
+				}
+
+				if (newValue && !viewportBuildingLoader) {
+					// Enable tile mode
+					console.log('[CesiumViewer] Enabling tile-based viewport loading');
+					viewportBuildingLoader = new ViewportBuildingLoader();
+					viewportBuildingLoader.initialize(viewer.value);
+				} else if (!newValue && viewportBuildingLoader) {
+					// Disable tile mode
+					console.log('[CesiumViewer] Disabling tile-based viewport loading');
+					await viewportBuildingLoader.shutdown();
+					viewportBuildingLoader = null;
+				}
+			}
+		);
+
 		onMounted(async () => {
 			await initViewer();
 			socioEconomicsStore.loadPaavo();
@@ -700,10 +748,16 @@ export default {
 			}
 		});
 
-		onBeforeUnmount(() => {
+		onBeforeUnmount(async () => {
 			// Clean up ESC key handler
 			document.removeEventListener('keydown', handleGlobalEscKey);
 			console.log('[CesiumViewer] 🧹 ESC key handler removed');
+
+			// Clean up viewport building loader if initialized
+			if (viewportBuildingLoader) {
+				await viewportBuildingLoader.shutdown();
+				console.log('[CesiumViewer] 🧹 ViewportBuildingLoader shutdown complete');
+			}
 		});
 
 		return {

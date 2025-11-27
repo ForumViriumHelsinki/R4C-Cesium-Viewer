@@ -40,6 +40,7 @@ import { defineStore } from 'pinia';
  * @property {boolean} capitalRegionCold - Show/hide Capital Region cold areas
  * @property {boolean} grid250m - Show/hide 250m population grid
  * @property {boolean} ndvi - Show/hide NDVI vegetation index imagery
+ * @property {boolean} viewportTileMode - Enable tile-based viewport building loading (alternative to postal code mode)
  */
 export const useToggleStore = defineStore('toggle', {
 	state: () => ({
@@ -64,6 +65,7 @@ export const useToggleStore = defineStore('toggle', {
 		capitalRegionCold: false,
 		grid250m: false,
 		ndvi: false,
+		viewportTileMode: false,
 	}),
 	actions: {
 		/**
@@ -212,6 +214,14 @@ export const useToggleStore = defineStore('toggle', {
 		 */
 		setSurveyPlaces(show) {
 			this.surveyPlaces = show;
+		},
+		/**
+		 * Toggle viewport tile-based building loading mode
+		 * When enabled, uses spatial tile grid instead of postal code boundaries
+		 * @param {boolean} enabled - True to enable tile-based viewport loading
+		 */
+		setViewportTileMode(enabled) {
+			this.viewportTileMode = enabled;
 		},
 		/**
 		 * Resets all toggles to their initial default values

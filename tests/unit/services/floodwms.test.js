@@ -23,32 +23,13 @@ vi.mock('cesium', () => ({
 	}),
 }));
 
-// Create shared mock store instances
-const mockRemove = vi.fn();
-const mockAddImageryProvider = vi.fn((provider) => ({
-	alpha: 1,
-	imageryProvider: provider,
-}));
-const mockContains = vi.fn(() => true);
+// Mock stores - functions will be initialized in beforeEach
+let mockRemove;
+let mockAddImageryProvider;
+let mockContains;
+let mockGlobalStore;
+let mockBackgroundStore;
 
-const mockGlobalStore = {
-	cesiumViewer: {
-		imageryLayers: {
-			addImageryProvider: mockAddImageryProvider,
-			contains: mockContains,
-			remove: mockRemove,
-		},
-	},
-};
-
-const mockBackgroundStore = {
-	floodLayers: [],
-	clearFloodLayers: vi.fn(function () {
-		this.floodLayers = [];
-	}),
-};
-
-// Mock stores
 vi.mock('@/stores/globalStore.js', () => ({
 	useGlobalStore: vi.fn(() => mockGlobalStore),
 }));
@@ -61,8 +42,35 @@ describe('Flood WMS Service', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia());
 		vi.clearAllMocks();
-		// Reset mock arrays
-		mockBackgroundStore.floodLayers = [];
+
+		// Create fresh mocks for each test
+		mockRemove = vi.fn();
+		mockAddImageryProvider = vi.fn((provider) => ({
+			alpha: 1,
+			imageryProvider: provider,
+		}));
+		mockContains = vi.fn(() => true);
+
+		mockGlobalStore = {
+			cesiumViewer: {
+				imageryLayers: {
+					addImageryProvider: mockAddImageryProvider,
+					contains: mockContains,
+					remove: mockRemove,
+				},
+			},
+		};
+
+		mockBackgroundStore = {
+			floodLayers: [],
+			clearFloodLayers: vi.fn(function () {
+				this.floodLayers = [];
+			}),
+		};
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
 	});
 
 	describe('createFloodImageryLayer', () => {

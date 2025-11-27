@@ -31,9 +31,16 @@ describe('API Integration Tests', () => {
 		if (testServer) {
 			await testServer.close();
 		}
+		// Restore all mocks after test suite
+		vi.restoreAllMocks();
 	});
 
 	describe('Frontend API Service Integration', () => {
+		beforeEach(() => {
+			// Clear all mocks before each test for isolation
+			vi.clearAllMocks();
+		});
+
 		describe('Address Service', () => {
 			it('should handle building address resolution end-to-end', async () => {
 				const { findAddressForBuilding } = await import('../../src/services/address.js');
@@ -133,6 +140,11 @@ describe('API Integration Tests', () => {
 	});
 
 	describe('Store Integration Tests', () => {
+		beforeEach(() => {
+			// Clear all mocks before each test
+			vi.clearAllMocks();
+		});
+
 		it('should maintain consistency across multiple stores', async () => {
 			const { createPinia, setActivePinia } = await import('pinia');
 			const { useGlobalStore } = await import('@/stores/globalStore.js');
@@ -193,6 +205,11 @@ describe('API Integration Tests', () => {
 	});
 
 	describe('Component Store Integration', () => {
+		beforeEach(() => {
+			// Clear all mocks before each test
+			vi.clearAllMocks();
+		});
+
 		it('should integrate Loading component with globalStore', async () => {
 			const { mount } = await import('@vue/test-utils');
 			const { createPinia, setActivePinia } = await import('pinia');
@@ -224,6 +241,11 @@ describe('API Integration Tests', () => {
 	});
 
 	describe('WMS Service Integration', () => {
+		beforeEach(() => {
+			// Clear all mocks before each test
+			vi.clearAllMocks();
+		});
+
 		it('should handle WMS layer requests correctly', async () => {
 			const mockWMSResponse = {
 				data: '<WMS_Capabilities><Capability><Layer><Layer><Name>test-layer</Name><Title>Test Layer</Title></Layer></Layer></Capability></WMS_Capabilities>',
@@ -503,6 +525,11 @@ describe('API Integration Tests', () => {
 	});
 
 	describe('Performance Integration', () => {
+		beforeEach(() => {
+			// Clear all mocks before each test
+			vi.clearAllMocks();
+		});
+
 		it('should handle concurrent data requests efficiently', async () => {
 			const startTime = Date.now();
 

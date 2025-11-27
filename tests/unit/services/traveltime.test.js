@@ -6,47 +6,66 @@ import Traveltime from '@/services/traveltime.js';
 global.fetch = vi.fn();
 
 // Mock Cesium module
-vi.mock('cesium', () => ({
-	CustomDataSource: vi.fn(function (name) {
-		this.name = name;
-	}),
-	GeoJsonDataSource: vi.fn(function () {
+vi.mock('cesium', () => {
+	const GeoJsonDataSource = vi.fn(function () {
 		this.load = vi.fn().mockResolvedValue({ name: 'test', entities: { values: [] } });
-	}),
-	Color: {
-		ORANGE: 'ORANGE',
-		BLACK: 'BLACK',
-		WHITE: 'WHITE',
-	},
-	HorizontalOrigin: {
-		CENTER: 'CENTER',
-	},
-	VerticalOrigin: {
-		CENTER: 'CENTER',
-	},
-	Cartesian2: vi.fn((x, y) => ({ x, y })),
-	Cartesian3: vi.fn((x, y, z) => ({ x, y, z })),
-	NearFarScalar: vi.fn((near, nearValue, far, farValue) => ({
-		near,
-		nearValue,
-		far,
-		farValue,
-	})),
-	BoundingSphere: {
-		fromPoints: vi.fn(() => ({
-			center: { x: 0, y: 0, z: 0 },
-		})),
-	},
-	Cartographic: {
-		fromCartesian: vi.fn(() => ({
-			latitude: 1.05,
-			longitude: 0.44,
-		})),
-	},
-	Math: {
-		toDegrees: vi.fn((val) => val * 57.2958),
-	},
-}));
+	});
+	// Add static load method
+	GeoJsonDataSource.load = vi.fn().mockResolvedValue({
+		name: 'test',
+		entities: { values: [] },
+	});
+
+	return {
+		CustomDataSource: vi.fn(function (name) {
+			this.name = name;
+		}),
+		GeoJsonDataSource,
+		Color: {
+			ORANGE: 'ORANGE',
+			BLACK: 'BLACK',
+			WHITE: 'WHITE',
+		},
+		HorizontalOrigin: {
+			CENTER: 'CENTER',
+		},
+		VerticalOrigin: {
+			CENTER: 'CENTER',
+		},
+		Cartesian2: vi.fn(function (x, y) {
+			this.x = x;
+			this.y = y;
+			return this;
+		}),
+		Cartesian3: vi.fn(function (x, y, z) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+			return this;
+		}),
+		NearFarScalar: vi.fn(function (near, nearValue, far, farValue) {
+			this.near = near;
+			this.nearValue = nearValue;
+			this.far = far;
+			this.farValue = farValue;
+			return this;
+		}),
+		BoundingSphere: {
+			fromPoints: vi.fn(() => ({
+				center: { x: 0, y: 0, z: 0 },
+			})),
+		},
+		Cartographic: {
+			fromCartesian: vi.fn(() => ({
+				latitude: 1.05,
+				longitude: 0.44,
+			})),
+		},
+		Math: {
+			toDegrees: vi.fn((val) => val * 57.2958),
+		},
+	};
+});
 
 // Mock datasource service
 vi.mock('@/services/datasource.js', () => ({
@@ -256,6 +275,9 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 		it('should handle missing TravelTimeGrid datasource', () => {
 			// Arrange: Mock getByName to return null
 			traveltime.viewer.dataSources.getByName = vi.fn().mockReturnValue(null);
+			// Mock internal async methods to prevent promise issues
+			traveltime.removeTravelTimeGridAndAddDataGrid = vi.fn();
+			traveltime.addTravelLabelDataSource = vi.fn();
 			const traveldata = [{ to_id: 5975376, pt_m_walk_avg: 12.5 }];
 
 			// Act: Should not throw
@@ -266,6 +288,10 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 		});
 
 		it('should handle empty travel data array', () => {
+			// Arrange: Mock internal async methods to prevent promise issues
+			traveltime.removeTravelTimeGridAndAddDataGrid = vi.fn();
+			traveltime.addTravelLabelDataSource = vi.fn();
+
 			// Act & Assert: Should not throw
 			expect(() => traveltime.addTravelTimeLabels([])).not.toThrow();
 		});

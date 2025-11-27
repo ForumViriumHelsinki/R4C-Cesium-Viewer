@@ -21,8 +21,17 @@ vi.mock('cesium', () => ({
 	VerticalOrigin: {
 		CENTER: 'CENTER',
 	},
-	Cartesian2: vi.fn((x, y) => ({ x, y })),
-	Cartesian3: vi.fn((x, y, z) => ({ x, y, z })),
+	Cartesian2: vi.fn(function (x, y) {
+		this.x = x;
+		this.y = y;
+		return this;
+	}),
+	Cartesian3: vi.fn(function (x, y, z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		return this;
+	}),
 }));
 
 // Mock datasource service
@@ -169,7 +178,9 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 			await sensor.loadSensorData();
 
 			// Assert
-			expect(global.fetch).toHaveBeenCalledWith('https://bri3.fvh.io/opendata/r4c/r4c_last.geojson');
+			expect(global.fetch).toHaveBeenCalledWith(
+				'https://bri3.fvh.io/opendata/r4c/r4c_last.geojson'
+			);
 			expect(sensor.addSensorDataSource).toHaveBeenCalledWith(mockData);
 		});
 	});

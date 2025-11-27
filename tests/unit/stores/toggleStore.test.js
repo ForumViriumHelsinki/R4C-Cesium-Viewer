@@ -32,13 +32,14 @@ describe('toggleStore', () => {
 			expect(store.capitalRegionCold).toBe(false);
 			expect(store.grid250m).toBe(false);
 			expect(store.ndvi).toBe(false);
+			expect(store.viewportTileMode).toBe(false);
 		});
 
 		it('should have exactly the expected number of state properties', () => {
 			const store = useToggleStore();
 			const stateKeys = Object.keys(store.$state);
 
-			expect(stateKeys).toHaveLength(21);
+			expect(stateKeys).toHaveLength(22);
 		});
 	});
 

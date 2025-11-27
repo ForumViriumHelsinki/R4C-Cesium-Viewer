@@ -57,57 +57,11 @@ vi.mock('@turf/turf', () => ({
 	centroid: vi.fn(() => ({ geometry: { coordinates: [0, 0] } })),
 }));
 
-// Mock stores
-const mockGlobalStore = {
-	cesiumViewer: {
-		screenSpaceEventHandler: {
-			setInputAction: vi.fn(),
-			removeInputAction: vi.fn(),
-		},
-		dataSources: {
-			getByName: vi.fn(() => [
-				{
-					entities: {
-						values: [],
-						collectionChanged: {
-							addEventListener: vi.fn(),
-							removeEventListener: vi.fn(),
-						},
-					},
-				},
-			]),
-			add: vi.fn(),
-			remove: vi.fn(),
-		},
-		isDestroyed: vi.fn(() => false),
-		scene: {
-			pick: vi.fn(),
-		},
-	},
-};
-
-const mockPropsStore = {
-	statsIndex: 'heat_index',
-};
-
-const mockURLStore = {
-	landcoverToParks: vi.fn((gridId) => `/api/landcover/${gridId}`),
-};
-
-const mockMitigationStore = {
-	calculateParksEffect: vi.fn(() => ({
-		sourceReduction: 0.1,
-		neighborsAffected: 4,
-		totalCoolingArea: 50000,
-		heatReductions: [
-			{ grid_id: 'grid_001', heatReduction: 0.05 },
-			{ grid_id: 'grid_002', heatReduction: 0.03 },
-		],
-	})),
-	cumulativeCoolingArea: 100000,
-	cumulativeHeatReduction: 0.25,
-	resetStore: vi.fn(),
-};
+// Mock stores - will be initialized in beforeEach
+let mockGlobalStore;
+let mockPropsStore;
+let mockURLStore;
+let mockMitigationStore;
 
 vi.mock('../../../src/stores/globalStore.js', () => ({
 	useGlobalStore: () => mockGlobalStore,
@@ -146,6 +100,58 @@ describe('LandcoverToParks Component', () => {
 	let pinia;
 
 	beforeEach(() => {
+		// Initialize fresh mocks for each test
+		mockGlobalStore = {
+			cesiumViewer: {
+				screenSpaceEventHandler: {
+					setInputAction: vi.fn(),
+					removeInputAction: vi.fn(),
+				},
+				dataSources: {
+					getByName: vi.fn(() => [
+						{
+							entities: {
+								values: [],
+								collectionChanged: {
+									addEventListener: vi.fn(),
+									removeEventListener: vi.fn(),
+								},
+							},
+						},
+					]),
+					add: vi.fn(),
+					remove: vi.fn(),
+				},
+				isDestroyed: vi.fn(() => false),
+				scene: {
+					pick: vi.fn(),
+				},
+			},
+		};
+
+		mockPropsStore = {
+			statsIndex: 'heat_index',
+		};
+
+		mockURLStore = {
+			landcoverToParks: vi.fn((gridId) => `/api/landcover/${gridId}`),
+		};
+
+		mockMitigationStore = {
+			calculateParksEffect: vi.fn(() => ({
+				sourceReduction: 0.1,
+				neighborsAffected: 4,
+				totalCoolingArea: 50000,
+				heatReductions: [
+					{ grid_id: 'grid_001', heatReduction: 0.05 },
+					{ grid_id: 'grid_002', heatReduction: 0.03 },
+				],
+			})),
+			cumulativeCoolingArea: 100000,
+			cumulativeHeatReduction: 0.25,
+			resetStore: vi.fn(),
+		};
+
 		vuetify = createVuetify({
 			components,
 			directives,
@@ -157,6 +163,10 @@ describe('LandcoverToParks Component', () => {
 				plugins: [vuetify, pinia],
 			},
 		});
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
 	});
 
 	describe('Component Initialization', () => {

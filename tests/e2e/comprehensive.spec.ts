@@ -1,34 +1,21 @@
 import { test, expect } from '@playwright/test';
 import { PlaywrightPage } from '../types/playwright';
 import { API_ENDPOINTS, VIEWPORTS } from '../config/constants';
-
-// Helper functions for common interactions
-async function dismissDisclaimer(page: PlaywrightPage) {
-	try {
-		await page.getByRole('button', { name: 'Close' }).click({ timeout: 2000 });
-	} catch (error) {
-		// Disclaimer might not be present or already dismissed
-	}
-}
-
-async function waitForMapLoad(page: PlaywrightPage) {
-	// Wait for Cesium to load and render
-	await page.waitForSelector('canvas', { state: 'visible', timeout: 10000 });
-	await page.waitForTimeout(2000); // Additional time for 3D rendering
-}
-
-async function clickOnMap(page: PlaywrightPage, x: number, y: number) {
-	await page.locator('canvas').click({ position: { x, y } });
-	await page.waitForTimeout(1000); // Wait for map response
-}
+import {
+	dismissModalIfPresent,
+	waitForCesiumReady,
+	clickOnMap,
+	waitForMapViewTransition,
+	waitForLayerLoad,
+} from '../helpers/test-helpers';
 
 test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 	test.use({ tag: ['@e2e', '@comprehensive'] });
 
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
-		await dismissDisclaimer(page);
-		await waitForMapLoad(page);
+		await dismissModalIfPresent(page, 'Close');
+		await waitForCesiumReady(page);
 	});
 
 	test.describe('Basic Application Functionality', () => {
@@ -67,22 +54,20 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 	test.describe('Map Navigation and Interaction', () => {
 		test('should support camera controls', async ({ page }) => {
 			// Test zoom in/out buttons if present
-			try {
-				const cameraControls = page.locator('[class*="camera"]');
-				if ((await cameraControls.count()) > 0) {
-					await cameraControls.first().click();
-					await page.waitForTimeout(1000);
-				}
-			} catch (error) {
-				// Camera controls might not be visible or implemented differently
+			const cameraControls = page.locator('[class*="camera"]');
+			const count = await cameraControls.count();
+
+			if (count > 0) {
+				await cameraControls.first().click();
+				await waitForMapViewTransition(page);
 			}
 
 			// Test mouse wheel zoom by dispatching wheel events
 			await page.locator('canvas').hover();
 			await page.mouse.wheel(0, -100); // Zoom in
-			await page.waitForTimeout(500);
+			await waitForMapViewTransition(page);
 			await page.mouse.wheel(0, 100); // Zoom out
-			await page.waitForTimeout(500);
+			await waitForMapViewTransition(page);
 		});
 
 		test('should handle map clicks and feature selection', async ({ page }) => {
@@ -95,8 +80,8 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 			for (const area of mapAreas) {
 				await clickOnMap(page, area.x, area.y);
-				// Check if any UI elements respond to the click
-				await page.waitForTimeout(1000);
+				// Wait for any map response (state change or UI update)
+				await waitForMapViewTransition(page);
 			}
 		});
 
@@ -131,50 +116,43 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 		test.use({ tag: ['@wms'] });
 
 		test('should load and interact with background maps', async ({ page }) => {
-			// Try to access background maps functionality
-			try {
-				await page.getByRole('button', { name: 'HSY Background maps' }).click();
+			const hsyButton = page.getByRole('button', { name: 'HSY Background maps' });
+			await hsyButton.waitFor({ state: 'visible', timeout: 10000 });
+			await hsyButton.click();
 
-				// Test search functionality
-				const searchInput = page.getByPlaceholder('Search for WMS layers');
-				if (await searchInput.isVisible()) {
-					await searchInput.click();
-					await searchInput.fill('Kaupunginosat');
-					await page.waitForTimeout(2000);
+			// Test search functionality
+			const searchInput = page.getByPlaceholder('Search for WMS layers');
+			await searchInput.waitFor({ state: 'visible', timeout: 5000 });
+			await searchInput.click();
+			await searchInput.fill('Kaupunginosat');
 
-					// Check if search results appear
-					await expect(page.locator('v-list-item-group')).toBeVisible();
-					await expect(page.locator('v-list-item-group')).toContainText('Kaupunginosat');
-				}
-			} catch (error) {
-				test.skip('HSY Background maps not available');
-			}
+			// Wait for search results with correct selector
+			await expect(page.locator('.v-list-item-group')).toBeVisible({ timeout: 5000 });
+			await expect(page.locator('.v-list-item-group')).toContainText('Kaupunginosat');
 		});
 
 		test('should handle WMS layer selection', async ({ page }) => {
-			try {
-				await page.getByRole('button', { name: 'HSY Background maps' }).click();
+			const hsyButton = page.getByRole('button', { name: 'HSY Background maps' });
+			await hsyButton.waitFor({ state: 'visible', timeout: 10000 });
+			await hsyButton.click();
 
-				const searchInput = page.getByPlaceholder('Search for WMS layers');
-				if (await searchInput.isVisible()) {
-					await searchInput.fill('Kaupunginosat');
-					await page.waitForTimeout(2000);
+			const searchInput = page.getByPlaceholder('Search for WMS layers');
+			await searchInput.waitFor({ state: 'visible', timeout: 5000 });
+			await searchInput.fill('Kaupunginosat');
 
-					// Try to select a layer
-					const layerItems = page.locator('v-list-item');
-					const layerCount = await layerItems.count();
+			// Wait for results
+			await expect(page.locator('.v-list-item-group')).toBeVisible({ timeout: 5000 });
 
-					if (layerCount > 0) {
-						await layerItems.first().click();
-						await page.waitForTimeout(3000);
+			// Try to select a layer with correct selector
+			const layerItems = page.locator('.v-list-item');
+			const layerCount = await layerItems.count();
+			expect(layerCount).toBeGreaterThan(0);
 
-						// Verify layer is loaded (canvas should still be functional)
-						await expect(page.locator('canvas')).toBeVisible();
-					}
-				}
-			} catch (error) {
-				test.skip('WMS layer selection not working');
-			}
+			await layerItems.first().click();
+			await waitForLayerLoad(page);
+
+			// Verify layer is loaded (canvas should still be functional)
+			await expect(page.locator('canvas')).toBeVisible();
 		});
 	});
 
@@ -182,29 +160,24 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 		test('should display building information when building is selected', async ({ page }) => {
 			// Click on a specific location likely to have building data
 			await clickOnMap(page, 690, 394);
-			await page.waitForTimeout(3000);
+			await waitForMapViewTransition(page);
 
 			// Click again to ensure selection
 			await clickOnMap(page, 674, 363);
-			await page.waitForTimeout(2000);
+			await waitForMapViewTransition(page);
 
-			try {
-				await page.getByRole('button', { name: 'Building properties' }).click();
-				await page.waitForTimeout(2000);
+			const buildingButton = page.getByRole('button', { name: 'Building properties' });
+			await buildingButton.waitFor({ state: 'visible', timeout: 5000 });
+			await buildingButton.click();
 
-				// Check if building information container appears
-				const buildingInfo = page.locator('#printContainer');
-				if (await buildingInfo.isVisible()) {
-					await expect(buildingInfo).toBeVisible();
+			// Check if building information container appears
+			const buildingInfo = page.locator('#printContainer');
+			await buildingInfo.waitFor({ state: 'visible', timeout: 5000 });
 
-					// Should contain some building-related text
-					const content = await buildingInfo.textContent();
-					expect(content).toBeTruthy();
-					expect(content?.length).toBeGreaterThan(0);
-				}
-			} catch (error) {
-				// Building properties might not be available for this location
-			}
+			// Should contain some building-related text
+			const content = await buildingInfo.textContent();
+			expect(content).toBeTruthy();
+			expect(content?.length).toBeGreaterThan(0);
 		});
 
 		test('should handle building data for different locations', async ({ page }) => {
