@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from './setup/digitransit-mock';
+import { dismissModalIfPresent, waitForLayerLoad } from './helpers/test-helpers';
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
@@ -9,7 +10,7 @@ test.describe('Control Panel Functionality', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
 		// Dismiss the disclaimer popup
-		await page.getByRole('button', { name: 'Explore Map' }).click();
+		await dismissModalIfPresent(page, 'Explore Map');
 
 		// Ensure control panel is visible
 		const toggleButton = page.getByRole('button', {
@@ -48,7 +49,8 @@ test.describe('Control Panel Functionality', () => {
 			'[data-testid="unified-search"], .unified-search, input[placeholder*="search" i]'
 		);
 
-		if ((await searchComponent.count()) > 0) {
+		const count = await searchComponent.count();
+		if (count > 0) {
 			const searchInput = searchComponent.first();
 			await expect(searchInput).toBeVisible();
 
@@ -56,10 +58,8 @@ test.describe('Control Panel Functionality', () => {
 			await searchInput.click();
 			await searchInput.fill('Helsinki');
 
-			// Wait for search results using DOM state
-			await page
-				.waitForLoadState('domcontentloaded')
-				.catch((e) => console.warn('DOM load timeout:', e.message));
+			// Wait for value to be set
+			await expect(searchInput).toHaveValue('Helsinki');
 
 			// Clear search
 			await searchInput.clear();
@@ -89,30 +89,26 @@ test.describe('Control Panel Functionality', () => {
 			name: /background.*map|HSY.*map/i,
 		});
 
-		if ((await backgroundMapButton.count()) > 0) {
+		const buttonCount = await backgroundMapButton.count();
+		if (buttonCount > 0) {
 			await backgroundMapButton.click();
 
 			// Wait for background map browser to open - check for search input
 			const mapSearchInput = page.getByPlaceholder(/search.*layer|search.*map/i);
-			if ((await mapSearchInput.count()) > 0) {
-				await mapSearchInput
-					.waitFor({ state: 'visible', timeout: 2000 })
-					.catch((e) => console.warn('Map search input visibility timeout:', e.message));
-				await expect(mapSearchInput).toBeVisible();
+			await mapSearchInput.waitFor({ state: 'visible', timeout: 5000 });
+			await expect(mapSearchInput).toBeVisible();
 
-				// Test searching for a layer
-				await mapSearchInput.fill('Kaupunginosat');
-				await page
-					.waitForLoadState('domcontentloaded')
-					.catch((e) => console.warn('Layer search DOM load timeout:', e.message));
+			// Test searching for a layer
+			await mapSearchInput.fill('Kaupunginosat');
+			await expect(mapSearchInput).toHaveValue('Kaupunginosat');
 
-				// Clear search
-				await mapSearchInput.clear();
-			}
+			// Clear search
+			await mapSearchInput.clear();
 
 			// Close background map browser if there's a close button
 			const closeButton = page.getByRole('button', { name: /close|cancel/i });
-			if ((await closeButton.count()) > 0) {
+			const closeCount = await closeButton.count();
+			if (closeCount > 0) {
 				await closeButton.click();
 			}
 		}
@@ -143,16 +139,24 @@ test.describe('Control Panel Functionality', () => {
 		// Look for statistical grid controls
 		const gridCheckbox = page.getByLabel(/statistical.*grid|grid/i);
 
-		if ((await gridCheckbox.count()) > 0) {
+		const checkboxCount = await gridCheckbox.count();
+		if (checkboxCount > 0) {
 			await gridCheckbox.check();
+
+			// Wait for grid to be enabled in store
+			await page.waitForFunction(
+				() => {
+					const store = (window as any).useToggleStore?.();
+					return store?.statisticalGridEnabled === true;
+				},
+				{ timeout: 5000 }
+			);
+
 			// Wait for grid options to appear
 			const gridOptions = page.locator('[data-testid="grid-options"], .grid-options');
-			if ((await gridOptions.count()) > 0) {
-				await gridOptions
-					.first()
-					.waitFor({ state: 'visible', timeout: 2000 })
-					.catch((e) => console.warn('Grid options visibility timeout:', e.message));
-				await expect(gridOptions.first()).toBeVisible();
+			const optionsCount = await gridOptions.count();
+			if (optionsCount > 0) {
+				await expect(gridOptions.first()).toBeVisible({ timeout: 5000 });
 			}
 
 			// Uncheck to clean up
@@ -193,32 +197,31 @@ test.describe('Control Panel Functionality', () => {
 			'[aria-expanded], .v-expansion-panel-header, .accordion-header'
 		);
 
-		if ((await expandableHeaders.count()) > 0) {
+		const headerCount = await expandableHeaders.count();
+		if (headerCount > 0) {
 			const firstHeader = expandableHeaders.first();
+			await firstHeader.waitFor({ state: 'visible', timeout: 5000 });
 
-			if (await firstHeader.isVisible()) {
-				// Get initial state
-				const initialExpanded = await firstHeader.getAttribute('aria-expanded');
+			// Get initial state
+			const initialExpanded = await firstHeader.getAttribute('aria-expanded');
 
-				// Click to toggle
-				await firstHeader.click();
-				// Wait for expansion animation using attribute change
-				await page
-					.waitForFunction(
-						(initialState) => {
-							const el = document.querySelector('[aria-expanded]');
-							return el && el.getAttribute('aria-expanded') !== initialState;
-						},
-						initialExpanded,
-						{ timeout: 2000 }
-					)
-					.catch((e) => console.warn('Expansion animation timeout:', e.message));
+			// Click to toggle
+			await firstHeader.click();
 
-				// Verify state changed
-				const newExpanded = await firstHeader.getAttribute('aria-expanded');
-				if (initialExpanded !== null && newExpanded !== null) {
-					expect(newExpanded).not.toBe(initialExpanded);
-				}
+			// Wait for state to change
+			await page.waitForFunction(
+				(initialState) => {
+					const el = document.querySelector('[aria-expanded]');
+					return el && el.getAttribute('aria-expanded') !== initialState;
+				},
+				initialExpanded,
+				{ timeout: 5000 }
+			);
+
+			// Verify state changed
+			const newExpanded = await firstHeader.getAttribute('aria-expanded');
+			if (initialExpanded !== null && newExpanded !== null) {
+				expect(newExpanded).not.toBe(initialExpanded);
 			}
 		}
 	});

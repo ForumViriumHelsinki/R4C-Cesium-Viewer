@@ -30,6 +30,16 @@ vi.mock('cesium', () => ({
 	Scene: {
 		pick: vi.fn(),
 	},
+	Rectangle: vi.fn(function () {
+		this.west = 0;
+		this.south = 0;
+		this.east = 0;
+		this.north = 0;
+	}),
+	Math: {
+		toDegrees: vi.fn((radians) => (radians * 180) / Math.PI),
+		toRadians: vi.fn((degrees) => (degrees * Math.PI) / 180),
+	},
 }));
 
 // Mock browser APIs

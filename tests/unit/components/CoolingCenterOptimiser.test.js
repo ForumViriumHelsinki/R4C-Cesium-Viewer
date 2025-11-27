@@ -79,134 +79,12 @@ vi.mock('@turf/turf', () => ({
 	})),
 }));
 
+// Mock stores - will be initialized in beforeEach
+let mockCoolingCentersDataSource;
+let mockGlobalStore;
+let mockMitigationStore;
+
 // Mock stores
-const mockCoolingCentersDataSource = {
-	entities: {
-		add: vi.fn(),
-		values: [],
-	},
-};
-
-const mockGlobalStore = {
-	cesiumViewer: {
-		dataSources: {
-			getByName: vi.fn(() => [mockCoolingCentersDataSource]),
-			add: vi.fn(),
-			remove: vi.fn(),
-		},
-	},
-};
-
-const mockMitigationStore = {
-	resetStore: vi.fn(),
-	optimised: false,
-	gridCells: [
-		{
-			id: 'grid_001',
-			x: TEST_COORDINATES.TEST_POINT_1.X,
-			y: TEST_COORDINATES.TEST_POINT_1.Y,
-			entity: {
-				properties: {
-					grid_id: { getValue: () => 'grid_001' },
-					euref_x: { getValue: () => TEST_COORDINATES.TEST_POINT_1.X },
-					euref_y: { getValue: () => TEST_COORDINATES.TEST_POINT_1.Y },
-				},
-				polygon: {
-					hierarchy: {
-						getValue: () => ({
-							positions: [
-								{ x: 0, y: 0, z: 0 },
-								{ x: 1, y: 0, z: 0 },
-								{ x: 1, y: 1, z: 0 },
-								{ x: 0, y: 1, z: 0 },
-							],
-						}),
-					},
-				},
-			},
-		},
-		{
-			id: 'grid_002',
-			x: 1500,
-			y: 2500,
-			entity: {
-				properties: {
-					grid_id: { getValue: () => 'grid_002' },
-					euref_x: { getValue: () => 1500 },
-					euref_y: { getValue: () => 2500 },
-				},
-				polygon: {
-					hierarchy: {
-						getValue: () => ({
-							positions: [
-								{ x: 0, y: 0, z: 0 },
-								{ x: 1, y: 0, z: 0 },
-								{ x: 1, y: 1, z: 0 },
-								{ x: 0, y: 1, z: 0 },
-							],
-						}),
-					},
-				},
-			},
-		},
-		{
-			id: 'grid_003',
-			x: 2000,
-			y: 3000,
-			entity: {
-				properties: {
-					grid_id: { getValue: () => 'grid_003' },
-					euref_x: { getValue: () => 2000 },
-					euref_y: { getValue: () => 3000 },
-				},
-				polygon: {
-					hierarchy: {
-						getValue: () => ({
-							positions: [
-								{ x: 0, y: 0, z: 0 },
-								{ x: 1, y: 0, z: 0 },
-								{ x: 1, y: 1, z: 0 },
-								{ x: 0, y: 1, z: 0 },
-							],
-						}),
-					},
-				},
-			},
-		},
-	],
-	getGridImpact: vi.fn((id) => {
-		const impacts = {
-			grid_001: 5,
-			grid_002: 8,
-			grid_003: 3,
-		};
-		return impacts[id] || 0;
-	}),
-	coolingCenters: [],
-	addCoolingCenter: vi.fn(function (center) {
-		this.coolingCenters.push(center);
-	}),
-	getCoolingCenterCount: vi.fn(() => 1),
-	optimalEffect: 7,
-	// Add new store actions from refactoring
-	setOptimised: vi.fn(function (value) {
-		this.optimised = value;
-	}),
-	setImpact: vi.fn(function (value) {
-		this.impact = value;
-	}),
-	setAffected: vi.fn(function (array) {
-		this.affected = array;
-	}),
-	resetMitigationState: vi.fn(function () {
-		this.impact = 0;
-		this.affected = [];
-		this.optimised = false;
-	}),
-	impact: 0,
-	affected: [],
-};
-
 vi.mock('../../../src/stores/globalStore.js', () => ({
 	useGlobalStore: () => mockGlobalStore,
 }));
@@ -221,29 +99,149 @@ describe('CoolingCenterOptimiser Component', () => {
 	let pinia;
 
 	beforeEach(() => {
+		// Initialize fresh mocks for each test
+		mockCoolingCentersDataSource = {
+			entities: {
+				add: vi.fn(),
+				values: [],
+			},
+		};
+
+		mockGlobalStore = {
+			cesiumViewer: {
+				dataSources: {
+					getByName: vi.fn(() => [mockCoolingCentersDataSource]),
+					add: vi.fn(),
+					remove: vi.fn(),
+				},
+			},
+		};
+
+		mockMitigationStore = {
+			resetStore: vi.fn(),
+			optimised: false,
+			gridCells: [
+				{
+					id: 'grid_001',
+					x: TEST_COORDINATES.TEST_POINT_1.X,
+					y: TEST_COORDINATES.TEST_POINT_1.Y,
+					entity: {
+						properties: {
+							grid_id: { getValue: () => 'grid_001' },
+							euref_x: { getValue: () => TEST_COORDINATES.TEST_POINT_1.X },
+							euref_y: { getValue: () => TEST_COORDINATES.TEST_POINT_1.Y },
+						},
+						polygon: {
+							hierarchy: {
+								getValue: () => ({
+									positions: [
+										{ x: 0, y: 0, z: 0 },
+										{ x: 1, y: 0, z: 0 },
+										{ x: 1, y: 1, z: 0 },
+										{ x: 0, y: 1, z: 0 },
+									],
+								}),
+							},
+						},
+					},
+				},
+				{
+					id: 'grid_002',
+					x: 1500,
+					y: 2500,
+					entity: {
+						properties: {
+							grid_id: { getValue: () => 'grid_002' },
+							euref_x: { getValue: () => 1500 },
+							euref_y: { getValue: () => 2500 },
+						},
+						polygon: {
+							hierarchy: {
+								getValue: () => ({
+									positions: [
+										{ x: 0, y: 0, z: 0 },
+										{ x: 1, y: 0, z: 0 },
+										{ x: 1, y: 1, z: 0 },
+										{ x: 0, y: 1, z: 0 },
+									],
+								}),
+							},
+						},
+					},
+				},
+				{
+					id: 'grid_003',
+					x: 2000,
+					y: 3000,
+					entity: {
+						properties: {
+							grid_id: { getValue: () => 'grid_003' },
+							euref_x: { getValue: () => 2000 },
+							euref_y: { getValue: () => 3000 },
+						},
+						polygon: {
+							hierarchy: {
+								getValue: () => ({
+									positions: [
+										{ x: 0, y: 0, z: 0 },
+										{ x: 1, y: 0, z: 0 },
+										{ x: 1, y: 1, z: 0 },
+										{ x: 0, y: 1, z: 0 },
+									],
+								}),
+							},
+						},
+					},
+				},
+			],
+			getGridImpact: vi.fn((id) => {
+				const impacts = {
+					grid_001: 5,
+					grid_002: 8,
+					grid_003: 3,
+				};
+				return impacts[id] || 0;
+			}),
+			coolingCenters: [],
+			addCoolingCenter: vi.fn(function (center) {
+				this.coolingCenters.push(center);
+			}),
+			getCoolingCenterCount: vi.fn(() => 1),
+			optimalEffect: 7,
+			// Add new store actions from refactoring
+			setOptimised: vi.fn(function (value) {
+				this.optimised = value;
+			}),
+			setImpact: vi.fn(function (value) {
+				this.impact = value;
+			}),
+			setAffected: vi.fn(function (array) {
+				this.affected = array;
+			}),
+			resetMitigationState: vi.fn(function () {
+				this.impact = 0;
+				this.affected = [];
+				this.optimised = false;
+			}),
+			impact: 0,
+			affected: [],
+		};
+
 		vuetify = createVuetify({
 			components,
 			directives,
 		});
 		pinia = createPinia();
 
-		// Reset mock state
-		mockMitigationStore.coolingCenters = [];
-		mockMitigationStore.optimised = false;
-		mockMitigationStore.impact = 0;
-		mockMitigationStore.affected = [];
-		mockMitigationStore.resetStore.mockClear();
-		mockMitigationStore.addCoolingCenter.mockClear();
-		mockMitigationStore.setOptimised.mockClear();
-		mockMitigationStore.setImpact.mockClear();
-		mockMitigationStore.setAffected.mockClear();
-		mockMitigationStore.resetMitigationState.mockClear();
-
 		wrapper = mount(CoolingCenterOptimiser, {
 			global: {
 				plugins: [vuetify, pinia],
 			},
 		});
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
 	});
 
 	describe('Component Initialization', () => {

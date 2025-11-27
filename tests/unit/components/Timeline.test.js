@@ -6,16 +6,9 @@ import * as directives from 'vuetify/directives';
 import Timeline from '../../../src/components/Timeline.vue';
 import { createPinia } from 'pinia';
 
-// Mock stores
-const mockPropsStore = {
-	currentDataDate: '2024-06-26',
-};
-
-const mockGlobalStore = {
-	cesiumViewer: null,
-	setShowBuildingInfo: vi.fn(),
-	setHeatDataDate: vi.fn(),
-};
+// Mock stores - will be initialized in beforeEach
+let mockPropsStore;
+let mockGlobalStore;
 
 vi.mock('../../../src/stores/propsStore.js', () => ({
 	usePropsStore: () => mockPropsStore,
@@ -43,6 +36,17 @@ describe('Timeline Component', () => {
 	let pinia;
 
 	beforeEach(() => {
+		// Initialize fresh mocks for each test
+		mockPropsStore = {
+			currentDataDate: '2024-06-26',
+		};
+
+		mockGlobalStore = {
+			cesiumViewer: null,
+			setShowBuildingInfo: vi.fn(),
+			setHeatDataDate: vi.fn(),
+		};
+
 		vuetify = createVuetify({
 			components,
 			directives,
@@ -57,6 +61,10 @@ describe('Timeline Component', () => {
 				},
 			},
 		});
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
 	});
 
 	describe('Component Initialization', () => {

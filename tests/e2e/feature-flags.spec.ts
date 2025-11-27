@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissModalIfPresent } from '../helpers/test-helpers';
 
 test.describe('Feature Flags Panel', () => {
 	test.use({ tag: ['@e2e', '@feature-flags'] });
@@ -7,11 +8,7 @@ test.describe('Feature Flags Panel', () => {
 		await page.waitForLoadState('domcontentloaded');
 
 		// Dismiss any modal if present
-		const closeButton = page.getByRole('button', { name: 'Close' });
-		if (await closeButton.isVisible({ timeout: 5000 })) {
-			await closeButton.click();
-			await expect(closeButton).toBeHidden();
-		}
+		await dismissModalIfPresent(page, 'Close');
 	});
 
 	test('Feature Flags button is visible in navigation', async ({ page }) => {
@@ -32,8 +29,14 @@ test.describe('Feature Flags Panel', () => {
 		// Wait for dialog to open
 		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
 
+		// Wait for dialog animations
+		await page.waitForTimeout(300);
+
+		// Scope selectors to dialog to avoid scrim interception
+		const dialog = page.locator('[role="dialog"]');
+
 		// Verify dialog title
-		await expect(page.getByText('Feature Flags')).toBeVisible();
+		await expect(dialog.getByText('Feature Flags').first()).toBeVisible();
 	});
 
 	test('Feature Flags panel displays categories', async ({ page }) => {
@@ -44,11 +47,17 @@ test.describe('Feature Flags Panel', () => {
 		await featureFlagsButton.click();
 		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
 
+		// Wait for dialog animations
+		await page.waitForTimeout(300);
+
+		// Scope selectors to dialog to avoid scrim interception
+		const dialog = page.locator('[role="dialog"]');
+
 		// Check for category sections (at least some of them)
 		const categories = ['Data Layers', 'Graphics & Performance', 'Analysis Tools', 'UI & UX'];
 
 		for (const category of categories) {
-			await expect(page.getByText(category)).toBeVisible();
+			await expect(dialog.getByText(category).first()).toBeVisible();
 		}
 	});
 
@@ -60,44 +69,73 @@ test.describe('Feature Flags Panel', () => {
 		await featureFlagsButton.click();
 		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
 
+		// Wait for dialog animations
+		await page.waitForTimeout(300);
+
+		// Scope selectors to dialog to avoid scrim interception
+		const dialog = page.locator('[role="dialog"]');
+
 		// Expand the Data Layers category
-		const dataLayersCategory = page.getByText('Data Layers').first();
+		const dataLayersCategory = dialog
+			.locator('.v-expansion-panel-title')
+			.filter({ hasText: 'Data Layers' });
 		await dataLayersCategory.click();
 
 		// Wait for expansion panel to open
 		await page.waitForTimeout(500);
 
-		// Find and toggle the NDVI flag
-		const ndviSwitch = page.locator('input[type="checkbox"]').first();
+		// Find and toggle the NDVI flag (scoped to dialog)
+		const ndviSwitch = dialog.locator('input[type="checkbox"]').first();
 		const initialState = await ndviSwitch.isChecked();
 
 		// Click the switch to toggle it
 		await ndviSwitch.click();
 
-		// Verify state changed
-		await expect(ndviSwitch).toHaveAttribute('aria-checked', initialState ? 'false' : 'true');
+		// Verify state changed (use isChecked() instead of aria-checked attribute)
+		if (initialState) {
+			await expect(ndviSwitch).not.toBeChecked();
+		} else {
+			await expect(ndviSwitch).toBeChecked();
+		}
 
 		// Close the dialog
 		await page.getByRole('button', { name: 'Close' }).click();
+
+		// Wait for dialog to fully close and scrim to disappear
+		await page.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 });
+		await page.waitForTimeout(300);
 
 		// Reload the page
 		await page.reload();
 		await page.waitForLoadState('domcontentloaded');
 
+		// Dismiss any modal if present after reload
+		await dismissModalIfPresent(page, 'Close');
+
 		// Re-open feature flags panel
 		await featureFlagsButton.click();
 		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
 
+		// Wait for dialog animations
+		await page.waitForTimeout(300);
+
+		// Re-scope to dialog after reload
+		const dialogAfterReload = page.locator('[role="dialog"]');
+
 		// Expand the Data Layers category again
-		await dataLayersCategory.click();
+		const dataLayersCategoryAfterReload = dialogAfterReload
+			.locator('.v-expansion-panel-title')
+			.filter({ hasText: 'Data Layers' });
+		await dataLayersCategoryAfterReload.click();
 		await page.waitForTimeout(500);
 
-		// Verify the toggle persisted
-		const ndviSwitchAfterReload = page.locator('input[type="checkbox"]').first();
-		await expect(ndviSwitchAfterReload).toHaveAttribute(
-			'aria-checked',
-			initialState ? 'false' : 'true'
-		);
+		// Verify the toggle persisted (use isChecked() instead of aria-checked attribute)
+		const ndviSwitchAfterReload = dialogAfterReload.locator('input[type="checkbox"]').first();
+		if (initialState) {
+			await expect(ndviSwitchAfterReload).not.toBeChecked();
+		} else {
+			await expect(ndviSwitchAfterReload).toBeChecked();
+		}
 	});
 
 	test('Reset flag to default works', async ({ page }) => {
@@ -108,24 +146,32 @@ test.describe('Feature Flags Panel', () => {
 		await featureFlagsButton.click();
 		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
 
+		// Wait for dialog animations
+		await page.waitForTimeout(300);
+
+		// Scope selectors to dialog to avoid scrim interception
+		const dialog = page.locator('[role="dialog"]');
+
 		// Expand the Data Layers category
-		const dataLayersCategory = page.getByText('Data Layers').first();
+		const dataLayersCategory = dialog
+			.locator('.v-expansion-panel-title')
+			.filter({ hasText: 'Data Layers' });
 		await dataLayersCategory.click();
 		await page.waitForTimeout(500);
 
 		// Toggle a flag
-		const ndviSwitch = page.locator('input[type="checkbox"]').first();
+		const ndviSwitch = dialog.locator('input[type="checkbox"]').first();
 		await ndviSwitch.click();
 
 		// Look for the reset button (restore icon)
-		const resetButton = page.getByRole('button', { name: /Reset to default/i }).first();
+		const resetButton = dialog.getByRole('button', { name: /Reset to default/i }).first();
 
 		// Click the reset button if it appears
 		if (await resetButton.isVisible({ timeout: 2000 })) {
 			await resetButton.click();
 
 			// Verify the "Modified" chip is gone
-			await expect(page.getByText('Modified').first()).not.toBeVisible();
+			await expect(dialog.getByText('Modified').first()).not.toBeVisible();
 		}
 	});
 
@@ -159,8 +205,14 @@ test.describe('Feature Flags Panel', () => {
 		await featureFlagsButton.click();
 		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
 
+		// Wait for dialog animations
+		await page.waitForTimeout(300);
+
+		// Scope selectors to dialog to avoid scrim interception
+		const dialog = page.locator('[role="dialog"]');
+
 		// Click import button
-		const importButton = page.getByRole('button', { name: /Import/i });
+		const importButton = dialog.getByRole('button', { name: /Import/i });
 		await importButton.click();
 
 		// Wait for import dialog
@@ -188,8 +240,14 @@ test.describe('Feature Flags Panel', () => {
 		await featureFlagsButton.click();
 		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
 
+		// Wait for dialog animations
+		await page.waitForTimeout(300);
+
+		// Scope selectors to dialog to avoid scrim interception
+		const dialog = page.locator('[role="dialog"]');
+
 		// Click import button
-		const importButton = page.getByRole('button', { name: /Import/i });
+		const importButton = dialog.getByRole('button', { name: /Import/i });
 		await importButton.click();
 
 		// Wait for import dialog

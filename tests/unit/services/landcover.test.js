@@ -23,36 +23,14 @@ vi.mock('cesium', () => ({
 	}),
 }));
 
-// Create shared mock store instances
-const mockRemove = vi.fn();
-const mockAddImageryProvider = vi.fn((provider) => ({
-	imageryProvider: provider,
-}));
-const mockContains = vi.fn(() => true);
+// Mock stores - functions will be initialized in beforeEach
+let mockRemove;
+let mockAddImageryProvider;
+let mockContains;
+let mockGlobalStore;
+let mockBackgroundStore;
+let mockURLStore;
 
-const mockGlobalStore = {
-	cesiumViewer: {
-		imageryLayers: {
-			addImageryProvider: mockAddImageryProvider,
-			contains: mockContains,
-			remove: mockRemove,
-		},
-	},
-};
-
-const mockBackgroundStore = {
-	landcoverLayers: [],
-	hsyYear: '2023',
-	clearLandcoverLayers: vi.fn(function () {
-		this.landcoverLayers = [];
-	}),
-};
-
-const mockURLStore = {
-	wmsProxy: 'https://mock-wms-proxy.example.com/wms',
-};
-
-// Mock stores
 vi.mock('@/stores/globalStore.js', () => ({
 	useGlobalStore: vi.fn(() => mockGlobalStore),
 }));
@@ -69,8 +47,39 @@ describe('Landcover Service', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia());
 		vi.clearAllMocks();
-		// Reset mock arrays
-		mockBackgroundStore.landcoverLayers = [];
+
+		// Create fresh mocks for each test
+		mockRemove = vi.fn();
+		mockAddImageryProvider = vi.fn((provider) => ({
+			imageryProvider: provider,
+		}));
+		mockContains = vi.fn(() => true);
+
+		mockGlobalStore = {
+			cesiumViewer: {
+				imageryLayers: {
+					addImageryProvider: mockAddImageryProvider,
+					contains: mockContains,
+					remove: mockRemove,
+				},
+			},
+		};
+
+		mockBackgroundStore = {
+			landcoverLayers: [],
+			hsyYear: '2023',
+			clearLandcoverLayers: vi.fn(function () {
+				this.landcoverLayers = [];
+			}),
+		};
+
+		mockURLStore = {
+			wmsProxy: 'https://mock-wms-proxy.example.com/wms',
+		};
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
 	});
 
 	describe('createHSYImageryLayer', () => {
