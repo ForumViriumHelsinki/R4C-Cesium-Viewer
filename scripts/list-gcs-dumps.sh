@@ -71,14 +71,14 @@ fi
 echo -e "${BLUE}🔍 Fetching dump list...${NC}"
 echo ""
 
-DUMPS=$(gsutil ls -l "gs://${GCS_BUCKET}/${DUMP_PREFIX}*.sql.gz" 2>/dev/null | grep -v TOTAL || true)
+DUMPS=$(gsutil ls -l "gs://${GCS_BUCKET}/${DUMP_PREFIX}*.dump" 2>/dev/null | grep -v TOTAL || true)
 
 if [ -z "$DUMPS" ]; then
-  echo -e "${YELLOW}⚠️  No dump files found matching: ${DUMP_PREFIX}*.sql.gz${NC}"
+  echo -e "${YELLOW}⚠️  No dump files found matching: ${DUMP_PREFIX}*.dump${NC}"
   echo ""
   echo "Expected file naming format:"
-  echo "  ${DUMP_PREFIX}-YYYY-MM-DD.sql.gz"
-  echo "  Example: ${DUMP_PREFIX}-2025-01-15.sql.gz"
+  echo "  ${DUMP_PREFIX}-YYYY-MM-DD.dump"
+  echo "  Example: ${DUMP_PREFIX}-2025-01-15.dump"
   exit 0
 fi
 

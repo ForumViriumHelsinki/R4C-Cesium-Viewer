@@ -65,15 +65,15 @@ spec:
 
           # Find the latest dump file
           echo "🔍 Finding latest database dump..."
-          LATEST_DUMP=$(gsutil ls -l "gs://${GCS_BUCKET}/${DUMP_PREFIX}*.sql.gz" | \
+          LATEST_DUMP=$(gsutil ls -l "gs://${GCS_BUCKET}/${DUMP_PREFIX}*.dump" | \
                         grep -v TOTAL | \
                         sort -k2 -r | \
                         head -1 | \
                         awk '{print $3}')
 
           if [ -z "$LATEST_DUMP" ]; then
-            echo "❌ No dump files found in gs://${GCS_BUCKET}/${DUMP_PREFIX}*.sql.gz"
-            echo "Expected format: ${DUMP_PREFIX}-YYYY-MM-DD.sql.gz"
+            echo "❌ No dump files found in gs://${GCS_BUCKET}/${DUMP_PREFIX}*.dump"
+            echo "Expected format: ${DUMP_PREFIX}-YYYY-MM-DD.dump"
             exit 1
           fi
 
@@ -84,16 +84,10 @@ spec:
 
           # Download the dump
           echo "⬇️  Downloading dump from GCS..."
-          gsutil -m cp "$LATEST_DUMP" /tmp/dump.sql.gz
+          gsutil -m cp "$LATEST_DUMP" /tmp/dump.dump
 
-          DUMP_SIZE=$(du -h /tmp/dump.sql.gz | cut -f1)
-          echo "✅ Downloaded $DUMP_SIZE compressed dump"
-
-          # Decompress
-          echo "📦 Decompressing dump..."
-          gunzip /tmp/dump.sql.gz
-          UNCOMPRESSED_SIZE=$(du -h /tmp/dump.sql | cut -f1)
-          echo "✅ Decompressed to $UNCOMPRESSED_SIZE"
+          DUMP_SIZE=$(du -h /tmp/dump.dump | cut -f1)
+          echo "✅ Downloaded $DUMP_SIZE dump"
 
           # Set up database connection
           export PGHOST="postgresql"
@@ -147,8 +141,15 @@ EOSQL
           echo "📥 Restoring database from dump..."
           echo "⏱️  This may take several minutes depending on database size..."
 
-          # Use single transaction for faster restore and atomicity
-          psql -v ON_ERROR_STOP=1 --single-transaction < /tmp/dump.sql
+          # Use pg_restore with parallel jobs for faster restore
+          # --no-owner and --no-acl prevent permission issues with Cloud SQL users
+          pg_restore \
+            --dbname=regions4climate \
+            --no-owner \
+            --no-acl \
+            --jobs=4 \
+            --verbose \
+            /tmp/dump.dump
 
           echo "✅ Database restored successfully"
 
@@ -216,7 +217,7 @@ EOSQL
 
           # Clean up
           echo "🧹 Cleaning up temporary files..."
-          rm -f /tmp/dump.sql
+          rm -f /tmp/dump.dump
 
           echo ""
           echo "🎉 Database clone completed successfully!"

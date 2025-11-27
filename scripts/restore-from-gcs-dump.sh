@@ -13,7 +13,7 @@
 # Usage:
 #   ./scripts/restore-from-gcs-dump.sh
 #   ./scripts/restore-from-gcs-dump.sh --dump-date 2025-01-15
-#   ./scripts/restore-from-gcs-dump.sh --local-file /path/to/dump.sql.gz
+#   ./scripts/restore-from-gcs-dump.sh --local-file /path/to/dump.dump
 # ==============================================================================
 
 set -e
@@ -120,15 +120,16 @@ if [ -n "$LOCAL_FILE" ]; then
     echo -e "${RED}❌ Local file not found: ${LOCAL_FILE}${NC}"
     exit 1
   fi
-  cp "$LOCAL_FILE" "$TEMP_DIR/dump.sql.gz"
-  DUMP_FILE="$TEMP_DIR/dump.sql.gz"
+  cp "$LOCAL_FILE" "$TEMP_DIR/dump.dump"
+  DUMP_FILE="$TEMP_DIR/dump.dump"
+  DUMP_DATE=$(echo "$LOCAL_FILE" | grep -oP '\d{4}-\d{2}-\d{2}' || echo "unknown")
 else
   # Find and download from GCS
   echo -e "${BLUE}📦 Searching GCS bucket: gs://${GCS_BUCKET}${NC}"
 
   if [ -n "$DUMP_DATE" ]; then
     # Download specific date
-    GCS_PATH="gs://${GCS_BUCKET}/${DUMP_PREFIX}-${DUMP_DATE}.sql.gz"
+    GCS_PATH="gs://${GCS_BUCKET}/${DUMP_PREFIX}-${DUMP_DATE}.dump"
     echo -e "${BLUE}🔍 Looking for dump from ${DUMP_DATE}...${NC}"
 
     if ! gsutil ls "$GCS_PATH" > /dev/null 2>&1; then
@@ -140,14 +141,14 @@ else
   else
     # Find latest dump
     echo -e "${BLUE}🔍 Finding latest dump...${NC}"
-    LATEST_DUMP=$(gsutil ls -l "gs://${GCS_BUCKET}/${DUMP_PREFIX}*.sql.gz" | \
+    LATEST_DUMP=$(gsutil ls -l "gs://${GCS_BUCKET}/${DUMP_PREFIX}*.dump" | \
                   grep -v TOTAL | \
                   sort -k2 -r | \
                   head -1 | \
                   awk '{print $3}')
 
     if [ -z "$LATEST_DUMP" ]; then
-      echo -e "${RED}❌ No dump files found in gs://${GCS_BUCKET}/${DUMP_PREFIX}*.sql.gz${NC}"
+      echo -e "${RED}❌ No dump files found in gs://${GCS_BUCKET}/${DUMP_PREFIX}*.dump${NC}"
       exit 1
     fi
   fi
@@ -158,20 +159,12 @@ else
 
   # Download
   echo -e "${BLUE}⬇️  Downloading from GCS...${NC}"
-  gsutil -m cp "$LATEST_DUMP" "$TEMP_DIR/dump.sql.gz"
-  DUMP_FILE="$TEMP_DIR/dump.sql.gz"
+  gsutil -m cp "$LATEST_DUMP" "$TEMP_DIR/dump.dump"
+  DUMP_FILE="$TEMP_DIR/dump.dump"
 
   DUMP_SIZE=$(du -h "$DUMP_FILE" | cut -f1)
   echo -e "${GREEN}✅ Downloaded ${DUMP_SIZE}${NC}"
 fi
-
-# Decompress
-echo ""
-echo -e "${BLUE}📦 Decompressing dump...${NC}"
-gunzip "$DUMP_FILE"
-DUMP_FILE="${DUMP_FILE%.gz}"
-UNCOMPRESSED_SIZE=$(du -h "$DUMP_FILE" | cut -f1)
-echo -e "${GREEN}✅ Decompressed to ${UNCOMPRESSED_SIZE}${NC}"
 
 # Warning and confirmation
 echo ""
@@ -201,7 +194,15 @@ echo ""
 echo -e "${BLUE}📥 Restoring database...${NC}"
 echo -e "${YELLOW}⏱️  This may take several minutes...${NC}"
 
-PGDATABASE="$DB_NAME" psql -v ON_ERROR_STOP=1 --single-transaction < "$DUMP_FILE"
+# Use pg_restore with parallel jobs for faster restore
+# --no-owner and --no-acl prevent permission issues with Cloud SQL users
+PGDATABASE="$DB_NAME" pg_restore \
+  --dbname="$DB_NAME" \
+  --no-owner \
+  --no-acl \
+  --jobs=4 \
+  --verbose \
+  "$DUMP_FILE"
 
 echo -e "${GREEN}✅ Database restored successfully${NC}"
 

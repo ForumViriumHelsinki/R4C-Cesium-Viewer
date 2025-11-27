@@ -63,7 +63,7 @@ skaffold dev -p e2e-with-prod-data --port-forward
 ./scripts/restore-from-gcs-dump.sh --dump-date 2025-01-15
 
 # Use local dump file
-./scripts/restore-from-gcs-dump.sh --local-file /path/to/dump.sql.gz
+./scripts/restore-from-gcs-dump.sh --local-file /path/to/dump.dump
 ```
 
 ## Architecture
@@ -83,11 +83,11 @@ skaffold dev -p e2e-with-prod-data --port-forward
 │ fvh-database-dumps  │
 │                     │
 │ ├─ regions4climate- │
-│ │  2025-01-07.sql.gz│
+│ │  2025-01-07.dump  │
 │ ├─ regions4climate- │
-│ │  2025-01-14.sql.gz│
+│ │  2025-01-14.dump  │
 │ └─ regions4climate- │
-│    2025-01-21.sql.gz│
+│    2025-01-21.dump  │
 └──────────┬──────────┘
            │ Download on demand
            ↓
@@ -107,12 +107,18 @@ skaffold dev -p e2e-with-prod-data --port-forward
 Automated restore job that:
 - Waits for PostgreSQL to be ready
 - Downloads latest dump from GCS using `gsutil`
-- Verifies dump integrity
+- Restores dump using `pg_restore` with parallel jobs (4 workers)
 - Drops and recreates local database
-- Restores dump with progress logging
 - Verifies critical tables exist
 - Sets proper ownership and permissions
 - Runs ANALYZE for query optimization
+
+**Format:** Uses PostgreSQL custom format (`.dump`) which provides:
+- Parallel restore with `-j` flag for faster performance
+- Selective table restore capability
+- Better compression than gzipped SQL
+- Ability to list contents with `pg_restore -l`
+- Built-in format verification
 
 #### Scripts
 
@@ -179,9 +185,9 @@ For local development outside Kubernetes:
 # ----------------------------------------
 # DATE         SIZE            GCS PATH
 # ----------------------------------------
-# 2025-01-21   245MiB          regions4climate-2025-01-21.sql.gz
-# 2025-01-14   243MiB          regions4climate-2025-01-14.sql.gz
-# 2025-01-07   241MiB          regions4climate-2025-01-07.sql.gz
+# 2025-01-21   245MiB          regions4climate-2025-01-21.dump
+# 2025-01-14   243MiB          regions4climate-2025-01-14.dump
+# 2025-01-07   241MiB          regions4climate-2025-01-07.dump
 
 # Restore latest
 ./scripts/restore-from-gcs-dump.sh
@@ -190,7 +196,7 @@ For local development outside Kubernetes:
 ./scripts/restore-from-gcs-dump.sh --dump-date 2025-01-14
 
 # Use local file (useful for air-gapped environments)
-./scripts/restore-from-gcs-dump.sh --local-file ~/downloads/regions4climate-2025-01-14.sql.gz
+./scripts/restore-from-gcs-dump.sh --local-file ~/downloads/regions4climate-2025-01-14.dump
 ```
 
 **Configuration via environment variables:**
@@ -228,12 +234,12 @@ Expected file naming convention:
 
 ```
 fvh-database-dumps/
-├── regions4climate-2025-01-07.sql.gz
-├── regions4climate-2025-01-14.sql.gz
-└── regions4climate-2025-01-21.sql.gz
+├── regions4climate-2025-01-07.dump
+├── regions4climate-2025-01-14.dump
+└── regions4climate-2025-01-21.dump
 ```
 
-**Format:** `{DUMP_PREFIX}-YYYY-MM-DD.sql.gz`
+**Format:** `{DUMP_PREFIX}-YYYY-MM-DD.dump`
 
 ### Access Control
 
@@ -310,12 +316,12 @@ See: [Infrastructure Repository Issue](#infrastructure-repo-issue) for configura
 
 **Symptoms:**
 ```
-❌ No dump files found in gs://fvh-database-dumps/regions4climate*.sql.gz
+❌ No dump files found in gs://fvh-database-dumps/regions4climate*.dump
 ```
 
 **Solutions:**
 1. Verify bucket name: `gsutil ls gs://fvh-database-dumps/`
-2. Check file naming matches expected format: `regions4climate-YYYY-MM-DD.sql.gz`
+2. Check file naming matches expected format: `regions4climate-YYYY-MM-DD.dump`
 3. Ensure dumps exist (infrastructure automation may not be configured yet)
 4. Verify GCS permissions: `gsutil ls gs://fvh-database-dumps/`
 
@@ -474,9 +480,8 @@ jobs:
 
 1. **Never commit dumps to version control** - use `.gitignore`:
    ```gitignore
-   *.sql
-   *.sql.gz
-   dump-*.sql*
+   *.dump
+   dump-*.dump
    ```
 
 2. **Use Workload Identity** in production clusters (not service account keys)
@@ -501,7 +506,7 @@ The following issue should be created in your infrastructure repository to confi
 > **Requirements:**
 > - Schedule: Weekly dumps (suggested: Sunday 2 AM UTC to minimize impact)
 > - Bucket: `fvh-database-dumps`
-> - Naming: `regions4climate-YYYY-MM-DD.sql.gz`
+> - Naming: `regions4climate-YYYY-MM-DD.dump`
 > - Compression: gzip
 > - Retention: Keep last 4 weeks (automatic cleanup)
 > - Database: `regions4climate` production instance
