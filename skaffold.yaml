@@ -93,6 +93,25 @@ profiles:
         localPort: 5000
         address: 127.0.0.1
 
+  - name: e2e-with-prod-data
+    manifests:
+      rawYaml:
+        - k8s/serviceaccount.yaml
+        - k8s/configmap.yaml
+        - k8s/secrets.yaml
+        - k8s/deployment.yaml
+        - k8s/service.yaml
+        - k8s/ingress.yaml
+        - k8s/pygeoapi-deployment.yaml
+        # PostgreSQL with PostGIS (official postgis/postgis image)
+        - k8s/postgresql-secret.yaml
+        - k8s/postgresql-configmap.yaml
+        - k8s/postgresql-headless-service.yaml
+        - k8s/postgresql-service.yaml
+        - k8s/postgresql-statefulset.yaml
+        # Database clone from GCS production dumps
+        - k8s/db-clone-from-gcs-job.yaml
+
   - name: migration-test
     manifests:
       rawYaml:
