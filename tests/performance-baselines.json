@@ -1,103 +1,103 @@
 {
-  "layer-controls": {
-    "total": 45000,
-    "cesiumInit": 8000,
-    "individualTests": {
-      "should display NDVI toggle in all views and contexts": 3500,
-      "should maintain NDVI state across view changes": 3200,
-      "should display Layers section header consistently": 2800,
-      "should show Land Cover only in non-Helsinki views": 3800,
-      "should show vegetation controls only in Helsinki view": 2500,
-      "should handle view-specific layer state correctly": 4200,
-      "should show Trees toggle only with postal code in non-grid views": 5500,
-      "should hide Trees toggle in grid view even with postal code": 4800,
-      "should handle Trees toggle state across valid contexts": 6200,
-      "should handle rapid toggle switching without errors": 5000,
-      "should handle multiple layer toggles simultaneously": 6800,
-      "should maintain layer states during navigation": 5200,
-      "should have consistent styling for all layer toggles": 3500,
-      "should support keyboard navigation for layer toggles": 4000,
-      "should have proper labels for screen readers": 2800,
-      "should provide visual feedback for toggle state changes": 3200,
-      "should handle layer toggles during data loading": 4500,
-      "should reset layer states appropriately on application reset": 3800,
-      "should handle missing layer data gracefully": 3000,
-      "should handle layer toggles efficiently across viewports": 7500
-    }
-  },
-  "building-filters": {
-    "total": 38000,
-    "cesiumInit": 8000,
-    "individualTests": {
-      "should display building filter controls": 3000,
-      "should filter buildings by type": 4500,
-      "should filter buildings by energy efficiency": 4200,
-      "should combine multiple filters": 5500,
-      "should reset filters": 3200,
-      "should maintain filter state across navigation": 4800,
-      "should handle rapid filter changes": 4500,
-      "should provide visual feedback for active filters": 3500
-    }
-  },
-  "navigation-levels": {
-    "total": 42000,
-    "cesiumInit": 8000,
-    "individualTests": {
-      "should navigate to Capital Region view": 3500,
-      "should navigate to Grid view": 3200,
-      "should drill down to postal code level": 5800,
-      "should drill down to building level": 7200,
-      "should navigate back from building to postal code": 4500,
-      "should navigate back to start level": 3800,
-      "should maintain state during navigation": 4200,
-      "should handle rapid navigation changes": 5000,
-      "should show correct UI at each level": 4800
-    }
-  },
-  "expansion-panels": {
-    "total": 35000,
-    "cesiumInit": 8000,
-    "individualTests": {
-      "should expand and collapse panels": 3500,
-      "should maintain panel state": 3200,
-      "should handle multiple panels": 4500,
-      "should show correct content in panels": 3800,
-      "should support keyboard navigation": 4200,
-      "should handle rapid panel toggling": 4000,
-      "should work across different viewports": 6800
-    }
-  },
-  "timeline-controls": {
-    "total": 40000,
-    "cesiumInit": 8000,
-    "individualTests": {
-      "should display timeline controls": 3000,
-      "should change time period": 4500,
-      "should animate through time": 5500,
-      "should pause animation": 3200,
-      "should reset timeline": 3500,
-      "should maintain timeline state": 4200,
-      "should handle rapid time changes": 4800,
-      "should work with different data layers": 6300
-    }
-  },
-  "view-modes": {
-    "total": 36000,
-    "cesiumInit": 8000,
-    "individualTests": {
-      "should switch between 2D and 3D modes": 5500,
-      "should maintain view mode state": 3800,
-      "should preserve data when switching modes": 4500,
-      "should handle rapid mode switching": 4200,
-      "should adjust UI for different modes": 3500,
-      "should work with all data layers": 6500
-    }
-  },
-  "comprehensive-walkthrough": {
-    "total": 65000,
-    "cesiumInit": 8000,
-    "individualTests": {
-      "should complete full user journey": 55000
-    }
-  }
+	"layer-controls": {
+		"total": 45000,
+		"cesiumInit": 8000,
+		"individualTests": {
+			"should display NDVI toggle in all views and contexts": 3500,
+			"should maintain NDVI state across view changes": 3200,
+			"should display Layers section header consistently": 2800,
+			"should show Land Cover only in non-Helsinki views": 3800,
+			"should show vegetation controls only in Helsinki view": 2500,
+			"should handle view-specific layer state correctly": 4200,
+			"should show Trees toggle only with postal code in non-grid views": 5500,
+			"should hide Trees toggle in grid view even with postal code": 4800,
+			"should handle Trees toggle state across valid contexts": 6200,
+			"should handle rapid toggle switching without errors": 5000,
+			"should handle multiple layer toggles simultaneously": 6800,
+			"should maintain layer states during navigation": 5200,
+			"should have consistent styling for all layer toggles": 3500,
+			"should support keyboard navigation for layer toggles": 4000,
+			"should have proper labels for screen readers": 2800,
+			"should provide visual feedback for toggle state changes": 3200,
+			"should handle layer toggles during data loading": 4500,
+			"should reset layer states appropriately on application reset": 3800,
+			"should handle missing layer data gracefully": 3000,
+			"should handle layer toggles efficiently across viewports": 7500
+		}
+	},
+	"building-filters": {
+		"total": 38000,
+		"cesiumInit": 8000,
+		"individualTests": {
+			"should display building filter controls": 3000,
+			"should filter buildings by type": 4500,
+			"should filter buildings by energy efficiency": 4200,
+			"should combine multiple filters": 5500,
+			"should reset filters": 3200,
+			"should maintain filter state across navigation": 4800,
+			"should handle rapid filter changes": 4500,
+			"should provide visual feedback for active filters": 3500
+		}
+	},
+	"navigation-levels": {
+		"total": 42000,
+		"cesiumInit": 8000,
+		"individualTests": {
+			"should navigate to Capital Region view": 3500,
+			"should navigate to Grid view": 3200,
+			"should drill down to postal code level": 5800,
+			"should drill down to building level": 7200,
+			"should navigate back from building to postal code": 4500,
+			"should navigate back to start level": 3800,
+			"should maintain state during navigation": 4200,
+			"should handle rapid navigation changes": 5000,
+			"should show correct UI at each level": 4800
+		}
+	},
+	"expansion-panels": {
+		"total": 35000,
+		"cesiumInit": 8000,
+		"individualTests": {
+			"should expand and collapse panels": 3500,
+			"should maintain panel state": 3200,
+			"should handle multiple panels": 4500,
+			"should show correct content in panels": 3800,
+			"should support keyboard navigation": 4200,
+			"should handle rapid panel toggling": 4000,
+			"should work across different viewports": 6800
+		}
+	},
+	"timeline-controls": {
+		"total": 40000,
+		"cesiumInit": 8000,
+		"individualTests": {
+			"should display timeline controls": 3000,
+			"should change time period": 4500,
+			"should animate through time": 5500,
+			"should pause animation": 3200,
+			"should reset timeline": 3500,
+			"should maintain timeline state": 4200,
+			"should handle rapid time changes": 4800,
+			"should work with different data layers": 6300
+		}
+	},
+	"view-modes": {
+		"total": 36000,
+		"cesiumInit": 8000,
+		"individualTests": {
+			"should switch between 2D and 3D modes": 5500,
+			"should maintain view mode state": 3800,
+			"should preserve data when switching modes": 4500,
+			"should handle rapid mode switching": 4200,
+			"should adjust UI for different modes": 3500,
+			"should work with all data layers": 6500
+		}
+	},
+	"comprehensive-walkthrough": {
+		"total": 65000,
+		"cesiumInit": 8000,
+		"individualTests": {
+			"should complete full user journey": 55000
+		}
+	}
 }

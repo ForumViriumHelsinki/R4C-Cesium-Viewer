@@ -13,9 +13,9 @@
  * @see {@link https://www.ogc.org/standards/wms|OGC WMS Standard}
  */
 
-import { useGlobalStore } from "../stores/globalStore.js";
-import * as Cesium from "cesium";
-import { useBackgroundMapStore } from "../stores/backgroundMapStore.js";
+import { useGlobalStore } from '../stores/globalStore.js';
+import * as Cesium from 'cesium';
+import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
 
 /**
  * Creates and adds a flood risk WMS imagery layer to the Cesium viewer
@@ -44,37 +44,37 @@ import { useBackgroundMapStore } from "../stores/backgroundMapStore.js";
  * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/pull/340|PR #340 - WMS Tile Optimization}
  */
 export const createFloodImageryLayer = async (url, layerName) => {
-  const store = useGlobalStore();
-  const backgroundMapStore = useBackgroundMapStore();
-  const viewer = store.cesiumViewer;
+	const store = useGlobalStore();
+	const backgroundMapStore = useBackgroundMapStore();
+	const viewer = store.cesiumViewer;
 
-  try {
-    // Construct URL with proper query parameter handling
-    const serviceUrl = new URL(url);
-    serviceUrl.searchParams.set("format", "image/png");
-    serviceUrl.searchParams.set("transparent", "true");
+	try {
+		// Construct URL with proper query parameter handling
+		const serviceUrl = new URL(url);
+		serviceUrl.searchParams.set('format', 'image/png');
+		serviceUrl.searchParams.set('transparent', 'true');
 
-    const provider = new Cesium.WebMapServiceImageryProvider({
-      url: serviceUrl.toString(),
-      layers: layerName,
-      // Performance optimization: Use larger tiles to reduce request count
-      // 512x512 tiles reduce requests by ~75% compared to default 256x256
-      tileWidth: 512,
-      tileHeight: 512,
-      // Limit zoom levels to prevent excessive tile loading
-      minimumLevel: 0,
-      maximumLevel: 18,
-      // Use geographic tiling scheme for EPSG:4326 (WGS84)
-      tilingScheme: new Cesium.GeographicTilingScheme(),
-    });
+		const provider = new Cesium.WebMapServiceImageryProvider({
+			url: serviceUrl.toString(),
+			layers: layerName,
+			// Performance optimization: Use larger tiles to reduce request count
+			// 512x512 tiles reduce requests by ~75% compared to default 256x256
+			tileWidth: 512,
+			tileHeight: 512,
+			// Limit zoom levels to prevent excessive tile loading
+			minimumLevel: 0,
+			maximumLevel: 18,
+			// Use geographic tiling scheme for EPSG:4326 (WGS84)
+			tilingScheme: new Cesium.GeographicTilingScheme(),
+		});
 
-    await provider.readyPromise;
-    const addedLayer = viewer.imageryLayers.addImageryProvider(provider);
-    addedLayer.alpha = 1;
-    backgroundMapStore.floodLayers.push(addedLayer);
-  } catch (error) {
-    console.error("Error creating WMS layer:", error);
-  }
+		await provider.readyPromise;
+		const addedLayer = viewer.imageryLayers.addImageryProvider(provider);
+		addedLayer.alpha = 1;
+		backgroundMapStore.floodLayers.push(addedLayer);
+	} catch (error) {
+		console.error('Error creating WMS layer:', error);
+	}
 };
 
 /**
@@ -88,25 +88,25 @@ export const createFloodImageryLayer = async (url, layerName) => {
  * removeFloodLayers(); // Removes all flood WMS layers
  */
 export const removeFloodLayers = () => {
-  const store = useGlobalStore();
-  const backgroundMapStore = useBackgroundMapStore();
-  const viewer = store.cesiumViewer;
+	const store = useGlobalStore();
+	const backgroundMapStore = useBackgroundMapStore();
+	const viewer = store.cesiumViewer;
 
-  try {
-    if (
-      Array.isArray(backgroundMapStore.floodLayers) &&
-      backgroundMapStore.floodLayers.length > 0
-    ) {
-      // Remove each layer from the Cesium viewer
-      backgroundMapStore.floodLayers.forEach((layer) => {
-        if (viewer.imageryLayers.contains(layer)) {
-          viewer.imageryLayers.remove(layer);
-        }
-      });
+	try {
+		if (
+			Array.isArray(backgroundMapStore.floodLayers) &&
+			backgroundMapStore.floodLayers.length > 0
+		) {
+			// Remove each layer from the Cesium viewer
+			backgroundMapStore.floodLayers.forEach((layer) => {
+				if (viewer.imageryLayers.contains(layer)) {
+					viewer.imageryLayers.remove(layer);
+				}
+			});
 
-      backgroundMapStore.floodLayers = [];
-    }
-  } catch (error) {
-    console.error("Error removing floodlayer:", error);
-  }
+			backgroundMapStore.clearFloodLayers();
+		}
+	} catch (error) {
+		console.error('Error removing floodlayer:', error);
+	}
 };

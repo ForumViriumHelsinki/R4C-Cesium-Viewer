@@ -1,27 +1,27 @@
-name: "Start Server with Health Check"
-description: "Start frontend server and wait for it to be ready with health checks"
+name: 'Start Server with Health Check'
+description: 'Start frontend server and wait for it to be ready with health checks'
 
 inputs:
   server-command:
-    description: "Command to start the server"
+    description: 'Command to start the server'
     required: false
-    default: "npm run preview"
+    default: 'npm run preview'
   server-url:
-    description: "URL to check for server readiness"
+    description: 'URL to check for server readiness'
     required: false
-    default: "http://localhost:4173"
+    default: 'http://localhost:4173'
   timeout:
-    description: "Maximum time to wait for server to be ready (seconds)"
+    description: 'Maximum time to wait for server to be ready (seconds)'
     required: false
-    default: "30"
+    default: '30'
 
 outputs:
   server-pid:
-    description: "Process ID of the started server"
+    description: 'Process ID of the started server'
     value: ${{ steps.start-server.outputs.pid }}
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Start server and wait for readiness
       id: start-server

@@ -65,11 +65,15 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_r4c_postalcode_mat_geom_box
 ON public.r4c_postalcode_mat USING gist (ST_Envelope(geom));
 
 -- 4. Create statistics for better query planning
-CREATE STATISTICS IF NOT EXISTS stat_r4c_hsy_building_mat_multi
+-- Drop existing statistics first to avoid conflicts
+DROP STATISTICS IF EXISTS public.stat_r4c_hsy_building_mat_multi;
+DROP STATISTICS IF EXISTS public.stat_r4c_postalcode_mat_multi;
+
+CREATE STATISTICS stat_r4c_hsy_building_mat_multi
 ON postinumero, kayttarks, area_m2, kavu
 FROM public.r4c_hsy_building_mat;
 
-CREATE STATISTICS IF NOT EXISTS stat_r4c_postalcode_mat_multi
+CREATE STATISTICS stat_r4c_postalcode_mat_multi
 ON postinumero, avgheatexposure, avgcoldexposure
 FROM public.r4c_postalcode_mat;
 

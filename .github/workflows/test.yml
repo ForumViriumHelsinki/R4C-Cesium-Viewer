@@ -30,8 +30,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "25"
-          cache: "npm"
+          node-version: '25'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -50,7 +50,7 @@ jobs:
     name: Unit Tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     env:
-      NODE_OPTIONS: "--max-old-space-size=512"
+      NODE_OPTIONS: '--max-old-space-size=512'
 
     strategy:
       matrix:
@@ -64,7 +64,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -85,7 +85,7 @@ jobs:
     needs: unit-tests
     runs-on: ubuntu-latest
     env:
-      NODE_OPTIONS: "--max-old-space-size=512"
+      NODE_OPTIONS: '--max-old-space-size=512'
 
     steps:
       - name: Checkout code
@@ -94,8 +94,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "25"
-          cache: "npm"
+          node-version: '25'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NODE_OPTIONS: "--max-old-space-size=2048"
+      NODE_OPTIONS: '--max-old-space-size=2048'
 
     steps:
       - name: Checkout code
@@ -120,8 +120,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "25"
-          cache: "npm"
+          node-version: '25'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -139,9 +139,9 @@ jobs:
         uses: ./.github/actions/start-server-with-healthcheck
         id: server
         with:
-          server-command: "npm run preview"
-          server-url: "http://localhost:4173"
-          timeout: "30"
+          server-command: 'npm run preview'
+          server-url: 'http://localhost:4173'
+          timeout: '30'
 
       - name: Run Playwright tests
         run: npm run test:e2e
@@ -164,7 +164,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NODE_OPTIONS: "--max-old-space-size=2048"
+      NODE_OPTIONS: '--max-old-space-size=2048'
 
     strategy:
       fail-fast: true
@@ -178,8 +178,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "25"
-          cache: "npm"
+          node-version: '25'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -197,9 +197,9 @@ jobs:
         uses: ./.github/actions/start-server-with-healthcheck
         id: server
         with:
-          server-command: "npm run preview"
-          server-url: "http://localhost:4173"
-          timeout: "30"
+          server-command: 'npm run preview'
+          server-url: 'http://localhost:4173'
+          timeout: '30'
 
       - name: Run accessibility tests
         run: timeout 600 npm run test:accessibility:${{ matrix.viewport }} -- -x --reporter=list,json --trace=on-first-retry
@@ -226,7 +226,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     env:
-      NODE_OPTIONS: "--max-old-space-size=2048"
+      NODE_OPTIONS: '--max-old-space-size=2048'
 
     steps:
       - name: Checkout code
@@ -235,8 +235,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "25"
-          cache: "npm"
+          node-version: '25'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -254,9 +254,9 @@ jobs:
         uses: ./.github/actions/start-server-with-healthcheck
         id: server
         with:
-          server-command: "npm run preview"
-          server-url: "http://localhost:4173"
-          timeout: "30"
+          server-command: 'npm run preview'
+          server-url: 'http://localhost:4173'
+          timeout: '30'
 
       - name: Run performance tests
         run: npm run test:performance
@@ -284,8 +284,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "25"
-          cache: "npm"
+          node-version: '25'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci

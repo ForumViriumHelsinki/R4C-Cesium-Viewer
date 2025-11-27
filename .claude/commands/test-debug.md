@@ -144,9 +144,9 @@ await page.pause();
 ```typescript
 // In playwright.config.ts for debugging
 use: {
-  launchOptions: {
-    slowMo: 1000; // 1 second delay between actions
-  }
+	launchOptions: {
+		slowMo: 1000; // 1 second delay between actions
+	}
 }
 ```
 
@@ -166,7 +166,7 @@ use: {
 ```typescript
 // Log page console to terminal
 test.beforeEach(async ({ page }) => {
-  page.on("console", (msg) => console.log("PAGE:", msg.text()));
+	page.on('console', (msg) => console.log('PAGE:', msg.text()));
 });
 ```
 

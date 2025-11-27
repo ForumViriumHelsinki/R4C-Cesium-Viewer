@@ -1,192 +1,202 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createPinia, setActivePinia } from "pinia";
-import {
-  createHSYImageryLayer,
-  removeLandcover,
-} from "@/services/landcover.js";
-import * as Cesium from "cesium";
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { createHSYImageryLayer, removeLandcover } from '@/services/landcover.js';
+import * as Cesium from 'cesium';
+import { useGlobalStore } from '@/stores/globalStore.js';
+import { useBackgroundMapStore } from '@/stores/backgroundMapStore.js';
 
 // Mock Cesium module
-vi.mock("cesium", () => ({
-  WebMapServiceImageryProvider: vi.fn(function (options) {
-    // Constructor mock that stores the options
-    this.url = options.url;
-    this.layers = options.layers;
-    this.tileWidth = options.tileWidth;
-    this.tileHeight = options.tileHeight;
-    this.minimumLevel = options.minimumLevel;
-    this.maximumLevel = options.maximumLevel;
-    this.tilingScheme = options.tilingScheme;
-    this.readyPromise = Promise.resolve(true);
-  }),
-  GeographicTilingScheme: vi.fn(function () {
-    this.name = "GeographicTilingScheme";
-  }),
+vi.mock('cesium', () => ({
+	WebMapServiceImageryProvider: vi.fn(function (options) {
+		// Constructor mock that stores the options
+		this.url = options.url;
+		this.layers = options.layers;
+		this.tileWidth = options.tileWidth;
+		this.tileHeight = options.tileHeight;
+		this.minimumLevel = options.minimumLevel;
+		this.maximumLevel = options.maximumLevel;
+		this.tilingScheme = options.tilingScheme;
+		this.readyPromise = Promise.resolve(true);
+	}),
+	GeographicTilingScheme: vi.fn(function () {
+		this.name = 'GeographicTilingScheme';
+	}),
 }));
 
-// Mock stores
-vi.mock("@/stores/globalStore.js", () => ({
-  useGlobalStore: vi.fn(() => ({
-    cesiumViewer: {
-      imageryLayers: {
-        addImageryProvider: vi.fn((provider) => ({
-          imageryProvider: provider,
-        })),
-        contains: vi.fn(() => true),
-        remove: vi.fn(),
-      },
-    },
-  })),
+// Mock stores - functions will be initialized in beforeEach
+let mockRemove;
+let mockAddImageryProvider;
+let mockContains;
+let mockGlobalStore;
+let mockBackgroundStore;
+let mockURLStore;
+
+vi.mock('@/stores/globalStore.js', () => ({
+	useGlobalStore: vi.fn(() => mockGlobalStore),
 }));
 
-vi.mock("@/stores/backgroundMapStore.js", () => ({
-  useBackgroundMapStore: vi.fn(() => ({
-    landcoverLayers: [],
-    hsyYear: "2023",
-  })),
+vi.mock('@/stores/backgroundMapStore.js', () => ({
+	useBackgroundMapStore: vi.fn(() => mockBackgroundStore),
 }));
 
-vi.mock("@/stores/urlStore.js", () => ({
-  useURLStore: vi.fn(() => ({
-    wmsProxy: "https://mock-wms-proxy.example.com/wms",
-  })),
+vi.mock('@/stores/urlStore.js', () => ({
+	useURLStore: vi.fn(() => mockURLStore),
 }));
 
-describe("Landcover Service", () => {
-  beforeEach(() => {
-    setActivePinia(createPinia());
-    vi.clearAllMocks();
-  });
+describe('Landcover Service', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia());
+		vi.clearAllMocks();
 
-  describe("createHSYImageryLayer", () => {
-    it("should create imagery layer with optimized tile configuration", async () => {
-      await createHSYImageryLayer();
+		// Create fresh mocks for each test
+		mockRemove = vi.fn();
+		mockAddImageryProvider = vi.fn((provider) => ({
+			imageryProvider: provider,
+		}));
+		mockContains = vi.fn(() => true);
 
-      // Verify WebMapServiceImageryProvider was called with optimized config
-      expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
-        expect.objectContaining({
-          tileWidth: 512,
-          tileHeight: 512,
-          maximumLevel: 18,
-          minimumLevel: 0,
-        }),
-      );
-    });
+		mockGlobalStore = {
+			cesiumViewer: {
+				imageryLayers: {
+					addImageryProvider: mockAddImageryProvider,
+					contains: mockContains,
+					remove: mockRemove,
+				},
+			},
+		};
 
-    it("should use GeographicTilingScheme for EPSG:4326", async () => {
-      await createHSYImageryLayer();
+		mockBackgroundStore = {
+			landcoverLayers: [],
+			hsyYear: '2023',
+			clearLandcoverLayers: vi.fn(function () {
+				this.landcoverLayers = [];
+			}),
+		};
 
-      expect(Cesium.GeographicTilingScheme).toHaveBeenCalled();
-    });
+		mockURLStore = {
+			wmsProxy: 'https://mock-wms-proxy.example.com/wms',
+		};
+	});
 
-    it("should use correct WMS proxy URL from store", async () => {
-      await createHSYImageryLayer();
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
 
-      expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
-        expect.objectContaining({
-          url: "https://mock-wms-proxy.example.com/wms",
-        }),
-      );
-    });
+	describe('createHSYImageryLayer', () => {
+		it('should create imagery layer with optimized tile configuration', async () => {
+			await createHSYImageryLayer();
 
-    it("should generate all 13 landcover layers when no custom layers provided", async () => {
-      await createHSYImageryLayer();
+			// Verify WebMapServiceImageryProvider was called with optimized config
+			expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
+				expect.objectContaining({
+					tileWidth: 512,
+					tileHeight: 512,
+					maximumLevel: 18,
+					minimumLevel: 0,
+				})
+			);
+		});
 
-      const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0];
-      const layers = call.layers.split(",");
+		it('should use GeographicTilingScheme for EPSG:4326', async () => {
+			await createHSYImageryLayer();
 
-      // Should have all 13 landcover types with year suffix
-      expect(layers).toHaveLength(13);
-      expect(call.layers).toContain("2023"); // Year suffix
-      expect(call.layers).toContain("maanpeite_avokalliot");
-      expect(call.layers).toContain("maanpeite_vesi");
-      expect(call.layers).toContain("maanpeite_puusto_yli20m");
-    });
+			expect(Cesium.GeographicTilingScheme).toHaveBeenCalled();
+		});
 
-    it("should use custom layers when provided", async () => {
-      const customLayers = "asuminen_ja_maankaytto:maanpeite_vesi_2023";
+		it('should use correct WMS proxy URL from store', async () => {
+			await createHSYImageryLayer();
 
-      await createHSYImageryLayer(customLayers);
+			expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
+				expect.objectContaining({
+					url: 'https://mock-wms-proxy.example.com/wms',
+				})
+			);
+		});
 
-      expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
-        expect.objectContaining({
-          layers: customLayers,
-        }),
-      );
-    });
+		it('should generate all 13 landcover layers when no custom layers provided', async () => {
+			await createHSYImageryLayer();
 
-    describe("performance configuration", () => {
-      it("should use 512x512 tiles to reduce request count", async () => {
-        await createHSYImageryLayer();
+			const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0];
+			const layers = call.layers.split(',');
 
-        const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0];
-        // 512x512 provides ~75% reduction in requests vs 256x256 default
-        expect(call.tileWidth).toBe(512);
-        expect(call.tileHeight).toBe(512);
-      });
+			// Should have all 13 landcover types with year suffix
+			expect(layers).toHaveLength(13);
+			expect(call.layers).toContain('2023'); // Year suffix
+			expect(call.layers).toContain('maanpeite_avokalliot');
+			expect(call.layers).toContain('maanpeite_vesi');
+			expect(call.layers).toContain('maanpeite_puusto_yli20m');
+		});
 
-      it("should limit maximum zoom to level 18 to prevent excessive requests", async () => {
-        await createHSYImageryLayer();
+		it('should use custom layers when provided', async () => {
+			const customLayers = 'asuminen_ja_maankaytto:maanpeite_vesi_2023';
 
-        const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0];
-        // Level 18 provides ~0.6m resolution at equator, sufficient for landcover visualization
-        // This prevents N+1 API call issues at extreme zoom levels
-        expect(call.maximumLevel).toBe(18);
-      });
+			await createHSYImageryLayer(customLayers);
 
-      it("should allow zooming from minimum level 0", async () => {
-        await createHSYImageryLayer();
+			expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
+				expect.objectContaining({
+					layers: customLayers,
+				})
+			);
+		});
 
-        const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0];
-        expect(call.minimumLevel).toBe(0);
-      });
-    });
+		describe('performance configuration', () => {
+			it('should use 512x512 tiles to reduce request count', async () => {
+				await createHSYImageryLayer();
 
-    describe("coordinate system", () => {
-      it("should use EPSG:4326 (WGS84) coordinate system", async () => {
-        await createHSYImageryLayer();
+				const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0];
+				// 512x512 provides ~75% reduction in requests vs 256x256 default
+				expect(call.tileWidth).toBe(512);
+				expect(call.tileHeight).toBe(512);
+			});
 
-        // GeographicTilingScheme = EPSG:4326 (WGS84)
-        // This is CesiumJS's default and compatible with HSY WMS
-        expect(Cesium.GeographicTilingScheme).toHaveBeenCalled();
-      });
-    });
-  });
+			it('should limit maximum zoom to level 18 to prevent excessive requests', async () => {
+				await createHSYImageryLayer();
 
-  describe("removeLandcover", () => {
-    it("should remove all landcover layers from viewer", () => {
-      const { useGlobalStore } = require("@/stores/globalStore.js");
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
+				const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0];
+				// Level 18 provides ~0.6m resolution at equator, sufficient for landcover visualization
+				// This prevents N+1 API call issues at extreme zoom levels
+				expect(call.maximumLevel).toBe(18);
+			});
 
-      const mockStore = useGlobalStore();
-      const mockBackgroundStore = useBackgroundMapStore();
+			it('should allow zooming from minimum level 0', async () => {
+				await createHSYImageryLayer();
 
-      // Add mock layers
-      mockBackgroundStore.landcoverLayers = [
-        { id: "layer1" },
-        { id: "layer2" },
-        { id: "layer3" },
-      ];
+				const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0];
+				expect(call.minimumLevel).toBe(0);
+			});
+		});
 
-      removeLandcover();
+		describe('coordinate system', () => {
+			it('should use EPSG:4326 (WGS84) coordinate system', async () => {
+				await createHSYImageryLayer();
 
-      expect(mockStore.cesiumViewer.imageryLayers.remove).toHaveBeenCalledTimes(
-        3,
-      );
-      expect(mockBackgroundStore.landcoverLayers).toEqual([]);
-    });
+				// GeographicTilingScheme = EPSG:4326 (WGS84)
+				// This is CesiumJS's default and compatible with HSY WMS
+				expect(Cesium.GeographicTilingScheme).toHaveBeenCalled();
+			});
+		});
+	});
 
-    it("should handle empty landcover layers array gracefully", () => {
-      const {
-        useBackgroundMapStore,
-      } = require("@/stores/backgroundMapStore.js");
-      const mockBackgroundStore = useBackgroundMapStore();
+	describe('removeLandcover', () => {
+		it('should remove all landcover layers from viewer', () => {
+			const mockStore = useGlobalStore();
+			const mockBackgroundStore = useBackgroundMapStore();
 
-      mockBackgroundStore.landcoverLayers = [];
+			// Add mock layers
+			mockBackgroundStore.landcoverLayers = [{ id: 'layer1' }, { id: 'layer2' }, { id: 'layer3' }];
 
-      expect(() => removeLandcover()).not.toThrow();
-    });
-  });
+			removeLandcover();
+
+			expect(mockStore.cesiumViewer.imageryLayers.remove).toHaveBeenCalledTimes(3);
+			expect(mockBackgroundStore.clearLandcoverLayers).toHaveBeenCalled();
+		});
+
+		it('should handle empty landcover layers array gracefully', () => {
+			const mockBackgroundStore = useBackgroundMapStore();
+
+			mockBackgroundStore.landcoverLayers = [];
+
+			expect(() => removeLandcover()).not.toThrow();
+		});
+	});
 });

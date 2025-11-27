@@ -49,12 +49,35 @@ See `.claude/skills/test-categorization.md` for best practices on test organizat
 
 ### Docker/Kubernetes
 
+See `docs/LOCAL_DEVELOPMENT_SKAFFOLD.md` for comprehensive local development documentation.
+See `docs/DATABASE_IMPORT.md` for importing production database dumps.
+
+**Full stack development (default):**
+
+```bash
+# Deploy everything with hot reload
+skaffold dev --port-forward
+```
+
+**Services only + local frontend (faster iteration):**
+
+```bash
+# 1. Deploy backend services
+skaffold run -p services-only --port-forward
+
+# 2. Run frontend locally
+npm run dev
+```
+
+**Other commands:**
+
 - `docker compose up` - Run with Docker (http://localhost:4173)
 - `skaffold dev --port-forward` - Run with Skaffold using plain K8s manifests (no Helm required)
 - `skaffold dev --profile=local-with-services --port-forward` - Full local development with database
 - `skaffold dev --profile=e2e-with-prod-data --port-forward` - E2E testing with cloned production data from GCS
 - `skaffold test -p migration-test` - Test database migrations
-- `skaffold delete` - Clean up Skaffold deployments
+- `skaffold delete` - Clean up default Skaffold deployment
+- `skaffold delete -p services-only` - Clean up services-only deployment
 
 **Note**: Local development uses plain Kubernetes manifests in `k8s/` directory for simplicity.
 

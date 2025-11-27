@@ -9,11 +9,15 @@ ENV VITE_PYGEOAPI_HOST=${VITE_PYGEOAPI_HOST}
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+# Cache npm packages across builds for faster installs
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 COPY . .
 
-RUN NODE_ENV=production ./node_modules/.bin/vite build
+# Cache npm and Vite build artifacts for faster rebuilds
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/app/node_modules/.vite \
+    NODE_ENV=production ./node_modules/.bin/vite build
 
 FROM nginx:1.27
 

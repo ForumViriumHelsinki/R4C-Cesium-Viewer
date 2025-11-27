@@ -1,360 +1,361 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { createPinia, setActivePinia } from "pinia";
-import { useToggleStore } from "@/stores/toggleStore.js";
-
-describe("toggleStore", () => {
-  beforeEach(() => {
-    setActivePinia(createPinia());
-  });
-
-  describe("initial state", () => {
-    it("should have correct default boolean values", () => {
-      const store = useToggleStore();
-
-      expect(store.postalCode).toBe(false);
-      expect(store.natureGrid).toBe(false);
-      expect(store.travelTime).toBe(false);
-      expect(store.resetGrid).toBe(false);
-      expect(store.gridView).toBe(false);
-      expect(store.helsinkiView).toBe(false);
-      expect(store.showPlot).toBe(true);
-      expect(store.print).toBe(true);
-      expect(store.showVegetation).toBe(false);
-      expect(store.showOtherNature).toBe(false);
-      expect(store.hideNewBuildings).toBe(false);
-      expect(store.hideNonSote).toBe(false);
-      expect(store.hideLow).toBe(false);
-      expect(store.showTrees).toBe(false);
-      expect(store.hideColdAreas).toBe(false);
-      expect(store.landCover).toBe(false);
-      expect(store.switchView).toBe(false);
-      expect(store.surveyPlaces).toBe(false);
-      expect(store.capitalRegionCold).toBe(false);
-      expect(store.grid250m).toBe(false);
-      expect(store.ndvi).toBe(false);
-    });
-
-    it("should have exactly the expected number of state properties", () => {
-      const store = useToggleStore();
-      const stateKeys = Object.keys(store.$state);
-
-      expect(stateKeys).toHaveLength(21);
-    });
-  });
-
-  describe("toggle actions", () => {
-    it("should set NDVI toggle", () => {
-      const store = useToggleStore();
-
-      store.setNDVI(true);
-      expect(store.ndvi).toBe(true);
-
-      store.setNDVI(false);
-      expect(store.ndvi).toBe(false);
-    });
-
-    it("should set Grid250m toggle", () => {
-      const store = useToggleStore();
-
-      store.setGrid250m(true);
-      expect(store.grid250m).toBe(true);
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { useToggleStore } from '@/stores/toggleStore.js';
+
+describe('toggleStore', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
+
+	describe('initial state', () => {
+		it('should have correct default boolean values', () => {
+			const store = useToggleStore();
+
+			expect(store.postalCode).toBe(false);
+			expect(store.natureGrid).toBe(false);
+			expect(store.travelTime).toBe(false);
+			expect(store.resetGrid).toBe(false);
+			expect(store.gridView).toBe(false);
+			expect(store.helsinkiView).toBe(false);
+			expect(store.showPlot).toBe(true);
+			expect(store.print).toBe(true);
+			expect(store.showVegetation).toBe(false);
+			expect(store.showOtherNature).toBe(false);
+			expect(store.hideNewBuildings).toBe(false);
+			expect(store.hideNonSote).toBe(false);
+			expect(store.hideLow).toBe(false);
+			expect(store.showTrees).toBe(false);
+			expect(store.hideColdAreas).toBe(false);
+			expect(store.landCover).toBe(false);
+			expect(store.switchView).toBe(false);
+			expect(store.surveyPlaces).toBe(false);
+			expect(store.capitalRegionCold).toBe(false);
+			expect(store.grid250m).toBe(false);
+			expect(store.ndvi).toBe(false);
+			expect(store.viewportTileMode).toBe(false);
+		});
+
+		it('should have exactly the expected number of state properties', () => {
+			const store = useToggleStore();
+			const stateKeys = Object.keys(store.$state);
+
+			expect(stateKeys).toHaveLength(22);
+		});
+	});
+
+	describe('toggle actions', () => {
+		it('should set NDVI toggle', () => {
+			const store = useToggleStore();
+
+			store.setNDVI(true);
+			expect(store.ndvi).toBe(true);
+
+			store.setNDVI(false);
+			expect(store.ndvi).toBe(false);
+		});
+
+		it('should set Grid250m toggle', () => {
+			const store = useToggleStore();
+
+			store.setGrid250m(true);
+			expect(store.grid250m).toBe(true);
+
+			store.setGrid250m(false);
+			expect(store.grid250m).toBe(false);
+		});
+
+		it('should set Capital Region Cold toggle', () => {
+			const store = useToggleStore();
 
-      store.setGrid250m(false);
-      expect(store.grid250m).toBe(false);
-    });
+			store.setCapitalRegionCold(true);
+			expect(store.capitalRegionCold).toBe(true);
 
-    it("should set Capital Region Cold toggle", () => {
-      const store = useToggleStore();
+			store.setCapitalRegionCold(false);
+			expect(store.capitalRegionCold).toBe(false);
+		});
 
-      store.setCapitalRegionCold(true);
-      expect(store.capitalRegionCold).toBe(true);
+		it('should set Postal Code toggle', () => {
+			const store = useToggleStore();
 
-      store.setCapitalRegionCold(false);
-      expect(store.capitalRegionCold).toBe(false);
-    });
+			store.setPostalCode(true);
+			expect(store.postalCode).toBe(true);
 
-    it("should set Postal Code toggle", () => {
-      const store = useToggleStore();
+			store.setPostalCode(false);
+			expect(store.postalCode).toBe(false);
+		});
 
-      store.setPostalCode(true);
-      expect(store.postalCode).toBe(true);
+		it('should set Nature Grid toggle', () => {
+			const store = useToggleStore();
 
-      store.setPostalCode(false);
-      expect(store.postalCode).toBe(false);
-    });
+			store.setNatureGrid(true);
+			expect(store.natureGrid).toBe(true);
 
-    it("should set Nature Grid toggle", () => {
-      const store = useToggleStore();
+			store.setNatureGrid(false);
+			expect(store.natureGrid).toBe(false);
+		});
 
-      store.setNatureGrid(true);
-      expect(store.natureGrid).toBe(true);
+		it('should set Travel Time toggle', () => {
+			const store = useToggleStore();
 
-      store.setNatureGrid(false);
-      expect(store.natureGrid).toBe(false);
-    });
+			store.setTravelTime(true);
+			expect(store.travelTime).toBe(true);
 
-    it("should set Travel Time toggle", () => {
-      const store = useToggleStore();
+			store.setTravelTime(false);
+			expect(store.travelTime).toBe(false);
+		});
 
-      store.setTravelTime(true);
-      expect(store.travelTime).toBe(true);
+		it('should set Reset Grid toggle', () => {
+			const store = useToggleStore();
 
-      store.setTravelTime(false);
-      expect(store.travelTime).toBe(false);
-    });
+			store.setResetGrid(true);
+			expect(store.resetGrid).toBe(true);
 
-    it("should set Reset Grid toggle", () => {
-      const store = useToggleStore();
+			store.setResetGrid(false);
+			expect(store.resetGrid).toBe(false);
+		});
 
-      store.setResetGrid(true);
-      expect(store.resetGrid).toBe(true);
+		it('should set Grid View toggle', () => {
+			const store = useToggleStore();
 
-      store.setResetGrid(false);
-      expect(store.resetGrid).toBe(false);
-    });
+			store.setGridView(true);
+			expect(store.gridView).toBe(true);
 
-    it("should set Grid View toggle", () => {
-      const store = useToggleStore();
+			store.setGridView(false);
+			expect(store.gridView).toBe(false);
+		});
 
-      store.setGridView(true);
-      expect(store.gridView).toBe(true);
+		it('should set Helsinki View toggle', () => {
+			const store = useToggleStore();
 
-      store.setGridView(false);
-      expect(store.gridView).toBe(false);
-    });
+			store.setHelsinkiView(true);
+			expect(store.helsinkiView).toBe(true);
 
-    it("should set Helsinki View toggle", () => {
-      const store = useToggleStore();
+			store.setHelsinkiView(false);
+			expect(store.helsinkiView).toBe(false);
+		});
 
-      store.setHelsinkiView(true);
-      expect(store.helsinkiView).toBe(true);
+		it('should set Show Plot toggle', () => {
+			const store = useToggleStore();
 
-      store.setHelsinkiView(false);
-      expect(store.helsinkiView).toBe(false);
-    });
+			store.setShowPlot(false);
+			expect(store.showPlot).toBe(false);
 
-    it("should set Show Plot toggle", () => {
-      const store = useToggleStore();
+			store.setShowPlot(true);
+			expect(store.showPlot).toBe(true);
+		});
 
-      store.setShowPlot(false);
-      expect(store.showPlot).toBe(false);
+		it('should set Print toggle', () => {
+			const store = useToggleStore();
 
-      store.setShowPlot(true);
-      expect(store.showPlot).toBe(true);
-    });
+			store.setPrint(false);
+			expect(store.print).toBe(false);
 
-    it("should set Print toggle", () => {
-      const store = useToggleStore();
+			store.setPrint(true);
+			expect(store.print).toBe(true);
+		});
 
-      store.setPrint(false);
-      expect(store.print).toBe(false);
+		it('should set Show Vegetation toggle', () => {
+			const store = useToggleStore();
 
-      store.setPrint(true);
-      expect(store.print).toBe(true);
-    });
+			store.setShowVegetation(true);
+			expect(store.showVegetation).toBe(true);
 
-    it("should set Show Vegetation toggle", () => {
-      const store = useToggleStore();
+			store.setShowVegetation(false);
+			expect(store.showVegetation).toBe(false);
+		});
 
-      store.setShowVegetation(true);
-      expect(store.showVegetation).toBe(true);
+		it('should set Show Other Nature toggle', () => {
+			const store = useToggleStore();
 
-      store.setShowVegetation(false);
-      expect(store.showVegetation).toBe(false);
-    });
+			store.setShowOtherNature(true);
+			expect(store.showOtherNature).toBe(true);
 
-    it("should set Show Other Nature toggle", () => {
-      const store = useToggleStore();
+			store.setShowOtherNature(false);
+			expect(store.showOtherNature).toBe(false);
+		});
 
-      store.setShowOtherNature(true);
-      expect(store.showOtherNature).toBe(true);
+		it('should set Hide New Buildings toggle', () => {
+			const store = useToggleStore();
 
-      store.setShowOtherNature(false);
-      expect(store.showOtherNature).toBe(false);
-    });
+			store.setHideNewBuildings(true);
+			expect(store.hideNewBuildings).toBe(true);
 
-    it("should set Hide New Buildings toggle", () => {
-      const store = useToggleStore();
+			store.setHideNewBuildings(false);
+			expect(store.hideNewBuildings).toBe(false);
+		});
 
-      store.setHideNewBuildings(true);
-      expect(store.hideNewBuildings).toBe(true);
+		it('should set Hide Non Sote toggle', () => {
+			const store = useToggleStore();
 
-      store.setHideNewBuildings(false);
-      expect(store.hideNewBuildings).toBe(false);
-    });
+			store.setHideNonSote(true);
+			expect(store.hideNonSote).toBe(true);
 
-    it("should set Hide Non Sote toggle", () => {
-      const store = useToggleStore();
+			store.setHideNonSote(false);
+			expect(store.hideNonSote).toBe(false);
+		});
 
-      store.setHideNonSote(true);
-      expect(store.hideNonSote).toBe(true);
+		it('should set Hide Low toggle', () => {
+			const store = useToggleStore();
 
-      store.setHideNonSote(false);
-      expect(store.hideNonSote).toBe(false);
-    });
+			store.setHideLow(true);
+			expect(store.hideLow).toBe(true);
 
-    it("should set Hide Low toggle", () => {
-      const store = useToggleStore();
+			store.setHideLow(false);
+			expect(store.hideLow).toBe(false);
+		});
 
-      store.setHideLow(true);
-      expect(store.hideLow).toBe(true);
+		it('should set Show Trees toggle', () => {
+			const store = useToggleStore();
 
-      store.setHideLow(false);
-      expect(store.hideLow).toBe(false);
-    });
+			store.setShowTrees(true);
+			expect(store.showTrees).toBe(true);
 
-    it("should set Show Trees toggle", () => {
-      const store = useToggleStore();
+			store.setShowTrees(false);
+			expect(store.showTrees).toBe(false);
+		});
 
-      store.setShowTrees(true);
-      expect(store.showTrees).toBe(true);
+		it('should set Hide Cold Areas toggle', () => {
+			const store = useToggleStore();
 
-      store.setShowTrees(false);
-      expect(store.showTrees).toBe(false);
-    });
+			store.setHideColdAreas(true);
+			expect(store.hideColdAreas).toBe(true);
 
-    it("should set Hide Cold Areas toggle", () => {
-      const store = useToggleStore();
+			store.setHideColdAreas(false);
+			expect(store.hideColdAreas).toBe(false);
+		});
 
-      store.setHideColdAreas(true);
-      expect(store.hideColdAreas).toBe(true);
+		it('should set Land Cover toggle', () => {
+			const store = useToggleStore();
 
-      store.setHideColdAreas(false);
-      expect(store.hideColdAreas).toBe(false);
-    });
+			store.setLandCover(true);
+			expect(store.landCover).toBe(true);
 
-    it("should set Land Cover toggle", () => {
-      const store = useToggleStore();
+			store.setLandCover(false);
+			expect(store.landCover).toBe(false);
+		});
 
-      store.setLandCover(true);
-      expect(store.landCover).toBe(true);
+		it('should set Switch View toggle', () => {
+			const store = useToggleStore();
 
-      store.setLandCover(false);
-      expect(store.landCover).toBe(false);
-    });
+			store.setSwitchView(true);
+			expect(store.switchView).toBe(true);
 
-    it("should set Switch View toggle", () => {
-      const store = useToggleStore();
+			store.setSwitchView(false);
+			expect(store.switchView).toBe(false);
+		});
 
-      store.setSwitchView(true);
-      expect(store.switchView).toBe(true);
+		it('should set Survey Places toggle', () => {
+			const store = useToggleStore();
 
-      store.setSwitchView(false);
-      expect(store.switchView).toBe(false);
-    });
+			store.setSurveyPlaces(true);
+			expect(store.surveyPlaces).toBe(true);
 
-    it("should set Survey Places toggle", () => {
-      const store = useToggleStore();
+			store.setSurveyPlaces(false);
+			expect(store.surveyPlaces).toBe(false);
+		});
+	});
 
-      store.setSurveyPlaces(true);
-      expect(store.surveyPlaces).toBe(true);
+	describe('reset functionality', () => {
+		it('should reset all state to initial values', () => {
+			const store = useToggleStore();
 
-      store.setSurveyPlaces(false);
-      expect(store.surveyPlaces).toBe(false);
-    });
-  });
+			// Change multiple state values
+			store.setNDVI(true);
+			store.setGrid250m(true);
+			store.setPostalCode(true);
+			store.setShowPlot(false);
+			store.setPrint(false);
+			store.setShowVegetation(true);
 
-  describe("reset functionality", () => {
-    it("should reset all state to initial values", () => {
-      const store = useToggleStore();
+			// Verify changes
+			expect(store.ndvi).toBe(true);
+			expect(store.grid250m).toBe(true);
+			expect(store.postalCode).toBe(true);
+			expect(store.showPlot).toBe(false);
+			expect(store.print).toBe(false);
+			expect(store.showVegetation).toBe(true);
 
-      // Change multiple state values
-      store.setNDVI(true);
-      store.setGrid250m(true);
-      store.setPostalCode(true);
-      store.setShowPlot(false);
-      store.setPrint(false);
-      store.setShowVegetation(true);
+			// Reset
+			store.reset();
 
-      // Verify changes
-      expect(store.ndvi).toBe(true);
-      expect(store.grid250m).toBe(true);
-      expect(store.postalCode).toBe(true);
-      expect(store.showPlot).toBe(false);
-      expect(store.print).toBe(false);
-      expect(store.showVegetation).toBe(true);
+			// Verify reset to initial state
+			expect(store.ndvi).toBe(false);
+			expect(store.grid250m).toBe(false);
+			expect(store.postalCode).toBe(false);
+			expect(store.showPlot).toBe(true);
+			expect(store.print).toBe(true);
+			expect(store.showVegetation).toBe(false);
+		});
 
-      // Reset
-      store.reset();
+		it('should reset all toggles to their default values', () => {
+			const store = useToggleStore();
+			const initialState = { ...store.$state };
 
-      // Verify reset to initial state
-      expect(store.ndvi).toBe(false);
-      expect(store.grid250m).toBe(false);
-      expect(store.postalCode).toBe(false);
-      expect(store.showPlot).toBe(true);
-      expect(store.print).toBe(true);
-      expect(store.showVegetation).toBe(false);
-    });
+			// Change all values
+			Object.keys(store.$state).forEach((key) => {
+				if (typeof store.$state[key] === 'boolean') {
+					store.$state[key] = !store.$state[key];
+				}
+			});
 
-    it("should reset all toggles to their default values", () => {
-      const store = useToggleStore();
-      const initialState = { ...store.$state };
+			// Reset
+			store.reset();
 
-      // Change all values
-      Object.keys(store.$state).forEach((key) => {
-        if (typeof store.$state[key] === "boolean") {
-          store.$state[key] = !store.$state[key];
-        }
-      });
+			// Verify all values match initial state
+			Object.keys(initialState).forEach((key) => {
+				expect(store.$state[key]).toBe(initialState[key]);
+			});
+		});
+	});
 
-      // Reset
-      store.reset();
+	describe('edge cases', () => {
+		it('should handle non-boolean values gracefully', () => {
+			const store = useToggleStore();
 
-      // Verify all values match initial state
-      Object.keys(initialState).forEach((key) => {
-        expect(store.$state[key]).toBe(initialState[key]);
-      });
-    });
-  });
+			// Test passing non-boolean values (should still work due to JavaScript's truthy/falsy)
+			store.setNDVI(1);
+			expect(store.ndvi).toBe(1);
 
-  describe("edge cases", () => {
-    it("should handle non-boolean values gracefully", () => {
-      const store = useToggleStore();
+			store.setGrid250m(0);
+			expect(store.grid250m).toBe(0);
 
-      // Test passing non-boolean values (should still work due to JavaScript's truthy/falsy)
-      store.setNDVI(1);
-      expect(store.ndvi).toBe(1);
+			store.setPostalCode(null);
+			expect(store.postalCode).toBe(null);
 
-      store.setGrid250m(0);
-      expect(store.grid250m).toBe(0);
+			store.setShowPlot(undefined);
+			expect(store.showPlot).toBe(undefined);
 
-      store.setPostalCode(null);
-      expect(store.postalCode).toBe(null);
+			store.setShowVegetation('');
+			expect(store.showVegetation).toBe('');
 
-      store.setShowPlot(undefined);
-      expect(store.showPlot).toBe(undefined);
+			store.setShowTrees('true');
+			expect(store.showTrees).toBe('true');
+		});
 
-      store.setShowVegetation("");
-      expect(store.showVegetation).toBe("");
+		it('should maintain state consistency when methods are called multiple times', () => {
+			const store = useToggleStore();
 
-      store.setShowTrees("true");
-      expect(store.showTrees).toBe("true");
-    });
+			// Call the same method multiple times
+			store.setNDVI(true);
+			store.setNDVI(true);
+			store.setNDVI(true);
+			expect(store.ndvi).toBe(true);
 
-    it("should maintain state consistency when methods are called multiple times", () => {
-      const store = useToggleStore();
+			store.setNDVI(false);
+			store.setNDVI(false);
+			store.setNDVI(false);
+			expect(store.ndvi).toBe(false);
+		});
 
-      // Call the same method multiple times
-      store.setNDVI(true);
-      store.setNDVI(true);
-      store.setNDVI(true);
-      expect(store.ndvi).toBe(true);
+		it('should handle rapid toggle changes', () => {
+			const store = useToggleStore();
 
-      store.setNDVI(false);
-      store.setNDVI(false);
-      store.setNDVI(false);
-      expect(store.ndvi).toBe(false);
-    });
+			// Rapid toggling
+			for (let i = 0; i < 100; i++) {
+				store.setGridView(i % 2 === 0);
+			}
 
-    it("should handle rapid toggle changes", () => {
-      const store = useToggleStore();
-
-      // Rapid toggling
-      for (let i = 0; i < 100; i++) {
-        store.setGridView(i % 2 === 0);
-      }
-
-      expect(store.gridView).toBe(false); // Should be false after 100 iterations (last call with i=99, 99%2===0 is false)
-    });
-  });
+			expect(store.gridView).toBe(false); // Should be false after 100 iterations (last call with i=99, 99%2===0 is false)
+		});
+	});
 });

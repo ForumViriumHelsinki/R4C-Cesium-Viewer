@@ -18,7 +18,7 @@ Provides comprehensive mocking for the Digitransit API to prevent test failures 
 #### Usage:
 
 ```typescript
-import { setupDigitransitMock } from "./setup/digitransit-mock";
+import { setupDigitransitMock } from './setup/digitransit-mock';
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();

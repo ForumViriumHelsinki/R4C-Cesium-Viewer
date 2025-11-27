@@ -1,131 +1,132 @@
 <template>
+	<div id="gridviewContainer">
+		<p class="header">R4C Urban Heat risk demonstrator</p>
+		<v-btn
+			icon
+			class="uiButton"
+			style="color: red; float: right; cursor: pointer"
+			@click="reset"
+		>
+			<v-icon>mdi-refresh</v-icon>
+		</v-btn>
+		<label class="switch">
+			<input
+				id="postalCodeToggle"
+				type="checkbox"
+				value="postalCode"
+			/>
+			<span class="slider round" />
+		</label>
+		<label
+			id="postalCodeLabel"
+			for="postalCodeToggle"
+			class="label"
+			>Postalcode view</label
+		>
 
-    <div id="gridviewContainer">
-        <p class="header">
-R4C Urban Heat risk demonstrator
-</p>
-  <v-btn
-icon
-class="uiButton"
-style="color: red; float:right; cursor: pointer;"
-@click="reset"
->
-    <v-icon>mdi-refresh</v-icon>
-  </v-btn>
-        <label class="switch">
-            <input
-id="postalCodeToggle"
-type="checkbox"
-value="postalCode"
->
-            <span class="slider round"/>
-        </label>
-        <label
-id="postalCodeLabel"
-for="postalCodeToggle"
-class="label"
->Postalcode view</label>
+		<!--  natureGrid-->
+		<label
+			id="natureGridSwitch"
+			class="switch"
+			style="display: none"
+		>
+			<input
+				id="natureGridToggle"
+				type="checkbox"
+				value="natureGrid"
+			/>
+			<span class="slider round" />
+		</label>
+		<label
+			id="natureGridLabel"
+			for="natureGrid"
+			class="label"
+			style="display: none"
+			>Nature grid</label
+		>
 
-          <!--  natureGrid-->
-        <label
-id="natureGridSwitch"
-class="switch"
-style="display:none;"
->
-            <input
-id="natureGridToggle"
-type="checkbox"
-value="natureGrid"
->
-            <span class="slider round"/>
-        </label>
-        <label
-id="natureGridLabel"
-for="natureGrid"
-class="label"
-style="display:none;"
->Nature grid</label>
+		<!--  travelTime-->
+		<label
+			id="travelTimeSwitch"
+			class="switch"
+		>
+			<input
+				id="travelTimeToggle"
+				type="checkbox"
+				value="travelTime"
+			/>
+			<span class="slider round" />
+		</label>
+		<label
+			id="travelTimeLabel"
+			for="travelTime"
+			class="label"
+			>Travel time grid</label
+		>
 
-        <!--  travelTime-->
-        <label
-id="travelTimeSwitch"
-class="switch"
->
-            <input
-id="travelTimeToggle"
-type="checkbox"
-value="travelTime"
->
-            <span class="slider round"/>
-        </label>
-        <label
-id="travelTimeLabel"
-for="travelTime"
-class="label"
->Travel time grid</label>
-
-        <!--  resetGrid-->
-        <label
-id="resetGridwitch"
-class="switch"
->
-            <input
-id="resetGridToggle"
-type="checkbox"
-value="resetGrid"
->
-            <span class="slider round"/>
-        </label>
-        <label
-id="resetGridLabel"
-for="resetGrid"
-class="label"
->Reset grid</label>
+		<!--  resetGrid-->
+		<label
+			id="resetGridwitch"
+			class="switch"
+		>
+			<input
+				id="resetGridToggle"
+				type="checkbox"
+				value="resetGrid"
+			/>
+			<span class="slider round" />
+		</label>
+		<label
+			id="resetGridLabel"
+			for="resetGrid"
+			class="label"
+			>Reset grid</label
+		>
 
 		<!--  surveyPlaces-->
-        <label
-id="surveyPlacesSwitch"
-class="switch"
->
-            <input
-id="surveyPlacesToggle"
-type="checkbox"
-value="surveyPlaces"
->
-            <span class="slider round"/>
-        </label>
-        <label
-id="surveyPlacesLabel"
-for="surveyPlaces"
-class="label"
->Espoo resident survey places</label>
+		<label
+			id="surveyPlacesSwitch"
+			class="switch"
+		>
+			<input
+				id="surveyPlacesToggle"
+				type="checkbox"
+				value="surveyPlaces"
+			/>
+			<span class="slider round" />
+		</label>
+		<label
+			id="surveyPlacesLabel"
+			for="surveyPlaces"
+			class="label"
+			>Espoo resident survey places</label
+		>
 
-          <!--  250mGrid-->
-        <label
-id="250mGridSwitch"
-class="switch"
->
-            <input
-id="250mGridToggle"
-type="checkbox"
-value="250mGrid"
->
-            <span class="slider round"/>
-        </label>
-        <label
-id="250mGridLabel"
-for="250mGrid"
-class="label"
->250m grid</label>
-    </div>
-    <BuildingGridChart />
+		<!--  250mGrid-->
+		<label
+			id="250mGridSwitch"
+			class="switch"
+		>
+			<input
+				id="250mGridToggle"
+				type="checkbox"
+				value="250mGrid"
+			/>
+			<span class="slider round" />
+		</label>
+		<label
+			id="250mGridLabel"
+			for="250mGrid"
+			class="label"
+			>250m grid</label
+		>
+	</div>
+	<BuildingGridChart />
 	<SosEco250mGrid />
 	<SurveyScatterPlot />
-
 </template>
 
 <script>
-
 import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
@@ -143,27 +144,43 @@ export default {
 		SurveyScatterPlot,
 		SosEco250mGrid,
 		VulnerabilityChart,
-		BuildingGridChart
+		BuildingGridChart,
 	},
 	data() {
 		return {
 			viewer: null,
+			// Store bound function references for cleanup
+			boundPostalCodeViewEvent: null,
+			boundTravelTimeEvent: null,
+			boundNatureGridEvent: null,
+			boundResetGridViewEvent: null,
+			boundSurveyPlacesEvent: null,
+			boundActivate250mGridEvent: null,
 		};
 	},
 	mounted() {
-		this.unsubscribe = eventBus.on( 'createPopulationGrid', this.createPopulationGrid );
+		this.unsubscribe = eventBus.on('createPopulationGrid', this.createPopulationGrid);
 		this.store = useGlobalStore();
-		this.toggleStore  = useToggleStore();
+		this.toggleStore = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
-		this.addEventListeners();
 
+		// Create bound function references
+		this.boundPostalCodeViewEvent = this.postalCodeViewEvent.bind(this);
+		this.boundTravelTimeEvent = this.travelTimeEvent.bind(this);
+		this.boundNatureGridEvent = this.natureGridEvent.bind(this);
+		this.boundResetGridViewEvent = this.resetGridViewEvent.bind(this);
+		this.boundSurveyPlacesEvent = this.surveyPlacesEvent.bind(this);
+		this.boundActivate250mGridEvent = this.activate250mGridEvent.bind(this);
+
+		this.addEventListeners();
 	},
 	beforeUnmount() {
 		this.unsubscribe();
+		this.removeEventListeners();
 	},
 	methods: {
-		reset(){
+		reset() {
 			// Smart reset instead of page reload
 			this.store.setLevel('start');
 			this.store.setPostalCode(null);
@@ -174,151 +191,180 @@ export default {
 			const camera = new Camera();
 			camera.init();
 		},
-		async createPopulationGrid( ) {
+		async createPopulationGrid() {
 			const populationgridService = new Populationgrid();
 			populationgridService.createPopulationGrid();
-
 		},
 		/**
-        * Add EventListeners
-        */
+		 * Add EventListeners
+		 */
 		addEventListeners() {
+			const postalCodeToggle = document.getElementById('postalCodeToggle');
+			const travelTimeToggle = document.getElementById('travelTimeToggle');
+			const natureGridToggle = document.getElementById('natureGridToggle');
+			const resetGridToggle = document.getElementById('resetGridToggle');
+			const surveyPlacesToggle = document.getElementById('surveyPlacesToggle');
+			const grid250mToggle = document.getElementById('250mGridToggle');
 
-			document.getElementById( 'postalCodeToggle' ).addEventListener( 'change', this.postalCodeViewEvent.bind( this ) );
-			document.getElementById( 'travelTimeToggle' ).addEventListener( 'change', this.travelTimeEvent.bind( this ) );
-			document.getElementById( 'natureGridToggle' ).addEventListener( 'change', this.natureGridEvent.bind( this ) );
-			document.getElementById( 'resetGridToggle' ).addEventListener( 'change', this.resetGridViewEvent.bind( this ) );
-			document.getElementById( 'surveyPlacesToggle' ).addEventListener( 'change', this.surveyPlacesEvent.bind( this ) );
-			document.getElementById( '250mGridToggle' ).addEventListener( 'change', this.activate250mGridEvent.bind( this ) );
-
+			if (postalCodeToggle) {
+				postalCodeToggle.addEventListener('change', this.boundPostalCodeViewEvent);
+			}
+			if (travelTimeToggle) {
+				travelTimeToggle.addEventListener('change', this.boundTravelTimeEvent);
+			}
+			if (natureGridToggle) {
+				natureGridToggle.addEventListener('change', this.boundNatureGridEvent);
+			}
+			if (resetGridToggle) {
+				resetGridToggle.addEventListener('change', this.boundResetGridViewEvent);
+			}
+			if (surveyPlacesToggle) {
+				surveyPlacesToggle.addEventListener('change', this.boundSurveyPlacesEvent);
+			}
+			if (grid250mToggle) {
+				grid250mToggle.addEventListener('change', this.boundActivate250mGridEvent);
+			}
 		},
 
 		/**
-        * This function handles the toggle event for activing 250m sos eco grid
-        */
+		 * Remove EventListeners to prevent memory leaks
+		 */
+		removeEventListeners() {
+			const postalCodeToggle = document.getElementById('postalCodeToggle');
+			const travelTimeToggle = document.getElementById('travelTimeToggle');
+			const natureGridToggle = document.getElementById('natureGridToggle');
+			const resetGridToggle = document.getElementById('resetGridToggle');
+			const surveyPlacesToggle = document.getElementById('surveyPlacesToggle');
+			const grid250mToggle = document.getElementById('250mGridToggle');
+
+			if (postalCodeToggle) {
+				postalCodeToggle.removeEventListener('change', this.boundPostalCodeViewEvent);
+			}
+			if (travelTimeToggle) {
+				travelTimeToggle.removeEventListener('change', this.boundTravelTimeEvent);
+			}
+			if (natureGridToggle) {
+				natureGridToggle.removeEventListener('change', this.boundNatureGridEvent);
+			}
+			if (resetGridToggle) {
+				resetGridToggle.removeEventListener('change', this.boundResetGridViewEvent);
+			}
+			if (surveyPlacesToggle) {
+				surveyPlacesToggle.removeEventListener('change', this.boundSurveyPlacesEvent);
+			}
+			if (grid250mToggle) {
+				grid250mToggle.removeEventListener('change', this.boundActivate250mGridEvent);
+			}
+		},
+
+		/**
+		 * This function handles the toggle event for activing 250m sos eco grid
+		 */
 		activate250mGridEvent() {
+			const checked = document.getElementById('250mGridToggle').checked;
 
-			const checked = document.getElementById( '250mGridToggle' ).checked;
-
-			if ( checked ) {
-
-				this.datasourceService.changeDataSourceShowByName( 'PopulationGrid', false );
-				eventBus.emit( 'create250mGrid' ); // Trigger the simulation to start
-
+			if (checked) {
+				this.datasourceService.changeDataSourceShowByName('PopulationGrid', false);
+				eventBus.emit('create250mGrid'); // Trigger the simulation to start
 			} else {
-
-				this.datasourceService.removeDataSourcesByNamePrefix( '250m_grid' );
-				document.getElementById( 'bar-chart-container' ).style.visibility = 'hidden';
-				document.getElementById( 'legend' ).style.visibility = 'hidden';
-				this.datasourceService.changeDataSourceShowByName( 'PopulationGrid', true );
-
+				this.datasourceService.removeDataSourcesByNamePrefix('250m_grid');
+				document.getElementById('bar-chart-container').style.visibility = 'hidden';
+				document.getElementById('legend').style.visibility = 'hidden';
+				this.datasourceService.changeDataSourceShowByName('PopulationGrid', true);
 			}
-
 		},
 
 		/**
-        * This function handles the toggle event for switching to postal code view
-        */
+		 * This function handles the toggle event for switching to postal code view
+		 */
 		surveyPlacesEvent() {
+			const surveyPlaces = document.getElementById('surveyPlacesToggle').checked;
+			this.toggleStore.setSurveyPlaces(surveyPlaces);
 
-			const surveyPlaces = document.getElementById( 'surveyPlacesToggle' ).checked;
-			this.toggleStore.setSurveyPlaces( surveyPlaces );
-
-			if ( surveyPlaces ) {
+			if (surveyPlaces) {
 				const espooSurveyService = new EspooSurvey();
-				espooSurveyService.loadSurveyFeatures( 'places_in_everyday_life' );
-
+				espooSurveyService.loadSurveyFeatures('places_in_everyday_life');
 			} else {
-
-				this.datasourceService.removeDataSourcesByNamePrefix( 'Survey ' );
-				document.getElementById( 'surveyScatterPlot' ).style.visibility = 'hidden';
-
+				this.datasourceService.removeDataSourcesByNamePrefix('Survey ');
+				document.getElementById('surveyScatterPlot').style.visibility = 'hidden';
 			}
-
 		},
 
 		/**
-        * This function handles the toggle event for switching to postal code view
-        */
+		 * This function handles the toggle event for switching to postal code view
+		 */
 		postalCodeViewEvent() {
+			const postalView = document.getElementById('postalCodeToggle').checked;
+			this.toggleStore.setPostalCode(postalView);
 
-			const postalView = document.getElementById( 'postalCodeToggle' ).checked;
-			this.toggleStore.setPostalCode( postalView );
-
-			if ( postalView ) {
-
-				this.store.setView( 'capitalRegion' );
+			if (postalView) {
+				this.store.setView('capitalRegion');
 				this.reset();
-
 			}
-
 		},
 
 		/**
-        * This function resets grid view
-        */
+		 * This function resets grid view
+		 */
 		resetGridViewEvent() {
+			const resetGrid = document.getElementById('resetGridToggle').checked;
+			this.toggleStore.setResetGrid(resetGrid);
 
-			const resetGrid = document.getElementById( 'resetGridToggle' ).checked;
-			this.toggleStore.setResetGrid( resetGrid );
-
-			if ( resetGrid ) {
-
+			if (resetGrid) {
 				const populationgridService = new Populationgrid();
 				populationgridService.createPopulationGrid();
 			}
-
 		},
 
 		/**
-        * This function to switch between population grid and travel time grid view
-        *
-        */
+		 * This function to switch between population grid and travel time grid view
+		 *
+		 */
 		async travelTimeEvent() {
-
 			// Check if viewer is initialized
-			if ( !this.viewer ) {
-				console.error( 'Viewer is not initialized.' );
+			if (!this.viewer) {
+				console.error('Viewer is not initialized.');
 				return; // Exit the function if viewer is not initialized
 			}
 
 			try {
-				const travelTime = document.getElementById( 'travelTimeToggle' ).checked;
-				this.toggleStore.setTravelTime( travelTime );
-				this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
-				this.datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
+				const travelTime = document.getElementById('travelTimeToggle').checked;
+				this.toggleStore.setTravelTime(travelTime);
+				this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
+				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
 
-				if ( travelTime ) {
-
+				if (travelTime) {
 					// await datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
-					await this.datasourceService.loadGeoJsonDataSource( 0.1, 'assets/data/travel_time_grid.json', 'TravelTimeGrid' );
+					await this.datasourceService.loadGeoJsonDataSource(
+						0.1,
+						'assets/data/travel_time_grid.json',
+						'TravelTimeGrid'
+					);
 				} else {
-					await this.datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
-					await this.datasourceService.removeDataSourcesByNamePrefix( 'TravelLabel' );
-					this.createPopulationGrid( ); // Pass this.viewer
+					await this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
+					await this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
+					this.createPopulationGrid(); // Pass this.viewer
 				}
-			} catch ( error ) {
-				console.error( 'Error in travelTimeEvent:', error );
+			} catch (error) {
+				console.error('Error in travelTimeEvent:', error);
 			}
 		},
 
 		/**
-        * This function to switch between population grid and nature grid view
-        *
-        */
+		 * This function to switch between population grid and nature grid view
+		 *
+		 */
 		natureGridEvent() {
+			const natureGrid = document.getElementById('natureGridToggle').checked;
+			this.toggleStore.setNatureGrid(natureGrid);
 
-			const natureGrid = document.getElementById( 'natureGridToggle' ).checked;
-			this.toggleStore.setNatureGrid( natureGrid );
+			this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
 
-			this.datasourceService.removeDataSourcesByNamePrefix( 'TravelTimeGrid' );
+			if (natureGrid) {
+				const dataSource = this.datasourceService.getDataSourceByName('PopulationGrid');
 
-			if ( natureGrid ) {
-
-				const dataSource = this.datasourceService.getDataSourceByName( 'PopulationGrid' );
-
-				if ( !dataSource ) {
-					console.error( 'Data source with name PopulationGrid not found.' );
+				if (!dataSource) {
+					console.error('Data source with name PopulationGrid not found.');
 					return [];
 				}
 
@@ -326,27 +372,19 @@ export default {
 				const entities = dataSource.entities.values;
 				const populationgridService = new Populationgrid();
 
-				for ( let i = 0; i < entities.length; i++ ) {
-
-					let entity = entities[ i ];
-					populationgridService.setGridEntityPolygonToGreen( entity );
-
+				for (let i = 0; i < entities.length; i++) {
+					let entity = entities[i];
+					populationgridService.setGridEntityPolygonToGreen(entity);
 				}
 
-				document.getElementById( 'travelTimeToggle' ).checked = false;
-
+				document.getElementById('travelTimeToggle').checked = false;
 			} else {
-
-				this.datasourceService.removeDataSourcesByNamePrefix( 'PopulationGrid' );
-				this.createPopulationGrid( );
-
+				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
+				this.createPopulationGrid();
 			}
-
-
 		},
 	},
 };
-
 </script>
 
 <style>
@@ -363,17 +401,17 @@ export default {
 	float: left;
 
 	text-decoration: underline;
-  height: 18px !important; /* Set a smaller height */
-  width: 18px !important;  /* Set a smaller width */
-  min-width: 0 !important; /* Override Vuetify's min-width */
+	height: 18px !important; /* Set a smaller height */
+	width: 18px !important; /* Set a smaller width */
+	min-width: 0 !important; /* Override Vuetify's min-width */
 }
 
 .uiButton .v-btn__content {
-  padding: 0 !important; /* Remove default padding */
+	padding: 0 !important; /* Remove default padding */
 }
 
 .uiButton:hover {
-	color: rgb(150,150,150);
+	color: rgb(150, 150, 150);
 }
 
 .label {
@@ -387,7 +425,7 @@ export default {
 	font-size: small;
 }
 
-#gridviewContainer{
+#gridviewContainer {
 	top: 10px;
 	left: 0px;
 
@@ -406,64 +444,64 @@ export default {
 
 /* The switch - the box around the slider */
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 47px;
-  height: 20px;
+	position: relative;
+	display: inline-block;
+	width: 47px;
+	height: 20px;
 }
 
 /* Hide default HTML checkbox */
 .switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+	opacity: 0;
+	width: 0;
+	height: 0;
 }
 
 /* The slider */
 .slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: 0.4s;
+	transition: 0.4s;
 }
 
 .slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 2px;
-  bottom: 2px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+	position: absolute;
+	content: '';
+	height: 16px;
+	width: 16px;
+	left: 2px;
+	bottom: 2px;
+	background-color: white;
+	-webkit-transition: 0.4s;
+	transition: 0.4s;
 }
 
 input:checked + .slider {
-  background-color: #2196F3;
+	background-color: #2196f3;
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
+	box-shadow: 0 0 1px #2196f3;
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
+	-webkit-transform: translateX(26px);
+	-ms-transform: translateX(26px);
+	transform: translateX(26px);
 }
 
 /* Rounded sliders */
 .slider.round {
-  border-radius: 34px;
+	border-radius: 34px;
 }
 
 .slider.round:before {
-  border-radius: 50%;
+	border-radius: 50%;
 }
 </style>

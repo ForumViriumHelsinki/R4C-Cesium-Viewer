@@ -4,4 +4,9 @@ metadata:
   name: r4c-cesium-viewer-config
   namespace: regions4climate
 data:
-  VITE_PYGEOAPI_HOST: "pygeoapi.dataportal.fi"
+  # For local Skaffold development: use full K8s service FQDN
+  # For production: change to pygeoapi.dataportal.fi
+  VITE_PYGEOAPI_HOST: "pygeoapi.regions4climate.svc.cluster.local"
+  # DNS resolver for nginx - use kube-dns ClusterIP
+  # Find with: kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}'
+  NGINX_DNS_RESOLVER: "192.168.194.138"

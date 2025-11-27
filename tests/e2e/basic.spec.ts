@@ -1,158 +1,121 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
+import { dismissModalIfPresent, waitForCesiumReady } from '../helpers/test-helpers';
 
-test("Page load", { tag: ["@e2e", "@smoke"] }, async ({ page }) => {
-  await page.goto("/");
+test('Page load', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
+	await page.goto('/');
 
-  // Wait for page to load and dismiss any modal if present
-  await page.waitForLoadState("domcontentloaded");
-  await page.waitForSelector("body", { state: "attached" });
-  const closeButton = page.getByRole("button", { name: "Close" });
-  if (await closeButton.isVisible({ timeout: 5000 })) {
-    await closeButton.click();
-  }
+	// Wait for page to load and dismiss any modal if present
+	await page.waitForLoadState('domcontentloaded');
+	await dismissModalIfPresent(page, 'Close');
 
-  await expect(page).toHaveTitle(/R4C Uusimaa Demo/);
+	await expect(page).toHaveTitle(/R4C Uusimaa Demo/);
 });
 
-test("HSY Background maps", { tag: ["@e2e", "@wms"] }, async ({ page }) => {
-  await page.goto("/");
+test('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ page }) => {
+	await page.goto('/');
 
-  // Wait for page to load and dismiss any modal if present
-  await page.waitForLoadState("domcontentloaded");
-  const closeButton = page.getByRole("button", { name: "Close" });
-  if (await closeButton.isVisible({ timeout: 5000 })) {
-    await closeButton.click();
-    // Wait for modal to close completely
-    await expect(closeButton).toBeHidden();
-  }
+	// Wait for page to load and dismiss any modal if present
+	await page.waitForLoadState('domcontentloaded');
+	await dismissModalIfPresent(page, 'Close');
 
-  // Try to find HSY Background maps button
-  const hsyButton = page.getByRole("button", { name: "HSY Background maps" });
-  if (await hsyButton.isVisible({ timeout: 10000 })) {
-    await hsyButton.click();
-    // Wait for HSY panel to open by looking for search input
-    await page
-      .waitForSelector(
-        '[placeholder*="Search for WMS layers"], [placeholder*="search"]',
-        { timeout: 10000 },
-      )
-      .catch(() => {});
+	// Wait for page to be fully loaded
+	await page.waitForSelector('#app', { state: 'visible', timeout: 10000 });
 
-    // Try to interact with WMS layers search
-    const searchInput = page.getByPlaceholder(" Search for WMS layers");
-    if (await searchInput.isVisible({ timeout: 5000 })) {
-      await searchInput.click();
-      await searchInput.fill("Kaupunginosat");
-      // Wait for search to process by checking input value
-      await expect(searchInput).toHaveValue("Kaupunginosat");
-      // Wait a bit for search results to load
-      await page
-        .waitForLoadState("networkidle", { timeout: 5000 })
-        .catch(() => {});
+	// Click on Environmental category chip to access HSY layers
+	// The chip is a generic element with text, not a button
+	const environmentalChip = page.getByText('Environmental').first();
+	await environmentalChip.waitFor({ state: 'visible', timeout: 10000 });
+	await environmentalChip.click();
 
-      // Look for results in various possible containers
-      const resultSelectors = [
-        ".v-list",
-        '[role="list"]',
-        ".search-results",
-        ".wms-results",
-      ];
-      let found = false;
+	// Wait for search input to appear
+	const searchInput = page.getByPlaceholder('Search environmental layers...');
+	await searchInput.waitFor({ state: 'visible', timeout: 5000 });
 
-      for (const selector of resultSelectors) {
-        const resultContainer = page.locator(selector);
-        if (await resultContainer.isVisible({ timeout: 2000 })) {
-          await expect(resultContainer).toContainText("Kaupunginosat");
-          found = true;
-          break;
-        }
-      }
+	// Wait for HSY layers to load before searching
+	// Look for the loading indicator to disappear or for actual layer content to appear
+	await page
+		.waitForFunction(
+			() => {
+				const listItems = document.querySelectorAll('.v-list-item-title');
+				// Wait until we have at least one layer with actual content (not just "Updated: Unknown")
+				return Array.from(listItems).some(
+					(item) =>
+						item.textContent &&
+						item.textContent.trim().length > 0 &&
+						!item.textContent.includes('Unknown')
+				);
+			},
+			{ timeout: 15000 }
+		)
+		.catch(() => {
+			// If timeout, continue anyway - layers might be loaded but without titles
+		});
 
-      if (!found) {
-        // Just verify that we can search without errors
-        await expect(searchInput).toHaveValue("Kaupunginosat");
-      }
-    }
-  }
+	// Search for a layer
+	await searchInput.click();
+	await searchInput.fill('Kaupunginosat');
+
+	// Wait for search to process by checking input value
+	await expect(searchInput).toHaveValue('Kaupunginosat');
+
+	// Wait for filtered results to appear
+	await page.waitForTimeout(500); // Small delay for search debounce
+
+	// Wait for results to appear using single stable selector
+	const resultContainer = page.locator('.v-list');
+	await expect(resultContainer).toBeVisible({ timeout: 5000 });
+
+	// Check that we have actual layer results (the search should filter the list)
+	// Look for any list item with content that suggests a valid layer
+	const listItems = page.locator('.v-list-item');
+	await expect(listItems.first()).toBeVisible({ timeout: 5000 });
 });
 
-test("Building properties", { tag: ["@e2e", "@smoke"] }, async ({ page }) => {
-  await page.goto("/");
+test('Building properties', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
+	await page.goto('/');
 
-  // Wait for page to load and dismiss any modal if present
-  await page.waitForLoadState("domcontentloaded");
-  const closeButton = page.getByRole("button", { name: "Close" });
-  if (await closeButton.isVisible({ timeout: 5000 })) {
-    await closeButton.click();
-    // Wait for modal to close
-    await expect(closeButton).toBeHidden();
-  }
+	// Wait for page to load and dismiss any modal if present
+	await page.waitForLoadState('domcontentloaded');
+	await dismissModalIfPresent(page, 'Close');
 
-  // Just verify the page loaded successfully - canvas loading can be flaky in CI
-  await expect(page).toHaveTitle(/R4C Uusimaa Demo/);
+	// Verify the page loaded successfully
+	await expect(page).toHaveTitle(/R4C Uusimaa Demo/);
 
-  // Look for canvas or basic UI elements that should be present
-  const canvas = page.locator("canvas");
-  const mainContent = page.locator("main, #app, .v-application");
+	// Wait for Cesium to initialize with extended timeout
+	await waitForCesiumReady(page);
 
-  // Either canvas should be visible OR main content should be visible
-  const canvasVisible = await canvas.isVisible({ timeout: 5000 });
-  const mainVisible = await mainContent.isVisible({ timeout: 5000 });
-
-  if (!canvasVisible && !mainVisible) {
-    // If neither is visible, just verify we can find some basic page structure
-    await expect(page.locator("body")).toBeVisible();
-  }
+	// Verify canvas is visible and functional
+	const canvas = page.locator('canvas');
+	await expect(canvas).toBeVisible({ timeout: 10000 });
 });
 
-test("Heat Vulnerability", async ({ page }) => {
-  await page.goto("/");
+test('Statistical Grid View', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
+	await page.goto('/');
 
-  // Wait for page to load and dismiss any modal if present
-  await page.waitForLoadState("domcontentloaded");
-  const closeButton = page.getByRole("button", { name: "Close" });
-  if (await closeButton.isVisible({ timeout: 5000 })) {
-    await closeButton.click();
-    // Wait for modal to close
-    await expect(closeButton).toBeHidden();
-  }
+	// Wait for page to load and dismiss any modal if present
+	await page.waitForLoadState('domcontentloaded');
+	await dismissModalIfPresent(page, 'Close');
 
-  // Wait for page to load completely
-  await page.waitForSelector("#app, main, .v-application", { timeout: 10000 });
+	// Wait for app to be ready
+	await page.waitForSelector('#app', { state: 'visible', timeout: 10000 });
 
-  // Check and click Statistical Grid if available
-  const statisticalGrid = page.getByLabel("Statistical Grid");
-  if (await statisticalGrid.isVisible({ timeout: 5000 })) {
-    await statisticalGrid.check();
-    // Wait for grid option to be checked
-    await expect(statisticalGrid).toBeChecked();
-  }
+	// Click on Statistical Grid button in the view mode toggle
+	const statisticalGridButton = page.getByRole('button', { name: /Statistical Grid/i });
+	await statisticalGridButton.waitFor({ state: 'visible', timeout: 5000 });
+	await statisticalGridButton.click();
 
-  // Click on 250m grid option if available
-  const gridOption = page
-    .locator("div")
-    .filter({ hasText: /^250m grid$/ })
-    .locator("span");
-  if (await gridOption.isVisible({ timeout: 5000 })) {
-    await gridOption.click();
-    // Wait for grid option to be selected by checking if it's still visible and clickable
-    await page.waitForFunction(
-      () => {
-        return document.readyState === "complete";
-      },
-      { timeout: 3000 },
-    );
-  }
+	// Verify the button is now active (has v-btn--active class)
+	await expect(statisticalGridButton).toHaveClass(/v-btn--active/);
 
-  // Look for Heat Vulnerability heading - make it optional since UI may vary
-  const heatVulnHeading = page.getByRole("heading", {
-    name: "Heat Vulnerability",
-  });
-  if (await heatVulnHeading.isVisible({ timeout: 10000 })) {
-    await heatVulnHeading.click();
-    await expect(heatVulnHeading).toBeVisible();
-  } else {
-    // If Heat Vulnerability heading is not found, just verify the page loaded successfully
-    await expect(page).toHaveTitle(/R4C Uusimaa Demo/);
-  }
+	// Wait for grid view to load
+	await page.waitForTimeout(2000);
+
+	// Open the Grid Options panel by clicking the Grid Options button
+	const gridOptionsButton = page.getByRole('button', { name: /Grid Options/i });
+	await gridOptionsButton.waitFor({ state: 'visible', timeout: 10000 });
+	await gridOptionsButton.click();
+
+	// Verify that the statistical grid options panel appears
+	const gridOptionsHeading = page.getByRole('heading', { name: /Statistical grid options/i });
+	await expect(gridOptionsHeading).toBeVisible({ timeout: 10000 });
 });

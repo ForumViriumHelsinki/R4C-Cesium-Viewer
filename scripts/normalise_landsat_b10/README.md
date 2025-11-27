@@ -86,6 +86,6 @@ The function returns a JSON response:
 
 ```json
 {
-  "error": "<error_message>"
+	"error": "<error_message>"
 }
 ```

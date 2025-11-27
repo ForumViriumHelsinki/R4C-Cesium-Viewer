@@ -2,74 +2,83 @@
 	<v-app>
 		<!-- Top Navigation Bar -->
 		<v-app-bar
-app
-elevation="2"
-class="top-nav"
->
-			<v-container
-fluid
-class="d-flex align-center py-0"
->
-				<div class="navigation-buttons">
-					<v-btn
-						v-if="currentLevel === 'building'"
-						icon
-						size="small"
-						aria-label="Return to postal code level"
-						@click="returnToPostalCode"
-					>
-						<v-icon>mdi-arrow-left</v-icon>
-					</v-btn>
+			app
+			:elevation="2"
+			height="64"
+			color="surface"
+		>
+			<!-- Left section: Title + Navigation -->
+			<AppTitle class="ml-4 mr-4" />
 
-					<v-btn
-						icon
-						size="small"
-						aria-label="Sign out"
-						@click="signOut"
-					>
-						<v-icon>mdi-logout</v-icon>
-					</v-btn>
-
-					<v-btn
-						v-if="currentLevel !== 'start'"
-						icon
-						size="small"
-						aria-label="Rotate camera view 180 degrees"
-						@click="rotateCamera"
-					>
-						<v-icon>mdi-compass</v-icon>
-					</v-btn>
-
-					<!-- Feature Flags Panel -->
-					<FeatureFlagsPanel />
-				</div>
-
-				<v-spacer />
-
-				<!-- View Mode Selector -->
-				<ViewModeCompact />
-
-				<v-spacer />
-
-				<!-- Control Panel Toggle -->
+			<div class="d-flex align-center ga-1">
 				<v-btn
-					variant="outlined"
-					size="small"
-					aria-label="Toggle control panel"
-					prepend-icon="mdi-tune"
-					@click="sidebarVisible = !sidebarVisible"
+					v-if="currentLevel === 'building'"
+					icon
+					variant="text"
+					aria-label="Return to postal code level"
+					@click="returnToPostalCode"
 				>
-					{{ sidebarVisible ? 'Hide' : 'Show' }} Controls
+					<v-icon>mdi-arrow-left</v-icon>
 				</v-btn>
-			</v-container>
+
+				<v-btn
+					icon
+					variant="text"
+					aria-label="Sign out"
+					@click="signOut"
+				>
+					<v-icon>mdi-logout</v-icon>
+				</v-btn>
+
+				<v-btn
+					v-if="currentLevel !== 'start'"
+					icon
+					variant="text"
+					aria-label="Rotate camera view 180 degrees"
+					@click="rotateCamera"
+				>
+					<v-icon>mdi-compass</v-icon>
+				</v-btn>
+
+				<!-- Feature Flags Panel -->
+				<FeatureFlagsPanel />
+			</div>
+
+			<v-spacer />
+
+			<!-- Center section -->
+			<ViewModeCompact />
+
+			<!-- Heat Timeline (shown at postalCode and building levels) -->
+			<TimelineCompact
+				v-if="currentLevel === 'postalCode' || currentLevel === 'building'"
+				class="ml-4"
+			/>
+
+			<v-spacer />
+
+			<!-- Right section -->
+			<v-btn
+				variant="outlined"
+				aria-label="Toggle control panel"
+				prepend-icon="mdi-tune"
+				class="mr-4"
+				@click="sidebarVisible = !sidebarVisible"
+			>
+				<span class="d-none d-sm-inline">{{ sidebarVisible ? 'Hide' : 'Show' }} Controls</span>
+				<span class="d-inline d-sm-none">{{ sidebarVisible ? 'Hide' : 'Show' }}</span>
+			</v-btn>
 		</v-app-bar>
 
 		<!-- Enhanced Control Panel -->
-		<ControlPanel v-if="sidebarVisible" />
+		<ControlPanel v-model="sidebarVisible" />
 
 		<v-main>
 			<CesiumViewer />
 			<SosEco250mGrid v-if="grid250m" />
+
+			<!-- Version Badge -->
+			<VersionBadge />
 
 			<!-- Loading Indicator -->
 			<LoadingIndicator
@@ -91,9 +100,7 @@ class="d-flex align-center py-0"
 
 			<!-- Minimal disclaimer -->
 			<div class="minimal-disclaimer">
-				<span class="disclaimer-text">
-					Data: HSY • Statistics Finland
-				</span>
+				<span class="disclaimer-text"> Data: HSY • Statistics Finland </span>
 			</div>
 		</v-main>
 	</v-app>
@@ -105,8 +112,11 @@ import CesiumViewer from './pages/CesiumViewer.vue';
 import SosEco250mGrid from './components/SosEco250mGrid.vue';
 import LoadingIndicator from './components/LoadingIndicator.vue';
 import DataSourceStatusCompact from './components/DataSourceStatusCompact.vue';
+import TimelineCompact from './components/TimelineCompact.vue';
 import ViewModeCompact from './components/ViewModeCompact.vue';
 import FeatureFlagsPanel from './components/FeatureFlagsPanel.vue';
+import VersionBadge from './components/VersionBadge.vue';
+import AppTitle from './components/AppTitle.vue';
 import { useToggleStore } from './stores/toggleStore.js';
 import { useGlobalStore } from './stores/globalStore.js';
 import { useFeatureFlagStore } from './stores/featureFlagStore';
@@ -195,7 +205,7 @@ const handleCacheCleared = (sourceId) => {
 	console.log(`Cache cleared for: ${sourceId}`);
 	if (sourceId === 'all') {
 		// Refresh cache status for all layers
-		Object.keys(loadingStore.cacheStatus).forEach(layer => {
+		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
 			loadingStore.checkLayerCache(layer);
 		});
 	}
@@ -218,10 +228,9 @@ onMounted(async () => {
 		console.log('Background preloader initialized');
 
 		// Check cache status for all layers on app start
-		Object.keys(loadingStore.cacheStatus).forEach(layer => {
+		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
 			loadingStore.checkLayerCache(layer);
 		});
-
 	} catch (error) {
 		console.warn('Failed to initialize caching services:', error);
 	}
@@ -229,18 +238,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.top-nav {
-	height: 64px;
-	background: white;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-.navigation-buttons {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-}
-
 .minimal-disclaimer {
 	position: fixed;
 	bottom: 8px;
@@ -289,6 +286,40 @@ onMounted(async () => {
 	right: 296px; /* 280px sidebar width + 16px margin */
 }
 
+/* Navigation buttons - ensure touch targets meet WCAG 2.5.5 */
+.v-app-bar .v-btn--icon {
+	/* Default Vuetify icon button is 40px, which is close to 44px minimum */
+	min-width: 44px;
+	min-height: 44px;
+}
+
+.v-app-bar .v-btn:not(.v-btn--icon) {
+	min-height: 44px;
+}
+
+/* Focus visible styles for accessibility */
+.v-btn:focus-visible {
+	outline: 2px solid #1976d2;
+	outline-offset: 2px;
+}
+
+/* Touch optimization - prevent double-tap zoom delays */
+.v-btn,
+.v-slider,
+.v-checkbox,
+.v-switch,
+.v-radio,
+button,
+a {
+	touch-action: manipulation;
+}
+
+/* Allow pinch-zoom on the map but prevent double-tap zoom */
+.cesium-viewer,
+.cesium-widget {
+	touch-action: pan-x pan-y pinch-zoom;
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
 	.minimal-disclaimer {
@@ -310,6 +341,15 @@ onMounted(async () => {
 	/* On mobile, sidebar covers full screen so keep indicator on right */
 	.status-indicator-container.sidebar-open {
 		right: 8px;
+	}
+}
+
+/* Very small mobile - further optimize */
+@media (max-width: 480px) {
+	/* Keep 44px minimum for WCAG 2.5.5 compliance even on very small screens */
+	.v-app-bar .v-btn--icon {
+		min-width: 44px;
+		min-height: 44px;
 	}
 }
 </style>

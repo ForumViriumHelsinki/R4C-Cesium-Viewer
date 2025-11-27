@@ -13,33 +13,60 @@ build:
       context: .
       docker:
         dockerfile: Dockerfile
+      hooks:
+        before:
+          - command: ['sh', '-c', 'dotenvx run -- sh scripts/generate-secrets.sh']
+            os: [darwin, linux]
+          # Run lint before build to catch errors early
+          - command: ['sh', '-c', 'npm run lint --silent || echo "Lint warnings found"']
+            os: [darwin, linux]
+# Default: Full stack with all services (PostgreSQL, pygeoapi, frontend)
 manifests:
   rawYaml:
+    - k8s/namespace.yaml
     - k8s/serviceaccount.yaml
     - k8s/configmap.yaml
-    - k8s/secrets.yaml
+    - k8s/migration-job.yaml
     - k8s/deployment.yaml
     - k8s/service.yaml
     - k8s/ingress.yaml
+    - k8s/pygeoapi-deployment.yaml
+    # PostgreSQL with PostGIS (official postgis/postgis image)
+    - k8s/postgresql-secret.yaml
+    - k8s/postgresql-configmap.yaml
+    - k8s/postgresql-headless-service.yaml
+    - k8s/postgresql-service.yaml
+    - k8s/postgresql-statefulset.yaml
 deploy:
   kubectl:
     hooks:
-      before:
+      after:
         - host:
             command:
-              ["sh", "-c", "dotenvx run -- sh scripts/generate-secrets.sh"]
+              ['sh', '-c', 'kubectl apply -f k8s/secrets.yaml -f k8s/migration-secret.yaml']
+            os: [darwin, linux]
+  # Wait up to 180s for pods to be ready; tolerate init container restarts
+  statusCheck: true
+  statusCheckDeadlineSeconds: 180
+  tolerateFailuresUntilDeadline: true
+# Bind to localhost only for security
+portForward:
+  - resourceType: service
+    resourceName: r4c-cesium-viewer
+    port: 80
+    localPort: 4173
+    address: 127.0.0.1
 profiles:
-  - name: local-with-services
+  # Services only (PostgreSQL, pygeoapi) - use with 'npm run dev' for frontend
+  - name: services-only
+    build:
+      artifacts: [] # Don't build frontend
     manifests:
       rawYaml:
+        - k8s/namespace.yaml
         - k8s/serviceaccount.yaml
         - k8s/configmap.yaml
-        - k8s/secrets.yaml
-        - k8s/migration-secret.yaml
         - k8s/migration-job.yaml
-        - k8s/deployment.yaml
-        - k8s/service.yaml
-        - k8s/ingress.yaml
         - k8s/pygeoapi-deployment.yaml
         # PostgreSQL with PostGIS (official postgis/postgis image)
         - k8s/postgresql-secret.yaml
@@ -47,6 +74,24 @@ profiles:
         - k8s/postgresql-headless-service.yaml
         - k8s/postgresql-service.yaml
         - k8s/postgresql-statefulset.yaml
+    deploy:
+      kubectl:
+        hooks:
+          after:
+            - host:
+                command: ['sh', '-c', 'kubectl apply -f k8s/migration-secret.yaml']
+                os: [darwin, linux]
+    portForward:
+      - resourceType: service
+        resourceName: postgresql
+        port: 5432
+        localPort: 5432
+        address: 127.0.0.1
+      - resourceType: service
+        resourceName: pygeoapi
+        port: 80
+        localPort: 5000
+        address: 127.0.0.1
 
   - name: e2e-with-prod-data
     manifests:
@@ -70,18 +115,26 @@ profiles:
   - name: migration-test
     manifests:
       rawYaml:
+        - k8s/namespace.yaml
         # PostgreSQL with PostGIS (official postgis/postgis image)
         - k8s/postgresql-secret.yaml
         - k8s/postgresql-configmap.yaml
         - k8s/postgresql-headless-service.yaml
         - k8s/postgresql-service.yaml
         - k8s/postgresql-statefulset.yaml
+    deploy:
+      kubectl:
+        hooks:
+          after:
+            - host:
+                command: ['sh', '-c', 'kubectl apply -f k8s/migration-secret.yaml']
+                os: [darwin, linux]
     test:
-      - image: amacneil/dbmate:v2.13.0
+      - image: amacneil/dbmate:2.28.0
         custom:
           - command: "sh -c 'apk add --no-cache postgresql-client && /scripts/test_migration.sh'"
             timeoutSeconds: 600
             dependencies:
               paths:
-                - "db/migrations/*.sql"
-                - "scripts/test_migration.sh"
+                - 'db/migrations/*.sql'
+                - 'scripts/test_migration.sh'
