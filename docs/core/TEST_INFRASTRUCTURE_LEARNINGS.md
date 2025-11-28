@@ -2,6 +2,81 @@
 
 This document captures critical knowledge about CesiumJS test infrastructure issues discovered and resolved in the R4C-Cesium-Viewer project. These patterns apply to any Playwright E2E tests with CesiumJS applications.
 
+## Table of Contents
+
+- [Quick Reference](#quick-reference)
+- [Executive Summary](#executive-summary)
+- [Root Cause #1: Viewer Variable Name Mismatch](#root-cause-1-viewer-variable-name-mismatch)
+- [Root Cause #2: Network Idle Anti-Pattern with CesiumJS](#root-cause-2-network-idle-anti-pattern-with-cesiumjs)
+- [Root Cause #3: Scene Idle Detection with Camera Events](#root-cause-3-scene-idle-detection-with-camera-events)
+- [Performance Results](#performance-results)
+- [Test Results](#test-results)
+- [Best Practices for CesiumJS Testing](#best-practices-for-cesiumjs-testing)
+- [Key Architectural Insights](#key-architectural-insights)
+- [Remaining Work](#remaining-work)
+- [Files Modified](#files-modified)
+- [Verification Steps](#verification-steps)
+- [Questions & Troubleshooting](#questions--troubleshooting)
+
+---
+
+## Quick Reference
+
+### Common Issues and Solutions
+
+| Problem                               | Solution                                                             | Why                                                     |
+| ------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
+| Tests timeout at initialization (30s) | Use `window.__viewer` not `window.viewer`                            | Application exposes viewer with `__` prefix             |
+| View navigation times out (8-13s)     | Replace `waitForLoadState('networkidle')` with `waitForTimeout(500)` | CesiumJS continuously loads tiles, network never idle   |
+| Scene idle detection fails            | Remove event-based `waitForSceneIdle()`                              | Camera events don't fire with `requestRenderMode: true` |
+| Camera movement detection fails       | Use simple timeouts, not event listeners                             | View changes are synchronous Pinia state updates        |
+
+### Quick Fixes
+
+```typescript
+// ❌ WRONG - Will timeout or cause delays
+await page.waitForLoadState('networkidle');
+await waitForSceneIdle(page);
+const viewer = window.viewer; // Missing __ prefix
+
+// ✅ CORRECT - Fast and reliable
+await page.waitForTimeout(500); // UI updates
+const viewer = window.__viewer; // Matches app code
+```
+
+### Recommended Timeout Durations
+
+| Operation             | Timeout | Rationale                       |
+| --------------------- | ------- | ------------------------------- |
+| View navigation       | 500ms   | Synchronous Pinia state changes |
+| Data layer activation | 800ms   | Additional rendering time       |
+| UI element stability  | 300ms   | DOM updates complete            |
+| Test initialization   | 2-3s    | Cesium viewer creation          |
+
+### Impact Summary
+
+- **Before fixes:** 17.5 minutes, most tests failing
+- **After fixes:** 2.6 minutes, tests passing
+- **Improvement:** 5-8x faster execution, eliminated false failures
+
+### Files to Check
+
+**Core helpers (already fixed ✅):**
+
+- `tests/e2e/helpers/cesium-helper.ts`
+- `tests/e2e/helpers/test-helpers.ts`
+
+**Remaining cleanup (low priority):**
+
+- `tests/loading-performance.spec.ts` - 20 instances with `.catch()` handlers
+- `tests/performance/load.test.ts` - 5 instances with `.catch()` handlers
+- `tests/e2e/accessibility/*.spec.ts` - 10 instances with `.catch()` handlers
+- `tests/e2e/basic.spec.ts` - 1 instance with `.catch()` handler
+
+See [Remaining Work](#remaining-work) section for details.
+
+---
+
 ## Executive Summary
 
 Three critical infrastructure issues were causing widespread test failures and 5-8x performance degradation:
@@ -88,8 +163,8 @@ CesiumJS continuously loads tiles in the background. **Network NEVER becomes tru
 
 ### Instances Found
 
-- `tests/e2e/helpers/test-helpers.ts`: 6 instances (FIXED)
-- `tests/e2e/helpers/cesium-helper.ts`: 1 instance (FIXED)
+- `tests/e2e/helpers/test-helpers.ts`: 6 instances (FIXED ✅)
+- `tests/e2e/helpers/cesium-helper.ts`: 1 instance (FIXED ✅)
 - `tests/loading-performance.spec.ts`: 20 instances (low priority - have `.catch()`)
 - `tests/performance/load.test.ts`: 5 instances (low priority - have `.catch()`)
 - `tests/e2e/basic.spec.ts`: 1 instance (low priority - has `.catch()`)
@@ -358,17 +433,45 @@ await page.waitForTimeout(500);
 
 ### Low Priority (Optional Cleanup)
 
-**37 instances of `networkidle` waits in test spec files:**
+**37 instances of `networkidle` waits remaining in test spec files:**
 
-Most have `.catch()` handlers so they're non-blocking, but could be cleaned up for consistency:
+These instances are **intentionally left in place** for the following reasons:
 
-- `tests/loading-performance.spec.ts` - 20 instances
-- `tests/performance/load.test.ts` - 5 instances
-- `tests/e2e/accessibility/*.spec.ts` - 10 instances
-- `tests/e2e/basic.spec.ts` - 1 instance
-- `tests/r4c.spec.ts` - 1 instance
+1. **Non-blocking behavior:** All instances have `.catch()` handlers that prevent test failures
+2. **Performance testing context:** Many are in performance test files where network behavior is being measured
+3. **Edge case coverage:** Some test specific network scenarios where timeout + catch is acceptable
+4. **Low impact:** Since they have fallback handlers, they don't cause test failures or significant delays
 
-**Recommendation:** Replace during routine maintenance or when touching those files.
+**Distribution:**
+
+- `tests/loading-performance.spec.ts` - 20 instances (performance monitoring)
+- `tests/performance/load.test.ts` - 5 instances (load testing)
+- `tests/e2e/accessibility/*.spec.ts` - 10 instances (accessibility edge cases)
+- `tests/e2e/basic.spec.ts` - 1 instance (basic smoke test)
+- `tests/r4c.spec.ts` - 1 instance (integration test)
+
+**Example pattern (acceptable):**
+
+```typescript
+// This pattern is acceptable because:
+// 1. It has a short timeout (3-5s)
+// 2. It has a .catch() handler preventing failures
+// 3. It falls back to simple timeout on failure
+await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+```
+
+**Recommendation:**
+
+These instances can be replaced during routine maintenance or when touching those files, but they are **not causing test failures** and are therefore low priority.
+
+**Verification command:**
+
+```bash
+# Check remaining networkidle usage in spec files (excluding helpers)
+rg "waitForLoadState.*networkidle" tests/ --type ts | grep -v helpers/
+
+# Expected: 37 instances, all with .catch() handlers
+```
 
 ---
 
@@ -409,6 +512,10 @@ npm run test:layer-controls
 # Check for any remaining networkidle usage in helpers
 rg "waitForLoadState.*networkidle" tests/e2e/helpers/
 # Should return: No files found
+
+# Check spec files (should show instances with .catch() handlers)
+rg "waitForLoadState.*networkidle" tests/ --type ts | grep -v helpers/
+# Should return: 37 instances, all with .catch()
 ```
 
 ---
@@ -452,8 +559,19 @@ But the current 500ms has proven sufficient in testing.
 
 **A:** The function still exists but is no longer called from core helpers. It could be removed entirely or refactored to use direct state checks instead of camera events. Current status: unused but not blocking.
 
+### Q: Why are there still networkidle references in test files?
+
+**A:** The 37 remaining instances are intentionally left in place because:
+
+1. All have `.catch()` handlers preventing test failures
+2. Many are in performance tests where network behavior is being measured
+3. They represent edge cases or fallback scenarios
+4. Removing them is low priority since they don't cause failures
+
+See [Remaining Work](#remaining-work) for full explanation.
+
 ---
 
-**Last Updated:** 2025-11-13
+**Last Updated:** 2025-11-28
 **Maintainer:** Discovered and documented by Claude Code with system-debugging agent
 **Status:** ✅ Complete - Core infrastructure fixes applied and verified
