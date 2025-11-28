@@ -1,43 +1,35 @@
 {
-  "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "entry": [
-    "src/main.js",
-    "tests/**/*.test.{js,ts}",
-    "tests/**/*.spec.{js,ts}",
-    "tests/setup/**/*.{js,ts}",
-    "tests/reporters/**/*.ts",
-    "scripts/**/*.js"
-  ],
-  "project": [
-    "src/**/*.{js,ts,vue}",
-    "tests/**/*.{js,ts}",
-    "scripts/**/*.js"
-  ],
-  "ignore": [
-    "components.d.ts",
-    "src/auto-imports.d.ts",
-    "src/components.d.ts",
-    "**/dist/**",
-    "**/dist-ssr/**",
-    "**/coverage/**",
-    "**/*.md",
-    ".claude/**"
-  ],
-  "ignoreDependencies": [
-    "playwright",
-    "@sentry/browser",
-    "globals"
-  ],
-  "vite": {
-    "config": ["vite.config.js"]
-  },
-  "vitest": {
-    "config": ["vitest.config.js"]
-  },
-  "playwright": {
-    "config": ["playwright.config.ts"]
-  },
-  "eslint": {
-    "config": ["eslint.config.js"]
-  }
+	"$schema": "https://unpkg.com/knip@latest/schema.json",
+	"entry": [
+		"src/main.js",
+		"tests/**/*.test.{js,ts}",
+		"tests/**/*.spec.{js,ts}",
+		"tests/setup/**/*.{js,ts}",
+		"tests/reporters/**/*.ts",
+		"scripts/**/*.js"
+	],
+	"project": ["src/**/*.{js,ts,vue}", "tests/**/*.{js,ts}", "scripts/**/*.js"],
+	"ignore": [
+		"components.d.ts",
+		"src/auto-imports.d.ts",
+		"src/components.d.ts",
+		"**/dist/**",
+		"**/dist-ssr/**",
+		"**/coverage/**",
+		"**/*.md",
+		".claude/**"
+	],
+	"ignoreDependencies": ["playwright", "@sentry/browser", "globals"],
+	"vite": {
+		"config": ["vite.config.js"]
+	},
+	"vitest": {
+		"config": ["vitest.config.js"]
+	},
+	"playwright": {
+		"config": ["playwright.config.ts"]
+	},
+	"eslint": {
+		"config": ["eslint.config.js"]
+	}
 }

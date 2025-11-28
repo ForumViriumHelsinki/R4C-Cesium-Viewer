@@ -19,20 +19,18 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
-import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
 import BuildingTreeChart from '../components/BuildingTreeChart.vue';
 import BuildingHeatChart from '../components/BuildingHeatChart.vue';
 import { eventBus } from '../services/eventEmitter.js';
 
 export default {
 	components: {
-		HSYBuildingHeatChart,
 		BuildingTreeChart,
 		BuildingHeatChart,
 	},
 	setup() {
 		const showComponents = ref(false);
-		const store = useGlobalStore();
+		const _store = useGlobalStore();
 		const toggleStore = useToggleStore();
 
 		onMounted(() => {

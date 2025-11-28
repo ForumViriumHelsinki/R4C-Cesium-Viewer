@@ -392,7 +392,7 @@ describe('featureFlagStore', () => {
 		describe('checkHardwareSupport', () => {
 			it('should disable unsupported features correctly', () => {
 				// hdrRendering requires support
-				const initialValue = store.flags.hdrRendering.enabled;
+				const _initialValue = store.flags.hdrRendering.enabled;
 
 				store.checkHardwareSupport('hdrRendering', false);
 
@@ -408,7 +408,7 @@ describe('featureFlagStore', () => {
 			});
 
 			it('should not affect flags without requiresSupport', () => {
-				const initialValue = store.flags.ndvi.enabled;
+				const _initialValue = store.flags.ndvi.enabled;
 
 				store.checkHardwareSupport('ndvi', false);
 

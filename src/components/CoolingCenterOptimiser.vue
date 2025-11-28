@@ -39,7 +39,6 @@ import { useMitigationStore } from '../stores/mitigationStore';
 import * as Cesium from 'cesium';
 import * as turf from '@turf/turf';
 import { useGlobalStore } from '../stores/globalStore.js';
-import DataSource from '../services/datasource.js';
 
 const numCoolingCenters = ref(25);
 const mitigationStore = useMitigationStore();

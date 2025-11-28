@@ -1,7 +1,6 @@
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
-import { eventBus } from '../services/eventEmitter.js';
 import DataSource from './datasource.js';
 import HSYBuilding from './hsybuilding.js';
 import ElementsDisplay from './elementsDisplay.js';

@@ -250,7 +250,9 @@ export default {
 		const activate250mGrid = async () => {
 			toggleStore.setGrid250m(grid250m.value);
 			store.setView('grid');
-			!grid250m.value && new Populationgrid().createPopulationGrid();
+			if (!grid250m.value) {
+				new Populationgrid().createPopulationGrid();
+			}
 		};
 
 		/**
@@ -294,12 +296,16 @@ export default {
 			toggleStore.setShowTrees(showTrees.value);
 			const treeService = new Tree();
 
-			showTrees.value
-				? store.postalcode && !dataSourceService.getDataSourceByName('Trees')
-					? treeService.loadTrees()
-					: dataSourceService.changeDataSourceShowByName('Trees', true)
-				: (dataSourceService.changeDataSourceShowByName('Trees', false),
-					buildingService.resetBuildingEntities());
+			if (showTrees.value) {
+				if (store.postalcode && !dataSourceService.getDataSourceByName('Trees')) {
+					treeService.loadTrees();
+				} else {
+					dataSourceService.changeDataSourceShowByName('Trees', true);
+				}
+			} else {
+				dataSourceService.changeDataSourceShowByName('Trees', false);
+				buildingService.resetBuildingEntities();
+			}
 		};
 
 		/**
@@ -339,7 +345,11 @@ export default {
 			if (landCover.value && ndvi.value) disableOtherLayer('landcover');
 
 			toggleStore.setLandCover(landCover.value);
-			landCover.value ? createHSYImageryLayer() : removeLandcover();
+			if (landCover.value) {
+				createHSYImageryLayer();
+			} else {
+				removeLandcover();
+			}
 		};
 
 		/**

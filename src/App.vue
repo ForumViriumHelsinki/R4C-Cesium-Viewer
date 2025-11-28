@@ -139,7 +139,7 @@ const signOut = () => {
 	window.location.href = '/oauth2/sign_out';
 };
 
-const smartReset = () => {
+const _smartReset = () => {
 	// Reset application state without page reload
 	globalStore.setLevel('start');
 	globalStore.setPostalCode(null);
@@ -165,7 +165,9 @@ const returnToPostalCode = () => {
 	const treeService = new Tree();
 	hideTooltip();
 	featurepicker.loadPostalCode();
-	toggleStore.showTrees && treeService.loadTrees();
+	if (toggleStore.showTrees) {
+		treeService.loadTrees();
+	}
 };
 
 const hideTooltip = () => {
@@ -208,7 +210,7 @@ const handleCacheCleared = (sourceId) => {
 };
 
 // Handle data preloading requests
-const handleDataPreload = (sourceId) => {
+const _handleDataPreload = (sourceId) => {
 	console.log(`Preloading requested for: ${sourceId}`);
 	// Could trigger specific preloading for the source
 };

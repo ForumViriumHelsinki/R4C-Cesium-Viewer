@@ -83,10 +83,7 @@ describe('ColdArea Service - Error Handling', { tags: ['@unit', '@coldarea'] }, 
 			expect(mockStore.setIsLoading).toHaveBeenCalledWith(false);
 
 			// Verify error was logged
-			expect(console.error).toHaveBeenCalledWith(
-				'Error loading cold areas:',
-				expect.any(Error)
-			);
+			expect(console.error).toHaveBeenCalledWith('Error loading cold areas:', expect.any(Error));
 		});
 
 		it('should handle invalid JSON response', async () => {

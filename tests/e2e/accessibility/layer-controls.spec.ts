@@ -607,7 +607,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				await cesiumPage.waitForTimeout(300);
 
 				// Initial state
-				const initialChecked = await ndviToggle.isChecked();
+				const _initialChecked = await ndviToggle.isChecked();
 
 				// Toggle on
 				await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' });

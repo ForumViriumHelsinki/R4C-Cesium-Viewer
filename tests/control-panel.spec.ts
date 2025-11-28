@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from './setup/digitransit-mock';
-import { dismissModalIfPresent, waitForLayerLoad } from './helpers/test-helpers';
+import { dismissModalIfPresent } from './helpers/test-helpers';
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();

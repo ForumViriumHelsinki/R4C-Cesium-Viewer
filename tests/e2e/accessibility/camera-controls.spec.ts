@@ -90,7 +90,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 				// Get initial rotation
 				const initialStyle = await compassRing.getAttribute('style');
-				const initialRotation = initialStyle?.match(/rotate\(([^)]+)\)/)?.[1];
+				const _initialRotation = initialStyle?.match(/rotate\(([^)]+)\)/)?.[1];
 
 				// Simulate camera heading change via JavaScript
 				await cesiumPage.evaluate(() => {
@@ -117,7 +117,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 				// Check if rotation changed
 				const updatedStyle = await compassRing.getAttribute('style');
-				const updatedRotation = updatedStyle?.match(/rotate\(([^)]+)\)/)?.[1];
+				const _updatedRotation = updatedStyle?.match(/rotate\(([^)]+)\)/)?.[1];
 
 				// If viewer is available, rotation should change
 				// Note: In mock mode, this may not change
@@ -163,7 +163,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			await helpers.scrollIntoViewportWithRetry(compassControl, { elementName: 'compass' });
 
 			// Get initial box-shadow (for visual feedback comparison)
-			const initialStyles = await compassControl.evaluate((el) => {
+			const _initialStyles = await compassControl.evaluate((el) => {
 				const computed = window.getComputedStyle(el);
 				return {
 					transform: computed.transform,
@@ -193,7 +193,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			await cesiumPage.waitForTimeout(500); // Wait for tooltip to appear
 
 			// Vuetify tooltip should appear
-			const tooltip = cesiumPage.locator('.v-tooltip__content');
+			const _tooltip = cesiumPage.locator('.v-tooltip__content');
 
 			// Tooltip may or may not be visible depending on delay settings
 			// At minimum, verify compass has tooltip activation props
@@ -423,7 +423,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			await expect(compassControl).toBeVisible();
 
 			// Get initial aria-label
-			const initialLabel = await compassControl.getAttribute('aria-label');
+			const _initialLabel = await compassControl.getAttribute('aria-label');
 
 			// Change camera heading
 			await cesiumPage.evaluate(() => {
@@ -648,7 +648,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			await expect(compassControl).toBeVisible();
 
 			// Get initial styles
-			const initialStyles = await compassControl.evaluate((el) => {
+			const _initialStyles = await compassControl.evaluate((el) => {
 				return window.getComputedStyle(el).transform;
 			});
 

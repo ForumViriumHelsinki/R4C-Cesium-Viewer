@@ -290,57 +290,64 @@ export default {
 		// Sync Vue reactive data with toggle store
 		showPlot(newValue) {
 			this.toggleStore.setShowPlot(newValue);
-			newValue ? this.plotService.showAllPlots() : this.plotService.hideAllPlots();
+			if (newValue) {
+				this.plotService.showAllPlots();
+			} else {
+				this.plotService.hideAllPlots();
+			}
 		},
 		gridView(newValue) {
 			this.toggleStore.setGridView(newValue);
-			newValue
-				? (this.store.setView('grid'),
-					(this.showPostalCodeView = false),
-					eventBus.emit('createPopulationGrid'))
-				: (this.store.setView('capitalRegion'), this.reset());
+			if (newValue) {
+				this.store.setView('grid');
+				this.showPostalCodeView = false;
+				eventBus.emit('createPopulationGrid');
+			} else {
+				this.store.setView('capitalRegion');
+				this.reset();
+			}
 		},
-		helsinkiView(newValue) {
-			this.toggleStore.setHelsinkiView(newValue);
+		helsinkiView(_newValue) {
+			this.toggleStore.setHelsinkiView(_newValue);
 			this.capitalRegionViewEvent();
 		},
-		showVegetation(newValue) {
-			this.toggleStore.setShowVegetation(newValue);
+		showVegetation(_newValue) {
+			this.toggleStore.setShowVegetation(_newValue);
 			this.loadVegetationEvent();
 		},
-		showOtherNature(newValue) {
-			this.toggleStore.setShowOtherNature(newValue);
+		showOtherNature(_newValue) {
+			this.toggleStore.setShowOtherNature(_newValue);
 			this.loadOtherNatureEvent();
 		},
-		filterBuildings(newValue) {
+		filterBuildings(_newValue) {
 			this.filterBuildingsEvent();
 		},
-		hideNonSote(newValue) {
-			this.toggleStore.setHideNonSote(newValue);
+		hideNonSote(_newValue) {
+			this.toggleStore.setHideNonSote(_newValue);
 			this.filterBuildingsEvent();
 		},
-		hideLow(newValue) {
-			this.toggleStore.setHideLow(newValue);
+		hideLow(_newValue) {
+			this.toggleStore.setHideLow(_newValue);
 			this.filterBuildingsEvent();
 		},
-		showTrees(newValue) {
-			this.toggleStore.setShowTrees(newValue);
+		showTrees(_newValue) {
+			this.toggleStore.setShowTrees(_newValue);
 			this.loadTreesEvent();
 		},
-		landCover(newValue) {
-			this.toggleStore.setLandCover(newValue);
+		landCover(_newValue) {
+			this.toggleStore.setLandCover(_newValue);
 			this.getLandCoverEvent();
 		},
-		switchView(newValue) {
-			this.toggleStore.setSwitchView(newValue);
+		switchView(_newValue) {
+			this.toggleStore.setSwitchView(_newValue);
 			this.switchViewEvent();
 		},
-		hideColdAreas(newValue) {
+		hideColdAreas(_newValue) {
 			// Add to toggle store if needed
-			// this.toggleStore.setHideColdAreas(newValue);
+			// this.toggleStore.setHideColdAreas(_newValue);
 		},
-		capitalRegionCold(newValue) {
-			this.toggleStore.setCapitalRegionCold(newValue);
+		capitalRegionCold(_newValue) {
+			this.toggleStore.setCapitalRegionCold(_newValue);
 			this.toggleCold();
 		},
 		shouldShowReturn(newValue) {
@@ -378,7 +385,9 @@ export default {
 		returnToPostalCode() {
 			const featurepicker = new Featurepicker();
 			featurepicker.loadPostalCode();
-			this.toggleStore.showTrees && this.treeService.loadTrees();
+			if (this.toggleStore.showTrees) {
+				this.treeService.loadTrees();
+			}
 			eventBus.emit('hideBuilding');
 		},
 		initPostalCodeView() {
@@ -401,7 +410,9 @@ export default {
 			const checked = document.getElementById('capitalRegionColdToggle').checked;
 			this.toggleStore.setCapitalRegionCold(checked);
 
-			!checked && this.reset();
+			if (!checked) {
+				this.reset();
+			}
 		},
 
 		/**
@@ -432,10 +443,12 @@ export default {
 			const landcover = document.getElementById('landCoverToggle').checked;
 			this.toggleStore.setLandCover(landcover);
 
-			landcover
-				? (this.viewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true),
-					createHSYImageryLayer())
-				: removeLandcover();
+			if (landcover) {
+				this.viewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
+				createHSYImageryLayer();
+			} else {
+				removeLandcover();
+			}
 		},
 
 		/**
@@ -445,11 +458,14 @@ export default {
 			const gridView = document.getElementById('gridViewToggle').checked;
 			this.toggleStore.setGridView(gridView);
 
-			gridView
-				? (this.store.setView('grid'),
-					(this.showPostalCodeView = false),
-					eventBus.emit('createPopulationGrid'))
-				: (this.store.setView('capitalRegion'), this.reset());
+			if (gridView) {
+				this.store.setView('grid');
+				this.showPostalCodeView = false;
+				eventBus.emit('createPopulationGrid');
+			} else {
+				this.store.setView('capitalRegion');
+				this.reset();
+			}
 		},
 
 		/**
@@ -460,7 +476,11 @@ export default {
 			const showPlots = document.getElementById('showPlotToggle').checked;
 			this.toggleStore.setShowPlot(showPlots);
 
-			showPlots ? this.plotService.showAllPlots() : this.plotService.hideAllPlots();
+			if (showPlots) {
+				this.plotService.showAllPlots();
+			} else {
+				this.plotService.hideAllPlots();
+			}
 		},
 
 		/**
@@ -472,13 +492,17 @@ export default {
 			const showTrees = document.getElementById('showTreesToggle').checked;
 			this.toggleStore.setShowTrees(showTrees);
 
-			showTrees
-				? this.store.postalcode && !this.dataSourceService.getDataSourceByName('Trees')
-					? this.treeService.loadTrees(this.store.postalcode)
-					: this.dataSourceService.changeDataSourceShowByName('Trees', true)
-				: (this.dataSourceService.changeDataSourceShowByName('Trees', false),
-					this.plotService.showAllPlots(),
-					this.buildingService.resetBuildingEntities());
+			if (showTrees) {
+				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Trees')) {
+					this.treeService.loadTrees(this.store.postalcode);
+				} else {
+					this.dataSourceService.changeDataSourceShowByName('Trees', true);
+				}
+			} else {
+				this.dataSourceService.changeDataSourceShowByName('Trees', false);
+				this.plotService.showAllPlots();
+				this.buildingService.resetBuildingEntities();
+			}
 		},
 
 		/**
@@ -545,11 +569,15 @@ export default {
 				);
 
 				if (buildingsDataSource) {
-					hideNonSote || hideNewBuildings || hideLow
-						? this.buildingService.filterBuildings(buildingsDataSource)
-						: this.buildingService.showAllBuildings(buildingsDataSource);
+					if (hideNonSote || hideNewBuildings || hideLow) {
+						this.buildingService.filterBuildings(buildingsDataSource);
+					} else {
+						this.buildingService.showAllBuildings(buildingsDataSource);
+					}
 
-					!this.toggleStore.helsinkiView && eventBus.emit('updateScatterPlot');
+					if (!this.toggleStore.helsinkiView) {
+						eventBus.emit('updateScatterPlot');
+					}
 				}
 			}
 		},

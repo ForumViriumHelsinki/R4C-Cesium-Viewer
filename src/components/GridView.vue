@@ -137,13 +137,11 @@ import Camera from '../services/camera.js';
 import BuildingGridChart from './BuildingGridChart.vue';
 import SurveyScatterPlot from './SurveyScatterPlot.vue';
 import SosEco250mGrid from './SosEco250mGrid.vue'; // Import the 250mGrid component
-import VulnerabilityChart from './VulnerabilityChart.vue';
 
 export default {
 	components: {
 		SurveyScatterPlot,
 		SosEco250mGrid,
-		VulnerabilityChart,
 		BuildingGridChart,
 	},
 	data() {

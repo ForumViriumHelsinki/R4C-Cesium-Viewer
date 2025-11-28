@@ -21,7 +21,7 @@ const mockExternalAPIs = () => {
 
 describe('API Integration Tests', () => {
 	let testServer;
-	const TEST_BASE_URL = 'http://localhost:5173';
+	const _TEST_BASE_URL = 'http://localhost:5173';
 
 	beforeAll(async () => {
 		mockExternalAPIs();
@@ -155,7 +155,7 @@ describe('API Integration Tests', () => {
 
 			const globalStore = useGlobalStore();
 			const toggleStore = useToggleStore();
-			const buildingStore = useBuildingStore();
+			const _buildingStore = useBuildingStore();
 
 			// Test cross-store state consistency
 			globalStore.setLevel('building');

@@ -224,7 +224,7 @@ export default class FeaturePicker {
 	 * @returns {Promise<Object|null>} Cached data or null
 	 * @private
 	 */
-	async checkCacheForPostalCode(cacheKey) {
+	async checkCacheForPostalCode(_cacheKey) {
 		try {
 			// Check if cacheWarmer has preloaded this data
 			const warmed = cacheWarmer.warmedPostalCodes.has(this.store.postalcode);
@@ -492,9 +492,11 @@ export default class FeaturePicker {
 			// Update application state to building level
 			this.store.setLevel('building');
 			this.store.setPostalCode(properties._postinumero._value);
-			this.toggleStore.helsinkiView
-				? eventBus.emit('hideHelsinki')
-				: eventBus.emit('hideCapitalRegion');
+			if (this.toggleStore.helsinkiView) {
+				eventBus.emit('hideHelsinki');
+			} else {
+				eventBus.emit('hideCapitalRegion');
+			}
 			eventBus.emit('showBuilding');
 			this.elementsDisplayService.setBuildingDisplay('none');
 			this.buildingService.resetBuildingOutline();

@@ -283,27 +283,35 @@ export default class Tree {
 		switch (description) {
 			case 'Puusto yli 20 m':
 				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.7);
-				height
-					? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
-					: extrudeTree(entity, 22.5);
+				if (height) {
+					extrudeTree(entity, entity._properties._korkeus_ka_m._value);
+				} else {
+					extrudeTree(entity, 22.5);
+				}
 				break;
 			case 'puusto, 15 m - 20 m':
 				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.6);
-				height
-					? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
-					: extrudeTree(entity, 17.5);
+				if (height) {
+					extrudeTree(entity, entity._properties._korkeus_ka_m._value);
+				} else {
+					extrudeTree(entity, 17.5);
+				}
 				break;
 			case 'puusto, 10 m - 15 m':
 				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.55);
-				height
-					? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
-					: extrudeTree(entity, 12.5);
+				if (height) {
+					extrudeTree(entity, entity._properties._korkeus_ka_m._value);
+				} else {
+					extrudeTree(entity, 12.5);
+				}
 				break;
 			case 'puusto, 2 m - 10 m':
 				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.5);
-				height
-					? extrudeTree(entity, entity._properties._korkeus_ka_m._value)
-					: extrudeTree(entity, 6);
+				if (height) {
+					extrudeTree(entity, entity._properties._korkeus_ka_m._value);
+				} else {
+					extrudeTree(entity, 6);
+				}
 				break;
 		}
 	}

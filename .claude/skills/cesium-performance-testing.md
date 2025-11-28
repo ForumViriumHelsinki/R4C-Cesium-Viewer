@@ -229,7 +229,12 @@ Vuetify overlays (dialogs, loading spinners) can remain in DOM even when hidden:
 
 ```html
 <!-- Still in DOM but hidden -->
-<div class="v-overlay v-overlay--active" style="display: none;">...</div>
+<div
+	class="v-overlay v-overlay--active"
+	style="display: none;"
+>
+	...
+</div>
 ```
 
 **Impact**:

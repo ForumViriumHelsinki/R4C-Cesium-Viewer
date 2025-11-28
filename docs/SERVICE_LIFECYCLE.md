@@ -15,14 +15,17 @@ Several services in the application implement `destroy()` methods to clean up re
 ### geocoding.js
 
 **Resources managed:**
+
 - 3 event listeners (keyup, click, input)
 - DOM element references (searchInput, searchButton, searchResults)
 
 **Lifecycle:**
+
 - **Created:** When UnifiedSearch component mounts
 - **Destroyed:** When UnifiedSearch component unmounts
 
 **Cleanup method:**
+
 ```javascript
 destroy() {
   if (this.searchInput) {
@@ -43,43 +46,47 @@ destroy() {
 ```
 
 **Implementation in component:**
+
 ```vue
 <!-- src/components/UnifiedSearch.vue -->
 <script>
 import Geocoding from '@/services/geocoding.js';
 
 export default {
-  setup() {
-    let geocodingService = null;
+	setup() {
+		let geocodingService = null;
 
-    onMounted(() => {
-      geocodingService = new Geocoding();
-      // Use the service...
-    });
+		onMounted(() => {
+			geocodingService = new Geocoding();
+			// Use the service...
+		});
 
-    onBeforeUnmount(() => {
-      if (geocodingService) {
-        geocodingService.destroy();
-        geocodingService = null;
-      }
-    });
-  }
-}
+		onBeforeUnmount(() => {
+			if (geocodingService) {
+				geocodingService.destroy();
+				geocodingService = null;
+			}
+		});
+	},
+};
 </script>
 ```
 
 ### backgroundPreloader.js
 
 **Resources managed:**
+
 - 5 document-level event listeners
 - Idle timer (setTimeout)
 - Map collections (landcoverLayersMap, floodLayersMap)
 
 **Lifecycle:**
+
 - **Created:** During application initialization in CesiumViewer
 - **Destroyed:** When application unmounts (page navigation, tab close)
 
 **Cleanup method:**
+
 ```javascript
 destroy() {
   this.stopBackgroundLoading();
@@ -102,24 +109,25 @@ destroy() {
 ```
 
 **Implementation in component:**
+
 ```vue
 <!-- src/pages/CesiumViewer.vue -->
 <script>
 import cacheWarmer from '@/services/cacheWarmer.js';
 
 export default {
-  setup() {
-    onMounted(async () => {
-      // cacheWarmer is singleton, initialized during mount
-      await cacheWarmer.start();
-    });
+	setup() {
+		onMounted(async () => {
+			// cacheWarmer is singleton, initialized during mount
+			await cacheWarmer.start();
+		});
 
-    onBeforeUnmount(() => {
-      // Clean up when page/app unmounts
-      cacheWarmer.destroy();
-    });
-  }
-}
+		onBeforeUnmount(() => {
+			// Clean up when page/app unmounts
+			cacheWarmer.destroy();
+		});
+	},
+};
 </script>
 ```
 
@@ -130,44 +138,46 @@ export default {
 These components manage their own DOM event listeners directly in the component lifecycle:
 
 **Pattern used:**
+
 ```vue
 <script>
 export default {
-  data() {
-    return {
-      // Store bound function references for cleanup
-      boundHandleNumericalChange: null,
-      boundHandleSelectChange: null,
-      // ... more bound functions
-    };
-  },
+	data() {
+		return {
+			// Store bound function references for cleanup
+			boundHandleNumericalChange: null,
+			boundHandleSelectChange: null,
+			// ... more bound functions
+		};
+	},
 
-  mounted() {
-    // Create bound function references
-    this.boundHandleNumericalChange = this.handleNumericalChange.bind(this);
+	mounted() {
+		// Create bound function references
+		this.boundHandleNumericalChange = this.handleNumericalChange.bind(this);
 
-    // Add event listeners
-    const element = document.getElementById('someElement');
-    if (element) {
-      element.addEventListener('change', this.boundHandleNumericalChange);
-    }
-  },
+		// Add event listeners
+		const element = document.getElementById('someElement');
+		if (element) {
+			element.addEventListener('change', this.boundHandleNumericalChange);
+		}
+	},
 
-  beforeUnmount() {
-    // Remove event listeners using the same bound references
-    const element = document.getElementById('someElement');
-    if (element) {
-      element.removeEventListener('change', this.boundHandleNumericalChange);
-    }
+	beforeUnmount() {
+		// Remove event listeners using the same bound references
+		const element = document.getElementById('someElement');
+		if (element) {
+			element.removeEventListener('change', this.boundHandleNumericalChange);
+		}
 
-    // Nullify references
-    this.boundHandleNumericalChange = null;
-  }
-}
+		// Nullify references
+		this.boundHandleNumericalChange = null;
+	},
+};
 </script>
 ```
 
 **Why this pattern?**
+
 - Event listeners require the **exact same function reference** for removal
 - Binding creates a new function, so we store it for later cleanup
 - Checking element existence prevents errors if DOM changed
@@ -179,9 +189,11 @@ export default {
 **When to use:** Services that should exist once for the entire application lifetime.
 
 **Examples:**
+
 - `cacheWarmer` (backgroundPreloader.js)
 
 **Pattern:**
+
 ```javascript
 // Service file exports singleton instance
 export default new BackgroundPreloader();
@@ -198,9 +210,11 @@ onBeforeUnmount(() => cacheWarmer.destroy());
 **When to use:** Services that are scoped to a single component's lifecycle.
 
 **Examples:**
+
 - Geocoding service in UnifiedSearch
 
 **Pattern:**
+
 ```javascript
 // Service file exports class
 export default class Geocoding { ... }
@@ -295,13 +309,13 @@ Add unit tests verifying cleanup:
 
 ```javascript
 it('should cleanup all resources on destroy', () => {
-  const service = new MyService();
-  const removeListenerSpy = vi.spyOn(element, 'removeEventListener');
+	const service = new MyService();
+	const removeListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-  service.destroy();
+	service.destroy();
 
-  expect(removeListenerSpy).toHaveBeenCalledWith('click', expect.any(Function));
-  expect(service.timer).toBeNull();
+	expect(removeListenerSpy).toHaveBeenCalledWith('click', expect.any(Function));
+	expect(service.timer).toBeNull();
 });
 ```
 
@@ -381,12 +395,12 @@ Use Chrome DevTools to verify cleanup:
 
 ## Service Cleanup Summary Table
 
-| Service | Resources | Created By | Destroyed By | Pattern |
-|---------|-----------|------------|--------------|---------|
-| geocoding.js | 3 event listeners | UnifiedSearch | UnifiedSearch.beforeUnmount() | Per-component |
-| backgroundPreloader.js | 5 listeners + timer | CesiumViewer | CesiumViewer.beforeUnmount() | Singleton |
-| GridView.vue | 6 DOM listeners | GridView (self) | GridView.beforeUnmount() | Component-managed |
-| Scatterplot.vue | 2 DOM + 1 eventBus | Scatterplot (self) | Scatterplot.beforeUnmount() | Component-managed |
+| Service                | Resources           | Created By         | Destroyed By                  | Pattern           |
+| ---------------------- | ------------------- | ------------------ | ----------------------------- | ----------------- |
+| geocoding.js           | 3 event listeners   | UnifiedSearch      | UnifiedSearch.beforeUnmount() | Per-component     |
+| backgroundPreloader.js | 5 listeners + timer | CesiumViewer       | CesiumViewer.beforeUnmount()  | Singleton         |
+| GridView.vue           | 6 DOM listeners     | GridView (self)    | GridView.beforeUnmount()      | Component-managed |
+| Scatterplot.vue        | 2 DOM + 1 eventBus  | Scatterplot (self) | Scatterplot.beforeUnmount()   | Component-managed |
 
 ## Questions?
 

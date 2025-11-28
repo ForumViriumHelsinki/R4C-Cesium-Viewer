@@ -522,7 +522,7 @@ const loadTrees = async () => {
 				const treeService = new Tree();
 
 				// Create a promise-based wrapper for the tree loading
-				const treeData = await new Promise((resolve, reject) => {
+				const treeData = await new Promise((resolve, _reject) => {
 					const originalLoadTrees = treeService.loadTrees.bind(treeService);
 
 					// Override the tree service to provide progress updates

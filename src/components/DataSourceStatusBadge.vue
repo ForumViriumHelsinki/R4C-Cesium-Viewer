@@ -4,9 +4,9 @@
 		location="bottom end"
 		:offset="8"
 	>
-		<template #activator="{ props }">
+		<template #activator="{ props: activatorProps }">
 			<v-btn
-				v-bind="props"
+				v-bind="activatorProps"
 				size="small"
 				variant="text"
 				class="status-badge-btn"

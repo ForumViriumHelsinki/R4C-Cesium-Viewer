@@ -591,7 +591,7 @@ const focusOnCurrent = () => {
  *
  * @returns {void}
  */
-const handleClickOutside = () => {
+const _handleClickOutside = () => {
 	showResults.value = false;
 };
 

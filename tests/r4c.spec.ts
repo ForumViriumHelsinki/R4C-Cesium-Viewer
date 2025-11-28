@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from './setup/digitransit-mock';
-import { API_ENDPOINTS } from './config/constants';
 import {
 	dismissModalIfPresent,
 	clickOnMap,

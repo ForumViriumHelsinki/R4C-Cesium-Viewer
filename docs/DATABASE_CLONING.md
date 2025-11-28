@@ -105,6 +105,7 @@ skaffold dev -p e2e-with-prod-data --port-forward
 #### Kubernetes Job: `db-clone-from-gcs-job.yaml`
 
 Automated restore job that:
+
 - Waits for PostgreSQL to be ready
 - Downloads latest dump from GCS using `gsutil`
 - Restores dump using `pg_restore` with parallel jobs (4 workers)
@@ -114,6 +115,7 @@ Automated restore job that:
 - Runs ANALYZE for query optimization
 
 **Format:** Uses PostgreSQL custom format (`.dump`) which provides:
+
 - Parallel restore with `-j` flag for faster performance
 - Selective table restore capability
 - Better compression than gzipped SQL
@@ -128,6 +130,7 @@ Automated restore job that:
 #### Skaffold Profile: `e2e-with-prod-data`
 
 Pre-configured deployment profile that includes:
+
 - PostgreSQL StatefulSet with PostGIS
 - Database clone job from GCS
 - pygeoapi with database connection
@@ -258,6 +261,7 @@ gsutil ls gs://fvh-database-dumps/
 Production environments should use Workload Identity instead of service account keys:
 
 1. **Create GCS service account** (in infrastructure repo):
+
    ```terraform
    resource "google_service_account" "db_clone" {
      account_id   = "db-clone-reader"
@@ -266,6 +270,7 @@ Production environments should use Workload Identity instead of service account 
    ```
 
 2. **Grant bucket read access**:
+
    ```terraform
    resource "google_storage_bucket_iam_member" "db_clone" {
      bucket = "fvh-database-dumps"
@@ -275,6 +280,7 @@ Production environments should use Workload Identity instead of service account 
    ```
 
 3. **Enable Workload Identity binding**:
+
    ```terraform
    resource "google_service_account_iam_member" "workload_identity" {
      service_account_id = google_service_account.db_clone.name
@@ -284,6 +290,7 @@ Production environments should use Workload Identity instead of service account 
    ```
 
 4. **Update Kubernetes ServiceAccount** in `k8s/serviceaccount.yaml`:
+
    ```yaml
    apiVersion: v1
    kind: ServiceAccount
@@ -299,7 +306,7 @@ Production environments should use Workload Identity instead of service account 
    spec:
      template:
        spec:
-         serviceAccountName: database-clone-sa  # Uncomment this line
+         serviceAccountName: database-clone-sa # Uncomment this line
    ```
 
 ### Scheduled Dump Creation
@@ -315,11 +322,13 @@ See: [Infrastructure Repository Issue](#infrastructure-repo-issue) for configura
 #### "No dump files found"
 
 **Symptoms:**
+
 ```
 ❌ No dump files found in gs://fvh-database-dumps/regions4climate*.dump
 ```
 
 **Solutions:**
+
 1. Verify bucket name: `gsutil ls gs://fvh-database-dumps/`
 2. Check file naming matches expected format: `regions4climate-YYYY-MM-DD.dump`
 3. Ensure dumps exist (infrastructure automation may not be configured yet)
@@ -328,11 +337,13 @@ See: [Infrastructure Repository Issue](#infrastructure-repo-issue) for configura
 #### "Access Denied" when downloading from GCS
 
 **Symptoms:**
+
 ```
 AccessDeniedException: 403 Forbidden
 ```
 
 **Solutions:**
+
 1. Re-authenticate: `gcloud auth login`
 2. Verify you're using correct project: `gcloud config get-value project`
 3. Request bucket access from infrastructure team
@@ -341,11 +352,13 @@ AccessDeniedException: 403 Forbidden
 #### Job fails with "cannot connect to database"
 
 **Symptoms:**
+
 ```
 ❌ Cannot connect to PostgreSQL at postgresql:5432
 ```
 
 **Solutions:**
+
 1. Check PostgreSQL is running: `kubectl get pods -n regions4climate`
 2. Check PostgreSQL logs: `kubectl logs -n regions4climate postgresql-0`
 3. Verify secret exists: `kubectl get secret -n regions4climate postgresql`
@@ -354,14 +367,16 @@ AccessDeniedException: 403 Forbidden
 #### Restore takes too long / times out
 
 **Symptoms:**
+
 - Job timeout after 10+ minutes
 - Large dumps (>1GB) fail to restore
 
 **Solutions:**
+
 1. Increase job timeout in `db-clone-from-gcs-job.yaml`:
    ```yaml
    spec:
-     activeDeadlineSeconds: 3600  # 1 hour
+     activeDeadlineSeconds: 3600 # 1 hour
    ```
 2. Increase resource limits:
    ```yaml
@@ -375,10 +390,12 @@ AccessDeniedException: 403 Forbidden
 #### Database exists but has no data
 
 **Symptoms:**
+
 - Database created successfully
 - Table count is 0 or very low
 
 **Solutions:**
+
 1. Check restore logs for errors: `kubectl logs -n regions4climate job/db-clone-from-gcs`
 2. Verify dump file isn't corrupted: Download locally and inspect with `gunzip -t`
 3. Check dump was created correctly (see infrastructure repo issue)
@@ -403,11 +420,13 @@ kubectl logs -n regions4climate job/db-clone-from-gcs --all-containers=true
 ### For Development
 
 1. **Use the Skaffold profile** for consistent environments:
+
    ```bash
    skaffold dev -p e2e-with-prod-data --port-forward
    ```
 
 2. **Delete and recreate regularly** to ensure fresh data:
+
    ```bash
    skaffold delete -p e2e-with-prod-data
    skaffold dev -p e2e-with-prod-data --port-forward
@@ -418,12 +437,14 @@ kubectl logs -n regions4climate job/db-clone-from-gcs --all-containers=true
 ### For E2E Testing
 
 1. **Use specific dump dates** for reproducible tests:
+
    ```bash
    # In CI/CD, pin to specific date
    ./scripts/restore-from-gcs-dump.sh --dump-date 2025-01-14
    ```
 
 2. **Verify data state before tests**:
+
    ```bash
    # Check critical tables exist and have data
    psql -c "SELECT COUNT(*) FROM r4c_hsy_building_current;"
@@ -443,7 +464,7 @@ name: E2E Tests with Production Data
 
 on:
   schedule:
-    - cron: '0 2 * * 1'  # Weekly on Monday at 2am
+    - cron: '0 2 * * 1' # Weekly on Monday at 2am
   workflow_dispatch:
 
 jobs:
@@ -479,6 +500,7 @@ jobs:
 ### Security
 
 1. **Never commit dumps to version control** - use `.gitignore`:
+
    ```gitignore
    *.dump
    dump-*.dump
@@ -504,6 +526,7 @@ The following issue should be created in your infrastructure repository to confi
 > We need to configure automated weekly database dumps from production PostgreSQL to GCS bucket for E2E testing purposes.
 >
 > **Requirements:**
+>
 > - Schedule: Weekly dumps (suggested: Sunday 2 AM UTC to minimize impact)
 > - Bucket: `fvh-database-dumps`
 > - Naming: `regions4climate-YYYY-MM-DD.dump`
@@ -515,6 +538,7 @@ The following issue should be created in your infrastructure repository to confi
 > Use Terraform to configure Cloud Scheduler + Cloud Run job:
 >
 > 1. **Storage Bucket:**
+>
 >    ```terraform
 >    resource "google_storage_bucket" "db_dumps" {
 >      name     = "fvh-database-dumps"
@@ -532,6 +556,7 @@ The following issue should be created in your infrastructure repository to confi
 >    ```
 >
 > 2. **Cloud Scheduler Job:**
+>
 >    ```terraform
 >    resource "google_cloud_scheduler_job" "db_dump" {
 >      name        = "regions4climate-weekly-dump"
@@ -555,11 +580,13 @@ The following issue should be created in your infrastructure repository to confi
 >    - Upload to GCS with date-stamped filename
 >
 > **Testing:**
+>
 > - Manual trigger: `gcloud scheduler jobs run regions4climate-weekly-dump`
 > - Verify dump in bucket: `gsutil ls gs://fvh-database-dumps/`
 > - Test restore: `./scripts/restore-from-gcs-dump.sh` (in app repo)
 >
 > **Related:**
+>
 > - Application repository PR: [link to this PR]
 > - Database cloning documentation: `docs/DATABASE_CLONING.md`
 

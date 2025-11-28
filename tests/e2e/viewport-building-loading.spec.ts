@@ -40,7 +40,7 @@ async function enableViewportStreaming(page) {
 			if (pinia) {
 				const stores = (pinia as any)._s;
 				const toggleStore = Array.from(stores.values()).find((store: any) =>
-					store.hasOwnProperty('viewportTileMode')
+					Object.prototype.hasOwnProperty.call(store, 'viewportTileMode')
 				);
 
 				if (toggleStore) {
@@ -201,7 +201,7 @@ test.describe('Viewport Building Loading', () => {
 						east: Cesium.Math.toDegrees(rect.east),
 						north: Cesium.Math.toDegrees(rect.north),
 					};
-				} catch (e) {
+				} catch (_e) {
 					// Fallback: return camera position
 					const position = viewer.camera.positionCartographic;
 					if (!position) return null;
@@ -384,7 +384,7 @@ test.describe('Viewport Building Loading', () => {
 			await page.waitForTimeout(1000);
 
 			// Get initial visible tile count
-			const initialVisible = await page.evaluate(() => {
+			const _initialVisible = await page.evaluate(() => {
 				const viewer = (window as any).cesiumViewer;
 				if (!viewer) return 0;
 

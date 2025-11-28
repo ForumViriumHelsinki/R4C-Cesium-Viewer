@@ -12,8 +12,8 @@
  * 2 - Error reading or parsing reports
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Import thresholds from shared config
 // Note: Using require for CommonJS compatibility
@@ -29,7 +29,7 @@ try {
 
 	if (criticalMatch) CRITICAL_THRESHOLD = parseInt(criticalMatch[1]);
 	if (warningMatch) WARNING_THRESHOLD = parseInt(warningMatch[1]);
-} catch (error) {
+} catch (_error) {
 	console.warn('⚠️  Could not load config from performance-config.ts, using defaults');
 }
 

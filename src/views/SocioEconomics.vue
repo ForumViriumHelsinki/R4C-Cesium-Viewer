@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import SocioEconomicsSelect from '../components/SocioEconomicsSelect.vue';
 import SocioEconomicsChart from '../components/SocioEconomicsChart.vue';
 

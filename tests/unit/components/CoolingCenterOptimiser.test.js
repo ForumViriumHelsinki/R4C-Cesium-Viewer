@@ -5,7 +5,7 @@ import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 import CoolingCenterOptimiser from '../../../src/components/CoolingCenterOptimiser.vue';
 import { createPinia } from 'pinia';
-import { TEST_COORDINATES, DATASET_SIZES, CAMERA_CONSTANTS } from '../../config/constants';
+import { TEST_COORDINATES, DATASET_SIZES } from '../../config/constants';
 
 // Mock Cesium
 vi.mock('cesium', () => {

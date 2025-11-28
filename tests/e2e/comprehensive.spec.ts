@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { PlaywrightPage } from '../types/playwright';
-import { API_ENDPOINTS, VIEWPORTS } from '../config/constants';
+import { VIEWPORTS } from '../config/constants';
 import {
 	dismissModalIfPresent,
 	waitForCesiumReady,
@@ -104,7 +103,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 							// Verify map is still functional
 							await expect(page.locator('canvas')).toBeVisible();
 						}
-					} catch (error) {
+					} catch (_error) {
 						// Button might not be clickable or cause navigation issues
 					}
 				}
@@ -203,7 +202,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 						const hasInfo = await page.locator('#printContainer').isVisible();
 						console.log(`Building info available at ${location.name}: ${hasInfo}`);
 					}
-				} catch (error) {
+				} catch (_error) {
 					// No building data at this location
 				}
 			}
@@ -229,7 +228,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 					// Verify grid is displayed
 					await expect(page.locator('canvas')).toBeVisible();
 				}
-			} catch (error) {
+			} catch (_error) {
 				test.skip('Statistical grid not available');
 			}
 		});
@@ -257,7 +256,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 					await expect(heatVulnButton).toBeVisible();
 				}
-			} catch (error) {
+			} catch (_error) {
 				test.skip('Heat vulnerability data not available');
 			}
 		});
@@ -289,7 +288,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 						await button.click();
 						await page.waitForTimeout(1500);
 					}
-				} catch (error) {
+				} catch (_error) {
 					// Button not available
 				}
 			}
@@ -362,7 +361,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 					// Clear the input
 					await searchInput.fill('');
 				}
-			} catch (error) {
+			} catch (_error) {
 				// Search input not available
 			}
 
@@ -451,7 +450,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 						// Verify the map is still functional
 						await expect(page.locator('canvas')).toBeVisible();
 					}
-				} catch (error) {
+				} catch (_error) {
 					// Option not available
 				}
 			}
@@ -483,7 +482,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 							}
 						}
 					}
-				} catch (error) {
+				} catch (_error) {
 					// Timeline controls not found
 				}
 			}

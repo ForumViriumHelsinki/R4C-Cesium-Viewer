@@ -149,7 +149,7 @@ describe('BuildingInformation component', { tags: ['@unit', '@accessibility'] },
 
 			// Verify the template structure contains accessibility attributes
 			// The tooltip element should have role="tooltip", aria-live="polite", aria-label="Building information"
-			const html = wrapper.html();
+			const _html = wrapper.html();
 			// When showTooltip is false, the element won't be rendered, but we can verify
 			// the component mounts without errors and has correct structure
 			expect(wrapper.vm).toBeDefined();
@@ -234,7 +234,7 @@ describe('BuildingInformation component', { tags: ['@unit', '@accessibility'] },
 			wrapper = mount(BuildingInformation);
 
 			// Verify dark theme styling exists in component
-			const html = wrapper.html();
+			const _html = wrapper.html();
 			expect(wrapper.vm).toBeDefined();
 		});
 
@@ -347,13 +347,13 @@ describe('BuildingInformation component', { tags: ['@unit', '@accessibility'] },
 
 describe('BuildingInformation temperature lookup', { tags: ['@unit'] }, () => {
 	let wrapper;
-	let buildingStore;
+	let _buildingStore;
 	let globalStore;
 
 	beforeEach(() => {
 		setActivePinia(createPinia());
 		globalStore = useGlobalStore();
-		buildingStore = useBuildingStore();
+		_buildingStore = useBuildingStore();
 
 		// Create minimal mock viewer
 		globalStore.setCesiumViewer({

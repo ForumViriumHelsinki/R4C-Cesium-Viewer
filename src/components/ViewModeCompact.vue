@@ -9,41 +9,41 @@
 			class="view-toggle-group"
 		>
 			<v-btn
-value="capitalRegionView"
-size="small"
-@click="onToggleChange('capitalRegionView')"
->
+				value="capitalRegionView"
+				size="small"
+				@click="onToggleChange('capitalRegionView')"
+			>
 				<v-icon
-start
-size="16"
->
-mdi-city
-</v-icon>
+					start
+					size="16"
+				>
+					mdi-city
+				</v-icon>
 				Capital Region
 			</v-btn>
 
 			<v-btn
-value="gridView"
-size="small"
-@click="onToggleChange('gridView')"
->
+				value="gridView"
+				size="small"
+				@click="onToggleChange('gridView')"
+			>
 				<v-icon
-start
-size="16"
->
-mdi-grid
-</v-icon>
+					start
+					size="16"
+				>
+					mdi-grid
+				</v-icon>
 				Statistical Grid
 			</v-btn>
 		</v-btn-toggle>
 
 		<!-- Contextual Info Chip -->
 		<v-chip
-size="small"
-:color="getViewModeColor()"
-variant="tonal"
-class="coverage-chip"
->
+			size="small"
+			:color="getViewModeColor()"
+			variant="tonal"
+			class="coverage-chip"
+		>
 			{{ getCoverageText() }}
 		</v-chip>
 	</div>

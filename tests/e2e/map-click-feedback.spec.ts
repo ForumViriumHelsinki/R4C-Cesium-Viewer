@@ -77,10 +77,10 @@ async function resetStoreState(cesiumPage: any) {
 
 cesiumDescribe('Map Click Loading Overlay', () => {
 	cesiumTest.use({ tag: ['@e2e', '@interaction', '@accessibility', '@performance'] });
-	let helpers: AccessibilityTestHelpers;
+	let _helpers: AccessibilityTestHelpers;
 
 	cesiumTest.beforeEach(async ({ cesiumPage }) => {
-		helpers = new AccessibilityTestHelpers(cesiumPage);
+		_helpers = new AccessibilityTestHelpers(cesiumPage);
 		// Cesium is already initialized by the fixture
 		// Reset store state before each test
 		await resetStoreState(cesiumPage);

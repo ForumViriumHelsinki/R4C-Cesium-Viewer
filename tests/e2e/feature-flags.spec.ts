@@ -61,7 +61,7 @@ test.describe('Feature Flags Panel', () => {
 		}
 	});
 
-	test('Toggle a feature flag and verify persistence', async ({ page, context }) => {
+	test('Toggle a feature flag and verify persistence', async ({ page, context: _context }) => {
 		// Open feature flags panel
 		const featureFlagsButton = page.getByRole('button', {
 			name: /Feature Flags/i,

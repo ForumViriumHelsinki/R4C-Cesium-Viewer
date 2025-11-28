@@ -419,7 +419,10 @@ describe('globalStore', () => {
 			expect(store.errorNotification.show).toBe(true);
 			expect(store.errorNotification.message).toBe('Test error message');
 			expect(store.errorNotification.context).toBe('Technical context details');
-			expect(consoleSpy).toHaveBeenCalledWith('[GlobalStore] Error context:', 'Technical context details');
+			expect(consoleSpy).toHaveBeenCalledWith(
+				'[GlobalStore] Error context:',
+				'Technical context details'
+			);
 
 			consoleSpy.mockRestore();
 		});
