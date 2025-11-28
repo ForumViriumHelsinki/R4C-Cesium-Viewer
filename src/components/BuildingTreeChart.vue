@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import { onMounted, ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import * as d3 from 'd3';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';

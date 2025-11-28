@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from './setup/digitransit-mock';
-import { TIMEOUTS, VIEWPORTS, BUNDLE_SIZE_BUDGETS, WEB_VITALS_BUDGETS } from './config/constants';
+import { BUNDLE_SIZE_BUDGETS, WEB_VITALS_BUDGETS } from './config/constants';
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
@@ -55,7 +55,7 @@ test.describe('Loading Performance and User Experience', () => {
 		// Loading indicators should eventually disappear
 		if ((await loadingIndicators.count()) > 0) {
 			// Check if loaders are hidden after loading
-			const stillVisible = await loadingIndicators.filter({ hasText: /./ }).count();
+			const _stillVisible = await loadingIndicators.filter({ hasText: /./ }).count();
 			// Some loaders might still be in DOM but hidden
 		}
 	});

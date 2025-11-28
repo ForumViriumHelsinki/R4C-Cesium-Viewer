@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { chromium, Browser, Page } from 'playwright';
-import { TIMEOUTS, PERFORMANCE_THRESHOLDS, API_ENDPOINTS } from '../config/constants';
 
 // Localhost URL for performance tests
 const LOCALHOST_URL = 'http://localhost:5173';
@@ -36,7 +35,7 @@ const PERF_CONFIG = {
  * Helper function to measure performance with warmup runs
  * Warmup runs eliminate cold start effects and JIT compilation noise
  */
-async function measureWithStats(
+async function _measureWithStats(
 	fn: () => Promise<void>,
 	options = { iterations: 5, warmup: 2 }
 ): Promise<{ mean: number; p95: number; stddev: number }> {

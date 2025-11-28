@@ -4,7 +4,7 @@
  *
  * @tags @e2e @accessibility
  */
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from '../../setup/digitransit-mock';
 
 // Setup digitransit mocking for all tests in this file
@@ -67,8 +67,8 @@ test.describe('Building Hover Information', () => {
 			await page.waitForTimeout(3000);
 
 			// Check tooltip styling for accessibility
-			const tooltipStyle = await page.evaluate(() => {
-				const style = document.createElement('style');
+			const _tooltipStyle = await page.evaluate(() => {
+				const _style = document.createElement('style');
 				// Verify tooltip uses high contrast colors
 				// Background: rgba(30, 30, 30, 0.95) - dark background
 				// Text: white
@@ -79,8 +79,8 @@ test.describe('Building Hover Information', () => {
 				};
 			});
 
-			expect(tooltipStyle.expectedBackground).toBeDefined();
-			expect(tooltipStyle.expectedTextColor).toBe('white');
+			expect(_tooltipStyle.expectedBackground).toBeDefined();
+			expect(_tooltipStyle.expectedTextColor).toBe('white');
 		});
 
 		test('tooltip should not block keyboard interaction', async ({ page }) => {
@@ -308,7 +308,7 @@ test.describe('Building Hover Information', () => {
 			await page.waitForTimeout(3000);
 
 			// Now buildings should be loaded (buildingStore.buildingFeatures populated)
-			const buildingsLoaded = await page.evaluate(() => {
+			const _buildingsLoaded = await page.evaluate(() => {
 				// Check if building datasources exist
 				const viewer = (window as any).viewer;
 				if (viewer?.dataSources?._dataSources) {

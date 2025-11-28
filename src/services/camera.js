@@ -180,7 +180,11 @@ export default class Camera {
 			let entity = postCodesDataSource._entityCollection._entities._array[i];
 
 			// Check if the entity posno property matches the postalcode.
-			if (entity._properties && entity._properties._posno && entity._properties._posno._value == this.store.postalcode) {
+			if (
+				entity._properties &&
+				entity._properties._posno &&
+				entity._properties._posno._value == this.store.postalcode
+			) {
 				// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
 				this.viewer.camera.flyTo({
 					destination: Cesium.Cartesian3.fromDegrees(
@@ -234,7 +238,11 @@ export default class Camera {
 			let entity = postCodesDataSource._entityCollection._entities._array[i];
 
 			// Check if entity postal code matches current selected postal code
-			if (entity._properties && entity._properties._posno && entity._properties._posno._value == this.store.postalcode) {
+			if (
+				entity._properties &&
+				entity._properties._posno &&
+				entity._properties._posno._value == this.store.postalcode
+			) {
 				// Update state to animating stage
 				if (this.store.clickProcessingState.isProcessing) {
 					this.store.setClickProcessingState({
@@ -446,14 +454,20 @@ export default class Camera {
 		}
 
 		// Guard: Check entity collection is available
-		if (!postCodesDataSource._entityCollection || !postCodesDataSource._entityCollection._entities) {
+		if (
+			!postCodesDataSource._entityCollection ||
+			!postCodesDataSource._entityCollection._entities
+		) {
 			console.warn('[Camera] PostCodes entity collection not available');
 			return;
 		}
 
 		// Search for entity with matching postal code
 		const entity = postCodesDataSource._entityCollection._entities._array.find(
-			(entity) => entity._properties && entity._properties._posno && entity._properties._posno._value == postalCode
+			(entity) =>
+				entity._properties &&
+				entity._properties._posno &&
+				entity._properties._posno._value == postalCode
 		);
 
 		if (entity) {

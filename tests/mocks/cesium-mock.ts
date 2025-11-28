@@ -112,11 +112,11 @@ export function createCesiumMock() {
 			this.positionCartographic.height += amount || 100000;
 		}
 
-		lookAt(target: any, offset: any) {
+		lookAt(_target: any, _offset: any) {
 			// Mock implementation
 		}
 
-		flyToBoundingSphere(boundingSphere: any, options?: any) {
+		flyToBoundingSphere(_boundingSphere: any, _options?: any) {
 			return Promise.resolve();
 		}
 	}
@@ -220,7 +220,7 @@ export function createCesiumMock() {
 			destroy: () => {},
 		};
 
-		constructor(container: string | HTMLElement, options?: any) {
+		constructor(container: string | HTMLElement, _options?: any) {
 			if (typeof container === 'string') {
 				this.container = document.getElementById(container) || document.createElement('div');
 			} else {
@@ -245,11 +245,11 @@ export function createCesiumMock() {
 			}
 		}
 
-		zoomTo(target: any, offset?: any) {
+		zoomTo(_target: any, _offset?: any) {
 			return Promise.resolve();
 		}
 
-		flyTo(target: any, options?: any) {
+		flyTo(_target: any, _options?: any) {
 			return Promise.resolve();
 		}
 
@@ -302,7 +302,7 @@ export function createCesiumMock() {
 		static BLUE = new MockColor(0, 0, 1, 1);
 		static TRANSPARENT = new MockColor(1, 1, 1, 0);
 
-		static fromCssColorString(color: string) {
+		static fromCssColorString(_color: string) {
 			return new MockColor();
 		}
 	}
@@ -323,7 +323,7 @@ export function createCesiumMock() {
 
 	// Mock other required classes
 	const MockEllipsoidTerrainProvider = class {
-		constructor(options?: any) {}
+		constructor(_options?: any) {}
 	};
 
 	const MockFeatureDetection = {
@@ -418,14 +418,14 @@ export function createCesiumMock() {
 			}
 		},
 		CallbackProperty: class {
-			constructor(callback: Function, isConstant: boolean) {}
+			constructor(_callback: () => unknown, _isConstant: boolean) {}
 		},
 		ConstantProperty: class {
-			constructor(value: any) {}
+			constructor(_value: any) {}
 		},
 		SampledProperty: class {
-			constructor(type: any) {}
-			addSample(time: any, value: any) {}
+			constructor(_type: any) {}
+			addSample(_time: any, _value: any) {}
 		},
 		BoundingSphere: class {
 			center: any;

@@ -14,14 +14,12 @@
 					>
 						mdi-city
 					</v-icon>
-					<h4 class="mode-title">
-Capital Region
-</h4>
+					<h4 class="mode-title">Capital Region</h4>
 					<v-icon
-v-if="activeViewMode === 'capitalRegionView'"
-class="check-icon"
-color="primary"
->
+						v-if="activeViewMode === 'capitalRegionView'"
+						class="check-icon"
+						color="primary"
+					>
 						mdi-check-circle
 					</v-icon>
 				</div>
@@ -33,39 +31,39 @@ color="primary"
 
 				<div class="mode-features">
 					<v-chip
-size="x-small"
-class="feature-chip"
->
+						size="x-small"
+						class="feature-chip"
+					>
 						<v-icon
-start
-size="12"
->
-mdi-thermometer
-</v-icon>
+							start
+							size="12"
+						>
+							mdi-thermometer
+						</v-icon>
 						Heat Analysis
 					</v-chip>
 					<v-chip
-size="x-small"
-class="feature-chip"
->
+						size="x-small"
+						class="feature-chip"
+					>
 						<v-icon
-start
-size="12"
->
-mdi-home-group
-</v-icon>
+							start
+							size="12"
+						>
+							mdi-home-group
+						</v-icon>
 						Building Data
 					</v-chip>
 					<v-chip
-size="x-small"
-class="feature-chip"
->
+						size="x-small"
+						class="feature-chip"
+					>
 						<v-icon
-start
-size="12"
->
-mdi-leaf
-</v-icon>
+							start
+							size="12"
+						>
+							mdi-leaf
+						</v-icon>
 						Green Coverage
 					</v-chip>
 				</div>
@@ -79,19 +77,17 @@ mdi-leaf
 			>
 				<div class="card-header">
 					<v-icon
-class="mode-icon"
-:color="activeViewMode === 'gridView' ? 'primary' : 'grey'"
->
+						class="mode-icon"
+						:color="activeViewMode === 'gridView' ? 'primary' : 'grey'"
+					>
 						mdi-grid
 					</v-icon>
-					<h4 class="mode-title">
-Statistical Grid
-</h4>
+					<h4 class="mode-title">Statistical Grid</h4>
 					<v-icon
-v-if="activeViewMode === 'gridView'"
-class="check-icon"
-color="primary"
->
+						v-if="activeViewMode === 'gridView'"
+						class="check-icon"
+						color="primary"
+					>
 						mdi-check-circle
 					</v-icon>
 				</div>
@@ -103,39 +99,39 @@ color="primary"
 
 				<div class="mode-features">
 					<v-chip
-size="x-small"
-class="feature-chip"
->
+						size="x-small"
+						class="feature-chip"
+					>
 						<v-icon
-start
-size="12"
->
-mdi-chart-box
-</v-icon>
+							start
+							size="12"
+						>
+							mdi-chart-box
+						</v-icon>
 						Grid Analysis
 					</v-chip>
 					<v-chip
-size="x-small"
-class="feature-chip"
->
+						size="x-small"
+						class="feature-chip"
+					>
 						<v-icon
-start
-size="12"
->
-mdi-air-conditioner
-</v-icon>
+							start
+							size="12"
+						>
+							mdi-air-conditioner
+						</v-icon>
 						Cooling Centers
 					</v-chip>
 					<v-chip
-size="x-small"
-class="feature-chip"
->
+						size="x-small"
+						class="feature-chip"
+					>
 						<v-icon
-start
-size="12"
->
-mdi-chart-line
-</v-icon>
+							start
+							size="12"
+						>
+							mdi-chart-line
+						</v-icon>
 						Statistics
 					</v-chip>
 				</div>
@@ -150,19 +146,17 @@ mdi-chart-line
 			>
 				<div class="card-header">
 					<v-icon
-class="mode-icon"
-:color="activeViewMode === 'helsinkiHeat' ? 'primary' : 'grey'"
->
+						class="mode-icon"
+						:color="activeViewMode === 'helsinkiHeat' ? 'primary' : 'grey'"
+					>
 						mdi-city-variant
 					</v-icon>
-					<h4 class="mode-title">
-Helsinki Focus
-</h4>
+					<h4 class="mode-title">Helsinki Focus</h4>
 					<v-icon
-v-if="activeViewMode === 'helsinkiHeat'"
-class="check-icon"
-color="primary"
->
+						v-if="activeViewMode === 'helsinkiHeat'"
+						class="check-icon"
+						color="primary"
+					>
 						mdi-check-circle
 					</v-icon>
 				</div>
@@ -174,39 +168,39 @@ color="primary"
 
 				<div class="mode-features">
 					<v-chip
-size="x-small"
-class="feature-chip"
->
+						size="x-small"
+						class="feature-chip"
+					>
 						<v-icon
-start
-size="12"
->
-mdi-tree
-</v-icon>
+							start
+							size="12"
+						>
+							mdi-tree
+						</v-icon>
 						Vegetation
 					</v-chip>
 					<v-chip
-size="x-small"
-class="feature-chip"
->
+						size="x-small"
+						class="feature-chip"
+					>
 						<v-icon
-start
-size="12"
->
-mdi-hospital-building
-</v-icon>
+							start
+							size="12"
+						>
+							mdi-hospital-building
+						</v-icon>
 						Social Services
 					</v-chip>
 					<v-chip
-size="x-small"
-class="feature-chip"
->
+						size="x-small"
+						class="feature-chip"
+					>
 						<v-icon
-start
-size="12"
->
-mdi-account-group
-</v-icon>
+							start
+							size="12"
+						>
+							mdi-account-group
+						</v-icon>
 						Demographics
 					</v-chip>
 				</div>
@@ -217,21 +211,21 @@ mdi-account-group
 		<div class="current-view-info">
 			<div class="info-section">
 				<v-icon
-class="info-icon"
-size="16"
-color="primary"
->
-mdi-information
-</v-icon>
+					class="info-icon"
+					size="16"
+					color="primary"
+				>
+					mdi-information
+				</v-icon>
 				<span class="info-text">{{ currentViewInfo }}</span>
 			</div>
 
 			<div class="coverage-info">
 				<v-chip
-size="small"
-:color="getViewModeColor()"
-variant="tonal"
->
+					size="small"
+					:color="getViewModeColor()"
+					variant="tonal"
+				>
 					{{ getCoverageText() }}
 				</v-chip>
 			</div>
@@ -331,8 +325,12 @@ export default {
 			await dataSourceService.removeDataSourcesAndEntities();
 			await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes');
 
-			store.postalcode && featurePicker.loadPostalCode();
-			toggleStore.showTrees && (await loadTrees());
+			if (store.postalcode) {
+				featurePicker.loadPostalCode();
+			}
+			if (toggleStore.showTrees) {
+				await loadTrees();
+			}
 		};
 
 		const loadTrees = async () => {
@@ -363,7 +361,9 @@ export default {
 				'PostCodes'
 			);
 
-			store.postalcode && featurePicker.loadPostalCode();
+			if (store.postalcode) {
+				featurePicker.loadPostalCode();
+			}
 		};
 
 		const gridView = () => {

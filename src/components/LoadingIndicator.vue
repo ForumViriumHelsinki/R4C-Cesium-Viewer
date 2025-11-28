@@ -43,7 +43,8 @@
 							<span
 								id="overall-progress-label"
 								class="progress-text"
-							>Overall Progress</span>
+								>Overall Progress</span
+							>
 							<span class="progress-percentage">{{ overallProgress }}%</span>
 						</div>
 						<v-progress-linear
@@ -114,12 +115,11 @@
 							class="mb-2"
 						>
 							<template #prepend>
-								<v-icon size="16">
-mdi-alert-circle
-</v-icon>
+								<v-icon size="16"> mdi-alert-circle </v-icon>
 							</template>
 							<div class="error-content">
-								<strong>{{ formatLayerName(layer) }}</strong>: {{ error }}
+								<strong>{{ formatLayerName(layer) }}</strong
+								>: {{ error }}
 								<v-btn
 									size="x-small"
 									variant="text"
@@ -177,9 +177,7 @@ mdi-alert-circle
 					size="small"
 					@click="showGlobalOverlay = true"
 				>
-					<v-icon size="16">
-mdi-arrow-expand
-</v-icon>
+					<v-icon size="16"> mdi-arrow-expand </v-icon>
 				</v-btn>
 			</template>
 		</v-snackbar>
@@ -205,9 +203,7 @@ mdi-arrow-expand
 				</v-card-text>
 				<v-card-actions>
 					<v-spacer />
-					<v-btn @click="showPerformanceDialog = false">
-Close
-</v-btn>
+					<v-btn @click="showPerformanceDialog = false"> Close </v-btn>
 				</v-card-actions>
 			</v-card>
 		</v-dialog>

@@ -162,7 +162,7 @@ export default defineConfig(({ mode }) => {
 					rewrite: (path) => path.replace(/^\/paavo/, ''),
 					secure: false,
 					configure: (proxy, _options) => {
-						proxy.on('proxyReq', (proxyReq, req, _res) => {
+						proxy.on('proxyReq', (proxyReq, _req, _res) => {
 							// Modify the outgoing request to include the necessary parameters
 							try {
 								// Sanitize the path to ensure it's a valid URL component
@@ -244,7 +244,7 @@ export default defineConfig(({ mode }) => {
 							}
 						: {},
 					rewrite: (path) => path.replace(/^\/digitransit/, ''),
-					configure: (proxy, options) => {
+					configure: (_proxy, _options) => {
 						// Log warning if API key is missing
 						if (!process.env.VITE_DIGITRANSIT_KEY) {
 							console.warn(

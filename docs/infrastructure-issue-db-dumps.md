@@ -277,6 +277,7 @@ echo "📦 Size: ${DUMP_SIZE}"
 ### Testing Plan
 
 1. **Manual Trigger Test**:
+
    ```bash
    # Trigger scheduler job manually
    gcloud scheduler jobs run regions4climate-weekly-dump --project=PROJECT_ID
@@ -290,6 +291,7 @@ echo "📦 Size: ${DUMP_SIZE}"
    ```
 
 2. **Application-side Restore Test** (in R4C-Cesium-Viewer repo):
+
    ```bash
    # Clone and restore the dump
    ./scripts/restore-from-gcs-dump.sh
@@ -299,6 +301,7 @@ echo "📦 Size: ${DUMP_SIZE}"
    ```
 
 3. **E2E Integration Test**:
+
    ```bash
    # Start full environment with production data
    skaffold dev -p e2e-with-prod-data --port-forward
@@ -362,6 +365,7 @@ resource "google_monitoring_alert_policy" "db_dump_failure" {
 If automated dumps cause issues:
 
 1. **Disable scheduler temporarily**:
+
    ```bash
    gcloud scheduler jobs pause regions4climate-weekly-dump
    ```

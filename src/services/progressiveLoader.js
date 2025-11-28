@@ -418,7 +418,7 @@ class ProgressiveLoader {
 	 * progressiveLoader.cancelAllLoads();
 	 */
 	cancelAllLoads() {
-		for (const [loadId, controller] of this.activeLoads) {
+		for (const [_loadId, controller] of this.activeLoads) {
 			controller.abort();
 		}
 		this.activeLoads.clear();

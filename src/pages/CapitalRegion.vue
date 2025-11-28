@@ -72,7 +72,6 @@ import { eventBus } from '../services/eventEmitter.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
-import HeatHistogram from '../components/HeatHistogram.vue';
 import BuildingInformation from '../components/BuildingInformation.vue';
 import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
@@ -82,7 +81,6 @@ import HSYWMS from '../components/HSYWMS.vue';
 
 export default {
 	components: {
-		HeatHistogram,
 		BuildingScatterPlot,
 		SocioEconomics,
 		Landcover,
@@ -126,7 +124,9 @@ export default {
 		watch(
 			() => store.postalcode,
 			(newPostalCode) => {
-				!showLandcover.value && newPostalCode && (showHSYWMS.value = true);
+				if (!showLandcover.value && newPostalCode) {
+					showHSYWMS.value = true;
+				}
 			}
 		);
 

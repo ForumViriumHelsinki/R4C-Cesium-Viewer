@@ -280,7 +280,7 @@ export default class HSYBuilding {
 					yieldInterval: 1, // Yield after every batch
 				},
 			});
-		} catch (error) {
+		} catch (_error) {
 			console.warn('[HSYBuilding] Unified loader not available, falling back to legacy processing');
 			await this.processGridAttributesLegacy(features, geoJsonPolygon);
 		}

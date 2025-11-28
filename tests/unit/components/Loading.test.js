@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { nextTick } from 'vue';
@@ -209,7 +209,7 @@ describe('Loading Component', () => {
 			wrapper = mount(Loading);
 
 			// Mock the component's visible ref to track changes
-			const originalVisible = wrapper.vm.visible;
+			const _originalVisible = wrapper.vm.visible;
 			let changeCount = 0;
 
 			// Watch for changes (simplified tracking)

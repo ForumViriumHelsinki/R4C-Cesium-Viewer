@@ -506,7 +506,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 
 	cesiumTest.describe('Feature Coverage Validation', () => {
 		cesiumTest('should verify all identified features are accessible', async ({ cesiumPage }) => {
-			const featureCheckList = [
+			const _featureCheckList = [
 				// View modes
 				'Capital Region Heat',
 				'Statistical Grid',

@@ -27,6 +27,7 @@ export default [
 				{
 					argsIgnorePattern: '^_',
 					varsIgnorePattern: '^_',
+					caughtErrors: 'none',
 				},
 			],
 			'@typescript-eslint/no-explicit-any': 'warn',
@@ -51,6 +52,7 @@ export default [
 				{
 					argsIgnorePattern: '^_',
 					varsIgnorePattern: '^_',
+					caughtErrors: 'none',
 				},
 			],
 			'@typescript-eslint/no-unused-expressions': 'warn',
@@ -133,6 +135,7 @@ export default [
 				{
 					argsIgnorePattern: '^_',
 					varsIgnorePattern: '^_',
+					caughtErrors: 'none',
 				},
 			],
 			'@typescript-eslint/no-unused-expressions': 'warn',

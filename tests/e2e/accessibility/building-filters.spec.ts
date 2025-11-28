@@ -156,7 +156,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				// In Helsinki view, the label should change to "Only social & healthcare buildings"
 
 				// Verify that the filter toggle exists and can be identified
-				const buildingTypeToggle = cesiumPage.locator('input[type="checkbox"]').first();
+				const _buildingTypeToggle = cesiumPage.locator('input[type="checkbox"]').first();
 				const filterContainer = cesiumPage.locator('.switch-container').first();
 
 				await expect(filterContainer).toBeVisible();
@@ -609,7 +609,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				await cesiumPage.waitForTimeout(300);
 
 				// Initial state
-				const initialChecked = await tallBuildingsToggle.isChecked();
+				const _initialChecked = await tallBuildingsToggle.isChecked();
 
 				// Toggle on with retry
 				for (let attempt = 1; attempt <= 3; attempt++) {

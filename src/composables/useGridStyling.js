@@ -101,7 +101,7 @@ export const indexToColorScheme = {
 export function useGridStyling() {
 	// --- STATE MANAGEMENT ---
 	const globalStore = useGlobalStore();
-	const propsStore = usePropsStore();
+	const _propsStore = usePropsStore();
 	const toggleStore = useToggleStore();
 	const mitigationStore = useMitigationStore();
 
@@ -129,7 +129,7 @@ export function useGridStyling() {
 	const getColorForIndex = (indexValue, indexType) => {
 		const colorScheme = indexToColorScheme[indexType] || heatColors;
 		// Find the correct color object based on the index value, ignoring the first two "missing data" entries
-		const colorEntry = colorScheme.slice(2).find((entry, i, arr) => {
+		const colorEntry = colorScheme.slice(2).find((entry, i, _arr) => {
 			const lowerBound = i * 0.2;
 			return indexValue < lowerBound + 0.2;
 		});

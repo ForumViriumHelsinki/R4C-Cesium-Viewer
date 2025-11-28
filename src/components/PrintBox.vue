@@ -110,7 +110,7 @@ export default {
 			);
 		};
 
-		const addFooterNote = (postno, view) => {
+		const addFooterNote = (_postno, _view) => {
 			const container = document.getElementById('printContainer');
 
 			if (store.heatDataDate === '2023-06-23') {

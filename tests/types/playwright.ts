@@ -7,16 +7,15 @@ import type { Page } from '@playwright/test';
 // Type-only export for Page
 export type { Page };
 
-export interface PlaywrightPage extends Page {
-	// Add any custom methods or properties if needed
-}
+// Type alias for Page - extend if custom methods needed
+export type PlaywrightPage = Page;
 
 export interface TestHelper {
 	dismissDisclaimer(): Promise<void>;
 	waitForMapLoad(): Promise<void>;
-	clickOnMap(x: number, y: number): Promise<void>;
-	waitForCesiumReady(timeout?: number): Promise<void>;
-	waitForAppReady(timeout?: number): Promise<void>;
+	clickOnMap(_x: number, _y: number): Promise<void>;
+	waitForCesiumReady(_timeout?: number): Promise<void>;
+	waitForAppReady(_timeout?: number): Promise<void>;
 }
 
 export interface ApiResponse {

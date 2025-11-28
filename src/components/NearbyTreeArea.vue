@@ -4,7 +4,8 @@
 	<label
 		id="bearingLabel"
 		style="position: fixed; bottom: 41px; left: 15px; visibility: hidden"
-		>Direction of trees</label>
+		>Direction of trees</label
+	>
 
 	<div id="bearingAllSwitchContainer">
 		<!-- bearingAll -->
@@ -16,14 +17,15 @@
 				id="bearingAllToggle"
 				type="checkbox"
 				value="a"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingAllLabel"
 			for="bearingAllToggle"
 			class="label"
-			>All</label>
+			>All</label
+		>
 	</div>
 
 	<div id="bearingSouthSwitchContainer">
@@ -36,14 +38,15 @@
 				id="bearingSouthToggle"
 				type="checkbox"
 				value="s"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingSouthLabel"
 			for="bearingSouthToggle"
 			class="label"
-			>South</label>
+			>South</label
+		>
 	</div>
 
 	<div id="bearingWestSwitchContainer">
@@ -56,14 +59,15 @@
 				id="bearingWestToggle"
 				type="checkbox"
 				value="w"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingWestLabel"
 			for="bearingWestToggle"
 			class="label"
-			>West</label>
+			>West</label
+		>
 	</div>
 
 	<div id="bearingEastSwitchContainer">
@@ -76,14 +80,15 @@
 				id="bearingEastToggle"
 				type="checkbox"
 				value="e"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingEastLabel"
 			for="bearingEastToggle"
 			class="label"
-			>East</label>
+			>East</label
+		>
 	</div>
 
 	<div id="bearingNorthSwitchContainer">
@@ -96,14 +101,15 @@
 				id="bearingNorthToggle"
 				type="checkbox"
 				value="n"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingNorthLabel"
 			for="bearingNorthToggle"
 			class="label"
-			>North</label>
+			>North</label
+		>
 	</div>
 </template>
 
@@ -354,20 +360,22 @@ export default {
 					if (bearing > 134 && bearing < 225) {
 						return true;
 					}
-
+					break;
 				case 'w':
 					if (bearing > 224 && bearing < 315) {
 						return true;
 					}
+					break;
 				case 'n':
 					if (bearing > 314 && bearing < 45) {
 						return true;
 					}
+					break;
 				case 'e':
 					if (bearing > 44 && bearing < 135) {
 						return true;
 					}
-
+					break;
 				default:
 					return false;
 			}

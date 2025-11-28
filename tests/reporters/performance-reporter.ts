@@ -111,7 +111,7 @@ class PerformanceReporter implements Reporter {
 		}
 	}
 
-	onBegin(config: FullConfig, suite: Suite) {
+	onBegin(_config: FullConfig, _suite: Suite) {
 		this.startTime = Date.now();
 		console.log('\n[Performance Reporter] Starting performance monitoring...');
 	}
@@ -186,7 +186,7 @@ class PerformanceReporter implements Reporter {
 		}
 	}
 
-	async onEnd(result: FullResult) {
+	async onEnd(_result: FullResult) {
 		const totalDuration = Date.now() - this.startTime;
 
 		// Calculate summary statistics
@@ -246,7 +246,7 @@ class PerformanceReporter implements Reporter {
 		// Use relative file path as suite identifier to prevent collisions
 		// between different directories with same filename
 		const filePath = test.location.file;
-		const relativePath = path.relative(process.cwd(), filePath);
+		const _relativePath = path.relative(process.cwd(), filePath);
 
 		// Extract just the filename without extension for cleaner display
 		// but keep full path in case we need it for uniqueness

@@ -5,36 +5,34 @@
  * to ensure nothing gets lost during interface overhaul.
  */
 
-import { expect } from "@playwright/test";
-import type { PlaywrightPage, CesiumTestState } from "../../types/playwright";
-import type { Locator } from "@playwright/test";
+import { expect } from '@playwright/test';
+import type { PlaywrightPage, CesiumTestState } from '../../types/playwright';
+import type { Locator } from '@playwright/test';
 import {
-  waitForCesiumReady as cesiumWaitForReady,
-  setupCesiumForCI,
-  initializeCesiumWithRetry,
-  waitForAppReady,
-  waitForSceneIdle,
-} from "./cesium-helper";
+	waitForCesiumReady as cesiumWaitForReady,
+	initializeCesiumWithRetry,
+	waitForAppReady,
+} from './cesium-helper';
 
 /**
  * Timeout constants for test interactions
  */
 export const TEST_TIMEOUTS = {
-  SCROLL_INTO_VIEW: 3000,
-  INTERACTION: 5000,
-  RETRY_BACKOFF_BASE: 200,
-  RETRY_BACKOFF_INTERACTION: 300,
+	SCROLL_INTO_VIEW: 3000,
+	INTERACTION: 5000,
+	RETRY_BACKOFF_BASE: 200,
+	RETRY_BACKOFF_INTERACTION: 300,
 } as const;
 
 export interface ViewMode {
-  id: "capitalRegionView" | "gridView" | "helsinkiHeat";
-  label: string;
-  selector: string;
+	id: 'capitalRegionView' | 'gridView' | 'helsinkiHeat';
+	label: string;
+	selector: string;
 }
 
 export interface NavigationLevel {
-  level: "start" | "postalCode" | "building";
-  expectedElements: string[];
+	level: 'start' | 'postalCode' | 'building';
+	expectedElements: string[];
 }
 
 export class AccessibilityTestHelpers {
@@ -378,9 +376,9 @@ export class AccessibilityTestHelpers {
 		const maxRetries = 2; // Reduced from 5 - requestRenderMode makes retries unnecessary
 
 		switch (targetLevel) {
-			case 'postalCode':
+			case 'postalCode': {
 				// Click on a postal code area - using Helsinki center as default
-				const postalCodeId = identifier || '00100';
+				const _postalCodeId = identifier || '00100';
 
 				// Wait for Cesium viewer to be ready with enhanced verification
 				await this.page.waitForSelector('#cesiumContainer', {
@@ -549,6 +547,7 @@ export class AccessibilityTestHelpers {
 					}
 				}
 				throw new Error(`Failed to activate postal code level after ${maxRetries} attempts`);
+			}
 
 			case 'building':
 				// Ensure we're at postal code level first
@@ -753,7 +752,7 @@ export class AccessibilityTestHelpers {
 		currentLevel: string;
 		hasPostalCode: boolean;
 	}): Promise<void> {
-		const { currentView, currentLevel, hasPostalCode } = context;
+		const { currentView, currentLevel: _currentLevel, hasPostalCode } = context;
 
 		// Test layer toggles based on context
 		if (currentView === 'helsinki') {

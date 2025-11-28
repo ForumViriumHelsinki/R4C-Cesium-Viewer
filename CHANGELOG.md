@@ -2,24 +2,21 @@
 
 ## [1.32.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.31.0...r4c-cesium-viewer-v1.32.0) (2025-11-27)
 
-
 ### Features
 
-* add user-facing error notifications for async service failures ([#395](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/395)) ([77ca677](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/77ca6778395323d8c0650ec9d716e35dcf66149b))
-* add viewport-based building streaming with comprehensive test coverage ([#399](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/399)) ([283c51b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/283c51bb4ec3092cefa6d02383a2349525aebadb))
-* restore UI improvements and refactor to Vuetify components ([#398](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/398)) ([a818d1e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a818d1ef9f5b17bfcb459864f9794a2b44db06df))
-
+- add user-facing error notifications for async service failures ([#395](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/395)) ([77ca677](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/77ca6778395323d8c0650ec9d716e35dcf66149b))
+- add viewport-based building streaming with comprehensive test coverage ([#399](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/399)) ([283c51b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/283c51bb4ec3092cefa6d02383a2349525aebadb))
+- restore UI improvements and refactor to Vuetify components ([#398](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/398)) ([a818d1e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a818d1ef9f5b17bfcb459864f9794a2b44db06df))
 
 ### Bug Fixes
 
-* address code quality issues from comprehensive codebase analysis ([#393](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/393)) ([af1d988](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/af1d9884edd141b5ec2c0eb233da7d424409d3e4))
+- address code quality issues from comprehensive codebase analysis ([#393](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/393)) ([af1d988](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/af1d9884edd141b5ec2c0eb233da7d424409d3e4))
 
 ## [1.31.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.30.0...r4c-cesium-viewer-v1.31.0) (2025-11-25)
 
-
 ### Features
 
-* UI improvements with enhanced accessibility and loading states ([#380](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/380)) ([d2625af](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d2625af06c83475765db484c7c2cd0a91d4358ca))
+- UI improvements with enhanced accessibility and loading states ([#380](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/380)) ([d2625af](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d2625af06c83475765db484c7c2cd0a91d4358ca))
 
 ## [1.30.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.29.1...r4c-cesium-viewer-v1.30.0) (2025-11-12)
 

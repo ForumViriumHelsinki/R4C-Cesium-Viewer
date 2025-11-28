@@ -140,7 +140,7 @@ describe('FeaturePicker service', () => {
 		// Setup Pinia stores
 		setActivePinia(createPinia());
 		const globalStore = useGlobalStore();
-		const toggleStore = useToggleStore();
+		const _toggleStore = useToggleStore();
 		const propsStore = usePropsStore();
 
 		// Initialize postalCodeData to prevent null access errors
@@ -643,7 +643,7 @@ describe('FeaturePicker service', () => {
 			};
 
 			// Mock the dynamic import to fail
-			const originalImport = global.import;
+			const _originalImport = global.import;
 			vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 			await featurePicker.handleBuildingFeature(mockProperties);
@@ -727,8 +727,8 @@ describe('FeaturePicker service', () => {
 	});
 
 	describe('getBoundingBox', () => {
-		const MOCK_POSTAL_CODE = '00100';
-		const MOCK_GRID_ID = 'grid_123';
+		const _MOCK_POSTAL_CODE = '00100';
+		const _MOCK_GRID_ID = 'grid_123';
 
 		it('should calculate correct bounding box for polygon entity', () => {
 			// Create mock positions in Cartesian3 format
@@ -756,7 +756,7 @@ describe('FeaturePicker service', () => {
 				{ longitude: 0.445, latitude: 1.0559 }, // In between
 			];
 
-			vi.spyOn(Cesium.Cartographic, 'fromCartesian').mockImplementation((position, result) => {
+			vi.spyOn(Cesium.Cartographic, 'fromCartesian').mockImplementation((position, _result) => {
 				const index = mockPositions.indexOf(position);
 				return mockCartographics[index];
 			});

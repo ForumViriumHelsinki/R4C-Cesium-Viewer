@@ -25,7 +25,7 @@ vi.mock('cesium', () => ({
 		this.y = y;
 	}),
 	Cartographic: {
-		fromCartesian: vi.fn((cartesian) => ({
+		fromCartesian: vi.fn((_cartesian) => ({
 			longitude: 0.4,
 			latitude: 1.0,
 			height: 1000,

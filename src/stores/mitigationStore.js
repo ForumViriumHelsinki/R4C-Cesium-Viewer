@@ -32,7 +32,6 @@
  */
 
 import { defineStore } from 'pinia';
-import { markRaw } from 'vue';
 
 /**
  * Mitigation Pinia Store
@@ -251,7 +250,9 @@ export const useMitigationStore = defineStore('mitigation', {
 			this.coolingCenters.push(coolingCenter);
 		},
 		addCell(id) {
-			!this.affected.includes(id) && this.affected.push(id);
+			if (!this.affected.includes(id)) {
+				this.affected.push(id);
+			}
 		},
 		addImpact(impact) {
 			this.impact += impact;

@@ -42,8 +42,7 @@ deploy:
     hooks:
       after:
         - host:
-            command:
-              ['sh', '-c', 'kubectl apply -f k8s/secrets.yaml -f k8s/migration-secret.yaml']
+            command: ['sh', '-c', 'kubectl apply -f k8s/secrets.yaml -f k8s/migration-secret.yaml']
             os: [darwin, linux]
   # Wait up to 180s for pods to be ready; tolerate init container restarts
   statusCheck: true

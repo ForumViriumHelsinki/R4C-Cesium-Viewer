@@ -39,7 +39,6 @@
 import { useLoadingStore } from '../stores/loadingStore.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import unifiedLoader from './unifiedLoader.js';
-import backgroundPreloader from './backgroundPreloader.js';
 
 /**
  * Loading session configuration
@@ -199,9 +198,9 @@ class LoadingCoordinator {
 	 */
 	async startLoadingSession(sessionId, layerConfigs, options = {}) {
 		const {
-			showGlobalProgress = false,
-			allowInterruption = true,
-			backgroundMode = false,
+			showGlobalProgress: _showGlobalProgress = false,
+			allowInterruption: _allowInterruption = true,
+			backgroundMode: _backgroundMode = false,
 			priorityStrategy = 'balanced', // 'critical-first', 'parallel', 'balanced'
 		} = options;
 
@@ -612,7 +611,11 @@ class LoadingCoordinator {
 	 * });
 	 */
 	async intelligentPreload(context = {}) {
-		const { currentPostalCode, view, userHistory = [] } = context;
+		const {
+			currentPostalCode: _currentPostalCode,
+			view: _view,
+			userHistory: _userHistory = [],
+		} = context;
 
 		// Determine what to preload based on context
 		const preloadConfigs = this.generatePreloadConfigs(context);
@@ -635,7 +638,7 @@ class LoadingCoordinator {
 	 * @returns {Object[]} Preload configurations (currently empty)
 	 * @private
 	 */
-	generatePreloadConfigs(context) {
+	generatePreloadConfigs(_context) {
 		// This would analyze user patterns and predict likely next actions
 		// For now, return empty array - would be expanded based on analytics
 		return [];

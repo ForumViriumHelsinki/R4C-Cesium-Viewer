@@ -1,10 +1,12 @@
 <template>
 	<v-navigation-drawer
+		:model-value="modelValue"
 		role="navigation"
 		aria-label="Analysis tools and data exploration"
 		class="analysis-sidebar"
 		width="350"
 		location="right"
+		@update:model-value="$emit('update:modelValue', $event)"
 	>
 		<div class="sidebar-content">
 			<div class="control-section">
@@ -342,6 +344,13 @@ export default {
 		EstimatedImpacts,
 		LandcoverToParks,
 	},
+	props: {
+		modelValue: {
+			type: Boolean,
+			default: true,
+		},
+	},
+	emits: ['update:modelValue'],
 	setup() {
 		// ## NEW: State for the new panel ##
 		const adaptationTab = ref('centers');

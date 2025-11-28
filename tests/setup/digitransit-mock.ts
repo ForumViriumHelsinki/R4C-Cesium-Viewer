@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 // Mock digitransit API responses for testing
 export const digitransitMockResponses = {

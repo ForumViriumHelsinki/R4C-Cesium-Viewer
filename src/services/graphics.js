@@ -165,7 +165,7 @@ export default class Graphics {
 	 */
 	setupWatchers() {
 		// Watch for MSAA changes
-		this.graphicsStore.$subscribe((mutation, state) => {
+		this.graphicsStore.$subscribe((mutation, _state) => {
 			if (mutation.events.some((e) => ['msaaEnabled', 'msaaSamples'].includes(e.key))) {
 				this.applyMsaaSettings();
 			}

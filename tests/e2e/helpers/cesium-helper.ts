@@ -91,7 +91,7 @@ export async function isWebGLAvailable(page: Page): Promise<boolean> {
 			const canvas = document.createElement('canvas');
 			const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
 			return !!gl;
-		} catch (e) {
+		} catch (_e) {
 			return false;
 		}
 	});

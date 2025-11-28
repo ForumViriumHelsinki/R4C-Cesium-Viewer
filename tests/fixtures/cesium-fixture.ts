@@ -4,7 +4,7 @@ import {
 	setupCesiumForCI,
 	waitForAppReady,
 } from '../e2e/helpers/cesium-helper';
-import { createCesiumMock } from '../mocks/cesium-mock';
+import { createCesiumMock as _createCesiumMock } from '../mocks/cesium-mock';
 
 /**
  * Cesium Test Fixture
@@ -152,11 +152,11 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 							this.positionCartographic.height += amount || 100000;
 						}
 
-						lookAt(target, offset) {
+						lookAt(_target, _offset) {
 							// Mock implementation
 						}
 
-						flyToBoundingSphere(boundingSphere, options) {
+						flyToBoundingSphere(_boundingSphere, _options) {
 							return Promise.resolve();
 						}
 					}
@@ -260,7 +260,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 							destroy: () => {},
 						};
 
-						constructor(container, options) {
+						constructor(container, _options) {
 							if (typeof container === 'string') {
 								this.container =
 									document.getElementById(container) || document.createElement('div');
@@ -286,11 +286,11 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 							}
 						}
 
-						zoomTo(target, offset) {
+						zoomTo(_target, _offset) {
 							return Promise.resolve();
 						}
 
-						flyTo(target, options) {
+						flyTo(_target, _options) {
 							return Promise.resolve();
 						}
 
@@ -334,7 +334,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 						static BLUE = new MockColor(0, 0, 1, 1);
 						static TRANSPARENT = new MockColor(1, 1, 1, 0);
 
-						static fromCssColorString(color) {
+						static fromCssColorString(_color) {
 							return new MockColor();
 						}
 					}
@@ -355,7 +355,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 
 					// Mock other required classes
 					const MockEllipsoidTerrainProvider = class {
-						constructor(options) {}
+						constructor(_options) {}
 					};
 
 					const MockFeatureDetection = {
@@ -440,14 +440,14 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 							}
 						},
 						CallbackProperty: class {
-							constructor(callback, isConstant) {}
+							constructor(_callback, _isConstant) {}
 						},
 						ConstantProperty: class {
-							constructor(value) {}
+							constructor(_value) {}
 						},
 						SampledProperty: class {
-							constructor(type) {}
-							addSample(time, value) {}
+							constructor(_type) {}
+							addSample(_time, _value) {}
 						},
 						BoundingSphere: class {
 							constructor(center, radius = 1000) {

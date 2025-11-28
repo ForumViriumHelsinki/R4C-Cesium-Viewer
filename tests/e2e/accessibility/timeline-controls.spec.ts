@@ -22,7 +22,7 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 	});
 
 	cesiumTest.describe('Timeline Visibility and Access', () => {
-		cesiumTest('should not show timeline at start level', async ({ cesiumPage }) => {
+		cesiumTest('should not show timeline at start level', async ({ cesiumPage: _cesiumPage }) => {
 			await helpers.verifyTimelineVisibility('start');
 		});
 
