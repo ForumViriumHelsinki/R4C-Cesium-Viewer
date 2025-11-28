@@ -39,6 +39,7 @@
 import { useLoadingStore } from '../stores/loadingStore.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import unifiedLoader from './unifiedLoader.js';
+import logger from '../utils/logger.js';
 
 /**
  * Loading session configuration
@@ -123,7 +124,7 @@ class LoadingCoordinator {
 			try {
 				this._loadingStore = useLoadingStore();
 			} catch (error) {
-				console.warn('Loading store not available, using fallback:', error.message);
+				logger.warn('Loading store not available, using fallback:', error.message);
 				this._loadingStore = {
 					startLayerLoading: () => {},
 					updateLayerProgress: () => {},
@@ -148,7 +149,7 @@ class LoadingCoordinator {
 			try {
 				this._globalStore = useGlobalStore();
 			} catch (error) {
-				console.warn('Global store not available, using fallback:', error.message);
+				logger.warn('Global store not available, using fallback:', error.message);
 				this._globalStore = {
 					cesiumViewer: null,
 					postalcode: null,
@@ -258,7 +259,7 @@ class LoadingCoordinator {
 
 		this.activeSessions.set(sessionId, session);
 
-		console.log(`🚀 Starting loading session: ${sessionId} (${layerConfigs.length} layers)`);
+		logger.debug(`Starting loading session: ${sessionId} (${layerConfigs.length} layers)`);
 	}
 
 	/**
@@ -284,7 +285,7 @@ class LoadingCoordinator {
 		const criticalAndHigh = [...(priorityGroups.critical || []), ...(priorityGroups.high || [])];
 
 		if (criticalAndHigh.length > 0) {
-			console.log(`⚡ Loading ${criticalAndHigh.length} critical/high priority layers`);
+			logger.debug(`Loading ${criticalAndHigh.length} critical/high priority layers`);
 			const criticalResults = await this.loadWithStaggering(criticalAndHigh, 100); // 100ms stagger
 			results.push(...criticalResults);
 		}
@@ -293,14 +294,14 @@ class LoadingCoordinator {
 		const normalAndLow = [...(priorityGroups.normal || []), ...(priorityGroups.low || [])];
 
 		if (normalAndLow.length > 0) {
-			console.log(`🔄 Loading ${normalAndLow.length} normal/low priority layers in parallel`);
+			logger.debug(`Loading ${normalAndLow.length} normal/low priority layers in parallel`);
 			const normalResults = await unifiedLoader.loadLayers(normalAndLow);
 			results.push(...normalResults);
 		}
 
 		// Handle background layers separately
 		if (priorityGroups.background?.length > 0) {
-			console.log(`🌅 Scheduling ${priorityGroups.background.length} background layers`);
+			logger.debug(`Scheduling ${priorityGroups.background.length} background layers`);
 			this.scheduleBackgroundLoading(priorityGroups.background);
 		}
 
@@ -354,8 +355,8 @@ class LoadingCoordinator {
 
 		for (const config of sortedConfigs) {
 			try {
-				console.log(
-					`📥 Loading layer: ${config.layerId} (priority: ${config.options?.priority || 'normal'})`
+				logger.debug(
+					`Loading layer: ${config.layerId} (priority: ${config.options?.priority || 'normal'})`
 				);
 				const result = await unifiedLoader.loadLayer(config);
 				results.push({ status: 'fulfilled', value: result, config });
@@ -366,7 +367,7 @@ class LoadingCoordinator {
 				// Brief pause to allow UI updates
 				await new Promise((resolve) => setTimeout(resolve, 10));
 			} catch (error) {
-				console.error(`❌ Failed to load layer: ${config.layerId}`, error?.message || error);
+				logger.error(`Failed to load layer: ${config.layerId}`, error?.message || error);
 				results.push({ status: 'rejected', reason: error, config });
 			}
 		}
@@ -384,7 +385,7 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	async loadInParallel(sessionId, layerConfigs) {
-		console.log(`🚄 Loading ${layerConfigs.length} layers in parallel`);
+		logger.debug(`Loading ${layerConfigs.length} layers in parallel`);
 		return unifiedLoader.loadLayers(layerConfigs);
 	}
 
@@ -414,7 +415,7 @@ class LoadingCoordinator {
 			scheduleFunction(async () => {
 				try {
 					const config = configs[index];
-					console.log(`🌙 Background loading: ${config.layerId}`);
+					logger.debug(`Background loading: ${config.layerId}`);
 					await unifiedLoader.loadLayer({
 						...config,
 						options: {
@@ -424,7 +425,7 @@ class LoadingCoordinator {
 						},
 					});
 				} catch (error) {
-					console.warn(
+					logger.warn(
 						`Background loading failed for ${configs[index].layerId}:`,
 						error?.message || error
 					);
@@ -486,9 +487,7 @@ class LoadingCoordinator {
 		if (session) {
 			session.layersCompleted = completed;
 			const progress = (completed / total) * 100;
-			console.log(
-				`📊 Session ${sessionId}: ${completed}/${total} layers (${progress.toFixed(1)}%)`
-			);
+			logger.debug(`Session ${sessionId}: ${completed}/${total} layers (${progress.toFixed(1)}%)`);
 		}
 	}
 
@@ -518,11 +517,11 @@ class LoadingCoordinator {
 		const successful = results.filter((r) => r.status === 'fulfilled').length;
 		const failed = results.length - successful;
 
-		console.log(`✅ Session ${sessionId} completed in ${duration.toFixed(0)}ms`);
-		console.log(`📈 Success rate: ${successful}/${results.length} layers`);
+		logger.debug(`Session ${sessionId} completed in ${duration.toFixed(0)}ms`);
+		logger.debug(`Success rate: ${successful}/${results.length} layers`);
 
 		if (failed > 0) {
-			console.warn(`⚠️ ${failed} layers failed to load`);
+			logger.warn(`${failed} layers failed to load in session ${sessionId}`);
 		}
 
 		// Clean up session
@@ -539,7 +538,7 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	handleSessionError(sessionId, error) {
-		console.error(`❌ Loading session ${sessionId} failed:`, error?.message || error);
+		logger.error(`Loading session ${sessionId} failed:`, error?.message || error);
 		this.activeSessions.delete(sessionId);
 	}
 
@@ -557,7 +556,7 @@ class LoadingCoordinator {
 	cancelSession(sessionId) {
 		const session = this.activeSessions.get(sessionId);
 		if (session) {
-			console.log(`🛑 Cancelling loading session: ${sessionId}`);
+			logger.debug(`Cancelling loading session: ${sessionId}`);
 
 			// Cancel individual layer loading
 			session.configs.forEach((config) => {
@@ -621,7 +620,7 @@ class LoadingCoordinator {
 		const preloadConfigs = this.generatePreloadConfigs(context);
 
 		if (preloadConfigs.length > 0) {
-			console.log(`🔮 Starting intelligent preload of ${preloadConfigs.length} layers`);
+			logger.debug(`Starting intelligent preload of ${preloadConfigs.length} layers`);
 
 			await this.startLoadingSession('preload', preloadConfigs, {
 				priorityStrategy: 'balanced',
