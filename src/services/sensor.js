@@ -1,6 +1,7 @@
 import Datasource from './datasource.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
+import { useURLStore } from '../stores/urlStore.js';
 
 /**
  * Sensor Service
@@ -23,6 +24,7 @@ export default class Vegetation {
 	 */
 	constructor() {
 		this.store = useGlobalStore();
+		this.urlStore = useURLStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
 	}
@@ -33,7 +35,8 @@ export default class Vegetation {
 	 */
 	async loadSensorData() {
 		try {
-			const response = await fetch('https://bri3.fvh.io/opendata/r4c/r4c_last.geojson');
+			const url = this.urlStore.r4cSensorUrl;
+			const response = await fetch(url);
 			const data = await response.json();
 
 			// Create a Cesium data source

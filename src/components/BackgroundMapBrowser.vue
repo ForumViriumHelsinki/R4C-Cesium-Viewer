@@ -256,11 +256,13 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms';
 import { useBackgroundMapStore } from '../stores/backgroundMapStore';
+import { useURLStore } from '../stores/urlStore';
 
 export default {
 	name: 'BackgroundMapBrowser',
 	setup() {
 		const _backgroundMapStore = useBackgroundMapStore();
+		const urlStore = useURLStore();
 
 		// Category management
 		const selectedCategory = ref('basic');
@@ -451,25 +453,10 @@ export default {
 		};
 
 		const updateFloodLayer = async () => {
-			const floodLayerMapping = {
-				HulevesitulvaVesisyvyysSade52mmMallinnettuAlue:
-					'https://paikkatiedot.ymparisto.fi/geoserver/tulva/ows?SERVICE=WMS&',
-				HulevesitulvaVesisyvyysSade80mmMallinnettuAlue:
-					'https://paikkatiedot.ymparisto.fi/geoserver/tulva/ows?SERVICE=WMS&',
-				SSP585_re_with_SSP245_with_SSP126_with_current:
-					'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022_yhdistelma/wms?SERVICE=WMS&',
-				coastal_flood_SSP585_2050_0020_with_protected:
-					'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-				coastal_flood_SSP245_2050_0020_with_protected:
-					'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-				coastal_flood_SSP126_2050_0020_with_protected:
-					'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-			};
-
 			removeFloodLayers();
 
 			if (selectedFloodLayer.value && selectedFloodLayer.value !== 'none') {
-				const url = floodLayerMapping[selectedFloodLayer.value];
+				const url = urlStore.sykeFloodUrl(selectedFloodLayer.value);
 				if (url) {
 					await createFloodImageryLayer(url, selectedFloodLayer.value);
 				}

@@ -8,6 +8,9 @@
  * - **HSY WMS**: Helsinki Region Environmental Services Web Map Service
  * - **Digitransit**: Public transport geocoding (via separate proxy)
  * - **NDVI TIFF**: Vegetation index imagery (Cloud Optimized GeoTIFF)
+ * - **SYKE**: Finnish Environment Institute flood risk data
+ * - **Helsinki Maps**: Helsinki City WFS/WMS services
+ * - **R4C Sensors**: Real-time environmental sensor data
  *
  * Proxy configuration:
  * - `/pygeoapi` → Finland geo data portal
@@ -30,6 +33,12 @@ import { defineStore } from 'pinia';
  * @property {string} helsinkiWMS - Helsinki WMS base URL
  * @property {string} pygeoapiBase - Pygeoapi collections base URL (/pygeoapi/collections)
  * @property {string} wmsProxy - WMS proxy endpoint (/wms/proxy)
+ * @property {Object} externalApis - External API endpoints configuration
+ * @property {Object} externalApis.syke - Finnish Environment Institute (SYKE) endpoints
+ * @property {string} externalApis.syke.geoserverBase - Base URL for SYKE GeoServer
+ * @property {Object} externalApis.syke.flood - SYKE flood map service paths
+ * @property {Object} externalApis.maps - Map service endpoints
+ * @property {Object} externalApis.sensors - Environmental sensor data endpoints
  */
 export const useURLStore = defineStore('url', {
 	state: () => ({
@@ -37,6 +46,34 @@ export const useURLStore = defineStore('url', {
 		helsinkiWMS: '/helsinki-wms?SERVICE=WMS&',
 		pygeoapiBase: '/pygeoapi/collections', // Base URL for pygeoapi collections (proxied through /pygeoapi)
 		wmsProxy: '/wms/proxy',
+		externalApis: {
+			// Finnish Environment Institute (SYKE) - Flood risk and environmental data
+			syke: {
+				geoserverBase: 'https://paikkatiedot.ymparisto.fi/geoserver',
+				flood: {
+					// Stormwater flood maps (extreme rainfall scenarios)
+					stormwater52mm: '/tulva/ows?SERVICE=WMS&',
+					stormwater80mm: '/tulva/ows?SERVICE=WMS&',
+					// Coastal flood maps (sea level rise scenarios)
+					coastalBase: '/meritulvakartat_2022/ows?SERVICE=WMS&',
+					// Combined scenario comparison (SSP pathways)
+					coastalCombined: '/meritulvakartat_2022_yhdistelma/wms?SERVICE=WMS&',
+				},
+			},
+			// Map service providers
+			maps: {
+				// Helsinki City WFS/WMS services
+				helsinkiWfs: 'https://kartta.hel.fi/ws/geoserver/avoindata/wfs',
+				helsinkiWms: 'https://kartta.hel.fi/ws/geoserver/avoindata/wms',
+				// HSY (Helsinki Region Environmental Services) WMS
+				hsyWms: 'https://kartta.hsy.fi/geoserver/wms',
+			},
+			// Environmental sensors
+			sensors: {
+				// R4C (Regions for Climate Action) real-time sensor network
+				r4cLatest: 'https://bri3.fvh.io/opendata/r4c/r4c_last.geojson',
+			},
+		},
 	}),
 	getters: {
 		/**
@@ -179,5 +216,57 @@ export const useURLStore = defineStore('url', {
 			(postinumero, limit = 2000) => {
 				return `${state.pygeoapiBase}/urban_heat_building/items?f=json&limit=${limit}&postinumero=${postinumero}`;
 			},
+		/**
+		 * Generates SYKE flood map URL for a specific scenario
+		 * @param {Object} state - Pinia state
+		 * @returns {(scenario: string) => string|null} Function accepting scenario name and returning WMS URL or null if unknown
+		 * @example
+		 * sykeFloodUrl(state)('HulevesitulvaVesisyvyysSade52mmMallinnettuAlue') // Returns stormwater 52mm flood URL
+		 * sykeFloodUrl(state)('coastal_flood_SSP585_2050_0020_with_protected') // Returns coastal flood SSP585 2050 URL
+		 */
+		sykeFloodUrl: (state) => (scenario) => {
+			const { geoserverBase, flood } = state.externalApis.syke;
+
+			// Stormwater flood scenarios
+			if (scenario === 'HulevesitulvaVesisyvyysSade52mmMallinnettuAlue') {
+				return `${geoserverBase}${flood.stormwater52mm}`;
+			}
+			if (scenario === 'HulevesitulvaVesisyvyysSade80mmMallinnettuAlue') {
+				return `${geoserverBase}${flood.stormwater80mm}`;
+			}
+
+			// Combined coastal flood scenarios (all SSP pathways)
+			if (scenario === 'SSP585_re_with_SSP245_with_SSP126_with_current') {
+				return `${geoserverBase}${flood.coastalCombined}`;
+			}
+
+			// Individual coastal flood scenarios
+			if (scenario.startsWith('coastal_flood_')) {
+				return `${geoserverBase}${flood.coastalBase}`;
+			}
+
+			return null; // Unknown scenario
+		},
+		/**
+		 * Generates Helsinki WFS URL for building data by postal code
+		 * @param {Object} state - Pinia state
+		 * @returns {(postalCode: string) => string} Function accepting postal code and returning WFS GetFeature URL
+		 * @example
+		 * helsinkiBuildingsUrl(state)('00100') // Returns WFS URL for buildings in postal code 00100
+		 */
+		helsinkiBuildingsUrl: (state) => (postalCode) => {
+			const baseUrl = state.externalApis.maps.helsinkiWfs;
+			return `${baseUrl}?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27${postalCode}%27`;
+		},
+		/**
+		 * Generates R4C sensor data URL for latest measurements
+		 * @param {Object} state - Pinia state
+		 * @returns {string} GeoJSON URL for latest sensor readings
+		 * @example
+		 * r4cSensorUrl(state) // Returns latest R4C sensor data URL
+		 */
+		r4cSensorUrl: (state) => {
+			return state.externalApis.sensors.r4cLatest;
+		},
 	},
 });

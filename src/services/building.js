@@ -7,6 +7,7 @@ import unifiedLoader from './unifiedLoader.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { useURLStore } from '../stores/urlStore.js';
 import { eventBus } from './eventEmitter.js';
 
 /**
@@ -34,6 +35,7 @@ export default class Building {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
 		this.propsStore = usePropsStore();
+		this.urlStore = useURLStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
 		this.treeService = new Tree();
@@ -290,10 +292,7 @@ export default class Building {
 	 */
 	async loadBuildings(postalCode) {
 		const targetPostalCode = postalCode || this.store.postalcode;
-		const url =
-			'https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27' +
-			targetPostalCode +
-			'%27';
+		const url = this.urlStore.helsinkiBuildingsUrl(targetPostalCode);
 
 		console.log(
 			'[HelsinkiBuilding] 🏢 Loading Helsinki buildings for postal code:',
