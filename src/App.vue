@@ -55,6 +55,13 @@
 				class="ml-4"
 			/>
 
+			<!-- Data Source Status Badge -->
+			<DataSourceStatusBadge
+				class="ml-2"
+				@source-retry="handleSourceRetry"
+				@cache-cleared="handleCacheCleared"
+			/>
+
 			<v-spacer />
 
 			<!-- Right section -->
@@ -87,17 +94,6 @@
 				@retry-layer="handleRetryLayer"
 			/>
 
-			<!-- Data Source Status - Bottom Right Corner -->
-			<div
-				class="status-indicator-container"
-				:class="{ 'sidebar-open': sidebarVisible }"
-			>
-				<DataSourceStatusCompact
-					@source-retry="handleSourceRetry"
-					@cache-cleared="handleCacheCleared"
-				/>
-			</div>
-
 			<!-- Minimal disclaimer -->
 			<div class="minimal-disclaimer">
 				<span class="disclaimer-text"> Data: HSY • Statistics Finland </span>
@@ -111,7 +107,7 @@ import ControlPanel from './pages/ControlPanel.vue';
 import CesiumViewer from './pages/CesiumViewer.vue';
 import SosEco250mGrid from './components/SosEco250mGrid.vue';
 import LoadingIndicator from './components/LoadingIndicator.vue';
-import DataSourceStatusCompact from './components/DataSourceStatusCompact.vue';
+import DataSourceStatusBadge from './components/DataSourceStatusBadge.vue';
 import TimelineCompact from './components/TimelineCompact.vue';
 import ViewModeCompact from './components/ViewModeCompact.vue';
 import FeatureFlagsPanel from './components/FeatureFlagsPanel.vue';
@@ -271,21 +267,6 @@ onMounted(async () => {
 	padding: 0 !important;
 }
 
-/* Status indicator positioning */
-.status-indicator-container {
-	position: fixed;
-	bottom: 16px; /* No longer need to be above footer */
-	right: 16px;
-	z-index: 2010; /* Above sidebar (which is typically z-index 2000-2005) */
-	max-width: 300px;
-	transition: right 0.3s ease;
-}
-
-/* Adjust position when sidebar is open */
-.status-indicator-container.sidebar-open {
-	right: 296px; /* 280px sidebar width + 16px margin */
-}
-
 /* Navigation buttons - ensure touch targets meet WCAG 2.5.5 */
 .v-app-bar .v-btn--icon {
 	/* Default Vuetify icon button is 40px, which is close to 44px minimum */
@@ -330,17 +311,6 @@ a {
 	.disclaimer-text {
 		font-size: 0.55rem;
 		padding: 1px 4px;
-	}
-
-	.status-indicator-container {
-		bottom: 8px;
-		right: 8px;
-		max-width: 250px;
-	}
-
-	/* On mobile, sidebar covers full screen so keep indicator on right */
-	.status-indicator-container.sidebar-open {
-		right: 8px;
 	}
 }
 

@@ -1,10 +1,12 @@
 <template>
 	<v-navigation-drawer
+		:model-value="modelValue"
 		role="navigation"
 		aria-label="Analysis tools and data exploration"
 		class="analysis-sidebar"
 		width="350"
 		location="right"
+		@update:model-value="$emit('update:modelValue', $event)"
 	>
 		<div class="sidebar-content">
 			<div class="control-section">
@@ -194,7 +196,7 @@
 					<v-icon class="mr-2"> mdi-information </v-icon
 					>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
 				</h3>
-				<PrintBox />
+				<AreaProperties />
 			</div>
 		</div>
 	</v-navigation-drawer>
@@ -292,7 +294,7 @@ import { ref, computed } from 'vue';
 import UnifiedSearch from '../components/UnifiedSearch.vue';
 import MapControls from '../components/MapControls.vue';
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue';
-import PrintBox from '../components/PrintBox.vue';
+import AreaProperties from '../components/AreaProperties.vue';
 import HeatHistogram from '../components/HeatHistogram.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
 import Landcover from '../views/Landcover.vue';
@@ -325,7 +327,7 @@ export default {
 		UnifiedSearch,
 		MapControls,
 		BackgroundMapBrowser,
-		PrintBox,
+		AreaProperties,
 		HeatHistogram,
 		SocioEconomics,
 		Landcover,
@@ -342,6 +344,13 @@ export default {
 		EstimatedImpacts,
 		LandcoverToParks,
 	},
+	props: {
+		modelValue: {
+			type: Boolean,
+			default: true,
+		},
+	},
+	emits: ['update:modelValue'],
 	setup() {
 		// ## NEW: State for the new panel ##
 		const adaptationTab = ref('centers');
