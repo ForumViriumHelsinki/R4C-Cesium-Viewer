@@ -110,9 +110,11 @@ export default class HSYBuilding {
 					console.log(
 						'[HSYBuilding] 🔧 Calling setHSYBuildingAttributes with',
 						entities.length,
-						'entities'
+						'entities',
+						'for postal code:',
+						targetPostalCode
 					);
-					this.setHSYBuildingAttributes(data, entities);
+					this.setHSYBuildingAttributes(data, entities, targetPostalCode);
 
 					console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer');
 					return entities;
@@ -419,7 +421,7 @@ export default class HSYBuilding {
 		}
 	}
 
-	async calculateHSYUrbanHeatData(data, entities) {
+	async calculateHSYUrbanHeatData(data, entities, postalCode) {
 		console.log('[HSYBuilding] 🌡️ Calculating urban heat data for', entities.length, 'entities');
 
 		const heatExposureData = this.urbanHeatService.calculateAverageExposure(data.features);
@@ -443,17 +445,18 @@ export default class HSYBuilding {
 			heatExposureData: heatExposureData.length,
 			avgTempCList: avgTempCList.length,
 			dataFeatures: data.features?.length || 0,
+			postalCode: postalCode,
 		});
 
-		setBuildingPropsAndEmitEvent(entities, heatExposureData, avgTempCList, data);
+		setBuildingPropsAndEmitEvent(entities, heatExposureData, avgTempCList, data, postalCode);
 	}
 
-	setHSYBuildingAttributes(data, entities) {
+	setHSYBuildingAttributes(data, entities, postalCode) {
 		console.log('[HSYBuilding] 🏗️ setHSYBuildingAttributes called with:', {
 			dataFeatures: data.features?.length || 0,
 			entities: entities.length,
-			hasPostalCode: Boolean(this.store.postalcode),
-			postalCode: this.store.postalcode,
+			postalCode: postalCode,
+			storePostalCode: this.store.postalcode,
 		});
 
 		this.buildingService.setHeatExposureToBuildings(entities);
@@ -463,11 +466,11 @@ export default class HSYBuilding {
 		// This was previously only set inside calculateHSYUrbanHeatData which required postal code
 		const buildingStore = useBuildingStore();
 		console.log('[HSYBuilding] 🎯 Setting buildingFeatures in store (always, for hover support)');
-		buildingStore.setBuildingFeatures(data);
+		buildingStore.setBuildingFeatures(data, postalCode);
 
 		if (this.store.postalcode) {
 			console.log('[HSYBuilding] ✓ Postal code exists, calling calculateHSYUrbanHeatData');
-			this.calculateHSYUrbanHeatData(data, entities);
+			this.calculateHSYUrbanHeatData(data, entities, postalCode);
 		} else {
 			console.log(
 				'[HSYBuilding] ⚠️ No postal code, skipping calculateHSYUrbanHeatData (but buildingFeatures is set)'
@@ -502,16 +505,24 @@ export default class HSYBuilding {
  * @param {Array} heatExposureData - Heat exposure timeseries data array
  * @param {Array<number>} avg_temp_cList - Average temperature values for histogram
  * @param {Object} data - Raw building feature data
+ * @param {string} postalCode - Postal code for the building features (for LRU cache tracking)
  * @fires eventBus#showCapitalRegion - Emitted when Capital Region data is loaded
  * @private
  */
-const setBuildingPropsAndEmitEvent = (entities, heatExposureData, avg_temp_cList, data) => {
+const setBuildingPropsAndEmitEvent = (
+	entities,
+	heatExposureData,
+	avg_temp_cList,
+	data,
+	postalCode
+) => {
 	console.log('[HSYBuilding] 💾 setBuildingPropsAndEmitEvent called with:', {
 		entities: entities.length,
 		heatExposureDataLength: heatExposureData.length,
 		avgTempCListLength: avg_temp_cList.length,
 		dataType: data?.type,
 		dataFeaturesLength: data?.features?.length || 0,
+		postalCode: postalCode,
 	});
 
 	const propsStore = usePropsStore();
@@ -526,9 +537,10 @@ const setBuildingPropsAndEmitEvent = (entities, heatExposureData, avg_temp_cList
 		featuresCount: data?.features?.length,
 		firstFeatureId: data?.features?.[0]?.id,
 		firstFeatureProps: Object.keys(data?.features?.[0]?.properties || {}),
+		postalCode: postalCode,
 	});
 
-	buildingStore.setBuildingFeatures(data);
+	buildingStore.setBuildingFeatures(data, postalCode);
 
 	console.log('[HSYBuilding] ✅ buildingFeatures set in store. Verifying:', {
 		storeHasFeatures: Boolean(buildingStore.buildingFeatures),

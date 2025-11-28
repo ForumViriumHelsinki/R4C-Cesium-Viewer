@@ -104,7 +104,7 @@ export default class Urbanheat {
 	async findUrbanHeatData(data, postalCode) {
 		const buildingStore = useBuildingStore();
 		const postcode = postalCode || this.store.postalcode;
-		buildingStore.setBuildingFeatures(data);
+		buildingStore.setBuildingFeatures(data, postcode);
 
 		try {
 			const response = await fetch(this.urlStore.urbanHeatHelsinki(postcode));
