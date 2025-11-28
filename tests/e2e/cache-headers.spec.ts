@@ -1,6 +1,32 @@
 /**
  * Cache Header Verification Tests
  *
+ * ===================================================================
+ * REQUIREMENTS - PRODUCTION BUILD ONLY
+ * ===================================================================
+ *
+ * These tests verify nginx cache header configuration and REQUIRE
+ * a production build. They will be SKIPPED when running against
+ * the development server.
+ *
+ * Setup Instructions:
+ * 1. Build the production bundle: `npm run build`
+ * 2. Start the preview server: `npm run preview`
+ * 3. Run tests: `npx playwright test cache-headers`
+ *
+ * CI Environment:
+ * - CI automatically uses the production server (port 4173)
+ * - See playwright.config.ts line 50 for base URL configuration
+ *
+ * Local Development:
+ * - Default base URL is http://localhost:5173 (dev server)
+ * - Dev server does NOT set cache headers (handled by nginx in production)
+ * - Tests will skip gracefully with informational message
+ *
+ * ===================================================================
+ * TEST COVERAGE
+ * ===================================================================
+ *
  * These tests verify that cache headers are correctly configured for:
  * 1. index.html - should never be cached (no-cache, no-store, must-revalidate)
  * 2. /assets/* - should be aggressively cached (immutable, max-age=1 year)
@@ -53,7 +79,39 @@ function assertImmutableCacheHeaders(cacheControl: string | undefined, assetPath
 	expect(cacheControl).toContain('public');
 }
 
+/**
+ * Helper function to detect if running against production build
+ * Checks if we're running against port 4173 (preview server) or if CI environment
+ */
+function isProductionEnvironment(): boolean {
+	// CI always uses production build (port 4173)
+	if (process.env.CI) {
+		return true;
+	}
+
+	// Check if PLAYWRIGHT_BASE_URL is set to preview server
+	const baseUrl = process.env.PLAYWRIGHT_BASE_URL;
+	if (baseUrl && baseUrl.includes(':4173')) {
+		return true;
+	}
+
+	// Default local development uses port 5173 (dev server)
+	return false;
+}
+
 test.describe('Cache Header Verification', () => {
+	test.beforeEach(async ({}, testInfo) => {
+		// Skip all cache header tests when running against dev server
+		if (!isProductionEnvironment()) {
+			test.skip(
+				true,
+				'⚠️  Cache header tests require production build.\n' +
+					'   Run: npm run build && npm run preview\n' +
+					'   Then: npx playwright test cache-headers --config playwright.config.ts -c "baseURL=http://localhost:4173"'
+			);
+		}
+	});
+
 	test(
 		'index.html should have no-cache header',
 		{ tag: ['@e2e', '@performance'] },
@@ -163,18 +221,52 @@ test.describe('Cache Header Verification', () => {
 		'unhashed static assets should have no-cache header',
 		{ tag: ['@e2e', '@performance'] },
 		async ({ request }) => {
-			// Test vite.svg which is a known unhashed static file
+			// Test multiple unhashed static files from the public directory
 			// Per nginx config lines 72-76, unhashed static files should have no-cache
-			const staticResponse = await request.get('/vite.svg');
+			// These files don't have content hashes in their names, so they need no-cache
+			// to ensure browsers always check for updates
+			const unhashedAssets = [
+				'/vite.svg', // Vite branding
+				'/assets/vue.svg', // Vue branding
+				'/assets/images/fvh-1_musta.png', // Forum Virium Helsinki logo
+				'/assets/images/regions4climate-black.png', // R4C logo
+				'/assets/images/hsy-logo_600px.png', // HSY logo
+				'/assets/images/hero_logo.png', // Hero logo
+				'/assets/images/tilastokeskus_en.png', // Statistics Finland logo
+				'/assets/images/sentinel_hub_by_sinergise_logo_big.png', // Sentinel Hub logo
+			];
 
-			// Only test if the file exists (it may not in all environments)
-			if (staticResponse.status() === 200) {
-				const cacheControl = staticResponse.headers()['cache-control'];
-				assertNoCacheHeaders(cacheControl, '/vite.svg');
-			} else {
-				// Skip if vite.svg doesn't exist - test is informational only
-				test.skip(true, 'vite.svg not found - skipping unhashed static asset test');
+			let testedCount = 0;
+			const results: { asset: string; tested: boolean; reason?: string }[] = [];
+
+			// Test each asset
+			for (const asset of unhashedAssets) {
+				const response = await request.get(asset);
+
+				if (response.status() === 200) {
+					const cacheControl = response.headers()['cache-control'];
+					assertNoCacheHeaders(cacheControl, asset);
+					testedCount++;
+					results.push({ asset, tested: true });
+				} else {
+					results.push({
+						asset,
+						tested: false,
+						reason: `Status ${response.status()}`,
+					});
+				}
 			}
+
+			// Ensure we tested at least some assets
+			// This prevents the test from silently passing if all assets are missing
+			expect(
+				testedCount,
+				`Only ${testedCount} of ${unhashedAssets.length} unhashed assets were found and tested. ` +
+					`Missing assets: ${results
+						.filter((r) => !r.tested)
+						.map((r) => r.asset)
+						.join(', ')}`
+			).toBeGreaterThan(0);
 		}
 	);
 });
