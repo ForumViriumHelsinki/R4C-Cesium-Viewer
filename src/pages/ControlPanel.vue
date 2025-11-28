@@ -194,7 +194,7 @@
 					<v-icon class="mr-2"> mdi-information </v-icon
 					>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
 				</h3>
-				<PrintBox />
+				<AreaProperties />
 			</div>
 		</div>
 	</v-navigation-drawer>
@@ -292,7 +292,7 @@ import { ref, computed } from 'vue';
 import UnifiedSearch from '../components/UnifiedSearch.vue';
 import MapControls from '../components/MapControls.vue';
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue';
-import PrintBox from '../components/PrintBox.vue';
+import AreaProperties from '../components/AreaProperties.vue';
 import HeatHistogram from '../components/HeatHistogram.vue';
 import SocioEconomics from '../views/SocioEconomics.vue';
 import Landcover from '../views/Landcover.vue';
@@ -325,7 +325,7 @@ export default {
 		UnifiedSearch,
 		MapControls,
 		BackgroundMapBrowser,
-		PrintBox,
+		AreaProperties,
 		HeatHistogram,
 		SocioEconomics,
 		Landcover,
