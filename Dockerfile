@@ -21,8 +21,11 @@ RUN --mount=type=cache,target=/root/.npm \
 
 FROM nginx:1.27
 
-# Set default value for nginx environment variable
+# Set default values for nginx environment variables
 ENV VITE_PYGEOAPI_HOST=pygeoapi.dataportal.fi
+# DNS resolver: 127.0.0.11 is Docker's embedded DNS resolver
+# Override with NGINX_DNS_RESOLVER env var for Kubernetes (use kube-dns ClusterIP)
+ENV NGINX_DNS_RESOLVER=127.0.0.11
 
 # Install dbmate and postgresql-client for migrations
 RUN apt-get update && apt-get install -y \
