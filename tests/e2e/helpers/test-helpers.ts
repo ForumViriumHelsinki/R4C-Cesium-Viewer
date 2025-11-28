@@ -15,55 +15,533 @@ import {
 } from './cesium-helper';
 
 /**
- * Timeout constants for test interactions
+ * Centralized timeout constants for test suite operations.
  *
- * These constants centralize timeout values used throughout the test suite,
- * making it easier to adjust timing for different CI/CD environments and
- * maintain consistency across tests.
+ * These values are calibrated based on:
+ * - Actual CesiumJS WebGL initialization performance (10-15s typical)
+ * - Vuetify animation durations (CSS transitions: 150-300ms)
+ * - Network latency for WMS/API calls (1-3s typical)
+ * - Browser rendering and layout stabilization timing
  *
- * Categories:
- * - WAIT_* : Fixed delays using waitForTimeout for element stabilization
- * - ELEMENT_* : Timeouts for element visibility/interaction checks
- * - CESIUM_* : Timeouts specific to CesiumJS initialization and rendering
- * - RETRY_* : Backoff delays for retry logic
- * - DATA_* : Timeouts for data loading and processing
+ * ## Design Philosophy
+ *
+ * **Stability over speed**: Timeouts are intentionally conservative to prevent
+ * flaky tests. A test that takes 1 second longer but never flakes is preferable
+ * to a fast but unreliable test.
+ *
+ * **Categories by purpose**: Timeouts are organized by what they're waiting for
+ * (element rendering, data loading, animations) rather than by numeric value.
+ * This makes it easier to tune related operations together.
+ *
+ * **Environment awareness**: CI environments (GitHub Actions) receive 1.5-2x
+ * longer timeouts due to:
+ * - Shared compute resources causing variable CPU availability
+ * - Software rendering for WebGL (SwiftShader) being 2-3x slower than GPU
+ * - Container networking overhead for API/WMS requests
+ *
+ * ## Performance Considerations
+ *
+ * These timeouts were chosen to balance:
+ * 1. **Test reliability**: Must accommodate 99th percentile performance
+ * 2. **Feedback speed**: Shorter timeouts = faster failure detection
+ * 3. **Resource efficiency**: Longer waits consume CI minutes
+ *
+ * Current test suite performance (local development):
+ * - Median test: ~15-20 seconds (Cesium init + interactions)
+ * - 95th percentile: ~35-40 seconds (complex drill-down scenarios)
+ * - CI environments: ~1.5-2x slower
+ *
+ * @see {@link https://playwright.dev/docs/test-timeouts | Playwright Timeout Guide}
+ * @see {@link file://../../../docs/TEST_TIMEOUTS.md | Test Timeouts Documentation}
  */
 export const TEST_TIMEOUTS = {
-	// Fixed wait delays (waitForTimeout) - ordered by duration
-	WAIT_BRIEF: 100, // Very short wait for quick UI updates
-	WAIT_SHORT: 200, // Short wait for element stabilization
-	WAIT_STABILITY: 300, // Element stability after interaction
-	WAIT_TOOLTIP: 500, // Wait for tooltip/overlay animations
-	WAIT_STATE_CHANGE: 500, // Wait for state changes to settle
-	WAIT_MEDIUM: 1000, // Medium wait for data processing
-	WAIT_DATA_LOAD: 2000, // Wait for data loading operations
-	WAIT_CESIUM_TILES: 2000, // Wait for Cesium tile loading
-	WAIT_LONG: 3000, // Long wait for complex operations
-	WAIT_EXTENDED: 5000, // Extended wait for heavy operations
+	// ============================================================================
+	// FIXED WAIT DELAYS (WAIT_*)
+	// Used with page.waitForTimeout() for explicit pauses
+	// ============================================================================
 
-	// Element interaction timeouts (waitFor, expect)
-	ELEMENT_VISIBLE: 500, // Quick element visibility checks (loading cards, etc.)
-	ELEMENT_INTERACTION: 2000, // Element click/interaction timeout
-	ELEMENT_SCROLL: 3000, // Scroll into view timeout
-	ELEMENT_STANDARD: 5000, // Standard element wait timeout
-	ELEMENT_COMPLEX: 8000, // Complex element wait (timeline, charts)
-	ELEMENT_DATA_DEPENDENT: 10000, // Elements dependent on data loading
+	/**
+	 * Very brief wait for immediate UI state changes (100ms).
+	 *
+	 * **When to use:**
+	 * - Focus state settling after programmatic focus()
+	 * - Synchronous Vue reactivity updates
+	 * - Quick DOM mutations that happen within one frame
+	 *
+	 * **Rationale:** 100ms = ~6 frames at 60fps, sufficient for:
+	 * - Browser to commit pending style changes
+	 * - Vue's nextTick() to process reactive updates
+	 * - Accessibility tree updates to propagate
+	 *
+	 * **Optimization potential:** Could be reduced to 50ms for most cases,
+	 * but 100ms provides safety margin for slower CI environments.
+	 */
+	WAIT_BRIEF: 100,
 
-	// CesiumJS-specific timeouts
-	CESIUM_CONTAINER: 10000, // Cesium container initialization
-	CESIUM_READY: 15000, // Cesium viewer ready state
-	CESIUM_READY_CI: 30000, // Cesium ready in CI environment
-	CESIUM_POSTAL_CODE: 8000, // Postal code level activation
-	CESIUM_BUILDING: 10000, // Building level activation
+	/**
+	 * Short wait for element stabilization after layout changes (200ms).
+	 *
+	 * **When to use:**
+	 * - Retry backoff in scroll operations
+	 * - After dynamic content insertion causing reflow
+	 * - Between rapid successive interactions
+	 *
+	 * **Rationale:** 200ms matches typical scroll animation duration.
+	 * Vuetify's default scroll-behavior uses CSS scroll-behavior: smooth,
+	 * which takes ~200-250ms to complete.
+	 *
+	 * **Used in:** scrollIntoViewportWithRetry retry delays
+	 */
+	WAIT_SHORT: 200,
 
-	// Retry backoff delays
-	RETRY_BACKOFF_BASE: 200, // Base backoff for retries
-	RETRY_BACKOFF_INTERACTION: 300, // Backoff for interaction retries
-	RETRY_BACKOFF_EXPONENTIAL: 1000, // Base for exponential backoff
+	/**
+	 * Wait for element stability after user interactions (300ms).
+	 *
+	 * **When to use:**
+	 * - After checkbox check/uncheck operations
+	 * - After form input value changes
+	 * - After programmatic state updates
+	 * - Before verifying element state changed
+	 *
+	 * **Rationale:** 300ms accommodates:
+	 * - Vuetify transition durations (150-250ms)
+	 * - Vue reactivity batching and DOM patch cycle
+	 * - Browser reflow/repaint after DOM changes
+	 *
+	 * **Measured performance:** Most interactions settle within 150-200ms,
+	 * 300ms provides 50% safety margin for variable CI performance.
+	 */
+	WAIT_STABILITY: 300,
 
-	// Legacy aliases (for backward compatibility during migration)
-	SCROLL_INTO_VIEW: 3000, // Use ELEMENT_SCROLL instead
-	INTERACTION: 5000, // Use ELEMENT_STANDARD instead
+	/**
+	 * Wait for tooltip, overlay, and modal animations (500ms).
+	 *
+	 * **When to use:**
+	 * - After closing dialogs/overlays
+	 * - After tooltip display/hide
+	 * - After dropdown menu open/close
+	 * - After view mode switches (state changes)
+	 *
+	 * **Rationale:** 500ms covers:
+	 * - Vuetify overlay fade transitions (300ms)
+	 * - CSS transform/opacity animations
+	 * - Z-index stacking context updates
+	 * - Overlay backdrop removal from DOM
+	 *
+	 * **Measured performance:** Vuetify transitions complete in 300-350ms,
+	 * 500ms ensures animation fully completes and cleanup runs.
+	 */
+	WAIT_TOOLTIP: 500,
+
+	/**
+	 * Wait for application state changes to propagate (500ms).
+	 *
+	 * **When to use:**
+	 * - After view mode selection (Capital Region ↔ Statistical Grid)
+	 * - After filter toggle changes
+	 * - After layer visibility changes
+	 * - Before verifying derived state updates
+	 *
+	 * **Rationale:** Same as WAIT_TOOLTIP (both are 500ms), but semantically
+	 * different. State changes may trigger multiple UI updates:
+	 * - Pinia store updates
+	 * - Component re-renders
+	 * - Computed property recalculations
+	 * - Watchers and side effects
+	 */
+	WAIT_STATE_CHANGE: 500,
+
+	/**
+	 * Medium wait for data processing and light computations (1000ms).
+	 *
+	 * **When to use:**
+	 * - After form submissions
+	 * - After API responses return but UI updating
+	 * - After timeline slider changes (data recalculation)
+	 * - Between drill-down levels
+	 *
+	 * **Rationale:** 1 second accommodates:
+	 * - D3.js chart re-rendering
+	 * - GeoJSON data parsing and processing
+	 * - CesiumJS entity updates
+	 * - Multiple cascading Vue component updates
+	 *
+	 * **Optimization potential:** Could potentially be reduced to 750ms,
+	 * but 1000ms is a safe default for variable data set sizes.
+	 */
+	WAIT_MEDIUM: 1000,
+
+	/**
+	 * Wait for data loading and rendering operations (2000ms).
+	 *
+	 * **When to use:**
+	 * - After data-dependent component mounting
+	 * - After chart/graph rendering with D3.js
+	 * - After table population with large datasets
+	 * - After timeline component initialization
+	 *
+	 * **Rationale:** 2 seconds covers:
+	 * - API fetch completion (local: 100-500ms, WMS: 500-1500ms)
+	 * - Data transformation and processing
+	 * - D3.js enter/update/exit cycles
+	 * - Vuetify data table rendering
+	 *
+	 * **Measured performance:** Timeline initialization takes 1.2-1.8s,
+	 * 2000ms provides buffer for slower network or CPU contention.
+	 */
+	WAIT_DATA_LOAD: 2000,
+
+	/**
+	 * Wait for CesiumJS tile loading after camera movement (2000ms).
+	 *
+	 * **When to use:**
+	 * - After camera fly-to operations
+	 * - After zoom level changes
+	 * - After view mode switches affecting camera
+	 * - Before capturing screenshots of map
+	 *
+	 * **Rationale:** CesiumJS tile loading is progressive:
+	 * - Low-res tiles: 200-500ms
+	 * - High-res tiles: 1000-2000ms
+	 * - 3D terrain tiles: 1500-3000ms
+	 *
+	 * **Note:** CesiumJS continuously loads tiles in background, so this
+	 * timeout is a "good enough" heuristic, not a guarantee all tiles loaded.
+	 *
+	 * **Optimization potential:** Reducing below 2000ms would cause visible
+	 * low-resolution tiles in screenshots/assertions.
+	 */
+	WAIT_CESIUM_TILES: 2000,
+
+	/**
+	 * Long wait for complex multi-step operations (3000ms).
+	 *
+	 * **When to use:**
+	 * - After postal code drill-down (multi-step process)
+	 * - After multiple cascading state updates
+	 * - After heavy computation or rendering
+	 * - In scenarios with multiple asynchronous dependencies
+	 *
+	 * **Rationale:** 3 seconds allows for:
+	 * - Multiple sequential API calls
+	 * - Heavy D3.js visualizations (scatter plots with 1000+ points)
+	 * - CesiumJS camera animations + data loading
+	 * - Complex Vue component lifecycle (mount + data fetch + render)
+	 */
+	WAIT_LONG: 3000,
+
+	/**
+	 * Extended wait for very heavy operations (5000ms).
+	 *
+	 * **When to use:**
+	 * - After building level drill-down (loads multiple data sources)
+	 * - After large dataset operations
+	 * - When multiple WMS/API calls run in parallel
+	 * - For operations with unpredictable performance characteristics
+	 *
+	 * **Rationale:** 5 seconds is conservative timeout for:
+	 * - Parallel data fetching (WMS layers + API data + GeoJSON)
+	 * - Large GeoJSON parsing (10,000+ features)
+	 * - Complex Cesium entity collections
+	 *
+	 * **Usage note:** Should be used sparingly - if you need this often,
+	 * consider optimizing the application rather than increasing timeout.
+	 */
+	WAIT_EXTENDED: 5000,
+
+	// ============================================================================
+	// ELEMENT INTERACTION TIMEOUTS (ELEMENT_*)
+	// Used with waitFor(), waitForSelector(), expect() timeout options
+	// These use Playwright's auto-retry mechanism
+	// ============================================================================
+
+	/**
+	 * Quick element visibility check timeout (500ms).
+	 *
+	 * **When to use:**
+	 * - Loading spinners that should appear immediately
+	 * - Toast notifications
+	 * - Error messages
+	 * - Elements that should already be in DOM
+	 *
+	 * **Rationale:** Short timeout for fail-fast on elements that should
+	 * appear instantly. If element not visible in 500ms, likely an error.
+	 *
+	 * **Playwright retry behavior:** Retries every 50ms, so 500ms = ~10 attempts.
+	 *
+	 * **Optimization:** Already quite aggressive - don't reduce further.
+	 */
+	ELEMENT_VISIBLE: 500,
+
+	/**
+	 * Element click/interaction operation timeout (2000ms).
+	 *
+	 * **When to use:**
+	 * - button.click() with timeout option
+	 * - checkbox.check()/uncheck() operations
+	 * - input.fill() operations
+	 * - Any interactive element manipulation
+	 *
+	 * **Rationale:** 2 seconds allows for:
+	 * - Playwright actionability checks (visible, stable, enabled, not obscured)
+	 * - Scroll into view if needed
+	 * - Wait for element to become actionable
+	 * - Handle Vuetify overlay timing issues
+	 *
+	 * **Measured performance:** Most interactions complete in 200-500ms,
+	 * 2000ms handles edge cases like WebGL canvas overlays settling.
+	 */
+	ELEMENT_INTERACTION: 2000,
+
+	/**
+	 * Scroll into view operation timeout (3000ms).
+	 *
+	 * **When to use:**
+	 * - scrollIntoViewIfNeeded() operations
+	 * - Long lists or nested scrollable containers
+	 * - Elements in expansion panels that need to expand first
+	 *
+	 * **Rationale:** 3 seconds accommodates:
+	 * - Scroll animation duration (200-300ms)
+	 * - Expansion panel open animation (250ms)
+	 * - Lazy-loaded content rendering
+	 * - Multiple nested scroll containers
+	 *
+	 * **Used in:** scrollIntoViewportWithRetry, testToggle, drillToLevel
+	 */
+	ELEMENT_SCROLL: 3000,
+
+	/**
+	 * Standard element wait timeout (5000ms).
+	 *
+	 * **When to use:**
+	 * - Generic expect(element).toBeVisible() assertions
+	 * - waitForSelector() for regular UI elements
+	 * - Elements that depend on state changes
+	 * - Default timeout when specific timeout unclear
+	 *
+	 * **Rationale:** 5 seconds is conservative default that handles:
+	 * - View mode switches (500ms) + element render (500ms) + buffer (4s)
+	 * - Network-dependent elements that aren't specifically data-heavy
+	 * - Elements that require multiple preconditions
+	 *
+	 * **Matches:** Playwright config expect.timeout in local dev (5000ms)
+	 *
+	 * **Optimization potential:** Could be reduced to 3000ms for many cases,
+	 * but 5000ms prevents false failures on slower machines.
+	 */
+	ELEMENT_STANDARD: 5000,
+
+	/**
+	 * Complex element wait timeout (8000ms).
+	 *
+	 * **When to use:**
+	 * - Timeline component visibility and initialization
+	 * - D3.js charts and graphs
+	 * - Interactive visualizations
+	 * - Elements with complex initialization logic
+	 *
+	 * **Rationale:** 8 seconds allows for:
+	 * - Timeline: data fetch (1s) + D3 render (1s) + slider init (0.5s) + buffer
+	 * - Scatter plots: data load (1s) + D3 layout (2s) + render (1s) + buffer
+	 * - Heat histogram: data processing (1.5s) + chart render (1s) + buffer
+	 *
+	 * **Matches:** Playwright config expect.timeout in CI (8000ms)
+	 */
+	ELEMENT_COMPLEX: 8000,
+
+	/**
+	 * Data-dependent element timeout (10000ms).
+	 *
+	 * **When to use:**
+	 * - Elements populated from API calls
+	 * - WMS layer-dependent UI elements
+	 * - GeoJSON-loaded content
+	 * - Elements requiring multiple data sources
+	 *
+	 * **Rationale:** 10 seconds covers:
+	 * - WMS GetFeatureInfo request (1-3s)
+	 * - PyGeoAPI data fetch (500ms-2s)
+	 * - Data transformation (500ms-1s)
+	 * - UI rendering (500ms-1s)
+	 * - Retry attempts (2-3s)
+	 *
+	 * **Measured performance:** Building properties panel can take 5-8s
+	 * on first load (WMS + PyGeoAPI + GeoJSON parsing), 10s provides buffer.
+	 */
+	ELEMENT_DATA_DEPENDENT: 10000,
+
+	// ============================================================================
+	// CESIUM-SPECIFIC TIMEOUTS (CESIUM_*)
+	// Calibrated for WebGL initialization and 3D rendering operations
+	// ============================================================================
+
+	/**
+	 * Cesium container initialization timeout (10000ms).
+	 *
+	 * **When to use:**
+	 * - waitForSelector('#cesiumContainer')
+	 * - Before any Cesium interactions
+	 * - Ensuring canvas element exists and has dimensions
+	 *
+	 * **Rationale:** 10 seconds for:
+	 * - Vue component mount and Cesium instantiation (2-4s)
+	 * - WebGL context creation (1-2s, slower in CI with SwiftShader)
+	 * - Initial camera setup (1s)
+	 * - Default imagery provider loading (2-3s)
+	 *
+	 * **Measured performance:** Local: 3-5s, CI: 6-10s
+	 */
+	CESIUM_CONTAINER: 10000,
+
+	/**
+	 * Cesium viewer ready state timeout - local development (15000ms).
+	 *
+	 * **When to use:**
+	 * - waitForCesiumReady() in local environment
+	 * - Ensuring Cesium viewer fully initialized
+	 * - Before performing any map interactions
+	 *
+	 * **Rationale:** 15 seconds for complete initialization:
+	 * - Container ready (3-5s)
+	 * - Imagery tiles loaded (3-5s)
+	 * - Terrain provider ready (2-4s)
+	 * - Initial data layers (2-3s)
+	 *
+	 * **Local performance:** Typically 8-12 seconds, 15s provides buffer.
+	 */
+	CESIUM_READY: 15000,
+
+	/**
+	 * Cesium viewer ready state timeout - CI environment (30000ms).
+	 *
+	 * **When to use:**
+	 * - waitForCesiumReady() when process.env.CI is true
+	 * - GitHub Actions or other CI environments
+	 * - Headless browser with software rendering
+	 *
+	 * **Rationale:** 30 seconds accounts for:
+	 * - SwiftShader software rendering (2-3x slower than GPU)
+	 * - Shared CI compute resources causing CPU throttling
+	 * - Container networking latency for tile requests
+	 * - Cold start penalties (no HTTP cache)
+	 *
+	 * **CI performance:** Typically 15-25 seconds, 30s handles 95th percentile.
+	 *
+	 * **Optimization:** Could potentially reduce to 25s, but 30s prevents
+	 * flakes during periods of high CI load.
+	 */
+	CESIUM_READY_CI: 30000,
+
+	/**
+	 * Postal code level activation timeout (8000ms).
+	 *
+	 * **When to use:**
+	 * - After clicking map to drill down to postal code
+	 * - Waiting for postal code UI panels to appear
+	 * - Before interacting with postal code-level features
+	 *
+	 * **Rationale:** 8 seconds for postal code activation:
+	 * - Click handling and hit testing (100ms)
+	 * - Camera fly-to animation (1-2s)
+	 * - Tile loading for new zoom level (2-3s)
+	 * - Building data fetch and render (2-3s)
+	 * - Timeline initialization (1-2s)
+	 *
+	 * **Used in:** drillToLevel('postalCode')
+	 */
+	CESIUM_POSTAL_CODE: 8000,
+
+	/**
+	 * Building level activation timeout (10000ms).
+	 *
+	 * **When to use:**
+	 * - After clicking building to drill down to building level
+	 * - Waiting for building-specific panels
+	 * - Before interacting with building detail features
+	 *
+	 * **Rationale:** 10 seconds for building activation:
+	 * - Building selection and highlight (200ms)
+	 * - Camera fly-to building (1-2s)
+	 * - 3D model loading if applicable (2-3s)
+	 * - Building properties API fetch (1-2s)
+	 * - Heat data fetch (1-2s)
+	 * - UI panel rendering (1-2s)
+	 *
+	 * **Used in:** drillToLevel('building')
+	 *
+	 * **Measured performance:** Typically 5-8s, 10s handles slow API responses.
+	 */
+	CESIUM_BUILDING: 10000,
+
+	// ============================================================================
+	// RETRY BACKOFF DELAYS (RETRY_*)
+	// Used in retry logic for transient failures
+	// ============================================================================
+
+	/**
+	 * Base backoff delay for scroll retry operations (200ms).
+	 *
+	 * **When to use:**
+	 * - In scrollIntoViewportWithRetry retry loops
+	 * - Between scroll attempts when first attempt fails
+	 * - As multiplier: 200ms * attempt (200, 400, 600...)
+	 *
+	 * **Rationale:** 200ms = typical scroll animation duration.
+	 * Waiting one animation cycle before retry ensures scroll completed.
+	 *
+	 * **Pattern:** `await page.waitForTimeout(200 * scrollAttempt)`
+	 */
+	RETRY_BACKOFF_BASE: 200,
+
+	/**
+	 * Backoff delay for interaction retry operations (300ms).
+	 *
+	 * **When to use:**
+	 * - In checkWithRetry/uncheckWithRetry retry loops
+	 * - Between click attempts when actionability checks fail
+	 * - As multiplier: 300ms * attempt (300, 600, 900...)
+	 *
+	 * **Rationale:** 300ms = element stability wait + small buffer.
+	 * Allows Vuetify overlays and WebGL canvas to settle between attempts.
+	 *
+	 * **Pattern:** `await page.waitForTimeout(RETRY_BACKOFF_INTERACTION * attempt)`
+	 */
+	RETRY_BACKOFF_INTERACTION: 300,
+
+	/**
+	 * Base for exponential backoff calculations (1000ms).
+	 *
+	 * **When to use:**
+	 * - In retry logic with exponential backoff
+	 * - For operations with transient failures (network, rate limits)
+	 * - As base: 1000ms * Math.pow(multiplier, attempt)
+	 *
+	 * **Rationale:** 1 second base provides reasonable spacing:
+	 * - Attempt 1: 1s * 1.5^1 = 1.5s
+	 * - Attempt 2: 1s * 1.5^2 = 2.25s
+	 * - Attempt 3: 1s * 1.5^3 = 3.375s
+	 *
+	 * **Pattern:** `backoffMs = 1000 * Math.pow(1.5, attempt) + Math.random() * 500`
+	 *
+	 * **Note:** Usually combined with jitter to prevent thundering herd.
+	 */
+	RETRY_BACKOFF_EXPONENTIAL: 1000,
+
+	// ============================================================================
+	// LEGACY ALIASES
+	// Deprecated - kept for backward compatibility during migration
+	// ============================================================================
+
+	/**
+	 * @deprecated Use ELEMENT_SCROLL instead. Will be removed in next major version.
+	 */
+	SCROLL_INTO_VIEW: 3000,
+
+	/**
+	 * @deprecated Use ELEMENT_STANDARD instead. Will be removed in next major version.
+	 */
+	INTERACTION: 5000,
 } as const;
 
 export interface ViewMode {

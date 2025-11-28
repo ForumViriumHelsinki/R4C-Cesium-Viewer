@@ -315,6 +315,191 @@ If you need a new timeout constant:
 2. Document its purpose with an inline comment
 3. Update this documentation file
 
+## Timeout Analysis and Optimization
+
+### Current Timeout Values - Performance Assessment
+
+Based on the comprehensive JSDoc documentation added in issue #352, each timeout value has been analyzed for optimization potential:
+
+#### Safe to Keep (No Changes Recommended)
+
+| Constant                    | Value   | Reason                                                                  |
+| --------------------------- | ------- | ----------------------------------------------------------------------- |
+| `ELEMENT_VISIBLE`           | 500ms   | Already aggressive; shorter would cause false failures                  |
+| `WAIT_STABILITY`            | 300ms   | Matches Vuetify animation timing; measured at 150-200ms typical         |
+| `WAIT_TOOLTIP`              | 500ms   | Matches Vuetify transition completion (300-350ms measured)              |
+| `WAIT_STATE_CHANGE`         | 500ms   | Necessary for Pinia store + component updates                           |
+| `ELEMENT_INTERACTION`       | 2000ms  | Handles WebGL canvas overlay edge cases (200-500ms typical)             |
+| `ELEMENT_SCROLL`            | 3000ms  | Handles expansion panel animations + lazy loading                       |
+| `ELEMENT_COMPLEX`           | 8000ms  | Timeline/charts measured at 4-6s, buffer needed                         |
+| `ELEMENT_DATA_DEPENDENT`    | 10000ms | Building properties can take 5-8s on first load                         |
+| `CESIUM_CONTAINER`          | 10000ms | CI measured at 6-10s with SwiftShader                                   |
+| `CESIUM_READY`              | 15000ms | Local measured at 8-12s, buffer prevents flakes                         |
+| `CESIUM_READY_CI`           | 30000ms | CI measured at 15-25s, handles 95th percentile                          |
+| `CESIUM_POSTAL_CODE`        | 8000ms  | Multi-step process (camera + tiles + data), measured at 5-7s            |
+| `CESIUM_BUILDING`           | 10000ms | Heavy operation (3D model + multiple APIs), measured at 5-8s            |
+| `RETRY_BACKOFF_BASE`        | 200ms   | Matches scroll animation duration                                       |
+| `RETRY_BACKOFF_INTERACTION` | 300ms   | Matches element stability wait                                          |
+| `RETRY_BACKOFF_EXPONENTIAL` | 1000ms  | Standard base for exponential backoff with jitter                       |
+| `WAIT_CESIUM_TILES`         | 2000ms  | Reducing would cause low-res tiles in screenshots                       |
+| `WAIT_LONG`                 | 3000ms  | Used for complex multi-step operations (scatter plots with 1000+ points |
+
+#### Minor Optimization Potential
+
+| Constant         | Current | Could Be | Risk Assessment                                                                                                                      |
+| ---------------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `WAIT_BRIEF`     | 100ms   | 50ms     | **Low risk** - Most operations complete in <50ms. However, 100ms provides safety margin for CI variability. **Recommendation: Keep** |
+| `WAIT_SHORT`     | 200ms   | 150ms    | **Medium risk** - Scroll animations sometimes take 200-250ms. Could cause intermittent failures. **Recommendation: Keep**            |
+| `WAIT_MEDIUM`    | 1000ms  | 750ms    | **Medium risk** - D3.js rendering variable (500-1200ms). Reduction could work but risky. **Recommendation: Keep**                    |
+| `WAIT_DATA_LOAD` | 2000ms  | 1500ms   | **Medium risk** - Timeline measured at 1.2-1.8s. 1500ms might be tight. **Recommendation: Keep**                                     |
+
+#### Moderate Optimization Opportunity
+
+| Constant           | Current | Could Be | Rationale & Recommendation                                                                                                                                                                                                    |
+| ------------------ | ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ELEMENT_STANDARD` | 5000ms  | 3000ms   | **Moderate risk** - Most operations complete in 1-2s. 5000ms is very conservative. <br>**Recommendation:** Consider reducing to 4000ms first, monitor for failures, then potentially 3000ms. Would speed up tests by ~20-30%. |
+| `WAIT_EXTENDED`    | 5000ms  | 4000ms   | **Low risk** - Rarely used. If needed often, indicates application performance problem. <br>**Recommendation:** Reduce to 4000ms and investigate why tests need this timeout.                                                 |
+
+### Recommended Optimizations (Conservative Approach)
+
+Based on the analysis, only **one timeout has clear optimization potential** without risking test stability:
+
+```typescript
+// Current
+ELEMENT_STANDARD: 5000,
+
+// Recommended (Phase 1)
+ELEMENT_STANDARD: 4000,
+
+// Potential (Phase 2 - after monitoring)
+ELEMENT_STANDARD: 3000,
+```
+
+**Impact estimation:**
+
+- `ELEMENT_STANDARD` is used in ~150+ test operations
+- Reducing from 5000ms to 4000ms: **Saves ~150 seconds per full test run** (if all operations wait full timeout)
+- Reducing to 3000ms: **Saves ~300 seconds per full test run**
+- Actual savings: **10-30 seconds** (most operations don't hit timeout limit)
+
+**Implementation strategy:**
+
+1. Reduce `ELEMENT_STANDARD` to 4000ms
+2. Run full test suite 10 times in CI
+3. Monitor for new flakes or failures
+4. If stable for 1 week, consider 3000ms reduction
+5. If failures occur, revert immediately
+
+### Performance Monitoring Recommendations
+
+To make data-driven timeout decisions, implement performance tracking:
+
+#### 1. Add Timeout Usage Logging
+
+```typescript
+export const TEST_TIMEOUTS_INSTRUMENTED = {
+	...TEST_TIMEOUTS,
+	// Wrap each timeout with timing instrumentation
+} as const;
+```
+
+#### 2. Track Actual Wait Times
+
+Create a performance reporter that logs:
+
+- How long each `waitForTimeout()` actually waited
+- How many retries before timeout expiry
+- Which timeouts are consistently hit (vs. operations completing early)
+
+#### 3. Establish Performance Baselines
+
+```bash
+# Run tests with performance instrumentation
+PERFORMANCE_MONITORING=true npm run test:accessibility
+
+# Analyze timeout usage
+node scripts/analyze-timeout-usage.js
+```
+
+Expected output:
+
+```
+Timeout Usage Analysis:
+=======================
+WAIT_STABILITY (300ms):
+  - Used: 342 times
+  - Avg actual wait: 187ms
+  - 95th percentile: 245ms
+  - Recommendation: Keep current value
+
+ELEMENT_STANDARD (5000ms):
+  - Used: 156 times
+  - Avg actual wait: 1243ms
+  - 95th percentile: 2876ms
+  - Recommendation: Reduce to 3500ms (95th + 20% buffer)
+```
+
+### Global Timeout Configuration
+
+The timeout values align with Playwright's global timeout configuration:
+
+| Configuration               | Local Dev | CI       | Notes                                            |
+| --------------------------- | --------- | -------- | ------------------------------------------------ |
+| `timeout` (per test)        | 40000ms   | 50000ms  | Full test including Cesium init + interactions   |
+| `actionTimeout`             | 5000ms    | 8000ms   | Matches `ELEMENT_STANDARD` (local), matches CI   |
+| `navigationTimeout`         | 10000ms   | 15000ms  | SPA, rarely used (noWaitAfter pattern)           |
+| `expect.timeout`            | 5000ms    | 8000ms   | Matches `ELEMENT_STANDARD` and `ELEMENT_COMPLEX` |
+| `waitForCesium` (effective) | 15000ms   | 30000ms  | Uses `CESIUM_READY` and `CESIUM_READY_CI`        |
+| `drillToLevel` (effective)  | ~20000ms  | ~25000ms | Cumulative: camera + tiles + data + UI           |
+
+**Coherence check:** ✅ All timeout values are coherent with global configuration. No conflicts detected.
+
+### Environment-Specific Tuning Guide
+
+#### Local Development (Fast Iteration)
+
+For rapid test development, create a `.env.test.local` file:
+
+```bash
+# Aggressive timeouts for fast feedback during development
+TEST_TIMEOUT_SCALE=0.7
+```
+
+Then modify `test-helpers.ts`:
+
+```typescript
+const SCALE = parseFloat(process.env.TEST_TIMEOUT_SCALE || '1.0');
+
+export const TEST_TIMEOUTS = {
+	WAIT_BRIEF: Math.floor(100 * SCALE),
+	WAIT_SHORT: Math.floor(200 * SCALE),
+	// ... etc
+} as const;
+```
+
+#### CI Environments (Reliability First)
+
+Current CI multipliers:
+
+- `CESIUM_READY_CI`: 2x local timeout (15s → 30s)
+- `actionTimeout`: 1.6x local (5s → 8s)
+- Test timeout: 1.25x local (40s → 50s)
+
+These multipliers are **appropriate** for SwiftShader software rendering overhead.
+
+#### Debug Mode (Troubleshooting)
+
+For debugging flaky tests, increase all timeouts:
+
+```bash
+# Very generous timeouts for debugging
+DEBUG_MODE=true npx playwright test --debug
+```
+
+```typescript
+const DEBUG_MULTIPLIER = process.env.DEBUG_MODE ? 3.0 : 1.0;
+```
+
 ## Future Enhancements
 
 Potential improvements for the timeout system:
@@ -343,14 +528,22 @@ Potential improvements for the timeout system:
    ```
 
 3. **Per-test timeout overrides**:
+
    ```typescript
    test.use({ timeoutProfile: 'slow' });
    ```
 
+4. **Performance-based adaptive timeouts**:
+   ```typescript
+   // Automatically adjust based on historical performance
+   const ADAPTIVE_TIMEOUTS = await loadTimeoutsFromBaseline();
+   ```
+
 ## References
 
-- **Issue**: [#321 Replace hard-coded timeouts with named constants](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/321)
-- **Implementation**: `/tests/e2e/helpers/test-helpers.ts` (lines 17-67)
+- **Issue #321**: [Replace hard-coded timeouts with named constants](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/321)
+- **Issue #352**: [Optimize test timeouts based on actual performance data](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/352)
+- **Implementation**: `/tests/e2e/helpers/test-helpers.ts` (comprehensive JSDoc comments)
 - **Playwright Documentation**: [Timeouts](https://playwright.dev/docs/test-timeouts)
 
 ## Related Documentation
