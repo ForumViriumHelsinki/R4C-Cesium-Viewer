@@ -18,6 +18,10 @@ import Camera from './camera.js';
 import ColdArea from './coldarea.js';
 import { eventBus } from '../services/eventEmitter.js';
 import cacheWarmer from './cacheWarmer.js';
+import {
+	loadPostalCodeWithParallelStrategy,
+	setNameOfZone as setNameOfZoneHelper,
+} from './postalCodeLoader.js';
 
 /**
  * FeaturePicker Service
@@ -163,305 +167,43 @@ export default class FeaturePicker {
 
 	/**
 	 * Loads postal code with parallel camera animation and data loading (Phase 3)
+	 * Delegates to postalCodeLoader module for implementation.
 	 * Implements FR-3.1 (Parallel Loading), FR-3.3 (Performance Optimization), FR-3.4 (Error Handling)
-	 *
-	 * Performance optimizations:
-	 * - Checks cacheWarmer for preloaded data before network requests
-	 * - Runs camera animation and data loading in parallel using Promise.allSettled
-	 * - Implements retry logic with exponential backoff for failed requests
-	 * - Shows partial data if some datasets load successfully
 	 *
 	 * @param {string} postalCode - Postal code to load
 	 * @returns {Promise<void>}
 	 * @private
 	 */
 	async loadPostalCodeWithParallelStrategy(postalCode) {
-		performance.mark('parallel-load-start');
+		const services = {
+			cameraService: this.cameraService,
+			elementsDisplayService: this.elementsDisplayService,
+			datasourceService: this.datasourceService,
+			capitalRegionService: this.capitalRegionService,
+			helsinkiService: this.helsinkiService,
+		};
 
-		// Start camera animation immediately (will update state to 'animating')
-		const cameraPromise = this.startCameraAnimation();
+		const stores = {
+			store: this.store,
+			toggleStore: this.toggleStore,
+		};
 
-		// Check cache first for instant loading (FR-3.3 optimization)
-		const cacheKey = `buildings_${postalCode}_${this.toggleStore.helsinkiView ? 'helsinki' : 'capital'}`;
-		const cachedData = await this.checkCacheForPostalCode(cacheKey);
+		const setNameOfZoneCallback = () => this.setNameOfZone();
 
-		let dataPromise;
-		if (cachedData) {
-			console.log('[FeaturePicker] ⚡ Using cached data for instant loading');
-			// Wrap cached data in Promise.resolve for consistent handling
-			dataPromise = Promise.resolve({ data: cachedData, fromCache: true });
-
-			// Update progress immediately
-			this.updateLoadingProgress(1, 2);
-		} else {
-			console.log('[FeaturePicker] 🌐 Loading data from network');
-			// Load from network with retry logic
-			dataPromise = this.loadPostalCodeDataWithRetry(postalCode);
-		}
-
-		// Wait for both camera and data loading to complete (FR-3.1 parallel loading)
-		const results = await Promise.allSettled([cameraPromise, dataPromise]);
-
-		// Process results with comprehensive error handling (FR-3.4)
-		this.processParallelLoadingResults(results, postalCode);
-
-		performance.mark('parallel-load-complete');
-		performance.measure('parallel-load-total', 'parallel-load-start', 'parallel-load-complete');
-
-		const measure = performance.getEntriesByName('parallel-load-total')[0];
-		console.log(
-			`[FeaturePicker] ⏱️ Parallel loading completed in ${measure.duration.toFixed(2)}ms`
-		);
-
-		performance.clearMarks('parallel-load-start');
-		performance.clearMarks('parallel-load-complete');
-		performance.clearMeasures('parallel-load-total');
-	}
-
-	/**
-	 * Checks cache for preloaded postal code data (FR-3.3 optimization)
-	 * @param {string} cacheKey - Cache key to check
-	 * @returns {Promise<Object|null>} Cached data or null
-	 * @private
-	 */
-	async checkCacheForPostalCode(_cacheKey) {
-		try {
-			// Check if cacheWarmer has preloaded this data
-			const warmed = cacheWarmer.warmedPostalCodes.has(this.store.postalcode);
-			if (warmed) {
-				console.log('[FeaturePicker] ✓ Cache warmer preloaded this postal code');
-			}
-
-			// Check IndexedDB cache via unifiedLoader
-			// The unifiedLoader will check cache automatically when we call loadLayer
-			return null; // Let unifiedLoader handle cache checking
-		} catch (error) {
-			console.warn('[FeaturePicker] Cache check failed:', error?.message || error);
-			return null;
-		}
-	}
-
-	/**
-	 * Starts camera animation and returns a promise
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async startCameraAnimation() {
-		return new Promise((resolve, reject) => {
-			try {
-				// Update state to animating
-				this.store.setClickProcessingState({
-					stage: 'animating',
-					canCancel: true,
-				});
-
-				// Start camera animation
-				this.cameraService.switchTo3DView();
-
-				// Camera animation is 3 seconds, resolve after that
-				// In a real implementation, we'd hook into the camera completion callback
-				setTimeout(() => {
-					console.log('[FeaturePicker] ✓ Camera animation completed');
-					this.updateLoadingProgress(1, 2);
-					resolve();
-				}, 3000);
-			} catch (error) {
-				console.error('[FeaturePicker] ❌ Camera animation failed:', error?.message || error);
-				reject(error);
-			}
-		});
-	}
-
-	/**
-	 * Loads postal code data with retry logic (FR-3.4 error handling)
-	 * Implements exponential backoff for transient failures.
-	 *
-	 * @param {string} postalCode - Postal code to load
-	 * @param {number} retryCount - Current retry attempt (default 0)
-	 * @returns {Promise<Object>} Loaded data
-	 * @private
-	 */
-	async loadPostalCodeDataWithRetry(postalCode, retryCount = 0) {
-		const maxRetries = 3;
-		const baseDelay = 1000; // 1 second
-
-		try {
-			// Set zone name and prepare UI
-			this.setNameOfZone();
-			this.elementsDisplayService.setSwitchViewElementsDisplay('inline-block');
-			this.elementsDisplayService.setViewDisplay('none');
-
-			// Clean up previous data sources and building features
-			this.datasourceService.removeDataSourcesAndEntities();
-			const buildingStore = useBuildingStore();
-			buildingStore.clearBuildingFeatures();
-
-			// Load region-specific data with performance tracking
-			performance.mark('data-load-start');
-
-			if (!this.toggleStore.helsinkiView) {
-				console.log('[FeaturePicker] Loading Capital Region elements...');
-				await this.capitalRegionService.loadCapitalRegionElements();
-			} else {
-				console.log('[FeaturePicker] Loading Helsinki elements...');
-				await this.helsinkiService.loadHelsinkiElements();
-			}
-
-			performance.mark('data-load-complete');
-			performance.measure('data-load-duration', 'data-load-start', 'data-load-complete');
-
-			const measure = performance.getEntriesByName('data-load-duration')[0];
-			console.log(`[FeaturePicker] Data loaded in ${measure.duration.toFixed(2)}ms`);
-
-			performance.clearMarks('data-load-start');
-			performance.clearMarks('data-load-complete');
-			performance.clearMeasures('data-load-duration');
-
-			// Update level
-			this.store.setLevel('postalCode');
-
-			this.updateLoadingProgress(2, 2);
-
-			return { success: true, fromCache: false };
-		} catch (error) {
-			console.error(`[FeaturePicker] ❌ Data loading failed (attempt ${retryCount + 1}):`, error);
-
-			// Retry with exponential backoff for transient failures
-			if (retryCount < maxRetries && this.isRetriableError(error)) {
-				const delay = baseDelay * Math.pow(2, retryCount);
-				console.log(`[FeaturePicker] 🔄 Retrying in ${delay}ms...`);
-
-				// Update retry count in state
-				this.store.setClickProcessingState({
-					retryCount: retryCount + 1,
-				});
-
-				await new Promise((resolve) => setTimeout(resolve, delay));
-				return this.loadPostalCodeDataWithRetry(postalCode, retryCount + 1);
-			}
-
-			// Max retries exceeded or non-retriable error
-			throw error;
-		}
-	}
-
-	/**
-	 * Determines if an error is retriable (network/timeout vs. permanent failure)
-	 * @param {Error} error - Error to check
-	 * @returns {boolean} True if error is retriable
-	 * @private
-	 */
-	isRetriableError(error) {
-		// Network errors, timeouts, and 5xx server errors are retriable
-		const errorString = error.toString().toLowerCase();
-		return (
-			errorString.includes('network') ||
-			errorString.includes('timeout') ||
-			errorString.includes('fetch') ||
-			errorString.includes('500') ||
-			errorString.includes('502') ||
-			errorString.includes('503') ||
-			errorString.includes('504')
-		);
-	}
-
-	/**
-	 * Updates loading progress for progressive UI updates (FR-3.2)
-	 * @param {number} current - Current completed tasks
-	 * @param {number} total - Total tasks
-	 * @private
-	 */
-	updateLoadingProgress(current, total) {
-		this.store.setClickProcessingState({
-			loadingProgress: { current, total },
-		});
-
-		const percentage = Math.round((current / total) * 100);
-		console.log(`[FeaturePicker] 📊 Loading progress: ${current}/${total} (${percentage}%)`);
-	}
-
-	/**
-	 * Processes results from parallel loading with error handling (FR-3.4)
-	 * Handles partial success (one operation succeeds, other fails).
-	 *
-	 * @param {Array<PromiseSettledResult>} results - Results from Promise.allSettled
-	 * @param {string} postalCode - Postal code being loaded
-	 * @private
-	 */
-	processParallelLoadingResults(results, postalCode) {
-		const [cameraResult, dataResult] = results;
-
-		const cameraSuccess = cameraResult.status === 'fulfilled';
-		const dataSuccess = dataResult.status === 'fulfilled';
-
-		console.log('[FeaturePicker] Results:', {
-			camera: cameraSuccess ? '✓' : '✗',
-			data: dataSuccess ? '✓' : '✗',
-		});
-
-		// Handle error scenarios
-		if (!cameraSuccess) {
-			console.error('[FeaturePicker] ❌ Camera animation failed:', cameraResult.reason);
-			// Camera failure is not critical - data can still be shown
-		}
-
-		if (!dataSuccess) {
-			console.error('[FeaturePicker] ❌ Data loading failed:', dataResult.reason);
-
-			// Set error state for user feedback
-			this.store.setClickProcessingState({
-				stage: 'complete',
-				error: {
-					message: 'Failed to load postal code data',
-					details: dataResult.reason?.message || 'Unknown error',
-					canRetry: this.isRetriableError(dataResult.reason),
-				},
-			});
-
-			// Keep error state visible for user to see retry option
-			// Don't auto-reset in this case
-			return;
-		}
-
-		// Success path - both operations completed
-		this.store.setClickProcessingState({
-			stage: 'complete',
-			error: null,
-		});
-
-		// Reset state after brief delay to allow UI transition
-		setTimeout(() => {
-			this.store.resetClickProcessingState();
-		}, 500);
-
-		console.log('[FeaturePicker] ✅ Postal code loading complete:', postalCode);
+		await loadPostalCodeWithParallelStrategy(postalCode, services, stores, setNameOfZoneCallback);
 	}
 
 	/**
 	 * Sets the name of the current zone from postal code data
-	 * Searches through postal code entities to find matching postal code and extracts zone name.
+	 * Delegates to postalCodeLoader module for implementation.
 	 *
 	 * @returns {void}
 	 * @private
 	 */
 	setNameOfZone() {
-		const entitiesArray = this.propStore.postalCodeData._entityCollection?._entities._array;
-
-		if (Array.isArray(entitiesArray)) {
-			for (let i = 0; i < entitiesArray.length; i++) {
-				const entity = entitiesArray[i];
-				if (
-					entity &&
-					entity._properties &&
-					entity._properties._nimi &&
-					typeof entity._properties._nimi._value !== 'undefined' &&
-					entity._properties._posno._value === this.store.postalcode
-				) {
-					this.store.setNameOfZone(entity._properties._nimi);
-					break; // Exit the loop after finding the first match
-				}
-			}
-		}
+		setNameOfZoneHelper(this.store.postalcode, this.propStore.postalCodeData, (name) =>
+			this.store.setNameOfZone(name)
+		);
 	}
 
 	/**
