@@ -224,12 +224,12 @@ export class AccessibilityTestHelpers {
 			capitalRegionView: {
 				id: 'capitalRegionView',
 				label: 'Capital Region',
-				selector: '.view-mode-card:has-text("Capital Region")',
+				selector: '[data-testid="view-mode-capital-region"]',
 			},
 			gridView: {
 				id: 'gridView',
 				label: 'Statistical Grid',
-				selector: '.view-mode-card:has-text("Statistical Grid")',
+				selector: '[data-testid="view-mode-statistical-grid"]',
 			},
 		};
 
@@ -297,7 +297,7 @@ export class AccessibilityTestHelpers {
 
 				if (!viewCardFound) {
 					throw new Error(
-						`View mode card for ${viewMode} not found (attempt ${attempt}/${maxRetries}). Available selectors checked: ${targetView.selector}, input[value="${viewMode}"], .view-mode-card, button:has-text("${targetView.label}")`
+						`View mode card for ${viewMode} not found (attempt ${attempt}/${maxRetries}). Available selectors checked: ${targetView.selector}, input[value="${viewMode}"], .view-mode-card`
 					);
 				}
 

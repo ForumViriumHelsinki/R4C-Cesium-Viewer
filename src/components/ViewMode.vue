@@ -5,6 +5,7 @@
 			<div
 				class="view-mode-card"
 				:class="{ active: activeViewMode === 'capitalRegionView' }"
+				data-testid="view-mode-capital-region"
 				@click="onToggleChange('capitalRegionView')"
 			>
 				<div class="card-header">
@@ -73,6 +74,7 @@
 			<div
 				class="view-mode-card"
 				:class="{ active: activeViewMode === 'gridView' }"
+				data-testid="view-mode-statistical-grid"
 				@click="onToggleChange('gridView')"
 			>
 				<div class="card-header">
@@ -142,6 +144,7 @@
 				v-if="showHelsinkiHeat"
 				class="view-mode-card"
 				:class="{ active: activeViewMode === 'helsinkiHeat' }"
+				data-testid="view-mode-helsinki-focus"
 				@click="onToggleChange('helsinkiHeat')"
 			>
 				<div class="card-header">
