@@ -63,17 +63,17 @@ spec:
           echo "📦 Bucket: gs://${GCS_BUCKET}"
           echo "📁 Prefix: ${DUMP_PREFIX}"
 
-          # Find the latest dump file
+          # Find the latest dump file (native pg_dump custom format)
           echo "🔍 Finding latest database dump..."
-          LATEST_DUMP=$(gsutil ls -l "gs://${GCS_BUCKET}/${DUMP_PREFIX}*.sql.gz" | \
+          LATEST_DUMP=$(gsutil ls -l "gs://${GCS_BUCKET}/${DUMP_PREFIX}*.dump" | \
                         grep -v TOTAL | \
                         sort -k2 -r | \
                         head -1 | \
                         awk '{print $3}')
 
           if [ -z "$LATEST_DUMP" ]; then
-            echo "❌ No dump files found in gs://${GCS_BUCKET}/${DUMP_PREFIX}*.sql.gz"
-            echo "Expected format: ${DUMP_PREFIX}-YYYY-MM-DD.sql.gz"
+            echo "❌ No dump files found in gs://${GCS_BUCKET}/${DUMP_PREFIX}*.dump"
+            echo "Expected format: ${DUMP_PREFIX}-YYYY-MM-DD.dump (pg_dump custom format)"
             exit 1
           fi
 
@@ -84,16 +84,10 @@ spec:
 
           # Download the dump
           echo "⬇️  Downloading dump from GCS..."
-          gsutil -m cp "$LATEST_DUMP" /tmp/dump.sql.gz
+          gsutil -m cp "$LATEST_DUMP" /tmp/dump.dump
 
-          DUMP_SIZE=$(du -h /tmp/dump.sql.gz | cut -f1)
-          echo "✅ Downloaded $DUMP_SIZE compressed dump"
-
-          # Decompress
-          echo "📦 Decompressing dump..."
-          gunzip /tmp/dump.sql.gz
-          UNCOMPRESSED_SIZE=$(du -h /tmp/dump.sql | cut -f1)
-          echo "✅ Decompressed to $UNCOMPRESSED_SIZE"
+          DUMP_SIZE=$(du -h /tmp/dump.dump | cut -f1)
+          echo "✅ Downloaded $DUMP_SIZE (native PostgreSQL custom format with built-in compression)"
 
           # Set up database connection
           export PGHOST="postgresql"
@@ -143,12 +137,28 @@ EOSQL
 
           echo "✅ Database prepared"
 
-          # Restore the dump
+          # Restore the dump using pg_restore
           echo "📥 Restoring database from dump..."
           echo "⏱️  This may take several minutes depending on database size..."
+          echo "🚀 Using parallel restore for optimal performance..."
 
-          # Use single transaction for faster restore and atomicity
-          psql -v ON_ERROR_STOP=1 --single-transaction < /tmp/dump.sql
+          # Detect number of CPU cores for parallel restore
+          PARALLEL_JOBS=$(nproc 2>/dev/null || echo "2")
+          echo "   Using $PARALLEL_JOBS parallel jobs"
+
+          # Use pg_restore with parallel jobs for faster restore
+          # -j: parallel restore jobs
+          # -v: verbose output
+          # --no-owner: skip ownership commands (we set them later)
+          # --no-acl: skip access control list commands
+          # -d: target database
+          pg_restore \
+            -j "$PARALLEL_JOBS" \
+            -v \
+            --no-owner \
+            --no-acl \
+            -d regions4climate \
+            /tmp/dump.dump
 
           echo "✅ Database restored successfully"
 
@@ -216,7 +226,7 @@ EOSQL
 
           # Clean up
           echo "🧹 Cleaning up temporary files..."
-          rm -f /tmp/dump.sql
+          rm -f /tmp/dump.dump
 
           echo ""
           echo "🎉 Database clone completed successfully!"

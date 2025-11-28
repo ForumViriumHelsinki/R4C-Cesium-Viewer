@@ -22,11 +22,11 @@ We need to configure automated weekly database dumps from production PostgreSQL 
 
 - **Schedule**: Weekly dumps (suggested: Sunday 2 AM UTC to minimize production impact)
 - **Target Bucket**: `fvh-database-dumps`
-- **Naming Convention**: `regions4climate-YYYY-MM-DD.sql.gz`
-- **Compression**: gzip (for efficient storage and transfer)
+- **Naming Convention**: `regions4climate-YYYY-MM-DD.dump`
+- **Format**: PostgreSQL custom format (`pg_dump -Fc`) with built-in compression
 - **Retention Policy**: Keep last 4 weeks (automatic cleanup of older dumps)
 - **Source Database**: `regions4climate` production PostgreSQL instance
-- **Format**: Plain SQL dump (compatible with `pg_dump` and `psql`)
+- **Restore Tool**: `pg_restore` with parallel restore support
 
 ### Implementation Approach
 
@@ -229,26 +229,27 @@ DB_NAME="${DB_NAME:-regions4climate}"
 DB_USER="${DB_USER:-postgres}"
 GCS_BUCKET="${GCS_BUCKET:-fvh-database-dumps}"
 DUMP_DATE=$(date +%Y-%m-%d)
-DUMP_FILE="${DUMP_PREFIX:-regions4climate}-${DUMP_DATE}.sql.gz"
+DUMP_FILE="${DUMP_PREFIX:-regions4climate}-${DUMP_DATE}.dump"
 TEMP_FILE="/tmp/${DUMP_FILE}"
 
 echo "🗄️  Starting database dump..."
 echo "Database: ${DB_NAME}"
 echo "Target: gs://${GCS_BUCKET}/${DUMP_FILE}"
 
-# Create dump with compression
-echo "📦 Creating compressed dump..."
+# Create dump using native custom format (built-in compression)
+echo "📦 Creating dump in native PostgreSQL custom format..."
 pg_dump \
   -h "${DB_HOST}" \
   -U "${DB_USER}" \
   -d "${DB_NAME}" \
+  -Fc \
   --no-owner \
   --no-acl \
   --verbose \
-  | gzip > "${TEMP_FILE}"
+  -f "${TEMP_FILE}"
 
 DUMP_SIZE=$(du -h "${TEMP_FILE}" | cut -f1)
-echo "✅ Dump created: ${DUMP_SIZE}"
+echo "✅ Dump created: ${DUMP_SIZE} (with built-in compression)"
 
 # Upload to GCS
 echo "⬆️  Uploading to GCS..."
@@ -283,8 +284,8 @@ echo "📦 Size: ${DUMP_SIZE}"
    gsutil ls gs://fvh-database-dumps/
 
    # Download and verify dump integrity
-   gsutil cp gs://fvh-database-dumps/regions4climate-YYYY-MM-DD.sql.gz /tmp/
-   gunzip -t /tmp/regions4climate-YYYY-MM-DD.sql.gz
+   gsutil cp gs://fvh-database-dumps/regions4climate-YYYY-MM-DD.dump /tmp/
+   pg_restore --list /tmp/regions4climate-YYYY-MM-DD.dump | head -20
    ```
 
 2. **Application-side Restore Test** (in R4C-Cesium-Viewer repo):
