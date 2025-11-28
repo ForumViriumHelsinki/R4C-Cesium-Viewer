@@ -2,14 +2,10 @@
 	<div class="postal-code-picker">
 		<div class="picker-header">
 			<h4 class="picker-title">
-				<v-icon class="mr-2">
-mdi-map-marker
-</v-icon>
+				<v-icon class="mr-2"> mdi-map-marker </v-icon>
 				Select Area to Analyze
 			</h4>
-			<p class="picker-subtitle">
-Choose a postal code area to explore climate data
-</p>
+			<p class="picker-subtitle">Choose a postal code area to explore climate data</p>
 		</div>
 
 		<!-- Search Filter -->
@@ -123,12 +119,8 @@ Choose a postal code area to explore climate data
 			v-if="!isLoading && filteredPostalCodes.length === 0"
 			class="no-results"
 		>
-			<v-icon class="mb-2">
-mdi-map-search
-</v-icon>
-			<p class="text-body-2">
-No areas found matching "{{ searchQuery }}"
-</p>
+			<v-icon class="mb-2"> mdi-map-search </v-icon>
+			<p class="text-body-2">No areas found matching "{{ searchQuery }}"</p>
 			<v-btn
 				variant="text"
 				size="small"

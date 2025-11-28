@@ -33,7 +33,8 @@
 			<a
 				href="https://kartta.hsy.fi/"
 				target="_blank"
-				>HSY map service</a>
+				>HSY map service</a
+			>
 			under 'karttatasot'.
 		</div>
 

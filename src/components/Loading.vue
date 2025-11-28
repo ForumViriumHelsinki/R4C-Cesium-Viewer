@@ -3,9 +3,7 @@
 		v-if="visible"
 		class="loading-overlay"
 	>
-		<div class="loading-message">
-Loading data, please wait
-</div>
+		<div class="loading-message">Loading data, please wait</div>
 	</div>
 </template>
 
