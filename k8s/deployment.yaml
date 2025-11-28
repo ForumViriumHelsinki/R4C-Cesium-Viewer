@@ -47,3 +47,4 @@ spec:
                 name: r4c-cesium-viewer-config
             - secretRef:
                 name: r4c-cesium-viewer-secrets
+                optional: true  # Secrets may not exist during initial deployment

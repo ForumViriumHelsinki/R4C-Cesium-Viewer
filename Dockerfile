@@ -23,9 +23,9 @@ FROM nginx:1.27
 
 # Set default values for nginx environment variables
 ENV VITE_PYGEOAPI_HOST=pygeoapi.dataportal.fi
-# DNS resolver: 127.0.0.11 is Docker's embedded DNS resolver
-# Override with NGINX_DNS_RESOLVER env var for Kubernetes (use kube-dns ClusterIP)
-ENV NGINX_DNS_RESOLVER=127.0.0.11
+# DNS resolver: "auto" means detect from /etc/resolv.conf at startup
+# This works in both Docker (127.0.0.11) and Kubernetes (kube-dns ClusterIP)
+ENV NGINX_DNS_RESOLVER=auto
 
 # Install dbmate and postgresql-client for migrations
 RUN apt-get update && apt-get install -y \
@@ -39,6 +39,8 @@ RUN apt-get update && apt-get install -y \
 # Copy built frontend
 COPY --link --from=build /app/dist/ /usr/share/nginx/html
 COPY nginx/default.conf.template /etc/nginx/templates/
+# Copy custom entrypoint script to auto-detect DNS resolver (sourced by nginx entrypoint)
+COPY nginx/docker-entrypoint.d/05-set-dns-resolver.envsh /docker-entrypoint.d/
 
 # Copy database migrations
 COPY db/migrations /migrations
