@@ -59,6 +59,14 @@ export default [
 		},
 	},
 
+	// Test files - relax strict typing for mocks and browser globals
+	{
+		files: ['tests/**/*.ts', 'tests/**/*.js'],
+		rules: {
+			'@typescript-eslint/no-explicit-any': 'off',
+		},
+	},
+
 	{
 		languageOptions: {
 			globals: {

@@ -124,9 +124,7 @@
 											title="Reset to default"
 											@click="resetFlag(flag.name)"
 										>
-											<v-icon size="small">
-mdi-restore
-</v-icon>
+											<v-icon size="small"> mdi-restore </v-icon>
 										</v-btn>
 									</template>
 								</v-list-item>
@@ -219,7 +217,7 @@ mdi-restore
 					v-model="importJson"
 					label="Paste JSON configuration"
 					rows="10"
-					placeholder="{&quot;ndvi&quot;: true, &quot;hdrRendering&quot;: false, ...}"
+					placeholder='{"ndvi": true, "hdrRendering": false, ...}'
 				/>
 			</v-card-text>
 			<v-card-actions>

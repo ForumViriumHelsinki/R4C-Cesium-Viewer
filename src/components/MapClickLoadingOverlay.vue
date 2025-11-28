@@ -63,9 +63,7 @@
 				@click="handleCancel"
 				@keydown.esc="handleCancel"
 			>
-				<v-icon start>
-mdi-close
-</v-icon>
+				<v-icon start> mdi-close </v-icon>
 				Press ESC to Cancel
 			</v-btn>
 
