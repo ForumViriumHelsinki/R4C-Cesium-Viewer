@@ -406,11 +406,7 @@ export default {
 		},
 
 		toggleCold() {
-			// Get the value of the "Show Plot" toggle button
-			const checked = document.getElementById('capitalRegionColdToggle').checked;
-			this.toggleStore.setCapitalRegionCold(checked);
-
-			if (!checked) {
+			if (!this.capitalRegionCold) {
 				this.reset();
 			}
 		},
@@ -419,10 +415,7 @@ export default {
 		 * This function handles the toggle event for switching to capital region view
 		 */
 		async capitalRegionViewEvent() {
-			const metropolitanView = document.getElementById('capitalRegionViewToggle').checked;
-			this.toggleStore.setHelsinkiView(metropolitanView);
-
-			if (metropolitanView) {
+			if (this.helsinkiView) {
 				this.store.setView('helsinki');
 				this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
 				await this.dataSourceService.loadGeoJsonDataSource(
@@ -437,13 +430,10 @@ export default {
 		},
 
 		/**
-		 * This function handles the toggle event for switching to capital region view
+		 * This function handles the toggle event for land cover layer
 		 */
 		getLandCoverEvent() {
-			const landcover = document.getElementById('landCoverToggle').checked;
-			this.toggleStore.setLandCover(landcover);
-
-			if (landcover) {
+			if (this.landCover) {
 				this.viewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
 				createHSYImageryLayer();
 			} else {
@@ -453,12 +443,10 @@ export default {
 
 		/**
 		 * This function handles the toggle event for switching to grid view
+		 * Note: This is a legacy method that may not be needed since watchers handle this
 		 */
 		gridViewEvent() {
-			const gridView = document.getElementById('gridViewToggle').checked;
-			this.toggleStore.setGridView(gridView);
-
-			if (gridView) {
+			if (this.gridView) {
 				this.store.setView('grid');
 				this.showPostalCodeView = false;
 				eventBus.emit('createPopulationGrid');
@@ -470,13 +458,10 @@ export default {
 
 		/**
 		 * This function is called when the "Display Plot" toggle button is clicked
-		 *
+		 * Note: This is a legacy method that may not be needed since watchers handle this
 		 */
 		showPlotEvent() {
-			const showPlots = document.getElementById('showPlotToggle').checked;
-			this.toggleStore.setShowPlot(showPlots);
-
-			if (showPlots) {
+			if (this.showPlot) {
 				this.plotService.showAllPlots();
 			} else {
 				this.plotService.hideAllPlots();
@@ -485,14 +470,9 @@ export default {
 
 		/**
 		 * This function to show or hide tree entities on the map based on the toggle button state
-		 *
 		 */
 		loadTreesEvent() {
-			// Get the state of the showTrees toggle button
-			const showTrees = document.getElementById('showTreesToggle').checked;
-			this.toggleStore.setShowTrees(showTrees);
-
-			if (showTrees) {
+			if (this.showTrees) {
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Trees')) {
 					this.treeService.loadTrees(this.store.postalcode);
 				} else {
@@ -507,17 +487,9 @@ export default {
 
 		/**
 		 * This function handles the toggle event for showing or hiding the nature areas layer on the map.
-		 *
 		 */
 		loadOtherNatureEvent() {
-			// Get the current state of the toggle button for showing nature areas.
-			const showloadOtherNature = document.getElementById('showOtherNatureToggle').checked;
-			this.toggleStore.setShowOtherNature(showloadOtherNature);
-
-			if (showloadOtherNature) {
-				// If the toggle button is checked, enable the toggle button for showing the nature area heat map.
-				//document.getElementById("showloadOtherNature").disabled = false;
-
+			if (this.showOtherNature) {
 				// If there is a postal code available, load the nature areas for that area.
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('OtherNature')) {
 					const otherNatureService = new Othernature();
@@ -532,17 +504,9 @@ export default {
 
 		/**
 		 * This function handles the toggle event for showing or hiding the vegetation layer on the map.
-		 *
 		 */
 		loadVegetationEvent() {
-			// Get the current state of the toggle button for showing nature areas.
-			const showVegetation = document.getElementById('showVegetationToggle').checked;
-			this.toggleStore.setShowVegetation(showVegetation);
-
-			if (showVegetation) {
-				// If the toggle button is checked, enable the toggle button for showing the nature area heat map.
-				//document.getElementById("showVegetationHeatToggle").disabled = false;
-
+			if (this.showVegetation) {
 				// If there is a postal code available, load the nature areas for that area.
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Vegetation')) {
 					const vegetationService = new Vegetation();
@@ -556,12 +520,9 @@ export default {
 		},
 
 		filterBuildingsEvent() {
-			const hideNonSote = document.getElementById('hideNonSoteToggle').checked;
-			const hideNewBuildings = document.getElementById('hideNewBuildingsToggle').checked;
-			const hideLow = document.getElementById('hideLowToggle').checked;
-			this.toggleStore.setHideNonSote(hideNonSote);
-			this.toggleStore.setHideNewBuildings(hideNewBuildings);
-			this.toggleStore.setHideLow(hideLow);
+			this.toggleStore.setHideNonSote(this.hideNonSote);
+			this.toggleStore.setHideNewBuildings(this.filterBuildings);
+			this.toggleStore.setHideLow(this.hideLow);
 
 			if (this.dataSourceService) {
 				const buildingsDataSource = this.dataSourceService.getDataSourceByName(
@@ -569,7 +530,7 @@ export default {
 				);
 
 				if (buildingsDataSource) {
-					if (hideNonSote || hideNewBuildings || hideLow) {
+					if (this.hideNonSote || this.filterBuildings || this.hideLow) {
 						this.buildingService.filterBuildings(buildingsDataSource);
 					} else {
 						this.buildingService.showAllBuildings(buildingsDataSource);
@@ -584,18 +545,11 @@ export default {
 
 		/**
 		 * This function is called when the user clicks on the "switch view" toggle button.
-		 *
 		 */
 		switchViewEvent() {
-			// Get the status of the "switch view" toggle button.
-			const switchView = document.getElementById('switchViewToggle').checked;
-			this.toggleStore.setSwitchView(switchView);
 			const viewService = new Camera();
-			// If the "switch view" toggle button is checked.
-			if (switchView) {
+			if (this.switchView) {
 				viewService.switchTo2DView();
-
-				// If the "switch view"" toggle button is not checked.
 			} else {
 				viewService.switchTo3DView();
 			}

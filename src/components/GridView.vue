@@ -11,14 +11,13 @@
 		</v-btn>
 		<label class="switch">
 			<input
-				id="postalCodeToggle"
+				v-model="postalCodeView"
 				type="checkbox"
 				value="postalCode"
 			/>
 			<span class="slider round" />
 		</label>
 		<label
-			id="postalCodeLabel"
 			for="postalCodeToggle"
 			class="label"
 			>Postalcode view</label
@@ -26,104 +25,86 @@
 
 		<!--  natureGrid-->
 		<label
-			id="natureGridSwitch"
+			v-show="showNatureGrid"
 			class="switch"
-			style="display: none"
 		>
 			<input
-				id="natureGridToggle"
+				v-model="natureGrid"
 				type="checkbox"
 				value="natureGrid"
 			/>
 			<span class="slider round" />
 		</label>
 		<label
-			id="natureGridLabel"
+			v-show="showNatureGrid"
 			for="natureGrid"
 			class="label"
-			style="display: none"
 			>Nature grid</label
 		>
 
 		<!--  travelTime-->
-		<label
-			id="travelTimeSwitch"
-			class="switch"
-		>
+		<label class="switch">
 			<input
-				id="travelTimeToggle"
+				v-model="travelTime"
 				type="checkbox"
 				value="travelTime"
 			/>
 			<span class="slider round" />
 		</label>
 		<label
-			id="travelTimeLabel"
 			for="travelTime"
 			class="label"
 			>Travel time grid</label
 		>
 
 		<!--  resetGrid-->
-		<label
-			id="resetGridwitch"
-			class="switch"
-		>
+		<label class="switch">
 			<input
-				id="resetGridToggle"
+				v-model="resetGrid"
 				type="checkbox"
 				value="resetGrid"
 			/>
 			<span class="slider round" />
 		</label>
 		<label
-			id="resetGridLabel"
 			for="resetGrid"
 			class="label"
 			>Reset grid</label
 		>
 
 		<!--  surveyPlaces-->
-		<label
-			id="surveyPlacesSwitch"
-			class="switch"
-		>
+		<label class="switch">
 			<input
-				id="surveyPlacesToggle"
+				v-model="surveyPlaces"
 				type="checkbox"
 				value="surveyPlaces"
 			/>
 			<span class="slider round" />
 		</label>
 		<label
-			id="surveyPlacesLabel"
 			for="surveyPlaces"
 			class="label"
 			>Espoo resident survey places</label
 		>
 
 		<!--  250mGrid-->
-		<label
-			id="250mGridSwitch"
-			class="switch"
-		>
+		<label class="switch">
 			<input
-				id="250mGridToggle"
+				v-model="grid250m"
 				type="checkbox"
 				value="250mGrid"
 			/>
 			<span class="slider round" />
 		</label>
 		<label
-			id="250mGridLabel"
 			for="250mGrid"
 			class="label"
 			>250m grid</label
 		>
 	</div>
-	<BuildingGridChart />
-	<SosEco250mGrid />
-	<SurveyScatterPlot />
+	<BuildingGridChart ref="buildingGridChart" />
+	<SosEco250mGrid ref="sosEco250mGrid" />
+	<SurveyScatterPlot ref="surveyScatterPlot" />
 </template>
 
 <script>
@@ -147,14 +128,46 @@ export default {
 	data() {
 		return {
 			viewer: null,
-			// Store bound function references for cleanup
-			boundPostalCodeViewEvent: null,
-			boundTravelTimeEvent: null,
-			boundNatureGridEvent: null,
-			boundResetGridViewEvent: null,
-			boundSurveyPlacesEvent: null,
-			boundActivate250mGridEvent: null,
+			// Vue reactive state for toggles
+			postalCodeView: false,
+			natureGrid: false,
+			travelTime: false,
+			resetGrid: false,
+			surveyPlaces: false,
+			grid250m: false,
+			showNatureGrid: false, // Control visibility of nature grid toggle
 		};
+	},
+	watch: {
+		postalCodeView(newValue) {
+			this.toggleStore.setPostalCode(newValue);
+			if (newValue) {
+				this.store.setView('capitalRegion');
+				this.reset();
+			}
+		},
+		natureGrid(newValue) {
+			this.toggleStore.setNatureGrid(newValue);
+			this.natureGridEvent();
+		},
+		travelTime(newValue) {
+			this.toggleStore.setTravelTime(newValue);
+			this.travelTimeEvent();
+		},
+		resetGrid(newValue) {
+			this.toggleStore.setResetGrid(newValue);
+			if (newValue) {
+				const populationgridService = new Populationgrid();
+				populationgridService.createPopulationGrid();
+			}
+		},
+		surveyPlaces(newValue) {
+			this.toggleStore.setSurveyPlaces(newValue);
+			this.surveyPlacesEvent();
+		},
+		grid250m(newValue) {
+			this.activate250mGridEvent();
+		},
 	},
 	mounted() {
 		this.unsubscribe = eventBus.on('createPopulationGrid', this.createPopulationGrid);
@@ -162,20 +175,9 @@ export default {
 		this.toggleStore = useToggleStore();
 		this.viewer = this.store.cesiumViewer;
 		this.datasourceService = new Datasource();
-
-		// Create bound function references
-		this.boundPostalCodeViewEvent = this.postalCodeViewEvent.bind(this);
-		this.boundTravelTimeEvent = this.travelTimeEvent.bind(this);
-		this.boundNatureGridEvent = this.natureGridEvent.bind(this);
-		this.boundResetGridViewEvent = this.resetGridViewEvent.bind(this);
-		this.boundSurveyPlacesEvent = this.surveyPlacesEvent.bind(this);
-		this.boundActivate250mGridEvent = this.activate250mGridEvent.bind(this);
-
-		this.addEventListeners();
 	},
 	beforeUnmount() {
 		this.unsubscribe();
-		this.removeEventListeners();
 	},
 	methods: {
 		reset() {
@@ -193,130 +195,47 @@ export default {
 			const populationgridService = new Populationgrid();
 			populationgridService.createPopulationGrid();
 		},
-		/**
-		 * Add EventListeners
-		 */
-		addEventListeners() {
-			const postalCodeToggle = document.getElementById('postalCodeToggle');
-			const travelTimeToggle = document.getElementById('travelTimeToggle');
-			const natureGridToggle = document.getElementById('natureGridToggle');
-			const resetGridToggle = document.getElementById('resetGridToggle');
-			const surveyPlacesToggle = document.getElementById('surveyPlacesToggle');
-			const grid250mToggle = document.getElementById('250mGridToggle');
-
-			if (postalCodeToggle) {
-				postalCodeToggle.addEventListener('change', this.boundPostalCodeViewEvent);
-			}
-			if (travelTimeToggle) {
-				travelTimeToggle.addEventListener('change', this.boundTravelTimeEvent);
-			}
-			if (natureGridToggle) {
-				natureGridToggle.addEventListener('change', this.boundNatureGridEvent);
-			}
-			if (resetGridToggle) {
-				resetGridToggle.addEventListener('change', this.boundResetGridViewEvent);
-			}
-			if (surveyPlacesToggle) {
-				surveyPlacesToggle.addEventListener('change', this.boundSurveyPlacesEvent);
-			}
-			if (grid250mToggle) {
-				grid250mToggle.addEventListener('change', this.boundActivate250mGridEvent);
-			}
-		},
 
 		/**
-		 * Remove EventListeners to prevent memory leaks
-		 */
-		removeEventListeners() {
-			const postalCodeToggle = document.getElementById('postalCodeToggle');
-			const travelTimeToggle = document.getElementById('travelTimeToggle');
-			const natureGridToggle = document.getElementById('natureGridToggle');
-			const resetGridToggle = document.getElementById('resetGridToggle');
-			const surveyPlacesToggle = document.getElementById('surveyPlacesToggle');
-			const grid250mToggle = document.getElementById('250mGridToggle');
-
-			if (postalCodeToggle) {
-				postalCodeToggle.removeEventListener('change', this.boundPostalCodeViewEvent);
-			}
-			if (travelTimeToggle) {
-				travelTimeToggle.removeEventListener('change', this.boundTravelTimeEvent);
-			}
-			if (natureGridToggle) {
-				natureGridToggle.removeEventListener('change', this.boundNatureGridEvent);
-			}
-			if (resetGridToggle) {
-				resetGridToggle.removeEventListener('change', this.boundResetGridViewEvent);
-			}
-			if (surveyPlacesToggle) {
-				surveyPlacesToggle.removeEventListener('change', this.boundSurveyPlacesEvent);
-			}
-			if (grid250mToggle) {
-				grid250mToggle.removeEventListener('change', this.boundActivate250mGridEvent);
-			}
-		},
-
-		/**
-		 * This function handles the toggle event for activing 250m sos eco grid
+		 * This function handles the toggle event for activating 250m sos eco grid
 		 */
 		activate250mGridEvent() {
-			const checked = document.getElementById('250mGridToggle').checked;
-
-			if (checked) {
+			if (this.grid250m) {
 				this.datasourceService.changeDataSourceShowByName('PopulationGrid', false);
 				eventBus.emit('create250mGrid'); // Trigger the simulation to start
 			} else {
 				this.datasourceService.removeDataSourcesByNamePrefix('250m_grid');
-				document.getElementById('bar-chart-container').style.visibility = 'hidden';
-				document.getElementById('legend').style.visibility = 'hidden';
+				// Use refs for child component visibility control
+				if (this.$refs.buildingGridChart?.$el) {
+					const barChartContainer =
+						this.$refs.buildingGridChart.$el.querySelector('#bar-chart-container');
+					const legend = this.$refs.buildingGridChart.$el.querySelector('#legend');
+					if (barChartContainer) barChartContainer.style.visibility = 'hidden';
+					if (legend) legend.style.visibility = 'hidden';
+				}
 				this.datasourceService.changeDataSourceShowByName('PopulationGrid', true);
 			}
 		},
 
 		/**
-		 * This function handles the toggle event for switching to postal code view
+		 * This function handles the toggle event for survey places
 		 */
 		surveyPlacesEvent() {
-			const surveyPlaces = document.getElementById('surveyPlacesToggle').checked;
-			this.toggleStore.setSurveyPlaces(surveyPlaces);
-
-			if (surveyPlaces) {
+			if (this.surveyPlaces) {
 				const espooSurveyService = new EspooSurvey();
 				espooSurveyService.loadSurveyFeatures('places_in_everyday_life');
 			} else {
 				this.datasourceService.removeDataSourcesByNamePrefix('Survey ');
-				document.getElementById('surveyScatterPlot').style.visibility = 'hidden';
-			}
-		},
-
-		/**
-		 * This function handles the toggle event for switching to postal code view
-		 */
-		postalCodeViewEvent() {
-			const postalView = document.getElementById('postalCodeToggle').checked;
-			this.toggleStore.setPostalCode(postalView);
-
-			if (postalView) {
-				this.store.setView('capitalRegion');
-				this.reset();
-			}
-		},
-
-		/**
-		 * This function resets grid view
-		 */
-		resetGridViewEvent() {
-			const resetGrid = document.getElementById('resetGridToggle').checked;
-			this.toggleStore.setResetGrid(resetGrid);
-
-			if (resetGrid) {
-				const populationgridService = new Populationgrid();
-				populationgridService.createPopulationGrid();
+				// Use refs for child component visibility control
+				if (this.$refs.surveyScatterPlot?.$el) {
+					const scatterPlot = this.$refs.surveyScatterPlot.$el.querySelector('#surveyScatterPlot');
+					if (scatterPlot) scatterPlot.style.visibility = 'hidden';
+				}
 			}
 		},
 
 		/**
 		 * This function to switch between population grid and travel time grid view
-		 *
 		 */
 		async travelTimeEvent() {
 			// Check if viewer is initialized
@@ -326,13 +245,10 @@ export default {
 			}
 
 			try {
-				const travelTime = document.getElementById('travelTimeToggle').checked;
-				this.toggleStore.setTravelTime(travelTime);
 				this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
 				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
 
-				if (travelTime) {
-					// await datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
+				if (this.travelTime) {
 					await this.datasourceService.loadGeoJsonDataSource(
 						0.1,
 						'assets/data/travel_time_grid.json',
@@ -341,7 +257,7 @@ export default {
 				} else {
 					await this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
 					await this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
-					this.createPopulationGrid(); // Pass this.viewer
+					this.createPopulationGrid();
 				}
 			} catch (error) {
 				console.error('Error in travelTimeEvent:', error);
@@ -350,20 +266,16 @@ export default {
 
 		/**
 		 * This function to switch between population grid and nature grid view
-		 *
 		 */
 		natureGridEvent() {
-			const natureGrid = document.getElementById('natureGridToggle').checked;
-			this.toggleStore.setNatureGrid(natureGrid);
-
 			this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
 
-			if (natureGrid) {
+			if (this.natureGrid) {
 				const dataSource = this.datasourceService.getDataSourceByName('PopulationGrid');
 
 				if (!dataSource) {
 					console.error('Data source with name PopulationGrid not found.');
-					return [];
+					return;
 				}
 
 				// Get the entities of the data source
@@ -375,7 +287,8 @@ export default {
 					populationgridService.setGridEntityPolygonToGreen(entity);
 				}
 
-				document.getElementById('travelTimeToggle').checked = false;
+				// Uncheck travel time toggle when nature grid is enabled
+				this.travelTime = false;
 			} else {
 				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
 				this.createPopulationGrid();
