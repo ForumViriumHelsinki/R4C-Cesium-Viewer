@@ -17,6 +17,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { TEST_TIMEOUTS } from './helpers/test-helpers';
 
 /**
  * Helper function to enable viewport streaming mode programmatically
@@ -61,7 +62,7 @@ async function enableViewportStreaming(page) {
 	});
 
 	// Wait for the viewport loader to initialize and process
-	await page.waitForTimeout(2000);
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 	// Check if viewport datasources were created (indicating feature is working)
 	const hasViewportFeature = await page
@@ -74,7 +75,7 @@ async function enableViewportStreaming(page) {
 				// Check for viewport datasources (may be empty but should exist)
 				return dataSources.some((ds: any) => ds.name?.includes('Buildings Viewport'));
 			},
-			{ timeout: 10000 }
+			{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 		)
 		.catch(() => false);
 
@@ -96,15 +97,18 @@ test.describe('Viewport Building Loading', () => {
 
 		// Dismiss any modal if present
 		const closeButton = page.getByRole('button', { name: 'Close' });
-		if (await closeButton.isVisible({ timeout: 5000 })) {
+		if (await closeButton.isVisible({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })) {
 			await closeButton.click();
 			await expect(closeButton).toBeHidden();
 		}
 
 		// Wait for canvas to be visible (Cesium initialization)
-		await page.waitForSelector('canvas', { state: 'visible', timeout: 30000 });
+		await page.waitForSelector('canvas', {
+			state: 'visible',
+			timeout: TEST_TIMEOUTS.CESIUM_READY_CI,
+		});
 		// Additional time for 3D rendering to stabilize
-		await page.waitForTimeout(2000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 	});
 
 	test.fixme(
@@ -141,7 +145,7 @@ test.describe('Viewport Building Loading', () => {
 			await enableViewportStreaming(page);
 
 			// Wait for initial viewport loading
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Get initial viewport state
 			const initialTileCount = await page.evaluate(() => {
@@ -160,7 +164,7 @@ test.describe('Viewport Building Loading', () => {
 			await page.mouse.up();
 
 			// Wait for debounced viewport update and loading
-			await page.waitForTimeout(1500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Check that new tiles were loaded
 			const newTileCount = await page.evaluate(() => {
@@ -184,7 +188,7 @@ test.describe('Viewport Building Loading', () => {
 			await enableViewportStreaming(page);
 
 			// Wait for initial viewport loading to complete
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Get current viewport - use try/catch to handle cases where rectangle computation fails
 			const viewportInfo = await page.evaluate(() => {
@@ -254,7 +258,7 @@ test.describe('Viewport Building Loading', () => {
 			await page.mouse.wheel(0, -100);
 
 			// Wait for debounce (300ms) + network + processing
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Check buildings still visible
 			let hasBuildings = await page.evaluate(() => {
@@ -275,7 +279,7 @@ test.describe('Viewport Building Loading', () => {
 			await page.mouse.wheel(0, 100);
 
 			// Wait for debounce + processing
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Check buildings still managed
 			hasBuildings = await page.evaluate(() => {
@@ -302,7 +306,7 @@ test.describe('Viewport Building Loading', () => {
 			await enableViewportStreaming(page);
 
 			// Wait for initial viewport loading
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// This test verifies that the loader doesn't load unlimited tiles
 
@@ -314,11 +318,11 @@ test.describe('Viewport Building Loading', () => {
 				await page.mouse.down();
 				await page.mouse.move(200 + i * 50, 300 + i * 50, { steps: 10 });
 				await page.mouse.up();
-				await page.waitForTimeout(1000);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 			}
 
 			// Wait for all loading to complete
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Check tile count doesn't exceed limit
 			const tileStats = await page.evaluate(() => {
@@ -363,7 +367,7 @@ test.describe('Viewport Building Loading', () => {
 			await page.mouse.up();
 
 			// Wait for first buildings to appear in new area
-			await page.waitForTimeout(800);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			const viewportLoadTime = Date.now() - startTime;
 
@@ -381,7 +385,7 @@ test.describe('Viewport Building Loading', () => {
 			await enableViewportStreaming(page);
 
 			// Wait for initial viewport loading
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Get initial visible tile count
 			const _initialVisible = await page.evaluate(() => {
@@ -402,7 +406,7 @@ test.describe('Viewport Building Loading', () => {
 			await page.mouse.up();
 
 			// Wait for viewport update (debounce + processing)
-			await page.waitForTimeout(1500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Check that some datasources are now hidden
 			const datasourceStates = await page.evaluate(() => {
@@ -448,11 +452,11 @@ test.describe('Viewport Building Loading', () => {
 
 			for (let i = 0; i < 10; i++) {
 				await page.mouse.move(300 + i * 5, 300 + i * 5, { steps: 1 });
-				await page.waitForTimeout(50);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 			}
 
 			// Wait for debounced update
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Should have debounced and not triggered 10 separate loads
 			// Exact count depends on timing, but should be much less than 10
@@ -508,7 +512,7 @@ test.describe('Viewport Building Loading', () => {
 			await page.mouse.up();
 
 			// Wait for loading attempts (including retries)
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Application should still function (some tiles loaded successfully)
 			const hasAnyBuildings = await page.evaluate(() => {
@@ -532,7 +536,7 @@ test.describe('Viewport Building Loading', () => {
 			await enableViewportStreaming(page);
 
 			// Wait for initial viewport loading
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// First visit to an area
 			const canvas = page.locator('canvas');
@@ -540,14 +544,14 @@ test.describe('Viewport Building Loading', () => {
 			await page.mouse.down();
 			await page.mouse.move(350, 300, { steps: 5 });
 			await page.mouse.up();
-			await page.waitForTimeout(1500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Pan away
 			await canvas.hover();
 			await page.mouse.down();
 			await page.mouse.move(150, 300, { steps: 10 });
 			await page.mouse.up();
-			await page.waitForTimeout(1500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Track cache hits
 			let cacheHits = 0;
@@ -562,7 +566,7 @@ test.describe('Viewport Building Loading', () => {
 			await page.mouse.down();
 			await page.mouse.move(350, 300, { steps: 5 });
 			await page.mouse.up();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Should use cached data on revisit (if within cache TTL)
 			// Note: This may not always fire if tiles are still in memory
@@ -578,15 +582,18 @@ test.describe('Viewport Building Loading - Edge Cases', () => {
 		await page.waitForLoadState('domcontentloaded');
 
 		const closeButton = page.getByRole('button', { name: 'Close' });
-		if (await closeButton.isVisible({ timeout: 5000 })) {
+		if (await closeButton.isVisible({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })) {
 			await closeButton.click();
 			await expect(closeButton).toBeHidden();
 		}
 
 		// Wait for canvas to be visible (Cesium initialization)
-		await page.waitForSelector('canvas', { state: 'visible', timeout: 30000 });
+		await page.waitForSelector('canvas', {
+			state: 'visible',
+			timeout: TEST_TIMEOUTS.CESIUM_READY_CI,
+		});
 		// Additional time for 3D rendering to stabilize
-		await page.waitForTimeout(2000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 	});
 
 	test.fixme(
@@ -611,7 +618,7 @@ test.describe('Viewport Building Loading - Edge Cases', () => {
 				});
 			});
 
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Should not crash or load invalid tiles
 			const errors = [];
@@ -619,7 +626,7 @@ test.describe('Viewport Building Loading - Edge Cases', () => {
 				errors.push(error.message);
 			});
 
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			expect(errors.length).toBe(0);
 		}
@@ -648,7 +655,7 @@ test.describe('Viewport Building Loading - Edge Cases', () => {
 			});
 
 			// Wait for debounced viewport update + tile loading
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Should load buildings at high zoom
 			const hasBuildings = await page.evaluate(() => {
@@ -685,7 +692,7 @@ test.describe('Viewport Building Loading - Edge Cases', () => {
 				});
 			});
 
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Should not attempt to load excessive tiles
 			const tileCount = await page.evaluate(() => {

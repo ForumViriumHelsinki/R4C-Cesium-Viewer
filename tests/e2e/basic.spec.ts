@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { dismissModalIfPresent, waitForCesiumReady } from '../helpers/test-helpers';
+import { dismissModalIfPresent, waitForCesiumReady } from '../helpers/test-helpers'; // TEST_TIMEOUTS;
+import { TEST_TIMEOUTS } from './helpers/test-helpers';
 
 test('Page load', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
 	await page.goto('/');
@@ -19,17 +20,23 @@ test('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ page }) => {
 	await dismissModalIfPresent(page, 'Close');
 
 	// Wait for page to be fully loaded
-	await page.waitForSelector('#app', { state: 'visible', timeout: 10000 });
+	await page.waitForSelector('#app', {
+		state: 'visible',
+		timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+	});
 
 	// Click on Environmental category chip to access HSY layers
 	// The chip is a generic element with text, not a button
 	const environmentalChip = page.getByText('Environmental').first();
-	await environmentalChip.waitFor({ state: 'visible', timeout: 10000 });
+	await environmentalChip.waitFor({
+		state: 'visible',
+		timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+	});
 	await environmentalChip.click();
 
 	// Wait for search input to appear
 	const searchInput = page.getByPlaceholder('Search environmental layers...');
-	await searchInput.waitFor({ state: 'visible', timeout: 5000 });
+	await searchInput.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 	// Wait for HSY layers to load before searching
 	// Look for the loading indicator to disappear or for actual layer content to appear
@@ -45,7 +52,7 @@ test('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ page }) => {
 						!item.textContent.includes('Unknown')
 				);
 			},
-			{ timeout: 15000 }
+			{ timeout: TEST_TIMEOUTS.CESIUM_READY }
 		)
 		.catch(() => {
 			// If timeout, continue anyway - layers might be loaded but without titles
@@ -59,16 +66,16 @@ test('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ page }) => {
 	await expect(searchInput).toHaveValue('Kaupunginosat');
 
 	// Wait for filtered results to appear
-	await page.waitForTimeout(500); // Small delay for search debounce
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP); // Small delay for search debounce
 
 	// Wait for results to appear using single stable selector
 	const resultContainer = page.locator('.v-list');
-	await expect(resultContainer).toBeVisible({ timeout: 5000 });
+	await expect(resultContainer).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 	// Check that we have actual layer results (the search should filter the list)
 	// Look for any list item with content that suggests a valid layer
 	const listItems = page.locator('.v-list-item');
-	await expect(listItems.first()).toBeVisible({ timeout: 5000 });
+	await expect(listItems.first()).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 });
 
 test('Building properties', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
@@ -86,7 +93,7 @@ test('Building properties', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
 
 	// Verify canvas is visible and functional
 	const canvas = page.locator('canvas');
-	await expect(canvas).toBeVisible({ timeout: 10000 });
+	await expect(canvas).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 });
 
 test('Statistical Grid View', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
@@ -97,25 +104,34 @@ test('Statistical Grid View', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
 	await dismissModalIfPresent(page, 'Close');
 
 	// Wait for app to be ready
-	await page.waitForSelector('#app', { state: 'visible', timeout: 10000 });
+	await page.waitForSelector('#app', {
+		state: 'visible',
+		timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+	});
 
 	// Click on Statistical Grid button in the view mode toggle
 	const statisticalGridButton = page.getByRole('button', { name: /Statistical Grid/i });
-	await statisticalGridButton.waitFor({ state: 'visible', timeout: 5000 });
+	await statisticalGridButton.waitFor({
+		state: 'visible',
+		timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+	});
 	await statisticalGridButton.click();
 
 	// Verify the button is now active (has v-btn--active class)
 	await expect(statisticalGridButton).toHaveClass(/v-btn--active/);
 
 	// Wait for grid view to load
-	await page.waitForTimeout(2000);
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 	// Open the Grid Options panel by clicking the Grid Options button
 	const gridOptionsButton = page.getByRole('button', { name: /Grid Options/i });
-	await gridOptionsButton.waitFor({ state: 'visible', timeout: 10000 });
+	await gridOptionsButton.waitFor({
+		state: 'visible',
+		timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+	});
 	await gridOptionsButton.click();
 
 	// Verify that the statistical grid options panel appears
 	const gridOptionsHeading = page.getByRole('heading', { name: /Statistical grid options/i });
-	await expect(gridOptionsHeading).toBeVisible({ timeout: 10000 });
+	await expect(gridOptionsHeading).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 });

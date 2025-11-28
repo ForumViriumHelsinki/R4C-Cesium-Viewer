@@ -10,7 +10,7 @@
 
 import { expect } from '@playwright/test';
 import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers from '../helpers/test-helpers';
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
 
 cesiumDescribe('Timeline Controls Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] });
@@ -28,14 +28,14 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 
 		cesiumTest('should show timeline at postal code level', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			await helpers.verifyTimelineVisibility('postalCode');
 		});
 
 		cesiumTest('should show timeline at building level', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('building');
-			await cesiumPage.waitForTimeout(5000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_EXTENDED);
 
 			await helpers.verifyTimelineVisibility('building');
 		});
@@ -44,7 +44,7 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 	cesiumTest.describe('Timeline Components', () => {
 		cesiumTest('should display all timeline elements', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Timeline container
 			await expect(cesiumPage.locator('#heatTimeseriesContainer')).toBeVisible();
@@ -68,13 +68,13 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 
 		cesiumTest('should have functional timeline slider', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			const slider = cesiumPage.locator('.timeline-slider input');
 
 			// Test slider interaction
 			await slider.fill('3');
-			await cesiumPage.waitForTimeout(1000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Slider should reflect the change
 			const sliderValue = await slider.inputValue();
@@ -85,15 +85,15 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 	cesiumTest.describe('Timeline State Persistence', () => {
 		cesiumTest('should maintain timeline state between levels', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			const slider = cesiumPage.locator('.timeline-slider input');
 			await slider.fill('2');
-			await cesiumPage.waitForTimeout(1000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Navigate to building level
 			await helpers.drillToLevel('building');
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Timeline should still be visible
 			await helpers.verifyTimelineVisibility('building');
@@ -107,13 +107,13 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 			// Test in Capital Region view
 			await helpers.navigateToView('capitalRegionView');
 			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			await helpers.verifyTimelineVisibility('postalCode');
 
 			// Switch to Grid view
 			await helpers.navigateToView('gridView');
-			await cesiumPage.waitForTimeout(2000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Timeline should still be visible
 			await helpers.verifyTimelineVisibility('postalCode');
@@ -123,14 +123,14 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 	cesiumTest.describe('Timeline Accessibility', () => {
 		cesiumTest('should support keyboard navigation', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			const slider = cesiumPage.locator('.timeline-slider input');
 			await slider.focus();
 
 			// Test arrow key navigation
 			await cesiumPage.keyboard.press('ArrowRight');
-			await cesiumPage.waitForTimeout(500);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Should change slider value
 			const finalValue = await slider.inputValue();
@@ -139,7 +139,7 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 
 		cesiumTest('should be responsive across viewports', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			const viewports = [
 				{ width: 1920, height: 1080 },
@@ -149,7 +149,7 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 
 			for (const viewport of viewports) {
 				await cesiumPage.setViewportSize(viewport);
-				await cesiumPage.waitForTimeout(1000);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 				// Timeline should remain functional
 				await expect(cesiumPage.locator('#heatTimeseriesContainer')).toBeVisible();

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { dismissModalIfPresent } from '../helpers/test-helpers';
+import { dismissModalIfPresent } from '../helpers/test-helpers'; // TEST_TIMEOUTS;
+import { TEST_TIMEOUTS } from './helpers/test-helpers';
 
 test.describe('Feature Flags Panel', () => {
 	test.use({ tag: ['@e2e', '@feature-flags'] });
@@ -16,7 +17,7 @@ test.describe('Feature Flags Panel', () => {
 		const featureFlagsButton = page.getByRole('button', {
 			name: /Feature Flags/i,
 		});
-		await expect(featureFlagsButton).toBeVisible({ timeout: 10000 });
+		await expect(featureFlagsButton).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 	});
 
 	test('Feature Flags panel opens when clicked', async ({ page }) => {
@@ -27,10 +28,10 @@ test.describe('Feature Flags Panel', () => {
 		await featureFlagsButton.click();
 
 		// Wait for dialog to open
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Wait for dialog animations
-		await page.waitForTimeout(300);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 		// Scope selectors to dialog to avoid scrim interception
 		const dialog = page.locator('[role="dialog"]');
@@ -45,10 +46,10 @@ test.describe('Feature Flags Panel', () => {
 			name: /Feature Flags/i,
 		});
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Wait for dialog animations
-		await page.waitForTimeout(300);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 		// Scope selectors to dialog to avoid scrim interception
 		const dialog = page.locator('[role="dialog"]');
@@ -67,10 +68,10 @@ test.describe('Feature Flags Panel', () => {
 			name: /Feature Flags/i,
 		});
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Wait for dialog animations
-		await page.waitForTimeout(300);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 		// Scope selectors to dialog to avoid scrim interception
 		const dialog = page.locator('[role="dialog"]');
@@ -82,7 +83,7 @@ test.describe('Feature Flags Panel', () => {
 		await dataLayersCategory.click();
 
 		// Wait for expansion panel to open
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 		// Find and toggle the NDVI flag (scoped to dialog)
 		const ndviSwitch = dialog.locator('input[type="checkbox"]').first();
@@ -102,8 +103,11 @@ test.describe('Feature Flags Panel', () => {
 		await page.getByRole('button', { name: 'Close' }).click();
 
 		// Wait for dialog to fully close and scrim to disappear
-		await page.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 });
-		await page.waitForTimeout(300);
+		await page.waitForSelector('[role="dialog"]', {
+			state: 'detached',
+			timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+		});
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 		// Reload the page
 		await page.reload();
@@ -114,10 +118,10 @@ test.describe('Feature Flags Panel', () => {
 
 		// Re-open feature flags panel
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Wait for dialog animations
-		await page.waitForTimeout(300);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 		// Re-scope to dialog after reload
 		const dialogAfterReload = page.locator('[role="dialog"]');
@@ -127,7 +131,7 @@ test.describe('Feature Flags Panel', () => {
 			.locator('.v-expansion-panel-title')
 			.filter({ hasText: 'Data Layers' });
 		await dataLayersCategoryAfterReload.click();
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 		// Verify the toggle persisted (use isChecked() instead of aria-checked attribute)
 		const ndviSwitchAfterReload = dialogAfterReload.locator('input[type="checkbox"]').first();
@@ -144,10 +148,10 @@ test.describe('Feature Flags Panel', () => {
 			name: /Feature Flags/i,
 		});
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Wait for dialog animations
-		await page.waitForTimeout(300);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 		// Scope selectors to dialog to avoid scrim interception
 		const dialog = page.locator('[role="dialog"]');
@@ -157,7 +161,7 @@ test.describe('Feature Flags Panel', () => {
 			.locator('.v-expansion-panel-title')
 			.filter({ hasText: 'Data Layers' });
 		await dataLayersCategory.click();
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 		// Toggle a flag
 		const ndviSwitch = dialog.locator('input[type="checkbox"]').first();
@@ -167,7 +171,7 @@ test.describe('Feature Flags Panel', () => {
 		const resetButton = dialog.getByRole('button', { name: /Reset to default/i }).first();
 
 		// Click the reset button if it appears
-		if (await resetButton.isVisible({ timeout: 2000 })) {
+		if (await resetButton.isVisible({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })) {
 			await resetButton.click();
 
 			// Verify the "Modified" chip is gone
@@ -181,10 +185,12 @@ test.describe('Feature Flags Panel', () => {
 			name: /Feature Flags/i,
 		});
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Set up download listener
-		const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
+		const downloadPromise = page.waitForEvent('download', {
+			timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+		});
 
 		// Click export button
 		const exportButton = page.getByRole('button', { name: /Export/i });
@@ -203,10 +209,10 @@ test.describe('Feature Flags Panel', () => {
 			name: /Feature Flags/i,
 		});
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Wait for dialog animations
-		await page.waitForTimeout(300);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 		// Scope selectors to dialog to avoid scrim interception
 		const dialog = page.locator('[role="dialog"]');
@@ -216,7 +222,7 @@ test.describe('Feature Flags Panel', () => {
 		await importButton.click();
 
 		// Wait for import dialog
-		await page.waitForSelector('textarea', { timeout: 5000 });
+		await page.waitForSelector('textarea', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Enter invalid JSON
 		const textarea = page.locator('textarea');
@@ -228,7 +234,7 @@ test.describe('Feature Flags Panel', () => {
 
 		// Verify error snackbar appears
 		await expect(page.getByText(/Invalid JSON format/i)).toBeVisible({
-			timeout: 5000,
+			timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
 		});
 	});
 
@@ -238,10 +244,10 @@ test.describe('Feature Flags Panel', () => {
 			name: /Feature Flags/i,
 		});
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Wait for dialog animations
-		await page.waitForTimeout(300);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 		// Scope selectors to dialog to avoid scrim interception
 		const dialog = page.locator('[role="dialog"]');
@@ -251,7 +257,7 @@ test.describe('Feature Flags Panel', () => {
 		await importButton.click();
 
 		// Wait for import dialog
-		await page.waitForSelector('textarea', { timeout: 5000 });
+		await page.waitForSelector('textarea', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Enter valid JSON
 		const validConfig = JSON.stringify({ ndvi: true, floodLayers: false });
@@ -264,7 +270,7 @@ test.describe('Feature Flags Panel', () => {
 
 		// Verify success snackbar appears
 		await expect(page.getByText(/imported successfully/i)).toBeVisible({
-			timeout: 5000,
+			timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
 		});
 	});
 
@@ -274,7 +280,7 @@ test.describe('Feature Flags Panel', () => {
 			name: /Feature Flags/i,
 		});
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Set up dialog listener for confirmation
 		page.on('dialog', async (dialog) => {
@@ -298,7 +304,7 @@ test.describe('Feature Flags Panel', () => {
 			name: /Feature Flags/i,
 		});
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Look for the enabled count chip (e.g., "15 / 30 enabled")
 		const enabledCountChip = page
@@ -313,16 +319,16 @@ test.describe('Feature Flags Panel', () => {
 			name: /Feature Flags/i,
 		});
 		await featureFlagsButton.click();
-		await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+		await page.waitForSelector('[role="dialog"]', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 		// Expand the Graphics & Performance category (likely has experimental flags)
 		const graphicsCategory = page.getByText('Graphics & Performance').first();
 		await graphicsCategory.click();
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 		// Look for experimental badge
 		const experimentalChip = page.getByText('Experimental').first();
-		if (await experimentalChip.isVisible({ timeout: 2000 })) {
+		if (await experimentalChip.isVisible({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })) {
 			await expect(experimentalChip).toBeVisible();
 		}
 	});

@@ -11,7 +11,7 @@ import type { Page } from '@playwright/test';
  */
 export async function waitForCesiumReady(page: Page): Promise<void> {
 	// Wait for canvas to be visible first
-	await page.waitForSelector('canvas', { state: 'visible', timeout: 15000 });
+	await page.waitForSelector('canvas', { state: 'visible', timeout: TEST_TIMEOUTS.CESIUM_READY });
 
 	// Wait for Cesium viewer to be initialized
 	await page.waitForFunction(
@@ -19,7 +19,7 @@ export async function waitForCesiumReady(page: Page): Promise<void> {
 			const viewer = (window as any).cesiumViewer || (window as any).__viewer;
 			return viewer && viewer.scene && viewer.scene.globe;
 		},
-		{ timeout: 15000 }
+		{ timeout: TEST_TIMEOUTS.CESIUM_READY }
 	);
 
 	// Wait for initial tile loading to complete by checking the loading indicator
@@ -30,14 +30,14 @@ export async function waitForCesiumReady(page: Page): Promise<void> {
 				const loadingText = document.body.innerText;
 				return !loadingText.includes('Loading') || !loadingText.includes('layers');
 			},
-			{ timeout: 30000 }
+			{ timeout: TEST_TIMEOUTS.CESIUM_READY_CI }
 		)
 		.catch(() => {
 			// If timeout, continue anyway as the viewer might be functional
 		});
 
 	// Give a small delay for final render
-	await page.waitForTimeout(1000);
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 }
 
 /**
@@ -50,7 +50,7 @@ export async function waitForPostalCodeSelection(page: Page): Promise<void> {
 			const store = (window as any).useGlobalStore?.();
 			return store?.selectedPostalCode !== null;
 		},
-		{ timeout: 10000 }
+		{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 	);
 }
 
@@ -64,7 +64,7 @@ export async function waitForBuildingSelection(page: Page): Promise<void> {
 			const store = (window as any).useGlobalStore?.();
 			return store?.selectedBuilding !== null;
 		},
-		{ timeout: 10000 }
+		{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 	);
 }
 
@@ -78,7 +78,7 @@ export async function dismissModalIfPresent(
 ): Promise<void> {
 	await page
 		.getByRole('button', { name: buttonName })
-		.click({ timeout: 2000 })
+		.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
 		.catch(() => {}); // Modal not present, that's fine
 }
 
@@ -88,9 +88,9 @@ export async function dismissModalIfPresent(
  */
 export async function dismissModal(page: Page, buttonName: string = 'Close'): Promise<void> {
 	const closeButton = page.getByRole('button', { name: buttonName });
-	await closeButton.waitFor({ state: 'visible', timeout: 5000 });
+	await closeButton.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 	await closeButton.click();
-	await closeButton.waitFor({ state: 'hidden', timeout: 3000 });
+	await closeButton.waitFor({ state: 'hidden', timeout: TEST_TIMEOUTS.ELEMENT_SCROLL });
 }
 
 /**
@@ -99,7 +99,7 @@ export async function dismissModal(page: Page, buttonName: string = 'Close'): Pr
  */
 export async function clickOnMap(page: Page, x: number, y: number): Promise<void> {
 	const canvas = page.locator('canvas');
-	await canvas.waitFor({ state: 'visible', timeout: 5000 });
+	await canvas.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 	await canvas.click({ position: { x, y } });
 }
 
@@ -117,13 +117,13 @@ export async function waitForLayerLoad(page: Page): Promise<void> {
 		for (let i = 0; i < count; i++) {
 			await loadingIndicators
 				.nth(i)
-				.waitFor({ state: 'hidden', timeout: 15000 })
+				.waitFor({ state: 'hidden', timeout: TEST_TIMEOUTS.CESIUM_READY })
 				.catch(() => {}); // May already be hidden
 		}
 	}
 
 	// Small delay to ensure visual updates complete
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 }
 
 /**
@@ -143,7 +143,7 @@ export async function waitForMapViewTransition(page: Page): Promise<void> {
 
 				return !cameraMoving && tilesLoaded;
 			},
-			{ timeout: 10000 }
+			{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 		)
 		.catch(() => {
 			// Timeout is acceptable, continue anyway
@@ -226,7 +226,7 @@ export async function toggleLayer(
 	checked: boolean
 ): Promise<void> {
 	const toggle = page.getByLabel(labelPattern);
-	await toggle.waitFor({ state: 'visible', timeout: 5000 });
+	await toggle.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 	const currentState = await toggle.isChecked();
 	if (currentState !== checked) {

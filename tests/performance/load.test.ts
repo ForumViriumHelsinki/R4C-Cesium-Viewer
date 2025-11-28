@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { chromium, Browser, Page } from 'playwright';
+import { TEST_TIMEOUTS } from '../e2e/helpers/test-helpers';
 
 // Localhost URL for performance tests
 const LOCALHOST_URL = 'http://localhost:5173';
@@ -72,8 +73,11 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 		const context = await browser.newContext();
 		const page = await context.newPage();
 		try {
-			await page.goto(LOCALHOST_URL, { timeout: 10000 });
-			await page.waitForSelector('canvas', { state: 'visible', timeout: 10000 });
+			await page.goto(LOCALHOST_URL, { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
+			await page.waitForSelector('canvas', {
+				state: 'visible',
+				timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+			});
 		} catch (error: any) {
 			throw new Error(
 				'Dev server not responding. Ensure `npm run dev` is running or check playwright.config.ts webServer config.\n' +
@@ -226,13 +230,13 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 						(window as any).cesiumViewer
 					);
 				},
-				{ timeout: 10000 }
+				{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 			);
 
 			// Warmup interactions (not measured)
 			const canvas = page.locator('canvas');
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Measure FPS using Cesium's Scene.postRender event
 			const fps = await page.evaluate((measureDuration: number) => {
@@ -281,7 +285,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// Perform memory-intensive operations
 			for (let i = 0; i < 10; i++) {
 				await page.locator('canvas').click({ position: { x: 300 + i * 10, y: 300 + i * 10 } });
-				await page.waitForTimeout(100);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 			}
 
 			// Check memory after operations
@@ -420,9 +424,11 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			}
 
 			// Wait for API responses or network activity to settle
-			await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
-				// Continue if network doesn't become idle (expected for ongoing operations)
-			});
+			await page
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
+				.catch(() => {
+					// Continue if network doesn't become idle (expected for ongoing operations)
+				});
 
 			const endTime = Date.now();
 			const totalTime = endTime - startTime;
@@ -467,7 +473,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 					() => {
 						return document.readyState === 'complete';
 					},
-					{ timeout: 500 }
+					{ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE }
 				);
 			}
 
@@ -496,7 +502,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 					await page.goto(LOCALHOST_URL);
 					await page.waitForSelector('canvas', {
 						state: 'visible',
-						timeout: 10000,
+						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 					});
 					tabs.push(page);
 				}
@@ -513,7 +519,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 								const canvas = document.querySelector('canvas');
 								return canvas && canvas.offsetWidth > 0;
 							},
-							{ timeout: 1000 }
+							{ timeout: TEST_TIMEOUTS.WAIT_MEDIUM }
 						);
 					}
 				});
@@ -550,7 +556,9 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 
 			// Normal interaction first
 			await page.locator('canvas').click({ position: { x: 400, y: 300 } });
-			await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+			await page
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
+				.catch(() => {});
 
 			// Enable network failure
 			networkDown = true;
@@ -563,7 +571,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 					const canvas = document.querySelector('canvas');
 					return canvas && canvas.offsetWidth > 0;
 				},
-				{ timeout: 5000 }
+				{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
 			);
 
 			// Application should still be responsive
@@ -574,7 +582,9 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 
 			// Should recover and work normally
 			await page.locator('canvas').click({ position: { x: 300, y: 400 } });
-			await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+			await page
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
+				.catch(() => {});
 
 			await expect(page.locator('canvas')).toBeVisible();
 

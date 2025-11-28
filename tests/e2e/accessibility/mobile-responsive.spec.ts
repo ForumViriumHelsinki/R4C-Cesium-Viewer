@@ -13,7 +13,7 @@
 
 import { expect } from '@playwright/test';
 import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers from '../helpers/test-helpers';
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
 
 cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@mobile'] });
@@ -46,7 +46,7 @@ cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 
 			if (!isVisible) {
 				await toggleButton.click();
-				await cesiumPage.waitForTimeout(500);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 			}
 
 			const drawer = cesiumPage.locator('.v-navigation-drawer');
@@ -68,7 +68,7 @@ cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 
 			if (!isVisible) {
 				await toggleButton.click();
-				await cesiumPage.waitForTimeout(500);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 			}
 
 			const drawer = cesiumPage.locator('.v-navigation-drawer');
@@ -100,7 +100,7 @@ cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 
 			// Navigate to view that shows timeline
 			await helpers.selectPostalCodeByMap({ retries: 3 });
-			await cesiumPage.waitForTimeout(1000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Check if timeline exists and is visible
 			const timeline = cesiumPage.locator('.timeline-card');
@@ -126,7 +126,7 @@ cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 
 			// Navigate to view that shows timeline
 			await helpers.selectPostalCodeByMap({ retries: 3 });
-			await cesiumPage.waitForTimeout(1000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			const timeline = cesiumPage.locator('.timeline-card');
 			const timelineVisible = await timeline.isVisible();

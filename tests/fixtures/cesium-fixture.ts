@@ -5,6 +5,7 @@ import {
 	waitForAppReady,
 } from '../e2e/helpers/cesium-helper';
 import { createCesiumMock as _createCesiumMock } from '../mocks/cesium-mock';
+import { TEST_TIMEOUTS } from './e2e/helpers/test-helpers';
 
 /**
  * Cesium Test Fixture
@@ -479,7 +480,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 			const dialogVisible = await dialogButton.isVisible().catch(() => false);
 			if (dialogVisible) {
 				await dialogButton.click();
-				await page.waitForTimeout(500); // Wait for dialog to close
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP); // Wait for dialog to close
 			}
 
 			// Disable navigation drawer overlay in tests
@@ -490,7 +491,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 			});
 
 			// Wait a moment for any initial animations
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Initialize mock viewer if not already created
 			await page.evaluate(() => {
@@ -691,10 +692,10 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 		const cesiumErrorOkButton = page.locator('.cesium-widget-errorPanel button:has-text("OK")');
 		const cesiumErrorVisible = await cesiumErrorOkButton.isVisible().catch(() => false);
 		if (cesiumErrorVisible) {
-			await cesiumErrorOkButton.click({ timeout: 5000 }).catch(() => {
+			await cesiumErrorOkButton.click({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }).catch(() => {
 				console.warn('Failed to dismiss Cesium error panel, continuing anyway');
 			});
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 		}
 
 		// Force remove disclaimer dialog and overlays using JavaScript
@@ -730,7 +731,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 		});
 
 		// Wait a moment for DOM changes to complete
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 		// Wait for Cesium to be ready with extended timeout for CI
 		await waitForCesiumReady(page, process.env.CI ? 60000 : 30000);

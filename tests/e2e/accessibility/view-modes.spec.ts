@@ -10,7 +10,7 @@
 
 import { expect } from '@playwright/test';
 import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers from '../helpers/test-helpers';
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
 
 cesiumDescribe('View Modes Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] });
@@ -57,7 +57,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 			async ({ cesiumPage }) => {
 				// Click somewhere on the map
 				await cesiumPage.locator('#cesiumContainer').click({ position: { x: 400, y: 300 } });
-				await cesiumPage.waitForTimeout(2000);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 				// Verify selection is still active
 				const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]');
@@ -100,7 +100,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 				await helpers.navigateToView('gridView');
 
 				// Wait for grid view to load
-				await cesiumPage.waitForTimeout(2000);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 				// Note: This would require actually setting the statsIndex to 'heat_index'
 				// For now, we test that the panel structure exists for the condition
@@ -114,7 +114,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 
 		cesiumTest('should enable 250m grid toggle in grid view', async ({ cesiumPage }) => {
 			await helpers.navigateToView('gridView');
-			await cesiumPage.waitForTimeout(2000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// The 250m grid should be activated automatically in grid view
 			// We verify this through the presence of the SosEco250mGrid component
@@ -168,9 +168,9 @@ cesiumDescribe('View Modes Accessibility', () => {
 			// Rapidly switch between views
 			for (let i = 0; i < 3; i++) {
 				await helpers.navigateToView('gridView');
-				await cesiumPage.waitForTimeout(500);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 				await helpers.navigateToView('capitalRegionView');
-				await cesiumPage.waitForTimeout(500);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 			}
 
 			// Final state should be consistent
@@ -233,7 +233,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 			await resetButton.click();
 
 			// Wait for reset to complete
-			await cesiumPage.waitForTimeout(2000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// View mode selection behavior after reset depends on implementation
 			// The test verifies the radio buttons are still functional
@@ -254,7 +254,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 
 				for (const viewport of viewports) {
 					await cesiumPage.setViewportSize(viewport);
-					await cesiumPage.waitForTimeout(1000);
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 					// Verify view mode container is accessible
 					await expect(cesiumPage.locator('#viewModeContainer')).toBeVisible();
@@ -285,7 +285,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 			await helpers.navigateToView('capitalRegionView');
 
 			// Wait for stabilization
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Verify final state is consistent
 			const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]');
@@ -311,7 +311,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 
 			// Test radio button keyboard control
 			await cesiumPage.keyboard.press('ArrowDown');
-			await cesiumPage.waitForTimeout(500);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Verify state change
 			const gridRadio = cesiumPage.locator('input[value="gridView"]');

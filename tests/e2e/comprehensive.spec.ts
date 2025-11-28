@@ -37,7 +37,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 			// Resize window
 			await page.setViewportSize({ width: 1200, height: 800 });
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Canvas should adapt to new size
 			const canvas = page.locator('canvas');
@@ -87,7 +87,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 		test('should maintain map state during navigation', async ({ page }) => {
 			// Interact with the map
 			await clickOnMap(page, 500, 300);
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Navigate to different sections if available
 			const navButtons = await page.locator('button').all();
@@ -98,7 +98,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 						const buttonText = await button.textContent();
 						if (buttonText && !buttonText.toLowerCase().includes('close')) {
 							await button.click();
-							await page.waitForTimeout(2000);
+							await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 							// Verify map is still functional
 							await expect(page.locator('canvas')).toBeVisible();
@@ -116,31 +116,35 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 		test('should load and interact with background maps', async ({ page }) => {
 			const hsyButton = page.getByRole('button', { name: 'HSY Background maps' });
-			await hsyButton.waitFor({ state: 'visible', timeout: 10000 });
+			await hsyButton.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 			await hsyButton.click();
 
 			// Test search functionality
 			const searchInput = page.getByPlaceholder('Search for WMS layers');
-			await searchInput.waitFor({ state: 'visible', timeout: 5000 });
+			await searchInput.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 			await searchInput.click();
 			await searchInput.fill('Kaupunginosat');
 
 			// Wait for search results with correct selector
-			await expect(page.locator('.v-list-item-group')).toBeVisible({ timeout: 5000 });
+			await expect(page.locator('.v-list-item-group')).toBeVisible({
+				timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+			});
 			await expect(page.locator('.v-list-item-group')).toContainText('Kaupunginosat');
 		});
 
 		test('should handle WMS layer selection', async ({ page }) => {
 			const hsyButton = page.getByRole('button', { name: 'HSY Background maps' });
-			await hsyButton.waitFor({ state: 'visible', timeout: 10000 });
+			await hsyButton.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 			await hsyButton.click();
 
 			const searchInput = page.getByPlaceholder('Search for WMS layers');
-			await searchInput.waitFor({ state: 'visible', timeout: 5000 });
+			await searchInput.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 			await searchInput.fill('Kaupunginosat');
 
 			// Wait for results
-			await expect(page.locator('.v-list-item-group')).toBeVisible({ timeout: 5000 });
+			await expect(page.locator('.v-list-item-group')).toBeVisible({
+				timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+			});
 
 			// Try to select a layer with correct selector
 			const layerItems = page.locator('.v-list-item');
@@ -166,12 +170,12 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			await waitForMapViewTransition(page);
 
 			const buildingButton = page.getByRole('button', { name: 'Building properties' });
-			await buildingButton.waitFor({ state: 'visible', timeout: 5000 });
+			await buildingButton.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 			await buildingButton.click();
 
 			// Check if building information container appears
 			const buildingInfo = page.locator('#printContainer');
-			await buildingInfo.waitFor({ state: 'visible', timeout: 5000 });
+			await buildingInfo.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 			// Should contain some building-related text
 			const content = await buildingInfo.textContent();
@@ -188,15 +192,15 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 			for (const location of buildingTestLocations) {
 				await clickOnMap(page, location.x, location.y);
-				await page.waitForTimeout(2000);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 				try {
 					const buildingButton = page.getByRole('button', {
 						name: 'Building properties',
 					});
-					if (await buildingButton.isVisible({ timeout: 1000 })) {
+					if (await buildingButton.isVisible({ timeout: TEST_TIMEOUTS.WAIT_MEDIUM })) {
 						await buildingButton.click();
-						await page.waitForTimeout(1000);
+						await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 						// Check for any building information
 						const hasInfo = await page.locator('#printContainer').isVisible();
@@ -216,13 +220,13 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 				const gridCheckbox = page.getByLabel('Statistical Grid');
 				if (await gridCheckbox.isVisible()) {
 					await gridCheckbox.check();
-					await page.waitForTimeout(2000);
+					await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 					// Select grid resolution
 					const gridOption = page.locator('div').filter({ hasText: /^250m grid$/ });
 					if (await gridOption.isVisible()) {
 						await gridOption.locator('span').click();
-						await page.waitForTimeout(2000);
+						await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 					}
 
 					// Verify grid is displayed
@@ -237,14 +241,14 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			try {
 				// Enable statistical grid first
 				await page.getByLabel('Statistical Grid').check();
-				await page.waitForTimeout(1000);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 				await page
 					.locator('div')
 					.filter({ hasText: /^250m grid$/ })
 					.locator('span')
 					.click();
-				await page.waitForTimeout(2000);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 				// Access heat vulnerability
 				const heatVulnButton = page.getByRole('heading', {
@@ -252,7 +256,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 				});
 				if (await heatVulnButton.isVisible()) {
 					await heatVulnButton.click();
-					await page.waitForTimeout(2000);
+					await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 					await expect(heatVulnButton).toBeVisible();
 				}
@@ -276,7 +280,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 			// Perform actions that trigger data loading
 			await clickOnMap(page, 500, 300);
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Try various features that might trigger loading
 			const testButtons = ['Building properties', 'HSY Background maps', 'Heat Vulnerability'];
@@ -284,9 +288,9 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			for (const buttonName of testButtons) {
 				try {
 					const button = page.getByRole('button', { name: buttonName });
-					if (await button.isVisible({ timeout: 1000 })) {
+					if (await button.isVisible({ timeout: TEST_TIMEOUTS.WAIT_MEDIUM })) {
 						await button.click();
-						await page.waitForTimeout(1500);
+						await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 					}
 				} catch (_error) {
 					// Button not available
@@ -310,7 +314,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 			// Perform typical user interactions
 			await clickOnMap(page, 400, 300);
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Application should remain responsive
 			await expect(page.locator('canvas')).toBeVisible();
@@ -319,7 +323,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			const buttons = await page.locator('button:visible').all();
 			if (buttons.length > 0) {
 				await buttons[0].click();
-				await page.waitForTimeout(2000);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 			}
 		});
 	});
@@ -337,26 +341,26 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 			// User interactions should not crash the application
 			await clickOnMap(page, 400, 300);
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 		});
 
 		test('should handle invalid user inputs', async ({ page }) => {
 			// Test with various input scenarios
 			try {
 				const searchInput = page.getByPlaceholder('Search for WMS layers');
-				if (await searchInput.isVisible({ timeout: 2000 })) {
+				if (await searchInput.isVisible({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })) {
 					// Test empty search
 					await searchInput.click();
 					await searchInput.fill('');
-					await page.waitForTimeout(1000);
+					await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 					// Test very long search term
 					await searchInput.fill('a'.repeat(1000));
-					await page.waitForTimeout(1000);
+					await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 					// Test special characters
 					await searchInput.fill('!@#$%^&*()');
-					await page.waitForTimeout(1000);
+					await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 					// Clear the input
 					await searchInput.fill('');
@@ -382,12 +386,12 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 			for (const pos of clickPositions) {
 				await clickOnMap(page, pos.x, pos.y);
-				await page.waitForTimeout(100); // Very short wait
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF); // Very short wait
 			}
 
 			// Application should remain responsive
 			await expect(page.locator('canvas')).toBeVisible();
-			await page.waitForTimeout(2000); // Allow processing to complete
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD); // Allow processing to complete
 		});
 	});
 
@@ -395,7 +399,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 		test('should work on mobile viewport', async ({ page }) => {
 			// Set mobile viewport
 			await page.setViewportSize(VIEWPORTS.MOBILE);
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Basic elements should still be visible
 			await expect(page.locator('canvas')).toBeVisible();
@@ -403,11 +407,11 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 			// Touch interactions should work
 			await page.touchscreen.tap(200, 300);
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Test zoom gestures (if supported)
 			await page.touchscreen.tap(200, 300);
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 		});
 
 		test('should adapt to different screen sizes', async ({ page }) => {
@@ -423,14 +427,14 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 					width: viewport.width,
 					height: viewport.height,
 				});
-				await page.waitForTimeout(1000);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 				// Core functionality should work at all sizes
 				await expect(page.locator('canvas')).toBeVisible();
 
 				// Test basic interaction
 				await clickOnMap(page, viewport.width / 2, viewport.height / 2);
-				await page.waitForTimeout(1000);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 			}
 		});
 	});
@@ -443,9 +447,9 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			for (const option of toggleOptions) {
 				try {
 					const element = page.getByText(option).first();
-					if (await element.isVisible({ timeout: 1000 })) {
+					if (await element.isVisible({ timeout: TEST_TIMEOUTS.WAIT_MEDIUM })) {
 						await element.click();
-						await page.waitForTimeout(2000);
+						await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 						// Verify the map is still functional
 						await expect(page.locator('canvas')).toBeVisible();
@@ -468,9 +472,9 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			for (const selector of timelineSelectors) {
 				try {
 					const element = page.locator(selector).first();
-					if (await element.isVisible({ timeout: 1000 })) {
+					if (await element.isVisible({ timeout: TEST_TIMEOUTS.WAIT_MEDIUM })) {
 						await element.click();
-						await page.waitForTimeout(1000);
+						await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 						// If it's a select or input, try to change the value
 						const tagName = await element.evaluate((el) => el.tagName.toLowerCase());
@@ -478,7 +482,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 							const options = await element.locator('option').all();
 							if (options.length > 1) {
 								await element.selectOption({ index: 1 });
-								await page.waitForTimeout(2000);
+								await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 							}
 						}
 					}

@@ -23,7 +23,7 @@
 
 import { expect } from '@playwright/test';
 import { cesiumTest, cesiumDescribe } from '../fixtures/cesium-fixture';
-import AccessibilityTestHelpers from './helpers/test-helpers';
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from './helpers/test-helpers';
 
 /**
  * Helper function to trigger overlay display via store state
@@ -58,7 +58,7 @@ async function triggerOverlayViaStore(cesiumPage: any, stateOverrides: any = {})
 			const style = window.getComputedStyle(overlay);
 			return style.display !== 'none' && style.visibility !== 'hidden';
 		},
-		{ timeout: 2000 }
+		{ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION }
 	);
 }
 
@@ -125,8 +125,8 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 				const loadingCard = cesiumPage.locator('.loading-card');
 
 				// Wait for overlay to appear with tight timeout
-				await expect(overlay).toBeVisible({ timeout: 500 });
-				await expect(loadingCard).toBeVisible({ timeout: 500 });
+				await expect(overlay).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
+				await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 				const endTime = Date.now();
 				const feedbackTime = endTime - startTime;
@@ -149,7 +149,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay to appear
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Check for postal code name text
 			const postalCodeText = cesiumPage.locator('.loading-card p.text-body-2');
@@ -166,7 +166,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay to appear
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Check for progress circular indicator
 			const progressCircular = cesiumPage.locator('.v-progress-circular');
@@ -189,7 +189,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 				// Wait for overlay to appear
 				const loadingCard = cesiumPage.locator('.loading-card');
-				await expect(loadingCard).toBeVisible({ timeout: 500 });
+				await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 				// Check for loading stage text
 				const stageText = cesiumPage.locator('.loading-card h3');
@@ -209,7 +209,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 				// Wait for overlay to appear
 				const loadingCard = cesiumPage.locator('.loading-card');
-				await expect(loadingCard).toBeVisible({ timeout: 500 });
+				await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 				// Check for animating stage text
 				const stageText = cesiumPage.locator('.loading-card h3');
@@ -226,7 +226,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 				// Wait for overlay to appear
 				const loadingCard = cesiumPage.locator('.loading-card');
-				await expect(loadingCard).toBeVisible({ timeout: 500 });
+				await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 				// Check for complete stage text
 				const stageText = cesiumPage.locator('.loading-card h3');
@@ -243,7 +243,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 				// Wait for overlay to appear
 				const loadingCard = cesiumPage.locator('.loading-card');
-				await expect(loadingCard).toBeVisible({ timeout: 500 });
+				await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 				// Check for default processing text
 				const stageText = cesiumPage.locator('.loading-card h3');
@@ -259,7 +259,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Verify loading stage text
 			const stageText = cesiumPage.locator('.loading-card h3');
@@ -283,7 +283,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			});
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Verify animating stage text
 			const stageText = cesiumPage.locator('.loading-card h3');
@@ -301,7 +301,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Check for progress linear indicator
 			const progressLinear = cesiumPage.locator('.v-progress-linear').first();
@@ -320,7 +320,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			});
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Check for progress linear indicator
 			const progressLinear = cesiumPage.locator('.v-progress-linear').first();
@@ -339,7 +339,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			});
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Progress bar should reflect real progress (33%)
 			const progressLinear = cesiumPage.locator('.v-progress-linear').first();
@@ -354,11 +354,11 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Overlay should remain visible for several frames
 			for (let i = 0; i < 3; i++) {
-				await cesiumPage.waitForTimeout(200);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 				await expect(loadingCard).toBeVisible();
 			}
 		});
@@ -374,7 +374,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Cancel button should be visible
 			const cancelButton = cesiumPage.locator('button:has-text("Press ESC to Cancel")');
@@ -390,7 +390,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Cancel button should NOT be visible
 			const cancelButton = cesiumPage.locator('button:has-text("Press ESC to Cancel")');
@@ -406,7 +406,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Cancel button should NOT be visible during loading
 			const cancelButton = cesiumPage.locator('button:has-text("Press ESC to Cancel")');
@@ -422,7 +422,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Find and click cancel button
 			const cancelButton = cesiumPage.locator('button:has-text("Press ESC to Cancel")');
@@ -459,7 +459,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Check for error alert with assertive aria-live
 			const errorAlert = cesiumPage.locator('[role="alert"]');
@@ -481,7 +481,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Look for retry button within error alert
 			const retryButton = cesiumPage.locator('button:has-text("Retry")');
@@ -501,7 +501,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Find and click retry button
 			const retryButton = cesiumPage.locator('button:has-text("Retry")');
@@ -575,7 +575,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 				});
 
 				let loadingCard = cesiumPage.locator('.loading-card');
-				await expect(loadingCard).toBeVisible({ timeout: 500 });
+				await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 				let errorAlert = cesiumPage.locator('[role="alert"]');
 				await expect(errorAlert).toContainText('Network connection failed');
@@ -592,7 +592,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 				});
 
 				loadingCard = cesiumPage.locator('.loading-card');
-				await expect(loadingCard).toBeVisible({ timeout: 500 });
+				await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 				errorAlert = cesiumPage.locator('[role="alert"]');
 				await expect(errorAlert).toContainText('Request timed out');
@@ -610,11 +610,11 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			});
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Overlay should remain visible with error for extended period
 			for (let i = 0; i < 3; i++) {
-				await cesiumPage.waitForTimeout(300);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 				await expect(loadingCard).toBeVisible();
 				const errorAlert = cesiumPage.locator('[role="alert"]');
 				await expect(errorAlert).toBeVisible();
@@ -631,7 +631,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Check for ARIA attributes
 			const role = await loadingCard.getAttribute('role');
@@ -651,7 +651,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Stage text should be present for screen readers
 			const stageText = cesiumPage.locator('.loading-card h3');
@@ -676,7 +676,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Cancel button should be focusable
 			const cancelButton = cesiumPage.locator('button:has-text("Press ESC to Cancel")');
@@ -705,7 +705,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Retry button should be present
 			const retryButton = cesiumPage.locator('button:has-text("Retry")');
@@ -723,7 +723,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Check loading card has styled appearance
 			const bgColor = await loadingCard.evaluate((el) => {
@@ -747,7 +747,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Progress indicators should still be present
 			const progressCircular = cesiumPage.locator('.v-progress-circular');
@@ -773,7 +773,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Cancel button should have descriptive label
 			const cancelButton = cesiumPage.locator('button:has-text("Press ESC to Cancel")');
@@ -797,7 +797,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Error alert should have assertive aria-live
 			const errorAlert = cesiumPage.locator('[role="alert"]');
@@ -820,7 +820,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Mark completion
 			const duration = await cesiumPage.evaluate(() => {
@@ -845,7 +845,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Monitor frame timings during transitions
 			const frameTimings: number[] = [];
@@ -859,7 +859,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 					canCancel: stage === 'animating',
 				});
 
-				await cesiumPage.waitForTimeout(100);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 				frameTimings.push(Date.now() - start);
 			}
 
@@ -909,9 +909,9 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 				// Trigger and close overlay multiple times
 				for (let i = 0; i < 5; i++) {
 					await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
-					await cesiumPage.waitForTimeout(200);
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 					await resetStoreState(cesiumPage);
-					await cesiumPage.waitForTimeout(200);
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 				}
 
 				// Check final state
@@ -936,12 +936,12 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 					postalCodeName: `Test Area ${i}`,
 					stage: 'loading',
 				});
-				await cesiumPage.waitForTimeout(100);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 			}
 
 			// Overlay should be visible with last postal code
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			const postalCodeText = cesiumPage.locator('.loading-card p.text-body-2');
 			await expect(postalCodeText).toContainText('Test Area 2');
@@ -957,7 +957,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Update state while overlay is visible
 			await triggerOverlayViaStore(cesiumPage, {
@@ -985,7 +985,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 				});
 
 				const loadingCard = cesiumPage.locator('.loading-card');
-				await expect(loadingCard).toBeVisible({ timeout: 500 });
+				await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 				// Check store consistency
 				const storeState = await cesiumPage.evaluate(() => {
@@ -1007,7 +1007,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 				expect(storeState?.retryCount).toBe(i);
 
 				// Wait before next change
-				await cesiumPage.waitForTimeout(200);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 			}
 		});
 	});
@@ -1016,14 +1016,14 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 		cesiumTest('should display overlay on mobile viewport', async ({ cesiumPage }) => {
 			// Set mobile viewport
 			await cesiumPage.setViewportSize({ width: 375, height: 667 });
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			// Trigger overlay
 			await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
 
 			// Overlay should appear on mobile
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Card should be readable on mobile
 			const box = await loadingCard.boundingBox();
@@ -1037,18 +1037,18 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Resize to tablet viewport
 			await cesiumPage.setViewportSize({ width: 768, height: 1024 });
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			// Overlay should remain visible and accessible
 			await expect(loadingCard).toBeVisible();
 
 			// Resize to mobile viewport
 			await cesiumPage.setViewportSize({ width: 375, height: 667 });
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			// Overlay should still be visible
 			await expect(loadingCard).toBeVisible();
@@ -1060,7 +1060,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Wait for overlay
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Check z-index of overlay parent
 			const overlay = cesiumPage.locator('.map-click-loading-overlay');
@@ -1083,7 +1083,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 
 			// Overlay should still appear
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Should show default "Loading..." text
 			const postalCodeText = cesiumPage.locator('.loading-card p.text-body-2');
@@ -1095,7 +1095,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Reset state
 			await resetStoreState(cesiumPage);
@@ -1129,7 +1129,7 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			});
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Should show progress bar with fallback values
 			const progressLinear = cesiumPage.locator('.v-progress-linear').first();
@@ -1147,13 +1147,13 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
 
 			const loadingCard = cesiumPage.locator('.loading-card');
-			await expect(loadingCard).toBeVisible({ timeout: 500 });
+			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE });
 
 			// Reset state
 			await resetStoreState(cesiumPage);
 
 			// Wait for cleanup
-			await cesiumPage.waitForTimeout(500);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Should be only zero or one overlay (the hidden one)
 			const overlayCount = await cesiumPage.locator('.map-click-loading-overlay').count();
@@ -1168,13 +1168,13 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 		cesiumTest('should have consistent state after multiple operations', async ({ cesiumPage }) => {
 			// Perform multiple operations
 			await triggerOverlayViaStore(cesiumPage, { stage: 'loading' });
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
 			await triggerOverlayViaStore(cesiumPage, { stage: 'animating' });
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
 			await resetStoreState(cesiumPage);
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
 			// Component should be in consistent state
 			const storeState = await cesiumPage.evaluate(() => {

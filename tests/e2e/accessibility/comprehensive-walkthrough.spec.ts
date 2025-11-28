@@ -11,7 +11,7 @@
 
 import { expect } from '@playwright/test';
 import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers from '../helpers/test-helpers';
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
 
 cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e', '@comprehensive'] });
@@ -36,7 +36,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				await helpers.drillToLevel('postalCode');
 				// Wait for postal code UI elements
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+					.waitForSelector('text="Building Scatter Plot"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+					})
 					.catch(() => {});
 
 				// Verify postal code features
@@ -52,7 +54,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				// 3. Navigate to building level
 				await helpers.drillToLevel('building');
 				// Wait for building level elements
-				await cesiumPage.waitForSelector('.mdi-arrow-left', { timeout: 15000 }).catch(() => {});
+				await cesiumPage
+					.waitForSelector('.mdi-arrow-left', { timeout: TEST_TIMEOUTS.CESIUM_READY })
+					.catch(() => {});
 
 				// Verify building features
 				await helpers.verifyPanelVisibility({
@@ -93,7 +97,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code level in grid view
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 
 			// Timeline should work in grid view
@@ -109,7 +115,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.drillToLevel('building');
 			// Wait for building level in grid view
 			await cesiumPage
-				.waitForSelector('text="Building heat data"', { timeout: 15000 })
+				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
 				.catch(() => {});
 
 			// Should show grid-specific building data
@@ -132,13 +138,13 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 					if (level === 'postalCode') {
 						await cesiumPage
 							.waitForSelector('text="Building Scatter Plot"', {
-								timeout: 10000,
+								timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 							})
 							.catch(() => {});
 					} else {
 						await cesiumPage
 							.waitForSelector('text="Building heat data"', {
-								timeout: 15000,
+								timeout: TEST_TIMEOUTS.CESIUM_READY,
 							})
 							.catch(() => {});
 					}
@@ -161,7 +167,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 					.filter({ has: cesiumPage.locator('.mdi-refresh') });
 				await resetButton.click();
 				// Wait for reset to complete
-				await cesiumPage.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+				await cesiumPage
+					.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+					.catch(() => {});
 			}
 		});
 	});
@@ -174,7 +182,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				await helpers.drillToLevel('postalCode');
 				// Wait for postal code UI
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+					.waitForSelector('text="Building Scatter Plot"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+					})
 					.catch(() => {});
 
 				// 2. Enable multiple layers
@@ -224,7 +234,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				await helpers.drillToLevel('building');
 				// Wait for building level
 				await cesiumPage
-					.waitForSelector('text="Building heat data"', { timeout: 15000 })
+					.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
 					.catch(() => {});
 
 				// 6. Verify all features are maintained
@@ -243,7 +253,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code level
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 
 			const ndviToggle = cesiumPage
@@ -300,7 +312,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 						.filter({ has: cesiumPage.locator('.mdi-refresh') });
 					await resetButton.click();
 					// Wait for reset
-					await cesiumPage.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+					await cesiumPage
+						.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+						.catch(() => {});
 
 					// Navigate to target state
 					await helpers.navigateToView(state.view as 'capitalRegionView' | 'gridView');
@@ -311,13 +325,13 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 						if (state.level === 'postalCode') {
 							await cesiumPage
 								.waitForSelector('text="Building Scatter Plot"', {
-									timeout: 10000,
+									timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 								})
 								.catch(() => {});
 						} else {
 							await cesiumPage
 								.waitForSelector('text="Building heat data"', {
-									timeout: 15000,
+									timeout: TEST_TIMEOUTS.CESIUM_READY,
 								})
 								.catch(() => {});
 						}
@@ -363,12 +377,14 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 						.filter({ has: cesiumPage.locator('.mdi-refresh') });
 					await resetButton.click();
 					// Wait for reset
-					await cesiumPage.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+					await cesiumPage
+						.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+						.catch(() => {});
 
 					await context.action();
 					// Wait for context action to complete
 					await cesiumPage.waitForFunction(() => document.readyState === 'complete', {
-						timeout: 5000,
+						timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
 					});
 
 					// Test keyboard navigation
@@ -379,7 +395,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 						// Brief wait for focus to move
 						await cesiumPage
 							.waitForFunction(() => document.readyState === 'complete', {
-								timeout: 500,
+								timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE,
 							})
 							.catch(() => {});
 
@@ -412,7 +428,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 						return window.innerWidth === expectedWidth;
 					},
 					viewport.width,
-					{ timeout: 3000 }
+					{ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL }
 				);
 
 				// Test essential elements are accessible
@@ -446,7 +462,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code level
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 
 			// Enable features during slow loading
@@ -459,7 +477,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.drillToLevel('building');
 			// Wait for building level under load
 			await cesiumPage
-				.waitForSelector('text="Building heat data"', { timeout: 20000 })
+				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY_CI })
 				.catch(() => {});
 
 			// Should reach stable state
@@ -482,7 +500,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			// Attempt navigation despite failures
 			await helpers.drillToLevel('postalCode');
 			// Wait longer for recovery
-			await cesiumPage.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+			await cesiumPage
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
+				.catch(() => {});
 
 			// Should not show error states
 			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]');
@@ -497,7 +517,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 
 			await resetButton.click();
 			// Wait for reset to complete
-			await cesiumPage.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+			await cesiumPage
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+				.catch(() => {});
 
 			// Should return to stable state
 			await helpers.testNavigationControls('start');
@@ -548,7 +570,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code level
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 			await expect(cesiumPage.getByText('Building Scatter Plot')).toBeVisible();
 
@@ -556,7 +580,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.drillToLevel('building');
 			// Wait for building level
 			await cesiumPage
-				.waitForSelector('text="Building heat data"', { timeout: 15000 })
+				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
 				.catch(() => {});
 			await expect(cesiumPage.getByText('Building heat data')).toBeVisible();
 

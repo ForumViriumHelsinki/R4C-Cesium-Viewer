@@ -13,7 +13,7 @@
 
 import { expect } from '@playwright/test';
 import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers from '../helpers/test-helpers';
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
 import { VIEWPORTS } from '../../config/constants';
 
 cesiumDescribe('Layer Controls Accessibility', () => {
@@ -226,7 +226,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				await helpers.drillToLevel('postalCode');
 				// Wait for postal code level UI
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+					.waitForSelector('text="Building Scatter Plot"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+					})
 					.catch(() => {});
 
 				// Trees toggle should now be visible
@@ -254,7 +256,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				await helpers.drillToLevel('postalCode');
 				// Wait for postal code UI elements
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+					.waitForSelector('text="Building Scatter Plot"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+					})
 					.catch(() => {});
 
 				// Verify Trees is visible
@@ -284,7 +288,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code level
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 
 			let treesToggle = cesiumPage
@@ -304,7 +310,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('building');
 			// Wait for building level
 			await cesiumPage
-				.waitForSelector('text="Building heat data"', { timeout: 15000 })
+				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
 				.catch(() => {});
 
 			// Re-query locator after navigation
@@ -321,7 +327,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await backButton.click();
 			// Wait for navigation back to postal code
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 
 			// Re-query locator after navigation back
@@ -343,7 +351,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.scrollIntoViewportWithRetry(ndviToggle, {
 				elementName: 'NDVI',
 			});
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			// Rapidly toggle NDVI multiple times with viewport checks
 			for (let i = 0; i < 5; i++) {
@@ -356,14 +364,14 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 						elementName: 'NDVI',
 						maxRetries: 2,
 					});
-					await cesiumPage.waitForTimeout(200);
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 				}
 
 				// Use force option for rapid toggling after initial attempts
-				await ndviToggle.check({ timeout: 3000, force: i > 2 });
-				await cesiumPage.waitForTimeout(250);
-				await ndviToggle.uncheck({ timeout: 3000, force: i > 2 });
-				await cesiumPage.waitForTimeout(250);
+				await ndviToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL, force: i > 2 });
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
+				await ndviToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL, force: i > 2 });
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 			}
 
 			// Final state should be consistent
@@ -380,7 +388,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code level
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 
 			// Get available toggles
@@ -447,7 +457,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code UI
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 
 			// Re-query locators after navigation
@@ -465,7 +477,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('building');
 			// Wait for building level
 			await cesiumPage
-				.waitForSelector('text="Building heat data"', { timeout: 15000 })
+				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
 				.catch(() => {});
 
 			// Re-query locators after navigation
@@ -488,7 +500,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code UI
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 
 			// Check that all visible toggles have consistent structure
@@ -530,7 +544,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 					}
 
 					await cesiumPage.keyboard.press('Tab');
-					await cesiumPage.waitForTimeout(100); // Brief wait for focus to settle
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF); // Brief wait for focus to settle
 
 					const focused = cesiumPage.locator(':focus');
 
@@ -550,7 +564,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 							if (initialState === null) continue;
 
 							await cesiumPage.keyboard.press(' ');
-							await cesiumPage.waitForTimeout(500);
+							await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 							const isChecked = await focused.isChecked().catch(() => null);
 							if (isChecked !== null) {
@@ -574,7 +588,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code UI
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 10000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
 				.catch(() => {});
 
 			// Check that layer labels are descriptive
@@ -604,14 +620,14 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				await helpers.scrollIntoViewportWithRetry(ndviToggle, {
 					elementName: 'NDVI',
 				});
-				await cesiumPage.waitForTimeout(300);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 				// Initial state
 				const _initialChecked = await ndviToggle.isChecked();
 
 				// Toggle on
 				await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' });
-				await cesiumPage.waitForTimeout(500);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 				// Wait for toggle state change
 				await expect(ndviToggle).toBeChecked();
@@ -668,7 +684,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' });
 
 			// Wait for loading to complete
-			await cesiumPage.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+			await cesiumPage
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
+				.catch(() => {});
 
 			// Toggle state should be consistent
 			await expect(ndviToggle).toBeChecked();
@@ -714,7 +732,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 					.filter({ has: cesiumPage.locator('.mdi-refresh') });
 				await resetButton.click();
 				// Wait for reset to complete
-				await cesiumPage.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+				await cesiumPage
+					.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+					.catch(() => {});
 
 				// Re-query locators after reset
 				ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
@@ -775,7 +795,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 							return window.innerWidth === expectedWidth;
 						},
 						viewport.width,
-						{ timeout: 3000 }
+						{ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL }
 					);
 
 					// Layer controls should remain accessible

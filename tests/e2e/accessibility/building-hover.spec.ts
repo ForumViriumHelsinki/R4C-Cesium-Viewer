@@ -6,6 +6,7 @@
  */
 import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from '../../setup/digitransit-mock';
+import { TEST_TIMEOUTS } from '../helpers/test-helpers';
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
@@ -18,11 +19,11 @@ test.describe('Building Hover Information', () => {
 
 		// Dismiss the disclaimer popup
 		const exploreButton = page.getByRole('button', { name: 'Explore Map' });
-		await expect(exploreButton).toBeVisible({ timeout: 10000 });
+		await expect(exploreButton).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 		await exploreButton.click();
 
 		// Wait for map to load
-		await page.waitForTimeout(2000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 		await expect(page.locator('canvas')).toBeVisible();
 	});
 
@@ -31,14 +32,14 @@ test.describe('Building Hover Information', () => {
 			// First navigate to a postal code area to load buildings
 			const canvas = page.locator('canvas');
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Check for the building tooltip element structure (even if not visible)
 			// The component should be mounted with proper accessibility attributes
 			const tooltipSelector = '.building-tooltip';
 
 			// Wait for building data to potentially load
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Check if tooltip component exists in DOM (may be hidden)
 			const tooltipExists = await page.evaluate(() => {
@@ -64,7 +65,7 @@ test.describe('Building Hover Information', () => {
 			// Navigate to postal code to load buildings
 			const canvas = page.locator('canvas');
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Check tooltip styling for accessibility
 			const _tooltipStyle = await page.evaluate(() => {
@@ -87,7 +88,7 @@ test.describe('Building Hover Information', () => {
 			// Navigate to postal code area
 			const canvas = page.locator('canvas');
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Verify that tooltip has pointer-events: none (doesn't block interaction)
 			const hasProperPointerEvents = await page.evaluate(() => {
@@ -109,7 +110,7 @@ test.describe('Building Hover Information', () => {
 			// Navigate to postal code
 			const canvas = page.locator('canvas');
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Check if tooltip structure is correct
 			const tooltipHeader = page.locator('.tooltip-header');
@@ -132,7 +133,7 @@ test.describe('Building Hover Information', () => {
 			}
 
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Check tooltip positioning logic
 			const tooltipPositioning = await page.evaluate(() => {
@@ -179,7 +180,7 @@ test.describe('Building Hover Information', () => {
 
 			// Navigate to postal code first
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Capture console errors
 			const errors: string[] = [];
@@ -189,14 +190,14 @@ test.describe('Building Hover Information', () => {
 
 			// Perform mouse move over canvas
 			await canvas.hover({ position: { x: 420, y: 320 } });
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Move mouse to different positions
 			await canvas.hover({ position: { x: 450, y: 350 } });
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			await canvas.hover({ position: { x: 380, y: 280 } });
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Check that no errors occurred during mouse movement
 			const criticalErrors = errors.filter(
@@ -214,7 +215,7 @@ test.describe('Building Hover Information', () => {
 
 			// Navigate to postal code
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Rapidly move mouse multiple times
 			const movements = 20;
@@ -223,7 +224,7 @@ test.describe('Building Hover Information', () => {
 			}
 
 			// Wait for any pending operations
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// App should remain responsive
 			await expect(canvas).toBeVisible();
@@ -234,11 +235,11 @@ test.describe('Building Hover Information', () => {
 
 			// Click on empty area (water or area without buildings)
 			await canvas.click({ position: { x: 100, y: 100 } });
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Hover over same area - should not throw errors
 			await canvas.hover({ position: { x: 100, y: 100 } });
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// App should remain functional
 			await expect(canvas).toBeVisible();
@@ -251,15 +252,15 @@ test.describe('Building Hover Information', () => {
 
 			// Navigate to postal code
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Hover over potential building area
 			await canvas.hover({ position: { x: 420, y: 320 } });
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Move to empty area
 			await page.mouse.move(50, 50);
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Tooltip should be hidden
 			const tooltip = page.locator('.building-tooltip');
@@ -275,14 +276,14 @@ test.describe('Building Hover Information', () => {
 
 			// Navigate to postal code
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Rapidly enter and exit potential building areas
 			for (let i = 0; i < 5; i++) {
 				await canvas.hover({ position: { x: 420, y: 320 } });
-				await page.waitForTimeout(100);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 				await page.mouse.move(50, 50);
-				await page.waitForTimeout(100);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 			}
 
 			// App should remain stable
@@ -296,7 +297,7 @@ test.describe('Building Hover Information', () => {
 
 			// Initially, before navigating to postal code, no buildings are loaded
 			await canvas.hover({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Tooltip should not appear without building data
 			const tooltipBefore = page.locator('.building-tooltip');
@@ -305,7 +306,7 @@ test.describe('Building Hover Information', () => {
 
 			// Navigate to postal code to load buildings
 			await canvas.click({ position: { x: 400, y: 300 } });
-			await page.waitForTimeout(3000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Now buildings should be loaded (buildingStore.buildingFeatures populated)
 			const _buildingsLoaded = await page.evaluate(() => {
@@ -331,9 +332,9 @@ test.describe('Building Hover Regression Prevention', () => {
 		await page.goto('/');
 
 		const exploreButton = page.getByRole('button', { name: 'Explore Map' });
-		await expect(exploreButton).toBeVisible({ timeout: 10000 });
+		await expect(exploreButton).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 		await exploreButton.click();
-		await page.waitForTimeout(2000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 	});
 
 	test('mouse move handler should be registered after building features load', async ({ page }) => {
@@ -341,7 +342,7 @@ test.describe('Building Hover Regression Prevention', () => {
 
 		// Navigate to postal code to trigger building load
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(4000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_EXTENDED);
 
 		// Verify that mouse move handling is set up
 		const handlerRegistered = await page.evaluate(() => {
@@ -357,7 +358,7 @@ test.describe('Building Hover Regression Prevention', () => {
 
 		// Navigate to postal code
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Verify Cesium is properly loaded and can handle pick operations
 		const pickFunctionExists = await page.evaluate(() => {
@@ -375,7 +376,7 @@ test.describe('Building Hover Regression Prevention', () => {
 
 		// Navigate to postal code level
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// BuildingInformation component should be conditionally rendered
 		// when shouldShowBuildingInformation is true
@@ -403,11 +404,11 @@ test.describe('Building Hover Regression Prevention', () => {
 
 		// Step 2: Navigate to postal code
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Step 3: Hover over building area
 		await canvas.hover({ position: { x: 420, y: 320 } });
-		await page.waitForTimeout(1000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 		// Step 4: Verify no errors occurred
 		const regressionErrors = errors.filter(
