@@ -4,7 +4,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-### Build and Development
+### Makefile (Recommended)
+
+Use `make` for the unified development experience:
+
+```bash
+make help        # Show all commands with current status
+make dev         # Backend in K8s + local frontend (fast iteration)
+make dev-full    # Everything in containers (closer to production)
+make stop        # Stop all services
+```
+
+**Database commands:**
+
+- `make db-status` - Show connection info and table count
+- `make db-migrate` - Run pending migrations
+- `make db-import` - Import production dump from tmp/
+- `make db-shell` - Open psql shell
+- `make db-reset` - Drop and recreate database (requires confirmation)
+
+**Testing:**
+
+- `make test` - All tests
+- `make test-quick` - Unit tests only
+- `make test-e2e` - End-to-end tests
+
+Database data persists across `make stop` and even `skaffold delete`. Only `make db-reset` explicitly wipes the data.
+
+### Build and Development (npm)
 
 - `npm run dev` - Start development server (accessible at http://localhost:5173)
 - `npm run build` - Build for production
