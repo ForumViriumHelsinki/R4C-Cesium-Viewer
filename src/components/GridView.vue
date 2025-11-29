@@ -165,7 +165,7 @@ export default {
 			this.toggleStore.setSurveyPlaces(newValue);
 			this.surveyPlacesEvent();
 		},
-		grid250m(newValue) {
+		grid250m(_newValue) {
 			this.activate250mGridEvent();
 		},
 	},

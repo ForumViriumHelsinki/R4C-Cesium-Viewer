@@ -2,15 +2,15 @@
 	<v-app>
 		<!-- Top Navigation Bar -->
 		<v-app-bar
-			app
 			:elevation="2"
 			height="64"
 			color="surface"
 		>
 			<!-- Left section: Title + Navigation -->
-			<AppTitle class="ml-4 mr-4" />
+			<AppTitle class="ml-2 ml-sm-4 mr-2 mr-sm-4" />
 
-			<div class="d-flex align-center ga-1">
+			<!-- Navigation buttons - hidden on mobile, shown in menu -->
+			<div class="d-none d-md-flex align-center ga-1">
 				<v-btn
 					v-if="currentLevel === 'building'"
 					icon
@@ -44,36 +44,71 @@
 				<FeatureFlagsPanel />
 			</div>
 
-			<v-spacer />
+			<!-- Mobile menu for navigation buttons -->
+			<v-menu class="d-md-none">
+				<template #activator="{ props }">
+					<v-btn
+						v-bind="props"
+						icon
+						variant="text"
+						aria-label="Navigation menu"
+						class="d-md-none"
+					>
+						<v-icon>mdi-dots-vertical</v-icon>
+					</v-btn>
+				</template>
+				<v-list density="compact">
+					<v-list-item
+						v-if="currentLevel === 'building'"
+						prepend-icon="mdi-arrow-left"
+						title="Back to postal code"
+						@click="returnToPostalCode"
+					/>
+					<v-list-item
+						prepend-icon="mdi-logout"
+						title="Sign out"
+						@click="signOut"
+					/>
+					<v-list-item
+						v-if="currentLevel !== 'start'"
+						prepend-icon="mdi-compass"
+						title="Rotate camera"
+						@click="rotateCamera"
+					/>
+				</v-list>
+			</v-menu>
 
-			<!-- Center section -->
+			<v-spacer class="d-none d-sm-flex" />
+
+			<!-- Center section - PRIORITY: Always visible -->
 			<ViewModeCompact />
 
-			<!-- Heat Timeline (shown at postalCode and building levels) -->
+			<!-- Heat Timeline - hidden on small screens -->
 			<TimelineCompact
 				v-if="currentLevel === 'postalCode' || currentLevel === 'building'"
-				class="ml-4"
+				class="ml-4 d-none d-lg-flex"
 			/>
 
-			<!-- Data Source Status Badge -->
+			<!-- Data Source Status Badge - hidden on mobile -->
 			<DataSourceStatusBadge
-				class="ml-2"
+				class="ml-2 d-none d-md-flex"
 				@source-retry="handleSourceRetry"
 				@cache-cleared="handleCacheCleared"
 			/>
 
 			<v-spacer />
 
-			<!-- Right section -->
+			<!-- Right section: Controls button -->
 			<v-btn
 				variant="outlined"
 				aria-label="Toggle control panel"
 				prepend-icon="mdi-tune"
-				class="mr-4"
+				class="mr-2 mr-sm-4"
+				size="small"
 				@click="sidebarVisible = !sidebarVisible"
 			>
 				<span class="d-none d-sm-inline">{{ sidebarVisible ? 'Hide' : 'Show' }} Controls</span>
-				<span class="d-inline d-sm-none">{{ sidebarVisible ? 'Hide' : 'Show' }}</span>
+				<span class="d-inline d-sm-none">{{ sidebarVisible ? 'Hide' : '' }}</span>
 			</v-btn>
 		</v-app-bar>
 

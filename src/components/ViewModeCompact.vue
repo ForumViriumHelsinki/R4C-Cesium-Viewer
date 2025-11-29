@@ -11,38 +11,40 @@
 			<v-btn
 				value="capitalRegionView"
 				size="small"
+				aria-label="Capital Region view"
 				@click="onToggleChange('capitalRegionView')"
 			>
 				<v-icon
-					start
+					:start="!isMobile"
 					size="16"
 				>
 					mdi-city
 				</v-icon>
-				Capital Region
+				<span class="d-none d-sm-inline">Capital Region</span>
 			</v-btn>
 
 			<v-btn
 				value="gridView"
 				size="small"
+				aria-label="Statistical Grid view"
 				@click="onToggleChange('gridView')"
 			>
 				<v-icon
-					start
+					:start="!isMobile"
 					size="16"
 				>
 					mdi-grid
 				</v-icon>
-				Statistical Grid
+				<span class="d-none d-sm-inline">Statistical Grid</span>
 			</v-btn>
 		</v-btn-toggle>
 
-		<!-- Contextual Info Chip -->
+		<!-- Contextual Info Chip - hidden on mobile -->
 		<v-chip
 			size="small"
 			:color="getViewModeColor()"
 			variant="tonal"
-			class="coverage-chip"
+			class="coverage-chip d-none d-md-flex"
 		>
 			{{ getCoverageText() }}
 		</v-chip>
@@ -51,6 +53,7 @@
 
 <script>
 import { ref, watch, computed } from 'vue';
+import { useDisplay } from 'vuetify';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import Datasource from '../services/datasource.js';
@@ -64,6 +67,8 @@ export default {
 		const activeViewMode = ref('capitalRegionView');
 		const toggleStore = useToggleStore();
 		const store = useGlobalStore();
+		const { smAndDown } = useDisplay();
+		const isMobile = computed(() => smAndDown.value);
 		const dataSourceService = new Datasource();
 		const featurePicker = new FeaturePicker();
 
@@ -204,6 +209,7 @@ export default {
 			showHelsinkiHeat,
 			getCoverageText,
 			getViewModeColor,
+			isMobile,
 		};
 	},
 };
@@ -226,41 +232,31 @@ export default {
 }
 
 /* Responsive adjustments */
-@media (max-width: 900px) {
+@media (max-width: 960px) {
 	.view-mode-compact {
-		flex-direction: column;
-		gap: 6px;
+		gap: 8px;
 	}
 
 	.view-toggle-group :deep(.v-btn) {
 		font-size: 0.75rem;
 		padding: 0 8px;
 	}
-
-	.view-toggle-group :deep(.v-btn .v-icon) {
-		font-size: 14px;
-	}
 }
 
+/* Mobile: icon-only buttons */
 @media (max-width: 600px) {
+	.view-mode-compact {
+		gap: 4px;
+	}
+
 	.view-toggle-group :deep(.v-btn) {
-		min-width: 0;
-		padding: 0 6px;
+		min-width: 44px;
+		min-height: 44px;
+		padding: 0 8px;
 	}
 
-	.view-toggle-group :deep(.v-btn .mdi-city::before) {
-		content: '🏙️';
-		font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
-	}
-
-	.view-toggle-group :deep(.v-btn .mdi-grid::before) {
-		content: '📊';
-		font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
-	}
-
-	.view-toggle-group :deep(.v-btn .mdi-city-variant::before) {
-		content: '🌆';
-		font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+	.view-toggle-group :deep(.v-btn .v-icon) {
+		font-size: 20px;
 	}
 }
 </style>
