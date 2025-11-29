@@ -100,7 +100,7 @@ function isProductionEnvironment(): boolean {
 }
 
 test.describe('Cache Header Verification', () => {
-	test.beforeEach(async ({}, testInfo) => {
+	test.beforeEach(async () => {
 		// Skip all cache header tests when running against dev server
 		if (!isProductionEnvironment()) {
 			test.skip(

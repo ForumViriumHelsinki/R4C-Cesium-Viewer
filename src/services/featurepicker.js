@@ -10,7 +10,6 @@ import ElementsDisplay from './elementsDisplay.js';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { usePropsStore } from '../stores/propsStore.js';
-import { useBuildingStore } from '../stores/buildingStore.js';
 import Helsinki from './helsinki.js';
 import CapitalRegion from './capitalRegion.js';
 import Sensor from './sensor.js';

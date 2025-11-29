@@ -116,7 +116,7 @@ describe('buildingStore', () => {
 			const features1 = {
 				features: [{ id: 'building-1', properties: { name: 'Building 1' } }],
 			};
-			const features2 = {
+			const _features2 = {
 				features: [{ id: 'building-2', properties: { name: 'Building 2' } }],
 			};
 
