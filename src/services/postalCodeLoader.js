@@ -371,7 +371,7 @@ export function setNameOfZone(postalCode, postalCodeData, setNameCallback) {
 				typeof entity._properties._nimi._value !== 'undefined' &&
 				entity._properties._posno._value === postalCode
 			) {
-				setNameCallback(entity._properties._nimi);
+				setNameCallback(entity._properties._nimi._value);
 				break; // Exit the loop after finding the first match
 			}
 		}
