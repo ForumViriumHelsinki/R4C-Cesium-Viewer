@@ -38,16 +38,6 @@
 				<span class="d-none d-sm-inline">Statistical Grid</span>
 			</v-btn>
 		</v-btn-toggle>
-
-		<!-- Contextual Info Chip - hidden on mobile -->
-		<v-chip
-			size="small"
-			:color="getViewModeColor()"
-			variant="tonal"
-			class="coverage-chip d-none d-md-flex"
-		>
-			{{ getCoverageText() }}
-		</v-chip>
 	</div>
 </template>
 
@@ -72,30 +62,6 @@ export default {
 		const dataSourceService = new Datasource();
 		const featurePicker = new FeaturePicker();
 
-		// View mode information
-		const viewModeInfo = {
-			capitalRegionView: {
-				coverage: '~200 postal codes',
-				color: 'blue',
-			},
-			gridView: {
-				coverage: 'Grid analysis',
-				color: 'green',
-			},
-			helsinkiHeat: {
-				coverage: '~50 Helsinki areas',
-				color: 'orange',
-			},
-		};
-
-		const getCoverageText = () => {
-			return viewModeInfo[activeViewMode.value]?.coverage || '';
-		};
-
-		const getViewModeColor = () => {
-			return viewModeInfo[activeViewMode.value]?.color || 'grey';
-		};
-
 		// Watcher for activeViewMode changes
 		watch(activeViewMode, (newViewMode) => {
 			onToggleChange(newViewMode);
@@ -111,21 +77,9 @@ export default {
 				case 'gridView':
 					gridView();
 					break;
-				case 'capitalRegionCold':
-					toggleCold();
-					break;
-				case 'helsinkiHeat':
-					helsinkiHeat();
-					break;
 				default:
 					break;
 			}
-		};
-
-		const toggleCold = async () => {
-			const checked = activeViewMode.value === 'capitalRegionCold';
-			toggleStore.setCapitalRegionCold(checked);
-			setCapitalRegion();
 		};
 
 		const setCapitalRegion = async () => {
@@ -162,24 +116,6 @@ export default {
 			setCapitalRegion();
 		};
 
-		const helsinkiHeat = async () => {
-			const checked = activeViewMode.value === 'helsinkiHeat';
-			// Don't reset all toggles - preserve data layer states (landCover, ndvi, etc.)
-			toggleStore.setHelsinkiView(checked);
-			toggleStore.setCapitalRegionCold(false);
-			store.setView('helsinki');
-			await dataSourceService.removeDataSourcesAndEntities();
-			await dataSourceService.loadGeoJsonDataSource(
-				0.2,
-				'./assets/data/hki_po_clipped.json',
-				'PostCodes'
-			);
-
-			if (store.postalcode) {
-				featurePicker.loadPostalCode();
-			}
-		};
-
 		const gridView = () => {
 			const isGridView = activeViewMode.value === 'gridView';
 			toggleStore.setGridView(isGridView);
@@ -197,18 +133,9 @@ export default {
 			// Reset logic if needed
 		};
 
-		// Computed property to control the visibility of the Helsinki Heat option
-		const showHelsinkiHeat = computed(() => {
-			const postalCode = Number(store.postalcode);
-			return postalCode === null || (postalCode >= 0 && postalCode <= 1000);
-		});
-
 		return {
 			activeViewMode,
 			onToggleChange,
-			showHelsinkiHeat,
-			getCoverageText,
-			getViewModeColor,
 			isMobile,
 		};
 	},
@@ -224,11 +151,6 @@ export default {
 
 .view-toggle-group {
 	border-radius: 6px;
-}
-
-.coverage-chip {
-	font-size: 0.75rem;
-	height: 24px;
 }
 
 /* Responsive adjustments */
