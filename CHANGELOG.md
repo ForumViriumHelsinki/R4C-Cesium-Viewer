@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.34.0...r4c-cesium-viewer-v1.34.1) (2025-12-01)
+
+
+### Bug Fixes
+
+* **nginx:** make DNS resolver script executable ([#409](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/409)) ([d8f137e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d8f137e08d9eb134ce7c4b8f9904d4d5d98793b0))
+
 ## [1.34.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.33.0...r4c-cesium-viewer-v1.34.0) (2025-12-01)
 
 
