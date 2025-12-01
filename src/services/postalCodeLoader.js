@@ -10,21 +10,20 @@ import cacheWarmer from './cacheWarmer.js';
 
 /**
  * Checks cache for preloaded postal code data (FR-3.3 optimization)
- * @param {string} cacheKey - Cache key to check (unused but kept for API compatibility)
+ * Note: Cache lookup is delegated to unifiedLoader. This function only logs cache warmer status.
+ * @param {string} _cacheKey - Cache key (unused - kept for API compatibility)
  * @param {string} postalCode - Postal code to check in cache
- * @returns {Promise<Object|null>} Cached data or null
+ * @returns {Promise<null>} Always returns null - actual cache checking done by unifiedLoader
  */
 export async function checkCacheForPostalCode(_cacheKey, postalCode) {
 	try {
-		// Check if cacheWarmer has preloaded this data
-		const warmed = cacheWarmer.warmedPostalCodes.has(postalCode);
-		if (warmed) {
+		// Log if cache warmer has preloaded this data (informational only)
+		if (cacheWarmer.warmedPostalCodes.has(postalCode)) {
 			console.log('[PostalCodeLoader] ✓ Cache warmer preloaded this postal code');
 		}
 
-		// Check IndexedDB cache via unifiedLoader
-		// The unifiedLoader will check cache automatically when we call loadLayer
-		return null; // Let unifiedLoader handle cache checking
+		// Cache lookup delegated to unifiedLoader - it will check IndexedDB automatically
+		return null;
 	} catch (error) {
 		console.warn('[PostalCodeLoader] Cache check failed:', error?.message || error);
 		return null;
@@ -44,6 +43,8 @@ export async function startCameraAnimation(
 	setStateCallback
 ) {
 	return new Promise((resolve, reject) => {
+		let timeoutId;
+
 		try {
 			// Update state to animating
 			setStateCallback({
@@ -56,12 +57,16 @@ export async function startCameraAnimation(
 
 			// Camera animation is 3 seconds, resolve after that
 			// In a real implementation, we'd hook into the camera completion callback
-			setTimeout(() => {
+			timeoutId = setTimeout(() => {
 				console.log('[PostalCodeLoader] ✓ Camera animation completed');
 				updateProgressCallback(1, 2);
 				resolve();
 			}, 3000);
 		} catch (error) {
+			// Clean up timeout on error to prevent memory leak
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
 			console.error('[PostalCodeLoader] ❌ Camera animation failed:', error?.message || error);
 			reject(error);
 		}
