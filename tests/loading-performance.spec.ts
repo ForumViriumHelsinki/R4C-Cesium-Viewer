@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from './setup/digitransit-mock';
 import { BUNDLE_SIZE_BUDGETS, WEB_VITALS_BUDGETS } from './config/constants';
+import { TEST_TIMEOUTS } from './e2e/helpers/test-helpers';
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
@@ -50,7 +51,7 @@ test.describe('Loading Performance and User Experience', () => {
 		}
 
 		// Wait for loading to complete using network idle
-		await page.waitForLoadState('networkidle', { timeout: 10000 });
+		await page.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 
 		// Loading indicators should eventually disappear
 		if ((await loadingIndicators.count()) > 0) {
@@ -68,7 +69,7 @@ test.describe('Loading Performance and User Experience', () => {
 
 		// Navigate to postal code level
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForLoadState('networkidle', { timeout: 10000 });
+		await page.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 
 		// Toggle vegetation layer and measure loading time
 		const vegToggle = page.getByLabel(/vegetation/i);
@@ -79,7 +80,7 @@ test.describe('Loading Performance and User Experience', () => {
 
 			// Wait for layer to load using network idle
 			await page
-				.waitForLoadState('networkidle', { timeout: 10000 })
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
 				.catch((e) => console.warn('Layer load network idle timeout:', e.message));
 
 			const loadTime = Date.now() - startTime;
@@ -120,7 +121,7 @@ test.describe('Loading Performance and User Experience', () => {
 
 				// Wait for progress to complete using network idle
 				await page
-					.waitForLoadState('networkidle', { timeout: 5000 })
+					.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 					.catch((e) => console.warn('Progress completion timeout:', e.message));
 			}
 		}
@@ -140,7 +141,7 @@ test.describe('Loading Performance and User Experience', () => {
 
 		// Navigate to postal code level
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForLoadState('networkidle', { timeout: 10000 });
+		await page.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 
 		// Enable multiple layers simultaneously
 		const layers = [/vegetation/i, /tree/i, /nature/i];
@@ -158,7 +159,7 @@ test.describe('Loading Performance and User Experience', () => {
 
 		// Wait for all layers to load using network idle
 		await page
-			.waitForLoadState('networkidle', { timeout: 15000 })
+			.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.CESIUM_READY })
 			.catch((e) => console.warn('Multiple layers load timeout:', e.message));
 
 		const totalLoadTime = Date.now() - startTime;
@@ -199,7 +200,7 @@ test.describe('Loading Performance and User Experience', () => {
 		await canvas.click({ position: { x: 200, y: 200 } });
 		await canvas.click({ position: { x: 300, y: 300 } });
 		await page
-			.waitForLoadState('networkidle', { timeout: 5000 })
+			.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 			.catch((e) => console.warn('Error state handling timeout:', e.message));
 
 		// App should still be functional
@@ -239,7 +240,7 @@ test.describe('Loading Performance and User Experience', () => {
 		// Navigate to postal code
 		await canvas.click({ position: { x: 400, y: 300 } });
 		await page
-			.waitForLoadState('networkidle', { timeout: 5000 })
+			.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 			.catch((e) => console.warn('Postal code navigation timeout:', e.message));
 
 		// Try to navigate to building
@@ -293,7 +294,7 @@ test.describe('Loading Performance and User Experience', () => {
 		for (const position of interactions) {
 			await canvas.click({ position });
 			await page
-				.waitForLoadState('networkidle', { timeout: 5000 })
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 				.catch((e) =>
 					console.warn(`Position ${position.x},${position.y} load timeout:`, e.message)
 				);
@@ -331,7 +332,7 @@ test.describe('Loading Performance and User Experience', () => {
 
 		// First visit to an area
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForLoadState('networkidle', { timeout: 10000 });
+		await page.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT });
 
 		// Enable a layer
 		const vegToggle = page.getByLabel(/vegetation/i);
@@ -339,7 +340,7 @@ test.describe('Loading Performance and User Experience', () => {
 			const firstLoadStart = Date.now();
 			await vegToggle.check();
 			await page
-				.waitForLoadState('networkidle', { timeout: 10000 })
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
 				.catch((e) => console.warn('First layer load timeout:', e.message));
 			const firstLoadTime = Date.now() - firstLoadStart;
 
@@ -355,7 +356,7 @@ test.describe('Loading Performance and User Experience', () => {
 				.catch((e) => console.warn('Navigate away timeout:', e.message));
 			await canvas.click({ position: { x: 400, y: 300 } });
 			await page
-				.waitForLoadState('networkidle', { timeout: 5000 })
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 				.catch((e) => console.warn('Navigate back timeout:', e.message));
 
 			// Second load should be faster (cached)
@@ -391,7 +392,7 @@ test.describe('Loading Performance and User Experience', () => {
 		await page.getByRole('button', { name: 'Explore Map' }).click();
 
 		// Wait for map to fully load and WMS tiles to settle
-		await page.waitForTimeout(5000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_EXTENDED);
 
 		// Verify request count is below threshold (down from ~600 before optimization)
 		expect(
@@ -451,7 +452,7 @@ test.describe('Bundle Size and Dynamic Import Performance', () => {
 		await Promise.all([
 			page.waitForResponse(
 				(response) => response.url().toLowerCase().includes('cesium') && response.status() === 200,
-				{ timeout: 10000 }
+				{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 			),
 			page.waitForLoadState('networkidle'),
 		]);
@@ -649,7 +650,7 @@ test.describe('Bundle Size and Dynamic Import Performance', () => {
 		await Promise.all([
 			page.waitForResponse(
 				(response) => response.url().toLowerCase().includes('cesium') && response.status() === 200,
-				{ timeout: 10000 }
+				{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 			),
 			page.waitForLoadState('networkidle'),
 		]);

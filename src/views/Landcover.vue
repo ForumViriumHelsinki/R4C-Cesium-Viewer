@@ -44,7 +44,8 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import HSYYearSelect from '../components/HSYYearSelect.vue';
 import HSYAreaSelect from '../components/HSYAreaSelect.vue';
 import PieChart from '../components/PieChart.vue';
@@ -60,18 +61,9 @@ export default {
 	},
 	setup() {
 		const showComponents = ref(true);
-		const landcover = ref(false); // State for checkbox
 		const toggleStore = useToggleStore();
 		const store = useGlobalStore();
-
-		// Watch to synchronize landcover state with the store's landCover value
-		watch(
-			() => toggleStore.landCover,
-			(newVal) => {
-				landcover.value = newVal;
-			},
-			{ immediate: true }
-		);
+		const { landCover: landcover } = storeToRefs(toggleStore);
 
 		// Function to toggle land cover
 		const toggleLandCover = () => {

@@ -105,7 +105,7 @@ test.describe('Data Visualization Components', () => {
 
 		// Navigate to get data
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Look for scatter plot components
 		const scatterPlots = page.locator(
@@ -141,7 +141,7 @@ test.describe('Data Visualization Components', () => {
 
 		if ((await gridToggle.count()) > 0) {
 			await gridToggle.check();
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Look for grid visualization components
 			const gridComponents = page.locator('[data-testid*="grid"], .grid-view, .population-grid');
@@ -158,7 +158,7 @@ test.describe('Data Visualization Components', () => {
 
 			// Clean up
 			await gridToggle.uncheck();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 		}
 	});
 
@@ -167,7 +167,7 @@ test.describe('Data Visualization Components', () => {
 
 		// Navigate to get charts loaded
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Look for interactive chart elements
 		const charts = page.locator('svg');
@@ -178,7 +178,7 @@ test.describe('Data Visualization Components', () => {
 			if (await firstChart.isVisible()) {
 				// Try hovering over chart elements
 				await firstChart.hover();
-				await page.waitForTimeout(500);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 				// Look for tooltips
 				const tooltips = page.locator('.tooltip, [data-testid="tooltip"]');
@@ -198,13 +198,13 @@ test.describe('Data Visualization Components', () => {
 
 		// Navigate to postal code level
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Toggle a data layer to trigger chart updates
 		const vegToggle = page.getByLabel(/vegetation/i);
 		if ((await vegToggle.count()) > 0) {
 			await vegToggle.check();
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Check that charts still exist after data update
 			const charts = page.locator('svg, canvas').filter({ hasText: /./ });
@@ -213,7 +213,7 @@ test.describe('Data Visualization Components', () => {
 			}
 
 			await vegToggle.uncheck();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 		}
 	});
 
@@ -222,11 +222,11 @@ test.describe('Data Visualization Components', () => {
 
 		// Get some charts loaded
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Test in mobile viewport
 		await page.setViewportSize({ width: 375, height: 667 });
-		await page.waitForTimeout(1000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 		// Charts should still be visible and properly sized
 		const charts = page.locator('svg, [id*="chart"]');
@@ -245,14 +245,14 @@ test.describe('Data Visualization Components', () => {
 
 		// Restore desktop viewport
 		await page.setViewportSize({ width: 1280, height: 720 });
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 	});
 
 	test('should handle chart error states', async ({ page }) => {
 		// Click on areas that might not have data
 		const canvas = page.locator('canvas');
 		await canvas.click({ position: { x: 100, y: 100 } });
-		await page.waitForTimeout(2000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 		// App should still be functional even if no charts load
 		await expect(canvas).toBeVisible();

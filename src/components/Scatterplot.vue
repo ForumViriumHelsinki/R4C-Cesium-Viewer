@@ -2,30 +2,22 @@
 	<div id="scatterPlotContainer" />
 
 	<select
-		id="numericalSelect"
+		ref="numericalSelect"
+		v-model="numericalValue"
 		value="numerical"
 	>
-		<option
-			value="measured_height"
-			selected
-		>
-			height
-		</option>
+		<option value="measured_height">height</option>
 		<option value="c_valmpvm">age</option>
 		<option value="area_m2">area</option>
 		<option value="i_raktilav">volume</option>
 	</select>
 
 	<select
-		id="categoricalSelect"
+		ref="categoricalSelect"
+		v-model="categoricalValue"
 		value="categorical"
 	>
-		<option
-			value="c_julkisivu"
-			selected
-		>
-			facade material
-		</option>
+		<option value="c_julkisivu">facade material</option>
 		<option value="c_rakeaine">building material</option>
 		<option value="roof_type">roof type</option>
 		<option value="roof_median_color">roof median color</option>
@@ -49,52 +41,34 @@ import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
 export default {
 	data() {
 		return {
-			// Store bound function references for cleanup
-			boundHandleSelectChange: null,
-			boundSelectAttributeForScatterPlot: null,
-			// Store DOM element references
-			numericalSelect: null,
-			categoricalSelect: null,
+			// Vue reactive properties for dropdown selections
+			numericalValue: 'measured_height',
+			categoricalValue: 'c_julkisivu',
 		};
+	},
+	watch: {
+		numericalValue() {
+			this.selectAttributeForScatterPlot();
+		},
+		categoricalValue() {
+			this.selectAttributeForScatterPlot();
+		},
 	},
 	mounted() {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
 		this.plotService = new Plot();
 
-		// Create bound function references
-		this.boundHandleSelectChange = this.handleSelectChange.bind(this);
-		this.boundSelectAttributeForScatterPlot = this.selectAttributeForScatterPlot.bind(this);
-
-		this.numericalSelect = document.getElementById('numericalSelect');
-		this.categoricalSelect = document.getElementById('categoricalSelect');
-
-		if (this.numericalSelect) {
-			this.numericalSelect.addEventListener('change', this.boundHandleSelectChange);
-		}
-		if (this.categoricalSelect) {
-			this.categoricalSelect.addEventListener('change', this.boundHandleSelectChange);
-		}
-
-		eventBus.on('updateScatterPlot', this.boundSelectAttributeForScatterPlot);
+		// Subscribe to eventBus updates
+		this.unsubscribe = eventBus.on('updateScatterPlot', () => this.selectAttributeForScatterPlot());
 
 		this.newScatterPlot();
 	},
 	beforeUnmount() {
-		// Remove DOM event listeners
-		if (this.numericalSelect) {
-			this.numericalSelect.removeEventListener('change', this.boundHandleSelectChange);
-		}
-		if (this.categoricalSelect) {
-			this.categoricalSelect.removeEventListener('change', this.boundHandleSelectChange);
-		}
-
 		// Remove eventBus listener
-		eventBus.off('updateScatterPlot', this.boundSelectAttributeForScatterPlot);
-
-		// Clean up references
-		this.numericalSelect = null;
-		this.categoricalSelect = null;
+		if (this.unsubscribe) {
+			this.unsubscribe();
+		}
 	},
 	methods: {
 		newScatterPlot() {
@@ -102,13 +76,8 @@ export default {
 				this.selectAttributeForScatterPlot();
 			} else {
 				// Hide or clear the visualization when not visible
-				// Example: call a method to hide or clear the D3 visualization
 				this.clearScatterPlot();
 			}
-		},
-		// Method to handle the change event for both selects
-		handleSelectChange() {
-			this.selectAttributeForScatterPlot();
 		},
 		/**
 		 * * A function to handle change of categorical or numerical value in the scatter plot
@@ -132,8 +101,8 @@ export default {
 		 * @param { Array } urbanHeatDataAndMaterial - Array to store scatter plot data
 		 */
 		processEntitiesForScatterPlot(urbanHeatDataAndMaterial) {
-			const numerical = document.getElementById('numericalSelect').value;
-			const categorical = document.getElementById('categoricalSelect').value;
+			const numerical = this.numericalValue;
+			const categorical = this.categoricalValue;
 			const hideNonSote = this.toggleStore.hideNonSote;
 			const hideLowToggle = this.toggleStore.hideLow;
 			const hideNew = this.toggleStore.hideNew;
@@ -251,15 +220,15 @@ export default {
 		},
 
 		/**
-		 * Returns the selected text of a dropdown menu with the given element ID.
+		 * Returns the selected text of a dropdown menu using Vue refs.
 		 *
-		 * @param { string } elementId - The ID of the HTML element that represents the dropdown menu.
+		 * @param { string } refName - The name of the Vue ref ('numericalSelect' or 'categoricalSelect')
 		 * @returns { string } The selected text of the dropdown menu, or null if no option is selected.
 		 */
-		getSelectedText(elementId) {
-			const elt = document.getElementById(elementId);
+		getSelectedText(refName) {
+			const elt = this.$refs[refName];
 
-			if (elt.selectedIndex == -1) {
+			if (!elt || elt.selectedIndex === -1) {
 				return null;
 			}
 
@@ -317,11 +286,18 @@ export default {
 			return [heatList, numericalList, average, ids];
 		},
 
+		/**
+		 * Initialize plot container using D3.js selector
+		 * Note: D3.js requires DOM access for SVG manipulation - this is legitimate usage
+		 */
 		initializePlotContainer(containerId) {
-			const container = document.getElementById(containerId);
-			// Use textContent for safe clearing (prevents potential XSS)
-			container.textContent = '';
-			container.style.visibility = this.toggleStore.showPlot ? 'visible' : 'hidden';
+			// Use D3.js selector for consistency with other D3.js operations
+			const container = d3.select(`#${containerId}`).node();
+			if (container) {
+				// Use textContent for safe clearing (prevents potential XSS)
+				container.textContent = '';
+				container.style.visibility = this.toggleStore.showPlot ? 'visible' : 'hidden';
+			}
 		},
 
 		prepareDataForPlot(features, categorical, numerical) {

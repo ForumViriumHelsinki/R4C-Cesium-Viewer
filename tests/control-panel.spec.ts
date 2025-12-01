@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from './setup/digitransit-mock';
-import { dismissModalIfPresent } from './helpers/test-helpers';
+import { dismissModalIfPresent } from './helpers/test-helpers'; // TEST_TIMEOUTS;
+import { TEST_TIMEOUTS } from './e2e/helpers/test-helpers';
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
@@ -95,7 +96,7 @@ test.describe('Control Panel Functionality', () => {
 
 			// Wait for background map browser to open - check for search input
 			const mapSearchInput = page.getByPlaceholder(/search.*layer|search.*map/i);
-			await mapSearchInput.waitFor({ state: 'visible', timeout: 5000 });
+			await mapSearchInput.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 			await expect(mapSearchInput).toBeVisible();
 
 			// Test searching for a layer
@@ -149,14 +150,14 @@ test.describe('Control Panel Functionality', () => {
 					const store = (window as any).useToggleStore?.();
 					return store?.statisticalGridEnabled === true;
 				},
-				{ timeout: 5000 }
+				{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
 			);
 
 			// Wait for grid options to appear
 			const gridOptions = page.locator('[data-testid="grid-options"], .grid-options');
 			const optionsCount = await gridOptions.count();
 			if (optionsCount > 0) {
-				await expect(gridOptions.first()).toBeVisible({ timeout: 5000 });
+				await expect(gridOptions.first()).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 			}
 
 			// Uncheck to clean up
@@ -200,7 +201,7 @@ test.describe('Control Panel Functionality', () => {
 		const headerCount = await expandableHeaders.count();
 		if (headerCount > 0) {
 			const firstHeader = expandableHeaders.first();
-			await firstHeader.waitFor({ state: 'visible', timeout: 5000 });
+			await firstHeader.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 			// Get initial state
 			const initialExpanded = await firstHeader.getAttribute('aria-expanded');
@@ -215,7 +216,7 @@ test.describe('Control Panel Functionality', () => {
 					return el && el.getAttribute('aria-expanded') !== initialState;
 				},
 				initialExpanded,
-				{ timeout: 5000 }
+				{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
 			);
 
 			// Verify state changed

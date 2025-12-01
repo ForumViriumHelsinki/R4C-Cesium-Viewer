@@ -13,7 +13,7 @@
 
 import { expect } from '@playwright/test';
 import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers from '../helpers/test-helpers';
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
 import { VIEWPORTS, TIMEOUTS } from '../../config/constants';
 
 cesiumDescribe('Camera Controls Accessibility', () => {
@@ -113,7 +113,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 				});
 
 				// Wait for compass to update
-				await cesiumPage.waitForTimeout(500);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 				// Check if rotation changed
 				const updatedStyle = await compassRing.getAttribute('style');
@@ -136,10 +136,12 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			await helpers.scrollIntoViewportWithRetry(compassControl, { elementName: 'compass' });
 			await compassControl.waitFor({ state: 'visible' });
 
-			await compassControl.click({ timeout: 5000 });
+			await compassControl.click({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 			// Wait for camera animation to complete - use network idle or state check
-			await cesiumPage.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
+			await cesiumPage
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
+				.catch(() => {});
 
 			// Verify camera heading is reset (in mock mode, check function was called)
 			const headingReset = await cesiumPage.evaluate(() => {
@@ -173,7 +175,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Simulate mousedown for active state
 			await compassControl.dispatchEvent('mousedown');
-			await cesiumPage.waitForTimeout(100);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 
 			// The button should respond to active state (visual feedback)
 			// CSS shows transform: scale(0.98) on :active
@@ -190,7 +192,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Hover over compass
 			await compassControl.hover();
-			await cesiumPage.waitForTimeout(500); // Wait for tooltip to appear
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP); // Wait for tooltip to appear
 
 			// Vuetify tooltip should appear
 			const _tooltip = cesiumPage.locator('.v-tooltip__content');
@@ -216,7 +218,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			for (let i = 0; i < maxTabs; i++) {
 				await cesiumPage.keyboard.press('Tab');
-				await cesiumPage.waitForTimeout(100);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 
 				const focusedElement = cesiumPage.locator(':focus');
 				const hasCompassClass = await focusedElement
@@ -238,7 +240,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Focus the compass
 			await compassControl.focus();
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
 			// Verify focus-visible styles are applied
 			// CSS shows outline: 2px solid #1976d2; outline-offset: 2px;
@@ -276,11 +278,11 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Focus and press Enter
 			await compassControl.focus();
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 			await cesiumPage.keyboard.press('Enter');
 
 			// Wait for animation
-			await cesiumPage.waitForTimeout(1200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Verify heading is reset
 			const headingReset = await cesiumPage.evaluate(() => {
@@ -317,11 +319,11 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Focus and press Space
 			await compassControl.focus();
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 			await cesiumPage.keyboard.press(' '); // Space key
 
 			// Wait for animation
-			await cesiumPage.waitForTimeout(1200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Verify heading is reset
 			const headingReset = await cesiumPage.evaluate(() => {
@@ -348,7 +350,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 				// Focus compass and press Space
 				await compassControl.focus();
 				await cesiumPage.keyboard.press(' ');
-				await cesiumPage.waitForTimeout(500);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 				// Scroll position should not change (event.preventDefault)
 				const finalScroll = await cesiumPage.evaluate(() => window.scrollY);
@@ -442,7 +444,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			});
 
 			// Wait for label to update
-			await cesiumPage.waitForTimeout(500);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Get updated aria-label
 			const updatedLabel = await compassControl.getAttribute('aria-label');
@@ -512,7 +514,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Click zoom in
 			await zoomInButton.click();
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			// Get new height
 			const newHeight = await cesiumPage.evaluate(() => {
@@ -543,7 +545,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Click zoom out
 			await zoomOutButton.click();
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			// Get new height
 			const newHeight = await cesiumPage.evaluate(() => {
@@ -577,7 +579,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			for (let i = 0; i < maxTabs; i++) {
 				await cesiumPage.keyboard.press('Tab');
-				await cesiumPage.waitForTimeout(100);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 
 				const focusedElement = cesiumPage.locator(':focus');
 				const ariaLabel = await focusedElement.getAttribute('aria-label').catch(() => null);
@@ -608,7 +610,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 				await cesiumPage.waitForFunction(
 					(expectedWidth) => window.innerWidth === expectedWidth,
 					viewport.width,
-					{ timeout: 3000 }
+					{ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL }
 				);
 
 				// Compass should remain visible
@@ -624,7 +626,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 		cesiumTest('should have touch-friendly size on touch devices', async ({ cesiumPage }) => {
 			// Set to mobile viewport (which typically has pointer: coarse)
 			await cesiumPage.setViewportSize(VIEWPORTS.MOBILE);
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			const compassControl = cesiumPage.locator('.compass-control');
 			await expect(compassControl).toBeVisible();
@@ -654,7 +656,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Hover over compass
 			await compassControl.hover();
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			// CSS shows transform: scale(1.02) on hover
 			// Note: Actual computed style may be matrix representation
@@ -730,8 +732,8 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 			// Rapid clicks
 			for (let i = 0; i < 5; i++) {
-				await compassControl.click({ timeout: 2000 });
-				await cesiumPage.waitForTimeout(100);
+				await compassControl.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION });
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 			}
 
 			// Should not cause errors
@@ -751,7 +753,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			// Rapid Enter presses
 			for (let i = 0; i < 5; i++) {
 				await cesiumPage.keyboard.press('Enter');
-				await cesiumPage.waitForTimeout(100);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF);
 			}
 
 			// Should not cause errors
@@ -790,7 +792,7 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 
 				// Click should still work
 				await compassControl.click();
-				await cesiumPage.waitForTimeout(1200);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 				// No errors
 				const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]');

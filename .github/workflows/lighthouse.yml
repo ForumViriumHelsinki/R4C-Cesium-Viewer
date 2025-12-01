@@ -1,0 +1,218 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+
+jobs:
+  lighthouse:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_OPTIONS: '--max-old-space-size=3072'
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Fetch more history for better comparison
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.14.x
+
+      - name: Run Lighthouse CI
+        id: lighthouse
+        run: |
+          # Run Lighthouse CI and capture output
+          lhci autorun --config=lighthouserc.js 2>&1 | tee lighthouse-output.txt
+
+          # Store exit code
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Parse Lighthouse results
+        id: parse-results
+        run: |
+          # Extract key metrics from Lighthouse output
+          if [ -f ".lighthouseci/manifest.json" ]; then
+            echo "Results found in .lighthouseci/"
+
+            # Get the latest run directory
+            LATEST_RUN=$(ls -t .lighthouseci/lhr-*.json | head -1)
+
+            if [ -n "$LATEST_RUN" ]; then
+              # Extract key metrics using jq
+              PERFORMANCE=$(jq -r '.categories.performance.score * 100 | floor' "$LATEST_RUN")
+              ACCESSIBILITY=$(jq -r '.categories.accessibility.score * 100 | floor' "$LATEST_RUN")
+              BEST_PRACTICES=$(jq -r '.categories["best-practices"].score * 100 | floor' "$LATEST_RUN")
+              SEO=$(jq -r '.categories.seo.score * 100 | floor' "$LATEST_RUN")
+
+              # Core Web Vitals
+              LCP=$(jq -r '.audits["largest-contentful-paint"].numericValue / 1000' "$LATEST_RUN")
+              TBT=$(jq -r '.audits["total-blocking-time"].numericValue' "$LATEST_RUN")
+              CLS=$(jq -r '.audits["cumulative-layout-shift"].numericValue' "$LATEST_RUN")
+
+              # Output for PR comment
+              echo "performance=$PERFORMANCE" >> $GITHUB_OUTPUT
+              echo "accessibility=$ACCESSIBILITY" >> $GITHUB_OUTPUT
+              echo "best_practices=$BEST_PRACTICES" >> $GITHUB_OUTPUT
+              echo "seo=$SEO" >> $GITHUB_OUTPUT
+              echo "lcp=$LCP" >> $GITHUB_OUTPUT
+              echo "tbt=$TBT" >> $GITHUB_OUTPUT
+              echo "cls=$CLS" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-results
+          path: |
+            .lighthouseci/
+            lighthouse-output.txt
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Read Lighthouse output
+            let output = '';
+            try {
+              output = fs.readFileSync('lighthouse-output.txt', 'utf8');
+            } catch (e) {
+              console.log('Could not read lighthouse output');
+            }
+
+            // Get parsed metrics
+            const performance = '${{ steps.parse-results.outputs.performance }}' || 'N/A';
+            const accessibility = '${{ steps.parse-results.outputs.accessibility }}' || 'N/A';
+            const bestPractices = '${{ steps.parse-results.outputs.best_practices }}' || 'N/A';
+            const seo = '${{ steps.parse-results.outputs.seo }}' || 'N/A';
+            const lcp = '${{ steps.parse-results.outputs.lcp }}' || 'N/A';
+            const tbt = '${{ steps.parse-results.outputs.tbt }}' || 'N/A';
+            const cls = '${{ steps.parse-results.outputs.cls }}' || 'N/A';
+
+            // Determine status emoji
+            const getStatusEmoji = (score) => {
+              if (score === 'N/A') return '⚪';
+              const num = parseInt(score);
+              if (num >= 90) return '🟢';
+              if (num >= 50) return '🟠';
+              return '🔴';
+            };
+
+            // Find temporary public storage URL
+            let storageUrl = '';
+            const urlMatch = output.match(/https:\/\/storage\.googleapis\.com\/lighthouse-infrastructure\.appspot\.com\/reports\/[\w-]+\.report\.html/);
+            if (urlMatch) {
+              storageUrl = `\n\n[📊 View Full Lighthouse Report](${urlMatch[0]})`;
+            }
+
+            // Create comment body
+            const comment = `## Lighthouse CI Results
+
+            ### Category Scores
+
+            | Category | Score |
+            |----------|-------|
+            | ${getStatusEmoji(performance)} Performance | ${performance}/100 |
+            | ${getStatusEmoji(accessibility)} Accessibility | ${accessibility}/100 |
+            | ${getStatusEmoji(bestPractices)} Best Practices | ${bestPractices}/100 |
+            | ${getStatusEmoji(seo)} SEO | ${seo}/100 |
+
+            ### Core Web Vitals
+
+            | Metric | Value | Target |
+            |--------|-------|--------|
+            | LCP (Largest Contentful Paint) | ${lcp}s | < 4.0s |
+            | TBT (Total Blocking Time) | ${tbt}ms | < 1000ms |
+            | CLS (Cumulative Layout Shift) | ${cls} | < 0.1 |
+            ${storageUrl}
+
+            <details>
+            <summary>About these scores</summary>
+
+            This project uses CesiumJS, a heavy 3D mapping library (~2-3MB core). Performance targets are calibrated for this use case:
+
+            - **Performance target: 50+** (CesiumJS initialization is resource-intensive)
+            - **Accessibility target: 90+** (strict requirement)
+            - **Best Practices target: 80+** (good practices maintained)
+            - **SEO target: 80+** (reasonable optimization)
+
+            Scores are calculated from 3 runs (median value). Results are stored for 7 days in temporary public storage.
+            </details>
+            `;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('Lighthouse CI Results')
+            );
+
+            // Create or update comment
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment,
+              });
+            }
+
+      - name: Check Lighthouse assertions
+        if: steps.lighthouse.outputs.exit_code != '0'
+        run: |
+          echo "Lighthouse CI assertions failed with exit code ${{ steps.lighthouse.outputs.exit_code }}"
+          echo "Review the lighthouse-output.txt artifact for details"
+
+          # For now, don't fail the workflow - just warn
+          # exit ${{ steps.lighthouse.outputs.exit_code }}
+          exit 0

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { setupDigitransitMock } from './setup/digitransit-mock';
+import { TEST_TIMEOUTS } from './e2e/helpers/test-helpers';
 
 // Setup digitransit mocking for all tests in this file
 setupDigitransitMock();
@@ -12,7 +13,7 @@ test.describe('Map Interactions and Navigation', () => {
 		await page.getByRole('button', { name: 'Explore Map' }).click();
 
 		// Wait for map to load
-		await page.waitForTimeout(2000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 		await expect(page.locator('canvas')).toBeVisible();
 	});
 
@@ -40,7 +41,7 @@ test.describe('Map Interactions and Navigation', () => {
 		});
 
 		// Wait for postal code selection to process
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Check if postal code view appears
 		const postalCodeView = page.locator('.postal-code-panel, [data-testid="postal-code-view"]');
@@ -60,11 +61,11 @@ test.describe('Map Interactions and Navigation', () => {
 
 		// First click to select postal code area
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Second click to potentially select a building
 		await canvas.click({ position: { x: 420, y: 320 } });
-		await page.waitForTimeout(2000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 		// Check if building information appears
 		const buildingInfo = page.locator(
@@ -80,7 +81,7 @@ test.describe('Map Interactions and Navigation', () => {
 		});
 		if ((await buildingPropsButton.count()) > 0) {
 			await buildingPropsButton.click();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Check if building details are shown
 			const buildingDetails = page.locator('#printContainer, .building-details');
@@ -95,7 +96,7 @@ test.describe('Map Interactions and Navigation', () => {
 		const rotateButton = page.getByRole('button', { name: /rotate|compass/i });
 		if ((await rotateButton.count()) > 0) {
 			await rotateButton.click();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 		}
 
 		// Test 2D/3D view switching if available
@@ -105,7 +106,7 @@ test.describe('Map Interactions and Navigation', () => {
 		if ((await viewToggle.count()) > 0) {
 			const currentState = await viewToggle.isChecked();
 			await viewToggle.click();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Verify state changed
 			const newState = await viewToggle.isChecked();
@@ -127,7 +128,7 @@ test.describe('Map Interactions and Navigation', () => {
 				if (await slider.isVisible()) {
 					// Interact with timeline slider
 					await slider.click();
-					await page.waitForTimeout(500);
+					await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 				}
 			}
 		}
@@ -138,13 +139,13 @@ test.describe('Map Interactions and Navigation', () => {
 
 		// Select a postal code area first
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Look for heat-related controls
 		const heatControls = page.locator('input').filter({ hasText: /heat|temperature/i });
 		if ((await heatControls.count()) > 0) {
 			await heatControls.first().click();
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 		}
 
 		// Check if heat visualization appears (timeline might become visible)
@@ -159,29 +160,29 @@ test.describe('Map Interactions and Navigation', () => {
 
 		// Select postal code area first
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Test vegetation layer toggle
 		const vegToggle = page.getByLabel(/vegetation|show.*vegetation/i);
 		if ((await vegToggle.count()) > 0) {
 			await vegToggle.check();
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 			// Verify map updated (check for loading or changes)
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 			// Uncheck to clean up
 			await vegToggle.uncheck();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 		}
 
 		// Test trees layer toggle
 		const treeToggle = page.getByLabel(/tree|trees/i);
 		if ((await treeToggle.count()) > 0) {
 			await treeToggle.check();
-			await page.waitForTimeout(2000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 			await treeToggle.uncheck();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 		}
 	});
 
@@ -191,17 +192,17 @@ test.describe('Map Interactions and Navigation', () => {
 		// Test mouse wheel zoom (simulate)
 		await canvas.hover();
 		await page.mouse.wheel(0, -100); // Zoom in
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 		await page.mouse.wheel(0, 100); // Zoom out
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 		// Test pan operation (drag)
 		await canvas.hover();
 		await page.mouse.down();
 		await page.mouse.move(50, 50);
 		await page.mouse.up();
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 	});
 
 	test('should handle return navigation', async ({ page }) => {
@@ -209,11 +210,11 @@ test.describe('Map Interactions and Navigation', () => {
 
 		// Navigate to postal code level
 		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 		// Try to navigate to building level
 		await canvas.click({ position: { x: 420, y: 320 } });
-		await page.waitForTimeout(2000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
 		// Look for return/back button
 		const returnButton = page.getByRole('button', {
@@ -221,14 +222,14 @@ test.describe('Map Interactions and Navigation', () => {
 		});
 		if ((await returnButton.count()) > 0) {
 			await returnButton.click();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 		}
 
 		// Look for reset button
 		const resetButton = page.getByRole('button', { name: /reset|refresh/i });
 		if ((await resetButton.count()) > 0) {
 			await resetButton.click();
-			await page.waitForTimeout(1000);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 		}
 	});
 
@@ -238,10 +239,10 @@ test.describe('Map Interactions and Navigation', () => {
 
 		// Click on water/empty areas
 		await canvas.click({ position: { x: 100, y: 100 } });
-		await page.waitForTimeout(1000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 		await canvas.click({ position: { x: 800, y: 100 } });
-		await page.waitForTimeout(1000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 		// Check that app doesn't crash and remains responsive
 		await expect(canvas).toBeVisible();
@@ -252,7 +253,7 @@ test.describe('Map Interactions and Navigation', () => {
 		});
 		await expect(toggleButton).toBeVisible();
 		await toggleButton.click();
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 		await toggleButton.click();
 	});
 });

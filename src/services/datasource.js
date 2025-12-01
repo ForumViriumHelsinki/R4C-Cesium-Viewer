@@ -1,6 +1,7 @@
 import { logVisibilityChange } from './visibilityLogger.js';
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
+import logger from '../utils/logger.js';
 
 /**
  * DataSource Service
@@ -170,7 +171,7 @@ export default class DataSource {
 					resolve(entities);
 				})
 				.catch((error) => {
-					console.log(error);
+					logger.error('GeoJSON data source loading failed:', error);
 					reject(error);
 				});
 		});
@@ -190,14 +191,14 @@ export default class DataSource {
 		return new Promise((resolve, reject) => {
 			// Validate data is not null/undefined
 			if (!data) {
-				console.warn(`[DATASOURCE CREATE] No data provided for "${name}", returning empty array`);
+				logger.warn(`[DATASOURCE CREATE] No data provided for "${name}", returning empty array`);
 				resolve([]);
 				return;
 			}
 
 			// Validate GeoJSON structure has required 'type' property
 			if (!data.type) {
-				console.error(
+				logger.error(
 					`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": missing 'type' property`,
 					data
 				);
@@ -209,7 +210,7 @@ export default class DataSource {
 
 			// Validate GeoJSON has features array
 			if (!Array.isArray(data.features)) {
-				console.error(
+				logger.error(
 					`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": 'features' is not an array`,
 					data
 				);
@@ -223,7 +224,7 @@ export default class DataSource {
 
 			// Handle empty features array - log and return gracefully
 			if (data.features.length === 0) {
-				console.warn(
+				logger.warn(
 					`[DATASOURCE CREATE] No features in GeoJSON for "${name}", returning empty array`
 				);
 				resolve([]);
@@ -231,8 +232,8 @@ export default class DataSource {
 			}
 
 			// DIAGNOSTIC: Log incoming data
-			console.log(
-				`%c[DATASOURCE CREATE] Creating datasource "${name}" with ${data.features?.length || 0} features`,
+			logger.styled(
+				`[DATASOURCE CREATE] Creating datasource "${name}" with ${data.features?.length || 0} features`,
 				'color: green; font-weight: bold'
 			);
 
@@ -250,8 +251,8 @@ export default class DataSource {
 						) || [];
 
 					if (existingDatasources.length > 0) {
-						console.log(
-							`[DATASOURCE CREATE] ⚠️ Removing ${existingDatasources.length} existing datasource(s): [${existingDatasources.map((ds) => ds.name).join(', ')}]`
+						logger.debug(
+							`[DATASOURCE CREATE] Removing ${existingDatasources.length} existing datasource(s): [${existingDatasources.map((ds) => ds.name).join(', ')}]`
 						);
 					}
 
@@ -274,14 +275,14 @@ export default class DataSource {
 					loadedData.show = initialVisibility;
 
 					// DIAGNOSTIC: Confirm datasource added
-					console.log(
-						`[DATASOURCE CREATE] ✅ Added "${name}" with ${loadedData.entities.values.length} entities, show=${loadedData.show} (initialVisibility=${initialVisibility})`
+					logger.debug(
+						`[DATASOURCE CREATE] Added "${name}" with ${loadedData.entities.values.length} entities, show=${loadedData.show} (initialVisibility=${initialVisibility})`
 					);
 
 					resolve(loadedData.entities.values);
 				})
 				.catch((error) => {
-					console.error(`[DATASOURCE CREATE] ❌ Failed to create "${name}":`, error);
+					logger.error(`[DATASOURCE CREATE] Failed to create "${name}":`, error);
 					reject(error);
 				});
 		});

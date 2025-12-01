@@ -5,6 +5,7 @@ import { createSentryPiniaPlugin } from '@sentry/vue';
 import App from './App.vue';
 import './version.js'; // Log version info to console
 import { useGlobalStore } from './stores/globalStore.js';
+import logger from './utils/logger.js';
 
 // Vuetify
 import 'vuetify/styles';
@@ -94,9 +95,12 @@ Sentry.init({
 	replaysOnErrorSampleRate: 1.0,
 });
 
-console.log(`Sentry DSN: ${import.meta.env.VITE_SENTRY_DSN}`);
-console.log(`Sentry environment: ${import.meta.env.MODE}`);
-console.log(`Release: ${version}`);
+// Log Sentry configuration in development only (security: avoid exposing DSN)
+logger.debug('Sentry configuration:', {
+	environment: import.meta.env.MODE,
+	release: `r4c-cesium-viewer@${version}`,
+	dsnConfigured: !!import.meta.env.VITE_SENTRY_DSN,
+});
 
 app.use(pinia);
 app.use(vuetify);

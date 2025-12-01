@@ -75,7 +75,9 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
 import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms';
+import { useURLStore } from '../stores/urlStore';
 
+const urlStore = useURLStore();
 const selectedScenario = ref(null);
 
 const legendItemsCombination = ref([
@@ -116,31 +118,13 @@ const currentLegend = computed(() => {
 	}
 });
 
-// https://paikkatiedot.ymparisto.fi/geoserver/tulva/ows?SERVICE=WMS&REQUEST
+// WMS configuration using centralized URL store
 const wmsConfig = computed(() => {
-	const urlMapping = {
-		HulevesitulvaVesisyvyysSade52mmMallinnettuAlue:
-			'https://paikkatiedot.ymparisto.fi/geoserver/tulva/ows?SERVICE=WMS&',
-		HulevesitulvaVesisyvyysSade80mmMallinnettuAlue:
-			'https://paikkatiedot.ymparisto.fi/geoserver/tulva/ows?SERVICE=WMS&',
-		SSP585_re_with_SSP245_with_SSP126_with_current:
-			'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022_yhdistelma/wms?SERVICE=WMS&',
-		coastal_flood_SSP585_2050_0020_with_protected:
-			'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-		coastal_flood_SSP585_2100_0020_with_protected:
-			'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-		coastal_flood_SSP245_2050_0020_with_protected:
-			'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-		coastal_flood_SSP245_2100_0020_with_protected:
-			'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-		coastal_flood_SSP126_2050_0020_with_protected:
-			'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-		coastal_flood_SSP126_2100_0020_with_protected:
-			'https://paikkatiedot.ymparisto.fi/geoserver/meritulvakartat_2022/ows?SERVICE=WMS&',
-	};
+	if (!selectedScenario.value) {
+		return { url: null, layerName: null };
+	}
 
-	const url = urlMapping[selectedScenario.value] || null;
-
+	const url = urlStore.sykeFloodUrl(selectedScenario.value);
 	return { url, layerName: selectedScenario.value };
 });
 

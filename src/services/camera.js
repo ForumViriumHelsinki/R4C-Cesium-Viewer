@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
+import logger from '../utils/logger.js';
 
 /**
  * Camera Service
@@ -37,10 +38,10 @@ export default class Camera {
 		if (this.currentFlight && !this.flightCancelRequested) {
 			this.currentFlight.cancelFlight = true;
 			this.flightCancelRequested = true;
-			console.log('[Camera] Flight cancellation requested');
+			logger.debug('[Camera] Flight cancellation requested');
 			return true;
 		}
-		console.log('[Camera] No active flight to cancel');
+		logger.debug('[Camera] No active flight to cancel');
 		return false;
 	}
 
@@ -50,7 +51,7 @@ export default class Camera {
 	 */
 	captureCurrentState() {
 		if (!this.viewer) {
-			console.warn('[Camera] Cannot capture camera state: Viewer not initialized');
+			logger.warn('[Camera] Cannot capture camera state: Viewer not initialized');
 			return;
 		}
 
@@ -62,7 +63,7 @@ export default class Camera {
 			roll: camera.roll,
 		};
 
-		console.log('[Camera] Camera state captured for restoration');
+		logger.debug('[Camera] Camera state captured for restoration');
 	}
 
 	/**
@@ -71,12 +72,12 @@ export default class Camera {
 	 */
 	restoreCapturedState() {
 		if (!this.previousCameraState) {
-			console.warn('[Camera] No previous camera state to restore');
+			logger.warn('[Camera] No previous camera state to restore');
 			return;
 		}
 
 		if (!this.viewer) {
-			console.warn('[Camera] Cannot restore camera state: Viewer not initialized');
+			logger.warn('[Camera] Cannot restore camera state: Viewer not initialized');
 			return;
 		}
 
@@ -89,7 +90,7 @@ export default class Camera {
 			},
 		});
 
-		console.log('[Camera] Previous camera state restored');
+		logger.debug('[Camera] Previous camera state restored');
 	}
 
 	/**
@@ -98,7 +99,7 @@ export default class Camera {
 	 * @private
 	 */
 	onFlightComplete() {
-		console.log('[Camera] Flight completed');
+		logger.debug('[Camera] Flight completed');
 		this.currentFlight = null;
 		this.flightCancelRequested = false;
 		this.previousCameraState = null;
@@ -118,7 +119,7 @@ export default class Camera {
 	 * @private
 	 */
 	onFlightCancelled() {
-		console.log('[Camera] Flight cancelled');
+		logger.debug('[Camera] Flight cancelled');
 
 		// Restore camera position
 		this.restoreCapturedState();
@@ -161,7 +162,7 @@ export default class Camera {
 	switchTo2DView() {
 		// Guard: Check viewer is initialized
 		if (!this.viewer || !this.viewer.dataSources) {
-			console.warn('[Camera] Cannot switch to 2D view: Viewer not initialized');
+			logger.warn('[Camera] Cannot switch to 2D view: Viewer not initialized');
 			return;
 		}
 
@@ -171,7 +172,7 @@ export default class Camera {
 		);
 
 		if (!postCodesDataSource || !postCodesDataSource._entityCollection) {
-			console.warn('[Camera] PostCodes data source not found');
+			logger.warn('[Camera] PostCodes data source not found');
 			return;
 		}
 
@@ -202,7 +203,7 @@ export default class Camera {
 			}
 		}
 
-		console.warn(`[Camera] Postal code ${this.store.postalcode} not found for 2D view`);
+		logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 2D view`);
 	}
 
 	/**
@@ -216,7 +217,7 @@ export default class Camera {
 	switchTo3DView() {
 		// Guard: Check viewer is initialized
 		if (!this.viewer || !this.viewer.dataSources) {
-			console.warn('[Camera] Cannot switch to 3D view: Viewer not initialized');
+			logger.warn('[Camera] Cannot switch to 3D view: Viewer not initialized');
 			return;
 		}
 
@@ -229,7 +230,7 @@ export default class Camera {
 		);
 
 		if (!postCodesDataSource || !postCodesDataSource._entityCollection) {
-			console.warn('[Camera] PostCodes data source not found');
+			logger.warn('[Camera] PostCodes data source not found');
 			return;
 		}
 
@@ -268,12 +269,12 @@ export default class Camera {
 					cancel: () => this.onFlightCancelled(),
 				});
 
-				console.log('[Camera] 3D view flight initiated');
+				logger.debug('[Camera] 3D view flight initiated');
 				return;
 			}
 		}
 
-		console.warn(`[Camera] Postal code ${this.store.postalcode} not found for 3D view`);
+		logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 3D view`);
 	}
 
 	/**
@@ -433,13 +434,13 @@ export default class Camera {
 	focusOnPostalCode(postalCode) {
 		// Guard: Check viewer is initialized
 		if (!this.viewer) {
-			console.warn('[Camera] Cannot focus on postal code: Viewer not initialized');
+			logger.warn('[Camera] Cannot focus on postal code: Viewer not initialized');
 			return;
 		}
 
 		// Guard: Check dataSources are available
 		if (!this.viewer.dataSources || !this.viewer.dataSources._dataSources) {
-			console.warn('[Camera] Cannot focus on postal code: DataSources not available');
+			logger.warn('[Camera] Cannot focus on postal code: DataSources not available');
 			return;
 		}
 
@@ -449,7 +450,7 @@ export default class Camera {
 		);
 
 		if (!postCodesDataSource) {
-			console.warn('[Camera] PostCodes data source not found');
+			logger.warn('[Camera] PostCodes data source not found');
 			return;
 		}
 
@@ -458,7 +459,7 @@ export default class Camera {
 			!postCodesDataSource._entityCollection ||
 			!postCodesDataSource._entityCollection._entities
 		) {
-			console.warn('[Camera] PostCodes entity collection not available');
+			logger.warn('[Camera] PostCodes entity collection not available');
 			return;
 		}
 
@@ -473,7 +474,7 @@ export default class Camera {
 		if (entity) {
 			// Verify entity has required center coordinates
 			if (!entity._properties._center_x || !entity._properties._center_y) {
-				console.warn(`[Camera] Postal code ${postalCode} missing center coordinates`);
+				logger.warn(`[Camera] Postal code ${postalCode} missing center coordinates`);
 				return;
 			}
 
@@ -491,9 +492,9 @@ export default class Camera {
 				},
 				duration: 2,
 			});
-			console.log(`[Camera] Focusing on postal code: ${postalCode}`);
+			logger.debug(`[Camera] Focusing on postal code: ${postalCode}`);
 		} else {
-			console.warn(`[Camera] Postal code ${postalCode} not found in data source`);
+			logger.warn(`[Camera] Postal code ${postalCode} not found in data source`);
 		}
 	}
 
@@ -551,7 +552,7 @@ export default class Camera {
 			// Toggle the rotation state in the Pinia store
 			this.store.toggleCameraRotation();
 		} else {
-			console.log('No ellipsoid point was found at the center of the screen.');
+			logger.debug('No ellipsoid point was found at the center of the screen.');
 		}
 	}
 
@@ -597,7 +598,7 @@ export default class Camera {
 
 		// Handle cases where camera is looking at space (no ellipsoid intersection)
 		if (!topLeft || !topRight || !bottomLeft || !bottomRight) {
-			console.warn('[Camera] Cannot determine viewport rectangle - camera looking at space');
+			logger.warn('[Camera] Cannot determine viewport rectangle - camera looking at space');
 			return null;
 		}
 

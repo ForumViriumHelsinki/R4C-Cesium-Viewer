@@ -13,7 +13,7 @@
 
 import { expect } from '@playwright/test';
 import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers from '../helpers/test-helpers';
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
 
 cesiumDescribe('Mobile Touch Targets @accessibility @mobile', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@mobile'] });
@@ -32,7 +32,7 @@ cesiumDescribe('Mobile Touch Targets @accessibility @mobile', () => {
 
 				// Navigate to postal code level to reveal return button
 				await helpers.selectPostalCodeByMap({ retries: 3 });
-				await cesiumPage.waitForTimeout(1000);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 				// Test return button
 				const returnButton = cesiumPage.getByLabel('Return to postal code level');
@@ -91,7 +91,9 @@ cesiumDescribe('Mobile Touch Targets @accessibility @mobile', () => {
 			await cesiumPage.setViewportSize({ width: 1024, height: 768 });
 
 			// Wait for camera controls to be visible
-			await cesiumPage.waitForSelector('.camera-controls-container', { timeout: 5000 });
+			await cesiumPage.waitForSelector('.camera-controls-container', {
+				timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+			});
 
 			// Test zoom buttons
 			const zoomInButton = cesiumPage.locator('.zoom-controls .v-btn').first();
@@ -106,7 +108,9 @@ cesiumDescribe('Mobile Touch Targets @accessibility @mobile', () => {
 			await cesiumPage.setViewportSize({ width: 600, height: 800 });
 
 			// Wait for camera controls
-			await cesiumPage.waitForSelector('.compass-assembly', { timeout: 5000 });
+			await cesiumPage.waitForSelector('.compass-assembly', {
+				timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+			});
 
 			// Test compass direction buttons
 			const northButton = cesiumPage.locator('.dir-btn.north');

@@ -4,14 +4,26 @@
  * Tests all building filter controls and their conditional behavior:
  * - Public Buildings / Social & Healthcare (label changes by view)
  * - Pre-2018 (Helsinki view only)
- * - Tall Buildings (universal)
+ * - Tall Buildings (applies to all non-grid views)
+ *
+ * IMPORTANT: Filter Visibility by View Mode
+ * - Grid View: ALL building filters are HIDDEN (entire section is v-if="view !== 'grid'")
+ * - Capital Region View: All filters visible (Public Buildings, Tall Buildings)
+ * - Helsinki View: All filters visible (Social & Healthcare, Pre-2018, Tall Buildings)
+ * - Postal Code View: All filters visible and functional
+ * - Building View: All filters visible and functional
+ *
+ * Filter State Management:
+ * - Filters are reset when changing views (watch on store.view calls resetFilters())
+ * - Filter toggle state is NOT persisted when switching to grid view (filters are hidden)
+ * - Filter functionality is maintained when navigating between non-grid views
  *
  * Ensures all building filter controls remain accessible during interface overhaul.
  */
 
 import { expect } from '@playwright/test';
 import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers from '../helpers/test-helpers';
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
 
 cesiumDescribe('Building Filters Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] });
@@ -23,81 +35,84 @@ cesiumDescribe('Building Filters Accessibility', () => {
 	});
 
 	cesiumTest.describe('Universal Building Filters', () => {
-		cesiumTest('should display "Tall Buildings" filter in all contexts', async ({ cesiumPage }) => {
-			// Should be visible in default view
-			await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).toBeVisible();
+		cesiumTest(
+			'should display "Tall Buildings" filter in non-grid contexts',
+			async ({ cesiumPage }) => {
+				// Should be visible in default view (capital region)
+				await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).toBeVisible();
 
-			const tallBuildingsToggle = cesiumPage
-				.getByText('Tall Buildings', { exact: true })
-				.locator('..')
-				.locator('input[type="checkbox"]');
-			await expect(tallBuildingsToggle).toBeVisible();
+				const tallBuildingsToggle = cesiumPage
+					.getByText('Tall Buildings', { exact: true })
+					.locator('..')
+					.locator('input[type="checkbox"]');
+				await expect(tallBuildingsToggle).toBeVisible();
 
-			// Scroll into view before interaction
-			await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
-			await cesiumPage.waitForTimeout(300);
+				// Scroll into view before interaction
+				await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
-			// Test functionality with retry
-			await tallBuildingsToggle.check({ timeout: 5000 });
-			await expect(tallBuildingsToggle).toBeChecked();
+				// Test functionality with retry
+				await tallBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
+				await expect(tallBuildingsToggle).toBeChecked();
 
-			await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
-			await cesiumPage.waitForTimeout(200);
+				await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
-			await tallBuildingsToggle.uncheck({ timeout: 5000 });
-			await expect(tallBuildingsToggle).not.toBeChecked();
+				await tallBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
+				await expect(tallBuildingsToggle).not.toBeChecked();
 
-			// Should remain visible in grid view
-			await helpers.navigateToView('gridView');
-			await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).toBeVisible();
-			await expect(tallBuildingsToggle).toBeVisible();
-		});
+				// Should NOT be visible in grid view (entire Building Filters section is hidden)
+				await helpers.navigateToView('gridView');
+				await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).not.toBeVisible();
+			}
+		);
 
 		cesiumTest(
-			'should display Building Filters section header consistently',
+			'should display Building Filters section header in non-grid views only',
 			async ({ cesiumPage }) => {
+				// Should be visible in default (capital region) view
 				await expect(cesiumPage.getByText('Building Filters', { exact: true })).toBeVisible();
 
-				// Should NOT be visible in grid view (filters are hidden in grid view)
+				// Should NOT be visible in grid view (entire Building Filters section is hidden via v-if="view !== 'grid'")
 				await helpers.navigateToView('gridView');
 				await expect(cesiumPage.getByText('Building Filters', { exact: true })).not.toBeVisible();
 
-				// Should be visible again in capital region view
+				// Should be visible again when returning to capital region view
 				await helpers.navigateToView('capitalRegionView');
 				await expect(cesiumPage.getByText('Building Filters', { exact: true })).toBeVisible();
 			}
 		);
 
 		cesiumTest(
-			'should maintain tall buildings filter state across contexts',
+			'should maintain tall buildings filter state across non-grid view contexts',
 			async ({ cesiumPage }) => {
 				const tallBuildingsToggle = cesiumPage
 					.getByText('Tall Buildings', { exact: true })
 					.locator('..')
 					.locator('input[type="checkbox"]');
 
-				// Enable filter
+				// Enable filter in capital region view
 				await tallBuildingsToggle.check();
 				await expect(tallBuildingsToggle).toBeChecked();
 
-				// Switch views
-				await helpers.navigateToView('gridView');
-				await expect(tallBuildingsToggle).toBeChecked();
-
-				// Navigate to postal code level
+				// Navigate to postal code level (filter should remain visible and checked)
 				await helpers.drillToLevel('postalCode');
 				// Wait for postal code UI instead of fixed timeout
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', { timeout: 5000 })
+					.waitForSelector('text="Building Scatter Plot"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+					})
 					.catch(() => {});
+				await expect(tallBuildingsToggle).toBeVisible();
 				await expect(tallBuildingsToggle).toBeChecked();
 
-				// Navigate to building level
+				// Navigate to building level (filter should remain visible and checked)
 				await helpers.drillToLevel('building');
 				// Wait for building UI instead of fixed timeout
 				await cesiumPage
-					.waitForSelector('text="Building heat data"', { timeout: 8000 })
+					.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.ELEMENT_COMPLEX })
 					.catch(() => {});
+				await expect(tallBuildingsToggle).toBeVisible();
 				await expect(tallBuildingsToggle).toBeChecked();
 			}
 		);
@@ -118,23 +133,29 @@ cesiumDescribe('Building Filters Accessibility', () => {
 
 			// Scroll into view before interaction
 			await publicBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			// Test functionality
-			await publicBuildingsToggle.check({ timeout: 5000 });
+			await publicBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 			await expect(publicBuildingsToggle).toBeChecked();
 
 			await publicBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
-			await publicBuildingsToggle.uncheck({ timeout: 5000 });
+			await publicBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 			await expect(publicBuildingsToggle).not.toBeChecked();
 		});
 
-		cesiumTest('should show "Public Buildings" in Grid view', async ({ cesiumPage }) => {
+		cesiumTest('should NOT show "Public Buildings" in Grid view', async ({ cesiumPage }) => {
+			// Navigate to grid view
 			await helpers.navigateToView('gridView');
 
-			// Should show "Public Buildings" label in grid view too
+			// Building filters should NOT be visible in grid view (entire section is hidden)
+			await expect(cesiumPage.getByText('Public Buildings', { exact: true })).not.toBeVisible();
+			await expect(cesiumPage.getByText('Building Filters', { exact: true })).not.toBeVisible();
+
+			// Return to capital region view where filters should be visible
+			await helpers.navigateToView('capitalRegionView');
 			await expect(cesiumPage.getByText('Public Buildings', { exact: true })).toBeVisible();
 
 			const publicBuildingsToggle = cesiumPage
@@ -143,7 +164,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				.locator('input[type="checkbox"]');
 			await expect(publicBuildingsToggle).toBeVisible();
 
-			// Test functionality
+			// Test functionality in capital region view
 			await publicBuildingsToggle.check();
 			await expect(publicBuildingsToggle).toBeChecked();
 		});
@@ -225,33 +246,33 @@ cesiumDescribe('Building Filters Accessibility', () => {
 
 			// Scroll first toggle into view
 			await publicBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
 			// Enable both filters
-			await publicBuildingsToggle.check({ timeout: 5000 });
+			await publicBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 			await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
-			await tallBuildingsToggle.check({ timeout: 5000 });
+			await tallBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 			await expect(publicBuildingsToggle).toBeChecked();
 			await expect(tallBuildingsToggle).toBeChecked();
 
 			// Wait for filter application
-			await cesiumPage.waitForTimeout(500);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Scroll before unchecking
 			await publicBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
 			// Disable both filters
-			await publicBuildingsToggle.uncheck({ timeout: 5000 });
+			await publicBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 			await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {});
-			await cesiumPage.waitForTimeout(200);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 
-			await tallBuildingsToggle.uncheck({ timeout: 5000 });
+			await tallBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
 
 			await expect(publicBuildingsToggle).not.toBeChecked();
 			await expect(tallBuildingsToggle).not.toBeChecked();
@@ -271,18 +292,22 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await publicBuildingsToggle.check();
 			await tallBuildingsToggle.check();
 
-			// Switch to Grid view
+			// Switch to Grid view - filters should be hidden (component behavior: v-if="view !== 'grid'")
 			await helpers.navigateToView('gridView');
-			await cesiumPage.waitForTimeout(2000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
-			// Filters may reset based on implementation
-			// We verify they remain functional
+			// Filters should NOT be visible in grid view
+			await expect(publicBuildingsToggle).not.toBeVisible();
+			await expect(tallBuildingsToggle).not.toBeVisible();
+
+			// Return to capital region view - filters should be visible again and reset to unchecked
+			await helpers.navigateToView('capitalRegionView');
 			await expect(publicBuildingsToggle).toBeVisible();
 			await expect(tallBuildingsToggle).toBeVisible();
 
-			// Test functionality is maintained
-			await publicBuildingsToggle.check();
-			await expect(publicBuildingsToggle).toBeChecked();
+			// Filters are reset when changing views (based on watch in MapControls.vue)
+			await expect(publicBuildingsToggle).not.toBeChecked();
+			await expect(tallBuildingsToggle).not.toBeChecked();
 		});
 
 		cesiumTest('should handle filter state during navigation levels', async ({ cesiumPage }) => {
@@ -303,7 +328,9 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code UI instead of fixed timeout
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 5000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+				})
 				.catch(() => {});
 
 			// Filters should remain functional
@@ -322,7 +349,9 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code UI instead of fixed timeout
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 5000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+				})
 				.catch(() => {});
 
 			const tallBuildingsToggle = cesiumPage
@@ -333,7 +362,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			// Apply filter
 			await tallBuildingsToggle.check();
 			// Brief wait for filter to apply
-			await cesiumPage.waitForTimeout(500);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			// Filter should be applied (visual changes would occur in Cesium)
 			// We verify the toggle state is consistent
@@ -342,7 +371,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			// Remove filter
 			await tallBuildingsToggle.uncheck();
 			// Brief wait for filter to remove
-			await cesiumPage.waitForTimeout(500);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 			await expect(tallBuildingsToggle).not.toBeChecked();
 		});
@@ -358,7 +387,9 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			// Scroll into view once before rapid toggling with retry
 			for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
 				try {
-					await tallBuildingsToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
+					await tallBuildingsToggle.scrollIntoViewIfNeeded({
+						timeout: TEST_TIMEOUTS.ELEMENT_SCROLL,
+					});
 					const box = await tallBuildingsToggle.boundingBox();
 					if (box && box.y >= 0 && box.x >= 0) {
 						break;
@@ -371,7 +402,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				}
 			}
 
-			await cesiumPage.waitForTimeout(300);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 			// Rapidly toggle filter multiple times with viewport checks
 			for (let i = 0; i < 5; i++) {
@@ -383,21 +414,21 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					for (let scrollAttempt = 1; scrollAttempt <= 2; scrollAttempt++) {
 						try {
 							await tallBuildingsToggle.scrollIntoViewIfNeeded({
-								timeout: 2000,
+								timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION,
 							});
 							break;
 						} catch {
-							await cesiumPage.waitForTimeout(200);
+							await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 						}
 					}
-					await cesiumPage.waitForTimeout(200);
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
 				}
 
 				// Use force option for rapid toggling
-				await tallBuildingsToggle.check({ timeout: 3000, force: i > 2 });
-				await cesiumPage.waitForTimeout(250);
-				await tallBuildingsToggle.uncheck({ timeout: 3000, force: i > 2 });
-				await cesiumPage.waitForTimeout(250);
+				await tallBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL, force: i > 2 });
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
+				await tallBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL, force: i > 2 });
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 			}
 
 			// Final state should be consistent
@@ -426,7 +457,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await tallBuildingsToggle.check();
 
 			// Wait for loading to complete
-			await cesiumPage.waitForTimeout(3000);
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
 
 			// Filter state should be consistent
 			await expect(tallBuildingsToggle).toBeChecked();
@@ -491,7 +522,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					// Press Tab key with error handling
 					try {
 						await cesiumPage.keyboard.press('Tab');
-						await cesiumPage.waitForTimeout(150); // Brief wait for focus to settle
+						await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT); // Brief wait for focus to settle
 					} catch (tabError) {
 						console.warn(`Tab press failed at iteration ${i}:`, tabError);
 						break;
@@ -540,7 +571,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 							// Press space to toggle
 							try {
 								await cesiumPage.keyboard.press(' ');
-								await cesiumPage.waitForTimeout(500);
+								await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 							} catch (spaceError) {
 								console.warn(`Space press failed at iteration ${i}:`, spaceError);
 								continue;
@@ -593,7 +624,9 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				// Scroll into view before interaction with retry
 				for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
 					try {
-						await tallBuildingsToggle.scrollIntoViewIfNeeded({ timeout: 3000 });
+						await tallBuildingsToggle.scrollIntoViewIfNeeded({
+							timeout: TEST_TIMEOUTS.ELEMENT_SCROLL,
+						});
 						const box = await tallBuildingsToggle.boundingBox();
 						if (box && box.y >= 0 && box.x >= 0) {
 							break;
@@ -606,7 +639,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					}
 				}
 
-				await cesiumPage.waitForTimeout(300);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 
 				// Initial state
 				const _initialChecked = await tallBuildingsToggle.isChecked();
@@ -615,7 +648,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				for (let attempt = 1; attempt <= 3; attempt++) {
 					try {
 						await tallBuildingsToggle.check({
-							timeout: 5000,
+							timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
 							force: attempt > 1,
 						});
 						break;
@@ -625,7 +658,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					}
 				}
 
-				await cesiumPage.waitForTimeout(500);
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 				// Visual state should reflect change
 				const afterToggle = await tallBuildingsToggle.isChecked();
@@ -673,8 +706,8 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					expect(afterToggle).toBe(true);
 
 					// Additional check: verify the checkbox can be toggled off
-					await tallBuildingsToggle.uncheck({ timeout: 5000 });
-					await cesiumPage.waitForTimeout(300);
+					await tallBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
 					const afterUncheck = await tallBuildingsToggle.isChecked();
 					expect(afterUncheck).toBe(false);
 				}
@@ -694,7 +727,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 
 				for (const viewport of viewports) {
 					await cesiumPage.setViewportSize(viewport);
-					await cesiumPage.waitForTimeout(1000);
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 
 					// Filters should remain accessible
 					await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).toBeVisible();
@@ -721,7 +754,9 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await helpers.drillToLevel('postalCode');
 			// Wait for postal code UI instead of fixed timeout
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', { timeout: 5000 })
+				.waitForSelector('text="Building Scatter Plot"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+				})
 				.catch(() => {});
 
 			// Enable building filter
@@ -748,32 +783,39 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await expect(ndviToggle).toBeChecked(); // Should not affect layer toggle
 		});
 
-		cesiumTest('should maintain filter state during view mode changes', async ({ cesiumPage }) => {
-			// Enable filters
-			const publicBuildingsToggle = cesiumPage
-				.getByText('Public Buildings', { exact: true })
-				.locator('..')
-				.locator('input[type="checkbox"]');
-			const tallBuildingsToggle = cesiumPage
-				.getByText('Tall Buildings', { exact: true })
-				.locator('..')
-				.locator('input[type="checkbox"]');
+		cesiumTest(
+			'should hide filters in grid view and reset when returning',
+			async ({ cesiumPage }) => {
+				// Enable filters in capital region view
+				const publicBuildingsToggle = cesiumPage
+					.getByText('Public Buildings', { exact: true })
+					.locator('..')
+					.locator('input[type="checkbox"]');
+				const tallBuildingsToggle = cesiumPage
+					.getByText('Tall Buildings', { exact: true })
+					.locator('..')
+					.locator('input[type="checkbox"]');
 
-			await publicBuildingsToggle.check();
-			await tallBuildingsToggle.check();
+				await publicBuildingsToggle.check();
+				await tallBuildingsToggle.check();
 
-			// Switch view modes
-			await helpers.navigateToView('gridView');
-			await cesiumPage.waitForTimeout(2000);
+				// Switch to grid view - filters should be hidden
+				await helpers.navigateToView('gridView');
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 
-			// Verify filters remain functional
-			await expect(publicBuildingsToggle).toBeVisible();
-			await expect(tallBuildingsToggle).toBeVisible();
+				// Filters should NOT be visible in grid view (entire Building Filters section is hidden)
+				await expect(publicBuildingsToggle).not.toBeVisible();
+				await expect(tallBuildingsToggle).not.toBeVisible();
 
-			// Test toggle functionality is maintained
-			await publicBuildingsToggle.uncheck();
-			await publicBuildingsToggle.check();
-			await expect(publicBuildingsToggle).toBeChecked();
-		});
+				// Return to capital region view - filters should be visible again
+				await helpers.navigateToView('capitalRegionView');
+				await expect(publicBuildingsToggle).toBeVisible();
+				await expect(tallBuildingsToggle).toBeVisible();
+
+				// Test toggle functionality after view change (filters are reset by watch)
+				await publicBuildingsToggle.check();
+				await expect(publicBuildingsToggle).toBeChecked();
+			}
+		);
 	});
 });

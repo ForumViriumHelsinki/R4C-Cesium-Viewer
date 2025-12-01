@@ -2,16 +2,14 @@
 
 ## [1.33.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.32.0...r4c-cesium-viewer-v1.33.0) (2025-11-28)
 
-
 ### Features
 
-* add AreaProperties component with categorization and search ([#400](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/400)) ([ac1b456](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ac1b45634ad6e2a748436b4a84f0f374d60a4cad))
-* add AreaProperties component with categorization and search ([#400](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/400)) ([#402](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/402)) ([3c47197](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3c47197fec0fd9157602d8952396efffb130c5f7))
-
+- add AreaProperties component with categorization and search ([#400](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/400)) ([ac1b456](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ac1b45634ad6e2a748436b4a84f0f374d60a4cad))
+- add AreaProperties component with categorization and search ([#400](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/400)) ([#402](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/402)) ([3c47197](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3c47197fec0fd9157602d8952396efffb130c5f7))
 
 ### Bug Fixes
 
-* resolve ESLint errors and warnings across codebase ([#403](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/403)) ([bd9a786](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bd9a7865b6a917bea820237fc2463d709762ce38))
+- resolve ESLint errors and warnings across codebase ([#403](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/403)) ([bd9a786](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bd9a7865b6a917bea820237fc2463d709762ce38))
 
 ## [1.32.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.31.0...r4c-cesium-viewer-v1.32.0) (2025-11-27)
 

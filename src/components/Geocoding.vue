@@ -63,7 +63,6 @@ import FeaturePicker from '../services/featurepicker';
 import { eventBus } from '../services/eventEmitter';
 
 // State variables
-const showGeocoding = ref(true);
 const searchQuery = ref('');
 const filteredAddresses = ref([]); // Store full address objects
 const showSearchResults = ref(false);
@@ -76,14 +75,9 @@ const cameraService = new Camera();
 const featurePicker = new FeaturePicker();
 
 // Computed property to determine if geocoding should be shown
-const shouldShowGeocoding = computed(() => {
+const showGeocoding = computed(() => {
 	const view = globalStore.view.toLowerCase(); // Ensure case-insensitivity
 	return view === 'helsinki' || view === 'capitalregion';
-});
-
-// Watch for changes in computed property and toggle visibility
-watch(shouldShowGeocoding, (newVal) => {
-	showGeocoding.value = newVal;
 });
 
 // Placeholder method for moving to the target

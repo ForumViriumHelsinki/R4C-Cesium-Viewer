@@ -5,6 +5,7 @@ import {
 	waitForAppReady,
 } from '../e2e/helpers/cesium-helper';
 import { createCesiumMock as _createCesiumMock } from '../mocks/cesium-mock';
+import { TEST_TIMEOUTS } from './e2e/helpers/test-helpers';
 
 /**
  * Cesium Test Fixture
@@ -19,6 +20,53 @@ import { createCesiumMock as _createCesiumMock } from '../mocks/cesium-mock';
 
 export interface CesiumFixtures {
 	cesiumPage: Page;
+}
+
+/**
+ * Removes overlay scrims and dialogs that block UI interactions during tests.
+ *
+ * This helper handles:
+ * - Disclaimer dialogs that may appear on app load
+ * - Navigation drawer overlay scrims that block interactions
+ * - Preserves MapClickLoadingOverlay to prevent interfering with user feedback
+ *
+ * @param page - Playwright page instance
+ */
+async function removeBlockingOverlays(page: Page): Promise<void> {
+	// Remove dialogs and overlay scrims using JavaScript
+	// This is more reliable than CSS hiding or trying to click buttons
+	await page.evaluate(() => {
+		// Remove all dialogs with disclaimer-related content
+		document.querySelectorAll('[role="dialog"]').forEach((dialog) => {
+			const text = dialog.textContent || '';
+			if (
+				text.includes('R4C Climate Demo') ||
+				text.includes('Demo only') ||
+				text.includes('disclaimer')
+			) {
+				dialog.remove();
+			}
+		});
+
+		// Remove overlay scrims that block interactions (but NOT the MapClickLoadingOverlay)
+		document.querySelectorAll('.v-overlay__scrim').forEach((scrim) => {
+			// Only remove scrims that aren't part of the map click loading overlay
+			const parent = scrim.closest('.map-click-loading-overlay');
+			if (!parent) {
+				scrim.remove();
+			}
+		});
+
+		// Also hide scrims via CSS as a backup (but allow map-click-loading-overlay to display)
+		const style = document.createElement('style');
+		style.textContent = `
+			.v-overlay__scrim:not(.map-click-loading-overlay .v-overlay__scrim) { display: none !important; }
+		`;
+		document.head.appendChild(style);
+	});
+
+	// Wait a moment for DOM changes to complete
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 }
 
 /**
@@ -472,25 +520,8 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 			// Wait for app to be ready (but not for real Cesium)
 			await waitForAppReady(page, 30000);
 
-			// Close the disclaimer dialog if it appears
-			const dialogButton = page.getByRole('button', {
-				name: /close disclaimer|explore map/i,
-			});
-			const dialogVisible = await dialogButton.isVisible().catch(() => false);
-			if (dialogVisible) {
-				await dialogButton.click();
-				await page.waitForTimeout(500); // Wait for dialog to close
-			}
-
-			// Disable navigation drawer overlay in tests
-			// The drawer creates an overlay by default which blocks interactions
-			// We'll hide the overlay scrim via CSS instead of closing the drawer
-			await page.addStyleTag({
-				content: '.v-overlay__scrim { display: none !important; }',
-			});
-
-			// Wait a moment for any initial animations
-			await page.waitForTimeout(500);
+			// Remove blocking overlays and dialogs
+			await removeBlockingOverlays(page);
 
 			// Initialize mock viewer if not already created
 			await page.evaluate(() => {
@@ -691,46 +722,14 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 		const cesiumErrorOkButton = page.locator('.cesium-widget-errorPanel button:has-text("OK")');
 		const cesiumErrorVisible = await cesiumErrorOkButton.isVisible().catch(() => false);
 		if (cesiumErrorVisible) {
-			await cesiumErrorOkButton.click({ timeout: 5000 }).catch(() => {
+			await cesiumErrorOkButton.click({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }).catch(() => {
 				console.warn('Failed to dismiss Cesium error panel, continuing anyway');
 			});
-			await page.waitForTimeout(500);
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 		}
 
-		// Force remove disclaimer dialog and overlays using JavaScript
-		// This is more reliable than CSS hiding or trying to click buttons
-		await page.evaluate(() => {
-			// Remove all dialogs with disclaimer-related content
-			document.querySelectorAll('[role="dialog"]').forEach((dialog) => {
-				const text = dialog.textContent || '';
-				if (
-					text.includes('R4C Climate Demo') ||
-					text.includes('Demo only') ||
-					text.includes('disclaimer')
-				) {
-					dialog.remove();
-				}
-			});
-
-			// Remove overlay scrims that block interactions (but NOT the MapClickLoadingOverlay)
-			document.querySelectorAll('.v-overlay__scrim').forEach((scrim) => {
-				// Only remove scrims that aren't part of the map click loading overlay
-				const parent = scrim.closest('.map-click-loading-overlay');
-				if (!parent) {
-					scrim.remove();
-				}
-			});
-
-			// Also hide scrims via CSS as a backup (but allow map-click-loading-overlay to display)
-			const style = document.createElement('style');
-			style.textContent = `
-        .v-overlay__scrim:not(.map-click-loading-overlay .v-overlay__scrim) { display: none !important; }
-      `;
-			document.head.appendChild(style);
-		});
-
-		// Wait a moment for DOM changes to complete
-		await page.waitForTimeout(500);
+		// Remove blocking overlays and dialogs
+		await removeBlockingOverlays(page);
 
 		// Wait for Cesium to be ready with extended timeout for CI
 		await waitForCesiumReady(page, process.env.CI ? 60000 : 30000);

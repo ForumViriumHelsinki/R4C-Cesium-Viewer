@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { TEST_TIMEOUTS } from './test-helpers';
 
 /**
  * Helper utilities for handling Cesium WebGL initialization in tests
@@ -72,7 +73,7 @@ export async function waitForCesiumReady(page: Page, timeout: number = 30000): P
 		// In CI environment, we might need to proceed without full Cesium
 		if (process.env.CI) {
 			console.log('Running in CI mode - proceeding despite Cesium initialization issues');
-			await page.waitForTimeout(2000); // Give it a bit more time
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD); // Give it a bit more time
 			return;
 		}
 
@@ -154,7 +155,7 @@ export async function waitForAppReady(page: Page, timeout: number = 30000): Prom
 	// Wait for initial page load to complete
 	// Note: CesiumJS continuously loads tiles, so we don't wait for network idle
 	// Instead we just ensure basic DOM is ready
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
 
 	// Check for app-specific readiness indicators
 	try {
@@ -180,7 +181,7 @@ export async function waitForAppReady(page: Page, timeout: number = 30000): Prom
 		}
 
 		// Give the app a moment to stabilize
-		await page.waitForTimeout(1000);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 	} catch (error) {
 		console.warn('App readiness check encountered issues:', error);
 		// Don't throw - let the test continue
@@ -211,7 +212,7 @@ export async function initializeCesiumWithRetry(page: Page, retries: number = 3)
 			console.log(`Cesium initialization attempt ${i + 1} failed:`, error);
 			if (i < retries - 1) {
 				await page.reload();
-				await page.waitForTimeout(2000);
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
 			}
 		}
 	}
