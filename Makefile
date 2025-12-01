@@ -20,13 +20,13 @@
 # ==============================================================================
 
 NAMESPACE := regions4climate
-DB_HOST := localhost
-DB_PORT := 5432
-DB_USER := regions4climate_user
-DB_PASS := regions4climate_pass
-DB_NAME := regions4climate
-DB_ADMIN_USER := postgres
-DB_ADMIN_PASS := postgres
+DB_HOST ?= localhost
+DB_PORT ?= 5432
+DB_USER ?= regions4climate_user
+DB_PASS ?= regions4climate_pass
+DB_NAME ?= regions4climate
+DB_ADMIN_USER ?= postgres
+DB_ADMIN_PASS ?= postgres
 DB_WAIT_TIMEOUT := 120
 DB_WAIT_INTERVAL := 2
 
@@ -132,6 +132,8 @@ dev: ## Start services + local frontend (fast iteration)
 	@echo "$(ARROW) Starting backend services..."
 	@skaffold run -p services-only --port-forward &
 	@echo ""
+	@echo "$(ARROW) Waiting for pods to be scheduled..."
+	@sleep 5
 	@echo "$(ARROW) Waiting for database..."
 	@$(MAKE) db-wait
 	@echo ""
