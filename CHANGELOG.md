@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.34.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.33.0...r4c-cesium-viewer-v1.34.0) (2025-12-01)
+
+
+### Features
+
+* **postalCodeLoader:** add unit tests and improve code quality ([#408](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/408)) ([7668ad9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7668ad9bc356c4445248c89e8f3eac00e1329132))
+* unified dev workflow, mobile improvements, and code cleanup ([#406](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/406)) ([1b8cd83](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1b8cd834b967e2512812fc9015cb84155430422a))
+
 ## [1.33.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.32.0...r4c-cesium-viewer-v1.33.0) (2025-11-28)
 
 ### Features
