@@ -326,7 +326,7 @@ const startRefreshTimer = () => {
 
 	refreshTimer.value = setInterval(() => {
 		if (!refreshing.value) {
-			refreshAll();
+			void refreshAll();
 		}
 	}, props.refreshInterval);
 };

@@ -47,7 +47,7 @@ spec:
               key: password
       containers:
       - name: dbmate
-        image: amacneil/dbmate:2.28.0
+        image: dbmate-migrations
         command:
         - sh
         - -c
@@ -198,9 +198,6 @@ spec:
           value: /migrations
         - name: DBMATE_NO_DUMP_SCHEMA
           value: "true"
-        volumeMounts:
-        - name: migrations
-          mountPath: /migrations
         resources:
           limits:
             cpu: 200m
@@ -208,8 +205,3 @@ spec:
           requests:
             cpu: 100m
             memory: 64Mi
-      volumes:
-      - name: migrations
-        hostPath:
-          path: /Users/lgates/repos/R4C-Cesium-Viewer/db/migrations
-          type: Directory

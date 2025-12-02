@@ -5,7 +5,7 @@ import {
 	waitForAppReady,
 } from '../e2e/helpers/cesium-helper';
 import { createCesiumMock as _createCesiumMock } from '../mocks/cesium-mock';
-import { TEST_TIMEOUTS } from './e2e/helpers/test-helpers';
+import { TEST_TIMEOUTS } from '../e2e/helpers/test-helpers';
 
 /**
  * Cesium Test Fixture

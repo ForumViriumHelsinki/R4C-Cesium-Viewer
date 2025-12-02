@@ -32,7 +32,7 @@ describe('toggleStore', () => {
 			expect(store.capitalRegionCold).toBe(false);
 			expect(store.grid250m).toBe(false);
 			expect(store.ndvi).toBe(false);
-			expect(store.viewportTileMode).toBe(false);
+			expect(store.viewportTileMode).toBe(true); // Enabled by default for center-out loading
 		});
 
 		it('should have exactly the expected number of state properties', () => {

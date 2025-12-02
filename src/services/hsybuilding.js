@@ -114,7 +114,7 @@ export default class HSYBuilding {
 						'for postal code:',
 						targetPostalCode
 					);
-					this.setHSYBuildingAttributes(data, entities, targetPostalCode);
+					await this.setHSYBuildingAttributes(data, entities, targetPostalCode);
 
 					console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer');
 					return entities;
@@ -451,7 +451,7 @@ export default class HSYBuilding {
 		setBuildingPropsAndEmitEvent(entities, heatExposureData, avgTempCList, data, postalCode);
 	}
 
-	setHSYBuildingAttributes(data, entities, postalCode) {
+	async setHSYBuildingAttributes(data, entities, postalCode) {
 		console.log('[HSYBuilding] 🏗️ setHSYBuildingAttributes called with:', {
 			dataFeatures: data.features?.length || 0,
 			entities: entities.length,
@@ -459,7 +459,7 @@ export default class HSYBuilding {
 			storePostalCode: this.store.postalcode,
 		});
 
-		this.buildingService.setHeatExposureToBuildings(entities);
+		await this.buildingService.setHeatExposureToBuildings(entities);
 		this.setHSYBuildingsHeight(entities);
 
 		// Always set buildingFeatures for hover tooltip functionality
@@ -470,7 +470,7 @@ export default class HSYBuilding {
 
 		if (this.store.postalcode) {
 			console.log('[HSYBuilding] ✓ Postal code exists, calling calculateHSYUrbanHeatData');
-			this.calculateHSYUrbanHeatData(data, entities, postalCode);
+			void this.calculateHSYUrbanHeatData(data, entities, postalCode);
 		} else {
 			console.log(
 				'[HSYBuilding] ⚠️ No postal code, skipping calculateHSYUrbanHeatData (but buildingFeatures is set)'

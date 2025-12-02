@@ -237,7 +237,7 @@ class CacheService {
 
 				if (age > maxAgeToUse) {
 					// Data is expired, remove it
-					this.removeData(key);
+					void this.removeData(key);
 					resolve(null);
 					return;
 				}

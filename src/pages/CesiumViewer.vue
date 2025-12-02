@@ -314,7 +314,7 @@ export default {
 			const camera = new Camera();
 			camera.init();
 
-			addPostalCodes();
+			await addPostalCodes();
 			addFeaturePicker();
 			addCameraMoveEndListener();
 			addAttribution();
@@ -324,7 +324,8 @@ export default {
 			// Enable toggleStore.viewportTileMode to use tile-based spatial grid loading
 			if (toggleStore.viewportTileMode) {
 				viewportBuildingLoader = new ViewportBuildingLoader();
-				viewportBuildingLoader.initialize(viewer.value);
+				// Await initialization - includes retry logic for globe readiness
+				await viewportBuildingLoader.initialize(viewer.value);
 				console.log('[CesiumViewer] ✅ ViewportBuildingLoader initialized (tile-based mode)');
 			}
 
@@ -478,7 +479,7 @@ export default {
 				// Set new timeout
 				cameraMoveTimeout = setTimeout(() => {
 					console.log('[CesiumViewer] 📷 Camera movement ended, checking viewport state...');
-					handleCameraSettled();
+					handleCameraSettled().catch(console.error);
 				}, DEBOUNCE_DELAY_MS);
 			});
 
@@ -618,8 +619,8 @@ export default {
 			store.setIsLoading(true);
 			await initViewer();
 			if (!errorSnackbar.value) {
-				socioEconomicsStore.loadPaavo();
-				heatExposureStore.loadHeatExposure();
+				socioEconomicsStore.loadPaavo().catch(console.error);
+				heatExposureStore.loadHeatExposure().catch(console.error);
 			}
 			store.setIsLoading(false);
 		};
@@ -712,7 +713,7 @@ export default {
 					// Enable tile mode
 					console.log('[CesiumViewer] Enabling tile-based viewport loading');
 					viewportBuildingLoader = new ViewportBuildingLoader();
-					viewportBuildingLoader.initialize(viewer.value);
+					await viewportBuildingLoader.initialize(viewer.value);
 				} else if (!newValue && viewportBuildingLoader) {
 					// Disable tile mode
 					console.log('[CesiumViewer] Disabling tile-based viewport loading');
@@ -724,8 +725,8 @@ export default {
 
 		onMounted(async () => {
 			await initViewer();
-			socioEconomicsStore.loadPaavo();
-			heatExposureStore.loadHeatExposure();
+			socioEconomicsStore.loadPaavo().catch(console.error);
+			heatExposureStore.loadHeatExposure().catch(console.error);
 
 			// Register ESC key handler for animation cancellation
 			document.addEventListener('keydown', handleGlobalEscKey);
@@ -736,14 +737,14 @@ export default {
 			if (typeof requestIdleCallback !== 'undefined') {
 				requestIdleCallback(
 					() => {
-						cacheWarmer.warmCriticalData();
+						void cacheWarmer.warmCriticalData();
 					},
 					{ timeout: 2000 }
 				); // 2 second timeout
 			} else {
 				// Fallback for browsers without requestIdleCallback
 				setTimeout(() => {
-					cacheWarmer.warmCriticalData();
+					void cacheWarmer.warmCriticalData();
 				}, 1000);
 			}
 		});

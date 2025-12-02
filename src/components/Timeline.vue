@@ -187,7 +187,7 @@ export default {
 			if (!buildingsDataSource) return;
 
 			const entities = buildingsDataSource.entities.values;
-			buildingService.setHeatExposureToBuildings(entities);
+			void buildingService.setHeatExposureToBuildings(entities);
 			buildingService.updateHeatHistogramDataAfterFilter(entities);
 			// Register entities with cesiumEntityManager for non-reactive entity management
 			cesiumEntityManager.registerBuildingEntities(entities);

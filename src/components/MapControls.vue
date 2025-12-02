@@ -590,12 +590,12 @@ const loadOtherNature = () => {
 	if (showOtherNature.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
 			const otherNatureService = new Othernature();
-			otherNatureService.loadOtherNature();
+			void otherNatureService.loadOtherNature();
 		} else {
-			dataSourceService.changeDataSourceShowByName('OtherNature', true);
+			void dataSourceService.changeDataSourceShowByName('OtherNature', true);
 		}
 	} else {
-		dataSourceService.changeDataSourceShowByName('OtherNature', false);
+		void dataSourceService.changeDataSourceShowByName('OtherNature', false);
 	}
 };
 
@@ -612,7 +612,7 @@ const addLandCover = () => {
 
 	toggleStore.setLandCover(landCover.value);
 	if (landCover.value) {
-		createHSYImageryLayer();
+		void createHSYImageryLayer();
 	} else {
 		removeLandcover();
 	}
@@ -633,10 +633,10 @@ const toggleNDVI = () => {
 	toggleStore.setNDVI(ndvi.value);
 
 	if (ndvi.value) {
-		changeTIFF();
+		void changeTIFF();
 		eventBus.emit('addNDVI');
 	} else {
-		removeTIFF();
+		void removeTIFF();
 	}
 };
 

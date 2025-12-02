@@ -72,7 +72,7 @@ export default {
 
 			switch (viewMode) {
 				case 'capitalRegionView':
-					capitalRegion();
+					void capitalRegion();
 					break;
 				case 'gridView':
 					gridView();
@@ -94,7 +94,7 @@ export default {
 			await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes');
 
 			if (store.postalcode) {
-				featurePicker.loadPostalCode();
+				void featurePicker.loadPostalCode();
 			}
 			if (toggleStore.showTrees) {
 				await loadTrees();
@@ -103,7 +103,7 @@ export default {
 
 		const loadTrees = async () => {
 			const treeService = new Tree();
-			treeService.loadTrees();
+			void treeService.loadTrees();
 		};
 
 		const clearLandCover = async () => {
@@ -113,7 +113,7 @@ export default {
 		const capitalRegion = async () => {
 			const checked = activeViewMode.value === 'capitalRegionView';
 			toggleStore.setCapitalRegionCold(!checked);
-			setCapitalRegion();
+			setCapitalRegion().catch(console.error);
 		};
 
 		const gridView = () => {

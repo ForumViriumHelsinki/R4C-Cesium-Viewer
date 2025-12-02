@@ -108,7 +108,7 @@ export default class Populationgrid {
 	}
 
 	async createPopulationGrid() {
-		this.datasourceService.removeDataSourcesAndEntities();
+		await this.datasourceService.removeDataSourcesAndEntities();
 		this.cameraService.switchTo3DGrid();
 
 		try {

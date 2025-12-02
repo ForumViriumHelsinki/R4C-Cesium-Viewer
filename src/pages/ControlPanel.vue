@@ -532,8 +532,8 @@ export default {
 			const featurepicker = new Featurepicker();
 			const treeService = new Tree();
 			hideTooltip();
-			featurepicker.loadPostalCode();
-			if (toggleStore.showTrees) treeService.loadTrees();
+			featurepicker.loadPostalCode().catch(console.error);
+			if (toggleStore.showTrees) treeService.loadTrees().catch(console.error);
 		};
 
 		return {

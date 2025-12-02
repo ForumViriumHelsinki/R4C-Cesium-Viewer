@@ -245,7 +245,7 @@ export default {
 					const pickedEntity = viewer.scene.pick(new Cartesian2(endPosition.x, endPosition.y));
 
 					if (pickedEntity && pickedEntity.id) {
-						fetchBuildingInfo(pickedEntity.id);
+						void fetchBuildingInfo(pickedEntity.id);
 					} else {
 						showTooltip.value = false;
 					}

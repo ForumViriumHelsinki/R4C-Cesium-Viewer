@@ -94,7 +94,7 @@ export default {
 			(treeArea) => {
 				if (treeArea) {
 					showChart.value = true;
-					nextTick(() => {
+					void nextTick(() => {
 						createBuildingTreeBarChart();
 					});
 				} else {

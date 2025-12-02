@@ -161,7 +161,7 @@ const moveCameraToLocation = (address) => {
 const moveCameraAndReset = (longitude, latitude) => {
 	cameraService.setCameraView(longitude, latitude);
 	eventBus.emit('geocodingPrintEvent');
-	featurePicker.loadPostalCode();
+	void featurePicker.loadPostalCode();
 };
 
 // Watch for changes in `searchQuery` to trigger filtering

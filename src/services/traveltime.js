@@ -134,8 +134,8 @@ export default class Traveltime {
 			console.error('TravelTimeGrid data source not found.');
 		}
 
-		this.removeTravelTimeGridAndAddDataGrid();
-		this.addTravelLabelDataSource(geoJsonData);
+		void this.removeTravelTimeGridAndAddDataGrid();
+		void this.addTravelLabelDataSource(geoJsonData);
 	}
 
 	/**
@@ -146,7 +146,7 @@ export default class Traveltime {
 	 * @returns {Promise<void>}
 	 */
 	async removeTravelTimeGridAndAddDataGrid() {
-		this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
+		await this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
 		await this.populationGridService.createPopulationGrid();
 
 		if (this.toggleStore.travelTime) {
@@ -187,7 +187,7 @@ export default class Traveltime {
 		var dataSource = new Cesium.GeoJsonDataSource();
 
 		// Load the GeoJSON data into the data source
-		dataSource.load(data, {
+		void dataSource.load(data, {
 			markerColor: Cesium.Color.ORANGE, // Customize the marker color if desired
 			clampToGround: true, // Set to true to clamp entities to the ground
 		});

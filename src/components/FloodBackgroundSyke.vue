@@ -141,7 +141,7 @@ const updateWMS = async (config) => {
 
 watch(selectedScenario, async () => {
 	await nextTick(); // Ensure updates propagate before modifying layers
-	updateWMS(wmsConfig.value);
+	updateWMS(wmsConfig.value).catch(console.error);
 });
 </script>
 

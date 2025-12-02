@@ -5,19 +5,22 @@
  * Tests pure functions that don't require mocking:
  * - expandBounds() - Viewport buffer zone calculation
  * - getTilesInBounds() - Tile key generation from bounds
- * - buildWFSUrl() - WFS URL construction with BBOX parameter
+ * - buildBboxUrl() - WFS URL construction with BBOX parameter
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import ViewportBuildingLoader from '@/services/viewportBuildingLoader.js';
+import { useToggleStore } from '@/stores/toggleStore.js';
 
 describe('ViewportBuildingLoader - Unit Tests', () => {
 	let loader;
+	let toggleStore;
 
 	beforeEach(() => {
 		// Initialize Pinia before creating loader (loader uses stores in constructor)
 		setActivePinia(createPinia());
+		toggleStore = useToggleStore();
 		loader = new ViewportBuildingLoader();
 	});
 
@@ -250,153 +253,192 @@ describe('ViewportBuildingLoader - Unit Tests', () => {
 		});
 	});
 
-	describe('buildWFSUrl()', () => {
-		it('should construct valid WFS URL with BBOX parameter', () => {
-			const bounds = {
-				west: 24.9,
-				south: 60.1,
-				east: 25.0,
-				north: 60.2,
-			};
+	describe('buildBboxUrl()', () => {
+		describe('Helsinki WFS mode (helsinkiView = true)', () => {
+			beforeEach(() => {
+				toggleStore.helsinkiView = true;
+			});
 
-			const url = loader.buildWFSUrl(bounds);
+			it('should construct valid WFS URL with BBOX parameter', () => {
+				const bounds = {
+					west: 24.9,
+					south: 60.1,
+					east: 25.0,
+					north: 60.2,
+				};
 
-			// Verify base URL
-			expect(url).toContain('https://kartta.hel.fi/ws/geoserver/avoindata/wfs');
+				const url = loader.buildBboxUrl(bounds);
 
-			// Verify required WFS parameters
-			expect(url).toContain('service=wfs');
-			expect(url).toContain('version=2.0.0');
-			expect(url).toContain('request=GetFeature');
-			expect(url).toContain('typeNames=avoindata%3ARakennukset_alue_rekisteritiedot');
-			expect(url).toContain('outputFormat=application%2Fjson');
-			expect(url).toContain('srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326');
+				// Verify base URL
+				expect(url).toContain('https://kartta.hel.fi/ws/geoserver/avoindata/wfs');
 
-			// Verify BBOX parameter with correct format and CRS
-			expect(url).toContain(
-				'bbox=24.9%2C60.1%2C25%2C60.2%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326'
-			);
+				// Verify required WFS parameters
+				expect(url).toContain('service=wfs');
+				expect(url).toContain('version=2.0.0');
+				expect(url).toContain('request=GetFeature');
+				expect(url).toContain('typeNames=avoindata%3ARakennukset_alue_rekisteritiedot');
+				expect(url).toContain('outputFormat=application%2Fjson');
+				expect(url).toContain('srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326');
+
+				// Verify BBOX parameter with correct format and CRS
+				expect(url).toContain(
+					'bbox=24.9%2C60.1%2C25%2C60.2%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326'
+				);
+			});
+
+			it('should handle negative coordinates in BBOX', () => {
+				const bounds = {
+					west: -100.5,
+					south: 30.2,
+					east: -100.4,
+					north: 30.3,
+				};
+
+				const url = loader.buildBboxUrl(bounds);
+
+				// Verify negative coordinates are properly encoded
+				expect(url).toContain('bbox=-100.5%2C30.2%2C-100.4%2C30.3');
+			});
+
+			it('should handle decimal precision in bounds', () => {
+				const bounds = {
+					west: 24.123456789,
+					south: 60.987654321,
+					east: 25.111111111,
+					north: 61.222222222,
+				};
+
+				const url = loader.buildBboxUrl(bounds);
+
+				// Should preserve full precision
+				expect(url).toContain('24.123456789');
+				expect(url).toContain('60.987654321');
+				expect(url).toContain('25.111111111');
+				expect(url).toContain('61.222222222');
+			});
+
+			it('should use correct EPSG:4326 CRS', () => {
+				const bounds = {
+					west: 24.9,
+					south: 60.1,
+					east: 25.0,
+					north: 60.2,
+				};
+
+				const url = loader.buildBboxUrl(bounds);
+
+				// Should include CRS in both srsName and BBOX parameters
+				const crsParam = 'urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326';
+				expect(url).toContain(`srsName=${crsParam}`);
+				expect(url).toContain(`%2C${crsParam}`); // End of BBOX parameter
+			});
+
+			it('should request correct building layer', () => {
+				const bounds = {
+					west: 24.9,
+					south: 60.1,
+					east: 25.0,
+					north: 60.2,
+				};
+
+				const url = loader.buildBboxUrl(bounds);
+
+				// Should request Helsinki buildings layer
+				expect(url).toContain('avoindata%3ARakennukset_alue_rekisteritiedot');
+			});
+
+			it('should request GeoJSON output format', () => {
+				const bounds = {
+					west: 24.9,
+					south: 60.1,
+					east: 25.0,
+					north: 60.2,
+				};
+
+				const url = loader.buildBboxUrl(bounds);
+
+				expect(url).toContain('outputFormat=application%2Fjson');
+			});
+
+			it('should create valid URL that can be parsed', () => {
+				const bounds = {
+					west: 24.9,
+					south: 60.1,
+					east: 25.0,
+					north: 60.2,
+				};
+
+				const url = loader.buildBboxUrl(bounds);
+
+				// Should be parseable as URL
+				expect(() => new URL(url)).not.toThrow();
+
+				const parsedUrl = new URL(url);
+				expect(parsedUrl.protocol).toBe('https:');
+				expect(parsedUrl.hostname).toBe('kartta.hel.fi');
+				expect(parsedUrl.pathname).toBe('/ws/geoserver/avoindata/wfs');
+			});
 		});
 
-		it('should handle negative coordinates in BBOX', () => {
-			const bounds = {
-				west: -100.5,
-				south: 30.2,
-				east: -100.4,
-				north: 30.3,
-			};
+		describe('HSY pygeoapi mode (helsinkiView = false)', () => {
+			beforeEach(() => {
+				toggleStore.helsinkiView = false;
+			});
 
-			const url = loader.buildWFSUrl(bounds);
+			it('should construct valid pygeoapi URL with bbox parameter', () => {
+				const bounds = {
+					west: 24.9,
+					south: 60.1,
+					east: 25.0,
+					north: 60.2,
+				};
 
-			// Verify negative coordinates are properly encoded
-			expect(url).toContain('bbox=-100.5%2C30.2%2C-100.4%2C30.3');
-		});
+				const url = loader.buildBboxUrl(bounds);
 
-		it('should handle decimal precision in bounds', () => {
-			const bounds = {
-				west: 24.123456789,
-				south: 60.987654321,
-				east: 25.111111111,
-				north: 61.222222222,
-			};
+				// Verify pygeoapi endpoint
+				expect(url).toContain('/pygeoapi/collections/hsy_buildings_optimized/items');
+				expect(url).toContain('f=json');
+				expect(url).toContain('bbox=24.9,60.1,25,60.2');
+			});
 
-			const url = loader.buildWFSUrl(bounds);
+			it('should include limit parameter for HSY', () => {
+				const bounds = {
+					west: 24.9,
+					south: 60.1,
+					east: 25.0,
+					north: 60.2,
+				};
 
-			// Should preserve full precision
-			expect(url).toContain('24.123456789');
-			expect(url).toContain('60.987654321');
-			expect(url).toContain('25.111111111');
-			expect(url).toContain('61.222222222');
-		});
+				const url = loader.buildBboxUrl(bounds);
 
-		it('should use correct EPSG:4326 CRS', () => {
-			const bounds = {
-				west: 24.9,
-				south: 60.1,
-				east: 25.0,
-				north: 60.2,
-			};
+				expect(url).toContain('limit=');
+			});
 
-			const url = loader.buildWFSUrl(bounds);
+			it('should handle very small tile bounds', () => {
+				const bounds = {
+					west: 24.9,
+					south: 60.1,
+					east: 24.91,
+					north: 60.11,
+				};
 
-			// Should include CRS in both srsName and BBOX parameters
-			const crsParam = 'urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326';
-			expect(url).toContain(`srsName=${crsParam}`);
-			expect(url).toContain(`%2C${crsParam}`); // End of BBOX parameter
-		});
+				const url = loader.buildBboxUrl(bounds);
 
-		it('should request correct building layer', () => {
-			const bounds = {
-				west: 24.9,
-				south: 60.1,
-				east: 25.0,
-				north: 60.2,
-			};
+				expect(url).toContain('bbox=24.9,60.1,24.91,60.11');
+			});
 
-			const url = loader.buildWFSUrl(bounds);
+			it('should handle bounds with integer coordinates', () => {
+				const bounds = {
+					west: 25,
+					south: 60,
+					east: 26,
+					north: 61,
+				};
 
-			// Should request Helsinki buildings layer
-			expect(url).toContain('avoindata%3ARakennukset_alue_rekisteritiedot');
-		});
+				const url = loader.buildBboxUrl(bounds);
 
-		it('should request GeoJSON output format', () => {
-			const bounds = {
-				west: 24.9,
-				south: 60.1,
-				east: 25.0,
-				north: 60.2,
-			};
-
-			const url = loader.buildWFSUrl(bounds);
-
-			expect(url).toContain('outputFormat=application%2Fjson');
-		});
-
-		it('should create valid URL that can be parsed', () => {
-			const bounds = {
-				west: 24.9,
-				south: 60.1,
-				east: 25.0,
-				north: 60.2,
-			};
-
-			const url = loader.buildWFSUrl(bounds);
-
-			// Should be parseable as URL
-			expect(() => new URL(url)).not.toThrow();
-
-			const parsedUrl = new URL(url);
-			expect(parsedUrl.protocol).toBe('https:');
-			expect(parsedUrl.hostname).toBe('kartta.hel.fi');
-			expect(parsedUrl.pathname).toBe('/ws/geoserver/avoindata/wfs');
-		});
-
-		it('should handle very small tile bounds', () => {
-			// Single tile bounds (0.01 x 0.01 degrees)
-			const bounds = {
-				west: 24.9,
-				south: 60.1,
-				east: 24.91,
-				north: 60.11,
-			};
-
-			const url = loader.buildWFSUrl(bounds);
-
-			expect(url).toContain('bbox=24.9%2C60.1%2C24.91%2C60.11');
-		});
-
-		it('should handle bounds with integer coordinates', () => {
-			const bounds = {
-				west: 25,
-				south: 60,
-				east: 26,
-				north: 61,
-			};
-
-			const url = loader.buildWFSUrl(bounds);
-
-			// Integers should work without issues
-			expect(url).toContain('bbox=25%2C60%2C26%2C61');
+				expect(url).toContain('bbox=25,60,26,61');
+			});
 		});
 	});
 

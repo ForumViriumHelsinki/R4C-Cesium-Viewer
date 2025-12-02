@@ -18,6 +18,37 @@ export default [
 	...pluginVue.configs['flat/recommended'],
 	...tseslint.configs.recommended,
 
+	// Type-aware linting for catching async/Promise bugs
+	// These rules require parserOptions.project for type information
+	{
+		files: ['**/*.{js,ts,vue}'],
+		ignores: ['**/*.d.ts', 'tests/**/*', '*.config.js'], // Exclude files not in tsconfig
+		languageOptions: {
+			parserOptions: {
+				project: './tsconfig.json',
+				tsconfigRootDir: import.meta.dirname,
+				extraFileExtensions: ['.vue'], // Required for Vue SFC type-aware linting
+			},
+		},
+		rules: {
+			// Catch fire-and-forget promises (async called without await)
+			'@typescript-eslint/no-floating-promises': [
+				'error',
+				{
+					ignoreVoid: true, // Allow explicit void to mark intentional fire-and-forget
+					ignoreIIFE: true, // Allow immediately invoked async functions
+				},
+			],
+			// Catch promises used incorrectly (e.g., in conditionals)
+			'@typescript-eslint/no-misused-promises': [
+				'warn',
+				{
+					checksVoidReturn: false, // Too noisy for event handlers
+				},
+			],
+		},
+	},
+
 	// TypeScript-specific overrides
 	{
 		files: ['**/*.ts', '**/*.tsx'],

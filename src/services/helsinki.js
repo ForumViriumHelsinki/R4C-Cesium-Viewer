@@ -56,7 +56,7 @@ export default class Helsinki {
 			'./assets/data/hki_po_clipped.json',
 			'PostCodes'
 		);
-		this.loadHelsinkiGreenElements();
+		void this.loadHelsinkiGreenElements();
 		eventBus.emit('showHelsinki');
 	}
 

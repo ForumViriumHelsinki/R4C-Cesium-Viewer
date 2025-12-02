@@ -534,7 +534,7 @@ const selectPostalCode = async (area) => {
 const moveCameraAndLoad = (longitude, latitude) => {
 	cameraService.setCameraView(longitude, latitude);
 	eventBus.emit('geocodingPrintEvent');
-	featurePicker.loadPostalCode();
+	featurePicker.loadPostalCode().catch(console.error);
 };
 
 /**
@@ -569,9 +569,9 @@ const focusOnPostalCode = (postalCode) => {
  */
 const selectFirstResult = () => {
 	if (addressResults.value.length > 0) {
-		selectAddress(addressResults.value[0]);
+		void selectAddress(addressResults.value[0]);
 	} else if (postalCodeResults.value.length > 0) {
-		selectPostalCode(postalCodeResults.value[0]);
+		void selectPostalCode(postalCodeResults.value[0]);
 	}
 };
 
@@ -604,7 +604,7 @@ watch(
 	() => globalStore.view,
 	() => {
 		if (searchQuery.value) {
-			handleSearch();
+			void handleSearch();
 		}
 	}
 );
