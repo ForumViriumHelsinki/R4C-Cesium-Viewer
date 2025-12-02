@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.35.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.34.1...r4c-cesium-viewer-v1.35.0) (2025-12-02)
+
+
+### Features
+
+* **infra:** add deployment config and auto-merge workflow ([#413](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/413)) ([19205e5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/19205e59d53393dca4668f372c05039871793ff4))
+* **infra:** add PostgreSQL k8s manifests and auto-merge workflow ([#414](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/414)) ([39b0f1d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/39b0f1d0a5e1fc2d794eaf17ab6841cd3d00a3d0))
+
+
+### Bug Fixes
+
+* **viewportBuildingLoader:** fix race condition and add floating-promises lint rule ([#411](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/411)) ([9a61deb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9a61deb956d8af9b1a6284905247012b33c81108))
+
 ## [1.34.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.34.0...r4c-cesium-viewer-v1.34.1) (2025-12-01)
 
 
