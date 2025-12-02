@@ -73,7 +73,7 @@ export default {
 			if (isLandcoverChecked) {
 				// Remove background map and add land cover layer
 				store.cesiumViewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
-				createHSYImageryLayer(); // Add land cover
+				createHSYImageryLayer().catch(console.error); // Add land cover
 			} else {
 				// Remove land cover
 				removeLandcover();

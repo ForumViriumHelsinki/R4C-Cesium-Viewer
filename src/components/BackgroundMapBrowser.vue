@@ -480,7 +480,7 @@ export default {
 
 		// Initialize
 		onMounted(() => {
-			loadHSYLayers();
+			void loadHSYLayers();
 		});
 
 		return {

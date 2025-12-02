@@ -158,7 +158,7 @@ export default {
 			this.toggleStore.setResetGrid(newValue);
 			if (newValue) {
 				const populationgridService = new Populationgrid();
-				populationgridService.createPopulationGrid();
+				void populationgridService.createPopulationGrid();
 			}
 		},
 		surveyPlaces(newValue) {
@@ -193,7 +193,7 @@ export default {
 		},
 		async createPopulationGrid() {
 			const populationgridService = new Populationgrid();
-			populationgridService.createPopulationGrid();
+			await populationgridService.createPopulationGrid();
 		},
 
 		/**
@@ -223,7 +223,7 @@ export default {
 		surveyPlacesEvent() {
 			if (this.surveyPlaces) {
 				const espooSurveyService = new EspooSurvey();
-				espooSurveyService.loadSurveyFeatures('places_in_everyday_life');
+				void espooSurveyService.loadSurveyFeatures('places_in_everyday_life');
 			} else {
 				this.datasourceService.removeDataSourcesByNamePrefix('Survey ');
 				// Use refs for child component visibility control
@@ -257,7 +257,7 @@ export default {
 				} else {
 					await this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
 					await this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
-					this.createPopulationGrid();
+					await this.createPopulationGrid();
 				}
 			} catch (error) {
 				console.error('Error in travelTimeEvent:', error);
@@ -291,7 +291,7 @@ export default {
 				this.travelTime = false;
 			} else {
 				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
-				this.createPopulationGrid();
+				void this.createPopulationGrid();
 			}
 		},
 	},

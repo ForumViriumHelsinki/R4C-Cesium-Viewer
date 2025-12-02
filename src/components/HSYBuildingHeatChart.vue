@@ -54,7 +54,7 @@ export default {
 		const hideColdAreas = () => {
 			toggleStore.setHideColdAreas(hideColdAreasChecked.value);
 			const dataSourceService = new Datasource();
-			dataSourceService.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value);
+			void dataSourceService.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value);
 		};
 
 		const createHSYBuildingBarChart = () => {
@@ -217,7 +217,7 @@ export default {
 					if (propsStore.buildingHeatExposure > 27.2632995605) {
 						// The toggle visibility is controlled by whether the building exposure is above a threshold
 						if (!toggleStore.capitalRegionCold) {
-							coldAreaService.loadColdAreas();
+							void coldAreaService.loadColdAreas();
 							coldAreasLoaded.value = true; // Set to true when cold areas are loaded
 						}
 					} else {

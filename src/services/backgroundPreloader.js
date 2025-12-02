@@ -59,7 +59,7 @@ class BackgroundPreloader {
 		await this.loadUserBehavior();
 
 		// Start preloading critical data
-		this.startCriticalPreload();
+		await this.startCriticalPreload();
 
 		// Set up idle preloading
 		this.setupIdlePreloading();
@@ -105,7 +105,7 @@ class BackgroundPreloader {
 		await this.preloadNDVI(ndviDates, 'low'); // Low priority, background only
 
 		// Start processing the queue
-		this.processPreloadQueue();
+		void this.processPreloadQueue();
 	}
 
 	/**
@@ -318,7 +318,7 @@ class BackgroundPreloader {
 
 		// Process queue if not already running
 		if (!this.isPreloading) {
-			this.processPreloadQueue();
+			void this.processPreloadQueue();
 		}
 	}
 
@@ -345,7 +345,7 @@ class BackgroundPreloader {
 
 		// Process queue if not already running
 		if (!this.isPreloading) {
-			this.processPreloadQueue();
+			void this.processPreloadQueue();
 		}
 
 		console.log(`Added ${dates.length} NDVI dates to preload queue`);
@@ -399,7 +399,7 @@ class BackgroundPreloader {
 	trackPostalCodeVisit(postalCode) {
 		this.userBehavior.visitedPostalCodes.add(postalCode);
 		this.userBehavior.lastActivity = Date.now();
-		this.saveUserBehavior();
+		this.saveUserBehavior().catch(console.error);
 	}
 
 	/**
@@ -409,7 +409,7 @@ class BackgroundPreloader {
 		const current = this.userBehavior.frequentLayers.get(layerType) || 0;
 		this.userBehavior.frequentLayers.set(layerType, current + 1);
 		this.userBehavior.lastActivity = Date.now();
-		this.saveUserBehavior();
+		this.saveUserBehavior().catch(console.error);
 	}
 
 	/**
@@ -449,7 +449,7 @@ class BackgroundPreloader {
 				// User has been idle for 10 seconds, resume preloading
 				if (this.preloadQueue.size > 0 && !this.isPreloading) {
 					console.log('User idle, resuming background preloading');
-					this.processPreloadQueue();
+					void this.processPreloadQueue();
 				}
 			}, 10000);
 		};
@@ -530,7 +530,7 @@ class BackgroundPreloader {
 	resume() {
 		if (this.preloadQueue.size > 0 && !this.isPreloading) {
 			console.log('Background preloading resumed');
-			this.processPreloadQueue();
+			void this.processPreloadQueue();
 		}
 	}
 

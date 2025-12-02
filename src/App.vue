@@ -199,9 +199,9 @@ const returnToPostalCode = () => {
 	const featurepicker = new Featurepicker();
 	const treeService = new Tree();
 	hideTooltip();
-	featurepicker.loadPostalCode();
+	featurepicker.loadPostalCode().catch(console.error);
 	if (toggleStore.showTrees) {
-		treeService.loadTrees();
+		treeService.loadTrees().catch(console.error);
 	}
 };
 
@@ -239,7 +239,7 @@ const handleCacheCleared = (sourceId) => {
 	if (sourceId === 'all') {
 		// Refresh cache status for all layers
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
-			loadingStore.checkLayerCache(layer);
+			void loadingStore.checkLayerCache(layer);
 		});
 	}
 };
@@ -262,7 +262,7 @@ onMounted(async () => {
 
 		// Check cache status for all layers on app start
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
-			loadingStore.checkLayerCache(layer);
+			void loadingStore.checkLayerCache(layer);
 		});
 	} catch (error) {
 		console.warn('Failed to initialize caching services:', error);

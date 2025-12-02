@@ -335,7 +335,7 @@ export default class Building {
 		}
 
 		if (this.toggleStore.showTrees) {
-			this.treeService.loadTrees(targetPostalCode);
+			void this.treeService.loadTrees(targetPostalCode);
 		}
 	}
 

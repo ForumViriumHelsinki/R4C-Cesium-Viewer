@@ -132,7 +132,7 @@ export default {
 					const index = bins.indexOf(d); // Get the correct index
 					if (index !== -1) {
 						const rangeParts = labels[index].split('-').map(parseFloat);
-						outlineByNDVI(rangeParts);
+						void outlineByNDVI(rangeParts);
 					}
 				});
 

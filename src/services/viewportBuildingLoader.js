@@ -33,6 +33,7 @@
 import * as Cesium from 'cesium';
 import { useGlobalStore } from '../stores/globalStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
+import { useURLStore } from '../stores/urlStore.js';
 import unifiedLoader from './unifiedLoader.js';
 import Datasource from './datasource.js';
 import Urbanheat from './urbanheat.js';
@@ -56,6 +57,16 @@ const CONFIG = {
 };
 
 /**
+ * Configuration for fade animation
+ */
+const FADE_CONFIG = {
+	/** Fade duration in milliseconds */
+	DURATION_MS: 300,
+	/** Number of animation steps */
+	STEPS: 10,
+};
+
+/**
  * ViewportBuildingLoader Class
  * Manages viewport-based building streaming with spatial tile grid system.
  *
@@ -69,6 +80,7 @@ export default class ViewportBuildingLoader {
 	constructor() {
 		this.store = useGlobalStore();
 		this.toggleStore = useToggleStore();
+		this.urlStore = useURLStore();
 		this.viewer = null;
 
 		// Service dependencies
@@ -101,11 +113,12 @@ export default class ViewportBuildingLoader {
 	/**
 	 * Initialize viewport-based loading system
 	 * Sets up camera event listeners and performs initial viewport load.
+	 * Waits for globe to be ready before initial load to avoid race conditions.
 	 *
 	 * @param {Cesium.Viewer} viewer - CesiumJS viewer instance
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 */
-	initialize(viewer) {
+	async initialize(viewer) {
 		if (this.isInitialized) {
 			console.warn('[ViewportBuildingLoader] Already initialized, skipping');
 			return;
@@ -121,8 +134,62 @@ export default class ViewportBuildingLoader {
 		this.isInitialized = true;
 		console.log('[ViewportBuildingLoader] Camera listeners attached');
 
-		// Perform initial load for current viewport
-		this.updateViewport();
+		// Wait for globe to be ready, then perform initial load with retry
+		await this.waitForGlobeAndLoadInitial();
+	}
+
+	/**
+	 * Wait for globe tiles to load, then perform initial viewport update.
+	 * Uses retry with exponential backoff if viewport bounds unavailable.
+	 *
+	 * @private
+	 * @returns {Promise<void>}
+	 */
+	async waitForGlobeAndLoadInitial() {
+		const MAX_RETRIES = 5;
+		const BASE_DELAY_MS = 200;
+
+		for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+			// Check if globe is ready (tiles loaded)
+			const globe = this.viewer?.scene?.globe;
+			if (!globe) {
+				console.warn('[ViewportBuildingLoader] Globe not available, retrying...');
+				await this.delay(BASE_DELAY_MS * attempt);
+				continue;
+			}
+
+			// Try to get viewport bounds
+			const bounds = this.getViewportBounds();
+			if (bounds) {
+				console.log(
+					`[ViewportBuildingLoader] Globe ready, starting initial load (attempt ${attempt})`
+				);
+				await this.updateViewport();
+				return;
+			}
+
+			// Bounds not available yet, wait with exponential backoff
+			const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
+			console.log(
+				`[ViewportBuildingLoader] Viewport bounds not ready, retry ${attempt}/${MAX_RETRIES} in ${delay}ms`
+			);
+			await this.delay(delay);
+		}
+
+		// All retries exhausted, set up listener for first camera move
+		console.warn(
+			'[ViewportBuildingLoader] Initial load failed after retries, will load on first camera move'
+		);
+	}
+
+	/**
+	 * Simple delay helper
+	 * @private
+	 * @param {number} ms - Milliseconds to wait
+	 * @returns {Promise<void>}
+	 */
+	delay(ms) {
+		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
 	/**
@@ -138,7 +205,7 @@ export default class ViewportBuildingLoader {
 
 		// Schedule new update
 		this.debounceTimeout = setTimeout(() => {
-			this.updateViewport();
+			this.updateViewport().catch(console.error);
 		}, CONFIG.DEBOUNCE_DELAY);
 	}
 
@@ -174,7 +241,7 @@ export default class ViewportBuildingLoader {
 			await this.loadMissingTiles(requiredTileKeys);
 
 			// Evict distant tiles if over memory limit
-			this.unloadDistantTiles(requiredTileKeys);
+			void this.unloadDistantTiles(requiredTileKeys);
 		} catch (error) {
 			console.error('[ViewportBuildingLoader] Error updating viewport:', error);
 		}
@@ -256,6 +323,7 @@ export default class ViewportBuildingLoader {
 	/**
 	 * Load tiles that are not yet loaded or loading
 	 * Respects concurrent loading limit and queues excess requests.
+	 * Uses center-out loading priority for better perceived performance.
 	 *
 	 * @param {string[]} tileKeys - Required tile keys
 	 * @returns {Promise<void>}
@@ -269,7 +337,34 @@ export default class ViewportBuildingLoader {
 			return;
 		}
 
-		console.log(`[ViewportBuildingLoader] Loading ${missingTiles.length} missing tiles`);
+		// Get viewport bounds for center calculation
+		const viewportBounds = this.getViewportBounds();
+		if (!viewportBounds) {
+			console.warn(
+				'[ViewportBuildingLoader] Cannot determine viewport center for priority sorting'
+			);
+			// Fall back to unsorted loading
+			this.loadingQueue.push(...missingTiles);
+			await this.processLoadingQueue();
+			return;
+		}
+
+		// Calculate viewport center for distance-based priority
+		const viewportCenter = {
+			lat: (viewportBounds.north + viewportBounds.south) / 2,
+			lon: (viewportBounds.east + viewportBounds.west) / 2,
+		};
+
+		// Sort by distance from center (closest first)
+		missingTiles.sort(
+			(a, b) =>
+				this.getDistanceFromCenter(a, viewportCenter) -
+				this.getDistanceFromCenter(b, viewportCenter)
+		);
+
+		console.log(
+			`[ViewportBuildingLoader] Loading ${missingTiles.length} tiles (center-out priority)`
+		);
 
 		// Add to queue and process
 		this.loadingQueue.push(...missingTiles);
@@ -301,14 +396,14 @@ export default class ViewportBuildingLoader {
 					this.activeLoads--;
 					this.loadingTiles.delete(tileKey);
 					// Continue processing queue
-					this.processLoadingQueue();
+					void this.processLoadingQueue();
 				})
 				.catch((error) => {
 					console.error(`[ViewportBuildingLoader] Failed to load tile ${tileKey}:`, error);
 					this.activeLoads--;
 					this.loadingTiles.delete(tileKey);
 					// Continue processing queue even on error
-					this.processLoadingQueue();
+					void this.processLoadingQueue();
 				});
 		}
 	}
@@ -334,12 +429,13 @@ export default class ViewportBuildingLoader {
 			north: (tileY + 1) * CONFIG.TILE_SIZE,
 		};
 
-		// Build WFS URL for tile bounds
-		const url = this.buildWFSUrl(bounds);
+		// Build BBOX URL for tile bounds (uses different endpoint based on view mode)
+		const url = this.buildBboxUrl(bounds);
 
 		try {
+			const viewPrefix = this.toggleStore.helsinkiView ? 'hki' : 'hsy';
 			const loadingConfig = {
-				layerId: `viewport_buildings_${tileKey}`,
+				layerId: `viewport_buildings_${viewPrefix}_${tileKey}`,
 				url: url,
 				type: 'geojson',
 				processor: async (data, metadata) => {
@@ -381,32 +477,39 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
-	 * Build WFS URL for BBOX query
-	 * Constructs Helsinki WFS endpoint with spatial filter.
+	 * Build URL for BBOX query based on current view mode
+	 * Uses Helsinki WFS for Helsinki view, HSY pygeoapi for Capital Region view.
 	 *
 	 * @param {Object} bounds - Geographic bounds {west, south, east, north}
-	 * @returns {string} WFS URL with BBOX parameter
+	 * @returns {string} API URL with BBOX parameter
 	 */
-	buildWFSUrl(bounds) {
-		// Use Helsinki WFS endpoint (toggleStore.helsinkiView determines which WFS to use)
-		const baseUrl = 'https://kartta.hel.fi/ws/geoserver/avoindata/wfs';
+	buildBboxUrl(bounds) {
+		// Format bbox string as "minLon,minLat,maxLon,maxLat"
+		const bboxString = `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`;
 
-		const params = new URLSearchParams({
-			service: 'wfs',
-			version: '2.0.0',
-			request: 'GetFeature',
-			typeNames: 'avoindata:Rakennukset_alue_rekisteritiedot',
-			outputFormat: 'application/json',
-			srsName: 'urn:ogc:def:crs:EPSG::4326',
-			bbox: `${bounds.west},${bounds.south},${bounds.east},${bounds.north},urn:ogc:def:crs:EPSG::4326`,
-		});
-
-		return `${baseUrl}?${params.toString()}`;
+		if (this.toggleStore.helsinkiView) {
+			// Helsinki WFS endpoint
+			const baseUrl = 'https://kartta.hel.fi/ws/geoserver/avoindata/wfs';
+			const params = new URLSearchParams({
+				service: 'wfs',
+				version: '2.0.0',
+				request: 'GetFeature',
+				typeNames: 'avoindata:Rakennukset_alue_rekisteritiedot',
+				outputFormat: 'application/json',
+				srsName: 'urn:ogc:def:crs:EPSG::4326',
+				bbox: `${bounds.west},${bounds.south},${bounds.east},${bounds.north},urn:ogc:def:crs:EPSG::4326`,
+			});
+			return `${baseUrl}?${params.toString()}`;
+		} else {
+			// Capital Region - HSY pygeoapi endpoint
+			// Use the urlStore getter for consistency
+			return this.urlStore.hsyGridBuildings(bboxString, 5000);
+		}
 	}
 
 	/**
 	 * Process building GeoJSON data
-	 * Reuses existing building processing logic for heat exposure and height.
+	 * Handles both Helsinki and HSY (Capital Region) building formats.
 	 *
 	 * @param {Object} geojson - GeoJSON FeatureCollection
 	 * @param {string} tileKey - Tile key for datasource naming
@@ -418,28 +521,49 @@ export default class ViewportBuildingLoader {
 			return [];
 		}
 
+		const isHelsinkiView = this.toggleStore.helsinkiView;
+		const viewType = isHelsinkiView ? 'Helsinki' : 'Capital Region';
+		console.log(
+			`[ViewportBuildingLoader] Processing ${geojson.features.length} ${viewType} buildings for tile ${tileKey}`
+		);
+
 		// Create datasource with tile-specific name
-		// Use initialVisibility=false since we'll control visibility via updateTileVisibility
-		const datasourceName = `Buildings Viewport ${tileKey}`;
+		const viewPrefix = isHelsinkiView ? 'Helsinki' : 'HSY';
+		const datasourceName = `Buildings Viewport ${viewPrefix} ${tileKey}`;
 		const entities = await this.datasourceService.addDataSourceWithPolygonFix(
 			geojson,
 			datasourceName,
 			false // Start hidden, visibility controlled by updateTileVisibility
 		);
 
-		// Process entities for heat exposure (if Helsinki view)
-		if (this.toggleStore.helsinkiView && entities.length > 0) {
-			// Find heat exposure data for entities
+		if (entities.length === 0) {
+			return [];
+		}
+
+		// Process entities based on view type
+		if (isHelsinkiView) {
+			// Helsinki: Full heat exposure processing
 			const entitiesWithHeat = await this.urbanheatService.findUrbanHeatData(
 				geojson,
 				null // No postal code filtering for viewport-based loading
 			);
-
-			// Apply heat exposure styling in batches
 			await this.setHeatExposureToBuildings(entitiesWithHeat);
-
-			// Apply building heights in batches
 			await this.setHelsinkiBuildingsHeight(entitiesWithHeat);
+		} else {
+			// Capital Region (HSY): Different property names
+			await this.setHSYBuildingAttributes(entities);
+		}
+
+		// Set initial alpha to 0 for fade-in effect
+		for (const entity of entities) {
+			if (entity.polygon?.material) {
+				const color = entity.polygon.material.color?.getValue?.(Cesium.JulianDate.now());
+				if (color) {
+					entity.polygon.material = new Cesium.ColorMaterialProperty(
+						new Cesium.Color(color.red, color.green, color.blue, 0)
+					);
+				}
+			}
 		}
 
 		return entities;
@@ -518,6 +642,108 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
+	 * Set HSY building attributes (height from floor count)
+	 * HSY buildings use 'kerrosten_lkm' for floor count instead of 'i_kerrlkm'
+	 *
+	 * @param {Array<Cesium.Entity>} entities - Building entities
+	 * @returns {Promise<void>}
+	 */
+	async setHSYBuildingAttributes(entities) {
+		const batchSize = 30;
+
+		for (let i = 0; i < entities.length; i += batchSize) {
+			const batch = entities.slice(i, i + batchSize);
+
+			for (const entity of batch) {
+				if (entity.polygon) {
+					// HSY uses 'kerrosten_lkm' for floor count
+					const floorCount = entity.properties?.kerrosten_lkm?._value;
+
+					// Set height based on floor count (3.2m per floor) or default
+					entity.polygon.extrudedHeight =
+						floorCount != null && floorCount < 999 ? floorCount * 3.2 : 2.7;
+
+					// Set a default color for HSY buildings (since no heat data)
+					// Use a blue-ish color to differentiate from Helsinki's heat colors
+					const alpha = 0.7;
+					entity.polygon.material = new Cesium.ColorMaterialProperty(
+						new Cesium.Color(0.4, 0.6, 0.8, alpha)
+					);
+				}
+			}
+
+			if (i + batchSize < entities.length) {
+				await new Promise((resolve) =>
+					typeof requestIdleCallback !== 'undefined'
+						? requestIdleCallback(resolve)
+						: setTimeout(resolve, 0)
+				);
+			}
+		}
+
+		console.log(`[ViewportBuildingLoader] ✅ HSY attributes set for ${entities.length} buildings`);
+	}
+
+	/**
+	 * Fade in a datasource's entities smoothly
+	 * Animates entity alpha from 0 to target value over FADE_CONFIG.DURATION_MS
+	 *
+	 * @param {Cesium.DataSource} datasource - Datasource containing building entities
+	 * @returns {Promise<void>}
+	 */
+	async fadeInDatasource(datasource) {
+		if (!datasource || !datasource.entities) return;
+
+		const entities = datasource.entities.values;
+		const stepDuration = FADE_CONFIG.DURATION_MS / FADE_CONFIG.STEPS;
+
+		// Store original alpha values for each entity
+		const originalAlphas = new Map();
+
+		for (const entity of entities) {
+			if (entity.polygon?.material) {
+				const color = entity.polygon.material.color?.getValue?.(Cesium.JulianDate.now());
+				if (color) {
+					originalAlphas.set(entity.id, color.alpha);
+					// Start fully transparent
+					entity.polygon.material = new Cesium.ColorMaterialProperty(
+						new Cesium.Color(color.red, color.green, color.blue, 0)
+					);
+				}
+			}
+		}
+
+		// Make datasource visible (entities are transparent)
+		datasource.show = true;
+
+		// Animate alpha over time
+		for (let step = 1; step <= FADE_CONFIG.STEPS; step++) {
+			const progress = step / FADE_CONFIG.STEPS;
+
+			for (const entity of entities) {
+				if (entity.polygon?.material && originalAlphas.has(entity.id)) {
+					const targetAlpha = originalAlphas.get(entity.id);
+					const currentAlpha = targetAlpha * progress;
+					const color = entity.polygon.material.color?.getValue?.(Cesium.JulianDate.now());
+					if (color) {
+						entity.polygon.material = new Cesium.ColorMaterialProperty(
+							new Cesium.Color(color.red, color.green, color.blue, currentAlpha)
+						);
+					}
+				}
+			}
+
+			// Request render and wait for next frame
+			if (this.viewer) {
+				this.viewer.scene.requestRender();
+			}
+			await new Promise((resolve) => setTimeout(resolve, stepDuration));
+		}
+
+		console.log(`[ViewportBuildingLoader] ✨ Fade-in complete for ${entities.length} entities`);
+	}
+
+	/**
 	 * Update entity visibility based on visible tiles
 	 * Shows entities in visible tiles, hides entities in loaded but non-visible tiles.
 	 *
@@ -526,10 +752,11 @@ export default class ViewportBuildingLoader {
 	 */
 	updateTileVisibility(visibleTileKeys) {
 		const visibleSet = new Set(visibleTileKeys);
+		const viewPrefix = this.toggleStore.helsinkiView ? 'Helsinki' : 'HSY';
 
 		// Update visibility for all loaded tiles
 		for (const [tileKey] of this.loadedTiles) {
-			const datasourceName = `Buildings Viewport ${tileKey}`;
+			const datasourceName = `Buildings Viewport ${viewPrefix} ${tileKey}`;
 			const datasource = this.datasourceService.getDataSourceByName(datasourceName);
 
 			if (!datasource) {
@@ -537,20 +764,20 @@ export default class ViewportBuildingLoader {
 			}
 
 			const shouldBeVisible = visibleSet.has(tileKey);
+			const isCurrentlyVisible = datasource.show;
 
-			// Only update if state changed to minimize render calls
-			if (datasource.show !== shouldBeVisible) {
-				datasource.show = shouldBeVisible;
+			// Only update if state changed
+			if (shouldBeVisible && !isCurrentlyVisible) {
+				// Fade in (async, non-blocking)
+				void this.fadeInDatasource(datasource);
+			} else if (!shouldBeVisible && isCurrentlyVisible) {
+				// Instant hide (no fade-out for performance)
+				datasource.show = false;
 			}
 		}
 
 		// Update visible tiles tracking
 		this.visibleTiles = visibleSet;
-
-		// Request render to apply visibility changes
-		if (this.viewer) {
-			this.viewer.scene.requestRender();
-		}
 	}
 
 	/**
@@ -601,7 +828,8 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async unloadTile(tileKey) {
-		const datasourceName = `Buildings Viewport ${tileKey}`;
+		const viewPrefix = this.toggleStore.helsinkiView ? 'Helsinki' : 'HSY';
+		const datasourceName = `Buildings Viewport ${viewPrefix} ${tileKey}`;
 
 		try {
 			await this.datasourceService.removeDataSourcesByNamePrefix(datasourceName);
@@ -636,6 +864,19 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
+	 * Handle view mode change (Helsinki <-> Capital Region)
+	 * Clears all loaded tiles since the data source changes.
+	 *
+	 * @returns {Promise<void>}
+	 */
+	async handleViewModeChange() {
+		console.log('[ViewportBuildingLoader] View mode changed, clearing tiles');
+		await this.clearAllTiles();
+		// Trigger reload for new view
+		void this.updateViewport();
+	}
+
+	/**
 	 * Shutdown the viewport loader
 	 * Removes event listeners and clears all tiles.
 	 *
@@ -657,5 +898,31 @@ export default class ViewportBuildingLoader {
 
 		this.isInitialized = false;
 		console.log('[ViewportBuildingLoader] Shutdown complete');
+	}
+	/**
+	 * Calculate tile center coordinates from tile key
+	 * @param {string} tileKey - Tile key (format: "tileX_tileY")
+	 * @returns {{lat: number, lon: number}} Tile center coordinates
+	 */
+	getTileCenter(tileKey) {
+		const [tileX, tileY] = tileKey.split('_').map(Number);
+		return {
+			lon: (tileX + 0.5) * CONFIG.TILE_SIZE,
+			lat: (tileY + 0.5) * CONFIG.TILE_SIZE,
+		};
+	}
+
+	/**
+	 * Calculate squared distance from viewport center (faster than actual distance)
+	 * Uses squared Euclidean distance which is sufficient for sorting.
+	 * @param {string} tileKey - Tile key
+	 * @param {{lat: number, lon: number}} viewportCenter - Viewport center
+	 * @returns {number} Squared distance
+	 */
+	getDistanceFromCenter(tileKey, viewportCenter) {
+		const tileCenter = this.getTileCenter(tileKey);
+		const dLat = tileCenter.lat - viewportCenter.lat;
+		const dLon = tileCenter.lon - viewportCenter.lon;
+		return dLat * dLat + dLon * dLon; // Squared distance is fine for sorting
 	}
 }

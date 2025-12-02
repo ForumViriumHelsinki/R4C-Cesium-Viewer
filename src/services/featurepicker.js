@@ -132,7 +132,7 @@ export default class FeaturePicker {
 
 		this.setNameOfZone();
 		this.elementsDisplayService.setSwitchViewElementsDisplay('inline-block');
-		this.datasourceService.removeDataSourcesAndEntities();
+		await this.datasourceService.removeDataSourcesAndEntities();
 
 		// Load region-specific data based on view mode
 		if (!this.toggleStore.helsinkiView) {
@@ -290,7 +290,7 @@ export default class FeaturePicker {
 
 		this.removeEntityByName('coldpoint');
 		this.removeEntityByName('currentLocation');
-		this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
+		void this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
 
 		this.propStore.setTreeArea(null);
 		this.propStore.setHeatFloodVulnerability(id.properties ?? null);
@@ -310,7 +310,7 @@ export default class FeaturePicker {
 				}
 			}
 
-			this.handleBuildingFeature(id.properties);
+			void this.handleBuildingFeature(id.properties);
 		}
 
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
@@ -349,7 +349,7 @@ export default class FeaturePicker {
 				this.store.setPostalCode(newPostalCode);
 
 				// PHASE 3: Parallel loading - camera animation and data load simultaneously
-				this.loadPostalCodeWithParallelStrategy(newPostalCode);
+				void this.loadPostalCodeWithParallelStrategy(newPostalCode);
 			} else {
 				console.log(
 					'[FeaturePicker] ⚠️ Same postal code already selected at postalCode level, skipping reload'
@@ -368,7 +368,7 @@ export default class FeaturePicker {
 				const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`;
 
 				// Now you can use this URL to make your WFS request
-				this.hSYBuildingService.loadHSYBuildings(bboxString);
+				void this.hSYBuildingService.loadHSYBuildings(bboxString);
 			}
 
 			//createDiagramForPopulationGrid( id.properties.index, id.properties.asukkaita );
@@ -379,8 +379,8 @@ export default class FeaturePicker {
 			id.entityCollection._entities._array[0]._properties._id &&
 			id.entityCollection._entities._array[0]._properties._id._value == 5879932
 		) {
-			this.traveltimeService.loadTravelTimeData(id.properties.id._value);
-			this.traveltimeService.markCurrentLocation(id);
+			this.traveltimeService.loadTravelTimeData(id.properties.id._value).catch(console.error);
+			this.traveltimeService.markCurrentLocation(id).catch(console.error);
 		}
 	}
 

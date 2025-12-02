@@ -27,7 +27,7 @@ export default {
 			(newValue) => {
 				backgroundMapStore.setHSYYear(newValue);
 				removeLandcover(store.landcoverLayers, store.cesiumViewer);
-				createHSYImageryLayer();
+				void createHSYImageryLayer();
 				eventBus.emit('recreate piechart');
 			}
 		);

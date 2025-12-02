@@ -278,7 +278,7 @@ export default {
 
 		// Lifecycle hooks for mounting and unmounting
 		onMounted(() => {
-			nextTick(() => {
+			void nextTick(() => {
 				newHeatHistogram();
 			});
 

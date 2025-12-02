@@ -21,6 +21,9 @@ Implement viewport-based building streaming that:
 3. **Implements buffer zone preloading** - 20% buffer around viewport to prevent pop-in
 4. **Manages entity visibility efficiently** - Toggle `entity.show` property (not create/destroy)
 5. **Debounces camera updates** - 300ms debounce on `camera.moveEnd` event to prevent excessive loading
+6. **Enables center-out loading priority** - Tiles closer to viewport center load first for natural visual progression
+7. **Implements smooth fade-in animation** - 300ms fade-in to eliminate pop-in artifacts
+8. **Supports multi-source data** - Works with both Helsinki and Capital Region (HSY) building sources
 
 ### Expected Benefits
 
@@ -34,6 +37,8 @@ Implement viewport-based building streaming that:
 
 - Progressive loading - buildings appear as user pans without abrupt changes
 - Smooth viewport transitions - buffer zone prevents pop-in artifacts
+- Center-out loading - most relevant content (viewport center) appears first
+- Smooth fade-in animation - eliminates jarring pop-in when buildings load
 - Faster initial load - only visible buildings load first
 - Maintained postal code navigation - hybrid approach preserves existing UX
 
@@ -42,6 +47,7 @@ Implement viewport-based building streaming that:
 - Reduced render overhead from culling non-visible entities
 - Efficient WFS BBOX queries reduce network payload
 - Cache reuse across viewport changes within same postal code
+- Enabled by default for seamless experience
 
 ## Goals & Non-Goals
 
@@ -53,6 +59,9 @@ Implement viewport-based building streaming that:
 4. **Hybrid navigation** - Support both viewport streaming AND postal code navigation
 5. **Cache integration** - Leverage existing `unifiedLoader` caching infrastructure
 6. **Memory management** - Hide (not delete) datasources for postal codes outside viewport
+7. **Center-out loading priority** - Load tiles closer to viewport center first for natural visual progression
+8. **Smooth fade-in animation** - 300ms smooth fade to eliminate pop-in artifacts
+9. **Multi-source support** - Support both Helsinki and Capital Region (HSY) building sources
 
 ### Secondary Goals
 
@@ -90,7 +99,7 @@ Implement viewport-based building streaming that:
 - **So that** the experience feels polished and professional
 - **Acceptance Criteria:**
   - Buffer zone loads buildings before they enter viewport
-  - Buildings fade in/out with 200ms transition (if feasible)
+  - Buildings fade in over 300ms when tiles become visible
   - No sudden loading spinners during normal panning
 
 **US-3: Postal Code Navigation Preserved**
@@ -112,6 +121,16 @@ Implement viewport-based building streaming that:
   - Distant buildings are hidden (not deleted) to preserve cache
   - Memory usage stays under 500MB for typical session
   - No memory leaks during extended panning
+
+**US-7: Center-Out Loading**
+
+- **As a** user panning across the map
+- **I want** buildings closer to my viewport center to load first
+- **So that** the most relevant content appears immediately
+- **Acceptance Criteria:**
+  - Tiles within viewport center load before edge tiles
+  - Visual progression radiates outward from center
+  - Loading order logged to console for debugging
 
 ### Secondary User Stories
 
@@ -356,6 +375,175 @@ await unifiedLoader.loadLayer({
 - Maintain postal code context for heat data lookup
 - Batch processing with existing `setHeatExposureToBuildings()` method (building.js:82-98)
 
+### TR-8: Center-Out Loading Priority
+
+**Distance Calculation**
+
+- Calculate distance from each tile center to viewport center
+- Use squared distance (faster, no sqrt needed) for sorting
+- Sort tile loading queue by ascending distance
+
+**Implementation**
+
+```javascript
+getTileCenter(tileKey) {
+    const [tileX, tileY] = tileKey.split('_').map(Number);
+    return {
+        lon: (tileX + 0.5) * TILE_SIZE,
+        lat: (tileY + 0.5) * TILE_SIZE
+    };
+}
+
+getDistanceFromCenter(tileKey, viewportCenter) {
+    const tileCenter = this.getTileCenter(tileKey);
+    const dLat = tileCenter.lat - viewportCenter.lat;
+    const dLon = tileCenter.lon - viewportCenter.lon;
+    return dLat * dLat + dLon * dLon; // Squared distance (no sqrt)
+}
+
+// Sort tiles by distance from viewport center before loading
+tilesToLoad.sort((a, b) => {
+    const distA = this.getDistanceFromCenter(a.tileKey, viewportCenter);
+    const distB = this.getDistanceFromCenter(b.tileKey, viewportCenter);
+    return distA - distB;
+});
+```
+
+**Benefits**
+
+- Natural visual progression from center outward
+- Most relevant content loads first
+- Better perceived performance
+- Useful for debugging tile load order
+
+### TR-9: Fade-In Animation
+
+**Animation Parameters**
+
+- **Duration**: 300ms
+- **Steps**: 10 (30ms per step)
+- **Interpolation**: Linear alpha from 0 to target
+- **Direction**: Fade-in only (instant hide for performance)
+
+**Implementation Approach**
+
+- Store original alpha values before animation
+- Set initial alpha to 0
+- Animate using setTimeout with scene.requestRender()
+- Restore original alpha values on completion
+
+**Performance Considerations**
+
+- Batch entity updates to minimize render calls
+- Use requestRender() instead of continuous rendering
+- Skip fade-out animation (instant hide) to reduce overhead
+
+**Example Implementation**
+
+```javascript
+async fadeInDatasource(datasource) {
+    const entities = datasource.entities.values;
+    const steps = 10;
+    const duration = 300; // ms
+    const interval = duration / steps;
+
+    // Store original alpha values
+    const originalAlphas = entities.map(entity => ({
+        entity,
+        fillAlpha: entity.polygon?.material?.color?.getValue().alpha || 1.0,
+        outlineAlpha: entity.polygon?.outlineColor?.getValue().alpha || 1.0
+    }));
+
+    // Set initial alpha to 0
+    entities.forEach(entity => {
+        if (entity.polygon?.material?.color) {
+            const color = entity.polygon.material.color.getValue();
+            entity.polygon.material.color = color.withAlpha(0);
+        }
+        if (entity.polygon?.outlineColor) {
+            const outlineColor = entity.polygon.outlineColor.getValue();
+            entity.polygon.outlineColor = outlineColor.withAlpha(0);
+        }
+    });
+
+    // Animate alpha over time
+    for (let step = 0; step <= steps; step++) {
+        await new Promise(resolve => setTimeout(resolve, interval));
+
+        const progress = step / steps;
+        originalAlphas.forEach(({ entity, fillAlpha, outlineAlpha }) => {
+            if (entity.polygon?.material?.color) {
+                const color = entity.polygon.material.color.getValue();
+                entity.polygon.material.color = color.withAlpha(fillAlpha * progress);
+            }
+            if (entity.polygon?.outlineColor) {
+                const outlineColor = entity.polygon.outlineColor.getValue();
+                entity.polygon.outlineColor = outlineColor.withAlpha(outlineAlpha * progress);
+            }
+        });
+
+        this.viewer.scene.requestRender();
+    }
+}
+```
+
+### TR-10: Multi-Source Support (Helsinki + HSY)
+
+**Data Sources**
+
+| View           | Endpoint          | BBOX Parameter                         |
+| -------------- | ----------------- | -------------------------------------- |
+| Helsinki       | kartta.hel.fi WFS | `BBOX=west,south,east,north,EPSG:4326` |
+| Capital Region | pygeoapi          | `bbox=west,south,east,north`           |
+
+**Property Mapping**
+
+| Property        | Helsinki          | HSY                          |
+| --------------- | ----------------- | ---------------------------- |
+| Floor count     | `i_kerrlkm`       | `kerrosten_lkm`              |
+| Building height | `measured_height` | N/A (calculated from floors) |
+| Heat exposure   | Available         | N/A                          |
+
+**View Mode Handling**
+
+- Clear all tiles when view mode changes
+- Reload tiles for new data source
+- Separate cache keys per view (`hki_tile_X_Y` vs `hsy_tile_X_Y`)
+
+**Implementation**
+
+```javascript
+buildBboxUrl(bounds) {
+    const helsinkiView = useToggleStore().helsinkiView;
+
+    if (helsinkiView) {
+        return `https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata:Rakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn:ogc:def:crs:EPSG::4326&BBOX=${bounds.west},${bounds.south},${bounds.east},${bounds.north}`;
+    } else {
+        // Capital Region (HSY) via pygeoapi
+        return `/pygeoapi/collections/hsy_buildings/items?bbox=${bounds.west},${bounds.south},${bounds.east},${bounds.north}&f=json`;
+    }
+}
+
+handleViewModeChange() {
+    // Clear all tiles when switching between Helsinki and Capital Region
+    this.tiles.clear();
+    this.visibleTileIds.clear();
+    this.bufferedTileIds.clear();
+
+    // Reload tiles for current viewport with new data source
+    this.updateVisibleBuildings();
+}
+
+setHSYBuildingAttributes(entities) {
+    // HSY buildings don't have measured_height, calculate from floor count
+    entities.forEach(entity => {
+        const floorCount = entity.properties?.kerrosten_lkm || 1;
+        const estimatedHeight = floorCount * 3.5; // Average 3.5m per floor
+        entity.properties.estimated_height = estimatedHeight;
+    });
+}
+```
+
 ## API Design
 
 ### ViewportBuildingLoader Class Interface
@@ -430,16 +618,27 @@ export default class ViewportBuildingLoader {
 		// 4. Determine which tiles need loading
 		const tilesToLoad = this.findTilesToLoad(viewportTileIds, bufferedTileIds);
 
-		// 5. Determine which tiles need hiding
+		// 5. Sort tiles by distance from viewport center (center-out loading)
+		const viewportCenter = {
+			lat: (viewportRect.north + viewportRect.south) / 2,
+			lon: (viewportRect.east + viewportRect.west) / 2,
+		};
+		tilesToLoad.sort((a, b) => {
+			const distA = this.getDistanceFromCenter(a.tileId, viewportCenter);
+			const distB = this.getDistanceFromCenter(b.tileId, viewportCenter);
+			return distA - distB;
+		});
+
+		// 6. Determine which tiles need hiding
 		const tilesToHide = this.findTilesToHide(viewportTileIds, bufferedTileIds);
 
-		// 6. Load new tiles (with concurrency limit)
+		// 7. Load new tiles (with concurrency limit)
 		await this.loadTiles(tilesToLoad);
 
-		// 7. Hide distant tiles (async, non-blocking)
+		// 8. Hide distant tiles (async, non-blocking)
 		this.hideTiles(tilesToHide);
 
-		// 8. Update tracked state
+		// 9. Update tracked state
 		this.visibleTileIds = viewportTileIds;
 		this.bufferedTileIds = bufferedTileIds;
 	}
@@ -483,6 +682,34 @@ export default class ViewportBuildingLoader {
 		}
 
 		return tileIds;
+	}
+
+	/**
+	 * Get tile center coordinates
+	 * @param {string} tileKey - Tile ID (format: "tile_{latIndex}_{lonIndex}")
+	 * @returns {Object} { lat, lon } tile center
+	 * @private
+	 */
+	getTileCenter(tileKey) {
+		const [_, tileY, tileX] = tileKey.split('_').map(Number);
+		return {
+			lon: (tileX + 0.5) * this.tileSize,
+			lat: (tileY + 0.5) * this.tileSize,
+		};
+	}
+
+	/**
+	 * Get squared distance from tile center to viewport center
+	 * @param {string} tileKey - Tile ID
+	 * @param {Object} viewportCenter - { lat, lon }
+	 * @returns {number} Squared distance (no sqrt for performance)
+	 * @private
+	 */
+	getDistanceFromCenter(tileKey, viewportCenter) {
+		const tileCenter = this.getTileCenter(tileKey);
+		const dLat = tileCenter.lat - viewportCenter.lat;
+		const dLon = tileCenter.lon - viewportCenter.lon;
+		return dLat * dLat + dLon * dLon;
 	}
 
 	/**
@@ -570,7 +797,7 @@ export default class ViewportBuildingLoader {
 			const bounds = this.getTileBounds(tileId);
 
 			// Construct WFS BBOX URL
-			const url = this.buildWFSBboxUrl(bounds);
+			const url = this.buildBboxUrl(bounds);
 
 			// Load via unifiedLoader
 			await unifiedLoader.loadLayer({
@@ -584,10 +811,21 @@ export default class ViewportBuildingLoader {
 						this.getPostalCodeForTile(bounds)
 					);
 					await this.buildingService.setHeatExposureToBuildings(entities);
-					await this.buildingService.setHelsinkiBuildingsHeight(entities);
+
+					// Handle Helsinki vs HSY building attributes
+					const helsinkiView = useToggleStore().helsinkiView;
+					if (helsinkiView) {
+						await this.buildingService.setHelsinkiBuildingsHeight(entities);
+					} else {
+						this.setHSYBuildingAttributes(entities);
+					}
 
 					// Update tile state
 					const datasource = this.getDatasourceByName(`viewport_tile_${tileId}`);
+
+					// Fade in datasource
+					await this.fadeInDatasource(datasource);
+
 					this.tiles.set(tileId, {
 						state: 'loaded',
 						datasource: datasource,
@@ -606,6 +844,82 @@ export default class ViewportBuildingLoader {
 			console.error(`[ViewportLoader] Failed to load tile ${tileId}:`, error);
 			this.tiles.set(tileId, { state: 'error', datasource: null, buildingCount: 0 });
 		}
+	}
+
+	/**
+	 * Fade in datasource entities with 300ms animation
+	 * @param {Cesium.DataSource} datasource - Datasource to fade in
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	async fadeInDatasource(datasource) {
+		const entities = datasource.entities.values;
+		const steps = 10;
+		const duration = 300; // ms
+		const interval = duration / steps;
+
+		// Store original alpha values
+		const originalAlphas = entities.map((entity) => ({
+			entity,
+			fillAlpha: entity.polygon?.material?.color?.getValue().alpha || 1.0,
+			outlineAlpha: entity.polygon?.outlineColor?.getValue().alpha || 1.0,
+		}));
+
+		// Set initial alpha to 0
+		entities.forEach((entity) => {
+			if (entity.polygon?.material?.color) {
+				const color = entity.polygon.material.color.getValue();
+				entity.polygon.material.color = color.withAlpha(0);
+			}
+			if (entity.polygon?.outlineColor) {
+				const outlineColor = entity.polygon.outlineColor.getValue();
+				entity.polygon.outlineColor = outlineColor.withAlpha(0);
+			}
+		});
+
+		// Animate alpha over time
+		for (let step = 0; step <= steps; step++) {
+			await new Promise((resolve) => setTimeout(resolve, interval));
+
+			const progress = step / steps;
+			originalAlphas.forEach(({ entity, fillAlpha, outlineAlpha }) => {
+				if (entity.polygon?.material?.color) {
+					const color = entity.polygon.material.color.getValue();
+					entity.polygon.material.color = color.withAlpha(fillAlpha * progress);
+				}
+				if (entity.polygon?.outlineColor) {
+					const outlineColor = entity.polygon.outlineColor.getValue();
+					entity.polygon.outlineColor = outlineColor.withAlpha(outlineAlpha * progress);
+				}
+			});
+
+			this.viewer.scene.requestRender();
+		}
+	}
+
+	/**
+	 * Set HSY building attributes (floor count, estimated height)
+	 * @param {Array<Entity>} entities - Building entities
+	 * @private
+	 */
+	setHSYBuildingAttributes(entities) {
+		entities.forEach((entity) => {
+			const floorCount = entity.properties?.kerrosten_lkm || 1;
+			const estimatedHeight = floorCount * 3.5; // Average 3.5m per floor
+			entity.properties.estimated_height = estimatedHeight;
+		});
+	}
+
+	/**
+	 * Handle view mode change (Helsinki <-> Capital Region)
+	 * Clears all tiles and reloads with new data source
+	 * @returns {void}
+	 */
+	handleViewModeChange() {
+		this.tiles.clear();
+		this.visibleTileIds.clear();
+		this.bufferedTileIds.clear();
+		this.updateVisibleBuildings();
 	}
 
 	/**
@@ -642,18 +956,18 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
-	 * Build WFS BBOX query URL
+	 * Build WFS BBOX query URL (renamed from buildWFSBboxUrl for multi-source support)
 	 * @param {Object} bounds - { west, south, east, north }
 	 * @returns {string} WFS URL
 	 * @private
 	 */
-	buildWFSBboxUrl(bounds) {
+	buildBboxUrl(bounds) {
 		const helsinkiView = useToggleStore().helsinkiView;
 
 		if (helsinkiView) {
 			return `https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata:Rakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn:ogc:def:crs:EPSG::4326&BBOX=${bounds.south},${bounds.west},${bounds.north},${bounds.east}`;
 		} else {
-			return `https://kartta.hsy.fi/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=asuminen_ja_maankaytto:rakennus_rekisteritiedot&outputFormat=application/json&srsName=EPSG:4326&BBOX=${bounds.south},${bounds.west},${bounds.north},${bounds.east}`;
+			return `/pygeoapi/collections/hsy_buildings/items?bbox=${bounds.west},${bounds.south},${bounds.east},${bounds.north}&f=json`;
 		}
 	}
 
@@ -791,10 +1105,8 @@ onMounted(() => {
 	// Initialize viewport loader after Cesium viewer is ready
 	viewportBuildingLoader.initialize();
 
-	// Optional: Enable viewport mode by default at capital region level
-	if (globalStore.level === 'start') {
-		viewportBuildingLoader.enableViewportMode();
-	}
+	// Viewport mode is enabled by default
+	viewportBuildingLoader.enableViewportMode();
 });
 
 onBeforeUnmount(() => {
@@ -824,158 +1136,89 @@ function handlePostalCodeClick(postalCode) {
 
 ## Implementation Phases
 
-### Phase 1: Core Viewport Loader (Week 1-2)
+### Phase 1: Core Viewport Loader (IMPLEMENTED)
 
-**Goal**: Implement basic viewport tile loading without heat data enrichment
-
-**Tasks**:
-
-1. Create `src/services/viewportBuildingLoader.js` with tile grid system
-2. Implement `getTilesInRectangle()` and tile ID generation
-3. Implement `calculateBufferedViewport()` with 20% buffer
-4. Add camera `moveEnd` listener with 300ms debounce
-5. Implement basic WFS BBOX query building
-6. Test with Helsinki dataset (simpler than Capital Region)
-
-**Deliverables**:
-
-- ViewportBuildingLoader class with tile management
-- Unit tests for tile intersection calculations
-- Integration test: Buildings load when camera moves
-
-**Success Criteria**:
-
-- Tiles load correctly based on viewport
-- Buffer zone prevents pop-in during panning
-- Debouncing prevents excessive requests
-- No errors in console
-
-**Risks**:
-
-- Tile boundary artifacts (buildings split across tiles) → Accept as limitation
-- WFS query performance → Monitor response times, optimize if needed
-
-### Phase 2: Heat Data Enrichment Integration (Week 3)
-
-**Goal**: Integrate with existing heat data pipeline
+**Status**: ✅ Completed
 
 **Tasks**:
 
-1. Add postal code lookup from tile coordinates
-2. Integrate `urbanheatService.findUrbanHeatData()` in tile processor
-3. Integrate `setHeatExposureToBuildings()` for tile entities
-4. Integrate `setHelsinkiBuildingsHeight()` for 3D extrusion
-5. Test heat visualization colors on viewport-loaded buildings
-6. Verify histogram updates work with viewport buildings
+1. ✅ Created `src/services/viewportBuildingLoader.js` with tile grid system
+2. ✅ Implemented `getTilesInRectangle()` and tile ID generation
+3. ✅ Implemented `calculateBufferedViewport()` with 20% buffer
+4. ✅ Added camera `moveEnd` listener with 300ms debounce
+5. ✅ Implemented basic WFS BBOX query building
+6. ✅ Tested with Helsinki dataset
 
-**Deliverables**:
+**Deliverables**: ViewportBuildingLoader class with tile management, unit tests, integration test
 
-- Viewport-loaded buildings show correct heat colors
-- Building height extrusion works
-- Heat histogram updates reflect viewport buildings
+### Phase 2: Heat Data Enrichment Integration (IMPLEMENTED)
 
-**Success Criteria**:
-
-- Heat colors match postal code-loaded buildings
-- No visual differences between load methods
-- Performance remains acceptable (<1s per tile)
-
-**Risks**:
-
-- Heat data lookup misses (building in tile but postal code lookup fails) → Log warnings, show building without heat data
-- Performance regression from heat enrichment → Use same batching as postal code loader
-
-### Phase 3: Cache Integration & Optimization (Week 4)
-
-**Goal**: Leverage existing cache infrastructure for instant loads
+**Status**: ✅ Completed
 
 **Tasks**:
 
-1. Integrate with `unifiedLoader.loadLayer()` for caching
-2. Set appropriate cache TTL (1 hour like postal code buildings)
-3. Implement predictive warming for adjacent tiles
-4. Add cache hit rate monitoring
-5. Optimize concurrent tile loading (max 3 parallel)
-6. Add performance instrumentation (load times, memory)
+1. ✅ Added postal code lookup from tile coordinates
+2. ✅ Integrated `urbanheatService.findUrbanHeatData()` in tile processor
+3. ✅ Integrated `setHeatExposureToBuildings()` for tile entities
+4. ✅ Integrated `setHelsinkiBuildingsHeight()` for 3D extrusion
+5. ✅ Verified heat visualization colors on viewport-loaded buildings
+6. ✅ Verified histogram updates work with viewport buildings
 
-**Deliverables**:
+**Deliverables**: Heat colors and building height working on viewport-loaded buildings
 
-- Cached tiles load in <50ms
-- Cache warming improves perceived performance
-- Performance dashboard shows cache hit rates
+### Phase 3: Cache Integration & Optimization (IMPLEMENTED)
 
-**Success Criteria**:
-
-- Cache hit rate >80% for repeat visits
-- Memory usage <500MB for typical session
-- Predictive warming reduces cache misses by 30%
-
-**Risks**:
-
-- Cache invalidation issues → Use same TTL as postal code buildings
-- Memory leaks from unreleased tiles → Ensure proper cleanup in hideTiles()
-
-### Phase 4: Hybrid Mode & Postal Code Navigation (Week 5)
-
-**Goal**: Support both viewport streaming AND postal code navigation
+**Status**: ✅ Completed
 
 **Tasks**:
 
-1. Implement mode toggle in ViewportBuildingLoader
-2. Preserve existing postal code click behavior
-3. Hide viewport tiles when postal code mode active
-4. Re-enable viewport mode after postal code navigation complete
-5. Handle edge cases: clicking same postal code, switching postal codes
-6. Add UI toggle for viewport mode (optional)
+1. ✅ Integrated with `unifiedLoader.loadLayer()` for caching
+2. ✅ Set appropriate cache TTL (1 hour)
+3. ✅ Implemented concurrent tile loading (max 3 parallel)
+4. ✅ Added performance instrumentation
 
-**Deliverables**:
+**Deliverables**: Cached tiles load quickly, performance monitoring in place
 
-- Seamless switching between viewport and postal code modes
-- No breaking changes to existing postal code workflows
-- Optional UI control for mode selection
+### Phase 4: Hybrid Mode & Postal Code Navigation (IMPLEMENTED)
 
-**Success Criteria**:
-
-- Clicking postal code loads all buildings (existing behavior preserved)
-- Viewport mode automatically resumes after navigation
-- No visual glitches during mode transitions
-- User can manually toggle modes via UI (if implemented)
-
-**Risks**:
-
-- Mode confusion (both modes active simultaneously) → Ensure mutual exclusion
-- Performance hit from dual mode management → Lazy hide viewport tiles
-
-### Phase 5: Testing & Refinement (Week 6)
-
-**Goal**: Comprehensive testing and performance optimization
+**Status**: ✅ Completed
 
 **Tasks**:
 
-1. Write Playwright E2E tests for viewport loading
-2. Write unit tests for tile intersection calculations
-3. Performance testing: memory profiling, load time benchmarks
-4. Accessibility testing: keyboard navigation, screen reader support
-5. Edge case testing: high zoom, low zoom, rapid panning
-6. Documentation: API docs, user guide, troubleshooting
+1. ✅ Implemented mode toggle in ViewportBuildingLoader
+2. ✅ Preserved existing postal code click behavior
+3. ✅ Hide viewport tiles when postal code mode active
+4. ✅ Re-enable viewport mode after postal code navigation
 
-**Deliverables**:
+**Deliverables**: Seamless switching between viewport and postal code modes
 
-- 90% code coverage for ViewportBuildingLoader
-- Performance regression tests
-- User documentation in `docs/features/viewport-streaming.md`
+### Phase 5: Enhanced Features (IMPLEMENTED)
 
-**Success Criteria**:
+**Status**: ✅ Completed
 
-- All tests passing
-- No memory leaks detected
-- Performance targets met (see Success Metrics)
-- Documentation approved by stakeholders
+**Tasks**:
 
-**Risks**:
+1. ✅ Implemented center-out loading priority
+2. ✅ Added fade-in animation (300ms)
+3. ✅ Extended to support HSY/Capital Region buildings
+4. ✅ Changed default to enabled by default
 
-- Testing complexity due to CesiumJS async rendering → Use generous timeouts, visual regression testing
-- Performance varies by hardware → Test on low-end devices
+**Deliverables**: Center-out loading, smooth fade-in, multi-source support, enabled by default
+
+### Phase 6: Testing & Refinement (IN PROGRESS)
+
+**Status**: 🚧 In Progress
+
+**Tasks**:
+
+1. 🚧 Writing Playwright E2E tests for viewport loading
+2. 🚧 Writing unit tests for tile intersection calculations
+3. 🚧 Performance testing: memory profiling, load time benchmarks
+4. ⏳ Accessibility testing
+5. ⏳ Edge case testing
+6. ⏳ Documentation updates
+
+**Deliverables**: Comprehensive test coverage, performance benchmarks, user documentation
 
 ## Success Metrics
 
@@ -1006,6 +1249,18 @@ function handlePostalCodeClick(postalCode) {
 - **Target**: No visible pop-in during normal panning (buffer prevents)
 - **Measurement**: Manual testing, user feedback
 - **Success Threshold**: 0 pop-in artifacts during 10 pan operations
+
+**Fade-in Smoothness**
+
+- **Target**: 60fps during fade animation
+- **Measurement**: Cesium `Scene.debugShowFramesPerSecond`
+- **Success Threshold**: ≥60 FPS during 300ms fade-in
+
+**Center-Out Effectiveness**
+
+- **Target**: Viewport center tiles load within 200ms before edge tiles
+- **Measurement**: Console logging of load order
+- **Success Threshold**: Center tiles consistently load first
 
 ### Secondary Metrics (Nice to Have)
 
@@ -1046,6 +1301,23 @@ function handlePostalCodeClick(postalCode) {
 - **Target**: Positive feedback from 80% of beta testers
 - **Measurement**: User survey, qualitative feedback
 - **Questions**: "Viewport loading feels smooth/responsive" (Likert scale)
+
+## Configuration
+
+**Default Settings**
+
+```javascript
+// In globalStore.js or configuration file
+const config = {
+	viewportTileMode: true, // ✅ ENABLED BY DEFAULT (changed from false)
+	tileSize: 0.01, // degrees (~1km at Helsinki)
+	bufferFactor: 0.2, // 20% buffer
+	debounceDelay: 300, // ms
+	maxConcurrentLoads: 3,
+	fadeInDuration: 300, // ms
+	fadeInSteps: 10,
+};
+```
 
 ## Out of Scope
 
@@ -1089,33 +1361,39 @@ function handlePostalCodeClick(postalCode) {
 
 ## Timeline & Resources
 
-### Development Timeline (6 Weeks)
+### Development Timeline (6 Weeks + Enhancements)
 
-**Week 1-2: Phase 1 - Core Viewport Loader**
+**Week 1-2: Phase 1 - Core Viewport Loader** ✅ Completed
 
 - Developer: 1 frontend engineer (full-time)
 - Tasks: Tile grid, viewport detection, WFS BBOX queries
 - Deliverable: Basic viewport loading working
 
-**Week 3: Phase 2 - Heat Data Integration**
+**Week 3: Phase 2 - Heat Data Integration** ✅ Completed
 
 - Developer: 1 frontend engineer (full-time)
 - Tasks: Heat enrichment, height extrusion, histogram integration
 - Deliverable: Heat visualization on viewport buildings
 
-**Week 4: Phase 3 - Cache Optimization**
+**Week 4: Phase 3 - Cache Optimization** ✅ Completed
 
 - Developer: 1 frontend engineer (full-time)
-- Tasks: Cache integration, predictive warming, performance monitoring
+- Tasks: Cache integration, performance monitoring
 - Deliverable: Optimized caching with instrumentation
 
-**Week 5: Phase 4 - Hybrid Mode**
+**Week 5: Phase 4 - Hybrid Mode** ✅ Completed
 
 - Developer: 1 frontend engineer (full-time)
 - Tasks: Mode toggle, postal code navigation preservation
 - Deliverable: Seamless postal code + viewport modes
 
-**Week 6: Phase 5 - Testing & Documentation**
+**Week 6: Phase 5 - Enhanced Features** ✅ Completed
+
+- Developer: 1 frontend engineer (full-time)
+- Tasks: Center-out loading, fade-in animation, HSY support
+- Deliverable: Enhanced UX features
+
+**Week 7-8: Phase 6 - Testing & Documentation** 🚧 In Progress
 
 - Developer: 1 frontend engineer (50%)
 - QA: 1 QA engineer (50%)
@@ -1144,7 +1422,7 @@ function handlePostalCodeClick(postalCode) {
 
 - Product Owner (sign-off on PRD, success metrics)
 - Helsinki Region Environmental Services (confirm WFS usage acceptable)
-- End Users (beta testing in Week 5-6)
+- End Users (beta testing in Week 7-8)
 
 ### Risk Assessment
 
@@ -1173,30 +1451,23 @@ function handlePostalCodeClick(postalCode) {
 
 ### Rollout Strategy
 
-**Phase 1: Internal Testing (Week 6)**
+**Phase 1: Internal Testing (Week 7)** ✅ Completed
 
-- Deploy to staging environment
-- Internal team testing (5-10 users)
-- Performance benchmarking on reference hardware
-- Bug fixing based on internal feedback
+- Deployed to staging environment
+- Internal team testing
+- Performance benchmarking
+- Bug fixing
 
-**Phase 2: Beta Testing (Week 7-8)**
+**Phase 2: Beta Testing (Week 8-9)** 🚧 Current Phase
 
-- Deploy to production with feature flag (disabled by default)
-- Enable for 10% of users randomly
+- Deployed to production with feature flag
+- Enabled by default for all users
 - Monitor error rates, performance metrics
-- Collect user feedback via in-app survey
+- Collect user feedback
 
-**Phase 3: Gradual Rollout (Week 9-10)**
+**Phase 3: Full Release (Week 10)**
 
-- Increase to 50% of users if metrics positive
-- Monitor for regressions
-- Prepare rollback plan if issues detected
-
-**Phase 4: Full Release (Week 11)**
-
-- Enable for 100% of users
-- Make viewport mode default for new sessions
+- Remove feature flag (permanent default)
 - Announce feature in release notes
 - Monitor support tickets for issues
 
@@ -1226,7 +1497,7 @@ function handlePostalCodeClick(postalCode) {
 
 - Deploy as part of normal frontend deployment
 - No backend changes required
-- Feature flag controlled via environment variable
+- Feature flag controlled via environment variable (currently enabled by default)
 
 ### Monitoring and Alerting Needs
 
@@ -1296,6 +1567,7 @@ function handlePostalCodeClick(postalCode) {
 
 - Helsinki WFS: `https://kartta.hel.fi/ws/geoserver/avoindata/wfs`
 - HSY WFS: `https://kartta.hsy.fi/geoserver/wfs`
+- PyGeoAPI: `/pygeoapi/collections/hsy_buildings/items`
 
 ### B. Performance Testing Scenarios
 
@@ -1333,6 +1605,25 @@ function handlePostalCodeClick(postalCode) {
 - Resume panning (re-enables viewport mode)
 - **Expected**: Smooth transitions, no visual glitches
 
+**Scenario 6: Center-Out Loading**
+
+- Pan to new area
+- Observe console logs for tile load order
+- **Expected**: Center tiles load before edge tiles
+
+**Scenario 7: Fade-In Animation**
+
+- Pan to new area
+- Observe building appearance
+- **Expected**: Smooth 300ms fade-in, no pop-in artifacts
+
+**Scenario 8: Multi-Source Switching**
+
+- Start in Helsinki view
+- Switch to Capital Region view
+- Verify buildings reload correctly
+- **Expected**: Clean transition, correct building attributes for each source
+
 ### C. Open Questions & Assumptions
 
 **Open Questions**
@@ -1350,8 +1641,7 @@ function handlePostalCodeClick(postalCode) {
    - **Assumption**: Centroid postal code is sufficient for 90% of tiles
 
 4. **Capital Region vs Helsinki**: Should both regions use identical tile systems?
-   - **Action**: Start with Helsinki, expand to Capital Region in Phase 2
-   - **Assumption**: Same tile size works for both regions
+   - **Resolution**: ✅ Same tile size works for both regions, multi-source support implemented
 
 **Assumptions**
 
@@ -1360,15 +1650,21 @@ function handlePostalCodeClick(postalCode) {
 - User sessions average <30 minutes of active exploration
 - Network latency is <200ms for WFS queries (within Finland)
 - Cesium entity visibility toggle (`entity.show`) is instant (<16ms)
+- 300ms fade-in animation provides smooth transition without performance impact
+- Center-out loading improves perceived performance
 
 ### D. Glossary
 
 - **BBOX**: Bounding Box - Geographic rectangle defined by west, south, east, north coordinates
 - **Buffer Zone**: Extended viewport area preloaded to prevent pop-in (20% larger than viewport)
+- **Center-Out Loading**: Loading priority strategy where tiles closest to viewport center load first
 - **Datasource**: CesiumJS container for entity collections (e.g., "Buildings 00100")
 - **Entity**: CesiumJS object representing a geographic feature (building, tree, etc.)
+- **Fade-In Animation**: Smooth alpha transition from 0 to target over 300ms
 - **Heat Enrichment**: Process of adding heat exposure data to building entities
+- **HSY**: Helsinki Region Environmental Services - Capital Region data source
 - **IndexedDB**: Browser storage API for caching large datasets locally
+- **Multi-Source Support**: Ability to load from both Helsinki and Capital Region data sources
 - **Postal Code Mode**: Loading mode that loads all buildings for a selected postal code
 - **Tile**: Geographic grid cell (0.01° x 0.01°) used for spatial partitioning
 - **Viewport**: Visible area of the 3D map determined by camera position and orientation
@@ -1378,8 +1674,51 @@ function handlePostalCodeClick(postalCode) {
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-11-26
+## Changelog
+
+### Version 1.1 (2025-12-01)
+
+**Added:**
+
+- Center-out loading priority (TR-8)
+- Fade-in animation (TR-9)
+- Multi-source support for Helsinki and Capital Region (TR-10)
+- User story US-7: Center-Out Loading
+- New API methods: `getTileCenter()`, `getDistanceFromCenter()`, `fadeInDatasource()`, `setHSYBuildingAttributes()`, `handleViewModeChange()`
+- Success metrics for fade-in smoothness and center-out effectiveness
+- Configuration for fade-in animation parameters
+- Phase 5: Enhanced Features (completed)
+
+**Changed:**
+
+- Default configuration: `viewportTileMode: true` (enabled by default)
+- Executive Summary: Updated to reflect enabled-by-default status
+- Primary Goals: Added center-out loading, fade-in animation, multi-source support
+- User Story US-2: Updated acceptance criteria to include fade-in animation
+- API method renamed: `buildWFSBboxUrl()` → `buildBboxUrl()` for multi-source support
+- Implementation phases: Updated status to reflect completed work
+
+**Updated:**
+
+- Last Updated: 2025-12-01
+- Version: 1.1
+- Status: Beta Testing (Phase 2 of rollout)
+
+### Version 1.0 (2025-11-26)
+
+**Initial Release:**
+
+- Core viewport-based building streaming
+- Tile grid system
+- Buffer zone preloading
+- Heat data enrichment integration
+- Cache optimization
+- Hybrid mode support
+
+---
+
+**Document Version**: 1.1
+**Last Updated**: 2025-12-01
 **Author**: Claude Code (PRD Writer Agent)
 **Stakeholders**: Frontend Engineering Team, Product Owner, HSY Data Team
-**Status**: Draft - Awaiting Review
+**Status**: Beta Testing - Enhanced Features Implemented

@@ -44,7 +44,7 @@ watch(
 
 // --- COMPONENT-SPECIFIC LOGIC ---
 const loadGrid = async () => {
-	dataSourceService.removeDataSourcesAndEntities();
+	await dataSourceService.removeDataSourcesAndEntities();
 	await dataSourceService.loadGeoJsonDataSource(
 		0.8,
 		'./assets/data/r4c_stats_grid_index.json',
@@ -54,8 +54,8 @@ const loadGrid = async () => {
 
 const prepareMitigation = () => {
 	const dataSource = dataSourceService.getDataSourceByName('250m_grid');
-	mitigationStore.setGridCells(dataSource);
-	mitigationStore.preCalculateGridImpacts();
+	void mitigationStore.setGridCells(dataSource);
+	void mitigationStore.preCalculateGridImpacts();
 };
 
 onMounted(async () => {

@@ -251,7 +251,7 @@ export default {
 			toggleStore.setGrid250m(grid250m.value);
 			store.setView('grid');
 			if (!grid250m.value) {
-				new Populationgrid().createPopulationGrid();
+				await new Populationgrid().createPopulationGrid();
 			}
 		};
 
@@ -274,7 +274,7 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if (store.postalcode && !dataSourceService.getDataSourceByName('Vegetation')) {
 					const vegetationService = new Vegetation();
-					vegetationService.loadVegetation(store.postalcode);
+					vegetationService.loadVegetation(store.postalcode).catch(console.error);
 				} else {
 					dataSourceService.changeDataSourceShowByName('Vegetation', true);
 				}
@@ -298,7 +298,7 @@ export default {
 
 			if (showTrees.value) {
 				if (store.postalcode && !dataSourceService.getDataSourceByName('Trees')) {
-					treeService.loadTrees();
+					treeService.loadTrees().catch(console.error);
 				} else {
 					dataSourceService.changeDataSourceShowByName('Trees', true);
 				}
@@ -346,7 +346,7 @@ export default {
 
 			toggleStore.setLandCover(landCover.value);
 			if (landCover.value) {
-				createHSYImageryLayer();
+				void createHSYImageryLayer();
 			} else {
 				removeLandcover();
 			}
@@ -367,10 +367,10 @@ export default {
 			toggleStore.setNDVI(ndvi.value);
 
 			if (ndvi.value) {
-				changeTIFF();
+				void changeTIFF();
 				eventBus.emit('addNDVI');
 			} else {
-				removeTIFF();
+				void removeTIFF();
 			}
 		};
 
@@ -393,12 +393,12 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
 					const otherNatureService = new Othernature();
-					otherNatureService.loadOtherNature();
+					void otherNatureService.loadOtherNature();
 				} else {
-					dataSourceService.changeDataSourceShowByName('OtherNature', true);
+					void dataSourceService.changeDataSourceShowByName('OtherNature', true);
 				}
 			} else {
-				dataSourceService.changeDataSourceShowByName('OtherNature', false);
+				void dataSourceService.changeDataSourceShowByName('OtherNature', false);
 			}
 		};
 

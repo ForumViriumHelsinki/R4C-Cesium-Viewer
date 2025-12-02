@@ -384,7 +384,7 @@ export default {
 		},
 		returnToPostalCode() {
 			const featurepicker = new Featurepicker();
-			featurepicker.loadPostalCode();
+			featurepicker.loadPostalCode().catch(console.error);
 			if (this.toggleStore.showTrees) {
 				this.treeService.loadTrees();
 			}
@@ -435,7 +435,7 @@ export default {
 		getLandCoverEvent() {
 			if (this.landCover) {
 				this.viewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
-				createHSYImageryLayer();
+				void createHSYImageryLayer();
 			} else {
 				removeLandcover();
 			}
@@ -493,7 +493,7 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('OtherNature')) {
 					const otherNatureService = new Othernature();
-					otherNatureService.loadOtherNature(this.store.postalcode);
+					otherNatureService.loadOtherNature(this.store.postalcode).catch(console.error);
 				} else {
 					this.dataSourceService.changeDataSourceShowByName('OtherNature', true);
 				}
@@ -510,7 +510,7 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Vegetation')) {
 					const vegetationService = new Vegetation();
-					vegetationService.loadVegetation(this.store.postalcode);
+					vegetationService.loadVegetation(this.store.postalcode).catch(console.error);
 				} else {
 					this.dataSourceService.changeDataSourceShowByName('Vegetation', true);
 				}

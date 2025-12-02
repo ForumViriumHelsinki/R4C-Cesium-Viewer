@@ -115,10 +115,10 @@ export default {
 		};
 
 		// Select and switch the WMS layer
-		const selectLayer = (layerName) => {
+		const selectLayer = async (layerName) => {
 			const store = useGlobalStore();
 			removeLandcover(store.landcoverLayers, store.cesiumViewer);
-			createHSYImageryLayer(layerName);
+			await createHSYImageryLayer(layerName);
 			// Clear the filtered layers after selecting
 			filteredLayers.value = [];
 		};
@@ -129,7 +129,7 @@ export default {
 				(layer) => layer.title.toLowerCase() === searchQuery.value.toLowerCase()
 			);
 			if (matchingLayer) {
-				selectLayer(matchingLayer.name); // Switch to the matching layer
+				void selectLayer(matchingLayer.name); // Switch to the matching layer
 			}
 		};
 
@@ -149,7 +149,7 @@ export default {
 
 		onMounted(() => {
 			if (!backgroundMapStore.hSYWMSLayers) {
-				fetchLayers();
+				void fetchLayers();
 			}
 		});
 

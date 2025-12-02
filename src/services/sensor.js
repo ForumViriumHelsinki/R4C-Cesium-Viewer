@@ -43,7 +43,7 @@ export default class Vegetation {
 			let dataSource = new Cesium.GeoJsonDataSource();
 
 			// Load the GeoJSON data into the data source
-			dataSource.load(data, {
+			void dataSource.load(data, {
 				markerColor: Cesium.Color.ORANGE, // Customize the marker color if desired
 				clampToGround: true, // Set to true to clamp entities to the ground
 			});

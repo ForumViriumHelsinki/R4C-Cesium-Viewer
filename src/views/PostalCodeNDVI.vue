@@ -49,7 +49,7 @@ export default {
 
 		const updateImage = async () => {
 			backgroundMapStore.setNdviDate(selectedDate.value);
-			changeTIFF();
+			changeTIFF().catch(console.error);
 		};
 
 		onMounted(async () => {
