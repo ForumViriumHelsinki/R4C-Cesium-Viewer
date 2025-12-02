@@ -37,30 +37,47 @@ The application deployment uses plain Kubernetes manifests for easier local deve
 
 ## Usage
 
-### Basic Development
+### Recommended: Use Makefile
 
-Run the basic application without services:
+The easiest way to run locally is via the Makefile:
+
+```bash
+make dev       # Local frontend + K8s services (fast iteration)
+make dev-full  # All in containers (closer to production)
+make stop      # Stop everything
+```
+
+Services persist on Ctrl+C. See the main [README.md](../README.md) for details.
+
+### Direct Skaffold (Advanced)
+
+#### services-only Profile
+
+Run backend services only (for use with local `npm run dev`):
+
+```bash
+skaffold run -p services-only --port-forward
+```
+
+Deploys: PostgreSQL, pygeoapi, migrations
+
+#### frontend-only Profile
+
+Run frontend only (assumes services-only is already running):
+
+```bash
+skaffold dev -p frontend-only --port-forward
+```
+
+#### Default Profile
+
+Full stack (all services + frontend):
 
 ```bash
 skaffold dev --port-forward
 ```
 
-This deploys only the R4C Cesium Viewer frontend application.
-
-### With Full Services
-
-Run with PostgreSQL database and other services:
-
-```bash
-skaffold dev --profile=local-with-services --port-forward
-```
-
-This deploys:
-
-- PostgreSQL with PostGIS (using official postgis/postgis:16-3.4 image)
-- Database migrations
-- R4C Cesium Viewer application
-- PyGeoAPI service
+**Note:** Direct `skaffold dev` cleans up on exit. Use `skaffold run` or Makefile commands for persistent services.
 
 ### Environment Variables
 
@@ -132,21 +149,20 @@ These can be adjusted based on your local environment's available resources.
 
 ## PostgreSQL Data Persistence
 
-The PostgreSQL StatefulSet uses a PersistentVolumeClaim (PVC) for data storage:
+The PostgreSQL deployment uses a PersistentVolumeClaim (PVC) for data storage:
 
-- **Data persists** across `skaffold delete` and pod restarts
-- **Data persists** when deleting the StatefulSet
-- To completely reset the database and start fresh, you must also delete the PVC:
+- **Data persists** across `make stop`, `skaffold delete`, and pod restarts
+- **Data persists** when deleting the deployment
+- To completely reset the database:
 
   ```bash
-  # Stop Skaffold
-  skaffold delete -p local-with-services
+  # Using Makefile (recommended)
+  make db-reset
 
-  # Delete the PostgreSQL PVC
-  kubectl delete pvc data-postgresql-0
-
-  # Restart with clean database
-  skaffold dev -p local-with-services --port-forward
+  # Or manually
+  make stop
+  kubectl delete pvc postgresql-data -n regions4climate
+  make dev
   ```
 
 **Note:** This is useful when you want to test initialization scripts from scratch or reset to a clean state.
@@ -160,8 +176,8 @@ The PostgreSQL StatefulSet uses a PersistentVolumeClaim (PVC) for data storage:
 Unlike Helm deployments with hooks, the migration Job must be manually deleted and recreated if you need to re-run migrations:
 
 ```bash
-kubectl delete job r4c-cesium-viewer-migration
-skaffold dev --profile=local-with-services --port-forward
+kubectl delete job r4c-cesium-viewer-migration -n regions4climate
+make dev  # or: skaffold run -p services-only --port-forward
 ```
 
 The Job has `ttlSecondsAfterFinished: 300` set, so completed jobs are automatically cleaned up after 5 minutes.

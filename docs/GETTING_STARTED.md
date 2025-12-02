@@ -10,85 +10,91 @@ Complete guide for setting up and running the R4C Cesium Viewer locally.
 - **dbmate** - [Installation guide](https://github.com/amacneil/dbmate#installation)
 - **PostgreSQL client tools** (for `psql` and `pg_isready`)
 
-## Quick Start Options
-
-### Option 1: Full Stack Development (Recommended)
-
-Deploy everything in containers with hot reload:
+## Quick Start
 
 ```bash
 # 1. Clone and setup
 git clone <repository-url>
 cd R4C-Cesium-Viewer
 cp .env.example .env
+make setup
 
-# 2. Deploy full stack
-skaffold dev --port-forward
-
-# 3. Initialize database (in another terminal)
-./scripts/init-local-db.sh
+# 2. Start development
+make dev
 ```
 
-Access at: **http://localhost:4173**
+**Access at:** http://localhost:5173 (frontend) | http://localhost:5000 (pygeoapi)
 
-### Option 2: Services Only + Local Frontend (Faster Iteration)
+## Development Modes
 
-Backend in containers, frontend with Vite dev server:
+### Option 1: Local Frontend + K8s Services (Recommended)
+
+Backend in Kubernetes, frontend with Vite for fast hot-reload:
 
 ```bash
-# 1. Deploy backend services
+make dev
+# Ctrl+C stops frontend only, services keep running
+# Run 'make dev' again to restart just the frontend
+```
+
+| Service         | URL                   |
+| --------------- | --------------------- |
+| Frontend (Vite) | http://localhost:5173 |
+| pygeoapi        | http://localhost:5000 |
+| PostgreSQL      | localhost:5432        |
+
+### Option 2: Full Stack in Containers
+
+Everything in containers (closer to production):
+
+```bash
+make dev-full
+# Ctrl+C stops frontend container, services keep running
+```
+
+| Service          | URL                   |
+| ---------------- | --------------------- |
+| Frontend (nginx) | http://localhost:4173 |
+| pygeoapi         | http://localhost:5000 |
+| PostgreSQL       | localhost:5432        |
+
+### Stopping Services
+
+```bash
+make stop           # Stop everything (DB data preserved)
+make stop-frontend  # Stop frontend only, keep services running
+```
+
+## Skaffold Profiles (Advanced)
+
+For direct Skaffold usage without `make`:
+
+### services-only
+
+Backend services only (use with local frontend):
+
+```bash
 skaffold run -p services-only --port-forward
-
-# 2. Initialize database
-./scripts/init-local-db.sh
-
-# 3. Run frontend locally (in another terminal)
-npm run dev
+npm run dev  # In another terminal
 ```
 
-Access at: **http://localhost:5173**
+### frontend-only
 
-This approach provides faster frontend iteration with Vite's hot module replacement.
+Frontend only (assumes services are running):
 
-## Development Profiles
+```bash
+skaffold dev -p frontend-only --port-forward
+```
 
-### Full Stack (Default)
+### Default Profile
+
+Full stack (all services + frontend):
 
 ```bash
 skaffold dev --port-forward
 ```
 
-**Deploys:**
-
-- PostgreSQL with PostGIS
-- pygeoapi OGC API server
-- Database migrations
-- Frontend application
-
-**Features:**
-
-- Watches for file changes and rebuilds automatically
-- Port-forwards frontend to localhost:4173
-- Cleans up all resources on exit (Ctrl+C)
-
-### Services Only
-
-```bash
-skaffold run -p services-only --port-forward
-```
-
-**Deploys:**
-
-- PostgreSQL with PostGIS
-- pygeoapi OGC API server
-- Database migrations
-
-**Port Forwards:**
-
-- PostgreSQL: localhost:5432
-- pygeoapi: localhost:5000
-
-Run frontend separately: `npm run dev`
+**Note:** Direct Skaffold commands clean up on exit. Use `make dev` or `make dev-full` for persistent services.
 
 ## Database Setup
 
@@ -297,17 +303,20 @@ For local frontend (`npm run dev`), use `localhost:5000` or proxy configuration.
 ## Clean Up
 
 ```bash
-# Stop full stack (Ctrl+C in skaffold dev terminal)
+# Stop all services (DB data preserved)
+make stop
 
-# Delete services-only deployment
-skaffold delete -p services-only
-
-# Delete default deployment
-skaffold delete
+# Stop frontend only, keep services running
+make stop-frontend
 
 # Complete reset (including data)
-skaffold delete
+make stop
 kubectl delete pvc --all -n regions4climate
+
+# Or use direct Skaffold commands
+skaffold delete -p services-only
+skaffold delete -p frontend-only
+skaffold delete
 ```
 
 ## Performance Tips

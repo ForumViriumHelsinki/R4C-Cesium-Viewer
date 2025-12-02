@@ -20,6 +20,10 @@ build:
           # Run lint before build to catch errors early
           - command: ['sh', '-c', 'npm run lint --silent || echo "Lint warnings found"']
             os: [darwin, linux]
+    - image: dbmate-migrations
+      context: db
+      docker:
+        dockerfile: Dockerfile
 # Default: Full stack with all services (PostgreSQL, pygeoapi, frontend)
 manifests:
   rawYaml:
@@ -86,6 +90,42 @@ profiles:
         resourceName: pygeoapi
         port: 80
         localPort: 5000
+        address: 127.0.0.1
+
+  # Frontend only - assumes services-only is already running
+  # Use: skaffold run -p services-only && skaffold dev -p frontend-only
+  - name: frontend-only
+    build:
+      artifacts:
+        - image: frontend
+          context: .
+          docker:
+            dockerfile: Dockerfile
+          hooks:
+            before:
+              - command: ['sh', '-c', 'dotenvx run -- sh scripts/generate-secrets.sh']
+                os: [darwin, linux]
+              - command: ['sh', '-c', 'npm run lint --silent || echo "Lint warnings found"']
+                os: [darwin, linux]
+    manifests:
+      rawYaml:
+        - k8s/namespace.yaml
+        - k8s/serviceaccount.yaml
+        - k8s/configmap.yaml
+        - k8s/secrets.yaml
+        - k8s/deployment.yaml
+        - k8s/service.yaml
+        - k8s/ingress.yaml
+    deploy:
+      kubectl: {}
+      statusCheck: true
+      statusCheckDeadlineSeconds: 120
+      tolerateFailuresUntilDeadline: true
+    portForward:
+      - resourceType: service
+        resourceName: r4c-cesium-viewer
+        port: 80
+        localPort: 4173
         address: 127.0.0.1
 
   - name: e2e-with-prod-data

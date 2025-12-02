@@ -19,6 +19,20 @@ spec:
         app.kubernetes.io/instance: r4c-cesium-viewer
     spec:
       serviceAccountName: r4c-cesium-viewer
+      initContainers:
+        - name: wait-for-pygeoapi
+          image: curlimages/curl:8.11.1
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              echo "🔍 Waiting for pygeoapi to be ready..."
+              until curl -sf http://pygeoapi:80/ > /dev/null 2>&1; do
+                echo "   pygeoapi is not ready yet. Waiting..."
+                sleep 5
+              done
+              echo "✅ pygeoapi is ready"
       containers:
         - name: r4c-cesium-viewer
           image: frontend # This will be replaced by Skaffold

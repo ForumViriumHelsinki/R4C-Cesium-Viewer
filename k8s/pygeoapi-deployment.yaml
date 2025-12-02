@@ -43,9 +43,11 @@ spec:
 
               until [ $ATTEMPT -gt $MAX_ATTEMPTS ]; do
                 # Check if schema_migrations table exists and has entries
-                MIGRATION_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM schema_migrations;" 2>/dev/null | tr -d ' ' || echo "0")
+                MIGRATION_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM schema_migrations;" 2>/dev/null | tr -d ' \n' || true)
+                # Default to 0 if empty (table doesn't exist yet)
+                MIGRATION_COUNT=${MIGRATION_COUNT:-0}
 
-                if [ "$MIGRATION_COUNT" -gt "0" ]; then
+                if [ "$MIGRATION_COUNT" -gt 0 ] 2>/dev/null; then
                   echo "✅ Found $MIGRATION_COUNT applied migrations"
 
                   # Verify critical table exists
