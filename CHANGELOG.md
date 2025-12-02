@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.36.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.35.0...r4c-cesium-viewer-v1.36.0) (2025-12-02)
+
+
+### Features
+
+* **dev:** add persistent services workflow with make commands ([#415](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/415)) ([b614d92](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b614d92cd24ef31e2bcdfae0de4001ecddd525be))
+
 ## [1.35.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.34.1...r4c-cesium-viewer-v1.35.0) (2025-12-02)
 
 
