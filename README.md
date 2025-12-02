@@ -24,39 +24,75 @@ For development, you can point to a local PygeoAPI instance:
 VITE_PYGEOAPI_HOST=localhost:5000
 ```
 
-## Run with Vite
-
-```
-npm run dev
-```
-
-The application should now be running at [http://localhost:5173](http://localhost:5173).
-
-## Run with Docker
-
-```
-docker compose up
-```
-
-The application should now be running at [http://localhost:4173](http://localhost:4173).
-
-## Run with Skaffold
-
-**Note:** Skaffold automatically generates Kubernetes secrets from your `.env` file on deployment. Make sure you've copied `.env.example` to `.env` first.
-
-### Frontend Only
+## Quick Start
 
 ```bash
+# First time setup
+cp .env.example .env
+make setup
+
+# Start development (services persist, frontend iterates)
+make dev
+```
+
+**Available at:** http://localhost:5173 (frontend) | http://localhost:5000 (pygeoapi)
+
+## Development Modes
+
+| Command         | Description                   | Frontend       | Services              |
+| --------------- | ----------------------------- | -------------- | --------------------- |
+| `make dev`      | Local frontend + K8s services | localhost:5173 | Persist on Ctrl+C     |
+| `make dev-full` | All in containers             | localhost:4173 | Persist on Ctrl+C     |
+| `make stop`     | Stop everything               | -              | Data preserved in PVC |
+
+### make dev (Recommended)
+
+Backend services run in Kubernetes, frontend runs locally with Vite for fast hot-reload:
+
+```bash
+make dev
+# Ctrl+C stops frontend only, services keep running
+# Run again to restart just the frontend
+```
+
+### make dev-full
+
+Everything runs in containers (closer to production):
+
+```bash
+make dev-full
+# Ctrl+C stops frontend container, services keep running
+```
+
+### Other Options
+
+```bash
+# Stop all services
+make stop
+
+# Stop only frontend (keep services)
+make stop-frontend
+
+# View all commands
+make help
+```
+
+## Legacy Commands
+
+These still work but `make` commands are preferred:
+
+```bash
+# Direct Vite (uses production pygeoapi)
+npm run dev
+
+# Docker Compose
+docker compose up
+
+# Direct Skaffold
 skaffold dev --port-forward
 ```
 
-### Full Stack (with PostgreSQL + pygeoapi)
-
-```bash
-skaffold dev --profile=local-with-services
-```
-
-For detailed local development setup including database migrations and mock data seeding, see [LOCAL_DEVELOPMENT.md](./docs/LOCAL_DEVELOPMENT.md).
+For detailed setup including database migrations and mock data seeding, see [docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md).
 
 ## Database Management
 

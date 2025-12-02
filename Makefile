@@ -8,7 +8,7 @@
 #   make dev-full  - Everything in containers (slower, but closer to prod)
 
 .PHONY: help setup status logs \
-        dev dev-full stop \
+        dev dev-full stop stop-frontend \
         db-wait db-status db-migrate db-import db-shell db-reset \
         test test-quick test-e2e \
         lint build
@@ -141,22 +141,37 @@ dev: ## Start services + local frontend (fast iteration)
 	@echo ""
 	@echo "$(ARROW) Starting local frontend (Ctrl+C to stop)..."
 	@echo "$(DIM)Frontend: http://localhost:5173$(RESET)"
-	@echo "$(DIM)PyGeoAPI: http://localhost:5001$(RESET)"
+	@echo "$(DIM)PyGeoAPI: http://localhost:5000$(RESET)"
 	@echo ""
 	@npm run dev
 
-dev-full: ## Start everything in Skaffold containers
-	@echo "$(ARROW) Starting full stack in containers..."
-	@echo "$(DIM)Frontend: http://localhost:4173$(RESET)"
+dev-full: ## Start everything in Skaffold containers (services persist)
+	@echo "$(ARROW) Starting backend services (will persist on stop)..."
+	@skaffold run -p services-only --port-forward &
 	@echo ""
-	skaffold dev --port-forward
+	@echo "$(ARROW) Waiting for services to be ready..."
+	@$(MAKE) db-wait
+	@echo ""
+	@echo "$(CHECK) Backend ready!"
+	@echo ""
+	@echo "$(ARROW) Starting frontend container (Ctrl+C to stop frontend only)..."
+	@echo "$(DIM)Frontend: http://localhost:4173$(RESET)"
+	@echo "$(DIM)PyGeoAPI: http://localhost:5000$(RESET)"
+	@echo ""
+	skaffold dev -p frontend-only --port-forward
 
 stop: ## Stop all services
 	@echo "$(ARROW) Stopping services..."
+	@skaffold delete -p frontend-only 2>/dev/null || true
 	@skaffold delete -p services-only 2>/dev/null || true
 	@skaffold delete 2>/dev/null || true
 	@echo "$(CHECK) Services stopped"
 	@echo "$(DIM)Note: Database data preserved in PVC. Use 'make db-reset' to wipe.$(RESET)"
+
+stop-frontend: ## Stop frontend only (keep services running)
+	@echo "$(ARROW) Stopping frontend..."
+	@skaffold delete -p frontend-only 2>/dev/null || true
+	@echo "$(CHECK) Frontend stopped (services still running)"
 
 # ==============================================================================
 # Database Operations
