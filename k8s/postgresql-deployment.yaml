@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql
+  namespace: regions4climate
+  labels:
+    app: postgresql
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # Required for RWO PVC - can't have multiple pods
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: postgis/postgis:16-3.4
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          env:
+            # PostgreSQL superuser password
+            # Note: Not setting POSTGRES_USER, so it defaults to "postgres"
+            # The regions4climate_user is created as a regular user in init scripts
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql
+                  key: postgres-password
+            # Data directory configuration
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            # Performance tuning for local development
+            # WARNING: These settings reduce durability for faster performance
+            # NEVER use these in production - data loss may occur on crashes
+            # Uncomment for faster migrations and data seeding:
+            # - name: POSTGRES_INITDB_ARGS
+            #   value: "-c fsync=off -c synchronous_commit=off -c full_page_writes=off"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                # Health check via local TCP (no credentials required)
+                - pg_isready -h localhost
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                # Health check via local TCP (no credentials required)
+                - pg_isready -h localhost
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 4Gi
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgresql-data
+        - name: init-scripts
+          configMap:
+            name: postgresql-init
+            # Scripts in /docker-entrypoint-initdb.d are executed in alphabetical order
+            # .sql files are passed to psql (don't need execute permission)
+            # .sh files are executed directly (need execute permission)
+            defaultMode: 0755
