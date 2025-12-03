@@ -129,7 +129,41 @@ rg -v "^(GRANT|ALTER.*OWNER TO)" tmp/regions4climate-*.sql > tmp/clean.sql
 
 ## Import to Local Skaffold
 
-### For Custom Format (.dump)
+### Via Port-Forward (Recommended)
+
+The fastest method is to restore directly from your local machine using the port-forwarded PostgreSQL connection. This avoids copying large dump files into the pod.
+
+```bash
+# 1. Ensure services are running with port-forward
+make dev
+# Or: skaffold run --port-forward
+
+# 2. Restore directly via port-forward (works for both custom and directory format)
+PGPASSWORD=postgres pg_restore \
+  -h localhost -p 5432 \
+  -U postgres \
+  -d regions4climate \
+  --no-owner \
+  --no-acl \
+  --jobs=4 \
+  --verbose \
+  tmp/regions4climate-dir    # or tmp/regions4climate.dump
+```
+
+**Benefits:**
+
+- No file copying required - restores directly from local filesystem
+- Faster than kubectl cp for large dumps
+- Progress visible in real-time
+- Can be backgrounded with `&` for long restores
+
+**Note:** Some "already exists" errors are expected for tables created by migrations. These are non-fatal.
+
+### Via kubectl cp (Alternative)
+
+If port-forwarding is unavailable, copy the dump into the pod first.
+
+#### For Custom Format (.dump)
 
 ```bash
 # 1. Ensure PostgreSQL is running with sufficient resources
@@ -156,7 +190,7 @@ kubectl exec -it postgresql-0 -n regions4climate -- pg_restore \
 kubectl exec -it postgresql-0 -n regions4climate -- rm /tmp/regions4climate.dump
 ```
 
-### For Directory Format
+#### For Directory Format
 
 ```bash
 # 1. Ensure PostgreSQL is running
