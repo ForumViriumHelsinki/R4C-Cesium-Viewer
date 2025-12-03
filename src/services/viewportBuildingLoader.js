@@ -54,6 +54,8 @@ const CONFIG = {
 	CONCURRENT_TILE_LOADS: 3,
 	/** Cache TTL for building tiles (1 hour) */
 	CACHE_TTL: 60 * 60 * 1000,
+	/** Maximum camera altitude (meters) for building loading - prevents mass loading at region overview */
+	MAX_ALTITUDE_FOR_LOADING: 3000,
 };
 
 /**
@@ -217,6 +219,15 @@ export default class ViewportBuildingLoader {
 	async updateViewport() {
 		if (!this.viewer) {
 			console.warn('[ViewportBuildingLoader] Viewer not initialized');
+			return;
+		}
+
+		// Check camera altitude - skip loading if too high (region overview)
+		const cameraHeight = this.viewer.camera.positionCartographic.height;
+		if (cameraHeight > CONFIG.MAX_ALTITUDE_FOR_LOADING) {
+			console.log(
+				`[ViewportBuildingLoader] Camera too high (${Math.round(cameraHeight)}m > ${CONFIG.MAX_ALTITUDE_FOR_LOADING}m), skipping building load`
+			);
 			return;
 		}
 

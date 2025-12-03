@@ -143,7 +143,7 @@ export default class Camera {
 	 */
 	init() {
 		this.viewer.camera.setView({
-			destination: Cesium.Cartesian3.fromDegrees(24.991745, 60.045, 12000),
+			destination: Cesium.Cartesian3.fromDegrees(24.945, 60.17, 4000),
 			orientation: {
 				heading: Cesium.Math.toRadians(0.0),
 				pitch: Cesium.Math.toRadians(-35.0),
