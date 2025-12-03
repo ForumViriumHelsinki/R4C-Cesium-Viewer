@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.37.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.36.1...r4c-cesium-viewer-v1.37.0) (2025-12-03)
+
+
+### Features
+
+* **viewport:** add fade-in animation and fix cache status warnings ([#422](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/422)) ([3d50a93](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3d50a93357752e8e9a8d6f26e21e9b3c1369be56))
+
+
+### Performance Improvements
+
+* **viewport:** add altitude threshold to prevent mass building load at startup ([#424](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/424)) ([faab5d0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/faab5d0101ca5b8f7d70ce576677f1e7c367e71e))
+
 ## [1.36.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.36.0...r4c-cesium-viewer-v1.36.1) (2025-12-03)
 
 
