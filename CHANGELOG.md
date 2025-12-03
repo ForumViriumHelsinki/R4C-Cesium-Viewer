@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.36.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.36.0...r4c-cesium-viewer-v1.36.1) (2025-12-03)
+
+
+### Bug Fixes
+
+* **dev:** resolve port conflicts for local Skaffold development ([#419](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/419)) ([f11d794](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f11d794e1614b5d1149a793a87ce5d0f196da884))
+
 ## [1.36.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.35.0...r4c-cesium-viewer-v1.36.0) (2025-12-02)
 
 
