@@ -84,12 +84,12 @@ profiles:
       - resourceType: service
         resourceName: postgresql
         port: 5432
-        localPort: 5432
+        localPort: 5434
         address: 127.0.0.1
       - resourceType: service
         resourceName: pygeoapi
         port: 80
-        localPort: 5000
+        localPort: 5001
         address: 127.0.0.1
 
   # Frontend only - assumes services-only is already running
