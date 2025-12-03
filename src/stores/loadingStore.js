@@ -331,6 +331,26 @@ export const useLoadingStore = defineStore('loading', {
 			}
 		},
 
+		/**
+		 * Update cache status for a layer (called by unifiedLoader after caching)
+		 * @param {string} layerId - Layer identifier
+		 * @param {boolean} cached - Whether data is cached
+		 * @param {number} timestamp - Cache timestamp
+		 */
+		updateCacheStatus(layerId, cached, timestamp = null) {
+			// Extract base layer name from layerId (e.g., "viewport_buildings_hsy_2499_6025" -> dynamic)
+			// For dynamic layer IDs, we just acknowledge the cache update without state tracking
+			// This prevents warnings while maintaining compatibility with unifiedLoader
+			if (this.cacheStatus[layerId]) {
+				this.cacheStatus[layerId] = {
+					cached,
+					age: timestamp ? Date.now() - timestamp : 0,
+					timestamp,
+				};
+			}
+			// For dynamic layer IDs not in predefined cacheStatus, silently succeed
+		},
+
 		// Data source health management
 		updateDataSourceHealth(sourceName, status, responseTime = null, error = null) {
 			if (this.dataSourceHealth[sourceName]) {

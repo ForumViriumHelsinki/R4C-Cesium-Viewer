@@ -395,6 +395,15 @@ export default class ViewportBuildingLoader {
 				.then(() => {
 					this.activeLoads--;
 					this.loadingTiles.delete(tileKey);
+
+					// Show the newly loaded tile with fade-in animation
+					const viewPrefix = this.toggleStore.helsinkiView ? 'Helsinki' : 'HSY';
+					const datasourceName = `Buildings Viewport ${viewPrefix} ${tileKey}`;
+					const datasource = this.datasourceService.getDataSourceByName(datasourceName);
+					if (datasource) {
+						void this.fadeInDatasource(datasource);
+					}
+
 					// Continue processing queue
 					void this.processLoadingQueue();
 				})
