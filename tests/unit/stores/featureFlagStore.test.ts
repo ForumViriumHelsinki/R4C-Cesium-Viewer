@@ -408,7 +408,7 @@ describe('featureFlagStore', () => {
 			});
 
 			it('should not affect flags without requiresSupport', () => {
-				const _initialValue = store.flags.ndvi.enabled;
+				const initialValue = store.flags.ndvi.enabled;
 
 				store.checkHardwareSupport('ndvi', false);
 

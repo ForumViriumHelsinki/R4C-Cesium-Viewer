@@ -109,7 +109,7 @@ describe('Camera service', () => {
 			camera.init();
 
 			expect(mockSetView).toHaveBeenCalledWith({
-				destination: { x: 24.991745, y: 60.045, z: 12000 },
+				destination: { x: 24.945, y: 60.17, z: 4000 },
 				orientation: {
 					heading: expect.any(Number),
 					pitch: expect.any(Number),
@@ -415,11 +415,12 @@ describe('Camera service', () => {
 
 		it('should handle case when no ellipsoid point is found', () => {
 			mockPickEllipsoid.mockReturnValue(null);
-			const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+			const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
 			camera.rotate180Degrees();
 
 			expect(consoleSpy).toHaveBeenCalledWith(
+				'[DEBUG]',
 				'No ellipsoid point was found at the center of the screen.'
 			);
 			expect(mockSetView).not.toHaveBeenCalled();
@@ -523,7 +524,7 @@ describe('Camera service', () => {
 			});
 
 			it('should log cancellation request', () => {
-				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+				const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
 				camera.currentFlight = {
 					cancelFlight: false,
@@ -531,18 +532,21 @@ describe('Camera service', () => {
 
 				camera.cancelFlight();
 
-				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Flight cancellation requested');
+				expect(consoleSpy).toHaveBeenCalledWith(
+					'[DEBUG]',
+					'[Camera] Flight cancellation requested'
+				);
 
 				consoleSpy.mockRestore();
 			});
 
 			it('should log when no flight to cancel', () => {
-				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+				const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
 				camera.currentFlight = null;
 				camera.cancelFlight();
 
-				expect(consoleSpy).toHaveBeenCalledWith('[Camera] No active flight to cancel');
+				expect(consoleSpy).toHaveBeenCalledWith('[DEBUG]', '[Camera] No active flight to cancel');
 
 				consoleSpy.mockRestore();
 			});
@@ -566,11 +570,14 @@ describe('Camera service', () => {
 			});
 
 			it('should log state capture', () => {
-				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+				const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
 				camera.captureCurrentState();
 
-				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Camera state captured for restoration');
+				expect(consoleSpy).toHaveBeenCalledWith(
+					'[DEBUG]',
+					'[Camera] Camera state captured for restoration'
+				);
 
 				consoleSpy.mockRestore();
 			});
@@ -628,7 +635,7 @@ describe('Camera service', () => {
 			});
 
 			it('should log state restoration', () => {
-				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+				const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
 				camera.previousCameraState = {
 					position: { x: 50, y: 100, z: 150 },
@@ -639,7 +646,10 @@ describe('Camera service', () => {
 
 				camera.restoreCapturedState();
 
-				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Previous camera state restored');
+				expect(consoleSpy).toHaveBeenCalledWith(
+					'[DEBUG]',
+					'[Camera] Previous camera state restored'
+				);
 
 				consoleSpy.mockRestore();
 			});
@@ -691,11 +701,11 @@ describe('Camera service', () => {
 			});
 
 			it('should log completion', () => {
-				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+				const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
 				camera.onFlightComplete();
 
-				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Flight completed');
+				expect(consoleSpy).toHaveBeenCalledWith('[DEBUG]', '[Camera] Flight completed');
 
 				consoleSpy.mockRestore();
 			});
@@ -746,11 +756,11 @@ describe('Camera service', () => {
 			});
 
 			it('should log cancellation', () => {
-				const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+				const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
 				camera.onFlightCancelled();
 
-				expect(consoleSpy).toHaveBeenCalledWith('[Camera] Flight cancelled');
+				expect(consoleSpy).toHaveBeenCalledWith('[DEBUG]', '[Camera] Flight cancelled');
 
 				consoleSpy.mockRestore();
 			});
