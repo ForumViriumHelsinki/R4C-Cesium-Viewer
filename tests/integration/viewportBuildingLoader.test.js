@@ -116,11 +116,12 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 			const config = unifiedLoader.loadLayer.mock.calls[0][0];
 
 			// Verify configuration structure
-			expect(config.layerId).toBe('viewport_buildings_2490_6010');
+			expect(config.layerId).toBe('viewport_buildings_hsy_2490_6010');
 			expect(config.type).toBe('geojson');
-			expect(config.url).toContain('https://kartta.hel.fi/ws/geoserver/avoindata/wfs');
-			// Check for bbox with some tolerance for floating point precision
-			expect(config.url).toMatch(/bbox=24\.9\d*%2C60\.1%2C24\.91%2C60\.11/);
+			// HSY view uses pygeoapi endpoint
+			expect(config.url).toContain('/pygeoapi/collections/hsy_buildings_optimized/items');
+			// Check for bbox parameter
+			expect(config.url).toMatch(/bbox=24\.9\d*,60\.1,24\.91,60\.11/);
 
 			// Verify caching options
 			expect(config.options.cache).toBe(true);
@@ -172,6 +173,11 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 				],
 			};
 
+			// Mock datasource service to return entities
+			loader.datasourceService.addDataSourceWithPolygonFix = vi
+				.fn()
+				.mockResolvedValue([{ id: 'entity1' }]);
+
 			unifiedLoader.loadLayer.mockImplementation(async (config) => {
 				// Call the processor function
 				const metadata = { fromCache: false };
@@ -222,13 +228,21 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 		});
 
 		it('should show datasources for visible tiles', () => {
-			// Mock datasources
-			const datasource1 = { show: false, name: 'Buildings Viewport 2490_6010' };
-			const datasource2 = { show: false, name: 'Buildings Viewport 2491_6011' };
+			// Mock datasources with entities for fadeIn
+			const datasource1 = {
+				show: false,
+				name: 'Buildings Viewport HSY 2490_6010',
+				entities: { values: [] },
+			};
+			const datasource2 = {
+				show: false,
+				name: 'Buildings Viewport HSY 2491_6011',
+				entities: { values: [] },
+			};
 
 			loader.datasourceService.getDataSourceByName = vi.fn().mockImplementation((name) => {
-				if (name === 'Buildings Viewport 2490_6010') return datasource1;
-				if (name === 'Buildings Viewport 2491_6011') return datasource2;
+				if (name === 'Buildings Viewport HSY 2490_6010') return datasource1;
+				if (name === 'Buildings Viewport HSY 2491_6011') return datasource2;
 				return null;
 			});
 
@@ -245,7 +259,7 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 		});
 
 		it('should hide datasources for non-visible tiles', () => {
-			const datasource = { show: true, name: 'Buildings Viewport 2490_6010' };
+			const datasource = { show: true, name: 'Buildings Viewport HSY 2490_6010' };
 
 			loader.datasourceService.getDataSourceByName = vi.fn().mockReturnValue(datasource);
 			loader.loadedTiles.set('2490_6010', { bounds: {}, entityCount: 5, loadedAt: Date.now() });
@@ -257,7 +271,7 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 		});
 
 		it('should only update visibility when state changes', () => {
-			const datasource = { show: true, name: 'Buildings Viewport 2490_6010' };
+			const datasource = { show: true, name: 'Buildings Viewport HSY 2490_6010' };
 
 			loader.datasourceService.getDataSourceByName = vi.fn().mockReturnValue(datasource);
 			loader.loadedTiles.set('2490_6010', { bounds: {}, entityCount: 5, loadedAt: Date.now() });
@@ -558,7 +572,7 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 
 			expect(loader.datasourceService.addDataSourceWithPolygonFix).toHaveBeenCalledWith(
 				mockGeoJSON,
-				'Buildings Viewport 2490_6010',
+				'Buildings Viewport HSY 2490_6010',
 				false // Initially hidden
 			);
 			expect(result).toEqual(mockEntities);

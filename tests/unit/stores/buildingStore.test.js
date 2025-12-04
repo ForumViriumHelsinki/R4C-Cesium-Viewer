@@ -113,6 +113,8 @@ describe('buildingStore', () => {
 		});
 
 		it('should update LRU cache position when postal code is accessed again', () => {
+			vi.useFakeTimers();
+
 			const features1 = {
 				features: [{ id: 'building-1', properties: { name: 'Building 1' } }],
 			};
@@ -129,6 +131,8 @@ describe('buildingStore', () => {
 			const timestamp2 = store.postalCodeCache.get('00100');
 
 			expect(timestamp2).toBeGreaterThan(timestamp1);
+
+			vi.useRealTimers();
 		});
 
 		it('should do nothing when features array is empty', () => {
