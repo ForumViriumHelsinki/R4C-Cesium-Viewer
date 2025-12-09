@@ -116,7 +116,8 @@
  * - globalStore: Main application state, viewer instance, loading states
  * - buildingStore: Building features and selection state
  * - propsStore: Postal code data and properties
- * - toggleStore: UI toggle states and layer visibility (includes viewportTileMode)
+ * - toggleStore: UI toggle states and layer visibility
+ * - featureFlagStore: Feature flags including viewportStreaming
  * - socioEconomicsStore: Socioeconomic data
  * - heatExposureStore: Heat exposure calculations
  * - graphicsStore: Graphics quality settings
@@ -146,6 +147,7 @@ import { usePropsStore } from '../stores/propsStore.js';
 import { useToggleStore } from '../stores/toggleStore.js';
 import { useBuildingStore } from '../stores/buildingStore.js';
 import { useGraphicsStore } from '../stores/graphicsStore.js';
+import { useFeatureFlagStore } from '../stores/featureFlagStore';
 
 import cacheWarmer from '../services/cacheWarmer.js';
 import ViewportBuildingLoader from '../services/viewportBuildingLoader.js';
@@ -167,6 +169,7 @@ export default {
 		const heatExposureStore = useHeatExposureStore();
 		const buildingStore = useBuildingStore();
 		const graphicsStore = useGraphicsStore();
+		const featureFlagStore = useFeatureFlagStore();
 		const shouldShowBuildingInformation = computed(() => {
 			return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading;
 		});
@@ -319,10 +322,10 @@ export default {
 			addCameraMoveEndListener();
 			addAttribution();
 
-			// Initialize viewport-based building loader if tile mode is enabled
-			// By default, uses postal code-based viewport loading (handleCameraSettled)
-			// Enable toggleStore.viewportTileMode to use tile-based spatial grid loading
-			if (toggleStore.viewportTileMode) {
+			// Initialize viewport-based building loader if viewport streaming is enabled
+			// By default enabled via feature flag (viewportStreaming)
+			// This uses tile-based spatial grid loading instead of postal code boundaries
+			if (featureFlagStore.isEnabled('viewportStreaming')) {
 				viewportBuildingLoader = new ViewportBuildingLoader();
 				// Await initialization - includes retry logic for globe readiness
 				await viewportBuildingLoader.initialize(viewer.value);
@@ -501,15 +504,15 @@ export default {
 		 * - Loads buildings for all visible postal codes
 		 * - Reuses FeaturePicker instance to maintain state
 		 * - Tracks loading progress and errors
-		 * - Skipped when toggleStore.viewportTileMode is enabled (tile-based loading active)
+		 * - Skipped when viewport streaming feature flag is enabled (tile-based loading active)
 		 *
 		 * @async
 		 * @returns {Promise<void>}
 		 */
 		const handleCameraSettled = async () => {
-			// Skip postal code-based viewport loading if tile mode is active
-			if (toggleStore.viewportTileMode) {
-				console.log('[CesiumViewer] Tile mode active, skipping postal code-based viewport loading');
+			// Skip postal code-based viewport loading if viewport streaming is active
+			if (featureFlagStore.isEnabled('viewportStreaming')) {
+				console.log('[CesiumViewer] Viewport streaming active, skipping postal code-based loading');
 				return;
 			}
 
@@ -698,25 +701,25 @@ export default {
 		};
 
 		/**
-		 * Watch for changes to viewport tile mode toggle
+		 * Watch for changes to viewport streaming feature flag
 		 * Dynamically enables/disables tile-based viewport loading at runtime.
 		 */
 		watch(
-			() => toggleStore.viewportTileMode,
+			() => featureFlagStore.isEnabled('viewportStreaming'),
 			async (newValue, _oldValue) => {
 				if (!viewer.value) {
-					console.warn('[CesiumViewer] Viewer not initialized, cannot toggle viewport tile mode');
+					console.warn('[CesiumViewer] Viewer not initialized, cannot toggle viewport streaming');
 					return;
 				}
 
 				if (newValue && !viewportBuildingLoader) {
-					// Enable tile mode
-					console.log('[CesiumViewer] Enabling tile-based viewport loading');
+					// Enable viewport streaming
+					console.log('[CesiumViewer] Enabling viewport streaming (tile-based loading)');
 					viewportBuildingLoader = new ViewportBuildingLoader();
 					await viewportBuildingLoader.initialize(viewer.value);
 				} else if (!newValue && viewportBuildingLoader) {
-					// Disable tile mode
-					console.log('[CesiumViewer] Disabling tile-based viewport loading');
+					// Disable viewport streaming
+					console.log('[CesiumViewer] Disabling viewport streaming');
 					await viewportBuildingLoader.shutdown();
 					viewportBuildingLoader = null;
 				}

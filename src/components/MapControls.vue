@@ -240,37 +240,6 @@
 			</v-tooltip>
 		</div>
 
-		<!-- Advanced Options -->
-		<div class="control-group">
-			<h4 class="control-group-title">Advanced Options</h4>
-
-			<!-- Viewport Tile Mode -->
-			<v-tooltip
-				location="left"
-				max-width="250"
-			>
-				<template #activator="{ props }">
-					<div
-						v-bind="props"
-						class="control-item"
-					>
-						<v-switch
-							v-model="viewportTileMode"
-							color="primary"
-							density="compact"
-							hide-details
-							@change="toggleViewportTileMode"
-						/>
-						<span class="control-label">Viewport Streaming</span>
-					</div>
-				</template>
-				<span
-					>Load buildings based on viewport tiles instead of postal code boundaries
-					(experimental)</span
-				>
-			</v-tooltip>
-		</div>
-
 		<!-- Layer Conflict Warning -->
 		<v-alert
 			v-if="hasLayerConflict"
@@ -299,7 +268,6 @@
  * **Features:**
  * - Data layer toggles (Trees, Vegetation, Other Nature, Land Cover, NDVI)
  * - Building filters (Public/Social, Age, Height)
- * - Advanced options (Viewport Streaming)
  * - Layer conflict detection and auto-resolution (NDVI vs Land Cover)
  * - Progressive loading indicators with progress tracking
  * - Cache status indicators for faster subsequent loads
@@ -382,12 +350,6 @@ const showOtherNature = ref(toggleStore.showOtherNature);
 const showTrees = ref(toggleStore.showTrees);
 const landCover = ref(toggleStore.landCover);
 const ndvi = ref(toggleStore.ndvi);
-
-/**
- * Reactive state for advanced options
- * Synchronized with toggleStore for persistence
- */
-const viewportTileMode = ref(toggleStore.viewportTileMode);
 
 /**
  * Reactive state for building filter toggles
@@ -641,19 +603,6 @@ const toggleNDVI = () => {
 };
 
 /**
- * Toggles viewport tile-based building loading mode
- *
- * When enabled, buildings are loaded using spatial tile grid based on viewport
- * instead of postal code boundaries. This provides more efficient streaming
- * for large areas and dynamic viewport changes.
- *
- * @returns {void}
- */
-const toggleViewportTileMode = () => {
-	toggleStore.setViewportTileMode(viewportTileMode.value);
-};
-
-/**
  * Applies building filters to the current postal code
  *
  * Filters buildings based on active filter criteria:
@@ -719,19 +668,6 @@ watch(
 	() => toggleStore.landCover,
 	(newValue) => {
 		landCover.value = newValue;
-	},
-	{ immediate: true }
-);
-
-/**
- * Synchronizes local viewportTileMode state with store changes
- *
- * Ensures the UI stays in sync with store state when changed externally.
- */
-watch(
-	() => toggleStore.viewportTileMode,
-	(newValue) => {
-		viewportTileMode.value = newValue;
 	},
 	{ immediate: true }
 );
