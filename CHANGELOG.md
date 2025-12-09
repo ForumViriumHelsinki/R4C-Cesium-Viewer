@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.37.0...r4c-cesium-viewer-v1.38.0) (2025-12-09)
+
+
+### Features
+
+* **config:** move viewport streaming to feature flags ([34a72de](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/34a72deef253c4b760cb248506a26c73805986c3))
+
 ## [1.37.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.36.1...r4c-cesium-viewer-v1.37.0) (2025-12-03)
 
 
