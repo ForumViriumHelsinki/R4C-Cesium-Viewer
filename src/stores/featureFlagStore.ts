@@ -77,6 +77,7 @@ export type FeatureFlagName =
 	| 'fxaaOptions'
 	| 'requestRenderMode'
 	| 'terrain3d'
+	| 'viewportStreaming'
 	// Analysis tools
 	| 'heatHistogram'
 	| 'buildingScatterPlot'
@@ -286,6 +287,14 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 				enabled: import.meta.env.VITE_FEATURE_3D_TERRAIN !== 'false',
 				label: '3D Terrain',
 				description: 'Helsinki 3D terrain rendering',
+				category: 'graphics',
+				experimental: false,
+			},
+			viewportStreaming: {
+				enabled: import.meta.env.VITE_FEATURE_VIEWPORT_STREAMING !== 'false',
+				label: 'Viewport Streaming',
+				description:
+					'Load buildings based on viewport tiles instead of postal code boundaries for more efficient streaming',
 				category: 'graphics',
 				experimental: false,
 			},
