@@ -54,6 +54,12 @@ export default defineConfig(({ mode }) => {
 	const buildTime = new Date().toISOString();
 
 	return {
+		// Strip console.log and console.debug from production builds
+		// Keeps console.warn, console.error, console.info for production monitoring
+		esbuild: {
+			drop: mode === 'production' ? ['debugger'] : [],
+			pure: mode === 'production' ? ['console.log', 'console.debug'] : [],
+		},
 		build: {
 			sourcemap: true, // Source map generation must be turned on
 			target: 'es2020', // Modern browsers only for better optimization
