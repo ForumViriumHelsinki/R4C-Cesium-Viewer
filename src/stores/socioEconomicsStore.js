@@ -26,7 +26,7 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 /**
  * Socio-Economics Pinia Store
@@ -53,7 +53,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 * console.log(data.he_vakiy); // Total population
 		 */
 		getDataByPostcode: (state) => (postcode) => {
-			return state.data.find((item) => item.postinumeroalue === postcode);
+			return state.data.find((item) => item.postinumeroalue === postcode)
 		},
 		/**
 		 * Retrieves socioeconomic data by area name
@@ -63,7 +63,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 * const data = getDataByNimi('Alppila - Vallila');
 		 */
 		getDataByNimi: (state) => (nimi) => {
-			return state.data.find((item) => item.nimi === nimi);
+			return state.data.find((item) => item.nimi === nimi)
 		},
 		/**
 		 * Gets sorted list of all area names in Capital Region
@@ -71,7 +71,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 * @returns {() => Array<string>} Function returning sorted array of area names
 		 */
 		getNimiForCapital: (state) => () => {
-			return state.data.map((item) => item.nimi).sort();
+			return state.data.map((item) => item.nimi).sort()
 		},
 		/**
 		 * Gets sorted list of area names in Helsinki only (kunta === '091')
@@ -82,7 +82,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 			return state.data
 				.filter((item) => item.kunta === '091')
 				.map((item) => item.nimi)
-				.sort();
+				.sort()
 		},
 	},
 	actions: {
@@ -96,16 +96,16 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 */
 		async loadPaavo() {
 			try {
-				const response = await fetch('/paavo');
-				if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-				const data = await response.json(); // Parse as JSON
+				const response = await fetch('/paavo')
+				if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+				const data = await response.json() // Parse as JSON
 
-				this.addDataToStore(data);
-				this.addRegionStatisticsToStore();
-				this.addHelsinkiStatisticsToStore();
-				this.calculateRegionTotal();
+				this.addDataToStore(data)
+				this.addRegionStatisticsToStore()
+				this.addHelsinkiStatisticsToStore()
+				this.calculateRegionTotal()
 			} catch (error) {
-				console.error('Error fetching Paavo data:', error);
+				console.error('Error fetching Paavo data:', error)
 			}
 		},
 
@@ -118,14 +118,14 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 */
 		async getAllPaavoData(requestUrl) {
 			try {
-				const response = await fetch(requestUrl);
-				if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-				const data = await response.json();
-				if (!data || !data.features) throw new Error('Invalid data structure');
-				return data;
+				const response = await fetch(requestUrl)
+				if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+				const data = await response.json()
+				if (!data || !data.features) throw new Error('Invalid data structure')
+				return data
 			} catch (error) {
-				console.error('Error fetching socio-economic data:', error);
-				throw error; // Rethrow to handle it in the calling function
+				console.error('Error fetching socio-economic data:', error)
+				throw error // Rethrow to handle it in the calling function
 			}
 		},
 
@@ -145,7 +145,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 				.filter(
 					(feature) => !['00230', '02290', '01770'].includes(feature.properties.postinumeroalue)
 				)
-				.map((feature) => feature.properties);
+				.map((feature) => feature.properties)
 
 			// Example statistics calculation (adjust according to actual data attributes)
 			this.regionStatistics = {
@@ -159,10 +159,10 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 					max: Math.max(...this.data.map((item) => Number(item.hr_ktu))),
 				},
 				// Add more attributes as needed
-			};
+			}
 
 			// Filter data for Helsinki (kunta = "091")
-			const helsinkiData = this.data.filter((item) => item.kunta === '091');
+			const helsinkiData = this.data.filter((item) => item.kunta === '091')
 
 			// Helsinki specific statistics
 			this.helsinkiStatistics = {
@@ -186,7 +186,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 							? Math.max(...helsinkiData.map((item) => Number(item.hr_ktu)))
 							: null,
 				},
-			};
+			}
 		},
 
 		/**
@@ -202,7 +202,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 				.filter(
 					(feature) => !['00230', '02290', '01770'].includes(feature.properties.postinumeroalue)
 				)
-				.map((feature) => feature.properties);
+				.map((feature) => feature.properties)
 		},
 
 		/**
@@ -223,7 +223,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 					min: Math.min(...this.data.map((item) => Number(item.hr_ktu))),
 					max: Math.max(...this.data.map((item) => Number(item.hr_ktu))),
 				},
-			};
+			}
 		},
 
 		/**
@@ -234,7 +234,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 */
 		addHelsinkiStatisticsToStore() {
 			// Filter data for Helsinki (kunta = "091")
-			const helsinkiData = this.data.filter((item) => item.kunta === '091');
+			const helsinkiData = this.data.filter((item) => item.kunta === '091')
 
 			// Helsinki specific statistics
 			this.helsinkiStatistics = {
@@ -258,7 +258,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 							? Math.max(...helsinkiData.map((item) => Number(item.hr_ktu)))
 							: null,
 				},
-			};
+			}
 		},
 
 		/**
@@ -274,7 +274,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 * @returns {void}
 		 */
 		calculateRegionTotal() {
-			if (!this.data || this.data.length === 0) return;
+			if (!this.data || this.data.length === 0) return
 
 			const attributesToSum = [
 				'he_0_2',
@@ -290,37 +290,37 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 				'ko_ika18y',
 				'te_taly',
 				'te_vuok_as',
-			];
+			]
 
-			const attributesToAverage = ['ra_as_kpa', 'hr_ktu'];
+			const attributesToAverage = ['ra_as_kpa', 'hr_ktu']
 
-			let totalSums = {};
-			let totalAverages = {};
-			let count = this.data.length;
+			const totalSums = {}
+			const totalAverages = {}
+			const count = this.data.length
 
 			// Initialize sums
-			attributesToSum.forEach((attr) => (totalSums[attr] = 0));
-			attributesToAverage.forEach((attr) => (totalAverages[attr] = 0));
+			attributesToSum.forEach((attr) => (totalSums[attr] = 0))
+			attributesToAverage.forEach((attr) => (totalAverages[attr] = 0))
 
 			// Calculate sums and prepare averages
 			this.data.forEach((item) => {
 				attributesToSum.forEach((attr) => {
 					if (item[attr] !== undefined) {
-						totalSums[attr] += Number(item[attr]) || 0;
+						totalSums[attr] += Number(item[attr]) || 0
 					}
-				});
+				})
 
 				attributesToAverage.forEach((attr) => {
 					if (item[attr] !== undefined) {
-						totalAverages[attr] += Number(item[attr]) || 0;
+						totalAverages[attr] += Number(item[attr]) || 0
 					}
-				});
-			});
+				})
+			})
 
 			// Compute averages
 			attributesToAverage.forEach((attr) => {
-				totalAverages[attr] = count > 0 ? totalAverages[attr] / count : 0;
-			});
+				totalAverages[attr] = count > 0 ? totalAverages[attr] / count : 0
+			})
 
 			// Create the new "whole region" object
 			const wholeRegionEntry = {
@@ -328,10 +328,10 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 				postinumeroalue: '99999',
 				...totalSums,
 				...totalAverages,
-			};
+			}
 
 			// Append the new entry to the dataset
-			this.data.push(wholeRegionEntry);
+			this.data.push(wholeRegionEntry)
 		},
 	},
-});
+})

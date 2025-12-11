@@ -42,104 +42,104 @@
 </template>
 
 <script>
-import { ref, watch, computed } from 'vue';
-import { useDisplay } from 'vuetify';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import Datasource from '../services/datasource.js';
-import { removeLandcover } from '../services/landcover';
-import Tree from '../services/tree.js';
-import FeaturePicker from '../services/featurepicker';
+import { computed, ref, watch } from 'vue'
+import { useDisplay } from 'vuetify'
+import Datasource from '../services/datasource.js'
+import FeaturePicker from '../services/featurepicker'
+import { removeLandcover } from '../services/landcover'
+import Tree from '../services/tree.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
 	name: 'ViewModeCompact',
 	setup() {
-		const activeViewMode = ref('capitalRegionView');
-		const toggleStore = useToggleStore();
-		const store = useGlobalStore();
-		const { smAndDown } = useDisplay();
-		const isMobile = computed(() => smAndDown.value);
-		const dataSourceService = new Datasource();
-		const featurePicker = new FeaturePicker();
+		const activeViewMode = ref('capitalRegionView')
+		const toggleStore = useToggleStore()
+		const store = useGlobalStore()
+		const { smAndDown } = useDisplay()
+		const isMobile = computed(() => smAndDown.value)
+		const dataSourceService = new Datasource()
+		const featurePicker = new FeaturePicker()
 
 		// Watcher for activeViewMode changes
 		watch(activeViewMode, (newViewMode) => {
-			onToggleChange(newViewMode);
-		});
+			onToggleChange(newViewMode)
+		})
 
 		const onToggleChange = (viewMode) => {
-			activeViewMode.value = viewMode;
+			activeViewMode.value = viewMode
 
 			switch (viewMode) {
 				case 'capitalRegionView':
-					void capitalRegion();
-					break;
+					void capitalRegion()
+					break
 				case 'gridView':
-					gridView();
-					break;
+					gridView()
+					break
 				default:
-					break;
+					break
 			}
-		};
+		}
 
 		const setCapitalRegion = async () => {
-			store.setView('capitalRegion');
-			toggleStore.setHelsinkiView(false);
+			store.setView('capitalRegion')
+			toggleStore.setHelsinkiView(false)
 			// Don't reset all toggles - preserve data layer states (landCover, ndvi, etc.)
 			// Only clear landCover imagery if at start level
 			if (store.level === 'start') {
-				await clearLandCover();
+				await clearLandCover()
 			}
-			await dataSourceService.removeDataSourcesAndEntities();
-			await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes');
+			await dataSourceService.removeDataSourcesAndEntities()
+			await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes')
 
 			if (store.postalcode) {
-				void featurePicker.loadPostalCode();
+				void featurePicker.loadPostalCode()
 			}
 			if (toggleStore.showTrees) {
-				await loadTrees();
+				await loadTrees()
 			}
-		};
+		}
 
 		const loadTrees = async () => {
-			const treeService = new Tree();
-			void treeService.loadTrees();
-		};
+			const treeService = new Tree()
+			void treeService.loadTrees()
+		}
 
 		const clearLandCover = async () => {
-			removeLandcover(store.landcoverLayers);
-		};
+			removeLandcover(store.landcoverLayers)
+		}
 
 		const capitalRegion = async () => {
-			const checked = activeViewMode.value === 'capitalRegionView';
-			toggleStore.setCapitalRegionCold(!checked);
-			setCapitalRegion().catch(console.error);
-		};
+			const checked = activeViewMode.value === 'capitalRegionView'
+			toggleStore.setCapitalRegionCold(!checked)
+			setCapitalRegion().catch(console.error)
+		}
 
 		const gridView = () => {
-			const isGridView = activeViewMode.value === 'gridView';
-			toggleStore.setGridView(isGridView);
-			toggleStore.setHelsinkiView(false);
-			store.setView(isGridView ? 'grid' : 'capitalRegion');
+			const isGridView = activeViewMode.value === 'gridView'
+			toggleStore.setGridView(isGridView)
+			toggleStore.setHelsinkiView(false)
+			store.setView(isGridView ? 'grid' : 'capitalRegion')
 			if (isGridView) {
-				store.setShowBuildingInfo(false);
-				toggleStore.setGrid250m(true);
+				store.setShowBuildingInfo(false)
+				toggleStore.setGrid250m(true)
 			} else {
-				reset();
+				reset()
 			}
-		};
+		}
 
 		const reset = () => {
 			// Reset logic if needed
-		};
+		}
 
 		return {
 			activeViewMode,
 			onToggleChange,
 			isMobile,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

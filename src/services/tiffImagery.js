@@ -20,10 +20,10 @@
  * @see {@link https://github.com/hongfaqiu/TIFFImageryProvider|TIFFImageryProvider}
  */
 
-import TIFFImageryProvider from 'tiff-imagery-provider';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
-import { useURLStore } from '../stores/urlStore.js';
+import TIFFImageryProvider from 'tiff-imagery-provider'
+import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useURLStore } from '../stores/urlStore.js'
 
 /**
  * Cache for TIFF imagery providers by date
@@ -31,14 +31,14 @@ import { useURLStore } from '../stores/urlStore.js';
  * Value: Cesium ImageryLayer instance
  * @type {Map<string, Object>}
  */
-const tiffProviderCache = new Map();
+const tiffProviderCache = new Map()
 
 /**
  * Maximum number of NDVI dates to keep in cache
  * Prevents unbounded memory growth while allowing smooth date switching
  * @constant {number}
  */
-const MAX_CACHED_DATES = 3;
+const MAX_CACHED_DATES = 3
 
 /**
  * Loads and displays NDVI TIFF imagery layer with custom color gradient.
@@ -62,33 +62,33 @@ const MAX_CACHED_DATES = 3;
  * await changeTIFF();
  */
 export const changeTIFF = async () => {
-	const store = useGlobalStore();
-	const urlStore = useURLStore();
-	const backgroundMapStore = useBackgroundMapStore();
-	const ndviDate = backgroundMapStore.ndviDate;
-	const viewer = store.cesiumViewer;
+	const store = useGlobalStore()
+	const urlStore = useURLStore()
+	const backgroundMapStore = useBackgroundMapStore()
+	const ndviDate = backgroundMapStore.ndviDate
+	const viewer = store.cesiumViewer
 
-	if (!viewer) return;
+	if (!viewer) return
 
 	try {
 		// Check if we already have this date in cache
-		let layer = tiffProviderCache.get(ndviDate);
+		let layer = tiffProviderCache.get(ndviDate)
 
 		if (layer) {
 			// Provider exists - just show it and add to viewer if not already there
 			if (!viewer.imageryLayers.contains(layer)) {
-				viewer.imageryLayers.add(layer);
+				viewer.imageryLayers.add(layer)
 			}
-			layer.show = true;
+			layer.show = true
 
 			// Hide other dates to prevent overlap
 			tiffProviderCache.forEach((otherLayer, otherDate) => {
 				if (otherDate !== ndviDate) {
-					otherLayer.show = false;
+					otherLayer.show = false
 				}
-			});
+			})
 
-			return;
+			return
 		}
 
 		// Not in cache - create new provider
@@ -115,36 +115,36 @@ export const changeTIFF = async () => {
 					],
 				},
 			},
-		});
+		})
 
-		await provider.readyPromise;
+		await provider.readyPromise
 
-		layer = viewer.imageryLayers.addImageryProvider(provider);
-		layer.brightness = 1;
+		layer = viewer.imageryLayers.addImageryProvider(provider)
+		layer.brightness = 1
 
 		// Store in cache
-		tiffProviderCache.set(ndviDate, layer);
+		tiffProviderCache.set(ndviDate, layer)
 
 		// Hide other dates to prevent overlap
 		tiffProviderCache.forEach((otherLayer, otherDate) => {
 			if (otherDate !== ndviDate) {
-				otherLayer.show = false;
+				otherLayer.show = false
 			}
-		});
+		})
 
 		// Evict oldest date if over cache limit
 		if (tiffProviderCache.size > MAX_CACHED_DATES) {
-			const oldestDate = tiffProviderCache.keys().next().value;
-			const oldestLayer = tiffProviderCache.get(oldestDate);
+			const oldestDate = tiffProviderCache.keys().next().value
+			const oldestLayer = tiffProviderCache.get(oldestDate)
 			if (viewer.imageryLayers.contains(oldestLayer)) {
-				viewer.imageryLayers.remove(oldestLayer);
+				viewer.imageryLayers.remove(oldestLayer)
 			}
-			tiffProviderCache.delete(oldestDate);
+			tiffProviderCache.delete(oldestDate)
 		}
 	} catch (error) {
-		console.error('Error loading TIFF:', error);
+		console.error('Error loading TIFF:', error)
 	}
-};
+}
 
 /**
  * Hides all NDVI TIFF imagery layers without removing them from cache.
@@ -164,9 +164,9 @@ export const removeTIFF = async () => {
 	try {
 		// Hide all cached layers instead of removing
 		tiffProviderCache.forEach((layer) => {
-			layer.show = false;
-		});
+			layer.show = false
+		})
 	} catch (error) {
-		console.error('Error hiding TIFF:', error);
+		console.error('Error hiding TIFF:', error)
 	}
-};
+}

@@ -28,64 +28,64 @@
 </template>
 
 <script>
-import { onMounted, watch, ref } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import Plot from '../services/plot.js';
-import ColdArea from '../services/coldarea.js';
-import Datasource from '../services/datasource.js';
-import Timeline from './Timeline.vue';
+import { onMounted, ref, watch } from 'vue'
+import ColdArea from '../services/coldarea.js'
+import Datasource from '../services/datasource.js'
+import Plot from '../services/plot.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
+import Timeline from './Timeline.vue'
 
 export default {
 	components: {
 		Timeline,
 	},
 	setup() {
-		const store = useGlobalStore();
-		const propsStore = usePropsStore();
-		const toggleStore = useToggleStore();
-		const plotService = new Plot();
-		const coldAreaService = new ColdArea();
+		const store = useGlobalStore()
+		const propsStore = usePropsStore()
+		const toggleStore = useToggleStore()
+		const plotService = new Plot()
+		const coldAreaService = new ColdArea()
 
-		const hideColdAreasChecked = ref(toggleStore.hideColdAreas);
-		const coldAreasLoaded = ref(false); // To track if cold areas are loaded
+		const hideColdAreasChecked = ref(toggleStore.hideColdAreas)
+		const coldAreasLoaded = ref(false) // To track if cold areas are loaded
 
 		const hideColdAreas = () => {
-			toggleStore.setHideColdAreas(hideColdAreasChecked.value);
-			const dataSourceService = new Datasource();
-			void dataSourceService.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value);
-		};
+			toggleStore.setHideColdAreas(hideColdAreasChecked.value)
+			const dataSourceService = new Datasource()
+			void dataSourceService.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value)
+		}
 
 		const createHSYBuildingBarChart = () => {
-			const buildingHeatExposure = propsStore.buildingHeatTimeseries;
-			const postalcodeHeatTimeseries = propsStore.postalcodeHeatTimeseries;
-			const address = store.buildingAddress;
-			const postinumero = store.postalcode;
+			const buildingHeatExposure = propsStore.buildingHeatTimeseries
+			const postalcodeHeatTimeseries = propsStore.postalcodeHeatTimeseries
+			const address = store.buildingAddress
+			const postinumero = store.postalcode
 
-			plotService.initializePlotContainer('hsyBuildingChartContainer');
+			plotService.initializePlotContainer('hsyBuildingChartContainer')
 
-			const postalCodeHeat = createPostalCodeTimeseries(postalcodeHeatTimeseries);
+			const postalCodeHeat = createPostalCodeTimeseries(postalcodeHeatTimeseries)
 
-			const margin = { top: 45, right: 10, bottom: 18, left: 20 };
-			const width = store.navbarWidth - margin.left - margin.right;
-			const height = 250 - margin.top - margin.bottom;
+			const margin = { top: 45, right: 10, bottom: 18, left: 20 }
+			const width = store.navbarWidth - margin.left - margin.right
+			const height = 250 - margin.top - margin.bottom
 
-			const svg = plotService.createSVGElement(margin, width, height, '#hsyBuildingChartContainer');
+			const svg = plotService.createSVGElement(margin, width, height, '#hsyBuildingChartContainer')
 
 			const allDates = Array.from(
 				new Set(buildingHeatExposure.map((d) => d.date).concat(postalCodeHeat.map((d) => d.date)))
-			);
-			const xScale = plotService.createScaleBand(allDates.sort(), width - 40);
+			)
+			const xScale = plotService.createScaleBand(allDates.sort(), width - 40)
 			const maxTemp = Math.max(
 				...buildingHeatExposure.map((d) => d.avg_temp_c),
 				...postalCodeHeat.map((d) => d.averageTemp)
-			);
+			)
 			const minTemp = Math.min(
 				...buildingHeatExposure.map((d) => d.avg_temp_c),
 				...postalCodeHeat.map((d) => d.averageTemp)
-			);
-			const yScale = plotService.createScaleLinear(minTemp, maxTemp, [height, 0]);
+			)
+			const yScale = plotService.createScaleLinear(minTemp, maxTemp, [height, 0])
 
 			const combinedData = [
 				...buildingHeatExposure.map((d) => ({
@@ -94,9 +94,9 @@ export default {
 					type: 'building',
 				})),
 				...postalCodeHeat.map((d) => ({ date: d.date, value: d.averageTemp, type: 'postalcode' })),
-			];
+			]
 
-			const tooltip = plotService.createTooltip('#hsyBuildingChartContainer');
+			const tooltip = plotService.createTooltip('#hsyBuildingChartContainer')
 
 			createHSYBarsWithLabels(
 				svg,
@@ -106,19 +106,19 @@ export default {
 				height,
 				{ building: 'orange', postalcode: 'steelblue' },
 				tooltip
-			);
+			)
 
-			plotService.setupAxes(svg, xScale, yScale, height);
-			plotService.addTitle(svg, 'Temperature in Celsius Comparison', margin.left, margin.top - 20);
+			plotService.setupAxes(svg, xScale, yScale, height)
+			plotService.addTitle(svg, 'Temperature in Celsius Comparison', margin.left, margin.top - 20)
 
 			const legendData = [
 				{ name: address, color: 'orange' },
-				{ name: 'Average of ' + postinumero, color: 'steelblue' },
-			];
-			const legendX = margin.left + store.navbarWidth / 2.5;
-			const legendY = margin.top - 87;
+				{ name: `Average of ${postinumero}`, color: 'steelblue' },
+			]
+			const legendX = margin.left + store.navbarWidth / 2.5
+			const legendY = margin.top - 87
 
-			const legend = svg.append('g').attr('transform', `translate(${legendX}, ${legendY})`);
+			const legend = svg.append('g').attr('transform', `translate(${legendX}, ${legendY})`)
 
 			legend
 				.selectAll('.legend-item')
@@ -129,8 +129,8 @@ export default {
 				.attr('width', 10)
 				.attr('height', 10)
 				.attr('x', 0)
-				.attr('y', (d, i) => i * 20)
-				.attr('fill', (d) => d.color);
+				.attr('y', (_d, i) => i * 20)
+				.attr('fill', (d) => d.color)
 
 			legend
 				.selectAll('.legend-text')
@@ -139,17 +139,17 @@ export default {
 				.append('text')
 				.attr('class', 'legend-text')
 				.attr('x', 15)
-				.attr('y', (d, i) => i * 20 + 9)
-				.text((d) => d.name);
-		};
+				.attr('y', (_d, i) => i * 20 + 9)
+				.text((d) => d.name)
+		}
 
 		const createHSYBarsWithLabels = (svg, data, xScale, yScale, height, colors, tooltip) => {
 			if (!data || !Array.isArray(data) || data.length === 0) {
-				console.warn('No data available for chart.');
-				return;
+				console.warn('No data available for chart.')
+				return
 			}
 
-			const barWidth = xScale.bandwidth() / 2.5;
+			const barWidth = xScale.bandwidth() / 2.5
 
 			svg
 				.selectAll('.bar')
@@ -180,76 +180,76 @@ export default {
 						(data) => `${data.value.toFixed(2)} °C`
 					)
 				)
-				.on('mouseout', () => plotService.handleMouseout(tooltip));
-		};
+				.on('mouseout', () => plotService.handleMouseout(tooltip))
+		}
 
 		const createPostalCodeTimeseries = (postalcodeHeatTimeseries) => {
-			const dateToTemps = {};
+			const dateToTemps = {}
 
 			postalcodeHeatTimeseries.forEach((subArray) => {
 				subArray.forEach((entry) => {
-					const date = entry.date;
-					const temp = entry.avg_temp_c;
+					const date = entry.date
+					const temp = entry.avg_temp_c
 
 					if (!dateToTemps[date]) {
-						dateToTemps[date] = [];
+						dateToTemps[date] = []
 					}
 
-					dateToTemps[date].push(temp);
-				});
-			});
+					dateToTemps[date].push(temp)
+				})
+			})
 
-			const averageTemps = [];
+			const averageTemps = []
 			for (const date in dateToTemps) {
-				const totalTemp = dateToTemps[date].reduce((sum, temp) => sum + temp, 0);
-				const averageTemp = totalTemp / dateToTemps[date].length;
-				averageTemps.push({ date, averageTemp });
+				const totalTemp = dateToTemps[date].reduce((sum, temp) => sum + temp, 0)
+				const averageTemp = totalTemp / dateToTemps[date].length
+				averageTemps.push({ date, averageTemp })
 			}
 
-			return averageTemps;
-		};
+			return averageTemps
+		}
 
 		const newHSYBuildingHeat = () => {
 			if (store.level === 'building') {
 				if (store.view === 'capitalRegion') {
-					createHSYBuildingBarChart();
+					createHSYBuildingBarChart()
 
 					if (propsStore.buildingHeatExposure > 27.2632995605) {
 						// The toggle visibility is controlled by whether the building exposure is above a threshold
 						if (!toggleStore.capitalRegionCold) {
-							void coldAreaService.loadColdAreas();
-							coldAreasLoaded.value = true; // Set to true when cold areas are loaded
+							void coldAreaService.loadColdAreas()
+							coldAreasLoaded.value = true // Set to true when cold areas are loaded
 						}
 					} else {
-						coldAreasLoaded.value = false;
-						hideColdAreas();
+						coldAreasLoaded.value = false
+						hideColdAreas()
 					}
 				}
 			}
-		};
+		}
 
 		// Watch for changes in buildingHeatTimeseries and call newHSYBuildingHeat when it changes
 		watch(
 			() => propsStore.buildingHeatTimeseries,
 			(newHeatTimeseries) => {
 				if (newHeatTimeseries) {
-					newHSYBuildingHeat();
+					newHSYBuildingHeat()
 				}
 			}
-		);
+		)
 
 		// Call updateHSYBuildingChart on mounted
 		onMounted(() => {
-			newHSYBuildingHeat();
-		});
+			newHSYBuildingHeat()
+		})
 
 		return {
 			hideColdAreasChecked,
 			hideColdAreas,
 			coldAreasLoaded, // Return the variable to control toggle visibility
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

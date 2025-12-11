@@ -1,8 +1,8 @@
-import Datasource from './datasource.js';
-import * as Cesium from 'cesium';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useURLStore } from '../stores/urlStore.js';
-import unifiedLoader from './unifiedLoader.js';
+import * as Cesium from 'cesium'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useURLStore } from '../stores/urlStore.js'
+import Datasource from './datasource.js'
+import unifiedLoader from './unifiedLoader.js'
 
 /**
  * Other Nature Service
@@ -28,10 +28,10 @@ export default class Othernature {
 	 * Creates an Othernature service instance
 	 */
 	constructor() {
-		this.store = useGlobalStore();
-		this.urlStore = useURLStore();
-		this.viewer = this.store.cesiumViewer;
-		this.datasourceService = new Datasource();
+		this.store = useGlobalStore()
+		this.urlStore = useURLStore()
+		this.viewer = this.store.cesiumViewer
+		this.datasourceService = new Datasource()
 	}
 
 	/**
@@ -53,13 +53,13 @@ export default class Othernature {
 					batchSize: 20,
 					progressive: true,
 				},
-			});
+			})
 
-			console.log(`✓ Other nature data loaded for postal code ${this.store.postalcode}`);
-			return data;
+			console.log(`✓ Other nature data loaded for postal code ${this.store.postalcode}`)
+			return data
 		} catch (error) {
-			console.error('Failed to load other nature data:', error);
-			throw error;
+			console.error('Failed to load other nature data:', error)
+			throw error
 		}
 	}
 
@@ -71,21 +71,18 @@ export default class Othernature {
 	 */
 	async addOtherNatureDataSource(data, metadata = {}) {
 		try {
-			const entities = await this.datasourceService.addDataSourceWithPolygonFix(
-				data,
-				'OtherNature'
-			);
+			const entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'OtherNature')
 
 			// Process entities in batches for smooth performance
-			const batchSize = 20;
+			const batchSize = 20
 			for (let i = 0; i < entities.length; i += batchSize) {
-				const batch = entities.slice(i, i + batchSize);
+				const batch = entities.slice(i, i + batchSize)
 
 				// Process batch
 				for (const entity of batch) {
-					const category = entity.properties._koodi?._value;
+					const category = entity.properties._koodi?._value
 					if (category) {
-						this.setOtherNaturePolygonMaterialColor(entity, category);
+						this.setOtherNaturePolygonMaterialColor(entity, category)
 					}
 				}
 
@@ -93,22 +90,22 @@ export default class Othernature {
 				if (i + batchSize < entities.length) {
 					await new Promise((resolve) => {
 						if (window.requestIdleCallback) {
-							requestIdleCallback(resolve);
+							requestIdleCallback(resolve)
 						} else {
-							setTimeout(resolve, 0);
+							setTimeout(resolve, 0)
 						}
-					});
+					})
 				}
 			}
 
 			if (!metadata.fromCache) {
-				console.log(`✓ Processed ${entities.length} other nature entities`);
+				console.log(`✓ Processed ${entities.length} other nature entities`)
 			} else {
-				console.log(`✓ Restored ${entities.length} other nature entities from cache`);
+				console.log(`✓ Restored ${entities.length} other nature entities from cache`)
 			}
 		} catch (error) {
-			console.error('Error processing other nature data:', error);
-			throw error;
+			console.error('Error processing other nature data:', error)
+			throw error
 		}
 	}
 
@@ -121,14 +118,14 @@ export default class Othernature {
 	setOtherNaturePolygonMaterialColor(entity, category) {
 		switch (category) {
 			case '310':
-				entity._polygon._material._color._value = Cesium.Color.LIGHTGREY.withAlpha(0.5);
-				break;
+				entity._polygon._material._color._value = Cesium.Color.LIGHTGREY.withAlpha(0.5)
+				break
 			case '410':
-				entity._polygon._material._color._value = Cesium.Color.SANDYBROWN.withAlpha(0.5);
-				break;
+				entity._polygon._material._color._value = Cesium.Color.SANDYBROWN.withAlpha(0.5)
+				break
 			case '130':
-				entity._polygon._material._color._value = Cesium.Color.ROSYBROWN.withAlpha(0.5);
-				break;
+				entity._polygon._material._color._value = Cesium.Color.ROSYBROWN.withAlpha(0.5)
+				break
 		}
 	}
 }

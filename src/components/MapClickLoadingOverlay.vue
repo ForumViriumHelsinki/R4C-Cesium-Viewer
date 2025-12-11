@@ -63,9 +63,7 @@
 				@click="handleCancel"
 				@keydown.esc="handleCancel"
 			>
-				<v-icon start>
-mdi-close
-</v-icon>
+				<v-icon start> mdi-close </v-icon>
 				Press ESC to Cancel
 			</v-btn>
 
@@ -110,25 +108,23 @@ mdi-close
  *
  * @see {@link module:stores/globalStore}
  */
-import { computed } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
+import { computed } from 'vue'
+import { useGlobalStore } from '../stores/globalStore.js'
 
 export default {
 	name: 'MapClickLoadingOverlay',
 
 	emits: ['cancel', 'retry'],
 
-	setup(props, { emit }) {
-		const store = useGlobalStore();
+	setup(_props, { emit }) {
+		const store = useGlobalStore()
 
 		// Reactive computed properties from store state
-		const isVisible = computed(() => store.clickProcessingState.isProcessing);
-		const postalCodeName = computed(
-			() => store.clickProcessingState.postalCodeName || 'Loading...'
-		);
-		const stage = computed(() => store.clickProcessingState.stage);
-		const canCancel = computed(() => store.clickProcessingState.canCancel);
-		const error = computed(() => store.clickProcessingState.error);
+		const isVisible = computed(() => store.clickProcessingState.isProcessing)
+		const postalCodeName = computed(() => store.clickProcessingState.postalCodeName || 'Loading...')
+		const stage = computed(() => store.clickProcessingState.stage)
+		const canCancel = computed(() => store.clickProcessingState.canCancel)
+		const error = computed(() => store.clickProcessingState.error)
 
 		/**
 		 * Returns user-friendly text for current processing stage
@@ -137,41 +133,41 @@ export default {
 		const stageText = computed(() => {
 			switch (stage.value) {
 				case 'loading':
-					return 'Loading Postal Code';
+					return 'Loading Postal Code'
 				case 'animating':
-					return 'Moving Camera';
+					return 'Moving Camera'
 				case 'complete':
-					return 'Almost Ready';
+					return 'Almost Ready'
 				default:
-					return 'Processing';
+					return 'Processing'
 			}
-		});
+		})
 
 		/**
 		 * Whether to show progress bar (during loading and animating stages)
 		 * @returns {boolean}
 		 */
-		const showProgress = computed(() => stage.value === 'loading' || stage.value === 'animating');
+		const showProgress = computed(() => stage.value === 'loading' || stage.value === 'animating')
 
 		/**
 		 * Current dataset being loaded (for progressive updates display)
 		 * @returns {string} Dataset name
 		 */
 		const currentDataset = computed(() => {
-			const progressData = store.clickProcessingState.loadingProgress;
-			if (!progressData) return '';
+			const progressData = store.clickProcessingState.loadingProgress
+			if (!progressData) return ''
 
 			// Show which step we're on
 			if (progressData.current === 0) {
-				return 'Preparing...';
+				return 'Preparing...'
 			} else if (progressData.current === 1) {
-				return 'Loading buildings...';
+				return 'Loading buildings...'
 			} else if (progressData.current === 2) {
-				return 'Complete';
+				return 'Complete'
 			}
 
-			return `Loading dataset ${progressData.current} of ${progressData.total}`;
-		});
+			return `Loading dataset ${progressData.current} of ${progressData.total}`
+		})
 
 		/**
 		 * Progressive loading progress tracking (FR-3.2)
@@ -180,27 +176,27 @@ export default {
 		 */
 		const loadingProgress = computed(() => {
 			// Check if we have real progress data (FR-3.2 progressive updates)
-			const progressData = store.clickProcessingState.loadingProgress;
+			const progressData = store.clickProcessingState.loadingProgress
 			if (progressData && progressData.total > 0) {
-				const percentage = Math.round((progressData.current / progressData.total) * 100);
+				const percentage = Math.round((progressData.current / progressData.total) * 100)
 				console.log(
 					`[MapClickLoadingOverlay] Real progress: ${progressData.current}/${progressData.total} (${percentage}%)`
-				);
-				return percentage;
+				)
+				return percentage
 			}
 
 			// Fallback to stage-based estimation
 			switch (stage.value) {
 				case 'loading':
-					return 30;
+					return 30
 				case 'animating':
-					return 60;
+					return 60
 				case 'complete':
-					return 100;
+					return 100
 				default:
-					return 0;
+					return 0
 			}
-		});
+		})
 
 		/**
 		 * Provides accessible description for screen readers
@@ -208,28 +204,28 @@ export default {
 		 */
 		const accessibleDescription = computed(() => {
 			if (error.value) {
-				return `Error loading ${postalCodeName.value}: ${error.value.message}. Retry button available.`;
+				return `Error loading ${postalCodeName.value}: ${error.value.message}. Retry button available.`
 			}
-			return `${stageText.value} for ${postalCodeName.value}. ${loadingProgress.value}% complete.${canCancel.value ? ' Press Escape to cancel.' : ''}`;
-		});
+			return `${stageText.value} for ${postalCodeName.value}. ${loadingProgress.value}% complete.${canCancel.value ? ' Press Escape to cancel.' : ''}`
+		})
 
 		/**
 		 * Handles cancellation request from user
 		 * Emits cancel event for parent component to handle
 		 */
 		const handleCancel = () => {
-			console.log('[MapClickLoadingOverlay] User requested cancellation');
-			emit('cancel');
-		};
+			console.log('[MapClickLoadingOverlay] User requested cancellation')
+			emit('cancel')
+		}
 
 		/**
 		 * Handles retry request after error
 		 * Emits retry event for parent component to handle
 		 */
 		const handleRetry = () => {
-			console.log('[MapClickLoadingOverlay] User requested retry');
-			emit('retry');
-		};
+			console.log('[MapClickLoadingOverlay] User requested retry')
+			emit('retry')
+		}
 
 		return {
 			isVisible,
@@ -244,9 +240,9 @@ export default {
 			accessibleDescription,
 			handleCancel,
 			handleRetry,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

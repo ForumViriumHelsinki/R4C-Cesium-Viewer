@@ -1,12 +1,12 @@
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { eventBus } from '../services/eventEmitter.js';
-import DataSource from './datasource.js';
-import ElementsDisplay from './elementsDisplay.js';
-import Building from './building.js';
-import Vegetation from './vegetation.js';
-import OtherNature from './othernature.js';
-import Tree from './tree.js';
+import { eventBus } from '../services/eventEmitter.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
+import Building from './building.js'
+import DataSource from './datasource.js'
+import ElementsDisplay from './elementsDisplay.js'
+import OtherNature from './othernature.js'
+import Tree from './tree.js'
+import Vegetation from './vegetation.js'
 
 /**
  * Helsinki Service
@@ -29,15 +29,15 @@ export default class Helsinki {
 	 * Initializes all Helsinki-specific service dependencies.
 	 */
 	constructor() {
-		this.toggleStore = useToggleStore();
-		this.store = useGlobalStore();
-		this.viewer = this.store.cesiumViewer;
-		this.buildingService = new Building();
-		this.elementsDisplayService = new ElementsDisplay();
-		this.datasourceService = new DataSource();
-		this.vegetationService = new Vegetation();
-		this.otherNatureService = new OtherNature();
-		this.treeService = new Tree();
+		this.toggleStore = useToggleStore()
+		this.store = useGlobalStore()
+		this.viewer = this.store.cesiumViewer
+		this.buildingService = new Building()
+		this.elementsDisplayService = new ElementsDisplay()
+		this.datasourceService = new DataSource()
+		this.vegetationService = new Vegetation()
+		this.otherNatureService = new OtherNature()
+		this.treeService = new Tree()
 	}
 
 	/**
@@ -49,15 +49,15 @@ export default class Helsinki {
 	 * @fires eventBus#showHelsinki - Emitted when Helsinki view elements are loaded
 	 */
 	async loadHelsinkiElements() {
-		this.elementsDisplayService.setHelsinkiElementsDisplay('inline-block');
-		await this.buildingService.loadBuildings();
+		this.elementsDisplayService.setHelsinkiElementsDisplay('inline-block')
+		await this.buildingService.loadBuildings()
 		await this.datasourceService.loadGeoJsonDataSource(
 			0.0,
 			'./assets/data/hki_po_clipped.json',
 			'PostCodes'
-		);
-		void this.loadHelsinkiGreenElements();
-		eventBus.emit('showHelsinki');
+		)
+		void this.loadHelsinkiGreenElements()
+		eventBus.emit('showHelsinki')
 	}
 
 	/**
@@ -69,15 +69,15 @@ export default class Helsinki {
 	 */
 	async loadHelsinkiGreenElements() {
 		if (this.toggleStore.showVegetation) {
-			await this.vegetationService.loadVegetation();
+			await this.vegetationService.loadVegetation()
 		}
 
 		if (this.toggleStore.showTrees) {
-			await this.treeService.loadTrees();
+			await this.treeService.loadTrees()
 		}
 
 		if (this.toggleStore.OtherNature) {
-			await this.otherNatureService.loadOtherNature();
+			await this.otherNatureService.loadOtherNature()
 		}
 	}
 }

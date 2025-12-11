@@ -79,8 +79,10 @@
 					</div>
 				</div>
 				<div class="extrusion-note">
-					<span>Green Space Index shown by grid cell height visualisation, with a maximum height of
-						250m (least green).</span>
+					<span
+						>Green Space Index shown by grid cell height visualisation, with a maximum height of
+						250m (least green).</span
+					>
 				</div>
 			</div>
 
@@ -131,43 +133,45 @@
 			v-if="legendExpanded"
 			class="source-note"
 		>
-			Socioeconomic source data by<br >
+			Socioeconomic source data by<br />
 			<a
 				href="https://stat.fi/index_en.html"
 				target="_blank"
-				>Statistics Finland</a><br >
+				>Statistics Finland</a
+			><br />
 			<a
 				href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf"
 				target="_blank"
-				>Methodology for Assessing Social Vulnerability</a>
+				>Methodology for Assessing Social Vulnerability</a
+			>
 		</div>
 	</div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { usePropsStore } from '../stores/propsStore.js';
-import { useIndexData } from '../composables/useIndexData.js';
-import { indexToColorScheme } from '../composables/useGridStyling.js';
+import { computed, ref, watch } from 'vue'
+import { indexToColorScheme } from '../composables/useGridStyling.js'
+import { useIndexData } from '../composables/useIndexData.js'
+import { usePropsStore } from '../stores/propsStore.js'
 
-const propsStore = usePropsStore();
-const { indexOptions, getIndexInfo } = useIndexData();
+const propsStore = usePropsStore()
+const { indexOptions, getIndexInfo } = useIndexData()
 
 // --- STATE ---
-const legendVisible = ref(true);
-const legendExpanded = ref(true);
+const _legendVisible = ref(true)
+const _legendExpanded = ref(true)
 // Initialize local state FROM the global store
-const localSelectedIndex = ref(propsStore.statsIndex);
+const localSelectedIndex = ref(propsStore.statsIndex)
 
 // --- COMPUTED PROPERTIES ---
-const legendData = computed(() => indexToColorScheme[localSelectedIndex.value] || []);
+const _legendData = computed(() => indexToColorScheme[localSelectedIndex.value] || [])
 
-const selectedIndexDescription = computed(() => {
-	const selectedOption = getIndexInfo(localSelectedIndex.value);
-	return selectedOption ? selectedOption.description : '';
-});
+const _selectedIndexDescription = computed(() => {
+	const selectedOption = getIndexInfo(localSelectedIndex.value)
+	return selectedOption ? selectedOption.description : ''
+})
 
-const extrusionNote = computed(() => {
+const _extrusionNote = computed(() => {
 	const notes = {
 		combined_avgheatexposure:
 			'Heat Index shown by grid cell height visualisation, with a maximum height of 250m.',
@@ -177,24 +181,24 @@ const extrusionNote = computed(() => {
 			'Flood Index shown by grid cell height visualisation, with a maximum height of 250m.',
 		combined_flood_heat:
 			'Heat Index shown by grid cell height visualisation, with a maximum height of 250m.',
-	};
-	return notes[localSelectedIndex.value] || null;
-});
+	}
+	return notes[localSelectedIndex.value] || null
+})
 
 // --- METHODS ---
-const handleSelectionChange = (value) => {
-	propsStore.setStatsIndex(value);
-};
+const _handleSelectionChange = (value) => {
+	propsStore.setStatsIndex(value)
+}
 
 // Watcher to sync global state back to the local component state
 watch(
 	() => propsStore.statsIndex,
 	(newGlobalIndex) => {
 		if (localSelectedIndex.value !== newGlobalIndex) {
-			localSelectedIndex.value = newGlobalIndex;
+			localSelectedIndex.value = newGlobalIndex
 		}
 	}
-);
+)
 </script>
 
 <style scoped>

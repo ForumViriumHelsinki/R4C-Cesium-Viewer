@@ -37,13 +37,9 @@
 			aria-live="assertive"
 		>
 			<div class="d-flex align-center">
-				<v-icon class="mr-2">
-mdi-alert-circle
-</v-icon>
+				<v-icon class="mr-2"> mdi-alert-circle </v-icon>
 				<div>
-					<div class="font-weight-bold">
-Failed to Load Map Viewer
-</div>
+					<div class="font-weight-bold">Failed to Load Map Viewer</div>
 					<div class="text-caption">
 						{{ errorMessage }}
 					</div>
@@ -79,9 +75,7 @@ Failed to Load Map Viewer
 			aria-live="assertive"
 		>
 			<div class="d-flex align-center">
-				<v-icon class="mr-2">
-mdi-alert
-</v-icon>
+				<v-icon class="mr-2"> mdi-alert </v-icon>
 				<div>
 					{{ store.errorNotification.message }}
 				</div>
@@ -137,26 +131,23 @@ mdi-alert
  * - cacheWarmer: Background data preloading
  * - ViewportBuildingLoader: Tile-based viewport building streaming
  */
-import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
-
-import DisclaimerPopup from '../components/DisclaimerPopup.vue';
-import Loading from '../components/Loading.vue';
-import BuildingInformation from '../components/BuildingInformation.vue';
-import CameraControls from '../components/CameraControls.vue';
-import MapClickLoadingOverlay from '../components/MapClickLoadingOverlay.vue';
-import ViewportLoadingIndicator from '../components/ViewportLoadingIndicator.vue';
-
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js';
-import { useHeatExposureStore } from '../stores/heatExposureStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useBuildingStore } from '../stores/buildingStore.js';
-import { useGraphicsStore } from '../stores/graphicsStore.js';
-import { useFeatureFlagStore } from '../stores/featureFlagStore';
-
-import cacheWarmer from '../services/cacheWarmer.js';
-import ViewportBuildingLoader from '../services/viewportBuildingLoader.js';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import BuildingInformation from '../components/BuildingInformation.vue'
+import CameraControls from '../components/CameraControls.vue'
+import DisclaimerPopup from '../components/DisclaimerPopup.vue'
+import Loading from '../components/Loading.vue'
+import MapClickLoadingOverlay from '../components/MapClickLoadingOverlay.vue'
+import ViewportLoadingIndicator from '../components/ViewportLoadingIndicator.vue'
+import cacheWarmer from '../services/cacheWarmer.js'
+import ViewportBuildingLoader from '../services/viewportBuildingLoader.js'
+import { useBuildingStore } from '../stores/buildingStore.js'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useGraphicsStore } from '../stores/graphicsStore.js'
+import { useHeatExposureStore } from '../stores/heatExposureStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
+import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
 	components: {
@@ -168,37 +159,37 @@ export default {
 		ViewportLoadingIndicator,
 	},
 	setup() {
-		const store = useGlobalStore();
-		const propsStore = usePropsStore();
-		const toggleStore = useToggleStore(); // Access the toggle store
-		const socioEconomicsStore = useSocioEconomicsStore();
-		const heatExposureStore = useHeatExposureStore();
-		const buildingStore = useBuildingStore();
-		const graphicsStore = useGraphicsStore();
-		const featureFlagStore = useFeatureFlagStore();
+		const store = useGlobalStore()
+		const propsStore = usePropsStore()
+		const toggleStore = useToggleStore() // Access the toggle store
+		const socioEconomicsStore = useSocioEconomicsStore()
+		const heatExposureStore = useHeatExposureStore()
+		const buildingStore = useBuildingStore()
+		const graphicsStore = useGraphicsStore()
+		const featureFlagStore = useFeatureFlagStore()
 		const shouldShowBuildingInformation = computed(() => {
-			return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading;
-		});
-		const viewer = ref(null);
-		const errorSnackbar = ref(false);
-		const errorMessage = ref('');
-		const isLoadingBuildings = ref(false);
+			return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading
+		})
+		const viewer = ref(null)
+		const errorSnackbar = ref(false)
+		const errorMessage = ref('')
+		const isLoadingBuildings = ref(false)
 		// Viewport loading progress tracking
-		const viewportLoadingProgress = ref({ current: 0, total: 0 });
-		const viewportLoadingError = ref(null);
-		let lastPickTime = 0;
-		let Cesium = null;
-		let Datasource = null;
-		let WMS = null;
-		let Featurepicker = null;
-		let Camera = null;
-		let Graphics = null;
+		const viewportLoadingProgress = ref({ current: 0, total: 0 })
+		const viewportLoadingError = ref(null)
+		let lastPickTime = 0
+		let Cesium = null
+		let Datasource = null
+		let WMS = null
+		let Featurepicker = null
+		let Camera = null
+		let Graphics = null
 		// Persistent FeaturePicker instance for viewport-based loading
 		// Reusing the same instance maintains visiblePostalCodes state across camera moves
-		let viewportFeaturepicker = null;
+		let viewportFeaturepicker = null
 		// ViewportBuildingLoader instance for tile-based building streaming
 		// This is an alternative to postal code-based loading (via viewportFeaturepicker)
-		let viewportBuildingLoader = null;
+		let viewportBuildingLoader = null
 
 		/**
 		 * Initializes the Cesium viewer with dynamic module loading.
@@ -224,8 +215,8 @@ export default {
 					const [cesiumModule] = await Promise.all([
 						import('cesium'),
 						import('cesium/Source/Widgets/widgets.css'),
-					]);
-					Cesium = cesiumModule;
+					])
+					Cesium = cesiumModule
 
 					// Load service modules that depend on Cesium
 					const [DatasourceModule, WMSModule, FeaturepickerModule, CameraModule, GraphicsModule] =
@@ -235,35 +226,35 @@ export default {
 							import('../services/featurepicker.js'),
 							import('../services/camera.js'),
 							import('../services/graphics.js'),
-						]);
+						])
 
-					Datasource = DatasourceModule.default;
-					WMS = WMSModule.default;
-					Featurepicker = FeaturepickerModule.default;
-					Camera = CameraModule.default;
-					Graphics = GraphicsModule.default;
+					Datasource = DatasourceModule.default
+					WMS = WMSModule.default
+					Featurepicker = FeaturepickerModule.default
+					Camera = CameraModule.default
+					Graphics = GraphicsModule.default
 				} catch (error) {
-					console.error('Failed to load Cesium library:', error);
+					console.error('Failed to load Cesium library:', error)
 					errorMessage.value =
-						'Unable to load the 3D map viewer. Please check your internet connection and try again.';
-					errorSnackbar.value = true;
-					store.setIsLoading(false);
-					return;
+						'Unable to load the 3D map viewer. Please check your internet connection and try again.'
+					errorSnackbar.value = true
+					store.setIsLoading(false)
+					return
 				}
 			}
 
 			// Set Ion token after loading
-			Cesium.Ion.defaultAccessToken = null;
+			Cesium.Ion.defaultAccessToken = null
 
 			// Detect E2E test environment
-			const isE2ETest = import.meta.env.VITE_E2E_TEST === 'true';
+			const isE2ETest = import.meta.env.VITE_E2E_TEST === 'true'
 
 			// Create offscreen element for hiding credits in test mode
-			let offscreenCreditContainer;
+			let offscreenCreditContainer
 			if (isE2ETest) {
-				offscreenCreditContainer = document.createElement('div');
-				offscreenCreditContainer.style.display = 'none';
-				document.body.appendChild(offscreenCreditContainer);
+				offscreenCreditContainer = document.createElement('div')
+				offscreenCreditContainer.style.display = 'none'
+				document.body.appendChild(offscreenCreditContainer)
 			}
 
 			// Create viewer with enhanced graphics options
@@ -284,12 +275,12 @@ export default {
 				homeButton: false,
 				// Test mode: hide credit container to prevent click interception
 				creditContainer: isE2ETest ? offscreenCreditContainer : undefined,
-			};
+			}
 
 			// Add request render mode if enabled for performance OR in test mode
 			if (graphicsStore.requestRenderMode || isE2ETest) {
-				viewerOptions.requestRenderMode = true;
-				viewerOptions.maximumRenderTimeChange = Infinity;
+				viewerOptions.requestRenderMode = true
+				viewerOptions.maximumRenderTimeChange = Infinity
 			}
 
 			// Test mode: disable camera inertia for deterministic behavior
@@ -298,60 +289,60 @@ export default {
 					inertiaSpin: 0,
 					inertiaZoom: 0,
 					inertiaTranslate: 0,
-				};
+				}
 			}
 
-			viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions);
+			viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions)
 
-			store.setCesiumViewer(viewer.value);
+			store.setCesiumViewer(viewer.value)
 
 			// Expose viewer to E2E test harness
 			if (isE2ETest) {
-				window.__viewer = viewer.value;
-				window.__cesium = Cesium;
-				console.log('[CesiumViewer] 🧪 Test mode enabled - viewer exposed to window');
+				window.__viewer = viewer.value
+				window.__cesium = Cesium
+				console.log('[CesiumViewer] 🧪 Test mode enabled - viewer exposed to window')
 			}
 
 			// Initialize graphics quality settings
-			const graphics = new Graphics();
-			graphics.init(viewer.value);
+			const graphics = new Graphics()
+			graphics.init(viewer.value)
 
 			viewer.value.imageryLayers.add(
 				new WMS().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-			);
+			)
 
-			const camera = new Camera();
-			camera.init();
+			const camera = new Camera()
+			camera.init()
 
-			await addPostalCodes();
-			addFeaturePicker();
-			addCameraMoveEndListener();
-			addAttribution();
+			await addPostalCodes()
+			addFeaturePicker()
+			addCameraMoveEndListener()
+			addAttribution()
 
 			// Initialize viewport-based building loader if viewport streaming is enabled
 			// By default enabled via feature flag (viewportStreaming)
 			// This uses tile-based spatial grid loading instead of postal code boundaries
 			if (featureFlagStore.isEnabled('viewportStreaming')) {
-				viewportBuildingLoader = new ViewportBuildingLoader();
+				viewportBuildingLoader = new ViewportBuildingLoader()
 				// Await initialization - includes retry logic for globe readiness
-				await viewportBuildingLoader.initialize(viewer.value);
-				console.log('[CesiumViewer] ✅ ViewportBuildingLoader initialized (tile-based mode)');
+				await viewportBuildingLoader.initialize(viewer.value)
+				console.log('[CesiumViewer] ✅ ViewportBuildingLoader initialized (tile-based mode)')
 			}
 
 			// Optimize CPU usage: pause rendering when tab is hidden
 			document.addEventListener('visibilitychange', () => {
-				if (!viewer.value) return;
+				if (!viewer.value) return
 
 				if (document.hidden) {
-					viewer.value.scene.requestRenderMode = true;
-					console.log('[CesiumViewer] ⏸ Rendering paused (tab hidden)');
+					viewer.value.scene.requestRenderMode = true
+					console.log('[CesiumViewer] ⏸ Rendering paused (tab hidden)')
 				} else {
-					viewer.value.scene.requestRenderMode = false;
-					viewer.value.scene.requestRender();
-					console.log('[CesiumViewer] ▶ Rendering resumed (tab visible)');
+					viewer.value.scene.requestRenderMode = false
+					viewer.value.scene.requestRender()
+					console.log('[CesiumViewer] ▶ Rendering resumed (tab visible)')
 				}
-			});
-		};
+			})
+		}
 
 		/**
 		 * Adds data source attributions to the Cesium credit display.
@@ -362,13 +353,13 @@ export default {
 		const addAttribution = () => {
 			const hriCredit = new Cesium.Credit(
 				'<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>'
-			);
+			)
 			const statsCredit = new Cesium.Credit(
 				'<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>'
-			);
-			store.cesiumViewer.creditDisplay.addStaticCredit(hriCredit);
-			store.cesiumViewer.creditDisplay.addStaticCredit(statsCredit);
-		};
+			)
+			store.cesiumViewer.creditDisplay.addStaticCredit(hriCredit)
+			store.cesiumViewer.creditDisplay.addStaticCredit(statsCredit)
+		}
 
 		/**
 		 * Loads postal code area boundaries from GeoJSON data.
@@ -378,17 +369,17 @@ export default {
 		 * @returns {Promise<void>}
 		 */
 		const addPostalCodes = async () => {
-			console.log('[CesiumViewer] 📮 Loading postal codes...');
-			const dataSourceService = new Datasource();
-			await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes');
+			console.log('[CesiumViewer] 📮 Loading postal codes...')
+			const dataSourceService = new Datasource()
+			await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes')
 
-			const dataSource = await dataSourceService.getDataSourceByName('PostCodes');
+			const dataSource = await dataSourceService.getDataSourceByName('PostCodes')
 			console.log(
 				'[CesiumViewer] ✅ Postal codes loaded, entities count:',
 				dataSource?._entityCollection?._entities?._array?.length || 0
-			);
-			propsStore.setPostalCodeData(dataSource);
-		};
+			)
+			propsStore.setPostalCodeData(dataSource)
+		}
 
 		/**
 		 * Registers click event handler for feature picking on the map.
@@ -408,65 +399,64 @@ export default {
 		 * @returns {void}
 		 */
 		const addFeaturePicker = () => {
-			const cesiumContainer = document.getElementById('cesiumContainer');
-			const featurepicker = new Featurepicker();
-			console.log('[CesiumViewer] ✅ FeaturePicker click handler added');
+			const cesiumContainer = document.getElementById('cesiumContainer')
+			const featurepicker = new Featurepicker()
+			console.log('[CesiumViewer] ✅ FeaturePicker click handler added')
 
 			// Drag detection: track mouse position to differentiate clicks from drags
-			let mouseDownPosition = null;
-			const DRAG_THRESHOLD = 5; // pixels - movement beyond this is considered a drag
+			let mouseDownPosition = null
+			const DRAG_THRESHOLD = 5 // pixels - movement beyond this is considered a drag
 
 			// Track mouse down position
 			cesiumContainer.addEventListener('mousedown', (event) => {
-				mouseDownPosition = { x: event.clientX, y: event.clientY };
-			});
+				mouseDownPosition = { x: event.clientX, y: event.clientY }
+			})
 
 			cesiumContainer.addEventListener('click', (event) => {
-				const controlPanelElement = document.querySelector('.control-panel-main');
-				const timeSeriesElement = document.querySelector('#heatTimeseriesContainer');
-				const isClickOnControlPanel =
-					controlPanelElement && controlPanelElement.contains(event.target);
-				const isClickOnTimeSeries = timeSeriesElement && timeSeriesElement.contains(event.target);
-				const currentTime = Date.now();
+				const controlPanelElement = document.querySelector('.control-panel-main')
+				const timeSeriesElement = document.querySelector('#heatTimeseriesContainer')
+				const isClickOnControlPanel = controlPanelElement?.contains(event.target)
+				const isClickOnTimeSeries = timeSeriesElement?.contains(event.target)
+				const currentTime = Date.now()
 
-				console.log('[CesiumViewer] 🖱️ Cesium click detected');
-				console.log('[CesiumViewer] Click on control panel:', isClickOnControlPanel);
-				console.log('[CesiumViewer] Click on time series:', isClickOnTimeSeries);
-				console.log('[CesiumViewer] Time since last pick:', currentTime - lastPickTime);
+				console.log('[CesiumViewer] 🖱️ Cesium click detected')
+				console.log('[CesiumViewer] Click on control panel:', isClickOnControlPanel)
+				console.log('[CesiumViewer] Click on time series:', isClickOnTimeSeries)
+				console.log('[CesiumViewer] Time since last pick:', currentTime - lastPickTime)
 
 				// Check if this was a drag (mouse moved significantly between mousedown and mouseup)
 				if (mouseDownPosition) {
-					const dx = event.clientX - mouseDownPosition.x;
-					const dy = event.clientY - mouseDownPosition.y;
-					const distance = Math.sqrt(dx * dx + dy * dy);
+					const dx = event.clientX - mouseDownPosition.x
+					const dy = event.clientY - mouseDownPosition.y
+					const distance = Math.sqrt(dx * dx + dy * dy)
 
 					if (distance > DRAG_THRESHOLD) {
 						console.log(
 							'[CesiumViewer] ⚠️ Click ignored - detected as drag (moved',
 							distance.toFixed(1),
 							'px)'
-						);
-						mouseDownPosition = null;
-						return;
+						)
+						mouseDownPosition = null
+						return
 					}
 				}
-				mouseDownPosition = null;
+				mouseDownPosition = null
 
 				if (!isClickOnControlPanel && !isClickOnTimeSeries && currentTime - lastPickTime > 500) {
-					console.log('[CesiumViewer] ✅ Processing click through FeaturePicker');
-					store.setShowBuildingInfo(false);
+					console.log('[CesiumViewer] ✅ Processing click through FeaturePicker')
+					store.setShowBuildingInfo(false)
 					if (!store.showBuildingInfo) {
-						featurepicker.processClick(event);
+						featurepicker.processClick(event)
 					}
-					lastPickTime = currentTime; // Update the last pick time
+					lastPickTime = currentTime // Update the last pick time
 					setTimeout(() => {
-						store.setShowBuildingInfo(true);
-					}, 1000);
+						store.setShowBuildingInfo(true)
+					}, 1000)
 				} else {
-					console.log('[CesiumViewer] ⚠️ Click ignored due to conditions');
+					console.log('[CesiumViewer] ⚠️ Click ignored due to conditions')
 				}
-			});
-		};
+			})
+		}
 
 		/**
 		 * Registers camera moveEnd event listener with debouncing.
@@ -476,28 +466,28 @@ export default {
 		 * @returns {void}
 		 */
 		const addCameraMoveEndListener = () => {
-			let cameraMoveTimeout = null;
-			const DEBOUNCE_DELAY_MS = 1500; // Wait 1500ms after camera stops moving to prevent blinking
+			let cameraMoveTimeout = null
+			const DEBOUNCE_DELAY_MS = 1500 // Wait 1500ms after camera stops moving to prevent blinking
 
 			viewer.value.camera.moveEnd.addEventListener(() => {
 				// Clear any pending timeout
 				if (cameraMoveTimeout) {
-					clearTimeout(cameraMoveTimeout);
+					clearTimeout(cameraMoveTimeout)
 				}
 
 				// Set new timeout
 				cameraMoveTimeout = setTimeout(() => {
-					console.log('[CesiumViewer] 📷 Camera movement ended, checking viewport state...');
-					handleCameraSettled().catch(console.error);
-				}, DEBOUNCE_DELAY_MS);
-			});
+					console.log('[CesiumViewer] 📷 Camera movement ended, checking viewport state...')
+					handleCameraSettled().catch(console.error)
+				}, DEBOUNCE_DELAY_MS)
+			})
 
 			console.log(
 				'[CesiumViewer] ✅ Camera moveEnd listener added with',
 				DEBOUNCE_DELAY_MS,
 				'ms debounce'
-			);
-		};
+			)
+		}
 
 		/**
 		 * Handles viewport-based building loading after camera stops moving.
@@ -518,8 +508,8 @@ export default {
 		const handleCameraSettled = async () => {
 			// Skip postal code-based viewport loading if viewport streaming is active
 			if (featureFlagStore.isEnabled('viewportStreaming')) {
-				console.log('[CesiumViewer] Viewport streaming active, skipping postal code-based loading');
-				return;
+				console.log('[CesiumViewer] Viewport streaming active, skipping postal code-based loading')
+				return
 			}
 
 			// Prevent overlapping calls to avoid visibility blinking
@@ -527,80 +517,80 @@ export default {
 			console.log(
 				`%c[VISIBILITY] Camera settled - triggering viewport check`,
 				'color: blue; font-weight: bold'
-			);
+			)
 			if (isLoadingBuildings.value) {
-				console.log('[CesiumViewer] Already loading buildings, skipping...');
-				return;
+				console.log('[CesiumViewer] Already loading buildings, skipping...')
+				return
 			}
 
-			const currentLevel = store.level;
+			const currentLevel = store.level
 
-			console.log('[CesiumViewer] Current level:', currentLevel);
+			console.log('[CesiumViewer] Current level:', currentLevel)
 
 			// Only handle viewport-based loading at postalCode level
 			// At 'start' level: user should click to select postal code
 			// At 'building' level: building detail view, no automatic loading
 			if (currentLevel !== 'postalCode') {
-				console.log('[CesiumViewer] Not at postalCode level, skipping viewport check');
-				return;
+				console.log('[CesiumViewer] Not at postalCode level, skipping viewport check')
+				return
 			}
 
 			// Get camera utilities
-			const camera = new Camera();
+			const camera = new Camera()
 
 			// Get viewport rectangle
-			const viewportRect = camera.getViewportRectangle();
+			const viewportRect = camera.getViewportRectangle()
 			if (!viewportRect) {
-				console.warn('[CesiumViewer] Could not determine viewport rectangle');
-				return;
+				console.warn('[CesiumViewer] Could not determine viewport rectangle')
+				return
 			}
 
 			// Get camera height to determine if we should load buildings
-			const cameraHeight = camera.getCameraHeight();
-			const MAX_HEIGHT_FOR_BUILDING_LOAD = 50000; // 50km - only load buildings when zoomed in enough
+			const cameraHeight = camera.getCameraHeight()
+			const MAX_HEIGHT_FOR_BUILDING_LOAD = 50000 // 50km - only load buildings when zoomed in enough
 
 			if (cameraHeight > MAX_HEIGHT_FOR_BUILDING_LOAD) {
-				console.log('[CesiumViewer] Camera too high for building loading:', cameraHeight, 'm');
-				return;
+				console.log('[CesiumViewer] Camera too high for building loading:', cameraHeight, 'm')
+				return
 			}
 
 			console.log(
 				'[CesiumViewer] Camera height:',
 				cameraHeight,
 				'm - proceeding with viewport-based building loading'
-			);
+			)
 
 			try {
-				isLoadingBuildings.value = true;
-				viewportLoadingError.value = null;
+				isLoadingBuildings.value = true
+				viewportLoadingError.value = null
 
 				// Reuse the same FeaturePicker instance to maintain visiblePostalCodes state
 				if (!viewportFeaturepicker) {
-					viewportFeaturepicker = new Featurepicker();
+					viewportFeaturepicker = new Featurepicker()
 				}
-				const visiblePostalCodes = viewportFeaturepicker.getVisiblePostalCodes(viewportRect);
+				const visiblePostalCodes = viewportFeaturepicker.getVisiblePostalCodes(viewportRect)
 
 				// Update progress tracking
 				viewportLoadingProgress.value = {
 					current: 0,
 					total: visiblePostalCodes.length,
-				};
+				}
 
 				// Load buildings for visible postal codes
-				await viewportFeaturepicker.loadBuildingsForVisiblePostalCodes(visiblePostalCodes);
+				await viewportFeaturepicker.loadBuildingsForVisiblePostalCodes(visiblePostalCodes)
 
 				// Update to complete
 				viewportLoadingProgress.value = {
 					current: visiblePostalCodes.length,
 					total: visiblePostalCodes.length,
-				};
+				}
 			} catch (error) {
-				console.error('[CesiumViewer] Error loading buildings:', error?.message || error);
-				viewportLoadingError.value = error?.message || 'Failed to load buildings';
+				console.error('[CesiumViewer] Error loading buildings:', error?.message || error)
+				viewportLoadingError.value = error?.message || 'Failed to load buildings'
 			} finally {
-				isLoadingBuildings.value = false;
+				isLoadingBuildings.value = false
 			}
-		};
+		}
 
 		/**
 		 * Handles retry of viewport-based building loading after an error.
@@ -610,10 +600,10 @@ export default {
 		 * @returns {Promise<void>}
 		 */
 		const handleRetryViewportLoading = async () => {
-			console.log('[CesiumViewer] Retrying viewport building loading');
-			viewportLoadingError.value = null;
-			await handleCameraSettled();
-		};
+			console.log('[CesiumViewer] Retrying viewport building loading')
+			viewportLoadingError.value = null
+			await handleCameraSettled()
+		}
 
 		/**
 		 * Retries viewer initialization after an error.
@@ -623,16 +613,16 @@ export default {
 		 * @returns {Promise<void>}
 		 */
 		const retryInit = async () => {
-			errorSnackbar.value = false;
-			errorMessage.value = '';
-			store.setIsLoading(true);
-			await initViewer();
+			errorSnackbar.value = false
+			errorMessage.value = ''
+			store.setIsLoading(true)
+			await initViewer()
 			if (!errorSnackbar.value) {
-				socioEconomicsStore.loadPaavo().catch(console.error);
-				heatExposureStore.loadHeatExposure().catch(console.error);
+				socioEconomicsStore.loadPaavo().catch(console.error)
+				heatExposureStore.loadHeatExposure().catch(console.error)
 			}
-			store.setIsLoading(false);
-		};
+			store.setIsLoading(false)
+		}
 
 		/**
 		 * Handles cancellation of camera animation via ESC key or button.
@@ -641,25 +631,25 @@ export default {
 		 * @returns {void}
 		 */
 		const handleCancelAnimation = () => {
-			console.log('[CesiumViewer] User requested animation cancellation');
+			console.log('[CesiumViewer] User requested animation cancellation')
 
 			if (!Camera) {
-				console.warn('[CesiumViewer] Camera module not loaded yet');
-				return;
+				console.warn('[CesiumViewer] Camera module not loaded yet')
+				return
 			}
 
-			const camera = new Camera();
-			const wasCancelled = camera.cancelFlight();
+			const camera = new Camera()
+			const wasCancelled = camera.cancelFlight()
 
 			if (wasCancelled) {
-				console.log('[CesiumViewer] Animation cancelled successfully');
+				console.log('[CesiumViewer] Animation cancelled successfully')
 				// Camera service handles state restoration via callbacks
 			} else {
-				console.warn('[CesiumViewer] No active flight to cancel');
+				console.warn('[CesiumViewer] No active flight to cancel')
 				// Still reset state to clear UI
-				store.resetClickProcessingState();
+				store.resetClickProcessingState()
 			}
-		};
+		}
 
 		/**
 		 * Handles retry of failed postal code loading.
@@ -668,17 +658,17 @@ export default {
 		 * @returns {void}
 		 */
 		const handleRetryLoading = () => {
-			console.log('[CesiumViewer] User requested data loading retry');
+			console.log('[CesiumViewer] User requested data loading retry')
 
-			const postalCode = store.clickProcessingState.postalCode;
+			const postalCode = store.clickProcessingState.postalCode
 			if (!postalCode) {
-				console.warn('[CesiumViewer] No postal code to retry');
-				return;
+				console.warn('[CesiumViewer] No postal code to retry')
+				return
 			}
 
 			if (!Featurepicker) {
-				console.warn('[CesiumViewer] Featurepicker module not loaded yet');
-				return;
+				console.warn('[CesiumViewer] Featurepicker module not loaded yet')
+				return
 			}
 
 			// Reset error state and increment retry counter
@@ -686,12 +676,12 @@ export default {
 				error: null,
 				retryCount: store.clickProcessingState.retryCount + 1,
 				stage: 'loading',
-			});
+			})
 
 			// Retry loading through featurepicker
-			const featurepicker = new Featurepicker();
-			featurepicker.loadPostalCodeData(postalCode);
-		};
+			const featurepicker = new Featurepicker()
+			featurepicker.loadPostalCodeData(postalCode)
+		}
 
 		/**
 		 * Global ESC key handler for animation cancellation.
@@ -702,9 +692,9 @@ export default {
 		 */
 		const handleGlobalEscKey = (event) => {
 			if (event.key === 'Escape' && store.clickProcessingState.canCancel) {
-				handleCancelAnimation();
+				handleCancelAnimation()
 			}
-		};
+		}
 
 		/**
 		 * Watch for changes to viewport streaming feature flag
@@ -714,61 +704,61 @@ export default {
 			() => featureFlagStore.isEnabled('viewportStreaming'),
 			async (newValue, _oldValue) => {
 				if (!viewer.value) {
-					console.warn('[CesiumViewer] Viewer not initialized, cannot toggle viewport streaming');
-					return;
+					console.warn('[CesiumViewer] Viewer not initialized, cannot toggle viewport streaming')
+					return
 				}
 
 				if (newValue && !viewportBuildingLoader) {
 					// Enable viewport streaming
-					console.log('[CesiumViewer] Enabling viewport streaming (tile-based loading)');
-					viewportBuildingLoader = new ViewportBuildingLoader();
-					await viewportBuildingLoader.initialize(viewer.value);
+					console.log('[CesiumViewer] Enabling viewport streaming (tile-based loading)')
+					viewportBuildingLoader = new ViewportBuildingLoader()
+					await viewportBuildingLoader.initialize(viewer.value)
 				} else if (!newValue && viewportBuildingLoader) {
 					// Disable viewport streaming
-					console.log('[CesiumViewer] Disabling viewport streaming');
-					await viewportBuildingLoader.shutdown();
-					viewportBuildingLoader = null;
+					console.log('[CesiumViewer] Disabling viewport streaming')
+					await viewportBuildingLoader.shutdown()
+					viewportBuildingLoader = null
 				}
 			}
-		);
+		)
 
 		onMounted(async () => {
-			await initViewer();
-			socioEconomicsStore.loadPaavo().catch(console.error);
-			heatExposureStore.loadHeatExposure().catch(console.error);
+			await initViewer()
+			socioEconomicsStore.loadPaavo().catch(console.error)
+			heatExposureStore.loadHeatExposure().catch(console.error)
 
 			// Register ESC key handler for animation cancellation
-			document.addEventListener('keydown', handleGlobalEscKey);
-			console.log('[CesiumViewer] ⌨️ ESC key handler registered');
+			document.addEventListener('keydown', handleGlobalEscKey)
+			console.log('[CesiumViewer] ⌨️ ESC key handler registered')
 
 			// Start cache warming in background (non-blocking)
 			// Uses requestIdleCallback to run during browser idle time
 			if (typeof requestIdleCallback !== 'undefined') {
 				requestIdleCallback(
 					() => {
-						void cacheWarmer.warmCriticalData();
+						void cacheWarmer.warmCriticalData()
 					},
 					{ timeout: 2000 }
-				); // 2 second timeout
+				) // 2 second timeout
 			} else {
 				// Fallback for browsers without requestIdleCallback
 				setTimeout(() => {
-					void cacheWarmer.warmCriticalData();
-				}, 1000);
+					void cacheWarmer.warmCriticalData()
+				}, 1000)
 			}
-		});
+		})
 
 		onBeforeUnmount(async () => {
 			// Clean up ESC key handler
-			document.removeEventListener('keydown', handleGlobalEscKey);
-			console.log('[CesiumViewer] 🧹 ESC key handler removed');
+			document.removeEventListener('keydown', handleGlobalEscKey)
+			console.log('[CesiumViewer] 🧹 ESC key handler removed')
 
 			// Clean up viewport building loader if initialized
 			if (viewportBuildingLoader) {
-				await viewportBuildingLoader.shutdown();
-				console.log('[CesiumViewer] 🧹 ViewportBuildingLoader shutdown complete');
+				await viewportBuildingLoader.shutdown()
+				console.log('[CesiumViewer] 🧹 ViewportBuildingLoader shutdown complete')
 			}
-		});
+		})
 
 		return {
 			store,
@@ -786,9 +776,9 @@ export default {
 			viewportLoadingProgress,
 			viewportLoadingError,
 			handleRetryViewportLoading,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

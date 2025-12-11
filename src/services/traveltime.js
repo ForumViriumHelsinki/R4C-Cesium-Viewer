@@ -1,9 +1,9 @@
-import Datasource from './datasource.js';
-import Populationgrid from './populationgrid.js';
-import * as Cesium from 'cesium';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useURLStore } from '../stores/urlStore.js';
+import * as Cesium from 'cesium'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
+import { useURLStore } from '../stores/urlStore.js'
+import Datasource from './datasource.js'
+import Populationgrid from './populationgrid.js'
 
 /**
  * Travel Time Service
@@ -30,12 +30,12 @@ export default class Traveltime {
 	 * Creates a Traveltime service instance
 	 */
 	constructor() {
-		this.toggleStore = useToggleStore();
-		this.store = useGlobalStore();
-		this.viewer = this.store.cesiumViewer;
-		this.datasourceService = new Datasource();
-		this.populationGridService = new Populationgrid();
-		this.urlStore = useURLStore();
+		this.toggleStore = useToggleStore()
+		this.store = useGlobalStore()
+		this.viewer = this.store.cesiumViewer
+		this.datasourceService = new Datasource()
+		this.populationGridService = new Populationgrid()
+		this.urlStore = useURLStore()
 	}
 
 	/**
@@ -53,16 +53,16 @@ export default class Traveltime {
 	 */
 	async loadTravelTimeData(from_id) {
 		try {
-			const response = await fetch(this.urlStore.hkiTravelTime(from_id));
-			const traveltimedata = await response.json();
-			this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data);
+			const response = await fetch(this.urlStore.hkiTravelTime(from_id))
+			const traveltimedata = await response.json()
+			this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data)
 		} catch (error) {
-			console.error('Error loading travel time data:', error);
+			console.error('Error loading travel time data:', error)
 			this.store.showError(
 				'Unable to load travel time data. Please try again.',
 				`Failed to fetch travel times from grid cell ${from_id}: ${error.message}`
-			);
-			throw error; // Re-throw so callers know it failed
+			)
+			throw error // Re-throw so callers know it failed
 		}
 	}
 
@@ -82,36 +82,34 @@ export default class Traveltime {
 		const geoJsonData = {
 			type: 'FeatureCollection',
 			features: [],
-		};
+		}
 
-		const dataSourceTravelLabel = new Cesium.CustomDataSource('TravelLabel');
-		this.viewer.dataSources.add(dataSourceTravelLabel);
+		const dataSourceTravelLabel = new Cesium.CustomDataSource('TravelLabel')
+		this.viewer.dataSources.add(dataSourceTravelLabel)
 
-		const dataSource = this.viewer.dataSources.getByName('TravelTimeGrid');
+		const dataSource = this.viewer.dataSources.getByName('TravelTimeGrid')
 
 		if (dataSource) {
-			const entities = dataSource[0]._entityCollection._entities._array;
+			const entities = dataSource[0]._entityCollection._entities._array
 
-			entities.forEach(function (entity) {
+			entities.forEach((entity) => {
 				if (entity.polygon) {
-					const entityId = entity.properties.id.getValue();
+					const entityId = entity.properties.id.getValue()
 
 					// Find the corresponding data in your traveldata
-					const matchingData = traveldata.find(function (data) {
-						return Number(data.to_id) === Number(entityId);
-					});
+					const matchingData = traveldata.find((data) => Number(data.to_id) === Number(entityId))
 
 					if (matchingData) {
-						const hierarchy = entity.polygon.hierarchy.getValue().positions;
+						const hierarchy = entity.polygon.hierarchy.getValue().positions
 
 						// Calculate the center of the polygon's vertices
-						const boundingSphere = Cesium.BoundingSphere.fromPoints(hierarchy);
-						const centerCartesian = boundingSphere.center;
+						const boundingSphere = Cesium.BoundingSphere.fromPoints(hierarchy)
+						const centerCartesian = boundingSphere.center
 
 						// Convert the center to latitude and longitude in degrees
-						const centerLL84 = Cesium.Cartographic.fromCartesian(centerCartesian);
-						const centerLatitude = Cesium.Math.toDegrees(centerLL84.latitude);
-						const centerLongitude = Cesium.Math.toDegrees(centerLL84.longitude);
+						const centerLL84 = Cesium.Cartographic.fromCartesian(centerCartesian)
+						const centerLatitude = Cesium.Math.toDegrees(centerLL84.latitude)
+						const centerLongitude = Cesium.Math.toDegrees(centerLL84.longitude)
 
 						// Create the GeoJSON feature with the center coordinates
 						const feature = {
@@ -124,18 +122,18 @@ export default class Traveltime {
 								time: Number(matchingData.pt_m_walk_avg).toFixed(0),
 								id: Number(matchingData.to_id),
 							},
-						};
+						}
 
-						geoJsonData.features.push(feature);
+						geoJsonData.features.push(feature)
 					}
 				}
-			});
+			})
 		} else {
-			console.error('TravelTimeGrid data source not found.');
+			console.error('TravelTimeGrid data source not found.')
 		}
 
-		void this.removeTravelTimeGridAndAddDataGrid();
-		void this.addTravelLabelDataSource(geoJsonData);
+		void this.removeTravelTimeGridAndAddDataGrid()
+		void this.addTravelLabelDataSource(geoJsonData)
 	}
 
 	/**
@@ -146,26 +144,26 @@ export default class Traveltime {
 	 * @returns {Promise<void>}
 	 */
 	async removeTravelTimeGridAndAddDataGrid() {
-		await this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
-		await this.populationGridService.createPopulationGrid();
+		await this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid')
+		await this.populationGridService.createPopulationGrid()
 
 		if (this.toggleStore.travelTime) {
-			const dataSource = this.datasourceService.getDataSourceByName('PopulationGrid');
+			const dataSource = this.datasourceService.getDataSourceByName('PopulationGrid')
 
 			if (!dataSource) {
-				console.error('Data source with name PopulationGrid not found.');
-				return [];
+				console.error('Data source with name PopulationGrid not found.')
+				return []
 			}
 
 			// Get the entities of the data source
-			const entities = dataSource.entities.values;
+			const entities = dataSource.entities.values
 
 			for (let i = 0; i < entities.length; i++) {
-				let entity = entities[i];
-				this.populationGridService.setGridEntityPolygonToGreen(entity);
+				const entity = entities[i]
+				this.populationGridService.setGridEntityPolygonToGreen(entity)
 			}
 
-			this.toggleStore.setTravelTime(false);
+			this.toggleStore.setTravelTime(false)
 		}
 	}
 
@@ -184,26 +182,26 @@ export default class Traveltime {
 	 * - Eye offset: Elevated above ground for visibility
 	 */
 	addTravelLabelDataSource(data) {
-		var dataSource = new Cesium.GeoJsonDataSource();
+		var dataSource = new Cesium.GeoJsonDataSource()
 
 		// Load the GeoJSON data into the data source
 		void dataSource.load(data, {
 			markerColor: Cesium.Color.ORANGE, // Customize the marker color if desired
 			clampToGround: true, // Set to true to clamp entities to the ground
-		});
+		})
 
 		// Add the data source to the viewer
 		this.viewer.dataSources
 			.add(Cesium.GeoJsonDataSource.load(data, {}))
-			.then(function (dataSource) {
+			.then((dataSource) => {
 				// Set a name for the data source
-				dataSource.name = 'TravelLabel';
-				const entities = dataSource.entities.values;
+				dataSource.name = 'TravelLabel'
+				const entities = dataSource.entities.values
 
 				// Iterate over the entities and add labels for "temp_air" and "rh_air"
 				for (let i = 0; i < entities.length; i++) {
-					let entity = entities[i];
-					const time = entity._properties._time._value;
+					const entity = entities[i]
+					const time = entity._properties._time._value
 
 					if (time) {
 						entity.label = {
@@ -216,19 +214,19 @@ export default class Traveltime {
 							backgroundColor: Cesium.Color.WHITE,
 							eyeOffset: new Cesium.Cartesian3(0, 20, -20),
 							scaleByDistance: new Cesium.NearFarScalar(4000, 1, 80000, 0.0),
-						};
+						}
 					}
 
-					entity.billboard = undefined; // Remove any billboard icon
-					entity.point = undefined; // Remove any point marker
-					entity.polyline = undefined; // Remove any polyline
-					entity.polygon = undefined; // Remove any polygon
+					entity.billboard = undefined // Remove any billboard icon
+					entity.point = undefined // Remove any point marker
+					entity.polyline = undefined // Remove any polyline
+					entity.polygon = undefined // Remove any polygon
 				}
 			})
-			.catch(function (error) {
+			.catch((error) => {
 				// Log any errors encountered while loading the data source
-				console.log(error);
-			});
+				console.log(error)
+			})
 	}
 
 	/**
@@ -245,11 +243,11 @@ export default class Traveltime {
 	 * - Eye offset: Elevated for visibility
 	 */
 	markCurrentLocation(entity) {
-		const hierarchy = entity.polygon.hierarchy.getValue().positions;
+		const hierarchy = entity.polygon.hierarchy.getValue().positions
 
 		// Calculate the center of the polygon's vertices
-		const boundingSphere = Cesium.BoundingSphere.fromPoints(hierarchy);
-		const centerCartesian = boundingSphere.center;
+		const boundingSphere = Cesium.BoundingSphere.fromPoints(hierarchy)
+		const centerCartesian = boundingSphere.center
 
 		this.viewer.entities.add({
 			position: centerCartesian,
@@ -263,6 +261,6 @@ export default class Traveltime {
 				eyeOffset: new Cesium.Cartesian3(0, 200, -200),
 				scaleByDistance: new Cesium.NearFarScalar(4000, 1, 40000, 0.0),
 			},
-		});
+		})
 	}
 }

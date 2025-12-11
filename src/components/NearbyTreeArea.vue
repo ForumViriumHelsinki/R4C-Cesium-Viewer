@@ -4,7 +4,8 @@
 	<label
 		id="bearingLabel"
 		style="position: fixed; bottom: 41px; left: 15px; visibility: hidden"
-		>Direction of trees</label>
+		>Direction of trees</label
+	>
 
 	<div id="bearingAllSwitchContainer">
 		<!-- bearingAll -->
@@ -16,14 +17,15 @@
 				id="bearingAllToggle"
 				type="checkbox"
 				value="a"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingAllLabel"
 			for="bearingAllToggle"
 			class="label"
-			>All</label>
+			>All</label
+		>
 	</div>
 
 	<div id="bearingSouthSwitchContainer">
@@ -36,14 +38,15 @@
 				id="bearingSouthToggle"
 				type="checkbox"
 				value="s"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingSouthLabel"
 			for="bearingSouthToggle"
 			class="label"
-			>South</label>
+			>South</label
+		>
 	</div>
 
 	<div id="bearingWestSwitchContainer">
@@ -56,14 +59,15 @@
 				id="bearingWestToggle"
 				type="checkbox"
 				value="w"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingWestLabel"
 			for="bearingWestToggle"
 			class="label"
-			>West</label>
+			>West</label
+		>
 	</div>
 
 	<div id="bearingEastSwitchContainer">
@@ -76,14 +80,15 @@
 				id="bearingEastToggle"
 				type="checkbox"
 				value="e"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingEastLabel"
 			for="bearingEastToggle"
 			class="label"
-			>East</label>
+			>East</label
+		>
 	</div>
 
 	<div id="bearingNorthSwitchContainer">
@@ -96,66 +101,67 @@
 				id="bearingNorthToggle"
 				type="checkbox"
 				value="n"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			id="bearingNorthLabel"
 			for="bearingNorthToggle"
 			class="label"
-			>North</label>
+			>North</label
+		>
 	</div>
 </template>
 
 <script>
-import { eventBus } from '../services/eventEmitter.js';
-import * as d3 from 'd3'; // Import D3.js
-import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import * as Cesium from 'cesium';
-import Plot from '../services/plot.js';
-import Tree from '../services/tree.js';
-import Building from '../services/building.js';
-import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
+import * as Cesium from 'cesium'
+import * as d3 from 'd3' // Import D3.js
+import Building from '../services/building.js'
+import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
+import { eventBus } from '../services/eventEmitter.js'
+import Plot from '../services/plot.js'
+import Tree from '../services/tree.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
 	mounted() {
-		this.unsubscribe = eventBus.on('newNearbyTreeDiagram', this.newNearbyTreeDiagram);
-		this.store = useGlobalStore();
-		this.toggleStore = useToggleStore();
-		this.plotService = new Plot();
+		this.unsubscribe = eventBus.on('newNearbyTreeDiagram', this.newNearbyTreeDiagram)
+		this.store = useGlobalStore()
+		this.toggleStore = useToggleStore()
+		this.plotService = new Plot()
 	},
 	beforeUnmount() {
-		eventBus.off('newNearbyTreeDiagram');
+		eventBus.off('newNearbyTreeDiagram')
 	},
 	methods: {
 		newNearbyTreeDiagram() {
-			const propsStore = usePropsStore();
-			setupBearingSwitches(this.store.postalcode);
+			const propsStore = usePropsStore()
+			setupBearingSwitches(this.store.postalcode)
 
-			if (this.store.level == 'postalCode') {
-				this.plotService.hideScatterPlot();
+			if (this.store.level === 'postalCode') {
+				this.plotService.hideScatterPlot()
 				// Call function that combines datasets for plotting
 				// Use serializable data from store + cesiumEntityManager for visual mutations
 				const sumPAlaM2Map = this.combineDistanceAndTreeData(
 					propsStore.treeBuildingDistanceData,
 					propsStore.treeData
-				);
+				)
 				const heatExpTreeArea = this.createTreeBuildingPlotMap(
 					sumPAlaM2Map,
 					propsStore.buildingData
-				);
-				const heatExpAverageTreeArea = this.extractKeysAndAverageTreeArea(heatExpTreeArea);
+				)
+				const heatExpAverageTreeArea = this.extractKeysAndAverageTreeArea(heatExpTreeArea)
 				this.createTreesNearbyBuildingsPlot(
 					heatExpAverageTreeArea[0],
 					heatExpAverageTreeArea[1],
 					heatExpAverageTreeArea[2]
-				);
+				)
 			}
 		},
 		clearNearbyTreeDiagram() {
-			d3.select('#nearbyTreeAreaContainer').select('svg').remove();
+			d3.select('#nearbyTreeAreaContainer').select('svg').remove()
 		},
 		/**
 		 * Extracts heat expsoure and calculates average tree_area from the heatTreeAverageMap.
@@ -165,24 +171,24 @@ export default {
 		 * @return { Array } An array containing three sub-arrays. The first sub-array contains all the keys from the map, and the second sub-array contains the calculated average tree_area for each key. Third one contains the count of buildings for the heat exposure value.
 		 */
 		extractKeysAndAverageTreeArea(heatTreeAverageMap) {
-			const heatExpArray = [];
-			const averageTreeAreaArray = [];
-			const buildingCounts = [];
+			const heatExpArray = []
+			const averageTreeAreaArray = []
+			const buildingCounts = []
 
 			heatTreeAverageMap.forEach((value, key) => {
-				heatExpArray.push(key);
+				heatExpArray.push(key)
 
-				if (value.tree_area == 0) {
+				if (value.tree_area === 0) {
 					// setting the value to 1 if there is no tree area nearby
-					averageTreeAreaArray.push(1);
+					averageTreeAreaArray.push(1)
 				} else {
-					averageTreeAreaArray.push(value.tree_area / value.count);
+					averageTreeAreaArray.push(value.tree_area / value.count)
 				}
 
-				buildingCounts.push(value.count);
-			});
+				buildingCounts.push(value.count)
+			})
 
-			return [heatExpArray, averageTreeAreaArray, buildingCounts];
+			return [heatExpArray, averageTreeAreaArray, buildingCounts]
 		},
 
 		/**
@@ -195,75 +201,75 @@ export default {
 		 * @return { Map } A map for plotting that contains the aggregated tree_area and count of buildings for each heat exposure value.
 		 */
 		createTreeBuildingPlotMap(sumPAlaM2Map, buildingData) {
-			const heatTreeAverageMap = new Map();
-			let totalCounter = 0;
-			let totalTreeArea = 0;
+			const heatTreeAverageMap = new Map()
+			let totalCounter = 0
+			let totalTreeArea = 0
 
-			let maxTreeArea = 0;
-			let maxTreeAreaBuilding = null;
+			let maxTreeArea = 0
+			let maxTreeAreaBuilding = null
 
 			// Iterate over serializable building data
 			for (const [building_id, buildingInfo] of buildingData.entries()) {
-				const heatExposure = buildingInfo.heatExposure;
-				const area_m2 = buildingInfo.area_m2;
+				const heatExposure = buildingInfo.heatExposure
+				const area_m2 = buildingInfo.area_m2
 
 				// Check if building has required data and meets size threshold
 				if (heatExposure && building_id && area_m2 && Number(area_m2) > 225) {
-					let tree_area = sumPAlaM2Map.get(building_id);
+					let tree_area = sumPAlaM2Map.get(building_id)
 
 					// Set tree area to 0 if not found
 					if (!tree_area) {
-						tree_area = 0;
+						tree_area = 0
 					}
 
-					const heatExpFixed = heatExposure.toFixed(2);
+					const heatExpFixed = heatExposure.toFixed(2)
 
 					// Aggregate by heat exposure
 					if (heatTreeAverageMap.has(heatExpFixed)) {
-						let storedValues = heatTreeAverageMap.get(heatExpFixed);
-						storedValues.tree_area = storedValues.tree_area + tree_area;
-						storedValues.count = storedValues.count + 1;
+						const storedValues = heatTreeAverageMap.get(heatExpFixed)
+						storedValues.tree_area = storedValues.tree_area + tree_area
+						storedValues.count = storedValues.count + 1
 
-						heatTreeAverageMap.set(heatExpFixed, storedValues);
+						heatTreeAverageMap.set(heatExpFixed, storedValues)
 					} else {
-						heatTreeAverageMap.set(heatExpFixed, { tree_area: tree_area, count: 1 });
+						heatTreeAverageMap.set(heatExpFixed, { tree_area: tree_area, count: 1 })
 					}
 
 					// Visual updates via cesiumEntityManager
-					const entity = cesiumEntityManager.getBuildingEntity(building_id);
+					const entity = cesiumEntityManager.getBuildingEntity(building_id)
 					if (entity) {
 						// Set tree_area as a property of the entity using proper Cesium Property API
 						if (!entity.properties.hasProperty('treeArea')) {
-							entity.properties.addProperty('treeArea');
+							entity.properties.addProperty('treeArea')
 						}
-						entity.properties.treeArea = new Cesium.ConstantProperty(tree_area);
+						entity.properties.treeArea = new Cesium.ConstantProperty(tree_area)
 
 						if (tree_area > 225) {
 							// Highlight the building entity edges by changing its outlineColor and outlineWidth
 							if (entity.polygon) {
-								entity.polygon.outline = true; // Enable outline
-								entity.polygon.outlineColor = Cesium.Color.CHARTREUSE; // Set outline color to green
-								entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
+								entity.polygon.outline = true // Enable outline
+								entity.polygon.outlineColor = Cesium.Color.CHARTREUSE // Set outline color to green
+								entity.polygon.outlineWidth = 20 // Set outline width to 3 (adjust as needed)
 							}
 
 							if (maxTreeArea < tree_area) {
-								maxTreeArea = tree_area;
-								maxTreeAreaBuilding = building_id;
+								maxTreeArea = tree_area
+								maxTreeAreaBuilding = building_id
 							}
 						}
 					}
 
 					// for calculating postal code average
-					totalTreeArea += tree_area;
-					totalCounter++;
+					totalTreeArea += tree_area
+					totalCounter++
 				}
 			}
 
-			this.setEntityColorToGreen(maxTreeAreaBuilding);
+			this.setEntityColorToGreen(maxTreeAreaBuilding)
 
-			this.store.setAverageTreeArea(totalTreeArea / totalCounter);
+			this.store.setAverageTreeArea(totalTreeArea / totalCounter)
 
-			return heatTreeAverageMap;
+			return heatTreeAverageMap
 		},
 
 		/**
@@ -274,14 +280,14 @@ export default {
 		 *
 		 */
 		setEntityColorToGreen(entityId) {
-			if (!entityId) return;
+			if (!entityId) return
 
 			// Get entity directly from cesiumEntityManager
-			const entity = cesiumEntityManager.getBuildingEntity(entityId);
+			const entity = cesiumEntityManager.getBuildingEntity(entityId)
 
-			if (entity && entity.polygon) {
-				entity.polygon.material = Cesium.Color.FORESTGREEN;
-				entity.polygon.outlineColor = Cesium.Color.RED; // Set outline color to red
+			if (entity?.polygon) {
+				entity.polygon.material = Cesium.Color.FORESTGREEN
+				entity.polygon.outlineColor = Cesium.Color.RED // Set outline color to red
 			}
 		},
 
@@ -295,47 +301,47 @@ export default {
 		 * @return { object } mapped data for plotting
 		 */
 		combineDistanceAndTreeData(distanceData, treeData) {
-			const selectedBearingValue = this.findSelectedBearingValue();
+			const selectedBearingValue = this.findSelectedBearingValue()
 
 			// Create a map to store the sum of 'p_ala_m2' for each 'kohde_id' in 'treeData'
-			const sumPAlaM2Map = new Map();
+			const sumPAlaM2Map = new Map()
 
 			// Create a lookup map from treeData for faster access
-			const treeDataMap = new Map();
+			const treeDataMap = new Map()
 			for (const tree of treeData) {
-				treeDataMap.set(tree.kohde_id, tree.p_ala_m2);
+				treeDataMap.set(tree.kohde_id, tree.p_ala_m2)
 			}
 
 			for (let i = 0, len = distanceData.features.length; i < len; i++) {
-				const bearing = distanceData.features[i].properties.bearing;
+				const bearing = distanceData.features[i].properties.bearing
 
 				if (this.checkBearing(bearing, selectedBearingValue)) {
-					const building_id = distanceData.features[i].properties.building_id;
-					const tree_id = distanceData.features[i].properties.tree_id;
+					const building_id = distanceData.features[i].properties.building_id
+					const tree_id = distanceData.features[i].properties.tree_id
 
 					// Get tree area from serializable data
-					const p_ala_m2 = treeDataMap.get(tree_id);
+					const p_ala_m2 = treeDataMap.get(tree_id)
 
 					if (p_ala_m2 !== undefined) {
 						// Update visual properties via cesiumEntityManager
-						const entity = cesiumEntityManager.getTreeEntity(tree_id);
+						const entity = cesiumEntityManager.getTreeEntity(tree_id)
 						if (entity) {
-							entity.polygon.outline = true; // Enable outline
-							entity.polygon.outlineColor = Cesium.Color.CHARTREUSE; // Set outline color to green
-							entity.polygon.outlineWidth = 20; // Set outline width to 3 (adjust as needed)
+							entity.polygon.outline = true // Enable outline
+							entity.polygon.outlineColor = Cesium.Color.CHARTREUSE // Set outline color to green
+							entity.polygon.outlineWidth = 20 // Set outline width to 3 (adjust as needed)
 						}
 
 						// Aggregate tree area by building
 						if (sumPAlaM2Map.has(building_id)) {
-							sumPAlaM2Map.set(building_id, sumPAlaM2Map.get(building_id) + p_ala_m2);
+							sumPAlaM2Map.set(building_id, sumPAlaM2Map.get(building_id) + p_ala_m2)
 						} else {
-							sumPAlaM2Map.set(building_id, p_ala_m2);
+							sumPAlaM2Map.set(building_id, p_ala_m2)
 						}
 					}
 				}
 			}
 
-			return sumPAlaM2Map;
+			return sumPAlaM2Map
 		},
 
 		/**
@@ -349,29 +355,29 @@ export default {
 		checkBearing(bearing, selectedBearingValue) {
 			switch (selectedBearingValue) {
 				case 'a':
-					return true;
+					return true
 				case 's':
 					if (bearing > 134 && bearing < 225) {
-						return true;
+						return true
 					}
-					break;
+					break
 				case 'w':
 					if (bearing > 224 && bearing < 315) {
-						return true;
+						return true
 					}
-					break;
+					break
 				case 'n':
 					if (bearing > 314 && bearing < 45) {
-						return true;
+						return true
 					}
-					break;
+					break
 				case 'e':
 					if (bearing > 44 && bearing < 135) {
-						return true;
+						return true
 					}
-					break;
+					break
 				default:
-					return false;
+					return false
 			}
 		},
 
@@ -393,7 +399,7 @@ export default {
 				.enter()
 				.append('rect')
 				.attr('class', 'bar')
-				.attr('x', (d, i) => xScale(heatExps[i]))
+				.attr('x', (_d, i) => xScale(heatExps[i]))
 				.attr('y', (d) => yScale(d))
 				.attr('width', width / data.length)
 				.attr('height', (d) => height - yScale(d))
@@ -407,7 +413,7 @@ export default {
 						() => `Heat Exposure: ${heatExps[i]}<br>Tree Area: ${d}`
 					)
 				)
-				.on('mouseout', () => this.plotService.handleMouseout(tooltip));
+				.on('mouseout', () => this.plotService.handleMouseout(tooltip))
 		},
 		/**
 		 * This function iterates through each direction using the switches array.
@@ -416,18 +422,18 @@ export default {
 		 *
 		 */
 		findSelectedBearingValue() {
-			const switches = ['All', 'South', 'West', 'East', 'North'];
+			const switches = ['All', 'South', 'West', 'East', 'North']
 
 			for (const direction of switches) {
-				const switchContainer = document.getElementById(`bearing${direction}SwitchContainer`);
-				const toggle = switchContainer.querySelector(`#bearing${direction}Toggle`);
+				const switchContainer = document.getElementById(`bearing${direction}SwitchContainer`)
+				const toggle = switchContainer.querySelector(`#bearing${direction}Toggle`)
 
 				if (toggle.checked) {
-					return toggle.value;
+					return toggle.value
 				}
 			}
 
-			return null; // Return null if no switch is selected
+			return null // Return null if no switch is selected
 		},
 
 		/**
@@ -438,31 +444,28 @@ export default {
 		 * @param { Array<Number> } counts array cointainig count of buildings for that heat exposure
 		 */
 		createTreesNearbyBuildingsPlot(heatexps, tree_areas) {
-			this.plotService.initializePlotContainer('nearbyTreeAreaContainer');
+			this.plotService.initializePlotContainer('nearbyTreeAreaContainer')
 
 			if (tree_areas.length > 0) {
-				this.plotService.toggleBearingSwitchesVisibility('visible');
+				this.plotService.toggleBearingSwitchesVisibility('visible')
 
-				const margin = { top: 30, right: 30, bottom: 60, left: 30 };
-				const width = 600 - margin.left - margin.right;
-				const height = 300 - margin.top - margin.bottom;
+				const margin = { top: 30, right: 30, bottom: 60, left: 30 }
+				const width = 600 - margin.left - margin.right
+				const height = 300 - margin.top - margin.bottom
 
 				const svg = this.plotService.createSVGElement(
 					margin,
 					width,
 					height,
 					'#nearbyTreeAreaContainer'
-				);
+				)
 
-				const x = this.plotService.createScaleLinear(d3.min(heatexps), d3.max(heatexps), [
-					0,
-					width,
-				]);
-				const y = this.plotService.createScaleLinear(0, d3.max(tree_areas), [height, 0]);
+				const x = this.plotService.createScaleLinear(d3.min(heatexps), d3.max(heatexps), [0, width])
+				const y = this.plotService.createScaleLinear(0, d3.max(tree_areas), [height, 0])
 
-				this.plotService.setupAxes(svg, x, y, height);
+				this.plotService.setupAxes(svg, x, y, height)
 
-				const tooltip = this.plotService.createTooltip('#nearbyTreeAreaContainer');
+				const tooltip = this.plotService.createTooltip('#nearbyTreeAreaContainer')
 
 				this.createBarsForTreeChart(
 					svg,
@@ -475,40 +478,40 @@ export default {
 					'nearbyTreeAreaContainer',
 					heatexps,
 					'green'
-				);
+				)
 				this.plotService.addTitle(
 					svg,
 					'Nearby Tree Area of Buildings with Heat Exposure',
 					width,
 					margin
-				);
+				)
 			}
 		},
 	},
-};
+}
 
 const setupBearingSwitches = (postalcode) => {
-	const switches = ['All', 'South', 'West', 'East', 'North'];
+	const switches = ['All', 'South', 'West', 'East', 'North']
 
 	for (const currentDirection of switches) {
-		const switchContainer = document.getElementById(`bearing${currentDirection}SwitchContainer`);
-		const toggle = switchContainer.querySelector(`#bearing${currentDirection}Toggle`);
+		const switchContainer = document.getElementById(`bearing${currentDirection}SwitchContainer`)
+		const toggle = switchContainer.querySelector(`#bearing${currentDirection}Toggle`)
 
 		toggle.addEventListener('click', () => {
-			updateBearingSwitches(switches, currentDirection);
-			const treeService = new Tree();
-			const buildingService = new Building();
-			buildingService.resetBuildingEntities();
-			treeService.resetTreeEntities();
-			treeService.fetchAndAddTreeDistanceData(postalcode);
-		});
+			updateBearingSwitches(switches, currentDirection)
+			const treeService = new Tree()
+			const buildingService = new Building()
+			buildingService.resetBuildingEntities()
+			treeService.resetTreeEntities()
+			treeService.fetchAndAddTreeDistanceData(postalcode)
+		})
 
 		// Set the 'All' switch to checked by default
 		if (currentDirection === 'All') {
-			toggle.checked = true;
+			toggle.checked = true
 		}
 	}
-};
+}
 
 const updateBearingSwitches = (switches, currentDirection) => {
 	// Use an arrow function with const
@@ -516,12 +519,12 @@ const updateBearingSwitches = (switches, currentDirection) => {
 		if (currentDirection !== otherDirection) {
 			const otherSwitchContainer = document.getElementById(
 				`bearing${otherDirection}SwitchContainer`
-			);
-			const otherToggle = otherSwitchContainer.querySelector(`#bearing${otherDirection}Toggle`);
-			otherToggle.checked = false;
+			)
+			const otherToggle = otherSwitchContainer.querySelector(`#bearing${otherDirection}Toggle`)
+			otherToggle.checked = false
 		}
 	}
-};
+}
 </script>
 
 <style>

@@ -55,57 +55,57 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { useGlobalStore } from '../stores/globalStore';
-import { useToggleStore } from '../stores/toggleStore';
-import Camera from '../services/camera';
-import FeaturePicker from '../services/featurepicker';
-import { eventBus } from '../services/eventEmitter';
+import { computed, ref, watch } from 'vue'
+import Camera from '../services/camera'
+import { eventBus } from '../services/eventEmitter'
+import FeaturePicker from '../services/featurepicker'
+import { useGlobalStore } from '../stores/globalStore'
+import { useToggleStore } from '../stores/toggleStore'
 
 // State variables
-const searchQuery = ref('');
-const filteredAddresses = ref([]); // Store full address objects
-const showSearchResults = ref(false);
-const addressData = ref([]);
+const searchQuery = ref('')
+const filteredAddresses = ref([]) // Store full address objects
+const showSearchResults = ref(false)
+const addressData = ref([])
 
 // Access stores
-const globalStore = useGlobalStore();
-const toggleStore = useToggleStore();
-const cameraService = new Camera();
-const featurePicker = new FeaturePicker();
+const globalStore = useGlobalStore()
+const toggleStore = useToggleStore()
+const cameraService = new Camera()
+const featurePicker = new FeaturePicker()
 
 // Computed property to determine if geocoding should be shown
-const showGeocoding = computed(() => {
-	const view = globalStore.view.toLowerCase(); // Ensure case-insensitivity
-	return view === 'helsinki' || view === 'capitalregion';
-});
+const _showGeocoding = computed(() => {
+	const view = globalStore.view.toLowerCase() // Ensure case-insensitivity
+	return view === 'helsinki' || view === 'capitalregion'
+})
 
 // Placeholder method for moving to the target
-const moveToTarget = () => {
+const _moveToTarget = () => {
 	// Search for a match in filteredAddresses based on searchQuery
 	const matchedAddress = filteredAddresses.value.find(
 		(address) => address.address.toLowerCase() === searchQuery.value.toLowerCase()
-	);
+	)
 
 	if (matchedAddress) {
 		// If a match is found, move the camera to the location
-		moveCameraToLocation(matchedAddress);
+		moveCameraToLocation(matchedAddress)
 	} else {
 		// Optionally, notify the user that no match was found
-		console.log('No matching address found.');
+		console.log('No matching address found.')
 	}
-};
+}
 
 // Function to process geocoding API response
 const processAddressData = (data) => {
-	let features = [];
+	const features = []
 	data.forEach((item) => {
 		const row = {
 			address: item.properties.name,
 			latitude: item.geometry.coordinates[1],
 			longitude: item.geometry.coordinates[0],
 			postalcode: item.properties.postalcode,
-		};
+		}
 
 		// Filter results to Helsinki if applicable
 		if (toggleStore.helsinkiView) {
@@ -113,15 +113,15 @@ const processAddressData = (data) => {
 				(item.properties.locality === 'Helsinki' || item.properties.localadmin === 'Helsinki') &&
 				item.properties.postalcode
 			) {
-				features.push(row);
+				features.push(row)
 			}
 		} else {
-			features.push(row);
+			features.push(row)
 		}
-	});
+	})
 
-	return features;
-};
+	return features
+}
 
 // Fetch and filter search results
 const filterSearchResults = async () => {
@@ -129,43 +129,43 @@ const filterSearchResults = async () => {
 		try {
 			const response = await fetch(
 				`/digitransit/geocoding/v1/autocomplete?text=${searchQuery.value}`
-			);
-			const data = await response.json();
+			)
+			const data = await response.json()
 
 			// Store the full address objects in addressData
-			addressData.value = processAddressData(data.features);
+			addressData.value = processAddressData(data.features)
 
 			// Now store the filtered address objects (not just strings) in filteredAddresses
-			filteredAddresses.value = addressData.value;
+			filteredAddresses.value = addressData.value
 
 			// Show search results if there are any addresses
-			showSearchResults.value = filteredAddresses.value.length > 0;
+			showSearchResults.value = filteredAddresses.value.length > 0
 		} catch (error) {
-			console.error('Geocoding error:', error);
+			console.error('Geocoding error:', error)
 		}
 	} else {
-		showSearchResults.value = false;
+		showSearchResults.value = false
 	}
-};
+}
 
 // Move the camera to the selected location
 const moveCameraToLocation = (address) => {
-	const { latitude, longitude, postalcode } = address;
-	globalStore.setPostalCode(postalcode);
-	moveCameraAndReset(longitude, latitude);
-	searchQuery.value = '';
-	showSearchResults.value = false;
-};
+	const { latitude, longitude, postalcode } = address
+	globalStore.setPostalCode(postalcode)
+	moveCameraAndReset(longitude, latitude)
+	searchQuery.value = ''
+	showSearchResults.value = false
+}
 
 // Move camera and reset related settings
 const moveCameraAndReset = (longitude, latitude) => {
-	cameraService.setCameraView(longitude, latitude);
-	eventBus.emit('geocodingPrintEvent');
-	void featurePicker.loadPostalCode();
-};
+	cameraService.setCameraView(longitude, latitude)
+	eventBus.emit('geocodingPrintEvent')
+	void featurePicker.loadPostalCode()
+}
 
 // Watch for changes in `searchQuery` to trigger filtering
-watch(searchQuery, filterSearchResults);
+watch(searchQuery, filterSearchResults)
 </script>
 
 <style scoped>

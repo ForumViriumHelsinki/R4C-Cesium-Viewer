@@ -4,16 +4,16 @@
 			elevation="2"
 			class="pa-4"
 		>
-			<v-card-title>Add Cooling <br >
-				Centers</v-card-title>
+			<v-card-title
+				>Add Cooling <br />
+				Centers</v-card-title
+			>
 
 			<v-card-text>
 				<!-- Capacity Slider -->
-				<v-label class="mb-2">
-Cooling Center Capacity
-</v-label>
-				<br >
-				<br >
+				<v-label class="mb-2"> Cooling Center Capacity </v-label>
+				<br />
+				<br />
 				<v-slider
 					v-model="selectedCapacity"
 					min="100"
@@ -53,109 +53,109 @@ Cooling Center Capacity
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue';
-import { useMitigationStore } from '../stores/mitigationStore';
-import { useGlobalStore } from '../stores/globalStore.js';
-import * as Cesium from 'cesium';
-import * as turf from '@turf/turf';
-import DataSource from '../services/datasource.js';
+import * as turf from '@turf/turf'
+import * as Cesium from 'cesium'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import DataSource from '../services/datasource.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useMitigationStore } from '../stores/mitigationStore'
 
-const globalStore = useGlobalStore();
-const mitigationStore = useMitigationStore();
-const viewer = computed(() => globalStore.cesiumViewer);
-const selectingGrid = ref(false);
-const selectedCapacity = ref(1000); // Default capacity for slider
+const globalStore = useGlobalStore()
+const mitigationStore = useMitigationStore()
+const viewer = computed(() => globalStore.cesiumViewer)
+const selectingGrid = ref(false)
+const selectedCapacity = ref(1000) // Default capacity for slider
 let coolingCentersDataSource =
-	globalStore?.cesiumViewer.dataSources?.getByName('cooling_centers')[0];
+	globalStore?.cesiumViewer.dataSources?.getByName('cooling_centers')[0]
 
-const toggleGridSelection = () => {
-	selectingGrid.value = !selectingGrid.value;
-};
+const _toggleGridSelection = () => {
+	selectingGrid.value = !selectingGrid.value
+}
 
 // Reset function
-const resetCoolingCenters = async () => {
-	const dataSourceService = new DataSource();
-	await dataSourceService.removeDataSourcesByNamePrefix('cooling_centers');
-	await globalStore.cesiumViewer.dataSources.remove(coolingCentersDataSource);
-	mitigationStore.resetStore();
-	coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers');
-	globalStore.cesiumViewer.dataSources.add(coolingCentersDataSource);
-};
+const _resetCoolingCenters = async () => {
+	const dataSourceService = new DataSource()
+	await dataSourceService.removeDataSourcesByNamePrefix('cooling_centers')
+	await globalStore.cesiumViewer.dataSources.remove(coolingCentersDataSource)
+	mitigationStore.resetStore()
+	coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers')
+	globalStore.cesiumViewer.dataSources.add(coolingCentersDataSource)
+}
 
 const handleMapClick = (clickEvent) => {
-	if (!selectingGrid.value) return;
+	if (!selectingGrid.value) return
 
-	const scene = viewer.value.scene;
-	const pickedObject = scene.pick(clickEvent.position);
+	const scene = viewer.value.scene
+	const pickedObject = scene.pick(clickEvent.position)
 
 	if (Cesium.defined(pickedObject) && pickedObject.id) {
-		const entity = pickedObject.id;
+		const entity = pickedObject.id
 		if (entity._properties) {
-			addCoolingCenter(entity);
+			addCoolingCenter(entity)
 		}
-		selectingGrid.value = false;
+		selectingGrid.value = false
 	}
-};
+}
 
 const getEntityCentroid = (entity) => {
 	// Get the polygon coordinates in WGS84
-	const polygonPositions = entity.polygon.hierarchy.getValue().positions;
+	const polygonPositions = entity.polygon.hierarchy.getValue().positions
 
 	// Convert Cesium Cartesian3 positions to GeoJSON format (Lng/Lat)
 	const coordinates = polygonPositions.map((pos) => {
-		const cartographic = Cesium.Cartographic.fromCartesian(pos);
+		const cartographic = Cesium.Cartographic.fromCartesian(pos)
 		return [
 			Cesium.Math.toDegrees(cartographic.longitude),
 			Cesium.Math.toDegrees(cartographic.latitude),
-		];
-	});
+		]
+	})
 
 	// Create a Turf.js polygon
-	const polygon = turf.polygon([coordinates]);
+	const polygon = turf.polygon([coordinates])
 
 	// Get the centroid
-	const centroid = turf.centroid(polygon);
-	const [longitude, latitude] = centroid.geometry.coordinates;
+	const centroid = turf.centroid(polygon)
+	const [longitude, latitude] = centroid.geometry.coordinates
 
 	// Convert centroid to Cesium Cartesian3 position
-	return Cesium.Cartesian3.fromDegrees(longitude, latitude);
-};
+	return Cesium.Cartesian3.fromDegrees(longitude, latitude)
+}
 
 const addCoolingCenter = (entity) => {
-	const gridId = entity.properties.grid_id?.getValue();
+	const gridId = entity.properties.grid_id?.getValue()
 	if (mitigationStore.getCoolingCenterCount(gridId) >= 5) {
-		alert('Maximum 5 cooling centers per grid reached!');
-		return;
+		alert('Maximum 5 cooling centers per grid reached!')
+		return
 	}
 
-	const euref_x = entity.properties.euref_x?.getValue();
-	const euref_y = entity.properties.euref_y?.getValue();
+	const euref_x = entity.properties.euref_x?.getValue()
+	const euref_y = entity.properties.euref_y?.getValue()
 	mitigationStore.addCoolingCenter({
 		grid_id: gridId,
 		euref_x,
 		euref_y,
 		capacity: selectedCapacity.value,
-	});
+	})
 
-	const cartesianPosition = getEntityCentroid(entity);
-	const coolingCentersCount = mitigationStore.getCoolingCenterCount(gridId);
+	const cartesianPosition = getEntityCentroid(entity)
+	const coolingCentersCount = mitigationStore.getCoolingCenterCount(gridId)
 	const offsets = [
 		[0, 0],
 		[-100, 80],
 		[-100, -80],
 		[100, 80],
 		[100, -80],
-	];
+	]
 
-	const offset = offsets[coolingCentersCount - 1];
+	const offset = offsets[coolingCentersCount - 1]
 	const newPosition = Cesium.Cartesian3.fromDegrees(
 		Cesium.Math.toDegrees(Cesium.Cartographic.fromCartesian(cartesianPosition).longitude) +
 			offset[0] / 111320,
 		Cesium.Math.toDegrees(Cesium.Cartographic.fromCartesian(cartesianPosition).latitude) +
 			offset[1] / 111320
-	);
+	)
 
-	const dimension = (selectedCapacity.value / 1000) * 80;
+	const dimension = (selectedCapacity.value / 1000) * 80
 
 	coolingCentersDataSource.entities.add({
 		id: `cooling_${gridId}_${coolingCentersCount}`,
@@ -174,30 +174,30 @@ const addCoolingCenter = (entity) => {
 			pixelOffset: new Cesium.Cartesian2(0, -30),
 		},
 		allowPicking: false,
-	});
-};
+	})
+}
 
 onMounted(() => {
 	if (!viewer.value) {
-		console.error('Cesium viewer is not initialized.');
-		return;
+		console.error('Cesium viewer is not initialized.')
+		return
 	}
 
 	if (!coolingCentersDataSource) {
-		coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers');
+		coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers')
 	}
 
-	viewer.value.dataSources.add(coolingCentersDataSource);
+	viewer.value.dataSources.add(coolingCentersDataSource)
 
 	viewer.value.screenSpaceEventHandler.setInputAction(
 		handleMapClick,
 		Cesium.ScreenSpaceEventType.LEFT_CLICK
-	);
-});
+	)
+})
 
 onUnmounted(() => {
-	if (viewer.value && viewer.value.screenSpaceEventHandler) {
-		viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+	if (viewer.value?.screenSpaceEventHandler) {
+		viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK)
 	}
-});
+})
 </script>

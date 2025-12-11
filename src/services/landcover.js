@@ -17,10 +17,10 @@
  * - Water (vesi)
  */
 
-import { useGlobalStore } from '../stores/globalStore.js';
-import * as Cesium from 'cesium';
-import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
-import { useURLStore } from '../stores/urlStore.js';
+import * as Cesium from 'cesium'
+import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useURLStore } from '../stores/urlStore.js'
 
 /**
  * Creates and adds HSY landcover WMS imagery layer to the Cesium viewer
@@ -51,11 +51,11 @@ import { useURLStore } from '../stores/urlStore.js';
  * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/pull/340|PR #340 - WMS Tile Optimization}
  */
 export const createHSYImageryLayer = async (newLayers) => {
-	const store = useGlobalStore();
-	const urlStore = useURLStore();
+	const store = useGlobalStore()
+	const urlStore = useURLStore()
 
-	const backgroundMapStore = useBackgroundMapStore();
-	const layersList = newLayers ? newLayers : createLayersForHsyLandcover(backgroundMapStore);
+	const backgroundMapStore = useBackgroundMapStore()
+	const layersList = newLayers ? newLayers : createLayersForHsyLandcover(backgroundMapStore)
 
 	const provider = new Cesium.WebMapServiceImageryProvider({
 		url: urlStore.wmsProxy,
@@ -69,14 +69,14 @@ export const createHSYImageryLayer = async (newLayers) => {
 		maximumLevel: 18,
 		// Use geographic tiling scheme for EPSG:4326 (WGS84)
 		tilingScheme: new Cesium.GeographicTilingScheme(),
-	});
+	})
 
-	await provider.readyPromise;
+	await provider.readyPromise
 
 	// Add the new layer and update store
-	const addedLayer = store.cesiumViewer.imageryLayers.addImageryProvider(provider);
-	backgroundMapStore.landcoverLayers.push(addedLayer);
-};
+	const addedLayer = store.cesiumViewer.imageryLayers.addImageryProvider(provider)
+	backgroundMapStore.landcoverLayers.push(addedLayer)
+}
 
 /**
  * Removes all HSY landcover layers from the Cesium viewer
@@ -89,8 +89,8 @@ export const createHSYImageryLayer = async (newLayers) => {
  * removeLandcover(); // Removes all HSY landcover layers
  */
 export const removeLandcover = () => {
-	const store = useGlobalStore();
-	const backgroundMapStore = useBackgroundMapStore();
+	const store = useGlobalStore()
+	const backgroundMapStore = useBackgroundMapStore()
 
 	try {
 		if (
@@ -100,17 +100,17 @@ export const removeLandcover = () => {
 			// Remove each layer from the viewer
 			backgroundMapStore.landcoverLayers.forEach((layer) => {
 				if (store.cesiumViewer.imageryLayers.contains(layer)) {
-					store.cesiumViewer.imageryLayers.remove(layer);
+					store.cesiumViewer.imageryLayers.remove(layer)
 				}
-			});
+			})
 
 			// Clear the tracking array
-			backgroundMapStore.clearLandcoverLayers();
+			backgroundMapStore.clearLandcoverLayers()
 		}
 	} catch (error) {
-		console.error('Error removing landcover:', error);
+		console.error('Error removing landcover:', error)
 	}
-};
+}
 
 /**
  * Generates comma-separated WMS layer names for all HSY landcover types
@@ -126,7 +126,7 @@ export const removeLandcover = () => {
  * const layers = createLayersForHsyLandcover(backgroundMapStore);
  */
 const createLayersForHsyLandcover = (backgroundMapStore) => {
-	const year = backgroundMapStore.hsyYear;
+	const year = backgroundMapStore.hsyYear
 	const layerNames = [
 		'asuminen_ja_maankaytto:maanpeite_avokalliot',
 		'asuminen_ja_maankaytto:maanpeite_merialue',
@@ -141,7 +141,7 @@ const createLayersForHsyLandcover = (backgroundMapStore) => {
 		'asuminen_ja_maankaytto:maanpeite_puusto_2_10m',
 		'asuminen_ja_maankaytto:maanpeite_puusto_yli20m',
 		'asuminen_ja_maankaytto:maanpeite_vesi',
-	];
+	]
 
-	return layerNames.map((name) => `${name}_${year}`).join(',');
-};
+	return layerNames.map((name) => `${name}_${year}`).join(',')
+}

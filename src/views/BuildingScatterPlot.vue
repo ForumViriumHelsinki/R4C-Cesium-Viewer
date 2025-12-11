@@ -32,10 +32,10 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-import CategoricalSelect from '../components/CategoricalSelect.vue';
-import NumericalSelect from '../components/NumericalSelect.vue';
-import HSYScatterplot from '../components/HSYScatterplot.vue';
+import { ref } from 'vue'
+import CategoricalSelect from '../components/CategoricalSelect.vue'
+import HSYScatterplot from '../components/HSYScatterplot.vue'
+import NumericalSelect from '../components/NumericalSelect.vue'
 
 export default {
 	components: {
@@ -44,13 +44,13 @@ export default {
 		HSYScatterplot,
 	},
 	setup() {
-		const showComponents = ref(true);
+		const showComponents = ref(true)
 
 		return {
 			showComponents,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

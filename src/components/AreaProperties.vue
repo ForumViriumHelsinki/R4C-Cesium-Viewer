@@ -143,15 +143,15 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { useGlobalStore } from '../stores/globalStore';
-import { eventBus } from '../services/eventEmitter';
+import { computed, ref, watch } from 'vue'
+import { eventBus } from '../services/eventEmitter'
+import { useGlobalStore } from '../stores/globalStore'
 
-const globalStore = useGlobalStore();
-const searchQuery = ref('');
-const openPanels = ref([]);
-const showCopyFeedback = ref(false);
-const copyFeedbackText = ref('Copied!');
+const globalStore = useGlobalStore()
+const searchQuery = ref('')
+const openPanels = ref([])
+const showCopyFeedback = ref(false)
+const copyFeedbackText = ref('Copied!')
 
 // Category definitions with property matchers
 const CATEGORIES = {
@@ -221,7 +221,7 @@ const CATEGORIES = {
 		order: 99,
 		matchers: [],
 	},
-};
+}
 
 // Key properties to show in summary (by priority)
 const KEY_PROPERTY_CONFIG = {
@@ -234,7 +234,7 @@ const KEY_PROPERTY_CONFIG = {
 	area_m2: { label: 'Area', icon: 'mdi-vector-square', color: 'default' },
 	measured_height: { label: 'Height', icon: 'mdi-arrow-expand-vertical', color: 'default' },
 	i_kerrlkm: { label: 'Floors', icon: 'mdi-layers', color: 'default' },
-};
+}
 
 // Properties to exclude from display
 const EXCLUDED_PATTERNS = [
@@ -248,26 +248,26 @@ const EXCLUDED_PATTERNS = [
 	'travel_data',
 	'locationunder40',
 	'_locationunder40',
-];
+]
 
 // Check if property should be excluded
 function shouldExclude(key) {
-	const lowerKey = key.toLowerCase();
-	if (lowerKey === 'id') return true;
-	if (lowerKey.endsWith('id') && lowerKey !== 'grid_id') return true;
-	return EXCLUDED_PATTERNS.some((pattern) => lowerKey.includes(pattern.toLowerCase()));
+	const lowerKey = key.toLowerCase()
+	if (lowerKey === 'id') return true
+	if (lowerKey.endsWith('id') && lowerKey !== 'grid_id') return true
+	return EXCLUDED_PATTERNS.some((pattern) => lowerKey.includes(pattern.toLowerCase()))
 }
 
 // Find category for a property key
 function findCategory(key) {
-	const lowerKey = key.toLowerCase();
+	const lowerKey = key.toLowerCase()
 	for (const [catId, cat] of Object.entries(CATEGORIES)) {
-		if (catId === 'other') continue;
+		if (catId === 'other') continue
 		if (cat.matchers.some((m) => lowerKey.includes(m))) {
-			return catId;
+			return catId
 		}
 	}
-	return 'other';
+	return 'other'
 }
 
 // Format property label for display
@@ -296,9 +296,9 @@ function formatLabel(key) {
 		p_ala_m2: 'Tree Area (m²)',
 		korkeus_ka_m: 'Tree Height (m)',
 		grid_id: 'Grid ID',
-	};
+	}
 
-	if (labelMap[key]) return labelMap[key];
+	if (labelMap[key]) return labelMap[key]
 
 	// Auto-format: replace underscores, capitalize
 	return key
@@ -306,28 +306,28 @@ function formatLabel(key) {
 		.replace(/([a-z])([A-Z])/g, '$1 $2')
 		.split(' ')
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(' ');
+		.join(' ')
 }
 
 // Format value for display
 function formatValue(value) {
-	if (value === null || value === undefined) return '-';
+	if (value === null || value === undefined) return '-'
 	if (typeof value === 'number') {
-		if (Number.isInteger(value)) return value.toString();
-		return value.toFixed(2);
+		if (Number.isInteger(value)) return value.toString()
+		return value.toFixed(2)
 	}
-	return String(value);
+	return String(value)
 }
 
 // Extract all properties from entity
 const allProperties = computed(() => {
-	const entity = globalStore.pickedEntity;
-	if (!entity?._properties) return [];
+	const entity = globalStore.pickedEntity
+	if (!entity?._properties) return []
 
-	const props = [];
+	const props = []
 
 	// Add vtj_prt from entity ID if applicable
-	const entityId = String(entity._id || '');
+	const entityId = String(entity._id || '')
 	if (entityId.length === 10) {
 		props.push({
 			key: 'vtj_prt',
@@ -335,17 +335,17 @@ const allProperties = computed(() => {
 			value: entityId,
 			displayValue: entityId,
 			category: 'location',
-		});
+		})
 	}
 
 	// Extract properties
-	const propertyNames = entity._properties._propertyNames || [];
+	const propertyNames = entity._properties._propertyNames || []
 	propertyNames.forEach((key) => {
-		if (shouldExclude(key)) return;
+		if (shouldExclude(key)) return
 
-		const rawValue = entity._properties[key]?._value;
-		if (rawValue === null || rawValue === undefined) return;
-		if (typeof rawValue === 'object') return; // Skip complex objects
+		const rawValue = entity._properties[key]?._value
+		if (rawValue === null || rawValue === undefined) return
+		if (typeof rawValue === 'object') return // Skip complex objects
 
 		props.push({
 			key,
@@ -353,65 +353,65 @@ const allProperties = computed(() => {
 			value: rawValue,
 			displayValue: formatValue(rawValue),
 			category: findCategory(key),
-		});
-	});
+		})
+	})
 
-	return props;
-});
+	return props
+})
 
 // Key properties for summary header (max 3-4)
-const keyProperties = computed(() => {
-	const result = [];
-	const priorityKeys = Object.keys(KEY_PROPERTY_CONFIG);
+const _keyProperties = computed(() => {
+	const result = []
+	const priorityKeys = Object.keys(KEY_PROPERTY_CONFIG)
 
 	for (const key of priorityKeys) {
-		if (result.length >= 3) break;
-		const prop = allProperties.value.find((p) => p.key === key);
+		if (result.length >= 3) break
+		const prop = allProperties.value.find((p) => p.key === key)
 		if (prop) {
-			const config = KEY_PROPERTY_CONFIG[key];
+			const config = KEY_PROPERTY_CONFIG[key]
 			result.push({
 				...prop,
 				label: config.label,
 				icon: config.icon,
 				color: config.color,
-			});
+			})
 		}
 	}
 
-	return result;
-});
+	return result
+})
 
 // Categorized properties
 const categorizedProperties = computed(() => {
-	const categories = {};
+	const categories = {}
 
 	// Initialize categories
 	Object.values(CATEGORIES).forEach((cat) => {
-		categories[cat.id] = { ...cat, properties: [] };
-	});
+		categories[cat.id] = { ...cat, properties: [] }
+	})
 
 	// Assign properties to categories
 	allProperties.value.forEach((prop) => {
 		// Skip key properties (already shown in summary)
-		if (KEY_PROPERTY_CONFIG[prop.key]) return;
+		if (KEY_PROPERTY_CONFIG[prop.key]) return
 
-		const catId = prop.category;
+		const catId = prop.category
 		if (categories[catId]) {
-			categories[catId].properties.push(prop);
+			categories[catId].properties.push(prop)
 		}
-	});
+	})
 
 	// Filter empty and sort by order
 	return Object.values(categories)
 		.filter((cat) => cat.properties.length > 0)
-		.sort((a, b) => a.order - b.order);
-});
+		.sort((a, b) => a.order - b.order)
+})
 
 // Apply search filter
-const filteredCategories = computed(() => {
-	if (!searchQuery.value) return categorizedProperties.value;
+const _filteredCategories = computed(() => {
+	if (!searchQuery.value) return categorizedProperties.value
 
-	const query = searchQuery.value.toLowerCase();
+	const query = searchQuery.value.toLowerCase()
 	return categorizedProperties.value
 		.map((cat) => ({
 			...cat,
@@ -419,37 +419,37 @@ const filteredCategories = computed(() => {
 				(p) => p.label.toLowerCase().includes(query) || p.displayValue.toLowerCase().includes(query)
 			),
 		}))
-		.filter((cat) => cat.properties.length > 0);
-});
+		.filter((cat) => cat.properties.length > 0)
+})
 
-const hasEntity = computed(() => allProperties.value.length > 0);
-const totalPropertyCount = computed(() => allProperties.value.length);
-const entityType = computed(() => {
-	if (globalStore.level === 'building') return 'building';
-	if (globalStore.level === 'postalCode') return 'postal code';
-	return 'area';
-});
+const _hasEntity = computed(() => allProperties.value.length > 0)
+const _totalPropertyCount = computed(() => allProperties.value.length)
+const _entityType = computed(() => {
+	if (globalStore.level === 'building') return 'building'
+	if (globalStore.level === 'postalCode') return 'postal code'
+	return 'area'
+})
 
 // Copy single value
-async function copyValue(value, label) {
+async function _copyValue(value, label) {
 	try {
-		await navigator.clipboard.writeText(String(value));
-		copyFeedbackText.value = `${label} copied`;
-		showCopyFeedback.value = true;
+		await navigator.clipboard.writeText(String(value))
+		copyFeedbackText.value = `${label} copied`
+		showCopyFeedback.value = true
 	} catch (err) {
-		console.error('Copy failed:', err);
+		console.error('Copy failed:', err)
 	}
 }
 
 // Copy all properties
-async function copyAllProperties() {
-	const lines = allProperties.value.map((p) => `${p.label}: ${p.value}`);
+async function _copyAllProperties() {
+	const lines = allProperties.value.map((p) => `${p.label}: ${p.value}`)
 	try {
-		await navigator.clipboard.writeText(lines.join('\n'));
-		copyFeedbackText.value = `${lines.length} properties copied`;
-		showCopyFeedback.value = true;
+		await navigator.clipboard.writeText(lines.join('\n'))
+		copyFeedbackText.value = `${lines.length} properties copied`
+		showCopyFeedback.value = true
 	} catch (err) {
-		console.error('Copy failed:', err);
+		console.error('Copy failed:', err)
 	}
 }
 
@@ -457,15 +457,15 @@ async function copyAllProperties() {
 watch(
 	() => globalStore.pickedEntity,
 	() => {
-		openPanels.value = [];
-		searchQuery.value = '';
+		openPanels.value = []
+		searchQuery.value = ''
 	}
-);
+)
 
 // Listen for entity events
 eventBus.on('entityPrintEvent', () => {
-	openPanels.value = [];
-});
+	openPanels.value = []
+})
 </script>
 
 <style scoped>

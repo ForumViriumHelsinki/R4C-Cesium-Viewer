@@ -4,29 +4,29 @@
 		class="slider-container"
 		style="width: 100%"
 	>
-		<h3 class="filter-title">
-Filters
-</h3>
+		<h3 class="filter-title">Filters</h3>
 		<div class="switch-container">
 			<label class="switch">
 				<input
 					v-model="hideNonSote"
 					type="checkbox"
 					@change="filterBuildings"
-				>
+				/>
 				<span class="slider round" />
 			</label>
 			<label
 				v-if="!helsinkiView"
 				for="hideNonSote"
 				class="label"
-				>Only public buildings</label>
+				>Only public buildings</label
+			>
 			<label
 				v-if="helsinkiView"
 				for="hideNonSote"
 				class="label"
-				>Only social & <br >
-				healthcare buildings</label>
+				>Only social & <br />
+				healthcare buildings</label
+			>
 		</div>
 
 		<div
@@ -38,13 +38,14 @@ Filters
 					v-model="hideNewBuildings"
 					type="checkbox"
 					@change="filterBuildings"
-				>
+				/>
 				<span class="slider round" />
 			</label>
 			<label
 				for="hideNewBuildings"
 				class="label"
-				>Built before summer 2018</label>
+				>Built before summer 2018</label
+			>
 		</div>
 
 		<div class="switch-container">
@@ -53,61 +54,62 @@ Filters
 					v-model="hideLow"
 					type="checkbox"
 					@change="filterBuildings"
-				>
+				/>
 				<span class="slider round" />
 			</label>
 			<label
 				for="hideLow"
 				class="label"
-				>Only tall buildings</label>
+				>Only tall buildings</label
+			>
 		</div>
 	</div>
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { eventBus } from '../services/eventEmitter.js';
-import Building from '../services/building.js';
+import { computed, onMounted, ref } from 'vue'
+import Building from '../services/building.js'
+import { eventBus } from '../services/eventEmitter.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
 	setup() {
-		const hideNonSote = ref(false);
-		const hideNewBuildings = ref(false);
-		const hideLow = ref(false);
+		const hideNonSote = ref(false)
+		const hideNewBuildings = ref(false)
+		const hideLow = ref(false)
 
-		const toggleStore = useToggleStore();
-		const globalStore = useGlobalStore();
-		let buildingService = null;
+		const toggleStore = useToggleStore()
+		const globalStore = useGlobalStore()
+		let buildingService = null
 
-		const helsinkiView = computed(() => toggleStore.helsinkiView);
+		const helsinkiView = computed(() => toggleStore.helsinkiView)
 
 		const filterBuildings = () => {
-			toggleStore.setHideNonSote(hideNonSote.value);
-			toggleStore.setHideNewBuildings(hideNewBuildings.value);
-			toggleStore.setHideLow(hideLow.value);
+			toggleStore.setHideNonSote(hideNonSote.value)
+			toggleStore.setHideNewBuildings(hideNewBuildings.value)
+			toggleStore.setHideLow(hideLow.value)
 			const buildingsDataSource = globalStore?.cesiumViewer?.dataSources?.getByName(
 				`Buildings ${globalStore.postalcode}`
-			)[0];
+			)[0]
 			if (buildingsDataSource) {
 				if (hideNonSote.value || hideNewBuildings.value || hideLow.value) {
-					buildingService.filterBuildings(buildingsDataSource);
+					buildingService.filterBuildings(buildingsDataSource)
 				} else {
-					buildingService.showAllBuildings(buildingsDataSource);
+					buildingService.showAllBuildings(buildingsDataSource)
 				}
 
-				eventBus.emit('updateScatterPlot');
+				eventBus.emit('updateScatterPlot')
 			}
-		};
+		}
 
 		// Reset function for explicit filter clearing (e.g., via reset button)
 		const _resetFilters = () => {
-			hideNonSote.value = false;
-			hideNewBuildings.value = false;
-			hideLow.value = false;
-			filterBuildings(); // Apply reset
-		};
+			hideNonSote.value = false
+			hideNewBuildings.value = false
+			hideLow.value = false
+			filterBuildings() // Apply reset
+		}
 
 		// REMOVED: resetFilters watcher that was clearing filter state on view changes
 		// Filter state should persist across view changes for better user experience
@@ -115,8 +117,8 @@ export default {
 		// (e.g., hideNewBuildings only shown in helsinkiView)
 
 		onMounted(() => {
-			buildingService = new Building();
-		});
+			buildingService = new Building()
+		})
 
 		return {
 			helsinkiView,
@@ -124,9 +126,9 @@ export default {
 			hideNewBuildings,
 			hideLow,
 			filterBuildings,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

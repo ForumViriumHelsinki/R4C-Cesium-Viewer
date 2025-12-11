@@ -1,6 +1,6 @@
-import * as Cesium from 'cesium';
-import { useGlobalStore } from '../stores/globalStore.js';
-import logger from '../utils/logger.js';
+import * as Cesium from 'cesium'
+import { useGlobalStore } from '../stores/globalStore.js'
+import logger from '../utils/logger.js'
 
 /**
  * Camera Service
@@ -20,12 +20,12 @@ export default class Camera {
 	 * Creates a Camera service instance
 	 */
 	constructor() {
-		this.store = useGlobalStore();
-		this.viewer = this.store.cesiumViewer;
-		this.isRotated = false; // Track rotation state for 180° rotations
-		this.currentFlight = null; // Track active camera flight for cancellation
-		this.flightCancelRequested = false; // Flag indicating cancellation was requested
-		this.previousCameraState = null; // Captured camera state for restoration
+		this.store = useGlobalStore()
+		this.viewer = this.store.cesiumViewer
+		this.isRotated = false // Track rotation state for 180° rotations
+		this.currentFlight = null // Track active camera flight for cancellation
+		this.flightCancelRequested = false // Flag indicating cancellation was requested
+		this.previousCameraState = null // Captured camera state for restoration
 	}
 
 	/**
@@ -36,13 +36,13 @@ export default class Camera {
 	 */
 	cancelFlight() {
 		if (this.currentFlight && !this.flightCancelRequested) {
-			this.currentFlight.cancelFlight = true;
-			this.flightCancelRequested = true;
-			logger.debug('[Camera] Flight cancellation requested');
-			return true;
+			this.currentFlight.cancelFlight = true
+			this.flightCancelRequested = true
+			logger.debug('[Camera] Flight cancellation requested')
+			return true
 		}
-		logger.debug('[Camera] No active flight to cancel');
-		return false;
+		logger.debug('[Camera] No active flight to cancel')
+		return false
 	}
 
 	/**
@@ -51,19 +51,19 @@ export default class Camera {
 	 */
 	captureCurrentState() {
 		if (!this.viewer) {
-			logger.warn('[Camera] Cannot capture camera state: Viewer not initialized');
-			return;
+			logger.warn('[Camera] Cannot capture camera state: Viewer not initialized')
+			return
 		}
 
-		const camera = this.viewer.camera;
+		const camera = this.viewer.camera
 		this.previousCameraState = {
 			position: camera.position.clone(),
 			heading: camera.heading,
 			pitch: camera.pitch,
 			roll: camera.roll,
-		};
+		}
 
-		logger.debug('[Camera] Camera state captured for restoration');
+		logger.debug('[Camera] Camera state captured for restoration')
 	}
 
 	/**
@@ -72,13 +72,13 @@ export default class Camera {
 	 */
 	restoreCapturedState() {
 		if (!this.previousCameraState) {
-			logger.warn('[Camera] No previous camera state to restore');
-			return;
+			logger.warn('[Camera] No previous camera state to restore')
+			return
 		}
 
 		if (!this.viewer) {
-			logger.warn('[Camera] Cannot restore camera state: Viewer not initialized');
-			return;
+			logger.warn('[Camera] Cannot restore camera state: Viewer not initialized')
+			return
 		}
 
 		this.viewer.camera.setView({
@@ -88,9 +88,9 @@ export default class Camera {
 				pitch: this.previousCameraState.pitch,
 				roll: this.previousCameraState.roll,
 			},
-		});
+		})
 
-		logger.debug('[Camera] Previous camera state restored');
+		logger.debug('[Camera] Previous camera state restored')
 	}
 
 	/**
@@ -99,17 +99,17 @@ export default class Camera {
 	 * @private
 	 */
 	onFlightComplete() {
-		logger.debug('[Camera] Flight completed');
-		this.currentFlight = null;
-		this.flightCancelRequested = false;
-		this.previousCameraState = null;
+		logger.debug('[Camera] Flight completed')
+		this.currentFlight = null
+		this.flightCancelRequested = false
+		this.previousCameraState = null
 
 		// Update store state if click processing is active
 		if (this.store.clickProcessingState.isProcessing) {
 			this.store.setClickProcessingState({
 				stage: 'complete',
 				canCancel: false,
-			});
+			})
 		}
 	}
 
@@ -119,20 +119,20 @@ export default class Camera {
 	 * @private
 	 */
 	onFlightCancelled() {
-		logger.debug('[Camera] Flight cancelled');
+		logger.debug('[Camera] Flight cancelled')
 
 		// Restore camera position
-		this.restoreCapturedState();
+		this.restoreCapturedState()
 
 		// Restore application state
-		this.store.restorePreviousViewState();
+		this.store.restorePreviousViewState()
 
 		// Clean up
-		this.currentFlight = null;
-		this.flightCancelRequested = false;
+		this.currentFlight = null
+		this.flightCancelRequested = false
 
 		// Reset click processing state
-		this.store.resetClickProcessingState();
+		this.store.resetClickProcessingState()
 	}
 
 	/**
@@ -149,7 +149,7 @@ export default class Camera {
 				pitch: Cesium.Math.toRadians(-35.0),
 				roll: 0.0,
 			},
-		});
+		})
 	}
 
 	/**
@@ -162,29 +162,28 @@ export default class Camera {
 	switchTo2DView() {
 		// Guard: Check viewer is initialized
 		if (!this.viewer || !this.viewer.dataSources) {
-			logger.warn('[Camera] Cannot switch to 2D view: Viewer not initialized');
-			return;
+			logger.warn('[Camera] Cannot switch to 2D view: Viewer not initialized')
+			return
 		}
 
 		// Find the data source for postcodes
 		const postCodesDataSource = this.viewer.dataSources._dataSources.find(
 			(ds) => ds.name === 'PostCodes'
-		);
+		)
 
 		if (!postCodesDataSource || !postCodesDataSource._entityCollection) {
-			logger.warn('[Camera] PostCodes data source not found');
-			return;
+			logger.warn('[Camera] PostCodes data source not found')
+			return
 		}
 
 		// Iterate over all entities in the postcodes data source.
 		for (let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++) {
-			let entity = postCodesDataSource._entityCollection._entities._array[i];
+			const entity = postCodesDataSource._entityCollection._entities._array[i]
 
 			// Check if the entity posno property matches the postalcode.
 			if (
-				entity._properties &&
-				entity._properties._posno &&
-				entity._properties._posno._value == this.store.postalcode
+				entity._properties?._posno &&
+				entity._properties._posno._value === this.store.postalcode
 			) {
 				// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
 				this.viewer.camera.flyTo({
@@ -198,12 +197,12 @@ export default class Camera {
 						pitch: Cesium.Math.toRadians(-90.0),
 					},
 					duration: 3,
-				});
-				return;
+				})
+				return
 			}
 		}
 
-		logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 2D view`);
+		logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 2D view`)
 	}
 
 	/**
@@ -217,39 +216,38 @@ export default class Camera {
 	switchTo3DView() {
 		// Guard: Check viewer is initialized
 		if (!this.viewer || !this.viewer.dataSources) {
-			logger.warn('[Camera] Cannot switch to 3D view: Viewer not initialized');
-			return;
+			logger.warn('[Camera] Cannot switch to 3D view: Viewer not initialized')
+			return
 		}
 
 		// Capture current camera state before starting flight
-		this.captureCurrentState();
+		this.captureCurrentState()
 
 		// Find the data source for postcodes
 		const postCodesDataSource = this.viewer.dataSources._dataSources.find(
 			(ds) => ds.name === 'PostCodes'
-		);
+		)
 
 		if (!postCodesDataSource || !postCodesDataSource._entityCollection) {
-			logger.warn('[Camera] PostCodes data source not found');
-			return;
+			logger.warn('[Camera] PostCodes data source not found')
+			return
 		}
 
 		// Iterate over all entities in the postcodes data source
 		for (let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++) {
-			let entity = postCodesDataSource._entityCollection._entities._array[i];
+			const entity = postCodesDataSource._entityCollection._entities._array[i]
 
 			// Check if entity postal code matches current selected postal code
 			if (
-				entity._properties &&
-				entity._properties._posno &&
-				entity._properties._posno._value == this.store.postalcode
+				entity._properties?._posno &&
+				entity._properties._posno._value === this.store.postalcode
 			) {
 				// Update state to animating stage
 				if (this.store.clickProcessingState.isProcessing) {
 					this.store.setClickProcessingState({
 						stage: 'animating',
 						canCancel: true,
-					});
+					})
 				}
 
 				// Fly to postal code with 3D perspective
@@ -267,14 +265,14 @@ export default class Camera {
 					duration: 3,
 					complete: () => this.onFlightComplete(),
 					cancel: () => this.onFlightCancelled(),
-				});
+				})
 
-				logger.debug('[Camera] 3D view flight initiated');
-				return;
+				logger.debug('[Camera] 3D view flight initiated')
+				return
 			}
 		}
 
-		logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 3D view`);
+		logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 3D view`)
 	}
 
 	/**
@@ -286,16 +284,16 @@ export default class Camera {
 	 */
 	switchTo3DGrid() {
 		if (this.store.level === 'start') {
-			this.flyCamera3D(24.991745, 60.045, 12000);
+			this.flyCamera3D(24.991745, 60.045, 12000)
 		} else {
 			// Get the current camera and its center coordinates
-			const camera = this.viewer.scene.camera;
-			const centerCartographic = camera.positionCartographic;
+			const camera = this.viewer.scene.camera
+			const centerCartographic = camera.positionCartographic
 
 			// Get current longitude, latitude, and altitude from the camera's current center position
-			const centerLongitude = Cesium.Math.toDegrees(centerCartographic.longitude);
-			const centerLatitude = Cesium.Math.toDegrees(centerCartographic.latitude);
-			const currentAltitude = centerCartographic.height; // Get current altitude
+			const centerLongitude = Cesium.Math.toDegrees(centerCartographic.longitude)
+			const centerLatitude = Cesium.Math.toDegrees(centerCartographic.latitude)
+			const currentAltitude = centerCartographic.height // Get current altitude
 
 			// Fly the camera to the current center position, preserving altitude and orientation
 			this.viewer.camera.flyTo({
@@ -310,9 +308,9 @@ export default class Camera {
 					roll: 0.0,
 				},
 				duration: 1, // Animation duration in seconds
-			});
+			})
 
-			this.store.setLevel(null);
+			this.store.setLevel(null)
 		}
 	}
 
@@ -334,7 +332,7 @@ export default class Camera {
 				roll: 0.0,
 			},
 			duration: 1,
-		});
+		})
 	}
 
 	/**
@@ -347,7 +345,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	setCameraView(longitude, latitude) {
-		const store = useGlobalStore();
+		const store = useGlobalStore()
 		store.cesiumViewer.camera.setView({
 			destination: Cesium.Cartesian3.fromDegrees(longitude, latitude - 0.0065, 500.0),
 			orientation: {
@@ -355,7 +353,7 @@ export default class Camera {
 				pitch: Cesium.Math.toRadians(-35.0),
 				roll: 0.0,
 			},
-		});
+		})
 	}
 
 	/**
@@ -370,10 +368,10 @@ export default class Camera {
 			// Zoom in: move camera closer to ground
 			this.viewer.camera.zoomIn(
 				this.viewer.camera.positionCartographic.height * (1 - 1 / multiplier)
-			);
+			)
 		} else {
 			// Zoom out: move camera further from ground
-			this.viewer.camera.zoomOut(this.viewer.camera.positionCartographic.height * (1 - multiplier));
+			this.viewer.camera.zoomOut(this.viewer.camera.positionCartographic.height * (1 - multiplier))
 		}
 	}
 
@@ -390,21 +388,21 @@ export default class Camera {
 			heading: Cesium.Math.toRadians(headingInDegrees),
 			pitch: this.viewer.camera.pitch, // Keep current pitch
 			roll: this.viewer.camera.roll, // Keep current roll
-		};
+		}
 
 		if (reduceMotion) {
 			// Instant change for users who prefer reduced motion
 			this.viewer.camera.setView({
 				destination: this.viewer.camera.position,
 				orientation,
-			});
+			})
 		} else {
 			// Animated transition for standard users
 			this.viewer.camera.flyTo({
 				destination: this.viewer.camera.position,
 				orientation,
 				duration: 1.0, // Animation duration in seconds
-			});
+			})
 		}
 	}
 
@@ -420,7 +418,7 @@ export default class Camera {
 				roll: 0.0,
 			},
 			duration: 1.0,
-		});
+		})
 	}
 
 	/**
@@ -434,24 +432,24 @@ export default class Camera {
 	focusOnPostalCode(postalCode) {
 		// Guard: Check viewer is initialized
 		if (!this.viewer) {
-			logger.warn('[Camera] Cannot focus on postal code: Viewer not initialized');
-			return;
+			logger.warn('[Camera] Cannot focus on postal code: Viewer not initialized')
+			return
 		}
 
 		// Guard: Check dataSources are available
 		if (!this.viewer.dataSources || !this.viewer.dataSources._dataSources) {
-			logger.warn('[Camera] Cannot focus on postal code: DataSources not available');
-			return;
+			logger.warn('[Camera] Cannot focus on postal code: DataSources not available')
+			return
 		}
 
 		// Find the PostCodes data source
 		const postCodesDataSource = this.viewer.dataSources._dataSources.find(
 			(ds) => ds.name === 'PostCodes'
-		);
+		)
 
 		if (!postCodesDataSource) {
-			logger.warn('[Camera] PostCodes data source not found');
-			return;
+			logger.warn('[Camera] PostCodes data source not found')
+			return
 		}
 
 		// Guard: Check entity collection is available
@@ -459,23 +457,20 @@ export default class Camera {
 			!postCodesDataSource._entityCollection ||
 			!postCodesDataSource._entityCollection._entities
 		) {
-			logger.warn('[Camera] PostCodes entity collection not available');
-			return;
+			logger.warn('[Camera] PostCodes entity collection not available')
+			return
 		}
 
 		// Search for entity with matching postal code
 		const entity = postCodesDataSource._entityCollection._entities._array.find(
-			(entity) =>
-				entity._properties &&
-				entity._properties._posno &&
-				entity._properties._posno._value == postalCode
-		);
+			(entity) => entity._properties?._posno && entity._properties._posno._value === postalCode
+		)
 
 		if (entity) {
 			// Verify entity has required center coordinates
 			if (!entity._properties._center_x || !entity._properties._center_y) {
-				logger.warn(`[Camera] Postal code ${postalCode} missing center coordinates`);
-				return;
+				logger.warn(`[Camera] Postal code ${postalCode} missing center coordinates`)
+				return
 			}
 
 			// Fly to postal code area with 2-second animation
@@ -491,10 +486,10 @@ export default class Camera {
 					roll: 0.0,
 				},
 				duration: 2,
-			});
-			logger.debug(`[Camera] Focusing on postal code: ${postalCode}`);
+			})
+			logger.debug(`[Camera] Focusing on postal code: ${postalCode}`)
 		} else {
-			logger.warn(`[Camera] Postal code ${postalCode} not found in data source`);
+			logger.warn(`[Camera] Postal code ${postalCode} not found in data source`)
 		}
 	}
 
@@ -507,37 +502,34 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	rotate180Degrees() {
-		const camera = this.viewer.camera;
-		const scene = this.viewer.scene;
+		const camera = this.viewer.camera
+		const scene = this.viewer.scene
 
 		// Get the center of the screen
-		const screenWidth = scene.canvas.clientWidth;
-		const screenHeight = scene.canvas.clientHeight;
-		const centerX = screenWidth / 2;
-		const centerY = screenHeight / 2;
+		const screenWidth = scene.canvas.clientWidth
+		const screenHeight = scene.canvas.clientHeight
+		const centerX = screenWidth / 2
+		const centerY = screenHeight / 2
 
 		// Get the ellipsoid point (longitude, latitude) at the center of the screen
-		const ellipsoid = scene.globe.ellipsoid;
-		const centerCartesian = camera.pickEllipsoid(
-			new Cesium.Cartesian2(centerX, centerY),
-			ellipsoid
-		);
+		const ellipsoid = scene.globe.ellipsoid
+		const centerCartesian = camera.pickEllipsoid(new Cesium.Cartesian2(centerX, centerY), ellipsoid)
 
 		// If the point is on the globe, convert to geographic coordinates
 		if (centerCartesian) {
-			const centerCartographic = Cesium.Cartographic.fromCartesian(centerCartesian);
-			const longitude = Cesium.Math.toDegrees(centerCartographic.longitude);
-			let latitude = Cesium.Math.toDegrees(centerCartographic.latitude);
+			const centerCartographic = Cesium.Cartographic.fromCartesian(centerCartesian)
+			const longitude = Cesium.Math.toDegrees(centerCartographic.longitude)
+			let latitude = Cesium.Math.toDegrees(centerCartographic.latitude)
 			// Adjust latitude based on the rotation state from the global store
 			if (this.store.isCameraRotated) {
-				latitude -= 0.015; // Move latitude back for second rotation
+				latitude -= 0.015 // Move latitude back for second rotation
 			} else {
-				latitude += 0.015; // Adjust latitude for first rotation
+				latitude += 0.015 // Adjust latitude for first rotation
 			}
 
 			// Now, rotate the camera 180 degrees around this center point
-			const currentHeading = camera.heading;
-			const newHeading = currentHeading + Math.PI; // Rotate 180 degrees
+			const currentHeading = camera.heading
+			const newHeading = currentHeading + Math.PI // Rotate 180 degrees
 
 			// Set the camera view
 			this.viewer.camera.setView({
@@ -547,12 +539,12 @@ export default class Camera {
 					pitch: Cesium.Math.toRadians(-35.0),
 					roll: 0.0,
 				},
-			});
+			})
 
 			// Toggle the rotation state in the Pinia store
-			this.store.toggleCameraRotation();
+			this.store.toggleCameraRotation()
 		} else {
-			logger.debug('No ellipsoid point was found at the center of the screen.');
+			logger.debug('No ellipsoid point was found at the center of the screen.')
 		}
 	}
 
@@ -564,7 +556,7 @@ export default class Camera {
 	 * @deprecated Use rotate180Degrees() instead
 	 */
 	rotateCamera() {
-		this.rotate180Degrees();
+		this.rotate180Degrees()
 	}
 
 	/**
@@ -575,48 +567,48 @@ export default class Camera {
 	 * @returns {Object|null} { west, south, east, north } in degrees, or null if no ellipsoid intersection
 	 */
 	getViewportRectangle() {
-		const camera = this.viewer.camera;
-		const canvas = this.viewer.scene.canvas;
+		const camera = this.viewer.camera
+		const canvas = this.viewer.scene.canvas
 
 		// Get corner positions by picking ellipsoid at each canvas corner
 		const topLeft = camera.pickEllipsoid(
 			new Cesium.Cartesian2(0, 0),
 			this.viewer.scene.globe.ellipsoid
-		);
+		)
 		const topRight = camera.pickEllipsoid(
 			new Cesium.Cartesian2(canvas.clientWidth, 0),
 			this.viewer.scene.globe.ellipsoid
-		);
+		)
 		const bottomLeft = camera.pickEllipsoid(
 			new Cesium.Cartesian2(0, canvas.clientHeight),
 			this.viewer.scene.globe.ellipsoid
-		);
+		)
 		const bottomRight = camera.pickEllipsoid(
 			new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight),
 			this.viewer.scene.globe.ellipsoid
-		);
+		)
 
 		// Handle cases where camera is looking at space (no ellipsoid intersection)
 		if (!topLeft || !topRight || !bottomLeft || !bottomRight) {
-			logger.warn('[Camera] Cannot determine viewport rectangle - camera looking at space');
-			return null;
+			logger.warn('[Camera] Cannot determine viewport rectangle - camera looking at space')
+			return null
 		}
 
 		// Convert to cartographic coordinates
 		const corners = [topLeft, topRight, bottomLeft, bottomRight].map((pos) =>
 			Cesium.Cartographic.fromCartesian(pos)
-		);
+		)
 
 		// Find bounding rectangle
-		const lons = corners.map((c) => Cesium.Math.toDegrees(c.longitude));
-		const lats = corners.map((c) => Cesium.Math.toDegrees(c.latitude));
+		const lons = corners.map((c) => Cesium.Math.toDegrees(c.longitude))
+		const lats = corners.map((c) => Cesium.Math.toDegrees(c.latitude))
 
 		return {
 			west: Math.min(...lons),
 			south: Math.min(...lats),
 			east: Math.max(...lons),
 			north: Math.max(...lats),
-		};
+		}
 	}
 
 	/**
@@ -626,8 +618,8 @@ export default class Camera {
 	 * @returns {number} Height in meters
 	 */
 	getCameraHeight() {
-		const camera = this.viewer.camera;
-		const cartographic = Cesium.Cartographic.fromCartesian(camera.position);
-		return cartographic.height;
+		const camera = this.viewer.camera
+		const cartographic = Cesium.Cartographic.fromCartesian(camera.position)
+		return cartographic.height
 	}
 }

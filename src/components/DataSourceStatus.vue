@@ -7,9 +7,7 @@
 			v-if="!compactMode"
 			class="status-title"
 		>
-			<v-icon class="mr-2">
-mdi-database-check
-</v-icon>
+			<v-icon class="mr-2"> mdi-database-check </v-icon>
 			Data Sources
 			<v-spacer />
 			<v-btn
@@ -170,9 +168,7 @@ mdi-database-check
 									:loading="source.retrying"
 									@click="retrySource(source.id)"
 								>
-									<v-icon size="14">
-mdi-refresh
-</v-icon>
+									<v-icon size="14"> mdi-refresh </v-icon>
 								</v-btn>
 							</template>
 							<span>Retry connection</span>
@@ -191,9 +187,7 @@ mdi-refresh
 									variant="text"
 									@click="clearCache(source.id)"
 								>
-									<v-icon size="14">
-mdi-delete-variant
-</v-icon>
+									<v-icon size="14"> mdi-delete-variant </v-icon>
 								</v-btn>
 							</template>
 							<span>Clear cached data</span>
@@ -210,36 +204,28 @@ mdi-delete-variant
 									size="x-small"
 									variant="text"
 								>
-									<v-icon size="14">
-mdi-dots-vertical
-</v-icon>
+									<v-icon size="14"> mdi-dots-vertical </v-icon>
 								</v-btn>
 							</template>
 
 							<v-list density="compact">
 								<v-list-item @click="checkHealth(source.id)">
 									<template #prepend>
-										<v-icon size="16">
-mdi-heart-pulse
-</v-icon>
+										<v-icon size="16"> mdi-heart-pulse </v-icon>
 									</template>
 									<v-list-item-title>Health Check</v-list-item-title>
 								</v-list-item>
 
 								<v-list-item @click="preloadData(source.id)">
 									<template #prepend>
-										<v-icon size="16">
-mdi-download
-</v-icon>
+										<v-icon size="16"> mdi-download </v-icon>
 									</template>
 									<v-list-item-title>Preload Data</v-list-item-title>
 								</v-list-item>
 
 								<v-list-item @click="showDetails(source)">
 									<template #prepend>
-										<v-icon size="16">
-mdi-information
-</v-icon>
+										<v-icon size="16"> mdi-information </v-icon>
 									</template>
 									<v-list-item-title>View Details</v-list-item-title>
 								</v-list-item>
@@ -403,9 +389,7 @@ mdi-information
 
 				<v-card-actions>
 					<v-spacer />
-					<v-btn @click="detailsDialog = false">
-Close
-</v-btn>
+					<v-btn @click="detailsDialog = false"> Close </v-btn>
 				</v-card-actions>
 			</v-card>
 		</v-dialog>
@@ -413,9 +397,9 @@ Close
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useLoadingStore } from '../stores/loadingStore';
-import cacheService from '../services/cacheService';
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import cacheService from '../services/cacheService'
+import { useLoadingStore } from '../stores/loadingStore'
 
 // Props
 const props = defineProps({
@@ -427,21 +411,21 @@ const props = defineProps({
 		type: Number,
 		default: 30000, // 30 seconds
 	},
-});
+})
 
 // Emits
-const emit = defineEmits(['source-retry', 'cache-cleared', 'data-preload']);
+const emit = defineEmits(['source-retry', 'cache-cleared', 'data-preload'])
 
 // Store
-const _loadingStore = useLoadingStore();
+const _loadingStore = useLoadingStore()
 
 // Local state
-const refreshing = ref(false);
-const showCacheStats = ref(false);
-const detailsDialog = ref(false);
-const selectedSource = ref(null);
-const cacheStats = ref({});
-const refreshTimer = ref(null);
+const refreshing = ref(false)
+const _showCacheStats = ref(false)
+const detailsDialog = ref(false)
+const selectedSource = ref(null)
+const cacheStats = ref({})
+const refreshTimer = ref(null)
 
 // Data sources to monitor
 const dataSources = ref([
@@ -505,243 +489,243 @@ const dataSources = ref([
 		cacheAge: null,
 		cacheSize: null,
 	},
-]);
+])
 
 // Computed properties
-const healthyCount = computed(() => dataSources.value.filter((s) => s.status === 'healthy').length);
+const healthyCount = computed(() => dataSources.value.filter((s) => s.status === 'healthy').length)
 
 const degradedCount = computed(
 	() => dataSources.value.filter((s) => s.status === 'degraded').length
-);
+)
 
-const errorCount = computed(() => dataSources.value.filter((s) => s.status === 'error').length);
+const errorCount = computed(() => dataSources.value.filter((s) => s.status === 'error').length)
 
-const overallStatusColor = computed(() => {
-	if (errorCount.value > 0) return 'error';
-	if (degradedCount.value > 0) return 'warning';
-	if (healthyCount.value > 0) return 'success';
-	return 'grey';
-});
+const _overallStatusColor = computed(() => {
+	if (errorCount.value > 0) return 'error'
+	if (degradedCount.value > 0) return 'warning'
+	if (healthyCount.value > 0) return 'success'
+	return 'grey'
+})
 
-const overallStatusIcon = computed(() => {
-	if (errorCount.value > 0) return 'mdi-alert-circle';
-	if (degradedCount.value > 0) return 'mdi-alert';
-	if (healthyCount.value > 0) return 'mdi-check-circle';
-	return 'mdi-help-circle';
-});
+const _overallStatusIcon = computed(() => {
+	if (errorCount.value > 0) return 'mdi-alert-circle'
+	if (degradedCount.value > 0) return 'mdi-alert'
+	if (healthyCount.value > 0) return 'mdi-check-circle'
+	return 'mdi-help-circle'
+})
 
-const overallStatusText = computed(() => {
-	if (errorCount.value > 0) return 'Some services unavailable';
-	if (degradedCount.value > 0) return 'Some services degraded';
-	if (healthyCount.value > 0) return 'All services healthy';
-	return 'Status unknown';
-});
+const _overallStatusText = computed(() => {
+	if (errorCount.value > 0) return 'Some services unavailable'
+	if (degradedCount.value > 0) return 'Some services degraded'
+	if (healthyCount.value > 0) return 'All services healthy'
+	return 'Status unknown'
+})
 
 // Methods
-const getStatusColor = (status) => {
+const _getStatusColor = (status) => {
 	const colors = {
 		healthy: 'success',
 		degraded: 'warning',
 		error: 'error',
 		loading: 'info',
 		unknown: 'grey',
-	};
-	return colors[status] || 'grey';
-};
+	}
+	return colors[status] || 'grey'
+}
 
-const getStatusIcon = (source) => {
-	if (source.loading) return 'mdi-loading';
+const _getStatusIcon = (source) => {
+	if (source.loading) return 'mdi-loading'
 
 	const icons = {
 		healthy: 'mdi-check-circle',
 		degraded: 'mdi-alert',
 		error: 'mdi-alert-circle',
 		unknown: 'mdi-help-circle',
-	};
-	return icons[source.status] || 'mdi-help-circle';
-};
+	}
+	return icons[source.status] || 'mdi-help-circle'
+}
 
-const getStatusClass = (status) => {
-	return `status-${status}`;
-};
+const _getStatusClass = (status) => {
+	return `status-${status}`
+}
 
 const checkHealth = async (sourceId) => {
-	const source = dataSources.value.find((s) => s.id === sourceId);
-	if (!source) return;
+	const source = dataSources.value.find((s) => s.id === sourceId)
+	if (!source) return
 
-	source.loading = true;
-	const startTime = Date.now();
+	source.loading = true
+	const startTime = Date.now()
 
 	try {
 		// Check cache first
-		const cacheKey = `health-${sourceId}`;
-		const cached = await cacheService.getData(cacheKey, 5 * 60 * 1000); // 5 minutes
+		const cacheKey = `health-${sourceId}`
+		const cached = await cacheService.getData(cacheKey, 5 * 60 * 1000) // 5 minutes
 
 		if (cached) {
-			source.cached = true;
-			source.cacheAge = cached.age;
-			source.cacheSize = new Blob([JSON.stringify(cached.data)]).size;
+			source.cached = true
+			source.cacheAge = cached.age
+			source.cacheSize = new Blob([JSON.stringify(cached.data)]).size
 		}
 
 		// Make health check request
 		const response = await fetch(source.url, {
 			method: 'GET',
 			headers: { Accept: 'application/json' },
-		});
+		})
 
-		const responseTime = Date.now() - startTime;
-		source.responseTime = responseTime;
-		source.lastUpdated = Date.now();
+		const responseTime = Date.now() - startTime
+		source.responseTime = responseTime
+		source.lastUpdated = Date.now()
 
 		if (response.ok) {
-			const data = await response.json();
+			const data = await response.json()
 
 			// Cache the response
 			await cacheService.setData(cacheKey, data, {
 				type: source.type,
 				ttl: 5 * 60 * 1000, // 5 minutes for health checks
-			});
+			})
 
 			if (responseTime > 5000) {
-				source.status = 'degraded';
-				source.message = `Slow response (${responseTime}ms)`;
+				source.status = 'degraded'
+				source.message = `Slow response (${responseTime}ms)`
 			} else {
-				source.status = 'healthy';
-				source.message = `Responsive (${responseTime}ms)`;
+				source.status = 'healthy'
+				source.message = `Responsive (${responseTime}ms)`
 			}
 		} else {
-			source.status = 'error';
-			source.message = `HTTP ${response.status}: ${response.statusText}`;
+			source.status = 'error'
+			source.message = `HTTP ${response.status}: ${response.statusText}`
 		}
 	} catch (error) {
-		source.status = 'error';
-		source.message = error.message || 'Connection failed';
-		source.responseTime = Date.now() - startTime;
+		source.status = 'error'
+		source.message = error.message || 'Connection failed'
+		source.responseTime = Date.now() - startTime
 	} finally {
-		source.loading = false;
+		source.loading = false
 	}
-};
+}
 
 const refreshAll = async () => {
-	refreshing.value = true;
+	refreshing.value = true
 
 	try {
 		// Update cache stats
-		cacheStats.value = await cacheService.getCacheStats();
+		cacheStats.value = await cacheService.getCacheStats()
 
 		// Check all sources in parallel
-		await Promise.all(dataSources.value.map((source) => checkHealth(source.id)));
+		await Promise.all(dataSources.value.map((source) => checkHealth(source.id)))
 	} finally {
-		refreshing.value = false;
+		refreshing.value = false
 	}
-};
+}
 
-const retrySource = async (sourceId) => {
-	const source = dataSources.value.find((s) => s.id === sourceId);
-	if (!source) return;
+const _retrySource = async (sourceId) => {
+	const source = dataSources.value.find((s) => s.id === sourceId)
+	if (!source) return
 
-	source.retrying = true;
-	await checkHealth(sourceId);
-	source.retrying = false;
+	source.retrying = true
+	await checkHealth(sourceId)
+	source.retrying = false
 
-	emit('source-retry', sourceId);
-};
+	emit('source-retry', sourceId)
+}
 
-const clearCache = async (sourceId) => {
-	const source = dataSources.value.find((s) => s.id === sourceId);
-	if (!source) return;
+const _clearCache = async (sourceId) => {
+	const source = dataSources.value.find((s) => s.id === sourceId)
+	if (!source) return
 
-	const cacheKey = `health-${sourceId}`;
-	await cacheService.removeData(cacheKey);
+	const cacheKey = `health-${sourceId}`
+	await cacheService.removeData(cacheKey)
 
-	source.cached = false;
-	source.cacheAge = null;
-	source.cacheSize = null;
+	source.cached = false
+	source.cacheAge = null
+	source.cacheSize = null
 
-	emit('cache-cleared', sourceId);
-};
+	emit('cache-cleared', sourceId)
+}
 
-const clearAllCache = async () => {
-	await cacheService.clearAll();
-	cacheStats.value = await cacheService.getCacheStats();
+const _clearAllCache = async () => {
+	await cacheService.clearAll()
+	cacheStats.value = await cacheService.getCacheStats()
 
 	dataSources.value.forEach((source) => {
-		source.cached = false;
-		source.cacheAge = null;
-		source.cacheSize = null;
-	});
+		source.cached = false
+		source.cacheAge = null
+		source.cacheSize = null
+	})
 
-	emit('cache-cleared', 'all');
-};
+	emit('cache-cleared', 'all')
+}
 
-const preloadData = async (sourceId) => {
-	emit('data-preload', sourceId);
-};
+const _preloadData = async (sourceId) => {
+	emit('data-preload', sourceId)
+}
 
-const showDetails = (source) => {
-	selectedSource.value = source;
-	detailsDialog.value = true;
-};
+const _showDetails = (source) => {
+	selectedSource.value = source
+	detailsDialog.value = true
+}
 
-const formatTimestamp = (timestamp) => {
-	if (!timestamp) return 'Never';
-	return new Date(timestamp).toLocaleString();
-};
+const _formatTimestamp = (timestamp) => {
+	if (!timestamp) return 'Never'
+	return new Date(timestamp).toLocaleString()
+}
 
-const formatAge = (age) => {
-	if (!age) return 'Unknown';
+const _formatAge = (age) => {
+	if (!age) return 'Unknown'
 
-	const seconds = Math.floor(age / 1000);
-	const minutes = Math.floor(seconds / 60);
-	const hours = Math.floor(minutes / 60);
+	const seconds = Math.floor(age / 1000)
+	const minutes = Math.floor(seconds / 60)
+	const hours = Math.floor(minutes / 60)
 
-	if (hours > 0) return `${hours}h ${minutes % 60}m`;
-	if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
-	return `${seconds}s`;
-};
+	if (hours > 0) return `${hours}h ${minutes % 60}m`
+	if (minutes > 0) return `${minutes}m ${seconds % 60}s`
+	return `${seconds}s`
+}
 
-const formatCacheSize = (bytes) => {
-	if (!bytes) return '0 B';
+const _formatCacheSize = (bytes) => {
+	if (!bytes) return '0 B'
 
-	const units = ['B', 'KB', 'MB', 'GB'];
-	let size = bytes;
-	let unitIndex = 0;
+	const units = ['B', 'KB', 'MB', 'GB']
+	let size = bytes
+	let unitIndex = 0
 
 	while (size >= 1024 && unitIndex < units.length - 1) {
-		size /= 1024;
-		unitIndex++;
+		size /= 1024
+		unitIndex++
 	}
 
-	return `${size.toFixed(1)} ${units[unitIndex]}`;
-};
+	return `${size.toFixed(1)} ${units[unitIndex]}`
+}
 
-const getCacheUtilizationColor = (percent) => {
-	if (percent > 90) return 'error';
-	if (percent > 70) return 'warning';
-	return 'success';
-};
+const _getCacheUtilizationColor = (percent) => {
+	if (percent > 90) return 'error'
+	if (percent > 70) return 'warning'
+	return 'success'
+}
 
 const startRefreshTimer = () => {
-	if (refreshTimer.value) clearInterval(refreshTimer.value);
+	if (refreshTimer.value) clearInterval(refreshTimer.value)
 
 	refreshTimer.value = setInterval(() => {
 		if (!refreshing.value) {
-			void refreshAll();
+			void refreshAll()
 		}
-	}, props.refreshInterval);
-};
+	}, props.refreshInterval)
+}
 
 // Lifecycle
 onMounted(async () => {
-	await refreshAll();
-	startRefreshTimer();
-});
+	await refreshAll()
+	startRefreshTimer()
+})
 
 onUnmounted(() => {
 	if (refreshTimer.value) {
-		clearInterval(refreshTimer.value);
+		clearInterval(refreshTimer.value)
 	}
-});
+})
 </script>
 
 <style scoped>

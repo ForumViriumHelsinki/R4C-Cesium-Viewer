@@ -41,9 +41,7 @@
 					class="mt-4"
 				>
 					<v-divider class="mb-3" />
-					<p class="text-subtitle-2">
-Estimated Impact
-</p>
+					<p class="text-subtitle-2">Estimated Impact</p>
 					<v-table
 						density="compact"
 						class="mt-2"
@@ -90,299 +88,299 @@ Estimated Impact
 </template>
 
 <script setup>
-import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import { useGridStyling } from '../composables/useGridStyling.js';
-import { useURLStore } from '../stores/urlStore.js';
-import { useIndexData } from '../composables/useIndexData.js';
-import { useMitigationStore } from '../stores/mitigationStore.js';
-import * as Cesium from 'cesium';
+import * as Cesium from 'cesium'
+import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
+import { useGridStyling } from '../composables/useGridStyling.js'
+import { useIndexData } from '../composables/useIndexData.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useMitigationStore } from '../stores/mitigationStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
+import { useURLStore } from '../stores/urlStore.js'
 
 // --- STATE MANAGEMENT ---
-const globalStore = useGlobalStore();
-const propsStore = usePropsStore();
-const urlStore = useURLStore();
-const mitigationStore = useMitigationStore();
-const viewer = computed(() => globalStore.cesiumViewer);
-const statsIndex = computed(() => propsStore.statsIndex);
-const { updateGridColors: restoreGridColoring } = useGridStyling();
-const { getIndexInfo } = useIndexData();
+const globalStore = useGlobalStore()
+const propsStore = usePropsStore()
+const urlStore = useURLStore()
+const mitigationStore = useMitigationStore()
+const viewer = computed(() => globalStore.cesiumViewer)
+const statsIndex = computed(() => propsStore.statsIndex)
+const { updateGridColors: restoreGridColoring } = useGridStyling()
+const { getIndexInfo } = useIndexData()
 
-const isSelectingGrid = ref(false);
-const isLoading = ref(false);
-const dataSourceName = 'landcover_for_parks';
-const gridDataSourceName = '250m_grid';
-const selectedGridEntity = shallowRef(null); // Cesium Entity - use shallowRef to prevent deep reactivity
-const originalGridColor = ref(null);
-const landcoverFeaturesLoaded = ref(false);
-const loadedGeoJson = ref(null);
-const loadedLandcoverDataSource = shallowRef(null); // Cesium DataSource - use shallowRef to prevent deep reactivity
-const calculationResults = ref(null);
-const convertedCellIds = ref([]);
-const modifiedHeatIndices = ref(new Map());
-const convertedParkDataSources = shallowRef([]); // Array of Cesium DataSources - use shallowRef to prevent deep reactivity
+const isSelectingGrid = ref(false)
+const isLoading = ref(false)
+const dataSourceName = 'landcover_for_parks'
+const gridDataSourceName = '250m_grid'
+const selectedGridEntity = shallowRef(null) // Cesium Entity - use shallowRef to prevent deep reactivity
+const originalGridColor = ref(null)
+const landcoverFeaturesLoaded = ref(false)
+const loadedGeoJson = ref(null)
+const loadedLandcoverDataSource = shallowRef(null) // Cesium DataSource - use shallowRef to prevent deep reactivity
+const calculationResults = ref(null)
+const convertedCellIds = ref([])
+const modifiedHeatIndices = ref(new Map())
+const convertedParkDataSources = shallowRef([]) // Array of Cesium DataSources - use shallowRef to prevent deep reactivity
 
 // --- DYNAMIC UI ---
-const primaryButtonText = computed(() => {
-	if (landcoverFeaturesLoaded.value) return 'Turn to Parks';
-	if (isSelectingGrid.value) return '...';
-	return 'Select';
-});
+const _primaryButtonText = computed(() => {
+	if (landcoverFeaturesLoaded.value) return 'Turn to Parks'
+	if (isSelectingGrid.value) return '...'
+	return 'Select'
+})
 
 // ** NEW: Dynamic text for the reset/cancel button **
-const resetOrCancelButtonText = computed(() => {
-	return landcoverFeaturesLoaded.value ? 'Cancel' : 'Reset All';
-});
+const _resetOrCancelButtonText = computed(() => {
+	return landcoverFeaturesLoaded.value ? 'Cancel' : 'Reset All'
+})
 
-const handlePrimaryButtonClick = () => {
+const _handlePrimaryButtonClick = () => {
 	if (landcoverFeaturesLoaded.value) {
-		turnToParks();
+		turnToParks()
 	} else {
-		toggleSelectionMode();
+		toggleSelectionMode()
 	}
-};
+}
 
 // ** NEW: Handler for the dual-purpose reset/cancel button **
-const handleResetOrCancel = () => {
+const _handleResetOrCancel = () => {
 	if (landcoverFeaturesLoaded.value) {
 		// If we are in a selection state, just clear the current selection (Cancel)
-		clearCurrentSelection();
+		clearCurrentSelection()
 	} else {
 		// Otherwise, perform a full reset of the simulation
-		fullReset();
+		fullReset()
 	}
-};
+}
 
 // --- UI ACTIONS ---
 const toggleSelectionMode = () => {
-	isSelectingGrid.value = !isSelectingGrid.value;
-	if (!isSelectingGrid.value) isLoading.value = false;
-};
+	isSelectingGrid.value = !isSelectingGrid.value
+	if (!isSelectingGrid.value) isLoading.value = false
+}
 
 const clearCurrentSelection = () => {
-	isLoading.value = false;
-	isSelectingGrid.value = false;
+	isLoading.value = false
+	isSelectingGrid.value = false
 
 	if (loadedLandcoverDataSource.value) {
-		viewer.value.dataSources.remove(loadedLandcoverDataSource.value, true);
+		viewer.value.dataSources.remove(loadedLandcoverDataSource.value, true)
 	}
 
-	const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
+	const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0]
 	if (selectedGridEntity.value && originalGridColor.value && gridDataSource) {
-		gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
-		selectedGridEntity.value.polygon.material = originalGridColor.value;
-		gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
+		gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities)
+		selectedGridEntity.value.polygon.material = originalGridColor.value
+		gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities)
 	}
 
-	selectedGridEntity.value = null;
-	originalGridColor.value = null;
-	landcoverFeaturesLoaded.value = false;
-	loadedLandcoverDataSource.value = null;
-	loadedGeoJson.value = null;
-	calculationResults.value = null;
-};
+	selectedGridEntity.value = null
+	originalGridColor.value = null
+	landcoverFeaturesLoaded.value = false
+	loadedLandcoverDataSource.value = null
+	loadedGeoJson.value = null
+	calculationResults.value = null
+}
 
 const fullReset = () => {
-	clearCurrentSelection();
+	clearCurrentSelection()
 
 	convertedParkDataSources.value.forEach((dataSource) => {
-		viewer.value.dataSources.remove(dataSource, true);
-	});
-	convertedParkDataSources.value = [];
+		viewer.value.dataSources.remove(dataSource, true)
+	})
+	convertedParkDataSources.value = []
 
 	if (convertedCellIds.value.length > 0) {
-		convertedCellIds.value = [];
-		modifiedHeatIndices.value.clear();
+		convertedCellIds.value = []
+		modifiedHeatIndices.value.clear()
 
-		const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
+		const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0]
 		if (gridDataSource) {
-			gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
-			filterGridEntities(); // Restore the blue-red heat map
-			gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
+			gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities)
+			filterGridEntities() // Restore the blue-red heat map
+			gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities)
 		}
 	}
-};
+}
 
 // --- CORE LOGIC ---
 const handleMapClick = async (clickEvent) => {
-	if (!isSelectingGrid.value) return;
+	if (!isSelectingGrid.value) return
 
-	const scene = viewer.value.scene;
-	const pickedObject = scene.pick(clickEvent.position);
+	const scene = viewer.value.scene
+	const pickedObject = scene.pick(clickEvent.position)
 
 	if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.properties) {
-		const gridId = pickedObject.id.properties.grid_id?.getValue();
+		const gridId = pickedObject.id.properties.grid_id?.getValue()
 
 		if (convertedCellIds.value.includes(gridId)) {
-			isSelectingGrid.value = false;
-			return;
+			isSelectingGrid.value = false
+			return
 		}
 
-		clearCurrentSelection();
+		clearCurrentSelection()
 
-		const clickedEntity = pickedObject.id;
-		const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
+		const clickedEntity = pickedObject.id
+		const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0]
 
 		if (gridId && clickedEntity.polygon && gridDataSource) {
-			isLoading.value = true;
-			isSelectingGrid.value = false;
+			isLoading.value = true
+			isSelectingGrid.value = false
 
-			gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
+			gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities)
 
-			selectedGridEntity.value = clickedEntity;
-			originalGridColor.value = clickedEntity.polygon.material;
-			clickedEntity.polygon.material = Cesium.Color.WHITE.withAlpha(0.75);
+			selectedGridEntity.value = clickedEntity
+			originalGridColor.value = clickedEntity.polygon.material
+			clickedEntity.polygon.material = Cesium.Color.WHITE.withAlpha(0.75)
 
-			gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
+			gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities)
 
-			await loadLandcoverData(gridId);
-			isLoading.value = false;
+			await loadLandcoverData(gridId)
+			isLoading.value = false
 		}
 	}
-};
+}
 
 const getHeatColor = (value) => {
-	let r, g, b;
-	const alpha = 0.65;
-	const clampedValue = Math.max(0, Math.min(1, value));
+	let r, g, b
+	const alpha = 0.65
+	const clampedValue = Math.max(0, Math.min(1, value))
 
 	if (clampedValue < 0.5) {
-		let interp = clampedValue * 2;
-		interp = interp * interp;
-		r = interp;
-		g = interp;
-		b = 1.0;
+		let interp = clampedValue * 2
+		interp = interp * interp
+		r = interp
+		g = interp
+		b = 1.0
 	} else {
-		let interp = (clampedValue - 0.5) * 2;
-		interp = Math.sqrt(interp);
-		r = 1.0;
-		g = 1.0 - interp;
-		b = 1.0 - interp;
+		let interp = (clampedValue - 0.5) * 2
+		interp = Math.sqrt(interp)
+		r = 1.0
+		g = 1.0 - interp
+		b = 1.0 - interp
 	}
-	return new Cesium.Color(r, g, b, alpha);
-};
+	return new Cesium.Color(r, g, b, alpha)
+}
 
 const applyDynamicStyling = (dataSource) => {
-	const entities = dataSource.entities.values;
+	const entities = dataSource.entities.values
 	for (const entity of entities) {
-		if (!entity.polygon) continue;
-		const koodi = entity.properties.koodi?.getValue();
-		let color;
+		if (!entity.polygon) continue
+		const koodi = entity.properties.koodi?.getValue()
+		let color
 		if (koodi === '130') {
-			color = Cesium.Color.fromCssColorString('#857976');
+			color = Cesium.Color.fromCssColorString('#857976')
 		} else if (koodi === '410') {
-			color = Cesium.Color.fromCssColorString('#cd853f');
+			color = Cesium.Color.fromCssColorString('#cd853f')
 		} else {
-			color = Cesium.Color.LIGHTSLATEGRAY;
+			color = Cesium.Color.LIGHTSLATEGRAY
 		}
-		entity.polygon.material = color.withAlpha(0.7);
+		entity.polygon.material = color.withAlpha(0.7)
 	}
-};
+}
 
 const loadLandcoverData = async (gridId) => {
-	const apiUrl = urlStore.landcoverToParks(gridId);
+	const apiUrl = urlStore.landcoverToParks(gridId)
 	try {
-		const response = await fetch(apiUrl);
-		if (!response.ok) throw new Error(`API returned status ${response.status}`);
-		const geojsonData = await response.json();
+		const response = await fetch(apiUrl)
+		if (!response.ok) throw new Error(`API returned status ${response.status}`)
+		const geojsonData = await response.json()
 
 		if (geojsonData.features.length === 0) {
-			alert(`No convertible landcover features found.`);
+			alert(`No convertible landcover features found.`)
 			if (selectedGridEntity.value && originalGridColor.value) {
-				selectedGridEntity.value.polygon.material = originalGridColor.value;
+				selectedGridEntity.value.polygon.material = originalGridColor.value
 			}
-			return;
+			return
 		}
 
-		loadedGeoJson.value = geojsonData;
+		loadedGeoJson.value = geojsonData
 
-		const defaultStyle = { stroke: Cesium.Color.BLACK.withAlpha(0.5), strokeWidth: 1 };
-		const newDataSource = await Cesium.GeoJsonDataSource.load(geojsonData, defaultStyle);
-		newDataSource.name = dataSourceName;
-		await viewer.value.dataSources.add(newDataSource);
-		applyDynamicStyling(newDataSource);
+		const defaultStyle = { stroke: Cesium.Color.BLACK.withAlpha(0.5), strokeWidth: 1 }
+		const newDataSource = await Cesium.GeoJsonDataSource.load(geojsonData, defaultStyle)
+		newDataSource.name = dataSourceName
+		await viewer.value.dataSources.add(newDataSource)
+		applyDynamicStyling(newDataSource)
 
-		loadedLandcoverDataSource.value = newDataSource;
-		landcoverFeaturesLoaded.value = true;
+		loadedLandcoverDataSource.value = newDataSource
+		landcoverFeaturesLoaded.value = true
 	} catch (error) {
-		console.error('Failed to load landcover data:', error);
-		alert('An error occurred while fetching landcover data.');
+		console.error('Failed to load landcover data:', error)
+		alert('An error occurred while fetching landcover data.')
 	}
-};
+}
 
 const filterGridEntities = () => {
-	const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
-	if (!gridDataSource) return;
+	const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0]
+	if (!gridDataSource) return
 	for (const entity of gridDataSource.entities.values) {
-		if (entity.properties && entity.properties['final_avg_conditional']?.getValue()) {
-			entity.show = true;
-			const gridId = entity.properties.grid_id.getValue();
+		if (entity.properties?.final_avg_conditional?.getValue()) {
+			entity.show = true
+			const gridId = entity.properties.grid_id.getValue()
 			const heatIndex = modifiedHeatIndices.value.has(gridId)
 				? modifiedHeatIndices.value.get(gridId)
-				: entity.properties['final_avg_conditional'].getValue();
+				: entity.properties.final_avg_conditional.getValue()
 
 			if (entity.polygon) {
-				entity.polygon.material = getHeatColor(heatIndex);
+				entity.polygon.material = getHeatColor(heatIndex)
 			}
 		} else {
-			entity.show = false;
+			entity.show = false
 		}
 	}
-};
+}
 
 const turnToParks = () => {
-	if (!loadedGeoJson.value || !selectedGridEntity.value) return;
+	if (!loadedGeoJson.value || !selectedGridEntity.value) return
 
 	const totalAreaConverted = loadedGeoJson.value.features.reduce((sum, feature) => {
-		return sum + (feature.properties.area_m2 || 0);
-	}, 0);
+		return sum + (feature.properties.area_m2 || 0)
+	}, 0)
 
-	const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
+	const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0]
 	if (gridDataSource) {
-		gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
+		gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities)
 
-		const currentIndexInfo = getIndexInfo(statsIndex.value);
-		const sourceGridId = selectedGridEntity.value.properties.grid_id.getValue();
+		const currentIndexInfo = getIndexInfo(statsIndex.value)
+		const sourceGridId = selectedGridEntity.value.properties.grid_id.getValue()
 
 		const results = mitigationStore.calculateParksEffect(
 			selectedGridEntity.value,
 			totalAreaConverted
-		);
+		)
 
-		const entityMap = new Map();
+		const entityMap = new Map()
 		for (const entity of gridDataSource.entities.values) {
-			const gridId = entity.properties.grid_id?.getValue();
-			if (gridId) entityMap.set(gridId, entity);
+			const gridId = entity.properties.grid_id?.getValue()
+			if (gridId) entityMap.set(gridId, entity)
 		}
 
-		let actualTotalReduction = 0;
+		let actualTotalReduction = 0
 
 		results.heatReductions.forEach((reductionData) => {
-			const entityToColor = entityMap.get(reductionData.grid_id);
+			const entityToColor = entityMap.get(reductionData.grid_id)
 			if (entityToColor) {
 				const currentIndex = modifiedHeatIndices.value.has(reductionData.grid_id)
 					? modifiedHeatIndices.value.get(reductionData.grid_id)
-					: entityToColor.properties.final_avg_conditional.getValue();
+					: entityToColor.properties.final_avg_conditional.getValue()
 
-				actualTotalReduction += reductionData.heatReduction;
+				actualTotalReduction += reductionData.heatReduction
 
-				const newIdx = Math.max(0, currentIndex - reductionData.heatReduction);
-				modifiedHeatIndices.value.set(reductionData.grid_id, newIdx);
-				const newColor = getHeatColor(newIdx);
-				entityToColor.polygon.material = newColor;
+				const newIdx = Math.max(0, currentIndex - reductionData.heatReduction)
+				modifiedHeatIndices.value.set(reductionData.grid_id, newIdx)
+				const newColor = getHeatColor(newIdx)
+				entityToColor.polygon.material = newColor
 
 				if (entityToColor.id === selectedGridEntity.value.id) {
-					originalGridColor.value = newColor;
+					originalGridColor.value = newColor
 				}
 			}
-		});
+		})
 
-		gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
+		gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities)
 
 		const initialIndexForDisplay = modifiedHeatIndices.value.has(sourceGridId)
 			? modifiedHeatIndices.value.get(sourceGridId) + results.sourceReduction
-			: selectedGridEntity.value.properties.final_avg_conditional.getValue();
+			: selectedGridEntity.value.properties.final_avg_conditional.getValue()
 
 		calculationResults.value = {
 			area: (totalAreaConverted / 10000).toFixed(2),
@@ -394,55 +392,55 @@ const turnToParks = () => {
 			newIndex: modifiedHeatIndices.value.get(sourceGridId).toFixed(3),
 			cumulativeCoolingArea: (mitigationStore.cumulativeCoolingArea / 10000).toFixed(2),
 			cumulativeHeatReduction: mitigationStore.cumulativeHeatReduction.toFixed(3),
-		};
+		}
 
-		convertedCellIds.value.push(sourceGridId);
+		convertedCellIds.value.push(sourceGridId)
 	}
 
 	if (loadedLandcoverDataSource.value) {
-		const dataSourceToConvert = loadedLandcoverDataSource.value;
+		const dataSourceToConvert = loadedLandcoverDataSource.value
 		for (const entity of dataSourceToConvert.entities.values) {
 			if (entity.polygon) {
-				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.8);
+				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.8)
 			}
 		}
-		convertedParkDataSources.value.push(dataSourceToConvert);
-		loadedLandcoverDataSource.value = null;
+		convertedParkDataSources.value.push(dataSourceToConvert)
+		loadedLandcoverDataSource.value = null
 	}
-	landcoverFeaturesLoaded.value = false;
-};
+	landcoverFeaturesLoaded.value = false
+}
 
 // --- LIFECYCLE HOOKS ---
 onMounted(() => {
-	if (!viewer.value) return;
+	if (!viewer.value) return
 	viewer.value.screenSpaceEventHandler.setInputAction(
 		handleMapClick,
 		Cesium.ScreenSpaceEventType.LEFT_CLICK
-	);
-	const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
+	)
+	const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0]
 	if (gridDataSource) {
-		if (gridDataSource.entities.values.length > 0) filterGridEntities();
-		gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities);
+		if (gridDataSource.entities.values.length > 0) filterGridEntities()
+		gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities)
 	} else {
-		console.warn(`Datasource '${gridDataSourceName}' not found on mount.`);
+		console.warn(`Datasource '${gridDataSourceName}' not found on mount.`)
 	}
-});
+})
 
 onUnmounted(() => {
 	if (viewer.value && !viewer.value.isDestroyed()) {
-		viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+		viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
 		// First, do a full reset of this component's state
-		fullReset();
+		fullReset()
 
 		// THEN, restore the main application's colors
-		const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0];
+		const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0]
 		if (gridDataSource) {
-			gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities);
-			restoreGridColoring(statsIndex.value);
+			gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities)
+			restoreGridColoring(statsIndex.value)
 		}
 	}
-});
+})
 </script>
 
 <style scoped>

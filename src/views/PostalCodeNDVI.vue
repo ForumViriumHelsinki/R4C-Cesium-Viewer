@@ -28,44 +28,44 @@
 </template>
 
 <script>
-import { onMounted, ref, onBeforeUnmount } from 'vue';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
-import { storeToRefs } from 'pinia';
-import { eventBus } from '../services/eventEmitter.js';
-import { changeTIFF } from '../services/tiffImagery.js';
-import { AVAILABLE_NDVI_DATES, DEFAULT_NDVI_DATE } from '../constants/ndviDates.js';
+import { storeToRefs } from 'pinia'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { AVAILABLE_NDVI_DATES, DEFAULT_NDVI_DATE } from '../constants/ndviDates.js'
+import { eventBus } from '../services/eventEmitter.js'
+import { changeTIFF } from '../services/tiffImagery.js'
+import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
 	setup() {
-		const toggleStore = useToggleStore();
-		const backgroundMapStore = useBackgroundMapStore();
+		const toggleStore = useToggleStore()
+		const backgroundMapStore = useBackgroundMapStore()
 
 		// Make ndvi reactive
-		const { ndvi } = storeToRefs(toggleStore);
+		const { ndvi } = storeToRefs(toggleStore)
 
-		const selectedDate = ref(DEFAULT_NDVI_DATE);
-		const availableDates = AVAILABLE_NDVI_DATES;
+		const selectedDate = ref(DEFAULT_NDVI_DATE)
+		const availableDates = AVAILABLE_NDVI_DATES
 
 		const updateImage = async () => {
-			backgroundMapStore.setNdviDate(selectedDate.value);
-			changeTIFF().catch(console.error);
-		};
+			backgroundMapStore.setNdviDate(selectedDate.value)
+			changeTIFF().catch(console.error)
+		}
 
 		onMounted(async () => {
-			eventBus.on('addNDVI', updateImage);
+			eventBus.on('addNDVI', updateImage)
 			if (ndvi.value) {
-				await updateImage();
+				await updateImage()
 			}
-		});
+		})
 
 		onBeforeUnmount(() => {
-			eventBus.off('addNDVI', updateImage);
-		});
+			eventBus.off('addNDVI', updateImage)
+		})
 
-		return { selectedDate, availableDates, updateImage, ndvi };
+		return { selectedDate, availableDates, updateImage, ndvi }
 	},
-};
+}
 </script>
 
 <style scoped>

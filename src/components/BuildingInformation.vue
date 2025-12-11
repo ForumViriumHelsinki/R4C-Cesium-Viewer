@@ -13,12 +13,8 @@
 		>
 			<!-- Header with building icon -->
 			<div class="tooltip-header">
-				<div class="building-icon">
-🏢
-</div>
-				<div class="building-title">
-Building Details
-</div>
+				<div class="building-icon">🏢</div>
+				<div class="building-title">Building Details</div>
 			</div>
 
 			<!-- Compact data grid -->
@@ -27,9 +23,7 @@ Building Details
 					v-if="buildingAttributes.address"
 					class="data-item"
 				>
-					<div class="data-label">
-📍
-</div>
+					<div class="data-label">📍</div>
 					<div class="data-value">
 						{{ buildingAttributes.address }}
 					</div>
@@ -38,9 +32,7 @@ Building Details
 					v-if="buildingAttributes.rakennusaine_s"
 					class="data-item"
 				>
-					<div class="data-label">
-🧱
-</div>
+					<div class="data-label">🧱</div>
 					<div class="data-value">
 						{{ buildingAttributes.rakennusaine_s }}
 					</div>
@@ -49,9 +41,7 @@ Building Details
 					v-if="buildingAttributes.avg_temp_c"
 					class="data-item"
 				>
-					<div class="data-label">
-🌡️
-</div>
+					<div class="data-label">🌡️</div>
 					<div class="data-value">
 						<span class="temp-value">{{ buildingAttributes.avg_temp_c }}°C</span>
 						<span class="temp-date">({{ heatDataDate }})</span>
@@ -92,24 +82,25 @@ Building Details
  * - address: Finds building address from properties
  * - Cesium: Scene picking and screen space events
  */
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useBuildingStore } from '../stores/buildingStore.js';
-import { findAddressForBuilding } from '../services/address.js';
-import { Cartesian2, ScreenSpaceEventType } from 'cesium';
+
+import { Cartesian2, ScreenSpaceEventType } from 'cesium'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { findAddressForBuilding } from '../services/address.js'
+import { useBuildingStore } from '../stores/buildingStore.js'
+import { useGlobalStore } from '../stores/globalStore.js'
 
 export default {
 	setup() {
-		const store = useGlobalStore();
-		const viewer = store.cesiumViewer;
-		const buildingStore = useBuildingStore();
-		const showTooltip = ref(false);
-		const mousePosition = ref({ x: 0, y: 0 });
-		const buildingAttributes = ref(null);
-		const pickPending = ref(false);
-		const handlerRegistered = ref(false);
+		const store = useGlobalStore()
+		const viewer = store.cesiumViewer
+		const buildingStore = useBuildingStore()
+		const showTooltip = ref(false)
+		const mousePosition = ref({ x: 0, y: 0 })
+		const buildingAttributes = ref(null)
+		const pickPending = ref(false)
+		const handlerRegistered = ref(false)
 
-		console.log('[BuildingInformation] 🎬 Component setup started');
+		console.log('[BuildingInformation] 🎬 Component setup started')
 
 		/**
 		 * Computed style for tooltip positioning and appearance.
@@ -128,7 +119,7 @@ export default {
 			pointerEvents: 'none',
 			backdropFilter: 'blur(8px)',
 			border: '1px solid rgba(255, 255, 255, 0.1)',
-		}));
+		}))
 
 		/**
 		 * Computed property to check if building features are available.
@@ -137,13 +128,13 @@ export default {
 		 * @type {import('vue').ComputedRef<boolean>}
 		 */
 		const hasBuildingFeatures = computed(() => {
-			const hasFeatures = Boolean(buildingStore.buildingFeatures);
+			const hasFeatures = Boolean(buildingStore.buildingFeatures)
 			console.log('[BuildingInformation] 🔍 hasBuildingFeatures computed:', {
 				hasFeatures,
 				featuresCount: buildingStore.buildingFeatures?.features?.length,
-			});
-			return hasFeatures;
-		});
+			})
+			return hasFeatures
+		})
 
 		/**
 		 * Exposes heat data date from store.
@@ -151,7 +142,7 @@ export default {
 		 *
 		 * @type {import('vue').ComputedRef<string>}
 		 */
-		const heatDataDate = computed(() => store.heatDataDate);
+		const heatDataDate = computed(() => store.heatDataDate)
 
 		/**
 		 * Fetches building information based on the hovered entity.
@@ -172,49 +163,49 @@ export default {
 		 */
 		const fetchBuildingInfo = async (entity) => {
 			try {
-				console.log('[BuildingInformation] 🔎 fetchBuildingInfo called for entity:', entity._id);
+				console.log('[BuildingInformation] 🔎 fetchBuildingInfo called for entity:', entity._id)
 
-				const features = buildingStore.buildingFeatures.features;
+				const features = buildingStore.buildingFeatures.features
 
-				const validIdPattern = /^[0-9]{9}[A-Z]$/;
+				const validIdPattern = /^[0-9]{9}[A-Z]$/
 
 				if (!entity._id || !validIdPattern.test(entity._id)) {
-					console.log('[BuildingInformation] ⚠️ Entity ID does not match pattern:', entity._id);
-					return;
+					console.log('[BuildingInformation] ⚠️ Entity ID does not match pattern:', entity._id)
+					return
 				}
 
-				console.log('[BuildingInformation] ✓ Entity ID matches pattern:', entity._id);
-				console.log('[BuildingInformation] 📦 Searching in', features?.length || 0, 'features');
+				console.log('[BuildingInformation] ✓ Entity ID matches pattern:', entity._id)
+				console.log('[BuildingInformation] 📦 Searching in', features?.length || 0, 'features')
 
 				if (features) {
-					const matchingFeature = features.find((feature) => feature.id === entity._id);
+					const matchingFeature = features.find((feature) => feature.id === entity._id)
 
 					if (matchingFeature) {
-						console.log('[BuildingInformation] ✅ Found matching feature:', matchingFeature.id);
-						const properties = matchingFeature.properties;
+						console.log('[BuildingInformation] ✅ Found matching feature:', matchingFeature.id)
+						const properties = matchingFeature.properties
 
 						buildingAttributes.value = {
 							avg_temp_c: findAverageTempC(properties),
 							rakennusaine_s: properties.rakennusaine_s,
 							address: findAddressForBuilding(properties),
-						};
-						showTooltip.value = true;
+						}
+						showTooltip.value = true
 						console.log(
 							'[BuildingInformation] 🎯 Tooltip displayed with:',
 							buildingAttributes.value
-						);
+						)
 					} else {
-						console.warn('[BuildingInformation] ❌ No matching feature found for Id:', entity._id);
+						console.warn('[BuildingInformation] ❌ No matching feature found for Id:', entity._id)
 						console.log(
 							'[BuildingInformation] Sample feature IDs:',
 							features.slice(0, 5).map((f) => f.id)
-						);
+						)
 					}
 				}
 			} catch (error) {
-				console.error('[BuildingInformation] ❌ Failed to fetch building data', error);
+				console.error('[BuildingInformation] ❌ Failed to fetch building data', error)
 			}
-		};
+		}
 
 		/**
 		 * Finds average temperature from heat timeseries for the current date.
@@ -224,10 +215,10 @@ export default {
 		 * @returns {string} Temperature in Celsius (fixed to 2 decimals) or 'n/a'
 		 */
 		const findAverageTempC = (properties) => {
-			const heatTimeseries = properties.heat_timeseries;
-			const foundEntry = heatTimeseries.find(({ date }) => date === store.heatDataDate);
-			return foundEntry ? foundEntry.avg_temp_c.toFixed(2) : 'n/a';
-		};
+			const heatTimeseries = properties.heat_timeseries
+			const foundEntry = heatTimeseries.find(({ date }) => date === store.heatDataDate)
+			return foundEntry ? foundEntry.avg_temp_c.toFixed(2) : 'n/a'
+		}
 
 		/**
 		 * Handles mouse movement and checks if the user is hovering over a building entity.
@@ -242,26 +233,26 @@ export default {
 		 * @returns {void}
 		 */
 		const onMouseMove = (event) => {
-			if (pickPending.value) return;
+			if (pickPending.value) return
 
-			pickPending.value = true;
+			pickPending.value = true
 			requestAnimationFrame(() => {
-				pickPending.value = false;
+				pickPending.value = false
 
-				const endPosition = event.endPosition;
-				mousePosition.value = { x: endPosition.x, y: endPosition.y };
+				const endPosition = event.endPosition
+				mousePosition.value = { x: endPosition.x, y: endPosition.y }
 
 				if (buildingStore.buildingFeatures && viewer) {
-					const pickedEntity = viewer.scene.pick(new Cartesian2(endPosition.x, endPosition.y));
+					const pickedEntity = viewer.scene.pick(new Cartesian2(endPosition.x, endPosition.y))
 
-					if (pickedEntity && pickedEntity.id) {
-						void fetchBuildingInfo(pickedEntity.id);
+					if (pickedEntity?.id) {
+						void fetchBuildingInfo(pickedEntity.id)
 					} else {
-						showTooltip.value = false;
+						showTooltip.value = false
 					}
 				}
-			});
-		};
+			})
+		}
 
 		/**
 		 * Registers the mouse move handler with Cesium's screen space event handler.
@@ -275,14 +266,14 @@ export default {
 					alreadyRegistered: handlerRegistered.value,
 					hasViewer: Boolean(viewer),
 					hasHandler: Boolean(viewer?.screenSpaceEventHandler),
-				});
-				return;
+				})
+				return
 			}
 
-			viewer.screenSpaceEventHandler.setInputAction(onMouseMove, ScreenSpaceEventType.MOUSE_MOVE);
-			handlerRegistered.value = true;
-			console.log('[BuildingInformation] ✅ MOUSE_MOVE handler registered successfully');
-		};
+			viewer.screenSpaceEventHandler.setInputAction(onMouseMove, ScreenSpaceEventType.MOUSE_MOVE)
+			handlerRegistered.value = true
+			console.log('[BuildingInformation] ✅ MOUSE_MOVE handler registered successfully')
+		}
 
 		/**
 		 * Unregisters the mouse move handler from Cesium's screen space event handler.
@@ -291,13 +282,13 @@ export default {
 		 */
 		const unregisterMouseMoveHandler = () => {
 			if (!handlerRegistered.value || !viewer || !viewer.screenSpaceEventHandler) {
-				return;
+				return
 			}
 
-			viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
-			handlerRegistered.value = false;
-			console.log('[BuildingInformation] 🗑️ MOUSE_MOVE handler unregistered');
-		};
+			viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE)
+			handlerRegistered.value = false
+			console.log('[BuildingInformation] 🗑️ MOUSE_MOVE handler unregistered')
+		}
 
 		/**
 		 * Watches for buildingFeatures to become available and registers handler.
@@ -313,17 +304,17 @@ export default {
 					hasFeatures,
 					'handlerRegistered:',
 					handlerRegistered.value
-				);
+				)
 
 				if (hasFeatures && !handlerRegistered.value) {
-					console.log('[BuildingInformation] ⏰ Scheduling handler registration in 100ms');
+					console.log('[BuildingInformation] ⏰ Scheduling handler registration in 100ms')
 					setTimeout(() => {
-						registerMouseMoveHandler();
-					}, 100);
+						registerMouseMoveHandler()
+					}, 100)
 				}
 			},
 			{ immediate: true }
-		);
+		)
 
 		/**
 		 * Sets up Cesium mouse events on mount if buildingFeatures already exists.
@@ -333,34 +324,32 @@ export default {
 			console.log(
 				'[BuildingInformation] 🔧 Component mounted. buildingFeatures exists:',
 				Boolean(buildingStore.buildingFeatures)
-			);
+			)
 
 			if (buildingStore.buildingFeatures) {
-				console.log(
-					'[BuildingInformation] ⏰ Scheduling handler registration in 100ms (onMounted)'
-				);
+				console.log('[BuildingInformation] ⏰ Scheduling handler registration in 100ms (onMounted)')
 				setTimeout(() => {
-					registerMouseMoveHandler();
-				}, 100);
+					registerMouseMoveHandler()
+				}, 100)
 			}
-		});
+		})
 
 		/**
 		 * Cleans up Cesium mouse events on component unmount.
 		 */
 		onUnmounted(() => {
-			console.log('[BuildingInformation] 🧹 Component unmounted');
-			unregisterMouseMoveHandler();
-		});
+			console.log('[BuildingInformation] 🧹 Component unmounted')
+			unregisterMouseMoveHandler()
+		})
 
 		return {
 			showTooltip,
 			tooltipStyle,
 			heatDataDate,
 			buildingAttributes,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

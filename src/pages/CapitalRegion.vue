@@ -67,17 +67,17 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
-import { eventBus } from '../services/eventEmitter.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useBuildingStore } from '../stores/buildingStore.js';
-import BuildingInformation from '../components/BuildingInformation.vue';
-import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
-import SocioEconomics from '../views/SocioEconomics.vue';
-import Landcover from '../views/Landcover.vue';
-import Loading from '../components/Loading.vue';
-import HSYWMS from '../components/HSYWMS.vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import BuildingInformation from '../components/BuildingInformation.vue'
+import HSYWMS from '../components/HSYWMS.vue'
+import Loading from '../components/Loading.vue'
+import { eventBus } from '../services/eventEmitter.js'
+import { useBuildingStore } from '../stores/buildingStore.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
+import BuildingScatterPlot from '../views/BuildingScatterPlot.vue'
+import Landcover from '../views/Landcover.vue'
+import SocioEconomics from '../views/SocioEconomics.vue'
 
 export default {
 	components: {
@@ -89,46 +89,46 @@ export default {
 		HSYWMS,
 	},
 	setup() {
-		const showComponents = ref(false);
-		const showLandcover = ref(false);
-		const showHSYWMS = ref(false);
-		const store = useGlobalStore();
-		const toggleStore = useToggleStore();
-		const buildingStore = useBuildingStore();
+		const showComponents = ref(false)
+		const showLandcover = ref(false)
+		const showHSYWMS = ref(false)
+		const store = useGlobalStore()
+		const toggleStore = useToggleStore()
+		const buildingStore = useBuildingStore()
 
 		onMounted(() => {
 			eventBus.on('showCapitalRegion', () => {
-				showComponents.value = true;
-			});
+				showComponents.value = true
+			})
 
 			eventBus.on('hideCapitalRegion', () => {
-				showComponents.value = false;
-			});
-		});
+				showComponents.value = false
+			})
+		})
 
 		onBeforeUnmount(() => {
-			eventBus.off('showCapitalRegion');
-			eventBus.off('hideCapitalRegion');
-		});
+			eventBus.off('showCapitalRegion')
+			eventBus.off('hideCapitalRegion')
+		})
 
 		// Watch landCover toggle to control mutual exclusivity
 		watch(
 			() => toggleStore.landCover,
 			(newValue) => {
-				showLandcover.value = toggleStore.helsinkiView ? showLandcover.value : !!newValue;
-				showHSYWMS.value = !showLandcover.value;
+				showLandcover.value = toggleStore.helsinkiView ? showLandcover.value : !!newValue
+				showHSYWMS.value = !showLandcover.value
 			}
-		);
+		)
 
 		// Separate control for HSYWMS based on postalcode and landcover visibility
 		watch(
 			() => store.postalcode,
 			(newPostalCode) => {
 				if (!showLandcover.value && newPostalCode) {
-					showHSYWMS.value = true;
+					showHSYWMS.value = true
 				}
 			}
-		);
+		)
 
 		return {
 			showComponents,
@@ -137,9 +137,9 @@ export default {
 			store,
 			buildingStore,
 			toggleStore,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped></style>

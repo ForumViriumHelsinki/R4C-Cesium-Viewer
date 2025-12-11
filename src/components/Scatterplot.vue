@@ -6,18 +6,10 @@
 		v-model="numericalValue"
 		value="numerical"
 	>
-		<option value="measured_height">
-height
-</option>
-		<option value="c_valmpvm">
-age
-</option>
-		<option value="area_m2">
-area
-</option>
-		<option value="i_raktilav">
-volume
-</option>
+		<option value="measured_height">height</option>
+		<option value="c_valmpvm">age</option>
+		<option value="area_m2">area</option>
+		<option value="i_raktilav">volume</option>
 	</select>
 
 	<select
@@ -25,44 +17,26 @@ volume
 		v-model="categoricalValue"
 		value="categorical"
 	>
-		<option value="c_julkisivu">
-facade material
-</option>
-		<option value="c_rakeaine">
-building material
-</option>
-		<option value="roof_type">
-roof type
-</option>
-		<option value="roof_median_color">
-roof median color
-</option>
-		<option value="roof_mode_color">
-roof mode color
-</option>
-		<option value="kayttotarkoitus">
-usage
-</option>
-		<option value="tyyppi">
-type
-</option>
-		<option value="c_lammtapa">
-heating method
-</option>
-		<option value="c_poltaine">
-heating source
-</option>
+		<option value="c_julkisivu">facade material</option>
+		<option value="c_rakeaine">building material</option>
+		<option value="roof_type">roof type</option>
+		<option value="roof_median_color">roof median color</option>
+		<option value="roof_mode_color">roof mode color</option>
+		<option value="kayttotarkoitus">usage</option>
+		<option value="tyyppi">type</option>
+		<option value="c_lammtapa">heating method</option>
+		<option value="c_poltaine">heating source</option>
 	</select>
 </template>
 
 <script>
-import { eventBus } from '../services/eventEmitter.js';
-import * as d3 from 'd3'; // Import D3.js
-import { useGlobalStore } from '../stores/globalStore.js';
-import Plot from '../services/plot.js';
-import Building from '../services/building.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
+import * as d3 from 'd3' // Import D3.js
+import Building from '../services/building.js'
+import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
+import { eventBus } from '../services/eventEmitter.js'
+import Plot from '../services/plot.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
 	data() {
@@ -70,39 +44,39 @@ export default {
 			// Vue reactive properties for dropdown selections
 			numericalValue: 'measured_height',
 			categoricalValue: 'c_julkisivu',
-		};
+		}
 	},
 	watch: {
 		numericalValue() {
-			this.selectAttributeForScatterPlot();
+			this.selectAttributeForScatterPlot()
 		},
 		categoricalValue() {
-			this.selectAttributeForScatterPlot();
+			this.selectAttributeForScatterPlot()
 		},
 	},
 	mounted() {
-		this.store = useGlobalStore();
-		this.toggleStore = useToggleStore();
-		this.plotService = new Plot();
+		this.store = useGlobalStore()
+		this.toggleStore = useToggleStore()
+		this.plotService = new Plot()
 
 		// Subscribe to eventBus updates
-		this.unsubscribe = eventBus.on('updateScatterPlot', () => this.selectAttributeForScatterPlot());
+		this.unsubscribe = eventBus.on('updateScatterPlot', () => this.selectAttributeForScatterPlot())
 
-		this.newScatterPlot();
+		this.newScatterPlot()
 	},
 	beforeUnmount() {
 		// Remove eventBus listener
 		if (this.unsubscribe) {
-			this.unsubscribe();
+			this.unsubscribe()
 		}
 	},
 	methods: {
 		newScatterPlot() {
 			if (this.toggleStore.helsinkiView) {
-				this.selectAttributeForScatterPlot();
+				this.selectAttributeForScatterPlot()
 			} else {
 				// Hide or clear the visualization when not visible
-				this.clearScatterPlot();
+				this.clearScatterPlot()
 			}
 		},
 		/**
@@ -110,16 +84,16 @@ export default {
 		 *
 		 * */
 		selectAttributeForScatterPlot() {
-			const urbanHeatDataAndMaterial = [];
+			const urbanHeatDataAndMaterial = []
 
 			// Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
-			this.processEntitiesForScatterPlot(urbanHeatDataAndMaterial);
+			this.processEntitiesForScatterPlot(urbanHeatDataAndMaterial)
 			// Create a scatter plot with the updated data
 			this.createScatterPlot(
 				urbanHeatDataAndMaterial,
 				this.getSelectedText('categoricalSelect'),
 				this.getSelectedText('numericalSelect')
-			);
+			)
 		},
 		/**
 		 * A function to process entities for scatter plot data
@@ -127,16 +101,16 @@ export default {
 		 * @param { Array } urbanHeatDataAndMaterial - Array to store scatter plot data
 		 */
 		processEntitiesForScatterPlot(urbanHeatDataAndMaterial) {
-			const numerical = this.numericalValue;
-			const categorical = this.categoricalValue;
-			const hideNonSote = this.toggleStore.hideNonSote;
-			const hideLowToggle = this.toggleStore.hideLow;
-			const hideNew = this.toggleStore.hideNew;
+			const numerical = this.numericalValue
+			const categorical = this.categoricalValue
+			const hideNonSote = this.toggleStore.hideNonSote
+			const hideLowToggle = this.toggleStore.hideLow
+			const hideNew = this.toggleStore.hideNew
 			// Get entities from cesiumEntityManager instead of propsStore
-			const entities = cesiumEntityManager.getAllBuildingEntities();
+			const entities = cesiumEntityManager.getAllBuildingEntities()
 
 			entities.forEach((entity) => {
-				let addDataToScatterPlot = true;
+				let addDataToScatterPlot = true
 
 				if (!hideNonSote && !hideLowToggle && !hideNew) {
 					this.addDataForScatterPlot(
@@ -146,18 +120,18 @@ export default {
 						this.getSelectedText('numericalSelect'),
 						categorical,
 						numerical
-					);
+					)
 				} else {
 					if (hideNonSote && !this.isSoteBuilding(entity)) {
-						addDataToScatterPlot = false;
+						addDataToScatterPlot = false
 					}
 
 					if (hideLowToggle && this.isLowBuilding(entity)) {
-						addDataToScatterPlot = false;
+						addDataToScatterPlot = false
 					}
 
 					if (hideNew && this.isNewBuilding(entity)) {
-						addDataToScatterPlot = false;
+						addDataToScatterPlot = false
 					}
 
 					if (addDataToScatterPlot) {
@@ -168,32 +142,32 @@ export default {
 							this.getSelectedText('numericalSelect'),
 							categorical,
 							numerical
-						);
+						)
 					}
 				}
-			});
+			})
 		},
 
 		isSoteBuilding(entity) {
-			const kayttotark = Number(entity._properties.c_kayttark?._value);
+			const kayttotark = Number(entity._properties.c_kayttark?._value)
 
 			return (
 				!kayttotark ||
 				[511, 131, ...Array.from({ length: 28 }, (_, i) => i + 211)].includes(kayttotark)
-			);
+			)
 		},
 
 		isLowBuilding(entity) {
-			const floorCount = Number(entity._properties.i_kerrlkm?._value);
+			const floorCount = Number(entity._properties.i_kerrlkm?._value)
 
-			return !floorCount || floorCount <= 6;
+			return !floorCount || floorCount <= 6
 		},
 
 		isNewBuilding(entity) {
-			const c_valmpvm = new Date(entity._properties._c_valmpvm?._value)?.getTime();
-			const cutoffDate = new Date('2018-06-01T00:00:00').getTime();
+			const c_valmpvm = new Date(entity._properties._c_valmpvm?._value)?.getTime()
+			const cutoffDate = new Date('2018-06-01T00:00:00').getTime()
 
-			return !c_valmpvm || c_valmpvm >= cutoffDate;
+			return !c_valmpvm || c_valmpvm >= cutoffDate
 		},
 
 		/**
@@ -221,11 +195,11 @@ export default {
 				entity._properties[categoricalName]._value
 			) {
 				// Get the numerical value from the entity properties.
-				let numbericalValue = entity._properties[numericalName]._value;
+				let numbericalValue = entity._properties[numericalName]._value
 
 				// If the numerical attribute is c_valmpvm, convert it to a number.
-				if (numericalName == 'c_valmpvm' && numbericalValue) {
-					numbericalValue = new Date().getFullYear() - Number(numbericalValue.slice(0, 4));
+				if (numericalName === 'c_valmpvm' && numbericalValue) {
+					numbericalValue = new Date().getFullYear() - Number(numbericalValue.slice(0, 4))
 				}
 
 				if (
@@ -239,8 +213,8 @@ export default {
 						[categorical]: entity._properties[categoricalName]._value,
 						[numerical]: numbericalValue,
 						buildingId: entity._properties._id._value,
-					};
-					urbanHeatDataAndMaterial.push(element);
+					}
+					urbanHeatDataAndMaterial.push(element)
 				}
 			}
 		},
@@ -252,13 +226,13 @@ export default {
 		 * @returns { string } The selected text of the dropdown menu, or null if no option is selected.
 		 */
 		getSelectedText(refName) {
-			const elt = this.$refs[refName];
+			const elt = this.$refs[refName]
 
 			if (!elt || elt.selectedIndex === -1) {
-				return null;
+				return null
 			}
 
-			return elt.options[elt.selectedIndex].text;
+			return elt.options[elt.selectedIndex].text
 		},
 
 		/**
@@ -269,17 +243,17 @@ export default {
 		 * @return { Array<String> } List containing all unique values for the category
 		 */
 		createUniqueValuesList(features, category) {
-			let uniqueValues = [];
+			const uniqueValues = []
 
 			for (let i = 0; i < features.length; i++) {
-				let value = features[i][category];
+				const value = features[i][category]
 
 				if (!uniqueValues.includes(value)) {
-					uniqueValues.push(value);
+					uniqueValues.push(value)
 				}
 			}
 
-			return uniqueValues;
+			return uniqueValues
 		},
 		/**
 		 * The function adds heat exposure data for given category value.
@@ -291,25 +265,25 @@ export default {
 		 * @return { object } Object that contains list of heat exposures and numerical values, and average heat exposure
 		 */
 		addHeatForLabelAndX(value, features, categorical, numerical) {
-			let heatList = [];
-			let numericalList = [];
-			let average = 0;
-			let sum = 0;
-			let ids = [];
+			const heatList = []
+			const numericalList = []
+			let average = 0
+			let sum = 0
+			const ids = []
 
 			for (let i = 0; i < features.length; i++) {
-				if (features[i][categorical] == value) {
-					heatList.push(features[i].heat);
-					numericalList.push(features[i][numerical]);
-					ids.push(features[i].buildingId);
-					sum = sum + features[i].heat;
+				if (features[i][categorical] === value) {
+					heatList.push(features[i].heat)
+					numericalList.push(features[i][numerical])
+					ids.push(features[i].buildingId)
+					sum = sum + features[i].heat
 				}
 			}
 
 			// calculate average heat exposure
-			average = sum / heatList.length;
+			average = sum / heatList.length
 
-			return [heatList, numericalList, average, ids];
+			return [heatList, numericalList, average, ids]
 		},
 
 		/**
@@ -318,27 +292,27 @@ export default {
 		 */
 		initializePlotContainer(containerId) {
 			// Use D3.js selector for consistency with other D3.js operations
-			const container = d3.select(`#${containerId}`).node();
+			const container = d3.select(`#${containerId}`).node()
 			if (container) {
 				// Use textContent for safe clearing (prevents potential XSS)
-				container.textContent = '';
-				container.style.visibility = this.toggleStore.showPlot ? 'visible' : 'hidden';
+				container.textContent = ''
+				container.style.visibility = this.toggleStore.showPlot ? 'visible' : 'hidden'
 			}
 		},
 
 		prepareDataForPlot(features, categorical, numerical) {
-			const values = this.createUniqueValuesList(features, categorical);
-			let heatData = [];
-			let labelsWithAverage = [];
+			const values = this.createUniqueValuesList(features, categorical)
+			const heatData = []
+			const labelsWithAverage = []
 
 			values.forEach((value) => {
-				const dataWithHeat = this.addHeatForLabelAndX(value, features, categorical, numerical);
+				const dataWithHeat = this.addHeatForLabelAndX(value, features, categorical, numerical)
 				const plotData = {
 					xData: dataWithHeat[1],
 					yData: dataWithHeat[0],
 					name: value,
 					buildingId: dataWithHeat[3],
-				};
+				}
 				plotData.xData.forEach((xData, j) => {
 					// Include the buildingId in the data pushed to heatData
 					heatData.push({
@@ -346,20 +320,20 @@ export default {
 						yData: plotData.yData[j],
 						name: value,
 						buildingId: plotData.buildingId[j],
-					});
-				});
-				const averageLabel = value + ' ' + dataWithHeat[2].toFixed(2);
+					})
+				})
+				const averageLabel = `${value} ${dataWithHeat[2].toFixed(2)}`
 				if (!labelsWithAverage.includes(averageLabel)) {
-					labelsWithAverage.push(averageLabel);
+					labelsWithAverage.push(averageLabel)
 				}
-			});
+			})
 
-			return { heatData, labelsWithAverage, values };
+			return { heatData, labelsWithAverage, values }
 		},
 
 		addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorical) {
-			const tooltip = this.plotService.createTooltip('#scatterPlotContainer');
-			const buildingSerivce = new Building();
+			const tooltip = this.plotService.createTooltip('#scatterPlotContainer')
+			const buildingSerivce = new Building()
 
 			svg
 				.append('g')
@@ -382,33 +356,33 @@ export default {
 					)
 				)
 				.on('mouseout', () => this.plotService.handleMouseout(tooltip))
-				.on('click', (event, d) => {
+				.on('click', (_event, d) => {
 					// Assume each data point includes a building ID or some identifier
-					buildingSerivce.highlightBuildingInViewer(d.buildingId);
-				});
+					buildingSerivce.highlightBuildingInViewer(d.buildingId)
+				})
 		},
 
 		createLegend(svg, width, margin, values, labelsWithAverage, colorScale) {
-			const maxVisibleItems = 15;
-			const itemHeight = 16;
-			const legendHeight = maxVisibleItems * itemHeight;
+			const maxVisibleItems = 15
+			const itemHeight = 16
+			const legendHeight = maxVisibleItems * itemHeight
 
 			const legend = svg
 				.append('g')
 				.attr('class', 'legend')
-				.attr('transform', `translate(${width},${margin.top - 20})`);
+				.attr('transform', `translate(${width},${margin.top - 20})`)
 
 			// Create a scrolling container
 			const legendContainer = legend
 				.append('foreignObject')
 				.attr('width', margin.right) // Adjust based on your layout
 				.attr('height', legendHeight)
-				.style('overflow-y', values.length > maxVisibleItems ? 'scroll' : 'hidden');
+				.style('overflow-y', values.length > maxVisibleItems ? 'scroll' : 'hidden')
 
 			const legendContent = legendContainer
 				.append('xhtml:div')
 				.style('height', `${values.length * itemHeight}px`) // Total height to allow scroll
-				.style('position', 'relative');
+				.style('position', 'relative')
 
 			// Draw color boxes
 			legendContent
@@ -417,11 +391,11 @@ export default {
 				.enter()
 				.append('div')
 				.style('position', 'absolute')
-				.style('top', (d, i) => `${i * itemHeight}px`)
+				.style('top', (_d, i) => `${i * itemHeight}px`)
 				.style('left', '2px')
 				.style('width', '10px')
 				.style('height', '10px')
-				.style('background-color', (d) => colorScale(d));
+				.style('background-color', (d) => colorScale(d))
 
 			// Draw labels
 			legendContent
@@ -430,14 +404,14 @@ export default {
 				.enter()
 				.append('div')
 				.style('position', 'absolute')
-				.style('top', (d, i) => `${i * itemHeight}px`)
+				.style('top', (_d, i) => `${i * itemHeight}px`)
 				.style('left', '15px')
 				.style('font-size', '9px')
-				.text((d) => d);
+				.text((d) => d)
 		},
 
 		createColorScale(values) {
-			return d3.scaleOrdinal().domain(values).range(d3.schemeCategory10); // This is a D3 predefined set of colors
+			return d3.scaleOrdinal().domain(values).range(d3.schemeCategory10) // This is a D3 predefined set of colors
 		},
 
 		/**
@@ -449,61 +423,61 @@ export default {
 		 */
 		createScatterPlot(features, categorical, numerical) {
 			// Setup the scatter plot container
-			this.plotService.initializePlotContainer('scatterPlotContainer');
-			this.plotService.showAllPlots();
+			this.plotService.initializePlotContainer('scatterPlotContainer')
+			this.plotService.showAllPlots()
 
 			// Prepare the data for the plot
 			const { heatData, labelsWithAverage, values } = this.prepareDataForPlot(
 				features,
 				categorical,
 				numerical
-			);
+			)
 
-			const margin = { top: 25, right: 190, bottom: 18, left: 28 };
-			const width = this.store.navbarWidth - margin.left - margin.right;
-			const height = 300 - margin.top - margin.bottom;
+			const margin = { top: 25, right: 190, bottom: 18, left: 28 }
+			const width = this.store.navbarWidth - margin.left - margin.right
+			const height = 300 - margin.top - margin.bottom
 
 			// Initialize the SVG element
-			const svg = this.plotService.createSVGElement(margin, width, height, '#scatterPlotContainer');
+			const svg = this.plotService.createSVGElement(margin, width, height, '#scatterPlotContainer')
 
 			const xScale = this.plotService.createScaleLinear(
 				d3.min(heatData, (d) => d.xData) - 1,
 				d3.max(heatData, (d) => d.xData) + 2,
 				[0, width]
-			);
+			)
 			const yScale = this.plotService.createScaleLinear(
 				d3.min(heatData, (d) => d.yData) - 0.05,
 				d3.max(heatData, (d) => d.yData) + 0.05,
 				[height, 0]
-			);
+			)
 
 			// Setup the axes
-			this.plotService.setupAxes(svg, xScale, yScale, height);
+			this.plotService.setupAxes(svg, xScale, yScale, height)
 
 			// Create the color scale
-			const colorScale = this.createColorScale(values);
+			const colorScale = this.createColorScale(values)
 
 			// Add the dots (plot elements) to the plot
-			this.addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorical);
+			this.addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorical)
 
 			// Create the legend
-			this.createLegend(svg, width, margin, values, labelsWithAverage, colorScale);
+			this.createLegend(svg, width, margin, values, labelsWithAverage, colorScale)
 
 			this.plotService.addTitle(
 				svg,
 				'Heat exposure index with building attributes',
 				margin.left,
 				margin.top - 8
-			);
+			)
 		},
 
 		clearScatterPlot() {
 			// Remove or clear the D3.js visualization
 			// Example:
-			d3.select('#scatterPlotContainer').select('svg').remove();
+			d3.select('#scatterPlotContainer').select('svg').remove()
 		},
 	},
-};
+}
 </script>
 
 <style>

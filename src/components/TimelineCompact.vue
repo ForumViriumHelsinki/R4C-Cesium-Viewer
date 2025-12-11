@@ -29,16 +29,16 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
-import Datasource from '../services/datasource.js';
-import Building from '../services/building.js';
-import { eventBus } from '../services/eventEmitter.js';
-import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
+import { computed, onMounted, ref, watch } from 'vue'
+import Building from '../services/building.js'
+import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
+import Datasource from '../services/datasource.js'
+import { eventBus } from '../services/eventEmitter.js'
+import { useGlobalStore } from '../stores/globalStore.js'
 
-const globalStore = useGlobalStore();
-const dataSourceService = new Datasource();
-const buildingService = new Building();
+const globalStore = useGlobalStore()
+const dataSourceService = new Datasource()
+const buildingService = new Building()
 
 const dates = [
 	'2015-07-03',
@@ -51,50 +51,50 @@ const dates = [
 	'2023-06-23',
 	'2024-06-26',
 	'2025-07-14',
-];
+]
 
-const selectedDate = ref('2022-06-28');
-const currentPropertyIndex = ref(dates.indexOf(selectedDate.value));
-const timelineLength = ref(dates.length);
+const selectedDate = ref('2022-06-28')
+const currentPropertyIndex = ref(dates.indexOf(selectedDate.value))
+const timelineLength = ref(dates.length)
 
 // Create tick labels (years only)
-const tickLabels = computed(() => {
-	return dates.reduce((acc, date, index) => {
-		acc[index] = '';
-		return acc;
-	}, {});
-});
+const _tickLabels = computed(() => {
+	return dates.reduce((acc, _date, index) => {
+		acc[index] = ''
+		return acc
+	}, {})
+})
 
-const formatYear = (dateString) => {
-	return new Date(dateString).getFullYear().toString();
-};
+const _formatYear = (dateString) => {
+	return new Date(dateString).getFullYear().toString()
+}
 
 const updateViewAndPlots = () => {
 	const buildingsDataSource = dataSourceService.getDataSourceByName(
-		'Buildings ' + globalStore.postalcode
-	);
+		`Buildings ${globalStore.postalcode}`
+	)
 
-	if (!buildingsDataSource) return;
+	if (!buildingsDataSource) return
 
-	const entities = buildingsDataSource.entities.values;
-	void buildingService.setHeatExposureToBuildings(entities);
-	buildingService.updateHeatHistogramDataAfterFilter(entities);
+	const entities = buildingsDataSource.entities.values
+	void buildingService.setHeatExposureToBuildings(entities)
+	buildingService.updateHeatHistogramDataAfterFilter(entities)
 	// Register entities with cesiumEntityManager for non-reactive entity management
-	cesiumEntityManager.registerBuildingEntities(entities);
-	eventBus.emit('updateScatterPlot');
-};
+	cesiumEntityManager.registerBuildingEntities(entities)
+	eventBus.emit('updateScatterPlot')
+}
 
 watch(currentPropertyIndex, (newIndex) => {
-	globalStore.setShowBuildingInfo(false);
-	selectedDate.value = dates[newIndex];
-	globalStore.setHeatDataDate(selectedDate.value);
-	updateViewAndPlots();
-	globalStore.setShowBuildingInfo(true);
-});
+	globalStore.setShowBuildingInfo(false)
+	selectedDate.value = dates[newIndex]
+	globalStore.setHeatDataDate(selectedDate.value)
+	updateViewAndPlots()
+	globalStore.setShowBuildingInfo(true)
+})
 
 onMounted(() => {
-	timelineLength.value = dates.length;
-});
+	timelineLength.value = dates.length
+})
 </script>
 
 <style scoped>

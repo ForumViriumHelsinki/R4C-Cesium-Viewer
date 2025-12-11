@@ -241,20 +241,20 @@
 </template>
 
 <script>
-import Datasource from '../services/datasource.js';
-import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
-import Tree from '../services/tree.js';
-import Building from '../services/building.js';
-import Vegetation from '../services/vegetation.js';
-import Othernature from '../services/othernature.js';
-import Plot from '../services/plot.js';
-import Camera from '../services/camera.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { eventBus } from '../services/eventEmitter.js';
-import ElementsDisplay from '../services/elementsDisplay.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import Featurepicker from '../services/featurepicker.js';
-import loadingCoordinator from '../services/loadingCoordinator.js';
+import Building from '../services/building.js'
+import Camera from '../services/camera.js'
+import Datasource from '../services/datasource.js'
+import ElementsDisplay from '../services/elementsDisplay.js'
+import { eventBus } from '../services/eventEmitter.js'
+import Featurepicker from '../services/featurepicker.js'
+import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
+import loadingCoordinator from '../services/loadingCoordinator.js'
+import Othernature from '../services/othernature.js'
+import Plot from '../services/plot.js'
+import Tree from '../services/tree.js'
+import Vegetation from '../services/vegetation.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
 	data() {
@@ -278,124 +278,124 @@ export default {
 			switchView: false,
 			hideColdAreas: false,
 			capitalRegionCold: false,
-		};
+		}
 	},
 	computed: {
 		shouldShowReturn() {
-			const store = useGlobalStore(); // Get access to the global store
-			return store.level === 'building';
+			const store = useGlobalStore() // Get access to the global store
+			return store.level === 'building'
 		},
 	},
 	watch: {
 		// Sync Vue reactive data with toggle store
 		showPlot(newValue) {
-			this.toggleStore.setShowPlot(newValue);
+			this.toggleStore.setShowPlot(newValue)
 			if (newValue) {
-				this.plotService.showAllPlots();
+				this.plotService.showAllPlots()
 			} else {
-				this.plotService.hideAllPlots();
+				this.plotService.hideAllPlots()
 			}
 		},
 		gridView(newValue) {
-			this.toggleStore.setGridView(newValue);
+			this.toggleStore.setGridView(newValue)
 			if (newValue) {
-				this.store.setView('grid');
-				this.showPostalCodeView = false;
-				eventBus.emit('createPopulationGrid');
+				this.store.setView('grid')
+				this.showPostalCodeView = false
+				eventBus.emit('createPopulationGrid')
 			} else {
-				this.store.setView('capitalRegion');
-				this.reset();
+				this.store.setView('capitalRegion')
+				this.reset()
 			}
 		},
 		helsinkiView(_newValue) {
-			this.toggleStore.setHelsinkiView(_newValue);
-			this.capitalRegionViewEvent();
+			this.toggleStore.setHelsinkiView(_newValue)
+			this.capitalRegionViewEvent()
 		},
 		showVegetation(_newValue) {
-			this.toggleStore.setShowVegetation(_newValue);
-			this.loadVegetationEvent();
+			this.toggleStore.setShowVegetation(_newValue)
+			this.loadVegetationEvent()
 		},
 		showOtherNature(_newValue) {
-			this.toggleStore.setShowOtherNature(_newValue);
-			this.loadOtherNatureEvent();
+			this.toggleStore.setShowOtherNature(_newValue)
+			this.loadOtherNatureEvent()
 		},
 		filterBuildings(_newValue) {
-			this.filterBuildingsEvent();
+			this.filterBuildingsEvent()
 		},
 		hideNonSote(_newValue) {
-			this.toggleStore.setHideNonSote(_newValue);
-			this.filterBuildingsEvent();
+			this.toggleStore.setHideNonSote(_newValue)
+			this.filterBuildingsEvent()
 		},
 		hideLow(_newValue) {
-			this.toggleStore.setHideLow(_newValue);
-			this.filterBuildingsEvent();
+			this.toggleStore.setHideLow(_newValue)
+			this.filterBuildingsEvent()
 		},
 		showTrees(_newValue) {
-			this.toggleStore.setShowTrees(_newValue);
-			this.loadTreesEvent();
+			this.toggleStore.setShowTrees(_newValue)
+			this.loadTreesEvent()
 		},
 		landCover(_newValue) {
-			this.toggleStore.setLandCover(_newValue);
-			this.getLandCoverEvent();
+			this.toggleStore.setLandCover(_newValue)
+			this.getLandCoverEvent()
 		},
 		switchView(_newValue) {
-			this.toggleStore.setSwitchView(_newValue);
-			this.switchViewEvent();
+			this.toggleStore.setSwitchView(_newValue)
+			this.switchViewEvent()
 		},
 		hideColdAreas(_newValue) {
 			// Add to toggle store if needed
 			// this.toggleStore.setHideColdAreas(_newValue);
 		},
 		capitalRegionCold(_newValue) {
-			this.toggleStore.setCapitalRegionCold(_newValue);
-			this.toggleCold();
+			this.toggleStore.setCapitalRegionCold(_newValue)
+			this.toggleCold()
 		},
 		shouldShowReturn(newValue) {
-			this.showReturn = newValue;
+			this.showReturn = newValue
 		},
 	},
 	mounted() {
-		this.unsubscribe = eventBus.on('initPostalCodeView', this.initPostalCodeView);
-		this.store = useGlobalStore();
-		this.toggleStore = useToggleStore();
-		this.viewer = this.store.cesiumViewer;
-		this.elementsDisplayService = new ElementsDisplay();
+		this.unsubscribe = eventBus.on('initPostalCodeView', this.initPostalCodeView)
+		this.store = useGlobalStore()
+		this.toggleStore = useToggleStore()
+		this.viewer = this.store.cesiumViewer
+		this.elementsDisplayService = new ElementsDisplay()
 	},
 	beforeUnmount() {
-		this.unsubscribe();
+		this.unsubscribe()
 	},
 	methods: {
 		reset() {
 			// Smart reset instead of page reload
-			this.store.setLevel('start');
-			this.store.setPostalCode(null);
-			this.store.setNameOfZone(null);
-			this.store.setView('capitalRegion');
+			this.store.setLevel('start')
+			this.store.setPostalCode(null)
+			this.store.setNameOfZone(null)
+			this.store.setView('capitalRegion')
 
 			// Reset camera to initial position
-			const camera = new Camera();
-			camera.init();
+			const camera = new Camera()
+			camera.init()
 
 			// Hide tooltip
-			const tooltip = document.querySelector('.tooltip');
+			const tooltip = document.querySelector('.tooltip')
 			if (tooltip) {
-				tooltip.style.display = 'none';
+				tooltip.style.display = 'none'
 			}
 		},
 		returnToPostalCode() {
-			const featurepicker = new Featurepicker();
-			featurepicker.loadPostalCode().catch(console.error);
+			const featurepicker = new Featurepicker()
+			featurepicker.loadPostalCode().catch(console.error)
 			if (this.toggleStore.showTrees) {
-				this.treeService.loadTrees();
+				this.treeService.loadTrees()
 			}
-			eventBus.emit('hideBuilding');
+			eventBus.emit('hideBuilding')
 		},
 		initPostalCodeView() {
-			this.dataSourceService = new Datasource();
-			this.treeService = new Tree();
-			this.buildingService = new Building();
-			this.plotService = new Plot();
-			this.addEventListeners();
+			this.dataSourceService = new Datasource()
+			this.treeService = new Tree()
+			this.buildingService = new Building()
+			this.plotService = new Plot()
+			this.addEventListeners()
 		},
 		/**
 		 * Add EventListeners - now mostly handled by Vue watchers
@@ -407,7 +407,7 @@ export default {
 
 		toggleCold() {
 			if (!this.capitalRegionCold) {
-				this.reset();
+				this.reset()
 			}
 		},
 
@@ -416,16 +416,16 @@ export default {
 		 */
 		async capitalRegionViewEvent() {
 			if (this.helsinkiView) {
-				this.store.setView('helsinki');
-				this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes');
+				this.store.setView('helsinki')
+				this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes')
 				await this.dataSourceService.loadGeoJsonDataSource(
 					0.2,
 					'./assets/data/hki_po_clipped.json',
 					'PostCodes'
-				);
+				)
 			} else {
-				this.store.setView('capitalRegion');
-				this.reset();
+				this.store.setView('capitalRegion')
+				this.reset()
 			}
 		},
 
@@ -434,10 +434,10 @@ export default {
 		 */
 		getLandCoverEvent() {
 			if (this.landCover) {
-				this.viewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
-				void createHSYImageryLayer();
+				this.viewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true)
+				void createHSYImageryLayer()
 			} else {
-				removeLandcover();
+				removeLandcover()
 			}
 		},
 
@@ -447,12 +447,12 @@ export default {
 		 */
 		gridViewEvent() {
 			if (this.gridView) {
-				this.store.setView('grid');
-				this.showPostalCodeView = false;
-				eventBus.emit('createPopulationGrid');
+				this.store.setView('grid')
+				this.showPostalCodeView = false
+				eventBus.emit('createPopulationGrid')
 			} else {
-				this.store.setView('capitalRegion');
-				this.reset();
+				this.store.setView('capitalRegion')
+				this.reset()
 			}
 		},
 
@@ -462,9 +462,9 @@ export default {
 		 */
 		showPlotEvent() {
 			if (this.showPlot) {
-				this.plotService.showAllPlots();
+				this.plotService.showAllPlots()
 			} else {
-				this.plotService.hideAllPlots();
+				this.plotService.hideAllPlots()
 			}
 		},
 
@@ -474,14 +474,14 @@ export default {
 		loadTreesEvent() {
 			if (this.showTrees) {
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Trees')) {
-					this.treeService.loadTrees(this.store.postalcode);
+					this.treeService.loadTrees(this.store.postalcode)
 				} else {
-					this.dataSourceService.changeDataSourceShowByName('Trees', true);
+					this.dataSourceService.changeDataSourceShowByName('Trees', true)
 				}
 			} else {
-				this.dataSourceService.changeDataSourceShowByName('Trees', false);
-				this.plotService.showAllPlots();
-				this.buildingService.resetBuildingEntities();
+				this.dataSourceService.changeDataSourceShowByName('Trees', false)
+				this.plotService.showAllPlots()
+				this.buildingService.resetBuildingEntities()
 			}
 		},
 
@@ -492,13 +492,13 @@ export default {
 			if (this.showOtherNature) {
 				// If there is a postal code available, load the nature areas for that area.
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('OtherNature')) {
-					const otherNatureService = new Othernature();
-					otherNatureService.loadOtherNature(this.store.postalcode).catch(console.error);
+					const otherNatureService = new Othernature()
+					otherNatureService.loadOtherNature(this.store.postalcode).catch(console.error)
 				} else {
-					this.dataSourceService.changeDataSourceShowByName('OtherNature', true);
+					this.dataSourceService.changeDataSourceShowByName('OtherNature', true)
 				}
 			} else {
-				this.dataSourceService.changeDataSourceShowByName('OtherNature', false);
+				this.dataSourceService.changeDataSourceShowByName('OtherNature', false)
 			}
 		},
 
@@ -509,35 +509,35 @@ export default {
 			if (this.showVegetation) {
 				// If there is a postal code available, load the nature areas for that area.
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Vegetation')) {
-					const vegetationService = new Vegetation();
-					vegetationService.loadVegetation(this.store.postalcode).catch(console.error);
+					const vegetationService = new Vegetation()
+					vegetationService.loadVegetation(this.store.postalcode).catch(console.error)
 				} else {
-					this.dataSourceService.changeDataSourceShowByName('Vegetation', true);
+					this.dataSourceService.changeDataSourceShowByName('Vegetation', true)
 				}
 			} else {
-				this.dataSourceService.changeDataSourceShowByName('Vegetation', false);
+				this.dataSourceService.changeDataSourceShowByName('Vegetation', false)
 			}
 		},
 
 		filterBuildingsEvent() {
-			this.toggleStore.setHideNonSote(this.hideNonSote);
-			this.toggleStore.setHideNewBuildings(this.filterBuildings);
-			this.toggleStore.setHideLow(this.hideLow);
+			this.toggleStore.setHideNonSote(this.hideNonSote)
+			this.toggleStore.setHideNewBuildings(this.filterBuildings)
+			this.toggleStore.setHideLow(this.hideLow)
 
 			if (this.dataSourceService) {
 				const buildingsDataSource = this.dataSourceService.getDataSourceByName(
 					`Buildings ${this.store.postalcode}`
-				);
+				)
 
 				if (buildingsDataSource) {
 					if (this.hideNonSote || this.filterBuildings || this.hideLow) {
-						this.buildingService.filterBuildings(buildingsDataSource);
+						this.buildingService.filterBuildings(buildingsDataSource)
 					} else {
-						this.buildingService.showAllBuildings(buildingsDataSource);
+						this.buildingService.showAllBuildings(buildingsDataSource)
 					}
 
 					if (!this.toggleStore.helsinkiView) {
-						eventBus.emit('updateScatterPlot');
+						eventBus.emit('updateScatterPlot')
 					}
 				}
 			}
@@ -547,11 +547,11 @@ export default {
 		 * This function is called when the user clicks on the "switch view" toggle button.
 		 */
 		switchViewEvent() {
-			const viewService = new Camera();
+			const viewService = new Camera()
 			if (this.switchView) {
-				viewService.switchTo2DView();
+				viewService.switchTo2DView()
 			} else {
-				viewService.switchTo3DView();
+				viewService.switchTo3DView()
 			}
 		},
 
@@ -561,12 +561,12 @@ export default {
 		 */
 		async loadAllEnvironmentalLayers() {
 			if (!this.store.postalcode) {
-				console.warn('No postal code selected for environmental layer loading');
-				return;
+				console.warn('No postal code selected for environmental layer loading')
+				return
 			}
 
 			try {
-				const sessionId = `environmental_${this.store.postalcode}`;
+				const sessionId = `environmental_${this.store.postalcode}`
 
 				// Define layer configurations for coordinated loading
 				const layerConfigs = [
@@ -575,8 +575,8 @@ export default {
 						url: this.urlStore.vegetation(this.store.postalcode),
 						type: 'geojson',
 						processor: (data, metadata) => {
-							const vegetationService = new Vegetation();
-							return vegetationService.addVegetationDataSource(data, metadata);
+							const vegetationService = new Vegetation()
+							return vegetationService.addVegetationDataSource(data, metadata)
 						},
 						options: {
 							cache: true,
@@ -591,8 +591,8 @@ export default {
 						url: this.urlStore.otherNature(this.store.postalcode),
 						type: 'geojson',
 						processor: (data, metadata) => {
-							const otherNatureService = new Othernature();
-							return otherNatureService.addOtherNatureDataSource(data, metadata);
+							const otherNatureService = new Othernature()
+							return otherNatureService.addOtherNatureDataSource(data, metadata)
 						},
 						options: {
 							cache: true,
@@ -606,8 +606,8 @@ export default {
 						layerId: 'trees',
 						// Trees would be handled by the Tree service's coordinated loading
 						processor: async () => {
-							const treeService = new Tree();
-							return treeService.loadTrees();
+							const treeService = new Tree()
+							return treeService.loadTrees()
 						},
 						options: {
 							priority: 'high',
@@ -615,38 +615,38 @@ export default {
 							cacheTTL: 25 * 60 * 1000,
 						},
 					},
-				];
+				]
 
 				console.log(
 					`🌿 Starting coordinated environmental layer loading for ${this.store.postalcode}`
-				);
+				)
 
 				const results = await loadingCoordinator.startLoadingSession(sessionId, layerConfigs, {
 					priorityStrategy: 'balanced',
 					showGlobalProgress: false, // Don't show global progress for subset loading
 					allowInterruption: true,
-				});
+				})
 
 				// Report results
-				const successful = results.filter((r) => r.status === 'fulfilled').length;
-				const failed = results.length - successful;
+				const successful = results.filter((r) => r.status === 'fulfilled').length
+				const failed = results.length - successful
 
 				if (failed === 0) {
-					console.log(`✅ All ${successful} environmental layers loaded successfully`);
+					console.log(`✅ All ${successful} environmental layers loaded successfully`)
 				} else {
 					console.warn(
 						`⚠️ ${successful}/${results.length} environmental layers loaded, ${failed} failed`
-					);
+					)
 				}
 
-				return results;
+				return results
 			} catch (error) {
-				console.error('Failed to load environmental layers:', error);
-				throw error;
+				console.error('Failed to load environmental layers:', error)
+				throw error
 			}
 		},
 	},
-};
+}
 </script>
 
 <style>

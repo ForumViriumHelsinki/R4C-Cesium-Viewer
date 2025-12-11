@@ -33,7 +33,8 @@
 			<a
 				href="https://kartta.hsy.fi/"
 				target="_blank"
-				>HSY map service</a>
+				>HSY map service</a
+			>
 			under 'karttatasot'.
 		</div>
 
@@ -50,107 +51,107 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import { useBackgroundMapStore } from '../stores/backgroundMapStore';
-import { useGlobalStore } from '../stores/globalStore';
-import wms from '../services/wms';
-import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
-import axios from 'axios';
-import { XMLParser } from 'fast-xml-parser';
+import axios from 'axios'
+import { XMLParser } from 'fast-xml-parser'
+import { onMounted, ref } from 'vue'
+import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
+import wms from '../services/wms'
+import { useBackgroundMapStore } from '../stores/backgroundMapStore'
+import { useGlobalStore } from '../stores/globalStore'
 
 export default {
 	setup() {
-		const backgroundMapStore = useBackgroundMapStore();
-		const searchQuery = ref('');
-		const filteredLayers = ref([]);
-		const wmsService = new wms();
+		const backgroundMapStore = useBackgroundMapStore()
+		const searchQuery = ref('')
+		const filteredLayers = ref([])
+		const wmsService = new wms()
 
 		const fetchLayers = async () => {
 			try {
-				const response = await axios.get('/wms/layers');
+				const response = await axios.get('/wms/layers')
 
 				if (response.data) {
 					const parser = new XMLParser({
 						ignoreAttributes: false,
 						attributeNamePrefix: '@_',
-					});
+					})
 					// Parse the response.data, not undefined 'data' variable
-					const parsedXml = parser.parse(response.data);
+					const parsedXml = parser.parse(response.data)
 
 					// Handle potential different XML structures
-					const layerData = parsedXml.WMS_Capabilities?.Capability?.Layer?.Layer || [];
+					const layerData = parsedXml.WMS_Capabilities?.Capability?.Layer?.Layer || []
 					const layers = (Array.isArray(layerData) ? layerData : [layerData])
-						.filter((layer) => layer && layer.Name) // Make sure layer and Name exist
+						.filter((layer) => layer?.Name) // Make sure layer and Name exist
 						.map((layer) => ({
 							name: layer.Name,
 							title: layer.Title ? layer.Title.replace(/_/g, ' ') : layer.Name,
-						}));
+						}))
 
 					// Set the processed layers array, not the raw response data
-					backgroundMapStore.setHSYWMSLayers(layers);
+					backgroundMapStore.setHSYWMSLayers(layers)
 				} else {
-					backgroundMapStore.setHSYWMSLayers([]);
+					backgroundMapStore.setHSYWMSLayers([])
 				}
 			} catch (error) {
-				console.error('Error fetching WMS layers:', error);
+				console.error('Error fetching WMS layers:', error)
 				console.error('Error details:', {
 					message: error.message,
 					response: error.response?.data,
 					status: error.response?.status,
-				});
-				backgroundMapStore.setHSYWMSLayers([]);
+				})
+				backgroundMapStore.setHSYWMSLayers([])
 			}
-		};
+		}
 
 		// Filter layers based on user input
 		const onSearch = () => {
 			if (searchQuery.value.length >= 3) {
 				filteredLayers.value = backgroundMapStore.hSYWMSLayers.filter((layer) =>
 					layer.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-				);
+				)
 			} else {
-				filteredLayers.value = [];
+				filteredLayers.value = []
 			}
-		};
+		}
 
 		// Select and switch the WMS layer
 		const selectLayer = async (layerName) => {
-			const store = useGlobalStore();
-			removeLandcover(store.landcoverLayers, store.cesiumViewer);
-			await createHSYImageryLayer(layerName);
+			const store = useGlobalStore()
+			removeLandcover(store.landcoverLayers, store.cesiumViewer)
+			await createHSYImageryLayer(layerName)
 			// Clear the filtered layers after selecting
-			filteredLayers.value = [];
-		};
+			filteredLayers.value = []
+		}
 
 		// Handle enter key press
 		const onEnter = () => {
 			const matchingLayer = backgroundMapStore.hSYWMSLayers.find(
 				(layer) => layer.title.toLowerCase() === searchQuery.value.toLowerCase()
-			);
+			)
 			if (matchingLayer) {
-				void selectLayer(matchingLayer.name); // Switch to the matching layer
+				void selectLayer(matchingLayer.name) // Switch to the matching layer
 			}
-		};
+		}
 
 		// Handle search button click
 		const onSearchClick = () => {
-			onEnter(); // Trigger the same behavior as pressing enter
-		};
+			onEnter() // Trigger the same behavior as pressing enter
+		}
 
 		// Restore default WMS layer
 		const restoreDefaultLayer = () => {
-			const store = useGlobalStore();
+			const store = useGlobalStore()
 			// Restore default WMS layer (avoindata:Karttasarja_PKS)
 			store.cesiumViewer.imageryLayers.add(
 				wmsService.createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-			);
-		};
+			)
+		}
 
 		onMounted(() => {
 			if (!backgroundMapStore.hSYWMSLayers) {
-				void fetchLayers();
+				void fetchLayers()
 			}
-		});
+		})
 
 		return {
 			searchQuery,
@@ -160,9 +161,9 @@ export default {
 			onEnter,
 			onSearchClick,
 			restoreDefaultLayer,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

@@ -3,13 +3,13 @@
 </template>
 
 <script>
-import { onMounted, onBeforeUnmount, nextTick } from 'vue';
-import * as d3 from 'd3'; // Import D3.js
-import { eventBus } from '../services/eventEmitter.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import Plot from '../services/plot.js';
-import Building from '../services/building.js';
+import * as d3 from 'd3' // Import D3.js
+import { nextTick, onBeforeUnmount, onMounted } from 'vue'
+import Building from '../services/building.js'
+import { eventBus } from '../services/eventEmitter.js'
+import Plot from '../services/plot.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
 
 /**
  * @component HeatHistogram
@@ -54,9 +54,9 @@ import Building from '../services/building.js';
 
 export default {
 	setup() {
-		const store = useGlobalStore();
-		const plotService = new Plot();
-		const propsStore = usePropsStore();
+		const store = useGlobalStore()
+		const plotService = new Plot()
+		const propsStore = usePropsStore()
 
 		/**
 		 * Creates histogram bars with D3.js
@@ -91,11 +91,11 @@ export default {
 					plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter)
 				)
 				.on('mouseout', () => plotService.handleMouseout(tooltip))
-				.on('click', (event, d) => {
-					const buildingService = new Building();
-					buildingService.highlightBuildingsInViewer(d);
-				});
-		};
+				.on('click', (_event, d) => {
+					const buildingService = new Building()
+					buildingService.highlightBuildingsInViewer(d)
+				})
+		}
 
 		/**
 		 * Determines bar color based on temperature data
@@ -107,8 +107,8 @@ export default {
 		 * @returns {string} RGBA color string
 		 */
 		const rgbColor = (data) => {
-			const average = calculateAverage(data);
-			const isCold = store.heatDataDate === '2021-02-18';
+			const average = calculateAverage(data)
+			const isCold = store.heatDataDate === '2021-02-18'
 			const index =
 				store.view === 'capitalRegion'
 					? calculateIndex(
@@ -116,10 +116,10 @@ export default {
 							store.minMaxKelvin[store.heatDataDate].min,
 							store.minMaxKelvin[store.heatDataDate].max
 						)
-					: average;
+					: average
 
-			return isCold ? getColdColor(index) : getWarmColor(index);
-		};
+			return isCold ? getColdColor(index) : getWarmColor(index)
+		}
 
 		/**
 		 * Calculates average value from histogram bin data
@@ -128,9 +128,9 @@ export default {
 		 * @returns {number} Average temperature value, or 0 if data is empty
 		 */
 		const calculateAverage = (data) => {
-			if (!data || data.length === 0) return 0;
-			return data.reduce((sum, value) => sum + value, 0) / data.length;
-		};
+			if (!data || data.length === 0) return 0
+			return data.reduce((sum, value) => sum + value, 0) / data.length
+		}
 
 		/**
 		 * Calculates normalized index from temperature value
@@ -144,8 +144,8 @@ export default {
 		 * @returns {number} Normalized index (0-1)
 		 */
 		const calculateIndex = (average, minKelvin, maxKelvin) => {
-			return (average + 273.15 - minKelvin) / (maxKelvin - minKelvin);
-		};
+			return (average + 273.15 - minKelvin) / (maxKelvin - minKelvin)
+		}
 
 		/**
 		 * Generates warm color palette for heat visualization
@@ -156,10 +156,10 @@ export default {
 		 * @returns {string} RGBA color string
 		 */
 		const getWarmColor = (index) => {
-			const g = 255 - index * 255;
-			const a = 255 * index;
-			return `rgba(255, ${g}, 0, ${a / 255})`;
-		};
+			const g = 255 - index * 255
+			const a = 255 * index
+			return `rgba(255, ${g}, 0, ${a / 255})`
+		}
 
 		/**
 		 * Generates cold color palette for cold wave visualization
@@ -170,10 +170,10 @@ export default {
 		 * @returns {string} RGBA color string
 		 */
 		const getColdColor = (index) => {
-			const g = 255 - (255 - index * 255);
-			const a = 1 - index;
-			return `rgba(0, ${g}, 255, ${a})`;
-		};
+			const g = 255 - (255 - index * 255)
+			const a = 1 - index
+			return `rgba(0, ${g}, 255, ${a})`
+		}
 
 		/**
 		 * Creates the histogram chart
@@ -188,32 +188,32 @@ export default {
 		 * @returns {void}
 		 */
 		const createHistogram = () => {
-			const urbanHeatData = propsStore.heatHistogramData;
+			const urbanHeatData = propsStore.heatHistogramData
 
-			plotService.initializePlotContainerForGrid('heatHistogramContainer');
+			plotService.initializePlotContainerForGrid('heatHistogramContainer')
 
 			// Get the container's actual width and height dynamically
-			const margin = { top: 30, right: 50, bottom: 34, left: 30 };
-			const width = store.navbarWidth - margin.left - margin.right; // Use container width
-			const height = 250 - margin.top - margin.bottom; // Use container height
+			const margin = { top: 30, right: 50, bottom: 34, left: 30 }
+			const width = store.navbarWidth - margin.left - margin.right // Use container width
+			const height = 250 - margin.top - margin.bottom // Use container height
 
-			const svg = plotService.createSVGElement(margin, width, height, '#heatHistogramContainer');
+			const svg = plotService.createSVGElement(margin, width, height, '#heatHistogramContainer')
 
-			const minDataValue = d3.min(urbanHeatData) - 0.02;
-			const maxDataValue = d3.max(urbanHeatData) + 0.02;
-			const x = plotService.createScaleLinear(minDataValue, maxDataValue, [0, width]);
-			const bins = d3.histogram().domain(x.domain()).thresholds(x.ticks(20))(urbanHeatData);
+			const minDataValue = d3.min(urbanHeatData) - 0.02
+			const maxDataValue = d3.max(urbanHeatData) + 0.02
+			const x = plotService.createScaleLinear(minDataValue, maxDataValue, [0, width])
+			const bins = d3.histogram().domain(x.domain()).thresholds(x.ticks(20))(urbanHeatData)
 			const y = plotService.createScaleLinear(
 				0,
 				d3.max(bins, (d) => d.length),
 				[height, 0]
-			);
+			)
 
-			plotService.setupAxes(svg, x, y, height);
+			plotService.setupAxes(svg, x, y, height)
 
-			const tooltip = plotService.createTooltip('#heatHistogramContainer');
+			const tooltip = plotService.createTooltip('#heatHistogramContainer')
 
-			if (urbanHeatData && urbanHeatData[0] && urbanHeatData[0].toString().startsWith('0')) {
+			if (urbanHeatData?.[0]?.toString().startsWith('0')) {
 				createBars(
 					svg,
 					bins,
@@ -223,13 +223,13 @@ export default {
 					tooltip,
 					'heatHistogramContainer',
 					(d) => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`
-				);
+				)
 				plotService.addTitle(
 					svg,
 					`Heat exposure to buildings in ${store.nameOfZone}`,
 					width,
 					margin
-				);
+				)
 			} else {
 				createBars(
 					svg,
@@ -241,15 +241,15 @@ export default {
 					'heatHistogramContainer',
 					(d) =>
 						`Temperature in Celsius: ${d.x0}<br>Amount of buildings: ${d.length}<br>Left click highlights the building(s) on map`
-				);
+				)
 				plotService.addTitleWithLink(
 					svg,
 					`${store.nameOfZone} ${store.heatDataDate} buildings <a href="https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature" target="_blank">surface temperature</a> in °C`,
 					margin.left,
 					margin.top
-				);
+				)
 			}
-		};
+		}
 
 		/**
 		 * Removes the histogram from the DOM
@@ -257,8 +257,8 @@ export default {
 		 * @returns {void}
 		 */
 		const clearHistogram = () => {
-			d3.select('#heatHistogramContainer').select('svg').remove();
-		};
+			d3.select('#heatHistogramContainer').select('svg').remove()
+		}
 
 		/**
 		 * Creates or clears histogram based on view level
@@ -270,28 +270,28 @@ export default {
 		 */
 		const newHeatHistogram = () => {
 			if (store.level === 'postalCode' && propsStore.heatHistogramData) {
-				createHistogram();
+				createHistogram()
 			} else {
-				clearHistogram();
+				clearHistogram()
 			}
-		};
+		}
 
 		// Lifecycle hooks for mounting and unmounting
 		onMounted(() => {
 			void nextTick(() => {
-				newHeatHistogram();
-			});
+				newHeatHistogram()
+			})
 
-			eventBus.on('newHeatHistogram', createHistogram);
-		});
+			eventBus.on('newHeatHistogram', createHistogram)
+		})
 
 		onBeforeUnmount(() => {
-			eventBus.off('newHeatHistogram');
-		});
+			eventBus.off('newHeatHistogram')
+		})
 
-		return {};
+		return {}
 	},
-};
+}
 </script>
 
 <style scoped>

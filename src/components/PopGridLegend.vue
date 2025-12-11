@@ -92,9 +92,11 @@
 					</div>
 				</div>
 				<div class="extrusion-note">
-					<span>Green Space Index shown by grid cell <br >
-						height visualisation, with a maximum <br >
-						height of 250m (least green).</span>
+					<span
+						>Green Space Index shown by grid cell <br />
+						height visualisation, with a maximum <br />
+						height of 250m (least green).</span
+					>
 				</div>
 			</div>
 
@@ -118,36 +120,44 @@
 			v-if="localSelectedIndex === 'combined_avgheatexposure' && legendExpanded"
 			class="extrusion-note"
 		>
-			<span>Heat Index shown by grid <br >
-				cell height visualisation, <br >
-				with a maximum height of 250m.</span>
+			<span
+				>Heat Index shown by grid <br />
+				cell height visualisation, <br />
+				with a maximum height of 250m.</span
+			>
 		</div>
 
 		<div
 			v-if="localSelectedIndex === 'combined_heatindex_avgheatexposure' && legendExpanded"
 			class="extrusion-note"
 		>
-			<span>Normalised Landsat Surface heat shown <br >
-				by grid cell height visualisation, <br >
-				with a maximum height of 250m.</span>
+			<span
+				>Normalised Landsat Surface heat shown <br />
+				by grid cell height visualisation, <br />
+				with a maximum height of 250m.</span
+			>
 		</div>
 
 		<div
 			v-if="localSelectedIndex === 'combined_heat_flood' && legendExpanded"
 			class="extrusion-note"
 		>
-			<span>Flood Index shown by grid <br >
-				cell height visualisation, <br >
-				with a maximum height of 250m.</span>
+			<span
+				>Flood Index shown by grid <br />
+				cell height visualisation, <br />
+				with a maximum height of 250m.</span
+			>
 		</div>
 
 		<div
 			v-if="localSelectedIndex === 'combined_flood_heat' && legendExpanded"
 			class="extrusion-note"
 		>
-			<span>Heat Index shown by grid <br >
-				cell height visualisation, <br >
-				with a maximum height of 250m.</span>
+			<span
+				>Heat Index shown by grid <br />
+				cell height visualisation, <br />
+				with a maximum height of 250m.</span
+			>
 		</div>
 
 		<v-tooltip
@@ -173,30 +183,32 @@
 			v-if="legendExpanded"
 			class="source-note"
 		>
-			Socioeconomic source data by<br >
+			Socioeconomic source data by<br />
 			<a
 				href="https://stat.fi/index_en.html"
 				target="_blank"
-				>Statistics Finland</a><br >
+				>Statistics Finland</a
+			><br />
 			<a
 				href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf"
 				target="_blank"
-				>Methodology for Assessing Social Vulnerability</a>
+				>Methodology for Assessing Social Vulnerability</a
+			>
 		</div>
 	</div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue'
 
 // Define state to control the visibility and expansion of the legend
-const legendVisible = ref(true);
-const legendExpanded = ref(true);
+const _legendVisible = ref(true)
+const legendExpanded = ref(true)
 
 // Toggle function for legend expansion/minimization
-const toggleLegend = () => {
-	legendExpanded.value = !legendExpanded.value;
-};
+const _toggleLegend = () => {
+	legendExpanded.value = !legendExpanded.value
+}
 // Define index options with their corresponding colors and descriptions
 const indexOptions = [
 	{
@@ -325,7 +337,7 @@ const indexOptions = [
 		description:
 			'Combined heat and flood vulnerability, colored by heat and flood, height by green space.',
 	},
-];
+]
 
 // Define heat vulnerability colors
 const heatColors = [
@@ -336,7 +348,7 @@ const heatColors = [
 	{ color: '#feb24c', range: '0.4 - 0.6' },
 	{ color: '#f03b20', range: '0.6 - 0.8' },
 	{ color: '#bd0026', range: '> 0.8' },
-];
+]
 
 // Define heat vulnerability colors
 const partialHeatColors = [
@@ -345,7 +357,7 @@ const partialHeatColors = [
 	{ color: '#feb24c', range: '0.4 - 0.6' },
 	{ color: '#f03b20', range: '0.6 - 0.8' },
 	{ color: '#bd0026', range: '> 0.8' },
-];
+]
 
 // Define flood vulnerability colors
 const floodColors = [
@@ -356,7 +368,7 @@ const floodColors = [
 	{ color: '#6baed6', range: '0.4 - 0.6' }, // Mid-tone blue
 	{ color: '#3182bd', range: '0.6 - 0.8' }, // Darker blue
 	{ color: '#08519c', range: '> 0.8' }, // Deep blue
-];
+]
 
 const partialFloodColors = [
 	{ color: '#c6dbef', range: '< 0.2' }, // More saturated light blue
@@ -364,7 +376,7 @@ const partialFloodColors = [
 	{ color: '#6baed6', range: '0.4 - 0.6' }, // Mid-tone blue
 	{ color: '#3182bd', range: '0.6 - 0.8' }, // Darker blue
 	{ color: '#08519c', range: '> 0.8' }, // Deep blue
-];
+]
 
 // Define green space vulnerability colors with the desired gradient
 const greenSpaceColors = [
@@ -373,12 +385,12 @@ const greenSpaceColors = [
 	{ color: '#74c476', range: '0.4 - 0.6' }, // Medium green for 0.4 - 0.6
 	{ color: '#a1d99b', range: '0.6 - 0.8' }, // Light green for 0.6 - 0.8
 	{ color: '#e5f5e0', range: '> 0.8' }, // Very light green for > 0.8
-];
+]
 
 const bothColors = [
 	{ color: '#ffffff', range: 'Incomplete data' },
 	{ color: '#A9A9A9', range: 'Missing values' },
-];
+]
 
 // Define a mapping of indices to their corresponding color schemes
 const indexToColorScheme = {
@@ -406,32 +418,32 @@ const indexToColorScheme = {
 	combined_heatindex_avgheatexposure: heatColors,
 	combined_heat_flood_green: heatColors,
 	both: bothColors,
-};
+}
 
 // Local state to bind to v-select
-const localSelectedIndex = ref('heat_index');
+const localSelectedIndex = ref('heat_index')
 
 // Compute legend data based on the selected index and the color scheme mapping
-const legendData = computed(() => indexToColorScheme[localSelectedIndex.value] || heatColors);
+const _legendData = computed(() => indexToColorScheme[localSelectedIndex.value] || heatColors)
 
-const emit = defineEmits(['onIndexChange']);
+const emit = defineEmits(['onIndexChange'])
 
 // Handle selection change and emit event
-const handleSelectionChange = (value) => {
-	emit('onIndexChange', value);
-};
+const _handleSelectionChange = (value) => {
+	emit('onIndexChange', value)
+}
 
 // Compute the title based on the selected index
 const _title = computed(() => {
-	const selectedOption = indexOptions.find((option) => option.value === localSelectedIndex.value);
-	return selectedOption ? selectedOption.text : 'Heat Vulnerability';
-});
+	const selectedOption = indexOptions.find((option) => option.value === localSelectedIndex.value)
+	return selectedOption ? selectedOption.text : 'Heat Vulnerability'
+})
 
 // Compute the description of the selected index for the tooltip
-const selectedIndexDescription = computed(() => {
-	const selectedOption = indexOptions.find((option) => option.value === localSelectedIndex.value);
-	return selectedOption ? selectedOption.description : '';
-});
+const _selectedIndexDescription = computed(() => {
+	const selectedOption = indexOptions.find((option) => option.value === localSelectedIndex.value)
+	return selectedOption ? selectedOption.description : ''
+})
 </script>
 
 <style scoped>

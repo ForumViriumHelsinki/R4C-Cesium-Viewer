@@ -124,9 +124,7 @@
 											title="Reset to default"
 											@click="resetFlag(flag.name)"
 										>
-											<v-icon size="small">
-mdi-restore
-</v-icon>
+											<v-icon size="small"> mdi-restore </v-icon>
 										</v-btn>
 									</template>
 								</v-list-item>
@@ -219,7 +217,7 @@ mdi-restore
 					v-model="importJson"
 					label="Paste JSON configuration"
 					rows="10"
-					placeholder="{&quot;ndvi&quot;: true, &quot;hdrRendering&quot;: false, ...}"
+					placeholder='{"ndvi": true, "hdrRendering": false, ...}'
 				/>
 			</v-card-text>
 			<v-card-actions>
@@ -261,29 +259,29 @@ mdi-restore
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue'
 import {
-	useFeatureFlagStore,
 	type FeatureFlagCategory,
-	type FeatureFlagWithName,
 	type FeatureFlagName,
-} from '@/stores/featureFlagStore';
-import { useGraphicsStore } from '@/stores/graphicsStore';
+	type FeatureFlagWithName,
+	useFeatureFlagStore,
+} from '@/stores/featureFlagStore'
+import { useGraphicsStore } from '@/stores/graphicsStore'
 
-const featureFlagStore = useFeatureFlagStore();
-const graphicsStore = useGraphicsStore();
+const featureFlagStore = useFeatureFlagStore()
+const graphicsStore = useGraphicsStore()
 
-const dialog = ref<boolean>(false);
-const resetConfirmDialog = ref<boolean>(false);
-const importDialog = ref<boolean>(false);
-const importJson = ref<string>('');
-const snackbar = ref<boolean>(false);
-const snackbarMessage = ref<string>('');
-const snackbarColor = ref<'error' | 'success'>('error');
+const _dialog = ref<boolean>(false)
+const resetConfirmDialog = ref<boolean>(false)
+const importDialog = ref<boolean>(false)
+const importJson = ref<string>('')
+const snackbar = ref<boolean>(false)
+const snackbarMessage = ref<string>('')
+const snackbarColor = ref<'error' | 'success'>('error')
 
-const categories = computed(() => featureFlagStore.categories);
+const _categories = computed(() => featureFlagStore.categories)
 
-const totalFlags = computed(() => Object.keys(featureFlagStore.flags).length);
+const _totalFlags = computed(() => Object.keys(featureFlagStore.flags).length)
 
 const categoryLabels: Record<FeatureFlagCategory, string> = {
 	'data-layers': 'Data Layers',
@@ -292,7 +290,7 @@ const categoryLabels: Record<FeatureFlagCategory, string> = {
 	ui: 'UI & UX',
 	integration: 'Integrations',
 	developer: 'Developer Tools',
-};
+}
 
 const categoryIcons: Record<FeatureFlagCategory, string> = {
 	'data-layers': 'mdi-layers',
@@ -301,96 +299,96 @@ const categoryIcons: Record<FeatureFlagCategory, string> = {
 	ui: 'mdi-palette',
 	integration: 'mdi-puzzle',
 	developer: 'mdi-code-braces',
-};
-
-function getCategoryLabel(category: FeatureFlagCategory): string {
-	return categoryLabels[category] || category;
 }
 
-function getCategoryIcon(category: FeatureFlagCategory): string {
-	return categoryIcons[category] || 'mdi-flag';
+function _getCategoryLabel(category: FeatureFlagCategory): string {
+	return categoryLabels[category] || category
 }
 
-function getCategoryEnabledCount(category: FeatureFlagCategory): number {
+function _getCategoryIcon(category: FeatureFlagCategory): string {
+	return categoryIcons[category] || 'mdi-flag'
+}
+
+function _getCategoryEnabledCount(category: FeatureFlagCategory): number {
 	return featureFlagStore
 		.flagsByCategory(category)
-		.filter((flag) => featureFlagStore.isEnabled(flag.name)).length;
+		.filter((flag) => featureFlagStore.isEnabled(flag.name)).length
 }
 
-function getCategoryTotalCount(category: FeatureFlagCategory): number {
-	return featureFlagStore.flagsByCategory(category).length;
+function _getCategoryTotalCount(category: FeatureFlagCategory): number {
+	return featureFlagStore.flagsByCategory(category).length
 }
 
-function setFlag(flagName: FeatureFlagName, enabled: boolean): void {
-	featureFlagStore.setFlag(flagName, enabled);
+function _setFlag(flagName: FeatureFlagName, enabled: boolean): void {
+	featureFlagStore.setFlag(flagName, enabled)
 }
 
-function resetFlag(flagName: FeatureFlagName): void {
-	featureFlagStore.resetFlag(flagName);
+function _resetFlag(flagName: FeatureFlagName): void {
+	featureFlagStore.resetFlag(flagName)
 }
 
-function resetAllFlags(): void {
-	resetConfirmDialog.value = true;
+function _resetAllFlags(): void {
+	resetConfirmDialog.value = true
 }
 
-function confirmResetAll(): void {
-	featureFlagStore.resetAllFlags();
-	resetConfirmDialog.value = false;
+function _confirmResetAll(): void {
+	featureFlagStore.resetAllFlags()
+	resetConfirmDialog.value = false
 }
 
-function checkHardwareSupport(flag: FeatureFlagWithName): boolean {
+function _checkHardwareSupport(flag: FeatureFlagWithName): boolean {
 	// Check hardware support based on graphics store
 	// Use optional chaining for defensive coding
 	if (flag.name === 'hdrRendering') {
-		return graphicsStore?.hdrSupported ?? false;
+		return graphicsStore?.hdrSupported ?? false
 	}
 	if (flag.name === 'ambientOcclusion') {
-		return graphicsStore?.ambientOcclusionSupported ?? false;
+		return graphicsStore?.ambientOcclusionSupported ?? false
 	}
 	if (flag.name === 'msaaOptions') {
-		return graphicsStore?.msaaSupported ?? false;
+		return graphicsStore?.msaaSupported ?? false
 	}
-	return true;
+	return true
 }
 
-function exportConfig(): void {
-	const config = featureFlagStore.exportConfig();
-	const json = JSON.stringify(config, null, 2);
+function _exportConfig(): void {
+	const config = featureFlagStore.exportConfig()
+	const json = JSON.stringify(config, null, 2)
 
 	// Create a blob and download
-	const blob = new Blob([json], { type: 'application/json' });
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement('a');
-	a.href = url;
-	a.download = 'feature-flags-config.json';
-	document.body.appendChild(a);
-	a.click();
-	document.body.removeChild(a);
-	URL.revokeObjectURL(url);
+	const blob = new Blob([json], { type: 'application/json' })
+	const url = URL.createObjectURL(blob)
+	const a = document.createElement('a')
+	a.href = url
+	a.download = 'feature-flags-config.json'
+	document.body.appendChild(a)
+	a.click()
+	document.body.removeChild(a)
+	URL.revokeObjectURL(url)
 }
 
-function importConfig(): void {
-	importJson.value = '';
-	importDialog.value = true;
+function _importConfig(): void {
+	importJson.value = ''
+	importDialog.value = true
 }
 
-function doImport(): void {
+function _doImport(): void {
 	try {
-		const config = JSON.parse(importJson.value);
-		featureFlagStore.importConfig(config);
-		importDialog.value = false;
-		importJson.value = '';
-		showSnackbar('Configuration imported successfully', 'success');
+		const config = JSON.parse(importJson.value)
+		featureFlagStore.importConfig(config)
+		importDialog.value = false
+		importJson.value = ''
+		showSnackbar('Configuration imported successfully', 'success')
 	} catch (error) {
-		showSnackbar('Invalid JSON format. Please check your input and try again.', 'error');
-		console.error('Import error:', error);
+		showSnackbar('Invalid JSON format. Please check your input and try again.', 'error')
+		console.error('Import error:', error)
 	}
 }
 
 function showSnackbar(message: string, color: 'error' | 'success' = 'error'): void {
-	snackbarMessage.value = message;
-	snackbarColor.value = color;
-	snackbar.value = true;
+	snackbarMessage.value = message
+	snackbarColor.value = color
+	snackbar.value = true
 }
 </script>
 

@@ -13,9 +13,9 @@
  * @see {@link https://www.ogc.org/standards/wms|OGC WMS Standard}
  */
 
-import { useGlobalStore } from '../stores/globalStore.js';
-import * as Cesium from 'cesium';
-import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
+import * as Cesium from 'cesium'
+import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
+import { useGlobalStore } from '../stores/globalStore.js'
 
 /**
  * Creates and adds a flood risk WMS imagery layer to the Cesium viewer
@@ -44,15 +44,15 @@ import { useBackgroundMapStore } from '../stores/backgroundMapStore.js';
  * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/pull/340|PR #340 - WMS Tile Optimization}
  */
 export const createFloodImageryLayer = async (url, layerName) => {
-	const store = useGlobalStore();
-	const backgroundMapStore = useBackgroundMapStore();
-	const viewer = store.cesiumViewer;
+	const store = useGlobalStore()
+	const backgroundMapStore = useBackgroundMapStore()
+	const viewer = store.cesiumViewer
 
 	try {
 		// Construct URL with proper query parameter handling
-		const serviceUrl = new URL(url);
-		serviceUrl.searchParams.set('format', 'image/png');
-		serviceUrl.searchParams.set('transparent', 'true');
+		const serviceUrl = new URL(url)
+		serviceUrl.searchParams.set('format', 'image/png')
+		serviceUrl.searchParams.set('transparent', 'true')
 
 		const provider = new Cesium.WebMapServiceImageryProvider({
 			url: serviceUrl.toString(),
@@ -66,16 +66,16 @@ export const createFloodImageryLayer = async (url, layerName) => {
 			maximumLevel: 18,
 			// Use geographic tiling scheme for EPSG:4326 (WGS84)
 			tilingScheme: new Cesium.GeographicTilingScheme(),
-		});
+		})
 
-		await provider.readyPromise;
-		const addedLayer = viewer.imageryLayers.addImageryProvider(provider);
-		addedLayer.alpha = 1;
-		backgroundMapStore.floodLayers.push(addedLayer);
+		await provider.readyPromise
+		const addedLayer = viewer.imageryLayers.addImageryProvider(provider)
+		addedLayer.alpha = 1
+		backgroundMapStore.floodLayers.push(addedLayer)
 	} catch (error) {
-		console.error('Error creating WMS layer:', error);
+		console.error('Error creating WMS layer:', error)
 	}
-};
+}
 
 /**
  * Removes all flood risk WMS layers from the Cesium viewer
@@ -88,9 +88,9 @@ export const createFloodImageryLayer = async (url, layerName) => {
  * removeFloodLayers(); // Removes all flood WMS layers
  */
 export const removeFloodLayers = () => {
-	const store = useGlobalStore();
-	const backgroundMapStore = useBackgroundMapStore();
-	const viewer = store.cesiumViewer;
+	const store = useGlobalStore()
+	const backgroundMapStore = useBackgroundMapStore()
+	const viewer = store.cesiumViewer
 
 	try {
 		if (
@@ -100,13 +100,13 @@ export const removeFloodLayers = () => {
 			// Remove each layer from the Cesium viewer
 			backgroundMapStore.floodLayers.forEach((layer) => {
 				if (viewer.imageryLayers.contains(layer)) {
-					viewer.imageryLayers.remove(layer);
+					viewer.imageryLayers.remove(layer)
 				}
-			});
+			})
 
-			backgroundMapStore.clearFloodLayers();
+			backgroundMapStore.clearFloodLayers()
 		}
 	} catch (error) {
-		console.error('Error removing floodlayer:', error);
+		console.error('Error removing floodlayer:', error)
 	}
-};
+}

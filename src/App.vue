@@ -138,136 +138,126 @@
 </template>
 
 <script setup>
-import ControlPanel from './pages/ControlPanel.vue';
-import CesiumViewer from './pages/CesiumViewer.vue';
-import SosEco250mGrid from './components/SosEco250mGrid.vue';
-import LoadingIndicator from './components/LoadingIndicator.vue';
-import DataSourceStatusBadge from './components/DataSourceStatusBadge.vue';
-import TimelineCompact from './components/TimelineCompact.vue';
-import ViewModeCompact from './components/ViewModeCompact.vue';
-import FeatureFlagsPanel from './components/FeatureFlagsPanel.vue';
-import VersionBadge from './components/VersionBadge.vue';
-import AppTitle from './components/AppTitle.vue';
-import { useToggleStore } from './stores/toggleStore.js';
-import { useGlobalStore } from './stores/globalStore.js';
-import { useFeatureFlagStore } from './stores/featureFlagStore';
-import { computed, ref, onMounted } from 'vue';
-import Tree from './services/tree';
-import Featurepicker from './services/featurepicker';
-import Camera from './services/camera';
-import { useLoadingStore } from './stores/loadingStore.js';
-import backgroundPreloader from './services/backgroundPreloader.js';
+import { computed, onMounted, ref } from 'vue'
+import backgroundPreloader from './services/backgroundPreloader.js'
+import Camera from './services/camera'
+import Featurepicker from './services/featurepicker'
+import Tree from './services/tree'
+import { useFeatureFlagStore } from './stores/featureFlagStore'
+import { useGlobalStore } from './stores/globalStore.js'
+import { useLoadingStore } from './stores/loadingStore.js'
+import { useToggleStore } from './stores/toggleStore.js'
 
-const toggleStore = useToggleStore();
-const globalStore = useGlobalStore();
-const loadingStore = useLoadingStore();
-const featureFlagStore = useFeatureFlagStore();
+const toggleStore = useToggleStore()
+const globalStore = useGlobalStore()
+const loadingStore = useLoadingStore()
+const featureFlagStore = useFeatureFlagStore()
 
-const grid250m = computed(() => toggleStore.grid250m);
-const currentLevel = computed(() => globalStore.level);
+const _grid250m = computed(() => toggleStore.grid250m)
+const _currentLevel = computed(() => globalStore.level)
 
 // UI state
-const sidebarVisible = ref(true); // Show sidebar by default for better discoverability
+const _sidebarVisible = ref(true) // Show sidebar by default for better discoverability
 
 // Navigation functions
-const signOut = () => {
-	window.location.href = '/oauth2/sign_out';
-};
+const _signOut = () => {
+	window.location.href = '/oauth2/sign_out'
+}
 
 const _smartReset = () => {
 	// Reset application state without page reload
-	globalStore.setLevel('start');
-	globalStore.setPostalCode(null);
-	globalStore.setNameOfZone(null);
-	globalStore.setView('capitalRegion');
+	globalStore.setLevel('start')
+	globalStore.setPostalCode(null)
+	globalStore.setNameOfZone(null)
+	globalStore.setView('capitalRegion')
 
 	// Reset toggle states
-	toggleStore.setShowTrees(false);
-	toggleStore.setShowPlot(true);
-	toggleStore.setGridView(false);
-	toggleStore.setHelsinkiView(false);
+	toggleStore.setShowTrees(false)
+	toggleStore.setShowPlot(true)
+	toggleStore.setGridView(false)
+	toggleStore.setHelsinkiView(false)
 
 	// Reset camera to initial position
-	const camera = new Camera();
-	camera.init();
+	const camera = new Camera()
+	camera.init()
 
 	// Hide tooltip
-	hideTooltip();
-};
+	hideTooltip()
+}
 
-const returnToPostalCode = () => {
-	const featurepicker = new Featurepicker();
-	const treeService = new Tree();
-	hideTooltip();
-	featurepicker.loadPostalCode().catch(console.error);
+const _returnToPostalCode = () => {
+	const featurepicker = new Featurepicker()
+	const treeService = new Tree()
+	hideTooltip()
+	featurepicker.loadPostalCode().catch(console.error)
 	if (toggleStore.showTrees) {
-		treeService.loadTrees().catch(console.error);
+		treeService.loadTrees().catch(console.error)
 	}
-};
+}
 
 const hideTooltip = () => {
-	const tooltip = document.querySelector('.tooltip');
+	const tooltip = document.querySelector('.tooltip')
 	if (tooltip) {
-		tooltip.style.display = 'none';
+		tooltip.style.display = 'none'
 	}
-};
+}
 
-const rotateCamera = () => {
-	const camera = new Camera();
-	camera.rotate180Degrees();
-};
+const _rotateCamera = () => {
+	const camera = new Camera()
+	camera.rotate180Degrees()
+}
 
 // Handle retry layer events from LoadingIndicator
-const handleRetryLayer = (layerName) => {
+const _handleRetryLayer = (layerName) => {
 	// Clear the error and attempt to reload the layer
-	loadingStore.retryLayerLoading(layerName);
+	loadingStore.retryLayerLoading(layerName)
 
 	// You would implement the actual retry logic here
 	// For now, we'll just log it
-	console.log(`Retrying layer: ${layerName}`);
-};
+	console.log(`Retrying layer: ${layerName}`)
+}
 
 // Handle data source retry events
-const handleSourceRetry = (sourceId) => {
-	console.log(`Retrying data source: ${sourceId}`);
+const _handleSourceRetry = (sourceId) => {
+	console.log(`Retrying data source: ${sourceId}`)
 	// Could trigger health checks or reconnection attempts
-};
+}
 
 // Handle cache clearing events
-const handleCacheCleared = (sourceId) => {
-	console.log(`Cache cleared for: ${sourceId}`);
+const _handleCacheCleared = (sourceId) => {
+	console.log(`Cache cleared for: ${sourceId}`)
 	if (sourceId === 'all') {
 		// Refresh cache status for all layers
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
-			void loadingStore.checkLayerCache(layer);
-		});
+			void loadingStore.checkLayerCache(layer)
+		})
 	}
-};
+}
 
 // Handle data preloading requests
 const _handleDataPreload = (sourceId) => {
-	console.log(`Preloading requested for: ${sourceId}`);
+	console.log(`Preloading requested for: ${sourceId}`)
 	// Could trigger specific preloading for the source
-};
+}
 
 // Initialize services on mount
 onMounted(async () => {
 	try {
 		// Load feature flag overrides from localStorage
-		featureFlagStore.loadOverrides();
+		featureFlagStore.loadOverrides()
 
 		// Initialize background preloader
-		await backgroundPreloader.init();
-		console.log('Background preloader initialized');
+		await backgroundPreloader.init()
+		console.log('Background preloader initialized')
 
 		// Check cache status for all layers on app start
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
-			void loadingStore.checkLayerCache(layer);
-		});
+			void loadingStore.checkLayerCache(layer)
+		})
 	} catch (error) {
-		console.warn('Failed to initialize caching services:', error);
+		console.warn('Failed to initialize caching services:', error)
 	}
-});
+})
 </script>
 
 <style scoped>

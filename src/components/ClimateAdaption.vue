@@ -126,52 +126,48 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue';
-import CoolingCenter from './CoolingCenter.vue';
-import CoolingCenterOptimiser from './CoolingCenterOptimiser.vue';
-import EstimatedImpacts from './EstimatedImpacts.vue';
-import LandcoverToParks from './LandcoverToParks.vue';
+import { computed, nextTick, ref, watch } from 'vue'
 
 // Props + emits
-const props = defineProps({ modelValue: Boolean });
-const emit = defineEmits(['update:modelValue']);
+const props = defineProps({ modelValue: Boolean })
+const emit = defineEmits(['update:modelValue'])
 
-const tab = ref('centers');
+const tab = ref('centers')
 
 // Use computed property for v-model synchronization (better performance)
-const drawerOpen = computed({
+const _drawerOpen = computed({
 	get() {
-		return props.modelValue;
+		return props.modelValue
 	},
 	set(value) {
-		emit('update:modelValue', value);
+		emit('update:modelValue', value)
 	},
-});
+})
 
 // Focus management when switching tabs
 watch(tab, async (newTab) => {
-	await nextTick();
+	await nextTick()
 	// Focus the active tab panel for better keyboard navigation
-	const tabPanel = document.getElementById(`tab-panel-${newTab}`);
+	const tabPanel = document.getElementById(`tab-panel-${newTab}`)
 	if (tabPanel) {
-		tabPanel.focus();
+		tabPanel.focus()
 	}
-});
+})
 
 // Focus management when drawer opens
 watch(
 	() => props.modelValue,
 	async (isOpen) => {
 		if (isOpen) {
-			await nextTick();
+			await nextTick()
 			// Focus the first tab when drawer opens
-			const firstTab = document.querySelector('.climate-adaption-panel [role="tab"]');
+			const firstTab = document.querySelector('.climate-adaption-panel [role="tab"]')
 			if (firstTab) {
-				firstTab.focus();
+				firstTab.focus()
 			}
 		}
 	}
-);
+)
 </script>
 
 <style scoped>

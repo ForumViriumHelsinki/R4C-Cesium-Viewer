@@ -44,14 +44,14 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-import { storeToRefs } from 'pinia';
-import HSYYearSelect from '../components/HSYYearSelect.vue';
-import HSYAreaSelect from '../components/HSYAreaSelect.vue';
-import PieChart from '../components/PieChart.vue';
-import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
-import { useToggleStore } from '../stores/toggleStore.js'; // Store for toggling
-import { useGlobalStore } from '../stores/globalStore.js'; // Global store for Cesium viewer
+import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
+import HSYAreaSelect from '../components/HSYAreaSelect.vue'
+import HSYYearSelect from '../components/HSYYearSelect.vue'
+import PieChart from '../components/PieChart.vue'
+import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
+import { useGlobalStore } from '../stores/globalStore.js' // Global store for Cesium viewer
+import { useToggleStore } from '../stores/toggleStore.js' // Store for toggling
 
 export default {
 	components: {
@@ -60,33 +60,33 @@ export default {
 		PieChart,
 	},
 	setup() {
-		const showComponents = ref(true);
-		const toggleStore = useToggleStore();
-		const store = useGlobalStore();
-		const { landCover: landcover } = storeToRefs(toggleStore);
+		const showComponents = ref(true)
+		const toggleStore = useToggleStore()
+		const store = useGlobalStore()
+		const { landCover: landcover } = storeToRefs(toggleStore)
 
 		// Function to toggle land cover
 		const toggleLandCover = () => {
-			const isLandcoverChecked = landcover.value;
-			toggleStore.setLandCover(isLandcoverChecked); // Update land cover state in store
+			const isLandcoverChecked = landcover.value
+			toggleStore.setLandCover(isLandcoverChecked) // Update land cover state in store
 
 			if (isLandcoverChecked) {
 				// Remove background map and add land cover layer
-				store.cesiumViewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true);
-				createHSYImageryLayer().catch(console.error); // Add land cover
+				store.cesiumViewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true)
+				createHSYImageryLayer().catch(console.error) // Add land cover
 			} else {
 				// Remove land cover
-				removeLandcover();
+				removeLandcover()
 			}
-		};
+		}
 
 		return {
 			showComponents,
 			landcover,
 			toggleLandCover, // Expose the toggle function
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

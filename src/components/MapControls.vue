@@ -2,9 +2,7 @@
 	<div class="map-controls">
 		<!-- Data Layers -->
 		<div class="control-group">
-			<h4 class="control-group-title">
-Data Layers
-</h4>
+			<h4 class="control-group-title">Data Layers</h4>
 
 			<!-- Trees -->
 			<v-tooltip
@@ -161,9 +159,7 @@ Data Layers
 			v-if="view !== 'grid'"
 			class="control-group"
 		>
-			<h4 class="control-group-title">
-Building Filters
-</h4>
+			<h4 class="control-group-title">Building Filters</h4>
 
 			<!-- Public/Social Buildings Filter -->
 			<v-tooltip
@@ -253,9 +249,7 @@ Building Filters
 			class="layer-warning"
 		>
 			<template #prepend>
-				<v-icon size="small">
-mdi-alert
-</v-icon>
+				<v-icon size="small"> mdi-alert </v-icon>
 			</template>
 			NDVI and Land Cover cannot be active simultaneously
 		</v-alert>
@@ -327,62 +321,62 @@ mdi-alert
  * <MapControls />
  */
 
-import { ref, computed, onMounted, watch } from 'vue';
-import { useToggleStore } from '../stores/toggleStore';
-import { useGlobalStore } from '../stores/globalStore';
-import { eventBus } from '../services/eventEmitter.js';
-import Datasource from '../services/datasource.js';
-import Building from '../services/building.js';
-import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
-import Tree from '../services/tree.js';
-import Othernature from '../services/othernature.js';
-import Vegetation from '../services/vegetation';
-import Wms from '../services/wms.js';
-import { changeTIFF, removeTIFF } from '../services/tiffImagery.js';
-import { useLoadingStore } from '../stores/loadingStore.js';
-import backgroundPreloader from '../services/backgroundPreloader.js';
+import { computed, onMounted, ref, watch } from 'vue'
+import backgroundPreloader from '../services/backgroundPreloader.js'
+import Building from '../services/building.js'
+import Datasource from '../services/datasource.js'
+import { eventBus } from '../services/eventEmitter.js'
+import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
+import Othernature from '../services/othernature.js'
+import { changeTIFF, removeTIFF } from '../services/tiffImagery.js'
+import Tree from '../services/tree.js'
+import Vegetation from '../services/vegetation'
+import Wms from '../services/wms.js'
+import { useGlobalStore } from '../stores/globalStore'
+import { useLoadingStore } from '../stores/loadingStore.js'
+import { useToggleStore } from '../stores/toggleStore'
 
 // Stores
-const toggleStore = useToggleStore();
-const store = useGlobalStore();
-const loadingStore = useLoadingStore();
+const toggleStore = useToggleStore()
+const store = useGlobalStore()
+const loadingStore = useLoadingStore()
 
 /**
  * Reactive state for data layer toggles
  * Synchronized with toggleStore for persistence
  */
-const showVegetation = ref(toggleStore.showVegetation);
-const showOtherNature = ref(toggleStore.showOtherNature);
-const showTrees = ref(toggleStore.showTrees);
-const landCover = ref(toggleStore.landCover);
-const ndvi = ref(toggleStore.ndvi);
+const showVegetation = ref(toggleStore.showVegetation)
+const showOtherNature = ref(toggleStore.showOtherNature)
+const showTrees = ref(toggleStore.showTrees)
+const landCover = ref(toggleStore.landCover)
+const ndvi = ref(toggleStore.ndvi)
 
 /**
  * Reactive state for building filter toggles
  * Synchronized with toggleStore for persistence
  */
-const hideNonSote = ref(toggleStore.hideNonSote);
-const hideNewBuildings = ref(toggleStore.hideNewBuildings);
-const hideLow = ref(toggleStore.hideLow);
+const hideNonSote = ref(toggleStore.hideNonSote)
+const hideNewBuildings = ref(toggleStore.hideNewBuildings)
+const hideLow = ref(toggleStore.hideLow)
 
 /**
  * Computed properties for view-specific features
  */
-const helsinkiView = computed(() => toggleStore.helsinkiView);
-const view = computed(() => store.view);
-const postalCode = computed(() => store.postalcode);
+const _helsinkiView = computed(() => toggleStore.helsinkiView)
+const _view = computed(() => store.view)
+const _postalCode = computed(() => store.postalcode)
 
 /**
  * Detects if NDVI and Land Cover are both active
  * @type {import('vue').ComputedRef<boolean>}
  */
-const hasLayerConflict = computed(() => {
-	return landCover.value && ndvi.value;
-});
+const _hasLayerConflict = computed(() => {
+	return landCover.value && ndvi.value
+})
 
 // Services
-let buildingService = null;
-let dataSourceService = null;
+let buildingService = null
+let dataSourceService = null
 
 /**
  * Disables conflicting layer when a new layer is activated
@@ -396,18 +390,18 @@ let dataSourceService = null;
  */
 const disableOtherLayer = (layer) => {
 	if (layer === 'ndvi') {
-		landCover.value = false;
-		toggleStore.setLandCover(false);
-		removeLandcover(store.landcoverLayers, store.cesiumViewer);
+		landCover.value = false
+		toggleStore.setLandCover(false)
+		removeLandcover(store.landcoverLayers, store.cesiumViewer)
 	} else if (layer === 'landcover') {
-		ndvi.value = false;
-		toggleStore.setNDVI(false);
-		store.cesiumViewer.imageryLayers.removeAll();
+		ndvi.value = false
+		toggleStore.setNDVI(false)
+		store.cesiumViewer.imageryLayers.removeAll()
 		store.cesiumViewer.imageryLayers.add(
 			new Wms().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-		);
+		)
 	}
-};
+}
 
 /**
  * Loads or toggles vegetation layer visibility
@@ -419,30 +413,30 @@ const disableOtherLayer = (layer) => {
  * @async
  * @returns {Promise<void>}
  */
-const loadVegetation = async () => {
-	toggleStore.setShowVegetation(showVegetation.value);
+const _loadVegetation = async () => {
+	toggleStore.setShowVegetation(showVegetation.value)
 
 	if (showVegetation.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('Vegetation')) {
 			loadingStore.startLayerLoading('vegetation', {
 				message: 'Loading vegetation areas...',
 				total: 1,
-			});
+			})
 
 			try {
-				const vegetationService = new Vegetation();
-				await vegetationService.loadVegetation(store.postalcode);
-				loadingStore.completeLayerLoading('vegetation', true);
+				const vegetationService = new Vegetation()
+				await vegetationService.loadVegetation(store.postalcode)
+				loadingStore.completeLayerLoading('vegetation', true)
 			} catch (error) {
-				loadingStore.setLayerError('vegetation', error.message || 'Failed to load vegetation data');
+				loadingStore.setLayerError('vegetation', error.message || 'Failed to load vegetation data')
 			}
 		} else {
-			dataSourceService.changeDataSourceShowByName('Vegetation', true);
+			dataSourceService.changeDataSourceShowByName('Vegetation', true)
 		}
 	} else {
-		dataSourceService.changeDataSourceShowByName('Vegetation', false);
+		dataSourceService.changeDataSourceShowByName('Vegetation', false)
 	}
-};
+}
 
 /**
  * Loads or toggles tree layer visibility
@@ -460,89 +454,89 @@ const loadVegetation = async () => {
  * @async
  * @returns {Promise<void>}
  */
-const loadTrees = async () => {
-	toggleStore.setShowTrees(showTrees.value);
+const _loadTrees = async () => {
+	toggleStore.setShowTrees(showTrees.value)
 
 	if (showTrees.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('Trees')) {
 			// Check cache first, then load if needed
-			const cacheKey = `trees-${store.postalcode}`;
+			const cacheKey = `trees-${store.postalcode}`
 			const cached = await loadingStore.startLayerLoadingWithCache('trees', {
 				message: 'Loading trees by height categories...',
 				total: 4, // 4 height categories
 				postalCode: store.postalcode,
 				cacheKey,
-			});
+			})
 
 			if (cached) {
 				// Use cached data - data source service would need to be updated to accept cached data
-				console.log('Using cached tree data');
-				return;
+				console.log('Using cached tree data')
+				return
 			}
 
 			// Use enhanced loading methods with progress tracking
 			loadingStore.startLayerLoading('trees', {
 				message: 'Loading trees by height categories...',
 				total: 4, // 4 height categories
-			});
+			})
 
 			try {
-				const treeService = new Tree();
+				const treeService = new Tree()
 
 				// Create a promise-based wrapper for the tree loading
 				const treeData = await new Promise((resolve, _reject) => {
-					const originalLoadTrees = treeService.loadTrees.bind(treeService);
+					const originalLoadTrees = treeService.loadTrees.bind(treeService)
 
 					// Override the tree service to provide progress updates
-					let completedCategories = 0;
-					const categories = [221, 222, 223, 224];
+					let completedCategories = 0
+					const categories = [221, 222, 223, 224]
 
 					categories.forEach((category, index) => {
 						// This is a simplified approach - the actual implementation would need
 						// to modify the tree service to support progress callbacks
 						setTimeout(
 							() => {
-								completedCategories++;
+								completedCategories++
 								loadingStore.updateLayerProgress(
 									'trees',
 									completedCategories,
 									`Loading trees: category ${category} (${completedCategories}/4)`
-								);
+								)
 
 								if (completedCategories === 4) {
-									resolve({ categories, postalCode: store.postalcode });
+									resolve({ categories, postalCode: store.postalcode })
 								}
 							},
 							(index + 1) * 500
-						); // Simulate progressive loading
-					});
+						) // Simulate progressive loading
+					})
 
 					// Call the original method
-					originalLoadTrees();
-				});
+					originalLoadTrees()
+				})
 
 				// Cache the loaded data
 				await loadingStore.cacheLayerData('trees', treeData, {
 					postalCode: store.postalcode,
 					cacheKey,
 					ttl: 60 * 60 * 1000, // 1 hour for tree data
-				});
+				})
 
-				loadingStore.completeLayerLoading('trees', true);
+				loadingStore.completeLayerLoading('trees', true)
 
 				// Track usage for background preloader
-				backgroundPreloader.trackLayerUsage('trees');
+				backgroundPreloader.trackLayerUsage('trees')
 			} catch (error) {
-				loadingStore.setLayerError('trees', error.message || 'Failed to load tree data');
+				loadingStore.setLayerError('trees', error.message || 'Failed to load tree data')
 			}
 		} else {
-			dataSourceService.changeDataSourceShowByName('Trees', true);
+			dataSourceService.changeDataSourceShowByName('Trees', true)
 		}
 	} else {
-		dataSourceService.changeDataSourceShowByName('Trees', false);
-		buildingService.resetBuildingEntities();
+		dataSourceService.changeDataSourceShowByName('Trees', false)
+		buildingService.resetBuildingEntities()
 	}
-};
+}
 
 /**
  * Loads or toggles other nature layer visibility
@@ -552,20 +546,20 @@ const loadTrees = async () => {
  *
  * @returns {void}
  */
-const loadOtherNature = () => {
-	toggleStore.setShowOtherNature(showOtherNature.value);
+const _loadOtherNature = () => {
+	toggleStore.setShowOtherNature(showOtherNature.value)
 
 	if (showOtherNature.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
-			const otherNatureService = new Othernature();
-			void otherNatureService.loadOtherNature();
+			const otherNatureService = new Othernature()
+			void otherNatureService.loadOtherNature()
 		} else {
-			void dataSourceService.changeDataSourceShowByName('OtherNature', true);
+			void dataSourceService.changeDataSourceShowByName('OtherNature', true)
 		}
 	} else {
-		void dataSourceService.changeDataSourceShowByName('OtherNature', false);
+		void dataSourceService.changeDataSourceShowByName('OtherNature', false)
 	}
-};
+}
 
 /**
  * Toggles HSY land cover layer
@@ -575,16 +569,16 @@ const loadOtherNature = () => {
  *
  * @returns {void}
  */
-const addLandCover = () => {
-	if (landCover.value && ndvi.value) disableOtherLayer('landcover');
+const _addLandCover = () => {
+	if (landCover.value && ndvi.value) disableOtherLayer('landcover')
 
-	toggleStore.setLandCover(landCover.value);
+	toggleStore.setLandCover(landCover.value)
 	if (landCover.value) {
-		void createHSYImageryLayer();
+		void createHSYImageryLayer()
 	} else {
-		removeLandcover();
+		removeLandcover()
 	}
-};
+}
 
 /**
  * Toggles NDVI satellite imagery layer
@@ -595,18 +589,18 @@ const addLandCover = () => {
  * @fires eventBus#addNDVI
  * @returns {void}
  */
-const toggleNDVI = () => {
-	if (ndvi.value && landCover.value) disableOtherLayer('ndvi');
+const _toggleNDVI = () => {
+	if (ndvi.value && landCover.value) disableOtherLayer('ndvi')
 
-	toggleStore.setNDVI(ndvi.value);
+	toggleStore.setNDVI(ndvi.value)
 
 	if (ndvi.value) {
-		void changeTIFF();
-		eventBus.emit('addNDVI');
+		void changeTIFF()
+		eventBus.emit('addNDVI')
 	} else {
-		void removeTIFF();
+		void removeTIFF()
 	}
-};
+}
 
 /**
  * Applies building filters to the current postal code
@@ -622,23 +616,23 @@ const toggleNDVI = () => {
  * @returns {void}
  */
 const filterBuildings = () => {
-	toggleStore.setHideNonSote(hideNonSote.value);
-	toggleStore.setHideNewBuildings(hideNewBuildings.value);
-	toggleStore.setHideLow(hideLow.value);
+	toggleStore.setHideNonSote(hideNonSote.value)
+	toggleStore.setHideNewBuildings(hideNewBuildings.value)
+	toggleStore.setHideLow(hideLow.value)
 
 	const buildingsDataSource = store?.cesiumViewer?.dataSources?.getByName(
 		`Buildings ${store.postalcode}`
-	)[0];
+	)[0]
 
 	if (buildingsDataSource) {
 		if (hideNonSote.value || hideNewBuildings.value || hideLow.value) {
-			buildingService.filterBuildings(buildingsDataSource);
+			buildingService.filterBuildings(buildingsDataSource)
 		} else {
-			buildingService.showAllBuildings(buildingsDataSource);
+			buildingService.showAllBuildings(buildingsDataSource)
 		}
-		eventBus.emit('updateScatterPlot');
+		eventBus.emit('updateScatterPlot')
 	}
-};
+}
 
 /**
  * Resets all building filters to default (all visible)
@@ -646,11 +640,11 @@ const filterBuildings = () => {
  * @returns {void}
  */
 const resetFilters = () => {
-	hideNonSote.value = false;
-	hideNewBuildings.value = false;
-	hideLow.value = false;
-	filterBuildings();
-};
+	hideNonSote.value = false
+	hideNewBuildings.value = false
+	hideLow.value = false
+	filterBuildings()
+}
 
 /**
  * Watches for view changes and resets building filters
@@ -661,9 +655,9 @@ const resetFilters = () => {
 watch(
 	() => store.view,
 	() => {
-		resetFilters();
+		resetFilters()
 	}
-);
+)
 
 /**
  * Synchronizes local landCover state with store changes
@@ -673,15 +667,15 @@ watch(
 watch(
 	() => toggleStore.landCover,
 	(newValue) => {
-		landCover.value = newValue;
+		landCover.value = newValue
 	},
 	{ immediate: true }
-);
+)
 
 onMounted(() => {
-	buildingService = new Building();
-	dataSourceService = new Datasource();
-});
+	buildingService = new Building()
+	dataSourceService = new Datasource()
+})
 </script>
 
 <style scoped>

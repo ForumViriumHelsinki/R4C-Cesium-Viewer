@@ -20,9 +20,9 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-import SocioEconomicsSelect from '../components/SocioEconomicsSelect.vue';
-import SocioEconomicsChart from '../components/SocioEconomicsChart.vue';
+import { ref } from 'vue'
+import SocioEconomicsChart from '../components/SocioEconomicsChart.vue'
+import SocioEconomicsSelect from '../components/SocioEconomicsSelect.vue'
 
 export default {
 	components: {
@@ -30,13 +30,13 @@ export default {
 		SocioEconomicsChart,
 	},
 	setup() {
-		const showComponents = ref(true);
+		const showComponents = ref(true)
 
 		return {
 			showComponents,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>
