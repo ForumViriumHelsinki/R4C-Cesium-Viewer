@@ -27,7 +27,9 @@
 			v-if="selectedCategory === 'flood'"
 			class="flood-quick-select"
 		>
-			<h5 class="flood-title">Flood Risk Scenarios</h5>
+			<h5 class="flood-title">
+Flood Risk Scenarios
+</h5>
 			<p class="flood-disclaimer">
 				⚠️ Map contains significant errors. Not for building-specific evaluation!
 			</p>
@@ -35,7 +37,9 @@
 			<div class="flood-categories">
 				<!-- Stormwater Floods -->
 				<div class="flood-category">
-					<h6 class="flood-category-title">Stormwater Floods</h6>
+					<h6 class="flood-category-title">
+Stormwater Floods
+</h6>
 					<v-btn-toggle
 						v-model="selectedFloodLayer"
 						mandatory
@@ -65,7 +69,9 @@
 
 				<!-- Coastal Floods -->
 				<div class="flood-category">
-					<h6 class="flood-category-title">Coastal Flood Scenarios</h6>
+					<h6 class="flood-category-title">
+Coastal Flood Scenarios
+</h6>
 					<v-btn-toggle
 						v-model="selectedFloodLayer"
 						mandatory
@@ -111,7 +117,9 @@
 				v-if="selectedFloodLayer && selectedFloodLayer !== 'none'"
 				class="flood-legend"
 			>
-				<h6 class="legend-title">Legend</h6>
+				<h6 class="legend-title">
+Legend
+</h6>
 				<div class="legend-items">
 					<div
 						v-for="item in currentFloodLegend"
@@ -158,6 +166,32 @@
 			</div>
 
 			<div
+				v-else-if="hsyLoadError"
+				class="error-state"
+			>
+				<v-icon
+					color="warning"
+					class="mb-2"
+				>
+					mdi-alert-circle-outline
+				</v-icon>
+				<p class="text-body-2">
+{{ hsyLoadError }}
+</p>
+				<v-btn
+					size="small"
+					variant="outlined"
+					class="mt-2"
+					@click="loadHSYLayers"
+				>
+					<v-icon start>
+mdi-refresh
+</v-icon>
+					Retry
+				</v-btn>
+			</div>
+
+			<div
 				v-else-if="filteredHSYLayers.length > 0"
 				class="hsy-layer-list"
 			>
@@ -188,7 +222,9 @@
 					v-if="filteredHSYLayers.length > 10"
 					class="more-results"
 				>
-					<p class="text-caption">Showing first 10 of {{ filteredHSYLayers.length }} results</p>
+					<p class="text-caption">
+Showing first 10 of {{ filteredHSYLayers.length }} results
+</p>
 				</div>
 			</div>
 
@@ -196,8 +232,12 @@
 				v-else-if="hsySearchQuery && !isLoadingHSY"
 				class="no-results"
 			>
-				<v-icon class="mb-2"> mdi-map-search </v-icon>
-				<p class="text-body-2">No layers found matching "{{ hsySearchQuery }}"</p>
+				<v-icon class="mb-2">
+mdi-map-search
+</v-icon>
+				<p class="text-body-2">
+No layers found matching "{{ hsySearchQuery }}"
+</p>
 			</div>
 		</div>
 
@@ -300,6 +340,7 @@ export default {
 		const selectedHSYLayer = ref(null);
 		const hsyLayers = ref([]);
 		const isLoadingHSY = ref(false);
+		const hsyLoadError = ref(null);
 
 		const filteredHSYLayers = computed(() => {
 			if (!hsySearchQuery.value) {
@@ -387,8 +428,21 @@ export default {
 		// Methods
 		const loadHSYLayers = async () => {
 			isLoadingHSY.value = true;
+			hsyLoadError.value = null;
 			try {
 				const response = await fetch('/hsy-action?action_route=GetHierarchicalMapLayerGroups');
+
+				// Check for HTTP errors before parsing JSON
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+
+				// Check content type to avoid parsing HTML error pages
+				const contentType = response.headers.get('content-type');
+				if (!contentType || !contentType.includes('application/json')) {
+					throw new Error('Invalid response type - expected JSON');
+				}
+
 				const data = await response.json();
 
 				// Extract and flatten all layers
@@ -431,6 +485,7 @@ export default {
 				hsyLayers.value = extractLayers(groupsToProcess);
 			} catch (error) {
 				console.error('Failed to load HSY layers:', error);
+				hsyLoadError.value = 'Unable to load environmental layers. Please try again later.';
 			} finally {
 				isLoadingHSY.value = false;
 			}
@@ -492,6 +547,7 @@ export default {
 			selectedHSYLayer,
 			filteredHSYLayers,
 			isLoadingHSY,
+			hsyLoadError,
 			selectedFloodLayer,
 			currentFloodLegend,
 			hasSelection,
@@ -501,6 +557,7 @@ export default {
 			selectBasicMap,
 			clearSelection,
 			formatDate,
+			loadHSYLayers,
 		};
 	},
 };
@@ -607,6 +664,18 @@ export default {
 	padding: 16px;
 	color: rgba(0, 0, 0, 0.6);
 	font-size: 0.9rem;
+}
+
+.error-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 24px 16px;
+	color: rgba(0, 0, 0, 0.6);
+	text-align: center;
+	background-color: rgba(255, 152, 0, 0.08);
+	border-radius: 8px;
 }
 
 .hsy-layer-list {

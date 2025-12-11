@@ -194,9 +194,20 @@ server {
         rewrite ^/wms/layers$ /geoserver/wms?request=getCapabilities break;
     }
 
-    # ADDED: Missing HSY action proxy route
+    # HSY action API proxy (for GetHierarchicalMapLayerGroups, etc.)
     location /hsy-action {
         proxy_pass https://kartta.hsy.fi;
+
+        # Explicit SSL and header settings for external API
+        proxy_ssl_server_name on;
+        proxy_set_header Host kartta.hsy.fi;
+        proxy_set_header Accept application/json;
+
+        # Cache API responses
+        proxy_cache global_cache;
+        proxy_cache_valid 200 1h;
+        proxy_cache_valid 404 5m;
+
         rewrite ^/hsy-action(.*)$ /action$1 break;
     }
 
