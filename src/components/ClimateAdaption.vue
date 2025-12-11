@@ -127,6 +127,10 @@
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
+import CoolingCenter from './CoolingCenter.vue'
+import CoolingCenterOptimiser from './CoolingCenterOptimiser.vue'
+import EstimatedImpacts from './EstimatedImpacts.vue'
+import LandcoverToParks from './LandcoverToParks.vue'
 
 // Props + emits
 const props = defineProps({ modelValue: Boolean })
@@ -135,7 +139,7 @@ const emit = defineEmits(['update:modelValue'])
 const tab = ref('centers')
 
 // Use computed property for v-model synchronization (better performance)
-const _drawerOpen = computed({
+const drawerOpen = computed({
 	get() {
 		return props.modelValue
 	},

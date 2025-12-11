@@ -63,7 +63,7 @@ const removeOldData = async () => {
 	globalStore.cesiumViewer.dataSources.add(coolingCentersDataSource)
 }
 
-const _findOptimalCoolingCenters = async () => {
+const findOptimalCoolingCenters = async () => {
 	await removeOldData()
 	mitigationStore.setOptimised(true)
 	const highImpactGrids = mitigationStore.gridCells.filter(

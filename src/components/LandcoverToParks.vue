@@ -122,18 +122,18 @@ const modifiedHeatIndices = ref(new Map())
 const convertedParkDataSources = shallowRef([]) // Array of Cesium DataSources - use shallowRef to prevent deep reactivity
 
 // --- DYNAMIC UI ---
-const _primaryButtonText = computed(() => {
+const primaryButtonText = computed(() => {
 	if (landcoverFeaturesLoaded.value) return 'Turn to Parks'
 	if (isSelectingGrid.value) return '...'
 	return 'Select'
 })
 
 // ** NEW: Dynamic text for the reset/cancel button **
-const _resetOrCancelButtonText = computed(() => {
+const resetOrCancelButtonText = computed(() => {
 	return landcoverFeaturesLoaded.value ? 'Cancel' : 'Reset All'
 })
 
-const _handlePrimaryButtonClick = () => {
+const handlePrimaryButtonClick = () => {
 	if (landcoverFeaturesLoaded.value) {
 		turnToParks()
 	} else {
@@ -142,7 +142,7 @@ const _handlePrimaryButtonClick = () => {
 }
 
 // ** NEW: Handler for the dual-purpose reset/cancel button **
-const _handleResetOrCancel = () => {
+const handleResetOrCancel = () => {
 	if (landcoverFeaturesLoaded.value) {
 		// If we are in a selection state, just clear the current selection (Cancel)
 		clearCurrentSelection()
