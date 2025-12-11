@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.1...r4c-cesium-viewer-v1.38.2) (2025-12-11)
+
+
+### Bug Fixes
+
+* **proxy:** improve HSY action endpoint configuration and error handling ([5e2fae3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5e2fae33378dc5ef4f062006639c39ca803dffde))
+
 ## [1.38.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.0...r4c-cesium-viewer-v1.38.1) (2025-12-11)
 
 
