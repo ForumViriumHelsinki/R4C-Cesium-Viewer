@@ -92,11 +92,9 @@
 					</div>
 				</div>
 				<div class="extrusion-note">
-					<span
-						>Green Space Index shown by grid cell <br />
-						height visualisation, with a maximum <br />
-						height of 250m (least green).</span
-					>
+					<span>Green Space Index shown by grid cell <br >
+						height visualisation, with a maximum <br >
+						height of 250m (least green).</span>
 				</div>
 			</div>
 
@@ -120,44 +118,36 @@
 			v-if="localSelectedIndex === 'combined_avgheatexposure' && legendExpanded"
 			class="extrusion-note"
 		>
-			<span
-				>Heat Index shown by grid <br />
-				cell height visualisation, <br />
-				with a maximum height of 250m.</span
-			>
+			<span>Heat Index shown by grid <br >
+				cell height visualisation, <br >
+				with a maximum height of 250m.</span>
 		</div>
 
 		<div
 			v-if="localSelectedIndex === 'combined_heatindex_avgheatexposure' && legendExpanded"
 			class="extrusion-note"
 		>
-			<span
-				>Normalised Landsat Surface heat shown <br />
-				by grid cell height visualisation, <br />
-				with a maximum height of 250m.</span
-			>
+			<span>Normalised Landsat Surface heat shown <br >
+				by grid cell height visualisation, <br >
+				with a maximum height of 250m.</span>
 		</div>
 
 		<div
 			v-if="localSelectedIndex === 'combined_heat_flood' && legendExpanded"
 			class="extrusion-note"
 		>
-			<span
-				>Flood Index shown by grid <br />
-				cell height visualisation, <br />
-				with a maximum height of 250m.</span
-			>
+			<span>Flood Index shown by grid <br >
+				cell height visualisation, <br >
+				with a maximum height of 250m.</span>
 		</div>
 
 		<div
 			v-if="localSelectedIndex === 'combined_flood_heat' && legendExpanded"
 			class="extrusion-note"
 		>
-			<span
-				>Heat Index shown by grid <br />
-				cell height visualisation, <br />
-				with a maximum height of 250m.</span
-			>
+			<span>Heat Index shown by grid <br >
+				cell height visualisation, <br >
+				with a maximum height of 250m.</span>
 		</div>
 
 		<v-tooltip
@@ -183,17 +173,15 @@
 			v-if="legendExpanded"
 			class="source-note"
 		>
-			Socioeconomic source data by<br />
+			Socioeconomic source data by<br >
 			<a
 				href="https://stat.fi/index_en.html"
 				target="_blank"
-				>Statistics Finland</a
-			><br />
+				>Statistics Finland</a><br >
 			<a
 				href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf"
 				target="_blank"
-				>Methodology for Assessing Social Vulnerability</a
-			>
+				>Methodology for Assessing Social Vulnerability</a>
 		</div>
 	</div>
 </template>

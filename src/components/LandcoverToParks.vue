@@ -41,7 +41,9 @@
 					class="mt-4"
 				>
 					<v-divider class="mb-3" />
-					<p class="text-subtitle-2">Estimated Impact</p>
+					<p class="text-subtitle-2">
+Estimated Impact
+</p>
 					<v-table
 						density="compact"
 						class="mt-2"

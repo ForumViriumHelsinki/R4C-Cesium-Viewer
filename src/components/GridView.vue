@@ -1,6 +1,8 @@
 <template>
 	<div id="gridviewContainer">
-		<p class="header">R4C Urban Heat risk demonstrator</p>
+		<p class="header">
+R4C Urban Heat risk demonstrator
+</p>
 		<v-btn
 			icon
 			class="uiButton"
@@ -14,14 +16,13 @@
 				v-model="postalCodeView"
 				type="checkbox"
 				value="postalCode"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			for="postalCodeToggle"
 			class="label"
-			>Postalcode view</label
-		>
+			>Postalcode view</label>
 
 		<!--  natureGrid-->
 		<label
@@ -32,15 +33,14 @@
 				v-model="natureGrid"
 				type="checkbox"
 				value="natureGrid"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			v-show="showNatureGrid"
 			for="natureGrid"
 			class="label"
-			>Nature grid</label
-		>
+			>Nature grid</label>
 
 		<!--  travelTime-->
 		<label class="switch">
@@ -48,14 +48,13 @@
 				v-model="travelTime"
 				type="checkbox"
 				value="travelTime"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			for="travelTime"
 			class="label"
-			>Travel time grid</label
-		>
+			>Travel time grid</label>
 
 		<!--  resetGrid-->
 		<label class="switch">
@@ -63,14 +62,13 @@
 				v-model="resetGrid"
 				type="checkbox"
 				value="resetGrid"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			for="resetGrid"
 			class="label"
-			>Reset grid</label
-		>
+			>Reset grid</label>
 
 		<!--  surveyPlaces-->
 		<label class="switch">
@@ -78,14 +76,13 @@
 				v-model="surveyPlaces"
 				type="checkbox"
 				value="surveyPlaces"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			for="surveyPlaces"
 			class="label"
-			>Espoo resident survey places</label
-		>
+			>Espoo resident survey places</label>
 
 		<!--  250mGrid-->
 		<label class="switch">
@@ -93,14 +90,13 @@
 				v-model="grid250m"
 				type="checkbox"
 				value="250mGrid"
-			/>
+			>
 			<span class="slider round" />
 		</label>
 		<label
 			for="250mGrid"
 			class="label"
-			>250m grid</label
-		>
+			>250m grid</label>
 	</div>
 	<BuildingGridChart ref="buildingGridChart" />
 	<SosEco250mGrid ref="sosEco250mGrid" />

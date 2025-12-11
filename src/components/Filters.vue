@@ -4,29 +4,29 @@
 		class="slider-container"
 		style="width: 100%"
 	>
-		<h3 class="filter-title">Filters</h3>
+		<h3 class="filter-title">
+Filters
+</h3>
 		<div class="switch-container">
 			<label class="switch">
 				<input
 					v-model="hideNonSote"
 					type="checkbox"
 					@change="filterBuildings"
-				/>
+				>
 				<span class="slider round" />
 			</label>
 			<label
 				v-if="!helsinkiView"
 				for="hideNonSote"
 				class="label"
-				>Only public buildings</label
-			>
+				>Only public buildings</label>
 			<label
 				v-if="helsinkiView"
 				for="hideNonSote"
 				class="label"
-				>Only social & <br />
-				healthcare buildings</label
-			>
+				>Only social & <br >
+				healthcare buildings</label>
 		</div>
 
 		<div
@@ -38,14 +38,13 @@
 					v-model="hideNewBuildings"
 					type="checkbox"
 					@change="filterBuildings"
-				/>
+				>
 				<span class="slider round" />
 			</label>
 			<label
 				for="hideNewBuildings"
 				class="label"
-				>Built before summer 2018</label
-			>
+				>Built before summer 2018</label>
 		</div>
 
 		<div class="switch-container">
@@ -54,14 +53,13 @@
 					v-model="hideLow"
 					type="checkbox"
 					@change="filterBuildings"
-				/>
+				>
 				<span class="slider round" />
 			</label>
 			<label
 				for="hideLow"
 				class="label"
-				>Only tall buildings</label
-			>
+				>Only tall buildings</label>
 		</div>
 	</div>
 </template>

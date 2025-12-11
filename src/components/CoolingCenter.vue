@@ -4,16 +4,16 @@
 			elevation="2"
 			class="pa-4"
 		>
-			<v-card-title
-				>Add Cooling <br />
-				Centers</v-card-title
-			>
+			<v-card-title>Add Cooling <br >
+				Centers</v-card-title>
 
 			<v-card-text>
 				<!-- Capacity Slider -->
-				<v-label class="mb-2"> Cooling Center Capacity </v-label>
-				<br />
-				<br />
+				<v-label class="mb-2">
+Cooling Center Capacity
+</v-label>
+				<br >
+				<br >
 				<v-slider
 					v-model="selectedCapacity"
 					min="100"

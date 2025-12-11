@@ -64,8 +64,7 @@
 				<a
 					href="https://www.syke.fi/en"
 					target="_blank"
-					>Finnish Environment Institute (Syke)</a
-				>
+					>Finnish Environment Institute (Syke)</a>
 				is licensed under Creative Commons Attribution 4.0 International licence.
 			</div>
 		</div>
