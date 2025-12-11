@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.0...r4c-cesium-viewer-v1.38.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* **deploy:** add securityContext for Kyverno policy compliance ([6ad25d6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6ad25d6f5d41a6e06582684bf4f04cb07e5861b6))
+
 ## [1.38.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.37.0...r4c-cesium-viewer-v1.38.0) (2025-12-09)
 
 
