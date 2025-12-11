@@ -4,7 +4,9 @@
 		class="slider-container"
 		style="width: 100%"
 	>
-		<h3 class="filter-title">Layers</h3>
+		<h3 class="filter-title">
+Layers
+</h3>
 		<div
 			v-if="helsinkiView"
 			class="switch-container"
@@ -14,14 +16,13 @@
 					v-model="showVegetation"
 					type="checkbox"
 					@change="loadVegetation"
-				/>
+				>
 				<span class="slider round" />
 			</label>
 			<label
 				for="showVegetation"
 				class="label"
-				>Vegetation</label
-			>
+				>Vegetation</label>
 		</div>
 
 		<div
@@ -33,14 +34,13 @@
 					v-model="showOtherNature"
 					type="checkbox"
 					@change="loadOtherNature"
-				/>
+				>
 				<span class="slider round" />
 			</label>
 			<label
 				for="showOtherNature"
 				class="label"
-				>Other Nature</label
-			>
+				>Other Nature</label>
 		</div>
 
 		<div
@@ -52,14 +52,13 @@
 					v-model="showTrees"
 					type="checkbox"
 					@change="loadTrees"
-				/>
+				>
 				<span class="slider round" />
 			</label>
 			<label
 				for="showTrees"
 				class="label"
-				>Trees</label
-			>
+				>Trees</label>
 		</div>
 
 		<div
@@ -71,14 +70,13 @@
 					v-model="landCover"
 					type="checkbox"
 					@change="addLandCover"
-				/>
+				>
 				<span class="slider round" />
 			</label>
 			<label
 				for="landCover"
 				class="label"
-				>HSY Land Cover</label
-			>
+				>HSY Land Cover</label>
 		</div>
 
 		<div class="switch-container">
@@ -87,14 +85,13 @@
 					v-model="ndvi"
 					type="checkbox"
 					@change="toggleNDVI"
-				/>
+				>
 				<span class="slider round" />
 			</label>
 			<label
 				for="ndvi"
 				class="label"
-				>NDVI</label
-			>
+				>NDVI</label>
 		</div>
 	</div>
 </template>

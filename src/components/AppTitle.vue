@@ -14,7 +14,9 @@
 		</template>
 		<template #default>
 			<div class="tooltip-content">
-				<div class="tooltip-header">Version Information</div>
+				<div class="tooltip-header">
+Version Information
+</div>
 				<v-divider class="my-2" />
 				<div class="tooltip-row">
 					<span class="tooltip-label">Version:</span>

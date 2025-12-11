@@ -132,9 +132,15 @@
 					v-if="searchQuery.length > 2 && !hasResults"
 					class="no-results"
 				>
-					<v-icon class="mb-2"> mdi-map-search </v-icon>
-					<p class="text-body-2">No results found for "{{ searchQuery }}"</p>
-					<p class="text-caption">Try searching by address, postal code, or area name</p>
+					<v-icon class="mb-2">
+mdi-map-search
+</v-icon>
+					<p class="text-body-2">
+No results found for "{{ searchQuery }}"
+</p>
+					<p class="text-caption">
+Try searching by address, postal code, or area name
+</p>
 				</div>
 
 				<!-- Search Tips -->
@@ -142,8 +148,12 @@
 					v-if="searchQuery.length <= 2"
 					class="search-tips"
 				>
-					<v-icon class="mb-2"> mdi-lightbulb-outline </v-icon>
-					<p class="text-body-2">Search examples:</p>
+					<v-icon class="mb-2">
+mdi-lightbulb-outline
+</v-icon>
+					<p class="text-body-2">
+Search examples:
+</p>
 					<v-chip
 						size="small"
 						class="ma-1"

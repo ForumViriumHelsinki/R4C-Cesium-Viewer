@@ -54,8 +54,7 @@
 					<v-icon
 						size="14"
 						class="mr-1"
-						>mdi-information-outline</v-icon
-					>
+						>mdi-information-outline</v-icon>
 					Use the slider to explore heat data across different time periods
 				</span>
 			</div>

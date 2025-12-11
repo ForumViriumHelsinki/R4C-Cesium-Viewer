@@ -37,9 +37,13 @@
 			aria-live="assertive"
 		>
 			<div class="d-flex align-center">
-				<v-icon class="mr-2"> mdi-alert-circle </v-icon>
+				<v-icon class="mr-2">
+mdi-alert-circle
+</v-icon>
 				<div>
-					<div class="font-weight-bold">Failed to Load Map Viewer</div>
+					<div class="font-weight-bold">
+Failed to Load Map Viewer
+</div>
 					<div class="text-caption">
 						{{ errorMessage }}
 					</div>
@@ -75,7 +79,9 @@
 			aria-live="assertive"
 		>
 			<div class="d-flex align-center">
-				<v-icon class="mr-2"> mdi-alert </v-icon>
+				<v-icon class="mr-2">
+mdi-alert
+</v-icon>
 				<div>
 					{{ store.errorNotification.message }}
 				</div>

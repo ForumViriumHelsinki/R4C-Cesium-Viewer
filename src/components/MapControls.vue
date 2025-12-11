@@ -2,7 +2,9 @@
 	<div class="map-controls">
 		<!-- Data Layers -->
 		<div class="control-group">
-			<h4 class="control-group-title">Data Layers</h4>
+			<h4 class="control-group-title">
+Data Layers
+</h4>
 
 			<!-- Trees -->
 			<v-tooltip
@@ -159,7 +161,9 @@
 			v-if="view !== 'grid'"
 			class="control-group"
 		>
-			<h4 class="control-group-title">Building Filters</h4>
+			<h4 class="control-group-title">
+Building Filters
+</h4>
 
 			<!-- Public/Social Buildings Filter -->
 			<v-tooltip
@@ -249,7 +253,9 @@
 			class="layer-warning"
 		>
 			<template #prepend>
-				<v-icon size="small"> mdi-alert </v-icon>
+				<v-icon size="small">
+mdi-alert
+</v-icon>
 			</template>
 			NDVI and Land Cover cannot be active simultaneously
 		</v-alert>

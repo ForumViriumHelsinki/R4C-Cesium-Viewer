@@ -11,26 +11,40 @@
 		<div class="sidebar-content">
 			<div class="control-section">
 				<h3 class="section-subtitle">
-					<v-icon class="mr-2"> mdi-magnify </v-icon>Search & Navigate
+					<v-icon class="mr-2">
+mdi-magnify
+</v-icon>Search & Navigate
 				</h3>
-				<p class="search-description">Find locations by address, postal code, or area name</p>
+				<p class="search-description">
+Find locations by address, postal code, or area name
+</p>
 				<UnifiedSearch />
 			</div>
 			<div class="control-section">
-				<h3 class="section-subtitle"><v-icon class="mr-2"> mdi-layers </v-icon>Map Controls</h3>
-				<p class="search-description">Toggle data layers and apply filters</p>
+				<h3 class="section-subtitle">
+<v-icon class="mr-2">
+mdi-layers
+</v-icon>Map Controls
+</h3>
+				<p class="search-description">
+Toggle data layers and apply filters
+</p>
 				<MapControls />
 			</div>
 			<div class="control-section">
 				<h3 class="section-subtitle">
-					<v-icon class="mr-2"> mdi-map-outline </v-icon>Background Maps
+					<v-icon class="mr-2">
+mdi-map-outline
+</v-icon>Background Maps
 				</h3>
 				<BackgroundMapBrowser />
 			</div>
 
 			<div class="control-section">
 				<h3 class="section-subtitle">
-					<v-icon class="mr-2"> mdi-chart-line </v-icon>Analysis Tools
+					<v-icon class="mr-2">
+mdi-chart-line
+</v-icon>Analysis Tools
 				</h3>
 				<div class="analysis-buttons">
 					<template v-if="currentLevel === 'postalCode'">
@@ -104,7 +118,9 @@
 						>
 							<v-expansion-panel>
 								<v-expansion-panel-title>
-									<v-icon class="mr-2"> mdi-shield-sun </v-icon>
+									<v-icon class="mr-2">
+mdi-shield-sun
+</v-icon>
 									Climate Adaptation
 								</v-expansion-panel-title>
 								<v-expansion-panel-text class="pa-0">
@@ -176,7 +192,9 @@
 						v-if="!hasAvailableAnalysis"
 						class="no-analysis-message"
 					>
-						<v-icon class="mb-2"> mdi-information-outline </v-icon>
+						<v-icon class="mb-2">
+mdi-information-outline
+</v-icon>
 						<p class="text-body-2 text-center">
 							{{
 								currentLevel === 'start'
@@ -193,8 +211,9 @@
 				class="control-section"
 			>
 				<h3 class="section-subtitle">
-					<v-icon class="mr-2"> mdi-information </v-icon
-					>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
+					<v-icon class="mr-2">
+mdi-information
+</v-icon>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
 				</h3>
 				<AreaProperties />
 			</div>

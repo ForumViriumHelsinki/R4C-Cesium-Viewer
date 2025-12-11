@@ -79,10 +79,8 @@
 					</div>
 				</div>
 				<div class="extrusion-note">
-					<span
-						>Green Space Index shown by grid cell height visualisation, with a maximum height of
-						250m (least green).</span
-					>
+					<span>Green Space Index shown by grid cell height visualisation, with a maximum height of
+						250m (least green).</span>
 				</div>
 			</div>
 
@@ -133,17 +131,15 @@
 			v-if="legendExpanded"
 			class="source-note"
 		>
-			Socioeconomic source data by<br />
+			Socioeconomic source data by<br >
 			<a
 				href="https://stat.fi/index_en.html"
 				target="_blank"
-				>Statistics Finland</a
-			><br />
+				>Statistics Finland</a><br >
 			<a
 				href="https://www.hsy.fi/globalassets/ilmanlaatu-ja-ilmasto/tiedostot/social-vulnerability-to-climate-change-helsinki-metropolitan-area_2016.pdf"
 				target="_blank"
-				>Methodology for Assessing Social Vulnerability</a
-			>
+				>Methodology for Assessing Social Vulnerability</a>
 		</div>
 	</div>
 </template>
