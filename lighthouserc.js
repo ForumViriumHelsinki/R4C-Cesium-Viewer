@@ -12,7 +12,7 @@ module.exports = {
 	ci: {
 		collect: {
 			// Build the production bundle and start preview server
-			startServerCommand: 'npm run preview',
+			startServerCommand: 'bun run preview',
 
 			// Test URL - preview server runs on port 4173 by default
 			url: ['http://localhost:4173/'],

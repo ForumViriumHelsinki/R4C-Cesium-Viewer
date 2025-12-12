@@ -33,20 +33,19 @@ jobs:
           # Fetch more history for better comparison
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '25'
-          cache: 'npm'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build production bundle
-        run: npm run build
+        run: bun run build
 
       - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli@0.14.x
+        run: bun install -g @lhci/cli@0.14.x
 
       - name: Run Lighthouse CI
         id: lighthouse
