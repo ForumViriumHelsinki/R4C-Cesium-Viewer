@@ -84,15 +84,15 @@ class CacheService {
 	 */
 	constructor() {
 		/** @type {string} Database name */
-		this.dbName = 'R4C-CesiumViewer-Cache';
+		this.dbName = 'R4C-CesiumViewer-Cache'
 		/** @type {number} Database schema version */
-		this.version = 1;
+		this.version = 1
 		/** @type {number} Default cache entry TTL (24 hours in milliseconds) */
-		this.maxCacheAge = 24 * 60 * 60 * 1000; // 24 hours
+		this.maxCacheAge = 24 * 60 * 60 * 1000 // 24 hours
 		/** @type {number} Maximum total cache size (100MB in bytes) */
-		this.maxCacheSize = 100 * 1024 * 1024; // 100MB
+		this.maxCacheSize = 100 * 1024 * 1024 // 100MB
 		/** @type {IDBDatabase|null} IndexedDB database instance */
-		this.db = null;
+		this.db = null
 	}
 
 	/**
@@ -112,33 +112,33 @@ class CacheService {
 	 * console.log('Cache initialized:', db.name);
 	 */
 	async init() {
-		if (this.db) return this.db;
+		if (this.db) return this.db
 
 		return new Promise((resolve, reject) => {
-			const request = indexedDB.open(this.dbName, this.version);
+			const request = indexedDB.open(this.dbName, this.version)
 
-			request.onerror = () => reject(request.error);
+			request.onerror = () => reject(request.error)
 			request.onsuccess = () => {
-				this.db = request.result;
-				resolve(this.db);
-			};
+				this.db = request.result
+				resolve(this.db)
+			}
 
 			request.onupgradeneeded = (event) => {
-				const db = event.target.result;
+				const db = event.target.result
 
 				// Create object stores
 				if (!db.objectStoreNames.contains('layers')) {
-					const layerStore = db.createObjectStore('layers', { keyPath: 'id' });
-					layerStore.createIndex('timestamp', 'timestamp');
-					layerStore.createIndex('type', 'type');
-					layerStore.createIndex('postalCode', 'postalCode');
+					const layerStore = db.createObjectStore('layers', { keyPath: 'id' })
+					layerStore.createIndex('timestamp', 'timestamp')
+					layerStore.createIndex('type', 'type')
+					layerStore.createIndex('postalCode', 'postalCode')
 				}
 
 				if (!db.objectStoreNames.contains('metadata')) {
-					db.createObjectStore('metadata', { keyPath: 'key' });
+					db.createObjectStore('metadata', { keyPath: 'key' })
 				}
-			};
-		});
+			}
+		})
 	}
 
 	/**
@@ -166,7 +166,7 @@ class CacheService {
 	 * );
 	 */
 	async setData(key, data, options = {}) {
-		await this.init();
+		await this.init()
 
 		const cacheEntry = {
 			id: key,
@@ -177,19 +177,19 @@ class CacheService {
 			size: new Blob([JSON.stringify(data)]).size,
 			ttl: options.ttl || this.maxCacheAge,
 			metadata: options.metadata || {},
-		};
+		}
 
 		// Check cache size before storing
-		await this.ensureCacheSize(cacheEntry.size);
+		await this.ensureCacheSize(cacheEntry.size)
 
-		const transaction = this.db.transaction(['layers'], 'readwrite');
-		const store = transaction.objectStore('layers');
+		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
-			const request = store.put(cacheEntry);
-			request.onsuccess = () => resolve(true);
-			request.onerror = () => reject(request.error);
-		});
+			const request = store.put(cacheEntry)
+			request.onsuccess = () => resolve(true)
+			request.onerror = () => reject(request.error)
+		})
 	}
 
 	/**
@@ -215,31 +215,31 @@ class CacheService {
 	 * const cached = await cacheService.getData('buildings-00100', 5 * 60 * 1000);
 	 */
 	async getData(key, maxAge = null) {
-		await this.init();
+		await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readonly');
-		const store = transaction.objectStore('layers');
+		const transaction = this.db.transaction(['layers'], 'readonly')
+		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
-			const request = store.get(key);
+			const request = store.get(key)
 
 			request.onsuccess = () => {
-				const result = request.result;
+				const result = request.result
 
 				if (!result) {
-					resolve(null);
-					return;
+					resolve(null)
+					return
 				}
 
 				// Check if data is expired
-				const age = Date.now() - result.timestamp;
-				const maxAgeToUse = maxAge || result.ttl;
+				const age = Date.now() - result.timestamp
+				const maxAgeToUse = maxAge || result.ttl
 
 				if (age > maxAgeToUse) {
 					// Data is expired, remove it
-					void this.removeData(key);
-					resolve(null);
-					return;
+					void this.removeData(key)
+					resolve(null)
+					return
 				}
 
 				resolve({
@@ -248,11 +248,11 @@ class CacheService {
 					age: age,
 					cached: true,
 					metadata: result.metadata,
-				});
-			};
+				})
+			}
 
-			request.onerror = () => reject(request.error);
-		});
+			request.onerror = () => reject(request.error)
+		})
 	}
 
 	/**
@@ -271,8 +271,8 @@ class CacheService {
 	 * }
 	 */
 	async hasValidData(key, maxAge = null) {
-		const cached = await this.getData(key, maxAge);
-		return cached !== null;
+		const cached = await this.getData(key, maxAge)
+		return cached !== null
 	}
 
 	/**
@@ -288,16 +288,16 @@ class CacheService {
 	 * await cacheService.removeData('buildings-00100');
 	 */
 	async removeData(key) {
-		await this.init();
+		await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readwrite');
-		const store = transaction.objectStore('layers');
+		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
-			const request = store.delete(key);
-			request.onsuccess = () => resolve(true);
-			request.onerror = () => reject(request.error);
-		});
+			const request = store.delete(key)
+			request.onsuccess = () => resolve(true)
+			request.onerror = () => reject(request.error)
+		})
 	}
 
 	/**
@@ -313,16 +313,16 @@ class CacheService {
 	 * // ['buildings-00100', 'trees-00100', 'vegetation-00150']
 	 */
 	async getCachedKeys() {
-		await this.init();
+		await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readonly');
-		const store = transaction.objectStore('layers');
+		const transaction = this.db.transaction(['layers'], 'readonly')
+		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
-			const request = store.getAllKeys();
-			request.onsuccess = () => resolve(request.result);
-			request.onerror = () => reject(request.error);
-		});
+			const request = store.getAllKeys()
+			request.onsuccess = () => resolve(request.result)
+			request.onerror = () => reject(request.error)
+		})
 	}
 
 	/**
@@ -340,29 +340,29 @@ class CacheService {
 	 * // By type: { buildings: 3, trees: 2, vegetation: 1 }
 	 */
 	async getCacheStats() {
-		await this.init();
+		await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readonly');
-		const store = transaction.objectStore('layers');
+		const transaction = this.db.transaction(['layers'], 'readonly')
+		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
-			const request = store.getAll();
+			const request = store.getAll()
 
 			request.onsuccess = () => {
-				const entries = request.result;
-				let totalSize = 0;
-				let expiredCount = 0;
-				const typeStats = {};
+				const entries = request.result
+				let totalSize = 0
+				let expiredCount = 0
+				const typeStats = {}
 
 				entries.forEach((entry) => {
-					totalSize += entry.size || 0;
+					totalSize += entry.size || 0
 
 					if (Date.now() - entry.timestamp > entry.ttl) {
-						expiredCount++;
+						expiredCount++
 					}
 
-					typeStats[entry.type] = (typeStats[entry.type] || 0) + 1;
-				});
+					typeStats[entry.type] = (typeStats[entry.type] || 0) + 1
+				})
 
 				resolve({
 					totalEntries: entries.length,
@@ -371,11 +371,11 @@ class CacheService {
 					typeStats,
 					maxSize: this.maxCacheSize,
 					utilizationPercent: (totalSize / this.maxCacheSize) * 100,
-				});
-			};
+				})
+			}
 
-			request.onerror = () => reject(request.error);
-		});
+			request.onerror = () => reject(request.error)
+		})
 	}
 
 	/**
@@ -392,31 +392,31 @@ class CacheService {
 	 * console.log(`Removed ${cleaned} expired cache entries`);
 	 */
 	async cleanupExpired() {
-		await this.init();
+		await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readwrite');
-		const store = transaction.objectStore('layers');
+		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
-			const request = store.getAll();
+			const request = store.getAll()
 
 			request.onsuccess = () => {
-				const entries = request.result;
-				const now = Date.now();
-				let cleanedCount = 0;
+				const entries = request.result
+				const now = Date.now()
+				let cleanedCount = 0
 
 				entries.forEach((entry) => {
 					if (now - entry.timestamp > entry.ttl) {
-						store.delete(entry.id);
-						cleanedCount++;
+						store.delete(entry.id)
+						cleanedCount++
 					}
-				});
+				})
 
-				resolve(cleanedCount);
-			};
+				resolve(cleanedCount)
+			}
 
-			request.onerror = () => reject(request.error);
-		});
+			request.onerror = () => reject(request.error)
+		})
 	}
 
 	/**
@@ -430,11 +430,11 @@ class CacheService {
 	 * @private
 	 */
 	async ensureCacheSize(newEntrySize) {
-		const stats = await this.getCacheStats();
+		const stats = await this.getCacheStats()
 
 		if (stats.totalSize + newEntrySize > this.maxCacheSize) {
 			// Remove oldest entries until we have enough space
-			await this.removeOldestEntries(newEntrySize);
+			await this.removeOldestEntries(newEntrySize)
 		}
 	}
 
@@ -450,31 +450,31 @@ class CacheService {
 	 * @private
 	 */
 	async removeOldestEntries(spaceNeeded) {
-		await this.init();
+		await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readwrite');
-		const store = transaction.objectStore('layers');
-		const index = store.index('timestamp');
+		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const store = transaction.objectStore('layers')
+		const index = store.index('timestamp')
 
 		return new Promise((resolve, reject) => {
-			const request = index.openCursor();
-			let freedSpace = 0;
+			const request = index.openCursor()
+			let freedSpace = 0
 
 			request.onsuccess = (event) => {
-				const cursor = event.target.result;
+				const cursor = event.target.result
 
 				if (cursor && freedSpace < spaceNeeded) {
-					const entry = cursor.value;
-					freedSpace += entry.size || 0;
-					cursor.delete();
-					cursor.continue();
+					const entry = cursor.value
+					freedSpace += entry.size || 0
+					cursor.delete()
+					cursor.continue()
 				} else {
-					resolve(freedSpace);
+					resolve(freedSpace)
 				}
-			};
+			}
 
-			request.onerror = () => reject(request.error);
-		});
+			request.onerror = () => reject(request.error)
+		})
 	}
 
 	/**
@@ -491,16 +491,16 @@ class CacheService {
 	 * console.log('All cache data cleared');
 	 */
 	async clearAll() {
-		await this.init();
+		await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readwrite');
-		const store = transaction.objectStore('layers');
+		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
-			const request = store.clear();
-			request.onsuccess = () => resolve(true);
-			request.onerror = () => reject(request.error);
-		});
+			const request = store.clear()
+			request.onsuccess = () => resolve(true)
+			request.onerror = () => reject(request.error)
+		})
 	}
 
 	/**
@@ -530,9 +530,9 @@ class CacheService {
 					Object.entries(params)
 						.map(([k, v]) => `${k}:${v}`)
 						.join('-')
-				: '';
+				: ''
 
-		return postalCode ? `${type}-${postalCode}${paramString}` : `${type}${paramString}`;
+		return postalCode ? `${type}-${postalCode}${paramString}` : `${type}${paramString}`
 	}
 
 	/**
@@ -559,19 +559,19 @@ class CacheService {
 	 */
 	async preloadPostalCodeData(postalCode, types = ['trees', 'buildings', 'vegetation']) {
 		const preloadPromises = types.map(async (type) => {
-			const key = this.generateKey(type, postalCode);
-			const cached = await this.getData(key);
+			const key = this.generateKey(type, postalCode)
+			const cached = await this.getData(key)
 
 			if (!cached) {
 				// Data not cached, could trigger background loading here
-				console.log(`${type} data for ${postalCode} not cached - could preload`);
-				return { type, postalCode, cached: false };
+				console.log(`${type} data for ${postalCode} not cached - could preload`)
+				return { type, postalCode, cached: false }
 			}
 
-			return { type, postalCode, cached: true, age: cached.age };
-		});
+			return { type, postalCode, cached: true, age: cached.age }
+		})
 
-		return Promise.all(preloadPromises);
+		return Promise.all(preloadPromises)
 	}
 
 	/**
@@ -593,16 +593,16 @@ class CacheService {
 	 * });
 	 */
 	async setMetadata(key, metadata) {
-		await this.init();
+		await this.init()
 
-		const transaction = this.db.transaction(['metadata'], 'readwrite');
-		const store = transaction.objectStore('metadata');
+		const transaction = this.db.transaction(['metadata'], 'readwrite')
+		const store = transaction.objectStore('metadata')
 
 		return new Promise((resolve, reject) => {
-			const request = store.put({ key, ...metadata, timestamp: Date.now() });
-			request.onsuccess = () => resolve(true);
-			request.onerror = () => reject(request.error);
-		});
+			const request = store.put({ key, ...metadata, timestamp: Date.now() })
+			request.onsuccess = () => resolve(true)
+			request.onerror = () => reject(request.error)
+		})
 	}
 
 	/**
@@ -620,19 +620,19 @@ class CacheService {
 	 * }
 	 */
 	async getMetadata(key) {
-		await this.init();
+		await this.init()
 
-		const transaction = this.db.transaction(['metadata'], 'readonly');
-		const store = transaction.objectStore('metadata');
+		const transaction = this.db.transaction(['metadata'], 'readonly')
+		const store = transaction.objectStore('metadata')
 
 		return new Promise((resolve, reject) => {
-			const request = store.get(key);
-			request.onsuccess = () => resolve(request.result);
-			request.onerror = () => reject(request.error);
-		});
+			const request = store.get(key)
+			request.onsuccess = () => resolve(request.result)
+			request.onerror = () => reject(request.error)
+		})
 	}
 }
 
 // Export singleton instance
-export const cacheService = new CacheService();
-export default cacheService;
+export const cacheService = new CacheService()
+export default cacheService

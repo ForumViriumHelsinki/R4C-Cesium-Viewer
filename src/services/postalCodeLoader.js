@@ -1,4 +1,4 @@
-import cacheWarmer from './cacheWarmer.js';
+import cacheWarmer from './cacheWarmer.js'
 
 /**
  * Postal Code Loader Service
@@ -19,14 +19,14 @@ export async function checkCacheForPostalCode(_cacheKey, postalCode) {
 	try {
 		// Log if cache warmer has preloaded this data (informational only)
 		if (cacheWarmer.warmedPostalCodes.has(postalCode)) {
-			console.log('[PostalCodeLoader] ✓ Cache warmer preloaded this postal code');
+			console.log('[PostalCodeLoader] ✓ Cache warmer preloaded this postal code')
 		}
 
 		// Cache lookup delegated to unifiedLoader - it will check IndexedDB automatically
-		return null;
+		return null
 	} catch (error) {
-		console.warn('[PostalCodeLoader] Cache check failed:', error?.message || error);
-		return null;
+		console.warn('[PostalCodeLoader] Cache check failed:', error?.message || error)
+		return null
 	}
 }
 
@@ -43,34 +43,34 @@ export async function startCameraAnimation(
 	setStateCallback
 ) {
 	return new Promise((resolve, reject) => {
-		let timeoutId;
+		let timeoutId
 
 		try {
 			// Update state to animating
 			setStateCallback({
 				stage: 'animating',
 				canCancel: true,
-			});
+			})
 
 			// Start camera animation
-			cameraService.switchTo3DView();
+			cameraService.switchTo3DView()
 
 			// Camera animation is 3 seconds, resolve after that
 			// In a real implementation, we'd hook into the camera completion callback
 			timeoutId = setTimeout(() => {
-				console.log('[PostalCodeLoader] ✓ Camera animation completed');
-				updateProgressCallback(1, 2);
-				resolve();
-			}, 3000);
+				console.log('[PostalCodeLoader] ✓ Camera animation completed')
+				updateProgressCallback(1, 2)
+				resolve()
+			}, 3000)
 		} catch (error) {
 			// Clean up timeout on error to prevent memory leak
 			if (timeoutId) {
-				clearTimeout(timeoutId);
+				clearTimeout(timeoutId)
 			}
-			console.error('[PostalCodeLoader] ❌ Camera animation failed:', error?.message || error);
-			reject(error);
+			console.error('[PostalCodeLoader] ❌ Camera animation failed:', error?.message || error)
+			reject(error)
 		}
-	});
+	})
 }
 
 /**
@@ -80,7 +80,7 @@ export async function startCameraAnimation(
  */
 export function isRetriableError(error) {
 	// Network errors, timeouts, and 5xx server errors are retriable
-	const errorString = error.toString().toLowerCase();
+	const errorString = error.toString().toLowerCase()
 	return (
 		errorString.includes('network') ||
 		errorString.includes('timeout') ||
@@ -89,7 +89,7 @@ export function isRetriableError(error) {
 		errorString.includes('502') ||
 		errorString.includes('503') ||
 		errorString.includes('504')
-	);
+	)
 }
 
 /**
@@ -120,62 +120,62 @@ export async function loadPostalCodeDataWithRetry(
 	setStateCallback,
 	retryCount = 0
 ) {
-	const maxRetries = 3;
-	const baseDelay = 1000; // 1 second
+	const maxRetries = 3
+	const baseDelay = 1000 // 1 second
 
 	try {
 		// Set zone name and prepare UI
-		setNameOfZoneCallback();
-		services.elementsDisplayService.setSwitchViewElementsDisplay('inline-block');
-		services.elementsDisplayService.setViewDisplay('none');
+		setNameOfZoneCallback()
+		services.elementsDisplayService.setSwitchViewElementsDisplay('inline-block')
+		services.elementsDisplayService.setViewDisplay('none')
 
 		// Clean up previous data sources and building features
-		services.datasourceService.removeDataSourcesAndEntities();
-		const { useBuildingStore } = await import('../stores/buildingStore.js');
-		const buildingStore = useBuildingStore();
-		buildingStore.clearBuildingFeatures();
+		services.datasourceService.removeDataSourcesAndEntities()
+		const { useBuildingStore } = await import('../stores/buildingStore.js')
+		const buildingStore = useBuildingStore()
+		buildingStore.clearBuildingFeatures()
 
 		// Load region-specific data with performance tracking
-		performance.mark('data-load-start');
+		performance.mark('data-load-start')
 
 		if (!stores.toggleStore.helsinkiView) {
-			console.log('[PostalCodeLoader] Loading Capital Region elements...');
-			await services.capitalRegionService.loadCapitalRegionElements();
+			console.log('[PostalCodeLoader] Loading Capital Region elements...')
+			await services.capitalRegionService.loadCapitalRegionElements()
 		} else {
-			console.log('[PostalCodeLoader] Loading Helsinki elements...');
-			await services.helsinkiService.loadHelsinkiElements();
+			console.log('[PostalCodeLoader] Loading Helsinki elements...')
+			await services.helsinkiService.loadHelsinkiElements()
 		}
 
-		performance.mark('data-load-complete');
-		performance.measure('data-load-duration', 'data-load-start', 'data-load-complete');
+		performance.mark('data-load-complete')
+		performance.measure('data-load-duration', 'data-load-start', 'data-load-complete')
 
-		const measure = performance.getEntriesByName('data-load-duration')[0];
-		console.log(`[PostalCodeLoader] Data loaded in ${measure.duration.toFixed(2)}ms`);
+		const measure = performance.getEntriesByName('data-load-duration')[0]
+		console.log(`[PostalCodeLoader] Data loaded in ${measure.duration.toFixed(2)}ms`)
 
-		performance.clearMarks('data-load-start');
-		performance.clearMarks('data-load-complete');
-		performance.clearMeasures('data-load-duration');
+		performance.clearMarks('data-load-start')
+		performance.clearMarks('data-load-complete')
+		performance.clearMeasures('data-load-duration')
 
 		// Update level
-		stores.store.setLevel('postalCode');
+		stores.store.setLevel('postalCode')
 
-		updateProgressCallback(2, 2);
+		updateProgressCallback(2, 2)
 
-		return { success: true, fromCache: false };
+		return { success: true, fromCache: false }
 	} catch (error) {
-		console.error(`[PostalCodeLoader] ❌ Data loading failed (attempt ${retryCount + 1}):`, error);
+		console.error(`[PostalCodeLoader] ❌ Data loading failed (attempt ${retryCount + 1}):`, error)
 
 		// Retry with exponential backoff for transient failures
 		if (retryCount < maxRetries && isRetriableError(error)) {
-			const delay = baseDelay * Math.pow(2, retryCount);
-			console.log(`[PostalCodeLoader] 🔄 Retrying in ${delay}ms...`);
+			const delay = baseDelay * 2 ** retryCount
+			console.log(`[PostalCodeLoader] 🔄 Retrying in ${delay}ms...`)
 
 			// Update retry count in state
 			setStateCallback({
 				retryCount: retryCount + 1,
-			});
+			})
 
-			await new Promise((resolve) => setTimeout(resolve, delay));
+			await new Promise((resolve) => setTimeout(resolve, delay))
 			return loadPostalCodeDataWithRetry(
 				postalCode,
 				services,
@@ -184,11 +184,11 @@ export async function loadPostalCodeDataWithRetry(
 				updateProgressCallback,
 				setStateCallback,
 				retryCount + 1
-			);
+			)
 		}
 
 		// Max retries exceeded or non-retriable error
-		throw error;
+		throw error
 	}
 }
 
@@ -201,10 +201,10 @@ export async function loadPostalCodeDataWithRetry(
 export function updateLoadingProgress(current, total, setStateCallback) {
 	setStateCallback({
 		loadingProgress: { current, total },
-	});
+	})
 
-	const percentage = Math.round((current / total) * 100);
-	console.log(`[PostalCodeLoader] 📊 Loading progress: ${current}/${total} (${percentage}%)`);
+	const percentage = Math.round((current / total) * 100)
+	console.log(`[PostalCodeLoader] 📊 Loading progress: ${current}/${total} (${percentage}%)`)
 }
 
 /**
@@ -222,24 +222,24 @@ export function processParallelLoadingResults(
 	setStateCallback,
 	resetStateCallback
 ) {
-	const [cameraResult, dataResult] = results;
+	const [cameraResult, dataResult] = results
 
-	const cameraSuccess = cameraResult.status === 'fulfilled';
-	const dataSuccess = dataResult.status === 'fulfilled';
+	const cameraSuccess = cameraResult.status === 'fulfilled'
+	const dataSuccess = dataResult.status === 'fulfilled'
 
 	console.log('[PostalCodeLoader] Results:', {
 		camera: cameraSuccess ? '✓' : '✗',
 		data: dataSuccess ? '✓' : '✗',
-	});
+	})
 
 	// Handle error scenarios
 	if (!cameraSuccess) {
-		console.error('[PostalCodeLoader] ❌ Camera animation failed:', cameraResult.reason);
+		console.error('[PostalCodeLoader] ❌ Camera animation failed:', cameraResult.reason)
 		// Camera failure is not critical - data can still be shown
 	}
 
 	if (!dataSuccess) {
-		console.error('[PostalCodeLoader] ❌ Data loading failed:', dataResult.reason);
+		console.error('[PostalCodeLoader] ❌ Data loading failed:', dataResult.reason)
 
 		// Set error state for user feedback
 		setStateCallback({
@@ -249,25 +249,25 @@ export function processParallelLoadingResults(
 				details: dataResult.reason?.message || 'Unknown error',
 				canRetry: isRetriableError(dataResult.reason),
 			},
-		});
+		})
 
 		// Keep error state visible for user to see retry option
 		// Don't auto-reset in this case
-		return;
+		return
 	}
 
 	// Success path - both operations completed
 	setStateCallback({
 		stage: 'complete',
 		error: null,
-	});
+	})
 
 	// Reset state after brief delay to allow UI transition
 	setTimeout(() => {
-		resetStateCallback();
-	}, 500);
+		resetStateCallback()
+	}, 500)
 
-	console.log('[PostalCodeLoader] ✅ Postal code loading complete:', postalCode);
+	console.log('[PostalCodeLoader] ✅ Postal code loading complete:', postalCode)
 }
 
 /**
@@ -292,38 +292,38 @@ export async function loadPostalCodeWithParallelStrategy(
 	stores,
 	setNameOfZoneCallback
 ) {
-	performance.mark('parallel-load-start');
+	performance.mark('parallel-load-start')
 
 	// Helper functions bound to stores
 	const updateProgress = (current, total) => {
-		updateLoadingProgress(current, total, (state) => stores.store.setClickProcessingState(state));
-	};
+		updateLoadingProgress(current, total, (state) => stores.store.setClickProcessingState(state))
+	}
 
 	const setState = (state) => {
-		stores.store.setClickProcessingState(state);
-	};
+		stores.store.setClickProcessingState(state)
+	}
 
 	const resetState = () => {
-		stores.store.resetClickProcessingState();
-	};
+		stores.store.resetClickProcessingState()
+	}
 
 	// Start camera animation immediately (will update state to 'animating')
-	const cameraPromise = startCameraAnimation(services.cameraService, updateProgress, setState);
+	const cameraPromise = startCameraAnimation(services.cameraService, updateProgress, setState)
 
 	// Check cache first for instant loading (FR-3.3 optimization)
-	const cacheKey = `buildings_${postalCode}_${stores.toggleStore.helsinkiView ? 'helsinki' : 'capital'}`;
-	const cachedData = await checkCacheForPostalCode(cacheKey, postalCode);
+	const cacheKey = `buildings_${postalCode}_${stores.toggleStore.helsinkiView ? 'helsinki' : 'capital'}`
+	const cachedData = await checkCacheForPostalCode(cacheKey, postalCode)
 
-	let dataPromise;
+	let dataPromise
 	if (cachedData) {
-		console.log('[PostalCodeLoader] ⚡ Using cached data for instant loading');
+		console.log('[PostalCodeLoader] ⚡ Using cached data for instant loading')
 		// Wrap cached data in Promise.resolve for consistent handling
-		dataPromise = Promise.resolve({ data: cachedData, fromCache: true });
+		dataPromise = Promise.resolve({ data: cachedData, fromCache: true })
 
 		// Update progress immediately
-		updateProgress(1, 2);
+		updateProgress(1, 2)
 	} else {
-		console.log('[PostalCodeLoader] 🌐 Loading data from network');
+		console.log('[PostalCodeLoader] 🌐 Loading data from network')
 		// Load from network with retry logic
 		dataPromise = loadPostalCodeDataWithRetry(
 			postalCode,
@@ -332,26 +332,24 @@ export async function loadPostalCodeWithParallelStrategy(
 			setNameOfZoneCallback,
 			updateProgress,
 			setState
-		);
+		)
 	}
 
 	// Wait for both camera and data loading to complete (FR-3.1 parallel loading)
-	const results = await Promise.allSettled([cameraPromise, dataPromise]);
+	const results = await Promise.allSettled([cameraPromise, dataPromise])
 
 	// Process results with comprehensive error handling (FR-3.4)
-	processParallelLoadingResults(results, postalCode, setState, resetState);
+	processParallelLoadingResults(results, postalCode, setState, resetState)
 
-	performance.mark('parallel-load-complete');
-	performance.measure('parallel-load-total', 'parallel-load-start', 'parallel-load-complete');
+	performance.mark('parallel-load-complete')
+	performance.measure('parallel-load-total', 'parallel-load-start', 'parallel-load-complete')
 
-	const measure = performance.getEntriesByName('parallel-load-total')[0];
-	console.log(
-		`[PostalCodeLoader] ⏱️ Parallel loading completed in ${measure.duration.toFixed(2)}ms`
-	);
+	const measure = performance.getEntriesByName('parallel-load-total')[0]
+	console.log(`[PostalCodeLoader] ⏱️ Parallel loading completed in ${measure.duration.toFixed(2)}ms`)
 
-	performance.clearMarks('parallel-load-start');
-	performance.clearMarks('parallel-load-complete');
-	performance.clearMeasures('parallel-load-total');
+	performance.clearMarks('parallel-load-start')
+	performance.clearMarks('parallel-load-complete')
+	performance.clearMeasures('parallel-load-total')
 }
 
 /**
@@ -364,11 +362,11 @@ export async function loadPostalCodeWithParallelStrategy(
  * @returns {void}
  */
 export function setNameOfZone(postalCode, postalCodeData, setNameCallback) {
-	const entitiesArray = postalCodeData._entityCollection?._entities._array;
+	const entitiesArray = postalCodeData._entityCollection?._entities._array
 
 	if (Array.isArray(entitiesArray)) {
 		for (let i = 0; i < entitiesArray.length; i++) {
-			const entity = entitiesArray[i];
+			const entity = entitiesArray[i]
 			if (
 				entity &&
 				entity._properties &&
@@ -376,8 +374,8 @@ export function setNameOfZone(postalCode, postalCodeData, setNameCallback) {
 				typeof entity._properties._nimi._value !== 'undefined' &&
 				entity._properties._posno._value === postalCode
 			) {
-				setNameCallback(entity._properties._nimi._value);
-				break; // Exit the loop after finding the first match
+				setNameCallback(entity._properties._nimi._value)
+				break // Exit the loop after finding the first match
 			}
 		}
 	}

@@ -64,7 +64,8 @@
 				<a
 					href="https://www.syke.fi/en"
 					target="_blank"
-					>Finnish Environment Institute (Syke)</a>
+					>Finnish Environment Institute (Syke)</a
+				>
 				is licensed under Creative Commons Attribution 4.0 International licence.
 			</div>
 		</div>
@@ -72,19 +73,19 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue';
-import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms';
-import { useURLStore } from '../stores/urlStore';
+import { computed, nextTick, ref, watch } from 'vue'
+import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
+import { useURLStore } from '../stores/urlStore'
 
-const urlStore = useURLStore();
-const selectedScenario = ref(null);
+const urlStore = useURLStore()
+const selectedScenario = ref(null)
 
 const legendItemsCombination = ref([
 	{ color: '#002a8e', text: 'Current situation (2020)' },
 	{ color: '#0f62fe', text: 'Year 2100, low = SSP1-2.6' },
 	{ color: '#b2192b', text: 'Year 2100, medium = SSP2-4.5' },
 	{ color: '#fde9dc', text: 'Year 2100 ,high = SSP5-8.5' },
-]);
+])
 
 const legendItemsSea = ref([
 	{ color: '#7ecce6', text: 'Less than 0.5 m' },
@@ -94,7 +95,7 @@ const legendItemsSea = ref([
 	{ color: '#002673', text: 'More than 3 m' },
 	{ color: '#fddbc6', text: 'Flood-protected by permanent structures' },
 	{ color: '#d2ffff', text: 'Sea area' },
-]);
+])
 
 const legendItemsStormwater = ref([
 	{ color: '#82CFFF', text: 'water/sea area' },
@@ -103,45 +104,45 @@ const legendItemsStormwater = ref([
 	{ color: '#0059C9', text: '0.5 m' }, // Dark blue
 	{ color: '#002A8E', text: '1 m' }, // Darker blue
 	{ color: '#001141', text: '2- m' }, // Almost black blue
-]);
+])
 
 const currentLegend = computed(() => {
 	if (selectedScenario.value?.startsWith('Hulevesitulva')) {
-		return legendItemsStormwater.value;
+		return legendItemsStormwater.value
 	} else if (selectedScenario.value === 'SSP585_re_with_SSP245_with_SSP126_with_current') {
-		return legendItemsCombination.value;
+		return legendItemsCombination.value
 	} else if (selectedScenario.value?.startsWith('coastal_flood')) {
-		return legendItemsSea.value;
+		return legendItemsSea.value
 	} else {
-		return [];
+		return []
 	}
-});
+})
 
 // WMS configuration using centralized URL store
 const wmsConfig = computed(() => {
 	if (!selectedScenario.value) {
-		return { url: null, layerName: null };
+		return { url: null, layerName: null }
 	}
 
-	const url = urlStore.sykeFloodUrl(selectedScenario.value);
-	return { url, layerName: selectedScenario.value };
-});
+	const url = urlStore.sykeFloodUrl(selectedScenario.value)
+	return { url, layerName: selectedScenario.value }
+})
 
 const updateWMS = async (config) => {
-	if (!config || !config.layerName) return;
+	if (!config || !config.layerName) return
 
 	// Remove previous layers
-	removeFloodLayers();
+	removeFloodLayers()
 
 	if (config.layerName !== 'none') {
-		await createFloodImageryLayer(config.url, config.layerName);
+		await createFloodImageryLayer(config.url, config.layerName)
 	}
-};
+}
 
 watch(selectedScenario, async () => {
-	await nextTick(); // Ensure updates propagate before modifying layers
-	updateWMS(wmsConfig.value).catch(console.error);
-});
+	await nextTick() // Ensure updates propagate before modifying layers
+	updateWMS(wmsConfig.value).catch(console.error)
+})
 </script>
 
 <style scoped>

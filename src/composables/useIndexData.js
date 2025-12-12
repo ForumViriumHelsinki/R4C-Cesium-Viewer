@@ -4,7 +4,7 @@
  * used throughout the application for heat and flood resilience analysis.
  */
 
-import { ref } from 'vue';
+import { ref } from 'vue'
 
 /**
  * Comprehensive list of social vulnerability indices with metadata
@@ -146,7 +146,7 @@ const indexOptions = ref([
 		description:
 			'Combined heat and flood vulnerability, colored by heat and flood, height by green space.',
 	},
-]);
+])
 
 /**
  * Vue 3 composable for vulnerability index metadata access
@@ -168,13 +168,13 @@ export function useIndexData() {
 	 * @returns {{text: string, value: string, description: string}|undefined} Index metadata object or undefined if not found
 	 */
 	const getIndexInfo = (indexValue) => {
-		return indexOptions.value.find((option) => option.value === indexValue);
-	};
+		return indexOptions.value.find((option) => option.value === indexValue)
+	}
 
 	return {
 		/** Reactive array of all vulnerability index definitions */
 		indexOptions,
 		/** Lookup function to retrieve index metadata by value */
 		getIndexInfo,
-	};
+	}
 }

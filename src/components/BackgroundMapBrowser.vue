@@ -27,9 +27,7 @@
 			v-if="selectedCategory === 'flood'"
 			class="flood-quick-select"
 		>
-			<h5 class="flood-title">
-Flood Risk Scenarios
-</h5>
+			<h5 class="flood-title">Flood Risk Scenarios</h5>
 			<p class="flood-disclaimer">
 				⚠️ Map contains significant errors. Not for building-specific evaluation!
 			</p>
@@ -37,9 +35,7 @@ Flood Risk Scenarios
 			<div class="flood-categories">
 				<!-- Stormwater Floods -->
 				<div class="flood-category">
-					<h6 class="flood-category-title">
-Stormwater Floods
-</h6>
+					<h6 class="flood-category-title">Stormwater Floods</h6>
 					<v-btn-toggle
 						v-model="selectedFloodLayer"
 						mandatory
@@ -69,9 +65,7 @@ Stormwater Floods
 
 				<!-- Coastal Floods -->
 				<div class="flood-category">
-					<h6 class="flood-category-title">
-Coastal Flood Scenarios
-</h6>
+					<h6 class="flood-category-title">Coastal Flood Scenarios</h6>
 					<v-btn-toggle
 						v-model="selectedFloodLayer"
 						mandatory
@@ -117,9 +111,7 @@ Coastal Flood Scenarios
 				v-if="selectedFloodLayer && selectedFloodLayer !== 'none'"
 				class="flood-legend"
 			>
-				<h6 class="legend-title">
-Legend
-</h6>
+				<h6 class="legend-title">Legend</h6>
 				<div class="legend-items">
 					<div
 						v-for="item in currentFloodLegend"
@@ -176,17 +168,15 @@ Legend
 					mdi-alert-circle-outline
 				</v-icon>
 				<p class="text-body-2">
-{{ hsyLoadError }}
-</p>
+					{{ hsyLoadError }}
+				</p>
 				<v-btn
 					size="small"
 					variant="outlined"
 					class="mt-2"
 					@click="loadHSYLayers"
 				>
-					<v-icon start>
-mdi-refresh
-</v-icon>
+					<v-icon start> mdi-refresh </v-icon>
 					Retry
 				</v-btn>
 			</div>
@@ -222,9 +212,7 @@ mdi-refresh
 					v-if="filteredHSYLayers.length > 10"
 					class="more-results"
 				>
-					<p class="text-caption">
-Showing first 10 of {{ filteredHSYLayers.length }} results
-</p>
+					<p class="text-caption">Showing first 10 of {{ filteredHSYLayers.length }} results</p>
 				</div>
 			</div>
 
@@ -232,12 +220,8 @@ Showing first 10 of {{ filteredHSYLayers.length }} results
 				v-else-if="hsySearchQuery && !isLoadingHSY"
 				class="no-results"
 			>
-				<v-icon class="mb-2">
-mdi-map-search
-</v-icon>
-				<p class="text-body-2">
-No layers found matching "{{ hsySearchQuery }}"
-</p>
+				<v-icon class="mb-2"> mdi-map-search </v-icon>
+				<p class="text-body-2">No layers found matching "{{ hsySearchQuery }}"</p>
 			</div>
 		</div>
 
@@ -293,27 +277,27 @@ No layers found matching "{{ hsySearchQuery }}"
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms';
-import { useBackgroundMapStore } from '../stores/backgroundMapStore';
-import { useURLStore } from '../stores/urlStore';
+import { computed, onMounted, ref, watch } from 'vue'
+import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
+import { useBackgroundMapStore } from '../stores/backgroundMapStore'
+import { useURLStore } from '../stores/urlStore'
 
 export default {
 	name: 'BackgroundMapBrowser',
 	setup() {
-		const _backgroundMapStore = useBackgroundMapStore();
-		const urlStore = useURLStore();
+		const _backgroundMapStore = useBackgroundMapStore()
+		const urlStore = useURLStore()
 
 		// Category management
-		const selectedCategory = ref('basic');
+		const selectedCategory = ref('basic')
 		const categories = [
 			{ key: 'basic', name: 'Basic', icon: 'mdi-map' },
 			{ key: 'environmental', name: 'Environmental', icon: 'mdi-leaf' },
 			{ key: 'flood', name: 'Flood Risk', icon: 'mdi-water' },
-		];
+		]
 
 		// Basic maps
-		const selectedBasicMap = ref('default');
+		const selectedBasicMap = ref('default')
 		const basicMaps = [
 			{
 				value: 'default',
@@ -333,28 +317,28 @@ export default {
 				description: 'Topographic map',
 				icon: 'mdi-terrain',
 			},
-		];
+		]
 
 		// HSY Environmental maps
-		const hsySearchQuery = ref('');
-		const selectedHSYLayer = ref(null);
-		const hsyLayers = ref([]);
-		const isLoadingHSY = ref(false);
-		const hsyLoadError = ref(null);
+		const hsySearchQuery = ref('')
+		const selectedHSYLayer = ref(null)
+		const hsyLayers = ref([])
+		const isLoadingHSY = ref(false)
+		const hsyLoadError = ref(null)
 
 		const filteredHSYLayers = computed(() => {
 			if (!hsySearchQuery.value) {
-				return hsyLayers.value.slice(0, 20); // Show top 20 by default
+				return hsyLayers.value.slice(0, 20) // Show top 20 by default
 			}
-			const query = hsySearchQuery.value.toLowerCase();
+			const query = hsySearchQuery.value.toLowerCase()
 			return hsyLayers.value.filter(
 				(layer) =>
 					layer.title.toLowerCase().includes(query) || layer.name.toLowerCase().includes(query)
-			);
-		});
+			)
+		})
 
 		// Flood risk maps
-		const selectedFloodLayer = ref('none');
+		const selectedFloodLayer = ref('none')
 
 		const floodLegends = {
 			stormwater: [
@@ -379,18 +363,18 @@ export default {
 				{ color: '#b2192b', text: 'Year 2100, medium = SSP2-4.5' },
 				{ color: '#fde9dc', text: 'Year 2100, high = SSP5-8.5' },
 			],
-		};
+		}
 
 		const currentFloodLegend = computed(() => {
 			if (selectedFloodLayer.value?.startsWith('Hulevesitulva')) {
-				return floodLegends.stormwater;
+				return floodLegends.stormwater
 			} else if (selectedFloodLayer.value === 'SSP585_re_with_SSP245_with_SSP126_with_current') {
-				return floodLegends.combination;
+				return floodLegends.combination
 			} else if (selectedFloodLayer.value?.startsWith('coastal_flood')) {
-				return floodLegends.coastal;
+				return floodLegends.coastal
 			}
-			return [];
-		});
+			return []
+		})
 
 		// Current selection tracking
 		const hasSelection = computed(() => {
@@ -398,61 +382,61 @@ export default {
 				(selectedBasicMap.value && selectedBasicMap.value !== 'default') ||
 				selectedHSYLayer.value ||
 				(selectedFloodLayer.value && selectedFloodLayer.value !== 'none')
-			);
-		});
+			)
+		})
 
 		const currentSelectionText = computed(() => {
 			if (selectedFloodLayer.value && selectedFloodLayer.value !== 'none') {
-				const floodMap = selectedFloodLayer.value;
+				const floodMap = selectedFloodLayer.value
 				if (floodMap.startsWith('Hulevesitulva')) {
 					return floodMap.includes('52mm')
 						? 'Stormwater Flood: 52mm/hour'
-						: 'Stormwater Flood: 80mm/hour';
+						: 'Stormwater Flood: 80mm/hour'
 				} else if (floodMap.startsWith('coastal_flood')) {
-					return 'Coastal Flood Scenario';
+					return 'Coastal Flood Scenario'
 				} else {
-					return 'Combined Flood Scenarios';
+					return 'Combined Flood Scenarios'
 				}
 			}
 			if (selectedHSYLayer.value) {
-				const layer = hsyLayers.value.find((l) => l.name === selectedHSYLayer.value);
-				return layer ? layer.title : 'HSY Environmental Layer';
+				const layer = hsyLayers.value.find((l) => l.name === selectedHSYLayer.value)
+				return layer ? layer.title : 'HSY Environmental Layer'
 			}
 			if (selectedBasicMap.value && selectedBasicMap.value !== 'default') {
-				const basicMap = basicMaps.find((m) => m.value === selectedBasicMap.value);
-				return basicMap ? basicMap.title : 'Basic Map';
+				const basicMap = basicMaps.find((m) => m.value === selectedBasicMap.value)
+				return basicMap ? basicMap.title : 'Basic Map'
 			}
-			return '';
-		});
+			return ''
+		})
 
 		// Methods
 		const loadHSYLayers = async () => {
-			isLoadingHSY.value = true;
-			hsyLoadError.value = null;
+			isLoadingHSY.value = true
+			hsyLoadError.value = null
 			try {
-				const response = await fetch('/hsy-action?action_route=GetHierarchicalMapLayerGroups');
+				const response = await fetch('/hsy-action?action_route=GetHierarchicalMapLayerGroups')
 
 				// Check for HTTP errors before parsing JSON
 				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
+					throw new Error(`HTTP error! status: ${response.status}`)
 				}
 
 				// Check content type to avoid parsing HTML error pages
-				const contentType = response.headers.get('content-type');
+				const contentType = response.headers.get('content-type')
 				if (!contentType || !contentType.includes('application/json')) {
-					throw new Error('Invalid response type - expected JSON');
+					throw new Error('Invalid response type - expected JSON')
 				}
 
-				const data = await response.json();
+				const data = await response.json()
 
 				// Extract and flatten all layers
 				const extractLayers = (groups) => {
 					if (!Array.isArray(groups)) {
-						console.warn('Expected groups to be an array, got:', typeof groups);
-						return [];
+						console.warn('Expected groups to be an array, got:', typeof groups)
+						return []
 					}
 
-					let layers = [];
+					const layers = []
 					groups.forEach((group) => {
 						if (group.layers) {
 							layers.push(
@@ -463,80 +447,80 @@ export default {
 									date_updated: layer.date_updated,
 									organization: layer.organization,
 								}))
-							);
+							)
 						}
 						if (group.children) {
-							layers.push(...extractLayers(group.children));
+							layers.push(...extractLayers(group.children))
 						}
-					});
-					return layers;
-				};
-
-				// Handle different possible response structures
-				let groupsToProcess = data;
-				if (data.groups) {
-					groupsToProcess = data.groups;
-				} else if (data.data) {
-					groupsToProcess = data.data;
-				} else if (data.result) {
-					groupsToProcess = data.result;
+					})
+					return layers
 				}
 
-				hsyLayers.value = extractLayers(groupsToProcess);
+				// Handle different possible response structures
+				let groupsToProcess = data
+				if (data.groups) {
+					groupsToProcess = data.groups
+				} else if (data.data) {
+					groupsToProcess = data.data
+				} else if (data.result) {
+					groupsToProcess = data.result
+				}
+
+				hsyLayers.value = extractLayers(groupsToProcess)
 			} catch (error) {
-				console.error('Failed to load HSY layers:', error);
-				hsyLoadError.value = 'Unable to load environmental layers. Please try again later.';
+				console.error('Failed to load HSY layers:', error)
+				hsyLoadError.value = 'Unable to load environmental layers. Please try again later.'
 			} finally {
-				isLoadingHSY.value = false;
+				isLoadingHSY.value = false
 			}
-		};
+		}
 
 		const searchHSYLayers = () => {
 			// Search is reactive via computed property
-		};
+		}
 
 		const selectHSYLayer = (layer) => {
-			selectedHSYLayer.value = layer.name;
+			selectedHSYLayer.value = layer.name
 			// TODO: Implement HSY layer selection logic
-			console.log('Selected HSY layer:', layer);
-		};
+			console.log('Selected HSY layer:', layer)
+		}
 
 		const selectBasicMap = (map) => {
-			selectedBasicMap.value = map.value;
+			selectedBasicMap.value = map.value
 			// TODO: Implement basic map selection logic
-			console.log('Selected basic map:', map);
-		};
+			console.log('Selected basic map:', map)
+		}
 
 		const updateFloodLayer = async () => {
-			removeFloodLayers();
+			removeFloodLayers()
 
 			if (selectedFloodLayer.value && selectedFloodLayer.value !== 'none') {
-				const url = urlStore.sykeFloodUrl(selectedFloodLayer.value);
+				const url = urlStore.sykeFloodUrl(selectedFloodLayer.value)
 				if (url) {
-					await createFloodImageryLayer(url, selectedFloodLayer.value);
+					await createFloodImageryLayer(url, selectedFloodLayer.value)
 				}
 			}
-		};
+		}
 
 		const clearSelection = () => {
-			selectedBasicMap.value = 'default';
-			selectedHSYLayer.value = null;
-			selectedFloodLayer.value = 'none';
-			removeFloodLayers();
-		};
+			selectedBasicMap.value = 'default'
+			selectedHSYLayer.value = null
+			selectedFloodLayer.value = 'none'
+			removeFloodLayers()
+		}
 
 		const formatDate = (dateString) => {
-			if (!dateString) return 'Unknown';
-			return new Date(dateString).toLocaleDateString();
-		};
+			if (!dateString) return 'Unknown'
+			return new Date(dateString).toLocaleDateString()
+		}
 
 		// Watchers
-		watch(selectedFloodLayer, updateFloodLayer);
+		watch(selectedFloodLayer, updateFloodLayer)
 
 		// Initialize
 		onMounted(() => {
-			void loadHSYLayers();
-		});
+			void loadHSYLayers()
+		})
 
 		return {
 			selectedCategory,
@@ -558,9 +542,9 @@ export default {
 			clearSelection,
 			formatDate,
 			loadHSYLayers,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

@@ -1,5 +1,5 @@
-import * as Cesium from 'cesium';
-import { useURLStore } from '../stores/urlStore.js';
+import * as Cesium from 'cesium'
+import { useURLStore } from '../stores/urlStore.js'
 
 /**
  * WMS (Web Map Service) Integration Service
@@ -10,11 +10,6 @@ import { useURLStore } from '../stores/urlStore.js';
  * @see {@link https://www.ogc.org/standards/wms|OGC WMS Specification}
  */
 export default class Wms {
-	/**
-	 * Creates a WMS service instance
-	 */
-	constructor() {}
-
 	/**
 	 * Creates a CesiumJS imagery layer from Helsinki WMS service
 	 * Configures Web Map Service provider with proxy for Helsinki map layers.
@@ -65,7 +60,7 @@ export default class Wms {
 	 * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/339|Issue #339 - N+1 API Call Optimization}
 	 */
 	createHelsinkiImageryLayer(layerName) {
-		const urlStore = useURLStore();
+		const urlStore = useURLStore()
 		const provider = new Cesium.WebMapServiceImageryProvider({
 			url: urlStore.helsinkiWMS,
 			layers: layerName,
@@ -78,8 +73,8 @@ export default class Wms {
 			maximumLevel: 18,
 			// Use geographic tiling scheme for EPSG:4326 (WGS84)
 			tilingScheme: new Cesium.GeographicTilingScheme(),
-		});
+		})
 
-		return new Cesium.ImageryLayer(provider);
+		return new Cesium.ImageryLayer(provider)
 	}
 }

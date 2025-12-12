@@ -4,9 +4,7 @@
 		class="slider-container"
 		style="width: 100%"
 	>
-		<h3 class="filter-title">
-Layers
-</h3>
+		<h3 class="filter-title">Layers</h3>
 		<div
 			v-if="helsinkiView"
 			class="switch-container"
@@ -16,13 +14,14 @@ Layers
 					v-model="showVegetation"
 					type="checkbox"
 					@change="loadVegetation"
-				>
+				/>
 				<span class="slider round" />
 			</label>
 			<label
 				for="showVegetation"
 				class="label"
-				>Vegetation</label>
+				>Vegetation</label
+			>
 		</div>
 
 		<div
@@ -34,13 +33,14 @@ Layers
 					v-model="showOtherNature"
 					type="checkbox"
 					@change="loadOtherNature"
-				>
+				/>
 				<span class="slider round" />
 			</label>
 			<label
 				for="showOtherNature"
 				class="label"
-				>Other Nature</label>
+				>Other Nature</label
+			>
 		</div>
 
 		<div
@@ -52,13 +52,14 @@ Layers
 					v-model="showTrees"
 					type="checkbox"
 					@change="loadTrees"
-				>
+				/>
 				<span class="slider round" />
 			</label>
 			<label
 				for="showTrees"
 				class="label"
-				>Trees</label>
+				>Trees</label
+			>
 		</div>
 
 		<div
@@ -70,13 +71,14 @@ Layers
 					v-model="landCover"
 					type="checkbox"
 					@change="addLandCover"
-				>
+				/>
 				<span class="slider round" />
 			</label>
 			<label
 				for="landCover"
 				class="label"
-				>HSY Land Cover</label>
+				>HSY Land Cover</label
+			>
 		</div>
 
 		<div class="switch-container">
@@ -85,13 +87,14 @@ Layers
 					v-model="ndvi"
 					type="checkbox"
 					@change="toggleNDVI"
-				>
+				/>
 				<span class="slider round" />
 			</label>
 			<label
 				for="ndvi"
 				class="label"
-				>NDVI</label>
+				>NDVI</label
+			>
 		</div>
 	</div>
 </template>
@@ -157,46 +160,46 @@ Layers
  * <Layers />
  */
 
-import { ref, computed, onMounted, watch } from 'vue';
-import { useToggleStore } from '../stores/toggleStore';
-import { useGlobalStore } from '../stores/globalStore';
-import { eventBus } from '../services/eventEmitter.js';
-import Datasource from '../services/datasource.js';
-import Building from '../services/building.js';
-import { createHSYImageryLayer, removeLandcover } from '../services/landcover';
-import Tree from '../services/tree.js';
-import Othernature from '../services/othernature.js';
-import Vegetation from '../services/vegetation';
-import Populationgrid from '../services/populationgrid.js';
-import Wms from '../services/wms.js';
-import { changeTIFF, removeTIFF } from '../services/tiffImagery.js';
+import { computed, onMounted, ref, watch } from 'vue'
+import Building from '../services/building.js'
+import Datasource from '../services/datasource.js'
+import { eventBus } from '../services/eventEmitter.js'
+import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
+import Othernature from '../services/othernature.js'
+import Populationgrid from '../services/populationgrid.js'
+import { changeTIFF, removeTIFF } from '../services/tiffImagery.js'
+import Tree from '../services/tree.js'
+import Vegetation from '../services/vegetation'
+import Wms from '../services/wms.js'
+import { useGlobalStore } from '../stores/globalStore'
+import { useToggleStore } from '../stores/toggleStore'
 
 export default {
 	setup() {
-		const toggleStore = useToggleStore();
-		const store = useGlobalStore();
+		const toggleStore = useToggleStore()
+		const store = useGlobalStore()
 
 		/**
 		 * Reactive state for layer toggles
 		 * Synchronized with toggleStore for persistence
 		 */
-		const showVegetation = ref(toggleStore.showVegetation);
-		const showOtherNature = ref(toggleStore.showOtherNature);
-		const showTrees = ref(toggleStore.showTrees);
-		const landCover = ref(toggleStore.landCover);
-		const grid250m = ref(toggleStore.grid250m);
-		const ndvi = ref(toggleStore.ndvi);
+		const showVegetation = ref(toggleStore.showVegetation)
+		const showOtherNature = ref(toggleStore.showOtherNature)
+		const showTrees = ref(toggleStore.showTrees)
+		const landCover = ref(toggleStore.landCover)
+		const grid250m = ref(toggleStore.grid250m)
+		const ndvi = ref(toggleStore.ndvi)
 
 		/**
 		 * Computed properties for view-specific features
 		 */
-		const helsinkiView = computed(() => toggleStore.helsinkiView);
-		const view = computed(() => store.view);
-		const postalCode = computed(() => store.postalcode);
+		const helsinkiView = computed(() => toggleStore.helsinkiView)
+		const view = computed(() => store.view)
+		const postalCode = computed(() => store.postalcode)
 
 		// Services
-		let buildingService = null;
-		let dataSourceService = null;
+		let buildingService = null
+		let dataSourceService = null
 
 		/**
 		 * Toggles land cover state in store
@@ -205,8 +208,8 @@ export default {
 		 * @returns {void}
 		 */
 		const toggleLandCover = () => {
-			toggleStore.setLandCover(landCover.value);
-		};
+			toggleStore.setLandCover(landCover.value)
+		}
 
 		/**
 		 * Synchronizes local landCover state with store changes
@@ -216,10 +219,10 @@ export default {
 		watch(
 			() => toggleStore.landCover,
 			(newValue) => {
-				landCover.value = newValue;
+				landCover.value = newValue
 			},
 			{ immediate: true }
-		);
+		)
 
 		/**
 		 * Synchronizes local grid250m state with store changes
@@ -229,10 +232,10 @@ export default {
 		watch(
 			() => toggleStore.grid250m,
 			(newVal) => {
-				grid250m.value = newVal;
+				grid250m.value = newVal
 			},
 			{ immediate: true }
-		);
+		)
 
 		/**
 		 * Activates 250m socioeconomic grid view
@@ -245,12 +248,12 @@ export default {
 		 * @returns {Promise<void>}
 		 */
 		const activate250mGrid = async () => {
-			toggleStore.setGrid250m(grid250m.value);
-			store.setView('grid');
+			toggleStore.setGrid250m(grid250m.value)
+			store.setView('grid')
 			if (!grid250m.value) {
-				await new Populationgrid().createPopulationGrid();
+				await new Populationgrid().createPopulationGrid()
 			}
-		};
+		}
 
 		/**
 		 * Loads or toggles vegetation layer visibility
@@ -262,7 +265,7 @@ export default {
 		 */
 		const loadVegetation = () => {
 			// Get the current state of the toggle button for showing nature areas.
-			toggleStore.setShowVegetation(showVegetation.value);
+			toggleStore.setShowVegetation(showVegetation.value)
 
 			if (showVegetation.value) {
 				// If the toggle button is checked, enable the toggle button for showing the nature area heat map.
@@ -270,15 +273,15 @@ export default {
 
 				// If there is a postal code available, load the nature areas for that area.
 				if (store.postalcode && !dataSourceService.getDataSourceByName('Vegetation')) {
-					const vegetationService = new Vegetation();
-					vegetationService.loadVegetation(store.postalcode).catch(console.error);
+					const vegetationService = new Vegetation()
+					vegetationService.loadVegetation(store.postalcode).catch(console.error)
 				} else {
-					dataSourceService.changeDataSourceShowByName('Vegetation', true);
+					dataSourceService.changeDataSourceShowByName('Vegetation', true)
 				}
 			} else {
-				dataSourceService.changeDataSourceShowByName('Vegetation', false);
+				dataSourceService.changeDataSourceShowByName('Vegetation', false)
 			}
-		};
+		}
 
 		/**
 		 * Loads or toggles tree layer visibility
@@ -290,20 +293,20 @@ export default {
 		 * @returns {void}
 		 */
 		const loadTrees = () => {
-			toggleStore.setShowTrees(showTrees.value);
-			const treeService = new Tree();
+			toggleStore.setShowTrees(showTrees.value)
+			const treeService = new Tree()
 
 			if (showTrees.value) {
 				if (store.postalcode && !dataSourceService.getDataSourceByName('Trees')) {
-					treeService.loadTrees().catch(console.error);
+					treeService.loadTrees().catch(console.error)
 				} else {
-					dataSourceService.changeDataSourceShowByName('Trees', true);
+					dataSourceService.changeDataSourceShowByName('Trees', true)
 				}
 			} else {
-				dataSourceService.changeDataSourceShowByName('Trees', false);
-				buildingService.resetBuildingEntities();
+				dataSourceService.changeDataSourceShowByName('Trees', false)
+				buildingService.resetBuildingEntities()
 			}
-		};
+		}
 
 		/**
 		 * Disables conflicting layer when a new layer is activated
@@ -317,18 +320,18 @@ export default {
 		 */
 		const disableOtherLayer = (layer) => {
 			if (layer === 'ndvi') {
-				landCover.value = false;
-				toggleStore.setLandCover(false);
-				removeLandcover(store.landcoverLayers, store.cesiumViewer);
+				landCover.value = false
+				toggleStore.setLandCover(false)
+				removeLandcover(store.landcoverLayers, store.cesiumViewer)
 			} else if (layer === 'landcover') {
-				ndvi.value = false;
-				toggleStore.setNDVI(false);
-				store.cesiumViewer.imageryLayers.removeAll();
+				ndvi.value = false
+				toggleStore.setNDVI(false)
+				store.cesiumViewer.imageryLayers.removeAll()
 				store.cesiumViewer.imageryLayers.add(
 					new Wms().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-				);
+				)
 			}
-		};
+		}
 
 		/**
 		 * Toggles HSY land cover layer
@@ -339,15 +342,15 @@ export default {
 		 * @returns {void}
 		 */
 		const addLandCover = () => {
-			if (landCover.value && ndvi.value) disableOtherLayer('landcover');
+			if (landCover.value && ndvi.value) disableOtherLayer('landcover')
 
-			toggleStore.setLandCover(landCover.value);
+			toggleStore.setLandCover(landCover.value)
 			if (landCover.value) {
-				void createHSYImageryLayer();
+				void createHSYImageryLayer()
 			} else {
-				removeLandcover();
+				removeLandcover()
 			}
-		};
+		}
 
 		/**
 		 * Toggles NDVI satellite imagery layer
@@ -359,17 +362,17 @@ export default {
 		 * @returns {void}
 		 */
 		const toggleNDVI = () => {
-			if (ndvi.value && landCover.value) disableOtherLayer('ndvi');
+			if (ndvi.value && landCover.value) disableOtherLayer('ndvi')
 
-			toggleStore.setNDVI(ndvi.value);
+			toggleStore.setNDVI(ndvi.value)
 
 			if (ndvi.value) {
-				void changeTIFF();
-				eventBus.emit('addNDVI');
+				void changeTIFF()
+				eventBus.emit('addNDVI')
 			} else {
-				void removeTIFF();
+				void removeTIFF()
 			}
-		};
+		}
 
 		/**
 		 * Loads or toggles other nature layer visibility
@@ -381,7 +384,7 @@ export default {
 		 */
 		const loadOtherNature = () => {
 			// Get the current state of the toggle button for showing nature areas.
-			toggleStore.setShowOtherNature(showOtherNature.value);
+			toggleStore.setShowOtherNature(showOtherNature.value)
 
 			if (showOtherNature.value) {
 				// If the toggle button is checked, enable the toggle button for showing the nature area heat map.
@@ -389,24 +392,24 @@ export default {
 
 				// If there is a postal code available, load the nature areas for that area.
 				if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
-					const otherNatureService = new Othernature();
-					void otherNatureService.loadOtherNature();
+					const otherNatureService = new Othernature()
+					void otherNatureService.loadOtherNature()
 				} else {
-					void dataSourceService.changeDataSourceShowByName('OtherNature', true);
+					void dataSourceService.changeDataSourceShowByName('OtherNature', true)
 				}
 			} else {
-				void dataSourceService.changeDataSourceShowByName('OtherNature', false);
+				void dataSourceService.changeDataSourceShowByName('OtherNature', false)
 			}
-		};
+		}
 
 		// REMOVED: resetLayers watcher that was clearing layer state on view changes
 		// Layer state should persist across view changes for better user experience
 		// View-specific layer visibility is already handled by v-if conditions in the template
 
 		onMounted(() => {
-			buildingService = new Building();
-			dataSourceService = new Datasource();
-		});
+			buildingService = new Building()
+			dataSourceService = new Datasource()
+		})
 
 		return {
 			showVegetation,
@@ -425,9 +428,9 @@ export default {
 			toggleLandCover,
 			postalCode,
 			ndvi,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

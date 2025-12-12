@@ -1,72 +1,72 @@
 <template><div /></template>
 
 <script setup>
-import { watch, computed, onMounted } from 'vue';
-import DataSource from '../services/datasource.js';
-import Camera from '../services/camera.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useMitigationStore } from '../stores/mitigationStore.js';
-import { useGridStyling } from '../composables/useGridStyling.js'; // <-- Import the composable
+import { computed, onMounted, watch } from 'vue'
+import { useGridStyling } from '../composables/useGridStyling.js' // <-- Import the composable
+import Camera from '../services/camera.js'
+import DataSource from '../services/datasource.js'
+import { useMitigationStore } from '../stores/mitigationStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 
 // --- STATE MANAGEMENT ---
-const propsStore = usePropsStore();
-const toggleStore = useToggleStore();
-const mitigationStore = useMitigationStore();
-const dataSourceService = new DataSource();
+const propsStore = usePropsStore()
+const toggleStore = useToggleStore()
+const mitigationStore = useMitigationStore()
+const dataSourceService = new DataSource()
 
 // ** Instantiate the composable to get the main update function **
-const { updateGridColors } = useGridStyling();
+const { updateGridColors } = useGridStyling()
 
-const coolingCenters = computed(() => mitigationStore.coolingCenters);
-const statsIndex = computed(() => propsStore.statsIndex);
-const ndviActive = computed(() => toggleStore.ndvi);
+const coolingCenters = computed(() => mitigationStore.coolingCenters)
+const statsIndex = computed(() => propsStore.statsIndex)
+const ndviActive = computed(() => toggleStore.ndvi)
 
 // --- WATCHERS ---
 // The watchers now call the clean, centralized function from the composable.
 watch([statsIndex, ndviActive], () => {
-	updateGridColors(statsIndex.value);
-});
+	updateGridColors(statsIndex.value)
+})
 
 watch(
 	coolingCenters,
 	() => {
 		if (statsIndex.value === 'heat_index') {
-			mitigationStore.resetMitigationState();
+			mitigationStore.resetMitigationState()
 			// Note: The original code's complex `heatIndex` function with mitigation
 			// would need to be moved into the composable as well to be fully DRY.
 			// For now, this call restores the base colors.
-			updateGridColors('heat_index');
+			updateGridColors('heat_index')
 		}
 	},
 	{ deep: true }
-);
+)
 
 // --- COMPONENT-SPECIFIC LOGIC ---
 const loadGrid = async () => {
-	await dataSourceService.removeDataSourcesAndEntities();
+	await dataSourceService.removeDataSourcesAndEntities()
 	await dataSourceService.loadGeoJsonDataSource(
 		0.8,
 		'./assets/data/r4c_stats_grid_index.json',
 		'250m_grid'
-	);
-};
+	)
+}
 
 const prepareMitigation = () => {
-	const dataSource = dataSourceService.getDataSourceByName('250m_grid');
-	void mitigationStore.setGridCells(dataSource);
-	void mitigationStore.preCalculateGridImpacts();
-};
+	const dataSource = dataSourceService.getDataSourceByName('250m_grid')
+	void mitigationStore.setGridCells(dataSource)
+	void mitigationStore.preCalculateGridImpacts()
+}
 
 onMounted(async () => {
-	const cameraService = new Camera();
-	cameraService.switchTo3DGrid();
+	const cameraService = new Camera()
+	cameraService.switchTo3DGrid()
 	try {
-		await loadGrid();
-		updateGridColors(propsStore.statsIndex); // Initial color update
-		prepareMitigation();
+		await loadGrid()
+		updateGridColors(propsStore.statsIndex) // Initial color update
+		prepareMitigation()
 	} catch (error) {
-		console.error('Error loading grid:', error);
+		console.error('Error loading grid:', error)
 	}
-});
+})
 </script>

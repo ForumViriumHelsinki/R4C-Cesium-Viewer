@@ -21,7 +21,7 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 /**
  * Graphics Pinia Store
@@ -54,9 +54,9 @@ export const useGraphicsStore = defineStore('graphics', {
 		 */
 		effectiveMsaaSamples: (state) => {
 			if (!state.msaaSupported || !state.msaaEnabled) {
-				return 1;
+				return 1
 			}
-			return state.msaaSamples;
+			return state.msaaSamples
 		},
 
 		/**
@@ -65,18 +65,18 @@ export const useGraphicsStore = defineStore('graphics', {
 		hasAntiAliasing: (state) => {
 			return (
 				(state.msaaEnabled && state.msaaSupported && state.msaaSamples > 1) || state.fxaaEnabled
-			);
+			)
 		},
 
 		/**
 		 * Get quality level description
 		 */
 		qualityLevel: (state) => {
-			if (state.msaaEnabled && state.msaaSamples >= 8) return 'Ultra';
-			if (state.msaaEnabled && state.msaaSamples >= 4) return 'High';
-			if (state.msaaEnabled && state.msaaSamples >= 2) return 'Medium';
-			if (state.fxaaEnabled) return 'Low (FXAA)';
-			return 'Basic';
+			if (state.msaaEnabled && state.msaaSamples >= 8) return 'Ultra'
+			if (state.msaaEnabled && state.msaaSamples >= 4) return 'High'
+			if (state.msaaEnabled && state.msaaSamples >= 2) return 'Medium'
+			if (state.fxaaEnabled) return 'Low (FXAA)'
+			return 'Basic'
 		},
 	},
 
@@ -85,45 +85,45 @@ export const useGraphicsStore = defineStore('graphics', {
 		 * Set hardware support detection results
 		 */
 		setSupportInfo(supportInfo) {
-			this.msaaSupported = supportInfo.msaaSupported;
-			this.hdrSupported = supportInfo.hdrSupported;
-			this.ambientOcclusionSupported = supportInfo.ambientOcclusionSupported;
+			this.msaaSupported = supportInfo.msaaSupported
+			this.hdrSupported = supportInfo.hdrSupported
+			this.ambientOcclusionSupported = supportInfo.ambientOcclusionSupported
 		},
 
 		/**
 		 * Update MSAA settings
 		 */
 		setMsaaSettings(enabled, samples = 4) {
-			this.msaaEnabled = enabled;
-			this.msaaSamples = Math.max(1, Math.min(8, samples));
+			this.msaaEnabled = enabled
+			this.msaaSamples = Math.max(1, Math.min(8, samples))
 		},
 
 		/**
 		 * Toggle FXAA
 		 */
 		setFxaaEnabled(enabled) {
-			this.fxaaEnabled = enabled;
+			this.fxaaEnabled = enabled
 		},
 
 		/**
 		 * Set HDR rendering
 		 */
 		setHdrEnabled(enabled) {
-			this.hdrEnabled = enabled && this.hdrSupported;
+			this.hdrEnabled = enabled && this.hdrSupported
 		},
 
 		/**
 		 * Set ambient occlusion
 		 */
 		setAmbientOcclusionEnabled(enabled) {
-			this.ambientOcclusionEnabled = enabled && this.ambientOcclusionSupported;
+			this.ambientOcclusionEnabled = enabled && this.ambientOcclusionSupported
 		},
 
 		/**
 		 * Set request render mode for performance
 		 */
 		setRequestRenderMode(enabled) {
-			this.requestRenderMode = enabled;
+			this.requestRenderMode = enabled
 		},
 
 		/**
@@ -132,43 +132,43 @@ export const useGraphicsStore = defineStore('graphics', {
 		applyQualityPreset(preset) {
 			switch (preset) {
 				case 'ultra':
-					this.setMsaaSettings(true, 8);
-					this.setFxaaEnabled(false);
-					this.setHdrEnabled(true);
-					this.setAmbientOcclusionEnabled(true);
-					this.setRequestRenderMode(false);
-					break;
+					this.setMsaaSettings(true, 8)
+					this.setFxaaEnabled(false)
+					this.setHdrEnabled(true)
+					this.setAmbientOcclusionEnabled(true)
+					this.setRequestRenderMode(false)
+					break
 				case 'high':
-					this.setMsaaSettings(true, 4);
-					this.setFxaaEnabled(false);
-					this.setHdrEnabled(false);
-					this.setAmbientOcclusionEnabled(true);
-					this.setRequestRenderMode(false);
-					break;
+					this.setMsaaSettings(true, 4)
+					this.setFxaaEnabled(false)
+					this.setHdrEnabled(false)
+					this.setAmbientOcclusionEnabled(true)
+					this.setRequestRenderMode(false)
+					break
 				case 'medium':
-					this.setMsaaSettings(true, 2);
-					this.setFxaaEnabled(false);
-					this.setHdrEnabled(false);
-					this.setAmbientOcclusionEnabled(false);
-					this.setRequestRenderMode(false);
-					break;
+					this.setMsaaSettings(true, 2)
+					this.setFxaaEnabled(false)
+					this.setHdrEnabled(false)
+					this.setAmbientOcclusionEnabled(false)
+					this.setRequestRenderMode(false)
+					break
 				case 'low':
-					this.setMsaaSettings(false, 1);
-					this.setFxaaEnabled(true);
-					this.setHdrEnabled(false);
-					this.setAmbientOcclusionEnabled(false);
-					this.setRequestRenderMode(false);
-					break;
+					this.setMsaaSettings(false, 1)
+					this.setFxaaEnabled(true)
+					this.setHdrEnabled(false)
+					this.setAmbientOcclusionEnabled(false)
+					this.setRequestRenderMode(false)
+					break
 				case 'performance':
-					this.setMsaaSettings(false, 1);
-					this.setFxaaEnabled(false);
-					this.setHdrEnabled(false);
-					this.setAmbientOcclusionEnabled(false);
-					this.setRequestRenderMode(true);
-					break;
+					this.setMsaaSettings(false, 1)
+					this.setFxaaEnabled(false)
+					this.setHdrEnabled(false)
+					this.setAmbientOcclusionEnabled(false)
+					this.setRequestRenderMode(true)
+					break
 				default:
-					console.warn(`Unknown quality preset: ${preset}`);
+					console.warn(`Unknown quality preset: ${preset}`)
 			}
 		},
 	},
-});
+})

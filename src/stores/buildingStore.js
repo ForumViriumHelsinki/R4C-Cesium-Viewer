@@ -5,7 +5,7 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 /**
  * Building Pinia Store
@@ -37,29 +37,29 @@ export const useBuildingStore = defineStore('building', {
 		 */
 		setBuildingFeatures(buildings, postalCode) {
 			if (!buildings?.features?.length) {
-				return;
+				return
 			}
 
 			// Tag features with postal code for eviction tracking
 			if (postalCode) {
 				buildings.features.forEach((feature) => {
 					if (!feature.properties) {
-						feature.properties = {};
+						feature.properties = {}
 					}
-					feature.properties._cached_postal_code = postalCode;
-				});
+					feature.properties._cached_postal_code = postalCode
+				})
 
 				// Update LRU cache: remove and re-add to update position (most recent at end)
-				this.postalCodeCache.delete(postalCode);
-				this.postalCodeCache.set(postalCode, Date.now());
+				this.postalCodeCache.delete(postalCode)
+				this.postalCodeCache.set(postalCode, Date.now())
 
 				// Evict oldest postal code if over limit
 				if (this.postalCodeCache.size > this.maxPostalCodes) {
-					const oldestPostalCode = this.postalCodeCache.keys().next().value;
-					this.evictPostalCode(oldestPostalCode);
+					const oldestPostalCode = this.postalCodeCache.keys().next().value
+					this.evictPostalCode(oldestPostalCode)
 					console.log(
 						`[BuildingStore] 🧹 Evicted postal code ${oldestPostalCode} (LRU cache limit: ${this.maxPostalCodes})`
-					);
+					)
 				}
 			}
 
@@ -68,28 +68,28 @@ export const useBuildingStore = defineStore('building', {
 				this.buildingFeatures = {
 					type: 'FeatureCollection',
 					features: [...buildings.features],
-				};
+				}
 				console.log(
 					`[BuildingStore] 📦 Initialized with ${buildings.features.length} features${postalCode ? ` for postal code ${postalCode}` : ''}`
-				);
-				return;
+				)
+				return
 			}
 
 			// Create a Set of existing feature IDs for fast lookup
-			const existingIds = new Set(this.buildingFeatures.features.map((f) => f.id));
+			const existingIds = new Set(this.buildingFeatures.features.map((f) => f.id))
 
 			// Add only new features (avoid duplicates)
-			const newFeatures = buildings.features.filter((f) => !existingIds.has(f.id));
+			const newFeatures = buildings.features.filter((f) => !existingIds.has(f.id))
 
 			if (newFeatures.length > 0) {
-				this.buildingFeatures.features.push(...newFeatures);
+				this.buildingFeatures.features.push(...newFeatures)
 				console.log(
 					`[BuildingStore] 📦 Added ${newFeatures.length} new features (total: ${this.buildingFeatures.features.length})${postalCode ? ` for postal code ${postalCode}` : ''}, cache size: ${this.postalCodeCache.size}/${this.maxPostalCodes}`
-				);
+				)
 			} else {
 				console.log(
 					`[BuildingStore] 📦 No new features to add (${buildings.features.length} already exist)${postalCode ? ` for postal code ${postalCode}` : ''}`
-				);
+				)
 			}
 		},
 
@@ -102,29 +102,29 @@ export const useBuildingStore = defineStore('building', {
 		 */
 		evictPostalCode(postalCode) {
 			if (!this.buildingFeatures?.features) {
-				return;
+				return
 			}
 
-			const beforeCount = this.buildingFeatures.features.length;
+			const beforeCount = this.buildingFeatures.features.length
 			this.buildingFeatures.features = this.buildingFeatures.features.filter(
 				(f) => f.properties?._cached_postal_code !== postalCode
-			);
-			const afterCount = this.buildingFeatures.features.length;
-			const evictedCount = beforeCount - afterCount;
+			)
+			const afterCount = this.buildingFeatures.features.length
+			const evictedCount = beforeCount - afterCount
 
-			this.postalCodeCache.delete(postalCode);
+			this.postalCodeCache.delete(postalCode)
 			console.log(
 				`[BuildingStore] 🗑️ Evicted ${evictedCount} features for postal code ${postalCode} (remaining: ${afterCount})`
-			);
+			)
 		},
 
 		/**
 		 * Clears all building features and LRU cache (call when navigating away or resetting view)
 		 */
 		clearBuildingFeatures() {
-			this.buildingFeatures = null;
-			this.postalCodeCache.clear();
-			console.log('[BuildingStore] 🗑️ Cleared all building features and cache');
+			this.buildingFeatures = null
+			this.postalCodeCache.clear()
+			console.log('[BuildingStore] 🗑️ Cleared all building features and cache')
 		},
 
 		/**
@@ -132,7 +132,7 @@ export const useBuildingStore = defineStore('building', {
 		 * @param {string} date - Date string in YYYY-MM-DD format
 		 */
 		settTimeseriesDate(date) {
-			this.timeseriesDate = date;
+			this.timeseriesDate = date
 		},
 	},
-});
+})

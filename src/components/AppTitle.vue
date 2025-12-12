@@ -14,9 +14,7 @@
 		</template>
 		<template #default>
 			<div class="tooltip-content">
-				<div class="tooltip-header">
-Version Information
-</div>
+				<div class="tooltip-header">Version Information</div>
 				<v-divider class="my-2" />
 				<div class="tooltip-row">
 					<span class="tooltip-label">Version:</span>
@@ -48,26 +46,26 @@ Version Information
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { VERSION_INFO } from '../version.js';
+import { computed } from 'vue'
+import { VERSION_INFO } from '../version.js'
 
-const versionInfo = VERSION_INFO;
+const versionInfo = VERSION_INFO
 
 const formattedCommitDate = computed(() => {
 	try {
-		return new Date(versionInfo.commitDate).toLocaleString();
+		return new Date(versionInfo.commitDate).toLocaleString()
 	} catch {
-		return versionInfo.commitDate;
+		return versionInfo.commitDate
 	}
-});
+})
 
 const formattedBuildTime = computed(() => {
 	try {
-		return new Date(versionInfo.buildTime).toLocaleString();
+		return new Date(versionInfo.buildTime).toLocaleString()
 	} catch {
-		return versionInfo.buildTime;
+		return versionInfo.buildTime
 	}
-});
+})
 </script>
 
 <style scoped>

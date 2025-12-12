@@ -12,7 +12,7 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 /**
  * Toggle Pinia Store
@@ -73,147 +73,147 @@ export const useToggleStore = defineStore('toggle', {
 		 * @param {boolean} enabled - True to show NDVI layers
 		 */
 		setNDVI(enabled) {
-			this.ndvi = enabled;
+			this.ndvi = enabled
 		},
 		/**
 		 * Toggle 250m population statistical grid visibility
 		 * @param {boolean} enabled - True to show population grid
 		 */
 		setGrid250m(enabled) {
-			this.grid250m = enabled;
+			this.grid250m = enabled
 		},
 		/**
 		 * Toggle Capital Region cold area visualization
 		 * @param {boolean} enabled - True to show Capital Region cooling zones
 		 */
 		setCapitalRegionCold(enabled) {
-			this.capitalRegionCold = enabled;
+			this.capitalRegionCold = enabled
 		},
 		/**
 		 * Toggle postal code boundary visibility
 		 * @param {boolean} enabled - True to show postal code polygons
 		 */
 		setPostalCode(enabled) {
-			this.postalCode = enabled;
+			this.postalCode = enabled
 		},
 		/**
 		 * Toggle nature grid overlay
 		 * @param {boolean} enabled - True to show nature grid
 		 */
 		setNatureGrid(enabled) {
-			this.natureGrid = enabled;
+			this.natureGrid = enabled
 		},
 		/**
 		 * Toggle public transport travel time visualization
 		 * @param {boolean} enabled - True to show travel time grid labels
 		 */
 		setTravelTime(enabled) {
-			this.travelTime = enabled;
+			this.travelTime = enabled
 		},
 		/**
 		 * Trigger grid reset operation
 		 * @param {boolean} enabled - True to reset grid to default state
 		 */
 		setResetGrid(enabled) {
-			this.resetGrid = enabled;
+			this.resetGrid = enabled
 		},
 		/**
 		 * Toggle grid-based view mode
 		 * @param {boolean} enabled - True to enable grid view
 		 */
 		setGridView(enabled) {
-			this.gridView = enabled;
+			this.gridView = enabled
 		},
 		/**
 		 * Toggle Helsinki-specific view mode
 		 * @param {boolean} enabled - True to enable Helsinki view
 		 */
 		setHelsinkiView(enabled) {
-			this.helsinkiView = enabled;
+			this.helsinkiView = enabled
 		},
 		/**
 		 * Toggle data visualization plot visibility
 		 * @param {boolean} enabled - True to show plots
 		 */
 		setShowPlot(enabled) {
-			this.showPlot = enabled;
+			this.showPlot = enabled
 		},
 		/**
 		 * Toggle print mode for optimized printing
 		 * @param {boolean} enabled - True to enable print mode
 		 */
 		setPrint(enabled) {
-			this.print = enabled;
+			this.print = enabled
 		},
 		/**
 		 * Toggle low vegetation layer visibility (grass, wetlands)
 		 * @param {boolean} show - True to show vegetation layers
 		 */
 		setShowVegetation(show) {
-			this.showVegetation = show;
+			this.showVegetation = show
 		},
 		/**
 		 * Toggle other nature surface visibility (rock, sand, bare soil)
 		 * @param {boolean} show - True to show other nature layers
 		 */
 		setShowOtherNature(show) {
-			this.showOtherNature = show;
+			this.showOtherNature = show
 		},
 		/**
 		 * Toggle filter to hide newly constructed buildings
 		 * @param {boolean} hide - True to hide new buildings
 		 */
 		setHideNewBuildings(hide) {
-			this.hideNewBuildings = hide;
+			this.hideNewBuildings = hide
 		},
 		/**
 		 * Toggle filter to hide non-SOTE buildings (excluding social/health facilities)
 		 * @param {boolean} hide - True to hide non-SOTE buildings
 		 */
 		setHideNonSote(hide) {
-			this.hideNonSote = hide;
+			this.hideNonSote = hide
 		},
 		/**
 		 * Toggle filter to hide low-value data points
 		 * @param {boolean} hide - True to hide low values
 		 */
 		setHideLow(hide) {
-			this.hideLow = hide;
+			this.hideLow = hide
 		},
 		/**
 		 * Toggle tree canopy layer visibility (all height categories)
 		 * @param {boolean} treesVisible - True to show tree layers
 		 */
 		setShowTrees(treesVisible) {
-			this.showTrees = treesVisible;
+			this.showTrees = treesVisible
 		},
 		/**
 		 * Toggle cooling zone visualization visibility
 		 * @param {boolean} coldAreasHidden - True to hide cold areas
 		 */
 		setHideColdAreas(coldAreasHidden) {
-			this.hideColdAreas = coldAreasHidden;
+			this.hideColdAreas = coldAreasHidden
 		},
 		/**
 		 * Toggle HSY landcover WMS layer visibility
 		 * @param {boolean} showLandCover - True to show landcover layers
 		 */
 		setLandCover(showLandCover) {
-			this.landCover = showLandCover;
+			this.landCover = showLandCover
 		},
 		/**
 		 * Toggle view switching state
 		 * @param {boolean} switchView - True to enable view switch
 		 */
 		setSwitchView(switchView) {
-			this.switchView = switchView;
+			this.switchView = switchView
 		},
 		/**
 		 * Toggle survey location marker visibility
 		 * @param {boolean} show - True to show survey places
 		 */
 		setSurveyPlaces(show) {
-			this.surveyPlaces = show;
+			this.surveyPlaces = show
 		},
 		/**
 		 * Toggle viewport tile-based building loading mode
@@ -221,7 +221,7 @@ export const useToggleStore = defineStore('toggle', {
 		 * @param {boolean} enabled - True to enable tile-based viewport loading
 		 */
 		setViewportTileMode(enabled) {
-			this.viewportTileMode = enabled;
+			this.viewportTileMode = enabled
 		},
 		/**
 		 * Resets all toggles to their initial default values
@@ -229,7 +229,7 @@ export const useToggleStore = defineStore('toggle', {
 		 * @returns {void}
 		 */
 		reset() {
-			this.$reset(); // Pinia has a built-in $reset function which resets state to initial values
+			this.$reset() // Pinia has a built-in $reset function which resets state to initial values
 		},
 	},
-});
+})

@@ -153,10 +153,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted, onMounted, watch } from 'vue';
-import { useGlobalStore } from '../stores/globalStore';
-import Camera from '../services/camera';
-import * as Cesium from 'cesium';
+import * as Cesium from 'cesium'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import Camera from '../services/camera'
+import { useGlobalStore } from '../stores/globalStore'
 
 // Direction configuration
 const directions = [
@@ -168,108 +168,108 @@ const directions = [
 	{ name: 'SW', label: 'Southwest', degrees: 225, position: 'southwest' },
 	{ name: 'W', label: 'West', degrees: 270, position: 'west' },
 	{ name: 'NW', label: 'Northwest', degrees: 315, position: 'northwest' },
-];
+]
 
 // Check for reduced motion preference
-const prefersReducedMotion = ref(false);
+const prefersReducedMotion = ref(false)
 
-const store = useGlobalStore();
-let cameraService = null;
-const currentHeading = ref(0);
-const viewerReady = ref(false);
-let motionMediaQuery = null;
+const store = useGlobalStore()
+let cameraService = null
+const currentHeading = ref(0)
+const viewerReady = ref(false)
+let motionMediaQuery = null
 
 onMounted(() => {
 	// Set up reduced motion detection
-	motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-	prefersReducedMotion.value = motionMediaQuery.matches;
+	motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+	prefersReducedMotion.value = motionMediaQuery.matches
 
 	const handleMotionChange = (e) => {
-		prefersReducedMotion.value = e.matches;
-	};
-	motionMediaQuery.addEventListener('change', handleMotionChange);
-});
+		prefersReducedMotion.value = e.matches
+	}
+	motionMediaQuery.addEventListener('change', handleMotionChange)
+})
 
 const updateHeading = () => {
 	if (store.cesiumViewer) {
-		const headingDegrees = Cesium.Math.toDegrees(store.cesiumViewer.camera.heading);
-		currentHeading.value = headingDegrees;
+		const headingDegrees = Cesium.Math.toDegrees(store.cesiumViewer.camera.heading)
+		currentHeading.value = headingDegrees
 	}
-};
+}
 
 watch(
 	() => store.cesiumViewer,
 	(newViewer) => {
 		if (newViewer && !cameraService) {
-			cameraService = new Camera();
+			cameraService = new Camera()
 
-			newViewer.camera.changed.addEventListener(updateHeading);
-			newViewer.camera.moveEnd.addEventListener(updateHeading);
-			updateHeading();
+			newViewer.camera.changed.addEventListener(updateHeading)
+			newViewer.camera.moveEnd.addEventListener(updateHeading)
+			updateHeading()
 
-			viewerReady.value = true;
+			viewerReady.value = true
 		}
 	},
 	{ immediate: true }
-);
+)
 
 onUnmounted(() => {
 	if (store.cesiumViewer) {
-		store.cesiumViewer.camera.changed.removeEventListener(updateHeading);
-		store.cesiumViewer.camera.moveEnd.removeEventListener(updateHeading);
+		store.cesiumViewer.camera.changed.removeEventListener(updateHeading)
+		store.cesiumViewer.camera.moveEnd.removeEventListener(updateHeading)
 	}
-});
+})
 
 // Normalize heading to 0-359 range
 const normalizedHeading = computed(() => {
-	return Math.round(((currentHeading.value % 360) + 360) % 360);
-});
+	return Math.round(((currentHeading.value % 360) + 360) % 360)
+})
 
 // Get current direction name for screen readers
 const currentDirectionName = computed(() => {
-	const heading = normalizedHeading.value;
-	const index = Math.round(heading / 45) % 8;
-	return directions[index].label;
-});
+	const heading = normalizedHeading.value
+	const index = Math.round(heading / 45) % 8
+	return directions[index].label
+})
 
 // Check if a direction button should show as active
 const isActiveDirection = (degrees) => {
-	const heading = normalizedHeading.value;
-	const diff = Math.abs(heading - degrees);
+	const heading = normalizedHeading.value
+	const diff = Math.abs(heading - degrees)
 	// Consider active if within 22.5 degrees (half of 45-degree sector)
-	return diff < 22.5 || diff > 337.5;
-};
+	return diff < 22.5 || diff > 337.5
+}
 
 // Get button color based on direction and active state
 const getButtonColor = (dir) => {
 	if (dir.name === 'N') {
-		return isActiveDirection(dir.degrees) ? 'error' : undefined;
+		return isActiveDirection(dir.degrees) ? 'error' : undefined
 	}
-	return isActiveDirection(dir.degrees) ? 'primary' : undefined;
-};
+	return isActiveDirection(dir.degrees) ? 'primary' : undefined
+}
 
 // Compass ring rotates opposite to heading to show current orientation
 const compassRingStyle = computed(() => {
 	const style = {
 		transform: `rotate(${-currentHeading.value}deg)`,
-	};
-	if (!prefersReducedMotion.value) {
-		style.transition = 'transform 0.2s ease-out';
 	}
-	return style;
-});
+	if (!prefersReducedMotion.value) {
+		style.transition = 'transform 0.2s ease-out'
+	}
+	return style
+})
 
 const setHeading = (degrees) => {
-	cameraService?.setHeading(degrees, prefersReducedMotion.value);
-};
+	cameraService?.setHeading(degrees, prefersReducedMotion.value)
+}
 
 const zoomIn = () => {
-	cameraService?.zoom(1.5);
-};
+	cameraService?.zoom(1.5)
+}
 
 const zoomOut = () => {
-	cameraService?.zoom(0.5);
-};
+	cameraService?.zoom(0.5)
+}
 </script>
 
 <style scoped>

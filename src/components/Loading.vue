@@ -3,26 +3,24 @@
 		v-if="visible"
 		class="loading-overlay"
 	>
-		<div class="loading-message">
-Loading data, please wait
-</div>
+		<div class="loading-message">Loading data, please wait</div>
 	</div>
 </template>
 
 <script>
-import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../stores/globalStore.js';
+import { storeToRefs } from 'pinia'
+import { useGlobalStore } from '../stores/globalStore.js'
 
 export default {
 	setup() {
-		const store = useGlobalStore();
-		const { isLoading: visible } = storeToRefs(store);
+		const store = useGlobalStore()
+		const { isLoading: visible } = storeToRefs(store)
 
 		return {
 			visible,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

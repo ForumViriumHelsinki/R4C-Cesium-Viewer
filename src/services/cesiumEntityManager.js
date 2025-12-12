@@ -26,19 +26,19 @@ class CesiumEntityManager {
 		 * Map of tree kohde_id to Cesium.Entity
 		 * @type {Map<string, Cesium.Entity>}
 		 */
-		this.treeEntitiesById = new Map();
+		this.treeEntitiesById = new Map()
 
 		/**
 		 * Map of building ID to Cesium.Entity
 		 * @type {Map<string, Cesium.Entity>}
 		 */
-		this.buildingEntitiesById = new Map();
+		this.buildingEntitiesById = new Map()
 
 		/**
 		 * Reference to buildings datasource for public API access
 		 * @type {Cesium.DataSource|null}
 		 */
-		this.buildingsDataSource = null;
+		this.buildingsDataSource = null
 	}
 
 	/**
@@ -48,16 +48,16 @@ class CesiumEntityManager {
 	 * @param {Array<Cesium.Entity>} entities - Tree entities from Cesium datasource
 	 */
 	registerTreeEntities(entities) {
-		this.treeEntitiesById.clear();
+		this.treeEntitiesById.clear()
 
 		for (const entity of entities) {
-			const kohdeId = entity._properties?._kohde_id?._value;
+			const kohdeId = entity._properties?._kohde_id?._value
 			if (kohdeId) {
-				this.treeEntitiesById.set(kohdeId, entity);
+				this.treeEntitiesById.set(kohdeId, entity)
 			}
 		}
 
-		console.log(`[CesiumEntityManager] Registered ${this.treeEntitiesById.size} tree entities`);
+		console.log(`[CesiumEntityManager] Registered ${this.treeEntitiesById.size} tree entities`)
 	}
 
 	/**
@@ -67,18 +67,18 @@ class CesiumEntityManager {
 	 * @param {Array<Cesium.Entity>} entities - Building entities from datasource
 	 */
 	registerBuildingEntities(entities) {
-		this.buildingEntitiesById.clear();
+		this.buildingEntitiesById.clear()
 
 		for (const entity of entities) {
-			const id = entity._properties?._id?._value || entity._properties?._hki_id?._value;
+			const id = entity._properties?._id?._value || entity._properties?._hki_id?._value
 			if (id) {
-				this.buildingEntitiesById.set(id, entity);
+				this.buildingEntitiesById.set(id, entity)
 			}
 		}
 
 		console.log(
 			`[CesiumEntityManager] Registered ${this.buildingEntitiesById.size} building entities`
-		);
+		)
 	}
 
 	/**
@@ -88,7 +88,7 @@ class CesiumEntityManager {
 	 * @param {Cesium.DataSource} datasource - Buildings datasource
 	 */
 	setBuildingsDataSource(datasource) {
-		this.buildingsDataSource = datasource;
+		this.buildingsDataSource = datasource
 	}
 
 	/**
@@ -98,7 +98,7 @@ class CesiumEntityManager {
 	 * @returns {Cesium.Entity|undefined} Tree entity or undefined
 	 */
 	getTreeEntity(kohdeId) {
-		return this.treeEntitiesById.get(kohdeId);
+		return this.treeEntitiesById.get(kohdeId)
 	}
 
 	/**
@@ -108,7 +108,7 @@ class CesiumEntityManager {
 	 * @returns {Cesium.Entity|undefined} Building entity or undefined
 	 */
 	getBuildingEntity(buildingId) {
-		return this.buildingEntitiesById.get(buildingId);
+		return this.buildingEntitiesById.get(buildingId)
 	}
 
 	/**
@@ -117,7 +117,7 @@ class CesiumEntityManager {
 	 * @returns {Array<Cesium.Entity>} Array of tree entities
 	 */
 	getAllTreeEntities() {
-		return Array.from(this.treeEntitiesById.values());
+		return Array.from(this.treeEntitiesById.values())
 	}
 
 	/**
@@ -127,9 +127,9 @@ class CesiumEntityManager {
 	 */
 	getAllBuildingEntities() {
 		if (this.buildingsDataSource) {
-			return this.buildingsDataSource.entities.values;
+			return this.buildingsDataSource.entities.values
 		}
-		return Array.from(this.buildingEntitiesById.values());
+		return Array.from(this.buildingEntitiesById.values())
 	}
 
 	/**
@@ -137,10 +137,10 @@ class CesiumEntityManager {
 	 * Call when switching postal codes or resetting view
 	 */
 	clear() {
-		this.treeEntitiesById.clear();
-		this.buildingEntitiesById.clear();
-		this.buildingsDataSource = null;
-		console.log('[CesiumEntityManager] Cleared all entity references');
+		this.treeEntitiesById.clear()
+		this.buildingEntitiesById.clear()
+		this.buildingsDataSource = null
+		console.log('[CesiumEntityManager] Cleared all entity references')
 	}
 
 	/**
@@ -153,9 +153,9 @@ class CesiumEntityManager {
 			treeEntities: this.treeEntitiesById.size,
 			buildingEntities: this.buildingEntitiesById.size,
 			hasBuildingsDataSource: !!this.buildingsDataSource,
-		};
+		}
 	}
 }
 
 // Export singleton instance
-export const cesiumEntityManager = new CesiumEntityManager();
+export const cesiumEntityManager = new CesiumEntityManager()

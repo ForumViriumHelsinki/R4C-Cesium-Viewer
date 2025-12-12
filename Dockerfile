@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM oven/bun:1 AS build
 
 ARG SENTRY_AUTH_TOKEN
 ARG VITE_SENTRY_DSN
@@ -8,16 +8,15 @@ ENV VITE_PYGEOAPI_HOST=${VITE_PYGEOAPI_HOST}
 
 WORKDIR /app
 
-COPY package*.json ./
-# Cache npm packages across builds for faster installs
-RUN --mount=type=cache,target=/root/.npm npm ci
+COPY package.json bun.lockb ./
+# Cache bun packages across builds for faster installs
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 
 COPY . .
 
-# Cache npm and Vite build artifacts for faster rebuilds
-RUN --mount=type=cache,target=/root/.npm \
-    --mount=type=cache,target=/app/node_modules/.vite \
-    NODE_ENV=production ./node_modules/.bin/vite build
+# Cache Vite build artifacts for faster rebuilds
+RUN --mount=type=cache,target=/app/node_modules/.vite \
+    NODE_ENV=production bun run build
 
 FROM nginx:1.27
 

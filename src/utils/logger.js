@@ -18,7 +18,7 @@
  * @module utils/logger
  */
 
-const isDev = import.meta.env.DEV;
+const isDev = import.meta.env.DEV
 
 export const logger = {
 	/**
@@ -58,6 +58,6 @@ export const logger = {
 	 * @param {string} style - CSS style string
 	 */
 	styled: (message, style) => isDev && console.log(`%c${message}`, style),
-};
+}
 
-export default logger;
+export default logger

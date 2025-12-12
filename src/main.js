@@ -1,19 +1,19 @@
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import * as Sentry from '@sentry/vue';
-import { createSentryPiniaPlugin } from '@sentry/vue';
-import App from './App.vue';
-import './version.js'; // Log version info to console
-import { useGlobalStore } from './stores/globalStore.js';
-import logger from './utils/logger.js';
+import * as Sentry from '@sentry/vue'
+import { createSentryPiniaPlugin } from '@sentry/vue'
+import { createPinia } from 'pinia'
+import { createApp } from 'vue'
+import App from './App.vue'
+import './version.js' // Log version info to console
+import { useGlobalStore } from './stores/globalStore.js'
+import logger from './utils/logger.js'
 
 // Vuetify
-import 'vuetify/styles';
-import { createVuetify } from 'vuetify';
-import { aliases, mdi } from 'vuetify/iconsets/mdi';
-import { md1 } from 'vuetify/blueprints';
+import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import { md1 } from 'vuetify/blueprints'
+import { aliases, mdi } from 'vuetify/iconsets/mdi'
 
-import { version } from '../package.json';
+import { version } from '../package.json'
 
 // If you're using one of our framework SDK packages, like `@sentry/react`,
 // substitute its name for `@sentry/browser` here
@@ -28,9 +28,9 @@ const vuetify = createVuetify({
 			mdi,
 		},
 	},
-});
+})
 
-const pinia = createPinia();
+const pinia = createPinia()
 pinia.use(
 	createSentryPiniaPlugin({
 		// Exclude deprecated Cesium entity properties from Sentry state capture
@@ -43,17 +43,17 @@ pinia.use(
 					postalCodeData: _postalCodeData,
 					heatFloodVulnerabilityEntity: _heatFloodVulnerabilityEntity,
 					...serializable
-				} = state;
-				return serializable;
+				} = state
+				return serializable
 			}
 
 			// For all other stores, return state as-is
-			return state;
+			return state
 		},
 	})
-);
+)
 
-const app = createApp(App);
+const app = createApp(App)
 
 Sentry.init({
 	app,
@@ -62,7 +62,7 @@ Sentry.init({
 	// Vue: Vue,
 	dsn: import.meta.env.VITE_SENTRY_DSN,
 	environment: import.meta.env.MODE,
-	release: 'r4c-cesium-viewer@' + version,
+	release: `r4c-cesium-viewer@${version}`,
 
 	// This enables automatic instrumentation (highly recommended),
 	// but is not necessary for purely manual usage
@@ -93,26 +93,26 @@ Sentry.init({
 	// plus for 100% of sessions with an error
 	replaysSessionSampleRate: 0.1,
 	replaysOnErrorSampleRate: 1.0,
-});
+})
 
 // Log Sentry configuration in development only (security: avoid exposing DSN)
 logger.debug('Sentry configuration:', {
 	environment: import.meta.env.MODE,
 	release: `r4c-cesium-viewer@${version}`,
 	dsnConfigured: !!import.meta.env.VITE_SENTRY_DSN,
-});
+})
 
-app.use(pinia);
-app.use(vuetify);
+app.use(pinia)
+app.use(vuetify)
 
 // Expose store instance to window for E2E testing
 // Must be done BEFORE mounting so the store is available when components initialize
 if (import.meta.env.MODE === 'development' || import.meta.env.MODE === 'test') {
 	// Initialize the store and expose the instance
-	const globalStore = useGlobalStore();
-	window.globalStore = globalStore;
+	const globalStore = useGlobalStore()
+	window.globalStore = globalStore
 	// Also expose the function for backwards compatibility
-	window.useGlobalStore = () => globalStore;
+	window.useGlobalStore = () => globalStore
 }
 
-app.mount('#app');
+app.mount('#app')

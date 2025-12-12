@@ -35,9 +35,9 @@
  * @see {@link module:stores/loadingStore}
  */
 
-import { useLoadingStore } from '../stores/loadingStore.js';
-import cacheService from './cacheService.js';
-import progressiveLoader from './progressiveLoader.js';
+import { useLoadingStore } from '../stores/loadingStore.js'
+import cacheService from './cacheService.js'
+import progressiveLoader from './progressiveLoader.js'
 
 /**
  * Layer loading configuration
@@ -84,9 +84,9 @@ class UnifiedLoader {
 	 */
 	constructor() {
 		/** @type {Map<string, AbortController>} Active request controllers for cancellation */
-		this.activeRequests = new Map();
+		this.activeRequests = new Map()
 		/** @type {Object|null} Lazy-loaded loading store instance */
-		this._loadingStore = null;
+		this._loadingStore = null
 	}
 
 	/**
@@ -99,9 +99,9 @@ class UnifiedLoader {
 	get loadingStore() {
 		if (!this._loadingStore) {
 			try {
-				this._loadingStore = useLoadingStore();
+				this._loadingStore = useLoadingStore()
 			} catch (error) {
-				console.warn('Loading store not available, using fallback:', error.message);
+				console.warn('Loading store not available, using fallback:', error.message)
 				// Provide a fallback object with minimal interface
 				this._loadingStore = {
 					startLayerLoading: () => {},
@@ -111,10 +111,10 @@ class UnifiedLoader {
 					clearLayerError: () => {},
 					updateCacheStatus: () => {},
 					layers: {},
-				};
+				}
 			}
 		}
-		return this._loadingStore;
+		return this._loadingStore
 	}
 
 	/**
@@ -170,7 +170,7 @@ class UnifiedLoader {
 	 * });
 	 */
 	async loadLayer(config) {
-		const { layerId, url, type = 'geojson', processor, options = {} } = config;
+		const { layerId, url, type = 'geojson', processor, options = {} } = config
 
 		const {
 			cache = true,
@@ -180,53 +180,53 @@ class UnifiedLoader {
 			progressive = false,
 			background = false,
 			priority = 'normal',
-		} = options;
+		} = options
 
 		try {
 			// Start loading tracking
-			this.loadingStore.startLayerLoading(layerId, { url, type, priority });
+			this.loadingStore.startLayerLoading(layerId, { url, type, priority })
 
 			// Check cache first if enabled
 			if (cache) {
-				const cached = await this.checkCache(layerId, url, cacheTTL);
+				const cached = await this.checkCache(layerId, url, cacheTTL)
 				if (cached) {
 					await this.processData(cached, processor, layerId, {
 						fromCache: true,
 						progressive,
-					});
-					this.loadingStore.completeLayerLoading(layerId);
-					return cached;
+					})
+					this.loadingStore.completeLayerLoading(layerId)
+					return cached
 				}
 			}
 
 			// Choose loading strategy based on configuration
-			let data;
+			let data
 			if (progressive && type === 'geojson') {
 				data = await this.loadProgressively(layerId, url, processor, {
 					batchSize,
 					background,
 					retries,
-				});
+				})
 			} else {
-				data = await this.loadStandard(layerId, url, type, retries);
+				data = await this.loadStandard(layerId, url, type, retries)
 			}
 
 			// Process the loaded data
 			if (processor && data) {
-				await this.processData(data, processor, layerId, { fromCache: false, progressive });
+				await this.processData(data, processor, layerId, { fromCache: false, progressive })
 			}
 
 			// Cache the data if enabled
 			if (cache && data) {
-				await this.cacheData(layerId, url, data, cacheTTL);
+				await this.cacheData(layerId, url, data, cacheTTL)
 			}
 
-			this.loadingStore.completeLayerLoading(layerId);
-			return data;
+			this.loadingStore.completeLayerLoading(layerId)
+			return data
 		} catch (error) {
-			this.loadingStore.setLayerError(layerId, error.message);
-			console.error(`Failed to load layer ${layerId}:`, error?.message || error);
-			throw error;
+			this.loadingStore.setLayerError(layerId, error.message)
+			console.error(`Failed to load layer ${layerId}:`, error?.message || error)
+			throw error
 		}
 	}
 
@@ -242,18 +242,18 @@ class UnifiedLoader {
 	 */
 	async checkCache(layerId, url, ttl) {
 		try {
-			const cacheKey = this.generateCacheKey(layerId, url);
-			const cached = await cacheService.getData(cacheKey);
+			const cacheKey = this.generateCacheKey(layerId, url)
+			const cached = await cacheService.getData(cacheKey)
 
 			if (cached && this.isCacheValid(cached, ttl)) {
-				console.log(`✓ Using cached data for ${layerId}`);
-				this.loadingStore.updateLayerProgress(layerId, 100, 100);
-				return cached.data;
+				console.log(`✓ Using cached data for ${layerId}`)
+				this.loadingStore.updateLayerProgress(layerId, 100, 100)
+				return cached.data
 			}
 		} catch (error) {
-			console.warn(`Cache check failed for ${layerId}:`, error?.message || error);
+			console.warn(`Cache check failed for ${layerId}:`, error?.message || error)
 		}
-		return null;
+		return null
 	}
 
 	/**
@@ -269,8 +269,8 @@ class UnifiedLoader {
 	 * @private
 	 */
 	async loadStandard(layerId, url, type, retries) {
-		const controller = new AbortController();
-		this.activeRequests.set(layerId, controller);
+		const controller = new AbortController()
+		this.activeRequests.set(layerId, controller)
 
 		try {
 			const response = await this.fetchWithRetry(
@@ -279,28 +279,28 @@ class UnifiedLoader {
 					signal: controller.signal,
 				},
 				retries
-			);
+			)
 
-			let data;
+			let data
 			switch (type) {
 				case 'json':
 				case 'geojson':
-					data = await response.json();
-					break;
+					data = await response.json()
+					break
 				case 'text':
-					data = await response.text();
-					break;
+					data = await response.text()
+					break
 				case 'blob':
-					data = await response.blob();
-					break;
+					data = await response.blob()
+					break
 				default:
-					data = await response.json();
+					data = await response.json()
 			}
 
-			this.loadingStore.updateLayerProgress(layerId, 100, 100);
-			return data;
+			this.loadingStore.updateLayerProgress(layerId, 100, 100)
+			return data
 		} finally {
-			this.activeRequests.delete(layerId);
+			this.activeRequests.delete(layerId)
 		}
 	}
 
@@ -319,14 +319,14 @@ class UnifiedLoader {
 		return await progressiveLoader.loadData(url, {
 			...options,
 			onProgress: (current, total) => {
-				this.loadingStore.updateLayerProgress(layerId, current, total);
+				this.loadingStore.updateLayerProgress(layerId, current, total)
 			},
 			onChunk: async (chunk) => {
 				if (processor) {
-					await this.processDataChunk(chunk, processor, layerId);
+					await this.processDataChunk(chunk, processor, layerId)
 				}
 			},
-		});
+		})
 	}
 
 	/**
@@ -347,29 +347,29 @@ class UnifiedLoader {
 	 * @private
 	 */
 	async processData(data, processor, layerId, metadata = {}) {
-		if (!processor || !data) return;
+		if (!processor || !data) return
 
 		// Auto-fix GeoJSON missing type property
 		if (data.features && !data.type) {
 			console.warn(
 				`[UnifiedLoader] GeoJSON data for ${layerId} missing 'type' property, auto-fixing to 'FeatureCollection'`
-			);
-			data.type = 'FeatureCollection';
+			)
+			data.type = 'FeatureCollection'
 		}
 
 		try {
 			// For large datasets, process in batches to avoid blocking
 			// Only batch if progressive mode is enabled - non-progressive processors
 			// are not designed for batched data and will fail
-			const shouldBatch = metadata.progressive && data.features && data.features.length > 100;
+			const shouldBatch = metadata.progressive && data.features && data.features.length > 100
 			if (shouldBatch) {
-				await this.processBatchedData(data, processor, layerId);
+				await this.processBatchedData(data, processor, layerId)
 			} else {
-				await processor(data, metadata);
+				await processor(data, metadata)
 			}
 		} catch (error) {
-			console.error(`Error processing data for ${layerId}:`, error?.message || error);
-			throw error;
+			console.error(`Error processing data for ${layerId}:`, error?.message || error)
+			throw error
 		}
 	}
 
@@ -391,28 +391,28 @@ class UnifiedLoader {
 	 * @private
 	 */
 	async processBatchedData(data, processor, layerId) {
-		const features = data.features || [];
-		const batchSize = 25;
-		let processed = 0;
+		const features = data.features || []
+		const batchSize = 25
+		let processed = 0
 
 		for (let i = 0; i < features.length; i += batchSize) {
-			const batch = features.slice(i, i + batchSize);
-			const batchData = { ...data, features: batch };
+			const batch = features.slice(i, i + batchSize)
+			const batchData = { ...data, features: batch }
 
-			await processor(batchData, { batch: i / batchSize + 1 });
+			await processor(batchData, { batch: i / batchSize + 1 })
 
-			processed += batch.length;
-			this.loadingStore.updateLayerProgress(layerId, processed, features.length);
+			processed += batch.length
+			this.loadingStore.updateLayerProgress(layerId, processed, features.length)
 
 			// Yield control to prevent UI blocking
 			if (i + batchSize < features.length) {
 				await new Promise((resolve) => {
 					if (window.requestIdleCallback) {
-						requestIdleCallback(resolve);
+						requestIdleCallback(resolve)
 					} else {
-						setTimeout(resolve, 0);
+						setTimeout(resolve, 0)
 					}
-				});
+				})
 			}
 		}
 	}
@@ -429,12 +429,12 @@ class UnifiedLoader {
 	 */
 	async processDataChunk(chunk, processor, layerId) {
 		try {
-			await processor(chunk, { streaming: true });
+			await processor(chunk, { streaming: true })
 
 			// Brief yield for UI responsiveness
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await new Promise((resolve) => setTimeout(resolve, 0))
 		} catch (error) {
-			console.error(`Error processing chunk for ${layerId}:`, error?.message || error);
+			console.error(`Error processing chunk for ${layerId}:`, error?.message || error)
 		}
 	}
 
@@ -456,31 +456,31 @@ class UnifiedLoader {
 	 * @private
 	 */
 	async fetchWithRetry(url, options = {}, retries = 3) {
-		let lastError;
+		let lastError
 
 		for (let attempt = 0; attempt <= retries; attempt++) {
 			try {
-				const response = await fetch(url, options);
+				const response = await fetch(url, options)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
 
-				return response;
+				return response
 			} catch (error) {
-				lastError = error;
+				lastError = error
 
 				if (attempt < retries && !options.signal?.aborted) {
-					const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
-					console.warn(`Fetch attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
-					await new Promise((resolve) => setTimeout(resolve, delay));
+					const delay = 2 ** attempt * 1000 // Exponential backoff
+					console.warn(`Fetch attempt ${attempt + 1} failed, retrying in ${delay}ms...`)
+					await new Promise((resolve) => setTimeout(resolve, delay))
 				} else {
-					break;
+					break
 				}
 			}
 		}
 
-		throw lastError;
+		throw lastError
 	}
 
 	/**
@@ -497,17 +497,17 @@ class UnifiedLoader {
 	 */
 	async cacheData(layerId, url, data, ttl) {
 		try {
-			const cacheKey = this.generateCacheKey(layerId, url);
+			const cacheKey = this.generateCacheKey(layerId, url)
 			// Pass raw data directly - cacheService handles its own metadata (timestamp, etc.)
 			// Avoid double-wrapping which caused GeoJSON validation failures
 			await cacheService.setData(cacheKey, data, {
 				ttl,
 				metadata: { url, layerId },
-			});
+			})
 
-			this.loadingStore.updateCacheStatus(layerId, true, Date.now());
+			this.loadingStore.updateCacheStatus(layerId, true, Date.now())
 		} catch (error) {
-			console.warn(`Failed to cache data for ${layerId}:`, error?.message || error);
+			console.warn(`Failed to cache data for ${layerId}:`, error?.message || error)
 		}
 	}
 
@@ -522,8 +522,8 @@ class UnifiedLoader {
 	 * @private
 	 */
 	generateCacheKey(layerId, url) {
-		const urlHash = btoa(url).replace(/[/+=]/g, '');
-		return `layer_${layerId}_${urlHash}`;
+		const urlHash = btoa(url).replace(/[/+=]/g, '')
+		return `layer_${layerId}_${urlHash}`
 	}
 
 	/**
@@ -536,7 +536,7 @@ class UnifiedLoader {
 	 * @private
 	 */
 	isCacheValid(cached, ttl) {
-		return Date.now() - cached.timestamp < ttl;
+		return Date.now() - cached.timestamp < ttl
 	}
 
 	/**
@@ -551,11 +551,11 @@ class UnifiedLoader {
 	 * unifiedLoader.cancelLoading('buildings-00100');
 	 */
 	cancelLoading(layerId) {
-		const controller = this.activeRequests.get(layerId);
+		const controller = this.activeRequests.get(layerId)
 		if (controller) {
-			controller.abort();
-			this.activeRequests.delete(layerId);
-			this.loadingStore.setLayerError(layerId, 'Loading cancelled');
+			controller.abort()
+			this.activeRequests.delete(layerId)
+			this.loadingStore.setLayerError(layerId, 'Loading cancelled')
 		}
 	}
 
@@ -573,9 +573,9 @@ class UnifiedLoader {
 	 * // Then re-call loadLayer with original config
 	 */
 	async retryLoading(layerId) {
-		const layerInfo = this.loadingStore.layers[layerId];
-		if (layerInfo && layerInfo.error) {
-			this.loadingStore.clearLayerError(layerId);
+		const layerInfo = this.loadingStore.layers[layerId]
+		if (layerInfo?.error) {
+			this.loadingStore.clearLayerError(layerId)
 			// The retry logic would need the original config
 			// This would typically be stored or passed from the calling component
 		}
@@ -605,7 +605,7 @@ class UnifiedLoader {
 				background: true,
 				priority: 'low',
 			},
-		});
+		})
 	}
 
 	/**
@@ -634,9 +634,9 @@ class UnifiedLoader {
 	async loadLayers(configs) {
 		const promises = configs.map((config) =>
 			this.loadLayer(config).catch((error) => ({ error, config }))
-		);
+		)
 
-		const results = await Promise.allSettled(promises);
+		const results = await Promise.allSettled(promises)
 
 		// Report any failures
 		results.forEach((result, index) => {
@@ -644,14 +644,14 @@ class UnifiedLoader {
 				console.error(
 					`Failed to load layer ${configs[index].layerId}:`,
 					result.reason || result.value?.error
-				);
+				)
 			}
-		});
+		})
 
-		return results;
+		return results
 	}
 }
 
 // Create and export singleton instance
-const unifiedLoader = new UnifiedLoader();
-export default unifiedLoader;
+const unifiedLoader = new UnifiedLoader()
+export default unifiedLoader

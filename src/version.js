@@ -31,12 +31,12 @@ export const VERSION_INFO = {
 	commitDate: import.meta.env.VITE_GIT_COMMIT_DATE || new Date().toISOString(),
 	branch: import.meta.env.VITE_GIT_BRANCH || 'local',
 	buildTime: import.meta.env.VITE_BUILD_TIME || new Date().toISOString(),
-};
+}
 
 // Log version info to console for debugging and support purposes
 console.log(
 	`%c🌍 R4C Cesium Viewer v${VERSION_INFO.version} %c(${VERSION_INFO.commit})`,
 	'color: #4CAF50; font-weight: bold; font-size: 14px',
 	'color: #666; font-size: 12px'
-);
-console.log(`Built: ${VERSION_INFO.buildTime}`);
+)
+console.log(`Built: ${VERSION_INFO.buildTime}`)

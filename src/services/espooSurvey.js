@@ -1,9 +1,9 @@
-import Datasource from './datasource.js';
-import * as Cesium from 'cesium';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { eventBus } from './eventEmitter.js';
-import { useURLStore } from '../stores/urlStore.js';
-import { cesiumEntityManager } from './cesiumEntityManager.js';
+import * as Cesium from 'cesium'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useURLStore } from '../stores/urlStore.js'
+import { cesiumEntityManager } from './cesiumEntityManager.js'
+import Datasource from './datasource.js'
+import { eventBus } from './eventEmitter.js'
 
 /**
  * Espoo Survey Service
@@ -32,10 +32,10 @@ export default class EspooSurvey {
 	 * Creates an EspooSurvey service instance
 	 */
 	constructor() {
-		this.store = useGlobalStore();
-		this.viewer = this.store.cesiumViewer;
-		this.datasourceService = new Datasource();
-		this.urlStore = useURLStore();
+		this.store = useGlobalStore()
+		this.viewer = this.store.cesiumViewer
+		this.datasourceService = new Datasource()
+		this.urlStore = useURLStore()
 	}
 
 	/**
@@ -46,16 +46,16 @@ export default class EspooSurvey {
 	 */
 	async loadSurveyFeatures(collection) {
 		try {
-			const response = await fetch(this.urlStore.collectionUrl(collection));
-			const data = await response.json();
-			await this.addSurveyDataSource(data, collection);
+			const response = await fetch(this.urlStore.collectionUrl(collection))
+			const data = await response.json()
+			await this.addSurveyDataSource(data, collection)
 		} catch (error) {
-			console.error('Error loading survey features:', error);
+			console.error('Error loading survey features:', error)
 			this.store.showError(
 				'Unable to load survey data. Please try again.',
 				`Failed to fetch survey collection ${collection}: ${error.message}`
-			);
-			throw error; // Re-throw so callers know it failed
+			)
+			throw error // Re-throw so callers know it failed
 		}
 	}
 
@@ -69,15 +69,15 @@ export default class EspooSurvey {
 	 * @private
 	 */
 	async addSurveyDataSource(data, collection) {
-		this.setAvgTempInCelsius(data.features);
-		let entities = await this.datasourceService.addDataSourceWithPolygonFix(
+		this.setAvgTempInCelsius(data.features)
+		const entities = await this.datasourceService.addDataSourceWithPolygonFix(
 			data,
-			'Survey ' + collection
-		);
-		this.setColorAndLabelForPointEntities(entities);
+			`Survey ${collection}`
+		)
+		this.setColorAndLabelForPointEntities(entities)
 		// Register entities with cesiumEntityManager for non-reactive entity management
-		cesiumEntityManager.registerBuildingEntities(entities);
-		eventBus.emit('newSurveyScatterPlot');
+		cesiumEntityManager.registerBuildingEntities(entities)
+		eventBus.emit('newSurveyScatterPlot')
 	}
 
 	/**
@@ -97,17 +97,17 @@ export default class EspooSurvey {
 	 */
 	setAvgTempInCelsius(features) {
 		for (let i = 0; i < features.length; i++) {
-			let feature = features[i];
-			let normalizedIndex = feature.properties.heatexposure;
+			const feature = features[i]
+			const normalizedIndex = feature.properties.heatexposure
 
 			// Convert normalized index back to Kelvin
-			let tempInKelvin =
+			const tempInKelvin =
 				normalizedIndex *
 					(this.store.minMaxKelvin['2023-06-23'].max - this.store.minMaxKelvin['2023-06-23'].min) +
-				this.store.minMaxKelvin['2023-06-23'].min;
+				this.store.minMaxKelvin['2023-06-23'].min
 
 			// Convert Kelvin to Celsius
-			feature.properties.avg_temp_c = tempInKelvin - 273.15;
+			feature.properties.avg_temp_c = tempInKelvin - 273.15
 		}
 	}
 
@@ -125,15 +125,15 @@ export default class EspooSurvey {
 	 */
 	setColorAndLabelForPointEntities(entities) {
 		for (let i = 0; i < entities.length; i++) {
-			let entity = entities[i];
+			const entity = entities[i]
 			if (entity.position) {
 				const color = new Cesium.Color(
 					1,
 					1 - entity._properties._heatexposure._value,
 					0,
 					entity._properties._heatexposure._value
-				);
-				const outlineColor = this.getOutlineColor(entity._properties._Paikan_kok._value);
+				)
+				const outlineColor = this.getOutlineColor(entity._properties._Paikan_kok._value)
 
 				if (outlineColor) {
 					// Set point color
@@ -142,12 +142,12 @@ export default class EspooSurvey {
 						pixelSize: 10,
 						outlineColor: outlineColor,
 						outlineWidth: 3,
-					});
+					})
 				} else {
-					entity.show = false;
+					entity.show = false
 				}
 
-				entity.billboard = undefined; // Remove any billboard icon
+				entity.billboard = undefined // Remove any billboard icon
 			}
 		}
 	}
@@ -167,8 +167,8 @@ export default class EspooSurvey {
 	 * getOutlineColor(null); // null (no data)
 	 */
 	getOutlineColor(value) {
-		if (value >= (100 * 2) / 3) return Cesium.Color.GREEN;
-		if (value >= (100 * 1) / 3) return Cesium.Color.YELLOW;
-		return value ? Cesium.Color.RED : null;
+		if (value >= (100 * 2) / 3) return Cesium.Color.GREEN
+		if (value >= (100 * 1) / 3) return Cesium.Color.YELLOW
+		return value ? Cesium.Color.RED : null
 	}
 }

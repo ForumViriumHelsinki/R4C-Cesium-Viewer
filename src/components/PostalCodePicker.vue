@@ -2,14 +2,10 @@
 	<div class="postal-code-picker">
 		<div class="picker-header">
 			<h4 class="picker-title">
-				<v-icon class="mr-2">
-mdi-map-marker
-</v-icon>
+				<v-icon class="mr-2"> mdi-map-marker </v-icon>
 				Select Area to Analyze
 			</h4>
-			<p class="picker-subtitle">
-Choose a postal code area to explore climate data
-</p>
+			<p class="picker-subtitle">Choose a postal code area to explore climate data</p>
 		</div>
 
 		<!-- Search Filter -->
@@ -123,12 +119,8 @@ Choose a postal code area to explore climate data
 			v-if="!isLoading && filteredPostalCodes.length === 0"
 			class="no-results"
 		>
-			<v-icon class="mb-2">
-mdi-map-search
-</v-icon>
-			<p class="text-body-2">
-No areas found matching "{{ searchQuery }}"
-</p>
+			<v-icon class="mb-2"> mdi-map-search </v-icon>
+			<p class="text-body-2">No areas found matching "{{ searchQuery }}"</p>
 			<v-btn
 				variant="text"
 				size="small"
@@ -165,34 +157,34 @@ No areas found matching "{{ searchQuery }}"
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import { useGlobalStore } from '../stores/globalStore';
-import { usePropsStore } from '../stores/propsStore';
-import Camera from '../services/camera';
-import Featurepicker from '../services/featurepicker';
+import { computed, onMounted, ref, watch } from 'vue'
+import Camera from '../services/camera'
+import Featurepicker from '../services/featurepicker'
+import { useGlobalStore } from '../stores/globalStore'
+import { usePropsStore } from '../stores/propsStore'
 
 export default {
 	name: 'PostalCodePicker',
 	setup() {
-		const globalStore = useGlobalStore();
-		const propsStore = usePropsStore();
+		const globalStore = useGlobalStore()
+		const propsStore = usePropsStore()
 
-		const searchQuery = ref('');
-		const isLoading = ref(false);
+		const searchQuery = ref('')
+		const isLoading = ref(false)
 
-		const currentView = computed(() => globalStore.view);
-		const currentPostalCode = computed(() => globalStore.postalcode);
-		const currentAreaName = computed(() => globalStore.nameOfZone);
+		const currentView = computed(() => globalStore.view)
+		const currentPostalCode = computed(() => globalStore.postalcode)
+		const currentAreaName = computed(() => globalStore.nameOfZone)
 
 		// Get postal code data from the loaded data source
 		const postalCodeData = computed(() => {
-			const data = propsStore.postalCodeData;
-			if (!data || !data.entities) return [];
+			const data = propsStore.postalCodeData
+			if (!data || !data.entities) return []
 
-			const entities = data.entities.values;
+			const entities = data.entities.values
 			return entities
 				.map((entity) => {
-					const properties = entity.properties;
+					const properties = entity.properties
 					return {
 						posno: properties.posno?.getValue() || '',
 						nimi: properties.nimi?.getValue() || '',
@@ -201,94 +193,94 @@ export default {
 						// Add other useful properties
 						trees_percentage: properties.trees_percentage?.getValue() || 0,
 						building_percentage: properties.building_percentage?.getValue() || 0,
-					};
+					}
 				})
-				.filter((item) => item.posno && item.nimi);
-		});
+				.filter((item) => item.posno && item.nimi)
+		})
 
 		// Filter postal codes based on search query
 		const filteredPostalCodes = computed(() => {
-			if (!searchQuery.value) return postalCodeData.value;
+			if (!searchQuery.value) return postalCodeData.value
 
-			const query = searchQuery.value.toLowerCase();
+			const query = searchQuery.value.toLowerCase()
 			return postalCodeData.value.filter(
 				(item) =>
 					item.nimi.toLowerCase().includes(query) ||
 					item.posno.includes(query) ||
 					item.kunta.toLowerCase().includes(query)
-			);
-		});
+			)
+		})
 
 		// Get vegetation color based on percentage
 		const getVegetationColor = (percentage) => {
-			if (percentage >= 50) return 'green';
-			if (percentage >= 30) return 'orange';
-			return 'red';
-		};
+			if (percentage >= 50) return 'green'
+			if (percentage >= 30) return 'orange'
+			return 'red'
+		}
 
 		// Select a postal code
 		const selectPostalCode = async (item) => {
-			isLoading.value = true;
+			isLoading.value = true
 
 			try {
 				// Update global store
-				globalStore.setPostalCode(item.posno);
-				globalStore.setNameOfZone(item.nimi);
+				globalStore.setPostalCode(item.posno)
+				globalStore.setNameOfZone(item.nimi)
 
 				// Use featurepicker to load the postal code (this handles map updates)
-				const featurepicker = new Featurepicker();
-				await featurepicker.loadPostalCode();
+				const featurepicker = new Featurepicker()
+				await featurepicker.loadPostalCode()
 
 				// Focus camera on the selected area
-				await focusOnCurrentArea();
+				await focusOnCurrentArea()
 			} catch (error) {
-				console.error('Error selecting postal code:', error);
+				console.error('Error selecting postal code:', error)
 			} finally {
-				isLoading.value = false;
+				isLoading.value = false
 			}
-		};
+		}
 
 		// Focus camera on current area
 		const focusOnCurrentArea = async () => {
-			if (!currentPostalCode.value) return;
+			if (!currentPostalCode.value) return
 
 			try {
-				const camera = new Camera();
+				const camera = new Camera()
 
 				// Verify camera has access to the viewer
 				if (!camera.viewer) {
-					console.warn('[PostalCodePicker] Camera viewer not initialized');
-					return;
+					console.warn('[PostalCodePicker] Camera viewer not initialized')
+					return
 				}
 
 				// Use the camera service to focus on the postal code
-				camera.focusOnPostalCode(currentPostalCode.value);
+				camera.focusOnPostalCode(currentPostalCode.value)
 			} catch (error) {
-				console.error('Error focusing on area:', error);
+				console.error('Error focusing on area:', error)
 			}
-		};
+		}
 
 		// Reset selection
 		const resetSelection = () => {
-			globalStore.setPostalCode(null);
-			globalStore.setNameOfZone(null);
-			globalStore.setLevel('start');
-			searchQuery.value = '';
+			globalStore.setPostalCode(null)
+			globalStore.setNameOfZone(null)
+			globalStore.setLevel('start')
+			searchQuery.value = ''
 
 			// Reset camera to initial position
-			const camera = new Camera();
-			camera.init();
-		};
+			const camera = new Camera()
+			camera.init()
+		}
 
 		// Watch for view changes to update data
 		watch(currentView, () => {
 			// Data will be updated by the parent component when view changes
-			searchQuery.value = '';
-		});
+			searchQuery.value = ''
+		})
 
 		onMounted(() => {
 			// Data should already be loaded by the time this component mounts
-		});
+		})
 
 		return {
 			searchQuery,
@@ -302,9 +294,9 @@ export default {
 			selectPostalCode,
 			focusOnCurrentArea,
 			resetSelection,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

@@ -30,159 +30,159 @@ export default class Decoding {
 	decodeKayttotarkoitusHKI(kayttotarkoitus) {
 		switch (kayttotarkoitus) {
 			case '011':
-				return 'Yhden asunnon talot';
+				return 'Yhden asunnon talot'
 			case '012':
-				return 'Kahden asunnon talot';
+				return 'Kahden asunnon talot'
 			case '013':
-				return 'Muut pientalot';
+				return 'Muut pientalot'
 			case '021':
-				return 'Rivitalot';
+				return 'Rivitalot'
 			case '022':
-				return 'Ketjutalot';
+				return 'Ketjutalot'
 			case '032':
-				return 'Luhtitalot';
+				return 'Luhtitalot'
 			case '039':
-				return 'Muut kerrostalot';
+				return 'Muut kerrostalot'
 			case '041':
-				return 'Vapaa-ajan asunnot';
+				return 'Vapaa-ajan asunnot'
 			case '111':
-				return 'Myymälähallit';
+				return 'Myymälähallit'
 			case '112':
-				return 'Liike- ja tavaratalot';
+				return 'Liike- ja tavaratalot'
 			case '119':
-				return 'Myymälärakennukset';
+				return 'Myymälärakennukset'
 			case '121':
-				return 'Hotellit';
+				return 'Hotellit'
 			case '123':
-				return 'Loma- lepo- ja virkistyskodit';
+				return 'Loma- lepo- ja virkistyskodit'
 			case '124':
-				return 'Vuokrattavat lomamökit';
+				return 'Vuokrattavat lomamökit'
 			case '129':
-				return 'Muu majoitusliike';
+				return 'Muu majoitusliike'
 			case '131':
-				return 'Asuntolat, vanhusten yms';
+				return 'Asuntolat, vanhusten yms'
 			case '139':
-				return 'Muut majoitusrakennukset';
+				return 'Muut majoitusrakennukset'
 			case '141':
-				return 'Ravintolat, baarit yms';
+				return 'Ravintolat, baarit yms'
 			case '151':
-				return 'Toimistorakennukset';
+				return 'Toimistorakennukset'
 			case '161':
-				return 'Asemat ja terminaalit';
+				return 'Asemat ja terminaalit'
 			case '162':
-				return 'Kulkuneuvojen rakennukset';
+				return 'Kulkuneuvojen rakennukset'
 			case '163':
-				return 'Pysäköintitalot';
+				return 'Pysäköintitalot'
 			case '164':
-				return 'Tietoliikenteen rakennukset';
+				return 'Tietoliikenteen rakennukset'
 			case '169':
-				return 'Muut liikenteen rakennukset';
+				return 'Muut liikenteen rakennukset'
 			case '211':
-				return 'Keskussairaalat';
+				return 'Keskussairaalat'
 			case '213':
-				return 'Muut sairaalat';
+				return 'Muut sairaalat'
 			case '214':
-				return 'Terveyskeskukset';
+				return 'Terveyskeskukset'
 			case '215':
-				return 'Erityis terveydenhoito';
+				return 'Erityis terveydenhoito'
 			case '219':
-				return 'Muu terveydenhoito';
+				return 'Muu terveydenhoito'
 			case '221':
-				return 'Vanhainkodit';
+				return 'Vanhainkodit'
 			case '222':
-				return 'Lastenkodit, koulukodit';
+				return 'Lastenkodit, koulukodit'
 			case '223':
-				return 'Kehitysvammaisten hoito';
+				return 'Kehitysvammaisten hoito'
 			case '229':
-				return 'Muut huoltolaitokset';
+				return 'Muut huoltolaitokset'
 			case '231':
-				return 'Lasten päiväkodit';
+				return 'Lasten päiväkodit'
 			case '239':
-				return 'Muut sosiaalitoimi';
+				return 'Muut sosiaalitoimi'
 			case '241':
-				return 'Vankilat';
+				return 'Vankilat'
 			case '311':
-				return 'Teatterit, konsertti yms';
+				return 'Teatterit, konsertti yms'
 			case '312':
-				return 'Elokuvateatterit';
+				return 'Elokuvateatterit'
 			case '322':
-				return 'Kirjastot';
+				return 'Kirjastot'
 			case '323':
-				return 'Museot, taidegalleriat';
+				return 'Museot, taidegalleriat'
 			case '324':
-				return 'Näyttelyhallit';
+				return 'Näyttelyhallit'
 			case '331':
-				return 'Seurain-, nuoriso- yms';
+				return 'Seurain-, nuoriso- yms'
 			case '341':
-				return 'Kirkot, kappelit yms';
+				return 'Kirkot, kappelit yms'
 			case '342':
-				return 'Seurakuntatalot';
+				return 'Seurakuntatalot'
 			case '349':
-				return 'Muut uskonnolliset yhteisöt';
+				return 'Muut uskonnolliset yhteisöt'
 			case '351':
-				return 'Jäähallit';
+				return 'Jäähallit'
 			case '352':
-				return 'Uimahallit';
+				return 'Uimahallit'
 			case '353':
-				return 'Tennis, squash yms';
+				return 'Tennis, squash yms'
 			case '354':
-				return 'Monitoimi/urheiluhallit';
+				return 'Monitoimi/urheiluhallit'
 			case '359':
-				return 'Muut urheilu';
+				return 'Muut urheilu'
 			case '369':
-				return 'Muut kokoontumisrakennukset';
+				return 'Muut kokoontumisrakennukset'
 			case '511':
-				return 'Peruskoulut, lukiot ja muut';
+				return 'Peruskoulut, lukiot ja muut'
 			case '521':
-				return 'Ammatilliset oppilaitokset';
+				return 'Ammatilliset oppilaitokset'
 			case '531':
-				return 'Korkeakoulurakennukset';
+				return 'Korkeakoulurakennukset'
 			case '532':
-				return 'Tutkimuslaitosrakennukset';
+				return 'Tutkimuslaitosrakennukset'
 			case '541':
-				return 'Järjestöjen opetus';
+				return 'Järjestöjen opetus'
 			case '549':
-				return 'Muut opetusrakennukset';
+				return 'Muut opetusrakennukset'
 			case '611':
-				return 'Voimalaitosrakennukset';
+				return 'Voimalaitosrakennukset'
 			case '613':
-				return 'Yhdyskuntatekniikka';
+				return 'Yhdyskuntatekniikka'
 			case '691':
-				return 'Teollisuushallit';
+				return 'Teollisuushallit'
 			case '692':
-				return 'Teollisuus- ja pienteollisuus';
+				return 'Teollisuus- ja pienteollisuus'
 			case '699':
-				return 'Muut teollisuus/tuotanto';
+				return 'Muut teollisuus/tuotanto'
 			case '711':
-				return 'Teollisuusvarastot';
+				return 'Teollisuusvarastot'
 			case '712':
-				return 'Kauppavarastot';
+				return 'Kauppavarastot'
 			case '719':
-				return 'Muut varastorakennukset';
+				return 'Muut varastorakennukset'
 			case '721':
-				return 'Paloasemat';
+				return 'Paloasemat'
 			case '722':
-				return 'Väestönsuojat';
+				return 'Väestönsuojat'
 			case '729':
-				return 'Muu palo- ja pelastustoiminta';
+				return 'Muu palo- ja pelastustoiminta'
 			case '811':
-				return 'Navetat, sikalat, kanalat yms';
+				return 'Navetat, sikalat, kanalat yms'
 			case '819':
-				return 'Eläinsuojat';
+				return 'Eläinsuojat'
 			case '891':
-				return 'Viljarakennukset';
+				return 'Viljarakennukset'
 			case '892':
-				return 'Kasvihuoneet';
+				return 'Kasvihuoneet'
 			case '893':
-				return 'Turkistarhat';
+				return 'Turkistarhat'
 			case '899':
-				return 'Muu maa/metsä/kala';
+				return 'Muu maa/metsä/kala'
 			case '931':
-				return 'Saunarakennukset';
+				return 'Saunarakennukset'
 			case '941':
-				return 'Talousrakennukset';
+				return 'Talousrakennukset'
 			default:
-				return kayttotarkoitus;
+				return kayttotarkoitus
 		}
 	}
 
@@ -201,17 +201,17 @@ export default class Decoding {
 	decodeMaterial(material) {
 		switch (material) {
 			case '1':
-				return 'concrete';
+				return 'concrete'
 			case '2':
-				return 'brick';
+				return 'brick'
 			case '3':
-				return 'steel';
+				return 'steel'
 			case '4':
-				return 'wood';
+				return 'wood'
 			case '5':
-				return 'other';
+				return 'other'
 			default:
-				return material;
+				return material
 		}
 	}
 
@@ -229,17 +229,17 @@ export default class Decoding {
 	decodeHeatingMethod(heatingMethod) {
 		switch (heatingMethod) {
 			case '1':
-				return 'central water';
+				return 'central water'
 			case '2':
-				return 'central air';
+				return 'central air'
 			case '3':
-				return 'electricity';
+				return 'electricity'
 			case '4':
-				return 'oven';
+				return 'oven'
 			case '5':
-				return 'no fixed heating';
+				return 'no fixed heating'
 			default:
-				return heatingMethod;
+				return heatingMethod
 		}
 	}
 
@@ -257,27 +257,27 @@ export default class Decoding {
 	decodeHeatingSource(heatingSource) {
 		switch (heatingSource) {
 			case '1':
-				return 'district';
+				return 'district'
 			case '2':
-				return 'light fuel oil';
+				return 'light fuel oil'
 			case '3':
-				return 'heavy fuel oil';
+				return 'heavy fuel oil'
 			case '4':
-				return 'electricity';
+				return 'electricity'
 			case '5':
-				return 'gas';
+				return 'gas'
 			case '6':
-				return 'coal';
+				return 'coal'
 			case '7':
-				return 'wood';
+				return 'wood'
 			case '8':
-				return 'peat';
+				return 'peat'
 			case '9':
-				return 'ground-source';
+				return 'ground-source'
 			case '10':
-				return 'other';
+				return 'other'
 			default:
-				return heatingSource;
+				return heatingSource
 		}
 	}
 
@@ -296,21 +296,21 @@ export default class Decoding {
 	decodeFacade(facade) {
 		switch (facade) {
 			case '1':
-				return 'concrete';
+				return 'concrete'
 			case '2':
-				return 'brick';
+				return 'brick'
 			case '3':
-				return 'metal';
+				return 'metal'
 			case '4':
-				return 'stone';
+				return 'stone'
 			case '5':
-				return 'wood';
+				return 'wood'
 			case '6':
-				return 'glass';
+				return 'glass'
 			case '7':
-				return 'other';
+				return 'other'
 			default:
-				return facade;
+				return facade
 		}
 	}
 
@@ -476,8 +476,8 @@ export default class Decoding {
 			whitesmoke: 'seashell',
 			yellow: 'gold',
 			yellowgreen: 'chartreuse',
-		};
+		}
 
-		return colorMap[key.toLowerCase()] || null;
+		return colorMap[key.toLowerCase()] || null
 	}
 }

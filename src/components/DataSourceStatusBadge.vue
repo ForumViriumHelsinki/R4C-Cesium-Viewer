@@ -122,8 +122,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import cacheService from '../services/cacheService';
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import cacheService from '../services/cacheService'
 
 // Props
 const props = defineProps({
@@ -131,14 +131,14 @@ const props = defineProps({
 		type: Number,
 		default: 30000,
 	},
-});
+})
 
 // Emits
-const emit = defineEmits(['source-retry', 'cache-cleared']);
+const emit = defineEmits(['source-retry', 'cache-cleared'])
 
 // Local state
-const refreshing = ref(false);
-const refreshTimer = ref(null);
+const refreshing = ref(false)
+const refreshTimer = ref(null)
 
 // Data sources to monitor
 const dataSources = ref([
@@ -182,28 +182,28 @@ const dataSources = ref([
 		cached: false,
 		responseTime: null,
 	},
-]);
+])
 
 // Computed properties
-const totalSources = computed(() => dataSources.value.length);
-const healthyCount = computed(() => dataSources.value.filter((s) => s.status === 'healthy').length);
-const hasErrors = computed(() => dataSources.value.some((s) => s.status === 'error'));
-const hasWarnings = computed(() => dataSources.value.some((s) => s.status === 'degraded'));
-const hasCachedData = computed(() => dataSources.value.some((s) => s.cached));
+const totalSources = computed(() => dataSources.value.length)
+const healthyCount = computed(() => dataSources.value.filter((s) => s.status === 'healthy').length)
+const hasErrors = computed(() => dataSources.value.some((s) => s.status === 'error'))
+const hasWarnings = computed(() => dataSources.value.some((s) => s.status === 'degraded'))
+const hasCachedData = computed(() => dataSources.value.some((s) => s.cached))
 
 const overallStatusColor = computed(() => {
-	if (hasErrors.value) return 'error';
-	if (hasWarnings.value) return 'warning';
-	if (healthyCount.value > 0) return 'success';
-	return 'grey';
-});
+	if (hasErrors.value) return 'error'
+	if (hasWarnings.value) return 'warning'
+	if (healthyCount.value > 0) return 'success'
+	return 'grey'
+})
 
 const overallStatusIcon = computed(() => {
-	if (hasErrors.value) return 'mdi-alert-circle';
-	if (hasWarnings.value) return 'mdi-alert';
-	if (healthyCount.value > 0) return 'mdi-check-circle';
-	return 'mdi-help-circle';
-});
+	if (hasErrors.value) return 'mdi-alert-circle'
+	if (hasWarnings.value) return 'mdi-alert'
+	if (healthyCount.value > 0) return 'mdi-check-circle'
+	return 'mdi-help-circle'
+})
 
 // Methods
 const getStatusColor = (status) => {
@@ -213,120 +213,120 @@ const getStatusColor = (status) => {
 		error: 'error',
 		loading: 'info',
 		unknown: 'grey',
-	};
-	return colors[status] || 'grey';
-};
+	}
+	return colors[status] || 'grey'
+}
 
 const getStatusIcon = (source) => {
-	if (source.loading) return 'mdi-loading';
+	if (source.loading) return 'mdi-loading'
 
 	const icons = {
 		healthy: 'mdi-check',
 		degraded: 'mdi-alert',
 		error: 'mdi-close',
 		unknown: 'mdi-help',
-	};
-	return icons[source.status] || 'mdi-help';
-};
+	}
+	return icons[source.status] || 'mdi-help'
+}
 
 const getResponseTimeClass = (responseTime) => {
-	if (responseTime > 5000) return 'response-slow';
-	if (responseTime > 2000) return 'response-medium';
-	return 'response-fast';
-};
+	if (responseTime > 5000) return 'response-slow'
+	if (responseTime > 2000) return 'response-medium'
+	return 'response-fast'
+}
 
 const checkHealth = async (sourceId) => {
-	const source = dataSources.value.find((s) => s.id === sourceId);
-	if (!source) return;
+	const source = dataSources.value.find((s) => s.id === sourceId)
+	if (!source) return
 
-	source.loading = true;
-	const startTime = Date.now();
+	source.loading = true
+	const startTime = Date.now()
 
 	try {
-		const cacheKey = `health-${sourceId}`;
-		const cached = await cacheService.getData(cacheKey, 5 * 60 * 1000);
+		const cacheKey = `health-${sourceId}`
+		const cached = await cacheService.getData(cacheKey, 5 * 60 * 1000)
 
 		if (cached) {
-			source.cached = true;
+			source.cached = true
 		}
 
 		const response = await fetch(source.url, {
 			method: 'GET',
 			headers: { Accept: 'application/json' },
-		});
+		})
 
-		const responseTime = Date.now() - startTime;
-		source.responseTime = responseTime;
+		const responseTime = Date.now() - startTime
+		source.responseTime = responseTime
 
 		if (response.ok) {
-			const data = await response.json();
+			const data = await response.json()
 
 			await cacheService.setData(cacheKey, data, {
 				type: source.id,
 				ttl: 5 * 60 * 1000,
-			});
+			})
 
 			if (responseTime > 5000) {
-				source.status = 'degraded';
-				source.message = `Slow response (${responseTime}ms)`;
+				source.status = 'degraded'
+				source.message = `Slow response (${responseTime}ms)`
 			} else {
-				source.status = 'healthy';
-				source.message = `Responsive (${responseTime}ms)`;
+				source.status = 'healthy'
+				source.message = `Responsive (${responseTime}ms)`
 			}
 		} else {
-			source.status = 'error';
-			source.message = `HTTP ${response.status}`;
+			source.status = 'error'
+			source.message = `HTTP ${response.status}`
 		}
 	} catch (error) {
-		source.status = 'error';
-		source.message = error.message.includes('fetch') ? 'Connection failed' : error.message;
-		source.responseTime = Date.now() - startTime;
+		source.status = 'error'
+		source.message = error.message.includes('fetch') ? 'Connection failed' : error.message
+		source.responseTime = Date.now() - startTime
 	} finally {
-		source.loading = false;
+		source.loading = false
 	}
-};
+}
 
 const refreshAll = async () => {
-	refreshing.value = true;
+	refreshing.value = true
 
 	try {
-		await Promise.all(dataSources.value.map((source) => checkHealth(source.id)));
+		await Promise.all(dataSources.value.map((source) => checkHealth(source.id)))
 	} finally {
-		refreshing.value = false;
+		refreshing.value = false
 	}
-};
+}
 
 const clearAllCache = async () => {
-	await cacheService.clearAll();
+	await cacheService.clearAll()
 
 	dataSources.value.forEach((source) => {
-		source.cached = false;
-	});
+		source.cached = false
+	})
 
-	emit('cache-cleared', 'all');
-};
+	emit('cache-cleared', 'all')
+}
 
 const startRefreshTimer = () => {
-	if (refreshTimer.value) clearInterval(refreshTimer.value);
+	if (refreshTimer.value) clearInterval(refreshTimer.value)
 
 	refreshTimer.value = setInterval(() => {
 		if (!refreshing.value) {
-			void refreshAll();
+			void refreshAll()
 		}
-	}, props.refreshInterval);
-};
+	}, props.refreshInterval)
+}
 
 // Lifecycle
 onMounted(async () => {
-	await refreshAll();
-	startRefreshTimer();
-});
+	await refreshAll()
+	startRefreshTimer()
+})
 
 onUnmounted(() => {
 	if (refreshTimer.value) {
-		clearInterval(refreshTimer.value);
+		clearInterval(refreshTimer.value)
 	}
-});
+})
 </script>
 
 <style scoped>

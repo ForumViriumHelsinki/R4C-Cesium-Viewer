@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium';
-import Datasource from './datasource.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import ElementsDisplay from './elementsDisplay.js';
-import { useURLStore } from '../stores/urlStore.js';
+import * as Cesium from 'cesium'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useURLStore } from '../stores/urlStore.js'
+import Datasource from './datasource.js'
+import ElementsDisplay from './elementsDisplay.js'
 
 /**
  * Cold Area Service
@@ -26,10 +26,10 @@ export default class ColdArea {
 	 * Creates a ColdArea service instance
 	 */
 	constructor() {
-		this.datasourceService = new Datasource();
-		this.elementsDisplayService = new ElementsDisplay();
-		this.store = useGlobalStore();
-		this.urlStore = useURLStore();
+		this.datasourceService = new Datasource()
+		this.elementsDisplayService = new ElementsDisplay()
+		this.store = useGlobalStore()
+		this.urlStore = useURLStore()
 	}
 
 	/**
@@ -44,7 +44,7 @@ export default class ColdArea {
 	 * coldAreaService.addColdPoint("60.1699,24.9384"); // Adds marker at Helsinki
 	 */
 	addColdPoint(location) {
-		const coordinates = location.split(',');
+		const coordinates = location.split(',')
 
 		this.store.cesiumViewer.entities.add({
 			position: Cesium.Cartesian3.fromDegrees(Number(coordinates[1]), Number(coordinates[0])),
@@ -56,7 +56,7 @@ export default class ColdArea {
 				outlineColor: Cesium.Color.LIGHTYELLOW,
 				outlineWidth: 5,
 			},
-		});
+		})
 	}
 
 	/**
@@ -65,20 +65,20 @@ export default class ColdArea {
 	 * @returns {Promise} - A promise that resolves once the data has been loaded
 	 */
 	async loadColdAreas() {
-		this.store.setIsLoading(true);
+		this.store.setIsLoading(true)
 		try {
-			const response = await fetch(this.urlStore.coldAreas(this.store.postalcode));
-			const data = await response.json();
-			await this.addColdAreaDataSource(data);
+			const response = await fetch(this.urlStore.coldAreas(this.store.postalcode))
+			const data = await response.json()
+			await this.addColdAreaDataSource(data)
 		} catch (error) {
-			console.error('Error loading cold areas:', error);
+			console.error('Error loading cold areas:', error)
 			this.store.showError(
 				'Unable to load cold area data. Please try again.',
 				`Failed to fetch cold areas for postal code ${this.store.postalcode}: ${error.message}`
-			);
-			throw error; // Re-throw so callers know it failed
+			)
+			throw error // Re-throw so callers know it failed
 		} finally {
-			this.store.setIsLoading(false);
+			this.store.setIsLoading(false)
 		}
 	}
 
@@ -88,12 +88,12 @@ export default class ColdArea {
 	 * @param {Object} data - The ColdArea data to be added as a data source
 	 */
 	async addColdAreaDataSource(data) {
-		let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'ColdAreas');
+		const entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'ColdAreas')
 
 		if (entities) {
-			this.elementsDisplayService.setColdAreasElementsDisplay('inline-block');
+			this.elementsDisplayService.setColdAreasElementsDisplay('inline-block')
 			for (let i = 0; i < entities.length; i++) {
-				let entity = entities[i];
+				const entity = entities[i]
 
 				if (entity._properties._heatexposure && entity.polygon) {
 					entity.polygon.material = new Cesium.Color(
@@ -101,9 +101,9 @@ export default class ColdArea {
 						1 - entity._properties._heatexposure._value,
 						0,
 						entity._properties._heatexposure._value
-					);
-					entity.polygon.outlineColor = Cesium.Color.BLACK;
-					entity.polygon.outlineWidth = 3;
+					)
+					entity.polygon.outlineColor = Cesium.Color.BLACK
+					entity.polygon.outlineWidth = 3
 				}
 			}
 		}

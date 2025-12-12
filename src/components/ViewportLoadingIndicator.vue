@@ -101,8 +101,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue';
-import { useLoadingStore } from '../stores/loadingStore';
+import { computed, onUnmounted, ref, watch } from 'vue'
+import { useLoadingStore } from '../stores/loadingStore'
 
 // Props
 const props = defineProps({
@@ -131,95 +131,95 @@ const props = defineProps({
 		type: Number,
 		default: 2000,
 	},
-});
+})
 
 // Emits
-const emit = defineEmits(['retry']);
+const emit = defineEmits(['retry'])
 
 // Store
-const loadingStore = useLoadingStore();
+const loadingStore = useLoadingStore()
 
 // Local state
-const showComplete = ref(false);
-const screenReaderAnnouncement = ref('');
-let completeTimeout = null;
+const showComplete = ref(false)
+const screenReaderAnnouncement = ref('')
+let completeTimeout = null
 
 // Computed properties
 const isLoading = computed(() => {
-	return props.isLoadingBuildings || loadingStore.layerLoading.buildings;
-});
+	return props.isLoadingBuildings || loadingStore.layerLoading.buildings
+})
 
 const hasError = computed(() => {
-	return !!props.error || !!loadingStore.loadingErrors.buildings;
-});
+	return !!props.error || !!loadingStore.loadingErrors.buildings
+})
 
 const errorMessage = computed(() => {
-	return props.error || loadingStore.loadingErrors.buildings || 'Failed to load buildings';
-});
+	return props.error || loadingStore.loadingErrors.buildings || 'Failed to load buildings'
+})
 
 const showIndicator = computed(() => {
-	return isLoading.value || showComplete.value || hasError.value;
-});
+	return isLoading.value || showComplete.value || hasError.value
+})
 
 const showProgress = computed(() => {
-	return props.postalCodesTotal > 1;
-});
+	return props.postalCodesTotal > 1
+})
 
 const progressValue = computed(() => {
-	if (props.postalCodesTotal === 0) return 0;
-	return Math.round((props.postalCodesLoading / props.postalCodesTotal) * 100);
-});
+	if (props.postalCodesTotal === 0) return 0
+	return Math.round((props.postalCodesLoading / props.postalCodesTotal) * 100)
+})
 
 const cardColor = computed(() => {
-	if (hasError.value) return 'error';
-	if (showComplete.value) return 'success';
-	return 'primary';
-});
+	if (hasError.value) return 'error'
+	if (showComplete.value) return 'success'
+	return 'primary'
+})
 
 const loadingTitle = computed(() => {
 	if (props.postalCodesTotal === 1) {
-		return 'Loading buildings...';
+		return 'Loading buildings...'
 	}
 	if (props.postalCodesTotal > 1) {
-		return `Loading buildings (${props.postalCodesLoading}/${props.postalCodesTotal})`;
+		return `Loading buildings (${props.postalCodesLoading}/${props.postalCodesTotal})`
 	}
-	return 'Loading buildings...';
-});
+	return 'Loading buildings...'
+})
 
 const loadingDetail = computed(() => {
 	if (props.postalCodesTotal > 1) {
-		return 'Pan and zoom to load more areas';
+		return 'Pan and zoom to load more areas'
 	}
-	return null;
-});
+	return null
+})
 
 const completeMessage = computed(() => {
 	if (props.postalCodesTotal === 1) {
-		return 'Buildings loaded';
+		return 'Buildings loaded'
 	}
 	if (props.postalCodesTotal > 1) {
-		return `${props.postalCodesTotal} areas loaded`;
+		return `${props.postalCodesTotal} areas loaded`
 	}
-	return 'Complete';
-});
+	return 'Complete'
+})
 
 const ariaLabel = computed(() => {
 	if (isLoading.value) {
-		return `Loading buildings for ${props.postalCodesTotal} postal code areas, ${progressValue.value}% complete`;
+		return `Loading buildings for ${props.postalCodesTotal} postal code areas, ${progressValue.value}% complete`
 	}
 	if (showComplete.value) {
-		return `Successfully loaded buildings for ${props.postalCodesTotal} areas`;
+		return `Successfully loaded buildings for ${props.postalCodesTotal} areas`
 	}
 	if (hasError.value) {
-		return `Error loading buildings: ${errorMessage.value}. Press retry button to try again.`;
+		return `Error loading buildings: ${errorMessage.value}. Press retry button to try again.`
 	}
-	return '';
-});
+	return ''
+})
 
 // Methods
 const handleRetry = () => {
-	emit('retry');
-};
+	emit('retry')
+}
 
 // Watch for loading state changes to show completion
 watch(isLoading, (newValue, oldValue) => {
@@ -227,41 +227,41 @@ watch(isLoading, (newValue, oldValue) => {
 	if (oldValue && !newValue && !hasError.value) {
 		// Clear any pending timeout
 		if (completeTimeout) {
-			clearTimeout(completeTimeout);
+			clearTimeout(completeTimeout)
 		}
 
 		// Show completion state
-		showComplete.value = true;
+		showComplete.value = true
 
 		// Announce to screen readers
-		screenReaderAnnouncement.value = completeMessage.value;
+		screenReaderAnnouncement.value = completeMessage.value
 
 		// Auto-hide after delay
 		completeTimeout = setTimeout(() => {
-			showComplete.value = false;
-			screenReaderAnnouncement.value = '';
-		}, props.autoHideDelay);
+			showComplete.value = false
+			screenReaderAnnouncement.value = ''
+		}, props.autoHideDelay)
 	}
 
 	// Announce loading start to screen readers
 	if (newValue && !oldValue) {
-		screenReaderAnnouncement.value = `Loading buildings for ${props.postalCodesTotal || 'visible'} areas`;
+		screenReaderAnnouncement.value = `Loading buildings for ${props.postalCodesTotal || 'visible'} areas`
 	}
-});
+})
 
 // Announce errors to screen readers
 watch(hasError, (newValue) => {
 	if (newValue) {
-		screenReaderAnnouncement.value = `Error: ${errorMessage.value}`;
+		screenReaderAnnouncement.value = `Error: ${errorMessage.value}`
 	}
-});
+})
 
 // Cleanup on unmount
 onUnmounted(() => {
 	if (completeTimeout) {
-		clearTimeout(completeTimeout);
+		clearTimeout(completeTimeout)
 	}
-});
+})
 </script>
 
 <style scoped>

@@ -43,7 +43,8 @@
 							<span
 								id="overall-progress-label"
 								class="progress-text"
-								>Overall Progress</span>
+								>Overall Progress</span
+							>
 							<span class="progress-percentage">{{ overallProgress }}%</span>
 						</div>
 						<v-progress-linear
@@ -114,12 +115,11 @@
 							class="mb-2"
 						>
 							<template #prepend>
-								<v-icon size="16">
-mdi-alert-circle
-</v-icon>
+								<v-icon size="16"> mdi-alert-circle </v-icon>
 							</template>
 							<div class="error-content">
-								<strong>{{ formatLayerName(layer) }}</strong>: {{ error }}
+								<strong>{{ formatLayerName(layer) }}</strong
+								>: {{ error }}
 								<v-btn
 									size="x-small"
 									variant="text"
@@ -177,9 +177,7 @@ mdi-alert-circle
 					size="small"
 					@click="showGlobalOverlay = true"
 				>
-					<v-icon size="16">
-mdi-arrow-expand
-</v-icon>
+					<v-icon size="16"> mdi-arrow-expand </v-icon>
 				</v-btn>
 			</template>
 		</v-snackbar>
@@ -205,9 +203,7 @@ mdi-arrow-expand
 				</v-card-text>
 				<v-card-actions>
 					<v-spacer />
-					<v-btn @click="showPerformanceDialog = false">
-Close
-</v-btn>
+					<v-btn @click="showPerformanceDialog = false"> Close </v-btn>
 				</v-card-actions>
 			</v-card>
 		</v-dialog>
@@ -215,8 +211,8 @@ Close
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { useLoadingStore } from '../stores/loadingStore';
+import { computed, ref, watch } from 'vue'
+import { useLoadingStore } from '../stores/loadingStore'
 
 // Props
 const props = defineProps({
@@ -229,13 +225,13 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
-});
+})
 
 // Store
-const loadingStore = useLoadingStore();
+const loadingStore = useLoadingStore()
 
 // Local state
-const showPerformanceDialog = ref(false);
+const showPerformanceDialog = ref(false)
 
 // Computed properties
 const showGlobalOverlay = computed({
@@ -246,37 +242,37 @@ const showGlobalOverlay = computed({
 			// Switch to compact mode when overlay is closed
 		}
 	},
-});
+})
 
 const showCompactIndicator = computed(() => {
 	return (
 		(props.mode === 'compact' || props.mode === 'both') &&
 		loadingStore.hasActiveLoading &&
 		!showGlobalOverlay.value
-	);
-});
+	)
+})
 
-const overallProgress = computed(() => loadingStore.overallProgress);
-const activeLoadingLayers = computed(() => loadingStore.activeLoadingLayers);
+const overallProgress = computed(() => loadingStore.overallProgress)
+const activeLoadingLayers = computed(() => loadingStore.activeLoadingLayers)
 
 const hasErrors = computed(() => {
-	return Object.keys(layerErrors.value).length > 0;
-});
+	return Object.keys(layerErrors.value).length > 0
+})
 
 const layerErrors = computed(() => {
 	return Object.keys(loadingStore.loadingErrors).reduce((errors, layer) => {
 		if (loadingStore.loadingErrors[layer]) {
-			errors[layer] = loadingStore.loadingErrors[layer];
+			errors[layer] = loadingStore.loadingErrors[layer]
 		}
-		return errors;
-	}, {});
-});
+		return errors
+	}, {})
+})
 
-const performanceMetrics = computed(() => loadingStore.getPerformanceMetrics());
+const performanceMetrics = computed(() => loadingStore.getPerformanceMetrics())
 
 // Methods
-const getLayerProgress = (layer) => loadingStore.getLayerProgress(layer);
-const getLoadingMessage = (layer) => loadingStore.getLoadingMessage(layer);
+const getLayerProgress = (layer) => loadingStore.getLayerProgress(layer)
+const getLoadingMessage = (layer) => loadingStore.getLoadingMessage(layer)
 
 const formatLayerName = (layer) => {
 	const names = {
@@ -289,9 +285,9 @@ const formatLayerName = (layer) => {
 		ndvi: 'NDVI Data',
 		populationGrid: 'Population Grid',
 		heatData: 'Heat Data',
-	};
-	return names[layer] || layer.charAt(0).toUpperCase() + layer.slice(1);
-};
+	}
+	return names[layer] || layer.charAt(0).toUpperCase() + layer.slice(1)
+}
 
 const getLayerIcon = (layer) => {
 	const icons = {
@@ -304,9 +300,9 @@ const getLayerIcon = (layer) => {
 		ndvi: 'mdi-chart-line',
 		populationGrid: 'mdi-grid',
 		heatData: 'mdi-thermometer',
-	};
-	return icons[layer] || 'mdi-database';
-};
+	}
+	return icons[layer] || 'mdi-database'
+}
 
 const getLayerColor = (layer) => {
 	const colors = {
@@ -319,41 +315,41 @@ const getLayerColor = (layer) => {
 		ndvi: 'orange',
 		populationGrid: 'indigo',
 		heatData: 'red',
-	};
-	return colors[layer] || 'primary';
-};
+	}
+	return colors[layer] || 'primary'
+}
 
 const getCompactMessage = () => {
-	const activeCount = activeLoadingLayers.value.length;
+	const activeCount = activeLoadingLayers.value.length
 	if (activeCount === 1) {
-		return `Loading ${formatLayerName(activeLoadingLayers.value[0])}...`;
+		return `Loading ${formatLayerName(activeLoadingLayers.value[0])}...`
 	}
-	return `Loading ${activeCount} layers...`;
-};
+	return `Loading ${activeCount} layers...`
+}
 
 const retryLayer = (layer) => {
-	loadingStore.retryLayerLoading(layer);
+	loadingStore.retryLayerLoading(layer)
 	// Emit event for parent component to handle actual retry
-	emit('retry-layer', layer);
-};
+	emit('retry-layer', layer)
+}
 
 const formatDuration = (ms) => {
-	if (ms < 1000) return `${ms}ms`;
-	return `${(ms / 1000).toFixed(1)}s`;
-};
+	if (ms < 1000) return `${ms}ms`
+	return `${(ms / 1000).toFixed(1)}s`
+}
 
 // Emits
-const emit = defineEmits(['retry-layer']);
+const emit = defineEmits(['retry-layer'])
 
 // Watch for loading changes to provide haptic feedback on mobile
 watch(
 	() => loadingStore.hasActiveLoading,
 	(isLoading) => {
 		if (isLoading && 'vibrate' in navigator) {
-			navigator.vibrate([50]); // Subtle vibration when loading starts
+			navigator.vibrate([50]) // Subtle vibration when loading starts
 		}
 	}
-);
+)
 </script>
 
 <style scoped>

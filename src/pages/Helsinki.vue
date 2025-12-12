@@ -59,14 +59,14 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { eventBus } from '../services/eventEmitter.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import HeatHistogram from '../components/HeatHistogram.vue';
-import SocioEconomics from '../views/SocioEconomics.vue';
-import Scatterplot from '../components/Scatterplot.vue';
-import NearbyTreeArea from '../components/NearbyTreeArea.vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import HeatHistogram from '../components/HeatHistogram.vue'
+import NearbyTreeArea from '../components/NearbyTreeArea.vue'
+import Scatterplot from '../components/Scatterplot.vue'
+import { eventBus } from '../services/eventEmitter.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
+import SocioEconomics from '../views/SocioEconomics.vue'
 
 export default {
 	components: {
@@ -76,32 +76,32 @@ export default {
 		NearbyTreeArea,
 	},
 	setup() {
-		const showComponents = ref(false);
-		const store = useGlobalStore(); // Access the store
-		const propsStore = usePropsStore();
+		const showComponents = ref(false)
+		const store = useGlobalStore() // Access the store
+		const propsStore = usePropsStore()
 
 		onMounted(() => {
 			eventBus.on('showHelsinki', () => {
-				showComponents.value = true;
-			});
+				showComponents.value = true
+			})
 
 			eventBus.on('hideHelsinki', () => {
-				showComponents.value = false;
-			});
-		});
+				showComponents.value = false
+			})
+		})
 
 		onBeforeUnmount(() => {
-			eventBus.off('showHelsinki');
-			eventBus.off('hideHelsinki');
-		});
+			eventBus.off('showHelsinki')
+			eventBus.off('hideHelsinki')
+		})
 
 		return {
 			showComponents,
 			propsStore,
 			store, // Return the store to access postalCode in the template
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped></style>

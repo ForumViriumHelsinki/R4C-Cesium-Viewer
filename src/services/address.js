@@ -5,38 +5,38 @@
  * @returns {string} The building's address, or 'n/a' if not found
  */
 export const findAddressForBuilding = (properties) => {
-	let address = '';
+	let address = ''
 
 	// Fetch address components, trying both prefixed and non-prefixed versions
-	const katunimi_suomi = getProperty(properties, 'katunimi_suomi');
-	const osoitenumero = getProperty(properties, 'osoitenumero');
-	const katu = getProperty(properties, 'katu');
-	const osno1 = getProperty(properties, 'osno1');
-	const oski1 = getProperty(properties, 'oski1');
-	const osno2 = getProperty(properties, 'osno2');
+	const katunimi_suomi = getProperty(properties, 'katunimi_suomi')
+	const osoitenumero = getProperty(properties, 'osoitenumero')
+	const katu = getProperty(properties, 'katu')
+	const osno1 = getProperty(properties, 'osno1')
+	const oski1 = getProperty(properties, 'oski1')
+	const osno2 = getProperty(properties, 'osno2')
 
 	if (isValidValue(katunimi_suomi)) {
-		address += String(katunimi_suomi).trim();
+		address += String(katunimi_suomi).trim()
 		if (isValidValue(osoitenumero)) {
-			address += ' ' + String(osoitenumero).trim();
+			address += ` ${String(osoitenumero).trim()}`
 		}
 	} else if (isValidValue(katu)) {
-		address += String(katu).trim();
-		if (isValidValue(osno1) && osno1 != 999999999) {
-			address += ' ' + String(osno1).trim();
-			if (isValidValue(oski1) && oski1 != 999999999) {
-				address += ' ' + String(oski1).trim();
-				if (isValidValue(osno2) && osno2 != 999999999) {
-					address += ' ' + String(osno2).trim();
+		address += String(katu).trim()
+		if (isValidValue(osno1) && osno1 !== 999999999) {
+			address += ` ${String(osno1).trim()}`
+			if (isValidValue(oski1) && oski1 !== 999999999) {
+				address += ` ${String(oski1).trim()}`
+				if (isValidValue(osno2) && osno2 !== 999999999) {
+					address += ` ${String(osno2).trim()}`
 				}
 			}
 		}
 	} else {
-		address = 'n/a';
+		address = 'n/a'
 	}
 
-	return removeNulls(address); // Ensure to remove any null or undefined values
-};
+	return removeNulls(address) // Ensure to remove any null or undefined values
+}
 
 /**
  * Removes all instances of 'null' from a string and handles whitespace
@@ -46,10 +46,10 @@ export const findAddressForBuilding = (properties) => {
  */
 const removeNulls = (str) => {
 	// Convert to string to handle non-string values
-	const stringValue = String(str);
+	const stringValue = String(str)
 	// Replace all 'null' strings but preserve existing spacing, then trim edges
-	return stringValue.replace(/null/g, '').replace(/^\s+|\s+$/g, '');
-};
+	return stringValue.replace(/null/g, '').replace(/^\s+|\s+$/g, '')
+}
 
 /**
  * Retrieves property value from building properties object
@@ -62,8 +62,8 @@ const removeNulls = (str) => {
  * @private
  */
 const getProperty = (properties, key) => {
-	return properties[key] ?? properties[`_${key}`];
-};
+	return properties[key] ?? properties[`_${key}`]
+}
 
 /**
  * Validates if a value is suitable for address construction
@@ -76,5 +76,5 @@ const getProperty = (properties, key) => {
  */
 const isValidValue = (value) => {
 	// Include boolean false, but exclude null, undefined, and empty strings
-	return value !== null && value !== undefined && value !== '';
-};
+	return value !== null && value !== undefined && value !== ''
+}

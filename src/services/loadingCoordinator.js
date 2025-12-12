@@ -36,10 +36,10 @@
  * @see {@link module:stores/loadingStore}
  */
 
-import { useLoadingStore } from '../stores/loadingStore.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import unifiedLoader from './unifiedLoader.js';
-import logger from '../utils/logger.js';
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useLoadingStore } from '../stores/loadingStore.js'
+import logger from '../utils/logger.js'
+import unifiedLoader from './unifiedLoader.js'
 
 /**
  * Loading session configuration
@@ -84,12 +84,12 @@ class LoadingCoordinator {
 	 */
 	constructor() {
 		/** @type {Object|null} Lazy-loaded loading store instance */
-		this._loadingStore = null;
+		this._loadingStore = null
 		/** @type {Object|null} Lazy-loaded global store instance */
-		this._globalStore = null;
+		this._globalStore = null
 
 		/** @type {Map<string, Object>} Active loading sessions by ID */
-		this.activeSessions = new Map();
+		this.activeSessions = new Map()
 
 		/** @type {Object<string, number>} Priority level mappings (lower = higher priority) */
 		this.priorities = {
@@ -98,10 +98,10 @@ class LoadingCoordinator {
 			normal: 3, // Standard data (vegetation, other nature)
 			low: 4, // Background data (cache warming, preloading)
 			background: 5, // Silent background operations
-		};
+		}
 
 		/** @type {Map} Loading queue for managing load order */
-		this.loadingQueue = new Map();
+		this.loadingQueue = new Map()
 
 		/** @type {PerformanceMetrics} Performance tracking metrics */
 		this.performanceMetrics = {
@@ -109,7 +109,7 @@ class LoadingCoordinator {
 			layersLoaded: 0,
 			totalLoadTime: 0,
 			avgLoadTime: 0,
-		};
+		}
 	}
 
 	/**
@@ -122,19 +122,19 @@ class LoadingCoordinator {
 	get loadingStore() {
 		if (!this._loadingStore) {
 			try {
-				this._loadingStore = useLoadingStore();
+				this._loadingStore = useLoadingStore()
 			} catch (error) {
-				logger.warn('Loading store not available, using fallback:', error.message);
+				logger.warn('Loading store not available, using fallback:', error.message)
 				this._loadingStore = {
 					startLayerLoading: () => {},
 					updateLayerProgress: () => {},
 					completeLayerLoading: () => {},
 					setLayerError: () => {},
 					layers: {},
-				};
+				}
 			}
 		}
-		return this._loadingStore;
+		return this._loadingStore
 	}
 
 	/**
@@ -147,17 +147,17 @@ class LoadingCoordinator {
 	get globalStore() {
 		if (!this._globalStore) {
 			try {
-				this._globalStore = useGlobalStore();
+				this._globalStore = useGlobalStore()
 			} catch (error) {
-				logger.warn('Global store not available, using fallback:', error.message);
+				logger.warn('Global store not available, using fallback:', error.message)
 				this._globalStore = {
 					cesiumViewer: null,
 					postalcode: null,
 					view: 'capitalRegion',
-				};
+				}
 			}
 		}
-		return this._globalStore;
+		return this._globalStore
 	}
 
 	/**
@@ -203,34 +203,33 @@ class LoadingCoordinator {
 			allowInterruption: _allowInterruption = true,
 			backgroundMode: _backgroundMode = false,
 			priorityStrategy = 'balanced', // 'critical-first', 'parallel', 'balanced'
-		} = options;
+		} = options
 
 		try {
 			// Initialize session
-			this.initializeSession(sessionId, layerConfigs, options);
+			this.initializeSession(sessionId, layerConfigs, options)
 
 			// Choose loading strategy based on configuration
-			let results;
+			let results
 			switch (priorityStrategy) {
 				case 'critical-first':
-					results = await this.loadSequentially(sessionId, layerConfigs);
-					break;
+					results = await this.loadSequentially(sessionId, layerConfigs)
+					break
 				case 'parallel':
-					results = await this.loadInParallel(sessionId, layerConfigs);
-					break;
-				case 'balanced':
+					results = await this.loadInParallel(sessionId, layerConfigs)
+					break
 				default:
-					results = await this.loadBalanced(sessionId, layerConfigs);
-					break;
+					results = await this.loadBalanced(sessionId, layerConfigs)
+					break
 			}
 
 			// Complete session
-			this.completeSession(sessionId, results);
+			this.completeSession(sessionId, results)
 
-			return results;
+			return results
 		} catch (error) {
-			this.handleSessionError(sessionId, error);
-			throw error;
+			this.handleSessionError(sessionId, error)
+			throw error
 		}
 	}
 
@@ -245,7 +244,7 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	initializeSession(sessionId, layerConfigs, options) {
-		this.performanceMetrics.sessionStartTime = performance.now();
+		this.performanceMetrics.sessionStartTime = performance.now()
 
 		const session = {
 			id: sessionId,
@@ -255,11 +254,11 @@ class LoadingCoordinator {
 			status: 'loading',
 			layersCompleted: 0,
 			totalLayers: layerConfigs.length,
-		};
+		}
 
-		this.activeSessions.set(sessionId, session);
+		this.activeSessions.set(sessionId, session)
 
-		logger.debug(`Starting loading session: ${sessionId} (${layerConfigs.length} layers)`);
+		logger.debug(`Starting loading session: ${sessionId} (${layerConfigs.length} layers)`)
 	}
 
 	/**
@@ -276,36 +275,36 @@ class LoadingCoordinator {
 	 * @returns {Promise<SessionResult[]>} Loading results
 	 * @private
 	 */
-	async loadBalanced(sessionId, layerConfigs) {
+	async loadBalanced(_sessionId, layerConfigs) {
 		// Group layers by priority
-		const priorityGroups = this.groupByPriority(layerConfigs);
-		const results = [];
+		const priorityGroups = this.groupByPriority(layerConfigs)
+		const results = []
 
 		// Load critical and high priority layers first
-		const criticalAndHigh = [...(priorityGroups.critical || []), ...(priorityGroups.high || [])];
+		const criticalAndHigh = [...(priorityGroups.critical || []), ...(priorityGroups.high || [])]
 
 		if (criticalAndHigh.length > 0) {
-			logger.debug(`Loading ${criticalAndHigh.length} critical/high priority layers`);
-			const criticalResults = await this.loadWithStaggering(criticalAndHigh, 100); // 100ms stagger
-			results.push(...criticalResults);
+			logger.debug(`Loading ${criticalAndHigh.length} critical/high priority layers`)
+			const criticalResults = await this.loadWithStaggering(criticalAndHigh, 100) // 100ms stagger
+			results.push(...criticalResults)
 		}
 
 		// Load normal and low priority layers in parallel
-		const normalAndLow = [...(priorityGroups.normal || []), ...(priorityGroups.low || [])];
+		const normalAndLow = [...(priorityGroups.normal || []), ...(priorityGroups.low || [])]
 
 		if (normalAndLow.length > 0) {
-			logger.debug(`Loading ${normalAndLow.length} normal/low priority layers in parallel`);
-			const normalResults = await unifiedLoader.loadLayers(normalAndLow);
-			results.push(...normalResults);
+			logger.debug(`Loading ${normalAndLow.length} normal/low priority layers in parallel`)
+			const normalResults = await unifiedLoader.loadLayers(normalAndLow)
+			results.push(...normalResults)
 		}
 
 		// Handle background layers separately
 		if (priorityGroups.background?.length > 0) {
-			logger.debug(`Scheduling ${priorityGroups.background.length} background layers`);
-			this.scheduleBackgroundLoading(priorityGroups.background);
+			logger.debug(`Scheduling ${priorityGroups.background.length} background layers`)
+			this.scheduleBackgroundLoading(priorityGroups.background)
 		}
 
-		return results;
+		return results
 	}
 
 	/**
@@ -323,16 +322,16 @@ class LoadingCoordinator {
 				new Promise((resolve) => {
 					setTimeout(async () => {
 						try {
-							const result = await unifiedLoader.loadLayer(config);
-							resolve({ status: 'fulfilled', value: result, config });
+							const result = await unifiedLoader.loadLayer(config)
+							resolve({ status: 'fulfilled', value: result, config })
 						} catch (error) {
-							resolve({ status: 'rejected', reason: error, config });
+							resolve({ status: 'rejected', reason: error, config })
 						}
-					}, index * staggerDelay);
+					}, index * staggerDelay)
 				})
-		);
+		)
 
-		return Promise.all(promises);
+		return Promise.all(promises)
 	}
 
 	/**
@@ -350,29 +349,29 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	async loadSequentially(sessionId, layerConfigs) {
-		const sortedConfigs = this.sortByPriority(layerConfigs);
-		const results = [];
+		const sortedConfigs = this.sortByPriority(layerConfigs)
+		const results = []
 
 		for (const config of sortedConfigs) {
 			try {
 				logger.debug(
 					`Loading layer: ${config.layerId} (priority: ${config.options?.priority || 'normal'})`
-				);
-				const result = await unifiedLoader.loadLayer(config);
-				results.push({ status: 'fulfilled', value: result, config });
+				)
+				const result = await unifiedLoader.loadLayer(config)
+				results.push({ status: 'fulfilled', value: result, config })
 
 				// Update session progress
-				this.updateSessionProgress(sessionId, results.length, sortedConfigs.length);
+				this.updateSessionProgress(sessionId, results.length, sortedConfigs.length)
 
 				// Brief pause to allow UI updates
-				await new Promise((resolve) => setTimeout(resolve, 10));
+				await new Promise((resolve) => setTimeout(resolve, 10))
 			} catch (error) {
-				logger.error(`Failed to load layer: ${config.layerId}`, error?.message || error);
-				results.push({ status: 'rejected', reason: error, config });
+				logger.error(`Failed to load layer: ${config.layerId}`, error?.message || error)
+				results.push({ status: 'rejected', reason: error, config })
 			}
 		}
 
-		return results;
+		return results
 	}
 
 	/**
@@ -384,9 +383,9 @@ class LoadingCoordinator {
 	 * @returns {Promise<SessionResult[]>} Loading results
 	 * @private
 	 */
-	async loadInParallel(sessionId, layerConfigs) {
-		logger.debug(`Loading ${layerConfigs.length} layers in parallel`);
-		return unifiedLoader.loadLayers(layerConfigs);
+	async loadInParallel(_sessionId, layerConfigs) {
+		logger.debug(`Loading ${layerConfigs.length} layers in parallel`)
+		return unifiedLoader.loadLayers(layerConfigs)
 	}
 
 	/**
@@ -407,15 +406,15 @@ class LoadingCoordinator {
 	scheduleBackgroundLoading(backgroundConfigs) {
 		// Use requestIdleCallback or setTimeout for background loading
 		const scheduleNext = (configs, index = 0) => {
-			if (index >= configs.length) return;
+			if (index >= configs.length) return
 
 			const scheduleFunction =
-				window.requestIdleCallback || ((callback) => setTimeout(callback, 1000));
+				window.requestIdleCallback || ((callback) => setTimeout(callback, 1000))
 
 			scheduleFunction(async () => {
 				try {
-					const config = configs[index];
-					logger.debug(`Background loading: ${config.layerId}`);
+					const config = configs[index]
+					logger.debug(`Background loading: ${config.layerId}`)
 					await unifiedLoader.loadLayer({
 						...config,
 						options: {
@@ -423,20 +422,20 @@ class LoadingCoordinator {
 							background: true,
 							priority: 'background',
 						},
-					});
+					})
 				} catch (error) {
 					logger.warn(
 						`Background loading failed for ${configs[index].layerId}:`,
 						error?.message || error
-					);
+					)
 				}
 
 				// Schedule next layer
-				scheduleNext(configs, index + 1);
-			});
-		};
+				scheduleNext(configs, index + 1)
+			})
+		}
 
-		scheduleNext(backgroundConfigs);
+		scheduleNext(backgroundConfigs)
 	}
 
 	/**
@@ -449,11 +448,11 @@ class LoadingCoordinator {
 	 */
 	groupByPriority(layerConfigs) {
 		return layerConfigs.reduce((groups, config) => {
-			const priority = config.options?.priority || 'normal';
-			if (!groups[priority]) groups[priority] = [];
-			groups[priority].push(config);
-			return groups;
-		}, {});
+			const priority = config.options?.priority || 'normal'
+			if (!groups[priority]) groups[priority] = []
+			groups[priority].push(config)
+			return groups
+		}, {})
 	}
 
 	/**
@@ -466,10 +465,10 @@ class LoadingCoordinator {
 	 */
 	sortByPriority(layerConfigs) {
 		return [...layerConfigs].sort((a, b) => {
-			const priorityA = this.priorities[a.options?.priority || 'normal'];
-			const priorityB = this.priorities[b.options?.priority || 'normal'];
-			return priorityA - priorityB;
-		});
+			const priorityA = this.priorities[a.options?.priority || 'normal']
+			const priorityB = this.priorities[b.options?.priority || 'normal']
+			return priorityA - priorityB
+		})
 	}
 
 	/**
@@ -483,11 +482,11 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	updateSessionProgress(sessionId, completed, total) {
-		const session = this.activeSessions.get(sessionId);
+		const session = this.activeSessions.get(sessionId)
 		if (session) {
-			session.layersCompleted = completed;
-			const progress = (completed / total) * 100;
-			logger.debug(`Session ${sessionId}: ${completed}/${total} layers (${progress.toFixed(1)}%)`);
+			session.layersCompleted = completed
+			const progress = (completed / total) * 100
+			logger.debug(`Session ${sessionId}: ${completed}/${total} layers (${progress.toFixed(1)}%)`)
 		}
 	}
 
@@ -501,31 +500,31 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	completeSession(sessionId, results) {
-		const session = this.activeSessions.get(sessionId);
-		if (!session) return;
+		const session = this.activeSessions.get(sessionId)
+		if (!session) return
 
-		const endTime = performance.now();
-		const duration = endTime - session.startTime;
+		const endTime = performance.now()
+		const duration = endTime - session.startTime
 
 		// Update performance metrics
-		this.performanceMetrics.layersLoaded += session.totalLayers;
-		this.performanceMetrics.totalLoadTime += duration;
+		this.performanceMetrics.layersLoaded += session.totalLayers
+		this.performanceMetrics.totalLoadTime += duration
 		this.performanceMetrics.avgLoadTime =
-			this.performanceMetrics.totalLoadTime / this.performanceMetrics.layersLoaded;
+			this.performanceMetrics.totalLoadTime / this.performanceMetrics.layersLoaded
 
 		// Log completion
-		const successful = results.filter((r) => r.status === 'fulfilled').length;
-		const failed = results.length - successful;
+		const successful = results.filter((r) => r.status === 'fulfilled').length
+		const failed = results.length - successful
 
-		logger.debug(`Session ${sessionId} completed in ${duration.toFixed(0)}ms`);
-		logger.debug(`Success rate: ${successful}/${results.length} layers`);
+		logger.debug(`Session ${sessionId} completed in ${duration.toFixed(0)}ms`)
+		logger.debug(`Success rate: ${successful}/${results.length} layers`)
 
 		if (failed > 0) {
-			logger.warn(`${failed} layers failed to load in session ${sessionId}`);
+			logger.warn(`${failed} layers failed to load in session ${sessionId}`)
 		}
 
 		// Clean up session
-		this.activeSessions.delete(sessionId);
+		this.activeSessions.delete(sessionId)
 	}
 
 	/**
@@ -538,8 +537,8 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	handleSessionError(sessionId, error) {
-		logger.error(`Loading session ${sessionId} failed:`, error?.message || error);
-		this.activeSessions.delete(sessionId);
+		logger.error(`Loading session ${sessionId} failed:`, error?.message || error)
+		this.activeSessions.delete(sessionId)
 	}
 
 	/**
@@ -554,16 +553,16 @@ class LoadingCoordinator {
 	 * loadingCoordinator.cancelSession('postal_00100');
 	 */
 	cancelSession(sessionId) {
-		const session = this.activeSessions.get(sessionId);
+		const session = this.activeSessions.get(sessionId)
 		if (session) {
-			logger.debug(`Cancelling loading session: ${sessionId}`);
+			logger.debug(`Cancelling loading session: ${sessionId}`)
 
 			// Cancel individual layer loading
 			session.configs.forEach((config) => {
-				unifiedLoader.cancelLoading(config.layerId);
-			});
+				unifiedLoader.cancelLoading(config.layerId)
+			})
 
-			this.activeSessions.delete(sessionId);
+			this.activeSessions.delete(sessionId)
 		}
 	}
 
@@ -585,7 +584,7 @@ class LoadingCoordinator {
 			sessionDuration: this.performanceMetrics.sessionStartTime
 				? performance.now() - this.performanceMetrics.sessionStartTime
 				: 0,
-		};
+		}
 	}
 
 	/**
@@ -614,18 +613,18 @@ class LoadingCoordinator {
 			currentPostalCode: _currentPostalCode,
 			view: _view,
 			userHistory: _userHistory = [],
-		} = context;
+		} = context
 
 		// Determine what to preload based on context
-		const preloadConfigs = this.generatePreloadConfigs(context);
+		const preloadConfigs = this.generatePreloadConfigs(context)
 
 		if (preloadConfigs.length > 0) {
-			logger.debug(`Starting intelligent preload of ${preloadConfigs.length} layers`);
+			logger.debug(`Starting intelligent preload of ${preloadConfigs.length} layers`)
 
 			await this.startLoadingSession('preload', preloadConfigs, {
 				priorityStrategy: 'balanced',
 				backgroundMode: true,
-			});
+			})
 		}
 	}
 
@@ -640,7 +639,7 @@ class LoadingCoordinator {
 	generatePreloadConfigs(_context) {
 		// This would analyze user patterns and predict likely next actions
 		// For now, return empty array - would be expanded based on analytics
-		return [];
+		return []
 	}
 
 	/**
@@ -666,7 +665,7 @@ class LoadingCoordinator {
 	 * });
 	 */
 	async loadPostalCodeData(postalCode, options = {}) {
-		const sessionId = `postal_code_${postalCode}`;
+		const sessionId = `postal_code_${postalCode}`
 
 		// Define standard postal code layer configurations
 		const layerConfigs = [
@@ -687,16 +686,16 @@ class LoadingCoordinator {
 				layerId: `othernature_${postalCode}`,
 				priority: 'normal',
 			},
-		];
+		]
 
 		return this.startLoadingSession(sessionId, layerConfigs, {
 			priorityStrategy: 'critical-first',
 			showGlobalProgress: true,
 			...options,
-		});
+		})
 	}
 }
 
 // Create and export singleton instance
-const loadingCoordinator = new LoadingCoordinator();
-export default loadingCoordinator;
+const loadingCoordinator = new LoadingCoordinator()
+export default loadingCoordinator

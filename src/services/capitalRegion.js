@@ -1,9 +1,9 @@
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import DataSource from './datasource.js';
-import HSYBuilding from './hsybuilding.js';
-import ElementsDisplay from './elementsDisplay.js';
+import { useGlobalStore } from '../stores/globalStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
+import DataSource from './datasource.js'
+import ElementsDisplay from './elementsDisplay.js'
+import HSYBuilding from './hsybuilding.js'
 
 /**
  * Capital Region Service
@@ -30,13 +30,13 @@ export default class CapitalRegion {
 	 * Initializes Capital Region-specific service dependencies.
 	 */
 	constructor() {
-		this.toggleStore = useToggleStore();
-		this.store = useGlobalStore();
-		this.propsStore = usePropsStore();
-		this.viewer = this.store.cesiumViewer;
-		this.hSYBuildingService = new HSYBuilding();
-		this.datasourceService = new DataSource();
-		this.elementsDisplayService = new ElementsDisplay();
+		this.toggleStore = useToggleStore()
+		this.store = useGlobalStore()
+		this.propsStore = usePropsStore()
+		this.viewer = this.store.cesiumViewer
+		this.hSYBuildingService = new HSYBuilding()
+		this.datasourceService = new DataSource()
+		this.elementsDisplayService = new ElementsDisplay()
 	}
 
 	/**
@@ -49,10 +49,10 @@ export default class CapitalRegion {
 	async loadCapitalRegionElements() {
 		// Show tree controls only for postal codes with tree data availability
 		if (Number(this.store.postalcode) < 1000) {
-			this.elementsDisplayService.setTreeElementsDisplay('inline-block');
+			this.elementsDisplayService.setTreeElementsDisplay('inline-block')
 		}
 
-		await this.hSYBuildingService.loadHSYBuildings();
+		await this.hSYBuildingService.loadHSYBuildings()
 	}
 
 	/**
@@ -62,7 +62,7 @@ export default class CapitalRegion {
 	 * @returns {Promise<void>}
 	 */
 	async addPostalCodeDataToPinia() {
-		const dataSource = this.datasourceService.getDataSourceByName('PostCodes');
-		this.propsStore.setPostalCodeData(dataSource);
+		const dataSource = this.datasourceService.getDataSourceByName('PostCodes')
+		this.propsStore.setPostalCodeData(dataSource)
 	}
 }

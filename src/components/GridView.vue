@@ -1,8 +1,6 @@
 <template>
 	<div id="gridviewContainer">
-		<p class="header">
-R4C Urban Heat risk demonstrator
-</p>
+		<p class="header">R4C Urban Heat risk demonstrator</p>
 		<v-btn
 			icon
 			class="uiButton"
@@ -16,13 +14,14 @@ R4C Urban Heat risk demonstrator
 				v-model="postalCodeView"
 				type="checkbox"
 				value="postalCode"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			for="postalCodeToggle"
 			class="label"
-			>Postalcode view</label>
+			>Postalcode view</label
+		>
 
 		<!--  natureGrid-->
 		<label
@@ -33,14 +32,15 @@ R4C Urban Heat risk demonstrator
 				v-model="natureGrid"
 				type="checkbox"
 				value="natureGrid"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			v-show="showNatureGrid"
 			for="natureGrid"
 			class="label"
-			>Nature grid</label>
+			>Nature grid</label
+		>
 
 		<!--  travelTime-->
 		<label class="switch">
@@ -48,13 +48,14 @@ R4C Urban Heat risk demonstrator
 				v-model="travelTime"
 				type="checkbox"
 				value="travelTime"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			for="travelTime"
 			class="label"
-			>Travel time grid</label>
+			>Travel time grid</label
+		>
 
 		<!--  resetGrid-->
 		<label class="switch">
@@ -62,13 +63,14 @@ R4C Urban Heat risk demonstrator
 				v-model="resetGrid"
 				type="checkbox"
 				value="resetGrid"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			for="resetGrid"
 			class="label"
-			>Reset grid</label>
+			>Reset grid</label
+		>
 
 		<!--  surveyPlaces-->
 		<label class="switch">
@@ -76,13 +78,14 @@ R4C Urban Heat risk demonstrator
 				v-model="surveyPlaces"
 				type="checkbox"
 				value="surveyPlaces"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			for="surveyPlaces"
 			class="label"
-			>Espoo resident survey places</label>
+			>Espoo resident survey places</label
+		>
 
 		<!--  250mGrid-->
 		<label class="switch">
@@ -90,13 +93,14 @@ R4C Urban Heat risk demonstrator
 				v-model="grid250m"
 				type="checkbox"
 				value="250mGrid"
-			>
+			/>
 			<span class="slider round" />
 		</label>
 		<label
 			for="250mGrid"
 			class="label"
-			>250m grid</label>
+			>250m grid</label
+		>
 	</div>
 	<BuildingGridChart ref="buildingGridChart" />
 	<SosEco250mGrid ref="sosEco250mGrid" />
@@ -104,16 +108,16 @@ R4C Urban Heat risk demonstrator
 </template>
 
 <script>
-import { eventBus } from '../services/eventEmitter.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import Datasource from '../services/datasource.js';
-import Populationgrid from '../services/populationgrid.js';
-import EspooSurvey from '../services/espooSurvey.js';
-import Camera from '../services/camera.js';
-import BuildingGridChart from './BuildingGridChart.vue';
-import SurveyScatterPlot from './SurveyScatterPlot.vue';
-import SosEco250mGrid from './SosEco250mGrid.vue'; // Import the 250mGrid component
+import Camera from '../services/camera.js'
+import Datasource from '../services/datasource.js'
+import EspooSurvey from '../services/espooSurvey.js'
+import { eventBus } from '../services/eventEmitter.js'
+import Populationgrid from '../services/populationgrid.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
+import BuildingGridChart from './BuildingGridChart.vue'
+import SosEco250mGrid from './SosEco250mGrid.vue' // Import the 250mGrid component
+import SurveyScatterPlot from './SurveyScatterPlot.vue'
 
 export default {
 	components: {
@@ -132,64 +136,64 @@ export default {
 			surveyPlaces: false,
 			grid250m: false,
 			showNatureGrid: false, // Control visibility of nature grid toggle
-		};
+		}
 	},
 	watch: {
 		postalCodeView(newValue) {
-			this.toggleStore.setPostalCode(newValue);
+			this.toggleStore.setPostalCode(newValue)
 			if (newValue) {
-				this.store.setView('capitalRegion');
-				this.reset();
+				this.store.setView('capitalRegion')
+				this.reset()
 			}
 		},
 		natureGrid(newValue) {
-			this.toggleStore.setNatureGrid(newValue);
-			this.natureGridEvent();
+			this.toggleStore.setNatureGrid(newValue)
+			this.natureGridEvent()
 		},
 		travelTime(newValue) {
-			this.toggleStore.setTravelTime(newValue);
-			this.travelTimeEvent();
+			this.toggleStore.setTravelTime(newValue)
+			this.travelTimeEvent()
 		},
 		resetGrid(newValue) {
-			this.toggleStore.setResetGrid(newValue);
+			this.toggleStore.setResetGrid(newValue)
 			if (newValue) {
-				const populationgridService = new Populationgrid();
-				void populationgridService.createPopulationGrid();
+				const populationgridService = new Populationgrid()
+				void populationgridService.createPopulationGrid()
 			}
 		},
 		surveyPlaces(newValue) {
-			this.toggleStore.setSurveyPlaces(newValue);
-			this.surveyPlacesEvent();
+			this.toggleStore.setSurveyPlaces(newValue)
+			this.surveyPlacesEvent()
 		},
 		grid250m(_newValue) {
-			this.activate250mGridEvent();
+			this.activate250mGridEvent()
 		},
 	},
 	mounted() {
-		this.unsubscribe = eventBus.on('createPopulationGrid', this.createPopulationGrid);
-		this.store = useGlobalStore();
-		this.toggleStore = useToggleStore();
-		this.viewer = this.store.cesiumViewer;
-		this.datasourceService = new Datasource();
+		this.unsubscribe = eventBus.on('createPopulationGrid', this.createPopulationGrid)
+		this.store = useGlobalStore()
+		this.toggleStore = useToggleStore()
+		this.viewer = this.store.cesiumViewer
+		this.datasourceService = new Datasource()
 	},
 	beforeUnmount() {
-		this.unsubscribe();
+		this.unsubscribe()
 	},
 	methods: {
 		reset() {
 			// Smart reset instead of page reload
-			this.store.setLevel('start');
-			this.store.setPostalCode(null);
-			this.store.setNameOfZone(null);
-			this.store.setView('capitalRegion');
+			this.store.setLevel('start')
+			this.store.setPostalCode(null)
+			this.store.setNameOfZone(null)
+			this.store.setView('capitalRegion')
 
 			// Reset camera to initial position
-			const camera = new Camera();
-			camera.init();
+			const camera = new Camera()
+			camera.init()
 		},
 		async createPopulationGrid() {
-			const populationgridService = new Populationgrid();
-			await populationgridService.createPopulationGrid();
+			const populationgridService = new Populationgrid()
+			await populationgridService.createPopulationGrid()
 		},
 
 		/**
@@ -197,19 +201,19 @@ export default {
 		 */
 		activate250mGridEvent() {
 			if (this.grid250m) {
-				this.datasourceService.changeDataSourceShowByName('PopulationGrid', false);
-				eventBus.emit('create250mGrid'); // Trigger the simulation to start
+				this.datasourceService.changeDataSourceShowByName('PopulationGrid', false)
+				eventBus.emit('create250mGrid') // Trigger the simulation to start
 			} else {
-				this.datasourceService.removeDataSourcesByNamePrefix('250m_grid');
+				this.datasourceService.removeDataSourcesByNamePrefix('250m_grid')
 				// Use refs for child component visibility control
 				if (this.$refs.buildingGridChart?.$el) {
 					const barChartContainer =
-						this.$refs.buildingGridChart.$el.querySelector('#bar-chart-container');
-					const legend = this.$refs.buildingGridChart.$el.querySelector('#legend');
-					if (barChartContainer) barChartContainer.style.visibility = 'hidden';
-					if (legend) legend.style.visibility = 'hidden';
+						this.$refs.buildingGridChart.$el.querySelector('#bar-chart-container')
+					const legend = this.$refs.buildingGridChart.$el.querySelector('#legend')
+					if (barChartContainer) barChartContainer.style.visibility = 'hidden'
+					if (legend) legend.style.visibility = 'hidden'
 				}
-				this.datasourceService.changeDataSourceShowByName('PopulationGrid', true);
+				this.datasourceService.changeDataSourceShowByName('PopulationGrid', true)
 			}
 		},
 
@@ -218,14 +222,14 @@ export default {
 		 */
 		surveyPlacesEvent() {
 			if (this.surveyPlaces) {
-				const espooSurveyService = new EspooSurvey();
-				void espooSurveyService.loadSurveyFeatures('places_in_everyday_life');
+				const espooSurveyService = new EspooSurvey()
+				void espooSurveyService.loadSurveyFeatures('places_in_everyday_life')
 			} else {
-				this.datasourceService.removeDataSourcesByNamePrefix('Survey ');
+				this.datasourceService.removeDataSourcesByNamePrefix('Survey ')
 				// Use refs for child component visibility control
 				if (this.$refs.surveyScatterPlot?.$el) {
-					const scatterPlot = this.$refs.surveyScatterPlot.$el.querySelector('#surveyScatterPlot');
-					if (scatterPlot) scatterPlot.style.visibility = 'hidden';
+					const scatterPlot = this.$refs.surveyScatterPlot.$el.querySelector('#surveyScatterPlot')
+					if (scatterPlot) scatterPlot.style.visibility = 'hidden'
 				}
 			}
 		},
@@ -236,27 +240,27 @@ export default {
 		async travelTimeEvent() {
 			// Check if viewer is initialized
 			if (!this.viewer) {
-				console.error('Viewer is not initialized.');
-				return; // Exit the function if viewer is not initialized
+				console.error('Viewer is not initialized.')
+				return // Exit the function if viewer is not initialized
 			}
 
 			try {
-				this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
-				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
+				this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel')
+				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid')
 
 				if (this.travelTime) {
 					await this.datasourceService.loadGeoJsonDataSource(
 						0.1,
 						'assets/data/travel_time_grid.json',
 						'TravelTimeGrid'
-					);
+					)
 				} else {
-					await this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
-					await this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel');
-					await this.createPopulationGrid();
+					await this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid')
+					await this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel')
+					await this.createPopulationGrid()
 				}
 			} catch (error) {
-				console.error('Error in travelTimeEvent:', error);
+				console.error('Error in travelTimeEvent:', error)
 			}
 		},
 
@@ -264,34 +268,34 @@ export default {
 		 * This function to switch between population grid and nature grid view
 		 */
 		natureGridEvent() {
-			this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid');
+			this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid')
 
 			if (this.natureGrid) {
-				const dataSource = this.datasourceService.getDataSourceByName('PopulationGrid');
+				const dataSource = this.datasourceService.getDataSourceByName('PopulationGrid')
 
 				if (!dataSource) {
-					console.error('Data source with name PopulationGrid not found.');
-					return;
+					console.error('Data source with name PopulationGrid not found.')
+					return
 				}
 
 				// Get the entities of the data source
-				const entities = dataSource.entities.values;
-				const populationgridService = new Populationgrid();
+				const entities = dataSource.entities.values
+				const populationgridService = new Populationgrid()
 
 				for (let i = 0; i < entities.length; i++) {
-					let entity = entities[i];
-					populationgridService.setGridEntityPolygonToGreen(entity);
+					const entity = entities[i]
+					populationgridService.setGridEntityPolygonToGreen(entity)
 				}
 
 				// Uncheck travel time toggle when nature grid is enabled
-				this.travelTime = false;
+				this.travelTime = false
 			} else {
-				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid');
-				void this.createPopulationGrid();
+				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid')
+				void this.createPopulationGrid()
 			}
 		},
 	},
-};
+}
 </script>
 
 <style>

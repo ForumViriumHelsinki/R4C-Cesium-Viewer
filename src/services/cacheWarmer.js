@@ -34,10 +34,10 @@
  * @see {@link module:stores/toggleStore}
  */
 
-import unifiedLoader from './unifiedLoader.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useURLStore } from '../stores/urlStore.js';
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
+import { useURLStore } from '../stores/urlStore.js'
+import unifiedLoader from './unifiedLoader.js'
 
 /**
  * Warming result object
@@ -61,15 +61,15 @@ class CacheWarmer {
 	 */
 	constructor() {
 		/** @type {Object|null} Lazy-loaded global store instance */
-		this._store = null;
+		this._store = null
 		/** @type {Object|null} Lazy-loaded toggle store instance */
-		this._toggleStore = null;
+		this._toggleStore = null
 		/** @type {Object|null} Lazy-loaded URL store instance */
-		this._urlStore = null;
+		this._urlStore = null
 		/** @type {boolean} Flag to prevent concurrent warming operations */
-		this.warmingInProgress = false;
+		this.warmingInProgress = false
 		/** @type {Set<string>} Tracking set of already-warmed postal codes */
-		this.warmedPostalCodes = new Set();
+		this.warmedPostalCodes = new Set()
 
 		/**
 		 * Most popular postal codes in Helsinki (based on typical usage patterns)
@@ -85,7 +85,7 @@ class CacheWarmer {
 			'00530', // Munkkiniemi
 			'00250', // Taka-Töölö
 			'00260', // Katajanokka
-		];
+		]
 	}
 
 	/**
@@ -94,8 +94,8 @@ class CacheWarmer {
 	 * @private
 	 */
 	get store() {
-		if (!this._store) this._store = useGlobalStore();
-		return this._store;
+		if (!this._store) this._store = useGlobalStore()
+		return this._store
 	}
 
 	/**
@@ -104,8 +104,8 @@ class CacheWarmer {
 	 * @private
 	 */
 	get toggleStore() {
-		if (!this._toggleStore) this._toggleStore = useToggleStore();
-		return this._toggleStore;
+		if (!this._toggleStore) this._toggleStore = useToggleStore()
+		return this._toggleStore
 	}
 
 	/**
@@ -114,8 +114,8 @@ class CacheWarmer {
 	 * @private
 	 */
 	get urlStore() {
-		if (!this._urlStore) this._urlStore = useURLStore();
-		return this._urlStore;
+		if (!this._urlStore) this._urlStore = useURLStore()
+		return this._urlStore
 	}
 
 	/**
@@ -138,22 +138,22 @@ class CacheWarmer {
 	 */
 	async warmCriticalData() {
 		if (this.warmingInProgress) {
-			console.log('[CacheWarmer] ⏳ Warming already in progress, skipping');
-			return;
+			console.log('[CacheWarmer] ⏳ Warming already in progress, skipping')
+			return
 		}
 
-		this.warmingInProgress = true;
-		console.log('[CacheWarmer] 🔥 Starting cache warming for critical data...');
+		this.warmingInProgress = true
+		console.log('[CacheWarmer] 🔥 Starting cache warming for critical data...')
 
 		try {
 			// Warm popular postal codes' building data
-			await this.warmPopularBuildingData();
+			await this.warmPopularBuildingData()
 
-			console.log('[CacheWarmer] ✅ Cache warming complete');
+			console.log('[CacheWarmer] ✅ Cache warming complete')
 		} catch (error) {
-			console.warn('[CacheWarmer] ⚠️ Cache warming encountered error:', error?.message || error);
+			console.warn('[CacheWarmer] ⚠️ Cache warming encountered error:', error?.message || error)
 		} finally {
-			this.warmingInProgress = false;
+			this.warmingInProgress = false
 		}
 	}
 
@@ -170,17 +170,17 @@ class CacheWarmer {
 			'[CacheWarmer] 🏢 Warming building caches for',
 			this.popularPostalCodes.length,
 			'popular areas...'
-		);
+		)
 
 		// Use Promise.allSettled to continue even if some fail
 		const results = await Promise.allSettled(
 			this.popularPostalCodes.map((postalCode) => this.warmBuildingsForPostalCode(postalCode))
-		);
+		)
 
-		const successful = results.filter((r) => r.status === 'fulfilled').length;
-		const failed = results.filter((r) => r.status === 'rejected').length;
+		const successful = results.filter((r) => r.status === 'fulfilled').length
+		const failed = results.filter((r) => r.status === 'rejected').length
 
-		console.log(`[CacheWarmer] 📊 Warming complete: ${successful} successful, ${failed} failed`);
+		console.log(`[CacheWarmer] 📊 Warming complete: ${successful} successful, ${failed} failed`)
 	}
 
 	/**
@@ -209,19 +209,19 @@ class CacheWarmer {
 	async warmBuildingsForPostalCode(postalCode) {
 		// Skip if already warmed
 		if (this.warmedPostalCodes.has(postalCode)) {
-			console.log(`[CacheWarmer] ⏭️ Skipping ${postalCode} (already warmed)`);
-			return;
+			console.log(`[CacheWarmer] ⏭️ Skipping ${postalCode} (already warmed)`)
+			return
 		}
 
 		try {
-			const helsinkiView = this.toggleStore.helsinkiView;
+			const helsinkiView = this.toggleStore.helsinkiView
 
 			if (helsinkiView) {
 				// Helsinki buildings from WFS
 				const url =
 					'https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27' +
 					postalCode +
-					'%27';
+					'%27'
 
 				await unifiedLoader.loadLayer({
 					layerId: `warmcache_helsinki_buildings_${postalCode}`,
@@ -235,10 +235,10 @@ class CacheWarmer {
 						priority: 'low',
 						background: true,
 					},
-				});
+				})
 			} else {
 				// HSY Capital Region buildings
-				const url = this.urlStore.hsyBuildings(postalCode);
+				const url = this.urlStore.hsyBuildings(postalCode)
 
 				await unifiedLoader.loadLayer({
 					layerId: `warmcache_hsy_buildings_${postalCode}`,
@@ -252,14 +252,14 @@ class CacheWarmer {
 						priority: 'low',
 						background: true,
 					},
-				});
+				})
 			}
 
-			this.warmedPostalCodes.add(postalCode);
-			console.log(`[CacheWarmer] ✓ Warmed buildings for ${postalCode}`);
+			this.warmedPostalCodes.add(postalCode)
+			console.log(`[CacheWarmer] ✓ Warmed buildings for ${postalCode}`)
 		} catch (error) {
-			console.warn(`[CacheWarmer] ⚠️ Failed to warm ${postalCode}:`, error.message);
-			throw error; // Re-throw for Promise.allSettled tracking
+			console.warn(`[CacheWarmer] ⚠️ Failed to warm ${postalCode}:`, error.message)
+			throw error // Re-throw for Promise.allSettled tracking
 		}
 	}
 
@@ -284,19 +284,19 @@ class CacheWarmer {
 	 * cacheWarmer.warmNearbyPostalCodes('00100', ['00150', '00170', '00180']);
 	 */
 	warmNearbyPostalCodes(currentPostalCode, nearbyPostalCodes) {
-		console.log('[CacheWarmer] 🎯 Predictively warming nearby postal codes...');
+		console.log('[CacheWarmer] 🎯 Predictively warming nearby postal codes...')
 
 		// Filter out current postal code and already warmed ones
 		const postalCodesToWarm = nearbyPostalCodes.filter(
 			(code) => code !== currentPostalCode && !this.warmedPostalCodes.has(code)
-		);
+		)
 
 		if (postalCodesToWarm.length === 0) {
-			console.log('[CacheWarmer] All nearby postal codes already warmed');
-			return;
+			console.log('[CacheWarmer] All nearby postal codes already warmed')
+			return
 		}
 
-		console.log('[CacheWarmer] Warming', postalCodesToWarm.length, 'nearby postal codes');
+		console.log('[CacheWarmer] Warming', postalCodesToWarm.length, 'nearby postal codes')
 
 		// Warm in background with low priority
 		// Use requestIdleCallback to run during browser idle time
@@ -305,25 +305,25 @@ class CacheWarmer {
 				requestIdleCallback(
 					async () => {
 						try {
-							await this.warmBuildingsForPostalCode(postalCode);
+							await this.warmBuildingsForPostalCode(postalCode)
 						} catch (_error) {
 							// Silent fail for predictive warming
-							console.debug(`[CacheWarmer] Predictive warming failed for ${postalCode}`);
+							console.debug(`[CacheWarmer] Predictive warming failed for ${postalCode}`)
 						}
 					},
 					{ timeout: 5000 }
-				); // 5 second timeout
+				) // 5 second timeout
 			} else {
 				// Fallback for browsers without requestIdleCallback
 				setTimeout(async () => {
 					try {
-						await this.warmBuildingsForPostalCode(postalCode);
+						await this.warmBuildingsForPostalCode(postalCode)
 					} catch (_error) {
-						console.debug(`[CacheWarmer] Predictive warming failed for ${postalCode}`);
+						console.debug(`[CacheWarmer] Predictive warming failed for ${postalCode}`)
 					}
-				}, 100);
+				}, 100)
 			}
-		});
+		})
 	}
 
 	/**
@@ -341,10 +341,10 @@ class CacheWarmer {
 	 * });
 	 */
 	clearWarmedTracking() {
-		console.log('[CacheWarmer] 🧹 Clearing warmed postal codes tracking');
-		this.warmedPostalCodes.clear();
+		console.log('[CacheWarmer] 🧹 Clearing warmed postal codes tracking')
+		this.warmedPostalCodes.clear()
 	}
 }
 
 // Export singleton instance
-export default new CacheWarmer();
+export default new CacheWarmer()

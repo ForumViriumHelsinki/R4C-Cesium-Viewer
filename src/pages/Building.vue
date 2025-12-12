@@ -16,12 +16,12 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import BuildingTreeChart from '../components/BuildingTreeChart.vue';
-import BuildingHeatChart from '../components/BuildingHeatChart.vue';
-import { eventBus } from '../services/eventEmitter.js';
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import BuildingHeatChart from '../components/BuildingHeatChart.vue'
+import BuildingTreeChart from '../components/BuildingTreeChart.vue'
+import { eventBus } from '../services/eventEmitter.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
 	components: {
@@ -29,29 +29,29 @@ export default {
 		BuildingHeatChart,
 	},
 	setup() {
-		const showComponents = ref(false);
-		const _store = useGlobalStore();
-		const toggleStore = useToggleStore();
+		const showComponents = ref(false)
+		const _store = useGlobalStore()
+		const toggleStore = useToggleStore()
 
 		onMounted(() => {
 			eventBus.on('showBuilding', () => {
-				showComponents.value = true;
-			});
+				showComponents.value = true
+			})
 
 			eventBus.on('hideBuilding', () => {
-				showComponents.value = false;
-			});
-		});
+				showComponents.value = false
+			})
+		})
 
 		onBeforeUnmount(() => {
-			eventBus.off('showBuilding');
-			eventBus.off('hideBuilding');
-		});
+			eventBus.off('showBuilding')
+			eventBus.off('hideBuilding')
+		})
 
 		return {
 			showComponents,
 			toggleStore,
-		};
+		}
 	},
-};
+}
 </script>

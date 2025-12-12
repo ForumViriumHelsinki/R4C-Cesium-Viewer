@@ -1,4 +1,4 @@
-import { useToggleStore } from '../stores/toggleStore.js';
+import { useToggleStore } from '../stores/toggleStore.js'
 
 /**
  * Elements Display Service
@@ -21,7 +21,7 @@ export default class ElementsDisplay {
 	 * Creates an ElementsDisplay service instance
 	 */
 	constructor() {
-		this.toggleStore = useToggleStore();
+		this.toggleStore = useToggleStore()
 	}
 
 	/**
@@ -57,9 +57,9 @@ export default class ElementsDisplay {
 			'hideNonSoteLabel',
 			'hideLowSwitch',
 			'hideLowLabel',
-		];
+		]
 
-		this.setElementsDisplay(elements, display);
+		this.setElementsDisplay(elements, display)
 	}
 
 	/**
@@ -80,14 +80,14 @@ export default class ElementsDisplay {
 	 * elementsDisplay.setBuildingDisplay('none'); // Hide building filters
 	 */
 	setBuildingDisplay(display) {
-		const elements = ['hideLowSwitch', 'hideLowLabel', 'hideNonSoteSwitch', 'hideNonSoteLabel'];
+		const elements = ['hideLowSwitch', 'hideLowLabel', 'hideNonSoteSwitch', 'hideNonSoteLabel']
 
 		if (this.toggleStore.helsinkiView) {
-			elements.push('hideNewBuildingsSwitch');
-			elements.push('hideNewBuildingsLabel');
+			elements.push('hideNewBuildingsSwitch')
+			elements.push('hideNewBuildingsLabel')
 		}
 
-		this.setElementsDisplay(elements, display);
+		this.setElementsDisplay(elements, display)
 	}
 
 	/**
@@ -107,14 +107,14 @@ export default class ElementsDisplay {
 	 * elementsDisplay.setViewDisplay('none'); // Hide view mode controls
 	 */
 	setViewDisplay(display) {
-		const elements = ['gridViewSwitch', 'gridViewLabel'];
+		const elements = ['gridViewSwitch', 'gridViewLabel']
 
 		if (!this.toggleStore.helsinkiView) {
-			elements.push('capitalRegionSwitch');
-			elements.push('capitalRegionViewLabel');
+			elements.push('capitalRegionSwitch')
+			elements.push('capitalRegionViewLabel')
 		}
 
-		this.setElementsDisplay(elements, display);
+		this.setElementsDisplay(elements, display)
 	}
 
 	/**
@@ -142,11 +142,11 @@ export default class ElementsDisplay {
 			'showTreesLabel',
 			'hideNonSoteSwitch',
 			'hideNonSoteLabel',
-		];
+		]
 
-		document.getElementById('hideNonSoteLabel').textContent = 'Only public buildings';
+		document.getElementById('hideNonSoteLabel').textContent = 'Only public buildings'
 
-		this.setElementsDisplay(elements, display);
+		this.setElementsDisplay(elements, display)
 	}
 
 	/**
@@ -164,9 +164,9 @@ export default class ElementsDisplay {
 	 * elementsDisplay.setTreeElementsDisplay('none'); // Hide tree controls
 	 */
 	setTreeElementsDisplay(display) {
-		const elements = ['showTreesSwitch', 'showTreesLabel'];
+		const elements = ['showTreesSwitch', 'showTreesLabel']
 
-		this.setElementsDisplay(elements, display);
+		this.setElementsDisplay(elements, display)
 	}
 
 	/**
@@ -184,9 +184,9 @@ export default class ElementsDisplay {
 	 * elementsDisplay.setFloodElementsDisplay('none'); // Hide flood link
 	 */
 	setFloodElementsDisplay(display) {
-		const elements = ['floodLink'];
+		const elements = ['floodLink']
 
-		this.setElementsDisplay(elements, display);
+		this.setElementsDisplay(elements, display)
 	}
 
 	/**
@@ -206,9 +206,9 @@ export default class ElementsDisplay {
 	 * elementsDisplay.setGridElementsDisplay('none'); // Hide grid controls
 	 */
 	setGridElementsDisplay(display) {
-		const elements = ['natureGridSwitch', 'natureGridLabel', 'travelTimeSwitch', 'travelTimeLabel'];
+		const elements = ['natureGridSwitch', 'natureGridLabel', 'travelTimeSwitch', 'travelTimeLabel']
 
-		this.setElementsDisplay(elements, display);
+		this.setElementsDisplay(elements, display)
 	}
 
 	/**
@@ -226,9 +226,9 @@ export default class ElementsDisplay {
 	 * elementsDisplay.setSwitchViewElementsDisplay('none'); // Hide view switch
 	 */
 	setSwitchViewElementsDisplay(display) {
-		const elements = ['switchViewSwitch', 'switchViewLabel'];
+		const elements = ['switchViewSwitch', 'switchViewLabel']
 
-		this.setElementsDisplay(elements, display);
+		this.setElementsDisplay(elements, display)
 	}
 
 	/**
@@ -246,9 +246,9 @@ export default class ElementsDisplay {
 	 * elementsDisplay.setColdAreasElementsDisplay('none'); // Hide cold areas control
 	 */
 	setColdAreasElementsDisplay(display) {
-		const elements = ['hideColdAreasSwitch', 'hideColdAreasLabel'];
+		const elements = ['hideColdAreasSwitch', 'hideColdAreasLabel']
 
-		this.setElementsDisplay(elements, display);
+		this.setElementsDisplay(elements, display)
 	}
 
 	/**
@@ -267,10 +267,10 @@ export default class ElementsDisplay {
 	 */
 	setElementsDisplay(elements, display) {
 		elements.forEach((elementId) => {
-			const element = document.getElementById(elementId);
+			const element = document.getElementById(elementId)
 			if (element) {
-				element.style.display = display;
+				element.style.display = display
 			}
-		});
+		})
 	}
 }

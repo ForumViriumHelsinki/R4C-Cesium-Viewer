@@ -1,6 +1,6 @@
-import * as Cesium from 'cesium';
-import { useGraphicsStore } from '../stores/graphicsStore.js';
-import { useGlobalStore } from '../stores/globalStore.js';
+import * as Cesium from 'cesium'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useGraphicsStore } from '../stores/graphicsStore.js'
 
 /**
  * Graphics Quality Management Service
@@ -22,10 +22,10 @@ export default class Graphics {
 	 * Creates a Graphics service instance
 	 */
 	constructor() {
-		this.store = useGlobalStore();
-		this.graphicsStore = useGraphicsStore();
-		this.viewer = null;
-		this.scene = null;
+		this.store = useGlobalStore()
+		this.graphicsStore = useGraphicsStore()
+		this.viewer = null
+		this.scene = null
 	}
 
 	/**
@@ -36,17 +36,17 @@ export default class Graphics {
 	 * @returns {void}
 	 */
 	init(viewer) {
-		this.viewer = viewer;
-		this.scene = viewer.scene;
+		this.viewer = viewer
+		this.scene = viewer.scene
 
 		// Detect hardware support
-		this.detectSupport();
+		this.detectSupport()
 
 		// Apply initial graphics settings
-		this.applyGraphicsSettings();
+		this.applyGraphicsSettings()
 
 		// Set up watchers for reactive updates
-		this.setupWatchers();
+		this.setupWatchers()
 	}
 
 	/**
@@ -59,22 +59,22 @@ export default class Graphics {
 			ambientOcclusionSupported: Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(
 				this.scene
 			),
-		};
+		}
 
-		this.graphicsStore.setSupportInfo(supportInfo);
+		this.graphicsStore.setSupportInfo(supportInfo)
 
 		// Log support information
-		console.log('Graphics Support Detection:', supportInfo);
+		console.log('Graphics Support Detection:', supportInfo)
 
 		// Warn about unsupported features
 		if (!supportInfo.msaaSupported) {
-			console.warn('MSAA (Multi-Sample Anti-Aliasing) is not supported by this browser/hardware');
+			console.warn('MSAA (Multi-Sample Anti-Aliasing) is not supported by this browser/hardware')
 		}
 		if (!supportInfo.hdrSupported) {
-			console.warn('HDR (High Dynamic Range) rendering is not supported by this browser/hardware');
+			console.warn('HDR (High Dynamic Range) rendering is not supported by this browser/hardware')
 		}
 		if (!supportInfo.ambientOcclusionSupported) {
-			console.warn('Ambient Occlusion post-processing is not supported by this browser/hardware');
+			console.warn('Ambient Occlusion post-processing is not supported by this browser/hardware')
 		}
 	}
 
@@ -82,11 +82,11 @@ export default class Graphics {
 	 * Apply current graphics settings to the scene
 	 */
 	applyGraphicsSettings() {
-		this.applyMsaaSettings();
-		this.applyFxaaSettings();
-		this.applyHdrSettings();
-		this.applyAmbientOcclusionSettings();
-		this.applyRequestRenderMode();
+		this.applyMsaaSettings()
+		this.applyFxaaSettings()
+		this.applyHdrSettings()
+		this.applyAmbientOcclusionSettings()
+		this.applyRequestRenderMode()
 	}
 
 	/**
@@ -94,11 +94,11 @@ export default class Graphics {
 	 */
 	applyMsaaSettings() {
 		if (this.graphicsStore.msaaSupported) {
-			const effectiveSamples = this.graphicsStore.effectiveMsaaSamples;
-			this.scene.msaaSamples = effectiveSamples;
-			console.log(`MSAA set to ${effectiveSamples}x samples`);
+			const effectiveSamples = this.graphicsStore.effectiveMsaaSamples
+			this.scene.msaaSamples = effectiveSamples
+			console.log(`MSAA set to ${effectiveSamples}x samples`)
 		} else {
-			console.log('MSAA not supported, skipping');
+			console.log('MSAA not supported, skipping')
 		}
 	}
 
@@ -106,10 +106,10 @@ export default class Graphics {
 	 * Apply FXAA (Fast Approximate Anti-Aliasing) settings
 	 */
 	applyFxaaSettings() {
-		const fxaaStage = this.scene.postProcessStages.fxaa;
+		const fxaaStage = this.scene.postProcessStages.fxaa
 		if (fxaaStage) {
-			fxaaStage.enabled = this.graphicsStore.fxaaEnabled;
-			console.log(`FXAA ${this.graphicsStore.fxaaEnabled ? 'enabled' : 'disabled'}`);
+			fxaaStage.enabled = this.graphicsStore.fxaaEnabled
+			console.log(`FXAA ${this.graphicsStore.fxaaEnabled ? 'enabled' : 'disabled'}`)
 		}
 	}
 
@@ -118,10 +118,10 @@ export default class Graphics {
 	 */
 	applyHdrSettings() {
 		if (this.graphicsStore.hdrSupported) {
-			this.scene.highDynamicRange = this.graphicsStore.hdrEnabled;
-			console.log(`HDR ${this.graphicsStore.hdrEnabled ? 'enabled' : 'disabled'}`);
+			this.scene.highDynamicRange = this.graphicsStore.hdrEnabled
+			console.log(`HDR ${this.graphicsStore.hdrEnabled ? 'enabled' : 'disabled'}`)
 		} else if (this.graphicsStore.hdrEnabled) {
-			console.warn('HDR requested but not supported');
+			console.warn('HDR requested but not supported')
 		}
 	}
 
@@ -130,22 +130,22 @@ export default class Graphics {
 	 */
 	applyAmbientOcclusionSettings() {
 		if (this.graphicsStore.ambientOcclusionSupported) {
-			const ambientOcclusion = this.scene.postProcessStages.ambientOcclusion;
-			ambientOcclusion.enabled = this.graphicsStore.ambientOcclusionEnabled;
+			const ambientOcclusion = this.scene.postProcessStages.ambientOcclusion
+			ambientOcclusion.enabled = this.graphicsStore.ambientOcclusionEnabled
 
 			if (ambientOcclusion.enabled) {
 				// Configure ambient occlusion parameters for building visualization
-				ambientOcclusion.uniforms.intensity = 2.0;
-				ambientOcclusion.uniforms.bias = 0.1;
-				ambientOcclusion.uniforms.lengthCap = 0.5;
-				ambientOcclusion.uniforms.directionCount = 16;
-				ambientOcclusion.uniforms.stepCount = 32;
-				console.log('Ambient Occlusion enabled with building-optimized settings');
+				ambientOcclusion.uniforms.intensity = 2.0
+				ambientOcclusion.uniforms.bias = 0.1
+				ambientOcclusion.uniforms.lengthCap = 0.5
+				ambientOcclusion.uniforms.directionCount = 16
+				ambientOcclusion.uniforms.stepCount = 32
+				console.log('Ambient Occlusion enabled with building-optimized settings')
 			} else {
-				console.log('Ambient Occlusion disabled');
+				console.log('Ambient Occlusion disabled')
 			}
 		} else if (this.graphicsStore.ambientOcclusionEnabled) {
-			console.warn('Ambient Occlusion requested but not supported');
+			console.warn('Ambient Occlusion requested but not supported')
 		}
 	}
 
@@ -156,7 +156,7 @@ export default class Graphics {
 		// Note: Request render mode should be set during viewer creation
 		// This is mainly for logging current state
 		if (this.graphicsStore.requestRenderMode) {
-			console.log('Request Render Mode enabled (set during viewer creation)');
+			console.log('Request Render Mode enabled (set during viewer creation)')
 		}
 	}
 
@@ -167,18 +167,18 @@ export default class Graphics {
 		// Watch for MSAA changes
 		this.graphicsStore.$subscribe((mutation, _state) => {
 			if (mutation.events.some((e) => ['msaaEnabled', 'msaaSamples'].includes(e.key))) {
-				this.applyMsaaSettings();
+				this.applyMsaaSettings()
 			}
 			if (mutation.events.some((e) => e.key === 'fxaaEnabled')) {
-				this.applyFxaaSettings();
+				this.applyFxaaSettings()
 			}
 			if (mutation.events.some((e) => e.key === 'hdrEnabled')) {
-				this.applyHdrSettings();
+				this.applyHdrSettings()
 			}
 			if (mutation.events.some((e) => e.key === 'ambientOcclusionEnabled')) {
-				this.applyAmbientOcclusionSettings();
+				this.applyAmbientOcclusionSettings()
 			}
-		});
+		})
 	}
 
 	/**
@@ -192,14 +192,14 @@ export default class Graphics {
 			ambientOcclusionEnabled: this.scene.postProcessStages.ambientOcclusion?.enabled || false,
 			qualityLevel: this.graphicsStore.qualityLevel,
 			hasAntiAliasing: this.graphicsStore.hasAntiAliasing,
-		};
+		}
 	}
 
 	/**
 	 * Show or hide FPS counter for performance monitoring
 	 */
 	setShowFps(show) {
-		this.scene.debugShowFramesPerSecond = show;
+		this.scene.debugShowFramesPerSecond = show
 	}
 
 	/**
@@ -207,7 +207,7 @@ export default class Graphics {
 	 */
 	requestRender() {
 		if (this.scene.requestRenderMode) {
-			this.scene.requestRender();
+			this.scene.requestRender()
 		}
 	}
 }

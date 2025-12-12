@@ -1,11 +1,11 @@
-import Datasource from './datasource.js';
-import * as Cesium from 'cesium';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import { eventBus } from '../services/eventEmitter.js';
-import { useURLStore } from '../stores/urlStore.js';
-import unifiedLoader from './unifiedLoader.js';
-import { cesiumEntityManager } from './cesiumEntityManager.js';
+import * as Cesium from 'cesium'
+import { eventBus } from '../services/eventEmitter.js'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
+import { useURLStore } from '../stores/urlStore.js'
+import { cesiumEntityManager } from './cesiumEntityManager.js'
+import Datasource from './datasource.js'
+import unifiedLoader from './unifiedLoader.js'
 
 /**
  * Tree Service
@@ -34,9 +34,9 @@ export default class Tree {
 	 * Creates a Tree service instance
 	 */
 	constructor() {
-		this.datasourceService = new Datasource();
-		this.store = useGlobalStore();
-		this.urlStore = useURLStore();
+		this.datasourceService = new Datasource()
+		this.store = useGlobalStore()
+		this.urlStore = useURLStore()
 	}
 
 	/**
@@ -45,11 +45,11 @@ export default class Tree {
 	 */
 	async loadTrees(postalCode = null) {
 		// Use provided postal code or fall back to global store
-		const targetPostalCode = postalCode || this.store.postalcode;
+		const targetPostalCode = postalCode || this.store.postalcode
 
 		try {
 			// Define all tree height categories
-			const koodis = ['221', '222', '223', '224'];
+			const koodis = ['221', '222', '223', '224']
 
 			// Create loading configurations for parallel execution
 			const loadingConfigs = koodis.map((koodi) => ({
@@ -66,25 +66,25 @@ export default class Tree {
 					progressive: true,
 					priority: 'high', // Trees are important for cooling analysis
 				},
-			}));
+			}))
 
 			// Load all tree types in parallel using unified loader
-			const results = await unifiedLoader.loadLayers(loadingConfigs);
+			const results = await unifiedLoader.loadLayers(loadingConfigs)
 
 			// Check results and log success/failures
-			const successful = results.filter((r) => r.status === 'fulfilled').length;
-			const failed = results.length - successful;
+			const successful = results.filter((r) => r.status === 'fulfilled').length
+			const failed = results.length - successful
 
 			if (failed === 0) {
-				console.log(`✓ All ${successful} tree height categories loaded successfully`);
+				console.log(`✓ All ${successful} tree height categories loaded successfully`)
 			} else {
-				console.warn(`⚠ ${successful}/${results.length} tree categories loaded, ${failed} failed`);
+				console.warn(`⚠ ${successful}/${results.length} tree categories loaded, ${failed} failed`)
 			}
 
-			return results;
+			return results
 		} catch (error) {
-			console.error('Failed to load tree data:', error?.message || error);
-			throw error;
+			console.error('Failed to load tree data:', error?.message || error)
+			throw error
 		}
 	}
 
@@ -93,7 +93,7 @@ export default class Tree {
 	 * @deprecated Use loadTrees() instead for unified loading
 	 */
 	async loadTreesWithKoodi(koodi) {
-		console.warn('loadTreesWithKoodi is deprecated, use loadTrees() instead');
+		console.warn('loadTreesWithKoodi is deprecated, use loadTrees() instead')
 
 		try {
 			const data = await unifiedLoader.loadLayer({
@@ -106,13 +106,13 @@ export default class Tree {
 					retries: 2,
 					batchSize: 30,
 				},
-			});
+			})
 
-			console.log(`✓ Loaded trees for height category ${koodi}`);
-			return data;
+			console.log(`✓ Loaded trees for height category ${koodi}`)
+			return data
 		} catch (error) {
-			console.error(`Failed to load trees for koodi ${koodi}:`, error?.message || error);
-			throw error;
+			console.error(`Failed to load trees for koodi ${koodi}:`, error?.message || error)
+			throw error
 		}
 	}
 
@@ -128,26 +128,26 @@ export default class Tree {
 		try {
 			const entities = await this.datasourceService.addDataSourceWithPolygonFix(
 				data,
-				'Trees' + koodi + '_' + postalCode
-			);
+				`Trees${koodi}_${postalCode}`
+			)
 
 			// Enhanced batch processing with adaptive batch sizes
-			const adaptiveBatchSize = entities.length > 1000 ? 15 : 25;
-			let processed = 0;
+			const adaptiveBatchSize = entities.length > 1000 ? 15 : 25
+			let processed = 0
 
 			for (let i = 0; i < entities.length; i += adaptiveBatchSize) {
-				const batch = entities.slice(i, i + adaptiveBatchSize);
+				const batch = entities.slice(i, i + adaptiveBatchSize)
 
 				// Process batch with improved error handling
 				for (const entity of batch) {
 					try {
-						const description = entity.properties._kuvaus?._value;
+						const description = entity.properties._kuvaus?._value
 						if (description) {
-							this.setTreePolygonMaterialColor(entity, description);
+							this.setTreePolygonMaterialColor(entity, description)
 						}
-						processed++;
+						processed++
 					} catch (entityError) {
-						console.warn(`Error processing tree entity in koodi ${koodi}:`, entityError);
+						console.warn(`Error processing tree entity in koodi ${koodi}:`, entityError)
 					}
 				}
 
@@ -155,27 +155,27 @@ export default class Tree {
 				if (i + adaptiveBatchSize < entities.length) {
 					await new Promise((resolve) => {
 						if (window.requestIdleCallback) {
-							requestIdleCallback(resolve, { timeout: 50 });
+							requestIdleCallback(resolve, { timeout: 50 })
 						} else {
-							setTimeout(resolve, 0);
+							setTimeout(resolve, 0)
 						}
-					});
+					})
 				}
 			}
 
 			// Handle Helsinki-specific tree distance data
 			if (this.store.view === 'helsinki') {
-				this.fetchAndAddTreeDistanceData(entities);
+				this.fetchAndAddTreeDistanceData(entities)
 			}
 
 			if (!metadata.fromCache) {
-				console.log(`✓ Processed ${processed} trees for height category ${koodi}`);
+				console.log(`✓ Processed ${processed} trees for height category ${koodi}`)
 			} else {
-				console.log(`✓ Restored ${processed} trees from cache for category ${koodi}`);
+				console.log(`✓ Restored ${processed} trees from cache for category ${koodi}`)
 			}
 		} catch (error) {
-			console.error(`Error processing tree data for koodi ${koodi}:`, error?.message || error);
-			throw error;
+			console.error(`Error processing tree data for koodi ${koodi}:`, error?.message || error)
+			throw error
 		}
 	}
 
@@ -187,35 +187,35 @@ export default class Tree {
 	fetchAndAddTreeDistanceData(entities) {
 		if (!entities) {
 			// Find the data source for buildings
-			const treeDataSource = this.datasourceService.getDataSourceByName('Trees');
+			const treeDataSource = this.datasourceService.getDataSourceByName('Trees')
 
 			// If the data source isn't found, exit the function
 			if (!treeDataSource) {
-				return;
+				return
 			}
 
-			entities = treeDataSource.entities.values;
+			entities = treeDataSource.entities.values
 		}
 
 		// Find the data source for buildings
 		const buildingsDataSource = this.datasourceService.getDataSourceByName(
-			'Buildings ' + this.store.postalcode
-		);
+			`Buildings ${this.store.postalcode}`
+		)
 
 		// If the data source isn't found, exit the function
 		if (!buildingsDataSource) {
-			return;
+			return
 		}
 
 		fetch(this.urlStore.treeBuildingDistance(this.store.postalcode))
 			.then((response) => response.json())
 			.then((data) => {
-				this.setPropertiesAndEmitEvent(data, entities, buildingsDataSource);
+				this.setPropertiesAndEmitEvent(data, entities, buildingsDataSource)
 			})
 			.catch((error) => {
 				// Log any errors encountered while fetching the data
-				console.log('Error fetching tree distance data:', error);
-			});
+				console.log('Error fetching tree distance data:', error)
+			})
 	}
 
 	/**
@@ -231,44 +231,44 @@ export default class Tree {
 	 * @private
 	 */
 	setPropertiesAndEmitEvent(data, entities, buildingsDataSource) {
-		const propsStore = usePropsStore();
+		const propsStore = usePropsStore()
 
 		// Extract serializable tree data (prevents DataCloneError)
 		const treeData = entities.map((entity) => ({
 			kohde_id: entity._properties?._kohde_id?._value,
 			p_ala_m2: entity._properties?._p_ala_m2?._value,
-		}));
+		}))
 
 		// Extract serializable building data (prevents DataCloneError)
-		const buildingData = new Map();
-		const buildingEntities = buildingsDataSource.entities.values;
+		const buildingData = new Map()
+		const buildingEntities = buildingsDataSource.entities.values
 		for (const entity of buildingEntities) {
-			const id = entity._properties?._id?._value || entity._properties?._hki_id?._value;
+			const id = entity._properties?._id?._value || entity._properties?._hki_id?._value
 			if (id) {
 				buildingData.set(id, {
 					heatExposure: entity._properties?.avgheatexposuretobuilding?._value,
 					area_m2: entity._properties?._area_m2?._value,
 					hki_id: entity._properties?._hki_id?._value,
-				});
+				})
 			}
 		}
 
 		// Store serializable data in Pinia (safe for Web Workers)
-		propsStore.setTreeBuildingDistanceData(data);
-		propsStore.setTreeData(treeData);
-		propsStore.setBuildingData(buildingData);
+		propsStore.setTreeBuildingDistanceData(data)
+		propsStore.setTreeData(treeData)
+		propsStore.setBuildingData(buildingData)
 
 		// Register entities in non-reactive manager for visual manipulation
-		cesiumEntityManager.registerTreeEntities(entities);
-		cesiumEntityManager.registerBuildingEntities(buildingEntities);
-		cesiumEntityManager.setBuildingsDataSource(buildingsDataSource);
+		cesiumEntityManager.registerTreeEntities(entities)
+		cesiumEntityManager.registerBuildingEntities(buildingEntities)
+		cesiumEntityManager.setBuildingsDataSource(buildingsDataSource)
 
 		console.log(
 			`[Tree Service] Stored ${treeData.length} tree data items, ${buildingData.size} building data items`
-		);
+		)
 
-		eventBus.emit('hideBuildingScatterPlot');
-		eventBus.emit('newNearbyTreeDiagram');
+		eventBus.emit('hideBuildingScatterPlot')
+		eventBus.emit('newNearbyTreeDiagram')
 	}
 
 	/**
@@ -278,41 +278,41 @@ export default class Tree {
 	 * @param {string} description - Description of tree entity
 	 */
 	setTreePolygonMaterialColor(entity, description) {
-		const height = entity._properties._korkeus_ka_m;
+		const height = entity._properties._korkeus_ka_m
 
 		switch (description) {
 			case 'Puusto yli 20 m':
-				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.7);
+				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.7)
 				if (height) {
-					extrudeTree(entity, entity._properties._korkeus_ka_m._value);
+					extrudeTree(entity, entity._properties._korkeus_ka_m._value)
 				} else {
-					extrudeTree(entity, 22.5);
+					extrudeTree(entity, 22.5)
 				}
-				break;
+				break
 			case 'puusto, 15 m - 20 m':
-				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.6);
+				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.6)
 				if (height) {
-					extrudeTree(entity, entity._properties._korkeus_ka_m._value);
+					extrudeTree(entity, entity._properties._korkeus_ka_m._value)
 				} else {
-					extrudeTree(entity, 17.5);
+					extrudeTree(entity, 17.5)
 				}
-				break;
+				break
 			case 'puusto, 10 m - 15 m':
-				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.55);
+				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.55)
 				if (height) {
-					extrudeTree(entity, entity._properties._korkeus_ka_m._value);
+					extrudeTree(entity, entity._properties._korkeus_ka_m._value)
 				} else {
-					extrudeTree(entity, 12.5);
+					extrudeTree(entity, 12.5)
 				}
-				break;
+				break
 			case 'puusto, 2 m - 10 m':
-				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.5);
+				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.5)
 				if (height) {
-					extrudeTree(entity, entity._properties._korkeus_ka_m._value);
+					extrudeTree(entity, entity._properties._korkeus_ka_m._value)
 				} else {
-					extrudeTree(entity, 6);
+					extrudeTree(entity, 6)
 				}
-				break;
+				break
 		}
 	}
 
@@ -322,22 +322,22 @@ export default class Tree {
 	 */
 	resetTreeEntities() {
 		// Find the data source for trees
-		const treeDataSource = this.datasourceService.getDataSourceByName('Trees');
+		const treeDataSource = this.datasourceService.getDataSourceByName('Trees')
 
 		// If the data source isn't found, exit the function
 		if (!treeDataSource) {
-			return;
+			return
 		}
 
-		const treeEntities = treeDataSource.entities.values;
+		const treeEntities = treeDataSource.entities.values
 		for (let i = 0; i < treeEntities.length; i++) {
-			let entity = treeEntities[i];
+			const entity = treeEntities[i]
 
-			entity.polygon.outlineColor = Cesium.Color.BLACK;
-			entity.polygon.outlineWidth = 3;
+			entity.polygon.outlineColor = Cesium.Color.BLACK
+			entity.polygon.outlineWidth = 3
 
 			if (entity._properties._description && entity.polygon) {
-				this.setTreePolygonMaterialColor(entity, entity._properties._description._value);
+				this.setTreePolygonMaterialColor(entity, entity._properties._description._value)
 			}
 		}
 	}
@@ -345,6 +345,6 @@ export default class Tree {
 
 const extrudeTree = (entity, heightValue) => {
 	if (heightValue) {
-		entity.polygon.extrudedHeight = heightValue;
+		entity.polygon.extrudedHeight = heightValue
 	}
-};
+}

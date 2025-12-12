@@ -12,7 +12,7 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 /**
  * Background Map Pinia Store
@@ -43,63 +43,63 @@ export const useBackgroundMapStore = defineStore('backgroundMap', {
 		 * @param {Array<Object>} layers - Cesium imagery layer objects
 		 */
 		setFloodLayers(layers) {
-			this.floodLayers = layers;
+			this.floodLayers = layers
 		},
 		/**
 		 * Sets HSY landcover WMS layer references
 		 * @param {Array<Object>} layers - Cesium imagery layer objects
 		 */
 		setLandcoverLayers(layers) {
-			this.landcoverLayers = layers;
+			this.landcoverLayers = layers
 		},
 		/**
 		 * Sets NDVI TIFF imagery layer references
 		 * @param {Array<Object>} layers - Cesium imagery layer objects with TIFF providers
 		 */
 		setTiffLayers(layers) {
-			this.tiffLayers = layers;
+			this.tiffLayers = layers
 		},
 		/**
 		 * Sets the selected date for NDVI vegetation imagery
 		 * @param {string} date - Date string in YYYY-MM-DD format
 		 */
 		setNdviDate(date) {
-			this.ndviDate = date;
+			this.ndviDate = date
 		},
 		/**
 		 * Sets HSY WMS layer references
 		 * @param {Object} layers - HSY WMS layer configuration object
 		 */
 		setHSYWMSLayers(layers) {
-			this.hSYWMSLayers = layers;
+			this.hSYWMSLayers = layers
 		},
 		/**
 		 * Sets the selected HSY region area
 		 * @param {string} area - Region name (e.g., 'Askisto')
 		 */
 		setHSYSelectArea(area) {
-			this.hsySelectArea = area;
+			this.hsySelectArea = area
 		},
 		/**
 		 * Sets the selected year for HSY landcover data
 		 * @param {number} year - Year (2015-2024)
 		 */
 		setHSYYear(year) {
-			this.hsyYear = year;
+			this.hsyYear = year
 		},
 		/**
 		 * Clears all HSY landcover WMS layer references
 		 * Resets the landcover layers array to empty state
 		 */
 		clearLandcoverLayers() {
-			this.landcoverLayers = [];
+			this.landcoverLayers = []
 		},
 		/**
 		 * Clears all flood risk WMS layer references
 		 * Resets the flood layers array to empty state
 		 */
 		clearFloodLayers() {
-			this.floodLayers = [];
+			this.floodLayers = []
 		},
 	},
-});
+})

@@ -3,40 +3,40 @@
 </template>
 
 <script>
-import { eventBus } from '../services/eventEmitter.js';
-import * as d3 from 'd3'; // Import D3.js
-import Plot from '../services/plot.js';
-import { useGlobalStore } from '../stores/globalStore';
-import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
+import * as d3 from 'd3' // Import D3.js
+import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
+import { eventBus } from '../services/eventEmitter.js'
+import Plot from '../services/plot.js'
+import { useGlobalStore } from '../stores/globalStore'
 
 export default {
 	mounted() {
-		this.unsubscribe = eventBus.on('newSurveyScatterPlot', this.newSurveyScatterPlot);
-		this.plotService = new Plot();
+		this.unsubscribe = eventBus.on('newSurveyScatterPlot', this.newSurveyScatterPlot)
+		this.plotService = new Plot()
 	},
 	beforeUnmount() {
-		this.unsubscribe();
+		this.unsubscribe()
 	},
 	methods: {
 		newSurveyScatterPlot() {
-			const store = useGlobalStore();
-			if (store.view == 'grid') {
-				this.createSurveyScatterPlot();
+			const store = useGlobalStore()
+			if (store.view === 'grid') {
+				this.createSurveyScatterPlot()
 			} else {
-				this.clearSurveyScatterPlot();
+				this.clearSurveyScatterPlot()
 			}
 		},
 
 		createSurveyScatterPlot() {
 			// Get entities from cesiumEntityManager instead of propsStore
-			const entities = cesiumEntityManager.getAllBuildingEntities();
-			const containerId = 'surveyScatterPlot';
-			this.plotService.initializePlotContainerForGrid(containerId);
+			const entities = cesiumEntityManager.getAllBuildingEntities()
+			const containerId = 'surveyScatterPlot'
+			this.plotService.initializePlotContainerForGrid(containerId)
 
 			// Doubling the width and height for a larger diagram
 			const margin = { top: 40, right: 20, bottom: 30, left: 40 },
 				width = 500 - margin.left - margin.right, // Previously 300
-				height = 300 - margin.top - margin.bottom; // Previously 200
+				height = 300 - margin.top - margin.bottom // Previously 200
 
 			// Initialize SVG element using provided plot service method
 			const svg = this.plotService.createSVGElement(
@@ -44,39 +44,39 @@ export default {
 				width,
 				height,
 				document.getElementById(containerId)
-			);
+			)
 
 			// Adjusting to access nested properties
-			const xValues = entities.map((d) => d._properties.Paikan_kok);
-			const yValues = entities.map((d) => d._properties.avg_temp_c);
+			const xValues = entities.map((d) => d._properties.Paikan_kok)
+			const yValues = entities.map((d) => d._properties.avg_temp_c)
 
 			// Creating scales with correct access to nested properties and adjusted yScale
 			const xScale = this.plotService.createScaleLinear(d3.min(xValues), d3.max(xValues), [
 				0,
 				width,
-			]);
+			])
 
 			const yScale = this.plotService.createScaleLinear(
 				d3.min(yValues), // Start from min value
 				d3.max(yValues), // End at max value
 				[height, 0] // Keep this to invert the y-axis correctly
-			);
+			)
 
 			// Setup axes using provided method
-			this.plotService.setupAxes(svg, xScale, yScale, height);
+			this.plotService.setupAxes(svg, xScale, yScale, height)
 
 			// Create tooltip
-			const tooltip = this.plotService.createTooltip('#surveyScatterPlot');
+			const tooltip = this.plotService.createTooltip('#surveyScatterPlot')
 
 			// Data formatter for the tooltip, adjusted for nested properties
 			const dataFormatter = (d) =>
-				`Paikan_kok: ${d._properties.Paikan_kok}<br>Temp in Celsius: ${d._properties.avg_temp_c}`;
+				`Paikan_kok: ${d._properties.Paikan_kok}<br>Temp in Celsius: ${d._properties.avg_temp_c}`
 			this.plotService.addTitle(
 				svg,
 				'Espoo on the map: resident survey places in everyday life with heat exposure',
 				width,
 				margin
-			);
+			)
 
 			// Plot points, adjusted for nested properties
 			svg
@@ -92,22 +92,22 @@ export default {
 				.on('mouseover', (event, d) =>
 					this.plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter)
 				)
-				.on('mouseout', () => this.plotService.handleMouseout(tooltip));
+				.on('mouseout', () => this.plotService.handleMouseout(tooltip))
 		},
 
 		getOutlineColor(value) {
-			if (value >= (100 * 2) / 3) return 'green'; // Use appropriate color or method to convert from Cesium.Color
-			if (value >= (100 * 1) / 3) return 'yellow';
-			return value ? 'red' : null;
+			if (value >= (100 * 2) / 3) return 'green' // Use appropriate color or method to convert from Cesium.Color
+			if (value >= (100 * 1) / 3) return 'yellow'
+			return value ? 'red' : null
 		},
 
 		clearSurveyScatterPlot() {
 			// Remove or clear the D3.js visualization
 			// Example:
-			d3.select('#surveyScatterPlot').select('svg').remove();
+			d3.select('#surveyScatterPlot').select('svg').remove()
 		},
 	},
-};
+}
 </script>
 
 <style>

@@ -1,7 +1,7 @@
-import { logVisibilityChange } from './visibilityLogger.js';
-import * as Cesium from 'cesium';
-import { useGlobalStore } from '../stores/globalStore.js';
-import logger from '../utils/logger.js';
+import * as Cesium from 'cesium'
+import { useGlobalStore } from '../stores/globalStore.js'
+import logger from '../utils/logger.js'
+import { logVisibilityChange } from './visibilityLogger.js'
 
 /**
  * DataSource Service
@@ -15,7 +15,7 @@ export default class DataSource {
 	 * Creates a DataSource service instance
 	 */
 	constructor() {
-		this.store = useGlobalStore();
+		this.store = useGlobalStore()
 	}
 
 	/**
@@ -32,9 +32,9 @@ export default class DataSource {
 				dataSource.show,
 				true,
 				'showAllDataSources'
-			);
-			dataSource.show = true;
-		});
+			)
+			dataSource.show = true
+		})
 	}
 
 	/**
@@ -53,11 +53,11 @@ export default class DataSource {
 					dataSource.name,
 					dataSource.show,
 					show,
-					'changeDataSourceShowByName-' + name
-				);
-				dataSource.show = show;
+					`changeDataSourceShowByName-${name}`
+				)
+				dataSource.show = show
 			}
-		});
+		})
 	}
 
 	/**
@@ -68,9 +68,9 @@ export default class DataSource {
 	 * @returns {Promise<void>}
 	 */
 	async removeDataSourcesAndEntities() {
-		await this.store.cesiumViewer.dataSources.removeAll();
+		await this.store.cesiumViewer.dataSources.removeAll()
 		// Remove all entities directly added to the viewer
-		await this.store.cesiumViewer.entities.removeAll();
+		await this.store.cesiumViewer.entities.removeAll()
 	}
 
 	/**
@@ -80,7 +80,7 @@ export default class DataSource {
 	 * @returns {Cesium.DataSource|undefined} The matching data source, or undefined if not found
 	 */
 	getDataSourceByName(name) {
-		return this.store.cesiumViewer.dataSources._dataSources.find((ds) => ds.name === name);
+		return this.store.cesiumViewer.dataSources._dataSources.find((ds) => ds.name === name)
 	}
 
 	/**
@@ -93,11 +93,11 @@ export default class DataSource {
 	 */
 	async removeDataSourcesByNamePrefix(namePrefix) {
 		return new Promise((resolve, reject) => {
-			const dataSources = this.store.cesiumViewer.dataSources._dataSources;
-			const removalPromises = [];
+			const dataSources = this.store.cesiumViewer.dataSources._dataSources
+			const removalPromises = []
 
 			// Create a copy of the array to avoid issues with iteration during removal
-			const dataSourcesCopy = [...dataSources];
+			const dataSourcesCopy = [...dataSources]
 
 			for (const dataSource of dataSourcesCopy) {
 				if (dataSource.name.startsWith(namePrefix)) {
@@ -108,42 +108,42 @@ export default class DataSource {
 							if (removedDataSource === dataSource) {
 								this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
 									onDataSourceRemoved
-								);
-								resolveRemove();
+								)
+								resolveRemove()
 							}
-						};
+						}
 
 						// Add listener BEFORE calling remove to avoid race condition
 						this.store.cesiumViewer.dataSources.dataSourceRemoved.addEventListener(
 							onDataSourceRemoved
-						);
+						)
 
 						// Call remove and check if it succeeded
-						const wasRemoved = this.store.cesiumViewer.dataSources.remove(dataSource, true);
+						const wasRemoved = this.store.cesiumViewer.dataSources.remove(dataSource, true)
 
 						// If removal failed (data source not in collection), resolve immediately
 						// and clean up the listener to avoid memory leaks
 						if (!wasRemoved) {
 							this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
 								onDataSourceRemoved
-							);
-							resolveRemove();
+							)
+							resolveRemove()
 						}
-					});
+					})
 
-					removalPromises.push(removalPromise);
+					removalPromises.push(removalPromise)
 				}
 			}
 
 			// Wait for all removal promises to resolve
 			Promise.all(removalPromises)
 				.then(() => {
-					resolve();
+					resolve()
 				})
 				.catch((error) => {
-					reject(error);
-				});
-		});
+					reject(error)
+				})
+		})
 	}
 
 	/**
@@ -165,16 +165,16 @@ export default class DataSource {
 				clampToGround: false,
 			})
 				.then((dataSource) => {
-					dataSource.name = name;
-					this.store.cesiumViewer.dataSources.add(dataSource);
-					const entities = dataSource.entities.values;
-					resolve(entities);
+					dataSource.name = name
+					this.store.cesiumViewer.dataSources.add(dataSource)
+					const entities = dataSource.entities.values
+					resolve(entities)
 				})
 				.catch((error) => {
-					logger.error('GeoJSON data source loading failed:', error);
-					reject(error);
-				});
-		});
+					logger.error('GeoJSON data source loading failed:', error)
+					reject(error)
+				})
+		})
 	}
 
 	/**
@@ -191,9 +191,9 @@ export default class DataSource {
 		return new Promise((resolve, reject) => {
 			// Validate data is not null/undefined
 			if (!data) {
-				logger.warn(`[DATASOURCE CREATE] No data provided for "${name}", returning empty array`);
-				resolve([]);
-				return;
+				logger.warn(`[DATASOURCE CREATE] No data provided for "${name}", returning empty array`)
+				resolve([])
+				return
 			}
 
 			// Validate GeoJSON structure has required 'type' property
@@ -201,11 +201,11 @@ export default class DataSource {
 				logger.error(
 					`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": missing 'type' property`,
 					data
-				);
+				)
 				reject(
 					new Error(`Invalid GeoJSON structure: missing 'type' property for data source "${name}"`)
-				);
-				return;
+				)
+				return
 			}
 
 			// Validate GeoJSON has features array
@@ -213,29 +213,29 @@ export default class DataSource {
 				logger.error(
 					`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": 'features' is not an array`,
 					data
-				);
+				)
 				reject(
 					new Error(
 						`Invalid GeoJSON structure: 'features' must be an array for data source "${name}"`
 					)
-				);
-				return;
+				)
+				return
 			}
 
 			// Handle empty features array - log and return gracefully
 			if (data.features.length === 0) {
 				logger.warn(
 					`[DATASOURCE CREATE] No features in GeoJSON for "${name}", returning empty array`
-				);
-				resolve([]);
-				return;
+				)
+				resolve([])
+				return
 			}
 
 			// DIAGNOSTIC: Log incoming data
 			logger.styled(
 				`[DATASOURCE CREATE] Creating datasource "${name}" with ${data.features?.length || 0} features`,
 				'color: green; font-weight: bold'
-			);
+			)
 
 			Cesium.GeoJsonDataSource.load(data, {
 				stroke: Cesium.Color.BLACK,
@@ -248,44 +248,44 @@ export default class DataSource {
 					const existingDatasources =
 						this.store.cesiumViewer?.dataSources?._dataSources?.filter((ds) =>
 							ds.name?.startsWith(name)
-						) || [];
+						) || []
 
 					if (existingDatasources.length > 0) {
 						logger.debug(
 							`[DATASOURCE CREATE] Removing ${existingDatasources.length} existing datasource(s): [${existingDatasources.map((ds) => ds.name).join(', ')}]`
-						);
+						)
 					}
 
 					// Remove previous datasource with same name to avoid duplicates
-					await this.removeDataSourcesByNamePrefix(name);
-					loadedData.name = name;
+					await this.removeDataSourcesByNamePrefix(name)
+					loadedData.name = name
 
 					// Fix polygon rendering by setting geodesic arc type
 					for (let i = 0; i < loadedData.entities.values.length; i++) {
-						let entity = loadedData.entities.values[i];
+						const entity = loadedData.entities.values[i]
 
 						if (Cesium.defined(entity.polygon)) {
-							entity.polygon.arcType = Cesium.ArcType.GEODESIC;
+							entity.polygon.arcType = Cesium.ArcType.GEODESIC
 						}
 					}
 
-					this.store.cesiumViewer.dataSources.add(loadedData);
+					this.store.cesiumViewer.dataSources.add(loadedData)
 
 					// Set initial visibility (for viewport-based culling, buildings start hidden)
-					loadedData.show = initialVisibility;
+					loadedData.show = initialVisibility
 
 					// DIAGNOSTIC: Confirm datasource added
 					logger.debug(
 						`[DATASOURCE CREATE] Added "${name}" with ${loadedData.entities.values.length} entities, show=${loadedData.show} (initialVisibility=${initialVisibility})`
-					);
+					)
 
-					resolve(loadedData.entities.values);
+					resolve(loadedData.entities.values)
 				})
 				.catch((error) => {
-					logger.error(`[DATASOURCE CREATE] Failed to create "${name}":`, error);
-					reject(error);
-				});
-		});
+					logger.error(`[DATASOURCE CREATE] Failed to create "${name}":`, error)
+					reject(error)
+				})
+		})
 	}
 
 	/**
@@ -298,27 +298,27 @@ export default class DataSource {
 	 */
 	calculateDataSourcePropertyTotal(datasource, property) {
 		// Find the data source
-		const foundDataSource = this.getDataSourceByName(datasource);
-		let total = 0;
+		const foundDataSource = this.getDataSourceByName(datasource)
+		let total = 0
 
 		// If the data source isn't found, exit the function
 		if (!foundDataSource) {
-			return total;
+			return total
 		}
 
 		// Iterate through the entities in the data source
-		const entities = foundDataSource.entities.values;
+		const entities = foundDataSource.entities.values
 		for (const entity of entities) {
 			// Check if the entity has the specified property
-			if (entity.properties && entity.properties.includes(property)) {
+			if (entity.properties?.includes(property)) {
 				// Extract the property value and add it to the total
-				const propertyValue = entity.properties[property].getValue();
-				if (!isNaN(propertyValue)) {
-					total += propertyValue;
+				const propertyValue = entity.properties[property].getValue()
+				if (!Number.isNaN(propertyValue)) {
+					total += propertyValue
 				}
 			}
 		}
-		return total;
+		return total
 	}
 
 	/**
@@ -330,42 +330,42 @@ export default class DataSource {
 	 */
 	async removeDuplicateDataSources() {
 		return new Promise((resolve, reject) => {
-			const dataSources = this.store.cesiumViewer.dataSources._dataSources;
-			const uniqueDataSources = {};
+			const dataSources = this.store.cesiumViewer.dataSources._dataSources
+			const uniqueDataSources = {}
 
 			// Track first occurrence of each uniquely named data source
 			for (let i = 0; i < dataSources.length; i++) {
-				const dataSource = dataSources[i];
+				const dataSource = dataSources[i]
 
 				if (!uniqueDataSources[dataSource.name] || uniqueDataSources[dataSource.name].index > i) {
 					// Store or replace if this is first occurrence or has smaller index
 					uniqueDataSources[dataSource.name] = {
 						dataSource: dataSource,
 						index: i,
-					};
+					}
 				}
 			}
 
 			// Clear all existing data sources
-			this.store.cesiumViewer.dataSources.removeAll();
+			this.store.cesiumViewer.dataSources.removeAll()
 
 			// Re-add only unique data sources
-			const addPromises = [];
+			const addPromises = []
 			for (const name in uniqueDataSources) {
-				const dataSource = uniqueDataSources[name].dataSource;
-				const addPromise = this.store.cesiumViewer.dataSources.add(dataSource);
-				addPromises.push(addPromise);
+				const dataSource = uniqueDataSources[name].dataSource
+				const addPromise = this.store.cesiumViewer.dataSources.add(dataSource)
+				addPromises.push(addPromise)
 			}
 
 			// Wait for all data sources to be re-added
 			Promise.all(addPromises)
 				.then(() => {
-					resolve();
+					resolve()
 				})
 				.catch((error) => {
-					reject(error);
-				});
-		});
+					reject(error)
+				})
+		})
 	}
 
 	/**
@@ -377,11 +377,11 @@ export default class DataSource {
 	 */
 	async removeDataSourceByName(name) {
 		// Find the data source named 'MajorDistricts' in the viewer
-		const majorDistrictsDataSource = this.getDataSourceByName(name);
+		const majorDistrictsDataSource = this.getDataSourceByName(name)
 
 		// If the data source is found, remove it
 		if (majorDistrictsDataSource) {
-			this.store.cesiumViewer.dataSources.remove(majorDistrictsDataSource, true);
+			this.store.cesiumViewer.dataSources.remove(majorDistrictsDataSource, true)
 		}
 	}
 }

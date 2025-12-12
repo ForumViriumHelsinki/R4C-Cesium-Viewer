@@ -1,14 +1,14 @@
-import { logVisibilityChange } from './visibilityLogger.js';
-import * as Cesium from 'cesium';
-import Datasource from './datasource.js';
-import Urbanheat from './urbanheat.js';
-import Tree from './tree.js';
-import unifiedLoader from './unifiedLoader.js';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { usePropsStore } from '../stores/propsStore.js';
-import { useToggleStore } from '../stores/toggleStore.js';
-import { useURLStore } from '../stores/urlStore.js';
-import { eventBus } from './eventEmitter.js';
+import * as Cesium from 'cesium'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { usePropsStore } from '../stores/propsStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
+import { useURLStore } from '../stores/urlStore.js'
+import Datasource from './datasource.js'
+import { eventBus } from './eventEmitter.js'
+import Tree from './tree.js'
+import unifiedLoader from './unifiedLoader.js'
+import Urbanheat from './urbanheat.js'
+import { logVisibilityChange } from './visibilityLogger.js'
 
 /**
  * Building Service
@@ -32,17 +32,17 @@ export default class Building {
 	 * Initializes service dependencies for data sources, urban heat, tree coverage, and caching.
 	 */
 	constructor() {
-		this.store = useGlobalStore();
-		this.toggleStore = useToggleStore();
-		this.propsStore = usePropsStore();
-		this.urlStore = useURLStore();
-		this.viewer = this.store.cesiumViewer;
-		this.datasourceService = new Datasource();
-		this.treeService = new Tree();
-		this.urbanheatService = new Urbanheat();
-		this.unifiedLoader = unifiedLoader;
+		this.store = useGlobalStore()
+		this.toggleStore = useToggleStore()
+		this.propsStore = usePropsStore()
+		this.urlStore = useURLStore()
+		this.viewer = this.store.cesiumViewer
+		this.datasourceService = new Datasource()
+		this.treeService = new Tree()
+		this.urbanheatService = new Urbanheat()
+		this.unifiedLoader = unifiedLoader
 		// Track last filter state to prevent redundant re-application
-		this.lastFilterState = null;
+		this.lastFilterState = null
 	}
 
 	/**
@@ -55,19 +55,19 @@ export default class Building {
 	 * @returns {Promise<void>}
 	 */
 	async removeNearbyTreeEffect(entities) {
-		const batchSize = 25; // Process 25 entities at a time
+		const batchSize = 25 // Process 25 entities at a time
 
 		for (let i = 0; i < entities.length; i += batchSize) {
-			const batch = entities.slice(i, i + batchSize);
+			const batch = entities.slice(i, i + batchSize)
 
 			// Process batch synchronously
 			for (let j = 0; j < batch.length; j++) {
-				this.setBuildingEntityPolygon(batch[j]);
+				this.setBuildingEntityPolygon(batch[j])
 			}
 
 			// Yield control to browser to prevent UI blocking
 			if (i + batchSize < entities.length) {
-				await new Promise((resolve) => requestIdleCallback(resolve));
+				await new Promise((resolve) => requestIdleCallback(resolve))
 			}
 		}
 	}
@@ -82,19 +82,19 @@ export default class Building {
 	 * @returns {Promise<void>}
 	 */
 	async setHeatExposureToBuildings(entities) {
-		const batchSize = 25; // Process 25 entities at a time
+		const batchSize = 25 // Process 25 entities at a time
 
 		for (let i = 0; i < entities.length; i += batchSize) {
-			const batch = entities.slice(i, i + batchSize);
+			const batch = entities.slice(i, i + batchSize)
 
 			// Process batch synchronously
 			for (let j = 0; j < batch.length; j++) {
-				this.setBuildingEntityPolygon(batch[j]);
+				this.setBuildingEntityPolygon(batch[j])
 			}
 
 			// Yield control to browser to maintain responsiveness
 			if (i + batchSize < entities.length) {
-				await new Promise((resolve) => requestIdleCallback(resolve));
+				await new Promise((resolve) => requestIdleCallback(resolve))
 			}
 		}
 	}
@@ -112,36 +112,36 @@ export default class Building {
 	 * @returns {Promise<void>}
 	 * @fires eventBus#newBuildingHeat - Emitted when building heat exposure data is updated
 	 */
-	async createBuildingCharts(treeArea, avg_temp_c, buildingProps) {
+	async createBuildingCharts(treeArea, _avg_temp_c, buildingProps) {
 		if (this.store.view === 'grid') {
-			this.propsStore.setGridBuildingProps(buildingProps);
+			this.propsStore.setGridBuildingProps(buildingProps)
 		}
 
 		// Process heat timeseries asynchronously to avoid blocking UI
 		await new Promise((resolve) => {
-			filterHeatTimeseries(buildingProps);
+			filterHeatTimeseries(buildingProps)
 			if (requestIdleCallback) {
-				requestIdleCallback(resolve);
+				requestIdleCallback(resolve)
 			} else {
-				setTimeout(resolve, 0);
+				setTimeout(resolve, 0)
 			}
-		});
+		})
 
 		// Set tree area if tree layer is visible and data exists
 		if (this.toggleStore.showTrees && treeArea) {
-			this.propsStore.setTreeArea(treeArea);
+			this.propsStore.setTreeArea(treeArea)
 		}
 
 		// Set heat exposure data based on view mode (Helsinki vs Capital Region)
 		if (this.toggleStore.helsinkiView) {
-			this.propsStore.setBuildingHeatExposure(buildingProps._avgheatexposuretobuilding._value);
-			eventBus.emit('newBuildingHeat');
+			this.propsStore.setBuildingHeatExposure(buildingProps._avgheatexposuretobuilding._value)
+			eventBus.emit('newBuildingHeat')
 		} else if (!this.toggleStore.helsinkiView) {
 			if (buildingProps.heat_timeseries) {
-				this.propsStore.setBuildingHeatTimeseries(buildingProps.heat_timeseries._value);
+				this.propsStore.setBuildingHeatTimeseries(buildingProps.heat_timeseries._value)
 			}
 		} else {
-			this.propsStore.setGridBuildingProps(buildingProps);
+			this.propsStore.setGridBuildingProps(buildingProps)
 		}
 	}
 
@@ -151,19 +151,19 @@ export default class Building {
 	 * @param {Object} entity - Building entity
 	 */
 	setBuildingEntityPolygon(entity) {
-		const { properties, polygon } = entity;
+		const { properties, polygon } = entity
 
-		const targetDate = this.store.heatDataDate;
+		const targetDate = this.store.heatDataDate
 
 		if (polygon) {
 			if (this.toggleStore.helsinkiView) {
 				if (properties?.avgheatexposuretobuilding) {
-					const heatExposureValue = properties.avgheatexposuretobuilding._value;
-					polygon.material = new Cesium.Color(1, 1 - heatExposureValue, 0, heatExposureValue);
+					const heatExposureValue = properties.avgheatexposuretobuilding._value
+					polygon.material = new Cesium.Color(1, 1 - heatExposureValue, 0, heatExposureValue)
 				}
 			} else {
-				const heatTimeseries = properties.heat_timeseries?._value || [];
-				const foundEntry = heatTimeseries.find(({ date }) => date === targetDate);
+				const heatTimeseries = properties.heat_timeseries?._value || []
+				const foundEntry = heatTimeseries.find(({ date }) => date === targetDate)
 
 				if (foundEntry) {
 					// Only set color if an entry is found
@@ -173,14 +173,14 @@ export default class Building {
 							1 - (1 - foundEntry.avgheatexposure),
 							1,
 							1 - foundEntry.avgheatexposure
-						);
+						)
 					} else {
 						polygon.material = new Cesium.Color(
 							1,
 							1 - foundEntry.avgheatexposure,
 							0,
 							foundEntry.avgheatexposure
-						);
+						)
 					}
 				} else {
 					logVisibilityChange(
@@ -189,16 +189,16 @@ export default class Building {
 						entity.show,
 						false,
 						'setBuildingEntityPolygon-noHeatData'
-					);
-					entity.show = false;
-					polygon.material = new Cesium.Color(0, 0, 0, 0); // Set color to 0 0 0 0 if no entry is found
+					)
+					entity.show = false
+					polygon.material = new Cesium.Color(0, 0, 0, 0) // Set color to 0 0 0 0 if no entry is found
 				}
 			}
 		}
 
 		if (this.toggleStore.helsinkiView) {
-			this.hideNonSoteBuilding(entity);
-			this.hideLowBuilding(entity);
+			this.hideNonSoteBuilding(entity)
+			this.hideLowBuilding(entity)
 		}
 		if (this.store.view === 'grid' && entity._properties?._kayttarks?._value !== 'Asuinrakennus') {
 			logVisibilityChange(
@@ -207,8 +207,8 @@ export default class Building {
 				entity.show,
 				false,
 				'setBuildingEntityPolygon-gridNonResidential'
-			);
-			entity.show = false;
+			)
+			entity.show = false
 		}
 	}
 
@@ -219,7 +219,7 @@ export default class Building {
 	 */
 	hideNonSoteBuilding(entity) {
 		if (this.toggleStore.hideNonSote) {
-			const kayttotark = entity._properties.c_kayttark?._value;
+			const kayttotark = entity._properties.c_kayttark?._value
 
 			if (
 				!kayttotark ||
@@ -232,8 +232,8 @@ export default class Building {
 					entity.show,
 					false,
 					'hideNonSoteBuilding'
-				);
-				entity.show = false;
+				)
+				entity.show = false
 			}
 		}
 	}
@@ -249,35 +249,35 @@ export default class Building {
 			(!Number(entity._properties.i_kerrlkm?._value) ||
 				Number(entity._properties.i_kerrlkm?._value) < 7)
 		) {
-			logVisibilityChange('entity', entity.id || 'building', entity.show, false, 'hideLowBuilding');
-			entity.show = false;
+			logVisibilityChange('entity', entity.id || 'building', entity.show, false, 'hideLowBuilding')
+			entity.show = false
 		}
 	}
 
 	async setHelsinkiBuildingsHeight(entities) {
-		const batchSize = 30; // Process 30 entities at a time (height calc is lighter)
+		const batchSize = 30 // Process 30 entities at a time (height calc is lighter)
 
 		for (let i = 0; i < entities.length; i += batchSize) {
-			const batch = entities.slice(i, i + batchSize);
+			const batch = entities.slice(i, i + batchSize)
 
 			// Process batch synchronously
 			for (let j = 0; j < batch.length; j++) {
-				const entity = batch[j];
+				const entity = batch[j]
 
 				if (entity.polygon) {
-					const { measured_height, i_kerrlkm } = entity.properties;
+					const { measured_height, i_kerrlkm } = entity.properties
 
 					entity.polygon.extrudedHeight = measured_height
 						? measured_height._value
 						: i_kerrlkm != null
 							? i_kerrlkm._value * 3.2
-							: 2.7;
+							: 2.7
 				}
 			}
 
 			// Yield control to prevent UI blocking
 			if (i + batchSize < entities.length) {
-				await new Promise((resolve) => requestIdleCallback(resolve));
+				await new Promise((resolve) => requestIdleCallback(resolve))
 			}
 		}
 	}
@@ -291,14 +291,14 @@ export default class Building {
 	 * @returns {Promise<void>}
 	 */
 	async loadBuildings(postalCode) {
-		const targetPostalCode = postalCode || this.store.postalcode;
-		const url = this.urlStore.helsinkiBuildingsUrl(targetPostalCode);
+		const targetPostalCode = postalCode || this.store.postalcode
+		const url = this.urlStore.helsinkiBuildingsUrl(targetPostalCode)
 
 		console.log(
 			'[HelsinkiBuilding] 🏢 Loading Helsinki buildings for postal code:',
 			targetPostalCode
-		);
-		console.log('[HelsinkiBuilding] API URL:', url);
+		)
+		console.log('[HelsinkiBuilding] API URL:', url)
 
 		try {
 			const loadingConfig = {
@@ -306,19 +306,19 @@ export default class Building {
 				url: url,
 				type: 'geojson',
 				processor: async (data, metadata) => {
-					const fromCache = metadata?.fromCache;
+					const fromCache = metadata?.fromCache
 					console.log(
 						fromCache ? '[HelsinkiBuilding] ✓ Using cached data' : '[HelsinkiBuilding] ✅ Received',
 						data.features?.length || 0,
 						'building features'
-					);
+					)
 
-					const entities = await this.urbanheatService.findUrbanHeatData(data, targetPostalCode);
-					await this.setHeatExposureToBuildings(entities);
-					await this.setHelsinkiBuildingsHeight(entities);
+					const entities = await this.urbanheatService.findUrbanHeatData(data, targetPostalCode)
+					await this.setHeatExposureToBuildings(entities)
+					await this.setHelsinkiBuildingsHeight(entities)
 
-					console.log('[HelsinkiBuilding] ✅ Buildings processed and added to Cesium viewer');
-					return entities;
+					console.log('[HelsinkiBuilding] ✅ Buildings processed and added to Cesium viewer')
+					return entities
 				},
 				options: {
 					cache: true,
@@ -327,15 +327,15 @@ export default class Building {
 					progressive: false,
 					priority: 'high',
 				},
-			};
+			}
 
-			await this.unifiedLoader.loadLayer(loadingConfig);
+			await this.unifiedLoader.loadLayer(loadingConfig)
 		} catch (error) {
-			console.error('[HelsinkiBuilding] ❌ Error loading buildings:', error);
+			console.error('[HelsinkiBuilding] ❌ Error loading buildings:', error)
 		}
 
 		if (this.toggleStore.showTrees) {
-			void this.treeService.loadTrees(targetPostalCode);
+			void this.treeService.loadTrees(targetPostalCode)
 		}
 	}
 
@@ -348,34 +348,31 @@ export default class Building {
 	resetBuildingEntities() {
 		// Find the data source for buildings
 		const buildingDataSource = this.datasourceService.getDataSourceByName(
-			'Buildings ' + this.store.postalcode
-		);
+			`Buildings ${this.store.postalcode}`
+		)
 
 		// If the data source isn't found, exit the function
-		if (!buildingDataSource) return;
+		if (!buildingDataSource) return
 
-		console.log(
-			'[Building] 🔄 Resetting building entities for postal code:',
-			this.store.postalcode
-		);
+		console.log('[Building] 🔄 Resetting building entities for postal code:', this.store.postalcode)
 
-		const buildingEntities = buildingDataSource.entities.values;
+		const buildingEntities = buildingDataSource.entities.values
 		for (let i = 0; i < buildingEntities.length; i++) {
-			let entity = buildingEntities[i];
+			const entity = buildingEntities[i]
 
 			// Reset outline styling
-			entity.polygon.outlineColor = Cesium.Color.BLACK;
-			entity.polygon.outlineWidth = 3;
+			entity.polygon.outlineColor = Cesium.Color.BLACK
+			entity.polygon.outlineWidth = 3
 
 			// Ensure fill is enabled to prevent wireframe appearance
-			entity.polygon.fill = true;
+			entity.polygon.fill = true
 
 			// Use the proper method that handles both Helsinki and Capital Region views
 			// This fixes the wireframe issue where Capital Region buildings were set to transparent
-			this.setBuildingEntityPolygon(entity);
+			this.setBuildingEntityPolygon(entity)
 		}
 
-		console.log('[Building] ✅ Reset', buildingEntities.length, 'building entities');
+		console.log('[Building] ✅ Reset', buildingEntities.length, 'building entities')
 	}
 
 	/**
@@ -386,46 +383,46 @@ export default class Building {
 	 */
 	filterBuildings(buildingsDataSource) {
 		// If the data source isn't found, exit the function
-		if (!buildingsDataSource) return;
+		if (!buildingsDataSource) return
 
-		const hideNewBuildings = this.toggleStore.hideNewBuildings;
-		const hideNonSote = this.toggleStore.hideNonSote;
-		const hideLow = this.toggleStore.hideLow;
+		const hideNewBuildings = this.toggleStore.hideNewBuildings
+		const hideNonSote = this.toggleStore.hideNonSote
+		const hideLow = this.toggleStore.hideLow
 
 		// Get current filter state
 		const currentState = {
 			hideNewBuildings,
 			hideNonSote,
 			hideLow,
-		};
+		}
 
 		// Skip if state unchanged to prevent redundant re-application
 		if (
 			this.lastFilterState &&
 			JSON.stringify(this.lastFilterState) === JSON.stringify(currentState)
 		) {
-			return;
+			return
 		}
-		this.lastFilterState = currentState;
+		this.lastFilterState = currentState
 
 		// Pre-calculate the cutoff date for hideNewBuildings filter
-		const cutoffDate = new Date('2018-06-01T00:00:00').getTime();
+		const cutoffDate = new Date('2018-06-01T00:00:00').getTime()
 
 		// Batch entity visibility changes
-		const entitiesToHide = [];
-		const entitiesToShow = [];
+		const entitiesToHide = []
+		const entitiesToShow = []
 
 		// Single pass through all entities with all filter checks
-		const entities = buildingsDataSource.entities.values;
+		const entities = buildingsDataSource.entities.values
 		for (let i = 0; i < entities.length; i++) {
-			const entity = entities[i];
-			let shouldHide = false;
+			const entity = entities[i]
+			let shouldHide = false
 
 			// Check hideNewBuildings filter
 			if (hideNewBuildings) {
-				const completionDate = entity._properties?._c_valmpvm?._value;
+				const completionDate = entity._properties?._c_valmpvm?._value
 				if (completionDate && new Date(completionDate).getTime() >= cutoffDate) {
-					shouldHide = true;
+					shouldHide = true
 				}
 			}
 
@@ -435,15 +432,15 @@ export default class Building {
 					? entity._properties?._c_kayttark?._value
 						? Number(entity._properties.c_kayttark._value)
 						: null
-					: entity._properties?._kayttarks?._value;
+					: entity._properties?._kayttarks?._value
 
 				const isSoteBuilding = this.toggleStore.helsinkiView
 					? kayttotark &&
 						([511, 131].includes(kayttotark) || (kayttotark > 210 && kayttotark < 240))
-					: kayttotark === 'Yleinen rakennus';
+					: kayttotark === 'Yleinen rakennus'
 
 				if (!isSoteBuilding) {
-					shouldHide = true;
+					shouldHide = true
 				}
 			}
 
@@ -451,17 +448,17 @@ export default class Building {
 			if (!shouldHide && hideLow) {
 				const floorCount =
 					entity._properties?.[this.toggleStore.helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']
-						?._value;
+						?._value
 				if (!floorCount || floorCount <= 6) {
-					shouldHide = true;
+					shouldHide = true
 				}
 			}
 
 			// Collect entities by visibility state
 			if (shouldHide) {
-				entitiesToHide.push(entity);
+				entitiesToHide.push(entity)
 			} else {
-				entitiesToShow.push(entity);
+				entitiesToShow.push(entity)
 			}
 		}
 
@@ -474,8 +471,8 @@ export default class Building {
 					true,
 					false,
 					'filterBuildings-hide'
-				);
-				entitiesToHide[i].show = false;
+				)
+				entitiesToHide[i].show = false
 			}
 		}
 		for (let i = 0; i < entitiesToShow.length; i++) {
@@ -486,17 +483,17 @@ export default class Building {
 					false,
 					true,
 					'filterBuildings-show'
-				);
-				entitiesToShow[i].show = true;
+				)
+				entitiesToShow[i].show = true
 			}
 		}
 
 		// Request render after batch updates
 		if (this.viewer) {
-			this.viewer.scene.requestRender();
+			this.viewer.scene.requestRender()
 		}
 
-		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities._entities._array);
+		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities._entities._array)
 	}
 
 	/**
@@ -509,22 +506,22 @@ export default class Building {
 	 */
 	updateHeatHistogramDataAfterFilter(entities) {
 		// Add the condition to filter only entities with show === true
-		const visibleEntities = entities.filter((entity) => entity.show);
-		const targetDate = this.store.heatDataDate;
+		const visibleEntities = entities.filter((entity) => entity.show)
+		const targetDate = this.store.heatDataDate
 
 		const avg_temp = this.toggleStore.helsinkiView
 			? visibleEntities.map((entity) => entity.properties._avgheatexposuretobuilding._value)
 			: visibleEntities
 					.map((entity) => {
-						const heatTimeseries = entity.properties.heat_timeseries?._value || [];
-						const foundEntry = heatTimeseries.find(({ date }) => date === targetDate);
-						return foundEntry ? foundEntry.avg_temp_c : null;
+						const heatTimeseries = entity.properties.heat_timeseries?._value || []
+						const foundEntry = heatTimeseries.find(({ date }) => date === targetDate)
+						return foundEntry ? foundEntry.avg_temp_c : null
 					})
-					.filter((temp) => temp !== null);
+					.filter((temp) => temp !== null)
 
-		this.resetBuildingOutline();
-		this.propsStore.setHeatHistogramData(avg_temp);
-		eventBus.emit('newHeatHistogram');
+		this.resetBuildingOutline()
+		this.propsStore.setHeatHistogramData(avg_temp)
+		eventBus.emit('newHeatHistogram')
 	}
 
 	/**
@@ -539,11 +536,11 @@ export default class Building {
 			? entity._properties?._c_kayttark?._value
 				? Number(entity._properties.c_kayttark._value)
 				: null
-			: entity._properties?._kayttarks?._value;
+			: entity._properties?._kayttarks?._value
 
 		entity.show = this.toggleStore.helsinkiView
 			? kayttotark && ([511, 131].includes(kayttotark) || (kayttotark > 210 && kayttotark < 240))
-			: kayttotark === 'Yleinen rakennus';
+			: kayttotark === 'Yleinen rakennus'
 	}
 
 	/**
@@ -558,7 +555,7 @@ export default class Building {
 			entity._properties?.[this.toggleStore.helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']
 				?._value <= 6
 		) {
-			entity.show = false;
+			entity.show = false
 		}
 	}
 	/**
@@ -568,57 +565,51 @@ export default class Building {
 	 */
 	showAllBuildings(buildingsDataSource) {
 		// If the data source isn't found, exit the function
-		if (!buildingsDataSource) return;
+		if (!buildingsDataSource) return
 
 		// Reset filter state tracking since we're showing all buildings
-		this.lastFilterState = null;
+		this.lastFilterState = null
 
 		// Batch visibility changes
-		const entities = buildingsDataSource._entityCollection._entities._array;
-		let hasChanges = false;
+		const entities = buildingsDataSource._entityCollection._entities._array
+		let hasChanges = false
 
 		// Iterate over all entities in data source
 		for (let i = 0; i < entities.length; i++) {
 			// Only update if needed to minimize render cycles
 			if (!entities[i].show) {
-				logVisibilityChange(
-					'entity',
-					entities[i].id || 'building',
-					false,
-					true,
-					'showAllBuildings'
-				);
-				entities[i].show = true;
-				hasChanges = true;
+				logVisibilityChange('entity', entities[i].id || 'building', false, true, 'showAllBuildings')
+				entities[i].show = true
+				hasChanges = true
 			}
 		}
 
 		// Request render after batch updates if there were changes
 		if (hasChanges && this.viewer) {
-			this.viewer.scene.requestRender();
+			this.viewer.scene.requestRender()
 		}
 
-		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities._entities._array);
+		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities._entities._array)
 	}
 
 	highlightBuildingsInViewer(temps) {
 		// Find the data source for buildings
 		const buildingDataSource = this.datasourceService.getDataSourceByName(
-			'Buildings ' + this.store.postalcode
-		);
+			`Buildings ${this.store.postalcode}`
+		)
 
 		// If the data source isn't found, exit the function
-		if (!buildingDataSource) return;
+		if (!buildingDataSource) return
 
-		const entities = buildingDataSource.entities.values;
+		const entities = buildingDataSource.entities.values
 
 		for (let i = 0; i < entities.length; i++) {
-			const entity = entities[i];
+			const entity = entities[i]
 
 			if (!this.toggleStore.helsinkiView) {
-				this.outlineByTemperature(entity, 'avg_temp_c', temps);
+				this.outlineByTemperature(entity, 'avg_temp_c', temps)
 			} else {
-				this.outlineByTemperature(entity, 'avgheatexposuretobuilding', temps);
+				this.outlineByTemperature(entity, 'avgheatexposuretobuilding', temps)
 			}
 		}
 	}
@@ -626,50 +617,50 @@ export default class Building {
 	resetBuildingOutline() {
 		// Find the data source for buildings
 		const buildingDataSource = this.datasourceService.getDataSourceByName(
-			'Buildings ' + this.store.postalcode
-		);
+			`Buildings ${this.store.postalcode}`
+		)
 
 		// If the data source isn't found, exit the function
-		if (!buildingDataSource) return;
+		if (!buildingDataSource) return
 
-		const entities = buildingDataSource.entities.values;
+		const entities = buildingDataSource.entities.values
 
 		for (let i = 0; i < entities.length; i++) {
-			const entity = entities[i];
-			this.polygonOutlineToBlack(entity);
+			const entity = entities[i]
+			this.polygonOutlineToBlack(entity)
 		}
 	}
 
 	outlineByTemperature(entity, property, values) {
-		const heatTimeseries = entity._properties['heat_timeseries']?._value || [];
-		const foundEntry = heatTimeseries.find(({ date }) => date === this.store.heatDataDate);
+		const heatTimeseries = entity._properties.heat_timeseries?._value || []
+		const foundEntry = heatTimeseries.find(({ date }) => date === this.store.heatDataDate)
 
 		const shouldOutlineYellow = !this.toggleStore.helsinkiView
 			? foundEntry && values.includes(foundEntry.avg_temp_c)
-			: entity._properties[property] && values.includes(entity._properties[property]._value);
+			: entity._properties[property] && values.includes(entity._properties[property]._value)
 
 		if (shouldOutlineYellow) {
-			this.polygonOutlineToYellow(entity);
+			this.polygonOutlineToYellow(entity)
 		} else {
-			this.polygonOutlineToBlack(entity);
+			this.polygonOutlineToBlack(entity)
 		}
 	}
 
 	highlightBuildingInViewer(id) {
 		// Find the data source for buildings
 		const buildingDataSource = this.datasourceService.getDataSourceByName(
-			'Buildings ' + this.store.postalcode
-		);
+			`Buildings ${this.store.postalcode}`
+		)
 
 		// If the data source isn't found, exit the function
-		if (!buildingDataSource) return;
+		if (!buildingDataSource) return
 
-		const entities = buildingDataSource.entities.values;
+		const entities = buildingDataSource.entities.values
 
 		for (let i = 0; i < entities.length; i++) {
-			const entity = entities[i];
+			const entity = entities[i]
 
-			this.outlineById(entity, this.toggleStore.helsinkiView ? 'id' : 'kiitun', id);
+			this.outlineById(entity, this.toggleStore.helsinkiView ? 'id' : 'kiitun', id)
 		}
 	}
 
@@ -685,11 +676,11 @@ export default class Building {
 	 */
 	outlineById(entity, property, id) {
 		if (entity._properties[property] && entity._properties[property]._value === id) {
-			this.polygonOutlineToYellow(entity);
-			this.store.setPickedEntity(entity);
-			eventBus.emit('entityPrintEvent');
+			this.polygonOutlineToYellow(entity)
+			this.store.setPickedEntity(entity)
+			eventBus.emit('entityPrintEvent')
 		} else {
-			this.polygonOutlineToBlack(entity);
+			this.polygonOutlineToBlack(entity)
 		}
 	}
 
@@ -701,9 +692,9 @@ export default class Building {
 	 * @private
 	 */
 	polygonOutlineToYellow(entity) {
-		entity.polygon.outline = true;
-		entity.polygon.outlineColor = Cesium.Color.YELLOW;
-		entity.polygon.outlineWidth = 20;
+		entity.polygon.outline = true
+		entity.polygon.outlineColor = Cesium.Color.YELLOW
+		entity.polygon.outlineWidth = 20
 	}
 
 	/**
@@ -714,8 +705,8 @@ export default class Building {
 	 * @private
 	 */
 	polygonOutlineToBlack(entity) {
-		entity.polygon.outlineColor = Cesium.Color.BLACK;
-		entity.polygon.outlineWidth = 8;
+		entity.polygon.outlineColor = Cesium.Color.BLACK
+		entity.polygon.outlineWidth = 8
 	}
 }
 
@@ -730,12 +721,12 @@ export default class Building {
  */
 const filterHeatTimeseries = (buildingProps) => {
 	if (buildingProps._kavu && typeof buildingProps._kavu._value === 'number') {
-		const cutoffYear = buildingProps._kavu._value;
+		const cutoffYear = buildingProps._kavu._value
 		buildingProps._heat_timeseries._value = buildingProps._heat_timeseries._value.filter(
 			(entry) => {
-				const entryYear = new Date(entry.date).getFullYear();
-				return entryYear >= cutoffYear;
+				const entryYear = new Date(entry.date).getFullYear()
+				return entryYear >= cutoffYear
 			}
-		);
+		)
 	}
-};
+}

@@ -15,6 +15,25 @@ env:
   CI: true
 
 jobs:
+  # Lint check runs early and independently - fast feedback on code quality
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run Biome lint
+        run: bun run lint
+
   # Build once and share across all browser-based test jobs
   build:
     name: Build Frontend
@@ -27,17 +46,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '25'
-          cache: 'npm'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build frontend
-        run: npm run build
+        run: bun run build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -47,33 +65,27 @@ jobs:
           retention-days: 1
 
   unit-tests:
-    name: Unit Tests (Node ${{ matrix.node-version }})
+    name: Unit Tests
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: '--max-old-space-size=512'
-
-    strategy:
-      matrix:
-        node-version: [24, 25]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run unit tests with coverage
-        run: npm run test:unit
+        run: bun run test:unit
 
       - name: Upload coverage to Codecov
-        if: matrix.node-version == '25'
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage/lcov.info
@@ -91,17 +103,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '25'
-          cache: 'npm'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run integration tests
-        run: npm run test:integration
+        run: bun run test:integration
         env:
           NODE_ENV: test
 
@@ -117,17 +128,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '25'
-          cache: 'npm'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: bunx playwright install --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
@@ -139,12 +149,12 @@ jobs:
         uses: ./.github/actions/start-server-with-healthcheck
         id: server
         with:
-          server-command: 'npm run preview'
+          server-command: 'bun run preview'
           server-url: 'http://localhost:4173'
           timeout: '30'
 
       - name: Run Playwright tests
-        run: npm run test:e2e
+        run: bun run test:e2e
 
       - name: Cleanup server process
         if: always()
@@ -175,17 +185,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '25'
-          cache: 'npm'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: bunx playwright install --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
@@ -197,12 +206,12 @@ jobs:
         uses: ./.github/actions/start-server-with-healthcheck
         id: server
         with:
-          server-command: 'npm run preview'
+          server-command: 'bun run preview'
           server-url: 'http://localhost:4173'
           timeout: '30'
 
       - name: Run accessibility tests
-        run: timeout 600 npm run test:accessibility:${{ matrix.viewport }} -- -x --reporter=list,json --trace=on-first-retry
+        run: timeout 600 bun run test:accessibility:${{ matrix.viewport }} -- -x --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-${{ matrix.viewport }}
 
@@ -232,17 +241,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '25'
-          cache: 'npm'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: bunx playwright install --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
@@ -254,12 +262,12 @@ jobs:
         uses: ./.github/actions/start-server-with-healthcheck
         id: server
         with:
-          server-command: 'npm run preview'
+          server-command: 'bun run preview'
           server-url: 'http://localhost:4173'
           timeout: '30'
 
       - name: Run performance tests
-        run: npm run test:performance
+        run: bun run test:performance
 
       - name: Cleanup server process
         if: always()
@@ -281,14 +289,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '25'
-          cache: 'npm'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
-      - name: Run npm audit
-        run: npm audit --audit-level moderate
+      - name: Run bun audit
+        run: bun pm audit

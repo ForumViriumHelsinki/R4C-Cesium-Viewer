@@ -6,7 +6,6 @@ import cesium from 'vite-plugin-cesium-build';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import eslint from 'vite-plugin-eslint';
 
 import { defineConfig } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
@@ -83,19 +82,11 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		plugins: [
-			// Only run ESLint during development, not in production builds
-			// ESLint checks are handled by pre-commit hooks and CI linting steps
-			...(process.env.NODE_ENV !== 'production' ? [eslint()] : []),
 			// Auto-import Vue APIs for better DX and tree-shaking
-			// Generates src/auto-imports.d.ts for TypeScript and .eslintrc-auto-import.json
-			// After first build, import the ESLint config in eslint.config.js if needed
+			// Generates src/auto-imports.d.ts for TypeScript
 			AutoImport({
 				imports: ['vue', 'pinia'],
 				dts: 'src/auto-imports.d.ts', // TypeScript declarations for IDE
-				eslintrc: {
-					enabled: true,
-					filepath: './.eslintrc-auto-import.json', // ESLint globals
-				},
 				vueTemplate: true, // Enable auto-imports in Vue templates
 			}),
 			Vue({

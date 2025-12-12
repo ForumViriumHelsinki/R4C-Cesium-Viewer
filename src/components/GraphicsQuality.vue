@@ -1,9 +1,7 @@
 <template>
 	<v-card class="graphics-quality-card">
 		<v-card-title class="d-flex align-center">
-			<v-icon class="mr-2">
-mdi-palette
-</v-icon>
+			<v-icon class="mr-2"> mdi-palette </v-icon>
 			Graphics Quality
 			<v-spacer />
 			<v-chip
@@ -19,9 +17,7 @@ mdi-palette
 			<!-- Quality Presets -->
 			<v-row class="mb-3">
 				<v-col cols="12">
-					<v-label class="text-caption text-medium-emphasis mb-2">
-Quick Presets
-</v-label>
+					<v-label class="text-caption text-medium-emphasis mb-2"> Quick Presets </v-label>
 					<v-btn-toggle
 						v-model="selectedPreset"
 						color="primary"
@@ -70,9 +66,7 @@ Quick Presets
 			<!-- Anti-Aliasing Settings -->
 			<v-row>
 				<v-col cols="12">
-					<v-label class="text-caption text-medium-emphasis mb-2">
-Anti-Aliasing
-</v-label>
+					<v-label class="text-caption text-medium-emphasis mb-2"> Anti-Aliasing </v-label>
 
 					<!-- MSAA Settings -->
 					<div class="mb-3">
@@ -160,9 +154,7 @@ Anti-Aliasing
 			<!-- Advanced Settings -->
 			<v-row>
 				<v-col cols="12">
-					<v-label class="text-caption text-medium-emphasis mb-2">
-Advanced Rendering
-</v-label>
+					<v-label class="text-caption text-medium-emphasis mb-2"> Advanced Rendering </v-label>
 
 					<!-- HDR -->
 					<v-switch
@@ -275,101 +267,101 @@ Advanced Rendering
 </template>
 
 <script>
-import { computed, ref, watch } from 'vue';
-import { useGraphicsStore } from '../stores/graphicsStore.js';
+import { computed, ref, watch } from 'vue'
+import { useGraphicsStore } from '../stores/graphicsStore.js'
 
 export default {
 	name: 'GraphicsQuality',
 	setup() {
-		const graphicsStore = useGraphicsStore();
-		const selectedPreset = ref(null);
+		const graphicsStore = useGraphicsStore()
+		const selectedPreset = ref(null)
 
 		// Reactive properties
 		const msaaEnabled = computed({
 			get: () => graphicsStore.msaaEnabled,
 			set: (value) => graphicsStore.setMsaaSettings(value, graphicsStore.msaaSamples),
-		});
+		})
 
 		const msaaSamples = computed({
 			get: () => graphicsStore.msaaSamples,
 			set: (value) => graphicsStore.setMsaaSettings(graphicsStore.msaaEnabled, value),
-		});
+		})
 
 		const fxaaEnabled = computed({
 			get: () => graphicsStore.fxaaEnabled,
 			set: (value) => graphicsStore.setFxaaEnabled(value),
-		});
+		})
 
 		const hdrEnabled = computed({
 			get: () => graphicsStore.hdrEnabled,
 			set: (value) => graphicsStore.setHdrEnabled(value),
-		});
+		})
 
 		const ambientOcclusionEnabled = computed({
 			get: () => graphicsStore.ambientOcclusionEnabled,
 			set: (value) => graphicsStore.setAmbientOcclusionEnabled(value),
-		});
+		})
 
 		const requestRenderMode = computed({
 			get: () => graphicsStore.requestRenderMode,
 			set: (value) => {
-				graphicsStore.setRequestRenderMode(value);
+				graphicsStore.setRequestRenderMode(value)
 				// Note: Request render mode requires viewer restart to take effect
 				if (value) {
-					console.warn('Performance mode requires page refresh to take effect');
+					console.warn('Performance mode requires page refresh to take effect')
 				}
 			},
-		});
+		})
 
 		// Computed properties for UI
 		const qualityColor = computed(() => {
-			const level = graphicsStore.qualityLevel;
+			const level = graphicsStore.qualityLevel
 			switch (level) {
 				case 'Ultra':
-					return 'purple';
+					return 'purple'
 				case 'High':
-					return 'primary';
+					return 'primary'
 				case 'Medium':
-					return 'success';
+					return 'success'
 				case 'Low (FXAA)':
-					return 'warning';
+					return 'warning'
 				default:
-					return 'grey';
+					return 'grey'
 			}
-		});
+		})
 
 		const canUseUltra = computed(() => {
 			return (
 				graphicsStore.msaaSupported &&
 				graphicsStore.hdrSupported &&
 				graphicsStore.ambientOcclusionSupported
-			);
-		});
+			)
+		})
 
 		const showPerformanceWarning = computed(() => {
 			return (
 				(msaaEnabled.value && msaaSamples.value >= 4) ||
 				hdrEnabled.value ||
 				ambientOcclusionEnabled.value
-			);
-		});
+			)
+		})
 
 		const antiAliasingStatus = computed(() => {
 			if (msaaEnabled.value && graphicsStore.msaaSupported && msaaSamples.value > 1) {
-				return `MSAA ${msaaSamples.value}x`;
+				return `MSAA ${msaaSamples.value}x`
 			} else if (fxaaEnabled.value) {
-				return 'FXAA';
+				return 'FXAA'
 			} else {
-				return 'None';
+				return 'None'
 			}
-		});
+		})
 
 		// Methods
 		const applyPreset = (preset) => {
 			if (preset) {
-				graphicsStore.applyQualityPreset(preset);
+				graphicsStore.applyQualityPreset(preset)
 			}
-		};
+		}
 
 		// Watch for external changes to update preset selection
 		watch(
@@ -383,13 +375,13 @@ export default {
 			],
 			() => {
 				// Auto-detect current preset
-				selectedPreset.value = detectCurrentPreset();
+				selectedPreset.value = detectCurrentPreset()
 			},
 			{ deep: true }
-		);
+		)
 
 		const detectCurrentPreset = () => {
-			const state = graphicsStore;
+			const state = graphicsStore
 
 			// Ultra preset
 			if (
@@ -400,7 +392,7 @@ export default {
 				state.ambientOcclusionEnabled &&
 				!state.requestRenderMode
 			) {
-				return 'ultra';
+				return 'ultra'
 			}
 
 			// High preset
@@ -412,7 +404,7 @@ export default {
 				state.ambientOcclusionEnabled &&
 				!state.requestRenderMode
 			) {
-				return 'high';
+				return 'high'
 			}
 
 			// Medium preset
@@ -424,7 +416,7 @@ export default {
 				!state.ambientOcclusionEnabled &&
 				!state.requestRenderMode
 			) {
-				return 'medium';
+				return 'medium'
 			}
 
 			// Low preset
@@ -435,7 +427,7 @@ export default {
 				!state.ambientOcclusionEnabled &&
 				!state.requestRenderMode
 			) {
-				return 'low';
+				return 'low'
 			}
 
 			// Performance preset
@@ -446,11 +438,11 @@ export default {
 				!state.ambientOcclusionEnabled &&
 				state.requestRenderMode
 			) {
-				return 'performance';
+				return 'performance'
 			}
 
-			return null; // Custom settings
-		};
+			return null // Custom settings
+		}
 
 		return {
 			graphicsStore,
@@ -466,9 +458,9 @@ export default {
 			showPerformanceWarning,
 			antiAliasingStatus,
 			applyPreset,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

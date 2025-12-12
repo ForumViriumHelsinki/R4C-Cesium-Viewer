@@ -34,7 +34,7 @@ export const AVAILABLE_NDVI_DATES = [
 	'2023-06-23',
 	'2024-06-27',
 	'2025-06-20',
-];
+]
 
 /**
  * Default NDVI date to use when none is selected
@@ -47,7 +47,7 @@ export const AVAILABLE_NDVI_DATES = [
  * import { DEFAULT_NDVI_DATE } from './constants/ndviDates.js';
  * const selectedDate = userSelection || DEFAULT_NDVI_DATE;
  */
-export const DEFAULT_NDVI_DATE = '2022-06-26';
+export const DEFAULT_NDVI_DATE = '2022-06-26'
 
 /**
  * Get the most recent N NDVI dates for preloading
@@ -71,5 +71,5 @@ export const DEFAULT_NDVI_DATE = '2022-06-26';
  */
 export function getRecentNDVIDates(count = 4) {
 	// Return the most recent dates (array is in chronological order)
-	return AVAILABLE_NDVI_DATES.slice(-count).reverse();
+	return AVAILABLE_NDVI_DATES.slice(-count).reverse()
 }

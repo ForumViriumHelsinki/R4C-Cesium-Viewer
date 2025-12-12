@@ -11,40 +11,26 @@
 		<div class="sidebar-content">
 			<div class="control-section">
 				<h3 class="section-subtitle">
-					<v-icon class="mr-2">
-mdi-magnify
-</v-icon>Search & Navigate
+					<v-icon class="mr-2"> mdi-magnify </v-icon>Search & Navigate
 				</h3>
-				<p class="search-description">
-Find locations by address, postal code, or area name
-</p>
+				<p class="search-description">Find locations by address, postal code, or area name</p>
 				<UnifiedSearch />
 			</div>
 			<div class="control-section">
-				<h3 class="section-subtitle">
-<v-icon class="mr-2">
-mdi-layers
-</v-icon>Map Controls
-</h3>
-				<p class="search-description">
-Toggle data layers and apply filters
-</p>
+				<h3 class="section-subtitle"><v-icon class="mr-2"> mdi-layers </v-icon>Map Controls</h3>
+				<p class="search-description">Toggle data layers and apply filters</p>
 				<MapControls />
 			</div>
 			<div class="control-section">
 				<h3 class="section-subtitle">
-					<v-icon class="mr-2">
-mdi-map-outline
-</v-icon>Background Maps
+					<v-icon class="mr-2"> mdi-map-outline </v-icon>Background Maps
 				</h3>
 				<BackgroundMapBrowser />
 			</div>
 
 			<div class="control-section">
 				<h3 class="section-subtitle">
-					<v-icon class="mr-2">
-mdi-chart-line
-</v-icon>Analysis Tools
+					<v-icon class="mr-2"> mdi-chart-line </v-icon>Analysis Tools
 				</h3>
 				<div class="analysis-buttons">
 					<template v-if="currentLevel === 'postalCode'">
@@ -118,9 +104,7 @@ mdi-chart-line
 						>
 							<v-expansion-panel>
 								<v-expansion-panel-title>
-									<v-icon class="mr-2">
-mdi-shield-sun
-</v-icon>
+									<v-icon class="mr-2"> mdi-shield-sun </v-icon>
 									Climate Adaptation
 								</v-expansion-panel-title>
 								<v-expansion-panel-text class="pa-0">
@@ -192,9 +176,7 @@ mdi-shield-sun
 						v-if="!hasAvailableAnalysis"
 						class="no-analysis-message"
 					>
-						<v-icon class="mb-2">
-mdi-information-outline
-</v-icon>
+						<v-icon class="mb-2"> mdi-information-outline </v-icon>
 						<p class="text-body-2 text-center">
 							{{
 								currentLevel === 'start'
@@ -211,9 +193,8 @@ mdi-information-outline
 				class="control-section"
 			>
 				<h3 class="section-subtitle">
-					<v-icon class="mr-2">
-mdi-information
-</v-icon>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
+					<v-icon class="mr-2"> mdi-information </v-icon
+					>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
 				</h3>
 				<AreaProperties />
 			</div>
@@ -307,39 +288,39 @@ mdi-information
  * - Analysis dialogs are controlled via local state
  * - Service layer interactions for camera, feature picking, and tree loading
  */
-import { ref, computed } from 'vue';
 
-// Component Imports
-import UnifiedSearch from '../components/UnifiedSearch.vue';
-import MapControls from '../components/MapControls.vue';
-import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue';
-import AreaProperties from '../components/AreaProperties.vue';
-import HeatHistogram from '../components/HeatHistogram.vue';
-import SocioEconomics from '../views/SocioEconomics.vue';
-import Landcover from '../views/Landcover.vue';
-import BuildingScatterPlot from '../views/BuildingScatterPlot.vue';
-import Scatterplot from '../components/Scatterplot.vue';
-import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue';
-import BuildingHeatChart from '../components/BuildingHeatChart.vue';
-import BuildingGridChart from '../components/BuildingGridChart.vue';
-import StatisticalGridOptions from '../components/StatisticalGridOptions.vue';
-import PostalCodeNDVI from '../views/PostalCodeNDVI.vue';
+import { storeToRefs } from 'pinia'
+import { computed, ref } from 'vue'
+import AreaProperties from '../components/AreaProperties.vue'
+import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue'
+import BuildingGridChart from '../components/BuildingGridChart.vue'
+import BuildingHeatChart from '../components/BuildingHeatChart.vue'
 // ## NEW: Import the tools directly, as they are now used in this template ##
-import CoolingCenter from '../components/CoolingCenter.vue';
-import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue';
-import EstimatedImpacts from '../components/EstimatedImpacts.vue';
-import LandcoverToParks from '../components/LandcoverToParks.vue';
+import CoolingCenter from '../components/CoolingCenter.vue'
+import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue'
+import EstimatedImpacts from '../components/EstimatedImpacts.vue'
+import HeatHistogram from '../components/HeatHistogram.vue'
+import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue'
+import LandcoverToParks from '../components/LandcoverToParks.vue'
+import MapControls from '../components/MapControls.vue'
+import Scatterplot from '../components/Scatterplot.vue'
+import StatisticalGridOptions from '../components/StatisticalGridOptions.vue'
+// Component Imports
+import UnifiedSearch from '../components/UnifiedSearch.vue'
+import Camera from '../services/camera'
+import Featurepicker from '../services/featurepicker'
+import Tree from '../services/tree'
 
 // Store and Service Imports
-import { useGlobalStore } from '../stores/globalStore';
-import { usePropsStore } from '../stores/propsStore';
-import { useHeatExposureStore } from '../stores/heatExposureStore';
-import { useSocioEconomicsStore } from '../stores/socioEconomicsStore';
-import { useToggleStore } from '../stores/toggleStore';
-import Tree from '../services/tree';
-import Featurepicker from '../services/featurepicker';
-import Camera from '../services/camera';
-import { storeToRefs } from 'pinia';
+import { useGlobalStore } from '../stores/globalStore'
+import { useHeatExposureStore } from '../stores/heatExposureStore'
+import { usePropsStore } from '../stores/propsStore'
+import { useSocioEconomicsStore } from '../stores/socioEconomicsStore'
+import { useToggleStore } from '../stores/toggleStore'
+import BuildingScatterPlot from '../views/BuildingScatterPlot.vue'
+import Landcover from '../views/Landcover.vue'
+import PostalCodeNDVI from '../views/PostalCodeNDVI.vue'
+import SocioEconomics from '../views/SocioEconomics.vue'
 
 export default {
 	components: {
@@ -372,27 +353,27 @@ export default {
 	emits: ['update:modelValue'],
 	setup() {
 		// ## NEW: State for the new panel ##
-		const adaptationTab = ref('centers');
+		const adaptationTab = ref('centers')
 
 		// --- Stores and existing state ---
-		const globalStore = useGlobalStore();
-		const propsStore = usePropsStore();
-		const heatExposureStore = useHeatExposureStore();
-		const socioEconomicsStore = useSocioEconomicsStore();
-		const toggleStore = useToggleStore();
+		const globalStore = useGlobalStore()
+		const propsStore = usePropsStore()
+		const heatExposureStore = useHeatExposureStore()
+		const socioEconomicsStore = useSocioEconomicsStore()
+		const toggleStore = useToggleStore()
 
-		const currentLevel = computed(() => globalStore.level);
-		const currentView = computed(() => globalStore.view);
-		const { ndvi } = storeToRefs(toggleStore);
+		const currentLevel = computed(() => globalStore.level)
+		const currentView = computed(() => globalStore.view)
+		const { ndvi } = storeToRefs(toggleStore)
 
 		// State for the simple dialog
-		const analysisDialog = ref(false);
-		const currentAnalysis = ref('');
+		const analysisDialog = ref(false)
+		const currentAnalysis = ref('')
 
-		const heatHistogramData = computed(() => propsStore.heatHistogramData);
-		const statsIndex = computed(() => propsStore.statsIndex);
-		const showSosEco = computed(() => socioEconomicsStore.data && heatExposureStore.data);
-		const hasNDVIData = computed(() => toggleStore.ndvi);
+		const heatHistogramData = computed(() => propsStore.heatHistogramData)
+		const statsIndex = computed(() => propsStore.statsIndex)
+		const showSosEco = computed(() => socioEconomicsStore.data && heatExposureStore.data)
+		const hasNDVIData = computed(() => toggleStore.ndvi)
 
 		/**
 		 * Determines if analysis tools are available for the current context.
@@ -401,19 +382,19 @@ export default {
 		 * @type {import('vue').ComputedRef<boolean>}
 		 */
 		const hasAvailableAnalysis = computed(() => {
-			if (currentLevel.value === 'start') return false;
+			if (currentLevel.value === 'start') return false
 			if (currentLevel.value === 'postalCode' && currentView.value !== 'grid') {
 				return (
 					(heatHistogramData.value && heatHistogramData.value.length > 0) ||
 					showSosEco.value ||
 					currentView.value !== 'helsinki' ||
 					true
-				);
+				)
 			}
-			if (currentLevel.value === 'building') return true;
-			if (currentView.value === 'grid') return true;
-			return false;
-		});
+			if (currentLevel.value === 'building') return true
+			if (currentView.value === 'grid') return true
+			return false
+		})
 
 		/**
 		 * Configuration for analysis dialog appearance and behavior.
@@ -464,18 +445,18 @@ export default {
 				width: '900px',
 				height: '600px',
 			},
-		};
+		}
 
-		const currentAnalysisTitle = computed(() => analysisConfig[currentAnalysis.value]?.title || '');
+		const currentAnalysisTitle = computed(() => analysisConfig[currentAnalysis.value]?.title || '')
 		const currentAnalysisIcon = computed(
 			() => analysisConfig[currentAnalysis.value]?.icon || 'mdi-chart-line'
-		);
+		)
 		const analysisDialogWidth = computed(
 			() => analysisConfig[currentAnalysis.value]?.width || '800px'
-		);
+		)
 		const analysisDialogHeight = computed(
 			() => analysisConfig[currentAnalysis.value]?.height || '600px'
-		);
+		)
 
 		/**
 		 * Opens an analysis dialog with the specified visualization type.
@@ -484,9 +465,9 @@ export default {
 		 * @returns {void}
 		 */
 		const openAnalysisPanel = (analysisType) => {
-			currentAnalysis.value = analysisType;
-			analysisDialog.value = true;
-		};
+			currentAnalysis.value = analysisType
+			analysisDialog.value = true
+		}
 
 		/**
 		 * Handles retry request for a failed data source.
@@ -495,7 +476,7 @@ export default {
 		 * @param {string} sourceId - ID of the data source to retry
 		 * @returns {void}
 		 */
-		const handleSourceRetry = (sourceId) => console.log(`Retrying data source: ${sourceId}`);
+		const handleSourceRetry = (sourceId) => console.log(`Retrying data source: ${sourceId}`)
 
 		/**
 		 * Handles cache clearing for a specific data source.
@@ -504,7 +485,7 @@ export default {
 		 * @param {string} sourceId - ID of the data source whose cache to clear
 		 * @returns {void}
 		 */
-		const handleCacheCleared = (sourceId) => console.log(`Cache cleared for: ${sourceId}`);
+		const handleCacheCleared = (sourceId) => console.log(`Cache cleared for: ${sourceId}`)
 
 		/**
 		 * Handles preload request for a data source.
@@ -513,14 +494,14 @@ export default {
 		 * @param {string} sourceId - ID of the data source to preload
 		 * @returns {void}
 		 */
-		const handleDataPreload = (sourceId) => console.log(`Preloading requested for: ${sourceId}`);
+		const handleDataPreload = (sourceId) => console.log(`Preloading requested for: ${sourceId}`)
 
 		/**
 		 * Resets the application by reloading the page.
 		 *
 		 * @returns {void}
 		 */
-		const reset = () => location.reload();
+		const reset = () => location.reload()
 
 		/**
 		 * Triggers camera rotation animation.
@@ -528,8 +509,8 @@ export default {
 		 * @returns {void}
 		 */
 		const rotateCamera = () => {
-			new Camera().rotateCamera();
-		};
+			new Camera().rotateCamera()
+		}
 
 		/**
 		 * Hides the building tooltip if present.
@@ -537,9 +518,9 @@ export default {
 		 * @returns {void}
 		 */
 		const hideTooltip = () => {
-			const tooltip = document.querySelector('.tooltip');
-			if (tooltip) tooltip.style.display = 'none';
-		};
+			const tooltip = document.querySelector('.tooltip')
+			if (tooltip) tooltip.style.display = 'none'
+		}
 
 		/**
 		 * Returns to postal code view from building detail view.
@@ -548,12 +529,12 @@ export default {
 		 * @returns {void}
 		 */
 		const returnToPostalCode = () => {
-			const featurepicker = new Featurepicker();
-			const treeService = new Tree();
-			hideTooltip();
-			featurepicker.loadPostalCode().catch(console.error);
-			if (toggleStore.showTrees) treeService.loadTrees().catch(console.error);
-		};
+			const featurepicker = new Featurepicker()
+			const treeService = new Tree()
+			hideTooltip()
+			featurepicker.loadPostalCode().catch(console.error)
+			if (toggleStore.showTrees) treeService.loadTrees().catch(console.error)
+		}
 
 		return {
 			// Existing returned values
@@ -580,9 +561,9 @@ export default {
 			ndvi,
 			// ## NEW: Return the new state variable ##
 			adaptationTab,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

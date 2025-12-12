@@ -11,8 +11,8 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
-import { useURLStore } from './urlStore.js';
+import { defineStore } from 'pinia'
+import { useURLStore } from './urlStore.js'
 
 /**
  * Heat Exposure Pinia Store
@@ -36,7 +36,7 @@ export const useHeatExposureStore = defineStore('heatExposure', {
 		 * console.log(heatData.properties.average_heat_exposure);
 		 */
 		getDataById: (state) => (postcode) => {
-			return state.data.find((item) => item.id === postcode);
+			return state.data.find((item) => item.id === postcode)
 		},
 	},
 	actions: {
@@ -53,17 +53,17 @@ export const useHeatExposureStore = defineStore('heatExposure', {
 		 * // data is now available via state.data or getDataById getter
 		 */
 		async loadHeatExposure() {
-			const urlStore = useURLStore(); // Get the URL from the store
+			const urlStore = useURLStore() // Get the URL from the store
 			try {
-				let data = null;
+				let data = null
 
 				if (!data) {
-					data = await this.getAllHeatExposureData(urlStore.heatExposure());
+					data = await this.getAllHeatExposureData(urlStore.heatExposure())
 				}
 
-				this.data = data;
+				this.data = data
 			} catch (error) {
-				console.error('Error fetching postal codedata:', error);
+				console.error('Error fetching postal codedata:', error)
 			}
 		},
 
@@ -78,15 +78,15 @@ export const useHeatExposureStore = defineStore('heatExposure', {
 		 */
 		async getAllHeatExposureData(requestUrl) {
 			try {
-				const response = await fetch(requestUrl);
-				if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-				const data = await response.json();
-				if (!data || !data.features) throw new Error('Invalid data structure');
-				return data.features;
+				const response = await fetch(requestUrl)
+				if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+				const data = await response.json()
+				if (!data || !data.features) throw new Error('Invalid data structure')
+				return data.features
 			} catch (error) {
-				console.error('Error fetching postal code data:', error);
-				throw error; // Rethrow to handle it in the calling function
+				console.error('Error fetching postal code data:', error)
+				throw error // Rethrow to handle it in the calling function
 			}
 		},
 	},
-});
+})

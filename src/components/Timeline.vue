@@ -54,7 +54,8 @@
 					<v-icon
 						size="14"
 						class="mr-1"
-						>mdi-information-outline</v-icon>
+						>mdi-information-outline</v-icon
+					>
 					Use the slider to explore heat data across different time periods
 				</span>
 			</div>
@@ -63,12 +64,12 @@
 </template>
 
 <script>
-import { onMounted, ref, watch } from 'vue';
-import { useGlobalStore } from '../stores/globalStore.js';
-import Datasource from '../services/datasource.js';
-import Building from '../services/building.js';
-import { eventBus } from '../services/eventEmitter.js';
-import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
+import { onMounted, ref, watch } from 'vue'
+import Building from '../services/building.js'
+import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
+import Datasource from '../services/datasource.js'
+import { eventBus } from '../services/eventEmitter.js'
+import { useGlobalStore } from '../stores/globalStore.js'
 
 /**
  * @component Timeline
@@ -109,22 +110,22 @@ import { cesiumEntityManager } from '../services/cesiumEntityManager.js';
 
 export default {
 	setup() {
-		const globalStore = useGlobalStore();
-		const dataSourceService = new Datasource();
-		const buildingService = new Building();
+		const globalStore = useGlobalStore()
+		const dataSourceService = new Datasource()
+		const buildingService = new Building()
 
 		/**
 		 * Current selected date for heat data visualization
 		 * @type {import('vue').Ref<string>}
 		 * @default '2022-06-28'
 		 */
-		const selectedDate = ref('2022-06-28'); // Set default date
+		const selectedDate = ref('2022-06-28') // Set default date
 
 		/**
 		 * Total number of available time points in the timeline
 		 * @type {import('vue').Ref<number>}
 		 */
-		const timelineLength = ref(0);
+		const timelineLength = ref(0)
 
 		/**
 		 * Available heat data dates from historical satellite imagery
@@ -142,13 +143,13 @@ export default {
 			'2023-06-23',
 			'2024-06-26',
 			'2025-07-14',
-		];
+		]
 
 		/**
 		 * Current selected index in the dates array
 		 * @type {import('vue').Ref<number>}
 		 */
-		const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)); // Set default index
+		const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)) // Set default index
 
 		/**
 		 * Formats ISO date string to localized short format
@@ -160,12 +161,12 @@ export default {
 		 * formatDate('2022-06-28') // Returns "Jun '22"
 		 */
 		const formatDate = (dateString) => {
-			const date = new Date(dateString);
+			const date = new Date(dateString)
 			return date.toLocaleDateString('en-US', {
 				year: '2-digit',
 				month: 'short',
-			});
-		};
+			})
+		}
 
 		/**
 		 * Updates building heat exposure visualization and related plots
@@ -180,22 +181,22 @@ export default {
 		 */
 		const updateViewAndPlots = () => {
 			const buildingsDataSource = dataSourceService.getDataSourceByName(
-				'Buildings ' + globalStore.postalcode
-			);
+				`Buildings ${globalStore.postalcode}`
+			)
 
-			if (!buildingsDataSource) return;
+			if (!buildingsDataSource) return
 
-			const entities = buildingsDataSource.entities.values;
-			void buildingService.setHeatExposureToBuildings(entities);
-			buildingService.updateHeatHistogramDataAfterFilter(entities);
+			const entities = buildingsDataSource.entities.values
+			void buildingService.setHeatExposureToBuildings(entities)
+			buildingService.updateHeatHistogramDataAfterFilter(entities)
 			// Register entities with cesiumEntityManager for non-reactive entity management
-			cesiumEntityManager.registerBuildingEntities(entities);
-			eventBus.emit('updateScatterPlot');
-		};
+			cesiumEntityManager.registerBuildingEntities(entities)
+			eventBus.emit('updateScatterPlot')
+		}
 
 		onMounted(() => {
-			timelineLength.value = dates.length; // Set the timeline length when mounted
-		});
+			timelineLength.value = dates.length // Set the timeline length when mounted
+		})
 
 		/**
 		 * Watches for changes in timeline slider position
@@ -209,23 +210,23 @@ export default {
 		 * @listens currentPropertyIndex
 		 */
 		watch(currentPropertyIndex, (newIndex) => {
-			globalStore.setShowBuildingInfo(false);
+			globalStore.setShowBuildingInfo(false)
 
-			selectedDate.value = dates[newIndex];
-			globalStore.setHeatDataDate(selectedDate.value);
-			updateViewAndPlots();
+			selectedDate.value = dates[newIndex]
+			globalStore.setHeatDataDate(selectedDate.value)
+			updateViewAndPlots()
 
-			globalStore.setShowBuildingInfo(true);
-		});
+			globalStore.setShowBuildingInfo(true)
+		})
 		return {
 			selectedDate,
 			timelineLength,
 			currentPropertyIndex,
 			dates,
 			formatDate,
-		};
+		}
 	},
-};
+}
 </script>
 
 <style scoped>

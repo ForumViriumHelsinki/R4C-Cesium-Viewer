@@ -1,8 +1,8 @@
-import Datasource from './datasource.js';
-import * as Cesium from 'cesium';
-import { useGlobalStore } from '../stores/globalStore.js';
-import { useURLStore } from '../stores/urlStore.js';
-import unifiedLoader from './unifiedLoader.js';
+import * as Cesium from 'cesium'
+import { useGlobalStore } from '../stores/globalStore.js'
+import { useURLStore } from '../stores/urlStore.js'
+import Datasource from './datasource.js'
+import unifiedLoader from './unifiedLoader.js'
 
 /**
  * Vegetation Service
@@ -29,9 +29,9 @@ export default class Vegetation {
 	 * Creates a Vegetation service instance
 	 */
 	constructor() {
-		this.datasourceService = new Datasource();
-		this.store = useGlobalStore();
-		this.urlStore = useURLStore();
+		this.datasourceService = new Datasource()
+		this.store = useGlobalStore()
+		this.urlStore = useURLStore()
 	}
 
 	/**
@@ -53,13 +53,13 @@ export default class Vegetation {
 					batchSize: 25,
 					progressive: true,
 				},
-			});
+			})
 
-			console.log(`✓ Vegetation data loaded for postal code ${this.store.postalcode}`);
-			return data;
+			console.log(`✓ Vegetation data loaded for postal code ${this.store.postalcode}`)
+			return data
 		} catch (error) {
-			console.error('Failed to load vegetation data:', error);
-			throw error;
+			console.error('Failed to load vegetation data:', error)
+			throw error
 		}
 	}
 
@@ -71,18 +71,18 @@ export default class Vegetation {
 	 */
 	async addVegetationDataSource(data, metadata = {}) {
 		try {
-			const entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Vegetation');
+			const entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Vegetation')
 
 			// Process entities in batches for smooth performance
-			const batchSize = 25;
+			const batchSize = 25
 			for (let i = 0; i < entities.length; i += batchSize) {
-				const batch = entities.slice(i, i + batchSize);
+				const batch = entities.slice(i, i + batchSize)
 
 				// Process batch
 				for (const entity of batch) {
-					const category = entity.properties._koodi?._value;
+					const category = entity.properties._koodi?._value
 					if (category) {
-						this.setVegetationPolygonMaterialColor(entity, category);
+						this.setVegetationPolygonMaterialColor(entity, category)
 					}
 				}
 
@@ -90,22 +90,22 @@ export default class Vegetation {
 				if (i + batchSize < entities.length) {
 					await new Promise((resolve) => {
 						if (window.requestIdleCallback) {
-							requestIdleCallback(resolve);
+							requestIdleCallback(resolve)
 						} else {
-							setTimeout(resolve, 0);
+							setTimeout(resolve, 0)
 						}
-					});
+					})
 				}
 			}
 
 			if (!metadata.fromCache) {
-				console.log(`✓ Processed ${entities.length} vegetation entities`);
+				console.log(`✓ Processed ${entities.length} vegetation entities`)
 			} else {
-				console.log(`✓ Restored ${entities.length} vegetation entities from cache`);
+				console.log(`✓ Restored ${entities.length} vegetation entities from cache`)
 			}
 		} catch (error) {
-			console.error('Error processing vegetation data:', error);
-			throw error;
+			console.error('Error processing vegetation data:', error)
+			throw error
 		}
 	}
 
@@ -118,19 +118,19 @@ export default class Vegetation {
 	setVegetationPolygonMaterialColor(entity, category) {
 		switch (category) {
 			case '212':
-				entity.polygon.extrudedHeight = 0.1;
-				entity.polygon.material = Cesium.Color.LIGHTGREEN.withAlpha(0.5);
-				break;
+				entity.polygon.extrudedHeight = 0.1
+				entity.polygon.material = Cesium.Color.LIGHTGREEN.withAlpha(0.5)
+				break
 			case '211':
-				entity.polygon.extrudedHeight = 0.5;
-				entity.polygon.material = Cesium.Color.GREENYELLOW.withAlpha(0.5);
-				break;
+				entity.polygon.extrudedHeight = 0.5
+				entity.polygon.material = Cesium.Color.GREENYELLOW.withAlpha(0.5)
+				break
 			case '510':
-				entity.polygon.material = Cesium.Color.DEEPSKYBLUE.withAlpha(0.5);
-				break;
+				entity.polygon.material = Cesium.Color.DEEPSKYBLUE.withAlpha(0.5)
+				break
 			case '520':
-				entity.polygon.material = Cesium.Color.DODGERBLUE.withAlpha(0.5);
-				break;
+				entity.polygon.material = Cesium.Color.DODGERBLUE.withAlpha(0.5)
+				break
 		}
 	}
 }

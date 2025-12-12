@@ -30,11 +30,11 @@
 </template>
 
 <script>
-import { onMounted, watch, ref } from 'vue';
-import * as d3 from 'd3';
-import { usePropsStore } from '../stores/propsStore.js';
-import * as Cesium from 'cesium';
-import Datasource from '../services/datasource.js';
+import * as Cesium from 'cesium'
+import * as d3 from 'd3'
+import { onMounted, ref, watch } from 'vue'
+import Datasource from '../services/datasource.js'
+import { usePropsStore } from '../stores/propsStore.js'
 
 export default {
 	props: {
@@ -44,77 +44,69 @@ export default {
 		},
 	},
 	setup(props) {
-		const propsStore = usePropsStore();
-		const datasourceService = new Datasource();
-		const chart = ref(null);
+		const propsStore = usePropsStore()
+		const datasourceService = new Datasource()
+		const chart = ref(null)
 
-		const ndviColors = [
-			'#eaeaea',
-			'#ccc682',
-			'#91bf51',
-			'#70a33f',
-			'#4f892d',
-			'#306d1c',
-			'#004400',
-		];
-		const labels = ['0.0-0.1', '0.1-0.2', '0.2-0.3', '0.3-0.4', '0.4-0.5', '0.5-0.6', '0.6-1.0'];
+		const ndviColors = ['#eaeaea', '#ccc682', '#91bf51', '#70a33f', '#4f892d', '#306d1c', '#004400']
+		const labels = ['0.0-0.1', '0.1-0.2', '0.2-0.3', '0.3-0.4', '0.4-0.5', '0.5-0.6', '0.6-1.0']
 
 		const computeHistogram = () => {
-			const entities = propsStore.postalCodeData.entities.values;
+			const entities = propsStore.postalCodeData.entities.values
 			const selectedNDVIValues = entities
 				.map((entity) => entity.properties[`ndvi_${props.selectedDate}`]?.getValue() ?? null)
-				.filter((value) => value !== null);
+				.filter((value) => value !== null)
 
-			const ndviBins = [0, 0, 0, 0, 0, 0, 0];
+			const ndviBins = [0, 0, 0, 0, 0, 0, 0]
 
 			selectedNDVIValues.forEach((value) => {
-				if (value < 0.1) ndviBins[0]++;
-				else if (value < 0.2) ndviBins[1]++;
-				else if (value < 0.3) ndviBins[2]++;
-				else if (value < 0.4) ndviBins[3]++;
-				else if (value < 0.5) ndviBins[4]++;
-				else if (value < 0.6) ndviBins[5]++;
-				else ndviBins[6]++;
-			});
+				if (value < 0.1) ndviBins[0]++
+				else if (value < 0.2) ndviBins[1]++
+				else if (value < 0.3) ndviBins[2]++
+				else if (value < 0.4) ndviBins[3]++
+				else if (value < 0.5) ndviBins[4]++
+				else if (value < 0.6) ndviBins[5]++
+				else ndviBins[6]++
+			})
 
-			return ndviBins;
-		};
+			return ndviBins
+		}
 
 		const outlineByNDVI = async (ndviRange) => {
-			const postCodesDataSource = await datasourceService.getDataSourceByName('PostCodes');
-			if (!postCodesDataSource) return;
+			const postCodesDataSource = await datasourceService.getDataSourceByName('PostCodes')
+			if (!postCodesDataSource) return
 
 			postCodesDataSource.entities.values.forEach((entity) => {
-				const ndviValue = entity.properties[`ndvi_${props.selectedDate}`]?.getValue();
+				const ndviValue = entity.properties[`ndvi_${props.selectedDate}`]?.getValue()
 
 				if (ndviValue >= ndviRange[0] && ndviValue < ndviRange[1]) {
-					entity.polygon.outlineColor = Cesium.Color.WHITE;
-					entity.polygon.outlineWidth = 20;
+					entity.polygon.outlineColor = Cesium.Color.WHITE
+					entity.polygon.outlineWidth = 20
 				} else {
-					entity.polygon.outlineColor = Cesium.Color.BLACK;
-					entity.polygon.outlineWidth = 8;
+					entity.polygon.outlineColor = Cesium.Color.BLACK
+					entity.polygon.outlineWidth = 8
 				}
-			});
-		};
+			})
+		}
 
 		const drawChart = () => {
-			const bins = computeHistogram();
-			const svg = d3.select(chart.value);
-			svg.selectAll('*').remove(); // Clear previous chart
+			const bins = computeHistogram()
+			const svg = d3.select(chart.value)
+			svg.selectAll('*').remove() // Clear previous chart
 
 			const width = 400,
 				height = 250,
-				margin = { top: 20, right: 30, bottom: 50, left: 50 };
+				margin = { top: 20, right: 30, bottom: 50, left: 50 }
 			const xScale = d3
 				.scaleBand()
 				.domain(labels)
 				.range([margin.left, width - margin.right])
-				.padding(0.2);
+				.padding(0.2)
 			const yScale = d3
 				.scaleLinear()
 				.domain([0, Math.max(...bins)])
 				.nice()
-				.range([height - margin.bottom, margin.top]);
+				.range([height - margin.bottom, margin.top])
 
 			// Bars
 			svg
@@ -128,13 +120,13 @@ export default {
 				.attr('width', xScale.bandwidth())
 				.attr('height', (d) => height - margin.bottom - yScale(d))
 				.attr('fill', (_, i) => ndviColors[i])
-				.on('click', function (event, d) {
-					const index = bins.indexOf(d); // Get the correct index
+				.on('click', (_event, d) => {
+					const index = bins.indexOf(d) // Get the correct index
 					if (index !== -1) {
-						const rangeParts = labels[index].split('-').map(parseFloat);
-						void outlineByNDVI(rangeParts);
+						const rangeParts = labels[index].split('-').map(parseFloat)
+						void outlineByNDVI(rangeParts)
 					}
-				});
+				})
 
 			// X Axis
 			svg
@@ -143,7 +135,7 @@ export default {
 				.call(d3.axisBottom(xScale))
 				.selectAll('text')
 				.attr('transform', 'rotate(-30)')
-				.style('text-anchor', 'end');
+				.style('text-anchor', 'end')
 
 			// X Axis Label
 			svg
@@ -152,10 +144,10 @@ export default {
 				.attr('y', height - 5)
 				.attr('text-anchor', 'middle')
 				.style('font-size', '12px')
-				.text('NDVI Ranges');
+				.text('NDVI Ranges')
 
 			// Y Axis
-			svg.append('g').attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(yScale));
+			svg.append('g').attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(yScale))
 
 			// Y Axis Label
 			svg
@@ -165,15 +157,15 @@ export default {
 				.attr('transform', 'rotate(-90)')
 				.attr('text-anchor', 'middle')
 				.style('font-size', '12px')
-				.text('Count of Postal Codes');
-		};
+				.text('Count of Postal Codes')
+		}
 
-		onMounted(drawChart);
-		watch(() => props.selectedDate, drawChart);
+		onMounted(drawChart)
+		watch(() => props.selectedDate, drawChart)
 
-		return { chart, ndviColors, labels };
+		return { chart, ndviColors, labels }
 	},
-};
+}
 </script>
 
 <style scoped>
