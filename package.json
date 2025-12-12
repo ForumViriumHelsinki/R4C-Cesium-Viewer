@@ -8,7 +8,7 @@
 		"dev:test": "VITE_E2E_TEST=true dotenvx run -- vite --host",
 		"build": "NODE_OPTIONS='--max-old-space-size=3072' dotenvx run -- vite build",
 		"build:analyze": "NODE_OPTIONS='--max-old-space-size=3072' dotenvx run -- vite build --mode analyze",
-		"preview": "dotenvx run -- vite preview --host",
+		"preview": "dotenvx run --ignore=MISSING_ENV_FILE -- vite preview --host",
 		"lint": "biome check src/",
 		"lint:fix": "biome check --write src/",
 		"lint:deps": "knip",
