@@ -99,6 +99,7 @@ const handleMapClick = (clickEvent) => {
 
 const getEntityCentroid = (entity) => {
 	// Get the polygon coordinates in WGS84
+	if (!entity.polygon) return null
 	const polygonPositions = entity.polygon.hierarchy.getValue().positions
 
 	// Convert Cesium Cartesian3 positions to GeoJSON format (Lng/Lat)
@@ -109,6 +110,15 @@ const getEntityCentroid = (entity) => {
 			Cesium.Math.toDegrees(cartographic.latitude),
 		]
 	})
+
+	// Ensure the polygon is closed for turf.js (first and last coordinate must match)
+	if (
+		coordinates.length > 0 &&
+		(coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
+			coordinates[0][1] !== coordinates[coordinates.length - 1][1])
+	) {
+		coordinates.push(coordinates[0])
+	}
 
 	// Create a Turf.js polygon
 	const polygon = turf.polygon([coordinates])
@@ -130,6 +140,12 @@ const addCoolingCenter = (entity) => {
 
 	const euref_x = entity.properties.euref_x?.getValue()
 	const euref_y = entity.properties.euref_y?.getValue()
+	const cartesianPosition = getEntityCentroid(entity)
+	if (!cartesianPosition) {
+		console.error('Could not calculate centroid for entity')
+		return
+	}
+
 	mitigationStore.addCoolingCenter({
 		grid_id: gridId,
 		euref_x,
@@ -137,7 +153,6 @@ const addCoolingCenter = (entity) => {
 		capacity: selectedCapacity.value,
 	})
 
-	const cartesianPosition = getEntityCentroid(entity)
 	const coolingCentersCount = mitigationStore.getCoolingCenterCount(gridId)
 	const offsets = [
 		[0, 0],
