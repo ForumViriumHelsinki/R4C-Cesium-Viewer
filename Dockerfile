@@ -8,7 +8,7 @@ ENV VITE_PYGEOAPI_HOST=${VITE_PYGEOAPI_HOST}
 
 WORKDIR /app
 
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 # Cache bun packages across builds for faster installs
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 
