@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.38.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.2...r4c-cesium-viewer-v1.38.3) (2025-12-12)
+
+
+### Bug Fixes
+
+* ensure polygon closure when adding cooling center manually ([#451](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/451)) ([acb3d7b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/acb3d7b4329f7bbfba444758e5d783556db33904))
+* handle missing .env file in CI for vite preview ([#447](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/447)) ([6e664f8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6e664f89077c3d1d7a74e1d50468b7edf55e1706))
+* improve Playwright test resilience for Tall Buildings filter ([#448](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/448)) ([22893be](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/22893be644f452dd75c6e81576d08769a85648c7))
+* update Dockerfile to use bun.lock instead of bun.lockb ([#444](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/444)) ([3b38092](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3b38092f61188531774cabe2b6e3ade7ce0810ce))
+* update Lighthouse CI workflow to use bun instead of npm ([#446](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/446)) ([3f3f565](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3f3f56540b21ea31e0dcab4f3dcc0b64d523c4fb))
+* use 'bun audit' instead of 'bun pm audit' in security scan ([#445](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/445)) ([da04212](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/da04212aaff280d37a8d2849921c445cdb485eef))
+
 ## [1.38.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.1...r4c-cesium-viewer-v1.38.2) (2025-12-11)
 
 
