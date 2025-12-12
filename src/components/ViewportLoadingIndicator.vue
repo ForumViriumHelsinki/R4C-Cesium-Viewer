@@ -157,11 +157,11 @@ const errorMessage = computed(() => {
 	return props.error || loadingStore.loadingErrors.buildings || 'Failed to load buildings'
 })
 
-const _showIndicator = computed(() => {
+const showIndicator = computed(() => {
 	return isLoading.value || showComplete.value || hasError.value
 })
 
-const _showProgress = computed(() => {
+const showProgress = computed(() => {
 	return props.postalCodesTotal > 1
 })
 
@@ -170,13 +170,13 @@ const progressValue = computed(() => {
 	return Math.round((props.postalCodesLoading / props.postalCodesTotal) * 100)
 })
 
-const _cardColor = computed(() => {
+const cardColor = computed(() => {
 	if (hasError.value) return 'error'
 	if (showComplete.value) return 'success'
 	return 'primary'
 })
 
-const _loadingTitle = computed(() => {
+const loadingTitle = computed(() => {
 	if (props.postalCodesTotal === 1) {
 		return 'Loading buildings...'
 	}
@@ -186,7 +186,7 @@ const _loadingTitle = computed(() => {
 	return 'Loading buildings...'
 })
 
-const _loadingDetail = computed(() => {
+const loadingDetail = computed(() => {
 	if (props.postalCodesTotal > 1) {
 		return 'Pan and zoom to load more areas'
 	}
@@ -203,7 +203,7 @@ const completeMessage = computed(() => {
 	return 'Complete'
 })
 
-const _ariaLabel = computed(() => {
+const ariaLabel = computed(() => {
 	if (isLoading.value) {
 		return `Loading buildings for ${props.postalCodesTotal} postal code areas, ${progressValue.value}% complete`
 	}
@@ -217,7 +217,7 @@ const _ariaLabel = computed(() => {
 })
 
 // Methods
-const _handleRetry = () => {
+const handleRetry = () => {
 	emit('retry')
 }
 

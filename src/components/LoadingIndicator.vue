@@ -231,7 +231,7 @@ const props = defineProps({
 const loadingStore = useLoadingStore()
 
 // Local state
-const _showPerformanceDialog = ref(false)
+const showPerformanceDialog = ref(false)
 
 // Computed properties
 const showGlobalOverlay = computed({
@@ -244,7 +244,7 @@ const showGlobalOverlay = computed({
 	},
 })
 
-const _showCompactIndicator = computed(() => {
+const showCompactIndicator = computed(() => {
 	return (
 		(props.mode === 'compact' || props.mode === 'both') &&
 		loadingStore.hasActiveLoading &&
@@ -252,10 +252,10 @@ const _showCompactIndicator = computed(() => {
 	)
 })
 
-const _overallProgress = computed(() => loadingStore.overallProgress)
+const overallProgress = computed(() => loadingStore.overallProgress)
 const activeLoadingLayers = computed(() => loadingStore.activeLoadingLayers)
 
-const _hasErrors = computed(() => {
+const hasErrors = computed(() => {
 	return Object.keys(layerErrors.value).length > 0
 })
 
@@ -268,11 +268,11 @@ const layerErrors = computed(() => {
 	}, {})
 })
 
-const _performanceMetrics = computed(() => loadingStore.getPerformanceMetrics())
+const performanceMetrics = computed(() => loadingStore.getPerformanceMetrics())
 
 // Methods
-const _getLayerProgress = (layer) => loadingStore.getLayerProgress(layer)
-const _getLoadingMessage = (layer) => loadingStore.getLoadingMessage(layer)
+const getLayerProgress = (layer) => loadingStore.getLayerProgress(layer)
+const getLoadingMessage = (layer) => loadingStore.getLoadingMessage(layer)
 
 const formatLayerName = (layer) => {
 	const names = {
@@ -289,7 +289,7 @@ const formatLayerName = (layer) => {
 	return names[layer] || layer.charAt(0).toUpperCase() + layer.slice(1)
 }
 
-const _getLayerIcon = (layer) => {
+const getLayerIcon = (layer) => {
 	const icons = {
 		trees: 'mdi-tree',
 		vegetation: 'mdi-leaf',
@@ -304,7 +304,7 @@ const _getLayerIcon = (layer) => {
 	return icons[layer] || 'mdi-database'
 }
 
-const _getLayerColor = (layer) => {
+const getLayerColor = (layer) => {
 	const colors = {
 		trees: 'green',
 		vegetation: 'light-green',
@@ -319,7 +319,7 @@ const _getLayerColor = (layer) => {
 	return colors[layer] || 'primary'
 }
 
-const _getCompactMessage = () => {
+const getCompactMessage = () => {
 	const activeCount = activeLoadingLayers.value.length
 	if (activeCount === 1) {
 		return `Loading ${formatLayerName(activeLoadingLayers.value[0])}...`
@@ -327,13 +327,13 @@ const _getCompactMessage = () => {
 	return `Loading ${activeCount} layers...`
 }
 
-const _retryLayer = (layer) => {
+const retryLayer = (layer) => {
 	loadingStore.retryLayerLoading(layer)
 	// Emit event for parent component to handle actual retry
 	emit('retry-layer', layer)
 }
 
-const _formatDuration = (ms) => {
+const formatDuration = (ms) => {
 	if (ms < 1000) return `${ms}ms`
 	return `${(ms / 1000).toFixed(1)}s`
 }

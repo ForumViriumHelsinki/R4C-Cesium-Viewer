@@ -144,7 +144,7 @@ const emit = defineEmits(['source-retry', 'cache-cleared'])
 
 // Local state
 const refreshing = ref(false)
-const _showDetails = ref(false)
+const showDetails = ref(false)
 const refreshTimer = ref(null)
 
 // Data sources to monitor
@@ -192,7 +192,7 @@ const dataSources = ref([
 ])
 
 // Computed properties
-const _totalSources = computed(() => dataSources.value.length)
+const totalSources = computed(() => dataSources.value.length)
 
 const healthyCount = computed(() => dataSources.value.filter((s) => s.status === 'healthy').length)
 
@@ -200,16 +200,16 @@ const hasErrors = computed(() => dataSources.value.some((s) => s.status === 'err
 
 const hasWarnings = computed(() => dataSources.value.some((s) => s.status === 'degraded'))
 
-const _hasCachedData = computed(() => dataSources.value.some((s) => s.cached))
+const hasCachedData = computed(() => dataSources.value.some((s) => s.cached))
 
-const _overallStatusColor = computed(() => {
+const overallStatusColor = computed(() => {
 	if (hasErrors.value) return 'error'
 	if (hasWarnings.value) return 'warning'
 	if (healthyCount.value > 0) return 'success'
 	return 'grey'
 })
 
-const _overallStatusIcon = computed(() => {
+const overallStatusIcon = computed(() => {
 	if (hasErrors.value) return 'mdi-alert-circle'
 	if (hasWarnings.value) return 'mdi-alert'
 	if (healthyCount.value > 0) return 'mdi-check-circle'
@@ -217,7 +217,7 @@ const _overallStatusIcon = computed(() => {
 })
 
 // Methods
-const _getStatusColor = (status) => {
+const getStatusColor = (status) => {
 	const colors = {
 		healthy: 'success',
 		degraded: 'warning',
@@ -228,7 +228,7 @@ const _getStatusColor = (status) => {
 	return colors[status] || 'grey'
 }
 
-const _getStatusIcon = (source) => {
+const getStatusIcon = (source) => {
 	if (source.loading) return 'mdi-loading'
 
 	const icons = {
@@ -240,7 +240,7 @@ const _getStatusIcon = (source) => {
 	return icons[source.status] || 'mdi-help'
 }
 
-const _getResponseTimeClass = (responseTime) => {
+const getResponseTimeClass = (responseTime) => {
 	if (responseTime > 5000) return 'response-slow'
 	if (responseTime > 2000) return 'response-medium'
 	return 'response-fast'
@@ -311,7 +311,7 @@ const refreshAll = async () => {
 	}
 }
 
-const _clearAllCache = async () => {
+const clearAllCache = async () => {
 	await cacheService.clearAll()
 
 	dataSources.value.forEach((source) => {

@@ -226,7 +226,7 @@ const normalizedHeading = computed(() => {
 })
 
 // Get current direction name for screen readers
-const _currentDirectionName = computed(() => {
+const currentDirectionName = computed(() => {
 	const heading = normalizedHeading.value
 	const index = Math.round(heading / 45) % 8
 	return directions[index].label
@@ -241,7 +241,7 @@ const isActiveDirection = (degrees) => {
 }
 
 // Get button color based on direction and active state
-const _getButtonColor = (dir) => {
+const getButtonColor = (dir) => {
 	if (dir.name === 'N') {
 		return isActiveDirection(dir.degrees) ? 'error' : undefined
 	}
@@ -249,7 +249,7 @@ const _getButtonColor = (dir) => {
 }
 
 // Compass ring rotates opposite to heading to show current orientation
-const _compassRingStyle = computed(() => {
+const compassRingStyle = computed(() => {
 	const style = {
 		transform: `rotate(${-currentHeading.value}deg)`,
 	}
@@ -259,15 +259,15 @@ const _compassRingStyle = computed(() => {
 	return style
 })
 
-const _setHeading = (degrees) => {
+const setHeading = (degrees) => {
 	cameraService?.setHeading(degrees, prefersReducedMotion.value)
 }
 
-const _zoomIn = () => {
+const zoomIn = () => {
 	cameraService?.zoom(1.5)
 }
 
-const _zoomOut = () => {
+const zoomOut = () => {
 	cameraService?.zoom(0.5)
 }
 </script>

@@ -158,20 +158,20 @@ const propsStore = usePropsStore()
 const { indexOptions, getIndexInfo } = useIndexData()
 
 // --- STATE ---
-const _legendVisible = ref(true)
-const _legendExpanded = ref(true)
+const legendVisible = ref(true)
+const legendExpanded = ref(true)
 // Initialize local state FROM the global store
 const localSelectedIndex = ref(propsStore.statsIndex)
 
 // --- COMPUTED PROPERTIES ---
-const _legendData = computed(() => indexToColorScheme[localSelectedIndex.value] || [])
+const legendData = computed(() => indexToColorScheme[localSelectedIndex.value] || [])
 
-const _selectedIndexDescription = computed(() => {
+const selectedIndexDescription = computed(() => {
 	const selectedOption = getIndexInfo(localSelectedIndex.value)
 	return selectedOption ? selectedOption.description : ''
 })
 
-const _extrusionNote = computed(() => {
+const extrusionNote = computed(() => {
 	const notes = {
 		combined_avgheatexposure:
 			'Heat Index shown by grid cell height visualisation, with a maximum height of 250m.',
@@ -186,7 +186,7 @@ const _extrusionNote = computed(() => {
 })
 
 // --- METHODS ---
-const _handleSelectionChange = (value) => {
+const handleSelectionChange = (value) => {
 	propsStore.setStatsIndex(value)
 }
 

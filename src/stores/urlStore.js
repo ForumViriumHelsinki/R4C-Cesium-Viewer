@@ -21,7 +21,7 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 /**
  * URL Pinia Store
@@ -84,7 +84,7 @@ export const useURLStore = defineStore('url', {
 		 * coldAreas(state)('00100') // Returns cold area URL for postal code 00100
 		 */
 		coldAreas: (state) => (postinumero) => {
-			return `${state.pygeoapiBase}/coldarea/items?f=json&limit=100000&posno=${postinumero}`;
+			return `${state.pygeoapiBase}/coldarea/items?f=json&limit=100000&posno=${postinumero}`
 		},
 		/**
 		 * Generates generic pygeoapi collection URL with optional limit
@@ -96,7 +96,7 @@ export const useURLStore = defineStore('url', {
 		collectionUrl:
 			(state) =>
 			(collection, limit = 35000) => {
-				return `${state.pygeoapiBase}${collection}/items?f=json&limit=${limit}`;
+				return `${state.pygeoapiBase}${collection}/items?f=json&limit=${limit}`
 			},
 		/**
 		 * Generates URL for heat exposure index data (postal code level aggregates)
@@ -108,7 +108,7 @@ export const useURLStore = defineStore('url', {
 		heatExposure:
 			(state) =>
 			(limit = 1000) => {
-				return `${state.pygeoapiBase}/heatexposure_optimized/items?f=json&limit=${limit}`; // New getter
+				return `${state.pygeoapiBase}/heatexposure_optimized/items?f=json&limit=${limit}` // New getter
 			},
 		/**
 		 * Generates URL for Helsinki Region Transport (HSL) travel time matrix data
@@ -120,7 +120,7 @@ export const useURLStore = defineStore('url', {
 		hkiTravelTime:
 			(state) =>
 			(from_id, limit = 2) => {
-				return `${state.pygeoapiBase}/hki_travel_time/items?f=json&limit=${limit}&from_id=${from_id}`;
+				return `${state.pygeoapiBase}/hki_travel_time/items?f=json&limit=${limit}&from_id=${from_id}`
 			},
 		/**
 		 * Generates URL for HSY (Capital Region) building data by postal code
@@ -132,7 +132,7 @@ export const useURLStore = defineStore('url', {
 		hsyBuildings:
 			(state) =>
 			(postinumero, limit = 10000) => {
-				return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&postinumero=${postinumero}`;
+				return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&postinumero=${postinumero}`
 			},
 		/**
 		 * Generates URL for HSY buildings filtered by bounding box (BBOX)
@@ -144,7 +144,7 @@ export const useURLStore = defineStore('url', {
 		hsyGridBuildings:
 			(state) =>
 			(bboxString, limit = 2000) => {
-				return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&bbox=${bboxString}`;
+				return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&bbox=${bboxString}`
 			},
 		/**
 		 * Generates URL for landcover-to-parks adaptation scenario data
@@ -156,7 +156,7 @@ export const useURLStore = defineStore('url', {
 		landcoverToParks:
 			(state) =>
 			(gridId, limit = 2) => {
-				return `${state.pygeoapiBase}/adaptation_landcover/items?f=json&limit=${limit}&grid_id=${gridId}`;
+				return `${state.pygeoapiBase}/adaptation_landcover/items?f=json&limit=${limit}&grid_id=${gridId}`
 			},
 		/**
 		 * Generates URL for NDVI (Normalized Difference Vegetation Index) TIFF imagery
@@ -166,7 +166,7 @@ export const useURLStore = defineStore('url', {
 		 * ndviTiffUrl(state)('2022-06-26') // Returns NDVI TIFF for June 26, 2022
 		 */
 		ndviTiffUrl: (state) => (ndviDate) => {
-			return `${state.imagesBase}/ndvi_${ndviDate}.tiff`;
+			return `${state.imagesBase}/ndvi_${ndviDate}.tiff`
 		},
 		/**
 		 * Generates URL for other nature surfaces (rock, sand, bare soil) by postal code
@@ -178,7 +178,7 @@ export const useURLStore = defineStore('url', {
 		otherNature:
 			(state) =>
 			(postinumero, limit = 10000) => {
-				return `${state.pygeoapiBase}/othernature/items?f=json&limit=${limit}&postinumero=${postinumero}`;
+				return `${state.pygeoapiBase}/othernature/items?f=json&limit=${limit}&postinumero=${postinumero}`
 			},
 		/**
 		 * Generates URL for tree canopy data by postal code and height category
@@ -190,7 +190,7 @@ export const useURLStore = defineStore('url', {
 		tree:
 			(state) =>
 			(postinumero, koodi, limit = 100000) => {
-				return `${state.pygeoapiBase}/tree/items?f=json&limit=${limit}&postinumero=${postinumero}&koodi=${koodi}`;
+				return `${state.pygeoapiBase}/tree/items?f=json&limit=${limit}&postinumero=${postinumero}&koodi=${koodi}`
 			},
 		/**
 		 * Generates URL for tree-to-building distance analysis by postal code
@@ -202,7 +202,7 @@ export const useURLStore = defineStore('url', {
 		treeBuildingDistance:
 			(state) =>
 			(postinumero, limit = 100000) => {
-				return `${state.pygeoapiBase}/tree_building_distance/items?f=json&limit=${limit}&postinumero=${postinumero}`;
+				return `${state.pygeoapiBase}/tree_building_distance/items?f=json&limit=${limit}&postinumero=${postinumero}`
 			},
 		/**
 		 * Generates URL for urban heat exposure building data (Helsinki only)
@@ -214,7 +214,7 @@ export const useURLStore = defineStore('url', {
 		urbanHeatHelsinki:
 			(state) =>
 			(postinumero, limit = 2000) => {
-				return `${state.pygeoapiBase}/urban_heat_building/items?f=json&limit=${limit}&postinumero=${postinumero}`;
+				return `${state.pygeoapiBase}/urban_heat_building/items?f=json&limit=${limit}&postinumero=${postinumero}`
 			},
 		/**
 		 * Generates SYKE flood map URL for a specific scenario
@@ -225,27 +225,27 @@ export const useURLStore = defineStore('url', {
 		 * sykeFloodUrl(state)('coastal_flood_SSP585_2050_0020_with_protected') // Returns coastal flood SSP585 2050 URL
 		 */
 		sykeFloodUrl: (state) => (scenario) => {
-			const { geoserverBase, flood } = state.externalApis.syke;
+			const { geoserverBase, flood } = state.externalApis.syke
 
 			// Stormwater flood scenarios
 			if (scenario === 'HulevesitulvaVesisyvyysSade52mmMallinnettuAlue') {
-				return `${geoserverBase}${flood.stormwater52mm}`;
+				return `${geoserverBase}${flood.stormwater52mm}`
 			}
 			if (scenario === 'HulevesitulvaVesisyvyysSade80mmMallinnettuAlue') {
-				return `${geoserverBase}${flood.stormwater80mm}`;
+				return `${geoserverBase}${flood.stormwater80mm}`
 			}
 
 			// Combined coastal flood scenarios (all SSP pathways)
 			if (scenario === 'SSP585_re_with_SSP245_with_SSP126_with_current') {
-				return `${geoserverBase}${flood.coastalCombined}`;
+				return `${geoserverBase}${flood.coastalCombined}`
 			}
 
 			// Individual coastal flood scenarios
 			if (scenario.startsWith('coastal_flood_')) {
-				return `${geoserverBase}${flood.coastalBase}`;
+				return `${geoserverBase}${flood.coastalBase}`
 			}
 
-			return null; // Unknown scenario
+			return null // Unknown scenario
 		},
 		/**
 		 * Generates Helsinki WFS URL for building data by postal code
@@ -255,8 +255,8 @@ export const useURLStore = defineStore('url', {
 		 * helsinkiBuildingsUrl(state)('00100') // Returns WFS URL for buildings in postal code 00100
 		 */
 		helsinkiBuildingsUrl: (state) => (postalCode) => {
-			const baseUrl = state.externalApis.maps.helsinkiWfs;
-			return `${baseUrl}?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27${postalCode}%27`;
+			const baseUrl = state.externalApis.maps.helsinkiWfs
+			return `${baseUrl}?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27${postalCode}%27`
 		},
 		/**
 		 * Generates R4C sensor data URL for latest measurements
@@ -266,7 +266,7 @@ export const useURLStore = defineStore('url', {
 		 * r4cSensorUrl(state) // Returns latest R4C sensor data URL
 		 */
 		r4cSensorUrl: (state) => {
-			return state.externalApis.sensors.r4cLatest;
+			return state.externalApis.sensors.r4cLatest
 		},
 	},
-});
+})

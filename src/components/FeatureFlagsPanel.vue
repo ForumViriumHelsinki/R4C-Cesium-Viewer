@@ -271,7 +271,7 @@ import { useGraphicsStore } from '@/stores/graphicsStore'
 const featureFlagStore = useFeatureFlagStore()
 const graphicsStore = useGraphicsStore()
 
-const _dialog = ref<boolean>(false)
+const dialog = ref<boolean>(false)
 const resetConfirmDialog = ref<boolean>(false)
 const importDialog = ref<boolean>(false)
 const importJson = ref<string>('')
@@ -279,9 +279,9 @@ const snackbar = ref<boolean>(false)
 const snackbarMessage = ref<string>('')
 const snackbarColor = ref<'error' | 'success'>('error')
 
-const _categories = computed(() => featureFlagStore.categories)
+const categories = computed(() => featureFlagStore.categories)
 
-const _totalFlags = computed(() => Object.keys(featureFlagStore.flags).length)
+const totalFlags = computed(() => Object.keys(featureFlagStore.flags).length)
 
 const categoryLabels: Record<FeatureFlagCategory, string> = {
 	'data-layers': 'Data Layers',
@@ -301,42 +301,42 @@ const categoryIcons: Record<FeatureFlagCategory, string> = {
 	developer: 'mdi-code-braces',
 }
 
-function _getCategoryLabel(category: FeatureFlagCategory): string {
+function getCategoryLabel(category: FeatureFlagCategory): string {
 	return categoryLabels[category] || category
 }
 
-function _getCategoryIcon(category: FeatureFlagCategory): string {
+function getCategoryIcon(category: FeatureFlagCategory): string {
 	return categoryIcons[category] || 'mdi-flag'
 }
 
-function _getCategoryEnabledCount(category: FeatureFlagCategory): number {
+function getCategoryEnabledCount(category: FeatureFlagCategory): number {
 	return featureFlagStore
 		.flagsByCategory(category)
 		.filter((flag) => featureFlagStore.isEnabled(flag.name)).length
 }
 
-function _getCategoryTotalCount(category: FeatureFlagCategory): number {
+function getCategoryTotalCount(category: FeatureFlagCategory): number {
 	return featureFlagStore.flagsByCategory(category).length
 }
 
-function _setFlag(flagName: FeatureFlagName, enabled: boolean): void {
+function setFlag(flagName: FeatureFlagName, enabled: boolean): void {
 	featureFlagStore.setFlag(flagName, enabled)
 }
 
-function _resetFlag(flagName: FeatureFlagName): void {
+function resetFlag(flagName: FeatureFlagName): void {
 	featureFlagStore.resetFlag(flagName)
 }
 
-function _resetAllFlags(): void {
+function resetAllFlags(): void {
 	resetConfirmDialog.value = true
 }
 
-function _confirmResetAll(): void {
+function confirmResetAll(): void {
 	featureFlagStore.resetAllFlags()
 	resetConfirmDialog.value = false
 }
 
-function _checkHardwareSupport(flag: FeatureFlagWithName): boolean {
+function checkHardwareSupport(flag: FeatureFlagWithName): boolean {
 	// Check hardware support based on graphics store
 	// Use optional chaining for defensive coding
 	if (flag.name === 'hdrRendering') {
@@ -351,7 +351,7 @@ function _checkHardwareSupport(flag: FeatureFlagWithName): boolean {
 	return true
 }
 
-function _exportConfig(): void {
+function exportConfig(): void {
 	const config = featureFlagStore.exportConfig()
 	const json = JSON.stringify(config, null, 2)
 
@@ -367,12 +367,12 @@ function _exportConfig(): void {
 	URL.revokeObjectURL(url)
 }
 
-function _importConfig(): void {
+function importConfig(): void {
 	importJson.value = ''
 	importDialog.value = true
 }
 
-function _doImport(): void {
+function doImport(): void {
 	try {
 		const config = JSON.parse(importJson.value)
 		featureFlagStore.importConfig(config)

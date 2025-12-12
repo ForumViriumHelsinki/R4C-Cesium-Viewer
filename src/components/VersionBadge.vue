@@ -21,25 +21,25 @@
 </template>
 
 <script>
-import { VERSION_INFO } from '../version.js';
+import { VERSION_INFO } from '../version.js'
 
 export default {
 	name: 'VersionBadge',
 	data() {
 		return {
 			versionInfo: VERSION_INFO,
-		};
+		}
 	},
 	computed: {
 		formattedBuildTime() {
 			try {
-				return new Date(this.versionInfo.buildTime).toLocaleString();
+				return new Date(this.versionInfo.buildTime).toLocaleString()
 			} catch {
-				return this.versionInfo.buildTime;
+				return this.versionInfo.buildTime
 			}
 		},
 	},
-};
+}
 </script>
 
 <style scoped>

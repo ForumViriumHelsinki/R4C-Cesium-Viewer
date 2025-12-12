@@ -22,7 +22,7 @@
  * eventBus.on('event', handler);
  * eventBus.off('event', handler);
  */
-import mitt from 'mitt';
+import mitt from 'mitt'
 
 /**
  * Global event bus instance
@@ -35,4 +35,4 @@ import mitt from 'mitt';
  *
  * @type {import('mitt').Emitter}
  */
-export const eventBus = mitt();
+export const eventBus = mitt()

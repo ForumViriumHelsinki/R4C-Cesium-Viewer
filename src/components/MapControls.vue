@@ -362,15 +362,15 @@ const hideLow = ref(toggleStore.hideLow)
 /**
  * Computed properties for view-specific features
  */
-const _helsinkiView = computed(() => toggleStore.helsinkiView)
-const _view = computed(() => store.view)
-const _postalCode = computed(() => store.postalcode)
+const helsinkiView = computed(() => toggleStore.helsinkiView)
+const view = computed(() => store.view)
+const postalCode = computed(() => store.postalcode)
 
 /**
  * Detects if NDVI and Land Cover are both active
  * @type {import('vue').ComputedRef<boolean>}
  */
-const _hasLayerConflict = computed(() => {
+const hasLayerConflict = computed(() => {
 	return landCover.value && ndvi.value
 })
 
@@ -413,7 +413,7 @@ const disableOtherLayer = (layer) => {
  * @async
  * @returns {Promise<void>}
  */
-const _loadVegetation = async () => {
+const loadVegetation = async () => {
 	toggleStore.setShowVegetation(showVegetation.value)
 
 	if (showVegetation.value) {
@@ -454,7 +454,7 @@ const _loadVegetation = async () => {
  * @async
  * @returns {Promise<void>}
  */
-const _loadTrees = async () => {
+const loadTrees = async () => {
 	toggleStore.setShowTrees(showTrees.value)
 
 	if (showTrees.value) {
@@ -546,7 +546,7 @@ const _loadTrees = async () => {
  *
  * @returns {void}
  */
-const _loadOtherNature = () => {
+const loadOtherNature = () => {
 	toggleStore.setShowOtherNature(showOtherNature.value)
 
 	if (showOtherNature.value) {
@@ -569,7 +569,7 @@ const _loadOtherNature = () => {
  *
  * @returns {void}
  */
-const _addLandCover = () => {
+const addLandCover = () => {
 	if (landCover.value && ndvi.value) disableOtherLayer('landcover')
 
 	toggleStore.setLandCover(landCover.value)
@@ -589,7 +589,7 @@ const _addLandCover = () => {
  * @fires eventBus#addNDVI
  * @returns {void}
  */
-const _toggleNDVI = () => {
+const toggleNDVI = () => {
 	if (ndvi.value && landCover.value) disableOtherLayer('ndvi')
 
 	toggleStore.setNDVI(ndvi.value)

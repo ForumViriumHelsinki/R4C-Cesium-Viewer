@@ -17,10 +17,10 @@ import { computed } from 'vue'
 import { useMitigationStore } from '../stores/mitigationStore'
 
 const mitigationStore = useMitigationStore()
-const _coolingCenters = computed(() => mitigationStore.coolingCenters)
-const _affectedCells = computed(() => mitigationStore.affected)
-const _impact = computed(() => mitigationStore.impact.toFixed(2))
-const _optimised = computed(() => mitigationStore.optimised)
+const coolingCenters = computed(() => mitigationStore.coolingCenters)
+const affectedCells = computed(() => mitigationStore.affected)
+const impact = computed(() => mitigationStore.impact.toFixed(2))
+const optimised = computed(() => mitigationStore.optimised)
 </script>
 
 <style scoped>

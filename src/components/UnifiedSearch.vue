@@ -277,7 +277,7 @@ const featurePicker = new FeaturePicker()
  * Dynamic search placeholder text
  * @type {import('vue').ComputedRef<string>}
  */
-const _searchPlaceholder = computed(() => {
+const searchPlaceholder = computed(() => {
 	return 'Search by address, postal code, or area name...'
 })
 
@@ -285,7 +285,7 @@ const _searchPlaceholder = computed(() => {
  * Current selection summary for quick actions
  * @type {import('vue').ComputedRef<{name: string} | null>}
  */
-const _currentSelection = computed(() => {
+const currentSelection = computed(() => {
 	const postalCode = globalStore.postalcode
 	const areaName = globalStore.nameOfZone
 	if (postalCode && areaName) {
@@ -359,7 +359,7 @@ const postalCodeResults = computed(() => {
  * Checks if any results are available
  * @type {import('vue').ComputedRef<boolean>}
  */
-const _hasResults = computed(() => {
+const hasResults = computed(() => {
 	return addressResults.value.length > 0 || postalCodeResults.value.length > 0
 })
 
@@ -369,7 +369,7 @@ const _hasResults = computed(() => {
  * @param {number} percentage - Vegetation coverage percentage (0-100)
  * @returns {string} Vuetify color name
  */
-const _getVegetationColor = (percentage) => {
+const getVegetationColor = (percentage) => {
 	if (percentage >= 50) return 'green'
 	if (percentage >= 30) return 'orange'
 	return 'red'
@@ -565,7 +565,7 @@ const focusOnPostalCode = (postalCode) => {
  *
  * @returns {void}
  */
-const _selectFirstResult = () => {
+const selectFirstResult = () => {
 	if (addressResults.value.length > 0) {
 		void selectAddress(addressResults.value[0])
 	} else if (postalCodeResults.value.length > 0) {
@@ -578,7 +578,7 @@ const _selectFirstResult = () => {
  *
  * @returns {void}
  */
-const _focusOnCurrent = () => {
+const focusOnCurrent = () => {
 	if (globalStore.postalcode) {
 		focusOnPostalCode(globalStore.postalcode)
 	}
@@ -589,7 +589,7 @@ const _focusOnCurrent = () => {
  *
  * @returns {void}
  */
-const _handleClickOutside = () => {
+const handleClickOutside = () => {
 	showResults.value = false
 }
 

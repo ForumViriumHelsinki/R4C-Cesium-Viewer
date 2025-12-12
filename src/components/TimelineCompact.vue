@@ -58,14 +58,14 @@ const currentPropertyIndex = ref(dates.indexOf(selectedDate.value))
 const timelineLength = ref(dates.length)
 
 // Create tick labels (years only)
-const _tickLabels = computed(() => {
+const tickLabels = computed(() => {
 	return dates.reduce((acc, _date, index) => {
 		acc[index] = ''
 		return acc
 	}, {})
 })
 
-const _formatYear = (dateString) => {
+const formatYear = (dateString) => {
 	return new Date(dateString).getFullYear().toString()
 }
 

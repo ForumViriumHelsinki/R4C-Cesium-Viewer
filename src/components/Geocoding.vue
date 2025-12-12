@@ -75,13 +75,13 @@ const cameraService = new Camera()
 const featurePicker = new FeaturePicker()
 
 // Computed property to determine if geocoding should be shown
-const _showGeocoding = computed(() => {
+const showGeocoding = computed(() => {
 	const view = globalStore.view.toLowerCase() // Ensure case-insensitivity
 	return view === 'helsinki' || view === 'capitalregion'
 })
 
 // Placeholder method for moving to the target
-const _moveToTarget = () => {
+const moveToTarget = () => {
 	// Search for a match in filteredAddresses based on searchQuery
 	const matchedAddress = filteredAddresses.value.find(
 		(address) => address.address.toLowerCase() === searchQuery.value.toLowerCase()

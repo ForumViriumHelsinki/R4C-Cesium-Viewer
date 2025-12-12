@@ -73,14 +73,14 @@ export default {
 	data() {
 		return {
 			isVisible: true,
-		};
+		}
 	},
 	methods: {
 		closePopup() {
-			this.isVisible = false;
+			this.isVisible = false
 		},
 	},
-};
+}
 </script>
 
 <style scoped>

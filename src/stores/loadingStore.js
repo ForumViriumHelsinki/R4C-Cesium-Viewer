@@ -26,8 +26,8 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
-import cacheService from '../services/cacheService.js';
+import { defineStore } from 'pinia'
+import cacheService from '../services/cacheService.js'
 
 /**
  * Loading Pinia Store
@@ -125,131 +125,131 @@ export const useLoadingStore = defineStore('loading', {
 	getters: {
 		// Check if any layer is currently loading
 		hasActiveLoading: (state) => {
-			return Object.values(state.layerLoading).some((loading) => loading);
+			return Object.values(state.layerLoading).some((loading) => loading)
 		},
 
 		// Get list of currently loading layers
 		activeLoadingLayers: (state) => {
 			return Object.entries(state.layerLoading)
 				.filter(([_, loading]) => loading)
-				.map(([layer, _]) => layer);
+				.map(([layer, _]) => layer)
 		},
 
 		// Get loading progress for a specific layer
 		getLayerProgress: (state) => (layerName) => {
-			const progress = state.loadingProgress[layerName];
-			if (!progress || progress.total === 0) return 0;
-			return Math.round((progress.current / progress.total) * 100);
+			const progress = state.loadingProgress[layerName]
+			if (!progress || progress.total === 0) return 0
+			return Math.round((progress.current / progress.total) * 100)
 		},
 
 		// Get overall loading progress
 		overallProgress: (state) => {
-			const activeLoading = Object.entries(state.layerLoading).filter(([_, loading]) => loading);
+			const activeLoading = Object.entries(state.layerLoading).filter(([_, loading]) => loading)
 
-			if (activeLoading.length === 0) return 100;
+			if (activeLoading.length === 0) return 100
 
 			const totalProgress = activeLoading.reduce((sum, [layer, _]) => {
-				const progress = state.loadingProgress[layer];
-				if (!progress || progress.total === 0) return sum;
-				return sum + progress.current / progress.total;
-			}, 0);
+				const progress = state.loadingProgress[layer]
+				if (!progress || progress.total === 0) return sum
+				return sum + progress.current / progress.total
+			}, 0)
 
-			return Math.round((totalProgress / activeLoading.length) * 100);
+			return Math.round((totalProgress / activeLoading.length) * 100)
 		},
 
 		// Get formatted loading message
 		getLoadingMessage: (state) => (layerName) => {
-			return state.loadingMessages[layerName] || `Loading ${layerName}...`;
+			return state.loadingMessages[layerName] || `Loading ${layerName}...`
 		},
 
 		// Check if layer has error
 		hasLayerError: (state) => (layerName) => {
-			return !!state.loadingErrors[layerName];
+			return !!state.loadingErrors[layerName]
 		},
 
 		// Get layer error message
 		getLayerError: (state) => (layerName) => {
-			return state.loadingErrors[layerName];
+			return state.loadingErrors[layerName]
 		},
 	},
 
 	actions: {
 		// Start loading for a specific layer
 		startLayerLoading(layerName, options = {}) {
-			this.layerLoading[layerName] = true;
+			this.layerLoading[layerName] = true
 			this.loadingProgress[layerName] = {
 				current: 0,
 				total: options.total || 1,
 				status: 'loading',
-			};
-			this.loadingMessages[layerName] = options.message || `Loading ${layerName}...`;
-			delete this.loadingErrors[layerName];
+			}
+			this.loadingMessages[layerName] = options.message || `Loading ${layerName}...`
+			delete this.loadingErrors[layerName]
 
 			// Track start time for performance metrics
-			this.loadingTimes[layerName] = { startTime: Date.now() };
+			this.loadingTimes[layerName] = { startTime: Date.now() }
 
-			this.updateGlobalLoading();
+			this.updateGlobalLoading()
 		},
 
 		// Update loading progress for a layer
 		updateLayerProgress(layerName, current, message = null) {
 			if (this.loadingProgress[layerName]) {
-				this.loadingProgress[layerName].current = current;
+				this.loadingProgress[layerName].current = current
 				if (message) {
-					this.loadingMessages[layerName] = message;
+					this.loadingMessages[layerName] = message
 				}
 			}
 		},
 
 		// Complete loading for a specific layer
 		completeLayerLoading(layerName, success = true) {
-			this.layerLoading[layerName] = false;
+			this.layerLoading[layerName] = false
 
 			if (success) {
-				this.loadingProgress[layerName].status = 'completed';
-				this.loadingProgress[layerName].current = this.loadingProgress[layerName].total;
-				delete this.loadingMessages[layerName];
-				delete this.loadingErrors[layerName];
+				this.loadingProgress[layerName].status = 'completed'
+				this.loadingProgress[layerName].current = this.loadingProgress[layerName].total
+				delete this.loadingMessages[layerName]
+				delete this.loadingErrors[layerName]
 			}
 
 			// Calculate loading time
 			if (this.loadingTimes[layerName]) {
-				this.loadingTimes[layerName].duration = Date.now() - this.loadingTimes[layerName].startTime;
+				this.loadingTimes[layerName].duration = Date.now() - this.loadingTimes[layerName].startTime
 			}
 
-			this.updateGlobalLoading();
+			this.updateGlobalLoading()
 		},
 
 		// Set error for a layer
 		setLayerError(layerName, error) {
-			this.layerLoading[layerName] = false;
-			this.loadingProgress[layerName].status = 'error';
-			this.loadingErrors[layerName] = error;
-			this.loadingMessages[layerName] = `Error loading ${layerName}: ${error}`;
+			this.layerLoading[layerName] = false
+			this.loadingProgress[layerName].status = 'error'
+			this.loadingErrors[layerName] = error
+			this.loadingMessages[layerName] = `Error loading ${layerName}: ${error}`
 
-			this.updateGlobalLoading();
+			this.updateGlobalLoading()
 		},
 
 		// Update global loading state based on individual layers
 		updateGlobalLoading() {
-			this.isLoading = this.hasActiveLoading;
+			this.isLoading = this.hasActiveLoading
 		},
 
 		// Clear all loading states
 		clearAllLoading() {
 			Object.keys(this.layerLoading).forEach((layer) => {
-				this.layerLoading[layer] = false;
-				this.loadingProgress[layer] = { current: 0, total: 1, status: 'idle' };
-			});
-			this.loadingMessages = {};
-			this.loadingErrors = {};
-			this.isLoading = false;
+				this.layerLoading[layer] = false
+				this.loadingProgress[layer] = { current: 0, total: 1, status: 'idle' }
+			})
+			this.loadingMessages = {}
+			this.loadingErrors = {}
+			this.isLoading = false
 		},
 
 		// Retry loading a layer that failed
 		retryLayerLoading(layerName) {
-			delete this.loadingErrors[layerName];
-			this.loadingProgress[layerName].status = 'idle';
+			delete this.loadingErrors[layerName]
+			this.loadingProgress[layerName].status = 'idle'
 			// The actual retry logic should be handled by the calling component
 		},
 
@@ -259,75 +259,75 @@ export const useLoadingStore = defineStore('loading', {
 				layer,
 				duration: times.duration || 0,
 				startTime: times.startTime,
-			}));
+			}))
 		},
 
 		// Cache management actions
 		async checkLayerCache(layerName, cacheKey = null) {
-			const key = cacheKey || layerName;
+			const key = cacheKey || layerName
 			try {
-				const cached = await cacheService.getData(key);
+				const cached = await cacheService.getData(key)
 				if (cached) {
 					this.cacheStatus[layerName] = {
 						cached: true,
 						age: cached.age,
 						size: new Blob([JSON.stringify(cached.data)]).size,
 						timestamp: cached.timestamp,
-					};
-					return cached;
+					}
+					return cached
 				} else {
 					this.cacheStatus[layerName] = {
 						cached: false,
 						age: null,
 						size: null,
 						timestamp: null,
-					};
-					return null;
+					}
+					return null
 				}
 			} catch (error) {
-				console.warn(`Cache check failed for ${layerName}:`, error?.message || error);
-				return null;
+				console.warn(`Cache check failed for ${layerName}:`, error?.message || error)
+				return null
 			}
 		},
 
 		async cacheLayerData(layerName, data, options = {}) {
-			const key = options.cacheKey || layerName;
+			const key = options.cacheKey || layerName
 			try {
 				await cacheService.setData(key, data, {
 					type: layerName,
 					postalCode: options.postalCode,
 					ttl: options.ttl || 24 * 60 * 60 * 1000, // 24 hours default
 					metadata: options.metadata || {},
-				});
+				})
 
 				this.cacheStatus[layerName] = {
 					cached: true,
 					age: 0,
 					size: new Blob([JSON.stringify(data)]).size,
 					timestamp: Date.now(),
-				};
+				}
 
-				return true;
+				return true
 			} catch (error) {
-				console.warn(`Cache storage failed for ${layerName}:`, error?.message || error);
-				return false;
+				console.warn(`Cache storage failed for ${layerName}:`, error?.message || error)
+				return false
 			}
 		},
 
 		async clearLayerCache(layerName, cacheKey = null) {
-			const key = cacheKey || layerName;
+			const key = cacheKey || layerName
 			try {
-				await cacheService.removeData(key);
+				await cacheService.removeData(key)
 				this.cacheStatus[layerName] = {
 					cached: false,
 					age: null,
 					size: null,
 					timestamp: null,
-				};
-				return true;
+				}
+				return true
 			} catch (error) {
-				console.warn(`Cache clear failed for ${layerName}:`, error?.message || error);
-				return false;
+				console.warn(`Cache clear failed for ${layerName}:`, error?.message || error)
+				return false
 			}
 		},
 
@@ -346,7 +346,7 @@ export const useLoadingStore = defineStore('loading', {
 					cached,
 					age: timestamp ? Date.now() - timestamp : 0,
 					timestamp,
-				};
+				}
 			}
 			// For dynamic layer IDs not in predefined cacheStatus, silently succeed
 		},
@@ -359,7 +359,7 @@ export const useLoadingStore = defineStore('loading', {
 					lastCheck: Date.now(),
 					responseTime,
 					error,
-				};
+				}
 			}
 		},
 
@@ -371,47 +371,47 @@ export const useLoadingStore = defineStore('loading', {
 					responseTime: null,
 					error: null,
 				}
-			);
+			)
 		},
 
 		getAllDataSourceHealth() {
 			return Object.entries(this.dataSourceHealth).map(([source, health]) => ({
 				source,
 				...health,
-			}));
+			}))
 		},
 
 		// Enhanced loading with cache check
 		async startLayerLoadingWithCache(layerName, options = {}) {
 			// Check cache first
-			const cacheKey = options.cacheKey || `${layerName}-${options.postalCode || 'global'}`;
-			const cached = await this.checkLayerCache(layerName, cacheKey);
+			const cacheKey = options.cacheKey || `${layerName}-${options.postalCode || 'global'}`
+			const cached = await this.checkLayerCache(layerName, cacheKey)
 
 			if (cached && !options.forceRefresh) {
 				// Data is cached and valid
-				this.loadingMessages[layerName] = `Using cached ${layerName} data`;
+				this.loadingMessages[layerName] = `Using cached ${layerName} data`
 
 				// Still show brief loading indicator for UI feedback
-				this.layerLoading[layerName] = true;
+				this.layerLoading[layerName] = true
 				setTimeout(() => {
-					this.completeLayerLoading(layerName, true);
-				}, 100);
+					this.completeLayerLoading(layerName, true)
+				}, 100)
 
-				return cached.data;
+				return cached.data
 			}
 
 			// Start normal loading process
-			this.startLayerLoading(layerName, options);
-			return null;
+			this.startLayerLoading(layerName, options)
+			return null
 		},
 
 		// Enhanced completion with caching
 		async completeLayerLoadingWithCache(layerName, success = true, data = null, options = {}) {
-			this.completeLayerLoading(layerName, success);
+			this.completeLayerLoading(layerName, success)
 
 			if (success && data && options.enableCaching !== false) {
-				await this.cacheLayerData(layerName, data, options);
+				await this.cacheLayerData(layerName, data, options)
 			}
 		},
 	},
-});
+})

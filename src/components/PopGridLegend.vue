@@ -202,11 +202,11 @@
 import { computed, ref } from 'vue'
 
 // Define state to control the visibility and expansion of the legend
-const _legendVisible = ref(true)
+const legendVisible = ref(true)
 const legendExpanded = ref(true)
 
 // Toggle function for legend expansion/minimization
-const _toggleLegend = () => {
+const toggleLegend = () => {
 	legendExpanded.value = !legendExpanded.value
 }
 // Define index options with their corresponding colors and descriptions
@@ -424,23 +424,23 @@ const indexToColorScheme = {
 const localSelectedIndex = ref('heat_index')
 
 // Compute legend data based on the selected index and the color scheme mapping
-const _legendData = computed(() => indexToColorScheme[localSelectedIndex.value] || heatColors)
+const legendData = computed(() => indexToColorScheme[localSelectedIndex.value] || heatColors)
 
 const emit = defineEmits(['onIndexChange'])
 
 // Handle selection change and emit event
-const _handleSelectionChange = (value) => {
+const handleSelectionChange = (value) => {
 	emit('onIndexChange', value)
 }
 
 // Compute the title based on the selected index
-const _title = computed(() => {
+const title = computed(() => {
 	const selectedOption = indexOptions.find((option) => option.value === localSelectedIndex.value)
 	return selectedOption ? selectedOption.text : 'Heat Vulnerability'
 })
 
 // Compute the description of the selected index for the tooltip
-const _selectedIndexDescription = computed(() => {
+const selectedIndexDescription = computed(() => {
 	const selectedOption = indexOptions.find((option) => option.value === localSelectedIndex.value)
 	return selectedOption ? selectedOption.description : ''
 })

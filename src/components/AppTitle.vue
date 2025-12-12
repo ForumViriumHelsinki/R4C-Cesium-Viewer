@@ -51,7 +51,7 @@ import { VERSION_INFO } from '../version.js'
 
 const versionInfo = VERSION_INFO
 
-const _formattedCommitDate = computed(() => {
+const formattedCommitDate = computed(() => {
 	try {
 		return new Date(versionInfo.commitDate).toLocaleString()
 	} catch {
@@ -59,7 +59,7 @@ const _formattedCommitDate = computed(() => {
 	}
 })
 
-const _formattedBuildTime = computed(() => {
+const formattedBuildTime = computed(() => {
 	try {
 		return new Date(versionInfo.buildTime).toLocaleString()
 	} catch {

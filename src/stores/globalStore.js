@@ -24,7 +24,7 @@
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 /**
  * Global Pinia Store
@@ -118,14 +118,14 @@ export const useGlobalStore = defineStore('global', {
 		 * @param {boolean} status - True to show building info panel
 		 */
 		setShowBuildingInfo(status) {
-			this.showBuildingInfo = status;
+			this.showBuildingInfo = status
 		},
 		/**
 		 * Sets global loading indicator state
 		 * @param {boolean} isLoading - True to show loading indicator
 		 */
 		setIsLoading(isLoading) {
-			this.isLoading = isLoading;
+			this.isLoading = isLoading
 		},
 		/**
 		 * Sets the selected date for heat exposure data visualization
@@ -133,14 +133,14 @@ export const useGlobalStore = defineStore('global', {
 		 * @param {string} date - Date string in YYYY-MM-DD format
 		 */
 		setHeatDataDate(date) {
-			this.heatDataDate = date;
+			this.heatDataDate = date
 		},
 		/**
 		 * Sets the current navigation level
 		 * @param {string} level - Level name ('start', 'postalcode', 'building')
 		 */
 		setLevel(level) {
-			this.level = level;
+			this.level = level
 		},
 		/**
 		 * Sets the CesiumJS viewer instance reference
@@ -148,14 +148,14 @@ export const useGlobalStore = defineStore('global', {
 		 * @param {Object} viewer - Cesium.Viewer instance
 		 */
 		setCesiumViewer(viewer) {
-			this.cesiumViewer = viewer;
+			this.cesiumViewer = viewer
 		},
 		/**
 		 * Sets the currently selected 250m population grid cell
 		 * @param {Object} currentGridCell - Cesium entity representing the grid cell
 		 */
 		setCurrentGridCell(currentGridCell) {
-			this.currentGridCell = currentGridCell;
+			this.currentGridCell = currentGridCell
 		},
 		/**
 		 * Sets the current view mode
@@ -163,7 +163,7 @@ export const useGlobalStore = defineStore('global', {
 		 * @param {string} view - View mode ('capitalRegion', 'postalcode', 'building')
 		 */
 		setView(view) {
-			this.view = view;
+			this.view = view
 		},
 		/**
 		 * Sets the selected postal code for data loading
@@ -171,14 +171,14 @@ export const useGlobalStore = defineStore('global', {
 		 * @param {string} postalcode - Five-digit postal code (e.g., '00100')
 		 */
 		setPostalCode(postalcode) {
-			this.postalcode = postalcode;
+			this.postalcode = postalcode
 		},
 		/**
 		 * Sets the name of the selected zone or neighborhood
 		 * @param {string} nameOfZone - Zone name (e.g., 'Alppila - Vallila')
 		 */
 		setNameOfZone(nameOfZone) {
-			this.nameOfZone = nameOfZone;
+			this.nameOfZone = nameOfZone
 		},
 		/**
 		 * Sets the average heat exposure for the selected area
@@ -186,21 +186,21 @@ export const useGlobalStore = defineStore('global', {
 		 * @param {number} averageHeatExposure - Normalized heat exposure (0-1)
 		 */
 		setAverageHeatExposure(averageHeatExposure) {
-			this.averageHeatExposure = averageHeatExposure;
+			this.averageHeatExposure = averageHeatExposure
 		},
 		/**
 		 * Sets the average tree canopy area for the selected area
 		 * @param {number} averageTreeArea - Tree coverage in square meters
 		 */
 		setAverageTreeArea(averageTreeArea) {
-			this.averageTreeArea = averageTreeArea;
+			this.averageTreeArea = averageTreeArea
 		},
 		/**
 		 * Sets the selected building address string
 		 * @param {string} buildingAddress - Building address (e.g., 'Aleksanterinkatu 1')
 		 */
 		setBuildingAddress(buildingAddress) {
-			this.buildingAddress = buildingAddress;
+			this.buildingAddress = buildingAddress
 		},
 		/**
 		 * Sets the currently picked Cesium entity
@@ -208,14 +208,14 @@ export const useGlobalStore = defineStore('global', {
 		 * @param {Object} picked - Cesium entity that was clicked
 		 */
 		setPickedEntity(picked) {
-			this.pickedEntity = picked;
+			this.pickedEntity = picked
 		},
 		/**
 		 * Toggles camera 180° rotation state
 		 * Used to track whether camera has been flipped for different viewing angles.
 		 */
 		toggleCameraRotation() {
-			this.isCameraRotated = !this.isCameraRotated;
+			this.isCameraRotated = !this.isCameraRotated
 		},
 		/**
 		 * Updates the click processing state with new values
@@ -226,32 +226,32 @@ export const useGlobalStore = defineStore('global', {
 			this.clickProcessingState = {
 				...this.clickProcessingState,
 				...newState,
-			};
+			}
 
 			// Track metrics for performance monitoring
 			if (newState.stage === 'loading' && newState.startTime) {
-				performance.mark('map-click-start');
+				performance.mark('map-click-start')
 			}
 
 			if (newState.stage === 'complete') {
-				performance.mark('map-click-complete');
+				performance.mark('map-click-complete')
 
 				// Only measure if the start mark exists
-				const startMark = performance.getEntriesByName('map-click-start', 'mark')[0];
+				const startMark = performance.getEntriesByName('map-click-start', 'mark')[0]
 				if (startMark) {
-					performance.measure('map-click-interaction', 'map-click-start', 'map-click-complete');
+					performance.measure('map-click-interaction', 'map-click-start', 'map-click-complete')
 
-					const measure = performance.getEntriesByName('map-click-interaction')[0];
+					const measure = performance.getEntriesByName('map-click-interaction')[0]
 					if (measure) {
 						console.log(
 							`[GlobalStore] Map click completed in ${measure.duration.toFixed(2)}ms for postal code ${this.clickProcessingState.postalCode}`
-						);
+						)
 					}
 
 					// Clean up performance entries
-					performance.clearMarks('map-click-start');
-					performance.clearMarks('map-click-complete');
-					performance.clearMeasures('map-click-interaction');
+					performance.clearMarks('map-click-start')
+					performance.clearMarks('map-click-complete')
+					performance.clearMeasures('map-click-interaction')
 				}
 			}
 		},
@@ -272,7 +272,7 @@ export const useGlobalStore = defineStore('global', {
 				retryCount: 0,
 				previousViewState: null,
 				loadingProgress: null,
-			};
+			}
 		},
 		/**
 		 * Captures current view state for restoration if animation is cancelled
@@ -280,11 +280,11 @@ export const useGlobalStore = defineStore('global', {
 		 */
 		captureViewState() {
 			if (!this.cesiumViewer) {
-				console.warn('[GlobalStore] Cannot capture view state: Cesium viewer not initialized');
-				return;
+				console.warn('[GlobalStore] Cannot capture view state: Cesium viewer not initialized')
+				return
 			}
 
-			const camera = this.cesiumViewer.camera;
+			const camera = this.cesiumViewer.camera
 			this.clickProcessingState.previousViewState = {
 				position: camera.position.clone(),
 				orientation: {
@@ -294,35 +294,35 @@ export const useGlobalStore = defineStore('global', {
 				},
 				showBuildingInfo: this.showBuildingInfo,
 				buildingAddress: this.buildingAddress,
-			};
+			}
 
-			console.log('[GlobalStore] View state captured for potential restoration');
+			console.log('[GlobalStore] View state captured for potential restoration')
 		},
 		/**
 		 * Restores previously captured view state
 		 * Used when user cancels camera animation to return to previous view.
 		 */
 		restorePreviousViewState() {
-			const prevState = this.clickProcessingState.previousViewState;
+			const prevState = this.clickProcessingState.previousViewState
 			if (!prevState) {
-				console.warn('[GlobalStore] No previous view state to restore');
-				return;
+				console.warn('[GlobalStore] No previous view state to restore')
+				return
 			}
 
 			if (!this.cesiumViewer) {
-				console.warn('[GlobalStore] Cannot restore view state: Cesium viewer not initialized');
-				return;
+				console.warn('[GlobalStore] Cannot restore view state: Cesium viewer not initialized')
+				return
 			}
 
 			this.cesiumViewer.camera.setView({
 				destination: prevState.position,
 				orientation: prevState.orientation,
-			});
+			})
 
-			this.showBuildingInfo = prevState.showBuildingInfo;
-			this.buildingAddress = prevState.buildingAddress;
+			this.showBuildingInfo = prevState.showBuildingInfo
+			this.buildingAddress = prevState.buildingAddress
 
-			console.log('[GlobalStore] Previous view state restored');
+			console.log('[GlobalStore] Previous view state restored')
 		},
 		/**
 		 * Shows a user-facing error notification
@@ -340,11 +340,11 @@ export const useGlobalStore = defineStore('global', {
 				show: true,
 				message,
 				context,
-			};
+			}
 
 			// Log technical context to console for developer debugging
 			if (context) {
-				console.error('[GlobalStore] Error context:', context);
+				console.error('[GlobalStore] Error context:', context)
 			}
 		},
 		/**
@@ -356,7 +356,7 @@ export const useGlobalStore = defineStore('global', {
 				show: false,
 				message: '',
 				context: '',
-			};
+			}
 		},
 	},
-});
+})

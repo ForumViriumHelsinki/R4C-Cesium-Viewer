@@ -421,7 +421,7 @@ const _loadingStore = useLoadingStore()
 
 // Local state
 const refreshing = ref(false)
-const _showCacheStats = ref(false)
+const showCacheStats = ref(false)
 const detailsDialog = ref(false)
 const selectedSource = ref(null)
 const cacheStats = ref({})
@@ -500,21 +500,21 @@ const degradedCount = computed(
 
 const errorCount = computed(() => dataSources.value.filter((s) => s.status === 'error').length)
 
-const _overallStatusColor = computed(() => {
+const overallStatusColor = computed(() => {
 	if (errorCount.value > 0) return 'error'
 	if (degradedCount.value > 0) return 'warning'
 	if (healthyCount.value > 0) return 'success'
 	return 'grey'
 })
 
-const _overallStatusIcon = computed(() => {
+const overallStatusIcon = computed(() => {
 	if (errorCount.value > 0) return 'mdi-alert-circle'
 	if (degradedCount.value > 0) return 'mdi-alert'
 	if (healthyCount.value > 0) return 'mdi-check-circle'
 	return 'mdi-help-circle'
 })
 
-const _overallStatusText = computed(() => {
+const overallStatusText = computed(() => {
 	if (errorCount.value > 0) return 'Some services unavailable'
 	if (degradedCount.value > 0) return 'Some services degraded'
 	if (healthyCount.value > 0) return 'All services healthy'
@@ -522,7 +522,7 @@ const _overallStatusText = computed(() => {
 })
 
 // Methods
-const _getStatusColor = (status) => {
+const getStatusColor = (status) => {
 	const colors = {
 		healthy: 'success',
 		degraded: 'warning',
@@ -533,7 +533,7 @@ const _getStatusColor = (status) => {
 	return colors[status] || 'grey'
 }
 
-const _getStatusIcon = (source) => {
+const getStatusIcon = (source) => {
 	if (source.loading) return 'mdi-loading'
 
 	const icons = {
@@ -545,7 +545,7 @@ const _getStatusIcon = (source) => {
 	return icons[source.status] || 'mdi-help-circle'
 }
 
-const _getStatusClass = (status) => {
+const getStatusClass = (status) => {
 	return `status-${status}`
 }
 
@@ -620,7 +620,7 @@ const refreshAll = async () => {
 	}
 }
 
-const _retrySource = async (sourceId) => {
+const retrySource = async (sourceId) => {
 	const source = dataSources.value.find((s) => s.id === sourceId)
 	if (!source) return
 
@@ -631,7 +631,7 @@ const _retrySource = async (sourceId) => {
 	emit('source-retry', sourceId)
 }
 
-const _clearCache = async (sourceId) => {
+const clearCache = async (sourceId) => {
 	const source = dataSources.value.find((s) => s.id === sourceId)
 	if (!source) return
 
@@ -645,7 +645,7 @@ const _clearCache = async (sourceId) => {
 	emit('cache-cleared', sourceId)
 }
 
-const _clearAllCache = async () => {
+const clearAllCache = async () => {
 	await cacheService.clearAll()
 	cacheStats.value = await cacheService.getCacheStats()
 
@@ -658,21 +658,21 @@ const _clearAllCache = async () => {
 	emit('cache-cleared', 'all')
 }
 
-const _preloadData = async (sourceId) => {
+const preloadData = async (sourceId) => {
 	emit('data-preload', sourceId)
 }
 
-const _showDetails = (source) => {
+const showDetails = (source) => {
 	selectedSource.value = source
 	detailsDialog.value = true
 }
 
-const _formatTimestamp = (timestamp) => {
+const formatTimestamp = (timestamp) => {
 	if (!timestamp) return 'Never'
 	return new Date(timestamp).toLocaleString()
 }
 
-const _formatAge = (age) => {
+const formatAge = (age) => {
 	if (!age) return 'Unknown'
 
 	const seconds = Math.floor(age / 1000)
@@ -684,7 +684,7 @@ const _formatAge = (age) => {
 	return `${seconds}s`
 }
 
-const _formatCacheSize = (bytes) => {
+const formatCacheSize = (bytes) => {
 	if (!bytes) return '0 B'
 
 	const units = ['B', 'KB', 'MB', 'GB']
@@ -699,7 +699,7 @@ const _formatCacheSize = (bytes) => {
 	return `${size.toFixed(1)} ${units[unitIndex]}`
 }
 
-const _getCacheUtilizationColor = (percent) => {
+const getCacheUtilizationColor = (percent) => {
 	if (percent > 90) return 'error'
 	if (percent > 70) return 'warning'
 	return 'success'

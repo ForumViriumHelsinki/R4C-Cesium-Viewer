@@ -35,8 +35,8 @@
 				"noExplicitAny": "warn",
 				"noDoubleEquals": "warn",
 				"noFallthroughSwitchClause": "warn",
-				"noAssignInExpressions": "warn",
-				"useIterableCallbackReturn": "warn"
+				"noAssignInExpressions": "off",
+				"useIterableCallbackReturn": "off"
 			},
 			"style": {
 				"noNonNullAssertion": "off",

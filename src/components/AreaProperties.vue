@@ -360,7 +360,7 @@ const allProperties = computed(() => {
 })
 
 // Key properties for summary header (max 3-4)
-const _keyProperties = computed(() => {
+const keyProperties = computed(() => {
 	const result = []
 	const priorityKeys = Object.keys(KEY_PROPERTY_CONFIG)
 
@@ -408,7 +408,7 @@ const categorizedProperties = computed(() => {
 })
 
 // Apply search filter
-const _filteredCategories = computed(() => {
+const filteredCategories = computed(() => {
 	if (!searchQuery.value) return categorizedProperties.value
 
 	const query = searchQuery.value.toLowerCase()
@@ -422,16 +422,16 @@ const _filteredCategories = computed(() => {
 		.filter((cat) => cat.properties.length > 0)
 })
 
-const _hasEntity = computed(() => allProperties.value.length > 0)
-const _totalPropertyCount = computed(() => allProperties.value.length)
-const _entityType = computed(() => {
+const hasEntity = computed(() => allProperties.value.length > 0)
+const totalPropertyCount = computed(() => allProperties.value.length)
+const entityType = computed(() => {
 	if (globalStore.level === 'building') return 'building'
 	if (globalStore.level === 'postalCode') return 'postal code'
 	return 'area'
 })
 
 // Copy single value
-async function _copyValue(value, label) {
+async function copyValue(value, label) {
 	try {
 		await navigator.clipboard.writeText(String(value))
 		copyFeedbackText.value = `${label} copied`
@@ -442,7 +442,7 @@ async function _copyValue(value, label) {
 }
 
 // Copy all properties
-async function _copyAllProperties() {
+async function copyAllProperties() {
 	const lines = allProperties.value.map((p) => `${p.label}: ${p.value}`)
 	try {
 		await navigator.clipboard.writeText(lines.join('\n'))

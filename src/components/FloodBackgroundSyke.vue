@@ -106,7 +106,7 @@ const legendItemsStormwater = ref([
 	{ color: '#001141', text: '2- m' }, // Almost black blue
 ])
 
-const _currentLegend = computed(() => {
+const currentLegend = computed(() => {
 	if (selectedScenario.value?.startsWith('Hulevesitulva')) {
 		return legendItemsStormwater.value
 	} else if (selectedScenario.value === 'SSP585_re_with_SSP245_with_SSP126_with_current') {

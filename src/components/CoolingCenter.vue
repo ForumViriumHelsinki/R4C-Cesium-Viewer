@@ -68,12 +68,12 @@ const selectedCapacity = ref(1000) // Default capacity for slider
 let coolingCentersDataSource =
 	globalStore?.cesiumViewer.dataSources?.getByName('cooling_centers')[0]
 
-const _toggleGridSelection = () => {
+const toggleGridSelection = () => {
 	selectingGrid.value = !selectingGrid.value
 }
 
 // Reset function
-const _resetCoolingCenters = async () => {
+const resetCoolingCenters = async () => {
 	const dataSourceService = new DataSource()
 	await dataSourceService.removeDataSourcesByNamePrefix('cooling_centers')
 	await globalStore.cesiumViewer.dataSources.remove(coolingCentersDataSource)
