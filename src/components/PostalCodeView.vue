@@ -376,11 +376,11 @@ export default {
 			const camera = new Camera()
 			camera.init()
 
-			// Hide tooltip
-			const tooltip = document.querySelector('.tooltip')
-			if (tooltip) {
-				tooltip.style.display = 'none'
-			}
+			// Hide all D3.js tooltips via D3 selection (maintains D3.js consistency)
+			// D3 creates tooltips dynamically, so we use D3 selection to hide them
+			void import('d3').then(({ selectAll }) => {
+				selectAll('.tooltip').style('opacity', 0).style('display', 'none')
+			})
 		},
 		returnToPostalCode() {
 			const featurepicker = new Featurepicker()

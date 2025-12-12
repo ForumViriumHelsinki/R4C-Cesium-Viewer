@@ -205,14 +205,8 @@ export default {
 				eventBus.emit('create250mGrid') // Trigger the simulation to start
 			} else {
 				this.datasourceService.removeDataSourcesByNamePrefix('250m_grid')
-				// Use refs for child component visibility control
-				if (this.$refs.buildingGridChart?.$el) {
-					const barChartContainer =
-						this.$refs.buildingGridChart.$el.querySelector('#bar-chart-container')
-					const legend = this.$refs.buildingGridChart.$el.querySelector('#legend')
-					if (barChartContainer) barChartContainer.style.visibility = 'hidden'
-					if (legend) legend.style.visibility = 'hidden'
-				}
+				// Hide building grid chart via event bus (maintains component encapsulation)
+				eventBus.emit('hideBuildingGridChart')
 				this.datasourceService.changeDataSourceShowByName('PopulationGrid', true)
 			}
 		},
@@ -226,11 +220,8 @@ export default {
 				void espooSurveyService.loadSurveyFeatures('places_in_everyday_life')
 			} else {
 				this.datasourceService.removeDataSourcesByNamePrefix('Survey ')
-				// Use refs for child component visibility control
-				if (this.$refs.surveyScatterPlot?.$el) {
-					const scatterPlot = this.$refs.surveyScatterPlot.$el.querySelector('#surveyScatterPlot')
-					if (scatterPlot) scatterPlot.style.visibility = 'hidden'
-				}
+				// Hide survey scatter plot via event bus (maintains component encapsulation)
+				eventBus.emit('hideSurveyScatterPlot')
 			}
 		},
 

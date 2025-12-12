@@ -1,5 +1,8 @@
 <template>
-	<div id="scatterPlotContainer" />
+	<div
+		id="scatterPlotContainer"
+		ref="containerRef"
+	/>
 
 	<select
 		ref="numericalSelect"
@@ -287,12 +290,12 @@ export default {
 		},
 
 		/**
-		 * Initialize plot container using D3.js selector
-		 * Note: D3.js requires DOM access for SVG manipulation - this is legitimate usage
+		 * Initialize plot container using Vue ref (proper Vue pattern)
+		 * Note: D3.js requires DOM access for SVG manipulation - using ref maintains Vue encapsulation
 		 */
-		initializePlotContainer(containerId) {
-			// Use D3.js selector for consistency with other D3.js operations
-			const container = d3.select(`#${containerId}`).node()
+		initializePlotContainer() {
+			// Use Vue ref for direct DOM access (maintains component encapsulation)
+			const container = this.$refs.containerRef
 			if (container) {
 				// Use textContent for safe clearing (prevents potential XSS)
 				container.textContent = ''
@@ -472,9 +475,11 @@ export default {
 		},
 
 		clearScatterPlot() {
-			// Remove or clear the D3.js visualization
-			// Example:
-			d3.select('#scatterPlotContainer').select('svg').remove()
+			// Remove or clear the D3.js visualization using Vue ref
+			// Using D3.js on the ref value maintains Vue encapsulation
+			if (this.$refs.containerRef) {
+				d3.select(this.$refs.containerRef).select('svg').remove()
+			}
 		},
 	},
 }

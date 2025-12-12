@@ -1,10 +1,14 @@
 <template>
-	<div id="buildingGridChartContainer" />
+	<div
+		id="buildingGridChartContainer"
+		ref="containerRef"
+	/>
 </template>
 
 <script>
 import * as d3 from 'd3'
-import { onMounted, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -15,6 +19,7 @@ export default {
 		const propsStore = usePropsStore()
 		const plotService = new Plot()
 		const buildingContainerId = 'buildingGridChartContainer'
+		const containerRef = ref(null)
 
 		const createBuildingGridChart = (buildingProps) => {
 			plotService.initializePlotContainer(buildingContainerId)
@@ -92,6 +97,15 @@ export default {
 				.on('mouseout', () => plotService.handleMouseout(tooltip))
 		}
 
+		/**
+		 * Hide the chart container using Vue ref (proper encapsulation)
+		 */
+		const hideChart = () => {
+			if (containerRef.value) {
+				containerRef.value.style.visibility = 'hidden'
+			}
+		}
+
 		watch(
 			() => propsStore.gridBuildingProps,
 			(gridBuilding) => {
@@ -101,13 +115,23 @@ export default {
 			}
 		)
 
+		let unsubscribe
+
 		onMounted(() => {
 			if (propsStore.gridBuildingProps) {
 				createBuildingGridChart(propsStore.gridBuildingProps)
 			}
+			// Listen for hide event from parent (proper component encapsulation)
+			unsubscribe = eventBus.on('hideBuildingGridChart', hideChart)
 		})
 
-		return {}
+		onBeforeUnmount(() => {
+			if (unsubscribe) {
+				unsubscribe()
+			}
+		})
+
+		return { containerRef }
 	},
 }
 </script>

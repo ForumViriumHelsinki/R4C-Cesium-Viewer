@@ -1,5 +1,8 @@
 <template>
-	<div id="surveyScatterPlot" />
+	<div
+		id="surveyScatterPlot"
+		ref="containerRef"
+	/>
 </template>
 
 <script>
@@ -10,12 +13,20 @@ import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore'
 
 export default {
+	data() {
+		return {
+			unsubscribeNewPlot: null,
+			unsubscribeHide: null,
+		}
+	},
 	mounted() {
-		this.unsubscribe = eventBus.on('newSurveyScatterPlot', this.newSurveyScatterPlot)
+		this.unsubscribeNewPlot = eventBus.on('newSurveyScatterPlot', this.newSurveyScatterPlot)
+		this.unsubscribeHide = eventBus.on('hideSurveyScatterPlot', this.hideScatterPlot)
 		this.plotService = new Plot()
 	},
 	beforeUnmount() {
-		this.unsubscribe()
+		if (this.unsubscribeNewPlot) this.unsubscribeNewPlot()
+		if (this.unsubscribeHide) this.unsubscribeHide()
 	},
 	methods: {
 		newSurveyScatterPlot() {
@@ -24,6 +35,15 @@ export default {
 				this.createSurveyScatterPlot()
 			} else {
 				this.clearSurveyScatterPlot()
+			}
+		},
+
+		/**
+		 * Hide the scatter plot using Vue ref (proper component encapsulation)
+		 */
+		hideScatterPlot() {
+			if (this.$refs.containerRef) {
+				this.$refs.containerRef.style.visibility = 'hidden'
 			}
 		},
 
@@ -38,13 +58,9 @@ export default {
 				width = 500 - margin.left - margin.right, // Previously 300
 				height = 300 - margin.top - margin.bottom // Previously 200
 
-			// Initialize SVG element using provided plot service method
-			const svg = this.plotService.createSVGElement(
-				margin,
-				width,
-				height,
-				document.getElementById(containerId)
-			)
+			// Initialize SVG element using Vue ref instead of document.getElementById
+			// This maintains proper Vue component encapsulation
+			const svg = this.plotService.createSVGElement(margin, width, height, this.$refs.containerRef)
 
 			// Adjusting to access nested properties
 			const xValues = entities.map((d) => d._properties.Paikan_kok)
@@ -102,9 +118,11 @@ export default {
 		},
 
 		clearSurveyScatterPlot() {
-			// Remove or clear the D3.js visualization
-			// Example:
-			d3.select('#surveyScatterPlot').select('svg').remove()
+			// Remove or clear the D3.js visualization using Vue ref
+			// Using D3.js on the ref value maintains Vue encapsulation
+			if (this.$refs.containerRef) {
+				d3.select(this.$refs.containerRef).select('svg').remove()
+			}
 		},
 	},
 }
