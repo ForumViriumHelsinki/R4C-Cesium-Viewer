@@ -29,9 +29,14 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 		cesiumTest('should display NDVI toggle in all views and contexts', async ({ cesiumPage }) => {
 			// Test NDVI in Capital Region view
 			await helpers.navigateToView('capitalRegionView');
-			await expect(cesiumPage.getByText('NDVI')).toBeVisible();
+
+			// Scroll NDVI text into viewport before checking visibility
+			const ndviText = cesiumPage.getByText('NDVI');
+			await helpers.scrollIntoViewportWithRetry(ndviText, { elementName: 'NDVI text' });
+			await expect(ndviText).toBeVisible();
 
 			let ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
+			await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: 'NDVI toggle' });
 			await expect(ndviToggle).toBeVisible();
 
 			// Test NDVI functionality with scroll-before-interact pattern
@@ -47,7 +52,11 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 
 			// Test NDVI in Statistical Grid view
 			await helpers.navigateToView('gridView');
-			await expect(cesiumPage.getByText('NDVI')).toBeVisible();
+
+			// Scroll NDVI into view after view change
+			const ndviTextGrid = cesiumPage.getByText('NDVI');
+			await helpers.scrollIntoViewportWithRetry(ndviTextGrid, { elementName: 'NDVI in grid view' });
+			await expect(ndviTextGrid).toBeVisible();
 
 			// Re-query the locator after view change to avoid stale element reference
 			ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]');
@@ -105,12 +114,19 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 		cesiumTest('should show Land Cover only in non-Helsinki views', async ({ cesiumPage }) => {
 			// Should be visible in Capital Region view (default)
 			await helpers.navigateToView('capitalRegionView');
-			await expect(cesiumPage.getByText('Land Cover')).toBeVisible();
+
+			// Scroll Land Cover into viewport before checking visibility
+			const landCoverText = cesiumPage.getByText('Land Cover');
+			await helpers.scrollIntoViewportWithRetry(landCoverText, { elementName: 'Land Cover text' });
+			await expect(landCoverText).toBeVisible();
 
 			let landCoverToggle = cesiumPage
 				.getByText('Land Cover')
 				.locator('..')
 				.locator('input[type="checkbox"]');
+			await helpers.scrollIntoViewportWithRetry(landCoverToggle, {
+				elementName: 'Land Cover toggle',
+			});
 
 			// Test toggle functionality
 			// Check current state first to avoid redundant operations
@@ -129,7 +145,13 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 
 			// Should be visible in Grid view too
 			await helpers.navigateToView('gridView');
-			await expect(cesiumPage.getByText('Land Cover')).toBeVisible();
+
+			// Scroll Land Cover into view after view change
+			const landCoverTextGrid = cesiumPage.getByText('Land Cover');
+			await helpers.scrollIntoViewportWithRetry(landCoverTextGrid, {
+				elementName: 'Land Cover in grid view',
+			});
+			await expect(landCoverTextGrid).toBeVisible();
 
 			// Re-query locator after view change
 			landCoverToggle = cesiumPage

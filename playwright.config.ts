@@ -66,18 +66,21 @@ export default defineConfig({
 		/* Explicitly run headless in CI */
 		headless: process.env.CI ? true : undefined,
 
-		/* CI-specific browser launch options for WebGL support */
-		...(process.env.CI && {
-			launchOptions: {
-				args: [
-					'--disable-gpu',
-					'--use-gl=swiftshader',
-					'--disable-dev-shm-usage',
-					'--no-sandbox',
-					'--disable-web-security',
-				],
-			},
-		}),
+		/* Browser launch options for WebGL/Cesium support (required for all environments) */
+		launchOptions: {
+			args: [
+				'--use-gl=angle',
+				'--use-angle=swiftshader',
+				...(process.env.CI
+					? [
+							'--disable-gpu',
+							'--disable-dev-shm-usage',
+							'--no-sandbox',
+							'--disable-web-security',
+						]
+					: []),
+			],
+		},
 	},
 
 	/* Test timeout increased to accommodate Cesium initialization + navigation retries

@@ -31,6 +31,7 @@ DB_WAIT_TIMEOUT := 120
 DB_WAIT_INTERVAL := 2
 
 # Paths
+DUMP_DIR := tmp/regions4climate-dir
 DUMP_FILE := tmp/regions4climate.dump
 DUMP_SQL := tmp/regions4climate-dump.sql
 
@@ -219,48 +220,99 @@ db-migrate: ## Run database migrations manually
 	fi
 	@echo "$(CHECK) Migrations complete"
 
-db-import: ## Import production database from tmp/
+db-import: ## Import production database from tmp/ (auto-detects format)
 	@echo "$(CYAN)=== Database Import ===$(RESET)"
-	@if [ -f "$(DUMP_FILE)" ]; then \
-		echo "$(CHECK) Found: $(DUMP_FILE)"; \
+	@echo ""
+	@# Detect dump format (prefer directory > custom > SQL)
+	@dump_path=""; dump_type=""; \
+	if [ -d "$(DUMP_DIR)" ]; then \
+		dump_path="$(DUMP_DIR)"; dump_type="directory"; \
+		size=$$(du -sh "$(DUMP_DIR)" | cut -f1); \
+		echo "$(CHECK) Found directory format dump: $(DUMP_DIR)"; \
+		echo "$(DIM)  Size: $$size (best performance with parallel restore)$(RESET)"; \
+	elif [ -f "$(DUMP_FILE)" ]; then \
+		dump_path="$(DUMP_FILE)"; dump_type="custom"; \
 		size=$$(du -h "$(DUMP_FILE)" | cut -f1); \
-		echo "$(DIM)Size: $$size$(RESET)"; \
+		echo "$(CHECK) Found custom format dump: $(DUMP_FILE)"; \
+		echo "$(DIM)  Size: $$size (supports parallel restore)$(RESET)"; \
 	elif [ -f "$(DUMP_SQL)" ]; then \
-		echo "$(CHECK) Found: $(DUMP_SQL)"; \
+		dump_path="$(DUMP_SQL)"; dump_type="sql"; \
 		size=$$(du -h "$(DUMP_SQL)" | cut -f1); \
-		echo "$(DIM)Size: $$size$(RESET)"; \
+		echo "$(CHECK) Found SQL dump: $(DUMP_SQL)"; \
+		echo "$(DIM)  Size: $$size (slower, no parallel support)$(RESET)"; \
 	else \
 		echo "$(CROSS) No dump file found in tmp/"; \
-		echo "$(DIM)Expected: $(DUMP_FILE) or $(DUMP_SQL)$(RESET)"; \
-		echo "$(DIM)Download from GCS: ./scripts/restore-from-gcs-dump.sh$(RESET)"; \
+		echo ""; \
+		echo "$(DIM)Expected one of:$(RESET)"; \
+		echo "$(DIM)  - $(DUMP_DIR)/ (directory format, recommended)$(RESET)"; \
+		echo "$(DIM)  - $(DUMP_FILE) (custom format)$(RESET)"; \
+		echo "$(DIM)  - $(DUMP_SQL) (plain SQL)$(RESET)"; \
+		echo ""; \
+		echo "$(DIM)To export from Cloud SQL:$(RESET)"; \
+		echo "$(DIM)  make help-db-export$(RESET)"; \
 		exit 1; \
-	fi
-	@echo ""
-	@echo "$(YELLOW)WARNING: This will DROP and recreate the database!$(RESET)"
-	@echo "$(DIM)Estimated time: 20-45 minutes for 18GB$(RESET)"
-	@echo ""
-	@read -p "Continue? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
-	@echo ""
-	@echo "$(ARROW) Importing database..."
-	@start_time=$$(date +%s); \
-	if [ -f "$(DUMP_FILE)" ]; then \
-		PGPASSWORD=$(DB_ADMIN_PASS) pg_restore -h $(DB_HOST) -p $(DB_PORT) -U $(DB_ADMIN_USER) \
-			-d $(DB_NAME) --clean --if-exists --no-owner --no-privileges -j 4 "$(DUMP_FILE)" 2>&1 | \
+	fi; \
+	echo ""; \
+	echo "$(YELLOW)WARNING: This will import data into the current database!$(RESET)"; \
+	echo "$(DIM)Database: $(DB_HOST):$(DB_PORT)/$(DB_NAME)$(RESET)"; \
+	echo "$(DIM)Some 'already exists' errors are expected (non-fatal)$(RESET)"; \
+	echo "$(DIM)Estimated time: 15-30 minutes for 18GB$(RESET)"; \
+	echo ""; \
+	read -p "Continue? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1; \
+	echo ""; \
+	echo "$(ARROW) Starting import..."; \
+	start_time=$$(date +%s); \
+	if [ "$$dump_type" = "directory" ] || [ "$$dump_type" = "custom" ]; then \
+		echo "$(DIM)Using parallel restore (4 jobs)$(RESET)"; \
+		PGPASSWORD=$(DB_ADMIN_PASS) pg_restore \
+			-h $(DB_HOST) -p $(DB_PORT) \
+			-U $(DB_ADMIN_USER) \
+			-d $(DB_NAME) \
+			--no-owner \
+			--no-acl \
+			--jobs=4 \
+			--verbose \
+			"$$dump_path" 2>&1 | \
 			while IFS= read -r line; do \
-				elapsed=$$(($$(date +%s) - $$start_time)); \
-				printf "\r$(DIM)Elapsed: %dm %ds$(RESET)    " $$((elapsed/60)) $$((elapsed%60)); \
+				case "$$line" in \
+					*"processing data for table"*|*"finished item"*|*"launching item"*) \
+						table=$$(echo "$$line" | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/public.//'); \
+						elapsed=$$(($$(date +%s) - $$start_time)); \
+						printf "\r$(DIM)[%dm %ds] Processing: $$table$(RESET)                    " $$((elapsed/60)) $$((elapsed%60)); \
+						;; \
+				esac; \
 			done; \
-	elif [ -f "$(DUMP_SQL)" ]; then \
+	elif [ "$$dump_type" = "sql" ]; then \
+		echo "$(DIM)Using psql (no parallelization available for SQL dumps)$(RESET)"; \
 		if command -v pv >/dev/null 2>&1; then \
-			pv -pterb "$(DUMP_SQL)" | PGPASSWORD=$(DB_ADMIN_PASS) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_ADMIN_USER) -d $(DB_NAME) -q; \
+			pv -pterb "$$dump_path" | PGPASSWORD=$(DB_ADMIN_PASS) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_ADMIN_USER) -d $(DB_NAME) -q; \
 		else \
-			echo "$(DIM)Tip: Install 'pv' for progress bar (brew install pv)$(RESET)"; \
-			PGPASSWORD=$(DB_ADMIN_PASS) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_ADMIN_USER) -d $(DB_NAME) -q < "$(DUMP_SQL)"; \
+			echo "$(DIM)Tip: Install 'pv' for progress (brew install pv)$(RESET)"; \
+			PGPASSWORD=$(DB_ADMIN_PASS) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_ADMIN_USER) -d $(DB_NAME) -q < "$$dump_path"; \
 		fi; \
 	fi; \
 	elapsed=$$(($$(date +%s) - $$start_time)); \
 	echo ""; \
-	echo "$(CHECK) Import complete in $$((elapsed/60))m $$((elapsed%60))s"
+	echo "$(CHECK) Import complete in $$((elapsed/60))m $$((elapsed%60))s"; \
+	echo ""; \
+	echo "$(DIM)Verify tables:$(RESET) make db-status"
+
+help-db-export: ## Show how to export database from Cloud SQL
+	@echo "$(CYAN)=== Export from Cloud SQL ===$(RESET)"
+	@echo ""
+	@echo "$(DIM)# Option 1: Directory Format (Recommended - fastest, parallel)$(RESET)"
+	@echo "cloud-sql-proxy --auto-iam-authn fvh-project-containers-etc:europe-north1:fvh-postgres --port 5433 &"
+	@echo "pg_dump -h 127.0.0.1 -p 5433 -U \$$(gcloud config get-value account) -d regions4climate \\"
+	@echo "  --format=directory --no-owner --no-acl --jobs=4 -f tmp/regions4climate-dir"
+	@echo "pkill cloud-sql-proxy"
+	@echo ""
+	@echo "$(DIM)# Option 2: Custom Format (Good - parallel restore)$(RESET)"
+	@echo "cloud-sql-proxy --auto-iam-authn fvh-project-containers-etc:europe-north1:fvh-postgres --port 5433 &"
+	@echo "pg_dump -h 127.0.0.1 -p 5433 -U \$$(gcloud config get-value account) -d regions4climate \\"
+	@echo "  --format=custom --no-owner --no-acl --compress=6 -f tmp/regions4climate.dump"
+	@echo "pkill cloud-sql-proxy"
+	@echo ""
+	@echo "$(DIM)See docs/DATABASE_IMPORT.md for full details$(RESET)"
 
 db-shell: ## Open psql shell
 	@echo "$(ARROW) Connecting to database..."

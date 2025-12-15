@@ -12,28 +12,17 @@
 			"command": "bunx",
 			"args": ["-y", "@playwright/mcp@latest"]
 		},
-		"vectorcode": {
-			"command": "uvx",
-			"args": ["vectorcode-mcp"],
-			"env": {
-				"VECTORCODE_INDEX_PATH": "${HOME}/.vectorcode"
-			}
-		},
 		"context7": {
 			"command": "bunx",
 			"args": ["-y", "@upstash/context7-mcp"]
 		},
-		"zen-mcp-server": {
+		"pal-mcp-server": {
 			"command": "uvx",
 			"args": [
 				"--from",
-				"git+https://github.com/BeehiveInnovations/zen-mcp-server.git",
-				"zen-mcp-server"
+				"git+https://github.com/BeehiveInnovations/pal-mcp-server.git",
+				"pal-mcp-server"
 			]
-		},
-		"graphiti-memory": {
-			"command": "npx",
-			"args": ["-y", "@getzep/graphiti-mcp-server"]
 		},
 		"sequential-thinking": {
 			"command": "npx",

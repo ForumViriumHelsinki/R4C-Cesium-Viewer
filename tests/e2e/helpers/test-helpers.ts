@@ -5,14 +5,14 @@
  * to ensure nothing gets lost during interface overhaul.
  */
 
-import { expect } from '@playwright/test';
-import type { PlaywrightPage, CesiumTestState } from '../../types/playwright';
-import type { Locator } from '@playwright/test';
+import type { Locator } from '@playwright/test'
+import { expect } from '@playwright/test'
+import type { CesiumTestState, PlaywrightPage } from '../../types/playwright'
 import {
 	waitForCesiumReady as cesiumWaitForReady,
 	initializeCesiumWithRetry,
 	waitForAppReady,
-} from './cesium-helper';
+} from './cesium-helper'
 
 /**
  * Centralized timeout constants for test suite operations.
@@ -366,7 +366,7 @@ export const TEST_TIMEOUTS = {
 	 * - UI rendering (500ms-1s)
 	 * - Retry attempts (2-3s)
 	 *
-	 * **Measured performance:** Building properties panel can take 5-8s
+	 * **Measured performance:** Building Properties panel can take 5-8s
 	 * on first load (WMS + PyGeoAPI + GeoJSON parsing), 10s provides buffer.
 	 */
 	ELEMENT_DATA_DEPENDENT: 10000,
@@ -464,7 +464,7 @@ export const TEST_TIMEOUTS = {
 	 * - Building selection and highlight (200ms)
 	 * - Camera fly-to building (1-2s)
 	 * - 3D model loading if applicable (2-3s)
-	 * - Building properties API fetch (1-2s)
+	 * - Building Properties API fetch (1-2s)
 	 * - Heat data fetch (1-2s)
 	 * - UI panel rendering (1-2s)
 	 *
@@ -542,24 +542,24 @@ export const TEST_TIMEOUTS = {
 	 * @deprecated Use ELEMENT_STANDARD instead. Will be removed in next major version.
 	 */
 	INTERACTION: 5000,
-} as const;
+} as const
 
 export interface ViewMode {
-	id: 'capitalRegionView' | 'gridView' | 'helsinkiHeat';
-	label: string;
-	selector: string;
+	id: 'capitalRegionView' | 'gridView' | 'helsinkiHeat'
+	label: string
+	selector: string
 }
 
 export interface NavigationLevel {
-	level: 'start' | 'postalCode' | 'building';
-	expectedElements: string[];
+	level: 'start' | 'postalCode' | 'building'
+	expectedElements: string[]
 }
 
 export class AccessibilityTestHelpers {
-	private page: PlaywrightPage;
+	private page: PlaywrightPage
 
 	constructor(page: PlaywrightPage) {
-		this.page = page;
+		this.page = page
 	}
 
 	/**
@@ -579,27 +579,27 @@ export class AccessibilityTestHelpers {
 		locator: Locator,
 		options: { maxRetries?: number; elementName?: string } = {}
 	): Promise<void> {
-		const { maxRetries = 3, elementName = 'element' } = options;
+		const { maxRetries = 3, elementName = 'element' } = options
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				await locator.scrollIntoViewIfNeeded({
 					timeout: TEST_TIMEOUTS.SCROLL_INTO_VIEW,
-				});
-				const box = await locator.boundingBox();
+				})
+				const box = await locator.boundingBox()
 				if (box && box.y >= 0 && box.x >= 0) {
-					return; // Successfully in viewport
+					return // Successfully in viewport
 				}
 			} catch {
 				if (attempt === maxRetries) {
-					console.warn(`Scroll failed for ${elementName}, continuing anyway`);
+					console.warn(`Scroll failed for ${elementName}, continuing anyway`)
 				}
 				// Wait for element to stabilize
 				await this.page
 					.waitForLoadState('domcontentloaded', {
 						timeout: TEST_TIMEOUTS.RETRY_BACKOFF_BASE * attempt,
 					})
-					.catch((e) => console.warn('Element stabilization timeout:', e.message));
+					.catch((e) => console.warn('Element stabilization timeout:', e.message))
 			}
 		}
 	}
@@ -627,9 +627,9 @@ export class AccessibilityTestHelpers {
 		locator: Locator,
 		options: { maxRetries?: number; elementName?: string } = {}
 	): Promise<void> {
-		await this.scrollIntoViewportWithRetry(locator, options);
+		await this.scrollIntoViewportWithRetry(locator, options)
 
-		const { maxRetries = 3, elementName = 'element' } = options;
+		const { maxRetries = 3, elementName = 'element' } = options
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				await locator.check({
@@ -637,14 +637,14 @@ export class AccessibilityTestHelpers {
 					// Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
 					// First attempt uses normal checks to ensure element is truly interactive
 					force: attempt > 1,
-				});
-				return;
+				})
+				return
 			} catch {
 				if (attempt === maxRetries) {
-					throw new Error(`Failed to check ${elementName} toggle after ${maxRetries} attempts`);
+					throw new Error(`Failed to check ${elementName} toggle after ${maxRetries} attempts`)
 				}
 				// Wait with exponential backoff before retry
-				await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+				await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt)
 			}
 		}
 	}
@@ -672,9 +672,9 @@ export class AccessibilityTestHelpers {
 		locator: Locator,
 		options: { maxRetries?: number; elementName?: string } = {}
 	): Promise<void> {
-		await this.scrollIntoViewportWithRetry(locator, options);
+		await this.scrollIntoViewportWithRetry(locator, options)
 
-		const { maxRetries = 3, elementName = 'element' } = options;
+		const { maxRetries = 3, elementName = 'element' } = options
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				await locator.uncheck({
@@ -682,14 +682,14 @@ export class AccessibilityTestHelpers {
 					// Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
 					// First attempt uses normal checks to ensure element is truly interactive
 					force: attempt > 1,
-				});
-				return;
+				})
+				return
 			} catch {
 				if (attempt === maxRetries) {
-					throw new Error(`Failed to uncheck ${elementName} toggle after ${maxRetries} attempts`);
+					throw new Error(`Failed to uncheck ${elementName} toggle after ${maxRetries} attempts`)
 				}
 				// Wait with exponential backoff before retry
-				await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt);
+				await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt)
 			}
 		}
 	}
@@ -709,99 +709,99 @@ export class AccessibilityTestHelpers {
 				label: 'Statistical Grid',
 				selector: '[data-testid="view-mode-statistical-grid"]',
 			},
-		};
+		}
 
-		const targetView = viewModes[viewMode];
+		const targetView = viewModes[viewMode]
 		if (!targetView) {
-			throw new Error(`Unknown view mode: ${viewMode}`);
+			throw new Error(`Unknown view mode: ${viewMode}`)
 		}
 
 		// Wait for any overlays to close before attempting navigation
-		await this.waitForOverlaysToClose();
+		await this.waitForOverlaysToClose()
 
 		// Dynamic view detection with retry logic (reduced from 5 to 2 with requestRenderMode)
-		const maxRetries = 2;
-		let lastError: Error | null = null;
+		const maxRetries = 2
+		let lastError: Error | null = null
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				// Wait for page to be stable first
 				await this.page
 					.waitForLoadState('domcontentloaded', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-					.catch((e) => console.warn('DOM content load wait failed:', e.message));
+					.catch((e) => console.warn('DOM content load wait failed:', e.message))
 
 				// Multi-strategy selector detection with fallbacks
-				let viewCardFound = false;
-				let viewCard = this.page.locator(targetView.selector);
+				let viewCardFound = false
+				let viewCard = this.page.locator(targetView.selector)
 
 				// Strategy 1: Try direct view-mode-card selector
-				viewCardFound = await viewCard.count().then((c) => c > 0);
+				viewCardFound = await viewCard.count().then((c) => c > 0)
 
 				// Strategy 2: If not found, try via input radio button
 				if (!viewCardFound) {
-					const radioInput = this.page.locator(`input[value="${viewMode}"]`);
-					const radioExists = await radioInput.count().then((c) => c > 0);
+					const radioInput = this.page.locator(`input[value="${viewMode}"]`)
+					const radioExists = await radioInput.count().then((c) => c > 0)
 					if (radioExists) {
-						viewCard = radioInput.locator('..').locator('..');
-						viewCardFound = await viewCard.count().then((c) => c > 0);
+						viewCard = radioInput.locator('..').locator('..')
+						viewCardFound = await viewCard.count().then((c) => c > 0)
 					}
 				}
 
 				// Strategy 3: Try finding any view-mode-card and filter by text
 				if (!viewCardFound) {
-					const allCards = this.page.locator('.view-mode-card');
-					const cardCount = await allCards.count();
+					const allCards = this.page.locator('.view-mode-card')
+					const cardCount = await allCards.count()
 					for (let i = 0; i < cardCount; i++) {
-						const card = allCards.nth(i);
-						const text = await card.textContent().catch(() => '');
+						const card = allCards.nth(i)
+						const text = await card.textContent().catch(() => '')
 						if (text.includes(targetView.label)) {
-							viewCard = card;
-							viewCardFound = true;
-							break;
+							viewCard = card
+							viewCardFound = true
+							break
 						}
 					}
 				}
 
 				// Strategy 4: Try finding button elements directly by text
 				if (!viewCardFound) {
-					const buttonSelector = `button:has-text("${targetView.label}")`;
-					const button = this.page.locator(buttonSelector);
-					const buttonExists = await button.count().then((c) => c > 0);
+					const buttonSelector = `button:has-text("${targetView.label}")`
+					const button = this.page.locator(buttonSelector)
+					const buttonExists = await button.count().then((c) => c > 0)
 					if (buttonExists) {
-						viewCard = button;
-						viewCardFound = true;
+						viewCard = button
+						viewCardFound = true
 					}
 				}
 
 				if (!viewCardFound) {
 					throw new Error(
 						`View mode card for ${viewMode} not found (attempt ${attempt}/${maxRetries}). Available selectors checked: ${targetView.selector}, input[value="${viewMode}"], .view-mode-card`
-					);
+					)
 				}
 
 				// Wait for element to be visible and stable
-				await viewCard.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
+				await viewCard.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 
 				// Scroll into viewport with retry
 				for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
 					try {
-						await viewCard.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL });
-						break;
+						await viewCard.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
+						break
 					} catch {
 						if (scrollAttempt === 3) {
-							console.warn('Scroll failed, continuing anyway');
+							console.warn('Scroll failed, continuing anyway')
 						}
-						await this.page.waitForTimeout(200 * scrollAttempt);
+						await this.page.waitForTimeout(200 * scrollAttempt)
 					}
 				}
 
 				// Wait for element stability with exponential backoff
-				await this.page.waitForTimeout(300 * attempt);
+				await this.page.waitForTimeout(300 * attempt)
 
 				// Verify element is in viewport before clicking
-				const box = await viewCard.boundingBox();
+				const box = await viewCard.boundingBox()
 				if (!box || box.y < 0 || box.x < 0) {
-					throw new Error(`View card not properly in viewport: ${JSON.stringify(box)}`);
+					throw new Error(`View card not properly in viewport: ${JSON.stringify(box)}`)
 				}
 
 				// Click with force by default - requestRenderMode makes this safe
@@ -811,15 +811,15 @@ export class AccessibilityTestHelpers {
 						timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION,
 						noWaitAfter: true,
 						force: true, // Force click bypasses stability checks that don't work with WebGL
-					});
+					})
 				} catch (clickError) {
-					console.warn('Click failed, retrying with mouse.click:', clickError);
+					console.warn('Click failed, retrying with mouse.click:', clickError)
 					// Fallback: use mouse.click directly
-					const box = await viewCard.boundingBox();
+					const box = await viewCard.boundingBox()
 					if (box) {
-						await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+						await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
 					} else {
-						throw new Error('Click failed and element has no bounding box');
+						throw new Error('Click failed and element has no bounding box')
 					}
 				}
 
@@ -827,7 +827,7 @@ export class AccessibilityTestHelpers {
 				// Note: View switching is synchronous state changes in requestRenderMode,
 				// so we just need a brief wait for the UI to reflect the new state
 				// We don't wait for network idle because CesiumJS continuously loads tiles
-				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
+				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
 				// Verify the selection with multiple strategies
 				const verificationResults = await Promise.all([
@@ -847,35 +847,35 @@ export class AccessibilityTestHelpers {
 						.getAttribute('aria-checked')
 						.then((v) => v === 'true')
 						.catch(() => false),
-				]);
+				])
 
-				const isSelected = verificationResults.some((result) => result === true);
+				const isSelected = verificationResults.some((result) => result === true)
 
 				if (!isSelected) {
 					throw new Error(
 						`View mode ${viewMode} not properly selected on attempt ${attempt}. Verification results: ${JSON.stringify(verificationResults)}`
-					);
+					)
 				}
 
 				// Success - additional wait for full stabilization
-				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
-				return;
+				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
+				return
 			} catch (error) {
-				lastError = error as Error;
-				console.warn(`navigateToView attempt ${attempt}/${maxRetries} failed:`, lastError.message);
+				lastError = error as Error
+				console.warn(`navigateToView attempt ${attempt}/${maxRetries} failed:`, lastError.message)
 
 				if (attempt < maxRetries) {
 					// Exponential backoff with jitter
-					const backoffMs = 1000 * Math.pow(1.5, attempt) + Math.random() * 500;
-					await this.page.waitForTimeout(backoffMs);
+					const backoffMs = 1000 * 1.5 ** attempt + Math.random() * 500
+					await this.page.waitForTimeout(backoffMs)
 
 					// Try to recover by closing overlays
-					await this.waitForOverlaysToClose();
+					await this.waitForOverlaysToClose()
 
 					// Try to reset page state
 					await this.page
 						.waitForLoadState('domcontentloaded', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-						.catch((e) => console.warn('Page state reset failed:', e.message));
+						.catch((e) => console.warn('Page state reset failed:', e.message))
 				}
 			}
 		}
@@ -883,7 +883,7 @@ export class AccessibilityTestHelpers {
 		// All retries failed
 		throw new Error(
 			`CRITICAL: Failed to navigate to view ${viewMode} after ${maxRetries} attempts. Last error: ${lastError?.message}. This indicates a fundamental issue with view mode detection or page state.`
-		);
+		)
 	}
 
 	/**
@@ -891,79 +891,113 @@ export class AccessibilityTestHelpers {
 	 */
 	async drillToLevel(targetLevel: 'postalCode' | 'building', identifier?: string): Promise<void> {
 		// Wait for any overlays to close before attempting drill-down
-		await this.waitForOverlaysToClose();
+		await this.waitForOverlaysToClose()
 
-		const maxRetries = 2; // Reduced from 5 - requestRenderMode makes retries unnecessary
+		const maxRetries = 5 // Increased for building selection which needs more attempts to hit clickable buildings
 
 		switch (targetLevel) {
 			case 'postalCode': {
 				// Click on a postal code area - using Helsinki center as default
-				const _postalCodeId = identifier || '00100';
+				const _postalCodeId = identifier || '00100'
 
 				// Wait for Cesium viewer to be ready with enhanced verification
 				await this.page.waitForSelector('#cesiumContainer', {
 					state: 'visible',
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
-				});
+				})
 
 				// Wait for Cesium to properly initialize with multiple checks
 				await this.page.waitForFunction(
 					() => {
-						const container = document.querySelector('#cesiumContainer');
-						const canvas = container ? container.querySelector('canvas') : null;
-						if (!canvas) return false;
+						const container = document.querySelector('#cesiumContainer')
+						const canvas = container ? container.querySelector('canvas') : null
+						if (!canvas) return false
 
 						// Check canvas dimensions
-						if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) return false;
+						if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) return false
 
 						// Check if Cesium viewer is initialized (check both possible names)
-						const cesiumWidget = (window as any).cesiumWidget;
-						const viewer = (window as any).viewer;
-						if (!cesiumWidget && !viewer) return false;
+						const cesiumWidget = (window as any).cesiumWidget
+						const viewer = (window as any).viewer
+						if (!cesiumWidget && !viewer) return false
 
-						return true;
+						return true
 					},
 					{ timeout: process.env.CI ? 20000 : 15000 }
-				);
+				)
+
+				// Enhanced readiness check: Wait for Cesium scene to finish initial tile loading
+				// This prevents clicking while the globe is still rendering
+				await this.page
+					.waitForFunction(
+						() => {
+							const viewer = (window as any).viewer || (window as any).cesiumWidget
+							if (!viewer || !viewer.scene) return false
+
+							// Check if scene is rendering
+							if (!viewer.scene.globe) return false
+
+							// Check if initial tiles have loaded
+							// Note: _surface._tilesToRenderByTextureCount may not exist in all Cesium versions
+							// so we check for it gracefully
+							const surface = viewer.scene.globe._surface
+							if (!surface) return true // If no surface, assume ready
+
+							// If we have access to tile counts, verify they're loaded
+							if (surface._tilesToRenderByTextureCount !== undefined) {
+								return surface._tilesToRenderByTextureCount.length > 0
+							}
+
+							// Fallback: If we can't check tiles, just verify scene is rendering
+							return true
+						},
+						{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
+					)
+					.catch(() => {
+						// If tile check fails, continue anyway - better to attempt click than block forever
+						console.warn(
+							'[drillToLevel] Cesium scene tile check timed out, continuing with click attempt'
+						)
+					})
 
 				// Retry logic for clicking on map to select postal code
 				for (let attempt = 1; attempt <= maxRetries; attempt++) {
 					try {
 						// Scroll Cesium container into view with retries
-						const cesiumContainer = this.page.locator('#cesiumContainer');
+						const cesiumContainer = this.page.locator('#cesiumContainer')
 
 						for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
 							try {
 								await cesiumContainer.scrollIntoViewIfNeeded({
 									timeout: TEST_TIMEOUTS.ELEMENT_SCROLL,
-								});
-								break;
+								})
+								break
 							} catch {
 								if (scrollAttempt === 3) {
-									console.warn('Cesium container scroll failed, continuing anyway');
+									console.warn('Cesium container scroll failed, continuing anyway')
 								}
-								await this.page.waitForTimeout(200 * scrollAttempt);
+								await this.page.waitForTimeout(200 * scrollAttempt)
 							}
 						}
 
 						// Verify container is in viewport
-						const box = await cesiumContainer.boundingBox();
+						const box = await cesiumContainer.boundingBox()
 						if (!box || box.y < 0 || box.x < 0) {
 							console.warn(
 								`Cesium container not in viewport: ${JSON.stringify(box)}, attempt ${attempt}`
-							);
+							)
 							if (attempt < maxRetries) {
-								await this.page.waitForTimeout(500 * attempt);
-								continue;
+								await this.page.waitForTimeout(500 * attempt)
+								continue
 							}
 						}
 
 						// Wait for stability with exponential backoff
-						await this.page.waitForTimeout(500 * attempt);
+						await this.page.waitForTimeout(500 * attempt)
 
 						// Wait for map to finish loading
 						// Note: CesiumJS continuously loads tiles, so we use a simple timeout
-						await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
+						await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
 						// Simulate clicking on the center of the map where postal codes are
 						// Use multiple click positions to increase success rate
@@ -971,15 +1005,15 @@ export class AccessibilityTestHelpers {
 							{ x: 400, y: 300 },
 							{ x: 450, y: 320 },
 							{ x: 350, y: 280 },
-						];
+						]
 
-						const clickPos = clickPositions[attempt % clickPositions.length];
+						const clickPos = clickPositions[attempt % clickPositions.length]
 
 						await cesiumContainer.click({
 							position: clickPos,
 							timeout: TEST_TIMEOUTS.ELEMENT_SCROLL,
 							force: true, // Always force click on Cesium canvas - stability checks don't work with WebGL
-						});
+						})
 
 						// Wait for postal code level to activate by checking for specific UI elements
 						// Also check for timeline as it's a reliable indicator of postal code level
@@ -998,210 +1032,331 @@ export class AccessibilityTestHelpers {
 								})
 								.then(() => true)
 								.catch(() => false),
-							// Timeline visibility is a reliable indicator of postal code level activation
+							// TimelineCompact in DOM is a reliable indicator of postal code level activation
 							this.page
-								.waitForSelector('#heatTimeseriesContainer', {
-									state: 'visible',
+								.waitForSelector('.timeline-compact', {
+									state: 'attached', // Check DOM presence, not CSS visibility
 									timeout: TEST_TIMEOUTS.ELEMENT_COMPLEX,
 								})
 								.then(() => true)
 								.catch(() => false),
-						]);
+						])
 
-						const activated = activationChecks.some((check) => check === true);
+						const activated = activationChecks.some((check) => check === true)
 
 						if (activated) {
 							// Additional wait for data to load
 							// Note: CesiumJS continuously loads tiles, so we use a simple timeout
-							await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+							await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 
-							// Wait for timeline component to fully initialize (critical for timeline tests)
-							// At postal code level, the timeline should become visible with interactive elements
+							// Verify Pinia store state updated to postal code level
+							// This ensures the application state is synchronized with UI changes
 							await this.page
 								.waitForFunction(
 									() => {
-										const timeline = document.querySelector('#heatTimeseriesContainer');
-										if (!timeline) return false;
-										const rect = timeline.getBoundingClientRect();
-										if (rect.width === 0 || rect.height === 0) return false;
-
-										// Verify Vuetify slider is rendered and visible (check thumb, not hidden input)
-										const sliderThumb = document.querySelector('.timeline-slider .v-slider-thumb');
-										if (!sliderThumb) return false;
-										const thumbVisible =
-											sliderThumb instanceof HTMLElement &&
-											sliderThumb.offsetParent !== null &&
-											window.getComputedStyle(sliderThumb).visibility !== 'hidden' &&
-											window.getComputedStyle(sliderThumb).display !== 'none';
-										return thumbVisible;
+										const piniaState = (window as any).__PINIA__
+										if (!piniaState || !piniaState.state || !piniaState.state.value) return false
+										const globalState = piniaState.state.value.global
+										if (!globalState) return false
+										// Check if current level is postalCode or building (building also means we drilled through postal)
+										return (
+											globalState.currentLevel === 'postalCode' ||
+											globalState.currentLevel === 'building'
+										)
 									},
 									{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 								)
 								.catch(() => {
-									// Timeline might not always be fully interactive immediately
-									console.warn('[drillToLevel] Timeline slider did not become interactive in time');
-								});
+									console.warn(
+										'[drillToLevel] Pinia store state did not update to postalCode level in time'
+									)
+								})
+
+							// Wait for timeline component to fully initialize (critical for timeline tests)
+							// At postal code level, TimelineCompact renders but may be CSS-hidden on small viewports
+							await this.page
+								.waitForFunction(
+									() => {
+										const timeline = document.querySelector('.timeline-compact')
+										if (!timeline) return false
+										// Timeline exists in DOM - sufficient for postal code level activation
+										// Note: May be CSS-hidden (d-none d-lg-flex) on viewports < 1280px
+										return true
+									},
+									{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
+								)
+								.catch(() => {
+									// Timeline might not render immediately
+									console.warn('[drillToLevel] TimelineCompact did not appear in time')
+								})
 
 							// Extra stability wait for Vue/Vuetify to finish rendering slider animations
-							await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
-							return; // Success
+							await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
+							return // Success
 						}
 
 						if (attempt < maxRetries) {
 							console.warn(
 								`Postal code selection attempt ${attempt}/${maxRetries} did not activate level, retrying...`
-							);
+							)
 							// Exponential backoff
-							await this.page.waitForTimeout(1000 * Math.pow(1.3, attempt));
+							await this.page.waitForTimeout(1000 * 1.3 ** attempt)
 						}
 					} catch (error) {
-						console.warn(
-							`drillToLevel(postalCode) attempt ${attempt}/${maxRetries} failed:`,
-							error
-						);
+						console.warn(`drillToLevel(postalCode) attempt ${attempt}/${maxRetries} failed:`, error)
 						if (attempt === maxRetries) {
 							throw new Error(
 								`Failed to drill to postal code level after ${maxRetries} attempts: ${error}`
-							);
+							)
 						}
 						// Backoff before retry
-						await this.page.waitForTimeout(1000 * attempt);
+						await this.page.waitForTimeout(1000 * attempt)
 					}
 				}
-				throw new Error(`Failed to activate postal code level after ${maxRetries} attempts`);
+				throw new Error(`Failed to activate postal code level after ${maxRetries} attempts`)
 			}
 
-			case 'building':
-				// Ensure we're at postal code level first
-				if (identifier) {
-					await this.drillToLevel('postalCode', identifier);
-				}
+			case 'building': {
+				// Ensure we're at postal code level first (required for building selection)
+				// If no identifier provided, drill to a default postal code
+				const postalCodeToUse = identifier || '00100' // Default to central Helsinki
+				await this.drillToLevel('postalCode', postalCodeToUse)
 
 				// Retry logic for clicking on building
 				for (let attempt = 1; attempt <= maxRetries; attempt++) {
 					try {
 						// Scroll container into view with retries
-						const container = this.page.locator('#cesiumContainer');
+						const container = this.page.locator('#cesiumContainer')
 
 						for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
 							try {
-								await container.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL });
-								break;
+								await container.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
+								break
 							} catch {
 								if (scrollAttempt === 3) {
-									console.warn('Container scroll failed, continuing anyway');
+									console.warn('Container scroll failed, continuing anyway')
 								}
-								await this.page.waitForTimeout(200 * scrollAttempt);
+								await this.page.waitForTimeout(200 * scrollAttempt)
 							}
 						}
 
 						// Verify container is in viewport
-						const box = await container.boundingBox();
+						const box = await container.boundingBox()
 						if (!box || box.y < 0 || box.x < 0) {
-							console.warn(`Container not in viewport: ${JSON.stringify(box)}, attempt ${attempt}`);
+							console.warn(`Container not in viewport: ${JSON.stringify(box)}, attempt ${attempt}`)
 							if (attempt < maxRetries) {
-								await this.page.waitForTimeout(500 * attempt);
-								continue;
+								await this.page.waitForTimeout(500 * attempt)
+								continue
 							}
 						}
 
-						// Wait for stability with exponential backoff
-						await this.page.waitForTimeout(500 * attempt);
+						// Wait for canvas to have valid dimensions (critical for Cesium picking)
+						await this.page.waitForFunction(
+							() => {
+								const canvas = document.querySelector(
+									'#cesiumContainer canvas'
+								) as HTMLCanvasElement
+								return canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0
+							},
+							{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
+						)
 
-						// Wait for map to finish loading
-						// Note: CesiumJS continuously loads tiles, so we use a simple timeout
-						await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
+						// Wait for loading indicators to disappear (app shows "Loading X layers...")
+						await this.page
+							.waitForFunction(
+								() => {
+									const loadingText = document.body.innerText
+									return (
+										!loadingText.includes('Loading') || !loadingText.match(/Loading \d+ layers?/)
+									)
+								},
+								{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
+							)
+							.catch(() => {
+								console.warn('[drillToLevel] Loading indicator still visible')
+							})
 
-						// Click on a building (use multiple positions to increase success rate)
+						// Wait for buildings to be loaded in Cesium datasource
+						// This ensures we have clickable building entities before attempting clicks
+						await this.page
+							.waitForFunction(
+								() => {
+									const viewer = (window as any).__viewer
+									if (!viewer || !viewer.dataSources) return false
+									// Check for any building-related datasource with entities
+									// Use the public API: dataSources.length and dataSources.get(i)
+									const dsCollection = viewer.dataSources
+									const length = dsCollection.length
+									for (let i = 0; i < length; i++) {
+										const ds = dsCollection.get(i)
+										if (ds && ds.name && ds.name.startsWith('Buildings ')) {
+											const entityCount = ds.entities?.values?.length || 0
+											if (entityCount > 0) {
+												console.log(
+													`[drillToLevel] Found building datasource: ${ds.name} with ${entityCount} entities`
+												)
+												return true
+											}
+										}
+									}
+									return false
+								},
+								{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
+							)
+							.catch(() => {
+								console.warn(
+									'[drillToLevel] Buildings datasource not found, will try clicking anyway'
+								)
+							})
+
+						// Wait for stability after buildings load
+						await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
+
+						// Get canvas center-based click positions
+						// After waiting for buildings to load, click in the center area where buildings should be visible
+						const canvasSize = await this.page.evaluate(() => {
+							const canvas = document.querySelector('#cesiumContainer canvas') as HTMLCanvasElement
+							return canvas
+								? { width: canvas.clientWidth, height: canvas.clientHeight }
+								: { width: 1024, height: 768 }
+						})
+						const centerX = Math.round(canvasSize.width / 2)
+						const centerY = Math.round(canvasSize.height / 2)
+
+						// Use a comprehensive grid pattern to maximize chance of hitting a building
+						// Buildings are rendered as colored polygons after postal code selection
+						// Try positions throughout the visible area, focusing on where buildings typically appear
 						const buildingPositions = [
-							{ x: 500, y: 350 },
-							{ x: 480, y: 370 },
-							{ x: 520, y: 330 },
-						];
-
-						const clickPos = buildingPositions[attempt % buildingPositions.length];
+							{ x: centerX, y: centerY }, // Center
+							{ x: centerX - 100, y: centerY }, // Left of center
+							{ x: centerX + 100, y: centerY }, // Right of center
+							{ x: centerX, y: centerY - 80 }, // Above center
+							{ x: centerX, y: centerY + 80 }, // Below center
+							{ x: centerX - 80, y: centerY - 60 }, // Upper left
+							{ x: centerX + 80, y: centerY - 60 }, // Upper right
+							{ x: centerX - 80, y: centerY + 60 }, // Lower left
+							{ x: centerX + 80, y: centerY + 60 }, // Lower right
+							{ x: centerX - 150, y: centerY - 100 }, // Far upper left (where buildings often are)
+							{ x: centerX + 150, y: centerY + 100 }, // Far lower right
+						]
+						const clickPos = buildingPositions[(attempt - 1) % buildingPositions.length]
+						console.log(
+							`[drillToLevel] Clicking at canvas position: (${clickPos.x}, ${clickPos.y}) [attempt ${attempt}/${maxRetries}]`
+						)
 
 						await container.click({
 							position: clickPos,
 							timeout: TEST_TIMEOUTS.ELEMENT_SCROLL,
 							force: true, // Always force click on Cesium canvas - stability checks don't work with WebGL
-						});
+						})
 
 						// Wait for building level to activate by checking for specific UI elements
 						const activationChecks = await Promise.all([
 							this.page
-								.waitForSelector('text="Building heat data"', {
+								.waitForSelector('text="Building Heat Data"', {
 									state: 'visible',
 									timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 								})
 								.then(() => true)
 								.catch(() => false),
 							this.page
-								.waitForSelector('text="Building properties"', {
+								.waitForSelector('text="Building Properties"', {
 									state: 'visible',
 									timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 								})
 								.then(() => true)
 								.catch(() => false),
-						]);
+						])
 
-						const activated = activationChecks.some((check) => check === true);
+						const activated = activationChecks.some((check) => check === true)
 
 						if (activated) {
 							// Additional wait for data to load
 							// Note: CesiumJS continuously loads tiles, so we use a simple timeout
-							await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+							await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 
+							// Verify Pinia store state updated to building level
+							// This ensures the application state is synchronized with UI changes
+							await this.page
+								.waitForFunction(
+									() => {
+										const piniaState = (window as any).__PINIA__
+										if (!piniaState || !piniaState.state || !piniaState.state.value) return false
+										const globalState = piniaState.state.value.global
+										if (!globalState) return false
+										return globalState.currentLevel === 'building'
+									},
+									{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
+								)
+								.catch(() => {
+									console.warn(
+										'[drillToLevel] Pinia store state did not update to building level in time'
+									)
+								})
+
+							// Open Building Heat Data panel to render Timeline component with #heatTimeseriesContainer
+							// This is required for timeline tests - the full Timeline only renders when this panel is opened
+							try {
+								await this.page.click('text="Building Heat Data"', {
+									timeout: TEST_TIMEOUTS.ELEMENT_COMPLEX,
+								})
+								// Wait for panel to open and render
+								await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+							} catch (error) {
+								console.warn('[drillToLevel] Could not click Building Heat Data button:', error)
+								// Continue anyway - some tests may not need timeline interaction
+							}
 							// Wait for timeline component to remain fully interactive (critical for timeline tests)
 							// At building level, the timeline should still be visible and functional
 							await this.page
 								.waitForFunction(
 									() => {
-										const timeline = document.querySelector('#heatTimeseriesContainer');
-										if (!timeline) return false;
-										const rect = timeline.getBoundingClientRect();
-										if (rect.width === 0 || rect.height === 0) return false;
+										const timeline = document.querySelector('#heatTimeseriesContainer')
+										if (!timeline) return false
+										const rect = timeline.getBoundingClientRect()
+										if (rect.width === 0 || rect.height === 0) return false
 
 										// Also verify the slider input is visible (not just in DOM)
-										const slider = document.querySelector('.timeline-slider input');
-										if (!slider) return false;
+										const slider = document.querySelector('.timeline-slider input')
+										if (!slider) return false
 										const sliderVisible =
 											slider instanceof HTMLElement &&
 											slider.offsetParent !== null &&
-											window.getComputedStyle(slider).visibility !== 'hidden';
-										return sliderVisible;
+											window.getComputedStyle(slider).visibility !== 'hidden'
+										return sliderVisible
 									},
 									{ timeout: TEST_TIMEOUTS.ELEMENT_COMPLEX }
 								)
 								.catch(() => {
 									// Timeline might not always be fully interactive immediately
-									console.warn('[drillToLevel] Timeline slider did not remain interactive');
-								});
+									console.warn('[drillToLevel] Timeline slider did not remain interactive')
+								})
 
 							// Final stability wait
-							await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
-							return; // Success
+							await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+							return // Success
 						}
 
 						if (attempt < maxRetries) {
 							console.warn(
 								`Building selection attempt ${attempt}/${maxRetries} did not activate level, retrying...`
-							);
+							)
 							// Exponential backoff
-							await this.page.waitForTimeout(1000 * Math.pow(1.3, attempt));
+							await this.page.waitForTimeout(1000 * 1.3 ** attempt)
 						}
 					} catch (error) {
-						console.warn(`drillToLevel(building) attempt ${attempt}/${maxRetries} failed:`, error);
+						console.warn(`drillToLevel(building) attempt ${attempt}/${maxRetries} failed:`, error)
 						if (attempt === maxRetries) {
 							throw new Error(
 								`Failed to drill to building level after ${maxRetries} attempts: ${error}`
-							);
+							)
 						}
 						// Backoff before retry
-						await this.page.waitForTimeout(1000 * attempt);
+						await this.page.waitForTimeout(1000 * attempt)
 					}
 				}
-				throw new Error(`Failed to activate building level after ${maxRetries} attempts`);
+				throw new Error(`Failed to activate building level after ${maxRetries} attempts`)
+			}
 		}
 	}
 
@@ -1209,107 +1364,107 @@ export class AccessibilityTestHelpers {
 	 * Verify conditional panel visibility based on current state
 	 */
 	async verifyPanelVisibility(conditions: {
-		currentView?: string;
-		currentLevel?: string;
-		statsIndex?: string;
-		hasData?: boolean;
+		currentView?: string
+		currentLevel?: string
+		statsIndex?: string
+		hasData?: boolean
 	}): Promise<void> {
 		const {
 			currentView = 'capitalRegion',
 			currentLevel = 'start',
 			statsIndex,
 			hasData = true,
-		} = conditions;
+		} = conditions
 
 		// Test Cooling Centers panel (grid view + heat_index)
 		if (currentView === 'grid' && statsIndex === 'heat_index') {
-			await expect(this.page.getByText('Manage Cooling Centers')).toBeVisible();
+			await expect(this.page.getByText('Manage Cooling Centers')).toBeVisible()
 		} else {
-			await expect(this.page.getByText('Manage Cooling Centers')).not.toBeVisible();
+			await expect(this.page.getByText('Manage Cooling Centers')).not.toBeVisible()
 		}
 
 		// Test Statistical grid options (grid view only)
 		if (currentView === 'grid') {
-			await expect(this.page.getByText('Statistical grid options')).toBeVisible();
+			await expect(this.page.getByText('Statistical grid options')).toBeVisible()
 		} else {
-			await expect(this.page.getByText('Statistical grid options')).not.toBeVisible();
+			await expect(this.page.getByText('Statistical grid options')).not.toBeVisible()
 		}
 
 		// Test NDVI panel (not grid view)
 		if (currentView !== 'grid') {
-			await expect(this.page.getByText('NDVI', { exact: true })).toBeVisible();
+			await expect(this.page.getByText('NDVI', { exact: true })).toBeVisible()
 		}
 
 		// Test postal code level panels
 		if (currentLevel === 'postalCode') {
-			await expect(this.page.getByText('Building Scatter Plot')).toBeVisible();
-			await expect(this.page.getByText('Area properties')).toBeVisible();
+			await expect(this.page.getByText('Building Scatter Plot')).toBeVisible()
+			await expect(this.page.getByText('Area properties')).toBeVisible()
 
 			if (hasData) {
-				await expect(this.page.getByText('Heat Histogram')).toBeVisible();
+				await expect(this.page.getByText('Heat Histogram')).toBeVisible()
 			}
 
 			if (currentView !== 'helsinki') {
-				await expect(this.page.getByText('Land Cover')).toBeVisible();
+				await expect(this.page.getByText('Land Cover')).toBeVisible()
 			}
 		}
 
 		// Test building level panels
 		if (currentLevel === 'building') {
-			await expect(this.page.getByText('Building heat data')).toBeVisible();
-			await expect(this.page.getByText('Building properties')).toBeVisible();
+			await expect(this.page.getByText('Building Heat Data')).toBeVisible()
+			await expect(this.page.getByText('Building Properties')).toBeVisible()
 		}
 
 		// Universal panels should always be visible
-		await expect(this.page.getByText('HSY Background maps')).toBeVisible();
-		await expect(this.page.getByText('Syke Flood Background Maps')).toBeVisible();
-		await expect(this.page.getByText('Geocoding')).toBeVisible();
+		await expect(this.page.getByText('HSY Background maps')).toBeVisible()
+		await expect(this.page.getByText('Syke Flood Background Maps')).toBeVisible()
+		await expect(this.page.getByText('Geocoding')).toBeVisible()
 	}
 
 	/**
 	 * Test all layer toggles systematically
 	 */
 	async testAllToggles(context: {
-		currentView: string;
-		currentLevel: string;
-		hasPostalCode: boolean;
+		currentView: string
+		currentLevel: string
+		hasPostalCode: boolean
 	}): Promise<void> {
-		const { currentView, currentLevel: _currentLevel, hasPostalCode } = context;
+		const { currentView, currentLevel: _currentLevel, hasPostalCode } = context
 
 		// Test layer toggles based on context
 		if (currentView === 'helsinki') {
-			await this.testToggle('Vegetation', true);
-			await this.testToggle('Other Nature', true);
+			await this.testToggle('Vegetation', true)
+			await this.testToggle('Other Nature', true)
 		} else {
-			await this.testToggle('Vegetation', false);
-			await this.testToggle('Other Nature', false);
+			await this.testToggle('Vegetation', false)
+			await this.testToggle('Other Nature', false)
 		}
 
 		// Trees toggle (not grid view + has postal code)
 		if (currentView !== 'grid' && hasPostalCode) {
-			await this.testToggle('Trees', true);
+			await this.testToggle('Trees', true)
 		} else {
-			await this.testToggle('Trees', false);
+			await this.testToggle('Trees', false)
 		}
 
 		// Land Cover (not Helsinki view)
 		if (currentView !== 'helsinki') {
-			await this.testToggle('Land Cover', true);
+			await this.testToggle('Land Cover', true)
 		} else {
-			await this.testToggle('Land Cover', false);
+			await this.testToggle('Land Cover', false)
 		}
 
 		// NDVI is universal
-		await this.testToggle('NDVI', true);
+		await this.testToggle('NDVI', true)
 
 		// Test filter toggles
-		await this.testToggle('Public Buildings', true);
-		await this.testToggle('Tall Buildings', true);
+		await this.testToggle('Public Buildings', true)
+		await this.testToggle('Tall Buildings', true)
 
 		if (currentView === 'helsinki') {
-			await this.testToggle('Pre-2018', true);
+			await this.testToggle('Pre-2018', true)
 		} else {
-			await this.testToggle('Pre-2018', false);
+			await this.testToggle('Pre-2018', false)
 		}
 	}
 
@@ -1317,139 +1472,152 @@ export class AccessibilityTestHelpers {
 	 * Test individual toggle functionality with viewport scrolling
 	 */
 	private async testToggle(toggleName: string, shouldBeVisible: boolean): Promise<void> {
-		const toggle = this.page.getByText(toggleName).locator('..').locator('input[type="checkbox"]');
+		const toggle = this.page.getByText(toggleName).locator('..').locator('input[type="checkbox"]')
 
 		if (shouldBeVisible) {
-			await expect(this.page.getByText(toggleName)).toBeVisible();
+			await expect(this.page.getByText(toggleName)).toBeVisible()
 
 			// Scroll toggle into viewport with retry logic
 			for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
 				try {
-					await toggle.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL });
+					await toggle.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
 
 					// Verify element is actually in viewport
-					const box = await toggle.boundingBox();
+					const box = await toggle.boundingBox()
 					if (box && box.y >= 0 && box.x >= 0) {
-						break; // Successfully in viewport
+						break // Successfully in viewport
 					}
 
 					if (scrollAttempt === 3) {
-						console.warn(`Toggle ${toggleName} not properly in viewport after 3 scroll attempts`);
+						console.warn(`Toggle ${toggleName} not properly in viewport after 3 scroll attempts`)
 					}
 				} catch {
 					if (scrollAttempt === 3) {
-						console.warn(`Scroll failed for toggle ${toggleName}, continuing anyway`);
+						console.warn(`Scroll failed for toggle ${toggleName}, continuing anyway`)
 					}
-					await this.page.waitForTimeout(200 * scrollAttempt);
+					await this.page.waitForTimeout(200 * scrollAttempt)
 				}
 			}
 
 			// Wait for element stability
-			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
 
 			// Verify element is clickable before interaction
-			const isClickable = await toggle.isEnabled().catch(() => false);
+			const isClickable = await toggle.isEnabled().catch(() => false)
 			if (!isClickable) {
-				console.warn(`Toggle ${toggleName} is not clickable, skipping interaction`);
-				return;
+				console.warn(`Toggle ${toggleName} is not clickable, skipping interaction`)
+				return
 			}
 
 			// Test toggling on with retry
-			let checkSuccess = false;
+			let checkSuccess = false
 			for (let attempt = 1; attempt <= 3; attempt++) {
 				try {
-					await toggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD, force: attempt > 1 });
-					checkSuccess = true;
-					break;
+					await toggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD, force: attempt > 1 })
+					checkSuccess = true
+					break
 				} catch (error) {
-					console.warn(`Toggle ${toggleName} check attempt ${attempt}/3 failed:`, error);
+					console.warn(`Toggle ${toggleName} check attempt ${attempt}/3 failed:`, error)
 					if (attempt < 3) {
-						await this.page.waitForTimeout(300 * attempt);
+						await this.page.waitForTimeout(300 * attempt)
 					}
 				}
 			}
 
 			if (!checkSuccess) {
-				throw new Error(`Failed to check toggle ${toggleName} after 3 attempts`);
+				throw new Error(`Failed to check toggle ${toggleName} after 3 attempts`)
 			}
 
-			await expect(toggle).toBeChecked();
+			await expect(toggle).toBeChecked()
 
 			// Wait for any state changes to settle
-			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
 
 			// Scroll again before unchecking (element might have moved)
 			for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
 				try {
-					await toggle.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL });
+					await toggle.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
 
 					// Verify element is still in viewport
-					const box = await toggle.boundingBox();
+					const box = await toggle.boundingBox()
 					if (box && box.y >= 0 && box.x >= 0) {
-						break;
+						break
 					}
 				} catch {
 					if (scrollAttempt === 3) {
-						console.warn(`Re-scroll failed for toggle ${toggleName}`);
+						console.warn(`Re-scroll failed for toggle ${toggleName}`)
 					}
-					await this.page.waitForTimeout(200 * scrollAttempt);
+					await this.page.waitForTimeout(200 * scrollAttempt)
 				}
 			}
 
 			// Wait for stability
-			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
 
 			// Test toggling off with retry
-			let uncheckSuccess = false;
+			let uncheckSuccess = false
 			for (let attempt = 1; attempt <= 3; attempt++) {
 				try {
-					await toggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD, force: attempt > 1 });
-					uncheckSuccess = true;
-					break;
+					await toggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD, force: attempt > 1 })
+					uncheckSuccess = true
+					break
 				} catch (error) {
-					console.warn(`Toggle ${toggleName} uncheck attempt ${attempt}/3 failed:`, error);
+					console.warn(`Toggle ${toggleName} uncheck attempt ${attempt}/3 failed:`, error)
 					if (attempt < 3) {
-						await this.page.waitForTimeout(300 * attempt);
+						await this.page.waitForTimeout(300 * attempt)
 					}
 				}
 			}
 
 			if (!uncheckSuccess) {
-				throw new Error(`Failed to uncheck toggle ${toggleName} after 3 attempts`);
+				throw new Error(`Failed to uncheck toggle ${toggleName} after 3 attempts`)
 			}
 
-			await expect(toggle).not.toBeChecked();
+			await expect(toggle).not.toBeChecked()
 		} else {
-			await expect(this.page.getByText(toggleName)).not.toBeVisible();
+			await expect(this.page.getByText(toggleName)).not.toBeVisible()
 		}
 	}
 
 	/**
 	 * Verify timeline component for postal code and building levels
+	 * Note: Different timeline components exist at different levels:
+	 * - Postal code: TimelineCompact (.timeline-compact) - may be CSS-hidden on small viewports
+	 * - Building: Full Timeline (#heatTimeseriesContainer) - requires opening "Building Heat Data" panel
 	 */
 	async verifyTimelineVisibility(currentLevel: string): Promise<void> {
-		if (currentLevel === 'postalCode' || currentLevel === 'building') {
-			await expect(this.page.locator('#heatTimeseriesContainer')).toBeVisible();
+		if (currentLevel === 'postalCode') {
+			// At postal code level, TimelineCompact renders but may be CSS-hidden (d-none d-lg-flex on viewports < 1280px)
+			// Check for DOM presence, not visibility
+			const timelineCompact = this.page.locator('.timeline-compact')
+			await expect(timelineCompact).toBeAttached({ timeout: TEST_TIMEOUTS.ELEMENT_COMPLEX })
+
+			// Verify compact slider exists (different selector than full timeline)
+			const compactSlider = this.page.locator('.timeline-compact .compact-slider input')
+			await expect(compactSlider).toBeAttached()
+		} else if (currentLevel === 'building') {
+			// At building level, full Timeline with #heatTimeseriesContainer can be opened via "Building Heat Data" button
+			await expect(this.page.locator('#heatTimeseriesContainer')).toBeVisible()
 
 			// Test timeline slider interaction - verify Vuetify slider thumb is visible
-			const sliderThumb = this.page.locator('.timeline-slider .v-slider-thumb');
-			await expect(sliderThumb).toBeVisible();
+			const sliderThumb = this.page.locator('.timeline-slider .v-slider-thumb')
+			await expect(sliderThumb).toBeVisible()
 
 			// Test moving the slider using the native input (works even though input is hidden)
-			const slider = this.page.locator('.timeline-slider input');
-			await slider.fill('3'); // Move to position 3
+			const slider = this.page.locator('.timeline-slider input')
+			await slider.fill('3') // Move to position 3
 			// Wait for slider value change to be processed
 			await this.page.waitForFunction(
 				() => {
-					const sliderElement = document.querySelector(
-						'.timeline-slider input'
-					) as HTMLInputElement;
-					return sliderElement && sliderElement.value === '3';
+					const sliderElement = document.querySelector('.timeline-slider input') as HTMLInputElement
+					return sliderElement && sliderElement.value === '3'
 				},
 				{ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL }
-			);
+			)
 		} else {
-			await expect(this.page.locator('#heatTimeseriesContainer')).not.toBeVisible();
+			// At other levels (start, capital region), no timeline should be present
+			await expect(this.page.locator('.timeline-compact')).not.toBeAttached()
+			await expect(this.page.locator('#heatTimeseriesContainer')).not.toBeVisible()
 		}
 	}
 
@@ -1460,27 +1628,27 @@ export class AccessibilityTestHelpers {
 		// Reset button should always be visible
 		const resetButton = this.page
 			.getByRole('button')
-			.filter({ has: this.page.locator('.mdi-refresh') });
-		await expect(resetButton).toBeVisible();
+			.filter({ has: this.page.locator('.mdi-refresh') })
+		await expect(resetButton).toBeVisible()
 
 		// Back button only visible at building level
 		const backButton = this.page
 			.getByRole('button')
-			.filter({ has: this.page.locator('.mdi-arrow-left') });
+			.filter({ has: this.page.locator('.mdi-arrow-left') })
 		if (currentLevel === 'building') {
-			await expect(backButton).toBeVisible();
+			await expect(backButton).toBeVisible()
 		} else {
-			await expect(backButton).not.toBeVisible();
+			await expect(backButton).not.toBeVisible()
 		}
 
 		// Camera rotation button visible when not at start level
 		const cameraButton = this.page
 			.getByRole('button')
-			.filter({ has: this.page.locator('.mdi-compass') });
+			.filter({ has: this.page.locator('.mdi-compass') })
 		if (currentLevel !== 'start') {
-			await expect(cameraButton).toBeVisible();
+			await expect(cameraButton).toBeVisible()
 		} else {
-			await expect(cameraButton).not.toBeVisible();
+			await expect(cameraButton).not.toBeVisible()
 		}
 	}
 
@@ -1489,12 +1657,12 @@ export class AccessibilityTestHelpers {
 	 */
 	async verifyLoadingStates(): Promise<void> {
 		// Check if loading component exists when needed
-		const loadingOverlay = this.page.locator('.loading-overlay');
+		const loadingOverlay = this.page.locator('.loading-overlay')
 
 		// The loading overlay may or may not be present depending on data loading state
 		// So we just verify it can be found if it exists
 		if (await loadingOverlay.isVisible()) {
-			await expect(this.page.getByText('Loading data, please wait')).toBeVisible();
+			await expect(this.page.getByText('Loading data, please wait')).toBeVisible()
 		}
 	}
 
@@ -1503,25 +1671,25 @@ export class AccessibilityTestHelpers {
 	 */
 	async testExpansionPanels(): Promise<void> {
 		// Get all expansion panels
-		const expansionPanels = this.page.locator('.v-expansion-panel');
-		const count = await expansionPanels.count();
+		const expansionPanels = this.page.locator('.v-expansion-panel')
+		const count = await expansionPanels.count()
 
 		// Test opening and closing each panel
 		for (let i = 0; i < count; i++) {
-			const panel = expansionPanels.nth(i);
-			const header = panel.locator('.v-expansion-panel-title');
+			const panel = expansionPanels.nth(i)
+			const header = panel.locator('.v-expansion-panel-title')
 
 			if (await header.isVisible()) {
 				// Click to open
-				await header.click();
+				await header.click()
 				// Wait for panel to expand by checking for visible content
-				const content = panel.locator('.v-expansion-panel-text');
-				await expect(content).toBeVisible();
+				const content = panel.locator('.v-expansion-panel-text')
+				await expect(content).toBeVisible()
 
 				// Click to close (if not using multiple prop)
-				await header.click();
+				await header.click()
 				// Wait for panel to collapse
-				await expect(content).toBeHidden();
+				await expect(content).toBeHidden()
 			}
 		}
 	}
@@ -1530,17 +1698,17 @@ export class AccessibilityTestHelpers {
 	 * Capture full accessibility state for documentation
 	 */
 	async captureAccessibilityTree(): Promise<{
-		visibleElements: string[];
-		interactiveElements: string[];
-		currentState: CesiumTestState;
+		visibleElements: string[]
+		interactiveElements: string[]
+		currentState: CesiumTestState
 	}> {
 		// Get all visible text elements
-		const visibleElements = await this.page.locator('*:visible').allTextContents();
+		const visibleElements = await this.page.locator('*:visible').allTextContents()
 
 		// Get all interactive elements
-		const buttons = await this.page.locator('button:visible').count();
-		const inputs = await this.page.locator('input:visible').count();
-		const selects = await this.page.locator('select:visible').count();
+		const buttons = await this.page.locator('button:visible').count()
+		const inputs = await this.page.locator('input:visible').count()
+		const selects = await this.page.locator('select:visible').count()
 
 		return {
 			visibleElements: visibleElements.filter((text) => text.trim().length > 0),
@@ -1549,7 +1717,7 @@ export class AccessibilityTestHelpers {
 				timestamp: new Date().toISOString(),
 				url: this.page.url(),
 			},
-		};
+		}
 	}
 
 	/**
@@ -1559,26 +1727,26 @@ export class AccessibilityTestHelpers {
 		// Use the enhanced Cesium helper for better CI compatibility
 		if (process.env.CI) {
 			// In CI, use the full initialization with retry logic
-			const initialized = await initializeCesiumWithRetry(this.page, 3);
+			const initialized = await initializeCesiumWithRetry(this.page, 3)
 			if (!initialized) {
 				console.warn(
 					'Cesium initialization incomplete in CI, proceeding with limited functionality'
-				);
+				)
 			}
 		} else {
 			// In local development, use simpler initialization
-			await waitForAppReady(this.page);
-			await cesiumWaitForReady(this.page, 30000);
+			await waitForAppReady(this.page)
+			await cesiumWaitForReady(this.page, 30000)
 		}
 
 		// Ensure the Cesium container is present
 		await this.page.waitForSelector('#cesiumContainer', {
 			timeout: process.env.CI ? 30000 : 15000,
-		});
+		})
 
 		// Wait for any final initialization processes
 		// Note: CesiumJS continuously loads tiles, so we use a simple timeout
-		await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
+		await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 	}
 
 	/**
@@ -1589,29 +1757,29 @@ export class AccessibilityTestHelpers {
 			{ width: 1920, height: 1080, name: 'desktop' },
 			{ width: 768, height: 1024, name: 'tablet' },
 			{ width: 375, height: 667, name: 'mobile' },
-		];
+		]
 
 		for (const viewport of viewports) {
 			await this.page.setViewportSize({
 				width: viewport.width,
 				height: viewport.height,
-			});
+			})
 			// Wait for viewport change to take effect by checking container dimensions
 			await this.page.waitForFunction(
 				(expectedWidth) => {
-					return window.innerWidth === expectedWidth;
+					return window.innerWidth === expectedWidth
 				},
 				viewport.width,
 				{ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL }
-			);
+			)
 
 			// Verify navigation drawer is accessible
-			const navigationDrawer = this.page.locator('.v-navigation-drawer');
-			await expect(navigationDrawer).toBeVisible();
+			const navigationDrawer = this.page.locator('.v-navigation-drawer')
+			await expect(navigationDrawer).toBeVisible()
 
 			// Verify Cesium container adapts
-			const cesiumContainer = this.page.locator('#cesiumContainer');
-			await expect(cesiumContainer).toBeVisible();
+			const cesiumContainer = this.page.locator('#cesiumContainer')
+			await expect(cesiumContainer).toBeVisible()
 		}
 	}
 
@@ -1619,7 +1787,7 @@ export class AccessibilityTestHelpers {
 	 * Wait for Vuetify overlays to close before interactions with comprehensive detection
 	 */
 	async waitForOverlaysToClose(): Promise<void> {
-		const maxAttempts = 5;
+		const maxAttempts = 5
 
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 			// Check multiple overlay types with comprehensive selectors
@@ -1632,47 +1800,47 @@ export class AccessibilityTestHelpers {
 				'.v-snackbar--active',
 				'.v-tooltip--active',
 				'[data-overlay]',
-			];
+			]
 
-			let overlayFound = false;
-			const visibleOverlays: string[] = [];
+			let overlayFound = false
+			const visibleOverlays: string[] = []
 
 			for (const selector of overlaySelectors) {
 				// Filter for visible elements only - this prevents counting DOM elements
 				// that are hidden via CSS injection (e.g., .v-overlay__scrim { display: none !important; })
-				const visibleLocator = this.page.locator(selector).locator('visible=true');
-				const count = await visibleLocator.count();
+				const visibleLocator = this.page.locator(selector).locator('visible=true')
+				const count = await visibleLocator.count()
 
 				if (count > 0) {
-					overlayFound = true;
-					visibleOverlays.push(selector);
+					overlayFound = true
+					visibleOverlays.push(selector)
 				}
 			}
 
 			if (!overlayFound) {
 				// No overlays detected, we're good
-				return;
+				return
 			}
 
 			console.log(
 				`Attempt ${attempt}/${maxAttempts}: Found visible overlays: ${visibleOverlays.join(', ')}`
-			);
+			)
 
 			// Strategy 1: Press Escape to close any dialogs/overlays
 			try {
-				await this.page.keyboard.press('Escape');
-				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP); // Allow time for CSS transitions
+				await this.page.keyboard.press('Escape')
+				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP) // Allow time for CSS transitions
 			} catch {
-				console.warn('Escape key press failed, trying alternative methods');
+				console.warn('Escape key press failed, trying alternative methods')
 			}
 
 			// Strategy 2: Click on overlay scrim if present
-			const scrim = this.page.locator('.v-overlay__scrim').first();
-			const scrimExists = await scrim.count().then((c) => c > 0);
+			const scrim = this.page.locator('.v-overlay__scrim').first()
+			const scrimExists = await scrim.count().then((c) => c > 0)
 			if (scrimExists) {
 				try {
-					await scrim.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION, force: true });
-					await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
+					await scrim.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION, force: true })
+					await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
 				} catch {
 					// Scrim click failed, continue
 				}
@@ -1681,19 +1849,19 @@ export class AccessibilityTestHelpers {
 			// Strategy 3: Look for close buttons in dialogs
 			const closeButtons = this.page.locator(
 				'.v-dialog .v-btn[aria-label*="close"], .v-dialog .mdi-close'
-			);
-			const closeButtonCount = await closeButtons.count();
+			)
+			const closeButtonCount = await closeButtons.count()
 			if (closeButtonCount > 0) {
 				try {
-					await closeButtons.first().click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION });
-					await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY);
+					await closeButtons.first().click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
+					await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
 				} catch {
 					// Close button click failed, continue
 				}
 			}
 
 			// Wait for animations to complete
-			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
 			// Verify overlays are gone by checking for visible elements only
 			const stillVisible = await Promise.all(
@@ -1705,12 +1873,12 @@ export class AccessibilityTestHelpers {
 						.then((count) => count > 0)
 						.catch(() => false)
 				)
-			);
+			)
 
 			if (!stillVisible.some((v) => v === true)) {
 				// All overlays are gone
-				console.log('All overlays successfully closed');
-				return;
+				console.log('All overlays successfully closed')
+				return
 			}
 
 			// Fallback: Try clicking outside any remaining overlays
@@ -1720,18 +1888,18 @@ export class AccessibilityTestHelpers {
 					const clickPositions = [
 						{ x: 10, y: 10 }, // Top-left corner
 						{ x: 50, y: 50 }, // Slightly in from corner
-					];
+					]
 
 					for (const pos of clickPositions) {
-						await this.page.mouse.click(pos.x, pos.y);
-						await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT);
+						await this.page.mouse.click(pos.x, pos.y)
+						await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
 					}
 				} catch {
 					// Continue anyway
 				}
 
 				// Exponential backoff before next attempt
-				await this.page.waitForTimeout(300 * attempt);
+				await this.page.waitForTimeout(300 * attempt)
 			}
 		}
 
@@ -1744,23 +1912,23 @@ export class AccessibilityTestHelpers {
 						.locator(selector)
 						.locator('visible=true')
 						.count()
-						.catch(() => 0);
-					return count > 0 ? selector : null;
+						.catch(() => 0)
+					return count > 0 ? selector : null
 				}
 			)
-		);
+		)
 
-		const stillPresent = remainingOverlays.filter((s) => s !== null);
+		const stillPresent = remainingOverlays.filter((s) => s !== null)
 
 		if (stillPresent.length > 0) {
 			console.warn(
 				`WARNING: Overlays still present after ${maxAttempts} attempts: ${stillPresent.join(', ')}. Continuing anyway, but this may cause test failures.`
-			);
+			)
 
 			// Final desperate measure: wait for any animations to settle
-			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 		}
 	}
 }
 
-export default AccessibilityTestHelpers;
+export default AccessibilityTestHelpers

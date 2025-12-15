@@ -44,6 +44,7 @@ manifests:
     - k8s/postgresql-service.yaml
     - k8s/postgresql-deployment.yaml
 deploy:
+  kubeContext: orbstack
   kubectl: {}
   # Wait up to 180s for pods to be ready; tolerate init container restarts
   statusCheck: true
@@ -79,6 +80,7 @@ profiles:
         - k8s/postgresql-service.yaml
         - k8s/postgresql-deployment.yaml
     deploy:
+      kubeContext: orbstack
       kubectl: {}
     portForward:
       - resourceType: service
@@ -117,6 +119,7 @@ profiles:
         - k8s/service.yaml
         - k8s/ingress.yaml
     deploy:
+      kubeContext: orbstack
       kubectl: {}
       statusCheck: true
       statusCheckDeadlineSeconds: 120
@@ -159,6 +162,7 @@ profiles:
         - k8s/postgresql-service.yaml
         - k8s/postgresql-deployment.yaml
     deploy:
+      kubeContext: orbstack
       kubectl: {}
     test:
       - image: amacneil/dbmate:2.28.0
