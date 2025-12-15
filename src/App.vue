@@ -146,7 +146,7 @@ import Featurepicker from './services/featurepicker'
 import Tree from './services/tree'
 import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
-import { useLoadingStore} from './stores/loadingStore.js'
+import { useLoadingStore } from './stores/loadingStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
 
 const toggleStore = useToggleStore()

@@ -261,7 +261,7 @@ export default {
 		/**
 		 * The function adds heat exposure data for given category value.
 		 *
-		 * @param { String } valeu value of category
+		 * @param { String } value value of category
 		 * @param { object } features dataset that contains building heat exposure and attributes of the building
 		 * @param { String } categorical name of categorical attribute
 		 * @param { String } numerical name of numerical attribute
