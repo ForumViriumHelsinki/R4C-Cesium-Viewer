@@ -555,7 +555,12 @@ export default {
 			if (cameraHeight > MAX_HEIGHT_FOR_BUILDING_LOAD) {
 				console.log('[CesiumViewer] Camera too high for building loading:', cameraHeight, 'm')
 				return
-			}	
+			}
+			console.log(
+				'[CesiumViewer] Camera height:',
+				cameraHeight,
+				'm - proceeding with viewport-based building loading'
+			)
 
 			try {
 				isLoadingBuildings.value = true
