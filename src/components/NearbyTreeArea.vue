@@ -126,6 +126,11 @@ import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
+	data() {
+		return {
+			eventCleanupFunctions: [],
+		}
+	},
 	mounted() {
 		this.unsubscribe = eventBus.on('newNearbyTreeDiagram', this.newNearbyTreeDiagram)
 		this.store = useGlobalStore()
@@ -134,11 +139,14 @@ export default {
 	},
 	beforeUnmount() {
 		eventBus.off('newNearbyTreeDiagram')
+		// Clean up all bearing switch event listeners
+		this.eventCleanupFunctions.forEach((cleanup) => cleanup())
+		this.eventCleanupFunctions = []
 	},
 	methods: {
 		newNearbyTreeDiagram() {
 			const propsStore = usePropsStore()
-			setupBearingSwitches(this.store.postalcode)
+			setupBearingSwitches(this.store.postalcode, this)
 
 			if (this.store.level === 'postalCode') {
 				this.plotService.hideScatterPlot()
@@ -490,21 +498,33 @@ export default {
 	},
 }
 
-const setupBearingSwitches = (postalcode) => {
+const setupBearingSwitches = (postalcode, componentInstance) => {
 	const switches = ['All', 'South', 'West', 'East', 'North']
+
+	// Clean up previous listeners before adding new ones
+	if (componentInstance.eventCleanupFunctions.length > 0) {
+		componentInstance.eventCleanupFunctions.forEach((cleanup) => cleanup())
+		componentInstance.eventCleanupFunctions = []
+	}
 
 	for (const currentDirection of switches) {
 		const switchContainer = document.getElementById(`bearing${currentDirection}SwitchContainer`)
 		const toggle = switchContainer.querySelector(`#bearing${currentDirection}Toggle`)
 
-		toggle.addEventListener('click', () => {
+		const handler = () => {
 			updateBearingSwitches(switches, currentDirection)
 			const treeService = new Tree()
 			const buildingService = new Building()
 			buildingService.resetBuildingEntities()
 			treeService.resetTreeEntities()
 			treeService.fetchAndAddTreeDistanceData(postalcode)
-		})
+		}
+
+		toggle.addEventListener('click', handler)
+		// Store cleanup function
+		componentInstance.eventCleanupFunctions.push(() =>
+			toggle.removeEventListener('click', handler)
+		)
 
 		// Set the 'All' switch to checked by default
 		if (currentDirection === 'All') {
