@@ -178,13 +178,14 @@ let cameraService = null
 const currentHeading = ref(0)
 const viewerReady = ref(false)
 let motionMediaQuery = null
+let handleMotionChange = null
 
 onMounted(() => {
 	// Set up reduced motion detection
 	motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 	prefersReducedMotion.value = motionMediaQuery.matches
 
-	const handleMotionChange = (e) => {
+	handleMotionChange = (e) => {
 		prefersReducedMotion.value = e.matches
 	}
 	motionMediaQuery.addEventListener('change', handleMotionChange)
@@ -214,6 +215,12 @@ watch(
 )
 
 onUnmounted(() => {
+	// Clean up motion media query listener
+	if (motionMediaQuery && handleMotionChange) {
+		motionMediaQuery.removeEventListener('change', handleMotionChange)
+	}
+
+	// Clean up Cesium camera listeners
 	if (store.cesiumViewer) {
 		store.cesiumViewer.camera.changed.removeEventListener(updateHeading)
 		store.cesiumViewer.camera.moveEnd.removeEventListener(updateHeading)
