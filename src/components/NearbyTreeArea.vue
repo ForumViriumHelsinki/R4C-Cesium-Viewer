@@ -522,9 +522,7 @@ const setupBearingSwitches = (postalcode, componentInstance) => {
 
 		toggle.addEventListener('click', handler)
 		// Store cleanup function
-		componentInstance.eventCleanupFunctions.push(() =>
-			toggle.removeEventListener('click', handler)
-		)
+		componentInstance.eventCleanupFunctions.push(() => toggle.removeEventListener('click', handler))
 
 		// Set the 'All' switch to checked by default
 		if (currentDirection === 'All') {
