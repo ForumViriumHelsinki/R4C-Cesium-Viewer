@@ -124,6 +124,16 @@ export async function loadPostalCodeDataWithRetry(
 	const baseDelay = 1000 // 1 second
 
 	try {
+		// Clear stale loading states before starting new postal code load
+		// This prevents loading indicator from getting stuck due to previous incomplete loads
+		try {
+			const { useLoadingStore } = await import('../stores/loadingStore.js')
+			const loadingStore = useLoadingStore()
+			loadingStore.clearStaleLoading(15000)
+		} catch (error) {
+			console.warn('[PostalCodeLoader] Could not clear stale loading:', error?.message || error)
+		}
+
 		// Set zone name and prepare UI
 		setNameOfZoneCallback()
 		services.elementsDisplayService.setSwitchViewElementsDisplay('inline-block')

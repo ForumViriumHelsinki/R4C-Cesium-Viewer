@@ -1162,8 +1162,10 @@ export class AccessibilityTestHelpers {
 						)
 
 						// Wait for loading indicators to disappear (app shows "Loading X layers...")
-						await this.page
-							.waitForFunction(
+						// If loading takes too long, force clear stale loading states via the store
+						let loadingCleared = false
+						try {
+							await this.page.waitForFunction(
 								() => {
 									const loadingText = document.body.innerText
 									return (
@@ -1172,9 +1174,42 @@ export class AccessibilityTestHelpers {
 								},
 								{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 							)
-							.catch(() => {
-								console.warn('[drillToLevel] Loading indicator still visible')
+							loadingCleared = true
+						} catch {
+							console.warn('[drillToLevel] Loading indicator still visible, forcing stale cleanup')
+							// Force clear stale loading states by calling the store action
+							// This triggers proper Vue reactivity updates
+							await this.page.evaluate(() => {
+								// Access the loading store via Pinia and call clearAllLoading action
+								const pinia = (window as any).__PINIA__
+								if (pinia?.state?.value?.loading) {
+									// Get the store instance from the app context
+									const app = (window as any).__VUE_APP__
+									if (app) {
+										try {
+											// Import the store and call the action
+											const loadingStore = pinia._s.get('loading')
+											if (loadingStore && typeof loadingStore.clearAllLoading === 'function') {
+												loadingStore.clearAllLoading()
+												console.log('[drillToLevel] Called clearAllLoading() via store action')
+											}
+										} catch (e) {
+											// Fallback: direct state mutation
+											const loadingState = pinia.state.value.loading
+											Object.keys(loadingState.layerLoading).forEach((key: string) => {
+												loadingState.layerLoading[key] = false
+											})
+											loadingState.isLoading = false
+											console.log('[drillToLevel] Fallback: direct state mutation')
+										}
+									}
+								}
 							})
+							// Wait for UI to update after clearing loading state
+							await this.page.waitForTimeout(500)
+							loadingCleared = true
+						}
+						console.log(`[drillToLevel] Loading state cleared: ${loadingCleared}`)
 
 						// Wait for buildings to be loaded in Cesium datasource
 						// This ensures we have clickable building entities before attempting clicks

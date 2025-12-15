@@ -220,13 +220,17 @@ export default class FeaturePicker {
 	 * @fires eventBus#showBuilding - Emitted when building level view is activated
 	 */
 	async handleBuildingFeature(properties) {
-		// Show loading indicator for building selection
+		// Clear stale loading states before transitioning to building level
+		// This prevents the loading indicator from staying visible due to:
+		// - Previous postal code loading that didn't complete properly
+		// - Dynamic layer IDs (e.g., 'buildings-00100') that timed out
 		try {
 			const { useLoadingStore } = await import('../stores/loadingStore.js')
 			const loadingStore = useLoadingStore()
-			loadingStore.startLoading('building-selection', 'Loading building information...')
+			// Clear any stale loading states (older than 15s or dynamic layer IDs)
+			loadingStore.clearStaleLoading(15000)
 		} catch (error) {
-			console.warn('Loading store not available:', error?.message || error)
+			console.warn('Loading store not available for cleanup:', error?.message || error)
 		}
 
 		try {
@@ -250,15 +254,6 @@ export default class FeaturePicker {
 			)
 		} catch (error) {
 			console.error('Error handling building feature:', error?.message || error)
-		} finally {
-			// Hide loading indicator
-			try {
-				const { useLoadingStore } = await import('../stores/loadingStore.js')
-				const loadingStore = useLoadingStore()
-				loadingStore.stopLoading('building-selection')
-			} catch (error) {
-				console.warn('Loading store not available for cleanup:', error?.message || error)
-			}
 		}
 	}
 
