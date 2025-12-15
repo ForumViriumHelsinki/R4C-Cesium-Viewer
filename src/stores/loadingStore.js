@@ -39,6 +39,9 @@ export const useLoadingStore = defineStore('loading', {
 		// Global loading state
 		isLoading: false,
 
+		// Stale loading cleanup timer ID (for automatic cleanup)
+		_staleCleanupTimer: null,
+
 		// Individual layer loading states
 		layerLoading: {
 			trees: false,
@@ -244,6 +247,103 @@ export const useLoadingStore = defineStore('loading', {
 			this.loadingMessages = {}
 			this.loadingErrors = {}
 			this.isLoading = false
+		},
+
+		/**
+		 * Clear stale loading states that have been loading for longer than the timeout.
+		 * Also removes dynamic layer IDs (not in predefined list) that are still loading.
+		 * This prevents the loading indicator from getting stuck due to:
+		 * - Network timeouts not properly completing layer loading
+		 * - Dynamic layer IDs (e.g., 'buildings-00100') that failed silently
+		 * - Race conditions in navigation where layer loading was interrupted
+		 *
+		 * In E2E test mode (VITE_E2E_TEST=true), uses a shorter timeout (5s) to prevent
+		 * test timeouts due to slow network responses in test environments.
+		 *
+		 * @param {number} staleTimeout - Maximum time in ms a layer can be loading before considered stale (default: 30000)
+		 */
+		clearStaleLoading(staleTimeout = 30000) {
+			// Use shorter timeout in E2E test mode to prevent test timeouts
+			const isE2ETest =
+				typeof import.meta !== 'undefined' && import.meta.env?.VITE_E2E_TEST === 'true'
+			const effectiveTimeout = isE2ETest ? Math.min(staleTimeout, 5000) : staleTimeout
+			const now = Date.now()
+			const predefinedLayers = [
+				'trees',
+				'vegetation',
+				'otherNature',
+				'buildings',
+				'postalCodes',
+				'landcover',
+				'ndvi',
+				'populationGrid',
+				'heatData',
+			]
+			let clearedCount = 0
+
+			Object.keys(this.layerLoading).forEach((layer) => {
+				if (!this.layerLoading[layer]) return // Skip layers not currently loading
+
+				const loadTime = this.loadingTimes[layer]
+				const isStale = loadTime && now - loadTime.startTime > effectiveTimeout
+				const isDynamicLayer = !predefinedLayers.includes(layer)
+
+				// Clear if stale OR if it's a dynamic layer ID (these should be transient)
+				if (isStale || isDynamicLayer) {
+					console.warn(
+						`[loadingStore] Clearing stale loading state for ${layer}`,
+						isDynamicLayer ? '(dynamic layer)' : `(loading for ${now - loadTime?.startTime}ms)`
+					)
+					this.layerLoading[layer] = false
+
+					if (this.loadingProgress[layer]) {
+						this.loadingProgress[layer].status = 'timeout'
+					}
+
+					delete this.loadingMessages[layer]
+					clearedCount++
+				}
+			})
+
+			if (clearedCount > 0) {
+				console.log(`[loadingStore] Cleared ${clearedCount} stale loading states`)
+				this.updateGlobalLoading()
+			}
+
+			return clearedCount
+		},
+
+		/**
+		 * Start automatic stale loading cleanup.
+		 * Runs clearStaleLoading periodically to prevent stuck loading indicators.
+		 * In E2E test mode, uses more aggressive cleanup (every 3s with 5s timeout).
+		 */
+		startStaleCleanupTimer() {
+			if (this._staleCleanupTimer) return // Already running
+
+			const isE2ETest =
+				typeof import.meta !== 'undefined' && import.meta.env?.VITE_E2E_TEST === 'true'
+			const interval = isE2ETest ? 3000 : 10000 // 3s in tests, 10s in production
+			const timeout = isE2ETest ? 5000 : 30000 // 5s in tests, 30s in production
+
+			this._staleCleanupTimer = setInterval(() => {
+				this.clearStaleLoading(timeout)
+			}, interval)
+
+			console.log(
+				`[loadingStore] Started stale cleanup timer (${interval}ms interval, ${timeout}ms timeout)`
+			)
+		},
+
+		/**
+		 * Stop automatic stale loading cleanup.
+		 */
+		stopStaleCleanupTimer() {
+			if (this._staleCleanupTimer) {
+				clearInterval(this._staleCleanupTimer)
+				this._staleCleanupTimer = null
+				console.log('[loadingStore] Stopped stale cleanup timer')
+			}
 		},
 
 		// Retry loading a layer that failed

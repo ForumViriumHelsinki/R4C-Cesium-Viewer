@@ -255,6 +255,10 @@ onMounted(async () => {
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
 			void loadingStore.checkLayerCache(layer)
 		})
+
+		// Start automatic stale loading cleanup timer
+		// This prevents loading indicators from getting stuck due to network issues
+		loadingStore.startStaleCleanupTimer()
 	} catch (error) {
 		console.warn('Failed to initialize caching services:', error)
 	}
