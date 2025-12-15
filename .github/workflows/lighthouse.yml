@@ -51,7 +51,7 @@ jobs:
         id: lighthouse
         run: |
           # Run Lighthouse CI and capture output
-          lhci autorun --config=lighthouserc.js 2>&1 | tee lighthouse-output.txt
+          lhci autorun --config=lighthouserc.cjs 2>&1 | tee lighthouse-output.txt
 
           # Store exit code
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
