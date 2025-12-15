@@ -171,6 +171,93 @@ The application uses multiple proxy endpoints in development:
 
 Primary data from Helsinki Region Environmental Services (HSY), Statistics Finland, and various environmental monitoring systems for climate resilience research.
 
+## Component Architecture for Testing
+
+Understanding the component hierarchy is critical for writing effective tests.
+
+### Timeline Components by Navigation Level
+
+| Level       | Component         | Selector                   | Notes                                                 |
+| ----------- | ----------------- | -------------------------- | ----------------------------------------------------- |
+| Start       | None              | -                          | No timeline at start level                            |
+| Postal Code | `TimelineCompact` | `.timeline-compact`        | Has `d-none d-lg-flex` CSS (hidden < 1280px viewport) |
+| Building    | `Timeline`        | `#heatTimeseriesContainer` | Only renders when "Building Heat Data" button clicked |
+
+**Key Insight:** Tests must check DOM presence (`state: 'attached'`) for `.timeline-compact`, not visibility, due to responsive CSS hiding on smaller viewports.
+
+### Building Selection Flow (FeaturePicker)
+
+The building click-to-selection flow follows this path:
+
+```
+User Click on Cesium Canvas
+    ↓
+CesiumViewer.vue click handler
+    - Filters drags (>5px movement threshold)
+    - Debounces rapid clicks (500ms minimum interval)
+    - Ignores clicks on control panel/timeline elements
+    ↓
+FeaturePicker.processClick(event)
+    - Converts event coordinates to Cesium.Cartesian2
+    ↓
+FeaturePicker.pickEntity(windowPosition)
+    - GUARD: Checks canvas dimensions (width/height > 0)
+    - Uses viewer.scene.pick() to find entity
+    - FILTER: Only processes entities with `_polygon` property
+    ↓
+FeaturePicker.handleFeatureWithProperties(entity)
+    - At postal code level → handleBuildingFeature()
+    ↓
+Updates Pinia store (level='building')
+EventBus emits 'showBuilding'
+```
+
+**Critical Guards in FeaturePicker:**
+
+1. Canvas must have valid dimensions (silently ignores clicks otherwise)
+2. Only polygon entities (with `_polygon` property) are selectable
+3. Entity must be a `Cesium.Entity` instance with properties
+
+### Testing Cesium Interactions
+
+**Common Pitfalls:**
+
+1. **Canvas Dimension Guard**: Clicks are silently ignored if canvas dimensions are 0 (transient rendering states)
+2. **Building Entity Loading**: Buildings may not be loaded when tests attempt to click
+3. **Hardcoded Coordinates**: Static pixel positions don't guarantee hitting buildings
+4. **Viewport CSS**: Elements with `d-none d-lg-flex` are hidden on small viewports
+
+**Best Practices for Building Selection Tests:**
+
+```typescript
+// 1. Wait for canvas to have valid dimensions
+await page.waitForFunction(() => {
+	const canvas = document.querySelector('#cesiumContainer canvas');
+	return canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0;
+});
+
+// 2. Wait for buildings to load in datasource
+await page.waitForFunction(() => {
+	const viewer = window.__viewer;
+	if (!viewer?.dataSources) return false;
+	const dataSources = viewer.dataSources._dataSources;
+	return dataSources.some(
+		(ds) => ds.name?.startsWith('Buildings ') && ds.entities?.values.length > 0
+	);
+});
+
+// 3. Use DOM attachment checks for responsive-hidden elements
+await expect(page.locator('.timeline-compact')).toBeAttached();
+// NOT: toBeVisible() - fails on viewports < 1280px
+```
+
+### UI Element Text Selectors (Case-Sensitive)
+
+Building level UI buttons use exact casing:
+
+- `"Building Heat Data"` (not "Building heat data")
+- `"Building Properties"` (not "Building properties")
+
 ## Database Performance Optimizations
 
 The project includes comprehensive database optimizations implemented via dbmate migrations:

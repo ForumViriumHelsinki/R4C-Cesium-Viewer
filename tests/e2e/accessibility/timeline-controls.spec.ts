@@ -8,155 +8,156 @@
  * - Timeline state persistence across levels
  */
 
-import { expect } from '@playwright/test';
-import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
+import { expect } from '@playwright/test'
+import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
 cesiumDescribe('Timeline Controls Accessibility', () => {
-	cesiumTest.use({ tag: ['@accessibility', '@e2e'] });
-	let helpers: AccessibilityTestHelpers;
+	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
+	let helpers: AccessibilityTestHelpers
 
 	cesiumTest.beforeEach(async ({ cesiumPage }) => {
-		helpers = new AccessibilityTestHelpers(cesiumPage);
+		helpers = new AccessibilityTestHelpers(cesiumPage)
 		// Cesium is already initialized by the fixture
-	});
+	})
 
 	cesiumTest.describe('Timeline Visibility and Access', () => {
 		cesiumTest('should not show timeline at start level', async ({ cesiumPage: _cesiumPage }) => {
-			await helpers.verifyTimelineVisibility('start');
-		});
+			await helpers.verifyTimelineVisibility('start')
+		})
 
-		cesiumTest('should show timeline at postal code level', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+		cesiumTest('should show timeline at postal code level', async ({ cesiumPage: _cesiumPage }) => {
+			await helpers.drillToLevel('postalCode')
 
-			await helpers.verifyTimelineVisibility('postalCode');
-		});
+			await helpers.verifyTimelineVisibility('postalCode')
+		})
 
+		// Building level requires drilling through postal code first, which takes more time
 		cesiumTest('should show timeline at building level', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('building');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_EXTENDED);
+			cesiumTest.setTimeout(90000) // 90 seconds for full drill-through flow
+			await helpers.drillToLevel('building')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_EXTENDED)
 
-			await helpers.verifyTimelineVisibility('building');
-		});
-	});
+			await helpers.verifyTimelineVisibility('building')
+		})
+	})
 
 	cesiumTest.describe('Timeline Components', () => {
 		cesiumTest('should display all timeline elements', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+			await helpers.drillToLevel('postalCode')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
 			// Timeline container
-			await expect(cesiumPage.locator('#heatTimeseriesContainer')).toBeVisible();
+			await expect(cesiumPage.locator('#heatTimeseriesContainer')).toBeVisible()
 
 			// Date labels
-			const dateLabels = cesiumPage.locator('.date-labels');
+			const dateLabels = cesiumPage.locator('.date-labels')
 			if (await dateLabels.isVisible()) {
-				await expect(dateLabels).toBeVisible();
+				await expect(dateLabels).toBeVisible()
 			}
 
 			// Slider
-			const slider = cesiumPage.locator('.timeline-slider input');
-			await expect(slider).toBeVisible();
+			const slider = cesiumPage.locator('.timeline-slider input')
+			await expect(slider).toBeVisible()
 
 			// Current date display
-			const timeLabel = cesiumPage.locator('.time-label');
+			const timeLabel = cesiumPage.locator('.time-label')
 			if (await timeLabel.isVisible()) {
-				await expect(timeLabel).toBeVisible();
+				await expect(timeLabel).toBeVisible()
 			}
-		});
+		})
 
 		cesiumTest('should have functional timeline slider', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+			await helpers.drillToLevel('postalCode')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
-			const slider = cesiumPage.locator('.timeline-slider input');
+			const slider = cesiumPage.locator('.timeline-slider input')
 
 			// Test slider interaction
-			await slider.fill('3');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+			await slider.fill('3')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 
 			// Slider should reflect the change
-			const sliderValue = await slider.inputValue();
-			expect(sliderValue).toBe('3');
-		});
-	});
+			const sliderValue = await slider.inputValue()
+			expect(sliderValue).toBe('3')
+		})
+	})
 
 	cesiumTest.describe('Timeline State Persistence', () => {
 		cesiumTest('should maintain timeline state between levels', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+			await helpers.drillToLevel('postalCode')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
-			const slider = cesiumPage.locator('.timeline-slider input');
-			await slider.fill('2');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+			const slider = cesiumPage.locator('.timeline-slider input')
+			await slider.fill('2')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 
 			// Navigate to building level
-			await helpers.drillToLevel('building');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+			await helpers.drillToLevel('building')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
 			// Timeline should still be visible
-			await helpers.verifyTimelineVisibility('building');
+			await helpers.verifyTimelineVisibility('building')
 
 			// State should be maintained
-			const sliderValue = await slider.inputValue();
-			expect(sliderValue).toBe('2');
-		});
+			const sliderValue = await slider.inputValue()
+			expect(sliderValue).toBe('2')
+		})
 
 		cesiumTest('should handle timeline across different views', async ({ cesiumPage }) => {
 			// Test in Capital Region view
-			await helpers.navigateToView('capitalRegionView');
-			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+			await helpers.navigateToView('capitalRegionView')
+			await helpers.drillToLevel('postalCode')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
-			await helpers.verifyTimelineVisibility('postalCode');
+			await helpers.verifyTimelineVisibility('postalCode')
 
 			// Switch to Grid view
-			await helpers.navigateToView('gridView');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
+			await helpers.navigateToView('gridView')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
 
 			// Timeline should still be visible
-			await helpers.verifyTimelineVisibility('postalCode');
-		});
-	});
+			await helpers.verifyTimelineVisibility('postalCode')
+		})
+	})
 
 	cesiumTest.describe('Timeline Accessibility', () => {
 		cesiumTest('should support keyboard navigation', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+			await helpers.drillToLevel('postalCode')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
-			const slider = cesiumPage.locator('.timeline-slider input');
-			await slider.focus();
+			const slider = cesiumPage.locator('.timeline-slider input')
+			await slider.focus()
 
 			// Test arrow key navigation
-			await cesiumPage.keyboard.press('ArrowRight');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
+			await cesiumPage.keyboard.press('ArrowRight')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
 			// Should change slider value
-			const finalValue = await slider.inputValue();
-			expect(finalValue).toMatch(/^\d+$/); // Should be a number
-		});
+			const finalValue = await slider.inputValue()
+			expect(finalValue).toMatch(/^\d+$/) // Should be a number
+		})
 
 		cesiumTest('should be responsive across viewports', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('postalCode');
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+			await helpers.drillToLevel('postalCode')
+			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
 			const viewports = [
 				{ width: 1920, height: 1080 },
 				{ width: 768, height: 1024 },
 				{ width: 375, height: 667 },
-			];
+			]
 
 			for (const viewport of viewports) {
-				await cesiumPage.setViewportSize(viewport);
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+				await cesiumPage.setViewportSize(viewport)
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 
 				// Timeline should remain functional
-				await expect(cesiumPage.locator('#heatTimeseriesContainer')).toBeVisible();
+				await expect(cesiumPage.locator('#heatTimeseriesContainer')).toBeVisible()
 
-				const slider = cesiumPage.locator('.timeline-slider input');
-				await expect(slider).toBeVisible();
+				const slider = cesiumPage.locator('.timeline-slider input')
+				await expect(slider).toBeVisible()
 			}
-		});
-	});
-});
+		})
+	})
+})

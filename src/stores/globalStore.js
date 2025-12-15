@@ -25,6 +25,7 @@
  */
 
 import { defineStore } from 'pinia'
+import { markRaw } from 'vue'
 
 /**
  * Global Pinia Store
@@ -145,17 +146,20 @@ export const useGlobalStore = defineStore('global', {
 		/**
 		 * Sets the CesiumJS viewer instance reference
 		 * Called during application initialization to store the Cesium viewer.
+		 * Uses markRaw() to prevent Vue reactivity on Cesium viewer,
+		 * which contains non-serializable properties.
 		 * @param {Object} viewer - Cesium.Viewer instance
 		 */
 		setCesiumViewer(viewer) {
-			this.cesiumViewer = viewer
+			this.cesiumViewer = viewer ? markRaw(viewer) : null
 		},
 		/**
 		 * Sets the currently selected 250m population grid cell
+		 * Uses markRaw() to prevent Vue reactivity on Cesium entities.
 		 * @param {Object} currentGridCell - Cesium entity representing the grid cell
 		 */
 		setCurrentGridCell(currentGridCell) {
-			this.currentGridCell = currentGridCell
+			this.currentGridCell = currentGridCell ? markRaw(currentGridCell) : null
 		},
 		/**
 		 * Sets the current view mode
@@ -205,10 +209,13 @@ export const useGlobalStore = defineStore('global', {
 		/**
 		 * Sets the currently picked Cesium entity
 		 * Updated when user clicks on map features.
+		 * Uses markRaw() to prevent Vue reactivity on Cesium entities,
+		 * which contain non-serializable properties that cause DataCloneError
+		 * when Cesium's web workers attempt postMessage() calls.
 		 * @param {Object} picked - Cesium entity that was clicked
 		 */
 		setPickedEntity(picked) {
-			this.pickedEntity = picked
+			this.pickedEntity = picked ? markRaw(picked) : null
 		},
 		/**
 		 * Toggles camera 180° rotation state

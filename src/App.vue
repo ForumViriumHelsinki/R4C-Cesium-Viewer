@@ -139,13 +139,14 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import CesiumViewer from './pages/CesiumViewer.vue'
 import backgroundPreloader from './services/backgroundPreloader.js'
 import Camera from './services/camera'
 import Featurepicker from './services/featurepicker'
 import Tree from './services/tree'
 import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
-import { useLoadingStore } from './stores/loadingStore.js'
+import { useLoadingStore} from './stores/loadingStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
 
 const toggleStore = useToggleStore()
@@ -153,18 +154,18 @@ const globalStore = useGlobalStore()
 const loadingStore = useLoadingStore()
 const featureFlagStore = useFeatureFlagStore()
 
-const _grid250m = computed(() => toggleStore.grid250m)
-const _currentLevel = computed(() => globalStore.level)
+const grid250m = computed(() => toggleStore.grid250m)
+const currentLevel = computed(() => globalStore.level)
 
 // UI state
-const _sidebarVisible = ref(true) // Show sidebar by default for better discoverability
+const sidebarVisible = ref(true) // Show sidebar by default for better discoverability
 
 // Navigation functions
-const _signOut = () => {
+const signOut = () => {
 	window.location.href = '/oauth2/sign_out'
 }
 
-const _smartReset = () => {
+const smartReset = () => {
 	// Reset application state without page reload
 	globalStore.setLevel('start')
 	globalStore.setPostalCode(null)
@@ -185,7 +186,7 @@ const _smartReset = () => {
 	hideTooltip()
 }
 
-const _returnToPostalCode = () => {
+const returnToPostalCode = () => {
 	const featurepicker = new Featurepicker()
 	const treeService = new Tree()
 	hideTooltip()
@@ -202,13 +203,13 @@ const hideTooltip = () => {
 	}
 }
 
-const _rotateCamera = () => {
+const rotateCamera = () => {
 	const camera = new Camera()
 	camera.rotate180Degrees()
 }
 
 // Handle retry layer events from LoadingIndicator
-const _handleRetryLayer = (layerName) => {
+const handleRetryLayer = (layerName) => {
 	// Clear the error and attempt to reload the layer
 	loadingStore.retryLayerLoading(layerName)
 
@@ -218,13 +219,13 @@ const _handleRetryLayer = (layerName) => {
 }
 
 // Handle data source retry events
-const _handleSourceRetry = (sourceId) => {
+const handleSourceRetry = (sourceId) => {
 	console.log(`Retrying data source: ${sourceId}`)
 	// Could trigger health checks or reconnection attempts
 }
 
 // Handle cache clearing events
-const _handleCacheCleared = (sourceId) => {
+const handleCacheCleared = (sourceId) => {
 	console.log(`Cache cleared for: ${sourceId}`)
 	if (sourceId === 'all') {
 		// Refresh cache status for all layers
@@ -235,7 +236,7 @@ const _handleCacheCleared = (sourceId) => {
 }
 
 // Handle data preloading requests
-const _handleDataPreload = (sourceId) => {
+const handleDataPreload = (sourceId) => {
 	console.log(`Preloading requested for: ${sourceId}`)
 	// Could trigger specific preloading for the source
 }
