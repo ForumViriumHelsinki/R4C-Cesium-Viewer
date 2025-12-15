@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.38.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.3...r4c-cesium-viewer-v1.38.4) (2025-12-15)
+
+
+### Bug Fixes
+
+* prevent loading indicator from getting stuck during slow data loading ([#457](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/457)) ([ca5eadf](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ca5eadf45f5d8e3ce6a8140fdd1f7c2993578442))
+* rename lighthouserc.js to .cjs for CommonJS compatibility ([#455](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/455)) ([b0fb1a5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b0fb1a5beb795397f75d2806c910f3a226a07742))
+
 ## [1.38.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.2...r4c-cesium-viewer-v1.38.3) (2025-12-12)
 
 
