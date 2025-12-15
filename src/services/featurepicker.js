@@ -21,6 +21,9 @@ import {
 import Sensor from './sensor.js'
 import Traveltime from './traveltime.js'
 import { logVisibilityChange } from './visibilityLogger.js'
+import { ALL_TREE_CODES } from '../constants/treeCodes.js'
+import { SPECIAL_ENTITIES } from '../constants/specialEntities.js'
+import { TIMING } from '../constants/timing.js'
 
 /**
  * FeaturePicker Service
@@ -228,7 +231,7 @@ export default class FeaturePicker {
 			const { useLoadingStore } = await import('../stores/loadingStore.js')
 			const loadingStore = useLoadingStore()
 			// Clear any stale loading states (older than 15s or dynamic layer IDs)
-			loadingStore.clearStaleLoading(15000)
+			loadingStore.clearStaleLoading(TIMING.STALE_LOADING_TIMEOUT_MS)
 		} catch (error) {
 			console.warn('Loading store not available for cleanup:', error?.message || error)
 		}
@@ -372,7 +375,7 @@ export default class FeaturePicker {
 		if (
 			!id.properties.posno &&
 			id.entityCollection._entities._array[0]._properties._id &&
-			id.entityCollection._entities._array[0]._properties._id._value === 5879932
+			id.entityCollection._entities._array[0]._properties._id._value === SPECIAL_ENTITIES.TRAVEL_TIME_GRID_CELL_ID
 		) {
 			this.traveltimeService.loadTravelTimeData(id.properties.id._value).catch(console.error)
 			this.traveltimeService.markCurrentLocation(id).catch(console.error)
@@ -572,7 +575,7 @@ export default class FeaturePicker {
 					}
 
 					// Collect tree hide changes
-					const koodis = ['221', '222', '223', '224']
+					const koodis = ALL_TREE_CODES
 					for (const koodi of koodis) {
 						const treeDatasourceName = `Trees${koodi}_${postalCode}`
 						const treeDatasource = this.datasourceService.getDataSourceByName(treeDatasourceName)
@@ -607,7 +610,7 @@ export default class FeaturePicker {
 					}
 
 					// Also collect tree datasource show changes if they exist
-					const koodis = ['221', '222', '223', '224']
+					const koodis = ALL_TREE_CODES
 					for (const koodi of koodis) {
 						const treeDatasourceName = `Trees${koodi}_${postalCode}`
 						const treeDatasource = this.datasourceService.getDataSourceByName(treeDatasourceName)
@@ -782,7 +785,7 @@ export default class FeaturePicker {
 	 * @returns {void}
 	 */
 	hideTreesForPostalCode(postalCode) {
-		const koodis = ['221', '222', '223', '224']
+		const koodis = ALL_TREE_CODES
 		let hiddenCount = 0
 
 		for (const koodi of koodis) {

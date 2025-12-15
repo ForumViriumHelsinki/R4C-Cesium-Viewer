@@ -9,6 +9,8 @@ import Tree from './tree.js'
 import unifiedLoader from './unifiedLoader.js'
 import Urbanheat from './urbanheat.js'
 import { logVisibilityChange } from './visibilityLogger.js'
+import { isSoteBuilding } from '../constants/buildingCodes.js'
+import { DATES } from '../constants/dates.js'
 
 /**
  * Building Service
@@ -222,9 +224,7 @@ export default class Building {
 			const kayttotark = entity._properties.c_kayttark?._value
 
 			if (
-				!kayttotark ||
-				(![511, 131].includes(Number(kayttotark)) &&
-					!(Number(kayttotark) > 212 && Number(kayttotark) < 240))
+				!kayttotark || !isSoteBuilding(kayttotark)
 			) {
 				logVisibilityChange(
 					'entity',
@@ -406,7 +406,7 @@ export default class Building {
 		this.lastFilterState = currentState
 
 		// Pre-calculate the cutoff date for hideNewBuildings filter
-		const cutoffDate = new Date('2018-06-01T00:00:00').getTime()
+		const cutoffDate = DATES.NEW_BUILDING_CUTOFF.getTime()
 
 		// Batch entity visibility changes
 		const entitiesToHide = []
@@ -434,12 +434,11 @@ export default class Building {
 						: null
 					: entity._properties?._kayttarks?._value
 
-				const isSoteBuilding = this.toggleStore.helsinkiView
-					? kayttotark &&
-						([511, 131].includes(kayttotark) || (kayttotark > 210 && kayttotark < 240))
+				const entityIsSoteBuilding = this.toggleStore.helsinkiView
+					? kayttotark && isSoteBuilding(kayttotark)
 					: kayttotark === 'Yleinen rakennus'
 
-				if (!isSoteBuilding) {
+				if (!entityIsSoteBuilding) {
 					shouldHide = true
 				}
 			}
@@ -539,7 +538,7 @@ export default class Building {
 			: entity._properties?._kayttarks?._value
 
 		entity.show = this.toggleStore.helsinkiView
-			? kayttotark && ([511, 131].includes(kayttotark) || (kayttotark > 210 && kayttotark < 240))
+			? kayttotark && isSoteBuilding(kayttotark)
 			: kayttotark === 'Yleinen rakennus'
 	}
 

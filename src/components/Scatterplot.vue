@@ -40,6 +40,7 @@ import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import { DATES } from '../constants/dates.js'
 
 export default {
 	data() {
@@ -168,7 +169,7 @@ export default {
 
 		isNewBuilding(entity) {
 			const c_valmpvm = new Date(entity._properties._c_valmpvm?._value)?.getTime()
-			const cutoffDate = new Date('2018-06-01T00:00:00').getTime()
+			const cutoffDate = DATES.NEW_BUILDING_CUTOFF.getTime()
 
 			return !c_valmpvm || c_valmpvm >= cutoffDate
 		},

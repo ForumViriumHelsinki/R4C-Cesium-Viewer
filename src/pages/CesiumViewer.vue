@@ -148,6 +148,9 @@ import { useHeatExposureStore } from '../stores/heatExposureStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import { TIMING } from '../constants/timing.js'
+import { VIEWPORT } from '../constants/viewport.js'
+
 
 export default {
 	components: {
@@ -442,7 +445,7 @@ export default {
 				}
 				mouseDownPosition = null
 
-				if (!isClickOnControlPanel && !isClickOnTimeSeries && currentTime - lastPickTime > 500) {
+				if (!isClickOnControlPanel && !isClickOnTimeSeries && currentTime - lastPickTime > TIMING.CLICK_THROTTLE_MS) {
 					console.log('[CesiumViewer] ✅ Processing click through FeaturePicker')
 					store.setShowBuildingInfo(false)
 					if (!store.showBuildingInfo) {
@@ -467,7 +470,7 @@ export default {
 		 */
 		const addCameraMoveEndListener = () => {
 			let cameraMoveTimeout = null
-			const DEBOUNCE_DELAY_MS = 1500 // Wait 1500ms after camera stops moving to prevent blinking
+			const DEBOUNCE_DELAY_MS = TIMING.CAMERA_DEBOUNCE_MS // Wait 1500ms after camera stops moving to prevent blinking, see ../constants/timing.js
 
 			viewer.value.camera.moveEnd.addEventListener(() => {
 				// Clear any pending timeout
@@ -547,18 +550,12 @@ export default {
 
 			// Get camera height to determine if we should load buildings
 			const cameraHeight = camera.getCameraHeight()
-			const MAX_HEIGHT_FOR_BUILDING_LOAD = 50000 // 50km - only load buildings when zoomed in enough
+			const MAX_HEIGHT_FOR_BUILDING_LOAD = VIEWPORT.MAX_CAMERA_HEIGHT_FOR_BUILDINGS // 50km - only load buildings when zoomed in enough, see ../constants/viewport.js
 
 			if (cameraHeight > MAX_HEIGHT_FOR_BUILDING_LOAD) {
 				console.log('[CesiumViewer] Camera too high for building loading:', cameraHeight, 'm')
 				return
-			}
-
-			console.log(
-				'[CesiumViewer] Camera height:',
-				cameraHeight,
-				'm - proceeding with viewport-based building loading'
-			)
+			}	
 
 			try {
 				isLoadingBuildings.value = true
