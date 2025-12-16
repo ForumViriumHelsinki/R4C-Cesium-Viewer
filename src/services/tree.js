@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium'
+import { ALL_TREE_CODES } from '../constants/treeCodes.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -6,7 +7,6 @@ import { useURLStore } from '../stores/urlStore.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
-import { ALL_TREE_CODES } from '../constants/treeCodes.js'
 
 /**
  * Tree Service

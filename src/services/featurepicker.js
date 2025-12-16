@@ -1,4 +1,7 @@
 import * as Cesium from 'cesium'
+import { SPECIAL_ENTITIES } from '../constants/specialEntities.js'
+import { TIMING } from '../constants/timing.js'
+import { ALL_TREE_CODES } from '../constants/treeCodes.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -21,9 +24,6 @@ import {
 import Sensor from './sensor.js'
 import Traveltime from './traveltime.js'
 import { logVisibilityChange } from './visibilityLogger.js'
-import { ALL_TREE_CODES } from '../constants/treeCodes.js'
-import { SPECIAL_ENTITIES } from '../constants/specialEntities.js'
-import { TIMING } from '../constants/timing.js'
 
 /**
  * FeaturePicker Service
@@ -375,7 +375,8 @@ export default class FeaturePicker {
 		if (
 			!id.properties.posno &&
 			id.entityCollection._entities._array[0]._properties._id &&
-			id.entityCollection._entities._array[0]._properties._id._value === SPECIAL_ENTITIES.TRAVEL_TIME_GRID_CELL_ID
+			id.entityCollection._entities._array[0]._properties._id._value ===
+				SPECIAL_ENTITIES.TRAVEL_TIME_GRID_CELL_ID
 		) {
 			this.traveltimeService.loadTravelTimeData(id.properties.id._value).catch(console.error)
 			this.traveltimeService.markCurrentLocation(id).catch(console.error)

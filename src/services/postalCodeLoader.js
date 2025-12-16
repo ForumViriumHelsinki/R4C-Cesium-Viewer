@@ -1,5 +1,5 @@
-import cacheWarmer from './cacheWarmer.js'
 import { TIMING } from '../constants/timing.js'
+import cacheWarmer from './cacheWarmer.js'
 
 /**
  * Postal Code Loader Service
