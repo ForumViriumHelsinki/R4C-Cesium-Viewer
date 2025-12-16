@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.4...r4c-cesium-viewer-v1.38.5) (2025-12-16)
+
+
+### Bug Fixes
+
+* Remove event listeners on component unmount to prevent memory leaks ([#467](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/467)) ([f4a3e6e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f4a3e6e7e13357889879c511f1d70ae42f0581da))
+
 ## [1.38.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.3...r4c-cesium-viewer-v1.38.4) (2025-12-15)
 
 
