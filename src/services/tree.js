@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium'
+import { ALL_TREE_CODES } from '../constants/treeCodes.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -18,7 +19,7 @@ import unifiedLoader from './unifiedLoader.js'
  * - 222: 15-20m
  * - 223: 10-15m
  * - 224: 2-10m (shortest, lightest green)
- *
+ * - ALL_TREE_CODES: All tree height categories - see ../constants/treeCodes.js
  * Features:
  * - Parallel loading of all height categories via unifiedLoader
  * - Adaptive batch processing for large datasets
@@ -49,7 +50,7 @@ export default class Tree {
 
 		try {
 			// Define all tree height categories
-			const koodis = ['221', '222', '223', '224']
+			const koodis = ALL_TREE_CODES
 
 			// Create loading configurations for parallel execution
 			const loadingConfigs = koodis.map((koodi) => ({

@@ -1,3 +1,4 @@
+import { TIMING } from '../constants/timing.js'
 import cacheWarmer from './cacheWarmer.js'
 
 /**
@@ -129,7 +130,7 @@ export async function loadPostalCodeDataWithRetry(
 		try {
 			const { useLoadingStore } = await import('../stores/loadingStore.js')
 			const loadingStore = useLoadingStore()
-			loadingStore.clearStaleLoading(15000)
+			loadingStore.clearStaleLoading(TIMING.STALE_LOADING_TIMEOUT_MS)
 		} catch (error) {
 			console.warn('[PostalCodeLoader] Could not clear stale loading:', error?.message || error)
 		}

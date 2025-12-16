@@ -1,4 +1,6 @@
 import * as Cesium from 'cesium'
+import { isSoteBuilding } from '../constants/buildingCodes.js'
+import { DATES } from '../constants/dates.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
@@ -221,11 +223,7 @@ export default class Building {
 		if (this.toggleStore.hideNonSote) {
 			const kayttotark = entity._properties.c_kayttark?._value
 
-			if (
-				!kayttotark ||
-				(![511, 131].includes(Number(kayttotark)) &&
-					!(Number(kayttotark) > 212 && Number(kayttotark) < 240))
-			) {
+			if (!kayttotark || !isSoteBuilding(kayttotark)) {
 				logVisibilityChange(
 					'entity',
 					entity.id || 'building',
@@ -406,7 +404,7 @@ export default class Building {
 		this.lastFilterState = currentState
 
 		// Pre-calculate the cutoff date for hideNewBuildings filter
-		const cutoffDate = new Date('2018-06-01T00:00:00').getTime()
+		const cutoffDate = DATES.NEW_BUILDING_CUTOFF.getTime()
 
 		// Batch entity visibility changes
 		const entitiesToHide = []
@@ -434,12 +432,11 @@ export default class Building {
 						: null
 					: entity._properties?._kayttarks?._value
 
-				const isSoteBuilding = this.toggleStore.helsinkiView
-					? kayttotark &&
-						([511, 131].includes(kayttotark) || (kayttotark > 210 && kayttotark < 240))
+				const entityIsSoteBuilding = this.toggleStore.helsinkiView
+					? kayttotark && isSoteBuilding(kayttotark)
 					: kayttotark === 'Yleinen rakennus'
 
-				if (!isSoteBuilding) {
+				if (!entityIsSoteBuilding) {
 					shouldHide = true
 				}
 			}
@@ -539,7 +536,7 @@ export default class Building {
 			: entity._properties?._kayttarks?._value
 
 		entity.show = this.toggleStore.helsinkiView
-			? kayttotark && ([511, 131].includes(kayttotark) || (kayttotark > 210 && kayttotark < 240))
+			? kayttotark && isSoteBuilding(kayttotark)
 			: kayttotark === 'Yleinen rakennus'
 	}
 
