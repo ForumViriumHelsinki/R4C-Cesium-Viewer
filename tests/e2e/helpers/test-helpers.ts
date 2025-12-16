@@ -563,6 +563,99 @@ export class AccessibilityTestHelpers {
 	}
 
 	/**
+	 * Ensures the control panel sidebar is open and visible.
+	 *
+	 * On smaller viewports (mobile/tablet), the navigation drawer may be closed
+	 * by default. This method checks if the sidebar is visible and opens it if needed.
+	 *
+	 * Known issue: In some test environments, the Vuetify v-navigation-drawer
+	 * may not render its DOM element even when the model value is true. This method
+	 * attempts multiple strategies to ensure the drawer content is accessible.
+	 *
+	 * @param options - Configuration options
+	 * @param options.timeout - Timeout for visibility check (default: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT)
+	 */
+	async ensureControlPanelOpen(options: { timeout?: number } = {}): Promise<void> {
+		const { timeout = TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT } = options
+
+		// First, dismiss any disclaimer dialog that might be blocking
+		const disclaimerCloseButton = this.page.locator(
+			'button:has-text("Explore Map"), button:has-text("Close")'
+		)
+		const dialogVisible = await disclaimerCloseButton
+			.first()
+			.isVisible()
+			.catch(() => false)
+		if (dialogVisible) {
+			await disclaimerCloseButton.first().click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
+			// Wait for dialog animation to complete
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
+		}
+
+		// Wait for Vue app to be fully mounted
+		await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
+
+		// Check if sidebar content is already visible
+		const mapControls = this.page.locator('.map-controls')
+		const isVisible = await mapControls.isVisible().catch(() => false)
+
+		if (isVisible) {
+			return // Sidebar is already open and content visible
+		}
+
+		// The v-navigation-drawer may not have rendered yet.
+		// Try to wait for it to appear in the DOM first
+		const drawer = this.page.locator('.v-navigation-drawer')
+
+		// Strategy 1: Wait for drawer to appear in DOM (may already be mounted)
+		const drawerAttached = await drawer
+			.waitFor({ state: 'attached', timeout: timeout / 2 })
+			.then(() => true)
+			.catch(() => false)
+
+		if (drawerAttached) {
+			// Drawer is in DOM, wait for it to be visible
+			await drawer.waitFor({ state: 'visible', timeout: timeout / 2 }).catch(() => {
+				console.warn('Drawer attached but not visible')
+			})
+
+			// Check if content is now visible
+			const contentVisible = await mapControls.isVisible().catch(() => false)
+			if (contentVisible) {
+				return
+			}
+		}
+
+		// Strategy 2: Toggle the control panel via button
+		const toggleButton = this.page.locator('[aria-label="Toggle control panel"]')
+		const buttonExists = await toggleButton.isVisible().catch(() => false)
+
+		if (buttonExists) {
+			// Check current button state - if it says "Show Controls" or "Show", drawer is closed
+			const buttonText = await toggleButton.textContent().catch(() => '')
+			const needsToggle =
+				buttonText?.includes('Show') || (!buttonText?.includes('Hide') && buttonText?.length === 0)
+
+			if (needsToggle) {
+				await toggleButton.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
+				// Wait for Vuetify drawer animation
+				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
+			}
+
+			// Final attempt: Wait for drawer and content with extended timeout
+			await drawer.waitFor({ state: 'visible', timeout }).catch(() => {
+				console.warn('Drawer element did not become visible after toggle')
+			})
+
+			await mapControls.waitFor({ state: 'visible', timeout }).catch(() => {
+				console.warn('Map controls not visible - drawer may not be rendering properly')
+			})
+		} else {
+			console.warn('Toggle control panel button not found')
+		}
+	}
+
+	/**
 	 * Scroll element into viewport with retry logic
 	 *
 	 * Ensures element is visible in viewport before interaction by:
