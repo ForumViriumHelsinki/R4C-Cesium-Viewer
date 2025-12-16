@@ -34,6 +34,7 @@
 
 <script>
 import * as d3 from 'd3' // Import D3.js
+import { DATES } from '../constants/dates.js'
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
 import { eventBus } from '../services/eventEmitter.js'
@@ -168,7 +169,7 @@ export default {
 
 		isNewBuilding(entity) {
 			const c_valmpvm = new Date(entity._properties._c_valmpvm?._value)?.getTime()
-			const cutoffDate = new Date('2018-06-01T00:00:00').getTime()
+			const cutoffDate = DATES.NEW_BUILDING_CUTOFF.getTime()
 
 			return !c_valmpvm || c_valmpvm >= cutoffDate
 		},
