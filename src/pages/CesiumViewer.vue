@@ -138,6 +138,8 @@ import DisclaimerPopup from '../components/DisclaimerPopup.vue'
 import Loading from '../components/Loading.vue'
 import MapClickLoadingOverlay from '../components/MapClickLoadingOverlay.vue'
 import ViewportLoadingIndicator from '../components/ViewportLoadingIndicator.vue'
+import { TIMING } from '../constants/timing.js'
+import { VIEWPORT } from '../constants/viewport.js'
 import cacheWarmer from '../services/cacheWarmer.js'
 import ViewportBuildingLoader from '../services/viewportBuildingLoader.js'
 import { useBuildingStore } from '../stores/buildingStore.js'
@@ -148,9 +150,6 @@ import { useHeatExposureStore } from '../stores/heatExposureStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
-import { TIMING } from '../constants/timing.js'
-import { VIEWPORT } from '../constants/viewport.js'
-
 
 export default {
 	components: {
@@ -445,7 +444,11 @@ export default {
 				}
 				mouseDownPosition = null
 
-				if (!isClickOnControlPanel && !isClickOnTimeSeries && currentTime - lastPickTime > TIMING.CLICK_THROTTLE_MS) {
+				if (
+					!isClickOnControlPanel &&
+					!isClickOnTimeSeries &&
+					currentTime - lastPickTime > TIMING.CLICK_THROTTLE_MS
+				) {
 					console.log('[CesiumViewer] ✅ Processing click through FeaturePicker')
 					store.setShowBuildingInfo(false)
 					if (!store.showBuildingInfo) {

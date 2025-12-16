@@ -1,4 +1,6 @@
 import * as Cesium from 'cesium'
+import { isSoteBuilding } from '../constants/buildingCodes.js'
+import { DATES } from '../constants/dates.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
@@ -9,8 +11,6 @@ import Tree from './tree.js'
 import unifiedLoader from './unifiedLoader.js'
 import Urbanheat from './urbanheat.js'
 import { logVisibilityChange } from './visibilityLogger.js'
-import { isSoteBuilding } from '../constants/buildingCodes.js'
-import { DATES } from '../constants/dates.js'
 
 /**
  * Building Service
@@ -223,9 +223,7 @@ export default class Building {
 		if (this.toggleStore.hideNonSote) {
 			const kayttotark = entity._properties.c_kayttark?._value
 
-			if (
-				!kayttotark || !isSoteBuilding(kayttotark)
-			) {
+			if (!kayttotark || !isSoteBuilding(kayttotark)) {
 				logVisibilityChange(
 					'entity',
 					entity.id || 'building',
