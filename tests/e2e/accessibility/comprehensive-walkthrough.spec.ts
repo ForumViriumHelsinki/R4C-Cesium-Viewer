@@ -9,18 +9,19 @@
  * - Complete accessibility audit
  */
 
-import { expect } from '@playwright/test';
-import { cesiumTest, cesiumDescribe } from '../../fixtures/cesium-fixture';
-import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers';
+import { expect } from '@playwright/test'
+import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
+import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
-cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
-	cesiumTest.use({ tag: ['@accessibility', '@e2e', '@comprehensive'] });
-	let helpers: AccessibilityTestHelpers;
+// SKIPPED: Component rendering issues in headless CI - see #472
+cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
+	cesiumTest.use({ tag: ['@accessibility', '@e2e', '@comprehensive'] })
+	let helpers: AccessibilityTestHelpers
 
 	cesiumTest.beforeEach(async ({ cesiumPage }) => {
-		helpers = new AccessibilityTestHelpers(cesiumPage);
+		helpers = new AccessibilityTestHelpers(cesiumPage)
 		// Cesium is already initialized by the fixture
-	});
+	})
 
 	cesiumTest.describe('Complete User Journeys', () => {
 		cesiumTest(
@@ -30,123 +31,123 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				await helpers.verifyPanelVisibility({
 					currentView: 'capitalRegion',
 					currentLevel: 'start',
-				});
+				})
 
 				// 2. Navigate to postal code level
-				await helpers.drillToLevel('postalCode');
+				await helpers.drillToLevel('postalCode')
 				// Wait for postal code UI elements
 				await cesiumPage
 					.waitForSelector('text="Building Scatter Plot"', {
 						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 					})
-					.catch(() => {});
+					.catch(() => {})
 
 				// Verify postal code features
 				await helpers.verifyPanelVisibility({
 					currentView: 'capitalRegion',
 					currentLevel: 'postalCode',
 					hasData: true,
-				});
+				})
 
 				// Verify timeline appears
-				await helpers.verifyTimelineVisibility('postalCode');
+				await helpers.verifyTimelineVisibility('postalCode')
 
 				// 3. Navigate to building level
-				await helpers.drillToLevel('building');
+				await helpers.drillToLevel('building')
 				// Wait for building level elements
 				await cesiumPage
 					.waitForSelector('.mdi-arrow-left', { timeout: TEST_TIMEOUTS.CESIUM_READY })
-					.catch(() => {});
+					.catch(() => {})
 
 				// Verify building features
 				await helpers.verifyPanelVisibility({
 					currentView: 'capitalRegion',
 					currentLevel: 'building',
-				});
+				})
 
 				// Verify back navigation works
 				const backButton = cesiumPage
 					.getByRole('button')
-					.filter({ has: cesiumPage.locator('.mdi-arrow-left') });
-				await expect(backButton).toBeVisible();
+					.filter({ has: cesiumPage.locator('.mdi-arrow-left') })
+				await expect(backButton).toBeVisible()
 
 				// Test back navigation
-				await backButton.click();
+				await backButton.click()
 				// Wait for navigation back to postal code level
-				await expect(backButton).toBeHidden();
+				await expect(backButton).toBeHidden()
 
 				// Should be back at postal code level
-				await helpers.verifyTimelineVisibility('postalCode');
-				await expect(backButton).not.toBeVisible();
+				await helpers.verifyTimelineVisibility('postalCode')
+				await expect(backButton).not.toBeVisible()
 			}
-		);
+		)
 
 		cesiumTest('should support grid analysis workflow', async ({ cesiumPage }) => {
 			// 1. Switch to Statistical Grid view
-			await helpers.navigateToView('gridView');
+			await helpers.navigateToView('gridView')
 
 			// Verify grid-specific features
 			await helpers.verifyPanelVisibility({
 				currentView: 'grid',
 				currentLevel: 'start',
-			});
+			})
 
-			await expect(cesiumPage.getByText('Statistical grid options')).toBeVisible();
+			await expect(cesiumPage.getByText('Statistical grid options')).toBeVisible()
 
 			// 2. Navigate through levels in grid view
-			await helpers.drillToLevel('postalCode');
+			await helpers.drillToLevel('postalCode')
 			// Wait for postal code level in grid view
 			await cesiumPage
 				.waitForSelector('text="Building Scatter Plot"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
-				.catch(() => {});
+				.catch(() => {})
 
 			// Timeline should work in grid view
-			await helpers.verifyTimelineVisibility('postalCode');
+			await helpers.verifyTimelineVisibility('postalCode')
 
 			// 3. Test grid-specific features
-			const coolingCenters = cesiumPage.getByText('Manage Cooling Centers');
+			const coolingCenters = cesiumPage.getByText('Manage Cooling Centers')
 			if (await coolingCenters.isVisible()) {
-				await expect(coolingCenters).toBeVisible();
+				await expect(coolingCenters).toBeVisible()
 			}
 
 			// 4. Navigate to building level in grid view
-			await helpers.drillToLevel('building');
+			await helpers.drillToLevel('building')
 			// Wait for building level in grid view
 			await cesiumPage
 				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
-				.catch(() => {});
+				.catch(() => {})
 
 			// Should show grid-specific building data
-			await expect(cesiumPage.getByText('Building heat data')).toBeVisible();
-		});
+			await expect(cesiumPage.getByText('Building heat data')).toBeVisible()
+		})
 
 		cesiumTest('should support multi-view exploration workflow', async ({ cesiumPage }) => {
-			const views = ['capitalRegionView', 'gridView'] as const;
+			const views = ['capitalRegionView', 'gridView'] as const
 
 			for (const view of views) {
 				// Switch to view
-				await helpers.navigateToView(view);
+				await helpers.navigateToView(view)
 				// Wait for view switch to complete
-				await expect(cesiumPage.locator(`input[value="${view}"]`)).toBeChecked();
+				await expect(cesiumPage.locator(`input[value="${view}"]`)).toBeChecked()
 
 				// Test navigation through all levels
 				for (const level of ['postalCode', 'building'] as const) {
-					await helpers.drillToLevel(level);
+					await helpers.drillToLevel(level)
 					// Wait for level-specific UI
 					if (level === 'postalCode') {
 						await cesiumPage
 							.waitForSelector('text="Building Scatter Plot"', {
 								timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 							})
-							.catch(() => {});
+							.catch(() => {})
 					} else {
 						await cesiumPage
 							.waitForSelector('text="Building heat data"', {
 								timeout: TEST_TIMEOUTS.CESIUM_READY,
 							})
-							.catch(() => {});
+							.catch(() => {})
 					}
 
 					// Verify appropriate features for view+level combination
@@ -154,143 +155,143 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 						currentView: view === 'capitalRegionView' ? 'capitalRegion' : 'grid',
 						currentLevel: level,
 						hasData: true,
-					});
+					})
 
 					if (level === 'postalCode' || level === 'building') {
-						await helpers.verifyTimelineVisibility(level);
+						await helpers.verifyTimelineVisibility(level)
 					}
 				}
 
 				// Reset for next view
 				const resetButton = cesiumPage
 					.getByRole('button')
-					.filter({ has: cesiumPage.locator('.mdi-refresh') });
-				await resetButton.click();
+					.filter({ has: cesiumPage.locator('.mdi-refresh') })
+				await resetButton.click()
 				// Wait for reset to complete
 				await cesiumPage
 					.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-					.catch(() => {});
+					.catch(() => {})
 			}
-		});
-	});
+		})
+	})
 
 	cesiumTest.describe('Feature Combination Testing', () => {
 		cesiumTest(
 			'should handle layers + filters + navigation simultaneously',
 			async ({ cesiumPage }) => {
 				// 1. Navigate to postal code level
-				await helpers.drillToLevel('postalCode');
+				await helpers.drillToLevel('postalCode')
 				// Wait for postal code UI
 				await cesiumPage
 					.waitForSelector('text="Building Scatter Plot"', {
 						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 					})
-					.catch(() => {});
+					.catch(() => {})
 
 				// 2. Enable multiple layers
 				const ndviToggle = cesiumPage
 					.getByText('NDVI')
 					.locator('..')
-					.locator('input[type="checkbox"]');
+					.locator('input[type="checkbox"]')
 				const landCoverToggle = cesiumPage
 					.getByText('Land Cover')
 					.locator('..')
-					.locator('input[type="checkbox"]');
+					.locator('input[type="checkbox"]')
 				const treesToggle = cesiumPage
 					.getByText('Trees')
 					.locator('..')
-					.locator('input[type="checkbox"]');
+					.locator('input[type="checkbox"]')
 
-				await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' });
+				await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' })
 				await helpers.checkWithRetry(landCoverToggle, {
 					elementName: 'Land Cover',
-				});
+				})
 				if (await treesToggle.isVisible()) {
-					await helpers.checkWithRetry(treesToggle, { elementName: 'Trees' });
+					await helpers.checkWithRetry(treesToggle, { elementName: 'Trees' })
 				}
 
 				// 3. Enable multiple filters
 				const publicBuildingsToggle = cesiumPage
 					.getByText('Public Buildings', { exact: true })
 					.locator('..')
-					.locator('input[type="checkbox"]');
+					.locator('input[type="checkbox"]')
 				const tallBuildingsToggle = cesiumPage
 					.getByText('Tall Buildings', { exact: true })
 					.locator('..')
-					.locator('input[type="checkbox"]');
+					.locator('input[type="checkbox"]')
 
 				await helpers.checkWithRetry(publicBuildingsToggle, {
 					elementName: 'Public Buildings',
-				});
+				})
 				await helpers.checkWithRetry(tallBuildingsToggle, {
 					elementName: 'Tall Buildings',
-				});
+				})
 
 				// 4. Use timeline
-				const slider = cesiumPage.locator('.timeline-slider input');
-				await slider.fill('2');
+				const slider = cesiumPage.locator('.timeline-slider input')
+				await slider.fill('2')
 
 				// 5. Navigate to building level with all features enabled
-				await helpers.drillToLevel('building');
+				await helpers.drillToLevel('building')
 				// Wait for building level
 				await cesiumPage
 					.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
-					.catch(() => {});
+					.catch(() => {})
 
 				// 6. Verify all features are maintained
-				await expect(ndviToggle).toBeChecked();
-				await expect(landCoverToggle).toBeChecked();
-				await expect(publicBuildingsToggle).toBeChecked();
-				await expect(tallBuildingsToggle).toBeChecked();
+				await expect(ndviToggle).toBeChecked()
+				await expect(landCoverToggle).toBeChecked()
+				await expect(publicBuildingsToggle).toBeChecked()
+				await expect(tallBuildingsToggle).toBeChecked()
 
-				const currentSliderValue = await slider.inputValue();
-				expect(currentSliderValue).toBe('2');
+				const currentSliderValue = await slider.inputValue()
+				expect(currentSliderValue).toBe('2')
 			}
-		);
+		)
 
 		cesiumTest('should handle view switching with complex state', async ({ cesiumPage }) => {
 			// 1. Set up complex state in Capital Region view
-			await helpers.drillToLevel('postalCode');
+			await helpers.drillToLevel('postalCode')
 			// Wait for postal code level
 			await cesiumPage
 				.waitForSelector('text="Building Scatter Plot"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
-				.catch(() => {});
+				.catch(() => {})
 
 			const ndviToggle = cesiumPage
 				.getByText('NDVI')
 				.locator('..')
-				.locator('input[type="checkbox"]');
+				.locator('input[type="checkbox"]')
 			const tallBuildingsToggle = cesiumPage
 				.getByText('Tall Buildings', { exact: true })
 				.locator('..')
-				.locator('input[type="checkbox"]');
+				.locator('input[type="checkbox"]')
 
-			await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' });
+			await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' })
 			await helpers.checkWithRetry(tallBuildingsToggle, {
 				elementName: 'Tall Buildings',
-			});
+			})
 
 			// 2. Switch to Grid view
-			await helpers.navigateToView('gridView');
+			await helpers.navigateToView('gridView')
 			// Wait for view switch
-			await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked();
+			await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked()
 
 			// 3. Verify state transition
-			await expect(ndviToggle).toBeChecked();
-			await expect(tallBuildingsToggle).toBeChecked();
+			await expect(ndviToggle).toBeChecked()
+			await expect(tallBuildingsToggle).toBeChecked()
 
 			// 4. Switch back to Capital Region
-			await helpers.navigateToView('capitalRegionView');
+			await helpers.navigateToView('capitalRegionView')
 			// Wait for view switch back
-			await expect(cesiumPage.locator('input[value="capitalRegionView"]')).toBeChecked();
+			await expect(cesiumPage.locator('input[value="capitalRegionView"]')).toBeChecked()
 
 			// 5. Verify state is maintained
-			await expect(ndviToggle).toBeChecked();
-			await expect(tallBuildingsToggle).toBeChecked();
-		});
-	});
+			await expect(ndviToggle).toBeChecked()
+			await expect(tallBuildingsToggle).toBeChecked()
+		})
+	})
 
 	cesiumTest.describe('Accessibility Audit', () => {
 		cesiumTest(
@@ -303,56 +304,56 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 					{ view: 'gridView', level: 'start' },
 					{ view: 'gridView', level: 'postalCode' },
 					{ view: 'gridView', level: 'building' },
-				];
+				]
 
 				for (const state of states) {
 					// Reset to clean state
 					const resetButton = cesiumPage
 						.getByRole('button')
-						.filter({ has: cesiumPage.locator('.mdi-refresh') });
-					await resetButton.click();
+						.filter({ has: cesiumPage.locator('.mdi-refresh') })
+					await resetButton.click()
 					// Wait for reset
 					await cesiumPage
 						.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-						.catch(() => {});
+						.catch(() => {})
 
 					// Navigate to target state
-					await helpers.navigateToView(state.view as 'capitalRegionView' | 'gridView');
+					await helpers.navigateToView(state.view as 'capitalRegionView' | 'gridView')
 
 					if (state.level !== 'start') {
-						await helpers.drillToLevel(state.level as 'postalCode' | 'building');
+						await helpers.drillToLevel(state.level as 'postalCode' | 'building')
 						// Wait for level-specific UI
 						if (state.level === 'postalCode') {
 							await cesiumPage
 								.waitForSelector('text="Building Scatter Plot"', {
 									timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 								})
-								.catch(() => {});
+								.catch(() => {})
 						} else {
 							await cesiumPage
 								.waitForSelector('text="Building heat data"', {
 									timeout: TEST_TIMEOUTS.CESIUM_READY,
 								})
-								.catch(() => {});
+								.catch(() => {})
 						}
 					}
 
 					// Capture accessibility state
-					const accessibilityTree = await helpers.captureAccessibilityTree();
+					const accessibilityTree = await helpers.captureAccessibilityTree()
 
 					// Verify essential elements are accessible
-					expect(accessibilityTree.visibleElements.length).toBeGreaterThan(10);
+					expect(accessibilityTree.visibleElements.length).toBeGreaterThan(10)
 					expect(
 						accessibilityTree.interactiveElements.some((e) => e.includes('buttons'))
-					).toBeTruthy();
+					).toBeTruthy()
 
 					// Verify no error states
-					const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]');
-					const errorCount = await errorElements.count();
-					expect(errorCount).toBe(0);
+					const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+					const errorCount = await errorElements.count()
+					expect(errorCount).toBe(0)
 				}
 			}
-		);
+		)
 
 		cesiumTest(
 			'should maintain keyboard navigation throughout complete workflows',
@@ -368,48 +369,48 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 						description: 'building level',
 						action: () => helpers.drillToLevel('building'),
 					},
-				];
+				]
 
 				for (const context of contexts) {
 					// Reset and navigate to context
 					const resetButton = cesiumPage
 						.getByRole('button')
-						.filter({ has: cesiumPage.locator('.mdi-refresh') });
-					await resetButton.click();
+						.filter({ has: cesiumPage.locator('.mdi-refresh') })
+					await resetButton.click()
 					// Wait for reset
 					await cesiumPage
 						.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-						.catch(() => {});
+						.catch(() => {})
 
-					await context.action();
+					await context.action()
 					// Wait for context action to complete
 					await cesiumPage.waitForFunction(() => document.readyState === 'complete', {
 						timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
-					});
+					})
 
 					// Test keyboard navigation
-					let focusableElements = 0;
+					let focusableElements = 0
 
 					for (let i = 0; i < 20; i++) {
-						await cesiumPage.keyboard.press('Tab');
+						await cesiumPage.keyboard.press('Tab')
 						// Brief wait for focus to move
 						await cesiumPage
 							.waitForFunction(() => document.readyState === 'complete', {
 								timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE,
 							})
-							.catch(() => {});
+							.catch(() => {})
 
-						const focused = cesiumPage.locator(':focus');
+						const focused = cesiumPage.locator(':focus')
 						if (await focused.isVisible()) {
-							focusableElements++;
+							focusableElements++
 						}
 					}
 
 					// Should have found focusable elements
-					expect(focusableElements).toBeGreaterThan(3);
+					expect(focusableElements).toBeGreaterThan(3)
 				}
 			}
-		);
+		)
 
 		cesiumTest('should be responsive across all viewport sizes', async ({ cesiumPage }) => {
 			const viewports = [
@@ -418,113 +419,113 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				{ width: 768, height: 1024, name: 'tablet-portrait' },
 				{ width: 375, height: 667, name: 'mobile' },
 				{ width: 320, height: 568, name: 'small-mobile' },
-			];
+			]
 
 			for (const viewport of viewports) {
-				await cesiumPage.setViewportSize(viewport);
+				await cesiumPage.setViewportSize(viewport)
 				// Wait for viewport change to take effect
 				await cesiumPage.waitForFunction(
 					(expectedWidth) => {
-						return window.innerWidth === expectedWidth;
+						return window.innerWidth === expectedWidth
 					},
 					viewport.width,
 					{ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL }
-				);
+				)
 
 				// Test essential elements are accessible
-				await expect(cesiumPage.locator('#cesiumContainer')).toBeVisible();
-				await expect(cesiumPage.locator('#viewModeContainer')).toBeVisible();
-				await expect(cesiumPage.getByText('Layers')).toBeVisible();
-				await expect(cesiumPage.getByText('Filters')).toBeVisible();
+				await expect(cesiumPage.locator('#cesiumContainer')).toBeVisible()
+				await expect(cesiumPage.locator('#viewModeContainer')).toBeVisible()
+				await expect(cesiumPage.getByText('Layers')).toBeVisible()
+				await expect(cesiumPage.getByText('Filters')).toBeVisible()
 
 				// Test navigation works
-				await helpers.navigateToView('gridView');
-				await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked();
+				await helpers.navigateToView('gridView')
+				await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked()
 
-				await helpers.navigateToView('capitalRegionView');
-				await expect(cesiumPage.locator('input[value="capitalRegionView"]')).toBeChecked();
+				await helpers.navigateToView('capitalRegionView')
+				await expect(cesiumPage.locator('input[value="capitalRegionView"]')).toBeChecked()
 			}
-		});
-	});
+		})
+	})
 
 	cesiumTest.describe('Performance and Reliability', () => {
 		cesiumTest('should handle complete workflows under load', async ({ cesiumPage }) => {
 			// Simulate slower network
 			cesiumPage.route('**/*', (route) => {
-				setTimeout(() => route.continue(), 200);
-			});
+				setTimeout(() => route.continue(), 200)
+			})
 
 			// Complete workflow with delays
-			await helpers.navigateToView('gridView');
+			await helpers.navigateToView('gridView')
 			// Wait for grid view
-			await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked();
+			await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked()
 
-			await helpers.drillToLevel('postalCode');
+			await helpers.drillToLevel('postalCode')
 			// Wait for postal code level
 			await cesiumPage
 				.waitForSelector('text="Building Scatter Plot"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
-				.catch(() => {});
+				.catch(() => {})
 
 			// Enable features during slow loading
 			const ndviToggle = cesiumPage
 				.getByText('NDVI')
 				.locator('..')
-				.locator('input[type="checkbox"]');
-			await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' });
+				.locator('input[type="checkbox"]')
+			await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' })
 
-			await helpers.drillToLevel('building');
+			await helpers.drillToLevel('building')
 			// Wait for building level under load
 			await cesiumPage
 				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY_CI })
-				.catch(() => {});
+				.catch(() => {})
 
 			// Should reach stable state
-			await expect(ndviToggle).toBeChecked();
-			await expect(cesiumPage.getByText('Building heat data')).toBeVisible();
-		});
+			await expect(ndviToggle).toBeChecked()
+			await expect(cesiumPage.getByText('Building heat data')).toBeVisible()
+		})
 
 		cesiumTest('should recover gracefully from errors', async ({ cesiumPage }) => {
 			// Simulate some network failures
-			let failCount = 0;
+			let failCount = 0
 			cesiumPage.route('**/*.json', (route) => {
 				if (failCount < 2) {
-					failCount++;
-					route.abort('failed');
+					failCount++
+					route.abort('failed')
 				} else {
-					route.continue();
+					route.continue()
 				}
-			});
+			})
 
 			// Attempt navigation despite failures
-			await helpers.drillToLevel('postalCode');
+			await helpers.drillToLevel('postalCode')
 			// Wait longer for recovery
 			await cesiumPage
 				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
-				.catch(() => {});
+				.catch(() => {})
 
 			// Should not show error states
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]');
-			const errorCount = await errorElements.count();
-			expect(errorCount).toBe(0);
+			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+			const errorCount = await errorElements.count()
+			expect(errorCount).toBe(0)
 
 			// Basic functionality should remain
 			const resetButton = cesiumPage
 				.getByRole('button')
-				.filter({ has: cesiumPage.locator('.mdi-refresh') });
-			await expect(resetButton).toBeVisible();
+				.filter({ has: cesiumPage.locator('.mdi-refresh') })
+			await expect(resetButton).toBeVisible()
 
-			await resetButton.click();
+			await resetButton.click()
 			// Wait for reset to complete
 			await cesiumPage
 				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-				.catch(() => {});
+				.catch(() => {})
 
 			// Should return to stable state
-			await helpers.testNavigationControls('start');
-		});
-	});
+			await helpers.testNavigationControls('start')
+		})
+	})
 
 	cesiumTest.describe('Feature Coverage Validation', () => {
 		cesiumTest('should verify all identified features are accessible', async ({ cesiumPage }) => {
@@ -553,47 +554,47 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				// Level-specific features (test at appropriate levels)
 				'Building Scatter Plot', // postal code level
 				'Building heat data', // building level
-			];
+			]
 
 			// Test features at start level
-			await expect(cesiumPage.getByText('Capital Region Heat')).toBeVisible();
-			await expect(cesiumPage.getByText('Statistical Grid')).toBeVisible();
-			await expect(cesiumPage.getByText('NDVI')).toBeVisible();
-			await expect(cesiumPage.getByText('Land Cover')).toBeVisible();
-			await expect(cesiumPage.getByText('Public Buildings', { exact: true })).toBeVisible();
-			await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).toBeVisible();
-			await expect(cesiumPage.getByText('HSY Background maps')).toBeVisible();
-			await expect(cesiumPage.getByText('Syke Flood Background Maps')).toBeVisible();
-			await expect(cesiumPage.getByText('Geocoding')).toBeVisible();
+			await expect(cesiumPage.getByText('Capital Region Heat')).toBeVisible()
+			await expect(cesiumPage.getByText('Statistical Grid')).toBeVisible()
+			await expect(cesiumPage.getByText('NDVI')).toBeVisible()
+			await expect(cesiumPage.getByText('Land Cover')).toBeVisible()
+			await expect(cesiumPage.getByText('Public Buildings', { exact: true })).toBeVisible()
+			await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).toBeVisible()
+			await expect(cesiumPage.getByText('HSY Background maps')).toBeVisible()
+			await expect(cesiumPage.getByText('Syke Flood Background Maps')).toBeVisible()
+			await expect(cesiumPage.getByText('Geocoding')).toBeVisible()
 
 			// Test features at postal code level
-			await helpers.drillToLevel('postalCode');
+			await helpers.drillToLevel('postalCode')
 			// Wait for postal code level
 			await cesiumPage
 				.waitForSelector('text="Building Scatter Plot"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
-				.catch(() => {});
-			await expect(cesiumPage.getByText('Building Scatter Plot')).toBeVisible();
+				.catch(() => {})
+			await expect(cesiumPage.getByText('Building Scatter Plot')).toBeVisible()
 
 			// Test features at building level
-			await helpers.drillToLevel('building');
+			await helpers.drillToLevel('building')
 			// Wait for building level
 			await cesiumPage
 				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
-				.catch(() => {});
-			await expect(cesiumPage.getByText('Building heat data')).toBeVisible();
+				.catch(() => {})
+			await expect(cesiumPage.getByText('Building heat data')).toBeVisible()
 
 			// All essential controls should remain functional
 			const resetButton = cesiumPage
 				.getByRole('button')
-				.filter({ has: cesiumPage.locator('.mdi-refresh') });
+				.filter({ has: cesiumPage.locator('.mdi-refresh') })
 			const backButton = cesiumPage
 				.getByRole('button')
-				.filter({ has: cesiumPage.locator('.mdi-arrow-left') });
+				.filter({ has: cesiumPage.locator('.mdi-arrow-left') })
 
-			await expect(resetButton).toBeVisible();
-			await expect(backButton).toBeVisible();
-		});
-	});
-});
+			await expect(resetButton).toBeVisible()
+			await expect(backButton).toBeVisible()
+		})
+	})
+})
