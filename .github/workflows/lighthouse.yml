@@ -44,14 +44,11 @@ jobs:
       - name: Build production bundle
         run: bun run build
 
-      - name: Install Lighthouse CI
-        run: bun install -g @lhci/cli@0.14.x
-
       - name: Run Lighthouse CI
         id: lighthouse
         run: |
-          # Run Lighthouse CI and capture output
-          lhci autorun --config=lighthouserc.cjs 2>&1 | tee lighthouse-output.txt
+          # Run Lighthouse CI using bunx (no global install needed)
+          bunx @lhci/cli@0.14.x autorun --config=lighthouserc.cjs 2>&1 | tee lighthouse-output.txt
 
           # Store exit code
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
@@ -60,14 +57,26 @@ jobs:
       - name: Parse Lighthouse results
         id: parse-results
         run: |
+          # Debug: Show what files were created
+          echo "=== Lighthouse CI output directory contents ==="
+          if [ -d ".lighthouseci" ]; then
+            ls -la .lighthouseci/
+          else
+            echo "WARNING: .lighthouseci/ directory does not exist"
+            echo "Lighthouse CI may have failed to run. Check lighthouse-output.txt for details."
+            exit 0
+          fi
+
           # Extract key metrics from Lighthouse output
           if [ -f ".lighthouseci/manifest.json" ]; then
-            echo "Results found in .lighthouseci/"
+            echo "=== Results found in .lighthouseci/ ==="
 
-            # Get the latest run directory
-            LATEST_RUN=$(ls -t .lighthouseci/lhr-*.json | head -1)
+            # Get the latest run file
+            LATEST_RUN=$(ls -t .lighthouseci/lhr-*.json 2>/dev/null | head -1)
 
             if [ -n "$LATEST_RUN" ]; then
+              echo "Parsing results from: $LATEST_RUN"
+
               # Extract key metrics using jq
               PERFORMANCE=$(jq -r '.categories.performance.score * 100 | floor' "$LATEST_RUN")
               ACCESSIBILITY=$(jq -r '.categories.accessibility.score * 100 | floor' "$LATEST_RUN")
@@ -79,6 +88,15 @@ jobs:
               TBT=$(jq -r '.audits["total-blocking-time"].numericValue' "$LATEST_RUN")
               CLS=$(jq -r '.audits["cumulative-layout-shift"].numericValue' "$LATEST_RUN")
 
+              echo "=== Parsed metrics ==="
+              echo "Performance: $PERFORMANCE"
+              echo "Accessibility: $ACCESSIBILITY"
+              echo "Best Practices: $BEST_PRACTICES"
+              echo "SEO: $SEO"
+              echo "LCP: ${LCP}s"
+              echo "TBT: ${TBT}ms"
+              echo "CLS: $CLS"
+
               # Output for PR comment
               echo "performance=$PERFORMANCE" >> $GITHUB_OUTPUT
               echo "accessibility=$ACCESSIBILITY" >> $GITHUB_OUTPUT
@@ -87,7 +105,11 @@ jobs:
               echo "lcp=$LCP" >> $GITHUB_OUTPUT
               echo "tbt=$TBT" >> $GITHUB_OUTPUT
               echo "cls=$CLS" >> $GITHUB_OUTPUT
+            else
+              echo "WARNING: No lhr-*.json files found in .lighthouseci/"
             fi
+          else
+            echo "WARNING: .lighthouseci/manifest.json not found"
           fi
 
       - name: Upload Lighthouse results
