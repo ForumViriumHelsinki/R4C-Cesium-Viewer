@@ -46,71 +46,122 @@ jobs:
 
       - name: Run Lighthouse CI
         id: lighthouse
+        shell: bash
         run: |
+          set -o pipefail
+
+          echo "=== Starting Lighthouse CI ==="
+          echo "Current directory: $(pwd)"
+          echo "Node version: $(node --version)"
+          echo "Bun version: $(bun --version)"
+
+          # Verify dist directory exists from build
+          if [ -d "dist" ]; then
+            echo "✓ dist/ directory exists"
+            echo "Contents:"
+            ls -la dist/ | head -10
+          else
+            echo "✗ ERROR: dist/ directory not found - build may have failed"
+          fi
+
           # Run Lighthouse CI using bunx (no global install needed)
+          echo "=== Running bunx @lhci/cli autorun ==="
           bunx @lhci/cli@0.14.x autorun --config=lighthouserc.cjs 2>&1 | tee lighthouse-output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          echo "=== Lighthouse CI finished with exit code: $EXIT_CODE ==="
 
           # Store exit code
-          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
         continue-on-error: true
 
       - name: Parse Lighthouse results
         id: parse-results
         run: |
+          # Initialize outputs with error values (will be overwritten on success)
+          echo "performance=" >> $GITHUB_OUTPUT
+          echo "accessibility=" >> $GITHUB_OUTPUT
+          echo "best_practices=" >> $GITHUB_OUTPUT
+          echo "seo=" >> $GITHUB_OUTPUT
+          echo "lcp=" >> $GITHUB_OUTPUT
+          echo "tbt=" >> $GITHUB_OUTPUT
+          echo "cls=" >> $GITHUB_OUTPUT
+          echo "error_message=" >> $GITHUB_OUTPUT
+
           # Debug: Show what files were created
           echo "=== Lighthouse CI output directory contents ==="
           if [ -d ".lighthouseci" ]; then
             ls -la .lighthouseci/
           else
-            echo "WARNING: .lighthouseci/ directory does not exist"
+            echo "ERROR: .lighthouseci/ directory does not exist"
             echo "Lighthouse CI may have failed to run. Check lighthouse-output.txt for details."
+            echo "error_message=Lighthouse CI failed to create output directory" >> $GITHUB_OUTPUT
+
+            # Show last 50 lines of Lighthouse output for debugging
+            if [ -f "lighthouse-output.txt" ]; then
+              echo "=== Last 50 lines of lighthouse-output.txt ==="
+              tail -50 lighthouse-output.txt
+            fi
             exit 0
           fi
 
           # Extract key metrics from Lighthouse output
-          if [ -f ".lighthouseci/manifest.json" ]; then
-            echo "=== Results found in .lighthouseci/ ==="
-
-            # Get the latest run file
-            LATEST_RUN=$(ls -t .lighthouseci/lhr-*.json 2>/dev/null | head -1)
-
-            if [ -n "$LATEST_RUN" ]; then
-              echo "Parsing results from: $LATEST_RUN"
-
-              # Extract key metrics using jq
-              PERFORMANCE=$(jq -r '.categories.performance.score * 100 | floor' "$LATEST_RUN")
-              ACCESSIBILITY=$(jq -r '.categories.accessibility.score * 100 | floor' "$LATEST_RUN")
-              BEST_PRACTICES=$(jq -r '.categories["best-practices"].score * 100 | floor' "$LATEST_RUN")
-              SEO=$(jq -r '.categories.seo.score * 100 | floor' "$LATEST_RUN")
-
-              # Core Web Vitals
-              LCP=$(jq -r '.audits["largest-contentful-paint"].numericValue / 1000' "$LATEST_RUN")
-              TBT=$(jq -r '.audits["total-blocking-time"].numericValue' "$LATEST_RUN")
-              CLS=$(jq -r '.audits["cumulative-layout-shift"].numericValue' "$LATEST_RUN")
-
-              echo "=== Parsed metrics ==="
-              echo "Performance: $PERFORMANCE"
-              echo "Accessibility: $ACCESSIBILITY"
-              echo "Best Practices: $BEST_PRACTICES"
-              echo "SEO: $SEO"
-              echo "LCP: ${LCP}s"
-              echo "TBT: ${TBT}ms"
-              echo "CLS: $CLS"
-
-              # Output for PR comment
-              echo "performance=$PERFORMANCE" >> $GITHUB_OUTPUT
-              echo "accessibility=$ACCESSIBILITY" >> $GITHUB_OUTPUT
-              echo "best_practices=$BEST_PRACTICES" >> $GITHUB_OUTPUT
-              echo "seo=$SEO" >> $GITHUB_OUTPUT
-              echo "lcp=$LCP" >> $GITHUB_OUTPUT
-              echo "tbt=$TBT" >> $GITHUB_OUTPUT
-              echo "cls=$CLS" >> $GITHUB_OUTPUT
-            else
-              echo "WARNING: No lhr-*.json files found in .lighthouseci/"
-            fi
-          else
-            echo "WARNING: .lighthouseci/manifest.json not found"
+          if [ ! -f ".lighthouseci/manifest.json" ]; then
+            echo "ERROR: .lighthouseci/manifest.json not found"
+            echo "error_message=Lighthouse CI manifest.json not found" >> $GITHUB_OUTPUT
+            exit 0
           fi
+
+          echo "=== Results found in .lighthouseci/ ==="
+
+          # Get the latest run file
+          LATEST_RUN=$(ls -t .lighthouseci/lhr-*.json 2>/dev/null | head -1)
+
+          if [ -z "$LATEST_RUN" ]; then
+            echo "ERROR: No lhr-*.json files found in .lighthouseci/"
+            echo "error_message=No Lighthouse report files found" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Parsing results from: $LATEST_RUN"
+
+          # Validate JSON file is readable
+          if ! jq empty "$LATEST_RUN" 2>/dev/null; then
+            echo "ERROR: Failed to parse JSON from $LATEST_RUN"
+            echo "error_message=Failed to parse Lighthouse JSON report" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Extract key metrics using jq (with null handling)
+          PERFORMANCE=$(jq -r 'if .categories.performance.score then (.categories.performance.score * 100 | floor) else "error" end' "$LATEST_RUN")
+          ACCESSIBILITY=$(jq -r 'if .categories.accessibility.score then (.categories.accessibility.score * 100 | floor) else "error" end' "$LATEST_RUN")
+          BEST_PRACTICES=$(jq -r 'if .categories["best-practices"].score then (.categories["best-practices"].score * 100 | floor) else "error" end' "$LATEST_RUN")
+          SEO=$(jq -r 'if .categories.seo.score then (.categories.seo.score * 100 | floor) else "error" end' "$LATEST_RUN")
+
+          # Core Web Vitals (with null handling)
+          LCP=$(jq -r 'if .audits["largest-contentful-paint"].numericValue then (.audits["largest-contentful-paint"].numericValue / 1000 | . * 100 | floor / 100) else "error" end' "$LATEST_RUN")
+          TBT=$(jq -r 'if .audits["total-blocking-time"].numericValue then (.audits["total-blocking-time"].numericValue | floor) else "error" end' "$LATEST_RUN")
+          CLS=$(jq -r 'if .audits["cumulative-layout-shift"].numericValue then (.audits["cumulative-layout-shift"].numericValue | . * 1000 | floor / 1000) else "error" end' "$LATEST_RUN")
+
+          echo "=== Parsed metrics ==="
+          echo "Performance: $PERFORMANCE"
+          echo "Accessibility: $ACCESSIBILITY"
+          echo "Best Practices: $BEST_PRACTICES"
+          echo "SEO: $SEO"
+          echo "LCP: ${LCP}s"
+          echo "TBT: ${TBT}ms"
+          echo "CLS: $CLS"
+
+          # Output for PR comment (overwrite initial empty values)
+          {
+            echo "performance=$PERFORMANCE"
+            echo "accessibility=$ACCESSIBILITY"
+            echo "best_practices=$BEST_PRACTICES"
+            echo "seo=$SEO"
+            echo "lcp=$LCP"
+            echo "tbt=$TBT"
+            echo "cls=$CLS"
+          } >> $GITHUB_OUTPUT
 
       - name: Upload Lighthouse results
         uses: actions/upload-artifact@v4
@@ -139,19 +190,35 @@ jobs:
               console.log('Could not read lighthouse output');
             }
 
-            // Get parsed metrics
-            const performance = '${{ steps.parse-results.outputs.performance }}' || 'N/A';
-            const accessibility = '${{ steps.parse-results.outputs.accessibility }}' || 'N/A';
-            const bestPractices = '${{ steps.parse-results.outputs.best_practices }}' || 'N/A';
-            const seo = '${{ steps.parse-results.outputs.seo }}' || 'N/A';
-            const lcp = '${{ steps.parse-results.outputs.lcp }}' || 'N/A';
-            const tbt = '${{ steps.parse-results.outputs.tbt }}' || 'N/A';
-            const cls = '${{ steps.parse-results.outputs.cls }}' || 'N/A';
+            // Get parsed metrics (empty string means not set)
+            const rawPerformance = '${{ steps.parse-results.outputs.performance }}';
+            const rawAccessibility = '${{ steps.parse-results.outputs.accessibility }}';
+            const rawBestPractices = '${{ steps.parse-results.outputs.best_practices }}';
+            const rawSeo = '${{ steps.parse-results.outputs.seo }}';
+            const rawLcp = '${{ steps.parse-results.outputs.lcp }}';
+            const rawTbt = '${{ steps.parse-results.outputs.tbt }}';
+            const rawCls = '${{ steps.parse-results.outputs.cls }}';
+            const errorMessage = '${{ steps.parse-results.outputs.error_message }}';
+
+            // Helper to check if value is valid
+            const isValid = (val) => val && val !== '' && val !== 'error' && val !== 'null';
+
+            const performance = isValid(rawPerformance) ? rawPerformance : 'N/A';
+            const accessibility = isValid(rawAccessibility) ? rawAccessibility : 'N/A';
+            const bestPractices = isValid(rawBestPractices) ? rawBestPractices : 'N/A';
+            const seo = isValid(rawSeo) ? rawSeo : 'N/A';
+            const lcp = isValid(rawLcp) ? rawLcp : 'N/A';
+            const tbt = isValid(rawTbt) ? rawTbt : 'N/A';
+            const cls = isValid(rawCls) ? rawCls : 'N/A';
+
+            // Check if we have any valid results
+            const hasResults = isValid(rawPerformance) || isValid(rawAccessibility);
 
             // Determine status emoji
             const getStatusEmoji = (score) => {
               if (score === 'N/A') return '⚪';
               const num = parseInt(score);
+              if (isNaN(num)) return '⚪';
               if (num >= 90) return '🟢';
               if (num >= 50) return '🟠';
               return '🔴';
@@ -164,9 +231,26 @@ jobs:
               storageUrl = `\n\n[📊 View Full Lighthouse Report](${urlMatch[0]})`;
             }
 
+            // Create error section if needed
+            let errorSection = '';
+            if (!hasResults) {
+              errorSection = `
+            > ⚠️ **Lighthouse CI did not produce results**
+            > ${errorMessage || 'Unknown error - check the workflow logs for details'}
+            >
+            > This can happen if:
+            > - The preview server failed to start
+            > - Lighthouse timed out waiting for the page
+            > - There was a build error
+            >
+            > Check the [workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+
+            `;
+            }
+
             // Create comment body
             const comment = `## Lighthouse CI Results
-
+            ${errorSection}
             ### Category Scores
 
             | Category | Score |
