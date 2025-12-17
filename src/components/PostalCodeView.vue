@@ -240,7 +240,8 @@
 	</v-card>
 </template>
 
-<script>
+<script setup>
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Building from '../services/building.js'
 import Camera from '../services/camera.js'
 import Datasource from '../services/datasource.js'
@@ -257,411 +258,412 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
 
-export default {
-	data() {
-		return {
-			viewer: null,
-			dataSourceService: null,
-			treeService: null,
-			showPostalCodeView: true,
-			showReturn: false,
-			// Vue reactive data for switches
-			showPlot: true,
-			gridView: false,
-			helsinkiView: false,
-			showVegetation: false,
-			showOtherNature: false,
-			filterBuildings: false,
-			hideNonSote: false,
-			hideLow: false,
-			showTrees: false,
-			landCover: false,
-			switchView: false,
-			hideColdAreas: false,
-			capitalRegionCold: false,
-		}
-	},
-	computed: {
-		shouldShowReturn() {
-			const store = useGlobalStore() // Get access to the global store
-			return store.level === 'building'
-		},
-	},
-	watch: {
-		// Sync Vue reactive data with toggle store
-		showPlot(newValue) {
-			this.toggleStore.setShowPlot(newValue)
-			if (newValue) {
-				this.plotService.showAllPlots()
-			} else {
-				this.plotService.hideAllPlots()
-			}
-		},
-		gridView(newValue) {
-			this.toggleStore.setGridView(newValue)
-			if (newValue) {
-				this.store.setView('grid')
-				this.showPostalCodeView = false
-				eventBus.emit('createPopulationGrid')
-			} else {
-				this.store.setView('capitalRegion')
-				this.reset()
-			}
-		},
-		helsinkiView(_newValue) {
-			this.toggleStore.setHelsinkiView(_newValue)
-			this.capitalRegionViewEvent()
-		},
-		showVegetation(_newValue) {
-			this.toggleStore.setShowVegetation(_newValue)
-			this.loadVegetationEvent()
-		},
-		showOtherNature(_newValue) {
-			this.toggleStore.setShowOtherNature(_newValue)
-			this.loadOtherNatureEvent()
-		},
-		filterBuildings(_newValue) {
-			this.filterBuildingsEvent()
-		},
-		hideNonSote(_newValue) {
-			this.toggleStore.setHideNonSote(_newValue)
-			this.filterBuildingsEvent()
-		},
-		hideLow(_newValue) {
-			this.toggleStore.setHideLow(_newValue)
-			this.filterBuildingsEvent()
-		},
-		showTrees(_newValue) {
-			this.toggleStore.setShowTrees(_newValue)
-			this.loadTreesEvent()
-		},
-		landCover(_newValue) {
-			this.toggleStore.setLandCover(_newValue)
-			this.getLandCoverEvent()
-		},
-		switchView(_newValue) {
-			this.toggleStore.setSwitchView(_newValue)
-			this.switchViewEvent()
-		},
-		hideColdAreas(_newValue) {
-			// Add to toggle store if needed
-			// this.toggleStore.setHideColdAreas(_newValue);
-		},
-		capitalRegionCold(_newValue) {
-			this.toggleStore.setCapitalRegionCold(_newValue)
-			this.toggleCold()
-		},
-		shouldShowReturn(newValue) {
-			this.showReturn = newValue
-		},
-	},
-	mounted() {
-		this.unsubscribe = eventBus.on('initPostalCodeView', this.initPostalCodeView)
-		this.store = useGlobalStore()
-		this.toggleStore = useToggleStore()
-		this.viewer = this.store.cesiumViewer
-		this.elementsDisplayService = new ElementsDisplay()
-	},
-	beforeUnmount() {
-		this.unsubscribe()
-	},
-	methods: {
-		reset() {
-			// Smart reset instead of page reload
-			this.store.setLevel('start')
-			this.store.setPostalCode(null)
-			this.store.setNameOfZone(null)
-			this.store.setView('capitalRegion')
+// Stores
+const store = useGlobalStore()
+const toggleStore = useToggleStore()
 
-			// Reset camera to initial position
-			const camera = new Camera()
-			camera.init()
+// Services (initialized lazily)
+let dataSourceService = null
+let treeService = null
+let buildingService = null
+let plotService = null
+let elementsDisplayService = null
 
-			// Hide all D3.js tooltips via D3 selection (maintains D3.js consistency)
-			// D3 creates tooltips dynamically, so we use D3 selection to hide them
-			import('d3')
-				.then(({ selectAll }) => {
-					selectAll('.tooltip').style('opacity', 0).style('display', 'none')
-				})
-				.catch((error) => {
-					logger.error('Failed to load D3 for tooltip cleanup:', error)
-				})
-		},
-		returnToPostalCode() {
-			const featurepicker = new Featurepicker()
-			featurepicker.loadPostalCode().catch((error) => {
-				logger.error('Failed to load postal code:', error)
-			})
-			if (this.toggleStore.showTrees) {
-				this.treeService.loadTrees().catch((error) => {
-					logger.error('Failed to load trees:', error)
-				})
-			}
-			eventBus.emit('hideBuilding')
-		},
-		initPostalCodeView() {
-			this.dataSourceService = new Datasource()
-			this.treeService = new Tree()
-			this.buildingService = new Building()
-			this.plotService = new Plot()
-			this.addEventListeners()
-		},
-		/**
-		 * Add EventListeners - now mostly handled by Vue watchers
-		 */
-		addEventListeners() {
-			// Most event listeners now handled by Vue watchers
-			// Keep any legacy handlers that are still needed
-		},
+// Reactive state
+const showPostalCodeView = ref(true)
+const showReturn = ref(false)
+const showPlot = ref(true)
+const gridView = ref(false)
+const helsinkiView = ref(false)
+const showVegetation = ref(false)
+const showOtherNature = ref(false)
+const filterBuildings = ref(false)
+const hideNonSote = ref(false)
+const hideLow = ref(false)
+const showTrees = ref(false)
+const landCover = ref(false)
+const switchView = ref(false)
+const hideColdAreas = ref(false)
+const capitalRegionCold = ref(false)
 
-		toggleCold() {
-			if (!this.capitalRegionCold) {
-				this.reset()
-			}
-		},
+// Computed
+const shouldShowReturn = computed(() => store.level === 'building')
 
-		/**
-		 * This function handles the toggle event for switching to capital region view
-		 */
-		async capitalRegionViewEvent() {
-			if (this.helsinkiView) {
-				this.store.setView('helsinki')
-				this.dataSourceService.removeDataSourcesByNamePrefix('PostCodes')
-				await this.dataSourceService.loadGeoJsonDataSource(
-					0.2,
-					'./assets/data/hki_po_clipped.json',
-					'PostCodes'
-				)
-			} else {
-				this.store.setView('capitalRegion')
-				this.reset()
-			}
-		},
+// Event unsubscribe function
+let unsubscribe = null
 
-		/**
-		 * This function handles the toggle event for land cover layer
-		 */
-		getLandCoverEvent() {
-			if (this.landCover) {
-				this.viewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true)
-				createHSYImageryLayer().catch((error) => {
-					logger.error('Failed to create HSY imagery layer:', error)
-				})
-			} else {
-				removeLandcover()
-			}
-		},
+// Methods
+const reset = () => {
+	// Smart reset instead of page reload
+	store.setLevel('start')
+	store.setPostalCode(null)
+	store.setNameOfZone(null)
+	store.setView('capitalRegion')
 
-		/**
-		 * This function handles the toggle event for switching to grid view
-		 * Note: This is a legacy method that may not be needed since watchers handle this
-		 */
-		gridViewEvent() {
-			if (this.gridView) {
-				this.store.setView('grid')
-				this.showPostalCodeView = false
-				eventBus.emit('createPopulationGrid')
-			} else {
-				this.store.setView('capitalRegion')
-				this.reset()
-			}
-		},
+	// Reset camera to initial position
+	const camera = new Camera()
+	camera.init()
 
-		/**
-		 * This function is called when the "Display Plot" toggle button is clicked
-		 * Note: This is a legacy method that may not be needed since watchers handle this
-		 */
-		showPlotEvent() {
-			if (this.showPlot) {
-				this.plotService.showAllPlots()
-			} else {
-				this.plotService.hideAllPlots()
-			}
-		},
-
-		/**
-		 * This function to show or hide tree entities on the map based on the toggle button state
-		 */
-		loadTreesEvent() {
-			if (this.showTrees) {
-				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Trees')) {
-					this.treeService.loadTrees(this.store.postalcode)
-				} else {
-					this.dataSourceService.changeDataSourceShowByName('Trees', true)
-				}
-			} else {
-				this.dataSourceService.changeDataSourceShowByName('Trees', false)
-				this.plotService.showAllPlots()
-				this.buildingService.resetBuildingEntities()
-			}
-		},
-
-		/**
-		 * This function handles the toggle event for showing or hiding the nature areas layer on the map.
-		 */
-		loadOtherNatureEvent() {
-			if (this.showOtherNature) {
-				// If there is a postal code available, load the nature areas for that area.
-				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('OtherNature')) {
-					const otherNatureService = new Othernature()
-					otherNatureService.loadOtherNature(this.store.postalcode).catch((error) => {
-						logger.error('Failed to load other nature data:', error)
-					})
-				} else {
-					this.dataSourceService.changeDataSourceShowByName('OtherNature', true)
-				}
-			} else {
-				this.dataSourceService.changeDataSourceShowByName('OtherNature', false)
-			}
-		},
-
-		/**
-		 * This function handles the toggle event for showing or hiding the vegetation layer on the map.
-		 */
-		loadVegetationEvent() {
-			if (this.showVegetation) {
-				// If there is a postal code available, load the nature areas for that area.
-				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Vegetation')) {
-					const vegetationService = new Vegetation()
-					vegetationService.loadVegetation(this.store.postalcode).catch((error) => {
-						logger.error('Failed to load vegetation data:', error)
-					})
-				} else {
-					this.dataSourceService.changeDataSourceShowByName('Vegetation', true)
-				}
-			} else {
-				this.dataSourceService.changeDataSourceShowByName('Vegetation', false)
-			}
-		},
-
-		filterBuildingsEvent() {
-			this.toggleStore.setHideNonSote(this.hideNonSote)
-			this.toggleStore.setHideNewBuildings(this.filterBuildings)
-			this.toggleStore.setHideLow(this.hideLow)
-
-			if (this.dataSourceService) {
-				const buildingsDataSource = this.dataSourceService.getDataSourceByName(
-					`Buildings ${this.store.postalcode}`
-				)
-
-				if (buildingsDataSource) {
-					if (this.hideNonSote || this.filterBuildings || this.hideLow) {
-						this.buildingService.filterBuildings(buildingsDataSource)
-					} else {
-						this.buildingService.showAllBuildings(buildingsDataSource)
-					}
-
-					if (!this.toggleStore.helsinkiView) {
-						eventBus.emit('updateScatterPlot')
-					}
-				}
-			}
-		},
-
-		/**
-		 * This function is called when the user clicks on the "switch view" toggle button.
-		 */
-		switchViewEvent() {
-			const viewService = new Camera()
-			if (this.switchView) {
-				viewService.switchTo2DView()
-			} else {
-				viewService.switchTo3DView()
-			}
-		},
-
-		/**
-		 * Demonstration of harmonized loading - loads multiple layers smoothly
-		 * This shows how the new loading system can be used for coordinated layer loading
-		 */
-		async loadAllEnvironmentalLayers() {
-			if (!this.store.postalcode) {
-				console.warn('No postal code selected for environmental layer loading')
-				return
-			}
-
-			try {
-				const sessionId = `environmental_${this.store.postalcode}`
-
-				// Define layer configurations for coordinated loading
-				const layerConfigs = [
-					{
-						layerId: 'vegetation',
-						url: this.urlStore.vegetation(this.store.postalcode),
-						type: 'geojson',
-						processor: (data, metadata) => {
-							const vegetationService = new Vegetation()
-							return vegetationService.addVegetationDataSource(data, metadata)
-						},
-						options: {
-							cache: true,
-							cacheTTL: 15 * 60 * 1000,
-							priority: 'normal',
-							retries: 2,
-							progressive: true,
-						},
-					},
-					{
-						layerId: 'othernature',
-						url: this.urlStore.otherNature(this.store.postalcode),
-						type: 'geojson',
-						processor: (data, metadata) => {
-							const otherNatureService = new Othernature()
-							return otherNatureService.addOtherNatureDataSource(data, metadata)
-						},
-						options: {
-							cache: true,
-							cacheTTL: 20 * 60 * 1000,
-							priority: 'normal',
-							retries: 2,
-							progressive: true,
-						},
-					},
-					{
-						layerId: 'trees',
-						// Trees would be handled by the Tree service's coordinated loading
-						processor: async () => {
-							const treeService = new Tree()
-							return treeService.loadTrees()
-						},
-						options: {
-							priority: 'high',
-							cache: true,
-							cacheTTL: 25 * 60 * 1000,
-						},
-					},
-				]
-
-				console.log(
-					`🌿 Starting coordinated environmental layer loading for ${this.store.postalcode}`
-				)
-
-				const results = await loadingCoordinator.startLoadingSession(sessionId, layerConfigs, {
-					priorityStrategy: 'balanced',
-					showGlobalProgress: false, // Don't show global progress for subset loading
-					allowInterruption: true,
-				})
-
-				// Report results
-				const successful = results.filter((r) => r.status === 'fulfilled').length
-				const failed = results.length - successful
-
-				if (failed === 0) {
-					console.log(`✅ All ${successful} environmental layers loaded successfully`)
-				} else {
-					console.warn(
-						`⚠️ ${successful}/${results.length} environmental layers loaded, ${failed} failed`
-					)
-				}
-
-				return results
-			} catch (error) {
-				console.error('Failed to load environmental layers:', error)
-				throw error
-			}
-		},
-	},
+	// Hide all D3.js tooltips via D3 selection (maintains D3.js consistency)
+	// D3 creates tooltips dynamically, so we use D3 selection to hide them
+	import('d3')
+		.then(({ selectAll }) => {
+			selectAll('.tooltip').style('opacity', 0).style('display', 'none')
+		})
+		.catch((error) => {
+			logger.error('Failed to load D3 for tooltip cleanup:', error)
+		})
 }
+
+const returnToPostalCode = () => {
+	const featurepicker = new Featurepicker()
+	featurepicker.loadPostalCode().catch((error) => {
+		logger.error('Failed to load postal code:', error)
+	})
+	if (toggleStore.showTrees) {
+		treeService.loadTrees().catch((error) => {
+			logger.error('Failed to load trees:', error)
+		})
+	}
+	eventBus.emit('hideBuilding')
+}
+
+const initPostalCodeView = () => {
+	dataSourceService = new Datasource()
+	treeService = new Tree()
+	buildingService = new Building()
+	plotService = new Plot()
+	addEventListeners()
+}
+
+const addEventListeners = () => {
+	// Most event listeners now handled by Vue watchers
+	// Keep any legacy handlers that are still needed
+}
+
+const toggleCold = () => {
+	if (!capitalRegionCold.value) {
+		reset()
+	}
+}
+
+const capitalRegionViewEvent = async () => {
+	if (helsinkiView.value) {
+		store.setView('helsinki')
+		dataSourceService.removeDataSourcesByNamePrefix('PostCodes')
+		await dataSourceService.loadGeoJsonDataSource(
+			0.2,
+			'./assets/data/hki_po_clipped.json',
+			'PostCodes'
+		)
+	} else {
+		store.setView('capitalRegion')
+		reset()
+	}
+}
+
+const getLandCoverEvent = () => {
+	if (landCover.value) {
+		store.cesiumViewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true)
+		createHSYImageryLayer().catch((error) => {
+			logger.error('Failed to create HSY imagery layer:', error)
+		})
+	} else {
+		removeLandcover()
+	}
+}
+
+const gridViewEvent = () => {
+	if (gridView.value) {
+		store.setView('grid')
+		showPostalCodeView.value = false
+		eventBus.emit('createPopulationGrid')
+	} else {
+		store.setView('capitalRegion')
+		reset()
+	}
+}
+
+const showPlotEvent = () => {
+	if (showPlot.value) {
+		plotService.showAllPlots()
+	} else {
+		plotService.hideAllPlots()
+	}
+}
+
+const loadTreesEvent = () => {
+	if (showTrees.value) {
+		if (store.postalcode && !dataSourceService.getDataSourceByName('Trees')) {
+			treeService.loadTrees(store.postalcode)
+		} else {
+			dataSourceService.changeDataSourceShowByName('Trees', true)
+		}
+	} else {
+		dataSourceService.changeDataSourceShowByName('Trees', false)
+		plotService.showAllPlots()
+		buildingService.resetBuildingEntities()
+	}
+}
+
+const loadOtherNatureEvent = () => {
+	if (showOtherNature.value) {
+		if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
+			const otherNatureService = new Othernature()
+			otherNatureService.loadOtherNature(store.postalcode).catch((error) => {
+				logger.error('Failed to load other nature data:', error)
+			})
+		} else {
+			dataSourceService.changeDataSourceShowByName('OtherNature', true)
+		}
+	} else {
+		dataSourceService.changeDataSourceShowByName('OtherNature', false)
+	}
+}
+
+const loadVegetationEvent = () => {
+	if (showVegetation.value) {
+		if (store.postalcode && !dataSourceService.getDataSourceByName('Vegetation')) {
+			const vegetationService = new Vegetation()
+			vegetationService.loadVegetation(store.postalcode).catch((error) => {
+				logger.error('Failed to load vegetation data:', error)
+			})
+		} else {
+			dataSourceService.changeDataSourceShowByName('Vegetation', true)
+		}
+	} else {
+		dataSourceService.changeDataSourceShowByName('Vegetation', false)
+	}
+}
+
+const filterBuildingsEvent = () => {
+	toggleStore.setHideNonSote(hideNonSote.value)
+	toggleStore.setHideNewBuildings(filterBuildings.value)
+	toggleStore.setHideLow(hideLow.value)
+
+	if (dataSourceService) {
+		const buildingsDataSource = dataSourceService.getDataSourceByName(
+			`Buildings ${store.postalcode}`
+		)
+
+		if (buildingsDataSource) {
+			if (hideNonSote.value || filterBuildings.value || hideLow.value) {
+				buildingService.filterBuildings(buildingsDataSource)
+			} else {
+				buildingService.showAllBuildings(buildingsDataSource)
+			}
+
+			if (!toggleStore.helsinkiView) {
+				eventBus.emit('updateScatterPlot')
+			}
+		}
+	}
+}
+
+const switchViewEvent = () => {
+	const viewService = new Camera()
+	if (switchView.value) {
+		viewService.switchTo2DView()
+	} else {
+		viewService.switchTo3DView()
+	}
+}
+
+const loadAllEnvironmentalLayers = async () => {
+	if (!store.postalcode) {
+		console.warn('No postal code selected for environmental layer loading')
+		return
+	}
+
+	try {
+		const sessionId = `environmental_${store.postalcode}`
+
+		// Define layer configurations for coordinated loading
+		const layerConfigs = [
+			{
+				layerId: 'vegetation',
+				url: store.urlStore?.vegetation(store.postalcode),
+				type: 'geojson',
+				processor: (data, metadata) => {
+					const vegetationService = new Vegetation()
+					return vegetationService.addVegetationDataSource(data, metadata)
+				},
+				options: {
+					cache: true,
+					cacheTTL: 15 * 60 * 1000,
+					priority: 'normal',
+					retries: 2,
+					progressive: true,
+				},
+			},
+			{
+				layerId: 'othernature',
+				url: store.urlStore?.otherNature(store.postalcode),
+				type: 'geojson',
+				processor: (data, metadata) => {
+					const otherNatureService = new Othernature()
+					return otherNatureService.addOtherNatureDataSource(data, metadata)
+				},
+				options: {
+					cache: true,
+					cacheTTL: 20 * 60 * 1000,
+					priority: 'normal',
+					retries: 2,
+					progressive: true,
+				},
+			},
+			{
+				layerId: 'trees',
+				// Trees would be handled by the Tree service's coordinated loading
+				processor: async () => {
+					const localTreeService = new Tree()
+					return localTreeService.loadTrees()
+				},
+				options: {
+					priority: 'high',
+					cache: true,
+					cacheTTL: 25 * 60 * 1000,
+				},
+			},
+		]
+
+		console.log(`🌿 Starting coordinated environmental layer loading for ${store.postalcode}`)
+
+		const results = await loadingCoordinator.startLoadingSession(sessionId, layerConfigs, {
+			priorityStrategy: 'balanced',
+			showGlobalProgress: false,
+			allowInterruption: true,
+		})
+
+		// Report results
+		const successful = results.filter((r) => r.status === 'fulfilled').length
+		const failed = results.length - successful
+
+		if (failed === 0) {
+			console.log(`✅ All ${successful} environmental layers loaded successfully`)
+		} else {
+			console.warn(
+				`⚠️ ${successful}/${results.length} environmental layers loaded, ${failed} failed`
+			)
+		}
+
+		return results
+	} catch (error) {
+		console.error('Failed to load environmental layers:', error)
+		throw error
+	}
+}
+
+// Watchers with cleanup handlers
+const stopWatchShowPlot = watch(showPlot, (newValue) => {
+	toggleStore.setShowPlot(newValue)
+	if (newValue) {
+		plotService?.showAllPlots()
+	} else {
+		plotService?.hideAllPlots()
+	}
+})
+
+const stopWatchGridView = watch(gridView, (newValue) => {
+	toggleStore.setGridView(newValue)
+	if (newValue) {
+		store.setView('grid')
+		showPostalCodeView.value = false
+		eventBus.emit('createPopulationGrid')
+	} else {
+		store.setView('capitalRegion')
+		reset()
+	}
+})
+
+const stopWatchHelsinkiView = watch(helsinkiView, (newValue) => {
+	toggleStore.setHelsinkiView(newValue)
+	capitalRegionViewEvent().catch((error) => {
+		logger.error('Failed to handle capital region view event:', error)
+	})
+})
+
+const stopWatchShowVegetation = watch(showVegetation, (newValue) => {
+	toggleStore.setShowVegetation(newValue)
+	loadVegetationEvent()
+})
+
+const stopWatchShowOtherNature = watch(showOtherNature, (newValue) => {
+	toggleStore.setShowOtherNature(newValue)
+	loadOtherNatureEvent()
+})
+
+const stopWatchFilterBuildings = watch(filterBuildings, () => {
+	filterBuildingsEvent()
+})
+
+const stopWatchHideNonSote = watch(hideNonSote, (newValue) => {
+	toggleStore.setHideNonSote(newValue)
+	filterBuildingsEvent()
+})
+
+const stopWatchHideLow = watch(hideLow, (newValue) => {
+	toggleStore.setHideLow(newValue)
+	filterBuildingsEvent()
+})
+
+const stopWatchShowTrees = watch(showTrees, (newValue) => {
+	toggleStore.setShowTrees(newValue)
+	loadTreesEvent()
+})
+
+const stopWatchLandCover = watch(landCover, (newValue) => {
+	toggleStore.setLandCover(newValue)
+	getLandCoverEvent()
+})
+
+const stopWatchSwitchView = watch(switchView, (newValue) => {
+	toggleStore.setSwitchView(newValue)
+	switchViewEvent()
+})
+
+const stopWatchHideColdAreas = watch(hideColdAreas, (_newValue) => {
+	// Add to toggle store if needed
+	// toggleStore.setHideColdAreas(newValue)
+})
+
+const stopWatchCapitalRegionCold = watch(capitalRegionCold, (newValue) => {
+	toggleStore.setCapitalRegionCold(newValue)
+	toggleCold()
+})
+
+const stopWatchShouldShowReturn = watch(shouldShowReturn, (newValue) => {
+	showReturn.value = newValue
+})
+
+// Lifecycle hooks
+onMounted(() => {
+	unsubscribe = eventBus.on('initPostalCodeView', initPostalCodeView)
+	elementsDisplayService = new ElementsDisplay()
+})
+
+onBeforeUnmount(() => {
+	// Unsubscribe from event bus
+	if (unsubscribe) {
+		unsubscribe()
+	}
+
+	// Stop all watchers to prevent stale callbacks
+	stopWatchShowPlot()
+	stopWatchGridView()
+	stopWatchHelsinkiView()
+	stopWatchShowVegetation()
+	stopWatchShowOtherNature()
+	stopWatchFilterBuildings()
+	stopWatchHideNonSote()
+	stopWatchHideLow()
+	stopWatchShowTrees()
+	stopWatchLandCover()
+	stopWatchSwitchView()
+	stopWatchHideColdAreas()
+	stopWatchCapitalRegionCold()
+	stopWatchShouldShowReturn()
+})
 </script>
 
 <style>
