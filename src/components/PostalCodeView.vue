@@ -255,6 +255,7 @@ import Tree from '../services/tree.js'
 import Vegetation from '../services/vegetation.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	data() {
@@ -378,15 +379,23 @@ export default {
 
 			// Hide all D3.js tooltips via D3 selection (maintains D3.js consistency)
 			// D3 creates tooltips dynamically, so we use D3 selection to hide them
-			void import('d3').then(({ selectAll }) => {
-				selectAll('.tooltip').style('opacity', 0).style('display', 'none')
-			})
+			import('d3')
+				.then(({ selectAll }) => {
+					selectAll('.tooltip').style('opacity', 0).style('display', 'none')
+				})
+				.catch((error) => {
+					logger.error('Failed to load D3 for tooltip cleanup:', error)
+				})
 		},
 		returnToPostalCode() {
 			const featurepicker = new Featurepicker()
-			featurepicker.loadPostalCode().catch(console.error)
+			featurepicker.loadPostalCode().catch((error) => {
+				logger.error('Failed to load postal code:', error)
+			})
 			if (this.toggleStore.showTrees) {
-				this.treeService.loadTrees()
+				this.treeService.loadTrees().catch((error) => {
+					logger.error('Failed to load trees:', error)
+				})
 			}
 			eventBus.emit('hideBuilding')
 		},
@@ -435,7 +444,9 @@ export default {
 		getLandCoverEvent() {
 			if (this.landCover) {
 				this.viewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true)
-				void createHSYImageryLayer()
+				createHSYImageryLayer().catch((error) => {
+					logger.error('Failed to create HSY imagery layer:', error)
+				})
 			} else {
 				removeLandcover()
 			}
@@ -493,7 +504,9 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('OtherNature')) {
 					const otherNatureService = new Othernature()
-					otherNatureService.loadOtherNature(this.store.postalcode).catch(console.error)
+					otherNatureService.loadOtherNature(this.store.postalcode).catch((error) => {
+						logger.error('Failed to load other nature data:', error)
+					})
 				} else {
 					this.dataSourceService.changeDataSourceShowByName('OtherNature', true)
 				}
@@ -510,7 +523,9 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if (this.store.postalcode && !this.dataSourceService.getDataSourceByName('Vegetation')) {
 					const vegetationService = new Vegetation()
-					vegetationService.loadVegetation(this.store.postalcode).catch(console.error)
+					vegetationService.loadVegetation(this.store.postalcode).catch((error) => {
+						logger.error('Failed to load vegetation data:', error)
+					})
 				} else {
 					this.dataSourceService.changeDataSourceShowByName('Vegetation', true)
 				}

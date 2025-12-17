@@ -148,6 +148,7 @@ import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
 import { useLoadingStore } from './stores/loadingStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
+import logger from './utils/logger.js'
 
 const toggleStore = useToggleStore()
 const globalStore = useGlobalStore()
@@ -190,9 +191,13 @@ const returnToPostalCode = () => {
 	const featurepicker = new Featurepicker()
 	const treeService = new Tree()
 	hideTooltip()
-	featurepicker.loadPostalCode().catch(console.error)
+	featurepicker.loadPostalCode().catch((error) => {
+		logger.error('Failed to load postal code:', error)
+	})
 	if (toggleStore.showTrees) {
-		treeService.loadTrees().catch(console.error)
+		treeService.loadTrees().catch((error) => {
+			logger.error('Failed to load trees:', error)
+		})
 	}
 }
 
@@ -230,7 +235,9 @@ const handleCacheCleared = (sourceId) => {
 	if (sourceId === 'all') {
 		// Refresh cache status for all layers
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
-			void loadingStore.checkLayerCache(layer)
+			loadingStore.checkLayerCache(layer).catch((error) => {
+				logger.error(`Failed to check layer cache for ${layer}:`, error)
+			})
 		})
 	}
 }
@@ -253,7 +260,9 @@ onMounted(async () => {
 
 		// Check cache status for all layers on app start
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
-			void loadingStore.checkLayerCache(layer)
+			loadingStore.checkLayerCache(layer).catch((error) => {
+				logger.error(`Failed to check layer cache for ${layer}:`, error)
+			})
 		})
 
 		// Start automatic stale loading cleanup timer

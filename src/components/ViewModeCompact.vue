@@ -50,6 +50,7 @@ import { removeLandcover } from '../services/landcover'
 import Tree from '../services/tree.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	name: 'ViewModeCompact',
@@ -94,7 +95,9 @@ export default {
 			await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes')
 
 			if (store.postalcode) {
-				void featurePicker.loadPostalCode()
+				featurePicker.loadPostalCode().catch((error) => {
+					logger.error('Failed to load postal code:', error)
+				})
 			}
 			if (toggleStore.showTrees) {
 				await loadTrees()
@@ -103,7 +106,9 @@ export default {
 
 		const loadTrees = async () => {
 			const treeService = new Tree()
-			void treeService.loadTrees()
+			treeService.loadTrees().catch((error) => {
+				logger.error('Failed to load trees:', error)
+			})
 		}
 
 		const clearLandCover = async () => {
@@ -113,7 +118,9 @@ export default {
 		const capitalRegion = async () => {
 			const checked = activeViewMode.value === 'capitalRegionView'
 			toggleStore.setCapitalRegionCold(!checked)
-			setCapitalRegion().catch(console.error)
+			setCapitalRegion().catch((error) => {
+				logger.error('Failed to set capital region:', error)
+			})
 		}
 
 		const gridView = () => {

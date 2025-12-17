@@ -150,6 +150,7 @@ import { useHeatExposureStore } from '../stores/heatExposureStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	components: {
@@ -484,7 +485,9 @@ export default {
 				// Set new timeout
 				cameraMoveTimeout = setTimeout(() => {
 					console.log('[CesiumViewer] 📷 Camera movement ended, checking viewport state...')
-					handleCameraSettled().catch(console.error)
+					handleCameraSettled().catch((error) => {
+						logger.error('Failed to handle camera settled event:', error)
+					})
 				}, DEBOUNCE_DELAY_MS)
 			})
 
@@ -623,8 +626,12 @@ export default {
 			store.setIsLoading(true)
 			await initViewer()
 			if (!errorSnackbar.value) {
-				socioEconomicsStore.loadPaavo().catch(console.error)
-				heatExposureStore.loadHeatExposure().catch(console.error)
+				socioEconomicsStore.loadPaavo().catch((error) => {
+					logger.error('Failed to load Paavo data on retry:', error)
+				})
+				heatExposureStore.loadHeatExposure().catch((error) => {
+					logger.error('Failed to load heat exposure data on retry:', error)
+				})
 			}
 			store.setIsLoading(false)
 		}
@@ -729,8 +736,12 @@ export default {
 
 		onMounted(async () => {
 			await initViewer()
-			socioEconomicsStore.loadPaavo().catch(console.error)
-			heatExposureStore.loadHeatExposure().catch(console.error)
+			socioEconomicsStore.loadPaavo().catch((error) => {
+				logger.error('Failed to load Paavo data:', error)
+			})
+			heatExposureStore.loadHeatExposure().catch((error) => {
+				logger.error('Failed to load heat exposure data:', error)
+			})
 
 			// Register ESC key handler for animation cancellation
 			document.addEventListener('keydown', handleGlobalEscKey)
@@ -741,14 +752,18 @@ export default {
 			if (typeof requestIdleCallback !== 'undefined') {
 				requestIdleCallback(
 					() => {
-						void cacheWarmer.warmCriticalData()
+						cacheWarmer.warmCriticalData().catch((error) => {
+							logger.error('Failed to warm critical cache data:', error)
+						})
 					},
 					{ timeout: 2000 }
 				) // 2 second timeout
 			} else {
 				// Fallback for browsers without requestIdleCallback
 				setTimeout(() => {
-					void cacheWarmer.warmCriticalData()
+					cacheWarmer.warmCriticalData().catch((error) => {
+						logger.error('Failed to warm critical cache data:', error)
+					})
 				}, 1000)
 			}
 		})

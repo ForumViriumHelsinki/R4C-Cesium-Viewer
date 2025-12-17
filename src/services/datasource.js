@@ -157,24 +157,20 @@ export default class DataSource {
 	 * @throws {Error} If GeoJSON loading fails
 	 */
 	async loadGeoJsonDataSource(opacity, url, name) {
-		return new Promise((resolve, reject) => {
-			Cesium.GeoJsonDataSource.load(url, {
+		try {
+			const dataSource = await Cesium.GeoJsonDataSource.load(url, {
 				stroke: Cesium.Color.BLACK,
 				fill: new Cesium.Color(0.3, 0.3, 0.3, opacity),
 				strokeWidth: 8,
 				clampToGround: false,
 			})
-				.then((dataSource) => {
-					dataSource.name = name
-					this.store.cesiumViewer.dataSources.add(dataSource)
-					const entities = dataSource.entities.values
-					resolve(entities)
-				})
-				.catch((error) => {
-					logger.error('GeoJSON data source loading failed:', error)
-					reject(error)
-				})
-		})
+			dataSource.name = name
+			this.store.cesiumViewer.dataSources.add(dataSource)
+			return dataSource.entities.values
+		} catch (error) {
+			logger.error('GeoJSON data source loading failed:', error)
+			throw error
+		}
 	}
 
 	/**
@@ -188,104 +184,94 @@ export default class DataSource {
 	 * @returns {Promise<Array<Cesium.Entity>>} Promise resolving to array of entities
 	 */
 	async addDataSourceWithPolygonFix(data, name, initialVisibility = true) {
-		return new Promise((resolve, reject) => {
-			// Validate data is not null/undefined
-			if (!data) {
-				logger.warn(`[DATASOURCE CREATE] No data provided for "${name}", returning empty array`)
-				resolve([])
-				return
-			}
+		// Validate data is not null/undefined
+		if (!data) {
+			logger.warn(`[DATASOURCE CREATE] No data provided for "${name}", returning empty array`)
+			return []
+		}
 
-			// Validate GeoJSON structure has required 'type' property
-			if (!data.type) {
-				logger.error(
-					`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": missing 'type' property`,
-					data
-				)
-				reject(
-					new Error(`Invalid GeoJSON structure: missing 'type' property for data source "${name}"`)
-				)
-				return
-			}
-
-			// Validate GeoJSON has features array
-			if (!Array.isArray(data.features)) {
-				logger.error(
-					`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": 'features' is not an array`,
-					data
-				)
-				reject(
-					new Error(
-						`Invalid GeoJSON structure: 'features' must be an array for data source "${name}"`
-					)
-				)
-				return
-			}
-
-			// Handle empty features array - log and return gracefully
-			if (data.features.length === 0) {
-				logger.warn(
-					`[DATASOURCE CREATE] No features in GeoJSON for "${name}", returning empty array`
-				)
-				resolve([])
-				return
-			}
-
-			// DIAGNOSTIC: Log incoming data
-			logger.styled(
-				`[DATASOURCE CREATE] Creating datasource "${name}" with ${data.features?.length || 0} features`,
-				'color: green; font-weight: bold'
+		// Validate GeoJSON structure has required 'type' property
+		if (!data.type) {
+			logger.error(
+				`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": missing 'type' property`,
+				data
 			)
+			throw new Error(
+				`Invalid GeoJSON structure: missing 'type' property for data source "${name}"`
+			)
+		}
 
-			Cesium.GeoJsonDataSource.load(data, {
+		// Validate GeoJSON has features array
+		if (!Array.isArray(data.features)) {
+			logger.error(
+				`[DATASOURCE CREATE] Invalid GeoJSON for "${name}": 'features' is not an array`,
+				data
+			)
+			throw new Error(
+				`Invalid GeoJSON structure: 'features' must be an array for data source "${name}"`
+			)
+		}
+
+		// Handle empty features array - log and return gracefully
+		if (data.features.length === 0) {
+			logger.warn(`[DATASOURCE CREATE] No features in GeoJSON for "${name}", returning empty array`)
+			return []
+		}
+
+		// DIAGNOSTIC: Log incoming data
+		logger.styled(
+			`[DATASOURCE CREATE] Creating datasource "${name}" with ${data.features?.length || 0} features`,
+			'color: green; font-weight: bold'
+		)
+
+		try {
+			const loadedData = await Cesium.GeoJsonDataSource.load(data, {
 				stroke: Cesium.Color.BLACK,
 				fill: Cesium.Color.CRIMSON,
 				strokeWidth: 3,
 				clampToGround: true,
 			})
-				.then(async (loadedData) => {
-					// DIAGNOSTIC: Check for existing datasources before removal
-					const existingDatasources =
-						this.store.cesiumViewer?.dataSources?._dataSources?.filter((ds) =>
-							ds.name?.startsWith(name)
-						) || []
 
-					if (existingDatasources.length > 0) {
-						logger.debug(
-							`[DATASOURCE CREATE] Removing ${existingDatasources.length} existing datasource(s): [${existingDatasources.map((ds) => ds.name).join(', ')}]`
-						)
-					}
+			// DIAGNOSTIC: Check for existing datasources before removal
+			const existingDatasources =
+				this.store.cesiumViewer?.dataSources?._dataSources?.filter((ds) =>
+					ds.name?.startsWith(name)
+				) || []
 
-					// Remove previous datasource with same name to avoid duplicates
-					await this.removeDataSourcesByNamePrefix(name)
-					loadedData.name = name
+			if (existingDatasources.length > 0) {
+				logger.debug(
+					`[DATASOURCE CREATE] Removing ${existingDatasources.length} existing datasource(s): [${existingDatasources.map((ds) => ds.name).join(', ')}]`
+				)
+			}
 
-					// Fix polygon rendering by setting geodesic arc type
-					for (let i = 0; i < loadedData.entities.values.length; i++) {
-						const entity = loadedData.entities.values[i]
+			// Remove previous datasource with same name to avoid duplicates
+			await this.removeDataSourcesByNamePrefix(name)
+			loadedData.name = name
 
-						if (Cesium.defined(entity.polygon)) {
-							entity.polygon.arcType = Cesium.ArcType.GEODESIC
-						}
-					}
+			// Fix polygon rendering by setting geodesic arc type
+			for (let i = 0; i < loadedData.entities.values.length; i++) {
+				const entity = loadedData.entities.values[i]
 
-					this.store.cesiumViewer.dataSources.add(loadedData)
+				if (Cesium.defined(entity.polygon)) {
+					entity.polygon.arcType = Cesium.ArcType.GEODESIC
+				}
+			}
 
-					// Set initial visibility (for viewport-based culling, buildings start hidden)
-					loadedData.show = initialVisibility
+			this.store.cesiumViewer.dataSources.add(loadedData)
 
-					// DIAGNOSTIC: Confirm datasource added
-					logger.debug(
-						`[DATASOURCE CREATE] Added "${name}" with ${loadedData.entities.values.length} entities, show=${loadedData.show} (initialVisibility=${initialVisibility})`
-					)
+			// Set initial visibility (for viewport-based culling, buildings start hidden)
+			loadedData.show = initialVisibility
 
-					resolve(loadedData.entities.values)
-				})
-				.catch((error) => {
-					logger.error(`[DATASOURCE CREATE] Failed to create "${name}":`, error)
-					reject(error)
-				})
-		})
+			// DIAGNOSTIC: Confirm datasource added
+			logger.debug(
+				`[DATASOURCE CREATE] Added "${name}" with ${loadedData.entities.values.length} entities, show=${loadedData.show} (initialVisibility=${initialVisibility})`
+			)
+
+			return loadedData.entities.values
+		} catch (error) {
+			logger.error(`[DATASOURCE CREATE] Failed to create "${name}":`, error)
+			throw error
+		}
 	}
 
 	/**
@@ -329,43 +315,35 @@ export default class DataSource {
 	 * @returns {Promise<void>} Promise that resolves when operation completes
 	 */
 	async removeDuplicateDataSources() {
-		return new Promise((resolve, reject) => {
-			const dataSources = this.store.cesiumViewer.dataSources._dataSources
-			const uniqueDataSources = {}
+		const dataSources = this.store.cesiumViewer.dataSources._dataSources
+		const uniqueDataSources = {}
 
-			// Track first occurrence of each uniquely named data source
-			for (let i = 0; i < dataSources.length; i++) {
-				const dataSource = dataSources[i]
+		// Track first occurrence of each uniquely named data source
+		for (let i = 0; i < dataSources.length; i++) {
+			const dataSource = dataSources[i]
 
-				if (!uniqueDataSources[dataSource.name] || uniqueDataSources[dataSource.name].index > i) {
-					// Store or replace if this is first occurrence or has smaller index
-					uniqueDataSources[dataSource.name] = {
-						dataSource: dataSource,
-						index: i,
-					}
+			if (!uniqueDataSources[dataSource.name] || uniqueDataSources[dataSource.name].index > i) {
+				// Store or replace if this is first occurrence or has smaller index
+				uniqueDataSources[dataSource.name] = {
+					dataSource: dataSource,
+					index: i,
 				}
 			}
+		}
 
-			// Clear all existing data sources
-			this.store.cesiumViewer.dataSources.removeAll()
+		// Clear all existing data sources
+		this.store.cesiumViewer.dataSources.removeAll()
 
-			// Re-add only unique data sources
-			const addPromises = []
-			for (const name in uniqueDataSources) {
-				const dataSource = uniqueDataSources[name].dataSource
-				const addPromise = this.store.cesiumViewer.dataSources.add(dataSource)
-				addPromises.push(addPromise)
-			}
+		// Re-add only unique data sources
+		const addPromises = []
+		for (const name in uniqueDataSources) {
+			const dataSource = uniqueDataSources[name].dataSource
+			const addPromise = this.store.cesiumViewer.dataSources.add(dataSource)
+			addPromises.push(addPromise)
+		}
 
-			// Wait for all data sources to be re-added
-			Promise.all(addPromises)
-				.then(() => {
-					resolve()
-				})
-				.catch((error) => {
-					reject(error)
-				})
-		})
+		// Wait for all data sources to be re-added
+		await Promise.all(addPromises)
 	}
 
 	/**
