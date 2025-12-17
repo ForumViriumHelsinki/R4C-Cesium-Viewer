@@ -60,6 +60,8 @@
  *
  * @class ProgressiveLoader
  */
+import logger from '../utils/logger.js'
+
 class ProgressiveLoader {
 	/**
 	 * Creates a ProgressiveLoader instance
@@ -109,7 +111,7 @@ class ProgressiveLoader {
 	 *   'https://api.example.com/buildings.geojson',
 	 *   {
 	 *     onProgress: (current, total) => {
-	 *       console.log(`Progress: ${current}/${total} features`);
+	 *       logger.debug(`Progress: ${current}/${total} features`);
 	 *     },
 	 *     onChunk: async (chunk) => {
 	 *       // Process each chunk as it's loaded
@@ -176,7 +178,7 @@ class ProgressiveLoader {
 			}
 		} catch (error) {
 			// If HEAD fails, we'll proceed with progressive loading anyway
-			console.warn('Could not get dataset metadata:', error)
+			logger.warn('Could not get dataset metadata:', error)
 			return {
 				estimatedSize: null,
 				contentType: 'application/json',
@@ -269,7 +271,7 @@ class ProgressiveLoader {
 		// So we'll load the full data and then process it in chunks
 		// This still provides progressive UI updates
 
-		console.log('🔄 Starting progressive loading for:', url)
+		logger.debug('🔄 Starting progressive loading for:', url)
 
 		// Load the complete dataset
 		const response = await fetch(url, { signal, timeout: config.timeout })
@@ -318,7 +320,7 @@ class ProgressiveLoader {
 			? this.calculateOptimalChunkSize(totalFeatures)
 			: config.chunkSize
 
-		console.log(`📦 Processing ${totalFeatures} features in chunks of ${chunkSize}`)
+		logger.debug(`📦 Processing ${totalFeatures} features in chunks of ${chunkSize}`)
 
 		let processedFeatures = 0
 		const processedChunks = []
@@ -336,7 +338,7 @@ class ProgressiveLoader {
 					await config.onChunk(chunkData)
 					processedChunks.push(chunkData)
 				} catch (error) {
-					console.error(`Error processing chunk ${Math.floor(i / chunkSize)}:`, error)
+					logger.error(`Error processing chunk ${Math.floor(i / chunkSize)}:`, error)
 					// Continue with other chunks
 				}
 			}
@@ -358,7 +360,7 @@ class ProgressiveLoader {
 			})
 		}
 
-		console.log(`✅ Progressive processing complete: ${processedFeatures} features`)
+		logger.debug(`✅ Progressive processing complete: ${processedFeatures} features`)
 
 		// Return the original data structure
 		return data
@@ -403,7 +405,7 @@ class ProgressiveLoader {
 		if (controller) {
 			controller.abort()
 			this.activeLoads.delete(loadId)
-			console.log('📛 Cancelled progressive loading:', url)
+			logger.debug('📛 Cancelled progressive loading:', url)
 		}
 	}
 
@@ -422,7 +424,7 @@ class ProgressiveLoader {
 			controller.abort()
 		}
 		this.activeLoads.clear()
-		console.log('📛 Cancelled all progressive loading operations')
+		logger.debug('📛 Cancelled all progressive loading operations')
 	}
 
 	/**
@@ -447,8 +449,8 @@ class ProgressiveLoader {
 	 *
 	 * @example
 	 * const stats = progressiveLoader.getLoadStats();
-	 * console.log(`Active loads: ${stats.activeLoads}`);
-	 * console.log(`Load IDs:`, stats.loadIds);
+	 * logger.debug(`Active loads: ${stats.activeLoads}`);
+	 * logger.debug(`Load IDs:`, stats.loadIds);
 	 */
 	getLoadStats() {
 		return {

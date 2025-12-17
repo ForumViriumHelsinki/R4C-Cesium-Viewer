@@ -12,6 +12,7 @@
  */
 
 import { defineStore } from 'pinia'
+import logger from '../utils/logger.js'
 import { useURLStore } from './urlStore.js'
 
 /**
@@ -63,7 +64,7 @@ export const useHeatExposureStore = defineStore('heatExposure', {
 
 				this.data = data
 			} catch (error) {
-				console.error('Error fetching postal codedata:', error)
+				logger.error('Error fetching postal codedata:', error)
 			}
 		},
 
@@ -84,7 +85,7 @@ export const useHeatExposureStore = defineStore('heatExposure', {
 				if (!data || !data.features) throw new Error('Invalid data structure')
 				return data.features
 			} catch (error) {
-				console.error('Error fetching postal code data:', error)
+				logger.error('Error fetching postal code data:', error)
 				throw error // Rethrow to handle it in the calling function
 			}
 		},

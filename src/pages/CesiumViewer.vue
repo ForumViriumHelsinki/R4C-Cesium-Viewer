@@ -237,7 +237,7 @@ export default {
 					Camera = CameraModule.default
 					Graphics = GraphicsModule.default
 				} catch (error) {
-					console.error('Failed to load Cesium library:', error)
+					logger.error('Failed to load Cesium library:', error)
 					errorMessage.value =
 						'Unable to load the 3D map viewer. Please check your internet connection and try again.'
 					errorSnackbar.value = true
@@ -303,7 +303,7 @@ export default {
 			if (isE2ETest) {
 				window.__viewer = viewer.value
 				window.__cesium = Cesium
-				console.log('[CesiumViewer] 🧪 Test mode enabled - viewer exposed to window')
+				logger.debug('[CesiumViewer] 🧪 Test mode enabled - viewer exposed to window')
 			}
 
 			// Initialize graphics quality settings
@@ -329,7 +329,7 @@ export default {
 				viewportBuildingLoader = new ViewportBuildingLoader()
 				// Await initialization - includes retry logic for globe readiness
 				await viewportBuildingLoader.initialize(viewer.value)
-				console.log('[CesiumViewer] ✅ ViewportBuildingLoader initialized (tile-based mode)')
+				logger.debug('[CesiumViewer] ✅ ViewportBuildingLoader initialized (tile-based mode)')
 			}
 
 			// Optimize CPU usage: pause rendering when tab is hidden
@@ -338,11 +338,11 @@ export default {
 
 				if (document.hidden) {
 					viewer.value.scene.requestRenderMode = true
-					console.log('[CesiumViewer] ⏸ Rendering paused (tab hidden)')
+					logger.debug('[CesiumViewer] ⏸ Rendering paused (tab hidden)')
 				} else {
 					viewer.value.scene.requestRenderMode = false
 					viewer.value.scene.requestRender()
-					console.log('[CesiumViewer] ▶ Rendering resumed (tab visible)')
+					logger.debug('[CesiumViewer] ▶ Rendering resumed (tab visible)')
 				}
 			})
 		}
@@ -372,12 +372,12 @@ export default {
 		 * @returns {Promise<void>}
 		 */
 		const addPostalCodes = async () => {
-			console.log('[CesiumViewer] 📮 Loading postal codes...')
+			logger.debug('[CesiumViewer] 📮 Loading postal codes...')
 			const dataSourceService = new Datasource()
 			await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes')
 
 			const dataSource = await dataSourceService.getDataSourceByName('PostCodes')
-			console.log(
+			logger.debug(
 				'[CesiumViewer] ✅ Postal codes loaded, entities count:',
 				dataSource?._entityCollection?._entities?._array?.length || 0
 			)
@@ -404,7 +404,7 @@ export default {
 		const addFeaturePicker = () => {
 			const cesiumContainer = document.getElementById('cesiumContainer')
 			const featurepicker = new Featurepicker()
-			console.log('[CesiumViewer] ✅ FeaturePicker click handler added')
+			logger.debug('[CesiumViewer] ✅ FeaturePicker click handler added')
 
 			// Drag detection: track mouse position to differentiate clicks from drags
 			let mouseDownPosition = null
@@ -422,10 +422,10 @@ export default {
 				const isClickOnTimeSeries = timeSeriesElement?.contains(event.target)
 				const currentTime = Date.now()
 
-				console.log('[CesiumViewer] 🖱️ Cesium click detected')
-				console.log('[CesiumViewer] Click on control panel:', isClickOnControlPanel)
-				console.log('[CesiumViewer] Click on time series:', isClickOnTimeSeries)
-				console.log('[CesiumViewer] Time since last pick:', currentTime - lastPickTime)
+				logger.debug('[CesiumViewer] 🖱️ Cesium click detected')
+				logger.debug('[CesiumViewer] Click on control panel:', isClickOnControlPanel)
+				logger.debug('[CesiumViewer] Click on time series:', isClickOnTimeSeries)
+				logger.debug('[CesiumViewer] Time since last pick:', currentTime - lastPickTime)
 
 				// Check if this was a drag (mouse moved significantly between mousedown and mouseup)
 				if (mouseDownPosition) {
@@ -434,7 +434,7 @@ export default {
 					const distance = Math.sqrt(dx * dx + dy * dy)
 
 					if (distance > DRAG_THRESHOLD) {
-						console.log(
+						logger.debug(
 							'[CesiumViewer] ⚠️ Click ignored - detected as drag (moved',
 							distance.toFixed(1),
 							'px)'
@@ -450,7 +450,7 @@ export default {
 					!isClickOnTimeSeries &&
 					currentTime - lastPickTime > TIMING.CLICK_THROTTLE_MS
 				) {
-					console.log('[CesiumViewer] ✅ Processing click through FeaturePicker')
+					logger.debug('[CesiumViewer] ✅ Processing click through FeaturePicker')
 					store.setShowBuildingInfo(false)
 					if (!store.showBuildingInfo) {
 						featurepicker.processClick(event)
@@ -460,7 +460,7 @@ export default {
 						store.setShowBuildingInfo(true)
 					}, 1000)
 				} else {
-					console.log('[CesiumViewer] ⚠️ Click ignored due to conditions')
+					logger.debug('[CesiumViewer] ⚠️ Click ignored due to conditions')
 				}
 			})
 		}
@@ -484,14 +484,14 @@ export default {
 
 				// Set new timeout
 				cameraMoveTimeout = setTimeout(() => {
-					console.log('[CesiumViewer] 📷 Camera movement ended, checking viewport state...')
+					logger.debug('[CesiumViewer] 📷 Camera movement ended, checking viewport state...')
 					handleCameraSettled().catch((error) => {
 						logger.error('Failed to handle camera settled event:', error)
 					})
 				}, DEBOUNCE_DELAY_MS)
 			})
 
-			console.log(
+			logger.debug(
 				'[CesiumViewer] ✅ Camera moveEnd listener added with',
 				DEBOUNCE_DELAY_MS,
 				'ms debounce'
@@ -517,30 +517,30 @@ export default {
 		const handleCameraSettled = async () => {
 			// Skip postal code-based viewport loading if viewport streaming is active
 			if (featureFlagStore.isEnabled('viewportStreaming')) {
-				console.log('[CesiumViewer] Viewport streaming active, skipping postal code-based loading')
+				logger.debug('[CesiumViewer] Viewport streaming active, skipping postal code-based loading')
 				return
 			}
 
 			// Prevent overlapping calls to avoid visibility blinking
 			// Log camera settled event for visibility debugging
-			console.log(
+			logger.debug(
 				`%c[VISIBILITY] Camera settled - triggering viewport check`,
 				'color: blue; font-weight: bold'
 			)
 			if (isLoadingBuildings.value) {
-				console.log('[CesiumViewer] Already loading buildings, skipping...')
+				logger.debug('[CesiumViewer] Already loading buildings, skipping...')
 				return
 			}
 
 			const currentLevel = store.level
 
-			console.log('[CesiumViewer] Current level:', currentLevel)
+			logger.debug('[CesiumViewer] Current level:', currentLevel)
 
 			// Only handle viewport-based loading at postalCode level
 			// At 'start' level: user should click to select postal code
 			// At 'building' level: building detail view, no automatic loading
 			if (currentLevel !== 'postalCode') {
-				console.log('[CesiumViewer] Not at postalCode level, skipping viewport check')
+				logger.debug('[CesiumViewer] Not at postalCode level, skipping viewport check')
 				return
 			}
 
@@ -550,7 +550,7 @@ export default {
 			// Get viewport rectangle
 			const viewportRect = camera.getViewportRectangle()
 			if (!viewportRect) {
-				console.warn('[CesiumViewer] Could not determine viewport rectangle')
+				logger.warn('[CesiumViewer] Could not determine viewport rectangle')
 				return
 			}
 
@@ -559,10 +559,10 @@ export default {
 			const MAX_HEIGHT_FOR_BUILDING_LOAD = VIEWPORT.MAX_CAMERA_HEIGHT_FOR_BUILDINGS // 50km - only load buildings when zoomed in enough, see ../constants/viewport.js
 
 			if (cameraHeight > MAX_HEIGHT_FOR_BUILDING_LOAD) {
-				console.log('[CesiumViewer] Camera too high for building loading:', cameraHeight, 'm')
+				logger.debug('[CesiumViewer] Camera too high for building loading:', cameraHeight, 'm')
 				return
 			}
-			console.log(
+			logger.debug(
 				'[CesiumViewer] Camera height:',
 				cameraHeight,
 				'm - proceeding with viewport-based building loading'
@@ -593,7 +593,7 @@ export default {
 					total: visiblePostalCodes.length,
 				}
 			} catch (error) {
-				console.error('[CesiumViewer] Error loading buildings:', error?.message || error)
+				logger.error('[CesiumViewer] Error loading buildings:', error?.message || error)
 				viewportLoadingError.value = error?.message || 'Failed to load buildings'
 			} finally {
 				isLoadingBuildings.value = false
@@ -608,7 +608,7 @@ export default {
 		 * @returns {Promise<void>}
 		 */
 		const handleRetryViewportLoading = async () => {
-			console.log('[CesiumViewer] Retrying viewport building loading')
+			logger.debug('[CesiumViewer] Retrying viewport building loading')
 			viewportLoadingError.value = null
 			await handleCameraSettled()
 		}
@@ -643,10 +643,10 @@ export default {
 		 * @returns {void}
 		 */
 		const handleCancelAnimation = () => {
-			console.log('[CesiumViewer] User requested animation cancellation')
+			logger.debug('[CesiumViewer] User requested animation cancellation')
 
 			if (!Camera) {
-				console.warn('[CesiumViewer] Camera module not loaded yet')
+				logger.warn('[CesiumViewer] Camera module not loaded yet')
 				return
 			}
 
@@ -654,10 +654,10 @@ export default {
 			const wasCancelled = camera.cancelFlight()
 
 			if (wasCancelled) {
-				console.log('[CesiumViewer] Animation cancelled successfully')
+				logger.debug('[CesiumViewer] Animation cancelled successfully')
 				// Camera service handles state restoration via callbacks
 			} else {
-				console.warn('[CesiumViewer] No active flight to cancel')
+				logger.warn('[CesiumViewer] No active flight to cancel')
 				// Still reset state to clear UI
 				store.resetClickProcessingState()
 			}
@@ -670,16 +670,16 @@ export default {
 		 * @returns {void}
 		 */
 		const handleRetryLoading = () => {
-			console.log('[CesiumViewer] User requested data loading retry')
+			logger.debug('[CesiumViewer] User requested data loading retry')
 
 			const postalCode = store.clickProcessingState.postalCode
 			if (!postalCode) {
-				console.warn('[CesiumViewer] No postal code to retry')
+				logger.warn('[CesiumViewer] No postal code to retry')
 				return
 			}
 
 			if (!Featurepicker) {
-				console.warn('[CesiumViewer] Featurepicker module not loaded yet')
+				logger.warn('[CesiumViewer] Featurepicker module not loaded yet')
 				return
 			}
 
@@ -716,18 +716,18 @@ export default {
 			() => featureFlagStore.isEnabled('viewportStreaming'),
 			async (newValue, _oldValue) => {
 				if (!viewer.value) {
-					console.warn('[CesiumViewer] Viewer not initialized, cannot toggle viewport streaming')
+					logger.warn('[CesiumViewer] Viewer not initialized, cannot toggle viewport streaming')
 					return
 				}
 
 				if (newValue && !viewportBuildingLoader) {
 					// Enable viewport streaming
-					console.log('[CesiumViewer] Enabling viewport streaming (tile-based loading)')
+					logger.debug('[CesiumViewer] Enabling viewport streaming (tile-based loading)')
 					viewportBuildingLoader = new ViewportBuildingLoader()
 					await viewportBuildingLoader.initialize(viewer.value)
 				} else if (!newValue && viewportBuildingLoader) {
 					// Disable viewport streaming
-					console.log('[CesiumViewer] Disabling viewport streaming')
+					logger.debug('[CesiumViewer] Disabling viewport streaming')
 					await viewportBuildingLoader.shutdown()
 					viewportBuildingLoader = null
 				}
@@ -745,7 +745,7 @@ export default {
 
 			// Register ESC key handler for animation cancellation
 			document.addEventListener('keydown', handleGlobalEscKey)
-			console.log('[CesiumViewer] ⌨️ ESC key handler registered')
+			logger.debug('[CesiumViewer] ⌨️ ESC key handler registered')
 
 			// Start cache warming in background (non-blocking)
 			// Uses requestIdleCallback to run during browser idle time
@@ -771,12 +771,12 @@ export default {
 		onBeforeUnmount(async () => {
 			// Clean up ESC key handler
 			document.removeEventListener('keydown', handleGlobalEscKey)
-			console.log('[CesiumViewer] 🧹 ESC key handler removed')
+			logger.debug('[CesiumViewer] 🧹 ESC key handler removed')
 
 			// Clean up viewport building loader if initialized
 			if (viewportBuildingLoader) {
 				await viewportBuildingLoader.shutdown()
-				console.log('[CesiumViewer] 🧹 ViewportBuildingLoader shutdown complete')
+				logger.debug('[CesiumViewer] 🧹 ViewportBuildingLoader shutdown complete')
 			}
 		})
 

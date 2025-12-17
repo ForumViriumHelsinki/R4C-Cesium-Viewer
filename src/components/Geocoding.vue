@@ -61,6 +61,7 @@ import { eventBus } from '../services/eventEmitter'
 import FeaturePicker from '../services/featurepicker'
 import { useGlobalStore } from '../stores/globalStore'
 import { useToggleStore } from '../stores/toggleStore'
+import logger from '../utils/logger.js'
 
 // State variables
 const searchQuery = ref('')
@@ -92,7 +93,7 @@ const moveToTarget = () => {
 		moveCameraToLocation(matchedAddress)
 	} else {
 		// Optionally, notify the user that no match was found
-		console.log('No matching address found.')
+		logger.debug('No matching address found.')
 	}
 }
 
@@ -141,7 +142,7 @@ const filterSearchResults = async () => {
 			// Show search results if there are any addresses
 			showSearchResults.value = filteredAddresses.value.length > 0
 		} catch (error) {
-			console.error('Geocoding error:', error)
+			logger.error('Geocoding error:', error)
 		}
 	} else {
 		showSearchResults.value = false

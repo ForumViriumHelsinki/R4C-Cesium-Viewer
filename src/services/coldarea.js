@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import Datasource from './datasource.js'
 import ElementsDisplay from './elementsDisplay.js'
 
@@ -71,7 +72,7 @@ export default class ColdArea {
 			const data = await response.json()
 			await this.addColdAreaDataSource(data)
 		} catch (error) {
-			console.error('Error loading cold areas:', error)
+			logger.error('Error loading cold areas:', error)
 			this.store.showError(
 				'Unable to load cold area data. Please try again.',
 				`Failed to fetch cold areas for postal code ${this.store.postalcode}: ${error.message}`

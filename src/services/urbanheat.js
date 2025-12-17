@@ -2,6 +2,7 @@ import { useBuildingStore } from '../stores/buildingStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
 import Datasource from './datasource.js'
 import Decoding from './decoding.js'
@@ -110,12 +111,12 @@ export default class Urbanheat {
 			const response = await fetch(this.urlStore.urbanHeatHelsinki(postcode))
 			const urbanheat = await response.json()
 
-			console.log('[UrbanHeat] 🔄 Processing building heat attributes...')
+			logger.debug('[UrbanHeat] 🔄 Processing building heat attributes...')
 			for (let i = 0; i < data.features.length; i++) {
 				const feature = data.features[i]
 				await setAttributesFromApiToBuilding(feature.properties, urbanheat.features)
 			}
-			console.log('[UrbanHeat] ✅ Building heat attributes processing complete')
+			logger.debug('[UrbanHeat] ✅ Building heat attributes processing complete')
 
 			addMissingHeatData(data.features, urbanheat.features)
 			const entities = await this.datasourceService.addDataSourceWithPolygonFix(
@@ -126,7 +127,7 @@ export default class Urbanheat {
 
 			return entities
 		} catch (error) {
-			console.error('Error finding urban heat data:', error)
+			logger.error('Error finding urban heat data:', error)
 			return null // Handle error case or return accordingly
 		}
 	}

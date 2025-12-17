@@ -110,7 +110,7 @@ export default class ViewportBuildingLoader {
 		this.loadingQueue = []
 		this.activeLoads = 0
 
-		console.log('[ViewportBuildingLoader] Service initialized')
+		logger.debug('[ViewportBuildingLoader] Service initialized')
 	}
 
 	/**
@@ -123,7 +123,7 @@ export default class ViewportBuildingLoader {
 	 */
 	async initialize(viewer) {
 		if (this.isInitialized) {
-			console.warn('[ViewportBuildingLoader] Already initialized, skipping')
+			logger.warn('[ViewportBuildingLoader] Already initialized, skipping')
 			return
 		}
 
@@ -135,7 +135,7 @@ export default class ViewportBuildingLoader {
 		})
 
 		this.isInitialized = true
-		console.log('[ViewportBuildingLoader] Camera listeners attached')
+		logger.debug('[ViewportBuildingLoader] Camera listeners attached')
 
 		// Wait for globe to be ready, then perform initial load with retry
 		await this.waitForGlobeAndLoadInitial()
@@ -156,7 +156,7 @@ export default class ViewportBuildingLoader {
 			// Check if globe is ready (tiles loaded)
 			const globe = this.viewer?.scene?.globe
 			if (!globe) {
-				console.warn('[ViewportBuildingLoader] Globe not available, retrying...')
+				logger.warn('[ViewportBuildingLoader] Globe not available, retrying...')
 				await this.delay(BASE_DELAY_MS * attempt)
 				continue
 			}
@@ -164,7 +164,7 @@ export default class ViewportBuildingLoader {
 			// Try to get viewport bounds
 			const bounds = this.getViewportBounds()
 			if (bounds) {
-				console.log(
+				logger.debug(
 					`[ViewportBuildingLoader] Globe ready, starting initial load (attempt ${attempt})`
 				)
 				await this.updateViewport()
@@ -173,14 +173,14 @@ export default class ViewportBuildingLoader {
 
 			// Bounds not available yet, wait with exponential backoff
 			const delay = BASE_DELAY_MS * 2 ** (attempt - 1)
-			console.log(
+			logger.debug(
 				`[ViewportBuildingLoader] Viewport bounds not ready, retry ${attempt}/${MAX_RETRIES} in ${delay}ms`
 			)
 			await this.delay(delay)
 		}
 
 		// All retries exhausted, set up listener for first camera move
-		console.warn(
+		logger.warn(
 			'[ViewportBuildingLoader] Initial load failed after retries, will load on first camera move'
 		)
 	}
@@ -221,14 +221,14 @@ export default class ViewportBuildingLoader {
 	 */
 	async updateViewport() {
 		if (!this.viewer) {
-			console.warn('[ViewportBuildingLoader] Viewer not initialized')
+			logger.warn('[ViewportBuildingLoader] Viewer not initialized')
 			return
 		}
 
 		// Check camera altitude - skip loading if too high (region overview)
 		const cameraHeight = this.viewer.camera.positionCartographic.height
 		if (cameraHeight > CONFIG.MAX_ALTITUDE_FOR_LOADING) {
-			console.log(
+			logger.debug(
 				`[ViewportBuildingLoader] Camera too high (${Math.round(cameraHeight)}m > ${CONFIG.MAX_ALTITUDE_FOR_LOADING}m), skipping building load`
 			)
 			return
@@ -238,7 +238,7 @@ export default class ViewportBuildingLoader {
 			// Get current viewport bounds with buffer zone
 			const viewportBounds = this.getViewportBounds()
 			if (!viewportBounds) {
-				console.warn('[ViewportBuildingLoader] Cannot determine viewport bounds')
+				logger.warn('[ViewportBuildingLoader] Cannot determine viewport bounds')
 				return
 			}
 
@@ -246,7 +246,7 @@ export default class ViewportBuildingLoader {
 
 			// Calculate required tiles
 			const requiredTileKeys = this.getTilesInBounds(bufferedBounds)
-			console.log(`[ViewportBuildingLoader] Viewport requires ${requiredTileKeys.length} tiles`)
+			logger.debug(`[ViewportBuildingLoader] Viewport requires ${requiredTileKeys.length} tiles`)
 
 			// Update visibility for loaded tiles
 			this.updateTileVisibility(requiredTileKeys)
@@ -259,7 +259,7 @@ export default class ViewportBuildingLoader {
 				logger.error('Failed to unload distant tiles:', error)
 			})
 		} catch (error) {
-			console.error('[ViewportBuildingLoader] Error updating viewport:', error)
+			logger.error('[ViewportBuildingLoader] Error updating viewport:', error)
 		}
 	}
 
@@ -287,7 +287,7 @@ export default class ViewportBuildingLoader {
 				north: Cesium.Math.toDegrees(rect.north),
 			}
 		} catch (error) {
-			console.error('[ViewportBuildingLoader] Error computing viewport rectangle:', error)
+			logger.error('[ViewportBuildingLoader] Error computing viewport rectangle:', error)
 			return null
 		}
 	}
@@ -356,7 +356,7 @@ export default class ViewportBuildingLoader {
 		// Get viewport bounds for center calculation
 		const viewportBounds = this.getViewportBounds()
 		if (!viewportBounds) {
-			console.warn('[ViewportBuildingLoader] Cannot determine viewport center for priority sorting')
+			logger.warn('[ViewportBuildingLoader] Cannot determine viewport center for priority sorting')
 			// Fall back to unsorted loading
 			this.loadingQueue.push(...missingTiles)
 			await this.processLoadingQueue()
@@ -376,7 +376,7 @@ export default class ViewportBuildingLoader {
 				this.getDistanceFromCenter(b, viewportCenter)
 		)
 
-		console.log(
+		logger.debug(
 			`[ViewportBuildingLoader] Loading ${missingTiles.length} tiles (center-out priority)`
 		)
 
@@ -445,7 +445,7 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async loadTile(tileKey) {
-		console.log(`[ViewportBuildingLoader] Loading tile ${tileKey}`)
+		logger.debug(`[ViewportBuildingLoader] Loading tile ${tileKey}`)
 
 		// Parse tile coordinates
 		const [tileX, tileY] = tileKey.split('_').map(Number)
@@ -469,7 +469,7 @@ export default class ViewportBuildingLoader {
 				type: 'geojson',
 				processor: async (data, metadata) => {
 					const fromCache = metadata?.fromCache
-					console.log(
+					logger.debug(
 						fromCache
 							? `[ViewportBuildingLoader] ✓ Using cached data for tile ${tileKey}`
 							: `[ViewportBuildingLoader] ✅ Received ${data.features?.length || 0} buildings for tile ${tileKey}`
@@ -498,9 +498,9 @@ export default class ViewportBuildingLoader {
 				loadedAt: Date.now(),
 			})
 
-			console.log(`[ViewportBuildingLoader] ✅ Tile ${tileKey} loaded successfully`)
+			logger.debug(`[ViewportBuildingLoader] ✅ Tile ${tileKey} loaded successfully`)
 		} catch (error) {
-			console.error(`[ViewportBuildingLoader] ❌ Error loading tile ${tileKey}:`, error)
+			logger.error(`[ViewportBuildingLoader] ❌ Error loading tile ${tileKey}:`, error)
 			throw error
 		}
 	}
@@ -546,13 +546,13 @@ export default class ViewportBuildingLoader {
 	 */
 	async processBuildings(geojson, tileKey) {
 		if (!geojson || !geojson.features || geojson.features.length === 0) {
-			console.warn(`[ViewportBuildingLoader] No features in tile ${tileKey}`)
+			logger.warn(`[ViewportBuildingLoader] No features in tile ${tileKey}`)
 			return []
 		}
 
 		const isHelsinkiView = this.toggleStore.helsinkiView
 		const viewType = isHelsinkiView ? 'Helsinki' : 'Capital Region'
-		console.log(
+		logger.debug(
 			`[ViewportBuildingLoader] Processing ${geojson.features.length} ${viewType} buildings for tile ${tileKey}`
 		)
 
@@ -710,7 +710,7 @@ export default class ViewportBuildingLoader {
 			}
 		}
 
-		console.log(`[ViewportBuildingLoader] ✅ HSY attributes set for ${entities.length} buildings`)
+		logger.debug(`[ViewportBuildingLoader] ✅ HSY attributes set for ${entities.length} buildings`)
 	}
 
 	/**
@@ -769,7 +769,7 @@ export default class ViewportBuildingLoader {
 			await new Promise((resolve) => setTimeout(resolve, stepDuration))
 		}
 
-		console.log(`[ViewportBuildingLoader] ✨ Fade-in complete for ${entities.length} entities`)
+		logger.debug(`[ViewportBuildingLoader] ✨ Fade-in complete for ${entities.length} entities`)
 	}
 
 	/**
@@ -842,7 +842,7 @@ export default class ViewportBuildingLoader {
 		// Evict oldest tiles
 		const tilesToEvict = evictableTiles.slice(0, Math.min(tilesOverLimit, evictableTiles.length))
 
-		console.log(
+		logger.debug(
 			`[ViewportBuildingLoader] Evicting ${tilesToEvict.length} tiles (over limit by ${tilesOverLimit})`
 		)
 
@@ -867,9 +867,9 @@ export default class ViewportBuildingLoader {
 			this.loadedTiles.delete(tileKey)
 			this.visibleTiles.delete(tileKey)
 
-			console.log(`[ViewportBuildingLoader] Tile ${tileKey} unloaded`)
+			logger.debug(`[ViewportBuildingLoader] Tile ${tileKey} unloaded`)
 		} catch (error) {
-			console.error(`[ViewportBuildingLoader] Error unloading tile ${tileKey}:`, error)
+			logger.error(`[ViewportBuildingLoader] Error unloading tile ${tileKey}:`, error)
 		}
 	}
 
@@ -880,7 +880,7 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async clearAllTiles() {
-		console.log(`[ViewportBuildingLoader] Clearing all ${this.loadedTiles.size} loaded tiles`)
+		logger.debug(`[ViewportBuildingLoader] Clearing all ${this.loadedTiles.size} loaded tiles`)
 
 		// Remove all viewport datasources
 		await this.datasourceService.removeDataSourcesByNamePrefix('Buildings Viewport')
@@ -891,7 +891,7 @@ export default class ViewportBuildingLoader {
 		this.loadingTiles.clear()
 		this.loadingQueue = []
 
-		console.log('[ViewportBuildingLoader] All tiles cleared')
+		logger.debug('[ViewportBuildingLoader] All tiles cleared')
 	}
 
 	/**
@@ -901,7 +901,7 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async handleViewModeChange() {
-		console.log('[ViewportBuildingLoader] View mode changed, clearing tiles')
+		logger.debug('[ViewportBuildingLoader] View mode changed, clearing tiles')
 		await this.clearAllTiles()
 		// Trigger reload for new view
 		this.updateViewport().catch((error) => {
@@ -916,7 +916,7 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async shutdown() {
-		console.log('[ViewportBuildingLoader] Shutting down')
+		logger.debug('[ViewportBuildingLoader] Shutting down')
 
 		// Clear debounce timeout
 		if (this.debounceTimeout) {
@@ -930,7 +930,7 @@ export default class ViewportBuildingLoader {
 		await this.clearAllTiles()
 
 		this.isInitialized = false
-		console.log('[ViewportBuildingLoader] Shutdown complete')
+		logger.debug('[ViewportBuildingLoader] Shutdown complete')
 	}
 	/**
 	 * Calculate tile center coordinates from tile key

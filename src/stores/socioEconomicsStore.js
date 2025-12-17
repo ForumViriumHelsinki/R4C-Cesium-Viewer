@@ -27,6 +27,7 @@
  */
 
 import { defineStore } from 'pinia'
+import logger from '../utils/logger.js'
 
 /**
  * Socio-Economics Pinia Store
@@ -105,7 +106,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 				this.addHelsinkiStatisticsToStore()
 				this.calculateRegionTotal()
 			} catch (error) {
-				console.error('Error fetching Paavo data:', error)
+				logger.error('Error fetching Paavo data:', error)
 			}
 		},
 
@@ -124,7 +125,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 				if (!data || !data.features) throw new Error('Invalid data structure')
 				return data
 			} catch (error) {
-				console.error('Error fetching socio-economic data:', error)
+				logger.error('Error fetching socio-economic data:', error)
 				throw error // Rethrow to handle it in the calling function
 			}
 		},

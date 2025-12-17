@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
 
@@ -55,10 +56,10 @@ export default class Vegetation {
 				},
 			})
 
-			console.log(`✓ Vegetation data loaded for postal code ${this.store.postalcode}`)
+			logger.debug(`✓ Vegetation data loaded for postal code ${this.store.postalcode}`)
 			return data
 		} catch (error) {
-			console.error('Failed to load vegetation data:', error)
+			logger.error('Failed to load vegetation data:', error)
 			throw error
 		}
 	}
@@ -99,12 +100,12 @@ export default class Vegetation {
 			}
 
 			if (!metadata.fromCache) {
-				console.log(`✓ Processed ${entities.length} vegetation entities`)
+				logger.debug(`✓ Processed ${entities.length} vegetation entities`)
 			} else {
-				console.log(`✓ Restored ${entities.length} vegetation entities from cache`)
+				logger.debug(`✓ Restored ${entities.length} vegetation entities from cache`)
 			}
 		} catch (error) {
-			console.error('Error processing vegetation data:', error)
+			logger.error('Error processing vegetation data:', error)
 			throw error
 		}
 	}

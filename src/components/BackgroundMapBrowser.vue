@@ -281,6 +281,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore'
 import { useURLStore } from '../stores/urlStore'
+import logger from '../utils/logger.js'
 
 export default {
 	name: 'BackgroundMapBrowser',
@@ -432,7 +433,7 @@ export default {
 				// Extract and flatten all layers
 				const extractLayers = (groups) => {
 					if (!Array.isArray(groups)) {
-						console.warn('Expected groups to be an array, got:', typeof groups)
+						logger.warn('Expected groups to be an array, got:', typeof groups)
 						return []
 					}
 
@@ -468,7 +469,7 @@ export default {
 
 				hsyLayers.value = extractLayers(groupsToProcess)
 			} catch (error) {
-				console.error('Failed to load HSY layers:', error)
+				logger.error('Failed to load HSY layers:', error)
 				hsyLoadError.value = 'Unable to load environmental layers. Please try again later.'
 			} finally {
 				isLoadingHSY.value = false
@@ -482,13 +483,13 @@ export default {
 		const selectHSYLayer = (layer) => {
 			selectedHSYLayer.value = layer.name
 			// TODO: Implement HSY layer selection logic
-			console.log('Selected HSY layer:', layer)
+			logger.debug('Selected HSY layer:', layer)
 		}
 
 		const selectBasicMap = (map) => {
 			selectedBasicMap.value = map.value
 			// TODO: Implement basic map selection logic
-			console.log('Selected basic map:', map)
+			logger.debug('Selected basic map:', map)
 		}
 
 		const updateFloodLayer = async () => {

@@ -267,6 +267,7 @@ import {
 	useFeatureFlagStore,
 } from '@/stores/featureFlagStore'
 import { useGraphicsStore } from '@/stores/graphicsStore'
+import logger from '@/utils/logger'
 import { validateJSON } from '@/utils/validators'
 
 const featureFlagStore = useFeatureFlagStore()
@@ -387,7 +388,7 @@ function doImport(): void {
 				? error.message
 				: 'Invalid JSON format. Please check your input and try again.'
 		showSnackbar(errorMessage, 'error')
-		console.error('Import error:', error)
+		logger.error('Import error:', error)
 	}
 }
 

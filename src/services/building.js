@@ -5,6 +5,7 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import Datasource from './datasource.js'
 import { eventBus } from './eventEmitter.js'
 import Tree from './tree.js'
@@ -292,11 +293,11 @@ export default class Building {
 		const targetPostalCode = postalCode || this.store.postalcode
 		const url = this.urlStore.helsinkiBuildingsUrl(targetPostalCode)
 
-		console.log(
+		logger.debug(
 			'[HelsinkiBuilding] 🏢 Loading Helsinki buildings for postal code:',
 			targetPostalCode
 		)
-		console.log('[HelsinkiBuilding] API URL:', url)
+		logger.debug('[HelsinkiBuilding] API URL:', url)
 
 		try {
 			const loadingConfig = {
@@ -305,7 +306,7 @@ export default class Building {
 				type: 'geojson',
 				processor: async (data, metadata) => {
 					const fromCache = metadata?.fromCache
-					console.log(
+					logger.debug(
 						fromCache ? '[HelsinkiBuilding] ✓ Using cached data' : '[HelsinkiBuilding] ✅ Received',
 						data.features?.length || 0,
 						'building features'
@@ -315,7 +316,7 @@ export default class Building {
 					await this.setHeatExposureToBuildings(entities)
 					await this.setHelsinkiBuildingsHeight(entities)
 
-					console.log('[HelsinkiBuilding] ✅ Buildings processed and added to Cesium viewer')
+					logger.debug('[HelsinkiBuilding] ✅ Buildings processed and added to Cesium viewer')
 					return entities
 				},
 				options: {
@@ -329,7 +330,7 @@ export default class Building {
 
 			await this.unifiedLoader.loadLayer(loadingConfig)
 		} catch (error) {
-			console.error('[HelsinkiBuilding] ❌ Error loading buildings:', error)
+			logger.error('[HelsinkiBuilding] ❌ Error loading buildings:', error)
 		}
 
 		if (this.toggleStore.showTrees) {
@@ -352,7 +353,10 @@ export default class Building {
 		// If the data source isn't found, exit the function
 		if (!buildingDataSource) return
 
-		console.log('[Building] 🔄 Resetting building entities for postal code:', this.store.postalcode)
+		logger.debug(
+			'[Building] 🔄 Resetting building entities for postal code:',
+			this.store.postalcode
+		)
 
 		const buildingEntities = buildingDataSource.entities.values
 		for (let i = 0; i < buildingEntities.length; i++) {
@@ -370,7 +374,7 @@ export default class Building {
 			this.setBuildingEntityPolygon(entity)
 		}
 
-		console.log('[Building] ✅ Reset', buildingEntities.length, 'building entities')
+		logger.debug('[Building] ✅ Reset', buildingEntities.length, 'building entities')
 	}
 
 	/**

@@ -16,6 +16,7 @@
 import * as Cesium from 'cesium'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
+import logger from '../utils/logger.js'
 
 /**
  * Creates and adds a flood risk WMS imagery layer to the Cesium viewer
@@ -73,7 +74,7 @@ export const createFloodImageryLayer = async (url, layerName) => {
 		addedLayer.alpha = 1
 		backgroundMapStore.floodLayers.push(addedLayer)
 	} catch (error) {
-		console.error('Error creating WMS layer:', error)
+		logger.error('Error creating WMS layer:', error)
 	}
 }
 
@@ -107,6 +108,6 @@ export const removeFloodLayers = () => {
 			backgroundMapStore.clearFloodLayers()
 		}
 	} catch (error) {
-		console.error('Error removing floodlayer:', error)
+		logger.error('Error removing floodlayer:', error)
 	}
 }

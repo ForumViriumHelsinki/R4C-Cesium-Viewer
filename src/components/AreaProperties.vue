@@ -146,6 +146,7 @@
 import { computed, ref, watch } from 'vue'
 import { eventBus } from '../services/eventEmitter'
 import { useGlobalStore } from '../stores/globalStore'
+import logger from '../utils/logger.js'
 
 const globalStore = useGlobalStore()
 const searchQuery = ref('')
@@ -437,7 +438,7 @@ async function copyValue(value, label) {
 		copyFeedbackText.value = `${label} copied`
 		showCopyFeedback.value = true
 	} catch (err) {
-		console.error('Copy failed:', err)
+		logger.error('Copy failed:', err)
 	}
 }
 
@@ -449,7 +450,7 @@ async function copyAllProperties() {
 		copyFeedbackText.value = `${lines.length} properties copied`
 		showCopyFeedback.value = true
 	} catch (err) {
-		console.error('Copy failed:', err)
+		logger.error('Copy failed:', err)
 	}
 }
 

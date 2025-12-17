@@ -77,6 +77,8 @@ import progressiveLoader from './progressiveLoader.js'
  *
  * @class UnifiedLoader
  */
+import logger from '../utils/logger.js'
+
 class UnifiedLoader {
 	/**
 	 * Creates a UnifiedLoader instance
@@ -101,7 +103,7 @@ class UnifiedLoader {
 			try {
 				this._loadingStore = useLoadingStore()
 			} catch (error) {
-				console.warn('Loading store not available, using fallback:', error.message)
+				logger.warn('Loading store not available, using fallback:', error.message)
 				// Provide a fallback object with minimal interface
 				this._loadingStore = {
 					startLayerLoading: () => {},
@@ -159,7 +161,7 @@ class UnifiedLoader {
 	 *   processor: async (chunk, metadata) => {
 	 *     // Process each chunk as it loads
 	 *     if (metadata.streaming) {
-	 *       console.log('Processing chunk with', chunk.features.length, 'features');
+	 *       logger.debug('Processing chunk with', chunk.features.length, 'features');
 	 *     }
 	 *   },
 	 *   options: {
@@ -225,7 +227,7 @@ class UnifiedLoader {
 			return data
 		} catch (error) {
 			this.loadingStore.setLayerError(layerId, error.message)
-			console.error(`Failed to load layer ${layerId}:`, error?.message || error)
+			logger.error(`Failed to load layer ${layerId}:`, error?.message || error)
 			throw error
 		}
 	}
@@ -246,12 +248,12 @@ class UnifiedLoader {
 			const cached = await cacheService.getData(cacheKey)
 
 			if (cached && this.isCacheValid(cached, ttl)) {
-				console.log(`✓ Using cached data for ${layerId}`)
+				logger.debug(`✓ Using cached data for ${layerId}`)
 				this.loadingStore.updateLayerProgress(layerId, 100, 100)
 				return cached.data
 			}
 		} catch (error) {
-			console.warn(`Cache check failed for ${layerId}:`, error?.message || error)
+			logger.warn(`Cache check failed for ${layerId}:`, error?.message || error)
 		}
 		return null
 	}
@@ -351,7 +353,7 @@ class UnifiedLoader {
 
 		// Auto-fix GeoJSON missing type property
 		if (data.features && !data.type) {
-			console.warn(
+			logger.warn(
 				`[UnifiedLoader] GeoJSON data for ${layerId} missing 'type' property, auto-fixing to 'FeatureCollection'`
 			)
 			data.type = 'FeatureCollection'
@@ -368,7 +370,7 @@ class UnifiedLoader {
 				await processor(data, metadata)
 			}
 		} catch (error) {
-			console.error(`Error processing data for ${layerId}:`, error?.message || error)
+			logger.error(`Error processing data for ${layerId}:`, error?.message || error)
 			throw error
 		}
 	}
@@ -434,7 +436,7 @@ class UnifiedLoader {
 			// Brief yield for UI responsiveness
 			await new Promise((resolve) => setTimeout(resolve, 0))
 		} catch (error) {
-			console.error(`Error processing chunk for ${layerId}:`, error?.message || error)
+			logger.error(`Error processing chunk for ${layerId}:`, error?.message || error)
 		}
 	}
 
@@ -472,7 +474,7 @@ class UnifiedLoader {
 
 				if (attempt < retries && !options.signal?.aborted) {
 					const delay = 2 ** attempt * 1000 // Exponential backoff
-					console.warn(`Fetch attempt ${attempt + 1} failed, retrying in ${delay}ms...`)
+					logger.warn(`Fetch attempt ${attempt + 1} failed, retrying in ${delay}ms...`)
 					await new Promise((resolve) => setTimeout(resolve, delay))
 				} else {
 					break
@@ -507,7 +509,7 @@ class UnifiedLoader {
 
 			this.loadingStore.updateCacheStatus(layerId, true, Date.now())
 		} catch (error) {
-			console.warn(`Failed to cache data for ${layerId}:`, error?.message || error)
+			logger.warn(`Failed to cache data for ${layerId}:`, error?.message || error)
 		}
 	}
 
@@ -625,9 +627,9 @@ class UnifiedLoader {
 	 *
 	 * results.forEach((result, i) => {
 	 *   if (result.status === 'fulfilled') {
-	 *     console.log(`Layer ${i} loaded successfully`);
+	 *     logger.debug(`Layer ${i} loaded successfully`);
 	 *   } else {
-	 *     console.error(`Layer ${i} failed:`, result.reason);
+	 *     logger.error(`Layer ${i} failed:`, result.reason);
 	 *   }
 	 * });
 	 */
@@ -641,7 +643,7 @@ class UnifiedLoader {
 		// Report any failures
 		results.forEach((result, index) => {
 			if (result.status === 'rejected' || result.value?.error) {
-				console.error(
+				logger.error(
 					`Failed to load layer ${configs[index].layerId}:`,
 					result.reason || result.value?.error
 				)

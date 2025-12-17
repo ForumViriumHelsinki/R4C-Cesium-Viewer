@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 import Camera from './camera.js'
 import Datasource from './datasource.js'
 
@@ -127,7 +128,7 @@ export default class Populationgrid {
 				this.toggleStore.setTravelTime(false)
 			}
 		} catch (error) {
-			console.error(error)
+			logger.error(error)
 		}
 	}
 }

@@ -269,6 +269,7 @@
 <script>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	name: 'GraphicsQuality',
@@ -308,7 +309,7 @@ export default {
 				graphicsStore.setRequestRenderMode(value)
 				// Note: Request render mode requires viewer restart to take effect
 				if (value) {
-					console.warn('Performance mode requires page refresh to take effect')
+					logger.warn('Performance mode requires page refresh to take effect')
 				}
 			},
 		})

@@ -35,6 +35,7 @@ import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 import Timeline from './Timeline.vue'
 
 export default {
@@ -145,7 +146,7 @@ export default {
 
 		const createHSYBarsWithLabels = (svg, data, xScale, yScale, height, colors, tooltip) => {
 			if (!data || !Array.isArray(data) || data.length === 0) {
-				console.warn('No data available for chart.')
+				logger.warn('No data available for chart.')
 				return
 			}
 

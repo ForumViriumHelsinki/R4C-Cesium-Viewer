@@ -21,6 +21,7 @@ import * as Cesium from 'cesium'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 
 /**
  * Creates and adds HSY landcover WMS imagery layer to the Cesium viewer
@@ -108,7 +109,7 @@ export const removeLandcover = () => {
 			backgroundMapStore.clearLandcoverLayers()
 		}
 	} catch (error) {
-		console.error('Error removing landcover:', error)
+		logger.error('Error removing landcover:', error)
 	}
 }
 

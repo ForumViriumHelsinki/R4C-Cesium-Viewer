@@ -59,6 +59,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import DataSource from '../services/datasource.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore'
+import logger from '../utils/logger.js'
 
 const globalStore = useGlobalStore()
 const mitigationStore = useMitigationStore()
@@ -142,7 +143,7 @@ const addCoolingCenter = (entity) => {
 	const euref_y = entity.properties.euref_y?.getValue()
 	const cartesianPosition = getEntityCentroid(entity)
 	if (!cartesianPosition) {
-		console.error('Could not calculate centroid for entity')
+		logger.error('Could not calculate centroid for entity')
 		return
 	}
 
@@ -194,7 +195,7 @@ const addCoolingCenter = (entity) => {
 
 onMounted(() => {
 	if (!viewer.value) {
-		console.error('Cesium viewer is not initialized.')
+		logger.error('Cesium viewer is not initialized.')
 		return
 	}
 

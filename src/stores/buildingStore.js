@@ -6,6 +6,7 @@
  */
 
 import { defineStore } from 'pinia'
+import logger from '../utils/logger.js'
 
 /**
  * Building Pinia Store
@@ -57,7 +58,7 @@ export const useBuildingStore = defineStore('building', {
 				if (this.postalCodeCache.size > this.maxPostalCodes) {
 					const oldestPostalCode = this.postalCodeCache.keys().next().value
 					this.evictPostalCode(oldestPostalCode)
-					console.log(
+					logger.debug(
 						`[BuildingStore] 🧹 Evicted postal code ${oldestPostalCode} (LRU cache limit: ${this.maxPostalCodes})`
 					)
 				}
@@ -69,7 +70,7 @@ export const useBuildingStore = defineStore('building', {
 					type: 'FeatureCollection',
 					features: [...buildings.features],
 				}
-				console.log(
+				logger.debug(
 					`[BuildingStore] 📦 Initialized with ${buildings.features.length} features${postalCode ? ` for postal code ${postalCode}` : ''}`
 				)
 				return
@@ -83,11 +84,11 @@ export const useBuildingStore = defineStore('building', {
 
 			if (newFeatures.length > 0) {
 				this.buildingFeatures.features.push(...newFeatures)
-				console.log(
+				logger.debug(
 					`[BuildingStore] 📦 Added ${newFeatures.length} new features (total: ${this.buildingFeatures.features.length})${postalCode ? ` for postal code ${postalCode}` : ''}, cache size: ${this.postalCodeCache.size}/${this.maxPostalCodes}`
 				)
 			} else {
-				console.log(
+				logger.debug(
 					`[BuildingStore] 📦 No new features to add (${buildings.features.length} already exist)${postalCode ? ` for postal code ${postalCode}` : ''}`
 				)
 			}
@@ -113,7 +114,7 @@ export const useBuildingStore = defineStore('building', {
 			const evictedCount = beforeCount - afterCount
 
 			this.postalCodeCache.delete(postalCode)
-			console.log(
+			logger.debug(
 				`[BuildingStore] 🗑️ Evicted ${evictedCount} features for postal code ${postalCode} (remaining: ${afterCount})`
 			)
 		},
@@ -124,7 +125,7 @@ export const useBuildingStore = defineStore('building', {
 		clearBuildingFeatures() {
 			this.buildingFeatures = null
 			this.postalCodeCache.clear()
-			console.log('[BuildingStore] 🗑️ Cleared all building features and cache')
+			logger.debug('[BuildingStore] 🗑️ Cleared all building features and cache')
 		},
 
 		/**

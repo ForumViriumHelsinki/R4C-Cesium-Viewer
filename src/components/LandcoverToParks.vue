@@ -96,6 +96,7 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 
 // --- STATE MANAGEMENT ---
 const globalStore = useGlobalStore()
@@ -304,7 +305,7 @@ const loadLandcoverData = async (gridId) => {
 		loadedLandcoverDataSource.value = newDataSource
 		landcoverFeaturesLoaded.value = true
 	} catch (error) {
-		console.error('Failed to load landcover data:', error)
+		logger.error('Failed to load landcover data:', error)
 		alert('An error occurred while fetching landcover data.')
 	}
 }
@@ -422,7 +423,7 @@ onMounted(() => {
 		if (gridDataSource.entities.values.length > 0) filterGridEntities()
 		gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities)
 	} else {
-		console.warn(`Datasource '${gridDataSourceName}' not found on mount.`)
+		logger.warn(`Datasource '${gridDataSourceName}' not found on mount.`)
 	}
 })
 

@@ -5,6 +5,7 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import Building from './building.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
 import Datasource from './datasource.js'
@@ -64,8 +65,8 @@ export default class HSYBuilding {
 				? this.urlStore.hsyGridBuildings(bbox)
 				: this.urlStore.hsyBuildings(targetPostalCode)
 
-			console.log('[HSYBuilding] 🏢 Loading HSY buildings for postal code:', targetPostalCode)
-			console.log('[HSYBuilding] API URL:', url)
+			logger.debug('[HSYBuilding] 🏢 Loading HSY buildings for postal code:', targetPostalCode)
+			logger.debug('[HSYBuilding] API URL:', url)
 
 			const loadingConfig = {
 				layerId: `hsy_buildings_${targetPostalCode}${bbox ? '_grid' : ''}`,
@@ -73,7 +74,7 @@ export default class HSYBuilding {
 				type: 'geojson',
 				processor: async (data, metadata) => {
 					const fromCache = metadata?.fromCache
-					console.log(
+					logger.debug(
 						fromCache ? '[HSYBuilding] ✓ Using cached data' : '[HSYBuilding] ✅ Received',
 						data.features?.length || 0,
 						'building features'
@@ -91,7 +92,7 @@ export default class HSYBuilding {
 					const isSelectedPostalCode = targetPostalCode === this.store.postalcode
 					const initialVisibility = isSelectedPostalCode
 
-					console.log(
+					logger.debug(
 						`[HSYBuilding] 📍 Loading buildings for ${targetPostalCode}, selected=${this.store.postalcode}, initialVisibility=${initialVisibility}`
 					)
 
@@ -103,11 +104,11 @@ export default class HSYBuilding {
 
 					// Handle empty results gracefully
 					if (!entities || entities.length === 0) {
-						console.log(`[HSYBuilding] ℹ️ No buildings found for postal code ${targetPostalCode}`)
+						logger.debug(`[HSYBuilding] ℹ️ No buildings found for postal code ${targetPostalCode}`)
 						return []
 					}
 
-					console.log(
+					logger.debug(
 						'[HSYBuilding] 🔧 Calling setHSYBuildingAttributes with',
 						entities.length,
 						'entities',
@@ -116,7 +117,7 @@ export default class HSYBuilding {
 					)
 					await this.setHSYBuildingAttributes(data, entities, targetPostalCode)
 
-					console.log('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer')
+					logger.debug('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer')
 					return entities
 				},
 				options: {
@@ -130,7 +131,7 @@ export default class HSYBuilding {
 
 			return await this.unifiedLoader.loadLayer(loadingConfig)
 		} catch (error) {
-			console.error('[HSYBuilding] ❌ Error loading HSY buildings:', error)
+			logger.error('[HSYBuilding] ❌ Error loading HSY buildings:', error)
 			throw error
 		}
 	}
@@ -138,7 +139,7 @@ export default class HSYBuilding {
 	createGeoJsonPolygon() {
 		try {
 			if (!this.store.currentGridCell?.polygon?.hierarchy) {
-				console.warn('No valid grid cell polygon found')
+				logger.warn('No valid grid cell polygon found')
 				return null
 			}
 
@@ -163,7 +164,7 @@ export default class HSYBuilding {
 				},
 			}
 		} catch (error) {
-			console.error('Error creating GeoJSON polygon:', error)
+			logger.error('Error creating GeoJSON polygon:', error)
 			return null
 		}
 	}
@@ -229,7 +230,7 @@ export default class HSYBuilding {
 			this.setInitialAttributesForIntersectingBuilding(feature, weight, cellProps)
 			this.approximateOtherAttributesForIntersectingBuilding(feature, weight, gridProps)
 		} catch (error) {
-			console.error('Error approximating attributes:', error)
+			logger.error('Error approximating attributes:', error)
 		}
 	}
 
@@ -253,11 +254,11 @@ export default class HSYBuilding {
 		const geoJsonPolygon = this.createGeoJsonPolygon()
 
 		if (!geoJsonPolygon) {
-			console.warn('Skipping grid attributes - no valid polygon')
+			logger.warn('Skipping grid attributes - no valid polygon')
 			return
 		}
 
-		console.log(
+		logger.debug(
 			'[HSYBuilding] 🔄 Processing grid attributes for',
 			features.length,
 			'features with progressive loading'
@@ -283,11 +284,11 @@ export default class HSYBuilding {
 				},
 			})
 		} catch (_error) {
-			console.warn('[HSYBuilding] Unified loader not available, falling back to legacy processing')
+			logger.warn('[HSYBuilding] Unified loader not available, falling back to legacy processing')
 			await this.processGridAttributesLegacy(features, geoJsonPolygon)
 		}
 
-		console.log('[HSYBuilding] ✅ Grid attributes processing complete')
+		logger.debug('[HSYBuilding] ✅ Grid attributes processing complete')
 	}
 
 	async processGridAttributeBatch(batch, geoJsonPolygon) {
@@ -313,7 +314,7 @@ export default class HSYBuilding {
 
 				results.push(feature)
 			} catch (error) {
-				console.warn(`Error processing feature:`, error)
+				logger.warn(`Error processing feature:`, error)
 			}
 		}
 
@@ -345,7 +346,7 @@ export default class HSYBuilding {
 						this.approximateAttributesForIntersectingBuildings(feature)
 					}
 				} catch (error) {
-					console.warn(`Error processing feature:`, error)
+					logger.warn(`Error processing feature:`, error)
 					continue
 				}
 
@@ -358,7 +359,7 @@ export default class HSYBuilding {
 			// Show progress for large datasets
 			if (features.length > 10) {
 				const progress = Math.round(((i + batchSize) / features.length) * 100)
-				console.log(
+				logger.debug(
 					`[HSYBuilding] ⏳ Progress: ${progress}% (${Math.min(i + batchSize, features.length)}/${features.length})`
 				)
 			}
@@ -405,7 +406,7 @@ export default class HSYBuilding {
 				},
 			}
 		} catch (error) {
-			console.error('Error converting entity to GeoJSON:', error)
+			logger.error('Error converting entity to GeoJSON:', error)
 			return null
 		}
 	}
@@ -421,7 +422,7 @@ export default class HSYBuilding {
 	}
 
 	async calculateHSYUrbanHeatData(data, entities, postalCode) {
-		console.log('[HSYBuilding] 🌡️ Calculating urban heat data for', entities.length, 'entities')
+		logger.debug('[HSYBuilding] 🌡️ Calculating urban heat data for', entities.length, 'entities')
 
 		const heatExposureData = this.urbanHeatService.calculateAverageExposure(data.features)
 		const targetDate = this.store.heatDataDate
@@ -439,7 +440,7 @@ export default class HSYBuilding {
 			})
 			.filter((temp) => temp !== null) // Keep only valid temperature values
 
-		console.log('[HSYBuilding] 📊 Calling setBuildingPropsAndEmitEvent with data:', {
+		logger.debug('[HSYBuilding] 📊 Calling setBuildingPropsAndEmitEvent with data:', {
 			entities: entities.length,
 			heatExposureData: heatExposureData.length,
 			avgTempCList: avgTempCList.length,
@@ -451,7 +452,7 @@ export default class HSYBuilding {
 	}
 
 	async setHSYBuildingAttributes(data, entities, postalCode) {
-		console.log('[HSYBuilding] 🏗️ setHSYBuildingAttributes called with:', {
+		logger.debug('[HSYBuilding] 🏗️ setHSYBuildingAttributes called with:', {
 			dataFeatures: data.features?.length || 0,
 			entities: entities.length,
 			postalCode: postalCode,
@@ -464,14 +465,14 @@ export default class HSYBuilding {
 		// Always set buildingFeatures for hover tooltip functionality
 		// This was previously only set inside calculateHSYUrbanHeatData which required postal code
 		const buildingStore = useBuildingStore()
-		console.log('[HSYBuilding] 🎯 Setting buildingFeatures in store (always, for hover support)')
+		logger.debug('[HSYBuilding] 🎯 Setting buildingFeatures in store (always, for hover support)')
 		buildingStore.setBuildingFeatures(data, postalCode)
 
 		if (this.store.postalcode) {
-			console.log('[HSYBuilding] ✓ Postal code exists, calling calculateHSYUrbanHeatData')
+			logger.debug('[HSYBuilding] ✓ Postal code exists, calling calculateHSYUrbanHeatData')
 			void this.calculateHSYUrbanHeatData(data, entities, postalCode)
 		} else {
-			console.log(
+			logger.debug(
 				'[HSYBuilding] ⚠️ No postal code, skipping calculateHSYUrbanHeatData (but buildingFeatures is set)'
 			)
 		}
@@ -515,7 +516,7 @@ const setBuildingPropsAndEmitEvent = (
 	data,
 	postalCode
 ) => {
-	console.log('[HSYBuilding] 💾 setBuildingPropsAndEmitEvent called with:', {
+	logger.debug('[HSYBuilding] 💾 setBuildingPropsAndEmitEvent called with:', {
 		entities: entities.length,
 		heatExposureDataLength: heatExposureData.length,
 		avgTempCListLength: avg_temp_cList.length,
@@ -531,7 +532,7 @@ const setBuildingPropsAndEmitEvent = (
 	propsStore.setHeatHistogramData(avg_temp_cList)
 
 	const buildingStore = useBuildingStore()
-	console.log('[HSYBuilding] 🎯 Setting buildingFeatures in store. Data structure:', {
+	logger.debug('[HSYBuilding] 🎯 Setting buildingFeatures in store. Data structure:', {
 		type: data?.type,
 		featuresCount: data?.features?.length,
 		firstFeatureId: data?.features?.[0]?.id,
@@ -541,7 +542,7 @@ const setBuildingPropsAndEmitEvent = (
 
 	buildingStore.setBuildingFeatures(data, postalCode)
 
-	console.log('[HSYBuilding] ✅ buildingFeatures set in store. Verifying:', {
+	logger.debug('[HSYBuilding] ✅ buildingFeatures set in store. Verifying:', {
 		storeHasFeatures: Boolean(buildingStore.buildingFeatures),
 		storeFeaturesCount: buildingStore.buildingFeatures?.features?.length,
 	})

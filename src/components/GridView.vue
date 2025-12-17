@@ -115,6 +115,7 @@ import { eventBus } from '../services/eventEmitter.js'
 import Populationgrid from '../services/populationgrid.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 import BuildingGridChart from './BuildingGridChart.vue'
 import SosEco250mGrid from './SosEco250mGrid.vue' // Import the 250mGrid component
 import SurveyScatterPlot from './SurveyScatterPlot.vue'
@@ -231,7 +232,7 @@ export default {
 		async travelTimeEvent() {
 			// Check if viewer is initialized
 			if (!this.viewer) {
-				console.error('Viewer is not initialized.')
+				logger.error('Viewer is not initialized.')
 				return // Exit the function if viewer is not initialized
 			}
 
@@ -251,7 +252,7 @@ export default {
 					await this.createPopulationGrid()
 				}
 			} catch (error) {
-				console.error('Error in travelTimeEvent:', error)
+				logger.error('Error in travelTimeEvent:', error)
 			}
 		},
 
@@ -265,7 +266,7 @@ export default {
 				const dataSource = this.datasourceService.getDataSourceByName('PopulationGrid')
 
 				if (!dataSource) {
-					console.error('Data source with name PopulationGrid not found.')
+					logger.error('Data source with name PopulationGrid not found.')
 					return
 				}
 

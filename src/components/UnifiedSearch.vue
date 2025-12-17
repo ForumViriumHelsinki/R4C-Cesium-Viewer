@@ -241,6 +241,7 @@ import FeaturePicker from '../services/featurepicker'
 import { useGlobalStore } from '../stores/globalStore'
 import { usePropsStore } from '../stores/propsStore'
 import { useToggleStore } from '../stores/toggleStore'
+import logger from '../utils/logger.js'
 
 /**
  * Search query state
@@ -431,7 +432,7 @@ const fetchAddressResults = async () => {
 
 		addressResults.value = processAddressData(data.features)
 	} catch (error) {
-		console.error('Geocoding error:', error)
+		logger.error('Geocoding error:', error)
 		addressResults.value = []
 	} finally {
 		isLoading.value = false
@@ -515,7 +516,7 @@ const selectPostalCode = async (area) => {
 		searchQuery.value = `${area.nimi} (${area.posno})`
 		showResults.value = false
 	} catch (error) {
-		console.error('Error selecting postal code:', error)
+		logger.error('Error selecting postal code:', error)
 	} finally {
 		isLoading.value = false
 	}
@@ -547,14 +548,14 @@ const focusOnPostalCode = (postalCode) => {
 
 		// Verify camera has access to the viewer
 		if (!camera.viewer) {
-			console.warn('[UnifiedSearch] Camera viewer not initialized')
+			logger.warn('[UnifiedSearch] Camera viewer not initialized')
 			return
 		}
 
 		// Focus on the postal code (synchronous call)
 		camera.focusOnPostalCode(postalCode)
 	} catch (error) {
-		console.error('Error focusing on postal code:', error)
+		logger.error('Error focusing on postal code:', error)
 	}
 }
 

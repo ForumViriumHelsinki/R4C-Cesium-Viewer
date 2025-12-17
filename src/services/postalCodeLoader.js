@@ -1,4 +1,5 @@
 import { TIMING } from '../constants/timing.js'
+import logger from '../utils/logger.js'
 import cacheWarmer from './cacheWarmer.js'
 
 /**
@@ -20,13 +21,13 @@ export async function checkCacheForPostalCode(_cacheKey, postalCode) {
 	try {
 		// Log if cache warmer has preloaded this data (informational only)
 		if (cacheWarmer.warmedPostalCodes.has(postalCode)) {
-			console.log('[PostalCodeLoader] ✓ Cache warmer preloaded this postal code')
+			logger.debug('[PostalCodeLoader] ✓ Cache warmer preloaded this postal code')
 		}
 
 		// Cache lookup delegated to unifiedLoader - it will check IndexedDB automatically
 		return null
 	} catch (error) {
-		console.warn('[PostalCodeLoader] Cache check failed:', error?.message || error)
+		logger.warn('[PostalCodeLoader] Cache check failed:', error?.message || error)
 		return null
 	}
 }
@@ -58,7 +59,7 @@ export function startCameraAnimation(cameraService, updateProgressCallback, setS
 			// Camera animation is 3 seconds, resolve after that
 			// In a real implementation, we'd hook into the camera completion callback
 			timeoutId = setTimeout(() => {
-				console.log('[PostalCodeLoader] ✓ Camera animation completed')
+				logger.debug('[PostalCodeLoader] ✓ Camera animation completed')
 				updateProgressCallback(1, 2)
 				resolve()
 			}, 3000)
@@ -67,7 +68,7 @@ export function startCameraAnimation(cameraService, updateProgressCallback, setS
 			if (timeoutId) {
 				clearTimeout(timeoutId)
 			}
-			console.error('[PostalCodeLoader] ❌ Camera animation failed:', error?.message || error)
+			logger.error('[PostalCodeLoader] ❌ Camera animation failed:', error?.message || error)
 			reject(error)
 		}
 	})
@@ -131,7 +132,7 @@ export async function loadPostalCodeDataWithRetry(
 			const loadingStore = useLoadingStore()
 			loadingStore.clearStaleLoading(TIMING.STALE_LOADING_TIMEOUT_MS)
 		} catch (error) {
-			console.warn('[PostalCodeLoader] Could not clear stale loading:', error?.message || error)
+			logger.warn('[PostalCodeLoader] Could not clear stale loading:', error?.message || error)
 		}
 
 		// Set zone name and prepare UI
@@ -149,10 +150,10 @@ export async function loadPostalCodeDataWithRetry(
 		performance.mark('data-load-start')
 
 		if (!stores.toggleStore.helsinkiView) {
-			console.log('[PostalCodeLoader] Loading Capital Region elements...')
+			logger.debug('[PostalCodeLoader] Loading Capital Region elements...')
 			await services.capitalRegionService.loadCapitalRegionElements()
 		} else {
-			console.log('[PostalCodeLoader] Loading Helsinki elements...')
+			logger.debug('[PostalCodeLoader] Loading Helsinki elements...')
 			await services.helsinkiService.loadHelsinkiElements()
 		}
 
@@ -160,7 +161,7 @@ export async function loadPostalCodeDataWithRetry(
 		performance.measure('data-load-duration', 'data-load-start', 'data-load-complete')
 
 		const measure = performance.getEntriesByName('data-load-duration')[0]
-		console.log(`[PostalCodeLoader] Data loaded in ${measure.duration.toFixed(2)}ms`)
+		logger.debug(`[PostalCodeLoader] Data loaded in ${measure.duration.toFixed(2)}ms`)
 
 		performance.clearMarks('data-load-start')
 		performance.clearMarks('data-load-complete')
@@ -173,12 +174,12 @@ export async function loadPostalCodeDataWithRetry(
 
 		return { success: true, fromCache: false }
 	} catch (error) {
-		console.error(`[PostalCodeLoader] ❌ Data loading failed (attempt ${retryCount + 1}):`, error)
+		logger.error(`[PostalCodeLoader] ❌ Data loading failed (attempt ${retryCount + 1}):`, error)
 
 		// Retry with exponential backoff for transient failures
 		if (retryCount < maxRetries && isRetriableError(error)) {
 			const delay = baseDelay * 2 ** retryCount
-			console.log(`[PostalCodeLoader] 🔄 Retrying in ${delay}ms...`)
+			logger.debug(`[PostalCodeLoader] 🔄 Retrying in ${delay}ms...`)
 
 			// Update retry count in state
 			setStateCallback({
@@ -214,7 +215,7 @@ export function updateLoadingProgress(current, total, setStateCallback) {
 	})
 
 	const percentage = Math.round((current / total) * 100)
-	console.log(`[PostalCodeLoader] 📊 Loading progress: ${current}/${total} (${percentage}%)`)
+	logger.debug(`[PostalCodeLoader] 📊 Loading progress: ${current}/${total} (${percentage}%)`)
 }
 
 /**
@@ -237,19 +238,19 @@ export function processParallelLoadingResults(
 	const cameraSuccess = cameraResult.status === 'fulfilled'
 	const dataSuccess = dataResult.status === 'fulfilled'
 
-	console.log('[PostalCodeLoader] Results:', {
+	logger.debug('[PostalCodeLoader] Results:', {
 		camera: cameraSuccess ? '✓' : '✗',
 		data: dataSuccess ? '✓' : '✗',
 	})
 
 	// Handle error scenarios
 	if (!cameraSuccess) {
-		console.error('[PostalCodeLoader] ❌ Camera animation failed:', cameraResult.reason)
+		logger.error('[PostalCodeLoader] ❌ Camera animation failed:', cameraResult.reason)
 		// Camera failure is not critical - data can still be shown
 	}
 
 	if (!dataSuccess) {
-		console.error('[PostalCodeLoader] ❌ Data loading failed:', dataResult.reason)
+		logger.error('[PostalCodeLoader] ❌ Data loading failed:', dataResult.reason)
 
 		// Set error state for user feedback
 		setStateCallback({
@@ -277,7 +278,7 @@ export function processParallelLoadingResults(
 		resetStateCallback()
 	}, 500)
 
-	console.log('[PostalCodeLoader] ✅ Postal code loading complete:', postalCode)
+	logger.debug('[PostalCodeLoader] ✅ Postal code loading complete:', postalCode)
 }
 
 /**
@@ -326,14 +327,14 @@ export async function loadPostalCodeWithParallelStrategy(
 
 	let dataPromise
 	if (cachedData) {
-		console.log('[PostalCodeLoader] ⚡ Using cached data for instant loading')
+		logger.debug('[PostalCodeLoader] ⚡ Using cached data for instant loading')
 		// Wrap cached data in Promise.resolve for consistent handling
 		dataPromise = Promise.resolve({ data: cachedData, fromCache: true })
 
 		// Update progress immediately
 		updateProgress(1, 2)
 	} else {
-		console.log('[PostalCodeLoader] 🌐 Loading data from network')
+		logger.debug('[PostalCodeLoader] 🌐 Loading data from network')
 		// Load from network with retry logic
 		dataPromise = loadPostalCodeDataWithRetry(
 			postalCode,
@@ -355,7 +356,9 @@ export async function loadPostalCodeWithParallelStrategy(
 	performance.measure('parallel-load-total', 'parallel-load-start', 'parallel-load-complete')
 
 	const measure = performance.getEntriesByName('parallel-load-total')[0]
-	console.log(`[PostalCodeLoader] ⏱️ Parallel loading completed in ${measure.duration.toFixed(2)}ms`)
+	logger.debug(
+		`[PostalCodeLoader] ⏱️ Parallel loading completed in ${measure.duration.toFixed(2)}ms`
+	)
 
 	performance.clearMarks('parallel-load-start')
 	performance.clearMarks('parallel-load-complete')

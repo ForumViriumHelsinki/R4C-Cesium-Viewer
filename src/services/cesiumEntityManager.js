@@ -14,6 +14,7 @@
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm|Structured Clone Algorithm}
  */
+import logger from '../utils/logger.js'
 
 /**
  * Singleton class managing Cesium entity references by ID
@@ -57,7 +58,7 @@ class CesiumEntityManager {
 			}
 		}
 
-		console.log(`[CesiumEntityManager] Registered ${this.treeEntitiesById.size} tree entities`)
+		logger.debug(`[CesiumEntityManager] Registered ${this.treeEntitiesById.size} tree entities`)
 	}
 
 	/**
@@ -76,7 +77,7 @@ class CesiumEntityManager {
 			}
 		}
 
-		console.log(
+		logger.debug(
 			`[CesiumEntityManager] Registered ${this.buildingEntitiesById.size} building entities`
 		)
 	}
@@ -140,7 +141,7 @@ class CesiumEntityManager {
 		this.treeEntitiesById.clear()
 		this.buildingEntitiesById.clear()
 		this.buildingsDataSource = null
-		console.log('[CesiumEntityManager] Cleared all entity references')
+		logger.debug('[CesiumEntityManager] Cleared all entity references')
 	}
 
 	/**

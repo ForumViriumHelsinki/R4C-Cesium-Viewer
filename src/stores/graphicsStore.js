@@ -22,6 +22,7 @@
  */
 
 import { defineStore } from 'pinia'
+import logger from '../utils/logger.js'
 
 /**
  * Graphics Pinia Store
@@ -167,7 +168,7 @@ export const useGraphicsStore = defineStore('graphics', {
 					this.setRequestRenderMode(true)
 					break
 				default:
-					console.warn(`Unknown quality preset: ${preset}`)
+					logger.warn(`Unknown quality preset: ${preset}`)
 			}
 		},
 	},

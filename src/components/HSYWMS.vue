@@ -58,6 +58,7 @@ import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
 import wms from '../services/wms'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore'
 import { useGlobalStore } from '../stores/globalStore'
+import logger from '../utils/logger.js'
 
 export default {
 	setup() {
@@ -93,8 +94,8 @@ export default {
 					backgroundMapStore.setHSYWMSLayers([])
 				}
 			} catch (error) {
-				console.error('Error fetching WMS layers:', error)
-				console.error('Error details:', {
+				logger.error('Error fetching WMS layers:', error)
+				logger.error('Error details:', {
 					message: error.message,
 					response: error.response?.data,
 					status: error.response?.status,
