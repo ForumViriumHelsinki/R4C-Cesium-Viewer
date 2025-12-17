@@ -87,6 +87,9 @@ migrations:
     requests:
       cpu: 200m
       memory: 256Mi
+  image:
+    tag: 1.38.5
+    repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
 ingress:
   annotations:
     nginx.ingress.kubernetes.io/auth-url: 'https://$host/oauth2/auth'
