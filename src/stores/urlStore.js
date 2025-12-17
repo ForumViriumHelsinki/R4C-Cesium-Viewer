@@ -22,6 +22,7 @@
  */
 
 import { defineStore } from 'pinia'
+import { encodeURLParam, validatePostalCode } from '@/utils/validators'
 
 /**
  * URL Pinia Store
@@ -84,7 +85,8 @@ export const useURLStore = defineStore('url', {
 		 * coldAreas(state)('00100') // Returns cold area URL for postal code 00100
 		 */
 		coldAreas: (state) => (postinumero) => {
-			return `${state.pygeoapiBase}/coldarea/items?f=json&limit=100000&posno=${postinumero}`
+			const validated = validatePostalCode(postinumero)
+			return `${state.pygeoapiBase}/coldarea/items?f=json&limit=100000&posno=${encodeURLParam(validated)}`
 		},
 		/**
 		 * Generates generic pygeoapi collection URL with optional limit
@@ -132,7 +134,8 @@ export const useURLStore = defineStore('url', {
 		hsyBuildings:
 			(state) =>
 			(postinumero, limit = 10000) => {
-				return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&postinumero=${postinumero}`
+				const validated = validatePostalCode(postinumero)
+				return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}`
 			},
 		/**
 		 * Generates URL for HSY buildings filtered by bounding box (BBOX)
@@ -178,7 +181,8 @@ export const useURLStore = defineStore('url', {
 		otherNature:
 			(state) =>
 			(postinumero, limit = 10000) => {
-				return `${state.pygeoapiBase}/othernature/items?f=json&limit=${limit}&postinumero=${postinumero}`
+				const validated = validatePostalCode(postinumero)
+				return `${state.pygeoapiBase}/othernature/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}`
 			},
 		/**
 		 * Generates URL for tree canopy data by postal code and height category
@@ -190,7 +194,8 @@ export const useURLStore = defineStore('url', {
 		tree:
 			(state) =>
 			(postinumero, koodi, limit = 100000) => {
-				return `${state.pygeoapiBase}/tree/items?f=json&limit=${limit}&postinumero=${postinumero}&koodi=${koodi}`
+				const validated = validatePostalCode(postinumero)
+				return `${state.pygeoapiBase}/tree/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}&koodi=${encodeURLParam(koodi)}`
 			},
 		/**
 		 * Generates URL for tree-to-building distance analysis by postal code
@@ -202,7 +207,8 @@ export const useURLStore = defineStore('url', {
 		treeBuildingDistance:
 			(state) =>
 			(postinumero, limit = 100000) => {
-				return `${state.pygeoapiBase}/tree_building_distance/items?f=json&limit=${limit}&postinumero=${postinumero}`
+				const validated = validatePostalCode(postinumero)
+				return `${state.pygeoapiBase}/tree_building_distance/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}`
 			},
 		/**
 		 * Generates URL for urban heat exposure building data (Helsinki only)
@@ -214,7 +220,8 @@ export const useURLStore = defineStore('url', {
 		urbanHeatHelsinki:
 			(state) =>
 			(postinumero, limit = 2000) => {
-				return `${state.pygeoapiBase}/urban_heat_building/items?f=json&limit=${limit}&postinumero=${postinumero}`
+				const validated = validatePostalCode(postinumero)
+				return `${state.pygeoapiBase}/urban_heat_building/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}`
 			},
 		/**
 		 * Generates SYKE flood map URL for a specific scenario
@@ -255,8 +262,9 @@ export const useURLStore = defineStore('url', {
 		 * helsinkiBuildingsUrl(state)('00100') // Returns WFS URL for buildings in postal code 00100
 		 */
 		helsinkiBuildingsUrl: (state) => (postalCode) => {
+			const validated = validatePostalCode(postalCode)
 			const baseUrl = state.externalApis.maps.helsinkiWfs
-			return `${baseUrl}?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27${postalCode}%27`
+			return `${baseUrl}?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27${encodeURLParam(validated)}%27`
 		},
 		/**
 		 * Generates R4C sensor data URL for latest measurements

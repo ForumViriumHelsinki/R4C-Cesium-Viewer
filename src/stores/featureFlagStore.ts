@@ -42,6 +42,7 @@
  */
 
 import { defineStore } from 'pinia'
+import { validateJSON } from '@/utils/validators'
 
 /**
  * Feature flag category types for organizational grouping
@@ -638,10 +639,18 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 			try {
 				const stored = localStorage.getItem('featureFlags')
 				if (stored) {
-					this.userOverrides = JSON.parse(stored) as UserOverridesMap
+					// Validate JSON before parsing to prevent prototype pollution
+					const parsed = validateJSON(stored)
+					this.userOverrides = parsed as UserOverridesMap
 				}
 			} catch (error) {
 				console.warn('Failed to load feature flag overrides:', error)
+				// Clear corrupted data from localStorage
+				try {
+					localStorage.removeItem('featureFlags')
+				} catch (cleanupError) {
+					console.warn('Failed to clear corrupted feature flags:', cleanupError)
+				}
 			}
 		},
 

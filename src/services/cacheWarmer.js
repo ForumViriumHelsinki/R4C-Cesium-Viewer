@@ -37,6 +37,7 @@
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import { encodeURLParam, validatePostalCode } from '../utils/validators.js'
 import unifiedLoader from './unifiedLoader.js'
 
 /**
@@ -214,13 +215,14 @@ class CacheWarmer {
 		}
 
 		try {
+			const validated = validatePostalCode(postalCode)
 			const helsinkiView = this.toggleStore.helsinkiView
 
 			if (helsinkiView) {
 				// Helsinki buildings from WFS
 				const url =
 					'https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=avoindata%3ARakennukset_alue_rekisteritiedot&outputFormat=application/json&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326&CQL_FILTER=postinumero%3D%27' +
-					postalCode +
+					encodeURLParam(validated) +
 					'%27'
 
 				await unifiedLoader.loadLayer({
@@ -237,8 +239,8 @@ class CacheWarmer {
 					},
 				})
 			} else {
-				// HSY Capital Region buildings
-				const url = this.urlStore.hsyBuildings(postalCode)
+				// HSY Capital Region buildings (validated is already validated above)
+				const url = this.urlStore.hsyBuildings(validated)
 
 				await unifiedLoader.loadLayer({
 					layerId: `warmcache_hsy_buildings_${postalCode}`,

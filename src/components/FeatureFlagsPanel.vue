@@ -267,6 +267,7 @@ import {
 	useFeatureFlagStore,
 } from '@/stores/featureFlagStore'
 import { useGraphicsStore } from '@/stores/graphicsStore'
+import { validateJSON } from '@/utils/validators'
 
 const featureFlagStore = useFeatureFlagStore()
 const graphicsStore = useGraphicsStore()
@@ -374,13 +375,18 @@ function importConfig(): void {
 
 function doImport(): void {
 	try {
-		const config = JSON.parse(importJson.value)
+		// Validate JSON before parsing to prevent prototype pollution
+		const config = validateJSON(importJson.value)
 		featureFlagStore.importConfig(config)
 		importDialog.value = false
 		importJson.value = ''
 		showSnackbar('Configuration imported successfully', 'success')
 	} catch (error) {
-		showSnackbar('Invalid JSON format. Please check your input and try again.', 'error')
+		const errorMessage =
+			error instanceof Error
+				? error.message
+				: 'Invalid JSON format. Please check your input and try again.'
+		showSnackbar(errorMessage, 'error')
 		console.error('Import error:', error)
 	}
 }
