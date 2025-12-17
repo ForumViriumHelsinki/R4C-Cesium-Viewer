@@ -267,7 +267,7 @@
 </template>
 
 <script>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
 
 export default {
@@ -364,7 +364,8 @@ export default {
 		}
 
 		// Watch for external changes to update preset selection
-		watch(
+		// Capture stop handler for explicit cleanup on unmount
+		const stopWatchGraphicsSettings = watch(
 			() => [
 				graphicsStore.msaaEnabled,
 				graphicsStore.msaaSamples,
@@ -379,6 +380,11 @@ export default {
 			},
 			{ deep: true }
 		)
+
+		onBeforeUnmount(() => {
+			// Stop watcher to prevent stale callbacks
+			stopWatchGraphicsSettings()
+		})
 
 		const detectCurrentPreset = () => {
 			const state = graphicsStore

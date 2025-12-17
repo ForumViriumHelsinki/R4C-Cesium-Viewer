@@ -234,7 +234,7 @@
  * <UnifiedSearch />
  */
 
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import Camera from '../services/camera'
 import { eventBus } from '../services/eventEmitter'
 import FeaturePicker from '../services/featurepicker'
@@ -597,8 +597,9 @@ const handleClickOutside = () => {
  * Watches for view changes and refreshes search results
  *
  * Re-executes search when view changes to apply new filtering context.
+ * Capture stop handler for explicit cleanup on unmount.
  */
-watch(
+const stopWatchView = watch(
 	() => globalStore.view,
 	() => {
 		if (searchQuery.value) {
@@ -606,6 +607,11 @@ watch(
 		}
 	}
 )
+
+// Cleanup on unmount
+onUnmounted(() => {
+	stopWatchView()
+})
 </script>
 
 <style scoped>

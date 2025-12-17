@@ -222,7 +222,8 @@ const handleRetry = () => {
 }
 
 // Watch for loading state changes to show completion
-watch(isLoading, (newValue, oldValue) => {
+// Capture stop handlers for explicit cleanup on unmount
+const stopWatchIsLoading = watch(isLoading, (newValue, oldValue) => {
 	// Detect transition from loading to not loading
 	if (oldValue && !newValue && !hasError.value) {
 		// Clear any pending timeout
@@ -250,7 +251,7 @@ watch(isLoading, (newValue, oldValue) => {
 })
 
 // Announce errors to screen readers
-watch(hasError, (newValue) => {
+const stopWatchHasError = watch(hasError, (newValue) => {
 	if (newValue) {
 		screenReaderAnnouncement.value = `Error: ${errorMessage.value}`
 	}
@@ -261,6 +262,9 @@ onUnmounted(() => {
 	if (completeTimeout) {
 		clearTimeout(completeTimeout)
 	}
+	// Stop watchers to prevent stale callbacks
+	stopWatchIsLoading()
+	stopWatchHasError()
 })
 </script>
 

@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
 import { useURLStore } from '../stores/urlStore'
 
@@ -139,9 +139,15 @@ const updateWMS = async (config) => {
 	}
 }
 
-watch(selectedScenario, async () => {
+// Capture stop handler for explicit cleanup on unmount
+const stopWatchScenario = watch(selectedScenario, async () => {
 	await nextTick() // Ensure updates propagate before modifying layers
 	updateWMS(wmsConfig.value).catch(console.error)
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+	stopWatchScenario()
 })
 </script>
 

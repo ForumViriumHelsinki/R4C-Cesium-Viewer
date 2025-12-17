@@ -106,13 +106,9 @@ export default {
 			})
 		})
 
-		onBeforeUnmount(() => {
-			eventBus.off('showCapitalRegion')
-			eventBus.off('hideCapitalRegion')
-		})
-
 		// Watch landCover toggle to control mutual exclusivity
-		watch(
+		// Capture stop handlers for explicit cleanup on unmount
+		const stopWatchLandCover = watch(
 			() => toggleStore.landCover,
 			(newValue) => {
 				showLandcover.value = toggleStore.helsinkiView ? showLandcover.value : !!newValue
@@ -121,7 +117,7 @@ export default {
 		)
 
 		// Separate control for HSYWMS based on postalcode and landcover visibility
-		watch(
+		const stopWatchPostalCode = watch(
 			() => store.postalcode,
 			(newPostalCode) => {
 				if (!showLandcover.value && newPostalCode) {
@@ -129,6 +125,14 @@ export default {
 				}
 			}
 		)
+
+		onBeforeUnmount(() => {
+			eventBus.off('showCapitalRegion')
+			eventBus.off('hideCapitalRegion')
+			// Stop watchers to prevent stale callbacks
+			stopWatchLandCover()
+			stopWatchPostalCode()
+		})
 
 		return {
 			showComponents,
