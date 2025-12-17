@@ -24,6 +24,7 @@ import TIFFImageryProvider from 'tiff-imagery-provider'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 
 /**
  * Cache for TIFF imagery providers by date
@@ -142,7 +143,7 @@ export const changeTIFF = async () => {
 			tiffProviderCache.delete(oldestDate)
 		}
 	} catch (error) {
-		console.error('Error loading TIFF:', error)
+		logger.error('Error loading TIFF:', error)
 	}
 }
 
@@ -167,6 +168,6 @@ export const removeTIFF = async () => {
 			layer.show = false
 		})
 	} catch (error) {
-		console.error('Error hiding TIFF:', error)
+		logger.error('Error hiding TIFF:', error)
 	}
 }

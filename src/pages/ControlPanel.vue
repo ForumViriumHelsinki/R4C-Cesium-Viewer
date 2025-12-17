@@ -317,6 +317,7 @@ import { useHeatExposureStore } from '../stores/heatExposureStore'
 import { usePropsStore } from '../stores/propsStore'
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore'
 import { useToggleStore } from '../stores/toggleStore'
+import logger from '../utils/logger.js'
 import BuildingScatterPlot from '../views/BuildingScatterPlot.vue'
 import Landcover from '../views/Landcover.vue'
 import PostalCodeNDVI from '../views/PostalCodeNDVI.vue'
@@ -476,7 +477,7 @@ export default {
 		 * @param {string} sourceId - ID of the data source to retry
 		 * @returns {void}
 		 */
-		const handleSourceRetry = (sourceId) => console.log(`Retrying data source: ${sourceId}`)
+		const handleSourceRetry = (sourceId) => logger.debug(`Retrying data source: ${sourceId}`)
 
 		/**
 		 * Handles cache clearing for a specific data source.
@@ -485,7 +486,7 @@ export default {
 		 * @param {string} sourceId - ID of the data source whose cache to clear
 		 * @returns {void}
 		 */
-		const handleCacheCleared = (sourceId) => console.log(`Cache cleared for: ${sourceId}`)
+		const handleCacheCleared = (sourceId) => logger.debug(`Cache cleared for: ${sourceId}`)
 
 		/**
 		 * Handles preload request for a data source.
@@ -494,7 +495,7 @@ export default {
 		 * @param {string} sourceId - ID of the data source to preload
 		 * @returns {void}
 		 */
-		const handleDataPreload = (sourceId) => console.log(`Preloading requested for: ${sourceId}`)
+		const handleDataPreload = (sourceId) => logger.debug(`Preloading requested for: ${sourceId}`)
 
 		/**
 		 * Resets the application by reloading the page.

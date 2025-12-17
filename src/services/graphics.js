@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
+import logger from '../utils/logger.js'
 
 /**
  * Graphics Quality Management Service
@@ -64,17 +65,17 @@ export default class Graphics {
 		this.graphicsStore.setSupportInfo(supportInfo)
 
 		// Log support information
-		console.log('Graphics Support Detection:', supportInfo)
+		logger.debug('Graphics Support Detection:', supportInfo)
 
 		// Warn about unsupported features
 		if (!supportInfo.msaaSupported) {
-			console.warn('MSAA (Multi-Sample Anti-Aliasing) is not supported by this browser/hardware')
+			logger.warn('MSAA (Multi-Sample Anti-Aliasing) is not supported by this browser/hardware')
 		}
 		if (!supportInfo.hdrSupported) {
-			console.warn('HDR (High Dynamic Range) rendering is not supported by this browser/hardware')
+			logger.warn('HDR (High Dynamic Range) rendering is not supported by this browser/hardware')
 		}
 		if (!supportInfo.ambientOcclusionSupported) {
-			console.warn('Ambient Occlusion post-processing is not supported by this browser/hardware')
+			logger.warn('Ambient Occlusion post-processing is not supported by this browser/hardware')
 		}
 	}
 
@@ -96,9 +97,9 @@ export default class Graphics {
 		if (this.graphicsStore.msaaSupported) {
 			const effectiveSamples = this.graphicsStore.effectiveMsaaSamples
 			this.scene.msaaSamples = effectiveSamples
-			console.log(`MSAA set to ${effectiveSamples}x samples`)
+			logger.debug(`MSAA set to ${effectiveSamples}x samples`)
 		} else {
-			console.log('MSAA not supported, skipping')
+			logger.debug('MSAA not supported, skipping')
 		}
 	}
 
@@ -109,7 +110,7 @@ export default class Graphics {
 		const fxaaStage = this.scene.postProcessStages.fxaa
 		if (fxaaStage) {
 			fxaaStage.enabled = this.graphicsStore.fxaaEnabled
-			console.log(`FXAA ${this.graphicsStore.fxaaEnabled ? 'enabled' : 'disabled'}`)
+			logger.debug(`FXAA ${this.graphicsStore.fxaaEnabled ? 'enabled' : 'disabled'}`)
 		}
 	}
 
@@ -119,9 +120,9 @@ export default class Graphics {
 	applyHdrSettings() {
 		if (this.graphicsStore.hdrSupported) {
 			this.scene.highDynamicRange = this.graphicsStore.hdrEnabled
-			console.log(`HDR ${this.graphicsStore.hdrEnabled ? 'enabled' : 'disabled'}`)
+			logger.debug(`HDR ${this.graphicsStore.hdrEnabled ? 'enabled' : 'disabled'}`)
 		} else if (this.graphicsStore.hdrEnabled) {
-			console.warn('HDR requested but not supported')
+			logger.warn('HDR requested but not supported')
 		}
 	}
 
@@ -140,12 +141,12 @@ export default class Graphics {
 				ambientOcclusion.uniforms.lengthCap = 0.5
 				ambientOcclusion.uniforms.directionCount = 16
 				ambientOcclusion.uniforms.stepCount = 32
-				console.log('Ambient Occlusion enabled with building-optimized settings')
+				logger.debug('Ambient Occlusion enabled with building-optimized settings')
 			} else {
-				console.log('Ambient Occlusion disabled')
+				logger.debug('Ambient Occlusion disabled')
 			}
 		} else if (this.graphicsStore.ambientOcclusionEnabled) {
-			console.warn('Ambient Occlusion requested but not supported')
+			logger.warn('Ambient Occlusion requested but not supported')
 		}
 	}
 
@@ -156,7 +157,7 @@ export default class Graphics {
 		// Note: Request render mode should be set during viewer creation
 		// This is mainly for logging current state
 		if (this.graphicsStore.requestRenderMode) {
-			console.log('Request Render Mode enabled (set during viewer creation)')
+			logger.debug('Request Render Mode enabled (set during viewer creation)')
 		}
 	}
 

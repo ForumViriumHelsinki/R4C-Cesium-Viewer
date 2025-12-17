@@ -32,6 +32,7 @@
  */
 
 import { defineStore } from 'pinia'
+import logger from '../utils/logger.js'
 
 /**
  * Mitigation Pinia Store
@@ -229,7 +230,7 @@ export const useMitigationStore = defineStore('mitigation', {
 		},
 		preCalculateGridImpacts() {
 			if (!this.gridCells || this.gridCells.length === 0) {
-				console.warn('Grid cells are not set. Cannot pre-calculate impacts.')
+				logger.warn('Grid cells are not set. Cannot pre-calculate impacts.')
 				return
 			}
 			this.gridCells.forEach((cell) => {

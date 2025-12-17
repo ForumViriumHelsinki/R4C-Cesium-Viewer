@@ -471,7 +471,7 @@ const switchViewEvent = () => {
 
 const loadAllEnvironmentalLayers = async () => {
 	if (!store.postalcode) {
-		console.warn('No postal code selected for environmental layer loading')
+		logger.warn('No postal code selected for environmental layer loading')
 		return
 	}
 
@@ -527,7 +527,7 @@ const loadAllEnvironmentalLayers = async () => {
 			},
 		]
 
-		console.log(`🌿 Starting coordinated environmental layer loading for ${store.postalcode}`)
+		logger.debug(`🌿 Starting coordinated environmental layer loading for ${store.postalcode}`)
 
 		const results = await loadingCoordinator.startLoadingSession(sessionId, layerConfigs, {
 			priorityStrategy: 'balanced',
@@ -540,16 +540,14 @@ const loadAllEnvironmentalLayers = async () => {
 		const failed = results.length - successful
 
 		if (failed === 0) {
-			console.log(`✅ All ${successful} environmental layers loaded successfully`)
+			logger.debug(`✅ All ${successful} environmental layers loaded successfully`)
 		} else {
-			console.warn(
-				`⚠️ ${successful}/${results.length} environmental layers loaded, ${failed} failed`
-			)
+			logger.warn(`⚠️ ${successful}/${results.length} environmental layers loaded, ${failed} failed`)
 		}
 
 		return results
 	} catch (error) {
-		console.error('Failed to load environmental layers:', error)
+		logger.error('Failed to load environmental layers:', error)
 		throw error
 	}
 }

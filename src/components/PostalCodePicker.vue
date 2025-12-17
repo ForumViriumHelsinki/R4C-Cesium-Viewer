@@ -162,6 +162,7 @@ import Camera from '../services/camera'
 import Featurepicker from '../services/featurepicker'
 import { useGlobalStore } from '../stores/globalStore'
 import { usePropsStore } from '../stores/propsStore'
+import logger from '../utils/logger.js'
 
 export default {
 	name: 'PostalCodePicker',
@@ -234,7 +235,7 @@ export default {
 				// Focus camera on the selected area
 				await focusOnCurrentArea()
 			} catch (error) {
-				console.error('Error selecting postal code:', error)
+				logger.error('Error selecting postal code:', error)
 			} finally {
 				isLoading.value = false
 			}
@@ -249,14 +250,14 @@ export default {
 
 				// Verify camera has access to the viewer
 				if (!camera.viewer) {
-					console.warn('[PostalCodePicker] Camera viewer not initialized')
+					logger.warn('[PostalCodePicker] Camera viewer not initialized')
 					return
 				}
 
 				// Use the camera service to focus on the postal code
 				camera.focusOnPostalCode(currentPostalCode.value)
 			} catch (error) {
-				console.error('Error focusing on area:', error)
+				logger.error('Error focusing on area:', error)
 			}
 		}
 

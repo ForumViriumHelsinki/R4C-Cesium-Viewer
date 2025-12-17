@@ -8,6 +8,7 @@ import DataSource from '../services/datasource.js'
 import { useMitigationStore } from '../stores/mitigationStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 
 // --- STATE MANAGEMENT ---
 const propsStore = usePropsStore()
@@ -66,7 +67,7 @@ onMounted(async () => {
 		updateGridColors(propsStore.statsIndex) // Initial color update
 		prepareMitigation()
 	} catch (error) {
-		console.error('Error loading grid:', error)
+		logger.error('Error loading grid:', error)
 	}
 })
 </script>

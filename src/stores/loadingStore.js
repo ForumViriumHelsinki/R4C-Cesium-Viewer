@@ -34,6 +34,8 @@ import cacheService from '../services/cacheService.js'
  * Comprehensive loading state management with cache integration and health monitoring.
  * All methods already documented with JSDoc.
  */
+import logger from '../utils/logger.js'
+
 export const useLoadingStore = defineStore('loading', {
 	state: () => ({
 		// Global loading state
@@ -290,7 +292,7 @@ export const useLoadingStore = defineStore('loading', {
 
 				// Clear if stale OR if it's a dynamic layer ID (these should be transient)
 				if (isStale || isDynamicLayer) {
-					console.warn(
+					logger.warn(
 						`[loadingStore] Clearing stale loading state for ${layer}`,
 						isDynamicLayer ? '(dynamic layer)' : `(loading for ${now - loadTime?.startTime}ms)`
 					)
@@ -306,7 +308,7 @@ export const useLoadingStore = defineStore('loading', {
 			})
 
 			if (clearedCount > 0) {
-				console.log(`[loadingStore] Cleared ${clearedCount} stale loading states`)
+				logger.debug(`[loadingStore] Cleared ${clearedCount} stale loading states`)
 				this.updateGlobalLoading()
 			}
 
@@ -330,7 +332,7 @@ export const useLoadingStore = defineStore('loading', {
 				this.clearStaleLoading(timeout)
 			}, interval)
 
-			console.log(
+			logger.debug(
 				`[loadingStore] Started stale cleanup timer (${interval}ms interval, ${timeout}ms timeout)`
 			)
 		},
@@ -342,7 +344,7 @@ export const useLoadingStore = defineStore('loading', {
 			if (this._staleCleanupTimer) {
 				clearInterval(this._staleCleanupTimer)
 				this._staleCleanupTimer = null
-				console.log('[loadingStore] Stopped stale cleanup timer')
+				logger.debug('[loadingStore] Stopped stale cleanup timer')
 			}
 		},
 
@@ -385,7 +387,7 @@ export const useLoadingStore = defineStore('loading', {
 					return null
 				}
 			} catch (error) {
-				console.warn(`Cache check failed for ${layerName}:`, error?.message || error)
+				logger.warn(`Cache check failed for ${layerName}:`, error?.message || error)
 				return null
 			}
 		},
@@ -409,7 +411,7 @@ export const useLoadingStore = defineStore('loading', {
 
 				return true
 			} catch (error) {
-				console.warn(`Cache storage failed for ${layerName}:`, error?.message || error)
+				logger.warn(`Cache storage failed for ${layerName}:`, error?.message || error)
 				return false
 			}
 		},
@@ -426,7 +428,7 @@ export const useLoadingStore = defineStore('loading', {
 				}
 				return true
 			} catch (error) {
-				console.warn(`Cache clear failed for ${layerName}:`, error?.message || error)
+				logger.warn(`Cache clear failed for ${layerName}:`, error?.message || error)
 				return false
 			}
 		},

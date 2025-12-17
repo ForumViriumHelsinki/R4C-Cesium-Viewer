@@ -2,6 +2,7 @@ import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import Datasource from './datasource.js'
 import Populationgrid from './populationgrid.js'
 
@@ -57,7 +58,7 @@ export default class Traveltime {
 			const traveltimedata = await response.json()
 			this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data)
 		} catch (error) {
-			console.error('Error loading travel time data:', error)
+			logger.error('Error loading travel time data:', error)
 			this.store.showError(
 				'Unable to load travel time data. Please try again.',
 				`Failed to fetch travel times from grid cell ${from_id}: ${error.message}`
@@ -129,7 +130,7 @@ export default class Traveltime {
 				}
 			})
 		} else {
-			console.error('TravelTimeGrid data source not found.')
+			logger.error('TravelTimeGrid data source not found.')
 		}
 
 		void this.removeTravelTimeGridAndAddDataGrid()
@@ -151,7 +152,7 @@ export default class Traveltime {
 			const dataSource = this.datasourceService.getDataSourceByName('PopulationGrid')
 
 			if (!dataSource) {
-				console.error('Data source with name PopulationGrid not found.')
+				logger.error('Data source with name PopulationGrid not found.')
 				return []
 			}
 
@@ -225,7 +226,7 @@ export default class Traveltime {
 			})
 			.catch((error) => {
 				// Log any errors encountered while loading the data source
-				console.log(error)
+				logger.debug(error)
 			})
 	}
 

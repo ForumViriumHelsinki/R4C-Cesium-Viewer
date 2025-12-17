@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
 import Datasource from './datasource.js'
 import { eventBus } from './eventEmitter.js'
@@ -50,7 +51,7 @@ export default class EspooSurvey {
 			const data = await response.json()
 			await this.addSurveyDataSource(data, collection)
 		} catch (error) {
-			console.error('Error loading survey features:', error)
+			logger.error('Error loading survey features:', error)
 			this.store.showError(
 				'Unable to load survey data. Please try again.',
 				`Failed to fetch survey collection ${collection}: ${error.message}`

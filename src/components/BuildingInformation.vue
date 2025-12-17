@@ -88,6 +88,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { findAddressForBuilding } from '../services/address.js'
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	setup() {
@@ -100,7 +101,7 @@ export default {
 		const pickPending = ref(false)
 		const handlerRegistered = ref(false)
 
-		console.log('[BuildingInformation] 🎬 Component setup started')
+		logger.debug('[BuildingInformation] 🎬 Component setup started')
 
 		/**
 		 * Computed style for tooltip positioning and appearance.
@@ -129,7 +130,7 @@ export default {
 		 */
 		const hasBuildingFeatures = computed(() => {
 			const hasFeatures = Boolean(buildingStore.buildingFeatures)
-			console.log('[BuildingInformation] 🔍 hasBuildingFeatures computed:', {
+			logger.debug('[BuildingInformation] 🔍 hasBuildingFeatures computed:', {
 				hasFeatures,
 				featuresCount: buildingStore.buildingFeatures?.features?.length,
 			})
@@ -163,25 +164,25 @@ export default {
 		 */
 		const fetchBuildingInfo = async (entity) => {
 			try {
-				console.log('[BuildingInformation] 🔎 fetchBuildingInfo called for entity:', entity._id)
+				logger.debug('[BuildingInformation] 🔎 fetchBuildingInfo called for entity:', entity._id)
 
 				const features = buildingStore.buildingFeatures.features
 
 				const validIdPattern = /^[0-9]{9}[A-Z]$/
 
 				if (!entity._id || !validIdPattern.test(entity._id)) {
-					console.log('[BuildingInformation] ⚠️ Entity ID does not match pattern:', entity._id)
+					logger.debug('[BuildingInformation] ⚠️ Entity ID does not match pattern:', entity._id)
 					return
 				}
 
-				console.log('[BuildingInformation] ✓ Entity ID matches pattern:', entity._id)
-				console.log('[BuildingInformation] 📦 Searching in', features?.length || 0, 'features')
+				logger.debug('[BuildingInformation] ✓ Entity ID matches pattern:', entity._id)
+				logger.debug('[BuildingInformation] 📦 Searching in', features?.length || 0, 'features')
 
 				if (features) {
 					const matchingFeature = features.find((feature) => feature.id === entity._id)
 
 					if (matchingFeature) {
-						console.log('[BuildingInformation] ✅ Found matching feature:', matchingFeature.id)
+						logger.debug('[BuildingInformation] ✅ Found matching feature:', matchingFeature.id)
 						const properties = matchingFeature.properties
 
 						buildingAttributes.value = {
@@ -190,20 +191,20 @@ export default {
 							address: findAddressForBuilding(properties),
 						}
 						showTooltip.value = true
-						console.log(
+						logger.debug(
 							'[BuildingInformation] 🎯 Tooltip displayed with:',
 							buildingAttributes.value
 						)
 					} else {
-						console.warn('[BuildingInformation] ❌ No matching feature found for Id:', entity._id)
-						console.log(
+						logger.warn('[BuildingInformation] ❌ No matching feature found for Id:', entity._id)
+						logger.debug(
 							'[BuildingInformation] Sample feature IDs:',
 							features.slice(0, 5).map((f) => f.id)
 						)
 					}
 				}
 			} catch (error) {
-				console.error('[BuildingInformation] ❌ Failed to fetch building data', error)
+				logger.error('[BuildingInformation] ❌ Failed to fetch building data', error)
 			}
 		}
 
@@ -262,7 +263,7 @@ export default {
 		 */
 		const registerMouseMoveHandler = () => {
 			if (handlerRegistered.value || !viewer || !viewer.screenSpaceEventHandler) {
-				console.log('[BuildingInformation] ⚠️ Cannot register handler:', {
+				logger.debug('[BuildingInformation] ⚠️ Cannot register handler:', {
 					alreadyRegistered: handlerRegistered.value,
 					hasViewer: Boolean(viewer),
 					hasHandler: Boolean(viewer?.screenSpaceEventHandler),
@@ -272,7 +273,7 @@ export default {
 
 			viewer.screenSpaceEventHandler.setInputAction(onMouseMove, ScreenSpaceEventType.MOUSE_MOVE)
 			handlerRegistered.value = true
-			console.log('[BuildingInformation] ✅ MOUSE_MOVE handler registered successfully')
+			logger.debug('[BuildingInformation] ✅ MOUSE_MOVE handler registered successfully')
 		}
 
 		/**
@@ -287,7 +288,7 @@ export default {
 
 			viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE)
 			handlerRegistered.value = false
-			console.log('[BuildingInformation] 🗑️ MOUSE_MOVE handler unregistered')
+			logger.debug('[BuildingInformation] 🗑️ MOUSE_MOVE handler unregistered')
 		}
 
 		/**
@@ -299,7 +300,7 @@ export default {
 		watch(
 			hasBuildingFeatures,
 			(hasFeatures) => {
-				console.log(
+				logger.debug(
 					'[BuildingInformation] 👀 Watcher triggered. hasFeatures:',
 					hasFeatures,
 					'handlerRegistered:',
@@ -307,7 +308,7 @@ export default {
 				)
 
 				if (hasFeatures && !handlerRegistered.value) {
-					console.log('[BuildingInformation] ⏰ Scheduling handler registration in 100ms')
+					logger.debug('[BuildingInformation] ⏰ Scheduling handler registration in 100ms')
 					setTimeout(() => {
 						registerMouseMoveHandler()
 					}, 100)
@@ -321,13 +322,15 @@ export default {
 		 * Includes 100ms delay for Cesium viewer initialization.
 		 */
 		onMounted(() => {
-			console.log(
+			logger.debug(
 				'[BuildingInformation] 🔧 Component mounted. buildingFeatures exists:',
 				Boolean(buildingStore.buildingFeatures)
 			)
 
 			if (buildingStore.buildingFeatures) {
-				console.log('[BuildingInformation] ⏰ Scheduling handler registration in 100ms (onMounted)')
+				logger.debug(
+					'[BuildingInformation] ⏰ Scheduling handler registration in 100ms (onMounted)'
+				)
 				setTimeout(() => {
 					registerMouseMoveHandler()
 				}, 100)
@@ -338,7 +341,7 @@ export default {
 		 * Cleans up Cesium mouse events on component unmount.
 		 */
 		onUnmounted(() => {
-			console.log('[BuildingInformation] 🧹 Component unmounted')
+			logger.debug('[BuildingInformation] 🧹 Component unmounted')
 			unregisterMouseMoveHandler()
 		})
 

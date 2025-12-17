@@ -220,18 +220,18 @@ const handleRetryLayer = (layerName) => {
 
 	// You would implement the actual retry logic here
 	// For now, we'll just log it
-	console.log(`Retrying layer: ${layerName}`)
+	logger.debug(`Retrying layer: ${layerName}`)
 }
 
 // Handle data source retry events
 const handleSourceRetry = (sourceId) => {
-	console.log(`Retrying data source: ${sourceId}`)
+	logger.debug(`Retrying data source: ${sourceId}`)
 	// Could trigger health checks or reconnection attempts
 }
 
 // Handle cache clearing events
 const handleCacheCleared = (sourceId) => {
-	console.log(`Cache cleared for: ${sourceId}`)
+	logger.debug(`Cache cleared for: ${sourceId}`)
 	if (sourceId === 'all') {
 		// Refresh cache status for all layers
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
@@ -244,7 +244,7 @@ const handleCacheCleared = (sourceId) => {
 
 // Handle data preloading requests
 const handleDataPreload = (sourceId) => {
-	console.log(`Preloading requested for: ${sourceId}`)
+	logger.debug(`Preloading requested for: ${sourceId}`)
 	// Could trigger specific preloading for the source
 }
 
@@ -256,7 +256,7 @@ onMounted(async () => {
 
 		// Initialize background preloader
 		await backgroundPreloader.init()
-		console.log('Background preloader initialized')
+		logger.debug('Background preloader initialized')
 
 		// Check cache status for all layers on app start
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
@@ -269,7 +269,7 @@ onMounted(async () => {
 		// This prevents loading indicators from getting stuck due to network issues
 		loadingStore.startStaleCleanupTimer()
 	} catch (error) {
-		console.warn('Failed to initialize caching services:', error)
+		logger.warn('Failed to initialize caching services:', error)
 	}
 })
 </script>

@@ -37,6 +37,7 @@
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import { encodeURLParam, validatePostalCode } from '../utils/validators.js'
 import unifiedLoader from './unifiedLoader.js'
 
@@ -139,20 +140,20 @@ class CacheWarmer {
 	 */
 	async warmCriticalData() {
 		if (this.warmingInProgress) {
-			console.log('[CacheWarmer] ⏳ Warming already in progress, skipping')
+			logger.debug('[CacheWarmer] ⏳ Warming already in progress, skipping')
 			return
 		}
 
 		this.warmingInProgress = true
-		console.log('[CacheWarmer] 🔥 Starting cache warming for critical data...')
+		logger.debug('[CacheWarmer] 🔥 Starting cache warming for critical data...')
 
 		try {
 			// Warm popular postal codes' building data
 			await this.warmPopularBuildingData()
 
-			console.log('[CacheWarmer] ✅ Cache warming complete')
+			logger.debug('[CacheWarmer] ✅ Cache warming complete')
 		} catch (error) {
-			console.warn('[CacheWarmer] ⚠️ Cache warming encountered error:', error?.message || error)
+			logger.warn('[CacheWarmer] ⚠️ Cache warming encountered error:', error?.message || error)
 		} finally {
 			this.warmingInProgress = false
 		}
@@ -167,7 +168,7 @@ class CacheWarmer {
 	 * @private
 	 */
 	async warmPopularBuildingData() {
-		console.log(
+		logger.debug(
 			'[CacheWarmer] 🏢 Warming building caches for',
 			this.popularPostalCodes.length,
 			'popular areas...'
@@ -181,7 +182,7 @@ class CacheWarmer {
 		const successful = results.filter((r) => r.status === 'fulfilled').length
 		const failed = results.filter((r) => r.status === 'rejected').length
 
-		console.log(`[CacheWarmer] 📊 Warming complete: ${successful} successful, ${failed} failed`)
+		logger.debug(`[CacheWarmer] 📊 Warming complete: ${successful} successful, ${failed} failed`)
 	}
 
 	/**
@@ -210,7 +211,7 @@ class CacheWarmer {
 	async warmBuildingsForPostalCode(postalCode) {
 		// Skip if already warmed
 		if (this.warmedPostalCodes.has(postalCode)) {
-			console.log(`[CacheWarmer] ⏭️ Skipping ${postalCode} (already warmed)`)
+			logger.debug(`[CacheWarmer] ⏭️ Skipping ${postalCode} (already warmed)`)
 			return
 		}
 
@@ -258,9 +259,9 @@ class CacheWarmer {
 			}
 
 			this.warmedPostalCodes.add(postalCode)
-			console.log(`[CacheWarmer] ✓ Warmed buildings for ${postalCode}`)
+			logger.debug(`[CacheWarmer] ✓ Warmed buildings for ${postalCode}`)
 		} catch (error) {
-			console.warn(`[CacheWarmer] ⚠️ Failed to warm ${postalCode}:`, error.message)
+			logger.warn(`[CacheWarmer] ⚠️ Failed to warm ${postalCode}:`, error.message)
 			throw error // Re-throw for Promise.allSettled tracking
 		}
 	}
@@ -286,7 +287,7 @@ class CacheWarmer {
 	 * cacheWarmer.warmNearbyPostalCodes('00100', ['00150', '00170', '00180']);
 	 */
 	warmNearbyPostalCodes(currentPostalCode, nearbyPostalCodes) {
-		console.log('[CacheWarmer] 🎯 Predictively warming nearby postal codes...')
+		logger.debug('[CacheWarmer] 🎯 Predictively warming nearby postal codes...')
 
 		// Filter out current postal code and already warmed ones
 		const postalCodesToWarm = nearbyPostalCodes.filter(
@@ -294,11 +295,11 @@ class CacheWarmer {
 		)
 
 		if (postalCodesToWarm.length === 0) {
-			console.log('[CacheWarmer] All nearby postal codes already warmed')
+			logger.debug('[CacheWarmer] All nearby postal codes already warmed')
 			return
 		}
 
-		console.log('[CacheWarmer] Warming', postalCodesToWarm.length, 'nearby postal codes')
+		logger.debug('[CacheWarmer] Warming', postalCodesToWarm.length, 'nearby postal codes')
 
 		// Warm in background with low priority
 		// Use requestIdleCallback to run during browser idle time
@@ -343,7 +344,7 @@ class CacheWarmer {
 	 * });
 	 */
 	clearWarmedTracking() {
-		console.log('[CacheWarmer] 🧹 Clearing warmed postal codes tracking')
+		logger.debug('[CacheWarmer] 🧹 Clearing warmed postal codes tracking')
 		this.warmedPostalCodes.clear()
 	}
 }

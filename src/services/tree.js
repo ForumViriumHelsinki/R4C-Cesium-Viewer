@@ -4,6 +4,7 @@ import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
@@ -77,14 +78,14 @@ export default class Tree {
 			const failed = results.length - successful
 
 			if (failed === 0) {
-				console.log(`✓ All ${successful} tree height categories loaded successfully`)
+				logger.debug(`✓ All ${successful} tree height categories loaded successfully`)
 			} else {
-				console.warn(`⚠ ${successful}/${results.length} tree categories loaded, ${failed} failed`)
+				logger.warn(`⚠ ${successful}/${results.length} tree categories loaded, ${failed} failed`)
 			}
 
 			return results
 		} catch (error) {
-			console.error('Failed to load tree data:', error?.message || error)
+			logger.error('Failed to load tree data:', error?.message || error)
 			throw error
 		}
 	}
@@ -94,7 +95,7 @@ export default class Tree {
 	 * @deprecated Use loadTrees() instead for unified loading
 	 */
 	async loadTreesWithKoodi(koodi) {
-		console.warn('loadTreesWithKoodi is deprecated, use loadTrees() instead')
+		logger.warn('loadTreesWithKoodi is deprecated, use loadTrees() instead')
 
 		try {
 			const data = await unifiedLoader.loadLayer({
@@ -109,10 +110,10 @@ export default class Tree {
 				},
 			})
 
-			console.log(`✓ Loaded trees for height category ${koodi}`)
+			logger.debug(`✓ Loaded trees for height category ${koodi}`)
 			return data
 		} catch (error) {
-			console.error(`Failed to load trees for koodi ${koodi}:`, error?.message || error)
+			logger.error(`Failed to load trees for koodi ${koodi}:`, error?.message || error)
 			throw error
 		}
 	}
@@ -148,7 +149,7 @@ export default class Tree {
 						}
 						processed++
 					} catch (entityError) {
-						console.warn(`Error processing tree entity in koodi ${koodi}:`, entityError)
+						logger.warn(`Error processing tree entity in koodi ${koodi}:`, entityError)
 					}
 				}
 
@@ -170,12 +171,12 @@ export default class Tree {
 			}
 
 			if (!metadata.fromCache) {
-				console.log(`✓ Processed ${processed} trees for height category ${koodi}`)
+				logger.debug(`✓ Processed ${processed} trees for height category ${koodi}`)
 			} else {
-				console.log(`✓ Restored ${processed} trees from cache for category ${koodi}`)
+				logger.debug(`✓ Restored ${processed} trees from cache for category ${koodi}`)
 			}
 		} catch (error) {
-			console.error(`Error processing tree data for koodi ${koodi}:`, error?.message || error)
+			logger.error(`Error processing tree data for koodi ${koodi}:`, error?.message || error)
 			throw error
 		}
 	}
@@ -215,7 +216,7 @@ export default class Tree {
 			})
 			.catch((error) => {
 				// Log any errors encountered while fetching the data
-				console.log('Error fetching tree distance data:', error)
+				logger.debug('Error fetching tree distance data:', error)
 			})
 	}
 
@@ -264,7 +265,7 @@ export default class Tree {
 		cesiumEntityManager.registerBuildingEntities(buildingEntities)
 		cesiumEntityManager.setBuildingsDataSource(buildingsDataSource)
 
-		console.log(
+		logger.debug(
 			`[Tree Service] Stored ${treeData.length} tree data items, ${buildingData.size} building data items`
 		)
 

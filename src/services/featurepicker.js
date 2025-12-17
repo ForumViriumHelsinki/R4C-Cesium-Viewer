@@ -75,7 +75,7 @@ export default class FeaturePicker {
 	 * @returns {void}
 	 */
 	processClick(event) {
-		console.log('[FeaturePicker] 🖱️ Processing click at coordinates:', event.x, event.y)
+		logger.debug('[FeaturePicker] 🖱️ Processing click at coordinates:', event.x, event.y)
 		this.pickEntity(new Cesium.Cartesian2(event.x, event.y))
 	}
 
@@ -89,23 +89,23 @@ export default class FeaturePicker {
 	 * @fires eventBus#entityPrintEvent - Emitted when a polygon entity is selected
 	 */
 	pickEntity(windowPosition) {
-		console.log('[FeaturePicker] 🎯 Picking entity at window position:', windowPosition)
+		logger.debug('[FeaturePicker] 🎯 Picking entity at window position:', windowPosition)
 
 		// Guard: Check if viewer and scene are in a valid state
 		if (!this.viewer || !this.viewer.scene) {
-			console.warn('[FeaturePicker] ⚠️ Viewer or scene not available')
+			logger.warn('[FeaturePicker] ⚠️ Viewer or scene not available')
 			return
 		}
 
 		// Guard: Check if the drawing buffer has valid dimensions
 		const canvas = this.viewer.scene.canvas
 		if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) {
-			console.warn('[FeaturePicker] ⚠️ Canvas has invalid dimensions, skipping pick')
+			logger.warn('[FeaturePicker] ⚠️ Canvas has invalid dimensions, skipping pick')
 			return
 		}
 
 		const picked = this.viewer.scene.pick(windowPosition)
-		console.log('[FeaturePicker] Picked object:', picked)
+		logger.debug('[FeaturePicker] Picked object:', picked)
 
 		if (picked) {
 			const id = picked.id ?? picked.primitive?.id
@@ -131,8 +131,8 @@ export default class FeaturePicker {
 	 * @returns {Promise<void>}
 	 */
 	async loadPostalCode() {
-		console.log('[FeaturePicker] 🚀 Loading postal code:', this.store.postalcode)
-		console.log('[FeaturePicker] Helsinki view mode:', this.toggleStore.helsinkiView)
+		logger.debug('[FeaturePicker] 🚀 Loading postal code:', this.store.postalcode)
+		logger.debug('[FeaturePicker] Helsinki view mode:', this.toggleStore.helsinkiView)
 
 		this.setNameOfZone()
 		this.elementsDisplayService.setSwitchViewElementsDisplay('inline-block')
@@ -140,15 +140,15 @@ export default class FeaturePicker {
 
 		// Load region-specific data based on view mode
 		if (!this.toggleStore.helsinkiView) {
-			console.log('[FeaturePicker] Loading Capital Region elements (including buildings)...')
+			logger.debug('[FeaturePicker] Loading Capital Region elements (including buildings)...')
 			await this.capitalRegionService.loadCapitalRegionElements()
 		} else {
-			console.log('[FeaturePicker] Loading Helsinki elements (including buildings)...')
+			logger.debug('[FeaturePicker] Loading Helsinki elements (including buildings)...')
 			await this.helsinkiService.loadHelsinkiElements()
 		}
 
 		this.store.setLevel('postalCode')
-		console.log('[FeaturePicker] ✅ Postal code loading complete')
+		logger.debug('[FeaturePicker] ✅ Postal code loading complete')
 	}
 
 	/**
@@ -159,7 +159,7 @@ export default class FeaturePicker {
 	 * @returns {Promise<void>}
 	 */
 	async loadPostalCodeData(postalCode) {
-		console.log('[FeaturePicker] 📦 Loading postal code data:', postalCode)
+		logger.debug('[FeaturePicker] 📦 Loading postal code data:', postalCode)
 
 		// Set the postal code in store
 		this.store.setPostalCode(postalCode)
@@ -234,7 +234,7 @@ export default class FeaturePicker {
 			// Clear any stale loading states (older than 15s or dynamic layer IDs)
 			loadingStore.clearStaleLoading(TIMING.STALE_LOADING_TIMEOUT_MS)
 		} catch (error) {
-			console.warn('Loading store not available for cleanup:', error?.message || error)
+			logger.warn('Loading store not available for cleanup:', error?.message || error)
 		}
 
 		try {
@@ -257,7 +257,7 @@ export default class FeaturePicker {
 				properties
 			)
 		} catch (error) {
-			console.error('Error handling building feature:', error?.message || error)
+			logger.error('Error handling building feature:', error?.message || error)
 		}
 	}
 
@@ -284,8 +284,8 @@ export default class FeaturePicker {
 	 * @private
 	 */
 	handleFeatureWithProperties(id) {
-		console.log('[FeaturePicker] Clicked feature properties:', id.properties)
-		console.log('[FeaturePicker] Current level:', this.store.level)
+		logger.debug('[FeaturePicker] Clicked feature properties:', id.properties)
+		logger.debug('[FeaturePicker] Current level:', this.store.level)
 
 		this.removeEntityByName('coldpoint')
 		this.removeEntityByName('currentLocation')
@@ -322,9 +322,9 @@ export default class FeaturePicker {
 			const postalCodeName = id.properties.nimi?._value || `Postal Code ${newPostalCode}`
 			const currentPostalCode = this.store.postalcode
 
-			console.log('[FeaturePicker] ✓ Postal code detected:', newPostalCode)
-			console.log('[FeaturePicker] Current postal code:', currentPostalCode)
-			console.log('[FeaturePicker] Current level:', this.store.level)
+			logger.debug('[FeaturePicker] ✓ Postal code detected:', newPostalCode)
+			logger.debug('[FeaturePicker] Current postal code:', currentPostalCode)
+			logger.debug('[FeaturePicker] Current level:', this.store.level)
 
 			// Allow switching between postal codes or loading a new one from any level
 			if (
@@ -332,7 +332,7 @@ export default class FeaturePicker {
 				this.store.level === 'start' ||
 				this.store.level === 'building'
 			) {
-				console.log('[FeaturePicker] Triggering postal code loading with parallel strategy...')
+				logger.debug('[FeaturePicker] Triggering postal code loading with parallel strategy...')
 
 				// Capture view state before any changes
 				this.store.captureViewState()
@@ -356,12 +356,12 @@ export default class FeaturePicker {
 					logger.error('Failed to load postal code with parallel strategy:', error)
 				})
 			} else {
-				console.log(
+				logger.debug(
 					'[FeaturePicker] ⚠️ Same postal code already selected at postalCode level, skipping reload'
 				)
 			}
 		} else {
-			console.log('[FeaturePicker] ⚠️ No postal code property (posno) found in clicked feature')
+			logger.debug('[FeaturePicker] ⚠️ No postal code property (posno) found in clicked feature')
 		}
 
 		if (id.properties.asukkaita) {
@@ -462,13 +462,13 @@ export default class FeaturePicker {
 	 */
 	getVisiblePostalCodes(viewportRect) {
 		if (!viewportRect) {
-			console.warn('[FeaturePicker] Invalid viewport rectangle')
+			logger.warn('[FeaturePicker] Invalid viewport rectangle')
 			return []
 		}
 
 		const postalCodeData = this.propStore.postalCodeData
 		if (!postalCodeData || !postalCodeData._entityCollection) {
-			console.warn('[FeaturePicker] Postal code data not loaded')
+			logger.warn('[FeaturePicker] Postal code data not loaded')
 			return []
 		}
 
@@ -484,11 +484,11 @@ export default class FeaturePicker {
 		)
 
 		// DIAGNOSTIC: Log viewport bounds
-		console.log(
+		logger.debug(
 			`%c[VIEWPORT DEBUG] Viewport bounds: W=${viewportRect.west.toFixed(4)}, S=${viewportRect.south.toFixed(4)}, E=${viewportRect.east.toFixed(4)}, N=${viewportRect.north.toFixed(4)}`,
 			'color: orange; font-weight: bold'
 		)
-		console.log(`[VIEWPORT DEBUG] Total postal code entities to check: ${entities.length}`)
+		logger.debug(`[VIEWPORT DEBUG] Total postal code entities to check: ${entities.length}`)
 
 		for (const entity of entities) {
 			if (!entity.polygon || !entity.properties?.posno) continue
@@ -519,7 +519,7 @@ export default class FeaturePicker {
 			}
 		}
 
-		console.log(
+		logger.debug(
 			'[FeaturePicker] Found',
 			visiblePostalCodes.length,
 			'visible postal codes:',
@@ -542,7 +542,7 @@ export default class FeaturePicker {
 	async loadBuildingsForVisiblePostalCodes(visiblePostalCodes) {
 		// Prevent concurrent loads that cause visibility race conditions
 		if (this._isLoadingVisiblePostalCodes) {
-			console.log('[FeaturePicker] ⏳ Skipping load - already loading visible postal codes')
+			logger.debug('[FeaturePicker] ⏳ Skipping load - already loading visible postal codes')
 			return
 		}
 
@@ -560,14 +560,14 @@ export default class FeaturePicker {
 
 			// DIAGNOSTIC: Compare previous vs new visible postal codes
 			const previousCodes = Array.from(this.visiblePostalCodes)
-			console.log(`%c[STATE DEBUG] Visibility transition:`, 'color: cyan; font-weight: bold')
-			console.log(
+			logger.debug(`%c[STATE DEBUG] Visibility transition:`, 'color: cyan; font-weight: bold')
+			logger.debug(
 				`  Previous visible: [${previousCodes.join(', ')}] (${previousCodes.length} codes)`
 			)
-			console.log(
+			logger.debug(
 				`  New visible: [${visiblePostalCodes.join(', ')}] (${visiblePostalCodes.length} codes)`
 			)
-			console.log(`  Current selected: ${currentPostalCode || 'none'}`)
+			logger.debug(`  Current selected: ${currentPostalCode || 'none'}`)
 
 			// Collect all visibility changes to batch them
 			const visibilityChanges = []
@@ -647,7 +647,7 @@ export default class FeaturePicker {
 			if (visibilityChanges.length > 0) {
 				const showCount = visibilityChanges.filter((c) => c.visible).length
 				const hideCount = visibilityChanges.filter((c) => !c.visible).length
-				console.log(
+				logger.debug(
 					`[FeaturePicker] 🔄 Batching ${visibilityChanges.length} visibility changes (show: ${showCount}, hide: ${hideCount})`
 				)
 
@@ -671,14 +671,14 @@ export default class FeaturePicker {
 			}
 
 			if (postalCodesToLoad.length === 0) {
-				console.log('[FeaturePicker] All visible postal codes already have buildings loaded')
+				logger.debug('[FeaturePicker] All visible postal codes already have buildings loaded')
 				this.visiblePostalCodes = newVisibleSet
 				// DIAGNOSTIC: Still dump state even on early return
 				this._dumpBuildingDatasourceState()
 				return
 			}
 
-			console.log(
+			logger.debug(
 				'[FeaturePicker] Loading buildings for',
 				postalCodesToLoad.length,
 				'postal codes:',
@@ -689,7 +689,7 @@ export default class FeaturePicker {
 			// Pass postal code as parameter instead of modifying global state
 			for (const postalCode of postalCodesToLoad) {
 				try {
-					console.log('[FeaturePicker] 🔄 Loading buildings for postal code:', postalCode)
+					logger.debug('[FeaturePicker] 🔄 Loading buildings for postal code:', postalCode)
 
 					// Load buildings based on view mode, passing postal code as parameter
 					if (this.toggleStore.helsinkiView) {
@@ -698,9 +698,9 @@ export default class FeaturePicker {
 						await this.hSYBuildingService.loadHSYBuildings(null, postalCode)
 					}
 
-					console.log('[FeaturePicker] ✅ Loaded buildings for postal code:', postalCode)
+					logger.debug('[FeaturePicker] ✅ Loaded buildings for postal code:', postalCode)
 				} catch (error) {
-					console.error(
+					logger.error(
 						'[FeaturePicker] ❌ Failed to load buildings for',
 						postalCode,
 						error?.message || error
@@ -733,7 +733,7 @@ export default class FeaturePicker {
 		const allDatasources = this.viewer?.dataSources?._dataSources || []
 		const buildingDatasources = allDatasources.filter((ds) => ds.name?.startsWith('Buildings '))
 
-		console.log(
+		logger.debug(
 			`%c[DATASOURCE STATE] Total building datasources: ${buildingDatasources.length}`,
 			'color: magenta; font-weight: bold'
 		)
@@ -752,9 +752,9 @@ export default class FeaturePicker {
 			}
 		}
 
-		console.log(`  Visible: [${visible.join(', ')}]`)
-		console.log(`  Hidden: [${hidden.join(', ')}]`)
-		console.log(`  Tracked as visible: [${Array.from(this.visiblePostalCodes).join(', ')}]`)
+		logger.debug(`  Visible: [${visible.join(', ')}]`)
+		logger.debug(`  Hidden: [${hidden.join(', ')}]`)
+		logger.debug(`  Tracked as visible: [${Array.from(this.visiblePostalCodes).join(', ')}]`)
 
 		// Check for mismatches
 		const trackedSet = this.visiblePostalCodes
@@ -765,7 +765,7 @@ export default class FeaturePicker {
 		const missing = Array.from(trackedSet).filter((code) => !actualVisible.includes(code))
 
 		if (mismatches.length > 0 || missing.length > 0) {
-			console.warn(
+			logger.warn(
 				`%c[STATE MISMATCH!] Visible but not tracked: [${mismatches.join(', ')}], Tracked but not visible: [${missing.join(', ')}]`,
 				'color: red; font-weight: bold'
 			)
@@ -786,7 +786,7 @@ export default class FeaturePicker {
 		if (datasource && datasource.show !== false) {
 			logVisibilityChange('datasource', datasourceName, true, false, 'hideBuildingsForPostalCode')
 			datasource.show = false
-			console.log('[FeaturePicker] 🙈 Hiding buildings for postal code:', postalCode)
+			logger.debug('[FeaturePicker] 🙈 Hiding buildings for postal code:', postalCode)
 		}
 	}
 
@@ -814,7 +814,7 @@ export default class FeaturePicker {
 		}
 
 		if (hiddenCount > 0) {
-			console.log(
+			logger.debug(
 				`[FeaturePicker] 🌳 Hiding ${hiddenCount} tree datasources for postal code:`,
 				postalCode
 			)

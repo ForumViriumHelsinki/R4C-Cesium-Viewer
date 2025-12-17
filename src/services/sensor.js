@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import Datasource from './datasource.js'
 
 /**
@@ -50,7 +51,7 @@ export default class Vegetation {
 
 			await this.addSensorDataSource(data)
 		} catch (error) {
-			console.error('Error loading sensor data:', error)
+			logger.error('Error loading sensor data:', error)
 			this.store.showError(
 				'Unable to load sensor data. Please try again.',
 				`Failed to fetch sensor data from R4C API: ${error.message}`

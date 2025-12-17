@@ -65,7 +65,7 @@ class BackgroundPreloader {
 		// Set up idle preloading
 		this.setupIdlePreloading()
 
-		console.log('Background preloader initialized')
+		logger.debug('Background preloader initialized')
 	}
 
 	/**
@@ -176,18 +176,18 @@ class BackgroundPreloader {
 				// Check if already cached
 				const cached = await cacheService.getData(item.key)
 				if (cached) {
-					console.log(`Skipping preload of ${item.key} - already cached`)
+					logger.debug(`Skipping preload of ${item.key} - already cached`)
 					this.preloadQueue.delete(item.key)
 					continue
 				}
 
-				console.log(`Background preloading: ${item.description}`)
+				logger.debug(`Background preloading: ${item.description}`)
 
 				try {
 					await this.preloadItem(item)
 					this.preloadQueue.delete(item.key)
 				} catch (error) {
-					console.warn(`Failed to preload ${item.key}:`, error?.message || error)
+					logger.warn(`Failed to preload ${item.key}:`, error?.message || error)
 					// Keep in queue but lower priority
 					item.calculatedPriority *= 0.5
 				}
@@ -294,9 +294,9 @@ class BackgroundPreloader {
 				})
 			}
 
-			console.log(`Successfully preloaded ${item.key} in ${Date.now() - startTime}ms`)
+			logger.debug(`Successfully preloaded ${item.key} in ${Date.now() - startTime}ms`)
 		} catch (error) {
-			console.error(`Preload failed for ${item.key}:`, error?.message || error)
+			logger.error(`Preload failed for ${item.key}:`, error?.message || error)
 			throw error
 		}
 	}
@@ -355,7 +355,7 @@ class BackgroundPreloader {
 			})
 		}
 
-		console.log(`Added ${dates.length} NDVI dates to preload queue`)
+		logger.debug(`Added ${dates.length} NDVI dates to preload queue`)
 	}
 
 	/**
@@ -459,7 +459,7 @@ class BackgroundPreloader {
 			this.idleTimer = setTimeout(() => {
 				// User has been idle for 10 seconds, resume preloading
 				if (this.preloadQueue.size > 0 && !this.isPreloading) {
-					console.log('User idle, resuming background preloading')
+					logger.debug('User idle, resuming background preloading')
 					this.processPreloadQueue().catch((error) => {
 						logger.error('Failed to process preload queue on idle:', error)
 					})
@@ -507,7 +507,7 @@ class BackgroundPreloader {
 				}
 			}
 		} catch (error) {
-			console.warn('Failed to load user behavior:', error?.message || error)
+			logger.warn('Failed to load user behavior:', error?.message || error)
 		}
 	}
 
@@ -522,7 +522,7 @@ class BackgroundPreloader {
 				lastActivity: this.userBehavior.lastActivity,
 			})
 		} catch (error) {
-			console.warn('Failed to save user behavior:', error?.message || error)
+			logger.warn('Failed to save user behavior:', error?.message || error)
 		}
 	}
 
@@ -534,7 +534,7 @@ class BackgroundPreloader {
 		if (this.idleTimer) {
 			clearTimeout(this.idleTimer)
 		}
-		console.log('Background preloading paused')
+		logger.debug('Background preloading paused')
 	}
 
 	/**
@@ -542,7 +542,7 @@ class BackgroundPreloader {
 	 */
 	resume() {
 		if (this.preloadQueue.size > 0 && !this.isPreloading) {
-			console.log('Background preloading resumed')
+			logger.debug('Background preloading resumed')
 			this.processPreloadQueue().catch((error) => {
 				logger.error('Failed to process preload queue on resume:', error)
 			})
@@ -575,7 +575,7 @@ class BackgroundPreloader {
 			lastActivity: Date.now(),
 		}
 		await this.saveUserBehavior()
-		console.log('Background preloader reset')
+		logger.debug('Background preloader reset')
 	}
 
 	/**
@@ -601,7 +601,7 @@ class BackgroundPreloader {
 		this.removeIdleDetection()
 		this.preloadQueue.clear()
 		this.preloadPriorities.clear()
-		console.log('Background preloader destroyed')
+		logger.debug('Background preloader destroyed')
 	}
 
 	/**

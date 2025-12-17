@@ -42,6 +42,7 @@
  */
 
 import { defineStore } from 'pinia'
+import logger from '@/utils/logger'
 import { validateJSON } from '@/utils/validators'
 
 /**
@@ -623,7 +624,7 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 			try {
 				localStorage.setItem('featureFlags', JSON.stringify(this.userOverrides))
 			} catch (error) {
-				console.warn('Failed to persist feature flag overrides:', error)
+				logger.warn('Failed to persist feature flag overrides:', error)
 			}
 		},
 
@@ -644,12 +645,12 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 					this.userOverrides = parsed as UserOverridesMap
 				}
 			} catch (error) {
-				console.warn('Failed to load feature flag overrides:', error)
+				logger.warn('Failed to load feature flag overrides:', error)
 				// Clear corrupted data from localStorage
 				try {
 					localStorage.removeItem('featureFlags')
 				} catch (cleanupError) {
-					console.warn('Failed to clear corrupted feature flags:', cleanupError)
+					logger.warn('Failed to clear corrupted feature flags:', cleanupError)
 				}
 			}
 		},
@@ -726,9 +727,9 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 				if (this.flags[flagName] && typeof enabled === 'boolean') {
 					this.setFlag(flagName, enabled)
 				} else if (!this.flags[flagName]) {
-					console.warn(`Unknown feature flag "${name}" in imported configuration`)
+					logger.warn(`Unknown feature flag "${name}" in imported configuration`)
 				} else if (typeof enabled !== 'boolean') {
-					console.warn(
+					logger.warn(
 						`Invalid value for feature flag "${name}": expected boolean, got ${typeof enabled}`
 					)
 				}

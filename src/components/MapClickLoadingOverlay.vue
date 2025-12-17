@@ -110,6 +110,7 @@
  */
 import { computed } from 'vue'
 import { useGlobalStore } from '../stores/globalStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	name: 'MapClickLoadingOverlay',
@@ -179,7 +180,7 @@ export default {
 			const progressData = store.clickProcessingState.loadingProgress
 			if (progressData && progressData.total > 0) {
 				const percentage = Math.round((progressData.current / progressData.total) * 100)
-				console.log(
+				logger.debug(
 					`[MapClickLoadingOverlay] Real progress: ${progressData.current}/${progressData.total} (${percentage}%)`
 				)
 				return percentage
@@ -214,7 +215,7 @@ export default {
 		 * Emits cancel event for parent component to handle
 		 */
 		const handleCancel = () => {
-			console.log('[MapClickLoadingOverlay] User requested cancellation')
+			logger.debug('[MapClickLoadingOverlay] User requested cancellation')
 			emit('cancel')
 		}
 
@@ -223,7 +224,7 @@ export default {
 		 * Emits retry event for parent component to handle
 		 */
 		const handleRetry = () => {
-			console.log('[MapClickLoadingOverlay] User requested retry')
+			logger.debug('[MapClickLoadingOverlay] User requested retry')
 			emit('retry')
 		}
 

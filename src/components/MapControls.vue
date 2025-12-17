@@ -335,6 +335,7 @@ import Wms from '../services/wms.js'
 import { useGlobalStore } from '../stores/globalStore'
 import { useLoadingStore } from '../stores/loadingStore.js'
 import { useToggleStore } from '../stores/toggleStore'
+import logger from '../utils/logger.js'
 
 // Stores
 const toggleStore = useToggleStore()
@@ -470,7 +471,7 @@ const loadTrees = async () => {
 
 			if (cached) {
 				// Use cached data - data source service would need to be updated to accept cached data
-				console.log('Using cached tree data')
+				logger.debug('Using cached tree data')
 				return
 			}
 

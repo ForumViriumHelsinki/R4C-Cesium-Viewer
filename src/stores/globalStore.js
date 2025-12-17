@@ -65,6 +65,8 @@ import { markRaw } from 'vue'
  * @property {string} errorNotification.message - User-friendly error message
  * @property {string} errorNotification.context - Technical context for debugging (logged to console)
  */
+import logger from '../utils/logger.js'
+
 export const useGlobalStore = defineStore('global', {
 	state: () => ({
 		view: 'capitalRegion',
@@ -250,7 +252,7 @@ export const useGlobalStore = defineStore('global', {
 
 					const measure = performance.getEntriesByName('map-click-interaction')[0]
 					if (measure) {
-						console.log(
+						logger.debug(
 							`[GlobalStore] Map click completed in ${measure.duration.toFixed(2)}ms for postal code ${this.clickProcessingState.postalCode}`
 						)
 					}
@@ -287,7 +289,7 @@ export const useGlobalStore = defineStore('global', {
 		 */
 		captureViewState() {
 			if (!this.cesiumViewer) {
-				console.warn('[GlobalStore] Cannot capture view state: Cesium viewer not initialized')
+				logger.warn('[GlobalStore] Cannot capture view state: Cesium viewer not initialized')
 				return
 			}
 
@@ -303,7 +305,7 @@ export const useGlobalStore = defineStore('global', {
 				buildingAddress: this.buildingAddress,
 			}
 
-			console.log('[GlobalStore] View state captured for potential restoration')
+			logger.debug('[GlobalStore] View state captured for potential restoration')
 		},
 		/**
 		 * Restores previously captured view state
@@ -312,12 +314,12 @@ export const useGlobalStore = defineStore('global', {
 		restorePreviousViewState() {
 			const prevState = this.clickProcessingState.previousViewState
 			if (!prevState) {
-				console.warn('[GlobalStore] No previous view state to restore')
+				logger.warn('[GlobalStore] No previous view state to restore')
 				return
 			}
 
 			if (!this.cesiumViewer) {
-				console.warn('[GlobalStore] Cannot restore view state: Cesium viewer not initialized')
+				logger.warn('[GlobalStore] Cannot restore view state: Cesium viewer not initialized')
 				return
 			}
 
@@ -329,7 +331,7 @@ export const useGlobalStore = defineStore('global', {
 			this.showBuildingInfo = prevState.showBuildingInfo
 			this.buildingAddress = prevState.buildingAddress
 
-			console.log('[GlobalStore] Previous view state restored')
+			logger.debug('[GlobalStore] Previous view state restored')
 		},
 		/**
 		 * Shows a user-facing error notification
@@ -351,7 +353,7 @@ export const useGlobalStore = defineStore('global', {
 
 			// Log technical context to console for developer debugging
 			if (context) {
-				console.error('[GlobalStore] Error context:', context)
+				logger.error('[GlobalStore] Error context:', context)
 			}
 		},
 		/**
