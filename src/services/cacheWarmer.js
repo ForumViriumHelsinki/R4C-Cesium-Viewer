@@ -37,8 +37,8 @@
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import { encodeURLParam, validatePostalCode } from '../utils/validators.js'
 import unifiedLoader from './unifiedLoader.js'
-import { validatePostalCode, encodeURLParam } from '../utils/validators.js'
 
 /**
  * Warming result object

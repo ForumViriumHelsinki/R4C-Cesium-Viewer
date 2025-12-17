@@ -22,7 +22,7 @@
  */
 
 import { defineStore } from 'pinia'
-import { validatePostalCode, encodeURLParam } from '@/utils/validators'
+import { encodeURLParam, validatePostalCode } from '@/utils/validators'
 
 /**
  * URL Pinia Store

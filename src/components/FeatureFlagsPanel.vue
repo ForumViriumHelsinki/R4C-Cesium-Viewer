@@ -383,7 +383,9 @@ function doImport(): void {
 		showSnackbar('Configuration imported successfully', 'success')
 	} catch (error) {
 		const errorMessage =
-			error instanceof Error ? error.message : 'Invalid JSON format. Please check your input and try again.'
+			error instanceof Error
+				? error.message
+				: 'Invalid JSON format. Please check your input and try again.'
 		showSnackbar(errorMessage, 'error')
 		console.error('Import error:', error)
 	}

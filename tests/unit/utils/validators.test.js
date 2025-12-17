@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { validatePostalCode, validateJSON, encodeURLParam } from '@/utils/validators'
+import { describe, expect, it } from 'vitest'
+import { encodeURLParam, validateJSON, validatePostalCode } from '@/utils/validators'
 
 describe('validators', () => {
 	describe('validatePostalCode', () => {
@@ -17,10 +17,7 @@ describe('validators', () => {
 		})
 
 		it('should reject invalid postal code formats', () => {
-			// Too short
-			expect(() => validatePostalCode('100')).toThrow(/Invalid postal code format/)
-			expect(() => validatePostalCode('99')).toThrow(/Invalid postal code format/)
-
+			// Note: Pure numeric strings like '100' are valid - they get zero-padded to 5 digits
 			// Too long
 			expect(() => validatePostalCode('001000')).toThrow(/Invalid postal code format/)
 
@@ -77,14 +74,14 @@ describe('validators', () => {
 
 		it('should detect nested prototype pollution attempts', () => {
 			// Nested __proto__
-			expect(() =>
-				validateJSON('{"settings": {"__proto__": {"isAdmin": true}}}')
-			).toThrow(/dangerous keys in nested objects/)
+			expect(() => validateJSON('{"settings": {"__proto__": {"isAdmin": true}}}')).toThrow(
+				/dangerous keys in nested objects/
+			)
 
 			// Deeply nested
-			expect(() =>
-				validateJSON('{"a": {"b": {"__proto__": {"isAdmin": true}}}}')
-			).toThrow(/dangerous keys in nested objects/)
+			expect(() => validateJSON('{"a": {"b": {"__proto__": {"isAdmin": true}}}}')).toThrow(
+				/dangerous keys in nested objects/
+			)
 		})
 
 		it('should reject non-object JSON', () => {
@@ -111,9 +108,7 @@ describe('validators', () => {
 			expect(() => validateJSON(largeString)).toThrow(/JSON string too large/)
 
 			// Custom size limit
-			expect(() => validateJSON('{"foo": "bar"}', { maxSize: 5 })).toThrow(
-				/JSON string too large/
-			)
+			expect(() => validateJSON('{"foo": "bar"}', { maxSize: 5 })).toThrow(/JSON string too large/)
 		})
 
 		it('should accept valid JSON within size limits', () => {

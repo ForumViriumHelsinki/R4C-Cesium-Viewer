@@ -30,9 +30,7 @@
 export function validatePostalCode(code) {
 	// Type check
 	if (typeof code !== 'string' && typeof code !== 'number') {
-		throw new TypeError(
-			`Postal code must be string or number, got ${typeof code}`
-		)
+		throw new TypeError(`Postal code must be string or number, got ${typeof code}`)
 	}
 
 	// Convert to string and pad if number
@@ -84,9 +82,7 @@ export function validateJSON(jsonString, options = {}) {
 
 	// Size validation (prevent DoS)
 	if (jsonString.length > maxSize) {
-		throw new Error(
-			`JSON string too large: ${jsonString.length} characters (max ${maxSize})`
-		)
+		throw new Error(`JSON string too large: ${jsonString.length} characters (max ${maxSize})`)
 	}
 
 	// Parse JSON
@@ -107,7 +103,7 @@ export function validateJSON(jsonString, options = {}) {
 	// Prototype pollution prevention
 	const dangerousKeys = ['__proto__', 'constructor', 'prototype']
 	for (const key of dangerousKeys) {
-		if (key in parsed) {
+		if (Object.hasOwn(parsed, key)) {
 			throw new Error(
 				`Invalid configuration: detected dangerous key "${key}". This may be a prototype pollution attempt.`
 			)
@@ -135,14 +131,14 @@ export function validateJSON(jsonString, options = {}) {
  */
 function hasDangerousKeys(obj, dangerousKeys) {
 	for (const key in obj) {
-		if (Object.prototype.hasOwnProperty.call(obj, key)) {
+		if (Object.hasOwn(obj, key)) {
 			const value = obj[key]
 
 			// Check if value is a plain object
 			if (value && typeof value === 'object' && !Array.isArray(value)) {
 				// Check for dangerous keys in nested object
 				for (const dangerousKey of dangerousKeys) {
-					if (dangerousKey in value) {
+					if (Object.hasOwn(value, dangerousKey)) {
 						return true
 					}
 				}
@@ -174,9 +170,7 @@ function hasDangerousKeys(obj, dangerousKeys) {
  */
 export function encodeURLParam(value) {
 	if (typeof value !== 'string' && typeof value !== 'number') {
-		throw new TypeError(
-			`URL parameter must be string or number, got ${typeof value}`
-		)
+		throw new TypeError(`URL parameter must be string or number, got ${typeof value}`)
 	}
 	return encodeURIComponent(String(value))
 }
