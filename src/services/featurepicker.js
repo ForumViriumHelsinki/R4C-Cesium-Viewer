@@ -6,6 +6,7 @@ import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 import { findAddressForBuilding } from './address.js'
 import Building from './building.js'
 import cacheWarmer from './cacheWarmer.js'
@@ -288,7 +289,9 @@ export default class FeaturePicker {
 
 		this.removeEntityByName('coldpoint')
 		this.removeEntityByName('currentLocation')
-		void this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel')
+		this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel').catch((error) => {
+			logger.error('Failed to remove travel label datasources:', error)
+		})
 
 		this.propStore.setTreeArea(null)
 		this.propStore.setHeatFloodVulnerability(id.properties ?? null)
@@ -308,7 +311,9 @@ export default class FeaturePicker {
 				}
 			}
 
-			void this.handleBuildingFeature(id.properties)
+			this.handleBuildingFeature(id.properties).catch((error) => {
+				logger.error('Failed to handle building feature:', error)
+			})
 		}
 
 		//If we find postal code, we assume this is an area & zoom in AND load the buildings for it.
@@ -347,7 +352,9 @@ export default class FeaturePicker {
 				this.store.setPostalCode(newPostalCode)
 
 				// PHASE 3: Parallel loading - camera animation and data load simultaneously
-				void this.loadPostalCodeWithParallelStrategy(newPostalCode)
+				this.loadPostalCodeWithParallelStrategy(newPostalCode).catch((error) => {
+					logger.error('Failed to load postal code with parallel strategy:', error)
+				})
 			} else {
 				console.log(
 					'[FeaturePicker] ⚠️ Same postal code already selected at postalCode level, skipping reload'
@@ -366,7 +373,9 @@ export default class FeaturePicker {
 				const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`
 
 				// Now you can use this URL to make your WFS request
-				void this.hSYBuildingService.loadHSYBuildings(bboxString)
+				this.hSYBuildingService.loadHSYBuildings(bboxString).catch((error) => {
+					logger.error('Failed to load HSY buildings:', error)
+				})
 			}
 
 			//createDiagramForPopulationGrid( id.properties.index, id.properties.asukkaita );
@@ -378,8 +387,12 @@ export default class FeaturePicker {
 			id.entityCollection._entities._array[0]._properties._id._value ===
 				SPECIAL_ENTITIES.TRAVEL_TIME_GRID_CELL_ID
 		) {
-			this.traveltimeService.loadTravelTimeData(id.properties.id._value).catch(console.error)
-			this.traveltimeService.markCurrentLocation(id).catch(console.error)
+			this.traveltimeService.loadTravelTimeData(id.properties.id._value).catch((error) => {
+				logger.error('Failed to load travel time data:', error)
+			})
+			this.traveltimeService.markCurrentLocation(id).catch((error) => {
+				logger.error('Failed to mark current location:', error)
+			})
 		}
 	}
 

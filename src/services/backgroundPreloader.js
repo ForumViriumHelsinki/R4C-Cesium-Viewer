@@ -1,4 +1,5 @@
 import { getRecentNDVIDates } from '../constants/ndviDates.js'
+import logger from '../utils/logger.js'
 import cacheService from './cacheService.js'
 import progressiveLoader from './progressiveLoader.js'
 
@@ -105,7 +106,9 @@ class BackgroundPreloader {
 		await this.preloadNDVI(ndviDates, 'low') // Low priority, background only
 
 		// Start processing the queue
-		void this.processPreloadQueue()
+		this.processPreloadQueue().catch((error) => {
+			logger.error('Failed to process preload queue:', error)
+		})
 	}
 
 	/**
@@ -318,7 +321,9 @@ class BackgroundPreloader {
 
 		// Process queue if not already running
 		if (!this.isPreloading) {
-			void this.processPreloadQueue()
+			this.processPreloadQueue().catch((error) => {
+				logger.error('Failed to process preload queue:', error)
+			})
 		}
 	}
 
@@ -345,7 +350,9 @@ class BackgroundPreloader {
 
 		// Process queue if not already running
 		if (!this.isPreloading) {
-			void this.processPreloadQueue()
+			this.processPreloadQueue().catch((error) => {
+				logger.error('Failed to process preload queue:', error)
+			})
 		}
 
 		console.log(`Added ${dates.length} NDVI dates to preload queue`)
@@ -399,7 +406,9 @@ class BackgroundPreloader {
 	trackPostalCodeVisit(postalCode) {
 		this.userBehavior.visitedPostalCodes.add(postalCode)
 		this.userBehavior.lastActivity = Date.now()
-		this.saveUserBehavior().catch(console.error)
+		this.saveUserBehavior().catch((error) => {
+			logger.error('Failed to save user behavior:', error)
+		})
 	}
 
 	/**
@@ -409,7 +418,9 @@ class BackgroundPreloader {
 		const current = this.userBehavior.frequentLayers.get(layerType) || 0
 		this.userBehavior.frequentLayers.set(layerType, current + 1)
 		this.userBehavior.lastActivity = Date.now()
-		this.saveUserBehavior().catch(console.error)
+		this.saveUserBehavior().catch((error) => {
+			logger.error('Failed to save user behavior:', error)
+		})
 	}
 
 	/**
@@ -449,7 +460,9 @@ class BackgroundPreloader {
 				// User has been idle for 10 seconds, resume preloading
 				if (this.preloadQueue.size > 0 && !this.isPreloading) {
 					console.log('User idle, resuming background preloading')
-					void this.processPreloadQueue()
+					this.processPreloadQueue().catch((error) => {
+						logger.error('Failed to process preload queue on idle:', error)
+					})
 				}
 			}, 10000)
 		}
@@ -530,7 +543,9 @@ class BackgroundPreloader {
 	resume() {
 		if (this.preloadQueue.size > 0 && !this.isPreloading) {
 			console.log('Background preloading resumed')
-			void this.processPreloadQueue()
+			this.processPreloadQueue().catch((error) => {
+				logger.error('Failed to process preload queue on resume:', error)
+			})
 		}
 	}
 

@@ -33,16 +33,15 @@ export async function checkCacheForPostalCode(_cacheKey, postalCode) {
 
 /**
  * Starts camera animation and returns a promise
+ * Note: This uses Promise constructor because it wraps a setTimeout-based animation
+ * that needs to complete after a fixed duration. This is a valid use of Promise constructor.
+ *
  * @param {Object} cameraService - Camera service instance
  * @param {Function} updateProgressCallback - Callback to update loading progress
  * @param {Function} setStateCallback - Callback to set click processing state
  * @returns {Promise<void>}
  */
-export async function startCameraAnimation(
-	cameraService,
-	updateProgressCallback,
-	setStateCallback
-) {
+export function startCameraAnimation(cameraService, updateProgressCallback, setStateCallback) {
 	return new Promise((resolve, reject) => {
 		let timeoutId
 

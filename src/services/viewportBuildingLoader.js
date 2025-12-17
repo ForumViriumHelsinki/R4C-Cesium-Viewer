@@ -34,6 +34,7 @@ import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import logger from '../utils/logger.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
 import Urbanheat from './urbanheat.js'
@@ -207,7 +208,9 @@ export default class ViewportBuildingLoader {
 
 		// Schedule new update
 		this.debounceTimeout = setTimeout(() => {
-			this.updateViewport().catch(console.error)
+			this.updateViewport().catch((error) => {
+				logger.error('Failed to update viewport:', error)
+			})
 		}, CONFIG.DEBOUNCE_DELAY)
 	}
 
@@ -252,7 +255,9 @@ export default class ViewportBuildingLoader {
 			await this.loadMissingTiles(requiredTileKeys)
 
 			// Evict distant tiles if over memory limit
-			void this.unloadDistantTiles(requiredTileKeys)
+			this.unloadDistantTiles(requiredTileKeys).catch((error) => {
+				logger.error('Failed to unload distant tiles:', error)
+			})
 		} catch (error) {
 			console.error('[ViewportBuildingLoader] Error updating viewport:', error)
 		}
@@ -410,18 +415,24 @@ export default class ViewportBuildingLoader {
 					const datasourceName = `Buildings Viewport ${viewPrefix} ${tileKey}`
 					const datasource = this.datasourceService.getDataSourceByName(datasourceName)
 					if (datasource) {
-						void this.fadeInDatasource(datasource)
+						this.fadeInDatasource(datasource).catch((error) => {
+							logger.error(`Failed to fade in datasource for tile ${tileKey}:`, error)
+						})
 					}
 
 					// Continue processing queue
-					void this.processLoadingQueue()
+					this.processLoadingQueue().catch((error) => {
+						logger.error('Failed to continue processing loading queue:', error)
+					})
 				})
 				.catch((error) => {
-					console.error(`[ViewportBuildingLoader] Failed to load tile ${tileKey}:`, error)
+					logger.error(`Failed to load tile ${tileKey}:`, error)
 					this.activeLoads--
 					this.loadingTiles.delete(tileKey)
 					// Continue processing queue even on error
-					void this.processLoadingQueue()
+					this.processLoadingQueue().catch((err) => {
+						logger.error('Failed to continue processing loading queue after error:', err)
+					})
 				})
 		}
 	}
@@ -787,7 +798,9 @@ export default class ViewportBuildingLoader {
 			// Only update if state changed
 			if (shouldBeVisible && !isCurrentlyVisible) {
 				// Fade in (async, non-blocking)
-				void this.fadeInDatasource(datasource)
+				this.fadeInDatasource(datasource).catch((error) => {
+					logger.error(`Failed to fade in datasource for tile ${tileKey}:`, error)
+				})
 			} else if (!shouldBeVisible && isCurrentlyVisible) {
 				// Instant hide (no fade-out for performance)
 				datasource.show = false
@@ -891,7 +904,9 @@ export default class ViewportBuildingLoader {
 		console.log('[ViewportBuildingLoader] View mode changed, clearing tiles')
 		await this.clearAllTiles()
 		// Trigger reload for new view
-		void this.updateViewport()
+		this.updateViewport().catch((error) => {
+			logger.error('Failed to update viewport after view mode change:', error)
+		})
 	}
 
 	/**
