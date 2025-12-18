@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.38.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.5...r4c-cesium-viewer-v1.38.6) (2025-12-18)
+
+
+### Bug Fixes
+
+* **ci:** improve Lighthouse CI error handling and PR comment clarity ([#480](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/480)) ([de66750](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/de667501c96065710a9d8b96a35047c261ff7ab6))
+* **ci:** use bunx instead of global install for Lighthouse CI ([#478](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/478)) ([b353ceb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b353ceb5d2d9f037cb3a34880e92cc74c366aec0))
+
 ## [1.38.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.4...r4c-cesium-viewer-v1.38.5) (2025-12-16)
 
 
