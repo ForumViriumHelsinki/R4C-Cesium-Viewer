@@ -1,258 +1,36 @@
 <template>
 	<div class="map-controls">
 		<!-- Data Layers -->
-		<div class="control-group">
-			<h4 class="control-group-title">Data Layers</h4>
-
-			<!-- Trees -->
-			<v-tooltip
-				v-if="view !== 'grid' && postalCode"
-				location="left"
-				max-width="200"
-			>
-				<template #activator="{ props }">
-					<div
-						v-bind="props"
-						class="control-item"
-						:class="{ loading: loadingStore.layerLoading.trees }"
-					>
-						<v-switch
-							v-model="showTrees"
-							color="green"
-							density="compact"
-							hide-details
-							:loading="loadingStore.layerLoading.trees"
-							@change="loadTrees"
-						/>
-						<span class="control-label">
-							Trees
-							<v-progress-circular
-								v-if="loadingStore.layerLoading.trees"
-								size="12"
-								width="2"
-								color="green"
-								indeterminate
-								class="ml-2"
-							/>
-							<v-icon
-								v-if="loadingStore.cacheStatus.trees?.cached"
-								size="12"
-								color="blue"
-								class="ml-1 cache-indicator"
-							>
-								mdi-cached
-							</v-icon>
-						</span>
-					</div>
-				</template>
-				<span>Show individual trees in the selected postal code area</span>
-			</v-tooltip>
-
-			<!-- Vegetation (Helsinki only) -->
-			<v-tooltip
-				v-if="helsinkiView"
-				location="left"
-				max-width="200"
-			>
-				<template #activator="{ props }">
-					<div
-						v-bind="props"
-						class="control-item"
-					>
-						<v-switch
-							v-model="showVegetation"
-							color="green"
-							density="compact"
-							hide-details
-							@change="loadVegetation"
-						/>
-						<span class="control-label">
-							Vegetation
-							<v-icon
-								v-if="loadingStore.cacheStatus.vegetation?.cached"
-								size="12"
-								color="blue"
-								class="ml-1 cache-indicator"
-							>
-								mdi-cached
-							</v-icon>
-						</span>
-					</div>
-				</template>
-				<span>Display vegetation areas and green spaces</span>
-			</v-tooltip>
-
-			<!-- Other Nature (Helsinki only) -->
-			<v-tooltip
-				v-if="helsinkiView"
-				location="left"
-				max-width="200"
-			>
-				<template #activator="{ props }">
-					<div
-						v-bind="props"
-						class="control-item"
-					>
-						<v-switch
-							v-model="showOtherNature"
-							color="green"
-							density="compact"
-							hide-details
-							@change="loadOtherNature"
-						/>
-						<span class="control-label">Other Nature</span>
-					</div>
-				</template>
-				<span>Show parks, forests, and other natural areas</span>
-			</v-tooltip>
-
-			<!-- HSY Land Cover -->
-			<v-tooltip
-				v-if="!helsinkiView"
-				location="left"
-				max-width="200"
-			>
-				<template #activator="{ props }">
-					<div
-						v-bind="props"
-						class="control-item"
-					>
-						<v-switch
-							v-model="landCover"
-							color="brown"
-							density="compact"
-							hide-details
-							@change="addLandCover"
-						/>
-						<span class="control-label">Land Cover</span>
-					</div>
-				</template>
-				<span>HSY land use classification showing different surface types</span>
-			</v-tooltip>
-
-			<!-- NDVI -->
-			<v-tooltip
-				location="left"
-				max-width="200"
-			>
-				<template #activator="{ props }">
-					<div
-						v-bind="props"
-						class="control-item"
-					>
-						<v-switch
-							v-model="ndvi"
-							color="green"
-							density="compact"
-							hide-details
-							@change="toggleNDVI"
-						/>
-						<span class="control-label">NDVI</span>
-					</div>
-				</template>
-				<span>Normalized Difference Vegetation Index - satellite-based vegetation density</span>
-			</v-tooltip>
-		</div>
+		<DataLayersControl
+			v-model:show-trees="showTrees"
+			v-model:show-vegetation="showVegetation"
+			v-model:show-other-nature="showOtherNature"
+			v-model:land-cover="landCover"
+			v-model:ndvi="ndvi"
+			:helsinki-view="helsinkiView"
+			:view="view"
+			:postal-code="postalCode"
+			@update:show-trees="loadTrees"
+			@update:show-vegetation="loadVegetation"
+			@update:show-other-nature="loadOtherNature"
+			@update:land-cover="addLandCover"
+			@update:ndvi="toggleNDVI"
+		/>
 
 		<!-- Building Filters -->
-		<div
-			v-if="view !== 'grid'"
-			class="control-group"
-		>
-			<h4 class="control-group-title">Building Filters</h4>
-
-			<!-- Public/Social Buildings Filter -->
-			<v-tooltip
-				location="left"
-				max-width="200"
-			>
-				<template #activator="{ props }">
-					<div
-						v-bind="props"
-						class="control-item"
-					>
-						<v-switch
-							v-model="hideNonSote"
-							color="blue"
-							density="compact"
-							hide-details
-							@change="filterBuildings"
-						/>
-						<span class="control-label">
-							{{ helsinkiView ? 'Social & Healthcare' : 'Public Buildings' }}
-						</span>
-					</div>
-				</template>
-				<span>
-					{{
-						helsinkiView
-							? 'Show only social services and healthcare buildings'
-							: 'Show only public and municipal buildings'
-					}}
-				</span>
-			</v-tooltip>
-
-			<!-- Building Age Filter (Helsinki only) -->
-			<v-tooltip
-				v-if="helsinkiView"
-				location="left"
-				max-width="200"
-			>
-				<template #activator="{ props }">
-					<div
-						v-bind="props"
-						class="control-item"
-					>
-						<v-switch
-							v-model="hideNewBuildings"
-							color="orange"
-							density="compact"
-							hide-details
-							@change="filterBuildings"
-						/>
-						<span class="control-label">Pre-2018</span>
-					</div>
-				</template>
-				<span>Show only buildings constructed before summer 2018</span>
-			</v-tooltip>
-
-			<!-- Building Height Filter -->
-			<v-tooltip
-				location="left"
-				max-width="200"
-			>
-				<template #activator="{ props }">
-					<div
-						v-bind="props"
-						class="control-item"
-					>
-						<v-switch
-							v-model="hideLow"
-							color="purple"
-							density="compact"
-							hide-details
-							@change="filterBuildings"
-						/>
-						<span class="control-label">Tall Buildings</span>
-					</div>
-				</template>
-				<span>Show only tall buildings (filters out low-rise structures)</span>
-			</v-tooltip>
-		</div>
+		<BuildingFiltersControl
+			v-model:hide-non-sote="hideNonSote"
+			v-model:hide-new-buildings="hideNewBuildings"
+			v-model:hide-low="hideLow"
+			:helsinki-view="helsinkiView"
+			:view="view"
+			@update:hide-non-sote="filterBuildings"
+			@update:hide-new-buildings="filterBuildings"
+			@update:hide-low="filterBuildings"
+		/>
 
 		<!-- Layer Conflict Warning -->
-		<v-alert
-			v-if="hasLayerConflict"
-			type="warning"
-			density="compact"
-			variant="tonal"
-			class="layer-warning"
-		>
-			<template #prepend>
-				<v-icon size="small"> mdi-alert </v-icon>
-			</template>
-			NDVI and Land Cover cannot be active simultaneously
-		</v-alert>
+		<LayerConflictAlert :has-conflict="hasLayerConflict" />
 	</div>
 </template>
 
@@ -336,6 +114,9 @@ import { useGlobalStore } from '../stores/globalStore'
 import { useLoadingStore } from '../stores/loadingStore.js'
 import { useToggleStore } from '../stores/toggleStore'
 import logger from '../utils/logger.js'
+import BuildingFiltersControl from './controls/BuildingFiltersControl.vue'
+import DataLayersControl from './controls/DataLayersControl.vue'
+import LayerConflictAlert from './controls/LayerConflictAlert.vue'
 
 // Stores
 const toggleStore = useToggleStore()
@@ -685,83 +466,5 @@ onMounted(() => {
 	flex-direction: column;
 	gap: 16px;
 	width: 100%;
-}
-
-.control-group {
-	border: 1px solid rgba(0, 0, 0, 0.12);
-	border-radius: 6px;
-	overflow: hidden;
-}
-
-.control-group-title {
-	font-size: 0.875rem;
-	font-weight: 600;
-	padding: 12px 16px 8px 16px;
-	margin: 0;
-	color: rgba(0, 0, 0, 0.87);
-	background-color: rgba(0, 0, 0, 0.02);
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.control-item {
-	display: flex;
-	align-items: center;
-	padding: 8px 16px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-	transition: background-color 0.2s;
-}
-
-.control-item:last-child {
-	border-bottom: none;
-}
-
-.control-item:hover {
-	background-color: rgba(0, 0, 0, 0.02);
-}
-
-.control-item.loading {
-	background-color: rgba(25, 118, 210, 0.04);
-	border-left: 3px solid #1976d2;
-}
-
-.control-label {
-	font-size: 0.875rem;
-	color: rgba(0, 0, 0, 0.87);
-	margin-left: 12px;
-	flex: 1;
-	user-select: none;
-}
-
-.layer-warning {
-	margin-top: 8px;
-	font-size: 0.8rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-	.control-group-title {
-		font-size: 0.8rem;
-		padding: 10px 12px 6px 12px;
-	}
-
-	.control-item {
-		padding: 6px 12px;
-	}
-
-	.control-label {
-		font-size: 0.8rem;
-		margin-left: 8px;
-	}
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-	.control-group {
-		border-width: 2px;
-	}
-
-	.control-item:hover {
-		background-color: rgba(0, 0, 0, 0.1);
-	}
 }
 </style>

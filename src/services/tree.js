@@ -4,6 +4,7 @@ import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import { processBatch } from '../utils/batchProcessor.js'
 import logger from '../utils/logger.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
 import Datasource from './datasource.js'
@@ -133,15 +134,13 @@ export default class Tree {
 				`Trees${koodi}_${postalCode}`
 			)
 
-			// Enhanced batch processing with adaptive batch sizes
-			const adaptiveBatchSize = entities.length > 1000 ? 15 : 25
+			// Adaptive batch size: smaller batches for very large datasets
+			const adaptiveBatchSize = (count) => (count > 1000 ? 15 : 25)
 			let processed = 0
 
-			for (let i = 0; i < entities.length; i += adaptiveBatchSize) {
-				const batch = entities.slice(i, i + adaptiveBatchSize)
-
-				// Process batch with improved error handling
-				for (const entity of batch) {
+			await processBatch(
+				entities,
+				(entity) => {
 					try {
 						const description = entity.properties._kuvaus?._value
 						if (description) {
@@ -151,19 +150,9 @@ export default class Tree {
 					} catch (entityError) {
 						logger.warn(`Error processing tree entity in koodi ${koodi}:`, entityError)
 					}
-				}
-
-				// Yield control with improved scheduling
-				if (i + adaptiveBatchSize < entities.length) {
-					await new Promise((resolve) => {
-						if (window.requestIdleCallback) {
-							requestIdleCallback(resolve, { timeout: 50 })
-						} else {
-							setTimeout(resolve, 0)
-						}
-					})
-				}
-			}
+				},
+				{ batchSize: adaptiveBatchSize }
+			)
 
 			// Handle Helsinki-specific tree distance data
 			if (this.store.view === 'helsinki') {
