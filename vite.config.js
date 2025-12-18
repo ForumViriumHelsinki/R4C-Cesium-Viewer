@@ -12,6 +12,36 @@ import { fileURLToPath, URL } from 'node:url';
 import { version } from './package.json';
 import { execSync } from 'child_process';
 
+// Auto-detect pygeoapi port from kubectl port-forward
+const detectPygeoApiPort = () => {
+	// If explicitly set in env, use that
+	if (process.env.VITE_PYGEOAPI_HOST) {
+		return process.env.VITE_PYGEOAPI_HOST;
+	}
+
+	// Try to detect from running kubectl port-forwards
+	try {
+		const psOutput = execSync('ps aux | grep -E "kubectl.*port-forward.*pygeoapi" | grep -v grep', {
+			encoding: 'utf-8',
+			stdio: ['pipe', 'pipe', 'pipe'],
+		});
+
+		// Parse port from output like: kubectl port-forward ... pod/pygeoapi-xxx 5002:80
+		const portMatch = psOutput.match(/(\d+):80\b/);
+		if (portMatch) {
+			const localPort = portMatch[1];
+			console.log(`🔍 Auto-detected pygeoapi port: ${localPort}`);
+			return `localhost:${localPort}`;
+		}
+	} catch {
+		// No kubectl port-forward running, fall back to production
+	}
+
+	// Default to production if no local port-forward found
+	console.log('ℹ️  Using production pygeoapi (no local port-forward detected)');
+	return 'pygeoapi.dataportal.fi';
+};
+
 // Get git information at build time
 const getGitInfo = () => {
 	const gitInfo = {
@@ -100,6 +130,7 @@ export default defineConfig(({ mode }) => {
 				// },
 			}),
 			Components({
+				dirs: ['src/components', 'src/pages'],
 				dts: 'src/components.d.ts',
 			}),
 			cesium(),
@@ -143,9 +174,9 @@ export default defineConfig(({ mode }) => {
 		server: {
 			proxy: {
 				'/pygeoapi': {
-					// Derive URL from HOST - use http for localhost development, https for production
+					// Auto-detect local pygeoapi port or fall back to production
 					target: (() => {
-						const host = process.env.VITE_PYGEOAPI_HOST || 'pygeoapi.dataportal.fi';
+						const host = detectPygeoApiPort();
 						const protocol = host.startsWith('localhost:') ? 'http' : 'https';
 						return `${protocol}://${host}/`;
 					})(),
