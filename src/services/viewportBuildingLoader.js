@@ -133,6 +133,29 @@ export default class ViewportBuildingLoader {
 			return
 		}
 
+		// Validate viewer is a proper Cesium.Viewer instance
+		if (!viewer) {
+			logger.error('[ViewportBuildingLoader] Cannot initialize - viewer is null/undefined')
+			return
+		}
+
+		if (!viewer.camera) {
+			logger.error('[ViewportBuildingLoader] Cannot initialize - viewer.camera is undefined')
+			logger.error(
+				'[ViewportBuildingLoader] Viewer type:',
+				typeof viewer,
+				viewer?.constructor?.name
+			)
+			return
+		}
+
+		if (!viewer.camera.moveEnd) {
+			logger.error(
+				'[ViewportBuildingLoader] Cannot initialize - viewer.camera.moveEnd is undefined'
+			)
+			return
+		}
+
 		this.viewer = viewer
 
 		// Set up camera event listeners with debouncing

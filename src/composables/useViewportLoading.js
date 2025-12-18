@@ -193,6 +193,11 @@ export function useViewportLoading(viewer, Camera, Featurepicker) {
 	 * @returns {Promise<void>}
 	 */
 	const initViewportStreaming = async () => {
+		logger.debug('[useViewportLoading] initViewportStreaming called')
+		logger.debug('[useViewportLoading] viewer ref:', viewer)
+		logger.debug('[useViewportLoading] viewer.value:', viewer?.value)
+		logger.debug('[useViewportLoading] viewer.value?.camera:', viewer?.value?.camera)
+
 		if (!viewer?.value) {
 			logger.warn('[useViewportLoading] Cannot init viewport streaming - viewer not ready')
 			return
