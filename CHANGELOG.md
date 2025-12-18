@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.7...r4c-cesium-viewer-v1.38.8) (2025-12-18)
+
+
+### Bug Fixes
+
+* **viewport:** pass viewer.value instead of ref to ViewportBuildingLoader ([#489](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/489)) ([8cb7aac](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8cb7aac8e4b9285f37da81840e640ab155274296))
+
 ## [1.38.7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.6...r4c-cesium-viewer-v1.38.7) (2025-12-18)
 
 
