@@ -38,9 +38,10 @@ vi.mock('@/services/building.js', () => ({
 	}),
 }))
 
-vi.mock('@/services/plot.js', () => ({
-	default: vi.fn(() => {}),
-}))
+vi.mock('@/services/plot.js', () => {
+	class MockPlot {}
+	return { default: MockPlot }
+})
 
 vi.mock('@/services/traveltime.js', () => ({
 	default: vi.fn(function () {
@@ -79,9 +80,10 @@ vi.mock('@/services/capitalRegion.js', () => ({
 	}),
 }))
 
-vi.mock('@/services/sensor.js', () => ({
-	default: vi.fn(() => {}),
-}))
+vi.mock('@/services/sensor.js', () => {
+	class MockSensor {}
+	return { default: MockSensor }
+})
 
 vi.mock('@/services/camera.js', () => ({
 	default: vi.fn(function () {
