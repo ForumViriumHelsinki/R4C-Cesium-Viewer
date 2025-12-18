@@ -193,7 +193,7 @@ export function useViewportLoading(viewer, Camera, Featurepicker) {
 	 * @returns {Promise<void>}
 	 */
 	const initViewportStreaming = async () => {
-		if (!viewer) {
+		if (!viewer?.value) {
 			logger.warn('[useViewportLoading] Cannot init viewport streaming - viewer not ready')
 			return
 		}
@@ -201,7 +201,7 @@ export function useViewportLoading(viewer, Camera, Featurepicker) {
 		if (featureFlagStore.isEnabled('viewportStreaming')) {
 			viewportBuildingLoader = new ViewportBuildingLoader()
 			// Await initialization - includes retry logic for globe readiness
-			await viewportBuildingLoader.initialize(viewer)
+			await viewportBuildingLoader.initialize(viewer.value)
 			logger.debug('[useViewportLoading] ✅ ViewportBuildingLoader initialized (tile-based mode)')
 		}
 	}
@@ -213,7 +213,7 @@ export function useViewportLoading(viewer, Camera, Featurepicker) {
 	watch(
 		() => featureFlagStore.isEnabled('viewportStreaming'),
 		async (newValue, _oldValue) => {
-			if (!viewer) {
+			if (!viewer?.value) {
 				logger.warn('[useViewportLoading] Viewer not initialized, cannot toggle viewport streaming')
 				return
 			}
@@ -222,7 +222,7 @@ export function useViewportLoading(viewer, Camera, Featurepicker) {
 				// Enable viewport streaming
 				logger.debug('[useViewportLoading] Enabling viewport streaming (tile-based loading)')
 				viewportBuildingLoader = new ViewportBuildingLoader()
-				await viewportBuildingLoader.initialize(viewer)
+				await viewportBuildingLoader.initialize(viewer.value)
 			} else if (!newValue && viewportBuildingLoader) {
 				// Disable viewport streaming
 				logger.debug('[useViewportLoading] Disabling viewport streaming')
