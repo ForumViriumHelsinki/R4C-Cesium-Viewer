@@ -5,6 +5,8 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import { processBatch } from '../utils/batchProcessor.js'
+import { calculateBuildingHeight } from '../utils/entityStyling.js'
 import logger from '../utils/logger.js'
 import Datasource from './datasource.js'
 import { eventBus } from './eventEmitter.js'
@@ -58,21 +60,9 @@ export default class Building {
 	 * @returns {Promise<void>}
 	 */
 	async removeNearbyTreeEffect(entities) {
-		const batchSize = 25 // Process 25 entities at a time
-
-		for (let i = 0; i < entities.length; i += batchSize) {
-			const batch = entities.slice(i, i + batchSize)
-
-			// Process batch synchronously
-			for (let j = 0; j < batch.length; j++) {
-				this.setBuildingEntityPolygon(batch[j])
-			}
-
-			// Yield control to browser to prevent UI blocking
-			if (i + batchSize < entities.length) {
-				await new Promise((resolve) => requestIdleCallback(resolve))
-			}
-		}
+		await processBatch(entities, (entity) => this.setBuildingEntityPolygon(entity), {
+			batchSize: 25,
+		})
 	}
 
 	/**
@@ -85,21 +75,9 @@ export default class Building {
 	 * @returns {Promise<void>}
 	 */
 	async setHeatExposureToBuildings(entities) {
-		const batchSize = 25 // Process 25 entities at a time
-
-		for (let i = 0; i < entities.length; i += batchSize) {
-			const batch = entities.slice(i, i + batchSize)
-
-			// Process batch synchronously
-			for (let j = 0; j < batch.length; j++) {
-				this.setBuildingEntityPolygon(batch[j])
-			}
-
-			// Yield control to browser to maintain responsiveness
-			if (i + batchSize < entities.length) {
-				await new Promise((resolve) => requestIdleCallback(resolve))
-			}
-		}
+		await processBatch(entities, (entity) => this.setBuildingEntityPolygon(entity), {
+			batchSize: 25,
+		})
 	}
 
 	/**
@@ -254,31 +232,15 @@ export default class Building {
 	}
 
 	async setHelsinkiBuildingsHeight(entities) {
-		const batchSize = 30 // Process 30 entities at a time (height calc is lighter)
-
-		for (let i = 0; i < entities.length; i += batchSize) {
-			const batch = entities.slice(i, i + batchSize)
-
-			// Process batch synchronously
-			for (let j = 0; j < batch.length; j++) {
-				const entity = batch[j]
-
+		await processBatch(
+			entities,
+			(entity) => {
 				if (entity.polygon) {
-					const { measured_height, i_kerrlkm } = entity.properties
-
-					entity.polygon.extrudedHeight = measured_height
-						? measured_height._value
-						: i_kerrlkm != null
-							? i_kerrlkm._value * 3.2
-							: 2.7
+					entity.polygon.extrudedHeight = calculateBuildingHeight(entity.properties)
 				}
-			}
-
-			// Yield control to prevent UI blocking
-			if (i + batchSize < entities.length) {
-				await new Promise((resolve) => requestIdleCallback(resolve))
-			}
-		}
+			},
+			{ batchSize: 30 }
+		)
 	}
 
 	/**

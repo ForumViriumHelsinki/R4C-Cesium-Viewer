@@ -34,6 +34,12 @@ import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import { processBatch } from '../utils/batchProcessor.js'
+import {
+	calculateBuildingHeight,
+	DEFAULT_BUILDING_HEIGHT,
+	FLOOR_HEIGHT,
+} from '../utils/entityStyling.js'
 import logger from '../utils/logger.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
@@ -645,29 +651,15 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async setHelsinkiBuildingsHeight(entities) {
-		const batchSize = 30
-
-		for (let i = 0; i < entities.length; i += batchSize) {
-			const batch = entities.slice(i, i + batchSize)
-
-			for (let j = 0; j < batch.length; j++) {
-				const entity = batch[j]
-
+		await processBatch(
+			entities,
+			(entity) => {
 				if (entity.polygon) {
-					const { measured_height, i_kerrlkm } = entity.properties
-
-					entity.polygon.extrudedHeight = measured_height
-						? measured_height._value
-						: i_kerrlkm != null
-							? i_kerrlkm._value * 3.2
-							: 2.7
+					entity.polygon.extrudedHeight = calculateBuildingHeight(entity.properties)
 				}
-			}
-
-			if (i + batchSize < entities.length) {
-				await new Promise((resolve) => requestIdleCallback(resolve))
-			}
-		}
+			},
+			{ batchSize: 30 }
+		)
 	}
 
 	/**
@@ -678,19 +670,19 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async setHSYBuildingAttributes(entities) {
-		const batchSize = 30
-
-		for (let i = 0; i < entities.length; i += batchSize) {
-			const batch = entities.slice(i, i + batchSize)
-
-			for (const entity of batch) {
+		await processBatch(
+			entities,
+			(entity) => {
 				if (entity.polygon) {
-					// HSY uses 'kerrosten_lkm' for floor count
+					// HSY uses 'kerrosten_lkm' for floor count (not i_kerrlkm)
 					const floorCount = entity.properties?.kerrosten_lkm?._value
 
 					// Set height based on floor count (3.2m per floor) or default
+					// Filter out invalid floor counts (>= 999 indicates data quality issue)
 					entity.polygon.extrudedHeight =
-						floorCount != null && floorCount < 999 ? floorCount * 3.2 : 2.7
+						floorCount != null && floorCount < 999
+							? floorCount * FLOOR_HEIGHT
+							: DEFAULT_BUILDING_HEIGHT
 
 					// Set a default color for HSY buildings (since no heat data)
 					// Use a blue-ish color to differentiate from Helsinki's heat colors
@@ -699,16 +691,9 @@ export default class ViewportBuildingLoader {
 						new Cesium.Color(0.4, 0.6, 0.8, alpha)
 					)
 				}
-			}
-
-			if (i + batchSize < entities.length) {
-				await new Promise((resolve) =>
-					typeof requestIdleCallback !== 'undefined'
-						? requestIdleCallback(resolve)
-						: setTimeout(resolve, 0)
-				)
-			}
-		}
+			},
+			{ batchSize: 30 }
+		)
 
 		logger.debug(`[ViewportBuildingLoader] ✅ HSY attributes set for ${entities.length} buildings`)
 	}
