@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.6...r4c-cesium-viewer-v1.38.7) (2025-12-18)
+
+
+### Bug Fixes
+
+* **nginx:** add emptyDir volume for conf.d to enable template processing ([#487](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/487)) ([149fc28](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/149fc28346e74354c57ed4b615cdbd861a2a071c))
+
 ## [1.38.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.5...r4c-cesium-viewer-v1.38.6) (2025-12-18)
 
 
