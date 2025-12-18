@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.8...r4c-cesium-viewer-v1.38.9) (2025-12-18)
+
+
+### Bug Fixes
+
+* **viewport:** defensive validation and dev experience improvements ([#493](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/493)) ([9b78300](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9b78300f1b741c66a01c6b72568af23c7555262c))
+
 ## [1.38.8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.7...r4c-cesium-viewer-v1.38.8) (2025-12-18)
 
 
