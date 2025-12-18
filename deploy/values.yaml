@@ -2,7 +2,7 @@ image:
   repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
   tag: '1.38.6'
 imagePullSecrets:
-- name: ghcr-login-secret
+  - name: ghcr-login-secret
 serviceAccount:
   create: true
   name: r4c-cesium-viewer
@@ -10,70 +10,70 @@ serviceAccount:
     iam.gke.io/gcp-service-account: pygeoapi@fvh-project-containers-etc.iam.gserviceaccount.com
 # Cloud SQL Proxy for both app and migrations
 initContainers:
-- name: cloud-sql-proxy
-  image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.19.0
-  restartPolicy: Always
-  args:
-  - '--structured-logs'
-  - '--port=5432'
-  - '--auto-iam-authn'
-  - 'fvh-project-containers-etc:europe-north1:fvh-postgres'
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 65532
-    allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-      - ALL
-  resources:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 50m
-      memory: 64Mi
+  - name: cloud-sql-proxy
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.19.0
+    restartPolicy: Always
+    args:
+      - '--structured-logs'
+      - '--port=5432'
+      - '--auto-iam-authn'
+      - 'fvh-project-containers-etc:europe-north1:fvh-postgres'
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
 # Database migrations (Helm hook - runs before deployment)
 migrations:
   enabled: true
   command: ['sh', '-c']
   args:
-  - |
-    set -e
-    echo "Starting database migrations..."
+    - |
+      set -e
+      echo "Starting database migrations..."
 
-    # Ensure PostGIS extensions exist
-    echo "Ensuring PostGIS extensions..."
-    psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS postgis;" || echo "PostGIS may already exist"
-    psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS postgis_topology;" || echo "PostGIS topology may already exist"
+      # Ensure PostGIS extensions exist
+      echo "Ensuring PostGIS extensions..."
+      psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS postgis;" || echo "PostGIS may already exist"
+      psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS postgis_topology;" || echo "PostGIS topology may already exist"
 
-    # Run migrations
-    echo "Running migrations..."
-    dbmate status || echo "First run"
+      # Run migrations
+      echo "Running migrations..."
+      dbmate status || echo "First run"
 
-    if dbmate up; then
-      echo "Migrations complete"
+      if dbmate up; then
+        echo "Migrations complete"
 
-      # Verify critical table exists
-      if psql "$DATABASE_URL" -c "SELECT 1 FROM r4c_hsy_building_current LIMIT 1;" > /dev/null 2>&1; then
-        echo "Verified r4c_hsy_building_current"
+        # Verify critical table exists
+        if psql "$DATABASE_URL" -c "SELECT 1 FROM r4c_hsy_building_current LIMIT 1;" > /dev/null 2>&1; then
+          echo "Verified r4c_hsy_building_current"
+        else
+          echo "Missing r4c_hsy_building_current"
+          exit 1
+        fi
       else
-        echo "Missing r4c_hsy_building_current"
+        echo "Migration failed"
         exit 1
       fi
-    else
-      echo "Migration failed"
-      exit 1
-    fi
 
-    echo "Migrations completed successfully"
+      echo "Migrations completed successfully"
   env:
-  - name: DATABASE_URL
-    value: 'postgresql://pygeoapi%40fvh-project-containers-etc.iam@127.0.0.1:5432/regions4climate?sslmode=disable'
-  - name: DBMATE_MIGRATIONS_DIR
-    value: /migrations
-  - name: DBMATE_NO_DUMP_SCHEMA
-    value: 'true'
+    - name: DATABASE_URL
+      value: 'postgresql://pygeoapi%40fvh-project-containers-etc.iam@127.0.0.1:5432/regions4climate?sslmode=disable'
+    - name: DBMATE_MIGRATIONS_DIR
+      value: /migrations
+    - name: DBMATE_NO_DUMP_SCHEMA
+      value: 'true'
   waitForDatabase:
     enabled: true
     host: 127.0.0.1
@@ -99,39 +99,39 @@ ingress:
   enabled: true
   className: nginx
   hosts:
-  - host: r4c.dataportal.fi
-    paths:
-    - path: /
-      pathType: ImplementationSpecific
+    - host: r4c.dataportal.fi
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
   tls:
-  - hosts:
-    - r4c.dataportal.fi
-    secretName: r4c-tls # pragma: allowlist secret
+    - hosts:
+        - r4c.dataportal.fi
+      secretName: r4c-tls # pragma: allowlist secret
 env:
-- name: SENTRY_AUTH_TOKEN
-  valueFrom:
-    secretKeyRef:
-      name: regions4climate-secrets # pragma: allowlist secret
-      key: SENTRY_AUTH_TOKEN
-- name: VITE_SENTRY_DSN
-  valueFrom:
-    secretKeyRef:
-      name: regions4climate-secrets # pragma: allowlist secret
-      key: VITE_SENTRY_DSN
-- name: SENTRY_DSN
-  valueFrom:
-    secretKeyRef:
-      name: regions4climate-secrets # pragma: allowlist secret
-      key: SENTRY_DSN
-- name: VITE_DIGITRANSIT_KEY
-  valueFrom:
-    secretKeyRef:
-      name: regions4climate-secrets # pragma: allowlist secret
-      key: VITE_DIGITRANSIT_KEY
-- name: VITE_PYGEOAPI_HOST
-  value: 'pygeoapi-helm-webapp.pygeoapi.svc.cluster.local'
-- name: VITE_PYGEOAPI_URL
-  value: 'https://pygeoapi.dataportal.fi'
+  - name: SENTRY_AUTH_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: regions4climate-secrets # pragma: allowlist secret
+        key: SENTRY_AUTH_TOKEN
+  - name: VITE_SENTRY_DSN
+    valueFrom:
+      secretKeyRef:
+        name: regions4climate-secrets # pragma: allowlist secret
+        key: VITE_SENTRY_DSN
+  - name: SENTRY_DSN
+    valueFrom:
+      secretKeyRef:
+        name: regions4climate-secrets # pragma: allowlist secret
+        key: SENTRY_DSN
+  - name: VITE_DIGITRANSIT_KEY
+    valueFrom:
+      secretKeyRef:
+        name: regions4climate-secrets # pragma: allowlist secret
+        key: VITE_DIGITRANSIT_KEY
+  - name: VITE_PYGEOAPI_HOST
+    value: 'pygeoapi-helm-webapp.pygeoapi.svc.cluster.local'
+  - name: VITE_PYGEOAPI_URL
+    value: 'https://pygeoapi.dataportal.fi'
 replicaCount: 1
 resources:
   limits:
@@ -149,22 +149,26 @@ securityContext:
   readOnlyRootFilesystem: true
   capabilities:
     drop:
-    - ALL
+      - ALL
 # Volumes required for nginx with readOnlyRootFilesystem
 volumes:
-- name: nginx-cache
-  emptyDir: {}
-- name: nginx-run
-  emptyDir: {}
-- name: tmp
-  emptyDir: {}
+  - name: nginx-cache
+    emptyDir: {}
+  - name: nginx-run
+    emptyDir: {}
+  - name: nginx-conf
+    emptyDir: {}
+  - name: tmp
+    emptyDir: {}
 volumeMounts:
-- name: nginx-cache
-  mountPath: /var/cache/nginx
-- name: nginx-run
-  mountPath: /var/run
-- name: tmp
-  mountPath: /tmp
+  - name: nginx-cache
+    mountPath: /var/cache/nginx
+  - name: nginx-run
+    mountPath: /var/run
+  - name: nginx-conf
+    mountPath: /etc/nginx/conf.d
+  - name: tmp
+    mountPath: /tmp
 keda:
   enabled: true
   minReplicaCount: 0
@@ -172,9 +176,9 @@ keda:
   pollingInterval: 30
   cooldownPeriod: 300
   triggers:
-  - type: cron
-    metadata:
-      timezone: Europe/Helsinki
-      start: 0 7 * * 1-5
-      end: 0 20 * * 1-5
-      desiredReplicas: '1'
+    - type: cron
+      metadata:
+        timezone: Europe/Helsinki
+        start: 0 7 * * 1-5
+        end: 0 20 * * 1-5
+        desiredReplicas: '1'
