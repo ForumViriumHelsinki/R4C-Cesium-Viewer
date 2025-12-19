@@ -1,0 +1,14 @@
+{
+  "name": "r4c-mock-api",
+  "version": "1.0.0",
+  "description": "Mock PyGeoAPI server for local development",
+  "type": "module",
+  "scripts": {
+    "start": "bun run server.ts",
+    "dev": "bun run --watch server.ts",
+    "generate": "bun run generate.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

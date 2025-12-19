@@ -8,8 +8,9 @@
 #   make dev-full  - Everything in containers (slower, but closer to prod)
 
 .PHONY: help setup status logs \
-        dev dev-full stop stop-frontend \
-        db-wait db-status db-migrate db-import db-shell db-reset \
+        dev dev-full dev-mock stop stop-frontend \
+        db-wait db-status db-migrate db-seed db-seed-clean db-import db-shell db-reset \
+        mock-api mock-generate mock-stop \
         test test-quick test-e2e \
         lint build
 
@@ -29,6 +30,10 @@ DB_ADMIN_USER ?= postgres
 DB_ADMIN_PASS ?= postgres
 DB_WAIT_TIMEOUT := 120
 DB_WAIT_INTERVAL := 2
+
+# Seeding configuration
+SEED_RECORDS ?= 100
+SEED_SCRIPT := db/scripts/seed-dev-data.py
 
 # Paths
 DUMP_DIR := tmp/regions4climate-dir
@@ -88,10 +93,11 @@ help: ## Show available commands
 	@echo "$(DIM)Quick Start:$(RESET)"
 	@echo "  make dev       $(DIM)- Backend in K8s + local frontend (fast)$(RESET)"
 	@echo "  make dev-full  $(DIM)- Everything in containers$(RESET)"
+	@echo "  make db-seed   $(DIM)- Seed database with test data (recommended)$(RESET)"
 	@echo ""
 	@echo "$(DIM)All Commands:$(RESET)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-12s$(RESET) %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-14s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 
 setup: ## First-time setup (install dependencies, check tools)
@@ -108,6 +114,7 @@ setup: ## First-time setup (install dependencies, check tools)
 	@echo ""
 	@echo "Next steps:"
 	@echo "  make dev       $(DIM)- Start development environment$(RESET)"
+	@echo "  make db-seed   $(DIM)- Seed database with test data$(RESET)"
 
 status: ## Show current environment status
 	@echo ""
@@ -220,8 +227,51 @@ db-migrate: ## Run database migrations manually
 	fi
 	@echo "$(CHECK) Migrations complete"
 
+db-seed: ## Seed database with test data (recommended for local dev)
+	@echo "$(CYAN)=== Database Seeding ===$(RESET)"
+	@echo ""
+	@echo "$(DIM)This is the recommended approach for local development.$(RESET)"
+	@echo "$(DIM)Seeding takes ~30-60 seconds vs 15-30 minutes for production import.$(RESET)"
+	@echo ""
+	@if ! pg_isready -h $(DB_HOST) -p $(DB_PORT) -q 2>/dev/null; then \
+		echo "$(CROSS) Database not connected"; \
+		echo "$(DIM)Start services first with: make dev$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(ARROW) Seeding database with $(SEED_RECORDS) records per table..."
+	@if [ ! -f "$(SEED_SCRIPT)" ]; then \
+		echo "$(CROSS) Seed script not found: $(SEED_SCRIPT)"; \
+		exit 1; \
+	fi
+	@DATABASE_URL="postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)" \
+		python3 $(SEED_SCRIPT) --num-records $(SEED_RECORDS)
+	@echo ""
+	@echo "$(CHECK) Seeding complete!"
+	@echo ""
+	@echo "$(DIM)Verify with: make db-status$(RESET)"
+	@echo "$(DIM)Test API:    curl http://localhost:5000/collections$(RESET)"
+
+db-seed-clean: ## Clear existing data and seed fresh
+	@echo "$(CYAN)=== Database Seeding (Clean) ===$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)This will clear existing data before seeding.$(RESET)"
+	@echo ""
+	@if ! pg_isready -h $(DB_HOST) -p $(DB_PORT) -q 2>/dev/null; then \
+		echo "$(CROSS) Database not connected"; \
+		echo "$(DIM)Start services first with: make dev$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(ARROW) Clearing and seeding database with $(SEED_RECORDS) records per table..."
+	@DATABASE_URL="postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)" \
+		python3 $(SEED_SCRIPT) --clear-first --num-records $(SEED_RECORDS)
+	@echo ""
+	@echo "$(CHECK) Seeding complete!"
+
 db-import: ## Import production database from tmp/ (auto-detects format)
 	@echo "$(CYAN)=== Database Import ===$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)Note: For local development, consider using 'make db-seed' instead.$(RESET)"
+	@echo "$(YELLOW)Seeding takes ~30-60 seconds vs 15-30 minutes for production import.$(RESET)"
 	@echo ""
 	@# Detect dump format (prefer directory > custom > SQL)
 	@dump_path=""; dump_type=""; \
@@ -250,6 +300,9 @@ db-import: ## Import production database from tmp/ (auto-detects format)
 		echo ""; \
 		echo "$(DIM)To export from Cloud SQL:$(RESET)"; \
 		echo "$(DIM)  make help-db-export$(RESET)"; \
+		echo ""; \
+		echo "$(GREEN)Or use seeding instead (recommended):$(RESET)"; \
+		echo "$(GREEN)  make db-seed$(RESET)"; \
 		exit 1; \
 	fi; \
 	echo ""; \
@@ -334,7 +387,7 @@ db-reset: ## WARNING: Delete database and start fresh
 	@kubectl delete pvc data-postgresql-0 -n $(NAMESPACE) --ignore-not-found
 	@echo ""
 	@echo "$(CHECK) Database reset complete"
-	@echo "$(DIM)Run 'make dev' to recreate, then 'make db-import' to restore data$(RESET)"
+	@echo "$(DIM)Run 'make dev' to recreate, then 'make db-seed' to populate with test data$(RESET)"
 
 # ==============================================================================
 # Testing
@@ -348,6 +401,57 @@ test-quick: ## Run unit tests only (fast)
 
 test-e2e: ## Run end-to-end tests
 	npm run test:e2e
+
+# ==============================================================================
+# Mock API (No Database Required)
+# ==============================================================================
+
+MOCK_API_DIR := mock-api
+MOCK_DENSITY ?= 50
+
+mock-api: mock-generate ## Start mock PyGeoAPI server (no database needed)
+	@echo "$(ARROW) Starting mock PyGeoAPI server..."
+	@echo "$(DIM)Serves synthetic data from mock-api/fixtures/$(RESET)"
+	@echo ""
+	@cd $(MOCK_API_DIR) && bun run dev
+
+mock-generate: ## Generate mock GeoJSON fixtures
+	@echo "$(CYAN)=== Mock Data Generator ===$(RESET)"
+	@echo ""
+	@if [ ! -d "$(MOCK_API_DIR)/fixtures" ] || [ -z "$$(ls -A $(MOCK_API_DIR)/fixtures 2>/dev/null)" ]; then \
+		echo "$(ARROW) Generating fixtures ($(MOCK_DENSITY) buildings per postal code)..."; \
+		cd $(MOCK_API_DIR) && bun install --silent && bun run generate --density $(MOCK_DENSITY); \
+	else \
+		echo "$(CHECK) Fixtures already exist in $(MOCK_API_DIR)/fixtures/"; \
+		echo "$(DIM)To regenerate: rm -rf $(MOCK_API_DIR)/fixtures && make mock-generate$(RESET)"; \
+	fi
+
+mock-stop: ## Stop mock API server
+	@echo "$(ARROW) Stopping mock API..."
+	@pkill -f "bun.*server.ts" 2>/dev/null || true
+	@echo "$(CHECK) Mock API stopped"
+
+dev-mock: ## Start frontend with mock API (no database/K8s needed)
+	@echo "$(CYAN)=== Development with Mock API ===$(RESET)"
+	@echo ""
+	@echo "$(DIM)This mode uses synthetic data - no database or Kubernetes required.$(RESET)"
+	@echo "$(DIM)Perfect for frontend development and testing.$(RESET)"
+	@echo ""
+	@# Ensure fixtures exist
+	@$(MAKE) mock-generate
+	@echo ""
+	@echo "$(ARROW) Starting mock API in background..."
+	@cd $(MOCK_API_DIR) && bun run start &
+	@sleep 2
+	@echo "$(CHECK) Mock API running on http://localhost:5050"
+	@echo ""
+	@echo "$(ARROW) Starting frontend..."
+	@echo "$(DIM)Frontend: http://localhost:5173$(RESET)"
+	@echo "$(DIM)Mock API: http://localhost:5050$(RESET)"
+	@echo ""
+	@npm run dev || ($(MAKE) mock-stop && exit 1)
+	@# Stop mock API when frontend exits
+	@$(MAKE) mock-stop
 
 # ==============================================================================
 # Maintenance

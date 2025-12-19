@@ -1,47 +1,80 @@
 # Database Seeding for Development
 
-This document explains how to populate your development database with mock data for testing the R4C Cesium Viewer application.
-
-## Overview
-
-The seeding system provides realistic test data for all major tables in the regions4climate database, including:
-
-- ✅ **adaptation_landcover** - Land cover areas for climate adaptation
-- ✅ **r4c_coldspot** - Areas with low heat exposure
-- ✅ **tree_f** - Tree and vegetation data
-- ✅ **hsy_building_heat** - Building heat exposure measurements
-- ✅ **r4c_hsy_building_current** - Current building information
-- ✅ **urban_heat_building_f** - Urban heat building data
-- ✅ **r4c_paavo** - Postal code demographic statistics
+> **This is the recommended approach for local development.** Seeding generates realistic mock data in 30-60 seconds, compared to 15-30 minutes for importing the 18GB production dump.
 
 ## Quick Start
 
-### Automatic Seeding (Recommended)
-
-When you run the database initialization script, it will offer to seed data automatically:
-
 ```bash
-./scripts/init-local-db.sh
+# Start services first
+make dev
+
+# Seed the database (in another terminal)
+make db-seed
 ```
 
-When prompted, answer `y` to seed the database with mock data.
+That's it. You now have realistic test data for all major tables.
 
-### Manual Seeding
+## Why Seeding Instead of Production Import?
+
+| Aspect       | Seeding               | Production Import           |
+| ------------ | --------------------- | --------------------------- |
+| **Time**     | 30-60 seconds         | 15-30 minutes               |
+| **Size**     | 10-50 MB              | ~18 GB                      |
+| **Network**  | No download needed    | Requires GCS access         |
+| **Use Case** | Daily development, CI | Reproducing production bugs |
+
+**Use seeding for:**
+
+- Local development and testing
+- CI/CD pipelines
+- Onboarding new developers
+- Quick iterations
+
+**Use production import only when:**
+
+- Reproducing a specific production bug
+- Testing with real-world data distributions
+- Data analysis or reporting
+
+## Overview
+
+The seeding system provides realistic test data for all major tables in the regions4climate database:
+
+- **adaptation_landcover** - Land cover areas for climate adaptation
+- **r4c_coldspot** - Areas with low heat exposure
+- **tree_f** - Tree and vegetation data
+- **hsy_building_heat** - Building heat exposure measurements
+- **r4c_hsy_building_current** - Current building information
+- **urban_heat_building_f** - Urban heat building data
+- **r4c_paavo** - Postal code demographic statistics
+
+## Makefile Commands (Recommended)
+
+```bash
+make db-seed                    # Seed with 100 records per table
+make db-seed SEED_RECORDS=50    # Fewer records (faster)
+make db-seed SEED_RECORDS=500   # More records (load testing)
+make db-seed-clean              # Clear existing data, then seed
+```
+
+## Manual Seeding
+
+If you prefer running the script directly:
 
 ```bash
 # Install Python dependencies
-pip install -r scripts/requirements-seeding.txt
+pip install -r db/scripts/requirements-seeding.txt
 
 # Seed the database
-python3 scripts/seed-dev-data.py --clear-first --num-records 100
+python3 db/scripts/seed-dev-data.py --clear-first --num-records 100
 ```
 
-## Seeding Script Options
+## Script Options
 
 ### Basic Usage
 
 ```bash
-python3 scripts/seed-dev-data.py [OPTIONS]
+python3 db/scripts/seed-dev-data.py [OPTIONS]
 ```
 
 ### Available Options
@@ -57,19 +90,19 @@ python3 scripts/seed-dev-data.py [OPTIONS]
 
 ```bash
 # Seed all tables with default settings
-python3 scripts/seed-dev-data.py
+python3 db/scripts/seed-dev-data.py
 
 # Seed with custom record count
-python3 scripts/seed-dev-data.py --num-records 50
+python3 db/scripts/seed-dev-data.py --num-records 50
 
 # Clear existing data and seed fresh
-python3 scripts/seed-dev-data.py --clear-first --num-records 200
+python3 db/scripts/seed-dev-data.py --clear-first --num-records 200
 
 # Seed only specific tables
-python3 scripts/seed-dev-data.py --tables adaptation_landcover r4c_coldspot
+python3 db/scripts/seed-dev-data.py --tables adaptation_landcover r4c_coldspot
 
 # Custom database URL
-python3 scripts/seed-dev-data.py --database-url "postgres://user:pass@localhost:5432/mydb"
+python3 db/scripts/seed-dev-data.py --database-url "postgres://user:pass@localhost:5432/mydb"
 ```
 
 ## Data Characteristics
@@ -87,20 +120,20 @@ All seeded data uses **realistic Helsinki coordinates**:
 #### Land Cover (`adaptation_landcover`)
 
 - **Grid IDs**: Sequential format `GRID_000001`
-- **Area**: 100-10,000 m²
+- **Area**: 100-10,000 m^2
 - **Types**: FOREST, WATER, URBAN, GRASS, AGRICULTURAL, BARE
 - **Years**: 2020-2024
 
 #### Cold Spots (`r4c_coldspot`)
 
 - **Heat Exposure**: 0.0-0.4 (low values for cold spots)
-- **Temperature**: 15-25°C
+- **Temperature**: 15-25 C
 - **Dates**: Random dates within last year
 
 #### Trees (`tree_f`)
 
 - **Types**: DECIDUOUS, CONIFEROUS, MIXED
-- **Area**: 10-500 m²
+- **Area**: 10-500 m^2
 - **Height**: 5-25 meters
 
 #### Buildings (`r4c_hsy_building_current`)
@@ -139,19 +172,36 @@ The job will:
 
 ## Integration with Development Workflow
 
-### With Skaffold
+### With Makefile (Recommended)
 
-The seeding works seamlessly with your Skaffold development setup:
+```bash
+# 1. Start services
+make dev
 
-1. **Start services**: `skaffold dev --profile=local-with-services`
-2. **Initialize database**: `./scripts/init-local-db.sh` (in another terminal)
-3. **Choose to seed**: Answer `y` when prompted
-4. **Develop with data**: Your application now has realistic test data
+# 2. In another terminal: seed the database
+make db-seed
+
+# 3. Develop with data
+# Your application now has realistic test data
+```
+
+### With Skaffold Directly
+
+```bash
+# 1. Start services
+skaffold dev --profile=local-with-services
+
+# 2. Initialize database (in another terminal)
+./scripts/init-local-db.sh
+# Answer 'y' when prompted to seed
+
+# 3. Develop with data
+```
 
 ### Continuous Development
 
 - **Data persists**: Mock data remains across Skaffold restarts
-- **Re-seeding**: Run `--clear-first` to refresh data
+- **Re-seeding**: Run `make db-seed-clean` to refresh data
 - **Selective updates**: Use `--tables` to update specific datasets
 
 ## Testing pygeoapi Collections
@@ -160,16 +210,16 @@ After seeding, you can test pygeoapi endpoints with real data:
 
 ```bash
 # List collections
-curl http://localhost:8080/collections
+curl http://localhost:5000/collections
 
 # Get adaptation landcover features
-curl "http://localhost:8080/collections/adaptation_landcover/items?limit=10"
+curl "http://localhost:5000/collections/adaptation_landcover/items?limit=10"
 
 # Get cold spots
-curl "http://localhost:8080/collections/coldarea/items?limit=5"
+curl "http://localhost:5000/collections/coldarea/items?limit=5"
 
 # Get trees
-curl "http://localhost:8080/collections/tree/items?limit=20"
+curl "http://localhost:5000/collections/tree/items?limit=20"
 ```
 
 ## Troubleshooting
@@ -181,15 +231,17 @@ curl "http://localhost:8080/collections/tree/items?limit=20"
 ```bash
 pip install psycopg2-binary
 # or
-pip install -r scripts/requirements-seeding.txt
+pip install -r db/scripts/requirements-seeding.txt
 ```
 
 **Database connection failed**:
 
 ```bash
 # Check if PostgreSQL is running
-kubectl get pods
-kubectl port-forward svc/postgresql 5432:5432
+kubectl get pods -n regions4climate
+
+# Check port-forward
+kubectl port-forward svc/postgresql 5432:5432 -n regions4climate
 
 # Test connection
 psql "postgres://regions4climate_user:regions4climate_pass@localhost:5432/regions4climate" -c "SELECT 1;"
@@ -199,7 +251,7 @@ psql "postgres://regions4climate_user:regions4climate_pass@localhost:5432/region
 
 ```bash
 # Run with verbose output
-python3 scripts/seed-dev-data.py --clear-first --num-records 10
+python3 db/scripts/seed-dev-data.py --clear-first --num-records 10
 
 # Check table exists
 psql "$DATABASE_URL" -c "\dt adaptation_landcover"
@@ -215,13 +267,13 @@ psql "$DATABASE_URL" -c "\dt adaptation_landcover"
 
 ### Adding New Tables
 
-To seed additional tables, edit `scripts/seed-dev-data.py`:
+To seed additional tables, edit `db/scripts/seed-dev-data.py`:
 
 1. **Add seeding function**:
 
 ```python
 def seed_my_table(conn, num_records=50):
-    print(f"🌱 Seeding my_table with {num_records} records...")
+    print(f"Seeding my_table with {num_records} records...")
     # Implementation here
 ```
 
@@ -243,14 +295,14 @@ You can modify the data generation patterns:
 
 ## Best Practices
 
-1. **Always use `--clear-first`** for fresh testing environments
-2. **Start with small record counts** (`--num-records 10`) for quick iterations
-3. **Test pygeoapi endpoints** after seeding to verify data quality
-4. **Use realistic coordinate bounds** to match your application's expected data
-5. **Monitor database size** in constrained environments
+1. **Use `make db-seed`** for the simplest experience
+2. **Start with default record counts** (100) for normal development
+3. **Use `make db-seed-clean`** for fresh testing environments
+4. **Test pygeoapi endpoints** after seeding to verify data quality
+5. **Use realistic coordinate bounds** to match your application's expected data
 
 ## Related Documentation
 
-- [Local Development Setup](./LOCAL_DEVELOPMENT.md)
-- [Database Migrations](../db/README.md)
-- [pygeoapi Collection Mapping](../db/PYGEOAPI_ALIGNMENT.md)
+- [Getting Started](../GETTING_STARTED.md) - Local development setup
+- [Database Import](./IMPORT.md) - Importing production data (when needed)
+- [Database Migrations](../../db/README.md) - Migration workflow

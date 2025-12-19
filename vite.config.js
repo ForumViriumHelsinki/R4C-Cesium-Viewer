@@ -12,11 +12,25 @@ import { fileURLToPath, URL } from 'node:url';
 import { version } from './package.json';
 import { execSync } from 'child_process';
 
-// Auto-detect pygeoapi port from kubectl port-forward
+// Auto-detect pygeoapi: mock server > kubectl port-forward > production
 const detectPygeoApiPort = () => {
 	// If explicitly set in env, use that
 	if (process.env.VITE_PYGEOAPI_HOST) {
 		return process.env.VITE_PYGEOAPI_HOST;
+	}
+
+	// Check if mock API server is running on port 5050
+	try {
+		const psOutput = execSync('ps aux | grep -E "bun.*server\\.ts" | grep -v grep', {
+			encoding: 'utf-8',
+			stdio: ['pipe', 'pipe', 'pipe'],
+		});
+		if (psOutput.trim()) {
+			console.log('🎭 Using mock PyGeoAPI server (localhost:5050)');
+			return 'localhost:5050';
+		}
+	} catch {
+		// Mock server not running
 	}
 
 	// Try to detect from running kubectl port-forwards
@@ -37,8 +51,8 @@ const detectPygeoApiPort = () => {
 		// No kubectl port-forward running, fall back to production
 	}
 
-	// Default to production if no local port-forward found
-	console.log('ℹ️  Using production pygeoapi (no local port-forward detected)');
+	// Default to production if no local server found
+	console.log('ℹ️  Using production pygeoapi (no local server detected)');
 	return 'pygeoapi.dataportal.fi';
 };
 

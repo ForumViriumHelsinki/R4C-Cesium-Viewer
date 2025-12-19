@@ -5,12 +5,38 @@ Complete guide for setting up and running the R4C Cesium Viewer locally.
 ## Prerequisites
 
 - **Node.js** 18+ and npm
-- **Docker Desktop** with Kubernetes enabled
-- **Skaffold** - [Installation guide](https://skaffold.dev/docs/install/)
-- **dbmate** - [Installation guide](https://github.com/amacneil/dbmate#installation)
-- **PostgreSQL client tools** (for `psql` and `pg_isready`)
+- **Docker Desktop** with Kubernetes enabled (for full stack mode)
+- **Skaffold** - [Installation guide](https://skaffold.dev/docs/install/) (for full stack mode)
+- **Bun** - [Installation guide](https://bun.sh/docs/installation) (for mock API mode)
+- **dbmate** - [Installation guide](https://github.com/amacneil/dbmate#installation) (optional, for migrations)
+- **PostgreSQL client tools** (for `psql` and `pg_isready`) (optional, for full stack mode)
 
 ## Quick Start
+
+Choose your development mode based on what you need:
+
+### Option 1: Mock API Mode (Fastest - No Database Required)
+
+Perfect for frontend development. Uses synthetic data, no Kubernetes or PostgreSQL needed.
+
+```bash
+# 1. Clone and setup
+git clone <repository-url>
+cd R4C-Cesium-Viewer
+npm install
+
+# 2. Install Bun (if not already installed)
+curl -fsSL https://bun.sh/install | bash
+
+# 3. Start development with mock API
+make dev-mock
+```
+
+**Access at:** http://localhost:5173 (frontend) | http://localhost:5050 (mock API)
+
+### Option 2: Full Stack Mode (Production-like)
+
+Uses real PostgreSQL database and pygeoapi. Required for testing database queries or production data.
 
 ```bash
 # 1. Clone and setup
@@ -21,13 +47,176 @@ make setup
 
 # 2. Start development
 make dev
+
+# 3. Seed database with test data (recommended)
+make db-seed
 ```
 
 **Access at:** http://localhost:5173 (frontend) | http://localhost:5000 (pygeoapi)
 
+---
+
+## Mock API Development Mode
+
+The mock API server provides a lightweight alternative to the full Kubernetes stack. It serves synthetic GeoJSON data that mimics the real PyGeoAPI endpoints.
+
+### When to Use Mock API
+
+| Use Case                    | Mock API      | Full Stack            |
+| --------------------------- | ------------- | --------------------- |
+| Frontend UI development     | Recommended   | Overkill              |
+| Component styling           | Recommended   | Overkill              |
+| Testing data visualization  | Good          | Better for edge cases |
+| Database query testing      | Not supported | Required              |
+| Production bug reproduction | Not supported | Required              |
+
+### Starting Mock API Mode
+
+```bash
+make dev-mock
+```
+
+This command:
+
+1. Generates GeoJSON fixtures (if not already present)
+2. Starts the Bun mock server on port 5050
+3. Starts Vite dev server with auto-proxy to mock API
+4. Stops mock server when you exit (Ctrl+C)
+
+### How It Works
+
+The mock server (`mock-api/server.ts`) is a lightweight Bun HTTP server that:
+
+- Serves all 11 PyGeoAPI collections
+- Supports query parameters (`postinumero`, `bbox`, `limit`, `koodi`, etc.)
+- Returns GeoJSON FeatureCollections matching the real API format
+- Auto-detected by Vite (no configuration needed)
+
+**Auto-Detection:** When you run `npm run dev`, Vite automatically checks if the mock server is running on port 5050. If detected, it proxies `/pygeoapi` requests there instead of production.
+
+### Customizing Mock Data
+
+Control data density for different testing scenarios:
+
+```bash
+# Default: 50 buildings per postal code
+make mock-generate
+
+# More data for load testing
+MOCK_DENSITY=100 make mock-generate
+
+# Less data for faster startup
+MOCK_DENSITY=20 make mock-generate
+
+# Force regeneration
+rm -rf mock-api/fixtures && make mock-generate
+```
+
+### Supported Collections
+
+| Collection                 | Query Parameters                |
+| -------------------------- | ------------------------------- |
+| `hsy_buildings_optimized`  | `postinumero`, `bbox`, `limit`  |
+| `heatexposure_optimized`   | `postinumero`, `limit`          |
+| `urban_heat_building`      | `postinumero`, `limit`          |
+| `tree`                     | `postinumero`, `koodi`, `limit` |
+| `coldarea`                 | `posno`, `limit`                |
+| `adaptation_landcover`     | `grid_id`, `bbox`, `limit`      |
+| `tree_building_distance`   | `postinumero`, `limit`          |
+| `othernature`              | `postinumero`, `limit`          |
+| `hki_travel_time`          | `from_id`, `limit`              |
+| `populationgrid`           | `limit`                         |
+| `capitalregion_postalcode` | `limit`                         |
+
+### Mock API Limitations
+
+The mock server provides synthetic data sufficient for UI development, but with these differences from production:
+
+1. **Data is synthetic** - Realistic structure but generated values
+2. **Simplified geometry** - Buildings are rectangles, not actual footprints
+3. **No WFS/external data** - All data served from local fixtures
+4. **Faster responses** - No database queries, instant responses
+
+See [mock-api/README.md](../mock-api/README.md) for complete mock server documentation.
+
+---
+
+## Database: Seeding vs Production Import
+
+> **TL;DR:** Use `make db-seed` for local development. It takes 30-60 seconds vs 15-30 minutes for production import.
+
+| Approach                  | Time          | Size     | Use Case                                   |
+| ------------------------- | ------------- | -------- | ------------------------------------------ |
+| **Mock API (fastest)**    | Instant       | ~10 MB   | Frontend development                       |
+| **Seeding (recommended)** | 30-60 seconds | 10-50 MB | Local development, testing, CI             |
+| Production import         | 15-30 minutes | ~18 GB   | Reproducing production bugs, data analysis |
+
+### Quick Database Setup (Recommended)
+
+```bash
+# Start services
+make dev
+
+# In another terminal: seed with realistic mock data
+make db-seed
+```
+
+The seeding script generates realistic Helsinki-area data for all major tables:
+
+- Buildings, trees, and heat exposure data
+- Postal code demographics (PAAVO data)
+- Land cover and cold spot areas
+
+**Options:**
+
+```bash
+make db-seed                    # Default: 100 records per table
+make db-seed SEED_RECORDS=50    # Fewer records (faster)
+make db-seed SEED_RECORDS=500   # More data for load testing
+make db-seed-clean              # Clear existing data first, then seed
+```
+
+See [database/SEEDING.md](./database/SEEDING.md) for full documentation.
+
+### Production Data Import (When Needed)
+
+Only import production data when you specifically need it:
+
+- Reproducing a production bug
+- Testing with real-world data distributions
+- Data analysis or reporting
+
+```bash
+# See export instructions
+make help-db-export
+
+# Import from tmp/ directory
+make db-import
+```
+
+**Warning:** The production dump is ~18GB and takes 15-30 minutes to import.
+
+See [database/IMPORT.md](./database/IMPORT.md) for complete instructions.
+
+---
+
 ## Development Modes
 
-### Option 1: Local Frontend + K8s Services (Recommended)
+### Option 1: Mock API (No Database Required)
+
+Fastest option for frontend-only development:
+
+```bash
+make dev-mock
+# Ctrl+C stops both mock server and frontend
+```
+
+| Service         | URL                   |
+| --------------- | --------------------- |
+| Frontend (Vite) | http://localhost:5173 |
+| Mock PyGeoAPI   | http://localhost:5050 |
+
+### Option 2: Local Frontend + K8s Services (Recommended for Full Stack)
 
 Backend in Kubernetes, frontend with Vite for fast hot-reload:
 
@@ -43,7 +232,7 @@ make dev
 | pygeoapi        | http://localhost:5000 |
 | PostgreSQL      | localhost:5432        |
 
-### Option 2: Full Stack in Containers
+### Option 3: Full Stack in Containers
 
 Everything in containers (closer to production):
 
@@ -63,6 +252,7 @@ make dev-full
 ```bash
 make stop           # Stop everything (DB data preserved)
 make stop-frontend  # Stop frontend only, keep services running
+make mock-stop      # Stop mock API server only
 ```
 
 ## Skaffold Profiles (Advanced)
@@ -96,7 +286,7 @@ skaffold dev --port-forward
 
 **Note:** Direct Skaffold commands clean up on exit. Use `make dev` or `make dev-full` for persistent services.
 
-## Database Setup
+## Database Operations
 
 ### Environment Variables
 
@@ -136,21 +326,17 @@ dbmate rollback
 psql "$DATABASE_URL"
 ```
 
-### Test Data Seeding
-
-After migrations, populate with realistic mock data:
+### Makefile Database Commands
 
 ```bash
-# Install Python dependencies
-pip install -r scripts/requirements-seeding.txt
-
-# Seed with test data (100 records)
-python3 scripts/seed-dev-data.py --clear-first --num-records 100
+make db-status      # Show connection info and table count
+make db-migrate     # Run pending migrations
+make db-seed        # Seed with test data (recommended)
+make db-seed-clean  # Clear and re-seed
+make db-import      # Import production dump from tmp/
+make db-shell       # Open psql shell
+make db-reset       # WARNING: Delete all data
 ```
-
-This creates realistic Helsinki-area data for all major tables including buildings, trees, heat exposure, demographics, and more.
-
-See [database/SEEDING.md](./database/SEEDING.md) for detailed options.
 
 ## Service Architecture
 
@@ -160,6 +346,16 @@ See [database/SEEDING.md](./database/SEEDING.md) for detailed options.
 │  (Your Code)    │───▶│   (OGC API)     │───▶│   + PostGIS     │
 │  Port: 80/5173  │    │   Port: 80/5000 │    │   Port: 5432    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+**Mock API Mode (Simplified):**
+
+```
+┌─────────────────┐    ┌─────────────────┐
+│   R4C Webapp    │    │  Mock PyGeoAPI  │
+│  (Your Code)    │───▶│   (Bun Server)  │
+│  Port: 5173     │    │   Port: 5050    │
+└─────────────────┘    └─────────────────┘
 ```
 
 ### Database Schema
@@ -172,21 +368,6 @@ See [database/SEEDING.md](./database/SEEDING.md) for detailed options.
 All collections from `configmap.yaml` are available locally:
 
 - `adaptation_landcover`, `hsy_buildings`, `coldarea`, `tree`, `vegetation`, etc.
-
-## Importing Production Data (Optional)
-
-For testing with real production data:
-
-```bash
-# Download dump from GCS
-gsutil cp gs://regions4climate/database-export tmp/database-export.sql
-
-# Import into local database
-kubectl exec -i -n regions4climate postgresql-0 -- \
-  psql -U regions4climate_user -d regions4climate < tmp/database-export.sql
-```
-
-See [database/IMPORT.md](./database/IMPORT.md) for complete instructions.
 
 ## Available Commands
 
@@ -240,6 +421,20 @@ kubectl exec -it -n regions4climate postgresql-0 -- \
 
 ## Troubleshooting
 
+### Mock API Issues
+
+```bash
+# Check if mock server is running
+curl http://localhost:5050/health
+
+# Regenerate fixtures
+rm -rf mock-api/fixtures
+make mock-generate
+
+# Manual start (for debugging)
+cd mock-api && bun run dev
+```
+
 ### PostgreSQL Won't Start
 
 ```bash
@@ -283,6 +478,12 @@ dbmate up -v
 ### Port Conflicts
 
 ```bash
+# Port 5050 in use (mock API)
+PORT=5051 bun run mock-api/server.ts
+
+# Port 5000 conflicts with AirPlay (macOS)
+# The mock API uses 5050 specifically to avoid this
+
 # Use different port for PostgreSQL
 kubectl port-forward svc/postgresql 15432:5432
 export DATABASE_URL="postgres://regions4climate_user:regions4climate_pass@localhost:15432/regions4climate"
@@ -309,6 +510,9 @@ make stop
 # Stop frontend only, keep services running
 make stop-frontend
 
+# Stop mock API only
+make mock-stop
+
 # Complete reset (including data)
 make stop
 kubectl delete pvc --all -n regions4climate
@@ -325,6 +529,7 @@ skaffold delete
 2. **Pre-pull images**: `docker pull postgis/postgis:15-3.3`
 3. **Allocate sufficient memory** to Docker Desktop (8GB+ recommended)
 4. **Use SSD storage** for better PostgreSQL performance
+5. **Use mock API** for fastest frontend iteration (no container overhead)
 
 ## Project Structure
 
@@ -338,6 +543,10 @@ R4C-Cesium-Viewer/
 ├── tests/                  # Playwright end-to-end tests
 ├── db/                     # Database migrations (dbmate)
 ├── k8s/                    # Kubernetes manifests
+├── mock-api/               # Mock PyGeoAPI server (Bun)
+│   ├── server.ts           # HTTP server
+│   ├── generate.ts         # Fixture generator
+│   └── fixtures/           # Generated GeoJSON data
 ├── scripts/                # Utility scripts
 └── docs/                   # Documentation
 ```
@@ -357,8 +566,9 @@ R4C-Cesium-Viewer/
 
 ## Related Documentation
 
+- [mock-api/README.md](../mock-api/README.md) - Mock PyGeoAPI server documentation
 - [core/TESTING.md](./core/TESTING.md) - Testing strategies and commands
 - [core/PERFORMANCE_MONITORING.md](./core/PERFORMANCE_MONITORING.md) - Performance regression monitoring
-- [database/IMPORT.md](./database/IMPORT.md) - Importing production data
-- [database/SEEDING.md](./database/SEEDING.md) - Database seeding with mock data
+- [database/SEEDING.md](./database/SEEDING.md) - Database seeding with mock data (recommended)
+- [database/IMPORT.md](./database/IMPORT.md) - Importing production data (when needed)
 - [architecture/ARCHITECTURE_DIAGRAM.md](./architecture/ARCHITECTURE_DIAGRAM.md) - System architecture

@@ -26,6 +26,23 @@ VITE_PYGEOAPI_HOST=localhost:5000
 
 ## Quick Start
 
+Choose your development mode:
+
+### Fastest: Mock API (No Database Required)
+
+Perfect for frontend development. No Kubernetes or PostgreSQL needed.
+
+```bash
+npm install
+make dev-mock
+```
+
+**Available at:** http://localhost:5173 (frontend) | http://localhost:5050 (mock API)
+
+### Full Stack: With Database
+
+For testing with real database queries or production data.
+
 ```bash
 # First time setup
 cp .env.example .env
@@ -33,19 +50,40 @@ make setup
 
 # Start development (services persist, frontend iterates)
 make dev
+
+# Seed with test data (recommended)
+make db-seed
 ```
 
 **Available at:** http://localhost:5173 (frontend) | http://localhost:5000 (pygeoapi)
 
 ## Development Modes
 
-| Command         | Description                   | Frontend       | Services              |
+| Command         | Description                   | Frontend       | Backend               |
 | --------------- | ----------------------------- | -------------- | --------------------- |
+| `make dev-mock` | Mock API (no database)        | localhost:5173 | Mock server on :5050  |
 | `make dev`      | Local frontend + K8s services | localhost:5173 | Persist on Ctrl+C     |
 | `make dev-full` | All in containers             | localhost:4173 | Persist on Ctrl+C     |
 | `make stop`     | Stop everything               | -              | Data preserved in PVC |
 
-### make dev (Recommended)
+### make dev-mock (Fastest)
+
+Uses a lightweight Bun server with synthetic GeoJSON data. No containers, no database:
+
+```bash
+make dev-mock
+# Ctrl+C stops both mock server and frontend
+```
+
+The mock API:
+
+- Serves all 11 PyGeoAPI collections
+- Supports query parameters (`postinumero`, `bbox`, `limit`, etc.)
+- Auto-detected by Vite (no configuration needed)
+
+See [mock-api/README.md](./mock-api/README.md) for details.
+
+### make dev (Recommended for Full Stack)
 
 Backend services run in Kubernetes, frontend runs locally with Vite for fast hot-reload:
 
@@ -72,6 +110,9 @@ make stop
 
 # Stop only frontend (keep services)
 make stop-frontend
+
+# Stop mock API
+make mock-stop
 
 # View all commands
 make help
@@ -149,6 +190,8 @@ docker system --prune --all
 
 ## Project Documentation
 
+- [Getting Started Guide](./docs/GETTING_STARTED.md) - Complete setup with all options
+- [Mock API Documentation](./mock-api/README.md) - Lightweight development without database
 - [Local Development Guide](./docs/LOCAL_DEVELOPMENT.md) - Complete setup with PostgreSQL + pygeoapi
 - [Database Migrations](./db/README.md) - Schema management with dbmate
 - [Database Seeding](./docs/DATABASE_SEEDING.md) - Mock data for testing
