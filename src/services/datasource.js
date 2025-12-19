@@ -227,7 +227,7 @@ export default class DataSource {
 		try {
 			const loadedData = await Cesium.GeoJsonDataSource.load(data, {
 				stroke: Cesium.Color.BLACK,
-				fill: Cesium.Color.CRIMSON,
+				fill: Cesium.Color.WHITE.withAlpha(1.0),
 				strokeWidth: 3,
 				clampToGround: true,
 			})
@@ -248,12 +248,15 @@ export default class DataSource {
 			await this.removeDataSourcesByNamePrefix(name)
 			loadedData.name = name
 
-			// Fix polygon rendering by setting geodesic arc type
+			// Fix polygon rendering:
+			// - arcType=GEODESIC prevents rendering artifacts on curved surfaces
+			// - fill=true prevents wireframe appearance (SINGLE authoritative location - do not duplicate elsewhere)
 			for (let i = 0; i < loadedData.entities.values.length; i++) {
 				const entity = loadedData.entities.values[i]
 
 				if (Cesium.defined(entity.polygon)) {
 					entity.polygon.arcType = Cesium.ArcType.GEODESIC
+					entity.polygon.fill = true
 				}
 			}
 
