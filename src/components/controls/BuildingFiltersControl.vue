@@ -20,7 +20,7 @@
 						color="blue"
 						density="compact"
 						hide-details
-						@update:model-value="$emit('update:hideNonSote', $event)"
+						@update:model-value="$emit('update:hide-non-sote', $event)"
 					/>
 					<span class="control-label">
 						{{ helsinkiView ? 'Social & Healthcare' : 'Public Buildings' }}
@@ -52,7 +52,7 @@
 						color="orange"
 						density="compact"
 						hide-details
-						@update:model-value="$emit('update:hideNewBuildings', $event)"
+						@update:model-value="$emit('update:hide-new-buildings', $event)"
 					/>
 					<span class="control-label">Pre-2018</span>
 				</div>
@@ -75,7 +75,7 @@
 						color="purple"
 						density="compact"
 						hide-details
-						@update:model-value="$emit('update:hideLow', $event)"
+						@update:model-value="$emit('update:hide-low', $event)"
 					/>
 					<span class="control-label">Tall Buildings</span>
 				</div>
@@ -140,7 +140,7 @@ defineProps({
 	},
 })
 
-defineEmits(['update:hideNonSote', 'update:hideNewBuildings', 'update:hideLow'])
+defineEmits(['update:hide-non-sote', 'update:hide-new-buildings', 'update:hide-low'])
 </script>
 
 <style scoped>
