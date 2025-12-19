@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.39.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.9...r4c-cesium-viewer-v1.39.0) (2025-12-19)
+
+
+### Features
+
+* add mock PyGeoAPI server for database-free development ([#496](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/496)) ([38d7991](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/38d799164a7c00f908048d5d3edf613d30bb9127))
+
+
+### Bug Fixes
+
+* **buildings:** ensure polygons render filled instead of wireframe ([#498](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/498)) ([8280b53](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8280b53320d24fd9018aa9e9e0a584df656dac91))
+
 ## [1.38.9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.8...r4c-cesium-viewer-v1.38.9) (2025-12-18)
 
 
