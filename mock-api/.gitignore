@@ -1,0 +1,6 @@
+# Generated fixtures - regenerate with: bun run generate
+fixtures/
+
+# Bun dependencies
+node_modules/
+bun.lockb
