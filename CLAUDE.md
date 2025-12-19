@@ -10,6 +10,7 @@ Use `make` for the unified development experience:
 
 ```bash
 make help        # Show all commands with current status
+make dev-mock    # Mock API (fastest - no database/K8s required)
 make dev         # Backend in K8s + local frontend (fast iteration)
 make dev-full    # Everything in containers (closer to production)
 make stop        # Stop all services
@@ -19,7 +20,8 @@ make stop        # Stop all services
 
 - `make db-status` - Show connection info and table count
 - `make db-migrate` - Run pending migrations
-- `make db-import` - Import production dump from tmp/
+- `make db-seed` - Seed with test data (recommended for local dev)
+- `make db-import` - Import production dump from tmp/ (when needed)
 - `make db-shell` - Open psql shell
 - `make db-reset` - Drop and recreate database (requires confirmation)
 

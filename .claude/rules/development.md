@@ -1,10 +1,36 @@
 # Development
 
+## Development Modes
+
+| Mode            | Command                       | Backend                | Use Case            |
+| --------------- | ----------------------------- | ---------------------- | ------------------- |
+| Mock API        | `make dev-mock`               | Synthetic data (:5050) | Frontend UI work    |
+| Full Stack      | `make dev` + `make db-seed`   | PostgreSQL (:5000)     | Feature development |
+| Production Data | `make dev` + `make db-import` | 18GB dump              | Bug reproduction    |
+
+**Choose Mock API when:**
+
+- Developing UI components or styling
+- No database queries need testing
+- Want fastest possible iteration (no K8s/Docker)
+
+**Choose Full Stack when:**
+
+- Testing data fetching logic
+- Verifying database queries
+- Need realistic data relationships
+
+**Choose Production Data when:**
+
+- Reproducing a specific production bug
+- Testing with real-world data distributions
+
 ## Skaffold/Kubernetes Development
 
 **One-Command Start:**
 
 ```bash
+make dev-mock  # Mock API (fastest - no database/K8s required)
 make dev       # Local frontend + K8s services (fast iteration)
 make dev-full  # All in containers (closer to production)
 make stop      # Stop all services
