@@ -31,6 +31,7 @@
  */
 
 import * as Cesium from 'cesium'
+import { useBuildingStore } from '../stores/buildingStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
@@ -90,6 +91,7 @@ export default class ViewportBuildingLoader {
 		this.store = useGlobalStore()
 		this.toggleStore = useToggleStore()
 		this.urlStore = useURLStore()
+		this.buildingStore = useBuildingStore()
 		this.viewer = null
 
 		// Service dependencies
@@ -612,17 +614,16 @@ export default class ViewportBuildingLoader {
 			await this.setHSYBuildingAttributes(entities)
 		}
 
-		// Set initial alpha to 0 for fade-in effect
-		for (const entity of entities) {
-			if (entity.polygon?.material) {
-				const color = entity.polygon.material.color?.getValue?.(Cesium.JulianDate.now())
-				if (color) {
-					entity.polygon.material = new Cesium.ColorMaterialProperty(
-						new Cesium.Color(color.red, color.green, color.blue, 0)
-					)
-				}
-			}
-		}
+		// Note: Alpha is set to 0 by fadeInDatasource (after tile loading completes)
+		// Do NOT set alpha to 0 here - fadeInDatasource reads current alpha as target
+
+		// Populate building store for tooltip/hover info display
+		// Uses tileKey as cache key (similar to postal code in other loaders)
+		logger.debug(
+			`[ViewportBuildingLoader] 📦 Storing ${geojson.features.length} features for tooltip lookup. Sample IDs:`,
+			geojson.features.slice(0, 3).map((f) => f.id)
+		)
+		this.buildingStore.setBuildingFeatures(geojson, tileKey)
 
 		return entities
 	}
