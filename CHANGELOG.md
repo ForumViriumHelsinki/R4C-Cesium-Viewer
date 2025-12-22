@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.40.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.39.0...r4c-cesium-viewer-v1.40.0) (2025-12-22)
+
+
+### Features
+
+* **mock-api:** add complete building properties and documentation ([#501](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/501)) ([86c36d4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/86c36d48922bc9c2fcd0f90702e893a22c5089bd))
+
 ## [1.39.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.9...r4c-cesium-viewer-v1.39.0) (2025-12-19)
 
 
