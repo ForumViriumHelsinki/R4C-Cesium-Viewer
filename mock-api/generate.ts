@@ -1,18 +1,79 @@
 /**
+ * @module mock-api/generate
  * Mock Data Generator
  *
- * Generates realistic GeoJSON fixtures for all PyGeoAPI collections.
- * Uses real Helsinki postal codes and coordinate bounds.
+ * Generates realistic GeoJSON fixtures for all PyGeoAPI collections used by
+ * the R4C-Cesium-Viewer application. Uses real Helsinki region postal codes
+ * and coordinate bounds to create synthetic but realistic building, tree,
+ * heat exposure, and other geospatial data.
  *
- * Usage:
- *   bun run generate                    # Default: 50 buildings per postal code
- *   bun run generate --density 100      # 100 buildings per postal code
- *   bun run generate --postal-codes 10  # Only generate for 10 postal codes
+ * For detailed documentation of building properties, see:
+ * ../docs/data/BUILDING_PROPERTIES.md
+ *
+ * Features:
+ * - Generates buildings with full property set (identifiers, location, type, heat data, population)
+ * - Creates heat timeseries data for temporal visualization
+ * - Produces matching urban heat building records for Helsinki view
+ * - Generates trees, cold areas, landcover, and travel time data
+ * - Configurable density and postal code count via CLI args
+ *
+ * @example
+ * ```bash
+ * bun run generate                    # Default: 50 buildings per postal code
+ * bun run generate --density 100      # 100 buildings per postal code
+ * bun run generate --postal-codes 10  # Only generate for 10 postal codes
+ * ```
  */
 
 import { writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join } from 'path'
 
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+/**
+ * Geographic coordinates for a postal code center point
+ * @typedef {Object} PostalCodeCenter
+ * @property {number} lat - Latitude in WGS84 decimal degrees
+ * @property {number} lon - Longitude in WGS84 decimal degrees
+ * @property {string} name - Finnish neighborhood name
+ */
+type PostalCodeCenter = { lat: number; lon: number; name: string }
+
+/**
+ * Heat timeseries entry for a specific measurement date
+ * @typedef {Object} HeatTimeseriesEntry
+ * @property {string} date - Measurement date in YYYY-MM-DD format
+ * @property {number} avg_temp_c - Average surface temperature in Celsius
+ * @property {number} avgheatexposure - Heat exposure value (0-1 scale, higher = hotter)
+ */
+type HeatTimeseriesEntry = {
+	date: string
+	avg_temp_c: number
+	avgheatexposure: number
+}
+
+/**
+ * GeoJSON Feature representing a building
+ * @typedef {Object} BuildingFeature
+ * @property {string} type - Always "Feature"
+ * @property {string} id - Building ID (vtj_prt format: 9 digits + letter)
+ * @property {Object} geometry - GeoJSON Polygon geometry
+ * @property {Object} properties - Building properties (see BUILDING_PROPERTIES.md)
+ */
+type BuildingFeature = {
+	type: 'Feature'
+	id: string
+	geometry: { type: 'Polygon'; coordinates: number[][][] }
+	properties: Record<string, unknown>
+}
+
+// ============================================================================
+// Configuration
+// ============================================================================
+
+/** Output directory for generated fixture files */
 const FIXTURES_DIR = join(import.meta.dir, 'fixtures')
 
 // Parse CLI args
@@ -20,7 +81,10 @@ const args = process.argv.slice(2)
 const densityIdx = args.indexOf('--density')
 const postalCodesIdx = args.indexOf('--postal-codes')
 
+/** Number of buildings to generate per postal code area */
 const BUILDINGS_PER_POSTAL = densityIdx !== -1 ? Number(args[densityIdx + 1]) : 50
+
+/** Maximum number of postal codes to process (null = all) */
 const MAX_POSTAL_CODES = postalCodesIdx !== -1 ? Number(args[postalCodesIdx + 1]) : null
 
 // Helsinki region postal codes with approximate center coordinates
@@ -124,42 +188,226 @@ const POSTAL_CODES: Record<string, { lat: number; lon: number; name: string }> =
 	'01620': { lat: 60.2789, lon: 24.8334, name: 'Myyrmäki' },
 }
 
-// Building types and characteristics
-const BUILDING_TYPES = ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'PUBLIC', 'OFFICE']
+// ============================================================================
+// Building Type Constants
+// ============================================================================
+
+/**
+ * Finnish building usage type strings (kayttarks)
+ * Used in Capital Region view for building classification
+ * @see ../docs/data/BUILDING_PROPERTIES.md#building-type-strings-kayttarks
+ */
+const BUILDING_TYPES = ['Asuinrakennus', 'Liikerakennus', 'Teollisuusrakennus', 'Yleinen rakennus', 'Toimistorakennus']
+
+/**
+ * Numeric building usage codes (c_kayttark) per Statistics Finland classification
+ * SOTE buildings (social/healthcare) are codes 211-259 and 311-369
+ * These codes determine which buildings are highlighted when SOTE filter is enabled
+ * @see https://www.stat.fi/meta/luokitukset/rakennus/001-1994/index.html
+ * @see ../docs/data/BUILDING_PROPERTIES.md#building-type-codes-c_kayttark
+ */
+const BUILDING_TYPE_CODES = [
+	111, // Residential apartment building
+	121, // Row houses
+	211, // SOTE: Day care center (päiväkoti)
+	241, // SOTE: Elderly care home (vanhainkoti)
+	311, // SOTE: Health center (terveyskeskus)
+	511, // Office building
+	611, // Commercial building
+	711, // Industrial building
+	811, // Educational building
+]
+
+/**
+ * Building heating types (lammitystapa_s)
+ * Describes the primary heating method for the building
+ */
 const HEATING_TYPES = ['DISTRICT_HEATING', 'ELECTRIC', 'OIL', 'GAS', 'GEOTHERMAL']
+
+/**
+ * Building construction materials in Finnish (rakennusaine_s)
+ * Displayed in building tooltip when hovering
+ * @see ../docs/data/BUILDING_PROPERTIES.md#construction-materials-rakennusaine_s
+ */
+const BUILDING_MATERIALS = ['Betoni', 'Tiili', 'Puu', 'Teräs', 'Kivi', 'Lasi'] // Concrete, Brick, Wood, Steel, Stone, Glass
+
+// ============================================================================
+// Heat Data Constants
+// ============================================================================
+
+/**
+ * Measurement dates for heat timeseries data
+ * Includes summer dates (high heat) and one winter reference date (2021-02-18)
+ * The winter date uses blue coloring in visualization
+ */
+const HEAT_DATA_DATES = [
+	'2021-02-18', // Winter reference date (cold, blue visualization)
+	'2021-06-25',
+	'2021-07-15',
+	'2021-08-10',
+	'2022-06-28',
+	'2022-07-18',
+	'2023-07-15',
+]
+
+// ============================================================================
+// Nature & Landcover Constants
+// ============================================================================
+
+/** Tree type categories for tree polygon data */
 const TREE_TYPES = ['DECIDUOUS', 'CONIFEROUS', 'MIXED']
-const TREE_CODES = ['T510', 'T520', 'T530', 'T540', 'T550'] // Height categories
+
+/**
+ * Tree height category codes (koodi field)
+ * T510-T550 represent different tree height ranges
+ */
+const TREE_CODES = ['T510', 'T520', 'T530', 'T540', 'T550']
+
+/** Land cover classification types for adaptation analysis */
 const LANDCOVER_TYPES = ['FOREST', 'WATER', 'URBAN', 'GRASS', 'AGRICULTURAL', 'BARE']
 
-// Utility functions
+// ============================================================================
+// Address Constants
+// ============================================================================
+
+/**
+ * Real Finnish street names from Helsinki
+ * Used to generate realistic addresses for mock buildings
+ */
+const STREET_NAMES = [
+	'Mannerheimintie', 'Aleksanterinkatu', 'Esplanadi', 'Bulevardi', 'Fredrikinkatu',
+	'Hämeentie', 'Mechelininkatu', 'Runeberginkatu', 'Tehtaankatu', 'Unioninkatu',
+	'Kaivokatu', 'Lönnrotinkatu', 'Annankatu', 'Eerikinkatu', 'Iso Roobertinkatu',
+	'Kampinkuja', 'Vironkatu', 'Pohjoisesplanadi', 'Eteläranta', 'Korkeavuorenkatu',
+	'Laivurinkatu', 'Pietarinkatu', 'Apollonkatu', 'Caloniuksenkatu', 'Dagmarinkatu',
+]
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * Generate a random number within a range
+ * @param {number} min - Minimum value (inclusive)
+ * @param {number} max - Maximum value (exclusive)
+ * @returns {number} Random number between min and max
+ */
 function randomInRange(min: number, max: number): number {
 	return Math.random() * (max - min) + min
 }
 
+/**
+ * Select a random element from an array
+ * @template T
+ * @param {T[]} arr - Array to select from
+ * @returns {T} Randomly selected element
+ */
 function randomChoice<T>(arr: T[]): T {
 	return arr[Math.floor(Math.random() * arr.length)]
 }
 
+/**
+ * Generate a building ID in VTJ format (vtj_prt)
+ * Format: 9 random digits followed by 1 uppercase letter (e.g., "123456789A")
+ * This matches the format used by the Finnish Population Register Centre
+ * @returns {string} Building ID in VTJ format
+ */
 function generateBuildingId(): string {
 	const num = Math.floor(Math.random() * 900000000) + 100000000
 	const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26))
 	return `${num}${letter}`
 }
 
-function generatePolygon(centerLon: number, centerLat: number, size = 0.0003): number[][][] {
-	// Generate a simple rectangular building footprint
-	const halfSize = size / 2
-	const rotation = Math.random() * Math.PI / 4 // Random rotation up to 45 degrees
+/**
+ * Generate heat timeseries data for a building
+ *
+ * Creates an array of heat measurements across multiple dates, simulating
+ * temperature variation over time. Used by BuildingStyler and heat charts
+ * for temporal visualization.
+ *
+ * Temperature calculation:
+ * - Summer dates: base 20°C + (heat exposure × 15°C range) = 20-35°C
+ * - Winter date: base -5°C + (heat exposure × 10°C range) = -5 to +5°C
+ *
+ * @param {number} baseHeatExposure - Base heat exposure value (0-1 scale)
+ * @returns {HeatTimeseriesEntry[]} Array of heat measurements per date
+ * @see ../docs/data/BUILDING_PROPERTIES.md#heat-timeseries-structure
+ */
+function generateHeatTimeseries(baseHeatExposure: number): HeatTimeseriesEntry[] {
+	return HEAT_DATA_DATES.map((date) => {
+		// Add ±15% variation per date to simulate measurement differences
+		const variation = randomInRange(-0.15, 0.15)
+		const heatExposure = Math.max(0, Math.min(1, baseHeatExposure + variation))
 
+		// Winter date (2021-02-18) uses different temperature range
+		const isWinter = date === '2021-02-18'
+		const baseTemp = isWinter ? -5 : 20
+		const tempRange = isWinter ? 10 : 15
+
+		return {
+			date,
+			avg_temp_c: baseTemp + heatExposure * tempRange,
+			avgheatexposure: heatExposure,
+		}
+	})
+}
+
+/**
+ * Generate population age distribution for a building
+ *
+ * Creates normalized fractions (summing to 1.0) representing the proportion
+ * of building residents in each age group. Used by BuildingGridChart.vue
+ * to display demographic bar charts.
+ *
+ * Age groups: 0-9, 10-19, 20-29, 30-39, 40-49, 50-59, 60-69, 70-79, 80+
+ *
+ * @returns {number[]} Array of 9 fractions (one per age group), normalized to sum to 1.0
+ * @see ../docs/data/BUILDING_PROPERTIES.md#population-distribution
+ */
+function generatePopulationDistribution(): number[] {
+	// Generate random percentages with realistic ranges per age group
+	const raw = [
+		randomInRange(0.05, 0.15), // 0-9:   Children
+		randomInRange(0.08, 0.15), // 10-19: Adolescents
+		randomInRange(0.10, 0.20), // 20-29: Young adults (often largest group)
+		randomInRange(0.10, 0.18), // 30-39: Adults
+		randomInRange(0.08, 0.15), // 40-49: Middle-aged
+		randomInRange(0.08, 0.15), // 50-59: Middle-aged
+		randomInRange(0.06, 0.12), // 60-69: Pre-retirement
+		randomInRange(0.04, 0.10), // 70-79: Elderly
+		randomInRange(0.02, 0.08), // 80+:   Elderly (smallest group)
+	]
+	// Normalize to ensure sum equals 1.0
+	const total = raw.reduce((a, b) => a + b, 0)
+	return raw.map((v) => v / total)
+}
+
+/**
+ * Generate a GeoJSON Polygon geometry for a building footprint
+ *
+ * Creates a rectangular polygon with random rotation (0-45°) centered
+ * at the given coordinates. The polygon is closed (first and last
+ * coordinate are identical) as required by GeoJSON spec.
+ *
+ * @param {number} centerLon - Center longitude in WGS84 decimal degrees
+ * @param {number} centerLat - Center latitude in WGS84 decimal degrees
+ * @param {number} [size=0.0003] - Approximate size in degrees (~30m at Helsinki latitude)
+ * @returns {number[][][]} GeoJSON Polygon coordinates array
+ */
+function generatePolygon(centerLon: number, centerLat: number, size = 0.0003): number[][][] {
+	const halfSize = size / 2
+	const rotation = Math.random() * Math.PI / 4 // Random rotation 0-45 degrees
+
+	// Define rectangle corners relative to center
 	const corners = [
 		[-halfSize, -halfSize],
 		[halfSize, -halfSize],
 		[halfSize, halfSize],
 		[-halfSize, halfSize],
-		[-halfSize, -halfSize], // Close the polygon
+		[-halfSize, -halfSize], // Close the polygon (GeoJSON requirement)
 	]
 
-	// Apply rotation and translate to center
+	// Apply rotation matrix and translate to center coordinates
 	const rotatedCorners = corners.map(([x, y]) => {
 		const rx = x * Math.cos(rotation) - y * Math.sin(rotation)
 		const ry = x * Math.sin(rotation) + y * Math.cos(rotation)
@@ -169,7 +417,30 @@ function generatePolygon(centerLon: number, centerLat: number, size = 0.0003): n
 	return [rotatedCorners]
 }
 
-// Feature generators
+// ============================================================================
+// Feature Generators
+// ============================================================================
+
+/**
+ * Generate a complete building feature with all properties
+ *
+ * Creates a GeoJSON Feature representing a building with comprehensive
+ * properties for both Capital Region and Helsinki views. Includes:
+ * - Identifiers (vtj_prt, ratu, hki_id)
+ * - Location (postal code, municipality)
+ * - Building type (string and numeric code)
+ * - Physical characteristics (floors, height, area, material)
+ * - Construction date (for age filtering)
+ * - Heat exposure data (direct value and timeseries)
+ * - Address (street name and number)
+ * - Population distribution (9 age groups)
+ *
+ * @param {string} postalCode - 5-digit Finnish postal code (e.g., "00100")
+ * @param {PostalCodeCenter} center - Center coordinates of the postal code area
+ * @param {number} index - Building index within the postal code (used for ID generation)
+ * @returns {BuildingFeature} Complete GeoJSON Feature with all building properties
+ * @see ../docs/data/BUILDING_PROPERTIES.md
+ */
 function generateBuilding(postalCode: string, center: { lat: number; lon: number }, index: number) {
 	const offset = 0.008 // ~800m spread around center
 	const lon = center.lon + randomInRange(-offset, offset)
@@ -179,6 +450,21 @@ function generateBuilding(postalCode: string, center: { lat: number; lon: number
 	const heatExposure = randomInRange(0.2, 0.8)
 	const floors = Math.floor(randomInRange(1, 15))
 	const area = randomInRange(50, 2000)
+	const measuredHeight = floors * 3.2 + randomInRange(-1, 2) // ~3.2m per floor with variation
+	const yearBuilt = Math.floor(randomInRange(1900, 2024))
+	const buildingTypeCode = randomChoice(BUILDING_TYPE_CODES)
+
+	// Helsinki-style ID for matching with urban heat data (HKI_POSTAL_INDEX format)
+	const hkiId = `HKI_${postalCode}_${index}`
+
+	// Population distribution for residential buildings
+	const popDist = generatePopulationDistribution()
+
+	// Generate a completion date (c_valmpvm) - some buildings are new (post-2018)
+	const isNewBuilding = yearBuilt >= 2018
+	const completionDate = isNewBuilding
+		? `${yearBuilt}-${String(Math.floor(randomInRange(1, 12))).padStart(2, '0')}-${String(Math.floor(randomInRange(1, 28))).padStart(2, '0')}`
+		: `${yearBuilt}-06-15`
 
 	return {
 		type: 'Feature',
@@ -188,21 +474,69 @@ function generateBuilding(postalCode: string, center: { lat: number; lon: number
 			coordinates: generatePolygon(lon, lat, 0.0002 + Math.random() * 0.0003),
 		},
 		properties: {
+			// Core identifiers
+			id: hkiId, // Helsinki ID used for matching with urban heat data
 			vtj_prt: buildingId,
+			ratu: Math.floor(Math.random() * 900000) + 100000, // Building registry ID
+
+			// Location
 			postinumero: postalCode,
 			posno: postalCode,
 			kunta: postalCode.startsWith('02') ? 'Espoo' : postalCode.startsWith('01') ? 'Vantaa' : 'Helsinki',
-			kayttarks: randomChoice(BUILDING_TYPES),
+
+			// Building type - both string and numeric code
+			kayttarks: randomChoice(BUILDING_TYPES), // String type for Capital Region view
+			c_kayttark: buildingTypeCode, // Numeric code for Helsinki view SOTE filter
+
+			// Physical characteristics
 			lammitystapa_s: randomChoice(HEATING_TYPES),
-			kerrosten_lkm: floors,
+			rakennusaine_s: randomChoice(BUILDING_MATERIALS),
+			kerrosten_lkm: floors, // Floor count for Capital Region view
+			i_kerrlkm: floors, // Floor count for Helsinki view
+			measured_height: measuredHeight, // For 3D building height
 			area_m2: Math.round(area),
 			kavu: Math.round(area * floors * 3), // Volume estimate
-			avgheatexposure: heatExposure,
-			avg_temp_c: 20 + heatExposure * 15,
+
+			// Construction date - for building age filter
+			year_of_construction: String(yearBuilt),
+			c_valmpvm: completionDate, // Completion date for hideNewBuildings filter
+
+			// Heat exposure data
+			avgheatexposure: heatExposure, // Legacy field
+			avg_temp_c: 20 + heatExposure * 15, // Direct temperature for mock tooltip
+			avgheatexposuretobuilding: heatExposure, // Helsinki view heat exposure
+			heat_timeseries: generateHeatTimeseries(heatExposure), // Time series for Capital Region view
+			distancetounder40: Math.floor(randomInRange(50, 2000)), // Distance to cooling area
+
+			// Address fields for tooltip display
+			katunimi_suomi: randomChoice(STREET_NAMES),
+			osoitenumero: String(Math.floor(randomInRange(1, 150))),
+
+			// Population distribution for BuildingGridChart
+			pop_d_0_9: popDist[0],
+			pop_d_10_19: popDist[1],
+			pop_d_20_29: popDist[2],
+			pop_d_30_39: popDist[3],
+			pop_d_40_49: popDist[4],
+			pop_d_50_59: popDist[5],
+			pop_d_60_69: popDist[6],
+			pop_d_70_79: popDist[7],
+			pop_d_over80: popDist[8],
 		},
 	}
 }
 
+/**
+ * Generate a heat exposure area polygon
+ *
+ * Creates larger polygons representing areas with measured heat exposure.
+ * Used for area-based heat visualization overlays.
+ *
+ * @param {string} postalCode - Postal code for the area
+ * @param {PostalCodeCenter} center - Center coordinates
+ * @param {number} index - Area index
+ * @returns {Object} GeoJSON Feature with heat exposure properties
+ */
 function generateHeatExposureArea(postalCode: string, center: { lat: number; lon: number }, index: number) {
 	const offset = 0.006
 	const lon = center.lon + randomInRange(-offset, offset)
@@ -227,6 +561,17 @@ function generateHeatExposureArea(postalCode: string, center: { lat: number; lon
 	}
 }
 
+/**
+ * Generate a tree canopy polygon
+ *
+ * Creates small polygons representing tree coverage areas.
+ * Properties include height category (koodi), area, and average height.
+ *
+ * @param {string} postalCode - Postal code for the tree location
+ * @param {PostalCodeCenter} center - Center coordinates
+ * @param {number} index - Tree index
+ * @returns {Object} GeoJSON Feature with tree properties
+ */
 function generateTree(postalCode: string, center: { lat: number; lon: number }, index: number) {
 	const offset = 0.008
 	const lon = center.lon + randomInRange(-offset, offset)
@@ -255,6 +600,18 @@ function generateTree(postalCode: string, center: { lat: number; lon: number }, 
 	}
 }
 
+/**
+ * Generate a cooling area (cold spot) point
+ *
+ * Creates point features representing locations with low heat exposure
+ * (parks, water bodies, shaded areas). Heat exposure is 0.0-0.4 range.
+ * Used for cooling accessibility analysis (distancetounder40).
+ *
+ * @param {string} postalCode - Postal code for the area
+ * @param {PostalCodeCenter} center - Center coordinates
+ * @param {number} index - Cold area index
+ * @returns {Object} GeoJSON Point Feature with cooling properties
+ */
 function generateColdArea(postalCode: string, center: { lat: number; lon: number }, index: number) {
 	const offset = 0.005
 	const lon = center.lon + randomInRange(-offset, offset)
@@ -277,12 +634,37 @@ function generateColdArea(postalCode: string, center: { lat: number; lon: number
 	}
 }
 
+/**
+ * Generate an urban heat building for Helsinki view
+ *
+ * Creates building features specifically for the Helsinki view with
+ * heat exposure data. Uses hki_id to match with main building records.
+ * Generated at half the density of regular buildings.
+ *
+ * Key difference from generateBuilding():
+ * - Uses hki_id for matching (not id)
+ * - No heat_timeseries (Helsinki view uses avgheatexposuretobuilding directly)
+ * - No population distribution
+ *
+ * @param {string} postalCode - Postal code
+ * @param {PostalCodeCenter} center - Center coordinates
+ * @param {number} index - Building index (multiplied by 2 for hki_id matching)
+ * @returns {Object} GeoJSON Feature for Helsinki urban heat view
+ */
 function generateUrbanHeatBuilding(postalCode: string, center: { lat: number; lon: number }, index: number) {
 	const offset = 0.008
 	const lon = center.lon + randomInRange(-offset, offset)
 	const lat = center.lat + randomInRange(-offset, offset)
 
 	const heatExposure = randomInRange(0.2, 0.9)
+	const floors = Math.floor(randomInRange(1, 15))
+	const yearBuilt = Math.floor(randomInRange(1950, 2024))
+	const buildingTypeCode = randomChoice(BUILDING_TYPE_CODES)
+
+	// Use same hki_id format as buildings to enable matching
+	// Index is multiplied by 2 to match building indices (since we generate half as many heat buildings)
+	const matchingBuildingIndex = index * 2
+	const hkiId = `HKI_${postalCode}_${matchingBuildingIndex}`
 
 	return {
 		type: 'Feature',
@@ -293,13 +675,15 @@ function generateUrbanHeatBuilding(postalCode: string, center: { lat: number; lo
 		},
 		properties: {
 			id: `UHB_${postalCode}_${index}`,
+			hki_id: hkiId, // Matches building properties.id for heat data association
 			ratu: Math.floor(Math.random() * 900000) + 100000,
 			postinumero: postalCode,
-			c_kayttark: randomChoice(BUILDING_TYPES),
-			katunimi_suomi: `Testikatu ${Math.floor(Math.random() * 100)}`,
-			osoitenumero: String(Math.floor(Math.random() * 200)),
-			year_of_construction: String(Math.floor(randomInRange(1950, 2024))),
-			measured_height: randomInRange(5, 50),
+			c_kayttark: buildingTypeCode, // Numeric code for SOTE filter
+			i_kerrlkm: floors, // Floor count for Helsinki view
+			katunimi_suomi: randomChoice(STREET_NAMES),
+			osoitenumero: String(Math.floor(randomInRange(1, 150))),
+			year_of_construction: String(yearBuilt),
+			measured_height: floors * 3.2 + randomInRange(-1, 2),
 			avgheatexposuretobuilding: heatExposure,
 			distancetounder40: Math.floor(randomInRange(50, 2000)),
 			area_m2: Math.round(randomInRange(50, 2000)),
@@ -307,6 +691,15 @@ function generateUrbanHeatBuilding(postalCode: string, center: { lat: number; lo
 	}
 }
 
+/**
+ * Generate a land cover grid cell for adaptation analysis
+ *
+ * Creates larger grid polygons covering the entire Helsinki region
+ * with land cover classification. Used for climate adaptation analysis.
+ *
+ * @param {number} index - Grid cell index
+ * @returns {Object} GeoJSON Feature with land cover properties
+ */
 function generateAdaptationLandcover(index: number) {
 	// Generate across entire Helsinki region
 	const lon = randomInRange(24.5, 25.3)
@@ -329,6 +722,18 @@ function generateAdaptationLandcover(index: number) {
 	}
 }
 
+/**
+ * Generate a tree-to-building distance record
+ *
+ * Creates point features linking trees to nearby buildings with
+ * distance measurements. Used for analyzing tree coverage effects
+ * on building heat exposure.
+ *
+ * @param {string} postalCode - Postal code
+ * @param {PostalCodeCenter} center - Center coordinates
+ * @param {number} index - Record index
+ * @returns {Object} GeoJSON Point Feature with distance data
+ */
 function generateTreeBuildingDistance(postalCode: string, center: { lat: number; lon: number }, index: number) {
 	return {
 		type: 'Feature',
@@ -350,6 +755,17 @@ function generateTreeBuildingDistance(postalCode: string, center: { lat: number;
 	}
 }
 
+/**
+ * Generate other nature surface polygons
+ *
+ * Creates polygons for non-tree natural surfaces like rocks,
+ * sand, bare soil, and wetlands. Complements tree coverage data.
+ *
+ * @param {string} postalCode - Postal code
+ * @param {PostalCodeCenter} center - Center coordinates
+ * @param {number} index - Surface index
+ * @returns {Object} GeoJSON Polygon Feature with nature surface properties
+ */
 function generateOtherNature(postalCode: string, center: { lat: number; lon: number }, index: number) {
 	return {
 		type: 'Feature',
@@ -374,6 +790,15 @@ function generateOtherNature(postalCode: string, center: { lat: number; lon: num
 	}
 }
 
+/**
+ * Generate a travel time accessibility point
+ *
+ * Creates points with multi-modal travel time data (walk, bike,
+ * public transport, car) for accessibility analysis.
+ *
+ * @param {number} index - Point index
+ * @returns {Object} GeoJSON Point Feature with travel time data
+ */
 function generateTravelTime(index: number) {
 	const fromId = 5970000 + index * 100
 	const lon = randomInRange(24.8, 25.1)

@@ -166,12 +166,13 @@ export default {
 			try {
 				logger.debug('[BuildingInformation] 🔎 fetchBuildingInfo called for entity:', entity._id)
 
-				const features = buildingStore.buildingFeatures.features
+				const features = buildingStore.buildingFeatures?.features
 
 				const validIdPattern = /^[0-9]{9}[A-Z]$/
 
 				if (!entity._id || !validIdPattern.test(entity._id)) {
 					logger.debug('[BuildingInformation] ⚠️ Entity ID does not match pattern:', entity._id)
+					showTooltip.value = false
 					return
 				}
 
@@ -196,14 +197,18 @@ export default {
 							buildingAttributes.value
 						)
 					} else {
+						showTooltip.value = false
 						logger.warn('[BuildingInformation] ❌ No matching feature found for Id:', entity._id)
 						logger.debug(
 							'[BuildingInformation] Sample feature IDs:',
 							features.slice(0, 5).map((f) => f.id)
 						)
 					}
+				} else {
+					showTooltip.value = false
 				}
 			} catch (error) {
+				showTooltip.value = false
 				logger.error('[BuildingInformation] ❌ Failed to fetch building data', error)
 			}
 		}
@@ -211,12 +216,22 @@ export default {
 		/**
 		 * Finds average temperature from heat timeseries for the current date.
 		 * Returns formatted temperature or 'n/a' if data unavailable.
+		 * Handles both timeseries format (real data) and direct avg_temp_c (mock data).
 		 *
 		 * @param {Object} properties - Building feature properties
 		 * @returns {string} Temperature in Celsius (fixed to 2 decimals) or 'n/a'
 		 */
 		const findAverageTempC = (properties) => {
+			// Handle direct avg_temp_c property (mock data format)
+			if (properties.avg_temp_c != null) {
+				return properties.avg_temp_c.toFixed(2)
+			}
+
+			// Handle heat_timeseries format (real data)
 			const heatTimeseries = properties.heat_timeseries
+			if (!heatTimeseries) {
+				return 'n/a'
+			}
 			const foundEntry = heatTimeseries.find(({ date }) => date === store.heatDataDate)
 			return foundEntry ? foundEntry.avg_temp_c.toFixed(2) : 'n/a'
 		}
