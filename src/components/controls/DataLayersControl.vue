@@ -4,7 +4,7 @@
 
 		<!-- Trees -->
 		<v-tooltip
-			v-if="view !== 'grid' && postalCode"
+			v-if="view !== 'grid' && postalCode && featureFlagStore.isEnabled('treeCoverage')"
 			location="left"
 			max-width="200"
 		>
@@ -106,7 +106,7 @@
 
 		<!-- HSY Land Cover -->
 		<v-tooltip
-			v-if="!helsinkiView"
+			v-if="!helsinkiView && featureFlagStore.isEnabled('landCover')"
 			location="left"
 			max-width="200"
 		>
@@ -130,6 +130,7 @@
 
 		<!-- NDVI -->
 		<v-tooltip
+			v-if="featureFlagStore.isEnabled('ndvi')"
 			location="left"
 			max-width="200"
 		>
@@ -191,7 +192,10 @@
  * />
  */
 
+import { useFeatureFlagStore } from '../../stores/featureFlagStore'
 import { useLoadingStore } from '../../stores/loadingStore.js'
+
+const featureFlagStore = useFeatureFlagStore()
 
 defineProps({
 	showTrees: {

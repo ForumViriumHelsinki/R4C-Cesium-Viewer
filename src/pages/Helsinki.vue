@@ -15,10 +15,10 @@
 				class="d-flex flex-column pa-0 ma-0"
 				style="z-index: 20"
 			>
-				<HeatHistogram v-if="propsStore.heatHistogramData" />
+				<HeatHistogram v-if="propsStore.heatHistogramData && featureFlagStore.isEnabled('heatHistogram')" />
 			</v-col>
 			<v-col
-				v-if="store.postalcode !== '00230'"
+				v-if="store.postalcode !== '00230' && featureFlagStore.isEnabled('socioeconomicViz')"
 				class="d-flex align-end pa-0 ma-0"
 				style="z-index: 20"
 			>
@@ -51,8 +51,8 @@
 				class="d-flex flex-column pa-0 ma-0"
 				style="z-index: 20"
 			>
-				<Scatterplot />
-				<NearbyTreeArea />
+				<Scatterplot v-if="featureFlagStore.isEnabled('buildingScatterPlot')" />
+				<NearbyTreeArea v-if="featureFlagStore.isEnabled('treeCoverage')" />
 			</v-col>
 		</v-row>
 	</v-container>
@@ -64,6 +64,7 @@ import HeatHistogram from '../components/HeatHistogram.vue'
 import NearbyTreeArea from '../components/NearbyTreeArea.vue'
 import Scatterplot from '../components/Scatterplot.vue'
 import { eventBus } from '../services/eventEmitter.js'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import SocioEconomics from '../views/SocioEconomics.vue'
@@ -79,6 +80,7 @@ export default {
 		const showComponents = ref(false)
 		const store = useGlobalStore() // Access the store
 		const propsStore = usePropsStore()
+		const featureFlagStore = useFeatureFlagStore()
 
 		onMounted(() => {
 			eventBus.on('showHelsinki', () => {
@@ -99,6 +101,7 @@ export default {
 			showComponents,
 			propsStore,
 			store, // Return the store to access postalCode in the template
+			featureFlagStore,
 		}
 	},
 }

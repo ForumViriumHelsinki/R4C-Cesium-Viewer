@@ -35,7 +35,7 @@
 				<div class="analysis-buttons">
 					<template v-if="currentLevel === 'postalCode'">
 						<v-btn
-							v-if="heatHistogramData && heatHistogramData.length > 0"
+							v-if="heatHistogramData && heatHistogramData.length > 0 && featureFlagStore.isEnabled('heatHistogram')"
 							block
 							variant="outlined"
 							prepend-icon="mdi-chart-histogram"
@@ -45,7 +45,7 @@
 							Heat Distribution
 						</v-btn>
 						<v-btn
-							v-if="showSosEco"
+							v-if="showSosEco && featureFlagStore.isEnabled('socioeconomicViz')"
 							block
 							variant="outlined"
 							prepend-icon="mdi-account-group"
@@ -55,7 +55,7 @@
 							Socioeconomics
 						</v-btn>
 						<v-btn
-							v-if="currentView !== 'helsinki'"
+							v-if="currentView !== 'helsinki' && featureFlagStore.isEnabled('landCover')"
 							block
 							variant="outlined"
 							prepend-icon="mdi-leaf"
@@ -65,6 +65,7 @@
 							Land Cover
 						</v-btn>
 						<v-btn
+							v-if="featureFlagStore.isEnabled('buildingScatterPlot')"
 							block
 							variant="outlined"
 							prepend-icon="mdi-chart-scatter-plot"
@@ -74,7 +75,7 @@
 							Building Analysis
 						</v-btn>
 						<v-btn
-							v-if="hasNDVIData"
+							v-if="hasNDVIData && featureFlagStore.isEnabled('ndviAnalysis')"
 							block
 							variant="outlined"
 							prepend-icon="mdi-leaf"
@@ -98,7 +99,7 @@
 
 					<template v-if="currentView === 'grid'">
 						<v-expansion-panels
-							v-if="statsIndex === 'heat_index'"
+							v-if="statsIndex === 'heat_index' && featureFlagStore.isEnabled('coolingOptimizer')"
 							variant="outlined"
 							class="mb-2"
 						>
@@ -312,6 +313,7 @@ import Featurepicker from '../services/featurepicker'
 import Tree from '../services/tree'
 
 // Store and Service Imports
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore'
 import { useHeatExposureStore } from '../stores/heatExposureStore'
 import { usePropsStore } from '../stores/propsStore'
@@ -362,6 +364,7 @@ export default {
 		const heatExposureStore = useHeatExposureStore()
 		const socioEconomicsStore = useSocioEconomicsStore()
 		const toggleStore = useToggleStore()
+		const featureFlagStore = useFeatureFlagStore()
 
 		const currentLevel = computed(() => globalStore.level)
 		const currentView = computed(() => globalStore.view)
@@ -562,6 +565,7 @@ export default {
 			ndvi,
 			// ## NEW: Return the new state variable ##
 			adaptationTab,
+			featureFlagStore,
 		}
 	},
 }
