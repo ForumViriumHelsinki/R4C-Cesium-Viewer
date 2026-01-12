@@ -13,6 +13,66 @@ server {
     # For Docker Compose: leave default (127.0.0.11)
     resolver ${NGINX_DNS_RESOLVER} valid=30s ipv6=off;
 
+    # ===========================================
+    # Health Check Endpoints
+    # ===========================================
+
+    # Liveness probe - always returns 200 if nginx is running
+    location = /livez {
+        access_log off;
+        add_header Content-Type application/json;
+        return 200 '{"status":"ok","timestamp":"$time_iso8601"}';
+    }
+
+    # Simple health check - returns 200 if nginx can serve requests
+    location = /healthz {
+        access_log off;
+        add_header Content-Type application/json;
+        return 200 '{"status":"healthy","server":"r4c-frontend","timestamp":"$time_iso8601"}';
+    }
+
+    # Readiness probe - checks if PyGeoAPI is reachable
+    location = /readyz {
+        access_log off;
+        add_header Content-Type application/json;
+
+        # Store the host in a variable
+        set $pygeoapi_host "${VITE_PYGEOAPI_HOST}";
+        set $pygeoapi_protocol "https";
+        if ($pygeoapi_host ~* "^localhost:[0-9]+$") {
+            set $pygeoapi_protocol "http";
+        }
+        if ($pygeoapi_host ~* "\.svc\.cluster\.local$") {
+            set $pygeoapi_protocol "http";
+        }
+        if ($pygeoapi_host ~* "^[^.]+$") {
+            set $pygeoapi_protocol "http";
+        }
+
+        # Proxy to PyGeoAPI collections endpoint to verify backend is ready
+        proxy_pass $pygeoapi_protocol://$pygeoapi_host/collections?limit=1;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 5s;
+        proxy_intercept_errors on;
+        error_page 500 502 503 504 = @readyz_error;
+    }
+
+    location @readyz_error {
+        add_header Content-Type application/json;
+        return 503 '{"status":"unhealthy","server":"r4c-frontend","error":"pygeoapi_unreachable","timestamp":"$time_iso8601"}';
+    }
+
+    # Detailed status endpoint
+    location = /status {
+        access_log off;
+        add_header Content-Type application/json;
+        return 200 '{"status":"healthy","server":"r4c-frontend","nginx_version":"$nginx_version","timestamp":"$time_iso8601","endpoints":{"pygeoapi":"${VITE_PYGEOAPI_HOST}"}}';
+    }
+
+    # ===========================================
+    # End Health Check Endpoints
+    # ===========================================
+
     # Global proxy settings
     proxy_cache global_cache;
     proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
