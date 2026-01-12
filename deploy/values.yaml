@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
-  tag: '1.39.0'
+  tag: '1.40.0'
 imagePullSecrets:
 - name: ghcr-login-secret
 serviceAccount:
@@ -88,7 +88,7 @@ migrations:
       cpu: 200m
       memory: 256Mi
   image:
-    tag: 1.39.0
+    tag: 1.40.0
     repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
 ingress:
   annotations:
