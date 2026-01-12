@@ -600,10 +600,14 @@ const checkHealth = async (sourceId) => {
 
 		if (response.ok) {
 			// Service is healthy - cache the response
-			await cacheService.setData(cacheKey, { healthy: true }, {
-				type: source.type,
-				ttl: 5 * 60 * 1000, // 5 minutes for health checks
-			})
+			await cacheService.setData(
+				cacheKey,
+				{ healthy: true },
+				{
+					type: source.type,
+					ttl: 5 * 60 * 1000, // 5 minutes for health checks
+				}
+			)
 
 			if (responseTime > 5000) {
 				source.status = 'degraded'
