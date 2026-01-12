@@ -72,9 +72,9 @@ export function useUrlState() {
 
 		// Validate numeric values
 		if (
-			isNaN(state.camera.longitude) ||
-			isNaN(state.camera.latitude) ||
-			isNaN(state.camera.altitude)
+			Number.isNaN(state.camera.longitude) ||
+			Number.isNaN(state.camera.latitude) ||
+			Number.isNaN(state.camera.altitude)
 		) {
 			logger.warn('[useUrlState] Invalid numeric values in URL parameters')
 			return null
@@ -114,7 +114,7 @@ export function useUrlState() {
 		logger.debug('[useUrlState] Restoring state from URL:', state)
 
 		// Restore camera position immediately (no animation on page load)
-		if (viewer && viewer.camera) {
+		if (viewer?.camera) {
 			viewer.camera.setView({
 				destination: Cesium.Cartesian3.fromDegrees(
 					state.camera.longitude,
@@ -132,7 +132,8 @@ export function useUrlState() {
 
 		// Restore navigation state
 		// Normalize level value - URL may have lowercase 'postalcode' but store uses 'postalCode'
-		const normalizedLevel = state.navigation.level === 'postalcode' ? 'postalCode' : state.navigation.level
+		const normalizedLevel =
+			state.navigation.level === 'postalcode' ? 'postalCode' : state.navigation.level
 
 		if (normalizedLevel && normalizedLevel !== 'start') {
 			store.setLevel(normalizedLevel)
@@ -141,11 +142,16 @@ export function useUrlState() {
 				store.setPostalCode(state.navigation.postalcode)
 
 				// Load postal code data if we're at postal code or building level
-				if (featurepickerClass && (normalizedLevel === 'postalCode' || normalizedLevel === 'building')) {
+				if (
+					featurepickerClass &&
+					(normalizedLevel === 'postalCode' || normalizedLevel === 'building')
+				) {
 					try {
 						const featurepicker = new featurepickerClass()
 						// Load postal code data without camera animation (we already set camera position)
-						await featurepicker.loadPostalCodeData(state.navigation.postalcode, { skipCameraAnimation: true })
+						await featurepicker.loadPostalCodeData(state.navigation.postalcode, {
+							skipCameraAnimation: true,
+						})
 						logger.debug('[useUrlState] Postal code data loaded:', state.navigation.postalcode)
 					} catch (error) {
 						logger.error('[useUrlState] Failed to load postal code data:', error)
