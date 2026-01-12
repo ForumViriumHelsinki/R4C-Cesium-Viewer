@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.41.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.40.0...r4c-cesium-viewer-v1.41.0) (2026-01-12)
+
+
+### Features
+
+* restore map state on page refresh via URL parameters ([#505](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/505)) ([518e818](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/518e8185dbd646c7774608ee145e824b594b8e46))
+
+
+### Bug Fixes
+
+* **ci:** fix Lighthouse CI failing silently without results ([#506](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/506)) ([df5b37a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/df5b37a212e9ecc631b75890dda3940892462652))
+
 ## [1.40.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.39.0...r4c-cesium-viewer-v1.40.0) (2025-12-22)
 
 
