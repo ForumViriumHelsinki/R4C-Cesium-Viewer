@@ -11,6 +11,38 @@ import cacheWarmer from './cacheWarmer.js'
  */
 
 /**
+ * Updates URL with navigation state after postal code loads
+ * @param {string} level - Navigation level
+ * @param {string} postalCode - Selected postal code
+ */
+function updateUrlWithNavigationState(level, postalCode) {
+	try {
+		const params = new URLSearchParams(window.location.search)
+
+		if (level && level !== 'start') {
+			// Convert 'postalCode' to 'postalcode' for URL consistency
+			const urlLevel = level === 'postalCode' ? 'postalcode' : level.toLowerCase()
+			params.set('level', urlLevel)
+		} else {
+			params.delete('level')
+		}
+
+		if (postalCode) {
+			params.set('postalcode', postalCode)
+		} else {
+			params.delete('postalcode')
+		}
+
+		const newUrl = `${window.location.pathname}?${params.toString()}`
+		window.history.replaceState({ path: newUrl }, '', newUrl)
+
+		logger.debug('[PostalCodeLoader] URL updated with navigation state')
+	} catch (error) {
+		logger.warn('[PostalCodeLoader] Failed to update URL:', error?.message || error)
+	}
+}
+
+/**
  * Checks cache for preloaded postal code data (FR-3.3 optimization)
  * Note: Cache lookup is delegated to unifiedLoader. This function only logs cache warmer status.
  * @param {string} _cacheKey - Cache key (unused - kept for API compatibility)
@@ -169,6 +201,9 @@ export async function loadPostalCodeDataWithRetry(
 
 		// Update level
 		stores.store.setLevel('postalCode')
+
+		// Update URL with navigation state for deep linking
+		updateUrlWithNavigationState('postalCode', postalCode)
 
 		updateProgressCallback(2, 2)
 

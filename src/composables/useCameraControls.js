@@ -13,6 +13,7 @@ import logger from '../utils/logger.js'
  *
  * @param {any} viewer - Cesium viewer reference
  * @param {Function} onCameraSettled - Callback function to invoke when camera stops moving
+ * @param {Function} [onUrlUpdate] - Optional callback to update URL with camera state
  * @returns {{
  *   addCameraMoveEndListener: () => void,
  *   cleanup: () => void
@@ -20,11 +21,11 @@ import logger from '../utils/logger.js'
  *
  * @example
  * import { useCameraControls } from '@/composables/useCameraControls';
- * const { addCameraMoveEndListener, cleanup } = useCameraControls(viewer.value, handleCameraSettled);
+ * const { addCameraMoveEndListener, cleanup } = useCameraControls(viewer.value, handleCameraSettled, updateUrl);
  * addCameraMoveEndListener();
  * // Later: cleanup() in onBeforeUnmount
  */
-export function useCameraControls(viewer, onCameraSettled) {
+export function useCameraControls(viewer, onCameraSettled, onUrlUpdate = null) {
 	let cameraMoveTimeout = null
 	const DEBOUNCE_DELAY_MS = TIMING.CAMERA_DEBOUNCE_MS // Wait 1500ms after camera stops moving to prevent blinking
 
@@ -54,6 +55,11 @@ export function useCameraControls(viewer, onCameraSettled) {
 					onCameraSettled().catch((error) => {
 						logger.error('[useCameraControls] Failed to handle camera settled event:', error)
 					})
+				}
+
+				// Update URL with current camera state
+				if (onUrlUpdate) {
+					onUrlUpdate()
 				}
 			}, DEBOUNCE_DELAY_MS)
 		})
