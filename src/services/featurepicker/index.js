@@ -142,13 +142,46 @@ export default class FeaturePicker {
 	}
 
 	/**
-	 * Loads postal code data for a specific postal code (used for retry functionality)
+	 * Loads postal code data for a specific postal code (used for retry functionality and URL restoration)
 	 * @param {string} postalCode - Postal code to load
+	 * @param {Object} [options] - Loading options
+	 * @param {boolean} [options.skipCameraAnimation=false] - Skip camera animation (for URL state restoration)
 	 */
-	async loadPostalCodeData(postalCode) {
-		logger.debug('[FeaturePicker] Loading postal code data:', postalCode)
+	async loadPostalCodeData(postalCode, options = {}) {
+		logger.debug('[FeaturePicker] Loading postal code data:', postalCode, options)
 		this.store.setPostalCode(postalCode)
-		await this.loadPostalCode()
+
+		if (options.skipCameraAnimation) {
+			// Load postal code without camera animation (URL restoration mode)
+			await this.loadPostalCodeWithoutAnimation(postalCode)
+		} else {
+			await this.loadPostalCode()
+		}
+	}
+
+	/**
+	 * Loads postal code data without camera animation
+	 * Used when restoring state from URL where camera is already positioned.
+	 * @param {string} postalCode - Postal code to load
+	 * @private
+	 */
+	async loadPostalCodeWithoutAnimation(postalCode) {
+		logger.debug('[FeaturePicker] Loading postal code without animation:', postalCode)
+
+		this.setNameOfZone()
+		this.elementsDisplayService.setSwitchViewElementsDisplay('inline-block')
+		await this.datasourceService.removeDataSourcesAndEntities()
+
+		if (!this.toggleStore.helsinkiView) {
+			logger.debug('[FeaturePicker] Loading Capital Region elements (including buildings)...')
+			await this.capitalRegionService.loadCapitalRegionElements()
+		} else {
+			logger.debug('[FeaturePicker] Loading Helsinki elements (including buildings)...')
+			await this.helsinkiService.loadHelsinkiElements()
+		}
+
+		this.store.setLevel('postalCode')
+		logger.debug('[FeaturePicker] Postal code loading complete (no animation)')
 	}
 
 	/**

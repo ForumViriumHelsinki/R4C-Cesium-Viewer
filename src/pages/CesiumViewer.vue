@@ -131,7 +131,7 @@
  * - cacheWarmer: Background data preloading
  * - ViewportBuildingLoader: Tile-based viewport building streaming
  */
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import BuildingInformation from '../components/BuildingInformation.vue'
 import CameraControls from '../components/CameraControls.vue'
 import DisclaimerPopup from '../components/DisclaimerPopup.vue'
@@ -142,6 +142,7 @@ import { useCameraControls } from '../composables/useCameraControls.js'
 import { useDataLoading } from '../composables/useDataLoading.js'
 import { useEntityPicking } from '../composables/useEntityPicking.js'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts.js'
+import { useUrlState } from '../composables/useUrlState.js'
 import { useViewerInitialization } from '../composables/useViewerInitialization.js'
 import { useViewportLoading } from '../composables/useViewportLoading.js'
 import { useBuildingStore } from '../stores/buildingStore.js'
@@ -166,6 +167,13 @@ export default {
 		const shouldShowBuildingInformation = computed(() => {
 			return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading
 		})
+
+		// URL state composable for deep linking and page refresh persistence
+		const { restoreStateFromUrl, updateUrlFromCamera, updateUrlFromNavigation, getUrlState } =
+			useUrlState()
+
+		// Track if we restored from URL (to skip default camera init)
+		const restoredFromUrl = ref(false)
 
 		// Viewer initialization composable
 		const {
@@ -194,8 +202,15 @@ export default {
 			initViewportStreaming,
 		} = useViewportLoading(viewer, Camera, Featurepicker)
 
-		// Camera controls composable
-		const { addCameraMoveEndListener } = useCameraControls(viewer.value, handleCameraSettled)
+		// URL update callback for camera controls
+		const handleUrlUpdate = () => {
+			if (viewer.value) {
+				updateUrlFromCamera(viewer.value)
+			}
+		}
+
+		// Camera controls composable - will be initialized in onMounted
+		let cameraControlsInstance = null
 
 		// Entity picking composable
 		const { addFeaturePicker } = useEntityPicking(Featurepicker)
@@ -250,6 +265,13 @@ export default {
 		}
 
 		onMounted(async () => {
+			// Check if we have URL state to restore before initializing
+			const urlState = getUrlState()
+			if (urlState) {
+				logger.debug('[CesiumViewer] URL state detected, will restore after initialization')
+				restoredFromUrl.value = true
+			}
+
 			// Initialize viewer
 			await initViewer()
 
@@ -257,9 +279,19 @@ export default {
 			await addPostalCodes()
 			addAttribution()
 
+			// Restore state from URL if present (after postal codes are loaded)
+			if (restoredFromUrl.value && viewer.value && Featurepicker) {
+				logger.debug('[CesiumViewer] Restoring map state from URL...')
+				await restoreStateFromUrl(viewer.value, Featurepicker)
+				logger.debug('[CesiumViewer] Map state restored from URL')
+			}
+
 			// Add interaction handlers
 			addFeaturePicker()
-			addCameraMoveEndListener()
+
+			// Initialize camera controls with URL update callback
+			cameraControlsInstance = useCameraControls(viewer.value, handleCameraSettled, handleUrlUpdate)
+			cameraControlsInstance.addCameraMoveEndListener()
 
 			// Initialize viewport streaming if enabled
 			await initViewportStreaming()
