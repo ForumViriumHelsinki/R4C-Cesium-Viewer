@@ -62,11 +62,98 @@ server {
         return 503 '{"status":"unhealthy","server":"r4c-frontend","error":"pygeoapi_unreachable","timestamp":"$time_iso8601"}';
     }
 
-    # Detailed status endpoint
+    # Status overview - lists all available health check endpoints
     location = /status {
         access_log off;
         add_header Content-Type application/json;
-        return 200 '{"status":"healthy","server":"r4c-frontend","nginx_version":"$nginx_version","timestamp":"$time_iso8601","endpoints":{"pygeoapi":"${VITE_PYGEOAPI_HOST}"}}';
+        return 200 '{"status":"healthy","server":"r4c-frontend","nginx_version":"$nginx_version","timestamp":"$time_iso8601","config":{"pygeoapi":"${VITE_PYGEOAPI_HOST}","digitransit_key_set":"${VITE_DIGITRANSIT_KEY:+true}"},"checks":["/status/pygeoapi","/status/hsy-wms","/status/stat-fi","/status/digitransit","/status/helsinki-wms"]}';
+    }
+
+    # -------------------------------------------
+    # Individual Service Health Checks
+    # These verify external service connectivity
+    # and can catch auth/config errors
+    # -------------------------------------------
+
+    # Check PyGeoAPI - returns collections list if healthy
+    location = /status/pygeoapi {
+        access_log off;
+        set $pygeoapi_host "${VITE_PYGEOAPI_HOST}";
+        set $pygeoapi_protocol "https";
+        if ($pygeoapi_host ~* "^localhost:[0-9]+$") {
+            set $pygeoapi_protocol "http";
+        }
+        if ($pygeoapi_host ~* "\.svc\.cluster\.local$") {
+            set $pygeoapi_protocol "http";
+        }
+        if ($pygeoapi_host ~* "^[^.]+$") {
+            set $pygeoapi_protocol "http";
+        }
+
+        proxy_pass $pygeoapi_protocol://$pygeoapi_host/collections?limit=1;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 10s;
+        proxy_intercept_errors on;
+        error_page 401 403 = @status_auth_error;
+        error_page 500 502 503 504 = @status_service_error;
+    }
+
+    # Check HSY WMS - GetCapabilities request
+    location = /status/hsy-wms {
+        access_log off;
+        proxy_pass https://kartta.hsy.fi/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 10s;
+        proxy_intercept_errors on;
+        error_page 401 403 = @status_auth_error;
+        error_page 500 502 503 504 = @status_service_error;
+    }
+
+    # Check Statistics Finland WFS
+    location = /status/stat-fi {
+        access_log off;
+        proxy_pass https://geo.stat.fi/geoserver/postialue/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 10s;
+        proxy_intercept_errors on;
+        error_page 401 403 = @status_auth_error;
+        error_page 500 502 503 504 = @status_service_error;
+    }
+
+    # Check Digitransit API - requires API key, catches auth errors
+    location = /status/digitransit {
+        access_log off;
+        set $digitransit_key "${VITE_DIGITRANSIT_KEY}";
+        proxy_set_header digitransit-subscription-key $digitransit_key;
+        # Simple geocoding request to verify API key works
+        proxy_pass https://api.digitransit.fi/geocoding/v1/search?text=helsinki&size=1;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 10s;
+        proxy_intercept_errors on;
+        error_page 401 403 = @status_auth_error;
+        error_page 500 502 503 504 = @status_service_error;
+    }
+
+    # Check Helsinki WMS
+    location = /status/helsinki-wms {
+        access_log off;
+        proxy_pass https://kartta.hel.fi/ws/geoserver/avoindata/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 10s;
+        proxy_intercept_errors on;
+        error_page 401 403 = @status_auth_error;
+        error_page 500 502 503 504 = @status_service_error;
+    }
+
+    # Error handlers for service checks
+    location @status_auth_error {
+        add_header Content-Type application/json;
+        return 503 '{"status":"unhealthy","error":"auth_error","message":"Authentication or authorization failed - check API keys and credentials","timestamp":"$time_iso8601"}';
+    }
+
+    location @status_service_error {
+        add_header Content-Type application/json;
+        return 503 '{"status":"unhealthy","error":"service_error","message":"Service unavailable or returned error","timestamp":"$time_iso8601"}';
     }
 
     # ===========================================
