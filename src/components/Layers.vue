@@ -44,7 +44,7 @@
 		</div>
 
 		<div
-			v-if="view !== 'grid' && postalCode"
+			v-if="view !== 'grid' && postalCode && featureFlagStore.isEnabled('treeCoverage')"
 			class="switch-container"
 		>
 			<label class="switch">
@@ -63,7 +63,7 @@
 		</div>
 
 		<div
-			v-if="!helsinkiView"
+			v-if="!helsinkiView && featureFlagStore.isEnabled('landCover')"
 			class="switch-container"
 		>
 			<label class="switch">
@@ -81,7 +81,10 @@
 			>
 		</div>
 
-		<div class="switch-container">
+		<div
+			v-if="featureFlagStore.isEnabled('ndvi')"
+			class="switch-container"
+		>
 			<label class="switch">
 				<input
 					v-model="ndvi"
@@ -171,6 +174,7 @@ import { changeTIFF, removeTIFF } from '../services/tiffImagery.js'
 import Tree from '../services/tree.js'
 import Vegetation from '../services/vegetation'
 import Wms from '../services/wms.js'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore'
 import { useToggleStore } from '../stores/toggleStore'
 
@@ -178,6 +182,7 @@ export default {
 	setup() {
 		const toggleStore = useToggleStore()
 		const store = useGlobalStore()
+		const featureFlagStore = useFeatureFlagStore()
 
 		/**
 		 * Reactive state for layer toggles
@@ -428,6 +433,7 @@ export default {
 			toggleLandCover,
 			postalCode,
 			ndvi,
+			featureFlagStore,
 		}
 	},
 }
