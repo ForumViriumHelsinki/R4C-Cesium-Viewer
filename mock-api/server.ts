@@ -14,6 +14,7 @@ import { join } from 'path'
 
 const PORT = Number(process.env.PORT) || 5050
 const FIXTURES_DIR = join(import.meta.dir, 'fixtures')
+const startTime = Date.now()
 
 // Collection configurations
 interface CollectionConfig {
@@ -103,6 +104,126 @@ const COLLECTIONS: Record<string, CollectionConfig> = {
 
 // Cache loaded fixtures
 const fixtureCache = new Map<string, GeoJSON.FeatureCollection>()
+
+// Health check types
+interface ComponentStatus {
+	name: string
+	status: 'healthy' | 'unhealthy' | 'degraded'
+	message?: string
+	details?: Record<string, unknown>
+}
+
+interface HealthResponse {
+	status: 'healthy' | 'unhealthy' | 'degraded'
+	timestamp: string
+	server: string
+	uptime: number
+	components: ComponentStatus[]
+}
+
+/**
+ * Check if all fixture files exist and are loadable
+ */
+function checkFixtures(): ComponentStatus {
+	const missingFiles: string[] = []
+	const loadErrors: string[] = []
+
+	for (const [collection, config] of Object.entries(COLLECTIONS)) {
+		const filepath = join(FIXTURES_DIR, config.file)
+		if (!existsSync(filepath)) {
+			missingFiles.push(config.file)
+		} else {
+			// Try to load and parse the file
+			try {
+				const data = loadFixture(config.file)
+				if (!data || !data.features) {
+					loadErrors.push(`${config.file}: Invalid GeoJSON structure`)
+				}
+			} catch (error) {
+				loadErrors.push(
+					`${config.file}: ${error instanceof Error ? error.message : 'Unknown error'}`
+				)
+			}
+		}
+	}
+
+	if (missingFiles.length > 0) {
+		return {
+			name: 'fixtures',
+			status: 'unhealthy',
+			message: `Missing fixture files: ${missingFiles.join(', ')}`,
+			details: { missingFiles, loadErrors },
+		}
+	}
+
+	if (loadErrors.length > 0) {
+		return {
+			name: 'fixtures',
+			status: 'degraded',
+			message: `Some fixtures have issues: ${loadErrors.length} errors`,
+			details: { loadErrors },
+		}
+	}
+
+	return {
+		name: 'fixtures',
+		status: 'healthy',
+		message: `All ${Object.keys(COLLECTIONS).length} fixture files available`,
+		details: {
+			fixtureCount: Object.keys(COLLECTIONS).length,
+			cachedCount: fixtureCache.size,
+		},
+	}
+}
+
+/**
+ * Perform health check for mock API
+ */
+function performHealthCheck(): HealthResponse {
+	const fixtureStatus = checkFixtures()
+
+	const overallStatus =
+		fixtureStatus.status === 'unhealthy' ? 'unhealthy' : fixtureStatus.status
+
+	return {
+		status: overallStatus,
+		timestamp: new Date().toISOString(),
+		server: 'r4c-mock-api',
+		uptime: Math.floor((Date.now() - startTime) / 1000),
+		components: [fixtureStatus],
+	}
+}
+
+/**
+ * Get detailed status including all collections
+ */
+function getDetailedStatus(): Record<string, unknown> {
+	const health = performHealthCheck()
+
+	const collectionDetails = Object.entries(COLLECTIONS).map(
+		([id, config]) => {
+			const data = loadFixture(config.file)
+			return {
+				id,
+				file: config.file,
+				featureCount: data?.features?.length || 0,
+				supportsPostalCode: config.supportsPostalCode,
+				supportsBbox: config.supportsBbox,
+				loaded: fixtureCache.has(config.file),
+			}
+		}
+	)
+
+	return {
+		...health,
+		environment: 'mock',
+		collections: collectionDetails,
+		memory: {
+			heapUsed: process.memoryUsage?.()?.heapUsed || 'N/A',
+			heapTotal: process.memoryUsage?.()?.heapTotal || 'N/A',
+		},
+	}
+}
 
 interface GeoJSONFeature {
 	type: 'Feature'
@@ -291,12 +412,57 @@ const server = Bun.serve({
 			})
 		}
 
-		// Root / health check
-		if (path === '/' || path === '/health') {
-			return Response.json({
-				status: 'ok',
-				server: 'r4c-mock-api',
-				collections: Object.keys(COLLECTIONS).length,
+		// Liveness probe - always returns ok if service is running
+		if (path === '/live' || path === '/livez') {
+			return Response.json(
+				{
+					status: 'ok',
+					timestamp: new Date().toISOString(),
+				},
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Access-Control-Allow-Origin': '*',
+					},
+				}
+			)
+		}
+
+		// Health check - returns healthy only when all components work
+		if (path === '/' || path === '/health' || path === '/healthz') {
+			const health = performHealthCheck()
+			const statusCode = health.status === 'unhealthy' ? 503 : 200
+
+			return Response.json(health, {
+				status: statusCode,
+				headers: {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': '*',
+				},
+			})
+		}
+
+		// Readiness probe - same as health check
+		if (path === '/ready' || path === '/readyz') {
+			const health = performHealthCheck()
+			const statusCode = health.status === 'unhealthy' ? 503 : 200
+
+			return Response.json(health, {
+				status: statusCode,
+				headers: {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': '*',
+				},
+			})
+		}
+
+		// Detailed status - includes all components and collections
+		if (path === '/status') {
+			return Response.json(getDetailedStatus(), {
+				headers: {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': '*',
+				},
 			})
 		}
 
@@ -354,6 +520,12 @@ console.log(`
   ====================
 
   Running on: http://localhost:${PORT}
+
+  Health Endpoints:
+    /health  - Health check (returns 503 if unhealthy)
+    /ready   - Readiness probe (K8s)
+    /live    - Liveness probe (K8s)
+    /status  - Detailed status of all components
 
   Collections:
 ${Object.keys(COLLECTIONS)

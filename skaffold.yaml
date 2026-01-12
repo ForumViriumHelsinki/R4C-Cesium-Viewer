@@ -37,6 +37,7 @@ manifests:
     - k8s/service.yaml
     - k8s/ingress.yaml
     - k8s/pygeoapi-deployment.yaml
+    - k8s/health-service-deployment.yaml
     # PostgreSQL with PostGIS (simple single-instance deployment)
     - k8s/postgresql-secret.yaml
     - k8s/postgresql-configmap.yaml
@@ -57,6 +58,11 @@ portForward:
     port: 80
     localPort: 4173
     address: 127.0.0.1
+  - resourceType: service
+    resourceName: health-service
+    port: 5051
+    localPort: 5051
+    address: 127.0.0.1
 profiles:
   # Services only (PostgreSQL, pygeoapi) - use with 'npm run dev' for frontend
   - name: services-only
@@ -74,6 +80,7 @@ profiles:
         - k8s/migration-secret.yaml
         - k8s/migration-job.yaml
         - k8s/pygeoapi-deployment.yaml
+        - k8s/health-service-deployment.yaml
         - k8s/postgresql-secret.yaml
         - k8s/postgresql-configmap.yaml
         - k8s/postgresql-pvc.yaml
@@ -92,6 +99,11 @@ profiles:
         resourceName: pygeoapi
         port: 80
         localPort: 5001
+        address: 127.0.0.1
+      - resourceType: service
+        resourceName: health-service
+        port: 5051
+        localPort: 5051
         address: 127.0.0.1
 
   # Frontend only - assumes services-only is already running
@@ -141,6 +153,7 @@ profiles:
         - k8s/service.yaml
         - k8s/ingress.yaml
         - k8s/pygeoapi-deployment.yaml
+        - k8s/health-service-deployment.yaml
         # PostgreSQL with PostGIS (simple single-instance deployment)
         - k8s/postgresql-secret.yaml
         - k8s/postgresql-configmap.yaml

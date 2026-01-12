@@ -1,0 +1,386 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-service
+  namespace: regions4climate
+  labels:
+    app: health-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: health-service
+  template:
+    metadata:
+      labels:
+        app: health-service
+    spec:
+      containers:
+        - name: health-service
+          image: oven/bun:1-alpine
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              apk add --no-cache postgresql-client wget &&
+              cd /app &&
+              bun install &&
+              bun run server.ts
+          ports:
+            - containerPort: 5051
+              name: http
+          env:
+            - name: PORT
+              value: "5051"
+            - name: DB_HOST
+              value: postgresql
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: regions4climate
+            - name: DB_USER
+              value: regions4climate_user
+            - name: DB_PASSWORD
+              value: regions4climate_pass
+            - name: PYGEOAPI_URL
+              value: http://pygeoapi:80
+            - name: CHECK_EXTERNAL_SERVICES
+              value: "false"
+          volumeMounts:
+            - name: source
+              mountPath: /app
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: source
+          configMap:
+            name: health-service-source
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-service
+  namespace: regions4climate
+  labels:
+    app: health-service
+spec:
+  selector:
+    app: health-service
+  ports:
+    - port: 5051
+      targetPort: 5051
+      protocol: TCP
+      name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: health-service-source
+  namespace: regions4climate
+data:
+  package.json: |
+    {
+      "name": "r4c-health-service",
+      "version": "1.0.0",
+      "type": "module",
+      "scripts": {
+        "start": "bun run server.ts"
+      }
+    }
+  server.ts: |
+    /**
+     * R4C Health Check Service
+     *
+     * Provides comprehensive health and status endpoints for monitoring the R4C application.
+     * Checks database connectivity, PyGeoAPI availability, and external service health.
+     */
+
+    const PORT = Number(process.env.PORT) || 5051
+    const DB_HOST = process.env.DB_HOST || 'postgresql'
+    const DB_PORT = Number(process.env.DB_PORT) || 5432
+    const DB_NAME = process.env.DB_NAME || 'regions4climate'
+    const DB_USER = process.env.DB_USER || 'regions4climate_user'
+    const DB_PASSWORD = process.env.DB_PASSWORD || 'regions4climate_pass'
+    const PYGEOAPI_URL = process.env.PYGEOAPI_URL || 'http://pygeoapi:80'
+    const CHECK_EXTERNAL_SERVICES = process.env.CHECK_EXTERNAL_SERVICES === 'true'
+
+    interface ComponentStatus {
+      name: string
+      status: 'healthy' | 'unhealthy' | 'degraded' | 'unknown'
+      responseTime?: number
+      message?: string
+      details?: Record<string, unknown>
+    }
+
+    interface HealthResponse {
+      status: 'healthy' | 'unhealthy' | 'degraded'
+      timestamp: string
+      version: string
+      uptime: number
+      components: ComponentStatus[]
+    }
+
+    const startTime = Date.now()
+
+    async function checkDatabase(): Promise<ComponentStatus> {
+      const start = Date.now()
+      try {
+        const connectionString = `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`
+
+        const proc = Bun.spawn(
+          ['psql', connectionString, '-c', 'SELECT 1 as health_check;', '-t', '-A'],
+          { stdout: 'pipe', stderr: 'pipe' }
+        )
+
+        const exitCode = await proc.exited
+        const stdout = await new Response(proc.stdout).text()
+
+        if (exitCode === 0 && stdout.trim() === '1') {
+          const tableCheck = Bun.spawn(
+            ['psql', connectionString, '-c', "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'r4c_hsy_building_mat';", '-t', '-A'],
+            { stdout: 'pipe', stderr: 'pipe' }
+          )
+
+          const tableExitCode = await tableCheck.exited
+          const tableStdout = await new Response(tableCheck.stdout).text()
+          const tableExists = tableExitCode === 0 && parseInt(tableStdout.trim()) > 0
+
+          return {
+            name: 'database',
+            status: tableExists ? 'healthy' : 'degraded',
+            responseTime: Date.now() - start,
+            message: tableExists ? 'Connected and critical tables present' : 'Connected but critical tables missing',
+            details: { host: DB_HOST, port: DB_PORT, database: DB_NAME, criticalTablesPresent: tableExists }
+          }
+        }
+
+        return {
+          name: 'database',
+          status: 'unhealthy',
+          responseTime: Date.now() - start,
+          message: 'Failed to connect to database',
+          details: { host: DB_HOST, port: DB_PORT, database: DB_NAME }
+        }
+      } catch (error) {
+        return {
+          name: 'database',
+          status: 'unhealthy',
+          responseTime: Date.now() - start,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          details: { host: DB_HOST, port: DB_PORT, database: DB_NAME }
+        }
+      }
+    }
+
+    async function checkPyGeoAPI(): Promise<ComponentStatus> {
+      const start = Date.now()
+      try {
+        const response = await fetch(`${PYGEOAPI_URL}/collections`, {
+          signal: AbortSignal.timeout(10000)
+        })
+
+        if (response.ok) {
+          const data = await response.json() as { collections?: unknown[] }
+          const collectionCount = data.collections?.length || 0
+
+          return {
+            name: 'pygeoapi',
+            status: 'healthy',
+            responseTime: Date.now() - start,
+            message: `PyGeoAPI responding with ${collectionCount} collections`,
+            details: { url: PYGEOAPI_URL, collectionCount }
+          }
+        }
+
+        return {
+          name: 'pygeoapi',
+          status: 'unhealthy',
+          responseTime: Date.now() - start,
+          message: `PyGeoAPI returned status ${response.status}`,
+          details: { url: PYGEOAPI_URL, statusCode: response.status }
+        }
+      } catch (error) {
+        return {
+          name: 'pygeoapi',
+          status: 'unhealthy',
+          responseTime: Date.now() - start,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          details: { url: PYGEOAPI_URL }
+        }
+      }
+    }
+
+    async function checkHSYWMS(): Promise<ComponentStatus> {
+      const start = Date.now()
+      try {
+        const wmsUrl = 'https://kartta.hsy.fi/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities'
+        const response = await fetch(wmsUrl, { signal: AbortSignal.timeout(15000) })
+
+        return {
+          name: 'hsy_wms',
+          status: response.ok ? 'healthy' : 'degraded',
+          responseTime: Date.now() - start,
+          message: response.ok ? 'HSY WMS service available' : `HSY WMS returned status ${response.status}`,
+          details: { url: 'kartta.hsy.fi' }
+        }
+      } catch (error) {
+        return {
+          name: 'hsy_wms',
+          status: 'degraded',
+          responseTime: Date.now() - start,
+          message: 'HSY WMS service unreachable (external dependency)',
+          details: { url: 'kartta.hsy.fi' }
+        }
+      }
+    }
+
+    async function checkStatFi(): Promise<ComponentStatus> {
+      const start = Date.now()
+      try {
+        const response = await fetch(
+          'https://geo.stat.fi/geoserver/postialue/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities',
+          { signal: AbortSignal.timeout(15000) }
+        )
+
+        return {
+          name: 'stat_fi',
+          status: response.ok ? 'healthy' : 'degraded',
+          responseTime: Date.now() - start,
+          message: response.ok ? 'Statistics Finland WFS available' : `Statistics Finland WFS returned status ${response.status}`,
+          details: { url: 'geo.stat.fi' }
+        }
+      } catch (error) {
+        return {
+          name: 'stat_fi',
+          status: 'degraded',
+          responseTime: Date.now() - start,
+          message: 'Statistics Finland WFS unreachable (external dependency)',
+          details: { url: 'geo.stat.fi' }
+        }
+      }
+    }
+
+    async function performHealthChecks(includeExternal: boolean = false): Promise<HealthResponse> {
+      const checks: Promise<ComponentStatus>[] = [checkDatabase(), checkPyGeoAPI()]
+
+      if (includeExternal) {
+        checks.push(checkHSYWMS(), checkStatFi())
+      }
+
+      const components = await Promise.all(checks)
+
+      const criticalComponents = components.filter(c => ['database', 'pygeoapi'].includes(c.name))
+      const hasCriticalFailure = criticalComponents.some(c => c.status === 'unhealthy')
+      const hasDegraded = components.some(c => c.status === 'degraded')
+
+      let overallStatus: 'healthy' | 'unhealthy' | 'degraded'
+      if (hasCriticalFailure) {
+        overallStatus = 'unhealthy'
+      } else if (hasDegraded) {
+        overallStatus = 'degraded'
+      } else {
+        overallStatus = 'healthy'
+      }
+
+      return {
+        status: overallStatus,
+        timestamp: new Date().toISOString(),
+        version: '1.0.0',
+        uptime: Math.floor((Date.now() - startTime) / 1000),
+        components
+      }
+    }
+
+    function livenessCheck(): { status: string; timestamp: string } {
+      return { status: 'ok', timestamp: new Date().toISOString() }
+    }
+
+    const server = Bun.serve({
+      port: PORT,
+      async fetch(req) {
+        const url = new URL(req.url)
+        const path = url.pathname
+
+        const corsHeaders = {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        }
+
+        if (req.method === 'OPTIONS') {
+          return new Response(null, { headers: corsHeaders })
+        }
+
+        if (path === '/live' || path === '/livez') {
+          return Response.json(livenessCheck(), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          })
+        }
+
+        if (path === '/' || path === '/health' || path === '/healthz') {
+          const health = await performHealthChecks(false)
+          const statusCode = health.status === 'unhealthy' ? 503 : 200
+          return Response.json(health, {
+            status: statusCode,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          })
+        }
+
+        if (path === '/ready' || path === '/readyz') {
+          const health = await performHealthChecks(false)
+          const statusCode = health.status === 'unhealthy' ? 503 : 200
+          return Response.json(health, {
+            status: statusCode,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          })
+        }
+
+        if (path === '/status') {
+          const includeExternal = url.searchParams.get('external') !== 'false' && CHECK_EXTERNAL_SERVICES
+          const health = await performHealthChecks(includeExternal)
+          return Response.json({
+            ...health,
+            environment: process.env.NODE_ENV || 'production',
+            checkExternalServices: CHECK_EXTERNAL_SERVICES
+          }, {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          })
+        }
+
+        return Response.json({
+          error: 'Not found',
+          availableEndpoints: [
+            '/health - Health check (returns 503 if unhealthy)',
+            '/ready - Readiness probe',
+            '/live - Liveness probe',
+            '/status - Detailed status of all components'
+          ]
+        }, {
+          status: 404,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        })
+      }
+    })
+
+    console.log(`Health service running on port ${PORT}`)

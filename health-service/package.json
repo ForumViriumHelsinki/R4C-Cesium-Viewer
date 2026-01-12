@@ -1,0 +1,14 @@
+{
+	"name": "r4c-health-service",
+	"version": "1.0.0",
+	"description": "Health check service for R4C Cesium Viewer",
+	"type": "module",
+	"scripts": {
+		"start": "bun run server.ts",
+		"dev": "bun run --watch server.ts"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@types/bun": "^1.2.0"
+	}
+}
