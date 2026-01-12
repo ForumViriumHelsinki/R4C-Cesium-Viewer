@@ -312,12 +312,34 @@ jobs:
               });
             }
 
-      - name: Check Lighthouse assertions
-        if: steps.lighthouse.outputs.exit_code != '0'
+      - name: Check Lighthouse results
         run: |
-          echo "Lighthouse CI assertions failed with exit code ${{ steps.lighthouse.outputs.exit_code }}"
-          echo "Review the lighthouse-output.txt artifact for details"
+          EXIT_CODE="${{ steps.lighthouse.outputs.exit_code }}"
+          ERROR_MESSAGE="${{ steps.parse-results.outputs.error_message }}"
+          PERFORMANCE="${{ steps.parse-results.outputs.performance }}"
 
-          # For now, don't fail the workflow - just warn
-          # exit ${{ steps.lighthouse.outputs.exit_code }}
-          exit 0
+          echo "Lighthouse exit code: $EXIT_CODE"
+          echo "Error message: $ERROR_MESSAGE"
+          echo "Performance score: $PERFORMANCE"
+
+          # Fail if Lighthouse didn't produce any results
+          if [ -n "$ERROR_MESSAGE" ]; then
+            echo "::error::Lighthouse CI failed: $ERROR_MESSAGE"
+            echo "Review the lighthouse-output.txt artifact for details"
+            exit 1
+          fi
+
+          # Fail if performance score is empty (no results)
+          if [ -z "$PERFORMANCE" ] || [ "$PERFORMANCE" = "error" ]; then
+            echo "::error::Lighthouse CI did not produce valid results"
+            exit 1
+          fi
+
+          # Warn about assertion failures but don't fail the workflow
+          # (assertions may fail for expected reasons like CesiumJS performance)
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "::warning::Lighthouse CI assertions had warnings (exit code: $EXIT_CODE)"
+            echo "This is expected for CesiumJS applications with heavy initial load"
+          fi
+
+          echo "Lighthouse CI completed successfully with Performance score: $PERFORMANCE"

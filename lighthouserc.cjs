@@ -14,16 +14,31 @@ module.exports = {
 			// Build the production bundle and start preview server
 			startServerCommand: 'bun run preview',
 
+			// Pattern to detect when server is ready
+			// Vite outputs: "➜  Local:   http://localhost:4173/"
+			// Default pattern is /listen|ready/i which doesn't match Vite's output
+			startServerReadyPattern: 'Local:',
+
+			// Timeout for server startup (ms) - allow extra time for CI
+			startServerReadyTimeout: 30000,
+
 			// Test URL - preview server runs on port 4173 by default
 			url: ['http://localhost:4173/'],
 
 			// Number of runs for each URL to get median values
 			numberOfRuns: 3,
 
+			// Max wait time for page load (ms) - CesiumJS is heavy
+			maxWaitForLoad: 90000,
+
 			// Additional settings for more accurate measurements
 			settings: {
 				// Lighthouse preset
 				preset: 'desktop',
+
+				// Increase max wait time for page to load (CesiumJS is heavy)
+				maxWaitForFcp: 60000,
+				maxWaitForLoad: 90000,
 
 				// Disable throttling for CI environment
 				// (GitHub Actions runners are already slower than local dev)
@@ -32,6 +47,16 @@ module.exports = {
 					throughputKbps: 10240,
 					cpuSlowdownMultiplier: 1,
 				},
+
+				// Chrome flags for better CI performance
+				chromeFlags: [
+					'--disable-gpu',
+					'--no-sandbox',
+					'--disable-dev-shm-usage',
+					'--disable-background-timer-throttling',
+					'--disable-backgrounding-occluded-windows',
+					'--disable-renderer-backgrounding',
+				],
 
 				// Skip PWA and some unused audits to speed up CI
 				skipAudits: [
