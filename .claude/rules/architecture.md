@@ -73,3 +73,55 @@ Primary data from:
 - Helsinki Region Environmental Services (HSY)
 - Statistics Finland
 - Environmental monitoring systems for climate resilience research
+
+## Component Organization
+
+### Size Guidelines
+
+| Type | Max Lines | Action if Exceeded |
+|------|-----------|-------------------|
+| Vue Component | 400 | Extract composables or child components |
+| Service File | 300 | Split into focused modules |
+| Function | 80 | Extract helper functions |
+
+### Refactoring Patterns
+
+**Large Vue Components** → Extract composables:
+
+```
+src/composables/
+├── useViewportLoading.js  # Viewport streaming logic
+├── useCesiumEvents.js     # Event handling
+└── useCameraControls.js   # Camera state
+```
+
+**Large Service Files** → Split into modules:
+
+```
+src/services/building/
+├── index.js              # Re-exports
+├── buildingLoader.js     # Data fetching
+├── buildingFilter.js     # Filtering
+└── buildingStyler.js     # Styling
+```
+
+**Complex Components** → Extract children:
+
+```
+src/components/MapControls/
+├── MapControls.vue         # Parent
+├── DataLayerControls.vue   # Child
+└── VisualizationControls.vue # Child
+```
+
+### Utilities Directory
+
+Extract reusable logic to utilities:
+
+```
+src/utils/
+├── batchProcessor.js  # Batch processing
+├── entityStyling.js   # Entity styling helpers
+├── validators.js      # Input validation
+└── logger.js          # Logging utility
+```
