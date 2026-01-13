@@ -428,11 +428,12 @@ const cacheStats = ref({})
 const refreshTimer = ref(null)
 
 // Data sources to monitor
+// Uses /status/* health check endpoints for better error detection
 const dataSources = ref([
 	{
 		id: 'pygeoapi',
 		name: 'PyGeoAPI',
-		url: '/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=1',
+		url: '/status/pygeoapi',
 		type: 'heat-exposure',
 		status: 'unknown',
 		message: 'Not checked',
@@ -445,10 +446,10 @@ const dataSources = ref([
 		cacheSize: null,
 	},
 	{
-		id: 'hsy-action',
-		name: 'HSY Environmental',
-		url: '/hsy-action?action_route=GetHierarchicalMapLayerGroups',
-		type: 'environmental',
+		id: 'hsy-wms',
+		name: 'HSY Map Services',
+		url: '/status/hsy-wms',
+		type: 'wms',
 		status: 'unknown',
 		message: 'Not checked',
 		loading: false,
@@ -460,9 +461,9 @@ const dataSources = ref([
 		cacheSize: null,
 	},
 	{
-		id: 'paavo',
+		id: 'stat-fi',
 		name: 'Statistics Finland',
-		url: '/paavo',
+		url: '/status/stat-fi',
 		type: 'postal-codes',
 		status: 'unknown',
 		message: 'Not checked',
@@ -477,8 +478,23 @@ const dataSources = ref([
 	{
 		id: 'digitransit',
 		name: 'Digitransit API',
-		url: '/digitransit/geocoding/v1/search?text=Helsinki',
+		url: '/status/digitransit',
 		type: 'geocoding',
+		status: 'unknown',
+		message: 'Not checked',
+		loading: false,
+		retrying: false,
+		cached: false,
+		lastUpdated: null,
+		responseTime: null,
+		cacheAge: null,
+		cacheSize: null,
+	},
+	{
+		id: 'helsinki-wms',
+		name: 'Helsinki Map Services',
+		url: '/status/helsinki-wms',
+		type: 'wms',
 		status: 'unknown',
 		message: 'Not checked',
 		loading: false,
@@ -536,6 +552,11 @@ const getStatusColor = (status) => {
 const getStatusIcon = (source) => {
 	if (source.loading) return 'mdi-loading'
 
+	// Show specific icon for auth errors
+	if (source.status === 'error' && source.errorType === 'auth') {
+		return 'mdi-key-alert'
+	}
+
 	const icons = {
 		healthy: 'mdi-check-circle',
 		degraded: 'mdi-alert',
@@ -567,7 +588,7 @@ const checkHealth = async (sourceId) => {
 			source.cacheSize = new Blob([JSON.stringify(cached.data)]).size
 		}
 
-		// Make health check request
+		// Make health check request to /status/* endpoint
 		const response = await fetch(source.url, {
 			method: 'GET',
 			headers: { Accept: 'application/json' },
@@ -578,13 +599,15 @@ const checkHealth = async (sourceId) => {
 		source.lastUpdated = Date.now()
 
 		if (response.ok) {
-			const data = await response.json()
-
-			// Cache the response
-			await cacheService.setData(cacheKey, data, {
-				type: source.type,
-				ttl: 5 * 60 * 1000, // 5 minutes for health checks
-			})
+			// Service is healthy - cache the response
+			await cacheService.setData(
+				cacheKey,
+				{ healthy: true },
+				{
+					type: source.type,
+					ttl: 5 * 60 * 1000, // 5 minutes for health checks
+				}
+			)
 
 			if (responseTime > 5000) {
 				source.status = 'degraded'
@@ -594,12 +617,36 @@ const checkHealth = async (sourceId) => {
 				source.message = `Responsive (${responseTime}ms)`
 			}
 		} else {
-			source.status = 'error'
-			source.message = `HTTP ${response.status}: ${response.statusText}`
+			// Try to parse error response from nginx health endpoints
+			let errorType = 'unknown'
+			let errorMessage = `HTTP ${response.status}`
+
+			try {
+				const errorData = await response.json()
+				if (errorData.error === 'auth_error') {
+					errorType = 'auth'
+					errorMessage = 'Authentication failed - check API keys'
+					source.status = 'error'
+				} else if (errorData.error === 'service_error') {
+					errorType = 'service'
+					errorMessage = 'Service unavailable'
+					source.status = 'error'
+				} else if (errorData.message) {
+					errorMessage = errorData.message
+					source.status = 'error'
+				}
+			} catch {
+				// Response wasn't JSON, use generic error
+				source.status = 'error'
+			}
+
+			source.message = errorMessage
+			source.errorType = errorType
 		}
 	} catch (error) {
 		source.status = 'error'
 		source.message = error.message || 'Connection failed'
+		source.errorType = 'network'
 		source.responseTime = Date.now() - startTime
 	} finally {
 		source.loading = false
