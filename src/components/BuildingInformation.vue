@@ -88,6 +88,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { findAddressForBuilding } from '../services/address.js'
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
+import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
 
 export default {
@@ -95,11 +96,13 @@ export default {
 		const store = useGlobalStore()
 		const viewer = store.cesiumViewer
 		const buildingStore = useBuildingStore()
+		const urlStore = useURLStore()
 		const showTooltip = ref(false)
 		const mousePosition = ref({ x: 0, y: 0 })
 		const buildingAttributes = ref(null)
 		const pickPending = ref(false)
 		const handlerRegistered = ref(false)
+		const fetchingBuildingId = ref(null) // Track in-flight lazy fetch
 
 		logger.debug('[BuildingInformation] 🎬 Component setup started')
 
@@ -146,8 +149,61 @@ export default {
 		const heatDataDate = computed(() => store.heatDataDate)
 
 		/**
+		 * Lazy-fetches a single building from the API when not found in cache.
+		 * Adds the fetched feature to the store for future lookups.
+		 *
+		 * @async
+		 * @param {string} buildingId - Building ID (vtj_prt format: 9 digits + letter)
+		 * @returns {Promise<Object|null>} Feature properties or null if fetch failed
+		 */
+		const lazyFetchBuilding = async (buildingId) => {
+			// Avoid duplicate fetches for the same building
+			if (fetchingBuildingId.value === buildingId) {
+				return null
+			}
+
+			fetchingBuildingId.value = buildingId
+			logger.debug('[BuildingInformation] 🔄 Lazy-fetching building:', buildingId)
+
+			try {
+				const url = urlStore.hsyBuildingById(buildingId)
+				const response = await fetch(url)
+
+				if (!response.ok) {
+					logger.warn('[BuildingInformation] ⚠️ Lazy fetch failed:', response.status)
+					return null
+				}
+
+				const geojson = await response.json()
+
+				if (!geojson.features || geojson.features.length === 0) {
+					logger.warn('[BuildingInformation] ⚠️ No features returned for:', buildingId)
+					return null
+				}
+
+				const feature = geojson.features[0]
+				// Ensure feature has top-level ID for future lookups
+				if (!feature.id && feature.properties?.vtj_prt) {
+					feature.id = feature.properties.vtj_prt
+				}
+
+				// Add to store for future lookups (without LRU tracking to avoid eviction churn)
+				buildingStore.setBuildingFeatures({ features: [feature] })
+
+				logger.debug('[BuildingInformation] ✅ Lazy-fetched and cached:', buildingId)
+				return feature.properties
+			} catch (error) {
+				logger.error('[BuildingInformation] ❌ Lazy fetch error:', error)
+				return null
+			} finally {
+				fetchingBuildingId.value = null
+			}
+		}
+
+		/**
 		 * Fetches building information based on the hovered entity.
 		 * Validates entity ID, finds matching feature in GeoJSON, and extracts properties.
+		 * Falls back to lazy-fetching from API if not found in cache.
 		 *
 		 * ID Validation:
 		 * - Must match pattern: 9 digits followed by 1 uppercase letter
@@ -179,33 +235,33 @@ export default {
 				logger.debug('[BuildingInformation] ✓ Entity ID matches pattern:', entity._id)
 				logger.debug('[BuildingInformation] 📦 Searching in', features?.length || 0, 'features')
 
+				// First, try to find in cache
+				let properties = null
 				if (features) {
 					const matchingFeature = features.find((feature) => feature.id === entity._id)
-
 					if (matchingFeature) {
 						logger.debug('[BuildingInformation] ✅ Found matching feature:', matchingFeature.id)
-						const properties = matchingFeature.properties
-
-						buildingAttributes.value = {
-							avg_temp_c: findAverageTempC(properties),
-							rakennusaine_s: properties.rakennusaine_s,
-							address: findAddressForBuilding(properties),
-						}
-						showTooltip.value = true
-						logger.debug(
-							'[BuildingInformation] 🎯 Tooltip displayed with:',
-							buildingAttributes.value
-						)
-					} else {
-						showTooltip.value = false
-						logger.warn('[BuildingInformation] ❌ No matching feature found for Id:', entity._id)
-						logger.debug(
-							'[BuildingInformation] Sample feature IDs:',
-							features.slice(0, 5).map((f) => f.id)
-						)
+						properties = matchingFeature.properties
 					}
+				}
+
+				// If not in cache, lazy-fetch from API
+				if (!properties) {
+					logger.debug('[BuildingInformation] 🔄 Cache miss, trying lazy fetch for:', entity._id)
+					properties = await lazyFetchBuilding(entity._id)
+				}
+
+				if (properties) {
+					buildingAttributes.value = {
+						avg_temp_c: findAverageTempC(properties),
+						rakennusaine_s: properties.rakennusaine_s,
+						address: findAddressForBuilding(properties),
+					}
+					showTooltip.value = true
+					logger.debug('[BuildingInformation] 🎯 Tooltip displayed with:', buildingAttributes.value)
 				} else {
 					showTooltip.value = false
+					logger.warn('[BuildingInformation] ❌ Could not find or fetch building:', entity._id)
 				}
 			} catch (error) {
 				showTooltip.value = false

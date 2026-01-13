@@ -937,7 +937,7 @@ export default class ViewportBuildingLoader {
 
 	/**
 	 * Unload a single tile
-	 * Removes datasource and clears tile from tracking.
+	 * Removes datasource, evicts features from building store, and clears tile from tracking.
 	 *
 	 * @param {string} tileKey - Tile key to unload
 	 * @returns {Promise<void>}
@@ -948,10 +948,15 @@ export default class ViewportBuildingLoader {
 
 		try {
 			await this.datasourceService.removeDataSourcesByNamePrefix(datasourceName)
+
+			// Also evict features from building store to keep cache in sync with visible entities
+			// This prevents orphaned features in the cache and ensures consistent behavior
+			this.buildingStore.evictPostalCode(tileKey)
+
 			this.loadedTiles.delete(tileKey)
 			this.visibleTiles.delete(tileKey)
 
-			logger.debug(`[ViewportBuildingLoader] Tile ${tileKey} unloaded`)
+			logger.debug(`[ViewportBuildingLoader] Tile ${tileKey} unloaded (entities + features)`)
 		} catch (error) {
 			logger.error(`[ViewportBuildingLoader] Error unloading tile ${tileKey}:`, error)
 		}
