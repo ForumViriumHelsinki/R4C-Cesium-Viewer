@@ -6,6 +6,7 @@ import logger from '../utils/logger.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
 import Datasource from './datasource.js'
 import Decoding from './decoding.js'
+import unifiedLoader from './unifiedLoader.js'
 
 /**
  * Urban Heat Service
@@ -42,6 +43,66 @@ export default class Urbanheat {
 		this.viewer = this.store.cesiumViewer
 		this.datasourceService = new Datasource()
 		this.urlStore = useURLStore()
+	}
+
+	/**
+	 * Fetches heat exposure data independently from building data.
+	 * Uses unifiedLoader for IndexedDB caching with 1-hour TTL.
+	 * This method can be called in parallel with building data fetching.
+	 *
+	 * @param {string} postalCode - Postal code to fetch heat data for
+	 * @returns {Promise<Object|null>} Heat data GeoJSON or null if unavailable
+	 */
+	async getHeatData(postalCode) {
+		try {
+			const heatConfig = {
+				layerId: `heat_${postalCode}`,
+				url: this.urlStore.urbanHeatHelsinki(postalCode),
+				type: 'geojson',
+				options: {
+					cache: true,
+					cacheTTL: 60 * 60 * 1000, // 1 hour
+					retries: 2,
+					progressive: false,
+					priority: 'high',
+				},
+			}
+
+			logger.debug('[UrbanHeat] 🌡️ Fetching heat data for postal code:', postalCode)
+			const heatData = await unifiedLoader.loadLayer(heatConfig)
+			logger.debug('[UrbanHeat] ✅ Heat data loaded:', heatData?.features?.length || 0, 'features')
+			return heatData
+		} catch (error) {
+			logger.warn('[UrbanHeat] ⚠️ Failed to fetch heat data for', postalCode, ':', error.message)
+			return null
+		}
+	}
+
+	/**
+	 * Merges heat exposure data with building data.
+	 * This is a separate method to allow independent fetching and merging.
+	 * Updates buildingStore with building features.
+	 *
+	 * @param {Object} buildingData - Building GeoJSON data
+	 * @param {Object|null} heatData - Heat GeoJSON data (optional, may be null if unavailable)
+	 * @param {string} postalCode - Postal code for the data
+	 * @returns {Promise<void>}
+	 */
+	async mergeHeatWithBuildings(buildingData, heatData, postalCode) {
+		const buildingStore = useBuildingStore()
+		buildingStore.setBuildingFeatures(buildingData, postalCode)
+
+		if (heatData?.features) {
+			logger.debug('[UrbanHeat] 🔄 Merging heat data with buildings...')
+			for (let i = 0; i < buildingData.features.length; i++) {
+				const feature = buildingData.features[i]
+				await setAttributesFromApiToBuilding(feature.properties, heatData.features)
+			}
+			addMissingHeatData(buildingData.features, heatData.features)
+			logger.debug('[UrbanHeat] ✅ Heat data merged with buildings')
+		} else {
+			logger.warn('[UrbanHeat] ⚠️ No heat data available for merging')
+		}
 	}
 
 	/**
