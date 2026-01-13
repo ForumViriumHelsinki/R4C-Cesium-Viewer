@@ -68,7 +68,7 @@ describe('batchProcessor', () => {
 
 			const items = Array.from({ length: 10 }, (_, i) => i)
 
-			await processBatch(items, vi.fn(), { batchSize: 3, yieldToMain: true })
+			await processBatch(items, vi.fn(), { batchSize: 3, yieldToMain: true, adaptive: false })
 
 			// With 10 items and batch size 3, we have 4 batches
 			// Yielding should happen 3 times (between batches, not after last)
@@ -130,7 +130,7 @@ describe('batchProcessor', () => {
 				(item, index, batch, batchIndex) => {
 					calls.push({ item, index, batch, batchIndex })
 				},
-				{ batchSize: 2 }
+				{ batchSize: 2, adaptive: false }
 			)
 
 			expect(calls).toEqual([
