@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.42.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.2...r4c-cesium-viewer-v1.42.3) (2026-01-13)
+
+
+### Bug Fixes
+
+* **ci:** add outputDir to Lighthouse CI config to ensure manifest.json creation ([#522](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/522)) ([50f167a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/50f167a92e4671615ee1400d49d9f3ab3bfb9f7f)), closes [#521](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/521)
+
+
+### Performance Improvements
+
+* building pipeline optimizations with parallel fetching and adaptive batching ([#524](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/524)) ([8ff7e12](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8ff7e12c41c110837af50be4d6668fe6820dee4f))
+
 ## [1.42.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.1...r4c-cesium-viewer-v1.42.2) (2026-01-13)
 
 
