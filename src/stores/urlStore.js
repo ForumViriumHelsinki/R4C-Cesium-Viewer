@@ -150,6 +150,17 @@ export const useURLStore = defineStore('url', {
 				return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=${limit}&bbox=${bboxString}`
 			},
 		/**
+		 * Generates URL for fetching a single HSY building by its vtj_prt ID
+		 * Used for lazy-loading building data when tooltip cache misses.
+		 * @param {Object} state - Pinia state
+		 * @returns {(buildingId: string) => string} Function accepting building ID and returning single building URL
+		 * @example
+		 * hsyBuildingById(state)('103142373A') // Single building by ID
+		 */
+		hsyBuildingById: (state) => (buildingId) => {
+			return `${state.pygeoapiBase}/hsy_buildings_optimized/items?f=json&limit=1&vtj_prt=${encodeURLParam(buildingId)}`
+		},
+		/**
 		 * Generates URL for landcover-to-parks adaptation scenario data
 		 * @param {Object} state - Pinia state
 		 * @returns {(gridId: number, limit?: number) => string} Function accepting grid cell ID and optional limit, returning adaptation URL

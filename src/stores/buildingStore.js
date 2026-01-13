@@ -24,7 +24,9 @@ export const useBuildingStore = defineStore('building', {
 		buildingFeatures: null,
 		timeseriesDate: '2023-06-23',
 		postalCodeCache: new Map(),
-		maxPostalCodes: 10,
+		// Must match MAX_LOADED_TILES in viewportBuildingLoader.js to prevent
+		// tooltip data being evicted while buildings are still visible on screen
+		maxPostalCodes: 50,
 	}),
 	actions: {
 		/**
