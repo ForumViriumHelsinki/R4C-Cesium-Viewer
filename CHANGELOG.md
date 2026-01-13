@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.42.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.1...r4c-cesium-viewer-v1.42.2) (2026-01-13)
+
+
+### Bug Fixes
+
+* **tooltips:** prevent building tooltip data eviction while visible ([#518](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/518)) ([c590bf5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c590bf5c988d40652ef4a32517f038a290786dcd))
+
+
+### Performance Improvements
+
+* **ci:** optimize container build for faster CI ([#516](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/516)) ([2095889](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/209588939d27bd20094e6f9d229c0248e77bdc9a))
+
 ## [1.42.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.0...r4c-cesium-viewer-v1.42.1) (2026-01-13)
 
 
