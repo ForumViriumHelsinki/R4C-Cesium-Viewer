@@ -33,12 +33,12 @@ make stop        # Stop all services
 
 Database data persists across `make stop` and even `skaffold delete`. Only `make db-reset` explicitly wipes the data.
 
-### Build and Development (npm)
+### Build and Development (Bun)
 
-- `npm run dev` - Start development server (accessible at http://localhost:5173)
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build (http://localhost:4173)
-- `npm run lint` - Run ESLint to check code quality
+- `bun run dev` - Start development server (accessible at http://localhost:5173)
+- `bun run build` - Build for production
+- `bun run preview` - Preview production build (http://localhost:4173)
+- `bun run lint` - Run Biome to check code quality
 
 ### Testing
 
@@ -47,16 +47,16 @@ See `docs/PERFORMANCE_MONITORING.md` for performance regression monitoring.
 
 **Quick commands:**
 
-- `npm run test:layer-controls` - Run single accessibility test file (fast iteration)
-- `npm run test:accessibility` - Run all accessibility tests
+- `bun run test:layer-controls` - Run single accessibility test file (fast iteration)
+- `bun run test:accessibility` - Run all accessibility tests
 - `npx playwright test --ui` - Run tests in interactive UI mode
-- `npm run test:accessibility:report` - View HTML test report
+- `bun run test:accessibility:report` - View HTML test report
 
 **Performance monitoring:**
 
-- `npm run test:performance:monitor` - Run tests with performance tracking
-- `npm run test:performance:check` - Check for performance regressions
-- `npm run test:performance:baseline` - Generate new performance baselines
+- `bun run test:performance:monitor` - Run tests with performance tracking
+- `bun run test:performance:check` - Check for performance regressions
+- `bun run test:performance:baseline` - Generate new performance baselines
 
 **Development workflow:** Use focused testing for 5-8x faster iteration during test fixes. See `.claude/commands/test-focused.md` for details.
 
@@ -321,6 +321,6 @@ Specialized knowledge repositories for common patterns:
 - `playwright-accessibility-testing.md` - Accessibility testing best practices
 - `cesium-performance-testing.md` - CesiumJS performance optimization patterns
 - `test-categorization.md` - Test organization and tag-based categorization
-- `package-lock-management.md` - Keeping npm lock files in sync with package.json
+- `bun-lock-management.md` - Keeping bun.lock in sync with package.json
 
 These skills are automatically available to Claude Code for reference when working on related tasks.

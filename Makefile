@@ -104,11 +104,11 @@ setup: ## First-time setup (install dependencies, check tools)
 	@echo "$(ARROW) Checking required tools..."
 	@command -v skaffold >/dev/null || { echo "$(CROSS) skaffold not found. Install: brew install skaffold"; exit 1; }
 	@command -v kubectl >/dev/null || { echo "$(CROSS) kubectl not found. Install: brew install kubectl"; exit 1; }
-	@command -v node >/dev/null || { echo "$(CROSS) node not found. Install: brew install node"; exit 1; }
+	@command -v bun >/dev/null || { echo "$(CROSS) bun not found. Install: brew install oven-sh/bun/bun"; exit 1; }
 	@echo "$(CHECK) All tools installed"
 	@echo ""
-	@echo "$(ARROW) Installing npm dependencies..."
-	@npm install
+	@echo "$(ARROW) Installing dependencies..."
+	@bun install
 	@echo ""
 	@echo "$(CHECK) Setup complete!"
 	@echo ""
@@ -151,7 +151,7 @@ dev: ## Start services + local frontend (fast iteration)
 	@echo "$(DIM)Frontend: http://localhost:5173$(RESET)"
 	@echo "$(DIM)PyGeoAPI: http://localhost:5000$(RESET)"
 	@echo ""
-	@npm run dev
+	@bun run dev
 
 dev-full: ## Start everything in Skaffold containers (services persist)
 	@echo "$(ARROW) Starting backend services (will persist on stop)..."
@@ -394,13 +394,13 @@ db-reset: ## WARNING: Delete database and start fresh
 # ==============================================================================
 
 test: ## Run all tests
-	npm run test:all
+	bun run test:all
 
 test-quick: ## Run unit tests only (fast)
-	npm run test:unit
+	bun run test:unit
 
 test-e2e: ## Run end-to-end tests
-	npm run test:e2e
+	bun run test:e2e
 
 # ==============================================================================
 # Mock API (No Database Required)
@@ -449,7 +449,7 @@ dev-mock: ## Start frontend with mock API (no database/K8s needed)
 	@echo "$(DIM)Frontend: http://localhost:5173$(RESET)"
 	@echo "$(DIM)Mock API: http://localhost:5050$(RESET)"
 	@echo ""
-	@npm run dev || ($(MAKE) mock-stop && exit 1)
+	@bun run dev || ($(MAKE) mock-stop && exit 1)
 	@# Stop mock API when frontend exits
 	@$(MAKE) mock-stop
 
@@ -458,7 +458,7 @@ dev-mock: ## Start frontend with mock API (no database/K8s needed)
 # ==============================================================================
 
 lint: ## Run ESLint
-	npm run lint
+	bun run lint
 
 build: ## Production build
-	npm run build
+	bun run build

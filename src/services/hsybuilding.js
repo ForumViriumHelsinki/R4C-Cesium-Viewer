@@ -52,7 +52,7 @@ export default class HSYBuilding {
 	/**
 	 * Loads HSY buildings for a postal code or bounding box with caching support.
 	 * Uses unifiedLoader for IndexedDB caching with 1-hour TTL.
-	 * Fetches building data from HSY WFS service and processes grid attributes if applicable.
+	 * Fetches building and heat data in parallel for improved performance.
 	 *
 	 * @param {string} [bbox] - Optional bounding box for grid-based queries. If not provided, uses postal code.
 	 * @param {string} [postalCode] - Optional postal code to load buildings for. If not provided, uses current postal code from store.
@@ -61,65 +61,18 @@ export default class HSYBuilding {
 	async loadHSYBuildings(bbox, postalCode) {
 		try {
 			const targetPostalCode = postalCode || this.store.postalcode
-			const url = bbox
+			const buildingUrl = bbox
 				? this.urlStore.hsyGridBuildings(bbox)
 				: this.urlStore.hsyBuildings(targetPostalCode)
 
 			logger.debug('[HSYBuilding] 🏢 Loading HSY buildings for postal code:', targetPostalCode)
-			logger.debug('[HSYBuilding] API URL:', url)
+			logger.debug('[HSYBuilding] Building API URL:', buildingUrl)
 
-			const loadingConfig = {
+			// Configure building data fetch
+			const buildingConfig = {
 				layerId: `hsy_buildings_${targetPostalCode}${bbox ? '_grid' : ''}`,
-				url: url,
+				url: buildingUrl,
 				type: 'geojson',
-				processor: async (data, metadata) => {
-					const fromCache = metadata?.fromCache
-					logger.debug(
-						fromCache ? '[HSYBuilding] ✓ Using cached data' : '[HSYBuilding] ✅ Received',
-						data.features?.length || 0,
-						'building features'
-					)
-
-					// Only process grid attributes if we have a current grid cell
-					if (this.store.currentGridCell) {
-						await this.setGridAttributes(data.features)
-					}
-
-					// Determine initial visibility:
-					// - If loading for the currently selected postal code, show immediately (user clicked it)
-					// - If loading for viewport-based preloading (different postal code), start hidden
-					//   and let viewport culling logic control visibility
-					const isSelectedPostalCode = targetPostalCode === this.store.postalcode
-					const initialVisibility = isSelectedPostalCode
-
-					logger.debug(
-						`[HSYBuilding] 📍 Loading buildings for ${targetPostalCode}, selected=${this.store.postalcode}, initialVisibility=${initialVisibility}`
-					)
-
-					const entities = await this.datasourceService.addDataSourceWithPolygonFix(
-						data,
-						`Buildings ${targetPostalCode}`,
-						initialVisibility
-					)
-
-					// Handle empty results gracefully
-					if (!entities || entities.length === 0) {
-						logger.debug(`[HSYBuilding] ℹ️ No buildings found for postal code ${targetPostalCode}`)
-						return []
-					}
-
-					logger.debug(
-						'[HSYBuilding] 🔧 Calling setHSYBuildingAttributes with',
-						entities.length,
-						'entities',
-						'for postal code:',
-						targetPostalCode
-					)
-					await this.setHSYBuildingAttributes(data, entities, targetPostalCode)
-
-					logger.debug('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer')
-					return entities
-				},
 				options: {
 					cache: true,
 					cacheTTL: 60 * 60 * 1000, // 1 hour (buildings data is relatively static)
@@ -129,7 +82,90 @@ export default class HSYBuilding {
 				},
 			}
 
-			return await this.unifiedLoader.loadLayer(loadingConfig)
+			// Parallel fetch: building data and heat data
+			// Heat data is optional - buildings render even if heat API fails
+			logger.debug('[HSYBuilding] 🔄 Initiating parallel fetch for buildings and heat data')
+			const [buildingResult, heatResult] = await Promise.allSettled([
+				this.unifiedLoader.loadLayer(buildingConfig),
+				this.urbanHeatService.getHeatData(targetPostalCode),
+			])
+
+			// Handle building data (required)
+			if (buildingResult.status === 'rejected') {
+				logger.error('[HSYBuilding] ❌ Failed to load building data:', buildingResult.reason)
+				throw buildingResult.reason
+			}
+
+			const buildingData = buildingResult.value
+
+			// Handle heat data (optional)
+			const heatData = heatResult.status === 'fulfilled' ? heatResult.value : null
+			if (heatResult.status === 'rejected') {
+				logger.warn(
+					'[HSYBuilding] ⚠️ Heat data fetch failed:',
+					heatResult.reason?.message || heatResult.reason
+				)
+			} else if (!heatData) {
+				logger.warn('[HSYBuilding] ⚠️ Heat data unavailable for postal code:', targetPostalCode)
+			} else {
+				logger.debug(
+					'[HSYBuilding] ✅ Heat data loaded:',
+					heatData?.features?.length || 0,
+					'features'
+				)
+			}
+
+			// Merge heat data with buildings (if available)
+			if (heatData) {
+				await this.urbanHeatService.mergeHeatWithBuildings(buildingData, heatData, targetPostalCode)
+			}
+
+			// Process building data
+			logger.debug(
+				'[HSYBuilding] ✅ Received',
+				buildingData.features?.length || 0,
+				'building features'
+			)
+
+			// Only process grid attributes if we have a current grid cell
+			if (this.store.currentGridCell) {
+				await this.setGridAttributes(buildingData.features)
+			}
+
+			// Determine initial visibility:
+			// - If loading for the currently selected postal code, show immediately (user clicked it)
+			// - If loading for viewport-based preloading (different postal code), start hidden
+			//   and let viewport culling logic control visibility
+			const isSelectedPostalCode = targetPostalCode === this.store.postalcode
+			const initialVisibility = isSelectedPostalCode
+
+			logger.debug(
+				`[HSYBuilding] 📍 Loading buildings for ${targetPostalCode}, selected=${this.store.postalcode}, initialVisibility=${initialVisibility}`
+			)
+
+			const entities = await this.datasourceService.addDataSourceWithPolygonFix(
+				buildingData,
+				`Buildings ${targetPostalCode}`,
+				initialVisibility
+			)
+
+			// Handle empty results gracefully
+			if (!entities || entities.length === 0) {
+				logger.debug(`[HSYBuilding] ℹ️ No buildings found for postal code ${targetPostalCode}`)
+				return []
+			}
+
+			logger.debug(
+				'[HSYBuilding] 🔧 Calling setHSYBuildingAttributes with',
+				entities.length,
+				'entities',
+				'for postal code:',
+				targetPostalCode
+			)
+			await this.setHSYBuildingAttributes(buildingData, entities, targetPostalCode)
+
+			logger.debug('[HSYBuilding] ✅ Buildings loaded and added to Cesium viewer')
+			return entities
 		} catch (error) {
 			logger.error('[HSYBuilding] ❌ Error loading HSY buildings:', error)
 			throw error

@@ -80,6 +80,7 @@ export type FeatureFlagName =
 	| 'requestRenderMode'
 	| 'terrain3d'
 	| 'viewportStreaming'
+	| 'predictivePrefetch'
 	// Analysis tools
 	| 'heatHistogram'
 	| 'buildingScatterPlot'
@@ -299,6 +300,13 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 					'Load buildings based on viewport tiles instead of postal code boundaries for more efficient streaming',
 				category: 'graphics',
 				experimental: false,
+			},
+			predictivePrefetch: {
+				enabled: import.meta.env.VITE_FEATURE_PREDICTIVE_PREFETCH === 'true',
+				label: 'Predictive Prefetching',
+				description: 'Prefetch adjacent tiles during idle time for instant display when panning',
+				category: 'graphics',
+				experimental: true,
 			},
 
 			// Analysis tools

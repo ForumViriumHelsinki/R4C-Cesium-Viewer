@@ -59,6 +59,7 @@ import progressiveLoader from './progressiveLoader.js'
  * @property {boolean} [progressive=false] - Enable progressive loading for large datasets
  * @property {boolean} [background=false] - Load in background (low priority)
  * @property {string} [priority='normal'] - Loading priority: 'critical', 'high', 'normal', 'low', 'background'
+ * @property {boolean} [cacheOnly=false] - Cache data but don't return it (for prefetching)
  */
 
 /**
@@ -182,6 +183,7 @@ class UnifiedLoader {
 			progressive = false,
 			background = false,
 			priority = 'normal',
+			cacheOnly = false,
 		} = options
 
 		try {
@@ -192,6 +194,11 @@ class UnifiedLoader {
 			if (cache) {
 				const cached = await this.checkCache(layerId, url, cacheTTL)
 				if (cached) {
+					// For cacheOnly mode, return null (data is already cached)
+					if (cacheOnly) {
+						this.loadingStore.completeLayerLoading(layerId)
+						return null
+					}
 					await this.processData(cached, processor, layerId, {
 						fromCache: true,
 						progressive,
@@ -213,14 +220,20 @@ class UnifiedLoader {
 				data = await this.loadStandard(layerId, url, type, retries)
 			}
 
-			// Process the loaded data
-			if (processor && data) {
-				await this.processData(data, processor, layerId, { fromCache: false, progressive })
-			}
-
 			// Cache the data if enabled
 			if (cache && data) {
 				await this.cacheData(layerId, url, data, cacheTTL)
+			}
+
+			// For cacheOnly mode, return null (data is now cached, don't process or return)
+			if (cacheOnly) {
+				this.loadingStore.completeLayerLoading(layerId)
+				return null
+			}
+
+			// Process the loaded data
+			if (processor && data) {
+				await this.processData(data, processor, layerId, { fromCache: false, progressive })
 			}
 
 			this.loadingStore.completeLayerLoading(layerId)

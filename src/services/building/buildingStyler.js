@@ -12,7 +12,7 @@ import { isSoteBuilding } from '../../constants/buildingCodes.js'
 import { useGlobalStore } from '../../stores/globalStore.js'
 import { usePropsStore } from '../../stores/propsStore.js'
 import { useToggleStore } from '../../stores/toggleStore.js'
-import { processBatch } from '../../utils/batchProcessor.js'
+import { processBatchAdaptive } from '../../utils/batchProcessor.js'
 import { calculateBuildingHeight } from '../../utils/entityStyling.js'
 import { eventBus } from '../eventEmitter.js'
 import { logVisibilityChange } from '../visibilityLogger.js'
@@ -54,46 +54,47 @@ export class BuildingStyler {
 	/**
 	 * Removes nearby tree coverage effects from building entities
 	 * Resets building polygon colors to original heat exposure values.
-	 * Processes entities in batches to prevent UI blocking on large datasets.
+	 * Processes entities in adaptive batches to prevent UI blocking on large datasets.
 	 *
 	 * @param {Array<Cesium.Entity>} entities - Building entities to process
 	 * @returns {Promise<void>}
 	 */
 	async removeNearbyTreeEffect(entities) {
-		await processBatch(entities, (entity) => this.setBuildingEntityPolygon(entity), {
-			batchSize: 25,
+		await processBatchAdaptive(entities, (entity) => this.setBuildingEntityPolygon(entity), {
+			processorName: 'buildingPolygon',
 		})
 	}
 
 	/**
 	 * Applies heat exposure visualization to building entities
 	 * Updates building polygon colors based on heat exposure data.
-	 * Uses batched processing for performance optimization.
+	 * Uses adaptive batched processing for optimal performance across devices.
 	 *
 	 * @param {Array<Cesium.Entity>} entities - Building entities to style
 	 * @returns {Promise<void>}
 	 */
 	async setHeatExposureToBuildings(entities) {
-		await processBatch(entities, (entity) => this.setBuildingEntityPolygon(entity), {
-			batchSize: 25,
+		await processBatchAdaptive(entities, (entity) => this.setBuildingEntityPolygon(entity), {
+			processorName: 'heatExposure',
 		})
 	}
 
 	/**
 	 * Sets height extrusion for Helsinki buildings
+	 * Uses adaptive batching for optimal performance across different devices.
 	 *
 	 * @param {Array<Cesium.Entity>} entities - Building entities to process
 	 * @returns {Promise<void>}
 	 */
 	async setHelsinkiBuildingsHeight(entities) {
-		await processBatch(
+		await processBatchAdaptive(
 			entities,
 			(entity) => {
 				if (entity.polygon) {
 					entity.polygon.extrudedHeight = calculateBuildingHeight(entity.properties)
 				}
 			},
-			{ batchSize: 30 }
+			{ processorName: 'heightExtrusion' }
 		)
 	}
 
