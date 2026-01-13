@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.42.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.41.0...r4c-cesium-viewer-v1.42.0) (2026-01-13)
+
+
+### Features
+
+* add comprehensive health and status endpoints ([#508](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/508)) ([7876631](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/787663185d6415293165290c9605a29141de808b))
+
 ## [1.41.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.40.0...r4c-cesium-viewer-v1.41.0) (2026-01-12)
 
 
