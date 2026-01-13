@@ -34,6 +34,7 @@ vi.mock('@/services/datasource.js', () => ({
 vi.mock('@/services/urbanheat.js', () => ({
 	default: vi.fn(function () {
 		this.findUrbanHeatData = vi.fn();
+		this.mergeHeatWithBuildings = vi.fn();
 	}),
 }));
 
@@ -130,8 +131,22 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 		});
 
 		it('should track loaded tile with metadata', async () => {
+			const mockGeoJSON = {
+				type: 'FeatureCollection',
+				features: [
+					{ type: 'Feature', geometry: {}, properties: { id: 1 } },
+					{ type: 'Feature', geometry: {}, properties: { id: 2 } },
+				],
+			};
 			const mockEntities = [{ id: 'building1' }, { id: 'building2' }];
-			unifiedLoader.loadLayer.mockResolvedValue(mockEntities);
+
+			// Mock unifiedLoader to return GeoJSON
+			unifiedLoader.loadLayer.mockResolvedValue(mockGeoJSON);
+
+			// Mock datasource service to return entities
+			loader.datasourceService.addDataSourceWithPolygonFix = vi
+				.fn()
+				.mockResolvedValue(mockEntities);
 
 			const beforeTime = Date.now();
 			await loader.loadTile('2491_6011');
@@ -161,7 +176,7 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 			expect(loader.loadedTiles.has('2490_6010')).toBe(false);
 		});
 
-		it('should pass processor function to handle building data', async () => {
+		it('should process building data after parallel fetching', async () => {
 			const mockGeoJSON = {
 				type: 'FeatureCollection',
 				features: [
@@ -174,22 +189,21 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 			};
 
 			// Mock datasource service to return entities
+			const mockEntities = [{ id: 'entity1' }];
 			loader.datasourceService.addDataSourceWithPolygonFix = vi
 				.fn()
-				.mockResolvedValue([{ id: 'entity1' }]);
+				.mockResolvedValue(mockEntities);
 
-			unifiedLoader.loadLayer.mockImplementation(async (config) => {
-				// Call the processor function
-				const metadata = { fromCache: false };
-				await config.processor(mockGeoJSON, metadata);
-				return [];
-			});
+			unifiedLoader.loadLayer.mockResolvedValue(mockGeoJSON);
 
 			await loader.loadTile('2490_6010');
 
-			// Verify processor was configured
-			const config = unifiedLoader.loadLayer.mock.calls[0][0];
-			expect(config.processor).toBeInstanceOf(Function);
+			// Verify processBuildings was called with the GeoJSON from unifiedLoader
+			expect(loader.datasourceService.addDataSourceWithPolygonFix).toHaveBeenCalledWith(
+				mockGeoJSON,
+				expect.stringContaining('Buildings Viewport'),
+				false
+			);
 		});
 
 		it('should calculate correct tile bounds from tile key', async () => {
@@ -613,7 +627,9 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 
 			await loader.processBuildings(mockGeoJSON, '2490_6010');
 
-			expect(loader.urbanheatService.findUrbanHeatData).toHaveBeenCalledWith(mockGeoJSON, null);
+			// With parallel fetching, heat data is passed to processBuildings as third parameter
+		// When calling processBuildings directly (as this test does), pass null for heat data
+		expect(loader.urbanheatService.findUrbanHeatData).not.toHaveBeenCalled();
 		});
 
 		it('should skip heat processing when not in Helsinki view', async () => {
