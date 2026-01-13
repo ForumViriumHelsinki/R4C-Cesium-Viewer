@@ -66,7 +66,15 @@ server {
     location = /status {
         access_log off;
         add_header Content-Type application/json;
-        return 200 '{"status":"healthy","server":"r4c-frontend","nginx_version":"$nginx_version","timestamp":"$time_iso8601","config":{"pygeoapi":"${VITE_PYGEOAPI_HOST}","digitransit_key_set":"${VITE_DIGITRANSIT_KEY:+true}"},"checks":["/status/pygeoapi","/status/hsy-wms","/status/stat-fi","/status/digitransit","/status/helsinki-wms"]}';
+
+        # Check if digitransit key is configured (nginx variable logic)
+        set $digitransit_configured "false";
+        set $digitransit_key_check "${VITE_DIGITRANSIT_KEY}";
+        if ($digitransit_key_check != "") {
+            set $digitransit_configured "true";
+        }
+
+        return 200 '{"status":"healthy","server":"r4c-frontend","nginx_version":"$nginx_version","timestamp":"$time_iso8601","config":{"pygeoapi":"${VITE_PYGEOAPI_HOST}","digitransit_key_set":$digitransit_configured},"checks":["/status/pygeoapi","/status/hsy-wms","/status/stat-fi","/status/digitransit","/status/helsinki-wms"]}';
     }
 
     # -------------------------------------------
