@@ -1,0 +1,122 @@
+name: Release Notification
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract release info
+        id: release
+        env:
+          RELEASE_BODY: ${{ github.event.release.body }}
+        run: |
+          # Extract version from tag
+          VERSION="${{ github.event.release.tag_name }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Convert Markdown to Google Chat compatible format
+          # Google Chat Cards v2 supports: <b>, <i>, <a>, <br>, basic text
+          # Using perl for better regex support with nested parentheses in URLs
+          BODY=$(echo "$RELEASE_BODY" | perl -pe '
+            # Convert markdown links [text](url) - handle URLs with special chars
+            s/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/<a href="$2">$1<\/a>/g;
+
+            # Convert markdown headers ## text to bold
+            s/^##+ +/<b>/;
+
+            # Convert markdown bold **text** to <b>text</b>
+            s/\*\*([^*]+)\*\*/<b>$1<\/b>/g;
+
+            # Convert markdown list items to bullet points
+            s/^\* /• /;
+          ' | \
+            # Remove empty lines
+            grep -v '^$' | \
+            # Add </b> after header lines (lines starting with <b> without closing tag)
+            sed -E '/^<b>/{ /<\/b>$/!s/$/<\/b>/; }' | \
+            # Join lines with <br> for HTML display
+            tr '\n' '~' | sed 's/~/<br>/g' | \
+            # Limit to ~800 chars for readability
+            head -c 800)
+
+          # Escape for JSON
+          BODY=$(echo "$BODY" | jq -Rs '.')
+          echo "body=$BODY" >> $GITHUB_OUTPUT
+
+      - name: Send Google Chat notification
+        env:
+          WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}
+        run: |
+          # Build Cards v2 payload
+          cat > payload.json << 'EOF'
+          {
+            "cardsV2": [
+              {
+                "cardId": "release-${{ github.event.release.id }}",
+                "card": {
+                  "header": {
+                    "title": "🚀 New Release: ${{ github.event.repository.name }}",
+                    "subtitle": "${{ steps.release.outputs.version }}",
+                    "imageUrl": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+                    "imageType": "CIRCLE"
+                  },
+                  "sections": [
+                    {
+                      "header": "Release Notes",
+                      "widgets": [
+                        {
+                          "textParagraph": {
+                            "text": ${{ steps.release.outputs.body }}
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "widgets": [
+                        {
+                          "buttonList": {
+                            "buttons": [
+                              {
+                                "text": "View Release",
+                                "onClick": {
+                                  "openLink": {
+                                    "url": "${{ github.event.release.html_url }}"
+                                  }
+                                }
+                              },
+                              {
+                                "text": "View Commits",
+                                "onClick": {
+                                  "openLink": {
+                                    "url": "${{ github.event.repository.html_url }}/compare/${{ github.event.release.tag_name }}...main"
+                                  }
+                                }
+                              },
+                              {
+                                "text": "Open Website",
+                                "onClick": {
+                                  "openLink": {
+                                    "url": "https://r4c.dataportal.fi"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+          EOF
+
+          # Send to Google Chat
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d @payload.json \
+            "$WEBHOOK_URL"
