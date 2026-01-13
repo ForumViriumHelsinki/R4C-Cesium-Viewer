@@ -73,6 +73,19 @@ jobs:
           COLLECT_CODE=${PIPESTATUS[0]}
           echo "Collect exit code: $COLLECT_CODE"
 
+          # Debug: Check what files were created after collect
+          echo "=== Debug: Files after collect ==="
+          echo "Current directory: $(pwd)"
+          ls -la
+          if [ -d ".lighthouseci" ]; then
+            echo "=== .lighthouseci contents ==="
+            ls -la .lighthouseci/
+          else
+            echo "WARNING: .lighthouseci directory not found after collect"
+            # Check if files are in a different location
+            find . -name "manifest.json" -o -name "lhr-*.json" 2>/dev/null | head -10
+          fi
+
           echo "=== Running lhci upload ==="
           bunx @lhci/cli@0.14.x upload --config=lighthouserc.cjs 2>&1 | tee -a lighthouse-output.txt
           UPLOAD_CODE=${PIPESTATUS[0]}
