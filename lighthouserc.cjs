@@ -31,6 +31,9 @@ module.exports = {
 			// Max wait time for page load (ms) - CesiumJS is heavy
 			maxWaitForLoad: 90000,
 
+			// Output directory for results (required for CI workflow parsing)
+			outputDir: '.lighthouseci',
+
 			// Additional settings for more accurate measurements
 			settings: {
 				// Lighthouse preset
@@ -136,9 +139,6 @@ module.exports = {
 			// Use temporary public storage (free, no setup required)
 			// Results are available for 7 days via a public URL
 			target: 'temporary-public-storage',
-
-			// Optionally store results in filesystem for archival
-			// outputDir: '.lighthouseci',
 		},
 
 		// Server configuration (optional - for Lighthouse CI server)
