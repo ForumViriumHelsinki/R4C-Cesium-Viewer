@@ -32,10 +32,11 @@
 
 import * as Cesium from 'cesium'
 import { useBuildingStore } from '../stores/buildingStore.js'
+import { useFeatureFlagStore } from '../stores/featureFlagStore.ts'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
-import { processBatch } from '../utils/batchProcessor.js'
+import { processBatchAdaptive } from '../utils/batchProcessor.js'
 import {
 	calculateBuildingHeight,
 	DEFAULT_BUILDING_HEIGHT,
@@ -67,6 +68,20 @@ const CONFIG = {
 }
 
 /**
+ * Configuration constants for predictive prefetching
+ */
+const PREFETCH_CONFIG = {
+	/** Maximum concurrent prefetch requests */
+	maxConcurrent: 2,
+	/** Maximum tiles in prefetch queue */
+	maxPending: 8,
+	/** Minimum idle time (ms) to start prefetch work */
+	minIdleTime: 10,
+	/** Cooldown after user interaction before resuming prefetch (ms) */
+	cooldownMs: 1000,
+}
+
+/**
  * Configuration for fade animation
  */
 const FADE_CONFIG = {
@@ -92,6 +107,7 @@ export default class ViewportBuildingLoader {
 		this.toggleStore = useToggleStore()
 		this.urlStore = useURLStore()
 		this.buildingStore = useBuildingStore()
+		this.featureFlagStore = useFeatureFlagStore()
 		this.viewer = null
 
 		// Service dependencies
@@ -117,6 +133,24 @@ export default class ViewportBuildingLoader {
 		// Active loading queue
 		this.loadingQueue = []
 		this.activeLoads = 0
+
+		// Prefetch state tracking
+		/** @type {string[]} Queue of tile keys to prefetch */
+		this.prefetchQueue = []
+		/** @type {number} Currently active prefetch requests */
+		this.activePrefetches = 0
+		/** @type {number|null} Handle for requestIdleCallback */
+		this.prefetchHandle = null
+		/** @type {boolean} Flag to cancel prefetch operations */
+		this.prefetchCancelled = false
+		/** @type {Set<string>} Tiles already prefetched (in cache) */
+		this.prefetchedTiles = new Set()
+		/** @type {{x: number, y: number}} Last camera velocity for priority sorting */
+		this.lastCameraVelocity = { x: 0, y: 0 }
+		/** @type {{lat: number, lon: number}|null} Previous camera position for velocity calculation */
+		this.previousCameraPosition = null
+		/** @type {number|null} Previous camera timestamp */
+		this.previousCameraTimestamp = null
 
 		logger.debug('[ViewportBuildingLoader] Service initialized')
 	}
@@ -228,10 +262,18 @@ export default class ViewportBuildingLoader {
 
 	/**
 	 * Handle camera movement with debouncing
-	 * Cancels pending updates and schedules new update after debounce delay.
+	 * Cancels pending updates, tracks camera velocity, and schedules new update after debounce delay.
 	 * @private
 	 */
 	handleCameraMove() {
+		// Cancel any pending prefetch when user is actively moving
+		if (this.featureFlagStore.isEnabled('predictivePrefetch')) {
+			this.cancelPrefetch()
+		}
+
+		// Track camera velocity for prefetch prioritization
+		this.updateCameraVelocity()
+
 		// Clear existing timeout
 		if (this.debounceTimeout) {
 			clearTimeout(this.debounceTimeout)
@@ -243,6 +285,36 @@ export default class ViewportBuildingLoader {
 				logger.error('Failed to update viewport:', error)
 			})
 		}, CONFIG.DEBOUNCE_DELAY)
+	}
+
+	/**
+	 * Update camera velocity tracking for prefetch prioritization
+	 * Calculates direction and speed of camera movement.
+	 * @private
+	 */
+	updateCameraVelocity() {
+		if (!this.viewer) return
+
+		const cameraCartographic = this.viewer.camera.positionCartographic
+		const currentPosition = {
+			lat: Cesium.Math.toDegrees(cameraCartographic.latitude),
+			lon: Cesium.Math.toDegrees(cameraCartographic.longitude),
+		}
+		const currentTimestamp = Date.now()
+
+		if (this.previousCameraPosition && this.previousCameraTimestamp) {
+			const dt = (currentTimestamp - this.previousCameraTimestamp) / 1000 // seconds
+			if (dt > 0 && dt < 5) {
+				// Only calculate if reasonable time delta
+				this.lastCameraVelocity = {
+					x: (currentPosition.lon - this.previousCameraPosition.lon) / dt,
+					y: (currentPosition.lat - this.previousCameraPosition.lat) / dt,
+				}
+			}
+		}
+
+		this.previousCameraPosition = currentPosition
+		this.previousCameraTimestamp = currentTimestamp
 	}
 
 	/**
@@ -289,6 +361,11 @@ export default class ViewportBuildingLoader {
 			this.unloadDistantTiles(requiredTileKeys).catch((error) => {
 				logger.error('Failed to unload distant tiles:', error)
 			})
+
+			// Schedule prefetch for adjacent tiles if feature is enabled
+			if (this.featureFlagStore.isEnabled('predictivePrefetch')) {
+				this.schedulePrefetchForAdjacent()
+			}
 		} catch (error) {
 			logger.error('[ViewportBuildingLoader] Error updating viewport:', error)
 		}
@@ -471,6 +548,7 @@ export default class ViewportBuildingLoader {
 	/**
 	 * Load a single tile via WFS BBOX query
 	 * Fetches building data for tile bounds and processes entities.
+	 * For Helsinki view, also fetches heat data in parallel if postal code available.
 	 *
 	 * @param {string} tileKey - Tile key (format: "tileX_tileY")
 	 * @returns {Promise<void>}
@@ -494,23 +572,23 @@ export default class ViewportBuildingLoader {
 
 		try {
 			const viewPrefix = this.toggleStore.helsinkiView ? 'hki' : 'hsy'
+			const isHelsinkiView = this.toggleStore.helsinkiView
+			const currentPostalCode = this.store.postalcode
+
+			// For Helsinki view with postal code, fetch heat data in parallel with building data
+			// Heat data is optional - buildings render even if heat API fails
+			let heatDataPromise = null
+			if (isHelsinkiView && currentPostalCode) {
+				logger.debug(
+					`[ViewportBuildingLoader] Initiating parallel heat data fetch for postal code ${currentPostalCode}`
+				)
+				heatDataPromise = this.urbanheatService.getHeatData(currentPostalCode)
+			}
+
 			const loadingConfig = {
 				layerId: `viewport_buildings_${viewPrefix}_${tileKey}`,
 				url: url,
 				type: 'geojson',
-				processor: async (data, metadata) => {
-					const fromCache = metadata?.fromCache
-					logger.debug(
-						fromCache
-							? `[ViewportBuildingLoader] ✓ Using cached data for tile ${tileKey}`
-							: `[ViewportBuildingLoader] ✅ Received ${data.features?.length || 0} buildings for tile ${tileKey}`
-					)
-
-					// Process buildings using existing pipeline
-					const entities = await this.processBuildings(data, tileKey)
-
-					return entities
-				},
 				options: {
 					cache: true,
 					cacheTTL: CONFIG.CACHE_TTL,
@@ -520,7 +598,26 @@ export default class ViewportBuildingLoader {
 				},
 			}
 
-			const entities = await this.unifiedLoader.loadLayer(loadingConfig)
+			// Fetch building data and heat data in parallel
+			const [buildingData, heatResult] = await Promise.all([
+				this.unifiedLoader.loadLayer(loadingConfig),
+				heatDataPromise
+					? heatDataPromise.catch((error) => {
+							logger.warn(
+								`[ViewportBuildingLoader] Heat data fetch failed:`,
+								error?.message || error
+							)
+							return null
+						})
+					: Promise.resolve(null),
+			])
+
+			logger.debug(
+				`[ViewportBuildingLoader] ✅ Received ${buildingData?.features?.length || 0} buildings for tile ${tileKey}`
+			)
+
+			// Process buildings with pre-fetched heat data
+			const entities = await this.processBuildings(buildingData, tileKey, heatResult)
 
 			// Track loaded tile
 			this.loadedTiles.set(tileKey, {
@@ -609,12 +706,14 @@ export default class ViewportBuildingLoader {
 	/**
 	 * Process building GeoJSON data
 	 * Handles both Helsinki and HSY (Capital Region) building formats.
+	 * Uses pre-fetched heat data when available (parallel fetch optimization).
 	 *
 	 * @param {Object} geojson - GeoJSON FeatureCollection
 	 * @param {string} tileKey - Tile key for datasource naming
+	 * @param {Object|null} [prefetchedHeatData=null] - Pre-fetched heat data (optional, for parallel fetch optimization)
 	 * @returns {Promise<Array<Cesium.Entity>>} Processed building entities
 	 */
-	async processBuildings(geojson, tileKey) {
+	async processBuildings(geojson, tileKey, prefetchedHeatData = null) {
 		if (!geojson || !geojson.features || geojson.features.length === 0) {
 			logger.warn(`[ViewportBuildingLoader] No features in tile ${tileKey}`)
 			return []
@@ -646,13 +745,22 @@ export default class ViewportBuildingLoader {
 
 		// Process entities based on view type
 		if (isHelsinkiView) {
-			// Helsinki: Full heat exposure processing
-			const entitiesWithHeat = await this.urbanheatService.findUrbanHeatData(
-				geojson,
-				null // No postal code filtering for viewport-based loading
-			)
-			await this.setHeatExposureToBuildings(entitiesWithHeat)
-			await this.setHelsinkiBuildingsHeight(entitiesWithHeat)
+			// Helsinki: Merge pre-fetched heat data with buildings (parallel fetch optimization)
+			// If prefetchedHeatData is available, use it; otherwise heat data was unavailable
+			if (prefetchedHeatData) {
+				logger.debug(
+					`[ViewportBuildingLoader] Using pre-fetched heat data (${prefetchedHeatData?.features?.length || 0} features)`
+				)
+				await this.urbanheatService.mergeHeatWithBuildings(geojson, prefetchedHeatData, tileKey)
+			} else {
+				// No heat data available - buildings still render, just without heat attributes
+				logger.debug(
+					'[ViewportBuildingLoader] No heat data available, proceeding without heat attributes'
+				)
+				this.buildingStore.setBuildingFeatures(geojson, tileKey)
+			}
+			await this.setHeatExposureToBuildings(entities)
+			await this.setHelsinkiBuildingsHeight(entities)
 		} else {
 			// Capital Region (HSY): Different property names
 			await this.setHSYBuildingAttributes(entities)
@@ -713,20 +821,20 @@ export default class ViewportBuildingLoader {
 
 	/**
 	 * Apply building heights from floor count or measured height
-	 * Batched processing (reuses building.js pattern).
+	 * Uses adaptive batched processing for optimal performance.
 	 *
 	 * @param {Array<Cesium.Entity>} entities - Building entities
 	 * @returns {Promise<void>}
 	 */
 	async setHelsinkiBuildingsHeight(entities) {
-		await processBatch(
+		await processBatchAdaptive(
 			entities,
 			(entity) => {
 				if (entity.polygon) {
 					entity.polygon.extrudedHeight = calculateBuildingHeight(entity.properties)
 				}
 			},
-			{ batchSize: 30 }
+			{ processorName: 'viewportHeightExtrusion' }
 		)
 	}
 
@@ -734,6 +842,7 @@ export default class ViewportBuildingLoader {
 	 * Set HSY building attributes (height and heat-based color)
 	 * HSY buildings use 'kerrosten_lkm' for floor count instead of 'i_kerrlkm'
 	 * Colors are derived from heat_timeseries data when available.
+	 * Uses adaptive batching for optimal performance across devices.
 	 *
 	 * @param {Array<Cesium.Entity>} entities - Building entities
 	 * @returns {Promise<void>}
@@ -742,7 +851,7 @@ export default class ViewportBuildingLoader {
 		const targetDate = this.store.heatDataDate
 		let coloredCount = 0
 
-		await processBatch(
+		await processBatchAdaptive(
 			entities,
 			(entity) => {
 				if (entity.polygon) {
@@ -789,7 +898,7 @@ export default class ViewportBuildingLoader {
 					}
 				}
 			},
-			{ batchSize: 30 }
+			{ processorName: 'hsyBuildingAttributes' }
 		)
 
 		logger.debug(
@@ -1012,6 +1121,10 @@ export default class ViewportBuildingLoader {
 			clearTimeout(this.debounceTimeout)
 		}
 
+		// Cancel any pending prefetch operations
+		this.cancelPrefetch()
+		this.prefetchedTiles.clear()
+
 		// Note: Cesium camera events don't have removeEventListener
 		// The listener will be cleaned up when the viewer is destroyed
 
@@ -1046,5 +1159,225 @@ export default class ViewportBuildingLoader {
 		const dLat = tileCenter.lat - viewportCenter.lat
 		const dLon = tileCenter.lon - viewportCenter.lon
 		return dLat * dLat + dLon * dLon // Squared distance is fine for sorting
+	}
+
+	// ============================================================
+	// Predictive Prefetching Methods
+	// ============================================================
+
+	/**
+	 * Get tiles adjacent to the currently visible tiles
+	 * Returns tiles in 8 cardinal and diagonal directions that are not already loaded.
+	 *
+	 * @param {Set<string>} visibleTiles - Currently visible tile keys
+	 * @returns {Set<string>} Adjacent tile keys not yet loaded
+	 */
+	getAdjacentTiles(visibleTiles) {
+		const adjacent = new Set()
+
+		for (const tile of visibleTiles) {
+			const [x, y] = tile.split('_').map(Number)
+
+			// 8-directional adjacency (N, NE, E, SE, S, SW, W, NW)
+			const neighbors = [
+				[x - 1, y - 1],
+				[x, y - 1],
+				[x + 1, y - 1],
+				[x - 1, y],
+				[x + 1, y],
+				[x - 1, y + 1],
+				[x, y + 1],
+				[x + 1, y + 1],
+			]
+
+			for (const [nx, ny] of neighbors) {
+				const key = `${nx}_${ny}`
+				// Exclude tiles that are already visible, loaded, loading, or prefetched
+				if (
+					!visibleTiles.has(key) &&
+					!this.loadedTiles.has(key) &&
+					!this.loadingTiles.has(key) &&
+					!this.prefetchedTiles.has(key)
+				) {
+					adjacent.add(key)
+				}
+			}
+		}
+
+		return adjacent
+	}
+
+	/**
+	 * Prioritize tiles based on camera movement direction
+	 * Tiles in the direction of camera movement are prioritized higher.
+	 *
+	 * @param {Set<string>} adjacentTiles - Adjacent tile keys
+	 * @param {{x: number, y: number}} cameraVelocity - Camera velocity vector
+	 * @returns {string[]} Sorted array of tile keys (highest priority first)
+	 */
+	prioritizeTiles(adjacentTiles, cameraVelocity) {
+		return [...adjacentTiles].sort((a, b) => {
+			const [ax, ay] = a.split('_').map(Number)
+			const [bx, by] = b.split('_').map(Number)
+
+			// Score based on alignment with camera velocity (dot product)
+			// Higher score = tile is in the direction of movement
+			const scoreA = ax * cameraVelocity.x + ay * cameraVelocity.y
+			const scoreB = bx * cameraVelocity.x + by * cameraVelocity.y
+
+			return scoreB - scoreA // Higher score = higher priority
+		})
+	}
+
+	/**
+	 * Schedule prefetching for adjacent tiles
+	 * Determines which tiles to prefetch and starts the idle-time prefetch process.
+	 */
+	schedulePrefetchForAdjacent() {
+		// Reset cancellation flag
+		this.prefetchCancelled = false
+
+		const visibleTiles = this.visibleTiles
+		const adjacentTiles = this.getAdjacentTiles(visibleTiles)
+
+		if (adjacentTiles.size === 0) {
+			logger.debug('[ViewportBuildingLoader] No adjacent tiles to prefetch')
+			return
+		}
+
+		const prioritized = this.prioritizeTiles(adjacentTiles, this.lastCameraVelocity)
+
+		// Limit to configured maximum pending tiles
+		this.prefetchQueue = prioritized.slice(0, PREFETCH_CONFIG.maxPending)
+
+		logger.debug(
+			`[ViewportBuildingLoader] Scheduled ${this.prefetchQueue.length} tiles for prefetch`
+		)
+
+		this.startPrefetch()
+	}
+
+	/**
+	 * Start the prefetch process using requestIdleCallback
+	 * Begins processing the prefetch queue during browser idle time.
+	 */
+	startPrefetch() {
+		// Don't start if already running or cancelled
+		if (this.prefetchHandle || this.prefetchCancelled) return
+
+		// Don't start if queue is empty
+		if (this.prefetchQueue.length === 0) return
+
+		this.prefetchHandle = requestIdleCallback(
+			(deadline) => this.processPrefetchQueue(deadline),
+			{ timeout: 5000 } // Process within 5 seconds even if not idle
+		)
+	}
+
+	/**
+	 * Process the prefetch queue during idle time
+	 * Fetches tiles as long as there's idle time and concurrency budget allows.
+	 *
+	 * @param {IdleDeadline} deadline - requestIdleCallback deadline object
+	 */
+	processPrefetchQueue(deadline) {
+		// Process tiles while we have idle time, queue items, and concurrency budget
+		while (
+			this.prefetchQueue.length > 0 &&
+			this.activePrefetches < PREFETCH_CONFIG.maxConcurrent &&
+			deadline.timeRemaining() > PREFETCH_CONFIG.minIdleTime &&
+			!this.prefetchCancelled
+		) {
+			const tile = this.prefetchQueue.shift()
+
+			// Skip if tile was loaded while in queue
+			if (this.loadedTiles.has(tile) || this.loadingTiles.has(tile)) {
+				continue
+			}
+
+			// Start prefetch (fire and forget - errors are logged internally)
+			this.prefetchTile(tile).catch((error) => {
+				logger.debug(`[ViewportBuildingLoader] Prefetch error for ${tile}:`, error?.message)
+			})
+		}
+
+		// Continue if more tiles and not cancelled
+		if (this.prefetchQueue.length > 0 && !this.prefetchCancelled) {
+			this.prefetchHandle = requestIdleCallback((deadline) => this.processPrefetchQueue(deadline), {
+				timeout: 5000,
+			})
+		} else {
+			this.prefetchHandle = null
+		}
+	}
+
+	/**
+	 * Prefetch a single tile (cache-only, no rendering)
+	 * Fetches the tile data and stores it in cache without creating datasources.
+	 *
+	 * @param {string} tileKey - Tile key to prefetch
+	 */
+	async prefetchTile(tileKey) {
+		this.activePrefetches++
+
+		try {
+			// Parse tile coordinates
+			const [tileX, tileY] = tileKey.split('_').map(Number)
+
+			// Calculate tile bounds
+			const bounds = {
+				west: tileX * CONFIG.TILE_SIZE,
+				south: tileY * CONFIG.TILE_SIZE,
+				east: (tileX + 1) * CONFIG.TILE_SIZE,
+				north: (tileY + 1) * CONFIG.TILE_SIZE,
+			}
+
+			// Build URL for tile bounds
+			const url = this.buildBboxUrl(bounds)
+
+			const viewPrefix = this.toggleStore.helsinkiView ? 'hki' : 'hsy'
+
+			// Cache-only fetch - store in cache but don't create datasource
+			await this.unifiedLoader.loadLayer({
+				layerId: `prefetch_${viewPrefix}_${tileKey}`,
+				url: url,
+				type: 'geojson',
+				options: {
+					cache: true,
+					cacheTTL: CONFIG.CACHE_TTL,
+					retries: 1, // Fewer retries for prefetch (non-critical)
+					cacheOnly: true, // New flag: store in cache but don't return data
+				},
+			})
+
+			// Mark tile as prefetched
+			this.prefetchedTiles.add(tileKey)
+
+			logger.debug(`[ViewportBuildingLoader] ✓ Prefetched tile ${tileKey}`)
+		} catch (error) {
+			// Prefetch failures are non-critical, just log at debug level
+			logger.debug(`[ViewportBuildingLoader] Prefetch failed for ${tileKey}:`, error.message)
+		} finally {
+			this.activePrefetches--
+		}
+	}
+
+	/**
+	 * Cancel all pending prefetch operations
+	 * Called when user starts interacting with the map.
+	 */
+	cancelPrefetch() {
+		this.prefetchCancelled = true
+		this.prefetchQueue = []
+
+		if (this.prefetchHandle) {
+			cancelIdleCallback(this.prefetchHandle)
+			this.prefetchHandle = null
+		}
+
+		// Reset cancellation flag after cooldown to allow new prefetch
+		setTimeout(() => {
+			this.prefetchCancelled = false
+		}, PREFETCH_CONFIG.cooldownMs)
 	}
 }
