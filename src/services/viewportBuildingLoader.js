@@ -568,6 +568,45 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
+	 * Normalize feature IDs in GeoJSON to ensure top-level 'id' property exists.
+	 * PyGeoAPI may return features without a top-level 'id' field, but Cesium extracts
+	 * entity IDs from properties.vtj_prt. This normalization ensures feature.id matches
+	 * what Cesium uses for entity._id, enabling proper tooltip lookup.
+	 *
+	 * @param {Object} geojson - GeoJSON FeatureCollection to normalize
+	 * @returns {Object} Normalized GeoJSON with top-level IDs on all features
+	 * @private
+	 */
+	normalizeFeatureIds(geojson) {
+		if (!geojson?.features) {
+			return geojson
+		}
+
+		let normalizedCount = 0
+		for (const feature of geojson.features) {
+			// If feature already has a top-level id, keep it
+			if (feature.id != null) {
+				continue
+			}
+
+			// Extract ID from properties (vtj_prt for HSY buildings)
+			const vtjPrt = feature.properties?.vtj_prt
+			if (vtjPrt) {
+				feature.id = vtjPrt
+				normalizedCount++
+			}
+		}
+
+		if (normalizedCount > 0) {
+			logger.debug(
+				`[ViewportBuildingLoader] 🔧 Normalized ${normalizedCount} feature IDs from properties.vtj_prt`
+			)
+		}
+
+		return geojson
+	}
+
+	/**
 	 * Process building GeoJSON data
 	 * Handles both Helsinki and HSY (Capital Region) building formats.
 	 *
@@ -580,6 +619,11 @@ export default class ViewportBuildingLoader {
 			logger.warn(`[ViewportBuildingLoader] No features in tile ${tileKey}`)
 			return []
 		}
+
+		// Normalize feature IDs to ensure top-level 'id' exists for tooltip lookup
+		// This fixes the "No matching feature found for Id" issue where PyGeoAPI
+		// returns features without top-level IDs but Cesium extracts IDs from properties.vtj_prt
+		this.normalizeFeatureIds(geojson)
 
 		const isHelsinkiView = this.toggleStore.helsinkiView
 		const viewType = isHelsinkiView ? 'Helsinki' : 'Capital Region'
@@ -687,13 +731,17 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
-	 * Set HSY building attributes (height from floor count)
+	 * Set HSY building attributes (height and heat-based color)
 	 * HSY buildings use 'kerrosten_lkm' for floor count instead of 'i_kerrlkm'
+	 * Colors are derived from heat_timeseries data when available.
 	 *
 	 * @param {Array<Cesium.Entity>} entities - Building entities
 	 * @returns {Promise<void>}
 	 */
 	async setHSYBuildingAttributes(entities) {
+		const targetDate = this.store.heatDataDate
+		let coloredCount = 0
+
 		await processBatch(
 			entities,
 			(entity) => {
@@ -708,18 +756,45 @@ export default class ViewportBuildingLoader {
 							? floorCount * FLOOR_HEIGHT
 							: DEFAULT_BUILDING_HEIGHT
 
-					// Set a default color for HSY buildings (since no heat data)
-					// Use a blue-ish color to differentiate from Helsinki's heat colors
-					const alpha = 0.7
-					entity.polygon.material = new Cesium.ColorMaterialProperty(
-						new Cesium.Color(0.4, 0.6, 0.8, alpha)
-					)
+					// Try to get heat exposure from heat_timeseries for the current date
+					const heatTimeseries = entity.properties?.heat_timeseries?._value
+					let heatExposure = null
+
+					if (Array.isArray(heatTimeseries) && heatTimeseries.length > 0) {
+						const matchingEntry = heatTimeseries.find((entry) => entry.date === targetDate)
+						if (matchingEntry?.avgheatexposure != null) {
+							heatExposure = matchingEntry.avgheatexposure
+						}
+					}
+
+					// Also check direct avgheatexposure property (mock data format)
+					if (heatExposure == null) {
+						heatExposure = entity.properties?.avgheatexposure?._value
+					}
+
+					// Apply heat-based color if available, otherwise use default blue
+					if (heatExposure != null && heatExposure >= 0 && heatExposure <= 1) {
+						// Heat color gradient: green (low) -> yellow -> red (high)
+						const alpha = 0.7
+						entity.polygon.material = new Cesium.ColorMaterialProperty(
+							new Cesium.Color(1, 1 - heatExposure, 0, alpha)
+						)
+						coloredCount++
+					} else {
+						// Default blue color for buildings without heat data
+						const alpha = 0.7
+						entity.polygon.material = new Cesium.ColorMaterialProperty(
+							new Cesium.Color(0.4, 0.6, 0.8, alpha)
+						)
+					}
 				}
 			},
 			{ batchSize: 30 }
 		)
 
-		logger.debug(`[ViewportBuildingLoader] ✅ HSY attributes set for ${entities.length} buildings`)
+		logger.debug(
+			`[ViewportBuildingLoader] ✅ HSY attributes set for ${entities.length} buildings (${coloredCount} with heat colors)`
+		)
 	}
 
 	/**
