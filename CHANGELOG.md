@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.42.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.0...r4c-cesium-viewer-v1.42.1) (2026-01-13)
+
+
+### Bug Fixes
+
+* **nginx:** replace bash parameter expansion with nginx variable logic ([#513](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/513)) ([f2779fd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f2779fd77c1c3e3bfcaf580934f109938b6a2712))
+* normalize feature IDs and apply heat colors for HSY buildings ([#511](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/511)) ([88ce962](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/88ce96262a48e70db80a14691043072c4b4c40c1))
+
 ## [1.42.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.41.0...r4c-cesium-viewer-v1.42.0) (2026-01-13)
 
 
