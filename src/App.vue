@@ -158,8 +158,8 @@ const featureFlagStore = useFeatureFlagStore()
 const grid250m = computed(() => toggleStore.grid250m)
 const currentLevel = computed(() => globalStore.level)
 
-// UI state
-const sidebarVisible = ref(true) // Show sidebar by default for better discoverability
+// UI state - use feature flag to determine default sidebar visibility
+const sidebarVisible = ref(featureFlagStore.isEnabled('controlPanelDefault'))
 
 // Navigation functions
 const signOut = () => {
@@ -254,9 +254,11 @@ onMounted(async () => {
 		// Load feature flag overrides from localStorage
 		featureFlagStore.loadOverrides()
 
-		// Initialize background preloader
-		await backgroundPreloader.init()
-		logger.debug('Background preloader initialized')
+		// Initialize background preloader if enabled
+		if (featureFlagStore.isEnabled('backgroundPreload')) {
+			await backgroundPreloader.init()
+			logger.debug('Background preloader initialized')
+		}
 
 		// Check cache status for all layers on app start
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {

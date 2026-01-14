@@ -14,9 +14,9 @@
  * - **data-layers**: NDVI, flood layers, 250m grid, tree coverage, land cover
  * - **graphics**: HDR, ambient occlusion, MSAA, FXAA, request render mode, 3D terrain
  * - **analysis**: Heat histogram, building scatter plot, cooling optimizer, NDVI analysis, socioeconomic viz
- * - **ui**: Compact view, mobile optimization, control panel, data source status, loading performance info
+ * - **ui**: Control panel default, data source status, loading performance info, background preload
  * - **integration**: Sentry error tracking, Digitransit transport, background map providers
- * - **developer**: Debug mode, performance monitoring, cache visualization, health checks
+ * - **developer**: Debug mode, cache visualization, health checks
  *
  * Usage patterns:
  * ```typescript
@@ -88,8 +88,6 @@ export type FeatureFlagName =
 	| 'ndviAnalysis'
 	| 'socioeconomicViz'
 	// UI/UX
-	| 'compactView'
-	| 'mobileOptimized'
 	| 'controlPanelDefault'
 	| 'dataSourceStatus'
 	| 'loadingPerformanceInfo'
@@ -100,7 +98,6 @@ export type FeatureFlagName =
 	| 'backgroundMapProviders'
 	// Developer
 	| 'debugMode'
-	| 'performanceMonitoring'
 	| 'cacheVisualization'
 	| 'healthChecks'
 
@@ -347,20 +344,6 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 			},
 
 			// UI/UX features
-			compactView: {
-				enabled: import.meta.env.VITE_FEATURE_COMPACT_VIEW === 'true',
-				label: 'Compact View Mode',
-				description: 'Reduced UI elements for smaller screens',
-				category: 'ui',
-				experimental: false,
-			},
-			mobileOptimized: {
-				enabled: import.meta.env.VITE_FEATURE_MOBILE_OPTIMIZED === 'true',
-				label: 'Mobile Optimization',
-				description: 'Touch-optimized controls and layouts',
-				category: 'ui',
-				experimental: true,
-			},
 			controlPanelDefault: {
 				enabled: import.meta.env.VITE_FEATURE_CONTROL_PANEL_DEFAULT !== 'false',
 				label: 'Control Panel Open by Default',
@@ -421,13 +404,6 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 				enabled: import.meta.env.MODE === 'development',
 				label: 'Debug Mode',
 				description: 'Enable debug logging and developer tools',
-				category: 'developer',
-				experimental: false,
-			},
-			performanceMonitoring: {
-				enabled: import.meta.env.VITE_FEATURE_PERF_MONITOR === 'true',
-				label: 'Performance Monitoring',
-				description: 'Real-time performance metrics and profiling',
 				category: 'developer',
 				experimental: false,
 			},

@@ -43,7 +43,7 @@ describe('featureFlagStore', () => {
 			expect(store.flags.ndvi.category).toBe('data-layers');
 			expect(store.flags.hdrRendering.category).toBe('graphics');
 			expect(store.flags.heatHistogram.category).toBe('analysis');
-			expect(store.flags.compactView.category).toBe('ui');
+			expect(store.flags.controlPanelDefault.category).toBe('ui');
 			expect(store.flags.sentryErrorTracking.category).toBe('integration');
 			expect(store.flags.debugMode.category).toBe('developer');
 		});
