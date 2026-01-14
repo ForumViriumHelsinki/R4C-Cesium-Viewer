@@ -5,4 +5,7 @@ export const VIEWPORT = {
 	DRAG_DETECTION_THRESHOLD_PX: 5,
 	CLICK_PICK_TOLERANCE_PX: 5,
 	MIN_ZOOM_FOR_DETAILS: 15,
+	// Fog effect thresholds - indicates buildings won't load until zoomed in
+	FOG_START_HEIGHT: 3000, // meters - fog begins appearing
+	FOG_FULL_HEIGHT: 10000, // meters - fog reaches maximum density
 }
