@@ -141,6 +141,7 @@ import ViewportLoadingIndicator from '../components/ViewportLoadingIndicator.vue
 import { useCameraControls } from '../composables/useCameraControls.js'
 import { useDataLoading } from '../composables/useDataLoading.js'
 import { useEntityPicking } from '../composables/useEntityPicking.js'
+import { useFogEffect } from '../composables/useFogEffect.js'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts.js'
 import { useUrlState } from '../composables/useUrlState.js'
 import { useViewerInitialization } from '../composables/useViewerInitialization.js'
@@ -292,6 +293,10 @@ export default {
 			// Initialize camera controls with URL update callback
 			cameraControlsInstance = useCameraControls(viewer.value, handleCameraSettled, handleUrlUpdate)
 			cameraControlsInstance.addCameraMoveEndListener()
+
+			// Initialize fog effect (visual indicator for zoom level)
+			const { initFog } = useFogEffect(viewer.value)
+			initFog()
 
 			// Initialize viewport streaming if enabled
 			await initViewportStreaming()
