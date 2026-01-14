@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.43.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.3...r4c-cesium-viewer-v1.43.0) (2026-01-14)
+
+
+### Features
+
+* **ux:** add altitude-based fog overlay for zoom indication ([#528](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/528)) ([987f865](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/987f8650bfb9033cd5917209c5e9615d2887f96b))
+
+
+### Bug Fixes
+
+* **ci:** prevent Lighthouse PROTOCOL_TIMEOUT for CesiumJS apps ([#526](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/526)) ([5fba9bd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5fba9bd849ace17f793ac5484d5adb955d531f50))
+
 ## [1.42.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.2...r4c-cesium-viewer-v1.42.3) (2026-01-13)
 
 
