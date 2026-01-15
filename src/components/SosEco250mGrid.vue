@@ -25,19 +25,18 @@ const ndviActive = computed(() => toggleStore.ndvi)
 
 // --- WATCHERS ---
 // The watchers now call the clean, centralized function from the composable.
+// updateGridColors is async, so we use .catch() to handle errors properly.
 watch([statsIndex, ndviActive], () => {
-	updateGridColors(statsIndex.value)
+	updateGridColors(statsIndex.value).catch(logger.error)
 })
 
 watch(
 	coolingCenters,
 	() => {
 		if (statsIndex.value === 'heat_index') {
-			mitigationStore.resetMitigationState()
-			// Note: The original code's complex `heatIndex` function with mitigation
-			// would need to be moved into the composable as well to be fully DRY.
-			// For now, this call restores the base colors.
-			updateGridColors('heat_index')
+			// Pre-calculate impacts BEFORE rendering (populates cache for O(1) lookups)
+			mitigationStore.recalculateCoolingCenterImpacts()
+			updateGridColors('heat_index').catch(logger.error)
 		}
 	},
 	{ deep: true }
@@ -45,7 +44,8 @@ watch(
 
 // --- COMPONENT-SPECIFIC LOGIC ---
 const loadGrid = async () => {
-	await dataSourceService.removeDataSourcesAndEntities()
+	// Only remove existing grid datasource if present, preserve buildings
+	await dataSourceService.removeDataSourcesByNamePrefix('250m_grid')
 	await dataSourceService.loadGeoJsonDataSource(
 		0.8,
 		'./assets/data/r4c_stats_grid_index.json',
@@ -64,7 +64,7 @@ onMounted(async () => {
 	cameraService.switchTo3DGrid()
 	try {
 		await loadGrid()
-		updateGridColors(propsStore.statsIndex) // Initial color update
+		await updateGridColors(propsStore.statsIndex) // Initial color update
 		prepareMitigation()
 	} catch (error) {
 		logger.error('Error loading grid:', error)

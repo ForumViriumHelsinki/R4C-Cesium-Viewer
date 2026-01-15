@@ -126,6 +126,7 @@ export default class ViewportBuildingLoader {
 		// Camera event tracking
 		this.debounceTimeout = null
 		this.isInitialized = false
+		this.cameraMovedHandler = null
 
 		// Cesium scratch objects for performance (reuse to avoid GC)
 		this.scratchRectangle = new Cesium.Rectangle()
@@ -195,9 +196,11 @@ export default class ViewportBuildingLoader {
 		this.viewer = viewer
 
 		// Set up camera event listeners with debouncing
-		this.viewer.camera.moveEnd.addEventListener(() => {
+		// Store handler reference for cleanup in destroy()
+		this.cameraMovedHandler = () => {
 			this.handleCameraMove()
-		})
+		}
+		this.viewer.camera.moveEnd.addEventListener(this.cameraMovedHandler)
 
 		this.isInitialized = true
 		logger.debug('[ViewportBuildingLoader] Camera listeners attached')
@@ -1119,18 +1122,24 @@ export default class ViewportBuildingLoader {
 		// Clear debounce timeout
 		if (this.debounceTimeout) {
 			clearTimeout(this.debounceTimeout)
+			this.debounceTimeout = null
 		}
 
 		// Cancel any pending prefetch operations
 		this.cancelPrefetch()
 		this.prefetchedTiles.clear()
 
-		// Note: Cesium camera events don't have removeEventListener
-		// The listener will be cleaned up when the viewer is destroyed
+		// Remove camera event listener to prevent memory leaks
+		if (this.cameraMovedHandler && this.viewer?.camera?.moveEnd) {
+			this.viewer.camera.moveEnd.removeEventListener(this.cameraMovedHandler)
+			this.cameraMovedHandler = null
+			logger.debug('[ViewportBuildingLoader] Camera listener removed')
+		}
 
 		// Clear all tiles
 		await this.clearAllTiles()
 
+		this.viewer = null
 		this.isInitialized = false
 		logger.debug('[ViewportBuildingLoader] Shutdown complete')
 	}

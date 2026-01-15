@@ -5,14 +5,15 @@
  */
 
 import * as Cesium from 'cesium'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import { processBatchAdaptive } from '../utils/batchProcessor.js'
 
 /**
- * Heat vulnerability color scale (white → dark red)
+ * Heat vulnerability color scale (white -> dark red)
  */
 export const heatColors = [
 	{ color: '#ffffff', range: 'Incomplete data' },
@@ -91,12 +92,14 @@ export const indexToColorScheme = {
  * - Mitigation impact integration
  * - Gradient and stripe material patterns
  *
- * @returns {{updateGridColors: (selectedIndex: string) => void}} Grid styling functions
+ * - Batch processing for UI responsiveness
+ *
+ * @returns {{updateGridColors: (selectedIndex: string) => Promise<void>}} Grid styling functions
  *
  * @example
  * import { useGridStyling } from '@/composables/useGridStyling';
  * const { updateGridColors } = useGridStyling();
- * updateGridColors('heat_index'); // Apply heat vulnerability colors
+ * await updateGridColors('heat_index'); // Apply heat vulnerability colors
  */
 export function useGridStyling() {
 	// --- STATE MANAGEMENT ---
@@ -109,6 +112,23 @@ export function useGridStyling() {
 	const ndviActive = computed(() => toggleStore.ndvi)
 	const baseAlpha = computed(() => (ndviActive.value ? 0.4 : 0.8))
 
+	// --- COLOR CACHE ---
+	// Cache Cesium.Color objects keyed by "colorString-alpha" to reduce GC pressure
+	const colorCache = new Map()
+
+	const getCachedColor = (colorString, alpha) => {
+		const key = `${colorString}-${alpha.toFixed(2)}`
+		if (!colorCache.has(key)) {
+			colorCache.set(key, Cesium.Color.fromCssColorString(colorString).withAlpha(alpha))
+		}
+		return colorCache.get(key)
+	}
+
+	// Clear cache when baseAlpha changes (NDVI toggle)
+	watch(baseAlpha, () => {
+		colorCache.clear()
+	})
+
 	// --- HELPER FUNCTIONS ---
 	const handleMissingValues = (entity, selectedIndex) => {
 		const isMissingValues = entity.properties.missing_values?.getValue()
@@ -118,10 +138,7 @@ export function useGridStyling() {
 			selectedIndex !== 'avgheatexposure' &&
 			selectedIndex !== 'green'
 		) {
-			if (entity.polygon)
-				entity.polygon.material = Cesium.Color.fromCssColorString('#A9A9A9').withAlpha(
-					baseAlpha.value
-				)
+			if (entity.polygon) entity.polygon.material = getCachedColor('#A9A9A9', baseAlpha.value)
 		}
 		return isMissingValues
 	}
@@ -134,92 +151,110 @@ export function useGridStyling() {
 			return indexValue < lowerBound + 0.2
 		})
 		const colorString = colorEntry ? colorEntry.color : colorScheme[colorScheme.length - 1].color
-		return Cesium.Color.fromCssColorString(colorString).withAlpha(baseAlpha.value)
+		return getCachedColor(colorString, baseAlpha.value)
+	}
+
+	// --- ENTITY STYLING FUNCTION ---
+	/**
+	 * Styles a single grid entity based on the selected index.
+	 * Extracted from updateGridColors loop body for batch processing.
+	 *
+	 * @param {Cesium.Entity} entity - The entity to style
+	 * @param {string} selectedIndex - The selected vulnerability index
+	 */
+	const styleGridEntity = (entity, selectedIndex) => {
+		// Reset state for each entity
+		entity.polygon.extrudedHeight = 0
+		entity.polygon.material = getCachedColor('#FFFFFF', baseAlpha.value)
+
+		if (handleMissingValues(entity, selectedIndex)) return
+
+		if (selectedIndex === 'heat_index') {
+			const originalHeatIndex = entity.properties.heat_index?.getValue()
+			if (originalHeatIndex != null) {
+				const reduction = mitigationStore.calculateTotalReductionForCell(entity)
+				const newHeatIndex = Math.max(0, originalHeatIndex - reduction)
+
+				if (reduction > 0) {
+					// Correctly update the global state
+					mitigationStore.addImpact(reduction)
+					mitigationStore.addCell(entity.properties.grid_id.getValue())
+				}
+
+				if (entity.polygon) {
+					entity.polygon.material = getColorForIndex(newHeatIndex, 'heat_index')
+				}
+			}
+		} else if (selectedIndex === 'combined_heat_flood_green') {
+			const heat = entity.properties.heat_index?.getValue()
+			const flood = entity.properties.flood_index?.getValue()
+			const green = entity.properties.green?.getValue()
+			if (heat != null && flood != null && green != null) {
+				entity.polygon.material = new Cesium.StripeMaterialProperty({
+					evenColor: getColorForIndex(flood, 'flood_index'),
+					oddColor: getColorForIndex(heat, 'heat_index'),
+					repeat: 10,
+				})
+				entity.polygon.extrudedHeight = green * 250
+			}
+		} else if (selectedIndex === 'avgheatexposure') {
+			const avgHeat = entity.properties.final_avg_conditional?.getValue()
+			if (avgHeat != null) {
+				entity.polygon.material = new Cesium.Color(1, 1 - avgHeat, 0, avgHeat)
+			}
+		} else if (selectedIndex === 'combined_avgheatexposure') {
+			const avgHeat = entity.properties.final_avg_conditional?.getValue()
+			const heatIndex = entity.properties.heat_index?.getValue()
+			if (avgHeat != null && heatIndex != null) {
+				entity.polygon.material = new Cesium.Color(1, 1 - avgHeat, 0, avgHeat)
+				entity.polygon.extrudedHeight = heatIndex * 250
+			}
+		} else if (selectedIndex === 'combined_heatindex_avgheatexposure') {
+			const avgHeat = entity.properties.final_avg_conditional?.getValue()
+			const heatIndex = entity.properties.heat_index?.getValue()
+			if (avgHeat != null && heatIndex != null) {
+				entity.polygon.material = getColorForIndex(heatIndex, 'heat_index')
+				entity.polygon.extrudedHeight = avgHeat * 250
+			}
+		} else if (selectedIndex === 'combined_heat_flood' || selectedIndex === 'combined_flood_heat') {
+			const heat = entity.properties.heat_index?.getValue()
+			const flood = entity.properties.flood_index?.getValue()
+			if (heat != null && flood != null) {
+				if (selectedIndex === 'combined_heat_flood') {
+					entity.polygon.material = getColorForIndex(heat, 'heat_index')
+					entity.polygon.extrudedHeight = flood * 250
+				} else {
+					entity.polygon.material = getColorForIndex(flood, 'flood_index')
+					entity.polygon.extrudedHeight = heat * 250
+				}
+			}
+		} else {
+			// Handle all other simple indices
+			const indexValue = entity.properties[selectedIndex]?.getValue()
+			if (indexValue !== undefined && indexValue !== null && entity.polygon) {
+				entity.polygon.material = getColorForIndex(indexValue, selectedIndex)
+			}
+		}
 	}
 
 	// --- MAIN EXPOSED FUNCTION ---
-	const updateGridColors = (selectedIndex) => {
+	/**
+	 * Updates grid entity colors based on the selected vulnerability index.
+	 * Uses adaptive batch processing to maintain UI responsiveness.
+	 *
+	 * @param {string} selectedIndex - The selected vulnerability index
+	 * @returns {Promise<void>}
+	 */
+	const updateGridColors = async (selectedIndex) => {
 		if (!viewer.value) return
 		const dataSource = viewer.value.dataSources.getByName('250m_grid')[0]
 		if (!dataSource) return
 
-		for (const entity of dataSource.entities.values) {
-			// Reset state for each entity
-			entity.polygon.extrudedHeight = 0
-			entity.polygon.material = Cesium.Color.WHITE.withAlpha(baseAlpha.value)
+		const entities = dataSource.entities.values
 
-			if (handleMissingValues(entity, selectedIndex)) continue
-
-			if (selectedIndex === 'heat_index') {
-				const originalHeatIndex = entity.properties.heat_index?.getValue()
-				if (originalHeatIndex != null) {
-					const reduction = mitigationStore.calculateTotalReductionForCell(entity)
-					const newHeatIndex = Math.max(0, originalHeatIndex - reduction)
-
-					if (reduction > 0) {
-						// Correctly update the global state
-						mitigationStore.addImpact(reduction)
-						mitigationStore.addCell(entity.properties.grid_id.getValue())
-					}
-
-					if (entity.polygon) {
-						entity.polygon.material = getColorForIndex(newHeatIndex, 'heat_index')
-					}
-				}
-			} else if (selectedIndex === 'combined_heat_flood_green') {
-				const heat = entity.properties.heat_index?.getValue()
-				const flood = entity.properties.flood_index?.getValue()
-				const green = entity.properties.green?.getValue()
-				if (heat != null && flood != null && green != null) {
-					entity.polygon.material = new Cesium.StripeMaterialProperty({
-						evenColor: getColorForIndex(flood, 'flood_index'),
-						oddColor: getColorForIndex(heat, 'heat_index'),
-						repeat: 10,
-					})
-					entity.polygon.extrudedHeight = green * 250
-				}
-			} else if (selectedIndex === 'avgheatexposure') {
-				const avgHeat = entity.properties.final_avg_conditional?.getValue()
-				if (avgHeat != null) {
-					entity.polygon.material = new Cesium.Color(1, 1 - avgHeat, 0, avgHeat)
-				}
-			} else if (selectedIndex === 'combined_avgheatexposure') {
-				const avgHeat = entity.properties.final_avg_conditional?.getValue()
-				const heatIndex = entity.properties.heat_index?.getValue()
-				if (avgHeat != null && heatIndex != null) {
-					entity.polygon.material = new Cesium.Color(1, 1 - avgHeat, 0, avgHeat)
-					entity.polygon.extrudedHeight = heatIndex * 250
-				}
-			} else if (selectedIndex === 'combined_heatindex_avgheatexposure') {
-				const avgHeat = entity.properties.final_avg_conditional?.getValue()
-				const heatIndex = entity.properties.heat_index?.getValue()
-				if (avgHeat != null && heatIndex != null) {
-					entity.polygon.material = getColorForIndex(heatIndex, 'heat_index')
-					entity.polygon.extrudedHeight = avgHeat * 250
-				}
-			} else if (
-				selectedIndex === 'combined_heat_flood' ||
-				selectedIndex === 'combined_flood_heat'
-			) {
-				const heat = entity.properties.heat_index?.getValue()
-				const flood = entity.properties.flood_index?.getValue()
-				if (heat != null && flood != null) {
-					if (selectedIndex === 'combined_heat_flood') {
-						entity.polygon.material = getColorForIndex(heat, 'heat_index')
-						entity.polygon.extrudedHeight = flood * 250
-					} else {
-						entity.polygon.material = getColorForIndex(flood, 'flood_index')
-						entity.polygon.extrudedHeight = heat * 250
-					}
-				}
-			} else {
-				// Handle all other simple indices
-				const indexValue = entity.properties[selectedIndex]?.getValue()
-				if (indexValue !== undefined && indexValue !== null && entity.polygon) {
-					entity.polygon.material = getColorForIndex(indexValue, selectedIndex)
-				}
-			}
-		}
+		await processBatchAdaptive(entities, (entity) => styleGridEntity(entity, selectedIndex), {
+			processorName: 'gridStyling',
+		})
 	}
 
 	return {
