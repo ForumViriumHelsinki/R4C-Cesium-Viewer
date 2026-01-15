@@ -64,12 +64,15 @@
 			<v-divider class="my-3" />
 
 			<!-- Anti-Aliasing Settings -->
-			<v-row>
+			<v-row v-if="msaaOptionsEnabled || fxaaOptionsEnabled">
 				<v-col cols="12">
 					<v-label class="text-caption text-medium-emphasis mb-2"> Anti-Aliasing </v-label>
 
 					<!-- MSAA Settings -->
-					<div class="mb-3">
+					<div
+						v-if="msaaOptionsEnabled"
+						class="mb-3"
+					>
 						<v-row
 							align="center"
 							no-gutters
@@ -129,6 +132,7 @@
 
 					<!-- FXAA Settings -->
 					<v-switch
+						v-if="fxaaOptionsEnabled"
 						v-model="fxaaEnabled"
 						color="primary"
 						density="compact"
@@ -268,6 +272,7 @@
 
 <script>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
 import logger from '../utils/logger.js'
 
@@ -275,7 +280,12 @@ export default {
 	name: 'GraphicsQuality',
 	setup() {
 		const graphicsStore = useGraphicsStore()
+		const featureFlagStore = useFeatureFlagStore()
 		const selectedPreset = ref(null)
+
+		// Feature flag checks for anti-aliasing options
+		const msaaOptionsEnabled = computed(() => featureFlagStore.isEnabled('msaaOptions'))
+		const fxaaOptionsEnabled = computed(() => featureFlagStore.isEnabled('fxaaOptions'))
 
 		// Reactive properties
 		const msaaEnabled = computed({
@@ -465,6 +475,8 @@ export default {
 			showPerformanceWarning,
 			antiAliasingStatus,
 			applyPreset,
+			msaaOptionsEnabled,
+			fxaaOptionsEnabled,
 		}
 	},
 }

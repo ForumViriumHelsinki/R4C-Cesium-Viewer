@@ -90,8 +90,6 @@ VITE_FEATURE_SOCIOECONOMIC=true
 
 | Flag                     | Default | Description                                         | Experimental |
 | ------------------------ | ------- | --------------------------------------------------- | ------------ |
-| `compactView`            | `false` | Reduced UI elements for smaller screens             | No           |
-| `mobileOptimized`        | `false` | Touch-optimized controls and layouts                | Yes          |
 | `controlPanelDefault`    | `true`  | Show control panel on load                          | No           |
 | `dataSourceStatus`       | `true`  | Show connection status for data sources             | No           |
 | `loadingPerformanceInfo` | `false` | Display detailed performance metrics during loading | Yes          |
@@ -100,8 +98,6 @@ VITE_FEATURE_SOCIOECONOMIC=true
 **Environment Variables:**
 
 ```bash
-VITE_FEATURE_COMPACT_VIEW=false
-VITE_FEATURE_MOBILE_OPTIMIZED=false
 VITE_FEATURE_CONTROL_PANEL_DEFAULT=true
 VITE_FEATURE_DATA_SOURCE_STATUS=true
 VITE_FEATURE_LOADING_PERF=false
@@ -128,18 +124,16 @@ VITE_FEATURE_BG_MAP_PROVIDERS=true
 
 ### Developer Tools
 
-| Flag                    | Default | Description                                                                 | Experimental |
-| ----------------------- | ------- | --------------------------------------------------------------------------- | ------------ |
-| `debugMode`             | auto    | Enable debug logging and developer tools (auto-enabled in development mode) | No           |
-| `performanceMonitoring` | `false` | Real-time performance metrics and profiling                                 | No           |
-| `cacheVisualization`    | `false` | Visualize data cache status and usage                                       | Yes          |
-| `healthChecks`          | `false` | Show system health check results                                            | Yes          |
+| Flag                 | Default | Description                                                                 | Experimental |
+| -------------------- | ------- | --------------------------------------------------------------------------- | ------------ |
+| `debugMode`          | auto    | Enable debug logging and developer tools (auto-enabled in development mode) | No           |
+| `cacheVisualization` | `false` | Visualize data cache status and usage                                       | Yes          |
+| `healthChecks`       | `false` | Show system health check results                                            | Yes          |
 
 **Environment Variables:**
 
 ```bash
 # Debug mode is automatically enabled in development
-VITE_FEATURE_PERF_MONITOR=false
 VITE_FEATURE_CACHE_VIZ=false
 VITE_FEATURE_HEALTH_CHECKS=false
 ```
@@ -183,8 +177,8 @@ import { useFeatureFlagStore } from '@/stores/featureFlagStore';
 
 const featureFlagStore = useFeatureFlagStore();
 
-if (featureFlagStore.isEnabled('performanceMonitoring')) {
-	// Start performance monitoring
+if (featureFlagStore.isEnabled('debugMode')) {
+	// Log debug information
 	console.time('operation');
 	// ... do work ...
 	console.timeEnd('operation');
@@ -253,8 +247,8 @@ VITE_FEATURE_NDVI=true
 VITE_FEATURE_FLOOD_LAYERS=true
 VITE_FEATURE_HDR=true
 VITE_FEATURE_AO=true
-VITE_FEATURE_PERF_MONITOR=true
 VITE_FEATURE_CACHE_VIZ=true
+VITE_FEATURE_HEALTH_CHECKS=true
 ```
 
 ### Production
@@ -267,7 +261,6 @@ VITE_FEATURE_NDVI=true
 VITE_FEATURE_FLOOD_LAYERS=false
 VITE_FEATURE_HDR=false
 VITE_FEATURE_AO=false
-VITE_FEATURE_PERF_MONITOR=false
 ```
 
 ### Testing
@@ -277,8 +270,8 @@ Create a `.env.test` file:
 ```bash
 # Test with experimental features enabled
 VITE_FEATURE_FLOOD_LAYERS=true
-VITE_FEATURE_MOBILE_OPTIMIZED=true
 VITE_FEATURE_BACKGROUND_PRELOAD=true
+VITE_FEATURE_CACHE_VIZ=true
 ```
 
 ## Best Practices

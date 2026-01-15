@@ -280,6 +280,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useURLStore } from '../stores/urlStore'
 import logger from '../utils/logger.js'
 
@@ -287,15 +288,26 @@ export default {
 	name: 'BackgroundMapBrowser',
 	setup() {
 		const _backgroundMapStore = useBackgroundMapStore()
+		const featureFlagStore = useFeatureFlagStore()
 		const urlStore = useURLStore()
 
 		// Category management
 		const selectedCategory = ref('basic')
-		const categories = [
+		const allCategories = [
 			{ key: 'basic', name: 'Basic', icon: 'mdi-map' },
 			{ key: 'environmental', name: 'Environmental', icon: 'mdi-leaf' },
 			{ key: 'flood', name: 'Flood Risk', icon: 'mdi-water' },
 		]
+
+		// Filter categories based on feature flags
+		const categories = computed(() => {
+			return allCategories.filter((cat) => {
+				if (cat.key === 'flood') {
+					return featureFlagStore.isEnabled('floodLayers')
+				}
+				return true
+			})
+		})
 
 		// Basic maps
 		const selectedBasicMap = ref('default')
