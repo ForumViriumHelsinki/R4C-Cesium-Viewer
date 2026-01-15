@@ -10,41 +10,67 @@ jobs:
     steps:
       - name: Extract release info
         id: release
-        env:
-          RELEASE_BODY: ${{ github.event.release.body }}
-        run: |
-          # Extract version from tag
-          VERSION="${{ github.event.release.tag_name }}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = context.payload.release.tag_name;
+            core.setOutput('version', version);
 
-          # Convert Markdown to Google Chat compatible format
-          # Google Chat Cards v2 supports: <b>, <i>, <a>, <br>, basic text
-          # Using perl for better regex support with nested parentheses in URLs
-          BODY=$(echo "$RELEASE_BODY" | perl -pe '
-            # Convert markdown links [text](url) - handle URLs with special chars
-            s/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/<a href="$2">$1<\/a>/g;
+            // Convert markdown to HTML using GitHub's API (handles all edge cases properly)
+            const releaseBody = context.payload.release.body || '';
 
-            # Convert markdown headers ## text to bold
-            s/^##+ +/<b>/;
+            try {
+              const { data: htmlResult } = await github.rest.markdown.render({
+                text: releaseBody,
+                mode: 'gfm',
+                context: `${context.repo.owner}/${context.repo.repo}`
+              });
 
-            # Convert markdown bold **text** to <b>text</b>
-            s/\*\*([^*]+)\*\*/<b>$1<\/b>/g;
+              // Clean up GitHub's HTML for Google Chat Cards v2
+              // Cards v2 supports: <b>, <i>, <a>, <br>, basic text
+              let cleanHtml = htmlResult
+                // Convert <strong> to <b>
+                .replace(/<strong>/g, '<b>')
+                .replace(/<\/strong>/g, '</b>')
+                // Convert <em> to <i>
+                .replace(/<em>/g, '<i>')
+                .replace(/<\/em>/g, '</i>')
+                // Convert headers to bold
+                .replace(/<h[1-6][^>]*>/g, '<b>')
+                .replace(/<\/h[1-6]>/g, '</b><br>')
+                // Convert list items to bullet points
+                .replace(/<li>/g, '• ')
+                .replace(/<\/li>/g, '<br>')
+                // Remove ul/ol tags
+                .replace(/<\/?ul>/g, '')
+                .replace(/<\/?ol>/g, '')
+                // Convert paragraphs to line breaks
+                .replace(/<p>/g, '')
+                .replace(/<\/p>/g, '<br>')
+                // Remove code blocks but keep inline code
+                .replace(/<pre><code[^>]*>[\s\S]*?<\/code><\/pre>/g, '[code block]')
+                .replace(/<code>/g, '')
+                .replace(/<\/code>/g, '')
+                // Remove any remaining HTML tags not supported by Google Chat
+                .replace(/<(?!\/?(b|i|a|br)[ >])[^>]+>/g, '')
+                // Clean up multiple consecutive line breaks
+                .replace(/(<br>){3,}/g, '<br><br>')
+                // Trim and limit length
+                .trim()
+                .substring(0, 800);
 
-            # Convert markdown list items to bullet points
-            s/^\* /• /;
-          ' | \
-            # Remove empty lines
-            grep -v '^$' | \
-            # Add </b> after header lines (lines starting with <b> without closing tag)
-            sed -E '/^<b>/{ /<\/b>$/!s/$/<\/b>/; }' | \
-            # Join lines with <br> for HTML display
-            tr '\n' '~' | sed 's/~/<br>/g' | \
-            # Limit to ~800 chars for readability
-            head -c 800)
-
-          # Escape for JSON
-          BODY=$(echo "$BODY" | jq -Rs '.')
-          echo "body=$BODY" >> $GITHUB_OUTPUT
+              // Escape for JSON output
+              core.setOutput('body', JSON.stringify(cleanHtml));
+            } catch (error) {
+              console.log('Warning: Could not render markdown, using raw text');
+              // Fallback: escape special chars and use raw text
+              const escaped = releaseBody
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .substring(0, 800);
+              core.setOutput('body', JSON.stringify(escaped));
+            }
 
       - name: Send Google Chat notification
         env:

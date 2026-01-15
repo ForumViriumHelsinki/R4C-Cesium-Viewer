@@ -28,7 +28,7 @@ jobs:
       contents: read
       pull-requests: read
       issues: read
-      id-token: write
+      # Note: id-token: write removed - not needed for code review (principle of least privilege)
 
     steps:
       - name: Checkout repository

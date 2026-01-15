@@ -1,0 +1,34 @@
+version: 2
+updates:
+  # GitHub Actions version updates
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: 'ci(deps)'
+
+  # NPM/Bun dependency updates
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      development:
+        dependency-type: 'development'
+        patterns:
+          - '*'
+      production:
+        dependency-type: 'production'
+        patterns:
+          - '*'
+    commit-message:
+      prefix: 'deps'
+    ignore:
+      # Ignore major version updates for CesiumJS (breaking changes)
+      - dependency-name: 'cesium'
+        update-types: ['version-update:semver-major']

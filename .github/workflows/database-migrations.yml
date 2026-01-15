@@ -10,6 +10,12 @@ on:
     branches: [main]
     paths:
       - 'db/migrations/**'
+  workflow_dispatch:
+    inputs:
+      test_rollback:
+        description: 'Also test migration rollback'
+        type: boolean
+        default: true
 
 jobs:
   test-migrations:
@@ -54,22 +60,83 @@ jobs:
             sleep 2
           done
 
-      - name: Test migrations
+      - name: Run migrations up
+        id: migrate-up
         run: |
-          # Test basic dbmate functionality
+          set -euo pipefail
+
+          echo "::group::Running migrations up"
           dbmate wait
-
-          # Apply migrations
+          dbmate status
           dbmate up
+          echo "::endgroup::"
 
-          # Verify schema_migrations table exists
+          # Verify migrations applied
+          PENDING=$(dbmate status 2>&1 | grep -c "pending" || true)
+          if [ "$PENDING" -gt 0 ]; then
+            echo "::error::$PENDING migrations still pending after 'up'"
+            exit 1
+          fi
+
+          echo "✅ All migrations applied successfully"
+
+      - name: Verify schema
+        run: |
+          set -euo pipefail
+          # Verify schema_migrations table exists and has entries
           psql "$DATABASE_URL" -c "SELECT version FROM schema_migrations ORDER BY version;"
 
-          # Test rollback
-          dbmate rollback
+      - name: Run migrations down (rollback)
+        id: migrate-down
+        if: success() && (github.event.inputs.test_rollback != 'false')
+        run: |
+          set -euo pipefail
 
-          # Re-apply
+          echo "::group::Running migrations down"
+          dbmate rollback
+          echo "::endgroup::"
+
+          echo "✅ Rollback successful"
+
+      - name: Run migrations up again
+        id: migrate-up-again
+        if: success() && (github.event.inputs.test_rollback != 'false')
+        run: |
+          set -euo pipefail
+
+          echo "::group::Running migrations up (verify re-apply)"
           dbmate up
+          echo "::endgroup::"
+
+          echo "✅ Migrations re-applied successfully"
+
+      - name: Migration test summary
+        if: always()
+        run: |
+          echo "## 🗃️ Migration Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.migrate-up.outcome }}" == "success" ]; then
+            echo "- ✅ Up migrations: Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ Up migrations: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ steps.migrate-down.outcome }}" == "success" ]; then
+            echo "- ✅ Down migrations: Success" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.migrate-down.outcome }}" == "skipped" ]; then
+            echo "- ⏭️ Down migrations: Skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ Down migrations: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ steps.migrate-up-again.outcome }}" == "success" ]; then
+            echo "- ✅ Re-up migrations: Success" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.migrate-up-again.outcome }}" == "skipped" ]; then
+            echo "- ⏭️ Re-up migrations: Skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ Re-up migrations: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Run migration test script
         run: ./scripts/test_migration.sh
