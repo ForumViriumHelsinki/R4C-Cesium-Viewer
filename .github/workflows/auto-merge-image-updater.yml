@@ -39,12 +39,39 @@ jobs:
           echo "Created/found PR: $PR_URL"
 
       - name: Approve PR
+        id: approve
         env:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT || secrets.GITHUB_TOKEN }}
-        run: gh pr review --approve "${{ github.ref_name }}"
-        continue-on-error: true
+        run: |
+          set -euo pipefail
+
+          # Check if already approved
+          APPROVALS=$(gh pr view "${{ github.ref_name }}" --json reviews --jq '[.reviews[] | select(.state == "APPROVED")] | length')
+
+          if [ "$APPROVALS" -gt 0 ]; then
+            echo "PR already has $APPROVALS approval(s), skipping"
+            echo "already_approved=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Attempt approval
+          if gh pr review --approve "${{ github.ref_name }}"; then
+            echo "approved=true" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::Could not approve PR - may require manual approval"
+            echo "approved=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Enable auto-merge
+        if: steps.approve.outputs.approved == 'true' || steps.approve.outputs.already_approved == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr merge --auto --squash "${{ github.ref_name }}"
+
+      - name: Notify if approval failed
+        if: steps.approve.outputs.approved == 'false' && steps.approve.outputs.already_approved != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "::warning::Auto-merge skipped - PR requires manual approval"
+          gh pr comment "${{ github.ref_name }}" --body "⚠️ Auto-approval failed. Please review and approve manually."
