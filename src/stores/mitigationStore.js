@@ -311,5 +311,52 @@ export const useMitigationStore = defineStore('mitigation', {
 		getGridImpact(gridId) {
 			return this.gridImpacts[gridId] || 0
 		},
+		/**
+		 * Get cached cooling center reduction for a grid cell (O(1) lookup)
+		 * @param {string|number} gridId - Grid cell identifier
+		 * @returns {number} Cached reduction value, or 0 if not calculated
+		 */
+		getCachedReduction(gridId) {
+			return this.gridImpacts[gridId] || 0
+		},
+		/**
+		 * Pre-calculate cooling center impacts for all grid cells.
+		 * Must be called when cooling centers change to update the cache.
+		 * Stores results in gridImpacts for O(1) lookup during rendering.
+		 */
+		recalculateCoolingCenterImpacts() {
+			// Reset impacts and tracking state
+			this.gridImpacts = {}
+			this.affected = []
+			this.impact = 0
+
+			if (!this.gridCells || this.gridCells.length === 0) {
+				logger.warn('Grid cells not set. Cannot calculate cooling center impacts.')
+				return
+			}
+
+			if (this.coolingCenters.length === 0) {
+				// No cooling centers, all impacts are 0 (already reset above)
+				return
+			}
+
+			// Calculate total reduction for each grid cell
+			for (const cell of this.gridCells) {
+				let totalReduction = 0
+
+				for (const center of this.coolingCenters) {
+					const distance = Math.sqrt(
+						(center.euref_x - cell.x) ** 2 + (center.euref_y - cell.y) ** 2
+					)
+					totalReduction += this.getReductionValue(distance)
+				}
+
+				if (totalReduction > 0) {
+					this.gridImpacts[cell.id] = totalReduction
+					this.affected.push(cell.id)
+					this.impact += totalReduction
+				}
+			}
+		},
 	},
 })
