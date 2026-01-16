@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.1...r4c-cesium-viewer-v1.22.2) (2026-01-16)
+
+
+### Bug Fixes
+
+* remove unused DNS resolver directive from nginx config ([e4d3322](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e4d3322c9ddcfa93be2482166db27581a7e42e88))
+
 ## [1.22.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.0...r4c-cesium-viewer-v1.22.1) (2026-01-16)
 
 
