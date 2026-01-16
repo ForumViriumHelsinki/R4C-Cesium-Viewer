@@ -7,12 +7,6 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # DNS resolver for service discovery
-    # Uses NGINX_DNS_RESOLVER env var, defaults to 127.0.0.11 (Docker's embedded DNS)
-    # For Kubernetes: set to kube-dns ClusterIP (e.g., 10.96.0.10 or check your cluster)
-    # For Docker Compose: leave default (127.0.0.11)
-    resolver ${NGINX_DNS_RESOLVER} valid=30s ipv6=off;
-
     # Global proxy settings
     proxy_cache global_cache;
     proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
