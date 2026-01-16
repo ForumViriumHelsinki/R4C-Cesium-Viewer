@@ -22,7 +22,8 @@ import { VIEWPORTS } from '../../config/constants'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
 import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
-// TODO: Re-enable when Vuetify navigation drawer rendering issue is resolved
+// Drawer rendering fixed by 'eager' prop - still needs view navigation fixes
+// TODO: Re-enable after fixing view mode navigation in test helpers (see navigateToView)
 cesiumDescribe.skip('Layer Controls Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
 	let helpers: AccessibilityTestHelpers

@@ -1,5 +1,5 @@
-import type { Page } from '@playwright/test';
-import { TEST_TIMEOUTS } from './test-helpers';
+import type { Page } from '@playwright/test'
+import { TEST_TIMEOUTS } from './test-helpers'
 
 /**
  * Helper utilities for handling Cesium WebGL initialization in tests
@@ -14,17 +14,17 @@ import { TEST_TIMEOUTS } from './test-helpers';
 export async function waitForCesiumReady(page: Page, timeout: number = 30000): Promise<void> {
 	try {
 		// In CI, we may need to be more lenient
-		const cesiumTimeout = process.env.CI ? timeout / 2 : timeout;
+		const cesiumTimeout = process.env.CI ? timeout / 2 : timeout
 
 		// Pass CI flag to browser context
-		const isCI = process.env.CI === 'true';
+		const isCI = process.env.CI === 'true'
 
 		// Wait for Cesium viewer to be available
 		await page.waitForFunction(
 			(ci) => {
 				// Check if window.Cesium exists
 				if (typeof window === 'undefined' || !window.Cesium) {
-					return false;
+					return false
 				}
 
 				// Check if viewer exists (common pattern in Cesium apps)
@@ -32,52 +32,52 @@ export async function waitForCesiumReady(page: Page, timeout: number = 30000): P
 					window.__viewer ||
 					window.viewer ||
 					window.cesiumViewer ||
-					document.querySelector('.cesium-viewer');
+					document.querySelector('.cesium-viewer')
 
 				if (!viewer) {
 					// In CI, we might not have a full viewer
 					if (ci && window.Cesium) {
-						return true; // Cesium library is loaded, that's enough for CI
+						return true // Cesium library is loaded, that's enough for CI
 					}
-					return false;
+					return false
 				}
 
 				// Check if WebGL context is available (optional in CI)
 				const canvas =
 					document.querySelector('canvas.cesium-widget-canvas') ||
-					document.querySelector('#cesiumContainer canvas');
+					document.querySelector('#cesiumContainer canvas')
 
 				if (canvas && canvas instanceof HTMLCanvasElement) {
 					try {
-						const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-						return !!gl;
+						const gl = canvas.getContext('webgl') || canvas.getContext('webgl2')
+						return !!gl
 					} catch (e) {
 						// In CI, WebGL might not work properly
 						if (ci) {
-							return true; // Continue anyway
+							return true // Continue anyway
 						}
-						console.warn('WebGL context check failed:', e);
-						return false;
+						console.warn('WebGL context check failed:', e)
+						return false
 					}
 				}
 
 				// In CI, if Cesium is loaded, that's good enough
-				return ci ? !!window.Cesium : false;
+				return ci ? !!window.Cesium : false
 			},
 			isCI,
 			{ timeout: cesiumTimeout }
-		);
+		)
 	} catch (error) {
-		console.warn('Cesium readiness check failed:', error);
+		console.warn('Cesium readiness check failed:', error)
 
 		// In CI environment, we might need to proceed without full Cesium
 		if (process.env.CI) {
-			console.log('Running in CI mode - proceeding despite Cesium initialization issues');
-			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD); // Give it a bit more time
-			return;
+			console.log('Running in CI mode - proceeding despite Cesium initialization issues')
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD) // Give it a bit more time
+			return
 		}
 
-		throw error;
+		throw error
 	}
 }
 
@@ -89,13 +89,13 @@ export async function waitForCesiumReady(page: Page, timeout: number = 30000): P
 export async function isWebGLAvailable(page: Page): Promise<boolean> {
 	return await page.evaluate(() => {
 		try {
-			const canvas = document.createElement('canvas');
-			const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-			return !!gl;
+			const canvas = document.createElement('canvas')
+			const gl = canvas.getContext('webgl') || canvas.getContext('webgl2')
+			return !!gl
 		} catch (_e) {
-			return false;
+			return false
 		}
-	});
+	})
 }
 
 /**
@@ -104,43 +104,43 @@ export async function isWebGLAvailable(page: Page): Promise<boolean> {
  */
 export async function setupCesiumForCI(page: Page): Promise<void> {
 	if (!process.env.CI) {
-		return; // Only apply CI-specific setup in CI environment
+		return // Only apply CI-specific setup in CI environment
 	}
 
 	// Inject CI-specific configurations before page loads
 	await page.addInitScript(() => {
 		// Override WebGL context creation to use software rendering hints
-		const originalGetContext = HTMLCanvasElement.prototype.getContext;
+		const originalGetContext = HTMLCanvasElement.prototype.getContext
 		HTMLCanvasElement.prototype.getContext = function (contextType, ...args) {
 			if (contextType === 'webgl' || contextType === 'webgl2') {
-				const contextAttributes = args[0] || {};
+				const contextAttributes = args[0] || {}
 				// Force software rendering attributes
-				contextAttributes.failIfMajorPerformanceCaveat = false;
-				contextAttributes.powerPreference = 'low-power';
-				args[0] = contextAttributes;
+				contextAttributes.failIfMajorPerformanceCaveat = false
+				contextAttributes.powerPreference = 'low-power'
+				args[0] = contextAttributes
 			}
-			return originalGetContext.apply(this, [contextType, ...args]);
-		};
+			return originalGetContext.apply(this, [contextType, ...args])
+		}
 
 		// Set Cesium to use minimal settings
 		if (typeof window !== 'undefined') {
-			window.CESIUM_BASE_URL = '/cesium';
+			window.CESIUM_BASE_URL = '/cesium'
 
 			// Override Cesium defaults when it loads
 			const cesiumReadyInterval = setInterval(() => {
 				if (window.Cesium) {
 					// Disable fancy features that might cause issues in CI
 					if (window.Cesium.FeatureDetection) {
-						window.Cesium.FeatureDetection.supportsWebGL = () => true;
+						window.Cesium.FeatureDetection.supportsWebGL = () => true
 					}
-					clearInterval(cesiumReadyInterval);
+					clearInterval(cesiumReadyInterval)
 				}
-			}, 100);
+			}, 100)
 
 			// Clear interval after timeout to prevent memory leak
-			setTimeout(() => clearInterval(cesiumReadyInterval), 30000);
+			setTimeout(() => clearInterval(cesiumReadyInterval), 30000)
 		}
-	});
+	})
 }
 
 /**
@@ -150,40 +150,61 @@ export async function setupCesiumForCI(page: Page): Promise<void> {
  */
 export async function waitForAppReady(page: Page, timeout: number = 30000): Promise<void> {
 	// First wait for basic DOM readiness
-	await page.waitForLoadState('domcontentloaded');
+	await page.waitForLoadState('domcontentloaded')
 
 	// Wait for initial page load to complete
 	// Note: CesiumJS continuously loads tiles, so we don't wait for network idle
 	// Instead we just ensure basic DOM is ready
-	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
 	// Check for app-specific readiness indicators
 	try {
 		// Wait for Vue app to be present (not necessarily visible)
 		// Use full timeout in CI for better reliability
-		const appTimeout = process.env.CI ? timeout : timeout / 2;
+		const appTimeout = process.env.CI ? timeout : timeout / 2
 		await page.waitForSelector('#app', {
 			state: 'attached',
 			timeout: appTimeout,
-		});
+		})
 
 		// Wait for any loading indicators to disappear (if they exist)
-		const loadingSelectors = ['.loading', '.spinner', '.loading-overlay'];
+		const loadingSelectors = ['.loading', '.spinner', '.loading-overlay']
 		for (const selector of loadingSelectors) {
-			const element = await page.$(selector);
+			const element = await page.$(selector)
 			if (element) {
 				await page
 					.waitForSelector(selector, { state: 'hidden', timeout: timeout / 4 })
 					.catch(() => {
-						console.log(`${selector} did not hide, continuing...`);
-					});
+						console.log(`${selector} did not hide, continuing...`)
+					})
 			}
 		}
 
 		// Give the app a moment to stabilize
-		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
+
+		// Wait for Vuetify to be fully initialized
+		// This ensures v-navigation-drawer and other Vuetify components render properly
+		await page
+			.waitForFunction(
+				() => {
+					// Check for v-app (Vuetify root component)
+					const vApp = document.querySelector('.v-application')
+					if (!vApp) return false
+
+					// Check that Vuetify theme is applied
+					const hasTheme = document.querySelector('[class*="v-theme"]')
+					if (!hasTheme) return false
+
+					return true
+				},
+				{ timeout: timeout / 2 }
+			)
+			.catch(() => {
+				console.log('Vuetify initialization check timed out, continuing...')
+			})
 	} catch (error) {
-		console.warn('App readiness check encountered issues:', error);
+		console.warn('App readiness check encountered issues:', error)
 		// Don't throw - let the test continue
 	}
 }
@@ -196,34 +217,34 @@ export async function waitForAppReady(page: Page, timeout: number = 30000): Prom
 export async function initializeCesiumWithRetry(page: Page, retries: number = 3): Promise<boolean> {
 	for (let i = 0; i < retries; i++) {
 		try {
-			await setupCesiumForCI(page);
+			await setupCesiumForCI(page)
 			// Increase timeout in CI for better reliability
-			const appTimeout = process.env.CI ? 45000 : 30000;
-			await waitForAppReady(page, appTimeout);
+			const appTimeout = process.env.CI ? 45000 : 30000
+			await waitForAppReady(page, appTimeout)
 
-			const hasWebGL = await isWebGLAvailable(page);
+			const hasWebGL = await isWebGLAvailable(page)
 			if (!hasWebGL && !process.env.CI) {
-				throw new Error('WebGL not available');
+				throw new Error('WebGL not available')
 			}
 
-			await waitForCesiumReady(page, 20000);
-			return true;
+			await waitForCesiumReady(page, 20000)
+			return true
 		} catch (error) {
-			console.log(`Cesium initialization attempt ${i + 1} failed:`, error);
+			console.log(`Cesium initialization attempt ${i + 1} failed:`, error)
 			if (i < retries - 1) {
-				await page.reload();
-				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
+				await page.reload()
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
 			}
 		}
 	}
 
 	// In CI, we might proceed without full Cesium
 	if (process.env.CI) {
-		console.log('Proceeding without full Cesium initialization in CI mode');
-		return false;
+		console.log('Proceeding without full Cesium initialization in CI mode')
+		return false
 	}
 
-	throw new Error('Failed to initialize Cesium after retries');
+	throw new Error('Failed to initialize Cesium after retries')
 }
 
 /**
@@ -236,26 +257,26 @@ export async function initializeCesiumWithRetry(page: Page, retries: number = 3)
 export async function waitForSceneIdle(
 	page: Page,
 	options: {
-		timeout?: number;
-		idleFramesRequired?: number;
-		checkTiles?: boolean;
+		timeout?: number
+		idleFramesRequired?: number
+		checkTiles?: boolean
 	} = {}
 ): Promise<void> {
-	const { timeout = 8000, idleFramesRequired = 2, checkTiles = true } = options;
+	const { timeout = 8000, idleFramesRequired = 2, checkTiles = true } = options
 
 	try {
 		await page.waitForFunction(
 			({ idleFrames, checkTilesLoading }) => {
-				const viewer = window.__viewer;
+				const viewer = window.__viewer
 				if (!viewer) {
-					return false;
+					return false
 				}
 
 				// Check if globe tiles are loaded (if requested)
 				if (checkTilesLoading) {
-					const globeTilesLoaded = viewer.scene?.globe?.tilesLoaded ?? true;
+					const globeTilesLoaded = viewer.scene?.globe?.tilesLoaded ?? true
 					if (!globeTilesLoaded) {
-						return false;
+						return false
 					}
 				}
 
@@ -265,38 +286,38 @@ export async function waitForSceneIdle(
 						idleFrameCount: 0,
 						cameraMoving: false,
 						lastCheck: Date.now(),
-					};
+					}
 
 					// Set up camera event listeners
 					viewer.camera.moveStart.addEventListener(() => {
-						window.__sceneIdleState.cameraMoving = true;
-						window.__sceneIdleState.idleFrameCount = 0;
-					});
+						window.__sceneIdleState.cameraMoving = true
+						window.__sceneIdleState.idleFrameCount = 0
+					})
 
 					viewer.camera.moveEnd.addEventListener(() => {
-						window.__sceneIdleState.cameraMoving = false;
-					});
+						window.__sceneIdleState.cameraMoving = false
+					})
 				}
 
-				const state = window.__sceneIdleState;
+				const state = window.__sceneIdleState
 
 				// Check if camera is stable
 				if (state.cameraMoving) {
-					state.idleFrameCount = 0;
-					return false;
+					state.idleFrameCount = 0
+					return false
 				}
 
 				// Increment idle frame counter
-				state.idleFrameCount++;
+				state.idleFrameCount++
 
 				// Scene is idle if we have enough stable frames
-				return state.idleFrameCount >= idleFrames;
+				return state.idleFrameCount >= idleFrames
 			},
 			{ idleFrames: idleFramesRequired, checkTilesLoading: checkTiles },
 			{ timeout }
-		);
+		)
 	} catch (error) {
-		console.warn(`Scene idle check timed out after ${timeout}ms`, error);
+		console.warn(`Scene idle check timed out after ${timeout}ms`, error)
 		// Don't fail - proceed anyway to avoid blocking tests
 	}
 }
@@ -309,7 +330,7 @@ export async function waitForSceneIdle(
 export async function cleanupSceneIdleState(page: Page): Promise<void> {
 	await page.evaluate(() => {
 		if (window.__sceneIdleState) {
-			delete window.__sceneIdleState;
+			delete window.__sceneIdleState
 		}
-	});
+	})
 }
