@@ -23,23 +23,48 @@ export default class HSYBuilding {
 
     async loadHSYBuildings( bbox ) {
         try {
-            
-            const url = bbox ? this.urlStore.hsyGridBuildings( bbox ) : this.urlStore.hsyBuildings( this.store.postalcode )
+            const url = bbox ? this.urlStore.hsyGridBuildings( bbox ) : this.urlStore.hsyBuildings( this.store.postalcode );
             const response = await fetch( url );
-            const data = await response.json();
 
-            // Only process grid attributes if we have a current grid cell
-            if (this.store.currentGridCell) {
-                await this.setGridAttributes(data.features);
+            // Check for HTTP errors before parsing JSON
+            if ( !response.ok ) {
+                console.warn( `HSY buildings API error: ${response.status} for postal code ${this.store.postalcode}` );
+                // Return empty array - app can continue without building data
+                return [];
             }
 
-            let entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'Buildings ' + this.store.postalcode);
-            this.setHSYBuildingAttributes(data, entities);
-            
-            return entities;
-        } catch (error) {
-            console.error('Error loading HSY buildings:', error);
-            throw error;
+            // Try to parse JSON, handle parsing errors
+            let data;
+            try {
+                data = await response.json();
+            } catch ( parseError ) {
+                console.warn( 'Failed to parse HSY buildings response:', parseError );
+                return [];
+            }
+
+            // Validate data structure
+            if ( !data || !data.features ) {
+                console.warn( 'HSY buildings data has invalid structure' );
+                return [];
+            }
+
+            // Only process grid attributes if we have a current grid cell
+            if ( this.store.currentGridCell ) {
+                await this.setGridAttributes( data.features );
+            }
+
+            let entities = await this.datasourceService.addDataSourceWithPolygonFix( data, 'Buildings ' + this.store.postalcode );
+
+            // Only set attributes if we have entities
+            if ( entities && entities.length > 0 ) {
+                this.setHSYBuildingAttributes( data, entities );
+            }
+
+            return entities || [];
+        } catch ( error ) {
+            console.warn( 'Error loading HSY buildings:', error );
+            // Return empty array instead of throwing - allows app to continue
+            return [];
         }
     }
 

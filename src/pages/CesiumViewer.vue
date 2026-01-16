@@ -77,6 +77,8 @@ export default {
 				baseLayerPicker: false,
 				infoBox: false,
 				homeButton: false,
+				// Disable default Ion-based imagery to prevent 401 errors
+				baseLayer: false,
 			});
 
 			store.setCesiumViewer(viewer.value);
