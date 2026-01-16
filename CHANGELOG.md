@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.22.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.0...r4c-cesium-viewer-v1.22.1) (2026-01-16)
+
+
+### Bug Fixes
+
+* add backport workflow config ([#565](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/565)) ([012fbd3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/012fbd332482b32140cc3532bd8e92ea0ddd6710))
+* add DNS resolver config for Kubernetes deployments ([dfa2a10](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/dfa2a108d2d1077ac133966741755e1546abaf93))
+* backport error handling fixes to v1.22.0 ([df0a886](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/df0a88696ca2874ef11ac327b01f4bbb62d16168))
+* backport nginx improvements to v1.22.0 ([e0b26bc](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e0b26bc60cab2cd9e9e2eb7e80b1ea7c1123fed8))
+
 ## [1.22.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.21.0...r4c-cesium-viewer-v1.22.0) (2025-08-29)
 
 
