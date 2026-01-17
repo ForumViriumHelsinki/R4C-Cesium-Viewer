@@ -186,6 +186,7 @@
 		<!-- Performance Dialog -->
 		<v-dialog
 			v-model="showPerformanceDialog"
+			eager
 			max-width="500"
 		>
 			<v-card>

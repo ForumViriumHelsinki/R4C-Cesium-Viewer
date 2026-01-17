@@ -45,7 +45,10 @@
 			</div>
 
 			<!-- Mobile menu for navigation buttons -->
-			<v-menu class="d-md-none">
+			<v-menu
+				eager
+				class="d-md-none"
+			>
 				<template #activator="{ props }">
 					<v-btn
 						v-bind="props"

@@ -1,6 +1,7 @@
 <template>
 	<v-dialog
 		v-model="dialog"
+		eager
 		max-width="800"
 		scrollable
 	>
@@ -178,6 +179,7 @@
 	<!-- Reset confirmation dialog -->
 	<v-dialog
 		v-model="resetConfirmDialog"
+		eager
 		max-width="500"
 	>
 		<v-card>
@@ -208,6 +210,7 @@
 	<!-- Import dialog -->
 	<v-dialog
 		v-model="importDialog"
+		eager
 		max-width="500"
 	>
 		<v-card>
