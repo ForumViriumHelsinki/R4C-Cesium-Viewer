@@ -163,10 +163,19 @@ For complete database documentation, see [db/README.md](./db/README.md).
 
 ## Testing with Playwright
 
-Run tests:
+**Important:** E2E tests require `VITE_E2E_TEST=true` to expose the Cesium viewer to the test harness.
 
+Start dev server with E2E mode, then run tests:
+
+```bash
+bun run dev:test  # Terminal 1: Start with E2E flag
+npx playwright test  # Terminal 2: Run tests
 ```
-npx playwright test
+
+Or use make (handles E2E flag automatically):
+
+```bash
+make test-e2e
 ```
 
 Run tests in interactive UI mode:

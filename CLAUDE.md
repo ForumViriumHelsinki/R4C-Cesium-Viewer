@@ -31,6 +31,8 @@ make stop        # Stop all services
 - `make test-quick` - Unit tests only
 - `make test-e2e` - End-to-end tests
 
+**Note:** E2E tests require `VITE_E2E_TEST=true` to expose the Cesium viewer to the test harness. Use `bun run dev:test` to start the dev server with this flag, or run tests via `make test-e2e` which handles this automatically.
+
 Database data persists across `make stop` and even `skaffold delete`. Only `make db-reset` explicitly wipes the data.
 
 ### Build and Development (Bun)
