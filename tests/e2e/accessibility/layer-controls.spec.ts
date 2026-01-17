@@ -296,8 +296,8 @@ cesiumDescribe.skip('Layer Controls Accessibility', () => {
 
 				// Switch to grid view
 				await helpers.navigateToView('gridView')
-				// Wait for grid view switch
-				await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked()
+				// Wait for grid view switch - v-btn-toggle uses buttons with v-btn--active class
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STATE_CHANGE)
 
 				// Trees should now be hidden
 				await expect(cesiumPage.getByText('Trees')).not.toBeVisible()
@@ -305,7 +305,7 @@ cesiumDescribe.skip('Layer Controls Accessibility', () => {
 				// Switch back to Capital Region
 				await helpers.navigateToView('capitalRegionView')
 				// Wait for view switch back
-				await expect(cesiumPage.locator('input[value="capitalRegionView"]')).toBeChecked()
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STATE_CHANGE)
 
 				// Trees should be visible again
 				await expect(cesiumPage.getByText('Trees')).toBeVisible()
