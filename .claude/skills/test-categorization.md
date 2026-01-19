@@ -76,7 +76,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 - Apply base tags to entire test suite
 - Add domain-specific tags to test subsets
 - Avoid repetition in individual test declarations
-- Makes it easy to run all WMS tests: `npx playwright test --grep @wms`
+- Makes it easy to run all WMS tests: `bunx playwright test --grep @wms`
 
 **Note:** Nested `test.use({ tag: [...] })` calls are additive in Playwright, merging tags from parent and child scopes.
 
@@ -86,22 +86,22 @@ Run specific test categories using the `--grep` flag:
 
 ```bash
 # Run all accessibility tests
-npx playwright test --grep @accessibility
+bunx playwright test --grep @accessibility
 
 # Run all performance tests
-npx playwright test --grep @performance
+bunx playwright test --grep @performance
 
 # Run smoke tests only
-npx playwright test --grep @smoke
+bunx playwright test --grep @smoke
 
 # Run WMS integration tests
-npx playwright test --grep @wms
+bunx playwright test --grep @wms
 
 # Combine tags (AND logic)
-npx playwright test --grep "@accessibility.*@smoke"
+bunx playwright test --grep "@accessibility.*@smoke"
 
 # Exclude tags (NOT logic)
-npx playwright test --grep-invert @performance
+bunx playwright test --grep-invert @performance
 ```
 
 ### Tag Naming Conventions
@@ -232,13 +232,13 @@ Tags enable selective test execution in CI/CD:
 ```yaml
 # Example GitHub Actions workflow
 - name: Run smoke tests
-  run: npx playwright test --grep @smoke
+  run: bunx playwright test --grep @smoke
 
 - name: Run accessibility tests
-  run: npx playwright test --grep @accessibility
+  run: bunx playwright test --grep @accessibility
 
 - name: Run performance tests
-  run: npx playwright test --grep @performance
+  run: bunx playwright test --grep @performance
 ```
 
 ## Tag Coverage Guidelines
@@ -354,10 +354,10 @@ Run only relevant tests during development:
 
 ```bash
 # Working on accessibility features?
-npx playwright test --grep @accessibility
+bunx playwright test --grep @accessibility
 
 # Need quick feedback?
-npx playwright test --grep @smoke
+bunx playwright test --grep @smoke
 ```
 
 ### 2. Better CI/CD

@@ -261,7 +261,7 @@ await page.locator('[data-loaded="true"]').waitFor({
 ### UI Mode for Visual Debugging
 
 ```bash
-npm run test:accessibility:watch
+bun run test:accessibility:watch
 ```
 
 ### Trace Viewer
@@ -269,7 +269,7 @@ npm run test:accessibility:watch
 Traces are automatically captured on first failure:
 
 ```bash
-npm run test:accessibility:report
+bun run test:accessibility:report
 ```
 
 ### Selector Playground

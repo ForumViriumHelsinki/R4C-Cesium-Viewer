@@ -7,10 +7,10 @@ Playwright for E2E testing, Vitest for unit tests.
 ## Commands
 
 ```bash
-npm run test:layer-controls     # Single accessibility test (fast iteration)
-npm run test:accessibility      # All accessibility tests
-npx playwright test --ui        # Interactive UI mode
-npm run test:accessibility:report  # View HTML report
+bun run test:layer-controls     # Single accessibility test (fast iteration)
+bun run test:accessibility      # All accessibility tests
+bunx playwright test --ui       # Interactive UI mode
+bun run test:accessibility:report  # View HTML report
 ```
 
 ## Tag-Based Execution
@@ -18,14 +18,14 @@ npm run test:accessibility:report  # View HTML report
 Tests are categorized with tags:
 
 ```bash
-npx playwright test --grep @accessibility
-npx playwright test --grep @performance
-npx playwright test --grep @e2e
-npx playwright test --grep @smoke
-npx playwright test --grep @wms
+bunx playwright test --grep @accessibility
+bunx playwright test --grep @performance
+bunx playwright test --grep @e2e
+bunx playwright test --grep @smoke
+bunx playwright test --grep @wms
 ```
 
-Combine tags: `npx playwright test --grep "@accessibility.*@smoke"`
+Combine tags: `bunx playwright test --grep "@accessibility.*@smoke"`
 
 ## Component Architecture for Testing
 

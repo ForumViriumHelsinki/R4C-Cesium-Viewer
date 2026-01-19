@@ -39,13 +39,13 @@ Execute Playwright UI mode command:
 
 ```bash
 # All tests
-npx playwright test tests/e2e/accessibility --ui
+bunx playwright test tests/e2e/accessibility --ui
 
 # Specific file
-npx playwright test tests/e2e/accessibility/[filename] --ui
+bunx playwright test tests/e2e/accessibility/[filename] --ui
 
 # Pattern match
-npx playwright test tests/e2e/accessibility --ui --grep "[pattern]"
+bunx playwright test tests/e2e/accessibility --ui --grep "[pattern]"
 ```
 
 ## UI Mode Features
@@ -113,7 +113,7 @@ npx playwright test tests/e2e/accessibility --ui --grep "[pattern]"
 
 ```bash
 # 1. Find failure quickly
-npm run test:layer-controls
+bun run test:layer-controls
 # ❌ Fails at line 150: click timeout
 
 # 2. Debug to understand why
@@ -126,7 +126,7 @@ npm run test:layer-controls
 # Add scroll-before-interact from .claude/skills/test-pattern-library.md
 
 # 4. Verify fix
-npm run test:layer-controls
+bun run test:layer-controls
 # ✓ Passes
 ```
 
@@ -176,7 +176,7 @@ test.beforeEach(async ({ page }) => {
 
 ```bash
 # Install UI dependencies
-npx playwright install --with-deps
+bunx playwright install --with-deps
 ```
 
 ### Tests Run Too Fast
@@ -204,10 +204,10 @@ For simpler debugging without full UI:
 
 ```bash
 # Run with visible browser
-npx playwright test tests/e2e/accessibility/layer-controls.spec.ts --headed
+bunx playwright test tests/e2e/accessibility/layer-controls.spec.ts --headed
 
 # With additional debugging
-npx playwright test --headed --debug
+bunx playwright test --headed --debug
 ```
 
 ## Keyboard Shortcuts in UI Mode
