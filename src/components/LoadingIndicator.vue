@@ -3,6 +3,7 @@
 		<!-- Global Loading Overlay -->
 		<v-overlay
 			v-model="showGlobalOverlay"
+			eager
 			persistent
 			class="loading-overlay"
 		>

@@ -2,6 +2,9 @@ on:
   push:
     branches:
       - main
+      # Support backport release branches (e.g., release-1.22.x)
+      # Pattern must NOT match release-please PR branches (release-please--branches--*)
+      - 'release-[0-9]+.[0-9]+.x'
 
 permissions:
   contents: write
@@ -18,3 +21,4 @@ jobs:
           token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          target-branch: ${{ github.ref_name }}
