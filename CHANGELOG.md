@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.2...r4c-cesium-viewer-v1.22.3) (2026-01-19)
+
+
+### Bug Fixes
+
+* use optimized PyGeoAPI collections for buildings and heat exposure ([ae98e93](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ae98e93b7cd2c2e318c42157bfdc410936a53d18))
+
 ## [1.22.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.1...r4c-cesium-viewer-v1.22.2) (2026-01-16)
 
 
