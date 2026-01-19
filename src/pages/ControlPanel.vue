@@ -1,6 +1,7 @@
 <template>
 	<v-navigation-drawer
 		:model-value="modelValue"
+		eager
 		role="navigation"
 		aria-label="Analysis tools and data exploration"
 		class="analysis-sidebar"

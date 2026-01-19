@@ -2,6 +2,7 @@
 	<v-navigation-drawer
 		v-if="drawerOpen"
 		v-model="drawerOpen"
+		eager
 		location="left"
 		width="300"
 		temporary
