@@ -204,7 +204,7 @@ When fixing a failing test:
 
 1. Identify the failure pattern from error message
 2. Apply the corresponding pattern from this library
-3. Test locally with: `npm run test:layer-controls` (or appropriate file)
+3. Test locally with: `bun run test:layer-controls` (or appropriate file)
 4. Verify fix doesn't cause regressions
 
 For multiple failures in same file, apply patterns systematically from top to bottom of the file.

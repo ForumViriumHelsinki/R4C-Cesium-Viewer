@@ -121,7 +121,7 @@ Perform a comprehensive review of your stack configuration, checking all major c
    - Integration test: Verify realistic interactions
 
 2. **Build output analysis**:
-   - Run `npm run build` and check bundle sizes
+   - Run `bun run build` and check bundle sizes
    - Look for warnings about large chunks
    - Identify vendor bundle composition
 
@@ -230,7 +230,7 @@ Create structured report with:
 
 **Check:**
 
-- Run `npm outdated`
+- Run `bun outdated`
 - Check for major version updates
 - Look for deprecated packages
 
@@ -313,7 +313,7 @@ Create structured report with:
 
 - `.claude/skills/test-pattern-library.md` - Test quality patterns
 - `.claude/skills/playwright-accessibility-testing.md` - E2E testing best practices
-- `.claude/skills/package-lock-management.md` - Dependency management
+- `.claude/skills/bun-lock-management.md` - Dependency management
 
 ## Example Session
 

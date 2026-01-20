@@ -399,8 +399,8 @@ test: ## Run all tests
 test-quick: ## Run unit tests only (fast)
 	bun run test:unit
 
-test-e2e: ## Run end-to-end tests
-	bun run test:e2e
+test-e2e: ## Run end-to-end tests (requires VITE_E2E_TEST=true for Cesium viewer exposure)
+	VITE_E2E_TEST=true bun run test:e2e
 
 # ==============================================================================
 # Mock API (No Database Required)

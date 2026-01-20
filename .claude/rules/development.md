@@ -39,7 +39,7 @@ make stop      # Stop all services
 **Profiles:**
 
 - Default: Full stack with PostgreSQL + PostGIS
-- `services-only`: Backend services only (use with `npm run dev`)
+- `services-only`: Backend services only (use with `bun run dev`)
 - `frontend-only`: Frontend only (assumes services running)
 - `e2e-with-prod-data`: E2E testing with cloned production data
 
@@ -89,10 +89,10 @@ ast-grep -p 'await $PROMISE.catch($$$)'               # Find error handling
 ## Building
 
 ```bash
-npm run build    # Production build
-npm run dev      # Development server with hot reload
-npm run lint     # ESLint check
-npm run lint:fix # ESLint auto-fix
+bun run build    # Production build
+bun run dev      # Development server with hot reload
+bun run lint     # Biome check
+bun run lint:fix # Biome auto-fix
 ```
 
 ## CI/CD

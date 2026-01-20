@@ -27,11 +27,11 @@ export const PERFORMANCE_CONFIG = {
 	 * Warns if a baseline exceeds this value
 	 */
 	MAX_BASELINE_DURATION: 60000, // 60 seconds
-} as const;
+} as const
 
 /**
  * Convert percentage threshold to decimal for calculations
  */
 export function percentToDecimal(percent: number): number {
-	return percent / 100;
+	return percent / 100
 }

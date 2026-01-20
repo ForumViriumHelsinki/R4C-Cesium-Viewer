@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { createPinia, setActivePinia } from 'pinia';
-import Sensor from '@/services/sensor.js';
+import { createPinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import Sensor from '@/services/sensor.js'
 
 // Mock fetch globally
-global.fetch = vi.fn();
+global.fetch = vi.fn()
 
 // Mock Cesium module
 vi.mock('cesium', () => ({
 	GeoJsonDataSource: vi.fn(function () {
-		this.load = vi.fn().mockResolvedValue({ name: 'test', entities: { values: [] } });
+		this.load = vi.fn().mockResolvedValue({ name: 'test', entities: { values: [] } })
 	}),
 	Color: {
 		ORANGE: 'ORANGE',
@@ -22,24 +22,24 @@ vi.mock('cesium', () => ({
 		CENTER: 'CENTER',
 	},
 	Cartesian2: vi.fn(function (x, y) {
-		this.x = x;
-		this.y = y;
-		return this;
+		this.x = x
+		this.y = y
+		return this
 	}),
 	Cartesian3: vi.fn(function (x, y, z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		return this;
+		this.x = x
+		this.y = y
+		this.z = z
+		return this
 	}),
-}));
+}))
 
 // Mock datasource service
 vi.mock('@/services/datasource.js', () => ({
 	default: vi.fn(function () {
-		this.addDataSourceWithPolygonFix = vi.fn().mockResolvedValue([]);
+		this.addDataSourceWithPolygonFix = vi.fn().mockResolvedValue([])
 	}),
-}));
+}))
 
 // Mock global store
 vi.mock('@/stores/globalStore.js', () => ({
@@ -51,53 +51,53 @@ vi.mock('@/stores/globalStore.js', () => ({
 		},
 		showError: vi.fn(),
 	})),
-}));
+}))
 
 describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () => {
-	let sensor;
+	let sensor
 
 	beforeEach(() => {
-		setActivePinia(createPinia());
-		vi.clearAllMocks();
-		global.fetch.mockClear();
-		vi.spyOn(console, 'error').mockImplementation(() => {});
+		setActivePinia(createPinia())
+		vi.clearAllMocks()
+		global.fetch.mockClear()
+		vi.spyOn(console, 'error').mockImplementation(() => {})
 
-		sensor = new Sensor();
-	});
+		sensor = new Sensor()
+	})
 
 	afterEach(() => {
-		vi.restoreAllMocks();
-	});
+		vi.restoreAllMocks()
+	})
 
 	describe('loadSensorData - Network Error Handling', () => {
 		it('should handle network errors gracefully', async () => {
 			// Arrange
-			global.fetch.mockRejectedValue(new Error('Network error'));
+			global.fetch.mockRejectedValue(new Error('Network error'))
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow('Network error');
+			await expect(sensor.loadSensorData()).rejects.toThrow('Network error')
 
 			// Verify error was logged
-			expect(console.error).toHaveBeenCalledWith('Error loading sensor data:', expect.any(Error));
-		});
+			expect(console.error).toHaveBeenCalledWith('Error loading sensor data:', expect.any(Error))
+		})
 
 		it('should handle invalid JSON response', async () => {
 			// Arrange
 			global.fetch.mockResolvedValue({
 				json: vi.fn().mockRejectedValue(new Error('Invalid JSON')),
-			});
+			})
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow('Invalid JSON');
-		});
+			await expect(sensor.loadSensorData()).rejects.toThrow('Invalid JSON')
+		})
 
 		it('should handle CORS errors from external API', async () => {
 			// Arrange: Simulate CORS error
-			global.fetch.mockRejectedValue(new TypeError('Failed to fetch'));
+			global.fetch.mockRejectedValue(new TypeError('Failed to fetch'))
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow('Failed to fetch');
-		});
+			await expect(sensor.loadSensorData()).rejects.toThrow('Failed to fetch')
+		})
 
 		it.each([
 			[404, 'Not found'],
@@ -108,47 +108,47 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 			global.fetch.mockResolvedValue({
 				status,
 				json: vi.fn().mockRejectedValue(new Error(message)),
-			});
+			})
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow(message);
-		});
+			await expect(sensor.loadSensorData()).rejects.toThrow(message)
+		})
 
 		it('should handle connection timeout', async () => {
 			// Arrange
-			global.fetch.mockRejectedValue(new Error('Request timeout'));
+			global.fetch.mockRejectedValue(new Error('Request timeout'))
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow('Request timeout');
-		});
+			await expect(sensor.loadSensorData()).rejects.toThrow('Request timeout')
+		})
 
 		it('should handle malformed GeoJSON from sensor API', async () => {
 			// Arrange: Return invalid GeoJSON
 			global.fetch.mockResolvedValue({
 				json: vi.fn().mockResolvedValue({ invalid: 'structure' }),
-			});
-			sensor.addSensorDataSource = vi.fn().mockRejectedValue(new Error('Invalid GeoJSON format'));
+			})
+			sensor.addSensorDataSource = vi.fn().mockRejectedValue(new Error('Invalid GeoJSON format'))
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow('Invalid GeoJSON format');
-		});
+			await expect(sensor.loadSensorData()).rejects.toThrow('Invalid GeoJSON format')
+		})
 
 		it('should handle SSL/TLS certificate errors', async () => {
 			// Arrange
-			global.fetch.mockRejectedValue(new Error('SSL certificate problem'));
+			global.fetch.mockRejectedValue(new Error('SSL certificate problem'))
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow('SSL certificate problem');
-		});
+			await expect(sensor.loadSensorData()).rejects.toThrow('SSL certificate problem')
+		})
 
 		it('should handle DNS resolution errors', async () => {
 			// Arrange
-			global.fetch.mockRejectedValue(new Error('getaddrinfo ENOTFOUND'));
+			global.fetch.mockRejectedValue(new Error('getaddrinfo ENOTFOUND'))
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow('getaddrinfo ENOTFOUND');
-		});
-	});
+			await expect(sensor.loadSensorData()).rejects.toThrow('getaddrinfo ENOTFOUND')
+		})
+	})
 
 	describe('loadSensorData - Success Path', () => {
 		it('should successfully load sensor data', async () => {
@@ -168,22 +168,20 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 						geometry: { type: 'Point', coordinates: [24.9384, 60.1699] },
 					},
 				],
-			};
+			}
 			global.fetch.mockResolvedValue({
 				json: vi.fn().mockResolvedValue(mockData),
-			});
-			sensor.addSensorDataSource = vi.fn().mockResolvedValue();
+			})
+			sensor.addSensorDataSource = vi.fn().mockResolvedValue()
 
 			// Act
-			await sensor.loadSensorData();
+			await sensor.loadSensorData()
 
 			// Assert
-			expect(global.fetch).toHaveBeenCalledWith(
-				'https://bri3.fvh.io/opendata/r4c/r4c_last.geojson'
-			);
-			expect(sensor.addSensorDataSource).toHaveBeenCalledWith(mockData);
-		});
-	});
+			expect(global.fetch).toHaveBeenCalledWith('https://bri3.fvh.io/opendata/r4c/r4c_last.geojson')
+			expect(sensor.addSensorDataSource).toHaveBeenCalledWith(mockData)
+		})
+	})
 
 	describe('addSensorDataSource', () => {
 		it('should process sensor entities and add labels', async () => {
@@ -204,22 +202,20 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 					polyline: {},
 					polygon: {},
 				},
-			];
-			sensor.datasourceService.addDataSourceWithPolygonFix = vi
-				.fn()
-				.mockResolvedValue(mockEntities);
-			const mockData = { type: 'FeatureCollection', features: [] };
+			]
+			sensor.datasourceService.addDataSourceWithPolygonFix = vi.fn().mockResolvedValue(mockEntities)
+			const mockData = { type: 'FeatureCollection', features: [] }
 
 			// Act
-			await sensor.addSensorDataSource(mockData);
+			await sensor.addSensorDataSource(mockData)
 
 			// Assert
-			expect(mockEntities[0].label).toBeDefined();
-			expect(mockEntities[0].billboard).toBeUndefined();
-			expect(mockEntities[0].point).toBeUndefined();
-			expect(mockEntities[0].polyline).toBeUndefined();
-			expect(mockEntities[0].polygon).toBeUndefined();
-		});
+			expect(mockEntities[0].label).toBeDefined()
+			expect(mockEntities[0].billboard).toBeUndefined()
+			expect(mockEntities[0].point).toBeUndefined()
+			expect(mockEntities[0].polyline).toBeUndefined()
+			expect(mockEntities[0].polygon).toBeUndefined()
+		})
 
 		it('should handle entities without measurement data', async () => {
 			// Arrange
@@ -231,17 +227,15 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 						},
 					},
 				},
-			];
-			sensor.datasourceService.addDataSourceWithPolygonFix = vi
-				.fn()
-				.mockResolvedValue(mockEntities);
-			const mockData = { type: 'FeatureCollection', features: [] };
+			]
+			sensor.datasourceService.addDataSourceWithPolygonFix = vi.fn().mockResolvedValue(mockEntities)
+			const mockData = { type: 'FeatureCollection', features: [] }
 
 			// Act: Should not throw
-			await expect(sensor.addSensorDataSource(mockData)).resolves.not.toThrow();
+			await expect(sensor.addSensorDataSource(mockData)).resolves.not.toThrow()
 
 			// Assert: No label should be added
-			expect(mockEntities[0].label).toBeUndefined();
-		});
-	});
-});
+			expect(mockEntities[0].label).toBeUndefined()
+		})
+	})
+})

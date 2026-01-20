@@ -82,7 +82,7 @@ viewer.scene.maximumRenderTimeChange = Infinity; // Don't auto-render on time ch
 **Do**:
 
 - Run tests sequentially file-by-file
-- Use focused testing for faster iteration (`npm run test:layer-controls`)
+- Use focused testing for faster iteration (`bun run test:layer-controls`)
 - Leverage fail-fast mode (`--max-failures=1`) for development
 
 ## Graphics Quality Preset for Testing
@@ -276,13 +276,13 @@ await page.waitForTimeout(500); // Let CSS apply and animations settle
 
 ```bash
 # Time full suite
-time npm run test:accessibility
+time bun run test:accessibility
 
 # Time single file
-time npm run test:layer-controls
+time bun run test:layer-controls
 
 # Profile with Chrome DevTools (local only)
-npm run test:accessibility:watch
+bun run test:accessibility:watch
 # Then use Chrome DevTools Performance panel
 ```
 
@@ -362,7 +362,7 @@ Enable detailed performance traces:
 View trace:
 
 ```bash
-npm run test:accessibility:report
+bun run test:accessibility:report
 # Click on failed test → View trace
 ```
 

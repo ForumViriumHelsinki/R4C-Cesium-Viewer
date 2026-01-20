@@ -32,20 +32,20 @@ Run a specific accessibility test file and stop on first failure for rapid devel
 
 ## Implementation
 
-Execute the corresponding npm script based on filename:
+Execute the corresponding bun script based on filename:
 
-- `layer-controls.spec.ts` → `npm run test:layer-controls`
-- `building-filters.spec.ts` → `npm run test:building-filters`
-- `navigation-levels.spec.ts` → `npm run test:navigation-levels`
-- `expansion-panels.spec.ts` → `npm run test:expansion-panels`
-- `timeline-controls.spec.ts` → `npm run test:timeline-controls`
-- `view-modes.spec.ts` → `npm run test:view-modes`
-- `comprehensive-walkthrough.spec.ts` → `npm run test:comprehensive-walkthrough`
+- `layer-controls.spec.ts` → `bun run test:layer-controls`
+- `building-filters.spec.ts` → `bun run test:building-filters`
+- `navigation-levels.spec.ts` → `bun run test:navigation-levels`
+- `expansion-panels.spec.ts` → `bun run test:expansion-panels`
+- `timeline-controls.spec.ts` → `bun run test:timeline-controls`
+- `view-modes.spec.ts` → `bun run test:view-modes`
+- `comprehensive-walkthrough.spec.ts` → `bun run test:comprehensive-walkthrough`
 
 Or use generic command:
 
 ```bash
-npm run test:accessibility:file tests/e2e/accessibility/[filename]
+bun run test:accessibility:file tests/e2e/accessibility/[filename]
 ```
 
 ## Expected Output
@@ -98,7 +98,7 @@ Run tests in this order for maximum impact:
 - Use with `/test-debug` if you need visual step-through
 - Check `.claude/skills/test-pattern-library.md` for common fix patterns
 - Reference `building-filters.spec.ts` as template (already fixed)
-- View results with `npm run test:accessibility:report`
+- View results with `bun run test:accessibility:report`
 
 ## Resources
 

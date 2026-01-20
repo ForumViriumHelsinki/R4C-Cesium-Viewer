@@ -1,4 +1,9 @@
-import type { Page } from '@playwright/test';
+import type { Page } from '@playwright/test'
+
+// Re-export TEST_TIMEOUTS from the e2e helpers for backward compatibility
+export { TEST_TIMEOUTS } from '../e2e/helpers/test-helpers'
+
+import { TEST_TIMEOUTS } from '../e2e/helpers/test-helpers'
 
 /**
  * Shared test helper functions for E2E tests
@@ -11,33 +16,33 @@ import type { Page } from '@playwright/test';
  */
 export async function waitForCesiumReady(page: Page): Promise<void> {
 	// Wait for canvas to be visible first
-	await page.waitForSelector('canvas', { state: 'visible', timeout: TEST_TIMEOUTS.CESIUM_READY });
+	await page.waitForSelector('canvas', { state: 'visible', timeout: TEST_TIMEOUTS.CESIUM_READY })
 
 	// Wait for Cesium viewer to be initialized
 	await page.waitForFunction(
 		() => {
-			const viewer = (window as any).cesiumViewer || (window as any).__viewer;
-			return viewer && viewer.scene && viewer.scene.globe;
+			const viewer = (window as any).cesiumViewer || (window as any).__viewer
+			return viewer?.scene?.globe
 		},
 		{ timeout: TEST_TIMEOUTS.CESIUM_READY }
-	);
+	)
 
 	// Wait for initial tile loading to complete by checking the loading indicator
 	// The loading indicator appears as "Loading X layers..." at the bottom of the screen
 	await page
 		.waitForFunction(
 			() => {
-				const loadingText = document.body.innerText;
-				return !loadingText.includes('Loading') || !loadingText.includes('layers');
+				const loadingText = document.body.innerText
+				return !loadingText.includes('Loading') || !loadingText.includes('layers')
 			},
 			{ timeout: TEST_TIMEOUTS.CESIUM_READY_CI }
 		)
 		.catch(() => {
 			// If timeout, continue anyway as the viewer might be functional
-		});
+		})
 
 	// Give a small delay for final render
-	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 }
 
 /**
@@ -47,11 +52,11 @@ export async function waitForCesiumReady(page: Page): Promise<void> {
 export async function waitForPostalCodeSelection(page: Page): Promise<void> {
 	await page.waitForFunction(
 		() => {
-			const store = (window as any).useGlobalStore?.();
-			return store?.selectedPostalCode !== null;
+			const store = (window as any).useGlobalStore?.()
+			return store?.selectedPostalCode !== null
 		},
 		{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
-	);
+	)
 }
 
 /**
@@ -61,25 +66,55 @@ export async function waitForPostalCodeSelection(page: Page): Promise<void> {
 export async function waitForBuildingSelection(page: Page): Promise<void> {
 	await page.waitForFunction(
 		() => {
-			const store = (window as any).useGlobalStore?.();
-			return store?.selectedBuilding !== null;
+			const store = (window as any).useGlobalStore?.()
+			return store?.selectedBuilding !== null
 		},
 		{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
-	);
+	)
 }
 
 /**
  * Dismiss modal if present (non-blocking, no race condition)
  * Uses single operation with error handling instead of check-then-click pattern
+ * Note: Uses text-based locator to match visible button text regardless of aria-label
  */
 export async function dismissModalIfPresent(
 	page: Page,
-	buttonName: string = 'Close'
+	buttonText: string = 'Close'
 ): Promise<void> {
-	await page
-		.getByRole('button', { name: buttonName })
-		.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
-		.catch(() => {}); // Modal not present, that's fine
+	try {
+		// Use locator with hasText for visible text matching (ignores aria-label)
+		const button = page.locator('button', { hasText: buttonText })
+		// Wait for button to be visible first with a longer timeout
+		await button.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+		await button.click({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+		// Wait for the dialog content to fully disappear after clicking
+		// The v-overlay-container may still have the dialog during CSS transition
+		await page
+			.waitForFunction(
+				() => {
+					const container = document.querySelector('.v-overlay-container')
+					if (!container) return true
+					// Check if any v-dialog is still active/visible
+					const dialogs = container.querySelectorAll('.v-dialog')
+					return (
+						dialogs.length === 0 ||
+						Array.from(dialogs).every((d) => {
+							const style = window.getComputedStyle(d)
+							return (
+								style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0'
+							)
+						})
+					)
+				},
+				{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
+			)
+			.catch(() => {})
+		// Small additional wait for Vuetify transition cleanup
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
+	} catch {
+		// Modal not present, that's fine
+	}
 }
 
 /**
@@ -87,10 +122,10 @@ export async function dismissModalIfPresent(
  * Ensures modal is actually dismissed before proceeding
  */
 export async function dismissModal(page: Page, buttonName: string = 'Close'): Promise<void> {
-	const closeButton = page.getByRole('button', { name: buttonName });
-	await closeButton.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
-	await closeButton.click();
-	await closeButton.waitFor({ state: 'hidden', timeout: TEST_TIMEOUTS.ELEMENT_SCROLL });
+	const closeButton = page.getByRole('button', { name: buttonName })
+	await closeButton.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+	await closeButton.click()
+	await closeButton.waitFor({ state: 'hidden', timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
 }
 
 /**
@@ -98,9 +133,9 @@ export async function dismissModal(page: Page, buttonName: string = 'Close'): Pr
  * Waits for canvas to be ready before clicking
  */
 export async function clickOnMap(page: Page, x: number, y: number): Promise<void> {
-	const canvas = page.locator('canvas');
-	await canvas.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
-	await canvas.click({ position: { x, y } });
+	const canvas = page.locator('canvas')
+	await canvas.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+	await canvas.click({ position: { x, y } })
 }
 
 /**
@@ -109,8 +144,8 @@ export async function clickOnMap(page: Page, x: number, y: number): Promise<void
  */
 export async function waitForLayerLoad(page: Page): Promise<void> {
 	// Wait for any loading indicators to disappear
-	const loadingIndicators = page.locator('.v-progress-circular, .loading, .spinner');
-	const count = await loadingIndicators.count();
+	const loadingIndicators = page.locator('.v-progress-circular, .loading, .spinner')
+	const count = await loadingIndicators.count()
 
 	if (count > 0) {
 		// Wait for all loading indicators to be hidden
@@ -118,12 +153,12 @@ export async function waitForLayerLoad(page: Page): Promise<void> {
 			await loadingIndicators
 				.nth(i)
 				.waitFor({ state: 'hidden', timeout: TEST_TIMEOUTS.CESIUM_READY })
-				.catch(() => {}); // May already be hidden
+				.catch(() => {}) // May already be hidden
 		}
 	}
 
 	// Small delay to ensure visual updates complete
-	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
+	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 }
 
 /**
@@ -134,20 +169,20 @@ export async function waitForMapViewTransition(page: Page): Promise<void> {
 	await page
 		.waitForFunction(
 			() => {
-				const viewer = (window as any).cesiumViewer || (window as any).__viewer;
-				if (!viewer) return false;
+				const viewer = (window as any).cesiumViewer || (window as any).__viewer
+				if (!viewer) return false
 
 				// Check if camera is not moving and tiles are loaded
-				const cameraMoving = viewer.camera?.isMoving || false;
-				const tilesLoaded = viewer.scene?.globe?.tilesLoaded || false;
+				const cameraMoving = viewer.camera?.isMoving || false
+				const tilesLoaded = viewer.scene?.globe?.tilesLoaded || false
 
-				return !cameraMoving && tilesLoaded;
+				return !cameraMoving && tilesLoaded
 			},
 			{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
 		)
 		.catch(() => {
 			// Timeout is acceptable, continue anyway
-		});
+		})
 }
 
 /**
@@ -156,14 +191,14 @@ export async function waitForMapViewTransition(page: Page): Promise<void> {
  */
 export async function resetStoreState(page: Page): Promise<void> {
 	await page.evaluate(() => {
-		const globalStore = (window as any).useGlobalStore?.();
-		const buildingStore = (window as any).useBuildingStore?.();
-		const toggleStore = (window as any).useToggleStore?.();
+		const globalStore = (window as any).useGlobalStore?.()
+		const buildingStore = (window as any).useBuildingStore?.()
+		const toggleStore = (window as any).useToggleStore?.()
 
-		globalStore?.$reset?.();
-		buildingStore?.$reset?.();
-		toggleStore?.$reset?.();
-	});
+		globalStore?.$reset?.()
+		buildingStore?.$reset?.()
+		toggleStore?.$reset?.()
+	})
 }
 
 /**
@@ -171,8 +206,8 @@ export async function resetStoreState(page: Page): Promise<void> {
  * Returns true if element exists, false otherwise
  */
 export async function elementExists(page: Page, selector: string): Promise<boolean> {
-	const count = await page.locator(selector).count();
-	return count > 0;
+	const count = await page.locator(selector).count()
+	return count > 0
 }
 
 /**
@@ -180,40 +215,17 @@ export async function elementExists(page: Page, selector: string): Promise<boole
  * Useful after store mutations or computed property updates
  */
 export async function waitForVueReactivity(page: Page, delayMs: number = 100): Promise<void> {
-	await page.waitForTimeout(delayMs);
+	await page.waitForTimeout(delayMs)
 	await page.evaluate(() => {
 		return new Promise<void>((resolve) => {
 			// Wait for Vue's next tick
 			if ((window as any).Vue) {
-				(window as any).Vue.nextTick(() => resolve());
+				;(window as any).Vue.nextTick(() => resolve())
 			} else {
-				resolve();
+				resolve()
 			}
-		});
-	});
-}
-
-/**
- * Wait for specific store state condition
- * Generic helper for waiting on Pinia store state
- */
-export async function waitForStoreState(
-	page: Page,
-	storeName: string,
-	condition: string,
-	timeout: number = 5000
-): Promise<void> {
-	await page.waitForFunction(
-		({ store, cond }) => {
-			const storeInstance = (window as any)[`use${store}Store`]?.();
-			if (!storeInstance) return false;
-
-			// Evaluate condition string as JavaScript
-			return eval(cond);
-		},
-		{ store: storeName, cond: condition },
-		{ timeout }
-	);
+		})
+	})
 }
 
 /**
@@ -225,13 +237,48 @@ export async function toggleLayer(
 	labelPattern: string | RegExp,
 	checked: boolean
 ): Promise<void> {
-	const toggle = page.getByLabel(labelPattern);
-	await toggle.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD });
+	const toggle = page.getByLabel(labelPattern)
+	await toggle.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 
-	const currentState = await toggle.isChecked();
+	const currentState = await toggle.isChecked()
 	if (currentState !== checked) {
-		await toggle.click();
-		await waitForLayerLoad(page);
+		await toggle.click()
+		await waitForLayerLoad(page)
+	}
+}
+
+/**
+ * Dismiss any open Vuetify overlays (menus, dialogs, etc.)
+ * Presses Escape key to close overlays and waits for them to be removed
+ */
+export async function dismissVuetifyOverlays(page: Page): Promise<void> {
+	// Check if any overlay scrim is visible
+	const hasOverlay = await page.evaluate(() => {
+		const scrim = document.querySelector('.v-overlay__scrim')
+		if (!scrim) return false
+		const style = window.getComputedStyle(scrim)
+		return style.display !== 'none' && style.visibility !== 'hidden'
+	})
+
+	if (hasOverlay) {
+		// Press Escape to close any open overlays
+		await page.keyboard.press('Escape')
+		// Wait for overlay to be removed
+		await page
+			.waitForFunction(
+				() => {
+					const scrims = document.querySelectorAll('.v-overlay__scrim')
+					return Array.from(scrims).every((scrim) => {
+						const style = window.getComputedStyle(scrim)
+						return (
+							style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0'
+						)
+					})
+				},
+				{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
+			)
+			.catch(() => {})
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
 	}
 }
 
@@ -243,16 +290,16 @@ export async function getConsoleErrors(
 	page: Page,
 	errorTypes: string[] = ['TypeError', 'ReferenceError']
 ): Promise<string[]> {
-	const errors: string[] = [];
+	const errors: string[] = []
 
 	page.on('console', (msg) => {
 		if (msg.type() === 'error') {
-			const text = msg.text();
+			const text = msg.text()
 			if (errorTypes.some((type) => text.includes(type))) {
-				errors.push(text);
+				errors.push(text)
 			}
 		}
-	});
+	})
 
-	return errors;
+	return errors
 }

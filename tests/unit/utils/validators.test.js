@@ -104,7 +104,7 @@ describe('validators', () => {
 
 		it('should enforce size limits to prevent DoS', () => {
 			// Large string
-			const largeString = '{"data": "' + 'a'.repeat(100000) + '"}'
+			const largeString = `{"data": "${'a'.repeat(100000)}"}`
 			expect(() => validateJSON(largeString)).toThrow(/JSON string too large/)
 
 			// Custom size limit

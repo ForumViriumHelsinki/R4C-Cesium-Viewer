@@ -6,11 +6,32 @@
  * - Capital Region Heat (default)
  * - Statistical Grid
  * - Helsinki Heat (conditional)
+ *
+ * Note: The ViewModeCompact component uses Vuetify's v-btn-toggle with buttons,
+ * not radio inputs. Buttons have value attributes and v-btn--active class when selected.
  */
 
-import { expect } from '@playwright/test'
+import { expect, type Locator } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
 import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
+
+/**
+ * Helper to get view mode button locators for v-btn-toggle component
+ */
+function getViewModeButton(
+	page: { locator: (selector: string) => Locator },
+	viewMode: 'capitalRegionView' | 'gridView'
+): Locator {
+	return page.locator(`.view-toggle-group button[value="${viewMode}"]`)
+}
+
+/**
+ * Helper to check if a v-btn-toggle button is selected
+ */
+async function isViewModeButtonSelected(button: Locator): Promise<boolean> {
+	const className = await button.getAttribute('class').catch(() => '')
+	return className?.includes('v-btn--active') || className?.includes('v-btn--selected') || false
+}
 
 // SKIPPED: Component rendering issues in headless CI - see #472
 cesiumDescribe.skip('View Modes Accessibility', () => {
@@ -24,15 +45,16 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 
 	cesiumTest.describe('Capital Region View (Default)', () => {
 		cesiumTest('should load Capital Region Heat view by default', async ({ cesiumPage }) => {
-			// Verify default view selection
-			const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]')
-			await expect(capitalRegionRadio).toBeChecked()
+			// Verify default view selection (v-btn-toggle uses buttons with v-btn--active class)
+			const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+			await expect(capitalRegionButton).toBeVisible()
+			expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
 
-			// Verify Capital Region Heat label is visible
-			await expect(cesiumPage.getByText('Capital Region Heat')).toBeVisible()
+			// Verify Capital Region label is visible
+			await expect(cesiumPage.getByText('Capital Region')).toBeVisible()
 
-			// Verify view mode container is accessible
-			await expect(cesiumPage.locator('#viewModeContainer')).toBeVisible()
+			// Verify view mode component is accessible
+			await expect(cesiumPage.locator('.view-mode-compact')).toBeVisible()
 		})
 
 		cesiumTest(
@@ -60,9 +82,9 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 				await cesiumPage.locator('#cesiumContainer').click({ position: { x: 400, y: 300 } })
 				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
 
-				// Verify selection is still active
-				const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]')
-				await expect(capitalRegionRadio).toBeChecked()
+				// Verify selection is still active (v-btn-toggle button)
+				const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+				expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
 			}
 		)
 	})
@@ -71,9 +93,9 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 		cesiumTest('should switch to Statistical Grid view successfully', async ({ cesiumPage }) => {
 			await helpers.navigateToView('gridView')
 
-			// Verify Statistical Grid selection
-			const gridRadio = cesiumPage.locator('input[value="gridView"]')
-			await expect(gridRadio).toBeChecked()
+			// Verify Statistical Grid selection (v-btn-toggle button)
+			const gridButton = getViewModeButton(cesiumPage, 'gridView')
+			expect(await isViewModeButtonSelected(gridButton)).toBeTruthy()
 
 			// Verify Statistical Grid label is visible
 			await expect(cesiumPage.getByText('Statistical Grid')).toBeVisible()
@@ -128,16 +150,16 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 			'should transition from Capital Region to Statistical Grid smoothly',
 			async ({ cesiumPage }) => {
 				// Start with Capital Region (default)
-				const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]')
-				await expect(capitalRegionRadio).toBeChecked()
+				const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+				expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
 
 				// Switch to Statistical Grid
 				await helpers.navigateToView('gridView')
 
-				// Verify transition
-				const gridRadio = cesiumPage.locator('input[value="gridView"]')
-				await expect(gridRadio).toBeChecked()
-				await expect(capitalRegionRadio).not.toBeChecked()
+				// Verify transition (v-btn-toggle buttons)
+				const gridButton = getViewModeButton(cesiumPage, 'gridView')
+				expect(await isViewModeButtonSelected(gridButton)).toBeTruthy()
+				expect(await isViewModeButtonSelected(capitalRegionButton)).toBeFalsy()
 
 				// Verify appropriate content switched
 				await expect(cesiumPage.getByText('Statistical grid options')).toBeVisible()
@@ -149,16 +171,16 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 			async ({ cesiumPage }) => {
 				// Switch to grid first
 				await helpers.navigateToView('gridView')
-				const gridRadio = cesiumPage.locator('input[value="gridView"]')
-				await expect(gridRadio).toBeChecked()
+				const gridButton = getViewModeButton(cesiumPage, 'gridView')
+				expect(await isViewModeButtonSelected(gridButton)).toBeTruthy()
 
 				// Switch back to Capital Region
 				await helpers.navigateToView('capitalRegionView')
 
-				// Verify transition back
-				const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]')
-				await expect(capitalRegionRadio).toBeChecked()
-				await expect(gridRadio).not.toBeChecked()
+				// Verify transition back (v-btn-toggle buttons)
+				const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+				expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
+				expect(await isViewModeButtonSelected(gridButton)).toBeFalsy()
 
 				// Verify Capital Region content restored
 				await expect(cesiumPage.getByText('Land Cover')).toBeVisible()
@@ -174,10 +196,10 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 			}
 
-			// Final state should be consistent
-			const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]')
-			await expect(capitalRegionRadio).toBeChecked()
-			await expect(cesiumPage.getByText('Capital Region Heat')).toBeVisible()
+			// Final state should be consistent (v-btn-toggle button)
+			const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+			expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
+			await expect(cesiumPage.getByText('Capital Region')).toBeVisible()
 		})
 	})
 
@@ -190,15 +212,15 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 
 				// For comprehensive testing, we check that the view switching mechanism
 				// can handle conditional views when they become available
-				const viewModeContainer = cesiumPage.locator('#viewModeContainer')
+				const viewModeContainer = cesiumPage.locator('.view-mode-compact')
 				await expect(viewModeContainer).toBeVisible()
 
-				// The radio buttons should be present and functional
-				const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]')
-				const gridRadio = cesiumPage.locator('input[value="gridView"]')
+				// The v-btn-toggle buttons should be present and functional
+				const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+				const gridButton = getViewModeButton(cesiumPage, 'gridView')
 
-				await expect(capitalRegionRadio).toBeVisible()
-				await expect(gridRadio).toBeVisible()
+				await expect(capitalRegionButton).toBeVisible()
+				await expect(gridButton).toBeVisible()
 			}
 		)
 	})
@@ -213,16 +235,17 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 				// Test navigation controls don't affect view mode selection
 				await helpers.testNavigationControls('start')
 
-				// Verify grid view is still selected
-				const gridRadio = cesiumPage.locator('input[value="gridView"]')
-				await expect(gridRadio).toBeChecked()
+				// Verify grid view is still selected (v-btn-toggle button)
+				const gridButton = getViewModeButton(cesiumPage, 'gridView')
+				expect(await isViewModeButtonSelected(gridButton)).toBeTruthy()
 			}
 		)
 
 		cesiumTest('should preserve view mode when using reset button', async ({ cesiumPage }) => {
 			// Switch to grid view
 			await helpers.navigateToView('gridView')
-			await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked()
+			const gridButton = getViewModeButton(cesiumPage, 'gridView')
+			expect(await isViewModeButtonSelected(gridButton)).toBeTruthy()
 
 			// Click reset button
 			const resetButton = cesiumPage
@@ -237,8 +260,8 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
 
 			// View mode selection behavior after reset depends on implementation
-			// The test verifies the radio buttons are still functional
-			const viewModeContainer = cesiumPage.locator('#viewModeContainer')
+			// The test verifies the toggle buttons are still functional
+			const viewModeContainer = cesiumPage.locator('.view-mode-compact')
 			await expect(viewModeContainer).toBeVisible()
 		})
 	})
@@ -258,14 +281,16 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 
 					// Verify view mode container is accessible
-					await expect(cesiumPage.locator('#viewModeContainer')).toBeVisible()
+					await expect(cesiumPage.locator('.view-mode-compact')).toBeVisible()
 
-					// Verify view switching works
+					// Verify view switching works (v-btn-toggle buttons)
 					await helpers.navigateToView('gridView')
-					await expect(cesiumPage.locator('input[value="gridView"]')).toBeChecked()
+					const gridButton = getViewModeButton(cesiumPage, 'gridView')
+					expect(await isViewModeButtonSelected(gridButton)).toBeTruthy()
 
 					await helpers.navigateToView('capitalRegionView')
-					await expect(cesiumPage.locator('input[value="capitalRegionView"]')).toBeChecked()
+					const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+					expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
 				}
 			}
 		)
@@ -288,9 +313,9 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 			// Wait for stabilization
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
-			// Verify final state is consistent
-			const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]')
-			await expect(capitalRegionRadio).toBeChecked()
+			// Verify final state is consistent (v-btn-toggle button)
+			const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+			expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
 
 			// Verify no error states are visible
 			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
@@ -310,30 +335,36 @@ cesiumDescribe.skip('View Modes Accessibility', () => {
 			const focusedElement = cesiumPage.locator(':focus')
 			await expect(focusedElement).toBeVisible()
 
-			// Test radio button keyboard control
-			await cesiumPage.keyboard.press('ArrowDown')
+			// Test keyboard control (v-btn-toggle uses arrow keys)
+			await cesiumPage.keyboard.press('ArrowRight')
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
-			// Verify state change
-			const gridRadio = cesiumPage.locator('input[value="gridView"]')
-			const capitalRegionRadio = cesiumPage.locator('input[value="capitalRegionView"]')
+			// Verify state change - at least one button should be selected
+			const gridButton = getViewModeButton(cesiumPage, 'gridView')
+			const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
 
 			// Either should be selected (depending on focus behavior)
-			const anyChecked = (await gridRadio.isChecked()) || (await capitalRegionRadio.isChecked())
-			expect(anyChecked).toBeTruthy()
+			const anySelected =
+				(await isViewModeButtonSelected(gridButton)) ||
+				(await isViewModeButtonSelected(capitalRegionButton))
+			expect(anySelected).toBeTruthy()
 		})
 
 		cesiumTest('should have meaningful text labels for screen readers', async ({ cesiumPage }) => {
 			// Verify text content is present for screen readers
-			await expect(cesiumPage.getByText('Capital Region Heat')).toBeVisible()
+			await expect(cesiumPage.getByText('Capital Region')).toBeVisible()
 			await expect(cesiumPage.getByText('Statistical Grid')).toBeVisible()
 
-			// Verify labels are associated with inputs
-			const capitalLabel = cesiumPage.getByText('Capital Region Heat')
-			const gridLabel = cesiumPage.getByText('Statistical Grid')
+			// Verify aria-labels are present on buttons
+			const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+			const gridButton = getViewModeButton(cesiumPage, 'gridView')
 
-			await expect(capitalLabel).toBeVisible()
-			await expect(gridLabel).toBeVisible()
+			// Check for aria-label attributes
+			const capitalAriaLabel = await capitalRegionButton.getAttribute('aria-label')
+			const gridAriaLabel = await gridButton.getAttribute('aria-label')
+
+			expect(capitalAriaLabel).toBeTruthy()
+			expect(gridAriaLabel).toBeTruthy()
 		})
 	})
 })

@@ -1,266 +1,263 @@
-import { test, expect } from '@playwright/test';
-import { setupDigitransitMock } from './setup/digitransit-mock';
+import { expect, test } from '@playwright/test'
 import {
-	dismissModalIfPresent,
 	clickOnMap,
-	waitForMapViewTransition,
+	dismissModalIfPresent,
+	dismissVuetifyOverlays,
+	TEST_TIMEOUTS,
 	waitForCesiumReady,
-} from './helpers/test-helpers';
+	waitForMapViewTransition,
+} from './helpers/test-helpers'
+import { setupDigitransitMock } from './setup/digitransit-mock'
 
 // Setup digitransit mocking for all tests in this file
-setupDigitransitMock();
+setupDigitransitMock()
 
 test.describe('Data Visualization Components', () => {
-	test.use({ tag: ['@e2e', '@data', '@visual'] });
+	test.use({ tag: ['@e2e', '@data', '@visual'] })
 	test.beforeEach(async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/')
 		// Dismiss the disclaimer popup
-		await dismissModalIfPresent(page, 'Explore Map');
-		await waitForCesiumReady(page);
-	});
+		await dismissModalIfPresent(page, 'Explore Map')
+		await waitForCesiumReady(page)
+	})
 
 	test('should display charts and visualization components', async ({ page }) => {
 		// Navigate to get some data loaded
-		await clickOnMap(page, 400, 300);
-		await waitForMapViewTransition(page);
+		await clickOnMap(page, 400, 300)
+		await waitForMapViewTransition(page)
 
 		// Look for various chart components
 		const chartContainers = page.locator(
 			'[id*="chart"], [id*="plot"], .chart-container, .plot-container'
-		);
+		)
 
-		const chartCount = await chartContainers.count();
+		const chartCount = await chartContainers.count()
 		if (chartCount > 0) {
 			// Check that at least one chart container is visible
-			const visibleCharts = await chartContainers.filter({ hasText: /./ }).count();
+			const visibleCharts = await chartContainers.filter({ hasText: /./ }).count()
 			if (visibleCharts > 0) {
-				await expect(chartContainers.first()).toBeVisible();
+				await expect(chartContainers.first()).toBeVisible()
 			}
 		}
-	});
+	})
 
 	test('should handle heat histogram visualization', async ({ page }) => {
 		// Navigate to postal code to load heat data
-		await clickOnMap(page, 400, 300);
-		await waitForMapViewTransition(page);
+		await clickOnMap(page, 400, 300)
+		await waitForMapViewTransition(page)
 
 		// Look for heat histogram
-		const heatHistogram = page.locator('#heatHistogramContainer, [data-testid="heat-histogram"]');
+		const heatHistogram = page.locator('#heatHistogramContainer, [data-testid="heat-histogram"]')
 
-		const histogramCount = await heatHistogram.count();
+		const histogramCount = await heatHistogram.count()
 		if (histogramCount > 0) {
-			await expect(heatHistogram.first()).toBeVisible();
+			await expect(heatHistogram.first()).toBeVisible()
 
 			// Check for SVG chart content
-			const svg = heatHistogram.locator('svg');
-			const svgCount = await svg.count();
+			const svg = heatHistogram.locator('svg')
+			const svgCount = await svg.count()
 			if (svgCount > 0) {
-				await expect(svg.first()).toBeVisible();
+				await expect(svg.first()).toBeVisible()
 			}
 		}
-	});
+	})
 
 	test('should display building information charts', async ({ page }) => {
 		// Navigate to building level
-		await clickOnMap(page, 400, 300);
-		await waitForMapViewTransition(page);
+		await clickOnMap(page, 400, 300)
+		await waitForMapViewTransition(page)
 
 		// Try to select a building
-		await clickOnMap(page, 420, 320);
-		await waitForMapViewTransition(page);
+		await clickOnMap(page, 420, 320)
+		await waitForMapViewTransition(page)
 
 		// Look for building charts
 		const buildingCharts = page.locator(
 			'#buildingGridChartContainer, [data-testid="building-chart"]'
-		);
+		)
 
 		if ((await buildingCharts.count()) > 0) {
-			await expect(buildingCharts.first()).toBeVisible();
+			await expect(buildingCharts.first()).toBeVisible()
 		}
 
 		// Check for vulnerability chart
-		const vulnChart = page.locator('[data-testid="vulnerability-chart"], .vulnerability-chart');
+		const vulnChart = page.locator('[data-testid="vulnerability-chart"], .vulnerability-chart')
 		if ((await vulnChart.count()) > 0) {
-			await expect(vulnChart.first()).toBeVisible();
+			await expect(vulnChart.first()).toBeVisible()
 		}
-	});
+	})
 
 	test('should handle socio-economics visualization', async ({ page }) => {
 		// Look for socio-economics controls
-		const socioEcoSection = page.locator('[data-testid="socio-economics"], .socio-economics');
+		const socioEcoSection = page.locator('[data-testid="socio-economics"], .socio-economics')
 
 		if ((await socioEcoSection.count()) > 0) {
-			await expect(socioEcoSection.first()).toBeVisible();
+			await expect(socioEcoSection.first()).toBeVisible()
 
 			// Look for charts or selectors
-			const charts = socioEcoSection.locator('svg, canvas, .chart');
+			const charts = socioEcoSection.locator('svg, canvas, .chart')
 			if ((await charts.count()) > 0) {
-				await expect(charts.first()).toBeVisible();
+				await expect(charts.first()).toBeVisible()
 			}
 		}
-	});
+	})
 
 	test('should display scatter plot visualizations', async ({ page }) => {
-		const canvas = page.locator('canvas');
-
 		// Navigate to get data
-		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+		await clickOnMap(page, 400, 300)
+		await waitForMapViewTransition(page)
 
 		// Look for scatter plot components
 		const scatterPlots = page.locator(
 			'[class*="scatter"], [id*="scatter"], [data-testid*="scatter"]'
-		);
+		)
 
 		if ((await scatterPlots.count()) > 0) {
-			const visiblePlots = await scatterPlots.filter({ hasText: /./ }).count();
+			const visiblePlots = await scatterPlots.filter({ hasText: /./ }).count()
 			if (visiblePlots > 0) {
-				await expect(scatterPlots.first()).toBeVisible();
+				await expect(scatterPlots.first()).toBeVisible()
 			}
 		}
-	});
+	})
 
 	test('should handle NDVI chart functionality', async ({ page }) => {
 		// Look for NDVI chart component
-		const ndviChart = page.locator('[data-testid="ndvi-chart"], #ndviChart, .ndvi-chart');
+		const ndviChart = page.locator('[data-testid="ndvi-chart"], #ndviChart, .ndvi-chart')
 
 		if ((await ndviChart.count()) > 0) {
-			await expect(ndviChart.first()).toBeVisible();
+			await expect(ndviChart.first()).toBeVisible()
 
 			// Check for date selector or controls
-			const dateControls = ndviChart.locator('select, input[type="date"], .date-picker');
+			const dateControls = ndviChart.locator('select, input[type="date"], .date-picker')
 			if ((await dateControls.count()) > 0) {
-				await expect(dateControls.first()).toBeVisible();
+				await expect(dateControls.first()).toBeVisible()
 			}
 		}
-	});
+	})
 
 	test('should display statistical grid visualization', async ({ page }) => {
-		// Enable statistical grid if available
-		const gridToggle = page.getByLabel(/statistical.*grid|grid/i);
+		// Dismiss any open overlays that might intercept clicks
+		await dismissVuetifyOverlays(page)
 
-		if ((await gridToggle.count()) > 0) {
-			await gridToggle.check();
-			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
+		// Enable statistical grid if available (it's a button, not checkbox)
+		const gridButton = page.getByLabel(/statistical.*grid/i)
+
+		if ((await gridButton.count()) > 0) {
+			await dismissVuetifyOverlays(page)
+			await gridButton.click()
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
 
 			// Look for grid visualization components
-			const gridComponents = page.locator('[data-testid*="grid"], .grid-view, .population-grid');
+			const gridComponents = page.locator('[data-testid*="grid"], .grid-view, .population-grid')
 
 			if ((await gridComponents.count()) > 0) {
-				await expect(gridComponents.first()).toBeVisible();
+				await expect(gridComponents.first()).toBeVisible()
 			}
 
 			// Look for grid legend
-			const legend = page.locator('.legend, [data-testid="legend"]');
+			const legend = page.locator('.legend, [data-testid="legend"]')
 			if ((await legend.count()) > 0) {
-				await expect(legend.first()).toBeVisible();
+				await expect(legend.first()).toBeVisible()
 			}
-
-			// Clean up
-			await gridToggle.uncheck();
-			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
 		}
-	});
+	})
 
 	test('should handle interactive chart elements', async ({ page }) => {
-		const canvas = page.locator('canvas');
-
 		// Navigate to get charts loaded
-		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+		await clickOnMap(page, 400, 300)
+		await waitForMapViewTransition(page)
 
-		// Look for interactive chart elements
-		const charts = page.locator('svg');
+		// Look for interactive chart elements (D3 charts specifically, not UI compass SVGs)
+		// D3 charts are typically in containers like .histogram, .chart-container, or inside the sidebar
+		const chartContainers = page.locator(
+			'.histogram svg, .chart-container svg, .analysis-sidebar svg, .d3-chart svg'
+		)
 
-		if ((await charts.count()) > 0) {
-			const firstChart = charts.first();
+		if ((await chartContainers.count()) > 0) {
+			const firstChart = chartContainers.first()
 
 			if (await firstChart.isVisible()) {
 				// Try hovering over chart elements
-				await firstChart.hover();
-				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
+				await firstChart.hover({ force: true })
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
 				// Look for tooltips
-				const tooltips = page.locator('.tooltip, [data-testid="tooltip"]');
+				const tooltips = page.locator('.tooltip, [data-testid="tooltip"]')
 				if ((await tooltips.count()) > 0) {
 					// Tooltip might appear on hover
-					const tooltip = tooltips.first();
+					const tooltip = tooltips.first()
 					if (await tooltip.isVisible()) {
-						await expect(tooltip).toBeVisible();
+						await expect(tooltip).toBeVisible()
 					}
 				}
 			}
 		}
-	});
+	})
 
 	test('should handle chart data updates', async ({ page }) => {
-		const canvas = page.locator('canvas');
-
 		// Navigate to postal code level
-		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+		await clickOnMap(page, 400, 300)
+		await waitForMapViewTransition(page)
 
 		// Toggle a data layer to trigger chart updates
-		const vegToggle = page.getByLabel(/vegetation/i);
+		const vegToggle = page.getByLabel(/vegetation/i)
 		if ((await vegToggle.count()) > 0) {
-			await vegToggle.check();
-			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
+			await vegToggle.check()
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
 
 			// Check that charts still exist after data update
-			const charts = page.locator('svg, canvas').filter({ hasText: /./ });
+			const charts = page.locator('svg, canvas').filter({ hasText: /./ })
 			if ((await charts.count()) > 0) {
-				await expect(charts.first()).toBeVisible();
+				await expect(charts.first()).toBeVisible()
 			}
 
-			await vegToggle.uncheck();
-			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+			await vegToggle.uncheck()
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 		}
-	});
+	})
 
 	test('should handle chart responsive behavior', async ({ page }) => {
-		const canvas = page.locator('canvas');
-
 		// Get some charts loaded
-		await canvas.click({ position: { x: 400, y: 300 } });
-		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG);
+		await clickOnMap(page, 400, 300)
+		await waitForMapViewTransition(page)
 
 		// Test in mobile viewport
-		await page.setViewportSize({ width: 375, height: 667 });
-		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM);
+		await page.setViewportSize({ width: 375, height: 667 })
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 
 		// Charts should still be visible and properly sized
-		const charts = page.locator('svg, [id*="chart"]');
+		const charts = page.locator('svg, [id*="chart"]')
 		if ((await charts.count()) > 0) {
-			const firstChart = charts.first();
+			const firstChart = charts.first()
 			if (await firstChart.isVisible()) {
-				const chartBox = await firstChart.boundingBox();
+				const chartBox = await firstChart.boundingBox()
 
 				// Chart should fit within mobile viewport
 				if (chartBox) {
-					expect(chartBox.width).toBeLessThanOrEqual(375);
-					expect(chartBox.x).toBeGreaterThanOrEqual(0);
+					expect(chartBox.width).toBeLessThanOrEqual(375)
+					expect(chartBox.x).toBeGreaterThanOrEqual(0)
 				}
 			}
 		}
 
 		// Restore desktop viewport
-		await page.setViewportSize({ width: 1280, height: 720 });
-		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP);
-	});
+		await page.setViewportSize({ width: 1280, height: 720 })
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+	})
 
 	test('should handle chart error states', async ({ page }) => {
-		// Click on areas that might not have data
-		const canvas = page.locator('canvas');
-		await canvas.click({ position: { x: 100, y: 100 } });
-		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD);
+		// Click on areas that might not have data (use center position to avoid UI overlays)
+		await clickOnMap(page, 400, 300)
+		await waitForMapViewTransition(page)
 
 		// App should still be functional even if no charts load
-		await expect(canvas).toBeVisible();
+		const canvas = page.locator('canvas')
+		await expect(canvas).toBeVisible()
 
 		// Navigation should still work
 		const toggleButton = page.getByRole('button', {
-			name: /Show Controls|Hide Controls/,
-		});
-		await expect(toggleButton).toBeVisible();
-	});
-});
+			name: 'Toggle control panel',
+		})
+		await expect(toggleButton).toBeVisible()
+	})
+})

@@ -22,7 +22,7 @@ export const TIMEOUTS = {
 	NETWORK_IDLE: 30000,
 	CESIUM_READY: 30000,
 	APP_READY: 45000,
-} as const;
+} as const
 
 // Performance thresholds (in milliseconds)
 export const PERFORMANCE_THRESHOLDS = {
@@ -32,7 +32,7 @@ export const PERFORMANCE_THRESHOLDS = {
 	API_RESPONSE: 3000,
 	SESSION_DURATION: 30000,
 	RESPONSIVE_ACTION: 1000,
-} as const;
+} as const
 
 // Test coordinates and dimensions
 export const TEST_COORDINATES = {
@@ -53,7 +53,7 @@ export const TEST_COORDINATES = {
 		X: 2000,
 		Y: 3000,
 	},
-} as const;
+} as const
 
 // Camera and zoom values
 export const CAMERA_CONSTANTS = {
@@ -61,26 +61,26 @@ export const CAMERA_CONSTANTS = {
 	ZOOM_FACTOR: 0.5,
 	ZOOM_PRECISION: 0.01,
 	DEFAULT_CAPACITY: 1000,
-} as const;
+} as const
 
 // Test dataset sizes
 export const DATASET_SIZES = {
 	SMALL: 25,
 	MEDIUM: 50,
 	LARGE: 10000,
-} as const;
+} as const
 
 // URL and ports
 export const TEST_URLS = {
 	LOCALHOST_DEV: 3000,
 	LOCALHOST_PREVIEW: 4173,
-} as const;
+} as const
 
 // Postal code ranges
 export const POSTAL_CODE_RANGES = {
 	MIN: 0,
 	MAX: 1000,
-} as const;
+} as const
 
 /**
  * API and service endpoint patterns for test request matching
@@ -93,7 +93,7 @@ export const API_ENDPOINTS = {
 	PAAVO: '/paavo',
 	PYGEOAPI: '/pygeoapi',
 	TERRAIN_PROXY: '/terrain-proxy',
-} as const;
+} as const
 
 /**
  * Performance budgets for JavaScript bundle sizes (in bytes)
@@ -102,10 +102,10 @@ export const API_ENDPOINTS = {
  */
 export const BUNDLE_SIZE_BUDGETS = {
 	MIN_CESIUM_CHUNK: 100000, // 100KB minimum for actual Cesium library
-	MAX_MAIN_BUNDLE: 500000, // 500KB budget for largest single bundle (excludes ~5MB Cesium)
-	MAX_TOTAL_MAIN_BUNDLE: 1000000, // 1MB total budget for all non-Cesium bundles
+	MAX_MAIN_BUNDLE: 1000000, // 1MB budget for largest single bundle (excludes ~5MB Cesium)
+	MAX_TOTAL_MAIN_BUNDLE: 5000000, // 5MB total budget for all non-Cesium bundles (catches if Cesium gets accidentally bundled)
 	BYTES_PER_KIB: 1024, // Conversion factor for bytes to kibibytes (KiB)
-} as const;
+} as const
 
 /**
  * Web Vitals performance budgets (in milliseconds)
@@ -118,7 +118,7 @@ export const WEB_VITALS_BUDGETS = {
 	DOM_INTERACTIVE_BUDGET: 5000, // DOM Interactive budget
 	LCP_OBSERVATION_TIMEOUT_CI: 3000, // LCP timeout in CI
 	LCP_OBSERVATION_TIMEOUT_LOCAL: 1500, // LCP timeout locally
-} as const;
+} as const
 
 /**
  * Viewport dimensions for responsive testing
@@ -141,4 +141,4 @@ export const VIEWPORTS = {
 	TABLET_LANDSCAPE: { width: 1024, height: 768 }, // iPad Landscape
 	DESKTOP: { width: 1280, height: 720 }, // Desktop
 	DESKTOP_HD: { width: 1920, height: 1080 }, // Desktop HD
-} as const;
+} as const

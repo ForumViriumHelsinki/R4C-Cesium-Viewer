@@ -99,7 +99,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 				// Simulate camera heading change via JavaScript
 				await cesiumPage.evaluate(() => {
 					const viewer = (window as any).viewer
-					if (viewer && viewer.camera) {
+					if (viewer?.camera) {
 						// Change camera heading to 90 degrees (East)
 						const Cesium = (window as any).Cesium
 						if (Cesium) {
@@ -150,7 +150,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			// Verify camera heading is reset (in mock mode, check function was called)
 			const headingReset = await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
-				if (viewer && viewer.camera) {
+				if (viewer?.camera) {
 					// In real mode, heading should be 0 (or very close)
 					const heading = viewer.camera.heading || 0
 					return Math.abs(heading) < 0.1 || Math.abs(heading - 2 * Math.PI) < 0.1
@@ -268,7 +268,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
 				const Cesium = (window as any).Cesium
-				if (viewer && viewer.camera && Cesium) {
+				if (viewer?.camera && Cesium) {
 					viewer.camera.setView({
 						destination: viewer.camera.position,
 						orientation: {
@@ -291,7 +291,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			// Verify heading is reset
 			const headingReset = await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
-				if (viewer && viewer.camera) {
+				if (viewer?.camera) {
 					const heading = viewer.camera.heading || 0
 					return Math.abs(heading) < 0.1 || Math.abs(heading - 2 * Math.PI) < 0.1
 				}
@@ -309,7 +309,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
 				const Cesium = (window as any).Cesium
-				if (viewer && viewer.camera && Cesium) {
+				if (viewer?.camera && Cesium) {
 					viewer.camera.setView({
 						destination: viewer.camera.position,
 						orientation: {
@@ -332,7 +332,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			// Verify heading is reset
 			const headingReset = await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
-				if (viewer && viewer.camera) {
+				if (viewer?.camera) {
 					const heading = viewer.camera.heading || 0
 					return Math.abs(heading) < 0.1 || Math.abs(heading - 2 * Math.PI) < 0.1
 				}
@@ -435,7 +435,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
 				const Cesium = (window as any).Cesium
-				if (viewer && viewer.camera && Cesium) {
+				if (viewer?.camera && Cesium) {
 					viewer.camera.setView({
 						destination: viewer.camera.position,
 						orientation: {
@@ -510,7 +510,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			// Get initial camera height
 			const initialHeight = await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
-				if (viewer && viewer.camera && viewer.camera.positionCartographic) {
+				if (viewer?.camera?.positionCartographic) {
 					return viewer.camera.positionCartographic.height
 				}
 				return 1000000
@@ -523,7 +523,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			// Get new height
 			const newHeight = await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
-				if (viewer && viewer.camera && viewer.camera.positionCartographic) {
+				if (viewer?.camera?.positionCartographic) {
 					return viewer.camera.positionCartographic.height
 				}
 				return 1000000
@@ -541,7 +541,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			// Get initial camera height
 			const initialHeight = await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
-				if (viewer && viewer.camera && viewer.camera.positionCartographic) {
+				if (viewer?.camera?.positionCartographic) {
 					return viewer.camera.positionCartographic.height
 				}
 				return 1000000
@@ -554,7 +554,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			// Get new height
 			const newHeight = await cesiumPage.evaluate(() => {
 				const viewer = (window as any).viewer
-				if (viewer && viewer.camera && viewer.camera.positionCartographic) {
+				if (viewer?.camera?.positionCartographic) {
 					return viewer.camera.positionCartographic.height
 				}
 				return 1000000
@@ -709,7 +709,7 @@ cesiumDescribe.skip('Camera Controls Accessibility', () => {
 			})
 
 			// z-index should be 400 as defined in CSS
-			expect(parseInt(zIndex)).toBe(400)
+			expect(parseInt(zIndex, 10)).toBe(400)
 		})
 
 		cesiumTest('should not interfere with map interactions', async ({ cesiumPage }) => {
