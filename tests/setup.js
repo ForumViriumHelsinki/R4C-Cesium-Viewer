@@ -57,19 +57,21 @@ Object.defineProperty(window, 'matchMedia', {
 	})),
 })
 
-// Mock IntersectionObserver
-global.IntersectionObserver = vi.fn(() => ({
-	observe: vi.fn(),
-	unobserve: vi.fn(),
-	disconnect: vi.fn(),
-}))
+// Mock IntersectionObserver - use class for constructor compatibility
+global.IntersectionObserver = class MockIntersectionObserver {
+	observe = vi.fn()
+	unobserve = vi.fn()
+	disconnect = vi.fn()
+	constructor() {}
+}
 
-// Mock ResizeObserver
-global.ResizeObserver = vi.fn(() => ({
-	observe: vi.fn(),
-	unobserve: vi.fn(),
-	disconnect: vi.fn(),
-}))
+// Mock ResizeObserver - use class for constructor compatibility
+global.ResizeObserver = class MockResizeObserver {
+	observe = vi.fn()
+	unobserve = vi.fn()
+	disconnect = vi.fn()
+	constructor() {}
+}
 
 // Set up global test configuration
 config.global.mocks = {
