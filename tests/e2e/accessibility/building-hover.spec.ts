@@ -22,7 +22,7 @@ test.describe
 			await page.goto('/')
 
 			// Dismiss the disclaimer popup
-			const exploreButton = page.getByRole('button', { name: 'Explore Map' })
+			const exploreButton = page.locator('button', { hasText: 'Explore Map' })
 			await expect(exploreButton).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
 			await exploreButton.click()
 
@@ -334,7 +334,7 @@ test.describe
 		test.beforeEach(async ({ page }) => {
 			await page.goto('/')
 
-			const exploreButton = page.getByRole('button', { name: 'Explore Map' })
+			const exploreButton = page.locator('button', { hasText: 'Explore Map' })
 			await expect(exploreButton).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
 			await exploreButton.click()
 			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)

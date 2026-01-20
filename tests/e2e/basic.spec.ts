@@ -7,7 +7,7 @@ test('Page load', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
 
 	// Wait for page to load and dismiss any modal if present
 	await page.waitForLoadState('domcontentloaded')
-	await dismissModalIfPresent(page, 'Close')
+	await dismissModalIfPresent(page, 'Explore Map')
 
 	await expect(page).toHaveTitle(/R4C Uusimaa Demo/)
 })
@@ -17,7 +17,7 @@ test('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ page }) => {
 
 	// Wait for page to load and dismiss any modal if present
 	await page.waitForLoadState('domcontentloaded')
-	await dismissModalIfPresent(page, 'Close')
+	await dismissModalIfPresent(page, 'Explore Map')
 
 	// Wait for page to be fully loaded
 	await page.waitForSelector('#app', {
@@ -82,7 +82,7 @@ test('Building properties', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
 
 	// Wait for page to load and dismiss any modal if present
 	await page.waitForLoadState('domcontentloaded')
-	await dismissModalIfPresent(page, 'Close')
+	await dismissModalIfPresent(page, 'Explore Map')
 
 	// Verify the page loaded successfully
 	await expect(page).toHaveTitle(/R4C Uusimaa Demo/)
@@ -100,7 +100,7 @@ test('Statistical Grid View', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
 
 	// Wait for page to load and dismiss any modal if present
 	await page.waitForLoadState('domcontentloaded')
-	await dismissModalIfPresent(page, 'Close')
+	await dismissModalIfPresent(page, 'Explore Map')
 
 	// Wait for app to be ready
 	await page.waitForSelector('#app', {

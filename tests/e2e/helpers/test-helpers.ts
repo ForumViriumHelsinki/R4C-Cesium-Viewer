@@ -1136,6 +1136,108 @@ export class AccessibilityTestHelpers {
 	}
 
 	/**
+	 * Navigate to a postal code using the search feature.
+	 * This is more reliable than clicking on the map at fixed coordinates.
+	 *
+	 * @param postalCode - The postal code to search for (e.g., '00100')
+	 * @returns true if navigation succeeded, false otherwise
+	 */
+	private async navigateViaSearch(postalCode: string): Promise<boolean> {
+		try {
+			// Find the search input using role-based selector (more reliable for Vuetify components)
+			// The search box has accessible name containing "Search by address, postal code"
+			const searchInput = this.page.getByRole('textbox', { name: /search.*postal/i })
+
+			// Check if search input exists
+			const inputExists = (await searchInput.count()) > 0
+			if (!inputExists) {
+				// Fallback to CSS selector for Vuetify autocomplete
+				const fallbackInput = this.page.locator('.v-autocomplete input, .v-text-field input')
+				const fallbackExists = (await fallbackInput.count()) > 0
+				if (!fallbackExists) {
+					console.log('[navigateViaSearch] Search input not found')
+					return false
+				}
+				console.log('[navigateViaSearch] Using fallback CSS selector for search input')
+			}
+
+			const finalInput = inputExists
+				? searchInput
+				: this.page.locator('.v-autocomplete input, .v-text-field input').first()
+
+			await finalInput.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+			console.log('[navigateViaSearch] Found search input, typing postal code:', postalCode)
+
+			// Clear any existing text and type the postal code
+			await finalInput.clear()
+			await finalInput.fill(postalCode)
+
+			// Small wait for dropdown to appear and stabilize
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+
+			// Look for a search result that matches the postal code
+			// Digitransit returns results like "00100, Helsinki" or similar
+			const searchResult = this.page.locator('.v-list-item').filter({ hasText: postalCode }).first()
+
+			const resultExists = await searchResult
+				.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+				.then(() => true)
+				.catch(() => false)
+
+			if (resultExists) {
+				// Click on the search result with force to bypass stability checks
+				// This positions the camera at the postal code area
+				await searchResult.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION, force: true })
+				console.log(`[navigateViaSearch] Clicked search result to position camera at ${postalCode}`)
+			} else {
+				// No dropdown result, try pressing Enter to search
+				await finalInput.press('Enter')
+				console.log(`[navigateViaSearch] Pressed Enter to position camera at ${postalCode}`)
+			}
+
+			// Wait for camera to move and tiles to load
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
+
+			// Search positions the camera but doesn't SELECT the postal code.
+			// We need to click on the map center to select the postal code polygon.
+			const cesiumContainer = this.page.locator('#cesiumContainer')
+			const box = await cesiumContainer.boundingBox()
+			if (box) {
+				// Click on the center of the map where the postal code should now be positioned
+				const centerX = box.width / 2
+				const centerY = box.height / 2
+				await cesiumContainer.click({
+					position: { x: centerX, y: centerY },
+					force: true,
+				})
+				console.log(
+					`[navigateViaSearch] Clicked map center (${centerX}, ${centerY}) to select postal code`
+				)
+			}
+
+			// Wait for postal code level to activate using promise race (whichever appears first)
+			const activated = await Promise.race([
+				this.page
+					.waitForSelector('.timeline-compact', { state: 'attached', timeout: 8000 })
+					.then(() => true)
+					.catch(() => false),
+				this.page
+					.waitForSelector('text="Building Scatter Plot"', { state: 'visible', timeout: 8000 })
+					.then(() => true)
+					.catch(() => false),
+				// Timeout fallback
+				new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000)),
+			])
+
+			console.log(`[navigateViaSearch] Postal code level activated: ${activated}`)
+			return activated
+		} catch (error) {
+			console.warn('[navigateViaSearch] Failed:', error)
+			return false
+		}
+	}
+
+	/**
 	 * Navigate through levels: start → postal code → building with retry and viewport handling
 	 */
 	async drillToLevel(targetLevel: 'postalCode' | 'building', identifier?: string): Promise<void> {
@@ -1146,8 +1248,8 @@ export class AccessibilityTestHelpers {
 
 		switch (targetLevel) {
 			case 'postalCode': {
-				// Click on a postal code area - using Helsinki center as default
-				const _postalCodeId = identifier || '00100'
+				// Use postal code for search, default to Helsinki center
+				const postalCodeId = identifier || '00100'
 
 				// Wait for Cesium viewer to be ready with enhanced verification
 				await this.page.waitForSelector('#cesiumContainer', {
@@ -1209,7 +1311,18 @@ export class AccessibilityTestHelpers {
 						)
 					})
 
-				// Retry logic for clicking on map to select postal code
+				// Strategy 1: Try using search to navigate (more reliable)
+				const searchSucceeded = await this.navigateViaSearch(postalCodeId)
+				if (searchSucceeded) {
+					// Brief wait for UI to stabilize after search navigation
+					// The navigateViaSearch already verified activation, no need for Pinia check
+					await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+					return // Success via search
+				}
+
+				console.log('[drillToLevel] Search navigation failed, falling back to map clicks')
+
+				// Strategy 2: Fall back to clicking on map
 				for (let attempt = 1; attempt <= maxRetries; attempt++) {
 					try {
 						// Scroll Cesium container into view with retries
@@ -2075,15 +2188,14 @@ export class AccessibilityTestHelpers {
 
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 			// Check multiple overlay types with comprehensive selectors
+			// Note: Avoid generic [role='dialog'] - Vuetify creates many inactive dialog
+			// containers in DOM for menus/tooltips. Use specific Vuetify classes instead.
+			// Note: Snackbars (.v-snackbar--active) are NOT blocking overlays - they're
+			// informational notifications that don't prevent user interaction.
 			const overlaySelectors = [
-				'.v-overlay__scrim',
-				'.v-overlay--active',
+				'.v-overlay__scrim:not([style*="display: none"])',
 				'.v-dialog--active',
-				'.v-menu__content',
-				"[role='dialog']",
-				'.v-snackbar--active',
-				'.v-tooltip--active',
-				'[data-overlay]',
+				'.v-menu--active',
 			]
 
 			let overlayFound = false
@@ -2144,6 +2256,9 @@ export class AccessibilityTestHelpers {
 				}
 			}
 
+			// Note: Snackbars are intentionally not handled here - they are
+			// non-blocking notifications and don't prevent user interaction.
+
 			// Wait for animations to complete
 			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
@@ -2188,18 +2303,18 @@ export class AccessibilityTestHelpers {
 		}
 
 		// Final check - if overlays still present after all attempts, log warning but continue
+		// Note: .v-overlay--active is too generic - it includes snackbar overlays which aren't blockers.
+		// Only check for actual blocking overlays (dialogs and menus).
 		const remainingOverlays = await Promise.all(
-			['.v-overlay__scrim', '.v-overlay--active', '.v-dialog--active', "[role='dialog']"].map(
-				async (selector) => {
-					// Only check for visible elements, not just DOM presence
-					const count = await this.page
-						.locator(selector)
-						.locator('visible=true')
-						.count()
-						.catch(() => 0)
-					return count > 0 ? selector : null
-				}
-			)
+			['.v-dialog--active', '.v-menu--active'].map(async (selector) => {
+				// Only check for visible elements, not just DOM presence
+				const count = await this.page
+					.locator(selector)
+					.locator('visible=true')
+					.count()
+					.catch(() => 0)
+				return count > 0 ? selector : null
+			})
 		)
 
 		const stillPresent = remainingOverlays.filter((s) => s !== null)

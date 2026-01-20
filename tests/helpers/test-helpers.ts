@@ -76,15 +76,45 @@ export async function waitForBuildingSelection(page: Page): Promise<void> {
 /**
  * Dismiss modal if present (non-blocking, no race condition)
  * Uses single operation with error handling instead of check-then-click pattern
+ * Note: Uses text-based locator to match visible button text regardless of aria-label
  */
 export async function dismissModalIfPresent(
 	page: Page,
-	buttonName: string = 'Close'
+	buttonText: string = 'Close'
 ): Promise<void> {
-	await page
-		.getByRole('button', { name: buttonName })
-		.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
-		.catch(() => {}) // Modal not present, that's fine
+	try {
+		// Use locator with hasText for visible text matching (ignores aria-label)
+		const button = page.locator('button', { hasText: buttonText })
+		// Wait for button to be visible first with a longer timeout
+		await button.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+		await button.click({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+		// Wait for the dialog content to fully disappear after clicking
+		// The v-overlay-container may still have the dialog during CSS transition
+		await page
+			.waitForFunction(
+				() => {
+					const container = document.querySelector('.v-overlay-container')
+					if (!container) return true
+					// Check if any v-dialog is still active/visible
+					const dialogs = container.querySelectorAll('.v-dialog')
+					return (
+						dialogs.length === 0 ||
+						Array.from(dialogs).every((d) => {
+							const style = window.getComputedStyle(d)
+							return (
+								style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0'
+							)
+						})
+					)
+				},
+				{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
+			)
+			.catch(() => {})
+		// Small additional wait for Vuetify transition cleanup
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
+	} catch {
+		// Modal not present, that's fine
+	}
 }
 
 /**
@@ -214,6 +244,41 @@ export async function toggleLayer(
 	if (currentState !== checked) {
 		await toggle.click()
 		await waitForLayerLoad(page)
+	}
+}
+
+/**
+ * Dismiss any open Vuetify overlays (menus, dialogs, etc.)
+ * Presses Escape key to close overlays and waits for them to be removed
+ */
+export async function dismissVuetifyOverlays(page: Page): Promise<void> {
+	// Check if any overlay scrim is visible
+	const hasOverlay = await page.evaluate(() => {
+		const scrim = document.querySelector('.v-overlay__scrim')
+		if (!scrim) return false
+		const style = window.getComputedStyle(scrim)
+		return style.display !== 'none' && style.visibility !== 'hidden'
+	})
+
+	if (hasOverlay) {
+		// Press Escape to close any open overlays
+		await page.keyboard.press('Escape')
+		// Wait for overlay to be removed
+		await page
+			.waitForFunction(
+				() => {
+					const scrims = document.querySelectorAll('.v-overlay__scrim')
+					return Array.from(scrims).every((scrim) => {
+						const style = window.getComputedStyle(scrim)
+						return (
+							style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0'
+						)
+					})
+				},
+				{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
+			)
+			.catch(() => {})
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
 	}
 }
 
