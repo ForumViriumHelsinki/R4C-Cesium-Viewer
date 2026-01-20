@@ -1136,6 +1136,106 @@ export class AccessibilityTestHelpers {
 	}
 
 	/**
+	 * Navigate to a postal code using programmatic store manipulation.
+	 *
+	 * This method directly sets the Pinia store state and triggers postal code
+	 * data loading through the app's FeaturePicker service, bypassing unreliable
+	 * map click interactions.
+	 *
+	 * This is more reliable than URL-based navigation (which requires page reload)
+	 * or search-based navigation (which depends on UI interaction).
+	 *
+	 * @param postalCode - The postal code to navigate to (e.g., '00100')
+	 * @returns true if navigation succeeded, false otherwise
+	 */
+	private async navigateViaStore(postalCode: string): Promise<boolean> {
+		try {
+			console.log(`[navigateViaStore] Navigating to postal code: ${postalCode}`)
+
+			// Check if we can access the FeaturePicker through the window
+			const hasFeaturePicker = await this.page.evaluate(() => {
+				return typeof (window as any).__featurepicker?.loadPostalCodeData === 'function'
+			})
+
+			if (!hasFeaturePicker) {
+				console.log('[navigateViaStore] FeaturePicker not exposed on window, using store directly')
+
+				// Use window.globalStore which is exposed in dev/test mode (see main.js)
+				await this.page.evaluate((pc) => {
+					const store = (window as any).globalStore
+					if (!store) {
+						throw new Error('globalStore not available on window (check main.js exposure)')
+					}
+
+					store.setLevel('postalCode')
+					store.setPostalCode(pc)
+					console.log(`[navigateViaStore] Set store: level=postalCode, postalcode=${pc}`)
+				}, postalCode)
+			} else {
+				// Use FeaturePicker to load postal code data properly
+				await this.page.evaluate(async (pc) => {
+					const featurepicker = (window as any).__featurepicker
+					if (featurepicker?.loadPostalCodeData) {
+						await featurepicker.loadPostalCodeData(pc)
+						console.log(`[navigateViaStore] Loaded postal code data via FeaturePicker: ${pc}`)
+					}
+				}, postalCode)
+			}
+
+			// Wait for store state to update
+			const stateUpdated = await this.page
+				.waitForFunction(
+					(expectedPostalCode) => {
+						// Use window.globalStore which is exposed in dev/test mode
+						const store = (window as any).globalStore
+						if (!store) return false
+
+						return store.level === 'postalCode' && store.postalcode === expectedPostalCode
+					},
+					postalCode,
+					{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
+				)
+				.then(() => true)
+				.catch(() => false)
+
+			if (!stateUpdated) {
+				console.warn('[navigateViaStore] Store state did not update to expected values')
+				return false
+			}
+
+			console.log(`[navigateViaStore] Store state updated to postal code level: ${postalCode}`)
+
+			// Wait for postal code UI indicators to appear
+			const uiIndicators = await Promise.race([
+				this.page
+					.waitForSelector('.timeline-compact', { state: 'attached', timeout: 8000 })
+					.then(() => 'timeline'),
+				this.page
+					.waitForSelector('text="Building Scatter Plot"', { state: 'visible', timeout: 8000 })
+					.then(() => 'scatterplot'),
+				this.page
+					.waitForSelector('text="Area properties"', { state: 'visible', timeout: 8000 })
+					.then(() => 'properties'),
+				new Promise<string>((resolve) => setTimeout(() => resolve('timeout'), 8000)),
+			])
+
+			if (uiIndicators === 'timeout') {
+				console.warn('[navigateViaStore] UI indicators did not appear, but store state is correct')
+			} else {
+				console.log(`[navigateViaStore] UI indicator appeared: ${uiIndicators}`)
+			}
+
+			// Brief stabilization wait
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+
+			return true
+		} catch (error) {
+			console.warn('[navigateViaStore] Failed:', error)
+			return false
+		}
+	}
+
+	/**
 	 * Navigate to a postal code using the search feature.
 	 * This is more reliable than clicking on the map at fixed coordinates.
 	 *
@@ -1311,7 +1411,16 @@ export class AccessibilityTestHelpers {
 						)
 					})
 
-				// Strategy 1: Try using search to navigate (more reliable)
+				// Strategy 1: Try programmatic store navigation (most reliable - bypasses UI)
+				const storeSucceeded = await this.navigateViaStore(postalCodeId)
+				if (storeSucceeded) {
+					console.log('[drillToLevel] Store navigation succeeded')
+					return // Success via store manipulation
+				}
+
+				console.log('[drillToLevel] Store navigation failed, trying search navigation')
+
+				// Strategy 2: Try using search to navigate (fallback)
 				const searchSucceeded = await this.navigateViaSearch(postalCodeId)
 				if (searchSucceeded) {
 					// Brief wait for UI to stabilize after search navigation
@@ -1322,7 +1431,7 @@ export class AccessibilityTestHelpers {
 
 				console.log('[drillToLevel] Search navigation failed, falling back to map clicks')
 
-				// Strategy 2: Fall back to clicking on map
+				// Strategy 3: Fall back to clicking on map
 				for (let attempt = 1; attempt <= maxRetries; attempt++) {
 					try {
 						// Scroll Cesium container into view with retries
