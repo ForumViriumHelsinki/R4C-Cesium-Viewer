@@ -285,7 +285,7 @@ describe('postalCodeLoader service', () => {
 
 			try {
 				await startCameraAnimation(mockServices.cameraService, updateProgress, setState)
-			} catch (e) {
+			} catch (_e) {
 				// Expected to throw
 			}
 

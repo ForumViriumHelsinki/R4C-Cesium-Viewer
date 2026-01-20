@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import axios from 'axios';
+import axios from 'axios'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 // Mock external APIs for integration tests
 const mockExternalAPIs = () => {
 	vi.mock('axios', async () => {
-		const actual = await vi.importActual('axios');
+		const actual = await vi.importActual('axios')
 		return {
 			...actual,
 			default: {
@@ -15,35 +15,35 @@ const mockExternalAPIs = () => {
 					post: vi.fn(),
 				})),
 			},
-		};
-	});
-};
+		}
+	})
+}
 
 describe('API Integration Tests', () => {
-	let testServer;
-	const _TEST_BASE_URL = 'http://localhost:5173';
+	let testServer
+	const _TEST_BASE_URL = 'http://localhost:5173'
 
 	beforeAll(async () => {
-		mockExternalAPIs();
-	});
+		mockExternalAPIs()
+	})
 
 	afterAll(async () => {
 		if (testServer) {
-			await testServer.close();
+			await testServer.close()
 		}
 		// Restore all mocks after test suite
-		vi.restoreAllMocks();
-	});
+		vi.restoreAllMocks()
+	})
 
 	describe('Frontend API Service Integration', () => {
 		beforeEach(() => {
 			// Clear all mocks before each test for isolation
-			vi.clearAllMocks();
-		});
+			vi.clearAllMocks()
+		})
 
 		describe('Address Service', () => {
 			it('should handle building address resolution end-to-end', async () => {
-				const { findAddressForBuilding } = await import('../../src/services/address.js');
+				const { findAddressForBuilding } = await import('../../src/services/address.js')
 				// Test realistic building property scenarios
 				const testCases = [
 					{
@@ -82,14 +82,14 @@ describe('API Integration Tests', () => {
 						},
 						expected: 'Katunimi 10',
 					},
-				];
+				]
 
 				testCases.forEach((testCase) => {
-					const result = findAddressForBuilding(testCase.properties);
-					expect(result).toBe(testCase.expected);
-				});
-			});
-		});
+					const result = findAddressForBuilding(testCase.properties)
+					expect(result).toBe(testCase.expected)
+				})
+			})
+		})
 
 		describe('Geocoding Service Integration', () => {
 			it('should integrate with external geocoding APIs', async () => {
@@ -107,144 +107,144 @@ describe('API Integration Tests', () => {
 							},
 						],
 					},
-				};
+				}
 
-				axios.get.mockResolvedValue(mockGeocodeResponse);
+				axios.get.mockResolvedValue(mockGeocodeResponse)
 
 				// Test geocoding integration
-				const address = 'Helsinki, Finland';
+				const address = 'Helsinki, Finland'
 				const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json`, {
 					params: {
 						address,
 						key: 'test-key',
 					},
-				});
+				})
 
 				expect(response.data.results[0].geometry.location).toEqual({
 					lat: 60.1699,
 					lng: 24.9384,
-				});
-			});
+				})
+			})
 
 			it('should handle geocoding errors gracefully', async () => {
-				axios.get.mockRejectedValue(new Error('Geocoding API unavailable'));
+				axios.get.mockRejectedValue(new Error('Geocoding API unavailable'))
 
 				try {
-					await axios.get('https://maps.googleapis.com/maps/api/geocode/json');
-					expect.fail('Should have thrown error');
+					await axios.get('https://maps.googleapis.com/maps/api/geocode/json')
+					expect.fail('Should have thrown error')
 				} catch (error) {
-					expect(error.message).toBe('Geocoding API unavailable');
+					expect(error.message).toBe('Geocoding API unavailable')
 				}
-			});
-		});
-	});
+			})
+		})
+	})
 
 	describe('Store Integration Tests', () => {
 		beforeEach(() => {
 			// Clear all mocks before each test
-			vi.clearAllMocks();
-		});
+			vi.clearAllMocks()
+		})
 
 		it('should maintain consistency across multiple stores', async () => {
-			const { createPinia, setActivePinia } = await import('pinia');
-			const { useGlobalStore } = await import('@/stores/globalStore.js');
-			const { useToggleStore } = await import('@/stores/toggleStore.js');
-			const { useBuildingStore } = await import('@/stores/buildingStore.js');
+			const { createPinia, setActivePinia } = await import('pinia')
+			const { useGlobalStore } = await import('@/stores/globalStore.js')
+			const { useToggleStore } = await import('@/stores/toggleStore.js')
+			const { useBuildingStore } = await import('@/stores/buildingStore.js')
 
-			setActivePinia(createPinia());
+			setActivePinia(createPinia())
 
-			const globalStore = useGlobalStore();
-			const toggleStore = useToggleStore();
-			const _buildingStore = useBuildingStore();
+			const globalStore = useGlobalStore()
+			const toggleStore = useToggleStore()
+			const _buildingStore = useBuildingStore()
 
 			// Test cross-store state consistency
-			globalStore.setLevel('building');
-			globalStore.setPostalCode('00100');
-			toggleStore.setShowPlot(true);
+			globalStore.setLevel('building')
+			globalStore.setPostalCode('00100')
+			toggleStore.setShowPlot(true)
 
-			expect(globalStore.level).toBe('building');
-			expect(globalStore.postalcode).toBe('00100');
-			expect(toggleStore.showPlot).toBe(true);
+			expect(globalStore.level).toBe('building')
+			expect(globalStore.postalcode).toBe('00100')
+			expect(toggleStore.showPlot).toBe(true)
 
 			// Test reset functionality affects all stores appropriately
-			toggleStore.reset();
-			expect(toggleStore.showPlot).toBe(true); // Default is true
-			expect(globalStore.level).toBe('building'); // Should remain unchanged
-		});
+			toggleStore.reset()
+			expect(toggleStore.showPlot).toBe(true) // Default is true
+			expect(globalStore.level).toBe('building') // Should remain unchanged
+		})
 
 		it('should handle complex state transitions', async () => {
-			const { createPinia, setActivePinia } = await import('pinia');
-			const { useGlobalStore } = await import('@/stores/globalStore.js');
-			const { useToggleStore } = await import('@/stores/toggleStore.js');
+			const { createPinia, setActivePinia } = await import('pinia')
+			const { useGlobalStore } = await import('@/stores/globalStore.js')
+			const { useToggleStore } = await import('@/stores/toggleStore.js')
 
-			setActivePinia(createPinia());
+			setActivePinia(createPinia())
 
-			const globalStore = useGlobalStore();
-			const toggleStore = useToggleStore();
+			const globalStore = useGlobalStore()
+			const toggleStore = useToggleStore()
 
 			// Simulate complex user workflow
-			globalStore.setView('capitalRegion');
-			globalStore.setIsLoading(true);
-			toggleStore.setGridView(true);
-			toggleStore.setPostalCode(true);
+			globalStore.setView('capitalRegion')
+			globalStore.setIsLoading(true)
+			toggleStore.setGridView(true)
+			toggleStore.setPostalCode(true)
 
-			expect(globalStore.view).toBe('capitalRegion');
-			expect(globalStore.isLoading).toBe(true);
-			expect(toggleStore.gridView).toBe(true);
-			expect(toggleStore.postalCode).toBe(true);
+			expect(globalStore.view).toBe('capitalRegion')
+			expect(globalStore.isLoading).toBe(true)
+			expect(toggleStore.gridView).toBe(true)
+			expect(toggleStore.postalCode).toBe(true)
 
 			// Change to building view
-			globalStore.setLevel('building');
-			globalStore.setIsLoading(false);
-			toggleStore.setGridView(false);
+			globalStore.setLevel('building')
+			globalStore.setIsLoading(false)
+			toggleStore.setGridView(false)
 
-			expect(globalStore.level).toBe('building');
-			expect(globalStore.isLoading).toBe(false);
-			expect(toggleStore.gridView).toBe(false);
-		});
-	});
+			expect(globalStore.level).toBe('building')
+			expect(globalStore.isLoading).toBe(false)
+			expect(toggleStore.gridView).toBe(false)
+		})
+	})
 
 	describe('Component Store Integration', () => {
 		beforeEach(() => {
 			// Clear all mocks before each test
-			vi.clearAllMocks();
-		});
+			vi.clearAllMocks()
+		})
 
 		it('should integrate Loading component with globalStore', async () => {
-			const { mount } = await import('@vue/test-utils');
-			const { createPinia, setActivePinia } = await import('pinia');
-			const { useGlobalStore } = await import('@/stores/globalStore.js');
-			const Loading = await import('@/components/Loading.vue');
-			const { nextTick } = await import('vue');
+			const { mount } = await import('@vue/test-utils')
+			const { createPinia, setActivePinia } = await import('pinia')
+			const { useGlobalStore } = await import('@/stores/globalStore.js')
+			const Loading = await import('@/components/Loading.vue')
+			const { nextTick } = await import('vue')
 
-			setActivePinia(createPinia());
-			const store = useGlobalStore();
+			setActivePinia(createPinia())
+			const store = useGlobalStore()
 
-			const wrapper = mount(Loading.default);
+			const wrapper = mount(Loading.default)
 
 			// Test integration: store change should affect component
-			expect(wrapper.find('.loading-overlay').exists()).toBe(false);
+			expect(wrapper.find('.loading-overlay').exists()).toBe(false)
 
-			store.setIsLoading(true);
-			await nextTick();
+			store.setIsLoading(true)
+			await nextTick()
 
-			expect(wrapper.find('.loading-overlay').exists()).toBe(true);
-			expect(wrapper.find('.loading-message').text()).toBe('Loading data, please wait');
+			expect(wrapper.find('.loading-overlay').exists()).toBe(true)
+			expect(wrapper.find('.loading-message').text()).toBe('Loading data, please wait')
 
-			store.setIsLoading(false);
-			await nextTick();
+			store.setIsLoading(false)
+			await nextTick()
 
-			expect(wrapper.find('.loading-overlay').exists()).toBe(false);
+			expect(wrapper.find('.loading-overlay').exists()).toBe(false)
 
-			wrapper.unmount();
-		});
-	});
+			wrapper.unmount()
+		})
+	})
 
 	describe('WMS Service Integration', () => {
 		beforeEach(() => {
 			// Clear all mocks before each test
-			vi.clearAllMocks();
-		});
+			vi.clearAllMocks()
+		})
 
 		it('should handle WMS layer requests correctly', async () => {
 			const mockWMSResponse = {
@@ -252,18 +252,18 @@ describe('API Integration Tests', () => {
 				headers: {
 					'content-type': 'application/xml',
 				},
-			};
+			}
 
-			axios.get.mockResolvedValue(mockWMSResponse);
+			axios.get.mockResolvedValue(mockWMSResponse)
 
 			// Test WMS integration
 			const response = await axios.get(
 				'https://kartta.hsy.fi/geoserver/wms?request=getCapabilities'
-			);
+			)
 
-			expect(response.data).toContain('WMS_Capabilities');
-			expect(response.headers['content-type']).toBe('application/xml');
-		});
+			expect(response.data).toContain('WMS_Capabilities')
+			expect(response.headers['content-type']).toBe('application/xml')
+		})
 
 		it('should handle WMS proxy scenarios', async () => {
 			const testScenarios = [
@@ -293,7 +293,7 @@ describe('API Integration Tests', () => {
 					},
 					expectedContentType: 'application/json',
 				},
-			];
+			]
 
 			for (const scenario of testScenarios) {
 				const mockResponse = {
@@ -302,19 +302,19 @@ describe('API Integration Tests', () => {
 						'content-type': scenario.expectedContentType,
 					},
 					status: 200,
-				};
+				}
 
-				axios.get.mockResolvedValue(mockResponse);
+				axios.get.mockResolvedValue(mockResponse)
 
 				const response = await axios.get('https://kartta.hsy.fi/geoserver/wms', {
 					params: scenario.params,
-				});
+				})
 
-				expect(response.status).toBe(200);
-				expect(response.headers['content-type']).toBe(scenario.expectedContentType);
+				expect(response.status).toBe(200)
+				expect(response.headers['content-type']).toBe(scenario.expectedContentType)
 			}
-		});
-	});
+		})
+	})
 
 	describe('Data Processing Integration', () => {
 		it('should handle geospatial data processing workflows', () => {
@@ -335,7 +335,7 @@ describe('API Integration Tests', () => {
 						},
 					},
 				],
-			};
+			}
 
 			// Process coordinates
 			const processedFeatures = mockGeoData.features.map((feature) => ({
@@ -347,70 +347,70 @@ describe('API Integration Tests', () => {
 						lng: feature.geometry.coordinates[0],
 					},
 				},
-			}));
+			}))
 
 			expect(processedFeatures[0].properties.processedCoords).toEqual({
 				lat: 60.1699,
 				lng: 24.9384,
-			});
-		});
+			})
+		})
 
 		it('should handle temperature data normalization', () => {
 			const tempData = [
 				{ date: '2023-06-01', kelvin: 298.15 },
 				{ date: '2023-06-02', kelvin: 301.15 },
 				{ date: '2023-06-03', kelvin: 295.15 },
-			];
+			]
 
 			// Convert Kelvin to Celsius
 			const normalizedData = tempData.map((item) => ({
 				...item,
 				celsius: Math.round((item.kelvin - 273.15) * 10) / 10,
-			}));
+			}))
 
 			expect(normalizedData).toEqual([
 				{ date: '2023-06-01', kelvin: 298.15, celsius: 25.0 },
 				{ date: '2023-06-02', kelvin: 301.15, celsius: 28.0 },
 				{ date: '2023-06-03', kelvin: 295.15, celsius: 22.0 },
-			]);
-		});
-	});
+			])
+		})
+	})
 
 	describe('Error Handling Integration', () => {
 		it('should handle cascading failures gracefully', async () => {
 			// Simulate chain of API failures
-			const errors = [];
+			const errors = []
 
 			// Mock failing services
 			axios.get.mockImplementation((url) => {
 				if (url.includes('geo.stat.fi')) {
-					const error = new Error('Paavo service unavailable');
-					errors.push(error);
-					return Promise.reject(error);
+					const error = new Error('Paavo service unavailable')
+					errors.push(error)
+					return Promise.reject(error)
 				}
 				if (url.includes('kartta.hsy.fi')) {
-					const error = new Error('HSY service unavailable');
-					errors.push(error);
-					return Promise.reject(error);
+					const error = new Error('HSY service unavailable')
+					errors.push(error)
+					return Promise.reject(error)
 				}
-				return Promise.resolve({ data: 'fallback data' });
-			});
+				return Promise.resolve({ data: 'fallback data' })
+			})
 
 			// Test error accumulation
 			try {
-				await axios.get('https://geo.stat.fi/test');
+				await axios.get('https://geo.stat.fi/test')
 			} catch (error) {
-				expect(error.message).toBe('Paavo service unavailable');
+				expect(error.message).toBe('Paavo service unavailable')
 			}
 
 			try {
-				await axios.get('https://kartta.hsy.fi/test');
+				await axios.get('https://kartta.hsy.fi/test')
 			} catch (error) {
-				expect(error.message).toBe('HSY service unavailable');
+				expect(error.message).toBe('HSY service unavailable')
 			}
 
-			expect(errors).toHaveLength(2);
-		});
+			expect(errors).toHaveLength(2)
+		})
 
 		it('should provide meaningful error messages for user', () => {
 			const errorScenarios = [
@@ -426,26 +426,26 @@ describe('API Integration Tests', () => {
 					error: new Error('500 Internal Server Error'),
 					expectedUserMessage: 'Server error. Please try again later.',
 				},
-			];
+			]
 
 			const getUserFriendlyError = (error) => {
 				if (error.message.includes('timeout')) {
-					return 'Connection timeout. Please check your internet connection.';
+					return 'Connection timeout. Please check your internet connection.'
 				}
 				if (error.message.includes('404')) {
-					return 'Requested data not found. Please try again.';
+					return 'Requested data not found. Please try again.'
 				}
 				if (error.message.includes('500')) {
-					return 'Server error. Please try again later.';
+					return 'Server error. Please try again later.'
 				}
-				return 'An unexpected error occurred. Please try again.';
-			};
+				return 'An unexpected error occurred. Please try again.'
+			}
 
 			errorScenarios.forEach(({ error, expectedUserMessage }) => {
-				expect(getUserFriendlyError(error)).toBe(expectedUserMessage);
-			});
-		});
-	});
+				expect(getUserFriendlyError(error)).toBe(expectedUserMessage)
+			})
+		})
+	})
 
 	describe('Pygeoapi Proxy Integration', () => {
 		it('should successfully proxy pygeoapi requests', async () => {
@@ -473,32 +473,32 @@ describe('API Integration Tests', () => {
 				headers: {
 					'content-type': 'application/json',
 				},
-			};
+			}
 
-			axios.get.mockResolvedValue(mockPygeoapiResponse);
+			axios.get.mockResolvedValue(mockPygeoapiResponse)
 
 			// Test pygeoapi proxy integration
 			const response = await axios.get(
 				'/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=100'
-			);
+			)
 
-			expect(response.status).toBe(200);
-			expect(response.data).toHaveProperty('features');
-			expect(response.data.type).toBe('FeatureCollection');
-			expect(response.data.features).toHaveLength(1);
-			expect(response.headers['content-type']).toBe('application/json');
-		});
+			expect(response.status).toBe(200)
+			expect(response.data).toHaveProperty('features')
+			expect(response.data.type).toBe('FeatureCollection')
+			expect(response.data.features).toHaveLength(1)
+			expect(response.headers['content-type']).toBe('application/json')
+		})
 
 		it('should handle pygeoapi proxy errors gracefully', async () => {
-			axios.get.mockRejectedValue(new Error('no resolver defined to resolve pygeoapi host'));
+			axios.get.mockRejectedValue(new Error('no resolver defined to resolve pygeoapi host'))
 
 			try {
-				await axios.get('/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=10');
-				expect.fail('Should have thrown error');
+				await axios.get('/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=10')
+				expect.fail('Should have thrown error')
 			} catch (error) {
-				expect(error.message).toContain('no resolver defined');
+				expect(error.message).toContain('no resolver defined')
 			}
-		});
+		})
 
 		it('should handle pygeoapi collections endpoint', async () => {
 			const mockCollectionsResponse = {
@@ -512,55 +512,55 @@ describe('API Integration Tests', () => {
 					],
 				},
 				status: 200,
-			};
+			}
 
-			axios.get.mockResolvedValue(mockCollectionsResponse);
+			axios.get.mockResolvedValue(mockCollectionsResponse)
 
-			const response = await axios.get('/pygeoapi/collections');
+			const response = await axios.get('/pygeoapi/collections')
 
-			expect(response.status).toBe(200);
-			expect(response.data).toHaveProperty('collections');
-			expect(response.data.collections).toHaveLength(1);
-		});
-	});
+			expect(response.status).toBe(200)
+			expect(response.data).toHaveProperty('collections')
+			expect(response.data.collections).toHaveLength(1)
+		})
+	})
 
 	describe('Performance Integration', () => {
 		beforeEach(() => {
 			// Clear all mocks before each test
-			vi.clearAllMocks();
-		});
+			vi.clearAllMocks()
+		})
 
 		it('should handle concurrent data requests efficiently', async () => {
-			const startTime = Date.now();
+			const startTime = Date.now()
 
 			// Mock multiple concurrent API calls
 			const mockResponses = Array.from({ length: 10 }, (_, i) => ({
 				data: { id: i, data: `test-data-${i}` },
-			}));
+			}))
 
 			axios.get.mockImplementation(() =>
 				Promise.resolve(mockResponses[Math.floor(Math.random() * mockResponses.length)])
-			);
+			)
 
 			const concurrentRequests = Array.from({ length: 10 }, (_, i) =>
 				axios.get(`https://api.test.com/data/${i}`)
-			);
+			)
 
-			const results = await Promise.all(concurrentRequests);
-			const endTime = Date.now();
+			const results = await Promise.all(concurrentRequests)
+			const endTime = Date.now()
 
-			expect(results).toHaveLength(10);
-			expect(endTime - startTime).toBeLessThan(1000); // Should complete within 1 second
-		});
+			expect(results).toHaveLength(10)
+			expect(endTime - startTime).toBeLessThan(1000) // Should complete within 1 second
+		})
 
 		it('should handle large dataset processing', () => {
 			const largeDataset = Array.from({ length: 10000 }, (_, i) => ({
 				id: i,
 				coordinates: [24.9384 + (Math.random() - 0.5) * 0.1, 60.1699 + (Math.random() - 0.5) * 0.1],
 				temperature: 20 + Math.random() * 15,
-			}));
+			}))
 
-			const startTime = Date.now();
+			const startTime = Date.now()
 
 			// Process large dataset
 			const processedData = largeDataset
@@ -568,14 +568,14 @@ describe('API Integration Tests', () => {
 				.map((item) => ({
 					...item,
 					temperatureCategory: item.temperature > 30 ? 'hot' : 'warm',
-				}));
+				}))
 
-			const endTime = Date.now();
-			const processingTime = endTime - startTime;
+			const endTime = Date.now()
+			const processingTime = endTime - startTime
 
-			expect(processedData.length).toBeGreaterThan(0);
-			expect(processedData.length).toBeLessThan(largeDataset.length);
-			expect(processingTime).toBeLessThan(100); // Should process within 100ms
-		});
-	});
-});
+			expect(processedData.length).toBeGreaterThan(0)
+			expect(processedData.length).toBeLessThan(largeDataset.length)
+			expect(processingTime).toBeLessThan(100) // Should process within 100ms
+		})
+	})
+})

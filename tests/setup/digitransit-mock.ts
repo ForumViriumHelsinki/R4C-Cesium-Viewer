@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test } from '@playwright/test'
 
 // Mock digitransit API responses for testing
 export const digitransitMockResponses = {
@@ -91,18 +91,18 @@ export const digitransitMockResponses = {
 			},
 		],
 	},
-};
+}
 
 // Setup digitransit API mocking for all tests
 export function setupDigitransitMock() {
 	test.beforeEach(async ({ page }) => {
 		// Mock all digitransit requests with a single comprehensive handler
 		await page.route('**/digitransit/**', async (route) => {
-			const url = route.request().url();
+			const url = route.request().url()
 
 			if (url.includes('/geocoding/v1/autocomplete')) {
-				const urlObj = new URL(url);
-				const searchText = urlObj.searchParams.get('text') || '';
+				const urlObj = new URL(url)
+				const searchText = urlObj.searchParams.get('text') || ''
 
 				// Create dynamic response based on search text
 				const response = {
@@ -114,27 +114,27 @@ export function setupDigitransitMock() {
 							label: searchText ? `${searchText}, Finland` : feature.properties.label,
 						},
 					})),
-				};
+				}
 
 				await route.fulfill({
 					status: 200,
 					contentType: 'application/json',
 					body: JSON.stringify(response),
-				});
+				})
 			} else if (url.includes('/geocoding/v1/search')) {
 				await route.fulfill({
 					status: 200,
 					contentType: 'application/json',
 					body: JSON.stringify(digitransitMockResponses.search),
-				});
+				})
 			} else {
 				// For any other digitransit requests, return a basic success response
 				await route.fulfill({
 					status: 200,
 					contentType: 'application/json',
 					body: JSON.stringify({ status: 'ok', timestamp: Date.now() }),
-				});
+				})
 			}
-		});
-	});
+		})
+	})
 }
