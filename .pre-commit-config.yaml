@@ -38,3 +38,12 @@ repos:
     hooks:
       - id: helmlint
         files: ^helm/
+
+  - repo: local
+    hooks:
+      - id: bun-lockfile
+        name: sync bun lockfile
+        entry: bun install --lockfile-only
+        language: system
+        files: ^package\.json$
+        pass_filenames: false
