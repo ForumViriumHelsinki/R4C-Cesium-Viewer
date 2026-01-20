@@ -18,13 +18,23 @@ vi.mock('../../../src/stores/globalStore.js', () => ({
 	useGlobalStore: () => mockGlobalStore,
 }))
 
-// Mock Datasource service
+// Mock Datasource service - use class for constructor compatibility
 vi.mock('../../../src/services/datasource.js', () => {
 	return {
-		default: vi.fn(() => ({
-			loadSentinelHeatData: vi.fn(),
-			getDataSourceByName: vi.fn(() => null),
-		})),
+		default: class MockDatasource {
+			loadSentinelHeatData = vi.fn()
+			getDataSourceByName = vi.fn(() => null)
+		},
+	}
+})
+
+// Mock Building service - used by Timeline component
+vi.mock('../../../src/services/building.js', () => {
+	return {
+		default: class MockBuilding {
+			loadBuildings = vi.fn()
+			getBuilding = vi.fn(() => null)
+		},
 	}
 })
 
