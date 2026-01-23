@@ -239,6 +239,17 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    # GO Feature Flag relay proxy (OFREP endpoint)
+    location /feature-flags/ {
+        set $goff_host "gofeatureflag.feature-flags.svc.cluster.local";
+        proxy_pass http://$goff_host:1031/;
+        proxy_set_header Host $goff_host;
+        proxy_connect_timeout 3s;
+        proxy_read_timeout 5s;
+        proxy_cache off;
+        add_header Cache-Control "no-cache, no-store" always;
+    }
+
     # FIXED: Updated to match Vite configuration (removed _2024 suffix)
     location /paavo {
         proxy_pass https://geo.stat.fi;

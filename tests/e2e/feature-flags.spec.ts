@@ -4,16 +4,35 @@ import { TEST_TIMEOUTS } from './helpers/test-helpers'
 
 test.describe('Feature Flags Panel', () => {
 	test.use({ tag: ['@e2e', '@feature-flags'] })
-	test.beforeEach(async ({ page }) => {
-		await page.goto('/')
+	test.beforeEach(async ({ page }, testInfo) => {
+		// Feature Flags toolbar button doesn't fit on mobile viewports
+		test.skip(
+			testInfo.project.name.includes('Mobile'),
+			'Feature Flags panel requires desktop viewport'
+		)
+		// Panel requires ?flags=true URL param or showFeaturePanel flag
+		await page.goto('/?flags=true')
 		await page.waitForLoadState('domcontentloaded')
 
 		// Dismiss any modal if present
 		await dismissModalIfPresent(page, 'Explore Map')
 	})
 
-	test('Feature Flags button is visible in navigation', async ({ page }) => {
-		// Look for the feature flags button by title or icon
+	test('Feature Flags button is hidden without flags param', async ({ page }) => {
+		await page.goto('/')
+		await page.waitForLoadState('domcontentloaded')
+		await dismissModalIfPresent(page, 'Explore Map')
+
+		const featureFlagsButton = page.getByRole('button', {
+			name: /Feature Flags/i,
+		})
+		await expect(featureFlagsButton).not.toBeVisible({
+			timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION,
+		})
+	})
+
+	test('Feature Flags button is visible with flags param', async ({ page }) => {
+		// Already navigated to /?flags=true in beforeEach
 		const featureFlagsButton = page.getByRole('button', {
 			name: /Feature Flags/i,
 		})
