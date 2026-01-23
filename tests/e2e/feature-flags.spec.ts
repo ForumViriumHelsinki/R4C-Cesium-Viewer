@@ -4,7 +4,12 @@ import { TEST_TIMEOUTS } from './helpers/test-helpers'
 
 test.describe('Feature Flags Panel', () => {
 	test.use({ tag: ['@e2e', '@feature-flags'] })
-	test.beforeEach(async ({ page }) => {
+	test.beforeEach(async ({ page }, testInfo) => {
+		// Feature Flags toolbar button doesn't fit on mobile viewports
+		test.skip(
+			testInfo.project.name.includes('Mobile'),
+			'Feature Flags panel requires desktop viewport'
+		)
 		// Panel requires ?flags=true URL param or showFeaturePanel flag
 		await page.goto('/?flags=true')
 		await page.waitForLoadState('domcontentloaded')
