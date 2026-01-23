@@ -3,6 +3,7 @@
 		<!-- Search Results Dropdown -->
 		<v-menu
 			v-model="showResults"
+			eager
 			:close-on-content-click="false"
 			location="bottom"
 			max-height="400"

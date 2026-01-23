@@ -205,6 +205,7 @@
 
 	<v-dialog
 		v-model="analysisDialog"
+		eager
 		:width="analysisDialogWidth"
 		:height="analysisDialogHeight"
 		scrollable

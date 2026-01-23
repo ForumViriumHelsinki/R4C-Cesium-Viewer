@@ -269,6 +269,23 @@ def seed_urban_heat_building_f(conn, num_records=80):
     conn.commit()
     print(f"✅ Seeded {num_records} urban_heat_building_f records")
 
+def seed_hki_urbanheat(conn, num_records=30):
+    """Seed hki_urbanheat table for postal code heat exposure data."""
+    print(f"🌱 Seeding hki_urbanheat with {num_records} records...")
+
+    cur = conn.cursor()
+
+    for posno in HELSINKI_POSTAL_CODES[:num_records]:
+        hki_avgheatexposure = random.uniform(0.3, 0.7)
+
+        cur.execute("""
+            INSERT INTO hki_urbanheat (postinumero, hki_avgheatexposure)
+            VALUES (%s, %s)
+        """, (posno, hki_avgheatexposure))
+
+    conn.commit()
+    print(f"✅ Seeded {num_records} hki_urbanheat records")
+
 def seed_r4c_paavo(conn, num_records=30):
     """Seed r4c_paavo (postal code statistics) table."""
     print(f"🌱 Seeding r4c_paavo with {num_records} records...")
@@ -313,6 +330,28 @@ def seed_r4c_paavo(conn, num_records=30):
     conn.commit()
     print(f"✅ Seeded {num_records} r4c_paavo records")
 
+def refresh_materialized_views(conn):
+    """Refresh materialized views after seeding data."""
+    print("🔄 Refreshing materialized views...")
+
+    cur = conn.cursor()
+
+    views_to_refresh = [
+        'r4c_hsy_building_mat',
+        'r4c_postalcode_mat'
+    ]
+
+    for view in views_to_refresh:
+        try:
+            cur.execute(f"REFRESH MATERIALIZED VIEW {view}")
+            print(f"  ✅ Refreshed {view}")
+        except Exception as e:
+            print(f"  ⚠️ Could not refresh {view}: {e}")
+            conn.rollback()
+
+    conn.commit()
+    print("✅ Materialized views refreshed")
+
 def clear_existing_data(conn):
     """Clear existing test data."""
     print("🧹 Clearing existing test data...")
@@ -326,7 +365,8 @@ def clear_existing_data(conn):
         'tree_f',
         'r4c_coldspot',
         'adaptation_landcover',
-        'r4c_paavo'
+        'r4c_paavo',
+        'hki_urbanheat'
     ]
 
     for table in tables_to_clear:
@@ -348,7 +388,7 @@ def main():
     parser.add_argument('--tables', nargs='+', help='Specific tables to seed',
                        choices=['adaptation_landcover', 'r4c_coldspot', 'tree_f',
                                'hsy_building_heat', 'r4c_hsy_building_current',
-                               'urban_heat_building_f', 'r4c_paavo', 'all'])
+                               'urban_heat_building_f', 'r4c_paavo', 'hki_urbanheat', 'all'])
 
     args = parser.parse_args()
 
@@ -364,16 +404,21 @@ def main():
     if 'all' in tables_to_seed:
         # Seed in dependency order
         seed_r4c_paavo(conn, min(30, args.num_records))
+        seed_hki_urbanheat(conn, min(30, args.num_records))
         seed_r4c_hsy_building_current(conn, args.num_records)
         seed_hsy_building_heat(conn, args.num_records + 50)
         seed_adaptation_landcover(conn, args.num_records)
         seed_r4c_coldspot(conn, args.num_records // 2)
         seed_tree_f(conn, args.num_records * 2)
         seed_urban_heat_building_f(conn, args.num_records)
+        # Refresh materialized views after all data is seeded
+        refresh_materialized_views(conn)
     else:
         # Seed specific tables
         if 'r4c_paavo' in tables_to_seed:
             seed_r4c_paavo(conn, min(30, args.num_records))
+        if 'hki_urbanheat' in tables_to_seed:
+            seed_hki_urbanheat(conn, min(30, args.num_records))
         if 'r4c_hsy_building_current' in tables_to_seed:
             seed_r4c_hsy_building_current(conn, args.num_records)
         if 'hsy_building_heat' in tables_to_seed:

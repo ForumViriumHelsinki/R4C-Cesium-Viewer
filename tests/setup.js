@@ -1,8 +1,8 @@
-import { vi } from 'vitest';
-import { config } from '@vue/test-utils';
+import { config } from '@vue/test-utils'
+import { vi } from 'vitest'
 
 // Mock CSS imports
-vi.mock('*.css', () => ({}));
+vi.mock('*.css', () => ({}))
 
 // Mock Cesium to avoid loading heavy 3D library in tests
 vi.mock('cesium', () => ({
@@ -31,16 +31,16 @@ vi.mock('cesium', () => ({
 		pick: vi.fn(),
 	},
 	Rectangle: vi.fn(function () {
-		this.west = 0;
-		this.south = 0;
-		this.east = 0;
-		this.north = 0;
+		this.west = 0
+		this.south = 0
+		this.east = 0
+		this.north = 0
 	}),
 	Math: {
 		toDegrees: vi.fn((radians) => (radians * 180) / Math.PI),
 		toRadians: vi.fn((degrees) => (degrees * Math.PI) / 180),
 	},
-}));
+}))
 
 // Mock browser APIs
 Object.defineProperty(window, 'matchMedia', {
@@ -55,25 +55,23 @@ Object.defineProperty(window, 'matchMedia', {
 		removeEventListener: vi.fn(),
 		dispatchEvent: vi.fn(),
 	})),
-});
+})
 
-// Mock IntersectionObserver
-global.IntersectionObserver = vi.fn(function () {
-	return {
-		observe: vi.fn(),
-		unobserve: vi.fn(),
-		disconnect: vi.fn(),
-	};
-});
+// Mock IntersectionObserver - use class for constructor compatibility
+global.IntersectionObserver = class MockIntersectionObserver {
+	observe = vi.fn()
+	unobserve = vi.fn()
+	disconnect = vi.fn()
+	constructor() {}
+}
 
-// Mock ResizeObserver
-global.ResizeObserver = vi.fn(function () {
-	return {
-		observe: vi.fn(),
-		unobserve: vi.fn(),
-		disconnect: vi.fn(),
-	};
-});
+// Mock ResizeObserver - use class for constructor compatibility
+global.ResizeObserver = class MockResizeObserver {
+	observe = vi.fn()
+	unobserve = vi.fn()
+	disconnect = vi.fn()
+	constructor() {}
+}
 
 // Set up global test configuration
 config.global.mocks = {
@@ -87,10 +85,10 @@ config.global.mocks = {
 		replace: vi.fn(),
 		back: vi.fn(),
 	},
-};
+}
 
 // Add global render stub for Vuetify components that need VApp wrapper
-config.global.renderStubDefaultSlot = true;
+config.global.renderStubDefaultSlot = true
 
 // Mock window properties
 Object.defineProperty(window, 'location', {
@@ -100,40 +98,40 @@ Object.defineProperty(window, 'location', {
 		pathname: '/',
 	},
 	writable: true,
-});
+})
 
 // Mock fetch for API calls
-global.fetch = vi.fn();
+global.fetch = vi.fn()
 
 // Mock localStorage with actual storage functionality
 const createLocalStorageMock = () => {
-	const store = {};
+	const store = {}
 	return {
 		getItem: vi.fn((key) => store[key] || null),
 		setItem: vi.fn((key, value) => {
 			if (value != null) {
-				store[key] = value.toString();
+				store[key] = value.toString()
 			}
 		}),
 		removeItem: vi.fn((key) => {
-			delete store[key];
+			delete store[key]
 		}),
 		clear: vi.fn(() => {
-			Object.keys(store).forEach((key) => delete store[key]);
+			Object.keys(store).forEach((key) => delete store[key])
 		}),
 		key: vi.fn((index) => {
-			const keys = Object.keys(store);
-			return keys[index] || null;
+			const keys = Object.keys(store)
+			return keys[index] || null
 		}),
 		get length() {
-			return Object.keys(store).length;
+			return Object.keys(store).length
 		},
-	};
-};
+	}
+}
 
-const localStorageMock = createLocalStorageMock();
-global.localStorage = localStorageMock;
+const localStorageMock = createLocalStorageMock()
+global.localStorage = localStorageMock
 Object.defineProperty(window, 'localStorage', {
 	value: localStorageMock,
 	writable: true,
-});
+})

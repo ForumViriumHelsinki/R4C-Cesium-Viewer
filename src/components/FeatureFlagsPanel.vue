@@ -1,6 +1,8 @@
 <template>
 	<v-dialog
+		v-if="showPanel"
 		v-model="dialog"
+		eager
 		max-width="800"
 		scrollable
 	>
@@ -178,6 +180,7 @@
 	<!-- Reset confirmation dialog -->
 	<v-dialog
 		v-model="resetConfirmDialog"
+		eager
 		max-width="500"
 	>
 		<v-card>
@@ -208,6 +211,7 @@
 	<!-- Import dialog -->
 	<v-dialog
 		v-model="importDialog"
+		eager
 		max-width="500"
 	>
 		<v-card>
@@ -260,6 +264,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { ALL_FLAG_NAMES, CATEGORY_ICONS, CATEGORY_LABELS } from '@/constants/flagMetadata'
 import {
 	type FeatureFlagCategory,
 	type FeatureFlagName,
@@ -281,34 +286,23 @@ const snackbar = ref<boolean>(false)
 const snackbarMessage = ref<string>('')
 const snackbarColor = ref<'error' | 'success'>('error')
 
+/** Panel is visible via URL param ?flags=true or showFeaturePanel flag */
+const showPanel = computed(() => {
+	const urlParams = new URLSearchParams(window.location.search)
+	if (urlParams.get('flags') === 'true') return true
+	return featureFlagStore.isEnabled('showFeaturePanel')
+})
+
 const categories = computed(() => featureFlagStore.categories)
 
-const totalFlags = computed(() => Object.keys(featureFlagStore.flags).length)
-
-const categoryLabels: Record<FeatureFlagCategory, string> = {
-	'data-layers': 'Data Layers',
-	graphics: 'Graphics & Performance',
-	analysis: 'Analysis Tools',
-	ui: 'UI & UX',
-	integration: 'Integrations',
-	developer: 'Developer Tools',
-}
-
-const categoryIcons: Record<FeatureFlagCategory, string> = {
-	'data-layers': 'mdi-layers',
-	graphics: 'mdi-chart-line',
-	analysis: 'mdi-chart-box',
-	ui: 'mdi-palette',
-	integration: 'mdi-puzzle',
-	developer: 'mdi-code-braces',
-}
+const totalFlags = computed(() => ALL_FLAG_NAMES.filter((n) => n !== 'showFeaturePanel').length)
 
 function getCategoryLabel(category: FeatureFlagCategory): string {
-	return categoryLabels[category] || category
+	return CATEGORY_LABELS[category] || category
 }
 
 function getCategoryIcon(category: FeatureFlagCategory): string {
-	return categoryIcons[category] || 'mdi-flag'
+	return CATEGORY_ICONS[category] || 'mdi-flag'
 }
 
 function getCategoryEnabledCount(category: FeatureFlagCategory): number {

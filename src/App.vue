@@ -45,7 +45,10 @@
 			</div>
 
 			<!-- Mobile menu for navigation buttons -->
-			<v-menu class="d-md-none">
+			<v-menu
+				eager
+				class="d-md-none"
+			>
 				<template #activator="{ props }">
 					<v-btn
 						v-bind="props"
@@ -142,18 +145,21 @@ import { computed, onMounted, ref } from 'vue'
 import CesiumViewer from './pages/CesiumViewer.vue'
 import backgroundPreloader from './services/backgroundPreloader.js'
 import Camera from './services/camera'
+import { initializeFeatureFlags } from './services/featureFlagProvider'
 import Featurepicker from './services/featurepicker'
 import Tree from './services/tree'
 import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
 import { useLoadingStore } from './stores/loadingStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
+import { useUserStore } from './stores/userStore'
 import logger from './utils/logger.js'
 
 const toggleStore = useToggleStore()
 const globalStore = useGlobalStore()
 const loadingStore = useLoadingStore()
 const featureFlagStore = useFeatureFlagStore()
+const userStore = useUserStore()
 
 const grid250m = computed(() => toggleStore.grid250m)
 const currentLevel = computed(() => globalStore.level)
@@ -251,8 +257,15 @@ const handleDataPreload = (sourceId) => {
 // Initialize services on mount
 onMounted(async () => {
 	try {
-		// Load feature flag overrides from localStorage
+		// 1. Fetch user identity from OAuth2 proxy (graceful fallback to anonymous)
+		await userStore.fetchUserInfo()
+
+		// 2. Initialize OpenFeature with GOFF provider (or InMemoryProvider fallback)
+		await initializeFeatureFlags(userStore)
+
+		// 3. Load localStorage overrides and refresh evaluations
 		featureFlagStore.loadOverrides()
+		featureFlagStore.refreshFlags()
 
 		// Initialize background preloader if enabled
 		if (featureFlagStore.isEnabled('backgroundPreload')) {

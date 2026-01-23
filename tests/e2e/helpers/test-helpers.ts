@@ -788,19 +788,171 @@ export class AccessibilityTestHelpers {
 	}
 
 	/**
-	 * Navigate to specific view mode and verify selection with retry logic
+	 * Wait for Vuetify components to be fully initialized and interactive.
+	 * This ensures v-btn-toggle, v-navigation-drawer, and other components are ready.
+	 *
+	 * Vuetify components go through several initialization phases:
+	 * 1. DOM attachment
+	 * 2. Vue component mounting
+	 * 3. CSS transitions starting
+	 * 4. Component becoming interactive
+	 *
+	 * This helper waits for all phases to complete.
+	 */
+	private async waitForVuetifyReady(
+		timeout: number = TEST_TIMEOUTS.ELEMENT_STANDARD
+	): Promise<void> {
+		try {
+			await this.page.waitForFunction(
+				() => {
+					// Check for Vuetify application wrapper
+					const vApp = document.querySelector('.v-application')
+					if (!vApp) return false
+
+					// Check for Vuetify theme being applied
+					const hasTheme = document.querySelector('[class*="v-theme"]')
+					if (!hasTheme) return false
+
+					// Check for view mode toggle group (specific to this app)
+					const viewToggle = document.querySelector('.view-toggle-group')
+					if (!viewToggle) return false
+
+					// Verify buttons in toggle are interactive (not disabled)
+					const buttons = viewToggle.querySelectorAll('button')
+					if (buttons.length === 0) return false
+
+					// Check that at least one button is not disabled
+					const hasEnabledButton = Array.from(buttons).some(
+						(btn) => !(btn as HTMLButtonElement).disabled
+					)
+
+					return hasEnabledButton
+				},
+				{ timeout }
+			)
+		} catch {
+			console.warn(
+				'[waitForVuetifyReady] Vuetify initialization check timed out, continuing anyway'
+			)
+		}
+	}
+
+	/**
+	 * Wait for element to be fully ready for interaction.
+	 * Combines visibility, stability, and actionability checks.
+	 *
+	 * @param locator - Playwright locator for the element
+	 * @param options - Configuration options
+	 * @returns true if element is ready, false otherwise
+	 */
+	private async waitForElementReady(
+		locator: Locator,
+		options: { timeout?: number; elementName?: string } = {}
+	): Promise<boolean> {
+		const { timeout = TEST_TIMEOUTS.ELEMENT_STANDARD, elementName = 'element' } = options
+
+		try {
+			// Wait for element to be attached to DOM
+			await locator.waitFor({ state: 'attached', timeout: timeout / 3 })
+
+			// Wait for element to be visible
+			await locator.waitFor({ state: 'visible', timeout: timeout / 3 })
+
+			// Verify element has valid dimensions and position
+			const box = await locator.boundingBox()
+			if (!box || box.width === 0 || box.height === 0) {
+				console.warn(`[waitForElementReady] ${elementName} has no valid bounding box`)
+				return false
+			}
+
+			// Verify element is in viewport
+			if (box.y < 0 || box.x < 0) {
+				console.warn(`[waitForElementReady] ${elementName} is outside viewport`)
+				return false
+			}
+
+			// Verify element is enabled (can receive interactions)
+			const isEnabled = await locator.isEnabled().catch(() => false)
+			if (!isEnabled) {
+				console.warn(`[waitForElementReady] ${elementName} is disabled`)
+				return false
+			}
+
+			return true
+		} catch (error) {
+			console.warn(`[waitForElementReady] ${elementName} not ready:`, error)
+			return false
+		}
+	}
+
+	/**
+	 * Verify view mode selection using waitForFunction for reliable async state verification.
+	 * This is more robust than checking DOM state directly because it polls until the condition is met.
+	 *
+	 * @param viewMode - The view mode to verify
+	 * @param timeout - Maximum time to wait for verification
+	 * @returns true if verified, false otherwise
+	 */
+	private async verifyViewModeSelection(
+		viewMode: 'capitalRegionView' | 'gridView',
+		timeout: number = TEST_TIMEOUTS.ELEMENT_COMPLEX
+	): Promise<boolean> {
+		try {
+			await this.page.waitForFunction(
+				(targetMode) => {
+					// Strategy 1: Check v-btn--active class on button
+					const button = document.querySelector(`.view-toggle-group button[value="${targetMode}"]`)
+					if (button?.classList.contains('v-btn--active')) return true
+					if (button?.classList.contains('v-btn--selected')) return true
+
+					// Strategy 2: Check aria-pressed attribute
+					if (button?.getAttribute('aria-pressed') === 'true') return true
+
+					// Strategy 3: Check Pinia store state (most reliable)
+					const pinia = (window as any).__PINIA__
+					if (pinia?.state?.value?.global) {
+						const currentView = pinia.state.value.global.currentView
+						// Map viewMode to store values
+						if (targetMode === 'capitalRegionView' && currentView === 'capitalRegion') return true
+						if (targetMode === 'gridView' && currentView === 'grid') return true
+					}
+
+					return false
+				},
+				viewMode,
+				{ timeout }
+			)
+			return true
+		} catch {
+			return false
+		}
+	}
+
+	/**
+	 * Navigate to specific view mode and verify selection with robust retry logic.
+	 *
+	 * The ViewModeCompact component uses Vuetify's v-btn-toggle with buttons:
+	 * - Buttons have value="capitalRegionView" or value="gridView"
+	 * - Buttons have aria-label attributes for accessibility
+	 * - Selected button has v-btn--active class
+	 *
+	 * This method handles:
+	 * - Vuetify component initialization timing
+	 * - WebGL canvas overlay issues
+	 * - Async state propagation in Pinia stores
+	 * - Multiple selector strategies for view mode buttons
 	 */
 	async navigateToView(viewMode: 'capitalRegionView' | 'gridView'): Promise<void> {
 		const viewModes: Record<string, ViewMode> = {
 			capitalRegionView: {
 				id: 'capitalRegionView',
 				label: 'Capital Region',
-				selector: '[data-testid="view-mode-capital-region"]',
+				selector: '.view-toggle-group button[value="capitalRegionView"]',
 			},
 			gridView: {
 				id: 'gridView',
 				label: 'Statistical Grid',
-				selector: '[data-testid="view-mode-statistical-grid"]',
+				selector: '.view-toggle-group button[value="gridView"]',
 			},
 		}
 
@@ -812,171 +964,377 @@ export class AccessibilityTestHelpers {
 		// Wait for any overlays to close before attempting navigation
 		await this.waitForOverlaysToClose()
 
-		// Dynamic view detection with retry logic (reduced from 5 to 2 with requestRenderMode)
-		const maxRetries = 2
+		// Wait for Vuetify components to be fully initialized
+		await this.waitForVuetifyReady()
+
+		// Retry logic for view mode selection
+		const maxRetries = 3
 		let lastError: Error | null = null
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
-				// Wait for page to be stable first
-				await this.page
-					.waitForLoadState('domcontentloaded', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-					.catch((e) => console.warn('DOM content load wait failed:', e.message))
+				// Progressive timeout increase on retries
+				const attemptTimeout = TEST_TIMEOUTS.ELEMENT_STANDARD * (1 + (attempt - 1) * 0.5)
 
-				// Multi-strategy selector detection with fallbacks
-				let viewCardFound = false
-				let viewCard = this.page.locator(targetView.selector)
+				// Multi-strategy selector detection with fallbacks for v-btn-toggle
+				let viewButton: Locator | null = null
+				let buttonFound = false
 
-				// Strategy 1: Try direct view-mode-card selector
-				viewCardFound = await viewCard.count().then((c) => c > 0)
+				// Strategy 1: Try direct button[value] selector (most reliable for v-btn-toggle)
+				const directButton = this.page.locator(targetView.selector)
+				if ((await directButton.count()) > 0) {
+					viewButton = directButton
+					buttonFound = true
+				}
 
-				// Strategy 2: If not found, try via input radio button
-				if (!viewCardFound) {
-					const radioInput = this.page.locator(`input[value="${viewMode}"]`)
-					const radioExists = await radioInput.count().then((c) => c > 0)
-					if (radioExists) {
-						viewCard = radioInput.locator('..').locator('..')
-						viewCardFound = await viewCard.count().then((c) => c > 0)
+				// Strategy 2: Try aria-label selector
+				if (!buttonFound) {
+					const ariaButton = this.page.locator(
+						`button[aria-label="${targetView.label} view"], button[aria-label*="${targetView.label}"]`
+					)
+					if ((await ariaButton.count()) > 0) {
+						viewButton = ariaButton.first()
+						buttonFound = true
 					}
 				}
 
-				// Strategy 3: Try finding any view-mode-card and filter by text
-				if (!viewCardFound) {
-					const allCards = this.page.locator('.view-mode-card')
-					const cardCount = await allCards.count()
-					for (let i = 0; i < cardCount; i++) {
-						const card = allCards.nth(i)
-						const text = await card.textContent().catch(() => '')
-						if (text.includes(targetView.label)) {
-							viewCard = card
-							viewCardFound = true
-							break
-						}
+				// Strategy 3: Try finding button by text content within view-mode-compact
+				if (!buttonFound) {
+					const textButton = this.page.locator(
+						`.view-mode-compact button:has-text("${targetView.label}")`
+					)
+					if ((await textButton.count()) > 0) {
+						viewButton = textButton.first()
+						buttonFound = true
 					}
 				}
 
-				// Strategy 4: Try finding button elements directly by text
-				if (!viewCardFound) {
-					const buttonSelector = `button:has-text("${targetView.label}")`
-					const button = this.page.locator(buttonSelector)
-					const buttonExists = await button.count().then((c) => c > 0)
-					if (buttonExists) {
-						viewCard = button
-						viewCardFound = true
+				// Strategy 4: Fallback to any button with matching text
+				if (!buttonFound) {
+					const fallbackButton = this.page.locator(`button:has-text("${targetView.label}")`)
+					if ((await fallbackButton.count()) > 0) {
+						viewButton = fallbackButton.first()
+						buttonFound = true
 					}
 				}
 
-				if (!viewCardFound) {
+				if (!buttonFound || !viewButton) {
 					throw new Error(
-						`View mode card for ${viewMode} not found (attempt ${attempt}/${maxRetries}). Available selectors checked: ${targetView.selector}, input[value="${viewMode}"], .view-mode-card`
+						`View mode button for ${viewMode} not found (attempt ${attempt}/${maxRetries}). ` +
+							`Checked selectors: ${targetView.selector}, aria-label="${targetView.label}", text="${targetView.label}"`
 					)
 				}
 
-				// Wait for element to be visible and stable
-				await viewCard.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+				// Wait for element to be fully ready using the helper
+				const isReady = await this.waitForElementReady(viewButton, {
+					timeout: attemptTimeout,
+					elementName: `view button (${viewMode})`,
+				})
 
-				// Scroll into viewport with retry
-				for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-					try {
-						await viewCard.scrollIntoViewIfNeeded({ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
-						break
-					} catch {
-						if (scrollAttempt === 3) {
-							console.warn('Scroll failed, continuing anyway')
-						}
-						await this.page.waitForTimeout(200 * scrollAttempt)
-					}
-				}
-
-				// Wait for element stability with exponential backoff
-				await this.page.waitForTimeout(300 * attempt)
-
-				// Verify element is in viewport before clicking
-				const box = await viewCard.boundingBox()
-				if (!box || box.y < 0 || box.x < 0) {
-					throw new Error(`View card not properly in viewport: ${JSON.stringify(box)}`)
-				}
-
-				// Click with force by default - requestRenderMode makes this safe
-				// Use noWaitAfter since this is a SPA - click triggers state change, not navigation
-				try {
-					await viewCard.click({
-						timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION,
-						noWaitAfter: true,
-						force: true, // Force click bypasses stability checks that don't work with WebGL
+				if (!isReady) {
+					// Fallback: try scroll and wait manually
+					await this.scrollIntoViewportWithRetry(viewButton, {
+						maxRetries: 3,
+						elementName: `view button (${viewMode})`,
 					})
-				} catch (clickError) {
-					console.warn('Click failed, retrying with mouse.click:', clickError)
-					// Fallback: use mouse.click directly
-					const box = await viewCard.boundingBox()
-					if (box) {
-						await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
-					} else {
-						throw new Error('Click failed and element has no bounding box')
+					await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
+				}
+
+				// Check if already selected (v-btn-toggle uses v-btn--active class)
+				const isAlreadySelected = await this.verifyViewModeSelection(viewMode, 1000).catch(
+					() => false
+				)
+
+				if (isAlreadySelected) {
+					// Already selected, nothing to do
+					console.log(`[navigateToView] ${viewMode} already selected`)
+					return
+				}
+
+				// Click the button with retry mechanism
+				let clickSuccess = false
+				for (let clickAttempt = 1; clickAttempt <= 2; clickAttempt++) {
+					try {
+						await viewButton.click({
+							timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION,
+							noWaitAfter: true,
+							force: clickAttempt > 1, // Force on retry
+						})
+						clickSuccess = true
+						break
+					} catch (clickError) {
+						if (clickAttempt === 2) {
+							// Last resort: use mouse.click at element center
+							console.warn('[navigateToView] Click failed, using mouse.click fallback')
+							const box = await viewButton.boundingBox()
+							if (box) {
+								await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+								clickSuccess = true
+							} else {
+								throw new Error('Click failed and element has no bounding box')
+							}
+						} else {
+							console.warn(`[navigateToView] Click attempt ${clickAttempt} failed:`, clickError)
+							await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+						}
 					}
 				}
 
-				// Wait for UI to update after view switch
-				// Note: View switching is synchronous state changes in requestRenderMode,
-				// so we just need a brief wait for the UI to reflect the new state
-				// We don't wait for network idle because CesiumJS continuously loads tiles
-				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+				if (!clickSuccess) {
+					throw new Error(`Failed to click view button for ${viewMode}`)
+				}
 
-				// Verify the selection with multiple strategies
-				const verificationResults = await Promise.all([
-					// Check 1: Radio button state
-					this.page
-						.locator(`input[value="${viewMode}"]`)
-						.isChecked()
-						.catch(() => false),
-					// Check 2: Active class on card
-					viewCard
-						.getAttribute('class')
-						.then((c) => c?.includes('active') || false)
-						.catch(() => false),
-					// Check 3: Aria-checked state
-					this.page
-						.locator(`input[value="${viewMode}"]`)
-						.getAttribute('aria-checked')
-						.then((v) => v === 'true')
-						.catch(() => false),
-				])
+				// Wait for Vue/Vuetify to process the state change
+				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STATE_CHANGE)
 
-				const isSelected = verificationResults.some((result) => result === true)
+				// Verify selection using the robust waitForFunction-based helper
+				// This polls until the condition is met, handling async state propagation
+				const selectionVerified = await this.verifyViewModeSelection(
+					viewMode,
+					TEST_TIMEOUTS.ELEMENT_COMPLEX
+				)
 
-				if (!isSelected) {
+				if (!selectionVerified) {
 					throw new Error(
-						`View mode ${viewMode} not properly selected on attempt ${attempt}. Verification results: ${JSON.stringify(verificationResults)}`
+						`View mode ${viewMode} not properly selected on attempt ${attempt}/${maxRetries}. ` +
+							`Selection verification timed out.`
 					)
 				}
 
 				// Success - additional wait for full stabilization
 				await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
+				console.log(`[navigateToView] Successfully navigated to ${viewMode}`)
 				return
 			} catch (error) {
 				lastError = error as Error
 				console.warn(`navigateToView attempt ${attempt}/${maxRetries} failed:`, lastError.message)
 
 				if (attempt < maxRetries) {
-					// Exponential backoff with jitter
-					const backoffMs = 1000 * 1.5 ** attempt + Math.random() * 500
+					// Progressive backoff: base * multiplier^attempt + jitter
+					const backoffMs =
+						TEST_TIMEOUTS.RETRY_BACKOFF_EXPONENTIAL * 1.5 ** attempt + Math.random() * 500
+					console.log(
+						`[navigateToView] Waiting ${Math.round(backoffMs)}ms before retry ${attempt + 1}`
+					)
 					await this.page.waitForTimeout(backoffMs)
 
-					// Try to recover by closing overlays
+					// Recovery: close any overlays that may have appeared
 					await this.waitForOverlaysToClose()
 
-					// Try to reset page state
-					await this.page
-						.waitForLoadState('domcontentloaded', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-						.catch((e) => console.warn('Page state reset failed:', e.message))
+					// Recovery: re-check Vuetify readiness
+					await this.waitForVuetifyReady(TEST_TIMEOUTS.ELEMENT_STANDARD)
 				}
 			}
 		}
 
 		// All retries failed
 		throw new Error(
-			`CRITICAL: Failed to navigate to view ${viewMode} after ${maxRetries} attempts. Last error: ${lastError?.message}. This indicates a fundamental issue with view mode detection or page state.`
+			`CRITICAL: Failed to navigate to view ${viewMode} after ${maxRetries} attempts. ` +
+				`Last error: ${lastError?.message}. ` +
+				`This indicates view mode buttons are not rendering or not interactive.`
 		)
+	}
+
+	/**
+	 * Navigate to a postal code using programmatic store manipulation.
+	 *
+	 * This method directly sets the Pinia store state and triggers postal code
+	 * data loading through the app's FeaturePicker service, bypassing unreliable
+	 * map click interactions.
+	 *
+	 * This is more reliable than URL-based navigation (which requires page reload)
+	 * or search-based navigation (which depends on UI interaction).
+	 *
+	 * @param postalCode - The postal code to navigate to (e.g., '00100')
+	 * @returns true if navigation succeeded, false otherwise
+	 */
+	private async navigateViaStore(postalCode: string): Promise<boolean> {
+		try {
+			console.log(`[navigateViaStore] Navigating to postal code: ${postalCode}`)
+
+			// Check if we can access the FeaturePicker through the window
+			const hasFeaturePicker = await this.page.evaluate(() => {
+				return typeof (window as any).__featurepicker?.loadPostalCodeData === 'function'
+			})
+
+			if (!hasFeaturePicker) {
+				console.log('[navigateViaStore] FeaturePicker not exposed on window, using store directly')
+
+				// Use window.globalStore which is exposed in dev/test mode (see main.js)
+				await this.page.evaluate((pc) => {
+					const store = (window as any).globalStore
+					if (!store) {
+						throw new Error('globalStore not available on window (check main.js exposure)')
+					}
+
+					store.setLevel('postalCode')
+					store.setPostalCode(pc)
+					console.log(`[navigateViaStore] Set store: level=postalCode, postalcode=${pc}`)
+				}, postalCode)
+			} else {
+				// Use FeaturePicker to load postal code data properly
+				await this.page.evaluate(async (pc) => {
+					const featurepicker = (window as any).__featurepicker
+					if (featurepicker?.loadPostalCodeData) {
+						await featurepicker.loadPostalCodeData(pc)
+						console.log(`[navigateViaStore] Loaded postal code data via FeaturePicker: ${pc}`)
+					}
+				}, postalCode)
+			}
+
+			// Wait for store state to update
+			const stateUpdated = await this.page
+				.waitForFunction(
+					(expectedPostalCode) => {
+						// Use window.globalStore which is exposed in dev/test mode
+						const store = (window as any).globalStore
+						if (!store) return false
+
+						return store.level === 'postalCode' && store.postalcode === expectedPostalCode
+					},
+					postalCode,
+					{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
+				)
+				.then(() => true)
+				.catch(() => false)
+
+			if (!stateUpdated) {
+				console.warn('[navigateViaStore] Store state did not update to expected values')
+				return false
+			}
+
+			console.log(`[navigateViaStore] Store state updated to postal code level: ${postalCode}`)
+
+			// Wait for postal code UI indicators to appear
+			const uiIndicators = await Promise.race([
+				this.page
+					.waitForSelector('.timeline-compact', { state: 'attached', timeout: 8000 })
+					.then(() => 'timeline'),
+				this.page
+					.waitForSelector('text="Building Scatter Plot"', { state: 'visible', timeout: 8000 })
+					.then(() => 'scatterplot'),
+				this.page
+					.waitForSelector('text="Area properties"', { state: 'visible', timeout: 8000 })
+					.then(() => 'properties'),
+				new Promise<string>((resolve) => setTimeout(() => resolve('timeout'), 8000)),
+			])
+
+			if (uiIndicators === 'timeout') {
+				console.warn('[navigateViaStore] UI indicators did not appear, but store state is correct')
+			} else {
+				console.log(`[navigateViaStore] UI indicator appeared: ${uiIndicators}`)
+			}
+
+			// Brief stabilization wait
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+
+			return true
+		} catch (error) {
+			console.warn('[navigateViaStore] Failed:', error)
+			return false
+		}
+	}
+
+	/**
+	 * Navigate to a postal code using the search feature.
+	 * This is more reliable than clicking on the map at fixed coordinates.
+	 *
+	 * @param postalCode - The postal code to search for (e.g., '00100')
+	 * @returns true if navigation succeeded, false otherwise
+	 */
+	private async navigateViaSearch(postalCode: string): Promise<boolean> {
+		try {
+			// Find the search input using role-based selector (more reliable for Vuetify components)
+			// The search box has accessible name containing "Search by address, postal code"
+			const searchInput = this.page.getByRole('textbox', { name: /search.*postal/i })
+
+			// Check if search input exists
+			const inputExists = (await searchInput.count()) > 0
+			if (!inputExists) {
+				// Fallback to CSS selector for Vuetify autocomplete
+				const fallbackInput = this.page.locator('.v-autocomplete input, .v-text-field input')
+				const fallbackExists = (await fallbackInput.count()) > 0
+				if (!fallbackExists) {
+					console.log('[navigateViaSearch] Search input not found')
+					return false
+				}
+				console.log('[navigateViaSearch] Using fallback CSS selector for search input')
+			}
+
+			const finalInput = inputExists
+				? searchInput
+				: this.page.locator('.v-autocomplete input, .v-text-field input').first()
+
+			await finalInput.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+			console.log('[navigateViaSearch] Found search input, typing postal code:', postalCode)
+
+			// Clear any existing text and type the postal code
+			await finalInput.clear()
+			await finalInput.fill(postalCode)
+
+			// Small wait for dropdown to appear and stabilize
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+
+			// Look for a search result that matches the postal code
+			// Digitransit returns results like "00100, Helsinki" or similar
+			const searchResult = this.page.locator('.v-list-item').filter({ hasText: postalCode }).first()
+
+			const resultExists = await searchResult
+				.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+				.then(() => true)
+				.catch(() => false)
+
+			if (resultExists) {
+				// Click on the search result with force to bypass stability checks
+				// This positions the camera at the postal code area
+				await searchResult.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION, force: true })
+				console.log(`[navigateViaSearch] Clicked search result to position camera at ${postalCode}`)
+			} else {
+				// No dropdown result, try pressing Enter to search
+				await finalInput.press('Enter')
+				console.log(`[navigateViaSearch] Pressed Enter to position camera at ${postalCode}`)
+			}
+
+			// Wait for camera to move and tiles to load
+			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
+
+			// Search positions the camera but doesn't SELECT the postal code.
+			// We need to click on the map center to select the postal code polygon.
+			const cesiumContainer = this.page.locator('#cesiumContainer')
+			const box = await cesiumContainer.boundingBox()
+			if (box) {
+				// Click on the center of the map where the postal code should now be positioned
+				const centerX = box.width / 2
+				const centerY = box.height / 2
+				await cesiumContainer.click({
+					position: { x: centerX, y: centerY },
+					force: true,
+				})
+				console.log(
+					`[navigateViaSearch] Clicked map center (${centerX}, ${centerY}) to select postal code`
+				)
+			}
+
+			// Wait for postal code level to activate using promise race (whichever appears first)
+			const activated = await Promise.race([
+				this.page
+					.waitForSelector('.timeline-compact', { state: 'attached', timeout: 8000 })
+					.then(() => true)
+					.catch(() => false),
+				this.page
+					.waitForSelector('text="Building Scatter Plot"', { state: 'visible', timeout: 8000 })
+					.then(() => true)
+					.catch(() => false),
+				// Timeout fallback
+				new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000)),
+			])
+
+			console.log(`[navigateViaSearch] Postal code level activated: ${activated}`)
+			return activated
+		} catch (error) {
+			console.warn('[navigateViaSearch] Failed:', error)
+			return false
+		}
 	}
 
 	/**
@@ -990,8 +1348,8 @@ export class AccessibilityTestHelpers {
 
 		switch (targetLevel) {
 			case 'postalCode': {
-				// Click on a postal code area - using Helsinki center as default
-				const _postalCodeId = identifier || '00100'
+				// Use postal code for search, default to Helsinki center
+				const postalCodeId = identifier || '00100'
 
 				// Wait for Cesium viewer to be ready with enhanced verification
 				await this.page.waitForSelector('#cesiumContainer', {
@@ -1053,7 +1411,27 @@ export class AccessibilityTestHelpers {
 						)
 					})
 
-				// Retry logic for clicking on map to select postal code
+				// Strategy 1: Try programmatic store navigation (most reliable - bypasses UI)
+				const storeSucceeded = await this.navigateViaStore(postalCodeId)
+				if (storeSucceeded) {
+					console.log('[drillToLevel] Store navigation succeeded')
+					return // Success via store manipulation
+				}
+
+				console.log('[drillToLevel] Store navigation failed, trying search navigation')
+
+				// Strategy 2: Try using search to navigate (fallback)
+				const searchSucceeded = await this.navigateViaSearch(postalCodeId)
+				if (searchSucceeded) {
+					// Brief wait for UI to stabilize after search navigation
+					// The navigateViaSearch already verified activation, no need for Pinia check
+					await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+					return // Success via search
+				}
+
+				console.log('[drillToLevel] Search navigation failed, falling back to map clicks')
+
+				// Strategy 3: Fall back to clicking on map
 				for (let attempt = 1; attempt <= maxRetries; attempt++) {
 					try {
 						// Scroll Cesium container into view with retries
@@ -1286,7 +1664,7 @@ export class AccessibilityTestHelpers {
 												loadingStore.clearAllLoading()
 												console.log('[drillToLevel] Called clearAllLoading() via store action')
 											}
-										} catch (e) {
+										} catch (_e) {
 											// Fallback: direct state mutation
 											const loadingState = pinia.state.value.loading
 											Object.keys(loadingState.layerLoading).forEach((key: string) => {
@@ -1317,7 +1695,7 @@ export class AccessibilityTestHelpers {
 									const length = dsCollection.length
 									for (let i = 0; i < length; i++) {
 										const ds = dsCollection.get(i)
-										if (ds && ds.name && ds.name.startsWith('Buildings ')) {
+										if (ds?.name?.startsWith('Buildings ')) {
 											const entityCount = ds.entities?.values?.length || 0
 											if (entityCount > 0) {
 												console.log(
@@ -1919,15 +2297,14 @@ export class AccessibilityTestHelpers {
 
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 			// Check multiple overlay types with comprehensive selectors
+			// Note: Avoid generic [role='dialog'] - Vuetify creates many inactive dialog
+			// containers in DOM for menus/tooltips. Use specific Vuetify classes instead.
+			// Note: Snackbars (.v-snackbar--active) are NOT blocking overlays - they're
+			// informational notifications that don't prevent user interaction.
 			const overlaySelectors = [
-				'.v-overlay__scrim',
-				'.v-overlay--active',
+				'.v-overlay__scrim:not([style*="display: none"])',
 				'.v-dialog--active',
-				'.v-menu__content',
-				"[role='dialog']",
-				'.v-snackbar--active',
-				'.v-tooltip--active',
-				'[data-overlay]',
+				'.v-menu--active',
 			]
 
 			let overlayFound = false
@@ -1988,6 +2365,9 @@ export class AccessibilityTestHelpers {
 				}
 			}
 
+			// Note: Snackbars are intentionally not handled here - they are
+			// non-blocking notifications and don't prevent user interaction.
+
 			// Wait for animations to complete
 			await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
@@ -2032,18 +2412,18 @@ export class AccessibilityTestHelpers {
 		}
 
 		// Final check - if overlays still present after all attempts, log warning but continue
+		// Note: .v-overlay--active is too generic - it includes snackbar overlays which aren't blockers.
+		// Only check for actual blocking overlays (dialogs and menus).
 		const remainingOverlays = await Promise.all(
-			['.v-overlay__scrim', '.v-overlay--active', '.v-dialog--active', "[role='dialog']"].map(
-				async (selector) => {
-					// Only check for visible elements, not just DOM presence
-					const count = await this.page
-						.locator(selector)
-						.locator('visible=true')
-						.count()
-						.catch(() => 0)
-					return count > 0 ? selector : null
-				}
-			)
+			['.v-dialog--active', '.v-menu--active'].map(async (selector) => {
+				// Only check for visible elements, not just DOM presence
+				const count = await this.page
+					.locator(selector)
+					.locator('visible=true')
+					.count()
+					.catch(() => 0)
+				return count > 0 ? selector : null
+			})
 		)
 
 		const stillPresent = remainingOverlays.filter((s) => s !== null)

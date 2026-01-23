@@ -115,7 +115,8 @@ test.describe('Building Fill Regression @e2e @buildings @regression', () => {
 
 	test('buildings should have polygon.fill set to true', async ({ page }) => {
 		// Navigate to a postal code to load buildings
-		const searchInput = page.getByPlaceholder(/search/i)
+		// Use the actual input inside the unified search component (Vuetify uses label, not placeholder)
+		const searchInput = page.locator('.unified-search input')
 		await searchInput.fill('00100')
 		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 
@@ -155,7 +156,7 @@ test.describe('Building Fill Regression @e2e @buildings @regression', () => {
 
 	test('buildings should have visible materials (not transparent)', async ({ page }) => {
 		// Navigate to postal code
-		const searchInput = page.getByPlaceholder(/search/i)
+		const searchInput = page.locator('.unified-search input')
 		await searchInput.fill('00100')
 		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 

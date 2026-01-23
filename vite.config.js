@@ -295,6 +295,11 @@ export default defineConfig(({ mode }) => {
 						}
 					},
 				},
+				'/feature-flags': {
+					target: 'http://localhost:1031',
+					changeOrigin: true,
+					rewrite: (path) => path.replace(/^\/feature-flags/, ''),
+				},
 				'/hsy-action': {
 					target: 'https://kartta.hsy.fi',
 					changeOrigin: true,

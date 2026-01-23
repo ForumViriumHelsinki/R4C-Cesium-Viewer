@@ -1,117 +1,38 @@
 /**
  * @module stores/featureFlagStore
- * Manages runtime feature toggles with environment variable initialization and localStorage persistence.
- * Provides centralized control for experimental features, integration toggles, and developer tools.
+ * Manages runtime feature toggles backed by OpenFeature SDK with GOFF relay.
  *
- * Feature flag architecture:
- * - **Environment-based defaults**: Initialized from VITE_FEATURE_* environment variables
- * - **Runtime overrides**: User can toggle flags during runtime via UI or programmatically
- * - **LocalStorage persistence**: User overrides persisted across sessions
- * - **Hardware validation**: Flags with requiresSupport disabled if hardware doesn't support them
- * - **Category organization**: Flags grouped into logical categories for management
+ * Evaluation flow:
+ * 1. OpenFeature evaluates flags via GOFF relay (or InMemoryProvider fallback)
+ * 2. Results cached in reactive Pinia state
+ * 3. localStorage overrides applied on top (dev/admin only)
+ * 4. Hardware guards disable unsupported features client-side
  *
- * Categories:
- * - **data-layers**: NDVI, flood layers, 250m grid, tree coverage, land cover
- * - **graphics**: HDR, ambient occlusion, MSAA, FXAA, request render mode, 3D terrain
- * - **analysis**: Heat histogram, building scatter plot, cooling optimizer, NDVI analysis, socioeconomic viz
- * - **ui**: Control panel default, data source status, loading performance info, background preload
- * - **integration**: Sentry error tracking, Digitransit transport, background map providers
- * - **developer**: Debug mode, cache visualization, health checks
- *
- * Usage patterns:
- * ```typescript
- * const featureFlagStore = useFeatureFlagStore();
- *
- * // Check if feature is enabled
- * if (featureFlagStore.isEnabled('ndvi')) {
- *   // Show NDVI layer controls
- * }
- *
- * // Toggle feature at runtime
- * featureFlagStore.setFlag('debugMode', true);
- *
- * // Get all experimental features
- * const experimental = featureFlagStore.experimentalFlags;
- *
- * // Export/import configuration
- * const config = featureFlagStore.exportConfig();
- * featureFlagStore.importConfig(config);
- * ```
- *
- * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
+ * Public API is preserved for all consumers:
+ * - isEnabled(flagName) - primary check
+ * - flagsByCategory(category) - for settings panels
+ * - categories, experimentalFlags, enabledCount - getters
+ * - setFlag, resetFlag, resetAllFlags - override management
+ * - exportConfig, importConfig - configuration sharing
+ * - checkHardwareSupport - client-side hardware validation
+ * - refreshFlags - re-evaluate all flags from OpenFeature
  */
 
 import { defineStore } from 'pinia'
+import {
+	ALL_FLAG_NAMES,
+	type FeatureFlagCategory,
+	type FeatureFlagName,
+	FLAG_METADATA,
+	type FlagMetadata,
+} from '@/constants/flagMetadata'
+import { getClient } from '@/services/featureFlagProvider'
 import logger from '@/utils/logger'
 import { validateJSON } from '@/utils/validators'
 
-/**
- * Feature flag category types for organizational grouping
- * @typedef {'data-layers' | 'graphics' | 'analysis' | 'ui' | 'integration' | 'developer'} FeatureFlagCategory
- */
-export type FeatureFlagCategory =
-	| 'data-layers'
-	| 'graphics'
-	| 'analysis'
-	| 'ui'
-	| 'integration'
-	| 'developer'
+// Re-export types for consumer compatibility
+export type { FeatureFlagCategory, FeatureFlagName } from '@/constants/flagMetadata'
 
-/**
- * Feature flag names - comprehensive list of all available feature toggles
- *
- * Naming convention: camelCase descriptive names
- * Environment variable mapping: VITE_FEATURE_<SCREAMING_SNAKE_CASE>
- *
- * @typedef {string} FeatureFlagName
- */
-export type FeatureFlagName =
-	// Data layers
-	| 'ndvi'
-	| 'floodLayers'
-	| 'grid250m'
-	| 'treeCoverage'
-	| 'landCover'
-	// Graphics & Performance
-	| 'hdrRendering'
-	| 'ambientOcclusion'
-	| 'msaaOptions'
-	| 'fxaaOptions'
-	| 'requestRenderMode'
-	| 'terrain3d'
-	| 'viewportStreaming'
-	| 'predictivePrefetch'
-	// Analysis tools
-	| 'heatHistogram'
-	| 'buildingScatterPlot'
-	| 'coolingOptimizer'
-	| 'ndviAnalysis'
-	| 'socioeconomicViz'
-	// UI/UX
-	| 'controlPanelDefault'
-	| 'dataSourceStatus'
-	| 'loadingPerformanceInfo'
-	| 'backgroundPreload'
-	// Integration
-	| 'sentryErrorTracking'
-	| 'digitransitIntegration'
-	| 'backgroundMapProviders'
-	// Developer
-	| 'debugMode'
-	| 'cacheVisualization'
-	| 'healthChecks'
-
-/**
- * Feature flag configuration object
- *
- * @interface FeatureFlagConfig
- * @property {boolean} enabled - Whether the feature is currently enabled
- * @property {FeatureFlagCategory} category - Category for grouping and filtering
- * @property {string} label - Human-readable display name
- * @property {string} description - Detailed explanation of the feature's purpose
- * @property {boolean} [experimental] - If true, marks feature as experimental/unstable
- * @property {boolean} [requiresSupport] - If true, requires hardware/browser support validation
- */
 export interface FeatureFlagConfig {
 	enabled: boolean
 	category: FeatureFlagCategory
@@ -121,429 +42,137 @@ export interface FeatureFlagConfig {
 	requiresSupport?: boolean
 }
 
-/**
- * Complete feature flags map with all flag configurations
- * @typedef {Record<FeatureFlagName, FeatureFlagConfig>} FeatureFlagsMap
- */
 export type FeatureFlagsMap = Record<FeatureFlagName, FeatureFlagConfig>
-
-/**
- * User runtime overrides for feature flags (persisted to localStorage)
- * @typedef {Partial<Record<FeatureFlagName, boolean>>} UserOverridesMap
- */
 export type UserOverridesMap = Partial<Record<FeatureFlagName, boolean>>
 
-/**
- * Feature flag with name attached (for iteration/display purposes)
- *
- * @interface FeatureFlagWithName
- * @extends FeatureFlagConfig
- * @property {FeatureFlagName} name - The flag's identifier
- */
 export interface FeatureFlagWithName extends FeatureFlagConfig {
 	name: FeatureFlagName
 }
 
-/**
- * Pinia store state shape
- *
- * @interface FeatureFlagState
- * @property {FeatureFlagsMap} flags - All feature flag configurations
- * @property {UserOverridesMap} userOverrides - Runtime user toggles (persisted to localStorage)
- */
 interface FeatureFlagState {
-	flags: FeatureFlagsMap
+	/** Cached evaluation results from OpenFeature */
+	evaluatedFlags: Record<FeatureFlagName, boolean>
+	/** User overrides (stored in localStorage, applied on top of evaluations) */
 	userOverrides: UserOverridesMap
+	/** Hardware support state for requiresSupport flags */
+	hardwareSupport: Partial<Record<FeatureFlagName, boolean>>
+	/** Whether flags have been evaluated at least once */
+	initialized: boolean
 }
 
-/**
- * Type predicate to check if a string is a valid FeatureFlagName
- * Provides runtime validation for type safety.
- *
- * @param {string} key - The key to validate
- * @param {FeatureFlagsMap} flags - The flags map to check against
- * @returns {boolean} True if key is a valid feature flag name
- */
-function isFeatureFlagName(key: string, flags: FeatureFlagsMap): key is FeatureFlagName {
-	return key in flags
-}
-
-/**
- * Feature Flag Pinia Store
- *
- * Manages runtime feature toggles with environment variable initialization and localStorage persistence.
- * Provides centralized control over experimental features, integrations, and developer tools.
- *
- * Initialization flow:
- * 1. State initialized from VITE_FEATURE_* environment variables
- * 2. User overrides loaded from localStorage (if any)
- * 3. Hardware support checked for flags with requiresSupport=true
- * 4. Features enabled/disabled based on combined configuration
- *
- * Persistence:
- * - User overrides automatically saved to localStorage on change
- * - Overrides take precedence over environment variable defaults
- * - Can reset individual flags or all flags to defaults
- *
- * @example
- * // Basic usage
- * const store = useFeatureFlagStore();
- * store.loadOverrides(); // Load saved overrides from localStorage
- *
- * if (store.isEnabled('ndvi')) {
- *   // Show NDVI controls
- * }
- *
- * // Runtime toggle
- * store.setFlag('debugMode', true);
- *
- * // Category filtering
- * const graphicsFlags = store.flagsByCategory('graphics');
- *
- * // Hardware validation
- * store.checkHardwareSupport('hdrRendering', viewer.scene.highDynamicRangeSupported);
- */
 export const useFeatureFlagStore = defineStore('featureFlags', {
 	state: (): FeatureFlagState => ({
-		// Initialize from env vars with runtime override capability
-		flags: {
-			// Data layers
-			ndvi: {
-				enabled: import.meta.env.VITE_FEATURE_NDVI !== 'false',
-				label: 'NDVI Vegetation Index',
-				description:
-					'Normalized Difference Vegetation Index visualization for vegetation health analysis',
-				category: 'data-layers',
-				experimental: false,
-			},
-			floodLayers: {
-				enabled: import.meta.env.VITE_FEATURE_FLOOD_LAYERS === 'true',
-				label: 'Flood Risk Layers',
-				description: 'SYKE flood risk data visualization',
-				category: 'data-layers',
-				experimental: true,
-			},
-			grid250m: {
-				enabled: import.meta.env.VITE_FEATURE_250M_GRID !== 'false',
-				label: '250m Socioeconomic Grid',
-				description: 'Fine-grained socioeconomic data overlay at 250m resolution',
-				category: 'data-layers',
-				experimental: false,
-			},
-			treeCoverage: {
-				enabled: import.meta.env.VITE_FEATURE_TREE_COVERAGE !== 'false',
-				label: 'Tree Coverage Visualization',
-				description: 'Display tree coverage and canopy data',
-				category: 'data-layers',
-				experimental: false,
-			},
-			landCover: {
-				enabled: import.meta.env.VITE_FEATURE_LAND_COVER !== 'false',
-				label: 'Land Cover Analysis',
-				description: 'Land cover classification and analysis tools',
-				category: 'data-layers',
-				experimental: false,
-			},
-
-			// Graphics & Performance features
-			hdrRendering: {
-				enabled: import.meta.env.VITE_FEATURE_HDR === 'true',
-				label: 'HDR Rendering',
-				description: 'High Dynamic Range rendering for better lighting',
-				category: 'graphics',
-				experimental: true,
-				requiresSupport: true,
-			},
-			ambientOcclusion: {
-				enabled: import.meta.env.VITE_FEATURE_AO === 'true',
-				label: 'Ambient Occlusion',
-				description: 'Screen Space Ambient Occlusion for depth perception',
-				category: 'graphics',
-				experimental: true,
-				requiresSupport: true,
-			},
-			msaaOptions: {
-				enabled: import.meta.env.VITE_FEATURE_MSAA !== 'false',
-				label: 'MSAA Anti-aliasing',
-				description: 'Multi-Sample Anti-Aliasing options',
-				category: 'graphics',
-				experimental: false,
-			},
-			fxaaOptions: {
-				enabled: import.meta.env.VITE_FEATURE_FXAA !== 'false',
-				label: 'FXAA Anti-aliasing',
-				description: 'Fast Approximate Anti-Aliasing',
-				category: 'graphics',
-				experimental: false,
-			},
-			requestRenderMode: {
-				enabled: import.meta.env.VITE_FEATURE_REQUEST_RENDER === 'true',
-				label: 'Request Render Mode',
-				description: 'Performance optimization - only render when scene changes',
-				category: 'graphics',
-				experimental: true,
-			},
-			terrain3d: {
-				enabled: import.meta.env.VITE_FEATURE_3D_TERRAIN !== 'false',
-				label: '3D Terrain',
-				description: 'Helsinki 3D terrain rendering',
-				category: 'graphics',
-				experimental: false,
-			},
-			viewportStreaming: {
-				enabled: import.meta.env.VITE_FEATURE_VIEWPORT_STREAMING !== 'false',
-				label: 'Viewport Streaming',
-				description:
-					'Load buildings based on viewport tiles instead of postal code boundaries for more efficient streaming',
-				category: 'graphics',
-				experimental: false,
-			},
-			predictivePrefetch: {
-				enabled: import.meta.env.VITE_FEATURE_PREDICTIVE_PREFETCH === 'true',
-				label: 'Predictive Prefetching',
-				description: 'Prefetch adjacent tiles during idle time for instant display when panning',
-				category: 'graphics',
-				experimental: true,
-			},
-
-			// Analysis tools
-			heatHistogram: {
-				enabled: import.meta.env.VITE_FEATURE_HEAT_HISTOGRAM !== 'false',
-				label: 'Heat Histogram Analysis',
-				description: 'Temperature distribution histogram visualization',
-				category: 'analysis',
-				experimental: false,
-			},
-			buildingScatterPlot: {
-				enabled: import.meta.env.VITE_FEATURE_BUILDING_SCATTER !== 'false',
-				label: 'Building Scatter Plot',
-				description: 'Building attribute correlation analysis',
-				category: 'analysis',
-				experimental: false,
-			},
-			coolingOptimizer: {
-				enabled: import.meta.env.VITE_FEATURE_COOLING_OPTIMIZER !== 'false',
-				label: 'Cooling Center Optimizer',
-				description: 'Tool to optimize cooling center placement',
-				category: 'analysis',
-				experimental: false,
-			},
-			ndviAnalysis: {
-				enabled: import.meta.env.VITE_FEATURE_NDVI_ANALYSIS !== 'false',
-				label: 'NDVI Analysis Tools',
-				description: 'Vegetation analysis and health monitoring',
-				category: 'analysis',
-				experimental: false,
-			},
-			socioeconomicViz: {
-				enabled: import.meta.env.VITE_FEATURE_SOCIOECONOMIC !== 'false',
-				label: 'Socioeconomic Visualizations',
-				description: 'Demographic and economic data overlays',
-				category: 'analysis',
-				experimental: false,
-			},
-
-			// UI/UX features
-			controlPanelDefault: {
-				enabled: import.meta.env.VITE_FEATURE_CONTROL_PANEL_DEFAULT !== 'false',
-				label: 'Control Panel Open by Default',
-				description: 'Show control panel on load',
-				category: 'ui',
-				experimental: false,
-			},
-			dataSourceStatus: {
-				enabled: import.meta.env.VITE_FEATURE_DATA_SOURCE_STATUS !== 'false',
-				label: 'Data Source Status Indicators',
-				description: 'Show connection status for data sources',
-				category: 'ui',
-				experimental: false,
-			},
-			loadingPerformanceInfo: {
-				enabled: import.meta.env.VITE_FEATURE_LOADING_PERF === 'true',
-				label: 'Loading Performance Info',
-				description: 'Display detailed performance metrics during loading',
-				category: 'ui',
-				experimental: true,
-			},
-			backgroundPreload: {
-				enabled: import.meta.env.VITE_FEATURE_BACKGROUND_PRELOAD === 'true',
-				label: 'Background Data Preloading',
-				description: 'Preload data in background for faster transitions',
-				category: 'ui',
-				experimental: true,
-			},
-
-			// Integration features
-			sentryErrorTracking: {
-				enabled:
-					import.meta.env.VITE_SENTRY_DSN !== undefined && import.meta.env.VITE_SENTRY_DSN !== '',
-				label: 'Sentry Error Tracking',
-				description: 'Error monitoring and reporting via Sentry',
-				category: 'integration',
-				experimental: false,
-			},
-			digitransitIntegration: {
-				enabled:
-					import.meta.env.VITE_DIGITRANSIT_KEY !== undefined &&
-					import.meta.env.VITE_DIGITRANSIT_KEY !== '',
-				label: 'Digitransit Public Transport',
-				description: 'Public transport route integration',
-				category: 'integration',
-				experimental: false,
-			},
-			backgroundMapProviders: {
-				enabled: import.meta.env.VITE_FEATURE_BG_MAP_PROVIDERS !== 'false',
-				label: 'Multiple Background Map Providers',
-				description: 'Switch between different base map providers',
-				category: 'integration',
-				experimental: false,
-			},
-
-			// Developer features
-			debugMode: {
-				enabled: import.meta.env.MODE === 'development',
-				label: 'Debug Mode',
-				description: 'Enable debug logging and developer tools',
-				category: 'developer',
-				experimental: false,
-			},
-			cacheVisualization: {
-				enabled: import.meta.env.VITE_FEATURE_CACHE_VIZ === 'true',
-				label: 'Cache Visualization',
-				description: 'Visualize data cache status and usage',
-				category: 'developer',
-				experimental: true,
-			},
-			healthChecks: {
-				enabled: import.meta.env.VITE_FEATURE_HEALTH_CHECKS === 'true',
-				label: 'Health Checks Display',
-				description: 'Show system health check results',
-				category: 'developer',
-				experimental: true,
-			},
-		},
-
-		// User overrides (stored in localStorage)
+		evaluatedFlags: buildInitialEvaluations(),
 		userOverrides: {},
+		hardwareSupport: {},
+		initialized: false,
 	}),
 
 	getters: {
 		/**
-		 * Check if a feature flag is enabled
-		 * User overrides take precedence over default flag values.
-		 *
-		 * @param {Object} state - Pinia state
-		 * @returns {(flagName: FeatureFlagName) => boolean} Function that returns true if flag is enabled
-		 *
-		 * @example
-		 * if (store.isEnabled('ndvi')) {
-		 *   // Show NDVI controls
-		 * }
+		 * Check if a feature flag is enabled.
+		 * Priority: localStorage override > hardware guard > OpenFeature evaluation
 		 */
 		isEnabled:
 			(state) =>
 			(flagName: FeatureFlagName): boolean => {
-				// Check user override first
+				const meta = FLAG_METADATA[flagName]
+				if (!meta) return false
+
+				// Hardware guard: if requires support and not supported, always disabled
+				if (meta.requiresSupport && state.hardwareSupport[flagName] === false) {
+					return false
+				}
+
+				// User override takes precedence
 				if (state.userOverrides[flagName] !== undefined) {
 					return state.userOverrides[flagName]!
 				}
 
-				// Fall back to default flag value
-				return state.flags[flagName]?.enabled ?? false
+				// OpenFeature evaluation result
+				return state.evaluatedFlags[flagName] ?? meta.fallbackDefault
 			},
 
 		/**
-		 * Get all flags in a specific category
-		 * Useful for building category-based settings panels.
-		 *
-		 * @param {Object} state - Pinia state
-		 * @returns {(category: FeatureFlagCategory) => FeatureFlagWithName[]} Function that returns array of flags in category
-		 *
-		 * @example
-		 * const graphicsFlags = store.flagsByCategory('graphics');
-		 * graphicsFlags.forEach(flag => {
-		 *   console.log(flag.name, flag.label, flag.enabled);
-		 * });
+		 * Compatibility getter: provides flags map matching old FeatureFlagsMap shape.
+		 * Used by FeatureFlagsPanel for iteration.
 		 */
-		flagsByCategory:
-			(state) =>
-			(category: FeatureFlagCategory): FeatureFlagWithName[] => {
-				return Object.entries(state.flags)
-					.filter(
-						([name, flag]) => isFeatureFlagName(name, state.flags) && flag.category === category
-					)
-					.map(([name, flag]) => ({ name, ...flag }))
-			},
-
-		/**
-		 * Get all experimental flags
-		 * Returns flags marked as experimental, useful for showing beta feature warnings.
-		 *
-		 * @param {Object} state - Pinia state
-		 * @returns {FeatureFlagWithName[]} Array of experimental flags
-		 *
-		 * @example
-		 * const betaFeatures = store.experimentalFlags;
-		 * if (betaFeatures.some(f => store.isEnabled(f.name))) {
-		 *   showExperimentalWarning();
-		 * }
-		 */
-		experimentalFlags: (state): FeatureFlagWithName[] => {
-			return Object.entries(state.flags)
-				.filter(([name, flag]) => isFeatureFlagName(name, state.flags) && flag.experimental)
-				.map(([name, flag]) => ({ name, ...flag }))
+		flags: (state): FeatureFlagsMap => {
+			const result: Partial<FeatureFlagsMap> = {}
+			for (const name of ALL_FLAG_NAMES) {
+				const meta = FLAG_METADATA[name]
+				result[name] = {
+					enabled: state.evaluatedFlags[name] ?? meta.fallbackDefault,
+					category: meta.category,
+					label: meta.label,
+					description: meta.description,
+					experimental: meta.experimental,
+					requiresSupport: meta.requiresSupport,
+				}
+			}
+			return result as FeatureFlagsMap
 		},
 
-		/**
-		 * Get all available categories
-		 * Returns sorted list of all unique categories in the feature flag system.
-		 *
-		 * @param {Object} state - Pinia state
-		 * @returns {FeatureFlagCategory[]} Sorted array of category names
-		 *
-		 * @example
-		 * const categories = store.categories;
-		 * // ['analysis', 'data-layers', 'developer', 'graphics', 'integration', 'ui']
-		 */
-		categories: (state): FeatureFlagCategory[] => {
+		/** Get all flags in a specific category */
+		flagsByCategory:
+			() =>
+			(category: FeatureFlagCategory): FeatureFlagWithName[] => {
+				return ALL_FLAG_NAMES.filter((name) => FLAG_METADATA[name].category === category)
+					.filter((name) => name !== 'showFeaturePanel')
+					.map((name) => {
+						const meta = FLAG_METADATA[name]
+						return {
+							name,
+							enabled: meta.fallbackDefault,
+							category: meta.category,
+							label: meta.label,
+							description: meta.description,
+							experimental: meta.experimental,
+							requiresSupport: meta.requiresSupport,
+						}
+					})
+			},
+
+		/** Get all experimental flags */
+		experimentalFlags: (): FeatureFlagWithName[] => {
+			return ALL_FLAG_NAMES.filter((name) => FLAG_METADATA[name].experimental)
+				.filter((name) => name !== 'showFeaturePanel')
+				.map((name) => {
+					const meta = FLAG_METADATA[name]
+					return {
+						name,
+						enabled: meta.fallbackDefault,
+						category: meta.category,
+						label: meta.label,
+						description: meta.description,
+						experimental: meta.experimental,
+						requiresSupport: meta.requiresSupport,
+					}
+				})
+		},
+
+		/** Get all available categories */
+		categories: (): FeatureFlagCategory[] => {
 			const cats = new Set<FeatureFlagCategory>()
-			Object.values(state.flags).forEach((flag) => {
-				cats.add(flag.category)
-			})
+			for (const name of ALL_FLAG_NAMES) {
+				if (name === 'showFeaturePanel') continue
+				cats.add(FLAG_METADATA[name].category)
+			}
 			return Array.from(cats).sort()
 		},
 
-		/**
-		 * Get count of enabled flags
-		 * Counts flags considering both default values and user overrides.
-		 *
-		 * @param {Object} state - Pinia state
-		 * @returns {number} Number of currently enabled flags
-		 *
-		 * @example
-		 * console.log(`${store.enabledCount} of ${Object.keys(store.flags).length} features enabled`);
-		 */
-		enabledCount: (state): number => {
-			return (Object.keys(state.flags) as FeatureFlagName[]).filter((name) => {
-				if (state.userOverrides[name] !== undefined) {
-					return state.userOverrides[name]
-				}
-				return state.flags[name]?.enabled ?? false
+		/** Get count of enabled flags */
+		enabledCount(state): number {
+			return ALL_FLAG_NAMES.filter((name) => {
+				if (name === 'showFeaturePanel') return false
+				const meta = FLAG_METADATA[name]
+				if (meta.requiresSupport && state.hardwareSupport[name] === false) return false
+				if (state.userOverrides[name] !== undefined) return state.userOverrides[name]
+				return state.evaluatedFlags[name] ?? meta.fallbackDefault
 			}).length
 		},
 
-		/**
-		 * Check if a flag has been overridden by the user
-		 * Useful for UI to show which flags differ from defaults.
-		 *
-		 * @param {Object} state - Pinia state
-		 * @returns {(flagName: FeatureFlagName) => boolean} Function that returns true if flag has user override
-		 *
-		 * @example
-		 * if (store.hasOverride('debugMode')) {
-		 *   // Show "reset to default" button
-		 * }
-		 */
+		/** Check if a flag has been overridden by the user */
 		hasOverride:
 			(state) =>
 			(flagName: FeatureFlagName): boolean => {
@@ -552,58 +181,27 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 	},
 
 	actions: {
-		/**
-		 * Set a feature flag state at runtime
-		 * Creates a user override and persists to localStorage.
-		 *
-		 * @param {FeatureFlagName} flagName - Name of the feature flag
-		 * @param {boolean} enabled - True to enable, false to disable
-		 *
-		 * @example
-		 * store.setFlag('debugMode', true);
-		 * // Flag is now enabled and saved to localStorage
-		 */
+		/** Set a feature flag override at runtime */
 		setFlag(flagName: FeatureFlagName, enabled: boolean): void {
-			if (this.flags[flagName]) {
+			if (FLAG_METADATA[flagName]) {
 				this.userOverrides[flagName] = enabled
 				this.persistOverrides()
 			}
 		},
 
-		/**
-		 * Reset a feature flag to its default value
-		 * Removes user override and persists change to localStorage.
-		 *
-		 * @param {FeatureFlagName} flagName - Name of the feature flag
-		 *
-		 * @example
-		 * store.resetFlag('debugMode');
-		 * // Flag now uses environment variable default
-		 */
+		/** Reset a feature flag to its evaluated value */
 		resetFlag(flagName: FeatureFlagName): void {
 			delete this.userOverrides[flagName]
 			this.persistOverrides()
 		},
 
-		/**
-		 * Reset all feature flags to default values
-		 * Clears all user overrides and persists to localStorage.
-		 *
-		 * @example
-		 * store.resetAllFlags();
-		 * // All flags now use environment variable defaults
-		 */
+		/** Reset all feature flags to evaluated values */
 		resetAllFlags(): void {
 			this.userOverrides = {}
 			this.persistOverrides()
 		},
 
-		/**
-		 * Persist user overrides to localStorage
-		 * Automatically called by setFlag/resetFlag actions.
-		 *
-		 * @private
-		 */
+		/** Persist user overrides to localStorage */
 		persistOverrides(): void {
 			try {
 				localStorage.setItem('featureFlags', JSON.stringify(this.userOverrides))
@@ -612,25 +210,16 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 			}
 		},
 
-		/**
-		 * Load user overrides from localStorage
-		 * Should be called during application initialization.
-		 *
-		 * @example
-		 * const store = useFeatureFlagStore();
-		 * store.loadOverrides(); // Restore saved user preferences
-		 */
+		/** Load user overrides from localStorage */
 		loadOverrides(): void {
 			try {
 				const stored = localStorage.getItem('featureFlags')
 				if (stored) {
-					// Validate JSON before parsing to prevent prototype pollution
 					const parsed = validateJSON(stored)
 					this.userOverrides = parsed as UserOverridesMap
 				}
 			} catch (error) {
 				logger.warn('Failed to load feature flag overrides:', error)
-				// Clear corrupted data from localStorage
 				try {
 					localStorage.removeItem('featureFlags')
 				} catch (cleanupError) {
@@ -640,77 +229,57 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 		},
 
 		/**
-		 * Check hardware support for a feature and disable if not supported
-		 * For flags with requiresSupport=true, validates hardware capability.
-		 *
-		 * @param {FeatureFlagName} flagName - Name of the feature flag
-		 * @param {boolean} isSupported - True if hardware supports the feature
-		 *
-		 * @example
-		 * const viewer = new Cesium.Viewer(...);
-		 * store.checkHardwareSupport('hdrRendering', viewer.scene.highDynamicRangeSupported);
-		 * store.checkHardwareSupport('ambientOcclusion', viewer.scene.postProcessStages.ambientOcclusion);
+		 * Re-evaluate all flags from OpenFeature client.
+		 * Called after provider initialization and on context changes.
 		 */
-		checkHardwareSupport(flagName: FeatureFlagName, isSupported: boolean): void {
-			const flag = this.flags[flagName]
-			if (flag?.requiresSupport && !isSupported) {
-				this.flags[flagName].enabled = false
-				console.info(`Feature '${flagName}' disabled: hardware not supported`)
+		refreshFlags(): void {
+			try {
+				const client = getClient()
+				for (const name of ALL_FLAG_NAMES) {
+					const meta = FLAG_METADATA[name]
+					const value = client.getBooleanValue(meta.goffId, meta.fallbackDefault)
+					this.evaluatedFlags[name] = value
+				}
+				this.initialized = true
+				logger.debug('Feature flags refreshed from OpenFeature')
+			} catch (error) {
+				logger.warn('Failed to refresh feature flags:', error)
 			}
 		},
 
-		/**
-		 * Get feature flag metadata
-		 * Returns the full configuration object for a flag.
-		 *
-		 * @param {FeatureFlagName} flagName - Name of the feature flag
-		 * @returns {FeatureFlagConfig | null} Flag configuration or null if not found
-		 *
-		 * @example
-		 * const metadata = store.getFlagMetadata('ndvi');
-		 * console.log(metadata.label, metadata.description, metadata.category);
-		 */
-		getFlagMetadata(flagName: FeatureFlagName): FeatureFlagConfig | null {
-			return this.flags[flagName] || null
+		/** Check hardware support for a feature and disable if not supported */
+		checkHardwareSupport(flagName: FeatureFlagName, isSupported: boolean): void {
+			const meta = FLAG_METADATA[flagName]
+			if (meta?.requiresSupport) {
+				this.hardwareSupport[flagName] = isSupported
+				if (!isSupported) {
+					logger.info(`Feature '${flagName}' disabled: hardware not supported`)
+				}
+			}
 		},
 
-		/**
-		 * Export current configuration as JSON
-		 * Returns effective state (defaults + overrides) for all flags.
-		 *
-		 * @returns {Record<FeatureFlagName, boolean>} Complete flag state map
-		 *
-		 * @example
-		 * const config = store.exportConfig();
-		 * // Save to file or send to server
-		 * downloadJSON(config, 'feature-flags.json');
-		 */
+		/** Get feature flag metadata */
+		getFlagMetadata(flagName: FeatureFlagName): FlagMetadata | null {
+			return FLAG_METADATA[flagName] || null
+		},
+
+		/** Export current configuration as JSON */
 		exportConfig(): Record<FeatureFlagName, boolean> {
 			const config: Partial<Record<FeatureFlagName, boolean>> = {}
-			;(Object.keys(this.flags) as FeatureFlagName[]).forEach((name) => {
+			for (const name of ALL_FLAG_NAMES) {
+				if (name === 'showFeaturePanel') continue
 				config[name] = this.isEnabled(name)
-			})
+			}
 			return config as Record<FeatureFlagName, boolean>
 		},
 
-		/**
-		 * Import configuration from JSON
-		 * Sets user overrides based on imported configuration.
-		 * Validates flag names and value types before importing.
-		 *
-		 * @param {Partial<Record<FeatureFlagName, boolean>>} config - Configuration to import
-		 *
-		 * @example
-		 * const config = await fetch('/api/feature-flags').then(r => r.json());
-		 * store.importConfig(config);
-		 * // User overrides updated and persisted
-		 */
+		/** Import configuration from JSON */
 		importConfig(config: Partial<Record<FeatureFlagName, boolean>>): void {
 			Object.entries(config).forEach(([name, enabled]) => {
 				const flagName = name as FeatureFlagName
-				if (this.flags[flagName] && typeof enabled === 'boolean') {
+				if (FLAG_METADATA[flagName] && typeof enabled === 'boolean') {
 					this.setFlag(flagName, enabled)
-				} else if (!this.flags[flagName]) {
+				} else if (!FLAG_METADATA[flagName]) {
 					logger.warn(`Unknown feature flag "${name}" in imported configuration`)
 				} else if (typeof enabled !== 'boolean') {
 					logger.warn(
@@ -721,3 +290,15 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 		},
 	},
 })
+
+/**
+ * Build initial evaluation state from fallback defaults.
+ * Before OpenFeature is initialized, flags use their fallback values.
+ */
+function buildInitialEvaluations(): Record<FeatureFlagName, boolean> {
+	const result: Partial<Record<FeatureFlagName, boolean>> = {}
+	for (const name of ALL_FLAG_NAMES) {
+		result[name] = FLAG_METADATA[name].fallbackDefault
+	}
+	return result as Record<FeatureFlagName, boolean>
+}

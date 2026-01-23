@@ -1,7 +1,6 @@
 import { test as base, type Page } from '@playwright/test'
 import { setupCesiumForCI, waitForAppReady, waitForCesiumReady } from '../e2e/helpers/cesium-helper'
 import { TEST_TIMEOUTS } from '../e2e/helpers/test-helpers'
-import { createCesiumMock as _createCesiumMock } from '../mocks/cesium-mock'
 
 /**
  * Cesium Test Fixture
@@ -387,7 +386,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 						name = ''
 						entities = new MockEntityCollection()
 
-						static load(data, options) {
+						static load(_data, options) {
 							const dataSource = new MockGeoJsonDataSource()
 							if (options?.clampToGround) {
 								// Mock clamp to ground behavior
@@ -397,9 +396,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 					}
 
 					// Mock other required classes
-					const MockEllipsoidTerrainProvider = class {
-						constructor(_options) {}
-					}
+					const MockEllipsoidTerrainProvider = class {}
 
 					const MockFeatureDetection = {
 						supportsWebGL: () => true,
@@ -482,14 +479,9 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 								return new this()
 							}
 						},
-						CallbackProperty: class {
-							constructor(_callback, _isConstant) {}
-						},
-						ConstantProperty: class {
-							constructor(_value) {}
-						},
+						CallbackProperty: class {},
+						ConstantProperty: class {},
 						SampledProperty: class {
-							constructor(_type) {}
 							addSample(_time, _value) {}
 						},
 						BoundingSphere: class {
@@ -823,7 +815,7 @@ cesiumDescribeImpl.skip = (title: string, fn: () => void) => {
  * Mark a cesiumDescribe block as only (for focused testing)
  */
 cesiumDescribeImpl.only = (title: string, fn: () => void) => {
-	cesiumTest.describe.only(title, fn)
+	cesiumTest.describe(title, fn)
 }
 
 export const cesiumDescribe = cesiumDescribeImpl

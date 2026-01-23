@@ -166,6 +166,8 @@ The seeding script generates realistic Helsinki-area data for all major tables:
 - Buildings, trees, and heat exposure data
 - Postal code demographics (PAAVO data)
 - Land cover and cold spot areas
+- Urban heat data by postal code (`hki_urbanheat`)
+- Automatically refreshes materialized views (`r4c_hsy_building_mat`, `r4c_postalcode_mat`) for API performance
 
 **Options:**
 
