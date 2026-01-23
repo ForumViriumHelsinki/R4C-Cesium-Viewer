@@ -1,10 +1,18 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ALL_FLAG_NAMES } from '@/constants/flagMetadata'
 import {
 	type FeatureFlagCategory,
 	type FeatureFlagName,
 	useFeatureFlagStore,
 } from '@/stores/featureFlagStore'
+
+// Mock the featureFlagProvider to avoid OpenFeature dependency in unit tests
+vi.mock('@/services/featureFlagProvider', () => ({
+	getClient: () => ({
+		getBooleanValue: (_flagId: string, defaultValue: boolean) => defaultValue,
+	}),
+}))
 
 describe('featureFlagStore', () => {
 	let store: ReturnType<typeof useFeatureFlagStore>
@@ -23,7 +31,7 @@ describe('featureFlagStore', () => {
 	})
 
 	describe('initial state', () => {
-		it('should have flags initialized from environment variables', () => {
+		it('should have flags initialized from metadata defaults', () => {
 			expect(store.flags).toBeDefined()
 			expect(store.flags.ndvi).toBeDefined()
 			expect(store.flags.debugMode).toBeDefined()
@@ -52,9 +60,8 @@ describe('featureFlagStore', () => {
 	describe('getters', () => {
 		describe('isEnabled', () => {
 			it('should return default flag value when no override exists', () => {
-				// ndvi defaults to true in test environment
-				const defaultValue = store.flags.ndvi.enabled
-				expect(store.isEnabled('ndvi')).toBe(defaultValue)
+				// ndvi has fallbackDefault: true
+				expect(store.isEnabled('ndvi')).toBe(true)
 			})
 
 			it('should return override value when override exists', () => {
@@ -165,8 +172,8 @@ describe('featureFlagStore', () => {
 				const initialCount = store.enabledCount
 
 				// Disable a flag that's enabled
-				const enabledFlag = (Object.keys(store.flags) as FeatureFlagName[]).find((name) =>
-					store.isEnabled(name)
+				const enabledFlag = ALL_FLAG_NAMES.find(
+					(name) => name !== 'showFeaturePanel' && store.isEnabled(name)
 				)
 				if (enabledFlag) {
 					store.userOverrides[enabledFlag] = false
@@ -175,17 +182,20 @@ describe('featureFlagStore', () => {
 			})
 
 			it('should handle all flags disabled', () => {
-				;(Object.keys(store.flags) as FeatureFlagName[]).forEach((name) => {
-					store.userOverrides[name] = false
+				ALL_FLAG_NAMES.forEach((name) => {
+					if (name !== 'showFeaturePanel') {
+						store.userOverrides[name] = false
+					}
 				})
 				expect(store.enabledCount).toBe(0)
 			})
 
 			it('should handle all flags enabled', () => {
-				;(Object.keys(store.flags) as FeatureFlagName[]).forEach((name) => {
+				const flagsExcludingPanel = ALL_FLAG_NAMES.filter((n) => n !== 'showFeaturePanel')
+				flagsExcludingPanel.forEach((name) => {
 					store.userOverrides[name] = true
 				})
-				expect(store.enabledCount).toBe(Object.keys(store.flags).length)
+				expect(store.enabledCount).toBe(flagsExcludingPanel.length)
 			})
 		})
 
@@ -200,8 +210,7 @@ describe('featureFlagStore', () => {
 			})
 
 			it('should return true even for override with same value as default', () => {
-				const defaultValue = store.flags.ndvi.enabled
-				store.userOverrides.ndvi = defaultValue
+				store.userOverrides.ndvi = true // Same as fallbackDefault
 				expect(store.hasOverride('ndvi')).toBe(true)
 			})
 
@@ -257,7 +266,8 @@ describe('featureFlagStore', () => {
 
 				store.resetFlag('ndvi')
 				expect(store.userOverrides.ndvi).toBeUndefined()
-				expect(store.isEnabled('ndvi')).toBe(store.flags.ndvi.enabled)
+				// Restores to evaluated value (fallbackDefault = true)
+				expect(store.isEnabled('ndvi')).toBe(true)
 			})
 
 			it('should update localStorage after reset', () => {
@@ -289,7 +299,8 @@ describe('featureFlagStore', () => {
 				store.resetAllFlags()
 
 				expect(store.userOverrides).toEqual({})
-				expect(store.isEnabled('ndvi')).toBe(store.flags.ndvi.enabled)
+				// ndvi restores to fallbackDefault (true)
+				expect(store.isEnabled('ndvi')).toBe(true)
 			})
 
 			it('should clear localStorage', () => {
@@ -390,29 +401,22 @@ describe('featureFlagStore', () => {
 		})
 
 		describe('checkHardwareSupport', () => {
-			it('should disable unsupported features correctly', () => {
-				// hdrRendering requires support
-				const _initialValue = store.flags.hdrRendering.enabled
-
+			it('should disable unsupported features via isEnabled', () => {
 				store.checkHardwareSupport('hdrRendering', false)
-
-				expect(store.flags.hdrRendering.enabled).toBe(false)
+				expect(store.isEnabled('hdrRendering')).toBe(false)
 			})
 
 			it('should not disable supported features', () => {
-				store.flags.hdrRendering.enabled = true
-
 				store.checkHardwareSupport('hdrRendering', true)
-
-				expect(store.flags.hdrRendering.enabled).toBe(true)
+				// hdrRendering fallbackDefault is false, but support doesn't force it off
+				expect(store.hardwareSupport.hdrRendering).toBe(true)
 			})
 
 			it('should not affect flags without requiresSupport', () => {
-				const initialValue = store.flags.ndvi.enabled
-
 				store.checkHardwareSupport('ndvi', false)
-
-				expect(store.flags.ndvi.enabled).toBe(initialValue)
+				// ndvi doesn't have requiresSupport, so hardware state is not recorded
+				expect(store.hardwareSupport.ndvi).toBeUndefined()
+				expect(store.isEnabled('ndvi')).toBe(true)
 			})
 
 			it('should log info message when disabling', () => {
@@ -429,6 +433,15 @@ describe('featureFlagStore', () => {
 				expect(() =>
 					store.checkHardwareSupport('nonExistentFlag' as FeatureFlagName, false)
 				).not.toThrow()
+			})
+
+			it('should override user override when hardware unsupported', () => {
+				// User enables the flag
+				store.setFlag('hdrRendering', true)
+				// But hardware doesn't support it
+				store.checkHardwareSupport('hdrRendering', false)
+				// Hardware guard takes priority
+				expect(store.isEnabled('hdrRendering')).toBe(false)
 			})
 		})
 
@@ -449,21 +462,23 @@ describe('featureFlagStore', () => {
 			it('should return complete metadata object', () => {
 				const metadata = store.getFlagMetadata('hdrRendering')
 
-				expect(metadata).toHaveProperty('enabled')
+				expect(metadata).toHaveProperty('goffId')
 				expect(metadata).toHaveProperty('label')
 				expect(metadata).toHaveProperty('description')
 				expect(metadata).toHaveProperty('category')
 				expect(metadata).toHaveProperty('experimental')
 				expect(metadata).toHaveProperty('requiresSupport')
+				expect(metadata).toHaveProperty('fallbackDefault')
 			})
 		})
 
 		describe('exportConfig', () => {
-			it('should create valid JSON with all flags', () => {
+			it('should create valid JSON with all flags except showFeaturePanel', () => {
 				const config = store.exportConfig()
+				const expectedCount = ALL_FLAG_NAMES.filter((n) => n !== 'showFeaturePanel').length
 
 				expect(typeof config).toBe('object')
-				expect(Object.keys(config).length).toBe(Object.keys(store.flags).length)
+				expect(Object.keys(config).length).toBe(expectedCount)
 			})
 
 			it('should include current enabled state for each flag', () => {
@@ -604,6 +619,21 @@ describe('featureFlagStore', () => {
 				expect(() => store.importConfig({})).not.toThrow()
 			})
 		})
+
+		describe('refreshFlags', () => {
+			it('should evaluate all flags from OpenFeature client', () => {
+				store.refreshFlags()
+				expect(store.initialized).toBe(true)
+			})
+
+			it('should populate evaluatedFlags', () => {
+				store.refreshFlags()
+				// All flags should have an entry in evaluatedFlags
+				for (const name of ALL_FLAG_NAMES) {
+					expect(typeof store.evaluatedFlags[name]).toBe('boolean')
+				}
+			})
+		})
 	})
 
 	describe('integration scenarios', () => {
@@ -643,16 +673,14 @@ describe('featureFlagStore', () => {
 		})
 
 		it('should handle hardware support check workflow', () => {
-			// Enable HDR initially
-			store.flags.hdrRendering.enabled = true
+			// User override enables HDR
+			store.setFlag('hdrRendering', true)
+			expect(store.isEnabled('hdrRendering')).toBe(true)
 
 			// Check hardware support - not supported
 			store.checkHardwareSupport('hdrRendering', false)
-			expect(store.flags.hdrRendering.enabled).toBe(false)
-
-			// User override shouldn't change hardware limitation
-			store.setFlag('hdrRendering', true)
-			expect(store.isEnabled('hdrRendering')).toBe(true) // Override works
+			// Hardware guard overrides user override
+			expect(store.isEnabled('hdrRendering')).toBe(false)
 		})
 
 		it('should maintain data integrity across multiple operations', () => {
@@ -675,7 +703,7 @@ describe('featureFlagStore', () => {
 			for (let i = 0; i < 100; i++) {
 				store.setFlag('ndvi', i % 2 === 0)
 			}
-			expect(store.isEnabled('ndvi')).toBe(false) // Last value
+			expect(store.isEnabled('ndvi')).toBe(false) // Last value (99 is odd → false)
 		})
 
 		it('should handle localStorage being disabled', () => {
@@ -698,18 +726,17 @@ describe('featureFlagStore', () => {
 			expect(store2.isEnabled('ndvi')).toBe(false)
 		})
 
-		// Testing runtime behavior despite TypeScript type constraints
-		// In JavaScript, the store could receive non-boolean values from external sources
-		// or when type safety is bypassed at runtime
 		it('should handle boolean coercion correctly', () => {
 			// These tests verify runtime behavior when type safety is bypassed
 			store.userOverrides.ndvi = 0 as any
-			expect(store.isEnabled('ndvi')).toBe(0) // Returns the actual value
+			// 0 !== undefined is true, so override is used; 0 is falsy
+			expect(store.isEnabled('ndvi')).toBe(0)
 
 			store.userOverrides.ndvi = '' as any
 			expect(store.isEnabled('ndvi')).toBe('')
 
 			store.userOverrides.ndvi = null as any
+			// null !== undefined is true, so override is used
 			expect(store.isEnabled('ndvi')).toBeNull()
 		})
 	})
