@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.44.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.43.0...r4c-cesium-viewer-v1.44.0) (2026-01-23)
+
+
+### Features
+
+* **feature-flags:** audit and cleanup feature flag system ([#556](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/556)) ([7194353](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7194353c94fd226484bc04b782de6b94ffc75f9c))
+
+
+### Bug Fixes
+
+* **ci:** prevent release-please recursion on release branches ([#572](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/572)) ([ed41fda](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ed41fdaac89d47dcd830cf8bb60387a4a1954e5c))
+* **grid:** improve 250m statistical grid performance and preserve buildings ([#536](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/536)) ([fc174dd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fc174dd176b243d84c86de5c88534a660cfe4ba2)), closes [#530](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/530) [#531](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/531) [#532](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/532) [#533](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/533) [#534](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/534)
+* **test:** update camera.test.js to match new initial camera height ([#554](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/554)) ([b9c6078](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b9c6078549e3098d9234d05060ef36e0cc9a00d4)), closes [#538](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/538)
+* **vuetify:** add eager prop to navigation drawers and overlays ([#562](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/562)) ([648aeb8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/648aeb8ef207a1857002c56b21d82ab625841bcc))
+
 ## [1.43.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.3...r4c-cesium-viewer-v1.43.0) (2026-01-14)
 
 
