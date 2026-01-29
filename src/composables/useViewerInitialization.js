@@ -10,6 +10,7 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import logger from '../utils/logger.js'
+import { loadWithRetry } from '../utils/moduleLoader.js'
 
 /**
  * Vue 3 composable for Cesium viewer initialization
@@ -77,23 +78,24 @@ export function useViewerInitialization() {
 				await cesiumProvider.initialize()
 				Cesium = getCesium()
 
-				// Load service modules that depend on Cesium
+				// Load service modules that depend on Cesium with retry logic
+				// Retries help handle transient network failures and deployment timing issues
 				const [DatasourceModule, WMSModule, FeaturepickerModule, CameraModule, GraphicsModule] =
 					await Promise.all([
-						import('../services/datasource.js'),
-						import('../services/wms.js'),
-						import('../services/featurepicker.js'),
-						import('../services/camera.js'),
-						import('../services/graphics.js'),
+						loadWithRetry(() => import('../services/datasource.js'), 3),
+						loadWithRetry(() => import('../services/wms.js'), 3),
+						loadWithRetry(() => import('../services/featurepicker.js'), 3),
+						loadWithRetry(() => import('../services/camera.js'), 3),
+						loadWithRetry(() => import('../services/graphics.js'), 3),
 					])
 
-				Datasource = DatasourceModule.default
-				WMS = WMSModule.default
-				Featurepicker = FeaturepickerModule.default
-				Camera = CameraModule.default
-				Graphics = GraphicsModule.default
+				Datasource = DatasourceModule.default || DatasourceModule
+				WMS = WMSModule.default || WMSModule
+				Featurepicker = FeaturepickerModule.default || FeaturepickerModule
+				Camera = CameraModule.default || CameraModule
+				Graphics = GraphicsModule.default || GraphicsModule
 			} catch (error) {
-				logger.error('Failed to load Cesium library:', error)
+				logger.error('Failed to load Cesium library or service modules:', error)
 				errorMessage.value =
 					'Unable to load the 3D map viewer. Please check your internet connection and try again.'
 				errorSnackbar.value = true
