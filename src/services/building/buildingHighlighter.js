@@ -136,6 +136,10 @@ export class BuildingHighlighter {
 	 * @param {Cesium.Entity} entity - Building entity to highlight
 	 */
 	polygonOutlineToYellow(entity) {
+		if (!entity?.polygon) {
+			return
+		}
+
 		entity.polygon.outline = true
 		entity.polygon.outlineColor = Cesium.Color.YELLOW
 		entity.polygon.outlineWidth = 20
@@ -147,6 +151,10 @@ export class BuildingHighlighter {
 	 * @param {Cesium.Entity} entity - Building entity to reset
 	 */
 	polygonOutlineToBlack(entity) {
+		if (!entity?.polygon) {
+			return
+		}
+
 		entity.polygon.outlineColor = Cesium.Color.BLACK
 		entity.polygon.outlineWidth = 8
 	}
