@@ -143,6 +143,11 @@ export default class Building {
 		for (let i = 0; i < buildingEntities.length; i++) {
 			const entity = buildingEntities[i]
 
+			// Guard against entities without polygon property
+			if (!entity?.polygon) {
+				continue
+			}
+
 			// Reset outline styling
 			entity.polygon.outlineColor = Cesium.Color.BLACK
 			entity.polygon.outlineWidth = 3
