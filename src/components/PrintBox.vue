@@ -17,7 +17,7 @@ export default {
 		const entityPrint = () => {
 			const entity = store.pickedEntity
 
-			if (entity._polygon && entity.properties) {
+			if (entity?._polygon && entity?.properties) {
 				document.getElementById('printContainer').scroll({
 					top: 0,
 					behavior: 'instant',
