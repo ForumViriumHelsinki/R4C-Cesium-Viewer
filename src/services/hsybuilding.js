@@ -1,5 +1,4 @@
 import * as turf from '@turf/turf'
-import * as Cesium from 'cesium'
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -8,6 +7,7 @@ import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
 import Building from './building.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import { eventBus } from './eventEmitter.js'
 import unifiedLoader from './unifiedLoader.js'
@@ -179,6 +179,7 @@ export default class HSYBuilding {
 				return null
 			}
 
+			const Cesium = getCesium()
 			const cesiumPolygon = this.store.currentGridCell.polygon.hierarchy.getValue(
 				Cesium.JulianDate.now()
 			)
@@ -416,6 +417,7 @@ export default class HSYBuilding {
 		try {
 			if (!entity?.polygon?.hierarchy) return null
 
+			const Cesium = getCesium()
 			const positions = entity.polygon.hierarchy.getValue(Cesium.JulianDate.now()).positions
 			const coordinates = positions.map((position) => {
 				const cartographic = Cesium.Cartographic.fromCartesian(position)

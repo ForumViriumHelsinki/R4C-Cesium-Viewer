@@ -2,216 +2,185 @@
 
 ## [1.43.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.3...r4c-cesium-viewer-v1.43.0) (2026-01-14)
 
-
 ### Features
 
-* **ux:** add altitude-based fog overlay for zoom indication ([#528](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/528)) ([987f865](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/987f8650bfb9033cd5917209c5e9615d2887f96b))
-
+- **ux:** add altitude-based fog overlay for zoom indication ([#528](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/528)) ([987f865](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/987f8650bfb9033cd5917209c5e9615d2887f96b))
 
 ### Bug Fixes
 
-* **ci:** prevent Lighthouse PROTOCOL_TIMEOUT for CesiumJS apps ([#526](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/526)) ([5fba9bd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5fba9bd849ace17f793ac5484d5adb955d531f50))
+- **ci:** prevent Lighthouse PROTOCOL_TIMEOUT for CesiumJS apps ([#526](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/526)) ([5fba9bd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5fba9bd849ace17f793ac5484d5adb955d531f50))
 
 ## [1.42.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.2...r4c-cesium-viewer-v1.42.3) (2026-01-13)
 
-
 ### Bug Fixes
 
-* **ci:** add outputDir to Lighthouse CI config to ensure manifest.json creation ([#522](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/522)) ([50f167a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/50f167a92e4671615ee1400d49d9f3ab3bfb9f7f)), closes [#521](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/521)
-
+- **ci:** add outputDir to Lighthouse CI config to ensure manifest.json creation ([#522](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/522)) ([50f167a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/50f167a92e4671615ee1400d49d9f3ab3bfb9f7f)), closes [#521](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/521)
 
 ### Performance Improvements
 
-* building pipeline optimizations with parallel fetching and adaptive batching ([#524](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/524)) ([8ff7e12](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8ff7e12c41c110837af50be4d6668fe6820dee4f))
+- building pipeline optimizations with parallel fetching and adaptive batching ([#524](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/524)) ([8ff7e12](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8ff7e12c41c110837af50be4d6668fe6820dee4f))
 
 ## [1.42.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.1...r4c-cesium-viewer-v1.42.2) (2026-01-13)
 
-
 ### Bug Fixes
 
-* **tooltips:** prevent building tooltip data eviction while visible ([#518](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/518)) ([c590bf5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c590bf5c988d40652ef4a32517f038a290786dcd))
-
+- **tooltips:** prevent building tooltip data eviction while visible ([#518](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/518)) ([c590bf5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c590bf5c988d40652ef4a32517f038a290786dcd))
 
 ### Performance Improvements
 
-* **ci:** optimize container build for faster CI ([#516](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/516)) ([2095889](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/209588939d27bd20094e6f9d229c0248e77bdc9a))
+- **ci:** optimize container build for faster CI ([#516](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/516)) ([2095889](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/209588939d27bd20094e6f9d229c0248e77bdc9a))
 
 ## [1.42.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.0...r4c-cesium-viewer-v1.42.1) (2026-01-13)
 
-
 ### Bug Fixes
 
-* **nginx:** replace bash parameter expansion with nginx variable logic ([#513](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/513)) ([f2779fd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f2779fd77c1c3e3bfcaf580934f109938b6a2712))
-* normalize feature IDs and apply heat colors for HSY buildings ([#511](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/511)) ([88ce962](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/88ce96262a48e70db80a14691043072c4b4c40c1))
+- **nginx:** replace bash parameter expansion with nginx variable logic ([#513](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/513)) ([f2779fd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f2779fd77c1c3e3bfcaf580934f109938b6a2712))
+- normalize feature IDs and apply heat colors for HSY buildings ([#511](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/511)) ([88ce962](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/88ce96262a48e70db80a14691043072c4b4c40c1))
 
 ## [1.42.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.41.0...r4c-cesium-viewer-v1.42.0) (2026-01-13)
 
-
 ### Features
 
-* add comprehensive health and status endpoints ([#508](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/508)) ([7876631](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/787663185d6415293165290c9605a29141de808b))
+- add comprehensive health and status endpoints ([#508](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/508)) ([7876631](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/787663185d6415293165290c9605a29141de808b))
 
 ## [1.41.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.40.0...r4c-cesium-viewer-v1.41.0) (2026-01-12)
 
-
 ### Features
 
-* restore map state on page refresh via URL parameters ([#505](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/505)) ([518e818](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/518e8185dbd646c7774608ee145e824b594b8e46))
-
+- restore map state on page refresh via URL parameters ([#505](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/505)) ([518e818](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/518e8185dbd646c7774608ee145e824b594b8e46))
 
 ### Bug Fixes
 
-* **ci:** fix Lighthouse CI failing silently without results ([#506](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/506)) ([df5b37a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/df5b37a212e9ecc631b75890dda3940892462652))
+- **ci:** fix Lighthouse CI failing silently without results ([#506](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/506)) ([df5b37a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/df5b37a212e9ecc631b75890dda3940892462652))
 
 ## [1.40.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.39.0...r4c-cesium-viewer-v1.40.0) (2025-12-22)
 
-
 ### Features
 
-* **mock-api:** add complete building properties and documentation ([#501](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/501)) ([86c36d4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/86c36d48922bc9c2fcd0f90702e893a22c5089bd))
+- **mock-api:** add complete building properties and documentation ([#501](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/501)) ([86c36d4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/86c36d48922bc9c2fcd0f90702e893a22c5089bd))
 
 ## [1.39.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.9...r4c-cesium-viewer-v1.39.0) (2025-12-19)
 
-
 ### Features
 
-* add mock PyGeoAPI server for database-free development ([#496](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/496)) ([38d7991](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/38d799164a7c00f908048d5d3edf613d30bb9127))
-
+- add mock PyGeoAPI server for database-free development ([#496](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/496)) ([38d7991](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/38d799164a7c00f908048d5d3edf613d30bb9127))
 
 ### Bug Fixes
 
-* **buildings:** ensure polygons render filled instead of wireframe ([#498](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/498)) ([8280b53](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8280b53320d24fd9018aa9e9e0a584df656dac91))
+- **buildings:** ensure polygons render filled instead of wireframe ([#498](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/498)) ([8280b53](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8280b53320d24fd9018aa9e9e0a584df656dac91))
 
 ## [1.38.9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.8...r4c-cesium-viewer-v1.38.9) (2025-12-18)
 
-
 ### Bug Fixes
 
-* **viewport:** defensive validation and dev experience improvements ([#493](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/493)) ([9b78300](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9b78300f1b741c66a01c6b72568af23c7555262c))
+- **viewport:** defensive validation and dev experience improvements ([#493](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/493)) ([9b78300](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9b78300f1b741c66a01c6b72568af23c7555262c))
 
 ## [1.38.8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.7...r4c-cesium-viewer-v1.38.8) (2025-12-18)
 
-
 ### Bug Fixes
 
-* **viewport:** pass viewer.value instead of ref to ViewportBuildingLoader ([#489](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/489)) ([8cb7aac](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8cb7aac8e4b9285f37da81840e640ab155274296))
+- **viewport:** pass viewer.value instead of ref to ViewportBuildingLoader ([#489](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/489)) ([8cb7aac](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8cb7aac8e4b9285f37da81840e640ab155274296))
 
 ## [1.38.7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.6...r4c-cesium-viewer-v1.38.7) (2025-12-18)
 
-
 ### Bug Fixes
 
-* **nginx:** add emptyDir volume for conf.d to enable template processing ([#487](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/487)) ([149fc28](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/149fc28346e74354c57ed4b615cdbd861a2a071c))
+- **nginx:** add emptyDir volume for conf.d to enable template processing ([#487](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/487)) ([149fc28](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/149fc28346e74354c57ed4b615cdbd861a2a071c))
 
 ## [1.38.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.5...r4c-cesium-viewer-v1.38.6) (2025-12-18)
 
-
 ### Bug Fixes
 
-* **ci:** improve Lighthouse CI error handling and PR comment clarity ([#480](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/480)) ([de66750](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/de667501c96065710a9d8b96a35047c261ff7ab6))
-* **ci:** use bunx instead of global install for Lighthouse CI ([#478](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/478)) ([b353ceb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b353ceb5d2d9f037cb3a34880e92cc74c366aec0))
+- **ci:** improve Lighthouse CI error handling and PR comment clarity ([#480](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/480)) ([de66750](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/de667501c96065710a9d8b96a35047c261ff7ab6))
+- **ci:** use bunx instead of global install for Lighthouse CI ([#478](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/478)) ([b353ceb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b353ceb5d2d9f037cb3a34880e92cc74c366aec0))
 
 ## [1.38.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.4...r4c-cesium-viewer-v1.38.5) (2025-12-16)
 
-
 ### Bug Fixes
 
-* Remove event listeners on component unmount to prevent memory leaks ([#467](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/467)) ([f4a3e6e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f4a3e6e7e13357889879c511f1d70ae42f0581da))
+- Remove event listeners on component unmount to prevent memory leaks ([#467](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/467)) ([f4a3e6e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f4a3e6e7e13357889879c511f1d70ae42f0581da))
 
 ## [1.38.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.3...r4c-cesium-viewer-v1.38.4) (2025-12-15)
 
-
 ### Bug Fixes
 
-* prevent loading indicator from getting stuck during slow data loading ([#457](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/457)) ([ca5eadf](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ca5eadf45f5d8e3ce6a8140fdd1f7c2993578442))
-* rename lighthouserc.js to .cjs for CommonJS compatibility ([#455](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/455)) ([b0fb1a5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b0fb1a5beb795397f75d2806c910f3a226a07742))
+- prevent loading indicator from getting stuck during slow data loading ([#457](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/457)) ([ca5eadf](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ca5eadf45f5d8e3ce6a8140fdd1f7c2993578442))
+- rename lighthouserc.js to .cjs for CommonJS compatibility ([#455](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/455)) ([b0fb1a5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b0fb1a5beb795397f75d2806c910f3a226a07742))
 
 ## [1.38.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.2...r4c-cesium-viewer-v1.38.3) (2025-12-12)
 
-
 ### Bug Fixes
 
-* ensure polygon closure when adding cooling center manually ([#451](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/451)) ([acb3d7b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/acb3d7b4329f7bbfba444758e5d783556db33904))
-* handle missing .env file in CI for vite preview ([#447](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/447)) ([6e664f8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6e664f89077c3d1d7a74e1d50468b7edf55e1706))
-* improve Playwright test resilience for Tall Buildings filter ([#448](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/448)) ([22893be](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/22893be644f452dd75c6e81576d08769a85648c7))
-* update Dockerfile to use bun.lock instead of bun.lockb ([#444](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/444)) ([3b38092](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3b38092f61188531774cabe2b6e3ade7ce0810ce))
-* update Lighthouse CI workflow to use bun instead of npm ([#446](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/446)) ([3f3f565](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3f3f56540b21ea31e0dcab4f3dcc0b64d523c4fb))
-* use 'bun audit' instead of 'bun pm audit' in security scan ([#445](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/445)) ([da04212](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/da04212aaff280d37a8d2849921c445cdb485eef))
+- ensure polygon closure when adding cooling center manually ([#451](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/451)) ([acb3d7b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/acb3d7b4329f7bbfba444758e5d783556db33904))
+- handle missing .env file in CI for vite preview ([#447](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/447)) ([6e664f8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6e664f89077c3d1d7a74e1d50468b7edf55e1706))
+- improve Playwright test resilience for Tall Buildings filter ([#448](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/448)) ([22893be](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/22893be644f452dd75c6e81576d08769a85648c7))
+- update Dockerfile to use bun.lock instead of bun.lockb ([#444](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/444)) ([3b38092](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3b38092f61188531774cabe2b6e3ade7ce0810ce))
+- update Lighthouse CI workflow to use bun instead of npm ([#446](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/446)) ([3f3f565](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3f3f56540b21ea31e0dcab4f3dcc0b64d523c4fb))
+- use 'bun audit' instead of 'bun pm audit' in security scan ([#445](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/445)) ([da04212](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/da04212aaff280d37a8d2849921c445cdb485eef))
 
 ## [1.38.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.1...r4c-cesium-viewer-v1.38.2) (2025-12-11)
 
-
 ### Bug Fixes
 
-* **proxy:** improve HSY action endpoint configuration and error handling ([5e2fae3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5e2fae33378dc5ef4f062006639c39ca803dffde))
+- **proxy:** improve HSY action endpoint configuration and error handling ([5e2fae3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5e2fae33378dc5ef4f062006639c39ca803dffde))
 
 ## [1.38.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.38.0...r4c-cesium-viewer-v1.38.1) (2025-12-11)
 
-
 ### Bug Fixes
 
-* **deploy:** add securityContext for Kyverno policy compliance ([6ad25d6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6ad25d6f5d41a6e06582684bf4f04cb07e5861b6))
+- **deploy:** add securityContext for Kyverno policy compliance ([6ad25d6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6ad25d6f5d41a6e06582684bf4f04cb07e5861b6))
 
 ## [1.38.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.37.0...r4c-cesium-viewer-v1.38.0) (2025-12-09)
 
-
 ### Features
 
-* **config:** move viewport streaming to feature flags ([34a72de](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/34a72deef253c4b760cb248506a26c73805986c3))
+- **config:** move viewport streaming to feature flags ([34a72de](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/34a72deef253c4b760cb248506a26c73805986c3))
 
 ## [1.37.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.36.1...r4c-cesium-viewer-v1.37.0) (2025-12-03)
 
-
 ### Features
 
-* **viewport:** add fade-in animation and fix cache status warnings ([#422](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/422)) ([3d50a93](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3d50a93357752e8e9a8d6f26e21e9b3c1369be56))
-
+- **viewport:** add fade-in animation and fix cache status warnings ([#422](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/422)) ([3d50a93](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3d50a93357752e8e9a8d6f26e21e9b3c1369be56))
 
 ### Performance Improvements
 
-* **viewport:** add altitude threshold to prevent mass building load at startup ([#424](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/424)) ([faab5d0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/faab5d0101ca5b8f7d70ce576677f1e7c367e71e))
+- **viewport:** add altitude threshold to prevent mass building load at startup ([#424](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/424)) ([faab5d0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/faab5d0101ca5b8f7d70ce576677f1e7c367e71e))
 
 ## [1.36.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.36.0...r4c-cesium-viewer-v1.36.1) (2025-12-03)
 
-
 ### Bug Fixes
 
-* **dev:** resolve port conflicts for local Skaffold development ([#419](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/419)) ([f11d794](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f11d794e1614b5d1149a793a87ce5d0f196da884))
+- **dev:** resolve port conflicts for local Skaffold development ([#419](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/419)) ([f11d794](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f11d794e1614b5d1149a793a87ce5d0f196da884))
 
 ## [1.36.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.35.0...r4c-cesium-viewer-v1.36.0) (2025-12-02)
 
-
 ### Features
 
-* **dev:** add persistent services workflow with make commands ([#415](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/415)) ([b614d92](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b614d92cd24ef31e2bcdfae0de4001ecddd525be))
+- **dev:** add persistent services workflow with make commands ([#415](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/415)) ([b614d92](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b614d92cd24ef31e2bcdfae0de4001ecddd525be))
 
 ## [1.35.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.34.1...r4c-cesium-viewer-v1.35.0) (2025-12-02)
 
-
 ### Features
 
-* **infra:** add deployment config and auto-merge workflow ([#413](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/413)) ([19205e5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/19205e59d53393dca4668f372c05039871793ff4))
-* **infra:** add PostgreSQL k8s manifests and auto-merge workflow ([#414](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/414)) ([39b0f1d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/39b0f1d0a5e1fc2d794eaf17ab6841cd3d00a3d0))
-
+- **infra:** add deployment config and auto-merge workflow ([#413](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/413)) ([19205e5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/19205e59d53393dca4668f372c05039871793ff4))
+- **infra:** add PostgreSQL k8s manifests and auto-merge workflow ([#414](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/414)) ([39b0f1d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/39b0f1d0a5e1fc2d794eaf17ab6841cd3d00a3d0))
 
 ### Bug Fixes
 
-* **viewportBuildingLoader:** fix race condition and add floating-promises lint rule ([#411](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/411)) ([9a61deb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9a61deb956d8af9b1a6284905247012b33c81108))
+- **viewportBuildingLoader:** fix race condition and add floating-promises lint rule ([#411](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/411)) ([9a61deb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9a61deb956d8af9b1a6284905247012b33c81108))
 
 ## [1.34.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.34.0...r4c-cesium-viewer-v1.34.1) (2025-12-01)
 
-
 ### Bug Fixes
 
-* **nginx:** make DNS resolver script executable ([#409](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/409)) ([d8f137e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d8f137e08d9eb134ce7c4b8f9904d4d5d98793b0))
+- **nginx:** make DNS resolver script executable ([#409](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/409)) ([d8f137e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d8f137e08d9eb134ce7c4b8f9904d4d5d98793b0))
 
 ## [1.34.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.33.0...r4c-cesium-viewer-v1.34.0) (2025-12-01)
 
-
 ### Features
 
-* **postalCodeLoader:** add unit tests and improve code quality ([#408](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/408)) ([7668ad9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7668ad9bc356c4445248c89e8f3eac00e1329132))
-* unified dev workflow, mobile improvements, and code cleanup ([#406](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/406)) ([1b8cd83](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1b8cd834b967e2512812fc9015cb84155430422a))
+- **postalCodeLoader:** add unit tests and improve code quality ([#408](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/408)) ([7668ad9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7668ad9bc356c4445248c89e8f3eac00e1329132))
+- unified dev workflow, mobile improvements, and code cleanup ([#406](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/406)) ([1b8cd83](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1b8cd834b967e2512812fc9015cb84155430422a))
 
 ## [1.33.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.32.0...r4c-cesium-viewer-v1.33.0) (2025-11-28)
 

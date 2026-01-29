@@ -54,8 +54,8 @@
 
 <script setup>
 import * as turf from '@turf/turf'
-import * as Cesium from 'cesium'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { getCesium } from '../services/cesiumProvider.js'
 import DataSource from '../services/datasource.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore'
@@ -75,6 +75,7 @@ const toggleGridSelection = () => {
 
 // Reset function
 const resetCoolingCenters = async () => {
+	const Cesium = getCesium()
 	const dataSourceService = new DataSource()
 	await dataSourceService.removeDataSourcesByNamePrefix('cooling_centers')
 	await globalStore.cesiumViewer.dataSources.remove(coolingCentersDataSource)
@@ -86,6 +87,7 @@ const resetCoolingCenters = async () => {
 const handleMapClick = (clickEvent) => {
 	if (!selectingGrid.value) return
 
+	const Cesium = getCesium()
 	const scene = viewer.value.scene
 	const pickedObject = scene.pick(clickEvent.position)
 
@@ -101,6 +103,7 @@ const handleMapClick = (clickEvent) => {
 const getEntityCentroid = (entity) => {
 	// Get the polygon coordinates in WGS84
 	if (!entity.polygon) return null
+	const Cesium = getCesium()
 	const polygonPositions = entity.polygon.hierarchy.getValue().positions
 
 	// Convert Cesium Cartesian3 positions to GeoJSON format (Lng/Lat)
@@ -133,6 +136,7 @@ const getEntityCentroid = (entity) => {
 }
 
 const addCoolingCenter = (entity) => {
+	const Cesium = getCesium()
 	const gridId = entity.properties.grid_id?.getValue()
 	if (mitigationStore.getCoolingCenterCount(gridId) >= 5) {
 		alert('Maximum 5 cooling centers per grid reached!')
@@ -194,6 +198,7 @@ const addCoolingCenter = (entity) => {
 }
 
 onMounted(() => {
+	const Cesium = getCesium()
 	if (!viewer.value) {
 		logger.error('Cesium viewer is not initialized.')
 		return
@@ -212,6 +217,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+	const Cesium = getCesium()
 	if (viewer.value?.screenSpaceEventHandler) {
 		viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK)
 	}

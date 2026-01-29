@@ -1,7 +1,7 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
 
@@ -117,6 +117,7 @@ export default class Othernature {
 	 * @param {string} category - The category of the othernature entity
 	 */
 	setOtherNaturePolygonMaterialColor(entity, category) {
+		const Cesium = getCesium()
 		switch (category) {
 			case '310':
 				entity._polygon._material._color._value = Cesium.Color.LIGHTGREY.withAlpha(0.5)

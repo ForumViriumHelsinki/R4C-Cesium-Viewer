@@ -1,7 +1,7 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
 
@@ -117,6 +117,7 @@ export default class Vegetation {
 	 * @param {string} category - The category of the vegetation entity
 	 */
 	setVegetationPolygonMaterialColor(entity, category) {
+		const Cesium = getCesium()
 		switch (category) {
 			case '212':
 				entity.polygon.extrudedHeight = 0.1

@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
 import Camera from './camera.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 
 /**
@@ -57,6 +57,7 @@ export default class Populationgrid {
 	 */
 	setGridEntityPolygon(entity) {
 		if (entity.properties.averageheatexposure && entity.polygon) {
+			const Cesium = getCesium()
 			entity.polygon.material = new Cesium.Color(
 				1,
 				1 - entity.properties.averageheatexposure._value,
@@ -92,6 +93,7 @@ export default class Populationgrid {
 			trees = entity.properties.tree_cover_m2._value
 		}
 
+		const Cesium = getCesium()
 		const greenIndex = (water + vegetation + trees) / this.gridArea
 		entity.polygon.material = new Cesium.Color(1 - greenIndex, 1, 0, greenIndex)
 	}

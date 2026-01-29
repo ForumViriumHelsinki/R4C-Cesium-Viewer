@@ -114,7 +114,6 @@
 </template>
 
 <script>
-import * as Cesium from 'cesium'
 import * as d3 from 'd3' // Import D3.js
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'

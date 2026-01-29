@@ -5,8 +5,8 @@ import Traveltime from '@/services/traveltime.js'
 // Mock fetch globally
 global.fetch = vi.fn()
 
-// Mock Cesium module
-vi.mock('cesium', () => {
+// Mock cesiumProvider
+vi.mock('@/services/cesiumProvider', () => {
 	const GeoJsonDataSource = vi.fn(function () {
 		this.load = vi.fn().mockResolvedValue({ name: 'test', entities: { values: [] } })
 	})
@@ -16,7 +16,7 @@ vi.mock('cesium', () => {
 		entities: { values: [] },
 	})
 
-	return {
+	const cesiumMock = {
 		CustomDataSource: vi.fn(function (name) {
 			this.name = name
 		}),
@@ -64,6 +64,9 @@ vi.mock('cesium', () => {
 		Math: {
 			toDegrees: vi.fn((val) => val * 57.2958),
 		},
+	}
+	return {
+		getCesium: vi.fn(() => cesiumMock),
 	}
 })
 

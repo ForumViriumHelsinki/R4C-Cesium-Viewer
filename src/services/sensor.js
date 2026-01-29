@@ -1,7 +1,7 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 
 /**
@@ -36,6 +36,7 @@ export default class Vegetation {
 	 */
 	async loadSensorData() {
 		try {
+			const Cesium = getCesium()
 			const url = this.urlStore.r4cSensorUrl
 			const response = await fetch(url)
 			const data = await response.json()
@@ -97,6 +98,7 @@ export default class Vegetation {
 				})
 
 				if (tempAir !== undefined && rhAir !== undefined) {
+					const Cesium = getCesium()
 					entity.label = {
 						text:
 							'Temp: ' +

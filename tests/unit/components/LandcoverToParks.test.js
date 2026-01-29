@@ -6,8 +6,8 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import LandcoverToParks from '../../../src/components/LandcoverToParks.vue'
 
-// Mock Cesium - needs to be defined in the factory function
-vi.mock('cesium', () => {
+// Factory function for creating Cesium mock
+const createCesiumMock = () => {
 	const ColorMock = vi.fn(function (r, g, b, a) {
 		this.red = r
 		this.green = g
@@ -47,7 +47,15 @@ vi.mock('cesium', () => {
 			entities: { add: vi.fn(), values: [] },
 		})),
 	}
-})
+}
+
+// Mock Cesium module for direct imports
+vi.mock('cesium', () => createCesiumMock())
+
+// Mock cesiumProvider for services using getCesium()
+vi.mock('@/services/cesiumProvider', () => ({
+	getCesium: vi.fn(() => createCesiumMock()),
+}))
 
 // Mock turf
 vi.mock('@turf/turf', () => ({

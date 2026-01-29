@@ -5,8 +5,8 @@
  *
  * @module featurepicker/entityPicker
  */
-import * as Cesium from 'cesium'
 import logger from '../../utils/logger.js'
+import { getCesium } from '../cesiumProvider.js'
 import { eventBus } from '../eventEmitter.js'
 
 /**
@@ -20,6 +20,7 @@ import { eventBus } from '../eventEmitter.js'
  * @returns {void}
  */
 export function processClick(event, context, onEntityPicked) {
+	const Cesium = getCesium()
 	logger.debug('[EntityPicker] Processing click at coordinates:', event.x, event.y)
 	pickEntity(new Cesium.Cartesian2(event.x, event.y), context, onEntityPicked)
 }
@@ -59,6 +60,7 @@ export function pickEntity(windowPosition, context, onEntityPicked) {
 	logger.debug('[EntityPicker] Picked object:', picked)
 
 	if (picked) {
+		const Cesium = getCesium()
 		const id = picked.id ?? picked.primitive?.id
 
 		if (id?._polygon) {
@@ -102,6 +104,7 @@ export function getBoundingBox(entity) {
 	let boundingBox = null
 
 	if (entity.polygon) {
+		const Cesium = getCesium()
 		// Access the polygon hierarchy to get vertex positions
 		const hierarchy = entity.polygon.hierarchy.getValue()
 

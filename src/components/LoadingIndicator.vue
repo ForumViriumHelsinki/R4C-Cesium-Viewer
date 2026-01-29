@@ -355,7 +355,7 @@ watch(
 </script>
 
 <style scoped>
-.loading-overlay {
+.loading-overlay.v-overlay--active {
 	backdrop-filter: blur(4px);
 }
 

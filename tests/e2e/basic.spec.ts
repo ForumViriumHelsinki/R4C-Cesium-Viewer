@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { dismissModalIfPresent, waitForCesiumReady, TEST_TIMEOUTS } from '../helpers/test-helpers'
+import { dismissModalIfPresent, TEST_TIMEOUTS, waitForCesiumReady } from '../helpers/test-helpers'
 
 test('Page load', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
 	await page.goto('/')

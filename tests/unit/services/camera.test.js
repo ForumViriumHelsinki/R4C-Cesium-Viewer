@@ -11,26 +11,28 @@ let mockZoomOut
 let mockPickEllipsoid
 let mockViewer
 
-// Mock Cesium module
-vi.mock('cesium', () => ({
-	Cartesian3: {
-		fromDegrees: vi.fn((lon, lat, alt) => ({ x: lon, y: lat, z: alt })),
-	},
-	Math: {
-		toRadians: vi.fn((degrees) => (degrees * Math.PI) / 180),
-		toDegrees: vi.fn((radians) => (radians * 180) / Math.PI),
-	},
-	Cartesian2: vi.fn(function (x, y) {
-		this.x = x
-		this.y = y
-	}),
-	Cartographic: {
-		fromCartesian: vi.fn((_cartesian) => ({
-			longitude: 0.4,
-			latitude: 1.0,
-			height: 1000,
-		})),
-	},
+// Mock cesiumProvider
+vi.mock('@/services/cesiumProvider', () => ({
+	getCesium: vi.fn(() => ({
+		Cartesian3: {
+			fromDegrees: vi.fn((lon, lat, alt) => ({ x: lon, y: lat, z: alt })),
+		},
+		Math: {
+			toRadians: vi.fn((degrees) => (degrees * Math.PI) / 180),
+			toDegrees: vi.fn((radians) => (radians * 180) / Math.PI),
+		},
+		Cartesian2: vi.fn(function (x, y) {
+			this.x = x
+			this.y = y
+		}),
+		Cartographic: {
+			fromCartesian: vi.fn((_cartesian) => ({
+				longitude: 0.4,
+				latitude: 1.0,
+				height: 1000,
+			})),
+		},
+	})),
 }))
 
 describe('Camera service', () => {

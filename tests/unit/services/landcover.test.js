@@ -1,26 +1,31 @@
-import * as Cesium from 'cesium'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createHSYImageryLayer, removeLandcover } from '@/services/landcover.js'
 import { useBackgroundMapStore } from '@/stores/backgroundMapStore.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
 
-// Mock Cesium module
-vi.mock('cesium', () => ({
-	WebMapServiceImageryProvider: vi.fn(function (options) {
-		// Constructor mock that stores the options
-		this.url = options.url
-		this.layers = options.layers
-		this.tileWidth = options.tileWidth
-		this.tileHeight = options.tileHeight
-		this.minimumLevel = options.minimumLevel
-		this.maximumLevel = options.maximumLevel
-		this.tilingScheme = options.tilingScheme
-		this.readyPromise = Promise.resolve(true)
-	}),
-	GeographicTilingScheme: vi.fn(function () {
-		this.name = 'GeographicTilingScheme'
-	}),
+// Create Cesium mock to be used by cesiumProvider
+const WebMapServiceImageryProviderMock = vi.fn(function (options) {
+	this.url = options.url
+	this.layers = options.layers
+	this.tileWidth = options.tileWidth
+	this.tileHeight = options.tileHeight
+	this.minimumLevel = options.minimumLevel
+	this.maximumLevel = options.maximumLevel
+	this.tilingScheme = options.tilingScheme
+	this.readyPromise = Promise.resolve(true)
+})
+
+const GeographicTilingSchemeMock = vi.fn(function () {
+	this.name = 'GeographicTilingScheme'
+})
+
+// Mock cesiumProvider
+vi.mock('@/services/cesiumProvider', () => ({
+	getCesium: vi.fn(() => ({
+		WebMapServiceImageryProvider: WebMapServiceImageryProviderMock,
+		GeographicTilingScheme: GeographicTilingSchemeMock,
+	})),
 }))
 
 // Mock stores - functions will be initialized in beforeEach
@@ -87,7 +92,7 @@ describe('Landcover Service', () => {
 			await createHSYImageryLayer()
 
 			// Verify WebMapServiceImageryProvider was called with optimized config
-			expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
+			expect(WebMapServiceImageryProviderMock).toHaveBeenCalledWith(
 				expect.objectContaining({
 					tileWidth: 512,
 					tileHeight: 512,
@@ -100,13 +105,13 @@ describe('Landcover Service', () => {
 		it('should use GeographicTilingScheme for EPSG:4326', async () => {
 			await createHSYImageryLayer()
 
-			expect(Cesium.GeographicTilingScheme).toHaveBeenCalled()
+			expect(GeographicTilingSchemeMock).toHaveBeenCalled()
 		})
 
 		it('should use correct WMS proxy URL from store', async () => {
 			await createHSYImageryLayer()
 
-			expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
+			expect(WebMapServiceImageryProviderMock).toHaveBeenCalledWith(
 				expect.objectContaining({
 					url: 'https://mock-wms-proxy.example.com/wms',
 				})
@@ -116,7 +121,7 @@ describe('Landcover Service', () => {
 		it('should generate all 13 landcover layers when no custom layers provided', async () => {
 			await createHSYImageryLayer()
 
-			const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0]
+			const call = WebMapServiceImageryProviderMock.mock.calls[0][0]
 			const layers = call.layers.split(',')
 
 			// Should have all 13 landcover types with year suffix
@@ -132,7 +137,7 @@ describe('Landcover Service', () => {
 
 			await createHSYImageryLayer(customLayers)
 
-			expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
+			expect(WebMapServiceImageryProviderMock).toHaveBeenCalledWith(
 				expect.objectContaining({
 					layers: customLayers,
 				})
@@ -143,7 +148,7 @@ describe('Landcover Service', () => {
 			it('should use 512x512 tiles to reduce request count', async () => {
 				await createHSYImageryLayer()
 
-				const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0]
+				const call = WebMapServiceImageryProviderMock.mock.calls[0][0]
 				// 512x512 provides ~75% reduction in requests vs 256x256 default
 				expect(call.tileWidth).toBe(512)
 				expect(call.tileHeight).toBe(512)
@@ -152,7 +157,7 @@ describe('Landcover Service', () => {
 			it('should limit maximum zoom to level 18 to prevent excessive requests', async () => {
 				await createHSYImageryLayer()
 
-				const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0]
+				const call = WebMapServiceImageryProviderMock.mock.calls[0][0]
 				// Level 18 provides ~0.6m resolution at equator, sufficient for landcover visualization
 				// This prevents N+1 API call issues at extreme zoom levels
 				expect(call.maximumLevel).toBe(18)
@@ -161,7 +166,7 @@ describe('Landcover Service', () => {
 			it('should allow zooming from minimum level 0', async () => {
 				await createHSYImageryLayer()
 
-				const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0]
+				const call = WebMapServiceImageryProviderMock.mock.calls[0][0]
 				expect(call.minimumLevel).toBe(0)
 			})
 		})
@@ -172,7 +177,7 @@ describe('Landcover Service', () => {
 
 				// GeographicTilingScheme = EPSG:4326 (WGS84)
 				// This is CesiumJS's default and compatible with HSY WMS
-				expect(Cesium.GeographicTilingScheme).toHaveBeenCalled()
+				expect(GeographicTilingSchemeMock).toHaveBeenCalled()
 			})
 		})
 	})
