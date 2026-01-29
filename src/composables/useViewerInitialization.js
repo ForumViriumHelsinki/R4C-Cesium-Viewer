@@ -5,6 +5,7 @@
  */
 
 import { ref } from 'vue'
+import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -69,15 +70,12 @@ export function useViewerInitialization() {
 	 * @returns {Promise<void>}
 	 */
 	const initViewer = async () => {
-		// Dynamically import Cesium and its dependencies to avoid blocking initial render
+		// Initialize Cesium via centralized provider to avoid blocking initial render
 		if (!Cesium) {
 			try {
-				// Load Cesium module and CSS in parallel
-				const [cesiumModule] = await Promise.all([
-					import('cesium'),
-					import('cesium/Source/Widgets/widgets.css'),
-				])
-				Cesium = cesiumModule
+				// Initialize Cesium module via provider (handles CSS loading too)
+				await cesiumProvider.initialize()
+				Cesium = getCesium()
 
 				// Load service modules that depend on Cesium
 				const [DatasourceModule, WMSModule, FeaturepickerModule, CameraModule, GraphicsModule] =

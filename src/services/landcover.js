@@ -17,11 +17,11 @@
  * - Water (vesi)
  */
 
-import * as Cesium from 'cesium'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 
 /**
  * Creates and adds HSY landcover WMS imagery layer to the Cesium viewer
@@ -52,6 +52,7 @@ import logger from '../utils/logger.js'
  * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/pull/340|PR #340 - WMS Tile Optimization}
  */
 export const createHSYImageryLayer = async (newLayers) => {
+	const Cesium = getCesium()
 	const store = useGlobalStore()
 	const urlStore = useURLStore()
 

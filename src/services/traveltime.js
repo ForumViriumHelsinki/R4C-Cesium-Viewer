@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import Populationgrid from './populationgrid.js'
 
@@ -80,6 +80,7 @@ export default class Traveltime {
 	 * [{ to_id: 5975376, pt_m_walk_avg: 12.5 }, ...]
 	 */
 	addTravelTimeLabels(traveldata) {
+		const Cesium = getCesium()
 		const geoJsonData = {
 			type: 'FeatureCollection',
 			features: [],
@@ -183,6 +184,7 @@ export default class Traveltime {
 	 * - Eye offset: Elevated above ground for visibility
 	 */
 	addTravelLabelDataSource(data) {
+		const Cesium = getCesium()
 		var dataSource = new Cesium.GeoJsonDataSource()
 
 		// Load the GeoJSON data into the data source
@@ -244,6 +246,7 @@ export default class Traveltime {
 	 * - Eye offset: Elevated for visibility
 	 */
 	markCurrentLocation(entity) {
+		const Cesium = getCesium()
 		const hierarchy = entity.polygon.hierarchy.getValue().positions
 
 		// Calculate the center of the polygon's vertices

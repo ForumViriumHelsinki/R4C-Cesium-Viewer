@@ -23,6 +23,7 @@ The application currently uses a flat `EllipsoidTerrainProvider` as the terrain 
 **Proposed Solution**
 
 Implement a UI toggle that allows users to switch between:
+
 - Flat terrain (EllipsoidTerrainProvider) - faster rendering
 - 3D terrain (Cesium World Terrain or Helsinki custom terrain) - realistic topography
 
@@ -35,12 +36,14 @@ Implement a UI toggle that allows users to switch between:
 ### Current Infrastructure (20% Complete)
 
 **What Exists:**
+
 - Feature flag defined in `featureFlagStore.ts` with default `true`
 - Hard-coded `EllipsoidTerrainProvider` in `useViewerInitialization.js` (line 123)
 - Terrain health tracking in `loadingStore.js`
 - Terrain WMS service URL building via `useURLStore`
 
 **What's Missing:**
+
 - Terrain provider switching logic
 - UI toggle component
 - Dynamic terrain provider configuration
@@ -52,27 +55,27 @@ Implement a UI toggle that allows users to switch between:
 
 ```typescript
 interface TerrainConfig {
-  type: 'flat' | '3d';
-  provider: Cesium.TerrainProvider;
-  label: string;
-  description: string;
+	type: 'flat' | '3d';
+	provider: Cesium.TerrainProvider;
+	label: string;
+	description: string;
 }
 
 const terrainProviders: TerrainConfig[] = [
-  {
-    type: 'flat',
-    provider: new Cesium.EllipsoidTerrainProvider(),
-    label: 'Flat Terrain',
-    description: 'Fast rendering, no elevation data'
-  },
-  {
-    type: '3d',
-    provider: await Cesium.CesiumTerrainProvider.fromUrl(
-      'https://kartta.hel.fi/3d/datasource-data/e9e1ba2a-c68a-4ed0-b209-b34fe6db6e9c/quantized-mesh'
-    ),
-    label: '3D Terrain',
-    description: 'Helsinki region elevation data'
-  }
+	{
+		type: 'flat',
+		provider: new Cesium.EllipsoidTerrainProvider(),
+		label: 'Flat Terrain',
+		description: 'Fast rendering, no elevation data',
+	},
+	{
+		type: '3d',
+		provider: await Cesium.CesiumTerrainProvider.fromUrl(
+			'https://kartta.hel.fi/3d/datasource-data/e9e1ba2a-c68a-4ed0-b209-b34fe6db6e9c/quantized-mesh'
+		),
+		label: '3D Terrain',
+		description: 'Helsinki region elevation data',
+	},
 ];
 ```
 
@@ -103,10 +106,10 @@ Add toggle in `GraphicsQuality.vue` or `BackgroundMapBrowser.vue`:
 
 ```vue
 <v-switch
-  v-if="featureFlagStore.isEnabled('terrain3d')"
-  v-model="terrain3dEnabled"
-  label="3D Terrain"
-  hint="Show Helsinki region elevation"
+	v-if="featureFlagStore.isEnabled('terrain3d')"
+	v-model="terrain3dEnabled"
+	label="3D Terrain"
+	hint="Show Helsinki region elevation"
 />
 ```
 
@@ -130,6 +133,7 @@ Add toggle in `GraphicsQuality.vue` or `BackgroundMapBrowser.vue`:
    - Add `setTerrain3dEnabled()` action
 
 ### Complexity: Medium
+
 ### Estimated Effort: 2-3 days
 
 ---
@@ -145,6 +149,7 @@ Users and developers have no visibility into loading performance metrics during 
 **Proposed Solution**
 
 Display real-time loading performance metrics including:
+
 - Layer load times (individual and aggregate)
 - Cache hit/miss rates
 - Network request timing
@@ -159,6 +164,7 @@ Display real-time loading performance metrics including:
 ### Current Infrastructure (40% Complete)
 
 **What Exists:**
+
 - `loadingStore.js` tracks `loadingTimes` per layer
 - `dataSourceHealth` tracks response times
 - `cacheStatus` tracks cache hit times
@@ -166,6 +172,7 @@ Display real-time loading performance metrics including:
 - Performance reporter in tests: `tests/reporters/performance-reporter.ts`
 
 **What's Missing:**
+
 - Runtime performance display component
 - Integration with `show-performance-info` prop
 - Real-time metric visualization
@@ -176,20 +183,20 @@ Display real-time loading performance metrics including:
 
 ```typescript
 interface PerformanceMetrics {
-  layers: {
-    [layerName: string]: {
-      loadTime: number;      // ms
-      cacheHit: boolean;
-      size: number;          // bytes
-      timestamp: number;
-    }
-  };
-  aggregate: {
-    totalLoadTime: number;
-    cacheHitRate: number;
-    avgResponseTime: number;
-  };
-  fps: number;
+	layers: {
+		[layerName: string]: {
+			loadTime: number; // ms
+			cacheHit: boolean;
+			size: number; // bytes
+			timestamp: number;
+		};
+	};
+	aggregate: {
+		totalLoadTime: number;
+		cacheHitRate: number;
+		avgResponseTime: number;
+	};
+	fps: number;
 }
 ```
 
@@ -199,31 +206,41 @@ Create `src/components/PerformanceInfo.vue`:
 
 ```vue
 <template>
-  <v-card v-if="showPerformanceInfo" class="performance-info">
-    <v-card-title>Loading Performance</v-card-title>
-    <v-card-text>
-      <div class="metric">
-        <span>Total Load Time:</span>
-        <span>{{ totalLoadTime }}ms</span>
-      </div>
-      <div class="metric">
-        <span>Cache Hit Rate:</span>
-        <span>{{ cacheHitRate }}%</span>
-      </div>
-      <div class="metric">
-        <span>FPS:</span>
-        <span>{{ fps }}</span>
-      </div>
-      <v-divider class="my-2" />
-      <div v-for="(layer, name) in layerMetrics" :key="name" class="layer-metric">
-        <span>{{ name }}:</span>
-        <span>{{ layer.loadTime }}ms</span>
-        <v-chip size="x-small" :color="layer.cacheHit ? 'success' : 'warning'">
-          {{ layer.cacheHit ? 'cached' : 'network' }}
-        </v-chip>
-      </div>
-    </v-card-text>
-  </v-card>
+	<v-card
+		v-if="showPerformanceInfo"
+		class="performance-info"
+	>
+		<v-card-title>Loading Performance</v-card-title>
+		<v-card-text>
+			<div class="metric">
+				<span>Total Load Time:</span>
+				<span>{{ totalLoadTime }}ms</span>
+			</div>
+			<div class="metric">
+				<span>Cache Hit Rate:</span>
+				<span>{{ cacheHitRate }}%</span>
+			</div>
+			<div class="metric">
+				<span>FPS:</span>
+				<span>{{ fps }}</span>
+			</div>
+			<v-divider class="my-2" />
+			<div
+				v-for="(layer, name) in layerMetrics"
+				:key="name"
+				class="layer-metric"
+			>
+				<span>{{ name }}:</span>
+				<span>{{ layer.loadTime }}ms</span>
+				<v-chip
+					size="x-small"
+					:color="layer.cacheHit ? 'success' : 'warning'"
+				>
+					{{ layer.cacheHit ? 'cached' : 'network' }}
+				</v-chip>
+			</div>
+		</v-card-text>
+	</v-card>
 </template>
 ```
 
@@ -252,6 +269,7 @@ Create `src/components/PerformanceInfo.vue`:
    - Pass flag state to LoadingIndicator
 
 ### Complexity: Medium
+
 ### Estimated Effort: 2 days
 
 ---
@@ -267,6 +285,7 @@ Users cannot switch between different base map providers (OpenStreetMap, satelli
 **Proposed Solution**
 
 Implement a provider selector allowing users to choose from:
+
 - OpenStreetMap (default)
 - HSY Aerial Imagery
 - Google Maps (if API key available)
@@ -281,12 +300,14 @@ Implement a provider selector allowing users to choose from:
 ### Current Infrastructure (60% Complete)
 
 **What Exists:**
+
 - `BackgroundMapBrowser.vue` with basic map category UI
 - OpenStreetMapImageryProvider in `useViewerInitialization.js`
 - `backgroundMapStore.js` for tracking selected layers
 - Basic maps array defined in BackgroundMapBrowser (default, satellite, terrain)
 
 **What's Missing:**
+
 - Actual imagery provider switching implementation
 - Feature flag integration
 - Provider configuration registry
@@ -298,32 +319,34 @@ Implement a provider selector allowing users to choose from:
 
 ```typescript
 interface MapProvider {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  createProvider: () => Cesium.ImageryProvider;
-  requiresApiKey?: boolean;
+	id: string;
+	name: string;
+	description: string;
+	icon: string;
+	createProvider: () => Cesium.ImageryProvider;
+	requiresApiKey?: boolean;
 }
 
 const mapProviders: MapProvider[] = [
-  {
-    id: 'osm',
-    name: 'OpenStreetMap',
-    description: 'Standard base map',
-    icon: 'mdi-map',
-    createProvider: () => new Cesium.OpenStreetMapImageryProvider({ url: 'https://tile.openstreetmap.org/' })
-  },
-  {
-    id: 'hsy-aerial',
-    name: 'HSY Aerial',
-    description: 'Helsinki region aerial imagery',
-    icon: 'mdi-satellite-variant',
-    createProvider: () => new Cesium.WebMapServiceImageryProvider({
-      url: 'https://kartta.hsy.fi/geoserver/wms',
-      layers: 'taustakartat:ortoilmakuva_2022'
-    })
-  }
+	{
+		id: 'osm',
+		name: 'OpenStreetMap',
+		description: 'Standard base map',
+		icon: 'mdi-map',
+		createProvider: () =>
+			new Cesium.OpenStreetMapImageryProvider({ url: 'https://tile.openstreetmap.org/' }),
+	},
+	{
+		id: 'hsy-aerial',
+		name: 'HSY Aerial',
+		description: 'Helsinki region aerial imagery',
+		icon: 'mdi-satellite-variant',
+		createProvider: () =>
+			new Cesium.WebMapServiceImageryProvider({
+				url: 'https://kartta.hsy.fi/geoserver/wms',
+				layers: 'taustakartat:ortoilmakuva_2022',
+			}),
+	},
 ];
 ```
 
@@ -365,6 +388,7 @@ async function switchBaseMapProvider(providerId: string) {
 4. **Feature flag integration** - Check flag before showing provider options
 
 ### Complexity: Small
+
 ### Estimated Effort: 1-2 days
 
 ---
@@ -380,6 +404,7 @@ Users and developers have no visibility into cache state, utilization, or effect
 **Proposed Solution**
 
 Create a cache visualization panel showing:
+
 - Total cache size and utilization
 - Cache entries by type (buildings, heat data, WMS tiles)
 - Cache age and TTL remaining
@@ -394,12 +419,14 @@ Create a cache visualization panel showing:
 ### Current Infrastructure (60% Complete)
 
 **What Exists:**
+
 - `cacheService.js` with full IndexedDB implementation
 - `cacheService.getStats()` returns detailed cache info
 - `loadingStore.cacheStatus` tracks per-layer cache state
 - DataSourceStatus shows "Checking cache..." status
 
 **What's Missing:**
+
 - Visualization component
 - Cache management UI (clear, refresh)
 - Integration with feature flag
@@ -410,18 +437,18 @@ Create a cache visualization panel showing:
 
 ```typescript
 interface CacheStats {
-  totalSize: number;        // bytes
-  totalEntries: number;
-  utilizationPercent: number;
-  entriesByType: {
-    buildings: number;
-    heatData: number;
-    wmsTiles: number;
-    postalCodes: number;
-  };
-  expiredCount: number;
-  oldestEntry: Date;
-  newestEntry: Date;
+	totalSize: number; // bytes
+	totalEntries: number;
+	utilizationPercent: number;
+	entriesByType: {
+		buildings: number;
+		heatData: number;
+		wmsTiles: number;
+		postalCodes: number;
+	};
+	expiredCount: number;
+	oldestEntry: Date;
+	newestEntry: Date;
 }
 ```
 
@@ -429,39 +456,45 @@ interface CacheStats {
 
 ```vue
 <template>
-  <v-card class="cache-visualization">
-    <v-card-title>
-      <v-icon class="mr-2">mdi-database</v-icon>
-      Cache Status
-    </v-card-title>
-    <v-card-text>
-      <!-- Utilization bar -->
-      <v-progress-linear
-        :model-value="stats.utilizationPercent"
-        :color="utilizationColor"
-        height="20"
-      >
-        {{ formatBytes(stats.totalSize) }} / {{ formatBytes(maxSize) }}
-      </v-progress-linear>
+	<v-card class="cache-visualization">
+		<v-card-title>
+			<v-icon class="mr-2">mdi-database</v-icon>
+			Cache Status
+		</v-card-title>
+		<v-card-text>
+			<!-- Utilization bar -->
+			<v-progress-linear
+				:model-value="stats.utilizationPercent"
+				:color="utilizationColor"
+				height="20"
+			>
+				{{ formatBytes(stats.totalSize) }} / {{ formatBytes(maxSize) }}
+			</v-progress-linear>
 
-      <!-- Entry breakdown -->
-      <v-list density="compact">
-        <v-list-item v-for="(count, type) in stats.entriesByType" :key="type">
-          <template #prepend>
-            <v-icon>{{ getTypeIcon(type) }}</v-icon>
-          </template>
-          <v-list-item-title>{{ type }}</v-list-item-title>
-          <template #append>{{ count }} entries</template>
-        </v-list-item>
-      </v-list>
+			<!-- Entry breakdown -->
+			<v-list density="compact">
+				<v-list-item
+					v-for="(count, type) in stats.entriesByType"
+					:key="type"
+				>
+					<template #prepend>
+						<v-icon>{{ getTypeIcon(type) }}</v-icon>
+					</template>
+					<v-list-item-title>{{ type }}</v-list-item-title>
+					<template #append>{{ count }} entries</template>
+				</v-list-item>
+			</v-list>
 
-      <!-- Actions -->
-      <v-btn color="warning" @click="clearCache">
-        <v-icon>mdi-delete</v-icon>
-        Clear Cache
-      </v-btn>
-    </v-card-text>
-  </v-card>
+			<!-- Actions -->
+			<v-btn
+				color="warning"
+				@click="clearCache"
+			>
+				<v-icon>mdi-delete</v-icon>
+				Clear Cache
+			</v-btn>
+		</v-card-text>
+	</v-card>
 </template>
 ```
 
@@ -486,6 +519,7 @@ interface CacheStats {
    - Real-time visualization
 
 ### Complexity: Medium
+
 ### Estimated Effort: 2 days
 
 ---
@@ -501,6 +535,7 @@ Users have no visibility into the health status of various data sources. When a 
 **Proposed Solution**
 
 Display health status for all data sources with:
+
 - Status indicator (healthy/degraded/error)
 - Response time metrics
 - Last successful check timestamp
@@ -515,12 +550,14 @@ Display health status for all data sources with:
 ### Current Infrastructure (70% Complete)
 
 **What Exists:**
+
 - `loadingStore.dataSourceHealth` tracks health per source
 - `DataSourceStatus.vue` displays health summary
 - `DataSourceStatusCompact.vue` compact variant
 - Health tracking for: pygeoapi, hsyAction, paavo, digitransit, terrain
 
 **What's Missing:**
+
 - Automated periodic health checks
 - Feature flag integration
 - Enhanced health check UI with retry buttons
@@ -532,23 +569,23 @@ Display health status for all data sources with:
 
 ```typescript
 interface HealthCheckConfig {
-  sourceId: string;
-  endpoint: string;
-  interval: number;         // ms
-  timeout: number;          // ms
-  thresholds: {
-    healthy: number;        // response time < this = healthy
-    degraded: number;       // response time < this = degraded, else error
-  };
+	sourceId: string;
+	endpoint: string;
+	interval: number; // ms
+	timeout: number; // ms
+	thresholds: {
+		healthy: number; // response time < this = healthy
+		degraded: number; // response time < this = degraded, else error
+	};
 }
 
 class HealthCheckService {
-  private checks: Map<string, HealthCheckConfig>;
-  private timers: Map<string, number>;
+	private checks: Map<string, HealthCheckConfig>;
+	private timers: Map<string, number>;
 
-  async runCheck(sourceId: string): Promise<HealthStatus>;
-  startPeriodicChecks(): void;
-  stopPeriodicChecks(): void;
+	async runCheck(sourceId: string): Promise<HealthStatus>;
+	startPeriodicChecks(): void;
+	stopPeriodicChecks(): void;
 }
 ```
 
@@ -556,32 +593,39 @@ class HealthCheckService {
 
 ```vue
 <template>
-  <v-expansion-panels v-if="featureFlagStore.isEnabled('healthChecks')">
-    <v-expansion-panel title="System Health">
-      <v-expansion-panel-text>
-        <v-list density="compact">
-          <v-list-item v-for="source in dataSources" :key="source.id">
-            <template #prepend>
-              <v-icon :color="getStatusColor(source.status)">
-                {{ getStatusIcon(source.status) }}
-              </v-icon>
-            </template>
+	<v-expansion-panels v-if="featureFlagStore.isEnabled('healthChecks')">
+		<v-expansion-panel title="System Health">
+			<v-expansion-panel-text>
+				<v-list density="compact">
+					<v-list-item
+						v-for="source in dataSources"
+						:key="source.id"
+					>
+						<template #prepend>
+							<v-icon :color="getStatusColor(source.status)">
+								{{ getStatusIcon(source.status) }}
+							</v-icon>
+						</template>
 
-            <v-list-item-title>{{ source.name }}</v-list-item-title>
-            <v-list-item-subtitle>
-              {{ source.responseTime }}ms | {{ formatTimestamp(source.lastCheck) }}
-            </v-list-item-subtitle>
+						<v-list-item-title>{{ source.name }}</v-list-item-title>
+						<v-list-item-subtitle>
+							{{ source.responseTime }}ms | {{ formatTimestamp(source.lastCheck) }}
+						</v-list-item-subtitle>
 
-            <template #append>
-              <v-btn icon size="small" @click="retryCheck(source.id)">
-                <v-icon>mdi-refresh</v-icon>
-              </v-btn>
-            </template>
-          </v-list-item>
-        </v-list>
-      </v-expansion-panel-text>
-    </v-expansion-panel>
-  </v-expansion-panels>
+						<template #append>
+							<v-btn
+								icon
+								size="small"
+								@click="retryCheck(source.id)"
+							>
+								<v-icon>mdi-refresh</v-icon>
+							</v-btn>
+						</template>
+					</v-list-item>
+				</v-list>
+			</v-expansion-panel-text>
+		</v-expansion-panel>
+	</v-expansion-panels>
 </template>
 ```
 
@@ -607,6 +651,7 @@ class HealthCheckService {
    - error: >= 2000ms or timeout
 
 ### Complexity: Small
+
 ### Estimated Effort: 1-2 days
 
 ---
@@ -615,13 +660,13 @@ class HealthCheckService {
 
 Based on infrastructure completeness and user value:
 
-| Priority | Flag | Completeness | Effort | Value |
-|----------|------|--------------|--------|-------|
-| 1 | healthChecks | 70% | 1-2 days | High - user transparency |
-| 2 | backgroundMapProviders | 60% | 1-2 days | High - user flexibility |
-| 3 | cacheVisualization | 60% | 2 days | Medium - debugging |
-| 4 | loadingPerformanceInfo | 40% | 2 days | Medium - debugging |
-| 5 | terrain3d | 20% | 2-3 days | Medium - visualization |
+| Priority | Flag                   | Completeness | Effort   | Value                    |
+| -------- | ---------------------- | ------------ | -------- | ------------------------ |
+| 1        | healthChecks           | 70%          | 1-2 days | High - user transparency |
+| 2        | backgroundMapProviders | 60%          | 1-2 days | High - user flexibility  |
+| 3        | cacheVisualization     | 60%          | 2 days   | Medium - debugging       |
+| 4        | loadingPerformanceInfo | 40%          | 2 days   | Medium - debugging       |
+| 5        | terrain3d              | 20%          | 2-3 days | Medium - visualization   |
 
 ---
 

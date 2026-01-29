@@ -30,9 +30,9 @@
 </template>
 
 <script>
-import * as Cesium from 'cesium'
 import * as d3 from 'd3'
 import { onMounted, ref, watch } from 'vue'
+import { getCesium } from '../services/cesiumProvider.js'
 import Datasource from '../services/datasource.js'
 import { usePropsStore } from '../stores/propsStore.js'
 
@@ -73,6 +73,7 @@ export default {
 		}
 
 		const outlineByNDVI = async (ndviRange) => {
+			const Cesium = getCesium()
 			const postCodesDataSource = await datasourceService.getDataSourceByName('PostCodes')
 			if (!postCodesDataSource) return
 

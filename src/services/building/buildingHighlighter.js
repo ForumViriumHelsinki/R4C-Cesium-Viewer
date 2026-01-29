@@ -8,9 +8,9 @@
  * @module services/building/buildingHighlighter
  */
 
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../../stores/globalStore.js'
 import { useToggleStore } from '../../stores/toggleStore.js'
+import { getCesium } from '../cesiumProvider.js'
 import Datasource from '../datasource.js'
 import { eventBus } from '../eventEmitter.js'
 
@@ -140,6 +140,7 @@ export class BuildingHighlighter {
 			return
 		}
 
+		const Cesium = getCesium()
 		entity.polygon.outline = true
 		entity.polygon.outlineColor = Cesium.Color.YELLOW
 		entity.polygon.outlineWidth = 20
@@ -155,6 +156,7 @@ export class BuildingHighlighter {
 			return
 		}
 
+		const Cesium = getCesium()
 		entity.polygon.outlineColor = Cesium.Color.BLACK
 		entity.polygon.outlineWidth = 8
 	}

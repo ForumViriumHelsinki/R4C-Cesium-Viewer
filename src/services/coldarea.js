@@ -1,7 +1,7 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import ElementsDisplay from './elementsDisplay.js'
 
@@ -45,6 +45,7 @@ export default class ColdArea {
 	 * coldAreaService.addColdPoint("60.1699,24.9384"); // Adds marker at Helsinki
 	 */
 	addColdPoint(location) {
+		const Cesium = getCesium()
 		const coordinates = location.split(',')
 
 		this.store.cesiumViewer.entities.add({
@@ -92,6 +93,7 @@ export default class ColdArea {
 		const entities = await this.datasourceService.addDataSourceWithPolygonFix(data, 'ColdAreas')
 
 		if (entities) {
+			const Cesium = getCesium()
 			this.elementsDisplayService.setColdAreasElementsDisplay('inline-block')
 			for (let i = 0; i < entities.length; i++) {
 				const entity = entities[i]

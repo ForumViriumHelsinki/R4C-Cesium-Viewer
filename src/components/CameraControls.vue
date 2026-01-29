@@ -153,9 +153,9 @@
 </template>
 
 <script setup>
-import * as Cesium from 'cesium'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import Camera from '../services/camera'
+import { getCesium } from '../services/cesiumProvider'
 import { useGlobalStore } from '../stores/globalStore'
 
 // Direction configuration
@@ -193,6 +193,7 @@ onMounted(() => {
 
 const updateHeading = () => {
 	if (store.cesiumViewer) {
+		const Cesium = getCesium()
 		const headingDegrees = Cesium.Math.toDegrees(store.cesiumViewer.camera.heading)
 		currentHeading.value = headingDegrees
 	}

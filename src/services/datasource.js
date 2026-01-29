@@ -1,6 +1,6 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 import { logVisibilityChange } from './visibilityLogger.js'
 
 /**
@@ -157,6 +157,7 @@ export default class DataSource {
 	 * @throws {Error} If GeoJSON loading fails
 	 */
 	async loadGeoJsonDataSource(opacity, url, name) {
+		const Cesium = getCesium()
 		try {
 			const dataSource = await Cesium.GeoJsonDataSource.load(url, {
 				stroke: Cesium.Color.BLACK,
@@ -224,6 +225,7 @@ export default class DataSource {
 			'color: green; font-weight: bold'
 		)
 
+		const Cesium = getCesium()
 		try {
 			const loadedData = await Cesium.GeoJsonDataSource.load(data, {
 				stroke: Cesium.Color.BLACK,

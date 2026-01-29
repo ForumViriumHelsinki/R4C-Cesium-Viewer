@@ -35,8 +35,8 @@
 
 <script setup>
 import * as turf from '@turf/turf'
-import * as Cesium from 'cesium'
 import { ref } from 'vue'
+import { getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore'
 
@@ -55,6 +55,7 @@ const shuffleArray = (array) => {
 }
 
 const removeOldData = async () => {
+	const Cesium = getCesium()
 	mitigationStore.resetStore()
 	if (coolingCentersDataSource) {
 		globalStore.cesiumViewer.dataSources.remove(coolingCentersDataSource, true)
@@ -110,6 +111,7 @@ const isCoolingCenterTooClose = (newCell) => {
 // This function now correctly receives a full Cesium entity
 const getEntityCentroid = (entity) => {
 	if (!entity.polygon) return null
+	const Cesium = getCesium()
 	const polygonPositions = entity.polygon.hierarchy.getValue().positions
 	const coordinates = polygonPositions.map((pos) => {
 		const cartographic = Cesium.Cartographic.fromCartesian(pos)
@@ -135,6 +137,7 @@ const getEntityCentroid = (entity) => {
 }
 
 const addCoolingCenter = (entity) => {
+	const Cesium = getCesium()
 	const gridId = entity.properties.grid_id?.getValue()
 	const euref_x = entity.properties.euref_x?.getValue()
 	const euref_y = entity.properties.euref_y?.getValue()

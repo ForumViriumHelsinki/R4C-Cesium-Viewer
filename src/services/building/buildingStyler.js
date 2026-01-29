@@ -7,13 +7,13 @@
  * @module services/building/buildingStyler
  */
 
-import * as Cesium from 'cesium'
 import { isSoteBuilding } from '../../constants/buildingCodes.js'
 import { useGlobalStore } from '../../stores/globalStore.js'
 import { usePropsStore } from '../../stores/propsStore.js'
 import { useToggleStore } from '../../stores/toggleStore.js'
 import { processBatchAdaptive } from '../../utils/batchProcessor.js'
 import { calculateBuildingHeight } from '../../utils/entityStyling.js'
+import { getCesium } from '../cesiumProvider.js'
 import { eventBus } from '../eventEmitter.js'
 import { logVisibilityChange } from '../visibilityLogger.js'
 
@@ -106,6 +106,7 @@ export class BuildingStyler {
 	setBuildingEntityPolygon(entity) {
 		const { properties, polygon } = entity
 		const targetDate = this.store.heatDataDate
+		const Cesium = getCesium()
 
 		if (polygon) {
 			if (this.toggleStore.helsinkiView) {
