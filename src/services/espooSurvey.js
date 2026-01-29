@@ -1,8 +1,8 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import { eventBus } from './eventEmitter.js'
 
@@ -125,6 +125,7 @@ export default class EspooSurvey {
 	 * @returns {void}
 	 */
 	setColorAndLabelForPointEntities(entities) {
+		const Cesium = getCesium()
 		for (let i = 0; i < entities.length; i++) {
 			const entity = entities[i]
 			if (entity.position) {
@@ -168,6 +169,7 @@ export default class EspooSurvey {
 	 * getOutlineColor(null); // null (no data)
 	 */
 	getOutlineColor(value) {
+		const Cesium = getCesium()
 		if (value >= (100 * 2) / 3) return Cesium.Color.GREEN
 		if (value >= (100 * 1) / 3) return Cesium.Color.YELLOW
 		return value ? Cesium.Color.RED : null

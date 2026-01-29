@@ -5,9 +5,9 @@
  *
  * @module featurepicker/postalCodeHandler
  */
-import * as Cesium from 'cesium'
 import logger from '../../utils/logger.js'
 import cacheWarmer from '../cacheWarmer.js'
+import { getCesium } from '../cesiumProvider.js'
 
 /**
  * Gets all postal codes that intersect with the current viewport
@@ -28,6 +28,7 @@ export function getVisiblePostalCodes(viewportRect, postalCodeData) {
 		return []
 	}
 
+	const Cesium = getCesium()
 	const entities = postalCodeData._entityCollection._entities._array
 	const visiblePostalCodes = []
 

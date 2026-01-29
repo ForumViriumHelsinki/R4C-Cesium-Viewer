@@ -5,33 +5,35 @@ import Sensor from '@/services/sensor.js'
 // Mock fetch globally
 global.fetch = vi.fn()
 
-// Mock Cesium module
-vi.mock('cesium', () => ({
-	GeoJsonDataSource: vi.fn(function () {
-		this.load = vi.fn().mockResolvedValue({ name: 'test', entities: { values: [] } })
-	}),
-	Color: {
-		ORANGE: 'ORANGE',
-		BLUE: 'BLUE',
-		YELLOW: 'YELLOW',
-	},
-	HorizontalOrigin: {
-		CENTER: 'CENTER',
-	},
-	VerticalOrigin: {
-		CENTER: 'CENTER',
-	},
-	Cartesian2: vi.fn(function (x, y) {
-		this.x = x
-		this.y = y
-		return this
-	}),
-	Cartesian3: vi.fn(function (x, y, z) {
-		this.x = x
-		this.y = y
-		this.z = z
-		return this
-	}),
+// Mock cesiumProvider
+vi.mock('@/services/cesiumProvider', () => ({
+	getCesium: vi.fn(() => ({
+		GeoJsonDataSource: vi.fn(function () {
+			this.load = vi.fn().mockResolvedValue({ name: 'test', entities: { values: [] } })
+		}),
+		Color: {
+			ORANGE: 'ORANGE',
+			BLUE: 'BLUE',
+			YELLOW: 'YELLOW',
+		},
+		HorizontalOrigin: {
+			CENTER: 'CENTER',
+		},
+		VerticalOrigin: {
+			CENTER: 'CENTER',
+		},
+		Cartesian2: vi.fn(function (x, y) {
+			this.x = x
+			this.y = y
+			return this
+		}),
+		Cartesian3: vi.fn(function (x, y, z) {
+			this.x = x
+			this.y = y
+			this.z = z
+			return this
+		}),
+	})),
 }))
 
 // Mock datasource service

@@ -1,5 +1,5 @@
-import * as Cesium from 'cesium'
 import { useURLStore } from '../stores/urlStore.js'
+import { getCesium } from './cesiumProvider.js'
 
 /**
  * WMS (Web Map Service) Integration Service
@@ -60,6 +60,7 @@ export default class Wms {
 	 * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/339|Issue #339 - N+1 API Call Optimization}
 	 */
 	createHelsinkiImageryLayer(layerName) {
+		const Cesium = getCesium()
 		const urlStore = useURLStore()
 		const provider = new Cesium.WebMapServiceImageryProvider({
 			url: urlStore.helsinkiWMS,

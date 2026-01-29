@@ -1,30 +1,40 @@
-import * as Cesium from 'cesium'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Wms from '@/services/wms.js'
 
 // Test configuration
 const MOCK_WMS_URL = 'https://mock-helsinki-wms.example.com/geoserver/wms'
 
-// Mock Cesium module
-vi.mock('cesium', () => ({
-	WebMapServiceImageryProvider: vi.fn(function (options) {
-		// Constructor mock that stores the options
-		this.url = options.url
-		this.layers = options.layers
-		this.tileWidth = options.tileWidth
-		this.tileHeight = options.tileHeight
-		this.minimumLevel = options.minimumLevel
-		this.maximumLevel = options.maximumLevel
-		this.tilingScheme = options.tilingScheme
-	}),
-	GeographicTilingScheme: vi.fn(function () {
-		this.name = 'GeographicTilingScheme'
-	}),
-	ImageryLayer: vi.fn(function (provider) {
-		this.imageryProvider = provider
-	}),
-}))
+// Mock cesiumProvider to return our Cesium mock
+// vi.mock is hoisted, so we define everything inline
+vi.mock('@/services/cesiumProvider', () => {
+	const cesiumMock = {
+		WebMapServiceImageryProvider: vi.fn(function (options) {
+			// Constructor mock that stores the options
+			this.url = options.url
+			this.layers = options.layers
+			this.tileWidth = options.tileWidth
+			this.tileHeight = options.tileHeight
+			this.minimumLevel = options.minimumLevel
+			this.maximumLevel = options.maximumLevel
+			this.tilingScheme = options.tilingScheme
+		}),
+		GeographicTilingScheme: vi.fn(function () {
+			this.name = 'GeographicTilingScheme'
+		}),
+		ImageryLayer: vi.fn(function (provider) {
+			this.imageryProvider = provider
+		}),
+	}
+	return {
+		getCesium: vi.fn(() => cesiumMock),
+		cesiumProvider: {
+			initialize: vi.fn().mockResolvedValue(cesiumMock),
+			get: vi.fn(() => cesiumMock),
+			isInitialized: vi.fn(() => true),
+		},
+	}
+})
 
 // Mock URL store
 vi.mock('@/stores/urlStore.js', () => ({
@@ -129,7 +139,8 @@ describe('Wms Service', { tags: ['@unit', '@wms'] }, () => {
 				// GeographicTilingScheme = EPSG:4326 (WGS84)
 				// This is CesiumJS's default and compatible with Helsinki WMS
 				expect(layer.imageryProvider.tilingScheme).toBeDefined()
-				expect(Cesium.GeographicTilingScheme).toHaveBeenCalled()
+				// Verify tilingScheme was set (constructor was called)
+				expect(layer.imageryProvider.tilingScheme.name).toBe('GeographicTilingScheme')
 			})
 		})
 	})

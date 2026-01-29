@@ -11,12 +11,12 @@
  * @module services/building
  */
 
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../../stores/globalStore.js'
 import { usePropsStore } from '../../stores/propsStore.js'
 import { useToggleStore } from '../../stores/toggleStore.js'
 import { useURLStore } from '../../stores/urlStore.js'
 import logger from '../../utils/logger.js'
+import { getCesium } from '../cesiumProvider.js'
 import Datasource from '../datasource.js'
 import Tree from '../tree.js'
 import unifiedLoader from '../unifiedLoader.js'
@@ -149,6 +149,7 @@ export default class Building {
 			}
 
 			// Reset outline styling
+			const Cesium = getCesium()
 			entity.polygon.outlineColor = Cesium.Color.BLACK
 			entity.polygon.outlineWidth = 3
 

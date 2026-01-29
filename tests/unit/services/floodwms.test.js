@@ -1,26 +1,31 @@
-import * as Cesium from 'cesium'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createFloodImageryLayer, removeFloodLayers } from '@/services/floodwms.js'
 import { useBackgroundMapStore } from '@/stores/backgroundMapStore.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
 
-// Mock Cesium module
-vi.mock('cesium', () => ({
-	WebMapServiceImageryProvider: vi.fn(function (options) {
-		// Constructor mock that stores the options
-		this.url = options.url
-		this.layers = options.layers
-		this.tileWidth = options.tileWidth
-		this.tileHeight = options.tileHeight
-		this.minimumLevel = options.minimumLevel
-		this.maximumLevel = options.maximumLevel
-		this.tilingScheme = options.tilingScheme
-		this.readyPromise = Promise.resolve(true)
-	}),
-	GeographicTilingScheme: vi.fn(function () {
-		this.name = 'GeographicTilingScheme'
-	}),
+// Create Cesium mock to be used by cesiumProvider
+const WebMapServiceImageryProviderMock = vi.fn(function (options) {
+	this.url = options.url
+	this.layers = options.layers
+	this.tileWidth = options.tileWidth
+	this.tileHeight = options.tileHeight
+	this.minimumLevel = options.minimumLevel
+	this.maximumLevel = options.maximumLevel
+	this.tilingScheme = options.tilingScheme
+	this.readyPromise = Promise.resolve(true)
+})
+
+const GeographicTilingSchemeMock = vi.fn(function () {
+	this.name = 'GeographicTilingScheme'
+})
+
+// Mock cesiumProvider
+vi.mock('@/services/cesiumProvider', () => ({
+	getCesium: vi.fn(() => ({
+		WebMapServiceImageryProvider: WebMapServiceImageryProviderMock,
+		GeographicTilingScheme: GeographicTilingSchemeMock,
+	})),
 }))
 
 // Mock stores - functions will be initialized in beforeEach
@@ -81,7 +86,7 @@ describe('Flood WMS Service', () => {
 			await createFloodImageryLayer(mockUrl, mockLayerName)
 
 			// Verify WebMapServiceImageryProvider was called with optimized config
-			expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
+			expect(WebMapServiceImageryProviderMock).toHaveBeenCalledWith(
 				expect.objectContaining({
 					layers: mockLayerName,
 					tileWidth: 512,
@@ -98,7 +103,7 @@ describe('Flood WMS Service', () => {
 
 			await createFloodImageryLayer(mockUrl, mockLayerName)
 
-			expect(Cesium.GeographicTilingScheme).toHaveBeenCalled()
+			expect(GeographicTilingSchemeMock).toHaveBeenCalled()
 		})
 
 		it('should append format and transparency parameters to URL', async () => {
@@ -107,13 +112,13 @@ describe('Flood WMS Service', () => {
 
 			await createFloodImageryLayer(mockUrl, mockLayerName)
 
-			expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
+			expect(WebMapServiceImageryProviderMock).toHaveBeenCalledWith(
 				expect.objectContaining({
 					url: expect.stringMatching(/format=image(%2F|\/png)/),
 				})
 			)
 
-			expect(Cesium.WebMapServiceImageryProvider).toHaveBeenCalledWith(
+			expect(WebMapServiceImageryProviderMock).toHaveBeenCalledWith(
 				expect.objectContaining({
 					url: expect.stringContaining('transparent=true'),
 				})
@@ -127,7 +132,7 @@ describe('Flood WMS Service', () => {
 
 				await createFloodImageryLayer(mockUrl, mockLayerName)
 
-				const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0]
+				const call = WebMapServiceImageryProviderMock.mock.calls[0][0]
 				// 512x512 provides ~75% reduction in requests vs 256x256 default
 				expect(call.tileWidth).toBe(512)
 				expect(call.tileHeight).toBe(512)
@@ -139,7 +144,7 @@ describe('Flood WMS Service', () => {
 
 				await createFloodImageryLayer(mockUrl, mockLayerName)
 
-				const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0]
+				const call = WebMapServiceImageryProviderMock.mock.calls[0][0]
 				// Level 18 provides ~0.6m resolution at equator, sufficient for flood visualization
 				// This prevents N+1 API call issues at extreme zoom levels
 				expect(call.maximumLevel).toBe(18)
@@ -151,7 +156,7 @@ describe('Flood WMS Service', () => {
 
 				await createFloodImageryLayer(mockUrl, mockLayerName)
 
-				const call = Cesium.WebMapServiceImageryProvider.mock.calls[0][0]
+				const call = WebMapServiceImageryProviderMock.mock.calls[0][0]
 				expect(call.minimumLevel).toBe(0)
 			})
 		})

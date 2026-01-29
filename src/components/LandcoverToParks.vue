@@ -88,10 +88,10 @@
 </template>
 
 <script setup>
-import * as Cesium from 'cesium'
 import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 import { useGridStyling } from '../composables/useGridStyling.js'
 import { useIndexData } from '../composables/useIndexData.js'
+import { getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -207,6 +207,7 @@ const fullReset = () => {
 const handleMapClick = async (clickEvent) => {
 	if (!isSelectingGrid.value) return
 
+	const Cesium = getCesium()
 	const scene = viewer.value.scene
 	const pickedObject = scene.pick(clickEvent.position)
 
@@ -242,6 +243,7 @@ const handleMapClick = async (clickEvent) => {
 }
 
 const getHeatColor = (value) => {
+	const Cesium = getCesium()
 	let r, g, b
 	const alpha = 0.65
 	const clampedValue = Math.max(0, Math.min(1, value))
@@ -263,6 +265,7 @@ const getHeatColor = (value) => {
 }
 
 const applyDynamicStyling = (dataSource) => {
+	const Cesium = getCesium()
 	const entities = dataSource.entities.values
 	for (const entity of entities) {
 		if (!entity.polygon) continue
@@ -296,6 +299,7 @@ const loadLandcoverData = async (gridId) => {
 
 		loadedGeoJson.value = geojsonData
 
+		const Cesium = getCesium()
 		const defaultStyle = { stroke: Cesium.Color.BLACK.withAlpha(0.5), strokeWidth: 1 }
 		const newDataSource = await Cesium.GeoJsonDataSource.load(geojsonData, defaultStyle)
 		newDataSource.name = dataSourceName
@@ -399,6 +403,7 @@ const turnToParks = () => {
 	}
 
 	if (loadedLandcoverDataSource.value) {
+		const Cesium = getCesium()
 		const dataSourceToConvert = loadedLandcoverDataSource.value
 		for (const entity of dataSourceToConvert.entities.values) {
 			if (entity.polygon) {
@@ -413,6 +418,7 @@ const turnToParks = () => {
 
 // --- LIFECYCLE HOOKS ---
 onMounted(() => {
+	const Cesium = getCesium()
 	if (!viewer.value) return
 	viewer.value.screenSpaceEventHandler.setInputAction(
 		handleMapClick,
@@ -428,6 +434,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+	const Cesium = getCesium()
 	if (viewer.value && !viewer.value.isDestroyed()) {
 		viewer.value.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK)
 

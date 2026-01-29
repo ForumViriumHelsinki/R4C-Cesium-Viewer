@@ -14,8 +14,8 @@
  * - date: Heat data date (e.g., '2022-06-28')
  */
 
-import * as Cesium from 'cesium'
 import { ref } from 'vue'
+import { getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import logger from '../utils/logger.js'
 
@@ -115,6 +115,7 @@ export function useUrlState() {
 
 		// Restore camera position immediately (no animation on page load)
 		if (viewer?.camera) {
+			const Cesium = getCesium()
 			viewer.camera.setView({
 				destination: Cesium.Cartesian3.fromDegrees(
 					state.camera.longitude,
@@ -187,6 +188,7 @@ export function useUrlState() {
 
 		// Debounce URL updates
 		urlUpdateTimer = setTimeout(() => {
+			const Cesium = getCesium()
 			const camera = viewer.camera
 			const cartographic = Cesium.Cartographic.fromCartesian(camera.position)
 

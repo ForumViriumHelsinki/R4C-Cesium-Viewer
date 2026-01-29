@@ -7,6 +7,7 @@
 import * as Cesium from 'cesium'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getCesium } from '@/services/cesiumProvider.js'
 import { eventBus } from '@/services/eventEmitter.js'
 import FeaturePicker from '@/services/featurepicker.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
@@ -110,8 +111,9 @@ vi.mock('@/stores/loadingStore.js', () => ({
 	}),
 }))
 
-// Mock Cesium module
+// Mock Cesium module - keep for test code that uses Cesium.* directly
 // Important: Entity must be a named class so instanceof checks work correctly
+// vi.mock is hoisted, so we define the mock inline
 vi.mock('cesium', () => {
 	class MockEntity {}
 	return {
@@ -126,6 +128,47 @@ vi.mock('cesium', () => {
 		Math: {
 			toDegrees: vi.fn((radians) => radians * (180 / Math.PI)),
 		},
+	}
+})
+
+// Mock cesiumProvider for service code that uses getCesium()
+// We need to create the Entity class here too, but ensure both mocks use compatible entities
+vi.mock('@/services/cesiumProvider', () => {
+	class MockEntity {}
+	const cesiumMock = {
+		Cartesian2: vi.fn(function (x, y) {
+			this.x = x
+			this.y = y
+		}),
+		Entity: MockEntity,
+		Cartographic: {
+			fromCartesian: vi.fn((position) => {
+				// Return different coordinates based on position.x value to simulate different geographic locations
+				// This ensures that bounding box calculations have varying min/max values
+				if (!position) {
+					return {
+						longitude: 0.44,
+						latitude: 1.05,
+						height: 0,
+					}
+				}
+				// Use position.x to create variation in longitude
+				// Use position.y to create variation in latitude
+				const lonVariation = (position.x || 0) / 1000 // Small variation based on x
+				const latVariation = (position.y || 0) / 1000 // Small variation based on y
+				return {
+					longitude: 0.4363 + lonVariation,
+					latitude: 1.0472 + latVariation,
+					height: 0,
+				}
+			}),
+		},
+		Math: {
+			toDegrees: vi.fn((radians) => radians * (180 / Math.PI)),
+		},
+	}
+	return {
+		getCesium: vi.fn(() => cesiumMock),
 	}
 })
 
@@ -211,8 +254,9 @@ describe('FeaturePicker service', () => {
 		describe('edge cases for picked.primitive handling', () => {
 			it('should handle case where picked.primitive is undefined (bug fix from #276)', () => {
 				// Setup: picked object with id but undefined primitive
-				// Create a proper Entity instance
-				const mockEntity = Object.assign(new Cesium.Entity(), {
+				// Create a proper Entity instance using the Entity class from getCesium() to ensure instanceof check passes
+				const CesiumProvider = getCesium()
+				const mockEntity = Object.assign(new CesiumProvider.Entity(), {
 					_polygon: true,
 					properties: {
 						posno: { _value: TEST_POSTAL_CODE_1 },
@@ -244,7 +288,8 @@ describe('FeaturePicker service', () => {
 			it('should handle case where picked.id is undefined but picked.primitive.id exists', () => {
 				// Setup: picked object with no direct id but primitive.id exists
 				// This tests the fallback logic: picked.id ?? picked.primitive?.id
-				const mockEntity = Object.assign(new Cesium.Entity(), {
+				const CesiumProvider = getCesium()
+				const mockEntity = Object.assign(new CesiumProvider.Entity(), {
 					_polygon: true,
 					properties: {
 						posno: { _value: TEST_POSTAL_CODE_2 },
@@ -322,14 +367,15 @@ describe('FeaturePicker service', () => {
 
 			it('should handle normal case where both picked.id and picked.primitive.id exist', () => {
 				// Setup: normal case with both ids present
-				const directEntity = Object.assign(new Cesium.Entity(), {
+				const CesiumProvider = getCesium()
+				const directEntity = Object.assign(new CesiumProvider.Entity(), {
 					_polygon: true,
 					properties: {
 						posno: { _value: TEST_POSTAL_CODE_1 },
 					},
 				})
 
-				const primitiveEntity = Object.assign(new Cesium.Entity(), {
+				const primitiveEntity = Object.assign(new CesiumProvider.Entity(), {
 					_polygon: true,
 					properties: {
 						posno: { _value: TEST_POSTAL_CODE_2 },

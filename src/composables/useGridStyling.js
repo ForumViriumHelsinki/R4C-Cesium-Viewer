@@ -4,8 +4,8 @@
  * with dynamic color schemes and 3D extrusion based on selected indices.
  */
 
-import * as Cesium from 'cesium'
 import { computed, watch } from 'vue'
+import { getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -117,6 +117,7 @@ export function useGridStyling() {
 	const colorCache = new Map()
 
 	const getCachedColor = (colorString, alpha) => {
+		const Cesium = getCesium()
 		const key = `${colorString}-${alpha.toFixed(2)}`
 		if (!colorCache.has(key)) {
 			colorCache.set(key, Cesium.Color.fromCssColorString(colorString).withAlpha(alpha))
@@ -186,6 +187,7 @@ export function useGridStyling() {
 				}
 			}
 		} else if (selectedIndex === 'combined_heat_flood_green') {
+			const Cesium = getCesium()
 			const heat = entity.properties.heat_index?.getValue()
 			const flood = entity.properties.flood_index?.getValue()
 			const green = entity.properties.green?.getValue()
@@ -198,11 +200,13 @@ export function useGridStyling() {
 				entity.polygon.extrudedHeight = green * 250
 			}
 		} else if (selectedIndex === 'avgheatexposure') {
+			const Cesium = getCesium()
 			const avgHeat = entity.properties.final_avg_conditional?.getValue()
 			if (avgHeat != null) {
 				entity.polygon.material = new Cesium.Color(1, 1 - avgHeat, 0, avgHeat)
 			}
 		} else if (selectedIndex === 'combined_avgheatexposure') {
+			const Cesium = getCesium()
 			const avgHeat = entity.properties.final_avg_conditional?.getValue()
 			const heatIndex = entity.properties.heat_index?.getValue()
 			if (avgHeat != null && heatIndex != null) {

@@ -78,11 +78,11 @@ Primary data from:
 
 ### Size Guidelines
 
-| Type | Max Lines | Action if Exceeded |
-|------|-----------|-------------------|
-| Vue Component | 400 | Extract composables or child components |
-| Service File | 300 | Split into focused modules |
-| Function | 80 | Extract helper functions |
+| Type          | Max Lines | Action if Exceeded                      |
+| ------------- | --------- | --------------------------------------- |
+| Vue Component | 400       | Extract composables or child components |
+| Service File  | 300       | Split into focused modules              |
+| Function      | 80        | Extract helper functions                |
 
 ### Refactoring Patterns
 

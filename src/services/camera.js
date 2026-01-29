@@ -1,6 +1,6 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 
 /**
  * Camera Service
@@ -142,6 +142,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	init() {
+		const Cesium = getCesium()
 		this.viewer.camera.setView({
 			destination: Cesium.Cartesian3.fromDegrees(24.945, 60.17, 2800),
 			orientation: {
@@ -186,6 +187,7 @@ export default class Camera {
 				entity._properties._posno._value === this.store.postalcode
 			) {
 				// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
+				const Cesium = getCesium()
 				this.viewer.camera.flyTo({
 					destination: Cesium.Cartesian3.fromDegrees(
 						entity._properties._center_x._value,
@@ -251,6 +253,7 @@ export default class Camera {
 				}
 
 				// Fly to postal code with 3D perspective
+				const Cesium = getCesium()
 				this.currentFlight = this.viewer.camera.flyTo({
 					destination: Cesium.Cartesian3.fromDegrees(
 						entity._properties._center_x._value,
@@ -286,6 +289,7 @@ export default class Camera {
 		if (this.store.level === 'start') {
 			this.flyCamera3D(24.991745, 60.045, 12000)
 		} else {
+			const Cesium = getCesium()
 			// Get the current camera and its center coordinates
 			const camera = this.viewer.scene.camera
 			const centerCartographic = camera.positionCartographic
@@ -324,6 +328,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	flyCamera3D(lat, long, z) {
+		const Cesium = getCesium()
 		this.viewer.camera.flyTo({
 			destination: Cesium.Cartesian3.fromDegrees(lat, long, z),
 			orientation: {
@@ -345,6 +350,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	setCameraView(longitude, latitude) {
+		const Cesium = getCesium()
 		const store = useGlobalStore()
 		store.cesiumViewer.camera.setView({
 			destination: Cesium.Cartesian3.fromDegrees(longitude, latitude - 0.0065, 500.0),
@@ -384,6 +390,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	setHeading(headingInDegrees, reduceMotion = false) {
+		const Cesium = getCesium()
 		const orientation = {
 			heading: Cesium.Math.toRadians(headingInDegrees),
 			pitch: this.viewer.camera.pitch, // Keep current pitch
@@ -410,6 +417,7 @@ export default class Camera {
 	 * Resets the camera orientation to face North with a default pitch.
 	 */
 	resetNorth() {
+		const Cesium = getCesium()
 		this.viewer.camera.flyTo({
 			destination: this.viewer.camera.position,
 			orientation: {
@@ -474,6 +482,7 @@ export default class Camera {
 			}
 
 			// Fly to postal code area with 2-second animation
+			const Cesium = getCesium()
 			this.viewer.camera.flyTo({
 				destination: Cesium.Cartesian3.fromDegrees(
 					entity._properties._center_x._value,
@@ -502,6 +511,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	rotate180Degrees() {
+		const Cesium = getCesium()
 		const camera = this.viewer.camera
 		const scene = this.viewer.scene
 
@@ -567,6 +577,7 @@ export default class Camera {
 	 * @returns {Object|null} { west, south, east, north } in degrees, or null if no ellipsoid intersection
 	 */
 	getViewportRectangle() {
+		const Cesium = getCesium()
 		const camera = this.viewer.camera
 		const canvas = this.viewer.scene.canvas
 
@@ -618,6 +629,7 @@ export default class Camera {
 	 * @returns {number} Height in meters
 	 */
 	getCameraHeight() {
+		const Cesium = getCesium()
 		const camera = this.viewer.camera
 		const cartographic = Cesium.Cartographic.fromCartesian(camera.position)
 		return cartographic.height

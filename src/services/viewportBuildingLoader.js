@@ -30,7 +30,6 @@
  * @see {@link module:services/unifiedLoader}
  */
 
-import * as Cesium from 'cesium'
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore.ts'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -43,6 +42,7 @@ import {
 	FLOOR_HEIGHT,
 } from '../utils/entityStyling.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
 import Urbanheat from './urbanheat.js'
@@ -129,7 +129,8 @@ export default class ViewportBuildingLoader {
 		this.cameraMovedHandler = null
 
 		// Cesium scratch objects for performance (reuse to avoid GC)
-		this.scratchRectangle = new Cesium.Rectangle()
+		// Initialized lazily after Cesium is loaded
+		this.scratchRectangle = null
 
 		// Active loading queue
 		this.loadingQueue = []
@@ -298,6 +299,7 @@ export default class ViewportBuildingLoader {
 	updateCameraVelocity() {
 		if (!this.viewer) return
 
+		const Cesium = getCesium()
 		const cameraCartographic = this.viewer.camera.positionCartographic
 		const currentPosition = {
 			lat: Cesium.Math.toDegrees(cameraCartographic.latitude),
@@ -382,6 +384,12 @@ export default class ViewportBuildingLoader {
 	 */
 	getViewportBounds() {
 		try {
+			const Cesium = getCesium()
+			// Lazily initialize scratch rectangle
+			if (!this.scratchRectangle) {
+				this.scratchRectangle = new Cesium.Rectangle()
+			}
+
 			const rect = this.viewer.camera.computeViewRectangle(
 				this.viewer.scene.globe.ellipsoid,
 				this.scratchRectangle
@@ -817,6 +825,7 @@ export default class ViewportBuildingLoader {
 		const { properties, polygon } = entity
 
 		if (polygon && properties?.avgheatexposuretobuilding) {
+			const Cesium = getCesium()
 			const heatExposureValue = properties.avgheatexposuretobuilding._value
 			polygon.material = new Cesium.Color(1, 1 - heatExposureValue, 0, heatExposureValue)
 		}
@@ -851,6 +860,7 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async setHSYBuildingAttributes(entities) {
+		const Cesium = getCesium()
 		const targetDate = this.store.heatDataDate
 		let coloredCount = 0
 
@@ -919,6 +929,7 @@ export default class ViewportBuildingLoader {
 	async fadeInDatasource(datasource) {
 		if (!datasource || !datasource.entities) return
 
+		const Cesium = getCesium()
 		const entities = datasource.entities.values
 		const stepDuration = FADE_CONFIG.DURATION_MS / FADE_CONFIG.STEPS
 

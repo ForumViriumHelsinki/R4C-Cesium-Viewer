@@ -1,7 +1,7 @@
-import * as Cesium from 'cesium'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
 import logger from '../utils/logger.js'
+import { getCesium } from './cesiumProvider.js'
 
 /**
  * Graphics Quality Management Service
@@ -54,6 +54,7 @@ export default class Graphics {
 	 * Detect hardware support for various graphics features
 	 */
 	detectSupport() {
+		const Cesium = getCesium()
 		const supportInfo = {
 			msaaSupported: this.scene.msaaSupported,
 			hdrSupported: this.scene.highDynamicRangeSupported,

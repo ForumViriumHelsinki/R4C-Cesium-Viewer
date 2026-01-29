@@ -1,4 +1,3 @@
-import * as Cesium from 'cesium'
 import { ALL_TREE_CODES } from '../constants/treeCodes.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -7,6 +6,7 @@ import { useURLStore } from '../stores/urlStore.js'
 import { processBatch } from '../utils/batchProcessor.js'
 import logger from '../utils/logger.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
+import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
 
@@ -269,6 +269,7 @@ export default class Tree {
 	 * @param {string} description - Description of tree entity
 	 */
 	setTreePolygonMaterialColor(entity, description) {
+		const Cesium = getCesium()
 		const height = entity._properties._korkeus_ka_m
 
 		switch (description) {
@@ -320,6 +321,7 @@ export default class Tree {
 			return
 		}
 
+		const Cesium = getCesium()
 		const treeEntities = treeDataSource.entities.values
 		for (let i = 0; i < treeEntities.length; i++) {
 			const entity = treeEntities[i]

@@ -5,8 +5,8 @@
 </template>
 
 <script>
-import * as Cesium from 'cesium'
 import { onBeforeUnmount, onMounted } from 'vue'
+import { getCesium } from '../services/cesiumProvider.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 
@@ -24,6 +24,7 @@ export default {
 				})
 
 				// Highlight the clicked entity for 5 seconds
+				const Cesium = getCesium()
 				const oldMaterial = entity.polygon.material
 				entity.polygon.material = new Cesium.Color(1, 0.5, 0.5, 0.8)
 				setTimeout(() => {
