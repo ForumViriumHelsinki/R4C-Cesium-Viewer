@@ -32,6 +32,7 @@
  */
 
 import { defineStore } from 'pinia'
+import { processBatchAdaptive } from '../utils/batchProcessor.js'
 import logger from '../utils/logger.js'
 
 /**
@@ -228,22 +229,37 @@ export const useMitigationStore = defineStore('mitigation', {
 				neighborsAffected: neighbors.length,
 			}
 		},
-		preCalculateGridImpacts() {
+		/**
+		 * Pre-calculates grid impacts asynchronously using batch processing.
+		 * This O(n²) calculation is performed with main thread yielding to prevent UI blocking.
+		 *
+		 * @returns {Promise<void>}
+		 */
+		async preCalculateGridImpacts() {
 			if (!this.gridCells || this.gridCells.length === 0) {
 				logger.warn('Grid cells are not set. Cannot pre-calculate impacts.')
 				return
 			}
-			this.gridCells.forEach((cell) => {
-				let totalReduction = 0
-				this.gridCells.forEach((otherCell) => {
-					// Check if otherCell is within 1000 units in both x and y
-					if (Math.abs(cell.x - otherCell.x) <= 1000 && Math.abs(cell.y - otherCell.y) <= 1000) {
-						const distance = Math.sqrt((cell.x - otherCell.x) ** 2 + (cell.y - otherCell.y) ** 2)
-						totalReduction += this.getReductionValue(distance)
+
+			const gridCells = this.gridCells
+			const gridImpacts = this.gridImpacts
+			const getReductionValue = this.getReductionValue.bind(this)
+
+			await processBatchAdaptive(
+				gridCells,
+				(cell) => {
+					let totalReduction = 0
+					for (const otherCell of gridCells) {
+						// Check if otherCell is within 1000 units in both x and y (bounding box filter)
+						if (Math.abs(cell.x - otherCell.x) <= 1000 && Math.abs(cell.y - otherCell.y) <= 1000) {
+							const distance = Math.sqrt((cell.x - otherCell.x) ** 2 + (cell.y - otherCell.y) ** 2)
+							totalReduction += getReductionValue(distance)
+						}
 					}
-				})
-				this.gridImpacts[cell.id] = totalReduction
-			})
+					gridImpacts[cell.id] = totalReduction
+				},
+				{ processorName: 'gridImpacts' }
+			)
 		},
 		addCoolingCenter(coolingCenter) {
 			this.coolingCenters.push(coolingCenter)

@@ -175,6 +175,64 @@ export default class DataSource {
 	}
 
 	/**
+	 * Loads GeoJSON data using a Web Worker to parse JSON off the main thread.
+	 * Useful for large GeoJSON files where JSON.parse() would block the UI.
+	 *
+	 * The fetch and JSON parsing happen in the worker, then the pre-parsed
+	 * object is passed to Cesium.GeoJsonDataSource.load() which only needs
+	 * to create entities (still on main thread, but faster than URL loading).
+	 *
+	 * @param {number} opacity - Fill opacity for polygons (0-1)
+	 * @param {string} url - URL to fetch GeoJSON data from
+	 * @param {string} name - Name to assign to the created data source
+	 * @returns {Promise<Array<Cesium.Entity>>} Promise resolving to array of created entities
+	 * @throws {Error} If GeoJSON loading fails
+	 */
+	async loadGeoJsonDataSourceWithWorker(opacity, url, name) {
+		const Cesium = getCesium()
+
+		// Parse JSON in Web Worker (off main thread)
+		const json = await new Promise((resolve, reject) => {
+			const worker = new Worker(new URL('../workers/geojsonParser.worker.js', import.meta.url), {
+				type: 'module',
+			})
+
+			worker.onmessage = (event) => {
+				worker.terminate()
+				if (event.data.success) {
+					resolve(event.data.data)
+				} else {
+					reject(new Error(event.data.error))
+				}
+			}
+
+			worker.onerror = (error) => {
+				worker.terminate()
+				reject(error)
+			}
+
+			worker.postMessage({ url })
+		})
+
+		try {
+			// Cesium creates entities from pre-parsed JSON (faster than URL loading)
+			const dataSource = await Cesium.GeoJsonDataSource.load(json, {
+				stroke: Cesium.Color.BLACK,
+				fill: new Cesium.Color(0.3, 0.3, 0.3, opacity),
+				strokeWidth: 8,
+				clampToGround: false,
+			})
+
+			dataSource.name = name
+			this.store.cesiumViewer.dataSources.add(dataSource)
+			return dataSource.entities.values
+		} catch (error) {
+			logger.error('GeoJSON data source loading failed:', error)
+			throw error
+		}
+	}
+
+	/**
 	 * Adds a GeoJSON data source with polygon geodesic arc type correction
 	 * Removes any existing data source with the same name before adding.
 	 * Fixes polygon rendering issues by setting arc type to GEODESIC.
