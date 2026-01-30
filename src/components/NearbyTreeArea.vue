@@ -332,7 +332,7 @@ export default {
 					if (p_ala_m2 !== undefined) {
 						// Update visual properties via cesiumEntityManager
 						const entity = cesiumEntityManager.getTreeEntity(tree_id)
-						if (entity) {
+						if (entity?.polygon) {
 							entity.polygon.outline = true // Enable outline
 							entity.polygon.outlineColor = Cesium.Color.CHARTREUSE // Set outline color to green
 							entity.polygon.outlineWidth = 20 // Set outline width to 3 (adjust as needed)

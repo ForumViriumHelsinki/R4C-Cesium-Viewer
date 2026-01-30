@@ -77,12 +77,12 @@ export class BuildingHighlighter {
 	 * @param {Array<number>} values - Values to match against
 	 */
 	outlineByTemperature(entity, property, values) {
-		const heatTimeseries = entity._properties.heat_timeseries?._value || []
+		const heatTimeseries = entity._properties?.heat_timeseries?._value || []
 		const foundEntry = heatTimeseries.find(({ date }) => date === this.store.heatDataDate)
 
 		const shouldOutlineYellow = !this.toggleStore.helsinkiView
 			? foundEntry && values.includes(foundEntry.avg_temp_c)
-			: entity._properties[property] && values.includes(entity._properties[property]._value)
+			: entity._properties?.[property] && values.includes(entity._properties[property]._value)
 
 		if (shouldOutlineYellow) {
 			this.polygonOutlineToYellow(entity)
@@ -121,7 +121,7 @@ export class BuildingHighlighter {
 	 * @private
 	 */
 	outlineById(entity, property, id) {
-		if (entity._properties[property] && entity._properties[property]._value === id) {
+		if (entity._properties?.[property] && entity._properties[property]._value === id) {
 			this.polygonOutlineToYellow(entity)
 			this.store.setPickedEntity(entity)
 			eventBus.emit('entityPrintEvent')

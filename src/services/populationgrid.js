@@ -56,14 +56,10 @@ export default class Populationgrid {
 	 * @param {Object} entity - Grid entity
 	 */
 	setGridEntityPolygon(entity) {
-		if (entity.properties.averageheatexposure && entity.polygon) {
+		const heatExposure = entity.properties?.averageheatexposure?._value
+		if (heatExposure != null && entity.polygon) {
 			const Cesium = getCesium()
-			entity.polygon.material = new Cesium.Color(
-				1,
-				1 - entity.properties.averageheatexposure._value,
-				0,
-				entity.properties.averageheatexposure._value
-			)
+			entity.polygon.material = new Cesium.Color(1, 1 - heatExposure, 0, heatExposure)
 		} else {
 			if (entity.polygon) {
 				entity.show = false
@@ -77,21 +73,9 @@ export default class Populationgrid {
 	 * @param {Object} entity - Grid entity
 	 */
 	setGridEntityPolygonToGreen(entity) {
-		let water = 0
-		let vegetation = 0
-		let trees = 0
-
-		if (entity.properties.water_m2) {
-			water = entity.properties.water_m2._value
-		}
-
-		if (entity.properties.vegetation_m2) {
-			vegetation = entity.properties.vegetation_m2._value
-		}
-
-		if (entity.properties.tree_cover_m2) {
-			trees = entity.properties.tree_cover_m2._value
-		}
+		const water = entity.properties?.water_m2?._value || 0
+		const vegetation = entity.properties?.vegetation_m2?._value || 0
+		const trees = entity.properties?.tree_cover_m2?._value || 0
 
 		const Cesium = getCesium()
 		const greenIndex = (water + vegetation + trees) / this.gridArea
@@ -103,8 +87,9 @@ export default class Populationgrid {
 			const entity = entities[i]
 
 			if (entity.polygon) {
-				if (entity.properties.asukkaita) {
-					entity.polygon.extrudedHeight = entity.properties.asukkaita._value / 4
+				const population = entity.properties?.asukkaita?._value
+				if (population) {
+					entity.polygon.extrudedHeight = population / 4
 				}
 			}
 		}

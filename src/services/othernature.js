@@ -117,6 +117,11 @@ export default class Othernature {
 	 * @param {string} category - The category of the othernature entity
 	 */
 	setOtherNaturePolygonMaterialColor(entity, category) {
+		// Guard against null/undefined at each level of the property chain
+		if (!entity?._polygon?._material?._color) {
+			return
+		}
+
 		const Cesium = getCesium()
 		switch (category) {
 			case '310':
