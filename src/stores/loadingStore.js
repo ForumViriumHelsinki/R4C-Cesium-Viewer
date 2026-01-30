@@ -55,6 +55,7 @@ export const useLoadingStore = defineStore('loading', {
 			ndvi: false,
 			populationGrid: false,
 			heatData: false,
+			statsGrid: false,
 		},
 
 		// Loading progress tracking
@@ -68,6 +69,7 @@ export const useLoadingStore = defineStore('loading', {
 			ndvi: { current: 0, total: 1, status: 'idle' },
 			populationGrid: { current: 0, total: 1, status: 'idle' },
 			heatData: { current: 0, total: 1, status: 'idle' },
+			statsGrid: { current: 0, total: 3, status: 'idle' }, // 3 stages: fetch, style, calculate
 		},
 
 		// Loading messages and details
@@ -90,6 +92,7 @@ export const useLoadingStore = defineStore('loading', {
 			ndvi: { cached: false, age: null, size: null },
 			populationGrid: { cached: false, age: null, size: null },
 			heatData: { cached: false, age: null, size: null },
+			statsGrid: { cached: false, age: null, size: null },
 		},
 
 		// Data source health tracking
@@ -280,6 +283,7 @@ export const useLoadingStore = defineStore('loading', {
 				'ndvi',
 				'populationGrid',
 				'heatData',
+				'statsGrid',
 			]
 			let clearedCount = 0
 
