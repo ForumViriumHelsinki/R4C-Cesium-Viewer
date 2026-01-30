@@ -45,6 +45,11 @@ describe('entityHelpers', () => {
 			expect(hasProperties(entity)).toBe(true)
 		})
 
+		it('should return true for entity with properties (no underscore)', () => {
+			const entity = { properties: { foo: 'bar' } }
+			expect(hasProperties(entity)).toBe(true)
+		})
+
 		it('should return false for entity without _properties', () => {
 			const entity = { id: '123' }
 			expect(hasProperties(entity)).toBe(false)

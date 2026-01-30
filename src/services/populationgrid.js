@@ -73,21 +73,9 @@ export default class Populationgrid {
 	 * @param {Object} entity - Grid entity
 	 */
 	setGridEntityPolygonToGreen(entity) {
-		let water = 0
-		let vegetation = 0
-		let trees = 0
-
-		if (entity.properties?.water_m2?._value) {
-			water = entity.properties.water_m2._value
-		}
-
-		if (entity.properties?.vegetation_m2?._value) {
-			vegetation = entity.properties.vegetation_m2._value
-		}
-
-		if (entity.properties?.tree_cover_m2?._value) {
-			trees = entity.properties.tree_cover_m2._value
-		}
+		const water = entity.properties?.water_m2?._value || 0
+		const vegetation = entity.properties?.vegetation_m2?._value || 0
+		const trees = entity.properties?.tree_cover_m2?._value || 0
 
 		const Cesium = getCesium()
 		const greenIndex = (water + vegetation + trees) / this.gridArea

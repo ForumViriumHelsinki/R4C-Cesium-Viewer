@@ -174,7 +174,7 @@ export class BuildingStyler {
 	 */
 	_hideNonSoteBuilding(entity) {
 		if (this.toggleStore.hideNonSote) {
-			const kayttotark = entity._properties?.c_kayttark?._value
+			const kayttotark = entity._properties?._c_kayttark?._value
 
 			if (!kayttotark || !isSoteBuilding(kayttotark)) {
 				logVisibilityChange(
@@ -196,11 +196,8 @@ export class BuildingStyler {
 	 * @private
 	 */
 	_hideLowBuilding(entity) {
-		if (
-			this.toggleStore.hideLow &&
-			(!Number(entity._properties?.i_kerrlkm?._value) ||
-				Number(entity._properties?.i_kerrlkm?._value) < 7)
-		) {
+		const floorCount = Number(entity._properties?._i_kerrlkm?._value)
+		if (this.toggleStore.hideLow && (!floorCount || floorCount < 7)) {
 			logVisibilityChange('entity', entity.id || 'building', entity.show, false, 'hideLowBuilding')
 			entity.show = false
 		}
