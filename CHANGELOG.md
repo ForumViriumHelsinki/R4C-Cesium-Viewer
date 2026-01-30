@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.44.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.43.0...r4c-cesium-viewer-v1.44.0) (2026-01-30)
+
+
+### Features
+
+* **feature-flags:** audit and cleanup feature flag system ([#556](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/556)) ([7194353](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7194353c94fd226484bc04b782de6b94ffc75f9c))
+
+
+### Bug Fixes
+
+* Add null check for entity.polygon to prevent TypeError ([#592](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/592)) ([17c37b4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/17c37b4e28cc0fb3e94cfd279ee4ab9bf90bc924)), closes [#585](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/585)
+* Add null checks for Cesium entity property access (Fixes [#590](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/590)) ([#597](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/597)) ([abd607b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/abd607b7799e761f843f45b7180e567df815d72b))
+* Add retry logic for dynamic module imports (Fixes [#591](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/591)) ([#596](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/596)) ([ef23d9b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ef23d9bc731c1c575843726ae3fbb1b7d23240d1))
+* **ci:** prevent release-please recursion on release branches ([#572](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/572)) ([ed41fda](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ed41fdaac89d47dcd830cf8bb60387a4a1954e5c))
+* **grid:** improve 250m statistical grid performance and preserve buildings ([#536](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/536)) ([fc174dd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fc174dd176b243d84c86de5c88534a660cfe4ba2)), closes [#530](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/530) [#531](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/531) [#532](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/532) [#533](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/533) [#534](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/534)
+* Remove blur effect from inactive loading overlay ([#594](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/594)) ([bef54de](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bef54def4f62b89da2cef8e37a350cd7f3f705c0))
+* **test:** update camera.test.js to match new initial camera height ([#554](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/554)) ([b9c6078](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b9c6078549e3098d9234d05060ef36e0cc9a00d4)), closes [#538](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/538)
+* TypeError in PrintBox when pickedEntity is null ([#595](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/595)) ([f5121eb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f5121ebbecd4196aab8537dfb65fe7449ba4c55d))
+* **vuetify:** add eager prop to navigation drawers and overlays ([#562](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/562)) ([648aeb8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/648aeb8ef207a1857002c56b21d82ab625841bcc))
+
+
+### Performance Improvements
+
+* Move statistical grid loading off main thread ([#600](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/600)) ([4888a35](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4888a35894b226c9623449f5bb357d036d9c2f1c))
+
 ## [1.43.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.3...r4c-cesium-viewer-v1.43.0) (2026-01-14)
 
 ### Features
