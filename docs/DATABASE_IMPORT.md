@@ -135,7 +135,7 @@ The fastest method is to restore directly from your local machine using the port
 
 ```bash
 # 1. Ensure services are running with port-forward
-make dev
+just dev
 # Or: skaffold run --port-forward
 
 # 2. Restore directly via port-forward (works for both custom and directory format)

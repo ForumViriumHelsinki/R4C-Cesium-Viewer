@@ -29,7 +29,7 @@ npm install
 curl -fsSL https://bun.sh/install | bash
 
 # 3. Start development with mock API
-make dev-mock
+just dev-mock
 ```
 
 **Access at:** http://localhost:5173 (frontend) | http://localhost:5050 (mock API)
@@ -43,13 +43,13 @@ Uses real PostgreSQL database and pygeoapi. Required for testing database querie
 git clone <repository-url>
 cd R4C-Cesium-Viewer
 cp .env.example .env
-make setup
+just setup
 
 # 2. Start development
-make dev
+just dev
 
 # 3. Seed database with test data (recommended)
-make db-seed
+just db-seed
 ```
 
 **Access at:** http://localhost:5173 (frontend) | http://localhost:5000 (pygeoapi)
@@ -73,7 +73,7 @@ The mock API server provides a lightweight alternative to the full Kubernetes st
 ### Starting Mock API Mode
 
 ```bash
-make dev-mock
+just dev-mock
 ```
 
 This command:
@@ -100,16 +100,16 @@ Control data density for different testing scenarios:
 
 ```bash
 # Default: 50 buildings per postal code
-make mock-generate
+just mock-generate
 
 # More data for load testing
-MOCK_DENSITY=100 make mock-generate
+MOCK_DENSITY=100 just mock-generate
 
 # Less data for faster startup
-MOCK_DENSITY=20 make mock-generate
+MOCK_DENSITY=20 just mock-generate
 
 # Force regeneration
-rm -rf mock-api/fixtures && make mock-generate
+rm -rf mock-api/fixtures && just mock-generate
 ```
 
 ### Supported Collections
@@ -143,7 +143,7 @@ See [mock-api/README.md](../mock-api/README.md) for complete mock server documen
 
 ## Database: Seeding vs Production Import
 
-> **TL;DR:** Use `make db-seed` for local development. It takes 30-60 seconds vs 15-30 minutes for production import.
+> **TL;DR:** Use `just db-seed` for local development. It takes 30-60 seconds vs 15-30 minutes for production import.
 
 | Approach                  | Time          | Size     | Use Case                                   |
 | ------------------------- | ------------- | -------- | ------------------------------------------ |
@@ -155,10 +155,10 @@ See [mock-api/README.md](../mock-api/README.md) for complete mock server documen
 
 ```bash
 # Start services
-make dev
+just dev
 
 # In another terminal: seed with realistic mock data
-make db-seed
+just db-seed
 ```
 
 The seeding script generates realistic Helsinki-area data for all major tables:
@@ -172,10 +172,10 @@ The seeding script generates realistic Helsinki-area data for all major tables:
 **Options:**
 
 ```bash
-make db-seed                    # Default: 100 records per table
-make db-seed SEED_RECORDS=50    # Fewer records (faster)
-make db-seed SEED_RECORDS=500   # More data for load testing
-make db-seed-clean              # Clear existing data first, then seed
+just db-seed                    # Default: 100 records per table
+just db-seed SEED_RECORDS=50    # Fewer records (faster)
+just db-seed SEED_RECORDS=500   # More data for load testing
+just db-seed-clean              # Clear existing data first, then seed
 ```
 
 See [database/SEEDING.md](./database/SEEDING.md) for full documentation.
@@ -190,10 +190,10 @@ Only import production data when you specifically need it:
 
 ```bash
 # See export instructions
-make help-db-export
+just help-db-export
 
 # Import from tmp/ directory
-make db-import
+just db-import
 ```
 
 **Warning:** The production dump is ~18GB and takes 15-30 minutes to import.
@@ -209,7 +209,7 @@ See [database/IMPORT.md](./database/IMPORT.md) for complete instructions.
 Fastest option for frontend-only development:
 
 ```bash
-make dev-mock
+just dev-mock
 # Ctrl+C stops both mock server and frontend
 ```
 
@@ -223,9 +223,9 @@ make dev-mock
 Backend in Kubernetes, frontend with Vite for fast hot-reload:
 
 ```bash
-make dev
+just dev
 # Ctrl+C stops frontend only, services keep running
-# Run 'make dev' again to restart just the frontend
+# Run 'just dev' again to restart just the frontend
 ```
 
 | Service         | URL                   |
@@ -239,7 +239,7 @@ make dev
 Everything in containers (closer to production):
 
 ```bash
-make dev-full
+just dev-full
 # Ctrl+C stops frontend container, services keep running
 ```
 
@@ -252,14 +252,14 @@ make dev-full
 ### Stopping Services
 
 ```bash
-make stop           # Stop everything (DB data preserved)
-make stop-frontend  # Stop frontend only, keep services running
-make mock-stop      # Stop mock API server only
+just stop           # Stop everything (DB data preserved)
+just stop-frontend  # Stop frontend only, keep services running
+just mock-stop      # Stop mock API server only
 ```
 
 ## Skaffold Profiles (Advanced)
 
-For direct Skaffold usage without `make`:
+For direct Skaffold usage without `just`:
 
 ### services-only
 
@@ -286,7 +286,7 @@ Full stack (all services + frontend):
 skaffold dev --port-forward
 ```
 
-**Note:** Direct Skaffold commands clean up on exit. Use `make dev` or `make dev-full` for persistent services.
+**Note:** Direct Skaffold commands clean up on exit. Use `just dev` or `just dev-full` for persistent services.
 
 ## Database Operations
 
@@ -328,16 +328,16 @@ dbmate rollback
 psql "$DATABASE_URL"
 ```
 
-### Makefile Database Commands
+### Justfile Database Commands
 
 ```bash
-make db-status      # Show connection info and table count
-make db-migrate     # Run pending migrations
-make db-seed        # Seed with test data (recommended)
-make db-seed-clean  # Clear and re-seed
-make db-import      # Import production dump from tmp/
-make db-shell       # Open psql shell
-make db-reset       # WARNING: Delete all data
+just db-status      # Show connection info and table count
+just db-migrate     # Run pending migrations
+just db-seed        # Seed with test data (recommended)
+just db-seed-clean  # Clear and re-seed
+just db-import      # Import production dump from tmp/
+just db-shell       # Open psql shell
+just db-reset       # WARNING: Delete all data
 ```
 
 ## Service Architecture
@@ -431,7 +431,7 @@ curl http://localhost:5050/health
 
 # Regenerate fixtures
 rm -rf mock-api/fixtures
-make mock-generate
+just mock-generate
 
 # Manual start (for debugging)
 cd mock-api && bun run dev
@@ -507,16 +507,16 @@ For local frontend (`npm run dev`), use `localhost:5000` or proxy configuration.
 
 ```bash
 # Stop all services (DB data preserved)
-make stop
+just stop
 
 # Stop frontend only, keep services running
-make stop-frontend
+just stop-frontend
 
 # Stop mock API only
-make mock-stop
+just mock-stop
 
 # Complete reset (including data)
-make stop
+just stop
 kubectl delete pvc --all -n regions4climate
 
 # Or use direct Skaffold commands

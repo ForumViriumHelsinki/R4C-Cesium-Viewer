@@ -4,36 +4,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-### Makefile (Recommended)
+### Justfile (Recommended)
 
-Use `make` for the unified development experience:
+Use `just` for the unified development experience:
 
 ```bash
-make help        # Show all commands with current status
-make dev-mock    # Mock API (fastest - no database/K8s required)
-make dev         # Backend in K8s + local frontend (fast iteration)
-make dev-full    # Everything in containers (closer to production)
-make stop        # Stop all services
+just help        # Show all commands with current status
+just dev-mock    # Mock API (fastest - no database/K8s required)
+just dev         # Backend in K8s + local frontend (fast iteration)
+just dev-full    # Everything in containers (closer to production)
+just stop        # Stop all services
 ```
 
 **Database commands:**
 
-- `make db-status` - Show connection info and table count
-- `make db-migrate` - Run pending migrations
-- `make db-seed` - Seed with test data (recommended for local dev)
-- `make db-import` - Import production dump from tmp/ (when needed)
-- `make db-shell` - Open psql shell
-- `make db-reset` - Drop and recreate database (requires confirmation)
+- `just db-status` - Show connection info and table count
+- `just db-migrate` - Run pending migrations
+- `just db-seed` - Seed with test data (recommended for local dev)
+- `just db-import` - Import production dump from tmp/ (when needed)
+- `just db-shell` - Open psql shell
+- `just db-reset` - Drop and recreate database (requires confirmation)
 
 **Testing:**
 
-- `make test` - All tests
-- `make test-quick` - Unit tests only
-- `make test-e2e` - End-to-end tests
+- `just test` - All tests
+- `just test-quick` - Unit tests only
+- `just test-e2e` - End-to-end tests
 
-**Note:** E2E tests require `VITE_E2E_TEST=true` to expose the Cesium viewer to the test harness. Use `bun run dev:test` to start the dev server with this flag, or run tests via `make test-e2e` which handles this automatically.
+**Note:** E2E tests require `VITE_E2E_TEST=true` to expose the Cesium viewer to the test harness. Use `bun run dev:test` to start the dev server with this flag, or run tests via `just test-e2e` which handles this automatically.
 
-Database data persists across `make stop` and even `skaffold delete`. Only `make db-reset` explicitly wipes the data.
+Database data persists across `just stop` and even `skaffold delete`. Only `just db-reset` explicitly wipes the data.
 
 ### Build and Development (Bun)
 
@@ -83,12 +83,12 @@ See `.claude/skills/test-categorization.md` for best practices on test organizat
 See `docs/GETTING_STARTED.md` for comprehensive local development documentation.
 See `docs/DATABASE_IMPORT.md` for importing production database dumps.
 
-**Recommended: Use Makefile commands (services persist on Ctrl+C):**
+**Recommended: Use Justfile commands (services persist on Ctrl+C):**
 
 ```bash
-make dev       # Local frontend + K8s services (fast iteration)
-make dev-full  # All in containers (closer to production)
-make stop      # Stop all services
+just dev       # Local frontend + K8s services (fast iteration)
+just dev-full  # All in containers (closer to production)
+just stop      # Stop all services
 ```
 
 **Direct Skaffold (cleans up on exit):**

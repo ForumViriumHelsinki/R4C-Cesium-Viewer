@@ -37,14 +37,14 @@ The application deployment uses plain Kubernetes manifests for easier local deve
 
 ## Usage
 
-### Recommended: Use Makefile
+### Recommended: Use Justfile
 
-The easiest way to run locally is via the Makefile:
+The easiest way to run locally is via the Justfile:
 
 ```bash
-make dev       # Local frontend + K8s services (fast iteration)
-make dev-full  # All in containers (closer to production)
-make stop      # Stop everything
+just dev       # Local frontend + K8s services (fast iteration)
+just dev-full  # All in containers (closer to production)
+just stop      # Stop everything
 ```
 
 Services persist on Ctrl+C. See the main [README.md](../README.md) for details.
@@ -77,7 +77,7 @@ Full stack (all services + frontend):
 skaffold dev --port-forward
 ```
 
-**Note:** Direct `skaffold dev` cleans up on exit. Use `skaffold run` or Makefile commands for persistent services.
+**Note:** Direct `skaffold dev` cleans up on exit. Use `skaffold run` or Justfile commands for persistent services.
 
 ### Environment Variables
 
@@ -151,18 +151,18 @@ These can be adjusted based on your local environment's available resources.
 
 The PostgreSQL deployment uses a PersistentVolumeClaim (PVC) for data storage:
 
-- **Data persists** across `make stop`, `skaffold delete`, and pod restarts
+- **Data persists** across `just stop`, `skaffold delete`, and pod restarts
 - **Data persists** when deleting the deployment
 - To completely reset the database:
 
   ```bash
-  # Using Makefile (recommended)
-  make db-reset
+  # Using Justfile (recommended)
+  just db-reset
 
   # Or manually
-  make stop
+  just stop
   kubectl delete pvc postgresql-data -n regions4climate
-  make dev
+  just dev
   ```
 
 **Note:** This is useful when you want to test initialization scripts from scratch or reset to a clean state.
@@ -177,7 +177,7 @@ Unlike Helm deployments with hooks, the migration Job must be manually deleted a
 
 ```bash
 kubectl delete job r4c-cesium-viewer-migration -n regions4climate
-make dev  # or: skaffold run -p services-only --port-forward
+just dev  # or: skaffold run -p services-only --port-forward
 ```
 
 The Job has `ttlSecondsAfterFinished: 300` set, so completed jobs are automatically cleaned up after 5 minutes.
