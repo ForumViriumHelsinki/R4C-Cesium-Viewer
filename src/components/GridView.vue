@@ -257,33 +257,29 @@ export default {
 		},
 
 		/**
-		 * This function to switch between population grid and nature grid view
+		 * This function to switch between population grid and nature grid view.
+		 * Uses batched processing for UI responsiveness with 18K+ entities.
 		 */
-		natureGridEvent() {
+		async natureGridEvent() {
 			this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid')
 
 			if (this.natureGrid) {
-				const dataSource = this.datasourceService.getDataSourceByName('PopulationGrid')
+				const populationgridService = new Populationgrid()
+				const entities = populationgridService.getGridEntities()
 
-				if (!dataSource) {
+				if (entities.length === 0) {
 					logger.error('Data source with name PopulationGrid not found.')
 					return
 				}
 
-				// Get the entities of the data source
-				const entities = dataSource.entities.values
-				const populationgridService = new Populationgrid()
-
-				for (let i = 0; i < entities.length; i++) {
-					const entity = entities[i]
-					populationgridService.setGridEntityPolygonToGreen(entity)
-				}
+				// Use batched processing for 18K+ entities
+				await populationgridService.setGridEntitiesToGreen(entities)
 
 				// Uncheck travel time toggle when nature grid is enabled
 				this.travelTime = false
 			} else {
 				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid')
-				void this.createPopulationGrid()
+				await this.createPopulationGrid()
 			}
 		},
 	},

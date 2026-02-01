@@ -67,6 +67,7 @@
 </template>
 
 <script>
+import { useDebounceFn } from '@vueuse/core'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import BuildingInformation from '../components/BuildingInformation.vue'
 import HSYWMS from '../components/HSYWMS.vue'
@@ -106,13 +107,24 @@ export default {
 			})
 		})
 
+		// Debounced handlers to prevent cascading state updates
+		const debouncedLandCoverUpdate = useDebounceFn((newValue) => {
+			showLandcover.value = toggleStore.helsinkiView ? showLandcover.value : !!newValue
+			showHSYWMS.value = !showLandcover.value
+		}, 100)
+
+		const debouncedPostalCodeUpdate = useDebounceFn((newPostalCode) => {
+			if (!showLandcover.value && newPostalCode) {
+				showHSYWMS.value = true
+			}
+		}, 100)
+
 		// Watch landCover toggle to control mutual exclusivity
 		// Capture stop handlers for explicit cleanup on unmount
 		const stopWatchLandCover = watch(
 			() => toggleStore.landCover,
 			(newValue) => {
-				showLandcover.value = toggleStore.helsinkiView ? showLandcover.value : !!newValue
-				showHSYWMS.value = !showLandcover.value
+				debouncedLandCoverUpdate(newValue)
 			}
 		)
 
@@ -120,9 +132,7 @@ export default {
 		const stopWatchPostalCode = watch(
 			() => store.postalcode,
 			(newPostalCode) => {
-				if (!showLandcover.value && newPostalCode) {
-					showHSYWMS.value = true
-				}
+				debouncedPostalCodeUpdate(newPostalCode)
 			}
 		)
 

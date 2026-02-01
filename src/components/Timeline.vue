@@ -234,7 +234,7 @@ export default {
 	position: fixed;
 	bottom: 24px;
 	left: 24px;
-	z-index: 1000;
+	z-index: 2100;
 	pointer-events: none;
 }
 

@@ -93,6 +93,9 @@ Sentry.init({
 	// plus for 100% of sessions with an error
 	replaysSessionSampleRate: 0.1,
 	replaysOnErrorSampleRate: 1.0,
+
+	// CPU profiling: 10% in production (minimal overhead), 100% in dev
+	profilesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
 })
 
 // Log Sentry configuration in development only (security: avoid exposing DSN)
