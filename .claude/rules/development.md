@@ -4,9 +4,9 @@
 
 | Mode            | Command                       | Backend                | Use Case            |
 | --------------- | ----------------------------- | ---------------------- | ------------------- |
-| Mock API        | `make dev-mock`               | Synthetic data (:5050) | Frontend UI work    |
-| Full Stack      | `make dev` + `make db-seed`   | PostgreSQL (:5000)     | Feature development |
-| Production Data | `make dev` + `make db-import` | 18GB dump              | Bug reproduction    |
+| Mock API        | `just dev-mock`               | Synthetic data (:5050) | Frontend UI work    |
+| Full Stack      | `just dev` + `just db-seed`   | PostgreSQL (:5000)     | Feature development |
+| Production Data | `just dev` + `just db-import` | 18GB dump              | Bug reproduction    |
 
 **Choose Mock API when:**
 
@@ -30,10 +30,10 @@
 **One-Command Start:**
 
 ```bash
-make dev-mock  # Mock API (fastest - no database/K8s required)
-make dev       # Local frontend + K8s services (fast iteration)
-make dev-full  # All in containers (closer to production)
-make stop      # Stop all services
+just dev-mock  # Mock API (fastest - no database/K8s required)
+just dev       # Local frontend + K8s services (fast iteration)
+just dev-full  # All in containers (closer to production)
+just stop      # Stop all services
 ```
 
 **Profiles:**
