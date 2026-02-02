@@ -7,16 +7,16 @@ import { visualizer } from 'rollup-plugin-visualizer';
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
 import { version } from './package.json';
 import { execSync } from 'child_process';
 
 // Auto-detect pygeoapi: mock server > kubectl port-forward > production
-const detectPygeoApiPort = () => {
+const detectPygeoApiPort = (env) => {
 	// If explicitly set in env, use that
-	if (process.env.VITE_PYGEOAPI_HOST) {
-		return process.env.VITE_PYGEOAPI_HOST;
+	if (env.VITE_PYGEOAPI_HOST) {
+		return env.VITE_PYGEOAPI_HOST;
 	}
 
 	// Check if mock API server is running on port 5050
@@ -93,6 +93,10 @@ const getGitInfo = () => {
 };
 
 export default defineConfig(({ mode }) => {
+	// Load env files before accessing process.env in config
+	// The third parameter '' loads all env vars, not just VITE_ prefixed ones
+	const env = loadEnv(mode, process.cwd(), '');
+
 	const gitInfo = getGitInfo();
 	const buildTime = new Date().toISOString();
 
@@ -150,7 +154,7 @@ export default defineConfig(({ mode }) => {
 			cesium(),
 			// Put the Sentry vite plugin after all other plugins
 			sentryVitePlugin({
-				authToken: process.env.SENTRY_AUTH_TOKEN,
+				authToken: env.SENTRY_AUTH_TOKEN,
 				org: 'forum-virium-helsinki',
 				project: 'regions4climate',
 			}),
@@ -190,7 +194,7 @@ export default defineConfig(({ mode }) => {
 				'/pygeoapi': {
 					// Auto-detect local pygeoapi port or fall back to production
 					target: (() => {
-						const host = detectPygeoApiPort();
+						const host = detectPygeoApiPort(env);
 						const protocol = host.startsWith('localhost:') ? 'http' : 'https';
 						return `${protocol}://${host}/`;
 					})(),
@@ -280,15 +284,15 @@ export default defineConfig(({ mode }) => {
 					target: 'https://api.digitransit.fi',
 					changeOrigin: true,
 					secure: false,
-					headers: process.env.VITE_DIGITRANSIT_KEY
+					headers: env.VITE_DIGITRANSIT_KEY
 						? {
-								'digitransit-subscription-key': process.env.VITE_DIGITRANSIT_KEY,
+								'digitransit-subscription-key': env.VITE_DIGITRANSIT_KEY,
 							}
 						: {},
 					rewrite: (path) => path.replace(/^\/digitransit/, ''),
 					configure: (_proxy, _options) => {
 						// Log warning if API key is missing
-						if (!process.env.VITE_DIGITRANSIT_KEY) {
+						if (!env.VITE_DIGITRANSIT_KEY) {
 							console.warn(
 								'⚠️  VITE_DIGITRANSIT_KEY not set - digitransit API calls may fail or be rate limited'
 							);
