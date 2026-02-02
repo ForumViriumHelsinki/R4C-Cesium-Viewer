@@ -15,10 +15,11 @@ build:
         dockerfile: Dockerfile
       hooks:
         before:
-          - command: ['sh', '-c', 'dotenvx run -- sh scripts/generate-secrets.sh']
+          # Load .env if present, then generate secrets (script has sensible defaults)
+          - command: ['sh', '-c', '[ -f .env ] && set -a && . ./.env && set +a; sh scripts/generate-secrets.sh']
             os: [darwin, linux]
           # Run lint before build to catch errors early
-          - command: ['sh', '-c', 'npm run lint --silent || echo "Lint warnings found"']
+          - command: ['sh', '-c', 'bun run lint --silent || echo "Lint warnings found"']
             os: [darwin, linux]
     - image: dbmate-migrations
       context: db
@@ -105,9 +106,10 @@ profiles:
             dockerfile: Dockerfile
           hooks:
             before:
-              - command: ['sh', '-c', 'dotenvx run -- sh scripts/generate-secrets.sh']
+              # Load .env if present, then generate secrets (script has sensible defaults)
+              - command: ['sh', '-c', '[ -f .env ] && set -a && . ./.env && set +a; sh scripts/generate-secrets.sh']
                 os: [darwin, linux]
-              - command: ['sh', '-c', 'npm run lint --silent || echo "Lint warnings found"']
+              - command: ['sh', '-c', 'bun run lint --silent || echo "Lint warnings found"']
                 os: [darwin, linux]
     manifests:
       rawYaml:
