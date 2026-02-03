@@ -17,6 +17,41 @@ import { getCesium } from '../cesiumProvider.js'
 import { eventBus } from '../eventEmitter.js'
 import { logVisibilityChange } from '../visibilityLogger.js'
 
+// --- COLOR CACHE ---
+// Caches Cesium.Color objects to avoid repeated instantiation for common colors
+const colorCache = new Map()
+
+/**
+ * Gets a cached Cesium.Color instance, creating one if not already cached.
+ * Reduces GC pressure by reusing color objects.
+ *
+ * @param {number} r - Red component (0-1)
+ * @param {number} g - Green component (0-1)
+ * @param {number} b - Blue component (0-1)
+ * @param {number} a - Alpha component (0-1)
+ * @returns {Cesium.Color} Cached color instance
+ */
+function getCachedColor(r, g, b, a) {
+	// Round to 2 decimal places to increase cache hits
+	const key = `${r.toFixed(2)},${g.toFixed(2)},${b.toFixed(2)},${a.toFixed(2)}`
+	if (!colorCache.has(key)) {
+		const Cesium = getCesium()
+		colorCache.set(key, new Cesium.Color(r, g, b, a))
+	}
+	return colorCache.get(key)
+}
+
+/**
+ * Indexes heat timeseries array by date for O(1) lookups.
+ * Call once per building then use Map.get() instead of Array.find()
+ *
+ * @param {Array<{date: string, avgheatexposure: number}>} heatTimeseries - Heat timeseries array
+ * @returns {Map<string, Object>} Map indexed by date string
+ */
+function indexHeatTimeseriesByDate(heatTimeseries) {
+	return new Map(heatTimeseries.map((entry) => [entry.date, entry]))
+}
+
 /**
  * Filters heat timeseries data by construction year cutoff
  * Removes historical data predating the building's construction year.
@@ -100,40 +135,40 @@ export class BuildingStyler {
 
 	/**
 	 * Set building entity polygon color based on heat exposure
+	 * Uses cached colors and indexed heat timeseries for performance.
 	 *
 	 * @param {Object} entity - Building entity
 	 */
 	setBuildingEntityPolygon(entity) {
 		const { properties, polygon } = entity
 		const targetDate = this.store.heatDataDate
-		const Cesium = getCesium()
 
 		if (polygon) {
 			if (this.toggleStore.helsinkiView) {
 				if (properties?.avgheatexposuretobuilding) {
 					const heatExposureValue = properties.avgheatexposuretobuilding._value
-					polygon.material = new Cesium.Color(1, 1 - heatExposureValue, 0, heatExposureValue)
+					polygon.material = getCachedColor(1, 1 - heatExposureValue, 0, heatExposureValue)
 				}
 			} else {
 				const heatTimeseries = properties.heat_timeseries?._value || []
-				const foundEntry = heatTimeseries.find(({ date }) => date === targetDate)
+
+				// Use indexed lookup if available, otherwise build index for this entity
+				let heatIndex = entity._heatTimeseriesIndex
+				if (!heatIndex && heatTimeseries.length > 0) {
+					heatIndex = indexHeatTimeseriesByDate(heatTimeseries)
+					entity._heatTimeseriesIndex = heatIndex // Cache on entity for reuse
+				}
+
+				const foundEntry = heatIndex?.get(targetDate)
 
 				if (foundEntry) {
 					// Only set color if an entry is found
 					if (targetDate === '2021-02-18') {
-						polygon.material = new Cesium.Color(
-							0,
-							1 - (1 - foundEntry.avgheatexposure),
-							1,
-							1 - foundEntry.avgheatexposure
-						)
+						const exposure = foundEntry.avgheatexposure
+						polygon.material = getCachedColor(0, exposure, 1, 1 - exposure)
 					} else {
-						polygon.material = new Cesium.Color(
-							1,
-							1 - foundEntry.avgheatexposure,
-							0,
-							foundEntry.avgheatexposure
-						)
+						const exposure = foundEntry.avgheatexposure
+						polygon.material = getCachedColor(1, 1 - exposure, 0, exposure)
 					}
 				} else {
 					logVisibilityChange(
@@ -144,7 +179,7 @@ export class BuildingStyler {
 						'setBuildingEntityPolygon-noHeatData'
 					)
 					entity.show = false
-					polygon.material = new Cesium.Color(0, 0, 0, 0)
+					polygon.material = getCachedColor(0, 0, 0, 0)
 				}
 			}
 		}

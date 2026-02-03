@@ -134,6 +134,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 * Processes and stores Paavo data with statistical calculations
 		 * Filters excluded postal codes, calculates min/max for both Capital Region
 		 * and Helsinki-only subsets for income and household size indicators.
+		 * Uses single-pass algorithm for O(n) performance.
 		 *
 		 * Excluded postal codes: 00230, 02290, 01770
 		 *
@@ -141,51 +142,69 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 * @returns {void}
 		 */
 		addPaavoDataToStore(data) {
-			// Filter out rows where postinumeroalue is "00230", then map the rest
+			const excludedPostalCodes = ['00230', '02290', '01770']
+
+			// Filter out excluded postal codes and map to properties
 			this.data = data.features
-				.filter(
-					(feature) => !['00230', '02290', '01770'].includes(feature.properties.postinumeroalue)
-				)
+				.filter((feature) => !excludedPostalCodes.includes(feature.properties.postinumeroalue))
 				.map((feature) => feature.properties)
 
-			// Example statistics calculation (adjust according to actual data attributes)
+			// Single-pass calculation of both region and Helsinki statistics
+			const stats = this.data.reduce(
+				(acc, item) => {
+					const raAsKpa = Number(item.ra_as_kpa)
+					const hrKtu = Number(item.hr_ktu)
+					const isHelsinki = item.kunta === '091'
+
+					// Region-wide stats
+					acc.ra_as_kpa_min = Math.min(acc.ra_as_kpa_min, raAsKpa)
+					acc.ra_as_kpa_max = Math.max(acc.ra_as_kpa_max, raAsKpa)
+					acc.hr_ktu_min = Math.min(acc.hr_ktu_min, hrKtu)
+					acc.hr_ktu_max = Math.max(acc.hr_ktu_max, hrKtu)
+
+					// Helsinki-specific stats
+					if (isHelsinki) {
+						acc.helsinki_count++
+						acc.helsinki_ra_as_kpa_min = Math.min(acc.helsinki_ra_as_kpa_min, raAsKpa)
+						acc.helsinki_ra_as_kpa_max = Math.max(acc.helsinki_ra_as_kpa_max, raAsKpa)
+						acc.helsinki_hr_ktu_min = Math.min(acc.helsinki_hr_ktu_min, hrKtu)
+						acc.helsinki_hr_ktu_max = Math.max(acc.helsinki_hr_ktu_max, hrKtu)
+					}
+
+					return acc
+				},
+				{
+					ra_as_kpa_min: Infinity,
+					ra_as_kpa_max: -Infinity,
+					hr_ktu_min: Infinity,
+					hr_ktu_max: -Infinity,
+					helsinki_count: 0,
+					helsinki_ra_as_kpa_min: Infinity,
+					helsinki_ra_as_kpa_max: -Infinity,
+					helsinki_hr_ktu_min: Infinity,
+					helsinki_hr_ktu_max: -Infinity,
+				}
+			)
+
 			this.regionStatistics = {
-				// Assuming 'someAttribute' is part of your data, replace with actual attribute names
 				ra_as_kpa: {
-					min: Math.min(...this.data.map((item) => Number(item.ra_as_kpa))),
-					max: Math.max(...this.data.map((item) => Number(item.ra_as_kpa))),
+					min: stats.ra_as_kpa_min,
+					max: stats.ra_as_kpa_max,
 				},
 				hr_ktu: {
-					min: Math.min(...this.data.map((item) => Number(item.hr_ktu))),
-					max: Math.max(...this.data.map((item) => Number(item.hr_ktu))),
+					min: stats.hr_ktu_min,
+					max: stats.hr_ktu_max,
 				},
-				// Add more attributes as needed
 			}
 
-			// Filter data for Helsinki (kunta = "091")
-			const helsinkiData = this.data.filter((item) => item.kunta === '091')
-
-			// Helsinki specific statistics
 			this.helsinkiStatistics = {
 				ra_as_kpa: {
-					min:
-						helsinkiData.length > 0
-							? Math.min(...helsinkiData.map((item) => Number(item.ra_as_kpa)))
-							: null,
-					max:
-						helsinkiData.length > 0
-							? Math.max(...helsinkiData.map((item) => Number(item.ra_as_kpa)))
-							: null,
+					min: stats.helsinki_count > 0 ? stats.helsinki_ra_as_kpa_min : null,
+					max: stats.helsinki_count > 0 ? stats.helsinki_ra_as_kpa_max : null,
 				},
 				hr_ktu: {
-					min:
-						helsinkiData.length > 0
-							? Math.min(...helsinkiData.map((item) => Number(item.hr_ktu)))
-							: null,
-					max:
-						helsinkiData.length > 0
-							? Math.max(...helsinkiData.map((item) => Number(item.hr_ktu)))
-							: null,
+					min: stats.helsinki_count > 0 ? stats.helsinki_hr_ktu_min : null,
+					max: stats.helsinki_count > 0 ? stats.helsinki_hr_ktu_max : null,
 				},
 			}
 		},
@@ -209,20 +228,40 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		/**
 		 * Calculates Capital Region-wide min/max statistics
 		 * Computes normalization bounds for income (ra_as_kpa) and household size (hr_ktu).
+		 * Uses single-pass algorithm for O(n) performance instead of O(4n) with map+spread.
 		 *
 		 * @returns {void}
 		 */
 		addRegionStatisticsToStore() {
-			// Example statistics calculation (adjust according to actual data attributes)
+			// Single-pass min/max calculation for all attributes
+			const stats = this.data.reduce(
+				(acc, item) => {
+					const raAsKpa = Number(item.ra_as_kpa)
+					const hrKtu = Number(item.hr_ktu)
+
+					return {
+						ra_as_kpa_min: Math.min(acc.ra_as_kpa_min, raAsKpa),
+						ra_as_kpa_max: Math.max(acc.ra_as_kpa_max, raAsKpa),
+						hr_ktu_min: Math.min(acc.hr_ktu_min, hrKtu),
+						hr_ktu_max: Math.max(acc.hr_ktu_max, hrKtu),
+					}
+				},
+				{
+					ra_as_kpa_min: Infinity,
+					ra_as_kpa_max: -Infinity,
+					hr_ktu_min: Infinity,
+					hr_ktu_max: -Infinity,
+				}
+			)
+
 			this.regionStatistics = {
-				// Assuming 'someAttribute' is part of your data, replace with actual attribute names
 				ra_as_kpa: {
-					min: Math.min(...this.data.map((item) => Number(item.ra_as_kpa))),
-					max: Math.max(...this.data.map((item) => Number(item.ra_as_kpa))),
+					min: stats.ra_as_kpa_min,
+					max: stats.ra_as_kpa_max,
 				},
 				hr_ktu: {
-					min: Math.min(...this.data.map((item) => Number(item.hr_ktu))),
-					max: Math.max(...this.data.map((item) => Number(item.hr_ktu))),
+					min: stats.hr_ktu_min,
+					max: stats.hr_ktu_max,
 				},
 			}
 		},
@@ -230,34 +269,46 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		/**
 		 * Calculates Helsinki-specific min/max statistics
 		 * Computes normalization bounds for Helsinki municipality only (kunta === '091').
+		 * Uses single-pass algorithm combining filter and min/max for O(n) performance.
 		 *
 		 * @returns {void}
 		 */
 		addHelsinkiStatisticsToStore() {
-			// Filter data for Helsinki (kunta = "091")
-			const helsinkiData = this.data.filter((item) => item.kunta === '091')
+			// Single-pass: filter Helsinki data and calculate min/max simultaneously
+			const stats = this.data.reduce(
+				(acc, item) => {
+					// Skip non-Helsinki items
+					if (item.kunta !== '091') return acc
+
+					const raAsKpa = Number(item.ra_as_kpa)
+					const hrKtu = Number(item.hr_ktu)
+
+					return {
+						count: acc.count + 1,
+						ra_as_kpa_min: Math.min(acc.ra_as_kpa_min, raAsKpa),
+						ra_as_kpa_max: Math.max(acc.ra_as_kpa_max, raAsKpa),
+						hr_ktu_min: Math.min(acc.hr_ktu_min, hrKtu),
+						hr_ktu_max: Math.max(acc.hr_ktu_max, hrKtu),
+					}
+				},
+				{
+					count: 0,
+					ra_as_kpa_min: Infinity,
+					ra_as_kpa_max: -Infinity,
+					hr_ktu_min: Infinity,
+					hr_ktu_max: -Infinity,
+				}
+			)
 
 			// Helsinki specific statistics
 			this.helsinkiStatistics = {
 				ra_as_kpa: {
-					min:
-						helsinkiData.length > 0
-							? Math.min(...helsinkiData.map((item) => Number(item.ra_as_kpa)))
-							: null,
-					max:
-						helsinkiData.length > 0
-							? Math.max(...helsinkiData.map((item) => Number(item.ra_as_kpa)))
-							: null,
+					min: stats.count > 0 ? stats.ra_as_kpa_min : null,
+					max: stats.count > 0 ? stats.ra_as_kpa_max : null,
 				},
 				hr_ktu: {
-					min:
-						helsinkiData.length > 0
-							? Math.min(...helsinkiData.map((item) => Number(item.hr_ktu)))
-							: null,
-					max:
-						helsinkiData.length > 0
-							? Math.max(...helsinkiData.map((item) => Number(item.hr_ktu)))
-							: null,
+					min: stats.count > 0 ? stats.hr_ktu_min : null,
+					max: stats.count > 0 ? stats.hr_ktu_max : null,
 				},
 			}
 		},

@@ -144,14 +144,38 @@ export function useGridStyling() {
 		return isMissingValues
 	}
 
+	/**
+	 * Gets the color for a given index value using threshold-based lookup.
+	 * Uses direct threshold comparison instead of slice().find() to avoid array allocation.
+	 *
+	 * @param {number} indexValue - The index value (0-1 range)
+	 * @param {string} indexType - The index type key for color scheme lookup
+	 * @returns {Cesium.Color} Cached color for the value
+	 */
 	const getColorForIndex = (indexValue, indexType) => {
 		const colorScheme = indexToColorScheme[indexType] || heatColors
-		// Find the correct color object based on the index value, ignoring the first two "missing data" entries
-		const colorEntry = colorScheme.slice(2).find((_entry, i, _arr) => {
-			const lowerBound = i * 0.2
-			return indexValue < lowerBound + 0.2
-		})
-		const colorString = colorEntry ? colorEntry.color : colorScheme[colorScheme.length - 1].color
+
+		// Direct threshold lookup - avoids slice(2).find() array allocation
+		// Color schemes have 2 "missing data" entries at indices 0-1, then 5 threshold colors at 2-6
+		// Thresholds: < 0.2 (index 2), 0.2-0.4 (3), 0.4-0.6 (4), 0.6-0.8 (5), > 0.8 (6)
+		let colorIndex
+		if (indexValue < 0.2) {
+			colorIndex = 2
+		} else if (indexValue < 0.4) {
+			colorIndex = 3
+		} else if (indexValue < 0.6) {
+			colorIndex = 4
+		} else if (indexValue < 0.8) {
+			colorIndex = 5
+		} else {
+			colorIndex = colorScheme.length - 1 // > 0.8
+		}
+
+		// Ensure we don't go out of bounds for shorter color schemes
+		const effectiveIndex = Math.min(colorIndex, colorScheme.length - 1)
+		const colorString =
+			colorScheme[effectiveIndex]?.color || colorScheme[colorScheme.length - 1].color
+
 		return getCachedColor(colorString, baseAlpha.value)
 	}
 

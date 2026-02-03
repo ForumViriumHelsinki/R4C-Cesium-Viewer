@@ -21,14 +21,17 @@ import { useURLStore } from './urlStore.js'
  *
  * @typedef {Object} HeatExposureState
  * @property {Array<Object>|null} data - Raw postal code heat exposure features
+ * @property {Map<string, Object>|null} dataByPostcode - Indexed lookup by postal code ID for O(1) access
  */
 export const useHeatExposureStore = defineStore('heatExposure', {
 	state: () => ({
 		data: null, // Stores the raw Postal code data
+		dataByPostcode: null, // Map-based index for O(1) lookups
 	}),
 	getters: {
 		/**
 		 * Retrieves heat exposure data for a specific postal code
+		 * Uses Map-based index for O(1) lookup instead of O(n) find()
 		 * @param {Object} state - Pinia state
 		 * @returns {(postcode: string) => Object|undefined} Function accepting postcode and returning feature data
 		 *
@@ -37,7 +40,12 @@ export const useHeatExposureStore = defineStore('heatExposure', {
 		 * console.log(heatData.properties.average_heat_exposure);
 		 */
 		getDataById: (state) => (postcode) => {
-			return state.data.find((item) => item.id === postcode)
+			// Use indexed lookup for O(1) performance
+			if (state.dataByPostcode) {
+				return state.dataByPostcode.get(postcode)
+			}
+			// Fallback to linear search if index not built
+			return state.data?.find((item) => item.id === postcode)
 		},
 	},
 	actions: {
@@ -45,6 +53,7 @@ export const useHeatExposureStore = defineStore('heatExposure', {
 		 * Loads postal code heat exposure data from pygeoapi
 		 * Fetches all heat exposure records and stores them in state.
 		 * Automatically uses the latest available heat data endpoint.
+		 * Builds Map-based index for O(1) lookups by postal code ID.
 		 *
 		 * @returns {Promise<void>}
 		 * @throws {Error} If heat exposure data fetch fails
@@ -63,6 +72,9 @@ export const useHeatExposureStore = defineStore('heatExposure', {
 				}
 
 				this.data = data
+
+				// Build indexed lookup for O(1) access by postal code
+				this.dataByPostcode = new Map(data.map((item) => [item.id, item]))
 			} catch (error) {
 				logger.error('Error fetching postal codedata:', error)
 			}
