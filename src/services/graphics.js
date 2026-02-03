@@ -27,11 +27,13 @@ export default class Graphics {
 		this.graphicsStore = useGraphicsStore()
 		this.viewer = null
 		this.scene = null
+		this._supportDetected = false
 	}
 
 	/**
 	 * Initializes graphics quality settings for the Cesium viewer
-	 * Detects hardware support, applies initial settings, and sets up reactive watchers.
+	 * Defers hardware detection to first use for faster initial load.
+	 * Sets up reactive watchers for dynamic settings changes.
 	 *
 	 * @param {Cesium.Viewer} viewer - CesiumJS viewer instance
 	 * @returns {void}
@@ -40,20 +42,28 @@ export default class Graphics {
 		this.viewer = viewer
 		this.scene = viewer.scene
 
-		// Detect hardware support
-		this.detectSupport()
+		// Defer hardware detection until actually needed
+		// Apply settings will trigger lazy detection
+		requestIdleCallback(
+			() => {
+				this.detectSupport()
+				this.applyGraphicsSettings()
+			},
+			{ timeout: 2000 }
+		)
 
-		// Apply initial graphics settings
-		this.applyGraphicsSettings()
-
-		// Set up watchers for reactive updates
+		// Set up watchers for reactive updates (doesn't need detection)
 		this.setupWatchers()
 	}
 
 	/**
 	 * Detect hardware support for various graphics features
+	 * Lazy detection - only runs once, results cached for subsequent calls.
 	 */
 	detectSupport() {
+		// Skip if already detected
+		if (this._supportDetected) return
+
 		const Cesium = getCesium()
 		const supportInfo = {
 			msaaSupported: this.scene.msaaSupported,
@@ -64,6 +74,7 @@ export default class Graphics {
 		}
 
 		this.graphicsStore.setSupportInfo(supportInfo)
+		this._supportDetected = true
 
 		// Log support information
 		logger.debug('Graphics Support Detection:', supportInfo)
