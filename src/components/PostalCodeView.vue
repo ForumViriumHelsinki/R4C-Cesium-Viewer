@@ -294,6 +294,13 @@ let unsubscribe = null
 
 // Methods
 const reset = () => {
+	// Cancel any in-flight building loads before resetting
+	const building = new Building()
+	building.cancelCurrentLoad()
+
+	// Restore grid visibility if it was hidden when entering postal code
+	toggleStore.onExitPostalCode()
+
 	// Smart reset instead of page reload
 	store.setLevel('start')
 	store.setPostalCode(null)
@@ -448,7 +455,10 @@ const filterBuildingsEvent = () => {
 
 		if (buildingsDataSource) {
 			if (hideNonSote.value || filterBuildings.value || hideLow.value) {
-				buildingService.filterBuildings(buildingsDataSource)
+				// Fire-and-forget async call - filter uses batch processing to yield to main thread
+				buildingService.filterBuildings(buildingsDataSource).catch((error) => {
+					console.error('[PostalCodeView] Failed to filter buildings:', error)
+				})
 			} else {
 				buildingService.showAllBuildings(buildingsDataSource)
 			}

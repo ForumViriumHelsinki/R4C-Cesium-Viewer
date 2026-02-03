@@ -99,5 +99,16 @@
 		"individualTests": {
 			"should complete full user journey": 55000
 		}
+	},
+	"view-transition-performance": {
+		"total": 60000,
+		"cesiumInit": 8000,
+		"individualTests": {
+			"capital region to statistical grid transition should complete within budget": 8000,
+			"statistical grid to capital region transition should complete within budget": 6000,
+			"grid entity styling should not cause long tasks": 12000,
+			"nature grid toggle should maintain UI responsiveness": 8000,
+			"should record performance marks during grid transition": 10000
+		}
 	}
 }

@@ -94,7 +94,10 @@ export default {
 			)[0]
 			if (buildingsDataSource) {
 				if (hideNonSote.value || hideNewBuildings.value || hideLow.value) {
-					buildingService.filterBuildings(buildingsDataSource)
+					// Fire-and-forget async call - filter uses batch processing to yield to main thread
+					buildingService.filterBuildings(buildingsDataSource).catch((error) => {
+						console.error('[Filters] Failed to filter buildings:', error)
+					})
 				} else {
 					buildingService.showAllBuildings(buildingsDataSource)
 				}

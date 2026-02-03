@@ -77,6 +77,26 @@ export default class Building {
 		return this._loader.loadBuildings(postalCode)
 	}
 
+	/**
+	 * Cancels any in-flight building load operation.
+	 * Safe to call even if no load is in progress.
+	 *
+	 * @returns {void}
+	 */
+	cancelCurrentLoad() {
+		this._loader.cancelCurrentLoad()
+	}
+
+	/**
+	 * Gets the layer ID for the currently active load.
+	 * Used for external monitoring or cancellation.
+	 *
+	 * @returns {string|null} Layer ID or null if no active load
+	 */
+	get activeLayerId() {
+		return this._loader.activeLayerId
+	}
+
 	// ============================================================
 	// Styler Methods (delegated to BuildingStyler)
 	// ============================================================
@@ -169,11 +189,13 @@ export default class Building {
 
 	/**
 	 * Filter buildings based on UI toggle switches.
+	 * Uses batch processing to yield to main thread and prevent UI blocking.
 	 * @param {Cesium.DataSource} buildingsDataSource - Data source containing building entities
+	 * @returns {Promise<void>}
 	 */
-	filterBuildings(buildingsDataSource) {
+	async filterBuildings(buildingsDataSource) {
 		// Call filter, then reset outline (since filter module cannot call back to highlighter)
-		this._filter.filterBuildings(buildingsDataSource)
+		await this._filter.filterBuildings(buildingsDataSource)
 		// Note: resetBuildingOutline is called within updateHeatHistogramDataAfterFilter
 		// which needs to be coordinated here to avoid circular dependency
 	}

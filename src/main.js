@@ -72,7 +72,9 @@ Sentry.init({
 	integrations: [
 		Sentry.browserTracingIntegration(),
 		Sentry.replayIntegration(),
-		Sentry.replayCanvasIntegration(),
+		// Note: replayCanvasIntegration removed - incompatible with CesiumJS WebGL
+		// Canvas replay captures every frame, causing 30-40s of main thread blocking
+		// Session replay still works for DOM elements; only canvas content is excluded
 	],
 
 	// Sample error events - full capture in dev, 20% in production
@@ -93,6 +95,9 @@ Sentry.init({
 	// plus for 100% of sessions with an error
 	replaysSessionSampleRate: 0.1,
 	replaysOnErrorSampleRate: 1.0,
+
+	// CPU profiling: 10% in production (minimal overhead), 100% in dev
+	profilesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
 })
 
 // Log Sentry configuration in development only (security: avoid exposing DSN)

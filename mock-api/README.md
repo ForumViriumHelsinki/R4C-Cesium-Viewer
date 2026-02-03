@@ -17,11 +17,11 @@ The server runs on `http://localhost:5050` (port 5000 is often used by AirPlay o
 
 ## Usage with Frontend
 
-### Recommended: Use Makefile
+### Recommended: Use Justfile
 
 ```bash
 # Start mock API + frontend together
-make dev-mock
+just dev-mock
 ```
 
 This automatically:
@@ -67,17 +67,17 @@ bun run generate --density 20
 bun run generate --postal-codes 10
 ```
 
-Via Makefile:
+Via Justfile:
 
 ```bash
 # Default density
-make mock-generate
+just mock-generate
 
 # Custom density
-MOCK_DENSITY=100 make mock-generate
+MOCK_DENSITY=100 just mock-generate
 
 # Force regeneration
-rm -rf mock-api/fixtures && make mock-generate
+rm -rf mock-api/fixtures && just mock-generate
 ```
 
 ## Supported Collections
@@ -196,5 +196,5 @@ curl -fsSL https://bun.sh/install | bash
 ## Related Documentation
 
 - [Getting Started Guide](../docs/GETTING_STARTED.md) - Full development setup options
-- [Makefile targets](../Makefile) - `mock-api`, `mock-generate`, `dev-mock`, `mock-stop`
+- [Justfile recipes](../justfile) - `mock-api`, `mock-generate`, `dev-mock`, `mock-stop`
 - [Vite configuration](../vite.config.js) - `detectPygeoApiPort()` function

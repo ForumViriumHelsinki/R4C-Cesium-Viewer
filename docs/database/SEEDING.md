@@ -6,10 +6,10 @@
 
 ```bash
 # Start services first
-make dev
+just dev
 
 # Seed the database (in another terminal)
-make db-seed
+just db-seed
 ```
 
 That's it. You now have realistic test data for all major tables.
@@ -51,10 +51,10 @@ The seeding system provides realistic test data for all major tables in the regi
 ## Makefile Commands (Recommended)
 
 ```bash
-make db-seed                    # Seed with 100 records per table
-make db-seed SEED_RECORDS=50    # Fewer records (faster)
-make db-seed SEED_RECORDS=500   # More records (load testing)
-make db-seed-clean              # Clear existing data, then seed
+just db-seed                    # Seed with 100 records per table
+just db-seed SEED_RECORDS=50    # Fewer records (faster)
+just db-seed SEED_RECORDS=500   # More records (load testing)
+just db-seed-clean              # Clear existing data, then seed
 ```
 
 ## Manual Seeding
@@ -176,10 +176,10 @@ The job will:
 
 ```bash
 # 1. Start services
-make dev
+just dev
 
 # 2. In another terminal: seed the database
-make db-seed
+just db-seed
 
 # 3. Develop with data
 # Your application now has realistic test data
@@ -201,7 +201,7 @@ skaffold dev --profile=local-with-services
 ### Continuous Development
 
 - **Data persists**: Mock data remains across Skaffold restarts
-- **Re-seeding**: Run `make db-seed-clean` to refresh data
+- **Re-seeding**: Run `just db-seed-clean` to refresh data
 - **Selective updates**: Use `--tables` to update specific datasets
 
 ## Testing pygeoapi Collections
@@ -295,9 +295,9 @@ You can modify the data generation patterns:
 
 ## Best Practices
 
-1. **Use `make db-seed`** for the simplest experience
+1. **Use `just db-seed`** for the simplest experience
 2. **Start with default record counts** (100) for normal development
-3. **Use `make db-seed-clean`** for fresh testing environments
+3. **Use `just db-seed-clean`** for fresh testing environments
 4. **Test pygeoapi endpoints** after seeding to verify data quality
 5. **Use realistic coordinate bounds** to match your application's expected data
 

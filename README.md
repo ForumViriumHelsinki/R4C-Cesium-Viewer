@@ -34,7 +34,7 @@ Perfect for frontend development. No Kubernetes or PostgreSQL needed.
 
 ```bash
 npm install
-make dev-mock
+just dev-mock
 ```
 
 **Available at:** http://localhost:5173 (frontend) | http://localhost:5050 (mock API)
@@ -46,13 +46,13 @@ For testing with real database queries or production data.
 ```bash
 # First time setup
 cp .env.example .env
-make setup
+just setup
 
 # Start development (services persist, frontend iterates)
-make dev
+just dev
 
 # Seed with test data (recommended)
-make db-seed
+just db-seed
 ```
 
 **Available at:** http://localhost:5173 (frontend) | http://localhost:5000 (pygeoapi)
@@ -61,17 +61,17 @@ make db-seed
 
 | Command         | Description                   | Frontend       | Backend               |
 | --------------- | ----------------------------- | -------------- | --------------------- |
-| `make dev-mock` | Mock API (no database)        | localhost:5173 | Mock server on :5050  |
-| `make dev`      | Local frontend + K8s services | localhost:5173 | Persist on Ctrl+C     |
-| `make dev-full` | All in containers             | localhost:4173 | Persist on Ctrl+C     |
-| `make stop`     | Stop everything               | -              | Data preserved in PVC |
+| `just dev-mock` | Mock API (no database)        | localhost:5173 | Mock server on :5050  |
+| `just dev`      | Local frontend + K8s services | localhost:5173 | Persist on Ctrl+C     |
+| `just dev-full` | All in containers             | localhost:4173 | Persist on Ctrl+C     |
+| `just stop`     | Stop everything               | -              | Data preserved in PVC |
 
-### make dev-mock (Fastest)
+### just dev-mock (Fastest)
 
 Uses a lightweight Bun server with synthetic GeoJSON data. No containers, no database:
 
 ```bash
-make dev-mock
+just dev-mock
 # Ctrl+C stops both mock server and frontend
 ```
 
@@ -83,22 +83,22 @@ The mock API:
 
 See [mock-api/README.md](./mock-api/README.md) for details.
 
-### make dev (Recommended for Full Stack)
+### just dev (Recommended for Full Stack)
 
 Backend services run in Kubernetes, frontend runs locally with Vite for fast hot-reload:
 
 ```bash
-make dev
+just dev
 # Ctrl+C stops frontend only, services keep running
 # Run again to restart just the frontend
 ```
 
-### make dev-full
+### just dev-full
 
 Everything runs in containers (closer to production):
 
 ```bash
-make dev-full
+just dev-full
 # Ctrl+C stops frontend container, services keep running
 ```
 
@@ -106,21 +106,21 @@ make dev-full
 
 ```bash
 # Stop all services
-make stop
+just stop
 
 # Stop only frontend (keep services)
-make stop-frontend
+just stop-frontend
 
 # Stop mock API
-make mock-stop
+just mock-stop
 
 # View all commands
-make help
+just help
 ```
 
 ## Legacy Commands
 
-These still work but `make` commands are preferred:
+These still work but `just` commands are preferred:
 
 ```bash
 # Direct Vite (uses production pygeoapi)
@@ -172,10 +172,10 @@ bun run dev:test  # Terminal 1: Start with E2E flag
 npx playwright test  # Terminal 2: Run tests
 ```
 
-Or use make (handles E2E flag automatically):
+Or use just (handles E2E flag automatically):
 
 ```bash
-make test-e2e
+just test-e2e
 ```
 
 Run tests in interactive UI mode:

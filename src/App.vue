@@ -122,9 +122,6 @@
 			<CesiumViewer />
 			<SosEco250mGrid v-if="grid250m" />
 
-			<!-- Version Badge -->
-			<VersionBadge />
-
 			<!-- Loading Indicator -->
 			<LoadingIndicator
 				mode="both"
@@ -137,6 +134,9 @@
 				<span class="disclaimer-text"> Data: HSY • Statistics Finland </span>
 			</div>
 		</v-main>
+
+		<!-- Heat Timeline Overlay - shown when buildings are loaded (postalCode or building level) -->
+		<Timeline v-if="currentLevel === 'postalCode' || currentLevel === 'building'" />
 	</v-app>
 </template>
 

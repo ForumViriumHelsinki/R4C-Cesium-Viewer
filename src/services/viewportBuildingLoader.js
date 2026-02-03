@@ -333,6 +333,14 @@ export default class ViewportBuildingLoader {
 			return
 		}
 
+		// Skip building loading when in statistical grid view - grid has 18K+ entities
+		// and doesn't need building overlays. This prevents unnecessary loading during
+		// the grid transition which compounds performance issues.
+		if (this.toggleStore.gridView) {
+			logger.debug('[ViewportBuildingLoader] Grid view active, skipping building load')
+			return
+		}
+
 		// Check camera altitude - skip loading if too high (region overview)
 		const cameraHeight = this.viewer.camera.positionCartographic.height
 		if (cameraHeight > CONFIG.MAX_ALTITUDE_FOR_LOADING) {
