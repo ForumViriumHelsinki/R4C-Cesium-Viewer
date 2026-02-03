@@ -14,6 +14,7 @@ import { DATES } from '../../constants/dates.js'
 import { useGlobalStore } from '../../stores/globalStore.js'
 import { usePropsStore } from '../../stores/propsStore.js'
 import { useToggleStore } from '../../stores/toggleStore.js'
+import { processBatch } from '../../utils/batchProcessor.js'
 import { eventBus } from '../eventEmitter.js'
 import { logVisibilityChange } from '../visibilityLogger.js'
 
@@ -41,84 +42,89 @@ export class BuildingFilter {
 
 	/**
 	 * Filter buildings from the given data source based on UI toggle switches.
-	 * Optimized to prevent redundant re-application and batch visibility changes.
+	 * Uses batch processing to yield to main thread and prevent UI blocking.
 	 *
 	 * @param {Cesium.DataSource} buildingsDataSource - Data source containing building entities
+	 * @returns {Promise<void>}
 	 */
-	filterBuildings(buildingsDataSource) {
+	async filterBuildings(buildingsDataSource) {
 		if (!buildingsDataSource) return
 
 		const hideNewBuildings = this.toggleStore.hideNewBuildings
 		const hideNonSote = this.toggleStore.hideNonSote
 		const hideLow = this.toggleStore.hideLow
 
-		// Get current filter state
-		const currentState = { hideNewBuildings, hideNonSote, hideLow }
-
-		// Skip if state unchanged to prevent redundant re-application
+		// Skip if state unchanged - shallow comparison (faster than JSON.stringify)
 		if (
 			this.lastFilterState &&
-			JSON.stringify(this.lastFilterState) === JSON.stringify(currentState)
+			this.lastFilterState.hideNewBuildings === hideNewBuildings &&
+			this.lastFilterState.hideNonSote === hideNonSote &&
+			this.lastFilterState.hideLow === hideLow
 		) {
 			return
 		}
-		this.lastFilterState = currentState
+		this.lastFilterState = { hideNewBuildings, hideNonSote, hideLow }
 
 		// Pre-calculate the cutoff date for hideNewBuildings filter
 		const cutoffDate = DATES.NEW_BUILDING_CUTOFF.getTime()
+		const helsinkiView = this.toggleStore.helsinkiView
 
 		// Batch entity visibility changes
 		const entitiesToHide = []
 		const entitiesToShow = []
 
 		// Single pass through all entities with all filter checks
+		// Use batch processing to yield to main thread and avoid TBT issues
 		const entities = buildingsDataSource.entities.values
-		for (let i = 0; i < entities.length; i++) {
-			const entity = entities[i]
-			let shouldHide = false
 
-			// Check hideNewBuildings filter
-			if (hideNewBuildings) {
-				const completionDate = entity._properties?._c_valmpvm?._value
-				if (completionDate && new Date(completionDate).getTime() >= cutoffDate) {
-					shouldHide = true
+		await processBatch(
+			entities,
+			(entity) => {
+				let shouldHide = false
+
+				// Check hideNewBuildings filter
+				if (hideNewBuildings) {
+					const completionDate = entity._properties?._c_valmpvm?._value
+					if (completionDate && new Date(completionDate).getTime() >= cutoffDate) {
+						shouldHide = true
+					}
 				}
-			}
 
-			// Check hideNonSote filter (social/healthcare buildings)
-			if (!shouldHide && hideNonSote) {
-				const kayttotark = this.toggleStore.helsinkiView
-					? entity._properties?._c_kayttark?._value
-						? Number(entity._properties?._c_kayttark?._value)
-						: null
-					: entity._properties?._kayttarks?._value
+				// Check hideNonSote filter (social/healthcare buildings)
+				if (!shouldHide && hideNonSote) {
+					const kayttotark = helsinkiView
+						? entity._properties?._c_kayttark?._value
+							? Number(entity._properties?._c_kayttark?._value)
+							: null
+						: entity._properties?._kayttarks?._value
 
-				const entityIsSoteBuilding = this.toggleStore.helsinkiView
-					? kayttotark && isSoteBuilding(kayttotark)
-					: kayttotark === 'Yleinen rakennus'
+					const entityIsSoteBuilding = helsinkiView
+						? kayttotark && isSoteBuilding(kayttotark)
+						: kayttotark === 'Yleinen rakennus'
 
-				if (!entityIsSoteBuilding) {
-					shouldHide = true
+					if (!entityIsSoteBuilding) {
+						shouldHide = true
+					}
 				}
-			}
 
-			// Check hideLow filter (buildings with <= 6 floors)
-			if (!shouldHide && hideLow) {
-				const floorCount =
-					entity._properties?.[this.toggleStore.helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']
-						?._value
-				if (!floorCount || floorCount <= 6) {
-					shouldHide = true
+				// Check hideLow filter (buildings with <= 6 floors)
+				if (!shouldHide && hideLow) {
+					const floorCount =
+						entity._properties?.[helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']?._value
+					if (!floorCount || floorCount <= 6) {
+						shouldHide = true
+					}
 				}
-			}
 
-			// Collect entities by visibility state
-			if (shouldHide) {
-				entitiesToHide.push(entity)
-			} else {
-				entitiesToShow.push(entity)
-			}
-		}
+				// Collect entities by visibility state
+				if (shouldHide) {
+					entitiesToHide.push(entity)
+				} else {
+					entitiesToShow.push(entity)
+				}
+			},
+			{ processorName: 'buildingFilter', yieldToMain: true }
+		)
 
 		// Apply visibility changes in batches to minimize render cycles
 		for (let i = 0; i < entitiesToHide.length; i++) {

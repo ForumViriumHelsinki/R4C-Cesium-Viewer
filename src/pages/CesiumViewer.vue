@@ -273,6 +273,10 @@ export default {
 				restoredFromUrl.value = true
 			}
 
+			// Start external data loading early - it's independent of viewer initialization
+			// This runs in parallel while the viewer initializes, reducing total blocking time
+			const externalDataPromise = loadExternalData()
+
 			// Initialize viewer
 			await initViewer()
 
@@ -301,8 +305,8 @@ export default {
 			// Initialize viewport streaming if enabled
 			await initViewportStreaming()
 
-			// Load external data (Paavo, heat exposure)
-			await loadExternalData()
+			// Wait for external data to complete (likely already done by now)
+			await externalDataPromise
 
 			// Start cache warming
 			startCacheWarming()
