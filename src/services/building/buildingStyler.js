@@ -21,9 +21,13 @@ import { logVisibilityChange } from '../visibilityLogger.js'
 // Caches Cesium.Color objects to avoid repeated instantiation for common colors
 const colorCache = new Map()
 
+/** Maximum number of colors to cache before FIFO eviction */
+const COLOR_CACHE_MAX_SIZE = 500
+
 /**
  * Gets a cached Cesium.Color instance, creating one if not already cached.
  * Reduces GC pressure by reusing color objects.
+ * Uses FIFO eviction when cache exceeds COLOR_CACHE_MAX_SIZE to prevent unbounded growth.
  *
  * @param {number} r - Red component (0-1)
  * @param {number} g - Green component (0-1)
@@ -34,6 +38,13 @@ const colorCache = new Map()
 function getCachedColor(r, g, b, a) {
 	// Round to 2 decimal places to increase cache hits
 	const key = `${r.toFixed(2)},${g.toFixed(2)},${b.toFixed(2)},${a.toFixed(2)}`
+
+	// FIFO eviction when at capacity (before adding new entry)
+	if (!colorCache.has(key) && colorCache.size >= COLOR_CACHE_MAX_SIZE) {
+		const oldestKey = colorCache.keys().next().value
+		colorCache.delete(oldestKey)
+	}
+
 	if (!colorCache.has(key)) {
 		const Cesium = getCesium()
 		colorCache.set(key, new Cesium.Color(r, g, b, a))

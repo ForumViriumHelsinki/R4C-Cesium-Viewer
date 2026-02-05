@@ -219,6 +219,27 @@ The **FeaturePicker** service (`featurepicker.js`, 1070 lines) serves as the cen
 - System SHALL prevent clicks on control panel and time series elements
 - System SHALL log click coordinates and timing for debugging
 
+**FR-1.4: Request Lifecycle Management**
+
+- System SHALL cancel in-flight building data requests when user initiates new navigation
+- System SHALL track active request via `BuildingLoader.activeLayerId` getter
+- System SHALL implement `cancelCurrentLoad()` to abort pending HTTP requests
+- System SHALL handle AbortError gracefully without logging as error
+
+**FR-1.5: Latest-Wins Navigation**
+
+- System SHALL queue pending navigation when user clicks while processing via `globalStore.pendingNavigation`
+- System SHALL provide `setPendingNavigation()`, `clearPendingNavigation()`, `consumePendingNavigation()` actions
+- System SHALL process queued navigation after current operation completes
+- System SHALL cancel current data loading when queueing new navigation
+
+**FR-1.6: Visibility Coordination**
+
+- System SHALL track grid visibility state before entering postal code via `toggleStore._previousGrid250m`
+- System SHALL call `onEnterPostalCode()` hook when navigating to postal code level
+- System SHALL call `onExitPostalCode()` hook when navigating away from postal code level
+- System SHALL restore previous grid visibility state on postal code exit
+
 ### FR-2: Navigation Level Management
 
 **FR-2.1: Level State Tracking**

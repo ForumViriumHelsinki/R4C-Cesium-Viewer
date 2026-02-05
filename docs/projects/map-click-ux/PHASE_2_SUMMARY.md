@@ -429,6 +429,34 @@ Phase 2 is complete. Ready to proceed to:
   - FR-3.3: Loading performance optimization
   - FR-3.4: Error handling and retry logic
 
+### Phase 3 State Switching Improvements (Implemented)
+
+Building on Phase 2's cancellation system, Phase 3 added robust state switching patterns:
+
+**Request Cancellation:**
+
+- `BuildingLoader.cancelCurrentLoad()` - Aborts in-flight data requests
+- `BuildingLoader.activeLayerId` - Tracks currently loading postal code
+- Integration: Called from FeaturePicker reset functions and navigation handlers
+
+**Latest-Wins Navigation:**
+
+- `globalStore.pendingNavigation` - Queues most recent user click
+- Actions: `setPendingNavigation()`, `clearPendingNavigation()`, `consumePendingNavigation()`
+- Flow: When user clicks during loading → queue pending → cancel current → process pending after completion
+
+**Visibility Coordination:**
+
+- `toggleStore._previousGrid250m` - Tracks grid state before postal code entry
+- Hooks: `onEnterPostalCode()` hides grid, `onExitPostalCode()` restores
+- Integration: Called from FeaturePicker, App.vue, PostalCodeView.vue, GridView.vue
+
+These patterns ensure:
+
+1. No stale data overwrites fresher navigation targets
+2. Rapid user clicks always navigate to the last-clicked target
+3. Layer visibility stays synchronized during navigation transitions
+
 ---
 
 ## Verification Commands

@@ -6,9 +6,11 @@
 
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { VIEWPORT } from '../constants/viewport.js'
+import Datasource from '../services/datasource.js'
 import ViewportBuildingLoader from '../services/viewportBuildingLoader.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
 
 /**
@@ -24,8 +26,8 @@ import logger from '../utils/logger.js'
  * - Automatic cleanup on unmount
  *
  * @param {any} viewer - Cesium viewer reference
- * @param {any} Camera - Camera service class
- * @param {any} Featurepicker - Featurepicker service class
+ * @param {() => any} getCamera - Getter function for Camera service class
+ * @param {() => any} getFeaturepicker - Getter function for Featurepicker service class
  * @returns {{
  *   isLoadingBuildings: import('vue').Ref<boolean>,
  *   viewportLoadingProgress: import('vue').Ref<{current: number, total: number}>,
@@ -39,12 +41,13 @@ import logger from '../utils/logger.js'
  *
  * @example
  * import { useViewportLoading } from '@/composables/useViewportLoading';
- * const { handleCameraSettled, initViewportStreaming } = useViewportLoading(viewer.value, Camera, Featurepicker);
+ * const { handleCameraSettled, initViewportStreaming } = useViewportLoading(viewer.value, () => Camera, () => Featurepicker);
  * await initViewportStreaming();
  */
-export function useViewportLoading(viewer, Camera, Featurepicker) {
+export function useViewportLoading(viewer, getCamera, getFeaturepicker) {
 	const store = useGlobalStore()
 	const featureFlagStore = useFeatureFlagStore()
+	const toggleStore = useToggleStore()
 
 	const isLoadingBuildings = ref(false)
 	const viewportLoadingProgress = ref({ current: 0, total: 0 })
@@ -83,6 +86,12 @@ export function useViewportLoading(viewer, Camera, Featurepicker) {
 			return
 		}
 
+		// Skip postal code-based viewport loading if 250m grid is active
+		if (toggleStore.grid250m) {
+			logger.debug('[useViewportLoading] 250m grid active, skipping postal code-based loading')
+			return
+		}
+
 		// Prevent overlapping calls to avoid visibility blinking
 		// Log camera settled event for visibility debugging
 		logger.debug(
@@ -106,6 +115,7 @@ export function useViewportLoading(viewer, Camera, Featurepicker) {
 			return
 		}
 
+		const Camera = getCamera()
 		if (!Camera) {
 			logger.warn('[useViewportLoading] Camera module not loaded')
 			return
@@ -135,6 +145,7 @@ export function useViewportLoading(viewer, Camera, Featurepicker) {
 			'm - proceeding with viewport-based building loading'
 		)
 
+		const Featurepicker = getFeaturepicker()
 		if (!Featurepicker) {
 			logger.warn('[useViewportLoading] Featurepicker module not loaded')
 			return
@@ -233,6 +244,48 @@ export function useViewportLoading(viewer, Camera, Featurepicker) {
 				logger.debug('[useViewportLoading] Disabling viewport streaming')
 				await viewportBuildingLoader.shutdown()
 				viewportBuildingLoader = null
+			}
+		}
+	)
+
+	/**
+	 * Watch for changes to 250m statistical grid toggle
+	 * Hides buildings when grid is shown, restores them when grid is hidden.
+	 * This prevents visual clutter and the "darker map" issue from overlapping entities.
+	 *
+	 * Handles both viewport-based (tile streaming) and postal code-based building loading:
+	 * - When viewport streaming is enabled: uses viewportBuildingLoader methods
+	 * - When viewport streaming is disabled: uses Datasource to hide/show postal code buildings
+	 */
+	watch(
+		() => toggleStore.grid250m,
+		async (gridEnabled) => {
+			if (gridEnabled) {
+				// Grid turned ON - hide all buildings
+				logger.debug('[useViewportLoading] 250m grid enabled, hiding buildings')
+
+				// Hide viewport-based buildings if loader exists
+				if (viewportBuildingLoader) {
+					viewportBuildingLoader.setAllBuildingsVisible(false)
+					viewportBuildingLoader.cancelPendingLoads()
+				}
+
+				// ALSO hide postal code-based buildings (fallback for non-viewport-streaming mode)
+				const datasourceService = new Datasource()
+				await datasourceService.changeDataSourceShowByName('Buildings', false)
+			} else {
+				// Grid turned OFF - show buildings and refresh viewport
+				logger.debug('[useViewportLoading] 250m grid disabled, restoring buildings')
+
+				if (viewportBuildingLoader) {
+					viewportBuildingLoader.setAllBuildingsVisible(true)
+					// Trigger viewport update to ensure correct visibility based on current viewport
+					await viewportBuildingLoader.updateViewport()
+				}
+
+				// ALSO show postal code-based buildings (fallback for non-viewport-streaming mode)
+				const datasourceService = new Datasource()
+				await datasourceService.changeDataSourceShowByName('Buildings', true)
 			}
 		}
 	)

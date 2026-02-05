@@ -18,6 +18,11 @@ vi.mock('@/services/cesiumProvider', () => {
 			this.minimumLevel = options.minimumLevel
 			this.maximumLevel = options.maximumLevel
 			this.tilingScheme = options.tilingScheme
+			// Mock errorEvent for retry handler integration
+			this.errorEvent = {
+				addEventListener: vi.fn(),
+				removeEventListener: vi.fn(),
+			}
 		}),
 		GeographicTilingScheme: vi.fn(function () {
 			this.name = 'GeographicTilingScheme'
@@ -35,6 +40,16 @@ vi.mock('@/services/cesiumProvider', () => {
 		},
 	}
 })
+
+// Mock WMS retry handler
+vi.mock('@/utils/wmsRetryHandler.js', () => ({
+	getGlobalWMSRetryHandler: vi.fn(() => ({
+		handleTileError: vi.fn(),
+		clear: vi.fn(),
+		getStats: vi.fn(() => ({})),
+	})),
+	resetGlobalWMSRetryHandler: vi.fn(),
+}))
 
 // Mock URL store
 vi.mock('@/stores/urlStore.js', () => ({

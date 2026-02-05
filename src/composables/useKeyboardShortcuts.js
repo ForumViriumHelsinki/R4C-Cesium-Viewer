@@ -18,16 +18,16 @@ import logger from '../utils/logger.js'
  * - Automatic registration/cleanup via lifecycle hooks
  * - Camera service integration for flight cancellation
  *
- * @param {any} Camera - Camera service class reference
+ * @param {() => any} getCamera - Getter function for Camera service class
  * @returns {{
  *   handleCancelAnimation: () => void
  * }} Keyboard shortcut handlers
  *
  * @example
  * import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
- * const { handleCancelAnimation } = useKeyboardShortcuts(Camera);
+ * const { handleCancelAnimation } = useKeyboardShortcuts(() => Camera);
  */
-export function useKeyboardShortcuts(Camera) {
+export function useKeyboardShortcuts(getCamera) {
 	const store = useGlobalStore()
 
 	/**
@@ -39,6 +39,7 @@ export function useKeyboardShortcuts(Camera) {
 	const handleCancelAnimation = () => {
 		logger.debug('[useKeyboardShortcuts] User requested animation cancellation')
 
+		const Camera = getCamera()
 		if (!Camera) {
 			logger.warn('[useKeyboardShortcuts] Camera module not loaded yet')
 			return

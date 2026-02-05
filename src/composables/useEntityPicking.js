@@ -19,7 +19,7 @@ import logger from '../utils/logger.js'
  * - 500ms minimum interval between picks to prevent rapid-fire
  * - Temporary hiding of building info during processing
  *
- * @param {any} Featurepicker - Featurepicker service class
+ * @param {(() => any) | any} getFeaturepicker - Getter function or Featurepicker service class
  * @returns {{
  *   addFeaturePicker: () => void,
  *   lastPickTime: import('vue').Ref<number>
@@ -27,10 +27,10 @@ import logger from '../utils/logger.js'
  *
  * @example
  * import { useEntityPicking } from '@/composables/useEntityPicking';
- * const { addFeaturePicker } = useEntityPicking(Featurepicker);
+ * const { addFeaturePicker } = useEntityPicking(() => Featurepicker);
  * addFeaturePicker();
  */
-export function useEntityPicking(Featurepicker) {
+export function useEntityPicking(getFeaturepicker) {
 	const store = useGlobalStore()
 	const lastPickTime = ref(0)
 
@@ -52,6 +52,10 @@ export function useEntityPicking(Featurepicker) {
 	 * @returns {void}
 	 */
 	const addFeaturePicker = () => {
+		// Support both getter function and direct value for backwards compatibility
+		const Featurepicker =
+			typeof getFeaturepicker === 'function' ? getFeaturepicker() : getFeaturepicker
+
 		if (!Featurepicker) {
 			logger.warn('[useEntityPicking] Cannot add feature picker - Featurepicker not loaded')
 			return

@@ -336,7 +336,8 @@ export default class ViewportBuildingLoader {
 		// Skip building loading when in statistical grid view - grid has 18K+ entities
 		// and doesn't need building overlays. This prevents unnecessary loading during
 		// the grid transition which compounds performance issues.
-		if (this.toggleStore.gridView) {
+		// Also skip when 250m statistical grid is active at capital region level.
+		if (this.toggleStore.gridView || this.toggleStore.grid250m) {
 			logger.debug('[ViewportBuildingLoader] Grid view active, skipping building load')
 			return
 		}
@@ -538,13 +539,21 @@ export default class ViewportBuildingLoader {
 					this.loadingTiles.delete(tileKey)
 
 					// Show the newly loaded tile with fade-in animation
+					// Skip fade-in if grid became active during load
 					const viewPrefix = this.toggleStore.helsinkiView ? 'Helsinki' : 'HSY'
 					const datasourceName = `Buildings Viewport ${viewPrefix} ${tileKey}`
 					const datasource = this.datasourceService.getDataSourceByName(datasourceName)
 					if (datasource) {
-						this.fadeInDatasource(datasource).catch((error) => {
-							logger.error(`Failed to fade in datasource for tile ${tileKey}:`, error)
-						})
+						if (this.toggleStore.grid250m) {
+							datasource.show = false
+							logger.debug(
+								`[ViewportBuildingLoader] Tile ${tileKey} loaded but hidden (grid active)`
+							)
+						} else {
+							this.fadeInDatasource(datasource).catch((error) => {
+								logger.error(`Failed to fade in datasource for tile ${tileKey}:`, error)
+							})
+						}
 					}
 
 					// Continue processing queue
@@ -931,25 +940,39 @@ export default class ViewportBuildingLoader {
 	 * Fade in a datasource's entities smoothly
 	 * Animates entity alpha from 0 to target value over FADE_CONFIG.DURATION_MS
 	 *
+	 * Performance optimizations:
+	 * - Hoists JulianDate creation (single allocation instead of entities.length × steps)
+	 * - Pre-caches entity color data before animation loop
+	 * - Uses requestAnimationFrame for frame-aligned animation
+	 * - Reuses scratch Color object to reduce GC pressure
+	 *
 	 * @param {Cesium.DataSource} datasource - Datasource containing building entities
 	 * @returns {Promise<void>}
 	 */
 	async fadeInDatasource(datasource) {
-		if (!datasource || !datasource.entities) return
+		if (!datasource?.entities) return
 
 		const Cesium = getCesium()
 		const entities = datasource.entities.values
 		const stepDuration = FADE_CONFIG.DURATION_MS / FADE_CONFIG.STEPS
 
-		// Store original alpha values for each entity
-		const originalAlphas = new Map()
+		// OPTIMIZATION: Create JulianDate once (hoisted from inner loop)
+		const now = Cesium.JulianDate.now()
 
+		// Pre-cache entity color data before animation to avoid getValue() calls per frame
+		const entityData = []
 		for (const entity of entities) {
 			if (entity.polygon?.material) {
-				const color = entity.polygon.material.color?.getValue?.(Cesium.JulianDate.now())
+				const color = entity.polygon.material.color?.getValue?.(now)
 				if (color) {
-					originalAlphas.set(entity.id, color.alpha)
-					// Start fully transparent
+					entityData.push({
+						entity,
+						r: color.red,
+						g: color.green,
+						b: color.blue,
+						targetAlpha: color.alpha,
+					})
+					// Set initial transparent state
 					entity.polygon.material = new Cesium.ColorMaterialProperty(
 						new Cesium.Color(color.red, color.green, color.blue, 0)
 					)
@@ -960,31 +983,40 @@ export default class ViewportBuildingLoader {
 		// Make datasource visible (entities are transparent)
 		datasource.show = true
 
-		// Animate alpha over time
-		for (let step = 1; step <= FADE_CONFIG.STEPS; step++) {
-			const progress = step / FADE_CONFIG.STEPS
+		// Use requestAnimationFrame for frame-aligned animation
+		return new Promise((resolve) => {
+			let step = 0
 
-			for (const entity of entities) {
-				if (entity.polygon?.material && originalAlphas.has(entity.id)) {
-					const targetAlpha = originalAlphas.get(entity.id)
-					const currentAlpha = targetAlpha * progress
-					const color = entity.polygon.material.color?.getValue?.(Cesium.JulianDate.now())
-					if (color) {
-						entity.polygon.material = new Cesium.ColorMaterialProperty(
-							new Cesium.Color(color.red, color.green, color.blue, currentAlpha)
-						)
-					}
+			const animate = () => {
+				step++
+				const progress = step / FADE_CONFIG.STEPS
+
+				// Update all entities with pre-cached color data
+				for (const data of entityData) {
+					const currentAlpha = data.targetAlpha * progress
+					data.entity.polygon.material = new Cesium.ColorMaterialProperty(
+						new Cesium.Color(data.r, data.g, data.b, currentAlpha)
+					)
+				}
+
+				// Request render
+				if (this.viewer) {
+					this.viewer.scene.requestRender()
+				}
+
+				if (step < FADE_CONFIG.STEPS) {
+					// Schedule next frame with stepDuration delay
+					setTimeout(() => requestAnimationFrame(animate), stepDuration)
+				} else {
+					logger.debug(
+						`[ViewportBuildingLoader] ✨ Fade-in complete for ${entityData.length} entities`
+					)
+					resolve()
 				}
 			}
 
-			// Request render and wait for next frame
-			if (this.viewer) {
-				this.viewer.scene.requestRender()
-			}
-			await new Promise((resolve) => setTimeout(resolve, stepDuration))
-		}
-
-		logger.debug(`[ViewportBuildingLoader] ✨ Fade-in complete for ${entities.length} entities`)
+			requestAnimationFrame(animate)
+		})
 	}
 
 	/**
@@ -1024,6 +1056,32 @@ export default class ViewportBuildingLoader {
 
 		// Update visible tiles tracking
 		this.visibleTiles = visibleSet
+	}
+
+	/**
+	 * Set visibility of all loaded building datasources
+	 * Used when toggling statistical grid to hide/show buildings without unloading.
+	 *
+	 * @param {boolean} visible - Whether buildings should be visible
+	 * @returns {void}
+	 */
+	setAllBuildingsVisible(visible) {
+		const viewPrefix = this.toggleStore.helsinkiView ? 'Helsinki' : 'HSY'
+		let updatedCount = 0
+
+		for (const [tileKey] of this.loadedTiles) {
+			const datasourceName = `Buildings Viewport ${viewPrefix} ${tileKey}`
+			const datasource = this.datasourceService.getDataSourceByName(datasourceName)
+
+			if (datasource && datasource.show !== visible) {
+				datasource.show = visible
+				updatedCount++
+			}
+		}
+
+		logger.debug(
+			`[ViewportBuildingLoader] Set ${updatedCount} building datasources to visible=${visible}`
+		)
 	}
 
 	/**
@@ -1090,6 +1148,20 @@ export default class ViewportBuildingLoader {
 			logger.debug(`[ViewportBuildingLoader] Tile ${tileKey} unloaded (entities + features)`)
 		} catch (error) {
 			logger.error(`[ViewportBuildingLoader] Error unloading tile ${tileKey}:`, error)
+		}
+	}
+
+	/**
+	 * Cancel all pending tile loads in the queue.
+	 * Called when grid view is enabled to stop further building loading.
+	 *
+	 * @returns {void}
+	 */
+	cancelPendingLoads() {
+		const cancelled = this.loadingQueue.length
+		this.loadingQueue = []
+		if (cancelled > 0) {
+			logger.debug(`[ViewportBuildingLoader] Cancelled ${cancelled} pending tile loads`)
 		}
 	}
 

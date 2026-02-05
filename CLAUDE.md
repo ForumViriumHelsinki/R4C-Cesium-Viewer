@@ -125,9 +125,9 @@ This is a Vue 3 climate data visualization application using CesiumJS for 3D map
 
 #### State Management (Pinia Stores)
 
-- `globalStore.js` - Main application state, view modes, current selections
+- `globalStore.js` - Main application state, view modes, current selections, click processing state with pending navigation coordination
 - `buildingStore.js` - Building-specific data and selection
-- `toggleStore.js` - UI toggle states and layer visibility
+- `toggleStore.js` - UI toggle states, layer visibility, postal code navigation lifecycle hooks
 - `socioEconomicsStore.js` - Socioeconomic data visualization state
 - `heatExposureStore.js` - Heat exposure data and calculations
 - `backgroundMapStore.js` - Background map layer management
@@ -201,6 +201,13 @@ CesiumViewer.vue click handler
     - Debounces rapid clicks (500ms minimum interval)
     - Ignores clicks on control panel/timeline elements
     ↓
+Check globalStore.clickProcessingState.isProcessing
+    ├─ If processing: Queue as pendingNavigation + cancel current load
+    │   - buildingService.cancelCurrentLoad()
+    │   - globalStore.setPendingNavigation({ postalCode, postalCodeName })
+    │   └─ Return (wait for current operation to complete)
+    └─ If not processing: Proceed with navigation
+    ↓
 FeaturePicker.processClick(event)
     - Converts event coordinates to Cesium.Cartesian2
     ↓
@@ -214,6 +221,10 @@ FeaturePicker.handleFeatureWithProperties(entity)
     ↓
 Updates Pinia store (level='building')
 EventBus emits 'showBuilding'
+    ↓
+Navigation Complete → Check pendingNavigation
+    ├─ If exists: globalStore.consumePendingNavigation() → process queued navigation
+    └─ If not: Navigation complete
 ```
 
 **Critical Guards in FeaturePicker:**
@@ -221,6 +232,22 @@ EventBus emits 'showBuilding'
 1. Canvas must have valid dimensions (silently ignores clicks otherwise)
 2. Only polygon entities (with `_polygon` property) are selectable
 3. Entity must be a `Cesium.Entity` instance with properties
+
+### Navigation State Coordination
+
+The application uses a three-phase pattern for robust state switching during navigation:
+
+1. **Request Cancellation**: `BuildingLoader.cancelCurrentLoad()` aborts in-flight data loading requests
+   - Called when user clicks new postal code while current one is loading
+   - Prevents stale data from overwriting fresher navigation targets
+
+2. **Latest-Wins Navigation**: `globalStore.pendingNavigation` queues the most recent user click
+   - Actions: `setPendingNavigation()`, `clearPendingNavigation()`, `consumePendingNavigation()`
+   - Ensures rapid clicks always result in navigating to the last-clicked target
+
+3. **Visibility Coordination**: `toggleStore.onEnterPostalCode()`/`onExitPostalCode()` manage grid visibility
+   - `_previousGrid250m` tracks grid state before entering postal code
+   - Automatically hides grid when entering postal code, restores when exiting
 
 ### Testing Cesium Interactions
 

@@ -1,6 +1,8 @@
 import { eventBus } from '../services/eventEmitter.js'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 import Building from './building.js'
 import DataSource from './datasource.js'
 import ElementsDisplay from './elementsDisplay.js'
@@ -45,12 +47,24 @@ export default class Helsinki {
 	 * Orchestrates loading of buildings, postal code boundaries, and nature layers.
 	 * Shows Helsinki-specific UI controls and emits visibility event.
 	 *
+	 * When viewport streaming is enabled, building loading is skipped because
+	 * the ViewportBuildingLoader handles building loading based on visible tiles.
+	 *
 	 * @returns {Promise<void>}
 	 * @fires eventBus#showHelsinki - Emitted when Helsinki view elements are loaded
 	 */
 	async loadHelsinkiElements() {
 		this.elementsDisplayService.setHelsinkiElementsDisplay('inline-block')
-		await this.buildingService.loadBuildings()
+
+		// Skip postal code-based building loading when viewport streaming is enabled
+		// Viewport streaming loads buildings based on visible tiles instead
+		const featureFlagStore = useFeatureFlagStore()
+		if (featureFlagStore.isEnabled('viewportStreaming')) {
+			logger.debug('[Helsinki] Viewport streaming enabled, skipping postal code building load')
+		} else {
+			await this.buildingService.loadBuildings()
+		}
+
 		await this.datasourceService.loadGeoJsonDataSource(
 			0.0,
 			'./assets/data/hki_po_clipped.json',

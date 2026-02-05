@@ -230,11 +230,16 @@ export function useViewerInitialization() {
 		await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes')
 
 		const dataSource = await dataSourceService.getDataSourceByName('PostCodes')
+		const entities = dataSource?._entityCollection?._entities?._array || []
 		logger.debug(
 			'[useViewerInitialization] ✅ Postal codes loaded, entities count:',
-			dataSource?._entityCollection?._entities?._array?.length || 0
+			entities.length
 		)
 		propsStore.setPostalCodeData(dataSource)
+
+		// Build postal code index for O(1) lookups in camera.js, postalCodeLoader.js, PrintBox.vue
+		const { postalCodeIndex } = await import('../services/postalCodeIndex.js')
+		postalCodeIndex.buildIndex(entities)
 	}
 
 	/**

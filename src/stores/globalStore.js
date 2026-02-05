@@ -60,6 +60,9 @@ import { markRaw } from 'vue'
  * @property {number} clickProcessingState.retryCount - Number of retry attempts for failed loads
  * @property {Object|null} clickProcessingState.previousViewState - Captured state for restoration on cancel
  * @property {Object|null} clickProcessingState.loadingProgress - Progressive loading progress {current, total}
+ * @property {Object|null} clickProcessingState.pendingNavigation - Queued navigation when user clicks while loading
+ * @property {string|null} clickProcessingState.pendingNavigation.postalCode - Pending postal code to navigate to
+ * @property {string|null} clickProcessingState.pendingNavigation.postalCodeName - Display name for pending postal code
  * @property {Object} errorNotification - Error notification state for user-facing error messages
  * @property {boolean} errorNotification.show - Whether error notification is visible
  * @property {string} errorNotification.message - User-friendly error message
@@ -113,6 +116,7 @@ export const useGlobalStore = defineStore('global', {
 			retryCount: 0,
 			previousViewState: null,
 			loadingProgress: null, // { current: number, total: number } for progressive updates (FR-3.2)
+			pendingNavigation: null, // { postalCode: string, postalCodeName: string } for latest-wins pattern
 		},
 	}),
 	actions: {
@@ -281,7 +285,38 @@ export const useGlobalStore = defineStore('global', {
 				retryCount: 0,
 				previousViewState: null,
 				loadingProgress: null,
+				pendingNavigation: null,
 			}
+		},
+		/**
+		 * Sets a pending navigation to be processed after current load completes.
+		 * Used for "latest-wins" pattern when user clicks a new postal code while loading.
+		 *
+		 * @param {Object} navigation - Pending navigation details
+		 * @param {string} navigation.postalCode - Postal code to navigate to
+		 * @param {string} navigation.postalCodeName - Display name for the postal code
+		 */
+		setPendingNavigation(navigation) {
+			this.clickProcessingState.pendingNavigation = navigation
+			logger.debug('[GlobalStore] Pending navigation set:', navigation.postalCode)
+		},
+		/**
+		 * Clears any pending navigation.
+		 * Called after pending navigation is processed or cancelled.
+		 */
+		clearPendingNavigation() {
+			this.clickProcessingState.pendingNavigation = null
+		},
+		/**
+		 * Gets and clears pending navigation atomically.
+		 * Returns the pending navigation if one exists, then clears it.
+		 *
+		 * @returns {Object|null} Pending navigation or null if none
+		 */
+		consumePendingNavigation() {
+			const pending = this.clickProcessingState.pendingNavigation
+			this.clickProcessingState.pendingNavigation = null
+			return pending
 		},
 		/**
 		 * Captures current view state for restoration if animation is cancelled

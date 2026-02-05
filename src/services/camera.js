@@ -1,6 +1,7 @@
 import { useGlobalStore } from '../stores/globalStore.js'
 import logger from '../utils/logger.js'
 import { getCesium } from './cesiumProvider.js'
+import { postalCodeIndex } from './postalCodeIndex.js'
 
 /**
  * Camera Service
@@ -156,7 +157,7 @@ export default class Camera {
 	/**
 	 * Switches camera to 2D top-down view of the current postal code
 	 * Flies camera to postal code center with 90° pitch (directly overhead).
-	 * Searches for postal code entity in PostCodes data source.
+	 * Uses PostalCodeIndex for O(1) entity lookup.
 	 *
 	 * @returns {void}
 	 */
@@ -167,44 +168,28 @@ export default class Camera {
 			return
 		}
 
-		// Find the data source for postcodes
-		const postCodesDataSource = this.viewer.dataSources._dataSources.find(
-			(ds) => ds.name === 'PostCodes'
-		)
+		// O(1) lookup using postal code index
+		const entity = postalCodeIndex.getByPostalCode(this.store.postalcode)
 
-		if (!postCodesDataSource || !postCodesDataSource._entityCollection) {
-			logger.warn('[Camera] PostCodes data source not found')
+		if (!entity) {
+			logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 2D view`)
 			return
 		}
 
-		// Iterate over all entities in the postcodes data source.
-		for (let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++) {
-			const entity = postCodesDataSource._entityCollection._entities._array[i]
-
-			// Check if the entity posno property matches the postalcode.
-			if (
-				entity._properties?._posno &&
-				entity._properties._posno._value === this.store.postalcode
-			) {
-				// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
-				const Cesium = getCesium()
-				this.viewer.camera.flyTo({
-					destination: Cesium.Cartesian3.fromDegrees(
-						entity._properties._center_x._value,
-						entity._properties._center_y._value,
-						3500
-					),
-					orientation: {
-						heading: Cesium.Math.toRadians(0.0),
-						pitch: Cesium.Math.toRadians(-90.0),
-					},
-					duration: 3,
-				})
-				return
-			}
-		}
-
-		logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 2D view`)
+		// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
+		const Cesium = getCesium()
+		this.viewer.camera.flyTo({
+			destination: Cesium.Cartesian3.fromDegrees(
+				entity._properties._center_x._value,
+				entity._properties._center_y._value,
+				3500
+			),
+			orientation: {
+				heading: Cesium.Math.toRadians(0.0),
+				pitch: Cesium.Math.toRadians(-90.0),
+			},
+			duration: 3,
+		})
 	}
 
 	/**
@@ -212,6 +197,7 @@ export default class Camera {
 	 * Flies camera to postal code center with 35° pitch (angled perspective).
 	 * Applies slight latitude offset for better framing.
 	 * Supports cancellation and state tracking for UX improvements.
+	 * Uses PostalCodeIndex for O(1) entity lookup.
 	 *
 	 * @returns {void}
 	 */
@@ -225,57 +211,41 @@ export default class Camera {
 		// Capture current camera state before starting flight
 		this.captureCurrentState()
 
-		// Find the data source for postcodes
-		const postCodesDataSource = this.viewer.dataSources._dataSources.find(
-			(ds) => ds.name === 'PostCodes'
-		)
+		// O(1) lookup using postal code index
+		const entity = postalCodeIndex.getByPostalCode(this.store.postalcode)
 
-		if (!postCodesDataSource || !postCodesDataSource._entityCollection) {
-			logger.warn('[Camera] PostCodes data source not found')
+		if (!entity) {
+			logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 3D view`)
 			return
 		}
 
-		// Iterate over all entities in the postcodes data source
-		for (let i = 0; i < postCodesDataSource._entityCollection._entities._array.length; i++) {
-			const entity = postCodesDataSource._entityCollection._entities._array[i]
-
-			// Check if entity postal code matches current selected postal code
-			if (
-				entity._properties?._posno &&
-				entity._properties._posno._value === this.store.postalcode
-			) {
-				// Update state to animating stage
-				if (this.store.clickProcessingState.isProcessing) {
-					this.store.setClickProcessingState({
-						stage: 'animating',
-						canCancel: true,
-					})
-				}
-
-				// Fly to postal code with 3D perspective
-				const Cesium = getCesium()
-				this.currentFlight = this.viewer.camera.flyTo({
-					destination: Cesium.Cartesian3.fromDegrees(
-						entity._properties._center_x._value,
-						entity._properties._center_y._value - 0.025,
-						2000
-					),
-					orientation: {
-						heading: 0.0,
-						pitch: Cesium.Math.toRadians(-35.0),
-						roll: 0.0,
-					},
-					duration: 3,
-					complete: () => this.onFlightComplete(),
-					cancel: () => this.onFlightCancelled(),
-				})
-
-				logger.debug('[Camera] 3D view flight initiated')
-				return
-			}
+		// Update state to animating stage
+		if (this.store.clickProcessingState.isProcessing) {
+			this.store.setClickProcessingState({
+				stage: 'animating',
+				canCancel: true,
+			})
 		}
 
-		logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 3D view`)
+		// Fly to postal code with 3D perspective
+		const Cesium = getCesium()
+		this.currentFlight = this.viewer.camera.flyTo({
+			destination: Cesium.Cartesian3.fromDegrees(
+				entity._properties._center_x._value,
+				entity._properties._center_y._value - 0.025,
+				2000
+			),
+			orientation: {
+				heading: 0.0,
+				pitch: Cesium.Math.toRadians(-35.0),
+				roll: 0.0,
+			},
+			duration: 3,
+			complete: () => this.onFlightComplete(),
+			cancel: () => this.onFlightCancelled(),
+		})
+
+		logger.debug('[Camera] 3D view flight initiated')
 	}
 
 	/**
@@ -431,7 +401,7 @@ export default class Camera {
 
 	/**
 	 * Focuses camera on a specific postal code area
-	 * Searches PostCodes data source for matching postal code and flies camera to its center.
+	 * Uses PostalCodeIndex for O(1) lookup and flies camera to its center.
 	 * Applies latitude offset for better framing and uses 45° pitch.
 	 *
 	 * @param {string|number} postalCode - Postal code to focus on
@@ -444,62 +414,36 @@ export default class Camera {
 			return
 		}
 
-		// Guard: Check dataSources are available
-		if (!this.viewer.dataSources || !this.viewer.dataSources._dataSources) {
-			logger.warn('[Camera] Cannot focus on postal code: DataSources not available')
+		// O(1) lookup using postal code index
+		const entity = postalCodeIndex.getByPostalCode(postalCode)
+
+		if (!entity) {
+			logger.warn(`[Camera] Postal code ${postalCode} not found in index`)
 			return
 		}
 
-		// Find the PostCodes data source
-		const postCodesDataSource = this.viewer.dataSources._dataSources.find(
-			(ds) => ds.name === 'PostCodes'
-		)
-
-		if (!postCodesDataSource) {
-			logger.warn('[Camera] PostCodes data source not found')
+		// Verify entity has required center coordinates
+		if (!entity._properties._center_x || !entity._properties._center_y) {
+			logger.warn(`[Camera] Postal code ${postalCode} missing center coordinates`)
 			return
 		}
 
-		// Guard: Check entity collection is available
-		if (
-			!postCodesDataSource._entityCollection ||
-			!postCodesDataSource._entityCollection._entities
-		) {
-			logger.warn('[Camera] PostCodes entity collection not available')
-			return
-		}
-
-		// Search for entity with matching postal code
-		const entity = postCodesDataSource._entityCollection._entities._array.find(
-			(entity) => entity._properties?._posno && entity._properties._posno._value === postalCode
-		)
-
-		if (entity) {
-			// Verify entity has required center coordinates
-			if (!entity._properties._center_x || !entity._properties._center_y) {
-				logger.warn(`[Camera] Postal code ${postalCode} missing center coordinates`)
-				return
-			}
-
-			// Fly to postal code area with 2-second animation
-			const Cesium = getCesium()
-			this.viewer.camera.flyTo({
-				destination: Cesium.Cartesian3.fromDegrees(
-					entity._properties._center_x._value,
-					entity._properties._center_y._value - 0.015,
-					2500
-				),
-				orientation: {
-					heading: 0.0,
-					pitch: Cesium.Math.toRadians(-45.0),
-					roll: 0.0,
-				},
-				duration: 2,
-			})
-			logger.debug(`[Camera] Focusing on postal code: ${postalCode}`)
-		} else {
-			logger.warn(`[Camera] Postal code ${postalCode} not found in data source`)
-		}
+		// Fly to postal code area with 2-second animation
+		const Cesium = getCesium()
+		this.viewer.camera.flyTo({
+			destination: Cesium.Cartesian3.fromDegrees(
+				entity._properties._center_x._value,
+				entity._properties._center_y._value - 0.015,
+				2500
+			),
+			orientation: {
+				heading: 0.0,
+				pitch: Cesium.Math.toRadians(-45.0),
+				roll: 0.0,
+			},
+			duration: 2,
+		})
+		logger.debug(`[Camera] Focusing on postal code: ${postalCode}`)
 	}
 
 	/**

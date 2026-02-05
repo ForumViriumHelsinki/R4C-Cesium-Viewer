@@ -20,7 +20,6 @@ const dataSourceService = new DataSource()
 // ** Instantiate the composable to get the main update function **
 const { updateGridColors } = useGridStyling()
 
-const coolingCenters = computed(() => mitigationStore.coolingCenters)
 const statsIndex = computed(() => propsStore.statsIndex)
 const ndviActive = computed(() => toggleStore.ndvi)
 
@@ -31,16 +30,18 @@ watch([statsIndex, ndviActive], () => {
 	updateGridColors(statsIndex.value).catch(logger.error)
 })
 
+// Watch version counter instead of deep watching the array
+// This is more efficient as it only triggers when cooling centers actually change
+// rather than on every array mutation check
 watch(
-	coolingCenters,
+	() => mitigationStore.coolingCentersVersion,
 	() => {
 		if (statsIndex.value === 'heat_index') {
 			// Pre-calculate impacts BEFORE rendering (populates cache for O(1) lookups)
 			mitigationStore.recalculateCoolingCenterImpacts()
 			updateGridColors('heat_index').catch(logger.error)
 		}
-	},
-	{ deep: true }
+	}
 )
 
 // --- COMPONENT-SPECIFIC LOGIC ---
@@ -53,9 +54,10 @@ const loadGrid = async () => {
 	await dataSourceService.removeDataSourcesByNamePrefix('250m_grid')
 
 	// Use Web Worker to parse the large (8.9 MB) GeoJSON off main thread
+	// Note: Must use absolute path because Web Workers resolve URLs from their own origin
 	await dataSourceService.loadGeoJsonDataSourceWithWorker(
 		0.8,
-		'./assets/data/r4c_stats_grid_index.json',
+		'/assets/data/r4c_stats_grid_index.json',
 		'250m_grid'
 	)
 }

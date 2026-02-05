@@ -185,7 +185,10 @@ export default class FeaturePicker {
 	}
 
 	/**
-	 * Loads postal code with parallel camera animation and data loading
+	 * Loads postal code with parallel camera animation and data loading.
+	 * Implements latest-wins pattern: if another postal code is clicked during loading,
+	 * the pending navigation will be processed after current load completes.
+	 *
 	 * @param {string} postalCode - Postal code to load
 	 * @private
 	 */
@@ -203,8 +206,28 @@ export default class FeaturePicker {
 			toggleStore: this.toggleStore,
 		}
 
-		await loadPostalCodeWithParallelStrategy(postalCode, services, stores, () =>
-			this.setNameOfZone()
+		// Handler for pending navigation (latest-wins pattern)
+		const handlePendingNavigation = (pending) => {
+			logger.debug('[FeaturePicker] Processing pending navigation:', pending.postalCode)
+
+			// Cancel current building load (if any)
+			this.buildingService.cancelCurrentLoad()
+
+			// Initialize and load the new postal code
+			initializePostalCodeNavigation(pending.postalCode, pending.postalCodeName, this.store)
+
+			// Recursively call to load the pending postal code
+			this.loadPostalCodeWithParallelStrategy(pending.postalCode).catch((error) => {
+				logger.error('Failed to load pending postal code:', error)
+			})
+		}
+
+		await loadPostalCodeWithParallelStrategy(
+			postalCode,
+			services,
+			stores,
+			() => this.setNameOfZone(),
+			handlePendingNavigation
 		)
 	}
 
@@ -284,7 +307,22 @@ export default class FeaturePicker {
 			logger.debug('[FeaturePicker] Current postal code:', this.store.postalcode)
 			logger.debug('[FeaturePicker] Current level:', this.store.level)
 
+			// Check if we're already processing a navigation
+			if (this.store.clickProcessingState.isProcessing) {
+				// Latest-wins pattern: queue this navigation and cancel current load
+				logger.debug('[FeaturePicker] Navigation in progress, queuing latest click:', newPostalCode)
+				this.store.setPendingNavigation({ postalCode: newPostalCode, postalCodeName })
+				this.buildingService.cancelCurrentLoad()
+				return
+			}
+
 			if (shouldNavigateToPostalCode(newPostalCode, this.store.postalcode, this.store.level)) {
+				// Cancel any in-flight building loads before starting new navigation
+				this.buildingService.cancelCurrentLoad()
+
+				// Coordinate visibility: hide grid when entering postal code view
+				this.toggleStore.onEnterPostalCode()
+
 				logger.debug('[FeaturePicker] Triggering postal code loading with parallel strategy...')
 				initializePostalCodeNavigation(newPostalCode, postalCodeName, this.store)
 
