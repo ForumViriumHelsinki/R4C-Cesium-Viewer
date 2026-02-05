@@ -179,16 +179,19 @@ export default class Graphics {
 	setupWatchers() {
 		// Watch for MSAA changes
 		this.graphicsStore.$subscribe((mutation, _state) => {
-			if (mutation.events.some((e) => ['msaaEnabled', 'msaaSamples'].includes(e.key))) {
+			// mutation.events may be undefined for single-change mutations
+			const events = Array.isArray(mutation.events) ? mutation.events : []
+
+			if (events.some((e) => ['msaaEnabled', 'msaaSamples'].includes(e.key))) {
 				this.applyMsaaSettings()
 			}
-			if (mutation.events.some((e) => e.key === 'fxaaEnabled')) {
+			if (events.some((e) => e.key === 'fxaaEnabled')) {
 				this.applyFxaaSettings()
 			}
-			if (mutation.events.some((e) => e.key === 'hdrEnabled')) {
+			if (events.some((e) => e.key === 'hdrEnabled')) {
 				this.applyHdrSettings()
 			}
-			if (mutation.events.some((e) => e.key === 'ambientOcclusionEnabled')) {
+			if (events.some((e) => e.key === 'ambientOcclusionEnabled')) {
 				this.applyAmbientOcclusionSettings()
 			}
 		})

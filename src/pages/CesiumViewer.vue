@@ -213,8 +213,8 @@ export default {
 		// Camera controls composable - will be initialized in onMounted
 		let cameraControlsInstance = null
 
-		// Entity picking composable
-		const { addFeaturePicker } = useEntityPicking(Featurepicker)
+		// Entity picking composable - pass getter to get Featurepicker at call time (after initViewer)
+		const { addFeaturePicker } = useEntityPicking(() => Featurepicker)
 
 		// Keyboard shortcuts composable
 		const { handleCancelAnimation } = useKeyboardShortcuts(Camera)
