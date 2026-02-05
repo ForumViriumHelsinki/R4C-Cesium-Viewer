@@ -73,7 +73,7 @@
 		"@vitest/coverage-v8": "^4.0.15",
 		"@vue/test-utils": "^2.4.6",
 		"globals": "^17.0.0",
-		"jsdom": "^27.3.0",
+		"jsdom": "^28.0.0",
 		"knip": "^5.73.4",
 		"rollup-plugin-visualizer": "^6.0.5",
 		"typedoc": "^0.28.15",
