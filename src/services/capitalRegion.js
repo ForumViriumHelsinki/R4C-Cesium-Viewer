@@ -1,6 +1,8 @@
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 import DataSource from './datasource.js'
 import ElementsDisplay from './elementsDisplay.js'
 import HSYBuilding from './hsybuilding.js'
@@ -44,12 +46,23 @@ export default class CapitalRegion {
 	 * Loads HSY building data and conditionally shows tree layer controls
 	 * for postal codes with available tree data (postal codes < 1000).
 	 *
+	 * When viewport streaming is enabled, building loading is skipped because
+	 * the ViewportBuildingLoader handles building loading based on visible tiles.
+	 *
 	 * @returns {Promise<void>}
 	 */
 	async loadCapitalRegionElements() {
 		// Show tree controls only for postal codes with tree data availability
 		if (Number(this.store.postalcode) < 1000) {
 			this.elementsDisplayService.setTreeElementsDisplay('inline-block')
+		}
+
+		// Skip postal code-based building loading when viewport streaming is enabled
+		// Viewport streaming loads buildings based on visible tiles instead
+		const featureFlagStore = useFeatureFlagStore()
+		if (featureFlagStore.isEnabled('viewportStreaming')) {
+			logger.debug('[CapitalRegion] Viewport streaming enabled, skipping postal code building load')
+			return
 		}
 
 		await this.hSYBuildingService.loadHSYBuildings()

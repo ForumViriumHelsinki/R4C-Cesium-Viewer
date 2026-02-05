@@ -5,8 +5,9 @@
 		<CameraControls />
 		<!-- Loading Component -->
 		<Loading v-if="store.isLoading" />
-		<!-- Map Click Loading Overlay -->
+		<!-- Map Click Loading Overlay (controlled by feature flag) -->
 		<MapClickLoadingOverlay
+			v-if="showMapClickLoadingOverlay"
 			@cancel="handleCancelAnimation"
 			@retry="handleRetryLoading"
 		/>
@@ -147,6 +148,7 @@ import { useUrlState } from '../composables/useUrlState.js'
 import { useViewerInitialization } from '../composables/useViewerInitialization.js'
 import { useViewportLoading } from '../composables/useViewportLoading.js'
 import { useBuildingStore } from '../stores/buildingStore.js'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
@@ -164,9 +166,14 @@ export default {
 		const store = useGlobalStore()
 		const toggleStore = useToggleStore()
 		const buildingStore = useBuildingStore()
+		const featureFlagStore = useFeatureFlagStore()
 
 		const shouldShowBuildingInformation = computed(() => {
 			return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading
+		})
+
+		const showMapClickLoadingOverlay = computed(() => {
+			return featureFlagStore.isEnabled('mapClickLoadingOverlay')
 		})
 
 		// URL state composable for deep linking and page refresh persistence
@@ -323,6 +330,7 @@ export default {
 			buildingStore,
 			viewer,
 			shouldShowBuildingInformation,
+			showMapClickLoadingOverlay,
 			errorSnackbar,
 			errorMessage,
 			retryInit,

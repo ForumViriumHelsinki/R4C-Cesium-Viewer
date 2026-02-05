@@ -39,6 +39,7 @@ export type FeatureFlagName =
 	| 'dataSourceStatus'
 	| 'loadingPerformanceInfo'
 	| 'backgroundPreload'
+	| 'mapClickLoadingOverlay'
 	// Integration
 	| 'sentryErrorTracking'
 	| 'digitransitIntegration'
@@ -273,6 +274,15 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		description: 'Preload data in background for faster transitions',
 		category: 'ui',
 		experimental: true,
+		requiresSupport: false,
+		fallbackDefault: false,
+	},
+	mapClickLoadingOverlay: {
+		goffId: 'r4c-map-click-loading-overlay',
+		label: 'Map Click Loading Overlay',
+		description: 'Show loading overlay with progress when navigating to postal codes',
+		category: 'ui',
+		experimental: false,
 		requiresSupport: false,
 		fallbackDefault: false,
 	},
