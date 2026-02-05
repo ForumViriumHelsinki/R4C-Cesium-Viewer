@@ -49,7 +49,7 @@ jobs:
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -57,7 +57,7 @@ jobs:
 
       - name: Cache BuildKit mounts
         id: cache
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: /tmp/.buildx-cache-mounts
           key: ${{ runner.os }}-buildkit-${{ hashFiles('package.json', 'bun.lock') }}
@@ -65,7 +65,7 @@ jobs:
             ${{ runner.os }}-buildkit-
 
       - name: Inject BuildKit cache mounts
-        uses: reproducible-containers/buildkit-cache-dance@9380a95413d28427de1842dc121f44b9e8a3f406 # v3.1.2
+        uses: reproducible-containers/buildkit-cache-dance@5b6db76d1da5c8b307d5d2e0706d266521b710de # v3.1.2
         with:
           cache-map: |
             {
