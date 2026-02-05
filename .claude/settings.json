@@ -1,23 +1,23 @@
 {
   "enabledPlugins": {
-    "accessibility-plugin@laurigates-plugins": true,
-    "agent-patterns-plugin@laurigates-plugins": true,
-    "api-plugin@laurigates-plugins": true,
-    "blueprint-plugin@laurigates-plugins": true,
-    "code-quality-plugin@laurigates-plugins": true,
-    "container-plugin@laurigates-plugins": true,
-    "documentation-plugin@laurigates-plugins": true,
-    "git-plugin@laurigates-plugins": true,
-    "github-actions-plugin@laurigates-plugins": true,
-    "hooks-plugin@laurigates-plugins": true,
-    "kubernetes-plugin@laurigates-plugins": true,
-    "project-plugin@laurigates-plugins": true,
-    "testing-plugin@laurigates-plugins": true,
-    "tools-plugin@laurigates-plugins": true,
-    "typescript-plugin@laurigates-plugins": true
+    "accessibility-plugin@laurigates-claude-plugins": true,
+    "agent-patterns-plugin@laurigates-claude-plugins": true,
+    "api-plugin@laurigates-claude-plugins": true,
+    "blueprint-plugin@laurigates-claude-plugins": true,
+    "code-quality-plugin@laurigates-claude-plugins": true,
+    "container-plugin@laurigates-claude-plugins": true,
+    "documentation-plugin@laurigates-claude-plugins": true,
+    "git-plugin@laurigates-claude-plugins": true,
+    "github-actions-plugin@laurigates-claude-plugins": true,
+    "hooks-plugin@laurigates-claude-plugins": true,
+    "kubernetes-plugin@laurigates-claude-plugins": true,
+    "project-plugin@laurigates-claude-plugins": true,
+    "testing-plugin@laurigates-claude-plugins": true,
+    "tools-plugin@laurigates-claude-plugins": true,
+    "typescript-plugin@laurigates-claude-plugins": true
   },
   "extraKnownMarketplaces": {
-    "laurigates-plugins": {
+    "laurigates-claude-plugins": {
       "source": {
         "source": "github",
         "repo": "laurigates/claude-plugins"

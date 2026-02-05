@@ -8,6 +8,7 @@
 import { onBeforeUnmount, onMounted } from 'vue'
 import { getCesium } from '../services/cesiumProvider.js'
 import { eventBus } from '../services/eventEmitter.js'
+import { postalCodeIndex } from '../services/postalCodeIndex.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 
 export default {
@@ -37,19 +38,10 @@ export default {
 
 		const geocodingPrint = () => {
 			const store = useGlobalStore()
-			store.cesiumViewer.dataSources._dataSources.forEach((dataSource) => {
-				if (dataSource.name === 'PostCodes') {
-					findPostalcodeEntity(dataSource, store.postalcode)
-				}
-			})
-		}
-
-		const findPostalcodeEntity = (dataSource, currentPostcode) => {
-			for (let i = 0; i < dataSource._entityCollection._entities._array.length; i++) {
-				const entity = dataSource._entityCollection._entities._array[i]
-				if (entity._properties._posno._value === currentPostcode) {
-					printEntity(entity)
-				}
+			// O(1) lookup using postal code index
+			const entity = postalCodeIndex.getByPostalCode(store.postalcode)
+			if (entity) {
+				printEntity(entity)
 			}
 		}
 

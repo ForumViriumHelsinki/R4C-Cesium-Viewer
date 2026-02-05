@@ -14,6 +14,11 @@ const WebMapServiceImageryProviderMock = vi.fn(function (options) {
 	this.maximumLevel = options.maximumLevel
 	this.tilingScheme = options.tilingScheme
 	this.readyPromise = Promise.resolve(true)
+	// Mock errorEvent for retry handler integration
+	this.errorEvent = {
+		addEventListener: vi.fn(),
+		removeEventListener: vi.fn(),
+	}
 })
 
 const GeographicTilingSchemeMock = vi.fn(function () {
@@ -41,6 +46,16 @@ vi.mock('@/stores/globalStore.js', () => ({
 
 vi.mock('@/stores/backgroundMapStore.js', () => ({
 	useBackgroundMapStore: vi.fn(() => mockBackgroundStore),
+}))
+
+// Mock WMS retry handler
+vi.mock('@/utils/wmsRetryHandler.js', () => ({
+	getGlobalWMSRetryHandler: vi.fn(() => ({
+		handleTileError: vi.fn(),
+		clear: vi.fn(),
+		getStats: vi.fn(() => ({})),
+	})),
+	resetGlobalWMSRetryHandler: vi.fn(),
 }))
 
 describe('Flood WMS Service', () => {

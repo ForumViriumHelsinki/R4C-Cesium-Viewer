@@ -12,16 +12,16 @@
 
 ## State Management (Pinia Stores)
 
-| Store                    | Purpose                                                |
-| ------------------------ | ------------------------------------------------------ |
-| `globalStore.js`         | Main application state, view modes, current selections |
-| `buildingStore.js`       | Building-specific data and selection                   |
-| `toggleStore.js`         | UI toggle states and layer visibility                  |
-| `socioEconomicsStore.js` | Socioeconomic data visualization state                 |
-| `heatExposureStore.js`   | Heat exposure data and calculations                    |
-| `backgroundMapStore.js`  | Background map layer management                        |
-| `propsStore.js`          | Property and building attribute data                   |
-| `urlStore.js`            | URL state management for deep linking                  |
+| Store                    | Purpose                                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| `globalStore.js`         | Main application state, view modes, selections, click processing with pending navigation |
+| `buildingStore.js`       | Building-specific data and selection                                                     |
+| `toggleStore.js`         | UI toggle states, layer visibility, postal code navigation lifecycle hooks               |
+| `socioEconomicsStore.js` | Socioeconomic data visualization state                                                   |
+| `heatExposureStore.js`   | Heat exposure data and calculations                                                      |
+| `backgroundMapStore.js`  | Background map layer management                                                          |
+| `propsStore.js`          | Property and building attribute data                                                     |
+| `urlStore.js`            | URL state management for deep linking                                                    |
 
 ## Main Pages
 
@@ -35,15 +35,17 @@
 
 ## Services Layer
 
-| Service             | Purpose                            |
-| ------------------- | ---------------------------------- |
-| `datasource.js`     | Data source management for Cesium  |
-| `wms.js`            | Web Map Service integration        |
-| `featurepicker.js`  | Entity selection and picking       |
-| `camera.js`         | Camera controls and positioning    |
-| `urbanheat.js`      | Urban heat island data processing  |
-| `building.js`       | Building data and 3D visualization |
-| `populationgrid.js` | Population grid data handling      |
+| Service                      | Purpose                                                 |
+| ---------------------------- | ------------------------------------------------------- |
+| `datasource.js`              | Data source management for Cesium                       |
+| `wms.js`                     | Web Map Service integration                             |
+| `featurepicker.js`           | Entity selection, navigation orchestration              |
+| `camera.js`                  | Camera controls and positioning                         |
+| `urbanheat.js`               | Urban heat island data processing                       |
+| `building/index.js`          | Building service facade                                 |
+| `building/buildingLoader.js` | Building data loading with request lifecycle management |
+| `populationgrid.js`          | Population grid data handling                           |
+| `postalCodeLoader.js`        | Postal code data loading with parallel strategy         |
 
 ## Key Features
 
@@ -125,3 +127,85 @@ src/utils/
 ├── validators.js      # Input validation
 └── logger.js          # Logging utility
 ```
+
+## Navigation State Coordination
+
+The application uses a three-phase pattern for robust state switching during navigation:
+
+### 1. Request Cancellation
+
+`BuildingLoader.cancelCurrentLoad()` aborts in-flight data loading requests:
+
+```javascript
+// In buildingLoader.js
+cancelCurrentLoad() {
+  if (this._abortController) {
+    this._abortController.abort()
+    this._abortController = null
+  }
+}
+
+get activeLayerId() {
+  return this._currentLayerId
+}
+```
+
+**Integration points:**
+
+- `featurepicker/index.js` - calls on reset and new navigation
+- `App.vue` - calls when returning to start level
+- `PostalCodeView.vue` - calls when navigating away
+- `GridView.vue` - calls when switching views
+
+### 2. Latest-Wins Navigation
+
+`globalStore.pendingNavigation` queues the most recent user click to prevent dropped inputs:
+
+```javascript
+// State structure
+clickProcessingState: {
+	pendingNavigation: null; // { postalCode: string, postalCodeName: string }
+}
+
+// Actions
+setPendingNavigation(navigation); // Queue a navigation request
+clearPendingNavigation(); // Clear without processing
+consumePendingNavigation(); // Get and clear pending navigation
+```
+
+**Flow:**
+
+1. User clicks postal code A → starts loading
+2. User clicks postal code B while A loads → B queued as pending, A cancelled
+3. A completes/cancels → check for pending → navigate to B
+
+### 3. Visibility Coordination
+
+`toggleStore` hooks manage grid visibility during navigation level transitions:
+
+```javascript
+// State
+_previousGrid250m: false  // Tracks grid state before entering postal code
+
+// Hooks
+onEnterPostalCode() {
+  if (this.grid250m) {
+    this._previousGrid250m = true
+    this.grid250m = false  // Hide grid at postal code level
+  }
+}
+
+onExitPostalCode() {
+  if (this._previousGrid250m) {
+    this.grid250m = true   // Restore grid when leaving postal code
+    this._previousGrid250m = false
+  }
+}
+```
+
+**Integration points:**
+
+- `featurepicker/index.js:324` - calls `onEnterPostalCode()` when entering postal code
+- `App.vue:182` - calls `onExitPostalCode()` when returning to start
+- `PostalCodeView.vue:302` - calls `onExitPostalCode()` when navigating away
+- `GridView.vue:191` - calls `onExitPostalCode()` when switching views

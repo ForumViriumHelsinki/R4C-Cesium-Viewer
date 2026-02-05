@@ -395,12 +395,167 @@ Use Chrome DevTools to verify cleanup:
 
 ## Service Cleanup Summary Table
 
-| Service                | Resources           | Created By         | Destroyed By                  | Pattern           |
-| ---------------------- | ------------------- | ------------------ | ----------------------------- | ----------------- |
-| geocoding.js           | 3 event listeners   | UnifiedSearch      | UnifiedSearch.beforeUnmount() | Per-component     |
-| backgroundPreloader.js | 5 listeners + timer | CesiumViewer       | CesiumViewer.beforeUnmount()  | Singleton         |
-| GridView.vue           | 6 DOM listeners     | GridView (self)    | GridView.beforeUnmount()      | Component-managed |
-| Scatterplot.vue        | 2 DOM + 1 eventBus  | Scatterplot (self) | Scatterplot.beforeUnmount()   | Component-managed |
+| Service                | Resources               | Created By         | Destroyed By                  | Pattern           |
+| ---------------------- | ----------------------- | ------------------ | ----------------------------- | ----------------- |
+| geocoding.js           | 3 event listeners       | UnifiedSearch      | UnifiedSearch.beforeUnmount() | Per-component     |
+| backgroundPreloader.js | 5 listeners + timer     | CesiumViewer       | CesiumViewer.beforeUnmount()  | Singleton         |
+| GridView.vue           | 6 DOM listeners         | GridView (self)    | GridView.beforeUnmount()      | Component-managed |
+| Scatterplot.vue        | 2 DOM + 1 eventBus      | Scatterplot (self) | Scatterplot.beforeUnmount()   | Component-managed |
+| buildingLoader.js      | AbortController + state | Building service   | cancelCurrentLoad()           | Request lifecycle |
+| toggleStore.js         | Grid visibility state   | Store (self)       | onExitPostalCode()            | Navigation hooks  |
+| globalStore.js         | Pending navigation      | Store (self)       | consumePendingNavigation()    | Latest-wins queue |
+
+## Request Lifecycle Management
+
+Some services manage in-flight HTTP requests that may need cancellation during navigation transitions.
+
+### Request Cancellation Pattern
+
+**BuildingLoader** (`src/services/building/buildingLoader.js`)
+
+The building loader implements request cancellation to prevent stale data from overwriting fresher navigation targets:
+
+```javascript
+class BuildingLoader {
+	constructor() {
+		this._abortController = null;
+		this._currentLayerId = null;
+	}
+
+	// Track currently active request
+	get activeLayerId() {
+		return this._currentLayerId;
+	}
+
+	// Cancel any in-flight request
+	cancelCurrentLoad() {
+		if (this._abortController) {
+			this._abortController.abort();
+			this._abortController = null;
+		}
+		this._currentLayerId = null;
+	}
+
+	async loadBuildings(postalCode) {
+		// Cancel previous request
+		this.cancelCurrentLoad();
+
+		// Create new abort controller
+		this._abortController = new AbortController();
+		this._currentLayerId = postalCode;
+
+		try {
+			const response = await fetch(url, {
+				signal: this._abortController.signal,
+			});
+			// ... process response
+		} catch (error) {
+			if (error.name === 'AbortError') {
+				// Request was cancelled - this is expected
+				return null;
+			}
+			throw error;
+		}
+	}
+}
+```
+
+**When to cancel:**
+
+- User clicks new postal code while current one is loading
+- User navigates back to start level
+- User switches view modes (GridView, PostalCodeView)
+
+**Integration in FeaturePicker:**
+
+```javascript
+// Before starting new navigation
+this.buildingService.cancelCurrentLoad()
+
+// In reset functions
+reset() {
+  this.buildingService.cancelCurrentLoad()
+  // ... other cleanup
+}
+```
+
+### Latest-Wins Navigation Pattern
+
+**GlobalStore** (`src/stores/globalStore.js`)
+
+Queues the most recent user click to prevent dropped inputs during rapid navigation:
+
+```javascript
+// State
+clickProcessingState: {
+  isProcessing: false,
+  pendingNavigation: null  // { postalCode: string, postalCodeName: string }
+}
+
+// Actions
+setPendingNavigation(navigation) {
+  this.clickProcessingState.pendingNavigation = navigation
+}
+
+clearPendingNavigation() {
+  this.clickProcessingState.pendingNavigation = null
+}
+
+consumePendingNavigation() {
+  const pending = this.clickProcessingState.pendingNavigation
+  this.clickProcessingState.pendingNavigation = null
+  return pending
+}
+```
+
+**Usage in postalCodeLoader.js:**
+
+```javascript
+// After parallel loading completes, check for pending navigation
+const pendingNavigation = processParallelLoadingResults(
+	results,
+	// ... other params
+	() => store.clickProcessingState.pendingNavigation
+);
+
+if (pendingNavigation && onNavigationRequest) {
+	// Navigate to the pending target instead of staying on current
+	onNavigationRequest(pendingNavigation);
+}
+```
+
+### Visibility Coordination Pattern
+
+**ToggleStore** (`src/stores/toggleStore.js`)
+
+Manages layer visibility during navigation level transitions:
+
+```javascript
+// State
+_previousGrid250m: false  // Tracks grid state before entering postal code
+
+// Lifecycle hooks
+onEnterPostalCode() {
+  // Save and hide grid when entering postal code level
+  if (this.grid250m) {
+    this._previousGrid250m = true
+    this.grid250m = false
+  }
+}
+
+onExitPostalCode() {
+  // Restore grid when leaving postal code level
+  if (this._previousGrid250m) {
+    this.grid250m = true
+    this._previousGrid250m = false
+  }
+}
+```
+
+**Integration points:**
+
+- `featurepicker/index.js` - calls `onEnterPostalCode()` when navigating to postal code
+- `App.vue`, `PostalCodeView.vue`, `GridView.vue` - call `onExitPostalCode()` when leaving
 
 ## Questions?
 
@@ -411,6 +566,7 @@ If you're unsure whether your service needs a `destroy()` method, ask:
 3. **Does it subscribe to external events?** → Yes, implement destroy()
 4. **Does it maintain large data structures?** → Yes, implement destroy()
 5. **Is it a pure utility (no state, no resources)?** → No, destroy() not needed
+6. **Does it make HTTP requests that could become stale?** → Yes, implement cancelCurrentLoad()
 
 ## Related Documentation
 

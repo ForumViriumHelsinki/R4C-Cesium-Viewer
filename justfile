@@ -664,6 +664,74 @@ dev-mock:
     just mock-stop
 
 # ==============================================================================
+# AI-Assisted Development
+# ==============================================================================
+
+# Launch Claude to monitor console errors and fix them in real-time
+dev-autofix:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo -e "{{CYAN}}=== AI-Assisted Development Mode ==={{RESET}}"
+    echo ""
+    echo -e "{{DIM}}This mode launches Claude Code to:{{RESET}}"
+    echo -e "{{DIM}}  1. Start the dev server in background{{RESET}}"
+    echo -e "{{DIM}}  2. Connect to Chrome DevTools MCP{{RESET}}"
+    echo -e "{{DIM}}  3. Monitor console for errors/warnings{{RESET}}"
+    echo -e "{{DIM}}  4. Fix issues automatically as you browse{{RESET}}"
+    echo ""
+    echo -e "{{YELLOW}}Prerequisites:{{RESET}}"
+    echo -e "  - Chrome running with remote debugging (see just chrome-debug){{RESET}}"
+    echo -e "  - Chrome DevTools MCP server configured{{RESET}}"
+    echo ""
+    # Check if Chrome DevTools MCP is likely configured
+    if ! grep -q "chrome-devtools" ~/.claude/mcp.json 2>/dev/null && \
+       ! grep -q "chrome-devtools" .mcp.json 2>/dev/null; then
+        echo -e "{{YELLOW}}⚠ Chrome DevTools MCP may not be configured{{RESET}}"
+        echo -e "{{DIM}}Add to your MCP config or run: just chrome-debug{{RESET}}"
+        echo ""
+    fi
+    echo -e "{{ARROW}} Launching Claude Code with dev-autofix workflow..."
+    echo ""
+    # Launch Claude with the monitoring prompt
+    claude "Start the development workflow: \
+    1. Run 'bun dev' in background using the Bash tool with run_in_background=true \
+    2. Wait 3 seconds for the server to start \
+    3. Use Chrome DevTools MCP to navigate to http://localhost:5173 \
+    4. Monitor the console for errors and warnings by periodically checking list_console_messages with types=['error', 'warn'] \
+    5. When you find issues, investigate and fix them in the code \
+    6. After fixing, reload the page and continue monitoring \
+    7. Keep monitoring until I say stop - check every 10-15 seconds for new errors \
+    \
+    Start now by running bun dev in background."
+
+# Launch Chrome with remote debugging for DevTools MCP
+chrome-debug:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo -e "{{CYAN}}=== Chrome Remote Debugging ==={{RESET}}"
+    echo ""
+    # Check if Chrome is already running with debugging
+    if lsof -i :9222 >/dev/null 2>&1; then
+        echo -e "{{CHECK}} Chrome already running with remote debugging on port 9222"
+        exit 0
+    fi
+    echo -e "{{ARROW}} Launching Chrome with remote debugging..."
+    # macOS Chrome path
+    if [ -d "/Applications/Google Chrome.app" ]; then
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+            --remote-debugging-port=9222 \
+            --user-data-dir="/tmp/chrome-debug-profile" \
+            "about:blank" &
+        sleep 2
+        echo -e "{{CHECK}} Chrome launched with remote debugging on port 9222"
+        echo -e "{{DIM}}Profile: /tmp/chrome-debug-profile{{RESET}}"
+    else
+        echo -e "{{CROSS}} Chrome not found at /Applications/Google Chrome.app"
+        echo -e "{{DIM}}Please launch Chrome manually with: --remote-debugging-port=9222{{RESET}}"
+        exit 1
+    fi
+
+# ==============================================================================
 # Maintenance
 # ==============================================================================
 

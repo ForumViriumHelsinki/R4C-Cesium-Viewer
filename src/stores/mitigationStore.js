@@ -43,6 +43,8 @@ import logger from '../utils/logger.js'
 export const useMitigationStore = defineStore('mitigation', {
 	state: () => ({
 		coolingCenters: [],
+		/** Version counter for coolingCenters - increment when array changes to enable efficient watching */
+		coolingCentersVersion: 0,
 		reachability: 1000,
 		maxReduction: 0.2,
 		minReduction: 0.04,
@@ -263,6 +265,7 @@ export const useMitigationStore = defineStore('mitigation', {
 		},
 		addCoolingCenter(coolingCenter) {
 			this.coolingCenters.push(coolingCenter)
+			this.coolingCentersVersion++
 		},
 		addCell(id) {
 			if (!this.affected.includes(id)) {
@@ -274,6 +277,7 @@ export const useMitigationStore = defineStore('mitigation', {
 		},
 		resetStore() {
 			this.coolingCenters = []
+			this.coolingCentersVersion++
 			this.affected = []
 			this.impact = 0
 			this.optimised = false

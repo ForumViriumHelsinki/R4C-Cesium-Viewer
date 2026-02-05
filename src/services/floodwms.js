@@ -16,6 +16,7 @@
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import logger from '../utils/logger.js'
+import { getGlobalWMSRetryHandler } from '../utils/wmsRetryHandler.js'
 import { getCesium } from './cesiumProvider.js'
 
 /**
@@ -68,6 +69,12 @@ export const createFloodImageryLayer = async (url, layerName) => {
 			maximumLevel: 18,
 			// Use geographic tiling scheme for EPSG:4326 (WGS84)
 			tilingScheme: new Cesium.GeographicTilingScheme(),
+		})
+
+		// Attach retry handler for transient network failures (ECONNRESET, etc.)
+		const retryHandler = getGlobalWMSRetryHandler()
+		provider.errorEvent.addEventListener((error) => {
+			retryHandler.handleTileError(error, layerName)
 		})
 
 		await provider.readyPromise

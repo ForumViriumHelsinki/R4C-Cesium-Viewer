@@ -144,6 +144,7 @@
 import { computed, onMounted, ref } from 'vue'
 import CesiumViewer from './pages/CesiumViewer.vue'
 import backgroundPreloader from './services/backgroundPreloader.js'
+import Building from './services/building'
 import Camera from './services/camera'
 import { initializeFeatureFlags } from './services/featureFlagProvider'
 import Featurepicker from './services/featurepicker'
@@ -172,7 +173,19 @@ const signOut = () => {
 	window.location.href = '/oauth2/sign_out'
 }
 
-const smartReset = () => {
+const smartReset = async () => {
+	// Cancel any in-flight building loads before resetting
+	const buildingService = new Building()
+	buildingService.cancelCurrentLoad()
+
+	// Clear building features to prevent memory leak
+	const { useBuildingStore } = await import('./stores/buildingStore.js')
+	const buildingStore = useBuildingStore()
+	buildingStore.clearBuildingFeatures()
+
+	// Restore grid visibility if it was hidden when entering postal code
+	toggleStore.onExitPostalCode()
+
 	// Reset application state without page reload
 	globalStore.setLevel('start')
 	globalStore.setPostalCode(null)

@@ -90,6 +90,88 @@ watch(
 );
 ```
 
+## Request Lifecycle Management
+
+### Cancellable Requests
+
+For services that load data which may become stale (e.g., user navigates away before load completes), implement request cancellation:
+
+```javascript
+// ✅ CORRECT: Cancellable request pattern
+class DataLoader {
+	constructor() {
+		this._abortController = null;
+		this._currentRequestId = null;
+	}
+
+	get activeRequestId() {
+		return this._currentRequestId;
+	}
+
+	cancelCurrentLoad() {
+		if (this._abortController) {
+			this._abortController.abort();
+			this._abortController = null;
+		}
+		this._currentRequestId = null;
+	}
+
+	async load(id) {
+		// Cancel previous request before starting new one
+		this.cancelCurrentLoad();
+
+		this._abortController = new AbortController();
+		this._currentRequestId = id;
+
+		try {
+			const response = await fetch(url, {
+				signal: this._abortController.signal,
+			});
+			return await response.json();
+		} catch (error) {
+			if (error.name === 'AbortError') {
+				return null; // Expected cancellation
+			}
+			throw error;
+		}
+	}
+}
+```
+
+```javascript
+// ❌ WRONG: No cancellation - stale data may overwrite fresh data
+async load(id) {
+  const response = await fetch(url)
+  this.data = await response.json()  // May overwrite newer data!
+}
+```
+
+### Latest-Wins Pattern
+
+For user interactions that may fire rapidly (e.g., clicks), queue the latest request:
+
+```javascript
+// ✅ CORRECT: Queue pending navigation
+if (store.isProcessing) {
+	store.setPendingNavigation({ target, name });
+	loader.cancelCurrentLoad();
+	return; // Don't start new navigation while processing
+}
+
+// After processing completes
+const pending = store.consumePendingNavigation();
+if (pending) {
+	navigateTo(pending);
+}
+```
+
+```javascript
+// ❌ WRONG: Drop user input while processing
+if (store.isProcessing) {
+	return; // User's click is lost!
+}
+```
+
 ## Async/Promise Error Handling
 
 ### Never Use `void` Operator

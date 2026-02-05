@@ -177,23 +177,24 @@ export default {
 		const restoredFromUrl = ref(false)
 
 		// Viewer initialization composable
+		// IMPORTANT: Keep reference to the object to access dynamic modules via getters.
+		// Destructuring Featurepicker/Camera directly captures null at setup time.
+		const viewerInit = useViewerInitialization()
 		const {
 			viewer,
 			errorSnackbar,
 			errorMessage,
-			Cesium,
-			Featurepicker,
-			Camera,
 			initViewer,
 			addPostalCodes,
 			addAttribution,
 			retryInit: baseRetryInit,
-		} = useViewerInitialization()
+		} = viewerInit
 
 		// Data loading composable (auto-loads on mount)
 		const { loadExternalData, startCacheWarming } = useDataLoading(false) // Don't auto-load, we'll call it explicitly
 
 		// Viewport loading composable
+		// Access dynamic modules via getters (viewerInit.Camera, viewerInit.Featurepicker)
 		const {
 			isLoadingBuildings,
 			viewportLoadingProgress,
@@ -201,7 +202,11 @@ export default {
 			handleCameraSettled,
 			handleRetryViewportLoading,
 			initViewportStreaming,
-		} = useViewportLoading(viewer, Camera, Featurepicker)
+		} = useViewportLoading(
+			viewer,
+			() => viewerInit.Camera,
+			() => viewerInit.Featurepicker
+		)
 
 		// URL update callback for camera controls
 		const handleUrlUpdate = () => {
@@ -214,10 +219,10 @@ export default {
 		let cameraControlsInstance = null
 
 		// Entity picking composable - pass getter to get Featurepicker at call time (after initViewer)
-		const { addFeaturePicker } = useEntityPicking(() => Featurepicker)
+		const { addFeaturePicker } = useEntityPicking(() => viewerInit.Featurepicker)
 
 		// Keyboard shortcuts composable
-		const { handleCancelAnimation } = useKeyboardShortcuts(Camera)
+		const { handleCancelAnimation } = useKeyboardShortcuts(() => viewerInit.Camera)
 
 		/**
 		 * Handles retry of failed postal code loading.
@@ -234,7 +239,7 @@ export default {
 				return
 			}
 
-			if (!Featurepicker) {
+			if (!viewerInit.Featurepicker) {
 				logger.warn('[CesiumViewer] Featurepicker module not loaded yet')
 				return
 			}
@@ -247,7 +252,7 @@ export default {
 			})
 
 			// Retry loading through featurepicker
-			const featurepicker = new Featurepicker()
+			const featurepicker = new viewerInit.Featurepicker()
 			featurepicker.loadPostalCodeData(postalCode)
 		}
 
@@ -285,9 +290,9 @@ export default {
 			addAttribution()
 
 			// Restore state from URL if present (after postal codes are loaded)
-			if (restoredFromUrl.value && viewer.value && Featurepicker) {
+			if (restoredFromUrl.value && viewer.value && viewerInit.Featurepicker) {
 				logger.debug('[CesiumViewer] Restoring map state from URL...')
-				await restoreStateFromUrl(viewer.value, Featurepicker)
+				await restoreStateFromUrl(viewer.value, viewerInit.Featurepicker)
 				logger.debug('[CesiumViewer] Map state restored from URL')
 			}
 

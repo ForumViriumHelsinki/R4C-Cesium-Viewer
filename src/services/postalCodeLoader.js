@@ -256,17 +256,21 @@ export function updateLoadingProgress(current, total, setStateCallback) {
 /**
  * Processes results from parallel loading with error handling (FR-3.4)
  * Handles partial success (one operation succeeds, other fails).
+ * Checks for pending navigation and triggers it if one was queued.
  *
  * @param {Array<PromiseSettledResult>} results - Results from Promise.allSettled
  * @param {string} postalCode - Postal code being loaded
  * @param {Function} setStateCallback - Callback to set click processing state
  * @param {Function} resetStateCallback - Callback to reset click processing state
+ * @param {Function} [getPendingNavigationCallback] - Optional callback to get and consume pending navigation
+ * @returns {Object|null} Pending navigation if one exists, null otherwise
  */
 export function processParallelLoadingResults(
 	results,
 	postalCode,
 	setStateCallback,
-	resetStateCallback
+	resetStateCallback,
+	getPendingNavigationCallback = null
 ) {
 	const [cameraResult, dataResult] = results
 
@@ -299,10 +303,22 @@ export function processParallelLoadingResults(
 
 		// Keep error state visible for user to see retry option
 		// Don't auto-reset in this case
-		return
+		return null
 	}
 
-	// Success path - both operations completed
+	// Check for pending navigation before completing
+	const pendingNavigation = getPendingNavigationCallback ? getPendingNavigationCallback() : null
+
+	if (pendingNavigation) {
+		logger.debug(
+			'[PostalCodeLoader] 🔄 Pending navigation detected, will navigate to:',
+			pendingNavigation.postalCode
+		)
+		// Don't reset state - let the caller handle navigation
+		return pendingNavigation
+	}
+
+	// Success path - both operations completed with no pending navigation
 	setStateCallback({
 		stage: 'complete',
 		error: null,
@@ -314,6 +330,7 @@ export function processParallelLoadingResults(
 	}, 500)
 
 	logger.debug('[PostalCodeLoader] ✅ Postal code loading complete:', postalCode)
+	return null
 }
 
 /**
@@ -325,18 +342,21 @@ export function processParallelLoadingResults(
  * - Runs camera animation and data loading in parallel using Promise.allSettled
  * - Implements retry logic with exponential backoff for failed requests
  * - Shows partial data if some datasets load successfully
+ * - Supports latest-wins pattern for rapid navigation clicks
  *
  * @param {string} postalCode - Postal code to load
  * @param {Object} services - Service instances needed for loading
  * @param {Object} stores - Store instances
  * @param {Function} setNameOfZoneCallback - Callback to set zone name
+ * @param {Function} [onNavigationRequest] - Optional callback to trigger navigation to a new postal code
  * @returns {Promise<void>}
  */
 export async function loadPostalCodeWithParallelStrategy(
 	postalCode,
 	services,
 	stores,
-	setNameOfZoneCallback
+	setNameOfZoneCallback,
+	onNavigationRequest = null
 ) {
 	performance.mark('parallel-load-start')
 
@@ -351,6 +371,10 @@ export async function loadPostalCodeWithParallelStrategy(
 
 	const resetState = () => {
 		stores.store.resetClickProcessingState()
+	}
+
+	const getPendingNavigation = () => {
+		return stores.store.consumePendingNavigation()
 	}
 
 	// Start camera animation immediately (will update state to 'animating')
@@ -385,7 +409,14 @@ export async function loadPostalCodeWithParallelStrategy(
 	const results = await Promise.allSettled([cameraPromise, dataPromise])
 
 	// Process results with comprehensive error handling (FR-3.4)
-	processParallelLoadingResults(results, postalCode, setState, resetState)
+	// Also checks for pending navigation (latest-wins pattern)
+	const pendingNavigation = processParallelLoadingResults(
+		results,
+		postalCode,
+		setState,
+		resetState,
+		getPendingNavigation
+	)
 
 	performance.mark('parallel-load-complete')
 	performance.measure('parallel-load-total', 'parallel-load-start', 'parallel-load-complete')
@@ -398,33 +429,41 @@ export async function loadPostalCodeWithParallelStrategy(
 	performance.clearMarks('parallel-load-start')
 	performance.clearMarks('parallel-load-complete')
 	performance.clearMeasures('parallel-load-total')
+
+	// Handle pending navigation (latest-wins pattern)
+	if (pendingNavigation && onNavigationRequest) {
+		logger.debug(
+			'[PostalCodeLoader] 🔄 Processing pending navigation to:',
+			pendingNavigation.postalCode
+		)
+		onNavigationRequest(pendingNavigation)
+	}
 }
 
 /**
  * Sets the name of the current zone from postal code data
- * Searches through postal code entities to find matching postal code and extracts zone name.
+ * Uses PostalCodeIndex for O(1) lookup instead of O(n) linear search.
  *
  * @param {string} postalCode - Postal code to find name for
- * @param {Object} postalCodeData - Postal code data from propStore
+ * @param {Object} _postalCodeData - Postal code data from propStore (unused, kept for API compatibility)
  * @param {Function} setNameCallback - Callback to set zone name in store
  * @returns {void}
  */
-export function setNameOfZone(postalCode, postalCodeData, setNameCallback) {
-	const entitiesArray = postalCodeData._entityCollection?._entities._array
-
-	if (Array.isArray(entitiesArray)) {
-		for (let i = 0; i < entitiesArray.length; i++) {
-			const entity = entitiesArray[i]
+export function setNameOfZone(postalCode, _postalCodeData, setNameCallback) {
+	// Import dynamically to avoid circular dependencies
+	import('./postalCodeIndex.js')
+		.then(({ postalCodeIndex }) => {
+			const entity = postalCodeIndex.getByPostalCode(postalCode)
 			if (
 				entity &&
 				entity._properties &&
 				entity._properties._nimi &&
-				typeof entity._properties._nimi._value !== 'undefined' &&
-				entity._properties._posno._value === postalCode
+				typeof entity._properties._nimi._value !== 'undefined'
 			) {
 				setNameCallback(entity._properties._nimi._value)
-				break // Exit the loop after finding the first match
 			}
-		}
-	}
+		})
+		.catch((error) => {
+			logger.warn('[PostalCodeLoader] Failed to load postal code index:', error?.message || error)
+		})
 }

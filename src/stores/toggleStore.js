@@ -66,6 +66,8 @@ export const useToggleStore = defineStore('toggle', {
 		grid250m: false,
 		ndvi: false,
 		viewportTileMode: true,
+		// Internal state for visibility coordination
+		_previousGrid250m: false, // Tracks grid state before entering postal code
 	}),
 	actions: {
 		/**
@@ -230,6 +232,35 @@ export const useToggleStore = defineStore('toggle', {
 		 */
 		reset() {
 			this.$reset() // Pinia has a built-in $reset function which resets state to initial values
+		},
+
+		// ============================================================
+		// Visibility Coordination Methods
+		// ============================================================
+
+		/**
+		 * Called when entering postal code view level.
+		 * Saves current grid state and disables grid overlay to prevent
+		 * visual conflict with building visualization.
+		 * @returns {void}
+		 */
+		onEnterPostalCode() {
+			if (this.grid250m) {
+				this._previousGrid250m = true
+				this.grid250m = false
+			}
+		},
+
+		/**
+		 * Called when exiting postal code view (returning to capital region).
+		 * Restores the previously saved grid state.
+		 * @returns {void}
+		 */
+		onExitPostalCode() {
+			if (this._previousGrid250m) {
+				this.grid250m = true
+				this._previousGrid250m = false
+			}
 		},
 	},
 })

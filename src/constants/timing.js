@@ -19,4 +19,10 @@ export const TIMING = {
 	// Retry/polling
 	RETRY_DELAY_BASE_MS: 1000,
 	MAX_RETRY_DELAY_MS: 30000,
+
+	// WMS tile retry configuration
+	WMS_MAX_RETRIES: 3,
+	WMS_RETRY_DELAY_BASE_MS: 1000,
+	WMS_RETRY_MAX_DELAY_MS: 8000,
+	WMS_RETRY_JITTER_MS: 200,
 }

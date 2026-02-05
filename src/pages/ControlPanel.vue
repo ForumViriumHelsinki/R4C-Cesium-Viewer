@@ -101,8 +101,7 @@
 					<template v-if="currentView === 'grid'">
 						<v-expansion-panels
 							v-if="statsIndex === 'heat_index' && featureFlagStore.isEnabled('coolingOptimizer')"
-							variant="outlined"
-							class="mb-2"
+							class="expansion-outlined mb-2"
 						>
 							<v-expansion-panel>
 								<v-expansion-panel-title>
@@ -621,6 +620,12 @@ export default {
 .v-btn:focus {
 	outline: 2px solid #1976d2;
 	outline-offset: 2px;
+}
+
+/* Outlined style for expansion panels to match v-btn variant="outlined" */
+.expansion-outlined :deep(.v-expansion-panel) {
+	border: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
+	background: transparent;
 }
 .mb-2 {
 	margin-bottom: 8px;

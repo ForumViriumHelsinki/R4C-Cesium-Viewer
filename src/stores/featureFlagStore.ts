@@ -294,11 +294,18 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 /**
  * Build initial evaluation state from fallback defaults.
  * Before OpenFeature is initialized, flags use their fallback values.
+ *
+ * In development mode, all flags are enabled by default to ensure all
+ * experimental features are available during local development without
+ * affecting production behavior.
  */
 function buildInitialEvaluations(): Record<FeatureFlagName, boolean> {
+	const isDev = import.meta.env.MODE === 'development'
 	const result: Partial<Record<FeatureFlagName, boolean>> = {}
 	for (const name of ALL_FLAG_NAMES) {
-		result[name] = FLAG_METADATA[name].fallbackDefault
+		// In development mode, enable all flags by default
+		// In production, use the configured fallbackDefault
+		result[name] = isDev ? true : FLAG_METADATA[name].fallbackDefault
 	}
 	return result as Record<FeatureFlagName, boolean>
 }

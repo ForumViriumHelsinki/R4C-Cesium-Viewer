@@ -108,6 +108,7 @@
 </template>
 
 <script>
+import Building from '../services/building.js'
 import Camera from '../services/camera.js'
 import Datasource from '../services/datasource.js'
 import EspooSurvey from '../services/espooSurvey.js'
@@ -182,6 +183,13 @@ export default {
 	},
 	methods: {
 		reset() {
+			// Cancel any in-flight building loads before resetting
+			const buildingService = new Building()
+			buildingService.cancelCurrentLoad()
+
+			// Restore grid visibility if it was hidden when entering postal code
+			this.toggleStore.onExitPostalCode()
+
 			// Smart reset instead of page reload
 			this.store.setLevel('start')
 			this.store.setPostalCode(null)

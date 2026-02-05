@@ -1,4 +1,5 @@
 import { useURLStore } from '../stores/urlStore.js'
+import { getGlobalWMSRetryHandler } from '../utils/wmsRetryHandler.js'
 import { getCesium } from './cesiumProvider.js'
 
 /**
@@ -10,6 +11,11 @@ import { getCesium } from './cesiumProvider.js'
  * @see {@link https://www.ogc.org/standards/wms|OGC WMS Specification}
  */
 export default class Wms {
+	constructor() {
+		/** @type {WMSRetryHandler} Shared retry handler for transient failures */
+		this.retryHandler = getGlobalWMSRetryHandler()
+	}
+
 	/**
 	 * Creates a CesiumJS imagery layer from Helsinki WMS service
 	 * Configures Web Map Service provider with proxy for Helsinki map layers.
@@ -74,6 +80,11 @@ export default class Wms {
 			maximumLevel: 18,
 			// Use geographic tiling scheme for EPSG:4326 (WGS84)
 			tilingScheme: new Cesium.GeographicTilingScheme(),
+		})
+
+		// Attach retry handler for transient network failures (ECONNRESET, etc.)
+		provider.errorEvent.addEventListener((error) => {
+			this.retryHandler.handleTileError(error, layerName)
 		})
 
 		return new Cesium.ImageryLayer(provider)

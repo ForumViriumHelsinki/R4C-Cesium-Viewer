@@ -35,6 +35,33 @@ export class BuildingLoader {
 		this.datasourceService = new Datasource()
 		this.styler = new BuildingStyler()
 		this.unifiedLoader = unifiedLoader
+		/** @type {string|null} Currently loading layer ID for cancellation */
+		this._currentLoadingLayerId = null
+	}
+
+	/**
+	 * Gets the layer ID for the currently active or most recent load.
+	 * Used for external cancellation when navigating away.
+	 *
+	 * @returns {string|null} Layer ID or null if no active load
+	 */
+	get activeLayerId() {
+		return this._currentLoadingLayerId
+	}
+
+	/**
+	 * Cancels the current building load operation.
+	 * Aborts in-flight network requests via unifiedLoader's AbortController.
+	 * Safe to call even if no load is in progress.
+	 *
+	 * @returns {void}
+	 */
+	cancelCurrentLoad() {
+		if (this._currentLoadingLayerId) {
+			logger.debug('[BuildingLoader] Cancelling load for:', this._currentLoadingLayerId)
+			this.unifiedLoader.cancelLoading(this._currentLoadingLayerId)
+			this._currentLoadingLayerId = null
+		}
 	}
 
 	/**
@@ -49,14 +76,18 @@ export class BuildingLoader {
 	async loadBuildings(postalCode) {
 		const targetPostalCode = postalCode || this.store.postalcode
 		const url = this.urlStore.helsinkiBuildingsUrl(targetPostalCode)
+		const layerId = `helsinki_buildings_${targetPostalCode}`
 
 		logger.debug('[HelsinkiBuilding] Loading Helsinki buildings for postal code:', targetPostalCode)
 		logger.debug('[HelsinkiBuilding] API URL:', url)
 
+		// Track current load for cancellation support
+		this._currentLoadingLayerId = layerId
+
 		try {
 			// Configure building data fetch
 			const buildingConfig = {
-				layerId: `helsinki_buildings_${targetPostalCode}`,
+				layerId,
 				url: url,
 				type: 'geojson',
 				options: {
@@ -129,8 +160,15 @@ export class BuildingLoader {
 				})
 			}
 
+			// Clear tracking on successful load
+			this._currentLoadingLayerId = null
+
 			return entities
 		} catch (error) {
+			// Clear tracking on error (but not on cancellation - already cleared)
+			if (this._currentLoadingLayerId === layerId) {
+				this._currentLoadingLayerId = null
+			}
 			logger.error('[HelsinkiBuilding] Error loading buildings:', error)
 			throw error
 		}
