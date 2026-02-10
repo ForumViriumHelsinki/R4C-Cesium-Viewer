@@ -38,6 +38,10 @@ DUMP_SQL := "tmp/regions4climate-dump.sql"
 MOCK_API_DIR := "mock-api"
 MOCK_DENSITY := env_var_or_default("MOCK_DENSITY", "50")
 
+# Test results
+RESULTS_FILE := "test-results/test-results.json"
+JUNIT_FILE := "test-results/junit.xml"
+
 # Colors and symbols
 GREEN := '\033[0;32m'
 YELLOW := '\033[0;33m'
@@ -50,7 +54,7 @@ CROSS := RED + '✗' + RESET
 ARROW := CYAN + '→' + RESET
 
 # ==============================================================================
-# Getting Started
+# Metadata
 # ==============================================================================
 
 # Show available commands (default)
@@ -92,6 +96,10 @@ help:
     echo -e "{{DIM}}All Commands:{{RESET}}"
     just --list --unsorted
 
+# ==============================================================================
+# Development
+# ==============================================================================
+
 # First-time setup (install dependencies, check tools)
 setup:
     #!/usr/bin/env bash
@@ -110,30 +118,6 @@ setup:
     echo "Next steps:"
     echo -e "  just dev       {{DIM}}- Start development environment{{RESET}}"
     echo -e "  just db-seed   {{DIM}}- Seed database with test data{{RESET}}"
-
-# Show current environment status
-status:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo ""
-    echo -e "{{CYAN}}=== Kubernetes Pods ==={{RESET}}"
-    kubectl get pods -n {{NAMESPACE}} 2>/dev/null || echo -e "{{DIM}}No pods running{{RESET}}"
-    echo ""
-    echo -e "{{CYAN}}=== PVC Status (database persistence) ==={{RESET}}"
-    kubectl get pvc -n {{NAMESPACE}} 2>/dev/null || echo -e "{{DIM}}No PVCs{{RESET}}"
-    echo ""
-    echo -e "{{CYAN}}=== Port Forwards ==={{RESET}}"
-    ps aux | grep -E "kubectl.*port-forward" | grep -v grep | awk '{print "  " $0}' || echo -e "{{DIM}}None active{{RESET}}"
-    echo ""
-
-# Tail logs from all services
-logs:
-    kubectl logs -f -l app -n {{NAMESPACE}} --prefix --all-containers 2>/dev/null || \
-        echo -e "{{CROSS}} No pods running. Start with: just dev"
-
-# ==============================================================================
-# Development Modes
-# ==============================================================================
 
 # Start services + local frontend (fast iteration)
 # Flags: --seed, --continue, --import (for programmatic use)
@@ -217,6 +201,15 @@ dev-full:
     echo ""
     skaffold dev -p frontend-only --port-forward
 
+# Production build
+build:
+    bun run build
+
+# Clean build artifacts
+clean:
+    rm -rf dist node_modules/.vite .playwright-cache
+    echo -e "{{CHECK}} Build artifacts cleaned"
+
 # Stop all services
 stop:
     #!/usr/bin/env bash
@@ -236,8 +229,81 @@ stop-frontend:
     skaffold delete -p frontend-only 2>/dev/null || true
     echo -e "{{CHECK}} Frontend stopped (services still running)"
 
+# Show current environment status
+status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo ""
+    echo -e "{{CYAN}}=== Kubernetes Pods ==={{RESET}}"
+    kubectl get pods -n {{NAMESPACE}} 2>/dev/null || echo -e "{{DIM}}No pods running{{RESET}}"
+    echo ""
+    echo -e "{{CYAN}}=== PVC Status (database persistence) ==={{RESET}}"
+    kubectl get pvc -n {{NAMESPACE}} 2>/dev/null || echo -e "{{DIM}}No PVCs{{RESET}}"
+    echo ""
+    echo -e "{{CYAN}}=== Port Forwards ==={{RESET}}"
+    ps aux | grep -E "kubectl.*port-forward" | grep -v grep | awk '{print "  " $0}' || echo -e "{{DIM}}None active{{RESET}}"
+    echo ""
+
+# Tail logs from all services
+logs:
+    kubectl logs -f -l app -n {{NAMESPACE}} --prefix --all-containers 2>/dev/null || \
+        echo -e "{{CROSS}} No pods running. Start with: just dev"
+
 # ==============================================================================
-# Database Operations
+# Code Quality
+# ==============================================================================
+
+# Run linter (read-only)
+lint *args:
+    bun run lint {{ args }}
+
+# Auto-fix lint issues
+lint-fix:
+    bun run lint --fix
+
+# Format code (mutating)
+format:
+    bun run lint --write
+
+# Verify formatting (non-mutating)
+format-check:
+    bun run lint
+
+# Run TypeScript type checking
+typecheck:
+    bunx vue-tsc --noEmit
+
+# Code quality gate (non-mutating, no tests)
+check: format-check lint typecheck
+
+# ==============================================================================
+# Testing
+# ==============================================================================
+
+# Run all tests
+test *args:
+    bun run test:all {{ args }}
+
+# Run unit tests only (fast)
+test-unit *args:
+    bun run test:unit {{ args }}
+
+# Run end-to-end tests (requires VITE_E2E_TEST=true for Cesium viewer exposure)
+test-e2e *args:
+    VITE_E2E_TEST=true bun run test:e2e {{ args }}
+
+# ==============================================================================
+# Workflows
+# ==============================================================================
+
+# Fast non-mutating checks before commit
+pre-commit: format-check lint typecheck test-unit
+
+# Full CI simulation
+ci: check test build
+
+# ==============================================================================
+# Database
 # ==============================================================================
 
 # Internal: Show database statistics (called by dev)
@@ -588,22 +654,6 @@ db-reset:
     echo -e "{{DIM}}Run 'just dev' to recreate, then 'just db-seed' to populate with test data{{RESET}}"
 
 # ==============================================================================
-# Testing
-# ==============================================================================
-
-# Run all tests
-test *args:
-    bun run test:all {{ args }}
-
-# Run unit tests only (fast)
-test-quick *args:
-    bun run test:unit {{ args }}
-
-# Run end-to-end tests (requires VITE_E2E_TEST=true for Cesium viewer exposure)
-test-e2e *args:
-    VITE_E2E_TEST=true bun run test:e2e {{ args }}
-
-# ==============================================================================
 # Mock API (No Database Required)
 # ==============================================================================
 
@@ -732,22 +782,209 @@ chrome-debug:
     fi
 
 # ==============================================================================
-# Maintenance
+# Test Analysis
 # ==============================================================================
 
-# Run ESLint
-lint:
-    bun run lint
+# Show test pass/fail/skip summary from Playwright JSON report
+[group: "test analysis"]
+test-results-summary results_file=RESULTS_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f "{{results_file}}" ]; then
+        echo -e "{{CROSS}} Results file not found: {{results_file}}"
+        echo -e "{{DIM}}Run tests first: just test-e2e --reporter=json{{RESET}}"
+        exit 1
+    fi
+    echo -e "{{CYAN}}=== Test Results Summary ==={{RESET}}"
+    echo ""
+    jq -r '
+      .stats |
+      "  Expected (pass): \(.expected)\n  Unexpected (fail): \(.unexpected)\n  Skipped:           \(.skipped)\n  Flaky:             \(.flaky)\n  Total:             \(.expected + .unexpected + .skipped + .flaky)\n  Duration:          \(.duration / 1000 | floor)s (\(.duration / 60000 | floor)m \(.duration / 1000 % 60 | floor)s)\n  Pass rate:         \(if (.expected + .unexpected) > 0 then ((.expected * 100) / (.expected + .unexpected) | floor) else 0 end)%"
+    ' "{{results_file}}"
+    echo ""
 
-# Production build
-build:
-    bun run build
+# Group test failures by error pattern
+[group: "test analysis"]
+test-results-failures results_file=RESULTS_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f "{{results_file}}" ]; then
+        echo -e "{{CROSS}} Results file not found: {{results_file}}"
+        echo -e "{{DIM}}Run tests first: just test-e2e --reporter=json{{RESET}}"
+        exit 1
+    fi
+    echo -e "{{CYAN}}=== Failures by Error Pattern ==={{RESET}}"
+    echo ""
+    jq -r '
+      # Collect all failure records with context
+      [.. | objects | select(.specs?) | .specs[] | select(.ok == false) |
+        . as $spec |
+        .tests[] | select(.status == "unexpected") |
+        {
+          title: $spec.title,
+          browser: .projectName,
+          error: (.results[0].error.message // "unknown")
+        }
+      ] |
+      # Classify each error
+      map(
+        .pattern = (
+          if (.error | test("waitForFunction")) then "waitForFunction timeout"
+          elif (.error | test("toBeVisible")) then "toBeVisible assertion"
+          elif (.error | test("locator\\.click|click.*timeout"; "i")) then "locator.click timeout"
+          elif (.error | test("toHaveLength")) then "toHaveLength assertion"
+          elif (.error | test("page\\.goto|navigation.*timeout"; "i")) then "page.goto timeout"
+          else "other"
+          end
+        )
+      ) |
+      # Group by pattern
+      group_by(.pattern) |
+      sort_by(-length) |
+      .[] |
+      "\u001b[0;33m\(.[0].pattern)\u001b[0m (\(length) failures)" ,
+      (
+        group_by(.title) |
+        sort_by(-length) |
+        .[] |
+        "  \(.[0].title)  \u001b[0;90m[\(map(.browser) | unique | join(", "))]\u001b[0m"
+      ),
+      ""
+    ' "{{results_file}}"
 
-# Clean build artifacts
-clean:
-    rm -rf dist node_modules/.vite .playwright-cache
-    echo -e "{{CHECK}} Build artifacts cleaned"
+# Group test failures by source file
+[group: "test analysis"]
+test-results-by-file results_file=RESULTS_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f "{{results_file}}" ]; then
+        echo -e "{{CROSS}} Results file not found: {{results_file}}"
+        echo -e "{{DIM}}Run tests first: just test-e2e --reporter=json{{RESET}}"
+        exit 1
+    fi
+    echo -e "{{CYAN}}=== Failures by Source File ==={{RESET}}"
+    echo ""
+    jq -r '
+      [.. | objects | select(.specs?) | .specs[] | select(.ok == false) |
+        . as $spec |
+        .tests[] | select(.status == "unexpected") |
+        {
+          title: $spec.title,
+          browser: .projectName,
+          file: (.results[0].error.location.file // "unknown"),
+          line: (.results[0].error.location.line // 0)
+        }
+      ] |
+      group_by(.file) |
+      sort_by(-length) |
+      .[] |
+      "\u001b[0;36m\(.[0].file)\u001b[0m (\(length) failures)",
+      (
+        group_by(.title) |
+        sort_by(-length) |
+        .[] |
+        "  L\(.[0].line): \(.[0].title)  \u001b[0;90m[\(map(.browser) | unique | join(", "))]\u001b[0m"
+      ),
+      ""
+    ' "{{results_file}}"
 
-# Format code
-format:
-    bun run lint --write
+# Group test failures by browser project
+[group: "test analysis"]
+test-results-by-browser results_file=RESULTS_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f "{{results_file}}" ]; then
+        echo -e "{{CROSS}} Results file not found: {{results_file}}"
+        echo -e "{{DIM}}Run tests first: just test-e2e --reporter=json{{RESET}}"
+        exit 1
+    fi
+    echo -e "{{CYAN}}=== Failures by Browser ==={{RESET}}"
+    echo ""
+    jq -r '
+      [.. | objects | select(.specs?) | .specs[] | select(.ok == false) |
+        . as $spec |
+        .tests[] | select(.status == "unexpected") |
+        {
+          title: $spec.title,
+          browser: .projectName,
+          file: (.results[0].error.location.file // "unknown"),
+          line: (.results[0].error.location.line // 0)
+        }
+      ] |
+      group_by(.browser) |
+      sort_by(-length) |
+      .[] |
+      "\u001b[0;33m\(.[0].browser)\u001b[0m (\(length) failures)",
+      (
+        sort_by(.file, .title) |
+        if length > 10 then
+          (.[:10] | .[] | "  \(.file):\(.line) \(.title)"),
+          "  \u001b[0;90m... and \(length - 10) more\u001b[0m"
+        else
+          .[] | "  \(.file):\(.line) \(.title)"
+        end
+      ),
+      ""
+    ' "{{results_file}}"
+
+# Generate GitHub issue drafts grouped by (file, error pattern)
+[group: "test analysis"]
+test-results-issues results_file=RESULTS_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f "{{results_file}}" ]; then
+        echo -e "{{CROSS}} Results file not found: {{results_file}}"
+        echo -e "{{DIM}}Run tests first: just test-e2e --reporter=json{{RESET}}"
+        exit 1
+    fi
+    echo -e "{{CYAN}}=== GitHub Issue Drafts ==={{RESET}}"
+    echo ""
+    jq -r '
+      # Collect failures with classification
+      [.. | objects | select(.specs?) | .specs[] | select(.ok == false) |
+        . as $spec |
+        .tests[] | select(.status == "unexpected") |
+        {
+          title: $spec.title,
+          browser: .projectName,
+          file: (.results[0].error.location.file // "unknown"),
+          line: (.results[0].error.location.line // 0),
+          error: (.results[0].error.message // "unknown"),
+          pattern: (
+            if (.results[0].error.message // "" | test("waitForFunction")) then "waitForFunction timeout"
+            elif (.results[0].error.message // "" | test("toBeVisible")) then "toBeVisible assertion"
+            elif (.results[0].error.message // "" | test("locator\\.click|click.*timeout"; "i")) then "locator.click timeout"
+            elif (.results[0].error.message // "" | test("toHaveLength")) then "toHaveLength assertion"
+            elif (.results[0].error.message // "" | test("page\\.goto|navigation.*timeout"; "i")) then "page.goto timeout"
+            else "other"
+            end
+          )
+        }
+      ] |
+      # Group by (file, pattern)
+      group_by(.file + "|" + .pattern) |
+      sort_by(-length) |
+      .[] |
+      . as $group |
+      ($group | map(.browser) | unique | join(", ")) as $browsers |
+      ($group[0].file | split("/") | last | split(".") | first) as $short_file |
+      (
+        "────────────────────────────────────────────────────────────",
+        "\u001b[0;33mIssue: \($short_file) — \($group[0].pattern) (\(length) failures)\u001b[0m",
+        "Title:    fix(test): \($short_file) tests fail with \($group[0].pattern)",
+        "Labels:   bug, testing",
+        "Browsers: \($browsers)",
+        "File:     \($group[0].file)",
+        "",
+        "Failing tests:",
+        ($group | group_by(.title) | sort_by(-length) | .[] |
+          "  - L\(.[0].line): \(.[0].title) [\(map(.browser) | unique | join(", "))]"
+        ),
+        "",
+        "Create with:",
+        "  gh issue create --title \"fix(test): \($short_file) tests fail with \($group[0].pattern)\" \\",
+        "    --label bug --label testing \\",
+        "    --body \"...\"",
+        ""
+      )
+    ' "{{results_file}}"
