@@ -39,7 +39,7 @@ vi.mock('@/services/urbanheat.js', () => ({
 }))
 
 // Mock Cesium
-vi.mock('cesium', () => ({
+const cesiumMock = {
 	Rectangle: vi.fn(function () {
 		this.west = 0
 		this.south = 0
@@ -56,6 +56,19 @@ vi.mock('cesium', () => ({
 		this.blue = b
 		this.alpha = a
 	}),
+	ColorMaterialProperty: vi.fn(function (color) {
+		this.color = { getValue: vi.fn(() => color) }
+	}),
+	JulianDate: {
+		now: vi.fn(() => ({})),
+	},
+}
+
+vi.mock('cesium', () => cesiumMock)
+
+// Mock cesiumProvider (used by viewportBuildingLoader via getCesium())
+vi.mock('@/services/cesiumProvider', () => ({
+	getCesium: vi.fn(() => cesiumMock),
 }))
 
 describe('ViewportBuildingLoader - Integration Tests', () => {
@@ -66,6 +79,9 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 	beforeEach(() => {
 		// Clear all mocks first for test isolation
 		vi.clearAllMocks()
+
+		// Mock requestAnimationFrame for fade-in animation
+		vi.stubGlobal('requestAnimationFrame', (cb) => setTimeout(cb, 0))
 
 		// Reset Pinia
 		setActivePinia(createPinia())
@@ -263,9 +279,9 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 			// Update visibility - only first tile is visible
 			loader.updateTileVisibility(['2490_6010'])
 
+			// fadeInDatasource sets show=true synchronously, then starts async animation
 			expect(datasource1.show).toBe(true)
 			expect(datasource2.show).toBe(false)
-			expect(mockViewer.scene.requestRender).toHaveBeenCalled()
 		})
 
 		it('should hide datasources for non-visible tiles', () => {

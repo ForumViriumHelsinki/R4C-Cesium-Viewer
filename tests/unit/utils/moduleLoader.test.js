@@ -40,11 +40,17 @@ describe('moduleLoader', () => {
 		})
 
 		it('should use exponential backoff between retries', async () => {
+			const error = new Error('Failed to fetch dynamically imported module')
 			const mockImport = vi
 				.fn()
-				.mockRejectedValue(new Error('Failed to fetch dynamically imported module'))
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
 
 			const importPromise = loadWithRetry(mockImport, 3)
+			// Attach catch immediately to prevent unhandled rejection during timer advancement
+			importPromise.catch(() => {})
 
 			// Initial attempt happens synchronously
 			expect(mockImport).toHaveBeenCalledTimes(1)
@@ -66,11 +72,17 @@ describe('moduleLoader', () => {
 		})
 
 		it('should throw error after max retries exceeded', async () => {
+			const error = new Error('Failed to fetch dynamically imported module')
 			const mockImport = vi
 				.fn()
-				.mockRejectedValue(new Error('Failed to fetch dynamically imported module'))
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
 
 			const importPromise = loadWithRetry(mockImport, 3)
+			// Attach catch immediately to prevent unhandled rejection during timer advancement
+			importPromise.catch(() => {})
 
 			// Advance through all retry delays
 			await vi.advanceTimersByTimeAsync(1000) // First retry
@@ -101,11 +113,16 @@ describe('moduleLoader', () => {
 		})
 
 		it('should accept custom retry count', async () => {
+			const error = new Error('Failed to fetch dynamically imported module')
 			const mockImport = vi
 				.fn()
-				.mockRejectedValue(new Error('Failed to fetch dynamically imported module'))
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
 
 			const importPromise = loadWithRetry(mockImport, 2)
+			// Attach catch immediately to prevent unhandled rejection during timer advancement
+			importPromise.catch(() => {})
 
 			await vi.advanceTimersByTimeAsync(1000) // First retry
 			await vi.advanceTimersByTimeAsync(2000) // Second retry (final)
@@ -154,11 +171,17 @@ describe('moduleLoader', () => {
 		})
 
 		it('should default to 3 retries when not specified', async () => {
+			const error = new Error('Failed to fetch dynamically imported module')
 			const mockImport = vi
 				.fn()
-				.mockRejectedValue(new Error('Failed to fetch dynamically imported module'))
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
+				.mockRejectedValueOnce(error)
 
 			const importPromise = loadWithRetry(mockImport) // No retry count specified
+			// Attach catch immediately to prevent unhandled rejection during timer advancement
+			importPromise.catch(() => {})
 
 			await vi.advanceTimersByTimeAsync(1000) // First retry
 			await vi.advanceTimersByTimeAsync(2000) // Second retry

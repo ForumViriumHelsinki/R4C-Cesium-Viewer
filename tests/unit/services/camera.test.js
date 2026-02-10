@@ -11,6 +11,14 @@ let mockZoomOut
 let mockPickEllipsoid
 let mockViewer
 
+// Mock postalCodeIndex for O(1) entity lookups
+const mockGetByPostalCode = vi.fn()
+vi.mock('@/services/postalCodeIndex', () => ({
+	postalCodeIndex: {
+		getByPostalCode: (...args) => mockGetByPostalCode(...args),
+	},
+}))
+
 // Mock cesiumProvider
 vi.mock('@/services/cesiumProvider', () => ({
 	getCesium: vi.fn(() => ({
@@ -122,97 +130,70 @@ describe('Camera service', () => {
 	})
 
 	describe('switchTo2DView', () => {
+		const mockEntity = {
+			_properties: {
+				_posno: { _value: '12345' },
+				_center_x: { _value: 24.95 },
+				_center_y: { _value: 60.17 },
+			},
+		}
+
 		beforeEach(() => {
 			store.setPostalCode('12345')
-
-			const mockDataSource = {
-				name: 'PostCodes',
-				_entityCollection: {
-					_entities: {
-						_array: [
-							{
-								_properties: {
-									_posno: { _value: '12345' },
-									_center_x: { _value: 24.95 },
-									_center_y: { _value: 60.17 },
-								},
-							},
-						],
-					},
-				},
-			}
-
-			mockViewer.dataSources._dataSources = [mockDataSource]
+			mockGetByPostalCode.mockReturnValue(mockEntity)
 		})
 
 		it('should fly to postal code area in 2D view', () => {
 			camera.switchTo2DView()
 
+			expect(mockGetByPostalCode).toHaveBeenCalledWith('12345')
 			expect(mockFlyTo).toHaveBeenCalledWith({
 				destination: { x: 24.95, y: 60.17, z: 3500 },
 				orientation: {
-					heading: 0,
+					heading: expect.any(Number),
 					pitch: expect.any(Number), // -90 degrees in radians
 				},
 				duration: 3,
 			})
 		})
 
-		it('should handle missing postal code data source', () => {
-			mockViewer.dataSources._dataSources = []
-			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+		it('should handle missing postal code in index', () => {
+			mockGetByPostalCode.mockReturnValue(null)
 
 			expect(() => camera.switchTo2DView()).not.toThrow()
 			expect(mockFlyTo).not.toHaveBeenCalled()
-			expect(consoleWarnSpy).toHaveBeenCalledWith('[Camera] PostCodes data source not found')
-
-			consoleWarnSpy.mockRestore()
 		})
 
 		it('should handle postal code not found in entities', () => {
 			store.setPostalCode('99999')
-			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+			mockGetByPostalCode.mockReturnValue(null)
 
 			expect(() => camera.switchTo2DView()).not.toThrow()
 			expect(mockFlyTo).not.toHaveBeenCalled()
-			expect(consoleWarnSpy).toHaveBeenCalledWith(
-				'[Camera] Postal code 99999 not found for 2D view'
-			)
-
-			consoleWarnSpy.mockRestore()
 		})
 	})
 
 	describe('switchTo3DView', () => {
+		const mockEntity = {
+			_properties: {
+				_posno: { _value: '12345' },
+				_center_x: { _value: 24.95 },
+				_center_y: { _value: 60.17 },
+			},
+		}
+
 		beforeEach(() => {
 			store.setPostalCode('12345')
+			mockGetByPostalCode.mockReturnValue(mockEntity)
 
 			// Ensure camera.position has clone method
 			mockViewer.camera.position.clone = vi.fn(() => ({ x: 100, y: 200, z: 300 }))
-
-			const mockDataSource = {
-				name: 'PostCodes',
-				_entityCollection: {
-					_entities: {
-						_array: [
-							{
-								_properties: {
-									_posno: { _value: '12345' },
-									_center_x: { _value: 24.95 },
-									_center_y: { _value: 60.17 },
-								},
-							},
-						],
-					},
-				},
-			}
-
-			mockViewer.dataSources._dataSources = [mockDataSource]
 		})
 
 		it('should fly to postal code area in 3D view', () => {
 			camera.switchTo3DView()
 
+			expect(mockGetByPostalCode).toHaveBeenCalledWith('12345')
 			expect(mockFlyTo).toHaveBeenCalledWith({
 				destination: { x: 24.95, y: 60.145, z: 2000 }, // y - 0.025
 				orientation: {

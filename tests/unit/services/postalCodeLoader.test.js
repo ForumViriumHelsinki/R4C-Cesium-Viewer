@@ -21,6 +21,14 @@ vi.mock('@/services/cacheWarmer.js', () => ({
 	},
 }))
 
+// Mock postalCodeIndex for O(1) entity lookups used by setNameOfZone
+const mockGetByPostalCode = vi.fn()
+vi.mock('@/services/postalCodeIndex.js', () => ({
+	postalCodeIndex: {
+		getByPostalCode: (...args) => mockGetByPostalCode(...args),
+	},
+}))
+
 // Mock buildingStore
 vi.mock('@/stores/buildingStore.js', () => ({
 	useBuildingStore: () => ({
@@ -626,61 +634,41 @@ describe('postalCodeLoader service', () => {
 	 * Zone name extraction tests - setNameOfZone()
 	 */
 	describe('setNameOfZone()', () => {
-		it('should extract zone name from matching entity', () => {
+		it('should extract zone name from matching entity', async () => {
 			const setNameCallback = vi.fn()
-			const postalCodeData = {
-				_entityCollection: {
-					_entities: {
-						_array: [
-							{
-								_properties: {
-									_posno: { _value: '00100' },
-									_nimi: { _value: 'Helsinki Keskusta' },
-								},
-							},
-						],
-					},
+			mockGetByPostalCode.mockReturnValue({
+				_properties: {
+					_posno: { _value: '00100' },
+					_nimi: { _value: 'Helsinki Keskusta' },
 				},
-			}
+			})
 
-			setNameOfZone('00100', postalCodeData, setNameCallback)
+			setNameOfZone('00100', {}, setNameCallback)
 
-			expect(setNameCallback).toHaveBeenCalledWith('Helsinki Keskusta')
+			// setNameOfZone uses dynamic import() internally, wait for async resolution
+			await vi.waitFor(() => {
+				expect(mockGetByPostalCode).toHaveBeenCalledWith('00100')
+				expect(setNameCallback).toHaveBeenCalledWith('Helsinki Keskusta')
+			})
 		})
 
-		it('should handle multiple entities and find matching postal code', () => {
+		it('should handle multiple entities and find matching postal code', async () => {
 			const setNameCallback = vi.fn()
-			const postalCodeData = {
-				_entityCollection: {
-					_entities: {
-						_array: [
-							{
-								_properties: {
-									_posno: { _value: '00200' },
-									_nimi: { _value: 'Area 1' },
-								},
-							},
-							{
-								_properties: {
-									_posno: { _value: '00100' },
-									_nimi: { _value: 'Target Area' },
-								},
-							},
-							{
-								_properties: {
-									_posno: { _value: '00300' },
-									_nimi: { _value: 'Area 3' },
-								},
-							},
-						],
-					},
+			mockGetByPostalCode.mockReturnValue({
+				_properties: {
+					_posno: { _value: '00100' },
+					_nimi: { _value: 'Target Area' },
 				},
-			}
+			})
 
-			setNameOfZone('00100', postalCodeData, setNameCallback)
+			setNameOfZone('00100', {}, setNameCallback)
 
-			expect(setNameCallback).toHaveBeenCalledWith('Target Area')
-			expect(setNameCallback).toHaveBeenCalledTimes(1) // Should stop after first match
+			// setNameOfZone uses dynamic import() internally, wait for async resolution
+			await vi.waitFor(() => {
+				expect(mockGetByPostalCode).toHaveBeenCalledWith('00100')
+				expect(setNameCallback).toHaveBeenCalledWith('Target Area')
+				expect(setNameCallback).toHaveBeenCalledTimes(1)
+			})
 		})
 
 		it('should not call callback when postal code not found', () => {
