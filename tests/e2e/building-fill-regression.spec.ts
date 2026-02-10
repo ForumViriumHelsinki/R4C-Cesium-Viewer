@@ -12,7 +12,7 @@
  * polygon.fill = true for all entities as the single authoritative location.
  */
 
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures/test-fixture'
 import { TEST_TIMEOUTS } from './helpers/test-helpers'
 
 /**

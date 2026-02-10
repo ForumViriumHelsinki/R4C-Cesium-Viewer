@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures/test-fixture'
 import { dismissModalIfPresent, TEST_TIMEOUTS, waitForCesiumReady } from '../helpers/test-helpers'
 
 test('Page load', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {

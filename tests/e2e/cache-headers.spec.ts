@@ -37,7 +37,7 @@
  *
  * @see https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/349
  */
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures/test-fixture'
 
 /**
  * Matches Vite build output pattern: /assets/[name].[8-char-hex-hash].[semver].[ext]

@@ -16,7 +16,7 @@
  * 3. Building datasources are created with "Buildings Viewport" naming
  */
 
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures/test-fixture'
 import { TEST_TIMEOUTS } from './helpers/test-helpers'
 
 /**

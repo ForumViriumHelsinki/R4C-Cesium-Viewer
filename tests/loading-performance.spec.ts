@@ -1,10 +1,6 @@
-import { expect, test } from '@playwright/test'
 import { BUNDLE_SIZE_BUDGETS, WEB_VITALS_BUDGETS } from './config/constants'
 import { TEST_TIMEOUTS } from './e2e/helpers/test-helpers'
-import { setupDigitransitMock } from './setup/digitransit-mock'
-
-// Setup digitransit mocking for all tests in this file
-setupDigitransitMock()
+import { expect, test } from './fixtures/test-fixture'
 
 test.describe('Loading Performance and User Experience', () => {
 	test.use({ tag: ['@performance'] })

@@ -1,9 +1,5 @@
-import { expect, test } from '@playwright/test'
-import { setupDigitransitMock } from '../setup/digitransit-mock'
+import { expect, test } from '../fixtures/test-fixture'
 import { TEST_TIMEOUTS } from './helpers/test-helpers'
-
-// Setup digitransit mocking for all tests in this file
-setupDigitransitMock()
 
 /**
  * View Transition Performance Tests

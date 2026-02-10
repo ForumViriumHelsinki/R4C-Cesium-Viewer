@@ -1,10 +1,6 @@
-import { expect, test } from '@playwright/test'
 import { TEST_TIMEOUTS } from './e2e/helpers/test-helpers'
+import { expect, test } from './fixtures/test-fixture'
 import { dismissModalIfPresent } from './helpers/test-helpers' // TEST_TIMEOUTS;
-import { setupDigitransitMock } from './setup/digitransit-mock'
-
-// Setup digitransit mocking for all tests in this file
-setupDigitransitMock()
 
 test.describe('Control Panel Functionality', () => {
 	test.use({ tag: ['@e2e', '@ui'] })

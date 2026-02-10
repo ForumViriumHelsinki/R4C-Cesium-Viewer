@@ -1,9 +1,5 @@
-import { expect, test } from '@playwright/test'
 import { VIEWPORTS } from './config/constants'
-import { setupDigitransitMock } from './setup/digitransit-mock'
-
-// Setup digitransit mocking for all tests in this file
-setupDigitransitMock()
+import { expect, test } from './fixtures/test-fixture'
 
 test.describe('Navigation and App Layout', () => {
 	test.use({ tag: ['@e2e', '@navigation', '@layout'] })

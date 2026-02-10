@@ -1,6 +1,7 @@
-import { test as base, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import { setupCesiumForCI, waitForAppReady, waitForCesiumReady } from '../e2e/helpers/cesium-helper'
 import { TEST_TIMEOUTS } from '../e2e/helpers/test-helpers'
+import { test as base } from './test-fixture'
 
 /**
  * Cesium Test Fixture
@@ -460,6 +461,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 								this.north = north
 							}
 							static fromDegrees(west, south, east, north) {
+								// biome-ignore lint/complexity/noThisInStatic: Factory pattern for anonymous class
 								return new this(west, south, east, north)
 							}
 						},
@@ -476,6 +478,7 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 								this.secondsOfDay = secondsOfDay
 							}
 							static now() {
+								// biome-ignore lint/complexity/noThisInStatic: Factory pattern for anonymous class
 								return new this()
 							}
 						},

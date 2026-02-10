@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures/test-fixture'
 import {
 	clickOnMap,
 	dismissModalIfPresent,
@@ -7,10 +7,6 @@ import {
 	waitForCesiumReady,
 	waitForMapViewTransition,
 } from './helpers/test-helpers'
-import { setupDigitransitMock } from './setup/digitransit-mock'
-
-// Setup digitransit mocking for all tests in this file
-setupDigitransitMock()
 
 test.describe('Data Visualization Components', () => {
 	test.use({ tag: ['@e2e', '@data', '@visual'] })

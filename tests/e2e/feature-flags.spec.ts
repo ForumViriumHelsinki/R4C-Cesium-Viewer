@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures/test-fixture'
 import { dismissModalIfPresent } from '../helpers/test-helpers' // TEST_TIMEOUTS;
 import { TEST_TIMEOUTS } from './helpers/test-helpers'
 

@@ -88,11 +88,27 @@ export const POSTAL_CODE_RANGES = {
  * await page.waitForRequest(API_ENDPOINTS.WMS_PROXY);
  */
 export const API_ENDPOINTS = {
-	WMS_PROXY: '/helsinki-wms',
+	WMS_PROXY: '/wms/proxy',
+	WMS_LAYERS: '/wms/layers',
+	HSY_ACTION: '/hsy-action',
+	HELSINKI_WMS: '/helsinki-wms',
 	DIGITRANSIT: '/digitransit',
 	PAAVO: '/paavo',
 	PYGEOAPI: '/pygeoapi',
 	TERRAIN_PROXY: '/terrain-proxy',
+	NDVI: '/ndvi_public',
+	FEATURE_FLAGS: '/feature-flags',
+} as const
+
+/**
+ * External domain patterns used by the application.
+ * Useful for asserting requests are intercepted by mocks.
+ */
+export const EXTERNAL_DOMAINS = {
+	HSY_WMS: 'kartta.hsy.fi',
+	HELSINKI_WMS: 'kartta.hel.fi',
+	SYKE_FLOOD: 'paikkatiedot.ymparisto.fi',
+	SENSOR: 'bri3.fvh.io',
 } as const
 
 /**

@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test'
 import { VIEWPORTS } from '../config/constants'
+import { expect, test } from '../fixtures/test-fixture'
 import {
 	clickOnMap,
 	dismissModalIfPresent,
