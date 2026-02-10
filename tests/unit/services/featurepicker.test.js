@@ -36,6 +36,7 @@ vi.mock('@/services/building.js', () => ({
 	default: vi.fn(function () {
 		this.createBuildingCharts = vi.fn()
 		this.resetBuildingOutline = vi.fn()
+		this.cancelCurrentLoad = vi.fn()
 	}),
 }))
 

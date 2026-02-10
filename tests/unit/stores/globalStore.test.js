@@ -183,6 +183,7 @@ describe('globalStore', () => {
 				retryCount: 0,
 				previousViewState: null,
 				loadingProgress: null,
+				pendingNavigation: null,
 			})
 		})
 
@@ -255,6 +256,7 @@ describe('globalStore', () => {
 				retryCount: 0,
 				previousViewState: null,
 				loadingProgress: null,
+				pendingNavigation: null,
 			})
 		})
 
