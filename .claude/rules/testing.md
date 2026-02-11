@@ -131,7 +131,7 @@ cesiumTest.skip('test name — requires real Cesium entities', async ({ cesiumPa
 
 // ✅ CORRECT: Pre-check skip condition before expensive operations
 cesiumTest('test name', async ({ cesiumPage }, testInfo) => {
-  const hasEntities = await page.evaluate(() => /* quick check */)
+  const hasEntities = await cesiumPage.evaluate(() => /* quick check */)
   if (!hasEntities) {
     testInfo.skip(true, 'No 3D entities available')
     return
