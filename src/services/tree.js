@@ -217,7 +217,6 @@ export default class Tree {
 	 * @param {Object} data - Tree distance data from API
 	 * @param {Array<Cesium.Entity>} entities - Tree entities
 	 * @param {Cesium.DataSource} buildingsDataSource - Buildings data source
-	 * @fires eventBus#hideBuildingScatterPlot - Hides building scatter plot
 	 * @fires eventBus#newNearbyTreeDiagram - Triggers tree proximity diagram update
 	 * @private
 	 */
@@ -258,7 +257,6 @@ export default class Tree {
 			`[Tree Service] Stored ${treeData.length} tree data items, ${buildingData.size} building data items`
 		)
 
-		eventBus.emit('hideBuildingScatterPlot')
 		eventBus.emit('newNearbyTreeDiagram')
 	}
 

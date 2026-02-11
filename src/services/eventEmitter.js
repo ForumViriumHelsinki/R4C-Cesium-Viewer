@@ -29,7 +29,6 @@ import mitt from 'mitt'
  * Singleton mitt instance used throughout the application for event communication.
  *
  * Common events:
- * - 'newBuildingHeat' - Emitted when building heat data is updated
  * - 'newHeatHistogram' - Emitted when heat histogram data changes
  * - 'entityPrintEvent' - Emitted when an entity is selected for printing
  *

@@ -211,7 +211,6 @@ export default {
 		activate250mGridEvent() {
 			if (this.grid250m) {
 				this.datasourceService.changeDataSourceShowByName('PopulationGrid', false)
-				eventBus.emit('create250mGrid') // Trigger the simulation to start
 			} else {
 				this.datasourceService.removeDataSourcesByNamePrefix('250m_grid')
 				// Hide building grid chart via event bus (maintains component encapsulation)

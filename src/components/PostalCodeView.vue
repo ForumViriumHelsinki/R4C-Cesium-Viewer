@@ -262,11 +262,11 @@ import logger from '../utils/logger.js'
 const store = useGlobalStore()
 const toggleStore = useToggleStore()
 
-// Services (initialized lazily)
-let dataSourceService = null
-let treeService = null
-let buildingService = null
-let plotService = null
+// Services
+const dataSourceService = new Datasource()
+const treeService = new Tree()
+const buildingService = new Building()
+const plotService = new Plot()
 let elementsDisplayService = null
 
 // Reactive state
@@ -288,9 +288,6 @@ const capitalRegionCold = ref(false)
 
 // Computed
 const shouldShowReturn = computed(() => store.level === 'building')
-
-// Event unsubscribe function
-let unsubscribe = null
 
 // Methods
 const reset = () => {
@@ -335,19 +332,6 @@ const returnToPostalCode = () => {
 	eventBus.emit('hideBuilding')
 }
 
-const initPostalCodeView = () => {
-	dataSourceService = new Datasource()
-	treeService = new Tree()
-	buildingService = new Building()
-	plotService = new Plot()
-	addEventListeners()
-}
-
-const addEventListeners = () => {
-	// Most event listeners now handled by Vue watchers
-	// Keep any legacy handlers that are still needed
-}
-
 const toggleCold = () => {
 	if (!capitalRegionCold.value) {
 		reset()
@@ -357,7 +341,7 @@ const toggleCold = () => {
 const capitalRegionViewEvent = async () => {
 	if (helsinkiView.value) {
 		store.setView('helsinki')
-		dataSourceService.removeDataSourcesByNamePrefix('PostCodes')
+		await dataSourceService.removeDataSourcesByNamePrefix('PostCodes')
 		await dataSourceService.loadGeoJsonDataSource(
 			0.2,
 			'./assets/data/hki_po_clipped.json',
@@ -402,12 +386,18 @@ const showPlotEvent = () => {
 const loadTreesEvent = () => {
 	if (showTrees.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('Trees')) {
-			treeService.loadTrees(store.postalcode)
+			treeService.loadTrees(store.postalcode).catch((error) => {
+				logger.error('Failed to load trees:', error)
+			})
 		} else {
-			dataSourceService.changeDataSourceShowByName('Trees', true)
+			dataSourceService.changeDataSourceShowByName('Trees', true).catch((error) => {
+				logger.error('Failed to show trees:', error)
+			})
 		}
 	} else {
-		dataSourceService.changeDataSourceShowByName('Trees', false)
+		dataSourceService.changeDataSourceShowByName('Trees', false).catch((error) => {
+			logger.error('Failed to hide trees:', error)
+		})
 		plotService.showAllPlots()
 		buildingService.resetBuildingEntities()
 	}
@@ -421,10 +411,14 @@ const loadOtherNatureEvent = () => {
 				logger.error('Failed to load other nature data:', error)
 			})
 		} else {
-			dataSourceService.changeDataSourceShowByName('OtherNature', true)
+			dataSourceService.changeDataSourceShowByName('OtherNature', true).catch((error) => {
+				logger.error('Failed to show other nature:', error)
+			})
 		}
 	} else {
-		dataSourceService.changeDataSourceShowByName('OtherNature', false)
+		dataSourceService.changeDataSourceShowByName('OtherNature', false).catch((error) => {
+			logger.error('Failed to hide other nature:', error)
+		})
 	}
 }
 
@@ -436,10 +430,14 @@ const loadVegetationEvent = () => {
 				logger.error('Failed to load vegetation data:', error)
 			})
 		} else {
-			dataSourceService.changeDataSourceShowByName('Vegetation', true)
+			dataSourceService.changeDataSourceShowByName('Vegetation', true).catch((error) => {
+				logger.error('Failed to show vegetation:', error)
+			})
 		}
 	} else {
-		dataSourceService.changeDataSourceShowByName('Vegetation', false)
+		dataSourceService.changeDataSourceShowByName('Vegetation', false).catch((error) => {
+			logger.error('Failed to hide vegetation:', error)
+		})
 	}
 }
 
@@ -646,16 +644,10 @@ const stopWatchShouldShowReturn = watch(shouldShowReturn, (newValue) => {
 
 // Lifecycle hooks
 onMounted(() => {
-	unsubscribe = eventBus.on('initPostalCodeView', initPostalCodeView)
 	elementsDisplayService = new ElementsDisplay()
 })
 
 onBeforeUnmount(() => {
-	// Unsubscribe from event bus
-	if (unsubscribe) {
-		unsubscribe()
-	}
-
 	// Stop all watchers to prevent stale callbacks
 	stopWatchShowPlot()
 	stopWatchGridView()

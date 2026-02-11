@@ -12,7 +12,6 @@
  *
  * @module featurepicker
  */
-import { SPECIAL_ENTITIES } from '../../constants/specialEntities.js'
 import { useGlobalStore } from '../../stores/globalStore.js'
 import { usePropsStore } from '../../stores/propsStore.js'
 import { useToggleStore } from '../../stores/toggleStore.js'
@@ -273,15 +272,18 @@ export default class FeaturePicker {
 
 		this.removeEntityByName('coldpoint')
 		this.removeEntityByName('currentLocation')
-		this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel').catch((error) => {
-			logger.error('Failed to remove travel label datasources:', error)
-		})
+
+		// Only attempt TravelLabel cleanup when travel time labels exist
+		if (this.datasourceService.getDataSourceByName('TravelLabel')) {
+			this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel').catch((error) => {
+				logger.error('Failed to remove travel label datasources:', error)
+			})
+		}
 
 		this.propStore.setTreeArea(null)
 		this.propStore.setHeatFloodVulnerability(id.properties ?? null)
 
 		if (id.properties.grid_id) {
-			this.propStore.setHeatFloodVulnerability(id.properties)
 			eventBus.emit('createHeatFloodVulnerabilityChart')
 		}
 
@@ -336,26 +338,16 @@ export default class FeaturePicker {
 			logMissingPostalCodeProperty()
 		}
 
-		// Handle population grid
+		// Handle population grid: enrich existing buildings with grid cell demographics
 		if (id.properties.asukkaita) {
-			const boundingBox = this.getBoundingBox(id)
 			this.store.setCurrentGridCell(id)
-
-			if (boundingBox) {
-				const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`
-				this.hSYBuildingService.loadHSYBuildings(bboxString).catch((error) => {
-					logger.error('Failed to load HSY buildings:', error)
-				})
-			}
+			this.hSYBuildingService.enrichExistingBuildingsWithGridAttributes().catch((error) => {
+				logger.error('Failed to enrich buildings with grid attributes:', error)
+			})
 		}
 
-		// Handle travel time grid
-		if (
-			!id.properties.posno &&
-			id.entityCollection._entities._array[0]._properties._id &&
-			id.entityCollection._entities._array[0]._properties._id._value ===
-				SPECIAL_ENTITIES.TRAVEL_TIME_GRID_CELL_ID
-		) {
+		// Handle travel time grid (detect via datasource ownership)
+		if (!id.properties.posno && id.entityCollection?.owner?.name === 'TravelTimeGrid') {
 			this.traveltimeService.loadTravelTimeData(id.properties.id._value).catch((error) => {
 				logger.error('Failed to load travel time data:', error)
 			})

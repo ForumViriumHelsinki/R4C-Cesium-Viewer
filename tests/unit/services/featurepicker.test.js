@@ -29,6 +29,7 @@ vi.mock('@/services/datasource.js', () => ({
 	default: vi.fn(function () {
 		this.removeDataSourcesAndEntities = vi.fn()
 		this.removeDataSourcesByNamePrefix = vi.fn().mockResolvedValue()
+		this.getDataSourceByName = vi.fn().mockReturnValue(null)
 	}),
 }))
 
@@ -55,6 +56,7 @@ vi.mock('@/services/traveltime.js', () => ({
 vi.mock('@/services/hsybuilding.js', () => ({
 	default: vi.fn(function () {
 		this.loadHSYBuildings = vi.fn().mockResolvedValue()
+		this.enrichExistingBuildingsWithGridAttributes = vi.fn().mockResolvedValue()
 	}),
 }))
 
@@ -613,44 +615,28 @@ describe('FeaturePicker service', () => {
 			expect(propsStore.heatFloodVulnerabilityEntity).toEqual(mockId.properties)
 		})
 
-		it('should handle population grid with bounding box', () => {
+		it('should enrich existing buildings when population grid cell is clicked', () => {
 			const mockId = {
 				properties: {
 					asukkaita: { _value: TEST_POPULATION },
 					index: { _value: 123 },
 				},
 				entityCollection: {
-					_entities: {
-						_array: [
-							{
-								_properties: {
-									_id: { _value: null },
-								},
-							},
-						],
-					},
-				},
-				polygon: {
-					hierarchy: {
-						getValue: vi.fn().mockReturnValue({
-							positions: [],
-						}),
-					},
+					owner: { name: 'PopulationGrid' },
 				},
 			}
 
 			vi.spyOn(globalStore, 'setCurrentGridCell')
-			vi.spyOn(featurePicker, 'getBoundingBox').mockReturnValue({
-				minLon: 24.9,
-				maxLon: 25.0,
-				minLat: 60.1,
-				maxLat: 60.2,
-			})
 
 			featurePicker.handleFeatureWithProperties(mockId)
 
-			// Verify grid cell is set
+			// Verify grid cell is stored
 			expect(globalStore.setCurrentGridCell).toHaveBeenCalledWith(mockId)
+
+			// Verify in-place enrichment is called instead of re-fetching buildings
+			expect(
+				featurePicker.hSYBuildingService.enrichExistingBuildingsWithGridAttributes
+			).toHaveBeenCalled()
 		})
 
 		it('should skip postal code loading at building level', () => {

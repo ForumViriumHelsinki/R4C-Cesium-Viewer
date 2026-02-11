@@ -218,7 +218,9 @@ export default {
 					if (propsStore.buildingHeatExposure > 27.2632995605) {
 						// The toggle visibility is controlled by whether the building exposure is above a threshold
 						if (!toggleStore.capitalRegionCold) {
-							void coldAreaService.loadColdAreas()
+							coldAreaService.loadColdAreas().catch((error) => {
+								logger.error('Failed to load cold areas:', error)
+							})
 							coldAreasLoaded.value = true // Set to true when cold areas are loaded
 						}
 					} else {

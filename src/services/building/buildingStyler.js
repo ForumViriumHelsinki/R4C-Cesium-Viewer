@@ -14,7 +14,6 @@ import { useToggleStore } from '../../stores/toggleStore.js'
 import { processBatchAdaptive } from '../../utils/batchProcessor.js'
 import { calculateBuildingHeight } from '../../utils/entityStyling.js'
 import { getCesium } from '../cesiumProvider.js'
-import { eventBus } from '../eventEmitter.js'
 import { logVisibilityChange } from '../visibilityLogger.js'
 
 // --- COLOR CACHE ---
@@ -281,7 +280,6 @@ export class BuildingStyler {
 		// Set heat exposure data based on view mode (Helsinki vs Capital Region)
 		if (this.toggleStore.helsinkiView) {
 			this.propsStore.setBuildingHeatExposure(buildingProps._avgheatexposuretobuilding._value)
-			eventBus.emit('newBuildingHeat')
 		} else if (!this.toggleStore.helsinkiView) {
 			if (buildingProps.heat_timeseries) {
 				this.propsStore.setBuildingHeatTimeseries(buildingProps.heat_timeseries._value)
