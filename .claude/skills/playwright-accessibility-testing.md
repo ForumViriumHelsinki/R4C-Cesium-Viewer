@@ -211,9 +211,10 @@ for (const viewport of viewports) {
 	await page.waitForTimeout(300);
 
 	// Dismiss any dialogs that reappeared after resize
-	const dialog = page.getByRole('button', { name: /close|dismiss|continue/i });
-	if ((await dialog.count()) > 0 && (await dialog.isVisible())) {
-		await dialog.click();
+	const dialogLocator = page.getByRole('button', { name: /close|dismiss|continue/i });
+	const firstDialog = dialogLocator.first();
+	if (await firstDialog.isVisible()) {
+		await firstDialog.click();
 		await page.waitForTimeout(200);
 	}
 
