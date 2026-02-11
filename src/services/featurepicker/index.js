@@ -273,15 +273,18 @@ export default class FeaturePicker {
 
 		this.removeEntityByName('coldpoint')
 		this.removeEntityByName('currentLocation')
-		this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel').catch((error) => {
-			logger.error('Failed to remove travel label datasources:', error)
-		})
+
+		// Only attempt TravelLabel cleanup when travel time labels exist
+		if (this.datasourceService.getDataSourceByName('TravelLabel')) {
+			this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel').catch((error) => {
+				logger.error('Failed to remove travel label datasources:', error)
+			})
+		}
 
 		this.propStore.setTreeArea(null)
 		this.propStore.setHeatFloodVulnerability(id.properties ?? null)
 
 		if (id.properties.grid_id) {
-			this.propStore.setHeatFloodVulnerability(id.properties)
 			eventBus.emit('createHeatFloodVulnerabilityChart')
 		}
 

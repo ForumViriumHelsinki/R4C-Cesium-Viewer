@@ -29,6 +29,7 @@ vi.mock('@/services/datasource.js', () => ({
 	default: vi.fn(function () {
 		this.removeDataSourcesAndEntities = vi.fn()
 		this.removeDataSourcesByNamePrefix = vi.fn().mockResolvedValue()
+		this.getDataSourceByName = vi.fn().mockReturnValue(null)
 	}),
 }))
 

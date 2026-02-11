@@ -508,7 +508,9 @@ export default class HSYBuilding {
 
 		if (this.store.postalcode) {
 			logger.debug('[HSYBuilding] ✓ Postal code exists, calling calculateHSYUrbanHeatData')
-			void this.calculateHSYUrbanHeatData(data, entities, postalCode)
+			this.calculateHSYUrbanHeatData(data, entities, postalCode).catch((error) => {
+				logger.error('[HSYBuilding] Failed to calculate urban heat data:', error)
+			})
 		} else {
 			logger.debug(
 				'[HSYBuilding] ⚠️ No postal code, skipping calculateHSYUrbanHeatData (but buildingFeatures is set)'
