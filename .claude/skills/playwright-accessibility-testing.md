@@ -201,6 +201,26 @@ test('should expand/collapse panel', async ({ cesiumPage }) => {
 }
 ```
 
+### Viewport Resize Side Effects
+
+**Critical**: `setViewportSize()` can trigger Vuetify responsive re-renders that cause modals/dialogs to reappear. Always dismiss blocking dialogs after viewport changes.
+
+```typescript
+for (const viewport of viewports) {
+	await page.setViewportSize(viewport);
+	await page.waitForTimeout(300);
+
+	// Dismiss any dialogs that reappeared after resize
+	const dialog = page.getByRole('button', { name: /close|dismiss|continue/i });
+	if ((await dialog.count()) > 0 && (await dialog.isVisible())) {
+		await dialog.click();
+		await page.waitForTimeout(200);
+	}
+
+	// Now safe to interact with the page
+}
+```
+
 ### Responsive Testing Pattern
 
 ```typescript
