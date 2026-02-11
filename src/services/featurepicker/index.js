@@ -338,17 +338,12 @@ export default class FeaturePicker {
 			logMissingPostalCodeProperty()
 		}
 
-		// Handle population grid
+		// Handle population grid: enrich existing buildings with grid cell demographics
 		if (id.properties.asukkaita) {
-			const boundingBox = this.getBoundingBox(id)
 			this.store.setCurrentGridCell(id)
-
-			if (boundingBox) {
-				const bboxString = `${boundingBox.minLon},${boundingBox.minLat},${boundingBox.maxLon},${boundingBox.maxLat}`
-				this.hSYBuildingService.loadHSYBuildings(bboxString).catch((error) => {
-					logger.error('Failed to load HSY buildings:', error)
-				})
-			}
+			this.hSYBuildingService.enrichExistingBuildingsWithGridAttributes().catch((error) => {
+				logger.error('Failed to enrich buildings with grid attributes:', error)
+			})
 		}
 
 		// Handle travel time grid (detect via datasource ownership)

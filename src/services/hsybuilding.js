@@ -328,6 +328,87 @@ export default class HSYBuilding {
 		logger.debug('[HSYBuilding] ✅ Grid attributes processing complete')
 	}
 
+	/**
+	 * Enriches already-loaded building entities with grid cell demographic attributes.
+	 * Instead of re-fetching buildings (which creates duplicate datasources), this method
+	 * finds existing building entities and adds grid attributes in-place using Turf.js
+	 * spatial analysis against the current grid cell.
+	 *
+	 * Sets pop_d_0_9 through pop_d_over80 properties on each entity for
+	 * BuildingGridChart.vue age distribution visualization.
+	 *
+	 * @returns {Promise<void>}
+	 */
+	async enrichExistingBuildingsWithGridAttributes() {
+		const geoJsonPolygon = this.createGeoJsonPolygon()
+		if (!geoJsonPolygon) return
+
+		const postalCode = this.store.postalcode
+		const buildingsDataSource = this.datasourceService.getDataSourceByName(
+			`Buildings ${postalCode}`
+		)
+
+		if (!buildingsDataSource) {
+			logger.warn(
+				`[HSYBuilding] No existing Buildings ${postalCode} datasource for grid enrichment`
+			)
+			return
+		}
+
+		const entities = buildingsDataSource.entities.values
+		logger.debug(
+			'[HSYBuilding] Enriching',
+			entities.length,
+			'existing buildings with grid attributes'
+		)
+
+		const gridAttributeKeys = [
+			'pop_d_0_9',
+			'pop_d_10_19',
+			'pop_d_20_29',
+			'pop_d_30_39',
+			'pop_d_40_49',
+			'pop_d_50_59',
+			'pop_d_60_69',
+			'pop_d_70_79',
+			'pop_d_over80',
+		]
+
+		for (const entity of entities) {
+			const featureGeoJson = this.entityToGeoJson(entity)
+			if (!featureGeoJson?.geometry) continue
+
+			// Use a temporary plain feature for attribute calculation
+			const tempFeature = {
+				properties: {},
+				geometry: featureGeoJson.geometry,
+			}
+
+			const isWithin = turf.booleanWithin(
+				{ type: 'Feature', properties: {}, geometry: featureGeoJson.geometry },
+				geoJsonPolygon
+			)
+
+			if (isWithin) {
+				this.setGridAttributesForWithinBuilding(tempFeature)
+			} else {
+				this.approximateAttributesForIntersectingBuildings(tempFeature)
+			}
+
+			// Copy calculated attributes to the Cesium entity's PropertyBag
+			for (const key of gridAttributeKeys) {
+				if (tempFeature.properties[key] == null) continue
+
+				if (entity.properties.hasProperty(key)) {
+					entity.properties.removeProperty(key)
+				}
+				entity.properties.addProperty(key, tempFeature.properties[key])
+			}
+		}
+
+		logger.debug('[HSYBuilding] Grid attribute enrichment complete')
+	}
+
 	async processGridAttributeBatch(batch, geoJsonPolygon) {
 		const results = []
 
