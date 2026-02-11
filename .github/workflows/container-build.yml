@@ -2,10 +2,10 @@ name: Build and push container image
 
 on:
   push:
-    branches:
-      - 'main'
     tags:
       - 'r4c-cesium-viewer-v*.*.*'
+  pull_request:
+    branches: [main]
 
 concurrency:
   group: container-build-${{ github.ref }}
@@ -16,7 +16,25 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # Gate: only run for release tags or release-please PRs
+  should-build:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.head_ref }}" == release-please--branches--main* ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-push:
+    needs: should-build
+    if: needs.should-build.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
