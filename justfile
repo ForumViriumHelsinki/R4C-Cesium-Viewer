@@ -292,6 +292,26 @@ test-unit *args:
 test-e2e *args:
     VITE_E2E_TEST=true bun run test:e2e {{ args }}
 
+# Run a single test file (fast iteration during test fixes)
+[group: "testing"]
+test-file file *args:
+    VITE_E2E_TEST=true bunx playwright test "{{ file }}" --project=chromium --reporter=line {{ args }}
+
+# Run all accessibility tests on chromium
+[group: "testing"]
+test-accessibility *args:
+    VITE_E2E_TEST=true bunx playwright test tests/e2e/accessibility/ --project=chromium --reporter=line {{ args }}
+
+# Run tests in interactive UI mode for debugging
+[group: "testing"]
+test-ui *args:
+    VITE_E2E_TEST=true bunx playwright test --ui {{ args }}
+
+# View HTML test report from last run
+[group: "testing"]
+test-report:
+    bunx playwright show-report
+
 # ==============================================================================
 # Workflows
 # ==============================================================================

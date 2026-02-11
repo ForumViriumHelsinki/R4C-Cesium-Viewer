@@ -109,3 +109,59 @@ Building level UI buttons use exact casing:
 
 - `"Building Heat Data"` (not "Building heat data")
 - `"Building Properties"` (not "Building properties")
+
+## Conditional Test Skip in Custom Fixtures
+
+`cesiumTest.skip()` inside a test body (e.g., in a catch block) does **not** work — the test timeout kills the process before the skip executes. Use test-level skip instead:
+
+```typescript
+// ❌ WRONG: Skip inside catch — times out before reaching catch
+cesiumTest('test name', async ({ cesiumPage }) => {
+  try {
+    await longRunningOperation()
+  } catch {
+    cesiumTest.skip() // Never reached if operation times out
+  }
+})
+
+// ✅ CORRECT: Skip at test declaration level
+cesiumTest.skip('test name — requires real Cesium entities', async ({ cesiumPage }) => {
+  await longRunningOperation()
+})
+
+// ✅ CORRECT: Pre-check skip condition before expensive operations
+cesiumTest('test name', async ({ cesiumPage }, testInfo) => {
+  const hasEntities = await page.evaluate(() => /* quick check */)
+  if (!hasEntities) {
+    testInfo.skip(true, 'No 3D entities available')
+    return
+  }
+  await longRunningOperation()
+})
+```
+
+## Feature Flag Defaults Affect Test Assertions
+
+The Pinia store defaults determine what's visible in tests without explicit setup:
+
+| Store Default                                            | Impact                                                     |
+| -------------------------------------------------------- | ---------------------------------------------------------- |
+| `statsIndex: 'heat_index'` (propsStore)                  | Climate Adaptation visible in grid view by default         |
+| `coolingOptimizer: fallbackDefault: true` (flagMetadata) | Climate Adaptation enabled by default                      |
+| `ndvi: fallbackDefault: true` (flagMetadata)             | NDVI toggle visible in **all** views (no view restriction) |
+
+When writing `verifyPanelVisibility()` assertions, check store defaults rather than assuming elements need explicit activation.
+
+## Navigation-Level Dependent UI Elements
+
+Not all UI elements exist at all navigation levels:
+
+| Element                       | Available At         | Component                            |
+| ----------------------------- | -------------------- | ------------------------------------ |
+| Reset button (`.mdi-refresh`) | postalCode, building | `GridView.vue`, `PostalCodeView.vue` |
+| Back button                   | building             | `App.vue` toolbar                    |
+| Timeline compact              | postalCode, building | `App.vue` (with `d-none d-lg-flex`)  |
+| Building Analysis button      | postalCode           | `ControlPanel.vue`                   |
+| Area/Building Properties      | postalCode/building  | `ControlPanel.vue`                   |
+
+Always check element existence before interaction when the navigation level might vary.

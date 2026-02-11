@@ -168,6 +168,24 @@ await page.waitForTimeout(300);
 await expect(element).toBeVisible({ timeout: 5000 });
 ```
 
+## Pattern 8: Vuetify CSS Class False Positives
+
+**Problem**: Selectors like `[class*="error"]` match Vuetify theme utility classes (`text-error`, `bg-error`, `color-error`), causing false-positive error detection.
+
+**Solution**: Use specific component selectors for actual error states.
+
+```typescript
+// ❌ WRONG: Matches Vuetify theme classes
+const errorElements = page.locator('[class*="error"], [class*="Error"]');
+expect(await errorElements.count()).toBe(0); // Always fails with Vuetify
+
+// ✅ CORRECT: Target actual error indicators
+const errorAlert = page.locator('.v-alert[type="error"], .loading-error');
+expect(await errorAlert.count()).toBe(0);
+```
+
+**Applies to**: Any Vuetify project. Also watch for `[class*="warning"]`, `[class*="success"]`, etc.
+
 ## Template Reference File
 
 **Use as template**: `tests/e2e/accessibility/building-filters.spec.ts`
