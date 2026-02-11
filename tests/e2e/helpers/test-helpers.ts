@@ -1211,10 +1211,10 @@ export class AccessibilityTestHelpers {
 					.waitForSelector('.timeline-compact', { state: 'attached', timeout: 8000 })
 					.then(() => 'timeline'),
 				this.page
-					.waitForSelector('text="Building Scatter Plot"', { state: 'visible', timeout: 8000 })
+					.waitForSelector('text="Building Analysis"', { state: 'visible', timeout: 8000 })
 					.then(() => 'scatterplot'),
 				this.page
-					.waitForSelector('text="Area properties"', { state: 'visible', timeout: 8000 })
+					.waitForSelector('text="Area Properties"', { state: 'visible', timeout: 8000 })
 					.then(() => 'properties'),
 				new Promise<string>((resolve) => setTimeout(() => resolve('timeout'), 8000)),
 			])
@@ -1322,7 +1322,7 @@ export class AccessibilityTestHelpers {
 					.then(() => true)
 					.catch(() => false),
 				this.page
-					.waitForSelector('text="Building Scatter Plot"', { state: 'visible', timeout: 8000 })
+					.waitForSelector('text="Building Analysis"', { state: 'visible', timeout: 8000 })
 					.then(() => true)
 					.catch(() => false),
 				// Timeout fallback
@@ -1490,14 +1490,14 @@ export class AccessibilityTestHelpers {
 						// Also check for timeline as it's a reliable indicator of postal code level
 						const activationChecks = await Promise.all([
 							this.page
-								.waitForSelector('text="Building Scatter Plot"', {
+								.waitForSelector('text="Building Analysis"', {
 									state: 'visible',
 									timeout: TEST_TIMEOUTS.ELEMENT_COMPLEX,
 								})
 								.then(() => true)
 								.catch(() => false),
 							this.page
-								.waitForSelector('text="Area properties"', {
+								.waitForSelector('text="Area Properties"', {
 									state: 'visible',
 									timeout: TEST_TIMEOUTS.ELEMENT_COMPLEX,
 								})
@@ -1872,42 +1872,35 @@ export class AccessibilityTestHelpers {
 	async verifyPanelVisibility(conditions: {
 		currentView?: string
 		currentLevel?: string
-		statsIndex?: string
 		hasData?: boolean
 	}): Promise<void> {
-		const {
-			currentView = 'capitalRegion',
-			currentLevel = 'start',
-			statsIndex,
-			hasData = true,
-		} = conditions
+		const { currentView = 'capitalRegion', currentLevel = 'start', hasData = true } = conditions
 
-		// Test Cooling Centers panel (grid view + heat_index)
-		if (currentView === 'grid' && statsIndex === 'heat_index') {
-			await expect(this.page.getByText('Manage Cooling Centers')).toBeVisible()
-		} else {
-			await expect(this.page.getByText('Manage Cooling Centers')).not.toBeVisible()
-		}
-
-		// Test Statistical grid options (grid view only)
+		// Test Climate Adaptation panel (grid view — statsIndex defaults to heat_index,
+		// coolingOptimizer flag defaults to true, so visible whenever grid view is active)
 		if (currentView === 'grid') {
-			await expect(this.page.getByText('Statistical grid options')).toBeVisible()
+			await expect(this.page.getByText('Climate Adaptation')).toBeVisible()
 		} else {
-			await expect(this.page.getByText('Statistical grid options')).not.toBeVisible()
+			await expect(this.page.getByText('Climate Adaptation')).not.toBeVisible()
 		}
 
-		// Test NDVI panel (not grid view)
-		if (currentView !== 'grid') {
-			await expect(this.page.getByText('NDVI', { exact: true })).toBeVisible()
+		// Test Grid Options button (grid view only)
+		if (currentView === 'grid') {
+			await expect(this.page.getByText('Grid Options')).toBeVisible()
+		} else {
+			await expect(this.page.getByText('Grid Options')).not.toBeVisible()
 		}
+
+		// NDVI toggle is visible in all views (feature flag controlled)
+		await expect(this.page.getByText('NDVI', { exact: true })).toBeVisible()
 
 		// Test postal code level panels
 		if (currentLevel === 'postalCode') {
-			await expect(this.page.getByText('Building Scatter Plot')).toBeVisible()
-			await expect(this.page.getByText('Area properties')).toBeVisible()
+			await expect(this.page.getByText('Building Analysis')).toBeVisible()
+			await expect(this.page.getByText('Area Properties')).toBeVisible()
 
 			if (hasData) {
-				await expect(this.page.getByText('Heat Histogram')).toBeVisible()
+				await expect(this.page.getByText('Heat Distribution')).toBeVisible()
 			}
 
 			if (currentView !== 'helsinki') {
@@ -1922,9 +1915,8 @@ export class AccessibilityTestHelpers {
 		}
 
 		// Universal panels should always be visible
-		await expect(this.page.getByText('HSY Background maps')).toBeVisible()
-		await expect(this.page.getByText('Syke Flood Background Maps')).toBeVisible()
-		await expect(this.page.getByText('Geocoding')).toBeVisible()
+		await expect(this.page.getByText('Background Maps')).toBeVisible()
+		await expect(this.page.getByText('Search & Navigate')).toBeVisible()
 	}
 
 	/**
@@ -2131,11 +2123,13 @@ export class AccessibilityTestHelpers {
 	 * Test navigation controls (back, reset, camera rotation)
 	 */
 	async testNavigationControls(currentLevel: string): Promise<void> {
-		// Reset button should always be visible
+		// Reset button visible at postal code and building levels (inside PostalCodeView/GridView)
 		const resetButton = this.page
 			.getByRole('button')
 			.filter({ has: this.page.locator('.mdi-refresh') })
-		await expect(resetButton).toBeVisible()
+		if (currentLevel !== 'start') {
+			await expect(resetButton.first()).toBeVisible()
+		}
 
 		// Back button only visible at building level
 		const backButton = this.page

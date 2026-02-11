@@ -13,8 +13,7 @@ import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
 import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
-// SKIPPED: Component rendering issues in headless CI - see #472
-cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
+cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e', '@comprehensive'] })
 	let helpers: AccessibilityTestHelpers
 
@@ -37,7 +36,7 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 				await helpers.drillToLevel('postalCode')
 				// Wait for postal code UI elements
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', {
+					.waitForSelector('text="Building Analysis"', {
 						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 					})
 					.catch(() => {})
@@ -92,13 +91,13 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 				currentLevel: 'start',
 			})
 
-			await expect(cesiumPage.getByText('Statistical grid options')).toBeVisible()
+			await expect(cesiumPage.getByText('Grid Options')).toBeVisible()
 
 			// 2. Navigate through levels in grid view
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code level in grid view
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
 				.catch(() => {})
@@ -107,7 +106,7 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.verifyTimelineVisibility('postalCode')
 
 			// 3. Test grid-specific features
-			const coolingCenters = cesiumPage.getByText('Manage Cooling Centers')
+			const coolingCenters = cesiumPage.getByText('Climate Adaptation')
 			if (await coolingCenters.isVisible()) {
 				await expect(coolingCenters).toBeVisible()
 			}
@@ -138,7 +137,7 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 					// Wait for level-specific UI
 					if (level === 'postalCode') {
 						await cesiumPage
-							.waitForSelector('text="Building Scatter Plot"', {
+							.waitForSelector('text="Building Analysis"', {
 								timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 							})
 							.catch(() => {})
@@ -183,7 +182,7 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 				await helpers.drillToLevel('postalCode')
 				// Wait for postal code UI
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', {
+					.waitForSelector('text="Building Analysis"', {
 						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 					})
 					.catch(() => {})
@@ -254,7 +253,7 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code level
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
 				.catch(() => {})
@@ -325,7 +324,7 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 						// Wait for level-specific UI
 						if (state.level === 'postalCode') {
 							await cesiumPage
-								.waitForSelector('text="Building Scatter Plot"', {
+								.waitForSelector('text="Building Analysis"', {
 									timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 								})
 								.catch(() => {})
@@ -463,7 +462,7 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code level
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
 				.catch(() => {})
@@ -546,13 +545,12 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 				'Public Buildings',
 				'Tall Buildings',
 
-				// Expansion panels
-				'HSY Background maps',
-				'Syke Flood Background Maps',
-				'Geocoding',
+				// Sidebar sections
+				'Background Maps',
+				'Search & Navigate',
 
 				// Level-specific features (test at appropriate levels)
-				'Building Scatter Plot', // postal code level
+				'Building Analysis', // postal code level
 				'Building heat data', // building level
 			]
 
@@ -563,19 +561,18 @@ cesiumDescribe.skip('Comprehensive Walkthrough Accessibility', () => {
 			await expect(cesiumPage.getByText('Land Cover')).toBeVisible()
 			await expect(cesiumPage.getByText('Public Buildings', { exact: true })).toBeVisible()
 			await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).toBeVisible()
-			await expect(cesiumPage.getByText('HSY Background maps')).toBeVisible()
-			await expect(cesiumPage.getByText('Syke Flood Background Maps')).toBeVisible()
-			await expect(cesiumPage.getByText('Geocoding')).toBeVisible()
+			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
+			await expect(cesiumPage.getByText('Search & Navigate')).toBeVisible()
 
 			// Test features at postal code level
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code level
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
 				.catch(() => {})
-			await expect(cesiumPage.getByText('Building Scatter Plot')).toBeVisible()
+			await expect(cesiumPage.getByText('Building Analysis')).toBeVisible()
 
 			// Test features at building level
 			await helpers.drillToLevel('building')
