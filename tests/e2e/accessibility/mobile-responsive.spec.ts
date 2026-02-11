@@ -20,8 +20,7 @@ import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
 import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
-// TODO: Re-enable when Vuetify navigation drawer rendering issue is resolved
-cesiumDescribe.skip('Mobile Responsive Layout @accessibility @mobile', () => {
+cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@mobile'] })
 	let helpers: AccessibilityTestHelpers
 

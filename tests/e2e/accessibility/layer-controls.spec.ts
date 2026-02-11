@@ -259,7 +259,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				await helpers.drillToLevel('postalCode')
 				// Wait for postal code level UI
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', {
+					.waitForSelector('text="Building Analysis"', {
 						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 					})
 					.catch(() => {})
@@ -289,7 +289,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				await helpers.drillToLevel('postalCode')
 				// Wait for postal code UI elements
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', {
+					.waitForSelector('text="Building Analysis"', {
 						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 					})
 					.catch(() => {})
@@ -325,7 +325,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				await helpers.drillToLevel('postalCode')
 				// Wait for postal code level
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', {
+					.waitForSelector('text="Building Analysis"', {
 						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 					})
 					.catch(() => {})
@@ -367,7 +367,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				await backButton.click()
 				// Wait for navigation back to postal code
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', {
+					.waitForSelector('text="Building Analysis"', {
 						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 					})
 					.catch(() => {})
@@ -434,7 +434,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code level
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
 				.catch(() => {})
@@ -503,7 +503,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code UI
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
 				.catch(() => {})
@@ -548,7 +548,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code UI
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
 				.catch(() => {})
@@ -636,7 +636,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code UI
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
 				})
 				.catch(() => {})

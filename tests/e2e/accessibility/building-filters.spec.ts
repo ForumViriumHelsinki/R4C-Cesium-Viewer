@@ -31,9 +31,7 @@ import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
 import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
-// TODO: Re-enable when Vuetify navigation drawer rendering issue is resolved
-// See GitHub issue for tracking: https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/470
-cesiumDescribe.skip('Building Filters Accessibility', () => {
+cesiumDescribe('Building Filters Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
 	let helpers: AccessibilityTestHelpers
 
@@ -140,7 +138,7 @@ cesiumDescribe.skip('Building Filters Accessibility', () => {
 				await helpers.drillToLevel('postalCode')
 				// Wait for postal code UI instead of fixed timeout
 				await cesiumPage
-					.waitForSelector('text="Building Scatter Plot"', {
+					.waitForSelector('text="Building Analysis"', {
 						timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
 					})
 					.catch(() => {})
@@ -369,7 +367,7 @@ cesiumDescribe.skip('Building Filters Accessibility', () => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code UI instead of fixed timeout
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
 				})
 				.catch(() => {})
@@ -390,7 +388,7 @@ cesiumDescribe.skip('Building Filters Accessibility', () => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code UI instead of fixed timeout
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
 				})
 				.catch(() => {})
@@ -798,7 +796,7 @@ cesiumDescribe.skip('Building Filters Accessibility', () => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code UI instead of fixed timeout
 			await cesiumPage
-				.waitForSelector('text="Building Scatter Plot"', {
+				.waitForSelector('text="Building Analysis"', {
 					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
 				})
 				.catch(() => {})

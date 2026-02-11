@@ -15,8 +15,7 @@ import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
 import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
-// SKIPPED: Component rendering issues in headless CI - see #472
-cesiumDescribe.skip('Mobile Touch Targets @accessibility @mobile', () => {
+cesiumDescribe('Mobile Touch Targets @accessibility @mobile', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@mobile'] })
 	let helpers: AccessibilityTestHelpers
 
