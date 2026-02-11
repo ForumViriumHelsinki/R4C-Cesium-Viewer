@@ -56,7 +56,7 @@ export default class Traveltime {
 		try {
 			const response = await fetch(this.urlStore.hkiTravelTime(from_id))
 			const traveltimedata = await response.json()
-			this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data)
+			await this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data)
 		} catch (error) {
 			logger.error('Error loading travel time data:', error)
 			this.store.showError(
@@ -79,22 +79,19 @@ export default class Traveltime {
 	 * // traveldata format:
 	 * [{ to_id: 5975376, pt_m_walk_avg: 12.5 }, ...]
 	 */
-	addTravelTimeLabels(traveldata) {
+	async addTravelTimeLabels(traveldata) {
 		const Cesium = getCesium()
 		const geoJsonData = {
 			type: 'FeatureCollection',
 			features: [],
 		}
 
-		const dataSourceTravelLabel = new Cesium.CustomDataSource('TravelLabel')
-		this.viewer.dataSources.add(dataSourceTravelLabel)
+		const dataSources = this.viewer.dataSources.getByName('TravelTimeGrid')
 
-		const dataSource = this.viewer.dataSources.getByName('TravelTimeGrid')
+		if (dataSources?.length > 0) {
+			const entities = dataSources[0].entities.values
 
-		if (dataSource) {
-			const entities = dataSource[0]._entityCollection._entities._array
-
-			entities.forEach((entity) => {
+			for (const entity of entities) {
 				if (entity.polygon) {
 					const entityId = entity.properties.id.getValue()
 
@@ -113,29 +110,26 @@ export default class Traveltime {
 						const centerLatitude = Cesium.Math.toDegrees(centerLL84.latitude)
 						const centerLongitude = Cesium.Math.toDegrees(centerLL84.longitude)
 
-						// Create the GeoJSON feature with the center coordinates
-						const feature = {
+						geoJsonData.features.push({
 							type: 'Feature',
 							geometry: {
 								type: 'Point',
-								coordinates: [centerLongitude, centerLatitude], // Replace "coordinates area" with the actual coordinates
+								coordinates: [centerLongitude, centerLatitude],
 							},
 							properties: {
 								time: Number(matchingData.pt_m_walk_avg).toFixed(0),
 								id: Number(matchingData.to_id),
 							},
-						}
-
-						geoJsonData.features.push(feature)
+						})
 					}
 				}
-			})
+			}
 		} else {
 			logger.error('TravelTimeGrid data source not found.')
 		}
 
-		void this.removeTravelTimeGridAndAddDataGrid()
-		void this.addTravelLabelDataSource(geoJsonData)
+		await this.removeTravelTimeGridAndAddDataGrid()
+		await this.addTravelLabelDataSource(geoJsonData)
 	}
 
 	/**
@@ -183,53 +177,40 @@ export default class Traveltime {
 	 * - Scale: 1.0 at 4km, 0.0 at 80km (distance-based fade)
 	 * - Eye offset: Elevated above ground for visibility
 	 */
-	addTravelLabelDataSource(data) {
+	async addTravelLabelDataSource(data) {
 		const Cesium = getCesium()
-		var dataSource = new Cesium.GeoJsonDataSource()
 
-		// Load the GeoJSON data into the data source
-		void dataSource.load(data, {
-			markerColor: Cesium.Color.ORANGE, // Customize the marker color if desired
-			clampToGround: true, // Set to true to clamp entities to the ground
-		})
+		try {
+			const dataSource = await this.viewer.dataSources.add(Cesium.GeoJsonDataSource.load(data, {}))
 
-		// Add the data source to the viewer
-		this.viewer.dataSources
-			.add(Cesium.GeoJsonDataSource.load(data, {}))
-			.then((dataSource) => {
-				// Set a name for the data source
-				dataSource.name = 'TravelLabel'
-				const entities = dataSource.entities.values
+			dataSource.name = 'TravelLabel'
+			const entities = dataSource.entities.values
 
-				// Iterate over the entities and add labels for "temp_air" and "rh_air"
-				for (let i = 0; i < entities.length; i++) {
-					const entity = entities[i]
-					const time = entity._properties._time._value
+			for (const entity of entities) {
+				const time = entity._properties._time._value
 
-					if (time) {
-						entity.label = {
-							text: time.toString(),
-							showBackground: false,
-							font: '24px sans-serif',
-							horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-							verticalOrigin: Cesium.VerticalOrigin.CENTER,
-							fillColor: Cesium.Color.BLACK,
-							backgroundColor: Cesium.Color.WHITE,
-							eyeOffset: new Cesium.Cartesian3(0, 20, -20),
-							scaleByDistance: new Cesium.NearFarScalar(4000, 1, 80000, 0.0),
-						}
+				if (time) {
+					entity.label = {
+						text: time.toString(),
+						showBackground: false,
+						font: '24px sans-serif',
+						horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+						verticalOrigin: Cesium.VerticalOrigin.CENTER,
+						fillColor: Cesium.Color.BLACK,
+						backgroundColor: Cesium.Color.WHITE,
+						eyeOffset: new Cesium.Cartesian3(0, 20, -20),
+						scaleByDistance: new Cesium.NearFarScalar(4000, 1, 80000, 0.0),
 					}
-
-					entity.billboard = undefined // Remove any billboard icon
-					entity.point = undefined // Remove any point marker
-					entity.polyline = undefined // Remove any polyline
-					entity.polygon = undefined // Remove any polygon
 				}
-			})
-			.catch((error) => {
-				// Log any errors encountered while loading the data source
-				logger.debug(error)
-			})
+
+				entity.billboard = undefined
+				entity.point = undefined
+				entity.polyline = undefined
+				entity.polygon = undefined
+			}
+		} catch (error) {
+			logger.error('Failed to add travel label data source:', error)
+		}
 	}
 
 	/**

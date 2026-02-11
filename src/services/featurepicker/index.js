@@ -12,7 +12,6 @@
  *
  * @module featurepicker
  */
-import { SPECIAL_ENTITIES } from '../../constants/specialEntities.js'
 import { useGlobalStore } from '../../stores/globalStore.js'
 import { usePropsStore } from '../../stores/propsStore.js'
 import { useToggleStore } from '../../stores/toggleStore.js'
@@ -352,13 +351,8 @@ export default class FeaturePicker {
 			}
 		}
 
-		// Handle travel time grid
-		if (
-			!id.properties.posno &&
-			id.entityCollection._entities._array[0]._properties._id &&
-			id.entityCollection._entities._array[0]._properties._id._value ===
-				SPECIAL_ENTITIES.TRAVEL_TIME_GRID_CELL_ID
-		) {
+		// Handle travel time grid (detect via datasource ownership)
+		if (!id.properties.posno && id.entityCollection?.owner?.name === 'TravelTimeGrid') {
 			this.traveltimeService.loadTravelTimeData(id.properties.id._value).catch((error) => {
 				logger.error('Failed to load travel time data:', error)
 			})
