@@ -204,7 +204,6 @@
 
 	<v-dialog
 		v-model="analysisDialog"
-		eager
 		:width="analysisDialogWidth"
 		:height="analysisDialogHeight"
 		scrollable
@@ -292,26 +291,11 @@
  */
 
 import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import AreaProperties from '../components/AreaProperties.vue'
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue'
-import BuildingGridChart from '../components/BuildingGridChart.vue'
-import BuildingHeatChart from '../components/BuildingHeatChart.vue'
-// ## NEW: Import the tools directly, as they are now used in this template ##
-import CoolingCenter from '../components/CoolingCenter.vue'
-import CoolingCenterOptimiser from '../components/CoolingCenterOptimiser.vue'
-import EstimatedImpacts from '../components/EstimatedImpacts.vue'
-import HeatHistogram from '../components/HeatHistogram.vue'
-import HSYBuildingHeatChart from '../components/HSYBuildingHeatChart.vue'
-import LandcoverToParks from '../components/LandcoverToParks.vue'
 import MapControls from '../components/MapControls.vue'
-import Scatterplot from '../components/Scatterplot.vue'
-import StatisticalGridOptions from '../components/StatisticalGridOptions.vue'
-// Component Imports
 import UnifiedSearch from '../components/UnifiedSearch.vue'
-import Camera from '../services/camera'
-import Featurepicker from '../services/featurepicker'
-import Tree from '../services/tree'
 
 // Store and Service Imports
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
@@ -321,10 +305,30 @@ import { usePropsStore } from '../stores/propsStore'
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore'
 import { useToggleStore } from '../stores/toggleStore'
 import logger from '../utils/logger.js'
-import BuildingScatterPlot from '../views/BuildingScatterPlot.vue'
-import Landcover from '../views/Landcover.vue'
-import PostalCodeNDVI from '../views/PostalCodeNDVI.vue'
-import SocioEconomics from '../views/SocioEconomics.vue'
+
+// Lazy-loaded dialog components (only needed when analysis dialog opens)
+const BuildingGridChart = defineAsyncComponent(() => import('../components/BuildingGridChart.vue'))
+const BuildingHeatChart = defineAsyncComponent(() => import('../components/BuildingHeatChart.vue'))
+const HeatHistogram = defineAsyncComponent(() => import('../components/HeatHistogram.vue'))
+const HSYBuildingHeatChart = defineAsyncComponent(
+	() => import('../components/HSYBuildingHeatChart.vue')
+)
+const Scatterplot = defineAsyncComponent(() => import('../components/Scatterplot.vue'))
+const StatisticalGridOptions = defineAsyncComponent(
+	() => import('../components/StatisticalGridOptions.vue')
+)
+const BuildingScatterPlot = defineAsyncComponent(() => import('../views/BuildingScatterPlot.vue'))
+const Landcover = defineAsyncComponent(() => import('../views/Landcover.vue'))
+const PostalCodeNDVI = defineAsyncComponent(() => import('../views/PostalCodeNDVI.vue'))
+const SocioEconomics = defineAsyncComponent(() => import('../views/SocioEconomics.vue'))
+
+// Lazy-loaded climate adaptation components (only visible with feature flags + grid view)
+const CoolingCenter = defineAsyncComponent(() => import('../components/CoolingCenter.vue'))
+const CoolingCenterOptimiser = defineAsyncComponent(
+	() => import('../components/CoolingCenterOptimiser.vue')
+)
+const EstimatedImpacts = defineAsyncComponent(() => import('../components/EstimatedImpacts.vue'))
+const LandcoverToParks = defineAsyncComponent(() => import('../components/LandcoverToParks.vue'))
 
 export default {
 	components: {
@@ -513,7 +517,8 @@ export default {
 		 *
 		 * @returns {void}
 		 */
-		const rotateCamera = () => {
+		const rotateCamera = async () => {
+			const { default: Camera } = await import('../services/camera')
 			new Camera().rotateCamera()
 		}
 
@@ -533,12 +538,22 @@ export default {
 		 *
 		 * @returns {void}
 		 */
-		const returnToPostalCode = () => {
+		const returnToPostalCode = async () => {
+			const [{ default: Featurepicker }, { default: Tree }] = await Promise.all([
+				import('../services/featurepicker'),
+				import('../services/tree'),
+			])
 			const featurepicker = new Featurepicker()
 			const treeService = new Tree()
 			hideTooltip()
-			featurepicker.loadPostalCode().catch(console.error)
-			if (toggleStore.showTrees) treeService.loadTrees().catch(console.error)
+			featurepicker.loadPostalCode().catch((error) => {
+				logger.error('Failed to load postal code:', error)
+			})
+			if (toggleStore.showTrees) {
+				treeService.loadTrees().catch((error) => {
+					logger.error('Failed to load trees:', error)
+				})
+			}
 		}
 
 		return {

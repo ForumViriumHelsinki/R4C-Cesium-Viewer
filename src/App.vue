@@ -141,14 +141,16 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+
+// Lazy-loaded components (only shown at non-start navigation levels)
+const TimelineCompact = defineAsyncComponent(() => import('./components/TimelineCompact.vue'))
+const Timeline = defineAsyncComponent(() => import('./components/Timeline.vue'))
+const SosEco250mGrid = defineAsyncComponent(() => import('./components/SosEco250mGrid.vue'))
+const ControlPanel = defineAsyncComponent(() => import('./pages/ControlPanel.vue'))
+
 import CesiumViewer from './pages/CesiumViewer.vue'
-import backgroundPreloader from './services/backgroundPreloader.js'
-import Building from './services/building'
-import Camera from './services/camera'
 import { initializeFeatureFlags } from './services/featureFlagProvider'
-import Featurepicker from './services/featurepicker'
-import Tree from './services/tree'
 import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
 import { useLoadingStore } from './stores/loadingStore.js'
@@ -175,6 +177,7 @@ const signOut = () => {
 
 const smartReset = async () => {
 	// Cancel any in-flight building loads before resetting
+	const { default: Building } = await import('./services/building')
 	const buildingService = new Building()
 	buildingService.cancelCurrentLoad()
 
@@ -199,6 +202,7 @@ const smartReset = async () => {
 	toggleStore.setHelsinkiView(false)
 
 	// Reset camera to initial position
+	const { default: Camera } = await import('./services/camera')
 	const camera = new Camera()
 	camera.init()
 
@@ -206,7 +210,11 @@ const smartReset = async () => {
 	hideTooltip()
 }
 
-const returnToPostalCode = () => {
+const returnToPostalCode = async () => {
+	const [{ default: Featurepicker }, { default: Tree }] = await Promise.all([
+		import('./services/featurepicker'),
+		import('./services/tree'),
+	])
 	const featurepicker = new Featurepicker()
 	const treeService = new Tree()
 	hideTooltip()
@@ -227,7 +235,8 @@ const hideTooltip = () => {
 	}
 }
 
-const rotateCamera = () => {
+const rotateCamera = async () => {
+	const { default: Camera } = await import('./services/camera')
 	const camera = new Camera()
 	camera.rotate180Degrees()
 }
@@ -282,6 +291,7 @@ onMounted(async () => {
 
 		// Initialize background preloader if enabled
 		if (featureFlagStore.isEnabled('backgroundPreload')) {
+			const { default: backgroundPreloader } = await import('./services/backgroundPreloader.js')
 			await backgroundPreloader.init()
 			logger.debug('Background preloader initialized')
 		}
