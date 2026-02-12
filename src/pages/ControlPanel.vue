@@ -5,29 +5,48 @@
 		role="navigation"
 		aria-label="Analysis tools and data exploration"
 		class="analysis-sidebar"
-		width="350"
-		location="right"
+		:width="drawerWidth"
+		location="left"
 		@update:model-value="$emit('update:modelValue', $event)"
 	>
 		<div class="sidebar-content">
-			<div class="control-section">
-				<h3 class="section-subtitle">
-					<v-icon class="mr-2"> mdi-magnify </v-icon>Search & Navigate
-				</h3>
-				<p class="search-description">Find locations by address, postal code, or area name</p>
-				<UnifiedSearch />
-			</div>
-			<div class="control-section">
-				<h3 class="section-subtitle"><v-icon class="mr-2"> mdi-layers </v-icon>Map Controls</h3>
-				<p class="search-description">Toggle data layers and apply filters</p>
-				<MapControls />
-			</div>
-			<div class="control-section">
-				<h3 class="section-subtitle">
-					<v-icon class="mr-2"> mdi-map-outline </v-icon>Background Maps
-				</h3>
-				<BackgroundMapBrowser />
-			</div>
+			<v-expansion-panels
+				v-model="openPanels"
+				multiple
+				variant="accordion"
+			>
+				<v-expansion-panel value="search">
+					<v-expansion-panel-title>
+						<v-icon class="mr-2">mdi-magnify</v-icon>
+						Search & Navigate
+					</v-expansion-panel-title>
+					<v-expansion-panel-text>
+						<p class="search-description">Find locations by address, postal code, or area name</p>
+						<UnifiedSearch />
+					</v-expansion-panel-text>
+				</v-expansion-panel>
+
+				<v-expansion-panel value="mapControls">
+					<v-expansion-panel-title>
+						<v-icon class="mr-2">mdi-layers</v-icon>
+						Map Controls
+					</v-expansion-panel-title>
+					<v-expansion-panel-text>
+						<p class="search-description">Toggle data layers and apply filters</p>
+						<MapControls />
+					</v-expansion-panel-text>
+				</v-expansion-panel>
+
+				<v-expansion-panel value="backgroundMaps">
+					<v-expansion-panel-title>
+						<v-icon class="mr-2">mdi-map-outline</v-icon>
+						Background Maps
+					</v-expansion-panel-title>
+					<v-expansion-panel-text>
+						<BackgroundMapBrowser />
+					</v-expansion-panel-text>
+				</v-expansion-panel>
+			</v-expansion-panels>
 
 			<div class="control-section">
 				<h3 class="section-subtitle">
@@ -292,6 +311,7 @@
 
 import { storeToRefs } from 'pinia'
 import { computed, defineAsyncComponent, ref } from 'vue'
+import { useDisplay } from 'vuetify'
 import AreaProperties from '../components/AreaProperties.vue'
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue'
 import MapControls from '../components/MapControls.vue'
@@ -360,6 +380,17 @@ export default {
 	},
 	emits: ['update:modelValue'],
 	setup() {
+		const { smAndDown, mdAndDown } = useDisplay()
+
+		const drawerWidth = computed(() => {
+			if (smAndDown.value) return Math.min(window.innerWidth * 0.9, 320)
+			if (mdAndDown.value) return Math.min(window.innerWidth * 0.4, 350)
+			return 350
+		})
+
+		// Default-open sections: Search and Map Controls
+		const openPanels = ref(['search', 'mapControls'])
+
 		// ## NEW: State for the new panel ##
 		const adaptationTab = ref('centers')
 
@@ -582,6 +613,8 @@ export default {
 			// ## NEW: Return the new state variable ##
 			adaptationTab,
 			featureFlagStore,
+			drawerWidth,
+			openPanels,
 		}
 	},
 }
@@ -618,6 +651,18 @@ export default {
 	font-weight: 500;
 	margin-bottom: 8px;
 	color: rgba(0, 0, 0, 0.7);
+}
+
+/* Expansion panels inside sidebar */
+.sidebar-content :deep(.v-expansion-panel-title) {
+	font-size: 1rem;
+	font-weight: 600;
+	min-height: 48px;
+	padding: 12px 16px;
+}
+
+.sidebar-content :deep(.v-expansion-panel-text__wrapper) {
+	padding: 8px 16px 16px;
 }
 .analysis-buttons {
 	display: flex;
