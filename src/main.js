@@ -31,49 +31,44 @@ const vuetify = createVuetify({
 })
 
 const pinia = createPinia()
+
+// Configuration: Non-serializable Cesium objects to exclude from Sentry state capture
+// These objects contain functions, circular references, getters, and WebGL contexts
+// that cannot be cloned by the structured clone algorithm used in postMessage()
+const nonSerializableKeysByStore = {
+	props: [
+		'treeEntities', // Cesium entity collection
+		'buildingsDatasource', // Cesium data source
+		'postalCodeData', // Contains Cesium entities
+		'heatFloodVulnerabilityEntity', // Cesium entity
+	],
+	global: [
+		'cesiumViewer', // Cesium Viewer instance (contains WebGL context)
+		'currentGridCell', // Cesium entity reference
+		'pickedEntity', // Cesium entity reference
+	],
+	backgroundMap: [
+		'floodLayers', // Array of Cesium ImageryLayer objects
+		'landcoverLayers', // Array of Cesium ImageryLayer objects
+		'tiffLayers', // Array of Cesium ImageryLayer objects
+		'hSYWMSLayers', // Array of Cesium ImageryLayer objects
+	],
+}
+
 pinia.use(
 	createSentryPiniaPlugin({
-		// Exclude Cesium objects from Sentry state capture to prevent DataCloneError
-		// Cesium objects contain non-serializable properties (functions, circular refs, getters)
-		// that cannot be cloned for postMessage() calls to Sentry servers
 		stateTransformer: (state, store) => {
-			// For propsStore, exclude deprecated Cesium entity properties
-			if (store.$id === 'props') {
-				const {
-					treeEntities: _treeEntities,
-					buildingsDatasource: _buildingsDatasource,
-					postalCodeData: _postalCodeData,
-					heatFloodVulnerabilityEntity: _heatFloodVulnerabilityEntity,
-					...serializable
-				} = state
-				return serializable
+			const keysToOmit = nonSerializableKeysByStore[store.$id]
+			if (!keysToOmit) {
+				return state // Return state as-is for stores without filtering config
 			}
 
-			// For globalStore, exclude Cesium viewer and entity references
-			if (store.$id === 'global') {
-				const {
-					cesiumViewer: _cesiumViewer,
-					currentGridCell: _currentGridCell,
-					pickedEntity: _pickedEntity,
-					...serializable
-				} = state
-				return serializable
+			// Filter out non-serializable keys
+			const serializableState = { ...state }
+			for (const key of keysToOmit) {
+				delete serializableState[key]
 			}
-
-			// For backgroundMapStore, exclude Cesium imagery layer objects
-			if (store.$id === 'backgroundMap') {
-				const {
-					floodLayers: _floodLayers,
-					landcoverLayers: _landcoverLayers,
-					tiffLayers: _tiffLayers,
-					hSYWMSLayers: _hSYWMSLayers,
-					...serializable
-				} = state
-				return serializable
-			}
-
-			// For all other stores, return state as-is
-			return state
+			return serializableState
 		},
 	})
 )
