@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
 
       - name: Extract Docker metadata
         id: meta
@@ -83,7 +83,7 @@ jobs:
             ${{ runner.os }}-buildkit-
 
       - name: Inject BuildKit cache mounts
-        uses: reproducible-containers/buildkit-cache-dance@5b6db76d1da5c8b307d5d2e0706d266521b710de # v3.1.2
+        uses: reproducible-containers/buildkit-cache-dance@6f699a72a59e4252f05a7435430009b77e25fe06 # v3.3.1
         with:
           cache-map: |
             {
@@ -93,7 +93,7 @@ jobs:
           skip-extraction: ${{ steps.cache.outputs.cache-hit }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        uses: docker/build-push-action@601a80b39c9405e50806ae38af30926f9d957c47 # v6.19.1
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
