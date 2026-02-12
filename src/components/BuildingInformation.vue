@@ -83,9 +83,9 @@
  * - Cesium: Scene picking and screen space events
  */
 
-import { Cartesian2, ScreenSpaceEventType } from 'cesium'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { findAddressForBuilding } from '../services/address.js'
+import { getCesium } from '../services/cesiumProvider.js'
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
@@ -315,7 +315,10 @@ export default {
 				mousePosition.value = { x: endPosition.x, y: endPosition.y }
 
 				if (buildingStore.buildingFeatures && viewer) {
-					const pickedEntity = viewer.scene.pick(new Cartesian2(endPosition.x, endPosition.y))
+					const Cesium = getCesium()
+					const pickedEntity = viewer.scene.pick(
+						new Cesium.Cartesian2(endPosition.x, endPosition.y)
+					)
 
 					if (pickedEntity?.id) {
 						void fetchBuildingInfo(pickedEntity.id)
@@ -342,7 +345,11 @@ export default {
 				return
 			}
 
-			viewer.screenSpaceEventHandler.setInputAction(onMouseMove, ScreenSpaceEventType.MOUSE_MOVE)
+			const Cesium = getCesium()
+			viewer.screenSpaceEventHandler.setInputAction(
+				onMouseMove,
+				Cesium.ScreenSpaceEventType.MOUSE_MOVE
+			)
 			handlerRegistered.value = true
 			logger.debug('[BuildingInformation] ✅ MOUSE_MOVE handler registered successfully')
 		}
@@ -357,7 +364,8 @@ export default {
 				return
 			}
 
-			viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE)
+			const Cesium = getCesium()
+			viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE)
 			handlerRegistered.value = false
 			logger.debug('[BuildingInformation] 🗑️ MOUSE_MOVE handler unregistered')
 		}

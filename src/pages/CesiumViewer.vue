@@ -132,8 +132,7 @@
  * - cacheWarmer: Background data preloading
  * - ViewportBuildingLoader: Tile-based viewport building streaming
  */
-import { computed, onMounted, ref } from 'vue'
-import BuildingInformation from '../components/BuildingInformation.vue'
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
 import CameraControls from '../components/CameraControls.vue'
 import DisclaimerPopup from '../components/DisclaimerPopup.vue'
 import Loading from '../components/Loading.vue'
@@ -152,6 +151,10 @@ import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
+
+const BuildingInformation = defineAsyncComponent(
+	() => import('../components/BuildingInformation.vue')
+)
 
 export default {
 	components: {
