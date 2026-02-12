@@ -69,6 +69,24 @@ export const useToggleStore = defineStore('toggle', {
 		// Internal state for visibility coordination
 		_previousGrid250m: false, // Tracks grid state before entering postal code
 	}),
+	getters: {
+		/**
+		 * Count of active data layers and building filters
+		 * @returns {number}
+		 */
+		activeLayerCount(state) {
+			let count = 0
+			if (state.showTrees) count++
+			if (state.showVegetation) count++
+			if (state.showOtherNature) count++
+			if (state.landCover) count++
+			if (state.ndvi) count++
+			if (state.hideNewBuildings) count++
+			if (state.hideNonSote) count++
+			if (state.hideLow) count++
+			return count
+		},
+	},
 	actions: {
 		/**
 		 * Toggle NDVI vegetation index imagery visibility
@@ -232,6 +250,28 @@ export const useToggleStore = defineStore('toggle', {
 		 */
 		reset() {
 			this.$reset() // Pinia has a built-in $reset function which resets state to initial values
+		},
+
+		/**
+		 * Resets data layer toggles to their default (off) state
+		 * @returns {void}
+		 */
+		resetLayers() {
+			this.showTrees = false
+			this.showVegetation = false
+			this.showOtherNature = false
+			this.landCover = false
+			this.ndvi = false
+		},
+
+		/**
+		 * Resets building filter toggles to their default (off) state
+		 * @returns {void}
+		 */
+		resetBuildingFilters() {
+			this.hideNewBuildings = false
+			this.hideNonSote = false
+			this.hideLow = false
 		},
 
 		// ============================================================

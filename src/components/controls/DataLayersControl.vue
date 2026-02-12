@@ -1,11 +1,24 @@
 <template>
 	<div class="control-group">
-		<h4 class="control-group-title">Data Layers</h4>
+		<h4 class="control-group-title">
+			Data Layers
+			<v-btn
+				v-if="hasActiveLayers"
+				icon
+				size="x-small"
+				variant="text"
+				aria-label="Reset all data layers"
+				class="ml-auto"
+				@click="$emit('reset:layers')"
+			>
+				<v-icon size="16">mdi-layers-off</v-icon>
+			</v-btn>
+		</h4>
 
 		<!-- Trees -->
 		<v-tooltip
 			v-if="view !== 'grid' && postalCode && featureFlagStore.isEnabled('treeCoverage')"
-			location="left"
+			location="right"
 			max-width="200"
 		>
 			<template #activator="{ props }">
@@ -49,7 +62,7 @@
 		<!-- Vegetation (Helsinki only) -->
 		<v-tooltip
 			v-if="helsinkiView"
-			location="left"
+			location="right"
 			max-width="200"
 		>
 			<template #activator="{ props }">
@@ -83,7 +96,7 @@
 		<!-- Other Nature (Helsinki only) -->
 		<v-tooltip
 			v-if="helsinkiView"
-			location="left"
+			location="right"
 			max-width="200"
 		>
 			<template #activator="{ props }">
@@ -107,7 +120,7 @@
 		<!-- HSY Land Cover -->
 		<v-tooltip
 			v-if="!helsinkiView && featureFlagStore.isEnabled('landCover')"
-			location="left"
+			location="right"
 			max-width="200"
 		>
 			<template #activator="{ props }">
@@ -131,7 +144,7 @@
 		<!-- NDVI -->
 		<v-tooltip
 			v-if="featureFlagStore.isEnabled('ndvi')"
-			location="left"
+			location="right"
 			max-width="200"
 		>
 			<template #activator="{ props }">
@@ -192,12 +205,13 @@
  * />
  */
 
+import { computed } from 'vue'
 import { useFeatureFlagStore } from '../../stores/featureFlagStore'
 import { useLoadingStore } from '../../stores/loadingStore.js'
 
 const featureFlagStore = useFeatureFlagStore()
 
-defineProps({
+const props = defineProps({
 	showTrees: {
 		type: Boolean,
 		required: true,
@@ -238,7 +252,17 @@ defineEmits([
 	'update:showOtherNature',
 	'update:landCover',
 	'update:ndvi',
+	'reset:layers',
 ])
+
+const hasActiveLayers = computed(
+	() =>
+		props.showTrees ||
+		props.showVegetation ||
+		props.showOtherNature ||
+		props.landCover ||
+		props.ndvi
+)
 
 const loadingStore = useLoadingStore()
 </script>
@@ -258,6 +282,8 @@ const loadingStore = useLoadingStore()
 	color: rgba(0, 0, 0, 0.87);
 	background-color: rgba(0, 0, 0, 0.02);
 	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	display: flex;
+	align-items: center;
 }
 
 .control-item {

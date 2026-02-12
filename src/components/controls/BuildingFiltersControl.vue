@@ -3,11 +3,24 @@
 		v-if="view !== 'grid'"
 		class="control-group"
 	>
-		<h4 class="control-group-title">Building Filters</h4>
+		<h4 class="control-group-title">
+			Building Filters
+			<v-btn
+				v-if="hideNonSote || hideNewBuildings || hideLow"
+				icon
+				size="x-small"
+				variant="text"
+				aria-label="Reset all building filters"
+				class="ml-auto"
+				@click="$emit('reset:filters')"
+			>
+				<v-icon size="16">mdi-filter-remove</v-icon>
+			</v-btn>
+		</h4>
 
 		<!-- Public/Social Buildings Filter -->
 		<v-tooltip
-			location="left"
+			location="right"
 			max-width="200"
 		>
 			<template #activator="{ props }">
@@ -39,7 +52,7 @@
 		<!-- Building Age Filter (Helsinki only) -->
 		<v-tooltip
 			v-if="helsinkiView"
-			location="left"
+			location="right"
 			max-width="200"
 		>
 			<template #activator="{ props }">
@@ -62,7 +75,7 @@
 
 		<!-- Building Height Filter -->
 		<v-tooltip
-			location="left"
+			location="right"
 			max-width="200"
 		>
 			<template #activator="{ props }">
@@ -140,7 +153,12 @@ defineProps({
 	},
 })
 
-defineEmits(['update:hide-non-sote', 'update:hide-new-buildings', 'update:hide-low'])
+defineEmits([
+	'update:hide-non-sote',
+	'update:hide-new-buildings',
+	'update:hide-low',
+	'reset:filters',
+])
 </script>
 
 <style scoped>
@@ -158,6 +176,8 @@ defineEmits(['update:hide-non-sote', 'update:hide-new-buildings', 'update:hide-l
 	color: rgba(0, 0, 0, 0.87);
 	background-color: rgba(0, 0, 0, 0.02);
 	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	display: flex;
+	align-items: center;
 }
 
 .control-item {

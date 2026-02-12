@@ -22,6 +22,16 @@
 				</v-btn>
 
 				<v-btn
+					v-if="currentLevel !== 'start'"
+					icon
+					variant="text"
+					aria-label="Reset to start view"
+					@click="smartReset"
+				>
+					<v-icon>mdi-home</v-icon>
+				</v-btn>
+
+				<v-btn
 					icon
 					variant="text"
 					aria-label="Sign out"
@@ -68,6 +78,12 @@
 						@click="returnToPostalCode"
 					/>
 					<v-list-item
+						v-if="currentLevel !== 'start'"
+						prepend-icon="mdi-home"
+						title="Reset to start"
+						@click="smartReset"
+					/>
+					<v-list-item
 						prepend-icon="mdi-logout"
 						title="Sign out"
 						@click="signOut"
@@ -102,17 +118,25 @@
 			<v-spacer />
 
 			<!-- Right section: Controls button -->
-			<v-btn
-				variant="outlined"
-				aria-label="Toggle control panel"
-				prepend-icon="mdi-tune"
-				class="mr-2 mr-sm-4"
-				size="small"
-				@click="sidebarVisible = !sidebarVisible"
+			<v-badge
+				:model-value="!sidebarVisible && activeLayerCount > 0"
+				:content="activeLayerCount"
+				color="primary"
+				offset-x="-4"
+				offset-y="-4"
 			>
-				<span class="d-none d-sm-inline">{{ sidebarVisible ? 'Hide' : 'Show' }} Controls</span>
-				<span class="d-inline d-sm-none">{{ sidebarVisible ? 'Hide' : '' }}</span>
-			</v-btn>
+				<v-btn
+					variant="outlined"
+					aria-label="Toggle control panel"
+					prepend-icon="mdi-tune"
+					class="mr-2 mr-sm-4"
+					size="small"
+					@click="sidebarVisible = !sidebarVisible"
+				>
+					<span class="d-none d-sm-inline">{{ sidebarVisible ? 'Hide' : 'Show' }} Controls</span>
+					<span class="d-inline d-sm-none">{{ sidebarVisible ? 'Hide' : '' }}</span>
+				</v-btn>
+			</v-badge>
 		</v-app-bar>
 
 		<!-- Enhanced Control Panel -->
@@ -135,8 +159,8 @@
 			</div>
 		</v-main>
 
-		<!-- Heat Timeline Overlay - shown when buildings are loaded (postalCode or building level) -->
-		<Timeline v-if="currentLevel === 'postalCode' || currentLevel === 'building'" />
+		<!-- Heat Timeline Overlay - disabled; compact timeline in app bar is sufficient -->
+		<!-- <Timeline v-if="currentLevel === 'postalCode' || currentLevel === 'building'" /> -->
 	</v-app>
 </template>
 
@@ -145,7 +169,7 @@ import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
 
 // Lazy-loaded components (only shown at non-start navigation levels)
 const TimelineCompact = defineAsyncComponent(() => import('./components/TimelineCompact.vue'))
-const Timeline = defineAsyncComponent(() => import('./components/Timeline.vue'))
+// const Timeline = defineAsyncComponent(() => import('./components/Timeline.vue'))
 const SosEco250mGrid = defineAsyncComponent(() => import('./components/SosEco250mGrid.vue'))
 const ControlPanel = defineAsyncComponent(() => import('./pages/ControlPanel.vue'))
 
@@ -166,6 +190,7 @@ const userStore = useUserStore()
 
 const grid250m = computed(() => toggleStore.grid250m)
 const currentLevel = computed(() => globalStore.level)
+const activeLayerCount = computed(() => toggleStore.activeLayerCount)
 
 // UI state - use feature flag to determine default sidebar visibility
 const sidebarVisible = ref(featureFlagStore.isEnabled('controlPanelDefault'))

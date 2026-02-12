@@ -15,6 +15,7 @@
 			@update:show-other-nature="loadOtherNature"
 			@update:land-cover="addLandCover"
 			@update:ndvi="toggleNDVI"
+			@reset:layers="resetLayers"
 		/>
 
 		<!-- Building Filters -->
@@ -27,6 +28,7 @@
 			@update:hide-non-sote="filterBuildings"
 			@update:hide-new-buildings="filterBuildings"
 			@update:hide-low="filterBuildings"
+			@reset:filters="resetFilters"
 		/>
 
 		<!-- Layer Conflict Warning -->
@@ -417,6 +419,29 @@ const filterBuildings = () => {
 		}
 		eventBus.emit('updateScatterPlot')
 	}
+}
+
+/**
+ * Resets all data layers to off and cleans up loaded data
+ *
+ * @returns {void}
+ */
+const resetLayers = () => {
+	showTrees.value = false
+	showVegetation.value = false
+	showOtherNature.value = false
+	landCover.value = false
+	ndvi.value = false
+	toggleStore.resetLayers()
+
+	// Clean up loaded layers
+	if (dataSourceService) {
+		dataSourceService.changeDataSourceShowByName('Trees', false)
+		dataSourceService.changeDataSourceShowByName('Vegetation', false)
+		dataSourceService.changeDataSourceShowByName('OtherNature', false)
+	}
+	removeLandcover()
+	removeTIFF().catch(logger.error)
 }
 
 /**
