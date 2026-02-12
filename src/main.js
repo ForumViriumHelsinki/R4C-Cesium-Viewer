@@ -33,7 +33,9 @@ const vuetify = createVuetify({
 const pinia = createPinia()
 pinia.use(
 	createSentryPiniaPlugin({
-		// Exclude deprecated Cesium entity properties from Sentry state capture
+		// Exclude Cesium objects from Sentry state capture to prevent DataCloneError
+		// Cesium objects contain non-serializable properties (functions, circular refs, getters)
+		// that cannot be cloned for postMessage() calls to Sentry servers
 		stateTransformer: (state, store) => {
 			// For propsStore, exclude deprecated Cesium entity properties
 			if (store.$id === 'props') {
@@ -42,6 +44,29 @@ pinia.use(
 					buildingsDatasource: _buildingsDatasource,
 					postalCodeData: _postalCodeData,
 					heatFloodVulnerabilityEntity: _heatFloodVulnerabilityEntity,
+					...serializable
+				} = state
+				return serializable
+			}
+
+			// For globalStore, exclude Cesium viewer and entity references
+			if (store.$id === 'global') {
+				const {
+					cesiumViewer: _cesiumViewer,
+					currentGridCell: _currentGridCell,
+					pickedEntity: _pickedEntity,
+					...serializable
+				} = state
+				return serializable
+			}
+
+			// For backgroundMapStore, exclude Cesium imagery layer objects
+			if (store.$id === 'backgroundMap') {
+				const {
+					floodLayers: _floodLayers,
+					landcoverLayers: _landcoverLayers,
+					tiffLayers: _tiffLayers,
+					hSYWMSLayers: _hSYWMSLayers,
 					...serializable
 				} = state
 				return serializable
