@@ -57,4 +57,4 @@ jobs:
           # Optional: Add claude_args to customize behavior and configuration
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://docs.anthropic.com/en/docs/claude-code/sdk#command-line for available options
-          claude_args: '--allowed-tools "Edit,MultiEdit,Write,Read,Glob,Grep,LS,Bash(npm test:*),Bash(npx playwright:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*)"'
+          claude_args: '--allowed-tools "Edit,MultiEdit,Write,Read,Glob,Grep,LS,Bash(npm run test:*),Bash(bun run test:*),Bash(bun run build*),Bash(bun run lint*),Bash(npx playwright *),Bash(git *),Bash(gh pr *),Bash(gh issue *),Bash(gh api *)"'
