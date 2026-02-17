@@ -10,5 +10,12 @@ import { setupDigitransitMocks } from './digitransit-mock'
 import { setupWmsMocks } from './wms-mocks'
 
 export async function setupAllApiMocks(page: Page): Promise<void> {
-	await Promise.all([setupWmsMocks(page), setupDataApiMocks(page), setupDigitransitMocks(page)])
+	// Enable WMS diagnostic logging in CI to help debug unmocked requests
+	const enableWmsLogging = process.env.CI === 'true' || process.env.DEBUG_WMS === 'true'
+
+	await Promise.all([
+		setupWmsMocks(page, { enableLogging: enableWmsLogging }),
+		setupDataApiMocks(page),
+		setupDigitransitMocks(page),
+	])
 }
