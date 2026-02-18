@@ -91,13 +91,46 @@ export const WMS_CAPABILITIES_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </WMS_Capabilities>`
 
 // Minimal layer group hierarchy for BackgroundMapBrowser.vue
+// Includes realistic HSY layer names for test compatibility
 export const HSY_LAYER_GROUPS = [
 	{
 		id: 1,
 		name: 'Background Maps',
 		layers: [
-			{ id: 101, name: 'mock_ortho', title: 'Orthoimage 2023', visible: true },
-			{ id: 102, name: 'mock_landcover', title: 'Land Cover', visible: false },
+			{
+				id: 101,
+				name: 'mock_ortho',
+				title: 'Orthoimage 2023',
+				date_updated: '2023-06-15',
+				organization: 'HSY',
+			},
+			{
+				id: 102,
+				name: 'mock_landcover',
+				title: 'Land Cover',
+				date_updated: '2023-05-20',
+				organization: 'HSY',
+			},
+		],
+	},
+	{
+		id: 2,
+		name: 'Administrative Boundaries',
+		layers: [
+			{
+				id: 201,
+				name: 'Kaupunginosat',
+				title: 'Kaupunginosat (City Districts)',
+				date_updated: '2024-01-10',
+				organization: 'HSY',
+			},
+			{
+				id: 202,
+				name: 'Postinumeroalueet',
+				title: 'Postinumeroalueet (Postal Code Areas)',
+				date_updated: '2024-01-10',
+				organization: 'HSY',
+			},
 		],
 	},
 ]
