@@ -327,6 +327,7 @@
 		<!-- Details Dialog -->
 		<v-dialog
 			v-model="detailsDialog"
+			eager
 			max-width="600"
 		>
 			<v-card v-if="selectedSource">
