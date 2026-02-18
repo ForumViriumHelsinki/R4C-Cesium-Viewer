@@ -7,11 +7,10 @@
 import { expect, test } from '../../fixtures/test-fixture'
 import { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
-// SKIPPED: Vuetify dialog component (disclaimer popup) does not render properly in Playwright CI environment
-// The "Explore Map" button is not visible because the dialog fails to mount its DOM elements
-// Related: https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/470
-test.describe
-	.skip('Building Hover Information', () => {
+// Fixed by adding 'eager' prop to v-dialog component in DisclaimerPopup.vue
+// This forces Vuetify to render the dialog DOM immediately in headless environments
+// Related: https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/621
+test.describe('Building Hover Information', () => {
 		test.use({ tag: ['@e2e', '@accessibility'] })
 
 		test.beforeEach(async ({ page }) => {
@@ -322,9 +321,8 @@ test.describe
 		})
 	})
 
-// SKIPPED: Same Vuetify dialog rendering issue as above
-test.describe
-	.skip('Building Hover Regression Prevention', () => {
+// Fixed by adding 'eager' prop to v-dialog component in DisclaimerPopup.vue
+test.describe('Building Hover Regression Prevention', () => {
 		test.use({ tag: ['@e2e', '@smoke'] })
 
 		test.beforeEach(async ({ page }) => {

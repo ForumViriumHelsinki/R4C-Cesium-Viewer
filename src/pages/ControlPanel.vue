@@ -332,6 +332,20 @@
 				v-if="!isMobile"
 				class="rail-toggle"
 			>
+	<v-dialog
+		v-model="analysisDialog"
+		eager
+		:width="analysisDialogWidth"
+		:height="analysisDialogHeight"
+		scrollable
+	>
+		<v-card>
+			<v-card-title class="d-flex align-center">
+				<v-icon class="mr-2">
+					{{ currentAnalysisIcon }}
+				</v-icon>
+				{{ currentAnalysisTitle }}
+				<v-spacer />
 				<v-btn
 					icon
 					variant="text"
