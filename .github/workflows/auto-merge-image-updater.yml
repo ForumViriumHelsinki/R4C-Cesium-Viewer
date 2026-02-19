@@ -1,77 +1,30 @@
-name: Auto-merge ArgoCD Image Updater branches
+# Auto-merges pull requests created by ArgoCD Image Updater.
+# Approves the PR using AUTO_MERGE_PAT (or GITHUB_TOKEN fallback),
+# then enables auto-merge so it lands once status checks pass.
+name: Auto-merge image updater PRs
 
 on:
-  push:
-    branches:
-      - 'image-updater-**'
+  pull_request:
+    types: [opened, synchronize]
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  create-and-merge:
+  auto-merge:
+    if: startsWith(github.head_ref, 'image-updater/')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Create Pull Request
-        id: create-pr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_URL=$(gh pr create \
-            --base main \
-            --head "${{ github.ref_name }}" \
-            --title "chore(deps): update container image" \
-            --body "Automated image update by argocd-image-updater.
-
-          Branch: \`${{ github.ref_name }}\`" \
-            2>&1) || true
-
-          # Check if PR already exists
-          if echo "$PR_URL" | grep -q "already exists"; then
-            PR_URL=$(gh pr view "${{ github.ref_name }}" --json url -q .url)
-          fi
-
-          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
-          echo "Created/found PR: $PR_URL"
+      - uses: actions/checkout@v6
 
       - name: Approve PR
-        id: approve
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT || secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-
-          # Check if already approved
-          APPROVALS=$(gh pr view "${{ github.ref_name }}" --json reviews --jq '[.reviews[] | select(.state == "APPROVED")] | length')
-
-          if [ "$APPROVALS" -gt 0 ]; then
-            echo "PR already has $APPROVALS approval(s), skipping"
-            echo "already_approved=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Attempt approval
-          if gh pr review --approve "${{ github.ref_name }}"; then
-            echo "approved=true" >> $GITHUB_OUTPUT
-          else
-            echo "::warning::Could not approve PR - may require manual approval"
-            echo "approved=false" >> $GITHUB_OUTPUT
-          fi
+        run: gh pr review "${{ github.event.pull_request.number }}" --approve
 
       - name: Enable auto-merge
-        if: steps.approve.outputs.approved == 'true' || steps.approve.outputs.already_approved == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge --auto --squash "${{ github.ref_name }}"
-
-      - name: Notify if approval failed
-        if: steps.approve.outputs.approved == 'false' && steps.approve.outputs.already_approved != 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "::warning::Auto-merge skipped - PR requires manual approval"
-          gh pr comment "${{ github.ref_name }}" --body "⚠️ Auto-approval failed. Please review and approve manually."
+        run: gh pr merge "${{ github.event.pull_request.number }}" --auto --squash --base main
