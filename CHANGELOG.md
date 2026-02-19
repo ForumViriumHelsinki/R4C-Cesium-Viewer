@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.44.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.43.0...r4c-cesium-viewer-v1.44.0) (2026-02-19)
+
+
+### Features
+
+* **feature-flags:** audit and cleanup feature flag system ([#556](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/556)) ([7194353](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7194353c94fd226484bc04b782de6b94ffc75f9c))
+* sidebar UX improvements ([#626](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/626)) ([4f2a25a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4f2a25a6106032bd49b702c635549dc1cf71bcdf))
+
+
+### Bug Fixes
+
+* Add null check for entity.polygon to prevent TypeError ([#592](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/592)) ([17c37b4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/17c37b4e28cc0fb3e94cfd279ee4ab9bf90bc924)), closes [#585](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/585)
+* Add null checks for Cesium entity property access (Fixes [#590](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/590)) ([#597](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/597)) ([abd607b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/abd607b7799e761f843f45b7180e567df815d72b))
+* Add retry logic for dynamic module imports (Fixes [#591](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/591)) ([#596](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/596)) ([ef23d9b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ef23d9bc731c1c575843726ae3fbb1b7d23240d1))
+* **ci:** correct Bash tool patterns in Claude workflow permissions ([#627](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/627)) ([f3f9474](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f3f9474e31a4c1c9a01675c7b7d8f4e0086be7e2))
+* **ci:** improve Claude workflow reliability and permissions ([38afb0b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/38afb0b1a9b71b55cb424133470f92a35d8f0776))
+* **ci:** prevent release-please recursion on release branches ([#572](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/572)) ([ed41fda](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ed41fdaac89d47dcd830cf8bb60387a4a1954e5c))
+* **docs:** apply code review feedback from Gemini Code Assist ([92ba16c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/92ba16c1458ff99df256772f83737f384800c0d3))
+* **grid:** improve 250m statistical grid performance and preserve buildings ([#536](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/536)) ([fc174dd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fc174dd176b243d84c86de5c88534a660cfe4ba2)), closes [#530](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/530) [#531](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/531) [#532](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/532) [#533](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/533) [#534](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/534)
+* Remove blur effect from inactive loading overlay ([#594](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/594)) ([bef54de](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bef54def4f62b89da2cef8e37a350cd7f3f705c0))
+* **test:** enhance WMS mock coverage with fallback handler ([#628](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/628)) ([a356397](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a356397488aa6a909a1f6a6b883f185c5359c9cd))
+* **test:** update camera.test.js to match new initial camera height ([#554](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/554)) ([b9c6078](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b9c6078549e3098d9234d05060ef36e0cc9a00d4)), closes [#538](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/538)
+* **test:** update e2e accessibility tests for current UI selectors ([#617](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/617)) ([78ea2b7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/78ea2b75aa5024b2a60a5949b34a6e61b7f212c5))
+* **test:** update unit tests for postalCodeIndex and navigation changes ([2db9960](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2db99606bff486ff651533289cadccf236393c6e))
+* TypeError in PrintBox when pickedEntity is null ([#595](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/595)) ([f5121eb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f5121ebbecd4196aab8537dfb65fe7449ba4c55d))
+* **vuetify:** add eager prop to navigation drawers and overlays ([#562](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/562)) ([648aeb8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/648aeb8ef207a1857002c56b21d82ab625841bcc))
+
+
+### Performance Improvements
+
+* Add navigation coordination and WMS retry resilience improvements ([#606](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/606)) ([c6349e9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c6349e9cb12cc8b35ce9c3c40ed3df49bafb83d4))
+* Implement Phase 2 optimizations - single-pass algorithms and indexing ([#603](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/603)) ([4662357](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/46623572cd4a35fb10aea81fd9051688d8869733))
+* lazy-load Cesium, services, and heavy components ([#625](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/625)) ([bd3cf80](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bd3cf80811fd2c62d4546cd73385484810001a18))
+* Move statistical grid loading off main thread ([#600](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/600)) ([4888a35](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4888a35894b226c9623449f5bb357d036d9c2f1c))
+* Reduce Total Blocking Time from 62s to &lt;5s ([#602](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/602)) ([bfdaa18](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bfdaa18c61ffb374053fb968e10c2fbb480ef7d4))
+
 ## [1.43.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.42.3...r4c-cesium-viewer-v1.43.0) (2026-01-14)
 
 ### Features
