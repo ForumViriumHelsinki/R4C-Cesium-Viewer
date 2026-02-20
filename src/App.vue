@@ -1,82 +1,84 @@
 <template>
 	<v-app>
-		<!-- Top Navigation Bar -->
+		<!-- Slim Top Bar (48px) -->
 		<v-app-bar
 			:elevation="2"
-			height="64"
+			height="48"
 			color="surface"
+			density="compact"
 		>
-			<!-- Left section: Title + Navigation -->
-			<AppTitle class="ml-2 ml-sm-4 mr-2 mr-sm-4" />
+			<!-- Left: App Title -->
+			<AppTitle class="ml-2 ml-sm-4 mr-2" />
 
-			<!-- Navigation buttons - hidden on mobile, shown in menu -->
-			<div class="d-none d-md-flex align-center ga-1">
-				<v-btn
-					v-if="currentLevel === 'building'"
-					icon
-					variant="text"
-					aria-label="Return to postal code level"
-					@click="returnToPostalCode"
-				>
-					<v-icon>mdi-arrow-left</v-icon>
-				</v-btn>
-
-				<v-btn
-					v-if="currentLevel !== 'start'"
-					icon
-					variant="text"
-					aria-label="Reset to start view"
-					@click="smartReset"
-				>
-					<v-icon>mdi-home</v-icon>
-				</v-btn>
-
-				<v-btn
-					icon
-					variant="text"
-					aria-label="Sign out"
-					@click="signOut"
-				>
-					<v-icon>mdi-logout</v-icon>
-				</v-btn>
-
-				<v-btn
-					v-if="currentLevel !== 'start'"
-					icon
-					variant="text"
-					aria-label="Rotate camera view 180 degrees"
-					@click="rotateCamera"
-				>
-					<v-icon>mdi-compass</v-icon>
-				</v-btn>
-
-				<!-- Feature Flags Panel -->
-				<FeatureFlagsPanel />
-			</div>
-
-			<!-- Mobile menu for navigation buttons -->
-			<v-menu
-				eager
-				class="d-md-none"
+			<!-- View mode context chip (hidden on mobile) -->
+			<v-chip
+				v-if="currentLevel === 'start' || currentLevel === 'postalCode'"
+				size="small"
+				variant="tonal"
+				class="d-none d-sm-flex mx-1"
+				:prepend-icon="viewModeIcon"
+				@click="toggleStore.toggleSidebar('layers')"
 			>
+				{{ viewModeLabel }}
+			</v-chip>
+
+			<!-- Location context chip (hidden on mobile) -->
+			<v-chip
+				v-if="locationLabel"
+				size="small"
+				variant="tonal"
+				color="primary"
+				class="d-none d-sm-flex mx-1"
+				prepend-icon="mdi-map-marker"
+				@click="toggleStore.toggleSidebar('details')"
+			>
+				<span
+					class="text-truncate"
+					style="max-width: 160px"
+				>{{ locationLabel }}</span>
+			</v-chip>
+
+			<v-spacer />
+
+			<!-- Right: Search shortcut + User menu -->
+			<v-btn
+				icon
+				variant="text"
+				size="small"
+				aria-label="Open search"
+				class="d-none d-sm-flex"
+				@click="toggleStore.toggleSidebar('search')"
+			>
+				<v-icon>mdi-magnify</v-icon>
+			</v-btn>
+
+			<!-- Mobile hamburger -->
+			<v-btn
+				icon
+				variant="text"
+				size="small"
+				aria-label="Toggle sidebar"
+				class="d-sm-none"
+				@click="toggleMobileSidebar"
+			>
+				<v-icon>mdi-menu</v-icon>
+			</v-btn>
+
+			<!-- User menu -->
+			<v-menu>
 				<template #activator="{ props }">
 					<v-btn
 						v-bind="props"
 						icon
 						variant="text"
-						aria-label="Navigation menu"
-						class="d-md-none"
+						size="small"
+						aria-label="User menu"
+						class="mr-2"
 					>
-						<v-icon>mdi-dots-vertical</v-icon>
+						<v-icon>mdi-account-circle</v-icon>
 					</v-btn>
 				</template>
 				<v-list density="compact">
-					<v-list-item
-						v-if="currentLevel === 'building'"
-						prepend-icon="mdi-arrow-left"
-						title="Back to postal code"
-						@click="returnToPostalCode"
-					/>
 					<v-list-item
 						v-if="currentLevel !== 'start'"
 						prepend-icon="mdi-home"
@@ -88,63 +90,32 @@
 						title="Sign out"
 						@click="signOut"
 					/>
-					<v-list-item
-						v-if="currentLevel !== 'start'"
-						prepend-icon="mdi-compass"
-						title="Rotate camera"
-						@click="rotateCamera"
-					/>
 				</v-list>
 			</v-menu>
-
-			<v-spacer class="d-none d-sm-flex" />
-
-			<!-- Center section - PRIORITY: Always visible -->
-			<ViewModeCompact />
-
-			<!-- Heat Timeline - hidden on small screens -->
-			<TimelineCompact
-				v-if="currentLevel === 'postalCode' || currentLevel === 'building'"
-				class="ml-4 d-none d-lg-flex"
-			/>
-
-			<!-- Data Source Status Badge - hidden on mobile -->
-			<DataSourceStatusBadge
-				class="ml-2 d-none d-md-flex"
-				@source-retry="handleSourceRetry"
-				@cache-cleared="handleCacheCleared"
-			/>
-
-			<v-spacer />
-
-			<!-- Right section: Controls button -->
-			<v-badge
-				:model-value="!sidebarVisible && activeLayerCount > 0"
-				:content="activeLayerCount"
-				color="primary"
-				offset-x="-4"
-				offset-y="-4"
-			>
-				<v-btn
-					variant="outlined"
-					aria-label="Toggle control panel"
-					prepend-icon="mdi-tune"
-					class="mr-2 mr-sm-4"
-					size="small"
-					@click="sidebarVisible = !sidebarVisible"
-				>
-					<span class="d-none d-sm-inline">{{ sidebarVisible ? 'Hide' : 'Show' }} Controls</span>
-					<span class="d-inline d-sm-none">{{ sidebarVisible ? 'Hide' : '' }}</span>
-				</v-btn>
-			</v-badge>
 		</v-app-bar>
 
-		<!-- Enhanced Control Panel -->
-		<ControlPanel v-model="sidebarVisible" />
+		<!-- Sidebar with Rail + Tabs -->
+		<ControlPanel />
 
 		<v-main>
 			<CesiumViewer />
 			<SosEco250mGrid v-if="grid250m" />
+
+			<!-- Map Overlay Controls (right side) -->
+			<!-- MapOverlayControls provides zoom/compass controls. -->
+			<!-- Safe to use: all Cesium built-in navigation widgets are disabled in -->
+			<!-- useViewerInitialization.js to prevent duplicate affordances. -->
+			<MapOverlayControls />
+
+			<!-- Bottom Timeline Bar -->
+			<v-slide-y-reverse-transition>
+				<div
+					v-if="showTimeline"
+					class="timeline-bottom-bar"
+				>
+					<TimelineCompact />
+				</div>
+			</v-slide-y-reverse-transition>
 
 			<!-- Loading Indicator -->
 			<LoadingIndicator
@@ -153,25 +124,29 @@
 				@retry-layer="handleRetryLayer"
 			/>
 
+			<!-- Data Source Status Badge - bottom right -->
+			<DataSourceStatusBadge
+				class="status-badge-overlay"
+				@source-retry="handleSourceRetry"
+				@cache-cleared="handleCacheCleared"
+			/>
+
 			<!-- Minimal disclaimer -->
 			<div class="minimal-disclaimer">
-				<span class="disclaimer-text"> Data: HSY • Statistics Finland </span>
+				<span class="disclaimer-text"> Data: HSY &bull; Statistics Finland </span>
 			</div>
 		</v-main>
-
-		<!-- Heat Timeline Overlay - disabled; compact timeline in app bar is sufficient -->
-		<!-- <Timeline v-if="currentLevel === 'postalCode' || currentLevel === 'building'" /> -->
 	</v-app>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted } from 'vue'
 
-// Lazy-loaded components (only shown at non-start navigation levels)
+// Lazy-loaded components
 const TimelineCompact = defineAsyncComponent(() => import('./components/TimelineCompact.vue'))
-// const Timeline = defineAsyncComponent(() => import('./components/Timeline.vue'))
 const SosEco250mGrid = defineAsyncComponent(() => import('./components/SosEco250mGrid.vue'))
 const ControlPanel = defineAsyncComponent(() => import('./pages/ControlPanel.vue'))
+const MapOverlayControls = defineAsyncComponent(() => import('./components/MapOverlayControls.vue'))
 
 import CesiumViewer from './pages/CesiumViewer.vue'
 import { initializeFeatureFlags } from './services/featureFlagProvider'
@@ -190,10 +165,28 @@ const userStore = useUserStore()
 
 const grid250m = computed(() => toggleStore.grid250m)
 const currentLevel = computed(() => globalStore.level)
-const activeLayerCount = computed(() => toggleStore.activeLayerCount)
+const showTimeline = computed(
+	() => currentLevel.value === 'postalCode' || currentLevel.value === 'building'
+)
 
-// UI state - use feature flag to determine default sidebar visibility
-const sidebarVisible = ref(featureFlagStore.isEnabled('controlPanelDefault'))
+const currentView = computed(() => globalStore.view)
+const postalCode = computed(() => globalStore.postalCode)
+const nameOfZone = computed(() => globalStore.nameOfZone)
+const buildingAddress = computed(() => globalStore.buildingAddress)
+
+const viewModeLabel = computed(() => (currentView.value === 'grid' ? 'Grid' : 'Capital Region'))
+const viewModeIcon = computed(() => (currentView.value === 'grid' ? 'mdi-grid' : 'mdi-city'))
+
+const locationLabel = computed(() => {
+	if (currentLevel.value === 'building') return buildingAddress.value || 'Building'
+	if (currentLevel.value === 'postalCode')
+		return nameOfZone.value ? `${postalCode.value} ${nameOfZone.value}` : postalCode.value
+	return null
+})
+
+const toggleMobileSidebar = () => {
+	toggleStore.setSidebarMode(toggleStore.sidebarMode === 'hidden' ? 'expanded' : 'hidden')
+}
 
 // Navigation functions
 const signOut = () => {
@@ -201,92 +194,47 @@ const signOut = () => {
 }
 
 const smartReset = async () => {
-	// Cancel any in-flight building loads before resetting
 	const { default: Building } = await import('./services/building')
 	const buildingService = new Building()
 	buildingService.cancelCurrentLoad()
 
-	// Clear building features to prevent memory leak
 	const { useBuildingStore } = await import('./stores/buildingStore.js')
 	const buildingStore = useBuildingStore()
 	buildingStore.clearBuildingFeatures()
 
-	// Restore grid visibility if it was hidden when entering postal code
 	toggleStore.onExitPostalCode()
 
-	// Reset application state without page reload
 	globalStore.setLevel('start')
 	globalStore.setPostalCode(null)
 	globalStore.setNameOfZone(null)
 	globalStore.setView('capitalRegion')
 
-	// Reset toggle states
 	toggleStore.setShowTrees(false)
 	toggleStore.setShowPlot(true)
 	toggleStore.setGridView(false)
 	toggleStore.setHelsinkiView(false)
 
-	// Reset camera to initial position
 	const { default: Camera } = await import('./services/camera')
 	const camera = new Camera()
 	camera.init()
 
-	// Hide tooltip
-	hideTooltip()
-}
-
-const returnToPostalCode = async () => {
-	const [{ default: Featurepicker }, { default: Tree }] = await Promise.all([
-		import('./services/featurepicker'),
-		import('./services/tree'),
-	])
-	const featurepicker = new Featurepicker()
-	const treeService = new Tree()
-	hideTooltip()
-	featurepicker.loadPostalCode().catch((error) => {
-		logger.error('Failed to load postal code:', error)
-	})
-	if (toggleStore.showTrees) {
-		treeService.loadTrees().catch((error) => {
-			logger.error('Failed to load trees:', error)
-		})
-	}
-}
-
-const hideTooltip = () => {
 	const tooltip = document.querySelector('.tooltip')
-	if (tooltip) {
-		tooltip.style.display = 'none'
-	}
-}
-
-const rotateCamera = async () => {
-	const { default: Camera } = await import('./services/camera')
-	const camera = new Camera()
-	camera.rotate180Degrees()
+	if (tooltip) tooltip.style.display = 'none'
 }
 
 // Handle retry layer events from LoadingIndicator
 const handleRetryLayer = (layerName) => {
-	// Clear the error and attempt to reload the layer
 	loadingStore.retryLayerLoading(layerName)
-
-	// You would implement the actual retry logic here
-	// For now, we'll just log it
 	logger.debug(`Retrying layer: ${layerName}`)
 }
 
-// Handle data source retry events
 const handleSourceRetry = (sourceId) => {
 	logger.debug(`Retrying data source: ${sourceId}`)
-	// Could trigger health checks or reconnection attempts
 }
 
-// Handle cache clearing events
 const handleCacheCleared = (sourceId) => {
 	logger.debug(`Cache cleared for: ${sourceId}`)
 	if (sourceId === 'all') {
-		// Refresh cache status for all layers
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
 			loadingStore.checkLayerCache(layer).catch((error) => {
 				logger.error(`Failed to check layer cache for ${layer}:`, error)
@@ -295,41 +243,27 @@ const handleCacheCleared = (sourceId) => {
 	}
 }
 
-// Handle data preloading requests
-const handleDataPreload = (sourceId) => {
-	logger.debug(`Preloading requested for: ${sourceId}`)
-	// Could trigger specific preloading for the source
-}
-
 // Initialize services on mount
 onMounted(async () => {
 	try {
-		// 1. Fetch user identity from OAuth2 proxy (graceful fallback to anonymous)
 		await userStore.fetchUserInfo()
-
-		// 2. Initialize OpenFeature with GOFF provider (or InMemoryProvider fallback)
 		await initializeFeatureFlags(userStore)
 
-		// 3. Load localStorage overrides and refresh evaluations
 		featureFlagStore.loadOverrides()
 		featureFlagStore.refreshFlags()
 
-		// Initialize background preloader if enabled
 		if (featureFlagStore.isEnabled('backgroundPreload')) {
 			const { default: backgroundPreloader } = await import('./services/backgroundPreloader.js')
 			await backgroundPreloader.init()
 			logger.debug('Background preloader initialized')
 		}
 
-		// Check cache status for all layers on app start
 		Object.keys(loadingStore.cacheStatus).forEach((layer) => {
 			loadingStore.checkLayerCache(layer).catch((error) => {
 				logger.error(`Failed to check layer cache for ${layer}:`, error)
 			})
 		})
 
-		// Start automatic stale loading cleanup timer
-		// This prevents loading indicators from getting stuck due to network issues
 		loadingStore.startStaleCleanupTimer()
 	} catch (error) {
 		logger.warn('Failed to initialize caching services:', error)
@@ -338,6 +272,29 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.timeline-bottom-bar {
+	position: fixed;
+	bottom: 0;
+	left: 56px; /* Rail width */
+	right: 0;
+	height: 48px;
+	z-index: 1100;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(8px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 16px;
+	box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge-overlay {
+	position: fixed;
+	bottom: 56px;
+	right: 16px;
+	z-index: 1100;
+}
+
 .minimal-disclaimer {
 	position: fixed;
 	bottom: 8px;
@@ -362,7 +319,7 @@ onMounted(async () => {
 	font-weight: 500;
 }
 
-/* Remove default spacing that could cause white space */
+/* Remove default spacing */
 .v-main {
 	padding: 0 !important;
 }
@@ -371,24 +328,19 @@ onMounted(async () => {
 	padding: 0 !important;
 }
 
-/* Navigation buttons - ensure touch targets meet WCAG 2.5.5 */
+/* Touch targets for WCAG 2.5.5 */
 .v-app-bar .v-btn--icon {
-	/* Default Vuetify icon button is 40px, which is close to 44px minimum */
 	min-width: 44px;
 	min-height: 44px;
 }
 
-.v-app-bar .v-btn:not(.v-btn--icon) {
-	min-height: 44px;
-}
-
-/* Focus visible styles for accessibility */
+/* Focus visible styles */
 .v-btn:focus-visible {
 	outline: 2px solid #1976d2;
 	outline-offset: 2px;
 }
 
-/* Touch optimization - prevent double-tap zoom delays */
+/* Touch optimization */
 .v-btn,
 .v-slider,
 .v-checkbox,
@@ -399,16 +351,19 @@ a {
 	touch-action: manipulation;
 }
 
-/* Allow pinch-zoom on the map but prevent double-tap zoom */
 .cesium-viewer,
 .cesium-widget {
 	touch-action: pan-x pan-y pinch-zoom;
 }
 
-/* Mobile responsive adjustments */
+/* Mobile responsive */
 @media (max-width: 768px) {
+	.timeline-bottom-bar {
+		left: 0;
+	}
+
 	.minimal-disclaimer {
-		bottom: 6px;
+		bottom: 56px;
 		left: 8px;
 	}
 
@@ -416,14 +371,10 @@ a {
 		font-size: 0.55rem;
 		padding: 1px 4px;
 	}
-}
 
-/* Very small mobile - further optimize */
-@media (max-width: 480px) {
-	/* Keep 44px minimum for WCAG 2.5.5 compliance even on very small screens */
-	.v-app-bar .v-btn--icon {
-		min-width: 44px;
-		min-height: 44px;
+	.status-badge-overlay {
+		bottom: 56px;
+		right: 8px;
 	}
 }
 </style>

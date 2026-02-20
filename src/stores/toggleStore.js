@@ -66,6 +66,9 @@ export const useToggleStore = defineStore('toggle', {
 		grid250m: false,
 		ndvi: false,
 		viewportTileMode: true,
+		// Sidebar UI state
+		sidebarMode: 'expanded', // 'rail' | 'expanded' | 'hidden'
+		activeTab: 'layers', // 'search' | 'layers' | 'analysis' | 'details'
 		// Internal state for visibility coordination
 		_previousGrid250m: false, // Tracks grid state before entering postal code
 	}),
@@ -272,6 +275,52 @@ export const useToggleStore = defineStore('toggle', {
 			this.hideNewBuildings = false
 			this.hideNonSote = false
 			this.hideLow = false
+		},
+
+		// ============================================================
+		// Sidebar UI Methods
+		// ============================================================
+
+		/**
+		 * Set sidebar display mode
+		 * @param {'rail' | 'expanded' | 'hidden'} mode
+		 */
+		setSidebarMode(mode) {
+			this.sidebarMode = mode
+		},
+
+		/**
+		 * Toggle sidebar between rail and expanded states.
+		 * If a tab is clicked and it matches the active tab, collapse to rail.
+		 * If a different tab is clicked, expand and switch to it.
+		 * @param {string} [tab] - Tab to activate
+		 */
+		toggleSidebar(tab) {
+			if (tab && this.sidebarMode === 'expanded' && this.activeTab === tab) {
+				this.sidebarMode = 'rail'
+			} else {
+				if (tab) this.activeTab = tab
+				this.sidebarMode = 'expanded'
+			}
+		},
+
+		/**
+		 * Always opens/expands the sidebar to the given tab — never collapses.
+		 * Use this for rail nav icons where re-clicking the active tab should
+		 * not collapse the panel (use toggleSidebar for app bar shortcuts instead).
+		 * @param {string} [tab] - Tab to activate
+		 */
+		openTab(tab) {
+			if (tab) this.activeTab = tab
+			this.sidebarMode = 'expanded'
+		},
+
+		/**
+		 * Set the active sidebar tab
+		 * @param {'search' | 'layers' | 'analysis' | 'details'} tab
+		 */
+		setActiveTab(tab) {
+			this.activeTab = tab
 		},
 
 		// ============================================================
