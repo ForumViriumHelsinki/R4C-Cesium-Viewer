@@ -51,7 +51,7 @@
 		"@openfeature/go-feature-flag-web-provider": "^0.2.7",
 		"@openfeature/web-sdk": "^1.7.2",
 		"@sentry/browser": "^10.30.0",
-		"@sentry/vite-plugin": "^4.6.1",
+		"@sentry/vite-plugin": "^5.1.0",
 		"@sentry/vue": "^10.30.0",
 		"@turf/turf": "^7.3.1",
 		"axios": "^1.13.2",
@@ -64,7 +64,7 @@
 		"unplugin-vue-components": "^31.0.0",
 		"vite-plugin-vuetify": "^2.1.2",
 		"vue": "^3.5.25",
-		"vuetify": "^3.11.3"
+		"vuetify": "^4.0.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.9",
