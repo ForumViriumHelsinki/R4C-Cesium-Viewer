@@ -339,7 +339,6 @@ export function processParallelLoadingResults(
  *
  * Performance optimizations:
  * - Checks cacheWarmer for preloaded data before network requests
- * - Runs camera animation and data loading in parallel using Promise.allSettled
  * - Implements retry logic with exponential backoff for failed requests
  * - Shows partial data if some datasets load successfully
  * - Supports latest-wins pattern for rapid navigation clicks
@@ -377,9 +376,6 @@ export async function loadPostalCodeWithParallelStrategy(
 		return stores.store.consumePendingNavigation()
 	}
 
-	// Start camera animation immediately (will update state to 'animating')
-	const cameraPromise = startCameraAnimation(services.cameraService, updateProgress, setState)
-
 	// Check cache first for instant loading (FR-3.3 optimization)
 	const cacheKey = `buildings_${postalCode}_${stores.toggleStore.helsinkiView ? 'helsinki' : 'capital'}`
 	const cachedData = await checkCacheForPostalCode(cacheKey, postalCode)
@@ -405,8 +401,10 @@ export async function loadPostalCodeWithParallelStrategy(
 		)
 	}
 
-	// Wait for both camera and data loading to complete (FR-3.1 parallel loading)
-	const results = await Promise.allSettled([cameraPromise, dataPromise])
+	// Wait for data loading to complete
+	const dataResult = await Promise.allSettled([dataPromise])
+	// Provide a synthetic fulfilled camera result to reuse processParallelLoadingResults signature
+	const results = [{ status: 'fulfilled' }, dataResult[0]]
 
 	// Process results with comprehensive error handling (FR-3.4)
 	// Also checks for pending navigation (latest-wins pattern)
