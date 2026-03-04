@@ -137,8 +137,14 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 			expect(config.type).toBe('geojson')
 			// HSY view uses pygeoapi endpoint
 			expect(config.url).toContain('/pygeoapi/collections/hsy_buildings_optimized/items')
-			// Check for bbox parameter
-			expect(config.url).toMatch(/bbox=24\.9\d*,60\.1,24\.91,60\.11/)
+			// Check for bbox parameter using numeric comparison (floating point safe)
+			const bboxMatch = config.url.match(/bbox=([^&]+)/)
+			expect(bboxMatch).toBeTruthy()
+			const [bboxWest, bboxSouth, bboxEast, bboxNorth] = bboxMatch[1].split(',').map(Number)
+			expect(bboxWest).toBeCloseTo(24.9, 5)
+			expect(bboxSouth).toBeCloseTo(60.1, 5)
+			expect(bboxEast).toBeCloseTo(24.91, 5)
+			expect(bboxNorth).toBeCloseTo(60.11, 5)
 
 			// Verify caching options
 			expect(config.options.cache).toBe(true)
@@ -223,14 +229,13 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 
 			await loader.loadTile('2500_6020')
 
-			// Verify tile bounds calculation
+			// Verify tile bounds calculation using toBeCloseTo for floating point safety
+			// (tileIndex * 0.01 produces IEEE 754 imprecision, e.g. 6020 * 0.01 !== 60.2 exactly)
 			const metadata = loader.loadedTiles.get('2500_6020')
-			expect(metadata.bounds).toEqual({
-				west: 25.0, // 2500 * 0.01
-				south: 60.2, // 6020 * 0.01
-				east: 25.01, // (2500 + 1) * 0.01
-				north: 60.21, // (6020 + 1) * 0.01
-			})
+			expect(metadata.bounds.west).toBeCloseTo(25.0, 5) // 2500 * 0.01
+			expect(metadata.bounds.south).toBeCloseTo(60.2, 5) // 6020 * 0.01
+			expect(metadata.bounds.east).toBeCloseTo(25.01, 5) // (2500 + 1) * 0.01
+			expect(metadata.bounds.north).toBeCloseTo(60.21, 5) // (6020 + 1) * 0.01
 		})
 
 		it('should handle negative tile indices', async () => {
@@ -238,13 +243,12 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 
 			await loader.loadTile('-10_-5')
 
+			// Use toBeCloseTo for floating point safety with negative tile indices
 			const metadata = loader.loadedTiles.get('-10_-5')
-			expect(metadata.bounds).toEqual({
-				west: -0.1, // -10 * 0.01
-				south: -0.05, // -5 * 0.01
-				east: -0.09, // (-10 + 1) * 0.01
-				north: -0.04, // (-5 + 1) * 0.01
-			})
+			expect(metadata.bounds.west).toBeCloseTo(-0.1, 5) // -10 * 0.01
+			expect(metadata.bounds.south).toBeCloseTo(-0.05, 5) // -5 * 0.01
+			expect(metadata.bounds.east).toBeCloseTo(-0.09, 5) // (-10 + 1) * 0.01
+			expect(metadata.bounds.north).toBeCloseTo(-0.04, 5) // (-5 + 1) * 0.01
 		})
 	})
 
