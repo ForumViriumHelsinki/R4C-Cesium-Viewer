@@ -72,7 +72,7 @@ export function useEntityPicking(getFeaturepicker) {
 
 		// Drag detection: track mouse position to differentiate clicks from drags
 		let mouseDownPosition = null
-		const DRAG_THRESHOLD = 5 // pixels - movement beyond this is considered a drag
+		const DRAG_THRESHOLD = 10 // pixels - movement beyond this is considered a drag
 
 		// Track mouse down position
 		cesiumContainer.addEventListener('mousedown', (event) => {

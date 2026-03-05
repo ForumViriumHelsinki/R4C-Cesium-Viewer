@@ -1,321 +1,367 @@
 <template>
 	<v-navigation-drawer
-		:model-value="modelValue"
+		:model-value="isVisible"
+		:rail="isRail"
+		:width="drawerWidth"
+		:permanent="!isMobile"
+		:temporary="isMobile"
 		eager
 		role="navigation"
 		aria-label="Analysis tools and data exploration"
-		class="analysis-sidebar"
-		:width="drawerWidth"
+		class="control-panel"
 		location="left"
-		@update:model-value="$emit('update:modelValue', $event)"
+		@update:model-value="handleDrawerUpdate"
 	>
-		<div class="sidebar-content">
-			<v-expansion-panels
-				v-model="openPanels"
-				multiple
-				variant="accordion"
+		<!-- Rail icons -->
+		<v-list
+			v-if="isRail"
+			density="compact"
+			nav
+			class="rail-nav"
+		>
+			<v-list-item
+				v-for="tab in tabs"
+				:key="tab.value"
+				:active="activeTab === tab.value"
+				:title="tab.label"
+				@click="toggleStore.openTab(tab.value)"
 			>
-				<v-expansion-panel value="search">
-					<v-expansion-panel-title>
-						<v-icon class="mr-2">mdi-magnify</v-icon>
-						Search & Navigate
-					</v-expansion-panel-title>
-					<v-expansion-panel-text>
-						<p class="search-description">Find locations by address, postal code, or area name</p>
-						<UnifiedSearch />
-					</v-expansion-panel-text>
-				</v-expansion-panel>
-
-				<v-expansion-panel value="mapControls">
-					<v-expansion-panel-title>
-						<v-icon class="mr-2">mdi-layers</v-icon>
-						Map Controls
-					</v-expansion-panel-title>
-					<v-expansion-panel-text>
-						<p class="search-description">Toggle data layers and apply filters</p>
-						<MapControls />
-					</v-expansion-panel-text>
-				</v-expansion-panel>
-
-				<v-expansion-panel value="backgroundMaps">
-					<v-expansion-panel-title>
-						<v-icon class="mr-2">mdi-map-outline</v-icon>
-						Background Maps
-					</v-expansion-panel-title>
-					<v-expansion-panel-text>
-						<BackgroundMapBrowser />
-					</v-expansion-panel-text>
-				</v-expansion-panel>
-			</v-expansion-panels>
-
-			<div class="control-section">
-				<h3 class="section-subtitle">
-					<v-icon class="mr-2"> mdi-chart-line </v-icon>Analysis Tools
-				</h3>
-				<div class="analysis-buttons">
-					<template v-if="currentLevel === 'postalCode'">
-						<v-btn
-							v-if="heatHistogramData && heatHistogramData.length > 0 && featureFlagStore.isEnabled('heatHistogram')"
-							block
-							variant="outlined"
-							prepend-icon="mdi-chart-histogram"
-							class="mb-2"
-							@click="openAnalysisPanel('heat-histogram')"
-						>
-							Heat Distribution
-						</v-btn>
-						<v-btn
-							v-if="showSosEco && featureFlagStore.isEnabled('socioeconomicViz')"
-							block
-							variant="outlined"
-							prepend-icon="mdi-account-group"
-							class="mb-2"
-							@click="openAnalysisPanel('socioeconomics')"
-						>
-							Socioeconomics
-						</v-btn>
-						<v-btn
-							v-if="currentView !== 'helsinki' && featureFlagStore.isEnabled('landCover')"
-							block
-							variant="outlined"
-							prepend-icon="mdi-leaf"
-							class="mb-2"
-							@click="openAnalysisPanel('landcover')"
-						>
-							Land Cover
-						</v-btn>
-						<v-btn
-							v-if="featureFlagStore.isEnabled('buildingScatterPlot')"
-							block
-							variant="outlined"
-							prepend-icon="mdi-chart-scatter-plot"
-							class="mb-2"
-							@click="openAnalysisPanel('scatter-plot')"
-						>
-							Building Analysis
-						</v-btn>
-						<v-btn
-							v-if="hasNDVIData && featureFlagStore.isEnabled('ndviAnalysis')"
-							block
-							variant="outlined"
-							prepend-icon="mdi-leaf"
-							class="mb-2"
-							@click="openAnalysisPanel('ndvi-analysis')"
-						>
-							NDVI Vegetation
-						</v-btn>
-					</template>
-					<template v-if="currentLevel === 'building'">
-						<v-btn
-							block
-							variant="outlined"
-							prepend-icon="mdi-thermometer"
-							class="mb-2"
-							@click="openAnalysisPanel('building-heat')"
-						>
-							Building Heat Data
-						</v-btn>
-					</template>
-
-					<template v-if="currentView === 'grid'">
-						<v-expansion-panels
-							v-if="statsIndex === 'heat_index' && featureFlagStore.isEnabled('coolingOptimizer')"
-							class="expansion-outlined mb-2"
-						>
-							<v-expansion-panel>
-								<v-expansion-panel-title>
-									<v-icon class="mr-2"> mdi-shield-sun </v-icon>
-									Climate Adaptation
-								</v-expansion-panel-title>
-								<v-expansion-panel-text class="pa-0">
-									<v-tabs
-										v-model="adaptationTab"
-										grow
-									>
-										<v-tab
-											value="centers"
-											:stacked="true"
-											class="text-none"
-										>
-											Cooling Centers
-										</v-tab>
-										<v-tab
-											value="optimizer"
-											:stacked="true"
-											class="text-none"
-										>
-											Optimizer
-										</v-tab>
-										<v-tab
-											value="parks"
-											:stacked="true"
-											class="text-none"
-										>
-											Parks
-										</v-tab>
-									</v-tabs>
-									<v-window v-model="adaptationTab">
-										<v-window-item
-											value="centers"
-											class="pa-1"
-										>
-											<CoolingCenter />
-										</v-window-item>
-										<v-window-item
-											value="optimizer"
-											class="pa-1"
-										>
-											<CoolingCenterOptimiser />
-										</v-window-item>
-										<v-window-item
-											value="parks"
-											class="pa-1"
-										>
-											<LandcoverToParks />
-										</v-window-item>
-									</v-window>
-									<div class="pa-2 mt-2">
-										<EstimatedImpacts />
-									</div>
-								</v-expansion-panel-text>
-							</v-expansion-panel>
-						</v-expansion-panels>
-
-						<v-btn
-							block
-							variant="outlined"
-							prepend-icon="mdi-grid"
-							class="mb-2"
-							@click="openAnalysisPanel('grid-options')"
-						>
-							Grid Options
-						</v-btn>
-					</template>
-
-					<div
-						v-if="!hasAvailableAnalysis"
-						class="no-analysis-message"
+				<template #prepend>
+					<v-badge
+						v-if="tab.value === 'details'"
+						:model-value="showDetailsBadge"
+						dot
+						color="primary"
+						floating
 					>
-						<v-icon class="mb-2"> mdi-information-outline </v-icon>
-						<p class="text-body-2 text-center">
-							{{
-								currentLevel === 'start'
-									? 'Select a postal code area to access analysis tools'
-									: 'No analysis tools available for current selection'
-							}}
-						</p>
-					</div>
-				</div>
+						<v-icon>{{ tab.icon }}</v-icon>
+					</v-badge>
+					<v-icon v-else>{{ tab.icon }}</v-icon>
+				</template>
+			</v-list-item>
+		</v-list>
+
+		<!-- Expanded content -->
+		<template v-if="!isRail">
+			<!-- Breadcrumb header -->
+			<div class="sidebar-header">
+				<v-btn
+					v-if="canGoBack"
+					icon
+					variant="text"
+					size="small"
+					aria-label="Go back"
+					@click="goBack"
+				>
+					<v-icon>mdi-arrow-left</v-icon>
+				</v-btn>
+				<v-breadcrumbs
+					:items="breadcrumbItems"
+					density="compact"
+					class="sidebar-breadcrumbs"
+				>
+					<template #divider>
+						<v-icon size="x-small">mdi-chevron-right</v-icon>
+					</template>
+				</v-breadcrumbs>
 			</div>
 
-			<div
-				v-if="currentLevel !== 'start'"
-				class="control-section"
+			<v-divider />
+
+			<!-- Tab bar -->
+			<v-tabs
+				v-model="activeTab"
+				density="compact"
+				grow
+				class="sidebar-tabs"
 			>
-				<h3 class="section-subtitle">
-					<v-icon class="mr-2"> mdi-information </v-icon
-					>{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
-				</h3>
-				<AreaProperties />
-			</div>
-		</div>
-	</v-navigation-drawer>
+				<v-tab
+					v-for="tab in tabs"
+					:key="tab.value"
+					:value="tab.value"
+					:stacked="true"
+					size="small"
+					class="text-none"
+				>
+					<v-badge
+						v-if="tab.value === 'details'"
+						:model-value="showDetailsBadge"
+						dot
+						color="primary"
+						floating
+					>
+						<v-icon size="small">{{ tab.icon }}</v-icon>
+					</v-badge>
+					<v-icon
+						v-else
+						size="small"
+					>{{ tab.icon }}</v-icon>
+					<span class="tab-label">{{ tab.label }}</span>
+				</v-tab>
+			</v-tabs>
 
-	<v-dialog
-		v-model="analysisDialog"
-		:width="analysisDialogWidth"
-		:height="analysisDialogHeight"
-		scrollable
-	>
-		<v-card>
-			<v-card-title class="d-flex align-center">
-				<v-icon class="mr-2">
-					{{ currentAnalysisIcon }}
-				</v-icon>
-				{{ currentAnalysisTitle }}
-				<v-spacer />
+			<v-divider />
+
+			<!-- Tab content -->
+			<div class="sidebar-content">
+				<v-window
+					v-model="activeTab"
+					class="tab-window"
+				>
+					<!-- Search Tab -->
+					<v-window-item value="search">
+						<div class="tab-content">
+							<p class="section-description">Find locations by address, postal code, or area name</p>
+							<UnifiedSearch />
+						</div>
+					</v-window-item>
+
+					<!-- Layers Tab -->
+					<v-window-item value="layers">
+						<div class="tab-content">
+							<ViewModeCompact class="mb-3" />
+							<MapControls />
+							<v-divider class="my-3" />
+							<p class="section-heading">Background Maps</p>
+							<BackgroundMapBrowser />
+						</div>
+					</v-window-item>
+
+					<!-- Analysis Tab -->
+					<v-window-item value="analysis">
+						<div class="tab-content">
+							<p class="section-description">
+								{{
+									currentLevel === 'start'
+										? 'Select a postal code to unlock analysis tools'
+										: 'Charts and statistical analysis for the selected area'
+								}}
+							</p>
+							<div class="analysis-buttons">
+								<template v-if="currentLevel === 'postalCode'">
+									<v-btn
+										v-if="heatHistogramData && heatHistogramData.length > 0 && featureFlagStore.isEnabled('heatHistogram')"
+										block
+										variant="outlined"
+										prepend-icon="mdi-chart-histogram"
+										@click="openAnalysis('heat-histogram', 'small')"
+									>
+										Heat Distribution
+									</v-btn>
+									<v-btn
+										v-if="showSosEco && featureFlagStore.isEnabled('socioeconomicViz')"
+										block
+										variant="outlined"
+										prepend-icon="mdi-account-group"
+										@click="openAnalysis('socioeconomics', 'large')"
+									>
+										Socioeconomics
+									</v-btn>
+									<v-btn
+										v-if="currentView !== 'helsinki' && featureFlagStore.isEnabled('landCover')"
+										block
+										variant="outlined"
+										prepend-icon="mdi-leaf"
+										@click="openAnalysis('landcover', 'small')"
+									>
+										Land Cover
+									</v-btn>
+									<v-btn
+										v-if="featureFlagStore.isEnabled('buildingScatterPlot')"
+										block
+										variant="outlined"
+										prepend-icon="mdi-chart-scatter-plot"
+										@click="openAnalysis('scatter-plot', 'large')"
+									>
+										Building Analysis
+									</v-btn>
+									<v-btn
+										v-if="hasNDVIData && featureFlagStore.isEnabled('ndviAnalysis')"
+										block
+										variant="outlined"
+										prepend-icon="mdi-leaf"
+										@click="openAnalysis('ndvi-analysis', 'large')"
+									>
+										NDVI Vegetation
+									</v-btn>
+								</template>
+								<template v-if="currentLevel === 'building'">
+									<v-btn
+										block
+										variant="outlined"
+										prepend-icon="mdi-thermometer"
+										@click="openAnalysis('building-heat', 'small')"
+									>
+										Building Heat Data
+									</v-btn>
+								</template>
+
+								<template v-if="currentView === 'grid'">
+									<v-expansion-panels
+										v-if="statsIndex === 'heat_index' && featureFlagStore.isEnabled('coolingOptimizer')"
+										class="expansion-outlined"
+									>
+										<v-expansion-panel>
+											<v-expansion-panel-title>
+												<v-icon class="mr-2">mdi-shield-sun</v-icon>
+												Climate Adaptation
+											</v-expansion-panel-title>
+											<v-expansion-panel-text class="pa-0">
+												<v-tabs
+													v-model="adaptationTab"
+													grow
+												>
+													<v-tab
+														value="centers"
+														:stacked="true"
+														class="text-none"
+													>
+														Cooling Centers
+													</v-tab>
+													<v-tab
+														value="optimizer"
+														:stacked="true"
+														class="text-none"
+													>
+														Optimizer
+													</v-tab>
+													<v-tab
+														value="parks"
+														:stacked="true"
+														class="text-none"
+													>
+														Parks
+													</v-tab>
+												</v-tabs>
+												<v-window v-model="adaptationTab">
+													<v-window-item
+														value="centers"
+														class="pa-1"
+													>
+														<CoolingCenter />
+													</v-window-item>
+													<v-window-item
+														value="optimizer"
+														class="pa-1"
+													>
+														<CoolingCenterOptimiser />
+													</v-window-item>
+													<v-window-item
+														value="parks"
+														class="pa-1"
+													>
+														<LandcoverToParks />
+													</v-window-item>
+												</v-window>
+												<div class="pa-2 mt-2">
+													<EstimatedImpacts />
+												</div>
+											</v-expansion-panel-text>
+										</v-expansion-panel>
+									</v-expansion-panels>
+
+									<v-btn
+										block
+										variant="outlined"
+										prepend-icon="mdi-grid"
+										@click="openAnalysis('grid-options', 'small')"
+									>
+										Grid Options
+									</v-btn>
+								</template>
+
+								<!-- Inline small charts -->
+								<div
+									v-if="inlineAnalysis"
+									class="inline-chart mt-3"
+								>
+									<div class="d-flex align-center mb-2">
+										<v-icon
+											size="small"
+											class="mr-2"
+										>
+											{{ analysisConfig[inlineAnalysis]?.icon }}
+										</v-icon>
+										<span class="text-subtitle-2">{{ analysisConfig[inlineAnalysis]?.title }}</span>
+										<v-spacer />
+										<v-btn
+											icon
+											variant="text"
+											size="x-small"
+											@click="inlineAnalysis = null"
+										>
+											<v-icon size="small">mdi-close</v-icon>
+										</v-btn>
+									</div>
+									<component :is="analysisComponents[inlineAnalysis]" />
+								</div>
+
+								<div
+									v-if="!hasAvailableAnalysis"
+									class="no-analysis-message"
+								>
+									<v-icon class="mb-2">mdi-information-outline</v-icon>
+									<p class="text-body-2 text-center">
+										{{
+											currentLevel === 'start'
+												? 'Select a postal code area to access analysis tools'
+												: 'No analysis tools available for current selection'
+										}}
+									</p>
+								</div>
+							</div>
+						</div>
+					</v-window-item>
+
+					<!-- Details Tab -->
+					<v-window-item value="details">
+						<div class="tab-content">
+							<p class="section-description">
+								{{ currentLevel === 'building' ? 'Building details and attributes' : currentLevel !== 'start' ? 'Area statistics and demographics' : 'Select an area to view properties' }}
+							</p>
+							<AreaProperties v-if="currentLevel !== 'start'" />
+						</div>
+					</v-window-item>
+				</v-window>
+			</div>
+		</template>
+
+		<!-- Rail footer with collapse/expand hint -->
+		<template #append>
+			<div
+				v-if="!isMobile"
+				class="rail-toggle"
+			>
 				<v-btn
 					icon
-					@click="analysisDialog = false"
+					variant="text"
+					size="small"
+					:aria-label="isRail ? 'Expand sidebar' : 'Collapse sidebar'"
+					@click="toggleStore.setSidebarMode(isRail ? 'expanded' : 'rail')"
 				>
-					<v-icon>mdi-close</v-icon>
+					<v-icon>{{ isRail ? 'mdi-chevron-right' : 'mdi-chevron-left' }}</v-icon>
 				</v-btn>
-			</v-card-title>
-			<v-card-text class="analysis-content">
-				<div v-if="currentAnalysis === 'heat-histogram'">
-					<HeatHistogram />
-				</div>
-				<div v-if="currentAnalysis === 'socioeconomics'">
-					<SocioEconomics />
-				</div>
-				<div v-if="currentAnalysis === 'landcover'">
-					<Landcover />
-				</div>
-				<div v-if="currentAnalysis === 'scatter-plot'">
-					<BuildingScatterPlot v-if="currentView !== 'helsinki'" /><Scatterplot
-						v-if="currentView === 'helsinki'"
-					/>
-				</div>
-				<div v-if="currentAnalysis === 'building-heat'">
-					<HSYBuildingHeatChart
-						v-if="currentView !== 'helsinki' && currentView !== 'grid'"
-					/><BuildingHeatChart
-						v-if="currentView === 'helsinki' && currentView !== 'grid'"
-					/><BuildingGridChart v-if="currentView === 'grid'" />
-				</div>
-				<div v-if="currentAnalysis === 'grid-options'">
-					<StatisticalGridOptions />
-				</div>
-				<div v-if="currentAnalysis === 'ndvi-analysis'">
-					<PostalCodeNDVI />
-				</div>
-			</v-card-text>
-		</v-card>
-	</v-dialog>
+			</div>
+		</template>
+	</v-navigation-drawer>
+
+	<!-- Right-side Analysis Panel for large charts -->
+	<AnalysisPanel
+		v-model="rightPanelOpen"
+		:analysis-type="rightPanelAnalysis"
+		:analysis-config="analysisConfig"
+	/>
 </template>
 
-<script>
-/**
- * @component ControlPanel
- * @description Main navigation drawer providing access to search, map controls,
- * and analysis tools. This is the primary interface for data exploration and
- * layer management in the climate visualization application.
- *
- * Features:
- * - Unified search interface for addresses and postal codes
- * - Map layer controls and filters
- * - Background map selection
- * - Context-aware analysis tools based on current level
- * - Climate adaptation tools for statistical grid view
- * - Dynamic dialog system for analysis visualizations
- *
- * The component adapts its content based on:
- * - Current navigation level (start, postalCode, building)
- * - Current view mode (capitalRegion, helsinki, grid)
- * - Available data for the selected area
- *
- * @example
- * <ControlPanel />
- *
- * Store Integration:
- * - globalStore: Current level, view, postal code, area name
- * - propsStore: Heat histogram data, statistics index
- * - heatExposureStore: Heat exposure data availability
- * - socioEconomicsStore: Socioeconomic data availability
- * - toggleStore: NDVI and layer visibility states
- *
- * Emitted Events:
- * - Analysis dialogs are controlled via local state
- * - Service layer interactions for camera, feature picking, and tree loading
- */
-
-import { storeToRefs } from 'pinia'
+<script setup>
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { useDisplay } from 'vuetify'
 import AreaProperties from '../components/AreaProperties.vue'
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue'
 import MapControls from '../components/MapControls.vue'
 import UnifiedSearch from '../components/UnifiedSearch.vue'
+import ViewModeCompact from '../components/ViewModeCompact.vue'
+import { useSidebarNavigation } from '../composables/useSidebarNavigation.js'
 
 // Store and Service Imports
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
@@ -324,16 +370,15 @@ import { useHeatExposureStore } from '../stores/heatExposureStore'
 import { usePropsStore } from '../stores/propsStore'
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore'
 import { useToggleStore } from '../stores/toggleStore'
-import logger from '../utils/logger.js'
 
-// Lazy-loaded dialog components (only needed when analysis dialog opens)
+// Lazy-loaded analysis components
+const AnalysisPanel = defineAsyncComponent(() => import('../components/AnalysisPanel.vue'))
 const BuildingGridChart = defineAsyncComponent(() => import('../components/BuildingGridChart.vue'))
 const BuildingHeatChart = defineAsyncComponent(() => import('../components/BuildingHeatChart.vue'))
 const HeatHistogram = defineAsyncComponent(() => import('../components/HeatHistogram.vue'))
 const HSYBuildingHeatChart = defineAsyncComponent(
 	() => import('../components/HSYBuildingHeatChart.vue')
 )
-const Scatterplot = defineAsyncComponent(() => import('../components/Scatterplot.vue'))
 const StatisticalGridOptions = defineAsyncComponent(
 	() => import('../components/StatisticalGridOptions.vue')
 )
@@ -342,7 +387,7 @@ const Landcover = defineAsyncComponent(() => import('../views/Landcover.vue'))
 const PostalCodeNDVI = defineAsyncComponent(() => import('../views/PostalCodeNDVI.vue'))
 const SocioEconomics = defineAsyncComponent(() => import('../views/SocioEconomics.vue'))
 
-// Lazy-loaded climate adaptation components (only visible with feature flags + grid view)
+// Lazy-loaded climate adaptation components
 const CoolingCenter = defineAsyncComponent(() => import('../components/CoolingCenter.vue'))
 const CoolingCenterOptimiser = defineAsyncComponent(
 	() => import('../components/CoolingCenterOptimiser.vue')
@@ -350,286 +395,151 @@ const CoolingCenterOptimiser = defineAsyncComponent(
 const EstimatedImpacts = defineAsyncComponent(() => import('../components/EstimatedImpacts.vue'))
 const LandcoverToParks = defineAsyncComponent(() => import('../components/LandcoverToParks.vue'))
 
-export default {
-	components: {
-		UnifiedSearch,
-		MapControls,
-		BackgroundMapBrowser,
-		AreaProperties,
-		HeatHistogram,
-		SocioEconomics,
-		Landcover,
-		BuildingScatterPlot,
-		Scatterplot,
-		HSYBuildingHeatChart,
-		BuildingHeatChart,
-		BuildingGridChart,
-		StatisticalGridOptions,
-		PostalCodeNDVI,
-		// ## NEW: Register the tools ##
-		CoolingCenter,
-		CoolingCenterOptimiser,
-		EstimatedImpacts,
-		LandcoverToParks,
-	},
-	props: {
-		modelValue: {
-			type: Boolean,
-			default: true,
-		},
-	},
-	emits: ['update:modelValue'],
-	setup() {
-		const { smAndDown, mdAndDown } = useDisplay()
+const { smAndDown: isMobile } = useDisplay()
 
-		const drawerWidth = computed(() => {
-			if (smAndDown.value) return Math.min(window.innerWidth * 0.9, 320)
-			if (mdAndDown.value) return Math.min(window.innerWidth * 0.4, 350)
-			return 350
-		})
+const toggleStore = useToggleStore()
+const globalStore = useGlobalStore()
+const propsStore = usePropsStore()
+const heatExposureStore = useHeatExposureStore()
+const socioEconomicsStore = useSocioEconomicsStore()
+const featureFlagStore = useFeatureFlagStore()
 
-		// Default-open sections: Search and Map Controls
-		const openPanels = ref(['search', 'mapControls'])
+const { breadcrumbs, canGoBack, goBack } = useSidebarNavigation()
 
-		// ## NEW: State for the new panel ##
-		const adaptationTab = ref('centers')
+const currentLevel = computed(() => globalStore.level)
+const currentView = computed(() => globalStore.view)
+const activeTab = computed({
+	get: () => toggleStore.activeTab,
+	set: (val) => toggleStore.setActiveTab(val),
+})
 
-		// --- Stores and existing state ---
-		const globalStore = useGlobalStore()
-		const propsStore = usePropsStore()
-		const heatExposureStore = useHeatExposureStore()
-		const socioEconomicsStore = useSocioEconomicsStore()
-		const toggleStore = useToggleStore()
-		const featureFlagStore = useFeatureFlagStore()
+const isRail = computed(() => toggleStore.sidebarMode === 'rail')
+const isVisible = computed(() => toggleStore.sidebarMode !== 'hidden')
 
-		const currentLevel = computed(() => globalStore.level)
-		const currentView = computed(() => globalStore.view)
-		const { ndvi } = storeToRefs(toggleStore)
+const drawerWidth = computed(() => {
+	if (isMobile.value) return Math.min(window.innerWidth * 0.9, 360)
+	return 360
+})
 
-		// State for the simple dialog
-		const analysisDialog = ref(false)
-		const currentAnalysis = ref('')
+const tabs = [
+	{ value: 'search', icon: 'mdi-magnify', label: 'Search' },
+	{ value: 'layers', icon: 'mdi-layers', label: 'Layers' },
+	{ value: 'analysis', icon: 'mdi-chart-line', label: 'Analysis' },
+	{ value: 'details', icon: 'mdi-information', label: 'Details' },
+]
 
-		const heatHistogramData = computed(() => propsStore.heatHistogramData)
-		const statsIndex = computed(() => propsStore.statsIndex)
-		const showSosEco = computed(() => socioEconomicsStore.data && heatExposureStore.data)
-		const hasNDVIData = computed(() => toggleStore.ndvi)
+const breadcrumbItems = computed(() =>
+	breadcrumbs.value.map((b) => ({ title: b.label, disabled: b.level === currentLevel.value }))
+)
 
-		/**
-		 * Determines if analysis tools are available for the current context.
-		 * Returns true if user is at postalCode or building level with relevant data.
-		 *
-		 * @type {import('vue').ComputedRef<boolean>}
-		 */
-		const hasAvailableAnalysis = computed(() => {
-			if (currentLevel.value === 'start') return false
-			if (currentLevel.value === 'postalCode' && currentView.value !== 'grid') {
-				return (
-					(heatHistogramData.value && heatHistogramData.value.length > 0) ||
-					showSosEco.value ||
-					currentView.value !== 'helsinki' ||
-					true
-				)
-			}
-			if (currentLevel.value === 'building') return true
-			if (currentView.value === 'grid') return true
-			return false
-		})
+const adaptationTab = ref('centers')
 
-		/**
-		 * Configuration for analysis dialog appearance and behavior.
-		 * Maps analysis type to dialog title, icon, and dimensions.
-		 *
-		 * @type {Object.<string, {title: string, icon: string, width: string, height: string}>}
-		 */
-		const analysisConfig = {
-			'heat-histogram': {
-				title: 'Heat Distribution Analysis',
-				icon: 'mdi-chart-histogram',
-				width: '800px',
-				height: '600px',
-			},
-			socioeconomics: {
-				title: 'Socioeconomic Analysis',
-				icon: 'mdi-account-group',
-				width: '900px',
-				height: '700px',
-			},
-			landcover: {
-				title: 'Land Cover Analysis',
-				icon: 'mdi-leaf',
-				width: '800px',
-				height: '600px',
-			},
-			'scatter-plot': {
-				title: 'Building Analysis',
-				icon: 'mdi-chart-scatter-plot',
-				width: '1000px',
-				height: '700px',
-			},
-			'building-heat': {
-				title: 'Building Heat Data',
-				icon: 'mdi-thermometer',
-				width: '800px',
-				height: '600px',
-			},
-			'grid-options': {
-				title: 'Statistical Grid Options',
-				icon: 'mdi-grid',
-				width: '600px',
-				height: '500px',
-			},
-			'ndvi-analysis': {
-				title: 'NDVI Vegetation Analysis',
-				icon: 'mdi-leaf',
-				width: '900px',
-				height: '600px',
-			},
+const heatHistogramData = computed(() => propsStore.heatHistogramData)
+const statsIndex = computed(() => propsStore.statsIndex)
+const showSosEco = computed(() => socioEconomicsStore.data && heatExposureStore.data)
+const hasNDVIData = computed(() => toggleStore.ndvi)
+
+const hasAvailableAnalysis = computed(() => {
+	if (currentLevel.value === 'start') return false
+	if (currentLevel.value === 'postalCode' && currentView.value !== 'grid') return true
+	if (currentLevel.value === 'building') return true
+	if (currentView.value === 'grid') return true
+	return false
+})
+
+// Analysis configuration
+const analysisConfig = {
+	'heat-histogram': { title: 'Heat Distribution', icon: 'mdi-chart-histogram' },
+	socioeconomics: { title: 'Socioeconomic Analysis', icon: 'mdi-account-group' },
+	landcover: { title: 'Land Cover', icon: 'mdi-leaf' },
+	'scatter-plot': { title: 'Building Analysis', icon: 'mdi-chart-scatter-plot' },
+	'building-heat': { title: 'Building Heat Data', icon: 'mdi-thermometer' },
+	'grid-options': { title: 'Grid Options', icon: 'mdi-grid' },
+	'ndvi-analysis': { title: 'NDVI Vegetation', icon: 'mdi-leaf' },
+}
+
+// Map analysis types to their components for inline rendering
+const analysisComponents = computed(() => ({
+	'heat-histogram': HeatHistogram,
+	landcover: Landcover,
+	'building-heat':
+		currentView.value === 'grid'
+			? BuildingGridChart
+			: currentView.value === 'helsinki'
+				? BuildingHeatChart
+				: HSYBuildingHeatChart,
+	'grid-options': StatisticalGridOptions,
+}))
+
+// Inline analysis (small charts rendered in sidebar)
+const inlineAnalysis = ref(null)
+// Right panel analysis (large charts)
+const rightPanelOpen = ref(false)
+const rightPanelAnalysis = ref('')
+
+const showDetailsBadge = computed(
+	() => currentLevel.value === 'building' && activeTab.value !== 'details'
+)
+
+const openAnalysis = (type, size) => {
+	if (size === 'small') {
+		inlineAnalysis.value = type
+		rightPanelOpen.value = false
+	} else {
+		inlineAnalysis.value = null
+		rightPanelAnalysis.value = type
+		rightPanelOpen.value = true
+		// Auto-collapse left sidebar on narrow viewports to prevent map tunnel
+		if (!isMobile.value && window.innerWidth < 1400) {
+			toggleStore.setSidebarMode('rail')
 		}
+	}
+}
 
-		const currentAnalysisTitle = computed(() => analysisConfig[currentAnalysis.value]?.title || '')
-		const currentAnalysisIcon = computed(
-			() => analysisConfig[currentAnalysis.value]?.icon || 'mdi-chart-line'
-		)
-		const analysisDialogWidth = computed(
-			() => analysisConfig[currentAnalysis.value]?.width || '800px'
-		)
-		const analysisDialogHeight = computed(
-			() => analysisConfig[currentAnalysis.value]?.height || '600px'
-		)
-
-		/**
-		 * Opens an analysis dialog with the specified visualization type.
-		 *
-		 * @param {string} analysisType - The type of analysis to display
-		 * @returns {void}
-		 */
-		const openAnalysisPanel = (analysisType) => {
-			currentAnalysis.value = analysisType
-			analysisDialog.value = true
-		}
-
-		/**
-		 * Handles retry request for a failed data source.
-		 * Placeholder for future retry implementation.
-		 *
-		 * @param {string} sourceId - ID of the data source to retry
-		 * @returns {void}
-		 */
-		const handleSourceRetry = (sourceId) => logger.debug(`Retrying data source: ${sourceId}`)
-
-		/**
-		 * Handles cache clearing for a specific data source.
-		 * Placeholder for future cache management.
-		 *
-		 * @param {string} sourceId - ID of the data source whose cache to clear
-		 * @returns {void}
-		 */
-		const handleCacheCleared = (sourceId) => logger.debug(`Cache cleared for: ${sourceId}`)
-
-		/**
-		 * Handles preload request for a data source.
-		 * Placeholder for future preloading implementation.
-		 *
-		 * @param {string} sourceId - ID of the data source to preload
-		 * @returns {void}
-		 */
-		const handleDataPreload = (sourceId) => logger.debug(`Preloading requested for: ${sourceId}`)
-
-		/**
-		 * Resets the application by reloading the page.
-		 *
-		 * @returns {void}
-		 */
-		const reset = () => location.reload()
-
-		/**
-		 * Triggers camera rotation animation.
-		 *
-		 * @returns {void}
-		 */
-		const rotateCamera = async () => {
-			const { default: Camera } = await import('../services/camera')
-			new Camera().rotateCamera()
-		}
-
-		/**
-		 * Hides the building tooltip if present.
-		 *
-		 * @returns {void}
-		 */
-		const hideTooltip = () => {
-			const tooltip = document.querySelector('.tooltip')
-			if (tooltip) tooltip.style.display = 'none'
-		}
-
-		/**
-		 * Returns to postal code view from building detail view.
-		 * Reloads postal code data and tree layer if enabled.
-		 *
-		 * @returns {void}
-		 */
-		const returnToPostalCode = async () => {
-			const [{ default: Featurepicker }, { default: Tree }] = await Promise.all([
-				import('../services/featurepicker'),
-				import('../services/tree'),
-			])
-			const featurepicker = new Featurepicker()
-			const treeService = new Tree()
-			hideTooltip()
-			featurepicker.loadPostalCode().catch((error) => {
-				logger.error('Failed to load postal code:', error)
-			})
-			if (toggleStore.showTrees) {
-				treeService.loadTrees().catch((error) => {
-					logger.error('Failed to load trees:', error)
-				})
-			}
-		}
-
-		return {
-			// Existing returned values
-			analysisDialog,
-			currentAnalysis,
-			currentAnalysisTitle,
-			currentAnalysisIcon,
-			analysisDialogWidth,
-			analysisDialogHeight,
-			openAnalysisPanel,
-			currentLevel,
-			currentView,
-			heatHistogramData,
-			showSosEco,
-			statsIndex,
-			hasAvailableAnalysis,
-			hasNDVIData,
-			handleSourceRetry,
-			handleCacheCleared,
-			handleDataPreload,
-			reset,
-			rotateCamera,
-			returnToPostalCode,
-			ndvi,
-			// ## NEW: Return the new state variable ##
-			adaptationTab,
-			featureFlagStore,
-			drawerWidth,
-			openPanels,
-		}
-	},
+const handleDrawerUpdate = (val) => {
+	if (!val && isMobile.value) {
+		toggleStore.setSidebarMode('hidden')
+	}
 }
 </script>
 
 <style scoped>
-.analysis-sidebar {
+.control-panel {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
 }
+
+.sidebar-header {
+	display: flex;
+	align-items: center;
+	padding: 4px 8px;
+	min-height: 40px;
+}
+
+.sidebar-breadcrumbs {
+	padding: 0;
+	flex: 1;
+	min-width: 0;
+}
+
+.sidebar-breadcrumbs :deep(.v-breadcrumbs-item) {
+	font-size: 0.8rem;
+}
+
+.sidebar-tabs :deep(.v-tab) {
+	min-width: 0;
+	padding: 0 8px;
+}
+
+.tab-label {
+	font-size: 0.65rem;
+	margin-top: 2px;
+}
+
 .sidebar-content {
 	flex: 1;
 	overflow-y: auto;
-	padding: 0;
 }
 .control-section {
 	padding: 16px;
@@ -653,67 +563,61 @@ export default {
 	color: rgba(0, 0, 0, 0.7);
 }
 
-/* Expansion panels inside sidebar */
-.sidebar-content :deep(.v-expansion-panel-title) {
-	font-size: 1rem;
-	font-weight: 600;
-	min-height: 48px;
+.tab-window {
+	height: 100%;
+}
+
+.tab-content {
 	padding: 12px 16px;
 }
 
-.sidebar-content :deep(.v-expansion-panel-text__wrapper) {
-	padding: 8px 16px 16px;
+.section-description {
+	font-size: 0.8rem;
+	color: rgba(0, 0, 0, 0.6);
+	margin-bottom: 8px;
 }
+
+.section-heading {
+	font-size: 0.85rem;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
 .analysis-buttons {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
 }
+
 .no-analysis-message {
 	text-align: center;
 	padding: 16px;
 	color: rgba(0, 0, 0, 0.6);
 }
-.analysis-content {
-	padding: 24px;
-}
-.v-btn:focus {
-	outline: 2px solid #1976d2;
-	outline-offset: 2px;
+
+.inline-chart {
+	border: 1px solid rgba(0, 0, 0, 0.12);
+	border-radius: 8px;
+	padding: 12px;
 }
 
-/* Outlined style for expansion panels to match v-btn variant="outlined" */
+.rail-nav {
+	padding-top: 8px;
+}
+
+.rail-toggle {
+	display: flex;
+	justify-content: center;
+	padding: 8px;
+}
+
 .expansion-outlined :deep(.v-expansion-panel) {
 	border: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
 	background: transparent;
 }
-.mb-2 {
-	margin-bottom: 8px;
-}
-.search-description {
-	font-size: 0.8rem;
-	color: rgba(0, 0, 0, 0.6);
-	margin-bottom: 8px;
-	margin-top: -4px;
-}
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-	.control-section {
-		padding: 12px;
-	}
-	.analysis-content {
-		padding: 16px;
-	}
-}
-
-/* Dialog responsive sizing */
-@media (max-width: 1200px) {
-	.v-dialog .v-card {
-		width: 95vw !important;
-		height: 90vh !important;
-		max-width: none !important;
-		max-height: none !important;
-	}
+.v-btn:focus-visible {
+	outline: 2px solid #1976d2;
+	outline-offset: 2px;
 }
 </style>
