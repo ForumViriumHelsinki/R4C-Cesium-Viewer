@@ -44,8 +44,8 @@ Database data persists across `just stop` and even `skaffold delete`. Only `just
 
 ### Testing
 
-See `docs/TESTING.md` for comprehensive testing documentation.
-See `docs/PERFORMANCE_MONITORING.md` for performance regression monitoring.
+See `docs/core/TESTING.md` for comprehensive testing documentation.
+See `docs/core/PERFORMANCE_MONITORING.md` for performance regression monitoring.
 
 **Quick commands:**
 
