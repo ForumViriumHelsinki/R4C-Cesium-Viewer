@@ -1,0 +1,24 @@
+{
+  "snapshots": [
+    {
+      "date": "2026-03-05",
+      "overall_score": 86,
+      "grade": "B",
+      "category_scores": {
+        "docs": 15,
+        "tests": 17,
+        "security": 16,
+        "quality": 18,
+        "ci": 20
+      },
+      "fixed_count": 4,
+      "remaining_count": 18,
+      "fixed_items": [
+        "Fixed broken README.md link: docs/LOCAL_DEVELOPMENT.md -> docs/GETTING_STARTED.md",
+        "Fixed broken README.md link: docs/DATABASE_SEEDING.md -> docs/database/SEEDING.md",
+        "Fixed broken CLAUDE.md reference: docs/TESTING.md -> docs/core/TESTING.md",
+        "Fixed broken CLAUDE.md reference: docs/PERFORMANCE_MONITORING.md -> docs/core/PERFORMANCE_MONITORING.md"
+      ]
+    }
+  ]
+}

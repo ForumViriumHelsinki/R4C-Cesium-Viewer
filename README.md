@@ -201,9 +201,9 @@ docker system --prune --all
 
 - [Getting Started Guide](./docs/GETTING_STARTED.md) - Complete setup with all options
 - [Mock API Documentation](./mock-api/README.md) - Lightweight development without database
-- [Local Development Guide](./docs/LOCAL_DEVELOPMENT.md) - Complete setup with PostgreSQL + pygeoapi
+- [Getting Started Guide](./docs/GETTING_STARTED.md) - Complete setup with PostgreSQL + pygeoapi
 - [Database Migrations](./db/README.md) - Schema management with dbmate
-- [Database Seeding](./docs/DATABASE_SEEDING.md) - Mock data for testing
+- [Database Seeding](./docs/database/SEEDING.md) - Mock data for testing
 - [pygeoapi Integration](./db/PYGEOAPI_ALIGNMENT.md) - API endpoint documentation
 
 ## Sentry
