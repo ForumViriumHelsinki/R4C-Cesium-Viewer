@@ -88,7 +88,7 @@ jobs:
         run: bun run build
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -208,7 +208,7 @@ jobs:
         run: bunx playwright install --with-deps
 
       - name: Download build artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
@@ -229,7 +229,7 @@ jobs:
         run: ./.github/scripts/cleanup-server.sh
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report-e2e
@@ -282,7 +282,7 @@ jobs:
         run: bunx playwright install --with-deps
 
       - name: Download build artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
@@ -307,7 +307,7 @@ jobs:
         run: ./.github/scripts/cleanup-server.sh
 
       - name: Upload accessibility test report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: accessibility-report-${{ matrix.viewport }}
@@ -356,7 +356,7 @@ jobs:
         run: bunx playwright install --with-deps
 
       - name: Download build artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
@@ -377,7 +377,7 @@ jobs:
         run: ./.github/scripts/cleanup-server.sh
 
       - name: Upload performance results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: performance-results
           path: performance-results/
