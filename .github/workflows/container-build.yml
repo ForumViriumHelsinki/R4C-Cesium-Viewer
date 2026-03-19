@@ -42,7 +42,7 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           # generate Docker tags based on the following events/attributes
@@ -63,11 +63,11 @@ jobs:
       # QEMU removed - only building for amd64 (no emulation needed)
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -75,7 +75,7 @@ jobs:
 
       - name: Cache BuildKit mounts
         id: cache
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: /tmp/.buildx-cache-mounts
           key: ${{ runner.os }}-buildkit-${{ hashFiles('package.json', 'bun.lock') }}
@@ -83,7 +83,7 @@ jobs:
             ${{ runner.os }}-buildkit-
 
       - name: Inject BuildKit cache mounts
-        uses: reproducible-containers/buildkit-cache-dance@6f699a72a59e4252f05a7435430009b77e25fe06 # v3.3.1
+        uses: reproducible-containers/buildkit-cache-dance@1b8ab18fbda5ad3646e3fcc9ed9dd41ce2f297b4 # v3.3.2
         with:
           cache-map: |
             {
@@ -93,7 +93,7 @@ jobs:
           skip-extraction: ${{ steps.cache.outputs.cache-hit }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
