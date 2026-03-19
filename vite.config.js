@@ -116,15 +116,12 @@ export default defineConfig(({ mode }) => {
 					assetFileNames: `assets/[name].[hash].${version}.[ext]`,
 					chunkFileNames: `assets/[name].[hash].${version}.js`,
 					entryFileNames: `assets/[name].[hash].${version}.js`,
-					manualChunks: {
-						// Split Cesium into its own chunk for better caching and async loading
-						cesium: ['cesium'],
-						// Split Vue ecosystem into separate chunks for optimal caching
-						'vue-vendor': ['vue', 'pinia'],
-						'vuetify-vendor': ['vuetify'],
-						'd3-vendor': ['d3'],
-						// Split other heavy dependencies
-						'turf-vendor': ['@turf/turf'],
+					manualChunks(id) {
+						if (id.includes('node_modules/vuetify')) return 'vuetify-vendor';
+						if (id.includes('node_modules/vue/') || id.includes('node_modules/pinia/'))
+							return 'vue-vendor';
+						if (id.includes('node_modules/d3')) return 'd3-vendor';
+						if (id.includes('node_modules/@turf')) return 'turf-vendor';
 					},
 				},
 			},
