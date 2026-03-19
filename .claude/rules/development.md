@@ -45,25 +45,6 @@ just stop      # Stop all services
 
 ## Code Search Tools
 
-### Serena (Semantic Code Analysis)
-
-MCP-based LSP integration for symbol-aware code navigation:
-
-```
-find_symbol "ComponentName"           # Locate by name path pattern
-find_symbol "store/action" depth=1    # Find with children
-find_referencing_symbols "MyService"  # Find all references
-get_symbols_overview "src/stores/"    # High-level file structure
-search_for_pattern "TODO|FIXME"       # Regex search with filtering
-```
-
-**When to use Serena:**
-
-- Understanding code structure and relationships
-- Finding all usages of a function/component
-- Navigating unfamiliar code
-- Refactoring with confidence (find all references first)
-
 ### ast-grep (Structural Search)
 
 Pattern-based code search using AST:

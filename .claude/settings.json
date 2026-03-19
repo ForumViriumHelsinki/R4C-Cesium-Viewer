@@ -28,8 +28,7 @@
     "allow": [
       "WebFetch(domain:developers.podio.com)",
       "mcp__context7",
-      "mcp__sequential-thinking",
-      "mcp__serena"
+      "mcp__sequential-thinking"
     ],
     "deny": []
   }
