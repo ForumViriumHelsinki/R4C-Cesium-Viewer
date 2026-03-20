@@ -90,23 +90,10 @@ migrations:
   image:
     tag: 1.43.0
     repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
-ingress:
-  annotations:
-    nginx.ingress.kubernetes.io/auth-url: 'https://$host/oauth2/auth'
-    nginx.ingress.kubernetes.io/auth-signin: 'https://$host/oauth2/start?rd=$escaped_request_uri'
-    nginx.ingress.kubernetes.io/auth-response-headers: 'X-Auth-Request-User,X-Auth-Request-Email'
-    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+gateway:
   enabled: true
-  className: nginx
-  hosts:
-    - host: r4c.dataportal.fi
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls:
-    - hosts:
-        - r4c.dataportal.fi
-      secretName: r4c-tls # pragma: allowlist secret
+ingress:
+  enabled: false
 env:
   - name: SENTRY_AUTH_TOKEN
     valueFrom:
