@@ -54,3 +54,6 @@ src/components.d.ts
 knip-report.json
 
 /tmp
+
+# Blueprint work orders (may contain task-specific details)
+docs/blueprint/work-orders/

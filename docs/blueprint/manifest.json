@@ -1,0 +1,146 @@
+{
+  "format_version": "3.2.0",
+  "created_at": "2026-03-19T17:20:29Z",
+  "updated_at": "2026-03-20T05:58:20Z",
+  "created_by": {
+    "blueprint_plugin": "3.2.0"
+  },
+  "project": {
+    "name": "r4c-cesium-viewer",
+    "detected_stack": [
+      "vue3",
+      "vite",
+      "cesiumjs",
+      "pinia",
+      "vuetify",
+      "d3",
+      "playwright",
+      "bun"
+    ]
+  },
+  "structure": {
+    "has_prds": true,
+    "has_adrs": true,
+    "has_prps": true,
+    "has_work_orders": true,
+    "has_ai_docs": false,
+    "has_modular_rules": true,
+    "has_feature_tracker": true,
+    "has_document_detection": true,
+    "claude_md_mode": "both"
+  },
+  "feature_tracker": {
+    "file": "feature-tracker.json",
+    "source_documents": [
+      "docs/prd/feature-flag-implementations.md",
+      "docs/prd/feature-picker-navigation.md",
+      "docs/prd/heat-exposure-analysis.md",
+      "docs/prd/viewport-building-streaming.md"
+    ],
+    "sync_targets": [
+      "TODO.md"
+    ]
+  },
+  "generated": {
+    "rules": {},
+    "commands": {}
+  },
+  "custom_overrides": {
+    "skills": [],
+    "commands": []
+  },
+  "task_registry": {
+    "derive-prd": {
+      "enabled": true,
+      "auto_run": false,
+      "last_completed_at": null,
+      "last_result": null,
+      "schedule": "on-demand",
+      "stats": {},
+      "context": {}
+    },
+    "derive-plans": {
+      "enabled": true,
+      "auto_run": false,
+      "last_completed_at": "2026-03-20T05:58:20Z",
+      "last_result": "success",
+      "schedule": "weekly",
+      "stats": {
+        "runs_total": 1,
+        "items_processed": 200,
+        "items_created": 4
+      },
+      "context": {
+        "commits_analyzed_up_to": "c272e66eca142f21acba0cbf47818f237c4fb4d9",
+        "commits_analyzed_count": 200
+      }
+    },
+    "derive-rules": {
+      "enabled": true,
+      "auto_run": false,
+      "last_completed_at": null,
+      "last_result": null,
+      "schedule": "weekly",
+      "stats": {},
+      "context": {}
+    },
+    "generate-rules": {
+      "enabled": true,
+      "auto_run": false,
+      "last_completed_at": "2026-03-20T08:41:05Z",
+      "last_result": "skipped-existing-rules-sufficient",
+      "schedule": "on-change",
+      "stats": {
+        "runs_total": 1,
+        "items_processed": 5,
+        "items_created": 0
+      },
+      "context": {}
+    },
+    "adr-validate": {
+      "enabled": true,
+      "auto_run": false,
+      "last_completed_at": null,
+      "last_result": null,
+      "schedule": "weekly",
+      "stats": {},
+      "context": {}
+    },
+    "feature-tracker-sync": {
+      "enabled": true,
+      "auto_run": false,
+      "last_completed_at": null,
+      "last_result": null,
+      "schedule": "daily",
+      "stats": {},
+      "context": {}
+    },
+    "sync-ids": {
+      "enabled": true,
+      "auto_run": false,
+      "last_completed_at": null,
+      "last_result": null,
+      "schedule": "on-change",
+      "stats": {},
+      "context": {}
+    },
+    "claude-md": {
+      "enabled": true,
+      "auto_run": false,
+      "last_completed_at": null,
+      "last_result": null,
+      "schedule": "on-change",
+      "stats": {},
+      "context": {}
+    },
+    "curate-docs": {
+      "enabled": false,
+      "auto_run": false,
+      "last_completed_at": null,
+      "last_result": null,
+      "schedule": "on-demand",
+      "stats": {},
+      "context": {}
+    }
+  }
+}
