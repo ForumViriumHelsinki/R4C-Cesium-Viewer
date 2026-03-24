@@ -129,13 +129,55 @@ export async function dismissModal(page: Page, buttonName: string = 'Close'): Pr
 }
 
 /**
- * Click on map canvas at specific position
- * Waits for canvas to be ready before clicking
+ * Dismiss mobile navigation drawer if it's covering the canvas.
+ * On mobile viewports, the sidebar opens as a temporary overlay by default,
+ * which intercepts pointer events on the Cesium canvas.
+ */
+export async function dismissMobileNavIfPresent(page: Page): Promise<void> {
+	const viewport = page.viewportSize()
+	// Only relevant for mobile viewports (< 600px, matching Vuetify's smAndDown breakpoint)
+	if (!viewport || viewport.width >= 600) return
+
+	// Check if the temporary nav drawer is open using Vuetify's active class
+	const drawerIsOpen = await page.evaluate(() => {
+		return !!document.querySelector('.control-panel.v-navigation-drawer--active')
+	})
+
+	if (!drawerIsOpen) return
+
+	// Click the hamburger toggle to close the mobile drawer
+	const hamburger = page.locator('[aria-label="Toggle sidebar"]')
+	try {
+		await hamburger.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
+		await hamburger.click()
+		// Wait for Vuetify's slide transition to complete
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+	} catch {
+		// Fallback: press Escape to close any overlay
+		await page.keyboard.press('Escape')
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
+	}
+}
+
+/**
+ * Click on map canvas at specific position.
+ * Coordinates are clamped to canvas bounds to support different viewport sizes,
+ * preventing out-of-bounds clicks on mobile viewports.
  */
 export async function clickOnMap(page: Page, x: number, y: number): Promise<void> {
 	const canvas = page.locator('canvas')
 	await canvas.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-	await canvas.click({ position: { x, y } })
+
+	// Clamp coordinates to canvas bounds to handle different viewport sizes
+	const box = await canvas.boundingBox()
+	if (box) {
+		const margin = 5
+		const clampedX = Math.min(Math.max(x, margin), box.width - margin)
+		const clampedY = Math.min(Math.max(y, margin), box.height - margin)
+		await canvas.click({ position: { x: clampedX, y: clampedY } })
+	} else {
+		await canvas.click({ position: { x, y } })
+	}
 }
 
 /**

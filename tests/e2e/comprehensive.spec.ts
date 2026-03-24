@@ -3,6 +3,7 @@ import { expect, test } from '../fixtures/test-fixture'
 import {
 	clickOnMap,
 	dismissModalIfPresent,
+	dismissMobileNavIfPresent,
 	TEST_TIMEOUTS,
 	waitForCesiumReady,
 	waitForMapViewTransition,
@@ -14,6 +15,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/')
 		await dismissModalIfPresent(page, 'Explore Map')
+		await dismissMobileNavIfPresent(page)
 		await waitForCesiumReady(page)
 	})
 
@@ -24,7 +26,7 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			// Check for key UI elements
 			await expect(page.locator('.v-app-bar')).toBeVisible()
 			await expect(page.locator('canvas')).toBeVisible()
-			await expect(page.locator('.analysis-sidebar')).toBeVisible()
+			await expect(page.locator('.control-panel')).toBeAttached()
 
 			// Check that the 3D viewer has loaded
 			const canvas = page.locator('canvas')
