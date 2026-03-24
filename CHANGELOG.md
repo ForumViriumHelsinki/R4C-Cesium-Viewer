@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.45.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.44.0...r4c-cesium-viewer-v1.45.0) (2026-03-24)
+
+
+### Features
+
+* **ci:** adopt reusable auto-fix, review, and conventional commits workflows ([#648](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/648)) ([f721ba1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f721ba1eda25a6dddde3f4131f0713636ded7318))
+* migrate ingress from NGINX to Envoy Gateway ([#651](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/651)) ([34a4043](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/34a404377275df0569dfeeaa9fd2c2dad85e0feb))
+
+
+### Bug Fixes
+
+* add missing gateway hostname causing 404 on r4c.dataportal.fi ([#652](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/652)) ([1513ce1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1513ce1871268ba597259277ddf514cfe202d635))
+* **test:** add Kaupunginosat layer to HSY mock data for basic.spec.ts ([#653](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/653)) ([5616588](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/561658821837bcac201fc144b8559d206e9c6f69))
+
 ## [1.44.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.43.0...r4c-cesium-viewer-v1.44.0) (2026-03-19)
 
 
