@@ -335,9 +335,9 @@
 	<v-dialog
 		v-model="analysisDialog"
 		eager
-		:width="analysisDialogWidth"
 		:height="analysisDialogHeight"
 		scrollable
+		:width="analysisDialogWidth"
 	>
 		<v-card>
 			<v-card-title class="d-flex align-center">
