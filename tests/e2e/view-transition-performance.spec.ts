@@ -59,7 +59,9 @@ test.describe('View Transition Performance @performance', () => {
 				if (!viewer?.dataSources) return false
 				const dataSources = viewer.dataSources._dataSources || []
 				return dataSources.some(
-					(ds: any) => ds.name === 'PopulationGrid' && ds.entities?.values?.length > 0
+					(ds: any) =>
+						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
+						ds.entities?.values?.length > 0
 				)
 			},
 			{ timeout: 30000 }
@@ -103,7 +105,9 @@ test.describe('View Transition Performance @performance', () => {
 				if (!viewer?.dataSources) return false
 				const dataSources = viewer.dataSources._dataSources || []
 				return dataSources.some(
-					(ds: any) => ds.name === 'PopulationGrid' && ds.entities?.values?.length > 0
+					(ds: any) =>
+						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
+						ds.entities?.values?.length > 0
 				)
 			},
 			{ timeout: 30000 }
@@ -182,7 +186,9 @@ test.describe('View Transition Performance @performance', () => {
 				if (!viewer?.dataSources) return false
 				const dataSources = viewer.dataSources._dataSources || []
 				return dataSources.some(
-					(ds: any) => ds.name === 'PopulationGrid' && ds.entities?.values?.length > 0
+					(ds: any) =>
+						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
+						ds.entities?.values?.length > 0
 				)
 			},
 			{ timeout: 30000 }
@@ -239,7 +245,9 @@ test.describe('View Transition Performance @performance', () => {
 				if (!viewer?.dataSources) return false
 				const dataSources = viewer.dataSources._dataSources || []
 				return dataSources.some(
-					(ds: any) => ds.name === 'PopulationGrid' && ds.entities?.values?.length > 0
+					(ds: any) =>
+						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
+						ds.entities?.values?.length > 0
 				)
 			},
 			{ timeout: 30000 }
@@ -307,7 +315,9 @@ test.describe('View Transition Sentry Integration @performance', () => {
 				if (!viewer?.dataSources) return false
 				const dataSources = viewer.dataSources._dataSources || []
 				return dataSources.some(
-					(ds: any) => ds.name === 'PopulationGrid' && ds.entities?.values?.length > 0
+					(ds: any) =>
+						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
+						ds.entities?.values?.length > 0
 				)
 			},
 			{ timeout: 30000 }
