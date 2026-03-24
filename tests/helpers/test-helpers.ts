@@ -129,13 +129,46 @@ export async function dismissModal(page: Page, buttonName: string = 'Close'): Pr
 }
 
 /**
- * Click on map canvas at specific position
- * Waits for canvas to be ready before clicking
+ * Dismiss the mobile navigation drawer if it overlays the canvas.
+ * On mobile viewports the nav drawer opens by default and intercepts pointer events.
+ */
+export async function dismissMobileNavIfPresent(page: Page): Promise<void> {
+	try {
+		const navDrawer = page.locator('.control-panel')
+		const isVisible = await navDrawer.isVisible({ timeout: 1000 }).catch(() => false)
+		if (!isVisible) return
+
+		const viewport = page.viewportSize()
+		if (!viewport || viewport.width >= 1280) return
+
+		// Close by clicking the scrim overlay or pressing Escape
+		const scrim = page.locator('.v-navigation-drawer__scrim')
+		if (await scrim.isVisible({ timeout: 500 }).catch(() => false)) {
+			await scrim.click()
+		} else {
+			await page.keyboard.press('Escape')
+		}
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
+	} catch {
+		// Nav drawer not present or already closed
+	}
+}
+
+/**
+ * Click on map canvas at specific position.
+ * Clamps coordinates to canvas bounds so clicks don't fall outside on mobile viewports.
  */
 export async function clickOnMap(page: Page, x: number, y: number): Promise<void> {
 	const canvas = page.locator('canvas')
 	await canvas.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-	await canvas.click({ position: { x, y } })
+	const box = await canvas.boundingBox()
+	if (box) {
+		const clampedX = Math.min(x, box.width - 10)
+		const clampedY = Math.min(y, box.height - 10)
+		await canvas.click({ position: { x: clampedX, y: clampedY } })
+	} else {
+		await canvas.click({ position: { x, y } })
+	}
 }
 
 /**
