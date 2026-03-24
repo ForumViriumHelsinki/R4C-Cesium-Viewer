@@ -1,6 +1,7 @@
 <template>
 	<v-dialog
 		v-model="isVisible"
+		eager
 		persistent
 		max-width="480"
 		role="dialog"
