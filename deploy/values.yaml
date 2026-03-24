@@ -92,6 +92,11 @@ migrations:
     repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
 gateway:
   enabled: true
+  hosts:
+    - host: r4c.dataportal.fi
+      paths:
+        - path: /
+          pathType: PathPrefix
 ingress:
   enabled: false
 env:
