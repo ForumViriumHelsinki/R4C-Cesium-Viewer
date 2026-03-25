@@ -4,6 +4,7 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import App from './App.vue'
 import './version.js' // Log version info to console
+import { useFeatureFlagStore } from './stores/featureFlagStore.ts'
 import { useGlobalStore } from './stores/globalStore.js'
 import logger from './utils/logger.js'
 
@@ -143,6 +144,9 @@ if (import.meta.env.MODE === 'development' || import.meta.env.MODE === 'test') {
 	window.globalStore = globalStore
 	// Also expose the function for backwards compatibility
 	window.useGlobalStore = () => globalStore
+
+	const featureFlagStore = useFeatureFlagStore()
+	window.useFeatureFlagStore = () => featureFlagStore
 }
 
 app.mount('#app')

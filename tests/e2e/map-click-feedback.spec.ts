@@ -31,6 +31,17 @@ import AccessibilityTestHelpers, { TEST_TIMEOUTS } from './helpers/test-helpers'
  * @param {Object} stateOverrides - Optional overrides for default state
  */
 async function triggerOverlayViaStore(cesiumPage: any, stateOverrides: any = {}) {
+	// Enable the feature flag so the overlay component is mounted (v-if gate)
+	await cesiumPage.evaluate(() => {
+		const flagStore = (window as any).useFeatureFlagStore?.()
+		if (flagStore) {
+			flagStore.setFlag('mapClickLoadingOverlay', true)
+		}
+	})
+
+	// Allow Vue to re-render with the flag enabled
+	await cesiumPage.waitForTimeout(100)
+
 	await cesiumPage.evaluate((overrides: any) => {
 		const store = (window as any).useGlobalStore?.()
 		if (store) {
@@ -71,6 +82,10 @@ async function resetStoreState(cesiumPage: any) {
 		const store = (window as any).useGlobalStore?.()
 		if (store) {
 			store.resetClickProcessingState()
+		}
+		const flagStore = (window as any).useFeatureFlagStore?.()
+		if (flagStore) {
+			flagStore.resetFlag('mapClickLoadingOverlay')
 		}
 	})
 }
