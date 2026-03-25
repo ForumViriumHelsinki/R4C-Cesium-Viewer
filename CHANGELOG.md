@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.45.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.45.0...r4c-cesium-viewer-v1.45.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* **test:** enable feature flag before testing MapClickLoadingOverlay ([#657](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/657)) ([72f8b7c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/72f8b7c3108599efddd5c140e4ae3117f3a6f795))
+* **test:** match both grid datasource names in performance tests ([#655](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/655)) ([3cb1784](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3cb178453238aa471ea8ac2e94f69d6a0f8eff0f))
+* **test:** resolve mobile test failures in comprehensive tests ([#609](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/609)) ([#656](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/656)) ([98c00e0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/98c00e075b60f4b2a135571f1dd914b9c0628850))
+
 ## [1.45.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.44.0...r4c-cesium-viewer-v1.45.0) (2026-03-24)
 
 
