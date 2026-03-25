@@ -4,6 +4,7 @@ import type { Page } from '@playwright/test'
 export { TEST_TIMEOUTS } from '../e2e/helpers/test-helpers'
 
 import { TEST_TIMEOUTS } from '../e2e/helpers/test-helpers'
+import { VIEWPORTS } from '../config/constants'
 
 /**
  * Shared test helper functions for E2E tests
@@ -139,7 +140,7 @@ export async function dismissMobileNavIfPresent(page: Page): Promise<void> {
 		if (!isVisible) return
 
 		const viewport = page.viewportSize()
-		if (!viewport || viewport.width >= 1280) return
+		if (!viewport || viewport.width >= VIEWPORTS.DESKTOP.width) return
 
 		// Close by clicking the scrim overlay or pressing Escape
 		const scrim = page.locator('.v-navigation-drawer__scrim')
@@ -163,8 +164,8 @@ export async function clickOnMap(page: Page, x: number, y: number): Promise<void
 	await canvas.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 	const box = await canvas.boundingBox()
 	if (box) {
-		const clampedX = Math.min(x, box.width - 10)
-		const clampedY = Math.min(y, box.height - 10)
+		const clampedX = Math.min(x, box.width - 1)
+		const clampedY = Math.min(y, box.height - 1)
 		await canvas.click({ position: { x: clampedX, y: clampedY } })
 	} else {
 		await canvas.click({ position: { x, y } })
