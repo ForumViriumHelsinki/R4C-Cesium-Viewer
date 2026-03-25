@@ -1,5 +1,23 @@
+import type { Page } from '@playwright/test'
 import { expect, test } from '../fixtures/test-fixture'
 import { TEST_TIMEOUTS } from './helpers/test-helpers'
+
+const GRID_DATASOURCE_NAMES = ['250m_grid', 'PopulationGrid']
+
+async function waitForGridEntities(page: Page) {
+	await page.waitForFunction(
+		(names: string[]) => {
+			const viewer = (window as any).__viewer
+			if (!viewer?.dataSources) return false
+			const dataSources = viewer.dataSources._dataSources || []
+			return dataSources.some(
+				(ds: any) => names.includes(ds.name) && ds.entities?.values?.length > 0
+			)
+		},
+		GRID_DATASOURCE_NAMES,
+		{ timeout: 30000 }
+	)
+}
 
 /**
  * View Transition Performance Tests
@@ -53,19 +71,7 @@ test.describe('View Transition Performance @performance', () => {
 		await gridToggle.click()
 
 		// Wait for grid entities to render (18K+ entities)
-		await page.waitForFunction(
-			() => {
-				const viewer = (window as any).__viewer
-				if (!viewer?.dataSources) return false
-				const dataSources = viewer.dataSources._dataSources || []
-				return dataSources.some(
-					(ds: any) =>
-						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
-						ds.entities?.values?.length > 0
-				)
-			},
-			{ timeout: 30000 }
-		)
+		await waitForGridEntities(page)
 
 		const transitionTime = Date.now() - startTime
 
@@ -99,19 +105,7 @@ test.describe('View Transition Performance @performance', () => {
 
 		// Navigate to grid view first
 		await gridToggle.click()
-		await page.waitForFunction(
-			() => {
-				const viewer = (window as any).__viewer
-				if (!viewer?.dataSources) return false
-				const dataSources = viewer.dataSources._dataSources || []
-				return dataSources.some(
-					(ds: any) =>
-						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
-						ds.entities?.values?.length > 0
-				)
-			},
-			{ timeout: 30000 }
-		)
+		await waitForGridEntities(page)
 
 		// Wait for grid to fully load
 		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
@@ -180,19 +174,7 @@ test.describe('View Transition Performance @performance', () => {
 		await gridToggle.click()
 
 		// Wait for transition to complete
-		await page.waitForFunction(
-			() => {
-				const viewer = (window as any).__viewer
-				if (!viewer?.dataSources) return false
-				const dataSources = viewer.dataSources._dataSources || []
-				return dataSources.some(
-					(ds: any) =>
-						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
-						ds.entities?.values?.length > 0
-				)
-			},
-			{ timeout: 30000 }
-		)
+		await waitForGridEntities(page)
 
 		// Give time for any remaining long tasks to be captured
 		await page.waitForTimeout(500)
@@ -239,19 +221,7 @@ test.describe('View Transition Performance @performance', () => {
 		}
 
 		await gridToggle.click()
-		await page.waitForFunction(
-			() => {
-				const viewer = (window as any).__viewer
-				if (!viewer?.dataSources) return false
-				const dataSources = viewer.dataSources._dataSources || []
-				return dataSources.some(
-					(ds: any) =>
-						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
-						ds.entities?.values?.length > 0
-				)
-			},
-			{ timeout: 30000 }
-		)
+		await waitForGridEntities(page)
 
 		// Find and toggle the nature grid
 		const natureToggle = page.getByLabel(/nature grid/i)
@@ -309,19 +279,7 @@ test.describe('View Transition Sentry Integration @performance', () => {
 		await gridToggle.click()
 
 		// Wait for transition
-		await page.waitForFunction(
-			() => {
-				const viewer = (window as any).__viewer
-				if (!viewer?.dataSources) return false
-				const dataSources = viewer.dataSources._dataSources || []
-				return dataSources.some(
-					(ds: any) =>
-						(ds.name === '250m_grid' || ds.name === 'PopulationGrid') &&
-						ds.entities?.values?.length > 0
-				)
-			},
-			{ timeout: 30000 }
-		)
+		await waitForGridEntities(page)
 
 		// Check for performance marks
 		const performanceMarks = await page.evaluate(() => {
