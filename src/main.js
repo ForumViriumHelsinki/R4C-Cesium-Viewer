@@ -146,6 +146,7 @@ if (import.meta.env.MODE === 'development' || import.meta.env.MODE === 'test') {
 	window.useGlobalStore = () => globalStore
 
 	const featureFlagStore = useFeatureFlagStore()
+	window.featureFlagStore = featureFlagStore
 	window.useFeatureFlagStore = () => featureFlagStore
 }
 

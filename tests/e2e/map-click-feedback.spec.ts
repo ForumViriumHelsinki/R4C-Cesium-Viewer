@@ -39,8 +39,8 @@ async function triggerOverlayViaStore(cesiumPage: any, stateOverrides: any = {})
 		}
 	})
 
-	// Allow Vue to re-render with the flag enabled
-	await cesiumPage.waitForTimeout(100)
+	// Wait for overlay component to mount in DOM (v-overlay uses eager, so it's attached even when not visible)
+	await cesiumPage.locator('.map-click-loading-overlay').waitFor({ state: 'attached' })
 
 	await cesiumPage.evaluate((overrides: any) => {
 		const store = (window as any).useGlobalStore?.()
