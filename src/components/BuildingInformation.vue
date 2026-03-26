@@ -456,7 +456,7 @@ export default {
 	align-items: center;
 	gap: 8px;
 	padding-bottom: 8px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	border-bottom: 1px solid rgba(var(--v-theme-surface), 0.1);
 }
 
 .building-icon {
@@ -465,7 +465,7 @@ export default {
 
 .building-title {
 	font-weight: 600;
-	color: #ffffff;
+	color: rgb(var(--v-theme-surface));
 	font-size: 13px;
 	letter-spacing: 0.3px;
 }
@@ -492,7 +492,7 @@ export default {
 }
 
 .data-value {
-	color: #ffffff;
+	color: rgb(var(--v-theme-surface));
 	font-weight: 400;
 	flex: 1;
 	word-wrap: break-word;

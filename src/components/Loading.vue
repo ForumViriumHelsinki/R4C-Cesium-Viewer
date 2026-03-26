@@ -30,7 +30,7 @@ export default {
 	left: 0;
 	width: 100vw;
 	height: 100vh;
-	background: rgba(255, 255, 255, 0.2); /* White transparent background */
+	background: rgba(var(--v-theme-surface), 0.2); /* Themed transparent background */
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -42,7 +42,7 @@ export default {
 	font-size: 18px;
 	font-weight: bold;
 	color: black;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	padding: 20px;
 	border-radius: 8px;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);

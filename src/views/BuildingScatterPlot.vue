@@ -59,7 +59,7 @@ export default {
 	position: relative;
 	width: 100%;
 	height: 300px;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	z-index: 10; /* Ensure it is on top */
 }
 </style>

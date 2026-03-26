@@ -295,7 +295,7 @@ export default {
 
 <style>
 .uiButton {
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	border: 0px solid black;
 
 	font-family: sans-serif;
@@ -321,7 +321,7 @@ export default {
 }
 
 .label {
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	border: 0px solid black;
 
 	font-family: sans-serif;
@@ -340,7 +340,7 @@ export default {
 	box-shadow: 3px 5px 5px black;
 	visibility: visible;
 
-	background: white;
+	background: rgb(var(--v-theme-surface));
 	padding: 5px;
 
 	min-height: 25px;
@@ -383,7 +383,7 @@ export default {
 	width: 16px;
 	left: 2px;
 	bottom: 2px;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	-webkit-transition: 0.4s;
 	transition: 0.4s;
 }

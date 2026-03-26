@@ -555,7 +555,7 @@ const updateBearingSwitches = (switches, currentDirection) => {
 	font-size: smaller;
 	border: 1px solid black;
 	box-shadow: 3px 5px 5px black;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	margin: 20px; /* Add margins to the container */
 }
 #bearingAllSwitchContainer {

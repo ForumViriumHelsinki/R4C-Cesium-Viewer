@@ -279,7 +279,7 @@ onMounted(async () => {
 	right: 0;
 	height: 48px;
 	z-index: 1100;
-	background: rgba(255, 255, 255, 0.95);
+	background: rgba(var(--v-theme-surface), 0.95);
 	backdrop-filter: blur(8px);
 	display: flex;
 	align-items: center;
@@ -311,8 +311,8 @@ onMounted(async () => {
 
 .disclaimer-text {
 	font-size: 0.6rem;
-	color: rgba(0, 0, 0, 0.7);
-	background-color: rgba(255, 255, 255, 0.8);
+	color: rgba(var(--v-theme-on-surface), 0.7);
+	background-color: rgba(var(--v-theme-surface), 0.8);
 	padding: 2px 6px;
 	border-radius: 3px;
 	backdrop-filter: blur(4px);
@@ -336,7 +336,7 @@ onMounted(async () => {
 
 /* Focus visible styles */
 .v-btn:focus-visible {
-	outline: 2px solid #1976d2;
+	outline: 2px solid rgb(var(--v-theme-primary));
 	outline-offset: 2px;
 }
 

@@ -205,7 +205,7 @@ watch(
 #legend {
 	width: 100%;
 	position: relative;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 }
 .swatch {
 	display: flex;

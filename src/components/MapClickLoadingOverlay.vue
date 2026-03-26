@@ -254,7 +254,7 @@ export default {
 }
 
 .loading-card {
-	background: rgba(255, 255, 255, 0.98);
+	background: rgba(var(--v-theme-surface), 0.98);
 	backdrop-filter: blur(10px);
 }
 

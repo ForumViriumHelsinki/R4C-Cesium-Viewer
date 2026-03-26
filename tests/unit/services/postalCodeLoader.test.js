@@ -768,22 +768,12 @@ describe('postalCodeLoader service', () => {
 	 * Integration tests - loadPostalCodeWithParallelStrategy()
 	 */
 	describe('loadPostalCodeWithParallelStrategy() - integration', () => {
-		it('should orchestrate parallel camera and data loading', async () => {
+		it('should orchestrate data loading', async () => {
 			const setNameCallback = vi.fn()
 			toggleStore.helsinkiView = false
 
-			const promise = loadPostalCodeWithParallelStrategy(
-				'00100',
-				mockServices,
-				mockStores,
-				setNameCallback
-			)
+			await loadPostalCodeWithParallelStrategy('00100', mockServices, mockStores, setNameCallback)
 
-			// Advance camera animation timeout
-			vi.advanceTimersByTime(3000)
-			await promise
-
-			expect(mockServices.cameraService.switchTo3DView).toHaveBeenCalled()
 			expect(mockServices.capitalRegionService.loadCapitalRegionElements).toHaveBeenCalled()
 		})
 

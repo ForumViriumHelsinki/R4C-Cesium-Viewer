@@ -491,7 +491,7 @@ export default {
 	position: relative;
 	width: 100%;
 	height: 300px;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 }
 
 #categoricalSelect {

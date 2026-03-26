@@ -395,12 +395,12 @@ watch(
 
 .progress-text {
 	font-weight: 500;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 }
 
 .progress-percentage {
 	font-weight: 600;
-	color: #1976d2;
+	color: rgb(var(--v-theme-primary));
 }
 
 .layers-progress {
@@ -411,7 +411,7 @@ watch(
 .layer-progress {
 	margin-bottom: 16px;
 	padding: 12px;
-	background-color: rgba(0, 0, 0, 0.02);
+	background-color: rgba(var(--v-theme-on-surface), 0.02);
 	border-radius: 8px;
 	border-left: 3px solid;
 }
@@ -457,14 +457,14 @@ watch(
 
 .layer-message {
 	font-size: 0.8rem;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 	font-style: italic;
 }
 
 .error-section {
 	margin-top: 16px;
 	padding-top: 16px;
-	border-top: 1px solid rgba(0, 0, 0, 0.12);
+	border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 }
 
 .error-content {
@@ -486,7 +486,7 @@ watch(
 .performance-item {
 	margin-bottom: 8px;
 	padding: 8px;
-	background-color: rgba(0, 0, 0, 0.02);
+	background-color: rgba(var(--v-theme-on-surface), 0.02);
 	border-radius: 4px;
 }
 
@@ -503,7 +503,7 @@ watch(
 .performance-time {
 	font-family: monospace;
 	font-size: 0.9rem;
-	color: rgba(0, 0, 0, 0.7);
+	color: rgba(var(--v-theme-on-surface), 0.7);
 }
 
 /* Screen reader only class */

@@ -174,7 +174,7 @@ watch(searchQuery, filterSearchResults)
 	width: 100%;
 	max-width: 600px;
 	padding: 8px;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 	border-radius: 4px;
 }

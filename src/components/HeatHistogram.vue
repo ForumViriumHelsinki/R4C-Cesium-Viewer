@@ -299,6 +299,6 @@ export default {
 	height: 220px;
 	width: 100%;
 	position: relative;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 }
 </style>

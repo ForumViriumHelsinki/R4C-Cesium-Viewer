@@ -22,6 +22,27 @@ import { version } from '../package.json'
 // Vuetify configuration - components are auto-imported via vite-plugin-vuetify
 const vuetify = createVuetify({
 	blueprint: md1,
+	theme: {
+		defaultTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+		themes: {
+			light: {
+				// MD1 defaults are fine, no overrides needed
+			},
+			dark: {
+				colors: {
+					surface: '#1e1e2e',
+					background: '#121212',
+				},
+			},
+		},
+	},
+	defaults: {
+		VCard: { elevation: 2 },
+		VTextField: { density: 'compact', variant: 'outlined' },
+		VSelect: { density: 'compact', variant: 'outlined' },
+		VSlider: { color: 'primary' },
+		VTooltip: { location: 'bottom' },
+	},
 	icons: {
 		defaultSet: 'mdi',
 		aliases,

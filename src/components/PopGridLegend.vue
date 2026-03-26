@@ -451,11 +451,11 @@ const selectedIndexDescription = computed(() => {
 	position: absolute;
 	top: 100px;
 	left: 10px;
-	background-color: rgba(255, 255, 255, 0.8);
+	background-color: rgba(var(--v-theme-surface), 0.8);
 	border-radius: 4px;
 	padding: 10px;
 	z-index: 10;
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.87);
 	box-shadow: 3px 5px 5px black;
 }
 

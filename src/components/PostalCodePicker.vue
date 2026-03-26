@@ -315,14 +315,14 @@ export default {
 	font-size: 1rem;
 	font-weight: 600;
 	margin-bottom: 4px;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 	display: flex;
 	align-items: center;
 }
 
 .picker-subtitle {
 	font-size: 0.875rem;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 	margin: 0;
 }
 
@@ -338,24 +338,24 @@ export default {
 .postal-codes-list {
 	flex: 1;
 	overflow: hidden;
-	border: 1px solid rgba(0, 0, 0, 0.12);
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	border-radius: 4px;
 	margin-bottom: 16px;
 }
 
 .postal-code-item {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 	cursor: pointer;
 	transition: background-color 0.2s;
 }
 
 .postal-code-item:hover {
-	background-color: rgba(0, 0, 0, 0.04);
+	background-color: rgba(var(--v-theme-on-surface), 0.04);
 }
 
 .postal-code-item.selected {
-	background-color: rgba(25, 118, 210, 0.08);
-	border-left: 3px solid #1976d2;
+	background-color: rgba(var(--v-theme-primary), 0.08);
+	border-left: 3px solid rgb(var(--v-theme-primary));
 }
 
 .area-name {
@@ -371,7 +371,7 @@ export default {
 }
 
 .postal-code-badge {
-	background: rgba(0, 0, 0, 0.1);
+	background: rgba(var(--v-theme-on-surface), 0.1);
 	padding: 2px 6px;
 	border-radius: 3px;
 	font-size: 0.75rem;
@@ -380,7 +380,7 @@ export default {
 
 .municipality {
 	font-size: 0.75rem;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .area-stats {
@@ -397,12 +397,12 @@ export default {
 	justify-content: center;
 	padding: 32px 16px;
 	text-align: center;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .quick-actions {
 	padding-top: 8px;
-	border-top: 1px solid rgba(0, 0, 0, 0.06);
+	border-top: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
 
 /* Responsive adjustments */

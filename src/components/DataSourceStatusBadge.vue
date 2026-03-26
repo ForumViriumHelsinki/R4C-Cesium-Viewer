@@ -362,7 +362,7 @@ onUnmounted(() => {
 }
 
 .source-item:hover {
-	background-color: rgba(0, 0, 0, 0.04);
+	background-color: rgba(var(--v-theme-on-surface), 0.04);
 }
 
 .response-time {

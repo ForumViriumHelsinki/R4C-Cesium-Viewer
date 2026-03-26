@@ -348,8 +348,8 @@ onUnmounted(() => {
 .status-compact-card {
 	border-radius: 8px;
 	backdrop-filter: blur(8px);
-	background-color: rgba(255, 255, 255, 0.95);
-	border: 1px solid rgba(0, 0, 0, 0.12);
+	background-color: rgba(var(--v-theme-surface), 0.95);
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	transition: all 0.2s ease;
 }
 
@@ -378,7 +378,7 @@ onUnmounted(() => {
 .status-text {
 	font-size: 0.8rem;
 	font-weight: 600;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 	flex: 1;
 }
 
@@ -396,7 +396,7 @@ onUnmounted(() => {
 	flex-direction: column;
 	gap: 2px;
 	padding: 4px 0;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
 
 .source-item-compact:last-child {
@@ -417,7 +417,7 @@ onUnmounted(() => {
 	font-size: 0.75rem;
 	font-weight: 500;
 	flex: 1;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 }
 
 .cache-icon {
@@ -461,7 +461,7 @@ onUnmounted(() => {
 	justify-content: center;
 	margin-top: 8px;
 	padding-top: 8px;
-	border-top: 1px solid rgba(0, 0, 0, 0.06);
+	border-top: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
 
 .action-btn {

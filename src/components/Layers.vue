@@ -449,7 +449,7 @@ export default {
 .slider-container {
 	display: flex;
 	flex-direction: column;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	border: 1px solid #ccc;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -494,7 +494,7 @@ export default {
 	width: 16px;
 	left: 2px;
 	bottom: 2px;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	transition: 0.4s;
 }
 

@@ -668,7 +668,7 @@ onBeforeUnmount(() => {
 
 <style>
 .uiButton {
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	border: 0px solid black;
 
 	font-family: sans-serif;
@@ -694,7 +694,7 @@ onBeforeUnmount(() => {
 }
 
 .label {
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	border: 0px solid black;
 
 	font-family: sans-serif;
@@ -713,7 +713,7 @@ onBeforeUnmount(() => {
 	box-shadow: 3px 5px 5px black;
 	visibility: visible;
 
-	background: white;
+	background: rgb(var(--v-theme-surface));
 	padding: 5px;
 
 	min-height: 25px;
@@ -756,7 +756,7 @@ onBeforeUnmount(() => {
 	width: 16px;
 	left: 2px;
 	bottom: 2px;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	-webkit-transition: 0.4s;
 	transition: 0.4s;
 }
@@ -792,16 +792,16 @@ input:checked + .slider:before {
 	width: 350px;
 	max-height: calc(100vh - 120px);
 	overflow-y: auto;
-	background: rgba(255, 255, 255, 0.95);
+	background: rgba(var(--v-theme-surface), 0.95);
 	backdrop-filter: blur(8px);
 	border-radius: 12px;
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	border: 1px solid rgba(var(--v-theme-surface), 0.2);
 	z-index: 1000;
 }
 
 .panel-header {
-	background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+	background: rgb(var(--v-theme-primary));
 	color: white;
 	padding: 16px 20px;
 	border-radius: 12px 12px 0 0;
@@ -839,12 +839,12 @@ input:checked + .slider:before {
 .section-title {
 	font-size: 0.95rem;
 	font-weight: 600;
-	color: rgba(0, 0, 0, 0.8);
+	color: rgba(var(--v-theme-on-surface), 0.8);
 	margin: 0 0 12px 0;
 	display: flex;
 	align-items: center;
 	padding-bottom: 4px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
 }
 
 .link-grid {

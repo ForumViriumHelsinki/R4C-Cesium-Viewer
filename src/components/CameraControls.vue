@@ -321,10 +321,10 @@ const zoomOut = () => {
 	width: 52px;
 	height: 52px;
 	border-radius: 50%;
-	background: linear-gradient(145deg, #ffffff, #f0f0f0);
+	background: linear-gradient(145deg, rgb(var(--v-theme-surface)), #f0f0f0);
 	box-shadow:
 		0 2px 8px rgba(0, 0, 0, 0.15),
-		inset 0 1px 0 rgba(255, 255, 255, 0.9);
+		inset 0 1px 0 rgba(var(--v-theme-surface), 0.9);
 	pointer-events: none;
 }
 
@@ -371,7 +371,7 @@ const zoomOut = () => {
 }
 
 .needle-center {
-	fill: #ffffff;
+	fill: rgb(var(--v-theme-surface));
 	stroke: #424242;
 	stroke-width: 1;
 }
@@ -381,7 +381,7 @@ const zoomOut = () => {
 	position: absolute;
 	padding: 0 !important;
 	min-width: 28px !important;
-	background-color: white !important;
+	background-color: rgb(var(--v-theme-surface)) !important;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -450,7 +450,7 @@ const zoomOut = () => {
 	border-radius: 20px;
 	overflow: hidden;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	background: white;
+	background: rgb(var(--v-theme-surface));
 }
 
 .zoom-btn {
@@ -458,7 +458,7 @@ const zoomOut = () => {
 }
 
 .zoom-btn:first-child {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
 }
 
 /* Touch device adjustments - larger targets */

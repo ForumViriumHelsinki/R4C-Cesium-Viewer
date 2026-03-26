@@ -332,20 +332,6 @@
 				v-if="!isMobile"
 				class="rail-toggle"
 			>
-	<v-dialog
-		v-model="analysisDialog"
-		eager
-		:height="analysisDialogHeight"
-		scrollable
-		:width="analysisDialogWidth"
-	>
-		<v-card>
-			<v-card-title class="d-flex align-center">
-				<v-icon class="mr-2">
-					{{ currentAnalysisIcon }}
-				</v-icon>
-				{{ currentAnalysisTitle }}
-				<v-spacer />
 				<v-btn
 					icon
 					variant="text"
@@ -557,7 +543,7 @@ const handleDrawerUpdate = (val) => {
 }
 .control-section {
 	padding: 16px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
 .control-section:last-child {
 	border-bottom: none;
@@ -566,7 +552,7 @@ const handleDrawerUpdate = (val) => {
 	font-size: 1rem;
 	font-weight: 600;
 	margin-bottom: 12px;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 	display: flex;
 	align-items: center;
 }
@@ -574,7 +560,7 @@ const handleDrawerUpdate = (val) => {
 	font-size: 0.9rem;
 	font-weight: 500;
 	margin-bottom: 8px;
-	color: rgba(0, 0, 0, 0.7);
+	color: rgba(var(--v-theme-on-surface), 0.7);
 }
 
 .tab-window {
@@ -587,7 +573,7 @@ const handleDrawerUpdate = (val) => {
 
 .section-description {
 	font-size: 0.8rem;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 	margin-bottom: 8px;
 }
 
@@ -606,11 +592,11 @@ const handleDrawerUpdate = (val) => {
 .no-analysis-message {
 	text-align: center;
 	padding: 16px;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .inline-chart {
-	border: 1px solid rgba(0, 0, 0, 0.12);
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	border-radius: 8px;
 	padding: 12px;
 }
@@ -631,7 +617,7 @@ const handleDrawerUpdate = (val) => {
 }
 
 .v-btn:focus-visible {
-	outline: 2px solid #1976d2;
+	outline: 2px solid rgb(var(--v-theme-primary));
 	outline-offset: 2px;
 }
 </style>

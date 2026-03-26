@@ -184,6 +184,6 @@ export default {
 	font-size: smaller;
 	border: 1px solid black;
 	box-shadow: 3px 5px 5px black;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 }
 </style>
