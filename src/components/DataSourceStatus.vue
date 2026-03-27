@@ -911,16 +911,16 @@ onUnmounted(() => {
 }
 
 .status-healthy {
-	color: #4caf50;
+	color: rgb(var(--v-theme-success));
 }
 .status-degraded {
-	color: #ff9800;
+	color: rgb(var(--v-theme-warning));
 }
 .status-error {
-	color: #f44336;
+	color: rgb(var(--v-theme-error));
 }
 .status-unknown {
-	color: #9e9e9e;
+	color: rgba(var(--v-theme-on-surface), 0.5);
 }
 
 .cache-stats {

@@ -4,7 +4,8 @@
 		<v-btn
 			icon
 			class="uiButton"
-			style="color: red; float: right; cursor: pointer"
+			color="error"
+			style="float: right; cursor: pointer"
 			@click="reset"
 		>
 			<v-icon>mdi-refresh</v-icon>
@@ -371,7 +372,7 @@ export default {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background-color: #ccc;
+	background-color: rgba(var(--v-theme-on-surface), 0.25);
 	-webkit-transition: 0.4s;
 	transition: 0.4s;
 }
@@ -389,7 +390,7 @@ export default {
 }
 
 input:checked + .slider {
-	background-color: #2196f3;
+	background-color: rgb(var(--v-theme-primary));
 }
 
 input:focus + .slider {

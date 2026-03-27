@@ -223,7 +223,7 @@ watch(
 	font-size: 8px;
 }
 .source-note a {
-	color: #0066cc;
+	color: rgb(var(--v-theme-primary));
 	text-decoration: none;
 }
 .source-note a:hover {

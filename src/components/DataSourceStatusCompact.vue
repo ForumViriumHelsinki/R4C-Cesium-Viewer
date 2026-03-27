@@ -354,11 +354,11 @@ onUnmounted(() => {
 }
 
 .status-compact-card.has-errors {
-	border-left: 3px solid #f44336;
+	border-left: 3px solid rgb(var(--v-theme-error));
 }
 
 .status-compact-card.has-warnings {
-	border-left: 3px solid #ff9800;
+	border-left: 3px solid rgb(var(--v-theme-warning));
 }
 
 .status-header {
@@ -434,23 +434,23 @@ onUnmounted(() => {
 }
 
 .response-fast {
-	background-color: rgba(76, 175, 80, 0.1);
-	color: #4caf50;
+	background-color: rgba(var(--v-theme-success), 0.1);
+	color: rgb(var(--v-theme-success));
 }
 
 .response-medium {
-	background-color: rgba(255, 152, 0, 0.1);
-	color: #ff9800;
+	background-color: rgba(var(--v-theme-warning), 0.1);
+	color: rgb(var(--v-theme-warning));
 }
 
 .response-slow {
-	background-color: rgba(244, 67, 54, 0.1);
-	color: #f44336;
+	background-color: rgba(var(--v-theme-error), 0.1);
+	color: rgb(var(--v-theme-error));
 }
 
 .error-msg {
 	font-size: 0.7rem;
-	color: #f44336;
+	color: rgb(var(--v-theme-error));
 	font-style: italic;
 	margin-left: 18px;
 }

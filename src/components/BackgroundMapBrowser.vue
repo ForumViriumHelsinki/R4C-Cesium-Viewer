@@ -589,11 +589,11 @@ export default {
 
 .flood-disclaimer {
 	font-size: 0.8rem;
-	color: #d32f2f;
+	color: rgb(var(--v-theme-error));
 	font-weight: 500;
 	margin: 0;
 	padding: 8px;
-	background-color: #ffebee;
+	background-color: rgba(var(--v-theme-error), 0.08);
 	border-radius: 4px;
 	/* Data visualization colors - not changed */
 }

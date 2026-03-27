@@ -389,7 +389,7 @@ const zoomOut = () => {
 	font-size: 10px;
 	font-weight: 600;
 	line-height: 1;
-	color: #424242;
+	color: rgba(var(--v-theme-on-surface), 0.74);
 }
 
 /* Active state - colored background with white text */

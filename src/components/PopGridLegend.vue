@@ -495,7 +495,7 @@ const selectedIndexDescription = computed(() => {
 }
 
 .source-note a {
-	color: #0066cc;
+	color: rgb(var(--v-theme-primary));
 	text-decoration: none;
 }
 

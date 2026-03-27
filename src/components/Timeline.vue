@@ -44,7 +44,7 @@
 					hide-details
 					class="timeline-slider"
 					color="primary"
-					track-color="grey-lighten-3"
+					track-color="surface-variant"
 					thumb-color="primary"
 				/>
 			</div>

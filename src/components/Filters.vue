@@ -178,7 +178,7 @@ export default {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background-color: #ccc;
+	background-color: rgba(var(--v-theme-on-surface), 0.25);
 	transition: 0.4s;
 }
 
@@ -194,7 +194,7 @@ export default {
 }
 
 input:checked + .slider {
-	background-color: #2196f3;
+	background-color: rgb(var(--v-theme-primary));
 }
 
 input:checked + .slider:before {

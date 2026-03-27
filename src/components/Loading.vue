@@ -41,7 +41,7 @@ export default {
 .loading-message {
 	font-size: 18px;
 	font-weight: bold;
-	color: black;
+	color: rgb(var(--v-theme-on-surface));
 	background-color: rgb(var(--v-theme-surface));
 	padding: 20px;
 	border-radius: 8px;

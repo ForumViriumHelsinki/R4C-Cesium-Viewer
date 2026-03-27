@@ -214,6 +214,6 @@ export default {
 }
 
 .v-list-item:hover {
-	background-color: #f0f0f0;
+	background-color: rgba(var(--v-theme-on-surface), 0.06);
 }
 </style>

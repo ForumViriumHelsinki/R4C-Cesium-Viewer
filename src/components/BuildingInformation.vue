@@ -500,12 +500,12 @@ export default {
 
 .temp-value {
 	font-weight: 600;
-	color: #4fc3f7;
+	color: rgb(var(--v-theme-primary));
 }
 
 .temp-date {
 	font-size: 11px;
-	color: #b0b0b0;
+	color: rgba(var(--v-theme-on-surface), 0.5);
 	margin-left: 4px;
 }
 
@@ -518,11 +518,11 @@ export default {
 
 	.building-title,
 	.data-value {
-		color: #ffffff;
+		color: rgb(var(--v-theme-surface));
 	}
 
 	.temp-value {
-		color: #ffffff;
+		color: rgb(var(--v-theme-surface));
 	}
 }
 
