@@ -157,8 +157,9 @@ const formattedBuildTime = computed(() => {
 </style>
 
 <style>
-/* Global styles for the tooltip content class */
+/* Global styles for the tooltip content class - uses theme-aware surface */
 .app-title-tooltip {
-	background-color: rgba(33, 33, 33, 0.95) !important;
+	background-color: rgba(var(--v-theme-on-surface), 0.95) !important;
+	color: rgb(var(--v-theme-surface)) !important;
 }
 </style>
