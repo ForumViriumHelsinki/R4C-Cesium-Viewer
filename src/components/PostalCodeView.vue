@@ -3,6 +3,7 @@
 		v-if="showPostalCodeView"
 		class="postal-code-panel"
 		elevation="2"
+		:style="offsetStyle"
 	>
 		<!-- Header Section -->
 		<v-card-title class="panel-header">
@@ -242,6 +243,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useSidebarOffset } from '../composables/useSidebarOffset'
 import Building from '../services/building.js'
 import Camera from '../services/camera.js'
 import Datasource from '../services/datasource.js'
@@ -257,6 +259,9 @@ import Vegetation from '../services/vegetation.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
+
+// Sidebar offset for navigation drawer awareness
+const { offsetStyle } = useSidebarOffset(24)
 
 // Stores
 const store = useGlobalStore()
@@ -669,7 +674,7 @@ onBeforeUnmount(() => {
 <style>
 .uiButton {
 	background-color: rgb(var(--v-theme-surface));
-	border: 0px solid black;
+	border: none;
 
 	font-family: sans-serif;
 	font-size: small;
@@ -690,12 +695,12 @@ onBeforeUnmount(() => {
 }
 
 .uiButton:hover {
-	color: rgb(150, 150, 150);
+	color: rgba(var(--v-theme-on-surface), 0.5);
 }
 
 .label {
 	background-color: rgb(var(--v-theme-surface));
-	border: 0px solid black;
+	border: none;
 
 	font-family: sans-serif;
 	text-align: middle;
@@ -709,7 +714,7 @@ onBeforeUnmount(() => {
 	left: 0px;
 
 	position: fixed;
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	box-shadow: 3px 5px 5px black;
 	visibility: visible;
 
@@ -788,8 +793,8 @@ input:checked + .slider:before {
 .postal-code-panel {
 	position: fixed;
 	top: 24px;
-	left: 24px;
 	width: 350px;
+	transition: left 0.2s ease;
 	max-height: calc(100vh - 120px);
 	overflow-y: auto;
 	background: rgba(var(--v-theme-surface), 0.95);
@@ -802,7 +807,7 @@ input:checked + .slider:before {
 
 .panel-header {
 	background: rgb(var(--v-theme-primary));
-	color: white;
+	color: rgb(var(--v-theme-surface));
 	padding: 16px 20px;
 	border-radius: 12px 12px 0 0;
 	display: flex;
@@ -862,7 +867,6 @@ input:checked + .slider:before {
 @media (max-width: 768px) {
 	.postal-code-panel {
 		width: calc(100vw - 48px);
-		left: 24px;
 		right: 24px;
 	}
 }

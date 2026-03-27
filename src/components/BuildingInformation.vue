@@ -512,7 +512,7 @@ export default {
 /* High contrast mode support */
 @media (prefers-contrast: high) {
 	.building-tooltip {
-		background: #000000 !important;
+		background: rgb(var(--v-theme-on-surface)) !important;
 		border: 2px solid #ffffff;
 	}
 

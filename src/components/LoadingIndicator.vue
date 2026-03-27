@@ -417,16 +417,16 @@ watch(
 }
 
 .layer-progress:nth-child(1) {
-	border-left-color: #4caf50;
+	border-left-color: rgb(var(--v-theme-success));
 }
 .layer-progress:nth-child(2) {
-	border-left-color: #2196f3;
+	border-left-color: rgb(var(--v-theme-primary));
 }
 .layer-progress:nth-child(3) {
-	border-left-color: #ff9800;
+	border-left-color: rgb(var(--v-theme-warning));
 }
 .layer-progress:nth-child(4) {
-	border-left-color: #9c27b0;
+	border-left-color: rgb(var(--v-theme-secondary));
 }
 
 .layer-header {

@@ -1,10 +1,11 @@
 <template>
-	<div id="heatHistogramContainer" />
+	<div id="heatHistogramContainer" :style="offsetStyle" />
 </template>
 
 <script>
 import * as d3 from 'd3' // Import D3.js
 import { onBeforeUnmount, onMounted } from 'vue'
+import { useSidebarOffset } from '../composables/useSidebarOffset'
 import Building from '../services/building.js'
 import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
@@ -14,6 +15,7 @@ import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
 	setup() {
+		const { offsetStyle } = useSidebarOffset(1)
 		const store = useGlobalStore()
 		const plotService = new Plot()
 		const propsStore = usePropsStore()
@@ -169,7 +171,7 @@ export default {
 			eventBus.off('newHeatHistogram')
 		})
 
-		return {}
+		return { offsetStyle }
 	},
 }
 </script>
@@ -178,11 +180,11 @@ export default {
 #heatHistogramContainer {
 	position: fixed;
 	top: 90px;
-	left: 1px;
+	transition: left 0.2s ease;
 	width: 420px;
 	height: 220px;
 	font-size: smaller;
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	box-shadow: 3px 5px 5px black;
 	background-color: rgb(var(--v-theme-surface));
 }

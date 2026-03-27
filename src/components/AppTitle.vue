@@ -1,7 +1,6 @@
 <template>
 	<v-tooltip
 		location="bottom"
-		content-class="app-title-tooltip"
 	>
 		<template #activator="{ props }">
 			<div
@@ -118,7 +117,7 @@ const formattedBuildTime = computed(() => {
 
 .tooltip-label {
 	font-weight: 500;
-	color: rgba(var(--v-theme-surface), 0.7);
+	color: rgba(var(--v-theme-on-surface-variant), 0.7);
 	white-space: nowrap;
 	font-size: 0.75rem;
 }
@@ -153,13 +152,5 @@ const formattedBuildTime = computed(() => {
 	.tooltip-content {
 		min-width: 240px;
 	}
-}
-</style>
-
-<style>
-/* Global styles for the tooltip content class - uses theme-aware surface */
-.app-title-tooltip {
-	background-color: rgba(var(--v-theme-on-surface), 0.95) !important;
-	color: rgb(var(--v-theme-surface)) !important;
 }
 </style>

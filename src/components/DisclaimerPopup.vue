@@ -92,7 +92,7 @@ export default {
 
 .compact-title {
 	background: rgb(var(--v-theme-primary));
-	color: white;
+	color: rgb(var(--v-theme-surface));
 	padding: 16px 20px 12px 20px;
 	display: flex;
 	align-items: center;

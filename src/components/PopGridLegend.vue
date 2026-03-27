@@ -2,6 +2,7 @@
 	<div
 		v-if="legendData.length > 0 && legendVisible"
 		id="legend"
+		:style="offsetStyle"
 	>
 		<!-- Toggle button to minimize or expand the legend -->
 		<v-icon
@@ -200,6 +201,9 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { useSidebarOffset } from '../composables/useSidebarOffset'
+
+const { offsetStyle } = useSidebarOffset(10)
 
 // Define state to control the visibility and expansion of the legend
 const legendVisible = ref(true)
@@ -450,24 +454,24 @@ const selectedIndexDescription = computed(() => {
 #legend {
 	position: absolute;
 	top: 100px;
-	left: 10px;
 	background-color: rgba(var(--v-theme-surface), 0.8);
 	border-radius: 4px;
 	padding: 10px;
 	z-index: 10;
 	border: 1px solid rgba(var(--v-theme-on-surface), 0.87);
 	box-shadow: 3px 5px 5px black;
+	transition: left 0.2s ease;
 }
 
 .toggle-legend-btn {
 	position: absolute;
 	top: 70px; /* Adjust position as needed */
-	left: 10px;
 	background: transparent;
 	border: none;
 	font-size: 1.5rem;
 	cursor: pointer;
 	z-index: 11;
+	transition: left 0.2s ease;
 }
 
 .legend-section {
@@ -485,7 +489,7 @@ const selectedIndexDescription = computed(() => {
 .color-box {
 	width: 20px;
 	height: 20px;
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	margin-right: 5px;
 }
 
@@ -521,7 +525,7 @@ const selectedIndexDescription = computed(() => {
 		/* Color for 0.4 - 0.6 */ #f03b20,
 		/* Color for 0.6 - 0.8 */ #bd0026 /* Color for > 0.8 */
 	);
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	border-radius: 4px;
 }
 
@@ -564,7 +568,7 @@ const selectedIndexDescription = computed(() => {
 .color-box {
 	width: 20px; /* Width of the color box */
 	height: 20px; /* Height of the color box */
-	border: 1px solid black; /* Border for the color box */
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12); /* Border for the color box */
 	margin-right: 5px; /* Space between color box and text */
 }
 

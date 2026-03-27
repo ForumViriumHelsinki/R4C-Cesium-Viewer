@@ -215,7 +215,7 @@ watch(
 .color-box {
 	width: 20px;
 	height: 20px;
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	margin-right: 5px;
 }
 .source-note {
@@ -236,7 +236,7 @@ watch(
 	width: 100%;
 	height: 20px;
 	background: linear-gradient(to right, #ffffcc, #ffeda0, #feb24c, #f03b20, #bd0026);
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 }
 .gradient-labels {
 	display: flex;

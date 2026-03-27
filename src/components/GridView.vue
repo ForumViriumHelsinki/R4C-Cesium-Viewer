@@ -1,5 +1,5 @@
 <template>
-	<div id="gridviewContainer">
+	<div id="gridviewContainer" :style="offsetStyle">
 		<p class="header">R4C Urban Heat risk demonstrator</p>
 		<v-btn
 			icon
@@ -109,6 +109,7 @@
 </template>
 
 <script>
+import { useSidebarOffset } from '../composables/useSidebarOffset'
 import Building from '../services/building.js'
 import Camera from '../services/camera.js'
 import Datasource from '../services/datasource.js'
@@ -127,6 +128,10 @@ export default {
 		SurveyScatterPlot,
 		SosEco250mGrid,
 		BuildingGridChart,
+	},
+	setup() {
+		const { offsetStyle } = useSidebarOffset(10)
+		return { offsetStyle }
 	},
 	data() {
 		return {
@@ -297,7 +302,7 @@ export default {
 <style>
 .uiButton {
 	background-color: rgb(var(--v-theme-surface));
-	border: 0px solid black;
+	border: none;
 
 	font-family: sans-serif;
 	font-size: small;
@@ -318,12 +323,12 @@ export default {
 }
 
 .uiButton:hover {
-	color: rgb(150, 150, 150);
+	color: rgba(var(--v-theme-on-surface), 0.5);
 }
 
 .label {
 	background-color: rgb(var(--v-theme-surface));
-	border: 0px solid black;
+	border: none;
 
 	font-family: sans-serif;
 	text-align: middle;
@@ -334,10 +339,10 @@ export default {
 
 #gridviewContainer {
 	top: 10px;
-	left: 0px;
+	right: 0;
 
 	position: fixed;
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	box-shadow: 3px 5px 5px black;
 	visibility: visible;
 
@@ -346,7 +351,7 @@ export default {
 
 	min-height: 25px;
 
-	width: 100%;
+	transition: left 0.2s ease;
 }
 
 /* The switch - the box around the slider */

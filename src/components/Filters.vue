@@ -145,7 +145,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	background-color: rgb(var(--v-theme-surface));
-	border: 1px solid #ccc;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
