@@ -6,7 +6,7 @@
 - **Vite** for build tooling and development server
 - **CesiumJS** for 3D globe and mapping functionality
 - **Pinia** for state management
-- **Vuetify** for UI components
+- **Vuetify 4** (MD1 blueprint) for UI components
 - **D3.js** for data visualization charts
 - **Playwright** for end-to-end testing
 
@@ -55,6 +55,17 @@
 - Socioeconomic data overlays
 - Time-series data with temporal controls
 - 3D building visualization with detailed attributes
+
+## Theme Configuration
+
+Vuetify theme is configured in `src/main.js` via `createVuetify()`:
+
+- **Dark/light detection**: `prefers-color-scheme` media query
+- **Dark theme overrides**: Custom `surface` and `background` colors for glassmorphic overlays
+- **Component defaults**: `VTextField`, `VSelect` (compact/outlined), `VSlider` (primary), `VTooltip` (bottom)
+- **SCSS overrides**: `src/styles/settings.scss` (wired via `vite.config.js`)
+
+All UI colors use `--v-theme-*` CSS variables — see `code-quality.md` CSS Theming section.
 
 ## Development Proxy Configuration
 

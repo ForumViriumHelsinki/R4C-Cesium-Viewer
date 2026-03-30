@@ -3,6 +3,7 @@
 		v-if="showPostalCodeView"
 		class="postal-code-panel"
 		elevation="2"
+		:style="offsetStyle"
 	>
 		<!-- Header Section -->
 		<v-card-title class="panel-header">
@@ -242,6 +243,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useSidebarOffset } from '../composables/useSidebarOffset'
 import Building from '../services/building.js'
 import Camera from '../services/camera.js'
 import Datasource from '../services/datasource.js'
@@ -257,6 +259,9 @@ import Vegetation from '../services/vegetation.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
+
+// Sidebar offset for navigation drawer awareness
+const { offsetStyle } = useSidebarOffset(24)
 
 // Stores
 const store = useGlobalStore()
@@ -668,8 +673,8 @@ onBeforeUnmount(() => {
 
 <style>
 .uiButton {
-	background-color: white;
-	border: 0px solid black;
+	background-color: rgb(var(--v-theme-surface));
+	border: none;
 
 	font-family: sans-serif;
 	font-size: small;
@@ -690,12 +695,12 @@ onBeforeUnmount(() => {
 }
 
 .uiButton:hover {
-	color: rgb(150, 150, 150);
+	color: rgba(var(--v-theme-on-surface), 0.5);
 }
 
 .label {
-	background-color: white;
-	border: 0px solid black;
+	background-color: rgb(var(--v-theme-surface));
+	border: none;
 
 	font-family: sans-serif;
 	text-align: middle;
@@ -709,11 +714,11 @@ onBeforeUnmount(() => {
 	left: 0px;
 
 	position: fixed;
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	box-shadow: 3px 5px 5px black;
 	visibility: visible;
 
-	background: white;
+	background: rgb(var(--v-theme-surface));
 	padding: 5px;
 
 	min-height: 25px;
@@ -744,7 +749,7 @@ onBeforeUnmount(() => {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background-color: #ccc;
+	background-color: rgba(var(--v-theme-on-surface), 0.25);
 	-webkit-transition: 0.4s;
 	transition: 0.4s;
 }
@@ -756,13 +761,13 @@ onBeforeUnmount(() => {
 	width: 16px;
 	left: 2px;
 	bottom: 2px;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	-webkit-transition: 0.4s;
 	transition: 0.4s;
 }
 
 input:checked + .slider {
-	background-color: #2196f3;
+	background-color: rgb(var(--v-theme-primary));
 }
 
 input:focus + .slider {
@@ -788,21 +793,21 @@ input:checked + .slider:before {
 .postal-code-panel {
 	position: fixed;
 	top: 24px;
-	left: 24px;
 	width: 350px;
+	transition: left 0.2s ease;
 	max-height: calc(100vh - 120px);
 	overflow-y: auto;
-	background: rgba(255, 255, 255, 0.95);
+	background: rgba(var(--v-theme-surface), 0.95);
 	backdrop-filter: blur(8px);
 	border-radius: 12px;
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	border: 1px solid rgba(var(--v-theme-surface), 0.2);
 	z-index: 1000;
 }
 
 .panel-header {
-	background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-	color: white;
+	background: rgb(var(--v-theme-primary));
+	color: rgb(var(--v-theme-surface));
 	padding: 16px 20px;
 	border-radius: 12px 12px 0 0;
 	display: flex;
@@ -839,12 +844,12 @@ input:checked + .slider:before {
 .section-title {
 	font-size: 0.95rem;
 	font-weight: 600;
-	color: rgba(0, 0, 0, 0.8);
+	color: rgba(var(--v-theme-on-surface), 0.8);
 	margin: 0 0 12px 0;
 	display: flex;
 	align-items: center;
 	padding-bottom: 4px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
 }
 
 .link-grid {
@@ -862,7 +867,6 @@ input:checked + .slider:before {
 @media (max-width: 768px) {
 	.postal-code-panel {
 		width: calc(100vw - 48px);
-		left: 24px;
 		right: 24px;
 	}
 }

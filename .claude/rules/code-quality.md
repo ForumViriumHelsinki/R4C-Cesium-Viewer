@@ -1,5 +1,44 @@
 # Code Quality
 
+## CSS Theming (Dark Mode)
+
+**ALWAYS** use Vuetify CSS variables for colors. Never introduce hardcoded color values.
+
+### Transformation Rules
+
+| Hardcoded value                             | Replacement                               |
+| ------------------------------------------- | ----------------------------------------- |
+| `rgba(0, 0, 0, X)` (text/border/background) | `rgba(var(--v-theme-on-surface), X)`      |
+| `rgba(255, 255, 255, X)`                    | `rgba(var(--v-theme-surface), X)`         |
+| `#1976d2` / primary blue                    | `rgb(var(--v-theme-primary))`             |
+| `background: white` / `#fff`                | `background: rgb(var(--v-theme-surface))` |
+| `color: black` / `#000`                     | `color: rgb(var(--v-theme-on-surface))`   |
+
+```css
+/* ✅ CORRECT: Theme-aware */
+background: rgba(var(--v-theme-surface), 0.95);
+color: rgba(var(--v-theme-on-surface), 0.8);
+border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+outline: 2px solid rgb(var(--v-theme-primary));
+```
+
+```css
+/* ❌ WRONG: Hardcoded — breaks in dark mode */
+background: rgba(255, 255, 255, 0.95);
+color: rgba(0, 0, 0, 0.8);
+border: 1px solid rgba(0, 0, 0, 0.12);
+outline: 2px solid #1976d2;
+```
+
+### Exceptions (Leave Hardcoded)
+
+| Context                            | Reason                                       |
+| ---------------------------------- | -------------------------------------------- |
+| `box-shadow` values                | Shadows work fine hardcoded in both themes   |
+| D3 chart data/scale colors         | Semantic data colors, not UI chrome          |
+| Cesium entity colors in `<script>` | Map data visualization, not UI               |
+| JS-string inline styles            | CSS variables don't work in JS style objects |
+
 ## Event Listener Cleanup
 
 **CRITICAL**: All event listeners MUST be removed on component unmount to prevent memory leaks.

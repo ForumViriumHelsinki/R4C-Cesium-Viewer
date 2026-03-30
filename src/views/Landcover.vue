@@ -94,7 +94,7 @@ export default {
 	position: relative;
 	width: 100%;
 	height: 200px;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 }
 
 .hsy-area-select {

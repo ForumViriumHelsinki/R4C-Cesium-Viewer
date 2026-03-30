@@ -112,6 +112,7 @@
 				<div
 					v-if="showTimeline"
 					class="timeline-bottom-bar"
+					:style="timelineLeftStyle"
 				>
 					<TimelineCompact />
 				</div>
@@ -132,7 +133,7 @@
 			/>
 
 			<!-- Minimal disclaimer -->
-			<div class="minimal-disclaimer">
+			<div class="minimal-disclaimer" :style="disclaimerLeftStyle">
 				<span class="disclaimer-text"> Data: HSY &bull; Statistics Finland </span>
 			</div>
 		</v-main>
@@ -141,6 +142,7 @@
 
 <script setup>
 import { computed, defineAsyncComponent, onMounted } from 'vue'
+import { useSidebarOffset } from './composables/useSidebarOffset'
 
 // Lazy-loaded components
 const TimelineCompact = defineAsyncComponent(() => import('./components/TimelineCompact.vue'))
@@ -162,6 +164,12 @@ const globalStore = useGlobalStore()
 const loadingStore = useLoadingStore()
 const featureFlagStore = useFeatureFlagStore()
 const userStore = useUserStore()
+
+const { sidebarOffset: timelineOffset } = useSidebarOffset(0)
+const { sidebarOffset: disclaimerOffset } = useSidebarOffset(12)
+
+const timelineLeftStyle = computed(() => ({ left: `${timelineOffset.value}px` }))
+const disclaimerLeftStyle = computed(() => ({ left: `${disclaimerOffset.value}px` }))
 
 const grid250m = computed(() => toggleStore.grid250m)
 const currentLevel = computed(() => globalStore.level)
@@ -275,17 +283,18 @@ onMounted(async () => {
 .timeline-bottom-bar {
 	position: fixed;
 	bottom: 0;
-	left: 56px; /* Rail width */
+	/* left is set dynamically via :style binding (useSidebarOffset) */
 	right: 0;
 	height: 48px;
 	z-index: 1100;
-	background: rgba(255, 255, 255, 0.95);
+	background: rgba(var(--v-theme-surface), 0.95);
 	backdrop-filter: blur(8px);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	padding: 0 16px;
 	box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+	transition: left 0.2s ease;
 }
 
 .status-badge-overlay {
@@ -298,11 +307,11 @@ onMounted(async () => {
 .minimal-disclaimer {
 	position: fixed;
 	bottom: 8px;
-	left: 12px;
+	/* left is set dynamically via :style binding (useSidebarOffset) */
 	z-index: 1100;
 	pointer-events: none;
 	opacity: 0.7;
-	transition: opacity 0.2s ease;
+	transition: opacity 0.2s ease, left 0.2s ease;
 }
 
 .minimal-disclaimer:hover {
@@ -311,8 +320,8 @@ onMounted(async () => {
 
 .disclaimer-text {
 	font-size: 0.6rem;
-	color: rgba(0, 0, 0, 0.7);
-	background-color: rgba(255, 255, 255, 0.8);
+	color: rgba(var(--v-theme-on-surface), 0.7);
+	background-color: rgba(var(--v-theme-surface), 0.8);
 	padding: 2px 6px;
 	border-radius: 3px;
 	backdrop-filter: blur(4px);
@@ -336,7 +345,7 @@ onMounted(async () => {
 
 /* Focus visible styles */
 .v-btn:focus-visible {
-	outline: 2px solid #1976d2;
+	outline: 2px solid rgb(var(--v-theme-primary));
 	outline-offset: 2px;
 }
 
@@ -358,13 +367,10 @@ a {
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-	.timeline-bottom-bar {
-		left: 0;
-	}
+	/* left is handled by useSidebarOffset (returns margin-only on mobile) */
 
 	.minimal-disclaimer {
 		bottom: 56px;
-		left: 8px;
 	}
 
 	.disclaimer-text {

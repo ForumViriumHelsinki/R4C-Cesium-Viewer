@@ -115,8 +115,8 @@ export default {
 	height: 200px;
 	visibility: hidden;
 	font-size: smaller;
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	box-shadow: 3px 5px 5px black;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 }
 </style>

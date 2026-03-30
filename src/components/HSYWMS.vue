@@ -171,7 +171,7 @@ export default {
 .wms-layer-switcher {
 	width: 100%;
 	font-size: smaller;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	z-index: 100000;
 }
 
@@ -185,12 +185,12 @@ export default {
 	margin-left: 10px;
 	font-size: 12px;
 	text-transform: none;
-	background-color: #f5f5f5;
-	color: #000;
+	background-color: rgba(var(--v-theme-on-surface), 0.04);
+	color: rgb(var(--v-theme-on-surface));
 }
 
 .hsy-link {
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	margin-top: 5px;
 	margin-bottom: 5px;
 	font-size: 10px;
@@ -203,7 +203,7 @@ export default {
 }
 
 .v-list {
-	background: white;
+	background: rgb(var(--v-theme-surface));
 	max-height: 200px;
 	overflow-y: auto;
 }
@@ -214,6 +214,6 @@ export default {
 }
 
 .v-list-item:hover {
-	background-color: #f0f0f0;
+	background-color: rgba(var(--v-theme-on-surface), 0.06);
 }
 </style>

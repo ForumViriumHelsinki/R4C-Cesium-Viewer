@@ -91,8 +91,8 @@ export default {
 }
 
 .compact-title {
-	background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-	color: white;
+	background: rgb(var(--v-theme-primary));
+	color: rgb(var(--v-theme-surface));
 	padding: 16px 20px 12px 20px;
 	display: flex;
 	align-items: center;
@@ -108,12 +108,12 @@ export default {
 
 .compact-content {
 	padding: 20px;
-	background-color: #fafafa;
+	background-color: rgb(var(--v-theme-surface));
 }
 
 .description {
 	font-size: 0.9rem;
-	color: rgba(0, 0, 0, 0.8);
+	color: rgba(var(--v-theme-on-surface), 0.8);
 	margin-bottom: 16px;
 	line-height: 1.4;
 }
@@ -131,13 +131,13 @@ export default {
 
 .disclaimer-note {
 	font-size: 0.85rem;
-	color: rgba(0, 0, 0, 0.85);
+	color: rgba(var(--v-theme-on-surface), 0.85);
 	line-height: 1.3;
 }
 
 .compact-actions {
 	padding: 12px 20px 20px 20px;
-	background-color: #fafafa;
+	background-color: rgb(var(--v-theme-surface));
 }
 
 /* Mobile responsive */

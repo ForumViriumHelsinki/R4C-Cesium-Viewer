@@ -279,9 +279,9 @@ export default {
 }
 
 .timeline-section {
-	border-top: 1px solid rgba(0, 0, 0, 0.12);
+	border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	padding-top: 16px;
-	background-color: rgba(0, 0, 0, 0.02);
+	background-color: rgba(var(--v-theme-on-surface), 0.02);
 	border-radius: 4px;
 	padding: 12px;
 }

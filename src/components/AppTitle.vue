@@ -1,7 +1,6 @@
 <template>
 	<v-tooltip
 		location="bottom"
-		content-class="app-title-tooltip"
 	>
 		<template #activator="{ props }">
 			<div
@@ -80,19 +79,19 @@ const formattedBuildTime = computed(() => {
 }
 
 .app-title-container:hover {
-	background-color: rgba(0, 0, 0, 0.04);
+	background-color: rgba(var(--v-theme-on-surface), 0.04);
 }
 
 .app-title {
 	font-size: 0.875rem;
 	font-weight: 600;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 	line-height: 1.2;
 }
 
 .app-version {
 	font-size: 0.75rem;
-	color: rgba(0, 0, 0, 0.5);
+	color: rgba(var(--v-theme-on-surface), 0.5);
 	font-family: 'Courier New', monospace;
 	line-height: 1.2;
 }
@@ -118,7 +117,7 @@ const formattedBuildTime = computed(() => {
 
 .tooltip-label {
 	font-weight: 500;
-	color: rgba(255, 255, 255, 0.7);
+	color: rgba(var(--v-theme-on-surface-variant), 0.7);
 	white-space: nowrap;
 	font-size: 0.75rem;
 }
@@ -153,12 +152,5 @@ const formattedBuildTime = computed(() => {
 	.tooltip-content {
 		min-width: 240px;
 	}
-}
-</style>
-
-<style>
-/* Global styles for the tooltip content class */
-.app-title-tooltip {
-	background-color: rgba(33, 33, 33, 0.95) !important;
 }
 </style>

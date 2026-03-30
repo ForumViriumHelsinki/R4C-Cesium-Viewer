@@ -144,8 +144,8 @@ export default {
 .slider-container {
 	display: flex;
 	flex-direction: column;
-	background-color: white;
-	border: 1px solid #ccc;
+	background-color: rgb(var(--v-theme-surface));
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -178,7 +178,7 @@ export default {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background-color: #ccc;
+	background-color: rgba(var(--v-theme-on-surface), 0.25);
 	transition: 0.4s;
 }
 
@@ -189,12 +189,12 @@ export default {
 	width: 16px;
 	left: 2px;
 	bottom: 2px;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	transition: 0.4s;
 }
 
 input:checked + .slider {
-	background-color: #2196f3;
+	background-color: rgb(var(--v-theme-primary));
 }
 
 input:checked + .slider:before {

@@ -456,7 +456,7 @@ export default {
 	align-items: center;
 	gap: 8px;
 	padding-bottom: 8px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	border-bottom: 1px solid rgba(var(--v-theme-surface), 0.1);
 }
 
 .building-icon {
@@ -465,7 +465,7 @@ export default {
 
 .building-title {
 	font-weight: 600;
-	color: #ffffff;
+	color: rgb(var(--v-theme-surface));
 	font-size: 13px;
 	letter-spacing: 0.3px;
 }
@@ -492,7 +492,7 @@ export default {
 }
 
 .data-value {
-	color: #ffffff;
+	color: rgb(var(--v-theme-surface));
 	font-weight: 400;
 	flex: 1;
 	word-wrap: break-word;
@@ -500,29 +500,29 @@ export default {
 
 .temp-value {
 	font-weight: 600;
-	color: #4fc3f7;
+	color: rgb(var(--v-theme-primary));
 }
 
 .temp-date {
 	font-size: 11px;
-	color: #b0b0b0;
+	color: rgba(var(--v-theme-on-surface), 0.5);
 	margin-left: 4px;
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
 	.building-tooltip {
-		background: #000000 !important;
+		background: rgb(var(--v-theme-on-surface)) !important;
 		border: 2px solid #ffffff;
 	}
 
 	.building-title,
 	.data-value {
-		color: #ffffff;
+		color: rgb(var(--v-theme-surface));
 	}
 
 	.temp-value {
-		color: #ffffff;
+		color: rgb(var(--v-theme-surface));
 	}
 }
 

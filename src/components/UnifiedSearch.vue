@@ -633,12 +633,12 @@ onUnmounted(() => {
 .results-card {
 	max-height: 400px;
 	overflow-y: auto;
-	border: 1px solid rgba(0, 0, 0, 0.12);
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .results-section {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
 
 .results-section:last-child {
@@ -648,9 +648,9 @@ onUnmounted(() => {
 .results-header {
 	font-weight: 600;
 	font-size: 0.875rem;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 	padding: 8px 16px 4px 16px;
-	background-color: rgba(0, 0, 0, 0.02);
+	background-color: rgba(var(--v-theme-on-surface), 0.02);
 }
 
 .result-item {
@@ -659,7 +659,7 @@ onUnmounted(() => {
 }
 
 .result-item:hover {
-	background-color: rgba(0, 0, 0, 0.04);
+	background-color: rgba(var(--v-theme-on-surface), 0.04);
 }
 
 .result-icon {
@@ -670,7 +670,7 @@ onUnmounted(() => {
 .search-tips {
 	padding: 24px;
 	text-align: center;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .search-tips .v-chip {

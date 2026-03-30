@@ -1,5 +1,8 @@
 <template>
-	<div class="camera-controls-container">
+	<div
+		class="camera-controls-container"
+		:style="offsetStyle"
+	>
 		<!-- Compass Assembly: SVG visual + directional buttons -->
 		<div
 			class="compass-assembly"
@@ -154,6 +157,7 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useSidebarOffset } from '../composables/useSidebarOffset'
 import Camera from '../services/camera'
 import { getCesium } from '../services/cesiumProvider'
 import { useGlobalStore } from '../stores/globalStore'
@@ -174,6 +178,7 @@ const directions = [
 const prefersReducedMotion = ref(false)
 
 const store = useGlobalStore()
+const { offsetStyle } = useSidebarOffset()
 let cameraService = null
 const currentHeading = ref(0)
 const viewerReady = ref(false)
@@ -284,12 +289,12 @@ const zoomOut = () => {
 .camera-controls-container {
 	position: absolute;
 	top: 75px;
-	left: 20px;
 	z-index: 400;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 12px;
+	transition: left 0.2s ease;
 }
 
 /* Screen reader only class */
@@ -321,10 +326,10 @@ const zoomOut = () => {
 	width: 52px;
 	height: 52px;
 	border-radius: 50%;
-	background: linear-gradient(145deg, #ffffff, #f0f0f0);
+	background: linear-gradient(145deg, rgb(var(--v-theme-surface)), rgb(var(--v-theme-surface)));
 	box-shadow:
 		0 2px 8px rgba(0, 0, 0, 0.15),
-		inset 0 1px 0 rgba(255, 255, 255, 0.9);
+		inset 0 1px 0 rgba(var(--v-theme-surface), 0.9);
 	pointer-events: none;
 }
 
@@ -340,14 +345,14 @@ const zoomOut = () => {
 .compass-cardinal {
 	font-size: 8px;
 	font-weight: 600;
-	fill: #424242;
+	fill: rgb(var(--v-theme-on-surface));
 	text-anchor: middle;
 	dominant-baseline: middle;
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .compass-north {
-	fill: #b71c1c;
+	fill: rgb(var(--v-theme-error));
 	font-weight: 700;
 	font-size: 9px;
 }
@@ -363,16 +368,16 @@ const zoomOut = () => {
 }
 
 .needle-north {
-	fill: #c62828;
+	fill: rgb(var(--v-theme-error));
 }
 
 .needle-south {
-	fill: #424242;
+	fill: rgb(var(--v-theme-on-surface));
 }
 
 .needle-center {
-	fill: #ffffff;
-	stroke: #424242;
+	fill: rgb(var(--v-theme-surface));
+	stroke: rgb(var(--v-theme-on-surface));
 	stroke-width: 1;
 }
 
@@ -381,7 +386,7 @@ const zoomOut = () => {
 	position: absolute;
 	padding: 0 !important;
 	min-width: 28px !important;
-	background-color: white !important;
+	background-color: rgb(var(--v-theme-surface)) !important;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -389,7 +394,7 @@ const zoomOut = () => {
 	font-size: 10px;
 	font-weight: 600;
 	line-height: 1;
-	color: #424242;
+	color: rgba(var(--v-theme-on-surface), 0.74);
 }
 
 /* Active state - colored background with white text */
@@ -398,7 +403,7 @@ const zoomOut = () => {
 }
 
 .dir-btn.v-btn--variant-flat .dir-label {
-	color: white;
+	color: rgb(var(--v-theme-surface));
 }
 
 /* North button active state */
@@ -450,7 +455,7 @@ const zoomOut = () => {
 	border-radius: 20px;
 	overflow: hidden;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	background: white;
+	background: rgb(var(--v-theme-surface));
 }
 
 .zoom-btn {
@@ -458,7 +463,7 @@ const zoomOut = () => {
 }
 
 .zoom-btn:first-child {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.1);
 }
 
 /* Touch device adjustments - larger targets */
@@ -510,11 +515,11 @@ const zoomOut = () => {
 /* High contrast mode support */
 @media (prefers-contrast: high) {
 	.compass-cardinal {
-		fill: #000000;
+		fill: rgb(var(--v-theme-on-surface));
 	}
 
 	.compass-north {
-		fill: #b71c1c;
+		fill: rgb(var(--v-theme-error));
 	}
 }
 </style>

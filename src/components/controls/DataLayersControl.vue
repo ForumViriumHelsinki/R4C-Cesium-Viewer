@@ -269,7 +269,7 @@ const loadingStore = useLoadingStore()
 
 <style scoped>
 .control-group {
-	border: 1px solid rgba(0, 0, 0, 0.12);
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	border-radius: 6px;
 	overflow: hidden;
 }
@@ -279,9 +279,9 @@ const loadingStore = useLoadingStore()
 	font-weight: 600;
 	padding: 12px 16px 8px 16px;
 	margin: 0;
-	color: rgba(0, 0, 0, 0.87);
-	background-color: rgba(0, 0, 0, 0.02);
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	color: rgba(var(--v-theme-on-surface), 0.87);
+	background-color: rgba(var(--v-theme-on-surface), 0.02);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 	display: flex;
 	align-items: center;
 }
@@ -290,7 +290,7 @@ const loadingStore = useLoadingStore()
 	display: flex;
 	align-items: center;
 	padding: 8px 16px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 	transition: background-color 0.2s;
 }
 
@@ -299,17 +299,17 @@ const loadingStore = useLoadingStore()
 }
 
 .control-item:hover {
-	background-color: rgba(0, 0, 0, 0.02);
+	background-color: rgba(var(--v-theme-on-surface), 0.02);
 }
 
 .control-item.loading {
 	background-color: rgba(25, 118, 210, 0.04);
-	border-left: 3px solid #1976d2;
+	border-left: 3px solid rgb(var(--v-theme-primary));
 }
 
 .control-label {
 	font-size: 0.875rem;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 	margin-left: 12px;
 	flex: 1;
 	user-select: none;
@@ -339,7 +339,7 @@ const loadingStore = useLoadingStore()
 	}
 
 	.control-item:hover {
-		background-color: rgba(0, 0, 0, 0.1);
+		background-color: rgba(var(--v-theme-on-surface), 0.1);
 	}
 }
 </style>

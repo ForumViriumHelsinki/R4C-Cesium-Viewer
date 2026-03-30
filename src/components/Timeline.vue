@@ -44,7 +44,7 @@
 					hide-details
 					class="timeline-slider"
 					color="primary"
-					track-color="grey-lighten-3"
+					track-color="surface-variant"
 					thumb-color="primary"
 				/>
 			</div>
@@ -239,16 +239,15 @@ export default {
 }
 
 .timeline-card {
-	background: rgba(255, 255, 255, 0.95);
+	background: rgba(var(--v-theme-surface), 0.95);
 	backdrop-filter: blur(12px);
 	border-radius: 12px;
 	padding: 16px 20px;
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-	border: 1px solid rgba(0, 0, 0, 0.1);
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
 	min-width: 400px;
 	max-width: 500px;
 	pointer-events: auto;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .timeline-header {
@@ -261,10 +260,10 @@ export default {
 .timeline-title {
 	display: flex;
 	align-items: center;
-	font-size: 14px;
+	font-size: 0.875rem;
 	font-weight: 600;
 	margin: 0;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 }
 
 .date-labels {
@@ -277,18 +276,18 @@ export default {
 .date-label {
 	font-size: 0.75rem;
 	font-weight: 500;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 	transition: color 0.2s;
 	cursor: pointer;
 }
 
 .date-label.active {
-	color: #1976d2;
+	color: rgb(var(--v-theme-primary));
 	font-weight: 600;
 }
 
 .date-label:hover {
-	color: #1976d2;
+	color: rgb(var(--v-theme-primary));
 }
 
 .slider-container {
@@ -307,7 +306,7 @@ export default {
 
 .info-text {
 	font-size: 0.75rem;
-	color: rgba(0, 0, 0, 0.5);
+	color: rgba(var(--v-theme-on-surface), 0.5);
 	display: flex;
 	align-items: center;
 }
@@ -326,7 +325,7 @@ export default {
 	}
 
 	.timeline-title {
-		font-size: 13px;
+		font-size: 0.8125rem;
 	}
 
 	.date-labels {
@@ -345,8 +344,8 @@ export default {
 /* High contrast support */
 @media (prefers-contrast: high) {
 	.timeline-card {
-		background: #ffffff;
-		border: 2px solid #000000;
+		background: rgb(var(--v-theme-surface));
+		border: 2px solid rgba(var(--v-theme-on-surface), 1);
 	}
 }
 </style>

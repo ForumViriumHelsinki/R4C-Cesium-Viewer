@@ -19,7 +19,7 @@
 				tick-size="4"
 				hide-details
 				color="primary"
-				track-color="grey-lighten-2"
+				track-color="on-surface"
 				thumb-size="12"
 				class="compact-slider"
 				density="compact"
@@ -133,7 +133,7 @@ onMounted(() => {
 .compact-slider :deep(.v-slider__tick) {
 	width: 2px;
 	height: 4px;
-	background-color: rgba(0, 0, 0, 0.3);
+	background-color: rgba(var(--v-theme-on-surface), 0.3);
 }
 
 /* Responsive adjustments */

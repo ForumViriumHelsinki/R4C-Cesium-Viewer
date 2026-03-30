@@ -39,7 +39,7 @@ describe('toggleStore', () => {
 			const store = useToggleStore()
 			const stateKeys = Object.keys(store.$state)
 
-			expect(stateKeys).toHaveLength(23)
+			expect(stateKeys).toHaveLength(25)
 		})
 	})
 

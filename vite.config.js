@@ -139,10 +139,9 @@ export default defineConfig(({ mode }) => {
 			}),
 			Vuetify({
 				autoImport: true,
-				// Uncomment when you create src/styles/settings.scss for custom theme
-				// styles: {
-				//   configFile: "src/styles/settings.scss",
-				// },
+				styles: {
+					configFile: 'src/styles/settings.scss',
+				},
 			}),
 			Components({
 				dirs: ['src/components', 'src/pages'],

@@ -1,13 +1,13 @@
 <template>
-	<div id="nearbyTreeAreaContainer" />
+	<div id="nearbyTreeAreaContainer" :style="barsStyle" />
 
 	<label
 		id="bearingLabel"
-		style="position: fixed; bottom: 41px; left: 15px; visibility: hidden"
+		:style="labelStyle"
 		>Direction of trees</label
 	>
 
-	<div id="bearingAllSwitchContainer">
+	<div id="bearingAllSwitchContainer" :style="switchStyle(120)">
 		<!-- bearingAll -->
 		<label
 			id="bearingAllSwitch"
@@ -28,7 +28,7 @@
 		>
 	</div>
 
-	<div id="bearingSouthSwitchContainer">
+	<div id="bearingSouthSwitchContainer" :style="switchStyle(210)">
 		<!-- bearingSouth -->
 		<label
 			id="bearingSouthSwitch"
@@ -49,7 +49,7 @@
 		>
 	</div>
 
-	<div id="bearingWestSwitchContainer">
+	<div id="bearingWestSwitchContainer" :style="switchStyle(300)">
 		<!-- bearingWest -->
 		<label
 			id="bearingWestSwitch"
@@ -70,7 +70,7 @@
 		>
 	</div>
 
-	<div id="bearingEastSwitchContainer">
+	<div id="bearingEastSwitchContainer" :style="switchStyle(390)">
 		<!-- bearingEast -->
 		<label
 			id="bearingEastwitch"
@@ -91,7 +91,7 @@
 		>
 	</div>
 
-	<div id="bearingNorthSwitchContainer">
+	<div id="bearingNorthSwitchContainer" :style="switchStyle(480)">
 		<!-- bearingWest -->
 		<label
 			id="bearingNorthSwitch"
@@ -115,6 +115,8 @@
 
 <script>
 import * as d3 from 'd3' // Import D3.js
+import { computed } from 'vue'
+import { useSidebarOffset } from '../composables/useSidebarOffset'
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
 import { eventBus } from '../services/eventEmitter.js'
@@ -125,6 +127,27 @@ import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 
 export default {
+	setup() {
+		const { sidebarOffset } = useSidebarOffset(0)
+
+		const labelStyle = computed(() => ({
+			position: 'fixed',
+			bottom: '41px',
+			left: `${sidebarOffset.value + 15}px`,
+			visibility: 'hidden',
+		}))
+
+		const barsStyle = computed(() => ({
+			left: `${sidebarOffset.value - 19}px`,
+		}))
+
+		const switchStyle = (baseLeft) =>
+			computed(() => ({
+				left: `${sidebarOffset.value + baseLeft}px`,
+			}))
+
+		return { sidebarOffset, labelStyle, barsStyle, switchStyle }
+	},
 	data() {
 		return {
 			eventCleanupFunctions: [],
@@ -548,48 +571,24 @@ const updateBearingSwitches = (switches, currentDirection) => {
 #nearbyTreeAreaContainer {
 	position: fixed;
 	bottom: 35px;
-	left: -19px;
+	/* left is set dynamically via barsStyle computed property */
 	width: 640px; /* Adjusted width to accommodate margin */
 	height: 300px; /* Adjusted height to accommodate margin */
 	visibility: hidden;
 	font-size: smaller;
-	border: 1px solid black;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	box-shadow: 3px 5px 5px black;
-	background-color: white;
+	background-color: rgb(var(--v-theme-surface));
 	margin: 20px; /* Add margins to the container */
 }
-#bearingAllSwitchContainer {
-	position: fixed;
-	bottom: 65px;
-	left: 120px;
-	visibility: hidden;
-}
-
-#bearingSouthSwitchContainer {
-	position: fixed;
-	bottom: 65px;
-	left: 210px;
-	visibility: hidden;
-}
-
-#bearingWestSwitchContainer {
-	position: fixed;
-	bottom: 65px;
-	left: 300px;
-	visibility: hidden;
-}
-
-#bearingEastSwitchContainer {
-	position: fixed;
-	bottom: 65px;
-	left: 390px;
-	visibility: hidden;
-}
-
+#bearingAllSwitchContainer,
+#bearingSouthSwitchContainer,
+#bearingWestSwitchContainer,
+#bearingEastSwitchContainer,
 #bearingNorthSwitchContainer {
 	position: fixed;
 	bottom: 65px;
-	left: 480px;
+	/* left is set dynamically via switchStyle computed property */
 	visibility: hidden;
 }
 </style>

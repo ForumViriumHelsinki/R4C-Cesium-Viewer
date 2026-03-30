@@ -457,8 +457,8 @@ onUnmounted(() => {
 	margin: 0;
 }
 .active-btn {
-	background-color: #ffca28 !important;
-	color: black !important;
+	background-color: rgb(var(--v-theme-warning)) !important;
+	color: rgb(var(--v-theme-on-surface)) !important;
 }
 .text-caption {
 	line-height: 1.2;

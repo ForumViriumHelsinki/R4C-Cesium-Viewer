@@ -83,7 +83,7 @@ const zoomOut = async () => {
 }
 
 .map-overlay-controls .v-btn:focus-visible {
-	outline: 2px solid #1976d2;
+	outline: 2px solid rgb(var(--v-theme-primary));
 	outline-offset: 2px;
 }
 

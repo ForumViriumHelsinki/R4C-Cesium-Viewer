@@ -479,7 +479,7 @@ eventBus.on('entityPrintEvent', () => {
 	align-items: center;
 	justify-content: center;
 	padding: 12px;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 	font-style: italic;
 }
 
@@ -553,7 +553,7 @@ eventBus.on('entityPrintEvent', () => {
 	align-items: center;
 	gap: 8px;
 	padding: 4px 0;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.04);
 }
 
 .property-row:last-child {
@@ -565,7 +565,7 @@ eventBus.on('entityPrintEvent', () => {
 	min-width: 100px;
 	max-width: 120px;
 	font-size: 0.75rem;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -575,7 +575,7 @@ eventBus.on('entityPrintEvent', () => {
 	flex: 1;
 	font-family: 'Roboto Mono', monospace;
 	font-size: 0.75rem;
-	color: rgba(0, 0, 0, 0.87);
+	color: rgba(var(--v-theme-on-surface), 0.87);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -600,7 +600,7 @@ eventBus.on('entityPrintEvent', () => {
 	justify-content: flex-end;
 	margin-top: 4px;
 	padding-top: 4px;
-	border-top: 1px solid rgba(0, 0, 0, 0.06);
+	border-top: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
 
 .copy-all-btn {

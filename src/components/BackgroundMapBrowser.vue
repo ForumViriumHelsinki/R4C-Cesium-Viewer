@@ -589,12 +589,13 @@ export default {
 
 .flood-disclaimer {
 	font-size: 0.8rem;
-	color: #d32f2f;
+	color: rgb(var(--v-theme-error));
 	font-weight: 500;
 	margin: 0;
 	padding: 8px;
-	background-color: #ffebee;
+	background-color: rgba(var(--v-theme-error), 0.08);
 	border-radius: 4px;
+	/* Data visualization colors - not changed */
 }
 
 .flood-categories {
@@ -607,7 +608,7 @@ export default {
 	font-size: 0.8rem;
 	font-weight: 500;
 	margin-bottom: 6px;
-	color: rgba(0, 0, 0, 0.7);
+	color: rgba(var(--v-theme-on-surface), 0.7);
 }
 
 .flood-buttons {
@@ -616,7 +617,7 @@ export default {
 
 .flood-legend {
 	padding: 12px;
-	background-color: rgba(0, 0, 0, 0.02);
+	background-color: rgba(var(--v-theme-on-surface), 0.02);
 	border-radius: 4px;
 }
 
@@ -642,7 +643,7 @@ export default {
 	width: 16px;
 	height: 16px;
 	border-radius: 2px;
-	border: 1px solid rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.2);
 }
 
 .legend-text {
@@ -659,7 +660,7 @@ export default {
 	align-items: center;
 	justify-content: center;
 	padding: 16px;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 	font-size: 0.9rem;
 }
 
@@ -669,7 +670,7 @@ export default {
 	align-items: center;
 	justify-content: center;
 	padding: 24px 16px;
-	color: rgba(0, 0, 0, 0.6);
+	color: rgba(var(--v-theme-on-surface), 0.6);
 	text-align: center;
 	background-color: rgba(255, 152, 0, 0.08);
 	border-radius: 8px;
@@ -678,7 +679,7 @@ export default {
 .hsy-layer-list {
 	max-height: 300px;
 	overflow-y: auto;
-	border: 1px solid rgba(0, 0, 0, 0.12);
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 	border-radius: 4px;
 }
 
@@ -694,13 +695,13 @@ export default {
 .more-results {
 	padding: 8px 16px;
 	text-align: center;
-	background-color: rgba(0, 0, 0, 0.02);
-	border-top: 1px solid rgba(0, 0, 0, 0.06);
+	background-color: rgba(var(--v-theme-on-surface), 0.02);
+	border-top: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
 
 .v-list-item.selected {
-	background-color: rgba(25, 118, 210, 0.08);
-	border-left: 3px solid #1976d2;
+	background-color: rgba(var(--v-theme-primary), 0.08);
+	border-left: 3px solid rgb(var(--v-theme-primary));
 }
 
 .current-selection {
@@ -711,7 +712,7 @@ export default {
 	display: flex;
 	align-items: center;
 	padding: 8px;
-	background-color: rgba(25, 118, 210, 0.08);
+	background-color: rgba(var(--v-theme-primary), 0.08);
 	border-radius: 4px;
 }
 

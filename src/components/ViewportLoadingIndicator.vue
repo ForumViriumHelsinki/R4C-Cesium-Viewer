@@ -288,7 +288,7 @@ onUnmounted(() => {
 	display: flex;
 	align-items: center;
 	padding: 12px 16px;
-	color: white;
+	color: rgb(var(--v-theme-surface));
 }
 
 .loading-text {
