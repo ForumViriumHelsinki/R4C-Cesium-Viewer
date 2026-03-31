@@ -564,8 +564,9 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 
 				// Wait for Cesium to be available and configure it
 				const configureCesium = () => {
-					if ((window as any).Cesium) {
-						const Cesium = (window as any).Cesium
+					const CesiumLib = (window as any).Cesium || (window as any).__cesium
+					if (CesiumLib) {
+						const Cesium = CesiumLib
 
 						// Store viewer creation function
 						const originalViewer = Cesium.Viewer
@@ -669,9 +670,12 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 				configureCesium()
 
 				// Also set up observer for when Cesium loads
-				if (!(window as any).Cesium) {
+				if (!(window as any).Cesium && !(window as any).__cesium) {
 					const observer = new MutationObserver(() => {
-						if ((window as any).Cesium && !(window as any).__cesiumConfigured) {
+						if (
+							((window as any).Cesium || (window as any).__cesium) &&
+							!(window as any).__cesiumConfigured
+						) {
 							configureCesium()
 							observer.disconnect()
 						}
@@ -732,8 +736,9 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 				const container =
 					document.getElementById('cesiumContainer') || document.querySelector('.cesium-container')
 
-				if (container && (window as any).Cesium) {
-					;(window as any).viewer = new (window as any).Cesium.Viewer(container)
+				const CesiumRef = (window as any).Cesium || (window as any).__cesium
+				if (container && CesiumRef) {
+					;(window as any).viewer = new CesiumRef.Viewer(container)
 				}
 			}
 

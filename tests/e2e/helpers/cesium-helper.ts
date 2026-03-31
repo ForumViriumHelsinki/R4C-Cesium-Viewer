@@ -22,10 +22,10 @@ export async function waitForCesiumReady(page: Page, timeout: number = 30000): P
 		// Wait for Cesium viewer to be available
 		await page.waitForFunction(
 			(ci) => {
-				// Check if window.Cesium exists
-				if (typeof window === 'undefined' || !window.Cesium) {
-					return false
-				}
+				// Check if Cesium exists (app exposes as __cesium, fixture may set Cesium)
+				if (typeof window === 'undefined') return false
+				const Cesium = window.__cesium || window.Cesium
+				if (!Cesium) return false
 
 				// Check if viewer exists (common pattern in Cesium apps)
 				const viewer =
@@ -36,7 +36,7 @@ export async function waitForCesiumReady(page: Page, timeout: number = 30000): P
 
 				if (!viewer) {
 					// In CI, we might not have a full viewer
-					if (ci && window.Cesium) {
+					if (ci && Cesium) {
 						return true // Cesium library is loaded, that's enough for CI
 					}
 					return false
@@ -62,7 +62,7 @@ export async function waitForCesiumReady(page: Page, timeout: number = 30000): P
 				}
 
 				// In CI, if Cesium is loaded, that's good enough
-				return ci ? !!window.Cesium : false
+				return ci ? !!Cesium : false
 			},
 			isCI,
 			{ timeout: cesiumTimeout }

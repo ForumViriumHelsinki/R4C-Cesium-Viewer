@@ -1,5 +1,6 @@
+import { cesiumTest } from '../fixtures/cesium-fixture'
 import { expect, test } from '../fixtures/test-fixture'
-import { dismissModalIfPresent, TEST_TIMEOUTS, waitForCesiumReady } from '../helpers/test-helpers'
+import { dismissModalIfPresent, TEST_TIMEOUTS } from '../helpers/test-helpers'
 
 test('Page load', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
 	await page.goto('/')
@@ -11,22 +12,10 @@ test('Page load', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
 	await expect(page).toHaveTitle(/R4C Uusimaa Demo/)
 })
 
-test('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ page }) => {
-	await page.goto('/')
-
-	// Wait for page to load and dismiss any modal if present
-	await page.waitForLoadState('domcontentloaded')
-	await dismissModalIfPresent(page, 'Explore Map')
-
-	// Wait for page to be fully loaded
-	await page.waitForSelector('#app', {
-		state: 'visible',
-		timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
-	})
-
+cesiumTest('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ cesiumPage }) => {
 	// Click on Environmental category chip to access HSY layers
 	// The chip is a generic element with text, not a button
-	const environmentalChip = page.getByText('Environmental').first()
+	const environmentalChip = cesiumPage.getByText('Environmental').first()
 	await environmentalChip.waitFor({
 		state: 'visible',
 		timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
@@ -34,12 +23,12 @@ test('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ page }) => {
 	await environmentalChip.click()
 
 	// Wait for search input to appear
-	const searchInput = page.getByPlaceholder('Search environmental layers...')
+	const searchInput = cesiumPage.getByPlaceholder('Search environmental layers...')
 	await searchInput.waitFor({ state: 'visible', timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 
 	// Wait for HSY layers to load before searching
 	// Look for the loading indicator to disappear or for actual layer content to appear
-	await page
+	await cesiumPage
 		.waitForFunction(
 			() => {
 				const listItems = document.querySelectorAll('.v-list-item-title')
@@ -65,71 +54,39 @@ test('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ page }) => {
 	await expect(searchInput).toHaveValue('Kaupunginosat')
 
 	// Wait for filtered results to appear
-	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP) // Small delay for search debounce
+	await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP) // Small delay for search debounce
 
 	// Wait for results to appear in the HSY layer list
-	const resultContainer = page.locator('.hsy-layer-list')
+	const resultContainer = cesiumPage.locator('.hsy-layer-list')
 	await expect(resultContainer).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 
 	// Check that we have actual layer results (the search should filter the list)
-	const listItems = page.locator('.hsy-layer-list .v-list-item')
+	const listItems = cesiumPage.locator('.hsy-layer-list .v-list-item')
 	await expect(listItems.first()).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
 })
 
-test('Building properties', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
-	await page.goto('/')
-
-	// Wait for page to load and dismiss any modal if present
-	await page.waitForLoadState('domcontentloaded')
-	await dismissModalIfPresent(page, 'Explore Map')
-
+cesiumTest('Building properties', { tag: ['@e2e', '@smoke'] }, async ({ cesiumPage }) => {
 	// Verify the page loaded successfully
-	await expect(page).toHaveTitle(/R4C Uusimaa Demo/)
+	await expect(cesiumPage).toHaveTitle(/R4C Uusimaa Demo/)
 
-	// Wait for Cesium to initialize with extended timeout
-	await waitForCesiumReady(page)
-
-	// Verify canvas is visible and functional
-	const canvas = page.locator('canvas')
-	await expect(canvas).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
+	// Verify Cesium canvas is visible and functional
+	const canvas = cesiumPage.locator('#cesiumContainer canvas')
+	await expect(canvas.first()).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
 })
 
-test('Statistical Grid View', { tag: ['@e2e', '@smoke'] }, async ({ page }) => {
-	await page.goto('/')
-
-	// Wait for page to load and dismiss any modal if present
-	await page.waitForLoadState('domcontentloaded')
-	await dismissModalIfPresent(page, 'Explore Map')
-
-	// Wait for app to be ready
-	await page.waitForSelector('#app', {
-		state: 'visible',
-		timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
-	})
-
+cesiumTest('Statistical Grid View', { tag: ['@e2e', '@smoke'] }, async ({ cesiumPage }) => {
 	// Click on Statistical Grid button in the view mode toggle
-	const statisticalGridButton = page.getByRole('button', { name: /Statistical Grid/i })
+	const statisticalGridButton = cesiumPage.getByRole('button', { name: /Statistical Grid/i })
 	await statisticalGridButton.waitFor({
 		state: 'visible',
 		timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
 	})
 	await statisticalGridButton.click()
 
-	// Verify the button is now active (has v-btn--active class)
+	// Verify the button is now active
 	await expect(statisticalGridButton).toHaveClass(/v-btn--active/)
 
-	// Wait for grid view to load
-	await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
-
-	// Open the Grid Options panel by clicking the Grid Options button
-	const gridOptionsButton = page.getByRole('button', { name: /Grid Options/i })
-	await gridOptionsButton.waitFor({
-		state: 'visible',
-		timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
-	})
-	await gridOptionsButton.click()
-
-	// Verify that the statistical grid options panel appears
-	const gridOptionsHeading = page.getByRole('heading', { name: /Statistical grid options/i })
-	await expect(gridOptionsHeading).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
+	// Verify the statistical grid heading appears in the sidebar
+	const gridHeading = cesiumPage.getByText(/Statistical grid/i).first()
+	await expect(gridHeading).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
 })

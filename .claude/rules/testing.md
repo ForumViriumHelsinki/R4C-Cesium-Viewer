@@ -2,7 +2,16 @@
 
 ## Framework
 
-Playwright for E2E testing, Vitest for unit tests.
+Playwright for E2E testing, Vitest for unit tests. Chrome/Chromium only — Firefox, WebKit, and Safari are not tested (WebGL/Cesium requires Chromium engine).
+
+## Fixture Selection
+
+| Test needs Cesium?         | Use fixture                        | Import                                                    |
+| -------------------------- | ---------------------------------- | --------------------------------------------------------- |
+| No (page title, static UI) | `test` from `test-fixture`         | `import { test } from '../fixtures/test-fixture'`         |
+| Yes (canvas, viewer, map)  | `cesiumTest` from `cesium-fixture` | `import { cesiumTest } from '../fixtures/cesium-fixture'` |
+
+`cesiumTest` provides `cesiumPage` which is already navigated, modal dismissed, and Cesium initialized with retry logic. Do not duplicate this setup manually with `page.goto('/')`, `dismissModalIfPresent()`, or `waitForCesiumReady()`.
 
 ## Commands
 
@@ -69,6 +78,48 @@ EventBus emits 'showBuilding'
 1. Canvas must have valid dimensions (silently ignores clicks otherwise)
 2. Only polygon entities (with `_polygon` property) are selectable
 3. Entity must be a `Cesium.Entity` instance with properties
+
+## Cesium Global Variables
+
+The app exposes Cesium objects on `window` in E2E mode (`VITE_E2E_TEST=true`):
+
+| Variable          | Set by                       | Contains                    |
+| ----------------- | ---------------------------- | --------------------------- |
+| `window.__cesium` | `useViewerInitialization.js` | Cesium module               |
+| `window.__viewer` | `useViewerInitialization.js` | Cesium.Viewer instance      |
+| `window.Cesium`   | NOT set by app               | Only set by CI mock fixture |
+
+Test helpers must check `window.__cesium || window.Cesium` — never just `window.Cesium`.
+
+## Canvas Selector
+
+Use `#cesiumContainer canvas` instead of bare `canvas` — multiple canvas elements exist on the page (Cesium widget canvas, compass canvas, etc.). Bare `canvas` causes strict mode violations.
+
+## API Mock Safety
+
+**Never intercept localhost in catch-all route handlers.** The WMS mock fallback `page.route('**/*')` will match Vite dev server module requests if URL substring matching is used carelessly:
+
+```typescript
+// ❌ WRONG: Catches http://localhost:5173/src/services/wms.js
+page.route('**/*', (route) => {
+	if (route.request().url().includes('wms')) {
+		return route.fulfill({ body: TRANSPARENT_PNG });
+	}
+	return route.continue();
+});
+
+// ✅ CORRECT: Skip localhost, only intercept external requests
+page.route('**/*', (route) => {
+	const url = route.request().url();
+	if (url.includes('localhost') || url.includes('127.0.0.1')) {
+		return route.continue();
+	}
+	if (url.includes('/wms')) {
+		return route.fulfill({ body: TRANSPARENT_PNG });
+	}
+	return route.continue();
+});
+```
 
 ## Testing Cesium Interactions
 

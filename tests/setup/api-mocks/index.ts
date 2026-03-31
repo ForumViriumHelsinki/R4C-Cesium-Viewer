@@ -7,6 +7,8 @@
 import type { Page } from '@playwright/test'
 import { setupDataApiMocks } from './data-api-mocks'
 import { setupDigitransitMocks } from './digitransit-mock'
+import { setupHealthCheckMocks } from './health-check-mocks'
+import { setupOsmTileMocks } from './osm-tile-mocks'
 import { setupWmsMocks } from './wms-mocks'
 
 export async function setupAllApiMocks(page: Page): Promise<void> {
@@ -14,8 +16,10 @@ export async function setupAllApiMocks(page: Page): Promise<void> {
 	const enableWmsLogging = process.env.CI === 'true' || process.env.DEBUG_WMS === 'true'
 
 	await Promise.all([
+		setupOsmTileMocks(page),
 		setupWmsMocks(page, { enableLogging: enableWmsLogging }),
 		setupDataApiMocks(page),
 		setupDigitransitMocks(page),
+		setupHealthCheckMocks(page),
 	])
 }

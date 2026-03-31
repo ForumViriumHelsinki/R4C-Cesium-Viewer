@@ -139,6 +139,11 @@ class CacheWarmer {
 	 * cacheWarmer.warmCriticalData();
 	 */
 	async warmCriticalData() {
+		if (import.meta.env.VITE_E2E_TEST === 'true') {
+			logger.debug('[CacheWarmer] Skipping cache warming in E2E test mode')
+			return
+		}
+
 		if (this.warmingInProgress) {
 			logger.debug('[CacheWarmer] ⏳ Warming already in progress, skipping')
 			return
@@ -287,6 +292,8 @@ class CacheWarmer {
 	 * cacheWarmer.warmNearbyPostalCodes('00100', ['00150', '00170', '00180']);
 	 */
 	warmNearbyPostalCodes(currentPostalCode, nearbyPostalCodes) {
+		if (import.meta.env.VITE_E2E_TEST === 'true') return
+
 		logger.debug('[CacheWarmer] 🎯 Predictively warming nearby postal codes...')
 
 		// Filter out current postal code and already warmed ones

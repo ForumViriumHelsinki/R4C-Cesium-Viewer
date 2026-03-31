@@ -100,24 +100,11 @@ export default defineConfig({
 		timeout: process.env.CI ? 8000 : 5000,
 	},
 
-	/* Configure projects for major browsers */
+	/* Chrome-only testing — WebGL/Cesium requires Chromium engine */
 	projects: [
-		// Desktop browsers for comprehensive accessibility testing
 		{
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
-			testMatch: /.*\.spec\.ts/,
-		},
-
-		{
-			name: 'firefox',
-			use: { ...devices['Desktop Firefox'] },
-			testMatch: /.*\.spec\.ts/,
-		},
-
-		{
-			name: 'webkit',
-			use: { ...devices['Desktop Safari'] },
 			testMatch: /.*\.spec\.ts/,
 		},
 
@@ -149,27 +136,12 @@ export default defineConfig({
 			testMatch: /tests\/e2e\/accessibility\/.*\.spec\.ts/,
 		},
 
-		/* Test against mobile viewports for general E2E. */
+		/* Mobile viewport using Chrome engine */
 		{
 			name: 'Mobile Chrome',
 			use: { ...devices['Pixel 5'] },
 			testMatch: /tests\/e2e\/(?!accessibility).*\.spec\.ts/,
 		},
-		{
-			name: 'Mobile Safari',
-			use: { ...devices['iPhone 12'] },
-			testMatch: /tests\/e2e\/(?!accessibility).*\.spec\.ts/,
-		},
-
-		/* Test against branded browsers. */
-		// {
-		//   name: 'Microsoft Edge',
-		//   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-		// },
-		// {
-		//   name: 'Google Chrome',
-		//   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-		// },
 	],
 
 	/* Run your local dev server before starting the tests */
