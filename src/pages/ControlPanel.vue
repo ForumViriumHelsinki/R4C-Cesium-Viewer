@@ -15,7 +15,6 @@
 		<!-- Rail icons -->
 		<v-list
 			v-if="isRail"
-			density="compact"
 			nav
 			class="rail-nav"
 		>
@@ -66,12 +65,9 @@
 				</v-breadcrumbs>
 			</div>
 
-			<v-divider />
-
-			<!-- Tab bar -->
+				<!-- Tab bar -->
 			<v-tabs
 				v-model="activeTab"
-				density="compact"
 				grow
 				class="sidebar-tabs"
 			>
@@ -99,8 +95,6 @@
 					<span class="tab-label">{{ tab.label }}</span>
 				</v-tab>
 			</v-tabs>
-
-			<v-divider />
 
 			<!-- Tab content -->
 			<div class="sidebar-content">
@@ -529,11 +523,11 @@ const handleDrawerUpdate = (val) => {
 
 .sidebar-tabs :deep(.v-tab) {
 	min-width: 0;
-	padding: 0 8px;
+	padding: 4px 8px;
 }
 
 .tab-label {
-	font-size: 0.65rem;
+	font-size: 0.7rem;
 	margin-top: 2px;
 }
 

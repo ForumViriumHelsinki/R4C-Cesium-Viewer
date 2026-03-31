@@ -1,11 +1,10 @@
 <template>
 	<v-app>
-		<!-- Slim Top Bar (48px) -->
+		<!-- Top Bar -->
 		<v-app-bar
 			:elevation="2"
-			height="48"
+			height="56"
 			color="surface"
-			density="compact"
 		>
 			<!-- Left: App Title -->
 			<AppTitle class="ml-2 ml-sm-4 mr-2" />
@@ -17,7 +16,6 @@
 				variant="tonal"
 				class="d-none d-sm-flex mx-1"
 				:prepend-icon="viewModeIcon"
-				@click="toggleStore.toggleSidebar('layers')"
 			>
 				{{ viewModeLabel }}
 			</v-chip>
@@ -30,7 +28,6 @@
 				color="primary"
 				class="d-none d-sm-flex mx-1"
 				prepend-icon="mdi-map-marker"
-				@click="toggleStore.toggleSidebar('details')"
 			>
 				<span
 					class="text-truncate"

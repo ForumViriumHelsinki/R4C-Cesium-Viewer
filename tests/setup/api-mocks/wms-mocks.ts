@@ -106,14 +106,20 @@ export async function setupWmsMocks(
 			})
 		),
 
-		// Fallback: Catch any unmocked tile/imagery requests
-		// This prevents test failures from unmocked patterns
+		// Fallback: Catch unmocked external tile/imagery requests
+		// Only intercept requests to external hosts — never intercept localhost (Vite dev server)
 		page.route('**/*', (route) => {
 			const url = route.request().url()
+
+			// Never intercept local dev server requests
+			if (url.includes('localhost') || url.includes('127.0.0.1')) {
+				return route.continue()
+			}
+
 			const isTileRequest =
-				url.includes('tile') ||
-				url.includes('wms') ||
-				url.includes('imagery') ||
+				url.includes('/tile') ||
+				url.includes('/wms') ||
+				url.includes('/imagery') ||
 				url.includes('GetMap') ||
 				url.includes('FORMAT=image/png')
 
@@ -128,7 +134,6 @@ export async function setupWmsMocks(
 				})
 			}
 
-			// Let non-tile requests pass through to other mocks
 			return route.continue()
 		}),
 	])
