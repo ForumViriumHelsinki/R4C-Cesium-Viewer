@@ -61,10 +61,10 @@ const activeViewMode = computed({
 const onToggleChange = (viewMode) => {
 	switch (viewMode) {
 		case 'capitalRegionView':
-			capitalRegion(viewMode)
+			capitalRegion()
 			break
 		case 'gridView':
-			gridView(viewMode)
+			gridView()
 			break
 		default:
 			break
@@ -74,8 +74,10 @@ const onToggleChange = (viewMode) => {
 const setCapitalRegion = async () => {
 	store.setView('capitalRegion')
 	toggleStore.setHelsinkiView(false)
+	toggleStore.setGridView(false)
+	toggleStore.setGrid250m(false)
 	if (store.level === 'start') {
-		removeLandcover(store.landcoverLayers)
+		removeLandcover()
 	}
 	await dataSourceService.removeDataSourcesAndEntities()
 	await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes')
@@ -93,23 +95,19 @@ const setCapitalRegion = async () => {
 	}
 }
 
-const capitalRegion = (viewMode) => {
-	const checked = viewMode === 'capitalRegionView'
-	toggleStore.setCapitalRegionCold(!checked)
+const capitalRegion = () => {
+	toggleStore.setCapitalRegionCold(false)
 	setCapitalRegion().catch((error) => {
 		logger.error('Failed to set capital region:', error)
 	})
 }
 
-const gridView = (viewMode) => {
-	const isGridView = viewMode === 'gridView'
-	toggleStore.setGridView(isGridView)
+const gridView = () => {
+	toggleStore.setGridView(true)
 	toggleStore.setHelsinkiView(false)
-	store.setView(isGridView ? 'grid' : 'capitalRegion')
-	if (isGridView) {
-		store.setShowBuildingInfo(false)
-		toggleStore.setGrid250m(true)
-	}
+	store.setView('grid')
+	store.setShowBuildingInfo(false)
+	toggleStore.setGrid250m(true)
 }
 </script>
 
