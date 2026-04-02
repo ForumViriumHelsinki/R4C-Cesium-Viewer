@@ -86,6 +86,8 @@ server {
     location /pygeoapi/ {
         proxy_pass https://pygeoapi.dataportal.fi/;
         proxy_set_header Host pygeoapi.dataportal.fi;
+        # Required for Envoy Gateway: send SNI so the gateway can identify the virtual host
+        proxy_ssl_server_name on;
         rewrite ^/pygeoapi/(.*)$ /$1 break;
     }
 
