@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.3...r4c-cesium-viewer-v1.22.4) (2026-04-02)
+
+
+### Bug Fixes
+
+* **nginx:** add SNI for pygeoapi proxy to fix Envoy Gateway SSL handshake ([6fcf450](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6fcf450fdabf9ccad861741aacdb86314b1c3d3d))
+
 ## [1.22.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.2...r4c-cesium-viewer-v1.22.3) (2026-01-19)
 
 
