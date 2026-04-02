@@ -126,7 +126,7 @@ jobs:
         run: bun run test:unit
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5.5.3 # Pinned for reproducible builds
+        uses: codecov/codecov-action@v6.0.0 # Pinned for reproducible builds
         with:
           file: ./coverage/lcov.info
           flags: unittests
