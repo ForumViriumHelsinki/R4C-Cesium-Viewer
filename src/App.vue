@@ -9,17 +9,6 @@
 			<!-- Left: App Title -->
 			<AppTitle class="ml-2 ml-sm-4 mr-2" />
 
-			<!-- View mode context chip (hidden on mobile) -->
-			<v-chip
-				v-if="currentLevel === 'start' || currentLevel === 'postalCode'"
-				size="small"
-				variant="tonal"
-				class="d-none d-sm-flex mx-1"
-				:prepend-icon="viewModeIcon"
-			>
-				{{ viewModeLabel }}
-			</v-chip>
-
 			<!-- Location context chip (hidden on mobile) -->
 			<v-chip
 				v-if="locationLabel"
@@ -174,13 +163,9 @@ const showTimeline = computed(
 	() => currentLevel.value === 'postalCode' || currentLevel.value === 'building'
 )
 
-const currentView = computed(() => globalStore.view)
 const postalCode = computed(() => globalStore.postalCode)
 const nameOfZone = computed(() => globalStore.nameOfZone)
 const buildingAddress = computed(() => globalStore.buildingAddress)
-
-const viewModeLabel = computed(() => (currentView.value === 'grid' ? 'Grid' : 'Capital Region'))
-const viewModeIcon = computed(() => (currentView.value === 'grid' ? 'mdi-grid' : 'mdi-city'))
 
 const locationLabel = computed(() => {
 	if (currentLevel.value === 'building') return buildingAddress.value || 'Building'
