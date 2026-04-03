@@ -72,6 +72,7 @@ import Building from '../services/building.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	setup() {
@@ -96,7 +97,7 @@ export default {
 				if (hideNonSote.value || hideNewBuildings.value || hideLow.value) {
 					// Fire-and-forget async call - filter uses batch processing to yield to main thread
 					buildingService.filterBuildings(buildingsDataSource).catch((error) => {
-						console.error('[Filters] Failed to filter buildings:', error)
+						logger.error('[Filters] Failed to filter buildings:', error)
 					})
 				} else {
 					buildingService.showAllBuildings(buildingsDataSource)

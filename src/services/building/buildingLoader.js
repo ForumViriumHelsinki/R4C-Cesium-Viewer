@@ -122,6 +122,10 @@ export class BuildingLoader {
 					'[HelsinkiBuilding] Heat data fetch failed:',
 					heatResult.reason?.message || heatResult.reason
 				)
+				this.store.showError(
+					'Heat data temporarily unavailable. Buildings are shown without heat coloring.',
+					`Heat data fetch failed for ${targetPostalCode}: ${heatResult.reason?.message || heatResult.reason}`
+				)
 			} else if (!heatData) {
 				logger.warn('[HelsinkiBuilding] Heat data unavailable for postal code:', targetPostalCode)
 			} else {

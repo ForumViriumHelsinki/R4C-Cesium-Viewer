@@ -55,6 +55,9 @@ export default class Traveltime {
 	async loadTravelTimeData(from_id) {
 		try {
 			const response = await fetch(this.urlStore.hkiTravelTime(from_id))
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+			}
 			const traveltimedata = await response.json()
 			await this.addTravelTimeLabels(traveltimedata.features[0].properties.travel_data)
 		} catch (error) {

@@ -75,9 +75,12 @@
 <script setup>
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
+import { useGlobalStore } from '../stores/globalStore'
 import { useURLStore } from '../stores/urlStore'
+import logger from '../utils/logger.js'
 
 const urlStore = useURLStore()
+const globalStore = useGlobalStore()
 const selectedScenario = ref(null)
 
 const legendItemsCombination = ref([
@@ -142,7 +145,13 @@ const updateWMS = async (config) => {
 // Capture stop handler for explicit cleanup on unmount
 const stopWatchScenario = watch(selectedScenario, async () => {
 	await nextTick() // Ensure updates propagate before modifying layers
-	updateWMS(wmsConfig.value).catch(console.error)
+	updateWMS(wmsConfig.value).catch((error) => {
+		logger.error('[FloodBackgroundSyke] Failed to update flood WMS layer:', error)
+		globalStore.showError(
+			'Unable to load flood data layer.',
+			`Flood WMS update failed: ${error.message}`
+		)
+	})
 })
 
 // Cleanup on unmount
