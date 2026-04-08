@@ -342,6 +342,10 @@ export default {
 				toggleStore.setNDVI(false)
 				removeTIFF().catch((error) => {
 					logger.error('[Layers] Failed to hide NDVI when switching to landcover:', error)
+					store.showError(
+						'Unable to hide NDVI imagery.',
+						`NDVI removal failed: ${error.message}`
+					)
 				})
 			}
 		}
@@ -382,11 +386,19 @@ export default {
 			if (ndvi.value) {
 				changeTIFF().catch((error) => {
 					logger.error('[Layers] Failed to load NDVI imagery:', error)
+					store.showError(
+						'Unable to load NDVI imagery.',
+						`NDVI load failed: ${error.message}`
+					)
 				})
 				eventBus.emit('addNDVI')
 			} else {
 				removeTIFF().catch((error) => {
 					logger.error('[Layers] Failed to hide NDVI imagery:', error)
+					store.showError(
+						'Unable to hide NDVI imagery.',
+						`NDVI removal failed: ${error.message}`
+					)
 				})
 			}
 		}
