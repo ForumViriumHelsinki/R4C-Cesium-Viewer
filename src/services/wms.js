@@ -106,7 +106,8 @@ export default class Wms {
 	 * @param {Cesium.ImageryLayer} layer - The imagery layer to remove (created by createHelsinkiImageryLayer)
 	 */
 	removeHelsinkiImageryLayer(imageryLayers, layer) {
-		if (layer?._removeErrorHandler) {
+		if (!layer) return
+		if (layer._removeErrorHandler) {
 			layer._removeErrorHandler()
 		}
 		imageryLayers.remove(layer, true)

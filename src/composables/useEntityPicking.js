@@ -38,6 +38,7 @@ export function useEntityPicking(getFeaturepicker) {
 	let mouseDownHandler = null
 	let clickHandler = null
 	let containerRef = null
+	let showInfoTimeout = null
 
 	/**
 	 * Registers click event handler for feature picking on the map.
@@ -127,7 +128,11 @@ export function useEntityPicking(getFeaturepicker) {
 					featurepicker.processClick(event)
 				}
 				lastPickTime.value = currentTime // Update the last pick time
-				setTimeout(() => {
+				if (showInfoTimeout) {
+					clearTimeout(showInfoTimeout)
+				}
+				showInfoTimeout = setTimeout(() => {
+					showInfoTimeout = null
 					store.setShowBuildingInfo(true)
 				}, 1000)
 			} else {
@@ -142,6 +147,10 @@ export function useEntityPicking(getFeaturepicker) {
 	 * Should be called in onBeforeUnmount to prevent memory leaks.
 	 */
 	const cleanup = () => {
+		if (showInfoTimeout) {
+			clearTimeout(showInfoTimeout)
+			showInfoTimeout = null
+		}
 		if (containerRef) {
 			if (mouseDownHandler) {
 				containerRef.removeEventListener('mousedown', mouseDownHandler)

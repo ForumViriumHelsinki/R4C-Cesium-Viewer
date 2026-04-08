@@ -106,7 +106,7 @@ export default class DataSource {
 					const onDataSourceRemoved = (removedDataSource) => {
 						if (removedDataSource === dataSource) {
 							clearTimeout(timeoutId)
-							this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
+							this.store.cesiumViewer?.dataSources?.dataSourceRemoved?.removeEventListener(
 								onDataSourceRemoved
 							)
 							resolveRemove()
@@ -114,13 +114,13 @@ export default class DataSource {
 					}
 
 					// Add listener BEFORE calling remove to avoid race condition
-					this.store.cesiumViewer.dataSources.dataSourceRemoved.addEventListener(
+					this.store.cesiumViewer?.dataSources?.dataSourceRemoved?.addEventListener(
 						onDataSourceRemoved
 					)
 
 					// Timeout safeguard: resolve and clean up listener if removal event never fires
 					const timeoutId = setTimeout(() => {
-						this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
+						this.store.cesiumViewer?.dataSources?.dataSourceRemoved?.removeEventListener(
 							onDataSourceRemoved
 						)
 						logger.warn(
@@ -130,12 +130,13 @@ export default class DataSource {
 					}, REMOVAL_TIMEOUT_MS)
 
 					// Call remove and check if it succeeded
-					const wasRemoved = this.store.cesiumViewer.dataSources.remove(dataSource, true)
+					const wasRemoved = this.store.cesiumViewer?.dataSources?.remove(dataSource, true)
 
 					// If removal failed (data source not in collection), resolve immediately
+					// Also handles the case where viewer was destroyed (wasRemoved === undefined)
 					if (!wasRemoved) {
 						clearTimeout(timeoutId)
-						this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
+						this.store.cesiumViewer?.dataSources?.dataSourceRemoved?.removeEventListener(
 							onDataSourceRemoved
 						)
 						resolveRemove()
