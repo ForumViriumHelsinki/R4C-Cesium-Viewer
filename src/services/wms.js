@@ -83,10 +83,32 @@ export default class Wms {
 		})
 
 		// Attach retry handler for transient network failures (ECONNRESET, etc.)
-		provider.errorEvent.addEventListener((error) => {
+		const errorHandler = (error) => {
 			this.retryHandler.handleTileError(error, layerName)
-		})
+		}
+		provider.errorEvent.addEventListener(errorHandler)
 
-		return new Cesium.ImageryLayer(provider)
+		const layer = new Cesium.ImageryLayer(provider)
+
+		// Store cleanup function on the layer so it can be called when the layer is removed
+		layer._removeErrorHandler = () => {
+			provider.errorEvent.removeEventListener(errorHandler)
+		}
+
+		return layer
+	}
+
+	/**
+	 * Removes a WMS imagery layer and cleans up its error event listener.
+	 * Use this instead of directly calling imageryLayers.remove() to prevent listener leaks.
+	 *
+	 * @param {Cesium.ImageryLayerCollection} imageryLayers - The viewer's imagery layer collection
+	 * @param {Cesium.ImageryLayer} layer - The imagery layer to remove (created by createHelsinkiImageryLayer)
+	 */
+	removeHelsinkiImageryLayer(imageryLayers, layer) {
+		if (layer?._removeErrorHandler) {
+			layer._removeErrorHandler()
+		}
+		imageryLayers.remove(layer, true)
 	}
 }

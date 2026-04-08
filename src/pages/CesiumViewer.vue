@@ -132,7 +132,7 @@
  * - cacheWarmer: Background data preloading
  * - ViewportBuildingLoader: Tile-based viewport building streaming
  */
-import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
 import CameraControls from '../components/CameraControls.vue'
 import DisclaimerPopup from '../components/DisclaimerPopup.vue'
 import Loading from '../components/Loading.vue'
@@ -228,8 +228,13 @@ export default {
 		// Camera controls composable - will be initialized in onMounted
 		let cameraControlsInstance = null
 
+		// Fog effect composable - will be initialized in onMounted
+		let fogCleanup = null
+
 		// Entity picking composable - pass getter to get Featurepicker at call time (after initViewer)
-		const { addFeaturePicker } = useEntityPicking(() => viewerInit.Featurepicker)
+		const { addFeaturePicker, cleanup: cleanupEntityPicking } = useEntityPicking(
+			() => viewerInit.Featurepicker
+		)
 
 		// Keyboard shortcuts composable
 		const { handleCancelAnimation } = useKeyboardShortcuts(() => viewerInit.Camera)
@@ -314,8 +319,9 @@ export default {
 			cameraControlsInstance.addCameraMoveEndListener()
 
 			// Initialize fog effect (visual indicator for zoom level)
-			const { initFog } = useFogEffect(viewer.value)
-			initFog()
+			const fogEffect = useFogEffect(viewer.value)
+			fogEffect.initFog()
+			fogCleanup = fogEffect.cleanup
 
 			// Initialize viewport streaming if enabled
 			await initViewportStreaming()
@@ -325,6 +331,16 @@ export default {
 
 			// Start cache warming
 			startCacheWarming()
+		})
+
+		onBeforeUnmount(() => {
+			if (cameraControlsInstance) {
+				cameraControlsInstance.cleanup()
+			}
+			if (fogCleanup) {
+				fogCleanup()
+			}
+			cleanupEntityPicking()
 		})
 
 		return {

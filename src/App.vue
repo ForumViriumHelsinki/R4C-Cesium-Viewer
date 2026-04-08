@@ -127,7 +127,7 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted } from 'vue'
 import { useSidebarOffset } from './composables/useSidebarOffset'
 
 // Lazy-loaded components
@@ -257,6 +257,15 @@ onMounted(async () => {
 		loadingStore.startStaleCleanupTimer()
 	} catch (error) {
 		logger.warn('Failed to initialize caching services:', error)
+	}
+})
+
+onBeforeUnmount(async () => {
+	loadingStore.stopStaleCleanupTimer()
+
+	if (featureFlagStore.isEnabled('backgroundPreload')) {
+		const { default: backgroundPreloader } = await import('./services/backgroundPreloader.js')
+		backgroundPreloader.destroy()
 	}
 })
 </script>

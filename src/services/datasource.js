@@ -92,58 +92,61 @@ export default class DataSource {
 	 * @returns {Promise<void>} Resolves when all matching data sources are removed
 	 */
 	async removeDataSourcesByNamePrefix(namePrefix) {
-		return new Promise((resolve, reject) => {
-			const dataSources = this.store.cesiumViewer.dataSources._dataSources
-			const removalPromises = []
+		const dataSources = this.store.cesiumViewer.dataSources._dataSources
+		const removalPromises = []
 
-			// Create a copy of the array to avoid issues with iteration during removal
-			const dataSourcesCopy = [...dataSources]
+		// Create a copy of the array to avoid issues with iteration during removal
+		const dataSourcesCopy = [...dataSources]
 
-			for (const dataSource of dataSourcesCopy) {
-				if (dataSource.name.startsWith(namePrefix)) {
-					const removalPromise = new Promise((resolveRemove) => {
-						// Use arrow function to preserve 'this' context
-						const onDataSourceRemoved = (removedDataSource) => {
-							// Only resolve when OUR datasource is removed
-							if (removedDataSource === dataSource) {
-								this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
-									onDataSourceRemoved
-								)
-								resolveRemove()
-							}
-						}
+		for (const dataSource of dataSourcesCopy) {
+			if (dataSource.name.startsWith(namePrefix)) {
+				const removalPromise = new Promise((resolveRemove) => {
+					const REMOVAL_TIMEOUT_MS = 5000
 
-						// Add listener BEFORE calling remove to avoid race condition
-						this.store.cesiumViewer.dataSources.dataSourceRemoved.addEventListener(
-							onDataSourceRemoved
-						)
-
-						// Call remove and check if it succeeded
-						const wasRemoved = this.store.cesiumViewer.dataSources.remove(dataSource, true)
-
-						// If removal failed (data source not in collection), resolve immediately
-						// and clean up the listener to avoid memory leaks
-						if (!wasRemoved) {
+					const onDataSourceRemoved = (removedDataSource) => {
+						if (removedDataSource === dataSource) {
+							clearTimeout(timeoutId)
 							this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
 								onDataSourceRemoved
 							)
 							resolveRemove()
 						}
-					})
+					}
 
-					removalPromises.push(removalPromise)
-				}
+					// Add listener BEFORE calling remove to avoid race condition
+					this.store.cesiumViewer.dataSources.dataSourceRemoved.addEventListener(
+						onDataSourceRemoved
+					)
+
+					// Timeout safeguard: resolve and clean up listener if removal event never fires
+					const timeoutId = setTimeout(() => {
+						this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
+							onDataSourceRemoved
+						)
+						logger.warn(
+							`[DataSource] Removal event for "${dataSource.name}" timed out after ${REMOVAL_TIMEOUT_MS}ms, cleaning up listener`
+						)
+						resolveRemove()
+					}, REMOVAL_TIMEOUT_MS)
+
+					// Call remove and check if it succeeded
+					const wasRemoved = this.store.cesiumViewer.dataSources.remove(dataSource, true)
+
+					// If removal failed (data source not in collection), resolve immediately
+					if (!wasRemoved) {
+						clearTimeout(timeoutId)
+						this.store.cesiumViewer.dataSources.dataSourceRemoved.removeEventListener(
+							onDataSourceRemoved
+						)
+						resolveRemove()
+					}
+				})
+
+				removalPromises.push(removalPromise)
 			}
+		}
 
-			// Wait for all removal promises to resolve
-			Promise.all(removalPromises)
-				.then(() => {
-					resolve()
-				})
-				.catch((error) => {
-					reject(error)
-				})
-		})
+		await Promise.all(removalPromises)
 	}
 
 	/**

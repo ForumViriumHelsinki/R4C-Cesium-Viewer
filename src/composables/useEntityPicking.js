@@ -34,6 +34,11 @@ export function useEntityPicking(getFeaturepicker) {
 	const store = useGlobalStore()
 	const lastPickTime = ref(0)
 
+	// Store handler references for cleanup
+	let mouseDownHandler = null
+	let clickHandler = null
+	let containerRef = null
+
 	/**
 	 * Registers click event handler for feature picking on the map.
 	 * Implements drag detection to differentiate clicks from pans.
@@ -67,6 +72,7 @@ export function useEntityPicking(getFeaturepicker) {
 			return
 		}
 
+		containerRef = cesiumContainer
 		const featurepicker = new Featurepicker()
 		logger.debug('[useEntityPicking] ✅ FeaturePicker click handler added')
 
@@ -75,11 +81,12 @@ export function useEntityPicking(getFeaturepicker) {
 		const DRAG_THRESHOLD = 10 // pixels - movement beyond this is considered a drag
 
 		// Track mouse down position
-		cesiumContainer.addEventListener('mousedown', (event) => {
+		mouseDownHandler = (event) => {
 			mouseDownPosition = { x: event.clientX, y: event.clientY }
-		})
+		}
+		cesiumContainer.addEventListener('mousedown', mouseDownHandler)
 
-		cesiumContainer.addEventListener('click', (event) => {
+		clickHandler = (event) => {
 			const controlPanelElement = document.querySelector('.control-panel-main')
 			const timeSeriesElement = document.querySelector('#heatTimeseriesContainer')
 			const isClickOnControlPanel = controlPanelElement?.contains(event.target)
@@ -126,11 +133,31 @@ export function useEntityPicking(getFeaturepicker) {
 			} else {
 				logger.debug('[useEntityPicking] ⚠️ Click ignored due to conditions')
 			}
-		})
+		}
+		cesiumContainer.addEventListener('click', clickHandler)
+	}
+
+	/**
+	 * Removes event listeners added by addFeaturePicker.
+	 * Should be called in onBeforeUnmount to prevent memory leaks.
+	 */
+	const cleanup = () => {
+		if (containerRef) {
+			if (mouseDownHandler) {
+				containerRef.removeEventListener('mousedown', mouseDownHandler)
+				mouseDownHandler = null
+			}
+			if (clickHandler) {
+				containerRef.removeEventListener('click', clickHandler)
+				clickHandler = null
+			}
+			containerRef = null
+		}
 	}
 
 	return {
 		addFeaturePicker,
+		cleanup,
 		lastPickTime,
 	}
 }
