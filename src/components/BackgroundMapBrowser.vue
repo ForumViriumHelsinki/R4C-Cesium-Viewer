@@ -357,6 +357,19 @@ export default {
 		const hsyMapLayer = ref(null)
 		const basicMapLayer = ref(null)
 
+		const removeLayer = (layerRef, errorMsg) => {
+			if (layerRef.value) {
+				try {
+					if (globalStore.cesiumViewer?.imageryLayers.contains(layerRef.value)) {
+						globalStore.cesiumViewer.imageryLayers.remove(layerRef.value)
+					}
+				} catch (error) {
+					logger.error(errorMsg, error)
+				}
+				layerRef.value = null
+			}
+		}
+
 		// Flood risk maps
 		const selectedFloodLayer = ref('none')
 
@@ -503,18 +516,6 @@ export default {
 			selectedHSYLayer.value = layer.name
 			const Cesium = getCesium()
 
-			// Remove previously added HSY imagery layer
-			if (hsyMapLayer.value) {
-				try {
-					if (globalStore.cesiumViewer?.imageryLayers.contains(hsyMapLayer.value)) {
-						globalStore.cesiumViewer.imageryLayers.remove(hsyMapLayer.value)
-					}
-				} catch (error) {
-					logger.error('Error removing previous HSY imagery layer:', error)
-				}
-				hsyMapLayer.value = null
-			}
-
 			// Create and add the new HSY WMS imagery layer
 			try {
 				const provider = new Cesium.WebMapServiceImageryProvider({
@@ -528,6 +529,15 @@ export default {
 					tilingScheme: new Cesium.GeographicTilingScheme(),
 				})
 				await provider.readyPromise
+
+				// Guard: only proceed if this is still the currently selected layer;
+				// a rapid second selection would have updated selectedHSYLayer already.
+				if (selectedHSYLayer.value !== layer.name) return
+
+				// Remove previous layer only after the new one is ready to avoid
+				// race conditions where both layers end up on the map simultaneously.
+				removeLayer(hsyMapLayer, 'Error removing previous HSY imagery layer:')
+
 				hsyMapLayer.value =
 					globalStore.cesiumViewer.imageryLayers.addImageryProvider(provider)
 				logger.debug('[BackgroundMapBrowser] HSY layer added:', layer.name)
@@ -536,21 +546,12 @@ export default {
 			}
 		}
 
-		const selectBasicMap = async (map) => {
+		const selectBasicMap = (map) => {
 			selectedBasicMap.value = map.value
 			const Cesium = getCesium()
 
 			// Remove previously added basic map layer
-			if (basicMapLayer.value) {
-				try {
-					if (globalStore.cesiumViewer?.imageryLayers.contains(basicMapLayer.value)) {
-						globalStore.cesiumViewer.imageryLayers.remove(basicMapLayer.value)
-					}
-				} catch (error) {
-					logger.error('Error removing previous basic map layer:', error)
-				}
-				basicMapLayer.value = null
-			}
+			removeLayer(basicMapLayer, 'Error removing previous basic map layer:')
 
 			if (map.value === 'satellite') {
 				// ESRI World Imagery — no token required
@@ -600,28 +601,10 @@ export default {
 
 		const clearSelection = () => {
 			// Remove custom basic map layer if active
-			if (basicMapLayer.value) {
-				try {
-					if (globalStore.cesiumViewer?.imageryLayers.contains(basicMapLayer.value)) {
-						globalStore.cesiumViewer.imageryLayers.remove(basicMapLayer.value)
-					}
-				} catch (error) {
-					logger.error('Error removing basic map layer on clear:', error)
-				}
-				basicMapLayer.value = null
-			}
+			removeLayer(basicMapLayer, 'Error removing basic map layer on clear:')
 
 			// Remove HSY imagery layer if active
-			if (hsyMapLayer.value) {
-				try {
-					if (globalStore.cesiumViewer?.imageryLayers.contains(hsyMapLayer.value)) {
-						globalStore.cesiumViewer.imageryLayers.remove(hsyMapLayer.value)
-					}
-				} catch (error) {
-					logger.error('Error removing HSY layer on clear:', error)
-				}
-				hsyMapLayer.value = null
-			}
+			removeLayer(hsyMapLayer, 'Error removing HSY layer on clear:')
 
 			selectedBasicMap.value = 'default'
 			selectedHSYLayer.value = null
