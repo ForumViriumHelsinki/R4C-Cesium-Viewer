@@ -279,8 +279,10 @@
 <script>
 import { computed, onMounted, ref, watch } from 'vue'
 import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
+import { getCesium } from '../services/cesiumProvider'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
+import { useGlobalStore } from '../stores/globalStore'
 import { useURLStore } from '../stores/urlStore'
 import logger from '../utils/logger.js'
 
@@ -289,6 +291,7 @@ export default {
 	setup() {
 		const _backgroundMapStore = useBackgroundMapStore()
 		const featureFlagStore = useFeatureFlagStore()
+		const globalStore = useGlobalStore()
 		const urlStore = useURLStore()
 
 		// Category management
@@ -349,6 +352,23 @@ export default {
 					layer.title.toLowerCase().includes(query) || layer.name.toLowerCase().includes(query)
 			)
 		})
+
+		// Track active imagery layers for cleanup
+		const hsyMapLayer = ref(null)
+		const basicMapLayer = ref(null)
+
+		const removeLayer = (layerRef, errorMsg) => {
+			if (layerRef.value) {
+				try {
+					if (globalStore.cesiumViewer?.imageryLayers.contains(layerRef.value)) {
+						globalStore.cesiumViewer.imageryLayers.remove(layerRef.value)
+					}
+				} catch (error) {
+					logger.error(errorMsg, error)
+				}
+				layerRef.value = null
+			}
+		}
 
 		// Flood risk maps
 		const selectedFloodLayer = ref('none')
@@ -492,16 +512,80 @@ export default {
 			// Search is reactive via computed property
 		}
 
-		const selectHSYLayer = (layer) => {
+		const selectHSYLayer = async (layer) => {
 			selectedHSYLayer.value = layer.name
-			// TODO: Implement HSY layer selection logic
-			logger.debug('Selected HSY layer:', layer)
+			const Cesium = getCesium()
+
+			// Create and add the new HSY WMS imagery layer
+			try {
+				const provider = new Cesium.WebMapServiceImageryProvider({
+					url: urlStore.wmsProxy,
+					layers: layer.name,
+					// Performance optimization: 512x512 tiles reduce requests by ~75%
+					tileWidth: 512,
+					tileHeight: 512,
+					minimumLevel: 0,
+					maximumLevel: 18,
+					tilingScheme: new Cesium.GeographicTilingScheme(),
+				})
+				await provider.readyPromise
+
+				// Guard: only proceed if this is still the currently selected layer;
+				// a rapid second selection would have updated selectedHSYLayer already.
+				if (selectedHSYLayer.value !== layer.name) return
+
+				// Remove previous layer only after the new one is ready to avoid
+				// race conditions where both layers end up on the map simultaneously.
+				removeLayer(hsyMapLayer, 'Error removing previous HSY imagery layer:')
+
+				hsyMapLayer.value =
+					globalStore.cesiumViewer.imageryLayers.addImageryProvider(provider)
+				logger.debug('[BackgroundMapBrowser] HSY layer added:', layer.name)
+			} catch (error) {
+				logger.error('Error creating HSY imagery layer:', error)
+			}
 		}
 
 		const selectBasicMap = (map) => {
 			selectedBasicMap.value = map.value
-			// TODO: Implement basic map selection logic
-			logger.debug('Selected basic map:', map)
+			const Cesium = getCesium()
+
+			// Remove previously added basic map layer
+			removeLayer(basicMapLayer, 'Error removing previous basic map layer:')
+
+			if (map.value === 'satellite') {
+				// ESRI World Imagery — no token required
+				try {
+					const provider = new Cesium.UrlTemplateImageryProvider({
+						url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+						maximumLevel: 19,
+						credit: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics',
+					})
+					basicMapLayer.value = new Cesium.ImageryLayer(provider)
+					// Insert at the bottom so it sits beneath all other overlays
+					globalStore.cesiumViewer.imageryLayers.add(basicMapLayer.value, 0)
+					logger.debug('[BackgroundMapBrowser] Satellite layer added')
+				} catch (error) {
+					logger.error('Error creating satellite imagery layer:', error)
+				}
+			} else if (map.value === 'terrain') {
+				// OpenTopoMap — CC-BY-SA, no token required
+				try {
+					const provider = new Cesium.UrlTemplateImageryProvider({
+						url: 'https://tile.opentopomap.org/{z}/{x}/{y}.png',
+						maximumLevel: 17,
+						credit: '© OpenTopoMap contributors (CC-BY-SA)',
+					})
+					basicMapLayer.value = new Cesium.ImageryLayer(provider)
+					// Insert at the bottom so it sits beneath all other overlays
+					globalStore.cesiumViewer.imageryLayers.add(basicMapLayer.value, 0)
+					logger.debug('[BackgroundMapBrowser] Terrain layer added')
+				} catch (error) {
+					logger.error('Error creating terrain imagery layer:', error)
+				}
+			}
+			// 'default' — removing the custom layer above is sufficient;
+			// the original OSM + Helsinki WMS base layers remain.
 		}
 
 		const updateFloodLayer = async () => {
@@ -516,6 +600,12 @@ export default {
 		}
 
 		const clearSelection = () => {
+			// Remove custom basic map layer if active
+			removeLayer(basicMapLayer, 'Error removing basic map layer on clear:')
+
+			// Remove HSY imagery layer if active
+			removeLayer(hsyMapLayer, 'Error removing HSY layer on clear:')
+
 			selectedBasicMap.value = 'default'
 			selectedHSYLayer.value = null
 			selectedFloodLayer.value = 'none'
