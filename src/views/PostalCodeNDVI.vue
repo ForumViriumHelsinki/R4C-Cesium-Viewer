@@ -34,7 +34,9 @@ import { AVAILABLE_NDVI_DATES, DEFAULT_NDVI_DATE } from '../constants/ndviDates.
 import { eventBus } from '../services/eventEmitter.js'
 import { changeTIFF } from '../services/tiffImagery.js'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
+import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	setup() {
@@ -47,9 +49,17 @@ export default {
 		const selectedDate = ref(DEFAULT_NDVI_DATE)
 		const availableDates = AVAILABLE_NDVI_DATES
 
+		const globalStore = useGlobalStore()
+
 		const updateImage = async () => {
 			backgroundMapStore.setNdviDate(selectedDate.value)
-			changeTIFF().catch(console.error)
+			changeTIFF().catch((error) => {
+				logger.error('[PostalCodeNDVI] Failed to load NDVI imagery:', error)
+				globalStore.showError(
+					'Unable to load NDVI vegetation data. Please try again.',
+					`TIFF imagery load failed: ${error.message}`
+				)
+			})
 		}
 
 		onMounted(async () => {

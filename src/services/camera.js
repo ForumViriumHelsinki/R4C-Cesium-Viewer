@@ -173,6 +173,10 @@ export default class Camera {
 
 		if (!entity) {
 			logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 2D view`)
+			this.store.showError(
+				'Unable to navigate to postal code area.',
+				`Postal code ${this.store.postalcode} not found in index for 2D view`
+			)
 			return
 		}
 
@@ -216,6 +220,10 @@ export default class Camera {
 
 		if (!entity) {
 			logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 3D view`)
+			this.store.showError(
+				'Unable to navigate to postal code area.',
+				`Postal code ${this.store.postalcode} not found in index for 3D view`
+			)
 			return
 		}
 
@@ -419,6 +427,10 @@ export default class Camera {
 
 		if (!entity) {
 			logger.warn(`[Camera] Postal code ${postalCode} not found in index`)
+			this.store.showError(
+				'Unable to navigate to postal code area.',
+				`Postal code ${postalCode} not found in index`
+			)
 			return
 		}
 

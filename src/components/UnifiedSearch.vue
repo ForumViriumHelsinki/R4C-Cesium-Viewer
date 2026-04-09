@@ -534,7 +534,13 @@ const selectPostalCode = async (area) => {
 const moveCameraAndLoad = (longitude, latitude) => {
 	cameraService.setCameraView(longitude, latitude)
 	eventBus.emit('geocodingPrintEvent')
-	featurePicker.loadPostalCode().catch(console.error)
+	featurePicker.loadPostalCode().catch((error) => {
+		logger.error('[UnifiedSearch] Failed to load postal code:', error)
+		globalStore.showError(
+			'Unable to load postal code data. Please try again.',
+			`Postal code load failed: ${error.message}`
+		)
+	})
 }
 
 /**

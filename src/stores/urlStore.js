@@ -72,7 +72,7 @@ export const useURLStore = defineStore('url', {
 			// Environmental sensors
 			sensors: {
 				// R4C (Regions for Climate Action) real-time sensor network
-				r4cLatest: 'https://bri3.fvh.io/opendata/r4c/r4c_last.geojson',
+				r4cLatest: 'https://bri3.fvh.io/opendata/r4c/r4c_all_latest.geojson',
 			},
 		},
 	}),

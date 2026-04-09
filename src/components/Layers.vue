@@ -173,10 +173,10 @@ import Populationgrid from '../services/populationgrid.js'
 import { changeTIFF, removeTIFF } from '../services/tiffImagery.js'
 import Tree from '../services/tree.js'
 import Vegetation from '../services/vegetation'
-import Wms from '../services/wms.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore'
 import { useToggleStore } from '../stores/toggleStore'
+import logger from '../utils/logger.js'
 
 export default {
 	setup() {
@@ -279,7 +279,13 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if (store.postalcode && !dataSourceService.getDataSourceByName('Vegetation')) {
 					const vegetationService = new Vegetation()
-					vegetationService.loadVegetation(store.postalcode).catch(console.error)
+					vegetationService.loadVegetation(store.postalcode).catch((error) => {
+						logger.error('[Layers] Failed to load vegetation:', error)
+						store.showError(
+							'Unable to load vegetation data.',
+							`Vegetation load failed: ${error.message}`
+						)
+					})
 				} else {
 					dataSourceService.changeDataSourceShowByName('Vegetation', true)
 				}
@@ -303,7 +309,10 @@ export default {
 
 			if (showTrees.value) {
 				if (store.postalcode && !dataSourceService.getDataSourceByName('Trees')) {
-					treeService.loadTrees().catch(console.error)
+					treeService.loadTrees().catch((error) => {
+						logger.error('[Layers] Failed to load trees:', error)
+						store.showError('Unable to load tree data.', `Tree load failed: ${error.message}`)
+					})
 				} else {
 					dataSourceService.changeDataSourceShowByName('Trees', true)
 				}
@@ -331,10 +340,13 @@ export default {
 			} else if (layer === 'landcover') {
 				ndvi.value = false
 				toggleStore.setNDVI(false)
-				store.cesiumViewer.imageryLayers.removeAll()
-				store.cesiumViewer.imageryLayers.add(
-					new Wms().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-				)
+				removeTIFF().catch((error) => {
+					logger.error('[Layers] Failed to hide NDVI when switching to landcover:', error)
+					store.showError(
+						'Unable to hide NDVI imagery.',
+						`NDVI removal failed: ${error.message}`
+					)
+				})
 			}
 		}
 
@@ -372,10 +384,22 @@ export default {
 			toggleStore.setNDVI(ndvi.value)
 
 			if (ndvi.value) {
-				void changeTIFF()
+				changeTIFF().catch((error) => {
+					logger.error('[Layers] Failed to load NDVI imagery:', error)
+					store.showError(
+						'Unable to load NDVI imagery.',
+						`NDVI load failed: ${error.message}`
+					)
+				})
 				eventBus.emit('addNDVI')
 			} else {
-				void removeTIFF()
+				removeTIFF().catch((error) => {
+					logger.error('[Layers] Failed to hide NDVI imagery:', error)
+					store.showError(
+						'Unable to hide NDVI imagery.',
+						`NDVI removal failed: ${error.message}`
+					)
+				})
 			}
 		}
 

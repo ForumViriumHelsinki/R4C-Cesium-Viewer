@@ -52,6 +52,7 @@ import PieChart from '../components/PieChart.vue'
 import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
 import { useGlobalStore } from '../stores/globalStore.js' // Global store for Cesium viewer
 import { useToggleStore } from '../stores/toggleStore.js' // Store for toggling
+import logger from '../utils/logger.js'
 
 export default {
 	components: {
@@ -73,7 +74,13 @@ export default {
 			if (isLandcoverChecked) {
 				// Remove background map and add land cover layer
 				store.cesiumViewer.imageryLayers.remove('avoindata:Karttasarja_PKS', true)
-				createHSYImageryLayer().catch(console.error) // Add land cover
+				createHSYImageryLayer().catch((error) => {
+					logger.error('[Landcover] Failed to load HSY imagery layer:', error)
+					store.showError(
+						'Unable to load land cover layer. Please try again.',
+						`HSY imagery layer failed: ${error.message}`
+					)
+				})
 			} else {
 				// Remove land cover
 				removeLandcover()

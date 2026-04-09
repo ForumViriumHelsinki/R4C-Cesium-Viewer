@@ -39,6 +39,9 @@ export default class Vegetation {
 			const Cesium = getCesium()
 			const url = this.urlStore.r4cSensorUrl
 			const response = await fetch(url)
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+			}
 			const data = await response.json()
 
 			// Create a Cesium data source
