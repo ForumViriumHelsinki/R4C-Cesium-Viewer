@@ -33,6 +33,7 @@
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore.ts'
 import { useGlobalStore } from '../stores/globalStore.js'
+import { useLoadingStore } from '../stores/loadingStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import { processBatchAdaptive } from '../utils/batchProcessor.js'
@@ -108,6 +109,7 @@ export default class ViewportBuildingLoader {
 		this.urlStore = useURLStore()
 		this.buildingStore = useBuildingStore()
 		this.featureFlagStore = useFeatureFlagStore()
+		this.loadingStore = useLoadingStore()
 		this.viewer = null
 
 		// Service dependencies
@@ -634,6 +636,10 @@ export default class ViewportBuildingLoader {
 							logger.warn(
 								`[ViewportBuildingLoader] Heat data fetch failed:`,
 								error?.message || error
+							)
+							this.loadingStore?.setLayerError(
+								'heatData',
+								error?.message || 'Heat data unavailable'
 							)
 							return null
 						})

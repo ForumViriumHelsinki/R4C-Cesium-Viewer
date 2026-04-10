@@ -104,57 +104,51 @@ pinia.use(
 
 const app = createApp(App)
 
-Sentry.init({
-	app,
-	// debug: true,
-	// Passing in `Vue` is optional, if you do not pass it `window.Vue` must be present.
-	// Vue: Vue,
-	dsn: import.meta.env.VITE_SENTRY_DSN,
-	environment: import.meta.env.MODE,
-	release: `r4c-cesium-viewer@${version}`,
+if (import.meta.env.VITE_SENTRY_DSN) {
+	Sentry.init({
+		app,
+		dsn: import.meta.env.VITE_SENTRY_DSN,
+		environment: import.meta.env.MODE,
+		release: `r4c-cesium-viewer@${version}`,
 
-	// This enables automatic instrumentation (highly recommended),
-	// but is not necessary for purely manual usage
-	// If you only want to use custom instrumentation:
-	// * Remove the `BrowserTracing` integration
-	// * add `Sentry.addTracingExtensions()` above your Sentry.init() call
-	integrations: [
-		Sentry.browserTracingIntegration(),
-		Sentry.replayIntegration(),
-		// Note: replayCanvasIntegration removed - incompatible with CesiumJS WebGL
-		// Canvas replay captures every frame, causing 30-40s of main thread blocking
-		// Session replay still works for DOM elements; only canvas content is excluded
-	],
+		integrations: [
+			Sentry.browserTracingIntegration(),
+			Sentry.replayIntegration(),
+			// Note: replayCanvasIntegration removed - incompatible with CesiumJS WebGL
+			// Canvas replay captures every frame, causing 30-40s of main thread blocking
+			// Session replay still works for DOM elements; only canvas content is excluded
+		],
 
-	// Sample error events - full capture in dev, 20% in production
-	sampleRate: import.meta.env.PROD ? 0.2 : 1.0,
+		// Sample error events - full capture in dev, 20% in production
+		sampleRate: import.meta.env.PROD ? 0.2 : 1.0,
 
-	// We recommend adjusting this value in production, or using tracesSampler
-	// for finer control
-	tracesSampleRate: 1.0,
+		// We recommend adjusting this value in production, or using tracesSampler
+		// for finer control
+		tracesSampleRate: 1.0,
 
-	// Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
-	tracePropagationTargets: [
-		'localhost',
-		/^https:\/\/r4c\.dataportal\.fi/,
-		/^https:\/\/r4c\.dev\.dataportal\.fi/,
-	],
+		// Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
+		tracePropagationTargets: [
+			'localhost',
+			/^https:\/\/r4c\.dataportal\.fi/,
+			/^https:\/\/r4c\.dev\.dataportal\.fi/,
+		],
 
-	// Capture Replay for 10% of all sessions,
-	// plus for 100% of sessions with an error
-	replaysSessionSampleRate: 0.1,
-	replaysOnErrorSampleRate: 1.0,
+		// Capture Replay for 10% of all sessions,
+		// plus for 100% of sessions with an error
+		replaysSessionSampleRate: 0.1,
+		replaysOnErrorSampleRate: 1.0,
 
-	// CPU profiling: 10% in production (minimal overhead), 100% in dev
-	profilesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-})
+		// CPU profiling: 10% in production (minimal overhead), 100% in dev
+		profilesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+	})
 
-// Log Sentry configuration in development only (security: avoid exposing DSN)
-logger.debug('Sentry configuration:', {
-	environment: import.meta.env.MODE,
-	release: `r4c-cesium-viewer@${version}`,
-	dsnConfigured: !!import.meta.env.VITE_SENTRY_DSN,
-})
+	logger.debug('Sentry configuration:', {
+		environment: import.meta.env.MODE,
+		release: `r4c-cesium-viewer@${version}`,
+	})
+} else {
+	logger.info('Sentry: DSN not configured, error monitoring disabled')
+}
 
 app.use(pinia)
 app.use(vuetify)
