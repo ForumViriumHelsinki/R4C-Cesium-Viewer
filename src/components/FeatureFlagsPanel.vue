@@ -40,6 +40,16 @@
 				Configure runtime feature flags for the application. Changes are saved to your browser.
 			</v-card-subtitle>
 
+			<v-alert
+				v-if="featureFlagStore.providerSource === 'fallback'"
+				type="warning"
+				density="compact"
+				variant="tonal"
+				class="mx-4 mt-2"
+			>
+				Using local defaults (GOFF unavailable)
+			</v-alert>
+
 			<v-divider />
 
 			<v-card-text style="max-height: 500px">
@@ -110,6 +120,14 @@
 											class="ml-2"
 										>
 											Not Supported
+										</v-chip>
+										<v-chip
+											v-if="flag.configRequirement && !flag.configRequirement.present"
+											size="x-small"
+											color="grey"
+											class="ml-2"
+										>
+											{{ flag.configRequirement.label }} not configured
 										</v-chip>
 									</v-list-item-title>
 

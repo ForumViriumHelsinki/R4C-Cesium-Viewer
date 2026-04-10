@@ -62,6 +62,11 @@ export interface FlagMetadata {
 	requiresSupport: boolean
 	/** Default value when GOFF is unavailable (InMemoryProvider fallback) */
 	fallbackDefault: boolean
+	/** Environment variable required for this flag to function */
+	configRequirement?: {
+		label: string
+		present: boolean
+	}
 }
 
 export type FlagMetadataMap = Record<FeatureFlagName, FlagMetadata>
@@ -298,6 +303,11 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		// Sentry is enabled when DSN is configured
 		fallbackDefault:
 			import.meta.env.VITE_SENTRY_DSN !== undefined && import.meta.env.VITE_SENTRY_DSN !== '',
+		configRequirement: {
+			label: 'Sentry DSN',
+			present:
+				import.meta.env.VITE_SENTRY_DSN !== undefined && import.meta.env.VITE_SENTRY_DSN !== '',
+		},
 	},
 	digitransitIntegration: {
 		goffId: 'r4c-digitransit-integration',
@@ -310,6 +320,12 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		fallbackDefault:
 			import.meta.env.VITE_DIGITRANSIT_KEY !== undefined &&
 			import.meta.env.VITE_DIGITRANSIT_KEY !== '',
+		configRequirement: {
+			label: 'Digitransit API Key',
+			present:
+				import.meta.env.VITE_DIGITRANSIT_KEY !== undefined &&
+				import.meta.env.VITE_DIGITRANSIT_KEY !== '',
+		},
 	},
 	backgroundMapProviders: {
 		goffId: 'r4c-background-map-providers',

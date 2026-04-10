@@ -6,6 +6,7 @@
 import { GoFeatureFlagWebProvider } from '@openfeature/go-feature-flag-web-provider'
 import { type EvaluationContext, InMemoryProvider, OpenFeature } from '@openfeature/web-sdk'
 import { ALL_FLAG_NAMES, FLAG_METADATA } from '@/constants/flagMetadata'
+import { useFeatureFlagStore } from '@/stores/featureFlagStore'
 import type { useUserStore } from '@/stores/userStore'
 import logger from '@/utils/logger'
 
@@ -95,16 +96,19 @@ export async function initializeFeatureFlags(userStore: UserStore): Promise<void
 		try {
 			await OpenFeature.setProviderAndWait(provider)
 			logger.info('Feature flags: GOFF provider initialized')
+			useFeatureFlagStore().setProviderSource('goff')
 		} catch (error) {
 			logger.warn('Feature flags: GOFF provider failed, falling back to defaults', error)
 			const fallbackProvider = new InMemoryProvider(buildFallbackFlags())
 			await OpenFeature.setProviderAndWait(fallbackProvider)
+			useFeatureFlagStore().setProviderSource('fallback')
 		}
 	} else {
 		logger.info('Feature flags: GOFF relay unavailable, using fallback defaults')
 		await OpenFeature.setContext(context)
 		const fallbackProvider = new InMemoryProvider(buildFallbackFlags())
 		await OpenFeature.setProviderAndWait(fallbackProvider)
+		useFeatureFlagStore().setProviderSource('fallback')
 	}
 }
 

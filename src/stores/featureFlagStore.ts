@@ -40,6 +40,10 @@ export interface FeatureFlagConfig {
 	description: string
 	experimental?: boolean
 	requiresSupport?: boolean
+	configRequirement?: {
+		label: string
+		present: boolean
+	}
 }
 
 export type FeatureFlagsMap = Record<FeatureFlagName, FeatureFlagConfig>
@@ -48,6 +52,8 @@ export type UserOverridesMap = Partial<Record<FeatureFlagName, boolean>>
 export interface FeatureFlagWithName extends FeatureFlagConfig {
 	name: FeatureFlagName
 }
+
+export type ProviderSource = 'goff' | 'fallback' | 'unknown'
 
 interface FeatureFlagState {
 	/** Cached evaluation results from OpenFeature */
@@ -58,6 +64,8 @@ interface FeatureFlagState {
 	hardwareSupport: Partial<Record<FeatureFlagName, boolean>>
 	/** Whether flags have been evaluated at least once */
 	initialized: boolean
+	/** Which provider is active: GOFF relay or local fallback defaults */
+	providerSource: ProviderSource
 }
 
 export const useFeatureFlagStore = defineStore('featureFlags', {
@@ -66,6 +74,7 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 		userOverrides: {},
 		hardwareSupport: {},
 		initialized: false,
+		providerSource: 'unknown',
 	}),
 
 	getters: {
@@ -129,6 +138,7 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 							description: meta.description,
 							experimental: meta.experimental,
 							requiresSupport: meta.requiresSupport,
+							configRequirement: meta.configRequirement,
 						}
 					})
 			},
@@ -256,6 +266,11 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 					logger.info(`Feature '${flagName}' disabled: hardware not supported`)
 				}
 			}
+		},
+
+		/** Set which provider is active (called by featureFlagProvider after init) */
+		setProviderSource(source: ProviderSource): void {
+			this.providerSource = source
 		},
 
 		/** Get feature flag metadata */

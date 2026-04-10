@@ -100,12 +100,15 @@ class UnifiedLoader {
 	 * @private
 	 */
 	get loadingStore() {
-		if (!this._loadingStore) {
+		if (!this._loadingStore || this._loadingStoreFallback) {
 			try {
 				this._loadingStore = useLoadingStore()
+				this._loadingStoreFallback = false
 			} catch (error) {
-				logger.warn('Loading store not available, using fallback:', error.message)
-				// Provide a fallback object with minimal interface
+				if (!this._loadingStoreFallback) {
+					logger.warn('Loading store not available, using fallback:', error.message)
+				}
+				this._loadingStoreFallback = true
 				this._loadingStore = {
 					startLayerLoading: () => {},
 					updateLayerProgress: () => {},

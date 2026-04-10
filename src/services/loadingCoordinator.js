@@ -120,11 +120,15 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	get loadingStore() {
-		if (!this._loadingStore) {
+		if (!this._loadingStore || this._loadingStoreFallback) {
 			try {
 				this._loadingStore = useLoadingStore()
+				this._loadingStoreFallback = false
 			} catch (error) {
-				logger.warn('Loading store not available, using fallback:', error.message)
+				if (!this._loadingStoreFallback) {
+					logger.warn('Loading store not available, using fallback:', error.message)
+				}
+				this._loadingStoreFallback = true
 				this._loadingStore = {
 					startLayerLoading: () => {},
 					updateLayerProgress: () => {},
@@ -145,11 +149,15 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	get globalStore() {
-		if (!this._globalStore) {
+		if (!this._globalStore || this._globalStoreFallback) {
 			try {
 				this._globalStore = useGlobalStore()
+				this._globalStoreFallback = false
 			} catch (error) {
-				logger.warn('Global store not available, using fallback:', error.message)
+				if (!this._globalStoreFallback) {
+					logger.warn('Global store not available, using fallback:', error.message)
+				}
+				this._globalStoreFallback = true
 				this._globalStore = {
 					cesiumViewer: null,
 					postalcode: null,
@@ -585,61 +593,6 @@ class LoadingCoordinator {
 				? performance.now() - this.performanceMetrics.sessionStartTime
 				: 0,
 		}
-	}
-
-	/**
-	 * Smart preloading based on user context
-	 * Analyzes user behavior to predict and preload likely next actions.
-	 *
-	 * Note: Currently returns empty array. Future implementation will use
-	 * analytics and user history to predict needed data.
-	 *
-	 * @param {Object} [context={}] - User context for prediction
-	 * @param {string} [context.currentPostalCode] - Current postal code
-	 * @param {string} [context.view] - Current view mode
-	 * @param {string[]} [context.userHistory] - Recent user actions
-	 * @returns {Promise<SessionResult[]>} Preload results
-	 *
-	 * @example
-	 * // Intelligent preloading based on current location
-	 * await loadingCoordinator.intelligentPreload({
-	 *   currentPostalCode: '00100',
-	 *   view: 'postalcode',
-	 *   userHistory: ['00150', '00170']
-	 * });
-	 */
-	async intelligentPreload(context = {}) {
-		const {
-			currentPostalCode: _currentPostalCode,
-			view: _view,
-			userHistory: _userHistory = [],
-		} = context
-
-		// Determine what to preload based on context
-		const preloadConfigs = this.generatePreloadConfigs(context)
-
-		if (preloadConfigs.length > 0) {
-			logger.debug(`Starting intelligent preload of ${preloadConfigs.length} layers`)
-
-			await this.startLoadingSession('preload', preloadConfigs, {
-				priorityStrategy: 'balanced',
-				backgroundMode: true,
-			})
-		}
-	}
-
-	/**
-	 * Generate preload configurations based on context
-	 * Future: Analyze user patterns and predict likely next actions.
-	 *
-	 * @param {Object} context - User context
-	 * @returns {Object[]} Preload configurations (currently empty)
-	 * @private
-	 */
-	generatePreloadConfigs(_context) {
-		// This would analyze user patterns and predict likely next actions
-		// For now, return empty array - would be expanded based on analytics
-		return []
 	}
 
 	/**
