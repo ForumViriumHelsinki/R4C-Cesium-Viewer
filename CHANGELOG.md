@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.46.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.45.1...r4c-cesium-viewer-v1.46.0) (2026-04-10)
+
+
+### Features
+
+* implement BackgroundMapBrowser HSY layer and basic map selection ([#683](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/683)) ([be3616f](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/be3616f2161483f15d02bed2fd7c1b3631790e4d))
+* **theme:** dark mode support with theme-aware colors and sidebar-responsive layout ([#663](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/663)) ([0cfa1ca](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0cfa1ca9bc6c57413ce2d172998be0574c1dcc76))
+
+
+### Bug Fixes
+
+* memory leaks by adding proper event listener cleanup ([#684](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/684)) ([ca6b4f6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ca6b4f6ceaaffaf4370b7ec2959a0843ead4d17e))
+* **test:** improve test reliability with proper mocking and fixture usage ([#665](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/665)) ([b87fefb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b87fefba1f397c1c87f6de0e7f14c3f4146c2bc8))
+* **ui:** resolve view mode toggle overflow and remove redundant top bar chip ([#667](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/667)) ([8c9cd7e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8c9cd7e225093de34ef97306c4bc8ca902af1adc))
+* **ux:** fix broken sensor URL, layer conflict, and surface errors to users ([#676](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/676)) ([99caeb4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/99caeb42a7906295957c2e0a10f2d85383b3bd66))
+* **ux:** surface silent degradation patterns to users and developers ([#688](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/688)) ([43d5193](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/43d5193e0db4288e18d8d60dab9251d7c439ce4b))
+
 ## [1.45.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.45.0...r4c-cesium-viewer-v1.45.1) (2026-03-25)
 
 
