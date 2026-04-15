@@ -7,6 +7,11 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # DNS resolver — required because /pygeoapi/ uses a variable in proxy_pass.
+    # Value populated at container startup by 05-set-dns-resolver.envsh
+    # (Docker: 127.0.0.11, Kubernetes: kube-dns ClusterIP).
+    resolver ${NGINX_DNS_RESOLVER} valid=30s ipv6=off;
+
     # Global proxy settings
     proxy_cache global_cache;
     proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
@@ -84,11 +89,41 @@ server {
     }
 
     location /pygeoapi/ {
-        proxy_pass https://pygeoapi.dataportal.fi/;
-        proxy_set_header Host pygeoapi.dataportal.fi;
-        # Required for Envoy Gateway: send SNI so the gateway can identify the virtual host
-        proxy_ssl_server_name on;
+        # Host is supplied at deploy time via VITE_PYGEOAPI_HOST. In production
+        # this points at the in-cluster pygeoapi service
+        # (e.g. pygeoapi-helm-webapp.pygeoapi.svc.cluster.local), bypassing
+        # Envoy Gateway entirely. For local dev it can be pygeoapi.dataportal.fi
+        # or a localhost:port. Using a variable forces nginx to re-resolve DNS
+        # at runtime instead of baking in the IP at config-load time.
+        set $pygeoapi_host "${VITE_PYGEOAPI_HOST}";
+
+        # Protocol follows host shape:
+        #   - localhost:port       -> http  (dev)
+        #   - short hostname       -> http  (in-cluster short service name)
+        #   - *.svc.cluster.local  -> http  (in-cluster FQDN)
+        #   - anything else        -> https (public endpoint)
+        set $pygeoapi_protocol "https";
+        if ($pygeoapi_host ~* "^localhost:[0-9]+$") {
+            set $pygeoapi_protocol "http";
+        }
+        if ($pygeoapi_host ~* "\.svc\.cluster\.local$") {
+            set $pygeoapi_protocol "http";
+        }
+        if ($pygeoapi_host ~* "^[^.]+$") {
+            set $pygeoapi_protocol "http";
+        }
+
+        # Strip the /pygeoapi prefix before forwarding.
+        # With a variable in proxy_pass, nginx does NOT do prefix-replacement,
+        # so the rewrite must produce the final upstream path.
         rewrite ^/pygeoapi/(.*)$ /$1 break;
+
+        # proxy_pass without a URI preserves the rewritten path verbatim.
+        proxy_pass $pygeoapi_protocol://$pygeoapi_host;
+        proxy_set_header Host $pygeoapi_host;
+        # Send SNI when talking to an https upstream (Envoy Gateway requires it).
+        proxy_ssl_server_name on;
+        proxy_ssl_name $pygeoapi_host;
     }
 
     location /wms/proxy {
