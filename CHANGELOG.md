@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.5...r4c-cesium-viewer-v1.22.6) (2026-04-15)
+
+
+### Bug Fixes
+
+* **nginx:** make DNS resolver entrypoint script executable ([#693](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/693)) ([fe1d6dd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fe1d6dd54bb7af54cc6e418d2d5a2a444a7f36d2))
+
 ## [1.22.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.4...r4c-cesium-viewer-v1.22.5) (2026-04-15)
 
 
