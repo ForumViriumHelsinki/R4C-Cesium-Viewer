@@ -1,0 +1,133 @@
+# Beta deployment — r4c-beta.dataportal.fi
+#
+# Independent deployment of the latest `main` build for stakeholder validation
+# before promotion to r4c.dataportal.fi. Shares the regions4climate namespace
+# and database with prod; deliberately avoids running DB migrations here so
+# that main's schema changes cannot affect the stable release.
+#
+# image.tag is maintained by ArgoCD Image Updater (see r4c-cesium-viewer-beta
+# Application in infrastructure/argocd/apps/templates/regions4climate/).
+image:
+  repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
+  tag: '1.22.6'
+# Distinct release name to avoid Service/Deployment collisions with stable
+fullnameOverride: r4c-cesium-viewer-beta
+imagePullSecrets:
+  - name: ghcr-login-secret
+serviceAccount:
+  create: true
+  # Distinct name to avoid collision with the stable ServiceAccount
+  name: r4c-cesium-viewer-beta
+  annotations:
+    iam.gke.io/gcp-service-account: pygeoapi@fvh-project-containers-etc.iam.gserviceaccount.com
+# Cloud SQL Proxy sidecar (read-only DB access; migrations disabled below)
+initContainers:
+  - name: cloud-sql-proxy
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.19.0
+    restartPolicy: Always
+    args:
+      - '--structured-logs'
+      - '--port=5432'
+      - '--auto-iam-authn'
+      - 'fvh-project-containers-etc:europe-north1:fvh-postgres'
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+# Migrations disabled on beta — the stable release owns schema changes against
+# the shared regions4climate database. Re-enable only once main is ready to
+# promote to prod.
+migrations:
+  enabled: false
+gateway:
+  enabled: true
+  hosts:
+    - host: r4c-beta.dataportal.fi
+      paths:
+        - path: /
+          pathType: PathPrefix
+ingress:
+  enabled: false
+env:
+  - name: SENTRY_AUTH_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: regions4climate-secrets # pragma: allowlist secret
+        key: SENTRY_AUTH_TOKEN
+  - name: VITE_SENTRY_DSN
+    valueFrom:
+      secretKeyRef:
+        name: regions4climate-secrets # pragma: allowlist secret
+        key: VITE_SENTRY_DSN
+  - name: SENTRY_DSN
+    valueFrom:
+      secretKeyRef:
+        name: regions4climate-secrets # pragma: allowlist secret
+        key: SENTRY_DSN
+  - name: VITE_DIGITRANSIT_KEY
+    valueFrom:
+      secretKeyRef:
+        name: regions4climate-secrets # pragma: allowlist secret
+        key: VITE_DIGITRANSIT_KEY
+  - name: VITE_PYGEOAPI_HOST
+    value: 'pygeoapi-helm-webapp.pygeoapi.svc.cluster.local'
+  - name: VITE_PYGEOAPI_URL
+    value: 'https://pygeoapi.dataportal.fi'
+replicaCount: 1
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 101
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+volumes:
+  - name: nginx-cache
+    emptyDir: {}
+  - name: nginx-run
+    emptyDir: {}
+  - name: nginx-conf
+    emptyDir: {}
+  - name: tmp
+    emptyDir: {}
+volumeMounts:
+  - name: nginx-cache
+    mountPath: /var/cache/nginx
+  - name: nginx-run
+    mountPath: /var/run
+  - name: nginx-conf
+    mountPath: /etc/nginx/conf.d
+  - name: tmp
+    mountPath: /tmp
+keda:
+  enabled: true
+  minReplicaCount: 0
+  maxReplicaCount: 1
+  pollingInterval: 30
+  cooldownPeriod: 300
+  triggers:
+    - type: cron
+      metadata:
+        timezone: Europe/Helsinki
+        start: 0 7 * * 1-5
+        end: 0 20 * * 1-5
+        desiredReplicas: '1'
