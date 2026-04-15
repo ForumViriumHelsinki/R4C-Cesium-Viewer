@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.4...r4c-cesium-viewer-v1.22.5) (2026-04-15)
+
+
+### Bug Fixes
+
+* **nginx:** route /pygeoapi/ via VITE_PYGEOAPI_HOST to bypass Envoy Gateway ([#689](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/689)) ([b8d5a29](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b8d5a29fc9b18d63205f9fd72450a328efaca469))
+
 ## [1.22.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.3...r4c-cesium-viewer-v1.22.4) (2026-04-02)
 
 
