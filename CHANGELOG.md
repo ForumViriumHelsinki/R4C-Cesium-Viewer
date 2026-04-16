@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.47.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.46.0...r4c-cesium-viewer-v1.47.0) (2026-04-16)
+
+
+### Features
+
+* **deploy:** add beta values for r4c-beta.dataportal.fi ([#696](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/696)) ([92b5d49](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/92b5d492aec886cc495377c5ce85b808ca8c7e2d))
+
 ## [1.46.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.45.1...r4c-cesium-viewer-v1.46.0) (2026-04-10)
 
 
