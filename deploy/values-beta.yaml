@@ -9,7 +9,7 @@
 # Application in infrastructure/argocd/apps/templates/regions4climate/).
 image:
   repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
-  tag: '1.22.6'
+  tag: '1.47.0'
 # Distinct release name to avoid Service/Deployment collisions with stable
 fullnameOverride: r4c-cesium-viewer-beta
 imagePullSecrets:
