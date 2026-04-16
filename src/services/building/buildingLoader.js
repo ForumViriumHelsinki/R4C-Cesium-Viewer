@@ -64,6 +64,12 @@ export class BuildingLoader {
 		}
 	}
 
+	_isStale(layerId) {
+		if (this._currentLoadingLayerId === layerId) return false
+		logger.debug('[BuildingLoader] Navigation changed during load, discarding stale results')
+		return true
+	}
+
 	/**
 	 * Loads Helsinki buildings for a postal code with caching support.
 	 * Uses unifiedLoader for IndexedDB caching with 1-hour TTL.
@@ -108,17 +114,7 @@ export class BuildingLoader {
 				this.urbanheatService.getHeatData(targetPostalCode),
 			])
 
-			// Navigation may have changed while both fetches were in flight.
-			// `_currentLoadingLayerId` is cleared on cancel or reassigned on a new
-			// loadBuildings() call, so a mismatch means these results are stale.
-			// Bail out before merging/creating datasources with the wrong postal code.
-			if (this._currentLoadingLayerId !== layerId) {
-				logger.debug(
-					'[HelsinkiBuilding] Navigation changed during load, discarding stale results for:',
-					layerId
-				)
-				return null
-			}
+			if (this._isStale(layerId)) return null
 
 			// Handle building data (required)
 			if (buildingResult.status === 'rejected') {
@@ -157,6 +153,8 @@ export class BuildingLoader {
 				buildingData.features?.length || 0,
 				'building features'
 			)
+
+			if (this._isStale(layerId)) return null
 
 			// Create Cesium datasource with entities
 			const entities = await this.datasourceService.addDataSourceWithPolygonFix(

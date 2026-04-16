@@ -482,9 +482,10 @@ class BackgroundPreloader {
 	removeIdleDetection() {
 		if (this.eventListenersAttached && this.boundResetIdleTimer) {
 			;['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach((event) => {
-				document.removeEventListener(event, this.boundResetIdleTimer, { passive: true })
+				document.removeEventListener(event, this.boundResetIdleTimer)
 			})
 			this.eventListenersAttached = false
+			this.boundResetIdleTimer = null
 		}
 
 		if (this.idleTimer) {

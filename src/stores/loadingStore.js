@@ -336,19 +336,28 @@ export const useLoadingStore = defineStore('loading', {
 				this.clearStaleLoading(timeout)
 			}, interval)
 
+			if (typeof window !== 'undefined' && !this._staleCleanupUnloadHandler) {
+				this._staleCleanupUnloadHandler = () => this.stopStaleCleanupTimer()
+				window.addEventListener('beforeunload', this._staleCleanupUnloadHandler, { once: true })
+			}
+
 			logger.debug(
 				`[loadingStore] Started stale cleanup timer (${interval}ms interval, ${timeout}ms timeout)`
 			)
 		},
 
 		/**
-		 * Stop automatic stale loading cleanup.
+		 * Stop automatic stale loading cleanup. Idempotent — safe to call multiple times.
 		 */
 		stopStaleCleanupTimer() {
 			if (this._staleCleanupTimer) {
 				clearInterval(this._staleCleanupTimer)
 				this._staleCleanupTimer = null
 				logger.debug('[loadingStore] Stopped stale cleanup timer')
+			}
+			if (typeof window !== 'undefined' && this._staleCleanupUnloadHandler) {
+				window.removeEventListener('beforeunload', this._staleCleanupUnloadHandler)
+				this._staleCleanupUnloadHandler = null
 			}
 		},
 
