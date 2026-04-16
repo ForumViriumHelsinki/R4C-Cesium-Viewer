@@ -1,110 +1,40 @@
-name: Build and push container image
+# Build pre-release container image on release-please PRs
+#
+# PR phase of the build-once/promote pattern.
+# Pushes a :next-{version} pre-release image that container-release.yml
+# promotes on release publish (manifest-only retag, seconds not minutes).
+name: Container Build (PR)
 
 on:
-  push:
-    tags:
-      - 'r4c-cesium-viewer-v*.*.*'
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 concurrency:
   group: container-build-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
-  # Gate: only run for release tags or release-please PRs
-  should-build:
+  setup:
+    # Only build for release-please PRs (not every PR)
+    if: startsWith(github.head_ref, 'release-please--branches--main--components--')
     runs-on: ubuntu-latest
     outputs:
-      run: ${{ steps.check.outputs.run }}
+      image-name: ${{ steps.lowercase.outputs.image-name }}
     steps:
-      - id: check
-        run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.head_ref }}" == release-please--branches--main* ]]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
+      - id: lowercase
+        run: echo "image-name=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
-  build-and-push:
-    needs: should-build
-    if: needs.should-build.outputs.run == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
-
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
-            # Match release-please manifest tag format: {component}-v{version}
-            # https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md
-            type=match,pattern=.*-v(\d+.\d+.\d+),group=1
-            type=match,pattern=.*-v(\d+.\d+),group=1
-            type=match,pattern=.*-v(\d+),group=1
-
-      # QEMU removed - only building for amd64 (no emulation needed)
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
-
-      - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Cache BuildKit mounts
-        id: cache
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-        with:
-          path: /tmp/.buildx-cache-mounts
-          key: ${{ runner.os }}-buildkit-${{ hashFiles('package.json', 'bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-buildkit-
-
-      - name: Inject BuildKit cache mounts
-        uses: reproducible-containers/buildkit-cache-dance@1b8ab18fbda5ad3646e3fcc9ed9dd41ce2f297b4 # v3.3.2
-        with:
-          cache-map: |
-            {
-              "/root/.bun/install/cache": "/tmp/.buildx-cache-mounts/bun-cache",
-              "/app/node_modules/.vite": "/tmp/.buildx-cache-mounts/vite-cache"
-            }
-          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
-            VITE_SENTRY_DSN=${{ secrets.VITE_SENTRY_DSN }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          # SBOM and provenance only for release tags (saves ~30s on regular builds)
-          provenance: ${{ startsWith(github.ref, 'refs/tags/') && 'mode=max' || 'false' }}
-          sbom: ${{ startsWith(github.ref, 'refs/tags/') }}
+  build:
+    needs: setup
+    uses: ForumViriumHelsinki/.github/.github/workflows/reusable-container-build.yml@7378f9c921226d2f90908b52f0a7a5a4f13e978e # main
+    with:
+      image-name: ${{ needs.setup.outputs.image-name }}
+    secrets:
+      secret-build-args: |
+        SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+        VITE_SENTRY_DSN=${{ secrets.VITE_SENTRY_DSN }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write

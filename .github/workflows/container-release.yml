@@ -1,0 +1,35 @@
+# Promote container image to semver tags on published releases
+#
+# Release phase of the build-once/promote pattern.
+# Promotes the :next-{version} pre-release image built by container-build.yml.
+# Falls back to a full rebuild if the pre-built image is not found.
+name: Container Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      image-name: ${{ steps.lowercase.outputs.image-name }}
+    steps:
+      - id: lowercase
+        run: echo "image-name=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: setup
+    uses: ForumViriumHelsinki/.github/.github/workflows/reusable-container-release.yml@7378f9c921226d2f90908b52f0a7a5a4f13e978e # main
+    with:
+      image-name: ${{ needs.setup.outputs.image-name }}
+      tag-prefix: 'r4c-cesium-viewer-v'
+    secrets:
+      secret-build-args: |
+        SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+        VITE_SENTRY_DSN=${{ secrets.VITE_SENTRY_DSN }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      actions: read
