@@ -19,8 +19,14 @@ serviceAccount:
   # Distinct name to avoid collision with the stable ServiceAccount
   name: r4c-cesium-viewer-beta
   annotations:
+    # TODO: Replace with a dedicated read-only beta GSA once provisioned in GCP.
+    # Using the production GSA here means the beta pod has the same DDL/DML
+    # privileges as the stable release. Acceptable for an internal-only beta
+    # (stakeholder validation), but should be tightened before any wider rollout.
     iam.gke.io/gcp-service-account: pygeoapi@fvh-project-containers-etc.iam.gserviceaccount.com
-# Cloud SQL Proxy sidecar (read-only DB access; migrations disabled below)
+# Cloud SQL Proxy sidecar — NOTE: connection is NOT read-only (uses production GSA).
+# Migrations are disabled below to protect the shared schema, but application-level
+# DML is still possible. See TODO above for the longer-term mitigation.
 initContainers:
   - name: cloud-sql-proxy
     image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.19.0
