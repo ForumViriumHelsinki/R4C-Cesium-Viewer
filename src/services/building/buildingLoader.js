@@ -71,7 +71,8 @@ export class BuildingLoader {
 	 *
 	 * @param {string} [postalCode] - Optional postal code to load buildings for.
 	 *                                If not provided, uses current postal code from store.
-	 * @returns {Promise<Array>} Building entities
+	 * @returns {Promise<Array|null>} Building entities, or null if the load was
+	 *                                superseded by a newer navigation (stale result).
 	 */
 	async loadBuildings(postalCode) {
 		const targetPostalCode = postalCode || this.store.postalcode
@@ -106,6 +107,18 @@ export class BuildingLoader {
 				this.unifiedLoader.loadLayer(buildingConfig),
 				this.urbanheatService.getHeatData(targetPostalCode),
 			])
+
+			// Navigation may have changed while both fetches were in flight.
+			// `_currentLoadingLayerId` is cleared on cancel or reassigned on a new
+			// loadBuildings() call, so a mismatch means these results are stale.
+			// Bail out before merging/creating datasources with the wrong postal code.
+			if (this._currentLoadingLayerId !== layerId) {
+				logger.debug(
+					'[HelsinkiBuilding] Navigation changed during load, discarding stale results for:',
+					layerId
+				)
+				return null
+			}
 
 			// Handle building data (required)
 			if (buildingResult.status === 'rejected') {
