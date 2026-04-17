@@ -10,7 +10,16 @@ import { useFeatureFlagStore } from '@/stores/featureFlagStore'
 import type { useUserStore } from '@/stores/userStore'
 import logger from '@/utils/logger'
 
-const GOFF_ENDPOINT = '/feature-flags'
+/**
+ * GOFF endpoint must be an absolute URL: the provider's websocket setup calls
+ * `new URL(endpoint)` directly, which throws `TypeError: Failed to construct 'URL'`
+ * on relative paths. Build it from `window.location.origin` so dev (Vite proxy),
+ * preview, and prod (nginx proxy) all route through the same `/feature-flags` path.
+ */
+const GOFF_ENDPOINT =
+	typeof window !== 'undefined' && window.location?.origin
+		? `${window.location.origin}/feature-flags`
+		: '/feature-flags'
 const GOFF_HEALTH_TIMEOUT_MS = 3000
 
 type UserStore = ReturnType<typeof useUserStore>
