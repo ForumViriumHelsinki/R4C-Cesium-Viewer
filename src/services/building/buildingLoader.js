@@ -37,6 +37,8 @@ export class BuildingLoader {
 		this.unifiedLoader = unifiedLoader
 		/** @type {string|null} Currently loading layer ID for cancellation */
 		this._currentLoadingLayerId = null
+		/** @type {symbol|null} Unique per-invocation token used to detect stale loads */
+		this._currentLoadingToken = null
 	}
 
 	/**
@@ -62,10 +64,21 @@ export class BuildingLoader {
 			this.unifiedLoader.cancelLoading(this._currentLoadingLayerId)
 			this._currentLoadingLayerId = null
 		}
+		this._currentLoadingToken = null
 	}
 
-	_isStale(layerId) {
-		if (this._currentLoadingLayerId === layerId) return false
+	/**
+	 * Returns true when a newer load has superseded this invocation.
+	 * Each call to loadBuildings creates a unique Symbol token; as soon as
+	 * _currentLoadingToken is replaced by a subsequent call, any earlier
+	 * invocation sees a mismatch and treats itself as stale — including when
+	 * the same postal code is requested twice in quick succession.
+	 *
+	 * @param {symbol} token - The token captured at the start of a loadBuildings call
+	 * @returns {boolean}
+	 */
+	_isStale(token) {
+		if (this._currentLoadingToken === token) return false
 		logger.debug('[BuildingLoader] Navigation changed during load, discarding stale results')
 		return true
 	}
@@ -88,8 +101,12 @@ export class BuildingLoader {
 		logger.debug('[HelsinkiBuilding] Loading Helsinki buildings for postal code:', targetPostalCode)
 		logger.debug('[HelsinkiBuilding] API URL:', url)
 
-		// Track current load for cancellation support
+		// Track current load: layerId for unifiedLoader cancellation, token for staleness detection.
+		// Using a Symbol per invocation ensures two concurrent calls for the same postal code
+		// are distinguished — a non-unique layerId string would cause both to pass _isStale().
+		const loadToken = Symbol(layerId)
 		this._currentLoadingLayerId = layerId
+		this._currentLoadingToken = loadToken
 
 		try {
 			// Configure building data fetch
@@ -114,7 +131,7 @@ export class BuildingLoader {
 				this.urbanheatService.getHeatData(targetPostalCode),
 			])
 
-			if (this._isStale(layerId)) return null
+			if (this._isStale(loadToken)) return []
 
 			// Handle building data (required)
 			if (buildingResult.status === 'rejected') {
@@ -154,7 +171,7 @@ export class BuildingLoader {
 				'building features'
 			)
 
-			if (this._isStale(layerId)) return null
+			if (this._isStale(loadToken)) return []
 
 			// Create Cesium datasource with entities
 			const entities = await this.datasourceService.addDataSourceWithPolygonFix(
@@ -177,12 +194,14 @@ export class BuildingLoader {
 
 			// Clear tracking on successful load
 			this._currentLoadingLayerId = null
+			this._currentLoadingToken = null
 
 			return entities
 		} catch (error) {
 			// Clear tracking on error (but not on cancellation - already cleared)
-			if (this._currentLoadingLayerId === layerId) {
+			if (this._currentLoadingToken === loadToken) {
 				this._currentLoadingLayerId = null
+				this._currentLoadingToken = null
 			}
 			logger.error('[HelsinkiBuilding] Error loading buildings:', error)
 			throw error
