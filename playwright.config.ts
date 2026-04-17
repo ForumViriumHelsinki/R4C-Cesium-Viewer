@@ -148,7 +148,7 @@ export default defineConfig({
 	webServer: process.env.CI
 		? undefined
 		: {
-				command: 'npm run dev:test',
+				command: 'bun run dev:test',
 				url: 'http://localhost:5173',
 				reuseExistingServer: true,
 			},

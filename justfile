@@ -273,6 +273,10 @@ format-check:
 typecheck:
     bunx vue-tsc --noEmit
 
+# Scan dependencies for known vulnerabilities (mirrors CI security-scan job)
+audit:
+    bun audit
+
 # Code quality gate (non-mutating, no tests)
 check: format-check lint typecheck
 
@@ -301,6 +305,16 @@ test-file file *args:
 [group: "testing"]
 test-accessibility *args:
     VITE_E2E_TEST=true bunx playwright test tests/e2e/accessibility/ --project=chromium --reporter=line {{ args }}
+
+# Run accessibility tests across all CI viewports (desktop, tablet, mobile)
+[group: "testing"]
+test-accessibility-all-viewports *args:
+    VITE_E2E_TEST=true bun run test:accessibility:all-viewports {{ args }}
+
+# Run accessibility tests for a single CI viewport (desktop | tablet | mobile)
+[group: "testing"]
+test-accessibility-viewport viewport *args:
+    VITE_E2E_TEST=true bun run test:accessibility:{{ viewport }} {{ args }}
 
 # Run tests in interactive UI mode for debugging
 [group: "testing"]
