@@ -90,8 +90,8 @@ export class BuildingLoader {
 	 *
 	 * @param {string} [postalCode] - Optional postal code to load buildings for.
 	 *                                If not provided, uses current postal code from store.
-	 * @returns {Promise<Array|null>} Building entities, or null if the load was
-	 *                                superseded by a newer navigation (stale result).
+	 * @returns {Promise<Array>} Building entities, or an empty array if the load
+	 *                           was superseded by a newer navigation (stale result).
 	 */
 	async loadBuildings(postalCode) {
 		const targetPostalCode = postalCode || this.store.postalcode
