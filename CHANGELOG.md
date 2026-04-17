@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.48.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.47.0...r4c-cesium-viewer-v1.48.0) (2026-04-17)
+
+
+### Features
+
+* typecheck job and improve CI/local testing setup ([#704](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/704)) ([d7ab743](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d7ab743b6f5072c206701d70f3bff7ffc67599ef))
+
+
+### Bug Fixes
+
+* tighten request lifecycle, listener cleanup, and URL resolution ([#703](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/703)) ([5fb1972](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5fb1972e04dcdfb95e96d7e4bfb48cee289da3dd))
+
 ## [1.47.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.46.0...r4c-cesium-viewer-v1.47.0) (2026-04-16)
 
 
