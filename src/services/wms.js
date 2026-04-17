@@ -82,18 +82,13 @@ export default class Wms {
 			tilingScheme: new Cesium.GeographicTilingScheme(),
 		})
 
-		// Attach retry handler for transient network failures (ECONNRESET, etc.)
 		const errorHandler = (error) => {
 			this.retryHandler.handleTileError(error, layerName)
 		}
-		provider.errorEvent.addEventListener(errorHandler)
+		const removeErrorListener = provider.errorEvent.addEventListener(errorHandler)
 
 		const layer = new Cesium.ImageryLayer(provider)
-
-		// Store cleanup function on the layer so it can be called when the layer is removed
-		layer._removeErrorHandler = () => {
-			provider.errorEvent.removeEventListener(errorHandler)
-		}
+		layer._removeErrorHandler = removeErrorListener
 
 		return layer
 	}
