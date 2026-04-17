@@ -1450,8 +1450,6 @@ export class AccessibilityTestHelpers {
 			{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
 		)
 
-		// Small settle time for Vue's reactive updates to propagate
-		await this.page.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
 	}
 
 	/**
