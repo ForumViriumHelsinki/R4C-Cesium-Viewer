@@ -4,8 +4,10 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import App from './App.vue'
 import './version.js' // Log version info to console
+import { useBuildingStore } from './stores/buildingStore.js'
 import { useFeatureFlagStore } from './stores/featureFlagStore.ts'
 import { useGlobalStore } from './stores/globalStore.js'
+import { useToggleStore } from './stores/toggleStore.js'
 import logger from './utils/logger.js'
 
 // Vuetify
@@ -153,14 +155,22 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 app.use(pinia)
 app.use(vuetify)
 
-// Expose store instance to window for E2E testing
+// Expose store instances to window for E2E testing
 // Must be done BEFORE mounting so the store is available when components initialize
 if (import.meta.env.MODE === 'development' || import.meta.env.MODE === 'test') {
-	// Initialize the store and expose the instance
+	// Initialize the stores and expose the instances
 	const globalStore = useGlobalStore()
 	window.globalStore = globalStore
 	// Also expose the function for backwards compatibility
 	window.useGlobalStore = () => globalStore
+
+	const buildingStore = useBuildingStore()
+	window.buildingStore = buildingStore
+	window.useBuildingStore = () => buildingStore
+
+	const toggleStore = useToggleStore()
+	window.toggleStore = toggleStore
+	window.useToggleStore = () => toggleStore
 
 	const featureFlagStore = useFeatureFlagStore()
 	window.featureFlagStore = featureFlagStore

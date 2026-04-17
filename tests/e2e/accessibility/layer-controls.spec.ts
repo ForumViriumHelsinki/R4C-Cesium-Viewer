@@ -315,73 +315,58 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			}
 		)
 
-		// Skip: Building-level navigation still uses click-based approach which is unreliable
-		// TODO: Implement store-based building selection for this test
-		cesiumTest.skip(
-			'should handle Trees toggle state across valid contexts',
-			async ({ cesiumPage }) => {
-				// Navigate to postal code in Capital Region
-				await helpers.navigateToView('capitalRegionView')
-				await helpers.drillToLevel('postalCode')
-				// Wait for postal code level
-				await cesiumPage
-					.waitForSelector('text="Building Analysis"', {
-						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
-					})
-					.catch(() => {})
+		// Uses store-based building-level navigation because clicking a 3D building
+		// entity is unreliable in mocked/headless environments. See setNavigationLevel
+		// in test-helpers.ts for the underlying mechanism.
+		cesiumTest('should handle Trees toggle state across valid contexts', async ({ cesiumPage }) => {
+			// Navigate to postal code in Capital Region
+			await helpers.navigateToView('capitalRegionView')
+			await helpers.drillToLevel('postalCode')
+			// Wait for postal code level
+			await cesiumPage
+				.waitForSelector('text="Building Analysis"', {
+					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+				})
+				.catch(() => {})
 
-				let treesToggle = cesiumPage
-					.getByText('Trees', { exact: true })
-					.locator('..')
-					.locator('input[type="checkbox"]')
+			let treesToggle = cesiumPage
+				.getByText('Trees', { exact: true })
+				.locator('..')
+				.locator('input[type="checkbox"]')
 
-				// Enable Trees
-				// Check current state first to avoid redundant operations
-				const isChecked = await treesToggle.isChecked()
-				if (!isChecked) {
-					await helpers.checkWithRetry(treesToggle, { elementName: 'Trees' })
-				}
-				await expect(treesToggle).toBeChecked()
-
-				// Navigate to building level (Trees should still be available)
-				await helpers.drillToLevel('building')
-				// Wait for building level
-				await cesiumPage
-					.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
-					.catch(() => {})
-
-				// Re-query locator after navigation
-				treesToggle = cesiumPage
-					.getByText('Trees', { exact: true })
-					.locator('..')
-					.locator('input[type="checkbox"]')
-
-				// Trees should still be visible and checked
-				await expect(cesiumPage.getByText('Trees', { exact: true })).toBeVisible()
-				await expect(treesToggle).toBeChecked()
-
-				// Navigate back to postal code
-				const backButton = cesiumPage
-					.getByRole('button')
-					.filter({ has: cesiumPage.locator('.mdi-arrow-left') })
-				await backButton.click()
-				// Wait for navigation back to postal code
-				await cesiumPage
-					.waitForSelector('text="Building Analysis"', {
-						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
-					})
-					.catch(() => {})
-
-				// Re-query locator after navigation back
-				treesToggle = cesiumPage
-					.getByText('Trees', { exact: true })
-					.locator('..')
-					.locator('input[type="checkbox"]')
-
-				// Trees state should be maintained
-				await expect(treesToggle).toBeChecked()
+			// Enable Trees
+			// Check current state first to avoid redundant operations
+			const isChecked = await treesToggle.isChecked()
+			if (!isChecked) {
+				await helpers.checkWithRetry(treesToggle, { elementName: 'Trees' })
 			}
-		)
+			await expect(treesToggle).toBeChecked()
+
+			// Navigate to building level via store (deterministic in mocked environments)
+			await helpers.drillToLevel('building', undefined, { method: 'store' })
+
+			// Re-query locator after navigation
+			treesToggle = cesiumPage
+				.getByText('Trees', { exact: true })
+				.locator('..')
+				.locator('input[type="checkbox"]')
+
+			// Trees should still be visible and checked
+			await expect(cesiumPage.getByText('Trees', { exact: true })).toBeVisible()
+			await expect(treesToggle).toBeChecked()
+
+			// Navigate back to postal code via store
+			await helpers.setNavigationLevel('postalCode', { postalCode: '00100' })
+
+			// Re-query locator after navigation back
+			treesToggle = cesiumPage
+				.getByText('Trees', { exact: true })
+				.locator('..')
+				.locator('input[type="checkbox"]')
+
+			// Trees state should be maintained
+			await expect(treesToggle).toBeChecked()
+		})
 	})
 
 	// FIXME: Tests have various issues beyond navigation - needs investigation

@@ -106,11 +106,11 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 			await expect(areaProps).toBeVisible()
 		})
 
-		// Building-level navigation requires clicking a 3D building entity in the Cesium viewer,
-		// which is not available in mocked environments. See navigation-levels.spec.ts for tests
-		// that cover this scenario with longer timeouts.
-		cesiumTest.skip('should show Building Properties at building level', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('building')
+		// Building-level navigation uses direct Pinia store manipulation because
+		// clicking a 3D building entity is unreliable in mocked/headless environments
+		// where WebGL picking cannot be guaranteed.
+		cesiumTest('should show Building Properties at building level', async ({ cesiumPage }) => {
+			await helpers.drillToLevel('building', undefined, { method: 'store' })
 			const buildingProps = cesiumPage.getByText('Building Properties')
 			await expect(buildingProps).toBeVisible()
 		})

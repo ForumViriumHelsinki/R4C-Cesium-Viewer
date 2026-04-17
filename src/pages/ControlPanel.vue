@@ -310,6 +310,12 @@
 					<!-- Details Tab -->
 					<v-window-item value="details">
 						<div class="tab-content">
+							<p
+								v-if="currentLevel !== 'start'"
+								class="section-heading"
+							>
+								{{ currentLevel === 'building' ? 'Building Properties' : 'Area Properties' }}
+							</p>
 							<p class="section-description">
 								{{ currentLevel === 'building' ? 'Building details and attributes' : currentLevel !== 'start' ? 'Area statistics and demographics' : 'Select an area to view properties' }}
 							</p>

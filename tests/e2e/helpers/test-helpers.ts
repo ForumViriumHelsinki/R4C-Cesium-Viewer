@@ -1338,9 +1338,143 @@ export class AccessibilityTestHelpers {
 	}
 
 	/**
-	 * Navigate through levels: start → postal code → building with retry and viewport handling
+	 * Deterministically set navigation state by directly manipulating Pinia stores.
+	 *
+	 * This bypasses click-based Cesium entity selection, which is unreliable in
+	 * mocked/headless CI environments where WebGL picking cannot be guaranteed.
+	 * Store manipulation gives tests the exact state they need without waiting
+	 * on rendered 3D geometry.
+	 *
+	 * Exposed stores (see `src/main.js`):
+	 * - `window.globalStore` — view mode, level, postal code, picked entity
+	 * - `window.buildingStore` — building features cache
+	 *
+	 * @example
+	 * // Go directly to building level with a mock picked entity
+	 * await helpers.setNavigationLevel('building', {
+	 *   postalCode: '00100',
+	 *   postalCodeName: 'Helsinki Keskusta',
+	 *   buildingId: 'test-building-001',
+	 * })
+	 *
+	 * @param level - Target navigation level
+	 * @param data - Optional state data for the target level
 	 */
-	async drillToLevel(targetLevel: 'postalCode' | 'building', identifier?: string): Promise<void> {
+	async setNavigationLevel(
+		level: 'start' | 'postalCode' | 'building',
+		data: {
+			postalCode?: string
+			postalCodeName?: string
+			buildingId?: string
+			buildingProperties?: Record<string, unknown>
+		} = {}
+	): Promise<void> {
+		await this.waitForOverlaysToClose()
+
+		await this.page.evaluate(
+			({ level, data }) => {
+				const globalStore = (window as any).globalStore
+				if (!globalStore) {
+					throw new Error(
+						'globalStore not exposed on window. Run in dev/test mode (see src/main.js).'
+					)
+				}
+
+				if (level === 'start') {
+					globalStore.setLevel('start')
+					globalStore.setPostalCode(null)
+					globalStore.setNameOfZone(null)
+					globalStore.setPickedEntity(null)
+					return
+				}
+
+				const postalCode = data.postalCode || '00100'
+				globalStore.setPostalCode(postalCode)
+				if (data.postalCodeName) {
+					globalStore.setNameOfZone(data.postalCodeName)
+				}
+
+				if (level === 'postalCode') {
+					globalStore.setLevel('postalCode')
+					globalStore.setPickedEntity(null)
+					return
+				}
+
+				// level === 'building'
+				globalStore.setLevel('building')
+
+				// Build a minimal Cesium-like picked entity so AreaProperties and
+				// other consumers of `globalStore.pickedEntity` render correctly.
+				const buildingId = data.buildingId || 'test-building-001'
+				const defaultProps: Record<string, unknown> = {
+					posno: postalCode,
+					nimi: data.postalCodeName || 'Test Area',
+					katunimi_suomi: 'Test Street',
+					osoitenumero: '1',
+					year_of_construction: 2000,
+					measured_height: 15,
+					i_kerrlkm: 4,
+					kayttotarkoitus: '011',
+					area_m2: 250,
+				}
+				const properties = { ...defaultProps, ...(data.buildingProperties || {}) }
+
+				const propertyNames = Object.keys(properties)
+				const wrappedProperties: Record<string, { _value: unknown }> = {}
+				for (const name of propertyNames) {
+					wrappedProperties[name] = { _value: properties[name] }
+				}
+
+				const entity = {
+					_id: buildingId,
+					_name: properties.katunimi_suomi,
+					_polygon: {}, // satisfies FeaturePicker's polygon filter
+					_properties: {
+						...wrappedProperties,
+						_propertyNames: propertyNames,
+					},
+				}
+				globalStore.setPickedEntity(entity)
+				globalStore.setBuildingAddress(`${properties.katunimi_suomi} ${properties.osoitenumero}`)
+			},
+			{ level, data }
+		)
+
+		// Wait for reactive UI to reflect the new level
+		await this.page.waitForFunction(
+			(expectedLevel) => {
+				const store = (window as any).globalStore
+				return store && store.level === expectedLevel
+			},
+			level,
+			{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
+		)
+
+	}
+
+	/**
+	 * Navigate through levels: start → postal code → building with retry and viewport handling.
+	 *
+	 * @param targetLevel - Destination navigation level
+	 * @param identifier - Optional postal code identifier
+	 * @param options - Configuration options
+	 * @param options.method - 'click' (default) uses UI/map interactions for realism;
+	 *   'store' uses direct Pinia state manipulation for deterministic tests in
+	 *   environments where Cesium picking is unreliable (mocked WebGL, CI).
+	 */
+	async drillToLevel(
+		targetLevel: 'postalCode' | 'building',
+		identifier?: string,
+		options: { method?: 'click' | 'store' } = {}
+	): Promise<void> {
+		const { method = 'click' } = options
+
+		if (method === 'store') {
+			const postalCode = identifier || '00100'
+			await this.setNavigationLevel(targetLevel, { postalCode })
+			return
+		}
+
 		// Wait for any overlays to close before attempting drill-down
 		await this.waitForOverlaysToClose()
 
