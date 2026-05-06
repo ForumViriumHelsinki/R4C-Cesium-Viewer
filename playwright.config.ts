@@ -27,21 +27,25 @@ export default defineConfig({
 	retries: process.env.CI ? 2 : 0,
 	/* Run ONE test at a time to prevent resource contention with WebGL */
 	workers: 1,
-	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
+	/* Reporter to use. See https://playwright.dev/docs/test-reporters
+	 * `line` (one line per test) replaces `list` (per-step) in CI for shorter logs;
+	 * `json` keeps a structured artifact for jq-based triage; `blob` enables
+	 * cross-shard merges via `playwright merge-reports`. */
 	reporter: process.env.CI
 		? [
-				['list'], // Verbose output in CI
+				['line'],
 				['json', { outputFile: 'test-results/test-results.json' }],
 				['junit', { outputFile: 'test-results/junit.xml' }],
+				['blob', { outputFile: 'test-results/blob-report.zip' }],
 				['html', { open: 'never' }],
-				['./tests/reporters/performance-reporter.ts'], // Performance monitoring
+				['./tests/reporters/performance-reporter.ts'],
 			]
 		: process.env.PERFORMANCE_MONITORING === 'true'
 			? [
 					['html'],
 					['json', { outputFile: 'test-results/test-results.json' }],
 					['junit', { outputFile: 'test-results/junit.xml' }],
-					['./tests/reporters/performance-reporter.ts'], // Performance monitoring
+					['./tests/reporters/performance-reporter.ts'],
 				]
 			: [
 					['html'],
@@ -53,8 +57,10 @@ export default defineConfig({
 		/* Base URL to use in actions like `await page.goto('/')`. */
 		baseURL: process.env.CI ? 'http://localhost:4173' : 'http://localhost:5173',
 
-		/* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-		trace: 'on-first-retry',
+		/* Retain trace on any failure (not just retries) so first-failure context
+		 * isn't lost. `on-first-retry` requires the failure to repeat, which
+		 * masks intermittent issues that pass on retry. */
+		trace: 'retain-on-failure',
 
 		/* Screenshots on failure for debugging */
 		screenshot: 'only-on-failure',
@@ -94,10 +100,28 @@ export default defineConfig({
      Total: ~25-35s needed for complex tests
      CI gets extra buffer for slower/variable environments */
 	timeout: process.env.CI ? 50000 : 40000,
+	/* Bound the entire test run so a runaway process doesn't hold the CI
+	 * runner indefinitely. 30 minutes covers the slowest current full-suite. */
+	globalTimeout: 30 * 60 * 1000,
+	/* Surface tests that exceed the per-postal-code-click target documented in
+	 * docs/prd/feature-picker-navigation.md (5s 95th percentile). Tests in the
+	 * 15s+ band become candidates for optimization. */
+	reportSlowTests: { max: 5, threshold: 15_000 },
+	/* Keep per-test artifacts (videos, traces, screenshots) out of the
+	 * test-results.json directory so jq queries stay fast. */
+	outputDir: 'test-results/artifacts',
 	expect: {
 		/* Timeout for assertions - reduced with stable rendering
 		 * CI gets slightly more time for slower execution */
 		timeout: process.env.CI ? 8000 : 5000,
+		/* Visual-regression thresholds — enables `expect(page).toHaveScreenshot()`
+		 * for the toggle-wireframe and color-drift bugs flagged in the
+		 * 2026-W19 audit (US-04..-06, US-12). Slightly permissive defaults
+		 * because CesiumJS rendering has small frame-to-frame variance. */
+		toHaveScreenshot: {
+			threshold: 0.2,
+			maxDiffPixelRatio: 0.02,
+		},
 	},
 
 	/* Chrome-only testing — WebGL/Cesium requires Chromium engine */
