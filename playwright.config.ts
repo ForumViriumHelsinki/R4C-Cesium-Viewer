@@ -36,7 +36,7 @@ export default defineConfig({
 				['line'],
 				['json', { outputFile: 'test-results/test-results.json' }],
 				['junit', { outputFile: 'test-results/junit.xml' }],
-				['blob', { outputFile: 'test-results/blob-report.zip' }],
+				['blob', { outputDir: 'test-results', fileName: 'blob-report.zip' }],
 				['html', { open: 'never' }],
 				['./tests/reporters/performance-reporter.ts'],
 			]

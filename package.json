@@ -47,10 +47,10 @@
 		"test:performance:monitor": "PERFORMANCE_MONITORING=true playwright test tests/e2e/accessibility",
 		"test:performance:check": "bun scripts/check-performance-regression.js",
 		"test:performance:baseline": "PERFORMANCE_MONITORING=true playwright test tests/e2e/accessibility && echo 'Baseline generated in tests/performance-baselines.json'",
-		"test:e2e:errors-only": "mkdir -p test-results && playwright test --reporter=line,json,blob --quiet 2> test-results/run.stderr.log | tee test-results/run.stdout.log",
-		"test:e2e:failed": "playwright test --last-failed --reporter=line,json",
+		"test:e2e:errors-only": "mkdir -p test-results && playwright test --reporter=line,json=test-results/test-results.json,blob --quiet 2> test-results/run.stderr.log | tee test-results/run.stdout.log",
+		"test:e2e:failed": "playwright test --last-failed --reporter=line,json=test-results/test-results.json",
 		"test:e2e:changed": "playwright test --only-changed --reporter=dot",
-		"test:e2e:triage": "jq '.stats' test-results/test-results.json && jq -r '.suites[] | .. | objects | select(.tests?) | .tests[] | select(.results[].status==\"failed\") | \"\\(.location.file):\\(.location.line)  \\(.title)\"' test-results/test-results.json"
+		"test:e2e:triage": "jq '.stats' test-results/test-results.json && jq -r '.suites[] | .. | objects | select(.tests?) | .tests[] | select(any(.results[]; .status==\"failed\")) | \"\\(.location.file):\\(.location.line)  \\(.title)\"' test-results/test-results.json"
 	},
 	"dependencies": {
 		"@openfeature/go-feature-flag-web-provider": "^0.2.7",
