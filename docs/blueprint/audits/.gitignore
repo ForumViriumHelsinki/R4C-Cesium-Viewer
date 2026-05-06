@@ -1,0 +1,6 @@
+# Investigation artifacts (large binaries) — keep local for ad-hoc reference
+# but don't bloat the repo. The audit markdown is the canonical record.
+screenshots/
+*.har
+*.trace.json
+*.trace.json.gz
