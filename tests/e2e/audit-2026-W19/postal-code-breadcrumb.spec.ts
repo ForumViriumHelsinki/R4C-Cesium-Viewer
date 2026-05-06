@@ -19,10 +19,9 @@ import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
 import AccessibilityTestHelpers from '../helpers/test-helpers'
 
 cesiumDescribe('Audit 2026-W19: postal-code breadcrumb', () => {
-	cesiumTest.use({ tag: ['@e2e', '@navigation', '@audit-2026-w19'] })
-
 	cesiumTest(
 		'postal-code header should not contain "undefined" prefix (US-03)',
+		{ tag: ['@e2e', '@navigation', '@audit-2026-w19'] },
 		async ({ cesiumPage }) => {
 			const helpers = new AccessibilityTestHelpers(cesiumPage)
 
@@ -35,18 +34,22 @@ cesiumDescribe('Audit 2026-W19: postal-code breadcrumb', () => {
 			// it's the most visible to users.
 			const banner = cesiumPage.locator('header, .v-toolbar, [role="banner"]').first()
 
-			// Hard assertion: the literal string "undefined " (with trailing space) must
-			// not appear. Using a regex ensures we catch both leading-undefined and
+			// Positive assertion first: wait for the breadcrumb to actually contain the
+			// postal-code area name. This guards against a race where the negative
+			// assertion below would pass against an empty/placeholder banner before
+			// the UI finishes loading.
+			await expect(banner).toContainText(/Helsinki Keskusta|Etu-Töölö|00100/i)
+
+			// Hard assertion: the literal string "undefined" must not appear. Using a
+			// regex with word boundaries ensures we catch both leading-undefined and
 			// mid-string-undefined patterns.
 			await expect(banner).not.toContainText(/\bundefined\b/i)
-
-			// Soft assertion: the breadcrumb should actually contain the postal-code area name.
-			await expect(banner).toContainText(/Helsinki Keskusta|Etu-Töölö|00100/i)
 		}
 	)
 
 	cesiumTest(
 		'sidebar header at postal-code level should not contain "undefined" prefix (US-03)',
+		{ tag: ['@e2e', '@navigation', '@audit-2026-w19'] },
 		async ({ cesiumPage }) => {
 			const helpers = new AccessibilityTestHelpers(cesiumPage)
 
@@ -56,8 +59,11 @@ cesiumDescribe('Audit 2026-W19: postal-code breadcrumb', () => {
 			// "undefined" string in the audit walkthrough.
 			const sidebar = cesiumPage.locator('nav, [role="navigation"]').first()
 
-			await expect(sidebar).not.toContainText(/\bundefined\b/i)
+			// Positive assertion first to wait for the sidebar header to populate
+			// before asserting absence of "undefined" — same race-condition guard as
+			// the banner test above.
 			await expect(sidebar).toContainText(/Helsinki Keskusta|Etu-Töölö|00100/i)
+			await expect(sidebar).not.toContainText(/\bundefined\b/i)
 		}
 	)
 })
