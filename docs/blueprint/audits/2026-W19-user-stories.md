@@ -357,9 +357,20 @@ Each row is one PR, sized for one-shot review.
 6. **`ops: investigate /feature-flags/health 502 in beta cluster` (US-02)** — probably a deploy/infra issue, separate from app code; track via infrastructure repo.
 7. Performance debt (US-19) and the race-condition tests (US-10) get their own dedicated regression suites — see Phase 5.
 
-## Tests Added in This Pass
+## Follow-up issues
 
-`tests/e2e/audit-2026-W19/postal-code-breadcrumb.spec.ts` — covers US-03. See companion PR.
+| Story           | Issue                                                                                  | Title                                                                                          |
+| --------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| US-02           | [#715](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/715)            | ops: GOFF /feature-flags/health returns 502 on beta                                            |
+| US-03           | [#711](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/711)            | fix: postal-code breadcrumb renders "undefined" prefix                                         |
+| US-04, -05, -06 | [#712](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/712)            | fix: ANALYSIS tab missing Heat Histogram / NDVI Analysis / Building Scatter Plot               |
+| US-07           | [#713](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/713)            | fix: AreaProperties stays empty at postal-code level                                           |
+| US-08           | [#714](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/714)            | fix: URL state retains postal-code params after back-navigation to start                       |
+| US-09           | [#680](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/680) (existing) | Investigate and fix root causes of stuck loading indicators — commented with 2026-W19 evidence |
+
+## Tests added in this pass
+
+`tests/e2e/audit-2026-W19/postal-code-breadcrumb.spec.ts` — covers US-03 / #711.
 
 ## Next-pass watch list
 
