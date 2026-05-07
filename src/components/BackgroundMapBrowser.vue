@@ -278,8 +278,8 @@
 
 <script>
 import { computed, onMounted, ref, watch } from 'vue'
-import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
 import { getCesium } from '../services/cesiumProvider'
+import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore'
@@ -538,8 +538,7 @@ export default {
 				// race conditions where both layers end up on the map simultaneously.
 				removeLayer(hsyMapLayer, 'Error removing previous HSY imagery layer:')
 
-				hsyMapLayer.value =
-					globalStore.cesiumViewer.imageryLayers.addImageryProvider(provider)
+				hsyMapLayer.value = globalStore.cesiumViewer.imageryLayers.addImageryProvider(provider)
 				logger.debug('[BackgroundMapBrowser] HSY layer added:', layer.name)
 			} catch (error) {
 				logger.error('Error creating HSY imagery layer:', error)

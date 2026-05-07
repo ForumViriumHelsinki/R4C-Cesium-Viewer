@@ -39,6 +39,10 @@
 		"paths": {
 			"@/*": ["./src/*"]
 		},
+		// Silence the TS5101 deprecation warning for `baseUrl` until a follow-up
+		// PR migrates to `paths`-only resolution. Required for TypeScript 6.x;
+		// `baseUrl` is removed in TypeScript 7.0.
+		"ignoreDeprecations": "6.0",
 
 		// Library types
 		"lib": ["ES2020", "DOM", "DOM.Iterable"]
