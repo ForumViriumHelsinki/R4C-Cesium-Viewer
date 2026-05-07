@@ -668,10 +668,7 @@ export default class ViewportBuildingLoader {
 								`[ViewportBuildingLoader] Heat data fetch failed:`,
 								error?.message || error
 							)
-							this.loadingStore.setLayerError(
-								'heatData',
-								error?.message || 'Heat data unavailable'
-							)
+							this.loadingStore.setLayerError('heatData', error?.message || 'Heat data unavailable')
 							return null
 						})
 					: Promise.resolve(null),
