@@ -9,11 +9,11 @@
 # Application in infrastructure/argocd/apps/templates/regions4climate/).
 image:
   repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
-  tag: '1.48.0'
+  tag: '1.48.1'
 # Distinct release name to avoid Service/Deployment collisions with stable
 fullnameOverride: r4c-cesium-viewer-beta
 imagePullSecrets:
-  - name: ghcr-login-secret
+- name: ghcr-login-secret
 serviceAccount:
   create: true
   # Distinct name to avoid collision with the stable ServiceAccount
@@ -28,29 +28,29 @@ serviceAccount:
 # Migrations are disabled below to protect the shared schema, but application-level
 # DML is still possible. See TODO above for the longer-term mitigation.
 initContainers:
-  - name: cloud-sql-proxy
-    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.19.0
-    restartPolicy: Always
-    args:
-      - '--structured-logs'
-      - '--port=5432'
-      - '--auto-iam-authn'
-      - 'fvh-project-containers-etc:europe-north1:fvh-postgres'
-    securityContext:
-      runAsNonRoot: true
-      runAsUser: 65532
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-          - ALL
-    resources:
-      limits:
-        cpu: 100m
-        memory: 128Mi
-      requests:
-        cpu: 50m
-        memory: 64Mi
+- name: cloud-sql-proxy
+  image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.19.0
+  restartPolicy: Always
+  args:
+  - '--structured-logs'
+  - '--port=5432'
+  - '--auto-iam-authn'
+  - 'fvh-project-containers-etc:europe-north1:fvh-postgres'
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+      - ALL
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
 # Migrations disabled on beta — the stable release owns schema changes against
 # the shared regions4climate database. Re-enable only once main is ready to
 # promote to prod.
@@ -59,37 +59,37 @@ migrations:
 gateway:
   enabled: true
   hosts:
-    - host: r4c-beta.dataportal.fi
-      paths:
-        - path: /
-          pathType: PathPrefix
+  - host: r4c-beta.dataportal.fi
+    paths:
+    - path: /
+      pathType: PathPrefix
 ingress:
   enabled: false
 env:
-  - name: SENTRY_AUTH_TOKEN
-    valueFrom:
-      secretKeyRef:
-        name: regions4climate-secrets # pragma: allowlist secret
-        key: SENTRY_AUTH_TOKEN
-  - name: VITE_SENTRY_DSN
-    valueFrom:
-      secretKeyRef:
-        name: regions4climate-secrets # pragma: allowlist secret
-        key: VITE_SENTRY_DSN
-  - name: SENTRY_DSN
-    valueFrom:
-      secretKeyRef:
-        name: regions4climate-secrets # pragma: allowlist secret
-        key: SENTRY_DSN
-  - name: VITE_DIGITRANSIT_KEY
-    valueFrom:
-      secretKeyRef:
-        name: regions4climate-secrets # pragma: allowlist secret
-        key: VITE_DIGITRANSIT_KEY
-  - name: VITE_PYGEOAPI_HOST
-    value: 'pygeoapi-helm-webapp.pygeoapi.svc.cluster.local'
-  - name: VITE_PYGEOAPI_URL
-    value: 'https://pygeoapi.dataportal.fi'
+- name: SENTRY_AUTH_TOKEN
+  valueFrom:
+    secretKeyRef:
+      name: regions4climate-secrets # pragma: allowlist secret
+      key: SENTRY_AUTH_TOKEN
+- name: VITE_SENTRY_DSN
+  valueFrom:
+    secretKeyRef:
+      name: regions4climate-secrets # pragma: allowlist secret
+      key: VITE_SENTRY_DSN
+- name: SENTRY_DSN
+  valueFrom:
+    secretKeyRef:
+      name: regions4climate-secrets # pragma: allowlist secret
+      key: SENTRY_DSN
+- name: VITE_DIGITRANSIT_KEY
+  valueFrom:
+    secretKeyRef:
+      name: regions4climate-secrets # pragma: allowlist secret
+      key: VITE_DIGITRANSIT_KEY
+- name: VITE_PYGEOAPI_HOST
+  value: 'pygeoapi-helm-webapp.pygeoapi.svc.cluster.local'
+- name: VITE_PYGEOAPI_URL
+  value: 'https://pygeoapi.dataportal.fi'
 replicaCount: 1
 resources:
   limits:
@@ -105,25 +105,25 @@ securityContext:
   readOnlyRootFilesystem: true
   capabilities:
     drop:
-      - ALL
+    - ALL
 volumes:
-  - name: nginx-cache
-    emptyDir: {}
-  - name: nginx-run
-    emptyDir: {}
-  - name: nginx-conf
-    emptyDir: {}
-  - name: tmp
-    emptyDir: {}
+- name: nginx-cache
+  emptyDir: {}
+- name: nginx-run
+  emptyDir: {}
+- name: nginx-conf
+  emptyDir: {}
+- name: tmp
+  emptyDir: {}
 volumeMounts:
-  - name: nginx-cache
-    mountPath: /var/cache/nginx
-  - name: nginx-run
-    mountPath: /var/run
-  - name: nginx-conf
-    mountPath: /etc/nginx/conf.d
-  - name: tmp
-    mountPath: /tmp
+- name: nginx-cache
+  mountPath: /var/cache/nginx
+- name: nginx-run
+  mountPath: /var/run
+- name: nginx-conf
+  mountPath: /etc/nginx/conf.d
+- name: tmp
+  mountPath: /tmp
 keda:
   enabled: true
   minReplicaCount: 0
@@ -131,9 +131,9 @@ keda:
   pollingInterval: 30
   cooldownPeriod: 300
   triggers:
-    - type: cron
-      metadata:
-        timezone: Europe/Helsinki
-        start: 0 7 * * 1-5
-        end: 0 20 * * 1-5
-        desiredReplicas: '1'
+  - type: cron
+    metadata:
+      timezone: Europe/Helsinki
+      start: 0 7 * * 1-5
+      end: 0 20 * * 1-5
+      desiredReplicas: '1'
