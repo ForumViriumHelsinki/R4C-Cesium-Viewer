@@ -12,6 +12,7 @@ import { useHeatExposureStore } from '../stores/heatExposureStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import { logger } from '../utils/logger.js'
 
 export default {
 	setup() {
@@ -178,7 +179,19 @@ export default {
 				const compareHeatData = helsinkiOrCapitalHeatExposure(
 					heatExposureStore.getDataById(compareData.postinumeroalue)
 				)
-				const compareValues = calculateYValues(compareData, statsData, compareHeatData)
+				// Skip the comparison series when heat exposure data for the
+				// compared postal code is missing — otherwise null values
+				// would propagate into d3 scale/axis computation.
+				const hasCompareHeatData = compareHeatData != null
+				const compareValues = hasCompareHeatData
+					? calculateYValues(compareData, statsData, compareHeatData)
+					: []
+				if (!hasCompareHeatData) {
+					logger.debug(
+						'[SocioEconomicsChart] Skipping comparison series; no heat exposure data for',
+						compareData.postinumeroalue
+					)
+				}
 				// Combine both yValues and compareValues arrays
 				const allYValues = yValues.concat(compareValues)
 				const xScale = plotService.createScaleBand(xLabels, width - 50)
@@ -186,26 +199,27 @@ export default {
 				setupAxes(svg, xScale, yScale, height)
 
 				const barData = yValues.map((value, index) => ({ value, label: xLabels[index] }))
-				const compareBarData = compareValues.map((value, index) => ({
-					value,
-					label: xLabels[index],
-				}))
-
 				const tooltip = plotService.createTooltip('#socioeonomicsContainer')
 				createBars(svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue', sosData.nimi)
 
-				const xOffsetForCompareData = xScale.bandwidth() / 2.5 // Adjust as needed for proper spacing
-				createBars(
-					svg,
-					compareBarData,
-					xScale,
-					yScale,
-					height,
-					tooltip,
-					xOffsetForCompareData,
-					'orange',
-					selectedNimi
-				)
+				if (hasCompareHeatData) {
+					const compareBarData = compareValues.map((value, index) => ({
+						value,
+						label: xLabels[index],
+					}))
+					const xOffsetForCompareData = xScale.bandwidth() / 2.5 // Adjust as needed for proper spacing
+					createBars(
+						svg,
+						compareBarData,
+						xScale,
+						yScale,
+						height,
+						tooltip,
+						xOffsetForCompareData,
+						'orange',
+						selectedNimi
+					)
+				}
 
 				plotService.addTitleWithLink(
 					svg,
@@ -240,6 +254,13 @@ export default {
 		}
 
 		const helsinkiOrCapitalHeatExposure = (heatData) => {
+			// Guard: heat exposure data may be undefined when the store hasn't
+			// loaded yet (e.g. compareData postal code not present in
+			// heatExposureStore). Return null so the caller can skip the
+			// comparison cleanly. See Sentry REGIONS4CLIMATE-2C.
+			if (heatData?.properties == null) {
+				return null
+			}
 			return toggleStore.capitalRegionCold
 				? 1 - heatData.properties.avgcoldexposure.toFixed(3)
 				: toggleStore.helsinkiView
