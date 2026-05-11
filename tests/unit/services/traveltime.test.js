@@ -156,9 +156,9 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 
 		it('should handle invalid JSON response', async () => {
 			// Arrange
-			global.fetch.mockResolvedValue({
-				json: vi.fn().mockRejectedValue(new Error('Invalid JSON')),
-			})
+			const response = new Response('invalid', { status: 200, statusText: 'OK' })
+			response.json = vi.fn().mockRejectedValue(new Error('Invalid JSON'))
+			global.fetch.mockResolvedValue(response)
 
 			// Act & Assert
 			await expect(traveltime.loadTravelTimeData(5975375)).rejects.toThrow('Invalid JSON')
@@ -166,12 +166,13 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 
 		it('should handle missing travel_data property gracefully', async () => {
 			// Arrange: Return data without travel_data
-			global.fetch.mockResolvedValue({
-				json: vi.fn().mockResolvedValue({
-					type: 'FeatureCollection',
-					features: [{ properties: {} }], // Missing travel_data
-				}),
-			})
+			const mockData = {
+				type: 'FeatureCollection',
+				features: [{ properties: {} }], // Missing travel_data
+			}
+			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
+			response.json = vi.fn().mockResolvedValue(mockData)
+			global.fetch.mockResolvedValue(response)
 
 			// Act & Assert: addTravelTimeLabels receives undefined but handles it
 			// gracefully since the entity loop is empty (no entities to process)
@@ -184,9 +185,9 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 				type: 'FeatureCollection',
 				features: [{ properties: { travel_data: [] } }], // Empty but present
 			}
-			global.fetch.mockResolvedValue({
-				json: vi.fn().mockResolvedValue(mockData),
-			})
+			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
+			response.json = vi.fn().mockResolvedValue(mockData)
+			global.fetch.mockResolvedValue(response)
 			traveltime.addTravelTimeLabels = vi.fn()
 
 			// Act: Should not throw
@@ -198,30 +199,32 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 
 		it('should handle empty features array', async () => {
 			// Arrange
-			global.fetch.mockResolvedValue({
-				json: vi.fn().mockResolvedValue({
-					type: 'FeatureCollection',
-					features: [], // Empty array
-				}),
-			})
+			const mockData = {
+				type: 'FeatureCollection',
+				features: [], // Empty array
+			}
+			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
+			response.json = vi.fn().mockResolvedValue(mockData)
+			global.fetch.mockResolvedValue(response)
 
 			// Act & Assert: Should throw when accessing features[0]
 			await expect(traveltime.loadTravelTimeData(5975375)).rejects.toThrow()
 		})
 
 		it.each([
-			[404, 'Not found'],
-			[500, 'Server error'],
-			[503, 'Service unavailable'],
-		])('should handle %i HTTP error (%s)', async (status, message) => {
+			[404, 'Not Found'],
+			[500, 'Internal Server Error'],
+			[503, 'Service Unavailable'],
+		])('should handle %i HTTP error (%s)', async (status, statusText) => {
 			// Arrange
-			global.fetch.mockResolvedValue({
-				status,
-				json: vi.fn().mockRejectedValue(new Error(message)),
-			})
+			const response = new Response('error', { status, statusText })
+			global.fetch.mockResolvedValue(response)
 
 			// Act & Assert
-			await expect(traveltime.loadTravelTimeData(5975375)).rejects.toThrow(message)
+			// Service throws HTTP error format, not the mocked json error
+			await expect(traveltime.loadTravelTimeData(5975375)).rejects.toThrow(
+				`HTTP ${status}: ${statusText}`
+			)
 		})
 
 		it('should handle invalid from_id parameter', async () => {
@@ -257,9 +260,9 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 					},
 				],
 			}
-			global.fetch.mockResolvedValue({
-				json: vi.fn().mockResolvedValue(mockData),
-			})
+			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
+			response.json = vi.fn().mockResolvedValue(mockData)
+			global.fetch.mockResolvedValue(response)
 			traveltime.addTravelTimeLabels = vi.fn()
 
 			// Act

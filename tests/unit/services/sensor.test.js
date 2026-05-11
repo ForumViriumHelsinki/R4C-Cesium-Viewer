@@ -85,9 +85,9 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 
 		it('should handle invalid JSON response', async () => {
 			// Arrange
-			global.fetch.mockResolvedValue({
-				json: vi.fn().mockRejectedValue(new Error('Invalid JSON')),
-			})
+			const response = new Response('invalid', { status: 200, statusText: 'OK' })
+			response.json = vi.fn().mockRejectedValue(new Error('Invalid JSON'))
+			global.fetch.mockResolvedValue(response)
 
 			// Act & Assert
 			await expect(sensor.loadSensorData()).rejects.toThrow('Invalid JSON')
@@ -102,18 +102,17 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 		})
 
 		it.each([
-			[404, 'Not found'],
-			[500, 'Server error'],
-			[503, 'Service unavailable'],
-		])('should handle %i HTTP error (%s)', async (status, message) => {
+			[404, 'Not Found'],
+			[500, 'Internal Server Error'],
+			[503, 'Service Unavailable'],
+		])('should handle %i HTTP error (%s)', async (status, statusText) => {
 			// Arrange
-			global.fetch.mockResolvedValue({
-				status,
-				json: vi.fn().mockRejectedValue(new Error(message)),
-			})
+			const response = new Response('error', { status, statusText })
+			global.fetch.mockResolvedValue(response)
 
 			// Act & Assert
-			await expect(sensor.loadSensorData()).rejects.toThrow(message)
+			// Service throws HTTP error format, not the mocked json error
+			await expect(sensor.loadSensorData()).rejects.toThrow(`HTTP ${status}: ${statusText}`)
 		})
 
 		it('should handle connection timeout', async () => {
@@ -126,9 +125,9 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 
 		it('should handle malformed GeoJSON from sensor API', async () => {
 			// Arrange: Return invalid GeoJSON
-			global.fetch.mockResolvedValue({
-				json: vi.fn().mockResolvedValue({ invalid: 'structure' }),
-			})
+			const response = new Response(JSON.stringify({ invalid: 'structure' }), { status: 200, statusText: 'OK' })
+			response.json = vi.fn().mockResolvedValue({ invalid: 'structure' })
+			global.fetch.mockResolvedValue(response)
 			sensor.addSensorDataSource = vi.fn().mockRejectedValue(new Error('Invalid GeoJSON format'))
 
 			// Act & Assert
@@ -171,16 +170,18 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 					},
 				],
 			}
-			global.fetch.mockResolvedValue({
-				json: vi.fn().mockResolvedValue(mockData),
-			})
+			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
+			response.json = vi.fn().mockResolvedValue(mockData)
+			global.fetch.mockResolvedValue(response)
 			sensor.addSensorDataSource = vi.fn().mockResolvedValue()
 
 			// Act
 			await sensor.loadSensorData()
 
 			// Assert
-			expect(global.fetch).toHaveBeenCalledWith('https://bri3.fvh.io/opendata/r4c/r4c_last.geojson')
+			expect(global.fetch).toHaveBeenCalledWith(
+				'https://bri3.fvh.io/opendata/r4c/r4c_all_latest.geojson'
+			)
 			expect(sensor.addSensorDataSource).toHaveBeenCalledWith(mockData)
 		})
 	})
