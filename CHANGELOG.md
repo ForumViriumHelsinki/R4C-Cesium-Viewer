@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.48.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.48.0...r4c-cesium-viewer-v1.48.1) (2026-05-07)
+
+
+### Bug Fixes
+
+* **ci:** clear pre-existing lint failure and unblock typecheck cleanup ([#720](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/720)) ([4ae4821](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4ae4821e55b155475aca3a8e2403faa8956e2997))
+
 ## [1.48.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.47.0...r4c-cesium-viewer-v1.48.0) (2026-04-17)
 
 
