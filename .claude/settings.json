@@ -31,5 +31,18 @@
       "mcp__sequential-thinking"
     ],
     "deny": []
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/install_pkgs.sh\""
+          }
+        ]
+      }
+    ]
   }
 }
