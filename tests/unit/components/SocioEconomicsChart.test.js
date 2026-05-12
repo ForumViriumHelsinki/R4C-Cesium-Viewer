@@ -1,8 +1,10 @@
 /**
- * Regression test for #728: SocioEconomicsChart must not throw when the
- * heatExposure store has no data for the compared postal code.
+ * Regression tests for SocioEconomicsChart resilience:
+ * - #728 (Sentry REGIONS4CLIMATE-2C): heatExposureStore.getDataById returning
+ *   undefined must not crash the chart.
+ * - #733: socioEconomicsStore.getDataByNimi returning undefined (no compare
+ *   area selected, or stale propsStore.socioEconomics reference) must not crash.
  *
- * Sentry: REGIONS4CLIMATE-2C
  * @see {@link file://./src/components/SocioEconomicsChart.vue}
  */
 
@@ -106,10 +108,11 @@ const statsFixture = {
 	hr_ktu: { min: 0, max: 60000 },
 }
 
+const socioEconomicsGetDataByNimi = vi.fn(() => compareDataFixture)
 vi.mock('@/stores/socioEconomicsStore.js', () => ({
 	useSocioEconomicsStore: () => ({
 		getDataByPostcode: vi.fn(() => sosDataFixture),
-		getDataByNimi: vi.fn(() => compareDataFixture),
+		getDataByNimi: socioEconomicsGetDataByNimi,
 		helsinkiStatistics: statsFixture,
 		regionStatistics: statsFixture,
 	}),
@@ -117,12 +120,14 @@ vi.mock('@/stores/socioEconomicsStore.js', () => ({
 
 import SocioEconomicsChart from '@/components/SocioEconomicsChart.vue'
 
-describe('SocioEconomicsChart — #728 heatData guard', { tags: ['@unit'] }, () => {
+describe('SocioEconomicsChart — undefined data guards', { tags: ['@unit'] }, () => {
 	let wrapper
 
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		heatExposureGetDataById.mockClear()
+		socioEconomicsGetDataByNimi.mockReset()
+		socioEconomicsGetDataByNimi.mockReturnValue(compareDataFixture)
 	})
 
 	afterEach(() => {
@@ -132,7 +137,7 @@ describe('SocioEconomicsChart — #728 heatData guard', { tags: ['@unit'] }, () 
 	it('does not throw when heatExposureStore.getDataById returns undefined', () => {
 		// Pre-regression: heatExposureStore.getDataById returning undefined
 		// caused helsinkiOrCapitalHeatExposure to do undefined.properties.X
-		// and crash (Sentry REGIONS4CLIMATE-2C).
+		// and crash (Sentry REGIONS4CLIMATE-2C, #728).
 		heatExposureGetDataById.mockReturnValue(undefined)
 
 		expect(() => {
@@ -146,6 +151,20 @@ describe('SocioEconomicsChart — #728 heatData guard', { tags: ['@unit'] }, () 
 		// Sibling regression: an entry that exists but lacks `.properties`
 		// (e.g. a stub or in-flight record) must also be handled.
 		heatExposureGetDataById.mockReturnValue({})
+
+		expect(() => {
+			wrapper = mount(SocioEconomicsChart, {
+				attachTo: document.body,
+			})
+		}).not.toThrow()
+	})
+
+	it('does not throw when socioEconomicsStore.getDataByNimi returns undefined (#733)', () => {
+		// Pre-regression: getDataByNimi returning undefined (no comparison area
+		// selected yet, or stale propsStore.socioEconomics referencing a removed
+		// nimi) caused `compareData.postinumeroalue` to throw before reaching
+		// the heat-exposure guard.
+		socioEconomicsGetDataByNimi.mockReturnValue(undefined)
 
 		expect(() => {
 			wrapper = mount(SocioEconomicsChart, {
