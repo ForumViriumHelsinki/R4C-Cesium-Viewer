@@ -133,14 +133,7 @@
 							</p>
 							<div class="analysis-buttons">
 								<template v-if="currentLevel === 'postalCode'">
-									<!-- Heat Distribution, NDVI Vegetation, and Building Analysis surface
-										 their UI as soon as the feature flag is enabled. Previously these
-										 were gated on `heatHistogramData.length > 0` / `hasNDVIData`, which
-										 meant the buttons never appeared until the corresponding dataset
-										 had already been loaded — leaving the Analysis tab silently
-										 incomplete (issue #712). The button's @click handler triggers data
-										 load, so a missing dataset is a runtime concern for the chart
-										 component, not a discoverability concern for the button. -->
+									<!-- Analysis buttons gate on the feature flag only; data loads on click (#712). -->
 									<v-btn
 										v-if="featureFlagStore.isEnabled('heatHistogram')"
 										block
@@ -442,10 +435,8 @@ const breadcrumbItems = computed(() =>
 
 const adaptationTab = ref('centers')
 
-const heatHistogramData = computed(() => propsStore.heatHistogramData)
 const statsIndex = computed(() => propsStore.statsIndex)
 const showSosEco = computed(() => socioEconomicsStore.data && heatExposureStore.data)
-const hasNDVIData = computed(() => toggleStore.ndvi)
 
 const hasAvailableAnalysis = computed(() => {
 	if (currentLevel.value === 'start') return false
