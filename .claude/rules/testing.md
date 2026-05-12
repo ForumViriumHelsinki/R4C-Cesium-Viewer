@@ -79,17 +79,43 @@ EventBus emits 'showBuilding'
 2. Only polygon entities (with `_polygon` property) are selectable
 3. Entity must be a `Cesium.Entity` instance with properties
 
-## Cesium Global Variables
+## Cesium & Store Global Variables
 
-The app exposes Cesium objects on `window` in E2E mode (`VITE_E2E_TEST=true`):
+The app exposes Cesium and Pinia state on `window` in E2E mode (`VITE_E2E_TEST=true`):
 
-| Variable          | Set by                       | Contains                    |
-| ----------------- | ---------------------------- | --------------------------- |
-| `window.__cesium` | `useViewerInitialization.js` | Cesium module               |
-| `window.__viewer` | `useViewerInitialization.js` | Cesium.Viewer instance      |
-| `window.Cesium`   | NOT set by app               | Only set by CI mock fixture |
+| Variable             | Set by                       | Contains                         |
+| -------------------- | ---------------------------- | -------------------------------- |
+| `window.__cesium`    | `useViewerInitialization.js` | Cesium module                    |
+| `window.__viewer`    | `useViewerInitialization.js` | Cesium.Viewer instance           |
+| `window.Cesium`      | NOT set by app               | Only set by CI mock fixture      |
+| `window.globalStore` | `src/main.js`                | Live Pinia globalStore reference |
 
 Test helpers must check `window.__cesium || window.Cesium` — never just `window.Cesium`.
+
+The store property is `postalcode` (lowercase), not `postalCode`. Reading from the store:
+
+```typescript
+const state = await page.evaluate(() => {
+	const s = (window as any).globalStore;
+	return { level: s.level, postalcode: s.postalcode, view: s.view };
+});
+```
+
+## Deterministic Drilling Without Cesium Picks
+
+`AccessibilityTestHelpers.drillToLevel` accepts `{ method: 'click' | 'store' }`. Use `'store'` when:
+
+- Running in CI with the mock Cesium fixture (polygon picking is unreliable).
+- Testing race conditions or rapid-click coordination — the store method lets you fire two transitions inside one `page.evaluate` tick.
+- The journey doesn't actually need to validate the click→pick→entity path; it just needs the destination level.
+
+```typescript
+// Click path — exercises CesiumViewer.vue → FeaturePicker → store
+await helpers.drillToLevel('postalCode', '00100');
+
+// Store path — deterministic, faster, no Cesium dependency
+await helpers.drillToLevel('postalCode', '00100', { method: 'store' });
+```
 
 ## Canvas Selector
 
@@ -202,6 +228,28 @@ The Pinia store defaults determine what's visible in tests without explicit setu
 | `ndvi: fallbackDefault: true` (flagMetadata)             | NDVI toggle visible in **all** views (no view restriction) |
 
 When writing `verifyPanelVisibility()` assertions, check store defaults rather than assuming elements need explicit activation.
+
+## Regression-Contract Specs (Soft Assertions)
+
+When a spec encodes contracts that are _known to be broken_ and tied to open issues — e.g. `tests/e2e/audit-2026-W19/user-journeys.spec.ts` — prefer `expect.soft()` over `expect()` for the broken assertions. Reserve hard `expect()` for structural pre/postconditions that must hold for the test to make sense.
+
+```typescript
+// Structural — bail if violated, test can't continue meaningfully
+await expect(banner).toContainText(/Helsinki Keskusta|00100/i);
+
+// Regression contract — soft so a single run surfaces *every* failure
+expect
+	.soft(await banner.textContent(), 'US-03 #711 — banner contains "undefined"')
+	.not.toMatch(/\bundefined\b/i);
+```
+
+Benefits:
+
+- One failing test reports every broken contract, not just the first — the report becomes a punch list.
+- The test still fails (preserves regression-contract semantics).
+- The message string carries the issue link, so failures are self-explanatory.
+
+When the linked issue closes, **graduate the soft to a hard** `expect` so the next regression is loud. Don't leave soft assertions in place after their issue is fixed — they hide future regressions.
 
 ## Navigation-Level Dependent UI Elements
 
