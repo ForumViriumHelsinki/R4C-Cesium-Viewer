@@ -108,8 +108,9 @@ export const useURLStore = defineStore('url', {
 		 * requested, and `skipGeometry=true` drops the postal-code
 		 * polygons we never render from this collection. Reduces payload
 		 * from a multi-MB GeoJSON FeatureCollection (all properties +
-		 * full geometry per postal code) to a small JSON dump keyed by
-		 * postal-code id, which is all the heat-exposure store needs.
+		 * full geometry per postal code) to a trimmed GeoJSON collection
+		 * which the heat-exposure store then indexes by postal-code id
+		 * (see `heatExposureStore.loadHeatExposure()`).
 		 *
 		 * @param {Object} state - Pinia state
 		 * @returns {(limit?: number) => string} Function accepting optional limit and returning heat exposure URL
