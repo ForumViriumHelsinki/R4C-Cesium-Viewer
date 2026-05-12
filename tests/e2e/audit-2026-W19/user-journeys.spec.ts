@@ -302,6 +302,11 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 			const gridState = await readStoreState(cesiumPage)
 			expect(gridState.view, 'US-20 — view must reflect grid after switch').toMatch(/grid/i)
 
+			// Climate Adaptation + Grid Options live in the Analysis tab inside
+			// ControlPanel (template v-if="currentView === 'grid'"). The default
+			// active tab is "Layers", so activate Analysis before asserting.
+			await cesiumPage.getByRole('tab', { name: 'Analysis' }).click()
+
 			// US-15 — Climate Adaptation panel only appears in grid view.
 			await expect(
 				cesiumPage.getByText('Climate Adaptation'),
@@ -313,6 +318,9 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 			).toBeVisible()
 
 			// Switch back — Climate Adaptation must hide again (view-scoped).
+			// The view-mode buttons live in ViewModeCompact on the Layers tab,
+			// so return there before driving navigateToView.
+			await cesiumPage.getByRole('tab', { name: 'Layers' }).click()
 			await helpers.navigateToView('capitalRegionView')
 			await expect(
 				cesiumPage.getByText('Climate Adaptation'),
@@ -340,15 +348,22 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 			const buildingState = await readStoreState(cesiumPage)
 			expect(buildingState.level, 'must reach building level').toBe('building')
 
+			// Building-level analysis lives on the Analysis tab, building
+			// properties on the Details tab. The default active tab is "Layers".
+			await cesiumPage.getByRole('tab', { name: 'Analysis' }).click()
+
 			// US-18 — Building Heat Data button visible (exact casing matters).
 			await expect(
 				cesiumPage.getByRole('button', { name: 'Building Heat Data' }),
 				'US-18 — Building Heat Data must be reachable'
 			).toBeVisible({ timeout: 10000 })
 
-			// US-18 — Building Properties button visible.
+			// US-18 — Building Properties section heading lives on the Details
+			// tab (not a button — it's the heading above the AreaProperties
+			// component when currentLevel === 'building').
+			await cesiumPage.getByRole('tab', { name: 'Details' }).click()
 			await expect(
-				cesiumPage.getByRole('button', { name: 'Building Properties' }),
+				cesiumPage.getByText('Building Properties'),
 				'US-18 — Building Properties must be reachable'
 			).toBeVisible({ timeout: 10000 })
 
