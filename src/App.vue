@@ -187,15 +187,17 @@ const toggleMobileSidebar = () => {
 // `?postalcode=` rather than leaving them stale (issue #714). The watcher fires
 // for every level transition, including direct store mutations from tests and
 // in-component back-button handlers, so all back-nav paths converge here.
+// Handles all three levels: start (clears both params), postalCode (sets both),
+// and building (preserves the parent postalcode param so reload restores
+// context). Camera params (lon/lat/alt) are managed by useUrlState and remain
+// untouched.
 const stopLevelUrlWatcher = watch(
 	() => [globalStore.level, globalStore.postalcode],
 	([level, code]) => {
 		if (level === 'start') {
-			// Clear navigation params on return to start. Camera params (lon/lat/alt)
-			// are managed by useUrlState and remain untouched.
 			updateUrlWithNavigationState('start', null)
-		} else if (level === 'postalCode' && code) {
-			updateUrlWithNavigationState('postalCode', code)
+		} else if ((level === 'postalCode' || level === 'building') && code) {
+			updateUrlWithNavigationState(level, code)
 		}
 	}
 )

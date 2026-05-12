@@ -20,6 +20,10 @@ import cacheWarmer from './cacheWarmer.js'
  * reload would re-enter the postal-code level even though the visible state
  * shows Capital Region (issue #714).
  *
+ * Accepts 'start', 'postalCode', and 'building' levels. At building level the
+ * postal-code param is preserved so a reload restores the parent postal-code
+ * context.
+ *
  * @param {string} level - Navigation level
  * @param {string} postalCode - Selected postal code
  */
