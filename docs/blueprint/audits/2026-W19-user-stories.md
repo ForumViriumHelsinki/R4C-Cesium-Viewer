@@ -372,6 +372,21 @@ Each row is one PR, sized for one-shot review.
 
 `tests/e2e/audit-2026-W19/postal-code-breadcrumb.spec.ts` — covers US-03 / #711.
 
+## Derived user journeys (2026-05-11 follow-up)
+
+Each story above feeds one or more **user journeys** in [`docs/blueprint/user-journeys/`](../user-journeys/README.md). The journeys (Mermaid `journey` + `flowchart` per file) translate the stories into testable contracts — every diamond / box in the flowchart maps to an `expect(...)` in the journey spec.
+
+| #   | Journey                                                                | Stories                                         | Spec                                                            |
+| --- | ---------------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------- |
+| 1   | [Onboarding & first load](../user-journeys/01-onboarding.md)           | US-01, US-02, US-09, US-17                      | `journey-1` in `tests/e2e/audit-2026-W19/user-journeys.spec.ts` |
+| 2   | [Postal-code drill-down](../user-journeys/02-postal-code-drilldown.md) | US-03, US-04, US-05, US-06, US-07, US-09, US-19 | `journey-2`                                                     |
+| 3   | [Back navigation](../user-journeys/03-back-navigation.md)              | US-08                                           | `journey-3`                                                     |
+| 4   | [View switch](../user-journeys/04-view-switch.md)                      | US-12, US-13, US-14, US-15, US-20               | `journey-4`                                                     |
+| 5   | [Building deep-dive](../user-journeys/05-building-deep-dive.md)        | US-11, US-18                                    | `journey-5`                                                     |
+| 6   | [Race condition](../user-journeys/06-race-condition.md)                | US-10                                           | `journey-6`                                                     |
+
+The spec uses `expect.soft(...)` for every contract tied to an open issue (#711, #712, #713, #714, #679, #681) so a single run surfaces every regression, not just the first failure. As each issue is fixed, the corresponding soft assertion graduates to a hard `expect`.
+
 ## Next-pass watch list
 
 - After GOFF is restored, re-verify US-04, US-05, US-06 — those may turn out to be data-level (provider returning `false` despite default `true`) instead of UI-level (gate bug).
