@@ -246,28 +246,28 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 			expect(afterBack.level, 'must return to start level').toBe('start')
 			expect(afterBack.postalcode, 'postal code must clear on back-nav').toBeNull()
 
-			// US-08 #714 — URL params must clear too. Soft until fixed.
+			// US-08 #714 — URL params must clear (graduated to hard after #714 fix).
 			const url = new URL(cesiumPage.url())
-			expect
-				.soft(url.searchParams.has('level'), 'US-08 #714 — ?level= param must clear after back-nav')
-				.toBe(false)
-			expect
-				.soft(
-					url.searchParams.has('postalcode'),
-					'US-08 #714 — ?postalcode= param must clear after back-nav'
-				)
-				.toBe(false)
+			expect(
+				url.searchParams.has('level'),
+				'US-08 #714 — ?level= param must clear after back-nav'
+			).toBe(false)
+			expect(
+				url.searchParams.has('postalcode'),
+				'US-08 #714 — ?postalcode= param must clear after back-nav'
+			).toBe(false)
 
-			// Deep-link consistency: reload should land at start level. Soft
-			// because URL stickiness (#714) drives the same regression today.
+			// Deep-link consistency: reload should land at start level. Hard now
+			// that URL stickiness (#714) is resolved.
 			await cesiumPage.reload()
 			await cesiumPage.waitForFunction(() => Boolean((window as any).globalStore), undefined, {
 				timeout: 10000,
 			})
 			const afterReload = await readStoreState(cesiumPage)
-			expect
-				.soft(afterReload.level, 'US-08 #714 — reload after back-nav must preserve start level')
-				.toBe('start')
+			expect(
+				afterReload.level,
+				'US-08 #714 — reload after back-nav must preserve start level'
+			).toBe('start')
 		}
 	)
 

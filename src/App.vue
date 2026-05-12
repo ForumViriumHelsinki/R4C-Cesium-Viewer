@@ -127,7 +127,7 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useSidebarOffset } from './composables/useSidebarOffset'
 
 // Lazy-loaded components
@@ -138,6 +138,7 @@ const MapOverlayControls = defineAsyncComponent(() => import('./components/MapOv
 
 import CesiumViewer from './pages/CesiumViewer.vue'
 import { initializeFeatureFlags } from './services/featureFlagProvider'
+import { updateUrlWithNavigationState } from './services/postalCodeLoader'
 import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
 import { useLoadingStore } from './stores/loadingStore.js'
@@ -181,6 +182,23 @@ const locationLabel = computed(() => {
 const toggleMobileSidebar = () => {
 	toggleStore.setSidebarMode(toggleStore.sidebarMode === 'hidden' ? 'expanded' : 'hidden')
 }
+
+// Sync URL query params with navigation level so back-nav clears `?level=` and
+// `?postalcode=` rather than leaving them stale (issue #714). The watcher fires
+// for every level transition, including direct store mutations from tests and
+// in-component back-button handlers, so all back-nav paths converge here.
+const stopLevelUrlWatcher = watch(
+	() => [globalStore.level, globalStore.postalcode],
+	([level, code]) => {
+		if (level === 'start') {
+			// Clear navigation params on return to start. Camera params (lon/lat/alt)
+			// are managed by useUrlState and remain untouched.
+			updateUrlWithNavigationState('start', null)
+		} else if (level === 'postalCode' && code) {
+			updateUrlWithNavigationState('postalCode', code)
+		}
+	}
+)
 
 // Navigation functions
 const signOut = () => {
@@ -265,6 +283,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(async () => {
+	stopLevelUrlWatcher()
 	loadingStore.stopStaleCleanupTimer()
 
 	if (featureFlagStore.isEnabled('backgroundPreload')) {
