@@ -78,6 +78,11 @@ bun run lint:fix # Biome auto-fix
 
 ## CI/CD
 
-- `container-build.yml` - Builds and pushes to GHCR on push to main and tags
-- `release-please.yml` - Manages releases and CHANGELOG via conventional commits
-- `lighthouse-ci.yml` - Performance monitoring on PRs
+Container build/release use the org reusable workflows (`ForumViriumHelsinki/.github`) with a build-once/promote pattern.
+
+- `container-build.yml` — calls `reusable-container-build.yml` on release-please PRs; produces a `:next-{version}` pre-release image
+- `container-release.yml` — calls `reusable-container-release.yml` on `release: published`; promotes the pre-release image to semver tags via manifest retag (seconds, not minutes), with a full rebuild as fallback
+- `release-please.yml` — manages releases and CHANGELOG via conventional commits
+- `lighthouse.yml` — performance monitoring on PRs
+
+Sentry build args (`SENTRY_AUTH_TOKEN`, `VITE_SENTRY_DSN`) reach the build via the reusable workflows' `secret-build-args` passthrough — secrets cannot flow through plain `inputs.build-args` on reusable-workflow callers.

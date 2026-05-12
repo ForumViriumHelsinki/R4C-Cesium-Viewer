@@ -1,7 +1,7 @@
 {
-  "format_version": "3.2.0",
+  "format_version": "3.3.0",
   "created_at": "2026-03-19T17:20:29Z",
-  "updated_at": "2026-03-20T05:58:20Z",
+  "updated_at": "2026-04-17T10:05:15Z",
   "created_by": {
     "blueprint_plugin": "3.2.0"
   },
@@ -142,5 +142,17 @@
       "stats": {},
       "context": {}
     }
-  }
+  },
+  "upgrade_history": [
+    {
+      "from": "3.2.0",
+      "to": "3.3.0",
+      "date": "2026-04-17T10:05:15Z",
+      "changes": [
+        "Added workspaces block for monorepo support",
+        "Enabled cross-workspace cross-references (`<path>/ADR-NNN`, `/ADR-NNN`)",
+        "Optional: implemented_by portfolio links in feature-tracker.json"
+      ]
+    }
+  ]
 }
