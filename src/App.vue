@@ -163,14 +163,21 @@ const showTimeline = computed(
 	() => currentLevel.value === 'postalCode' || currentLevel.value === 'building'
 )
 
-const postalCode = computed(() => globalStore.postalCode)
+// Store property is `postalcode` (lowercase) — reading `postalCode` (camelCase)
+// resolved to `undefined` and rendered as the literal string "undefined" in the
+// breadcrumb (issue #711).
+const postalCode = computed(() => globalStore.postalcode)
 const nameOfZone = computed(() => globalStore.nameOfZone)
 const buildingAddress = computed(() => globalStore.buildingAddress)
 
 const locationLabel = computed(() => {
 	if (currentLevel.value === 'building') return buildingAddress.value || 'Building'
-	if (currentLevel.value === 'postalCode')
-		return nameOfZone.value ? `${postalCode.value} ${nameOfZone.value}` : postalCode.value
+	if (currentLevel.value === 'postalCode') {
+		const code = postalCode.value
+		const zone = nameOfZone.value
+		if (code && zone) return `${code} ${zone}`
+		return zone || code || null
+	}
 	return null
 })
 

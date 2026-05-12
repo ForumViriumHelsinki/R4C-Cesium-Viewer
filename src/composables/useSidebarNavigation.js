@@ -11,7 +11,10 @@ export function useSidebarNavigation() {
 	const globalStore = useGlobalStore()
 
 	const currentLevel = computed(() => globalStore.level)
-	const postalCode = computed(() => globalStore.postalCode)
+	// Store property is `postalcode` (lowercase) — reading `postalCode` (camelCase)
+	// resolved to `undefined` and rendered as the literal string "undefined" in the
+	// sidebar breadcrumb (issue #711).
+	const postalCode = computed(() => globalStore.postalcode)
 	const nameOfZone = computed(() => globalStore.nameOfZone)
 	const buildingAddress = computed(() => globalStore.buildingAddress)
 
@@ -19,9 +22,11 @@ export function useSidebarNavigation() {
 		const items = [{ label: 'Capital Region', level: 'start' }]
 
 		if (currentLevel.value === 'postalCode' || currentLevel.value === 'building') {
-			const postalLabel = nameOfZone.value
-				? `${postalCode.value} ${nameOfZone.value}`
-				: postalCode.value || 'Area'
+			const code = postalCode.value
+			const zone = nameOfZone.value
+			let postalLabel
+			if (code && zone) postalLabel = `${code} ${zone}`
+			else postalLabel = zone || code || 'Area'
 			items.push({ label: postalLabel, level: 'postalCode' })
 		}
 
