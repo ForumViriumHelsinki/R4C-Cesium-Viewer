@@ -189,8 +189,10 @@ export default {
 						: null
 				// Skip the comparison series when either the compared record or
 				// its heat exposure data is missing — otherwise null values would
-				// propagate into d3 scale/axis computation.
-				const hasCompareSeries = compareData != null && compareHeatData != null
+				// propagate into d3 scale/axis computation. The compareData ==
+				// null case already coerces compareHeatData to null via the
+				// ternary above, so the single check is sufficient.
+				const hasCompareSeries = compareHeatData != null
 				const compareValues = hasCompareSeries
 					? calculateYValues(compareData, statsData, compareHeatData)
 					: []
