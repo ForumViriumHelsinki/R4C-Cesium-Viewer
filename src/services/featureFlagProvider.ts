@@ -67,6 +67,12 @@ function buildFallbackFlags(): Record<
 
 /**
  * Check if GOFF relay is reachable before attempting to use it.
+ *
+ * Issue #715: when the relay is broken upstream (e.g. 502 Bad Gateway on
+ * beta), `response.ok` returns false and we cleanly fall back to the
+ * InMemoryProvider with `fallbackDefault` values. Log the specific failure
+ * mode so the regression is traceable in beta console output and Sentry
+ * breadcrumbs, instead of just disappearing behind the silent catch.
  */
 async function isGoffAvailable(): Promise<boolean> {
 	try {
@@ -77,8 +83,21 @@ async function isGoffAvailable(): Promise<boolean> {
 			signal: controller.signal,
 		})
 		clearTimeout(timeout)
-		return response.ok
-	} catch {
+
+		if (!response.ok) {
+			logger.warn(
+				`Feature flags: GOFF health endpoint returned ${response.status} ${response.statusText}; falling back to local defaults (see ForumViriumHelsinki/infrastructure#1799)`
+			)
+			return false
+		}
+		return true
+	} catch (error) {
+		// Network error, CORS, abort, etc. — surface the reason so a degraded
+		// provider isn't silent in production.
+		logger.warn(
+			'Feature flags: GOFF health check failed; falling back to local defaults',
+			error instanceof Error ? error.message : error
+		)
 		return false
 	}
 }
