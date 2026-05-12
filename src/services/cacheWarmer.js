@@ -122,46 +122,26 @@ class CacheWarmer {
 
 	/**
 	 * Warm critical data caches on app startup
-	 * Runs in background using requestIdleCallback to avoid blocking UI.
-	 * Loads building data for most popular postal codes into IndexedDB.
 	 *
-	 * Warming Strategy:
-	 * - Loads building data only (most frequently accessed)
-	 * - Uses low-priority background loading
-	 * - 1-hour cache TTL (shorter than normal for freshness)
-	 * - Continues on failure (doesn't block app startup)
+	 * **No-op by default** (since 2026-05). Eager fan-out of 8 parallel
+	 * `/hsy_buildings_optimized/items?postinumero=*` requests at page load
+	 * was triggering Sentry's N+1 detector (R4C-CESIUM-VIEWER-5,
+	 * R4C-CESIUM-VIEWER-6) and shipping 8 large GeoJSON payloads the user
+	 * had not yet asked for (R4C-CESIUM-VIEWER-4). Buildings are now loaded
+	 * lazily on first postal-code selection, and predictive warming for
+	 * nearby postal codes (`warmNearbyPostalCodes`) handles the warm-cache
+	 * case once the user has expressed intent.
+	 *
+	 * Kept as a no-op (rather than removed) so callers and tests do not
+	 * break, and so the path can be re-enabled behind a feature flag if a
+	 * future use case justifies the network cost.
 	 *
 	 * @returns {Promise<void>}
-	 *
-	 * @example
-	 * // Call on app initialization
-	 * import cacheWarmer from './services/cacheWarmer.js';
-	 * cacheWarmer.warmCriticalData();
 	 */
 	async warmCriticalData() {
-		if (import.meta.env.VITE_E2E_TEST === 'true') {
-			logger.debug('[CacheWarmer] Skipping cache warming in E2E test mode')
-			return
-		}
-
-		if (this.warmingInProgress) {
-			logger.debug('[CacheWarmer] ⏳ Warming already in progress, skipping')
-			return
-		}
-
-		this.warmingInProgress = true
-		logger.debug('[CacheWarmer] 🔥 Starting cache warming for critical data...')
-
-		try {
-			// Warm popular postal codes' building data
-			await this.warmPopularBuildingData()
-
-			logger.debug('[CacheWarmer] ✅ Cache warming complete')
-		} catch (error) {
-			logger.warn('[CacheWarmer] ⚠️ Cache warming encountered error:', error?.message || error)
-		} finally {
-			this.warmingInProgress = false
-		}
+		logger.debug(
+			'[CacheWarmer] ⏭️ Startup warming disabled — buildings are loaded on first selection (see perf/#722,#724,#726)'
+		)
 	}
 
 	/**
