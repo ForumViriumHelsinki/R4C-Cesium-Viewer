@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.48.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.48.1...r4c-cesium-viewer-v1.48.2) (2026-05-12)
+
+
+### Bug Fixes
+
+* **charts:** guard SocioEconomicsChart against undefined heatData ([#731](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/731)) ([185dd70](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/185dd703b963a359fef5870ec6cddeb91bf34ae8))
+* **scripts:** use user-writable install dir and pip --user ([#737](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/737)) ([0703982](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/070398206be76b30facd0d83ca503d618897ef60))
+
 ## [1.48.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.48.0...r4c-cesium-viewer-v1.48.1) (2026-05-07)
 
 
