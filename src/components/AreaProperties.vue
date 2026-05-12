@@ -154,6 +154,36 @@ const openPanels = ref([])
 const showCopyFeedback = ref(false)
 const copyFeedbackText = ref('Copied!')
 
+// Fallback entity for postal-code level. Issue #713: when the user reached
+// the postal code via search / URL / programmatic navigation rather than a
+// map click, `globalStore.pickedEntity` is null and AreaProperties renders
+// the empty "Click on areas to view properties" state. Look up the postal-
+// code polygon entity directly from the index so the panel still populates.
+const fallbackPostalCodeEntity = ref(null)
+
+watch(
+	[() => globalStore.level, () => globalStore.postalcode, () => globalStore.pickedEntity],
+	async ([level, postalcode, picked]) => {
+		// Only fall back at postal-code level with no clicked entity.
+		if (level !== 'postalCode' || !postalcode || picked) {
+			fallbackPostalCodeEntity.value = null
+			return
+		}
+
+		try {
+			const { postalCodeIndex } = await import('../services/postalCodeIndex.js')
+			const entity = postalCodeIndex.getByPostalCode(postalcode)
+			fallbackPostalCodeEntity.value = entity ?? null
+		} catch (error) {
+			logger.warn('[AreaProperties] Failed to look up postal code entity:', error?.message || error)
+			fallbackPostalCodeEntity.value = null
+		}
+	},
+	{ immediate: true }
+)
+
+const effectiveEntity = computed(() => globalStore.pickedEntity || fallbackPostalCodeEntity.value)
+
 // Category definitions with property matchers
 const CATEGORIES = {
 	location: {
@@ -322,7 +352,7 @@ function formatValue(value) {
 
 // Extract all properties from entity
 const allProperties = computed(() => {
-	const entity = globalStore.pickedEntity
+	const entity = effectiveEntity.value
 	if (!entity?._properties) return []
 
 	const props = []
@@ -454,9 +484,9 @@ async function copyAllProperties() {
 	}
 }
 
-// Reset panels when entity changes
+// Reset panels when the effective entity changes
 watch(
-	() => globalStore.pickedEntity,
+	() => effectiveEntity.value,
 	() => {
 		openPanels.value = []
 		searchQuery.value = ''

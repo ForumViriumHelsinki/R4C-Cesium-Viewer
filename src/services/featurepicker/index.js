@@ -235,8 +235,21 @@ export default class FeaturePicker {
 	 * @private
 	 */
 	setNameOfZone() {
-		setNameOfZoneHelper(this.store.postalcode, this.propStore.postalCodeData, (name) =>
-			this.store.setNameOfZone(name)
+		setNameOfZoneHelper(
+			this.store.postalcode,
+			this.propStore.postalCodeData,
+			(name) => this.store.setNameOfZone(name),
+			{
+				// Issue #713 — populate AreaProperties when entering postal-code level
+				// via search / URL (no map click). Only set when no entity is already
+				// picked, so a click that selected a more specific entity isn't
+				// overwritten.
+				setPickedEntityIfEmpty: (entity) => {
+					if (!this.store.pickedEntity) {
+						this.store.setPickedEntity(entity)
+					}
+				},
+			}
 		)
 	}
 
