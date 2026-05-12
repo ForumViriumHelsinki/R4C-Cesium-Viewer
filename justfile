@@ -296,6 +296,11 @@ test-unit *args:
 test-e2e *args:
     VITE_E2E_TEST=true bun run test:e2e {{ args }}
 
+# Run mock-API-safe E2E subset (skips @requires-database specs). Use with `just dev-mock`.
+[group: "testing"]
+test-e2e-mock *args:
+    VITE_E2E_TEST=true SKIP_REQUIRES_DATABASE=true bun run test:e2e {{ args }}
+
 # Run a single test file (fast iteration during test fixes)
 [group: "testing"]
 test-file file *args:

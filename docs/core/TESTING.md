@@ -345,6 +345,55 @@ npm run test:watch
 npm run test:coverage
 ```
 
+### Tag-Based Execution
+
+Tests are categorized with Playwright tags so subsets can be run independently. Combine tags with `--grep` / `--grep-invert`:
+
+| Tag                  | Meaning                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| `@e2e`               | End-to-end browser test                                                                               |
+| `@accessibility`     | Accessibility (a11y) coverage                                                                         |
+| `@performance`       | Performance regression test                                                                           |
+| `@smoke`             | Fast smoke check                                                                                      |
+| `@wms`               | WMS / background-map integration                                                                      |
+| `@navigation`        | Navigation / drill-down flow                                                                          |
+| `@comprehensive`     | Multi-step end-to-end walkthrough                                                                     |
+| `@audit-2026-w19`    | Regression contract from the 2026-W19 audit                                                           |
+| `@requires-database` | Needs a real (or seeded) Postgres backend providing building polygon entities and postal-code GeoJSON |
+
+Examples:
+
+```bash
+# Run only accessibility specs
+bunx playwright test --grep @accessibility
+
+# Skip database-dependent specs (mock API / no backend)
+bunx playwright test --grep-invert @requires-database
+
+# Combine — accessibility smoke without DB
+bunx playwright test --grep "@accessibility.*@smoke" --grep-invert @requires-database
+```
+
+#### `@requires-database` — Skipping DB-dependent specs
+
+E2E specs tagged `@requires-database` exercise the FeaturePicker building-selection flow (`drillToLevel('building')` in click mode, real building entity hit-testing). The mock API in `mock-api/` cannot produce Cesium entities with the `_polygon` property the FeaturePicker requires, so these specs reliably fail in mock mode.
+
+To skip them, set the env var or use the dedicated scripts:
+
+```bash
+# Env-var driven (honoured by playwright.config.ts grepInvert)
+SKIP_REQUIRES_DATABASE=true bun run test:e2e
+
+# Dedicated scripts
+bun run test:e2e:mock
+bun run test:accessibility:mock
+
+# Justfile recipe (sets VITE_E2E_TEST and SKIP_REQUIRES_DATABASE)
+just test-e2e-mock
+```
+
+CI's E2E and accessibility jobs set `SKIP_REQUIRES_DATABASE=true` automatically because they run against `bun run preview` with no backend. See [#658](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/658).
+
 ### CI/CD Pipeline
 
 Tests run automatically on:

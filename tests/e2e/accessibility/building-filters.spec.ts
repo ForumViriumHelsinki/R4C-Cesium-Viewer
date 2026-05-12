@@ -116,6 +116,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 
 		cesiumTest(
 			'should maintain tall buildings filter state across non-grid view contexts',
+			{ tag: ['@requires-database'] },
 			async ({ cesiumPage }) => {
 				// Progressive assertion: ensure UI is ready
 				await expect(cesiumPage.locator('.map-controls')).toBeVisible({
