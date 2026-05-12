@@ -59,7 +59,8 @@ import unifiedLoader from './unifiedLoader.js'
 class CacheWarmer {
 	/**
 	 * Creates a CacheWarmer instance
-	 * Initializes store references and defines popular postal codes for warming.
+	 * Initializes store references and the warmed-postal-code tracking set
+	 * shared with `postalCodeLoader.checkCacheForPostalCode`.
 	 */
 	constructor() {
 		/** @type {Object|null} Lazy-loaded global store instance */
@@ -68,26 +69,8 @@ class CacheWarmer {
 		this._toggleStore = null
 		/** @type {Object|null} Lazy-loaded URL store instance */
 		this._urlStore = null
-		/** @type {boolean} Flag to prevent concurrent warming operations */
-		this.warmingInProgress = false
 		/** @type {Set<string>} Tracking set of already-warmed postal codes */
 		this.warmedPostalCodes = new Set()
-
-		/**
-		 * Most popular postal codes in Helsinki (based on typical usage patterns)
-		 * These will be warmed on app startup for instant loading.
-		 * @type {string[]}
-		 */
-		this.popularPostalCodes = [
-			'00100', // Helsinki center (Keskusta)
-			'00150', // Punavuori
-			'00170', // Kamppi
-			'00180', // Länsisatama
-			'00200', // Lauttasaari
-			'00530', // Munkkiniemi
-			'00250', // Taka-Töölö
-			'00260', // Katajanokka
-		]
 	}
 
 	/**
@@ -123,51 +106,28 @@ class CacheWarmer {
 	/**
 	 * Warm critical data caches on app startup
 	 *
-	 * **No-op by default** (since 2026-05). Eager fan-out of 8 parallel
-	 * `/hsy_buildings_optimized/items?postinumero=*` requests at page load
-	 * was triggering Sentry's N+1 detector (R4C-CESIUM-VIEWER-5,
-	 * R4C-CESIUM-VIEWER-6) and shipping 8 large GeoJSON payloads the user
-	 * had not yet asked for (R4C-CESIUM-VIEWER-4). Buildings are now loaded
-	 * lazily on first postal-code selection, and predictive warming for
-	 * nearby postal codes (`warmNearbyPostalCodes`) handles the warm-cache
-	 * case once the user has expressed intent.
+	 * **No-op** (since 2026-05). The previous implementation fanned out 8
+	 * parallel `/hsy_buildings_optimized/items?postinumero=*` requests at
+	 * page load (one per "popular" postal code), which triggered Sentry's
+	 * N+1 detector (R4C-CESIUM-VIEWER-5, R4C-CESIUM-VIEWER-6) and shipped
+	 * 8 large GeoJSON payloads the user had not yet asked for
+	 * (R4C-CESIUM-VIEWER-4). Buildings are now loaded lazily on first
+	 * postal-code selection, and predictive warming for nearby postal
+	 * codes (`warmNearbyPostalCodes`) handles the warm-cache case once
+	 * the user has expressed intent.
 	 *
-	 * Kept as a no-op (rather than removed) so callers and tests do not
-	 * break, and so the path can be re-enabled behind a feature flag if a
-	 * future use case justifies the network cost.
+	 * Method retained as a callable no-op so `useDataLoading` and any
+	 * existing tests/imports keep working. If a future use case
+	 * resurrects startup warming, gate it behind a GoFeatureFlag
+	 * (org-wide standard, see CLAUDE.md "feature-flags" rule) and not an
+	 * env-var build flag.
 	 *
 	 * @returns {Promise<void>}
 	 */
 	async warmCriticalData() {
 		logger.debug(
-			'[CacheWarmer] ⏭️ Startup warming disabled — buildings are loaded on first selection (see perf/#722,#724,#726)'
+			'[CacheWarmer] ⏭️ Startup warming disabled — buildings load on first selection (see perf/#722,#724,#726)'
 		)
-	}
-
-	/**
-	 * Preload building data for most popular postal codes
-	 * Loads data into cache only (doesn't process or display).
-	 * Uses Promise.allSettled to continue warming even if some areas fail.
-	 *
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	async warmPopularBuildingData() {
-		logger.debug(
-			'[CacheWarmer] 🏢 Warming building caches for',
-			this.popularPostalCodes.length,
-			'popular areas...'
-		)
-
-		// Use Promise.allSettled to continue even if some fail
-		const results = await Promise.allSettled(
-			this.popularPostalCodes.map((postalCode) => this.warmBuildingsForPostalCode(postalCode))
-		)
-
-		const successful = results.filter((r) => r.status === 'fulfilled').length
-		const failed = results.filter((r) => r.status === 'rejected').length
-
-		logger.debug(`[CacheWarmer] 📊 Warming complete: ${successful} successful, ${failed} failed`)
 	}
 
 	/**
