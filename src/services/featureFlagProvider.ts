@@ -5,6 +5,7 @@
 
 import { GoFeatureFlagWebProvider } from '@openfeature/go-feature-flag-web-provider'
 import { type EvaluationContext, InMemoryProvider, OpenFeature } from '@openfeature/web-sdk'
+import * as Sentry from '@sentry/vue'
 import { ALL_FLAG_NAMES, FLAG_METADATA } from '@/constants/flagMetadata'
 import { useFeatureFlagStore } from '@/stores/featureFlagStore'
 import type { useUserStore } from '@/stores/userStore'
@@ -21,6 +22,17 @@ const GOFF_ENDPOINT =
 		? `${window.location.origin}/feature-flags`
 		: '/feature-flags'
 const GOFF_HEALTH_TIMEOUT_MS = 3000
+
+/**
+ * GOFF websocket init timeout. The provider's built-in default is 5000 ms,
+ * which is too aggressive for cold relay-proxy connections — production
+ * traffic surfaces ~26 unhandled-rejection events per day from slow handshakes
+ * (Sentry R4C-CESIUM-VIEWER-1Z, #735). Bumped to 15s; override via
+ * `VITE_GOFF_TIMEOUT_MS` in environments with consistently slow handshakes.
+ * The flag-evaluation path is unaffected — fallback defaults are already
+ * applied when init fails or the relay is unreachable.
+ */
+const GOFF_WEBSOCKET_TIMEOUT_MS = Number(import.meta.env.VITE_GOFF_TIMEOUT_MS ?? 15000)
 
 type UserStore = ReturnType<typeof useUserStore>
 
@@ -84,12 +96,72 @@ async function isGoffAvailable(): Promise<boolean> {
 }
 
 /**
+ * Convert a GOFF rejection reason to a readable string. The library rejects
+ * with bare strings ("timeout of 5000 ms reached when initializing the
+ * websocket") and Error instances depending on the path.
+ */
+function describeGoffReason(reason: unknown): string {
+	if (reason instanceof Error) return reason.message
+	if (typeof reason === 'string') return reason
+	try {
+		return JSON.stringify(reason)
+	} catch {
+		return String(reason)
+	}
+}
+
+/**
+ * Test whether an unhandled rejection originated from the GOFF provider's
+ * background retry/reconnect loop. The library's `initialize()` catches its
+ * synchronous failure path, then fires `retryFetchAll()` and
+ * `reconnectWebsocket()` **without awaiting** — those returned promises can
+ * reject silently and surface as unhandled rejections (Sentry
+ * R4C-CESIUM-VIEWER-1Z, #735).
+ */
+function isGoffWebsocketRejection(reason: unknown): boolean {
+	const message = describeGoffReason(reason)
+	return (
+		/websocket/i.test(message) &&
+		/go-?feature-?flag|GoFeatureFlag|impossible to connect|reached when initializing/i.test(message)
+	)
+}
+
+let goffRejectionHandlerInstalled = false
+
+/**
+ * Convert GOFF's background-reconnect unhandled rejections into a single
+ * warning + Sentry breadcrumb, instead of letting them bubble up as
+ * production errors. Idempotent; safe to call multiple times.
+ */
+function installGoffRejectionHandler(): void {
+	if (goffRejectionHandlerInstalled || typeof window === 'undefined') {
+		return
+	}
+	goffRejectionHandlerInstalled = true
+	window.addEventListener('unhandledrejection', (event) => {
+		if (!isGoffWebsocketRejection(event.reason)) {
+			return
+		}
+		const message = describeGoffReason(event.reason)
+		logger.warn('Feature flags: GOFF websocket reconnect failed (handled)', message)
+		Sentry.addBreadcrumb({
+			category: 'feature-flags',
+			level: 'warning',
+			message: 'GOFF websocket reconnect failed',
+			data: { reason: message },
+		})
+		event.preventDefault()
+	})
+}
+
+/**
  * Initialize OpenFeature with the appropriate provider.
  * Attempts GOFF relay first, falls back to InMemoryProvider.
  *
  * @param userStore - The user identity store (must be initialized first)
  */
 export async function initializeFeatureFlags(userStore: UserStore): Promise<void> {
+	installGoffRejectionHandler()
 	const context = buildEvaluationContext(userStore)
 
 	const goffAvailable = await isGoffAvailable()
@@ -98,6 +170,7 @@ export async function initializeFeatureFlags(userStore: UserStore): Promise<void
 		logger.info('Feature flags: connecting to GOFF relay')
 		const provider = new GoFeatureFlagWebProvider({
 			endpoint: GOFF_ENDPOINT,
+			apiTimeout: GOFF_WEBSOCKET_TIMEOUT_MS,
 		})
 
 		await OpenFeature.setContext(context)
@@ -108,6 +181,12 @@ export async function initializeFeatureFlags(userStore: UserStore): Promise<void
 			useFeatureFlagStore().setProviderSource('goff')
 		} catch (error) {
 			logger.warn('Feature flags: GOFF provider failed, falling back to defaults', error)
+			Sentry.addBreadcrumb({
+				category: 'feature-flags',
+				level: 'warning',
+				message: 'GOFF provider init failed; using fallback defaults',
+				data: { reason: describeGoffReason(error) },
+			})
 			const fallbackProvider = new InMemoryProvider(buildFallbackFlags())
 			await OpenFeature.setProviderAndWait(fallbackProvider)
 			useFeatureFlagStore().setProviderSource('fallback')
