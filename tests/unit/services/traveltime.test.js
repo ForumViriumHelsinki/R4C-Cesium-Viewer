@@ -171,7 +171,6 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 				features: [{ properties: {} }], // Missing travel_data
 			}
 			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
-			response.json = vi.fn().mockResolvedValue(mockData)
 			global.fetch.mockResolvedValue(response)
 
 			// Act & Assert: addTravelTimeLabels receives undefined but handles it
@@ -186,7 +185,6 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 				features: [{ properties: { travel_data: [] } }], // Empty but present
 			}
 			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
-			response.json = vi.fn().mockResolvedValue(mockData)
 			global.fetch.mockResolvedValue(response)
 			traveltime.addTravelTimeLabels = vi.fn()
 
@@ -204,7 +202,6 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 				features: [], // Empty array
 			}
 			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
-			response.json = vi.fn().mockResolvedValue(mockData)
 			global.fetch.mockResolvedValue(response)
 
 			// Act & Assert: Should throw when accessing features[0]
@@ -261,7 +258,6 @@ describe('Traveltime Service - Error Handling', { tags: ['@unit', '@traveltime']
 				],
 			}
 			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
-			response.json = vi.fn().mockResolvedValue(mockData)
 			global.fetch.mockResolvedValue(response)
 			traveltime.addTravelTimeLabels = vi.fn()
 

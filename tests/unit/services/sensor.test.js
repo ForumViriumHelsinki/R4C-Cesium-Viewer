@@ -125,8 +125,10 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 
 		it('should handle malformed GeoJSON from sensor API', async () => {
 			// Arrange: Return invalid GeoJSON
-			const response = new Response(JSON.stringify({ invalid: 'structure' }), { status: 200, statusText: 'OK' })
-			response.json = vi.fn().mockResolvedValue({ invalid: 'structure' })
+			const response = new Response(JSON.stringify({ invalid: 'structure' }), {
+				status: 200,
+				statusText: 'OK',
+			})
 			global.fetch.mockResolvedValue(response)
 			sensor.addSensorDataSource = vi.fn().mockRejectedValue(new Error('Invalid GeoJSON format'))
 
@@ -171,7 +173,6 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 				],
 			}
 			const response = new Response(JSON.stringify(mockData), { status: 200, statusText: 'OK' })
-			response.json = vi.fn().mockResolvedValue(mockData)
 			global.fetch.mockResolvedValue(response)
 			sensor.addSensorDataSource = vi.fn().mockResolvedValue()
 
