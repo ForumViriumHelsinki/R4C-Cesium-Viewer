@@ -224,9 +224,7 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 		})
 	})
 
-	cesiumTest.describe('Building Level Navigation', () => {
-		cesiumTest.use({ tag: ['@requires-database'] })
-
+	cesiumTest.describe('Building Level Navigation', { tag: ['@requires-database'] }, () => {
 		cesiumTest('should transition to building level from postal code', async ({ cesiumPage }) => {
 			// First navigate to postal code level
 			await helpers.drillToLevel('postalCode')
@@ -337,7 +335,6 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 
 		cesiumTest(
 			'should display building heat data variants based on view',
-			{ tag: ['@requires-database'] },
 			async ({ cesiumPage }) => {
 				const testViews = [
 					{ view: 'capitalRegionView', expectedChart: 'HSYBuildingHeatChart' },

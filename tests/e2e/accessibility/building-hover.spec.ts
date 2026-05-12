@@ -322,7 +322,7 @@ test.describe('Building Hover Information', { tag: ['@requires-database'] }, () 
 })
 
 // Fixed by adding 'eager' prop to v-dialog component in DisclaimerPopup.vue
-test.describe('Building Hover Regression Prevention', () => {
+test.describe('Building Hover Regression Prevention', { tag: ['@requires-database'] }, () => {
 	test.use({ tag: ['@e2e', '@smoke'] })
 
 	test.beforeEach(async ({ page }) => {
