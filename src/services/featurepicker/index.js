@@ -235,8 +235,9 @@ export default class FeaturePicker {
 	 * @private
 	 */
 	setNameOfZone() {
+		const targetPostalCode = this.store.postalcode
 		setNameOfZoneHelper(
-			this.store.postalcode,
+			targetPostalCode,
 			this.propStore.postalCodeData,
 			(name) => this.store.setNameOfZone(name),
 			{
@@ -249,6 +250,9 @@ export default class FeaturePicker {
 						this.store.setPickedEntity(entity)
 					}
 				},
+				// Race guard: drop the deferred state update if a newer navigation
+				// has already replaced the current postal code in the store.
+				getCurrentPostalCode: () => this.store.postalcode,
 			}
 		)
 	}

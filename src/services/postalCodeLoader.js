@@ -475,6 +475,18 @@ export function setNameOfZone(postalCode, _postalCodeData, setNameCallback, opti
 			const entity = postalCodeIndex.getByPostalCode(postalCode)
 			if (!entity || !entity._properties) return
 
+			// Guard against late-arriving resolutions for an outdated postal code:
+			// if the caller passes `getCurrentPostalCode`, skip the state update when
+			// the in-flight postalCode no longer matches the active one. This protects
+			// the rapid-click case where a stale .then() could otherwise overwrite the
+			// newer postal code's nameOfZone / pickedEntity.
+			if (
+				typeof options.getCurrentPostalCode === 'function' &&
+				options.getCurrentPostalCode() !== postalCode
+			) {
+				return
+			}
+
 			if (entity._properties._nimi && typeof entity._properties._nimi._value !== 'undefined') {
 				setNameCallback(entity._properties._nimi._value)
 			}

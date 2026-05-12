@@ -145,6 +145,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { eventBus } from '../services/eventEmitter'
+import { postalCodeIndex } from '../services/postalCodeIndex.js'
 import { useGlobalStore } from '../stores/globalStore'
 import logger from '../utils/logger.js'
 
@@ -159,28 +160,22 @@ const copyFeedbackText = ref('Copied!')
 // map click, `globalStore.pickedEntity` is null and AreaProperties renders
 // the empty "Click on areas to view properties" state. Look up the postal-
 // code polygon entity directly from the index so the panel still populates.
-const fallbackPostalCodeEntity = ref(null)
-
-watch(
-	[() => globalStore.level, () => globalStore.postalcode, () => globalStore.pickedEntity],
-	async ([level, postalcode, picked]) => {
-		// Only fall back at postal-code level with no clicked entity.
-		if (level !== 'postalCode' || !postalcode || picked) {
-			fallbackPostalCodeEntity.value = null
-			return
-		}
-
-		try {
-			const { postalCodeIndex } = await import('../services/postalCodeIndex.js')
-			const entity = postalCodeIndex.getByPostalCode(postalcode)
-			fallbackPostalCodeEntity.value = entity ?? null
-		} catch (error) {
-			logger.warn('[AreaProperties] Failed to look up postal code entity:', error?.message || error)
-			fallbackPostalCodeEntity.value = null
-		}
-	},
-	{ immediate: true }
-)
+//
+// postalCodeIndex is imported synchronously: it's a leaf-node utility with
+// only a logger dependency, so there's no circular-import risk, and a sync
+// lookup avoids a stale-data window where the old postal-code's properties
+// would briefly render before the dynamic import resolved.
+const fallbackPostalCodeEntity = computed(() => {
+	if (globalStore.level !== 'postalCode' || !globalStore.postalcode || globalStore.pickedEntity) {
+		return null
+	}
+	try {
+		return postalCodeIndex.getByPostalCode(globalStore.postalcode) ?? null
+	} catch (error) {
+		logger.warn('[AreaProperties] Failed to look up postal code entity:', error?.message || error)
+		return null
+	}
+})
 
 const effectiveEntity = computed(() => globalStore.pickedEntity || fallbackPostalCodeEntity.value)
 
