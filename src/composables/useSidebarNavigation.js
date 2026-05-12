@@ -22,11 +22,7 @@ export function useSidebarNavigation() {
 		const items = [{ label: 'Capital Region', level: 'start' }]
 
 		if (currentLevel.value === 'postalCode' || currentLevel.value === 'building') {
-			const code = postalCode.value
-			const zone = nameOfZone.value
-			let postalLabel
-			if (code && zone) postalLabel = `${code} ${zone}`
-			else postalLabel = zone || code || 'Area'
+			const postalLabel = [postalCode.value, nameOfZone.value].filter(Boolean).join(' ') || 'Area'
 			items.push({ label: postalLabel, level: 'postalCode' })
 		}
 

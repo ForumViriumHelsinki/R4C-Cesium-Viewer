@@ -173,10 +173,7 @@ const buildingAddress = computed(() => globalStore.buildingAddress)
 const locationLabel = computed(() => {
 	if (currentLevel.value === 'building') return buildingAddress.value || 'Building'
 	if (currentLevel.value === 'postalCode') {
-		const code = postalCode.value
-		const zone = nameOfZone.value
-		if (code && zone) return `${code} ${zone}`
-		return zone || code || null
+		return [postalCode.value, nameOfZone.value].filter(Boolean).join(' ') || null
 	}
 	return null
 })
