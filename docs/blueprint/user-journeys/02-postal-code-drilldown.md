@@ -13,7 +13,7 @@ Emma wants to validate heat exposure for a single postal code (00100, Helsinki K
 1. Searches for `00100` (deterministic equivalent to clicking the polygon).
 2. Reads the breadcrumb to confirm the area.
 3. Inspects DETAILS tab for demographic context.
-4. Opens ANALYSIS tab and runs Heat Histogram, NDVI Analysis, and Building Scatter Plot.
+4. Opens ANALYSIS tab and runs Heat Distribution, NDVI Vegetation, and Building Analysis.
 
 This journey concentrates the bulk of audit failures (US-03, US-04, US-05, US-06, US-07). Until those are fixed, the spec is expected to fail on those exact assertions — that is the point.
 
@@ -34,9 +34,9 @@ journey
       See population & building count: 1: Emma
     section Run ANALYSIS
       Open ANALYSIS tab: 4: Emma
-      Click Heat Histogram: 1: Emma
-      Click NDVI Analysis: 1: Emma
-      Click Building Scatter Plot: 1: Emma
+      Click Heat Distribution: 1: Emma
+      Click NDVI Vegetation: 1: Emma
+      Click Building Analysis: 1: Emma
 ```
 
 ## Flow & assertions
@@ -56,11 +56,11 @@ flowchart TD
     G --> H{Properties count > 0?}
     H -- no --> X4[FAIL US-07 #713]
     H -- yes --> I[Open ANALYSIS tab]
-    I --> J{Heat Histogram button visible?}
+    I --> J{Heat Distribution button visible?}
     J -- no --> X5[FAIL US-04 #712]
-    J -- yes --> K{NDVI Analysis button visible?}
+    J -- yes --> K{NDVI Vegetation button visible?}
     K -- no --> X6[FAIL US-05 #712]
-    K -- yes --> L{Building Scatter Plot button visible?}
+    K -- yes --> L{Building Analysis button visible?}
     L -- no --> X7[FAIL US-06 #712]
     L -- yes --> M{TimelineCompact attached?}
     M -- no --> X8[FAIL temporal control]
@@ -89,8 +89,8 @@ The spec records `Date.now()` between the search submit and the moment `globalSt
 | Breadcrumb has zone name        | US-03      | banner contains `/Helsinki Keskusta                                | Etu-Töölö                                        | 00100/i` | `audit-2026-W19/postal-code-breadcrumb.spec.ts` (existing) |
 | Breadcrumb has no 'undefined'   | US-03      | banner does NOT contain `/\bundefined\b/i`                         | existing                                         |
 | DETAILS populated               | US-07      | DETAILS region text does NOT contain "0 properties"                | `journey-2-drilldown` — expected fail until #713 |
-| Heat Histogram button           | US-04      | `getByRole('button', { name: /heat histogram/i })` is visible      | `journey-2-drilldown` — expected fail until #712 |
-| NDVI Analysis button            | US-05      | `getByRole('button', { name: /ndvi analysis/i })` is visible       | `journey-2-drilldown` — expected fail until #712 |
-| Building Scatter Plot button    | US-06      | `getByRole('button', { name: /scatter/i })` is visible             | `journey-2-drilldown` — expected fail until #712 |
+| Heat Distribution button        | US-04      | `getByRole('button', { name: 'Heat Distribution' })` is visible    | `journey-2-drilldown` — expected fail until #712 |
+| NDVI Vegetation button          | US-05      | `getByRole('button', { name: 'NDVI Vegetation' })` is visible      | `journey-2-drilldown` — expected fail until #712 |
+| Building Analysis button        | US-06      | `getByRole('button', { name: 'Building Analysis' })` is visible    | `journey-2-drilldown` — expected fail until #712 |
 | TimelineCompact attached        | structural | `.timeline-compact` is attached (not toBeVisible — responsive CSS) | `journey-2-drilldown`                            |
 | 95p drilldown latency           | US-19      | record only — issue #687                                           | `journey-2-drilldown`                            |

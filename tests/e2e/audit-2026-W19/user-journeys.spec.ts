@@ -93,8 +93,10 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 				.count()
 			expect(disclaimerCount, 'US-01 — disclaimer must be dismissed before analysis').toBe(0)
 
-			// Give the app a beat to settle so any "stuck loading" warnings can fire.
-			await cesiumPage.waitForTimeout(5000)
+			// Let the network settle so any "stuck loading" warnings can fire.
+			// networkidle is more semantic than a fixed sleep and tolerates
+			// slow CI runners without inflating the happy-path duration.
+			await cesiumPage.waitForLoadState('networkidle')
 
 			// US-09 #680 — no recurring stale-loading warnings. Soft because the
 			// audit listed this as a known-noisy signal.
@@ -158,41 +160,55 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 				'TimelineCompact must be attached at postal-code level'
 			).toBeAttached()
 
-			// US-07 #713 — Properties panel should not be empty.
-			const areaPropertiesPanel = cesiumPage
-				.locator('section, .v-expansion-panel, [class*="panel"]')
-				.filter({ hasText: /Area Properties/i })
-				.first()
-			if ((await areaPropertiesPanel.count()) > 0) {
-				const text = (await areaPropertiesPanel.textContent()) ?? ''
-				expect
-					.soft(text, 'US-07 #713 — Area Properties must not be empty at postal-code level')
-					.not.toMatch(/\b0\s+properties\b/i)
-			}
-
-			// US-04 #712 — Heat Distribution analysis must be reachable.
+			// US-07 #713 — Area Properties heading + content live on the Details
+			// tab. Soft-assert visibility (heading must be present) and then
+			// soft-assert the panel body isn't "0 properties" — the empty-panel
+			// regression that #713 tracks.
+			await cesiumPage.getByRole('tab', { name: 'Details' }).click()
+			const areaPropertiesHeading = cesiumPage.getByText('Area Properties', { exact: false })
+			await expect
+				.soft(
+					areaPropertiesHeading,
+					'US-07 #713 — Area Properties heading must be visible at postal-code level'
+				)
+				.toBeVisible()
+			const detailsTabBody = await cesiumPage.locator('.tab-content').first().textContent()
 			expect
 				.soft(
-					await cesiumPage.getByText('Heat Distribution', { exact: false }).count(),
-					'US-04 #712 — Heat Distribution panel must be reachable from ControlPanel'
+					detailsTabBody ?? '',
+					'US-07 #713 — Area Properties content must not be empty at postal-code level'
 				)
-				.toBeGreaterThan(0)
+				.not.toMatch(/\b0\s+properties\b/i)
 
-			// US-05 #712 — NDVI analysis panel must be reachable.
-			expect
-				.soft(
-					await cesiumPage.getByText(/NDVI/i).count(),
-					'US-05 #712 — NDVI analysis must be reachable at postal-code level'
-				)
-				.toBeGreaterThan(0)
+			// Heat Distribution / NDVI Vegetation / Building Analysis buttons
+			// live on the Analysis tab. Switch tabs before asserting so the
+			// soft contracts fail for the *right* reason (#712 data/flag gates,
+			// not "wrong tab active").
+			await cesiumPage.getByRole('tab', { name: 'Analysis' }).click()
 
-			// US-06 #712 — Building Analysis (scatter plot) must be reachable.
-			expect
+			// US-04 #712 — Heat Distribution button must be reachable.
+			await expect
 				.soft(
-					await cesiumPage.getByText('Building Analysis', { exact: false }).count(),
-					'US-06 #712 — Building Analysis (scatter) must be reachable at postal-code level'
+					cesiumPage.getByRole('button', { name: 'Heat Distribution' }),
+					'US-04 #712 — Heat Distribution button must be reachable from ControlPanel'
 				)
-				.toBeGreaterThan(0)
+				.toBeVisible()
+
+			// US-05 #712 — NDVI Vegetation button must be reachable.
+			await expect
+				.soft(
+					cesiumPage.getByRole('button', { name: 'NDVI Vegetation' }),
+					'US-05 #712 — NDVI Vegetation button must be reachable at postal-code level'
+				)
+				.toBeVisible()
+
+			// US-06 #712 — Building Analysis (scatter plot) button must be reachable.
+			await expect
+				.soft(
+					cesiumPage.getByRole('button', { name: 'Building Analysis' }),
+					'US-06 #712 — Building Analysis (scatter) button must be reachable at postal-code level'
+				)
+				.toBeVisible()
 		}
 	)
 
@@ -342,6 +358,10 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 			// Pickable buildings are not reliable in the mock-Cesium CI path, so
 			// drive the building-level transition through the store. This still
 			// exercises every downstream subscriber of `level === 'building'`.
+			// The second argument is the *postal code that owns the building*
+			// (see AccessibilityTestHelpers.setNavigationLevel); the building
+			// itself gets a synthetic id ('test-building-001') via the helper's
+			// default entity payload.
 			await helpers.drillToLevel('postalCode', '00100', { method: 'store' })
 			await helpers.drillToLevel('building', '00100', { method: 'store' })
 
@@ -378,10 +398,19 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 				}
 			})
 
+			// US-11 #679 — the Trees toggle is rendered by PostalCodeView. Soft-
+			// assert its presence so a missing toggle surfaces as part of the
+			// regression contract instead of silently skipping the click loop.
 			const treesToggle = cesiumPage.locator('#showTreesToggle')
+			await expect
+				.soft(
+					treesToggle,
+					'US-11 #679 — Trees toggle must be present for the DataCloneError contract'
+				)
+				.toBeAttached()
 			if ((await treesToggle.count()) > 0) {
 				for (let i = 0; i < 5; i++) {
-					await treesToggle.click({ force: true }).catch(() => {})
+					await treesToggle.click({ force: true })
 					await cesiumPage.waitForTimeout(150)
 				}
 			}
@@ -418,13 +447,17 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 				store.setPostalCode('00120')
 			})
 
-			// Allow the loaders + watchers to settle.
+			// Wait until level transitioned AND click-processing settled — the
+			// isProcessing flag flips false only after pending navigation has
+			// drained, so we don't need an additional fixed sleep on top.
 			await cesiumPage.waitForFunction(
-				() => (window as any).globalStore?.level === 'postalCode',
+				() => {
+					const s = (window as any).globalStore
+					return s?.level === 'postalCode' && !s.clickProcessingState?.isProcessing
+				},
 				undefined,
 				{ timeout: 10000 }
 			)
-			await cesiumPage.waitForTimeout(1000)
 
 			const finalState = await readStoreState(cesiumPage)
 
