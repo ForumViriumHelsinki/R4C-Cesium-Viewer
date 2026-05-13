@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import Camera from '@/services/camera.js'
+import { POSTAL_CODE_ZOOM } from '@/constants/viewport.js'
+import Camera, { computePostalCodeAltitude } from '@/services/camera.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
 
 // Mock Cesium additional methods - will be initialized in beforeEach
@@ -20,6 +21,8 @@ vi.mock('@/services/postalCodeIndex', () => ({
 }))
 
 // Mock cesiumProvider
+// `Cartographic.fromCartesian` is configured per-test where bbox math matters.
+// Default mock returns a fixed value sufficient for the rotate/position tests.
 vi.mock('@/services/cesiumProvider', () => ({
 	getCesium: vi.fn(() => ({
 		Cartesian3: {
@@ -39,6 +42,9 @@ vi.mock('@/services/cesiumProvider', () => ({
 				latitude: 1.0,
 				height: 1000,
 			})),
+		},
+		JulianDate: {
+			now: vi.fn(() => ({})),
 		},
 	})),
 }))
@@ -143,12 +149,13 @@ describe('Camera service', () => {
 			mockGetByPostalCode.mockReturnValue(mockEntity)
 		})
 
-		it('should fly to postal code area in 2D view', () => {
+		it('should fly to postal code area in 2D view with fallback altitude when polygon is missing', () => {
+			// Entity has no polygon hierarchy, so computePostalCodeAltitude returns FALLBACK_ALTITUDE.
 			camera.switchTo2DView()
 
 			expect(mockGetByPostalCode).toHaveBeenCalledWith('12345')
 			expect(mockFlyTo).toHaveBeenCalledWith({
-				destination: { x: 24.95, y: 60.17, z: 3500 },
+				destination: { x: 24.95, y: 60.17, z: POSTAL_CODE_ZOOM.FALLBACK_ALTITUDE },
 				orientation: {
 					heading: expect.any(Number),
 					pitch: expect.any(Number), // -90 degrees in radians
@@ -190,12 +197,13 @@ describe('Camera service', () => {
 			mockViewer.camera.position.clone = vi.fn(() => ({ x: 100, y: 200, z: 300 }))
 		})
 
-		it('should fly to postal code area in 3D view', () => {
+		it('should fly to postal code area in 3D view with fallback altitude when polygon is missing', () => {
+			// Entity has no polygon hierarchy, so computePostalCodeAltitude returns FALLBACK_ALTITUDE.
 			camera.switchTo3DView()
 
 			expect(mockGetByPostalCode).toHaveBeenCalledWith('12345')
 			expect(mockFlyTo).toHaveBeenCalledWith({
-				destination: { x: 24.95, y: 60.145, z: 2000 }, // y - 0.025
+				destination: { x: 24.95, y: 60.145, z: POSTAL_CODE_ZOOM.FALLBACK_ALTITUDE }, // y - 0.025
 				orientation: {
 					heading: 0.0,
 					pitch: expect.any(Number), // -35 degrees in radians
@@ -866,6 +874,133 @@ describe('Camera service', () => {
 				// Should not accumulate state
 				expect(camera.previousCameraState).toBeDefined()
 			})
+		})
+	})
+
+	/**
+	 * Adaptive zoom altitude tests (#678).
+	 * Verifies that the bbox-diagonal altitude calculation scales appropriately
+	 * with postal-code area size and clamps to MIN/MAX bounds.
+	 */
+	describe('computePostalCodeAltitude (#678)', () => {
+		// Build a mock entity whose `polygon.hierarchy.getValue().positions` matches
+		// a sequence of cartographic points we control via Cartographic.fromCartesian.
+		function entityWithCorners(corners) {
+			return {
+				polygon: {
+					hierarchy: {
+						getValue: () => ({ positions: corners.map((_, i) => ({ _markerIndex: i })) }),
+					},
+				},
+			}
+		}
+
+		/**
+		 * Configure the cesiumProvider mock so that fromCartesian returns the
+		 * cartographic point indexed by `_markerIndex` on the marker.
+		 * The helper converts back to degrees via `Cesium.Math.toDegrees(radians)`,
+		 * so the cartographic value must be supplied in radians.
+		 */
+		async function stubCartographic(corners) {
+			const { getCesium } = await import('@/services/cesiumProvider')
+			const cesium = getCesium()
+			cesium.Cartographic.fromCartesian.mockImplementation((marker) => {
+				const { lon, lat } = corners[marker._markerIndex]
+				return {
+					longitude: (lon * Math.PI) / 180,
+					latitude: (lat * Math.PI) / 180,
+					height: 0,
+				}
+			})
+		}
+
+		it('returns fallback altitude when entity has no polygon hierarchy', () => {
+			const entity = {}
+			const altitude = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_2D)
+			expect(altitude).toBe(POSTAL_CODE_ZOOM.FALLBACK_ALTITUDE)
+		})
+
+		it('returns fallback altitude when positions array is empty', () => {
+			const entity = {
+				polygon: { hierarchy: { getValue: () => ({ positions: [] }) } },
+			}
+			const altitude = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_2D)
+			expect(altitude).toBe(POSTAL_CODE_ZOOM.FALLBACK_ALTITUDE)
+		})
+
+		it('clamps tiny postal codes to MIN_ALTITUDE', async () => {
+			// ~100 m diagonal — should clamp to MIN_ALTITUDE regardless of scale.
+			const corners = [
+				{ lon: 24.95, lat: 60.17 },
+				{ lon: 24.9505, lat: 60.1705 },
+				{ lon: 24.951, lat: 60.171 },
+				{ lon: 24.95, lat: 60.171 },
+			]
+			await stubCartographic(corners)
+			const altitude = computePostalCodeAltitude(
+				entityWithCorners(corners),
+				POSTAL_CODE_ZOOM.SCALE_2D
+			)
+			expect(altitude).toBe(POSTAL_CODE_ZOOM.MIN_ALTITUDE)
+		})
+
+		it('clamps huge sea-adjacent postal codes to MAX_ALTITUDE', async () => {
+			// ~50 km diagonal (simulating a coastal area where the bbox includes water).
+			const corners = [
+				{ lon: 24.5, lat: 60.0 },
+				{ lon: 25.0, lat: 60.3 },
+			]
+			await stubCartographic(corners)
+			const altitude = computePostalCodeAltitude(
+				entityWithCorners(corners),
+				POSTAL_CODE_ZOOM.SCALE_2D
+			)
+			expect(altitude).toBe(POSTAL_CODE_ZOOM.MAX_ALTITUDE)
+		})
+
+		it('scales medium postal codes within [MIN, MAX] proportionally to bbox diagonal', async () => {
+			// ~3 km diagonal — should land inside the clamp window.
+			const corners = [
+				{ lon: 24.95, lat: 60.17 },
+				{ lon: 24.99, lat: 60.19 },
+			]
+			await stubCartographic(corners)
+			const altitude = computePostalCodeAltitude(
+				entityWithCorners(corners),
+				POSTAL_CODE_ZOOM.SCALE_2D
+			)
+			expect(altitude).toBeGreaterThan(POSTAL_CODE_ZOOM.MIN_ALTITUDE)
+			expect(altitude).toBeLessThan(POSTAL_CODE_ZOOM.MAX_ALTITUDE)
+		})
+
+		it('3D scale produces a lower altitude than 2D scale for the same bbox', async () => {
+			const corners = [
+				{ lon: 24.95, lat: 60.17 },
+				{ lon: 24.99, lat: 60.19 },
+			]
+			await stubCartographic(corners)
+			const entity = entityWithCorners(corners)
+			const altitude2D = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_2D)
+			const altitude3D = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_3D)
+			expect(altitude3D).toBeLessThan(altitude2D)
+		})
+
+		it('accepts static positions array (no getValue function)', async () => {
+			const corners = [
+				{ lon: 24.95, lat: 60.17 },
+				{ lon: 24.99, lat: 60.19 },
+			]
+			await stubCartographic(corners)
+			const entity = {
+				polygon: {
+					hierarchy: {
+						positions: corners.map((_, i) => ({ _markerIndex: i })),
+					},
+				},
+			}
+			const altitude = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_2D)
+			expect(altitude).toBeGreaterThan(POSTAL_CODE_ZOOM.MIN_ALTITUDE)
+			expect(altitude).toBeLessThan(POSTAL_CODE_ZOOM.MAX_ALTITUDE)
 		})
 	})
 })

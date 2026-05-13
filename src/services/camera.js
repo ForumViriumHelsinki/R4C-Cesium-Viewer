@@ -1,7 +1,86 @@
+import { POSTAL_CODE_ZOOM } from '../constants/viewport.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import logger from '../utils/logger.js'
 import { getCesium } from './cesiumProvider.js'
 import { postalCodeIndex } from './postalCodeIndex.js'
+
+/**
+ * Earth radius in meters (mean radius) — used by the haversine helper.
+ * @private
+ */
+const EARTH_RADIUS_M = 6371000
+
+/**
+ * Computes great-circle distance between two lon/lat points in meters
+ * using the haversine formula. Used to derive bbox diagonal length.
+ *
+ * @param {number} lon1 - First point longitude in degrees
+ * @param {number} lat1 - First point latitude in degrees
+ * @param {number} lon2 - Second point longitude in degrees
+ * @param {number} lat2 - Second point latitude in degrees
+ * @returns {number} Distance in meters
+ * @private
+ */
+function haversineMeters(lon1, lat1, lon2, lat2) {
+	const toRad = (deg) => (deg * Math.PI) / 180
+	const dLat = toRad(lat2 - lat1)
+	const dLon = toRad(lon2 - lon1)
+	const a =
+		Math.sin(dLat / 2) ** 2 +
+		Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+	return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a))
+}
+
+/**
+ * Computes camera altitude in meters that frames a postal-code polygon nicely.
+ * Derives the polygon's geodesic bounding box, takes its diagonal length,
+ * scales by the per-view-type factor, then clamps to MIN/MAX bounds.
+ *
+ * Falls back to FALLBACK_ALTITUDE if the polygon hierarchy cannot be read
+ * (e.g. mocked entities in tests, missing geometry).
+ *
+ * @param {Object} entity - Cesium postal-code entity (with `polygon.hierarchy`)
+ * @param {number} scale - View-specific multiplier (see POSTAL_CODE_ZOOM.SCALE_*)
+ * @returns {number} Altitude in meters, clamped to [MIN_ALTITUDE, MAX_ALTITUDE]
+ */
+export function computePostalCodeAltitude(entity, scale) {
+	const Cesium = getCesium()
+	const hierarchy = entity?.polygon?.hierarchy
+	const positions =
+		typeof hierarchy?.getValue === 'function'
+			? hierarchy.getValue(Cesium.JulianDate?.now?.())?.positions
+			: hierarchy?.positions
+
+	if (!positions || positions.length === 0) {
+		logger.debug('[Camera] No polygon hierarchy on entity; using fallback altitude')
+		return POSTAL_CODE_ZOOM.FALLBACK_ALTITUDE
+	}
+
+	let minLon = Infinity
+	let maxLon = -Infinity
+	let minLat = Infinity
+	let maxLat = -Infinity
+
+	for (const position of positions) {
+		const carto = Cesium.Cartographic.fromCartesian(position)
+		const lon = Cesium.Math.toDegrees(carto.longitude)
+		const lat = Cesium.Math.toDegrees(carto.latitude)
+		if (lon < minLon) minLon = lon
+		if (lon > maxLon) maxLon = lon
+		if (lat < minLat) minLat = lat
+		if (lat > maxLat) maxLat = lat
+	}
+
+	if (!Number.isFinite(minLon) || !Number.isFinite(minLat)) {
+		logger.debug('[Camera] Polygon bbox computation failed; using fallback altitude')
+		return POSTAL_CODE_ZOOM.FALLBACK_ALTITUDE
+	}
+
+	const diagonalMeters = haversineMeters(minLon, minLat, maxLon, maxLat)
+	const altitude = diagonalMeters * scale
+
+	return Math.min(POSTAL_CODE_ZOOM.MAX_ALTITUDE, Math.max(POSTAL_CODE_ZOOM.MIN_ALTITUDE, altitude))
+}
 
 /**
  * Camera Service
@@ -180,13 +259,16 @@ export default class Camera {
 			return
 		}
 
-		// TODO create function that takes size of postal code area and possibile location by the sea into consideration and sets y and z based on thse values
+		// Adaptive altitude based on the postal-code polygon bbox (#678).
+		// Larger areas zoom out further; smaller dense areas zoom in closer.
+		// Clamped to MIN/MAX so sea-adjacent postal codes don't explode the view.
 		const Cesium = getCesium()
+		const altitude = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_2D)
 		this.viewer.camera.flyTo({
 			destination: Cesium.Cartesian3.fromDegrees(
 				entity._properties._center_x._value,
 				entity._properties._center_y._value,
-				3500
+				altitude
 			),
 			orientation: {
 				heading: Cesium.Math.toRadians(0.0),
@@ -236,12 +318,14 @@ export default class Camera {
 		}
 
 		// Fly to postal code with 3D perspective
+		// Adaptive altitude (#678) — oblique view uses a smaller scale than 2D top-down.
 		const Cesium = getCesium()
+		const altitude = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_3D)
 		this.currentFlight = this.viewer.camera.flyTo({
 			destination: Cesium.Cartesian3.fromDegrees(
 				entity._properties._center_x._value,
 				entity._properties._center_y._value - 0.025,
-				2000
+				altitude
 			),
 			orientation: {
 				heading: 0.0,
@@ -441,12 +525,14 @@ export default class Camera {
 		}
 
 		// Fly to postal code area with 2-second animation
+		// Adaptive altitude (#678) — 45° pitch uses a middle-ground scale.
 		const Cesium = getCesium()
+		const altitude = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_FOCUS)
 		this.viewer.camera.flyTo({
 			destination: Cesium.Cartesian3.fromDegrees(
 				entity._properties._center_x._value,
 				entity._properties._center_y._value - 0.015,
-				2500
+				altitude
 			),
 			orientation: {
 				heading: 0.0,
