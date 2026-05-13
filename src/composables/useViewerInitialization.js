@@ -54,6 +54,10 @@ export function useViewerInitialization() {
 	let Camera = null
 	let Graphics = null
 
+	// Captured handler for cleanup — visibilitychange fires globally, so the listener
+	// must be removed when the viewer is torn down to avoid post-destroy scene access.
+	let visibilityChangeHandler = null
+
 	/**
 	 * Initializes the Cesium viewer with dynamic module loading.
 	 * Loads Cesium library and dependencies asynchronously to prevent blocking initial render.
@@ -175,9 +179,12 @@ export function useViewerInitialization() {
 		const camera = new Camera()
 		camera.init()
 
-		// Optimize CPU usage: pause rendering when tab is hidden
-		document.addEventListener('visibilitychange', () => {
-			if (!viewer.value) return
+		// Optimize CPU usage: pause rendering when tab is hidden.
+		// Guard against access after viewer.destroy() — the listener can outlive the
+		// viewer instance on hot-reload or route swap, which previously surfaced as
+		// `Cannot read properties of null (reading 'scene')` in Sentry.
+		visibilityChangeHandler = () => {
+			if (!viewer.value || viewer.value.isDestroyed?.()) return
 
 			if (document.hidden) {
 				viewer.value.scene.requestRenderMode = true
@@ -187,7 +194,25 @@ export function useViewerInitialization() {
 				viewer.value.scene.requestRender()
 				logger.debug('[useViewerInitialization] ▶ Rendering resumed (tab visible)')
 			}
-		})
+		}
+		document.addEventListener('visibilitychange', visibilityChangeHandler)
+	}
+
+	/**
+	 * Tears down the viewer and removes globally-registered listeners.
+	 * Safe to call multiple times; idempotent.
+	 *
+	 * @returns {void}
+	 */
+	const destroyViewer = () => {
+		if (visibilityChangeHandler) {
+			document.removeEventListener('visibilitychange', visibilityChangeHandler)
+			visibilityChangeHandler = null
+		}
+		if (viewer.value && !viewer.value.isDestroyed?.()) {
+			viewer.value.destroy()
+		}
+		viewer.value = null
 	}
 
 	/**
@@ -284,5 +309,6 @@ export function useViewerInitialization() {
 		addPostalCodes,
 		addAttribution,
 		retryInit,
+		destroyViewer,
 	}
 }

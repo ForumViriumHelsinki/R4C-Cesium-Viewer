@@ -27,6 +27,7 @@ import logger from '../utils/logger.js'
  */
 export function useCameraControls(viewer, onCameraSettled, onUrlUpdate = null) {
 	let cameraMoveTimeout = null
+	let moveEndHandler = null
 	const DEBOUNCE_DELAY_MS = TIMING.CAMERA_DEBOUNCE_MS // Wait 1500ms after camera stops moving to prevent blinking
 
 	/**
@@ -42,7 +43,7 @@ export function useCameraControls(viewer, onCameraSettled, onUrlUpdate = null) {
 			return
 		}
 
-		viewer.camera.moveEnd.addEventListener(() => {
+		moveEndHandler = () => {
 			// Clear any pending timeout
 			if (cameraMoveTimeout) {
 				clearTimeout(cameraMoveTimeout)
@@ -50,6 +51,9 @@ export function useCameraControls(viewer, onCameraSettled, onUrlUpdate = null) {
 
 			// Set new timeout
 			cameraMoveTimeout = setTimeout(() => {
+				// Bail if the viewer was destroyed during the debounce window —
+				// otherwise onCameraSettled / onUrlUpdate would dereference a null scene.
+				if (!viewer || viewer.isDestroyed?.()) return
 				logger.debug('[useCameraControls] 📷 Camera movement ended, checking viewport state...')
 				if (onCameraSettled) {
 					onCameraSettled().catch((error) => {
@@ -62,7 +66,8 @@ export function useCameraControls(viewer, onCameraSettled, onUrlUpdate = null) {
 					onUrlUpdate()
 				}
 			}, DEBOUNCE_DELAY_MS)
-		})
+		}
+		viewer.camera.moveEnd.addEventListener(moveEndHandler)
 
 		logger.debug(
 			'[useCameraControls] ✅ Camera moveEnd listener added with',
@@ -72,8 +77,9 @@ export function useCameraControls(viewer, onCameraSettled, onUrlUpdate = null) {
 	}
 
 	/**
-	 * Cleans up camera timeout if active.
-	 * Should be called in onBeforeUnmount to prevent memory leaks.
+	 * Cleans up camera timeout and removes the moveEnd subscription.
+	 * Should be called in onBeforeUnmount to prevent memory leaks and
+	 * post-destroy scene access.
 	 *
 	 * @returns {void}
 	 */
@@ -81,8 +87,12 @@ export function useCameraControls(viewer, onCameraSettled, onUrlUpdate = null) {
 		if (cameraMoveTimeout) {
 			clearTimeout(cameraMoveTimeout)
 			cameraMoveTimeout = null
-			logger.debug('[useCameraControls] 🧹 Camera timeout cleared')
 		}
+		if (moveEndHandler && viewer && !viewer.isDestroyed?.()) {
+			viewer.camera.moveEnd.removeEventListener(moveEndHandler)
+		}
+		moveEndHandler = null
+		logger.debug('[useCameraControls] 🧹 Camera moveEnd listener and timeout cleared')
 	}
 
 	return {
