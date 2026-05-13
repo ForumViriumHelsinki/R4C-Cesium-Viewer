@@ -66,7 +66,18 @@ export function installPreloadErrorHandler(deps = {}) {
 		return () => {}
 	}
 
-	const storage = deps.storage ?? win.sessionStorage
+	// `win.sessionStorage` itself can throw SecurityError in Safari private mode
+	// and restricted iframes — accessing the property triggers the throw, not the
+	// later get/setItem calls. Without this guard, a crash at the top of main.js
+	// would block app boot for those users.
+	let storage = deps.storage
+	if (storage === undefined) {
+		try {
+			storage = win.sessionStorage
+		} catch {
+			storage = null
+		}
+	}
 	const now = deps.now ?? Date.now
 
 	// Guard against double-install (e.g. HMR re-running main.js).
