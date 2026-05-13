@@ -32,7 +32,10 @@ const GOFF_HEALTH_TIMEOUT_MS = 3000
  * The flag-evaluation path is unaffected — fallback defaults are already
  * applied when init fails or the relay is unreachable.
  */
-const GOFF_WEBSOCKET_TIMEOUT_MS = Number(import.meta.env.VITE_GOFF_TIMEOUT_MS ?? 15000)
+// Use `|| 15000` (not `??`) so empty string, NaN, and 0 all fall back to the
+// default. `apiTimeout: 0` would otherwise make the GOFF library use its
+// internal 5000 ms default — the bug this fix addresses.
+const GOFF_WEBSOCKET_TIMEOUT_MS = Number(import.meta.env.VITE_GOFF_TIMEOUT_MS) || 15000
 
 type UserStore = ReturnType<typeof useUserStore>
 
@@ -104,7 +107,9 @@ function describeGoffReason(reason: unknown): string {
 	if (reason instanceof Error) return reason.message
 	if (typeof reason === 'string') return reason
 	try {
-		return JSON.stringify(reason)
+		// JSON.stringify returns undefined for undefined/functions/symbols;
+		// fall back to String(reason) so the return type is always a string.
+		return JSON.stringify(reason) ?? String(reason)
 	} catch {
 		return String(reason)
 	}
@@ -120,9 +125,20 @@ function describeGoffReason(reason: unknown): string {
  */
 function isGoffWebsocketRejection(reason: unknown): boolean {
 	const message = describeGoffReason(reason)
+	// Require both:
+	//   1) "websocket" — narrows to the websocket-init failure class.
+	//   2) one of the GOFF-specific fingerprints:
+	//      - library name (defensive against future error wording)
+	//      - "reached when initializing" — the exact phrase the library uses
+	//        in its timeout reject path (index.esm.js: "timeout of N ms reached
+	//        when initializing the websocket"). This phrasing is highly
+	//        specific to GOFF, so it won't match Cesium Ion, Sentry replays,
+	//        or other websocket-using subsystems.
+	// The earlier "impossible to connect" alternative was too generic and
+	// risked swallowing unrelated websocket rejections (per code review on #745).
 	return (
 		/websocket/i.test(message) &&
-		/go-?feature-?flag|GoFeatureFlag|impossible to connect|reached when initializing/i.test(message)
+		/go-?feature-?flag|GoFeatureFlag|reached when initializing/i.test(message)
 	)
 }
 
