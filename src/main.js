@@ -9,6 +9,12 @@ import { useFeatureFlagStore } from './stores/featureFlagStore.ts'
 import { useGlobalStore } from './stores/globalStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
 import logger from './utils/logger.js'
+import { installPreloadErrorHandler } from './utils/preloadErrorHandler.js'
+
+// Install the global vite:preloadError handler before any dynamic imports
+// can run, so stale-chunk failures after a deploy trigger a reload rather
+// than a hard crash. See issue #740.
+installPreloadErrorHandler()
 
 // Vuetify
 import 'vuetify/styles'
