@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.49.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.48.2...r4c-cesium-viewer-v1.49.0) (2026-05-13)
+
+
+### Features
+
+* **test:** add [@requires-database](https://github.com/requires-database) tag for database-dependent E2E specs ([#752](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/752)) ([9799801](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/97998013779f25a6408fc1436fc894e8a67ed11d))
+
+
+### Bug Fixes
+
+* ANALYSIS tab missing Heat Histogram / NDVI Analysis / Building Scatter Plot at postal-code level ([#749](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/749)) ([c554642](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c5546423b399bdca7e240b0b3129410cb33b024c))
+* AreaProperties stays empty at postal-code level ([#750](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/750)) ([1437c59](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1437c596106880d82d17f99835feaf7be44983c2))
+* **charts:** guard SocioEconomicsChart against undefined compareData ([#733](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/733)) ([#743](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/743)) ([3fc7685](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3fc7685b75da7434bec1cd6dff29240e7acc8dd6))
+* **feature-flags:** log GOFF /health failure mode before falling back ([#751](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/751)) ([42838fc](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/42838fc001171bcb8e3e28a6110945aa49c7d52f))
+* **feature-flags:** raise GOFF websocket timeout and handle reconnect rejections ([#735](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/735)) ([#745](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/745)) ([1fff0b7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1fff0b7e6914a2f12ea6eb06df7a99d18fb02254))
+* postal-code breadcrumb renders "undefined" prefix ([#747](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/747)) ([743945b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/743945b1ec5c3ed20b2f3afbb8900082ac143609))
+* URL state retains postal-code params after back-navigation to start ([#748](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/748)) ([f6f06b1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/f6f06b176c18605b8dd087948bf5cc4026fdddf5))
+
+
+### Performance Improvements
+
+* **cache:** stop eager startup warming of building data ([#744](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/744)) ([816d228](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/816d228a285e4882901ff46913121b21303d1761))
+
 ## [1.48.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.48.1...r4c-cesium-viewer-v1.48.2) (2026-05-12)
 
 
