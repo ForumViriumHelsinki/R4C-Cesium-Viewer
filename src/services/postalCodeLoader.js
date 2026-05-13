@@ -11,11 +11,23 @@ import cacheWarmer from './cacheWarmer.js'
  */
 
 /**
- * Updates URL with navigation state after postal code loads
+ * Updates URL with navigation state after postal code loads.
+ *
+ * Exported so back-navigation paths (App.vue smartReset, useSidebarNavigation
+ * goBack, view switches) can call it with `level='start', postalCode=null` to
+ * clear the `?level=` and `?postalcode=` query params — without that, the URL
+ * keeps stale postal-code params after the user has navigated back, and a page
+ * reload would re-enter the postal-code level even though the visible state
+ * shows Capital Region (issue #714).
+ *
+ * Accepts 'start', 'postalCode', and 'building' levels. At building level the
+ * postal-code param is preserved so a reload restores the parent postal-code
+ * context.
+ *
  * @param {string} level - Navigation level
  * @param {string} postalCode - Selected postal code
  */
-function updateUrlWithNavigationState(level, postalCode) {
+export function updateUrlWithNavigationState(level, postalCode) {
 	try {
 		const params = new URLSearchParams(window.location.search)
 
