@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.50.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.49.0...r4c-cesium-viewer-v1.50.0) (2026-05-13)
+
+
+### Features
+
+* **camera:** adaptive zoom altitude based on postal-code bbox ([#756](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/756)) ([c85a50d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c85a50d412e21d72d940943035e2d04689621d23))
+
+
+### Bug Fixes
+
+* **build:** handle stale dynamic-import chunks globally via vite:preloadError ([#759](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/759)) ([bd5c15b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bd5c15bcdeee4d2f266ae11b4f58a697f5d03ec8))
+* **cesium:** guard viewer-property access against destroyed instances ([#758](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/758)) ([bc92b9c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bc92b9cf464268c9df1e2d8b81b4fd9c1d33644b))
+* **feature-flags:** guard URL construction against invalid GOFF endpoint ([#757](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/757)) ([347b6b2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/347b6b2b2cc1d74b25902a73bf4eae5d19e9e947))
+
 ## [1.49.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.48.2...r4c-cesium-viewer-v1.49.0) (2026-05-13)
 
 
