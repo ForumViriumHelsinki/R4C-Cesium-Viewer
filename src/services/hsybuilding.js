@@ -1,5 +1,6 @@
 import * as turf from '@turf/turf'
 import { useBuildingStore } from '../stores/buildingStore.js'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
@@ -46,6 +47,7 @@ export default class HSYBuilding {
 		this.urbanHeatService = new UrbanHeat()
 		this.toggleStore = useToggleStore()
 		this.urlStore = useURLStore()
+		this.featureFlagStore = useFeatureFlagStore()
 		this.unifiedLoader = unifiedLoader
 	}
 
@@ -61,6 +63,21 @@ export default class HSYBuilding {
 	async loadHSYBuildings(bbox, postalCode) {
 		try {
 			const targetPostalCode = postalCode || this.store.postalcode
+
+			// Defense-in-depth: skip the per-postal-code bulk fetch when viewport
+			// streaming is enabled. Upstream callers (capitalRegion/helsinki/
+			// useViewportLoading) already gate on this flag, but the bulk endpoint
+			// shipped multi-MB GeoJSON payloads (R4C-CESIUM-VIEWER-4, issue #755)
+			// so we want any direct caller to bail out too. bbox-filtered fetches
+			// are how viewport streaming itself loads buildings, so they pass.
+			if (!bbox && this.featureFlagStore.isEnabled('viewportStreaming')) {
+				logger.debug(
+					'[HSYBuilding] ⏭️ Skipping per-postal-code load (viewport streaming handles building loading) for:',
+					targetPostalCode
+				)
+				return []
+			}
+
 			const buildingUrl = bbox
 				? this.urlStore.hsyGridBuildings(bbox)
 				: this.urlStore.hsyBuildings(targetPostalCode)

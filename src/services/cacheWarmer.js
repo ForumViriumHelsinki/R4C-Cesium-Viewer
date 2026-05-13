@@ -34,6 +34,7 @@
  * @see {@link module:stores/toggleStore}
  */
 
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
@@ -69,6 +70,8 @@ class CacheWarmer {
 		this._toggleStore = null
 		/** @type {Object|null} Lazy-loaded URL store instance */
 		this._urlStore = null
+		/** @type {Object|null} Lazy-loaded feature flag store instance */
+		this._featureFlagStore = null
 		/** @type {Set<string>} Tracking set of already-warmed postal codes */
 		this.warmedPostalCodes = new Set()
 	}
@@ -101,6 +104,16 @@ class CacheWarmer {
 	get urlStore() {
 		if (!this._urlStore) this._urlStore = useURLStore()
 		return this._urlStore
+	}
+
+	/**
+	 * Get feature flag store instance (lazy-loaded to avoid initialization issues)
+	 * @returns {Object} Feature flag store instance
+	 * @private
+	 */
+	get featureFlagStore() {
+		if (!this._featureFlagStore) this._featureFlagStore = useFeatureFlagStore()
+		return this._featureFlagStore
 	}
 
 	/**
@@ -157,6 +170,22 @@ class CacheWarmer {
 		// Skip if already warmed
 		if (this.warmedPostalCodes.has(postalCode)) {
 			logger.debug(`[CacheWarmer] ⏭️ Skipping ${postalCode} (already warmed)`)
+			return
+		}
+
+		// Skip per-postal-code bulk warming when viewport streaming is enabled —
+		// the tile pipeline (viewportBuildingLoader) already covers the visible
+		// area lazily with bbox-filtered requests, so a `?postinumero=*` fetch
+		// here is duplicate work and re-introduces the large-payload regression
+		// (R4C-CESIUM-VIEWER-4, issue #755). The HSY view shares the same
+		// pygeoapi endpoint as tile loading; the Helsinki WFS path is gated
+		// the same way because the WFS predictive warm would still ship a
+		// per-postal-code GeoJSON payload that duplicates the viewport tiles.
+		if (this.featureFlagStore.isEnabled('viewportStreaming')) {
+			logger.debug(
+				`[CacheWarmer] ⏭️ Skipping ${postalCode} (viewport streaming handles building loading)`
+			)
+			this.warmedPostalCodes.add(postalCode)
 			return
 		}
 
