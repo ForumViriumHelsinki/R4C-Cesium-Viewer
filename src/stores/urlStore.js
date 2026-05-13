@@ -102,6 +102,16 @@ export const useURLStore = defineStore('url', {
 			},
 		/**
 		 * Generates URL for heat exposure index data (postal code level aggregates)
+		 *
+		 * Trimmed payload (#725 / R4C-CESIUM-VIEWER-1): only the three
+		 * aggregated heat fields consumed by SocioEconomicsChart are
+		 * requested, and `skipGeometry=true` drops the postal-code
+		 * polygons we never render from this collection. Reduces payload
+		 * from a multi-MB GeoJSON FeatureCollection (all properties +
+		 * full geometry per postal code) to a trimmed GeoJSON collection
+		 * which the heat-exposure store then indexes by postal-code id
+		 * (see `heatExposureStore.loadHeatExposure()`).
+		 *
 		 * @param {Object} state - Pinia state
 		 * @returns {(limit?: number) => string} Function accepting optional limit and returning heat exposure URL
 		 * @example
@@ -110,7 +120,7 @@ export const useURLStore = defineStore('url', {
 		heatExposure:
 			(state) =>
 			(limit = 1000) => {
-				return `${state.pygeoapiBase}/heatexposure_optimized/items?f=json&limit=${limit}` // New getter
+				return `${state.pygeoapiBase}/heatexposure_optimized/items?f=json&limit=${limit}&skipGeometry=true&properties=avgheatexposure,hki_avgheatexposure,avgcoldexposure`
 			},
 		/**
 		 * Generates URL for Helsinki Region Transport (HSL) travel time matrix data
