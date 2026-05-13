@@ -224,9 +224,8 @@ Any of these operations trigger the error:
 
 | Issue                                       | Location                            | Impact                     | Severity |
 | ------------------------------------------- | ----------------------------------- | -------------------------- | -------- |
-| Non-serializable Cesium entities in store   | propsStore.setTreeEntities()        | DataCloneError             | CRITICAL |
-| Non-serializable Cesium datasource in store | propsStore.setBuildingsDatasource() | DataCloneError             | CRITICAL |
+| Non-serializable Cesium entities in store   | propsStore.setTreeEntities()        | DataCloneError             | Resolved (fields removed; entities live in `cesiumEntityManager`) |
+| Non-serializable Cesium datasource in store | propsStore.setBuildingsDatasource() | DataCloneError             | Resolved (fields removed; entities live in `cesiumEntityManager`) |
 | Unsafe private property access              | NearbyTreeArea.vue:204              | API breakage risk          | HIGH     |
 | Mutating Cesium entity properties           | NearbyTreeArea.vue:240,299          | Data corruption risk       | HIGH     |
 | Unsafe private property access              | tree.js:300                         | API breakage risk          | HIGH     |
-| Missing markRaw() for entities              | propsStore.scatterPlotEntities      | Potential reactivity issue | MEDIUM   |

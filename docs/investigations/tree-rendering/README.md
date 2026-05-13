@@ -1,5 +1,10 @@
 # Tree Rendering Investigation
 
+> **Resolved (GitHub #679).** Cesium entities now live in a non-reactive registry at
+> `src/services/cesiumEntityManager.js`, and the deprecated `propsStore.treeEntities` /
+> `propsStore.buildingsDatasource` fields have been removed. Documents in this folder are
+> preserved as historical record of the investigation.
+
 Investigation into tree rendering issues in the R4C Cesium Viewer, focusing on DataClone errors and toggle functionality problems.
 
 ## Documents

@@ -1,5 +1,11 @@
 # Tree Toggle DataCloneError - Quick Reference
 
+> **Resolved (GitHub #679).** Cesium entities are no longer stored in Pinia. The non-reactive
+> registry lives in `src/services/cesiumEntityManager.js`; `src/services/tree.js` extracts
+> serializable tree data into `propsStore` and registers live entities with the manager. The
+> deprecated `propsStore.treeEntities` / `propsStore.buildingsDatasource` fields (and their
+> setters) have been removed. The analysis below is preserved for historical context.
+
 ## The Error
 
 ```
