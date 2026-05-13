@@ -454,23 +454,45 @@ export async function loadPostalCodeWithParallelStrategy(
  * Sets the name of the current zone from postal code data
  * Uses PostalCodeIndex for O(1) lookup instead of O(n) linear search.
  *
+ * Also populates the global store's `pickedEntity` from the index when no
+ * entity is currently picked. This means the Details-tab AreaProperties
+ * panel renders zone stats even when the user reached the postal code via
+ * search / URL deep-link / programmatic navigation rather than clicking the
+ * polygon on the map (issue #713). When the user *does* click a polygon,
+ * entityPicker.js sets a more specific entity and we leave that alone.
+ *
  * @param {string} postalCode - Postal code to find name for
  * @param {Object} _postalCodeData - Postal code data from propStore (unused, kept for API compatibility)
  * @param {Function} setNameCallback - Callback to set zone name in store
+ * @param {Object} [options] - Optional callbacks
+ * @param {Function} [options.setPickedEntityIfEmpty] - Receives the polygon entity; the global store action will be invoked only when no entity is currently set.
  * @returns {void}
  */
-export function setNameOfZone(postalCode, _postalCodeData, setNameCallback) {
+export function setNameOfZone(postalCode, _postalCodeData, setNameCallback, options = {}) {
 	// Import dynamically to avoid circular dependencies
 	import('./postalCodeIndex.js')
 		.then(({ postalCodeIndex }) => {
 			const entity = postalCodeIndex.getByPostalCode(postalCode)
+			if (!entity || !entity._properties) return
+
+			// Guard against late-arriving resolutions for an outdated postal code:
+			// if the caller passes `getCurrentPostalCode`, skip the state update when
+			// the in-flight postalCode no longer matches the active one. This protects
+			// the rapid-click case where a stale .then() could otherwise overwrite the
+			// newer postal code's nameOfZone / pickedEntity.
 			if (
-				entity &&
-				entity._properties &&
-				entity._properties._nimi &&
-				typeof entity._properties._nimi._value !== 'undefined'
+				typeof options.getCurrentPostalCode === 'function' &&
+				options.getCurrentPostalCode() !== postalCode
 			) {
+				return
+			}
+
+			if (entity._properties._nimi && typeof entity._properties._nimi._value !== 'undefined') {
 				setNameCallback(entity._properties._nimi._value)
+			}
+
+			if (typeof options.setPickedEntityIfEmpty === 'function') {
+				options.setPickedEntityIfEmpty(entity)
 			}
 		})
 		.catch((error) => {

@@ -8,12 +8,13 @@
  *
  * Soft vs. hard assertions:
  *   - `expect.soft(...)` is used for contracts tied to an open issue
- *     (#679, #681, #713, #715). The soft form surfaces every broken
- *     contract in a single run instead of bailing on the first. When an
- *     issue closes, the matching soft assertion graduates to a hard
- *     `expect` so the next regression is loud.
+ *     (#679, #681, #715). The soft form surfaces every broken contract in
+ *     a single run instead of bailing on the first. When an issue closes,
+ *     the matching soft assertion graduates to a hard `expect` so the next
+ *     regression is loud.
  *   - #711 lives in postal-code-breadcrumb.spec.ts (already hard).
  *   - #712 has graduated to hard — analysis-tab buttons must be visible.
+ *   - #713 has graduated to hard — AreaProperties must populate at postal-code level.
  *   - #714 has graduated to hard — URL params must clear on back-nav.
  *   - Plain `expect(...)` is used for structural pre/postconditions that
  *     must hold for the journey to make sense (e.g. Cesium ready, store
@@ -165,25 +166,19 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 				'TimelineCompact must be attached at postal-code level'
 			).toBeAttached()
 
-			// US-07 #713 — Area Properties heading + content live on the Details
-			// tab. Soft-assert visibility (heading must be present) and then
-			// soft-assert the panel body isn't "0 properties" — the empty-panel
-			// regression that #713 tracks.
+			// US-07 #713 — Area Properties heading + content live on the Details tab
+			// (graduated to hard after the #713 fix).
 			await cesiumPage.getByRole('tab', { name: 'Details' }).click()
 			const areaPropertiesHeading = cesiumPage.getByText('Area Properties', { exact: false })
-			await expect
-				.soft(
-					areaPropertiesHeading,
-					'US-07 #713 — Area Properties heading must be visible at postal-code level'
-				)
-				.toBeVisible()
+			await expect(
+				areaPropertiesHeading,
+				'US-07 #713 — Area Properties heading must be visible at postal-code level'
+			).toBeVisible()
 			const detailsTabBody = await cesiumPage.locator('.tab-content').first().textContent()
-			expect
-				.soft(
-					detailsTabBody ?? '',
-					'US-07 #713 — Area Properties content must not be empty at postal-code level'
-				)
-				.not.toMatch(/\b0\s+properties\b/i)
+			expect(
+				detailsTabBody ?? '',
+				'US-07 #713 — Area Properties content must not be empty at postal-code level'
+			).not.toMatch(/\b0\s+properties\b/i)
 
 			// Heat Distribution / NDVI Vegetation / Building Analysis buttons
 			// live on the Analysis tab. Switch tabs before asserting.

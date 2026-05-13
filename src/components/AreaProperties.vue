@@ -145,6 +145,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { eventBus } from '../services/eventEmitter'
+import { postalCodeIndex } from '../services/postalCodeIndex.js'
 import { useGlobalStore } from '../stores/globalStore'
 import logger from '../utils/logger.js'
 
@@ -153,6 +154,30 @@ const searchQuery = ref('')
 const openPanels = ref([])
 const showCopyFeedback = ref(false)
 const copyFeedbackText = ref('Copied!')
+
+// Fallback entity for postal-code level. Issue #713: when the user reached
+// the postal code via search / URL / programmatic navigation rather than a
+// map click, `globalStore.pickedEntity` is null and AreaProperties renders
+// the empty "Click on areas to view properties" state. Look up the postal-
+// code polygon entity directly from the index so the panel still populates.
+//
+// postalCodeIndex is imported synchronously: it's a leaf-node utility with
+// only a logger dependency, so there's no circular-import risk, and a sync
+// lookup avoids a stale-data window where the old postal-code's properties
+// would briefly render before the dynamic import resolved.
+const fallbackPostalCodeEntity = computed(() => {
+	if (globalStore.level !== 'postalCode' || !globalStore.postalcode || globalStore.pickedEntity) {
+		return null
+	}
+	try {
+		return postalCodeIndex.getByPostalCode(globalStore.postalcode) ?? null
+	} catch (error) {
+		logger.warn('[AreaProperties] Failed to look up postal code entity:', error?.message || error)
+		return null
+	}
+})
+
+const effectiveEntity = computed(() => globalStore.pickedEntity || fallbackPostalCodeEntity.value)
 
 // Category definitions with property matchers
 const CATEGORIES = {
@@ -322,7 +347,7 @@ function formatValue(value) {
 
 // Extract all properties from entity
 const allProperties = computed(() => {
-	const entity = globalStore.pickedEntity
+	const entity = effectiveEntity.value
 	if (!entity?._properties) return []
 
 	const props = []
@@ -454,9 +479,9 @@ async function copyAllProperties() {
 	}
 }
 
-// Reset panels when entity changes
+// Reset panels when the effective entity changes
 watch(
-	() => globalStore.pickedEntity,
+	() => effectiveEntity.value,
 	() => {
 		openPanels.value = []
 		searchQuery.value = ''
