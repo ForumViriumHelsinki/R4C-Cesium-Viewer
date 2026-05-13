@@ -32,7 +32,7 @@ test('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ page }) => {
 	)
 })
 
-test('Building properties', async ({ page }) => {
+test('Building properties', { tag: ['@e2e', '@requires-database'] }, async ({ page }) => {
 	await page.goto('/')
 	await dismissModalIfPresent(page, 'Explore Map')
 	await waitForCesiumReady(page)
@@ -57,7 +57,7 @@ test('Building properties', async ({ page }) => {
 	await expect(page.locator('canvas')).toBeVisible()
 })
 
-test('Heat Vulnerability', async ({ page }) => {
+test('Heat Vulnerability', { tag: ['@e2e', '@requires-database'] }, async ({ page }) => {
 	await page.goto('/')
 	await dismissModalIfPresent(page, 'Explore Map')
 

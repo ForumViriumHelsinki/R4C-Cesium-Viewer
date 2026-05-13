@@ -33,13 +33,17 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 		})
 
 		// Building level requires drilling through postal code first, which takes more time
-		cesiumTest('should show timeline at building level', async ({ cesiumPage }) => {
-			cesiumTest.setTimeout(90000) // 90 seconds for full drill-through flow
-			await helpers.drillToLevel('building')
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_EXTENDED)
+		cesiumTest(
+			'should show timeline at building level',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				cesiumTest.setTimeout(90000) // 90 seconds for full drill-through flow
+				await helpers.drillToLevel('building')
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_EXTENDED)
 
-			await helpers.verifyTimelineVisibility('building')
-		})
+				await helpers.verifyTimelineVisibility('building')
+			}
+		)
 	})
 
 	cesiumTest.describe('Timeline Components', () => {
@@ -84,25 +88,29 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 	})
 
 	cesiumTest.describe('Timeline State Persistence', () => {
-		cesiumTest('should maintain timeline state between levels', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('postalCode')
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
+		cesiumTest(
+			'should maintain timeline state between levels',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				await helpers.drillToLevel('postalCode')
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
-			const slider = cesiumPage.locator('.timeline-slider input')
-			await slider.fill('2')
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
+				const slider = cesiumPage.locator('.timeline-slider input')
+				await slider.fill('2')
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
 
-			// Navigate to building level
-			await helpers.drillToLevel('building')
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
+				// Navigate to building level
+				await helpers.drillToLevel('building')
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
-			// Timeline should still be visible
-			await helpers.verifyTimelineVisibility('building')
+				// Timeline should still be visible
+				await helpers.verifyTimelineVisibility('building')
 
-			// State should be maintained
-			const sliderValue = await slider.inputValue()
-			expect(sliderValue).toBe('2')
-		})
+				// State should be maintained
+				const sliderValue = await slider.inputValue()
+				expect(sliderValue).toBe('2')
+			}
+		)
 
 		cesiumTest('should handle timeline across different views', async ({ cesiumPage }) => {
 			// Test in Capital Region view

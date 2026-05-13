@@ -22,7 +22,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 		// Cesium is already initialized by the fixture
 	})
 
-	cesiumTest.describe('Complete User Journeys', () => {
+	cesiumTest.describe('Complete User Journeys', { tag: ['@requires-database'] }, () => {
 		cesiumTest(
 			'should support new user journey: start → postal code → building',
 			async ({ cesiumPage }) => {
@@ -174,7 +174,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 		})
 	})
 
-	cesiumTest.describe('Feature Combination Testing', () => {
+	cesiumTest.describe('Feature Combination Testing', { tag: ['@requires-database'] }, () => {
 		cesiumTest(
 			'should handle layers + filters + navigation simultaneously',
 			async ({ cesiumPage }) => {
@@ -292,7 +292,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 		})
 	})
 
-	cesiumTest.describe('Accessibility Audit', () => {
+	cesiumTest.describe('Accessibility Audit', { tag: ['@requires-database'] }, () => {
 		cesiumTest(
 			'should pass comprehensive accessibility checks across all states',
 			async ({ cesiumPage }) => {
@@ -447,7 +447,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 		})
 	})
 
-	cesiumTest.describe('Performance and Reliability', () => {
+	cesiumTest.describe('Performance and Reliability', { tag: ['@requires-database'] }, () => {
 		cesiumTest('should handle complete workflows under load', async ({ cesiumPage }) => {
 			// Simulate slower network
 			cesiumPage.route('**/*', (route) => {
@@ -526,7 +526,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 		})
 	})
 
-	cesiumTest.describe('Feature Coverage Validation', () => {
+	cesiumTest.describe('Feature Coverage Validation', { tag: ['@requires-database'] }, () => {
 		cesiumTest('should verify all identified features are accessible', async ({ cesiumPage }) => {
 			const _featureCheckList = [
 				// View modes

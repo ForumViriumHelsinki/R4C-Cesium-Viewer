@@ -11,8 +11,15 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+/* When SKIP_REQUIRES_DATABASE=true, skip specs tagged `@requires-database`.
+ * These tests assume a real (or seeded) PostgreSQL backend providing building
+ * polygon entities and postal-code GeoJSON; the mock API used by `just dev-mock`
+ * and CI (no backend) cannot satisfy them. See #658. */
+const grepInvert = process.env.SKIP_REQUIRES_DATABASE === 'true' ? /@requires-database/ : undefined;
+
 export default defineConfig({
 	testDir: './tests',
+	grepInvert,
 	/* Global setup for test environment */
 	globalSetup: './tests/setup/global-setup.ts',
 	/* Run tests SEQUENTIALLY to avoid multiple 3D renderers competing for resources */

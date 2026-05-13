@@ -463,65 +463,72 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await expect(treesToggle).not.toBeChecked()
 		})
 
-		cesiumTest('should maintain layer states during navigation', async ({ cesiumPage }) => {
-			// Enable NDVI and Land Cover
-			let ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
-			let landCoverToggle = cesiumPage
-				.getByText('Land Cover')
-				.locator('..')
-				.locator('input[type="checkbox"]')
+		cesiumTest(
+			'should maintain layer states during navigation',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				// Enable NDVI and Land Cover
+				let ndviToggle = cesiumPage
+					.getByText('NDVI')
+					.locator('..')
+					.locator('input[type="checkbox"]')
+				let landCoverToggle = cesiumPage
+					.getByText('Land Cover')
+					.locator('..')
+					.locator('input[type="checkbox"]')
 
-			// Check current state first to avoid redundant operations
-			const ndviChecked = await ndviToggle.isChecked()
-			if (!ndviChecked) {
-				await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' })
+				// Check current state first to avoid redundant operations
+				const ndviChecked = await ndviToggle.isChecked()
+				if (!ndviChecked) {
+					await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' })
+				}
+
+				const landCoverChecked = await landCoverToggle.isChecked()
+				if (!landCoverChecked) {
+					await helpers.checkWithRetry(landCoverToggle, {
+						elementName: 'Land Cover',
+					})
+				}
+
+				// Navigate to postal code level
+				await helpers.drillToLevel('postalCode')
+				// Wait for postal code UI
+				await cesiumPage
+					.waitForSelector('text="Building Analysis"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+					})
+					.catch(() => {})
+
+				// Re-query locators after navigation
+				ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+				landCoverToggle = cesiumPage
+					.getByText('Land Cover')
+					.locator('..')
+					.locator('input[type="checkbox"]')
+
+				// States should be maintained
+				await expect(ndviToggle).toBeChecked()
+				await expect(landCoverToggle).toBeChecked()
+
+				// Navigate to building level
+				await helpers.drillToLevel('building')
+				// Wait for building level
+				await cesiumPage
+					.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
+					.catch(() => {})
+
+				// Re-query locators after navigation
+				ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+				landCoverToggle = cesiumPage
+					.getByText('Land Cover')
+					.locator('..')
+					.locator('input[type="checkbox"]')
+
+				// States should still be maintained
+				await expect(ndviToggle).toBeChecked()
+				await expect(landCoverToggle).toBeChecked()
 			}
-
-			const landCoverChecked = await landCoverToggle.isChecked()
-			if (!landCoverChecked) {
-				await helpers.checkWithRetry(landCoverToggle, {
-					elementName: 'Land Cover',
-				})
-			}
-
-			// Navigate to postal code level
-			await helpers.drillToLevel('postalCode')
-			// Wait for postal code UI
-			await cesiumPage
-				.waitForSelector('text="Building Analysis"', {
-					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
-				})
-				.catch(() => {})
-
-			// Re-query locators after navigation
-			ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
-			landCoverToggle = cesiumPage
-				.getByText('Land Cover')
-				.locator('..')
-				.locator('input[type="checkbox"]')
-
-			// States should be maintained
-			await expect(ndviToggle).toBeChecked()
-			await expect(landCoverToggle).toBeChecked()
-
-			// Navigate to building level
-			await helpers.drillToLevel('building')
-			// Wait for building level
-			await cesiumPage
-				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
-				.catch(() => {})
-
-			// Re-query locators after navigation
-			ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
-			landCoverToggle = cesiumPage
-				.getByText('Land Cover')
-				.locator('..')
-				.locator('input[type="checkbox"]')
-
-			// States should still be maintained
-			await expect(ndviToggle).toBeChecked()
-			await expect(landCoverToggle).toBeChecked()
-		})
+		)
 	})
 
 	// FIXME: Tests have various issues beyond navigation - needs investigation

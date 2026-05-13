@@ -224,7 +224,7 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 		})
 	})
 
-	cesiumTest.describe('Building Level Navigation', () => {
+	cesiumTest.describe('Building Level Navigation', { tag: ['@requires-database'] }, () => {
 		cesiumTest('should transition to building level from postal code', async ({ cesiumPage }) => {
 			// First navigate to postal code level
 			await helpers.drillToLevel('postalCode')
@@ -402,45 +402,49 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 			await helpers.verifyTimelineVisibility('postalCode')
 		})
 
-		cesiumTest('should handle reset button from any level', async ({ cesiumPage }) => {
-			const resetButton = cesiumPage
-				.getByRole('button')
-				.filter({ has: cesiumPage.locator('.mdi-refresh') })
+		cesiumTest(
+			'should handle reset button from any level',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				const resetButton = cesiumPage
+					.getByRole('button')
+					.filter({ has: cesiumPage.locator('.mdi-refresh') })
 
-			// Test reset from postal code level
-			await helpers.drillToLevel('postalCode')
-			// Wait for postal code level
-			await cesiumPage
-				.waitForSelector('text="Building Analysis"', {
-					timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
-				})
-				.catch(() => {})
+				// Test reset from postal code level
+				await helpers.drillToLevel('postalCode')
+				// Wait for postal code level
+				await cesiumPage
+					.waitForSelector('text="Building Analysis"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT,
+					})
+					.catch(() => {})
 
-			await resetButton.click()
-			// Wait for reset to complete
-			await cesiumPage
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-				.catch(() => {})
+				await resetButton.click()
+				// Wait for reset to complete
+				await cesiumPage
+					.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+					.catch(() => {})
 
-			// Should be back to start level
-			await helpers.testNavigationControls('start')
+				// Should be back to start level
+				await helpers.testNavigationControls('start')
 
-			// Test reset from building level
-			await helpers.drillToLevel('building')
-			// Wait for building level
-			await cesiumPage
-				.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
-				.catch(() => {})
+				// Test reset from building level
+				await helpers.drillToLevel('building')
+				// Wait for building level
+				await cesiumPage
+					.waitForSelector('text="Building heat data"', { timeout: TEST_TIMEOUTS.CESIUM_READY })
+					.catch(() => {})
 
-			await resetButton.click()
-			// Wait for reset to complete
-			await cesiumPage
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-				.catch(() => {})
+				await resetButton.click()
+				// Wait for reset to complete
+				await cesiumPage
+					.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+					.catch(() => {})
 
-			// Should be back to start level
-			await helpers.testNavigationControls('start')
-		})
+				// Should be back to start level
+				await helpers.testNavigationControls('start')
+			}
+		)
 	})
 
 	cesiumTest.describe('Level-Specific Feature Access', () => {
@@ -504,6 +508,7 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 
 		cesiumTest(
 			'should handle timeline interactions at postal code and building levels',
+			{ tag: ['@requires-database'] },
 			async ({ cesiumPage }) => {
 				// Navigate to postal code level
 				await helpers.drillToLevel('postalCode')
@@ -565,38 +570,42 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 			}
 		})
 
-		cesiumTest('should maintain navigation state during data loading', async ({ cesiumPage }) => {
-			// Intercept requests to simulate slow loading
-			cesiumPage.route('**/*.json', (route) => {
-				setTimeout(() => route.continue(), 1000)
-			})
+		cesiumTest(
+			'should maintain navigation state during data loading',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				// Intercept requests to simulate slow loading
+				cesiumPage.route('**/*.json', (route) => {
+					setTimeout(() => route.continue(), 1000)
+				})
 
-			// Attempt navigation during loading
-			await helpers.drillToLevel('postalCode')
+				// Attempt navigation during loading
+				await helpers.drillToLevel('postalCode')
 
-			// Immediately try to navigate further
-			await helpers.drillToLevel('building')
+				// Immediately try to navigate further
+				await helpers.drillToLevel('building')
 
-			// Wait for everything to settle
-			await cesiumPage
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
-				.catch(() => {})
+				// Wait for everything to settle
+				await cesiumPage
+					.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
+					.catch(() => {})
 
-			// Should end up in a consistent state
-			const resetButton = cesiumPage
-				.getByRole('button')
-				.filter({ has: cesiumPage.locator('.mdi-refresh') })
-			await expect(resetButton).toBeVisible()
+				// Should end up in a consistent state
+				const resetButton = cesiumPage
+					.getByRole('button')
+					.filter({ has: cesiumPage.locator('.mdi-refresh') })
+				await expect(resetButton).toBeVisible()
 
-			// Navigation should still work
-			await resetButton.click()
-			// Wait for reset
-			await cesiumPage
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-				.catch(() => {})
+				// Navigation should still work
+				await resetButton.click()
+				// Wait for reset
+				await cesiumPage
+					.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+					.catch(() => {})
 
-			await helpers.testNavigationControls('start')
-		})
+				await helpers.testNavigationControls('start')
+			}
+		)
 	})
 
 	cesiumTest.describe('Accessibility Compliance for Navigation', () => {
@@ -650,39 +659,43 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 			expect(errorCount).toBe(0)
 		})
 
-		cesiumTest('should provide clear navigation state indicators', async ({ cesiumPage }) => {
-			// Navigation controls should have clear visual indicators
-			const resetButton = cesiumPage
-				.getByRole('button')
-				.filter({ has: cesiumPage.locator('.mdi-refresh') })
-			await expect(resetButton).toBeVisible()
+		cesiumTest(
+			'should provide clear navigation state indicators',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				// Navigation controls should have clear visual indicators
+				const resetButton = cesiumPage
+					.getByRole('button')
+					.filter({ has: cesiumPage.locator('.mdi-refresh') })
+				await expect(resetButton).toBeVisible()
 
-			// Navigate to building level to test back button
-			await helpers.drillToLevel('building')
-			// Wait for building level
-			await cesiumPage
-				.waitForSelector('.mdi-arrow-left', { timeout: TEST_TIMEOUTS.CESIUM_READY })
-				.catch(() => {})
+				// Navigate to building level to test back button
+				await helpers.drillToLevel('building')
+				// Wait for building level
+				await cesiumPage
+					.waitForSelector('.mdi-arrow-left', { timeout: TEST_TIMEOUTS.CESIUM_READY })
+					.catch(() => {})
 
-			const backButton = cesiumPage
-				.getByRole('button')
-				.filter({ has: cesiumPage.locator('.mdi-arrow-left') })
-			await expect(backButton).toBeVisible()
+				const backButton = cesiumPage
+					.getByRole('button')
+					.filter({ has: cesiumPage.locator('.mdi-arrow-left') })
+				await expect(backButton).toBeVisible()
 
-			// Buttons should have tooltips for accessibility
-			await backButton.hover()
-			// Wait for tooltip to appear
-			await cesiumPage
-				.waitForSelector('[role="tooltip"], .v-tooltip', {
-					timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION,
-				})
-				.catch(() => {})
+				// Buttons should have tooltips for accessibility
+				await backButton.hover()
+				// Wait for tooltip to appear
+				await cesiumPage
+					.waitForSelector('[role="tooltip"], .v-tooltip', {
+						timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION,
+					})
+					.catch(() => {})
 
-			// Tooltip should appear
-			const tooltip = cesiumPage.locator('[role="tooltip"], .v-tooltip')
-			if (await tooltip.first().isVisible()) {
-				await expect(tooltip.first()).toBeVisible()
+				// Tooltip should appear
+				const tooltip = cesiumPage.locator('[role="tooltip"], .v-tooltip')
+				if (await tooltip.first().isVisible()) {
+					await expect(tooltip.first()).toBeVisible()
+				}
 			}
-		})
+		)
 	})
 })

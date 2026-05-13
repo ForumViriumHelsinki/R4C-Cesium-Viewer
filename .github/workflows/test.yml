@@ -208,6 +208,10 @@ jobs:
     timeout-minutes: 15
     env:
       NODE_OPTIONS: '--max-old-space-size=2048'
+      # CI serves the production bundle via `bun run preview` with no backend
+      # (no DB, no mock API). Skip specs tagged @requires-database since they
+      # need real building entities / postal-code GeoJSON to pass. See #658.
+      SKIP_REQUIRES_DATABASE: 'true'
 
     steps:
       - name: Checkout code
@@ -277,6 +281,10 @@ jobs:
     timeout-minutes: 15 # Job-level timeout replaces shell timeout wrapper
     env:
       NODE_OPTIONS: '--max-old-space-size=2048'
+      # CI serves the production bundle via `bun run preview` with no backend
+      # (no DB, no mock API). Skip specs tagged @requires-database since they
+      # need real building entities / postal-code GeoJSON to pass. See #658.
+      SKIP_REQUIRES_DATABASE: 'true'
 
     strategy:
       fail-fast: true
