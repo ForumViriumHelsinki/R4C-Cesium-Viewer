@@ -13,15 +13,59 @@ import logger from '@/utils/logger'
 
 /**
  * GOFF endpoint must be an absolute URL: the provider's websocket setup calls
- * `new URL(endpoint)` directly, which throws `TypeError: Failed to construct 'URL'`
- * on relative paths. Build it from `window.location.origin` so dev (Vite proxy),
- * preview, and prod (nginx proxy) all route through the same `/feature-flags` path.
+ * `new URL(endpoint)` directly in `connectWebsocket()`, `fetchAll()`, and the
+ * data collector. Any of those throw `TypeError: Failed to construct 'URL':
+ * Invalid URL` if the endpoint is missing, empty, or relative. Build the
+ * endpoint from `window.location.origin` so dev (Vite proxy), preview, and
+ * prod (nginx proxy) all route through the same `/feature-flags` path.
+ *
+ * `VITE_GOFF_ENDPOINT` lets ops override the endpoint without rebuilding.
+ * Validate both paths with `isValidGoffEndpoint()` before handing the value
+ * to the provider — see #738 for the failure mode this guard prevents.
  */
-const GOFF_ENDPOINT =
-	typeof window !== 'undefined' && window.location?.origin
-		? `${window.location.origin}/feature-flags`
-		: '/feature-flags'
+function resolveGoffEndpoint(): string {
+	const override = import.meta.env.VITE_GOFF_ENDPOINT
+	if (typeof override === 'string' && override.length > 0) {
+		return override
+	}
+	if (typeof window !== 'undefined' && window.location?.origin) {
+		return `${window.location.origin}/feature-flags`
+	}
+	return ''
+}
+
+const GOFF_ENDPOINT = resolveGoffEndpoint()
 const GOFF_HEALTH_TIMEOUT_MS = 3000
+
+/**
+ * Validate that a value is a non-empty absolute URL the GOFF library can
+ * consume. The library calls `new URL(endpoint)` in three hot paths
+ * (`connectWebsocket`, `fetchAll`, `collectData`); each throws synchronously
+ * inside an async function on bad input, surfacing as an unhandled rejection
+ * (#738, 172 anonymous Sentry events across 22 fingerprints).
+ *
+ * Empty strings and protocol-relative paths (`/feature-flags`) are rejected
+ * outright. `URL.canParse` (Node 19+, all modern browsers) is the canonical
+ * test — fall back to a try/catch for older engines.
+ */
+export function isValidGoffEndpoint(value: unknown): value is string {
+	if (typeof value !== 'string' || value.length === 0) {
+		return false
+	}
+	// `URL.canParse` requires the value to be an absolute URL. Without a base
+	// argument, relative paths like `/feature-flags` return false — which is
+	// exactly what we want; the GOFF library will throw on them downstream.
+	if (typeof URL.canParse === 'function') {
+		return URL.canParse(value)
+	}
+	try {
+		// `new URL(value)` without a base throws on relative URLs.
+		new URL(value)
+		return true
+	} catch {
+		return false
+	}
+}
 
 /**
  * GOFF websocket init timeout. The provider's built-in default is 5000 ms,
@@ -91,6 +135,20 @@ function buildFallbackFlags(): Record<
  * silent catch.
  */
 async function isGoffAvailable(): Promise<boolean> {
+	if (!isValidGoffEndpoint(GOFF_ENDPOINT)) {
+		// Surface the misconfiguration once so it's traceable in Sentry —
+		// don't loop on a value the GOFF library will reject downstream (#738).
+		logger.warn(
+			`Feature flags: GOFF endpoint is missing or not an absolute URL (${JSON.stringify(GOFF_ENDPOINT)}); falling back to local defaults. Set VITE_GOFF_ENDPOINT to an absolute URL or run with window.location.origin available.`
+		)
+		Sentry.addBreadcrumb({
+			category: 'feature-flags',
+			level: 'warning',
+			message: 'GOFF endpoint invalid; skipping provider',
+			data: { endpoint: GOFF_ENDPOINT },
+		})
+		return false
+	}
 	try {
 		const controller = new AbortController()
 		const timeout = setTimeout(() => controller.abort(), GOFF_HEALTH_TIMEOUT_MS)
@@ -147,21 +205,35 @@ function describeGoffReason(reason: unknown): string {
  */
 function isGoffWebsocketRejection(reason: unknown): boolean {
 	const message = describeGoffReason(reason)
-	// Require both:
-	//   1) "websocket" — narrows to the websocket-init failure class.
-	//   2) one of the GOFF-specific fingerprints:
-	//      - library name (defensive against future error wording)
-	//      - "reached when initializing" — the exact phrase the library uses
-	//        in its timeout reject path (index.esm.js: "timeout of N ms reached
-	//        when initializing the websocket"). This phrasing is highly
-	//        specific to GOFF, so it won't match Cesium Ion, Sentry replays,
-	//        or other websocket-using subsystems.
-	// The earlier "impossible to connect" alternative was too generic and
-	// risked swallowing unrelated websocket rejections (per code review on #745).
-	return (
+	// Two GOFF-specific rejection shapes we want to handle, narrowed so we
+	// don't accidentally swallow unrelated rejections from Cesium Ion, Sentry
+	// replays, or other websocket-using subsystems:
+	//
+	//   A) Websocket init failures — require both "websocket" AND a
+	//      GOFF-specific fingerprint. "reached when initializing" is the exact
+	//      phrasing from index.esm.js' timeout reject path.
+	//   B) URL construction failures — `TypeError: Failed to construct 'URL':
+	//      Invalid URL`. The GOFF library calls `new URL(endpoint)` in three
+	//      hot paths; if the endpoint is malformed the TypeError surfaces as
+	//      an unhandled rejection from the retry loop (#738). The string
+	//      "Failed to construct 'URL'" is browser-internal wording — narrow
+	//      enough that we only catch the GOFF retry loop in practice. Pair
+	//      with a stack-trace check on Error instances so we don't catch
+	//      unrelated URL TypeErrors thrown elsewhere on the page.
+	if (
 		/websocket/i.test(message) &&
 		/go-?feature-?flag|GoFeatureFlag|reached when initializing/i.test(message)
-	)
+	) {
+		return true
+	}
+	if (
+		reason instanceof TypeError &&
+		/Failed to construct 'URL'|Invalid URL/i.test(message) &&
+		/go-?feature-?flag|GoFeatureFlag/i.test(reason.stack ?? '')
+	) {
+		return true
+	}
+	return false
 }
 
 let goffRejectionHandlerInstalled = false
