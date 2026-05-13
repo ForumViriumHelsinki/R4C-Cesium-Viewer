@@ -29,8 +29,6 @@ import { markRaw } from 'vue'
  * @property {Map|null} treeAreasByBuildingId - Map of building IDs to tree area calculations (serializable)
  * @property {Array|null} treeData - Serializable tree data (kohde_id, p_ala_m2) for analysis
  * @property {Map|null} buildingData - Serializable building data (id -> {heatExposure, area_m2}) for analysis
- * @property {Array|null} treeEntities - Cesium tree entity references (DEPRECATED - use cesiumEntityManager)
- * @property {Object|null} buildingsDatasource - Cesium buildings data source reference (DEPRECATED - use cesiumEntityManager)
  * @property {Array|null} postalcodeHeatTimeseries - Postal code heat time-series data
  * @property {Array|null} buildingHeatTimeseries - Building-level heat time-series data
  * @property {Object|null} heatFloodVulnerabilityEntity - Selected entity for vulnerability analysis
@@ -50,8 +48,6 @@ export const usePropsStore = defineStore('props', {
 		treeAreasByBuildingId: null,
 		treeData: null,
 		buildingData: null,
-		treeEntities: null,
-		buildingsDatasource: null,
 		postalcodeHeatTimeseries: null,
 		buildingHeatTimeseries: null,
 		heatFloodVulnerabilityEntity: null,
@@ -180,26 +176,6 @@ export const usePropsStore = defineStore('props', {
 		 */
 		setBuildingData(buildingData) {
 			this.buildingData = buildingData
-		},
-		/**
-		 * Sets tree entity references for analysis
-		 * @param {Array<Object>} entities - Cesium tree canopy entities
-		 * @deprecated Use setTreeData() and cesiumEntityManager instead
-		 * @note Uses markRaw to prevent Cesium entities from becoming reactive,
-		 *       which would cause DataCloneError in Web Workers
-		 */
-		setTreeEntities(entities) {
-			this.treeEntities = markRaw(entities)
-		},
-		/**
-		 * Sets buildings data source reference
-		 * @param {Object} datasource - Cesium buildings data source
-		 * @deprecated Use setBuildingData() and cesiumEntityManager instead
-		 * @note Uses markRaw to prevent Cesium datasource from becoming reactive,
-		 *       which would cause DataCloneError in Web Workers
-		 */
-		setBuildingsDatasource(datasource) {
-			this.buildingsDatasource = markRaw(datasource)
 		},
 		/**
 		 * Sets postal code-level heat exposure time-series data

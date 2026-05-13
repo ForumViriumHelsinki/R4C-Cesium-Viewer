@@ -69,11 +69,9 @@ pinia.use(
 		// Cesium objects contain non-serializable properties (functions, circular refs, getters)
 		// that cannot be cloned for postMessage() calls to Sentry servers
 		stateTransformer: (state, store) => {
-			// For propsStore, exclude deprecated Cesium entity properties
+			// For propsStore, exclude Cesium entity/datasource properties that remain on the store
 			if (store.$id === 'props') {
 				const {
-					treeEntities: _treeEntities,
-					buildingsDatasource: _buildingsDatasource,
 					postalCodeData: _postalCodeData,
 					heatFloodVulnerabilityEntity: _heatFloodVulnerabilityEntity,
 					...serializable

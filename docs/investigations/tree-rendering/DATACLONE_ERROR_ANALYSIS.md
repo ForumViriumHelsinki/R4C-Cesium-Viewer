@@ -1,5 +1,11 @@
 # Tree Toggle DataCloneError Analysis
 
+> **Resolved (GitHub #679).** Cesium entities have been moved out of Pinia into the
+> non-reactive registry at `src/services/cesiumEntityManager.js`. The deprecated
+> `propsStore.treeEntities` and `propsStore.buildingsDatasource` fields (and their setters)
+> have been removed. This document is retained for historical context — the root-cause
+> analysis no longer reflects the current code.
+
 ## Summary
 
 The DataCloneError is caused by Cesium entities (with non-serializable internal properties) being stored in the Pinia `propsStore` and then being passed to Web Workers. While `markRaw()` is correctly used for some properties, the entities contain internal Cesium properties that cannot be serialized.
