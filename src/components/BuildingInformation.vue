@@ -116,13 +116,13 @@ export default {
 			position: 'absolute',
 			top: `${mousePosition.value.y + 15}px`,
 			left: `${mousePosition.value.x + 15}px`,
-			background: 'rgba(30, 30, 30, 0.95)',
-			color: 'white',
+			background: 'rgba(var(--v-theme-surface), 0.95)',
+			color: 'rgb(var(--v-theme-on-surface))',
 			padding: '12px',
 			borderRadius: '8px',
 			pointerEvents: 'none',
 			backdropFilter: 'blur(8px)',
-			border: '1px solid rgba(255, 255, 255, 0.1)',
+			border: '1px solid rgba(var(--v-theme-on-surface), 0.12)',
 		}))
 
 		/**
@@ -456,7 +456,7 @@ export default {
 	align-items: center;
 	gap: 8px;
 	padding-bottom: 8px;
-	border-bottom: 1px solid rgba(var(--v-theme-surface), 0.1);
+	border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 }
 
 .building-icon {
@@ -465,7 +465,7 @@ export default {
 
 .building-title {
 	font-weight: 600;
-	color: rgb(var(--v-theme-surface));
+	color: rgb(var(--v-theme-on-surface));
 	font-size: 13px;
 	letter-spacing: 0.3px;
 }
@@ -492,7 +492,7 @@ export default {
 }
 
 .data-value {
-	color: rgb(var(--v-theme-surface));
+	color: rgb(var(--v-theme-on-surface));
 	font-weight: 400;
 	flex: 1;
 	word-wrap: break-word;
@@ -512,17 +512,17 @@ export default {
 /* High contrast mode support */
 @media (prefers-contrast: high) {
 	.building-tooltip {
-		background: rgb(var(--v-theme-on-surface)) !important;
-		border: 2px solid #ffffff;
+		background: rgb(var(--v-theme-surface)) !important;
+		border: 2px solid rgb(var(--v-theme-on-surface));
 	}
 
 	.building-title,
 	.data-value {
-		color: rgb(var(--v-theme-surface));
+		color: rgb(var(--v-theme-on-surface));
 	}
 
 	.temp-value {
-		color: rgb(var(--v-theme-surface));
+		color: rgb(var(--v-theme-on-surface));
 	}
 }
 
