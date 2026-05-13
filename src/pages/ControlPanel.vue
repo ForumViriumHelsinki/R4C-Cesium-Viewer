@@ -133,8 +133,9 @@
 							</p>
 							<div class="analysis-buttons">
 								<template v-if="currentLevel === 'postalCode'">
+									<!-- Analysis buttons gate on the feature flag only; data loads on click (#712). -->
 									<v-btn
-										v-if="heatHistogramData && heatHistogramData.length > 0 && featureFlagStore.isEnabled('heatHistogram')"
+										v-if="featureFlagStore.isEnabled('heatHistogram')"
 										block
 										variant="outlined"
 										prepend-icon="mdi-chart-histogram"
@@ -170,7 +171,7 @@
 										Building Analysis
 									</v-btn>
 									<v-btn
-										v-if="hasNDVIData && featureFlagStore.isEnabled('ndviAnalysis')"
+										v-if="featureFlagStore.isEnabled('ndviAnalysis')"
 										block
 										variant="outlined"
 										prepend-icon="mdi-leaf"
@@ -434,10 +435,8 @@ const breadcrumbItems = computed(() =>
 
 const adaptationTab = ref('centers')
 
-const heatHistogramData = computed(() => propsStore.heatHistogramData)
 const statsIndex = computed(() => propsStore.statsIndex)
 const showSosEco = computed(() => socioEconomicsStore.data && heatExposureStore.data)
-const hasNDVIData = computed(() => toggleStore.ndvi)
 
 const hasAvailableAnalysis = computed(() => {
 	if (currentLevel.value === 'start') return false

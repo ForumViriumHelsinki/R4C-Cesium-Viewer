@@ -8,10 +8,13 @@
  *
  * Soft vs. hard assertions:
  *   - `expect.soft(...)` is used for contracts tied to an open issue
- *     (#679, #681, #711, #712, #713, #714, #715). The soft form surfaces
- *     every broken contract in a single run instead of bailing on the first.
- *     When an issue closes, the matching soft assertion graduates to a hard
+ *     (#679, #681, #713, #715). The soft form surfaces every broken
+ *     contract in a single run instead of bailing on the first. When an
+ *     issue closes, the matching soft assertion graduates to a hard
  *     `expect` so the next regression is loud.
+ *   - #711 lives in postal-code-breadcrumb.spec.ts (already hard).
+ *   - #712 has graduated to hard — analysis-tab buttons must be visible.
+ *   - #714 has graduated to hard — URL params must clear on back-nav.
  *   - Plain `expect(...)` is used for structural pre/postconditions that
  *     must hold for the journey to make sense (e.g. Cesium ready, store
  *     state transitioned to the expected level).
@@ -181,34 +184,26 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 				.not.toMatch(/\b0\s+properties\b/i)
 
 			// Heat Distribution / NDVI Vegetation / Building Analysis buttons
-			// live on the Analysis tab. Switch tabs before asserting so the
-			// soft contracts fail for the *right* reason (#712 data/flag gates,
-			// not "wrong tab active").
+			// live on the Analysis tab. Switch tabs before asserting.
 			await cesiumPage.getByRole('tab', { name: 'Analysis' }).click()
 
-			// US-04 #712 — Heat Distribution button must be reachable.
-			await expect
-				.soft(
-					cesiumPage.getByRole('button', { name: 'Heat Distribution' }),
-					'US-04 #712 — Heat Distribution button must be reachable from ControlPanel'
-				)
-				.toBeVisible()
+			// US-04 #712 — Heat Distribution button must be reachable (graduated to hard).
+			await expect(
+				cesiumPage.getByRole('button', { name: 'Heat Distribution' }),
+				'US-04 #712 — Heat Distribution button must be reachable from ControlPanel'
+			).toBeVisible()
 
-			// US-05 #712 — NDVI Vegetation button must be reachable.
-			await expect
-				.soft(
-					cesiumPage.getByRole('button', { name: 'NDVI Vegetation' }),
-					'US-05 #712 — NDVI Vegetation button must be reachable at postal-code level'
-				)
-				.toBeVisible()
+			// US-05 #712 — NDVI Vegetation button must be reachable (graduated to hard).
+			await expect(
+				cesiumPage.getByRole('button', { name: 'NDVI Vegetation' }),
+				'US-05 #712 — NDVI Vegetation button must be reachable at postal-code level'
+			).toBeVisible()
 
-			// US-06 #712 — Building Analysis (scatter plot) button must be reachable.
-			await expect
-				.soft(
-					cesiumPage.getByRole('button', { name: 'Building Analysis' }),
-					'US-06 #712 — Building Analysis (scatter) button must be reachable at postal-code level'
-				)
-				.toBeVisible()
+			// US-06 #712 — Building Analysis (scatter plot) button must be reachable (graduated to hard).
+			await expect(
+				cesiumPage.getByRole('button', { name: 'Building Analysis' }),
+				'US-06 #712 — Building Analysis (scatter) button must be reachable at postal-code level'
+			).toBeVisible()
 		}
 	)
 
