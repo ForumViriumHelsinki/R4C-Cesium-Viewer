@@ -111,10 +111,12 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 				)
 				.toBeLessThanOrEqual(5)
 
-			// US-02 #715 — GOFF /feature-flags/health should be reachable. If no
-			// request was observed, mark as unverified (skip the assertion) rather
-			// than asserting false negatives. Soft when a request IS observed and
-			// is 5xx.
+			// US-02 #715 — GOFF /feature-flags/health should be reachable. Stays soft
+			// because the underlying 5xx is an infrastructure regression (see
+			// ForumViriumHelsinki/infrastructure#1799), not a client-side bug. The
+			// client already degrades gracefully via InMemoryProvider fallback when
+			// /health returns non-2xx — this assertion just records that the relay
+			// remains broken upstream until that issue is resolved.
 			const flagHealthFailures = flagHealthResponses.filter((r) => r.status() >= 500)
 			if (flagHealthResponses.length > 0) {
 				expect
