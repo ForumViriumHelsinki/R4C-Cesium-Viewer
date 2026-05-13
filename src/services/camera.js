@@ -22,12 +22,13 @@ const EARTH_RADIUS_M = 6371000
  * @private
  */
 function haversineMeters(lon1, lat1, lon2, lat2) {
-	const toRad = (deg) => (deg * Math.PI) / 180
-	const dLat = toRad(lat2 - lat1)
-	const dLon = toRad(lon2 - lon1)
+	const Cesium = getCesium()
+	const dLat = Cesium.Math.toRadians(lat2 - lat1)
+	const dLon = Cesium.Math.toRadians(lon2 - lon1)
+	const lat1Rad = Cesium.Math.toRadians(lat1)
+	const lat2Rad = Cesium.Math.toRadians(lat2)
 	const a =
-		Math.sin(dLat / 2) ** 2 +
-		Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+		Math.sin(dLat / 2) ** 2 + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLon / 2) ** 2
 	return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a))
 }
 
@@ -56,25 +57,19 @@ export function computePostalCodeAltitude(entity, scale) {
 		return POSTAL_CODE_ZOOM.FALLBACK_ALTITUDE
 	}
 
-	let minLon = Infinity
-	let maxLon = -Infinity
-	let minLat = Infinity
-	let maxLat = -Infinity
-
-	for (const position of positions) {
-		const carto = Cesium.Cartographic.fromCartesian(position)
-		const lon = Cesium.Math.toDegrees(carto.longitude)
-		const lat = Cesium.Math.toDegrees(carto.latitude)
-		if (lon < minLon) minLon = lon
-		if (lon > maxLon) maxLon = lon
-		if (lat < minLat) minLat = lat
-		if (lat > maxLat) maxLat = lat
-	}
-
-	if (!Number.isFinite(minLon) || !Number.isFinite(minLat)) {
+	// Cesium.Rectangle.fromCartesianArray returns west/east/south/north in radians and
+	// handles the antimeridian edge case correctly — preferable to a hand-rolled bbox
+	// loop over Cartographic.fromCartesian calls.
+	const rectangle = Cesium.Rectangle.fromCartesianArray(positions)
+	if (!rectangle) {
 		logger.debug('[Camera] Polygon bbox computation failed; using fallback altitude')
 		return POSTAL_CODE_ZOOM.FALLBACK_ALTITUDE
 	}
+
+	const minLon = Cesium.Math.toDegrees(rectangle.west)
+	const maxLon = Cesium.Math.toDegrees(rectangle.east)
+	const minLat = Cesium.Math.toDegrees(rectangle.south)
+	const maxLat = Cesium.Math.toDegrees(rectangle.north)
 
 	const diagonalMeters = haversineMeters(minLon, minLat, maxLon, maxLat)
 	const altitude = diagonalMeters * scale

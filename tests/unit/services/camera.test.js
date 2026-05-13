@@ -46,6 +46,22 @@ vi.mock('@/services/cesiumProvider', () => {
 				height: 1000,
 			})),
 		},
+		// Mirrors Cesium.Rectangle.fromCartesianArray by delegating to Cartographic.fromCartesian
+		// — tests configure that stub per-case, so the bbox math threads through cleanly.
+		Rectangle: {
+			fromCartesianArray: vi.fn((cartesians) => {
+				if (!cartesians || cartesians.length === 0) return undefined
+				const cartographics = cartesians.map((c) => cesiumStub.Cartographic.fromCartesian(c))
+				const lons = cartographics.map((c) => c.longitude)
+				const lats = cartographics.map((c) => c.latitude)
+				return {
+					west: Math.min(...lons),
+					east: Math.max(...lons),
+					south: Math.min(...lats),
+					north: Math.max(...lats),
+				}
+			}),
+		},
 		JulianDate: {
 			now: vi.fn(() => ({})),
 		},
