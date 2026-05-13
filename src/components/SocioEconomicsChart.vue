@@ -176,20 +176,30 @@ export default {
 					: globalStore.averageHeatExposure.toFixed(3) // Use heat exposure data
 
 				const yValues = calculateYValues(sosData, statsData, heatData)
-				const compareHeatData = helsinkiOrCapitalHeatExposure(
-					heatExposureStore.getDataById(compareData.postinumeroalue)
-				)
-				// Skip the comparison series when heat exposure data for the
-				// compared postal code is missing — otherwise null values
-				// would propagate into d3 scale/axis computation.
-				const hasCompareHeatData = compareHeatData != null
-				const compareValues = hasCompareHeatData
+				// Guard: compareData may be undefined when getDataByNimi finds no
+				// matching record (e.g. first load before a comparison area is
+				// selected, or propsStore.socioEconomics pointing at a stale nimi).
+				// Accessing compareData.postinumeroalue would throw — bail before
+				// the heat-exposure lookup and skip the comparison series. See #733.
+				const compareHeatData =
+					compareData != null
+						? helsinkiOrCapitalHeatExposure(
+								heatExposureStore.getDataById(compareData.postinumeroalue)
+							)
+						: null
+				// Skip the comparison series when either the compared record or
+				// its heat exposure data is missing — otherwise null values would
+				// propagate into d3 scale/axis computation. The compareData ==
+				// null case already coerces compareHeatData to null via the
+				// ternary above, so the single check is sufficient.
+				const hasCompareSeries = compareHeatData != null
+				const compareValues = hasCompareSeries
 					? calculateYValues(compareData, statsData, compareHeatData)
 					: []
-				if (!hasCompareHeatData) {
+				if (!hasCompareSeries) {
 					logger.debug(
-						'[SocioEconomicsChart] Skipping comparison series; no heat exposure data for',
-						compareData.postinumeroalue
+						'[SocioEconomicsChart] Skipping comparison series; missing compareData or heat exposure for',
+						compareData?.postinumeroalue ?? selectedNimi
 					)
 				}
 				// Combine both yValues and compareValues arrays
@@ -202,7 +212,7 @@ export default {
 				const tooltip = plotService.createTooltip('#socioeonomicsContainer')
 				createBars(svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue', sosData.nimi)
 
-				if (hasCompareHeatData) {
+				if (hasCompareSeries) {
 					const compareBarData = compareValues.map((value, index) => ({
 						value,
 						label: xLabels[index],
