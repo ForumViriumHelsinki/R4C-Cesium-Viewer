@@ -23,8 +23,11 @@ vi.mock('@/services/postalCodeIndex', () => ({
 // Mock cesiumProvider
 // `Cartographic.fromCartesian` is configured per-test where bbox math matters.
 // Default mock returns a fixed value sufficient for the rotate/position tests.
-vi.mock('@/services/cesiumProvider', () => ({
-	getCesium: vi.fn(() => ({
+// IMPORTANT: getCesium() must return a *stable* object so per-test
+// `mockImplementation` overrides on Cartographic.fromCartesian persist across
+// the helper's internal calls to getCesium().
+vi.mock('@/services/cesiumProvider', () => {
+	const cesiumStub = {
 		Cartesian3: {
 			fromDegrees: vi.fn((lon, lat, alt) => ({ x: lon, y: lat, z: alt })),
 		},
@@ -46,8 +49,9 @@ vi.mock('@/services/cesiumProvider', () => ({
 		JulianDate: {
 			now: vi.fn(() => ({})),
 		},
-	})),
-}))
+	}
+	return { getCesium: vi.fn(() => cesiumStub) }
+})
 
 describe('Camera service', () => {
 	let camera
