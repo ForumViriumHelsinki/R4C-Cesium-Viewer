@@ -181,11 +181,14 @@ class CacheWarmer {
 		// pygeoapi endpoint as tile loading; the Helsinki WFS path is gated
 		// the same way because the WFS predictive warm would still ship a
 		// per-postal-code GeoJSON payload that duplicates the viewport tiles.
+		//
+		// Don't add to `warmedPostalCodes`: if the user toggles
+		// `viewportStreaming` off later in the session, predictive warming
+		// for already-visited areas should be allowed to run.
 		if (this.featureFlagStore.isEnabled('viewportStreaming')) {
 			logger.debug(
 				`[CacheWarmer] ⏭️ Skipping ${postalCode} (viewport streaming handles building loading)`
 			)
-			this.warmedPostalCodes.add(postalCode)
 			return
 		}
 
