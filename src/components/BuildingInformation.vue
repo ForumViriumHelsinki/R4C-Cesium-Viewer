@@ -513,7 +513,7 @@ export default {
 @media (prefers-contrast: high) {
 	.building-tooltip {
 		background: rgb(var(--v-theme-surface)) !important;
-		border: 2px solid rgb(var(--v-theme-on-surface));
+		border: 2px solid rgb(var(--v-theme-on-surface)) !important;
 	}
 
 	.building-title,
