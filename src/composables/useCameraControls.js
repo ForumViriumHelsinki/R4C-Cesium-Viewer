@@ -43,6 +43,12 @@ export function useCameraControls(viewer, onCameraSettled, onUrlUpdate = null) {
 			return
 		}
 
+		// Idempotent re-registration: if a previous handler exists, remove it before
+		// attaching the replacement so retry / re-init paths don't stack listeners.
+		if (moveEndHandler && !viewer.isDestroyed?.()) {
+			viewer.camera.moveEnd.removeEventListener(moveEndHandler)
+		}
+
 		moveEndHandler = () => {
 			// Clear any pending timeout
 			if (cameraMoveTimeout) {

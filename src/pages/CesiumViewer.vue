@@ -198,6 +198,7 @@ export default {
 			addPostalCodes,
 			addAttribution,
 			retryInit: baseRetryInit,
+			destroyViewer,
 		} = viewerInit
 
 		// Data loading composable (auto-loads on mount)
@@ -341,6 +342,9 @@ export default {
 				fogCleanup()
 			}
 			cleanupEntityPicking()
+			// Tears down the visibilitychange listener and viewer instance so the
+			// composable's globals don't leak across hot-reload or route swaps.
+			destroyViewer()
 		})
 
 		return {

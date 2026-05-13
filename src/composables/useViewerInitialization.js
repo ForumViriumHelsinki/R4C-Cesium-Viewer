@@ -183,6 +183,11 @@ export function useViewerInitialization() {
 		// Guard against access after viewer.destroy() — the listener can outlive the
 		// viewer instance on hot-reload or route swap, which previously surfaced as
 		// `Cannot read properties of null (reading 'scene')` in Sentry.
+		// Idempotent re-registration: retryInit may call initViewer twice, so the
+		// previous listener must be removed before the new one is attached.
+		if (visibilityChangeHandler) {
+			document.removeEventListener('visibilitychange', visibilityChangeHandler)
+		}
 		visibilityChangeHandler = () => {
 			if (!viewer.value || viewer.value.isDestroyed?.()) return
 
@@ -213,6 +218,8 @@ export function useViewerInitialization() {
 			viewer.value.destroy()
 		}
 		viewer.value = null
+		// Clear the store reference so other services don't keep a stale viewer.
+		store.setCesiumViewer(null)
 	}
 
 	/**
