@@ -226,11 +226,11 @@ export function useViewportLoading(viewer, getCamera, getFeaturepicker) {
 	 * Watch for changes to viewport streaming feature flag
 	 * Dynamically enables/disables tile-based viewport loading at runtime.
 	 */
-	watch(
+	const stopViewportStreamingWatch = watch(
 		() => featureFlagStore.isEnabled('viewportStreaming'),
 		async (newValue, _oldValue) => {
-			if (!viewer?.value) {
-				logger.warn('[useViewportLoading] Viewer not initialized, cannot toggle viewport streaming')
+			if (!viewer?.value || viewer.value.isDestroyed?.()) {
+				logger.warn('[useViewportLoading] Viewer not ready, cannot toggle viewport streaming')
 				return
 			}
 
@@ -257,9 +257,13 @@ export function useViewportLoading(viewer, getCamera, getFeaturepicker) {
 	 * - When viewport streaming is enabled: uses viewportBuildingLoader methods
 	 * - When viewport streaming is disabled: uses Datasource to hide/show postal code buildings
 	 */
-	watch(
+	const stopGrid250mWatch = watch(
 		() => toggleStore.grid250m,
 		async (gridEnabled) => {
+			// Guard against post-destroy access — Datasource.changeDataSourceShowByName
+			// reads cesiumViewer.dataSources, which is the dataSources null-deref signature in Sentry.
+			if (!viewer?.value || viewer.value.isDestroyed?.()) return
+
 			if (gridEnabled) {
 				// Grid turned ON - hide all buildings
 				logger.debug('[useViewportLoading] 250m grid enabled, hiding buildings')
@@ -291,6 +295,11 @@ export function useViewportLoading(viewer, getCamera, getFeaturepicker) {
 	)
 
 	onBeforeUnmount(async () => {
+		// Stop the watchers before tearing down loaders — otherwise a final tick can
+		// fire async work against a destroyed viewer.
+		stopViewportStreamingWatch()
+		stopGrid250mWatch()
+
 		// Clean up viewport building loader if initialized
 		if (viewportBuildingLoader) {
 			await viewportBuildingLoader.shutdown()
