@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.50.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.50.0...r4c-cesium-viewer-v1.50.1) (2026-05-13)
+
+
+### Bug Fixes
+
+* **propsStore:** remove deprecated Cesium-entity fields to close DataCloneError surface ([#771](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/771)) ([e04d0ec](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e04d0ec64346b7f05ee29bfc0aedbf29166c9426))
+
+
+### Performance Improvements
+
+* **buildings:** gate per-postal-code bulk fetch behind viewportStreaming ([#767](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/767)) ([8a66463](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8a66463019c3c21aa99bf55ded177c99e3c1060a))
+
 ## [1.50.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.49.0...r4c-cesium-viewer-v1.50.0) (2026-05-13)
 
 
