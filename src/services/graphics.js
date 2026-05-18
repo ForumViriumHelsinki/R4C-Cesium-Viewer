@@ -28,6 +28,7 @@ export default class Graphics {
 		this.viewer = null
 		this.scene = null
 		this._supportDetected = false
+		this._unsubscribe = null
 	}
 
 	/**
@@ -46,6 +47,7 @@ export default class Graphics {
 		// Apply settings will trigger lazy detection
 		requestIdleCallback(
 			() => {
+				if (!this.viewer || this.viewer.isDestroyed?.()) return
 				this.detectSupport()
 				this.applyGraphicsSettings()
 			},
@@ -177,8 +179,9 @@ export default class Graphics {
 	 * Set up reactive watchers for graphics settings
 	 */
 	setupWatchers() {
-		// Watch for MSAA changes
-		this.graphicsStore.$subscribe((mutation, _state) => {
+		// Watch for MSAA changes — store stop fn so destroy() can release it
+		this._unsubscribe = this.graphicsStore.$subscribe((mutation, _state) => {
+			if (!this.viewer || this.viewer.isDestroyed?.()) return
 			// mutation.events may be undefined for single-change mutations
 			const events = Array.isArray(mutation.events) ? mutation.events : []
 
@@ -195,6 +198,19 @@ export default class Graphics {
 				this.applyAmbientOcclusionSettings()
 			}
 		})
+	}
+
+	/**
+	 * Release the Pinia subscription so callbacks stop firing after teardown.
+	 * Owner must call this from onBeforeUnmount / destroyViewer paths.
+	 */
+	destroy() {
+		if (this._unsubscribe) {
+			this._unsubscribe()
+			this._unsubscribe = null
+		}
+		this.viewer = null
+		this.scene = null
 	}
 
 	/**
