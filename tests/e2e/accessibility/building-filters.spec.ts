@@ -71,18 +71,17 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					.locator('input[type="checkbox"]')
 				await expect(tallBuildingsToggle).toBeVisible()
 
-				// Scroll into view before interaction
-				await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {})
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
-
-				// Test functionality with retry
-				await tallBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+				// Vuetify v-switch renders the input with opacity:0 covered by the slider thumb,
+				// so Playwright's actionability check times out on CI under tablet viewport
+				// (#762). The shared helper handles scroll + retry-with-force.
+				await helpers.checkWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+				})
 				await expect(tallBuildingsToggle).toBeChecked()
 
-				await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {})
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
-
-				await tallBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+				await helpers.uncheckWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+				})
 				await expect(tallBuildingsToggle).not.toBeChecked()
 
 				// Should NOT be visible in grid view (entire Building Filters section is hidden)
