@@ -25,7 +25,9 @@ export default class DataSource {
 	 * @returns {void}
 	 */
 	showAllDataSources() {
-		this.store.cesiumViewer.dataSources._dataSources.forEach((dataSource) => {
+		const viewer = this.store.cesiumViewer
+		if (!viewer || viewer.isDestroyed?.()) return
+		viewer.dataSources._dataSources.forEach((dataSource) => {
 			logVisibilityChange(
 				'datasource',
 				dataSource.name,
@@ -46,7 +48,9 @@ export default class DataSource {
 	 * @returns {Promise<void>}
 	 */
 	async changeDataSourceShowByName(name, show) {
-		this.store.cesiumViewer.dataSources._dataSources.forEach((dataSource) => {
+		const viewer = this.store.cesiumViewer
+		if (!viewer || viewer.isDestroyed?.()) return
+		viewer.dataSources._dataSources.forEach((dataSource) => {
 			if (dataSource.name.startsWith(name)) {
 				logVisibilityChange(
 					'datasource',
@@ -68,9 +72,11 @@ export default class DataSource {
 	 * @returns {Promise<void>}
 	 */
 	async removeDataSourcesAndEntities() {
-		await this.store.cesiumViewer.dataSources.removeAll()
+		const viewer = this.store.cesiumViewer
+		if (!viewer || viewer.isDestroyed?.()) return
+		await viewer.dataSources.removeAll()
 		// Remove all entities directly added to the viewer
-		await this.store.cesiumViewer.entities.removeAll()
+		await viewer.entities.removeAll()
 	}
 
 	/**
@@ -80,7 +86,9 @@ export default class DataSource {
 	 * @returns {Cesium.DataSource|undefined} The matching data source, or undefined if not found
 	 */
 	getDataSourceByName(name) {
-		return this.store.cesiumViewer.dataSources._dataSources.find((ds) => ds.name === name)
+		const viewer = this.store.cesiumViewer
+		if (!viewer || viewer.isDestroyed?.()) return undefined
+		return viewer.dataSources._dataSources.find((ds) => ds.name === name)
 	}
 
 	/**
@@ -382,7 +390,9 @@ export default class DataSource {
 	 * @returns {Promise<void>} Promise that resolves when operation completes
 	 */
 	async removeDuplicateDataSources() {
-		const dataSources = this.store.cesiumViewer.dataSources._dataSources
+		const viewer = this.store.cesiumViewer
+		if (!viewer || viewer.isDestroyed?.()) return
+		const dataSources = viewer.dataSources._dataSources
 		const uniqueDataSources = {}
 
 		// Track first occurrence of each uniquely named data source
@@ -399,13 +409,13 @@ export default class DataSource {
 		}
 
 		// Clear all existing data sources
-		this.store.cesiumViewer.dataSources.removeAll()
+		viewer.dataSources.removeAll()
 
 		// Re-add only unique data sources
 		const addPromises = []
 		for (const name in uniqueDataSources) {
 			const dataSource = uniqueDataSources[name].dataSource
-			const addPromise = this.store.cesiumViewer.dataSources.add(dataSource)
+			const addPromise = viewer.dataSources.add(dataSource)
 			addPromises.push(addPromise)
 		}
 
@@ -421,12 +431,14 @@ export default class DataSource {
 	 * @returns {Promise<void>}
 	 */
 	async removeDataSourceByName(name) {
+		const viewer = this.store.cesiumViewer
+		if (!viewer || viewer.isDestroyed?.()) return
 		// Find the data source named 'MajorDistricts' in the viewer
 		const majorDistrictsDataSource = this.getDataSourceByName(name)
 
 		// If the data source is found, remove it
 		if (majorDistrictsDataSource) {
-			this.store.cesiumViewer.dataSources.remove(majorDistrictsDataSource, true)
+			viewer.dataSources.remove(majorDistrictsDataSource, true)
 		}
 	}
 }
