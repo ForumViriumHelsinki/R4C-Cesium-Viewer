@@ -89,6 +89,7 @@ export default class Traveltime {
 			features: [],
 		}
 
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const dataSources = this.viewer.dataSources.getByName('TravelTimeGrid')
 
 		if (dataSources?.length > 0) {
@@ -181,6 +182,7 @@ export default class Traveltime {
 	 * - Eye offset: Elevated above ground for visibility
 	 */
 	async addTravelLabelDataSource(data) {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const Cesium = getCesium()
 
 		try {
@@ -230,6 +232,7 @@ export default class Traveltime {
 	 * - Eye offset: Elevated for visibility
 	 */
 	markCurrentLocation(entity) {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const Cesium = getCesium()
 		const hierarchy = entity.polygon.hierarchy.getValue().positions
 
