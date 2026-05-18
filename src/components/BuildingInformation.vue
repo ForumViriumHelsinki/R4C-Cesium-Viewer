@@ -314,7 +314,9 @@ export default {
 				const endPosition = event.endPosition
 				mousePosition.value = { x: endPosition.x, y: endPosition.y }
 
-				if (buildingStore.buildingFeatures && viewer) {
+				// Guard against the viewer being torn down between the event and
+				// the deferred RAF tick — viewer.scene.pick() throws on a destroyed viewer.
+				if (buildingStore.buildingFeatures && viewer && !viewer.isDestroyed?.()) {
 					const Cesium = getCesium()
 					const pickedEntity = viewer.scene.pick(
 						new Cesium.Cartesian2(endPosition.x, endPosition.y)
@@ -336,7 +338,12 @@ export default {
 		 * @returns {void}
 		 */
 		const registerMouseMoveHandler = () => {
-			if (handlerRegistered.value || !viewer || !viewer.screenSpaceEventHandler) {
+			if (
+				handlerRegistered.value ||
+				!viewer ||
+				viewer.isDestroyed?.() ||
+				!viewer.screenSpaceEventHandler
+			) {
 				logger.debug('[BuildingInformation] ⚠️ Cannot register handler:', {
 					alreadyRegistered: handlerRegistered.value,
 					hasViewer: Boolean(viewer),
@@ -361,6 +368,13 @@ export default {
 		 */
 		const unregisterMouseMoveHandler = () => {
 			if (!handlerRegistered.value || !viewer || !viewer.screenSpaceEventHandler) {
+				return
+			}
+
+			// If the viewer is already destroyed, the input action is gone too —
+			// flip the flag and bail rather than calling into a teardown-stale handler.
+			if (viewer.isDestroyed?.()) {
+				handlerRegistered.value = false
 				return
 			}
 
