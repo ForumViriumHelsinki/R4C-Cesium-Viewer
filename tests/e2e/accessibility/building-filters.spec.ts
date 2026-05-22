@@ -72,15 +72,18 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				await expect(tallBuildingsToggle).toBeVisible()
 
 				// Vuetify v-switch renders the input with opacity:0 covered by the slider thumb,
-				// so Playwright's actionability check times out on CI under tablet viewport
-				// (#762). The shared helper handles scroll + retry-with-force.
+				// so Playwright's actionability check is doomed by design (#762). Pass
+				// `force: true` so every attempt uses force-click — without it, the doomed
+				// first attempt blows 5s of the 50s test budget on CI desktop viewport.
 				await helpers.checkWithRetry(tallBuildingsToggle, {
 					elementName: 'Tall Buildings filter',
+					force: true,
 				})
 				await expect(tallBuildingsToggle).toBeChecked()
 
 				await helpers.uncheckWithRetry(tallBuildingsToggle, {
 					elementName: 'Tall Buildings filter',
+					force: true,
 				})
 				await expect(tallBuildingsToggle).not.toBeChecked()
 
@@ -212,6 +215,11 @@ cesiumDescribe('Building Filters Accessibility', () => {
 		cesiumTest(
 			'should change label to "Only social & healthcare buildings" in Helsinki view',
 			async ({ cesiumPage }) => {
+				// Pin to capital region view — previous test ("should NOT show Public
+				// Buildings in Grid view") navigates to grid and back, but state-leak across
+				// tests means `.switch-container` may not be present without an explicit nav.
+				await helpers.navigateToView('capitalRegionView')
+
 				// Note: This test would require actually triggering Helsinki view
 				// For now, we test the conditional label structure exists
 				// In Helsinki view, the label should change to "Only social & healthcare buildings"
