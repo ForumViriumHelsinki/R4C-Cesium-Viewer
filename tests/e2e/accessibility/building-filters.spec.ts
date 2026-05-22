@@ -84,9 +84,10 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				})
 				await expect(tallBuildingsToggle).not.toBeChecked()
 
-				// Should NOT be visible in grid view (entire Building Filters section is hidden)
-				await helpers.navigateToView('gridView')
-				await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).not.toBeVisible()
+				// Grid-view-hidden assertion lives in "should reset filters when changing views"
+				// (lines ~335-340) — it's covered there for both Public Buildings and Tall
+				// Buildings. Keeping a duplicate `navigateToView('gridView')` here busts the
+				// per-test 50s budget on CI tablet viewport (#762).
 			}
 		)
 
