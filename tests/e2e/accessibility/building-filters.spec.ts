@@ -135,7 +135,10 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					.locator('input[type="checkbox"]')
 
 				// Enable filter in capital region view
-				await tallBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
+				await helpers.checkWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+					force: true,
+				})
 				await expect(tallBuildingsToggle).toBeChecked()
 
 				// Navigate to postal code level (filter should remain visible and checked)
@@ -174,18 +177,17 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				.locator('input[type="checkbox"]')
 			await expect(publicBuildingsToggle).toBeVisible()
 
-			// Scroll into view before interaction
-			await publicBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {})
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
-
-			// Test functionality
-			await publicBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+			// Vuetify v-switch — helper handles scroll-before-interact + retry-with-force (#762).
+			await helpers.checkWithRetry(publicBuildingsToggle, {
+				elementName: 'Public Buildings filter',
+				force: true,
+			})
 			await expect(publicBuildingsToggle).toBeChecked()
 
-			await publicBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {})
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
-
-			await publicBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+			await helpers.uncheckWithRetry(publicBuildingsToggle, {
+				elementName: 'Public Buildings filter',
+				force: true,
+			})
 			await expect(publicBuildingsToggle).not.toBeChecked()
 		})
 
@@ -208,7 +210,10 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await expect(publicBuildingsToggle).toBeVisible()
 
 			// Test functionality in capital region view
-			await publicBuildingsToggle.check()
+			await helpers.checkWithRetry(publicBuildingsToggle, {
+				elementName: 'Public Buildings filter',
+				force: true,
+			})
 			await expect(publicBuildingsToggle).toBeChecked()
 		})
 
@@ -271,9 +276,15 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				if (await helsinkiFilter.isVisible()) {
 					const helsinkiToggle = helsinkiFilter.locator('..').locator('input[type="checkbox"]')
 
-					await helsinkiToggle.check()
+					await helpers.checkWithRetry(helsinkiToggle, {
+						elementName: 'Pre-2018 filter',
+						force: true,
+					})
 					await expect(helsinkiToggle).toBeChecked()
-					await helsinkiToggle.uncheck()
+					await helpers.uncheckWithRetry(helsinkiToggle, {
+						elementName: 'Pre-2018 filter',
+						force: true,
+					})
 					await expect(helsinkiToggle).not.toBeChecked()
 				}
 			}
@@ -292,17 +303,15 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				.locator('..')
 				.locator('input[type="checkbox"]')
 
-			// Scroll first toggle into view
-			await publicBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {})
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
-
-			// Enable both filters
-			await publicBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-
-			await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {})
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
-
-			await tallBuildingsToggle.check({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+			// Enable both filters — Vuetify v-switch needs scroll-before-interact + force (#762).
+			await helpers.checkWithRetry(publicBuildingsToggle, {
+				elementName: 'Public Buildings filter',
+				force: true,
+			})
+			await helpers.checkWithRetry(tallBuildingsToggle, {
+				elementName: 'Tall Buildings filter',
+				force: true,
+			})
 
 			await expect(publicBuildingsToggle).toBeChecked()
 			await expect(tallBuildingsToggle).toBeChecked()
@@ -310,17 +319,15 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			// Wait for filter application
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
-			// Scroll before unchecking
-			await publicBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {})
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
-
 			// Disable both filters
-			await publicBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-
-			await tallBuildingsToggle.scrollIntoViewIfNeeded().catch(() => {})
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
-
-			await tallBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+			await helpers.uncheckWithRetry(publicBuildingsToggle, {
+				elementName: 'Public Buildings filter',
+				force: true,
+			})
+			await helpers.uncheckWithRetry(tallBuildingsToggle, {
+				elementName: 'Tall Buildings filter',
+				force: true,
+			})
 
 			await expect(publicBuildingsToggle).not.toBeChecked()
 			await expect(tallBuildingsToggle).not.toBeChecked()
@@ -337,8 +344,14 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				.locator('..')
 				.locator('input[type="checkbox"]')
 
-			await publicBuildingsToggle.check()
-			await tallBuildingsToggle.check()
+			await helpers.checkWithRetry(publicBuildingsToggle, {
+				elementName: 'Public Buildings filter',
+				force: true,
+			})
+			await helpers.checkWithRetry(tallBuildingsToggle, {
+				elementName: 'Tall Buildings filter',
+				force: true,
+			})
 
 			// Switch to Grid view - filters should be hidden (component behavior: v-if="view !== 'grid'")
 			await helpers.navigateToView('gridView')
@@ -369,8 +382,14 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				.locator('..')
 				.locator('input[type="checkbox"]')
 
-			await publicBuildingsToggle.check()
-			await tallBuildingsToggle.check()
+			await helpers.checkWithRetry(publicBuildingsToggle, {
+				elementName: 'Public Buildings filter',
+				force: true,
+			})
+			await helpers.checkWithRetry(tallBuildingsToggle, {
+				elementName: 'Tall Buildings filter',
+				force: true,
+			})
 
 			// Navigate to postal code level
 			await helpers.drillToLevel('postalCode')
@@ -387,8 +406,14 @@ cesiumDescribe('Building Filters Accessibility', () => {
 
 			// State may be maintained or reset depending on implementation
 			// Test that they can be toggled
-			await publicBuildingsToggle.uncheck()
-			await publicBuildingsToggle.check()
+			await helpers.uncheckWithRetry(publicBuildingsToggle, {
+				elementName: 'Public Buildings filter',
+				force: true,
+			})
+			await helpers.checkWithRetry(publicBuildingsToggle, {
+				elementName: 'Public Buildings filter',
+				force: true,
+			})
 			await expect(publicBuildingsToggle).toBeChecked()
 		})
 
@@ -408,7 +433,10 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				.locator('input[type="checkbox"]')
 
 			// Apply filter
-			await tallBuildingsToggle.check()
+			await helpers.checkWithRetry(tallBuildingsToggle, {
+				elementName: 'Tall Buildings filter',
+				force: true,
+			})
 			// Brief wait for filter to apply
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
@@ -417,7 +445,10 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await expect(tallBuildingsToggle).toBeChecked()
 
 			// Remove filter
-			await tallBuildingsToggle.uncheck()
+			await helpers.uncheckWithRetry(tallBuildingsToggle, {
+				elementName: 'Tall Buildings filter',
+				force: true,
+			})
 			// Brief wait for filter to remove
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
@@ -502,7 +533,10 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				.getByText('Tall Buildings', { exact: true })
 				.locator('..')
 				.locator('input[type="checkbox"]')
-			await tallBuildingsToggle.check()
+			await helpers.checkWithRetry(tallBuildingsToggle, {
+				elementName: 'Tall Buildings filter',
+				force: true,
+			})
 
 			// Wait for loading to complete
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
@@ -669,42 +703,14 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					.locator('..')
 					.locator('input[type="checkbox"]')
 
-				// Scroll into view before interaction with retry
-				for (let scrollAttempt = 1; scrollAttempt <= 3; scrollAttempt++) {
-					try {
-						await tallBuildingsToggle.scrollIntoViewIfNeeded({
-							timeout: TEST_TIMEOUTS.ELEMENT_SCROLL,
-						})
-						const box = await tallBuildingsToggle.boundingBox()
-						if (box && box.y >= 0 && box.x >= 0) {
-							break
-						}
-					} catch {
-						if (scrollAttempt === 3) {
-							console.warn('Scroll failed, continuing anyway')
-						}
-						await cesiumPage.waitForTimeout(200 * scrollAttempt)
-					}
-				}
-
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
-
 				// Initial state
 				const _initialChecked = await tallBuildingsToggle.isChecked()
 
-				// Toggle on with retry
-				for (let attempt = 1; attempt <= 3; attempt++) {
-					try {
-						await tallBuildingsToggle.check({
-							timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
-							force: attempt > 1,
-						})
-						break
-					} catch {
-						if (attempt === 3) throw new Error('Failed to check toggle')
-						await cesiumPage.waitForTimeout(300 * attempt)
-					}
-				}
+				// Helper wraps scroll-before-interact + retry-with-force (#762).
+				await helpers.checkWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+					force: true,
+				})
 
 				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
 
@@ -754,7 +760,10 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					expect(afterToggle).toBe(true)
 
 					// Additional check: verify the checkbox can be toggled off
-					await tallBuildingsToggle.uncheck({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+					await helpers.uncheckWithRetry(tallBuildingsToggle, {
+						elementName: 'Tall Buildings filter',
+						force: true,
+					})
 					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
 					const afterUncheck = await tallBuildingsToggle.isChecked()
 					expect(afterUncheck).toBe(false)
@@ -789,10 +798,16 @@ cesiumDescribe('Building Filters Accessibility', () => {
 						.locator('input[type="checkbox"]')
 
 					// Toggle should work efficiently
-					await tallBuildingsToggle.check()
+					await helpers.checkWithRetry(tallBuildingsToggle, {
+						elementName: 'Tall Buildings filter',
+						force: true,
+					})
 					await expect(tallBuildingsToggle).toBeChecked()
 
-					await tallBuildingsToggle.uncheck()
+					await helpers.uncheckWithRetry(tallBuildingsToggle, {
+						elementName: 'Tall Buildings filter',
+						force: true,
+					})
 					await expect(tallBuildingsToggle).not.toBeChecked()
 				}
 			}
@@ -815,21 +830,30 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				.getByText('Tall Buildings', { exact: true })
 				.locator('..')
 				.locator('input[type="checkbox"]')
-			await tallBuildingsToggle.check()
+			await helpers.checkWithRetry(tallBuildingsToggle, {
+				elementName: 'Tall Buildings filter',
+				force: true,
+			})
 
-			// Enable layer toggle
+			// Enable layer toggle — NDVI is also a Vuetify v-switch.
 			const ndviToggle = cesiumPage
 				.getByText('NDVI')
 				.locator('..')
 				.locator('input[type="checkbox"]')
-			await ndviToggle.check()
+			await helpers.checkWithRetry(ndviToggle, {
+				elementName: 'NDVI layer',
+				force: true,
+			})
 
 			// Both should be enabled simultaneously
 			await expect(tallBuildingsToggle).toBeChecked()
 			await expect(ndviToggle).toBeChecked()
 
 			// Both should remain functional
-			await tallBuildingsToggle.uncheck()
+			await helpers.uncheckWithRetry(tallBuildingsToggle, {
+				elementName: 'Tall Buildings filter',
+				force: true,
+			})
 			await expect(tallBuildingsToggle).not.toBeChecked()
 			await expect(ndviToggle).toBeChecked() // Should not affect layer toggle
 		})
@@ -847,8 +871,14 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					.locator('..')
 					.locator('input[type="checkbox"]')
 
-				await publicBuildingsToggle.check()
-				await tallBuildingsToggle.check()
+				await helpers.checkWithRetry(publicBuildingsToggle, {
+					elementName: 'Public Buildings filter',
+					force: true,
+				})
+				await helpers.checkWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+					force: true,
+				})
 
 				// Switch to grid view - filters should be hidden
 				await helpers.navigateToView('gridView')
@@ -864,7 +894,10 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				await expect(tallBuildingsToggle).toBeVisible()
 
 				// Test toggle functionality after view change (filters are reset by watch)
-				await publicBuildingsToggle.check()
+				await helpers.checkWithRetry(publicBuildingsToggle, {
+					elementName: 'Public Buildings filter',
+					force: true,
+				})
 				await expect(publicBuildingsToggle).toBeChecked()
 			}
 		)
