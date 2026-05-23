@@ -715,21 +715,27 @@ export class AccessibilityTestHelpers {
 	 * @param options - Configuration options
 	 * @param options.maxRetries - Maximum number of retry attempts (default: 3)
 	 * @param options.elementName - Element name for logging (default: 'element')
+	 * @param options.force - Pass `force: true` on every attempt instead of only on retries.
+	 *   Use for Vuetify v-switch and other elements where the input is intentionally hidden
+	 *   under an overlay (opacity:0 under .v-switch__thumb) — the actionability check is
+	 *   doomed by design, and a doomed first attempt eats 5s of the 50s test budget on CI
+	 *   desktop viewport. Default: false (preserves "verify-then-force" behavior for normal
+	 *   checkboxes).
 	 */
 	async checkWithRetry(
 		locator: Locator,
-		options: { maxRetries?: number; elementName?: string } = {}
+		options: { maxRetries?: number; elementName?: string; force?: boolean } = {}
 	): Promise<void> {
 		await this.scrollIntoViewportWithRetry(locator, options)
 
-		const { maxRetries = 3, elementName = 'element' } = options
+		const { maxRetries = 3, elementName = 'element', force: forceAll = false } = options
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				await locator.check({
 					timeout: TEST_TIMEOUTS.INTERACTION,
-					// Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
-					// First attempt uses normal checks to ensure element is truly interactive
-					force: attempt > 1,
+					// Force click on retry to handle WebGL canvas and Vuetify overlay timing issues.
+					// `forceAll` skips the doomed first attempt for elements known to require force.
+					force: forceAll || attempt > 1,
 				})
 				return
 			} catch {
@@ -760,21 +766,22 @@ export class AccessibilityTestHelpers {
 	 * @param options - Configuration options
 	 * @param options.maxRetries - Maximum number of retry attempts (default: 3)
 	 * @param options.elementName - Element name for logging (default: 'element')
+	 * @param options.force - See `checkWithRetry`'s `force` option — same behavior for uncheck.
 	 */
 	async uncheckWithRetry(
 		locator: Locator,
-		options: { maxRetries?: number; elementName?: string } = {}
+		options: { maxRetries?: number; elementName?: string; force?: boolean } = {}
 	): Promise<void> {
 		await this.scrollIntoViewportWithRetry(locator, options)
 
-		const { maxRetries = 3, elementName = 'element' } = options
+		const { maxRetries = 3, elementName = 'element', force: forceAll = false } = options
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				await locator.uncheck({
 					timeout: TEST_TIMEOUTS.INTERACTION,
-					// Force click on retry to handle WebGL canvas and Vuetify overlay timing issues
-					// First attempt uses normal checks to ensure element is truly interactive
-					force: attempt > 1,
+					// Force click on retry to handle WebGL canvas and Vuetify overlay timing issues.
+					// `forceAll` skips the doomed first attempt for elements known to require force.
+					force: forceAll || attempt > 1,
 				})
 				return
 			} catch {
@@ -1449,7 +1456,6 @@ export class AccessibilityTestHelpers {
 			level,
 			{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
 		)
-
 	}
 
 	/**
