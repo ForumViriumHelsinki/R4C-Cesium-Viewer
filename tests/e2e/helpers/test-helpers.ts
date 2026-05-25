@@ -915,13 +915,16 @@ export class AccessibilityTestHelpers {
 					// Strategy 2: Check aria-pressed attribute
 					if (button?.getAttribute('aria-pressed') === 'true') return true
 
-					// Strategy 3: Check Pinia store state (most reliable)
-					const pinia = (window as any).__PINIA__
-					if (pinia?.state?.value?.global) {
-						const currentView = pinia.state.value.global.currentView
-						// Map viewMode to store values
-						if (targetMode === 'capitalRegionView' && currentView === 'capitalRegion') return true
-						if (targetMode === 'gridView' && currentView === 'grid') return true
+					// Strategy 3: Check globalStore state directly (most reliable)
+					// The app exposes the live Pinia globalStore as window.globalStore
+					// (see src/main.js). The store field is `view`, not `currentView`.
+					const store = (window as any).globalStore
+					if (store) {
+						const view = store.view
+						// Map viewMode to store values (see src/components/ViewModeCompact.vue:
+						// setView('capitalRegion') / setView('grid'))
+						if (targetMode === 'capitalRegionView' && view === 'capitalRegion') return true
+						if (targetMode === 'gridView' && view === 'grid') return true
 					}
 
 					return false
