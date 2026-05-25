@@ -51,12 +51,23 @@ export default class Urbanheat {
 	 * This method can be called in parallel with building data fetching.
 	 *
 	 * @param {string} postalCode - Postal code to fetch heat data for
-	 * @returns {Promise<Object|null>} Heat data GeoJSON or null if unavailable
+	 * @param {Object} [options={}] - Optional fetch options
+	 * @param {AbortSignal} [options.signal] - AbortSignal to cancel the in-flight request.
+	 *   When the signal fires, the fetch is aborted and null is returned silently
+	 *   (same treatment as the stale-token path in BuildingLoader).
+	 * @returns {Promise<Object|null>} Heat data GeoJSON or null if unavailable or aborted
 	 */
-	async getHeatData(postalCode) {
+	async getHeatData(postalCode, { signal } = {}) {
+		// If the caller already aborted before we even start, return null immediately.
+		if (signal?.aborted) {
+			logger.debug('[UrbanHeat] Heat data fetch aborted before start for:', postalCode)
+			return null
+		}
+
 		try {
+			const layerId = `heat_${postalCode}`
 			const heatConfig = {
-				layerId: `heat_${postalCode}`,
+				layerId,
 				url: this.urlStore.urbanHeatHelsinki(postalCode),
 				type: 'geojson',
 				options: {
@@ -68,11 +79,40 @@ export default class Urbanheat {
 				},
 			}
 
+			// If a signal is provided, abort the unifiedLoader layer when it fires.
+			// unifiedLoader owns its own AbortController per layerId; calling cancelLoading()
+			// aborts that controller immediately so the network request is freed.
+			let abortListener = null
+			if (signal) {
+				abortListener = () => {
+					unifiedLoader.cancelLoading(layerId)
+				}
+				signal.addEventListener('abort', abortListener, { once: true })
+			}
+
 			logger.debug('[UrbanHeat] 🌡️ Fetching heat data for postal code:', postalCode)
-			const heatData = await unifiedLoader.loadLayer(heatConfig)
-			logger.debug('[UrbanHeat] ✅ Heat data loaded:', heatData?.features?.length || 0, 'features')
-			return heatData
+			try {
+				const heatData = await unifiedLoader.loadLayer(heatConfig)
+				logger.debug(
+					'[UrbanHeat] ✅ Heat data loaded:',
+					heatData?.features?.length || 0,
+					'features'
+				)
+				return heatData
+			} finally {
+				// Always clean up the abort listener to avoid leaking it if the signal
+				// outlives this fetch (e.g. the load completes before cancellation fires).
+				if (signal && abortListener) {
+					signal.removeEventListener('abort', abortListener)
+				}
+			}
 		} catch (error) {
+			// AbortError means the caller cancelled the load — treat as a silent no-op
+			// (same as the stale-token path in BuildingLoader: return null, don't log as error).
+			if (error?.name === 'AbortError' || signal?.aborted) {
+				logger.debug('[UrbanHeat] Heat data fetch aborted for:', postalCode)
+				return null
+			}
 			logger.warn('[UrbanHeat] ⚠️ Failed to fetch heat data for', postalCode, ':', error.message)
 			return null
 		}

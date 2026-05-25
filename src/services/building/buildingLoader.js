@@ -37,6 +37,10 @@ export class BuildingLoader {
 		this.unifiedLoader = unifiedLoader
 		/** @type {string|null} Currently loading layer ID for cancellation */
 		this._currentLoadingLayerId = null
+		/** @type {string|null} Currently loading heat layer ID for cancellation */
+		this._currentHeatLayerId = null
+		/** @type {AbortController|null} AbortController for the in-flight heat-data fetch */
+		this._heatAbortController = null
 		/** @type {symbol|null} Unique per-invocation token used to detect stale loads */
 		this._currentLoadingToken = null
 	}
@@ -53,7 +57,8 @@ export class BuildingLoader {
 
 	/**
 	 * Cancels the current building load operation.
-	 * Aborts in-flight network requests via unifiedLoader's AbortController.
+	 * Aborts in-flight network requests via unifiedLoader's AbortController for the
+	 * building layer, and via the per-tile heat AbortController for the heat-data fetch.
 	 * Safe to call even if no load is in progress.
 	 *
 	 * @returns {void}
@@ -64,6 +69,15 @@ export class BuildingLoader {
 			this.unifiedLoader.cancelLoading(this._currentLoadingLayerId)
 			this._currentLoadingLayerId = null
 		}
+		if (this._heatAbortController) {
+			logger.debug(
+				'[BuildingLoader] Aborting in-flight heat-data fetch for:',
+				this._currentHeatLayerId
+			)
+			this._heatAbortController.abort()
+			this._heatAbortController = null
+		}
+		this._currentHeatLayerId = null
 		this._currentLoadingToken = null
 	}
 
@@ -108,6 +122,15 @@ export class BuildingLoader {
 		this._currentLoadingLayerId = layerId
 		this._currentLoadingToken = loadToken
 
+		// Per-tile AbortController for the heat-data fetch.
+		// cancelCurrentLoad() calls abort() on this controller so the in-flight
+		// network request is cancelled immediately when the user navigates away,
+		// rather than waiting for the response to arrive and then discarding it.
+		const heatLayerId = `heat_${targetPostalCode}`
+		const heatAbortController = new AbortController()
+		this._currentHeatLayerId = heatLayerId
+		this._heatAbortController = heatAbortController
+
 		try {
 			// Configure building data fetch
 			const buildingConfig = {
@@ -128,7 +151,7 @@ export class BuildingLoader {
 			logger.debug('[HelsinkiBuilding] Initiating parallel fetch for buildings and heat data')
 			const [buildingResult, heatResult] = await Promise.allSettled([
 				this.unifiedLoader.loadLayer(buildingConfig),
-				this.urbanheatService.getHeatData(targetPostalCode),
+				this.urbanheatService.getHeatData(targetPostalCode, { signal: heatAbortController.signal }),
 			])
 
 			if (this._isStale(loadToken)) return []
@@ -192,15 +215,24 @@ export class BuildingLoader {
 				})
 			}
 
-			// Clear tracking on successful load
-			this._currentLoadingLayerId = null
-			this._currentLoadingToken = null
+			// Clear tracking on successful load — guard against late arrivals
+			// (a previous load that resolved after a newer one started would
+			// otherwise clear the newer load's AbortController and IDs, breaking
+			// subsequent cancellation)
+			if (this._currentLoadingToken === loadToken) {
+				this._currentLoadingLayerId = null
+				this._currentHeatLayerId = null
+				this._heatAbortController = null
+				this._currentLoadingToken = null
+			}
 
 			return entities
 		} catch (error) {
 			// Clear tracking on error (but not on cancellation - already cleared)
 			if (this._currentLoadingToken === loadToken) {
 				this._currentLoadingLayerId = null
+				this._currentHeatLayerId = null
+				this._heatAbortController = null
 				this._currentLoadingToken = null
 			}
 			logger.error('[HelsinkiBuilding] Error loading buildings:', error)
