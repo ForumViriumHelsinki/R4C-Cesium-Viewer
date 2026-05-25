@@ -330,7 +330,7 @@ export default class ViewportBuildingLoader {
 	 * @private
 	 */
 	updateCameraVelocity() {
-		if (!this.viewer) return
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 
 		const Cesium = getCesium()
 		const cameraCartographic = this.viewer.camera.positionCartographic
@@ -361,8 +361,8 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async updateViewport() {
-		if (!this.viewer) {
-			logger.warn('[ViewportBuildingLoader] Viewer not initialized')
+		if (!this.viewer || this.viewer.isDestroyed?.()) {
+			logger.warn('[ViewportBuildingLoader] Viewer not initialized or destroyed')
 			return
 		}
 
@@ -425,6 +425,7 @@ export default class ViewportBuildingLoader {
 	 * @returns {Object|null} {west, south, east, north} in degrees, or null if viewport cannot be determined
 	 */
 	getViewportBounds() {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return null
 		try {
 			const Cesium = getCesium()
 			// Lazily initialize scratch rectangle
@@ -1038,10 +1039,15 @@ export default class ViewportBuildingLoader {
 					)
 				}
 
-				// Request render
-				if (this.viewer) {
-					this.viewer.scene.requestRender()
+				// Bail out of the animation loop if the viewer was destroyed
+				// while the fade-in chain was scheduled.
+				if (!this.viewer || this.viewer.isDestroyed?.()) {
+					resolve()
+					return
 				}
+
+				// Request render
+				this.viewer.scene.requestRender()
 
 				if (step < FADE_CONFIG.STEPS) {
 					// Schedule next frame with stepDuration delay

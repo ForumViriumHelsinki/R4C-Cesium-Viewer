@@ -153,7 +153,7 @@ export class BuildingFilter {
 		}
 
 		// Request render after batch updates
-		if (this.viewer) {
+		if (this.viewer && !this.viewer.isDestroyed?.()) {
 			this.viewer.scene.requestRender()
 		}
 
@@ -245,7 +245,7 @@ export class BuildingFilter {
 		}
 
 		// Request render after batch updates if there were changes
-		if (hasChanges && this.viewer) {
+		if (hasChanges && this.viewer && !this.viewer.isDestroyed?.()) {
 			this.viewer.scene.requestRender()
 		}
 

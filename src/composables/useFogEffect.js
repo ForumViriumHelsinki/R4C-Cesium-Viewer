@@ -115,6 +115,7 @@ export function useFogEffect(viewer) {
 	 * Called on camera change events with debouncing.
 	 */
 	const updateOverlayFromAltitude = () => {
+		if (!viewer || viewer.isDestroyed?.()) return
 		if (!viewer?.camera?.positionCartographic || !overlayElement) return
 
 		const altitude = viewer.camera.positionCartographic.height
@@ -169,8 +170,10 @@ export function useFogEffect(viewer) {
 			updateDebounceTimeout = null
 		}
 
-		if (viewer?.camera && cameraChangedHandler) {
+		if (viewer?.camera && !viewer.isDestroyed?.() && cameraChangedHandler) {
 			viewer.camera.changed.removeEventListener(cameraChangedHandler)
+			cameraChangedHandler = null
+		} else {
 			cameraChangedHandler = null
 		}
 

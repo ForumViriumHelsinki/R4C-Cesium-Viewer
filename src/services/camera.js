@@ -125,7 +125,7 @@ export default class Camera {
 	 * Stores position and orientation for use if flight is cancelled.
 	 */
 	captureCurrentState() {
-		if (!this.viewer) {
+		if (!this.viewer || this.viewer.isDestroyed?.()) {
 			logger.warn('[Camera] Cannot capture camera state: Viewer not initialized')
 			return
 		}
@@ -151,7 +151,7 @@ export default class Camera {
 			return
 		}
 
-		if (!this.viewer) {
+		if (!this.viewer || this.viewer.isDestroyed?.()) {
 			logger.warn('[Camera] Cannot restore camera state: Viewer not initialized')
 			return
 		}
@@ -217,6 +217,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	init() {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const Cesium = getCesium()
 		this.viewer.camera.setView({
 			destination: Cesium.Cartesian3.fromDegrees(24.945, 60.17, 2800),
@@ -237,7 +238,7 @@ export default class Camera {
 	 */
 	switchTo2DView() {
 		// Guard: Check viewer is initialized
-		if (!this.viewer || !this.viewer.dataSources) {
+		if (!this.viewer || this.viewer.isDestroyed?.() || !this.viewer.dataSources) {
 			logger.warn('[Camera] Cannot switch to 2D view: Viewer not initialized')
 			return
 		}
@@ -284,7 +285,7 @@ export default class Camera {
 	 */
 	switchTo3DView() {
 		// Guard: Check viewer is initialized
-		if (!this.viewer || !this.viewer.dataSources) {
+		if (!this.viewer || this.viewer.isDestroyed?.() || !this.viewer.dataSources) {
 			logger.warn('[Camera] Cannot switch to 3D view: Viewer not initialized')
 			return
 		}
@@ -343,6 +344,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	switchTo3DGrid() {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		if (this.store.level === 'start') {
 			this.flyCamera3D(24.991745, 60.045, 12000)
 		} else {
@@ -385,6 +387,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	flyCamera3D(lat, long, z) {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const Cesium = getCesium()
 		this.viewer.camera.flyTo({
 			destination: Cesium.Cartesian3.fromDegrees(lat, long, z),
@@ -407,9 +410,9 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	setCameraView(longitude, latitude) {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const Cesium = getCesium()
-		const store = useGlobalStore()
-		store.cesiumViewer.camera.setView({
+		this.viewer.camera.setView({
 			destination: Cesium.Cartesian3.fromDegrees(longitude, latitude - 0.0065, 500.0),
 			orientation: {
 				heading: 0.0,
@@ -427,6 +430,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	zoom(multiplier) {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		if (multiplier > 1) {
 			// Zoom in: move camera closer to ground
 			this.viewer.camera.zoomIn(
@@ -447,6 +451,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	setHeading(headingInDegrees, reduceMotion = false) {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const Cesium = getCesium()
 		const orientation = {
 			heading: Cesium.Math.toRadians(headingInDegrees),
@@ -474,6 +479,7 @@ export default class Camera {
 	 * Resets the camera orientation to face North with a default pitch.
 	 */
 	resetNorth() {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const Cesium = getCesium()
 		this.viewer.camera.flyTo({
 			destination: this.viewer.camera.position,
@@ -496,7 +502,7 @@ export default class Camera {
 	 */
 	focusOnPostalCode(postalCode) {
 		// Guard: Check viewer is initialized
-		if (!this.viewer) {
+		if (!this.viewer || this.viewer.isDestroyed?.()) {
 			logger.warn('[Camera] Cannot focus on postal code: Viewer not initialized')
 			return
 		}
@@ -548,6 +554,7 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	rotate180Degrees() {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const Cesium = getCesium()
 		const camera = this.viewer.camera
 		const scene = this.viewer.scene
@@ -614,6 +621,7 @@ export default class Camera {
 	 * @returns {Object|null} { west, south, east, north } in degrees, or null if no ellipsoid intersection
 	 */
 	getViewportRectangle() {
+		if (!this.viewer || this.viewer.isDestroyed?.()) return null
 		const Cesium = getCesium()
 		const camera = this.viewer.camera
 		const canvas = this.viewer.scene.canvas
