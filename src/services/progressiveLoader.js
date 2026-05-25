@@ -60,6 +60,7 @@
  *
  * @class ProgressiveLoader
  */
+import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
 
 class ProgressiveLoader {
@@ -351,13 +352,7 @@ class ProgressiveLoader {
 			}
 
 			// Yield control to prevent UI blocking
-			await new Promise((resolve) => {
-				if (window.requestIdleCallback) {
-					requestIdleCallback(resolve, { timeout: 50 })
-				} else {
-					setTimeout(resolve, 0)
-				}
-			})
+			await new Promise((resolve) => requestIdle(resolve, { timeout: 50 }))
 		}
 
 		logger.debug(`✅ Progressive processing complete: ${processedFeatures} features`)

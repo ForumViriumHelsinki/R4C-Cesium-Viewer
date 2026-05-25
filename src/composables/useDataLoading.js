@@ -9,6 +9,7 @@ import cacheWarmer from '../services/cacheWarmer.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useHeatExposureStore } from '../stores/heatExposureStore.js'
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore.js'
+import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
 
 /**
@@ -65,31 +66,21 @@ export function useDataLoading(shouldAutoLoad = true) {
 
 	/**
 	 * Starts background cache warming for critical data.
-	 * Uses requestIdleCallback to run during browser idle time.
-	 * Falls back to setTimeout for browsers without requestIdleCallback.
+	 * Uses requestIdle to run during browser idle time (with WebKit/iOS-safe fallback).
 	 *
 	 * @returns {void}
 	 */
 	const startCacheWarming = () => {
 		// Start cache warming in background (non-blocking)
-		// Uses requestIdleCallback to run during browser idle time
-		if (typeof requestIdleCallback !== 'undefined') {
-			requestIdleCallback(
-				() => {
-					cacheWarmer.warmCriticalData().catch((error) => {
-						logger.error('[useDataLoading] Failed to warm critical cache data:', error)
-					})
-				},
-				{ timeout: 2000 }
-			) // 2 second timeout
-		} else {
-			// Fallback for browsers without requestIdleCallback
-			setTimeout(() => {
+		// Uses requestIdle to run during browser idle time
+		requestIdle(
+			() => {
 				cacheWarmer.warmCriticalData().catch((error) => {
 					logger.error('[useDataLoading] Failed to warm critical cache data:', error)
 				})
-			}, 1000)
-		}
+			},
+			{ timeout: 2000 }
+		) // 2 second timeout
 
 		logger.debug('[useDataLoading] 🔥 Cache warming started')
 	}

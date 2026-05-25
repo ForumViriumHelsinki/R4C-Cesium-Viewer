@@ -38,6 +38,7 @@ import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
 import { encodeURLParam, validatePostalCode } from '../utils/validators.js'
 import unifiedLoader from './unifiedLoader.js'
@@ -281,30 +282,19 @@ class CacheWarmer {
 		logger.debug('[CacheWarmer] Warming', postalCodesToWarm.length, 'nearby postal codes')
 
 		// Warm in background with low priority
-		// Use requestIdleCallback to run during browser idle time
+		// Use requestIdle to run during browser idle time (with WebKit/iOS-safe fallback)
 		postalCodesToWarm.forEach((postalCode) => {
-			if (typeof requestIdleCallback !== 'undefined') {
-				requestIdleCallback(
-					async () => {
-						try {
-							await this.warmBuildingsForPostalCode(postalCode)
-						} catch (_error) {
-							// Silent fail for predictive warming
-							console.debug(`[CacheWarmer] Predictive warming failed for ${postalCode}`)
-						}
-					},
-					{ timeout: 5000 }
-				) // 5 second timeout
-			} else {
-				// Fallback for browsers without requestIdleCallback
-				setTimeout(async () => {
+			requestIdle(
+				async () => {
 					try {
 						await this.warmBuildingsForPostalCode(postalCode)
 					} catch (_error) {
+						// Silent fail for predictive warming
 						console.debug(`[CacheWarmer] Predictive warming failed for ${postalCode}`)
 					}
-				}, 100)
-			}
+				},
+				{ timeout: 5000 }
+			) // 5 second timeout
 		})
 	}
 

@@ -1,5 +1,6 @@
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
+import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
 import { getCesium } from './cesiumProvider.js'
 
@@ -45,7 +46,7 @@ export default class Graphics {
 
 		// Defer hardware detection until actually needed
 		// Apply settings will trigger lazy detection
-		requestIdleCallback(
+		requestIdle(
 			() => {
 				if (!this.viewer || this.viewer.isDestroyed?.()) return
 				this.detectSupport()

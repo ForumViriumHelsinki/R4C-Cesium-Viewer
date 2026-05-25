@@ -42,6 +42,7 @@ import {
 	DEFAULT_BUILDING_HEIGHT,
 	FLOOR_HEIGHT,
 } from '../utils/entityStyling.js'
+import { cancelIdle, requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
 import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
@@ -866,7 +867,7 @@ export default class ViewportBuildingLoader {
 			}
 
 			if (i + batchSize < entities.length) {
-				await new Promise((resolve) => requestIdleCallback(resolve))
+				await new Promise((resolve) => requestIdle(resolve))
 			}
 		}
 	}
@@ -1413,7 +1414,7 @@ export default class ViewportBuildingLoader {
 		// Don't start if queue is empty
 		if (this.prefetchQueue.length === 0) return
 
-		this.prefetchHandle = requestIdleCallback(
+		this.prefetchHandle = requestIdle(
 			(deadline) => this.processPrefetchQueue(deadline),
 			{ timeout: 5000 } // Process within 5 seconds even if not idle
 		)
@@ -1448,7 +1449,7 @@ export default class ViewportBuildingLoader {
 
 		// Continue if more tiles and not cancelled
 		if (this.prefetchQueue.length > 0 && !this.prefetchCancelled) {
-			this.prefetchHandle = requestIdleCallback((deadline) => this.processPrefetchQueue(deadline), {
+			this.prefetchHandle = requestIdle((deadline) => this.processPrefetchQueue(deadline), {
 				timeout: 5000,
 			})
 		} else {
@@ -1516,7 +1517,7 @@ export default class ViewportBuildingLoader {
 		this.prefetchQueue = []
 
 		if (this.prefetchHandle) {
-			cancelIdleCallback(this.prefetchHandle)
+			cancelIdle(this.prefetchHandle)
 			this.prefetchHandle = null
 		}
 
