@@ -219,7 +219,18 @@ cesiumDescribe('Building Filters Accessibility', () => {
 
 		cesiumTest(
 			'should change label to "Only social & healthcare buildings" in Helsinki view',
-			async ({ cesiumPage }) => {
+			async ({ cesiumPage }, testInfo) => {
+				// .switch-container is unmounted on mobile viewport (375x667), not just CSS-hidden.
+				// Use toBeAttached() checks which fail on mobile. Skip on mobile; desktop/tablet
+				// viewports have the element and can assert. See #143, PR #791 follow-up.
+				if (testInfo.project.name === 'accessibility-mobile') {
+					testInfo.skip(
+						true,
+						'.switch-container is unmounted on mobile viewport; covered by desktop/tablet matrix'
+					)
+					return
+				}
+
 				// Pin to capital region view — previous test ("should NOT show Public
 				// Buildings in Grid view") navigates to grid and back, but state-leak across
 				// tests means `.switch-container` may not be present without an explicit nav.
@@ -558,28 +569,42 @@ cesiumDescribe('Building Filters Accessibility', () => {
 	})
 
 	cesiumTest.describe('Building Filter Accessibility', () => {
-		cesiumTest('should have consistent styling for all filter toggles', async ({ cesiumPage }) => {
-			// Check that all visible filters have consistent structure
-			const filterToggles = cesiumPage
-				.locator('.switch-container')
-				.filter({ has: cesiumPage.locator('input[type="checkbox"]') })
-			const count = await filterToggles.count()
+		cesiumTest(
+			'should have consistent styling for all filter toggles',
+			async ({ cesiumPage }, testInfo) => {
+				// .switch-container is unmounted on mobile viewport (375x667), so count will be 0.
+				// Skip on mobile; desktop/tablet viewports have the elements and can assert.
+				// See #143, PR #791 follow-up.
+				if (testInfo.project.name === 'accessibility-mobile') {
+					testInfo.skip(
+						true,
+						'.switch-container is unmounted on mobile viewport; covered by desktop/tablet matrix'
+					)
+					return
+				}
 
-			expect(count).toBeGreaterThanOrEqual(2) // Should have at least 2 filter toggles
+				// Check that all visible filters have consistent structure
+				const filterToggles = cesiumPage
+					.locator('.switch-container')
+					.filter({ has: cesiumPage.locator('input[type="checkbox"]') })
+				const count = await filterToggles.count()
 
-			for (let i = 0; i < count; i++) {
-				const toggle = filterToggles.nth(i)
+				expect(count).toBeGreaterThanOrEqual(2) // Should have at least 2 filter toggles
 
-				// Each should have a switch and label
-				const switchElement = toggle.locator('.switch')
-				const label = toggle.locator('.label')
+				for (let i = 0; i < count; i++) {
+					const toggle = filterToggles.nth(i)
 
-				if (await switchElement.isVisible()) {
-					await expect(switchElement).toBeVisible()
-					await expect(label).toBeVisible()
+					// Each should have a switch and label
+					const switchElement = toggle.locator('.switch')
+					const label = toggle.locator('.label')
+
+					if (await switchElement.isVisible()) {
+						await expect(switchElement).toBeVisible()
+						await expect(label).toBeVisible()
+					}
 				}
 			}
-		})
+		)
 
 		cesiumTest('should support keyboard navigation for filter toggles', async ({ cesiumPage }) => {
 			// Tab through the interface to reach filter controls with safety measures
