@@ -94,6 +94,8 @@ export default {
 			// Get entities from cesiumEntityManager instead of propsStore
 			const entities = cesiumEntityManager.getAllBuildingEntities()
 
+			if (!Array.isArray(entities)) return
+
 			entities.forEach((entity) => {
 				let addData = true
 
