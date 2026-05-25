@@ -1,5 +1,6 @@
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
 import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
@@ -89,13 +90,7 @@ export default class Othernature {
 
 				// Yield control after each batch to prevent UI blocking
 				if (i + batchSize < entities.length) {
-					await new Promise((resolve) => {
-						if (window.requestIdleCallback) {
-							requestIdleCallback(resolve)
-						} else {
-							setTimeout(resolve, 0)
-						}
-					})
+					await new Promise((resolve) => requestIdle(resolve))
 				}
 			}
 

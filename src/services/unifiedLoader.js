@@ -36,6 +36,7 @@
  */
 
 import { useLoadingStore } from '../stores/loadingStore.js'
+import { requestIdle } from '../utils/idle.js'
 import cacheService from './cacheService.js'
 import progressiveLoader from './progressiveLoader.js'
 
@@ -424,13 +425,7 @@ class UnifiedLoader {
 
 			// Yield control to prevent UI blocking
 			if (i + batchSize < features.length) {
-				await new Promise((resolve) => {
-					if (window.requestIdleCallback) {
-						requestIdleCallback(resolve)
-					} else {
-						setTimeout(resolve, 0)
-					}
-				})
+				await new Promise((resolve) => requestIdle(resolve))
 			}
 		}
 	}

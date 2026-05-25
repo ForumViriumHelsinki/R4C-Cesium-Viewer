@@ -2,6 +2,7 @@ import { useBuildingStore } from '../stores/buildingStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
 import Datasource from './datasource.js'
@@ -326,9 +327,7 @@ const setAttributesFromApiToBuilding = async (properties, features) => {
 
 		// Yield control to prevent UI blocking after each batch
 		if (i + batchSize < features.length) {
-			await new Promise((resolve) =>
-				requestIdleCallback ? requestIdleCallback(resolve) : setTimeout(resolve, 0)
-			)
+			await new Promise((resolve) => requestIdle(resolve))
 		}
 	}
 }

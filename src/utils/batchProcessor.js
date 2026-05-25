@@ -21,6 +21,8 @@
  * @module utils/batchProcessor
  */
 
+import { requestIdle } from './idle.js'
+
 // Frame budget constants
 const FRAME_BUDGET_MS = 16.67 // 60fps target
 const MIN_BATCH_SIZE = 5
@@ -40,12 +42,9 @@ async function yieldToMain() {
 		if ('scheduler' in globalThis && 'yield' in globalThis.scheduler) {
 			// Modern browsers with Scheduler API (Chrome 115+)
 			globalThis.scheduler.yield().then(resolve)
-		} else if (typeof requestIdleCallback === 'function') {
-			// Fallback to requestIdleCallback
-			requestIdleCallback(resolve, { timeout: 50 })
 		} else {
-			// Final fallback for older browsers
-			setTimeout(resolve, 0)
+			// Fallback to requestIdleCallback (with WebKit/iOS-safe setTimeout shim)
+			requestIdle(resolve, { timeout: 50 })
 		}
 	})
 }

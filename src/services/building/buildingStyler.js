@@ -13,6 +13,7 @@ import { usePropsStore } from '../../stores/propsStore.js'
 import { useToggleStore } from '../../stores/toggleStore.js'
 import { processBatchAdaptive } from '../../utils/batchProcessor.js'
 import { calculateBuildingHeight } from '../../utils/entityStyling.js'
+import { requestIdle } from '../../utils/idle.js'
 import { getCesium } from '../cesiumProvider.js'
 import { logVisibilityChange } from '../visibilityLogger.js'
 
@@ -265,11 +266,7 @@ export class BuildingStyler {
 		// Process heat timeseries asynchronously to avoid blocking UI
 		await new Promise((resolve) => {
 			filterHeatTimeseries(buildingProps)
-			if (requestIdleCallback) {
-				requestIdleCallback(resolve)
-			} else {
-				setTimeout(resolve, 0)
-			}
+			requestIdle(resolve)
 		})
 
 		// Set tree area if tree layer is visible and data exists

@@ -5,6 +5,7 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
+import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
 import Building from './building.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
@@ -486,9 +487,7 @@ export default class HSYBuilding {
 				}
 
 				// Yield after each feature for responsive UI
-				await new Promise((resolve) =>
-					requestIdleCallback ? requestIdleCallback(resolve) : setTimeout(resolve, 0)
-				)
+				await new Promise((resolve) => requestIdle(resolve))
 			}
 
 			// Show progress for large datasets

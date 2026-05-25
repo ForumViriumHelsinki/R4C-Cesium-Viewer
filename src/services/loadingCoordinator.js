@@ -38,6 +38,7 @@
 
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useLoadingStore } from '../stores/loadingStore.js'
+import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
 import unifiedLoader from './unifiedLoader.js'
 
@@ -412,14 +413,11 @@ class LoadingCoordinator {
 	 * @private
 	 */
 	scheduleBackgroundLoading(backgroundConfigs) {
-		// Use requestIdleCallback or setTimeout for background loading
+		// Use requestIdle for background loading (with WebKit/iOS-safe fallback)
 		const scheduleNext = (configs, index = 0) => {
 			if (index >= configs.length) return
 
-			const scheduleFunction =
-				window.requestIdleCallback || ((callback) => setTimeout(callback, 1000))
-
-			scheduleFunction(async () => {
+			requestIdle(async () => {
 				try {
 					const config = configs[index]
 					logger.debug(`Background loading: ${config.layerId}`)
