@@ -215,11 +215,16 @@ export class BuildingLoader {
 				})
 			}
 
-			// Clear tracking on successful load
-			this._currentLoadingLayerId = null
-			this._currentHeatLayerId = null
-			this._heatAbortController = null
-			this._currentLoadingToken = null
+			// Clear tracking on successful load — guard against late arrivals
+			// (a previous load that resolved after a newer one started would
+			// otherwise clear the newer load's AbortController and IDs, breaking
+			// subsequent cancellation)
+			if (this._currentLoadingToken === loadToken) {
+				this._currentLoadingLayerId = null
+				this._currentHeatLayerId = null
+				this._heatAbortController = null
+				this._currentLoadingToken = null
+			}
 
 			return entities
 		} catch (error) {
