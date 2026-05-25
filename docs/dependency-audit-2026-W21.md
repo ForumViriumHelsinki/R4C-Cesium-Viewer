@@ -33,7 +33,7 @@
 | Package             | Current | Min Vulnerable | Patched | Severity | Source              | CVE                 | Impact                                                             |
 | ------------------- | ------- | -------------- | ------- | -------- | ------------------- | ------------------- | ------------------------------------------------------------------ |
 | **fast-xml-parser** | 5.3.3   | 5.0.9          | 5.7.0+  | Critical | Direct              | GHSA-m7jm-9gc2-mpf2 | Entity encoding bypass via regex injection in DOCTYPE entity names |
-| **protobufjs**      | 7.5.5   | ≤7.5.5         | 7.6.0+  | Critical | Transitive (cesium) | GHSA-xq3m-2v4x-88gg | Arbitrary code execution in protobufjs                             |
+| **protobufjs**      | 7.5.4   | ≤7.5.5         | 7.6.0+  | Critical | Transitive (cesium) | GHSA-xq3m-2v4x-88gg | Arbitrary code execution in protobufjs                             |
 
 ### Critical Issue: Cesium → Protobufjs Chain
 
@@ -41,7 +41,7 @@
 cesium@1.136.0
 └─ @cesium/widgets
    └─ @cesium/engine
-      └─ protobufjs@7.5.5 (CRITICAL: ACE)
+      └─ protobufjs@7.5.4 (CRITICAL: ACE)
 ```
 
 **Problem**: Cesium pins protobufjs internally; upgrading cesium is the only fix unless a bun.lock override is applied.
@@ -83,7 +83,7 @@ See Critical section above. Upgrade path: `5.7.0+`. No breaking changes in 5.x.
 
 #### Protobufjs (5 High, 3 Moderate via Cesium)
 
-**Chain**: `cesium@1.136.0 → @cesium/engine → protobufjs@7.5.5`
+**Chain**: `cesium@1.136.0 → @cesium/engine → protobufjs@7.5.4`
 
 | Issue                                                        | Fix    | Breaking |
 | ------------------------------------------------------------ | ------ | -------- |
@@ -133,8 +133,8 @@ See Critical section above. Upgrade path: `5.7.0+`. No breaking changes in 5.x.
 
 | Issue                                       | Range  | Current | Fix    | Breaking |
 | ------------------------------------------- | ------ | ------- | ------ | -------- |
-| ReDoS via extglob quantifiers               | <2.3.2 | ~2.3.2+ | 2.3.2+ | No       |
-| Method injection in POSIX character classes | <2.3.2 | ~2.3.2+ | 2.3.2+ | No       |
+| ReDoS via extglob quantifiers               | <2.3.2 | 2.3.1   | 2.3.2+ | No       |
+| Method injection in POSIX character classes | <2.3.2 | 2.3.1   | 2.3.2+ | No       |
 
 **Type**: Glob pattern matching (dev-time). Low runtime risk.
 
@@ -164,7 +164,7 @@ Dominated by transitive dependencies in dev tooling and UI libraries:
 | Package             | Issue                                                            | Current | Fix     |
 | ------------------- | ---------------------------------------------------------------- | ------- | ------- |
 | **Axios**           | Null byte injection via reverse-encoding in AxiosURLSearchParams | 1.13.2  | 1.15.2+ |
-| **Fast-XML-Parser** | Stack overflow in XMLBuilder with preserveOrder                  | <5.7.0  | 5.7.0+  |
+| **Fast-XML-Parser** | Stack overflow in XMLBuilder with preserveOrder                  | 5.3.3   | 5.7.0+  |
 
 ---
 
@@ -195,7 +195,7 @@ Dominated by transitive dependencies in dev tooling and UI libraries:
 
 **Action: Document risk acceptance, move forward**
 
-- Cesium 1.136.0 pins protobufjs 7.5.5
+- Cesium 1.136.0 pins protobufjs 7.5.4
 - Protobufjs is only used internally by Cesium for parsing .proto definitions at startup, not for untrusted user input
 - **Risk acceptance**: Low if Cesium data sources are trusted (GeoJSON, CQL, tile servers)
 - **Alternative**: If risk is unacceptable, escalate to Cesium upgrade (1.137+)
