@@ -229,11 +229,17 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				// For now, we test the conditional label structure exists
 				// In Helsinki view, the label should change to "Only social & healthcare buildings"
 
-				// Verify that the filter toggle exists and can be identified
+				// Verify that the filter toggle exists and can be identified.
+				// Use toBeAttached() not toBeVisible() — `.switch-container` is
+				// responsive-CSS-hidden on mobile viewports (analogous to
+				// `.timeline-compact` `d-none d-lg-flex` pattern documented in
+				// .claude/rules/testing.md "Testing Cesium Interactions"). This
+				// test only verifies presence; the visible-label check below
+				// reads sibling text and tolerates either label.
 				const _buildingTypeToggle = cesiumPage.locator('input[type="checkbox"]').first()
 				const filterContainer = cesiumPage.locator('.switch-container').first()
 
-				await expect(filterContainer).toBeVisible()
+				await expect(filterContainer).toBeAttached()
 
 				// The actual label text depends on the view state
 				// We verify the toggle is functional regardless of label
