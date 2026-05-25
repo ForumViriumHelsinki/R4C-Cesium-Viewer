@@ -410,11 +410,9 @@ export default class Camera {
 	 * @returns {void}
 	 */
 	setCameraView(longitude, latitude) {
-		const store = useGlobalStore()
-		const viewer = store.cesiumViewer
-		if (!viewer || viewer.isDestroyed?.()) return
+		if (!this.viewer || this.viewer.isDestroyed?.()) return
 		const Cesium = getCesium()
-		viewer.camera.setView({
+		this.viewer.camera.setView({
 			destination: Cesium.Cartesian3.fromDegrees(longitude, latitude - 0.0065, 500.0),
 			orientation: {
 				heading: 0.0,
