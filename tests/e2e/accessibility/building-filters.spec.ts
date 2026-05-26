@@ -86,20 +86,18 @@ cesiumDescribe('Building Filters Accessibility', () => {
 					.locator('input[type="checkbox"]')
 				await expect(tallBuildingsToggle).toBeVisible()
 
-				// Vuetify v-switch renders the input with opacity:0 covered by the slider thumb,
-				// so Playwright's actionability check is doomed by design (#762). Pass
-				// `force: true` so every attempt uses force-click — without it, the doomed
-				// first attempt blows 5s of the 50s test budget on CI desktop viewport.
-				await helpers.checkWithRetry(tallBuildingsToggle, {
-					elementName: 'Tall Buildings filter',
-					force: true,
-				})
+				// Use `dispatchEvent('click')` instead of `check()` to bypass Playwright's
+				// state-change wait (#782). The Vuetify v-switch input has `opacity:0` under
+				// `.v-switch__thumb`; `check({ force: true })` skips actionability but still
+				// waits for the `checked` attribute to flip — on desktop (1920x1080) the
+				// overlay intercepts the synthetic click, state never flips, and each attempt
+				// burns the full 5s INTERACTION timeout. `dispatchEvent` fires the event and
+				// lets the explicit `toBeChecked()` assertion below verify the flip with its
+				// own timeout, returning fast on success and failing fast on regression.
+				await tallBuildingsToggle.dispatchEvent('click')
 				await expect(tallBuildingsToggle).toBeChecked()
 
-				await helpers.uncheckWithRetry(tallBuildingsToggle, {
-					elementName: 'Tall Buildings filter',
-					force: true,
-				})
+				await tallBuildingsToggle.dispatchEvent('click')
 				await expect(tallBuildingsToggle).not.toBeChecked()
 
 				// Grid-view-hidden assertion lives in "should reset filters when changing views"

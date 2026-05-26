@@ -738,9 +738,16 @@ export class AccessibilityTestHelpers {
 					force: forceAll || attempt > 1,
 				})
 				return
-			} catch {
+			} catch (error) {
 				if (attempt === maxRetries) {
-					throw new Error(`Failed to check ${elementName} toggle after ${maxRetries} attempts`)
+					// Surface the inner Playwright error so callers can distinguish actionability
+					// timeouts from state-change timeouts (#782) instead of seeing a generic
+					// "after N attempts" wrapper.
+					const cause = error instanceof Error ? error : new Error(String(error))
+					throw new Error(
+						`Failed to check ${elementName} toggle after ${maxRetries} attempts: ${cause.message}`,
+						{ cause }
+					)
 				}
 				// Wait with exponential backoff before retry
 				await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt)
@@ -784,9 +791,16 @@ export class AccessibilityTestHelpers {
 					force: forceAll || attempt > 1,
 				})
 				return
-			} catch {
+			} catch (error) {
 				if (attempt === maxRetries) {
-					throw new Error(`Failed to uncheck ${elementName} toggle after ${maxRetries} attempts`)
+					// Surface the inner Playwright error so callers can distinguish actionability
+					// timeouts from state-change timeouts (#782) instead of seeing a generic
+					// "after N attempts" wrapper.
+					const cause = error instanceof Error ? error : new Error(String(error))
+					throw new Error(
+						`Failed to uncheck ${elementName} toggle after ${maxRetries} attempts: ${cause.message}`,
+						{ cause }
+					)
 				}
 				// Wait with exponential backoff before retry
 				await this.page.waitForTimeout(TEST_TIMEOUTS.RETRY_BACKOFF_INTERACTION * attempt)
