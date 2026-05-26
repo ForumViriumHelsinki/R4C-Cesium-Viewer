@@ -35,7 +35,22 @@ cesiumDescribe('Building Filters Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
 	let helpers: AccessibilityTestHelpers
 
-	cesiumTest.beforeEach(async ({ cesiumPage }) => {
+	cesiumTest.beforeEach(async ({ cesiumPage }, testInfo) => {
+		// The entire Building Filters section is unmounted (not just CSS-hidden) on
+		// the accessibility-mobile project (375x667). Every test in this file asserts
+		// on filter visibility (`.switch-container`, "Building Filters", "Tall
+		// Buildings", "Public Buildings", "Pre-2018"), so none are applicable on
+		// mobile. Skip the entire suite there; desktop (1920x1080) and tablet
+		// (768x1024) viewports continue to cover the matrix.
+		// See #143, PR #791 follow-up.
+		if (testInfo.project.name === 'accessibility-mobile') {
+			testInfo.skip(
+				true,
+				'Building filters are unmounted on mobile viewport; covered by desktop/tablet matrix'
+			)
+			return
+		}
+
 		helpers = new AccessibilityTestHelpers(cesiumPage)
 		// Cesium is already initialized by the fixture
 
@@ -220,6 +235,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 		cesiumTest(
 			'should change label to "Only social & healthcare buildings" in Helsinki view',
 			async ({ cesiumPage }) => {
+				// Mobile skip is handled by the top-level beforeEach hook.
 				// Pin to capital region view — previous test ("should NOT show Public
 				// Buildings in Grid view") navigates to grid and back, but state-leak across
 				// tests means `.switch-container` may not be present without an explicit nav.
@@ -559,6 +575,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 
 	cesiumTest.describe('Building Filter Accessibility', () => {
 		cesiumTest('should have consistent styling for all filter toggles', async ({ cesiumPage }) => {
+			// Mobile skip is handled by the top-level beforeEach hook.
 			// Check that all visible filters have consistent structure
 			const filterToggles = cesiumPage
 				.locator('.switch-container')
