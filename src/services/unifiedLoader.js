@@ -38,6 +38,7 @@
 import { useLoadingStore } from '../stores/loadingStore.js'
 import { requestIdle } from '../utils/idle.js'
 import cacheService from './cacheService.js'
+import { acquireHostSlot } from './hostConcurrencyLimiter.js'
 import progressiveLoader from './progressiveLoader.js'
 
 /**
@@ -452,14 +453,15 @@ class UnifiedLoader {
 	}
 
 	/**
-	 * Fetch with automatic retry logic
-	 * Implements exponential backoff strategy (1s, 2s, 4s, 8s...).
+	 * Fetch with automatic retry logic.
 	 *
 	 * Retry Strategy:
-	 * - Exponential backoff: 2^attempt * 1000ms
+	 * - Honors Retry-After header on 429/503 (seconds or HTTP-date)
+	 * - Falls back to exponential backoff with jitter (50–150% of 2^n * 1000ms)
+	 * - Caps the delay at MAX_RETRY_DELAY_MS so a misbehaving Retry-After
+	 *   doesn't pin a tab for minutes
+	 * - Skips retry entirely on non-retriable 4xx (anything except 408/429)
 	 * - Respects AbortController signal
-	 * - Retries on network errors and HTTP errors
-	 * - Logs each retry attempt with delay
 	 *
 	 * @param {string} url - Request URL
 	 * @param {Object} [options={}] - Fetch options (including signal)
@@ -469,27 +471,76 @@ class UnifiedLoader {
 	 * @private
 	 */
 	async fetchWithRetry(url, options = {}, retries = 3) {
+		const MAX_RETRY_DELAY_MS = 30_000
+		const isRetriableStatus = (status) => status === 408 || status === 429 || status >= 500
+		const parseRetryAfter = (header) => {
+			if (!header) return null
+			const trimmed = String(header).trim()
+			const seconds = Number(trimmed)
+			if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1000
+			const date = Date.parse(trimmed)
+			if (Number.isNaN(date)) return null
+			return Math.max(0, date - Date.now())
+		}
+
 		let lastError
 
 		for (let attempt = 0; attempt <= retries; attempt++) {
+			// Per-host concurrency gate. Throws AbortError if signal fires
+			// while we're queued.
+			let releaseSlot
+			try {
+				releaseSlot = await acquireHostSlot(url, options.signal)
+			} catch (error) {
+				lastError = error
+				break
+			}
+
+			// Whatever happens in this attempt, release the slot before
+			// sleeping/returning/throwing so other waiters can proceed.
 			try {
 				const response = await fetch(url, options)
 
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				if (response.ok) return response
+
+				const status = response.status
+				if (!isRetriableStatus(status) || attempt >= retries || options.signal?.aborted) {
+					throw new Error(`HTTP ${status}: ${response.statusText}`)
 				}
 
-				return response
+				const retryAfterMs = parseRetryAfter(response.headers.get('Retry-After'))
+				const expBackoff = 2 ** attempt * 1000
+				const jitter = 0.5 + Math.random() // 0.5x–1.5x
+				const baseDelay = retryAfterMs != null ? retryAfterMs : expBackoff * jitter
+				const delay = Math.min(MAX_RETRY_DELAY_MS, Math.max(0, Math.round(baseDelay)))
+
+				logger.warn(
+					`Fetch attempt ${attempt + 1} got HTTP ${status}, retrying in ${delay}ms` +
+						(retryAfterMs != null ? ' (server Retry-After)' : '')
+				)
+				lastError = new Error(`HTTP ${status}: ${response.statusText}`)
+				releaseSlot()
+				releaseSlot = null
+				await new Promise((resolve) => setTimeout(resolve, delay))
 			} catch (error) {
 				lastError = error
 
 				if (attempt < retries && !options.signal?.aborted) {
-					const delay = 2 ** attempt * 1000 // Exponential backoff
+					const expBackoff = 2 ** attempt * 1000
+					const jitter = 0.5 + Math.random()
+					const delay = Math.min(MAX_RETRY_DELAY_MS, Math.round(expBackoff * jitter))
 					logger.warn(`Fetch attempt ${attempt + 1} failed, retrying in ${delay}ms...`)
+					releaseSlot?.()
+					releaseSlot = null
 					await new Promise((resolve) => setTimeout(resolve, delay))
 				} else {
 					break
 				}
+			} finally {
+				// Cover any path that didn't already release (e.g. terminal
+				// throw on a non-retriable status). Idempotent — second call
+				// is a no-op.
+				releaseSlot?.()
 			}
 		}
 

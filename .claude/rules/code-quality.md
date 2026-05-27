@@ -211,6 +211,41 @@ if (store.isProcessing) {
 }
 ```
 
+### Per-Host Concurrency Coordination
+
+Per-request cancellation handles in-flight cleanup; it does **not** coordinate concurrency across many requests sharing a rate-limited upstream. When multiple independent loaders fan out parallel fetches to the same proxy (`/pygeoapi/*`, `/wms/proxy/*`, etc.), use a host-keyed semaphore so the gateway sees a bounded request rate regardless of how many call sites are active.
+
+```javascript
+// ✅ CORRECT: Gate each fetch behind a per-host semaphore
+import { acquireHostSlot, setHostLimit } from '@/services/hostConcurrencyLimiter';
+
+// Optional per-host tuning (defaults to DEFAULT_LIMIT)
+setHostLimit('pygeoapi', 3);
+
+async function fetchWithLimit(url, options) {
+	const release = await acquireHostSlot(url, options.signal);
+	try {
+		return await fetch(url, options);
+	} finally {
+		release(); // idempotent; safe in finally + on retry/return paths
+	}
+}
+```
+
+The limiter keys absolute URLs by `URL.hostname` and relative URLs by their first path segment (matching Vite's proxy buckets). Two callers requesting `/pygeoapi/x` and `/pygeoapi/y` share one budget; a caller to `/wms/proxy/z` has its own. See `src/services/hostConcurrencyLimiter.js`.
+
+**When to reach for it:**
+
+- Multiple loaders fire parallel requests to the same proxy and you're seeing HTTP 429s
+- An upstream's rate limit is enforced at a gateway/WAF, not at the application — concurrency caps in the loader itself can't prevent overload because they're scoped to one loader
+- You want per-host tunability for benchmarking (different upstreams have different real-world limits)
+
+**Edge cases:**
+
+- The releaser must be called in `finally` — a thrown fetch (network error, timeout) leaks a slot otherwise
+- On retry paths, release before sleeping so other waiters can use the slot during backoff
+- Pass the request's `AbortSignal` into `acquireHostSlot` so a queued waiter unblocks promptly when its caller cancels
+
 ## Async/Promise Error Handling
 
 ### Never Use `void` Operator

@@ -87,6 +87,16 @@ Primary data from:
 - Statistics Finland
 - Environmental monitoring systems for climate resilience research
 
+### Rate Limits Are Enforced at the Gateway, Not the Service
+
+The "HSY buildings" tiles (`viewport_buildings_hsy_*`) are served by `pygeoapi.dataportal.fi`, not by `kartta.hsy.fi` — the layer name is historical. pygeoapi sits behind an Envoy Gateway `BackendTrafficPolicy` that enforces a per-source-IP rate limit. When debugging HTTP 429s on tile loads:
+
+1. **Check the upstream service first** — `kubectl logs` the pygeoapi pod. If you see only 200s, the cap is being applied by the gateway before requests reach the service.
+2. **Inspect the BackendTrafficPolicy** for the affected route — `kubectl get backendtrafficpolicy -n <ns> <name> -o yaml`. The `spec.rateLimit.local.rules` describe the per-IP budget.
+3. **Distinguish "service overloaded" from "gateway rejecting"**: per-IP buckets mean one dev workstation can produce 940 429s in a session while the service itself is idle. In production each user has their own IP, so the effective limit is per-user, but bursts can still exceed a tight cap on initial viewport load (~30-50 tiles in 1-3 seconds).
+
+The client-side per-host concurrency limiter (`src/services/hostConcurrencyLimiter.js`) caps in-flight count but does not throttle the request rate — a circuit breaker or `Retry-After`-honoring backoff is the right next lever if cap relaxation alone isn't enough.
+
 ## Component Organization
 
 ### Size Guidelines
