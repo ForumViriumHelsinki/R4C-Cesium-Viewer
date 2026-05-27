@@ -67,6 +67,12 @@ Vuetify theme is configured in `src/main.js` via `createVuetify()`:
 
 All UI colors use `--v-theme-*` CSS variables — see `code-quality.md` CSS Theming section.
 
+## Cesium Render Mode
+
+`graphicsStore.requestRenderMode` defaults to `true` and is propagated to the live `viewer.scene.requestRenderMode` via the `r4c-request-render-mode` feature flag (wired in `App.vue` after `featureFlagStore.refreshFlags()`). The graphics service `$subscribe` watcher also propagates runtime toggles from `GraphicsQuality.vue` to the live scene.
+
+When RRM is on, Cesium only re-renders when something changes (camera move, entity update, imagery load); when off, the scene re-renders every animation frame at ~60 FPS. On a 3D globe with terrain + buildings + WMS imagery the difference is roughly one CPU core and a hot dGPU — keep RRM on unless a specific feature genuinely needs continuous rendering, and explicitly call `viewer.scene.requestRender()` at any mutation site that would otherwise be visually invisible under RRM (existing camera/entity/imagery hooks already do this).
+
 ## Development Proxy Configuration
 
 Proxy endpoints in development (`vite.config.js`):
