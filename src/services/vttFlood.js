@@ -87,11 +87,16 @@ export async function fetchSimulationFrame({ scenarioId, frameNumber, signal } =
 		scenario_number: safeScenario,
 	})
 
-	logger.debug(
-		`[VTTFlood] Fetching scenario=${safeScenario} frame=${safeFrame} from ${VTT_API_PATH}`
-	)
+	// Append scenario+frame as query params so the nginx proxy can build a
+	// reliable cache key from $request_uri alone. $request_body is not
+	// guaranteed to be populated during nginx's cache lookup phase, so a
+	// body-based key collapses every POST onto the same entry. The upstream
+	// VTT API still reads the POST body and ignores the query string.
+	const url = `${VTT_API_PATH}?scenario=${safeScenario}&frame=${safeFrame}`
 
-	const response = await fetch(VTT_API_PATH, {
+	logger.debug(`[VTTFlood] Fetching scenario=${safeScenario} frame=${safeFrame} from ${url}`)
+
+	const response = await fetch(url, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body,

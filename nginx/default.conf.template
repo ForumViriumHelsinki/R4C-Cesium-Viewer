@@ -389,14 +389,20 @@ server {
 
     # VTT R4C flood simulation API.
     location /vtt-api {
+        # Accept VITE_VTT_API_HOST with or without a protocol prefix. Without
+        # this normalization, a value like "https://vtt-api.fi" would produce
+        # "https://https://vtt-api.fi" in proxy_pass.
         set $vtt_host "${VITE_VTT_API_HOST}";
         set $vtt_protocol "http";
-        if ($vtt_host ~* "^https://") {
-            set $vtt_protocol "https";
+        if ($vtt_host ~* "^(https?)://(.*)$") {
+            set $vtt_protocol $1;
+            set $vtt_host $2;
         }
 
         # Strip the /vtt-api prefix; the upstream expects /python_api/calc.
-        rewrite ^/vtt-api.*$ /python_api/calc break;
+        # The client appends ?scenario=X&frame=Y so the cache key can rely on
+        # $request_uri alone — $request_body is unreliable during cache lookup.
+        rewrite ^/vtt-api.*$ /python_api/calc?$args break;
         proxy_pass $vtt_protocol://$vtt_host;
         proxy_set_header Host $vtt_host;
 
@@ -405,7 +411,7 @@ server {
         proxy_cache_valid 200 5m;
         proxy_cache_valid 404 30s;
         proxy_cache_methods POST;
-        proxy_cache_key "$request_uri|$request_body";
+        proxy_cache_key "$request_uri";
 
         # The VTT POC can take seconds for a single frame; allow generous timeouts.
         proxy_connect_timeout 10s;

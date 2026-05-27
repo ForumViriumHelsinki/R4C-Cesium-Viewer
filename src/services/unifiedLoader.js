@@ -482,6 +482,25 @@ class UnifiedLoader {
 			if (Number.isNaN(date)) return null
 			return Math.max(0, date - Date.now())
 		}
+		// Abortable sleep: resolves after `ms`, or rejects immediately if the
+		// caller's AbortSignal fires. Keeps backoff delays from leaking a
+		// pending timer (up to MAX_RETRY_DELAY_MS) after cancellation.
+		const sleep = (ms) =>
+			new Promise((resolve, reject) => {
+				if (options.signal?.aborted) {
+					reject(options.signal.reason ?? new DOMException('Aborted', 'AbortError'))
+					return
+				}
+				const onAbort = () => {
+					clearTimeout(timer)
+					reject(options.signal?.reason ?? new DOMException('Aborted', 'AbortError'))
+				}
+				const timer = setTimeout(() => {
+					options.signal?.removeEventListener('abort', onAbort)
+					resolve()
+				}, ms)
+				options.signal?.addEventListener('abort', onAbort)
+			})
 
 		let lastError
 
@@ -521,7 +540,7 @@ class UnifiedLoader {
 				lastError = new Error(`HTTP ${status}: ${response.statusText}`)
 				releaseSlot()
 				releaseSlot = null
-				await new Promise((resolve) => setTimeout(resolve, delay))
+				await sleep(delay)
 			} catch (error) {
 				lastError = error
 
@@ -532,7 +551,7 @@ class UnifiedLoader {
 					logger.warn(`Fetch attempt ${attempt + 1} failed, retrying in ${delay}ms...`)
 					releaseSlot?.()
 					releaseSlot = null
-					await new Promise((resolve) => setTimeout(resolve, delay))
+					await sleep(delay)
 				} else {
 					break
 				}
