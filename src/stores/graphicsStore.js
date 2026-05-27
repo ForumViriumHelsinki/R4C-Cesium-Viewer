@@ -41,7 +41,10 @@ export const useGraphicsStore = defineStore('graphics', {
 		ambientOcclusionEnabled: false,
 
 		// Performance settings
-		requestRenderMode: false,
+		// Default ON: Cesium only re-renders when the scene actually changes
+		// (camera move, entity update, imagery load). Without this, the viewer
+		// re-renders every animation frame and saturates CPU/GPU on idle viewports.
+		requestRenderMode: true,
 
 		// Support detection (set at runtime)
 		msaaSupported: false,

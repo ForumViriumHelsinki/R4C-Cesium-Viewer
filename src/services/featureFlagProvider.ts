@@ -99,11 +99,19 @@ function buildEvaluationContext(userStore: UserStore): EvaluationContext {
 /**
  * Build InMemoryProvider flag configuration from fallback defaults.
  * Used when GOFF relay is not available.
+ *
+ * In development mode every flag is enabled so new features are visible by
+ * default in `bun run dev` without a GOFF relay. This mirrors the optimistic
+ * initial state in `buildInitialEvaluations` (featureFlagStore.ts) so the
+ * `refreshFlags()` call doesn't silently undo the dev-mode default. Production
+ * still uses `fallbackDefault` so experimental flags stay gated if the relay
+ * goes down.
  */
 function buildFallbackFlags(): Record<
 	string,
 	{ variants: Record<string, boolean>; defaultVariant: string; disabled: boolean }
 > {
+	const isDev = import.meta.env.MODE === 'development'
 	const flags: Record<
 		string,
 		{ variants: Record<string, boolean>; defaultVariant: string; disabled: boolean }
@@ -111,12 +119,13 @@ function buildFallbackFlags(): Record<
 
 	for (const name of ALL_FLAG_NAMES) {
 		const meta = FLAG_METADATA[name]
+		const enabled = isDev || meta.fallbackDefault
 		flags[meta.goffId] = {
 			variants: {
 				enabled: true,
 				disabled: false,
 			},
-			defaultVariant: meta.fallbackDefault ? 'enabled' : 'disabled',
+			defaultVariant: enabled ? 'enabled' : 'disabled',
 			disabled: false,
 		}
 	}

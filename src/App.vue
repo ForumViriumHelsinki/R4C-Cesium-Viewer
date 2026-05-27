@@ -141,6 +141,7 @@ import { initializeFeatureFlags } from './services/featureFlagProvider'
 import { updateUrlWithNavigationState } from './services/postalCodeLoader'
 import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
+import { useGraphicsStore } from './stores/graphicsStore.js'
 import { useLoadingStore } from './stores/loadingStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
 import { useUserStore } from './stores/userStore'
@@ -150,6 +151,7 @@ const toggleStore = useToggleStore()
 const globalStore = useGlobalStore()
 const loadingStore = useLoadingStore()
 const featureFlagStore = useFeatureFlagStore()
+const graphicsStore = useGraphicsStore()
 const userStore = useUserStore()
 
 const { sidebarOffset: timelineOffset } = useSidebarOffset(0)
@@ -265,6 +267,12 @@ onMounted(async () => {
 
 		featureFlagStore.loadOverrides()
 		featureFlagStore.refreshFlags()
+
+		// Apply flag-driven graphics defaults. graphicsStore values flow into
+		// Cesium via useViewerInitialization (init-time) and the graphics
+		// service watcher (runtime). User-driven toggles in GraphicsQuality.vue
+		// still override the flag — last write wins.
+		graphicsStore.setRequestRenderMode(featureFlagStore.isEnabled('requestRenderMode'))
 
 		if (featureFlagStore.isEnabled('backgroundPreload')) {
 			const { default: backgroundPreloader } = await import('./services/backgroundPreloader.js')

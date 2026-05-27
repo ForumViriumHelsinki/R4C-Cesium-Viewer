@@ -22,6 +22,8 @@ FROM nginx:1.27
 
 # Set default values for nginx environment variables
 ENV VITE_PYGEOAPI_HOST=pygeoapi.dataportal.fi
+# VTT R4C flood simulation API host.
+ENV VITE_VTT_API_HOST=130.188.4.230
 # DNS resolver: "auto" means detect from /etc/resolv.conf at startup
 # This works in both Docker (127.0.0.11) and Kubernetes (kube-dns ClusterIP)
 ENV NGINX_DNS_RESOLVER=auto

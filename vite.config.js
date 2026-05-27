@@ -317,6 +317,18 @@ export default defineConfig(({ mode }) => {
 						});
 					},
 				},
+				'/vtt-api': {
+					// VTT R4C flood simulation API.
+					target: env.VITE_VTT_API_HOST || 'http://130.188.4.230',
+					changeOrigin: true,
+					secure: false,
+					rewrite: (path) => path.replace(/^\/vtt-api.*$/, '/python_api/calc'),
+					configure: (proxy, _options) => {
+						proxy.on('error', (err, _req, _res) => {
+							console.warn('VTT flood API proxy error:', err.message);
+						});
+					},
+				},
 			},
 		},
 	};

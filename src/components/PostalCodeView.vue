@@ -224,17 +224,6 @@
 					>
 						Sensor Dashboard
 					</v-btn>
-
-					<v-btn
-						href="https://geo.fvh.fi/r4c/6fkgOUqn3/"
-						target="_blank"
-						variant="outlined"
-						size="small"
-						prepend-icon="mdi-water"
-						style="display: none"
-					>
-						Flood Simulations
-					</v-btn>
 				</div>
 			</div>
 		</v-card-text>

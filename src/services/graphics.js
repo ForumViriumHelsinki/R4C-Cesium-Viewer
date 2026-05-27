@@ -198,6 +198,13 @@ export default class Graphics {
 			if (events.some((e) => e.key === 'ambientOcclusionEnabled')) {
 				this.applyAmbientOcclusionSettings()
 			}
+			if (events.some((e) => e.key === 'requestRenderMode')) {
+				this.scene.requestRenderMode = this.graphicsStore.requestRenderMode
+				if (!this.graphicsStore.requestRenderMode) {
+					// Kick the render loop back on immediately when turning RRM off
+					this.scene.requestRender()
+				}
+			}
 		})
 	}
 
