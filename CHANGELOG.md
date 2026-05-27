@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.51.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.50.1...r4c-cesium-viewer-v1.51.0) (2026-05-27)
+
+
+### Features
+
+* VTT flood simulation, per-host concurrency limiter, RRM default-on ([#796](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/796)) ([507a7e3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/507a7e3eae4d0a08fb4a99f3dfddc80193abb505))
+
+
+### Bug Fixes
+
+* **cesium:** apply isDestroyed guards to W19 audit-residue files ([#761](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/761)) ([#775](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/775)) ([4accced](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4accced136bd139b2c1962230af75b312b4f4605))
+* **compat:** safe fallback for requestIdleCallback on iOS Safari/Firefox ([#777](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/777)) ([#789](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/789)) ([4b6d495](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4b6d4951167d42aef408c2b99c578444f9a7e3ad))
+* **helpers:** drop verifyViewModeSelection Strategy 3 dead PINIA ref ([#781](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/781)) ([#788](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/788)) ([3e5fa37](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3e5fa374cba601e80a11c4d1d955e140e3b37e0d))
+* **scatterplot:** guard against null scatterPlotEntities ([#776](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/776)) ([#787](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/787)) ([1f118bb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/1f118bb3adbc98a128dbcdef1e0310f518eae267))
+
 ## [1.50.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.50.0...r4c-cesium-viewer-v1.50.1) (2026-05-13)
 
 
