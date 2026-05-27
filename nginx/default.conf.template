@@ -386,4 +386,30 @@ server {
         proxy_pass https://api.digitransit.fi;
         rewrite ^/digitransit(.*)$ $1 break;
     }
+
+    # VTT R4C flood simulation API.
+    location /vtt-api {
+        set $vtt_host "${VITE_VTT_API_HOST}";
+        set $vtt_protocol "http";
+        if ($vtt_host ~* "^https://") {
+            set $vtt_protocol "https";
+        }
+
+        # Strip the /vtt-api prefix; the upstream expects /python_api/calc.
+        rewrite ^/vtt-api.*$ /python_api/calc break;
+        proxy_pass $vtt_protocol://$vtt_host;
+        proxy_set_header Host $vtt_host;
+
+        # Same scenario+frame returns the same data, so a short cache is safe.
+        proxy_cache global_cache;
+        proxy_cache_valid 200 5m;
+        proxy_cache_valid 404 30s;
+        proxy_cache_methods POST;
+        proxy_cache_key "$request_uri|$request_body";
+
+        # The VTT POC can take seconds for a single frame; allow generous timeouts.
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
 }

@@ -115,6 +115,24 @@
 						<div class="tab-content">
 							<ViewModeCompact class="mb-3" />
 							<MapControls />
+							<template v-if="featureFlagStore.isEnabled('vttFloodSimulation')">
+								<v-divider class="my-3" />
+								<p class="section-heading">VTT Flood Simulation</p>
+								<v-btn
+									block
+									variant="outlined"
+									prepend-icon="mdi-water"
+									:active="vttFloodOpen"
+									@click="toggleVttFlood"
+								>
+									{{ vttFloodOpen ? 'Hide Flood Simulation' : 'Flood Simulation (VTT)' }}
+								</v-btn>
+								<FloodSimulationPanel
+									v-if="vttFloodOpen"
+									class="mt-2"
+									@close="closeVttFlood"
+								/>
+							</template>
 							<v-divider class="my-3" />
 							<p class="section-heading">Background Maps</p>
 							<BackgroundMapBrowser />
@@ -363,6 +381,8 @@ import MapControls from '../components/MapControls.vue'
 import UnifiedSearch from '../components/UnifiedSearch.vue'
 import ViewModeCompact from '../components/ViewModeCompact.vue'
 import { useSidebarNavigation } from '../composables/useSidebarNavigation.js'
+import { LAAJASALO_CAMERA } from '../constants/vttFlood.ts'
+import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
 
 // Store and Service Imports
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
@@ -371,6 +391,11 @@ import { useHeatExposureStore } from '../stores/heatExposureStore'
 import { usePropsStore } from '../stores/propsStore'
 import { useSocioEconomicsStore } from '../stores/socioEconomicsStore'
 import { useToggleStore } from '../stores/toggleStore'
+
+// Lazy-loaded VTT flood-simulation panel (only mounted when the gated layer is opened)
+const FloodSimulationPanel = defineAsyncComponent(
+	() => import('../components/FloodSimulationPanel.vue')
+)
 
 // Lazy-loaded analysis components
 const AnalysisPanel = defineAsyncComponent(() => import('../components/AnalysisPanel.vue'))
@@ -499,6 +524,42 @@ const handleDrawerUpdate = (val) => {
 	if (!val && isMobile.value) {
 		toggleStore.setSidebarMode('hidden')
 	}
+}
+
+// --- VTT Flood Simulation panel toggle ---
+const vttFloodOpen = ref(false)
+const vttFloodFlownTo = ref(false)
+
+const flyCameraToLaajasalo = () => {
+	const viewer = globalStore.cesiumViewer
+	if (!viewer || viewer.isDestroyed?.()) return
+	if (!cesiumProvider.isInitialized()) return
+	const Cesium = getCesium()
+	viewer.camera.flyTo({
+		destination: Cesium.Cartesian3.fromDegrees(
+			LAAJASALO_CAMERA.longitude,
+			LAAJASALO_CAMERA.latitude,
+			LAAJASALO_CAMERA.height
+		),
+		orientation: {
+			heading: Cesium.Math.toRadians(LAAJASALO_CAMERA.heading),
+			pitch: Cesium.Math.toRadians(LAAJASALO_CAMERA.pitch),
+			roll: 0.0,
+		},
+		duration: 1.2,
+	})
+}
+
+const toggleVttFlood = () => {
+	vttFloodOpen.value = !vttFloodOpen.value
+	if (vttFloodOpen.value && !vttFloodFlownTo.value) {
+		flyCameraToLaajasalo()
+		vttFloodFlownTo.value = true
+	}
+}
+
+const closeVttFlood = () => {
+	vttFloodOpen.value = false
 }
 </script>
 

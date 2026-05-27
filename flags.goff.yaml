@@ -1,0 +1,298 @@
+# Feature Flags Configuration for R4C Cesium Viewer
+# Provider: GO Feature Flag (https://gofeatureflag.org)
+# Documentation: https://gofeatureflag.org/docs/configure_flag/flag_format
+#
+# This file is the canonical, app-owned source for the GOFF flag definitions
+# consumed by R4C Cesium Viewer. The production GOFF relay reads its config
+# from the ConfigMap at:
+#   infrastructure/argocd/apps/templates/internal-tools/feature-flags-config.yaml
+# Keep this file and the ConfigMap's `r4c-*` section in sync when changing
+# flag rules — changes to either must land alongside the other.
+#
+# For local development, the InMemoryProvider in src/services/featureFlagProvider.ts
+# builds its fallback from `fallbackDefault` in src/constants/flagMetadata.ts,
+# not from this file. To test against a real GOFF relay locally:
+#
+#   docker run -p 1031:1031 \
+#     -v $(pwd)/flags.goff.yaml:/goff/flags.yaml \
+#     gofeatureflag/go-feature-flag:latest
+#
+# Targeting conventions:
+#   - `domain eq "forumvirium.fi"` enables experimental features for FVH staff
+#   - `domain eq "vtt.fi"` enables VTT-internal data layers
+#   - Use `OR` to combine domains for joint-team features
+
+# ============================================================
+# Data Layers
+# ============================================================
+
+r4c-ndvi:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-flood-layers:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    - query: domain eq "forumvirium.fi"
+      variation: enabled
+
+r4c-vtt-flood-simulation:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    # Gated to FVH + VTT staff while the simulation dataset remains
+    # internal-only. Remove the targeting block once VTT authorises
+    # open publication.
+    - query: domain eq "forumvirium.fi" OR domain eq "vtt.fi"
+      variation: enabled
+
+r4c-grid-250m:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-tree-coverage:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-land-cover:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+# ============================================================
+# Graphics & Performance
+# ============================================================
+
+r4c-hdr-rendering:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    - query: domain eq "forumvirium.fi"
+      variation: enabled
+
+r4c-ambient-occlusion:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    - query: domain eq "forumvirium.fi"
+      variation: enabled
+
+r4c-msaa-options:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-fxaa-options:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-request-render-mode:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    - query: domain eq "forumvirium.fi"
+      variation: enabled
+
+r4c-terrain-3d:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-viewport-streaming:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-predictive-prefetch:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    - query: domain eq "forumvirium.fi"
+      variation: enabled
+
+# ============================================================
+# Analysis Tools
+# ============================================================
+
+r4c-heat-histogram:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-building-scatter-plot:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-cooling-optimizer:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-ndvi-analysis:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-socioeconomic-viz:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+# ============================================================
+# UI / UX
+# ============================================================
+
+r4c-control-panel-default:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-data-source-status:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-loading-performance-info:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    - query: domain eq "forumvirium.fi"
+      variation: enabled
+
+r4c-background-preload:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    - query: domain eq "forumvirium.fi"
+      variation: enabled
+
+r4c-map-click-loading-overlay:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+# ============================================================
+# Integrations
+# ============================================================
+
+r4c-sentry-error-tracking:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-digitransit-integration:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+r4c-background-map-providers:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+# ============================================================
+# Developer Tools
+# ============================================================
+
+r4c-debug-mode:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+r4c-cache-visualization:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+r4c-health-checks:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+# ============================================================
+# Panel Visibility
+# ============================================================
+
+r4c-show-feature-panel:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    - query: domain eq "forumvirium.fi"
+      variation: enabled

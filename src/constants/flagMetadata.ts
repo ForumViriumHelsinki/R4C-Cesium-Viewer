@@ -16,6 +16,7 @@ export type FeatureFlagName =
 	// Data layers
 	| 'ndvi'
 	| 'floodLayers'
+	| 'vttFloodSimulation'
 	| 'grid250m'
 	| 'treeCoverage'
 	| 'landCover'
@@ -94,6 +95,16 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		category: 'data-layers',
 		experimental: true,
 		requiresSupport: false,
+		fallbackDefault: false,
+	},
+	vttFloodSimulation: {
+		goffId: 'r4c-vtt-flood-simulation',
+		label: 'VTT Flood Simulation',
+		description:
+			'VTT R4C flood simulation playback for Laajasalo (FVH/VTT internal — group-gated via GOFF)',
+		category: 'data-layers',
+		experimental: true,
+		requiresSupport: true,
 		fallbackDefault: false,
 	},
 	grid250m: {

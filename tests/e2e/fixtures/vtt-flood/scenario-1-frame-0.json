@@ -1,0 +1,68 @@
+{
+	"type": "FeatureCollection",
+	"features": [
+		{
+			"type": "Feature",
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[25.0420, 60.1780],
+						[25.0430, 60.1780],
+						[25.0430, 60.1790],
+						[25.0420, 60.1790],
+						[25.0420, 60.1780]
+					]
+				]
+			},
+			"properties": {
+				"canopy_air_temperature": 291.5,
+				"overland_water_depth": 0.05,
+				"transpiration": 0.30,
+				"upper_storage_water_depth": 0.02
+			}
+		},
+		{
+			"type": "Feature",
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[25.0430, 60.1780],
+						[25.0440, 60.1780],
+						[25.0440, 60.1790],
+						[25.0430, 60.1790],
+						[25.0430, 60.1780]
+					]
+				]
+			},
+			"properties": {
+				"canopy_air_temperature": 293.0,
+				"overland_water_depth": 0.20,
+				"transpiration": 0.45,
+				"upper_storage_water_depth": 0.06
+			}
+		},
+		{
+			"type": "Feature",
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[25.0440, 60.1780],
+						[25.0450, 60.1780],
+						[25.0450, 60.1790],
+						[25.0440, 60.1790],
+						[25.0440, 60.1780]
+					]
+				]
+			},
+			"properties": {
+				"canopy_air_temperature": 296.2,
+				"overland_water_depth": 0.55,
+				"transpiration": 0.62,
+				"upper_storage_water_depth": 0.11
+			}
+		}
+	]
+}
