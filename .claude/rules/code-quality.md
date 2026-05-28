@@ -333,6 +333,52 @@ this.loadTile(tileKey)
 	});
 ```
 
+### Guard `response.json()` Against SPA Catch-All
+
+`response.ok` only tells you the HTTP status is 2xx. It does **not** tell you the body is JSON. FVH apps deployed behind nginx (`try_files ... /index.html`) or Envoy Gateway (no `/oauth2/*` upstream rule) silently fall through to the SPA's `index.html` and return `200 OK` with `text/html` for any unmatched path. A naive `await response.json()` then throws `SyntaxError` on the HTML body — and if it lives inside a bare `catch {}`, the misconfiguration becomes invisible.
+
+Always check `content-type` before parsing, and log loudly on the mismatch so the gateway/proxy issue is visible in production logs.
+
+```ts
+// ✅ CORRECT: defensive parse with single warn-once on misconfiguration
+const response = await fetch('/oauth2/userinfo');
+if (!response.ok) {
+	logger.debug('userinfo not available (status %d)', response.status);
+	return;
+}
+
+const contentType = response.headers.get('content-type') ?? '';
+if (!contentType.toLowerCase().includes('application/json')) {
+	if (!this.warnedOnce) {
+		this.warnedOnce = true; // Pinia state — see "Once-per-app warn flags" below
+		logger.warn(
+			'/oauth2/userinfo returned non-JSON (content-type: %s); ' +
+				'the OIDC proxy is likely not in front of the app.',
+			contentType || '(missing)'
+		);
+	}
+	return;
+}
+
+const data = await response.json();
+```
+
+```ts
+// ❌ WRONG: SyntaxError on text/html body is swallowed by bare catch
+try {
+	const response = await fetch('/oauth2/userinfo');
+	if (!response.ok) return;
+	const data = await response.json(); // throws on HTML body
+	// ...
+} catch {
+	// Silent — the misconfiguration is now invisible
+}
+```
+
+**Once-per-app warn flags.** When the misconfiguration would otherwise log on every call (route change, periodic refresh), gate the `logger.warn` on a "warned once" flag stored on **Pinia state**, not a module-scoped `let`. Production: the singleton's lifetime gives the right "once per page load" semantics. Tests: `setActivePinia(createPinia())` in `beforeEach` resets it cleanly per test — a module-scoped flag would leak across cases.
+
+Apply the same pattern to any fetch against a same-origin endpoint that might be served by the SPA's catch-all (feature-flag bootstraps, version endpoints, etc.).
+
 ## Logging
 
 ### Use Logger Utility, Not Console
@@ -524,6 +570,48 @@ mounted() {
 }
 // Plus Composition API code elsewhere
 ```
+
+### Gate UI on `initialized` for Async-Fetched State
+
+When a store hydrates from an async source in `onMounted` (auth via `/oauth2/userinfo`, feature flags via OpenFeature, user profile, etc.), the initial reactive value is whatever the store defaults to — almost always the unauthenticated / disabled / empty case. Rendering UI on that default state during the in-flight round-trip produces a flash of the wrong affordance: a "Sign in" button briefly shown to an already-authenticated user, a feature toggle showing off before the override loads, a name field blank before the profile lands.
+
+Stores that fetch asynchronously should track an `initialized: boolean` and components should gate visibility on **both** the value AND `initialized`.
+
+```vue
+<!-- ✅ CORRECT: menu stays empty until fetchUserInfo resolves -->
+<v-list-item
+	v-if="userStore.initialized && userStore.isAuthenticated"
+	title="Sign out"
+	@click="signOut"
+/>
+<v-list-item v-else-if="userStore.initialized" title="Sign in" @click="signIn" />
+```
+
+```vue
+<!-- ❌ WRONG: "Sign in" flashes for authenticated users during fetch -->
+<v-list-item v-if="userStore.isAuthenticated" title="Sign out" @click="signOut" />
+<v-list-item v-else title="Sign in" @click="signIn" />
+```
+
+The store side:
+
+```ts
+state: () => ({
+	isAuthenticated: false,
+	initialized: false,  // flipped in finally{} after fetch resolves/rejects
+}),
+actions: {
+	async fetchUserInfo() {
+		try {
+			/* ... */
+		} finally {
+			this.initialized = true
+		}
+	},
+}
+```
+
+Apply the same gate to feature-flag-driven UI when the flag value comes from a remote evaluation: render nothing (or a skeleton) until `featureFlagStore.initialized`, then render the resolved variant.
 
 ## Complexity Reduction
 
