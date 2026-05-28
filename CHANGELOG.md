@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.1...r4c-cesium-viewer-v1.51.2) (2026-05-28)
+
+
+### Bug Fixes
+
+* **feature-flags:** catch GOFF object-shape rejections ([#794](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/794)) ([#805](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/805)) ([9a04b52](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9a04b52ccbe32da39987262bfbc31708cef134a7))
+
 ## [1.51.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.0...r4c-cesium-viewer-v1.51.1) (2026-05-28)
 
 
