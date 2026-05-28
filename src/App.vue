@@ -72,13 +72,13 @@
 						@click="smartReset"
 					/>
 					<v-list-item
-						v-if="userStore.isAuthenticated"
+						v-if="userStore.initialized && userStore.isAuthenticated"
 						prepend-icon="mdi-logout"
 						title="Sign out"
 						@click="signOut"
 					/>
 					<v-list-item
-						v-else
+						v-else-if="userStore.initialized"
 						prepend-icon="mdi-login"
 						title="Sign in"
 						@click="signIn"
