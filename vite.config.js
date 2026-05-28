@@ -331,5 +331,19 @@ export default defineConfig(({ mode }) => {
 				},
 			},
 		},
+		// Mirror /feature-flags onto `vite preview` so the GOFF health check
+		// doesn't 404 against the SPA catch-all and reject with a
+		// {response, responseHeaders, statusCode} object (#794). Without this
+		// block, `bun run preview` against a production-tagged build fires
+		// Sentry R4C-CESIUM-VIEWER-21 on every load.
+		preview: {
+			proxy: {
+				'/feature-flags': {
+					target: 'http://localhost:1031',
+					changeOrigin: true,
+					rewrite: (path) => path.replace(/^\/feature-flags/, ''),
+				},
+			},
+		},
 	};
 });

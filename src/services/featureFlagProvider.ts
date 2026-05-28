@@ -210,11 +210,11 @@ function describeGoffReason(reason: unknown): string {
  * synchronous failure path, then fires `retryFetchAll()` and
  * `reconnectWebsocket()` **without awaiting** — those returned promises can
  * reject silently and surface as unhandled rejections (Sentry
- * R4C-CESIUM-VIEWER-1Z, #735).
+ * R4C-CESIUM-VIEWER-1Z, #735; R4C-CESIUM-VIEWER-21, #794).
  */
-function isGoffWebsocketRejection(reason: unknown): boolean {
+export function isGoffRejection(reason: unknown): boolean {
 	const message = describeGoffReason(reason)
-	// Two GOFF-specific rejection shapes we want to handle, narrowed so we
+	// Three GOFF-specific rejection shapes we want to handle, narrowed so we
 	// don't accidentally swallow unrelated rejections from Cesium Ion, Sentry
 	// replays, or other websocket-using subsystems:
 	//
@@ -229,6 +229,19 @@ function isGoffWebsocketRejection(reason: unknown): boolean {
 	//      enough that we only catch the GOFF retry loop in practice. Pair
 	//      with a stack-trace check on Error instances so we don't catch
 	//      unrelated URL TypeErrors thrown elsewhere on the page.
+	//   C) HTTP-error-shaped object rejections — `{response, responseHeaders,
+	//      statusCode}`. GOFF's data-collector and fetch paths reject the
+	//      background retry promise with an axios-style plain object (no
+	//      `.message`, no stack), which slips past the string checks above
+	//      and surfaces as `UnhandledRejection: Object captured as promise
+	//      rejection with keys: response, responseHeaders, statusCode`
+	//      (Sentry R4C-CESIUM-VIEWER-21, #794). Fires reliably on `vite
+	//      preview` because vite.config.js' `/feature-flags` proxy lives
+	//      under `server.proxy` only — `preview.proxy` is absent, so the
+	//      health check returns the SPA's 404 HTML and GOFF rejects. The
+	//      three-key fingerprint is specific enough to avoid swallowing
+	//      unrelated HTTP-shaped rejections (Cesium fetchJson rejects with
+	//      its own RequestErrorEvent shape, not this triple).
 	if (
 		/websocket/i.test(message) &&
 		/go-?feature-?flag|GoFeatureFlag|reached when initializing/i.test(message)
@@ -241,6 +254,12 @@ function isGoffWebsocketRejection(reason: unknown): boolean {
 		/go-?feature-?flag|GoFeatureFlag/i.test(reason.stack ?? '')
 	) {
 		return true
+	}
+	if (typeof reason === 'object' && reason !== null) {
+		const r = reason as Record<string, unknown>
+		if ('response' in r && 'responseHeaders' in r && 'statusCode' in r) {
+			return true
+		}
 	}
 	return false
 }
@@ -258,15 +277,15 @@ function installGoffRejectionHandler(): void {
 	}
 	goffRejectionHandlerInstalled = true
 	window.addEventListener('unhandledrejection', (event) => {
-		if (!isGoffWebsocketRejection(event.reason)) {
+		if (!isGoffRejection(event.reason)) {
 			return
 		}
 		const message = describeGoffReason(event.reason)
-		logger.warn('Feature flags: GOFF websocket reconnect failed (handled)', message)
+		logger.warn('Feature flags: GOFF background rejection (handled)', message)
 		Sentry.addBreadcrumb({
 			category: 'feature-flags',
 			level: 'warning',
-			message: 'GOFF websocket reconnect failed',
+			message: 'GOFF background rejection',
 			data: { reason: message },
 		})
 		event.preventDefault()
