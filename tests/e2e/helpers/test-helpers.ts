@@ -924,7 +924,6 @@ export class AccessibilityTestHelpers {
 					// Strategy 1: Check v-btn--active class on button
 					const button = document.querySelector(`.view-toggle-group button[value="${targetMode}"]`)
 					if (button?.classList.contains('v-btn--active')) return true
-					if (button?.classList.contains('v-btn--selected')) return true
 
 					// Strategy 2: Check aria-pressed attribute
 					if (button?.getAttribute('aria-pressed') === 'true') return true

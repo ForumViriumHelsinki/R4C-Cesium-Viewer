@@ -30,7 +30,7 @@ function getViewModeButton(
  */
 async function isViewModeButtonSelected(button: Locator): Promise<boolean> {
 	const className = await button.getAttribute('class').catch(() => '')
-	return className?.includes('v-btn--active') || className?.includes('v-btn--selected') || false
+	return className?.includes('v-btn--active') || false
 }
 
 cesiumDescribe('View Modes Accessibility', () => {
