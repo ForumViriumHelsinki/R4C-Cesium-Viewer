@@ -72,9 +72,16 @@
 						@click="smartReset"
 					/>
 					<v-list-item
+						v-if="userStore.isAuthenticated"
 						prepend-icon="mdi-logout"
 						title="Sign out"
 						@click="signOut"
+					/>
+					<v-list-item
+						v-else
+						prepend-icon="mdi-login"
+						title="Sign in"
+						@click="signIn"
 					/>
 				</v-list>
 			</v-menu>
@@ -207,6 +214,11 @@ const stopLevelUrlWatcher = watch(
 // Navigation functions
 const signOut = () => {
 	window.location.href = '/oauth2/sign_out'
+}
+
+const signIn = () => {
+	const rd = encodeURIComponent(window.location.pathname + window.location.search)
+	window.location.href = `/oauth2/start?rd=${rd || '%2F'}`
 }
 
 const smartReset = async () => {
