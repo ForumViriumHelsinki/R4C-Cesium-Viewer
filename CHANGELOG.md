@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.0...r4c-cesium-viewer-v1.51.1) (2026-05-28)
+
+
+### Bug Fixes
+
+* **auth:** hide Sign Out for anonymous users; warn on non-JSON userinfo ([#800](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/800)) ([361e31c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/361e31ce0b969038ae841e3c5bcb3d16a05c05d2))
+
 ## [1.51.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.50.1...r4c-cesium-viewer-v1.51.0) (2026-05-27)
 
 
