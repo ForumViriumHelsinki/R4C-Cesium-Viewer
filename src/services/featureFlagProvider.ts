@@ -238,10 +238,15 @@ export function isGoffRejection(reason: unknown): boolean {
 	//      (Sentry R4C-CESIUM-VIEWER-21, #794). Fires reliably on `vite
 	//      preview` because vite.config.js' `/feature-flags` proxy lives
 	//      under `server.proxy` only — `preview.proxy` is absent, so the
-	//      health check returns the SPA's 404 HTML and GOFF rejects. The
-	//      three-key fingerprint is specific enough to avoid swallowing
-	//      unrelated HTTP-shaped rejections (Cesium fetchJson rejects with
-	//      its own RequestErrorEvent shape, not this triple).
+	//      health check returns the SPA's 404 HTML and GOFF rejects.
+	//
+	//      Restricted to **plain** objects (`constructor === Object` or no
+	//      prototype) because Cesium's `RequestErrorEvent` is a function-
+	//      constructor instance with the EXACT same three keys
+	//      (`statusCode`, `response`, `responseHeaders` — see
+	//      `@cesium/engine/Source/Core/RequestErrorEvent.js`). Without the
+	//      plain-object guard we would silently swallow every Cesium tile /
+	//      terrain / imagery network error.
 	if (
 		/websocket/i.test(message) &&
 		/go-?feature-?flag|GoFeatureFlag|reached when initializing/i.test(message)
@@ -255,7 +260,11 @@ export function isGoffRejection(reason: unknown): boolean {
 	) {
 		return true
 	}
-	if (typeof reason === 'object' && reason !== null) {
+	if (
+		typeof reason === 'object' &&
+		reason !== null &&
+		(reason.constructor === Object || reason.constructor === undefined)
+	) {
 		const r = reason as Record<string, unknown>
 		if ('response' in r && 'responseHeaders' in r && 'statusCode' in r) {
 			return true

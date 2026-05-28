@@ -249,5 +249,40 @@ describe('featureFlagProvider — isGoffRejection (#794)', () => {
 		it('returns false for an unrelated object that lacks the three-key fingerprint', () => {
 			expect(isGoffRejection({ message: 'something failed', code: 500 })).toBe(false)
 		})
+
+		it('returns false for a Cesium-style RequestErrorEvent with the same three keys', () => {
+			// Cesium's `RequestErrorEvent`
+			// (`@cesium/engine/Source/Core/RequestErrorEvent.js`) is a
+			// function-constructor instance with `statusCode`, `response`,
+			// and `responseHeaders` — exactly the three keys GOFF's
+			// axios-style rejection uses. Without the `constructor ===
+			// Object` plain-object guard, this fingerprint match would
+			// silently swallow every Cesium tile / terrain / imagery
+			// network error. See PR #805 review.
+			class RequestErrorEvent {
+				statusCode: number
+				response: unknown
+				responseHeaders: unknown
+				constructor(statusCode: number, response: unknown, responseHeaders: unknown) {
+					this.statusCode = statusCode
+					this.response = response
+					this.responseHeaders = responseHeaders
+				}
+			}
+			const cesiumErr = new RequestErrorEvent(404, {}, {})
+			expect(isGoffRejection(cesiumErr)).toBe(false)
+		})
+
+		it('returns true for a null-prototype object with the three-key fingerprint', () => {
+			// `Object.create(null)` has `constructor === undefined` and
+			// is also a plain dictionary — we accept it because GOFF
+			// could plausibly construct rejections this way and there's
+			// no risk of misidentifying a Cesium class instance.
+			const o = Object.create(null) as Record<string, unknown>
+			o.response = {}
+			o.responseHeaders = {}
+			o.statusCode = 404
+			expect(isGoffRejection(o)).toBe(true)
+		})
 	})
 })
