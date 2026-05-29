@@ -162,5 +162,40 @@ describe(
 			expect(dataSourcesAdd).toHaveBeenCalledTimes(1)
 			expect(result).toBe(entities)
 		})
+
+		it('loads the parsed GeoJSON on the happy path with the RFC 7946 content-type (application/geo+json)', async () => {
+			// Arrange: the standard GeoJSON media type must not be rejected by the
+			// content-type guard (regression for the includes('json') fix).
+			const geojson = {
+				type: 'FeatureCollection',
+				features: [{ type: 'Feature', properties: { id: 1 } }],
+			}
+			global.fetch.mockResolvedValue(
+				mockResponse({
+					ok: true,
+					status: 200,
+					contentType: 'application/geo+json',
+					body: geojson,
+				})
+			)
+			const entities = [{ id: 'entity-1' }]
+			geoJsonLoad.mockResolvedValue({
+				name: '',
+				entities: { values: entities },
+			})
+
+			// Act
+			const result = await dataSource.loadGeoJsonDataSource(
+				0.5,
+				'./assets/data/hsy_po.json',
+				'PostCodes'
+			)
+
+			// Assert: parsed object handed to Cesium, data source added, entities returned
+			expect(geoJsonLoad).toHaveBeenCalledTimes(1)
+			expect(geoJsonLoad.mock.calls[0][0]).toEqual(geojson)
+			expect(dataSourcesAdd).toHaveBeenCalledTimes(1)
+			expect(result).toBe(entities)
+		})
 	}
 )

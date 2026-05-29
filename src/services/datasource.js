@@ -192,16 +192,17 @@ export default class DataSource {
 				return []
 			}
 
+			// Accept any JSON-based content type: RFC 7946 GeoJSON is served as
+			// `application/geo+json`, which does not contain `application/json`.
+			// Matching on `json` covers application/json, application/geo+json,
+			// and friends while still rejecting text/html catch-all responses.
 			const contentType = response.headers.get('content-type') ?? ''
-			if (!contentType.toLowerCase().includes('application/json')) {
+			if (!contentType.toLowerCase().includes('json')) {
 				if (!this._nonJsonWarningEmitted) {
 					this._nonJsonWarningEmitted = true
 					logger.warn(
-						`[DataSource] GeoJSON fetch for "%s" returned non-JSON response (content-type: %s, url: %s); ` +
-							'the SPA/proxy catch-all is likely serving HTML (e.g. the oauth2 sign_out page). Skipping data source.',
-						name,
-						contentType || '(missing)',
-						url
+						`[DataSource] GeoJSON fetch for "${name}" returned non-JSON response (content-type: ${contentType || '(missing)'}, url: ${url}); ` +
+							'the SPA/proxy catch-all is likely serving HTML (e.g. the oauth2 sign_out page). Skipping data source.'
 					)
 				}
 				return []
