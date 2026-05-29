@@ -16,10 +16,29 @@ import { TIMEOUTS, VIEWPORTS } from '../../config/constants'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
 import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
-// SKIPPED: Cesium compass control does not render in headless CI environment
-// The .compass-control element is not visible because Cesium's internal UI components
-// don't render properly without a full WebGL context
-// Related: https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/472
+// SKIPPED: selector mismatch, NOT a WebGL/headless-CI limitation.
+//
+// CameraControls.vue is a pure Vue + SVG + DOM component (mounted unconditionally
+// in src/pages/CesiumViewer.vue), not a Cesium internal compass widget rendered
+// into the WebGL canvas. It renders in headless CI without a full WebGL context.
+//
+// These tests query `.compass-control` and `#compass-description`, but NEITHER
+// selector exists in src/. The real component uses `.camera-controls-container`,
+// `.compass-assembly`, `.compass-ring`, `.compass-needle`, `.dir-btn`, `.zoom-btn`
+// and an `sr-only` role="status" element. So every assertion timed out because the
+// locators never matched — the elements were never absent due to WebGL.
+//
+// Most assertions here (ARIA roles/labels, button presence + accessible names,
+// keyboard focusability, sr-only status presence) are DOM-only and CAN run once
+// the selectors are fixed. Only live heading reactivity (compassRingStyle rotation
+// / sr-only heading text after a real camera move) is genuinely Cesium-coupled and
+// should be driven via window.__viewer and tagged accordingly.
+//
+// Strategy + re-enablement plan: docs/core/TESTING.md → "Cesium UI Component
+// Accessibility Testing Strategy". Re-enablement is a deferred follow-up
+// (sub-issue of #472) because it touches all 37 tests.
+// Related: https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/623
+//          https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/472
 cesiumDescribe.skip('Camera Controls Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
 	let helpers: AccessibilityTestHelpers

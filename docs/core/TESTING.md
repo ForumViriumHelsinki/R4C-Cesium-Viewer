@@ -230,6 +230,95 @@ npm run test:accessibility                   # Desktop only (recommended)
 npm run test:accessibility:all-viewports     # Desktop + tablet + mobile
 ```
 
+### 3b. Cesium UI Component Accessibility Testing Strategy
+
+This section records the testing strategy for the `CameraControls.vue` component
+(compass + zoom controls) and, more generally, for **Vue/SVG/DOM components that
+sit on top of the Cesium canvas**. It was written to resolve [#623] after
+discovering that the original skip rationale for
+`tests/e2e/accessibility/camera-controls.spec.ts` was a misdiagnosis.
+
+#### What `CameraControls.vue` actually is
+
+`CameraControls.vue` is a **pure Vue 3 + SVG + DOM component**. It is **not** a
+Cesium internal compass widget rendered into the WebGL canvas. Concretely:
+
+- It is mounted unconditionally as `<CameraControls />` in
+  `src/pages/CesiumViewer.vue` and renders independently of the WebGL context.
+- Its markup is plain HTML/SVG: a `.camera-controls-container` wrapper containing
+  a `.compass-assembly` (`role="group"`, `aria-label="Camera direction controls"`)
+  with a `.compass-visual` SVG (`.compass-ring` + `.compass-needle`), real
+  `<button class="dir-btn">` directional buttons, a `.zoom-controls` group
+  (`role="group"`, `aria-label="Zoom controls"`) with `.zoom-btn` buttons, and an
+  `sr-only` `role="status" aria-live="polite"` element announcing the heading.
+- Because it is regular DOM, **it renders in a headless CI browser without a full
+  WebGL context.** The only thing that requires a live Cesium camera is the
+  _reactive heading_ (the `compassRingStyle` rotation and the `sr-only` heading
+  text update after a real camera move).
+
+#### Why the suite was skipped (the real root cause)
+
+The suite was disabled with `cesiumDescribe.skip(...)` and a comment claiming the
+"Cesium compass control does not render in headless CI ... without a full WebGL
+context." That premise is **factually wrong**. The real cause is a
+**selector mismatch**:
+
+- The 37 tests query `.compass-control` and `#compass-description`.
+- **Neither selector exists anywhere in `src/`.** The component uses
+  `.camera-controls-container` / `.compass-assembly` / `.compass-visual` /
+  `.compass-ring` / `.compass-needle` / `.dir-btn` / `.zoom-btn` and has no
+  `#compass-description` id.
+
+The elements were never absent because of WebGL — the locators simply never
+matched the rendered DOM, so every `toBeVisible()` timed out and the suite was
+skipped after the failures were misattributed to Cesium.
+
+#### Chosen strategy: hybrid (DOM-only vs Cesium-coupled split)
+
+Split the assertions by what they actually depend on. This is the issue's
+recommended hybrid approach, corrected for the real root cause.
+
+| Assertion category                                       | Depends on Cesium? | How to test                                                                                        | Fixture                                        |
+| -------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| ARIA roles/labels on the compass + zoom groups           | No                 | Standard Playwright E2E (DOM query)                                                                | `cesiumTest` (component still mounts under it) |
+| `sr-only` `role="status"` element **presence**           | No                 | DOM `toBeAttached()`                                                                               | `cesiumTest`                                   |
+| Directional / zoom button presence + accessible names    | No                 | `getByRole('button', { name: ... })`                                                               | `cesiumTest`                                   |
+| Keyboard focusability, tab order, `tabindex`             | No                 | Playwright keyboard + focus assertions                                                             | `cesiumTest`                                   |
+| Click handlers wired (heading/zoom intent)               | No                 | Assert via store / `cameraService` effect                                                          | `cesiumTest`                                   |
+| `compassRingStyle` rotation updating after a camera move | **Yes**            | Drive `window.__viewer` camera, then assert the `sr-only` heading text / `.compass-ring` transform | `cesiumTest` + `window.__viewer`               |
+| `sr-only` heading **text** reflecting live heading       | **Yes**            | Same as above                                                                                      | `cesiumTest` + `window.__viewer`               |
+
+Key consequences:
+
+- The **DOM-only** assertions (the large majority) can run as ordinary Playwright
+  E2E once the selectors are corrected to the real class names above. They do not
+  need a live WebGL camera — only a mounted component.
+- The **Cesium-coupled** subset (live heading reactivity) is the genuinely
+  Cesium-dependent part. Drive it via the documented E2E globals
+  (`window.__viewer`, `window.__cesium`; see "Cesium & Store Global Variables" in
+  `.claude/rules/testing.md`) rather than depending on real polygon picks, and
+  tag it so it can be skipped where a live camera is unavailable.
+
+#### Re-enablement plan (deferred follow-up)
+
+The suite stays `cesiumDescribe.skip(...)` in the PR that landed this strategy —
+re-enabling it is a larger change that touches every test and risks landing flaky
+specs unreviewed. The follow-up work:
+
+1. Replace `.compass-control` / `#compass-description` selectors across all 37
+   tests with the real selectors
+   (`.camera-controls-container` / `.compass-assembly` / `.compass-ring` /
+   `.compass-needle` / `.dir-btn` / `.zoom-btn` / the `sr-only` status element).
+2. Audit each test against live `CameraControls.vue` behaviour, splitting it into
+   the DOM-only vs Cesium-coupled categories above.
+3. Tag the Cesium-heading-coupled subset and drive it through `window.__viewer`.
+4. Remove the `cesiumDescribe.skip` once the suite is green.
+
+This re-enablement should be filed as a sub-issue of [#472].
+
+[#623]: https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/623
+[#472]: https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/472
+
 ### 4. Performance Tests (`tests/performance/`)
 
 Measure and validate application performance characteristics.
