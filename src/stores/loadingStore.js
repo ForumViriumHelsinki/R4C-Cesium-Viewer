@@ -290,8 +290,17 @@ export const useLoadingStore = defineStore('loading', {
 			Object.keys(this.layerLoading).forEach((layer) => {
 				if (!this.layerLoading[layer]) return // Skip layers not currently loading
 
-				const loadTime = this.loadingTimes[layer]
-				const isStale = loadTime && now - loadTime.startTime > effectiveTimeout
+				// Defensive: if a layer is flagged loading but has no recorded
+				// loadTime (inconsistent state — e.g. started without initializing
+				// loadingTimes), stamp it now. This prevents a stuck-forever loading
+				// state: it won't be cleared this tick (avoids cutting a fresh load
+				// short) but will be cleared once effectiveTimeout elapses.
+				let loadTime = this.loadingTimes[layer]
+				if (!loadTime) {
+					loadTime = { startTime: now }
+					this.loadingTimes[layer] = loadTime
+				}
+				const isStale = now - loadTime.startTime > effectiveTimeout
 
 				// Clear only when genuinely stale — a time-based safety net, not a
 				// blanket sweep of every dynamic layer ID.
