@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.51.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.2...r4c-cesium-viewer-v1.51.3) (2026-05-30)
+
+
+### Bug Fixes
+
+* **ci:** stop Lighthouse PROTOCOL_TIMEOUT by dropping source maps in the LH build ([#831](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/831)) ([c47bf41](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c47bf41e8dc2d2fd46f0b036f121e2fb5cb2aa19))
+* **viewer:** guard GeoJSON loader against non-JSON responses on oauth2 paths ([#813](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/813)) ([aab0ca4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/aab0ca4ad3c55451a28061d4f45cb77a8083ff84))
+
+
+### Performance Improvements
+
+* **charts:** import d3 from submodules via shared @/utils/d3 ([#830](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/830)) ([7dca882](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7dca8824f9c99535209697338381510a2279dd87))
+* disable Cesium IIFE mode to drop render-blocking Cesium.js script ([#778](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/778)) ([#814](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/814)) ([7944273](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7944273471596e84fe490e2692a2fbed23261039))
+* **icons:** replace render-blocking MDI webfont with @mdi/js SVG iconset ([#829](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/829)) ([cf728e2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/cf728e205b87b593b759fda41f57051cabbe06b0))
+
 ## [1.51.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.1...r4c-cesium-viewer-v1.51.2) (2026-05-28)
 
 
