@@ -147,7 +147,14 @@ export default defineConfig(({ mode }) => {
 				dirs: ['src/components', 'src/pages'],
 				dts: 'src/components.d.ts',
 			}),
-			cesium(),
+			// iife: false ships Cesium as a deferred ESM lazy chunk (loaded by
+			// cesiumProvider.initialize()'s `import('cesium')`) instead of
+			// externalizing it to a render-blocking <head> <script
+			// src="/cesium-package/Cesium.js">. The plugin still copies
+			// Assets/Workers/Widgets/ThirdParty into cesium-package/ and sets
+			// CESIUM_BASE_URL regardless of this flag. Fixes the chronic Sentry
+			// "Large Render Blocking Asset on /cesium-package/Cesium.js" signal (#778).
+			cesium({ iife: false }),
 			// Put the Sentry vite plugin after all other plugins
 			sentryVitePlugin({
 				authToken: env.SENTRY_AUTH_TOKEN,
