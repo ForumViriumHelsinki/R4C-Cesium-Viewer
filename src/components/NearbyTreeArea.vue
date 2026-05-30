@@ -114,8 +114,8 @@
 </template>
 
 <script>
-import * as d3 from '@/utils/d3' // Import D3.js
 import { computed } from 'vue'
+import * as d3 from '@/utils/d3' // Import D3.js
 import { useSidebarOffset } from '../composables/useSidebarOffset'
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'

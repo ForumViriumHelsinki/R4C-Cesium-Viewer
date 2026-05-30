@@ -6,8 +6,8 @@
 </template>
 
 <script>
-import * as d3 from '@/utils/d3'
 import { nextTick, ref, watch } from 'vue'
+import * as d3 from '@/utils/d3'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'

@@ -6,8 +6,8 @@
 </template>
 
 <script>
-import * as d3 from '@/utils/d3'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import * as d3 from '@/utils/d3'
 import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
