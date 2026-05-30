@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import * as d3 from 'd3'
+import * as d3 from '@/utils/d3'
 import { onBeforeUnmount, onMounted } from 'vue' // Import lifecycle hooks
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'

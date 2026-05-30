@@ -1,4 +1,4 @@
-import * as d3 from 'd3'
+import * as d3 from '@/utils/d3'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { eventBus } from './eventEmitter.js'
