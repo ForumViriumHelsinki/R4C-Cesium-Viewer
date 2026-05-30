@@ -91,6 +91,14 @@
 		"vitest": "^4.0.15"
 	},
 	"overrides": {
-		"esbuild": "^0.25.11"
+		"esbuild": "^0.25.11",
+		"postcss": "^8.5.10",
+		"brace-expansion": "^5.0.6",
+		"yaml": "^2.8.3",
+		"minimatch": "^9.0.6",
+		"js-cookie": "^3.0.8",
+		"markdown-it": "^14.2.0",
+		"picomatch": "^4.0.4",
+		"rollup": "^4.59.0"
 	}
 }
