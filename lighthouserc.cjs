@@ -26,9 +26,12 @@ module.exports = {
 			url: ['http://localhost:4173/'],
 
 			// Number of runs for each URL
-			// Reduced from 3 to 1 to decrease probability of PROTOCOL_TIMEOUT
-			// CesiumJS is too heavy for multiple runs in CI without timeouts
-			numberOfRuns: 1,
+			// 3 runs so Lighthouse reports the median, smoothing out the
+			// per-run variance inherent to CesiumJS's heavy initial load.
+			// PROTOCOL_TIMEOUT is now avoided by blocking only the heavy
+			// timeout-prone binaries (see blockedUrlPatterns below) rather
+			// than by collapsing to a single run.
+			numberOfRuns: 3,
 
 			// Max wait time for page load (ms) - CesiumJS is heavy
 			maxWaitForLoad: 90000,
@@ -74,9 +77,13 @@ module.exports = {
 					'--metrics-recording-only',
 				],
 
-				// Block heavy terrain and tile requests that cause PROTOCOL_TIMEOUT
-				// The DevTools Protocol times out (30s hardcoded) when trying to get
-				// response bodies for large terrain tiles and 3D data
+				// Block ONLY the heavy timeout-prone binaries that cause
+				// PROTOCOL_TIMEOUT. The DevTools Protocol times out (30s
+				// hardcoded) when trying to get response bodies for large
+				// terrain tiles and 3D mesh/point-cloud data. Raster WMS tiles
+				// (**/tile/**, **/tiles/**) are small PNGs and do NOT trip the
+				// timeout — leaving them unblocked keeps the measured load
+				// honest (they are part of the real page weight users pay for).
 				blockedUrlPatterns: [
 					// Helsinki 3D terrain data (large quantized-mesh tiles)
 					'**/3d/datasource-data/**',
@@ -90,16 +97,17 @@ module.exports = {
 					'*.cmpt',
 					'*.glb',
 					'*.gltf',
-					// External map tile services that load many requests
-					'**/tile/**',
-					'**/tiles/**',
 					// Ion/Cesium cloud assets
 					'*assets.cesium.com*',
 					'*ion.cesium.com*',
 				],
 
-				// Skip audits that require response body inspection (cause PROTOCOL_TIMEOUT)
-				// and PWA audits not relevant for this app
+				// Skip only audits that are genuinely meaningless against a
+				// localhost preview server (no HTTPS, no PWA), or that cannot
+				// be measured honestly there. Byte-weight audits
+				// (unminified-*, unused-javascript, valid-source-maps) now run
+				// again — with only the heavy binaries blocked, they no longer
+				// risk PROTOCOL_TIMEOUT and their findings are real signal.
 				skipAudits: [
 					'is-on-https', // CI runs on localhost
 					'service-worker',
@@ -108,12 +116,10 @@ module.exports = {
 					'themed-omnibox',
 					'maskable-icon',
 					'apple-touch-icon',
-					// Skip audits that inspect large response bodies
-					'uses-text-compression', // Needs to read compressed response bodies
-					'unminified-javascript', // Needs to parse all JS content
-					'unminified-css', // Needs to parse all CSS content
-					'unused-javascript', // Already disabled in assertions, skip here too
-					'valid-source-maps', // Can timeout reading large source maps
+					// localhost preview serves no gzip, so this audit always
+					// reports a false negative — measure it in the real
+					// nginx/Envoy deploy instead.
+					'uses-text-compression',
 				],
 			},
 		},
@@ -161,18 +167,24 @@ module.exports = {
 				// Network-related metrics
 				'uses-http2': 'off', // localhost doesn't use HTTP/2
 				'uses-long-cache-ttl': 'warn',
-				'uses-text-compression': 'off', // Skipped to avoid PROTOCOL_TIMEOUT
+				// Meaningless against a localhost preview server, which serves
+				// no gzip — the audit always fails here regardless of the real
+				// build. Measure compression in the real nginx/Envoy deploy.
+				'uses-text-compression': 'off',
 
 				// Modern best practices
 				'modern-image-formats': 'warn',
 				'uses-responsive-images': 'warn',
 				'offscreen-images': 'off', // Cesium loads lots of tiles dynamically
 
-				// JavaScript optimization (some skipped to avoid PROTOCOL_TIMEOUT)
-				'unused-javascript': 'off', // Cesium bundles are optimized but large
-				'unminified-javascript': 'off', // Skipped to avoid PROTOCOL_TIMEOUT
-				'unminified-css': 'off', // Skipped to avoid PROTOCOL_TIMEOUT
-				'valid-source-maps': 'off', // Skipped to avoid PROTOCOL_TIMEOUT on large maps
+				// JavaScript / CSS byte-weight optimization — now measured
+				// honestly (heavy binaries are blocked, so no PROTOCOL_TIMEOUT).
+				// Surfaced as warnings so regressions are visible without
+				// failing CI on Cesium's inherently large bundles.
+				'unused-javascript': 'warn',
+				'unminified-javascript': 'warn',
+				'unminified-css': 'warn',
+				'valid-source-maps': 'warn',
 				'uses-passive-event-listeners': 'error',
 				'no-document-write': 'error',
 
