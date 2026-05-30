@@ -16,6 +16,11 @@ export default class DataSource {
 	 */
 	constructor() {
 		this.store = useGlobalStore()
+		// Warn-once flag for the non-JSON response guard in loadGeoJsonDataSource.
+		// On the oauth2-proxy-intercepted /oauth2/sign_out path every request
+		// (including relative asset fetches) is answered with a logout HTML page,
+		// which would otherwise flood Sentry with one SyntaxError per layer load.
+		this._nonJsonWarningEmitted = false
 	}
 
 	/**
@@ -165,13 +170,48 @@ export default class DataSource {
 	 * @param {number} opacity - Fill opacity for polygons (0-1)
 	 * @param {string} url - URL to fetch GeoJSON data from
 	 * @param {string} name - Name to assign to the created data source
-	 * @returns {Promise<Array<Cesium.Entity>>} Promise resolving to array of created entities
+	 * @returns {Promise<Array<Cesium.Entity>>} Promise resolving to array of created entities, or [] when the response is not JSON
 	 * @throws {Error} If GeoJSON loading fails
 	 */
 	async loadGeoJsonDataSource(opacity, url, name) {
 		const Cesium = getCesium()
 		try {
-			const dataSource = await Cesium.GeoJsonDataSource.load(url, {
+			// Pre-fetch and content-type guard before handing the body to Cesium.
+			// Cesium.GeoJsonDataSource.load(url) fetches the URL and blindly runs
+			// JSON.parse on the body. On the oauth2-proxy /oauth2/sign_out path the
+			// proxy serves a logout HTML page (<!doctype ...>) for ALL paths -
+			// including relative asset requests - so JSON.parse throws a raw
+			// SyntaxError straight into Sentry. Mirrors the #799 userStore guard;
+			// see .claude/rules/code-quality.md "Guard response.json() Against SPA
+			// Catch-All".
+			const response = await fetch(url)
+			if (!response.ok) {
+				logger.warn(
+					`[DataSource] GeoJSON fetch for "${name}" returned status ${response.status} (${url}); skipping data source.`
+				)
+				return []
+			}
+
+			// Accept any JSON-based content type: RFC 7946 GeoJSON is served as
+			// `application/geo+json`, which does not contain `application/json`.
+			// Matching on `json` covers application/json, application/geo+json,
+			// and friends while still rejecting text/html catch-all responses.
+			const contentType = response.headers.get('content-type') ?? ''
+			if (!contentType.toLowerCase().includes('json')) {
+				if (!this._nonJsonWarningEmitted) {
+					this._nonJsonWarningEmitted = true
+					logger.warn(
+						`[DataSource] GeoJSON fetch for "${name}" returned non-JSON response (content-type: ${contentType || '(missing)'}, url: ${url}); ` +
+							'the SPA/proxy catch-all is likely serving HTML (e.g. the oauth2 sign_out page). Skipping data source.'
+					)
+				}
+				return []
+			}
+
+			// Pass the parsed GeoJSON object to Cesium - load() accepts either a URL
+			// string or an already-parsed object, so this keeps styling unchanged.
+			const json = await response.json()
+			const dataSource = await Cesium.GeoJsonDataSource.load(json, {
 				stroke: Cesium.Color.BLACK,
 				fill: new Cesium.Color(0.3, 0.3, 0.3, opacity),
 				strokeWidth: 8,
