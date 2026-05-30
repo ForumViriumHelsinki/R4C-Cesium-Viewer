@@ -67,6 +67,13 @@ Vuetify theme is configured in `src/main.js` via `createVuetify()`:
 
 All UI colors use `--v-theme-*` CSS variables — see `code-quality.md` CSS Theming section.
 
+## Icons
+
+Material Design Icons render as **inline SVG paths** via a custom Vuetify iconset (`src/plugins/mdiIconset.js`), not the MDI webfont — #821 removed the render-blocking CDN font (~339 KB CSS + ~394 KB woff2) from the critical path. The iconset re-exports Vuetify's `mdi-svg` aliases (for component internals like dropdowns/clear buttons) and maps the app's `mdi-*` names to `@mdi/js` paths via the generated `src/plugins/mdiPaths.js`. `main.js` registers it as the `mdi` set; call sites are unchanged (`<v-icon icon="mdi-foo">`).
+
+- **Adding/removing an icon**: use it as `mdi-foo` as usual, then run `node scripts/generate-mdi-iconset.mjs` to regenerate the path map. The generator scans `src/`, validates each name against `@mdi/js`, and **fails loudly** on an unmappable name — add an `OVERRIDES` entry for renamed icons (e.g. `mdi-building` → `mdiOfficeBuilding`). A missing icon renders blank, so never hand-edit `mdiPaths.js`.
+- **E2E selectors**: the iconset preserves the original `mdi-*` class on the `.v-icon` element, so `.mdi-refresh` / `.mdi-arrow-left` / etc. locators keep matching — the font classes are *not* gone.
+
 ## Cesium Render Mode
 
 `graphicsStore.requestRenderMode` defaults to `true` and is propagated to the live `viewer.scene.requestRenderMode` via the `r4c-request-render-mode` feature flag (wired in `App.vue` after `featureFlagStore.refreshFlags()`). The graphics service `$subscribe` watcher also propagates runtime toggles from `GraphicsQuality.vue` to the live scene.

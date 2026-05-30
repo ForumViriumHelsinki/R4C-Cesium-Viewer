@@ -187,6 +187,24 @@ Building level UI buttons use exact casing:
 - `"Building Heat Data"` (not "Building heat data")
 - `"Building Properties"` (not "Building properties")
 
+## Icon Selectors (`.mdi-*`)
+
+Icons render as inline SVG (custom `mdi-svg` iconset — see `architecture.md`), but the iconset **preserves the `mdi-*` class on the `.v-icon` element**, so existing icon locators keep working:
+
+```typescript
+page.getByRole('button').filter({ has: page.locator('.mdi-refresh') });
+```
+
+Locating a control by its `mdi-*` class is reliable. A brand-new icon must be regenerated into the path map (`node scripts/generate-mdi-iconset.mjs`) or it renders blank.
+
+## Accessibility Specs Require Data
+
+Most `tests/e2e/accessibility/*` specs are tagged `@requires-database` — they drill to postal-code / building levels that need seeded data, and the reset/back/compass controls only mount once data loads. Without a database they skip or fail, so **red accessibility/E2E checks locally (or on a config-only PR) are usually environmental, not a regression**. Notes:
+
+- DB-free subset: `just dev-mock` + `just test-e2e-mock` (sets `SKIP_REQUIRES_DATABASE=true`).
+- `camera-controls.spec.ts` is `cesiumDescribe.skip`-ed at the source — it always reports 0/skipped.
+- Setting `window.globalStore.level` alone does **not** mount the postal-code view; the data load gates the render. Use `AccessibilityTestHelpers.drillToLevel(..., { method: 'store' })` for deterministic level changes.
+
 ## Conditional Test Skip in Custom Fixtures
 
 `cesiumTest.skip()` inside a test body (e.g., in a catch block) does **not** work — the test timeout kills the process before the skip executes. Use test-level skip instead:

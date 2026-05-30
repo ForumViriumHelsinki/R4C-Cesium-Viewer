@@ -86,3 +86,11 @@ Container build/release use the org reusable workflows (`ForumViriumHelsinki/.gi
 - `lighthouse.yml` — performance monitoring on PRs
 
 Sentry build args (`SENTRY_AUTH_TOKEN`, `VITE_SENTRY_DSN`) reach the build via the reusable workflows' `secret-build-args` passthrough — secrets cannot flow through plain `inputs.build-args` on reusable-workflow callers.
+
+### Lighthouse CI
+
+`lighthouse.yml` runs `lhci collect` against `bun run preview`. Two hazards specific to this heavy CesiumJS app:
+
+- **Source maps cause `PROTOCOL_TIMEOUT`.** Lighthouse fetches response bodies over the DevTools protocol (hardcoded 30s). The multi-MB Cesium source maps — and the `valid-source-maps` / byte-weight audits that read them — reliably trip it and crash `lhci collect` entirely ("did not produce results"). The build step runs `LIGHTHOUSE=true bun run build`, and `vite.config.js` reads `process.env.LIGHTHOUSE` to **skip source maps for the Lighthouse build only** (the deploy/container build is unaffected and keeps maps for Sentry). Do **not** re-enable `valid-source-maps` in `lighthouserc.cjs` — no maps exist in that build by design. This is the timeout's real cause; it is **not** limited to terrain/3D binaries.
+- **The blocked-tile run is a "shell" benchmark.** `blockedUrlPatterns` blocks heavy terrain/3D binaries (raster WMS tiles are unblocked). The honest median is ~0.35 — the perf gate is a non-blocking `warn` at 0.3.
+- **Reproduce locally with `just lighthouse-local`** before pushing `lighthouserc.cjs` / build changes — CI runs are ~11 min, and `main` is unprotected so a broken config can merge before CI catches it.
