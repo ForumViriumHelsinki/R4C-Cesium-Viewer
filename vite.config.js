@@ -108,7 +108,12 @@ export default defineConfig(({ mode }) => {
 			pure: mode === 'production' ? ['console.log', 'console.debug'] : [],
 		},
 		build: {
-			sourcemap: true, // Source map generation must be turned on
+			// Source maps ship to production for Sentry symbolication. The
+			// Lighthouse CI build sets LIGHTHOUSE=true to skip them: Lighthouse's
+			// `valid-source-maps` / byte-weight audits fetch response bodies over
+			// the DevTools protocol (hardcoded 30s), and the multi-MB Cesium source
+			// maps reliably trip that timeout, crashing the whole lhci collect (#824).
+			sourcemap: process.env.LIGHTHOUSE !== 'true',
 			target: 'es2020', // Modern browsers only for better optimization
 			minify: 'esbuild', // Fast minification
 			rollupOptions: {
