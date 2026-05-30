@@ -20,9 +20,10 @@ installPreloadErrorHandler()
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import { md1 } from 'vuetify/blueprints'
-import { aliases, mdi } from 'vuetify/iconsets/mdi'
-
 import { version } from '../package.json'
+// Custom SVG iconset: ships only the ~81 icons we use as inline @mdi/js paths
+// instead of the render-blocking Material Design Icons webfont (#821).
+import { aliases, mdi } from './plugins/mdiIconset.js'
 
 // If you're using one of our framework SDK packages, like `@sentry/react`,
 // substitute its name for `@sentry/browser` here
