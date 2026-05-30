@@ -43,8 +43,9 @@ export const mdi = {
 		return h(mdiSvgSet.component, {
 			...props,
 			icon: resolve(props.icon),
-			// Keep the mdi-* class on the <svg> so class-based selectors still match.
-			class: isName ? props.icon : undefined,
+			// Keep the mdi-* class so class-based selectors still match, while
+			// preserving any class the caller passed (merge, don't overwrite).
+			class: [props.class, isName ? props.icon : null],
 		})
 	},
 }

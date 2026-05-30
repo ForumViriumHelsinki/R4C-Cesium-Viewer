@@ -9,7 +9,7 @@
  * Fails (exit 1) if any used icon has no matching @mdi/js export and no override.
  */
 import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as mdi from '@mdi/js'
 
@@ -27,11 +27,14 @@ const OVERRIDES = {
 	'mdi-building': 'mdiOfficeBuilding', // mdi-building absent from font + @mdi/js
 }
 
+// Normalize to forward slashes so the SKIP check works on Windows too.
+const relPosix = (full) => relative(ROOT, full).split(sep).join('/')
+
 const walk = (dir, acc = []) => {
 	for (const entry of readdirSync(dir)) {
 		const full = join(dir, entry)
 		if (statSync(full).isDirectory()) walk(full, acc)
-		else if (SCAN_EXT.test(entry) && !SKIP.has(relative(ROOT, full))) acc.push(full)
+		else if (SCAN_EXT.test(entry) && !SKIP.has(relPosix(full))) acc.push(full)
 	}
 	return acc
 }
