@@ -301,6 +301,12 @@ test-e2e *args:
 test-e2e-mock *args:
     VITE_E2E_TEST=true SKIP_REQUIRES_DATABASE=true bun run test:e2e {{ args }}
 
+# Reproduce the CI Lighthouse run locally (map-less build avoids PROTOCOL_TIMEOUT). See development.md.
+[group: "testing"]
+lighthouse-local:
+    LIGHTHOUSE=true bun run build
+    bunx @lhci/cli@0.14.x collect --config=lighthouserc.cjs
+
 # Run a single test file (fast iteration during test fixes)
 [group: "testing"]
 test-file file *args:
