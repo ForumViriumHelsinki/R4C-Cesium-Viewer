@@ -33,7 +33,7 @@
 </template>
 
 <script>
-import * as d3 from 'd3' // Import D3.js
+import * as d3 from '@/utils/d3' // Import D3.js
 import { DATES } from '../constants/dates.js'
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'

@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import * as d3 from 'd3' // Import D3.js
+import * as d3 from '@/utils/d3' // Import D3.js
 import { nextTick, onBeforeUnmount, onMounted } from 'vue'
 import Building from '../services/building.js'
 import { eventBus } from '../services/eventEmitter.js'

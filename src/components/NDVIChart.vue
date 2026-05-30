@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import * as d3 from 'd3'
+import * as d3 from '@/utils/d3'
 import { onMounted, ref, watch } from 'vue'
 import { getCesium } from '../services/cesiumProvider.js'
 import Datasource from '../services/datasource.js'
