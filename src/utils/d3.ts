@@ -13,3 +13,6 @@ export { schemeCategory10 } from 'd3-scale-chromatic'
 export type { Selection } from 'd3-selection'
 export { select } from 'd3-selection'
 export { arc, pie } from 'd3-shape'
+// Side-effect import: augments Selection.prototype with .transition()
+// Required for tooltip.transition().duration(...) calls in plot.js and VulnerabilityChart.vue
+import 'd3-transition'
