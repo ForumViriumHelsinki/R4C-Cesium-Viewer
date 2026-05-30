@@ -160,12 +160,20 @@ export default defineConfig(({ mode }) => {
 			// CESIUM_BASE_URL regardless of this flag. Fixes the chronic Sentry
 			// "Large Render Blocking Asset on /cesium-package/Cesium.js" signal (#778).
 			cesium({ iife: false }),
-			// Put the Sentry vite plugin after all other plugins
-			sentryVitePlugin({
-				authToken: env.SENTRY_AUTH_TOKEN,
-				org: 'forum-virium-helsinki',
-				project: 'regions4climate',
-			}),
+			// Put the Sentry vite plugin after all other plugins.
+			// Excluded from the Lighthouse build (LIGHTHOUSE=true) because:
+			// 1. Source maps are disabled in that build, so there is nothing to upload.
+			// 2. The plugin would warn about missing source maps and make unnecessary
+			//    Sentry API calls (release creation, artifact deployment) during CI.
+			...(process.env.LIGHTHOUSE !== 'true'
+				? [
+						sentryVitePlugin({
+							authToken: env.SENTRY_AUTH_TOKEN,
+							org: 'forum-virium-helsinki',
+							project: 'regions4climate',
+						}),
+					]
+				: []),
 			// Bundle analyzer - only in analyze mode (triggered by --mode analyze)
 			...(mode === 'analyze'
 				? [
