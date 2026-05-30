@@ -108,7 +108,12 @@ export default defineConfig(({ mode }) => {
 			pure: mode === 'production' ? ['console.log', 'console.debug'] : [],
 		},
 		build: {
-			sourcemap: true, // Source map generation must be turned on
+			// Source maps ship to production for Sentry symbolication. The
+			// Lighthouse CI build sets LIGHTHOUSE=true to skip them: Lighthouse's
+			// `valid-source-maps` / byte-weight audits fetch response bodies over
+			// the DevTools protocol (hardcoded 30s), and the multi-MB Cesium source
+			// maps reliably trip that timeout, crashing the whole lhci collect (#824).
+			sourcemap: process.env.LIGHTHOUSE !== 'true',
 			target: 'es2020', // Modern browsers only for better optimization
 			minify: 'esbuild', // Fast minification
 			rollupOptions: {
@@ -155,12 +160,20 @@ export default defineConfig(({ mode }) => {
 			// CESIUM_BASE_URL regardless of this flag. Fixes the chronic Sentry
 			// "Large Render Blocking Asset on /cesium-package/Cesium.js" signal (#778).
 			cesium({ iife: false }),
-			// Put the Sentry vite plugin after all other plugins
-			sentryVitePlugin({
-				authToken: env.SENTRY_AUTH_TOKEN,
-				org: 'forum-virium-helsinki',
-				project: 'regions4climate',
-			}),
+			// Put the Sentry vite plugin after all other plugins.
+			// Excluded from the Lighthouse build (LIGHTHOUSE=true) because:
+			// 1. Source maps are disabled in that build, so there is nothing to upload.
+			// 2. The plugin would warn about missing source maps and make unnecessary
+			//    Sentry API calls (release creation, artifact deployment) during CI.
+			...(process.env.LIGHTHOUSE !== 'true'
+				? [
+						sentryVitePlugin({
+							authToken: env.SENTRY_AUTH_TOKEN,
+							org: 'forum-virium-helsinki',
+							project: 'regions4climate',
+						}),
+					]
+				: []),
 			// Bundle analyzer - only in analyze mode (triggered by --mode analyze)
 			...(mode === 'analyze'
 				? [
