@@ -4,8 +4,8 @@
 </template>
 
 <script setup>
-import * as d3 from '@/utils/d3'
 import { onBeforeUnmount, onMounted } from 'vue'
+import * as d3 from '@/utils/d3'
 import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
