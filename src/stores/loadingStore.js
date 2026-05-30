@@ -231,7 +231,14 @@ export const useLoadingStore = defineStore('loading', {
 		// Set error for a layer
 		setLayerError(layerName, error) {
 			this.layerLoading[layerName] = false
-			this.loadingProgress[layerName].status = 'error'
+
+			// Guard the progress dereference — a layer may have no progress entry
+			// (e.g. cancelLoading() on a layer whose progress was never created).
+			// The error path must never itself throw and orphan the loading state.
+			if (this.loadingProgress[layerName]) {
+				this.loadingProgress[layerName].status = 'error'
+			}
+
 			this.loadingErrors[layerName] = error
 			this.loadingMessages[layerName] = `Error loading ${layerName}: ${error}`
 
@@ -255,12 +262,17 @@ export const useLoadingStore = defineStore('loading', {
 		},
 
 		/**
-		 * Clear stale loading states that have been loading for longer than the timeout.
-		 * Also removes dynamic layer IDs (not in predefined list) that are still loading.
+		 * Clear loading states that have genuinely been loading longer than the timeout.
 		 * This prevents the loading indicator from getting stuck due to:
 		 * - Network timeouts not properly completing layer loading
-		 * - Dynamic layer IDs (e.g., 'buildings-00100') that failed silently
 		 * - Race conditions in navigation where layer loading was interrupted
+		 *
+		 * The staleness check is purely time-based and applies equally to predefined
+		 * layers and dynamic layer IDs (e.g., viewport tile IDs). A layer being dynamic
+		 * is NOT evidence that it is stuck — viewport tiles legitimately stay in-flight
+		 * while queued behind CONCURRENT_TILE_LOADS and rate-limited at the gateway.
+		 * Clearing them solely for being dynamic prematurely flips genuinely-loading
+		 * tiles to false, producing a warning flood and a UI flicker/race (see #680).
 		 *
 		 * In E2E test mode (VITE_E2E_TEST=true), uses a shorter timeout (5s) to prevent
 		 * test timeouts due to slow network responses in test environments.
@@ -273,32 +285,28 @@ export const useLoadingStore = defineStore('loading', {
 				typeof import.meta !== 'undefined' && import.meta.env?.VITE_E2E_TEST === 'true'
 			const effectiveTimeout = isE2ETest ? Math.min(staleTimeout, 5000) : staleTimeout
 			const now = Date.now()
-			const predefinedLayers = [
-				'trees',
-				'vegetation',
-				'otherNature',
-				'buildings',
-				'postalCodes',
-				'landcover',
-				'ndvi',
-				'populationGrid',
-				'heatData',
-				'statsGrid',
-			]
 			let clearedCount = 0
 
 			Object.keys(this.layerLoading).forEach((layer) => {
 				if (!this.layerLoading[layer]) return // Skip layers not currently loading
 
-				const loadTime = this.loadingTimes[layer]
-				const isStale = loadTime && now - loadTime.startTime > effectiveTimeout
-				const isDynamicLayer = !predefinedLayers.includes(layer)
+				// Defensive: if a layer is flagged loading but has no recorded
+				// loadTime (inconsistent state — e.g. started without initializing
+				// loadingTimes), stamp it now. This prevents a stuck-forever loading
+				// state: it won't be cleared this tick (avoids cutting a fresh load
+				// short) but will be cleared once effectiveTimeout elapses.
+				let loadTime = this.loadingTimes[layer]
+				if (!loadTime) {
+					loadTime = { startTime: now }
+					this.loadingTimes[layer] = loadTime
+				}
+				const isStale = now - loadTime.startTime > effectiveTimeout
 
-				// Clear if stale OR if it's a dynamic layer ID (these should be transient)
-				if (isStale || isDynamicLayer) {
+				// Clear only when genuinely stale — a time-based safety net, not a
+				// blanket sweep of every dynamic layer ID.
+				if (isStale) {
 					logger.warn(
-						`[loadingStore] Clearing stale loading state for ${layer}`,
-						isDynamicLayer ? '(dynamic layer)' : `(loading for ${now - loadTime?.startTime}ms)`
+						`[loadingStore] Clearing stale loading state for ${layer} (loading for ${now - loadTime.startTime}ms)`
 					)
 					this.layerLoading[layer] = false
 
