@@ -287,7 +287,11 @@ jobs:
       SKIP_REQUIRES_DATABASE: 'true'
 
     strategy:
-      fail-fast: true
+      # Don't cancel desktop+mobile when one viewport times out. The tablet
+      # cross-view navigation specs are slow/flaky on CI (tracked in #784); a
+      # single viewport's timeout should not erase the signal from the other
+      # two, which pass within budget.
+      fail-fast: false
       matrix:
         viewport: [desktop, tablet, mobile]
 
