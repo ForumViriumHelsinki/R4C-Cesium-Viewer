@@ -93,7 +93,7 @@ export default class Vegetation {
 
 				// Process batch
 				for (const entity of batch) {
-					const category = entity.properties?._koodi?._value
+					const category = entity.properties?._koodi?.getValue()
 					if (category) {
 						this.setVegetationPolygonMaterialColor(entity, category)
 					}

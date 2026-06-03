@@ -84,7 +84,7 @@ export class BuildingFilter {
 
 				// Check hideNewBuildings filter
 				if (hideNewBuildings) {
-					const completionDate = entity.properties?._c_valmpvm?._value
+					const completionDate = entity.properties?._c_valmpvm?.getValue()
 					if (completionDate && new Date(completionDate).getTime() >= cutoffDate) {
 						shouldHide = true
 					}
@@ -93,10 +93,10 @@ export class BuildingFilter {
 				// Check hideNonSote filter (social/healthcare buildings)
 				if (!shouldHide && hideNonSote) {
 					const kayttotark = helsinkiView
-						? entity.properties?._c_kayttark?._value
-							? Number(entity.properties?._c_kayttark?._value)
+						? entity.properties?._c_kayttark?.getValue()
+							? Number(entity.properties?._c_kayttark?.getValue())
 							: null
-						: entity.properties?._kayttarks?._value
+						: entity.properties?._kayttarks?.getValue()
 
 					const entityIsSoteBuilding = helsinkiView
 						? kayttotark && isSoteBuilding(kayttotark)
@@ -110,7 +110,7 @@ export class BuildingFilter {
 				// Check hideLow filter (buildings with <= 6 floors)
 				if (!shouldHide && hideLow) {
 					const floorCount =
-						entity.properties?.[helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']?._value
+						entity.properties?.[helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']?.getValue()
 					if (!floorCount || floorCount <= 6) {
 						shouldHide = true
 					}
@@ -177,7 +177,7 @@ export class BuildingFilter {
 			? visibleEntities.map((entity) => entity.properties?._avgheatexposuretobuilding?._value)
 			: visibleEntities
 					.map((entity) => {
-						const heatTimeseries = entity.properties?.heat_timeseries?._value || []
+						const heatTimeseries = entity.properties?.heat_timeseries?.getValue() || []
 						const foundEntry = heatTimeseries.find(({ date }) => date === targetDate)
 						return foundEntry ? foundEntry.avg_temp_c : null
 					})

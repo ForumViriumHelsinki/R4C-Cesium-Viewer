@@ -33,15 +33,6 @@ import unifiedLoader from './unifiedLoader.js'
  * @class Tree
  */
 
-/**
- * A Cesium GeoJSON entity augmented with the internal `_properties` PropertyBag.
- * Cesium populates `_properties` with `ConstantProperty`-like wrappers whose
- * underlying value is read via `._value`. This mirrors the public `properties`
- * getter but is what the runtime code reads directly.
- *
- * @typedef {Cesium.Entity & { _properties?: Record<string, { _value?: any } | undefined> }} TreeEntity
- */
-
 export default class Tree {
 	/**
 	 * Creates a Tree service instance
@@ -247,24 +238,21 @@ export default class Tree {
 		const propsStore = usePropsStore()
 
 		// Extract serializable tree data (prevents DataCloneError)
-		const treeData = entities.map((entity) => {
-			const e = /** @type {TreeEntity} */ (entity)
-			return {
-				kohde_id: e._properties?._kohde_id?._value,
-				p_ala_m2: e._properties?._p_ala_m2?._value,
-			}
-		})
+		const treeData = entities.map((entity) => ({
+			kohde_id: entity.properties?.kohde_id?.getValue(),
+			p_ala_m2: entity.properties?.p_ala_m2?.getValue(),
+		}))
 
 		// Extract serializable building data (prevents DataCloneError)
 		const buildingData = new Map()
-		const buildingEntities = /** @type {TreeEntity[]} */ (buildingsDataSource.entities.values)
+		const buildingEntities = buildingsDataSource.entities.values
 		for (const entity of buildingEntities) {
-			const id = entity._properties?._id?._value || entity._properties?._hki_id?._value
+			const id = entity.properties?.id?.getValue() || entity.properties?.hki_id?.getValue()
 			if (id) {
 				buildingData.set(id, {
-					heatExposure: entity._properties?.avgheatexposuretobuilding?._value,
-					area_m2: entity._properties?._area_m2?._value,
-					hki_id: entity._properties?._hki_id?._value,
+					heatExposure: entity.properties?.avgheatexposuretobuilding?.getValue(),
+					area_m2: entity.properties?.area_m2?.getValue(),
+					hki_id: entity.properties?.hki_id?.getValue(),
 				})
 			}
 		}
@@ -348,7 +336,7 @@ export default class Tree {
 		const Cesium = getCesium()
 		const treeEntities = treeDataSource.entities.values
 		for (let i = 0; i < treeEntities.length; i++) {
-			const entity = /** @type {TreeEntity} */ (treeEntities[i])
+			const entity = treeEntities[i]
 
 			const polygon = /** @type {any} */ (entity.polygon)
 			if (polygon) {
@@ -356,8 +344,9 @@ export default class Tree {
 				polygon.outlineWidth = 3
 			}
 
-			if (entity._properties?._description && polygon) {
-				this.setTreePolygonMaterialColor(entity, entity._properties._description._value)
+			const description = entity.properties?.description?.getValue()
+			if (description && polygon) {
+				this.setTreePolygonMaterialColor(entity, description)
 			}
 		}
 	}

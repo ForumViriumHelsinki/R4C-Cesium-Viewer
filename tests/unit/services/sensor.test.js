@@ -199,11 +199,11 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 				{
 					properties: {
 						_measurement: {
-							_value: {
+							getValue: () => ({
 								temp_air: 23.5,
 								rh_air: 65.2,
 								time: '2023-06-23T12:00:00Z',
-							},
+							}),
 						},
 					},
 					billboard: {},
@@ -234,7 +234,7 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 				{
 					properties: {
 						_measurement: {
-							_value: null, // No measurement
+							getValue: () => null, // No measurement
 						},
 					},
 				},

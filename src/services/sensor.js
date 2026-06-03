@@ -75,7 +75,7 @@ export default class Vegetation {
 		// Iterate over the entities and add labels for "temp_air" and "rh_air"
 		for (let i = 0; i < entities.length; i++) {
 			const entity = entities[i]
-			const measurement = entity.properties?._measurement?._value
+			const measurement = entity.properties?._measurement?.getValue()
 
 			if (measurement) {
 				const tempAir = measurement.temp_air
