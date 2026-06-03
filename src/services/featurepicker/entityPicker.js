@@ -85,7 +85,8 @@ export function pickEntity(windowPosition, context, onEntityPicked) {
  * @returns {void}
  */
 export function removeEntityByName(viewer, name) {
-	viewer.entities._entities._array.forEach((entity) => {
+	// Iterate over a copy of the values array since remove() mutates the collection
+	;[...viewer.entities.values].forEach((entity) => {
 		if (entity.name === name) {
 			viewer.entities.remove(entity)
 		}
@@ -106,7 +107,7 @@ export function getBoundingBox(entity) {
 	if (entity.polygon) {
 		const Cesium = getCesium()
 		// Access the polygon hierarchy to get vertex positions
-		const hierarchy = entity.polygon.hierarchy.getValue()
+		const hierarchy = entity.polygon.hierarchy?.getValue()
 
 		if (hierarchy) {
 			const positions = hierarchy.positions

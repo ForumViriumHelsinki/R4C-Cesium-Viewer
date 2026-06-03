@@ -42,10 +42,15 @@ export default class Othernature {
 	 * @returns {Promise} - A promise that resolves once the data has been loaded
 	 */
 	async loadOtherNature() {
+		const postalcode = this.store.postalcode
+		if (!postalcode) {
+			logger.warn('loadOtherNature called without a postal code; skipping')
+			return null
+		}
 		try {
 			const data = await unifiedLoader.loadLayer({
 				layerId: 'othernature',
-				url: this.urlStore.otherNature(this.store.postalcode),
+				url: this.urlStore.otherNature(postalcode),
 				type: 'geojson',
 				processor: (data) => this.addOtherNatureDataSource(data),
 				options: {
@@ -82,7 +87,7 @@ export default class Othernature {
 
 				// Process batch
 				for (const entity of batch) {
-					const category = entity.properties._koodi?._value
+					const category = entity.properties?._koodi?.getValue()
 					if (category) {
 						this.setOtherNaturePolygonMaterialColor(entity, category)
 					}

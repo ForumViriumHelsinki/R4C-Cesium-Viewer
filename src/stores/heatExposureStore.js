@@ -25,7 +25,9 @@ import { useURLStore } from './urlStore.js'
  */
 export const useHeatExposureStore = defineStore('heatExposure', {
 	state: () => ({
+		/** @type {Array<Object>|null} */
 		data: null, // Stores the raw Postal code data
+		/** @type {Map<string, Object>|null} */
 		dataByPostcode: null, // Map-based index for O(1) lookups
 	}),
 	getters: {

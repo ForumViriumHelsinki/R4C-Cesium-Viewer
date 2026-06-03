@@ -77,12 +77,13 @@ export class BuildingHighlighter {
 	 * @param {Array<number>} values - Values to match against
 	 */
 	outlineByTemperature(entity, property, values) {
-		const heatTimeseries = entity._properties?.heat_timeseries?._value || []
+		const heatTimeseries = entity.properties?.heat_timeseries?.getValue() || []
 		const foundEntry = heatTimeseries.find(({ date }) => date === this.store.heatDataDate)
 
+		const propertyValue = entity.properties?.[property]?.getValue()
 		const shouldOutlineYellow = !this.toggleStore.helsinkiView
 			? foundEntry && values.includes(foundEntry.avg_temp_c)
-			: entity._properties?.[property] && values.includes(entity._properties[property]._value)
+			: propertyValue != null && values.includes(propertyValue)
 
 		if (shouldOutlineYellow) {
 			this.polygonOutlineToYellow(entity)
@@ -121,7 +122,8 @@ export class BuildingHighlighter {
 	 * @private
 	 */
 	outlineById(entity, property, id) {
-		if (entity._properties?.[property] && entity._properties[property]._value === id) {
+		const propertyValue = entity.properties?.[property]?.getValue()
+		if (propertyValue != null && propertyValue === id) {
 			this.polygonOutlineToYellow(entity)
 			this.store.setPickedEntity(entity)
 			eventBus.emit('entityPrintEvent')
@@ -141,9 +143,9 @@ export class BuildingHighlighter {
 		}
 
 		const Cesium = getCesium()
-		entity.polygon.outline = true
-		entity.polygon.outlineColor = Cesium.Color.YELLOW
-		entity.polygon.outlineWidth = 20
+		entity.polygon.outline = new Cesium.ConstantProperty(true)
+		entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.YELLOW)
+		entity.polygon.outlineWidth = new Cesium.ConstantProperty(20)
 	}
 
 	/**
@@ -157,8 +159,8 @@ export class BuildingHighlighter {
 		}
 
 		const Cesium = getCesium()
-		entity.polygon.outlineColor = Cesium.Color.BLACK
-		entity.polygon.outlineWidth = 8
+		entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK)
+		entity.polygon.outlineWidth = new Cesium.ConstantProperty(8)
 	}
 }
 

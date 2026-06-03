@@ -221,7 +221,7 @@ const props = defineProps({
 	mode: {
 		type: String,
 		default: 'overlay', // 'overlay', 'compact', 'both'
-		validator: (value) => ['overlay', 'compact', 'both'].includes(value),
+		validator: (/** @type {string} */ value) => ['overlay', 'compact', 'both'].includes(value),
 	},
 	showPerformanceInfo: {
 		type: Boolean,

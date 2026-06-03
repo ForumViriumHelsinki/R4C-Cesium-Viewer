@@ -39,7 +39,7 @@ export function logVisibilityChange(type, name, oldValue, newValue, source) {
 		from: oldValue,
 		to: newValue,
 		source,
-		stack: new Error().stack.split('\n').slice(2, 6).join('\n'), // Caller info
+		stack: (new Error().stack ?? '').split('\n').slice(2, 6).join('\n'), // Caller info
 	}
 
 	visibilityLog.push(entry)
@@ -75,7 +75,7 @@ export function logBatchVisibilityChange(type, count, newValue, source) {
 		from: null,
 		to: newValue,
 		source,
-		stack: new Error().stack.split('\n').slice(2, 6).join('\n'),
+		stack: (new Error().stack ?? '').split('\n').slice(2, 6).join('\n'),
 	}
 
 	visibilityLog.push(entry)
@@ -249,7 +249,9 @@ export function findEntries(filter = {}) {
 
 // Make available globally for console access
 if (typeof window !== 'undefined') {
-	window.visibilityLog = {
+	// Debug-only global; not part of the typed Window surface.
+	const debugWindow = /** @type {Window & { visibilityLog?: object }} */ (window)
+	debugWindow.visibilityLog = {
 		getLog: getVisibilityLog,
 		clear: clearVisibilityLog,
 		analyze: analyzeBlinking,

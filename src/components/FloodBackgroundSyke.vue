@@ -81,7 +81,7 @@ import logger from '../utils/logger.js'
 
 const urlStore = useURLStore()
 const globalStore = useGlobalStore()
-const selectedScenario = ref(null)
+const selectedScenario = ref(/** @type {string | null} */ (null))
 
 const legendItemsCombination = ref([
 	{ color: '#002a8e', text: 'Current situation (2020)' },

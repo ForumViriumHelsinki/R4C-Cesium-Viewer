@@ -77,7 +77,8 @@ export const createFloodImageryLayer = async (url, layerName) => {
 			retryHandler.handleTileError(error, layerName)
 		})
 
-		await provider.readyPromise
+		// WebMapServiceImageryProvider is constructed ready in this Cesium version;
+		// the removed `readyPromise` API would resolve to `await undefined` anyway.
 		const addedLayer = viewer.imageryLayers.addImageryProvider(provider)
 		addedLayer.alpha = 1
 		backgroundMapStore.floodLayers.push(addedLayer)

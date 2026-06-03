@@ -19,7 +19,10 @@ const propsStore = usePropsStore()
 
 const createPieChart = () => {
 	const datasource = propsStore.postalCodeData
-	const nameOfZone = globalStore.nameOfZone._value
+	// nameOfZone is stored as a plain string (already unwrapped from the Cesium
+	// property's ._value at the call site in featurepicker). Reading ._value here
+	// was a bug that yielded undefined; use the value directly with a null guard.
+	const nameOfZone = globalStore.nameOfZone ?? ''
 	const year = backgroundMapStore.hsyYear
 	const area = backgroundMapStore.hsySelectArea
 
@@ -66,8 +69,10 @@ const createPieChart = () => {
 	const height = 220 - margin.top - margin.bottom
 	const radius = Math.min(width, height) / 3 // Adjust as needed
 
-	const pie = d3
-		.pie()
+	/**
+	 * @typedef {{ value: number, label: string, zone: string }} PieDatum
+	 */
+	const pie = /** @type {import('d3').Pie<any, PieDatum>} */ (/** @type {unknown} */ (d3.pie()))
 		.sort(null)
 		.value((d) => d.value)
 	const arc = d3.arc().innerRadius(0).outerRadius(radius)
@@ -130,7 +135,7 @@ const clearPieChart = () => {
 /**
  * Get total area of district properties by district data source name and district id and list of property keys
  *
- * @param { Number } id Id of the district
+ * @param { string } name Name of the district
  * @param { Array } propertyKeys - List of property keys to calculate the total area
  * @param { Number } year user selected year
  * @param { Object } datasource postalcode datasource

@@ -25,8 +25,8 @@ export default {
 
 		const createBuildingTreeBarChart = () => {
 			const treeArea = setTreeArea()
-			const postinumero = store.postalcode
-			const address = store.buildingAddress
+			const postinumero = store.postalcode ?? ''
+			const address = store.buildingAddress ?? ''
 
 			plotService.initializePlotContainer('buildingTreeChartContainer')
 
@@ -52,7 +52,7 @@ export default {
 			createBars(svg, data, xScale, yScale, height, colors)
 
 			plotService.setupAxes(svg, xScale, yScale, height)
-			plotService.addTitle(svg, 'Nearby tree area comparison', width, margin)
+			plotService.addTitle(svg, 'Nearby tree area comparison', width, margin.top)
 		}
 
 		const createBars = (svg, data, xScale, yScale, height, colors) => {

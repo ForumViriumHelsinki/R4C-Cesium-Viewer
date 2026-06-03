@@ -133,11 +133,14 @@ export class BuildingStyler {
 	 * @returns {Promise<void>}
 	 */
 	async setHelsinkiBuildingsHeight(entities) {
+		const Cesium = getCesium()
 		await processBatchAdaptive(
 			entities,
 			(entity) => {
 				if (entity.polygon) {
-					entity.polygon.extrudedHeight = calculateBuildingHeight(entity.properties)
+					entity.polygon.extrudedHeight = new Cesium.ConstantProperty(
+						calculateBuildingHeight(entity.properties)
+					)
 				}
 			},
 			{ processorName: 'heightExtrusion' }
@@ -254,7 +257,7 @@ export class BuildingStyler {
 	 * Processes building heat timeseries data, tree coverage, and heat exposure values.
 	 *
 	 * @param {number} treeArea - Nearby tree coverage area in square meters
-	 * @param {number} avg_temp_c - Average surface temperature in Celsius (unused)
+	 * @param {number} _avg_temp_c - Average surface temperature in Celsius (unused)
 	 * @param {Object} buildingProps - Building properties object containing heat and structural data
 	 * @returns {Promise<void>}
 	 */

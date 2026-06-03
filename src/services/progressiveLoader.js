@@ -174,7 +174,7 @@ class ProgressiveLoader {
 
 			return {
 				estimatedSize: contentLength ? parseInt(contentLength, 10) : null,
-				contentType: response.headers.get('content-type'),
+				contentType: response.headers.get('content-type') ?? 'application/json',
 				supportsRangeRequests: response.headers.get('accept-ranges') === 'bytes',
 			}
 		} catch (error) {
@@ -230,10 +230,9 @@ class ProgressiveLoader {
 	 * @private
 	 */
 	async loadStandard(url, signal, config) {
-		const response = await fetch(url, {
-			signal,
-			timeout: config.timeout,
-		})
+		// Note: `fetch` has no `timeout` option (it is silently ignored by the
+		// browser); cancellation is driven by `signal` via the AbortController.
+		const response = await fetch(url, { signal })
 
 		if (!response.ok) {
 			throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -260,7 +259,7 @@ class ProgressiveLoader {
 	 * Future Enhancement: True streaming for APIs that support it (chunked transfer encoding).
 	 *
 	 * @param {string} url - Data source URL
-	 * @param {DatasetMetadata} metadata - Dataset metadata (not currently used)
+	 * @param {DatasetMetadata} _metadata - Dataset metadata (not currently used)
 	 * @param {AbortSignal} signal - Abort signal for cancellation
 	 * @param {ProgressiveOptions} config - Loading configuration
 	 * @returns {Promise<*>} Complete dataset
@@ -275,7 +274,8 @@ class ProgressiveLoader {
 		logger.debug('🔄 Starting progressive loading for:', url)
 
 		// Load the complete dataset
-		const response = await fetch(url, { signal, timeout: config.timeout })
+		// Note: `fetch` has no `timeout` option; cancellation is driven by `signal`.
+		const response = await fetch(url, { signal })
 
 		if (!response.ok) {
 			throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -284,7 +284,7 @@ class ProgressiveLoader {
 		const fullData = await response.json()
 
 		// Process data in chunks if it has features
-		if (fullData.features && fullData.features.length > config.chunkSize) {
+		if (fullData.features && fullData.features.length > (config.chunkSize ?? 1000)) {
 			return this.processDataInChunks(fullData, config)
 		} else {
 			// Small dataset, process normally
@@ -319,7 +319,7 @@ class ProgressiveLoader {
 		const totalFeatures = features.length
 		const chunkSize = config.adaptiveChunking
 			? this.calculateOptimalChunkSize(totalFeatures)
-			: config.chunkSize
+			: (config.chunkSize ?? 1000)
 
 		logger.debug(`📦 Processing ${totalFeatures} features in chunks of ${chunkSize}`)
 
@@ -438,9 +438,9 @@ class ProgressiveLoader {
 	 * Get statistics about active loads
 	 * Returns current loading state for monitoring and debugging.
 	 *
-	 * @returns {Object} Active load statistics
-	 * @returns {number} Object.activeLoads - Number of active loading operations
-	 * @returns {string[]} Object.loadIds - Array of active load IDs
+	 * @returns {{ activeLoads: number, loadIds: string[] }} Active load statistics:
+	 *   `activeLoads` is the number of active loading operations, `loadIds` is the
+	 *   array of active load IDs.
 	 *
 	 * @example
 	 * const stats = progressiveLoader.getLoadStats();

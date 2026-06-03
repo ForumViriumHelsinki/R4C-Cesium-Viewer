@@ -208,7 +208,7 @@ class CacheWarmer {
 					layerId: `warmcache_helsinki_buildings_${postalCode}`,
 					url,
 					type: 'geojson',
-					processor: null, // Cache only, don't process
+					// Cache only, don't process (processor omitted)
 					options: {
 						cache: true,
 						cacheTTL: 60 * 60 * 1000, // 1 hour
@@ -225,7 +225,7 @@ class CacheWarmer {
 					layerId: `warmcache_hsy_buildings_${postalCode}`,
 					url,
 					type: 'geojson',
-					processor: null, // Cache only, don't process
+					// Cache only, don't process (processor omitted)
 					options: {
 						cache: true,
 						cacheTTL: 60 * 60 * 1000, // 1 hour
@@ -265,7 +265,12 @@ class CacheWarmer {
 	 * cacheWarmer.warmNearbyPostalCodes('00100', ['00150', '00170', '00180']);
 	 */
 	warmNearbyPostalCodes(currentPostalCode, nearbyPostalCodes) {
-		if (import.meta.env.VITE_E2E_TEST === 'true') return
+		// Vite injects `env` on import.meta but the project has no vite/client
+		// ambient types, so narrow import.meta locally to a shape that has it.
+		const meta = /** @type {{ env: Record<string, string | undefined> }} */ (
+			/** @type {unknown} */ (import.meta)
+		)
+		if (meta.env.VITE_E2E_TEST === 'true') return
 
 		logger.debug('[CacheWarmer] 🎯 Predictively warming nearby postal codes...')
 

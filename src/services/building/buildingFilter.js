@@ -84,7 +84,7 @@ export class BuildingFilter {
 
 				// Check hideNewBuildings filter
 				if (hideNewBuildings) {
-					const completionDate = entity._properties?._c_valmpvm?._value
+					const completionDate = entity.properties?._c_valmpvm?.getValue()
 					if (completionDate && new Date(completionDate).getTime() >= cutoffDate) {
 						shouldHide = true
 					}
@@ -93,10 +93,10 @@ export class BuildingFilter {
 				// Check hideNonSote filter (social/healthcare buildings)
 				if (!shouldHide && hideNonSote) {
 					const kayttotark = helsinkiView
-						? entity._properties?._c_kayttark?._value
-							? Number(entity._properties?._c_kayttark?._value)
+						? entity.properties?._c_kayttark?.getValue()
+							? Number(entity.properties?._c_kayttark?.getValue())
 							: null
-						: entity._properties?._kayttarks?._value
+						: entity.properties?._kayttarks?.getValue()
 
 					const entityIsSoteBuilding = helsinkiView
 						? kayttotark && isSoteBuilding(kayttotark)
@@ -110,7 +110,7 @@ export class BuildingFilter {
 				// Check hideLow filter (buildings with <= 6 floors)
 				if (!shouldHide && hideLow) {
 					const floorCount =
-						entity._properties?.[helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']?._value
+						entity.properties?.[helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']?.getValue()
 					if (!floorCount || floorCount <= 6) {
 						shouldHide = true
 					}
@@ -157,15 +157,17 @@ export class BuildingFilter {
 			this.viewer.scene.requestRender()
 		}
 
-		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities._entities._array)
+		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities.values)
 	}
 
 	/**
 	 * Updates heat histogram data after filtering buildings
 	 * Extracts heat exposure values from visible entities and emits update event.
 	 *
+	 * Public API: the Building facade (building/index.js) and components delegate to
+	 * this for backward compatibility, so it is intentionally not private.
+	 *
 	 * @param {Array<Cesium.Entity>} entities - Building entities to process
-	 * @private
 	 */
 	updateHeatHistogramDataAfterFilter(entities) {
 		const visibleEntities = entities.filter((entity) => entity.show)
@@ -175,7 +177,7 @@ export class BuildingFilter {
 			? visibleEntities.map((entity) => entity.properties?._avgheatexposuretobuilding?._value)
 			: visibleEntities
 					.map((entity) => {
-						const heatTimeseries = entity.properties.heat_timeseries?._value || []
+						const heatTimeseries = entity.properties?.heat_timeseries?.getValue() || []
 						const foundEntry = heatTimeseries.find(({ date }) => date === targetDate)
 						return foundEntry ? foundEntry.avg_temp_c : null
 					})
@@ -197,10 +199,10 @@ export class BuildingFilter {
 	 */
 	soteBuildings(entity) {
 		const kayttotark = this.toggleStore.helsinkiView
-			? entity._properties?._c_kayttark?._value
-				? Number(entity._properties?._c_kayttark?._value)
+			? entity.properties?._c_kayttark?._value
+				? Number(entity.properties?._c_kayttark?._value)
 				: null
-			: entity._properties?._kayttarks?._value
+			: entity.properties?._kayttarks?._value
 
 		entity.show = this.toggleStore.helsinkiView
 			? kayttotark && isSoteBuilding(kayttotark)
@@ -214,7 +216,7 @@ export class BuildingFilter {
 	 */
 	lowBuildings(entity) {
 		if (
-			entity._properties?.[this.toggleStore.helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']
+			entity.properties?.[this.toggleStore.helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']
 				?._value <= 6
 		) {
 			entity.show = false
@@ -233,7 +235,7 @@ export class BuildingFilter {
 		this.lastFilterState = null
 
 		// Batch visibility changes
-		const entities = buildingsDataSource._entityCollection._entities._array
+		const entities = buildingsDataSource.entities.values
 		let hasChanges = false
 
 		for (let i = 0; i < entities.length; i++) {
@@ -249,7 +251,7 @@ export class BuildingFilter {
 			this.viewer.scene.requestRender()
 		}
 
-		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities._entities._array)
+		this.updateHeatHistogramDataAfterFilter(buildingsDataSource.entities.values)
 	}
 
 	/**

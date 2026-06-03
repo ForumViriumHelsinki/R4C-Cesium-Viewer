@@ -37,21 +37,36 @@ import { markRaw } from 'vue'
  * @property {Object} numericalSelect - Selected numerical attribute for charts
  * @property {string} socioEconomics - Selected socioeconomic area name
  * @property {string} statsIndex - Selected statistical index for visualization
+ * @property {Array<Object>|null} hSYWMSLayers - HSY WMS layer references (set via deprecated setHSYWMSLayers)
  */
 export const usePropsStore = defineStore('props', {
 	state: () => ({
+		/** @type {Object|null} */
 		gridBuildingProps: null,
+		/** @type {number|null} */
 		treeArea: null,
+		/** @type {number|null} */
 		buildingHeatExposure: null,
+		/** @type {Array<Object>|null} */
 		heatHistogramData: null,
+		/** @type {Array<Object>|null} */
 		treeBuildingDistanceData: null,
+		/** @type {Map<string, number>|null} */
 		treeAreasByBuildingId: null,
+		/** @type {Array<Object>|null} */
 		treeData: null,
+		/** @type {Map<string, Object>|null} */
 		buildingData: null,
+		/** @type {Array<Object>|null} */
 		postalcodeHeatTimeseries: null,
+		/** @type {Array<Object>|null} */
 		buildingHeatTimeseries: null,
+		/** @type {Object|null} */
 		heatFloodVulnerabilityEntity: null,
+		/** @type {Object|null} */
 		postalCodeData: null,
+		/** @type {Array<Object>|null} */
+		hSYWMSLayers: null,
 		categoricalSelect: { text: 'Facade Material', value: 'julkisivu_s' },
 		numericalSelect: { text: 'Area', value: 'area_m2' },
 		socioEconomics: 'Alppila - Vallila',

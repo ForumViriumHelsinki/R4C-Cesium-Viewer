@@ -206,6 +206,19 @@ export const useURLStore = defineStore('url', {
 				return `${state.pygeoapiBase}/othernature/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}`
 			},
 		/**
+		 * Generates URL for vegetation surfaces by postal code
+		 * @param {Object} state - Pinia state
+		 * @returns {(postinumero: string, limit?: number) => string} Function accepting postal code and optional limit, returning vegetation URL
+		 * @example
+		 * vegetation(state)('00100', 100000) // Vegetation in postal code 00100
+		 */
+		vegetation:
+			(state) =>
+			(postinumero, limit = 100000) => {
+				const validated = validatePostalCode(postinumero)
+				return `${state.pygeoapiBase}/vegetation/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}`
+			},
+		/**
 		 * Generates URL for tree canopy data by postal code and height category
 		 * @param {Object} state - Pinia state
 		 * @returns {(postinumero: string, koodi: string, limit?: number) => string} Function accepting postal code, height category code, and optional limit, returning tree URL

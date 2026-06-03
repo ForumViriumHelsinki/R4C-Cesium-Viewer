@@ -71,7 +71,7 @@ export default class Building {
 	/**
 	 * Loads Helsinki buildings for a postal code with caching support.
 	 * @param {string} [postalCode] - Optional postal code to load buildings for.
-	 * @returns {Promise<void>}
+	 * @returns {Promise<Array>} Building entities, or an empty array if the load was cancelled.
 	 */
 	async loadBuildings(postalCode) {
 		return this._loader.loadBuildings(postalCode)
@@ -170,11 +170,11 @@ export default class Building {
 
 			// Reset outline styling
 			const Cesium = getCesium()
-			entity.polygon.outlineColor = Cesium.Color.BLACK
-			entity.polygon.outlineWidth = 3
+			entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK)
+			entity.polygon.outlineWidth = new Cesium.ConstantProperty(3)
 
 			// Ensure fill is enabled to prevent wireframe appearance
-			entity.polygon.fill = true
+			entity.polygon.fill = new Cesium.ConstantProperty(true)
 
 			// Use the proper method that handles both Helsinki and Capital Region views
 			this._styler.setBuildingEntityPolygon(entity)
@@ -203,8 +203,9 @@ export default class Building {
 	/**
 	 * Updates heat histogram data after filtering buildings.
 	 * Note: resetBuildingOutline is called via callback injected into filter module.
+	 * Public facade API: components (e.g. TimelineCompact) delegate to this, so it is
+	 * intentionally not private.
 	 * @param {Array<Cesium.Entity>} entities - Building entities to process
-	 * @private
 	 */
 	updateHeatHistogramDataAfterFilter(entities) {
 		this._filter.updateHeatHistogramDataAfterFilter(entities)
@@ -294,7 +295,10 @@ export default class Building {
 	 * @param {string|number} id - Value to match against property
 	 */
 	outlineById(entity, property, id) {
-		return this._highlighter.outlineById(entity, property, id)
+		// `outlineById` is @private on BuildingHighlighter, but this facade legitimately
+		// delegates to it for backward compatibility. Cast to access the private member
+		// without editing the module class.
+		return /** @type {any} */ (this._highlighter).outlineById(entity, property, id)
 	}
 
 	/**

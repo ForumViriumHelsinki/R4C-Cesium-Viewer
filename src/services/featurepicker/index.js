@@ -236,6 +236,7 @@ export default class FeaturePicker {
 	 */
 	setNameOfZone() {
 		const targetPostalCode = this.store.postalcode
+		if (!targetPostalCode) return
 		setNameOfZoneHelper(
 			targetPostalCode,
 			this.propStore.postalCodeData,
@@ -297,7 +298,9 @@ export default class FeaturePicker {
 			})
 		}
 
-		this.propStore.setTreeArea(null)
+		// `null` clears the tree area (propsStore.treeArea is number|null); the
+		// store action's @param is documented as {number} only, so cast here.
+		this.propStore.setTreeArea(/** @type {number} */ (/** @type {unknown} */ (null)))
 		this.propStore.setHeatFloodVulnerability(id.properties ?? null)
 
 		if (id.properties.grid_id) {
@@ -306,13 +309,17 @@ export default class FeaturePicker {
 
 		// Handle building selection at postal code level
 		if (this.store.level === 'postalCode') {
-			processBuildingAtPostalCodeLevel(id, {
+			// Assemble context in a variable so TS structural assignment (not
+			// object-literal excess-property checking) applies — the extra keys
+			// are forwarded by processBuildingAtPostalCodeLevel to handleBuildingFeature.
+			const postalCodeContext = {
 				store: this.store,
 				coldAreaService: this.coldAreaService,
 				toggleStore: this.toggleStore,
 				buildingService: this.buildingService,
 				elementsDisplayService: this.elementsDisplayService,
-			}).catch((error) => {
+			}
+			processBuildingAtPostalCodeLevel(id, postalCodeContext).catch((error) => {
 				logger.error('Failed to handle building feature:', error)
 			})
 		}
@@ -335,7 +342,9 @@ export default class FeaturePicker {
 				return
 			}
 
-			if (shouldNavigateToPostalCode(newPostalCode, this.store.postalcode, this.store.level)) {
+			if (
+				shouldNavigateToPostalCode(newPostalCode, this.store.postalcode ?? '', this.store.level)
+			) {
 				// Cancel any in-flight building loads before starting new navigation
 				this.buildingService.cancelCurrentLoad()
 
@@ -368,9 +377,13 @@ export default class FeaturePicker {
 			this.traveltimeService.loadTravelTimeData(id.properties.id._value).catch((error) => {
 				logger.error('Failed to load travel time data:', error)
 			})
-			this.traveltimeService.markCurrentLocation(id).catch((error) => {
+			// markCurrentLocation is synchronous (returns void) — calling .catch on its
+			// undefined return throws a TypeError, so guard with try/catch instead.
+			try {
+				this.traveltimeService.markCurrentLocation(id)
+			} catch (error) {
 				logger.error('Failed to mark current location:', error)
-			})
+			}
 		}
 	}
 
@@ -418,7 +431,7 @@ export default class FeaturePicker {
 			const { visibilityChanges, postalCodesToLoad } = calculateVisibilityChanges(
 				this.visiblePostalCodes,
 				newVisibleSet,
-				currentPostalCode,
+				currentPostalCode ?? '',
 				this.datasourceService
 			)
 
@@ -447,7 +460,7 @@ export default class FeaturePicker {
 					if (this.toggleStore.helsinkiView) {
 						await this.buildingService.loadBuildings(postalCode)
 					} else {
-						await this.hSYBuildingService.loadHSYBuildings(null, postalCode)
+						await this.hSYBuildingService.loadHSYBuildings(undefined, postalCode)
 					}
 
 					logger.debug('[FeaturePicker] Loaded buildings for postal code:', postalCode)
@@ -461,7 +474,7 @@ export default class FeaturePicker {
 			}
 
 			this.visiblePostalCodes = newVisibleSet
-			warmNearbyPostalCodes(currentPostalCode, visiblePostalCodes)
+			warmNearbyPostalCodes(currentPostalCode ?? '', visiblePostalCodes)
 			this._dumpBuildingDatasourceState()
 		} finally {
 			this._isLoadingVisiblePostalCodes = false

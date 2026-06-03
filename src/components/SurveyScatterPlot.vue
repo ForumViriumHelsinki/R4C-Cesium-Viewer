@@ -12,21 +12,29 @@ import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore'
 
+/**
+ * Building entity as produced by cesiumEntityManager, accessed via the
+ * internal `_properties` backing object at runtime.
+ * @typedef {Object} SurveyEntity
+ * @property {{ Paikan_kok: number, avg_temp_c: number }} _properties
+ */
+
 export default {
 	data() {
 		return {
-			unsubscribeNewPlot: null,
-			unsubscribeHide: null,
+			/** @type {Plot | null} */
+			plotService: null,
 		}
 	},
 	mounted() {
-		this.unsubscribeNewPlot = eventBus.on('newSurveyScatterPlot', this.newSurveyScatterPlot)
-		this.unsubscribeHide = eventBus.on('hideSurveyScatterPlot', this.hideScatterPlot)
+		// mitt's `on` returns void; remove listeners explicitly via `off` on unmount.
+		eventBus.on('newSurveyScatterPlot', this.newSurveyScatterPlot)
+		eventBus.on('hideSurveyScatterPlot', this.hideScatterPlot)
 		this.plotService = new Plot()
 	},
 	beforeUnmount() {
-		if (this.unsubscribeNewPlot) this.unsubscribeNewPlot()
-		if (this.unsubscribeHide) this.unsubscribeHide()
+		eventBus.off('newSurveyScatterPlot', this.newSurveyScatterPlot)
+		eventBus.off('hideSurveyScatterPlot', this.hideScatterPlot)
 	},
 	methods: {
 		newSurveyScatterPlot() {
@@ -42,14 +50,21 @@ export default {
 		 * Hide the scatter plot using Vue ref (proper component encapsulation)
 		 */
 		hideScatterPlot() {
-			if (this.$refs.containerRef) {
-				this.$refs.containerRef.style.visibility = 'hidden'
+			const container = /** @type {HTMLElement | undefined} */ (this.$refs.containerRef)
+			if (container) {
+				container.style.visibility = 'hidden'
 			}
 		},
 
 		createSurveyScatterPlot() {
+			if (!this.plotService) return
+			// Capture in a non-null local so the deferred d3 .on() callbacks below
+			// (where `this.plotService` narrowing no longer applies) stay type-safe.
+			const plotService = this.plotService
 			// Get entities from cesiumEntityManager instead of propsStore
-			const entities = cesiumEntityManager.getAllBuildingEntities()
+			const entities = /** @type {SurveyEntity[]} */ (
+				/** @type {unknown} */ (cesiumEntityManager.getAllBuildingEntities())
+			)
 			const containerId = 'surveyScatterPlot'
 			this.plotService.initializePlotContainerForGrid(containerId)
 
@@ -91,7 +106,7 @@ export default {
 				svg,
 				'Espoo on the map: resident survey places in everyday life with heat exposure',
 				width,
-				margin
+				margin.top
 			)
 
 			// Plot points, adjusted for nested properties
@@ -106,9 +121,9 @@ export default {
 				.attr('r', 2) // Increase dot size for better visibility in the larger plot
 				.style('fill', (d) => this.getOutlineColor(d._properties.Paikan_kok))
 				.on('mouseover', (event, d) =>
-					this.plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter)
+					plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter)
 				)
-				.on('mouseout', () => this.plotService.handleMouseout(tooltip))
+				.on('mouseout', () => plotService.handleMouseout(tooltip))
 		},
 
 		getOutlineColor(value) {
@@ -120,8 +135,9 @@ export default {
 		clearSurveyScatterPlot() {
 			// Remove or clear the D3.js visualization using Vue ref
 			// Using D3.js on the ref value maintains Vue encapsulation
-			if (this.$refs.containerRef) {
-				d3.select(this.$refs.containerRef).select('svg').remove()
+			const container = /** @type {HTMLElement | undefined} */ (this.$refs.containerRef)
+			if (container) {
+				d3.select(container).select('svg').remove()
 			}
 		},
 	},

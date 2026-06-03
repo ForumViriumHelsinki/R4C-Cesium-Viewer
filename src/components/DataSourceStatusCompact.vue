@@ -145,51 +145,66 @@ const emit = defineEmits(['source-retry', 'cache-cleared'])
 // Local state
 const refreshing = ref(false)
 const showDetails = ref(false)
+/** @type {import('vue').Ref<ReturnType<typeof setInterval> | null>} */
 const refreshTimer = ref(null)
 
+/**
+ * @typedef {Object} DataSourceStatus
+ * @property {string} id
+ * @property {string} name
+ * @property {string} url
+ * @property {string} status
+ * @property {string} message
+ * @property {boolean} loading
+ * @property {boolean} cached
+ * @property {number | null} responseTime
+ */
+
 // Data sources to monitor
-const dataSources = ref([
-	{
-		id: 'pygeoapi',
-		name: 'PyGeoAPI',
-		url: '/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=1',
-		status: 'unknown',
-		message: 'Not checked',
-		loading: false,
-		cached: false,
-		responseTime: null,
-	},
-	{
-		id: 'hsy-action',
-		name: 'HSY Environmental',
-		url: '/hsy-action?action_route=GetHierarchicalMapLayerGroups',
-		status: 'unknown',
-		message: 'Not checked',
-		loading: false,
-		cached: false,
-		responseTime: null,
-	},
-	{
-		id: 'paavo',
-		name: 'Statistics Finland',
-		url: '/paavo',
-		status: 'unknown',
-		message: 'Not checked',
-		loading: false,
-		cached: false,
-		responseTime: null,
-	},
-	{
-		id: 'digitransit',
-		name: 'Digitransit API',
-		url: '/digitransit/geocoding/v1/search?text=Helsinki',
-		status: 'unknown',
-		message: 'Not checked',
-		loading: false,
-		cached: false,
-		responseTime: null,
-	},
-])
+const dataSources = ref(
+	/** @type {DataSourceStatus[]} */ ([
+		{
+			id: 'pygeoapi',
+			name: 'PyGeoAPI',
+			url: '/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=1',
+			status: 'unknown',
+			message: 'Not checked',
+			loading: false,
+			cached: false,
+			responseTime: null,
+		},
+		{
+			id: 'hsy-action',
+			name: 'HSY Environmental',
+			url: '/hsy-action?action_route=GetHierarchicalMapLayerGroups',
+			status: 'unknown',
+			message: 'Not checked',
+			loading: false,
+			cached: false,
+			responseTime: null,
+		},
+		{
+			id: 'paavo',
+			name: 'Statistics Finland',
+			url: '/paavo',
+			status: 'unknown',
+			message: 'Not checked',
+			loading: false,
+			cached: false,
+			responseTime: null,
+		},
+		{
+			id: 'digitransit',
+			name: 'Digitransit API',
+			url: '/digitransit/geocoding/v1/search?text=Helsinki',
+			status: 'unknown',
+			message: 'Not checked',
+			loading: false,
+			cached: false,
+			responseTime: null,
+		},
+	])
+)
 
 // Computed properties
 const totalSources = computed(() => dataSources.value.length)

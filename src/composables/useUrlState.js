@@ -30,7 +30,7 @@ const URL_UPDATE_DEBOUNCE_MS = 500
  * @returns {{
  *   hasUrlState: import('vue').Ref<boolean>,
  *   getUrlState: () => Object|null,
- *   restoreStateFromUrl: (viewer: any) => Promise<boolean>,
+ *   restoreStateFromUrl: (viewer: any, featurepickerClass?: any) => Promise<boolean>,
  *   updateUrlFromCamera: (viewer: any) => void,
  *   updateUrlFromNavigation: (options: Object) => void,
  *   clearUrlState: () => void
@@ -59,9 +59,9 @@ export function useUrlState() {
 			camera: {
 				longitude: parseFloat(lon),
 				latitude: parseFloat(lat),
-				altitude: parseFloat(params.get('alt')) || 4000,
-				heading: parseFloat(params.get('heading')) || 0,
-				pitch: parseFloat(params.get('pitch')) || -35,
+				altitude: parseFloat(params.get('alt') ?? '') || 4000,
+				heading: parseFloat(params.get('heading') ?? '') || 0,
+				pitch: parseFloat(params.get('pitch') ?? '') || -35,
 			},
 			navigation: {
 				level: params.get('level') || 'start',
@@ -197,9 +197,9 @@ export function useUrlState() {
 			// Update camera position parameters
 			params.set('lon', Cesium.Math.toDegrees(cartographic.longitude).toFixed(6))
 			params.set('lat', Cesium.Math.toDegrees(cartographic.latitude).toFixed(6))
-			params.set('alt', Math.round(cartographic.height))
-			params.set('heading', Math.round(Cesium.Math.toDegrees(camera.heading)))
-			params.set('pitch', Math.round(Cesium.Math.toDegrees(camera.pitch)))
+			params.set('alt', String(Math.round(cartographic.height)))
+			params.set('heading', String(Math.round(Cesium.Math.toDegrees(camera.heading))))
+			params.set('pitch', String(Math.round(Cesium.Math.toDegrees(camera.pitch))))
 
 			// Preserve navigation state (use lowercase in URL for consistency)
 			if (store.level && store.level !== 'start') {

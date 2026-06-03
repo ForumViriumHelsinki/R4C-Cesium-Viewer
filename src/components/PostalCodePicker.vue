@@ -263,8 +263,9 @@ export default {
 
 		// Reset selection
 		const resetSelection = () => {
-			globalStore.setPostalCode(null)
-			globalStore.setNameOfZone(null)
+			// Store setters accept null at runtime to clear selection (state is string|null).
+			globalStore.setPostalCode(/** @type {string} */ (/** @type {unknown} */ (null)))
+			globalStore.setNameOfZone(/** @type {string} */ (/** @type {unknown} */ (null)))
 			globalStore.setLevel('start')
 			searchQuery.value = ''
 
