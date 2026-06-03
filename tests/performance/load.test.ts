@@ -127,7 +127,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 		// Unset in CI → no extra args, same launch as before.
 		browser = await chromium.launch({
 			args: process.env.PERF_TEST_CHROMIUM_ARGS
-				? process.env.PERF_TEST_CHROMIUM_ARGS.split(' ')
+				? process.env.PERF_TEST_CHROMIUM_ARGS.split(/\s+/).filter(Boolean)
 				: [],
 		})
 
@@ -523,7 +523,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// the 10s test timeout) so the .catch() actually fires — the Cesium map
 			// streams tiles continuously and never reaches true 'networkidle'.
 			await page
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.WAIT_LONG })
 				.catch(() => {
 					// Continue if network doesn't become idle (expected for ongoing operations)
 				})
@@ -664,7 +664,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// Normal interaction first
 			await page.locator('canvas').click({ position: { x: 400, y: 300 } })
 			await page
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.WAIT_LONG })
 				.catch(() => {})
 
 			// Enable network failure
@@ -691,7 +691,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// Should recover and work normally
 			await page.locator('canvas').click({ position: { x: 300, y: 400 } })
 			await page
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_SCROLL })
+				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.WAIT_LONG })
 				.catch(() => {})
 
 			// Vitest's expect has no Playwright toBeVisible matcher; use isVisible()
