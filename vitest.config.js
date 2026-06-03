@@ -24,8 +24,12 @@ export default defineConfig({
 		globals: true,
 		environment: 'jsdom',
 		setupFiles: ['./tests/setup.js'],
-		include: ['tests/unit/**/*.test.{js,ts}', 'tests/integration/**/*.test.{js,ts}'],
-		exclude: ['tests/**/*.spec.ts', 'tests/e2e/**/*', 'tests/performance/**/*'],
+		include: [
+			'tests/unit/**/*.test.{js,ts}',
+			'tests/integration/**/*.test.{js,ts}',
+			'tests/performance/**/*.test.{js,ts}',
+		],
+		exclude: ['tests/**/*.spec.ts', 'tests/e2e/**/*'],
 		server: {
 			deps: {
 				inline: ['vuetify'],
