@@ -13,7 +13,13 @@ export default {
 	...baseConfig,
 	test: {
 		...baseConfig.test,
+		// Perf tests drive a real Chromium via Playwright, not in-process Vue
+		// component tests — so skip the JSDOM environment and the unit-test
+		// setup. `setup.js` also touches `window` at module load, which throws
+		// under `environment: 'node'`, so the two must change together. `exclude`
+		// is inherited from `baseConfig.test` via the spread above.
+		environment: 'node',
+		setupFiles: [],
 		include: ['tests/performance/**/*.test.{js,ts}'],
-		exclude: ['tests/**/*.spec.ts', 'tests/e2e/**/*'],
 	},
 };
