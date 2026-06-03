@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.3...r4c-cesium-viewer-v1.51.4) (2026-06-03)
+
+
+### Bug Fixes
+
+* **nginx:** correct GoFeatureFlag relay-proxy service hostname ([#836](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/836)) ([c88fe47](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c88fe47f6109248e1820ea0ebc064a3a5a5a0054))
+
 ## [1.51.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.2...r4c-cesium-viewer-v1.51.3) (2026-05-30)
 
 
