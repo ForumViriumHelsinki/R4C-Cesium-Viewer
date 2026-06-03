@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * Static flag metadata registry.
  * Maps internal flag names to GOFF flag IDs and stores display metadata.

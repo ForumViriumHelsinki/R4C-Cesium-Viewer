@@ -150,11 +150,11 @@ const isLoading = computed(() => {
 })
 
 const hasError = computed(() => {
-	return !!props.error || !!loadingStore.loadingErrors.buildings
+	return !!props.error || loadingStore.hasLayerError('buildings')
 })
 
 const errorMessage = computed(() => {
-	return props.error || loadingStore.loadingErrors.buildings || 'Failed to load buildings'
+	return props.error || loadingStore.getLayerError('buildings') || 'Failed to load buildings'
 })
 
 const showIndicator = computed(() => {

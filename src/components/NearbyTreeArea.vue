@@ -115,6 +115,7 @@
 
 <script>
 import { computed } from 'vue'
+/** @typedef {import('vue').CSSProperties} CSSProperties */
 import * as d3 from '@/utils/d3' // Import D3.js
 import { useSidebarOffset } from '../composables/useSidebarOffset'
 import Building from '../services/building.js'
@@ -130,34 +131,44 @@ export default {
 	setup() {
 		const { sidebarOffset } = useSidebarOffset(0)
 
-		const labelStyle = computed(() => ({
-			position: 'fixed',
-			bottom: '41px',
-			left: `${sidebarOffset.value + 15}px`,
-			visibility: 'hidden',
-		}))
+		const labelStyle = computed(
+			() =>
+				/** @type {CSSProperties} */ ({
+					position: 'fixed',
+					bottom: '41px',
+					left: `${sidebarOffset.value + 15}px`,
+					visibility: 'hidden',
+				})
+		)
 
-		const barsStyle = computed(() => ({
-			left: `${sidebarOffset.value - 19}px`,
-		}))
+		const barsStyle = computed(
+			() =>
+				/** @type {CSSProperties} */ ({
+					left: `${sidebarOffset.value - 19}px`,
+				})
+		)
 
-		const switchStyle = (baseLeft) =>
-			computed(() => ({
-				left: `${sidebarOffset.value + baseLeft}px`,
-			}))
+		/**
+		 * @param {number} baseLeft
+		 * @returns {CSSProperties}
+		 */
+		const switchStyle = (baseLeft) => ({
+			left: `${sidebarOffset.value + baseLeft}px`,
+		})
 
 		return { sidebarOffset, labelStyle, barsStyle, switchStyle }
 	},
 	data() {
 		return {
+			/** @type {Array<() => void>} */
 			eventCleanupFunctions: [],
+			store: useGlobalStore(),
+			toggleStore: useToggleStore(),
+			plotService: new Plot(),
 		}
 	},
 	mounted() {
-		this.unsubscribe = eventBus.on('newNearbyTreeDiagram', this.newNearbyTreeDiagram)
-		this.store = useGlobalStore()
-		this.toggleStore = useToggleStore()
-		this.plotService = new Plot()
+		eventBus.on('newNearbyTreeDiagram', this.newNearbyTreeDiagram)
 	},
 	beforeUnmount() {
 		eventBus.off('newNearbyTreeDiagram')
@@ -171,17 +182,22 @@ export default {
 			setupBearingSwitches(this.store.postalcode, this)
 
 			if (this.store.level === 'postalCode') {
-				this.plotService.hideScatterPlot()
+				// hideScatterPlot() never existed on the Plot service (latent bug since
+				// the feature was added); hideAllPlots() is the equivalent method.
+				this.plotService.hideAllPlots()
+
+				// Required serializable datasets must be present before plotting
+				const treeBuildingDistanceData = propsStore.treeBuildingDistanceData
+				const treeData = propsStore.treeData
+				const buildingData = propsStore.buildingData
+				if (!treeBuildingDistanceData || !treeData || !buildingData) {
+					return
+				}
+
 				// Call function that combines datasets for plotting
 				// Use serializable data from store + cesiumEntityManager for visual mutations
-				const sumPAlaM2Map = this.combineDistanceAndTreeData(
-					propsStore.treeBuildingDistanceData,
-					propsStore.treeData
-				)
-				const heatExpTreeArea = this.createTreeBuildingPlotMap(
-					sumPAlaM2Map,
-					propsStore.buildingData
-				)
+				const sumPAlaM2Map = this.combineDistanceAndTreeData(treeBuildingDistanceData, treeData)
+				const heatExpTreeArea = this.createTreeBuildingPlotMap(sumPAlaM2Map, buildingData)
 				const heatExpAverageTreeArea = this.extractKeysAndAverageTreeArea(heatExpTreeArea)
 				this.createTreesNearbyBuildingsPlot(
 					heatExpAverageTreeArea[0],
@@ -269,17 +285,19 @@ export default {
 					const entity = cesiumEntityManager.getBuildingEntity(building_id)
 					if (entity) {
 						// Set tree_area as a property of the entity using proper Cesium Property API
-						if (!entity.properties.hasProperty('treeArea')) {
-							entity.properties.addProperty('treeArea')
+						if (entity.properties) {
+							if (!entity.properties.hasProperty('treeArea')) {
+								entity.properties.addProperty('treeArea')
+							}
+							entity.properties.treeArea = new Cesium.ConstantProperty(tree_area)
 						}
-						entity.properties.treeArea = new Cesium.ConstantProperty(tree_area)
 
 						if (tree_area > 225) {
 							// Highlight the building entity edges by changing its outlineColor and outlineWidth
 							if (entity.polygon) {
-								entity.polygon.outline = true // Enable outline
-								entity.polygon.outlineColor = Cesium.Color.CHARTREUSE // Set outline color to green
-								entity.polygon.outlineWidth = 20 // Set outline width to 3 (adjust as needed)
+								entity.polygon.outline = new Cesium.ConstantProperty(true) // Enable outline
+								entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.CHARTREUSE) // Set outline color to green
+								entity.polygon.outlineWidth = new Cesium.ConstantProperty(20) // Set outline width
 							}
 
 							if (maxTreeArea < tree_area) {
@@ -316,8 +334,8 @@ export default {
 			const entity = cesiumEntityManager.getBuildingEntity(entityId)
 
 			if (entity?.polygon) {
-				entity.polygon.material = Cesium.Color.FORESTGREEN
-				entity.polygon.outlineColor = Cesium.Color.RED // Set outline color to red
+				entity.polygon.material = new Cesium.ColorMaterialProperty(Cesium.Color.FORESTGREEN)
+				entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.RED) // Set outline color to red
 			}
 		},
 
@@ -356,9 +374,9 @@ export default {
 						// Update visual properties via cesiumEntityManager
 						const entity = cesiumEntityManager.getTreeEntity(tree_id)
 						if (entity?.polygon) {
-							entity.polygon.outline = true // Enable outline
-							entity.polygon.outlineColor = Cesium.Color.CHARTREUSE // Set outline color to green
-							entity.polygon.outlineWidth = 20 // Set outline width to 3 (adjust as needed)
+							entity.polygon.outline = new Cesium.ConstantProperty(true) // Enable outline
+							entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.CHARTREUSE) // Set outline color to green
+							entity.polygon.outlineWidth = new Cesium.ConstantProperty(20) // Set outline width
 						}
 
 						// Aggregate tree area by building
@@ -378,7 +396,7 @@ export default {
 		 * Check if the bearing value is according to user select value
 		 *
 		 * @param { Number } bearing - The bearing of tree to building
-		 * @param { String } selectedBearingValue - The selected bearing value by user
+		 * @param { String | null } selectedBearingValue - The selected bearing value by user (null when no bearing switch is active)
 		 *
 		 * @return { Boolean }
 		 */
@@ -409,6 +427,8 @@ export default {
 				default:
 					return false
 			}
+
+			return false
 		},
 
 		createBarsForTreeChart(
@@ -456,9 +476,11 @@ export default {
 
 			for (const direction of switches) {
 				const switchContainer = document.getElementById(`bearing${direction}SwitchContainer`)
-				const toggle = switchContainer.querySelector(`#bearing${direction}Toggle`)
+				const toggle = /** @type {HTMLInputElement | null} */ (
+					switchContainer?.querySelector(`#bearing${direction}Toggle`) ?? null
+				)
 
-				if (toggle.checked) {
+				if (toggle?.checked) {
 					return toggle.value
 				}
 			}
@@ -473,7 +495,8 @@ export default {
 		 * @param { Array<Number> } tree_areas array cointainig buildings nearby tree area
 		 * @param { Array<Number> } counts array cointainig count of buildings for that heat exposure
 		 */
-		createTreesNearbyBuildingsPlot(heatexps, tree_areas) {
+		createTreesNearbyBuildingsPlot(heatexps, tree_areas, counts) {
+			void counts // documented/passed for parity; not used in the current bar plot
 			this.plotService.initializePlotContainer('nearbyTreeAreaContainer')
 
 			if (tree_areas.length > 0) {
@@ -513,7 +536,7 @@ export default {
 					svg,
 					'Nearby Tree Area of Buildings with Heat Exposure',
 					width,
-					margin
+					margin.top
 				)
 			}
 		},
@@ -531,7 +554,12 @@ const setupBearingSwitches = (postalcode, componentInstance) => {
 
 	for (const currentDirection of switches) {
 		const switchContainer = document.getElementById(`bearing${currentDirection}SwitchContainer`)
-		const toggle = switchContainer.querySelector(`#bearing${currentDirection}Toggle`)
+		const toggle = /** @type {HTMLInputElement | null} */ (
+			switchContainer?.querySelector(`#bearing${currentDirection}Toggle`) ?? null
+		)
+		if (!toggle) {
+			continue
+		}
 
 		const handler = () => {
 			updateBearingSwitches(switches, currentDirection)
@@ -560,8 +588,12 @@ const updateBearingSwitches = (switches, currentDirection) => {
 			const otherSwitchContainer = document.getElementById(
 				`bearing${otherDirection}SwitchContainer`
 			)
-			const otherToggle = otherSwitchContainer.querySelector(`#bearing${otherDirection}Toggle`)
-			otherToggle.checked = false
+			const otherToggle = /** @type {HTMLInputElement | null} */ (
+				otherSwitchContainer?.querySelector(`#bearing${otherDirection}Toggle`) ?? null
+			)
+			if (otherToggle) {
+				otherToggle.checked = false
+			}
 		}
 	}
 }

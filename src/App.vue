@@ -204,7 +204,8 @@ const stopLevelUrlWatcher = watch(
 	() => [globalStore.level, globalStore.postalcode],
 	([level, code]) => {
 		if (level === 'start') {
-			updateUrlWithNavigationState('start', null)
+			// Empty string is falsy, so the helper deletes the postalcode param.
+			updateUrlWithNavigationState('start', '')
 		} else if ((level === 'postalCode' || level === 'building') && code) {
 			updateUrlWithNavigationState(level, code)
 		}
@@ -233,8 +234,10 @@ const smartReset = async () => {
 	toggleStore.onExitPostalCode()
 
 	globalStore.setLevel('start')
-	globalStore.setPostalCode(null)
-	globalStore.setNameOfZone(null)
+	// Direct state reset to null: the setters are typed `string`-only, while the
+	// state fields are `string | null`. Clearing them is the correct reset intent.
+	globalStore.postalcode = null
+	globalStore.nameOfZone = null
 	globalStore.setView('capitalRegion')
 
 	toggleStore.setShowTrees(false)
@@ -246,7 +249,7 @@ const smartReset = async () => {
 	const camera = new Camera()
 	camera.init()
 
-	const tooltip = document.querySelector('.tooltip')
+	const tooltip = /** @type {HTMLElement | null} */ (document.querySelector('.tooltip'))
 	if (tooltip) tooltip.style.display = 'none'
 }
 

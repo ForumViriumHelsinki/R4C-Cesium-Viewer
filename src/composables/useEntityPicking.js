@@ -22,6 +22,7 @@ import logger from '../utils/logger.js'
  * @param {(() => any) | any} getFeaturepicker - Getter function or Featurepicker service class
  * @returns {{
  *   addFeaturePicker: () => void,
+ *   cleanup: () => void,
  *   lastPickTime: import('vue').Ref<number>
  * }} Entity picking functions and state
  *

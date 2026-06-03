@@ -148,7 +148,7 @@ const hideLow = ref(toggleStore.hideLow)
  */
 const helsinkiView = computed(() => toggleStore.helsinkiView)
 const view = computed(() => store.view)
-const postalCode = computed(() => store.postalcode)
+const postalCode = computed(() => store.postalcode ?? undefined)
 
 /**
  * Detects if NDVI and Land Cover are both active
@@ -176,7 +176,10 @@ const disableOtherLayer = (layer) => {
 	if (layer === 'ndvi') {
 		landCover.value = false
 		toggleStore.setLandCover(false)
-		removeLandcover(store.landcoverLayers, store.cesiumViewer)
+		// removeLandcover() reads its layers from backgroundMapStore internally and
+		// takes no arguments; the previous call passed a non-existent
+		// store.landcoverLayers (undefined) which was silently ignored.
+		removeLandcover()
 	} else if (layer === 'landcover') {
 		ndvi.value = false
 		toggleStore.setNDVI(false)
@@ -209,7 +212,8 @@ const loadVegetation = async () => {
 
 			try {
 				const vegetationService = new Vegetation()
-				await vegetationService.loadVegetation(store.postalcode)
+				// loadVegetation() reads postalcode from the global store internally; no arg needed.
+				await vegetationService.loadVegetation()
 				loadingStore.completeLayerLoading('vegetation', true)
 			} catch (error) {
 				loadingStore.setLayerError('vegetation', error.message || 'Failed to load vegetation data')
@@ -284,7 +288,12 @@ const loadTrees = async () => {
 								loadingStore.updateLayerProgress(
 									'trees',
 									completedCategories,
-									`Loading trees: category ${category} (${completedCategories}/4)`
+									// FLAG: loadingStore.updateLayerProgress's `message = null` default makes
+									// its param infer as `null`; passing a real string message requires a cast
+									// until the store's type is widened to `string | null` (store edits are out of scope here).
+									/** @type {any} */ (
+										`Loading trees: category ${category} (${completedCategories}/4)`
+									)
 								)
 
 								if (completedCategories === 4) {

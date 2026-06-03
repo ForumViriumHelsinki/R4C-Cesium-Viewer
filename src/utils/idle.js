@@ -59,12 +59,18 @@ export function requestIdle(callback, options) {
 	}
 	// WebKit fallback: invoke via setTimeout with a stub deadline so call sites
 	// using `deadline.timeRemaining()` / `deadline.didTimeout` keep working.
-	return setTimeout(() => {
-		callback({
-			didTimeout: false,
-			timeRemaining: () => 0,
-		})
-	}, 1)
+	// In the browser `setTimeout` returns a numeric handle; cast away the
+	// Node `Timeout` overload that @types/node otherwise resolves here.
+	return /** @type {number} */ (
+		/** @type {unknown} */ (
+			setTimeout(() => {
+				callback({
+					didTimeout: false,
+					timeRemaining: () => 0,
+				})
+			}, 1)
+		)
+	)
 }
 
 /**

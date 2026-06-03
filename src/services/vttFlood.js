@@ -24,7 +24,7 @@ import {
 	VTT_MAX_EXTRUSION_M,
 	validateFrameNumber,
 	validateScenarioId,
-} from '../constants/vttFlood.ts'
+} from '../constants/vttFlood'
 import logger from '../utils/logger.js'
 import { getCesium } from './cesiumProvider.js'
 
@@ -38,6 +38,7 @@ const DIMENSION_KEYS = VTT_DIMENSIONS.map((d) => d.key)
  * @returns {Record<string, {min: number, max: number}>}
  */
 function computePropertyRanges(features) {
+	/** @type {Record<string, {min: number, max: number}>} */
 	const ranges = {}
 	for (const key of DIMENSION_KEYS) {
 		ranges[key] = { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY }
@@ -78,7 +79,13 @@ function computePropertyRanges(features) {
  *   AbortError propagates as-is so callers can distinguish cancellation from
  *   real failures.
  */
-export async function fetchSimulationFrame({ scenarioId, frameNumber, signal } = {}) {
+export async function fetchSimulationFrame(
+	{
+		scenarioId,
+		frameNumber,
+		signal,
+	} = /** @type {{scenarioId: string, frameNumber: number, signal?: AbortSignal}} */ ({})
+) {
 	const safeScenario = validateScenarioId(scenarioId)
 	const safeFrame = validateFrameNumber(frameNumber)
 
@@ -159,7 +166,13 @@ function extractRing(geometry) {
  * @param {string} params.dimension - Active dimension key (one of {@link VTT_DIMENSIONS}).
  * @returns {Promise<number>} Number of entities created.
  */
-export async function renderFlood({ viewer, frame, dimension } = {}) {
+export async function renderFlood(
+	{
+		viewer,
+		frame,
+		dimension,
+	} = /** @type {{viewer: Cesium.Viewer, frame: {features: Array<Object>, propertyRanges: Record<string, {min: number, max: number}>}, dimension: string}} */ ({})
+) {
 	if (!viewer || viewer.isDestroyed?.()) {
 		logger.warn('[VTTFlood] renderFlood: viewer not initialized; skipping')
 		return 0
@@ -216,10 +229,14 @@ export async function renderFlood({ viewer, frame, dimension } = {}) {
  * @param {Cesium.Viewer} params.viewer - Cesium viewer.
  * @returns {Promise<void>}
  */
-export async function clearFlood({ viewer } = {}) {
+export async function clearFlood({ viewer } = /** @type {{viewer: Cesium.Viewer}} */ ({})) {
 	if (!viewer || viewer.isDestroyed?.() || !viewer.dataSources) return
-	const sources = viewer.dataSources._dataSources || []
-	for (const ds of [...sources]) {
+	// Snapshot via the public DataSourceCollection API before mutating it.
+	const sources = /** @type {Array<Cesium.DataSource>} */ ([])
+	for (let i = 0; i < viewer.dataSources.length; i++) {
+		sources.push(viewer.dataSources.get(i))
+	}
+	for (const ds of sources) {
 		if (ds.name === VTT_FLOOD_LAYER_NAME) {
 			viewer.dataSources.remove(ds, true)
 		}

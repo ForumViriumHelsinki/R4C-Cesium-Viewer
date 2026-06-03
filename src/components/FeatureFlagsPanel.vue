@@ -333,8 +333,8 @@ function getCategoryTotalCount(category: FeatureFlagCategory): number {
 	return featureFlagStore.flagsByCategory(category).length
 }
 
-function setFlag(flagName: FeatureFlagName, enabled: boolean): void {
-	featureFlagStore.setFlag(flagName, enabled)
+function setFlag(flagName: FeatureFlagName, enabled: boolean | null): void {
+	featureFlagStore.setFlag(flagName, enabled === true)
 }
 
 function resetFlag(flagName: FeatureFlagName): void {

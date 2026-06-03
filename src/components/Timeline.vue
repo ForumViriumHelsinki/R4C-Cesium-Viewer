@@ -188,7 +188,17 @@ export default {
 
 			const entities = buildingsDataSource.entities.values
 			void buildingService.setHeatExposureToBuildings(entities)
-			buildingService.updateHeatHistogramDataAfterFilter(entities)
+			// `updateHeatHistogramDataAfterFilter` is tagged `@private` on the Building
+			// facade but is part of its public API used by external callers such as this
+			// component (a real annotation mismatch in services/building/index.js, which is
+			// outside this batch). Cast to the exact method signature — routed through
+			// `unknown` so the private-vs-public member difference doesn't read as a bad
+			// conversion — rather than weakening the whole service type.
+			const buildingHistogram =
+				/** @type {{ updateHeatHistogramDataAfterFilter: (entities: unknown[]) => void }} */ (
+					/** @type {unknown} */ (buildingService)
+				)
+			buildingHistogram.updateHeatHistogramDataAfterFilter(entities)
 			// Register entities with cesiumEntityManager for non-reactive entity management
 			cesiumEntityManager.registerBuildingEntities(entities)
 			eventBus.emit('updateScatterPlot')

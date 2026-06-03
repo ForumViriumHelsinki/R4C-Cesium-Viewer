@@ -16,6 +16,11 @@ vi.mock('@/services/cesiumProvider', () => ({
 			BLUE: 'BLUE',
 			YELLOW: 'YELLOW',
 		},
+		// Production now wraps label options in Cesium.LabelGraphics; store the options
+		// so the constructed label is inspectable.
+		LabelGraphics: vi.fn(function (options) {
+			Object.assign(this, options)
+		}),
 		HorizontalOrigin: {
 			CENTER: 'CENTER',
 		},
@@ -194,11 +199,11 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 				{
 					properties: {
 						_measurement: {
-							_value: {
+							getValue: () => ({
 								temp_air: 23.5,
 								rh_air: 65.2,
 								time: '2023-06-23T12:00:00Z',
-							},
+							}),
 						},
 					},
 					billboard: {},
@@ -213,8 +218,10 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 			// Act
 			await sensor.addSensorDataSource(mockData)
 
-			// Assert
+			// Assert: label is a constructed LabelGraphics carrying the formatted text
 			expect(mockEntities[0].label).toBeDefined()
+			expect(mockEntities[0].label.text).toContain('Temp: 23.5°C')
+			expect(mockEntities[0].label.text).toContain('RH: 65.2%')
 			expect(mockEntities[0].billboard).toBeUndefined()
 			expect(mockEntities[0].point).toBeUndefined()
 			expect(mockEntities[0].polyline).toBeUndefined()
@@ -227,7 +234,7 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 				{
 					properties: {
 						_measurement: {
-							_value: null, // No measurement
+							getValue: () => null, // No measurement
 						},
 					},
 				},

@@ -20,8 +20,8 @@ export default {
 		const socioEconomicsStore = useSocioEconomicsStore()
 		const toggleStore = useToggleStore()
 		const propsStore = usePropsStore()
-		const selectedArea = ref('')
-		const areaOptions = ref([])
+		const selectedArea = ref(/** @type {string} */ (''))
+		const areaOptions = ref(/** @type {string[]} */ ([]))
 
 		// Populate the select options based on 'nimi' attribute of socioEconomics store
 		const populateSelectFromStore = () => {

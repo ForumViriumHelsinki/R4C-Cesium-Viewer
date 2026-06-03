@@ -31,10 +31,14 @@ export const useBackgroundMapStore = defineStore('backgroundMap', {
 	state: () => ({
 		hsyYear: 2024,
 		hsySelectArea: 'Askisto',
+		/** @type {Object|null} */
 		hSYWMSLayers: null,
 		ndviDate: '2022-06-26',
+		/** @type {Array<Object>} */
 		tiffLayers: [],
+		/** @type {Array<Object>} */
 		landcoverLayers: [],
+		/** @type {Array<Object>} */
 		floodLayers: [],
 	}),
 	actions: {

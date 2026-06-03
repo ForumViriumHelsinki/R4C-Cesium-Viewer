@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * @module composables/useViewerInitialization
  * Handles Cesium viewer initialization with dynamic module loading.
@@ -29,7 +30,8 @@ import { loadWithRetry } from '../utils/moduleLoader.js'
  *   initViewer: () => Promise<void>,
  *   addPostalCodes: () => Promise<void>,
  *   addAttribution: () => void,
- *   retryInit: () => Promise<void>
+ *   retryInit: () => Promise<void>,
+ *   destroyViewer: () => void
  * }} Viewer initialization state and functions
  *
  * @example
@@ -42,7 +44,7 @@ export function useViewerInitialization() {
 	const graphicsStore = useGraphicsStore()
 	const propsStore = usePropsStore()
 
-	const viewer = ref(null)
+	const viewer = ref(/** @type {any} */ (null))
 	const errorSnackbar = ref(false)
 	const errorMessage = ref('')
 
@@ -163,8 +165,11 @@ export function useViewerInitialization() {
 
 		// Expose viewer to E2E test harness
 		if (isE2ETest) {
-			window.__viewer = viewer.value
-			window.__cesium = Cesium
+			// `window` is augmented with __viewer/__cesium only in E2E mode; the global
+			// Window type has no such fields, so widen to access them here.
+			const testWindow = /** @type {Window & { __viewer?: any, __cesium?: any }} */ (window)
+			testWindow.__viewer = viewer.value
+			testWindow.__cesium = Cesium
 			logger.debug('[useViewerInitialization] 🧪 Test mode enabled - viewer exposed to window')
 		}
 

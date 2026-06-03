@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * @module version
  * @description Auto-generated version information module

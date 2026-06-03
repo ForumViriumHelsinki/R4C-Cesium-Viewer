@@ -124,7 +124,7 @@ class CacheService {
 			}
 
 			request.onupgradeneeded = (event) => {
-				const db = event.target.result
+				const db = /** @type {IDBOpenDBRequest} */ (event.target).result
 
 				// Create object stores
 				if (!db.objectStoreNames.contains('layers')) {
@@ -182,7 +182,8 @@ class CacheService {
 		// Check cache size before storing
 		await this.ensureCacheSize(cacheEntry.size)
 
-		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const db = await this.init()
+		const transaction = db.transaction(['layers'], 'readwrite')
 		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
@@ -215,9 +216,9 @@ class CacheService {
 	 * const cached = await cacheService.getData('buildings-00100', 5 * 60 * 1000);
 	 */
 	async getData(key, maxAge = null) {
-		await this.init()
+		const db = await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readonly')
+		const transaction = db.transaction(['layers'], 'readonly')
 		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
@@ -288,9 +289,9 @@ class CacheService {
 	 * await cacheService.removeData('buildings-00100');
 	 */
 	async removeData(key) {
-		await this.init()
+		const db = await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const transaction = db.transaction(['layers'], 'readwrite')
 		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
@@ -313,14 +314,15 @@ class CacheService {
 	 * // ['buildings-00100', 'trees-00100', 'vegetation-00150']
 	 */
 	async getCachedKeys() {
-		await this.init()
+		const db = await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readonly')
+		const transaction = db.transaction(['layers'], 'readonly')
 		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
 			const request = store.getAllKeys()
-			request.onsuccess = () => resolve(request.result)
+			request.onsuccess = () =>
+				resolve(request.result.map((/** @type {IDBValidKey} */ k) => String(k)))
 			request.onerror = () => reject(request.error)
 		})
 	}
@@ -340,9 +342,9 @@ class CacheService {
 	 * // By type: { buildings: 3, trees: 2, vegetation: 1 }
 	 */
 	async getCacheStats() {
-		await this.init()
+		const db = await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readonly')
+		const transaction = db.transaction(['layers'], 'readonly')
 		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
@@ -392,9 +394,9 @@ class CacheService {
 	 * console.log(`Removed ${cleaned} expired cache entries`);
 	 */
 	async cleanupExpired() {
-		await this.init()
+		const db = await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const transaction = db.transaction(['layers'], 'readwrite')
 		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
@@ -450,9 +452,9 @@ class CacheService {
 	 * @private
 	 */
 	async removeOldestEntries(spaceNeeded) {
-		await this.init()
+		const db = await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const transaction = db.transaction(['layers'], 'readwrite')
 		const store = transaction.objectStore('layers')
 		const index = store.index('timestamp')
 
@@ -461,7 +463,7 @@ class CacheService {
 			let freedSpace = 0
 
 			request.onsuccess = (event) => {
-				const cursor = event.target.result
+				const cursor = /** @type {IDBRequest<IDBCursorWithValue|null>} */ (event.target).result
 
 				if (cursor && freedSpace < spaceNeeded) {
 					const entry = cursor.value
@@ -491,9 +493,9 @@ class CacheService {
 	 * console.log('All cache data cleared');
 	 */
 	async clearAll() {
-		await this.init()
+		const db = await this.init()
 
-		const transaction = this.db.transaction(['layers'], 'readwrite')
+		const transaction = db.transaction(['layers'], 'readwrite')
 		const store = transaction.objectStore('layers')
 
 		return new Promise((resolve, reject) => {
@@ -593,9 +595,9 @@ class CacheService {
 	 * });
 	 */
 	async setMetadata(key, metadata) {
-		await this.init()
+		const db = await this.init()
 
-		const transaction = this.db.transaction(['metadata'], 'readwrite')
+		const transaction = db.transaction(['metadata'], 'readwrite')
 		const store = transaction.objectStore('metadata')
 
 		return new Promise((resolve, reject) => {
@@ -620,9 +622,9 @@ class CacheService {
 	 * }
 	 */
 	async getMetadata(key) {
-		await this.init()
+		const db = await this.init()
 
-		const transaction = this.db.transaction(['metadata'], 'readonly')
+		const transaction = db.transaction(['metadata'], 'readonly')
 		const store = transaction.objectStore('metadata')
 
 		return new Promise((resolve, reject) => {

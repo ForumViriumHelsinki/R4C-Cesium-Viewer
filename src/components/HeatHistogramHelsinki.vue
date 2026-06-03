@@ -87,7 +87,7 @@ export default {
 		}
 
 		const createHistogram = () => {
-			const urbanHeatData = propsStore.heatHistogramData
+			const urbanHeatData = /** @type {number[]} */ (propsStore.heatHistogramData ?? [])
 
 			plotService.initializePlotContainer('heatHistogramContainer')
 
@@ -97,10 +97,13 @@ export default {
 
 			const svg = plotService.createSVGElement(margin, width, height, '#heatHistogramContainer')
 
-			const minDataValue = d3.min(urbanHeatData) - 0.02
-			const maxDataValue = d3.max(urbanHeatData) + 0.02
+			const minDataValue = (d3.min(urbanHeatData) ?? 0) - 0.02
+			const maxDataValue = (d3.max(urbanHeatData) ?? 0) + 0.02
 			const x = plotService.createScaleLinear(minDataValue, maxDataValue, [0, width])
-			const bins = d3.histogram().domain(x.domain()).thresholds(x.ticks(20))(urbanHeatData)
+			const bins = d3
+				.histogram()
+				.domain(/** @type {[number, number]} */ (x.domain()))
+				.thresholds(x.ticks(20))(urbanHeatData)
 			const y = plotService.createScaleLinear(
 				0,
 				d3.max(bins, (d) => d.length),
@@ -126,7 +129,7 @@ export default {
 					svg,
 					`Heat exposure to buildings in ${store.nameOfZone}`,
 					width,
-					margin
+					margin.top
 				)
 			} else {
 				createBars(
@@ -144,7 +147,7 @@ export default {
 					svg,
 					`${store.nameOfZone} ${store.heatDataDate} buildings <a href="https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature" target="_blank">surface temperature</a> in °C`,
 					width - 20,
-					margin
+					margin.top
 				)
 			}
 		}

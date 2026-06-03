@@ -144,7 +144,10 @@ export default class ElementsDisplay {
 			'hideNonSoteLabel',
 		]
 
-		document.getElementById('hideNonSoteLabel').textContent = 'Only public buildings'
+		const hideNonSoteLabel = document.getElementById('hideNonSoteLabel')
+		if (hideNonSoteLabel) {
+			hideNonSoteLabel.textContent = 'Only public buildings'
+		}
 
 		this.setElementsDisplay(elements, display)
 	}

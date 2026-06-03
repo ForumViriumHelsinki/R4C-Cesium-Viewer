@@ -243,8 +243,15 @@ export default class Camera {
 			return
 		}
 
+		// Guard: postal code must be set before lookup
+		const postalcode = this.store.postalcode
+		if (!postalcode) {
+			logger.warn('[Camera] Cannot switch to 2D view: No postal code selected')
+			return
+		}
+
 		// O(1) lookup using postal code index
-		const entity = postalCodeIndex.getByPostalCode(this.store.postalcode)
+		const entity = postalCodeIndex.getByPostalCode(postalcode)
 
 		if (!entity) {
 			logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 2D view`)
@@ -293,8 +300,15 @@ export default class Camera {
 		// Capture current camera state before starting flight
 		this.captureCurrentState()
 
+		// Guard: postal code must be set before lookup
+		const postalcode = this.store.postalcode
+		if (!postalcode) {
+			logger.warn('[Camera] Cannot switch to 3D view: No postal code selected')
+			return
+		}
+
 		// O(1) lookup using postal code index
-		const entity = postalCodeIndex.getByPostalCode(this.store.postalcode)
+		const entity = postalCodeIndex.getByPostalCode(postalcode)
 
 		if (!entity) {
 			logger.warn(`[Camera] Postal code ${this.store.postalcode} not found for 3D view`)
@@ -373,7 +387,10 @@ export default class Camera {
 				duration: 1, // Animation duration in seconds
 			})
 
-			this.store.setLevel(null)
+			// `switchTo3DGrid` historically resets to a null level (see camera spec).
+			// `setLevel` is typed for the string state machine, so cast the intentional
+			// null reset through unknown rather than change the runtime value.
+			this.store.setLevel(/** @type {string} */ (/** @type {unknown} */ (null)))
 		}
 	}
 
@@ -507,8 +524,9 @@ export default class Camera {
 			return
 		}
 
-		// O(1) lookup using postal code index
-		const entity = postalCodeIndex.getByPostalCode(postalCode)
+		// O(1) lookup using postal code index. The index is keyed by string posno
+		// values, so normalize numeric postal codes to string before lookup.
+		const entity = postalCodeIndex.getByPostalCode(String(postalCode))
 
 		if (!entity) {
 			logger.warn(`[Camera] Postal code ${postalCode} not found in index`)

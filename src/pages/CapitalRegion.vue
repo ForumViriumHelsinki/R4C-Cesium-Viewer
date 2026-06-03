@@ -67,7 +67,6 @@
 </template>
 
 <script>
-import { useDebounceFn } from '@vueuse/core'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import BuildingInformation from '../components/BuildingInformation.vue'
 import HSYWMS from '../components/HSYWMS.vue'
@@ -79,6 +78,37 @@ import { useToggleStore } from '../stores/toggleStore.js'
 import BuildingScatterPlot from '../views/BuildingScatterPlot.vue'
 import Landcover from '../views/Landcover.vue'
 import SocioEconomics from '../views/SocioEconomics.vue'
+
+/**
+ * Creates a trailing-edge debounced wrapper around `fn`. Mirrors the subset of
+ * `@vueuse/core`'s `useDebounceFn` used here (which is not a project dependency),
+ * but additionally exposes `.cancel()` so a pending call can be dropped on
+ * component unmount to avoid stale state mutations.
+ *
+ * @template {(...args: any[]) => void} F
+ * @param {F} fn - Function to debounce.
+ * @param {number} delay - Trailing delay in milliseconds.
+ * @returns {((...args: Parameters<F>) => void) & { cancel: () => void }}
+ */
+function useDebounceFn(fn, delay) {
+	/** @type {ReturnType<typeof setTimeout> | null} */
+	let timer = null
+	/** @param {Parameters<F>} args */
+	const run = (...args) => {
+		if (timer !== null) clearTimeout(timer)
+		timer = setTimeout(() => {
+			timer = null
+			fn(...args)
+		}, delay)
+	}
+	const cancel = () => {
+		if (timer !== null) {
+			clearTimeout(timer)
+			timer = null
+		}
+	}
+	return Object.assign(run, { cancel })
+}
 
 export default {
 	components: {
@@ -142,6 +172,9 @@ export default {
 			// Stop watchers to prevent stale callbacks
 			stopWatchLandCover()
 			stopWatchPostalCode()
+			// Drop any pending debounced calls so they don't mutate state post-unmount
+			debouncedLandCoverUpdate.cancel()
+			debouncedPostalCodeUpdate.cancel()
 		})
 
 		return {

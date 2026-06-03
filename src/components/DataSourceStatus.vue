@@ -420,16 +420,50 @@ const emit = defineEmits(['source-retry', 'cache-cleared', 'data-preload'])
 // Store
 const _loadingStore = useLoadingStore()
 
+/**
+ * Cache statistics shape returned by cacheService.getCacheStats()
+ * @typedef {Object} CacheStats
+ * @property {number} [totalEntries] - Number of cached entries
+ * @property {number} [totalSize] - Total bytes used
+ * @property {number} [expiredCount] - Number of expired entries
+ * @property {Object<string, number>} [typeStats] - Entry counts by data type
+ * @property {number} [maxSize] - Maximum cache size in bytes
+ * @property {number} [utilizationPercent] - Percent of cache budget used
+ */
+
+/**
+ * A monitored data source entry
+ * @typedef {Object} DataSource
+ * @property {string} id
+ * @property {string} name
+ * @property {string} url
+ * @property {string} type
+ * @property {string} status
+ * @property {string} message
+ * @property {boolean} loading
+ * @property {boolean} retrying
+ * @property {boolean} cached
+ * @property {number|null} lastUpdated
+ * @property {number|null} responseTime
+ * @property {number|null} cacheAge
+ * @property {number|null} cacheSize
+ * @property {string} [errorType] - Classification of the most recent error ('auth', 'service', 'network', 'unknown')
+ */
+
 // Local state
 const refreshing = ref(false)
 const showCacheStats = ref(false)
 const detailsDialog = ref(false)
+/** @type {import('vue').Ref<DataSource|null>} */
 const selectedSource = ref(null)
+/** @type {import('vue').Ref<CacheStats>} */
 const cacheStats = ref({})
+/** @type {import('vue').Ref<ReturnType<typeof setInterval>|null>} */
 const refreshTimer = ref(null)
 
 // Data sources to monitor
 // Uses /status/* health check endpoints for better error detection
+/** @type {import('vue').Ref<DataSource[]>} */
 const dataSources = ref([
 	{
 		id: 'pygeoapi',

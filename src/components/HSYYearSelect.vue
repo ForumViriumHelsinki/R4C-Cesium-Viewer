@@ -13,12 +13,10 @@ import { ref, watch } from 'vue'
 import { eventBus } from '../services/eventEmitter.js'
 import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
-import { useGlobalStore } from '../stores/globalStore.js'
 
 export default {
 	setup() {
 		const backgroundMapStore = useBackgroundMapStore()
-		const store = useGlobalStore()
 		const yearOptions = [2024, 2022, 2020, 2018, 2016]
 		const selectedYear = ref(2024)
 
@@ -26,7 +24,11 @@ export default {
 			() => selectedYear.value,
 			(newValue) => {
 				backgroundMapStore.setHSYYear(newValue)
-				removeLandcover(store.landcoverLayers, store.cesiumViewer)
+				// removeLandcover() resolves the stores internally and takes no
+				// arguments; the previous call passed stale args (and read a
+				// nonexistent `landcoverLayers` off globalStore — it lives on
+				// backgroundMapStore). Both were silently ignored.
+				removeLandcover()
 				void createHSYImageryLayer()
 				eventBus.emit('recreate piechart')
 			}

@@ -46,6 +46,12 @@ function makeViewer() {
 		isDestroyed: () => false,
 		dataSources: {
 			_dataSources: sources,
+			// Production clearFlood() iterates via the public DataSourceCollection API
+			// (length + get(i)); back both with the same sources array.
+			get length() {
+				return sources.length
+			},
+			get: (i) => sources[i],
 			add: vi.fn((ds) => {
 				sources.push(ds)
 				return ds

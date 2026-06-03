@@ -16,7 +16,9 @@ import logger from '../utils/logger.js'
 
 class CesiumProvider {
 	constructor() {
+		/** @type {typeof import('cesium') | null} */
 		this._cesium = null
+		/** @type {Promise<typeof import('cesium')> | null} */
 		this._initPromise = null
 		this._initialized = false
 	}
@@ -27,7 +29,7 @@ class CesiumProvider {
 	 * @returns {Promise<typeof import('cesium')>}
 	 */
 	async initialize() {
-		if (this._initialized) return this._cesium
+		if (this._initialized && this._cesium) return this._cesium
 		if (this._initPromise) return this._initPromise
 
 		this._initPromise = (async () => {
@@ -39,7 +41,7 @@ class CesiumProvider {
 			this._cesium = cesiumModule
 			this._initialized = true
 			logger.debug('[CesiumProvider] Cesium module loaded')
-			return this._cesium
+			return cesiumModule
 		})()
 		return this._initPromise
 	}
@@ -51,7 +53,7 @@ class CesiumProvider {
 	 * @throws {Error} If Cesium not yet initialized
 	 */
 	get() {
-		if (!this._initialized) {
+		if (!this._initialized || !this._cesium) {
 			throw new Error(
 				'[CesiumProvider] Cesium accessed before initialization. ' +
 					'Ensure cesiumProvider.initialize() completes before using getCesium().'

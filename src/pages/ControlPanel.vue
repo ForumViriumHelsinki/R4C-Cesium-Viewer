@@ -381,7 +381,7 @@ import MapControls from '../components/MapControls.vue'
 import UnifiedSearch from '../components/UnifiedSearch.vue'
 import ViewModeCompact from '../components/ViewModeCompact.vue'
 import { useSidebarNavigation } from '../composables/useSidebarNavigation.js'
-import { LAAJASALO_CAMERA } from '../constants/vttFlood.ts'
+import { LAAJASALO_CAMERA } from '../constants/vttFlood'
 import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
 
 // Store and Service Imports
@@ -434,9 +434,23 @@ const { breadcrumbs, canGoBack, goBack } = useSidebarNavigation()
 
 const currentLevel = computed(() => globalStore.level)
 const currentView = computed(() => globalStore.view)
+/** @type {readonly ('search' | 'layers' | 'analysis' | 'details')[]} */
+const SIDEBAR_TABS = ['search', 'layers', 'analysis', 'details']
+
+/**
+ * Type guard narrowing an arbitrary tab value to the known sidebar tab union.
+ * @param {string} val
+ * @returns {val is 'search' | 'layers' | 'analysis' | 'details'}
+ */
+const isSidebarTab = (val) => /** @type {readonly string[]} */ (SIDEBAR_TABS).includes(val)
+
 const activeTab = computed({
 	get: () => toggleStore.activeTab,
-	set: (val) => toggleStore.setActiveTab(val),
+	set: (val) => {
+		if (isSidebarTab(val)) {
+			toggleStore.setActiveTab(val)
+		}
+	},
 })
 
 const isRail = computed(() => toggleStore.sidebarMode === 'rail')
@@ -496,7 +510,7 @@ const analysisComponents = computed(() => ({
 }))
 
 // Inline analysis (small charts rendered in sidebar)
-const inlineAnalysis = ref(null)
+const inlineAnalysis = ref(/** @type {keyof typeof analysisConfig | null} */ (null))
 // Right panel analysis (large charts)
 const rightPanelOpen = ref(false)
 const rightPanelAnalysis = ref('')

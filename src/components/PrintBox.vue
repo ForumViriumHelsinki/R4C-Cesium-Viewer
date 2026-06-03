@@ -19,7 +19,7 @@ export default {
 			const entity = store.pickedEntity
 
 			if (entity?._polygon && entity?.properties) {
-				document.getElementById('printContainer').scroll({
+				document.getElementById('printContainer')?.scroll({
 					top: 0,
 					behavior: 'instant',
 				})
@@ -38,6 +38,10 @@ export default {
 
 		const geocodingPrint = () => {
 			const store = useGlobalStore()
+			// store.postalcode is `string | null`; nothing to look up when null
+			if (!store.postalcode) {
+				return
+			}
 			// O(1) lookup using postal code index
 			const entity = postalCodeIndex.getByPostalCode(store.postalcode)
 			if (entity) {
@@ -47,6 +51,9 @@ export default {
 
 		const printEntity = (entity, postno, view) => {
 			const container = document.getElementById('printContainer')
+			if (!container) {
+				return
+			}
 
 			// Clear existing content safely
 			container.textContent = ''
@@ -105,6 +112,9 @@ export default {
 
 		const addFooterNote = (_postno, _view) => {
 			const container = document.getElementById('printContainer')
+			if (!container) {
+				return
+			}
 
 			if (store.heatDataDate === '2023-06-23') {
 				container.appendChild(document.createElement('br'))
