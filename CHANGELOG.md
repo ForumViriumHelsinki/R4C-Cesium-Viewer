@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.5...r4c-cesium-viewer-v1.51.6) (2026-06-03)
+
+
+### Bug Fixes
+
+* **tests:** repair performance test suite for Playwright ([#845](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/845)) ([98c0217](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/98c021794a9c4c809d8e1019ba39b8e2ebcc69e4))
+
 ## [1.51.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.4...r4c-cesium-viewer-v1.51.5) (2026-06-03)
 
 
