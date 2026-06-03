@@ -59,8 +59,9 @@ describe('BuildingHighlighter', () => {
 
 			highlighter.polygonOutlineToBlack(entity)
 
-			expect(entity.polygon.outlineColor).toBe(Cesium.Color.BLACK)
-			expect(entity.polygon.outlineWidth).toBe(8)
+			// Production wraps raw assignments in Cesium.ConstantProperty; read the value back.
+			expect(entity.polygon.outlineColor.getValue()).toBe(Cesium.Color.BLACK)
+			expect(entity.polygon.outlineWidth.getValue()).toBe(8)
 		})
 
 		it('should not throw error when entity is undefined', () => {
@@ -117,9 +118,10 @@ describe('BuildingHighlighter', () => {
 
 			highlighter.polygonOutlineToYellow(entity)
 
-			expect(entity.polygon.outline).toBe(true)
-			expect(entity.polygon.outlineColor).toBe(Cesium.Color.YELLOW)
-			expect(entity.polygon.outlineWidth).toBe(20)
+			// Production wraps raw assignments in Cesium.ConstantProperty; read the value back.
+			expect(entity.polygon.outline.getValue()).toBe(true)
+			expect(entity.polygon.outlineColor.getValue()).toBe(Cesium.Color.YELLOW)
+			expect(entity.polygon.outlineWidth.getValue()).toBe(20)
 		})
 
 		it('should not throw error when entity.polygon is undefined', () => {
