@@ -82,7 +82,7 @@ jobs:
           # (autorun exits before writing files when assertions fail)
 
           echo "=== Running lhci collect ==="
-          bunx @lhci/cli@0.14.x collect --config=lighthouserc.cjs 2>&1 | tee lighthouse-output.txt
+          bunx @lhci/cli@0.15.0 collect --config=lighthouserc.cjs 2>&1 | tee lighthouse-output.txt
           COLLECT_CODE=${PIPESTATUS[0]}
           echo "Collect exit code: $COLLECT_CODE"
 
@@ -100,12 +100,12 @@ jobs:
           fi
 
           echo "=== Running lhci upload ==="
-          bunx @lhci/cli@0.14.x upload --config=lighthouserc.cjs 2>&1 | tee -a lighthouse-output.txt
+          bunx @lhci/cli@0.15.0 upload --config=lighthouserc.cjs 2>&1 | tee -a lighthouse-output.txt
           UPLOAD_CODE=${PIPESTATUS[0]}
           echo "Upload exit code: $UPLOAD_CODE"
 
           echo "=== Running lhci assert ==="
-          bunx @lhci/cli@0.14.x assert --config=lighthouserc.cjs 2>&1 | tee -a lighthouse-output.txt
+          bunx @lhci/cli@0.15.0 assert --config=lighthouserc.cjs 2>&1 | tee -a lighthouse-output.txt
           ASSERT_CODE=${PIPESTATUS[0]}
           echo "Assert exit code: $ASSERT_CODE"
 
