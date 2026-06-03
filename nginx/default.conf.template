@@ -241,7 +241,7 @@ server {
 
     # GO Feature Flag relay proxy (OFREP endpoint)
     location /feature-flags/ {
-        set $goff_host "gofeatureflag.feature-flags.svc.cluster.local";
+        set $goff_host "gofeatureflag-relay-proxy.feature-flags.svc.cluster.local";
         proxy_pass http://$goff_host:1031/;
         proxy_set_header Host $goff_host;
         proxy_connect_timeout 3s;
