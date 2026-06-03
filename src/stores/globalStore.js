@@ -73,7 +73,9 @@ import logger from '../utils/logger.js'
 export const useGlobalStore = defineStore('global', {
 	state: () => ({
 		view: 'capitalRegion',
+		/** @type {string|null} */
 		postalcode: null,
+		/** @type {string|null} */
 		nameOfZone: null,
 		averageHeatExposure: 0,
 		averageTreeArea: 0,
@@ -96,9 +98,13 @@ export const useGlobalStore = defineStore('global', {
 			'2025-07-14': { min: 284.924407958, max: 328.2204589844 },
 		},
 		heatDataDate: '2022-06-28',
+		/** @type {Object|null} */
 		currentGridCell: null,
+		/** @type {Object|null} */
 		cesiumViewer: null,
+		/** @type {string|null} */
 		buildingAddress: null,
+		/** @type {Object|null} */
 		pickedEntity: null,
 		isLoading: false,
 		showBuildingInfo: true,
@@ -111,11 +117,16 @@ export const useGlobalStore = defineStore('global', {
 			stage: null,
 			startTime: null,
 			canCancel: false,
+			/** @type {Object|null} */
 			error: null,
+			/** @type {Object|null} */
 			partialData: null,
 			retryCount: 0,
+			/** @type {Object|null} */
 			previousViewState: null,
+			/** @type {Object|null} */
 			loadingProgress: null, // { current: number, total: number } for progressive updates (FR-3.2)
+			/** @type {{postalCode: string, postalCodeName: string}|null} */
 			pendingNavigation: null, // { postalCode: string, postalCodeName: string } for latest-wins pattern
 		},
 	}),

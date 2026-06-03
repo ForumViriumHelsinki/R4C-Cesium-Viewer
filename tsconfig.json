@@ -42,6 +42,6 @@
 		// Library types
 		"lib": ["ES2020", "DOM", "DOM.Iterable"]
 	},
-	"include": ["src/**/*.js", "src/**/*.vue"],
+	"include": ["src/**/*.js", "src/**/*.vue", "src/**/*.d.ts"],
 	"exclude": ["node_modules", "dist", "tests", "**/*.spec.js", "**/*.test.js"]
 }
