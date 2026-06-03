@@ -67,9 +67,15 @@ export default class ColdArea {
 	 * @returns {Promise} - A promise that resolves once the data has been loaded
 	 */
 	async loadColdAreas() {
+		const postalCode = this.store.postalcode
+		if (!postalCode) {
+			logger.warn('loadColdAreas called without a postal code; skipping')
+			return
+		}
+
 		this.store.setIsLoading(true)
 		try {
-			const response = await fetch(this.urlStore.coldAreas(this.store.postalcode))
+			const response = await fetch(this.urlStore.coldAreas(postalCode))
 			const data = await response.json()
 			await this.addColdAreaDataSource(data)
 		} catch (error) {
@@ -96,17 +102,21 @@ export default class ColdArea {
 			const Cesium = getCesium()
 			this.elementsDisplayService.setColdAreasElementsDisplay('inline-block')
 			for (let i = 0; i < entities.length; i++) {
-				const entity = entities[i]
-
-				if (entity._properties._heatexposure && entity.polygon) {
-					entity.polygon.material = new Cesium.Color(
-						1,
-						1 - entity._properties._heatexposure._value,
-						0,
-						entity._properties._heatexposure._value
+				const entity =
+					/** @type {Cesium.Entity & { _properties?: Record<string, { _value?: any } | undefined> }} */ (
+						entities[i]
 					)
-					entity.polygon.outlineColor = Cesium.Color.BLACK
-					entity.polygon.outlineWidth = 3
+
+				const heatexposure = entity._properties?._heatexposure
+				// Cesium's polygon graphics setters accept raw Color/number at
+				// runtime (coerced to ConstantProperty), but the published types
+				// declare them as Property/MaterialProperty — hence the cast.
+				const polygon = /** @type {any} */ (entity.polygon)
+
+				if (heatexposure && polygon) {
+					polygon.material = new Cesium.Color(1, 1 - heatexposure._value, 0, heatexposure._value)
+					polygon.outlineColor = Cesium.Color.BLACK
+					polygon.outlineWidth = 3
 				}
 			}
 		}

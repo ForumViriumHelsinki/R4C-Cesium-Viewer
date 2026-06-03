@@ -74,6 +74,7 @@ const findOptimalCoolingCenters = async () => {
 	shuffleArray(availableGrids)
 
 	for (let i = 0; i < numCoolingCenters.value; i++) {
+		/** @type {import('../stores/mitigationStore.js').GridCell | null} */
 		let bestCell = null
 		let highestTotalReduction = -Infinity
 
@@ -87,9 +88,17 @@ const findOptimalCoolingCenters = async () => {
 		})
 
 		if (bestCell) {
-			if (!isCoolingCenterTooClose(bestCell)) {
-				addCoolingCenter(bestCell.entity)
-				availableGrids.splice(availableGrids.indexOf(bestCell), 1)
+			// TS narrows `bestCell` to `never` here because its only visible assignment
+			// happens inside the forEach closure (opaque to control-flow analysis), so
+			// re-widen via the declared GridCell type before reading members.
+			const selectedCell = /** @type {import('../stores/mitigationStore.js').GridCell} */ (bestCell)
+			if (!isCoolingCenterTooClose(selectedCell)) {
+				// BUG (pre-existing): mitigationStore.setGridCells intentionally does
+				// NOT store the Cesium entity reference on grid cells, so `.entity` is
+				// always undefined here and addCoolingCenter() receives undefined. Left
+				// as-is to preserve runtime behavior; tracked separately.
+				addCoolingCenter(selectedCell.entity)
+				availableGrids.splice(availableGrids.indexOf(selectedCell), 1)
 			} else {
 				availableGrids.splice(availableGrids.indexOf(bestCell), 1)
 				i--

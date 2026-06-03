@@ -85,7 +85,7 @@
 			density="compact"
 			hide-details
 			class="mb-2"
-			@update:model-value="store.setDimension"
+			@update:model-value="onDimensionChange"
 		>
 			<v-radio
 				v-for="dim in VTT_DIMENSIONS"
@@ -128,10 +128,10 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, watch } from 'vue'
-import { VTT_DIMENSIONS, VTT_SCENARIOS } from '../constants/vttFlood.ts'
+import { VTT_DIMENSIONS, VTT_SCENARIOS } from '../constants/vttFlood'
 import { clearFlood, renderFlood } from '../services/vttFlood.js'
 import { useGlobalStore } from '../stores/globalStore.js'
-import { useVttFloodStore } from '../stores/vttFloodStore.ts'
+import { useVttFloodStore } from '../stores/vttFloodStore'
 import logger from '../utils/logger.js'
 
 const emit = defineEmits(['close'])
@@ -162,6 +162,9 @@ const legendMax = computed(() => formatRange(store.activeRange.max))
 function onScenarioChange(id) {
 	if (id) store.selectScenario(id)
 }
+function onDimensionChange(key) {
+	if (key) store.setDimension(key)
+}
 function onFrameChange(value) {
 	store.setFrame(Number(value))
 }
@@ -176,9 +179,11 @@ function onFrameInput(value) {
 // owns Cesium calls; the store stays viewer-agnostic.
 const stopRenderWatcher = watch(
 	() => [store.frame, store.dimension],
-	async ([frame, dimension]) => {
+	async () => {
 		const viewer = globalStore.cesiumViewer
 		if (!viewer) return
+		const frame = store.frame
+		const dimension = store.dimension
 		if (!frame) {
 			await clearFlood({ viewer })
 			return

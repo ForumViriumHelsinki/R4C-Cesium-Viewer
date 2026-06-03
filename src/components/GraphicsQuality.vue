@@ -281,7 +281,9 @@ export default {
 	setup() {
 		const graphicsStore = useGraphicsStore()
 		const featureFlagStore = useFeatureFlagStore()
-		const selectedPreset = ref(null)
+		const selectedPreset = ref(
+			/** @type {'ultra' | 'high' | 'medium' | 'low' | 'performance' | null} */ (null)
+		)
 
 		// Feature flag checks for anti-aliasing options
 		const msaaOptionsEnabled = computed(() => featureFlagStore.isEnabled('msaaOptions'))

@@ -279,7 +279,7 @@ export default {
 				// If there is a postal code available, load the nature areas for that area.
 				if (store.postalcode && !dataSourceService.getDataSourceByName('Vegetation')) {
 					const vegetationService = new Vegetation()
-					vegetationService.loadVegetation(store.postalcode).catch((error) => {
+					vegetationService.loadVegetation().catch((error) => {
 						logger.error('[Layers] Failed to load vegetation:', error)
 						store.showError(
 							'Unable to load vegetation data.',
@@ -336,7 +336,7 @@ export default {
 			if (layer === 'ndvi') {
 				landCover.value = false
 				toggleStore.setLandCover(false)
-				removeLandcover(store.landcoverLayers, store.cesiumViewer)
+				removeLandcover()
 			} else if (layer === 'landcover') {
 				ndvi.value = false
 				toggleStore.setNDVI(false)

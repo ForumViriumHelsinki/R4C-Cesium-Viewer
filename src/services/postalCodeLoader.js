@@ -270,7 +270,7 @@ export function updateLoadingProgress(current, total, setStateCallback) {
  * Handles partial success (one operation succeeds, other fails).
  * Checks for pending navigation and triggers it if one was queued.
  *
- * @param {Array<PromiseSettledResult>} results - Results from Promise.allSettled
+ * @param {Array<PromiseSettledResult<unknown>>} results - Results from Promise.allSettled
  * @param {string} postalCode - Postal code being loaded
  * @param {Function} setStateCallback - Callback to set click processing state
  * @param {Function} resetStateCallback - Callback to reset click processing state
@@ -282,7 +282,7 @@ export function processParallelLoadingResults(
 	postalCode,
 	setStateCallback,
 	resetStateCallback,
-	getPendingNavigationCallback = null
+	getPendingNavigationCallback = undefined
 ) {
 	const [cameraResult, dataResult] = results
 
@@ -367,7 +367,7 @@ export async function loadPostalCodeWithParallelStrategy(
 	services,
 	stores,
 	setNameOfZoneCallback,
-	onNavigationRequest = null
+	onNavigationRequest = undefined
 ) {
 	performance.mark('parallel-load-start')
 
@@ -416,7 +416,8 @@ export async function loadPostalCodeWithParallelStrategy(
 	// Wait for data loading to complete
 	const dataResult = await Promise.allSettled([dataPromise])
 	// Provide a synthetic fulfilled camera result to reuse processParallelLoadingResults signature
-	const results = [{ status: 'fulfilled' }, dataResult[0]]
+	/** @type {PromiseSettledResult<unknown>[]} */
+	const results = [{ status: 'fulfilled', value: undefined }, dataResult[0]]
 
 	// Process results with comprehensive error handling (FR-3.4)
 	// Also checks for pending navigation (latest-wins pattern)
@@ -466,6 +467,7 @@ export async function loadPostalCodeWithParallelStrategy(
  * @param {Function} setNameCallback - Callback to set zone name in store
  * @param {Object} [options] - Optional callbacks
  * @param {Function} [options.setPickedEntityIfEmpty] - Receives the polygon entity; the global store action will be invoked only when no entity is currently set.
+ * @param {() => (string | null)} [options.getCurrentPostalCode] - Returns the currently active postal code (or null); used to discard stale late-arriving resolutions.
  * @returns {void}
  */
 export function setNameOfZone(postalCode, _postalCodeData, setNameCallback, options = {}) {

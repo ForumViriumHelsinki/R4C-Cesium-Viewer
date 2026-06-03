@@ -64,7 +64,7 @@ export default {
 	setup() {
 		const backgroundMapStore = useBackgroundMapStore()
 		const searchQuery = ref('')
-		const filteredLayers = ref([])
+		const filteredLayers = ref(/** @type {{ name: string, title: string }[]} */ ([]))
 		const wmsService = new wms()
 
 		const fetchLayers = async () => {
@@ -117,8 +117,10 @@ export default {
 
 		// Select and switch the WMS layer
 		const selectLayer = async (layerName) => {
-			const store = useGlobalStore()
-			removeLandcover(store.landcoverLayers, store.cesiumViewer)
+			// removeLandcover() reads the viewer + tracked layers from the stores itself;
+			// the previous call passed args (store.landcoverLayers does not exist on the
+			// global store) that were ignored.
+			removeLandcover()
 			await createHSYImageryLayer(layerName)
 			// Clear the filtered layers after selecting
 			filteredLayers.value = []

@@ -78,6 +78,26 @@ export const indexToColorScheme = {
 }
 
 /**
+ * A 250m grid entity as loaded from GeoJSON.
+ *
+ * The entity always has a `polygon` graphics object and a `properties` bag in
+ * this code path (grid features are guaranteed to be polygons with attributes),
+ * but Cesium's typings mark both as optional and type `material`/`extrudedHeight`
+ * as `Property`. At runtime Cesium coerces a raw `Color`/`number` assignment into
+ * the corresponding `ConstantProperty`/material, so the writable shape below
+ * reflects what is actually assignable. Guards still narrow the optional members.
+ *
+ * @typedef {Object} GridPolygon
+ * @property {*} material - Accepts a Cesium.Color or MaterialProperty (coerced at runtime)
+ * @property {number} extrudedHeight - Accepts a raw number (coerced at runtime)
+ *
+ * @typedef {Object} GridEntity
+ * @property {GridPolygon} [polygon]
+ * @property {Object<string, { getValue: () => * }>} [properties]
+ * @property {boolean} [show]
+ */
+
+/**
  * Vue 3 composable for 250m statistical grid visualization styling
  * Centralizes all color scheme logic, index-based styling, and 3D extrusion.
  * Supports heat/flood vulnerability indices, social vulnerability factors,
@@ -184,10 +204,13 @@ export function useGridStyling() {
 	 * Styles a single grid entity based on the selected index.
 	 * Extracted from updateGridColors loop body for batch processing.
 	 *
-	 * @param {Cesium.Entity} entity - The entity to style
+	 * @param {GridEntity} entity - The entity to style
 	 * @param {string} selectedIndex - The selected vulnerability index
 	 */
 	const styleGridEntity = (entity, selectedIndex) => {
+		// Grid features always have a polygon + properties; guard for the type system.
+		if (!entity.polygon || !entity.properties) return
+
 		// Reset state for each entity
 		entity.polygon.extrudedHeight = 0
 		entity.polygon.material = getCachedColor('#FFFFFF', baseAlpha.value)

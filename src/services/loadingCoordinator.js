@@ -67,8 +67,8 @@ import unifiedLoader from './unifiedLoader.js'
  * @property {number} layersLoaded - Total layers loaded across all sessions
  * @property {number} totalLoadTime - Cumulative loading time in milliseconds
  * @property {number} avgLoadTime - Average loading time per layer in milliseconds
- * @property {number} activeSessions - Number of currently active sessions
- * @property {number} sessionDuration - Current session duration in milliseconds
+ * @property {number} [activeSessions] - Number of currently active sessions (added by getPerformanceMetrics)
+ * @property {number} [sessionDuration] - Current session duration in milliseconds (added by getPerformanceMetrics)
  */
 
 /**
@@ -279,7 +279,7 @@ class LoadingCoordinator {
 	 * 2. Normal + Low priority: Parallel (no delays)
 	 * 3. Background priority: Scheduled with requestIdleCallback
 	 *
-	 * @param {string} sessionId - Session identifier
+	 * @param {string} _sessionId - Session identifier (unused; kept for signature parity)
 	 * @param {Object[]} layerConfigs - Layer configurations
 	 * @returns {Promise<SessionResult[]>} Loading results
 	 * @private
@@ -387,7 +387,7 @@ class LoadingCoordinator {
 	 * Load all layers in parallel
 	 * Maximum throughput strategy - all layers load simultaneously.
 	 *
-	 * @param {string} sessionId - Session identifier
+	 * @param {string} _sessionId - Session identifier (unused; kept for signature parity)
 	 * @param {Object[]} layerConfigs - Layer configurations
 	 * @returns {Promise<SessionResult[]>} Loading results
 	 * @private

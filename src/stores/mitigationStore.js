@@ -36,22 +36,42 @@ import { processBatchAdaptive } from '../utils/batchProcessor.js'
 import logger from '../utils/logger.js'
 
 /**
+ * @typedef {Object} CoolingCenter
+ * @property {number} euref_x - EUREF-FIN X coordinate
+ * @property {number} euref_y - EUREF-FIN Y coordinate
+ * @property {string|number} [grid_id] - Grid cell identifier the center sits in
+ * @property {number} [capacity] - Cooling capacity of the center
+ */
+
+/**
+ * @typedef {Object} GridCell
+ * @property {string|number} id - Grid cell identifier (grid_id)
+ * @property {number} x - EUREF-FIN X coordinate
+ * @property {number} y - EUREF-FIN Y coordinate
+ * @property {import('cesium').Entity} [entity] - Optional Cesium entity reference; intentionally omitted by setGridCells (see note there)
+ */
+
+/**
  * Mitigation Pinia Store
  * Models heat mitigation impacts with spatial decay and cumulative tracking.
  * Many methods already have inline JSDoc comments.
  */
 export const useMitigationStore = defineStore('mitigation', {
 	state: () => ({
+		/** @type {CoolingCenter[]} */
 		coolingCenters: [],
 		/** Version counter for coolingCenters - increment when array changes to enable efficient watching */
 		coolingCentersVersion: 0,
 		reachability: 1000,
 		maxReduction: 0.2,
 		minReduction: 0.04,
+		/** @type {Array<number|string>} */
 		affected: [],
 		impact: 0,
 		optimalEffect: 4.64,
+		/** @type {Object<string, number>} */
 		gridImpacts: {}, // Store impact for each grid_id
+		/** @type {GridCell[]} */
 		gridCells: [], // Add gridCells here
 		optimised: false,
 		parks2022CoolingConstant: 0.177,
@@ -62,6 +82,7 @@ export const useMitigationStore = defineStore('mitigation', {
 		heatReducedByParks: 0,
 		totalAreaEffected: 0,
 		percentageMax: 0,
+		/** @type {Object<string, number>} */
 		modifiedHeatIndices: {},
 		cumulativeCoolingArea: 0,
 		cumulativeHeatReduction: 0,
@@ -320,7 +341,7 @@ export const useMitigationStore = defineStore('mitigation', {
 		getCoolingCapacity(gridId) {
 			return this.coolingCenters
 				.filter((center) => center.grid_id === gridId)
-				.reduce((total, center) => total + center.capacity, 0)
+				.reduce((total, center) => total + (center.capacity ?? 0), 0)
 		},
 		getReductionValue(distance) {
 			return distance > this.reachability

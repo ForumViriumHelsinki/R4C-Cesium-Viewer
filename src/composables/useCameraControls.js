@@ -13,7 +13,7 @@ import logger from '../utils/logger.js'
  *
  * @param {any} viewer - Cesium viewer reference
  * @param {Function} onCameraSettled - Callback function to invoke when camera stops moving
- * @param {Function} [onUrlUpdate] - Optional callback to update URL with camera state
+ * @param {Function|null} [onUrlUpdate] - Optional callback to update URL with camera state
  * @returns {{
  *   addCameraMoveEndListener: () => void,
  *   cleanup: () => void

@@ -44,7 +44,7 @@ async function yieldToMain() {
 			globalThis.scheduler.yield().then(resolve)
 		} else {
 			// Fallback to requestIdleCallback (with WebKit/iOS-safe setTimeout shim)
-			requestIdle(resolve, { timeout: 50 })
+			requestIdle(() => resolve(), { timeout: 50 })
 		}
 	})
 }
@@ -146,6 +146,7 @@ function calculateOptimalSize(batchTimes) {
  * Process items in adaptive batches that maintain 60fps.
  * Automatically adjusts batch size based on measured performance.
  *
+ * @template T
  * @param {Array<T>} items - Items to process
  * @param {(item: T) => void | Promise<void>} processor - Function to process each item
  * @param {Object} [options={}] - Configuration options
@@ -226,6 +227,7 @@ export async function processBatchAdaptive(items, processor, options = {}) {
  * Processes an array of items in batches with optional yielding to main thread.
  * By default uses adaptive sizing; set adaptive: false for fixed-size legacy mode.
  *
+ * @template T
  * @param {Array<T>} items - Array of items to process.
  * @param {(item: T, index: number, batch: T[], batchIndex: number) => void | Promise<void>} processor -
  *        Function called for each item. Receives item, absolute index, current batch array, and batch index.
@@ -266,18 +268,17 @@ export async function processBatchAdaptive(items, processor, options = {}) {
  */
 export async function processBatch(items, processor, options = {}) {
 	const { yieldToMain: shouldYield = true, adaptive = true } = options
-	let { batchSize = INITIAL_BATCH_SIZE } = options
+	const { batchSize: batchSizeOption = INITIAL_BATCH_SIZE } = options
 
 	// Handle empty array
 	if (!items || items.length === 0) {
 		return
 	}
 
-	// Support adaptive batch sizing via function (forces legacy mode)
-	const hasDynamicBatchSize = typeof batchSize === 'function'
-	if (hasDynamicBatchSize) {
-		batchSize = batchSize(items.length)
-	}
+	// Support adaptive batch sizing via function (forces legacy mode).
+	// Resolve the union into a concrete number so downstream arithmetic is typed.
+	const hasDynamicBatchSize = typeof batchSizeOption === 'function'
+	const batchSize = hasDynamicBatchSize ? batchSizeOption(items.length) : batchSizeOption
 
 	// Use adaptive mode by default unless explicitly disabled or using dynamic batch size
 	if (adaptive && !hasDynamicBatchSize) {

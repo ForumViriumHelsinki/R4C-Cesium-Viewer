@@ -24,6 +24,14 @@
 import logger from './logger.js'
 
 /**
+ * Window augmented with the idempotency flags this module stores on it.
+ * @typedef {Window & {
+ *   __r4cPreloadErrorHandlerInstalled?: boolean,
+ *   __r4cPreloadErrorHandlerCleanup?: (() => void) | null,
+ * }} PreloadHandlerWindow
+ */
+
+/**
  * Session-storage key used to short-circuit a reload-loop when even the
  * fresh `index.html` cannot recover. If we just reloaded for a preload
  * error and immediately hit another one, the problem is not stale chunks
@@ -60,7 +68,9 @@ const RELOAD_GUARD_WINDOW_MS = 10_000
  * installPreloadErrorHandler()
  */
 export function installPreloadErrorHandler(deps = {}) {
-	const win = deps.win ?? (typeof window !== 'undefined' ? window : null)
+	const win = /** @type {PreloadHandlerWindow | null} */ (
+		deps.win ?? (typeof window !== 'undefined' ? window : null)
+	)
 	if (!win) {
 		// Non-browser environment (SSR, unit-test without DOM) — no-op.
 		return () => {}
@@ -70,6 +80,7 @@ export function installPreloadErrorHandler(deps = {}) {
 	// and restricted iframes — accessing the property triggers the throw, not the
 	// later get/setItem calls. Without this guard, a crash at the top of main.js
 	// would block app boot for those users.
+	/** @type {Storage | null | undefined} */
 	let storage = deps.storage
 	if (storage === undefined) {
 		try {

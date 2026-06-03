@@ -73,8 +73,8 @@ export const createHSYImageryLayer = async (newLayers) => {
 		tilingScheme: new Cesium.GeographicTilingScheme(),
 	})
 
-	await provider.readyPromise
-
+	// Cesium 1.104+ removed ImageryProvider.readyPromise/ready — WebMapServiceImageryProvider
+	// is usable immediately after construction, so no await is needed here.
 	// Add the new layer and update store
 	const addedLayer = store.cesiumViewer.imageryLayers.addImageryProvider(provider)
 	backgroundMapStore.landcoverLayers.push(addedLayer)

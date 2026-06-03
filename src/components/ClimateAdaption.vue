@@ -166,7 +166,9 @@ watch(
 		if (isOpen) {
 			await nextTick()
 			// Focus the first tab when drawer opens
-			const firstTab = document.querySelector('.climate-adaption-panel [role="tab"]')
+			const firstTab = /** @type {HTMLElement | null} */ (
+				document.querySelector('.climate-adaption-panel [role="tab"]')
+			)
 			if (firstTab) {
 				firstTab.focus()
 			}

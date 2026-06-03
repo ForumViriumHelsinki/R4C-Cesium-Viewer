@@ -1,6 +1,7 @@
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
@@ -156,7 +157,7 @@ export default class Urbanheat {
 		let total = 0
 		const urbanHeatData = []
 		const heatTimeseries = []
-		const toggleStore = useGlobalStore()
+		const toggleStore = useToggleStore()
 		const inHelsinki = toggleStore.helsinkiView
 		const targetDate = this.store.heatDataDate
 
@@ -193,7 +194,7 @@ export default class Urbanheat {
 	setPropertiesAndCreateCharts(entities, features) {
 		const propsStore = usePropsStore()
 		const heatData = this.calculateAverageExposure(features)
-		propsStore.setHeatHistogramData(heatData[0])
+		propsStore.setHeatHistogramData(heatData?.[0] ?? [])
 		// Register entities with cesiumEntityManager for non-reactive entity management
 		cesiumEntityManager.registerBuildingEntities(entities)
 	}
@@ -207,6 +208,10 @@ export default class Urbanheat {
 	async findUrbanHeatData(data, postalCode) {
 		const buildingStore = useBuildingStore()
 		const postcode = postalCode || this.store.postalcode
+		if (!postcode) {
+			logger.warn('[UrbanHeat] findUrbanHeatData called without a postal code; skipping')
+			return null
+		}
 		buildingStore.setBuildingFeatures(data, postcode)
 
 		try {

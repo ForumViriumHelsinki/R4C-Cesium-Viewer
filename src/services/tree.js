@@ -32,6 +32,7 @@ import unifiedLoader from './unifiedLoader.js'
  *
  * @class Tree
  */
+
 export default class Tree {
 	/**
 	 * Creates a Tree service instance
@@ -44,11 +45,16 @@ export default class Tree {
 
 	/**
 	 * Asynchronously load tree data using unified loader with coordinated parallel loading
-	 * @param {string} postalCode - Optional postal code to load trees for. If not provided, uses global store.postalcode
+	 * @param {string|null} [postalCode] - Optional postal code to load trees for. If not provided, uses global store.postalcode
 	 */
 	async loadTrees(postalCode = null) {
 		// Use provided postal code or fall back to global store
 		const targetPostalCode = postalCode || this.store.postalcode
+
+		if (!targetPostalCode) {
+			logger.warn('loadTrees called without a postal code; skipping')
+			return []
+		}
 
 		try {
 			// Define all tree height categories
@@ -98,10 +104,16 @@ export default class Tree {
 	async loadTreesWithKoodi(koodi) {
 		logger.warn('loadTreesWithKoodi is deprecated, use loadTrees() instead')
 
+		const postalCode = this.store.postalcode
+		if (!postalCode) {
+			logger.warn('loadTreesWithKoodi called without a postal code; skipping')
+			return null
+		}
+
 		try {
 			const data = await unifiedLoader.loadLayer({
 				layerId: `trees_${koodi}`,
-				url: this.urlStore.tree(this.store.postalcode, koodi),
+				url: this.urlStore.tree(postalCode, koodi),
 				type: 'geojson',
 				processor: (data, metadata) => this.addTreesDataSource(data, koodi, metadata),
 				options: {
@@ -142,7 +154,7 @@ export default class Tree {
 				entities,
 				(entity) => {
 					try {
-						const description = entity.properties._kuvaus?._value
+						const description = entity.properties?._kuvaus?._value
 						if (description) {
 							this.setTreePolygonMaterialColor(entity, description)
 						}
@@ -188,17 +200,19 @@ export default class Tree {
 			entities = treeDataSource.entities.values
 		}
 
+		const postalCode = this.store.postalcode
+
 		// Find the data source for buildings
 		const buildingsDataSource = this.datasourceService.getDataSourceByName(
-			`Buildings ${this.store.postalcode}`
+			`Buildings ${postalCode}`
 		)
 
 		// If the data source isn't found, exit the function
-		if (!buildingsDataSource) {
+		if (!buildingsDataSource || !postalCode) {
 			return
 		}
 
-		fetch(this.urlStore.treeBuildingDistance(this.store.postalcode))
+		fetch(this.urlStore.treeBuildingDistance(postalCode))
 			.then((response) => response.json())
 			.then((data) => {
 				this.setPropertiesAndEmitEvent(data, entities, buildingsDataSource)
@@ -225,20 +239,20 @@ export default class Tree {
 
 		// Extract serializable tree data (prevents DataCloneError)
 		const treeData = entities.map((entity) => ({
-			kohde_id: entity._properties?._kohde_id?._value,
-			p_ala_m2: entity._properties?._p_ala_m2?._value,
+			kohde_id: entity.properties?.kohde_id?.getValue(),
+			p_ala_m2: entity.properties?.p_ala_m2?.getValue(),
 		}))
 
 		// Extract serializable building data (prevents DataCloneError)
 		const buildingData = new Map()
 		const buildingEntities = buildingsDataSource.entities.values
 		for (const entity of buildingEntities) {
-			const id = entity._properties?._id?._value || entity._properties?._hki_id?._value
+			const id = entity.properties?.id?.getValue() || entity.properties?.hki_id?.getValue()
 			if (id) {
 				buildingData.set(id, {
-					heatExposure: entity._properties?.avgheatexposuretobuilding?._value,
-					area_m2: entity._properties?._area_m2?._value,
-					hki_id: entity._properties?._hki_id?._value,
+					heatExposure: entity.properties?.avgheatexposuretobuilding?.getValue(),
+					area_m2: entity.properties?.area_m2?.getValue(),
+					hki_id: entity.properties?.hki_id?.getValue(),
 				})
 			}
 		}
@@ -324,11 +338,15 @@ export default class Tree {
 		for (let i = 0; i < treeEntities.length; i++) {
 			const entity = treeEntities[i]
 
-			entity.polygon.outlineColor = Cesium.Color.BLACK
-			entity.polygon.outlineWidth = 3
+			const polygon = /** @type {any} */ (entity.polygon)
+			if (polygon) {
+				polygon.outlineColor = Cesium.Color.BLACK
+				polygon.outlineWidth = 3
+			}
 
-			if (entity._properties._description && entity.polygon) {
-				this.setTreePolygonMaterialColor(entity, entity._properties._description._value)
+			const description = entity.properties?.description?.getValue()
+			if (description && polygon) {
+				this.setTreePolygonMaterialColor(entity, description)
 			}
 		}
 	}

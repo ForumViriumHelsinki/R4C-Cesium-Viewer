@@ -20,6 +20,12 @@ export default {
 			const address = store.buildingAddress
 			const postinumero = store.postalcode
 
+			// Chart requires a selected building (heat exposure + address) and a
+			// postal code; bail out otherwise so downstream code can rely on them.
+			if (buildingHeatExposure == null || address == null || postinumero == null) {
+				return
+			}
+
 			plotService.initializePlotContainer('buildingChartContainer')
 
 			const margin = { top: 40, right: 40, bottom: 30, left: 30 }

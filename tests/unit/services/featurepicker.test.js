@@ -231,6 +231,9 @@ describe('FeaturePicker service', () => {
 				_entities: {
 					_array: [], // Fresh array for each test
 				},
+				// Production removeEntityByName() iterates the public values array;
+				// expose the same entities the legacy _entities._array held.
+				values: [],
 				remove: vi.fn(),
 			},
 			dataSources: {

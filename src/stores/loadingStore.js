@@ -42,7 +42,12 @@ export const useLoadingStore = defineStore('loading', {
 		isLoading: false,
 
 		// Stale loading cleanup timer ID (for automatic cleanup)
+		/** @type {ReturnType<typeof setInterval>|null} */
 		_staleCleanupTimer: null,
+
+		// beforeunload handler reference (registered lazily when the timer starts)
+		/** @type {(() => void)|null} */
+		_staleCleanupUnloadHandler: null,
 
 		// Individual layer loading states
 		layerLoading: {
@@ -200,6 +205,11 @@ export const useLoadingStore = defineStore('loading', {
 		},
 
 		// Update loading progress for a layer
+		/**
+		 * @param {string} layerName
+		 * @param {number} current
+		 * @param {string|null} [message]
+		 */
 		updateLayerProgress(layerName, current, message = null) {
 			if (this.loadingProgress[layerName]) {
 				this.loadingProgress[layerName].current = current
@@ -458,7 +468,7 @@ export const useLoadingStore = defineStore('loading', {
 		 * Update cache status for a layer (called by unifiedLoader after caching)
 		 * @param {string} layerId - Layer identifier
 		 * @param {boolean} cached - Whether data is cached
-		 * @param {number} timestamp - Cache timestamp
+		 * @param {number|null} [timestamp] - Cache timestamp
 		 */
 		updateCacheStatus(layerId, cached, timestamp = null) {
 			// Extract base layer name from layerId (e.g., "viewport_buildings_hsy_2499_6025" -> dynamic)

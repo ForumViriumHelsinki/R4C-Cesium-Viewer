@@ -63,11 +63,20 @@ import { useGlobalStore } from '../stores/globalStore'
 import { useToggleStore } from '../stores/toggleStore'
 import logger from '../utils/logger.js'
 
+/**
+ * Geocoding result row produced by {@link processAddressData}.
+ * @typedef {Object} GeocodingAddress
+ * @property {string} address - Human-readable place/address name
+ * @property {number} latitude - WGS84 latitude
+ * @property {number} longitude - WGS84 longitude
+ * @property {string} postalcode - Finnish postal code
+ */
+
 // State variables
 const searchQuery = ref('')
-const filteredAddresses = ref([]) // Store full address objects
+const filteredAddresses = ref(/** @type {GeocodingAddress[]} */ ([])) // Store full address objects
 const showSearchResults = ref(false)
-const addressData = ref([])
+const addressData = ref(/** @type {GeocodingAddress[]} */ ([]))
 
 // Access stores
 const globalStore = useGlobalStore()

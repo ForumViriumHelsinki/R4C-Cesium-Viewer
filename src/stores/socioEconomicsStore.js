@@ -33,15 +33,26 @@ import logger from '../utils/logger.js'
  * Socio-Economics Pinia Store
  * Manages Paavo postal code statistics with regional and Helsinki-specific aggregations.
  *
+ * @typedef {Object} MinMax
+ * @property {number|null} min
+ * @property {number|null} max
+ *
+ * @typedef {Object} SocioEconomicsStatistics
+ * @property {MinMax} ra_as_kpa
+ * @property {MinMax} hr_ktu
+ *
  * @typedef {Object} SocioEconomicsState
  * @property {Array<Object>|null} data - Paavo postal code statistics (filtered)
- * @property {Object|null} regionStatistics - Min/max values for Capital Region
- * @property {Object|null} helsinkiStatistics - Min/max values for Helsinki only
+ * @property {SocioEconomicsStatistics|null} regionStatistics - Min/max values for Capital Region
+ * @property {SocioEconomicsStatistics|null} helsinkiStatistics - Min/max values for Helsinki only
  */
 export const useSocioEconomicsStore = defineStore('socioEconomics', {
 	state: () => ({
+		/** @type {Array<Object>|null} */
 		data: null, // Stores the raw Paavo data
+		/** @type {SocioEconomicsStatistics|null} */
 		regionStatistics: null, // Stores min and max values for attributes
+		/** @type {SocioEconomicsStatistics|null} */
 		helsinkiStatistics: null,
 	}),
 	getters: {
@@ -150,6 +161,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 				.map((feature) => feature.properties)
 
 			// Single-pass calculation of both region and Helsinki statistics
+			if (!this.data) return
 			const stats = this.data.reduce(
 				(acc, item) => {
 					const raAsKpa = Number(item.ra_as_kpa)
@@ -234,6 +246,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 */
 		addRegionStatisticsToStore() {
 			// Single-pass min/max calculation for all attributes
+			if (!this.data) return
 			const stats = this.data.reduce(
 				(acc, item) => {
 					const raAsKpa = Number(item.ra_as_kpa)
@@ -275,6 +288,7 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 		 */
 		addHelsinkiStatisticsToStore() {
 			// Single-pass: filter Helsinki data and calculate min/max simultaneously
+			if (!this.data) return
 			const stats = this.data.reduce(
 				(acc, item) => {
 					// Skip non-Helsinki items

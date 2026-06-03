@@ -47,7 +47,7 @@ export function useSidebarNavigation() {
 			const featurepicker = new Featurepicker()
 			const { useToggleStore } = await import('../stores/toggleStore.js')
 			const toggleStore = useToggleStore()
-			const tooltip = document.querySelector('.tooltip')
+			const tooltip = /** @type {HTMLElement|null} */ (document.querySelector('.tooltip'))
 			if (tooltip) tooltip.style.display = 'none'
 			featurepicker.loadPostalCode().catch((error) => {
 				logger.error('Failed to load postal code:', error)
@@ -77,8 +77,9 @@ export function useSidebarNavigation() {
 		toggleStore.onExitPostalCode()
 
 		globalStore.setLevel('start')
-		globalStore.setPostalCode(null)
-		globalStore.setNameOfZone(null)
+		// Reset to cleared state — store setters accept null at runtime to clear selection.
+		globalStore.setPostalCode(/** @type {string} */ (/** @type {unknown} */ (null)))
+		globalStore.setNameOfZone(/** @type {string} */ (/** @type {unknown} */ (null)))
 		globalStore.setView('capitalRegion')
 
 		toggleStore.setShowTrees(false)
@@ -90,7 +91,7 @@ export function useSidebarNavigation() {
 		const camera = new Camera()
 		camera.init()
 
-		const tooltip = document.querySelector('.tooltip')
+		const tooltip = /** @type {HTMLElement|null} */ (document.querySelector('.tooltip'))
 		if (tooltip) tooltip.style.display = 'none'
 	}
 

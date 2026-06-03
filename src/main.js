@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import * as Sentry from '@sentry/vue'
 import { createSentryPiniaPlugin } from '@sentry/vue'
 import { createPinia } from 'pinia'
@@ -5,11 +6,29 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import './version.js' // Log version info to console
 import { useBuildingStore } from './stores/buildingStore.js'
-import { useFeatureFlagStore } from './stores/featureFlagStore.ts'
+import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
 import logger from './utils/logger.js'
 import { installPreloadErrorHandler } from './utils/preloadErrorHandler.js'
+
+/**
+ * `window` augmented with the store instances and factory functions that the
+ * E2E test harness reads. These are attached only in development/test builds
+ * (see below); typed here so the assignments type-check without an ambient
+ * `.d.ts`.
+ *
+ * @typedef {Window & {
+ *   globalStore: ReturnType<typeof useGlobalStore>,
+ *   useGlobalStore: () => ReturnType<typeof useGlobalStore>,
+ *   buildingStore: ReturnType<typeof useBuildingStore>,
+ *   useBuildingStore: () => ReturnType<typeof useBuildingStore>,
+ *   toggleStore: ReturnType<typeof useToggleStore>,
+ *   useToggleStore: () => ReturnType<typeof useToggleStore>,
+ *   featureFlagStore: ReturnType<typeof useFeatureFlagStore>,
+ *   useFeatureFlagStore: () => ReturnType<typeof useFeatureFlagStore>,
+ * }} TestWindow
+ */
 
 // Install the global vite:preloadError handler before any dynamic imports
 // can run, so stale-chunk failures after a deploy trigger a reload rather
@@ -163,23 +182,27 @@ app.use(vuetify)
 // Expose store instances to window for E2E testing
 // Must be done BEFORE mounting so the store is available when components initialize
 if (import.meta.env.MODE === 'development' || import.meta.env.MODE === 'test') {
+	// Cast to the test-surface shape (see TestWindow typedef) rather than declaring
+	// an ambient .d.ts, since these properties are not on the standard Window type.
+	const testWindow = /** @type {TestWindow} */ (/** @type {unknown} */ (window))
+
 	// Initialize the stores and expose the instances
 	const globalStore = useGlobalStore()
-	window.globalStore = globalStore
+	testWindow.globalStore = globalStore
 	// Also expose the function for backwards compatibility
-	window.useGlobalStore = () => globalStore
+	testWindow.useGlobalStore = () => globalStore
 
 	const buildingStore = useBuildingStore()
-	window.buildingStore = buildingStore
-	window.useBuildingStore = () => buildingStore
+	testWindow.buildingStore = buildingStore
+	testWindow.useBuildingStore = () => buildingStore
 
 	const toggleStore = useToggleStore()
-	window.toggleStore = toggleStore
-	window.useToggleStore = () => toggleStore
+	testWindow.toggleStore = toggleStore
+	testWindow.useToggleStore = () => toggleStore
 
 	const featureFlagStore = useFeatureFlagStore()
-	window.featureFlagStore = featureFlagStore
-	window.useFeatureFlagStore = () => featureFlagStore
+	testWindow.featureFlagStore = featureFlagStore
+	testWindow.useFeatureFlagStore = () => featureFlagStore
 }
 
 app.mount('#app')

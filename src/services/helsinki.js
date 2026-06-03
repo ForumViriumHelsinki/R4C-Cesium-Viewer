@@ -90,7 +90,7 @@ export default class Helsinki {
 			await this.treeService.loadTrees()
 		}
 
-		if (this.toggleStore.OtherNature) {
+		if (this.toggleStore.showOtherNature) {
 			await this.otherNatureService.loadOtherNature()
 		}
 	}

@@ -13,16 +13,22 @@ import logger from '../utils/logger.js'
  * Manages selected building entity data and time-series date for heat exposure visualization.
  * Uses an LRU cache to limit memory usage by keeping only the most recently accessed postal codes.
  *
+ * @typedef {Object} FeatureCollection
+ * @property {string} type
+ * @property {Array<Object>} features
+ *
  * @typedef {Object} BuildingState
- * @property {Object|null} buildingFeatures - Accumulated building GeoJSON features with properties from loaded postal codes
+ * @property {FeatureCollection|null} buildingFeatures - Accumulated building GeoJSON features with properties from loaded postal codes
  * @property {string} timeseriesDate - Selected date for building heat time-series (YYYY-MM-DD)
  * @property {Map<string, number>} postalCodeCache - LRU cache tracking postal codes and their access timestamps
  * @property {number} maxPostalCodes - Maximum number of postal codes to keep in cache (default: 10)
  */
 export const useBuildingStore = defineStore('building', {
 	state: () => ({
+		/** @type {FeatureCollection|null} */
 		buildingFeatures: null,
 		timeseriesDate: '2023-06-23',
+		/** @type {Map<string, number>} */
 		postalCodeCache: new Map(),
 		// Must match MAX_LOADED_TILES in viewportBuildingLoader.js to prevent
 		// tooltip data being evicted while buildings are still visible on screen

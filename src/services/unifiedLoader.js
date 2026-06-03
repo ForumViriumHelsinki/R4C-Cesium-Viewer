@@ -45,7 +45,8 @@ import progressiveLoader from './progressiveLoader.js'
  * Layer loading configuration
  * @typedef {Object} LayerConfig
  * @property {string} layerId - Unique identifier for the layer (used for tracking and caching)
- * @property {string} url - Data source URL (HTTP/HTTPS endpoint)
+ * @property {string} [url] - Data source URL (HTTP/HTTPS endpoint); omit when supplying in-memory `data`
+ * @property {*} [data] - Pre-loaded in-memory data (alternative to `url`)
  * @property {string} [type='geojson'] - Data type: 'geojson', 'json', 'text', 'blob', 'wms', 'tiles'
  * @property {Function} [processor] - Function to process loaded data: (data, metadata) => Promise<void>
  * @property {LoadingOptions} [options={}] - Additional loading options
@@ -62,6 +63,8 @@ import progressiveLoader from './progressiveLoader.js'
  * @property {boolean} [background=false] - Load in background (low priority)
  * @property {string} [priority='normal'] - Loading priority: 'critical', 'high', 'normal', 'low', 'background'
  * @property {boolean} [cacheOnly=false] - Cache data but don't return it (for prefetching)
+ * @property {boolean} [enableYielding] - Hint to yield to the main thread between batches (consumed by some processors)
+ * @property {number} [yieldInterval] - Number of batches between yields when enableYielding is set
  */
 
 /**
@@ -178,7 +181,7 @@ class UnifiedLoader {
 	 * });
 	 */
 	async loadLayer(config) {
-		const { layerId, url, type = 'geojson', processor, options = {} } = config
+		const { layerId, url = '', type = 'geojson', processor, options = {} } = config
 
 		const {
 			cache = true,
@@ -330,12 +333,12 @@ class UnifiedLoader {
 	 *
 	 * @param {string} layerId - Layer identifier
 	 * @param {string} url - Data source URL
-	 * @param {Function} processor - Data processor function
-	 * @param {Object} options - Progressive loading options
+	 * @param {Function} [processor] - Data processor function
+	 * @param {Object} [options] - Progressive loading options
 	 * @returns {Promise<*>} Complete dataset
 	 * @private
 	 */
-	async loadProgressively(layerId, url, processor, options) {
+	async loadProgressively(layerId, url, processor, options = {}) {
 		return await progressiveLoader.loadData(url, {
 			...options,
 			onProgress: (current, total) => {
@@ -359,14 +362,14 @@ class UnifiedLoader {
 	 * - Only batches in progressive mode (non-progressive processors expect full data)
 	 *
 	 * @param {*} data - Loaded data to process
-	 * @param {Function} processor - Processing function: (data, metadata) => Promise<void>
-	 * @param {string} layerId - Layer identifier
+	 * @param {Function} [processor] - Processing function: (data, metadata) => Promise<void> (no-op when omitted)
+	 * @param {string} [layerId] - Layer identifier
 	 * @param {ProcessingMetadata} [metadata={}] - Processing metadata
 	 * @returns {Promise<void>}
 	 * @throws {Error} If processing fails
 	 * @private
 	 */
-	async processData(data, processor, layerId, metadata = {}) {
+	async processData(data, processor, layerId = '', metadata = {}) {
 		if (!processor || !data) return
 
 		// Auto-fix GeoJSON missing type property
@@ -486,21 +489,25 @@ class UnifiedLoader {
 		// caller's AbortSignal fires. Keeps backoff delays from leaking a
 		// pending timer (up to MAX_RETRY_DELAY_MS) after cancellation.
 		const sleep = (ms) =>
-			new Promise((resolve, reject) => {
-				if (options.signal?.aborted) {
-					reject(options.signal.reason ?? new DOMException('Aborted', 'AbortError'))
-					return
-				}
-				const onAbort = () => {
-					clearTimeout(timer)
-					reject(options.signal?.reason ?? new DOMException('Aborted', 'AbortError'))
-				}
-				const timer = setTimeout(() => {
-					options.signal?.removeEventListener('abort', onAbort)
-					resolve()
-				}, ms)
-				options.signal?.addEventListener('abort', onAbort)
-			})
+			new Promise(
+				/** @type {(resolve: (value?: any) => void, reject: (reason?: any) => void) => void} */ (
+					(resolve, reject) => {
+						if (options.signal?.aborted) {
+							reject(options.signal.reason ?? new DOMException('Aborted', 'AbortError'))
+							return
+						}
+						const onAbort = () => {
+							clearTimeout(timer)
+							reject(options.signal?.reason ?? new DOMException('Aborted', 'AbortError'))
+						}
+						const timer = setTimeout(() => {
+							options.signal?.removeEventListener('abort', onAbort)
+							resolve()
+						}, ms)
+						options.signal?.addEventListener('abort', onAbort)
+					}
+				)
+			)
 
 		let lastError
 
@@ -723,11 +730,10 @@ class UnifiedLoader {
 
 		// Report any failures
 		results.forEach((result, index) => {
-			if (result.status === 'rejected' || result.value?.error) {
-				logger.error(
-					`Failed to load layer ${configs[index].layerId}:`,
-					result.reason || result.value?.error
-				)
+			if (result.status === 'rejected') {
+				logger.error(`Failed to load layer ${configs[index].layerId}:`, result.reason)
+			} else if (result.value?.error) {
+				logger.error(`Failed to load layer ${configs[index].layerId}:`, result.value.error)
 			}
 		})
 

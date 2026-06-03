@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 /**
  * OpenFeature SDK initialization with GOFF web provider.
  * Falls back to InMemoryProvider when GOFF relay is unavailable (local dev).
@@ -88,10 +90,13 @@ type UserStore = ReturnType<typeof useUserStore>
  * This context is sent to GOFF for targeting rule evaluation.
  */
 function buildEvaluationContext(userStore: UserStore): EvaluationContext {
+	// `EvaluationContextValue` does not permit `undefined`, so omit the optional
+	// identity fields entirely when they're absent rather than assigning
+	// `undefined` (which preserves the original "key not sent to GOFF" intent).
 	return {
 		targetingKey: userStore.targetingKey,
-		email: userStore.email ?? undefined,
-		domain: userStore.domain ?? undefined,
+		...(userStore.email != null ? { email: userStore.email } : {}),
+		...(userStore.domain != null ? { domain: userStore.domain } : {}),
 		app: 'r4c-cesium-viewer',
 	}
 }

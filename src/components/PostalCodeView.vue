@@ -247,6 +247,7 @@ import Tree from '../services/tree.js'
 import Vegetation from '../services/vegetation.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
 
 // Sidebar offset for navigation drawer awareness
@@ -255,6 +256,7 @@ const { offsetStyle } = useSidebarOffset(24)
 // Stores
 const store = useGlobalStore()
 const toggleStore = useToggleStore()
+const urlStore = useURLStore()
 
 // Services
 const dataSourceService = new Datasource()
@@ -294,8 +296,11 @@ const reset = () => {
 
 	// Smart reset instead of page reload
 	store.setLevel('start')
-	store.setPostalCode(null)
-	store.setNameOfZone(null)
+	// Clear selection by direct assignment: the setters are JSDoc-typed for
+	// `string`, but the state fields are `string | null` and resetting to null
+	// is the intended behavior (same runtime effect as the setters).
+	store.postalcode = null
+	store.nameOfZone = null
 	store.setView('capitalRegion')
 
 	// Reset camera to initial position
@@ -401,7 +406,7 @@ const loadOtherNatureEvent = () => {
 	if (showOtherNature.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
 			const otherNatureService = new Othernature()
-			otherNatureService.loadOtherNature(store.postalcode).catch((error) => {
+			otherNatureService.loadOtherNature().catch((error) => {
 				logger.error('Failed to load other nature data:', error)
 			})
 		} else {
@@ -420,7 +425,7 @@ const loadVegetationEvent = () => {
 	if (showVegetation.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('Vegetation')) {
 			const vegetationService = new Vegetation()
-			vegetationService.loadVegetation(store.postalcode).catch((error) => {
+			vegetationService.loadVegetation().catch((error) => {
 				logger.error('Failed to load vegetation data:', error)
 			})
 		} else {
@@ -477,14 +482,16 @@ const loadAllEnvironmentalLayers = async () => {
 		return
 	}
 
+	const postalcode = store.postalcode
+
 	try {
-		const sessionId = `environmental_${store.postalcode}`
+		const sessionId = `environmental_${postalcode}`
 
 		// Define layer configurations for coordinated loading
 		const layerConfigs = [
 			{
 				layerId: 'vegetation',
-				url: store.urlStore?.vegetation(store.postalcode),
+				url: urlStore.vegetation(postalcode),
 				type: 'geojson',
 				processor: (data, metadata) => {
 					const vegetationService = new Vegetation()
@@ -500,7 +507,7 @@ const loadAllEnvironmentalLayers = async () => {
 			},
 			{
 				layerId: 'othernature',
-				url: store.urlStore?.otherNature(store.postalcode),
+				url: urlStore.otherNature(postalcode),
 				type: 'geojson',
 				processor: (data, metadata) => {
 					const otherNatureService = new Othernature()

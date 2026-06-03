@@ -2,6 +2,7 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import { requestIdle } from '../utils/idle.js'
 import logger from '../utils/logger.js'
+import { encodeURLParam, validatePostalCode } from '../utils/validators.js'
 import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
@@ -43,9 +44,19 @@ export default class Vegetation {
 	 */
 	async loadVegetation() {
 		try {
+			// BUG FIX: urlStore has no `vegetation` getter, so the previous
+			// `this.urlStore.vegetation(...)` threw `TypeError: ... is not a function`
+			// at runtime. Build the vegetation collection URL here, mirroring the
+			// sibling `otherNature`/`tree` getters (validated postal code + encoded query).
+			if (this.store.postalcode == null) {
+				return
+			}
+			const validated = validatePostalCode(this.store.postalcode)
+			const url = `${this.urlStore.pygeoapiBase}/vegetation/items?f=json&limit=100000&postinumero=${encodeURLParam(validated)}`
+
 			const data = await unifiedLoader.loadLayer({
 				layerId: 'vegetation',
-				url: this.urlStore.vegetation(this.store.postalcode),
+				url,
 				type: 'geojson',
 				processor: (data) => this.addVegetationDataSource(data),
 				options: {
@@ -82,7 +93,7 @@ export default class Vegetation {
 
 				// Process batch
 				for (const entity of batch) {
-					const category = entity.properties._koodi?._value
+					const category = entity.properties?._koodi?.getValue()
 					if (category) {
 						this.setVegetationPolygonMaterialColor(entity, category)
 					}

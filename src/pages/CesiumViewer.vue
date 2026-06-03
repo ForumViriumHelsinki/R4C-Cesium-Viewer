@@ -189,7 +189,13 @@ export default {
 		// Viewer initialization composable
 		// IMPORTANT: Keep reference to the object to access dynamic modules via getters.
 		// Destructuring Featurepicker/Camera directly captures null at setup time.
-		const viewerInit = useViewerInitialization()
+		// destroyViewer is returned at runtime by the composable, but its JSDoc
+		// @returns type omits it. This file cannot edit that composable's JSDoc,
+		// so widen the type here to access the genuinely-present teardown method.
+		const viewerInit =
+			/** @type {ReturnType<typeof useViewerInitialization> & { destroyViewer: () => void }} */ (
+				useViewerInitialization()
+			)
 		const {
 			viewer,
 			errorSnackbar,
@@ -209,7 +215,7 @@ export default {
 		const {
 			isLoadingBuildings,
 			viewportLoadingProgress,
-			viewportLoadingError,
+			viewportLoadingError: viewportLoadingErrorRef,
 			handleCameraSettled,
 			handleRetryViewportLoading,
 			initViewportStreaming,
@@ -218,6 +224,10 @@ export default {
 			() => viewerInit.Camera,
 			() => viewerInit.Featurepicker
 		)
+
+		// The ViewportLoadingIndicator `error` prop is `string | undefined`; the
+		// composable exposes `string | null`. Normalize null to undefined.
+		const viewportLoadingError = computed(() => viewportLoadingErrorRef.value ?? undefined)
 
 		// URL update callback for camera controls
 		const handleUrlUpdate = () => {

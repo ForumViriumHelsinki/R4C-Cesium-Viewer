@@ -213,7 +213,10 @@ export function hideTreesForPostalCode(postalCode, datasourceService) {
  * @returns {void}
  */
 export function dumpBuildingDatasourceState(viewer, visiblePostalCodes) {
-	const allDatasources = viewer?.dataSources?._dataSources || []
+	const dataSources = /** @type {{ _dataSources?: Cesium.DataSource[] } | undefined} */ (
+		viewer?.dataSources
+	)
+	const allDatasources = dataSources?._dataSources || []
 	const buildingDatasources = allDatasources.filter((ds) => ds.name?.startsWith('Buildings '))
 
 	logger.debug(

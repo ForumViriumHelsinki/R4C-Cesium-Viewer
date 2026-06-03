@@ -77,8 +77,18 @@ const updateViewAndPlots = () => {
 	if (!buildingsDataSource) return
 
 	const entities = buildingsDataSource.entities.values
-	void buildingService.setHeatExposureToBuildings(entities)
+
+	// vue-tsc mis-resolves `setHeatExposureToBuildings` on the imported Building instance
+	// type in this file's module graph, collapsing the method member to its `Promise<void>`
+	// return type (so a direct call reads as a non-callable value — TS2349). Capture a
+	// precisely-typed callable reference and invoke via Function.prototype.call to keep `this`.
+	const styleBuildings = /** @type {(e: unknown) => Promise<void>} */ (
+		buildingService.setHeatExposureToBuildings
+	)
+	void styleBuildings.call(buildingService, entities) // fire-and-forget
+
 	buildingService.updateHeatHistogramDataAfterFilter(entities)
+
 	// Register entities with cesiumEntityManager for non-reactive entity management
 	cesiumEntityManager.registerBuildingEntities(entities)
 	eventBus.emit('updateScatterPlot')

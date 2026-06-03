@@ -11,16 +11,24 @@
 module.exports = {
 	ci: {
 		collect: {
-			// Build the production bundle and start preview server
-			startServerCommand: 'bun run preview',
+			// Build the production bundle and start preview server.
+			// Call vite directly rather than via `bun run preview`: the bun
+			// script wrapper prints its own "$ vite preview --host" banner first
+			// and buffers vite's "➜  Local:" line, which can shadow the ready
+			// pattern and trip startServerReadyTimeout before navigation starts.
+			startServerCommand: 'bunx vite preview --host --port 4173',
 
-			// Pattern to detect when server is ready
-			// Vite outputs: "➜  Local:   http://localhost:4173/"
-			// Default pattern is /listen|ready/i which doesn't match Vite's output
-			startServerReadyPattern: 'Local:',
+			// Pattern to detect when server is ready.
+			// Vite outputs: "➜  Local:   http://localhost:4173/" — match the
+			// host:port directly so the wrapper banner can't shadow the match.
+			// Default pattern is /listen|ready/i which doesn't match Vite's output.
+			startServerReadyPattern: 'localhost:4173',
 
-			// Timeout for server startup (ms) - allow extra time for CI
-			startServerReadyTimeout: 30000,
+			// Timeout for server startup (ms) - allow extra time for CI.
+			// Raised from 30s: a premature timeout lets lhci navigate against an
+			// unconfirmed server, which is the first link in the PROTOCOL_TIMEOUT
+			// failure chain on this heavy CesiumJS app.
+			startServerReadyTimeout: 60000,
 
 			// Test URL - preview server runs on port 4173 by default
 			url: ['http://localhost:4173/'],

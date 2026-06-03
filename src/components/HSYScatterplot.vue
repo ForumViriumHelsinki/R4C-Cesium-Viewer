@@ -173,24 +173,26 @@ export default {
 				.append('text')
 				.attr('x', 0)
 				.attr('y', (_, i) => i * 40)
-				.each(function (_, i) {
-					// Iterate over each label
+				.each(
+					/** @this {SVGTextElement} */ function (_, i) {
+						// Iterate over each label
 
-					const label = d3.select(this)
-					const labelText = labelsWithAverage[i]
+						const label = d3.select(this)
+						const labelText = labelsWithAverage[i]
 
-					const lines = labelText.split('<br>') // Split the label text by <br>
-					label.text(null) // Clear the original text
+						const lines = labelText.split('<br>') // Split the label text by <br>
+						label.text(null) // Clear the original text
 
-					// Append tspans for each line
-					lines.forEach((line, j) => {
-						label
-							.append('tspan')
-							.attr('x', 10)
-							.attr('dy', `${j + 1}em`) // Adjust vertical offset for each line
-							.text(line)
-					})
-				})
+						// Append tspans for each line
+						lines.forEach((line, j) => {
+							label
+								.append('tspan')
+								.attr('x', 10)
+								.attr('dy', `${j + 1}em`) // Adjust vertical offset for each line
+								.text(line)
+						})
+					}
+				)
 				.style('font-size', '9px')
 		}
 
@@ -225,6 +227,9 @@ export default {
 			return { heatData, labelsWithAverage, values }
 		}
 
+		/**
+		 * @returns {[any[], any[], number, any[]]} [heatList, numericalList, average, ids]
+		 */
 		const addHeatForLabelAndX = (value, features) => {
 			const heatList = []
 			const numericalList = []
