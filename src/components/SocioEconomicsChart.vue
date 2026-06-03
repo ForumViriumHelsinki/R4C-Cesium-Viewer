@@ -185,7 +185,7 @@ export default {
 				const compareData = socioEconomicsStore.getDataByNimi(selectedNimi)
 				const heatData = toggleStore.capitalRegionCold
 					? 1 - Number(globalStore.averageHeatExposure.toFixed(3)) // Use cold exposure data if cold toggle is active
-					: globalStore.averageHeatExposure.toFixed(3) // Use heat exposure data
+					: Number(globalStore.averageHeatExposure.toFixed(3)) // Use heat exposure data
 
 				const yValues = calculateYValues(sosData, statsData, heatData)
 				// Guard: compareData may be undefined when getDataByNimi finds no

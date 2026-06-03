@@ -129,11 +129,7 @@ export default {
 					svg,
 					`Heat exposure to buildings in ${store.nameOfZone}`,
 					width,
-					// plot.js's `addTitle` JSDoc declares `top: number`, but every caller
-					// (BuildingTreeChart, VulnerabilityChart, etc.) passes the `margin`
-					// object as the 4th arg. plot.js is out of this batch's scope, so the
-					// runtime value is preserved and cast to satisfy the inaccurate signature.
-					/** @type {number} */ (/** @type {unknown} */ (margin))
+					margin.top
 				)
 			} else {
 				createBars(
@@ -151,7 +147,7 @@ export default {
 					svg,
 					`${store.nameOfZone} ${store.heatDataDate} buildings <a href="https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature" target="_blank">surface temperature</a> in °C`,
 					width - 20,
-					margin
+					margin.top
 				)
 			}
 		}
