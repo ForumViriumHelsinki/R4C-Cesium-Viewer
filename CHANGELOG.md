@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.51.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.4...r4c-cesium-viewer-v1.51.5) (2026-06-03)
+
+
+### Bug Fixes
+
+* **ci:** don't cancel a11y siblings when one viewport times out ([#842](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/842)) ([29d7286](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/29d72864158857cf53a5a4f8d040b27c2f5f6997))
+* **ci:** make Lighthouse CI survive hung Cesium loads ([#841](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/841)) ([d18c836](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d18c836754980b8fcf531a421f6b325a93670b0b))
+* **types:** drive vue-tsc to zero and pin vue-tsc/typescript ([#838](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/838)) ([9d65623](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9d6562351cd790f207c7f59c2624b90fa6103bbe))
+
 ## [1.51.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.3...r4c-cesium-viewer-v1.51.4) (2026-06-03)
 
 
