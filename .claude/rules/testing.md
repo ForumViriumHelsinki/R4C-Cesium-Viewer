@@ -101,6 +101,35 @@ const state = await page.evaluate(() => {
 });
 ```
 
+## Mocking Cesium Entity Properties
+
+Production reads entity properties via the public `ConstantProperty.getValue()` (see
+`architecture.md` "Reading Cesium Entity Properties"). Unit-test mocks must therefore
+expose a `getValue()` method — a raw `_value` field throws
+`entity.properties?.x?.getValue is not a function` the moment the code is migrated.
+
+```js
+// ✅ mock the public surface (real Cesium ConstantProperty)
+properties: {
+	_measurement: {
+		getValue: () => ({ temp_air: 23.5 });
+	}
+}
+
+// ❌ couples to the private field; breaks once the code uses .getValue()
+properties: {
+	_measurement: {
+		_value: {
+			temp_air: 23.5;
+		}
+	}
+}
+```
+
+This is the test-side half of the public-API migration (commits `91a2721`, `0bf0224`):
+when a service switches a property read to `.getValue()`, its mock flips from
+`{ _value: v }` to `{ getValue: () => v }` in the same commit.
+
 ## Deterministic Drilling Without Cesium Picks
 
 `AccessibilityTestHelpers.drillToLevel` accepts `{ method: 'click' | 'store' }`. Use `'store'` when:
