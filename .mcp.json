@@ -23,12 +23,7 @@
       ]
     },
     "pal-mcp-server": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/BeehiveInnovations/pal-mcp-server.git",
-        "pal-mcp-server"
-      ]
+      "command": "pal-mcp-server"
     }
   }
 }
