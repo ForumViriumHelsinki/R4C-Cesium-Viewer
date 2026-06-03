@@ -72,13 +72,35 @@ All UI colors use `--v-theme-*` CSS variables — see `code-quality.md` CSS Them
 Material Design Icons render as **inline SVG paths** via a custom Vuetify iconset (`src/plugins/mdiIconset.js`), not the MDI webfont — #821 removed the render-blocking CDN font (~339 KB CSS + ~394 KB woff2) from the critical path. The iconset re-exports Vuetify's `mdi-svg` aliases (for component internals like dropdowns/clear buttons) and maps the app's `mdi-*` names to `@mdi/js` paths via the generated `src/plugins/mdiPaths.js`. `main.js` registers it as the `mdi` set; call sites are unchanged (`<v-icon icon="mdi-foo">`).
 
 - **Adding/removing an icon**: use it as `mdi-foo` as usual, then run `node scripts/generate-mdi-iconset.mjs` to regenerate the path map. The generator scans `src/`, validates each name against `@mdi/js`, and **fails loudly** on an unmappable name — add an `OVERRIDES` entry for renamed icons (e.g. `mdi-building` → `mdiOfficeBuilding`). A missing icon renders blank, so never hand-edit `mdiPaths.js`.
-- **E2E selectors**: the iconset preserves the original `mdi-*` class on the `.v-icon` element, so `.mdi-refresh` / `.mdi-arrow-left` / etc. locators keep matching — the font classes are *not* gone.
+- **E2E selectors**: the iconset preserves the original `mdi-*` class on the `.v-icon` element, so `.mdi-refresh` / `.mdi-arrow-left` / etc. locators keep matching — the font classes are _not_ gone.
 
 ## Cesium Render Mode
 
 `graphicsStore.requestRenderMode` defaults to `true` and is propagated to the live `viewer.scene.requestRenderMode` via the `r4c-request-render-mode` feature flag (wired in `App.vue` after `featureFlagStore.refreshFlags()`). The graphics service `$subscribe` watcher also propagates runtime toggles from `GraphicsQuality.vue` to the live scene.
 
 When RRM is on, Cesium only re-renders when something changes (camera move, entity update, imagery load); when off, the scene re-renders every animation frame at ~60 FPS. On a 3D globe with terrain + buildings + WMS imagery the difference is roughly one CPU core and a hot dGPU — keep RRM on unless a specific feature genuinely needs continuous rendering, and explicitly call `viewer.scene.requestRender()` at any mutation site that would otherwise be visually invisible under RRM (existing camera/entity/imagery hooks already do this).
+
+## Reading Cesium Entity Properties
+
+Read GeoJSON entity properties through the **public** API:
+`entity.properties?.<name>?.getValue()` — not the private
+`entity._properties?._<name>?._value`.
+
+The two are runtime-equivalent: `entity.properties` is a getter returning the same
+`PropertyBag` as `entity._properties`, and on that bag both `name` (getter) and
+`_name` (backing field) resolve to the same `ConstantProperty`, whose public
+`.getValue()` (the optional `time` arg is ignored for constant properties) returns
+the same value as the private `._value`. The choice is about surface, not behavior.
+
+Prefer the public form because:
+
+- It **type-checks under `vue-tsc` with no cast** — `PropertyBag` indexing is `any`,
+  so `entity.properties?.foo?.getValue()` passes. Reading `entity._properties` off a
+  `Cesium.Entity` does not; that's what forced the `TreeEntity` cast removed in #838.
+- The `_`-prefixed backing fields are private and can rename across Cesium versions.
+
+When you migrate a read here, update its unit-test mock in the same change — see
+`testing.md` "Mocking Cesium Entity Properties".
 
 ## Development Proxy Configuration
 
