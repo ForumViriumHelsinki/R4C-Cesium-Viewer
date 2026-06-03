@@ -19,7 +19,7 @@ export default {
 		const backgroundMapStore = useBackgroundMapStore()
 		const propsStore = usePropsStore()
 		const selectedArea = ref('')
-		const areaOptions = ref([])
+		const areaOptions = ref(/** @type {string[]} */ ([]))
 
 		// Populate areaOptions when the component is mounted
 		onMounted(() => {
@@ -30,7 +30,7 @@ export default {
 		})
 
 		const extractNimiValues = (datasource) => {
-			const nimiValuesSet = new Set()
+			const nimiValuesSet = new Set(/** @type {string[]} */ ([]))
 			const entitiesArray = datasource._entityCollection?._entities._array
 
 			if (Array.isArray(entitiesArray)) {

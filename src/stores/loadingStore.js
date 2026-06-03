@@ -205,6 +205,11 @@ export const useLoadingStore = defineStore('loading', {
 		},
 
 		// Update loading progress for a layer
+		/**
+		 * @param {string} layerName
+		 * @param {number} current
+		 * @param {string|null} [message]
+		 */
 		updateLayerProgress(layerName, current, message = null) {
 			if (this.loadingProgress[layerName]) {
 				this.loadingProgress[layerName].current = current

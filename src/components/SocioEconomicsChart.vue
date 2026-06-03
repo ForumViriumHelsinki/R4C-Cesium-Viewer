@@ -34,6 +34,10 @@ export default {
 		})
 
 		const newSocioEconomicsDiagram = () => {
+			// globalStore.postalcode is `string | null`; nothing to chart when null
+			if (!globalStore.postalcode) {
+				return
+			}
 			const dataForPostcode = socioEconomicsStore.getDataByPostcode(globalStore.postalcode)
 			const statsData = findSocioEconomicsStats()
 			createSocioEconomicsDiagram(dataForPostcode, statsData)
@@ -77,33 +81,41 @@ export default {
 		}
 
 		const wrapText = (text, width) => {
-			text.each(function () {
-				const text = d3.select(this)
-				const words = text.text().split(/\s+/).reverse()
-				let word
-				let line = []
-				let lineNumber = 0
-				const lineHeight = 1.1 // ems
-				const y = text.attr('y')
-				const dy = parseFloat(text.attr('dy'))
-				let tspan = text.text(null).append('tspan').attr('x', 0).attr('y', y).attr('dy', `${dy}em`)
+			text.each(
+				/** @this {SVGTextElement} */ function () {
+					const text = d3.select(this)
+					const words = text.text().split(/\s+/).reverse()
+					let word
+					let line = []
+					let lineNumber = 0
+					const lineHeight = 1.1 // ems
+					const y = text.attr('y')
+					const dy = parseFloat(text.attr('dy'))
+					let tspan = text
+						.text(null)
+						.append('tspan')
+						.attr('x', 0)
+						.attr('y', y)
+						.attr('dy', `${dy}em`)
 
-				while ((word = words.pop())) {
-					line.push(word)
-					tspan.text(line.join(' '))
-					if (tspan.node().getComputedTextLength() > width) {
-						line.pop()
+					while ((word = words.pop())) {
+						line.push(word)
 						tspan.text(line.join(' '))
-						line = [word]
-						tspan = text
-							.append('tspan')
-							.attr('x', 0)
-							.attr('y', y)
-							.attr('dy', `${++lineNumber * lineHeight + dy}em`)
-							.text(word)
+						const node = tspan.node()
+						if (node && node.getComputedTextLength() > width) {
+							line.pop()
+							tspan.text(line.join(' '))
+							line = [word]
+							tspan = text
+								.append('tspan')
+								.attr('x', 0)
+								.attr('y', y)
+								.attr('dy', `${++lineNumber * lineHeight + dy}em`)
+								.text(word)
+						}
 					}
 				}
-			})
+			)
 		}
 
 		const createBars = (svg, data, xScale, yScale, height, tooltip, xOffset, barColor, name) => {
@@ -172,7 +184,7 @@ export default {
 				const selectedNimi = propsStore.socioEconomics
 				const compareData = socioEconomicsStore.getDataByNimi(selectedNimi)
 				const heatData = toggleStore.capitalRegionCold
-					? 1 - globalStore.averageHeatExposure.toFixed(3) // Use cold exposure data if cold toggle is active
+					? 1 - Number(globalStore.averageHeatExposure.toFixed(3)) // Use cold exposure data if cold toggle is active
 					: globalStore.averageHeatExposure.toFixed(3) // Use heat exposure data
 
 				const yValues = calculateYValues(sosData, statsData, heatData)
@@ -250,11 +262,18 @@ export default {
 				(totalEldery / data.he_vakiy).toFixed(3),
 				(data.pt_tyott / data.he_vakiy).toFixed(3),
 				1 -
-					normalizeValue(data.ra_as_kpa, statsData.ra_as_kpa.min, statsData.ra_as_kpa.max).toFixed(
-						3
+					Number(
+						normalizeValue(
+							data.ra_as_kpa,
+							statsData.ra_as_kpa.min,
+							statsData.ra_as_kpa.max
+						).toFixed(3)
 					),
 				(data.ko_perus / data.ko_ika18y).toFixed(3),
-				1 - normalizeValue(data.hr_ktu, statsData.hr_ktu.min, statsData.hr_ktu.max).toFixed(3),
+				1 -
+					Number(
+						normalizeValue(data.hr_ktu, statsData.hr_ktu.min, statsData.hr_ktu.max).toFixed(3)
+					),
 				(data.te_vuok_as / data.te_taly).toFixed(3),
 			]
 		}

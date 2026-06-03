@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * @module services/hostConcurrencyLimiter
  *
@@ -164,6 +165,7 @@ function makeReleaser(_hostKey, state) {
  * @returns {Record<string, { active: number, queued: number, limit: number }>}
  */
 export function inspectLimiter() {
+	/** @type {Record<string, { active: number, queued: number, limit: number }>} */
 	const out = {}
 	for (const [hostKey, state] of hostState.entries()) {
 		out[hostKey] = {
@@ -185,6 +187,13 @@ export function __resetForTests() {
 
 // Expose a debug hook in dev so it's easy to inspect from devtools.
 if (import.meta.env?.MODE === 'development' && typeof window !== 'undefined') {
-	window.__hostLimiter = { inspectLimiter, setHostLimit, DEFAULT_LIMIT }
+	// Attach an ad-hoc debug hook; cast through a loose shape since this custom
+	// global isn't part of the standard Window type.
+	const debugWindow = /** @type {Window & { __hostLimiter?: object }} */ (window)
+	debugWindow.__hostLimiter = {
+		inspectLimiter,
+		setHostLimit,
+		DEFAULT_LIMIT,
+	}
 	logger.debug('[hostConcurrencyLimiter] dev hook on window.__hostLimiter')
 }

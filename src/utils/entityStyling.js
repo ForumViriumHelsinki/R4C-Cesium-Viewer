@@ -34,11 +34,7 @@ export const FLOOR_HEIGHT = 3.2
  * 2. Floor count (i_kerrlkm) * FLOOR_HEIGHT - Estimated from number of floors
  * 3. DEFAULT_BUILDING_HEIGHT - Fallback when no data available
  *
- * @param {Object} [properties] - Entity properties object from Cesium entity.
- * @param {Object} [properties.measured_height] - Measured height property.
- * @param {number} [properties.measured_height._value] - Height value in meters.
- * @param {Object} [properties.i_kerrlkm] - Floor count property (Finnish: kerrosluku).
- * @param {number} [properties.i_kerrlkm._value] - Number of floors.
+ * @param {import('cesium').PropertyBag | { measured_height?: { _value?: number }, i_kerrlkm?: { _value?: number } }} [properties] - Entity properties object (a Cesium PropertyBag, or a plain object with the same shape).
  * @returns {number} Building height in meters.
  *
  * @example

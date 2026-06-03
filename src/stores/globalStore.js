@@ -189,14 +189,14 @@ export const useGlobalStore = defineStore('global', {
 		/**
 		 * Sets the selected postal code for data loading
 		 * Triggers loading of postal code-specific data layers.
-		 * @param {string} postalcode - Five-digit postal code (e.g., '00100')
+		 * @param {string|null} postalcode - Five-digit postal code (e.g., '00100'), or null to clear
 		 */
 		setPostalCode(postalcode) {
 			this.postalcode = postalcode
 		},
 		/**
 		 * Sets the name of the selected zone or neighborhood
-		 * @param {string} nameOfZone - Zone name (e.g., 'Alppila - Vallila')
+		 * @param {string|null} nameOfZone - Zone name (e.g., 'Alppila - Vallila'), or null to clear
 		 */
 		setNameOfZone(nameOfZone) {
 			this.nameOfZone = nameOfZone

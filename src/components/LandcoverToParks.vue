@@ -108,19 +108,34 @@ const statsIndex = computed(() => propsStore.statsIndex)
 const { updateGridColors: restoreGridColoring } = useGridStyling()
 const { getIndexInfo } = useIndexData()
 
+/**
+ * @typedef {Object} CalculationResults
+ * @property {string} area
+ * @property {string} totalCoolingArea
+ * @property {number} neighborsAffected
+ * @property {string} totalReduction
+ * @property {string} selectedIndexName
+ * @property {string} initialIndex
+ * @property {string} newIndex
+ * @property {string} cumulativeCoolingArea
+ * @property {string} cumulativeHeatReduction
+ */
+
 const isSelectingGrid = ref(false)
 const isLoading = ref(false)
 const dataSourceName = 'landcover_for_parks'
 const gridDataSourceName = '250m_grid'
-const selectedGridEntity = shallowRef(null) // Cesium Entity - use shallowRef to prevent deep reactivity
-const originalGridColor = ref(null)
+const selectedGridEntity = shallowRef(/** @type {Cesium.Entity|null} */ (null)) // Cesium Entity - use shallowRef to prevent deep reactivity
+// `any`: holds a Cesium polygon material, which Cesium accepts as either a raw
+// Color or a MaterialProperty (runtime coercion not modeled by its strict types).
+const originalGridColor = ref(/** @type {any} */ (null))
 const landcoverFeaturesLoaded = ref(false)
-const loadedGeoJson = ref(null)
-const loadedLandcoverDataSource = shallowRef(null) // Cesium DataSource - use shallowRef to prevent deep reactivity
-const calculationResults = ref(null)
-const convertedCellIds = ref([])
+const loadedGeoJson = ref(/** @type {{ features: Array<any> }|null} */ (null))
+const loadedLandcoverDataSource = shallowRef(/** @type {Cesium.DataSource|null} */ (null)) // Cesium DataSource - use shallowRef to prevent deep reactivity
+const calculationResults = ref(/** @type {CalculationResults|null} */ (null))
+const convertedCellIds = ref(/** @type {Array<string|number>} */ ([]))
 const modifiedHeatIndices = ref(new Map())
-const convertedParkDataSources = shallowRef([]) // Array of Cesium DataSources - use shallowRef to prevent deep reactivity
+const convertedParkDataSources = shallowRef(/** @type {Array<Cesium.DataSource>} */ ([])) // Array of Cesium DataSources - use shallowRef to prevent deep reactivity
 
 // --- DYNAMIC UI ---
 const primaryButtonText = computed(() => {
@@ -168,7 +183,7 @@ const clearCurrentSelection = () => {
 	}
 
 	const gridDataSource = viewer.value.dataSources.getByName(gridDataSourceName)[0]
-	if (selectedGridEntity.value && originalGridColor.value && gridDataSource) {
+	if (selectedGridEntity.value?.polygon && originalGridColor.value && gridDataSource) {
 		gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities)
 		selectedGridEntity.value.polygon.material = originalGridColor.value
 		gridDataSource.entities.collectionChanged.addEventListener(filterGridEntities)
@@ -291,7 +306,7 @@ const loadLandcoverData = async (gridId) => {
 
 		if (geojsonData.features.length === 0) {
 			alert(`No convertible landcover features found.`)
-			if (selectedGridEntity.value && originalGridColor.value) {
+			if (selectedGridEntity.value?.polygon && originalGridColor.value) {
 				selectedGridEntity.value.polygon.material = originalGridColor.value
 			}
 			return
@@ -337,6 +352,9 @@ const filterGridEntities = () => {
 const turnToParks = () => {
 	if (!loadedGeoJson.value || !selectedGridEntity.value) return
 
+	// Capture the non-null entity so the narrowing survives inside closures below.
+	const selectedEntity = selectedGridEntity.value
+
 	const totalAreaConverted = loadedGeoJson.value.features.reduce((sum, feature) => {
 		return sum + (feature.properties.area_m2 || 0)
 	}, 0)
@@ -346,12 +364,9 @@ const turnToParks = () => {
 		gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities)
 
 		const currentIndexInfo = getIndexInfo(statsIndex.value)
-		const sourceGridId = selectedGridEntity.value.properties.grid_id.getValue()
+		const sourceGridId = selectedEntity.properties?.grid_id?.getValue()
 
-		const results = mitigationStore.calculateParksEffect(
-			selectedGridEntity.value,
-			totalAreaConverted
-		)
+		const results = mitigationStore.calculateParksEffect(selectedEntity, totalAreaConverted)
 
 		const entityMap = new Map()
 		for (const entity of gridDataSource.entities.values) {
@@ -375,7 +390,7 @@ const turnToParks = () => {
 				const newColor = getHeatColor(newIdx)
 				entityToColor.polygon.material = newColor
 
-				if (entityToColor.id === selectedGridEntity.value.id) {
+				if (entityToColor.id === selectedEntity.id) {
 					originalGridColor.value = newColor
 				}
 			}
@@ -385,7 +400,7 @@ const turnToParks = () => {
 
 		const initialIndexForDisplay = modifiedHeatIndices.value.has(sourceGridId)
 			? modifiedHeatIndices.value.get(sourceGridId) + results.sourceReduction
-			: selectedGridEntity.value.properties.final_avg_conditional.getValue()
+			: selectedEntity.properties?.final_avg_conditional?.getValue()
 
 		calculationResults.value = {
 			area: (totalAreaConverted / 10000).toFixed(2),
@@ -407,7 +422,9 @@ const turnToParks = () => {
 		const dataSourceToConvert = loadedLandcoverDataSource.value
 		for (const entity of dataSourceToConvert.entities.values) {
 			if (entity.polygon) {
-				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.8)
+				entity.polygon.material = new Cesium.ColorMaterialProperty(
+					Cesium.Color.FORESTGREEN.withAlpha(0.8)
+				)
 			}
 		}
 		convertedParkDataSources.value.push(dataSourceToConvert)

@@ -52,7 +52,7 @@ class CesiumEntityManager {
 		this.treeEntitiesById.clear()
 
 		for (const entity of entities) {
-			const kohdeId = entity._properties?._kohde_id?._value
+			const kohdeId = entity.properties?.kohde_id?.getValue()
 			if (kohdeId) {
 				this.treeEntitiesById.set(kohdeId, entity)
 			}
@@ -71,7 +71,7 @@ class CesiumEntityManager {
 		this.buildingEntitiesById.clear()
 
 		for (const entity of entities) {
-			const id = entity._properties?._id?._value || entity._properties?._hki_id?._value
+			const id = entity.properties?.id?.getValue() || entity.properties?.hki_id?.getValue()
 			if (id) {
 				this.buildingEntitiesById.set(id, entity)
 			}

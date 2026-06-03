@@ -76,7 +76,7 @@ export default class Traveltime {
 	 * Calculates polygon centroids using bounding sphere method.
 	 *
 	 * @param {Array<Object>} traveldata - Travel time records with to_id and pt_m_walk_avg
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 *
 	 * @example
 	 * // traveldata format:
@@ -86,7 +86,7 @@ export default class Traveltime {
 		const Cesium = getCesium()
 		const geoJsonData = {
 			type: 'FeatureCollection',
-			features: [],
+			features: /** @type {Array<Object>} */ ([]),
 		}
 
 		if (!this.viewer || this.viewer.isDestroyed?.()) return
@@ -152,7 +152,7 @@ export default class Traveltime {
 
 			if (!dataSource) {
 				logger.error('Data source with name PopulationGrid not found.')
-				return []
+				return
 			}
 
 			// Get the entities of the data source
@@ -173,7 +173,7 @@ export default class Traveltime {
 	 * Labels scale with camera distance for readability.
 	 *
 	 * @param {Object} data - GeoJSON FeatureCollection with point features
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 *
 	 * Label styling:
 	 * - Font: 24px sans-serif

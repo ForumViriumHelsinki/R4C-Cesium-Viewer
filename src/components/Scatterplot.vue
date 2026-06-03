@@ -7,7 +7,6 @@
 	<select
 		ref="numericalSelect"
 		v-model="numericalValue"
-		value="numerical"
 	>
 		<option value="measured_height">height</option>
 		<option value="c_valmpvm">age</option>
@@ -18,7 +17,6 @@
 	<select
 		ref="categoricalSelect"
 		v-model="categoricalValue"
-		value="categorical"
 	>
 		<option value="c_julkisivu">facade material</option>
 		<option value="c_rakeaine">building material</option>
@@ -48,6 +46,18 @@ export default {
 			// Vue reactive properties for dropdown selections
 			numericalValue: 'measured_height',
 			categoricalValue: 'c_julkisivu',
+			// Non-reactive service/store handles assigned in mounted() before any
+			// method runs. Declared here so the component instance type knows about
+			// them; the `(null)` placeholder is cast because the real value is set
+			// in mounted() prior to first use.
+			/** @type {ReturnType<typeof useGlobalStore>} */
+			store: /** @type {any} */ (null),
+			/** @type {ReturnType<typeof useToggleStore>} */
+			toggleStore: /** @type {any} */ (null),
+			/** @type {Plot} */
+			plotService: /** @type {any} */ (null),
+			/** @type {(() => void) | null} */
+			unsubscribe: null,
 		}
 	},
 	watch: {
@@ -63,8 +73,12 @@ export default {
 		this.toggleStore = useToggleStore()
 		this.plotService = new Plot()
 
-		// Subscribe to eventBus updates
-		this.unsubscribe = eventBus.on('updateScatterPlot', () => this.selectAttributeForScatterPlot())
+		// Subscribe to eventBus updates. mitt's `on()` returns void, so build an
+		// explicit unsubscribe closure that calls `off()` with the same handler
+		// (otherwise the listener would never be removed on unmount).
+		const handler = () => this.selectAttributeForScatterPlot()
+		eventBus.on('updateScatterPlot', handler)
+		this.unsubscribe = () => eventBus.off('updateScatterPlot', handler)
 
 		this.newScatterPlot()
 	},
@@ -95,8 +109,8 @@ export default {
 			// Create a scatter plot with the updated data
 			this.createScatterPlot(
 				urbanHeatDataAndMaterial,
-				this.getSelectedText('categoricalSelect'),
-				this.getSelectedText('numericalSelect')
+				this.getSelectedText('categoricalSelect') ?? '',
+				this.getSelectedText('numericalSelect') ?? ''
 			)
 		},
 		/**
@@ -109,7 +123,7 @@ export default {
 			const categorical = this.categoricalValue
 			const hideNonSote = this.toggleStore.hideNonSote
 			const hideLowToggle = this.toggleStore.hideLow
-			const hideNew = this.toggleStore.hideNew
+			const hideNew = this.toggleStore.hideNewBuildings
 			// Get entities from cesiumEntityManager instead of propsStore
 			const entities = cesiumEntityManager.getAllBuildingEntities()
 
@@ -120,8 +134,8 @@ export default {
 					this.addDataForScatterPlot(
 						urbanHeatDataAndMaterial,
 						entity,
-						this.getSelectedText('categoricalSelect'),
-						this.getSelectedText('numericalSelect'),
+						this.getSelectedText('categoricalSelect') ?? '',
+						this.getSelectedText('numericalSelect') ?? '',
 						categorical,
 						numerical
 					)
@@ -142,8 +156,8 @@ export default {
 						this.addDataForScatterPlot(
 							urbanHeatDataAndMaterial,
 							entity,
-							this.getSelectedText('categoricalSelect'),
-							this.getSelectedText('numericalSelect'),
+							this.getSelectedText('categoricalSelect') ?? '',
+							this.getSelectedText('numericalSelect') ?? '',
 							categorical,
 							numerical
 						)
@@ -177,10 +191,11 @@ export default {
 		/**
 		 * This function creates a data set required for scatter plotting urban heat exposure.
 		 *
-		 * @param { Object } features buildings in postal code area
+		 * @param { Array } urbanHeatDataAndMaterial array to append scatter plot data to
+		 * @param { Object } entity building entity in postal code area
 		 * @param { String } categorical name of categorical attribute displayed for user
 		 * @param { String } numerical name of numerical attribute displayed for user
-		 * @param { String } categoricalName name of numerical attribute in register
+		 * @param { String } categoricalName name of categorical attribute in register
 		 * @param { String } numericalName name of numerical attribute in registery
 		 */
 		addDataForScatterPlot(
@@ -227,10 +242,10 @@ export default {
 		 * Returns the selected text of a dropdown menu using Vue refs.
 		 *
 		 * @param { string } refName - The name of the Vue ref ('numericalSelect' or 'categoricalSelect')
-		 * @returns { string } The selected text of the dropdown menu, or null if no option is selected.
+		 * @returns { string | null } The selected text of the dropdown menu, or null if no option is selected.
 		 */
 		getSelectedText(refName) {
-			const elt = this.$refs[refName]
+			const elt = /** @type {HTMLSelectElement | undefined} */ (this.$refs[refName])
 
 			if (!elt || elt.selectedIndex === -1) {
 				return null
@@ -296,7 +311,7 @@ export default {
 		 */
 		initializePlotContainer() {
 			// Use Vue ref for direct DOM access (maintains component encapsulation)
-			const container = this.$refs.containerRef
+			const container = /** @type {HTMLElement | undefined} */ (this.$refs.containerRef)
 			if (container) {
 				// Use textContent for safe clearing (prevents potential XSS)
 				container.textContent = ''
@@ -479,7 +494,9 @@ export default {
 			// Remove or clear the D3.js visualization using Vue ref
 			// Using D3.js on the ref value maintains Vue encapsulation
 			if (this.$refs.containerRef) {
-				d3.select(this.$refs.containerRef).select('svg').remove()
+				d3.select(/** @type {HTMLElement} */ (this.$refs.containerRef))
+					.select('svg')
+					.remove()
 			}
 		},
 	},

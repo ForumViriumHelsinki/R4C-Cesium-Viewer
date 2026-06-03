@@ -66,6 +66,7 @@ export default class Graphics {
 	detectSupport() {
 		// Skip if already detected
 		if (this._supportDetected) return
+		if (!this.scene) return
 
 		const Cesium = getCesium()
 		const supportInfo = {
@@ -109,6 +110,7 @@ export default class Graphics {
 	 * Apply MSAA (Multi-Sample Anti-Aliasing) settings
 	 */
 	applyMsaaSettings() {
+		if (!this.scene) return
 		if (this.graphicsStore.msaaSupported) {
 			const effectiveSamples = this.graphicsStore.effectiveMsaaSamples
 			this.scene.msaaSamples = effectiveSamples
@@ -122,6 +124,7 @@ export default class Graphics {
 	 * Apply FXAA (Fast Approximate Anti-Aliasing) settings
 	 */
 	applyFxaaSettings() {
+		if (!this.scene) return
 		const fxaaStage = this.scene.postProcessStages.fxaa
 		if (fxaaStage) {
 			fxaaStage.enabled = this.graphicsStore.fxaaEnabled
@@ -133,6 +136,7 @@ export default class Graphics {
 	 * Apply HDR (High Dynamic Range) settings
 	 */
 	applyHdrSettings() {
+		if (!this.scene) return
 		if (this.graphicsStore.hdrSupported) {
 			this.scene.highDynamicRange = this.graphicsStore.hdrEnabled
 			logger.debug(`HDR ${this.graphicsStore.hdrEnabled ? 'enabled' : 'disabled'}`)
@@ -145,6 +149,7 @@ export default class Graphics {
 	 * Apply Ambient Occlusion settings
 	 */
 	applyAmbientOcclusionSettings() {
+		if (!this.scene) return
 		if (this.graphicsStore.ambientOcclusionSupported) {
 			const ambientOcclusion = this.scene.postProcessStages.ambientOcclusion
 			ambientOcclusion.enabled = this.graphicsStore.ambientOcclusionEnabled
@@ -183,6 +188,7 @@ export default class Graphics {
 		// Watch for MSAA changes — store stop fn so destroy() can release it
 		this._unsubscribe = this.graphicsStore.$subscribe((mutation, _state) => {
 			if (!this.viewer || this.viewer.isDestroyed?.()) return
+			if (!this.scene) return
 			// mutation.events may be undefined for single-change mutations
 			const events = Array.isArray(mutation.events) ? mutation.events : []
 
@@ -225,6 +231,7 @@ export default class Graphics {
 	 * Get current graphics performance info
 	 */
 	getPerformanceInfo() {
+		if (!this.scene) return null
 		return {
 			msaaSamples: this.scene.msaaSamples,
 			fxaaEnabled: this.scene.postProcessStages.fxaa?.enabled || false,
@@ -239,6 +246,7 @@ export default class Graphics {
 	 * Show or hide FPS counter for performance monitoring
 	 */
 	setShowFps(show) {
+		if (!this.scene) return
 		this.scene.debugShowFramesPerSecond = show
 	}
 
@@ -246,6 +254,7 @@ export default class Graphics {
 	 * Force a render update (useful with request render mode)
 	 */
 	requestRender() {
+		if (!this.scene) return
 		if (this.scene.requestRenderMode) {
 			this.scene.requestRender()
 		}

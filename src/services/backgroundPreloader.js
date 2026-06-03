@@ -47,7 +47,9 @@ class BackgroundPreloader {
 			lastActivity: Date.now(),
 		}
 		// Store references for cleanup
+		/** @type {ReturnType<typeof setTimeout> | null} */
 		this.idleTimer = null
+		/** @type {(() => void) | null} */
 		this.boundResetIdleTimer = null
 		this.eventListenersAttached = false
 	}
@@ -207,14 +209,13 @@ class BackgroundPreloader {
 		const startTime = Date.now()
 
 		try {
-			// Use progressive loader for chunked data
+			// Use progressive loader for chunked data. The item URL already carries
+			// its query params (built by getLayerUrl); loadData is the public API
+			// (the previous loadChunked method does not exist on ProgressiveLoader).
 			if (item.type === 'trees' || item.type === 'buildings') {
-				const data = await progressiveLoader.loadChunked({
-					layerName: `preload-${item.key}`,
-					baseUrl: item.url,
-					params: item.params || {},
+				const data = await progressiveLoader.loadData(item.url, {
 					chunkSize: 200, // Smaller chunks for background loading
-					processor: item.processor,
+					onChunk: item.processor,
 				})
 
 				await cacheService.setData(item.key, data, {
@@ -264,9 +265,9 @@ class BackgroundPreloader {
 					{ preloaded: true, url: item.url },
 					{
 						type: item.type,
-						date: item.date,
 						ttl: item.ttl || 7 * 24 * 60 * 60 * 1000, // 7 days for NDVI
 						metadata: {
+							date: item.date,
 							preloaded: true,
 							preloadTime: Date.now(),
 							loadDuration: Date.now() - startTime,
@@ -374,7 +375,7 @@ class BackgroundPreloader {
 
 		const params = new URLSearchParams({
 			f: 'json',
-			limit: 1000,
+			limit: '1000',
 		})
 
 		if (postalCode) {
@@ -435,16 +436,18 @@ class BackgroundPreloader {
 	 * Wait for user to become idle
 	 */
 	async waitForUserIdle() {
-		return new Promise((resolve) => {
-			const checkIdle = () => {
-				if (!this.isUserActive()) {
-					resolve()
-				} else {
-					setTimeout(checkIdle, 1000)
+		return new Promise(
+			/** @param {(value?: any) => void} resolve */ (resolve) => {
+				const checkIdle = () => {
+					if (!this.isUserActive()) {
+						resolve()
+					} else {
+						setTimeout(checkIdle, 1000)
+					}
 				}
+				checkIdle()
 			}
-			checkIdle()
-		})
+		)
 	}
 
 	/**
@@ -452,9 +455,9 @@ class BackgroundPreloader {
 	 */
 	setupIdlePreloading() {
 		// Create bound function reference for cleanup
-		this.boundResetIdleTimer = () => {
+		const resetIdleTimer = () => {
 			this.userBehavior.lastActivity = Date.now()
-			clearTimeout(this.idleTimer)
+			if (this.idleTimer) clearTimeout(this.idleTimer)
 
 			this.idleTimer = setTimeout(() => {
 				// User has been idle for 10 seconds, resume preloading
@@ -466,14 +469,15 @@ class BackgroundPreloader {
 				}
 			}, 10000)
 		}
+		this.boundResetIdleTimer = resetIdleTimer
 
 		// Listen for user activity
 		;['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach((event) => {
-			document.addEventListener(event, this.boundResetIdleTimer, { passive: true })
+			document.addEventListener(event, resetIdleTimer, { passive: true })
 		})
 
 		this.eventListenersAttached = true
-		this.boundResetIdleTimer()
+		resetIdleTimer()
 	}
 
 	/**
@@ -481,8 +485,9 @@ class BackgroundPreloader {
 	 */
 	removeIdleDetection() {
 		if (this.eventListenersAttached && this.boundResetIdleTimer) {
+			const resetIdleTimer = this.boundResetIdleTimer
 			;['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach((event) => {
-				document.removeEventListener(event, this.boundResetIdleTimer)
+				document.removeEventListener(event, resetIdleTimer)
 			})
 			this.eventListenersAttached = false
 			this.boundResetIdleTimer = null

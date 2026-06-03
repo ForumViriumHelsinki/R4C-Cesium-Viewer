@@ -48,6 +48,7 @@ import logger from '../utils/logger.js'
  * @property {string|number} id - Grid cell identifier (grid_id)
  * @property {number} x - EUREF-FIN X coordinate
  * @property {number} y - EUREF-FIN Y coordinate
+ * @property {import('cesium').Entity} [entity] - Optional Cesium entity reference; intentionally omitted by setGridCells (see note there)
  */
 
 /**

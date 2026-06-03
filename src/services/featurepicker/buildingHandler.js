@@ -15,10 +15,7 @@ import { eventBus } from '../eventEmitter.js'
  * Updates application level to 'building', shows loading indicator, emits visibility events,
  * and creates building-specific charts. Manages loading state throughout the process.
  *
- * @param {Object} properties - Building properties object containing building attributes
- * @param {string} properties._postinumero - Postal code of the building
- * @param {number} [properties.treeArea] - Nearby tree area
- * @param {number} [properties._avg_temp_c] - Average temperature
+ * @param {Cesium.PropertyBag} properties - Building properties bag containing Cesium property objects
  * @param {Object} context - Context object with services and stores
  * @param {Object} context.store - Global store instance
  * @param {Object} context.toggleStore - Toggle store instance
@@ -77,11 +74,15 @@ export async function handleBuildingFeature(properties, context) {
  * @param {Object} context - Context object with services and stores
  * @param {Object} context.store - Global store instance
  * @param {Object} context.coldAreaService - Cold area service instance
+ * @param {Object} context.toggleStore - Toggle store instance
+ * @param {Object} context.buildingService - Building service instance
+ * @param {Object} context.elementsDisplayService - Elements display service instance
  * @returns {Promise<void>}
  */
 export async function processBuildingAtPostalCodeLevel(entity, context) {
 	const { store, coldAreaService } = context
 	const properties = entity.properties
+	if (!properties) return
 
 	store.setBuildingAddress(findAddressForBuilding(properties))
 

@@ -2,6 +2,15 @@ import { useURLStore } from '../stores/urlStore.js'
 import { getGlobalWMSRetryHandler } from '../utils/wmsRetryHandler.js'
 import { getCesium } from './cesiumProvider.js'
 
+/** @typedef {import('../utils/wmsRetryHandler.js').WMSRetryHandler} WMSRetryHandler */
+
+/**
+ * Cesium ImageryLayer augmented with a stored error-listener remover.
+ * `createHelsinkiImageryLayer` attaches `_removeErrorHandler` so
+ * `removeHelsinkiImageryLayer` can detach the provider's error listener.
+ * @typedef {Cesium.ImageryLayer & { _removeErrorHandler?: () => void }} HelsinkiImageryLayer
+ */
+
 /**
  * WMS (Web Map Service) Integration Service
  * Provides utilities for creating and managing WMS imagery layers in Cesium.
@@ -87,7 +96,7 @@ export default class Wms {
 		}
 		const removeErrorListener = provider.errorEvent.addEventListener(errorHandler)
 
-		const layer = new Cesium.ImageryLayer(provider)
+		const layer = /** @type {HelsinkiImageryLayer} */ (new Cesium.ImageryLayer(provider))
 		layer._removeErrorHandler = removeErrorListener
 
 		return layer
@@ -98,7 +107,7 @@ export default class Wms {
 	 * Use this instead of directly calling imageryLayers.remove() to prevent listener leaks.
 	 *
 	 * @param {Cesium.ImageryLayerCollection} imageryLayers - The viewer's imagery layer collection
-	 * @param {Cesium.ImageryLayer} layer - The imagery layer to remove (created by createHelsinkiImageryLayer)
+	 * @param {HelsinkiImageryLayer} layer - The imagery layer to remove (created by createHelsinkiImageryLayer)
 	 */
 	removeHelsinkiImageryLayer(imageryLayers, layer) {
 		if (!layer) return

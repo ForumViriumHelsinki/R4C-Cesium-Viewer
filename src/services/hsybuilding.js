@@ -79,6 +79,14 @@ export default class HSYBuilding {
 				return []
 			}
 
+			// A postal code is required to key the building URL, heat fetch, and
+			// merge. Without one (and no bbox), the downstream calls would build
+			// garbage `null`-keyed requests, so bail out early.
+			if (!targetPostalCode) {
+				logger.debug('[HSYBuilding] ℹ️ No postal code available; skipping HSY building load')
+				return []
+			}
+
 			const buildingUrl = bbox
 				? this.urlStore.hsyGridBuildings(bbox)
 				: this.urlStore.hsyBuildings(targetPostalCode)
@@ -190,6 +198,10 @@ export default class HSYBuilding {
 		}
 	}
 
+	/**
+	 * Builds a GeoJSON polygon Feature from the current grid cell's Cesium hierarchy.
+	 * @returns {import('geojson').Feature | null} The polygon feature, or null when no valid grid cell exists.
+	 */
 	createGeoJsonPolygon() {
 		try {
 			if (!this.store.currentGridCell?.polygon?.hierarchy) {
@@ -228,15 +240,15 @@ export default class HSYBuilding {
 		if (!cellProps?.asukkaita) return
 
 		const asukkaita = cellProps.asukkaita
-		feature.properties.pop_d_0_9 = weight * (cellProps.ika0_9 / asukkaita).toFixed(4)
-		feature.properties.pop_d_10_19 = weight * (cellProps.ika10_19 / asukkaita).toFixed(4)
-		feature.properties.pop_d_20_29 = weight * (cellProps.ika20_29 / asukkaita).toFixed(4)
-		feature.properties.pop_d_30_39 = weight * (cellProps.ika30_39 / asukkaita).toFixed(4)
-		feature.properties.pop_d_40_49 = weight * (cellProps.ika40_49 / asukkaita).toFixed(4)
-		feature.properties.pop_d_50_59 = weight * (cellProps.ika50_59 / asukkaita).toFixed(4)
-		feature.properties.pop_d_60_69 = weight * (cellProps.ika60_69 / asukkaita).toFixed(4)
-		feature.properties.pop_d_70_79 = weight * (cellProps.ika70_79 / asukkaita).toFixed(4)
-		feature.properties.pop_d_over80 = weight * (cellProps.ika_yli80 / asukkaita).toFixed(4)
+		feature.properties.pop_d_0_9 = weight * Number((cellProps.ika0_9 / asukkaita).toFixed(4))
+		feature.properties.pop_d_10_19 = weight * Number((cellProps.ika10_19 / asukkaita).toFixed(4))
+		feature.properties.pop_d_20_29 = weight * Number((cellProps.ika20_29 / asukkaita).toFixed(4))
+		feature.properties.pop_d_30_39 = weight * Number((cellProps.ika30_39 / asukkaita).toFixed(4))
+		feature.properties.pop_d_40_49 = weight * Number((cellProps.ika40_49 / asukkaita).toFixed(4))
+		feature.properties.pop_d_50_59 = weight * Number((cellProps.ika50_59 / asukkaita).toFixed(4))
+		feature.properties.pop_d_60_69 = weight * Number((cellProps.ika60_69 / asukkaita).toFixed(4))
+		feature.properties.pop_d_70_79 = weight * Number((cellProps.ika70_79 / asukkaita).toFixed(4))
+		feature.properties.pop_d_over80 = weight * Number((cellProps.ika_yli80 / asukkaita).toFixed(4))
 	}
 
 	approximateOtherAttributesForIntersectingBuilding(feature, weight, gridProps) {
@@ -245,15 +257,15 @@ export default class HSYBuilding {
 			if (!props?.asukkaita) continue
 
 			const asukkaita = props.asukkaita
-			feature.properties.pop_d_0_9 += weight * (props.ika0_9 / asukkaita).toFixed(4)
-			feature.properties.pop_d_10_19 += weight * (props.ika10_19 / asukkaita).toFixed(4)
-			feature.properties.pop_d_20_29 += weight * (props.ika20_29 / asukkaita).toFixed(4)
-			feature.properties.pop_d_30_39 += weight * (props.ika30_39 / asukkaita).toFixed(4)
-			feature.properties.pop_d_40_49 += weight * (props.ika40_49 / asukkaita).toFixed(4)
-			feature.properties.pop_d_50_59 += weight * (props.ika50_59 / asukkaita).toFixed(4)
-			feature.properties.pop_d_60_69 += weight * (props.ika60_69 / asukkaita).toFixed(4)
-			feature.properties.pop_d_70_79 += weight * (props.ika70_79 / asukkaita).toFixed(4)
-			feature.properties.pop_d_over80 += weight * (props.ika_yli80 / asukkaita).toFixed(4)
+			feature.properties.pop_d_0_9 += weight * Number((props.ika0_9 / asukkaita).toFixed(4))
+			feature.properties.pop_d_10_19 += weight * Number((props.ika10_19 / asukkaita).toFixed(4))
+			feature.properties.pop_d_20_29 += weight * Number((props.ika20_29 / asukkaita).toFixed(4))
+			feature.properties.pop_d_30_39 += weight * Number((props.ika30_39 / asukkaita).toFixed(4))
+			feature.properties.pop_d_40_49 += weight * Number((props.ika40_49 / asukkaita).toFixed(4))
+			feature.properties.pop_d_50_59 += weight * Number((props.ika50_59 / asukkaita).toFixed(4))
+			feature.properties.pop_d_60_69 += weight * Number((props.ika60_69 / asukkaita).toFixed(4))
+			feature.properties.pop_d_70_79 += weight * Number((props.ika70_79 / asukkaita).toFixed(4))
+			feature.properties.pop_d_over80 += weight * Number((props.ika_yli80 / asukkaita).toFixed(4))
 		}
 	}
 
@@ -273,7 +285,7 @@ export default class HSYBuilding {
 
 			for (let i = 0; i < entities.length; i++) {
 				const entity = entities[i]
-				if (entity.properties._index._value !== cellProps._index._value) {
+				if (entity.properties?._index?._value !== cellProps._index._value) {
 					const entityGeoJson = this.entityToGeoJson(entity)
 					if (entityGeoJson && turf.booleanIntersects(bboxPolygon, entityGeoJson)) {
 						gridProps.push(entityGeoJson.properties)
@@ -319,15 +331,17 @@ export default class HSYBuilding {
 			'features with progressive loading'
 		)
 
-		// Use progressive loading with the unified loader if available
+		// Use progressive loading with the unified loader if available.
+		// `unifiedLoader` is the module-level singleton (default export); the
+		// previous `const { unifiedLoader } = await import(...)` destructured a
+		// non-existent named export, so it was always undefined and silently fell
+		// through to the legacy path.
 		try {
-			const { unifiedLoader } = await import('./unifiedLoader.js')
-
 			const processor = async (batch) => {
 				return this.processGridAttributeBatch(batch, geoJsonPolygon)
 			}
 
-			await unifiedLoader.loadLayer({
+			await this.unifiedLoader.loadLayer({
 				layerId: 'grid-attributes',
 				data: features,
 				processor,
@@ -403,7 +417,11 @@ export default class HSYBuilding {
 			}
 
 			const isWithin = turf.booleanWithin(
-				{ type: 'Feature', properties: {}, geometry: featureGeoJson.geometry },
+				/** @type {import('geojson').Feature} */ ({
+					type: 'Feature',
+					properties: {},
+					geometry: featureGeoJson.geometry,
+				}),
 				geoJsonPolygon
 			)
 
@@ -414,6 +432,7 @@ export default class HSYBuilding {
 			}
 
 			// Copy calculated attributes to the Cesium entity's PropertyBag
+			if (!entity.properties) continue
 			for (const key of gridAttributeKeys) {
 				if (tempFeature.properties[key] == null) continue
 
@@ -434,11 +453,11 @@ export default class HSYBuilding {
 			try {
 				if (!feature.geometry) continue
 
-				const featureGeoJson = {
+				const featureGeoJson = /** @type {import('geojson').Feature} */ ({
 					type: 'Feature',
 					properties: feature.properties,
 					geometry: feature.geometry,
-				}
+				})
 
 				const isWithin = turf.booleanWithin(featureGeoJson, geoJsonPolygon)
 
@@ -468,11 +487,11 @@ export default class HSYBuilding {
 				try {
 					if (!feature.geometry) continue
 
-					const featureGeoJson = {
+					const featureGeoJson = /** @type {import('geojson').Feature} */ ({
 						type: 'Feature',
 						properties: feature.properties,
 						geometry: feature.geometry,
-					}
+					})
 
 					const isWithin = turf.booleanWithin(featureGeoJson, geoJsonPolygon)
 
@@ -510,6 +529,12 @@ export default class HSYBuilding {
 		return weights[length] || 1
 	}
 
+	/**
+	 * Converts a Cesium polygon entity to a GeoJSON Feature for Turf.js analysis.
+	 *
+	 * @param {Cesium.Entity} entity - Cesium entity with a polygon hierarchy
+	 * @returns {import('geojson').Feature | null} GeoJSON Feature or null when the entity has no polygon
+	 */
 	entityToGeoJson(entity) {
 		try {
 			if (!entity?.polygon?.hierarchy) return null
@@ -532,14 +557,14 @@ export default class HSYBuilding {
 				coordinates.push(coordinates[0])
 			}
 
-			return {
+			return /** @type {import('geojson').Feature} */ ({
 				type: 'Feature',
 				properties: entity.properties,
 				geometry: {
 					type: 'Polygon',
 					coordinates: [coordinates],
 				},
-			}
+			})
 		} catch (error) {
 			logger.error('Error converting entity to GeoJSON:', error)
 			return null
@@ -559,7 +584,10 @@ export default class HSYBuilding {
 	async calculateHSYUrbanHeatData(data, entities, postalCode) {
 		logger.debug('[HSYBuilding] 🌡️ Calculating urban heat data for', entities.length, 'entities')
 
-		const heatExposureData = this.urbanHeatService.calculateAverageExposure(data.features)
+		// calculateAverageExposure returns undefined when no buildings have heat
+		// data (count === 0). Default to an empty array so the .length logging and
+		// the heatExposureData[1] access in setBuildingPropsAndEmitEvent stay safe.
+		const heatExposureData = this.urbanHeatService.calculateAverageExposure(data.features) ?? []
 		const targetDate = this.store.heatDataDate
 
 		const avgTempCList = entities

@@ -19,7 +19,7 @@ export default {
 		const propsStore = usePropsStore()
 		const plotService = new Plot()
 		const buildingContainerId = 'buildingGridChartContainer'
-		const containerRef = ref(null)
+		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
 
 		const createBuildingGridChart = (buildingProps) => {
 			plotService.initializePlotContainer(buildingContainerId)

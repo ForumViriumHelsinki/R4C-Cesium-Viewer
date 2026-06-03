@@ -136,6 +136,11 @@ export default {
 	data() {
 		return {
 			viewer: null,
+			// Instance services/stores assigned in mounted() (declared here so the
+			// component instance type knows about them).
+			store: /** @type {ReturnType<typeof useGlobalStore> | null} */ (null),
+			toggleStore: /** @type {ReturnType<typeof useToggleStore> | null} */ (null),
+			datasourceService: /** @type {Datasource | null} */ (null),
 			// Vue reactive state for toggles
 			postalCodeView: false,
 			natureGrid: false,
@@ -148,29 +153,29 @@ export default {
 	},
 	watch: {
 		postalCodeView(newValue) {
-			this.toggleStore.setPostalCode(newValue)
+			this.toggleStore?.setPostalCode(newValue)
 			if (newValue) {
-				this.store.setView('capitalRegion')
+				this.store?.setView('capitalRegion')
 				this.reset()
 			}
 		},
 		natureGrid(newValue) {
-			this.toggleStore.setNatureGrid(newValue)
+			this.toggleStore?.setNatureGrid(newValue)
 			this.natureGridEvent()
 		},
 		travelTime(newValue) {
-			this.toggleStore.setTravelTime(newValue)
+			this.toggleStore?.setTravelTime(newValue)
 			this.travelTimeEvent()
 		},
 		resetGrid(newValue) {
-			this.toggleStore.setResetGrid(newValue)
+			this.toggleStore?.setResetGrid(newValue)
 			if (newValue) {
 				const populationgridService = new Populationgrid()
 				void populationgridService.createPopulationGrid()
 			}
 		},
 		surveyPlaces(newValue) {
-			this.toggleStore.setSurveyPlaces(newValue)
+			this.toggleStore?.setSurveyPlaces(newValue)
 			this.surveyPlacesEvent()
 		},
 		grid250m(_newValue) {
@@ -178,14 +183,15 @@ export default {
 		},
 	},
 	mounted() {
-		this.unsubscribe = eventBus.on('createPopulationGrid', this.createPopulationGrid)
+		// mitt's eventBus.on returns void (not an unsubscribe fn); use off() to clean up.
+		eventBus.on('createPopulationGrid', this.createPopulationGrid)
 		this.store = useGlobalStore()
 		this.toggleStore = useToggleStore()
 		this.viewer = this.store.cesiumViewer
 		this.datasourceService = new Datasource()
 	},
 	beforeUnmount() {
-		this.unsubscribe()
+		eventBus.off('createPopulationGrid', this.createPopulationGrid)
 	},
 	methods: {
 		reset() {
@@ -194,13 +200,13 @@ export default {
 			buildingService.cancelCurrentLoad()
 
 			// Restore grid visibility if it was hidden when entering postal code
-			this.toggleStore.onExitPostalCode()
+			this.toggleStore?.onExitPostalCode()
 
 			// Smart reset instead of page reload
-			this.store.setLevel('start')
-			this.store.setPostalCode(null)
-			this.store.setNameOfZone(null)
-			this.store.setView('capitalRegion')
+			this.store?.setLevel('start')
+			this.store?.setPostalCode(null)
+			this.store?.setNameOfZone(null)
+			this.store?.setView('capitalRegion')
 
 			// Reset camera to initial position
 			const camera = new Camera()
@@ -216,12 +222,12 @@ export default {
 		 */
 		activate250mGridEvent() {
 			if (this.grid250m) {
-				this.datasourceService.changeDataSourceShowByName('PopulationGrid', false)
+				this.datasourceService?.changeDataSourceShowByName('PopulationGrid', false)
 			} else {
-				this.datasourceService.removeDataSourcesByNamePrefix('250m_grid')
+				this.datasourceService?.removeDataSourcesByNamePrefix('250m_grid')
 				// Hide building grid chart via event bus (maintains component encapsulation)
 				eventBus.emit('hideBuildingGridChart')
-				this.datasourceService.changeDataSourceShowByName('PopulationGrid', true)
+				this.datasourceService?.changeDataSourceShowByName('PopulationGrid', true)
 			}
 		},
 
@@ -233,7 +239,7 @@ export default {
 				const espooSurveyService = new EspooSurvey()
 				void espooSurveyService.loadSurveyFeatures('places_in_everyday_life')
 			} else {
-				this.datasourceService.removeDataSourcesByNamePrefix('Survey ')
+				this.datasourceService?.removeDataSourcesByNamePrefix('Survey ')
 				// Hide survey scatter plot via event bus (maintains component encapsulation)
 				eventBus.emit('hideSurveyScatterPlot')
 			}
@@ -250,18 +256,18 @@ export default {
 			}
 
 			try {
-				this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel')
-				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid')
+				this.datasourceService?.removeDataSourcesByNamePrefix('TravelLabel')
+				this.datasourceService?.removeDataSourcesByNamePrefix('PopulationGrid')
 
 				if (this.travelTime) {
-					await this.datasourceService.loadGeoJsonDataSource(
+					await this.datasourceService?.loadGeoJsonDataSource(
 						0.1,
 						'assets/data/travel_time_grid.json',
 						'TravelTimeGrid'
 					)
 				} else {
-					await this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid')
-					await this.datasourceService.removeDataSourcesByNamePrefix('TravelLabel')
+					await this.datasourceService?.removeDataSourcesByNamePrefix('TravelTimeGrid')
+					await this.datasourceService?.removeDataSourcesByNamePrefix('TravelLabel')
 					await this.createPopulationGrid()
 				}
 			} catch (error) {
@@ -274,7 +280,7 @@ export default {
 		 * Uses batched processing for UI responsiveness with 18K+ entities.
 		 */
 		async natureGridEvent() {
-			this.datasourceService.removeDataSourcesByNamePrefix('TravelTimeGrid')
+			this.datasourceService?.removeDataSourcesByNamePrefix('TravelTimeGrid')
 
 			if (this.natureGrid) {
 				const populationgridService = new Populationgrid()
@@ -291,7 +297,7 @@ export default {
 				// Uncheck travel time toggle when nature grid is enabled
 				this.travelTime = false
 			} else {
-				this.datasourceService.removeDataSourcesByNamePrefix('PopulationGrid')
+				this.datasourceService?.removeDataSourcesByNamePrefix('PopulationGrid')
 				await this.createPopulationGrid()
 			}
 		},

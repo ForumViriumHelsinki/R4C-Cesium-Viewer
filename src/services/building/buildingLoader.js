@@ -109,6 +109,12 @@ export class BuildingLoader {
 	 */
 	async loadBuildings(postalCode) {
 		const targetPostalCode = postalCode || this.store.postalcode
+		// Guard: store.postalcode is `string | null`; without a postal code there
+		// is nothing to load (and downstream URL/heat/tree calls require a string).
+		if (!targetPostalCode) {
+			logger.debug('[HelsinkiBuilding] No postal code available; skipping building load')
+			return []
+		}
 		const url = this.urlStore.helsinkiBuildingsUrl(targetPostalCode)
 		const layerId = `helsinki_buildings_${targetPostalCode}`
 

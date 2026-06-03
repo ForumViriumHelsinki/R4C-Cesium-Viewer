@@ -75,7 +75,7 @@ export default class Vegetation {
 		// Iterate over the entities and add labels for "temp_air" and "rh_air"
 		for (let i = 0; i < entities.length; i++) {
 			const entity = entities[i]
-			const measurement = entity.properties._measurement._value
+			const measurement = entity.properties?._measurement?._value
 
 			if (measurement) {
 				const tempAir = measurement.temp_air
@@ -102,7 +102,7 @@ export default class Vegetation {
 
 				if (tempAir !== undefined && rhAir !== undefined) {
 					const Cesium = getCesium()
-					entity.label = {
+					entity.label = new Cesium.LabelGraphics({
 						text:
 							'Temp: ' +
 							tempAir.toFixed(1) +
@@ -118,7 +118,7 @@ export default class Vegetation {
 						fillColor: Cesium.Color.BLUE,
 						backgroundColor: Cesium.Color.YELLOW,
 						eyeOffset: new Cesium.Cartesian3(0, 0, -100),
-					}
+					})
 				}
 			}
 

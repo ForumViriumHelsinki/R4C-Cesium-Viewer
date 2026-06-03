@@ -31,7 +31,7 @@
  */
 
 import { useBuildingStore } from '../stores/buildingStore.js'
-import { useFeatureFlagStore } from '../stores/featureFlagStore.ts'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useLoadingStore } from '../stores/loadingStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
@@ -885,7 +885,9 @@ export default class ViewportBuildingLoader {
 		if (polygon && properties?.avgheatexposuretobuilding) {
 			const Cesium = getCesium()
 			const heatExposureValue = properties.avgheatexposuretobuilding._value
-			polygon.material = new Cesium.Color(1, 1 - heatExposureValue, 0, heatExposureValue)
+			polygon.material = new Cesium.ColorMaterialProperty(
+				new Cesium.Color(1, 1 - heatExposureValue, 0, heatExposureValue)
+			)
 		}
 	}
 
@@ -897,11 +899,14 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async setHelsinkiBuildingsHeight(entities) {
+		const Cesium = getCesium()
 		await processBatchAdaptive(
 			entities,
 			(entity) => {
 				if (entity.polygon) {
-					entity.polygon.extrudedHeight = calculateBuildingHeight(entity.properties)
+					entity.polygon.extrudedHeight = new Cesium.ConstantProperty(
+						calculateBuildingHeight(entity.properties)
+					)
 				}
 			},
 			{ processorName: 'viewportHeightExtrusion' }
@@ -931,10 +936,11 @@ export default class ViewportBuildingLoader {
 
 					// Set height based on floor count (3.2m per floor) or default
 					// Filter out invalid floor counts (>= 999 indicates data quality issue)
-					entity.polygon.extrudedHeight =
+					entity.polygon.extrudedHeight = new Cesium.ConstantProperty(
 						floorCount != null && floorCount < 999
 							? floorCount * FLOOR_HEIGHT
 							: DEFAULT_BUILDING_HEIGHT
+					)
 
 					// Try to get heat exposure from heat_timeseries for the current date
 					const heatTimeseries = entity.properties?.heat_timeseries?._value
@@ -1004,7 +1010,8 @@ export default class ViewportBuildingLoader {
 		const entityData = []
 		for (const entity of entities) {
 			if (entity.polygon?.material) {
-				const color = entity.polygon.material.color?.getValue?.(now)
+				const material = /** @type {Cesium.ColorMaterialProperty} */ (entity.polygon.material)
+				const color = material.color?.getValue?.(now)
 				if (color) {
 					entityData.push({
 						entity,
@@ -1435,6 +1442,7 @@ export default class ViewportBuildingLoader {
 			!this.prefetchCancelled
 		) {
 			const tile = this.prefetchQueue.shift()
+			if (tile === undefined) continue
 
 			// Skip if tile was loaded while in queue
 			if (this.loadedTiles.has(tile) || this.loadingTiles.has(tile)) {

@@ -8,10 +8,8 @@
 //
 // This is types-only; it emits no runtime code.
 
-import * as CesiumModule from 'cesium';
-
-export {};
+import * as CesiumModule from 'cesium'
 
 declare global {
-	export import Cesium = CesiumModule;
+	export import Cesium = CesiumModule
 }

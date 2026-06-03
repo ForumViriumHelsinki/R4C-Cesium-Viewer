@@ -80,7 +80,9 @@ export default class Plot {
 
 		for (const direction of switchContainers) {
 			const switchContainer = document.getElementById(`bearing${direction}SwitchContainer`)
-			switchContainer.style.visibility = status
+			if (switchContainer) {
+				switchContainer.style.visibility = status
+			}
 		}
 	}
 
@@ -89,7 +91,10 @@ export default class Plot {
 	 */
 
 	updateTreeElements(status) {
-		document.getElementById('nearbyTreeAreaContainer').style.visibility = status
+		const nearbyTreeAreaContainer = document.getElementById('nearbyTreeAreaContainer')
+		if (nearbyTreeAreaContainer) {
+			nearbyTreeAreaContainer.style.visibility = status
+		}
 		this.toggleBearingSwitchesVisibility(status)
 	}
 
@@ -100,6 +105,7 @@ export default class Plot {
 	 */
 	initializePlotContainerForGrid(containerId) {
 		const container = document.getElementById(containerId)
+		if (!container) return
 		// Use textContent for safe clearing (prevents potential XSS)
 		container.textContent = ''
 
@@ -113,6 +119,7 @@ export default class Plot {
 	 */
 	initializePlotContainer(containerId) {
 		const container = document.getElementById(containerId)
+		if (!container) return
 		// Use textContent for safe clearing (prevents potential XSS)
 		container.textContent = ''
 
@@ -182,6 +189,11 @@ export default class Plot {
 		return d3.scaleBand().domain(xLabels).range([0, width]).padding(0.1)
 	}
 
+	/**
+	 * Creates a styled tooltip div appended to the given container.
+	 * @param {string} container - CSS selector for the tooltip's parent element
+	 * @returns {import('@/utils/d3').Selection<HTMLDivElement, unknown, HTMLElement, any>} The tooltip selection
+	 */
 	createTooltip(container) {
 		return d3
 			.select(container)
@@ -210,7 +222,9 @@ export default class Plot {
 	}
 
 	handleMouseover(tooltip, containerId, event, d, dataFormatter) {
-		const containerRect = document.getElementById(containerId).getBoundingClientRect()
+		const container = document.getElementById(containerId)
+		if (!container) return
+		const containerRect = container.getBoundingClientRect()
 		const xPos = event.pageX - containerRect.left
 		const yPos = event.pageY - containerRect.top
 

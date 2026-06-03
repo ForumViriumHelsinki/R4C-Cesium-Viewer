@@ -39,8 +39,9 @@
 		"paths": {
 			"@/*": ["./src/*"]
 		},
-		// Library types
-		"lib": ["ES2020", "DOM", "DOM.Iterable"]
+		// Library types — ES2022 types Object.hasOwn (Biome's preferred form over
+		// Object.prototype.hasOwnProperty.call); widely supported by target browsers.
+		"lib": ["ES2022", "DOM", "DOM.Iterable"]
 	},
 	"include": ["src/**/*.js", "src/**/*.vue", "src/**/*.d.ts"],
 	"exclude": ["node_modules", "dist", "tests", "**/*.spec.js", "**/*.test.js"]

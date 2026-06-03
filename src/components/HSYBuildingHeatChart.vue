@@ -60,6 +60,9 @@ export default {
 
 		const createHSYBuildingBarChart = () => {
 			const buildingHeatExposure = propsStore.buildingHeatTimeseries
+			if (!buildingHeatExposure) {
+				return
+			}
 			const postalcodeHeatTimeseries = propsStore.postalcodeHeatTimeseries
 			const address = store.buildingAddress
 			const postinumero = store.postalcode
@@ -215,7 +218,7 @@ export default {
 				if (store.view === 'capitalRegion') {
 					createHSYBuildingBarChart()
 
-					if (propsStore.buildingHeatExposure > 27.2632995605) {
+					if ((propsStore.buildingHeatExposure ?? 0) > 27.2632995605) {
 						// The toggle visibility is controlled by whether the building exposure is above a threshold
 						if (!toggleStore.capitalRegionCold) {
 							coldAreaService.loadColdAreas().catch((error) => {

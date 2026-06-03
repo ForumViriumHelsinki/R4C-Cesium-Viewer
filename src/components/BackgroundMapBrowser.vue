@@ -336,11 +336,20 @@ export default {
 		]
 
 		// HSY Environmental maps
+		/**
+		 * @typedef {{
+		 *   id: any,
+		 *   name: string,
+		 *   title: string,
+		 *   date_updated?: any,
+		 *   organization?: any
+		 * }} HSYLayer
+		 */
 		const hsySearchQuery = ref('')
-		const selectedHSYLayer = ref(null)
-		const hsyLayers = ref([])
+		const selectedHSYLayer = ref(/** @type {string | null} */ (null))
+		const hsyLayers = ref(/** @type {HSYLayer[]} */ ([]))
 		const isLoadingHSY = ref(false)
-		const hsyLoadError = ref(null)
+		const hsyLoadError = ref(/** @type {string | null} */ (null))
 
 		const filteredHSYLayers = computed(() => {
 			if (!hsySearchQuery.value) {
@@ -354,8 +363,8 @@ export default {
 		})
 
 		// Track active imagery layers for cleanup
-		const hsyMapLayer = ref(null)
-		const basicMapLayer = ref(null)
+		const hsyMapLayer = ref(/** @type {Cesium.ImageryLayer | null} */ (null))
+		const basicMapLayer = ref(/** @type {Cesium.ImageryLayer | null} */ (null))
 
 		const removeLayer = (layerRef, errorMsg) => {
 			if (layerRef.value) {
@@ -512,6 +521,7 @@ export default {
 			// Search is reactive via computed property
 		}
 
+		/** @param {HSYLayer} layer */
 		const selectHSYLayer = async (layer) => {
 			selectedHSYLayer.value = layer.name
 			const Cesium = getCesium()
@@ -528,7 +538,8 @@ export default {
 					maximumLevel: 18,
 					tilingScheme: new Cesium.GeographicTilingScheme(),
 				})
-				await provider.readyPromise
+				// Cesium >= 1.104 removed ImageryProvider.readyPromise; providers are
+				// ready synchronously after construction, so no await is needed here.
 
 				// Guard: only proceed if this is still the currently selected layer;
 				// a rapid second selection would have updated selectedHSYLayer already.

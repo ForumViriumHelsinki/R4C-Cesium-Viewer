@@ -99,9 +99,16 @@ export default {
 		const urlStore = useURLStore()
 		const showTooltip = ref(false)
 		const mousePosition = ref({ x: 0, y: 0 })
-		const buildingAttributes = ref(null)
+		/**
+		 * @typedef {Object} BuildingAttributes
+		 * @property {string} avg_temp_c - Average temperature (formatted) or 'n/a'
+		 * @property {*} rakennusaine_s - Construction material
+		 * @property {string} address - Formatted building address
+		 */
+		const buildingAttributes = ref(/** @type {BuildingAttributes | null} */ (null))
 		const pickPending = ref(false)
 		const handlerRegistered = ref(false)
+		/** @type {import('vue').Ref<string | null>} */
 		const fetchingBuildingId = ref(null) // Track in-flight lazy fetch
 
 		logger.debug('[BuildingInformation] 🎬 Component setup started')

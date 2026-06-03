@@ -123,7 +123,7 @@ export default {
 		// Reactive computed properties from store state
 		const isVisible = computed(() => store.clickProcessingState.isProcessing)
 		const postalCodeName = computed(() => store.clickProcessingState.postalCodeName || 'Loading...')
-		const stage = computed(() => store.clickProcessingState.stage)
+		const stage = computed(() => /** @type {string|null} */ (store.clickProcessingState.stage))
 		const canCancel = computed(() => store.clickProcessingState.canCancel)
 		const error = computed(() => store.clickProcessingState.error)
 

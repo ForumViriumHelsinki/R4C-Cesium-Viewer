@@ -78,14 +78,15 @@ export default {
 			if (!postCodesDataSource) return
 
 			postCodesDataSource.entities.values.forEach((entity) => {
-				const ndviValue = entity.properties[`ndvi_${props.selectedDate}`]?.getValue()
+				if (!entity.polygon) return
+				const ndviValue = entity.properties?.[`ndvi_${props.selectedDate}`]?.getValue()
 
 				if (ndviValue >= ndviRange[0] && ndviValue < ndviRange[1]) {
-					entity.polygon.outlineColor = Cesium.Color.WHITE
-					entity.polygon.outlineWidth = 20
+					entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.WHITE)
+					entity.polygon.outlineWidth = new Cesium.ConstantProperty(20)
 				} else {
-					entity.polygon.outlineColor = Cesium.Color.BLACK
-					entity.polygon.outlineWidth = 8
+					entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK)
+					entity.polygon.outlineWidth = new Cesium.ConstantProperty(8)
 				}
 			})
 		}
@@ -116,7 +117,7 @@ export default {
 				.data(bins)
 				.enter()
 				.append('rect')
-				.attr('x', (_, i) => xScale(labels[i]))
+				.attr('x', (_, i) => xScale(labels[i]) ?? 0)
 				.attr('y', (d) => yScale(d))
 				.attr('width', xScale.bandwidth())
 				.attr('height', (d) => height - margin.bottom - yScale(d))
