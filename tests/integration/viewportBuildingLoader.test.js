@@ -59,6 +59,13 @@ const cesiumMock = {
 	ColorMaterialProperty: vi.fn(function (color) {
 		this.color = { getValue: vi.fn(() => color) }
 	}),
+	// viewportBuildingLoader.setHelsinkiBuildingsHeight wraps extrudedHeight in
+	// `new Cesium.ConstantProperty(...)`; without this the mock throws
+	// "Cesium.ConstantProperty is not a constructor". Mirrors tests/setup.js.
+	ConstantProperty: vi.fn(function (value) {
+		this._value = value
+		this.getValue = vi.fn(() => value)
+	}),
 	JulianDate: {
 		now: vi.fn(() => ({})),
 	},
