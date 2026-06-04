@@ -39,6 +39,7 @@ import { ref } from 'vue'
 import { getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore'
+import logger from '../utils/logger.js'
 
 const numCoolingCenters = ref(25)
 const mitigationStore = useMitigationStore()
@@ -46,6 +47,36 @@ const globalStore = useGlobalStore()
 const { optimalEffect } = mitigationStore
 
 let coolingCentersDataSource = globalStore.cesiumViewer.dataSources?.getByName('cooling_centers')[0]
+
+/**
+ * Builds a Map of grid_id → live Cesium entity from the `250m_grid` datasource.
+ *
+ * The mitigation store intentionally does NOT keep Cesium entity references on
+ * its grid cells (see `setGridCells` — storing entities triggers `DataCloneError`
+ * when Pinia state is cloned for the Cesium workers). The optimiser therefore
+ * resolves the entity for a chosen cell from the live datasource at the moment
+ * it's needed, keyed by the cell's `grid_id`.
+ *
+ * @returns {Map<string, import('cesium').Entity>} grid_id → entity lookup
+ */
+const buildGridEntityMap = () => {
+	/** @type {Map<string, import('cesium').Entity>} */
+	const entityMap = new Map()
+	const gridDataSource = globalStore.cesiumViewer.dataSources?.getByName('250m_grid')?.[0]
+	if (!gridDataSource) {
+		logger.warn(
+			'[CoolingCenterOptimiser] "250m_grid" datasource not found; cannot resolve grid entities for cooling centers.'
+		)
+		return entityMap
+	}
+	for (const entity of gridDataSource.entities.values) {
+		const gridId = entity.properties?.grid_id?.getValue()
+		if (gridId != null) {
+			entityMap.set(String(gridId), entity)
+		}
+	}
+	return entityMap
+}
 
 const shuffleArray = (array) => {
 	for (let i = array.length - 1; i > 0; i--) {
@@ -67,6 +98,9 @@ const removeOldData = async () => {
 const findOptimalCoolingCenters = async () => {
 	await removeOldData()
 	mitigationStore.setOptimised(true)
+	// Resolve grid entities from the live datasource (the store cells don't carry
+	// entity references — see buildGridEntityMap). Built once per run, not per cell.
+	const gridEntityMap = buildGridEntityMap()
 	const highImpactGrids = mitigationStore.gridCells.filter(
 		(cell) => mitigationStore.getGridImpact(cell.id) > 4
 	)
@@ -93,11 +127,18 @@ const findOptimalCoolingCenters = async () => {
 			// re-widen via the declared GridCell type before reading members.
 			const selectedCell = /** @type {import('../stores/mitigationStore.js').GridCell} */ (bestCell)
 			if (!isCoolingCenterTooClose(selectedCell)) {
-				// BUG (pre-existing): mitigationStore.setGridCells intentionally does
-				// NOT store the Cesium entity reference on grid cells, so `.entity` is
-				// always undefined here and addCoolingCenter() receives undefined. Left
-				// as-is to preserve runtime behavior; tracked separately.
-				addCoolingCenter(selectedCell.entity)
+				// Resolve the Cesium entity for this cell from the live datasource by
+				// grid_id (the store does not keep entity references — see
+				// buildGridEntityMap). Skip cells whose entity can't be found rather
+				// than calling addCoolingCenter(undefined), which would throw.
+				const entity = gridEntityMap.get(String(selectedCell.id))
+				if (entity) {
+					addCoolingCenter(entity)
+				} else {
+					logger.warn(
+						`[CoolingCenterOptimiser] No grid entity found for cell "${selectedCell.id}"; skipping cooling center placement.`
+					)
+				}
 				availableGrids.splice(availableGrids.indexOf(selectedCell), 1)
 			} else {
 				availableGrids.splice(availableGrids.indexOf(bestCell), 1)
