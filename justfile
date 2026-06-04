@@ -307,6 +307,24 @@ lighthouse-local:
     LIGHTHOUSE=true bun run build
     bunx @lhci/cli@0.14.x collect --config=lighthouserc.cjs
 
+# swgl=1 forces software rendering (mimics the no-GPU runner; FPS test skips).
+# The CI Performance Tests job runs only on push-to-main (not PRs) — use this to
+# verify before merging. See .claude/rules/testing.md "Vitest-Driven Playwright Suites".
+# Reproduce the CI perf run locally: build, serve the prod bundle on :4173, run the suite, tear down.
+[group: "testing"]
+test-performance swgl="0":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    VITE_E2E_TEST=true bun run build
+    bun run preview >/tmp/r4c-perf-preview.log 2>&1 &
+    PREVIEW_PID=$!
+    trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+    until curl -fsS -o /dev/null http://localhost:4173/ 2>/dev/null; do sleep 1; done
+    if [ "{{ swgl }}" = "1" ]; then
+        export PERF_TEST_CHROMIUM_ARGS="--use-gl=swiftshader --disable-gpu"
+    fi
+    CI=true bun run test:performance
+
 # Run a single test file (fast iteration during test fixes)
 [group: "testing"]
 test-file file *args:
