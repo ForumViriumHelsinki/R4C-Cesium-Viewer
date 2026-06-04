@@ -62,7 +62,10 @@ let coolingCentersDataSource = globalStore.cesiumViewer.dataSources?.getByName('
 const buildGridEntityMap = () => {
 	/** @type {Map<string, import('cesium').Entity>} */
 	const entityMap = new Map()
-	const gridDataSource = globalStore.cesiumViewer.dataSources?.getByName('250m_grid')?.[0]
+	// cesiumViewer is null until the viewer finishes loading (globalStore inits
+	// it to null); the optional chain lets this helper degrade gracefully to the
+	// empty-map + warn path below instead of throwing if called too early.
+	const gridDataSource = globalStore.cesiumViewer?.dataSources?.getByName('250m_grid')?.[0]
 	if (!gridDataSource) {
 		logger.warn(
 			'[CoolingCenterOptimiser] "250m_grid" datasource not found; cannot resolve grid entities for cooling centers.'
