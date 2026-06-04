@@ -178,9 +178,9 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		label: 'Request Render Mode',
 		description: 'Performance optimization - only render when scene changes',
 		category: 'graphics',
-		experimental: true,
+		experimental: false,
 		requiresSupport: false,
-		fallbackDefault: false,
+		fallbackDefault: true,
 	},
 	terrain3d: {
 		goffId: 'r4c-terrain-3d',
@@ -205,9 +205,9 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		label: 'Predictive Prefetching',
 		description: 'Prefetch adjacent tiles during idle time for instant display when panning',
 		category: 'graphics',
-		experimental: true,
+		experimental: false,
 		requiresSupport: false,
-		fallbackDefault: false,
+		fallbackDefault: true,
 	},
 
 	// Analysis tools
@@ -290,9 +290,9 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		label: 'Background Data Preloading',
 		description: 'Preload data in background for faster transitions',
 		category: 'ui',
-		experimental: true,
+		experimental: false,
 		requiresSupport: false,
-		fallbackDefault: false,
+		fallbackDefault: true,
 	},
 	mapClickLoadingOverlay: {
 		goffId: 'r4c-map-click-loading-overlay',
