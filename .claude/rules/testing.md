@@ -264,6 +264,43 @@ cesiumTest('test name', async ({ cesiumPage }, testInfo) => {
 })
 ```
 
+## Vitest-Driven Playwright Suites (`tests/performance/`)
+
+`tests/performance/load.test.ts` is a **Vitest** suite that drives a real Chromium via the `playwright` Node library directly — it does **not** use the Playwright test runner or the `cesium-fixture`. That hybrid has gotchas the rest of the E2E suite (Playwright-runner specs) never hits. When editing or adding tests here:
+
+| Trap                 | Playwright-runner spec                | Vitest-driven suite                                                                                                                                                                         |
+| -------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visibility assert    | `await expect(locator).toBeVisible()` | **No `toBeVisible` matcher** — use `expect(await locator.isVisible()).toBe(true)`                                                                                                           |
+| Memory / heap        | `page.metrics()`                      | **No `page.metrics()`** (Puppeteer-only) — `page.evaluate(() => (performance as any).memory?.usedJSHeapSize ?? 0)` (Chromium-only, works under SwiftShader)                                 |
+| Response timing      | `response.timing()`                   | **No `response.timing()`** (Puppeteer-only) — use `response.request().timing()` if ever needed                                                                                              |
+| Server               | `webServer` auto-starts               | **No auto-start** — a preview/dev server must already be running (`just test-performance` handles this)                                                                                     |
+| Modal dismissal      | `cesiumPage` fixture dismisses it     | **Must dismiss manually** — replicate `removeBlockingOverlays` (see below)                                                                                                                  |
+| Per-test time budget | spec timeout                          | bounded by the **global `testTimeout` (10s)** — a test whose own threshold (e.g. `SESSION_DURATION` 45s) exceeds it needs an explicit per-test timeout: `it('…', async () => { … }, 60000)` |
+
+**`networkidle` never settles on the Cesium map.** The 3D globe streams tiles continuously, so `page.waitForLoadState('networkidle')` hangs until it times out. Use `'load'` instead. If you must bound a `networkidle` wait, cap it **below** the 10s test timeout (`TEST_TIMEOUTS.ELEMENT_SCROLL` = 3s) and `.catch(() => {})` so the catch actually fires.
+
+**Floating map controls intercept canvas clicks.** Tests that `canvas.click()` at map coordinates collide with the nav drawer (`.control-panel`), camera/zoom/compass controls (`.camera-controls-container`, `.zoom-controls`, `.compass-assembly`), and the compact timeline — each swallows the click and Playwright retries for 30s. Inject a helper (mirroring `tests/fixtures/cesium-fixture.ts` `removeBlockingOverlays`) that removes the disclaimer dialog + scrims and sets `pointer-events: none` on those control containers, then call it after `waitForSelector('canvas')`.
+
+**Software-rendering skip.** Headless Chromium (CI **and** local headless) uses SwiftShader, so GPU-bound metrics like FPS aren't representative. Detect and `ctx.skip()` at runtime:
+
+```ts
+it('…fps…', async (ctx) => {
+	const renderer = await page.evaluate(() => {
+		const gl = document.createElement('canvas').getContext('webgl');
+		const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+		return ext ? (gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string) : '';
+	});
+	if (/swiftshader|llvmpipe|software/i.test(renderer)) {
+		await page.close();
+		ctx.skip();
+		return;
+	}
+	// …real-GPU measurement…
+});
+```
+
+The viewer is exposed as `window.__viewer` (double underscore, gated on `VITE_E2E_TEST`) — never `window.cesiumViewer`. The Performance Tests CI job runs **only on push-to-`main`, not on PRs**, and is not a merge gate, so a PR check won't catch breakage here — verify locally with `just test-performance`.
+
 ## Feature Flag Defaults Affect Test Assertions
 
 The Pinia store defaults determine what's visible in tests without explicit setup:
