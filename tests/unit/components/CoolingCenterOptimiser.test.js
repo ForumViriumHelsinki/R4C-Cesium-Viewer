@@ -81,8 +81,34 @@ vi.mock('@turf/turf', () => ({
 
 // Mock stores - will be initialized in beforeEach
 let mockCoolingCentersDataSource
+let mockGridDataSource
 let mockGlobalStore
 let mockMitigationStore
+
+/**
+ * Builds a mock grid entity exposing the public Cesium property surface
+ * (`.getValue()`) plus a polygon hierarchy, mirroring the live `250m_grid`
+ * datasource entities the optimiser resolves at runtime.
+ */
+const makeGridEntity = (gridId, x, y) => ({
+	properties: {
+		grid_id: { getValue: () => gridId },
+		euref_x: { getValue: () => x },
+		euref_y: { getValue: () => y },
+	},
+	polygon: {
+		hierarchy: {
+			getValue: () => ({
+				positions: [
+					{ x: 0, y: 0, z: 0 },
+					{ x: 1, y: 0, z: 0 },
+					{ x: 1, y: 1, z: 0 },
+					{ x: 0, y: 1, z: 0 },
+				],
+			}),
+		},
+	},
+})
 
 // Mock stores
 vi.mock('../../../src/stores/globalStore.js', () => ({
@@ -107,10 +133,24 @@ describe('CoolingCenterOptimiser Component', () => {
 			},
 		}
 
+		// Live grid datasource the optimiser resolves entities from by grid_id.
+		mockGridDataSource = {
+			name: '250m_grid',
+			entities: {
+				values: [
+					makeGridEntity('grid_001', TEST_COORDINATES.TEST_POINT_1.X, TEST_COORDINATES.TEST_POINT_1.Y),
+					makeGridEntity('grid_002', 1500, 2500),
+					makeGridEntity('grid_003', 2000, 3000),
+				],
+			},
+		}
+
 		mockGlobalStore = {
 			cesiumViewer: {
 				dataSources: {
-					getByName: vi.fn(() => [mockCoolingCentersDataSource]),
+					getByName: vi.fn((name) =>
+						name === '250m_grid' ? [mockGridDataSource] : [mockCoolingCentersDataSource]
+					),
 					add: vi.fn(),
 					remove: vi.fn(),
 				},
@@ -120,79 +160,12 @@ describe('CoolingCenterOptimiser Component', () => {
 		mockMitigationStore = {
 			resetStore: vi.fn(),
 			optimised: false,
+			// Store cells carry only serializable fields — NO entity reference.
+			// The optimiser resolves entities from the 250m_grid datasource by id.
 			gridCells: [
-				{
-					id: 'grid_001',
-					x: TEST_COORDINATES.TEST_POINT_1.X,
-					y: TEST_COORDINATES.TEST_POINT_1.Y,
-					entity: {
-						properties: {
-							grid_id: { getValue: () => 'grid_001' },
-							euref_x: { getValue: () => TEST_COORDINATES.TEST_POINT_1.X },
-							euref_y: { getValue: () => TEST_COORDINATES.TEST_POINT_1.Y },
-						},
-						polygon: {
-							hierarchy: {
-								getValue: () => ({
-									positions: [
-										{ x: 0, y: 0, z: 0 },
-										{ x: 1, y: 0, z: 0 },
-										{ x: 1, y: 1, z: 0 },
-										{ x: 0, y: 1, z: 0 },
-									],
-								}),
-							},
-						},
-					},
-				},
-				{
-					id: 'grid_002',
-					x: 1500,
-					y: 2500,
-					entity: {
-						properties: {
-							grid_id: { getValue: () => 'grid_002' },
-							euref_x: { getValue: () => 1500 },
-							euref_y: { getValue: () => 2500 },
-						},
-						polygon: {
-							hierarchy: {
-								getValue: () => ({
-									positions: [
-										{ x: 0, y: 0, z: 0 },
-										{ x: 1, y: 0, z: 0 },
-										{ x: 1, y: 1, z: 0 },
-										{ x: 0, y: 1, z: 0 },
-									],
-								}),
-							},
-						},
-					},
-				},
-				{
-					id: 'grid_003',
-					x: 2000,
-					y: 3000,
-					entity: {
-						properties: {
-							grid_id: { getValue: () => 'grid_003' },
-							euref_x: { getValue: () => 2000 },
-							euref_y: { getValue: () => 3000 },
-						},
-						polygon: {
-							hierarchy: {
-								getValue: () => ({
-									positions: [
-										{ x: 0, y: 0, z: 0 },
-										{ x: 1, y: 0, z: 0 },
-										{ x: 1, y: 1, z: 0 },
-										{ x: 0, y: 1, z: 0 },
-									],
-								}),
-							},
-						},
-					},
-				},
+				{ id: 'grid_001', x: TEST_COORDINATES.TEST_POINT_1.X, y: TEST_COORDINATES.TEST_POINT_1.Y },
+				{ id: 'grid_002', x: 1500, y: 2500 },
+				{ id: 'grid_003', x: 2000, y: 3000 },
 			],
 			getGridImpact: vi.fn((id) => {
 				const impacts = {
@@ -316,6 +289,47 @@ describe('CoolingCenterOptimiser Component', () => {
 					grid_id: 'grid_002',
 				})
 			)
+		})
+
+		// Regression for #839: the store does NOT keep entity references on grid
+		// cells, so the optimiser must resolve the entity from the live 250m_grid
+		// datasource by grid_id. Previously it read the always-undefined
+		// `cell.entity` and passed undefined into addCoolingCenter().
+		it('should resolve the grid entity from the datasource by grid_id (#839)', async () => {
+			wrapper.vm.numCoolingCenters = 1
+			await wrapper.vm.$nextTick()
+			await wrapper.vm.findOptimalCoolingCenters()
+
+			// The datasource was queried for the grid layer...
+			expect(mockGlobalStore.cesiumViewer.dataSources.getByName).toHaveBeenCalledWith('250m_grid')
+
+			// ...and the resolved entity's coordinates (from the datasource, not the
+			// bare store cell) flow into the stored cooling center.
+			expect(mockMitigationStore.addCoolingCenter).toHaveBeenCalledWith({
+				grid_id: 'grid_002',
+				euref_x: 1500,
+				euref_y: 2500,
+				capacity: 1000,
+			})
+
+			// A visual box entity was added for the resolved center. Note
+			// removeOldData() reassigns coolingCentersDataSource to a fresh
+			// CustomDataSource, so assert against the live component reference.
+			expect(wrapper.vm.coolingCentersDataSource.entities.add).toHaveBeenCalledWith(
+				expect.objectContaining({ id: expect.stringContaining('cooling_grid_002') })
+			)
+		})
+
+		it('should skip placement when no entity matches the cell id (#839)', async () => {
+			// Datasource has no entities → no grid_id resolves.
+			mockGridDataSource.entities.values = []
+			wrapper.vm.numCoolingCenters = 1
+			await wrapper.vm.$nextTick()
+			await wrapper.vm.findOptimalCoolingCenters()
+
+			// No undefined entity passed into addCoolingCenter; placement skipped.
+			expect(mockMitigationStore.addCoolingCenter).not.toHaveBeenCalled()
+			expect(mockCoolingCentersDataSource.entities.add).not.toHaveBeenCalled()
 		})
 	})
 

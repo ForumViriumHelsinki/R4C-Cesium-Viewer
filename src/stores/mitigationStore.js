@@ -48,7 +48,12 @@ import logger from '../utils/logger.js'
  * @property {string|number} id - Grid cell identifier (grid_id)
  * @property {number} x - EUREF-FIN X coordinate
  * @property {number} y - EUREF-FIN Y coordinate
- * @property {import('cesium').Entity} [entity] - Optional Cesium entity reference; intentionally omitted by setGridCells (see note there)
+ *
+ * @note No Cesium entity reference is stored on grid cells: setGridCells
+ *       intentionally extracts only serializable fields to avoid DataCloneError
+ *       when state is cloned for the Cesium workers. Consumers that need the live
+ *       entity (e.g. CoolingCenterOptimiser) resolve it from the datasource by
+ *       grid_id at the moment it's needed.
  */
 
 /**
