@@ -180,7 +180,7 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		category: 'graphics',
 		experimental: true,
 		requiresSupport: false,
-		fallbackDefault: false,
+		fallbackDefault: true,
 	},
 	terrain3d: {
 		goffId: 'r4c-terrain-3d',
@@ -207,7 +207,7 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		category: 'graphics',
 		experimental: true,
 		requiresSupport: false,
-		fallbackDefault: false,
+		fallbackDefault: true,
 	},
 
 	// Analysis tools
@@ -292,7 +292,7 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		category: 'ui',
 		experimental: true,
 		requiresSupport: false,
-		fallbackDefault: false,
+		fallbackDefault: true,
 	},
 	mapClickLoadingOverlay: {
 		goffId: 'r4c-map-click-loading-overlay',
