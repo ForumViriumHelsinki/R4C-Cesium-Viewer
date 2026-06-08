@@ -18,7 +18,7 @@ COPY . .
 RUN --mount=type=cache,target=/app/node_modules/.vite \
     NODE_ENV=production bun run build
 
-FROM nginx:1.27
+FROM nginx:1.31
 
 # Set default values for nginx environment variables
 ENV VITE_PYGEOAPI_HOST=pygeoapi.dataportal.fi
