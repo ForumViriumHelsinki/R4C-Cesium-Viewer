@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.52.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.6...r4c-cesium-viewer-v1.52.0) (2026-06-08)
+
+
+### Features
+
+* **flags:** default perf-optimization flags on when GOFF unreachable ([#853](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/853)) ([4f212c6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4f212c6591542e88e3ab9fc5a5f290b3b8ce43a6))
+
+
+### Bug Fixes
+
+* **cooling-center:** resolve grid entity from datasource by grid_id ([#839](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/839)) ([#856](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/856)) ([731ff0a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/731ff0a65414820eb9eaf2e5f18a8ea85bb4a57f))
+* **nginx:** send SNI to api.digitransit.fi to fix geocoding 502 ([#870](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/870)) ([65f7aa7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/65f7aa744d4384208d7947959dc6e28ee714b999))
+
 ## [1.51.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.5...r4c-cesium-viewer-v1.51.6) (2026-06-03)
 
 
