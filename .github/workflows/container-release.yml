@@ -20,7 +20,7 @@ jobs:
 
   release:
     needs: setup
-    uses: ForumViriumHelsinki/.github/.github/workflows/reusable-container-release.yml@551e19e37daabddd3134b8b813a298cc9c547eab # main
+    uses: ForumViriumHelsinki/.github/.github/workflows/reusable-container-release.yml@0d5ca4e76732262ee80e6756e6ad54038615e349 # main
     with:
       image-name: ${{ needs.setup.outputs.image-name }}
       tag-prefix: 'r4c-cesium-viewer-v'
