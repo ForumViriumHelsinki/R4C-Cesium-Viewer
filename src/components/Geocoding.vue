@@ -137,9 +137,21 @@ const processAddressData = (data) => {
 const filterSearchResults = async () => {
 	if (searchQuery.value.length > 2) {
 		try {
-			const response = await fetch(
-				`/digitransit/geocoding/v1/autocomplete?text=${searchQuery.value}`
-			)
+			const url = `/digitransit/geocoding/v1/autocomplete?text=${encodeURIComponent(searchQuery.value)}`
+			const response = await fetch(url)
+			if (!response.ok) {
+				throw new Error(
+					`Geocoding request failed: ${response.status} ${response.statusText} (${url})`
+				)
+			}
+			// Guard against the SPA/auth catch-all: a 302 redirect or nginx 502
+			// returns HTML, and response.json() would throw an opaque SyntaxError.
+			const contentType = response.headers.get('content-type') ?? ''
+			if (!contentType.toLowerCase().includes('application/json')) {
+				throw new Error(
+					`Geocoding returned non-JSON (content-type: ${contentType || 'missing'}) — digitransit proxy/auth misconfiguration for ${url}`
+				)
+			}
 			const data = await response.json()
 
 			// Store the full address objects in addressData
