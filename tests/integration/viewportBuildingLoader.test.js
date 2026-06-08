@@ -59,6 +59,9 @@ const cesiumMock = {
 	ColorMaterialProperty: vi.fn(function (color) {
 		this.color = { getValue: vi.fn(() => color) }
 	}),
+	ConstantProperty: vi.fn(function (value) {
+		this.getValue = vi.fn(() => value)
+	}),
 	JulianDate: {
 		now: vi.fn(() => ({})),
 	},
