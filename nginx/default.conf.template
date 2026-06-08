@@ -133,6 +133,10 @@ server {
         access_log off;
         set $digitransit_key "${VITE_DIGITRANSIT_KEY}";
         proxy_set_header digitransit-subscription-key $digitransit_key;
+        # api.digitransit.fi is fronted by Cloudflare, which rejects the TLS
+        # handshake when no SNI is sent. nginx omits SNI by default, so this
+        # must be enabled or the upstream call fails the handshake (-> 502).
+        proxy_ssl_server_name on;
         # Simple geocoding request to verify API key works
         proxy_pass https://api.digitransit.fi/geocoding/v1/search?text=helsinki&size=1;
         proxy_connect_timeout 5s;
@@ -382,6 +386,12 @@ server {
         # Use nginx environment variable substitution
         set $digitransit_key "${VITE_DIGITRANSIT_KEY}";
         proxy_set_header digitransit-subscription-key $digitransit_key;
+
+        # api.digitransit.fi is fronted by Cloudflare, which rejects the TLS
+        # handshake when no SNI is sent. nginx omits SNI by default (see the
+        # matching setting on /hsy-action), so without this the upstream TLS
+        # handshake fails and the client sees nginx's own 502 Bad Gateway.
+        proxy_ssl_server_name on;
 
         proxy_pass https://api.digitransit.fi;
         rewrite ^/digitransit(.*)$ $1 break;
