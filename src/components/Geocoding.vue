@@ -146,8 +146,10 @@ const filterSearchResults = async () => {
 			}
 			// Guard against the SPA/auth catch-all: a 302 redirect or nginx 502
 			// returns HTML, and response.json() would throw an opaque SyntaxError.
+			// Match any JSON media type (application/json, application/geo+json,
+			// application/problem+json) — only HTML/redirect bodies should fail here.
 			const contentType = response.headers.get('content-type') ?? ''
-			if (!contentType.toLowerCase().includes('application/json')) {
+			if (!contentType.toLowerCase().includes('json')) {
 				throw new Error(
 					`Geocoding returned non-JSON (content-type: ${contentType || 'missing'}) — digitransit proxy/auth misconfiguration for ${url}`
 				)
