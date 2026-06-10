@@ -318,32 +318,53 @@ server {
         proxy_set_header Host $pygeoapi_host;
     }
 
+    # HSY landcover WMS GetMap tiles. HSY's upstream is flaky under load —
+    # it returns 504s (Microsoft-Azure-Application-Gateway, ~20 s TTFB; WO-4)
+    # rather than throttling, and is periodically fully down, which breaks
+    # testing and stakeholder demos. This block makes the proxy resilient:
+    # cache 200 tiles for a long time and serve them STALE when HSY errors,
+    # times out, or is mid-refresh, so users keep seeing the map.
     location /wms/proxy {
         proxy_pass https://kartta.hsy.fi;
+
+        # Cache key covers the full GetMap query string (LAYERS/BBOX/WIDTH/…),
+        # so each distinct tile is a distinct cache entry.
         proxy_cache_key $request_uri;
 
-        # Use WMS-specific cache
+        # Only cache GET/HEAD (nginx default) + 200s. Landcover layers are
+        # near-static annual datasets, so a 7-day validity is safe and means a
+        # cold cache fills once then serves locally for a week.
         proxy_cache wms_cache;
-        proxy_cache_valid 200 7d;        # Cache successful responses for 7 days
-        proxy_cache_valid 404 60m;       # Cache not-found for 1 hour
-        proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
+        proxy_cache_methods GET HEAD;
+        proxy_cache_valid 200 7d;
+
+        # Resilience: serve a previously-cached tile when HSY errors, times
+        # out, or while a background refresh is in flight ("updating"). With
+        # background_update the refresh happens out-of-band so the user never
+        # waits on HSY; with cache_lock, concurrent identical misses collapse
+        # to a single upstream request (also avoids tipping HSY into its
+        # 504-under-load behavior).
+        proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
         proxy_cache_background_update on;
         proxy_cache_lock on;
 
-        # Optimize for tile delivery
+        # X-Cache-Status (HIT/MISS/STALE/UPDATING) is inherited from the
+        # server-level add_header for observability; no add_header here so the
+        # inherited security + cache-status headers are preserved.
+
+        # Buffers sized for raster tiles (~7-30 KB per WO-2/WO-4).
         proxy_buffers 8 256k;
         proxy_buffer_size 256k;
         proxy_busy_buffers_size 256k;
         proxy_temp_file_write_size 256k;
 
-        # Increase timeouts for large tiles
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        # SHORT timeouts so a hung HSY fails over to a stale tile in seconds
+        # instead of hanging ~20 s on the upstream Azure gateway timeout.
+        # Healthy GetMap responds in ~0.2 s (WO-2), so 10 s is generous.
+        proxy_connect_timeout 3s;
+        proxy_send_timeout 10s;
+        proxy_read_timeout 10s;
 
-        # Enable compression
-        gzip on;
-        gzip_types image/jpeg image/png image/gif;
         rewrite ^/wms/proxy(.*)$ /geoserver/wms$1 break;
     }
 
