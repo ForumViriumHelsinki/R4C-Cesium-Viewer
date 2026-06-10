@@ -144,7 +144,7 @@ export const removeLandcover = () => {
 					layer._removeErrorHandler()
 					layer._removeErrorHandler = undefined
 				}
-				if (store.cesiumViewer.imageryLayers.contains(layer)) {
+				if (store.cesiumViewer?.imageryLayers?.contains(layer)) {
 					store.cesiumViewer.imageryLayers.remove(layer)
 				}
 			})

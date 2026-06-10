@@ -17,6 +17,7 @@ import { useServiceHealthStore } from '../../../src/stores/serviceHealthStore.js
 
 const HSY_WMS_URL = '/wms/proxy/landcover'
 const PYGEOAPI_URL = '/pygeoapi/collections/buildings'
+const NON_HSY_URL = '/digitransit/routing'
 
 describe('serviceHealthStore', () => {
 	beforeEach(() => {
@@ -55,6 +56,19 @@ describe('serviceHealthStore', () => {
 		expect(store.isHsyDegraded).toBe(true)
 		expect(store.degradedMessage).toMatch(/HSY map layers/i)
 		expect(store.degradedHostKeys).toContain('wms')
+	})
+
+	it('does not surface the HSY notice for a degraded non-HSY host', () => {
+		const store = useServiceHealthStore()
+		store.init()
+
+		recordFailure(NON_HSY_URL)
+		recordFailure(NON_HSY_URL) // opens (threshold 2)
+
+		// A non-HSY host is degraded, but the message is HSY-specific.
+		expect(store.isAnyServiceDegraded).toBe(true)
+		expect(store.isHsyDegraded).toBe(false)
+		expect(store.degradedMessage).toBe('')
 	})
 
 	it('clears the notice when the breaker recovers', () => {

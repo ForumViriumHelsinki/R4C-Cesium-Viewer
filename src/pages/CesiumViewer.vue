@@ -100,7 +100,7 @@
 		-->
 		<v-snackbar
 			v-if="serviceHealthStore.initialized"
-			:model-value="serviceHealthStore.isAnyServiceDegraded"
+			:model-value="serviceHealthStore.isHsyDegraded"
 			:timeout="-1"
 			color="warning"
 			location="top"

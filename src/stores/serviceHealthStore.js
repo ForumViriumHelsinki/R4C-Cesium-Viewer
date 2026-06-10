@@ -49,9 +49,15 @@ export const useServiceHealthStore = defineStore('serviceHealth', {
 		/** Specifically an HSY map-data host is degraded. */
 		isHsyDegraded: (state) => state.degradedHostKeys.some((key) => HSY_HOST_KEYS.has(key)),
 
-		/** User-facing notice text, or '' when healthy. */
+		/**
+		 * User-facing notice text, or '' when healthy. The message is
+		 * HSY-specific, so only emit it when an HSY map-data host is degraded —
+		 * a non-HSY host (digitransit, paavo, …) tripping its breaker must not
+		 * surface a misleading "HSY map layers unavailable" warning.
+		 */
 		degradedMessage: (state) => {
-			if (state.degradedHostKeys.length === 0) return ''
+			const isHsyDegraded = state.degradedHostKeys.some((key) => HSY_HOST_KEYS.has(key))
+			if (!isHsyDegraded) return ''
 			return 'HSY map layers are temporarily unavailable. The rest of the app keeps working; retrying automatically…'
 		},
 	},
