@@ -21,7 +21,17 @@ import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
+import { getGlobalWMSRetryHandler } from '../utils/wmsRetryHandler.js'
 import { getCesium } from './cesiumProvider.js'
+import { isHostDegraded, recordFailure } from './hostCircuitBreaker.js'
+
+/**
+ * Imagery layer augmented with a stored error-listener remover so
+ * {@link removeLandcover} can detach the provider's error listener (preventing
+ * a listener leak across toggles).
+ * @typedef {Object} TrackedImageryLayer
+ * @property {() => void} [_removeErrorHandler]
+ */
 
 /**
  * Creates and adds HSY landcover WMS imagery layer to the Cesium viewer
@@ -73,10 +83,37 @@ export const createHSYImageryLayer = async (newLayers) => {
 		tilingScheme: new Cesium.GeographicTilingScheme(),
 	})
 
+	// HSY-outage resilience: bound and quiet the imagery layer's tile errors.
+	// When HSY's WMS gateway returns 504 (or is down), Cesium would otherwise
+	// error-storm with retries against a hung upstream — the layer renders
+	// nothing and the hung requests starve the connection pool. We:
+	//   1. feed each tile error to the shared WMS retry handler (bounded
+	//      exponential backoff, capped retry count), and
+	//   2. once the per-host circuit breaker has opened for the HSY proxy,
+	//      stop retrying entirely (error.retry stays false) so failed tiles
+	//      degrade quietly — the base map and the rest of the app keep working.
+	// Each tile error is also recorded into the breaker so it opens (and the
+	// user-facing "layers unavailable" notice fires) under a sustained outage.
+	const retryHandler = getGlobalWMSRetryHandler()
+	const proxyUrl = urlStore.wmsProxy
+	const errorHandler = (error) => {
+		recordFailure(proxyUrl)
+		if (isHostDegraded(proxyUrl)) {
+			// Breaker open — degrade quietly instead of retrying into the hang.
+			error.retry = false
+			return
+		}
+		retryHandler.handleTileError(error, 'HSY-landcover')
+	}
+	const removeErrorListener = provider.errorEvent.addEventListener(errorHandler)
+
 	// Cesium 1.104+ removed ImageryProvider.readyPromise/ready — WebMapServiceImageryProvider
 	// is usable immediately after construction, so no await is needed here.
 	// Add the new layer and update store
-	const addedLayer = store.cesiumViewer.imageryLayers.addImageryProvider(provider)
+	const addedLayer = /** @type {TrackedImageryLayer} */ (
+		store.cesiumViewer.imageryLayers.addImageryProvider(provider)
+	)
+	addedLayer._removeErrorHandler = removeErrorListener
 	backgroundMapStore.landcoverLayers.push(addedLayer)
 }
 
@@ -101,7 +138,13 @@ export const removeLandcover = () => {
 		) {
 			// Remove each layer from the viewer
 			backgroundMapStore.landcoverLayers.forEach((layer) => {
-				if (store.cesiumViewer.imageryLayers.contains(layer)) {
+				// Detach the WMS error listener first to avoid a listener leak
+				// across landcover toggles (see createHSYImageryLayer).
+				if (typeof layer?._removeErrorHandler === 'function') {
+					layer._removeErrorHandler()
+					layer._removeErrorHandler = undefined
+				}
+				if (store.cesiumViewer?.imageryLayers?.contains(layer)) {
 					store.cesiumViewer.imageryLayers.remove(layer)
 				}
 			})

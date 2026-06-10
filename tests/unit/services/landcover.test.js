@@ -4,6 +4,9 @@ import { createHSYImageryLayer, removeLandcover } from '@/services/landcover.js'
 import { useBackgroundMapStore } from '@/stores/backgroundMapStore.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
 
+// Shared spy for the error-listener remover returned by errorEvent.addEventListener.
+const removeErrorListenerSpy = vi.fn()
+
 // Create Cesium mock to be used by cesiumProvider
 const WebMapServiceImageryProviderMock = vi.fn(function (options) {
 	this.url = options.url
@@ -14,6 +17,11 @@ const WebMapServiceImageryProviderMock = vi.fn(function (options) {
 	this.maximumLevel = options.maximumLevel
 	this.tilingScheme = options.tilingScheme
 	this.readyPromise = Promise.resolve(true)
+	// Real WebMapServiceImageryProvider always exposes errorEvent; the HSY
+	// outage-resilience handler attaches to it.
+	this.errorEvent = {
+		addEventListener: vi.fn(() => removeErrorListenerSpy),
+	}
 })
 
 const GeographicTilingSchemeMock = vi.fn(function () {
@@ -144,6 +152,17 @@ describe('Landcover Service', () => {
 			)
 		})
 
+		it('attaches a tile error handler for HSY-outage resilience', async () => {
+			await createHSYImageryLayer()
+
+			const providerInstance = WebMapServiceImageryProviderMock.mock.instances[0]
+			expect(providerInstance.errorEvent.addEventListener).toHaveBeenCalledTimes(1)
+
+			// The added layer carries a remover so removeLandcover can detach it.
+			const addedLayer = mockBackgroundStore.landcoverLayers[0]
+			expect(typeof addedLayer._removeErrorHandler).toBe('function')
+		})
+
 		describe('performance configuration', () => {
 			it('should use 512x512 tiles to reduce request count', async () => {
 				await createHSYImageryLayer()
@@ -202,6 +221,16 @@ describe('Landcover Service', () => {
 			mockBackgroundStore.landcoverLayers = []
 
 			expect(() => removeLandcover()).not.toThrow()
+		})
+
+		it('detaches the tile error listener on removal (no listener leak)', async () => {
+			// Create a real layer so it carries the _removeErrorHandler remover.
+			await createHSYImageryLayer()
+			expect(removeErrorListenerSpy).not.toHaveBeenCalled()
+
+			removeLandcover()
+
+			expect(removeErrorListenerSpy).toHaveBeenCalledTimes(1)
 		})
 	})
 })

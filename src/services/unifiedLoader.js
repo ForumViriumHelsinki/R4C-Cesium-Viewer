@@ -35,10 +35,16 @@
  * @see {@link module:stores/loadingStore}
  */
 
+import { TIMING } from '../constants/timing.js'
 import { useLoadingStore } from '../stores/loadingStore.js'
 import { requestIdle } from '../utils/idle.js'
 import { PERF_STATS_ENABLED, perfStats } from '../utils/perfStats.js'
 import cacheService from './cacheService.js'
+import {
+	canRequest as breakerCanRequest,
+	recordFailure as breakerRecordFailure,
+	recordSuccess as breakerRecordSuccess,
+} from './hostCircuitBreaker.js'
 import { acquireHostSlot } from './hostConcurrencyLimiter.js'
 import progressiveLoader from './progressiveLoader.js'
 
@@ -472,7 +478,7 @@ class UnifiedLoader {
 	}
 
 	/**
-	 * Fetch with automatic retry logic.
+	 * Fetch with automatic retry logic and outage resilience.
 	 *
 	 * Retry Strategy:
 	 * - Honors Retry-After header on 429/503 (seconds or HTTP-date)
@@ -481,6 +487,16 @@ class UnifiedLoader {
 	 *   doesn't pin a tab for minutes
 	 * - Skips retry entirely on non-retriable 4xx (anything except 408/429)
 	 * - Respects AbortController signal
+	 *
+	 * Outage resilience (HSY flakiness / down):
+	 * - Bounds each attempt with a {@link TIMING.FETCH_TIMEOUT_MS} timeout so a
+	 *   hung upstream (HSY's Azure App Gateway holds ~20s before a 504) cannot
+	 *   pin a hostConcurrencyLimiter slot for the full gateway timeout. On
+	 *   timeout the attempt aborts and is treated as a retriable failure.
+	 * - A per-host circuit breaker fast-fails when a host has had too many
+	 *   consecutive failures, so the app stops hammering a service that is
+	 *   clearly down and frees concurrency slots immediately. The breaker also
+	 *   drives the user-facing "layers unavailable" notice.
 	 *
 	 * @param {string} url - Request URL
 	 * @param {Object} [options={}] - Fetch options (including signal)
@@ -525,9 +541,50 @@ class UnifiedLoader {
 				)
 			)
 
+		// Run a single fetch bounded by FETCH_TIMEOUT_MS, while still honoring
+		// the caller's AbortSignal. Returns { response } on completion or
+		// { timedOut: true } when our own timeout fired (a retriable failure).
+		// A caller-driven abort propagates as a thrown AbortError.
+		/** @returns {Promise<{ response?: Response, timedOut?: boolean }>} */
+		const fetchWithTimeout = async () => {
+			const attemptController = new AbortController()
+			let timedOut = false
+			const onCallerAbort = () => attemptController.abort(options.signal?.reason)
+			if (options.signal) {
+				if (options.signal.aborted) {
+					throw options.signal.reason ?? new DOMException('Aborted', 'AbortError')
+				}
+				options.signal.addEventListener('abort', onCallerAbort, { once: true })
+			}
+			const timer = setTimeout(() => {
+				timedOut = true
+				attemptController.abort()
+			}, TIMING.FETCH_TIMEOUT_MS)
+			try {
+				const response = await fetch(url, { ...options, signal: attemptController.signal })
+				return { response }
+			} catch (error) {
+				if (timedOut) {
+					return { timedOut: true }
+				}
+				throw error
+			} finally {
+				clearTimeout(timer)
+				options.signal?.removeEventListener('abort', onCallerAbort)
+			}
+		}
+
 		let lastError
 
 		for (let attempt = 0; attempt <= retries; attempt++) {
+			// Circuit breaker: if this host is degraded, fast-fail without
+			// acquiring a slot or hitting the network. Frees concurrency
+			// immediately and stops hammering a down service.
+			if (!breakerCanRequest(url)) {
+				lastError = new Error(`Circuit open: host for ${url} is degraded`)
+				break
+			}
+
 			// Per-host concurrency gate. Throws AbortError if signal fires
 			// while we're queued.
 			let releaseSlot
@@ -541,13 +598,46 @@ class UnifiedLoader {
 			// Whatever happens in this attempt, release the slot before
 			// sleeping/returning/throwing so other waiters can proceed.
 			try {
-				const response = await fetch(url, options)
+				const { response, timedOut } = await fetchWithTimeout()
 
-				if (response.ok) return response
+				// `!response` is a defensive guard (and narrows `response` to
+				// defined for the rest of the block); `timedOut` is the real
+				// signal that our per-attempt timeout fired.
+				if (timedOut || !response) {
+					// Our own timeout fired — treat like a retriable failure.
+					breakerRecordFailure(url)
+					lastError = new Error(`Fetch timed out after ${TIMING.FETCH_TIMEOUT_MS}ms`)
+					if (attempt >= retries) break
+					const expBackoff = 2 ** attempt * 1000
+					const jitter = 0.5 + Math.random()
+					const delay = Math.min(MAX_RETRY_DELAY_MS, Math.round(expBackoff * jitter))
+					logger.warn(`Fetch attempt ${attempt + 1} timed out, retrying in ${delay}ms...`)
+					releaseSlot()
+					releaseSlot = null
+					await sleep(delay)
+					continue
+				}
+
+				if (response.ok) {
+					breakerRecordSuccess(url)
+					return response
+				}
 
 				const status = response.status
-				if (!isRetriableStatus(status) || attempt >= retries || options.signal?.aborted) {
-					throw new Error(`HTTP ${status}: ${response.statusText}`)
+				const retriable = isRetriableStatus(status)
+
+				// Record outage signal only for retriable (server/limit) failures;
+				// a non-retriable 4xx is a client error, not a host outage.
+				if (retriable) {
+					breakerRecordFailure(url)
+				}
+
+				// Terminal for this response — set lastError and break out rather
+				// than throwing into the local catch (which is for genuine
+				// network/timeout exceptions and would double-count the failure).
+				lastError = new Error(`HTTP ${status}: ${response.statusText}`)
+				if (!retriable || attempt >= retries || options.signal?.aborted) {
+					break
 				}
 
 				const retryAfterMs = parseRetryAfter(response.headers.get('Retry-After'))
@@ -560,12 +650,18 @@ class UnifiedLoader {
 					`Fetch attempt ${attempt + 1} got HTTP ${status}, retrying in ${delay}ms` +
 						(retryAfterMs != null ? ' (server Retry-After)' : '')
 				)
-				lastError = new Error(`HTTP ${status}: ${response.statusText}`)
+				// lastError already set above before the retriable break-check.
 				releaseSlot()
 				releaseSlot = null
 				await sleep(delay)
 			} catch (error) {
 				lastError = error
+
+				// A caller-driven cancel is not a host outage — don't penalize
+				// the breaker for it. A network/DNS error is.
+				if (!options.signal?.aborted) {
+					breakerRecordFailure(url)
+				}
 
 				if (attempt < retries && !options.signal?.aborted) {
 					const expBackoff = 2 ** attempt * 1000
