@@ -221,6 +221,23 @@ server {
         try_files $uri =404;
     }
 
+    # Rule 2a: Unhashed runtime data files (e.g. r4c_stats_grid_index.json) —
+    # MUST NOT be immutable-cached. These filenames carry no content hash, so
+    # the immutable Rule 2 below served them "public, max-age=31536000,
+    # immutable", meaning a returning visitor kept up-to-1-year-stale grid data
+    # after a redeploy that changed the file (WO-6 BUG #1 — a correctness bug).
+    # This more-specific prefix wins over /assets/ (nginx longest-prefix match).
+    # Short max-age bounds staleness to 1h; ETag (on by default for static
+    # files) makes revalidation a cheap 304 when the file is unchanged. 1h is
+    # chosen over a longer window because data redeploys are infrequent and the
+    # revalidation cost is negligible, so a tight bound on staleness is free.
+    location /assets/data/ {
+        add_header Cache-Control "public, max-age=3600, must-revalidate" always;
+        etag on;
+        access_log off;
+        try_files $uri =404;
+    }
+
     # Rule 2: Aggressively cache hashed assets (they're immutable)
     location /assets/ {
         add_header Cache-Control "public, max-age=31536000, immutable" always;
