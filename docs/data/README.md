@@ -4,9 +4,10 @@ This folder contains documentation for the data models and GeoJSON structures us
 
 ## Contents
 
-| Document                                           | Description                                                 |
-| -------------------------------------------------- | ----------------------------------------------------------- |
-| [BUILDING_PROPERTIES.md](./BUILDING_PROPERTIES.md) | Comprehensive reference for all building GeoJSON properties |
+| Document                                           | Description                                                                                         |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| [BUILDING_PROPERTIES.md](./BUILDING_PROPERTIES.md) | Comprehensive reference for all building GeoJSON properties                                         |
+| [GRID_INDEX.md](./GRID_INDEX.md)                   | 250 m stats grid (`r4c_stats_grid_index.json`) properties, slimming, and upstream-pipeline adoption |
 
 ## Quick Reference
 
