@@ -62,11 +62,23 @@ classic version" link in the new frontend** as the only app-side change.
 ### HTTPRoute rules
 
 1. `?ui=legacy` query match → legacy backend, plus `ResponseHeaderModifier`
-   adding `Set-Cookie: r4c_ui=legacy; Path=/; Max-Age=<TTL>`
-2. `?ui=new` query match → next backend, plus a cookie-clearing `Set-Cookie`
-   (the frozen legacy UI has no switch link; the return path is this URL)
-3. `Cookie` header regex match `r4c_ui=legacy` → legacy backend (keeps
-   hashed-asset requests sticky to the bundle that referenced them)
+   adding
+   `Set-Cookie: r4c_ui=legacy; Path=/; Max-Age=<TTL>; Secure; HttpOnly; SameSite=Lax`
+   — the cookie is set and read only by the gateway, so `HttpOnly` denies it
+   to client-side JS; `SameSite=Lax` still rides along on top-level
+   navigations like the switch links.
+2. `?ui=new` query match → next backend, plus a cookie-clearing
+   `Set-Cookie: r4c_ui=legacy; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax`
+   with attributes matching rule 1 so deletion works across browsers (the
+   frozen legacy UI has no switch link; the return path is this URL)
+3. `Cookie` header regex match → legacy backend (keeps hashed-asset requests
+   sticky to the bundle that referenced them). Envoy's regex matcher is a
+   **full-string** match (RE2, "matched against the full string, not as a
+   partial match"), and the `Cookie` header carries all cookies, so the
+   pattern must wildcard both sides while anchoring the cookie-name
+   boundary: `(.*;\s*)?r4c_ui=legacy(\s*;.*)?`. A bare substring or
+   partial-match pattern either never matches (full-match semantics) or
+   false-positives on look-alike names (`other_r4c_ui=legacy`).
 4. Default → per rollout phase (see below)
 
 ### Two-phase rollout
@@ -192,6 +204,9 @@ implementation issue):
 
 1. Deployed Envoy Gateway version supports HTTPRoute `queryParams` match,
    regex `Cookie` header match, and `ResponseHeaderModifier` on route rules.
+   Verify the full-string regex semantics empirically with a multi-cookie
+   request (the pattern in the HTTPRoute rules section assumes RE2
+   full-match).
 2. Scope of the existing Google OAuth SecurityPolicy — confirm nothing on
    `r4c.dataportal.fi` routes through it in a way the new HTTPRoute rules
    would bypass or break.
