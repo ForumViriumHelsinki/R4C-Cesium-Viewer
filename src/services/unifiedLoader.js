@@ -312,6 +312,12 @@ class UnifiedLoader {
 				perfStats.recordNetworkBytes(Number.isFinite(contentLength) ? contentLength : 0)
 			}
 
+			// `response.json()/.text()/.blob()` stream the body from the network
+			// before parsing, so this span measures body download + parse time,
+			// not pure CPU-bound deserialization. On slow links it is dominated by
+			// transfer time. Kept as one combined "body read" metric on purpose:
+			// awaiting `.text()` first to isolate `JSON.parse` would double-buffer
+			// large payloads and drop blob handling.
 			const deserializeStart = PERF_STATS_ENABLED ? performance.now() : 0
 			let data
 			switch (type) {

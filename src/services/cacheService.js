@@ -218,6 +218,35 @@ class CacheService {
 	 * const cached = await cacheService.getData('buildings-00100', 5 * 60 * 1000);
 	 */
 	async getData(key, maxAge = null) {
+		const { result, size } = await this._lookup(key, maxAge)
+
+		// Perf stats are recorded only here, not in `_lookup`, so that
+		// `hasValidData` (which also calls `_lookup`) does not double-count
+		// hits/misses against an actual `getData` retrieval.
+		if (PERF_STATS_ENABLED) {
+			if (result) {
+				perfStats.recordCacheHit(size)
+			} else {
+				perfStats.recordCacheMiss()
+			}
+		}
+
+		return result
+	}
+
+	/**
+	 * Internal cache lookup shared by {@link getData} and {@link hasValidData}.
+	 * Performs the IndexedDB read, expiry check, and expired-entry removal, but
+	 * does NOT record perf stats — the caller decides whether the lookup counts
+	 * as a hit/miss. This prevents `hasValidData` from inflating cache counters.
+	 *
+	 * @param {string} key - Cache key to retrieve
+	 * @param {number|null} [maxAge=null] - Override TTL for this retrieval (milliseconds)
+	 * @returns {Promise<{result: CacheResult|null, size: number}>} The cache
+	 *   result (null on miss/expired) and the raw stored byte size on a hit.
+	 * @private
+	 */
+	async _lookup(key, maxAge = null) {
 		const db = await this.init()
 
 		const transaction = db.transaction(['layers'], 'readonly')
@@ -230,8 +259,7 @@ class CacheService {
 				const result = request.result
 
 				if (!result) {
-					if (PERF_STATS_ENABLED) perfStats.recordCacheMiss()
-					resolve(null)
+					resolve({ result: null, size: 0 })
 					return
 				}
 
@@ -241,20 +269,20 @@ class CacheService {
 
 				if (age > maxAgeToUse) {
 					// Data is expired, remove it
-					if (PERF_STATS_ENABLED) perfStats.recordCacheMiss()
 					void this.removeData(key)
-					resolve(null)
+					resolve({ result: null, size: 0 })
 					return
 				}
 
-				if (PERF_STATS_ENABLED) perfStats.recordCacheHit(result.size || 0)
-
 				resolve({
-					data: result.data,
-					timestamp: result.timestamp,
-					age: age,
-					cached: true,
-					metadata: result.metadata,
+					result: {
+						data: result.data,
+						timestamp: result.timestamp,
+						age: age,
+						cached: true,
+						metadata: result.metadata,
+					},
+					size: result.size || 0,
 				})
 			}
 
@@ -278,8 +306,10 @@ class CacheService {
 	 * }
 	 */
 	async hasValidData(key, maxAge = null) {
-		const cached = await this.getData(key, maxAge)
-		return cached !== null
+		// Use `_lookup` (not `getData`) so a hit/miss check does not record perf
+		// stats — only an actual `getData` retrieval counts toward the counters.
+		const { result } = await this._lookup(key, maxAge)
+		return result !== null
 	}
 
 	/**

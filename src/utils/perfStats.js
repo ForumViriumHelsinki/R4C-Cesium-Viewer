@@ -15,8 +15,9 @@
  * - `limiter`: per-host queue-wait time injected by the 3-concurrent cap in
  *   {@link module:services/hostConcurrencyLimiter}.
  * - `cache`: hit/miss counts, bytes served from IndexedDB vs the network, and
- *   cumulative JSON deserialize time — {@link module:services/cacheService}
- *   and {@link module:services/unifiedLoader}.
+ *   cumulative response-body read+deserialize time (download + parse, not pure
+ *   parse) — {@link module:services/cacheService} and
+ *   {@link module:services/unifiedLoader}.
  * - `render`: how many times `viewer.scene.requestRender()` fired (patched once
  *   at viewer init in {@link module:composables/useViewerInitialization}).
  *
@@ -150,7 +151,10 @@ export const perfStats = {
 	},
 
 	/**
-	 * Record time spent deserializing a network response body (JSON/text parse).
+	 * Record time spent reading and deserializing a network response body. This
+	 * spans the body download (`response.json()/.text()/.blob()` stream the body
+	 * from the network) plus the parse, so it is NOT pure CPU parse time and is
+	 * dominated by transfer time on slow links.
 	 * @param {number} ms
 	 */
 	recordDeserialize(ms) {
