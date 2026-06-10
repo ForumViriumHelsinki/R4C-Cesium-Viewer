@@ -353,12 +353,14 @@ export const mergeHeatFeaturesIntoBuildings = async (buildingFeatures, heatFeatu
 	// Single pass over buildings: O(1) lookup + at most one attribute copy each.
 	const matched = new Set()
 	for (let b = 0; b < buildingFeatures.length; b++) {
-		const properties = buildingFeatures[b].properties
-		const bucket = heatById.get(properties.id)
-		if (bucket && bucket.length > 0) {
-			const feature = bucket.shift()
-			matched.add(feature)
-			applyHeatAttributes(properties, feature.properties, decodingService)
+		const properties = buildingFeatures[b]?.properties
+		if (properties) {
+			const bucket = heatById.get(properties.id)
+			if (bucket && bucket.length > 0) {
+				const feature = bucket.shift()
+				matched.add(feature)
+				applyHeatAttributes(properties, feature.properties, decodingService)
+			}
 		}
 
 		// Coarse, timeout-bounded yield so very large datasets stay responsive.
