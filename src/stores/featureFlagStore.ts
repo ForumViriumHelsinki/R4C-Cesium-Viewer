@@ -307,20 +307,31 @@ export const useFeatureFlagStore = defineStore('featureFlags', {
 })
 
 /**
+ * Flags forced to their `fallbackDefault` even in development mode, opting out
+ * of the dev-mode "enable everything" convenience.
+ *
+ * `deckglRenderer` is a renderer-switching spike: it must default OFF
+ * *everywhere* (including `just dev`) so the Cesium path stays the untouched
+ * baseline and the deck.gl A/B is strictly opt-in.
+ */
+const DEV_DEFAULT_OFF: ReadonlySet<FeatureFlagName> = new Set<FeatureFlagName>(['deckglRenderer'])
+
+/**
  * Build initial evaluation state from fallback defaults.
  * Before OpenFeature is initialized, flags use their fallback values.
  *
  * In development mode, all flags are enabled by default to ensure all
  * experimental features are available during local development without
- * affecting production behavior.
+ * affecting production behavior — except flags listed in {@link DEV_DEFAULT_OFF},
+ * which keep their `fallbackDefault`.
  */
 function buildInitialEvaluations(): Record<FeatureFlagName, boolean> {
 	const isDev = import.meta.env.MODE === 'development'
 	const result: Partial<Record<FeatureFlagName, boolean>> = {}
 	for (const name of ALL_FLAG_NAMES) {
-		// In development mode, enable all flags by default
-		// In production, use the configured fallbackDefault
-		result[name] = isDev ? true : FLAG_METADATA[name].fallbackDefault
+		// In development mode, enable all flags by default (except opt-outs).
+		// In production, use the configured fallbackDefault.
+		result[name] = isDev && !DEV_DEFAULT_OFF.has(name) ? true : FLAG_METADATA[name].fallbackDefault
 	}
 	return result as Record<FeatureFlagName, boolean>
 }
