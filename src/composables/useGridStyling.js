@@ -10,71 +10,22 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
+// Color scheme constants + the value→hex threshold mapping are the single
+// source of truth in utils/gridColorMapping.js so the deck.gl renderer spike
+// (components/DeckGlGridView.vue) shares the exact same palette without forking.
+// Re-exported here to preserve the existing import surface for consumers
+// (e.g. StatisticalGridOptions.vue imports `indexToColorScheme` from this module).
+import { getGridColorString } from '../utils/gridColorMapping.js'
 
-/**
- * Heat vulnerability color scale (white -> dark red)
- */
-export const heatColors = [
-	{ color: '#ffffff', range: 'Incomplete data' },
-	{ color: '#A9A9A9', range: 'Missing values' },
-	{ color: '#ffffcc', range: '< 0.2' },
-	{ color: '#ffeda0', range: '0.2 - 0.4' },
-	{ color: '#feb24c', range: '0.4 - 0.6' },
-	{ color: '#f03b20', range: '0.6 - 0.8' },
-	{ color: '#bd0026', range: '> 0.8' },
-]
-export const partialHeatColors = heatColors.slice(2)
-export const floodColors = [
-	{ color: '#ffffff', range: 'Incomplete data' },
-	{ color: '#A9A9A9', range: 'Missing values' },
-	{ color: '#c6dbef', range: '< 0.2' },
-	{ color: '#9ecae1', range: '0.2 - 0.4' },
-	{ color: '#6baed6', range: '0.4 - 0.6' },
-	{ color: '#3182bd', range: '0.6 - 0.8' },
-	{ color: '#08519c', range: '> 0.8' },
-]
-export const partialFloodColors = floodColors.slice(2)
-export const greenSpaceColors = [
-	{ color: '#006d2c', range: '< 0.2' },
-	{ color: '#31a354', range: '0.2 - 0.4' },
-	{ color: '#74c476', range: '0.4 - 0.6' },
-	{ color: '#a1d99b', range: '0.6 - 0.8' },
-	{ color: '#e5f5e0', range: '> 0.8' },
-]
-export const bothColors = [
-	{ color: '#ffffff', range: 'Incomplete data' },
-	{ color: '#A9A9A9', range: 'Missing values' },
-]
-
-// ** THE FIX IS HERE: The map is now complete **
-export const indexToColorScheme = {
-	partialHeat: partialHeatColors,
-	partialFlood: partialFloodColors,
-	heat_index: heatColors,
-	flood_index: floodColors,
-	sensitivity: heatColors,
-	flood_exposure: greenSpaceColors,
-	flood_prepare: floodColors,
-	flood_respond: floodColors,
-	flood_recover: floodColors,
-	heat_exposure: heatColors,
-	heat_prepare: heatColors,
-	heat_respond: heatColors,
-	age: heatColors,
-	income: heatColors,
-	info: heatColors,
-	tenure: heatColors,
-	green: greenSpaceColors,
-	social_networks: floodColors,
-	overcrowding: floodColors,
-	combined_heat_flood: heatColors,
-	combined_flood_heat: floodColors,
-	combined_heatindex_avgheatexposure: heatColors,
-	combined_heat_flood_green: heatColors,
-	both: bothColors,
-	avgheatexposure: [{ color: 'gradient', range: 'Heat Exposure' }],
-	combined_avgheatexposure: [{ color: 'gradient', range: 'Combined Heat Exposure' }],
-}
+export {
+	bothColors,
+	floodColors,
+	greenSpaceColors,
+	heatColors,
+	indexToColorScheme,
+	partialFloodColors,
+	partialHeatColors,
+} from '../utils/gridColorMapping.js'
 
 /**
  * A 250m grid entity as loaded from GeoJSON.
@@ -172,30 +123,9 @@ export function useGridStyling() {
 	 * @returns {Cesium.Color} Cached color for the value
 	 */
 	const getColorForIndex = (indexValue, indexType) => {
-		const colorScheme = indexToColorScheme[indexType] || heatColors
-
-		// Direct threshold lookup - avoids slice(2).find() array allocation
-		// Color schemes have 2 "missing data" entries at indices 0-1, then 5 threshold colors at 2-6
-		// Thresholds: < 0.2 (index 2), 0.2-0.4 (3), 0.4-0.6 (4), 0.6-0.8 (5), > 0.8 (6)
-		let colorIndex
-		if (indexValue < 0.2) {
-			colorIndex = 2
-		} else if (indexValue < 0.4) {
-			colorIndex = 3
-		} else if (indexValue < 0.6) {
-			colorIndex = 4
-		} else if (indexValue < 0.8) {
-			colorIndex = 5
-		} else {
-			colorIndex = colorScheme.length - 1 // > 0.8
-		}
-
-		// Ensure we don't go out of bounds for shorter color schemes
-		const effectiveIndex = Math.min(colorIndex, colorScheme.length - 1)
-		const colorString =
-			colorScheme[effectiveIndex]?.color || colorScheme[colorScheme.length - 1].color
-
-		return getCachedColor(colorString, baseAlpha.value)
+		// Shared threshold→hex mapping (utils/gridColorMapping.js); wrap the
+		// returned hex in a cached Cesium.Color to reduce GC pressure.
+		return getCachedColor(getGridColorString(indexValue, indexType), baseAlpha.value)
 	}
 
 	// --- ENTITY STYLING FUNCTION ---

@@ -92,7 +92,12 @@
 
 		<v-main>
 			<CesiumViewer />
-			<SosEco250mGrid v-if="grid250m" />
+			<!--
+			  Grid renderer A/B (r4c-deckgl-renderer flag, default OFF):
+			  flag OFF -> Cesium grid (SosEco250mGrid); flag ON -> deck.gl overlay.
+			-->
+			<SosEco250mGrid v-if="grid250m && !deckGlRenderer" />
+			<DeckGlGridView v-if="grid250m && deckGlRenderer" />
 
 			<!-- Map Overlay Controls (right side) -->
 			<!-- MapOverlayControls provides zoom/compass controls. -->
@@ -140,6 +145,10 @@ import { useSidebarOffset } from './composables/useSidebarOffset'
 // Lazy-loaded components
 const TimelineCompact = defineAsyncComponent(() => import('./components/TimelineCompact.vue'))
 const SosEco250mGrid = defineAsyncComponent(() => import('./components/SosEco250mGrid.vue'))
+// deck.gl renderer spike — lazy so the deck.gl bundle is NOT paid while the
+// r4c-deckgl-renderer flag is off (the v-if never mounts it, so its dynamic
+// import never fires).
+const DeckGlGridView = defineAsyncComponent(() => import('./components/DeckGlGridView.vue'))
 const ControlPanel = defineAsyncComponent(() => import('./pages/ControlPanel.vue'))
 const MapOverlayControls = defineAsyncComponent(() => import('./components/MapOverlayControls.vue'))
 
@@ -170,6 +179,9 @@ const timelineLeftStyle = computed(() => ({ left: `${timelineOffset.value}px` })
 const disclaimerLeftStyle = computed(() => ({ left: `${disclaimerOffset.value}px` }))
 
 const grid250m = computed(() => toggleStore.grid250m)
+// deck.gl renderer A/B toggle (default OFF). When on, the grid view renders via
+// deck.gl instead of Cesium — see <DeckGlGridView>.
+const deckGlRenderer = computed(() => featureFlagStore.isEnabled('deckglRenderer'))
 const currentLevel = computed(() => globalStore.level)
 const showTimeline = computed(
 	() => currentLevel.value === 'postalCode' || currentLevel.value === 'building'

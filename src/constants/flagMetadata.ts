@@ -30,6 +30,7 @@ export type FeatureFlagName =
 	| 'terrain3d'
 	| 'viewportStreaming'
 	| 'predictivePrefetch'
+	| 'deckglRenderer'
 	// Analysis tools
 	| 'heatHistogram'
 	| 'buildingScatterPlot'
@@ -208,6 +209,18 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		experimental: false,
 		requiresSupport: false,
 		fallbackDefault: true,
+	},
+	deckglRenderer: {
+		goffId: 'r4c-deckgl-renderer',
+		label: 'deck.gl Grid Renderer (spike)',
+		description:
+			'Experimental: render the 250m statistical grid with deck.gl instead of Cesium for A/B comparison. Default OFF — toggle on to replace the Cesium grid view with a lazily-loaded deck.gl canvas.',
+		category: 'graphics',
+		experimental: true,
+		requiresSupport: false,
+		// Default OFF everywhere (including dev — see buildInitialEvaluations override),
+		// so flag-off is a zero-behavior-change Cesium baseline.
+		fallbackDefault: false,
 	},
 
 	// Analysis tools
