@@ -21,7 +21,9 @@ to a `location` silently drops every server-level header (the security set:
 `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, …). Any
 location that sets its own `Cache-Control` must re-declare the security
 headers. Verify with `curl -sI` against the container — we shipped this bug
-in the first cut of `/assets/data/`.
+in the first cut of `/assets/data/`, and the #885 review found four more
+locations (`/index.html`, `/assets/`, `/`, `/feature-flags/`) plus the
+unhashed-static regex location with the same violation, all fixed since.
 
 ## Outbound TLS proxying needs explicit SNI
 
@@ -53,6 +55,11 @@ on;` serves `.gz` siblings; dynamic/proxied responses (pygeoapi JSON arrives
 uncompressed from origin) use `gzip_comp_level 6` + `application/geo+json`
 in `gzip_types`. The stock `nginx:1.31` image (Renovate-managed) has **no
 brotli module** — `.br` serving requires an image change, tracked in #876.
+
+Never add image formats (JPEG/PNG/GIF/WebP) to `gzip_types` — they are
+already compressed; gzipping them burns CPU per response and can grow the
+payload. The `/helsinki-wms` tile proxy shipped this anti-pattern until the
+#885 review caught it.
 
 ## Verifying changes
 
