@@ -26,6 +26,7 @@
  */
 
 import logger from '../utils/logger.js'
+import { PERF_STATS_ENABLED, perfStats } from '../utils/perfStats.js'
 
 /**
  * Default per-host concurrent request budget. Conservative on purpose — most
@@ -123,14 +124,19 @@ export async function acquireHostSlot(url, signal) {
 
 	if (state.active < getLimit(hostKey)) {
 		state.active += 1
+		if (PERF_STATS_ENABLED) perfStats.recordLimiterAcquire(hostKey, 0)
 		return makeReleaser(hostKey, state)
 	}
 
 	// Park in the queue, waiting for someone to release.
 	return new Promise((resolve, reject) => {
+		const enqueuedAt = PERF_STATS_ENABLED ? performance.now() : 0
 		const wake = () => {
 			signal?.removeEventListener('abort', onAbort)
 			state.active += 1
+			if (PERF_STATS_ENABLED) {
+				perfStats.recordLimiterAcquire(hostKey, performance.now() - enqueuedAt)
+			}
 			resolve(makeReleaser(hostKey, state))
 		}
 		const onAbort = () => {
@@ -145,15 +151,17 @@ export async function acquireHostSlot(url, signal) {
 		}
 		signal?.addEventListener('abort', onAbort, { once: true })
 		state.queue.push(wake)
+		if (PERF_STATS_ENABLED) perfStats.recordLimiterEnqueue(hostKey, state.queue.length)
 	})
 }
 
-function makeReleaser(_hostKey, state) {
+function makeReleaser(hostKey, state) {
 	let released = false
 	return () => {
 		if (released) return
 		released = true
 		state.active = Math.max(0, state.active - 1)
+		if (PERF_STATS_ENABLED) perfStats.recordLimiterRelease(hostKey)
 		const next = state.queue.shift()
 		if (next) next()
 	}

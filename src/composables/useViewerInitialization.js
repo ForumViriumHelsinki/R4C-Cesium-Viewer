@@ -12,6 +12,7 @@ import { useGraphicsStore } from '../stores/graphicsStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import logger from '../utils/logger.js'
 import { loadWithRetry } from '../utils/moduleLoader.js'
+import { PERF_STATS_ENABLED, perfStats } from '../utils/perfStats.js'
 
 /**
  * Vue 3 composable for Cesium viewer initialization
@@ -160,6 +161,18 @@ export function useViewerInitialization() {
 		}
 
 		viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions)
+
+		// Count requestRender() calls for render-pressure attribution. Patched
+		// once per viewer instance (each new viewer gets a fresh scene); dev/E2E
+		// only, inert in production.
+		if (PERF_STATS_ENABLED && viewer.value?.scene) {
+			const scene = viewer.value.scene
+			const originalRequestRender = scene.requestRender.bind(scene)
+			scene.requestRender = () => {
+				perfStats.recordRequestRender()
+				return originalRequestRender()
+			}
+		}
 
 		store.setCesiumViewer(viewer.value)
 
