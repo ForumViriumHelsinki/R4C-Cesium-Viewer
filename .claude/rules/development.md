@@ -85,8 +85,15 @@ brotli-capable nginx image — tracked in issue #876.
 ## Merge Commits Must Be Conventional
 
 The `conventional-pre-commit` hook validates **merge commits too** — git's
-default `Merge remote-tracking branch '...'` subject is rejected. When
-committing a conflict resolution, supply a conventional subject:
+default `Merge remote-tracking branch '...'` subject is rejected. A
+conflict-free `git merge main` auto-commits the default subject and fails
+the hook immediately, so pass the message on the merge itself:
+
+```bash
+git merge main -m "chore(merge): merge main into <branch>"
+```
+
+When committing a conflict resolution, the same subject goes on the commit:
 
 ```bash
 git commit -m "chore(merge): merge main into <branch>"
