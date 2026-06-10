@@ -90,6 +90,29 @@
 				</v-btn>
 			</template>
 		</v-snackbar>
+		<!--
+			Upstream Service Degradation Notice
+			Purpose: Inform the user when HSY map-data services are flaky/down
+			Behavior: Non-blocking, persistent while degraded, auto-clears on recovery
+			Use case: HSY WMS/pygeoapi returning 504 or down — circuit breaker open.
+			Gated on serviceHealthStore.initialized so it never flashes before the
+			breaker subscription is wired (store-init-gating, code-quality.md).
+		-->
+		<v-snackbar
+			v-if="serviceHealthStore.initialized"
+			:model-value="serviceHealthStore.isHsyDegraded"
+			:timeout="-1"
+			color="warning"
+			location="top"
+			multi-line
+			role="status"
+			aria-live="polite"
+		>
+			<div class="d-flex align-center">
+				<v-icon class="mr-2"> mdi-alert </v-icon>
+				<div>{{ serviceHealthStore.degradedMessage }}</div>
+			</div>
+		</v-snackbar>
 	</div>
 </template>
 
@@ -149,6 +172,7 @@ import { useViewportLoading } from '../composables/useViewportLoading.js'
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
+import { useServiceHealthStore } from '../stores/serviceHealthStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
 
@@ -170,6 +194,7 @@ export default {
 		const toggleStore = useToggleStore()
 		const buildingStore = useBuildingStore()
 		const featureFlagStore = useFeatureFlagStore()
+		const serviceHealthStore = useServiceHealthStore()
 
 		const shouldShowBuildingInformation = computed(() => {
 			return store.showBuildingInfo && buildingStore.buildingFeatures && !store.isLoading
@@ -361,6 +386,7 @@ export default {
 			store,
 			toggleStore,
 			buildingStore,
+			serviceHealthStore,
 			viewer,
 			shouldShowBuildingInformation,
 			showMapClickLoadingOverlay,

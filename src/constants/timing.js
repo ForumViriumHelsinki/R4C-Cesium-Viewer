@@ -25,4 +25,18 @@ export const TIMING = {
 	WMS_RETRY_DELAY_BASE_MS: 1000,
 	WMS_RETRY_MAX_DELAY_MS: 8000,
 	WMS_RETRY_JITTER_MS: 200,
+
+	// Per-attempt fetch timeout. Bounds a single request so a hung upstream
+	// (e.g. HSY's Azure App Gateway, which holds ~20s before returning 504)
+	// cannot pin a hostConcurrencyLimiter slot for the full gateway timeout.
+	// Kept well under 20s so the request aborts, retries, and degrades while
+	// the gateway is still hanging.
+	FETCH_TIMEOUT_MS: 12000,
+
+	// Per-host circuit breaker: after this many consecutive failures the
+	// breaker opens and requests to that host fast-fail for the cooldown
+	// window, instead of every request independently paying the full
+	// timeout + retry penalty against a service that is clearly down.
+	CIRCUIT_BREAKER_FAILURE_THRESHOLD: 5,
+	CIRCUIT_BREAKER_COOLDOWN_MS: 30000,
 }

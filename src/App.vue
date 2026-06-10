@@ -159,6 +159,7 @@ import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
 import { useGraphicsStore } from './stores/graphicsStore.js'
 import { useLoadingStore } from './stores/loadingStore.js'
+import { useServiceHealthStore } from './stores/serviceHealthStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
 import { useUserStore } from './stores/userStore'
 import logger from './utils/logger.js'
@@ -169,6 +170,7 @@ const loadingStore = useLoadingStore()
 const featureFlagStore = useFeatureFlagStore()
 const graphicsStore = useGraphicsStore()
 const userStore = useUserStore()
+const serviceHealthStore = useServiceHealthStore()
 
 const { sidebarOffset: timelineOffset } = useSidebarOffset(0)
 const { sidebarOffset: disclaimerOffset } = useSidebarOffset(12)
@@ -288,6 +290,10 @@ const handleCacheCleared = (sourceId) => {
 
 // Initialize services on mount
 onMounted(async () => {
+	// Wire the upstream-degradation notice (circuit breaker → snackbar). Done
+	// outside the try so a downstream init failure can't leave it unsubscribed.
+	serviceHealthStore.init()
+
 	try {
 		await userStore.fetchUserInfo()
 		await initializeFeatureFlags(userStore)
@@ -322,6 +328,7 @@ onMounted(async () => {
 onBeforeUnmount(async () => {
 	stopLevelUrlWatcher()
 	loadingStore.stopStaleCleanupTimer()
+	serviceHealthStore.teardown()
 
 	if (featureFlagStore.isEnabled('backgroundPreload')) {
 		const { default: backgroundPreloader } = await import('./services/backgroundPreloader.js')

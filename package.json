@@ -7,7 +7,7 @@
 	"scripts": {
 		"dev": "vite --host",
 		"dev:test": "VITE_E2E_TEST=true vite --host",
-		"build": "NODE_OPTIONS='--max-old-space-size=3072' vite build",
+		"build": "NODE_OPTIONS='--max-old-space-size=3072' vite build && bun scripts/precompress.mjs",
 		"build:analyze": "NODE_OPTIONS='--max-old-space-size=3072' vite build --mode analyze",
 		"preview": "vite preview --host",
 		"lint": "biome check src/",
