@@ -10,7 +10,6 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
-import { processBatchAdaptive } from '../utils/batchProcessor.js'
 
 /**
  * Heat vulnerability color scale (white -> dark red)
@@ -292,8 +291,12 @@ export function useGridStyling() {
 	/**
 	 * Updates grid entity colors based on the selected vulnerability index.
 	 *
-	 * Styling runs as a SINGLE non-yielding pass (`yieldToMain: false`) wrapped
-	 * in `entities.suspendEvents()` / `resumeEvents()`.
+	 * Styling runs as a SINGLE non-yielding pass — a plain synchronous `for`
+	 * loop wrapped in `entities.suspendEvents()` / `resumeEvents()`. A bare loop
+	 * is used deliberately instead of `processBatchAdaptive`: with yielding
+	 * disabled the batcher adds only overhead (per-batch array slicing, promise
+	 * wrapping, timing, and calibration) without changing behaviour, and the
+	 * loop makes the "no intermediate frames" guarantee explicit.
 	 *
 	 * WO-3 measured this pass as super-linear (3,291→6,710 entities = 2.04×
 	 * entities but ~7× time; ~412 ms at 6,710 on an M4 Pro). The cause was the
@@ -333,10 +336,9 @@ export function useGridStyling() {
 
 		collection.suspendEvents()
 		try {
-			await processBatchAdaptive(entities, (entity) => styleGridEntity(entity, selectedIndex), {
-				processorName: 'gridStyling',
-				yieldToMain: false,
-			})
+			for (let i = 0; i < entities.length; i++) {
+				styleGridEntity(entities[i], selectedIndex)
+			}
 		} finally {
 			collection.resumeEvents()
 		}
