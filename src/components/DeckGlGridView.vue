@@ -49,6 +49,11 @@ const INITIAL_VIEW_STATE = {
 }
 
 let deck = null
+// Guards against the lazy deck.gl import / grid fetch resolving after the
+// component has already unmounted (flag flipped off or grid view left during
+// the in-flight async window) — without it, a Deck instance would be created
+// and leaked with no onBeforeUnmount to finalize() it.
+let isMounted = true
 
 /** Read the JS heap size in MB (Chromium-only), or null if unavailable. */
 function readHeapMB() {
@@ -127,6 +132,10 @@ onMounted(async () => {
 			fetch(GRID_URL),
 		])
 
+		// Bail if the component unmounted while the imports/fetch were in flight,
+		// so we never instantiate a dangling Deck that nothing will finalize().
+		if (!isMounted) return
+
 		if (!gridResponse.ok) {
 			throw new Error(`Grid fetch failed: HTTP ${gridResponse.status}`)
 		}
@@ -172,6 +181,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+	isMounted = false
 	if (deck) {
 		deck.finalize()
 		deck = null
