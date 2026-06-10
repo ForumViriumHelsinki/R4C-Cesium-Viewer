@@ -37,6 +37,7 @@
 
 import { useLoadingStore } from '../stores/loadingStore.js'
 import { requestIdle } from '../utils/idle.js'
+import { PERF_STATS_ENABLED, perfStats } from '../utils/perfStats.js'
 import cacheService from './cacheService.js'
 import { acquireHostSlot } from './hostConcurrencyLimiter.js'
 import progressiveLoader from './progressiveLoader.js'
@@ -304,6 +305,14 @@ class UnifiedLoader {
 				retries
 			)
 
+			// Network byte count (Content-Length; absent on chunked/gzip-without-length
+			// responses, in which case it reads 0).
+			if (PERF_STATS_ENABLED) {
+				const contentLength = Number(response.headers.get('content-length'))
+				perfStats.recordNetworkBytes(Number.isFinite(contentLength) ? contentLength : 0)
+			}
+
+			const deserializeStart = PERF_STATS_ENABLED ? performance.now() : 0
 			let data
 			switch (type) {
 				case 'json':
@@ -319,6 +328,7 @@ class UnifiedLoader {
 				default:
 					data = await response.json()
 			}
+			if (PERF_STATS_ENABLED) perfStats.recordDeserialize(performance.now() - deserializeStart)
 
 			this.loadingStore.updateLayerProgress(layerId, 100, 100)
 			return data

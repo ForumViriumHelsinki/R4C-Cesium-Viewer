@@ -27,6 +27,8 @@
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API|IndexedDB API Documentation}
  */
 
+import { PERF_STATS_ENABLED, perfStats } from '../utils/perfStats.js'
+
 /**
  * Cache entry metadata structure
  * @typedef {Object} CacheEntry
@@ -228,6 +230,7 @@ class CacheService {
 				const result = request.result
 
 				if (!result) {
+					if (PERF_STATS_ENABLED) perfStats.recordCacheMiss()
 					resolve(null)
 					return
 				}
@@ -238,10 +241,13 @@ class CacheService {
 
 				if (age > maxAgeToUse) {
 					// Data is expired, remove it
+					if (PERF_STATS_ENABLED) perfStats.recordCacheMiss()
 					void this.removeData(key)
 					resolve(null)
 					return
 				}
+
+				if (PERF_STATS_ENABLED) perfStats.recordCacheHit(result.size || 0)
 
 				resolve({
 					data: result.data,
