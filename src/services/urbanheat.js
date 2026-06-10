@@ -136,11 +136,7 @@ export default class Urbanheat {
 
 		if (heatData?.features) {
 			logger.debug('[UrbanHeat] 🔄 Merging heat data with buildings...')
-			for (let i = 0; i < buildingData.features.length; i++) {
-				const feature = buildingData.features[i]
-				await setAttributesFromApiToBuilding(feature.properties, heatData.features)
-			}
-			addMissingHeatData(buildingData.features, heatData.features)
+			await mergeHeatFeaturesIntoBuildings(buildingData.features, heatData.features)
 			logger.debug('[UrbanHeat] ✅ Heat data merged with buildings')
 		} else {
 			logger.warn('[UrbanHeat] ⚠️ No heat data available for merging')
@@ -219,13 +215,9 @@ export default class Urbanheat {
 			const urbanheat = await response.json()
 
 			logger.debug('[UrbanHeat] 🔄 Processing building heat attributes...')
-			for (let i = 0; i < data.features.length; i++) {
-				const feature = data.features[i]
-				await setAttributesFromApiToBuilding(feature.properties, urbanheat.features)
-			}
+			await mergeHeatFeaturesIntoBuildings(data.features, urbanheat.features)
 			logger.debug('[UrbanHeat] ✅ Building heat attributes processing complete')
 
-			addMissingHeatData(data.features, urbanheat.features)
 			const entities = await this.datasourceService.addDataSourceWithPolygonFix(
 				data,
 				`Buildings ${postcode}`
@@ -241,98 +233,144 @@ export default class Urbanheat {
 }
 
 /**
- * Adds urban heat exposure data that did not match in previous phase.
+ * Number of buildings processed between coarse idle yields during the merge.
  *
- * @param {Object} features - The buildings from city WFS
- * @param {Object} heat - Urban heat exposure data from pygeoapi
+ * With the O(B+H) hash-join the per-building work is a single Map lookup plus a
+ * handful of property copies, so the merge no longer needs the per-25-feature
+ * `requestIdleCallback` ping-pong that previously dominated wall-clock time
+ * (WO-1: 300k idle samples vs 145 working samples). We still yield coarsely so
+ * a pathologically large dataset cannot monopolise the main thread for an
+ * unbounded stretch; the `timeout` bounds each yield so it can never block on a
+ * scarce idle gap between Cesium frames.
+ *
+ * @type {number}
  */
+export const HEAT_MERGE_YIELD_INTERVAL = 500
 
-const addMissingHeatData = (features, heat) => {
-	for (let i = 0; i < heat.length; i++) {
-		features.push(heat[i])
+/**
+ * Copies the heat-exposure attributes from a matched heat feature onto the
+ * building's properties and decodes the building's own coded fields.
+ *
+ * Behaviour is identical to the per-match block of the previous linear scan:
+ * each field is copied only when present on the heat feature, and the building's
+ * coded fields (`c_julkisivu`, `c_rakeaine`, …) are decoded only for matched
+ * buildings.
+ *
+ * @param {Object} properties - Properties of the building to enrich (mutated in place).
+ * @param {Object} heatProps - Properties of the matched heat feature.
+ * @param {Decoding} decodingService - Shared decoding service instance.
+ */
+const applyHeatAttributes = (properties, heatProps, decodingService) => {
+	if (heatProps.avgheatexposuretobuilding) {
+		properties.avgheatexposuretobuilding = heatProps.avgheatexposuretobuilding
 	}
+
+	if (heatProps.distancetounder40) {
+		properties.distanceToUnder40 = heatProps.distancetounder40
+	}
+
+	if (heatProps.distancetounder40) {
+		properties.locationUnder40 = heatProps.locationunder40
+	}
+
+	if (heatProps.year_of_construction) {
+		properties.year_of_construction = heatProps.year_of_construction
+	}
+
+	if (heatProps.measured_height) {
+		properties.measured_height = heatProps.measured_height
+	}
+
+	if (heatProps.roof_type) {
+		properties.roof_type = heatProps.roof_type
+	}
+
+	if (heatProps.area_m2) {
+		properties.area_m2 = heatProps.area_m2
+	}
+
+	if (heatProps.roof_median_color) {
+		properties.roof_median_color = decodingService.getColorValue(heatProps.roof_median_color)
+	}
+
+	if (heatProps.roof_mode_color) {
+		properties.roof_mode_color = decodingService.getColorValue(heatProps.roof_mode_color)
+	}
+
+	properties.kayttotarkoitus = decodingService.decodeKayttotarkoitusHKI(heatProps.c_kayttark)
+	properties.c_julkisivu = decodingService.decodeFacade(properties.c_julkisivu)
+	properties.c_rakeaine = decodingService.decodeMaterial(properties.c_rakeaine)
+	properties.c_lammtapa = decodingService.decodeHeatingMethod(properties.c_lammtapa)
+	properties.c_poltaine = decodingService.decodeHeatingSource(properties.c_poltaine)
 }
 
 /**
- * Sets attributes from API data source to building data source
+ * Merges urban-heat-exposure features into building features via an O(B+H)
+ * hash-join keyed on the Helsinki building id (`building.properties.id` ===
+ * `heatFeature.properties.hki_id`).
  *
- * Finds the purpose of a building in Helsinki based on code included in wfs source data
- * Code list: https://kartta.hel.fi/avoindata/dokumentit/Rakennusrekisteri_avoindata_metatiedot_20160601.pdf
+ * This replaces the previous O(buildings × heat-features) implementation: a
+ * per-building linear scan over every heat feature, with a `requestIdleCallback`
+ * yield after every 25 heat features. On the Helsinki / non-streaming bulk path
+ * that cost 11.7 s (378 buildings) to 137 s (1,319 buildings) — see
+ * `tmp/perf-investigation/WO-1-report.md`.
  *
- * @param {Object} properties - Properties of a building
- * @param {Object} features - Urban Heat Exposure buildings dataset
+ * Behaviour preserved exactly:
+ * - Each heat feature is consumed by at most one building, matched in building
+ *   order (the buckets are FIFO, so when multiple heat features share an id the
+ *   first building takes the first feature — identical to the old splice order).
+ * - Matched heat features are removed from the orphan pool; unmatched heat
+ *   features (including those with a missing `hki_id`) are appended to
+ *   `buildingFeatures` as orphan heat polygons, in their original order — the
+ *   exact behaviour of the old `addMissingHeatData`.
+ *
+ * @param {Array<Object>} buildingFeatures - Building GeoJSON features (mutated in place).
+ * @param {Array<Object>} heatFeatures - Urban heat exposure GeoJSON features.
+ * @returns {Promise<void>}
  */
-const setAttributesFromApiToBuilding = async (properties, features) => {
+export const mergeHeatFeaturesIntoBuildings = async (buildingFeatures, heatFeatures) => {
+	if (!Array.isArray(buildingFeatures) || !Array.isArray(heatFeatures)) {
+		return
+	}
+
 	const decodingService = new Decoding()
-	const batchSize = 25 // Smaller batches for better responsiveness
 
-	for (let i = 0; i < features.length; i += batchSize) {
-		const batch = features.slice(i, i + batchSize)
+	// Build the hash index once: hki_id -> FIFO bucket of heat features.
+	// Buckets preserve input order so consuming with shift() reproduces the
+	// "first remaining match" semantics of the old linear-scan + splice.
+	const heatById = new Map()
+	for (let i = 0; i < heatFeatures.length; i++) {
+		const key = heatFeatures[i]?.properties?.hki_id
+		if (key === undefined || key === null) continue
+		const bucket = heatById.get(key)
+		if (bucket) {
+			bucket.push(heatFeatures[i])
+		} else {
+			heatById.set(key, [heatFeatures[i]])
+		}
+	}
 
-		// Process batch with yielding for better UI responsiveness
-		for (let j = 0; j < batch.length; j++) {
-			const feature = batch[j]
-			const actualIndex = i + j // Track actual index for splicing
-
-			// match building based on Helsinki id
-			if (properties.id === feature.properties.hki_id) {
-				if (feature.properties.avgheatexposuretobuilding) {
-					properties.avgheatexposuretobuilding = feature.properties.avgheatexposuretobuilding
-				}
-
-				if (feature.properties.distancetounder40) {
-					properties.distanceToUnder40 = feature.properties.distancetounder40
-				}
-
-				if (feature.properties.distancetounder40) {
-					properties.locationUnder40 = feature.properties.locationunder40
-				}
-
-				if (feature.properties.year_of_construction) {
-					properties.year_of_construction = feature.properties.year_of_construction
-				}
-
-				if (feature.properties.measured_height) {
-					properties.measured_height = feature.properties.measured_height
-				}
-
-				if (feature.properties.roof_type) {
-					properties.roof_type = feature.properties.roof_type
-				}
-
-				if (feature.properties.area_m2) {
-					properties.area_m2 = feature.properties.area_m2
-				}
-
-				if (feature.properties.roof_median_color) {
-					properties.roof_median_color = decodingService.getColorValue(
-						feature.properties.roof_median_color
-					)
-				}
-
-				if (feature.properties.roof_mode_color) {
-					properties.roof_mode_color = decodingService.getColorValue(
-						feature.properties.roof_mode_color
-					)
-				}
-
-				properties.kayttotarkoitus = decodingService.decodeKayttotarkoitusHKI(
-					feature.properties.c_kayttark
-				)
-				properties.c_julkisivu = decodingService.decodeFacade(properties.c_julkisivu)
-				properties.c_rakeaine = decodingService.decodeMaterial(properties.c_rakeaine)
-				properties.c_lammtapa = decodingService.decodeHeatingMethod(properties.c_lammtapa)
-				properties.c_poltaine = decodingService.decodeHeatingSource(properties.c_poltaine)
-
-				// Remove matched feature (note: this modifies the original array)
-				features.splice(actualIndex, 1)
-				return // Found match, exit function
-			}
+	// Single pass over buildings: O(1) lookup + at most one attribute copy each.
+	const matched = new Set()
+	for (let b = 0; b < buildingFeatures.length; b++) {
+		const properties = buildingFeatures[b].properties
+		const bucket = heatById.get(properties.id)
+		if (bucket && bucket.length > 0) {
+			const feature = bucket.shift()
+			matched.add(feature)
+			applyHeatAttributes(properties, feature.properties, decodingService)
 		}
 
-		// Yield control to prevent UI blocking after each batch
-		if (i + batchSize < features.length) {
-			await new Promise((resolve) => requestIdle(resolve))
+		// Coarse, timeout-bounded yield so very large datasets stay responsive.
+		if (b > 0 && b % HEAT_MERGE_YIELD_INTERVAL === 0) {
+			await new Promise((resolve) => requestIdle(resolve, { timeout: 50 }))
+		}
+	}
+
+	// Append unmatched heat features as orphan polygons (preserves input order).
+	for (let i = 0; i < heatFeatures.length; i++) {
+		if (!matched.has(heatFeatures[i])) {
+			buildingFeatures.push(heatFeatures[i])
 		}
 	}
 }
