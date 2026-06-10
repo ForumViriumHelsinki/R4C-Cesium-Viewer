@@ -245,6 +245,15 @@ server {
     # revalidation cost is negligible, so a tight bound on staleness is free.
     location /assets/data/ {
         add_header Cache-Control "public, max-age=3600, must-revalidate" always;
+        # An add_header at this level suppresses ALL inherited server-level
+        # add_header directives (nginx headers module: inherited "if and only
+        # if there are no add_header directives defined on the current level").
+        # Re-declare the global security headers so data responses keep them
+        # (#877 review). X-Cache-Status is intentionally not re-added: it is
+        # $upstream_cache_status, which is empty for local static-file serving.
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         etag on;
         access_log off;
         try_files $uri =404;
@@ -326,6 +335,15 @@ server {
     # times out, or is mid-refresh, so users keep seeing the map.
     location /wms/proxy {
         proxy_pass https://kartta.hsy.fi;
+
+        # kartta.hsy.fi is fronted by a Microsoft-Azure-Application-Gateway
+        # (WO-4) that needs SNI to route the TLS handshake. nginx omits SNI by
+        # default (proxy_ssl_server_name off), so enable it here — matching
+        # /hsy-action — to avoid intermittent handshake failures surfacing as
+        # 502s (#877 review). The HTTP Host header is already kartta.hsy.fi via
+        # the server-level `proxy_set_header Host $proxy_host`, and proxy_ssl_name
+        # defaults to $proxy_host, so SNI is sent as kartta.hsy.fi automatically.
+        proxy_ssl_server_name on;
 
         # Cache key covers the full GetMap query string (LAYERS/BBOX/WIDTH/…),
         # so each distinct tile is a distinct cache entry.
