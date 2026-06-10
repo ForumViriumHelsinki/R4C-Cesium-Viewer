@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { DROPPED_KEYS, slimGridIndex } from '../../../scripts/slim-grid-index.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -49,9 +49,15 @@ const REQUIRED_KEYS = [
 const FEATURE_COUNT = 6710
 
 describe('r4c_stats_grid_index.json slimming', { tags: ['@unit'] }, () => {
-	const raw = readFileSync(GRID_FILE, 'utf8')
-	const data = JSON.parse(raw)
-	const keyUnion = new Set(data.features.flatMap((f) => Object.keys(f.properties ?? {})))
+	let raw
+	let data
+	let keyUnion
+
+	beforeAll(() => {
+		raw = readFileSync(GRID_FILE, 'utf8')
+		data = JSON.parse(raw)
+		keyUnion = new Set(data.features.flatMap((f) => Object.keys(f.properties ?? {})))
+	})
 
 	it('is a FeatureCollection with the full feature count unchanged', () => {
 		expect(data.type).toBe('FeatureCollection')

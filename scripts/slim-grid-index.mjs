@@ -81,9 +81,19 @@ function parseArgs(argv) {
 	const args = { check: false, in: DEFAULT_FILE, out: null };
 	for (let i = 0; i < argv.length; i++) {
 		const a = argv[i];
-		if (a === '--check') args.check = true;
-		else if (a === '--in') args.in = resolve(argv[++i]);
-		else if (a === '--out') args.out = resolve(argv[++i]);
+		if (a === '--check') {
+			args.check = true;
+		} else if (a === '--in') {
+			const val = argv[i + 1];
+			if (!val || val.startsWith('-')) throw new Error('Missing value for --in');
+			args.in = resolve(val);
+			i++;
+		} else if (a === '--out') {
+			const val = argv[i + 1];
+			if (!val || val.startsWith('-')) throw new Error('Missing value for --out');
+			args.out = resolve(val);
+			i++;
+		}
 	}
 	if (!args.out) args.out = args.in;
 	return args;
@@ -95,8 +105,8 @@ function main() {
 	const bytesBefore = statSync(args.in).size;
 
 	const geojson = JSON.parse(rawBefore);
-	const featureCount = geojson.features.length;
 	slimGridIndex(geojson);
+	const featureCount = geojson.features.length;
 
 	// Minify: no indent, compact separators. Trailing newline keeps the output
 	// idempotent with the repo's end-of-file-fixer pre-commit hook.
