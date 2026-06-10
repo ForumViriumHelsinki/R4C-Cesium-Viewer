@@ -80,6 +80,35 @@ Material Design Icons render as **inline SVG paths** via a custom Vuetify iconse
 
 When RRM is on, Cesium only re-renders when something changes (camera move, entity update, imagery load); when off, the scene re-renders every animation frame at ~60 FPS. On a 3D globe with terrain + buildings + WMS imagery the difference is roughly one CPU core and a hot dGPU — keep RRM on unless a specific feature genuinely needs continuous rendering, and explicitly call `viewer.scene.requestRender()` at any mutation site that would otherwise be visually invisible under RRM (existing camera/entity/imagery hooks already do this).
 
+## Bulk Entity Styling (grids, building sets)
+
+Measured on the 6,710-entity stats grid (Wave-0 perf investigation, PR #880;
+WO-3 report). Three findings that contradict the "obvious" optimizations:
+
+1. **Mid-pass yields are the cliff, not the styling work.** Any
+   `await`/`scheduler.yield()`/`requestIdleCallback` inside a styling loop
+   releases an animation frame, and Cesium rebuilds entity materials on every
+   frame while they mutate — O(N) rebuilds instead of one. Removing the
+   per-batch yield took the 6,710-cell pass from 412 ms to 127 ms and removed
+   the super-linear scaling. The same mechanism made the Helsinki heat merge
+   take 11.7–137 s (PR #874): the cost was tens of thousands of untimed
+   `requestIdleCallback` round-trips, not the merge CPU (single-digit ms).
+2. **`entityCollection.suspendEvents()` alone does NOT stop the rebuilds** —
+   each entity's `GeometryUpdater` subscribes to the entity's own
+   `definitionChanged`, not the collection's `collectionChanged`. Suspend is
+   still correct (batches collection events), but only helps once the pass is
+   yield-free.
+3. **Never mutate a shared color property in place** (`color.setValue()` /
+   mutating a cached `Cesium.Color`): it pegs Cesium's
+   `StaticGeometryColorBatch` and was measured to blow the pass to tens of
+   seconds. Assign cached immutable `Color` instances per palette bucket
+   instead (see the warning comment in `useGridStyling.js`).
+
+Canonical pattern: single synchronous loop wrapped in
+`suspendEvents()`/`resumeEvents()`, one `scene.requestRender()` at the end.
+For yield-needing huge passes, yield coarsely (hundreds of items) with a
+timeout-bounded idle callback — never per-N-features untimed.
+
 ## Reading Cesium Entity Properties
 
 Read GeoJSON entity properties through the **public** API:
@@ -130,7 +159,43 @@ The "HSY buildings" tiles (`viewport_buildings_hsy_*`) are served by `pygeoapi.d
 2. **Inspect the BackendTrafficPolicy** for the affected route — `kubectl get backendtrafficpolicy -n <ns> <name> -o yaml`. The `spec.rateLimit.local.rules` describe the per-IP budget.
 3. **Distinguish "service overloaded" from "gateway rejecting"**: per-IP buckets mean one dev workstation can produce 940 429s in a session while the service itself is idle. In production each user has their own IP, so the effective limit is per-user, but bursts can still exceed a tight cap on initial viewport load (~30-50 tiles in 1-3 seconds).
 
-The client-side per-host concurrency limiter (`src/services/hostConcurrencyLimiter.js`) caps in-flight count but does not throttle the request rate — a circuit breaker or `Retry-After`-honoring backoff is the right next lever if cap relaxation alone isn't enough.
+The client-side per-host concurrency limiter (`src/services/hostConcurrencyLimiter.js`) caps in-flight count but does not throttle the request rate.
+
+### HSY Outage Resilience Stack (PRs #877, #878)
+
+HSY (`kartta.hsy.fi` behind an Azure App Gateway) returns 504s under load
+instead of throttling, with ~20 s hangs, and is occasionally fully down. The
+app survives this with two layers — keep both in mind when touching HSY paths:
+
+- **nginx (`/wms/proxy`)**: `proxy_cache` with
+  `proxy_cache_use_stale error timeout updating http_5xx` + `proxy_cache_lock`
+  - short 3 s/10 s timeouts — a flaky/down HSY serves stale tiles instead of
+    failing; `X-Cache-Status` header exposes HIT/MISS/STALE.
+- **Client**: `src/services/hostCircuitBreaker.js` (sibling of the
+  concurrency limiter — opens after consecutive failures, fast-fails during
+  cooldown, half-opens to probe recovery), 12 s per-attempt fetch timeouts in
+  `unifiedLoader.js` (must stay below the 20 s gateway hang so a hung request
+  frees its 3-per-host slot), quiet-degrade `errorEvent` handling on HSY
+  imagery layers (`landcover.js`), and a `serviceHealthStore`-driven snackbar
+  gated on HSY host keys only.
+
+Behavior is unchanged when HSY is healthy; never let an HSY request block app
+init or navigation.
+
+## deck.gl Renderer (experimental, behind flag)
+
+The `r4c-deckgl-renderer` feature flag (default OFF everywhere; local
+override via FeatureFlagsPanel) swaps the stats-grid view to a deck.gl 9.x
+renderer (`src/components/DeckGlGridView.vue`, GeoJsonLayer choropleth + HSY
+WMS via TileLayer in EPSG:3857). Spike verdict (PR #879): styling 17–29 ms vs
+Cesium's 127 ms, ~half the memory, ~454 KB gz lazy chunk vs Cesium's 1.25 MB.
+
+- **Lazy-load invariant**: deck.gl chunks must never appear in the entry
+  bundle — `DeckGlGridView` is dynamically imported; check the build output
+  if you touch its imports.
+- **Shared palette**: both renderers consume `src/utils/gridColorMapping.js`
+  (extracted from `useGridStyling.js`, which re-exports it for existing
+  consumers). Never fork the color mapping — fix it in one place.
 
 ## Component Organization
 

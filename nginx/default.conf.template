@@ -230,6 +230,11 @@ server {
         add_header Cache-Control "no-cache, no-store, must-revalidate" always;
         add_header Pragma "no-cache" always;
         add_header Expires "0" always;
+        # Re-declare security headers: location-level add_header suppresses
+        # ALL inherited server-level add_header directives (see /assets/data/).
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         try_files $uri =404;
     }
 
@@ -262,6 +267,10 @@ server {
     # Rule 2: Aggressively cache hashed assets (they're immutable)
     location /assets/ {
         add_header Cache-Control "public, max-age=31536000, immutable" always;
+        # Re-declare security headers (suppressed by the add_header above).
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         expires 1y;
         access_log off;
         try_files $uri =404;
@@ -270,6 +279,10 @@ server {
     # Rule 3: Don't cache unhashed static assets
     location ~* \.(svg|png|jpg|jpeg|gif|ico|webp)$ {
         add_header Cache-Control "no-cache" always;
+        # Re-declare security headers (suppressed by the add_header above).
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         try_files $uri =404;
     }
 
@@ -278,6 +291,10 @@ server {
         add_header Cache-Control "no-cache, no-store, must-revalidate" always;
         add_header Pragma "no-cache" always;
         add_header Expires "0" always;
+        # Re-declare security headers (suppressed by the add_header above).
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         try_files $uri $uri/ /index.html;
     }
 
@@ -290,6 +307,10 @@ server {
         proxy_read_timeout 5s;
         proxy_cache off;
         add_header Cache-Control "no-cache, no-store" always;
+        # Re-declare security headers (suppressed by the add_header above).
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
     # FIXED: Updated to match Vite configuration (removed _2024 suffix)
@@ -410,9 +431,9 @@ server {
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
 
-        # Enable compression
-        gzip on;
-        gzip_types image/jpeg image/png image/gif;
+        # No gzip override here: JPEG/PNG/GIF tiles are already compressed —
+        # gzipping them wastes CPU and can grow the payload. Text responses
+        # (GetCapabilities XML etc.) inherit the server-level gzip settings.
         rewrite ^/helsinki-wms(.*)$ /ws/geoserver/avoindata/ows$1 break;
     }
 

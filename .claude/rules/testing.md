@@ -83,12 +83,13 @@ EventBus emits 'showBuilding'
 
 The app exposes Cesium and Pinia state on `window` in E2E mode (`VITE_E2E_TEST=true`):
 
-| Variable             | Set by                       | Contains                         |
-| -------------------- | ---------------------------- | -------------------------------- |
-| `window.__cesium`    | `useViewerInitialization.js` | Cesium module                    |
-| `window.__viewer`    | `useViewerInitialization.js` | Cesium.Viewer instance           |
-| `window.Cesium`      | NOT set by app               | Only set by CI mock fixture      |
-| `window.globalStore` | `src/main.js`                | Live Pinia globalStore reference |
+| Variable             | Set by                       | Contains                                                                                                       |
+| -------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `window.__cesium`    | `useViewerInitialization.js` | Cesium module                                                                                                  |
+| `window.__viewer`    | `useViewerInitialization.js` | Cesium.Viewer instance                                                                                         |
+| `window.Cesium`      | NOT set by app               | Only set by CI mock fixture                                                                                    |
+| `window.globalStore` | `src/main.js`                | Live Pinia globalStore reference                                                                               |
+| `window.__perfStats` | `src/utils/perfStats.js`     | Perf counters (limiter queue-wait, cache hit/miss/bytes, requestRender count); `reset()` zeroes between trials |
 
 Test helpers must check `window.__cesium || window.Cesium` — never just `window.Cesium`.
 
@@ -300,6 +301,18 @@ it('…fps…', async (ctx) => {
 ```
 
 The viewer is exposed as `window.__viewer` (double underscore, gated on `VITE_E2E_TEST`) — never `window.cesiumViewer`. The Performance Tests CI job runs **only on push-to-`main`, not on PRs**, and is not a merge gate, so a PR check won't catch breakage here — verify locally with `just test-performance`.
+
+## No Wall-Clock Comparison Assertions in Unit Tests
+
+Never assert that one implementation is faster than another by comparing
+measured durations (`expect(newMs).toBeLessThan(oldMs)`). At small absolute
+magnitudes (sub-15 ms), JIT warmup and GC noise on shared CI runners can make
+the "slow" implementation win any single run — PR #874's benchmark failed CI
+at 14.56 ms vs 14.07 ms exactly this way, despite a real 14× speedup on other
+runs. Keep benchmark timings as informational `console.log` output and assert
+correctness via behavior-equivalence checks instead. If a perf property must
+be enforced, enforce it via the dedicated performance suite with baselines
+(`tests/performance-baselines.json`), not inline unit assertions.
 
 ## Feature Flag Defaults Affect Test Assertions
 

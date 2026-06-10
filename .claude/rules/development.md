@@ -70,11 +70,37 @@ ast-grep -p 'await $PROMISE.catch($$$)'               # Find error handling
 ## Building
 
 ```bash
-bun run build    # Production build
+bun run build    # Production build (runs scripts/precompress.mjs after vite build)
 bun run dev      # Development server with hot reload
 bun run lint     # Biome check
 bun run lint:fix # Biome auto-fix
 ```
+
+`bun run build` ends with a precompression step (`scripts/precompress.mjs`,
+gzip-9 over `dist/` — ~−77% on compressible assets); nginx serves the `.gz`
+siblings via `gzip_static`. If a build artifact seems stale or doubled, check
+for orphaned `.gz` files. Brotli precompression is blocked on a
+brotli-capable nginx image — tracked in issue #876.
+
+## Merge Commits Must Be Conventional
+
+The `conventional-pre-commit` hook validates **merge commits too** — git's
+default `Merge remote-tracking branch '...'` subject is rejected. A
+conflict-free `git merge main` auto-commits the default subject and fails
+the hook immediately, so pass the message on the merge itself:
+
+```bash
+git merge main -m "chore(merge): merge main into <branch>"
+```
+
+When committing a conflict resolution, the same subject goes on the commit:
+
+```bash
+git commit -m "chore(merge): merge main into <branch>"
+```
+
+(The subject disappears on squash-merge anyway; it only needs to satisfy the
+hook.)
 
 ## CI/CD
 
