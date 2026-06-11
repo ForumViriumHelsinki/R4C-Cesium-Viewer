@@ -25,6 +25,81 @@ describe('gridColorMapping', () => {
 			expect(getGridColorString(value, 'heat_index')).toBe(expected)
 		})
 
+		// Regression net for #882: the other full 7-entry scheme must keep mapping
+		// from index 2 (placeholders at 0-1), byte-identical to pre-fix behavior.
+		it.each([
+			[0.0, '#c6dbef'],
+			[0.19, '#c6dbef'],
+			[0.2, '#9ecae1'],
+			[0.39, '#9ecae1'],
+			[0.4, '#6baed6'],
+			[0.59, '#6baed6'],
+			[0.6, '#3182bd'],
+			[0.79, '#3182bd'],
+			[0.8, '#08519c'],
+			[1.0, '#08519c'],
+		])('flood_index value %f -> %s', (value, expected) => {
+			expect(getGridColorString(value, 'flood_index')).toBe(expected)
+		})
+
+		// #882: greenSpaceColors has no placeholder entries — its 5 threshold
+		// colors start at index 0, so values < 0.6 must hit the darker greens
+		// instead of overshooting by the placeholder offset.
+		it.each([
+			[0.0, '#006d2c'],
+			[0.19, '#006d2c'],
+			[0.2, '#31a354'],
+			[0.39, '#31a354'],
+			[0.4, '#74c476'],
+			[0.59, '#74c476'],
+			[0.6, '#a1d99b'],
+			[0.79, '#a1d99b'],
+			[0.8, '#e5f5e0'],
+			[1.0, '#e5f5e0'],
+		])('green value %f -> %s', (value, expected) => {
+			expect(getGridColorString(value, 'green')).toBe(expected)
+		})
+
+		// #882: partialHeatColors = heatColors.slice(2) — same threshold colors,
+		// indexed from 0.
+		it.each([
+			[0.0, '#ffffcc'],
+			[0.19, '#ffffcc'],
+			[0.2, '#ffeda0'],
+			[0.39, '#ffeda0'],
+			[0.4, '#feb24c'],
+			[0.59, '#feb24c'],
+			[0.6, '#f03b20'],
+			[0.79, '#f03b20'],
+			[0.8, '#bd0026'],
+			[1.0, '#bd0026'],
+		])('partialHeat value %f -> %s', (value, expected) => {
+			expect(getGridColorString(value, 'partialHeat')).toBe(expected)
+		})
+
+		// #882: partialFloodColors = floodColors.slice(2) — same threshold colors,
+		// indexed from 0.
+		it.each([
+			[0.0, '#c6dbef'],
+			[0.19, '#c6dbef'],
+			[0.2, '#9ecae1'],
+			[0.39, '#9ecae1'],
+			[0.4, '#6baed6'],
+			[0.59, '#6baed6'],
+			[0.6, '#3182bd'],
+			[0.79, '#3182bd'],
+			[0.8, '#08519c'],
+			[1.0, '#08519c'],
+		])('partialFlood value %f -> %s', (value, expected) => {
+			expect(getGridColorString(value, 'partialFlood')).toBe(expected)
+		})
+
+		// #882: flood_exposure shares greenSpaceColors — spot-check lower bands.
+		it('maps flood_exposure lower bands through greenSpaceColors from index 0', () => {
+			expect(getGridColorString(0.1, 'flood_exposure')).toBe('#006d2c')
+			expect(getGridColorString(0.5, 'flood_exposure')).toBe('#74c476')
+		})
+
 		it('falls back to heatColors for an unknown index type', () => {
 			expect(getGridColorString(0.5, 'totally_unknown_index')).toBe('#feb24c')
 		})
