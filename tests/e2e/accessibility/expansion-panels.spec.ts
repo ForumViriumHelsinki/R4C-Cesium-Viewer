@@ -6,9 +6,10 @@
  * - Universal: Background Maps and Data Layers (Layers tab), Search tab
  * - View-specific (Analysis tab): Grid Options (grid view), Climate Adaptation
  *   (grid + heat_index)
- * - Level-specific (Analysis tab): Building Analysis etc.
+ * - Level-specific (Analysis tab): Building Analysis etc. — these drill to
+ *   postal-code/building level and are tagged @requires-database (#658)
  * - Properties (Details tab): Area Properties (postal code), Building
- *   Properties (building)
+ *   Properties (building) — also @requires-database
  * - NDVI toggle (Layers tab, visible in all views)
  */
 
@@ -106,50 +107,62 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 	})
 
 	cesiumTest.describe('Level-Specific Analysis Tools', () => {
-		cesiumTest('should show analysis tool buttons at postal code level', async ({ cesiumPage }) => {
-			// Analysis buttons render in the Analysis tab (tabbed sidebar refactor)
-			const analysisTab = cesiumPage.getByRole('tab', { name: 'Analysis' })
-			await analysisTab.click()
+		cesiumTest(
+			'should show analysis tool buttons at postal code level',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				// Analysis buttons render in the Analysis tab (tabbed sidebar refactor)
+				const analysisTab = cesiumPage.getByRole('tab', { name: 'Analysis' })
+				await analysisTab.click()
 
-			// Not visible at start level
-			await expect(cesiumPage.getByText('Building Analysis')).toBeHidden()
+				// Not visible at start level
+				await expect(cesiumPage.getByText('Building Analysis')).toBeHidden()
 
-			// Navigate to postal code level
-			await helpers.drillToLevel('postalCode')
+				// Navigate to postal code level
+				await helpers.drillToLevel('postalCode')
 
-			// Building Analysis button should appear at postal code level
-			await expect(cesiumPage.getByText('Building Analysis')).toBeVisible()
-		})
+				// Building Analysis button should appear at postal code level
+				await expect(cesiumPage.getByText('Building Analysis')).toBeVisible()
+			}
+		)
 
-		cesiumTest('should show Area Properties at postal code level', async ({ cesiumPage }) => {
-			// Properties render in the Details tab (tabbed sidebar refactor)
-			const detailsTab = cesiumPage.getByRole('tab', { name: 'Details' })
-			await detailsTab.click()
+		cesiumTest(
+			'should show Area Properties at postal code level',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				// Properties render in the Details tab (tabbed sidebar refactor)
+				const detailsTab = cesiumPage.getByRole('tab', { name: 'Details' })
+				await detailsTab.click()
 
-			// Properties section not visible at start level
-			await expect(cesiumPage.getByText('Area Properties')).toBeHidden()
+				// Properties section not visible at start level
+				await expect(cesiumPage.getByText('Area Properties')).toBeHidden()
 
-			// Navigate to postal code level
-			await helpers.drillToLevel('postalCode')
+				// Navigate to postal code level
+				await helpers.drillToLevel('postalCode')
 
-			// Area Properties section heading should appear
-			const areaProps = cesiumPage.getByText('Area Properties')
-			await expect(areaProps).toBeVisible()
-		})
+				// Area Properties section heading should appear
+				const areaProps = cesiumPage.getByText('Area Properties')
+				await expect(areaProps).toBeVisible()
+			}
+		)
 
 		// Building-level navigation uses direct Pinia store manipulation because
 		// clicking a 3D building entity is unreliable in mocked/headless environments
 		// where WebGL picking cannot be guaranteed.
-		cesiumTest('should show Building Properties at building level', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('building', undefined, { method: 'store' })
+		cesiumTest(
+			'should show Building Properties at building level',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				await helpers.drillToLevel('building', undefined, { method: 'store' })
 
-			// Properties render in the Details tab (tabbed sidebar refactor)
-			const detailsTab = cesiumPage.getByRole('tab', { name: 'Details' })
-			await detailsTab.click()
+				// Properties render in the Details tab (tabbed sidebar refactor)
+				const detailsTab = cesiumPage.getByRole('tab', { name: 'Details' })
+				await detailsTab.click()
 
-			const buildingProps = cesiumPage.getByText('Building Properties')
-			await expect(buildingProps).toBeVisible()
-		})
+				const buildingProps = cesiumPage.getByText('Building Properties')
+				await expect(buildingProps).toBeVisible()
+			}
+		)
 	})
 
 	cesiumTest.describe('Panel State Across View Switches', () => {
