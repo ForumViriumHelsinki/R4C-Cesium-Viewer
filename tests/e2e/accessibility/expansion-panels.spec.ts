@@ -2,7 +2,7 @@
  * Sidebar Panels Accessibility Tests
  *
  * Tests conditional panel/section visibility and interactions for the analysis sidebar:
- * - Universal sections: Background Maps, Search & Navigate, Map Controls
+ * - Universal sections: Background Maps and Data Layers (Layers tab), Search tab
  * - View-specific: Grid Options (grid view), Climate Adaptation (grid + heat_index)
  * - Level-specific analysis tools: Heat Distribution, Building Analysis, Land Cover, etc.
  * - Properties section: Area Properties (postal code), Building Properties (building)
@@ -28,20 +28,24 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
 		})
 
-		cesiumTest(
-			'should display Search & Navigate section in all contexts',
-			async ({ cesiumPage }) => {
-				// Search & Navigate is a permanent section with UnifiedSearch below
-				await expect(cesiumPage.getByText('Search & Navigate')).toBeVisible()
+		cesiumTest('should provide search via the Search tab in all contexts', async ({ cesiumPage }) => {
+			// The sidebar was refactored into tabs (Search / Layers / Analysis /
+			// Details); the old "Search & Navigate" section heading no longer
+			// exists. Search lives in the dedicated Search tab (#897).
+			const searchTab = cesiumPage.getByRole('tab', { name: 'Search' })
+			await expect(searchTab).toBeVisible()
+			await searchTab.click()
 
-				// Search input should be visible directly (no expansion needed)
-				const searchInput = cesiumPage.getByRole('textbox', { name: /search/i })
-				await expect(searchInput.first()).toBeVisible()
-			}
-		)
+			// Search input should be visible once the Search tab is active
+			const searchInput = cesiumPage.getByRole('textbox', { name: /search/i })
+			await expect(searchInput.first()).toBeVisible()
+		})
 
-		cesiumTest('should display Map Controls section in all contexts', async ({ cesiumPage }) => {
-			await expect(cesiumPage.getByText('Map Controls')).toBeVisible()
+		cesiumTest('should display map layer controls in all contexts', async ({ cesiumPage }) => {
+			// The old "Map Controls" heading was removed in the tabbed-sidebar
+			// refactor; MapControls renders inside the Layers tab under the
+			// "Data Layers" heading (#897).
+			await expect(cesiumPage.getByRole('heading', { name: 'Data Layers' })).toBeVisible()
 		})
 	})
 
@@ -118,23 +122,24 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 
 	cesiumTest.describe('Panel State Across View Switches', () => {
 		cesiumTest('should maintain sidebar sections during view switches', async ({ cesiumPage }) => {
-			// Verify universal sections visible
+			// Verify universal sections visible (Search tab replaces the removed
+			// "Search & Navigate" heading — see Universal Sidebar Sections above)
 			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-			await expect(cesiumPage.getByText('Search & Navigate')).toBeVisible()
+			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
 
 			// Switch view
 			await helpers.navigateToView('gridView')
 
 			// Universal sections should remain visible
 			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-			await expect(cesiumPage.getByText('Search & Navigate')).toBeVisible()
+			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
 
 			// Switch back
 			await helpers.navigateToView('capitalRegionView')
 
 			// Still visible
 			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-			await expect(cesiumPage.getByText('Search & Navigate')).toBeVisible()
+			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
 		})
 	})
 
