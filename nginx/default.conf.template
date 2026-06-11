@@ -298,11 +298,43 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    # GO Feature Flag relay proxy — websocket (flag-change push channel).
+    # The GOFF web provider's initialize() requires this socket; without it the
+    # app silently falls back to local flag defaults. The relay authenticates
+    # the websocket via the `apiKey` query parameter ONLY (the Authorization
+    # header is rejected on this endpoint — verified against relay v1.50.1),
+    # so the rewrite injects the key server-side; it never ships in the JS
+    # bundle. Empty ${GOFF_API_KEY} yields a 401 and the app degrades to
+    # fallback defaults, same as an unreachable relay.
+    location /feature-flags/ws/ {
+        set $goff_host "gofeatureflag-relay-proxy.feature-flags.svc.cluster.local";
+        rewrite ^/feature-flags/(.*)$ /$1?apiKey=${GOFF_API_KEY} break;
+        proxy_pass http://$goff_host:1031;
+        proxy_set_header Host $goff_host;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_connect_timeout 3s;
+        # Long-lived socket: GOFF pushes flag-change events over it. The 5s
+        # read timeout of the HTTP block below would sever it immediately.
+        proxy_read_timeout 1h;
+        proxy_send_timeout 1h;
+    }
+
     # GO Feature Flag relay proxy (OFREP endpoint)
     location /feature-flags/ {
         set $goff_host "gofeatureflag-relay-proxy.feature-flags.svc.cluster.local";
-        proxy_pass http://$goff_host:1031/;
+        # proxy_pass with a variable host passes its URI part LITERALLY — the
+        # previous `proxy_pass http://$goff_host:1031/;` sent every request to
+        # the relay as `GET /`, so /feature-flags/health hit a 404 and the app
+        # always fell back to local defaults. Rewrite first, then pass without
+        # a URI part (same pattern as the pygeoapi block below).
+        rewrite ^/feature-flags/(.*)$ /$1 break;
+        proxy_pass http://$goff_host:1031;
         proxy_set_header Host $goff_host;
+        # Relay evaluation endpoints require an API key (Bearer works for
+        # HTTP). Injected server-side so the key stays out of the bundle.
+        proxy_set_header Authorization "Bearer ${GOFF_API_KEY}";
         proxy_connect_timeout 3s;
         proxy_read_timeout 5s;
         proxy_cache off;
