@@ -19,21 +19,15 @@
  * - Filter functionality is maintained when navigating between non-grid views
  *
  * Ensures all building filter controls remain accessible during interface overhaul.
- *
- * SKIPPED: These tests are currently skipped due to a Vuetify v-navigation-drawer
- * rendering issue in the Playwright test environment. The drawer component does not
- * render its DOM element even when the model value is true, preventing tests from
- * accessing the .map-controls content.
- * See: https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/470
  */
 
 import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
-import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
+import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 cesiumDescribe('Building Filters Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
-	let helpers: AccessibilityTestHelpers
+	let helpers: GridAwareTestHelpers
 
 	cesiumTest.beforeEach(async ({ cesiumPage }, testInfo) => {
 		// The entire Building Filters section is unmounted (not just CSS-hidden) on
@@ -51,7 +45,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			return
 		}
 
-		helpers = new AccessibilityTestHelpers(cesiumPage)
+		helpers = new GridAwareTestHelpers(cesiumPage)
 		// Cesium is already initialized by the fixture
 
 		// Ensure control panel is open (needed for mobile viewports where drawer is closed by default)
