@@ -1,12 +1,15 @@
 /**
  * Sidebar Panels Accessibility Tests
  *
- * Tests conditional panel/section visibility and interactions for the analysis sidebar:
- * - Universal sections: Background Maps and Data Layers (Layers tab), Search tab
- * - View-specific: Grid Options (grid view), Climate Adaptation (grid + heat_index)
- * - Level-specific analysis tools: Heat Distribution, Building Analysis, Land Cover, etc.
- * - Properties section: Area Properties (postal code), Building Properties (building)
- * - NDVI toggle (visible in all views)
+ * Tests conditional panel/section visibility and interactions for the tabbed
+ * analysis sidebar (Search / Layers / Analysis / Details):
+ * - Universal: Background Maps and Data Layers (Layers tab), Search tab
+ * - View-specific (Analysis tab): Grid Options (grid view), Climate Adaptation
+ *   (grid + heat_index)
+ * - Level-specific (Analysis tab): Building Analysis etc.
+ * - Properties (Details tab): Area Properties (postal code), Building
+ *   Properties (building)
+ * - NDVI toggle (Layers tab, visible in all views)
  */
 
 import { expect } from '@playwright/test'
@@ -51,27 +54,43 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 
 	cesiumTest.describe('View-Specific Panels', () => {
 		cesiumTest('should show Grid Options button only in Grid view', async ({ cesiumPage }) => {
+			// Grid Options renders in the Analysis tab (tabbed sidebar refactor);
+			// the view-mode toggle lives in the Layers tab, so switch back before
+			// navigating between views.
+			const analysisTab = cesiumPage.getByRole('tab', { name: 'Analysis' })
+			const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
+
 			// Not visible in Capital Region view
+			await analysisTab.click()
 			await expect(cesiumPage.getByText('Grid Options')).toBeHidden()
 
 			// Switch to Grid view
+			await layersTab.click()
 			await helpers.navigateToView('gridView')
 
-			// Now visible as a button
+			// Now visible as a button in the Analysis tab
+			await analysisTab.click()
 			await expect(cesiumPage.getByText('Grid Options')).toBeVisible()
 		})
 
 		cesiumTest(
 			'should show Climate Adaptation only in Grid view with heat index',
 			async ({ cesiumPage }) => {
+				// Climate Adaptation renders in the Analysis tab (tabbed sidebar refactor)
+				const analysisTab = cesiumPage.getByRole('tab', { name: 'Analysis' })
+				const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
+
 				// Not visible in Capital Region view
+				await analysisTab.click()
 				await expect(cesiumPage.getByText('Climate Adaptation')).toBeHidden()
 
 				// Switch to Grid view — Climate Adaptation is visible because
 				// statsIndex defaults to 'heat_index' and coolingOptimizer flag defaults to true
+				await layersTab.click()
 				await helpers.navigateToView('gridView')
 
 				// Climate Adaptation should now be visible as an expansion panel
+				await analysisTab.click()
 				await expect(cesiumPage.getByText('Climate Adaptation')).toBeVisible()
 			}
 		)
@@ -88,6 +107,10 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 
 	cesiumTest.describe('Level-Specific Analysis Tools', () => {
 		cesiumTest('should show analysis tool buttons at postal code level', async ({ cesiumPage }) => {
+			// Analysis buttons render in the Analysis tab (tabbed sidebar refactor)
+			const analysisTab = cesiumPage.getByRole('tab', { name: 'Analysis' })
+			await analysisTab.click()
+
 			// Not visible at start level
 			await expect(cesiumPage.getByText('Building Analysis')).toBeHidden()
 
@@ -99,6 +122,10 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 		})
 
 		cesiumTest('should show Area Properties at postal code level', async ({ cesiumPage }) => {
+			// Properties render in the Details tab (tabbed sidebar refactor)
+			const detailsTab = cesiumPage.getByRole('tab', { name: 'Details' })
+			await detailsTab.click()
+
 			// Properties section not visible at start level
 			await expect(cesiumPage.getByText('Area Properties')).toBeHidden()
 
@@ -115,6 +142,11 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 		// where WebGL picking cannot be guaranteed.
 		cesiumTest('should show Building Properties at building level', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('building', undefined, { method: 'store' })
+
+			// Properties render in the Details tab (tabbed sidebar refactor)
+			const detailsTab = cesiumPage.getByRole('tab', { name: 'Details' })
+			await detailsTab.click()
+
 			const buildingProps = cesiumPage.getByText('Building Properties')
 			await expect(buildingProps).toBeVisible()
 		})
@@ -145,8 +177,10 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 
 	cesiumTest.describe('Accessibility Compliance', () => {
 		cesiumTest('should have proper navigation landmark', async ({ cesiumPage }) => {
-			// The sidebar should have role="navigation"
-			const sidebar = cesiumPage.locator('[role="navigation"]')
+			// The sidebar should have role="navigation". The page renders more
+			// than one navigation landmark (sidebar + analysis panel), so scope
+			// to the first to keep the locator strict-mode safe.
+			const sidebar = cesiumPage.locator('[role="navigation"]').first()
 			await expect(sidebar).toBeVisible()
 
 			// Should have an aria-label
