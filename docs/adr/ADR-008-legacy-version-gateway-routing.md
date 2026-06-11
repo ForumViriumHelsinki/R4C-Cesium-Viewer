@@ -2,7 +2,8 @@
 
 ## Status
 
-Proposed
+Accepted (amended 2026-06-11: symmetric cookie scheme, 7-rule precedence
+structure, immediate beta retirement)
 
 ## Date
 
@@ -59,27 +60,53 @@ classic version" link in the new frontend** as the only app-side change.
 | HTTPRoute on `r4c.dataportal.fi`  | infrastructure repo                                | Routing rules below                                                                           |
 | "Switch to classic version" link  | this repo                                          | Small UI element in the current frontend linking to `/?ui=legacy`                             |
 
-### HTTPRoute rules
+### Cookie scheme (amended 2026-06-11)
 
-1. `?ui=legacy` query match → legacy backend, plus `ResponseHeaderModifier`
-   adding
-   `Set-Cookie: r4c_ui=legacy; Path=/; Max-Age=<TTL>; Secure; HttpOnly; SameSite=Lax`
-   — the cookie is set and read only by the gateway, so `HttpOnly` denies it
-   to client-side JS; `SameSite=Lax` still rides along on top-level
-   navigations like the switch links.
-2. `?ui=new` query match → next backend, plus a cookie-clearing
-   `Set-Cookie: r4c_ui=legacy; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax`
-   with attributes matching rule 1 so deletion works across browsers (the
-   frozen legacy UI has no switch link; the return path is this URL)
-3. `Cookie` header regex match → legacy backend (keeps hashed-asset requests
-   sticky to the bundle that referenced them). Envoy's regex matcher is a
-   **full-string** match (RE2, "matched against the full string, not as a
-   partial match"), and the `Cookie` header carries all cookies, so the
-   pattern must wildcard both sides while anchoring the cookie-name
-   boundary: `(.*;\s*)?r4c_ui=legacy(\s*;.*)?`. A bare substring or
-   partial-match pattern either never matches (full-match semantics) or
-   false-positives on look-alike names (`other_r4c_ui=legacy`).
-4. Default → per rollout phase (see below)
+One cookie, **two values**. The originally proposed single-value design
+(`r4c_ui=legacy` set by `?ui=legacy`, _cleared_ by `?ui=new`) cannot express
+opt-in to the new frontend while the default is legacy (phase 1): clearing
+the cookie just lands the user back on the default. Corrected scheme:
+
+- `?ui=legacy` sets `r4c_ui=legacy`
+- `?ui=new` sets `r4c_ui=new`
+
+Both with `Path=/; Max-Age=2592000; Secure; HttpOnly; SameSite=Lax` — the
+cookie is set and read only by the gateway, so `HttpOnly` denies it to
+client-side JS; `SameSite=Lax` still rides along on top-level navigations
+like the switch links. Two cookie-match rules route each value to its
+backend; the default rule carries the phase, so the phase-2 cutover remains
+a one-field flip.
+
+### HTTPRoute rules (amended 2026-06-11)
+
+Gateway API rule selection is **not list-ordered**: when multiple rules
+match, precedence is decided by match characteristics, and **header matches
+outrank queryParam matches**. A bare `?ui=new` queryParam rule would
+therefore lose to the `Cookie: r4c_ui=legacy` header-match rule, and a
+legacy-cookie user could never escape to the new frontend. To fix this,
+each `?ui=` switch rule is authored **twice**: once _with_ a wildcard
+`Cookie` header match (`RegularExpression: ".*"` — ties the sticky cookie
+rules on header-match count, then wins on the additional queryParam match)
+and once _without_ (cookie-less first visits, where the wildcard variant
+cannot match). Seven rules total:
+
+| #   | Rule                     | Match                                        | Backend   | Set-Cookie      |
+| --- | ------------------------ | -------------------------------------------- | --------- | --------------- |
+| 1   | `switch-legacy`          | `Cookie` ~ `.*` **and** `?ui=legacy`         | legacy    | `r4c_ui=legacy` |
+| 2   | `switch-legacy-nocookie` | `?ui=legacy`                                 | legacy    | `r4c_ui=legacy` |
+| 3   | `switch-new`             | `Cookie` ~ `.*` **and** `?ui=new`            | next      | `r4c_ui=new`    |
+| 4   | `switch-new-nocookie`    | `?ui=new`                                    | next      | `r4c_ui=new`    |
+| 5   | `cookie-legacy`          | `Cookie` ~ `(.*;\s*)?r4c_ui=legacy(\s*;.*)?` | legacy    | —               |
+| 6   | `cookie-new`             | `Cookie` ~ `(.*;\s*)?r4c_ui=new(\s*;.*)?`    | next      | —               |
+| 7   | `default`                | `/` PathPrefix                               | per phase | —               |
+
+Rules 5–6 keep hashed-asset requests sticky to the bundle that referenced
+them. Envoy's regex matcher is a **full-string** match (RE2, "matched
+against the full string, not as a partial match"), and the `Cookie` header
+carries all cookies, so the pattern must wildcard both sides while
+anchoring the cookie-name boundary. A bare substring or partial-match
+pattern either never matches (full-match semantics) or false-positives on
+look-alike names (`other_r4c_ui=legacy`).
 
 ### Two-phase rollout
 
@@ -89,7 +116,10 @@ changes:
 - **Phase 1 — default legacy.** Staff and stakeholders use the `?ui=new`
   link (cookie-sticky) to live on the current frontend against production
   data. Production users see no change. The `r4c-beta` hostname and
-  `deploy/values-beta.yaml` can already be retired.
+  `deploy/values-beta.yaml` are retired **immediately** as part of the
+  routing change (decision 2026-06-11): no transition redirect is kept;
+  stakeholders are pointed at `r4c.dataportal.fi/?ui=new` before the
+  routing PR merges.
 - **Phase 2 — default new (the cutover).** Flip the HTTPRoute default. The
   in-app "switch to classic version" link becomes the public safety valve.
   Rollback is flipping the default back — no image or values change.
@@ -100,9 +130,12 @@ issue), not an automatic consequence of this ADR.
 
 ### Cookie TTL
 
-The `r4c_ui=legacy` cookie carries a bounded `Max-Age` (proposed: 30 days)
-so users who escape to classic are periodically re-landed on the new UI.
-This prevents a permanent shadow population on the frozen bundle.
+The `r4c_ui` cookie carries a bounded `Max-Age` (30 days) for both values,
+so users who escape to classic are periodically re-landed on the default
+UI. This prevents a permanent shadow population on the frozen bundle. (The
+same expiry on `r4c_ui=new` is harmless: opted-in users re-opt with one
+`?ui=new` visit, and after the phase-2 flip the default already serves
+them.)
 
 ### Readiness metric
 
