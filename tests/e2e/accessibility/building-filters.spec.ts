@@ -385,89 +385,97 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await expect(tallBuildingsToggle).not.toBeChecked()
 		})
 
-		cesiumTest('should handle filter state during navigation levels', async ({ cesiumPage }) => {
-			// Enable filters at start level
-			const publicBuildingsToggle = cesiumPage
-				.getByText('Public Buildings', { exact: true })
-				.locator('..')
-				.locator('input[type="checkbox"]')
-			const tallBuildingsToggle = cesiumPage
-				.getByText('Tall Buildings', { exact: true })
-				.locator('..')
-				.locator('input[type="checkbox"]')
+		cesiumTest(
+			'should handle filter state during navigation levels',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				// Enable filters at start level
+				const publicBuildingsToggle = cesiumPage
+					.getByText('Public Buildings', { exact: true })
+					.locator('..')
+					.locator('input[type="checkbox"]')
+				const tallBuildingsToggle = cesiumPage
+					.getByText('Tall Buildings', { exact: true })
+					.locator('..')
+					.locator('input[type="checkbox"]')
 
-			await helpers.checkWithRetry(publicBuildingsToggle, {
-				elementName: 'Public Buildings filter',
-				force: true,
-			})
-			await helpers.checkWithRetry(tallBuildingsToggle, {
-				elementName: 'Tall Buildings filter',
-				force: true,
-			})
-
-			// Navigate to postal code level
-			await helpers.drillToLevel('postalCode')
-			// Wait for postal code UI instead of fixed timeout
-			await cesiumPage
-				.waitForSelector('text="Building Analysis"', {
-					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+				await helpers.checkWithRetry(publicBuildingsToggle, {
+					elementName: 'Public Buildings filter',
+					force: true,
 				})
-				.catch(() => {})
-
-			// Filters should remain functional
-			await expect(publicBuildingsToggle).toBeVisible()
-			await expect(tallBuildingsToggle).toBeVisible()
-
-			// State may be maintained or reset depending on implementation
-			// Test that they can be toggled
-			await helpers.uncheckWithRetry(publicBuildingsToggle, {
-				elementName: 'Public Buildings filter',
-				force: true,
-			})
-			await helpers.checkWithRetry(publicBuildingsToggle, {
-				elementName: 'Public Buildings filter',
-				force: true,
-			})
-			await expect(publicBuildingsToggle).toBeChecked()
-		})
-
-		cesiumTest('should apply filters to building visualization', async ({ cesiumPage }) => {
-			// Navigate to postal code level where buildings are visible
-			await helpers.drillToLevel('postalCode')
-			// Wait for postal code UI instead of fixed timeout
-			await cesiumPage
-				.waitForSelector('text="Building Analysis"', {
-					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+				await helpers.checkWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+					force: true,
 				})
-				.catch(() => {})
 
-			const tallBuildingsToggle = cesiumPage
-				.getByText('Tall Buildings', { exact: true })
-				.locator('..')
-				.locator('input[type="checkbox"]')
+				// Navigate to postal code level
+				await helpers.drillToLevel('postalCode')
+				// Wait for postal code UI instead of fixed timeout
+				await cesiumPage
+					.waitForSelector('text="Building Analysis"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+					})
+					.catch(() => {})
 
-			// Apply filter
-			await helpers.checkWithRetry(tallBuildingsToggle, {
-				elementName: 'Tall Buildings filter',
-				force: true,
-			})
-			// Brief wait for filter to apply
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+				// Filters should remain functional
+				await expect(publicBuildingsToggle).toBeVisible()
+				await expect(tallBuildingsToggle).toBeVisible()
 
-			// Filter should be applied (visual changes would occur in Cesium)
-			// We verify the toggle state is consistent
-			await expect(tallBuildingsToggle).toBeChecked()
+				// State may be maintained or reset depending on implementation
+				// Test that they can be toggled
+				await helpers.uncheckWithRetry(publicBuildingsToggle, {
+					elementName: 'Public Buildings filter',
+					force: true,
+				})
+				await helpers.checkWithRetry(publicBuildingsToggle, {
+					elementName: 'Public Buildings filter',
+					force: true,
+				})
+				await expect(publicBuildingsToggle).toBeChecked()
+			}
+		)
 
-			// Remove filter
-			await helpers.uncheckWithRetry(tallBuildingsToggle, {
-				elementName: 'Tall Buildings filter',
-				force: true,
-			})
-			// Brief wait for filter to remove
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+		cesiumTest(
+			'should apply filters to building visualization',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				// Navigate to postal code level where buildings are visible
+				await helpers.drillToLevel('postalCode')
+				// Wait for postal code UI instead of fixed timeout
+				await cesiumPage
+					.waitForSelector('text="Building Analysis"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+					})
+					.catch(() => {})
 
-			await expect(tallBuildingsToggle).not.toBeChecked()
-		})
+				const tallBuildingsToggle = cesiumPage
+					.getByText('Tall Buildings', { exact: true })
+					.locator('..')
+					.locator('input[type="checkbox"]')
+
+				// Apply filter
+				await helpers.checkWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+					force: true,
+				})
+				// Brief wait for filter to apply
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+
+				// Filter should be applied (visual changes would occur in Cesium)
+				// We verify the toggle state is consistent
+				await expect(tallBuildingsToggle).toBeChecked()
+
+				// Remove filter
+				await helpers.uncheckWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+					force: true,
+				})
+				// Brief wait for filter to remove
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+
+				await expect(tallBuildingsToggle).not.toBeChecked()
+			}
+		)
 	})
 
 	cesiumTest.describe('Building Filter Performance', () => {
@@ -533,36 +541,40 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			expect(errorCount).toBe(0)
 		})
 
-		cesiumTest('should handle filters during data loading', async ({ cesiumPage }) => {
-			// Intercept requests to simulate slow loading
-			cesiumPage.route('**/*.json', (route) => {
-				setTimeout(() => route.continue(), 1000)
-			})
+		cesiumTest(
+			'should handle filters during data loading',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				// Intercept requests to simulate slow loading
+				cesiumPage.route('**/*.json', (route) => {
+					setTimeout(() => route.continue(), 1000)
+				})
 
-			// Try applying filters during navigation/loading
-			await helpers.drillToLevel('postalCode')
+				// Try applying filters during navigation/loading
+				await helpers.drillToLevel('postalCode')
 
-			// Immediately apply filters
-			const tallBuildingsToggle = cesiumPage
-				.getByText('Tall Buildings', { exact: true })
-				.locator('..')
-				.locator('input[type="checkbox"]')
-			await helpers.checkWithRetry(tallBuildingsToggle, {
-				elementName: 'Tall Buildings filter',
-				force: true,
-			})
+				// Immediately apply filters
+				const tallBuildingsToggle = cesiumPage
+					.getByText('Tall Buildings', { exact: true })
+					.locator('..')
+					.locator('input[type="checkbox"]')
+				await helpers.checkWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+					force: true,
+				})
 
-			// Wait for loading to complete
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
+				// Wait for loading to complete
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
-			// Filter state should be consistent
-			await expect(tallBuildingsToggle).toBeChecked()
+				// Filter state should be consistent
+				await expect(tallBuildingsToggle).toBeChecked()
 
-			// No error states
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
-			const errorCount = await errorElements.count()
-			expect(errorCount).toBe(0)
-		})
+				// No error states
+				const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+				const errorCount = await errorElements.count()
+				expect(errorCount).toBe(0)
+			}
+		)
 	})
 
 	cesiumTest.describe('Building Filter Accessibility', () => {
@@ -830,48 +842,52 @@ cesiumDescribe('Building Filters Accessibility', () => {
 	})
 
 	cesiumTest.describe('Building Filter Integration', () => {
-		cesiumTest('should work with layer controls simultaneously', async ({ cesiumPage }) => {
-			// Navigate to context where both filters and layers are available
-			await helpers.drillToLevel('postalCode')
-			// Wait for postal code UI instead of fixed timeout
-			await cesiumPage
-				.waitForSelector('text="Building Analysis"', {
-					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+		cesiumTest(
+			'should work with layer controls simultaneously',
+			{ tag: ['@requires-database'] },
+			async ({ cesiumPage }) => {
+				// Navigate to context where both filters and layers are available
+				await helpers.drillToLevel('postalCode')
+				// Wait for postal code UI instead of fixed timeout
+				await cesiumPage
+					.waitForSelector('text="Building Analysis"', {
+						timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+					})
+					.catch(() => {})
+
+				// Enable building filter
+				const tallBuildingsToggle = cesiumPage
+					.getByText('Tall Buildings', { exact: true })
+					.locator('..')
+					.locator('input[type="checkbox"]')
+				await helpers.checkWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+					force: true,
 				})
-				.catch(() => {})
 
-			// Enable building filter
-			const tallBuildingsToggle = cesiumPage
-				.getByText('Tall Buildings', { exact: true })
-				.locator('..')
-				.locator('input[type="checkbox"]')
-			await helpers.checkWithRetry(tallBuildingsToggle, {
-				elementName: 'Tall Buildings filter',
-				force: true,
-			})
+				// Enable layer toggle — NDVI is also a Vuetify v-switch.
+				const ndviToggle = cesiumPage
+					.getByText('NDVI')
+					.locator('..')
+					.locator('input[type="checkbox"]')
+				await helpers.checkWithRetry(ndviToggle, {
+					elementName: 'NDVI layer',
+					force: true,
+				})
 
-			// Enable layer toggle — NDVI is also a Vuetify v-switch.
-			const ndviToggle = cesiumPage
-				.getByText('NDVI')
-				.locator('..')
-				.locator('input[type="checkbox"]')
-			await helpers.checkWithRetry(ndviToggle, {
-				elementName: 'NDVI layer',
-				force: true,
-			})
+				// Both should be enabled simultaneously
+				await expect(tallBuildingsToggle).toBeChecked()
+				await expect(ndviToggle).toBeChecked()
 
-			// Both should be enabled simultaneously
-			await expect(tallBuildingsToggle).toBeChecked()
-			await expect(ndviToggle).toBeChecked()
-
-			// Both should remain functional
-			await helpers.uncheckWithRetry(tallBuildingsToggle, {
-				elementName: 'Tall Buildings filter',
-				force: true,
-			})
-			await expect(tallBuildingsToggle).not.toBeChecked()
-			await expect(ndviToggle).toBeChecked() // Should not affect layer toggle
-		})
+				// Both should remain functional
+				await helpers.uncheckWithRetry(tallBuildingsToggle, {
+					elementName: 'Tall Buildings filter',
+					force: true,
+				})
+				await expect(tallBuildingsToggle).not.toBeChecked()
+				await expect(ndviToggle).toBeChecked() // Should not affect layer toggle
+			}
+		)
 
 		cesiumTest(
 			'should hide filters in grid view and reset when returning',
