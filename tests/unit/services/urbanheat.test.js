@@ -38,6 +38,10 @@ vi.mock('@/services/unifiedLoader.js', () => ({
  * Faithful re-implementation of the previous merge algorithm (without the
  * per-25-feature idle yields, which never affected the *output*). Used as the
  * equivalence oracle and the benchmark baseline.
+ *
+ * One deliberate divergence from the historical scan: `locationUnder40` is
+ * gated on `locationunder40` rather than `distancetounder40`, matching the
+ * #881 fix, so the equivalence assertions verify the *corrected* behaviour.
  */
 function oldMergeReference(buildingFeatures, heatFeatures) {
 	const decodingService = new Decoding()
@@ -53,7 +57,7 @@ function oldMergeReference(buildingFeatures, heatFeatures) {
 				if (hp.distancetounder40) {
 					properties.distanceToUnder40 = hp.distancetounder40
 				}
-				if (hp.distancetounder40) {
+				if (hp.locationunder40) {
 					properties.locationUnder40 = hp.locationunder40
 				}
 				if (hp.year_of_construction) {
@@ -141,6 +145,32 @@ describe('mergeHeatFeaturesIntoBuildings', () => {
 		expect(props.kayttotarkoitus).toBe('Yhden asunnon talot')
 	})
 
+	it('sets locationUnder40 when locationunder40 is present but distancetounder40 is absent (#881)', async () => {
+		const buildings = [building('A')]
+		const heatFeatures = [heat('A', { distancetounder40: undefined })]
+
+		await mergeHeatFeaturesIntoBuildings(buildings, heatFeatures)
+
+		const props = buildings[0].properties
+		// Pre-#881 the locationUnder40 copy was gated on distancetounder40,
+		// silently dropping the cold point for exactly this shape of feature.
+		expect(props.locationUnder40).toBe('north')
+		expect(props.distanceToUnder40).toBeUndefined()
+	})
+
+	it('does not set locationUnder40 when locationunder40 is absent even if distancetounder40 is present (#881)', async () => {
+		const buildings = [building('A')]
+		const heatFeatures = [heat('A', { locationunder40: undefined })]
+
+		await mergeHeatFeaturesIntoBuildings(buildings, heatFeatures)
+
+		const props = buildings[0].properties
+		expect(props.distanceToUnder40).toBe(10)
+		// Pre-#881 this assigned `undefined` to locationUnder40; the key must
+		// now be absent entirely, not present-with-undefined.
+		expect('locationUnder40' in props).toBe(false)
+	})
+
 	it('leaves an unmatched building untouched', async () => {
 		const buildings = [building('A'), building('NO_MATCH')]
 		const heatFeatures = [heat('A')]
@@ -219,9 +249,21 @@ describe('mergeHeatFeaturesIntoBuildings', () => {
 			building('id_5'), // duplicate of an existing id
 		]
 		// Heat: matches for most ids (shuffled), a couple of orphans, one no-key,
-		// and a second feature for the duplicated id.
+		// and a second feature for the duplicated id. Mix in #881-relevant shapes:
+		// some features missing distancetounder40, some missing locationunder40.
 		const heatSpecs = [
-			...ids.filter((_, i) => i % 7 !== 0).map((id) => heat(id)),
+			...ids
+				.filter((_, i) => i % 7 !== 0)
+				.map((id, i) =>
+					heat(
+						id,
+						i % 5 === 1
+							? { distancetounder40: undefined }
+							: i % 5 === 3
+								? { locationunder40: undefined }
+								: {}
+					)
+				),
 			heat('ORPHAN_A'),
 			heat('ORPHAN_B'),
 			heat(undefined),
