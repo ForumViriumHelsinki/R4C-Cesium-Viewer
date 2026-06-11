@@ -318,6 +318,11 @@ export default defineConfig(({ mode }) => {
 				'/feature-flags': {
 					target: 'http://localhost:1031',
 					changeOrigin: true,
+					// The GOFF web provider's initialize() requires the
+					// /feature-flags/ws/* websocket — without ws proxying it
+					// always falls back to local defaults (masked in dev by
+					// the enable-all-flags dev fallback).
+					ws: true,
 					rewrite: (path) => path.replace(/^\/feature-flags/, ''),
 				},
 				'/hsy-action': {
@@ -361,6 +366,7 @@ export default defineConfig(({ mode }) => {
 				'/feature-flags': {
 					target: 'http://localhost:1031',
 					changeOrigin: true,
+					ws: true,
 					rewrite: (path) => path.replace(/^\/feature-flags/, ''),
 				},
 			},

@@ -27,6 +27,13 @@ ENV VITE_VTT_API_HOST=130.188.4.230
 # DNS resolver: "auto" means detect from /etc/resolv.conf at startup
 # This works in both Docker (127.0.0.11) and Kubernetes (kube-dns ClusterIP)
 ENV NGINX_DNS_RESOLVER=auto
+# GOFF relay evaluation key, injected into proxied /feature-flags/ requests by
+# nginx (see default.conf.template). MUST stay defined (even empty): the nginx
+# image's envsubst-on-templates only substitutes variables present in the
+# environment — an undefined var leaves a literal ${GOFF_API_KEY} that nginx
+# parses as an unknown nginx variable and refuses to start. Production
+# overrides this via a Secret-backed env var on the Deployment.
+ENV GOFF_API_KEY=""
 
 # Install dbmate and postgresql-client for migrations
 RUN apt-get update && apt-get install -y \
