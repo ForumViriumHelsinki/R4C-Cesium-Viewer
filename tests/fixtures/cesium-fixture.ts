@@ -483,7 +483,12 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 							}
 						},
 						CallbackProperty: class {},
-						ConstantProperty: class {},
+						ConstantProperty: class {
+							constructor(value) {
+								this._value = value
+								this.getValue = () => value
+							}
+						},
 						SampledProperty: class {
 							addSample(_time, _value) {}
 						},
