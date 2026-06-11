@@ -1,24 +1,24 @@
+name: release-please
+
 on:
   push:
     branches:
       - main
-      # Support backport release branches (e.g., release-1.22.x)
-      # Pattern must NOT match release-please PR branches (release-please--branches--*)
-      - 'release-[0-9]+.[0-9]+.x'
+  # Manual re-run escape hatch (e.g. to cut a release missed by a failed run)
+  workflow_dispatch: {}
 
-permissions:
-  contents: write
-  pull-requests: write
-
-name: release-please
-
+# Authenticates via the org CI GitHub App (short-lived installation tokens,
+# no PAT rotation) — see infrastructure/docs/CI_GITHUB_APP_SETUP.md.
+# CI_APP_PRIVATE_KEY availability is gated on the repo's release-please
+# topic in infrastructure/github/repos.json.
+#
+# The release-1.22.x branch trigger was removed with ADR-008: the branch is
+# frozen (no more backport releases); the legacy v1.22.6 deployment is pinned
+# in the infrastructure repo.
 jobs:
   release-please:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: googleapis/release-please-action@v5
-        with:
-          token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-          target-branch: ${{ github.ref_name }}
+    uses: ForumViriumHelsinki/.github/.github/workflows/reusable-release-please.yml@main
+    with:
+      app-id: ${{ vars.CI_APP_ID }}
+    secrets:
+      APP_PRIVATE_KEY: ${{ secrets.CI_APP_PRIVATE_KEY }}
