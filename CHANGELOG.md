@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.53.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.52.0...r4c-cesium-viewer-v1.53.0) (2026-06-10)
+
+
+### Features
+
+* **perf:** add dev-gated performance counters (window.__perfStats) ([#873](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/873)) ([35e1c2f](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/35e1c2f21ac047c17aa4f1a0aaac81141e54c7a9))
+* **renderer:** deck.gl grid renderer spike behind r4c-deckgl-renderer flag ([#879](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/879)) ([2cbf4ce](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2cbf4ce88347c25504f830cf1f4d1ba663d3f1a7))
+
+
+### Bug Fixes
+
+* **nginx:** data cache headers, precompression, HSY stale-on-error tile cache ([#877](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/877)) ([a661e6b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a661e6b9e2bad26fa2d620dbbaec3e71b94bbf4d))
+* **nginx:** re-declare security headers in location blocks (+ session-learning rules) ([#885](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/885)) ([4b90ef3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4b90ef3e910e3dc3d381e5690d2fcb2db1f3dfce))
+* **urbanheat:** replace O(B×H) heat merge with hash-join and bound idle yields ([#874](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/874)) ([b3b58f5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b3b58f5a35b385a3bc377df23c83bfd44018f844))
+* **wms:** graceful degradation when HSY API is flaky or down ([#878](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/878)) ([ffdac4e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ffdac4e31a4ad7a48e01c3cf5ca1ea043330ee46))
+
+
+### Performance Improvements
+
+* **grid:** batch entity styling to eliminate super-linear material rebuilds ([#880](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/880)) ([eb0109c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/eb0109c704ca111300e3318f96835c89af5c95a6))
+
 ## [1.52.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.51.6...r4c-cesium-viewer-v1.52.0) (2026-06-08)
 
 
