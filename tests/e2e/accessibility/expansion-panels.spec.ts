@@ -11,14 +11,14 @@
 
 import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
-import AccessibilityTestHelpers from '../helpers/test-helpers'
+import GridAwareTestHelpers from '../helpers/grid-aware-helpers'
 
 cesiumDescribe('Sidebar Panels Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
-	let helpers: AccessibilityTestHelpers
+	let helpers: GridAwareTestHelpers
 
 	cesiumTest.beforeEach(async ({ cesiumPage }) => {
-		helpers = new AccessibilityTestHelpers(cesiumPage)
+		helpers = new GridAwareTestHelpers(cesiumPage)
 		// Cesium is already initialized by the fixture
 	})
 
