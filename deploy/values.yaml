@@ -13,7 +13,7 @@
 # Application in infrastructure/argocd/apps/templates/regions4climate/).
 image:
   repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
-  tag: '1.54.0'
+  tag: '1.55.0'
 # Distinct release name to avoid Service/Deployment collisions with the
 # frozen legacy release
 fullnameOverride: r4c-cesium-viewer-beta
@@ -107,7 +107,7 @@ migrations:
       cpu: 200m
       memory: 256Mi
   image:
-    tag: 1.54.0
+    tag: 1.55.0
     repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
 # Routing is owned by the hand-authored HTTPRoute in the infrastructure repo
 # (cookie-based legacy/next selection on r4c.dataportal.fi exceeds what the
