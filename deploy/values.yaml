@@ -117,31 +117,48 @@ gateway:
   enabled: false
 ingress:
   enabled: false
+# GOFF evaluation key — ExternalSecret pulls the GCP Secret Manager secret
+# `r4c_cesium_viewer_goff_client_id` into a co-located K8s secret. The app's
+# NGINX injects this key server-side for GOFF relay-proxy evaluation requests.
+externalSecret:
+  enabled: true
+  name: r4c-cesium-viewer-goff
+  target:
+    name: r4c-cesium-viewer-goff
+  data:
+  - secretKey: GOFF_API_KEY
+    remoteRef:
+      key: r4c_cesium_viewer_goff_client_id
 env:
-  - name: SENTRY_AUTH_TOKEN
-    valueFrom:
-      secretKeyRef:
-        name: regions4climate-secrets # pragma: allowlist secret
-        key: SENTRY_AUTH_TOKEN
-  - name: VITE_SENTRY_DSN
-    valueFrom:
-      secretKeyRef:
-        name: regions4climate-secrets # pragma: allowlist secret
-        key: VITE_SENTRY_DSN
-  - name: SENTRY_DSN
-    valueFrom:
-      secretKeyRef:
-        name: regions4climate-secrets # pragma: allowlist secret
-        key: SENTRY_DSN
-  - name: VITE_DIGITRANSIT_KEY
-    valueFrom:
-      secretKeyRef:
-        name: regions4climate-secrets # pragma: allowlist secret
-        key: VITE_DIGITRANSIT_KEY
-  - name: VITE_PYGEOAPI_HOST
-    value: 'pygeoapi-helm-webapp.pygeoapi.svc.cluster.local'
-  - name: VITE_PYGEOAPI_URL
-    value: 'https://pygeoapi.dataportal.fi'
+- name: SENTRY_AUTH_TOKEN
+  valueFrom:
+    secretKeyRef:
+      name: regions4climate-secrets # pragma: allowlist secret
+      key: SENTRY_AUTH_TOKEN
+- name: VITE_SENTRY_DSN
+  valueFrom:
+    secretKeyRef:
+      name: regions4climate-secrets # pragma: allowlist secret
+      key: VITE_SENTRY_DSN
+- name: SENTRY_DSN
+  valueFrom:
+    secretKeyRef:
+      name: regions4climate-secrets # pragma: allowlist secret
+      key: SENTRY_DSN
+- name: VITE_DIGITRANSIT_KEY
+  valueFrom:
+    secretKeyRef:
+      name: regions4climate-secrets # pragma: allowlist secret
+      key: VITE_DIGITRANSIT_KEY
+- name: VITE_PYGEOAPI_HOST
+  value: 'pygeoapi-helm-webapp.pygeoapi.svc.cluster.local'
+- name: VITE_PYGEOAPI_URL
+  value: 'https://pygeoapi.dataportal.fi'
+- name: GOFF_API_KEY
+  valueFrom:
+    secretKeyRef:
+      name: r4c-cesium-viewer-goff # pragma: allowlist secret
+      key: GOFF_API_KEY
 replicaCount: 1
 resources:
   limits:
