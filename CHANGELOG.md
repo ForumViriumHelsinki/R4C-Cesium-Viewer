@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.54.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.53.1...r4c-cesium-viewer-v1.54.0) (2026-06-12)
+
+
+### Features
+
+* **deploy:** rewrite values.yaml as next-frontend config + classic-version switch link ([#891](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/891)) ([b712e22](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b712e22a18ba55b30305fda9fca5b381b4f0bcbb))
+
 ## [1.53.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.53.0...r4c-cesium-viewer-v1.53.1) (2026-06-12)
 
 
