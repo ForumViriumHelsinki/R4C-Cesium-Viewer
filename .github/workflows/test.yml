@@ -159,7 +159,7 @@ jobs:
         run: bun run test:unit
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v6.0.1 # Pinned for reproducible builds
+        uses: codecov/codecov-action@v7.0.0 # Pinned for reproducible builds
         with:
           file: ./coverage/lcov.info
           flags: unittests
