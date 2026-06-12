@@ -84,9 +84,13 @@ export const indexToColorScheme = {
 /**
  * Resolve an index value (0-1) to its threshold color hex string.
  *
- * Color schemes carry 2 "missing data" entries at indices 0-1, then 5 threshold
- * colors at indices 2-6. Thresholds: < 0.2 (2), 0.2-0.4 (3), 0.4-0.6 (4),
- * 0.6-0.8 (5), > 0.8 (6). Direct comparison avoids array allocation.
+ * Full-length schemes (`heatColors`, `floodColors`) carry 2 "missing data"
+ * entries at indices 0-1, then 5 threshold colors at indices 2-6. Shorter
+ * schemes (`greenSpaceColors`, `partialHeatColors`, `partialFloodColors`)
+ * have no placeholders — their 5 threshold colors start at index 0. A
+ * length-based offset selects the right starting index so both shapes map
+ * the thresholds < 0.2, 0.2-0.4, 0.4-0.6, 0.6-0.8, > 0.8 to consecutive
+ * entries (#882). Direct comparison avoids array allocation.
  *
  * @param {number} indexValue - The index value (0-1 range)
  * @param {string} indexType - The index type key for color scheme lookup
@@ -95,15 +99,19 @@ export const indexToColorScheme = {
 export function getGridColorString(indexValue, indexType) {
 	const colorScheme = indexToColorScheme[indexType] || heatColors
 
+	// 2 placeholder entries ("Incomplete data" / "Missing values") only exist
+	// on the full 7-entry schemes; shorter schemes index thresholds from 0.
+	const offset = colorScheme.length > 5 ? 2 : 0
+
 	let colorIndex
 	if (indexValue < 0.2) {
-		colorIndex = 2
+		colorIndex = offset
 	} else if (indexValue < 0.4) {
-		colorIndex = 3
+		colorIndex = offset + 1
 	} else if (indexValue < 0.6) {
-		colorIndex = 4
+		colorIndex = offset + 2
 	} else if (indexValue < 0.8) {
-		colorIndex = 5
+		colorIndex = offset + 3
 	} else {
 		colorIndex = colorScheme.length - 1 // > 0.8
 	}

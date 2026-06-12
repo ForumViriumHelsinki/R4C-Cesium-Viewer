@@ -416,7 +416,15 @@ export function createCesiumMock() {
 			}
 		},
 		CallbackProperty: class {},
-		ConstantProperty: class {},
+		ConstantProperty: class {
+			_value: any
+			constructor(value?: any) {
+				this._value = value
+			}
+			getValue() {
+				return this._value
+			}
+		},
 		SampledProperty: class {
 			addSample(_time: any, _value: any) {}
 		},

@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.54.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.53.1...r4c-cesium-viewer-v1.54.0) (2026-06-12)
+
+
+### Features
+
+* **deploy:** rewrite values.yaml as next-frontend config + classic-version switch link ([#891](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/891)) ([b712e22](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b712e22a18ba55b30305fda9fca5b381b4f0bcbb))
+
+## [1.53.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.53.0...r4c-cesium-viewer-v1.53.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **grid:** map short color schemes proportionally in getGridColorString ([#899](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/899)) ([ac143d7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ac143d7859cf2325eb06a8849dece0a98fc377d4))
+* **nginx:** repair GOFF relay proxying — path rewrite, websocket, API key ([#892](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/892)) ([bdb219e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bdb219ed785be9772a7d41f0590b55b72c8f3cd1))
+* **tests:** align ConstantProperty stubs with setup.js getValue convention ([#901](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/901)) ([77cd40c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/77cd40c7666a60f306f5574a67d9df0102c6aae2))
+* **tests:** wait out grid-view main-thread wedge in a11y view navigation ([#903](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/903)) ([021c610](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/021c6109fa55b724b2dae6b392a8839c3bea02c9))
+* **urbanheat:** gate locationUnder40 on locationunder40 field ([#900](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/900)) ([d82f081](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d82f081345236a0acb46c4956b1931dbc0371e28))
+
 ## [1.53.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.52.0...r4c-cesium-viewer-v1.53.0) (2026-06-10)
 
 

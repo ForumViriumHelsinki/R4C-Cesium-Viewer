@@ -105,8 +105,9 @@ export default defineConfig({
      - View navigation with retries: 5-10s
      - Element interactions: 5-10s
      Total: ~25-35s needed for complex tests
-     CI gets extra buffer for slower/variable environments */
-	timeout: process.env.CI ? 50000 : 40000,
+     CI gets extra buffer for slower/variable environments, including the
+     grid-view data-load quiescence wait on 2-vCPU SwiftShader runners (#897) */
+	timeout: process.env.CI ? 90000 : 40000,
 	/* Bound the entire test run so a runaway process doesn't hold the CI
 	 * runner indefinitely. 30 minutes covers the slowest current full-suite. */
 	globalTimeout: 30 * 60 * 1000,
