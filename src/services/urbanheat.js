@@ -251,10 +251,11 @@ export const HEAT_MERGE_YIELD_INTERVAL = 500
  * Copies the heat-exposure attributes from a matched heat feature onto the
  * building's properties and decodes the building's own coded fields.
  *
- * Behaviour is identical to the per-match block of the previous linear scan:
- * each field is copied only when present on the heat feature, and the building's
+ * Behaviour matches the per-match block of the previous linear scan — each
+ * field is copied only when present on the heat feature, and the building's
  * coded fields (`c_julkisivu`, `c_rakeaine`, …) are decoded only for matched
- * buildings.
+ * buildings — except that `locationUnder40` is now gated on `locationunder40`
+ * (the old scan gated it on `distancetounder40` by mistake; see #881).
  *
  * @param {Object} properties - Properties of the building to enrich (mutated in place).
  * @param {Object} heatProps - Properties of the matched heat feature.
@@ -269,7 +270,7 @@ const applyHeatAttributes = (properties, heatProps, decodingService) => {
 		properties.distanceToUnder40 = heatProps.distancetounder40
 	}
 
-	if (heatProps.distancetounder40) {
+	if (heatProps.locationunder40) {
 		properties.locationUnder40 = heatProps.locationunder40
 	}
 
