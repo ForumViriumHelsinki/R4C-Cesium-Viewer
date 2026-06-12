@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.55.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.54.0...r4c-cesium-viewer-v1.55.0) (2026-06-12)
+
+
+### Features
+
+* **deploy:** wire GOFF_API_KEY from ExternalSecret ([#896](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/896)) ([a1ee2e3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a1ee2e348d88b4d43f6c70972f52914babb5febb))
+
 ## [1.54.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.53.1...r4c-cesium-viewer-v1.54.0) (2026-06-12)
 
 
