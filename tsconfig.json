@@ -34,8 +34,8 @@
 		// Ensure consistent casing in imports
 		"forceConsistentCasingInFileNames": true,
 
-		// Match Vite's path alias configuration
-		"baseUrl": ".",
+		// Match Vite's path alias configuration; relative paths resolve against
+		// this tsconfig's directory (TS 5.0+), so no baseUrl needed (removed in TS 7)
 		"paths": {
 			"@/*": ["./src/*"]
 		},

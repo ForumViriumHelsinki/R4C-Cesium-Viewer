@@ -12,3 +12,7 @@ declare module '*.css' {
 	const content: string
 	export default content
 }
+
+// Vuetify's "./styles" export maps to a stylesheet with no type declarations;
+// TypeScript 6 checks side-effect imports (TS2882), so declare it here.
+declare module 'vuetify/styles'
