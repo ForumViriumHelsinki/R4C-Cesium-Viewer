@@ -83,6 +83,11 @@
 						title="Sign in"
 						@click="signIn"
 					/>
+					<v-list-item
+						prepend-icon="mdi-history"
+						title="Switch to classic version"
+						@click="switchToLegacy"
+					/>
 				</v-list>
 			</v-menu>
 		</v-app-bar>
@@ -234,6 +239,12 @@ const signOut = () => {
 const signIn = () => {
 	const rd = encodeURIComponent(window.location.pathname + window.location.search)
 	window.location.href = `/oauth2/start?rd=${rd || '%2F'}`
+}
+
+// ADR-008 escape hatch: ?ui=legacy is matched by the Envoy Gateway HTTPRoute,
+// which sets the r4c_ui=legacy cookie and serves the frozen v1.22.x bundle.
+const switchToLegacy = () => {
+	window.location.href = '/?ui=legacy'
 }
 
 const smartReset = async () => {
