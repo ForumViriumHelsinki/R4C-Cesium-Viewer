@@ -101,7 +101,7 @@
 		"vite": "^8.0.1",
 		"vite-plugin-cesium-build": "^0.7.2",
 		"vitest": "^4.0.15",
-		"vue-tsc": "3.3.4"
+		"vue-tsc": "3.3.5"
 	},
 	"overrides": {
 		"esbuild": "^0.28.0",
