@@ -2,5 +2,16 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Tool version pins in scripts/install_pkgs.sh",
+      "managerFilePatterns": ["/^scripts/install_pkgs\\.sh$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\s+\\w+_VERSION=\"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "{{{datasource}}}"
+    }
   ]
 }

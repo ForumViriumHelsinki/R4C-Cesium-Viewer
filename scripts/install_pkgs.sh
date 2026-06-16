@@ -23,7 +23,8 @@ else
   echo "[install_pkgs] pre-commit already installed, skipping."
 fi
 
-# --- just 1.40.0 ---
+# --- just (latest stable) ---
+# renovate: datasource=github-releases depName=casey/just
 JUST_VERSION="1.40.0"
 if ! has just; then
   echo "[install_pkgs] Installing just ${JUST_VERSION}..."
