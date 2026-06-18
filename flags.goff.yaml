@@ -81,6 +81,16 @@ r4c-land-cover:
 # Graphics & Performance
 # ============================================================
 
+r4c-deckgl-renderer:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+  targeting:
+    - query: domain eq "forumvirium.fi"
+      variation: enabled
+
 r4c-hdr-rendering:
   variations:
     enabled: true
