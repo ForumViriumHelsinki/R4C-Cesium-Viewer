@@ -27,7 +27,7 @@ jobs:
 
   build:
     needs: setup
-    uses: ForumViriumHelsinki/.github/.github/workflows/reusable-container-build.yml@882fa37faa0f3eb78a3ae044d6906071f4613a6a # main
+    uses: ForumViriumHelsinki/.github/.github/workflows/reusable-container-build.yml@f1399ee3bed8e3ac2c1a0616c853df17b3d7764f # main
     with:
       image-name: ${{ needs.setup.outputs.image-name }}
     secrets:
