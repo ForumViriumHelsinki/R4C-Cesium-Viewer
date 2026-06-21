@@ -417,8 +417,8 @@ export default class DataSource {
 			// Check if the entity has the specified property
 			if (entity.properties?.includes(property)) {
 				// Extract the property value and add it to the total
-				const propertyValue = entity.properties[property].getValue()
-				if (!Number.isNaN(propertyValue)) {
+				const propertyValue = entity.properties?.[property]?.getValue()
+				if (propertyValue != null && !Number.isNaN(propertyValue)) {
 					total += propertyValue
 				}
 			}

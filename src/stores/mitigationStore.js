@@ -104,15 +104,17 @@ export const useMitigationStore = defineStore('mitigation', {
 			const gridCellsData = datasource.entities.values
 				.filter((entity) => entity.properties?.final_avg_conditional?.getValue() != null)
 				.map((entity) => {
-					const gridId = entity.properties.grid_id.getValue()
-					const heatIndex = entity.properties.final_avg_conditional.getValue()
+					const gridId = entity.properties?.grid_id?.getValue()
+					const heatIndex = entity.properties?.final_avg_conditional?.getValue()
 
-					this.modifiedHeatIndices[gridId] = heatIndex
+					if (gridId != null) {
+						this.modifiedHeatIndices[gridId] = heatIndex
+					}
 
 					return {
 						id: gridId,
-						x: entity.properties.euref_x.getValue(),
-						y: entity.properties.euref_y.getValue(),
+						x: entity.properties?.euref_x?.getValue(),
+						y: entity.properties?.euref_y?.getValue(),
 						// DO NOT include entity reference
 					}
 				})
@@ -197,7 +199,7 @@ export const useMitigationStore = defineStore('mitigation', {
 		},
 		calculateParksEffect(sourceEntity, totalAreaConverted) {
 			const heatReductions = []
-			const sourceGridId = sourceEntity.properties.grid_id.getValue()
+			const sourceGridId = sourceEntity.properties?.grid_id?.getValue()
 			const originalIndex = this.modifiedHeatIndices[sourceGridId]
 			const sourceReduction = (totalAreaConverted / this.gridArea) * this.parks2022CoolingConstant
 			const newIndex = Math.max(0, originalIndex - sourceReduction)
