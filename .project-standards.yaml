@@ -1,0 +1,21 @@
+# Infrastructure standards compliance tracking — see /configure:all
+project_type: frontend
+last_checked: 2026-06-21
+components:
+  justfile: pass
+  pre_commit: pass
+  release_please: pass
+  dockerfile: warn # runtime nginx stage runs as root; verify deploy/values.yaml securityContext
+  container_ci: pass
+  skaffold: pass
+  workflows: pass
+  sentry: pass
+  docs: pass
+  cache_busting: pass
+  tests: pass
+  coverage: pass
+  linting: pass
+  formatting: pass # Biome owns JS/TS; Prettier scoped to YAML+Markdown (no overlap)
+  dead_code: pass
+  editor: pass # .editorconfig added
+  security: pass # Renovate central (infra repo); per-repo dependabot.yml removed
