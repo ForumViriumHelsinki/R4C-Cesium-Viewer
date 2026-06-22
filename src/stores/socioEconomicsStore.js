@@ -157,7 +157,14 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 
 			// Filter out excluded postal codes and map to properties
 			this.data = data.features
-				.filter((feature) => !excludedPostalCodes.includes(feature.properties.postinumeroalue))
+				// Drop features without properties first — otherwise they survive the
+				// exclusion check (undefined ∉ excluded) and map to `undefined`, which
+				// then throws in the reduce below on `item.ra_as_kpa`.
+				.filter(
+					(feature) =>
+						feature.properties != null &&
+						!excludedPostalCodes.includes(feature.properties.postinumeroalue)
+				)
 				.map((feature) => feature.properties)
 
 			// Single-pass calculation of both region and Helsinki statistics

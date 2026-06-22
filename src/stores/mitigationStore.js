@@ -102,7 +102,18 @@ export const useMitigationStore = defineStore('mitigation', {
 		async setGridCells(datasource) {
 			// Extract only serializable data - do NOT store entities
 			const gridCellsData = datasource.entities.values
-				.filter((entity) => entity.properties?.final_avg_conditional?.getValue() != null)
+				// Require every property the cell depends on — dropping incomplete
+				// entities here keeps gridCells / modifiedHeatIndices free of invalid
+				// (undefined id, NaN-prone) cells rather than mapping them through.
+				.filter((entity) => {
+					const props = entity.properties
+					return (
+						props?.final_avg_conditional?.getValue() != null &&
+						props?.grid_id?.getValue() != null &&
+						props?.euref_x?.getValue() != null &&
+						props?.euref_y?.getValue() != null
+					)
+				})
 				.map((entity) => {
 					const gridId = entity.properties.grid_id.getValue()
 					const heatIndex = entity.properties.final_avg_conditional.getValue()
@@ -197,8 +208,19 @@ export const useMitigationStore = defineStore('mitigation', {
 		},
 		calculateParksEffect(sourceEntity, totalAreaConverted) {
 			const heatReductions = []
-			const sourceGridId = sourceEntity.properties.grid_id.getValue()
-			const originalIndex = this.modifiedHeatIndices[sourceGridId]
+			const sourceGridId = sourceEntity.properties?.grid_id?.getValue()
+			// Without a grid id there is nothing to index; bail (returning the same
+			// shape callers expect) before the arithmetic below would write NaN into
+			// modifiedHeatIndices.
+			if (sourceGridId == null) {
+				return {
+					heatReductions,
+					sourceNewIndex: null,
+					totalCoolingArea: 0,
+					neighborsAffected: 0,
+				}
+			}
+			const originalIndex = this.modifiedHeatIndices[sourceGridId] ?? 0
 			const sourceReduction = (totalAreaConverted / this.gridArea) * this.parks2022CoolingConstant
 			const newIndex = Math.max(0, originalIndex - sourceReduction)
 

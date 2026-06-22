@@ -414,13 +414,13 @@ export default class DataSource {
 		// Iterate through the entities in the data source
 		const entities = foundDataSource.entities.values
 		for (const entity of entities) {
-			// Check if the entity has the specified property
-			if (entity.properties?.includes(property)) {
-				// Extract the property value and add it to the total
-				const propertyValue = entity.properties[property].getValue()
-				if (!Number.isNaN(propertyValue)) {
-					total += propertyValue
-				}
+			// Read via the null-safe public API and skip absent/non-numeric values.
+			// (The prior `entity.properties.includes(property)` guard was a latent
+			// TypeError — a Cesium PropertyBag has no `includes` method — and is made
+			// redundant by the optional chaining here.)
+			const propertyValue = entity.properties?.[property]?.getValue()
+			if (propertyValue != null && !Number.isNaN(propertyValue)) {
+				total += propertyValue
 			}
 		}
 		return total
