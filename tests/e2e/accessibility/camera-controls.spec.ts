@@ -1,12 +1,26 @@
 /**
  * Camera Controls Accessibility Tests
  *
- * Tests the CameraControls component including:
- * - Compass display and rotation
- * - Click functionality to reset North
- * - Keyboard accessibility (Enter/Space)
- * - ARIA attributes and screen reader support
- * - Zoom in/out controls
+ * Tests the CameraControls component (src/components/CameraControls.vue), a pure
+ * Vue 3 + SVG + DOM component mounted unconditionally in src/pages/CesiumViewer.vue.
+ * It is NOT a Cesium internal compass widget rendered into the WebGL canvas, so it
+ * renders in headless CI without a full WebGL context.
+ *
+ * The accessible interaction model is:
+ * - `.compass-assembly` (role=group) with eight directional `.dir-btn` buttons
+ *   (aria-label "Face <Direction>") that face the camera in a compass direction.
+ * - A decorative, aria-hidden SVG compass (`.compass-ring` + `.compass-needle`).
+ * - An `sr-only` role="status" aria-live region announcing the current heading.
+ * - `.zoom-controls` (role=group) with "Zoom in" / "Zoom out" buttons.
+ *
+ * History: this suite was previously skipped (#623) because it queried
+ * `.compass-control` / `#compass-description` — selectors that never existed in the
+ * component (the spec assumed a single click-to-reset-North button + an
+ * aria-describedby description element, neither of which the component has). It is
+ * re-enabled here (#818) with the real selectors, split into DOM-only assertions
+ * (run everywhere) and a Cesium-coupled `@cesium` subset driven via `window.__viewer`.
+ *
+ * Strategy: docs/core/TESTING.md → "Cesium UI Component Accessibility Testing Strategy".
  *
  * @tags @accessibility @e2e
  */
@@ -14,834 +28,301 @@
 import { expect } from '@playwright/test'
 import { TIMEOUTS, VIEWPORTS } from '../../config/constants'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
-import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
+import { TEST_TIMEOUTS } from '../helpers/test-helpers'
 
-// SKIPPED: selector mismatch, NOT a WebGL/headless-CI limitation.
-//
-// CameraControls.vue is a pure Vue + SVG + DOM component (mounted unconditionally
-// in src/pages/CesiumViewer.vue), not a Cesium internal compass widget rendered
-// into the WebGL canvas. It renders in headless CI without a full WebGL context.
-//
-// These tests query `.compass-control` and `#compass-description`, but NEITHER
-// selector exists in src/. The real component uses `.camera-controls-container`,
-// `.compass-assembly`, `.compass-ring`, `.compass-needle`, `.dir-btn`, `.zoom-btn`
-// and an `sr-only` role="status" element. So every assertion timed out because the
-// locators never matched — the elements were never absent due to WebGL.
-//
-// Most assertions here (ARIA roles/labels, button presence + accessible names,
-// keyboard focusability, sr-only status presence) are DOM-only and CAN run once
-// the selectors are fixed. Only live heading reactivity (compassRingStyle rotation
-// / sr-only heading text after a real camera move) is genuinely Cesium-coupled and
-// should be driven via window.__viewer and tagged accordingly.
-//
-// Strategy + re-enablement plan: docs/core/TESTING.md → "Cesium UI Component
-// Accessibility Testing Strategy". Re-enablement is a deferred follow-up
-// (sub-issue of #472) because it touches all 37 tests.
-// Related: https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/623
-//          https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/472
-cesiumDescribe.skip('Camera Controls Accessibility', () => {
+// The eight directional buttons, in template order. `name` is the on-button glyph,
+// `label` is the accessible name fragment (aria-label = `Face <label>`), `degrees`
+// is the heading the button faces the camera toward.
+const DIRECTIONS = [
+	{ name: 'N', label: 'North', degrees: 0 },
+	{ name: 'NE', label: 'Northeast', degrees: 45 },
+	{ name: 'E', label: 'East', degrees: 90 },
+	{ name: 'SE', label: 'Southeast', degrees: 135 },
+	{ name: 'S', label: 'South', degrees: 180 },
+	{ name: 'SW', label: 'Southwest', degrees: 225 },
+	{ name: 'W', label: 'West', degrees: 270 },
+	{ name: 'NW', label: 'Northwest', degrees: 315 },
+] as const
+
+cesiumDescribe('Camera Controls Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
-	let helpers: AccessibilityTestHelpers
 
-	cesiumTest.beforeEach(async ({ cesiumPage }) => {
-		helpers = new AccessibilityTestHelpers(cesiumPage)
-		// Cesium is already initialized by the fixture
+	cesiumTest.describe('Structure and Layout', () => {
+		cesiumTest('renders the camera controls container', async ({ cesiumPage }) => {
+			const container = cesiumPage.locator('.camera-controls-container')
+			await expect(container).toBeVisible({ timeout: TIMEOUTS.ELEMENT_WAIT })
+		})
+
+		cesiumTest(
+			'positions the container as an absolute top-left overlay',
+			async ({ cesiumPage }) => {
+				const container = cesiumPage.locator('.camera-controls-container')
+				await expect(container).toBeVisible()
+
+				const styles = await container.evaluate((el) => {
+					const computed = window.getComputedStyle(el)
+					return { position: computed.position, zIndex: computed.zIndex }
+				})
+				expect(styles.position).toBe('absolute')
+				// z-index 400 keeps the controls above other map UI (see component scoped CSS).
+				expect(parseInt(styles.zIndex, 10)).toBe(400)
+			}
+		)
+
+		cesiumTest('does not block map interactions', async ({ cesiumPage }) => {
+			const container = cesiumPage.locator('.camera-controls-container')
+			await expect(container).toBeVisible()
+
+			const cesiumContainer = cesiumPage.locator('#cesiumContainer')
+			const interactive = await cesiumContainer.evaluate(
+				(el) => window.getComputedStyle(el).pointerEvents !== 'none'
+			)
+			expect(interactive).toBeTruthy()
+		})
 	})
 
 	cesiumTest.describe('Compass Display', () => {
-		cesiumTest('should display compass when viewer is ready', async ({ cesiumPage }) => {
-			// Wait for camera controls container to be visible
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible({ timeout: TIMEOUTS.ELEMENT_WAIT })
-
-			// Compass should not be disabled when viewer is ready
-			await expect(compassControl).not.toHaveClass(/compass-disabled/)
+		cesiumTest('groups the compass with an accessible label', async ({ cesiumPage }) => {
+			const assembly = cesiumPage.locator('.compass-assembly')
+			await expect(assembly).toBeVisible()
+			await expect(assembly).toHaveAttribute('role', 'group')
+			await expect(assembly).toHaveAttribute('aria-label', 'Camera direction controls')
 		})
 
-		cesiumTest('should display compass ring with cardinal directions', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
+		cesiumTest(
+			'renders the rotating compass ring with cardinal markers',
+			async ({ cesiumPage }) => {
+				const ring = cesiumPage.locator('.compass-ring')
+				await expect(ring).toBeVisible()
 
-			// Verify compass ring SVG is present
-			const compassRing = compassControl.locator('.compass-ring')
-			await expect(compassRing).toBeVisible()
+				// All four cardinal markers (N, E, S, W) are present.
+				await expect(ring.locator('text.compass-cardinal')).toHaveCount(4)
 
-			// Verify cardinal direction markers are present
-			const northMarker = compassRing.locator('text.compass-north')
-			await expect(northMarker).toBeVisible()
-			await expect(northMarker).toHaveText('N')
+				// North marker is distinctly styled and reads "N".
+				const north = ring.locator('text.compass-north')
+				await expect(north).toHaveText('N')
+			}
+		)
 
-			// East, South, West markers should be present
-			const cardinalTexts = compassRing.locator('text.compass-cardinal')
-			const cardinalCount = await cardinalTexts.count()
-			expect(cardinalCount).toBe(4) // N, E, S, W
+		cesiumTest('renders the fixed compass needle', async ({ cesiumPage }) => {
+			const needle = cesiumPage.locator('.compass-needle')
+			await expect(needle).toBeVisible()
+			await expect(needle.locator('.needle-north')).toBeAttached()
+			await expect(needle.locator('.needle-south')).toBeAttached()
+			await expect(needle.locator('.needle-center')).toBeAttached()
 		})
 
-		cesiumTest('should display compass needle', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
+		cesiumTest('applies a rotation transform to the compass ring', async ({ cesiumPage }) => {
+			const ring = cesiumPage.locator('.compass-ring')
+			await expect(ring).toBeVisible()
 
-			// Verify needle SVG is present
-			const compassNeedle = compassControl.locator('.compass-needle')
-			await expect(compassNeedle).toBeVisible()
-
-			// Verify north and south needle parts
-			const northNeedle = compassNeedle.locator('.needle-north')
-			const southNeedle = compassNeedle.locator('.needle-south')
-			const centerCircle = compassNeedle.locator('.needle-center')
-
-			await expect(northNeedle).toBeVisible()
-			await expect(southNeedle).toBeVisible()
-			await expect(centerCircle).toBeVisible()
-		})
-
-		cesiumTest('should show correct heading rotation style', async ({ cesiumPage }) => {
-			const compassRing = cesiumPage.locator('.compass-ring')
-			await expect(compassRing).toBeVisible()
-
-			// Compass ring should have transform style for rotation
-			const style = await compassRing.getAttribute('style')
+			const style = await ring.getAttribute('style')
 			expect(style).toContain('transform')
 			expect(style).toContain('rotate')
 		})
 
 		cesiumTest(
-			'should update compass rotation when camera heading changes',
+			'hides decorative SVG compass elements from assistive tech',
 			async ({ cesiumPage }) => {
-				const compassRing = cesiumPage.locator('.compass-ring')
-				await expect(compassRing).toBeVisible()
-
-				// Get initial rotation
-				const initialStyle = await compassRing.getAttribute('style')
-				const _initialRotation = initialStyle?.match(/rotate\(([^)]+)\)/)?.[1]
-
-				// Simulate camera heading change via JavaScript
-				await cesiumPage.evaluate(() => {
-					const viewer = (window as any).viewer
-					if (viewer?.camera) {
-						// Change camera heading to 90 degrees (East)
-						const Cesium = (window as any).Cesium
-						if (Cesium) {
-							viewer.camera.flyTo({
-								destination: viewer.camera.position,
-								orientation: {
-									heading: Cesium.Math.toRadians(90),
-									pitch: viewer.camera.pitch,
-									roll: viewer.camera.roll,
-								},
-								duration: 0, // Instant for testing
-							})
-						}
-					}
-				})
-
-				// Wait for compass to update
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
-
-				// Check if rotation changed
-				const updatedStyle = await compassRing.getAttribute('style')
-				const _updatedRotation = updatedStyle?.match(/rotate\(([^)]+)\)/)?.[1]
-
-				// If viewer is available, rotation should change
-				// Note: In mock mode, this may not change
-				expect(updatedStyle).toContain('rotate')
+				// The ring/needle are purely visual; the sr-only status region carries the
+				// real heading information, so both SVGs are aria-hidden.
+				await expect(cesiumPage.locator('.compass-ring')).toHaveAttribute('aria-hidden', 'true')
+				await expect(cesiumPage.locator('.compass-needle')).toHaveAttribute('aria-hidden', 'true')
 			}
 		)
 	})
 
-	cesiumTest.describe('Click Functionality', () => {
-		cesiumTest('should reset camera to North when compass is clicked', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-			await expect(compassControl).toBeEnabled()
+	cesiumTest.describe('Screen Reader Heading Status', () => {
+		cesiumTest(
+			'exposes a polite live status region with the current heading',
+			async ({ cesiumPage }) => {
+				const status = cesiumPage.locator('.compass-assembly .sr-only[role="status"]')
+				await expect(status).toBeAttached()
+				await expect(status).toHaveAttribute('aria-live', 'polite')
 
-			// Click compass to reset to North
-			await helpers.scrollIntoViewportWithRetry(compassControl, { elementName: 'compass' })
-			await compassControl.waitFor({ state: 'visible' })
-
-			await compassControl.click({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
-
-			// Wait for camera animation to complete - use network idle or state check
-			await cesiumPage
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
-				.catch(() => {})
-
-			// Verify camera heading is reset (in mock mode, check function was called)
-			const headingReset = await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				if (viewer?.camera) {
-					// In real mode, heading should be 0 (or very close)
-					const heading = viewer.camera.heading || 0
-					return Math.abs(heading) < 0.1 || Math.abs(heading - 2 * Math.PI) < 0.1
-				}
-				return true // In mock mode, assume success
-			})
-
-			expect(headingReset).toBeTruthy()
-		})
-
-		cesiumTest('should show click feedback on compass button', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Scroll into view
-			await helpers.scrollIntoViewportWithRetry(compassControl, { elementName: 'compass' })
-
-			// Get initial box-shadow (for visual feedback comparison)
-			const _initialStyles = await compassControl.evaluate((el) => {
-				const computed = window.getComputedStyle(el)
-				return {
-					transform: computed.transform,
-					boxShadow: computed.boxShadow,
-				}
-			})
-
-			// Simulate mousedown for active state
-			await compassControl.dispatchEvent('mousedown')
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
-
-			// The button should respond to active state (visual feedback)
-			// CSS shows transform: scale(0.98) on :active
-			const activeState = await compassControl.isEnabled()
-			expect(activeState).toBeTruthy()
-
-			// Release
-			await compassControl.dispatchEvent('mouseup')
-		})
-
-		cesiumTest('should display tooltip on hover', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Hover over compass
-			await compassControl.hover()
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP) // Wait for tooltip to appear
-
-			// Vuetify tooltip should appear
-			const _tooltip = cesiumPage.locator('.v-tooltip__content')
-
-			// Tooltip may or may not be visible depending on delay settings
-			// At minimum, verify compass has tooltip activation props
-			const hasTooltipProps = await compassControl.evaluate((el) => {
-				return (
-					el.getAttribute('aria-describedby') !== null ||
-					el.closest('[role="tooltip"]') !== null ||
-					true
-				) // Tooltip wrapper exists
-			})
-			expect(hasTooltipProps).toBeTruthy()
-		})
+				const text = (await status.textContent())?.toLowerCase() ?? ''
+				expect(text).toContain('current heading')
+				expect(text).toContain('degrees')
+			}
+		)
 	})
 
-	cesiumTest.describe('Keyboard Accessibility', () => {
-		cesiumTest('should be focusable via Tab key', async ({ cesiumPage }) => {
-			// Tab through the interface to find compass
-			let foundCompass = false
-			const maxTabs = 30
-
-			for (let i = 0; i < maxTabs; i++) {
-				await cesiumPage.keyboard.press('Tab')
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
-
-				const focusedElement = cesiumPage.locator(':focus')
-				const hasCompassClass = await focusedElement
-					.evaluate((el) => el.classList.contains('compass-control'))
-					.catch(() => false)
-
-				if (hasCompassClass) {
-					foundCompass = true
-					break
+	cesiumTest.describe('Directional Buttons', () => {
+		cesiumTest(
+			'renders all eight directional buttons with accessible names',
+			async ({ cesiumPage }) => {
+				const controls = cesiumPage.locator('.camera-controls-container')
+				for (const dir of DIRECTIONS) {
+					// exact: true so "Face North" doesn't also match "Face Northeast"/"Face Northwest".
+					const button = controls.getByRole('button', { name: `Face ${dir.label}`, exact: true })
+					await expect(button).toBeVisible()
 				}
 			}
-
-			expect(foundCompass).toBeTruthy()
-		})
-
-		cesiumTest('should have visible focus indicator', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Focus the compass
-			await compassControl.focus()
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
-
-			// Verify focus-visible styles are applied
-			// CSS shows outline: 2px solid #1976d2; outline-offset: 2px;
-			const focusStyles = await compassControl.evaluate((el) => {
-				const computed = window.getComputedStyle(el)
-				return {
-					outline: computed.outline,
-					outlineOffset: computed.outlineOffset,
-				}
-			})
-
-			// Focus indicator should be visible (either via :focus or :focus-visible)
-			expect(focusStyles).toBeDefined()
-		})
-
-		cesiumTest('should reset to North when Enter key is pressed', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// First, set camera to a non-North heading
-			await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				const Cesium = (window as any).Cesium
-				if (viewer?.camera && Cesium) {
-					viewer.camera.setView({
-						destination: viewer.camera.position,
-						orientation: {
-							heading: Cesium.Math.toRadians(45), // 45 degrees
-							pitch: viewer.camera.pitch,
-							roll: viewer.camera.roll,
-						},
-					})
-				}
-			})
-
-			// Focus and press Enter
-			await compassControl.focus()
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
-			await cesiumPage.keyboard.press('Enter')
-
-			// Wait for animation
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
-
-			// Verify heading is reset
-			const headingReset = await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				if (viewer?.camera) {
-					const heading = viewer.camera.heading || 0
-					return Math.abs(heading) < 0.1 || Math.abs(heading - 2 * Math.PI) < 0.1
-				}
-				return true
-			})
-
-			expect(headingReset).toBeTruthy()
-		})
-
-		cesiumTest('should reset to North when Space key is pressed', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Set camera to non-North heading
-			await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				const Cesium = (window as any).Cesium
-				if (viewer?.camera && Cesium) {
-					viewer.camera.setView({
-						destination: viewer.camera.position,
-						orientation: {
-							heading: Cesium.Math.toRadians(90), // 90 degrees East
-							pitch: viewer.camera.pitch,
-							roll: viewer.camera.roll,
-						},
-					})
-				}
-			})
-
-			// Focus and press Space
-			await compassControl.focus()
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT)
-			await cesiumPage.keyboard.press(' ') // Space key
-
-			// Wait for animation
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
-
-			// Verify heading is reset
-			const headingReset = await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				if (viewer?.camera) {
-					const heading = viewer.camera.heading || 0
-					return Math.abs(heading) < 0.1 || Math.abs(heading - 2 * Math.PI) < 0.1
-				}
-				return true
-			})
-
-			expect(headingReset).toBeTruthy()
-		})
+		)
 
 		cesiumTest(
-			'should not scroll page when Space is pressed on focused compass',
+			'enables the directional buttons once the viewer is ready',
 			async ({ cesiumPage }) => {
-				const compassControl = cesiumPage.locator('.compass-control')
-				await expect(compassControl).toBeVisible()
-
-				// Get initial scroll position
-				const initialScroll = await cesiumPage.evaluate(() => window.scrollY)
-
-				// Focus compass and press Space
-				await compassControl.focus()
-				await cesiumPage.keyboard.press(' ')
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
-
-				// Scroll position should not change (event.preventDefault)
-				const finalScroll = await cesiumPage.evaluate(() => window.scrollY)
-				expect(finalScroll).toBe(initialScroll)
+				// Buttons are :disabled until store.cesiumViewer is set (viewerReady). The
+				// fixture initializes the viewer, so they should be enabled.
+				const controls = cesiumPage.locator('.camera-controls-container')
+				const north = controls.getByRole('button', { name: 'Face North', exact: true })
+				await expect(north).toBeEnabled()
 			}
 		)
-	})
 
-	cesiumTest.describe('ARIA and Accessibility Attributes', () => {
-		cesiumTest('should have appropriate aria-label with heading info', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Get aria-label
-			const ariaLabel = await compassControl.getAttribute('aria-label')
-			expect(ariaLabel).toBeTruthy()
-
-			// Should contain compass information
-			expect(ariaLabel?.toLowerCase()).toContain('compass')
-			expect(ariaLabel?.toLowerCase()).toContain('degrees')
-			expect(ariaLabel?.toLowerCase()).toContain('north')
+		cesiumTest('makes directional buttons keyboard focusable', async ({ cesiumPage }) => {
+			const controls = cesiumPage.locator('.camera-controls-container')
+			const east = controls.getByRole('button', { name: 'Face East', exact: true })
+			await expect(east).toBeVisible()
+			await east.focus()
+			await expect(east).toBeFocused()
 		})
-
-		cesiumTest('should have aria-describedby for instructions', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Get aria-describedby
-			const ariaDescribedBy = await compassControl.getAttribute('aria-describedby')
-			expect(ariaDescribedBy).toBe('compass-description')
-
-			// Verify the description element exists
-			const descriptionElement = cesiumPage.locator('#compass-description')
-			await expect(descriptionElement).toBeAttached()
-
-			// Verify description content
-			const descriptionText = await descriptionElement.textContent()
-			expect(descriptionText).toContain('degrees')
-			expect(descriptionText).toContain('North')
-			expect(descriptionText).toContain('Enter')
-			expect(descriptionText).toContain('Space')
-		})
-
-		cesiumTest('should have screen reader only description element', async ({ cesiumPage }) => {
-			const descriptionElement = cesiumPage.locator('#compass-description')
-			await expect(descriptionElement).toBeAttached()
-
-			// Verify it has sr-only class for screen reader only visibility
-			const hasScreenReaderClass = await descriptionElement.evaluate((el) => {
-				return el.classList.contains('sr-only')
-			})
-			expect(hasScreenReaderClass).toBeTruthy()
-		})
-
-		cesiumTest('should have aria-hidden on decorative SVG elements', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Check compass ring SVG
-			const compassRing = compassControl.locator('.compass-ring')
-			const ringAriaHidden = await compassRing.getAttribute('aria-hidden')
-			expect(ringAriaHidden).toBe('true')
-
-			// Check compass needle SVG
-			const compassNeedle = compassControl.locator('.compass-needle')
-			const needleAriaHidden = await compassNeedle.getAttribute('aria-hidden')
-			expect(needleAriaHidden).toBe('true')
-		})
-
-		cesiumTest('should update aria-label when heading changes', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Get initial aria-label
-			const _initialLabel = await compassControl.getAttribute('aria-label')
-
-			// Change camera heading
-			await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				const Cesium = (window as any).Cesium
-				if (viewer?.camera && Cesium) {
-					viewer.camera.setView({
-						destination: viewer.camera.position,
-						orientation: {
-							heading: Cesium.Math.toRadians(90), // East
-							pitch: viewer.camera.pitch,
-							roll: viewer.camera.roll,
-						},
-					})
-				}
-			})
-
-			// Wait for label to update
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
-
-			// Get updated aria-label
-			const updatedLabel = await compassControl.getAttribute('aria-label')
-
-			// Label should be updated (in real mode)
-			// In mock mode, it may stay the same, but should still be valid
-			expect(updatedLabel).toBeTruthy()
-			expect(updatedLabel?.toLowerCase()).toContain('compass')
-		})
-
-		cesiumTest(
-			'should be disabled with appropriate attributes when viewer not ready',
-			async ({ cesiumPage }) => {
-				// This test verifies the disabled state attributes
-				const compassControl = cesiumPage.locator('.compass-control')
-
-				// When viewer IS ready (normal state)
-				await expect(compassControl).toBeVisible()
-
-				// Should not be disabled when viewer is ready
-				const isDisabled = await compassControl.isDisabled()
-				expect(isDisabled).toBeFalsy()
-			}
-		)
 	})
 
 	cesiumTest.describe('Zoom Controls', () => {
-		cesiumTest('should display zoom in and zoom out buttons', async ({ cesiumPage }) => {
-			// Check for zoom controls container
-			const zoomControls = cesiumPage.locator('.zoom-controls')
-			await expect(zoomControls).toBeVisible()
-
-			// Check zoom in button
-			const zoomInButton = cesiumPage.getByRole('button', { name: 'Zoom in' })
-			await expect(zoomInButton).toBeVisible()
-
-			// Check zoom out button
-			const zoomOutButton = cesiumPage.getByRole('button', { name: 'Zoom out' })
-			await expect(zoomOutButton).toBeVisible()
+		cesiumTest('groups the zoom controls with an accessible label', async ({ cesiumPage }) => {
+			const zoom = cesiumPage.locator('.zoom-controls')
+			await expect(zoom).toBeVisible()
+			await expect(zoom).toHaveAttribute('role', 'group')
+			await expect(zoom).toHaveAttribute('aria-label', 'Zoom controls')
 		})
 
-		cesiumTest('should have correct icons for zoom buttons', async ({ cesiumPage }) => {
-			// Zoom in should have plus icon
-			const zoomInButton = cesiumPage.getByRole('button', { name: 'Zoom in' })
-			const plusIcon = zoomInButton.locator('.mdi-plus')
-			await expect(plusIcon).toBeVisible()
+		cesiumTest('renders zoom in / zoom out buttons with icons', async ({ cesiumPage }) => {
+			// Scope to .zoom-controls: MapOverlayControls renders a second "Zoom in"/"Zoom out"
+			// pair with identical accessible names, so an unscoped query is ambiguous.
+			const zoom = cesiumPage.locator('.zoom-controls')
+			const zoomIn = zoom.getByRole('button', { name: 'Zoom in', exact: true })
+			const zoomOut = zoom.getByRole('button', { name: 'Zoom out', exact: true })
+			await expect(zoomIn).toBeVisible()
+			await expect(zoomOut).toBeVisible()
 
-			// Zoom out should have minus icon
-			const zoomOutButton = cesiumPage.getByRole('button', { name: 'Zoom out' })
-			const minusIcon = zoomOutButton.locator('.mdi-minus')
-			await expect(minusIcon).toBeVisible()
+			// Icons render as inline SVG but preserve their mdi-* class (see architecture.md).
+			await expect(zoomIn.locator('.mdi-plus')).toBeAttached()
+			await expect(zoomOut.locator('.mdi-minus')).toBeAttached()
 		})
 
-		cesiumTest('should zoom in when zoom in button is clicked', async ({ cesiumPage }) => {
-			const zoomInButton = cesiumPage.getByRole('button', { name: 'Zoom in' })
-			await expect(zoomInButton).toBeVisible()
-			await expect(zoomInButton).toBeEnabled()
-
-			// Get initial camera height
-			const initialHeight = await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				if (viewer?.camera?.positionCartographic) {
-					return viewer.camera.positionCartographic.height
-				}
-				return 1000000
-			})
-
-			// Click zoom in
-			await zoomInButton.click()
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
-
-			// Get new height
-			const newHeight = await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				if (viewer?.camera?.positionCartographic) {
-					return viewer.camera.positionCartographic.height
-				}
-				return 1000000
-			})
-
-			// Height should decrease (camera closer to ground)
-			expect(newHeight).toBeLessThanOrEqual(initialHeight)
+		cesiumTest('exposes exact aria-labels for the zoom buttons', async ({ cesiumPage }) => {
+			const zoom = cesiumPage.locator('.zoom-controls')
+			await expect(zoom.getByRole('button', { name: 'Zoom in', exact: true })).toHaveAttribute(
+				'aria-label',
+				'Zoom in'
+			)
+			await expect(zoom.getByRole('button', { name: 'Zoom out', exact: true })).toHaveAttribute(
+				'aria-label',
+				'Zoom out'
+			)
 		})
 
-		cesiumTest('should zoom out when zoom out button is clicked', async ({ cesiumPage }) => {
-			const zoomOutButton = cesiumPage.getByRole('button', { name: 'Zoom out' })
-			await expect(zoomOutButton).toBeVisible()
-			await expect(zoomOutButton).toBeEnabled()
-
-			// Get initial camera height
-			const initialHeight = await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				if (viewer?.camera?.positionCartographic) {
-					return viewer.camera.positionCartographic.height
-				}
-				return 1000000
-			})
-
-			// Click zoom out
-			await zoomOutButton.click()
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
-
-			// Get new height
-			const newHeight = await cesiumPage.evaluate(() => {
-				const viewer = (window as any).viewer
-				if (viewer?.camera?.positionCartographic) {
-					return viewer.camera.positionCartographic.height
-				}
-				return 1000000
-			})
-
-			// Height should increase (camera further from ground)
-			expect(newHeight).toBeGreaterThanOrEqual(initialHeight)
-		})
-
-		cesiumTest('should have proper aria-labels for zoom buttons', async ({ cesiumPage }) => {
-			const zoomInButton = cesiumPage.getByRole('button', { name: 'Zoom in' })
-			const zoomOutButton = cesiumPage.getByRole('button', { name: 'Zoom out' })
-
-			const zoomInLabel = await zoomInButton.getAttribute('aria-label')
-			const zoomOutLabel = await zoomOutButton.getAttribute('aria-label')
-
-			expect(zoomInLabel).toBe('Zoom in')
-			expect(zoomOutLabel).toBe('Zoom out')
-		})
-
-		cesiumTest('should support keyboard navigation to zoom buttons', async ({ cesiumPage }) => {
-			// Tab through to find zoom buttons
-			let foundZoomIn = false
-			let foundZoomOut = false
-			const maxTabs = 30
-
-			for (let i = 0; i < maxTabs; i++) {
-				await cesiumPage.keyboard.press('Tab')
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
-
-				const focusedElement = cesiumPage.locator(':focus')
-				const ariaLabel = await focusedElement.getAttribute('aria-label').catch(() => null)
-
-				if (ariaLabel === 'Zoom in') {
-					foundZoomIn = true
-				}
-				if (ariaLabel === 'Zoom out') {
-					foundZoomOut = true
-				}
-
-				if (foundZoomIn && foundZoomOut) {
-					break
-				}
-			}
-
-			expect(foundZoomIn).toBeTruthy()
-			expect(foundZoomOut).toBeTruthy()
+		cesiumTest('makes zoom buttons keyboard focusable', async ({ cesiumPage }) => {
+			const zoom = cesiumPage.locator('.zoom-controls')
+			const zoomIn = zoom.getByRole('button', { name: 'Zoom in', exact: true })
+			await zoomIn.focus()
+			await expect(zoomIn).toBeFocused()
 		})
 	})
 
 	cesiumTest.describe('Responsive Behavior', () => {
-		cesiumTest('should remain accessible across viewports', async ({ cesiumPage }) => {
-			const viewports = [VIEWPORTS.DESKTOP_HD, VIEWPORTS.TABLET, VIEWPORTS.MOBILE]
+		cesiumTest(
+			'remains visible across desktop, tablet, and mobile viewports',
+			async ({ cesiumPage }) => {
+				for (const viewport of [VIEWPORTS.DESKTOP_HD, VIEWPORTS.TABLET, VIEWPORTS.MOBILE]) {
+					await cesiumPage.setViewportSize(viewport)
+					await cesiumPage.waitForFunction((width) => window.innerWidth === width, viewport.width, {
+						timeout: TEST_TIMEOUTS.ELEMENT_SCROLL,
+					})
 
-			for (const viewport of viewports) {
-				await cesiumPage.setViewportSize(viewport)
+					await expect(cesiumPage.locator('.camera-controls-container')).toBeVisible()
+					await expect(cesiumPage.locator('.zoom-controls')).toBeVisible()
+				}
+			}
+		)
+
+		cesiumTest(
+			'keeps directional buttons at a touch-friendly size on mobile',
+			async ({ cesiumPage }) => {
+				await cesiumPage.setViewportSize(VIEWPORTS.MOBILE)
 				await cesiumPage.waitForFunction(
-					(expectedWidth) => window.innerWidth === expectedWidth,
-					viewport.width,
-					{ timeout: TEST_TIMEOUTS.ELEMENT_SCROLL }
+					(width) => window.innerWidth === width,
+					VIEWPORTS.MOBILE.width
 				)
 
-				// Compass should remain visible
-				const compassControl = cesiumPage.locator('.compass-control')
-				await expect(compassControl).toBeVisible()
-
-				// Zoom controls should remain visible
-				const zoomControls = cesiumPage.locator('.zoom-controls')
-				await expect(zoomControls).toBeVisible()
-			}
-		})
-
-		cesiumTest('should have touch-friendly size on touch devices', async ({ cesiumPage }) => {
-			// Set to mobile viewport (which typically has pointer: coarse)
-			await cesiumPage.setViewportSize(VIEWPORTS.MOBILE)
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
-
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Get compass dimensions
-			const box = await compassControl.boundingBox()
-			expect(box).toBeTruthy()
-
-			if (box) {
-				// Compass should be at least 44x44 for touch accessibility
-				// CSS shows 56x56 default, 64x64 for touch devices
-				expect(box.width).toBeGreaterThanOrEqual(44)
-				expect(box.height).toBeGreaterThanOrEqual(44)
-			}
-		})
-	})
-
-	cesiumTest.describe('Visual Feedback', () => {
-		cesiumTest('should show hover state on compass', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Get initial styles
-			const _initialStyles = await compassControl.evaluate((el) => {
-				return window.getComputedStyle(el).transform
-			})
-
-			// Hover over compass
-			await compassControl.hover()
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_STABILITY)
-
-			// CSS shows transform: scale(1.02) on hover
-			// Note: Actual computed style may be matrix representation
-			const hoverState = await compassControl.isVisible()
-			expect(hoverState).toBeTruthy()
-		})
-
-		cesiumTest('should have smooth transition on compass ring rotation', async ({ cesiumPage }) => {
-			const compassRing = cesiumPage.locator('.compass-ring')
-			await expect(compassRing).toBeVisible()
-
-			// Check transition style
-			const style = await compassRing.getAttribute('style')
-			expect(style).toContain('transition')
-			expect(style).toContain('ease-out')
-		})
-	})
-
-	cesiumTest.describe('Integration with Viewer State', () => {
-		cesiumTest(
-			'should position correctly within camera controls container',
-			async ({ cesiumPage }) => {
-				const container = cesiumPage.locator('.camera-controls-container')
-				await expect(container).toBeVisible()
-
-				// Container should have correct positioning (absolute, top-left)
-				const containerStyles = await container.evaluate((el) => {
-					const computed = window.getComputedStyle(el)
-					return {
-						position: computed.position,
-						top: computed.top,
-						left: computed.left,
-					}
-				})
-
-				expect(containerStyles.position).toBe('absolute')
-			}
-		)
-
-		cesiumTest('should maintain z-index above other UI elements', async ({ cesiumPage }) => {
-			const container = cesiumPage.locator('.camera-controls-container')
-			await expect(container).toBeVisible()
-
-			const zIndex = await container.evaluate((el) => {
-				return window.getComputedStyle(el).zIndex
-			})
-
-			// z-index should be 400 as defined in CSS
-			expect(parseInt(zIndex, 10)).toBe(400)
-		})
-
-		cesiumTest('should not interfere with map interactions', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Click compass (uses click.stop modifier)
-			await compassControl.click()
-
-			// Map should still be interactive (no blocking)
-			const cesiumContainer = cesiumPage.locator('#cesiumContainer')
-			const isInteractive = await cesiumContainer.evaluate((el) => {
-				return window.getComputedStyle(el).pointerEvents !== 'none'
-			})
-
-			expect(isInteractive).toBeTruthy()
-		})
-	})
-
-	cesiumTest.describe('Edge Cases', () => {
-		cesiumTest('should handle rapid clicks gracefully', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-
-			// Rapid clicks
-			for (let i = 0; i < 5; i++) {
-				await compassControl.click({ timeout: TEST_TIMEOUTS.ELEMENT_INTERACTION })
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
-			}
-
-			// Should not cause errors
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
-			const errorCount = await errorElements.count()
-			expect(errorCount).toBe(0)
-
-			// Compass should still be functional
-			await expect(compassControl).toBeVisible()
-			await expect(compassControl).toBeEnabled()
-		})
-
-		cesiumTest('should handle rapid keyboard presses', async ({ cesiumPage }) => {
-			const compassControl = cesiumPage.locator('.compass-control')
-			await compassControl.focus()
-
-			// Rapid Enter presses
-			for (let i = 0; i < 5; i++) {
-				await cesiumPage.keyboard.press('Enter')
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_BRIEF)
-			}
-
-			// Should not cause errors
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
-			const errorCount = await errorElements.count()
-			expect(errorCount).toBe(0)
-		})
-
-		cesiumTest('should maintain state during view changes', async ({ cesiumPage }) => {
-			// Navigate to different view
-			await helpers.navigateToView('gridView')
-
-			// Compass should still be functional
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
-			await expect(compassControl).toBeEnabled()
-
-			// Switch back
-			await helpers.navigateToView('capitalRegionView')
-
-			// Still functional
-			await expect(compassControl).toBeVisible()
-			await expect(compassControl).toBeEnabled()
-		})
-
-		cesiumTest(
-			'should be accessible after drilling to postal code level',
-			async ({ cesiumPage }) => {
-				// Navigate to postal code level
-				await helpers.drillToLevel('postalCode')
-
-				// Compass should still be accessible and functional
-				const compassControl = cesiumPage.locator('.compass-control')
-				await expect(compassControl).toBeVisible()
-				await expect(compassControl).toBeEnabled()
-
-				// Click should still work
-				await compassControl.click()
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
-
-				// No errors
-				const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
-				const errorCount = await errorElements.count()
-				expect(errorCount).toBe(0)
+				const north = cesiumPage
+					.locator('.camera-controls-container')
+					.getByRole('button', { name: 'Face North', exact: true })
+				await expect(north).toBeVisible()
+				const box = await north.boundingBox()
+				expect(box).toBeTruthy()
+				if (box) {
+					// 28px base / 34px on coarse pointers; assert the WCAG 2.5.5-ish floor of 24px.
+					expect(box.width).toBeGreaterThanOrEqual(24)
+					expect(box.height).toBeGreaterThanOrEqual(24)
+				}
 			}
 		)
 	})
 
-	cesiumTest.describe('Reduced Motion Preference', () => {
-		cesiumTest('should respect reduced motion preference', async ({ cesiumPage }) => {
-			// Check that CSS media query for reduced motion exists
-			const compassControl = cesiumPage.locator('.compass-control')
-			await expect(compassControl).toBeVisible()
+	// Heading/zoom reactivity is genuinely Cesium-coupled: it depends on a live
+	// viewer camera. Driven via window.__viewer (the E2E-only global; see testing.md).
+	cesiumTest.describe('Camera Reactivity', () => {
+		cesiumTest.use({ tag: ['@accessibility', '@e2e', '@cesium'] })
 
-			// The CSS should have prefers-reduced-motion handling
-			// This is defined in the component's scoped styles
-			// We verify the element exists and is styled
-			const hasTransition = await compassControl.evaluate((el) => {
-				const computed = window.getComputedStyle(el)
-				// In reduced motion mode, transition should be 'none'
-				// We can't easily simulate the media query, but verify element exists
-				return computed.transition !== undefined
+		cesiumTest('faces the camera east when the East button is clicked', async ({ cesiumPage }) => {
+			const hasViewer = await cesiumPage.evaluate(() =>
+				Boolean((window as { __viewer?: unknown }).__viewer)
+			)
+			cesiumTest.skip(!hasViewer, 'No live Cesium viewer (window.__viewer) available')
+
+			await cesiumPage
+				.locator('.camera-controls-container')
+				.getByRole('button', { name: 'Face East', exact: true })
+				.click()
+
+			// setHeading flies to heading 90° (1s animation). Poll the camera heading
+			// (ground truth) until it settles near East.
+			await cesiumPage.waitForFunction(
+				() => {
+					const viewer = (window as { __viewer?: { camera?: { heading?: number } } }).__viewer
+					const Cesium = (window as { __cesium?: { Math: { toRadians: (d: number) => number } } })
+						.__cesium
+					if (!viewer?.camera || !Cesium) return false
+					const target = Cesium.Math.toRadians(90)
+					return Math.abs((viewer.camera.heading ?? 0) - target) < 0.05
+				},
+				undefined,
+				{ timeout: TIMEOUTS.VERY_LONG }
+			)
+
+			// The sr-only status region should reflect the new heading for screen readers.
+			const status = cesiumPage.locator('.compass-assembly .sr-only[role="status"]')
+			await expect(status).toContainText(/East/i, { timeout: TIMEOUTS.LONG })
+		})
+
+		cesiumTest('zooms the camera closer when Zoom in is clicked', async ({ cesiumPage }) => {
+			const initialHeight = await cesiumPage.evaluate(() => {
+				const viewer = (
+					window as { __viewer?: { camera?: { positionCartographic?: { height?: number } } } }
+				).__viewer
+				return viewer?.camera?.positionCartographic?.height ?? null
 			})
+			cesiumTest.skip(initialHeight === null, 'No live Cesium viewer camera available')
 
-			expect(hasTransition).toBeTruthy()
+			await cesiumPage
+				.locator('.zoom-controls')
+				.getByRole('button', { name: 'Zoom in', exact: true })
+				.click()
+
+			await cesiumPage.waitForFunction(
+				(start) => {
+					const viewer = (
+						window as { __viewer?: { camera?: { positionCartographic?: { height?: number } } } }
+					).__viewer
+					const height = viewer?.camera?.positionCartographic?.height
+					return typeof height === 'number' && height < (start as number)
+				},
+				initialHeight,
+				{ timeout: TIMEOUTS.VERY_LONG }
+			)
 		})
 	})
 })
