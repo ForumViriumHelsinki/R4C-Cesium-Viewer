@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.55.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.55.0...r4c-cesium-viewer-v1.55.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* **viewer:** guard entity/feature property access against undefined ([#923](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/923)) ([ca6e2ef](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ca6e2efd79595b7aadfc3c23f6187e74971f754d))
+
 ## [1.55.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.54.0...r4c-cesium-viewer-v1.55.0) (2026-06-12)
 
 
