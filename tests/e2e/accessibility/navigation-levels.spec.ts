@@ -11,14 +11,14 @@
 
 import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
-import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
+import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 cesiumDescribe('Navigation Levels Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e', '@navigation'] })
-	let helpers: AccessibilityTestHelpers
+	let helpers: GridAwareTestHelpers
 
 	cesiumTest.beforeEach(async ({ cesiumPage }) => {
-		helpers = new AccessibilityTestHelpers(cesiumPage)
+		helpers = new GridAwareTestHelpers(cesiumPage)
 		// Cesium is already initialized by the fixture
 	})
 
@@ -52,9 +52,11 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 		})
 
 		cesiumTest('should show basic panels at start level', async ({ cesiumPage }) => {
-			// Universal panels should be visible
+			// Universal panels should be visible. The sidebar was refactored into
+			// tabs (Search / Layers / Analysis / Details); the old "Search & Navigate"
+			// section heading no longer exists — search lives in the Search tab (#897).
 			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-			await expect(cesiumPage.getByText('Search & Navigate')).toBeVisible()
+			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
 
 			// Level-specific panels should not be visible
 			await expect(cesiumPage.getByText('Heat Distribution')).not.toBeVisible()
@@ -171,14 +173,12 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 					})
 					.catch(() => {})
 
-				// Verify view mode is maintained via Pinia store state (v-btn-toggle doesn't use radio inputs)
-				await cesiumPage.waitForFunction(
-					() => {
-						const pinia = (window as any).__PINIA__
-						return pinia?.state?.value?.global?.currentView === 'grid'
-					},
-					{ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD }
-				)
+				// Verify view mode is maintained via Pinia store state (v-btn-toggle doesn't use radio inputs).
+				// The live globalStore is exposed as window.globalStore; the field is `view`
+				// with values 'capitalRegion' / 'grid' (see src/main.js, #781).
+				await cesiumPage.waitForFunction(() => (window as any).globalStore?.view === 'grid', {
+					timeout: TEST_TIMEOUTS.ELEMENT_STANDARD,
+				})
 
 				// Grid-specific features should be visible
 				await expect(cesiumPage.getByText('Grid Options')).toBeVisible()
@@ -463,11 +463,11 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 					})
 					.catch(() => {})
 
-				// Trees toggle should now be available (unless in grid view)
-				// Check view mode via Pinia store state (v-btn-toggle doesn't use radio inputs)
+				// Trees toggle should now be available (unless in grid view).
+				// Check view mode via the live globalStore (window.globalStore.view); the
+				// store values are 'capitalRegion' / 'grid' (see src/main.js, #781).
 				const currentView = await cesiumPage.evaluate(() => {
-					const pinia = (window as any).__PINIA__
-					return pinia?.state?.value?.global?.currentView || 'capitalRegion'
+					return (window as any).globalStore?.view || 'capitalRegion'
 				})
 
 				if (currentView === 'capitalRegion') {

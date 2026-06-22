@@ -13,7 +13,7 @@
 
 import { expect, type Locator } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
-import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
+import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 /**
  * Helper to get view mode button locators for v-btn-toggle component
@@ -35,10 +35,10 @@ async function isViewModeButtonSelected(button: Locator): Promise<boolean> {
 
 cesiumDescribe('View Modes Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
-	let helpers: AccessibilityTestHelpers
+	let helpers: GridAwareTestHelpers
 
 	cesiumTest.beforeEach(async ({ cesiumPage }) => {
-		helpers = new AccessibilityTestHelpers(cesiumPage)
+		helpers = new GridAwareTestHelpers(cesiumPage)
 		// Cesium is already initialized by the fixture
 	})
 

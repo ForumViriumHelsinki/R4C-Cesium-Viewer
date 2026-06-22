@@ -11,14 +11,14 @@
 
 import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
-import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
+import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e', '@comprehensive'] })
-	let helpers: AccessibilityTestHelpers
+	let helpers: GridAwareTestHelpers
 
 	cesiumTest.beforeEach(async ({ cesiumPage }) => {
-		helpers = new AccessibilityTestHelpers(cesiumPage)
+		helpers = new GridAwareTestHelpers(cesiumPage)
 		// Cesium is already initialized by the fixture
 	})
 
@@ -547,7 +547,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 
 				// Sidebar sections
 				'Background Maps',
-				'Search & Navigate',
+				'Search', // Search tab (replaced the removed "Search & Navigate" heading, #897)
 
 				// Level-specific features (test at appropriate levels)
 				'Building Analysis', // postal code level
@@ -562,7 +562,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			await expect(cesiumPage.getByText('Public Buildings', { exact: true })).toBeVisible()
 			await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).toBeVisible()
 			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-			await expect(cesiumPage.getByText('Search & Navigate')).toBeVisible()
+			// The old "Search & Navigate" heading was replaced by the Search tab in
+			// the tabbed-sidebar refactor (#897).
+			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
 
 			// Test features at postal code level
 			await helpers.drillToLevel('postalCode')

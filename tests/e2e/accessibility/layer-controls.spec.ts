@@ -20,16 +20,16 @@
 import { expect } from '@playwright/test'
 import { VIEWPORTS } from '../../config/constants'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
-import AccessibilityTestHelpers, { TEST_TIMEOUTS } from '../helpers/test-helpers'
+import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 // Drawer rendering fixed by 'eager' prop - view navigation fixes implemented
 // Re-enabled to verify navigateToView helper improvements
 cesiumDescribe('Layer Controls Accessibility', () => {
 	cesiumTest.use({ tag: ['@accessibility', '@e2e'] })
-	let helpers: AccessibilityTestHelpers
+	let helpers: GridAwareTestHelpers
 
 	cesiumTest.beforeEach(async ({ cesiumPage }) => {
-		helpers = new AccessibilityTestHelpers(cesiumPage)
+		helpers = new GridAwareTestHelpers(cesiumPage)
 		// Cesium is already initialized by the fixture
 	})
 
@@ -545,8 +545,13 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				})
 				.catch(() => {})
 
-			// Check that all visible toggles have consistent structure
-			const toggles = cesiumPage.locator('.switch-container')
+			// Check that all visible toggles have consistent structure. The live
+			// layer rows render as `.control-item` (MapControls.vue), each with a
+			// v-switch (`input[type="checkbox"]`, visually opacity:0) and a
+			// `.control-label` — not the legacy `.switch-container`/`.switch`/`.label`.
+			const toggles = cesiumPage
+				.locator('.control-item')
+				.filter({ has: cesiumPage.locator('input[type="checkbox"]') })
 			const count = await toggles.count()
 
 			expect(count).toBeGreaterThan(2) // Should have multiple layer toggles
@@ -554,14 +559,12 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			for (let i = 0; i < count; i++) {
 				const toggle = toggles.nth(i)
 
-				// Each should have a switch and label
-				const switchElement = toggle.locator('.switch')
-				const label = toggle.locator('.label')
+				// Each should have a switch input and a visible label
+				const switchElement = toggle.locator('input[type="checkbox"]')
+				const label = toggle.locator('.control-label')
 
-				if (await switchElement.isVisible()) {
-					await expect(switchElement).toBeVisible()
-					await expect(label).toBeVisible()
-				}
+				await expect(switchElement).toBeAttached()
+				await expect(label).toBeVisible()
 			}
 		})
 
