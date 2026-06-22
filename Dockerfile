@@ -18,6 +18,26 @@ COPY . .
 RUN --mount=type=cache,target=/app/node_modules/.vite \
     NODE_ENV=production bun run build
 
+# Compile ngx_brotli as a dynamic module against the SAME pinned nginx:1.31
+# base, so the resulting .so is ABI-compatible with the runtime binary. Built
+# with `--with-compat` (the only configure flag required for a portable
+# dynamic module), so we don't need to mirror the stock image's full configure
+# args. Keeping this on the Debian-based official image preserves the apt-get
+# dbmate install below and the Renovate-managed `nginx:1.31` pin (issue #876).
+FROM nginx:1.31 AS brotli-builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential ca-certificates git wget libpcre2-dev zlib1g-dev libbrotli-dev \
+    && NGINX_VERSION="$(nginx -v 2>&1 | sed 's|.*nginx/||')" \
+    && wget -qO /tmp/nginx.tar.gz "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" \
+    && tar -xf /tmp/nginx.tar.gz -C /tmp \
+    && git clone --depth 1 --recurse-submodules --shallow-submodules \
+        https://github.com/google/ngx_brotli.git /tmp/ngx_brotli \
+    && cd "/tmp/nginx-${NGINX_VERSION}" \
+    && ./configure --with-compat --add-dynamic-module=/tmp/ngx_brotli \
+    && make -j"$(nproc)" modules \
+    && mkdir -p /modules \
+    && cp objs/ngx_http_brotli_static_module.so /modules/
+
 FROM nginx:1.31
 
 # Set default values for nginx environment variables
@@ -43,6 +63,15 @@ RUN apt-get update && apt-get install -y \
     && chmod +x /usr/local/bin/dbmate \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Load the brotli static module compiled above. `load_module` must live in the
+# main context, before `events`/`http`; the official image's nginx.conf has no
+# modules-enabled include, so prepend the directive. `modules/` resolves under
+# the prefix (/etc/nginx/modules -> /usr/lib/nginx/modules). Only the static
+# module is shipped — we serve precompressed `.br` siblings (brotli_static),
+# not on-the-fly compression, so the filter module is intentionally omitted.
+COPY --from=brotli-builder /modules/ngx_http_brotli_static_module.so /etc/nginx/modules/
+RUN sed -i '1i load_module modules/ngx_http_brotli_static_module.so;' /etc/nginx/nginx.conf
 
 # Copy built frontend
 COPY --link --from=build /app/dist/ /usr/share/nginx/html
