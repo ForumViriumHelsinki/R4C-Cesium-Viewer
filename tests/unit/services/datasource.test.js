@@ -1,5 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { isReactive, reactive } from 'vue'
 import DataSource from '@/services/datasource.js'
 
 // Mock fetch globally
@@ -21,7 +22,15 @@ vi.mock('@/services/cesiumProvider.js', () => ({
 				this.a = a
 			}
 			static BLACK = 'BLACK'
+			static WHITE = { withAlpha: () => 'WHITE_ALPHA' }
 		},
+		defined: (v) => v !== undefined && v !== null,
+		ConstantProperty: class ConstantProperty {
+			constructor(value) {
+				this.value = value
+			}
+		},
+		ArcType: { GEODESIC: 'GEODESIC' },
 	}),
 }))
 
@@ -196,6 +205,79 @@ describe(
 			expect(geoJsonLoad.mock.calls[0][0]).toEqual(geojson)
 			expect(dataSourcesAdd).toHaveBeenCalledTimes(1)
 			expect(result).toBe(entities)
+		})
+	}
+)
+
+describe(
+	'DataSource Service - addDataSourceWithPolygonFix reactivity stripping',
+	{ tags: ['@unit', '@datasource'] },
+	() => {
+		let dataSource
+
+		beforeEach(() => {
+			setActivePinia(createPinia())
+			vi.clearAllMocks()
+			geoJsonLoad.mockReset()
+			dataSourcesAdd.mockReset()
+			vi.spyOn(console, 'warn').mockImplementation(() => {})
+			vi.spyOn(console, 'error').mockImplementation(() => {})
+			vi.spyOn(console, 'log').mockImplementation(() => {})
+
+			// clampToGround:true load resolves to a datasource with no entities,
+			// so the polygon-fix loop (defined/ConstantProperty/ArcType) never runs.
+			geoJsonLoad.mockResolvedValue({ name: '', show: undefined, entities: { values: [] } })
+
+			dataSource = new DataSource()
+		})
+
+		afterEach(() => {
+			vi.restoreAllMocks()
+		})
+
+		it('hands Cesium a non-reactive plain object when given reactive GeoJSON (DataCloneError #925)', async () => {
+			// A Vue reactive proxy reaching Cesium's geometry worker via postMessage()
+			// throws `DataCloneError: [object Array] could not be cloned`. toRaw() must
+			// de-proxy at the boundary before the data is handed to Cesium.
+			const reactiveGeojson = reactive({
+				type: 'FeatureCollection',
+				features: [
+					{
+						type: 'Feature',
+						properties: { id: 1 },
+						geometry: { type: 'Polygon', coordinates: [[[24.9, 60.1]]] },
+					},
+				],
+			})
+			expect(isReactive(reactiveGeojson)).toBe(true)
+
+			await dataSource.addDataSourceWithPolygonFix(reactiveGeojson, 'Trees')
+
+			expect(geoJsonLoad).toHaveBeenCalledTimes(1)
+			const handed = geoJsonLoad.mock.calls[0][0]
+			expect(isReactive(handed)).toBe(false)
+			expect(handed).toEqual({
+				type: 'FeatureCollection',
+				features: [
+					{
+						type: 'Feature',
+						properties: { id: 1 },
+						geometry: { type: 'Polygon', coordinates: [[[24.9, 60.1]]] },
+					},
+				],
+			})
+		})
+
+		it('passes plain (non-reactive) data through unchanged', async () => {
+			const plain = {
+				type: 'FeatureCollection',
+				features: [{ type: 'Feature', properties: { id: 2 } }],
+			}
+
+			await dataSource.addDataSourceWithPolygonFix(plain, 'Trees')
+
+			expect(geoJsonLoad).toHaveBeenCalledTimes(1)
+			expect(geoJsonLoad.mock.calls[0][0]).toBe(plain)
 		})
 	}
 )
