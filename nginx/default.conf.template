@@ -213,6 +213,16 @@ server {
     # below for anything without a .gz (notably proxied pygeoapi JSON).
     gzip_static on;
 
+    # Serve build-time precompressed brotli siblings (.br, written by
+    # scripts/precompress.mjs at quality 11) when present. Brotli-11 shaves a
+    # further ~28-43% off the largest static JSON payloads over gzip-9 (WO-6:
+    # r4c_stats_grid_index.json 1.86 MB -> 1.34 MB, hsy_po.json 0.54 MB ->
+    # 0.31 MB). A client advertising `Accept-Encoding: br` gets the .br; one
+    # without falls through to gzip_static (.gz) then dynamic gzip below. The
+    # brotli static module is compiled into the image (see Dockerfile); only
+    # static serving is enabled (no on-the-fly `brotli on;`).
+    brotli_static on;
+
     # On-the-fly gzip for dynamic/proxied responses that have no precompressed
     # sibling — primarily the uncompressed multi-MB GeoJSON arriving from
     # pygeoapi (WO-2: origin sends no Content-Encoding). Level 6 is the sane
