@@ -201,6 +201,17 @@ class UnifiedLoader {
 			cacheOnly = false,
 		} = options
 
+		// A single AbortController owns this layer's whole lifecycle (cache check,
+		// fetch + retries, processing). Registering it in activeRequests for the
+		// entire call — not just the fetch phase — means cancelLoading(layerId)
+		// can abort at any point and the loading-state lifecycle is tracked
+		// deterministically: every layerId that starts loading here is settled
+		// (completed / errored / aborted) before activeRequests.delete in finally.
+		// This is what makes the loadingStore stale-sweep path unreachable rather
+		// than merely time-gated (see #816, #680).
+		const controller = new AbortController()
+		this.activeRequests.set(layerId, controller)
+
 		try {
 			// Start loading tracking
 			this.loadingStore.startLayerLoading(layerId, { url, type, priority })
@@ -232,7 +243,7 @@ class UnifiedLoader {
 					retries,
 				})
 			} else {
-				data = await this.loadStandard(layerId, url, type, retries)
+				data = await this.loadStandard(layerId, url, type, retries, controller.signal)
 			}
 
 			// Cache the data if enabled
@@ -257,6 +268,11 @@ class UnifiedLoader {
 			this.loadingStore.setLayerError(layerId, error.message)
 			logger.error(`Failed to load layer ${layerId}:`, error?.message || error)
 			throw error
+		} finally {
+			// The lifecycle is over (resolved, rejected, or aborted) — drop the
+			// controller so the map reflects only genuinely in-flight layers.
+			// Idempotent with cancelLoading()'s own delete.
+			this.activeRequests.delete(layerId)
 		}
 	}
 
@@ -294,59 +310,49 @@ class UnifiedLoader {
 	 * @param {string} url - Data source URL
 	 * @param {string} type - Data type ('json', 'geojson', 'text', 'blob')
 	 * @param {number} retries - Maximum retry attempts
+	 * @param {AbortSignal} [signal] - Abort signal owned by loadLayer's lifecycle controller
 	 * @returns {Promise<*>} Parsed data
 	 * @throws {Error} If fetch fails after all retries
 	 * @private
 	 */
-	async loadStandard(layerId, url, type, retries) {
-		const controller = new AbortController()
-		this.activeRequests.set(layerId, controller)
+	async loadStandard(layerId, url, type, retries, signal) {
+		// The AbortController lifecycle is owned by loadLayer (registered in
+		// activeRequests for the whole call); here we just honor its signal.
+		const response = await this.fetchWithRetry(url, { signal }, retries)
 
-		try {
-			const response = await this.fetchWithRetry(
-				url,
-				{
-					signal: controller.signal,
-				},
-				retries
-			)
-
-			// Network byte count (Content-Length; absent on chunked/gzip-without-length
-			// responses, in which case it reads 0).
-			if (PERF_STATS_ENABLED) {
-				const contentLength = Number(response.headers.get('content-length'))
-				perfStats.recordNetworkBytes(Number.isFinite(contentLength) ? contentLength : 0)
-			}
-
-			// `response.json()/.text()/.blob()` stream the body from the network
-			// before parsing, so this span measures body download + parse time,
-			// not pure CPU-bound deserialization. On slow links it is dominated by
-			// transfer time. Kept as one combined "body read" metric on purpose:
-			// awaiting `.text()` first to isolate `JSON.parse` would double-buffer
-			// large payloads and drop blob handling.
-			const deserializeStart = PERF_STATS_ENABLED ? performance.now() : 0
-			let data
-			switch (type) {
-				case 'json':
-				case 'geojson':
-					data = await response.json()
-					break
-				case 'text':
-					data = await response.text()
-					break
-				case 'blob':
-					data = await response.blob()
-					break
-				default:
-					data = await response.json()
-			}
-			if (PERF_STATS_ENABLED) perfStats.recordDeserialize(performance.now() - deserializeStart)
-
-			this.loadingStore.updateLayerProgress(layerId, 100, 100)
-			return data
-		} finally {
-			this.activeRequests.delete(layerId)
+		// Network byte count (Content-Length; absent on chunked/gzip-without-length
+		// responses, in which case it reads 0).
+		if (PERF_STATS_ENABLED) {
+			const contentLength = Number(response.headers.get('content-length'))
+			perfStats.recordNetworkBytes(Number.isFinite(contentLength) ? contentLength : 0)
 		}
+
+		// `response.json()/.text()/.blob()` stream the body from the network
+		// before parsing, so this span measures body download + parse time,
+		// not pure CPU-bound deserialization. On slow links it is dominated by
+		// transfer time. Kept as one combined "body read" metric on purpose:
+		// awaiting `.text()` first to isolate `JSON.parse` would double-buffer
+		// large payloads and drop blob handling.
+		const deserializeStart = PERF_STATS_ENABLED ? performance.now() : 0
+		let data
+		switch (type) {
+			case 'json':
+			case 'geojson':
+				data = await response.json()
+				break
+			case 'text':
+				data = await response.text()
+				break
+			case 'blob':
+				data = await response.blob()
+				break
+			default:
+				data = await response.json()
+		}
+		if (PERF_STATS_ENABLED) perfStats.recordDeserialize(performance.now() - deserializeStart)
+
+		this.loadingStore.updateLayerProgress(layerId, 100, 100)
+		return data
 	}
 
 	/**

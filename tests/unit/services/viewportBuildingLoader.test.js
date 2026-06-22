@@ -9,7 +9,7 @@
  */
 
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ViewportBuildingLoader from '@/services/viewportBuildingLoader.js'
 import { useToggleStore } from '@/stores/toggleStore.js'
 
@@ -442,6 +442,44 @@ describe('ViewportBuildingLoader - Unit Tests', () => {
 		})
 	})
 
+	describe('in-flight tile abort wiring (#816)', () => {
+		it('aborts every tracked in-flight tile via unifiedLoader.cancelLoading and clears the map', () => {
+			const cancelLoading = vi.fn()
+			loader.unifiedLoader = { cancelLoading }
+			loader.inFlightTileLayerIds.set('2490_6010', 'viewport_buildings_hsy_2490_6010')
+			loader.inFlightTileLayerIds.set('2491_6010', 'viewport_buildings_hsy_2491_6010')
+
+			loader.abortInFlightTileLoads()
+
+			expect(cancelLoading).toHaveBeenCalledTimes(2)
+			expect(cancelLoading).toHaveBeenCalledWith('viewport_buildings_hsy_2490_6010')
+			expect(cancelLoading).toHaveBeenCalledWith('viewport_buildings_hsy_2491_6010')
+			expect(loader.inFlightTileLayerIds.size).toBe(0)
+		})
+
+		it('is a no-op when nothing is in flight', () => {
+			const cancelLoading = vi.fn()
+			loader.unifiedLoader = { cancelLoading }
+
+			loader.abortInFlightTileLoads()
+
+			expect(cancelLoading).not.toHaveBeenCalled()
+		})
+
+		it('cancelPendingLoads aborts in-flight tile fetches too, not just the queue', () => {
+			const cancelLoading = vi.fn()
+			loader.unifiedLoader = { cancelLoading }
+			loader.loadingQueue = ['2492_6010', '2493_6010']
+			loader.inFlightTileLayerIds.set('2490_6010', 'viewport_buildings_hsy_2490_6010')
+
+			loader.cancelPendingLoads()
+
+			expect(loader.loadingQueue).toEqual([])
+			expect(cancelLoading).toHaveBeenCalledWith('viewport_buildings_hsy_2490_6010')
+			expect(loader.inFlightTileLayerIds.size).toBe(0)
+		})
+	})
+
 	describe('constructor', () => {
 		it('should initialize with correct default state', () => {
 			const loader = new ViewportBuildingLoader()
@@ -454,6 +492,8 @@ describe('ViewportBuildingLoader - Unit Tests', () => {
 			expect(loader.visibleTiles.size).toBe(0)
 			expect(loader.loadingTiles).toBeInstanceOf(Set)
 			expect(loader.loadingTiles.size).toBe(0)
+			expect(loader.inFlightTileLayerIds).toBeInstanceOf(Map)
+			expect(loader.inFlightTileLayerIds.size).toBe(0)
 			expect(loader.loadingQueue).toEqual([])
 			expect(loader.activeLoads).toBe(0)
 			expect(loader.debounceTimeout).toBeNull()

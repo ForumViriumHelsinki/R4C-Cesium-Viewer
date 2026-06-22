@@ -329,8 +329,6 @@ onMounted(async () => {
 				logger.error(`Failed to check layer cache for ${layer}:`, error)
 			})
 		})
-
-		loadingStore.startStaleCleanupTimer()
 	} catch (error) {
 		logger.warn('Failed to initialize caching services:', error)
 	}
@@ -338,7 +336,6 @@ onMounted(async () => {
 
 onBeforeUnmount(async () => {
 	stopLevelUrlWatcher()
-	loadingStore.stopStaleCleanupTimer()
 	serviceHealthStore.teardown()
 
 	if (featureFlagStore.isEnabled('backgroundPreload')) {
