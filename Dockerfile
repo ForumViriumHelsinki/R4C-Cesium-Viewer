@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/app/node_modules/.vite \
 # dbmate install below and the Renovate-managed `nginx:1.31` pin (issue #876).
 FROM nginx:1.31 AS brotli-builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential ca-certificates git wget libpcre2-dev zlib1g-dev libbrotli-dev \
+        build-essential ca-certificates git wget libpcre2-dev zlib1g-dev \
     && NGINX_VERSION="$(nginx -v 2>&1 | sed 's|.*nginx/||')" \
     && wget -qO /tmp/nginx.tar.gz "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" \
     && tar -xf /tmp/nginx.tar.gz -C /tmp \

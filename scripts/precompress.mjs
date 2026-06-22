@@ -83,14 +83,21 @@ function walk(dir) {
 
 		count += 1;
 		rawTotal += size;
-		// Emit each sibling only when it beats the raw payload.
+		// Emit each sibling only when it beats the raw payload. When a codec
+		// doesn't help, nginx serves the uncompressed file for that encoding, so
+		// accumulate the raw `size` (not 0) to keep the printed totals/ratios
+		// honest.
 		if (gz.length < size) {
 			writeFileSync(`${full}.gz`, gz);
 			gzTotal += gz.length;
+		} else {
+			gzTotal += size;
 		}
 		if (br.length < size) {
 			writeFileSync(`${full}.br`, br);
 			brTotal += br.length;
+		} else {
+			brTotal += size;
 		}
 	}
 }
