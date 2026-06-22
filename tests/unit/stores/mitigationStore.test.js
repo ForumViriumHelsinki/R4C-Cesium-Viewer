@@ -33,9 +33,10 @@ describe('mitigationStore — null/undefined property guards (#828)', () => {
 	})
 
 	describe('setGridCells', () => {
-		it('does not throw when grid_id / euref_x / euref_y are absent', async () => {
-			// final_avg_conditional present (passes the filter) but the other
-			// properties are missing — previously this threw on .getValue().
+		it('filters out entities when grid_id / euref_x / euref_y are absent', async () => {
+			// final_avg_conditional present (would pass the heat filter) but the other
+			// required properties are missing — the entity must be dropped entirely
+			// rather than mapped to an invalid cell with undefined coordinates.
 			const datasource = {
 				entities: {
 					values: [
@@ -50,12 +51,7 @@ describe('mitigationStore — null/undefined property guards (#828)', () => {
 			}
 
 			await expect(store.setGridCells(datasource)).resolves.toBeUndefined()
-			expect(store.gridCells).toHaveLength(1)
-			expect(store.gridCells[0]).toMatchObject({
-				id: undefined,
-				x: undefined,
-				y: undefined,
-			})
+			expect(store.gridCells).toHaveLength(0)
 			// A missing grid_id must not create a modifiedHeatIndices entry.
 			expect(store.modifiedHeatIndices).not.toHaveProperty('undefined')
 		})
