@@ -238,16 +238,18 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				// In Helsinki view, the label should change to "Only social & healthcare buildings"
 
 				// Verify that the filter toggle exists and can be identified.
-				// Use toBeAttached() not toBeVisible() — `.switch-container` is
-				// responsive-CSS-hidden on mobile viewports (analogous to
-				// `.timeline-compact` `d-none d-lg-flex` pattern documented in
-				// .claude/rules/testing.md "Testing Cesium Interactions"). This
-				// test only verifies presence; the visible-label check below
-				// reads sibling text and tolerates either label.
-				const _buildingTypeToggle = cesiumPage.locator('input[type="checkbox"]').first()
-				const filterContainer = cesiumPage.locator('.switch-container').first()
+				// The legacy `.switch-container` markup (src/components/Filters.vue /
+				// Layers.vue) is unmounted; the live filters render in
+				// BuildingFiltersControl.vue as `.control-item` rows with a v-switch
+				// and a `.control-label`. Scope to the building-type toggle by its
+				// label (matching the passing tests in this file) — mobile is skipped
+				// by the top-level beforeEach, so the row is mounted and visible here.
+				const buildingTypeToggle = cesiumPage
+					.getByText(/Public Buildings|Social & Healthcare/)
+					.locator('..')
+					.locator('input[type="checkbox"]')
 
-				await expect(filterContainer).toBeAttached()
+				await expect(buildingTypeToggle).toBeVisible()
 
 				// The actual label text depends on the view state
 				// We verify the toggle is functional regardless of label
@@ -580,9 +582,12 @@ cesiumDescribe('Building Filters Accessibility', () => {
 	cesiumTest.describe('Building Filter Accessibility', () => {
 		cesiumTest('should have consistent styling for all filter toggles', async ({ cesiumPage }) => {
 			// Mobile skip is handled by the top-level beforeEach hook.
-			// Check that all visible filters have consistent structure
+			// Check that all visible filters have consistent structure. The live
+			// filter rows render as `.control-item` (BuildingFiltersControl.vue),
+			// each with a v-switch (`input[type="checkbox"]`, visually opacity:0) and
+			// a `.control-label` — not the legacy `.switch-container`/`.switch`/`.label`.
 			const filterToggles = cesiumPage
-				.locator('.switch-container')
+				.locator('.control-item')
 				.filter({ has: cesiumPage.locator('input[type="checkbox"]') })
 			const count = await filterToggles.count()
 
@@ -591,14 +596,12 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			for (let i = 0; i < count; i++) {
 				const toggle = filterToggles.nth(i)
 
-				// Each should have a switch and label
-				const switchElement = toggle.locator('.switch')
-				const label = toggle.locator('.label')
+				// Each should have a switch input and a visible label
+				const switchElement = toggle.locator('input[type="checkbox"]')
+				const label = toggle.locator('.control-label')
 
-				if (await switchElement.isVisible()) {
-					await expect(switchElement).toBeVisible()
-					await expect(label).toBeVisible()
-				}
+				await expect(switchElement).toBeAttached()
+				await expect(label).toBeVisible()
 			}
 		})
 

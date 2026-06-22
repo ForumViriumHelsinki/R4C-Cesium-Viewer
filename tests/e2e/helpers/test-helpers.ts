@@ -2070,9 +2070,12 @@ export class AccessibilityTestHelpers {
 			await expect(this.page.getByText('Building Properties')).toBeVisible()
 		}
 
-		// Universal panels should always be visible
+		// Universal panels should always be visible. The sidebar was refactored
+		// into tabs (Search / Layers / Analysis / Details); the old "Search &
+		// Navigate" section heading no longer exists — search lives in the
+		// dedicated Search tab (#897).
 		await expect(this.page.getByText('Background Maps')).toBeVisible()
-		await expect(this.page.getByText('Search & Navigate')).toBeVisible()
+		await expect(this.page.getByRole('tab', { name: 'Search' })).toBeVisible()
 	}
 
 	/**
