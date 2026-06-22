@@ -322,6 +322,14 @@ export default {
 		}
 
 		onMounted(async () => {
+			// #819: On /oauth2/* routes (OIDC proxy sign-in/sign-out pages), the
+			// SPA shell is served but the Cesium viewer must never boot — short-circuit
+			// before any viewer init or data loading starts.
+			if (window.location.pathname.startsWith('/oauth2/')) {
+				logger.debug('[CesiumViewer] On /oauth2/* route — skipping Cesium init (#819)')
+				return
+			}
+
 			// Check if we have URL state to restore before initializing
 			const urlState = getUrlState()
 			if (urlState) {
