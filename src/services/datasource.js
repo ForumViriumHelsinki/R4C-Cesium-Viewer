@@ -1,3 +1,4 @@
+import { toRaw, unref } from 'vue'
 import { useGlobalStore } from '../stores/globalStore.js'
 import logger from '../utils/logger.js'
 import { getCesium } from './cesiumProvider.js'
@@ -302,6 +303,22 @@ export default class DataSource {
 			logger.warn(`[DATASOURCE CREATE] No data provided for "${name}", returning empty array`)
 			return []
 		}
+
+		// Strip Vue reactivity before handing the object to Cesium. This path loads
+		// polygons with `clampToGround: true`, which routes geometry through Cesium's
+		// TaskProcessor web workers. A reactive (Pinia/Vue) proxy array reaching
+		// `Worker.postMessage()` throws `DataCloneError: [object Array] could not be
+		// cloned` (Sentry REGIONS4CLIMATE-25, #925) because a proxy is not
+		// structured-cloneable. toRaw() returns the underlying plain object graph and
+		// is a no-op on data that was never made reactive. Cf. the markRaw() note in
+		// globalStore.setPickedEntity.
+		//
+		// unref() first: a caller may pass a Vue ref() wrapping the GeoJSON (a
+		// common Vue 3 pattern). toRaw() on a RefImpl returns the RefImpl itself,
+		// so the `!data.type` check below would spuriously fail. unref() unwraps
+		// the ref (and is a no-op on non-ref values) so both reactive objects and
+		// refs are handled.
+		data = toRaw(unref(data))
 
 		// Validate GeoJSON structure has required 'type' property
 		if (!data.type) {

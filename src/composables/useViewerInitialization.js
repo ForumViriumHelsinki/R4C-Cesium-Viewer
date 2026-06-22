@@ -178,11 +178,16 @@ export function useViewerInitialization() {
 
 		// Expose viewer to E2E test harness
 		if (isE2ETest) {
-			// `window` is augmented with __viewer/__cesium only in E2E mode; the global
-			// Window type has no such fields, so widen to access them here.
-			const testWindow = /** @type {Window & { __viewer?: any, __cesium?: any }} */ (window)
+			// `window` is augmented with __viewer/__cesium/__featurepicker only in E2E
+			// mode; the global Window type has no such fields, so widen to access them here.
+			const testWindow =
+				/** @type {Window & { __viewer?: any, __cesium?: any, __featurepicker?: any }} */ (window)
 			testWindow.__viewer = viewer.value
 			testWindow.__cesium = Cesium
+			// Expose the Featurepicker class so E2E tests can drive a real pick/navigate
+			// (e.g. the US-11 Cesium worker DataCloneError reproduction) without relying
+			// on canvas-coordinate clicks. Mirrors __viewer/__cesium (module-level refs).
+			testWindow.__featurepicker = Featurepicker
 			logger.debug('[useViewerInitialization] 🧪 Test mode enabled - viewer exposed to window')
 		}
 
