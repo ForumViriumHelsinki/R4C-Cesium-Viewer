@@ -188,9 +188,22 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			await expect(zoom).toHaveAttribute('aria-label', 'Zoom controls')
 		})
 
+		cesiumTest(
+			'exposes a single "Zoom in"/"Zoom out" accessible name (#928)',
+			async ({ cesiumPage }) => {
+				// MapOverlayControls still renders a visual zoom pair, but those buttons are
+				// aria-hidden + tabindex="-1", so the accessibility tree exposes exactly one
+				// "Zoom in" / "Zoom out" — the canonical pair in .zoom-controls (CameraControls).
+				await expect(cesiumPage.getByRole('button', { name: 'Zoom in', exact: true })).toHaveCount(
+					1
+				)
+				await expect(cesiumPage.getByRole('button', { name: 'Zoom out', exact: true })).toHaveCount(
+					1
+				)
+			}
+		)
+
 		cesiumTest('renders zoom in / zoom out buttons with icons', async ({ cesiumPage }) => {
-			// Scope to .zoom-controls: MapOverlayControls renders a second "Zoom in"/"Zoom out"
-			// pair with identical accessible names, so an unscoped query is ambiguous.
 			const zoom = cesiumPage.locator('.zoom-controls')
 			const zoomIn = zoom.getByRole('button', { name: 'Zoom in', exact: true })
 			const zoomOut = zoom.getByRole('button', { name: 'Zoom out', exact: true })

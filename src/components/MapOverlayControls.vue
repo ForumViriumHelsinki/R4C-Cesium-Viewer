@@ -11,12 +11,23 @@
 		>
 			<v-icon>mdi-compass</v-icon>
 		</v-btn>
+		<!--
+		  These zoom buttons are pointer-only decorative duplicates of the
+		  canonical, grouped, labelled zoom controls in CameraControls.vue
+		  (.zoom-controls, role="group" aria-label="Zoom controls"). They are
+		  removed from the accessibility tree and tab order so the page exposes a
+		  single "Zoom in" / "Zoom out" accessible name — duplicate names across
+		  two visible controls are ambiguous for screen-reader and voice-control
+		  users (WCAG 2.4.6). Keyboard and AT users zoom via CameraControls. See #928.
+		-->
 		<v-btn
 			icon
 			size="small"
 			variant="elevated"
 			color="surface"
 			aria-label="Zoom in"
+			aria-hidden="true"
+			tabindex="-1"
 			@click="zoomIn"
 		>
 			<v-icon>mdi-plus</v-icon>
@@ -27,6 +38,8 @@
 			variant="elevated"
 			color="surface"
 			aria-label="Zoom out"
+			aria-hidden="true"
+			tabindex="-1"
 			@click="zoomOut"
 		>
 			<v-icon>mdi-minus</v-icon>
