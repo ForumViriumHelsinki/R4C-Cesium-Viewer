@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { isReactive, reactive } from 'vue'
+import { isReactive, reactive, ref } from 'vue'
 import DataSource from '@/services/datasource.js'
 
 // Mock fetch globally
@@ -278,6 +278,38 @@ describe(
 
 			expect(geoJsonLoad).toHaveBeenCalledTimes(1)
 			expect(geoJsonLoad.mock.calls[0][0]).toBe(plain)
+		})
+
+		it('unwraps a Vue ref containing GeoJSON before stripping reactivity', async () => {
+			// A caller may pass a ref() wrapping the GeoJSON (common Vue 3 pattern).
+			// unref() must unwrap it before toRaw(); otherwise toRaw(ref) returns the
+			// RefImpl, the `!data.type` validation fails, and the load is rejected.
+			const reactiveGeojson = ref({
+				type: 'FeatureCollection',
+				features: [
+					{
+						type: 'Feature',
+						properties: { id: 3 },
+						geometry: { type: 'Polygon', coordinates: [[[24.9, 60.1]]] },
+					},
+				],
+			})
+
+			await dataSource.addDataSourceWithPolygonFix(reactiveGeojson, 'Trees')
+
+			expect(geoJsonLoad).toHaveBeenCalledTimes(1)
+			const handed = geoJsonLoad.mock.calls[0][0]
+			expect(isReactive(handed)).toBe(false)
+			expect(handed).toEqual({
+				type: 'FeatureCollection',
+				features: [
+					{
+						type: 'Feature',
+						properties: { id: 3 },
+						geometry: { type: 'Polygon', coordinates: [[[24.9, 60.1]]] },
+					},
+				],
+			})
 		})
 	}
 )

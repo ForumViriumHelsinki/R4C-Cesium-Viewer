@@ -1,4 +1,4 @@
-import { toRaw } from 'vue'
+import { toRaw, unref } from 'vue'
 import { useGlobalStore } from '../stores/globalStore.js'
 import logger from '../utils/logger.js'
 import { getCesium } from './cesiumProvider.js'
@@ -312,7 +312,13 @@ export default class DataSource {
 		// structured-cloneable. toRaw() returns the underlying plain object graph and
 		// is a no-op on data that was never made reactive. Cf. the markRaw() note in
 		// globalStore.setPickedEntity.
-		data = toRaw(data)
+		//
+		// unref() first: a caller may pass a Vue ref() wrapping the GeoJSON (a
+		// common Vue 3 pattern). toRaw() on a RefImpl returns the RefImpl itself,
+		// so the `!data.type` check below would spuriously fail. unref() unwraps
+		// the ref (and is a no-op on non-ref values) so both reactive objects and
+		// refs are handled.
+		data = toRaw(unref(data))
 
 		// Validate GeoJSON structure has required 'type' property
 		if (!data.type) {
