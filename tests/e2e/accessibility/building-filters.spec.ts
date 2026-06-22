@@ -245,8 +245,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				// label (matching the passing tests in this file) — mobile is skipped
 				// by the top-level beforeEach, so the row is mounted and visible here.
 				const buildingTypeToggle = cesiumPage
-					.getByText(/Public Buildings|Social & Healthcare/)
-					.locator('..')
+					.locator('.control-item', { hasText: /Public Buildings|Social & Healthcare/ })
 					.locator('input[type="checkbox"]')
 
 				await expect(buildingTypeToggle).toBeVisible()
