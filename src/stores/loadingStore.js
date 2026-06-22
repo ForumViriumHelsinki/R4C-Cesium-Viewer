@@ -41,14 +41,6 @@ export const useLoadingStore = defineStore('loading', {
 		// Global loading state
 		isLoading: false,
 
-		// Stale loading cleanup timer ID (for automatic cleanup)
-		/** @type {ReturnType<typeof setInterval>|null} */
-		_staleCleanupTimer: null,
-
-		// beforeunload handler reference (registered lazily when the timer starts)
-		/** @type {(() => void)|null} */
-		_staleCleanupUnloadHandler: null,
-
 		// Individual layer loading states
 		layerLoading: {
 			trees: false,
@@ -273,9 +265,14 @@ export const useLoadingStore = defineStore('loading', {
 
 		/**
 		 * Clear loading states that have genuinely been loading longer than the timeout.
-		 * This prevents the loading indicator from getting stuck due to:
-		 * - Network timeouts not properly completing layer loading
-		 * - Race conditions in navigation where layer loading was interrupted
+		 *
+		 * Defensive, manual safety net only. As of #816 in-flight layers are settled
+		 * deterministically — viewport tiles via per-tile AbortSignal tracking in
+		 * unifiedLoader.activeRequests (resolve / error / abort), predefined layers
+		 * via their own try/catch — so nothing fires this on a timer any more. It is
+		 * retained as an explicitly-callable recovery hook should a future caller need
+		 * to force-clear a stuck indicator; the automatic interval that produced the
+		 * #680 warning flood has been removed.
 		 *
 		 * The staleness check is purely time-based and applies equally to predefined
 		 * layers and dynamic layer IDs (e.g., viewport tile IDs). A layer being dynamic
@@ -335,48 +332,6 @@ export const useLoadingStore = defineStore('loading', {
 			}
 
 			return clearedCount
-		},
-
-		/**
-		 * Start automatic stale loading cleanup.
-		 * Runs clearStaleLoading periodically to prevent stuck loading indicators.
-		 * In E2E test mode, uses more aggressive cleanup (every 3s with 5s timeout).
-		 */
-		startStaleCleanupTimer() {
-			if (this._staleCleanupTimer) return // Already running
-
-			const isE2ETest =
-				typeof import.meta !== 'undefined' && import.meta.env?.VITE_E2E_TEST === 'true'
-			const interval = isE2ETest ? 3000 : 10000 // 3s in tests, 10s in production
-			const timeout = isE2ETest ? 5000 : 30000 // 5s in tests, 30s in production
-
-			this._staleCleanupTimer = setInterval(() => {
-				this.clearStaleLoading(timeout)
-			}, interval)
-
-			if (typeof window !== 'undefined' && !this._staleCleanupUnloadHandler) {
-				this._staleCleanupUnloadHandler = () => this.stopStaleCleanupTimer()
-				window.addEventListener('beforeunload', this._staleCleanupUnloadHandler, { once: true })
-			}
-
-			logger.debug(
-				`[loadingStore] Started stale cleanup timer (${interval}ms interval, ${timeout}ms timeout)`
-			)
-		},
-
-		/**
-		 * Stop automatic stale loading cleanup. Idempotent — safe to call multiple times.
-		 */
-		stopStaleCleanupTimer() {
-			if (this._staleCleanupTimer) {
-				clearInterval(this._staleCleanupTimer)
-				this._staleCleanupTimer = null
-				logger.debug('[loadingStore] Stopped stale cleanup timer')
-			}
-			if (typeof window !== 'undefined' && this._staleCleanupUnloadHandler) {
-				window.removeEventListener('beforeunload', this._staleCleanupUnloadHandler)
-				this._staleCleanupUnloadHandler = null
-			}
 		},
 
 		// Retry loading a layer that failed

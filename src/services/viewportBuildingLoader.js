@@ -126,6 +126,16 @@ export default class ViewportBuildingLoader {
 		this.visibleTiles = new Set()
 		/** @type {Set<string>} Tiles currently being loaded */
 		this.loadingTiles = new Set()
+		/**
+		 * In-flight tile fetches keyed by tileKey → unifiedLoader layerId.
+		 * Lets us deterministically abort a tile's building fetch (freeing the
+		 * loadingStore layer state and the host concurrency slot immediately)
+		 * when the tile is abandoned — grid switch, view-mode change, shutdown —
+		 * instead of letting it run to completion and rely on a stale-cleanup
+		 * timer (see #816).
+		 * @type {Map<string, string>}
+		 */
+		this.inFlightTileLayerIds = new Map()
 
 		// Camera event tracking
 		this.debounceTimeout = null
@@ -648,8 +658,15 @@ export default class ViewportBuildingLoader {
 				heatDataPromise = this.urbanheatService.getHeatData(currentPostalCode)
 			}
 
+			const layerId = `viewport_buildings_${viewPrefix}_${tileKey}`
+			// Record the layerId while the fetch is in flight so it can be aborted
+			// deterministically if the tile is abandoned. Captured from the same
+			// viewPrefix used to issue the request, so an abort always targets the
+			// real layerId even if the view mode toggles mid-load.
+			this.inFlightTileLayerIds.set(tileKey, layerId)
+
 			const loadingConfig = {
-				layerId: `viewport_buildings_${viewPrefix}_${tileKey}`,
+				layerId,
 				url: url,
 				type: 'geojson',
 				options: {
@@ -699,6 +716,10 @@ export default class ViewportBuildingLoader {
 		} catch (error) {
 			logger.error(`[ViewportBuildingLoader] ❌ Error loading tile ${tileKey}:`, error)
 			throw error
+		} finally {
+			// Settled (resolved, errored, or aborted) — the layerId is no longer
+			// in flight, so a later abort would target nothing.
+			this.inFlightTileLayerIds.delete(tileKey)
 		}
 	}
 
@@ -1205,14 +1226,36 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
+	 * Abort every in-flight tile building fetch.
+	 * Each abort flips the tile's loadingStore layer state to settled and frees
+	 * its host concurrency slot immediately, so no abandoned tile lingers in
+	 * `layerLoading: true` waiting on a stale-cleanup timer (see #816).
+	 *
+	 * @private
+	 * @returns {void}
+	 */
+	abortInFlightTileLoads() {
+		if (this.inFlightTileLayerIds.size === 0) return
+		const aborted = this.inFlightTileLayerIds.size
+		for (const layerId of this.inFlightTileLayerIds.values()) {
+			this.unifiedLoader.cancelLoading(layerId)
+		}
+		this.inFlightTileLayerIds.clear()
+		logger.debug(`[ViewportBuildingLoader] Aborted ${aborted} in-flight tile load(s)`)
+	}
+
+	/**
 	 * Cancel all pending tile loads in the queue.
-	 * Called when grid view is enabled to stop further building loading.
+	 * Called when grid view is enabled to stop further building loading. Aborts
+	 * in-flight tile fetches too — under grid view their buildings are hidden, so
+	 * letting them run only holds concurrency slots and loading state.
 	 *
 	 * @returns {void}
 	 */
 	cancelPendingLoads() {
 		const cancelled = this.loadingQueue.length
 		this.loadingQueue = []
+		this.abortInFlightTileLoads()
 		if (cancelled > 0) {
 			logger.debug(`[ViewportBuildingLoader] Cancelled ${cancelled} pending tile loads`)
 		}
@@ -1226,6 +1269,10 @@ export default class ViewportBuildingLoader {
 	 */
 	async clearAllTiles() {
 		logger.debug(`[ViewportBuildingLoader] Clearing all ${this.loadedTiles.size} loaded tiles`)
+
+		// Abort in-flight fetches before dropping their tracking — the data they
+		// would return is about to be discarded (datasource removal / view switch).
+		this.abortInFlightTileLoads()
 
 		// Remove all viewport datasources
 		await this.datasourceService.removeDataSourcesByNamePrefix('Buildings Viewport')
