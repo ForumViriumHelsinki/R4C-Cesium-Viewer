@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.55.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.55.1...r4c-cesium-viewer-v1.55.2) (2026-06-22)
+
+
+### Bug Fixes
+
+* **a11y:** expose a single "Zoom in"/"Zoom out" accessible name ([#929](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/929)) ([6948246](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/69482461c8953fd03b36b82c9b87bf5a803689af))
+* **deps:** resolve remaining dependency CVEs ([#815](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/815)) ([#931](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/931)) ([9c3055b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9c3055b4e8ed77ffddd9b70144699bbab098f414))
+* **viewer:** Cesium worker DataCloneError — strip Vue reactivity at GeoJSON boundary ([#930](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/930)) ([0459245](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0459245c1d72f075f8c08eb7b16e449b3f5faf95))
+
+
+### Performance Improvements
+
+* **nginx:** serve precompressed brotli (.br) for static assets ([#932](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/932)) ([ae05c47](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ae05c4785fddcd6347d86fab1b94bd617ae498d4))
+
 ## [1.55.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.55.0...r4c-cesium-viewer-v1.55.1) (2026-06-22)
 
 
