@@ -15,31 +15,32 @@
 		  These zoom buttons are pointer-only decorative duplicates of the
 		  canonical, grouped, labelled zoom controls in CameraControls.vue
 		  (.zoom-controls, role="group" aria-label="Zoom controls"). They are
-		  removed from the accessibility tree and tab order so the page exposes a
+		  rendered as non-focusable <div> elements (tag="div") with
+		  aria-hidden="true", which removes them from both the accessibility tree
+		  and the tab order without the ARIA-authoring violation of putting
+		  aria-hidden/tabindex on a real <button>. The page therefore exposes a
 		  single "Zoom in" / "Zoom out" accessible name — duplicate names across
 		  two visible controls are ambiguous for screen-reader and voice-control
 		  users (WCAG 2.4.6). Keyboard and AT users zoom via CameraControls. See #928.
 		-->
 		<v-btn
+			tag="div"
 			icon
 			size="small"
 			variant="elevated"
 			color="surface"
-			aria-label="Zoom in"
 			aria-hidden="true"
-			tabindex="-1"
 			@click="zoomIn"
 		>
 			<v-icon>mdi-plus</v-icon>
 		</v-btn>
 		<v-btn
+			tag="div"
 			icon
 			size="small"
 			variant="elevated"
 			color="surface"
-			aria-label="Zoom out"
 			aria-hidden="true"
-			tabindex="-1"
 			@click="zoomOut"
 		>
 			<v-icon>mdi-minus</v-icon>

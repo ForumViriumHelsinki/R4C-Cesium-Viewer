@@ -191,9 +191,10 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 		cesiumTest(
 			'exposes a single "Zoom in"/"Zoom out" accessible name (#928)',
 			async ({ cesiumPage }) => {
-				// MapOverlayControls still renders a visual zoom pair, but those buttons are
-				// aria-hidden + tabindex="-1", so the accessibility tree exposes exactly one
-				// "Zoom in" / "Zoom out" — the canonical pair in .zoom-controls (CameraControls).
+				// MapOverlayControls still renders a visual zoom pair, but those elements are
+				// rendered as non-focusable <div>s with aria-hidden="true", so the accessibility
+				// tree exposes exactly one "Zoom in" / "Zoom out" — the canonical pair in
+				// .zoom-controls (CameraControls).
 				await expect(cesiumPage.getByRole('button', { name: 'Zoom in', exact: true })).toHaveCount(
 					1
 				)
