@@ -22,6 +22,21 @@ export default defineConfig({
 	],
 	test: {
 		globals: true,
+		// Vitest 4.1 requires test tags used via describe/test options to be
+		// declared here (https://vitest.dev/guide/test-tags). Mirrors the
+		// @-tags applied across tests/unit and tests/integration.
+		tags: [
+			{ name: '@unit' },
+			{ name: '@integration' },
+			{ name: '@accessibility' },
+			{ name: '@performance' },
+			{ name: '@wms' },
+			{ name: '@coldarea' },
+			{ name: '@datasource' },
+			{ name: '@espooSurvey' },
+			{ name: '@sensor' },
+			{ name: '@traveltime' },
+		],
 		environment: 'jsdom',
 		setupFiles: ['./tests/setup.js'],
 		include: [

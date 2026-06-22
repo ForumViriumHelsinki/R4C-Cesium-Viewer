@@ -456,7 +456,9 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run bun audit
-        run: bun audit || true
+        # Blocking gate restored (#815). All advisories resolved via direct
+        # bumps + transitive overrides; this fails CI if the count regresses.
+        run: bun audit
 
   # Generate workflow summary after all jobs complete
   summary:
