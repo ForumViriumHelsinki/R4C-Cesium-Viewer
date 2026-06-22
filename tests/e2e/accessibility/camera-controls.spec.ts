@@ -283,8 +283,13 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			await cesiumPage.waitForFunction(
 				() => {
 					const viewer = (window as { __viewer?: { camera?: { heading?: number } } }).__viewer
-					const Cesium = (window as { __cesium?: { Math: { toRadians: (d: number) => number } } })
-						.__cesium
+					// Cesium attaches to __cesium in E2E mode, but the fixture mock uses
+					// window.Cesium — check both (testing.md: never just one global).
+					const w = window as {
+						__cesium?: { Math: { toRadians: (d: number) => number } }
+						Cesium?: { Math: { toRadians: (d: number) => number } }
+					}
+					const Cesium = w.__cesium ?? w.Cesium
 					if (!viewer?.camera || !Cesium) return false
 					const target = Cesium.Math.toRadians(90)
 					return Math.abs((viewer.camera.heading ?? 0) - target) < 0.05
