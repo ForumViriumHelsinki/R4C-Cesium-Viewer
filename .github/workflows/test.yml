@@ -39,7 +39,7 @@ jobs:
           bun-version: 1.3.14 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.bun/install/cache
@@ -67,7 +67,7 @@ jobs:
           bun-version: 1.3.14 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.bun/install/cache
@@ -105,7 +105,7 @@ jobs:
           bun-version: 1.3.14 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.bun/install/cache
@@ -143,7 +143,7 @@ jobs:
           bun-version: 1.3.14 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.bun/install/cache
@@ -183,7 +183,7 @@ jobs:
           bun-version: 1.3.14 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.bun/install/cache
@@ -223,7 +223,7 @@ jobs:
           bun-version: 1.3.14 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.bun/install/cache
@@ -236,7 +236,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
@@ -305,7 +305,7 @@ jobs:
           bun-version: 1.3.14 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.bun/install/cache
@@ -318,7 +318,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
@@ -379,7 +379,7 @@ jobs:
           bun-version: 1.3.14 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.bun/install/cache
@@ -392,7 +392,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
@@ -443,7 +443,7 @@ jobs:
           bun-version: 1.3.14 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5.0.5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.bun/install/cache
