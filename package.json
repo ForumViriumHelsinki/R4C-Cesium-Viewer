@@ -2,7 +2,7 @@
 	"name": "r4c-cesium-viewer",
 	"private": true,
 	"license": "MIT",
-	"version": "1.55.2",
+	"version": "1.55.3",
 	"type": "module",
 	"scripts": {
 		"dev": "vite --host",
