@@ -314,8 +314,16 @@ server {
     # the websocket via the `apiKey` query parameter ONLY (the Authorization
     # header is rejected on this endpoint — verified against relay v1.50.1),
     # so the rewrite injects the key server-side; it never ships in the JS
-    # bundle. Empty ${GOFF_API_KEY} yields a 401 and the app degrades to
-    # fallback defaults, same as an unreachable relay.
+    # bundle. An empty/invalid GOFF_API_KEY yields a 401 and the app degrades
+    # to fallback defaults, same as an unreachable relay.
+    #
+    # NB: never write the GOFF_API_KEY variable in shell brace form inside a
+    # comment. This template is run through `envsubst` at container start,
+    # which substitutes the variable everywhere — comments included. A key
+    # value carrying a stray newline then splits the comment, and its trailing
+    # words parse as an nginx directive (`[emerg] unknown directive`), which
+    # crashes the container. Reference it by bare name in prose only.
+    # (Infra incident 2026-06-29.)
     location /feature-flags/ws/ {
         set $goff_host "gofeatureflag-relay-proxy.feature-flags.svc.cluster.local";
         rewrite ^/feature-flags/(.*)$ /$1?apiKey=${GOFF_API_KEY} break;
