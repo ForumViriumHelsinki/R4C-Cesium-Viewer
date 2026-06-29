@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.55.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.55.2...r4c-cesium-viewer-v1.55.3) (2026-06-29)
+
+
+### Bug Fixes
+
+* **nginx:** stop envsubst corrupting config via GOFF_API_KEY in a comment ([#936](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/936)) ([524d425](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/524d4252e286cb1ad519e80ce4eba710c262c3fd))
+
 ## [1.55.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.55.1...r4c-cesium-viewer-v1.55.2) (2026-06-22)
 
 
