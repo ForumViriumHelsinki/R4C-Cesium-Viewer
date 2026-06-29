@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.56.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.55.3...r4c-cesium-viewer-v1.56.0) (2026-06-29)
+
+
+### Features
+
+* **deps:** enable Renovate lockFileMaintenance for bun.lock ([#938](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/938)) ([694f495](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/694f495625e38eaee84b1535311582802856cadd))
+
 ## [1.55.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.55.2...r4c-cesium-viewer-v1.55.3) (2026-06-29)
 
 
