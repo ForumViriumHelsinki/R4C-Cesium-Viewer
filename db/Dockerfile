@@ -1,4 +1,4 @@
-FROM amacneil/dbmate:2.33.0
+FROM amacneil/dbmate:2.34.0
 
 # Copy migrations into the image
 COPY migrations/ /migrations/
