@@ -7,6 +7,18 @@ on:
 
 jobs:
   auto-merge:
+    # app-id is what keeps this unattended. Since GitHub's 2026-06-11 bot-PR
+    # change, a pull request authored by github-actions[bot] has its workflow
+    # runs held in `action_required` until a human approves them, so a PR
+    # created with GITHUB_TOKEN never merges on its own. Authoring it with the
+    # CI App's installation token instead lets the checks start by themselves.
+    #
+    # AUTO_MERGE_PAT is not defined for this repo, so before this it silently
+    # fell back to GITHUB_TOKEN. It stays listed as the documented alternative
+    # to app-id; passing an undefined secret is a no-op.
     uses: ForumViriumHelsinki/.github/.github/workflows/reusable-auto-merge-image-updater.yml@main
+    with:
+      app-id: ${{ vars.CI_APP_ID }}
     secrets:
+      APP_PRIVATE_KEY: ${{ secrets.CI_APP_PRIVATE_KEY }}
       AUTO_MERGE_PAT: ${{ secrets.AUTO_MERGE_PAT }}
