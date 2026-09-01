@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.56.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.56.0...r4c-cesium-viewer-v1.56.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **nginx:** serve /oauth2/userinfo so OIDC identity reaches the app ([#949](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/949)) ([38d3ea2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/38d3ea2db7094f09951adbc30e9e41c6fad69b60))
+
 ## [1.56.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.55.3...r4c-cesium-viewer-v1.56.0) (2026-06-29)
 
 
