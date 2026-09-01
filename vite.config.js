@@ -101,12 +101,6 @@ export default defineConfig(({ mode }) => {
 	const buildTime = new Date().toISOString();
 
 	return {
-		// Strip console.log and console.debug from production builds
-		// Keeps console.warn, console.error, console.info for production monitoring
-		esbuild: {
-			drop: mode === 'production' ? ['debugger'] : [],
-			pure: mode === 'production' ? ['console.log', 'console.debug'] : [],
-		},
 		build: {
 			// Source maps ship to production for Sentry symbolication. The
 			// Lighthouse CI build sets LIGHTHOUSE=true to skip them: Lighthouse's
@@ -115,7 +109,13 @@ export default defineConfig(({ mode }) => {
 			// maps reliably trip that timeout, crashing the whole lhci collect (#824).
 			sourcemap: process.env.LIGHTHOUSE !== 'true',
 			target: 'es2020', // Modern browsers only for better optimization
-			minify: 'esbuild', // Fast minification
+			// Vite 8 is rolldown-based and no longer depends on esbuild: both
+			// `minify: 'esbuild'` and the top-level `esbuild` transform option now
+			// require the package to be installed separately, and asking for
+			// either fails the build outright. 'oxc' is Vite 8's default minifier
+			// (#947, defect 1). Production console gating lives in
+			// src/utils/logger.js, not in a build-time `pure` annotation.
+			minify: 'oxc',
 			rollupOptions: {
 				output: {
 					assetFileNames: `assets/[name].[hash].${version}.[ext]`,

@@ -454,7 +454,7 @@ const filterBuildingsEvent = () => {
 			if (hideNonSote.value || filterBuildings.value || hideLow.value) {
 				// Fire-and-forget async call - filter uses batch processing to yield to main thread
 				buildingService.filterBuildings(buildingsDataSource).catch((error) => {
-					console.error('[PostalCodeView] Failed to filter buildings:', error)
+					logger.error('[PostalCodeView] Failed to filter buildings:', error)
 				})
 			} else {
 				buildingService.showAllBuildings(buildingsDataSource)
