@@ -297,6 +297,97 @@ server {
     }
 
     # Rule 4: Default fallback for SPA routing
+    # ===========================================
+    # OIDC identity shim
+    # ===========================================
+
+    # Restores /oauth2/userinfo, which oauth2-proxy used to serve and Envoy
+    # Gateway's native OIDC filter does not: that filter implements only
+    # /oauth2/callback and /oauth2/sign_out, so after the Envoy migration
+    # (#631, infrastructure#1844) this path fell through to the SPA catch-all
+    # below and answered 200 text/html. userStore.fetchUserInfo() then took its
+    # non-JSON guard (#799) and every visitor evaluated as anonymous, which
+    # silently disabled every domain-targeted GOFF flag — including
+    # r4c-show-feature-panel, the panel that would otherwise let staff override
+    # a flag by hand.
+    #
+    # The gateway half of the fix is already deployed: the prod SecurityPolicy
+    # sets `forwardAccessToken: true` (infrastructure#2026), so an authenticated
+    # request arrives here carrying `Authorization: Bearer <google-access-token>`.
+    # This location exchanges that token for the `email` / `hd` claims at
+    # Google's userinfo endpoint. See infrastructure#2018 for the decision and
+    # the rejected alternatives (a userinfo-only oauth2-proxy, a standalone shim).
+    #
+    # Longer term, Envoy Gateway >= v1.8.0 exposes `forwardIDToken`, which would
+    # let the ID-token JWT be decoded locally and remove this round-trip
+    # entirely; the deployed version is v1.6.3.
+    location = /oauth2/userinfo {
+        # Applies to the `return` below; a proxied response carries Google's
+        # own Content-Type. Without this the error body would be typed
+        # application/octet-stream.
+        default_type application/json;
+
+        # No forwarded token means the request never passed the OIDC filter
+        # (local dev, or a misconfigured gateway). Answer directly rather than
+        # asking Google to reject it — fetchUserInfo() treats a non-2xx as
+        # "anonymous", which is the correct outcome either way.
+        if ($http_authorization = "") {
+            return 401 '{"error":"no_forwarded_token"}';
+        }
+
+        # Resolve at request time via the server-level resolver rather than
+        # pinning Google's address at config load. A variable proxy_pass does
+        # not append a URI, hence the explicit rewrite.
+        set $google_userinfo "openidconnect.googleapis.com";
+        rewrite ^ /v1/userinfo break;
+        proxy_pass https://$google_userinfo;
+        proxy_set_header Host $google_userinfo;
+
+        # Google's TLS front end requires SNI (same reason as /digitransit).
+        proxy_ssl_server_name on;
+
+        # The server block sets `proxy_ssl_verify off` globally for the map/data
+        # upstreams. A bearer token is leaving the cluster here, so verify the
+        # peer for this one call. nginx:1.31 is Debian-based; the CA bundle is
+        # at the path below.
+        proxy_ssl_verify on;
+        proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+        proxy_ssl_verify_depth 3;
+
+        # MUST stay off. The server block enables `proxy_cache global_cache`
+        # with `proxy_cache_key $request_uri` for every location, and that key
+        # is a constant here — a cached entry would serve the first caller's
+        # email to every subsequent visitor. In practice Google's `Cache-Control:
+        # no-store` already prevents it (no `proxy_ignore_headers` is set), but
+        # that makes the guarantee depend on an upstream header. Be explicit.
+        proxy_cache off;
+
+        # Forward only the bearer token. The site's own session cookies have no
+        # meaning to Google and must not leave the cluster.
+        proxy_set_header Authorization $http_authorization;
+        proxy_set_header Cookie "";
+
+        # Google sets both of these on its own response; drop them so the
+        # values below are not appended as a second, conflicting copy.
+        proxy_hide_header Cache-Control;
+        proxy_hide_header X-Content-Type-Options;
+        proxy_hide_header X-Frame-Options;
+
+        # Deliberately uncached. The response is per-user, so a correct cache
+        # key would have to be the access token itself, which would then sit in
+        # a cache file on disk. The app fetches this once per page load, so the
+        # round-trip is not worth that exposure.
+        add_header Cache-Control "no-store" always;
+        # Re-declare security headers (suppressed by the add_header above).
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 5s;
+        proxy_read_timeout 5s;
+    }
+
     location / {
         add_header Cache-Control "no-cache, no-store, must-revalidate" always;
         add_header Pragma "no-cache" always;
