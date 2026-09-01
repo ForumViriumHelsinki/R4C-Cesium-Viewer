@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.56.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.56.1...r4c-cesium-viewer-v1.56.2) (2026-09-01)
+
+
+### Bug Fixes
+
+* **build:** drop esbuild, minify with oxc ([#952](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/952)) ([cf89870](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/cf89870920f7440d273e6d90f915c85c700190e8))
+* **docker:** build only the brotli static module ([#954](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/954)) ([23f3e54](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/23f3e5450176c33933af595fbb93ab02379cb48a))
+
 ## [1.56.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.56.0...r4c-cesium-viewer-v1.56.1) (2026-09-01)
 
 
