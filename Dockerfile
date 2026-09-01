@@ -24,6 +24,17 @@ RUN --mount=type=cache,target=/app/node_modules/.vite \
 # dynamic module), so we don't need to mirror the stock image's full configure
 # args. Keeping this on the Debian-based official image preserves the apt-get
 # dbmate install below and the Renovate-managed `nginx:1.31` pin (issue #876).
+#
+# Builds the *static* module only. `make modules` would also build the
+# filter module, which links against libbrotlienc/libbrotlicommon and fails with
+# `ld: cannot find -lbrotlienc` unless libbrotli-dev is installed. Only the
+# static module is copied out (we serve precompressed .br siblings, not
+# on-the-fly compression), so building the filter was always wasted work — it
+# just went unnoticed until the frontend build stopped failing first and this
+# stage became the thing that took the image build down (#947).
+#
+# ngx_brotli is cloned at HEAD with no pin, so this stage can break from an
+# upstream commit with no diff on our side.
 FROM nginx:1.31 AS brotli-builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential ca-certificates git wget libpcre2-dev zlib1g-dev \
@@ -34,7 +45,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         https://github.com/google/ngx_brotli.git /tmp/ngx_brotli \
     && cd "/tmp/nginx-${NGINX_VERSION}" \
     && ./configure --with-compat --add-dynamic-module=/tmp/ngx_brotli \
-    && make -j"$(nproc)" modules \
+    && make -j"$(nproc)" -f objs/Makefile objs/ngx_http_brotli_static_module.so \
     && mkdir -p /modules \
     && cp objs/ngx_http_brotli_static_module.so /modules/
 
