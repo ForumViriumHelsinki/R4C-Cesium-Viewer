@@ -295,7 +295,7 @@ class CacheWarmer {
 						await this.warmBuildingsForPostalCode(postalCode)
 					} catch (_error) {
 						// Silent fail for predictive warming
-						console.debug(`[CacheWarmer] Predictive warming failed for ${postalCode}`)
+						logger.debug(`[CacheWarmer] Predictive warming failed for ${postalCode}`)
 					}
 				},
 				{ timeout: 5000 }

@@ -15,6 +15,8 @@
  *   window.visibilityLog.setLogging(false) - Disable logging
  */
 
+import logger from '@/utils/logger.js'
+
 const visibilityLog = []
 let isLogging = true
 let maxLogSize = 1000 // Prevent memory issues
@@ -49,10 +51,14 @@ export function logVisibilityChange(type, name, oldValue, newValue, source) {
 		visibilityLog.splice(0, 100)
 	}
 
-	// Log to console with color coding
+	// Log to console with color coding. Dev-only: this fires on every visibility
+	// change from four production services, and until #947 the call was removed
+	// from production bundles by esbuild's `pure` annotation rather than by any
+	// guard here. logger.styled makes the gating explicit and independent of the
+	// minifier.
 	const color = newValue ? 'color: green' : 'color: red'
-	console.log(
-		`%c[VISIBILITY] ${entry.timestamp}ms | ${type} "${name}" | ${oldValue} → ${newValue} | ${source}`,
+	logger.styled(
+		`[VISIBILITY] ${entry.timestamp}ms | ${type} "${name}" | ${oldValue} → ${newValue} | ${source}`,
 		color
 	)
 }
@@ -262,8 +268,10 @@ if (typeof window !== 'undefined') {
 		isLogging: isLoggingEnabled,
 	}
 
-	console.log(
-		'%c[VISIBILITY LOGGER] Initialized. Use window.visibilityLog.analyze() to check for blinking.',
+	// Dev-only banner; the window.visibilityLog commands below stay available in
+	// production and keep printing, since they only run when explicitly invoked.
+	logger.styled(
+		'[VISIBILITY LOGGER] Initialized. Use window.visibilityLog.analyze() to check for blinking.',
 		'color: blue; font-style: italic'
 	)
 }

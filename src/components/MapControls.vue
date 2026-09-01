@@ -421,7 +421,7 @@ const filterBuildings = () => {
 		if (hideNonSote.value || hideNewBuildings.value || hideLow.value) {
 			// Fire-and-forget async call - filter uses batch processing to yield to main thread
 			buildingService.filterBuildings(buildingsDataSource).catch((error) => {
-				console.error('[MapControls] Failed to filter buildings:', error)
+				logger.error('[MapControls] Failed to filter buildings:', error)
 			})
 		} else {
 			buildingService.showAllBuildings(buildingsDataSource)

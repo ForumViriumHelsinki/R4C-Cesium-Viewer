@@ -27,6 +27,7 @@
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API|IndexedDB API Documentation}
  */
 
+import logger from '../utils/logger.js'
 import { PERF_STATS_ENABLED, perfStats } from '../utils/perfStats.js'
 
 /**
@@ -602,7 +603,7 @@ class CacheService {
 
 			if (!cached) {
 				// Data not cached, could trigger background loading here
-				console.log(`${type} data for ${postalCode} not cached - could preload`)
+				logger.debug(`${type} data for ${postalCode} not cached - could preload`)
 				return { type, postalCode, cached: false }
 			}
 
