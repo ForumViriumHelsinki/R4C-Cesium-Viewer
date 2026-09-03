@@ -25,7 +25,7 @@
     "pal": {
       "command": "uvx",
       "args": [
-        "pal-mcp-server"
+        "pal-mcp-server@latest"
       ]
     }
   }
