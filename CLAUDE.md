@@ -189,7 +189,7 @@ Understanding the component hierarchy is critical for writing effective tests.
 
 **Key Insight:** `TimelineCompact` carries no Vuetify display utility class. Its presence is gated entirely by `v-if="showTimeline"` in `src/App.vue:116`, where `showTimeline` is `level === 'postalCode' || level === 'building'` (`src/App.vue:191`). The component's own scoped media queries (`src/components/TimelineCompact.vue:150` at `max-width: 960px` and `:163` at `max-width: 600px`) only shrink `min-width`/`max-width`/`gap` — neither sets `display: none`. So the element is either absent from the DOM or laid out and visible; there is no viewport at which it is present-but-hidden.
 
-Prefer `state: 'attached'` / `toBeAttached()` anyway: the component is lazily loaded (`defineAsyncComponent`, `src/App.vue:151`) and wrapped in a `<v-slide-y-reverse-transition>` (`src/App.vue:114`), so it enters the DOM before the slide-in finishes. Attachment is the stable signal; a visibility check races the transition.
+`toBeAttached()` and `toBeVisible()` are therefore equivalent for this element. The existing specs use `state: 'attached'` / `toBeAttached()` and should keep doing so — it is the narrower assertion, and it matches the component's actual gate (`v-if`).
 
 ### Building Selection Flow (FeaturePicker)
 
@@ -258,7 +258,6 @@ The application uses a three-phase pattern for robust state switching during nav
 1. **Canvas Dimension Guard**: Clicks are silently ignored if canvas dimensions are 0 (transient rendering states)
 2. **Building Entity Loading**: Buildings may not be loaded when tests attempt to click
 3. **Hardcoded Coordinates**: Static pixel positions don't guarantee hitting buildings
-4. **Transition and lazy-load timing**: An async component inside a Vuetify transition (e.g. `TimelineCompact`) attaches to the DOM before it finishes animating in
 
 **Best Practices for Building Selection Tests:**
 
@@ -279,9 +278,8 @@ await page.waitForFunction(() => {
 	);
 });
 
-// 3. Use DOM attachment checks for lazily-loaded, transition-wrapped elements
+// 3. toBeAttached() is the narrower assertion; .timeline-compact is never CSS-hidden
 await expect(page.locator('.timeline-compact')).toBeAttached();
-// NOT: toBeVisible() - races the slide-in transition on the async component
 ```
 
 ### UI Element Text Selectors (Case-Sensitive)
