@@ -15,8 +15,10 @@
  * reached through the `window.__cesium` handle the E2E fixtures use
  * (`src/composables/useViewerInitialization.js`), so they must stay exported.
  *
- * A symbol used only at runtime and missing here throws
- * `undefined is not a constructor` at the point of use, not at build time.
+ * A symbol dropped from this list is caught by `vue-tsc` (TS2339 at each
+ * `getCesium()` call site), which CI runs — except for symbols reached only
+ * through the `window.__cesium` handle, which are untyped and would fail at
+ * runtime.
  *
  * @module cesiumSymbols
  */
