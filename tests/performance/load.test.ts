@@ -471,6 +471,16 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// which serves the same hashed assets with a long max-age.
 			const HEADER_ONLY_TRANSFER_BYTES = 300
 
+			// `App.vue` resolves several `defineAsyncComponent(() => import(...))` chunks
+			// and `await import(...)` services after mount, so the bundle-asset set is
+			// still growing when the canvas becomes visible — and it grows faster on the
+			// cached reload than on the cold load. Sampling at `waitForSelector('canvas')`
+			// would therefore compare two truncated, differently-truncated sets. Poll
+			// until the count is unchanged across two consecutive checks so both samples
+			// are complete and the cold-vs-reload comparison is over the same set.
+			const SETTLE_INTERVAL_MS = 500
+			const SETTLE_ATTEMPTS = 20
+
 			const sampleBundleAssets = (target: Page) =>
 				target.evaluate((origin) => {
 					const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
@@ -483,9 +493,20 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 						.map((entry) => ({ name: entry.name, transferSize: entry.transferSize }))
 				}, LOCALHOST_URL)
 
+			const sampleSettledBundleAssets = async (target: Page) => {
+				let previous = await sampleBundleAssets(target)
+				for (let attempt = 0; attempt < SETTLE_ATTEMPTS; attempt++) {
+					await target.waitForTimeout(SETTLE_INTERVAL_MS)
+					const current = await sampleBundleAssets(target)
+					if (current.length === previous.length && current.length > 0) return current
+					previous = current
+				}
+				return previous
+			}
+
 			await page.goto(LOCALHOST_URL)
 			await page.waitForSelector('canvas', { state: 'visible' })
-			const coldEntries = await sampleBundleAssets(page)
+			const coldEntries = await sampleSettledBundleAssets(page)
 
 			expect(
 				coldEntries.length,
@@ -501,18 +522,22 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 
 			await page.reload()
 			await page.waitForSelector('canvas', { state: 'visible' })
-			const reloadEntries = await sampleBundleAssets(page)
+			const reloadEntries = await sampleSettledBundleAssets(page)
 
-			// The same hashed URLs are requested on both loads.
-			expect(reloadEntries.length).toBe(coldEntries.length)
+			// The same hashed URLs are requested on both loads. Compare the name sets
+			// rather than only the counts, so a chunk swapped for another of equal count
+			// is not read as a match.
+			expect([...reloadEntries.map((entry) => entry.name)].sort()).toEqual(
+				[...coldEntries.map((entry) => entry.name)].sort()
+			)
 			expect(
 				reloadEntries.filter((entry) => entry.transferSize <= HEADER_ONLY_TRANSFER_BYTES).length
 			).toBe(reloadEntries.length)
 
 			await page.close()
-			// Per-test timeout: this performs two full Cesium loads and the global
-			// testTimeout is 10s.
-		}, 30000)
+			// Per-test timeout: this performs two full Cesium loads plus two settle
+			// polls, and the global testTimeout is 10s.
+		}, 60000)
 
 		it('should handle concurrent API requests efficiently', async () => {
 			const page = await browser.newPage()
