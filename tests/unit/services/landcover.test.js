@@ -163,6 +163,41 @@ describe('Landcover Service', () => {
 			expect(typeof addedLayer._removeErrorHandler).toBe('function')
 		})
 
+		it('is idempotent — a second default call does not stack a duplicate layer', async () => {
+			await createHSYImageryLayer()
+			await createHSYImageryLayer()
+
+			// Without the guard the second call stacks a second provider on the
+			// same viewer, doubling the per-tile /wms/proxy request count.
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+			// One net add: two adds minus the one removed by the internal
+			// removeLandcover() before the second provider is created.
+			expect(mockAddImageryProvider).toHaveBeenCalledTimes(2)
+			expect(mockRemove).toHaveBeenCalledTimes(1)
+		})
+
+		it('detaches the first layer error listener when re-created', async () => {
+			await createHSYImageryLayer()
+			await createHSYImageryLayer()
+
+			expect(removeErrorListenerSpy).toHaveBeenCalledTimes(1)
+		})
+
+		it('leaves the explicit-layers caller path unchanged', async () => {
+			// HSYWMS.vue / HSYYearSelect.vue call removeLandcover() themselves
+			// before passing an explicit layer list; the guard must not alter
+			// that sequence.
+			await createHSYImageryLayer()
+			removeLandcover()
+			await createHSYImageryLayer('asuminen_ja_maankaytto:maanpeite_vesi_2023')
+
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+			const lastCall = WebMapServiceImageryProviderMock.mock.calls.at(-1)[0]
+			expect(lastCall.layers).toBe('asuminen_ja_maankaytto:maanpeite_vesi_2023')
+			// Exactly one removal — the caller's own, none injected by the guard.
+			expect(mockRemove).toHaveBeenCalledTimes(1)
+		})
+
 		describe('performance configuration', () => {
 			it('should use 512x512 tiles to reduce request count', async () => {
 				await createHSYImageryLayer()

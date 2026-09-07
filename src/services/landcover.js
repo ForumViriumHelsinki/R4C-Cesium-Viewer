@@ -67,6 +67,20 @@ export const createHSYImageryLayer = async (newLayers) => {
 	const urlStore = useURLStore()
 
 	const backgroundMapStore = useBackgroundMapStore()
+
+	// Idempotency guard. Several independent controls (MapControls.vue,
+	// PostalCodeView.vue, views/Landcover.vue) each hold their own `landCover`
+	// boolean and add the default layer set without removing first, so enabling
+	// landcover from a second mounted control while it is already on used to
+	// stack a duplicate provider — doubling the per-tile /wms/proxy request
+	// count. Drop the existing layers first, the same discipline HSYWMS.vue and
+	// HSYYearSelect.vue already apply at their call sites.
+	// Scoped to the default (no-argument) path: callers that pass an explicit
+	// layer list already call removeLandcover() themselves.
+	if (newLayers === undefined && backgroundMapStore.landcoverLayers.length > 0) {
+		removeLandcover()
+	}
+
 	const layersList = newLayers ? newLayers : createLayersForHsyLandcover(backgroundMapStore)
 
 	const provider = new Cesium.WebMapServiceImageryProvider({
