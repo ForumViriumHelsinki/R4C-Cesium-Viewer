@@ -100,6 +100,160 @@ export default defineConfig(({ mode }) => {
 	const gitInfo = getGitInfo();
 	const buildTime = new Date().toISOString();
 
+	// Shared dev/preview proxy table. Hoisted so `preview.proxy` can spread it:
+	// Vite resolves preview options as `preview?.proxy ?? server.proxy` — a whole-object
+	// fallback, NOT a merge — so declaring any key under `preview.proxy` drops the entire
+	// server table. Do not re-narrow that block to a single route.
+	const devProxy = {
+		'/pygeoapi': {
+			// Auto-detect local pygeoapi port or fall back to production
+			target: (() => {
+				const host = detectPygeoApiPort(env);
+				const protocol = host.startsWith('localhost:') ? 'http' : 'https';
+				return `${protocol}://${host}/`;
+			})(),
+			changeOrigin: true,
+			secure: false,
+			rewrite: (path) => path.replace(/^\/pygeoapi/, ''),
+		},
+		'/paavo': {
+			target: 'https://geo.stat.fi/geoserver/postialue/wfs',
+			changeOrigin: true,
+			rewrite: (path) => path.replace(/^\/paavo/, ''),
+			secure: false,
+			configure: (proxy, _options) => {
+				proxy.on('proxyReq', (proxyReq, _req, _res) => {
+					// Modify the outgoing request to include the necessary parameters
+					try {
+						// Sanitize the path to ensure it's a valid URL component
+						const sanitizedPath = proxyReq.path.startsWith('/')
+							? proxyReq.path
+							: '/' + proxyReq.path;
+						const url = new URL(sanitizedPath, 'https://geo.stat.fi');
+						url.searchParams.set('service', 'WFS');
+						url.searchParams.set('request', 'GetFeature');
+						url.searchParams.set('typename', 'postialue:pno_tilasto');
+						url.searchParams.set('version', '2.0.0');
+						url.searchParams.set('outputFormat', 'application/json');
+						url.searchParams.set('CQL_FILTER', "kunta IN ('091','092','049','235')");
+						url.searchParams.set('srsName', 'EPSG:4326');
+						proxyReq.path = url.pathname + url.search;
+					} catch (error) {
+						console.error('Failed to construct URL for proxy request:', {
+							path: proxyReq.path,
+							error: error.message,
+						});
+						// Fallback: use the original path if URL construction fails
+						// This ensures the proxy still functions even with malformed URLs
+					}
+				});
+			},
+		},
+		'/wms/proxy': {
+			target: 'https://kartta.hsy.fi',
+			changeOrigin: true,
+			secure: false,
+			rewrite: (path) => path.replace(/^\/wms\/proxy/, '/geoserver/wms'),
+		},
+		'/helsinki-wms': {
+			target: 'https://kartta.hel.fi',
+			changeOrigin: true,
+			secure: false,
+			rewrite: (path) => path.replace(/^\/helsinki-wms/, '/ws/geoserver/avoindata/ows'),
+		},
+		'/ndvi_public': {
+			target: 'https://storage.googleapis.com',
+			changeOrigin: true,
+			secure: false,
+			rewrite: (path) => path.replace(/^\/ndvi_public/, '/ndvi_public'),
+		},
+		'/terrain-proxy': {
+			target: 'https://kartta.hel.fi',
+			changeOrigin: true,
+			rewrite: (path) =>
+				path.replace(
+					/^\/terrain-proxy/,
+					'/3d/datasource-data/4383570b-33a3-4a9f-ae16-93373aff5ffa'
+				),
+		},
+		'/wms/layers': {
+			target: 'https://kartta.hsy.fi',
+			changeOrigin: true,
+			secure: false,
+			rewrite: (path) =>
+				path.replace(/^\/wms\/layers/, '/geoserver/wms?request=getCapabilities'),
+			configure: (proxy, _options) => {
+				proxy.on('error', (err, _req, _res) => {
+					console.log('proxy error', err);
+				});
+				proxy.on('proxyReq', (proxyReq, req, _res) => {
+					console.log('Sending Request to the Target:', req.method, req.url);
+				});
+				proxy.on('proxyRes', (proxyRes, req, _res) => {
+					console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+				});
+			},
+		},
+		'/digitransit': {
+			target: 'https://api.digitransit.fi',
+			changeOrigin: true,
+			secure: false,
+			headers: env.VITE_DIGITRANSIT_KEY
+				? {
+						'digitransit-subscription-key': env.VITE_DIGITRANSIT_KEY,
+					}
+				: {},
+			rewrite: (path) => path.replace(/^\/digitransit/, ''),
+			configure: (_proxy, _options) => {
+				// Log warning if API key is missing
+				if (!env.VITE_DIGITRANSIT_KEY) {
+					console.warn(
+						'⚠️  VITE_DIGITRANSIT_KEY not set - digitransit API calls may fail or be rate limited'
+					);
+				}
+			},
+		},
+		'/feature-flags': {
+			target: 'http://localhost:1031',
+			changeOrigin: true,
+			// The GOFF web provider's initialize() requires the
+			// /feature-flags/ws/* websocket — without ws proxying it
+			// always falls back to local defaults (masked in dev by
+			// the enable-all-flags dev fallback).
+			ws: true,
+			rewrite: (path) => path.replace(/^\/feature-flags/, ''),
+		},
+		'/hsy-action': {
+			target: 'https://kartta.hsy.fi',
+			changeOrigin: true,
+			secure: false,
+			rewrite: (path) => path.replace(/^\/hsy-action/, '/action'),
+			configure: (proxy, _options) => {
+				proxy.on('error', (err, _req, _res) => {
+					console.log('HSY action proxy error', err);
+				});
+				proxy.on('proxyReq', (proxyReq, req, _res) => {
+					console.log('Sending HSY Action Request:', req.method, req.url);
+				});
+				proxy.on('proxyRes', (proxyRes, req, _res) => {
+					console.log('Received HSY Action Response:', proxyRes.statusCode, req.url);
+				});
+			},
+		},
+		'/vtt-api': {
+			// VTT R4C flood simulation API.
+			target: env.VITE_VTT_API_HOST || 'http://130.188.4.230',
+			changeOrigin: true,
+			secure: false,
+			rewrite: (path) => path.replace(/^\/vtt-api.*$/, '/python_api/calc'),
+			configure: (proxy, _options) => {
+				proxy.on('error', (err, _req, _res) => {
+					console.warn('VTT flood API proxy error:', err.message);
+				});
+			},
+		},
+	};
+
 	return {
 		build: {
 			// Source maps ship to production for Sentry symbolication. The
@@ -206,163 +360,23 @@ export default defineConfig(({ mode }) => {
 			exclude: ['vue-demi'], // Causes issues with Pinia
 		},
 		server: {
-			proxy: {
-				'/pygeoapi': {
-					// Auto-detect local pygeoapi port or fall back to production
-					target: (() => {
-						const host = detectPygeoApiPort(env);
-						const protocol = host.startsWith('localhost:') ? 'http' : 'https';
-						return `${protocol}://${host}/`;
-					})(),
-					changeOrigin: true,
-					secure: false,
-					rewrite: (path) => path.replace(/^\/pygeoapi/, ''),
-				},
-				'/paavo': {
-					target: 'https://geo.stat.fi/geoserver/postialue/wfs',
-					changeOrigin: true,
-					rewrite: (path) => path.replace(/^\/paavo/, ''),
-					secure: false,
-					configure: (proxy, _options) => {
-						proxy.on('proxyReq', (proxyReq, _req, _res) => {
-							// Modify the outgoing request to include the necessary parameters
-							try {
-								// Sanitize the path to ensure it's a valid URL component
-								const sanitizedPath = proxyReq.path.startsWith('/')
-									? proxyReq.path
-									: '/' + proxyReq.path;
-								const url = new URL(sanitizedPath, 'https://geo.stat.fi');
-								url.searchParams.set('service', 'WFS');
-								url.searchParams.set('request', 'GetFeature');
-								url.searchParams.set('typename', 'postialue:pno_tilasto');
-								url.searchParams.set('version', '2.0.0');
-								url.searchParams.set('outputFormat', 'application/json');
-								url.searchParams.set('CQL_FILTER', "kunta IN ('091','092','049','235')");
-								url.searchParams.set('srsName', 'EPSG:4326');
-								proxyReq.path = url.pathname + url.search;
-							} catch (error) {
-								console.error('Failed to construct URL for proxy request:', {
-									path: proxyReq.path,
-									error: error.message,
-								});
-								// Fallback: use the original path if URL construction fails
-								// This ensures the proxy still functions even with malformed URLs
-							}
-						});
-					},
-				},
-				'/wms/proxy': {
-					target: 'https://kartta.hsy.fi',
-					changeOrigin: true,
-					secure: false,
-					rewrite: (path) => path.replace(/^\/wms\/proxy/, '/geoserver/wms'),
-				},
-				'/helsinki-wms': {
-					target: 'https://kartta.hel.fi',
-					changeOrigin: true,
-					secure: false,
-					rewrite: (path) => path.replace(/^\/helsinki-wms/, '/ws/geoserver/avoindata/ows'),
-				},
-				'/ndvi_public': {
-					target: 'https://storage.googleapis.com',
-					changeOrigin: true,
-					secure: false,
-					rewrite: (path) => path.replace(/^\/ndvi_public/, '/ndvi_public'),
-				},
-				'/terrain-proxy': {
-					target: 'https://kartta.hel.fi',
-					changeOrigin: true,
-					rewrite: (path) =>
-						path.replace(
-							/^\/terrain-proxy/,
-							'/3d/datasource-data/4383570b-33a3-4a9f-ae16-93373aff5ffa'
-						),
-				},
-				'/wms/layers': {
-					target: 'https://kartta.hsy.fi',
-					changeOrigin: true,
-					secure: false,
-					rewrite: (path) =>
-						path.replace(/^\/wms\/layers/, '/geoserver/wms?request=getCapabilities'),
-					configure: (proxy, _options) => {
-						proxy.on('error', (err, _req, _res) => {
-							console.log('proxy error', err);
-						});
-						proxy.on('proxyReq', (proxyReq, req, _res) => {
-							console.log('Sending Request to the Target:', req.method, req.url);
-						});
-						proxy.on('proxyRes', (proxyRes, req, _res) => {
-							console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-						});
-					},
-				},
-				'/digitransit': {
-					target: 'https://api.digitransit.fi',
-					changeOrigin: true,
-					secure: false,
-					headers: env.VITE_DIGITRANSIT_KEY
-						? {
-								'digitransit-subscription-key': env.VITE_DIGITRANSIT_KEY,
-							}
-						: {},
-					rewrite: (path) => path.replace(/^\/digitransit/, ''),
-					configure: (_proxy, _options) => {
-						// Log warning if API key is missing
-						if (!env.VITE_DIGITRANSIT_KEY) {
-							console.warn(
-								'⚠️  VITE_DIGITRANSIT_KEY not set - digitransit API calls may fail or be rate limited'
-							);
-						}
-					},
-				},
-				'/feature-flags': {
-					target: 'http://localhost:1031',
-					changeOrigin: true,
-					// The GOFF web provider's initialize() requires the
-					// /feature-flags/ws/* websocket — without ws proxying it
-					// always falls back to local defaults (masked in dev by
-					// the enable-all-flags dev fallback).
-					ws: true,
-					rewrite: (path) => path.replace(/^\/feature-flags/, ''),
-				},
-				'/hsy-action': {
-					target: 'https://kartta.hsy.fi',
-					changeOrigin: true,
-					secure: false,
-					rewrite: (path) => path.replace(/^\/hsy-action/, '/action'),
-					configure: (proxy, _options) => {
-						proxy.on('error', (err, _req, _res) => {
-							console.log('HSY action proxy error', err);
-						});
-						proxy.on('proxyReq', (proxyReq, req, _res) => {
-							console.log('Sending HSY Action Request:', req.method, req.url);
-						});
-						proxy.on('proxyRes', (proxyRes, req, _res) => {
-							console.log('Received HSY Action Response:', proxyRes.statusCode, req.url);
-						});
-					},
-				},
-				'/vtt-api': {
-					// VTT R4C flood simulation API.
-					target: env.VITE_VTT_API_HOST || 'http://130.188.4.230',
-					changeOrigin: true,
-					secure: false,
-					rewrite: (path) => path.replace(/^\/vtt-api.*$/, '/python_api/calc'),
-					configure: (proxy, _options) => {
-						proxy.on('error', (err, _req, _res) => {
-							console.warn('VTT flood API proxy error:', err.message);
-						});
-					},
-				},
-			},
+			proxy: devProxy,
 		},
 		// Mirror /feature-flags onto `vite preview` so the GOFF health check
 		// doesn't 404 against the SPA catch-all and reject with a
 		// {response, responseHeaders, statusCode} object (#794). Without this
 		// block, `bun run preview` against a production-tagged build fires
 		// Sentry R4C-CESIUM-VIEWER-21 on every load.
+		//
+		// `preview.proxy` REPLACES `server.proxy` rather than merging with it
+		// (vite resolves it as `preview?.proxy ?? server.proxy`), so devProxy is
+		// spread back in — otherwise every upstream route (/wms/proxy,
+		// /pygeoapi, /helsinki-wms, /terrain-proxy, /digitransit, /paavo,
+		// /ndvi_public) falls through to the SPA catch-all under `vite preview`.
+		// /feature-flags is listed last so it survives the spread.
 		preview: {
 			proxy: {
+				...devProxy,
 				'/feature-flags': {
 					target: 'http://localhost:1031',
 					changeOrigin: true,
