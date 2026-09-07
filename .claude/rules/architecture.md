@@ -187,20 +187,24 @@ init or navigation.
 Sentry's `performance_n_plus_one_api_calls` detector fires on repeated
 `/wms/proxy` GetMap calls because Cesium's `WebMapServiceImageryProvider`
 issues one GetMap per visible tile. That is the tiling model, not a defect.
-Check three discriminators before reopening such an issue:
+Check these discriminators before reopening such an issue:
 
 1. **The tile ceiling is present on the provider** — `tileWidth`/`tileHeight`
    512 and `maximumLevel: 18` (`landcover.js`, `wms.js`).
 2. **Layers are comma-joined into one provider**, not one provider per layer —
    `createLayersForHsyLandcover` puts all 13 landcover classifications into a
    single `layers=` value, so a tile costs one GetMap, not 13.
-3. **The event's `url` tag names production.** A `localhost:4173` event is a
-   preview-harness artefact: until the preview-proxy fix landed, the vite
-   preview server answered `/wms/proxy` with the SPA catch-all, so those
-   requests never reached HSY.
+3. **Read the event's `url` tag first — it routes the verdict.** A
+   `localhost:4173` event is a preview-harness artefact: the `preview:` block
+   in `vite.config.js` proxies only `/feature-flags` (added by #794), so the
+   preview server answers `/wms/proxy` with the SPA catch-all and those
+   requests never reach HSY — close it without reading 1 and 2. A production
+   `url` sends the verdict to discriminators 1 and 2. (PR #964 would give the
+   preview server the `server:` proxies; it is not merged, so the catch-all
+   behaviour is current.)
 
-If all three hold, the request volume is expected and nginx `proxy_cache`
-absorbs the repeat.
+If discriminators 1 and 2 hold, the request volume is expected and nginx
+`proxy_cache` absorbs the repeat.
 
 ## deck.gl Renderer (experimental, behind flag)
 

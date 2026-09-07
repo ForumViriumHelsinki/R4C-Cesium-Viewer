@@ -50,9 +50,9 @@ import { isHostDegraded, recordFailure } from './hostCircuitBreaker.js'
  * Expected request shape (issue #906): the repeated `/wms/proxy` GetMap calls this
  * layer produces are Cesium's `WebMapServiceImageryProvider` tiling model, not an
  * N+1 defect. The provider requests one GetMap per visible tile; the tile-count
- * ceiling is the 512px tile size plus `maximumLevel: 18` on the
- * `GeographicTilingScheme` in the provider config below, which is the same
- * ceiling `createHelsinkiImageryLayer` applies in `src/services/wms.js`
+ * ceiling is the 512px tile size plus `maximumLevel: 18` in the provider config
+ * below (which also uses a `GeographicTilingScheme`), the same ceiling
+ * `createHelsinkiImageryLayer` applies in `src/services/wms.js`
  * (lines 80-92, landed by #339/#340).
  *
  * The 13 landcover classifications do NOT each get their own request: they ride in
