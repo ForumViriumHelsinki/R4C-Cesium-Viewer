@@ -182,6 +182,26 @@ app survives this with two layers — keep both in mind when touching HSY paths:
 Behavior is unchanged when HSY is healthy; never let an HSY request block app
 init or navigation.
 
+### A Sentry N+1 Fingerprint on a Tiled WMS Endpoint Is Expected (#906, #723)
+
+Sentry's `performance_n_plus_one_api_calls` detector fires on repeated
+`/wms/proxy` GetMap calls because Cesium's `WebMapServiceImageryProvider`
+issues one GetMap per visible tile. That is the tiling model, not a defect.
+Check three discriminators before reopening such an issue:
+
+1. **The tile ceiling is present on the provider** — `tileWidth`/`tileHeight`
+   512 and `maximumLevel: 18` (`landcover.js`, `wms.js`).
+2. **Layers are comma-joined into one provider**, not one provider per layer —
+   `createLayersForHsyLandcover` puts all 13 landcover classifications into a
+   single `layers=` value, so a tile costs one GetMap, not 13.
+3. **The event's `url` tag names production.** A `localhost:4173` event is a
+   preview-harness artefact: until the preview-proxy fix landed, the vite
+   preview server answered `/wms/proxy` with the SPA catch-all, so those
+   requests never reached HSY.
+
+If all three hold, the request volume is expected and nginx `proxy_cache`
+absorbs the repeat.
+
 ## deck.gl Renderer (experimental, behind flag)
 
 The `r4c-deckgl-renderer` feature flag (default OFF everywhere; local

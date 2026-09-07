@@ -47,6 +47,27 @@ import { isHostDegraded, recordFailure } from './hostCircuitBreaker.js'
  * Larger tiles (512px) balance request reduction with download size, while zoom level
  * limit (18) provides sufficient detail for landcover visualization without excessive tiles.
  *
+ * Expected request shape (issue #906): the repeated `/wms/proxy` GetMap calls this
+ * layer produces are Cesium's `WebMapServiceImageryProvider` tiling model, not an
+ * N+1 defect. The provider requests one GetMap per visible tile; the tile-count
+ * ceiling is the 512px tile size plus `maximumLevel: 18` on the
+ * `GeographicTilingScheme` in the provider config below, which is the same
+ * ceiling `createHelsinkiImageryLayer` applies in `src/services/wms.js`
+ * (lines 80-92, landed by #339/#340).
+ *
+ * The 13 landcover classifications do NOT each get their own request: they ride in
+ * a single comma-separated `layers=` value built by `createLayersForHsyLandcover`
+ * in this module, so a tile costs one GetMap, not 13.
+ *
+ * In production the repeat is absorbed by the nginx tile cache in front of HSY —
+ * `location /wms/proxy` in `nginx/default.conf.template` (lines 498-549) uses
+ * `proxy_cache wms_cache` with `proxy_cache_valid 200 7d` and
+ * `proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504`,
+ * so repeat tiles are served from cache and survive an HSY outage.
+ *
+ * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/906|Issue #906 - /wms/proxy N+1 fingerprint, closed as expected behaviour}
+ * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/723|Issue #723 - sibling N+1 fingerprint}
+ *
  * @param {string} [newLayers] - Optional comma-separated WMS layer names. If not provided, loads all landcover layers for selected year.
  * @returns {Promise<void>}
  * @throws {Error} If WMS provider initialization fails
