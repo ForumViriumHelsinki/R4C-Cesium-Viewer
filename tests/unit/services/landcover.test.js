@@ -194,8 +194,37 @@ describe('Landcover Service', () => {
 			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
 			const lastCall = WebMapServiceImageryProviderMock.mock.calls.at(-1)[0]
 			expect(lastCall.layers).toBe('asuminen_ja_maankaytto:maanpeite_vesi_2023')
-			// Exactly one removal — the caller's own, none injected by the guard.
+			// Exactly one removal: the caller's own. (This sequence empties the
+			// store first, so it does not by itself exercise the guard's
+			// argument scoping — the next case does.)
 			expect(mockRemove).toHaveBeenCalledTimes(1)
+		})
+
+		it('does not fire the guard when an explicit layer list is passed', async () => {
+			// No removeLandcover() in between, so landcoverLayers is non-empty
+			// when the explicit call runs: only the `newLayers` scoping clause
+			// keeps the guard from dropping the caller's existing layer.
+			await createHSYImageryLayer()
+			mockRemove.mockClear()
+
+			await createHSYImageryLayer('asuminen_ja_maankaytto:maanpeite_vesi_2023')
+
+			expect(mockRemove).not.toHaveBeenCalled()
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(2)
+		})
+
+		it.each([null, ''])('treats %o like the no-argument default path', async (falsy) => {
+			// `layersList` picks the default set for any falsy argument, so the
+			// guard must use the same truthiness test — otherwise these values
+			// load the default layers while skipping the idempotency guard.
+			await createHSYImageryLayer()
+			await createHSYImageryLayer(falsy)
+
+			expect(mockRemove).toHaveBeenCalledTimes(1)
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+			expect(WebMapServiceImageryProviderMock.mock.calls.at(-1)[0].layers.split(',')).toHaveLength(
+				13
+			)
 		})
 
 		describe('performance configuration', () => {

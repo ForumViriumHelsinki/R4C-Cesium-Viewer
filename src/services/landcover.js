@@ -75,9 +75,11 @@ export const createHSYImageryLayer = async (newLayers) => {
 	// stack a duplicate provider — doubling the per-tile /wms/proxy request
 	// count. Drop the existing layers first, the same discipline HSYWMS.vue and
 	// HSYYearSelect.vue already apply at their call sites.
-	// Scoped to the default (no-argument) path: callers that pass an explicit
-	// layer list already call removeLandcover() themselves.
-	if (newLayers === undefined && backgroundMapStore.landcoverLayers.length > 0) {
+	// Scoped to the default path: callers that pass an explicit layer list
+	// already call removeLandcover() themselves. The `!newLayers` test matches
+	// the truthiness test used to pick `layersList` below, so null/'' take the
+	// default layer set *and* the guard rather than one without the other.
+	if (!newLayers && backgroundMapStore.landcoverLayers.length > 0) {
 		removeLandcover()
 	}
 
