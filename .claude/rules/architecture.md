@@ -195,13 +195,18 @@ Check these discriminators before reopening such an issue:
    `createLayersForHsyLandcover` puts all 13 landcover classifications into a
    single `layers=` value, so a tile costs one GetMap, not 13.
 3. **Read the event's `url` tag first — it routes the verdict.** A
-   `localhost:4173` event is a preview-harness artefact: the `preview:` block
-   in `vite.config.js` proxies only `/feature-flags` (added by #794), so the
-   preview server answers `/wms/proxy` with the SPA catch-all and those
-   requests never reach HSY — close it without reading 1 and 2. A production
-   `url` sends the verdict to discriminators 1 and 2. (PR #964 would give the
-   preview server the `server:` proxies; it is not merged, so the catch-all
-   behaviour is current.)
+   `localhost:4173` event comes from one developer's `vite preview`, not from
+   users, so it is a harness artefact either way and closing it needs no
+   further reading. What the request volume _means_ there depends on the
+   `preview.proxy` block in `vite.config.js`, which has changed once and can
+   change again — read it rather than assuming:
+
+   | `preview.proxy` contains `/wms/proxy` | What the events are                                                    |
+   | ------------------------------------- | ---------------------------------------------------------------------- |
+   | no                                    | the SPA catch-all answering `/wms/proxy`; the requests never reach HSY |
+   | yes                                   | real proxied tile loads, same shape as production but from one machine |
+
+   A production `url` sends the verdict to discriminators 1 and 2.
 
 If discriminators 1 and 2 hold, the request volume is expected and nginx
 `proxy_cache` absorbs the repeat.
