@@ -170,17 +170,31 @@ describe('Landcover Service', () => {
 			// Without the guard the second call stacks a second provider on the
 			// same viewer, doubling the per-tile /wms/proxy request count.
 			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
-			// One net add: two adds minus the one removed by the internal
-			// removeLandcover() before the second provider is created.
-			expect(mockAddImageryProvider).toHaveBeenCalledTimes(2)
-			expect(mockRemove).toHaveBeenCalledTimes(1)
 		})
 
-		it('detaches the first layer error listener when re-created', async () => {
+		it('leaves the live provider untouched on a redundant default call', async () => {
+			await createHSYImageryLayer()
+			const liveLayer = mockBackgroundStore.landcoverLayers[0]
+			mockAddImageryProvider.mockClear()
+			mockRemove.mockClear()
+
+			await createHSYImageryLayer()
+
+			// The guard is a no-op, not a remove-and-recreate: tearing the
+			// provider down would re-request every visible tile through
+			// /wms/proxy, which is the traffic this guard exists to remove.
+			expect(mockRemove).not.toHaveBeenCalled()
+			expect(mockAddImageryProvider).not.toHaveBeenCalled()
+			expect(mockBackgroundStore.landcoverLayers[0]).toBe(liveLayer)
+		})
+
+		it('does not orphan the live layer error listener', async () => {
 			await createHSYImageryLayer()
 			await createHSYImageryLayer()
 
-			expect(removeErrorListenerSpy).toHaveBeenCalledTimes(1)
+			// Nothing was replaced, so nothing had to be detached and the
+			// listener on the still-live layer stays attached.
+			expect(removeErrorListenerSpy).not.toHaveBeenCalled()
 		})
 
 		it('leaves the explicit-layers caller path unchanged', async () => {
@@ -220,11 +234,27 @@ describe('Landcover Service', () => {
 			await createHSYImageryLayer()
 			await createHSYImageryLayer(falsy)
 
-			expect(mockRemove).toHaveBeenCalledTimes(1)
 			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+			// Still the first call's provider — the falsy argument took the
+			// guard, so no second default provider was constructed.
+			expect(WebMapServiceImageryProviderMock).toHaveBeenCalledTimes(1)
 			expect(WebMapServiceImageryProviderMock.mock.calls.at(-1)[0].layers.split(',')).toHaveLength(
 				13
 			)
+		})
+
+		it('rebuilds the default set after the caller removes it (year refresh)', async () => {
+			// HSYYearSelect.vue is the only setHSYYear caller and it calls
+			// removeLandcover() before re-invoking the default path, so the
+			// guard is not reached and the year change still takes effect.
+			await createHSYImageryLayer()
+			mockBackgroundStore.hsyYear = 2018
+			removeLandcover()
+
+			await createHSYImageryLayer()
+
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+			expect(WebMapServiceImageryProviderMock.mock.calls.at(-1)[0].layers).toContain('_2018')
 		})
 
 		describe('performance configuration', () => {

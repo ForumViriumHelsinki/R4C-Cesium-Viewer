@@ -73,14 +73,24 @@ export const createHSYImageryLayer = async (newLayers) => {
 	// boolean and add the default layer set without removing first, so enabling
 	// landcover from a second mounted control while it is already on used to
 	// stack a duplicate provider — doubling the per-tile /wms/proxy request
-	// count. Drop the existing layers first, the same discipline HSYWMS.vue and
-	// HSYYearSelect.vue already apply at their call sites.
+	// count.
+	//
+	// The default path is a no-op when the default set is already loaded, not a
+	// remove-and-recreate: recreating would tear down the live provider and
+	// re-request every visible tile through /wms/proxy, which is the traffic
+	// this guard exists to remove. The one caller that needs the layers rebuilt
+	// is HSYYearSelect.vue, which calls removeLandcover() itself before
+	// re-calling this (backgroundMapStore.setHSYYear has no other caller), so
+	// the store is empty by the time the guard runs and the year refresh is
+	// unaffected.
+	//
 	// Scoped to the default path: callers that pass an explicit layer list
-	// already call removeLandcover() themselves. The `!newLayers` test matches
-	// the truthiness test used to pick `layersList` below, so null/'' take the
-	// default layer set *and* the guard rather than one without the other.
+	// (HSYWMS.vue) already call removeLandcover() themselves. The `!newLayers`
+	// test matches the truthiness test used to pick `layersList` below, so
+	// null/'' take the default layer set *and* the guard rather than one
+	// without the other.
 	if (!newLayers && backgroundMapStore.landcoverLayers.length > 0) {
-		removeLandcover()
+		return
 	}
 
 	const layersList = newLayers ? newLayers : createLayersForHsyLandcover(backgroundMapStore)
