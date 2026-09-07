@@ -22,8 +22,11 @@
         "@upstash/context7-mcp"
       ]
     },
-    "pal-mcp-server": {
-      "command": "pal-mcp-server"
+    "pal": {
+      "command": "uvx",
+      "args": [
+        "pal-mcp-server@latest"
+      ]
     }
   }
 }
