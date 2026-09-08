@@ -163,6 +163,100 @@ describe('Landcover Service', () => {
 			expect(typeof addedLayer._removeErrorHandler).toBe('function')
 		})
 
+		it('is idempotent — a second default call does not stack a duplicate layer', async () => {
+			await createHSYImageryLayer()
+			await createHSYImageryLayer()
+
+			// Without the guard the second call stacks a second provider on the
+			// same viewer, doubling the per-tile /wms/proxy request count.
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+		})
+
+		it('leaves the live provider untouched on a redundant default call', async () => {
+			await createHSYImageryLayer()
+			const liveLayer = mockBackgroundStore.landcoverLayers[0]
+			mockAddImageryProvider.mockClear()
+			mockRemove.mockClear()
+
+			await createHSYImageryLayer()
+
+			// The guard is a no-op, not a remove-and-recreate: tearing the
+			// provider down would re-request every visible tile through
+			// /wms/proxy, which is the traffic this guard exists to remove.
+			expect(mockRemove).not.toHaveBeenCalled()
+			expect(mockAddImageryProvider).not.toHaveBeenCalled()
+			expect(mockBackgroundStore.landcoverLayers[0]).toBe(liveLayer)
+		})
+
+		it('does not orphan the live layer error listener', async () => {
+			await createHSYImageryLayer()
+			await createHSYImageryLayer()
+
+			// Nothing was replaced, so nothing had to be detached and the
+			// listener on the still-live layer stays attached.
+			expect(removeErrorListenerSpy).not.toHaveBeenCalled()
+		})
+
+		it('leaves the explicit-layers caller path unchanged', async () => {
+			// HSYWMS.vue / HSYYearSelect.vue call removeLandcover() themselves
+			// before passing an explicit layer list; the guard must not alter
+			// that sequence.
+			await createHSYImageryLayer()
+			removeLandcover()
+			await createHSYImageryLayer('asuminen_ja_maankaytto:maanpeite_vesi_2023')
+
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+			const lastCall = WebMapServiceImageryProviderMock.mock.calls.at(-1)[0]
+			expect(lastCall.layers).toBe('asuminen_ja_maankaytto:maanpeite_vesi_2023')
+			// Exactly one removal: the caller's own. (This sequence empties the
+			// store first, so it does not by itself exercise the guard's
+			// argument scoping — the next case does.)
+			expect(mockRemove).toHaveBeenCalledTimes(1)
+		})
+
+		it('does not fire the guard when an explicit layer list is passed', async () => {
+			// No removeLandcover() in between, so landcoverLayers is non-empty
+			// when the explicit call runs: only the `newLayers` scoping clause
+			// keeps the guard from dropping the caller's existing layer.
+			await createHSYImageryLayer()
+			mockRemove.mockClear()
+
+			await createHSYImageryLayer('asuminen_ja_maankaytto:maanpeite_vesi_2023')
+
+			expect(mockRemove).not.toHaveBeenCalled()
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(2)
+		})
+
+		it.each([null, ''])('treats %o like the no-argument default path', async (falsy) => {
+			// `layersList` picks the default set for any falsy argument, so the
+			// guard must use the same truthiness test — otherwise these values
+			// load the default layers while skipping the idempotency guard.
+			await createHSYImageryLayer()
+			await createHSYImageryLayer(falsy)
+
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+			// Still the first call's provider — the falsy argument took the
+			// guard, so no second default provider was constructed.
+			expect(WebMapServiceImageryProviderMock).toHaveBeenCalledTimes(1)
+			expect(WebMapServiceImageryProviderMock.mock.calls.at(-1)[0].layers.split(',')).toHaveLength(
+				13
+			)
+		})
+
+		it('rebuilds the default set after the caller removes it (year refresh)', async () => {
+			// HSYYearSelect.vue is the only setHSYYear caller and it calls
+			// removeLandcover() before re-invoking the default path, so the
+			// guard is not reached and the year change still takes effect.
+			await createHSYImageryLayer()
+			mockBackgroundStore.hsyYear = 2018
+			removeLandcover()
+
+			await createHSYImageryLayer()
+
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+			expect(WebMapServiceImageryProviderMock.mock.calls.at(-1)[0].layers).toContain('_2018')
+		})
+
 		describe('performance configuration', () => {
 			it('should use 512x512 tiles to reduce request count', async () => {
 				await createHSYImageryLayer()
