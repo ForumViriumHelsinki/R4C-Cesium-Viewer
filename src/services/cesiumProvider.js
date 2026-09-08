@@ -16,9 +16,9 @@ import logger from '../utils/logger.js'
 
 class CesiumProvider {
 	constructor() {
-		/** @type {typeof import('cesium') | null} */
+		/** @type {typeof import('./cesiumSymbols.js') | null} */
 		this._cesium = null
-		/** @type {Promise<typeof import('cesium')> | null} */
+		/** @type {Promise<typeof import('./cesiumSymbols.js')> | null} */
 		this._initPromise = null
 		this._initialized = false
 	}
@@ -26,7 +26,7 @@ class CesiumProvider {
 	/**
 	 * Initialize Cesium module via dynamic import.
 	 * Safe to call multiple times - returns cached promise/module.
-	 * @returns {Promise<typeof import('cesium')>}
+	 * @returns {Promise<typeof import('./cesiumSymbols.js')>}
 	 */
 	async initialize() {
 		if (this._initialized && this._cesium) return this._cesium
@@ -35,7 +35,7 @@ class CesiumProvider {
 		this._initPromise = (async () => {
 			logger.debug('[CesiumProvider] Loading Cesium module...')
 			const [cesiumModule] = await Promise.all([
-				import('cesium'),
+				import('./cesiumSymbols.js'),
 				import('cesium/Source/Widgets/widgets.css'),
 			])
 			this._cesium = cesiumModule
@@ -49,7 +49,7 @@ class CesiumProvider {
 	/**
 	 * Get the Cesium module synchronously.
 	 * Throws if called before initialization completes.
-	 * @returns {typeof import('cesium')}
+	 * @returns {typeof import('./cesiumSymbols.js')}
 	 * @throws {Error} If Cesium not yet initialized
 	 */
 	get() {

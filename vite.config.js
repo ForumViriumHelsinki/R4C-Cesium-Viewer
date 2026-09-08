@@ -153,7 +153,7 @@ export default defineConfig(({ mode }) => {
 				dts: 'src/components.d.ts',
 			}),
 			// iife: false ships Cesium as a deferred ESM lazy chunk (loaded by
-			// cesiumProvider.initialize()'s `import('cesium')`) instead of
+			// cesiumProvider.initialize()'s `import('./cesiumSymbols.js')`) instead of
 			// externalizing it to a render-blocking <head> <script
 			// src="/cesium-package/Cesium.js">. The plugin still copies
 			// Assets/Workers/Widgets/ThirdParty into cesium-package/ and sets
