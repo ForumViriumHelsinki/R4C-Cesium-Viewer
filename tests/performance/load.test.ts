@@ -449,43 +449,95 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			await page.close()
 		})
 
-		it('should cache resources effectively', async (ctx) => {
-			// Skipped: the "second load requests fewer resources" assertion is not a
-			// reliable property for this app — Cesium streams a different set of dynamic
-			// map tiles on each load (observed 167 vs 99), so reload request count is
-			// not monotonic and the assertion is meaningless. Tracked in #843.
-			ctx.skip()
-
+		it('should cache bundle assets across reloads', async () => {
+			// The previous assertion ("the second load requests fewer resources") was
+			// wrong for this app: Cesium streams a different set of dynamic map tiles on
+			// every load, so the total request count is not monotonic across a reload.
+			// This version looks only at the hashed same-origin bundle assets (which are
+			// requested identically on both loads) and measures reuse via `transferSize`
+			// rather than response status — Playwright reports 200 for a revalidated
+			// (304) resource, so no status-based assertion can work here.
 			const page = await browser.newPage()
-			const firstLoadResources: string[] = []
-			const secondLoadResources: string[] = []
 
-			// First load
-			page.on('response', (response) => {
-				if (response.url().includes('localhost')) {
-					firstLoadResources.push(response.url())
+			// The resource-timing buffer defaults to 250 entries and this page records
+			// well over 500; bundle assets happen to load first today, but a bundle
+			// reorder would silently truncate the measurement.
+			await page.addInitScript(() => performance.setResourceTimingBufferSize(5000))
+
+			// `vite preview` sends `Cache-Control: no-cache` with an ETag, so the browser
+			// revalidates and Chrome reports its fixed header-overhead estimate (300
+			// bytes) with no body bytes. The predicate also holds for a pure memory-cache
+			// hit (`transferSize === 0`), so it stays correct against production nginx,
+			// which serves the same hashed assets with a long max-age.
+			const HEADER_ONLY_TRANSFER_BYTES = 300
+
+			// `App.vue` resolves several `defineAsyncComponent(() => import(...))` chunks
+			// and `await import(...)` services after mount, so the bundle-asset set is
+			// still growing when the canvas becomes visible — and it grows faster on the
+			// cached reload than on the cold load. Sampling at `waitForSelector('canvas')`
+			// would therefore compare two truncated, differently-truncated sets. Poll
+			// until the count is unchanged across two consecutive checks so both samples
+			// are complete and the cold-vs-reload comparison is over the same set.
+			const SETTLE_INTERVAL_MS = 500
+			const SETTLE_ATTEMPTS = 20
+
+			const sampleBundleAssets = (target: Page) =>
+				target.evaluate((origin) => {
+					const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
+					return entries
+						.filter(
+							(entry) =>
+								entry.name.startsWith(`${origin}/assets/`) &&
+								(entry.name.endsWith('.js') || entry.name.endsWith('.css'))
+						)
+						.map((entry) => ({ name: entry.name, transferSize: entry.transferSize }))
+				}, LOCALHOST_URL)
+
+			const sampleSettledBundleAssets = async (target: Page) => {
+				let previous = await sampleBundleAssets(target)
+				for (let attempt = 0; attempt < SETTLE_ATTEMPTS; attempt++) {
+					await target.waitForTimeout(SETTLE_INTERVAL_MS)
+					const current = await sampleBundleAssets(target)
+					if (current.length === previous.length && current.length > 0) return current
+					previous = current
 				}
-			})
+				return previous
+			}
 
 			await page.goto(LOCALHOST_URL)
 			await page.waitForSelector('canvas', { state: 'visible' })
+			const coldEntries = await sampleSettledBundleAssets(page)
 
-			// Clear listeners and reload
-			page.removeAllListeners('response')
-			page.on('response', (response) => {
-				if (response.url().includes('localhost')) {
-					secondLoadResources.push(response.url())
-				}
-			})
+			expect(
+				coldEntries.length,
+				'no hashed /assets/*.js|css entries — the performance suite must run against `bun run preview` (just test-performance), not the dev server'
+			).toBeGreaterThan(0)
+
+			// Control: on a cold load every bundle asset must transfer a real body. If the
+			// measurement mechanism ever starts returning zeros, this fails rather than
+			// letting the reload assertion pass vacuously.
+			expect(coldEntries.every((entry) => entry.transferSize > HEADER_ONLY_TRANSFER_BYTES)).toBe(
+				true
+			)
 
 			await page.reload()
 			await page.waitForSelector('canvas', { state: 'visible' })
+			const reloadEntries = await sampleSettledBundleAssets(page)
 
-			// Second load should request fewer resources due to caching
-			expect(secondLoadResources.length).toBeLessThanOrEqual(firstLoadResources.length)
+			// The same hashed URLs are requested on both loads. Compare the name sets
+			// rather than only the counts, so a chunk swapped for another of equal count
+			// is not read as a match.
+			expect([...reloadEntries.map((entry) => entry.name)].sort()).toEqual(
+				[...coldEntries.map((entry) => entry.name)].sort()
+			)
+			expect(
+				reloadEntries.filter((entry) => entry.transferSize <= HEADER_ONLY_TRANSFER_BYTES).length
+			).toBe(reloadEntries.length)
 
 			await page.close()
-		})
+			// Per-test timeout: this performs two full Cesium loads plus two settle
+			// polls, and the global testTimeout is 10s.
+		}, 60000)
 
 		it('should handle concurrent API requests efficiently', async () => {
 			const page = await browser.newPage()
@@ -522,11 +574,9 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// Wait for API responses or network activity to settle. Use a 3s cap (below
 			// the 10s test timeout) so the .catch() actually fires — the Cesium map
 			// streams tiles continuously and never reaches true 'networkidle'.
-			await page
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.WAIT_LONG })
-				.catch(() => {
-					// Continue if network doesn't become idle (expected for ongoing operations)
-				})
+			await page.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.WAIT_LONG }).catch(() => {
+				// Continue if network doesn't become idle (expected for ongoing operations)
+			})
 
 			const endTime = Date.now()
 			const totalTime = endTime - startTime
