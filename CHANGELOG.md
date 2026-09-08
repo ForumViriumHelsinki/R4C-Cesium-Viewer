@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.56.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.56.2...r4c-cesium-viewer-v1.56.3) (2026-09-08)
+
+
+### Bug Fixes
+
+* **landcover:** make createHSYImageryLayer idempotent ([#962](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/962)) ([7e08e64](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7e08e642c13ffd1db2b12f81405f6f8cb80402ab))
+* **mcp:** launch PAL via uvx from PyPI ([#957](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/957)) ([123f984](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/123f9841c81724ecc1adfae8fb18e14aa47a45dc))
+* **vite:** inherit server proxies in the preview server ([#964](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/964)) ([0738212](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/0738212fedbb73a4ef70746a800021adc2d5af55))
+
+
+### Performance Improvements
+
+* **cesium:** import named symbols so the engine chunk tree-shakes ([#959](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/959)) ([28c1c2c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/28c1c2cd544739c5e143382d3f114804a51fcfc6))
+
 ## [1.56.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.56.1...r4c-cesium-viewer-v1.56.2) (2026-09-01)
 
 
