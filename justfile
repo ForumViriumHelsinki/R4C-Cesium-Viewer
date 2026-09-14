@@ -308,11 +308,16 @@ lighthouse-local:
     bunx @lhci/cli@0.14.x collect --config=lighthouserc.cjs
 
 # swgl=1 forces software rendering (mimics the no-GPU runner; FPS test skips).
+# filter="substring" runs only matching tests (vitest -t) — use it when iterating on
+# one case, since a full pass rebuilds and replays every Cesium load.
+#   just test-performance                            # full suite, GPU
+#   just test-performance 1                          # full suite, software rendering
+#   just test-performance 1 "cache bundle assets"    # one test, software rendering
 # The CI Performance Tests job runs only on push-to-main (not PRs) — use this to
 # verify before merging. See .claude/rules/testing.md "Vitest-Driven Playwright Suites".
 # Reproduce the CI perf run locally: build, serve the prod bundle on :4173, run the suite, tear down.
 [group: "testing"]
-test-performance swgl="0":
+test-performance swgl="0" filter="":
     #!/usr/bin/env bash
     set -euo pipefail
     VITE_E2E_TEST=true bun run build
@@ -323,7 +328,11 @@ test-performance swgl="0":
     if [ "{{ swgl }}" = "1" ]; then
         export PERF_TEST_CHROMIUM_ARGS="--use-gl=swiftshader --disable-gpu"
     fi
-    CI=true bun run test:performance
+    if [ -n "{{ filter }}" ]; then
+        CI=true bun run test:performance -t "{{ filter }}"
+    else
+        CI=true bun run test:performance
+    fi
 
 # Run a single test file (fast iteration during test fixes)
 [group: "testing"]
