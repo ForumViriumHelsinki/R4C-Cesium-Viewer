@@ -21,6 +21,7 @@ import {
 	validateScenarioId,
 } from '@/constants/vttFlood'
 import { fetchSimulationFrame } from '@/services/vttFlood'
+import { useFeatureFlagStore } from '@/stores/featureFlagStore'
 import logger from '@/utils/logger'
 
 const FRAME_DEBOUNCE_MS = 200
@@ -117,6 +118,7 @@ export const useVttFloodStore = defineStore('vttFlood', {
 					scenarioId: this.scenarioId,
 					frameNumber: this.frameNumber,
 					signal: controller.signal,
+					synthetic: useFeatureFlagStore().isEnabled('vttFloodSyntheticData'),
 				})
 				if (seq !== this._requestSeq) return // a newer call superseded us
 				this.frame = result

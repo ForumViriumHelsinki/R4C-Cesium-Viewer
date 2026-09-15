@@ -27,6 +27,7 @@ import {
 } from '../constants/vttFlood'
 import logger from '../utils/logger.js'
 import { getCesium } from './cesiumProvider.js'
+import { generateSyntheticFrame } from './vttFloodSynthetic.js'
 
 const DIMENSION_KEYS = VTT_DIMENSIONS.map((d) => d.key)
 
@@ -74,6 +75,8 @@ function computePropertyRanges(features) {
  *   the {@link VTT_SCENARIOS} allow-list).
  * @param {number} params.frameNumber - Frame index in 0..VTT_FRAME_COUNT-1.
  * @param {AbortSignal} [params.signal] - Optional AbortSignal for cancellation.
+ * @param {boolean} [params.synthetic] - Return a locally generated frame
+ *   instead of calling the VTT API (the `vttFloodSyntheticData` flag).
  * @returns {Promise<{features: Array<Object>, propertyRanges: Record<string, {min: number, max: number}>}>}
  * @throws {Error} On invalid input, non-2xx response, or malformed payload.
  *   AbortError propagates as-is so callers can distinguish cancellation from
@@ -84,10 +87,20 @@ export async function fetchSimulationFrame(
 		scenarioId,
 		frameNumber,
 		signal,
-	} = /** @type {{scenarioId: string, frameNumber: number, signal?: AbortSignal}} */ ({})
+		synthetic = false,
+	} = /** @type {{scenarioId: string, frameNumber: number, signal?: AbortSignal, synthetic?: boolean}} */ ({})
 ) {
 	const safeScenario = validateScenarioId(scenarioId)
 	const safeFrame = validateFrameNumber(frameNumber)
+
+	if (synthetic) {
+		logger.debug(`[VTTFlood] Generating synthetic scenario=${safeScenario} frame=${safeFrame}`)
+		const { features } = generateSyntheticFrame({
+			scenarioId: safeScenario,
+			frameNumber: safeFrame,
+		})
+		return { features, propertyRanges: computePropertyRanges(features) }
+	}
 
 	const body = JSON.stringify({
 		picture_number: safeFrame,

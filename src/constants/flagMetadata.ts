@@ -51,6 +51,7 @@ export type FeatureFlagName =
 	| 'debugMode'
 	| 'cacheVisualization'
 	| 'healthChecks'
+	| 'vttFloodSyntheticData'
 	// Panel visibility
 	| 'showFeaturePanel'
 
@@ -385,6 +386,16 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		goffId: 'r4c-health-checks',
 		label: 'Health Checks Display',
 		description: 'Show system health check results',
+		category: 'developer',
+		experimental: true,
+		requiresSupport: false,
+		fallbackDefault: false,
+	},
+	vttFloodSyntheticData: {
+		goffId: 'r4c-vtt-flood-synthetic-data',
+		label: 'VTT Flood Synthetic Data',
+		description:
+			'Serve locally generated frames to the VTT flood simulation panel instead of calling the VTT API (demo fallback)',
 		category: 'developer',
 		experimental: true,
 		requiresSupport: false,

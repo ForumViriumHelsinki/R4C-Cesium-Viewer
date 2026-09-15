@@ -124,11 +124,12 @@ VITE_FEATURE_BG_MAP_PROVIDERS=true
 
 ### Developer Tools
 
-| Flag                 | Default | Description                                                                 | Experimental |
-| -------------------- | ------- | --------------------------------------------------------------------------- | ------------ |
-| `debugMode`          | auto    | Enable debug logging and developer tools (auto-enabled in development mode) | No           |
-| `cacheVisualization` | `false` | Visualize data cache status and usage                                       | Yes          |
-| `healthChecks`       | `false` | Show system health check results                                            | Yes          |
+| Flag                    | Default | Description                                                                                | Experimental |
+| ----------------------- | ------- | ------------------------------------------------------------------------------------------ | ------------ |
+| `debugMode`             | auto    | Enable debug logging and developer tools (auto-enabled in development mode)                | No           |
+| `cacheVisualization`    | `false` | Visualize data cache status and usage                                                      | Yes          |
+| `healthChecks`          | `false` | Show system health check results                                                           | Yes          |
+| `vttFloodSyntheticData` | `false` | VTT flood panel renders locally generated frames instead of calling the VTT API (demo use) | Yes          |
 
 **Environment Variables:**
 

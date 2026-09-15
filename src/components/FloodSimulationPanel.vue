@@ -20,6 +20,15 @@
 			>
 				VTT / FVH internal
 			</v-chip>
+			<v-chip
+				v-if="syntheticData"
+				size="x-small"
+				color="info"
+				class="ml-2"
+				variant="tonal"
+			>
+				Synthetic data
+			</v-chip>
 			<v-spacer />
 			<v-btn
 				icon
@@ -130,6 +139,7 @@
 import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { VTT_DIMENSIONS, VTT_SCENARIOS } from '../constants/vttFlood'
 import { clearFlood, renderFlood } from '../services/vttFlood.js'
+import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useVttFloodStore } from '../stores/vttFloodStore'
 import logger from '../utils/logger.js'
@@ -138,6 +148,15 @@ const emit = defineEmits(['close'])
 
 const store = useVttFloodStore()
 const globalStore = useGlobalStore()
+const featureFlagStore = useFeatureFlagStore()
+
+const syntheticData = computed(() => featureFlagStore.isEnabled('vttFloodSyntheticData'))
+
+// Flipping the synthetic-data flag while the panel is open re-loads the
+// current frame from the newly selected source.
+const stopSyntheticWatcher = watch(syntheticData, () => {
+	store.fetchCurrentFrame()
+})
 
 const scenarioItems = VTT_SCENARIOS.map((s) => ({ id: s.id, label: s.label }))
 
@@ -206,6 +225,7 @@ onMounted(() => {
 
 onUnmounted(async () => {
 	stopRenderWatcher()
+	stopSyntheticWatcher()
 	const viewer = globalStore.cesiumViewer
 	if (viewer) {
 		await clearFlood({ viewer })
