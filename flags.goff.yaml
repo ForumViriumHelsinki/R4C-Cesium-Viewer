@@ -293,6 +293,13 @@ r4c-health-checks:
   defaultRule:
     variation: disabled
 
+r4c-vtt-flood-synthetic-data:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
 # ============================================================
 # Panel Visibility
 # ============================================================

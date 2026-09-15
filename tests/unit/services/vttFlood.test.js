@@ -150,6 +150,18 @@ describe('fetchSimulationFrame', () => {
 		)
 	})
 
+	it('returns a synthetic frame without a network request when synthetic is set', async () => {
+		// restoreAllMocks does not clear call history of a re-spied global, so
+		// clear it explicitly — earlier tests in this block call fetch.
+		const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('{}'))
+		fetchSpy.mockClear()
+		const result = await fetchSimulationFrame({ scenarioId: '1', frameNumber: 12, synthetic: true })
+		expect(fetchSpy).not.toHaveBeenCalled()
+		expect(result.features.length).toBeGreaterThan(0)
+		const range = result.propertyRanges.overland_water_depth
+		expect(range.max).toBeGreaterThan(range.min)
+	})
+
 	it('propagates AbortError', async () => {
 		vi.spyOn(global, 'fetch').mockImplementation(() =>
 			Promise.reject(Object.assign(new DOMException('aborted', 'AbortError')))
