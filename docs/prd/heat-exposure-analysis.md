@@ -411,10 +411,10 @@ As a user, I want smooth performance when analyzing postal codes with thousands 
 
 **FR4.1 D3.js Heat Histogram**
 
-- Container: `#heatHistogramContainer` div (220px height)
-- SVG dimensions:
-  - Width: `navbarWidth - margins` (responsive)
-  - Height: 250px - margins
+- Container: `#heatHistogramContainer` div, full width of its panel; height follows the SVG
+- SVG dimensions (scalable `viewBox`, rendered at 100% width):
+  - Width: container width measured by `useChartSize`, minus margins
+  - Height: width / 1.2, minus margins
   - Margins: `{top: 30, right: 50, bottom: 34, left: 30}`
 - 20 bins calculated by D3 histogram with automatic domain
 - X-axis: Heat exposure index or temperature (Celsius)

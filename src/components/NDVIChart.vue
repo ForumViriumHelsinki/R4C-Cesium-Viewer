@@ -9,11 +9,15 @@
 			</a>
 			Distribution for {{ selectedDate }}
 		</h3>
-		<svg
-			ref="chart"
-			width="400"
-			height="250"
-		/>
+		<div
+			ref="containerRef"
+			class="ndvi-chart"
+		>
+			<svg
+				ref="chart"
+				class="ndvi-chart-svg"
+			/>
+		</div>
 
 		<!-- Updated Legend with text below -->
 		<div class="legend">
@@ -30,8 +34,9 @@
 </template>
 
 <script>
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as d3 from '@/utils/d3'
+import { useChartSize } from '../composables/useChartSize.js'
 import { getCesium } from '../services/cesiumProvider.js'
 import Datasource from '../services/datasource.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -47,6 +52,15 @@ export default {
 		const propsStore = usePropsStore()
 		const datasourceService = new Datasource()
 		const chart = ref(null)
+		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
+		const {
+			width: chartWidth,
+			height: chartHeight,
+			cleanup,
+		} = useChartSize(containerRef, {
+			aspect: 1.6,
+			onResize: () => drawChart(),
+		})
 
 		const ndviColors = ['#eaeaea', '#ccc682', '#91bf51', '#70a33f', '#4f892d', '#306d1c', '#004400']
 		const labels = ['0.0-0.1', '0.1-0.2', '0.2-0.3', '0.3-0.4', '0.4-0.5', '0.5-0.6', '0.6-1.0']
@@ -92,13 +106,15 @@ export default {
 		}
 
 		const drawChart = () => {
+			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
+			if (chartWidth.value === 0) return
 			const bins = computeHistogram()
-			const svg = d3.select(chart.value)
+			const width = chartWidth.value
+			const height = chartHeight.value
+			const margin = { top: 20, right: 30, bottom: 50, left: 50 }
+			const svg = d3.select(chart.value).attr('viewBox', `0 0 ${width} ${height}`)
 			svg.selectAll('*').remove() // Clear previous chart
 
-			const width = 400,
-				height = 250,
-				margin = { top: 20, right: 30, bottom: 50, left: 50 }
 			const xScale = d3
 				.scaleBand()
 				.domain(labels)
@@ -122,6 +138,7 @@ export default {
 				.attr('width', xScale.bandwidth())
 				.attr('height', (d) => height - margin.bottom - yScale(d))
 				.attr('fill', (_, i) => ndviColors[i])
+				.style('cursor', 'pointer')
 				.on('click', (_event, d) => {
 					const index = bins.indexOf(d) // Get the correct index
 					if (index !== -1) {
@@ -164,8 +181,9 @@ export default {
 
 		onMounted(drawChart)
 		watch(() => props.selectedDate, drawChart)
+		onBeforeUnmount(cleanup)
 
-		return { chart, ndviColors, labels }
+		return { chart, containerRef, ndviColors, labels }
 	},
 }
 </script>
@@ -177,8 +195,19 @@ export default {
 	align-items: center;
 }
 
+.ndvi-chart {
+	width: 100%;
+}
+
+.ndvi-chart-svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
 .legend {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: center;
 	gap: 10px;
 	margin-top: 10px;

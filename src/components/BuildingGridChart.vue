@@ -8,6 +8,7 @@
 <script>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as d3 from '@/utils/d3'
+import { useChartSize } from '../composables/useChartSize.js'
 import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -20,12 +21,24 @@ export default {
 		const plotService = new Plot()
 		const buildingContainerId = 'buildingGridChartContainer'
 		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
+		const {
+			width: chartWidth,
+			height: chartHeight,
+			cleanup,
+		} = useChartSize(containerRef, {
+			aspect: 1.2,
+			onResize: () => {
+				if (propsStore.gridBuildingProps) createBuildingGridChart(propsStore.gridBuildingProps)
+			},
+		})
 
 		const createBuildingGridChart = (buildingProps) => {
+			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
+			if (chartWidth.value === 0) return
 			plotService.initializePlotContainer(buildingContainerId)
 			const margin = { top: 30, right: 40, bottom: 55, left: 40 }
-			const width = globalStore.navbarWidth - margin.left - margin.right
-			const height = 250 - margin.top - margin.bottom
+			const width = chartWidth.value - margin.left - margin.right
+			const height = chartHeight.value - margin.top - margin.bottom
 
 			const data = [
 				{ label: '0-9', value: buildingProps._pop_d_0_9._value },
@@ -115,20 +128,18 @@ export default {
 			}
 		)
 
-		let unsubscribe
-
 		onMounted(() => {
 			if (propsStore.gridBuildingProps) {
 				createBuildingGridChart(propsStore.gridBuildingProps)
 			}
 			// Listen for hide event from parent (proper component encapsulation)
-			unsubscribe = eventBus.on('hideBuildingGridChart', hideChart)
+			eventBus.on('hideBuildingGridChart', hideChart)
 		})
 
 		onBeforeUnmount(() => {
-			if (unsubscribe) {
-				unsubscribe()
-			}
+			// mitt's on() returns undefined, so unsubscribe with the same handler
+			eventBus.off('hideBuildingGridChart', hideChart)
+			cleanup()
 		})
 
 		return { containerRef }
@@ -140,6 +151,5 @@ export default {
 #buildingGridChartContainer {
 	position: relative;
 	width: 100%;
-	height: 200px;
 }
 </style>

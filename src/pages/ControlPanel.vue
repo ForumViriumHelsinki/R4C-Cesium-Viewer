@@ -381,6 +381,7 @@ import MapControls from '../components/MapControls.vue'
 import UnifiedSearch from '../components/UnifiedSearch.vue'
 import ViewModeCompact from '../components/ViewModeCompact.vue'
 import { useSidebarNavigation } from '../composables/useSidebarNavigation.js'
+import { LAYOUT } from '../constants/layout.js'
 import { LAAJASALO_CAMERA } from '../constants/vttFlood'
 import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
 
@@ -408,10 +409,7 @@ const HSYBuildingHeatChart = defineAsyncComponent(
 const StatisticalGridOptions = defineAsyncComponent(
 	() => import('../components/StatisticalGridOptions.vue')
 )
-const BuildingScatterPlot = defineAsyncComponent(() => import('../views/BuildingScatterPlot.vue'))
-const Landcover = defineAsyncComponent(() => import('../views/Landcover.vue'))
-const PostalCodeNDVI = defineAsyncComponent(() => import('../views/PostalCodeNDVI.vue'))
-const SocioEconomics = defineAsyncComponent(() => import('../views/SocioEconomics.vue'))
+const LandcoverPanel = defineAsyncComponent(() => import('../components/LandcoverPanel.vue'))
 
 // Lazy-loaded climate adaptation components
 const CoolingCenter = defineAsyncComponent(() => import('../components/CoolingCenter.vue'))
@@ -457,8 +455,13 @@ const isRail = computed(() => toggleStore.sidebarMode === 'rail')
 const isVisible = computed(() => toggleStore.sidebarMode !== 'hidden')
 
 const drawerWidth = computed(() => {
-	if (isMobile.value) return Math.min(window.innerWidth * 0.9, 360)
-	return 360
+	if (isMobile.value) {
+		return Math.min(
+			window.innerWidth * LAYOUT.SIDEBAR_MOBILE_VIEWPORT_FRACTION,
+			LAYOUT.SIDEBAR_EXPANDED_WIDTH
+		)
+	}
+	return LAYOUT.SIDEBAR_EXPANDED_WIDTH
 })
 
 const tabs = [
@@ -499,7 +502,7 @@ const analysisConfig = {
 // Map analysis types to their components for inline rendering
 const analysisComponents = computed(() => ({
 	'heat-histogram': HeatHistogram,
-	landcover: Landcover,
+	landcover: LandcoverPanel,
 	'building-heat':
 		currentView.value === 'grid'
 			? BuildingGridChart
@@ -528,7 +531,7 @@ const openAnalysis = (type, size) => {
 		rightPanelAnalysis.value = type
 		rightPanelOpen.value = true
 		// Auto-collapse left sidebar on narrow viewports to prevent map tunnel
-		if (!isMobile.value && window.innerWidth < 1400) {
+		if (!isMobile.value && window.innerWidth < LAYOUT.ANALYSIS_PANEL_COLLAPSE_SIDEBAR_BELOW) {
 			toggleStore.setSidebarMode('rail')
 		}
 	}

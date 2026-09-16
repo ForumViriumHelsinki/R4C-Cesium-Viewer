@@ -171,7 +171,8 @@ export default {
 		eventBus.on('newNearbyTreeDiagram', this.newNearbyTreeDiagram)
 	},
 	beforeUnmount() {
-		eventBus.off('newNearbyTreeDiagram')
+		// Pass the handler: off(event) alone removes every component's listener
+		eventBus.off('newNearbyTreeDiagram', this.newNearbyTreeDiagram)
 		// Clean up all bearing switch event listeners
 		this.eventCleanupFunctions.forEach((cleanup) => cleanup())
 		this.eventCleanupFunctions = []

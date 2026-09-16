@@ -1,10 +1,14 @@
 <template>
-	<div id="socioeonomicsContainer" />
+	<div
+		id="socioeonomicsContainer"
+		ref="containerRef"
+	/>
 </template>
 
 <script>
-import { onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import * as d3 from '@/utils/d3' // Import D3.js
+import { useChartSize } from '../composables/useChartSize.js'
 import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -22,6 +26,15 @@ export default {
 		const heatExposureStore = useHeatExposureStore()
 		const propsStore = usePropsStore()
 		const plotService = new Plot()
+		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
+		const {
+			width: chartWidth,
+			height: chartHeight,
+			cleanup,
+		} = useChartSize(containerRef, {
+			aspect: 1.6,
+			onResize: () => newSocioEconomicsDiagram(),
+		})
 
 		onMounted(() => {
 			newSocioEconomicsDiagram()
@@ -31,6 +44,7 @@ export default {
 		onBeforeUnmount(() => {
 			// Unsubscribe from the eventBus when component is destroyed
 			eventBus.off('updateSocioEconomics', newSocioEconomicsDiagram)
+			cleanup()
 		})
 
 		const newSocioEconomicsDiagram = () => {
@@ -38,6 +52,8 @@ export default {
 			if (!globalStore.postalcode) {
 				return
 			}
+			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
+			if (chartWidth.value === 0) return
 			const dataForPostcode = socioEconomicsStore.getDataByPostcode(globalStore.postalcode)
 			const statsData = findSocioEconomicsStats()
 			createSocioEconomicsDiagram(dataForPostcode, statsData)
@@ -162,8 +178,8 @@ export default {
 				plotService.initializePlotContainerForGrid('socioeonomicsContainer')
 
 				const margin = { top: 60, right: 5, bottom: 50, left: 23 }
-				const width = globalStore.navbarWidth - margin.left - margin.right
-				const height = 250 - margin.top - margin.bottom
+				const width = chartWidth.value - margin.left - margin.right
+				const height = chartHeight.value - margin.top - margin.bottom
 				const svg = plotService.createSVGElement(margin, width, height, '#socioeonomicsContainer')
 
 				const xLabels = [
@@ -298,8 +314,17 @@ export default {
 		}
 
 		return {
+			containerRef,
 			newSocioEconomicsDiagram,
 		}
 	},
 }
 </script>
+
+<style scoped>
+#socioeonomicsContainer {
+	position: relative;
+	width: 100%;
+	background-color: rgb(var(--v-theme-surface));
+}
+</style>
