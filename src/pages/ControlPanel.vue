@@ -114,6 +114,16 @@
 					<v-window-item value="layers">
 						<div class="tab-content">
 							<ViewModeCompact class="mb-3" />
+							<!-- Map tools for the current view (Climate Adaptation, Grid Options) -->
+							<AnalysisEntryList
+								v-if="layersTabEntries.length > 0"
+								class="mb-3"
+								:entries="layersTabEntries"
+								:inline-entry="inlineEntry?.tab === 'layers' ? inlineEntry : null"
+								:view="currentView"
+								@open="openAnalysis"
+								@close-inline="inlineAnalysis = null"
+							/>
 							<MapControls />
 							<template v-if="featureFlagStore.isEnabled('vttFloodSimulation')">
 								<v-divider class="my-3" />
@@ -150,46 +160,15 @@
 								}}
 							</p>
 							<div class="analysis-buttons">
-								<!-- Buttons and panels come from src/constants/analysisRegistry.js.
+								<!-- Entries come from src/constants/analysisRegistry.js.
 								     Buttons gate on flags only; data loads on click (#712). -->
-								<template
-									v-for="entry in availableAnalyses"
-									:key="entry.id"
-								>
-									<v-expansion-panels
-										v-if="entry.placement === 'expansion'"
-										class="expansion-outlined"
-									>
-										<v-expansion-panel>
-											<v-expansion-panel-title>
-												<v-icon class="mr-2">{{ entry.icon }}</v-icon>
-												{{ entry.label }}
-											</v-expansion-panel-title>
-											<v-expansion-panel-text class="pa-0">
-												<component :is="entry.component(currentView)" />
-											</v-expansion-panel-text>
-										</v-expansion-panel>
-									</v-expansion-panels>
-									<v-btn
-										v-else
-										block
-										variant="outlined"
-										:prepend-icon="entry.icon"
-										@click="openAnalysis(entry)"
-									>
-										{{ entry.label }}
-									</v-btn>
-								</template>
-
-								<ChartCard
-									v-if="inlineEntry"
-									class="inline-chart mt-3"
-									:title="analysisTitle(inlineEntry)"
-									:icon="inlineEntry.icon"
-									@close="inlineAnalysis = null"
-								>
-									<component :is="inlineEntry.component(currentView)" />
-								</ChartCard>
+								<AnalysisEntryList
+									:entries="analysisTabEntries"
+									:inline-entry="inlineEntry?.tab === 'analysis' ? inlineEntry : null"
+									:view="currentView"
+									@open="openAnalysis"
+									@close-inline="inlineAnalysis = null"
+								/>
 
 								<div
 									v-if="!hasAvailableAnalysis"
@@ -256,19 +235,14 @@
 <script setup>
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { useDisplay } from 'vuetify'
+import AnalysisEntryList from '../components/AnalysisEntryList.vue'
 import AreaProperties from '../components/AreaProperties.vue'
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue'
-import ChartCard from '../components/ChartCard.vue'
 import MapControls from '../components/MapControls.vue'
 import UnifiedSearch from '../components/UnifiedSearch.vue'
 import ViewModeCompact from '../components/ViewModeCompact.vue'
 import { useSidebarNavigation } from '../composables/useSidebarNavigation.js'
-import {
-	ANALYSES,
-	analysisTitle,
-	findAnalysis,
-	isAnalysisAvailable,
-} from '../constants/analysisRegistry.js'
+import { ANALYSES, findAnalysis, isAnalysisAvailable } from '../constants/analysisRegistry.js'
 import { LAYOUT } from '../constants/layout.js'
 import { LAAJASALO_CAMERA } from '../constants/vttFlood'
 import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
@@ -358,13 +332,13 @@ const availableAnalyses = computed(() =>
 	ANALYSES.filter((entry) => isAnalysisAvailable(entry, analysisContext.value))
 )
 
-const hasAvailableAnalysis = computed(() => {
-	if (currentLevel.value === 'start') return false
-	if (currentLevel.value === 'postalCode' && currentView.value !== 'grid') return true
-	if (currentLevel.value === 'building') return true
-	if (currentView.value === 'grid') return true
-	return false
-})
+const analysisTabEntries = computed(() =>
+	availableAnalyses.value.filter((entry) => entry.tab === 'analysis')
+)
+const layersTabEntries = computed(() =>
+	availableAnalyses.value.filter((entry) => entry.tab === 'layers')
+)
+const hasAvailableAnalysis = computed(() => analysisTabEntries.value.length > 0)
 
 // Inline analysis (card rendered in the sidebar), by registry id
 const inlineAnalysis = ref(/** @type {string | null} */ (null))
@@ -530,12 +504,6 @@ const closeVttFlood = () => {
 	color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
-.inline-chart {
-	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
-	border-radius: 8px;
-	padding: 12px;
-}
-
 .rail-nav {
 	padding-top: 8px;
 }
@@ -544,11 +512,6 @@ const closeVttFlood = () => {
 	display: flex;
 	justify-content: center;
 	padding: 8px;
-}
-
-.expansion-outlined :deep(.v-expansion-panel) {
-	border: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
-	background: transparent;
 }
 
 .v-btn:focus-visible {

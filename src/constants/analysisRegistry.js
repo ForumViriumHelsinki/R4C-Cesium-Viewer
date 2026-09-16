@@ -35,6 +35,12 @@ import { defineAsyncComponent } from 'vue'
  */
 
 /**
+ * Sidebar tab an entry is listed in. Map tools belong with the layers they act
+ * on; everything that analyses the selected area belongs in Analysis.
+ * @typedef {'analysis' | 'layers'} SidebarTab
+ */
+
+/**
  * Inputs to availability that are not level, view or feature flags.
  * @typedef {Object} AnalysisContext
  * @property {NavigationLevel} level
@@ -51,6 +57,7 @@ import { defineAsyncComponent } from 'vue'
  *   accessible name, so changing it breaks tests/e2e contracts.
  * @property {string} [title] - Card header; defaults to `label`
  * @property {string} icon - MDI icon name
+ * @property {SidebarTab} tab - Sidebar tab the entry is listed in
  * @property {NavigationLevel[]} levels - Levels the analysis is offered at
  * @property {ViewMode[] | null} views - Views it is offered in; `null` for any
  * @property {import('./flagMetadata').FeatureFlagName | null} flag - Gating feature flag
@@ -89,6 +96,7 @@ const StatisticalGridOptions = defineAsyncComponent(
 export const ANALYSES = Object.freeze([
 	{
 		id: 'heat-histogram',
+		tab: 'analysis',
 		label: 'Heat Distribution',
 		icon: 'mdi-chart-histogram',
 		levels: ['postalCode'],
@@ -101,6 +109,7 @@ export const ANALYSES = Object.freeze([
 	},
 	{
 		id: 'socioeconomics',
+		tab: 'analysis',
 		label: 'Socioeconomics',
 		title: 'Socioeconomic Analysis',
 		icon: 'mdi-account-group',
@@ -114,6 +123,7 @@ export const ANALYSES = Object.freeze([
 	},
 	{
 		id: 'landcover',
+		tab: 'analysis',
 		label: 'Land Cover',
 		icon: 'mdi-leaf',
 		levels: ['postalCode'],
@@ -126,6 +136,7 @@ export const ANALYSES = Object.freeze([
 	},
 	{
 		id: 'scatter-plot',
+		tab: 'analysis',
 		label: 'Building Analysis',
 		icon: 'mdi-chart-scatter-plot',
 		levels: ['postalCode'],
@@ -138,6 +149,7 @@ export const ANALYSES = Object.freeze([
 	},
 	{
 		id: 'ndvi-analysis',
+		tab: 'analysis',
 		label: 'NDVI Vegetation',
 		icon: 'mdi-leaf',
 		levels: ['postalCode'],
@@ -150,6 +162,7 @@ export const ANALYSES = Object.freeze([
 	},
 	{
 		id: 'building-heat',
+		tab: 'analysis',
 		label: 'Building Heat Data',
 		icon: 'mdi-thermometer',
 		levels: ['building'],
@@ -167,6 +180,7 @@ export const ANALYSES = Object.freeze([
 	},
 	{
 		id: 'climate-adaptation',
+		tab: 'layers',
 		label: 'Climate Adaptation',
 		icon: 'mdi-shield-sun',
 		levels: ['start', 'postalCode', 'building'],
@@ -179,6 +193,7 @@ export const ANALYSES = Object.freeze([
 	},
 	{
 		id: 'grid-options',
+		tab: 'layers',
 		label: 'Grid Options',
 		icon: 'mdi-grid',
 		levels: ['start', 'postalCode', 'building'],
