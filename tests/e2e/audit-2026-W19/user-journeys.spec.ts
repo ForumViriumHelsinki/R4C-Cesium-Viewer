@@ -310,30 +310,36 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 			const gridState = await readStoreState(cesiumPage)
 			expect(gridState.view, 'US-20 — view must reflect grid after switch').toMatch(/grid/i)
 
-			// Climate Adaptation + Grid Options live in the Analysis tab inside
-			// ControlPanel (template v-if="currentView === 'grid'"). The default
-			// active tab is "Layers", so activate Analysis before asserting.
-			await cesiumPage.getByRole('tab', { name: 'Analysis' }).click()
+			// Climate Adaptation + Grid Options are map tools and live in the
+			// Layers tab, next to the view switcher (registry `tab: 'layers'`).
+			// Scope to that tab's panel so the assertions cannot pass or fail on
+			// whichever tab happens to be active.
+			await expect(cesiumPage.getByRole('tab', { name: 'Layers' })).toHaveAttribute(
+				'aria-selected',
+				'true'
+			)
+			const layersPanel = cesiumPage
+				.locator('.control-panel .v-window-item')
+				.filter({ has: cesiumPage.locator('.view-mode-compact') })
 
 			// US-15 — Climate Adaptation panel only appears in grid view.
 			await expect(
-				cesiumPage.getByText('Climate Adaptation'),
+				layersPanel.getByText('Climate Adaptation'),
 				'US-15 — Climate Adaptation must be visible in grid view'
 			).toBeVisible()
 			await expect(
-				cesiumPage.getByText('Grid Options'),
+				layersPanel.getByText('Grid Options'),
 				'US-15 — Grid Options must be visible in grid view'
 			).toBeVisible()
 
-			// Switch back — Climate Adaptation must hide again (view-scoped).
-			// The view-mode buttons live in ViewModeCompact on the Layers tab,
-			// so return there before driving navigateToView.
-			await cesiumPage.getByRole('tab', { name: 'Layers' }).click()
+			// Switch back — Climate Adaptation must leave the DOM (view-scoped).
+			// A count check, not not.toBeVisible(): the latter also passes when the
+			// panel is merely on an inactive tab.
 			await helpers.navigateToView('capitalRegionView')
 			await expect(
-				cesiumPage.getByText('Climate Adaptation'),
-				'US-15 — Climate Adaptation must hide outside grid view'
-			).not.toBeVisible()
+				layersPanel.getByText('Climate Adaptation'),
+				'US-15 — Climate Adaptation must be removed outside grid view'
+			).toHaveCount(0)
 		}
 	)
 

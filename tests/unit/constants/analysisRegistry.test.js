@@ -2,6 +2,8 @@
  * The analysis registry replaced hand-written v-if conditions in
  * ControlPanel.vue. `legacyVisible` restates those conditions verbatim, and
  * the registry must agree with it across every level/view/flag/data state.
+ * Grid Options and Climate Adaptation later moved to the Layers tab without
+ * changing when they appear, so the oracle is split by tab.
  */
 
 import { describe, expect, it, vi } from 'vitest'
@@ -27,11 +29,12 @@ const legacyVisible = ({ level, view, flags, statsIndex, socioEconomicsReady }) 
 		if (on('ndviAnalysis')) out.push('NDVI Vegetation')
 	}
 	if (level === 'building') out.push('Building Heat Data')
+	const layers = []
 	if (view === 'grid') {
-		if (statsIndex === 'heat_index' && on('coolingOptimizer')) out.push('Climate Adaptation')
-		out.push('Grid Options')
+		if (statsIndex === 'heat_index' && on('coolingOptimizer')) layers.push('Climate Adaptation')
+		layers.push('Grid Options')
 	}
-	return out
+	return { analysis: out, layers }
 }
 
 const FLAGS = [
@@ -62,11 +65,24 @@ describe('analysisRegistry', { tags: ['@unit'] }, () => {
 								statsIndex,
 								socioEconomicsReady,
 							}
-							const labels = ANALYSES.filter((e) => isAnalysisAvailable(e, ctx)).map((e) => e.label)
-							expect(
-								labels,
-								JSON.stringify({ level, view, flagList, statsIndex, socioEconomicsReady })
-							).toEqual(legacyVisible({ level, view, flags, statsIndex, socioEconomicsReady }))
+							const available = ANALYSES.filter((e) => isAnalysisAvailable(e, ctx))
+							const byTab = (tab) => available.filter((e) => e.tab === tab).map((e) => e.label)
+							const expected = legacyVisible({
+								level,
+								view,
+								flags,
+								statsIndex,
+								socioEconomicsReady,
+							})
+							const label = JSON.stringify({
+								level,
+								view,
+								flagList,
+								statsIndex,
+								socioEconomicsReady,
+							})
+							expect(byTab('analysis'), label).toEqual(expected.analysis)
+							expect(byTab('layers'), label).toEqual(expected.layers)
 							states++
 						}
 					}
@@ -87,6 +103,12 @@ describe('analysisRegistry', { tags: ['@unit'] }, () => {
 			'Climate Adaptation',
 			'Grid Options',
 		])
+	})
+
+	it('lists map tools in the Layers tab and analyses in the Analysis tab', () => {
+		for (const entry of ANALYSES) {
+			expect(entry.tab).toBe(entry.mapCoupling === 'tool' ? 'layers' : 'analysis')
+		}
 	})
 
 	it('has unique ids that findAnalysis resolves', () => {

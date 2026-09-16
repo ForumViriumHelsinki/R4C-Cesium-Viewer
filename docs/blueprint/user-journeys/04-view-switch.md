@@ -10,6 +10,8 @@ audit: ../audits/2026-W19-user-stories.md
 
 Mika scans Helsinki at the regional level using two complementary views: the Capital Region (postal-code polygons) and the Statistical Grid (250 m raster). He toggles data layers and filters in each, and expects the Climate Adaptation panel to appear when he's in Grid view.
 
+> **Changed 2026-09 (ADR-009 follow-up):** Climate Adaptation and Grid Options moved from the Analysis tab to the Layers tab. Grid Options is a legend for the grid layer and Climate Adaptation edits the map, so both sit next to the view switcher that reveals them. When they appear is unchanged. The spec now asserts inside the Layers tab panel, and checks that Climate Adaptation is removed from the DOM outside grid view. Previously it checked `not.toBeVisible()` after switching tabs, which also passes when the panel is only on an inactive tab.
+
 This journey is mostly ✅ at the presence layer but every individual toggle's downstream effect remains 🟡 unverified in the audit. The flow encodes the structural expectations so a future regression won't silently break the panel scaffolding.
 
 ## Persona satisfaction journey
@@ -49,12 +51,12 @@ flowchart TD
     F -- yes --> G[Click Statistical Grid view]
     G --> H{globalStore.view == 'grid' OR currentView updated?}
     H -- no --> X6[FAIL US-20 view switch]
-    H -- yes --> I{Climate Adaptation panel visible?}
+    H -- yes --> I{Climate Adaptation panel visible in Layers tab?}
     I -- no --> X7[FAIL US-15 coolingOptimizer]
-    I -- yes --> J{Grid Options visible?}
+    I -- yes --> J{Grid Options visible in Layers tab?}
     J -- no --> X8[FAIL US-15 grid options]
     J -- yes --> K[Switch back to Capital Region]
-    K --> L{Climate Adaptation hidden again?}
+    K --> L{Climate Adaptation removed from Layers tab?}
     L -- no --> X9[FAIL view-scoped panel bleed]
     L -- yes --> M[Done]
 
@@ -64,12 +66,12 @@ flowchart TD
 
 ## Coverage
 
-| Step                                   | Story | Assertion                                                                 | Test                                                      |
-| -------------------------------------- | ----- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
-| NDVI toggle present                    | US-13 | `getByText('NDVI', { exact: true })` visible                              | `journey-4-view-switch` (new)                             |
-| Land Cover toggle present              | US-13 | `getByText('Land Cover')` visible                                         | `journey-4-view-switch`                                   |
-| Building filters present               | US-14 | `getByText('Public Buildings')` and `getByText('Tall Buildings')` visible | `journey-4-view-switch`                                   |
-| Background Maps options                | US-12 | "Default Map", "Satellite", "Terrain" entries visible                     | `journey-4-view-switch`                                   |
-| View switch                            | US-20 | After click, `globalStore.view` (or equivalent) reads `grid`              | `journey-4-view-switch`                                   |
-| Climate Adaptation appears in grid     | US-15 | `getByText('Climate Adaptation')` visible only when view === 'grid'       | overlaps `verifyPanelVisibility({ currentView: 'grid' })` |
-| Climate Adaptation hidden outside grid | US-15 | not-visible when view === 'capitalRegion'                                 | `journey-4-view-switch`                                   |
+| Step                                    | Story | Assertion                                                                                | Test                                                      |
+| --------------------------------------- | ----- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| NDVI toggle present                     | US-13 | `getByText('NDVI', { exact: true })` visible                                             | `journey-4-view-switch` (new)                             |
+| Land Cover toggle present               | US-13 | `getByText('Land Cover')` visible                                                        | `journey-4-view-switch`                                   |
+| Building filters present                | US-14 | `getByText('Public Buildings')` and `getByText('Tall Buildings')` visible                | `journey-4-view-switch`                                   |
+| Background Maps options                 | US-12 | "Default Map", "Satellite", "Terrain" entries visible                                    | `journey-4-view-switch`                                   |
+| View switch                             | US-20 | After click, `globalStore.view` (or equivalent) reads `grid`                             | `journey-4-view-switch`                                   |
+| Climate Adaptation appears in grid      | US-15 | Layers tab panel `getByText('Climate Adaptation')` visible when view === 'grid'          | overlaps `verifyPanelVisibility({ currentView: 'grid' })` |
+| Climate Adaptation removed outside grid | US-15 | Layers tab panel `getByText('Climate Adaptation')` count 0 when view === 'capitalRegion' | `journey-4-view-switch`                                   |

@@ -32,18 +32,21 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
 		})
 
-		cesiumTest('should provide search via the Search tab in all contexts', async ({ cesiumPage }) => {
-			// The sidebar was refactored into tabs (Search / Layers / Analysis /
-			// Details); the old "Search & Navigate" section heading no longer
-			// exists. Search lives in the dedicated Search tab (#897).
-			const searchTab = cesiumPage.getByRole('tab', { name: 'Search' })
-			await expect(searchTab).toBeVisible()
-			await searchTab.click()
+		cesiumTest(
+			'should provide search via the Search tab in all contexts',
+			async ({ cesiumPage }) => {
+				// The sidebar was refactored into tabs (Search / Layers / Analysis /
+				// Details); the old "Search & Navigate" section heading no longer
+				// exists. Search lives in the dedicated Search tab (#897).
+				const searchTab = cesiumPage.getByRole('tab', { name: 'Search' })
+				await expect(searchTab).toBeVisible()
+				await searchTab.click()
 
-			// Search input should be visible once the Search tab is active
-			const searchInput = cesiumPage.getByRole('textbox', { name: /search/i })
-			await expect(searchInput.first()).toBeVisible()
-		})
+				// Search input should be visible once the Search tab is active
+				const searchInput = cesiumPage.getByRole('textbox', { name: /search/i })
+				await expect(searchInput.first()).toBeVisible()
+			}
+		)
 
 		cesiumTest('should display map layer controls in all contexts', async ({ cesiumPage }) => {
 			// The old "Map Controls" heading was removed in the tabbed-sidebar
@@ -55,43 +58,36 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 
 	cesiumTest.describe('View-Specific Panels', () => {
 		cesiumTest('should show Grid Options button only in Grid view', async ({ cesiumPage }) => {
-			// Grid Options renders in the Analysis tab (tabbed sidebar refactor);
-			// the view-mode toggle lives in the Layers tab, so switch back before
-			// navigating between views.
-			const analysisTab = cesiumPage.getByRole('tab', { name: 'Analysis' })
+			// Grid Options is a map tool and renders in the Layers tab, next to the
+			// view-mode toggle.
 			const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
+			await layersTab.click()
 
-			// Not visible in Capital Region view
-			await analysisTab.click()
-			await expect(cesiumPage.getByText('Grid Options')).toBeHidden()
+			// Not rendered in Capital Region view
+			await expect(cesiumPage.getByText('Grid Options')).toHaveCount(0)
 
 			// Switch to Grid view
-			await layersTab.click()
 			await helpers.navigateToView('gridView')
 
-			// Now visible as a button in the Analysis tab
-			await analysisTab.click()
+			// Now visible as a button in the Layers tab
 			await expect(cesiumPage.getByText('Grid Options')).toBeVisible()
 		})
 
 		cesiumTest(
 			'should show Climate Adaptation only in Grid view with heat index',
 			async ({ cesiumPage }) => {
-				// Climate Adaptation renders in the Analysis tab (tabbed sidebar refactor)
-				const analysisTab = cesiumPage.getByRole('tab', { name: 'Analysis' })
+				// Climate Adaptation is a map tool and renders in the Layers tab
 				const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
+				await layersTab.click()
 
-				// Not visible in Capital Region view
-				await analysisTab.click()
-				await expect(cesiumPage.getByText('Climate Adaptation')).toBeHidden()
+				// Not rendered in Capital Region view
+				await expect(cesiumPage.getByText('Climate Adaptation')).toHaveCount(0)
 
 				// Switch to Grid view — Climate Adaptation is visible because
 				// statsIndex defaults to 'heat_index' and coolingOptimizer flag defaults to true
-				await layersTab.click()
 				await helpers.navigateToView('gridView')
 
 				// Climate Adaptation should now be visible as an expansion panel
-				await analysisTab.click()
 				await expect(cesiumPage.getByText('Climate Adaptation')).toBeVisible()
 			}
 		)

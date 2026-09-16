@@ -2033,7 +2033,8 @@ export class AccessibilityTestHelpers {
 		const { currentView = 'capitalRegion', currentLevel = 'start', hasData = true } = conditions
 
 		// Test Climate Adaptation panel (grid view — statsIndex defaults to heat_index,
-		// coolingOptimizer flag defaults to true, so visible whenever grid view is active)
+		// coolingOptimizer flag defaults to true, so visible whenever grid view is active).
+		// It and Grid Options render in the Layers tab, the sidebar's default tab.
 		if (currentView === 'grid') {
 			await expect(this.page.getByText('Climate Adaptation')).toBeVisible()
 		} else {

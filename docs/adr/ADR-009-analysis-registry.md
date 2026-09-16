@@ -36,6 +36,7 @@ Two further facts shape the design:
 | `label`           | Button text; this is the accessible name the E2E specs use to locate the button        |
 | `title`           | Card header, defaulting to `label`                                                     |
 | `icon`            | MDI icon                                                                               |
+| `tab`             | Sidebar tab it is listed in: `analysis`, or `layers` for map tools                     |
 | `levels`, `views` | Where it is offered; `views: null` means any view                                      |
 | `flag`            | Gating feature flag, or `null`                                                         |
 | `requires`        | Extra precondition over an `AnalysisContext` (loaded data, `statsIndex`), or `null`    |
@@ -70,7 +71,11 @@ No full-page placement exists yet, so the constraint is recorded rather than enf
 
 ### Placement `expansion`
 
-Climate Adaptation renders as an expansion panel rather than a button. The registry expresses this as `placement: 'expansion'`, which keeps the change free of visual differences. It is expected to go when tool entries move to the Layers tab.
+Climate Adaptation renders as an expansion panel rather than a button. The registry expresses this as `placement: 'expansion'`, which keeps the change free of visual differences.
+
+### Tab
+
+Entries with `mapCoupling: 'tool'` (Grid Options, Climate Adaptation) are listed in the Layers tab, next to the view switcher that reveals them; all others are in the Analysis tab. `AnalysisEntryList.vue` renders either tab's entries. Moving an entry between tabs is a one-field change.
 
 ## Consequences
 
