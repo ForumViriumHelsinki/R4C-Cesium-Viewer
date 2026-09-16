@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.58.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.57.0...r4c-cesium-viewer-v1.58.0) (2026-09-16)
+
+
+### Features
+
+* **sidebar:** move Grid Options and Climate Adaptation to the Layers tab ([#986](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/986)) ([fbbf754](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/fbbf754aeb7b99ac3a296416409222c231723b8a))
+
+
+### Bug Fixes
+
+* **analysis:** size charts to their container and keep the map visible ([#978](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/978)) ([a5bdbb9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a5bdbb91733ebb3dc054b7a133308f82721a16cc))
+
 ## [1.57.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.56.3...r4c-cesium-viewer-v1.57.0) (2026-09-16)
 
 
