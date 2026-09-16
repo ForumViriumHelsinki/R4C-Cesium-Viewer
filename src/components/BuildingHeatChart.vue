@@ -1,9 +1,13 @@
 <template>
-	<div id="buildingChartContainer" />
+	<div
+		id="buildingChartContainer"
+		ref="containerRef"
+	/>
 </template>
 
 <script>
-import { onMounted, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useChartSize } from '../composables/useChartSize.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -13,6 +17,15 @@ export default {
 		const store = useGlobalStore()
 		const propsStore = usePropsStore()
 		const plotService = new Plot()
+		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
+		const {
+			width: chartWidth,
+			height: chartHeight,
+			cleanup,
+		} = useChartSize(containerRef, {
+			aspect: 1.5,
+			onResize: () => createBuildingBarChart(),
+		})
 
 		// Create building heat chart
 		const createBuildingBarChart = () => {
@@ -25,12 +38,14 @@ export default {
 			if (buildingHeatExposure == null || address == null || postinumero == null) {
 				return
 			}
+			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
+			if (chartWidth.value === 0) return
 
 			plotService.initializePlotContainer('buildingChartContainer')
 
 			const margin = { top: 40, right: 40, bottom: 30, left: 30 }
-			const width = store.navbarWidth - margin.left - margin.right
-			const height = 200 - margin.top - margin.bottom
+			const width = chartWidth.value - margin.left - margin.right
+			const height = chartHeight.value - margin.top - margin.bottom
 
 			const svg = plotService.createSVGElement(margin, width, height, '#buildingChartContainer')
 			const xScale = plotService.createScaleBand([address, postinumero], width)
@@ -91,7 +106,9 @@ export default {
 			createBuildingBarChart()
 		})
 
-		return {}
+		onBeforeUnmount(cleanup)
+
+		return { containerRef }
 	},
 }
 </script>
@@ -100,6 +117,5 @@ export default {
 #buildingChartContainer {
 	position: relative;
 	width: 100%;
-	height: 200px;
 }
 </style>

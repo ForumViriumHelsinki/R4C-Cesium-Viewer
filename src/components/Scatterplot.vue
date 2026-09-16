@@ -1,37 +1,34 @@
 <template>
-	<div
-		id="scatterPlotContainer"
-		ref="containerRef"
-	/>
-
-	<select
-		ref="numericalSelect"
-		v-model="numericalValue"
-	>
-		<option value="measured_height">height</option>
-		<option value="c_valmpvm">age</option>
-		<option value="area_m2">area</option>
-		<option value="i_raktilav">volume</option>
-	</select>
-
-	<select
-		ref="categoricalSelect"
-		v-model="categoricalValue"
-	>
-		<option value="c_julkisivu">facade material</option>
-		<option value="c_rakeaine">building material</option>
-		<option value="roof_type">roof type</option>
-		<option value="roof_median_color">roof median color</option>
-		<option value="roof_mode_color">roof mode color</option>
-		<option value="kayttotarkoitus">usage</option>
-		<option value="tyyppi">type</option>
-		<option value="c_lammtapa">heating method</option>
-		<option value="c_poltaine">heating source</option>
-	</select>
+	<div class="scatter-plot">
+		<div class="d-flex ga-2 mb-2">
+			<v-select
+				v-model="numericalValue"
+				:items="numericalOptions"
+				label="X axis"
+				density="compact"
+				variant="underlined"
+				hide-details
+			/>
+			<v-select
+				v-model="categoricalValue"
+				:items="categoricalOptions"
+				label="Colour by"
+				density="compact"
+				variant="underlined"
+				hide-details
+			/>
+		</div>
+		<div
+			id="scatterPlotContainer"
+			ref="containerRef"
+		/>
+	</div>
 </template>
 
 <script>
+import { ref } from 'vue'
 import * as d3 from '@/utils/d3' // Import D3.js
+import { useChartSize } from '../composables/useChartSize.js'
 import { DATES } from '../constants/dates.js'
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
@@ -40,9 +37,41 @@ import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 
+/** Option `title`s are the attribute names shown in the tooltip and legend. */
+const NUMERICAL_OPTIONS = [
+	{ title: 'height', value: 'measured_height' },
+	{ title: 'age', value: 'c_valmpvm' },
+	{ title: 'area', value: 'area_m2' },
+	{ title: 'volume', value: 'i_raktilav' },
+]
+
+const CATEGORICAL_OPTIONS = [
+	{ title: 'facade material', value: 'c_julkisivu' },
+	{ title: 'building material', value: 'c_rakeaine' },
+	{ title: 'roof type', value: 'roof_type' },
+	{ title: 'roof median color', value: 'roof_median_color' },
+	{ title: 'roof mode color', value: 'roof_mode_color' },
+	{ title: 'usage', value: 'kayttotarkoitus' },
+	{ title: 'type', value: 'tyyppi' },
+	{ title: 'heating method', value: 'c_lammtapa' },
+	{ title: 'heating source', value: 'c_poltaine' },
+]
+
 export default {
+	setup() {
+		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
+		// onResize is wired in mounted(), once the Options API instance exists.
+		const resizeHandler = { redraw: () => {} }
+		const chartSize = useChartSize(containerRef, {
+			aspect: 1.5,
+			onResize: () => resizeHandler.redraw(),
+		})
+		return { containerRef, chartSize, resizeHandler }
+	},
 	data() {
 		return {
+			numericalOptions: NUMERICAL_OPTIONS,
+			categoricalOptions: CATEGORICAL_OPTIONS,
 			// Vue reactive properties for dropdown selections
 			numericalValue: 'measured_height',
 			categoricalValue: 'c_julkisivu',
@@ -72,6 +101,7 @@ export default {
 		this.store = useGlobalStore()
 		this.toggleStore = useToggleStore()
 		this.plotService = new Plot()
+		this.resizeHandler.redraw = () => this.newScatterPlot()
 
 		// Subscribe to eventBus updates. mitt's `on()` returns void, so build an
 		// explicit unsubscribe closure that calls `off()` with the same handler
@@ -87,6 +117,7 @@ export default {
 		if (this.unsubscribe) {
 			this.unsubscribe()
 		}
+		this.chartSize.cleanup()
 	},
 	methods: {
 		newScatterPlot() {
@@ -102,6 +133,8 @@ export default {
 		 *
 		 * */
 		selectAttributeForScatterPlot() {
+			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
+			if (this.chartSize.width.value === 0) return
 			const urbanHeatDataAndMaterial = []
 
 			// Process the entities in the buildings data source and populate the urbanHeatDataAndMaterial array with scatter plot data
@@ -239,19 +272,17 @@ export default {
 		},
 
 		/**
-		 * Returns the selected text of a dropdown menu using Vue refs.
+		 * Returns the display name of the selected option in a dropdown.
 		 *
-		 * @param { string } refName - The name of the Vue ref ('numericalSelect' or 'categoricalSelect')
-		 * @returns { string | null } The selected text of the dropdown menu, or null if no option is selected.
+		 * @param { 'numericalSelect' | 'categoricalSelect' } selectName - Which dropdown to read
+		 * @returns { string | null } The selected option's title, or null if nothing matches.
 		 */
-		getSelectedText(refName) {
-			const elt = /** @type {HTMLSelectElement | undefined} */ (this.$refs[refName])
-
-			if (!elt || elt.selectedIndex === -1) {
-				return null
-			}
-
-			return elt.options[elt.selectedIndex].text
+		getSelectedText(selectName) {
+			const [options, value] =
+				selectName === 'numericalSelect'
+					? [this.numericalOptions, this.numericalValue]
+					: [this.categoricalOptions, this.categoricalValue]
+			return options.find((option) => option.value === value)?.title ?? null
 		},
 
 		/**
@@ -364,6 +395,7 @@ export default {
 				.attr('cy', (d) => yScale(d.yData))
 				.attr('r', 2)
 				.style('fill', (d) => colorScale(d.name))
+				.style('cursor', 'pointer')
 				.on('mouseover', (event, d) =>
 					this.plotService.handleMouseover(
 						tooltip,
@@ -453,8 +485,8 @@ export default {
 			)
 
 			const margin = { top: 25, right: 190, bottom: 18, left: 28 }
-			const width = this.store.navbarWidth - margin.left - margin.right
-			const height = 300 - margin.top - margin.bottom
+			const width = this.chartSize.width.value - margin.left - margin.right
+			const height = this.chartSize.height.value - margin.top - margin.bottom
 
 			// Initialize the SVG element
 			const svg = this.plotService.createSVGElement(margin, width, height, '#scatterPlotContainer')
@@ -503,25 +535,10 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 #scatterPlotContainer {
 	position: relative;
 	width: 100%;
-	height: 300px;
 	background-color: rgb(var(--v-theme-surface));
-}
-
-#categoricalSelect {
-	position: absolute;
-	top: 65px; /* Adjusted position to match scatter plot container */
-	right: 15%;
-	font-size: smaller;
-}
-
-#numericalSelect {
-	position: absolute;
-	bottom: 0px;
-	right: 18%; /* Adjusted position to match scatter plot container */
-	font-size: smaller;
 }
 </style>

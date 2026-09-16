@@ -40,6 +40,12 @@ vi.mock('@/services/plot.js', () => {
 	return { default: Plot }
 })
 
+// jsdom has no layout, so a real measurement is 0 and the chart would skip
+// drawing — which would make every guard below pass without being exercised.
+vi.mock('@/composables/useChartSize.js', () => ({
+	useChartSize: () => ({ width: { value: 400 }, height: { value: 250 }, cleanup: vi.fn() }),
+}))
+
 // Stub eventBus — the component subscribes on mount; we don't need the real one.
 vi.mock('@/services/eventEmitter.js', () => ({
 	eventBus: { on: vi.fn(), off: vi.fn(), emit: vi.fn() },
@@ -53,7 +59,6 @@ vi.mock('@/stores/globalStore.js', () => ({
 		postalcode: '00100',
 		view: 'helsinki',
 		nameOfZone: 'Test Zone',
-		navbarWidth: 400,
 		averageHeatExposure: 0.5,
 	}),
 }))
@@ -145,6 +150,7 @@ describe('SocioEconomicsChart — undefined data guards', { tags: ['@unit'] }, (
 				attachTo: document.body,
 			})
 		}).not.toThrow()
+		expect(heatExposureGetDataById).toHaveBeenCalled()
 	})
 
 	it('does not throw when the heat-exposure entry exists but has no properties', () => {
@@ -157,6 +163,7 @@ describe('SocioEconomicsChart — undefined data guards', { tags: ['@unit'] }, (
 				attachTo: document.body,
 			})
 		}).not.toThrow()
+		expect(heatExposureGetDataById).toHaveBeenCalled()
 	})
 
 	it('does not throw when socioEconomicsStore.getDataByNimi returns undefined (#733)', () => {
@@ -171,5 +178,6 @@ describe('SocioEconomicsChart — undefined data guards', { tags: ['@unit'] }, (
 				attachTo: document.body,
 			})
 		}).not.toThrow()
+		expect(socioEconomicsGetDataByNimi).toHaveBeenCalled()
 	})
 })

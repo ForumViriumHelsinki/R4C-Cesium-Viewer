@@ -37,13 +37,6 @@ describe('globalStore', () => {
 				max: 332.274230957,
 			})
 		})
-
-		it('should calculate navbar width correctly', () => {
-			const store = useGlobalStore()
-			const expectedWidth = Math.min(Math.max(window.innerWidth * 0.375, 400), 800)
-
-			expect(store.navbarWidth).toBe(expectedWidth)
-		})
 	})
 
 	describe('actions', () => {

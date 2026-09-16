@@ -1,10 +1,14 @@
 <template>
-	<div id="heatHistogramContainer" />
+	<div
+		id="heatHistogramContainer"
+		ref="containerRef"
+	/>
 </template>
 
 <script>
-import { nextTick, onBeforeUnmount, onMounted } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import * as d3 from '@/utils/d3' // Import D3.js
+import { useChartSize } from '../composables/useChartSize.js'
 import Building from '../services/building.js'
 import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
@@ -25,7 +29,7 @@ import { usePropsStore } from '../stores/propsStore.js'
  * - Clickable bars to highlight corresponding buildings on the 3D map
  * - Tooltip on hover showing temperature ranges and building counts
  * - Dynamic title with hyperlink to data source information
- * - Responsive sizing based on navbar width
+ * - Sized to its container's width (see useChartSize)
  * - Automatic updates via event bus
  *
  * **Data Modes:**
@@ -34,7 +38,7 @@ import { usePropsStore } from '../stores/propsStore.js'
  * - Cold wave data (2021-02-18) - Uses inverted color palette
  *
  * **Store Integration:**
- * - `globalStore` - View level, navbar width, heat data date, temperature ranges
+ * - `globalStore` - View level, heat data date, temperature ranges
  * - `propsStore` - Heat histogram data (temperature values for all buildings)
  *
  * **Service Integration:**
@@ -57,6 +61,15 @@ export default {
 		const store = useGlobalStore()
 		const plotService = new Plot()
 		const propsStore = usePropsStore()
+		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
+		const {
+			width: chartWidth,
+			height: chartHeight,
+			cleanup,
+		} = useChartSize(containerRef, {
+			aspect: 1.2,
+			onResize: () => newHeatHistogram(),
+		})
 
 		/**
 		 * Creates histogram bars with D3.js
@@ -87,6 +100,7 @@ export default {
 				.attr('width', (d) => Math.max(0, xScale(d.x1) - xScale(d.x0))) // Adjust width for the bars
 				.attr('height', (d) => Math.max(0, height - yScale(d.length))) // Ensure no negative heights
 				.attr('fill', (d) => rgbColor(d)) // Assuming you have a function for coloring bars
+				.style('cursor', 'pointer')
 				.on('mouseover', (event, d) =>
 					plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter)
 				)
@@ -188,14 +202,15 @@ export default {
 		 * @returns {void}
 		 */
 		const createHistogram = () => {
+			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
+			if (chartWidth.value === 0) return
 			const urbanHeatData = /** @type {number[]} */ (propsStore.heatHistogramData ?? [])
 
 			plotService.initializePlotContainerForGrid('heatHistogramContainer')
 
-			// Get the container's actual width and height dynamically
 			const margin = { top: 30, right: 50, bottom: 34, left: 30 }
-			const width = store.navbarWidth - margin.left - margin.right // Use container width
-			const height = 250 - margin.top - margin.bottom // Use container height
+			const width = chartWidth.value - margin.left - margin.right
+			const height = chartHeight.value - margin.top - margin.bottom
 
 			const svg = plotService.createSVGElement(margin, width, height, '#heatHistogramContainer')
 
@@ -289,17 +304,17 @@ export default {
 		})
 
 		onBeforeUnmount(() => {
-			eventBus.off('newHeatHistogram')
+			eventBus.off('newHeatHistogram', createHistogram)
+			cleanup()
 		})
 
-		return {}
+		return { containerRef }
 	},
 }
 </script>
 
 <style scoped>
 #heatHistogramContainer {
-	height: 220px;
 	width: 100%;
 	position: relative;
 	background-color: rgb(var(--v-theme-surface));

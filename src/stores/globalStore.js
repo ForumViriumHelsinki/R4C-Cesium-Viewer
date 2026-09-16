@@ -47,7 +47,6 @@ import { markRaw } from 'vue'
  * @property {boolean} isLoading - Global loading indicator state
  * @property {boolean} showBuildingInfo - Toggle building info panel visibility
  * @property {boolean} isCameraRotated - Camera 180° rotation state flag
- * @property {number} navbarWidth - Navigation drawer width in pixels (responsive, 400-800px)
  * @property {Object} clickProcessingState - Map click processing lifecycle state (Phase 3 enhanced)
  * @property {boolean} clickProcessingState.isProcessing - Whether a click is being processed
  * @property {string|null} clickProcessingState.postalCode - Target postal code being loaded
@@ -109,7 +108,6 @@ export const useGlobalStore = defineStore('global', {
 		isLoading: false,
 		showBuildingInfo: true,
 		isCameraRotated: false,
-		navbarWidth: Math.min(Math.max(window.innerWidth * 0.375, 400), 800),
 		clickProcessingState: {
 			isProcessing: false,
 			postalCode: null,

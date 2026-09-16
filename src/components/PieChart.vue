@@ -1,11 +1,15 @@
 <!-- Piechart.vue -->
 <template>
-	<div id="pieChartContainer" />
+	<div
+		id="pieChartContainer"
+		ref="containerRef"
+	/>
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import * as d3 from '@/utils/d3'
+import { useChartSize } from '../composables/useChartSize.js'
 import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
@@ -17,7 +21,22 @@ const backgroundMapStore = useBackgroundMapStore()
 const globalStore = useGlobalStore()
 const propsStore = usePropsStore()
 
+const containerRef = ref(/** @type {HTMLElement | null} */ (null))
+const {
+	width: chartWidth,
+	height: chartHeight,
+	cleanup,
+} = useChartSize(containerRef, {
+	aspect: 1.4,
+	// Only redraw a chart that exists: the first draw waits for the area select.
+	onResize: () => {
+		if (containerRef.value?.querySelector('svg')) recreatePieChart()
+	},
+})
+
 const createPieChart = () => {
+	// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
+	if (chartWidth.value === 0) return
 	const datasource = propsStore.postalCodeData
 	// nameOfZone is stored as a plain string (already unwrapped from the Cesium
 	// property's ._value at the call site in featurepicker). Reading ._value here
@@ -65,9 +84,11 @@ const createPieChart = () => {
 	const secondData = getLandCoverDataForArea(area, year, datasource)
 
 	const margin = { top: 10, right: 10, bottom: 10, left: 10 }
-	const width = globalStore.navbarWidth - margin.left - margin.right
-	const height = 220 - margin.top - margin.bottom
-	const radius = Math.min(width, height) / 3 // Adjust as needed
+	const width = chartWidth.value - margin.left - margin.right
+	const height = chartHeight.value - margin.top - margin.bottom
+	// Two pies side by side, each centred in its half, below the two-line title.
+	const titleHeight = 30
+	const radius = Math.max(0, Math.min(width / 4, (height - titleHeight) / 2) - 4)
 
 	/**
 	 * @typedef {{ value: number, label: string, zone: string }} PieDatum
@@ -90,9 +111,9 @@ const createPieChart = () => {
 	const svg = plotService.createSVGElement(margin, width, height, '#pieChartContainer')
 
 	// Translate pies to be centered vertically and positioned horizontally
-	const xOffsetFirstPie = width / 6.5 // Keeps existing horizontal positioning for the first pie
-	const xOffsetSecondPie = width / 1.8 // Keeps existing horizontal positioning for the second pie
-	const yOffset = height / 1.6 // New: Centers pies vertically
+	const xOffsetFirstPie = width / 4
+	const xOffsetSecondPie = (width * 3) / 4
+	const yOffset = titleHeight + (height - titleHeight) / 2
 
 	// Initialize tooltip using the Plot service
 	const tooltip = plotService.createTooltip('#pieChartContainer')
@@ -221,5 +242,14 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	clearPieChart()
 	eventBus.off('recreate piechart', recreatePieChart)
+	cleanup()
 })
 </script>
+
+<style scoped>
+#pieChartContainer {
+	position: relative;
+	width: 100%;
+	background-color: rgb(var(--v-theme-surface));
+}
+</style>

@@ -150,7 +150,9 @@ export default class Plot {
 			.append('foreignObject')
 			.attr('x', 0 - left) // Adjust horizontal position
 			.attr('y', 0 - top) // Adjust vertical position
-			.attr('width', 4000) // Width of the foreignObject
+			// Percentages resolve against the SVG viewBox, so the title wraps at the
+			// chart's right edge instead of running past it and being clipped.
+			.attr('width', '100%')
 			.attr('height', 40) // Height of the foreignObject
 			.append('xhtml:div') // Append a div as a child of the foreignObject
 			.style('font-size', '12px')
@@ -158,17 +160,35 @@ export default class Plot {
 			.html(title) // Insert the HTML content (including the link)
 	}
 
-	// 1. Initialize SVG and Background
+	/**
+	 * Appends a scalable SVG to the container and returns its inner plot group.
+	 *
+	 * The SVG carries a `viewBox` in chart coordinates and renders at 100% of its
+	 * container's width, so a chart drawn for one width scales to fit instead of
+	 * being clipped when the container is narrower. Draw at the container's
+	 * measured width (see `useChartSize`) to keep text at its authored size.
+	 *
+	 * @param {{ top: number, right: number, bottom: number, left: number }} margin
+	 * @param {number} width - Plot area width, excluding margins
+	 * @param {number} height - Plot area height, excluding margins
+	 * @param {*} container - Selector or element to append to
+	 * @returns {import('@/utils/d3').Selection<SVGGElement, unknown, HTMLElement, any>}
+	 */
 	createSVGElement(margin, width, height, container) {
 		// Ensure width and height are non-negative
 		const validatedWidth = Math.max(0, width)
 		const validatedHeight = Math.max(0, height)
+		const outerWidth = validatedWidth + margin.left + margin.right
+		const outerHeight = validatedHeight + margin.top + margin.bottom
 
 		const svg = d3
 			.select(container)
 			.append('svg')
-			.attr('width', validatedWidth + margin.left + margin.right)
-			.attr('height', validatedHeight + margin.top + margin.bottom)
+			.attr('viewBox', `0 0 ${outerWidth} ${outerHeight}`)
+			.attr('preserveAspectRatio', 'xMinYMin meet')
+			.style('display', 'block')
+			.style('width', '100%')
+			.style('height', 'auto')
 			.append('g')
 			.attr('transform', `translate(${margin.left}, ${margin.top})`)
 
@@ -228,14 +248,16 @@ export default class Plot {
 		const xPos = event.pageX - containerRect.left
 		const yPos = event.pageY - containerRect.top
 
-		tooltip.transition().duration(200).style('opacity', 0.9)
+		// No transition: @/utils/d3 does not re-export d3-transition, so
+		// `selection.transition` is undefined and calling it throws.
 		tooltip
+			.style('opacity', 0.9)
 			.html(dataFormatter(d))
 			.style('left', `${xPos - 80}px`)
 			.style('top', `${yPos - 100}px`)
 	}
 
 	handleMouseout(tooltip) {
-		tooltip.transition().duration(200).style('opacity', 0)
+		tooltip.style('opacity', 0)
 	}
 }

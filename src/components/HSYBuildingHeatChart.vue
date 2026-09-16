@@ -17,6 +17,7 @@
 		<!-- Container for the HSY Building Chart -->
 		<div
 			id="hsyBuildingChartContainer"
+			ref="containerRef"
 			class="chart-container"
 		/>
 
@@ -28,7 +29,8 @@
 </template>
 
 <script>
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useChartSize } from '../composables/useChartSize.js'
 import ColdArea from '../services/coldarea.js'
 import Datasource from '../services/datasource.js'
 import Plot from '../services/plot.js'
@@ -48,6 +50,15 @@ export default {
 		const toggleStore = useToggleStore()
 		const plotService = new Plot()
 		const coldAreaService = new ColdArea()
+		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
+		const {
+			width: chartWidth,
+			height: chartHeight,
+			cleanup,
+		} = useChartSize(containerRef, {
+			aspect: 1.2,
+			onResize: () => createHSYBuildingBarChart(),
+		})
 
 		const hideColdAreasChecked = ref(toggleStore.hideColdAreas)
 		const coldAreasLoaded = ref(false) // To track if cold areas are loaded
@@ -63,6 +74,8 @@ export default {
 			if (!buildingHeatExposure) {
 				return
 			}
+			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
+			if (chartWidth.value === 0) return
 			const postalcodeHeatTimeseries = propsStore.postalcodeHeatTimeseries
 			const address = store.buildingAddress
 			const postinumero = store.postalcode
@@ -72,8 +85,8 @@ export default {
 			const postalCodeHeat = createPostalCodeTimeseries(postalcodeHeatTimeseries)
 
 			const margin = { top: 45, right: 10, bottom: 18, left: 20 }
-			const width = store.navbarWidth - margin.left - margin.right
-			const height = 250 - margin.top - margin.bottom
+			const width = chartWidth.value - margin.left - margin.right
+			const height = chartHeight.value - margin.top - margin.bottom
 
 			const svg = plotService.createSVGElement(margin, width, height, '#hsyBuildingChartContainer')
 
@@ -119,7 +132,7 @@ export default {
 				{ name: address, color: 'orange' },
 				{ name: `Average of ${postinumero}`, color: 'steelblue' },
 			]
-			const legendX = margin.left + store.navbarWidth / 2.5
+			const legendX = margin.left + chartWidth.value / 2.5
 			const legendY = margin.top - 87
 
 			const legend = svg.append('g').attr('transform', `translate(${legendX}, ${legendY})`)
@@ -249,7 +262,10 @@ export default {
 			newHSYBuildingHeat()
 		})
 
+		onBeforeUnmount(cleanup)
+
 		return {
+			containerRef,
 			hideColdAreasChecked,
 			hideColdAreas,
 			coldAreasLoaded, // Return the variable to control toggle visibility
@@ -276,9 +292,6 @@ export default {
 .chart-container {
 	position: relative;
 	width: 100%;
-	height: 300px;
-	flex: 1;
-	min-height: 250px;
 }
 
 .timeline-section {

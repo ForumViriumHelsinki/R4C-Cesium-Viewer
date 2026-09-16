@@ -1,10 +1,14 @@
 <template>
-	<div id="scatterPlotContainerHSY" />
+	<div
+		id="scatterPlotContainerHSY"
+		ref="containerRef"
+	/>
 </template>
 
 <script>
-import { onBeforeUnmount, onMounted } from 'vue' // Import lifecycle hooks
+import { onBeforeUnmount, onMounted, ref } from 'vue' // Import lifecycle hooks
 import * as d3 from '@/utils/d3'
+import { useChartSize } from '../composables/useChartSize.js'
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
 import { eventBus } from '../services/eventEmitter.js'
@@ -20,6 +24,15 @@ export default {
 		const propsStore = usePropsStore()
 		const plotService = new Plot()
 		const buildingService = new Building()
+		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
+		const {
+			width: chartWidth,
+			height: chartHeight,
+			cleanup,
+		} = useChartSize(containerRef, {
+			aspect: 1.55,
+			onResize: () => updateHSYScatterPlot(),
+		})
 
 		// Function to add plot elements
 		const addPlotElements = (svg, heatData, xScale, yScale, colorScale) => {
@@ -35,6 +48,7 @@ export default {
 				.attr('cy', (d) => yScale(d.yData))
 				.attr('r', 2)
 				.style('fill', (d) => colorScale(d.name))
+				.style('cursor', 'pointer')
 				.on('mouseover', (event, d) =>
 					plotService.handleMouseover(
 						tooltip,
@@ -116,9 +130,11 @@ export default {
 
 			const { heatData, labelsWithAverage, values } = prepareDataForPlot(features)
 
+			// The right margin holds the legend: one 40px row per category.
 			const margin = { top: 50, right: 175, bottom: 16, left: 28 }
-			const width = globalStore.navbarWidth - margin.left - margin.right
-			const height = 290 - margin.top - margin.bottom
+			const width = chartWidth.value - margin.left - margin.right
+			const legendHeight = values.length * 40
+			const height = Math.max(chartHeight.value - margin.top - margin.bottom, legendHeight)
 
 			const svg = plotService.createSVGElement(margin, width, height, '#scatterPlotContainerHSY')
 			const xScale = plotService.createScaleLinear(
@@ -257,6 +273,8 @@ export default {
 		}
 
 		const updateHSYScatterPlot = () => {
+			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
+			if (chartWidth.value === 0) return
 			const urbanHeatDataAndMaterial = []
 			processEntitiesForHSYScatterPlot(urbanHeatDataAndMaterial)
 			createHSYScatterPlot(urbanHeatDataAndMaterial)
@@ -270,11 +288,21 @@ export default {
 
 		onBeforeUnmount(() => {
 			eventBus.off('updateScatterPlot', updateHSYScatterPlot) // Clean up event listener on unmount
+			cleanup()
 		})
 
 		return {
+			containerRef,
 			updateHSYScatterPlot,
 		}
 	},
 }
 </script>
+
+<style scoped>
+#scatterPlotContainerHSY {
+	position: relative;
+	width: 100%;
+	background-color: rgb(var(--v-theme-surface));
+}
+</style>

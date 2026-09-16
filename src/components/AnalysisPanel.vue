@@ -4,6 +4,7 @@
 		:width="panelWidth"
 		location="right"
 		temporary
+		:scrim="false"
 		class="analysis-panel"
 		@update:model-value="$emit('update:modelValue', $event)"
 	>
@@ -44,6 +45,7 @@
 <script setup>
 import { computed, defineAsyncComponent } from 'vue'
 import { useDisplay } from 'vuetify'
+import { LAYOUT } from '../constants/layout.js'
 import { useGlobalStore } from '../stores/globalStore'
 
 const props = defineProps({
@@ -58,15 +60,15 @@ const { smAndDown } = useDisplay()
 const globalStore = useGlobalStore()
 const currentView = computed(() => globalStore.view)
 
-const panelWidth = computed(() => (smAndDown.value ? '100%' : 480))
+const panelWidth = computed(() => (smAndDown.value ? '100%' : LAYOUT.ANALYSIS_PANEL_WIDTH))
 const config = computed(() => props.analysisConfig[props.analysisType])
 
 // Lazy-loaded chart components
 const componentMap = {
-	socioeconomics: defineAsyncComponent(() => import('../views/SocioEconomics.vue')),
-	'scatter-plot-default': defineAsyncComponent(() => import('../views/BuildingScatterPlot.vue')),
-	'scatter-plot-helsinki': defineAsyncComponent(() => import('../components/Scatterplot.vue')),
-	'ndvi-analysis': defineAsyncComponent(() => import('../views/PostalCodeNDVI.vue')),
+	socioeconomics: defineAsyncComponent(() => import('./SocioEconomicsPanel.vue')),
+	'scatter-plot-default': defineAsyncComponent(() => import('./BuildingScatterPlotPanel.vue')),
+	'scatter-plot-helsinki': defineAsyncComponent(() => import('./Scatterplot.vue')),
+	'ndvi-analysis': defineAsyncComponent(() => import('./NDVIPanel.vue')),
 }
 
 const activeComponent = computed(() => {
