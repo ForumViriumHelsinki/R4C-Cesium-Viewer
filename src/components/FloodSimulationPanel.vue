@@ -131,6 +131,13 @@
 			icon="mdi-alert-circle-outline"
 		>
 			{{ store.error }}
+			<div
+				v-if="!syntheticData"
+				class="text-caption mt-1"
+			>
+				Enable the "VTT Flood Synthetic Data" feature flag to preview the panel with locally
+				generated frames while the API is unavailable.
+			</div>
 		</v-alert>
 	</div>
 </template>
