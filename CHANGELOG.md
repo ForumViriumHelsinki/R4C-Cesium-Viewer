@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.56.3...r4c-cesium-viewer-v1.57.0) (2026-09-16)
+
+
+### Features
+
+* **vtt-flood:** name the synthetic-data flag in the panel error ([#974](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/974)) ([c7366fb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c7366fb05473b60ef576e9c3edacda3c6fb6a739))
+
 ## [1.56.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.56.2...r4c-cesium-viewer-v1.56.3) (2026-09-08)
 
 
