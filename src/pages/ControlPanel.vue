@@ -150,164 +150,46 @@
 								}}
 							</p>
 							<div class="analysis-buttons">
-								<template v-if="currentLevel === 'postalCode'">
-									<!-- Analysis buttons gate on the feature flag only; data loads on click (#712). -->
-									<v-btn
-										v-if="featureFlagStore.isEnabled('heatHistogram')"
-										block
-										variant="outlined"
-										prepend-icon="mdi-chart-histogram"
-										@click="openAnalysis('heat-histogram', 'small')"
-									>
-										Heat Distribution
-									</v-btn>
-									<v-btn
-										v-if="showSosEco && featureFlagStore.isEnabled('socioeconomicViz')"
-										block
-										variant="outlined"
-										prepend-icon="mdi-account-group"
-										@click="openAnalysis('socioeconomics', 'large')"
-									>
-										Socioeconomics
-									</v-btn>
-									<v-btn
-										v-if="currentView !== 'helsinki' && featureFlagStore.isEnabled('landCover')"
-										block
-										variant="outlined"
-										prepend-icon="mdi-leaf"
-										@click="openAnalysis('landcover', 'small')"
-									>
-										Land Cover
-									</v-btn>
-									<v-btn
-										v-if="featureFlagStore.isEnabled('buildingScatterPlot')"
-										block
-										variant="outlined"
-										prepend-icon="mdi-chart-scatter-plot"
-										@click="openAnalysis('scatter-plot', 'large')"
-									>
-										Building Analysis
-									</v-btn>
-									<v-btn
-										v-if="featureFlagStore.isEnabled('ndviAnalysis')"
-										block
-										variant="outlined"
-										prepend-icon="mdi-leaf"
-										@click="openAnalysis('ndvi-analysis', 'large')"
-									>
-										NDVI Vegetation
-									</v-btn>
-								</template>
-								<template v-if="currentLevel === 'building'">
-									<v-btn
-										block
-										variant="outlined"
-										prepend-icon="mdi-thermometer"
-										@click="openAnalysis('building-heat', 'small')"
-									>
-										Building Heat Data
-									</v-btn>
-								</template>
-
-								<template v-if="currentView === 'grid'">
+								<!-- Buttons and panels come from src/constants/analysisRegistry.js.
+								     Buttons gate on flags only; data loads on click (#712). -->
+								<template
+									v-for="entry in availableAnalyses"
+									:key="entry.id"
+								>
 									<v-expansion-panels
-										v-if="statsIndex === 'heat_index' && featureFlagStore.isEnabled('coolingOptimizer')"
+										v-if="entry.placement === 'expansion'"
 										class="expansion-outlined"
 									>
 										<v-expansion-panel>
 											<v-expansion-panel-title>
-												<v-icon class="mr-2">mdi-shield-sun</v-icon>
-												Climate Adaptation
+												<v-icon class="mr-2">{{ entry.icon }}</v-icon>
+												{{ entry.label }}
 											</v-expansion-panel-title>
 											<v-expansion-panel-text class="pa-0">
-												<v-tabs
-													v-model="adaptationTab"
-													grow
-												>
-													<v-tab
-														value="centers"
-														:stacked="true"
-														class="text-none"
-													>
-														Cooling Centers
-													</v-tab>
-													<v-tab
-														value="optimizer"
-														:stacked="true"
-														class="text-none"
-													>
-														Optimizer
-													</v-tab>
-													<v-tab
-														value="parks"
-														:stacked="true"
-														class="text-none"
-													>
-														Parks
-													</v-tab>
-												</v-tabs>
-												<v-window v-model="adaptationTab">
-													<v-window-item
-														value="centers"
-														class="pa-1"
-													>
-														<CoolingCenter />
-													</v-window-item>
-													<v-window-item
-														value="optimizer"
-														class="pa-1"
-													>
-														<CoolingCenterOptimiser />
-													</v-window-item>
-													<v-window-item
-														value="parks"
-														class="pa-1"
-													>
-														<LandcoverToParks />
-													</v-window-item>
-												</v-window>
-												<div class="pa-2 mt-2">
-													<EstimatedImpacts />
-												</div>
+												<component :is="entry.component(currentView)" />
 											</v-expansion-panel-text>
 										</v-expansion-panel>
 									</v-expansion-panels>
-
 									<v-btn
+										v-else
 										block
 										variant="outlined"
-										prepend-icon="mdi-grid"
-										@click="openAnalysis('grid-options', 'small')"
+										:prepend-icon="entry.icon"
+										@click="openAnalysis(entry)"
 									>
-										Grid Options
+										{{ entry.label }}
 									</v-btn>
 								</template>
 
-								<!-- Inline small charts -->
-								<div
-									v-if="inlineAnalysis"
+								<ChartCard
+									v-if="inlineEntry"
 									class="inline-chart mt-3"
+									:title="analysisTitle(inlineEntry)"
+									:icon="inlineEntry.icon"
+									@close="inlineAnalysis = null"
 								>
-									<div class="d-flex align-center mb-2">
-										<v-icon
-											size="small"
-											class="mr-2"
-										>
-											{{ analysisConfig[inlineAnalysis]?.icon }}
-										</v-icon>
-										<span class="text-subtitle-2">{{ analysisConfig[inlineAnalysis]?.title }}</span>
-										<v-spacer />
-										<v-btn
-											icon
-											variant="text"
-											size="x-small"
-											@click="inlineAnalysis = null"
-										>
-											<v-icon size="small">mdi-close</v-icon>
-										</v-btn>
-									</div>
-									<component :is="analysisComponents[inlineAnalysis]" />
-								</div>
+									<component :is="inlineEntry.component(currentView)" />
+								</ChartCard>
 
 								<div
 									v-if="!hasAvailableAnalysis"
@@ -368,7 +250,6 @@
 	<AnalysisPanel
 		v-model="rightPanelOpen"
 		:analysis-type="rightPanelAnalysis"
-		:analysis-config="analysisConfig"
 	/>
 </template>
 
@@ -377,10 +258,17 @@ import { computed, defineAsyncComponent, ref } from 'vue'
 import { useDisplay } from 'vuetify'
 import AreaProperties from '../components/AreaProperties.vue'
 import BackgroundMapBrowser from '../components/BackgroundMapBrowser.vue'
+import ChartCard from '../components/ChartCard.vue'
 import MapControls from '../components/MapControls.vue'
 import UnifiedSearch from '../components/UnifiedSearch.vue'
 import ViewModeCompact from '../components/ViewModeCompact.vue'
 import { useSidebarNavigation } from '../composables/useSidebarNavigation.js'
+import {
+	ANALYSES,
+	analysisTitle,
+	findAnalysis,
+	isAnalysisAvailable,
+} from '../constants/analysisRegistry.js'
 import { LAYOUT } from '../constants/layout.js'
 import { LAAJASALO_CAMERA } from '../constants/vttFlood'
 import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
@@ -398,26 +286,8 @@ const FloodSimulationPanel = defineAsyncComponent(
 	() => import('../components/FloodSimulationPanel.vue')
 )
 
-// Lazy-loaded analysis components
+// Lazy-loaded right-hand drawer for drawer-placed analyses
 const AnalysisPanel = defineAsyncComponent(() => import('../components/AnalysisPanel.vue'))
-const BuildingGridChart = defineAsyncComponent(() => import('../components/BuildingGridChart.vue'))
-const BuildingHeatChart = defineAsyncComponent(() => import('../components/BuildingHeatChart.vue'))
-const HeatHistogram = defineAsyncComponent(() => import('../components/HeatHistogram.vue'))
-const HSYBuildingHeatChart = defineAsyncComponent(
-	() => import('../components/HSYBuildingHeatChart.vue')
-)
-const StatisticalGridOptions = defineAsyncComponent(
-	() => import('../components/StatisticalGridOptions.vue')
-)
-const LandcoverPanel = defineAsyncComponent(() => import('../components/LandcoverPanel.vue'))
-
-// Lazy-loaded climate adaptation components
-const CoolingCenter = defineAsyncComponent(() => import('../components/CoolingCenter.vue'))
-const CoolingCenterOptimiser = defineAsyncComponent(
-	() => import('../components/CoolingCenterOptimiser.vue')
-)
-const EstimatedImpacts = defineAsyncComponent(() => import('../components/EstimatedImpacts.vue'))
-const LandcoverToParks = defineAsyncComponent(() => import('../components/LandcoverToParks.vue'))
 
 const { smAndDown: isMobile } = useDisplay()
 
@@ -475,10 +345,18 @@ const breadcrumbItems = computed(() =>
 	breadcrumbs.value.map((b) => ({ title: b.label, disabled: b.level === currentLevel.value }))
 )
 
-const adaptationTab = ref('centers')
+/** @type {import('vue').ComputedRef<import('../constants/analysisRegistry.js').AnalysisContext>} */
+const analysisContext = computed(() => ({
+	level: globalStore.level,
+	view: globalStore.view,
+	isEnabled: (flag) => featureFlagStore.isEnabled(flag),
+	statsIndex: propsStore.statsIndex,
+	socioEconomicsReady: Boolean(socioEconomicsStore.data && heatExposureStore.data),
+}))
 
-const statsIndex = computed(() => propsStore.statsIndex)
-const showSosEco = computed(() => socioEconomicsStore.data && heatExposureStore.data)
+const availableAnalyses = computed(() =>
+	ANALYSES.filter((entry) => isAnalysisAvailable(entry, analysisContext.value))
+)
 
 const hasAvailableAnalysis = computed(() => {
 	if (currentLevel.value === 'start') return false
@@ -488,33 +366,12 @@ const hasAvailableAnalysis = computed(() => {
 	return false
 })
 
-// Analysis configuration
-const analysisConfig = {
-	'heat-histogram': { title: 'Heat Distribution', icon: 'mdi-chart-histogram' },
-	socioeconomics: { title: 'Socioeconomic Analysis', icon: 'mdi-account-group' },
-	landcover: { title: 'Land Cover', icon: 'mdi-leaf' },
-	'scatter-plot': { title: 'Building Analysis', icon: 'mdi-chart-scatter-plot' },
-	'building-heat': { title: 'Building Heat Data', icon: 'mdi-thermometer' },
-	'grid-options': { title: 'Grid Options', icon: 'mdi-grid' },
-	'ndvi-analysis': { title: 'NDVI Vegetation', icon: 'mdi-leaf' },
-}
-
-// Map analysis types to their components for inline rendering
-const analysisComponents = computed(() => ({
-	'heat-histogram': HeatHistogram,
-	landcover: LandcoverPanel,
-	'building-heat':
-		currentView.value === 'grid'
-			? BuildingGridChart
-			: currentView.value === 'helsinki'
-				? BuildingHeatChart
-				: HSYBuildingHeatChart,
-	'grid-options': StatisticalGridOptions,
-}))
-
-// Inline analysis (small charts rendered in sidebar)
-const inlineAnalysis = ref(/** @type {keyof typeof analysisConfig | null} */ (null))
-// Right panel analysis (large charts)
+// Inline analysis (card rendered in the sidebar), by registry id
+const inlineAnalysis = ref(/** @type {string | null} */ (null))
+const inlineEntry = computed(() =>
+	inlineAnalysis.value ? (findAnalysis(inlineAnalysis.value) ?? null) : null
+)
+// Right panel analysis (drawer), by registry id
 const rightPanelOpen = ref(false)
 const rightPanelAnalysis = ref('')
 
@@ -522,13 +379,14 @@ const showDetailsBadge = computed(
 	() => currentLevel.value === 'building' && activeTab.value !== 'details'
 )
 
-const openAnalysis = (type, size) => {
-	if (size === 'small') {
-		inlineAnalysis.value = type
+/** @param {import('../constants/analysisRegistry.js').AnalysisEntry} entry */
+const openAnalysis = (entry) => {
+	if (entry.placement === 'inline') {
+		inlineAnalysis.value = entry.id
 		rightPanelOpen.value = false
 	} else {
 		inlineAnalysis.value = null
-		rightPanelAnalysis.value = type
+		rightPanelAnalysis.value = entry.id
 		rightPanelOpen.value = true
 		// Auto-collapse left sidebar on narrow viewports to prevent map tunnel
 		if (!isMobile.value && window.innerWidth < LAYOUT.ANALYSIS_PANEL_COLLAPSE_SIDEBAR_BELOW) {

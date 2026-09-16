@@ -32,12 +32,12 @@ import { markRaw } from 'vue'
  * Core application state managing navigation, selections, and Cesium viewer reference.
  *
  * @typedef {Object} GlobalState
- * @property {string} view - Current view mode ('capitalRegion', 'postalcode', 'building')
+ * @property {import('../constants/analysisRegistry.js').ViewMode} view - Current view mode ('capitalRegion', 'grid', 'helsinki')
  * @property {string|null} postalcode - Selected postal code (e.g., '00100')
  * @property {string|null} nameOfZone - Selected zone/neighborhood name
  * @property {number} averageHeatExposure - Average heat exposure for selected area (0-1)
  * @property {number} averageTreeArea - Average tree canopy area for selected area (m²)
- * @property {string} level - Navigation level ('start', 'postalcode', 'building')
+ * @property {import('../constants/analysisRegistry.js').NavigationLevel} level - Navigation level ('start', 'postalCode', 'building')
  * @property {Object} minMaxKelvin - Min/max Kelvin temperatures by date for heat normalization
  * @property {string} heatDataDate - Selected date for heat exposure visualization (YYYY-MM-DD)
  * @property {Object|null} currentGridCell - Currently selected 250m grid cell entity
@@ -71,14 +71,14 @@ import logger from '../utils/logger.js'
 
 export const useGlobalStore = defineStore('global', {
 	state: () => ({
-		view: 'capitalRegion',
+		view: /** @type {import('../constants/analysisRegistry.js').ViewMode} */ ('capitalRegion'),
 		/** @type {string|null} */
 		postalcode: null,
 		/** @type {string|null} */
 		nameOfZone: null,
 		averageHeatExposure: 0,
 		averageTreeArea: 0,
-		level: 'start',
+		level: /** @type {import('../constants/analysisRegistry.js').NavigationLevel} */ ('start'),
 		errorNotification: {
 			show: false,
 			message: '',
@@ -153,7 +153,7 @@ export const useGlobalStore = defineStore('global', {
 		},
 		/**
 		 * Sets the current navigation level
-		 * @param {string} level - Level name ('start', 'postalcode', 'building')
+		 * @param {import('../constants/analysisRegistry.js').NavigationLevel} level
 		 */
 		setLevel(level) {
 			this.level = level
@@ -178,8 +178,7 @@ export const useGlobalStore = defineStore('global', {
 		},
 		/**
 		 * Sets the current view mode
-		 * Controls which level of the navigation hierarchy is active.
-		 * @param {string} view - View mode ('capitalRegion', 'postalcode', 'building')
+		 * @param {import('../constants/analysisRegistry.js').ViewMode} view
 		 */
 		setView(view) {
 			this.view = view

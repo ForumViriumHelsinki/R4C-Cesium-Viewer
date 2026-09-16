@@ -388,9 +388,13 @@ export default class Camera {
 			})
 
 			// `switchTo3DGrid` historically resets to a null level (see camera spec).
-			// `setLevel` is typed for the string state machine, so cast the intentional
+			// `setLevel` is typed for the NavigationLevel union, so cast the intentional
 			// null reset through unknown rather than change the runtime value.
-			this.store.setLevel(/** @type {string} */ (/** @type {unknown} */ (null)))
+			this.store.setLevel(
+				/** @type {import('../constants/analysisRegistry.js').NavigationLevel} */ (
+					/** @type {unknown} */ (null)
+				)
+			)
 		}
 	}
 
