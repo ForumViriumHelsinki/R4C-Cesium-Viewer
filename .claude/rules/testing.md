@@ -352,12 +352,12 @@ When the linked issue closes, **graduate the soft to a hard** `expect` so the ne
 
 Not all UI elements exist at all navigation levels:
 
-| Element                       | Available At         | Component                            |
-| ----------------------------- | -------------------- | ------------------------------------ |
-| Reset button (`.mdi-refresh`) | postalCode, building | `GridView.vue`, `PostalCodeView.vue` |
-| Back button                   | building             | `App.vue` toolbar                    |
-| Timeline compact              | postalCode, building | `App.vue` (`v-if="showTimeline"`)    |
-| Building Analysis button      | postalCode           | `ControlPanel.vue`                   |
-| Area/Building Properties      | postalCode/building  | `ControlPanel.vue`                   |
+| Element                    | Available At         | Component                         |
+| -------------------------- | -------------------- | --------------------------------- |
+| "Reset to start" menu item | postalCode, building | `App.vue` user menu               |
+| Back button (`Go back`)    | postalCode, building | `ControlPanel.vue` sidebar header |
+| Timeline compact           | postalCode, building | `App.vue` (`v-if="showTimeline"`) |
+| Building Analysis button   | postalCode           | `ControlPanel.vue`                |
+| Area/Building Properties   | postalCode/building  | `ControlPanel.vue`                |
 
 Always check element existence before interaction when the navigation level might vary.

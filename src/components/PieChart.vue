@@ -93,7 +93,9 @@ const createPieChart = () => {
 	/**
 	 * @typedef {{ value: number, label: string, zone: string }} PieDatum
 	 */
-	const pie = /** @type {import('d3').Pie<any, PieDatum>} */ (/** @type {unknown} */ (d3.pie()))
+	const pie = /** @type {import('d3-shape').Pie<any, PieDatum>} */ (
+		/** @type {unknown} */ (d3.pie())
+	)
 		.sort(null)
 		.value((d) => d.value)
 	const arc = d3.arc().innerRadius(0).outerRadius(radius)

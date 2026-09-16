@@ -137,10 +137,7 @@ This is a Vue 3 climate data visualization application using CesiumJS for 3D map
 #### Main Pages
 
 - `CesiumViewer.vue` - Core 3D map interface using CesiumJS
-- `ControlPanel.vue` - Navigation drawer with filters and controls
-- `Building.vue` - Building-specific detail view
-- `Helsinki.vue` - Helsinki-specific data views
-- `CapitalRegion.vue` - Capital region overview
+- `ControlPanel.vue` - Left sidebar: Search, Layers, Analysis and Details tabs
 
 #### Services Layer
 

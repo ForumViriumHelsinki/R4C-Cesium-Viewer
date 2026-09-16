@@ -80,7 +80,7 @@
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ CHART COMPONENT - TREE ANALYSIS                                  │
+│ CHART COMPONENT - TREE ANALYSIS (NOT MOUNTED)                    │
 │ src/components/NearbyTreeArea.vue                               │
 │ ┌──────────────────────────────────────────────────────────────┐│
 │ │ mounted()                                                    ││
@@ -102,6 +102,10 @@
 │ └──────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+> `NearbyTreeArea.vue` is not mounted by any live component, so this last stage
+> of the pipeline does not run: the event is emitted and nothing listens.
+> Whether the tree chart was dropped deliberately is tracked in a GitHub issue.
 
 ## Data Structure Inside Store (Non-Serializable)
 
@@ -222,10 +226,10 @@ Any of these operations trigger the error:
 
 ## Summary of Issues
 
-| Issue                                       | Location                            | Impact                     | Severity |
-| ------------------------------------------- | ----------------------------------- | -------------------------- | -------- |
-| Non-serializable Cesium entities in store   | propsStore.setTreeEntities()        | DataCloneError             | Resolved (fields removed; entities live in `cesiumEntityManager`) |
-| Non-serializable Cesium datasource in store | propsStore.setBuildingsDatasource() | DataCloneError             | Resolved (fields removed; entities live in `cesiumEntityManager`) |
-| Unsafe private property access              | NearbyTreeArea.vue:204              | API breakage risk          | HIGH     |
-| Mutating Cesium entity properties           | NearbyTreeArea.vue:240,299          | Data corruption risk       | HIGH     |
-| Unsafe private property access              | tree.js:300                         | API breakage risk          | HIGH     |
+| Issue                                       | Location                            | Impact               | Severity                                                          |
+| ------------------------------------------- | ----------------------------------- | -------------------- | ----------------------------------------------------------------- |
+| Non-serializable Cesium entities in store   | propsStore.setTreeEntities()        | DataCloneError       | Resolved (fields removed; entities live in `cesiumEntityManager`) |
+| Non-serializable Cesium datasource in store | propsStore.setBuildingsDatasource() | DataCloneError       | Resolved (fields removed; entities live in `cesiumEntityManager`) |
+| Unsafe private property access              | NearbyTreeArea.vue:204              | API breakage risk    | HIGH                                                              |
+| Mutating Cesium entity properties           | NearbyTreeArea.vue:240,299          | Data corruption risk | HIGH                                                              |
+| Unsafe private property access              | tree.js:300                         | API breakage risk    | HIGH                                                              |

@@ -13,7 +13,7 @@ The R4C Cesium Viewer follows a layered architecture:
 ```
 ┌─────────────────────────────────────────────┐
 │           Vue 3 Components (UI)              │
-│  CesiumViewer, ControlPanel, Building, etc   │
+│  CesiumViewer, ControlPanel, AnalysisPanel   │
 └─────────────────────────────────────────────┘
                     │
 ┌─────────────────────────────────────────────┐
