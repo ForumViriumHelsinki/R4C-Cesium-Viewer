@@ -102,6 +102,35 @@ git commit -m "chore(merge): merge main into <branch>"
 (The subject disappears on squash-merge anyway; it only needs to satisfy the
 hook.)
 
+## A PR Description Becomes the Commit Body — No Code Fences In It
+
+This repo is set to `squash_merge_commit_message = PR_BODY`, so GitHub copies
+the whole PR description into the squash commit's body. release-please then
+parses that body as a conventional commit, and a fenced code block in it can
+throw the parser:
+
+```text
+❯ commit could not be parsed: e156d1f feat(vtt-flood): add synthetic data flag …
+❯ error message: Error: unexpected token '(' at 35:52, valid tokens [)]
+```
+
+An unparsable commit is dropped, so a `feat:`/`fix:` PR merges green and cuts
+**no release** — the version and CHANGELOG simply never move. The org workflow's
+missed-release check catches it, but only as a run **warning**, and the PR
+itself shows nothing.
+
+> Observed 2026-09-15 (#973): a `js` fence holding a `localStorage.setItem(...)`
+> line killed the 1.57.0 release. Recovered by landing #974, a fence-free `feat:`
+> commit; the version had to wait for that second merge.
+
+- **Write PR descriptions for this repo without fenced code blocks.** Inline
+  backticks are fine; it is the fenced block that carries the offending line.
+- **Check after merging any `feat:`/`fix:`/`perf:`/`revert:` PR** that a release
+  PR appeared: `gh pr list --search 'chore(main): release'`. The release-please
+  run's warning annotation names the missed commit.
+- **Recovery is a new fence-free commit**, not a re-run — `workflow_dispatch`
+  re-parses the same commit and fails identically.
+
 ## CI/CD
 
 Container build/release use the org reusable workflows (`ForumViriumHelsinki/.github`) with a build-once/promote pattern.
