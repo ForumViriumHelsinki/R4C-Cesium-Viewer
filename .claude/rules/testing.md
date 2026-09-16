@@ -314,6 +314,24 @@ correctness via behavior-equivalence checks instead. If a perf property must
 be enforced, enforce it via the dedicated performance suite with baselines
 (`tests/performance-baselines.json`), not inline unit assertions.
 
+## Unit-Testing D3 Charts: Mock `useChartSize`
+
+jsdom does no layout, so `clientWidth` is 0. Charts sized by
+`useChartSize` return early at width 0 ("not laid out yet"), so a chart
+unit test mounts without error and **asserts nothing about drawing**: a guard
+test passes whether or not the guarded code is correct. Mock the composable with
+a real width, and assert that the draw path ran (for example, that a data lookup
+was called):
+
+```js
+vi.mock('@/composables/useChartSize.js', () => ({
+	useChartSize: () => ({ width: { value: 400 }, height: { value: 250 }, cleanup: vi.fn() }),
+}));
+```
+
+Mutation-check it: set the mocked width to 0 and confirm the test goes red.
+`tests/unit/components/SocioEconomicsChart.test.js` is the reference.
+
 ## Feature Flag Defaults Affect Test Assertions
 
 The Pinia store defaults determine what's visible in tests without explicit setup:

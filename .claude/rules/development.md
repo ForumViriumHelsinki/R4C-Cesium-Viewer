@@ -25,6 +25,21 @@
 - Reproducing a specific production bug
 - Testing with real-world data distributions
 
+## Verifying Changes in the Browser (`just dev-mock`)
+
+- **Page reloads mid-check are Vite, not the app.** The first time a lazily
+  loaded panel pulls in a dependency Vite hasn't pre-bundled (a Vuetify
+  component, a d3 submodule), the dev server logs
+  `optimized dependencies changed. reloading` and reloads the page. A Playwright
+  `evaluate` in flight fails with "Execution context was destroyed". Check the
+  dev-server log for that line and re-run; a cold dev server may do this several
+  times before it settles.
+- **Deep links need the camera params.** A URL with only
+  `?level=postalcode&postalcode=00100` loaded at the start level in testing
+  (2026-09); the same link with `lon`, `lat`, `alt`, `heading` and `pitch`
+  restored the postal code. Copy the full URL the app writes after a search
+  rather than hand-writing one.
+
 ## Skaffold/Kubernetes Development
 
 **One-Command Start:**
