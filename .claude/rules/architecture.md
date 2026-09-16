@@ -33,6 +33,16 @@
 Level- and view-specific UI (postal code, building, grid) is branched inside
 `ControlPanel.vue` and `App.vue` overlays; there are no per-level page components.
 
+## Analysis Tab
+
+Every Analysis tab entry — button label, availability (level, view, flag, data
+preconditions), placement (inline card, drawer, expansion panel), map coupling,
+and the component per view — is declared once in
+`src/constants/analysisRegistry.js` (ADR-009). Add or re-place an analysis there,
+not in `ControlPanel.vue`/`AnalysisPanel.vue`. Labels are the accessible names
+E2E specs locate by. Charts size themselves with `useChartSize` (container width,
+aspect-derived height) and draw through `Plot.createSVGElement` (viewBox SVG).
+
 ## Services Layer
 
 | Service                      | Purpose                                                 |

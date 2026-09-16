@@ -17,9 +17,9 @@
 					class="mr-2"
 					size="small"
 				>
-					{{ config?.icon || 'mdi-chart-line' }}
+					{{ entry?.icon || 'mdi-chart-line' }}
 				</v-icon>
-				<span class="text-subtitle-1">{{ config?.title || '' }}</span>
+				<span class="text-subtitle-1">{{ entry ? analysisTitle(entry) : '' }}</span>
 				<v-spacer />
 				<v-btn
 					icon
@@ -43,43 +43,26 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent } from 'vue'
+import { computed } from 'vue'
 import { useDisplay } from 'vuetify'
+import { analysisTitle, findAnalysis } from '../constants/analysisRegistry.js'
 import { LAYOUT } from '../constants/layout.js'
 import { useGlobalStore } from '../stores/globalStore'
 
 const props = defineProps({
 	modelValue: { type: Boolean, default: false },
+	/** Registry id of the analysis to show (src/constants/analysisRegistry.js) */
 	analysisType: { type: String, default: '' },
-	analysisConfig: { type: Object, default: () => ({}) },
 })
 
 defineEmits(['update:modelValue'])
 
 const { smAndDown } = useDisplay()
 const globalStore = useGlobalStore()
-const currentView = computed(() => globalStore.view)
 
 const panelWidth = computed(() => (smAndDown.value ? '100%' : LAYOUT.ANALYSIS_PANEL_WIDTH))
-const config = computed(() => props.analysisConfig[props.analysisType])
-
-// Lazy-loaded chart components
-const componentMap = {
-	socioeconomics: defineAsyncComponent(() => import('./SocioEconomicsPanel.vue')),
-	'scatter-plot-default': defineAsyncComponent(() => import('./BuildingScatterPlotPanel.vue')),
-	'scatter-plot-helsinki': defineAsyncComponent(() => import('./Scatterplot.vue')),
-	'ndvi-analysis': defineAsyncComponent(() => import('./NDVIPanel.vue')),
-}
-
-const activeComponent = computed(() => {
-	if (!props.analysisType) return null
-	if (props.analysisType === 'scatter-plot') {
-		return currentView.value === 'helsinki'
-			? componentMap['scatter-plot-helsinki']
-			: componentMap['scatter-plot-default']
-	}
-	return componentMap[props.analysisType] || null
-})
+const entry = computed(() => (props.analysisType ? findAnalysis(props.analysisType) : undefined))
+const activeComponent = computed(() => entry.value?.component(globalStore.view) ?? null)
 </script>
 
 <style scoped>
