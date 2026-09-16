@@ -25,13 +25,13 @@
 
 ## Main Pages
 
-| Component           | Purpose                                     |
-| ------------------- | ------------------------------------------- |
-| `CesiumViewer.vue`  | Core 3D map interface using CesiumJS        |
-| `ControlPanel.vue`  | Navigation drawer with filters and controls |
-| `Building.vue`      | Building-specific detail view               |
-| `Helsinki.vue`      | Helsinki-specific data views                |
-| `CapitalRegion.vue` | Capital region overview                     |
+| Component          | Purpose                                                 |
+| ------------------ | ------------------------------------------------------- |
+| `CesiumViewer.vue` | Core 3D map interface using CesiumJS                    |
+| `ControlPanel.vue` | Left sidebar: Search, Layers, Analysis and Details tabs |
+
+Level- and view-specific UI (postal code, building, grid) is branched inside
+`ControlPanel.vue` and `App.vue` overlays; there are no per-level page components.
 
 ## Services Layer
 
@@ -76,7 +76,7 @@ Material Design Icons render as **inline SVG paths** via a custom Vuetify iconse
 
 ## Cesium Render Mode
 
-`graphicsStore.requestRenderMode` defaults to `true` and is propagated to the live `viewer.scene.requestRenderMode` via the `r4c-request-render-mode` feature flag (wired in `App.vue` after `featureFlagStore.refreshFlags()`). The graphics service `$subscribe` watcher also propagates runtime toggles from `GraphicsQuality.vue` to the live scene.
+`graphicsStore.requestRenderMode` defaults to `true` and is propagated to the live `viewer.scene.requestRenderMode` via the `r4c-request-render-mode` feature flag (wired in `App.vue` after `featureFlagStore.refreshFlags()`). The graphics service `$subscribe` watcher propagates later `graphicsStore` changes to the live scene. No mounted component currently calls the MSAA/FXAA/HDR/ambient-occlusion setters: `FeatureFlagsPanel.vue` toggles the graphics feature flags but not the store settings, and `GraphicsQuality.vue`, which did, is not mounted anywhere.
 
 When RRM is on, Cesium only re-renders when something changes (camera move, entity update, imagery load); when off, the scene re-renders every animation frame at ~60 FPS. On a 3D globe with terrain + buildings + WMS imagery the difference is roughly one CPU core and a hot dGPU — keep RRM on unless a specific feature genuinely needs continuous rendering, and explicitly call `viewer.scene.requestRender()` at any mutation site that would otherwise be visually invisible under RRM (existing camera/entity/imagery hooks already do this).
 
@@ -303,9 +303,8 @@ get activeLayerId() {
 **Integration points:**
 
 - `featurepicker/index.js` - calls on reset and new navigation
-- `App.vue` - calls when returning to start level
-- `PostalCodeView.vue` - calls when navigating away
-- `GridView.vue` - calls when switching views
+- `App.vue` `smartReset()` - calls when returning to start level
+- `useSidebarNavigation.js` `goHome()` - calls when the sidebar back button returns to start
 
 ### 2. Latest-Wins Navigation
 
@@ -355,7 +354,6 @@ onExitPostalCode() {
 
 **Integration points:**
 
-- `featurepicker/index.js:324` - calls `onEnterPostalCode()` when entering postal code
-- `App.vue:182` - calls `onExitPostalCode()` when returning to start
-- `PostalCodeView.vue:302` - calls `onExitPostalCode()` when navigating away
-- `GridView.vue:191` - calls `onExitPostalCode()` when switching views
+- `featurepicker/index.js` (postal-code navigation branch) - calls `onEnterPostalCode()` when entering postal code
+- `App.vue` `smartReset()` - calls `onExitPostalCode()` when returning to start
+- `useSidebarNavigation.js` `goHome()` - calls `onExitPostalCode()` when the back button returns to start

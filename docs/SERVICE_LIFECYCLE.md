@@ -555,7 +555,7 @@ onExitPostalCode() {
 **Integration points:**
 
 - `featurepicker/index.js` - calls `onEnterPostalCode()` when navigating to postal code
-- `App.vue`, `PostalCodeView.vue`, `GridView.vue` - call `onExitPostalCode()` when leaving
+- `App.vue` (`smartReset`) and `useSidebarNavigation.js` (`goHome`) - call `onExitPostalCode()` when leaving
 
 ## Questions?
 

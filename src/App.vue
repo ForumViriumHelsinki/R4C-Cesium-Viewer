@@ -314,8 +314,8 @@ onMounted(async () => {
 
 		// Apply flag-driven graphics defaults. graphicsStore values flow into
 		// Cesium via useViewerInitialization (init-time) and the graphics
-		// service watcher (runtime). User-driven toggles in GraphicsQuality.vue
-		// still override the flag — last write wins.
+		// service watcher (runtime); a later graphicsStore write overrides the
+		// flag — last write wins.
 		graphicsStore.setRequestRenderMode(featureFlagStore.isEnabled('requestRenderMode'))
 
 		if (featureFlagStore.isEnabled('backgroundPreload')) {
