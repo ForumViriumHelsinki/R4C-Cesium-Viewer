@@ -11,6 +11,7 @@ import { useGlobalStore } from './stores/globalStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
 import logger from './utils/logger.js'
 import { installPreloadErrorHandler } from './utils/preloadErrorHandler.js'
+import { resolveSentryEnvironment } from './utils/sentryEnvironment.js'
 
 /**
  * `window` augmented with the store instances and factory functions that the
@@ -131,10 +132,15 @@ pinia.use(
 const app = createApp(App)
 
 if (import.meta.env.VITE_SENTRY_DSN) {
+	// `production` only when the build declares it (#995); see sentryEnvironment.js
+	const environment = resolveSentryEnvironment(
+		import.meta.env.VITE_SENTRY_ENVIRONMENT,
+		import.meta.env.MODE
+	)
 	Sentry.init({
 		app,
 		dsn: import.meta.env.VITE_SENTRY_DSN,
-		environment: import.meta.env.MODE,
+		environment,
 		release: `r4c-cesium-viewer@${version}`,
 
 		integrations: [
@@ -169,7 +175,7 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 	})
 
 	logger.debug('Sentry configuration:', {
-		environment: import.meta.env.MODE,
+		environment,
 		release: `r4c-cesium-viewer@${version}`,
 	})
 } else {
