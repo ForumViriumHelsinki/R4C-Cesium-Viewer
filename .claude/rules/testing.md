@@ -236,7 +236,7 @@ Locating a control by its `mdi-*` class is reliable. A brand-new icon must be re
 Most `tests/e2e/accessibility/*` specs are tagged `@requires-database` — they drill to postal-code / building levels that need seeded data, and the reset/back/compass controls only mount once data loads. Without a database they skip or fail, so **red accessibility/E2E checks locally (or on a config-only PR) are usually environmental, not a regression**. Notes:
 
 - DB-free subset: `just dev-mock` + `just test-e2e-mock` (sets `SKIP_REQUIRES_DATABASE=true`).
-- `camera-controls.spec.ts` is `cesiumDescribe.skip`-ed at the source — it always reports 0/skipped.
+- `camera-controls.spec.ts` runs on all three viewports (re-enabled in #927). Below the `md` breakpoint (the mobile and tablet projects) the control panel is a temporary drawer that covers the camera controls and takes clicks aimed at them, so the Camera Reactivity tests close it by clicking its scrim first.
 - Setting `window.globalStore.level` alone does **not** mount the postal-code view; the data load gates the render. Use `AccessibilityTestHelpers.drillToLevel(..., { method: 'store' })` for deterministic level changes.
 
 ## Conditional Test Skip in Custom Fixtures
