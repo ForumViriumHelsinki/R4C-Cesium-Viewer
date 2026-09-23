@@ -8,26 +8,21 @@
 import { TIMING } from '../../constants/timing.js'
 import logger from '../../utils/logger.js'
 import { findAddressForBuilding } from '../address.js'
-import { eventBus } from '../eventEmitter.js'
 
 /**
  * Handles building feature selection and visualization
- * Updates application level to 'building', shows loading indicator, emits visibility events,
+ * Updates application level to 'building', shows loading indicator,
  * and creates building-specific charts. Manages loading state throughout the process.
  *
  * @param {Cesium.PropertyBag} properties - Building properties bag containing Cesium property objects
  * @param {Object} context - Context object with services and stores
  * @param {Object} context.store - Global store instance
- * @param {Object} context.toggleStore - Toggle store instance
  * @param {Object} context.buildingService - Building service instance
  * @param {Object} context.elementsDisplayService - Elements display service instance
  * @returns {Promise<void>}
- * @fires eventBus#hideHelsinki - Emitted when switching away from Helsinki view
- * @fires eventBus#hideCapitalRegion - Emitted when switching away from Capital Region view
- * @fires eventBus#showBuilding - Emitted when building level view is activated
  */
 export async function handleBuildingFeature(properties, context) {
-	const { store, toggleStore, buildingService, elementsDisplayService } = context
+	const { store, buildingService, elementsDisplayService } = context
 
 	// Clear stale loading states before transitioning to building level
 	// This prevents the loading indicator from staying visible due to:
@@ -46,21 +41,11 @@ export async function handleBuildingFeature(properties, context) {
 		// Update application state to building level
 		store.setLevel('building')
 		store.setPostalCode(properties._postinumero._value)
-		if (toggleStore.helsinkiView) {
-			eventBus.emit('hideHelsinki')
-		} else {
-			eventBus.emit('hideCapitalRegion')
-		}
-		eventBus.emit('showBuilding')
 		elementsDisplayService.setBuildingDisplay('none')
 		buildingService.resetBuildingOutline()
 
 		// Process building charts asynchronously
-		await buildingService.createBuildingCharts(
-			properties.treeArea,
-			properties._avg_temp_c,
-			properties
-		)
+		await buildingService.createBuildingCharts(properties._avg_temp_c, properties)
 	} catch (error) {
 		logger.error('Error handling building feature:', error?.message || error)
 	}
@@ -74,7 +59,6 @@ export async function handleBuildingFeature(properties, context) {
  * @param {Object} context - Context object with services and stores
  * @param {Object} context.store - Global store instance
  * @param {Object} context.coldAreaService - Cold area service instance
- * @param {Object} context.toggleStore - Toggle store instance
  * @param {Object} context.buildingService - Building service instance
  * @param {Object} context.elementsDisplayService - Elements display service instance
  * @returns {Promise<void>}

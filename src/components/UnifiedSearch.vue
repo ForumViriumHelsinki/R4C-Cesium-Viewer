@@ -222,10 +222,6 @@
  * - `Camera` - Camera positioning for selected locations
  * - `FeaturePicker` - Postal code data loading and selection
  *
- * **Event Emissions:**
- * - Listens: None
- * - Emits: 'geocodingPrintEvent' (via eventBus) - When address is selected
- *
  * **Vegetation Color Coding:**
  * - Green: ≥50% vegetation coverage
  * - Orange: 30-49% vegetation coverage
@@ -237,7 +233,6 @@
 
 import { computed, onUnmounted, ref, watch } from 'vue'
 import Camera from '../services/camera'
-import { eventBus } from '../services/eventEmitter'
 import FeaturePicker from '../services/featurepicker'
 import { useGlobalStore } from '../stores/globalStore'
 import { usePropsStore } from '../stores/propsStore'
@@ -499,7 +494,6 @@ const processAddressData = (features) => {
  *
  * @param {{address: string, latitude: number, longitude: number, postalcode: string}} address - Selected address object
  * @returns {void}
- * @fires eventBus#geocodingPrintEvent
  */
 const selectAddress = (address) => {
 	const { latitude, longitude, postalcode } = address
@@ -545,11 +539,9 @@ const selectPostalCode = async (area) => {
  * @param {number} longitude - Target longitude
  * @param {number} latitude - Target latitude
  * @returns {void}
- * @fires eventBus#geocodingPrintEvent
  */
 const moveCameraAndLoad = (longitude, latitude) => {
 	cameraService.setCameraView(longitude, latitude)
-	eventBus.emit('geocodingPrintEvent')
 	featurePicker.loadPostalCode().catch((error) => {
 		logger.error('[UnifiedSearch] Failed to load postal code:', error)
 		globalStore.showError(

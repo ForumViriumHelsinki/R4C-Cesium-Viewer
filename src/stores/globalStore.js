@@ -36,7 +36,6 @@ import { markRaw } from 'vue'
  * @property {string|null} postalcode - Selected postal code (e.g., '00100')
  * @property {string|null} nameOfZone - Selected zone/neighborhood name
  * @property {number} averageHeatExposure - Average heat exposure for selected area (0-1)
- * @property {number} averageTreeArea - Average tree canopy area for selected area (m²)
  * @property {import('../constants/analysisRegistry.js').NavigationLevel} level - Navigation level ('start', 'postalCode', 'building')
  * @property {Object} minMaxKelvin - Min/max Kelvin temperatures by date for heat normalization
  * @property {string} heatDataDate - Selected date for heat exposure visualization (YYYY-MM-DD)
@@ -77,7 +76,6 @@ export const useGlobalStore = defineStore('global', {
 		/** @type {string|null} */
 		nameOfZone: null,
 		averageHeatExposure: 0,
-		averageTreeArea: 0,
 		level: /** @type {import('../constants/analysisRegistry.js').NavigationLevel} */ ('start'),
 		errorNotification: {
 			show: false,
@@ -205,13 +203,6 @@ export const useGlobalStore = defineStore('global', {
 		 */
 		setAverageHeatExposure(averageHeatExposure) {
 			this.averageHeatExposure = averageHeatExposure
-		},
-		/**
-		 * Sets the average tree canopy area for the selected area
-		 * @param {number} averageTreeArea - Tree coverage in square meters
-		 */
-		setAverageTreeArea(averageTreeArea) {
-			this.averageTreeArea = averageTreeArea
 		},
 		/**
 		 * Sets the selected building address string

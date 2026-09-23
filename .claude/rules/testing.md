@@ -72,7 +72,6 @@ FeaturePicker.handleFeatureWithProperties(entity)
     - At postal code level → handleBuildingFeature()
     ↓
 Updates Pinia store (level='building')
-EventBus emits 'showBuilding'
 ```
 
 **Critical Guards:**

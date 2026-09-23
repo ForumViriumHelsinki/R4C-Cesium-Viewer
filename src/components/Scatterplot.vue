@@ -475,7 +475,6 @@ export default {
 		createScatterPlot(features, categorical, numerical) {
 			// Setup the scatter plot container
 			this.plotService.initializePlotContainer('scatterPlotContainer')
-			this.plotService.showAllPlots()
 
 			// Prepare the data for the plot
 			const { heatData, labelsWithAverage, values } = this.prepareDataForPlot(

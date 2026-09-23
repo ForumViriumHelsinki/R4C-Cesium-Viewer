@@ -1,4 +1,3 @@
-import { eventBus } from '../services/eventEmitter.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
@@ -45,13 +44,12 @@ export default class Helsinki {
 	/**
 	 * Loads all Helsinki-specific map elements for the current postal code
 	 * Orchestrates loading of buildings, postal code boundaries, and nature layers.
-	 * Shows Helsinki-specific UI controls and emits visibility event.
+	 * Shows Helsinki-specific UI controls.
 	 *
 	 * When viewport streaming is enabled, building loading is skipped because
 	 * the ViewportBuildingLoader handles building loading based on visible tiles.
 	 *
 	 * @returns {Promise<void>}
-	 * @fires eventBus#showHelsinki - Emitted when Helsinki view elements are loaded
 	 */
 	async loadHelsinkiElements() {
 		this.elementsDisplayService.setHelsinkiElementsDisplay('inline-block')
@@ -71,7 +69,6 @@ export default class Helsinki {
 			'PostCodes'
 		)
 		void this.loadHelsinkiGreenElements()
-		eventBus.emit('showHelsinki')
 	}
 
 	/**

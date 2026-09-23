@@ -1,13 +1,10 @@
 import * as d3 from '@/utils/d3'
-import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
-import { eventBus } from './eventEmitter.js'
 
 /**
  * Plot Service
  * Provides D3.js-based plotting utilities for data visualization throughout the application.
  * Manages plot containers, SVG creation, scales, axes, tooltips, and interactive chart elements.
- * Handles visibility control for level-specific (postal code vs building) visualizations.
  *
  * Key capabilities:
  * - SVG element creation and initialization
@@ -15,7 +12,6 @@ import { eventBus } from './eventEmitter.js'
  * - Tooltip management for interactive charts
  * - Axis setup and configuration
  * - Plot container lifecycle management
- * - Tree bearing switch controls
  *
  * @class Plot
  * @see {@link https://d3js.org/|D3.js Documentation}
@@ -25,77 +21,7 @@ export default class Plot {
 	 * Creates a Plot service instance
 	 */
 	constructor() {
-		this.store = useGlobalStore()
 		this.toggleStore = useToggleStore()
-	}
-
-	/**
-	 * Shows all plots and select elements
-	 * Emits visibility events based on current view level (postalCode or building).
-	 *
-	 * @fires eventBus#showHelsinki - Emitted when showing Helsinki postal code view
-	 * @fires eventBus#showCapitalRegion - Emitted when showing Capital Region postal code view
-	 * @fires eventBus#showBuilding - Emitted when showing building level view
-	 */
-	showAllPlots() {
-		switch (this.store.level) {
-			case 'postalCode':
-				eventBus.emit(this.toggleStore.helsinkiView ? 'showHelsinki' : 'showCapitalRegion')
-				break
-			case 'building':
-				eventBus.emit('showBuilding')
-				break
-		}
-	}
-
-	/**
-	 * Hides all plots and select elements
-	 * Emits hide events based on current view level (postalCode or building).
-	 *
-	 * @fires eventBus#hideHelsinki - Emitted when hiding Helsinki postal code view
-	 * @fires eventBus#hideCapitalRegion - Emitted when hiding Capital Region postal code view
-	 * @fires eventBus#hideBuilding - Emitted when hiding building level view
-	 */
-	hideAllPlots() {
-		switch (this.store.level) {
-			case 'postalCode':
-				eventBus.emit(this.toggleStore.helsinkiView ? 'hideHelsinki' : 'hideCapitalRegion')
-				break
-			case 'building':
-				eventBus.emit('hideBuilding')
-				break
-		}
-	}
-
-	/**
-
-
-	/**
- * Toggle visibility of tree bearing switches
- *
- * @param {string} status - The desired visibility status ("visible" or "hidden")
- */
-	toggleBearingSwitchesVisibility(status) {
-		const switchContainers = ['All', 'South', 'West', 'East', 'North']
-
-		for (const direction of switchContainers) {
-			const switchContainer = document.getElementById(`bearing${direction}SwitchContainer`)
-			if (switchContainer) {
-				switchContainer.style.visibility = status
-			}
-		}
-	}
-
-	/**
-	 *
-	 */
-
-	updateTreeElements(status) {
-		const nearbyTreeAreaContainer = document.getElementById('nearbyTreeAreaContainer')
-		if (nearbyTreeAreaContainer) {
-			nearbyTreeAreaContainer.style.visibility = status
-		}
-		this.toggleBearingSwitchesVisibility(status)
 	}
 
 	/**
