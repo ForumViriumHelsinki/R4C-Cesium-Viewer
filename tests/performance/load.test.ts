@@ -45,10 +45,12 @@ const PERF_CONFIG = {
 
 	// Network and stress test thresholds
 	SLOW_NETWORK_TIMEOUT: process.env.CI ? 25000 : 15000,
-	// 50 map clicks with a responsiveness probe after each. The first CI run with
-	// the harness (run 35857022407) took about 42s: probe p50 568ms, because
-	// viewport-building streaming kept the main thread about 95% busy (long tasks
-	// 40.8s of the test). 60s is that plus about 40% headroom (#961).
+	// 50 map clicks with a responsiveness probe after each. The first two CI runs
+	// with the harness took about 42s (run 35857022407) and 43.4s (run
+	// 35858081838), probe p50 568ms and 505ms: under SwiftShader the page's main
+	// thread was in long tasks for about 95% of the session (40.8s, 43.1s). On a
+	// real GPU the same session takes about 1.2s. 60s is the CI value plus about
+	// 40% headroom (#961).
 	SESSION_DURATION: process.env.CI ? 60000 : 30000,
 
 	// Warmup configuration
