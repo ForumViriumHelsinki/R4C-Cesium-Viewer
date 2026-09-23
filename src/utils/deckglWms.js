@@ -45,6 +45,14 @@ export function mercatorBBoxString({ west, south, east, north }) {
 }
 
 /**
+ * WMS tile edge in pixels, shared by the deck TileLayer and its GetMap
+ * width/height. 512 matches every Cesium WebMapServiceImageryProvider (#340).
+ * deck picks tile zoom as round(zoom + log2(512 / tileSize)), so 256 would load
+ * one zoom level deeper and request four times the tiles (#966).
+ */
+export const WMS_TILE_SIZE = 512
+
+/**
  * Build a WMS 1.3.0 GetMap URL for one deck tile in EPSG:3857.
  *
  * Routes through the app's existing `/wms/proxy` path (rewritten to
@@ -55,10 +63,15 @@ export function mercatorBBoxString({ west, south, east, north }) {
  * @param {{west:number, south:number, east:number, north:number}} opts.bbox - tile bbox (WGS84)
  * @param {string} opts.layers - comma-separated WMS layer names
  * @param {string} [opts.baseUrl='/wms/proxy'] - WMS endpoint
- * @param {number} [opts.tileSize=256] - tile pixel size
+ * @param {number} [opts.tileSize=WMS_TILE_SIZE] - tile pixel size; must equal the TileLayer's tileSize
  * @returns {string} Fully-formed GetMap URL
  */
-export function buildWmsGetMapUrl({ bbox, layers, baseUrl = '/wms/proxy', tileSize = 256 }) {
+export function buildWmsGetMapUrl({
+	bbox,
+	layers,
+	baseUrl = '/wms/proxy',
+	tileSize = WMS_TILE_SIZE,
+}) {
 	const params = new URLSearchParams({
 		service: 'WMS',
 		request: 'GetMap',
