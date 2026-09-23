@@ -96,8 +96,24 @@
 				</v-tab>
 			</v-tabs>
 
-			<!-- Tab content -->
-			<div class="sidebar-content">
+			<!-- Tab content: inert until the Cesium viewer exists (#951) -->
+			<div
+				v-if="!viewerReady"
+				class="viewer-loading-hint"
+				role="status"
+			>
+				<v-progress-circular
+					indeterminate
+					size="14"
+					width="2"
+				/>
+				<span>Loading map…</span>
+			</div>
+			<div
+				class="sidebar-content"
+				:class="{ 'sidebar-content--waiting': !viewerReady }"
+				:inert="!viewerReady"
+			>
 				<v-window
 					v-model="activeTab"
 					class="tab-window"
@@ -276,6 +292,15 @@ const { breadcrumbs, canGoBack, goBack } = useSidebarNavigation()
 
 const currentLevel = computed(() => globalStore.level)
 const currentView = computed(() => globalStore.view)
+
+/**
+ * The sidebar mounts in the same tick as CesiumViewer, but its controls call
+ * getCesium() and read globalStore.cesiumViewer, which exist only once the lazy
+ * Cesium chunk has loaded and the viewer is built. The tab content stays inert
+ * until then (#951). A non-null viewer implies the Cesium module is loaded, so this
+ * one gate covers both the "module not loaded" and the "viewer still null" window.
+ */
+const viewerReady = computed(() => Boolean(globalStore.cesiumViewer))
 /** @type {readonly ('search' | 'layers' | 'analysis' | 'details')[]} */
 const SIDEBAR_TABS = ['search', 'layers', 'analysis', 'details']
 
@@ -449,6 +474,19 @@ const closeVttFlood = () => {
 .sidebar-content {
 	flex: 1;
 	overflow-y: auto;
+}
+
+.sidebar-content--waiting {
+	opacity: 0.6;
+}
+
+.viewer-loading-hint {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 16px 0;
+	font-size: 0.75rem;
+	color: rgba(var(--v-theme-on-surface), 0.6);
 }
 .control-section {
 	padding: 16px;
