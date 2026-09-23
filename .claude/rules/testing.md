@@ -149,6 +149,10 @@ await helpers.drillToLevel('postalCode', '00100');
 await helpers.drillToLevel('postalCode', '00100', { method: 'store' });
 ```
 
+## Error-State Probes
+
+To assert that no error UI is showing, use `visibleErrorStates(page)` from `tests/e2e/helpers/error-states.ts`. It names the error components (error `v-alert`/`v-snackbar`, `.v-input--error`, Cesium's error panel, the app's `.error-*` blocks). Never probe with a class substring such as `[class*="error"]`: Vuetify renders `color="error"` as a `bg-error`/`text-error` class on any component, and the compass North button carries it whenever the heading is north (#947). `tests/unit/testContracts/` fails on substring class probes for any theme colour and checks the selector against real Vuetify rendering.
+
 ## Canvas Selector
 
 Use `#cesiumContainer canvas` instead of bare `canvas` — multiple canvas elements exist on the page (Cesium widget canvas, compass canvas, etc.). Bare `canvas` causes strict mode violations.
