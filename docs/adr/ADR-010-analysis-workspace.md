@@ -102,6 +102,7 @@ This is the cheapest option and remains the interim state until the workspace sh
 
 - Order: #999 (component-ref containers), then the workspace shell (overlay, split pane, map-pane controls), then moving entries one at a time by changing their registry `placement`.
 - Add the workspace placement to the `MAP_VISIBLE` classification in `tests/unit/constants/analysisRegistry.test.js` in the same change that adds it to the registry.
+- That classification can only be `true`, because `writes` entries must be able to use the workspace (item 2). The registry test then trusts the workspace to switch to split mode rather than checking it. The workspace shell needs its own component test: with a `writes` card open, the map pane stays in the layout.
 - When the map pane resizes, check that the viewer re-renders under request render mode (see `.claude/rules/architecture.md`, Cesium Render Mode). Call `viewer.scene.requestRender()` after the resize if it does not.
 - The controls to re-home are `MapOverlayControls.vue` (`position: fixed`, `z-index: 1100`), `CameraControls.vue` (`position: absolute`, `z-index: 400`) and the `.timeline-bottom-bar` in `App.vue` (`z-index: 1100`). Check stacking in a browser: the drawer case above shows that the stylesheet does not predict it.
 - Keep the ADR-005 lazy-loading: workspace cards resolve their components through the registry's `defineAsyncComponent` entries.
