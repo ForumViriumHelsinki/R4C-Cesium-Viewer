@@ -61,6 +61,13 @@ function cesiumReads({ file, code }) {
 		if (new RegExp(String.raw`(?<![\w$.])${alias}\??\.?\[`).test(src)) {
 			untracked.push(`${file}: computed access on ${alias}`)
 		}
+		// `const { X } = alias` hides X from the member-read sweep above.
+		// Destructuring a member (`= alias.Math`) is fine: `alias.Math` is a read.
+		if (
+			new RegExp(String.raw`\b(?:const|let|var)\s*\{[^}]*\}\s*=\s*${alias}\b(?!\s*\??\.)`).test(src)
+		) {
+			untracked.push(`${file}: destructured Cesium module via ${alias}`)
+		}
 	}
 	if (DESTRUCTURE.test(src)) untracked.push(`${file}: destructured Cesium module`)
 	return { reads, untracked }
