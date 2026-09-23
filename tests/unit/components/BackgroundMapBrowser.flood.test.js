@@ -18,19 +18,19 @@ import BackgroundMapBrowser from '@/components/BackgroundMapBrowser.vue'
 import { createFloodImageryLayer } from '@/services/floodwms'
 import { useURLStore } from '@/stores/urlStore'
 
-// SYKE WMS GetCapabilities, checked 2026-09-23: tulva/ows (stormwater),
-// meritulvakartat_2022_yhdistelma (combined), meritulvakartat_2022 (coastal)
-const SYKE_SCENARIOS = [
-	'HulevesitulvaVesisyvyysSade52mmMallinnettuAlue',
-	'HulevesitulvaVesisyvyysSade80mmMallinnettuAlue',
-	'SSP585_re_with_SSP245_with_SSP126_with_current',
-	'coastal_flood_SSP126_2050_0020_with_protected',
-	'coastal_flood_SSP245_2050_0020_with_protected',
-	'coastal_flood_SSP585_2050_0020_with_protected',
-	'coastal_flood_SSP126_2100_0020_with_protected',
-	'coastal_flood_SSP245_2100_0020_with_protected',
-	'coastal_flood_SSP585_2100_0020_with_protected',
-]
+// Layer id -> the SYKE GeoServer workspace whose GetCapabilities lists it
+// (checked 2026-09-23). A layer requested from another workspace renders blank.
+const SYKE_SCENARIOS = {
+	HulevesitulvaVesisyvyysSade52mmMallinnettuAlue: 'tulva',
+	HulevesitulvaVesisyvyysSade80mmMallinnettuAlue: 'tulva',
+	SSP585_re_with_SSP245_with_SSP126_with_current: 'meritulvakartat_2022_yhdistelma',
+	coastal_flood_SSP126_2050_0020_with_protected: 'meritulvakartat_2022',
+	coastal_flood_SSP245_2050_0020_with_protected: 'meritulvakartat_2022',
+	coastal_flood_SSP585_2050_0020_with_protected: 'meritulvakartat_2022',
+	coastal_flood_SSP126_2100_0020_with_protected: 'meritulvakartat_2022',
+	coastal_flood_SSP245_2100_0020_with_protected: 'meritulvakartat_2022',
+	coastal_flood_SSP585_2100_0020_with_protected: 'meritulvakartat_2022',
+}
 
 vi.mock('@/services/floodwms', () => ({
 	createFloodImageryLayer: vi.fn().mockResolvedValue(undefined),
@@ -88,11 +88,13 @@ describe('BackgroundMapBrowser flood scenarios', { tags: ['@unit'] }, () => {
 
 		await selectEveryScenario(wrapper)
 
-		expect([...new Set(loadedLayers())].sort()).toEqual([...SYKE_SCENARIOS].sort())
+		expect([...new Set(loadedLayers())].sort()).toEqual(Object.keys(SYKE_SCENARIOS).sort())
 		const urlStore = useURLStore()
 		for (const [url, layerName] of vi.mocked(createFloodImageryLayer).mock.calls) {
 			expect(url, layerName).toBe(urlStore.sykeFloodUrl(layerName))
-			expect(url, layerName).toMatch(/^https:\/\/paikkatiedot\.ymparisto\.fi\/geoserver\//)
+			expect(url, layerName).toMatch(
+				new RegExp(`^https://paikkatiedot\\.ymparisto\\.fi/geoserver/${SYKE_SCENARIOS[layerName]}/`)
+			)
 		}
 	})
 
