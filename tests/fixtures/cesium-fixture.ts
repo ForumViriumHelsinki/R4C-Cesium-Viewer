@@ -526,6 +526,13 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 				.locator('.viewer-loading-hint')
 				.waitFor({ state: 'detached', timeout: 30000 })
 				.catch(() => console.log('Sidebar viewer gate still closed after 30s, continuing...'))
+			// The hint also detaches when viewer initialisation fails, and the content then
+			// stays inert. Log it, or the first sidebar click times out with no stated cause.
+			if ((await page.locator('.viewer-init-error').count()) > 0) {
+				console.log(
+					'Viewer initialisation failed (.viewer-init-error shown); sidebar stays inert, continuing...'
+				)
+			}
 
 			// Initialize mock viewer if not already created
 			await page.evaluate(() => {
