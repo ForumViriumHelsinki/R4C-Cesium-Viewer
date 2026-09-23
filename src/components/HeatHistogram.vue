@@ -14,6 +14,7 @@ import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
+import logger from '../utils/logger.js'
 
 /**
  * @component HeatHistogram
@@ -296,8 +297,10 @@ export default {
 
 		// Lifecycle hooks for mounting and unmounting
 		onMounted(() => {
-			void nextTick(() => {
+			nextTick(() => {
 				newHeatHistogram()
+			}).catch((error) => {
+				logger.error('Failed to draw heat histogram:', error)
 			})
 
 			eventBus.on('newHeatHistogram', createHistogram)

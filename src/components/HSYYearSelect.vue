@@ -13,6 +13,7 @@ import { ref, watch } from 'vue'
 import { eventBus } from '../services/eventEmitter.js'
 import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	setup() {
@@ -29,7 +30,9 @@ export default {
 				// nonexistent `landcoverLayers` off globalStore — it lives on
 				// backgroundMapStore). Both were silently ignored.
 				removeLandcover()
-				void createHSYImageryLayer()
+				createHSYImageryLayer().catch((error) => {
+					logger.error('Failed to create HSY landcover layer:', error)
+				})
 				eventBus.emit('recreate piechart')
 			}
 		)

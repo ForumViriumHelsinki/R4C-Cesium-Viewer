@@ -70,6 +70,7 @@ import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
 import Datasource from '../services/datasource.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
+import logger from '../utils/logger.js'
 
 /**
  * @component Timeline
@@ -187,7 +188,9 @@ export default {
 			if (!buildingsDataSource) return
 
 			const entities = buildingsDataSource.entities.values
-			void buildingService.setHeatExposureToBuildings(entities)
+			buildingService.setHeatExposureToBuildings(entities).catch((error) => {
+				logger.error('Failed to restyle buildings for the selected date:', error)
+			})
 			// `updateHeatHistogramDataAfterFilter` is tagged `@private` on the Building
 			// facade but is part of its public API used by external callers such as this
 			// component (a real annotation mismatch in services/building/index.js, which is
