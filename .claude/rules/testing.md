@@ -83,15 +83,18 @@ EventBus emits 'showBuilding'
 
 ## Cesium & Store Global Variables
 
-The app exposes Cesium and Pinia state on `window` in E2E mode (`VITE_E2E_TEST=true`):
+The app exposes Cesium and Pinia state on `window` in any build with `VITE_E2E_TEST=true`, whatever its `MODE`. That includes the CI bundle, which Build Frontend makes with `vite build` (`MODE=production`) and `VITE_E2E_TEST=true`. Some hooks are also set on the dev server and under Vitest:
 
-| Variable             | Set by                       | Contains                                                                                                       |
-| -------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `window.__cesium`    | `useViewerInitialization.js` | Cesium module                                                                                                  |
-| `window.__viewer`    | `useViewerInitialization.js` | Cesium.Viewer instance                                                                                         |
-| `window.Cesium`      | NOT set by app               | Only set by CI mock fixture                                                                                    |
-| `window.globalStore` | `src/main.js`                | Live Pinia globalStore reference                                                                               |
-| `window.__perfStats` | `src/utils/perfStats.js`     | Perf counters (limiter queue-wait, cache hit/miss/bytes, requestRender count); `reset()` zeroes between trials |
+| Variable                                                                                                           | Set by                                            | Set when                                             | Contains                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `window.__cesium`                                                                                                  | `useViewerInitialization.js`                      | `VITE_E2E_TEST=true`                                 | Cesium module                                                                                                  |
+| `window.__viewer`                                                                                                  | `useViewerInitialization.js`                      | `VITE_E2E_TEST=true`                                 | Cesium.Viewer instance                                                                                         |
+| `window.__featurepicker`                                                                                           | `useViewerInitialization.js`                      | `VITE_E2E_TEST=true`                                 | `Featurepicker` class, for driving a real pick without canvas clicks                                           |
+| `window.globalStore`, `buildingStore`, `toggleStore`, `featureFlagStore` and a `use*Store()` getter returning each | `src/utils/e2eStoreHooks.js`, called by `main.js` | `VITE_E2E_TEST=true`, or `MODE` `development`/`test` | Live Pinia store instances                                                                                     |
+| `window.__perfStats`                                                                                               | `src/utils/perfStats.js`                          | `VITE_E2E_TEST=true`, or the dev server              | Perf counters (limiter queue-wait, cache hit/miss/bytes, requestRender count); `reset()` zeroes between trials |
+| `window.Cesium`                                                                                                    | NOT set by app                                    | -                                                    | Only set by CI mock fixture                                                                                    |
+
+A normal production build (the container image, no `VITE_E2E_TEST`) sets none of these. `tests/unit/utils/e2eStoreHooks.test.js` pins the store row in both directions. Other `window` reads in specs, such as `cesiumViewer`, `__PINIA__` and `useGraphicsStore`, are never set by the app (#998).
 
 Test helpers must check `window.__cesium || window.Cesium` — never just `window.Cesium`.
 
