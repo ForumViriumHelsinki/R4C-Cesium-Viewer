@@ -8,10 +8,20 @@
  * and assert on the fake scene the service writes to.
  */
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
+import { useGraphicsFlagSync } from '@/composables/useGraphicsFlagSync.js'
 import Graphics from '@/services/graphics.js'
+import { useFeatureFlagStore } from '@/stores/featureFlagStore'
 import { useGraphicsStore } from '@/stores/graphicsStore.js'
+
+// Flags come from local overrides in these tests; keep the OpenFeature
+// client out of the picture.
+vi.mock('@/services/featureFlagProvider', () => ({
+	getClient: () => ({
+		getBooleanValue: (_flagId, defaultValue) => defaultValue,
+	}),
+}))
 
 // Run the deferred support detection synchronously so init() applies the
 // initial settings before each test's assertions.
@@ -147,6 +157,94 @@ describe(
 		it('does not write to a destroyed viewer', async () => {
 			viewer.destroy()
 			graphicsStore.setHdrEnabled(true)
+			await nextTick()
+			expect(viewer.scene.highDynamicRange).toBe(false)
+		})
+	}
+)
+
+describe(
+	'graphics feature flags reach the scene through graphicsStore',
+	{ tags: ['@unit'] },
+	() => {
+		let featureFlagStore
+		let viewer
+		let graphics
+		let stopSync
+
+		beforeEach(() => {
+			setActivePinia(createPinia())
+			localStorage.clear()
+			featureFlagStore = useFeatureFlagStore()
+			// Production order: App.vue starts the flag sync in setup, before the
+			// viewer (and its graphics service) exists.
+			stopSync = useGraphicsFlagSync()
+			viewer = createFakeViewer()
+			graphics = new Graphics()
+		})
+
+		afterEach(() => {
+			stopSync()
+			graphics.destroy()
+		})
+
+		it('keeps request render mode on with the flag at its default', async () => {
+			graphics.init(viewer)
+			await nextTick()
+			expect(featureFlagStore.isEnabled('requestRenderMode')).toBe(true)
+			expect(viewer.scene.requestRenderMode).toBe(true)
+		})
+
+		it('turns request render mode off and on with the requestRenderMode flag', async () => {
+			graphics.init(viewer)
+			featureFlagStore.setFlag('requestRenderMode', false)
+			await nextTick()
+			expect(viewer.scene.requestRenderMode).toBe(false)
+
+			featureFlagStore.resetFlag('requestRenderMode')
+			await nextTick()
+			expect(viewer.scene.requestRenderMode).toBe(true)
+		})
+
+		it('turns HDR on and off with the hdrRendering flag', async () => {
+			graphics.init(viewer)
+			featureFlagStore.setFlag('hdrRendering', true)
+			await nextTick()
+			expect(viewer.scene.highDynamicRange).toBe(true)
+
+			featureFlagStore.setFlag('hdrRendering', false)
+			await nextTick()
+			expect(viewer.scene.highDynamicRange).toBe(false)
+		})
+
+		it('turns ambient occlusion on and off with the ambientOcclusion flag', async () => {
+			graphics.init(viewer)
+			featureFlagStore.setFlag('ambientOcclusion', true)
+			await nextTick()
+			expect(viewer.scene.postProcessStages.ambientOcclusion.enabled).toBe(true)
+
+			featureFlagStore.setFlag('ambientOcclusion', false)
+			await nextTick()
+			expect(viewer.scene.postProcessStages.ambientOcclusion.enabled).toBe(false)
+		})
+
+		it('applies HDR and AO flags that resolve before hardware support is detected', async () => {
+			// Flags usually load before the viewer's idle-time support detection.
+			featureFlagStore.setFlag('hdrRendering', true)
+			featureFlagStore.setFlag('ambientOcclusion', true)
+			await nextTick()
+
+			graphics.init(viewer)
+			await nextTick()
+
+			expect(viewer.scene.highDynamicRange).toBe(true)
+			expect(viewer.scene.postProcessStages.ambientOcclusion.enabled).toBe(true)
+		})
+
+		it('leaves HDR off when the hardware does not support it', async () => {
+			viewer.scene.highDynamicRangeSupported = false
+			featureFlagStore.setFlag('hdrRendering', true)
+			graphics.init(viewer)
 			await nextTick()
 			expect(viewer.scene.highDynamicRange).toBe(false)
 		})

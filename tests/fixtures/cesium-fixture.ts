@@ -716,23 +716,6 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 		// Wait for app to be ready
 		await waitForAppReady(page, process.env.CI ? 60000 : 30000)
 
-		// Enable performance mode via graphics store
-		await page.evaluate(() => {
-			// Wait for store to be available and set performance preset
-			const checkStore = setInterval(() => {
-				if ((window as any).useGraphicsStore) {
-					const graphicsStore = (window as any).useGraphicsStore()
-					if (graphicsStore) {
-						graphicsStore.applyQualityPreset('performance')
-						console.log('[Test] Graphics store set to performance mode')
-						clearInterval(checkStore)
-					}
-				}
-			}, 100)
-			// Timeout after 5 seconds
-			setTimeout(() => clearInterval(checkStore), 5000)
-		})
-
 		// First, handle any Cesium error panels that may be blocking the UI
 		const cesiumErrorOkButton = page.locator('.cesium-widget-errorPanel button:has-text("OK")')
 		const cesiumErrorVisible = await cesiumErrorOkButton.isVisible().catch(() => false)

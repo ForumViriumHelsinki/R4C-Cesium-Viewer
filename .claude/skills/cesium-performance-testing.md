@@ -85,38 +85,22 @@ viewer.scene.maximumRenderTimeChange = Infinity; // Don't auto-render on time ch
 - Use focused testing for faster iteration (`bun run test:layer-controls`)
 - Leverage fail-fast mode (`--max-failures=1`) for development
 
-## Graphics Quality Preset for Testing
+## Graphics Settings Under Test
 
-### Performance Preset Configuration
+There is no graphics quality preset. `applyQualityPreset` and `GraphicsQuality.vue`
+were removed (#983); the fixture's call to it never ran, because the app does not
+expose `useGraphicsStore` on `window`.
 
-Apply low-quality graphics settings to speed up rendering:
+What the tests actually get:
 
-```typescript
-// In cesium-fixture.ts
-await cesiumPage.evaluate(() => {
-	const graphicsStore = window.$app?.config?.globalProperties?.$pinia?.state?.value?.graphics;
-	if (graphicsStore) {
-		graphicsStore.applyQualityPreset('performance');
-	}
-});
-```
-
-**Performance Preset Settings**:
-
-- Lower texture resolution
-- Reduced shadow quality
-- Simplified terrain rendering
-- Faster tile loading
-- Less detailed 3D buildings
-
-**Impact**:
-
-- 40-50% faster Cesium initialization
-- Lower memory footprint
-- Reduced GPU load
-- **No impact on accessibility test accuracy** (tests focus on UI, not visuals)
-
-**Reference**: `tests/fixtures/cesium-fixture.ts:678-693`
+- **Request render mode** is forced on at viewer creation when `VITE_E2E_TEST=true`
+  (`useViewerInitialization.js`), and otherwise follows the `requestRenderMode`
+  flag, which defaults on.
+- **HDR and ambient occlusion** follow the `hdrRendering` and `ambientOcclusion`
+  flags (`composables/useGraphicsFlagSync.js`). CI serves the production bundle,
+  where both fall back to off. A local `bun run dev:test` without a GOFF relay
+  enables every flag, so both are on wherever the renderer supports them; set a
+  `featureFlags` localStorage override to turn them off.
 
 ## Fixture Initialization Optimization
 
@@ -129,9 +113,7 @@ await cesiumPage.evaluate(() => {
 if (process.env.CI) {
 	await page.addInitScript(() => {
 		// Inject mock Cesium (464 lines)
-		window.Cesium = {
-			/* mock implementation */
-		};
+		window.Cesium = {/* mock implementation */};
 	});
 }
 // Init time: ~2-3 seconds
@@ -155,7 +137,6 @@ if (!process.env.CI) {
 
 - CI: Faster, but doesn't catch WebGL-specific issues
 - Local: Slower, but tests real rendering behavior
-- Both: Apply performance presets to balance speed/accuracy
 
 ## Timeout Configuration for Performance
 
@@ -394,11 +375,10 @@ console.log('Entities:', viewer.entities.values.length);
 
 1. **Always use requestRenderMode** - Eliminates 90% of stability issues
 2. **Never increase workers** - WebGL constraint is hardware-limited
-3. **Apply performance preset** - Faster init, no impact on test accuracy
-4. **Keep tight timeouts** - Catches real performance problems early
-5. **Destroy viewers properly** - Prevents memory leaks
-6. **Use focused testing** - Fast iteration during development
-7. **Profile when needed** - Use traces to identify bottlenecks
+3. **Keep tight timeouts** - Catches real performance problems early
+4. **Destroy viewers properly** - Prevents memory leaks
+5. **Use focused testing** - Fast iteration during development
+6. **Profile when needed** - Use traces to identify bottlenecks
 
 ## Resources
 

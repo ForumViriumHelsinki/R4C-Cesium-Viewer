@@ -48,18 +48,16 @@ VITE_FEATURE_LAND_COVER=true
 | ------------------- | ------- | --------------------------------------------------------- | ------------ | -------------- |
 | `hdrRendering`      | `false` | High Dynamic Range rendering for better lighting          | Yes          | Yes            |
 | `ambientOcclusion`  | `false` | Screen Space Ambient Occlusion for depth perception       | Yes          | Yes            |
-| `msaaOptions`       | `true`  | Multi-Sample Anti-Aliasing options                        | No           | No             |
-| `fxaaOptions`       | `true`  | Fast Approximate Anti-Aliasing                            | No           | No             |
-| `requestRenderMode` | `false` | Performance optimization - only render when scene changes | Yes          | No             |
+| `requestRenderMode` | `true`  | Performance optimization - only render when scene changes | No           | No             |
 | `terrain3d`         | `true`  | Helsinki 3D terrain rendering                             | No           | No             |
+
+`hdrRendering`, `ambientOcclusion` and `requestRenderMode` drive `graphicsStore` through `src/composables/useGraphicsFlagSync.js`, so a GOFF change or a Feature Flags panel override reaches the live Cesium scene. MSAA stays at 4x and FXAA off; there are no flags for them.
 
 **Environment Variables:**
 
 ```bash
 VITE_FEATURE_HDR=false
 VITE_FEATURE_AO=false
-VITE_FEATURE_MSAA=true
-VITE_FEATURE_FXAA=true
 VITE_FEATURE_REQUEST_RENDER=false
 VITE_FEATURE_3D_TERRAIN=true
 ```
