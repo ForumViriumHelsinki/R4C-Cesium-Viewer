@@ -1,7 +1,7 @@
 <template>
 	<div
-		id="buildingGridChartContainer"
 		ref="containerRef"
+		class="building-grid-chart-container"
 	/>
 </template>
 
@@ -19,7 +19,6 @@ export default {
 		const globalStore = useGlobalStore()
 		const propsStore = usePropsStore()
 		const plotService = new Plot()
-		const buildingContainerId = 'buildingGridChartContainer'
 		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
 		const {
 			width: chartWidth,
@@ -35,7 +34,7 @@ export default {
 		const createBuildingGridChart = (buildingProps) => {
 			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
 			if (chartWidth.value === 0) return
-			plotService.initializePlotContainer(buildingContainerId)
+			plotService.initializePlotContainer(containerRef.value)
 			const margin = { top: 30, right: 40, bottom: 55, left: 40 }
 			const width = chartWidth.value - margin.left - margin.right
 			const height = chartHeight.value - margin.top - margin.bottom
@@ -52,7 +51,7 @@ export default {
 				{ label: '80-', value: buildingProps._pop_d_over80._value },
 			]
 
-			const svg = plotService.createSVGElement(margin, width, height, `#${buildingContainerId}`)
+			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 			const xScale = plotService.createScaleBand(
 				data.map((d) => d.label),
 				width
@@ -64,7 +63,7 @@ export default {
 			)
 
 			plotService.setupAxes(svg, xScale, yScale, height)
-			const tooltip = plotService.createTooltip(`#${buildingContainerId}`)
+			const tooltip = plotService.createTooltip(containerRef.value)
 
 			createBars(svg, data, xScale, yScale, height, tooltip, 0, 'steelblue')
 			svg
@@ -101,7 +100,7 @@ export default {
 				.on('mouseover', (event, d) =>
 					plotService.handleMouseover(
 						tooltip,
-						buildingContainerId,
+						containerRef.value,
 						event,
 						d,
 						(data) => `Age ${data.label}: ${(data.value * 100).toFixed(2)} %`
@@ -148,7 +147,7 @@ export default {
 </script>
 
 <style>
-#buildingGridChartContainer {
+.building-grid-chart-container {
 	position: relative;
 	width: 100%;
 }

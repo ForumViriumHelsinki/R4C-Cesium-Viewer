@@ -42,6 +42,9 @@ and the component per view — is declared once in
 not in `ControlPanel.vue`/`AnalysisPanel.vue`. Labels are the accessible names
 E2E specs locate by. Charts size themselves with `useChartSize` (container width,
 aspect-derived height) and draw through `Plot.createSVGElement` (viewBox SVG).
+Each chart passes its own template ref to `Plot` (container, tooltip, clear),
+never a document-global id, so two instances can be on screen at once;
+`tests/unit/components/chartContainerScope.test.js` enforces this.
 
 ## Services Layer
 
