@@ -269,20 +269,24 @@ cesiumTest('test name', async ({ cesiumPage }, testInfo) => {
 
 `tests/performance/load.test.ts` is a **Vitest** suite that drives a real Chromium via the `playwright` Node library directly — it does **not** use the Playwright test runner or the `cesium-fixture`. That hybrid has gotchas the rest of the E2E suite (Playwright-runner specs) never hits. When editing or adding tests here:
 
-| Trap                 | Playwright-runner spec                | Vitest-driven suite                                                                                                                                                                         |
-| -------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Visibility assert    | `await expect(locator).toBeVisible()` | **No `toBeVisible` matcher** — use `expect(await locator.isVisible()).toBe(true)`                                                                                                           |
-| Memory / heap        | `page.metrics()`                      | **No `page.metrics()`** (Puppeteer-only) — `page.evaluate(() => (performance as any).memory?.usedJSHeapSize ?? 0)` (Chromium-only, works under SwiftShader)                                 |
-| Response timing      | `response.timing()`                   | **No `response.timing()`** (Puppeteer-only) — use `response.request().timing()` if ever needed                                                                                              |
-| Server               | `webServer` auto-starts               | **No auto-start** — a preview/dev server must already be running (`just test-performance` handles this)                                                                                     |
-| Modal dismissal      | `cesiumPage` fixture dismisses it     | **Must dismiss manually** — replicate `removeBlockingOverlays` (see below)                                                                                                                  |
-| Per-test time budget | spec timeout                          | bounded by the **global `testTimeout` (10s)** — a test whose own threshold (e.g. `SESSION_DURATION` 45s) exceeds it needs an explicit per-test timeout: `it('…', async () => { … }, 60000)` |
+| Trap                 | Playwright-runner spec                | Vitest-driven suite                                                                                                                                                                                                                          |
+| -------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visibility assert    | `await expect(locator).toBeVisible()` | **No `toBeVisible` matcher** — use `expect(await locator.isVisible()).toBe(true)`                                                                                                                                                            |
+| Memory / heap        | `page.metrics()`                      | **No `page.metrics()`** (Puppeteer-only) — `page.evaluate(() => (performance as any).memory?.usedJSHeapSize ?? 0)` (Chromium-only, works under SwiftShader)                                                                                  |
+| Response timing      | `response.timing()`                   | **No `response.timing()`** (Puppeteer-only) — use `response.request().timing()` if ever needed                                                                                                                                               |
+| Server               | `webServer` auto-starts               | **No auto-start** — a preview/dev server must already be running (`just test-performance` handles this)                                                                                                                                      |
+| Modal dismissal      | `cesiumPage` fixture dismisses it     | **Must dismiss manually** — `gotoReady()` in `tests/performance/harness.ts` does it (see below)                                                                                                                                              |
+| Per-test time budget | spec timeout                          | bounded by the **global `testTimeout` (10s)** — a test that loads the map or whose own threshold (e.g. `SESSION_DURATION`) exceeds it needs an explicit per-test timeout that covers page readiness too: `it('…', async () => { … }, 60000)` |
 
 **`networkidle` never settles on the Cesium map.** The 3D globe streams tiles continuously, so `page.waitForLoadState('networkidle')` hangs until it times out. Use `'load'` instead. If you must bound a `networkidle` wait, cap it **below** the 10s test timeout (`TEST_TIMEOUTS.ELEMENT_SCROLL` = 3s) and `.catch(() => {})` so the catch actually fires.
 
-**Floating map controls intercept canvas clicks.** Tests that `canvas.click()` at map coordinates collide with the nav drawer (`.control-panel`), camera/zoom/compass controls (`.camera-controls-container`, `.zoom-controls`, `.compass-assembly`), and the compact timeline — each swallows the click and Playwright retries for 30s. Inject a helper (mirroring `tests/fixtures/cesium-fixture.ts` `removeBlockingOverlays`) that removes the disclaimer dialog + scrims and sets `pointer-events: none` on those control containers, then call it after `waitForSelector('canvas')`.
+**Go through the harness (`tests/performance/harness.ts`).** Open pages with `openPage(browser)`, never `browser.newPage()`: the suite's `afterEach` closes them even when the test timed out, and then asserts no browser context is left open. Navigate with `gotoReady(page, url, timeout)`, which waits for `window.__viewer`, a sized `#cesiumContainer canvas` and no **active** global loading overlay (`.loading-overlay` is an eager `v-overlay` that is always in the DOM, so check `v-overlay--active`, not visibility). Contract tests in `tests/unit/testContracts/` fail on a raw `newPage`/`newContext` in `tests/performance/` and on any un-awaited Playwright action under `tests/` (#961).
 
-**Software-rendering skip.** Headless Chromium (CI **and** local headless) uses SwiftShader, so GPU-bound metrics like FPS aren't representative. Detect and `ctx.skip()` at runtime:
+**Click the map with `clickMap(page, x, y)`, not `locator.click()`.** In headless Chromium, viewport buildings keep streaming in for over a minute after load and hold the page's main thread about 95% busy (long-task observer, local run with and without SwiftShader, 2026-09). A locator click first waits for Playwright's visible/enabled/stable checks, each of which needs that thread, and it took seconds per click. `clickMap` dispatches `page.mouse.click` at canvas coordinates and records how long the browser took to acknowledge it; `probeResponsiveness(page)` records an empty `page.evaluate` round trip. `gotoReady` also hides the disclaimer dialog and scrims and sets `pointer-events: none` on the floating controls (nav drawer, camera/zoom/compass controls, compact timeline), so clicks at map coordinates reach the canvas.
+
+**Informational output.** Each test's per-click latency, probe latency and long-task totals go to the log as `[perf] {…}` lines and to `$PERF_RESULTS_DIR/metrics.jsonl` (default `performance-results/`). A failed test also leaves a screenshot and a Playwright trace there. The CI job uploads the directory with `if: always()`. Keep timings informational unless a threshold was calibrated from these CI numbers.
+
+**Software-rendering skip.** Headless Chromium uses SwiftShader unless launched with `--enable-gpu`, and the CI runner has no GPU, so GPU-bound metrics like FPS aren't representative there. Measure anyway, record the value, then `ctx.skip()`; the assertion runs only on a real GPU, which means `just test-performance` locally (it passes `--enable-gpu`, #843):
 
 ```ts
 it('…fps…', async (ctx) => {
@@ -291,16 +295,17 @@ it('…fps…', async (ctx) => {
 		const ext = gl?.getExtension('WEBGL_debug_renderer_info');
 		return ext ? (gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string) : '';
 	});
+	const fps = await measureFps(page);
+	recordMetric(ctx.task.name, { renderer, fps });
 	if (/swiftshader|llvmpipe|software/i.test(renderer)) {
-		await page.close();
 		ctx.skip();
 		return;
 	}
-	// …real-GPU measurement…
+	expect(fps).toBeGreaterThan(MIN_FPS);
 });
 ```
 
-The viewer is exposed as `window.__viewer` (double underscore, gated on `VITE_E2E_TEST`) — never `window.cesiumViewer`. The Performance Tests CI job runs **only on push-to-`main`, not on PRs**, and is not a merge gate, so a PR check won't catch breakage here — verify locally with `just test-performance`.
+The viewer is exposed as `window.__viewer` (double underscore, gated on `VITE_E2E_TEST`) — never `window.cesiumViewer`. The Performance Tests CI job runs on PRs as a **non-required** check (no ruleset lists it), on pushes to `main`, and on manual runs, with the SwiftShader flags from `playwright.config.ts` passed in `PERF_TEST_CHROMIUM_ARGS`. `just test-performance 1` reproduces it locally.
 
 ## No Wall-Clock Comparison Assertions in Unit Tests
 

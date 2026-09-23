@@ -361,11 +361,13 @@ jobs:
             test-results/
           retention-days: 7
 
+  # Runs on PRs as a non-required check (no ruleset lists it), as well as on
+  # pushes to main and manual runs (#961).
   performance-tests:
     name: Performance Tests
     needs: [build, unit-tests]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 25
     env:
       NODE_OPTIONS: '--max-old-space-size=2048'
 
@@ -416,6 +418,12 @@ jobs:
 
       - name: Run performance tests
         run: bun run test:performance
+        env:
+          # Software GL, as in playwright.config.ts: the runner has no GPU.
+          PERF_TEST_CHROMIUM_ARGS: '--use-gl=angle --use-angle=swiftshader --disable-gpu --disable-dev-shm-usage --no-sandbox'
+          # The harness writes per-test metrics here, plus a screenshot and a
+          # Playwright trace for each failed test.
+          PERF_RESULTS_DIR: performance-results
 
       - name: Cleanup server process
         if: always()
@@ -423,6 +431,7 @@ jobs:
 
       - name: Upload performance results
         uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: performance-results
           path: performance-results/
@@ -473,6 +482,7 @@ jobs:
         integration-tests,
         e2e-tests,
         accessibility-tests,
+        performance-tests,
         security-scan,
       ]
     if: always()
@@ -543,6 +553,15 @@ jobs:
             echo "- ⏭️ **Accessibility Tests**: Skipped" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ❌ **Accessibility Tests**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Performance Tests (not a required check)
+          if [ "${{ needs.performance-tests.result }}" == "success" ]; then
+            echo "- ✅ **Performance Tests**: Passed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.performance-tests.result }}" == "skipped" ]; then
+            echo "- ⏭️ **Performance Tests**: Skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ **Performance Tests**: Failed" >> $GITHUB_STEP_SUMMARY
           fi
 
           # Security Scan
