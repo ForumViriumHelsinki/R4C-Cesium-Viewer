@@ -108,4 +108,12 @@ describe('Cesium objects in Pinia state', () => {
 			.map((w) => `${w.file}:${w.line} ${w.field} <- ${w.value}`)
 		expect(offending).toEqual([])
 	})
+
+	it('has no stale PENDING entries (delete an entry once its fix lands)', () => {
+		// A stale entry would silently allowlist a later regression at that site.
+		const unmarked = new Set(
+			writes.filter((w) => !isRawOrReset(w.value)).map((w) => `${w.file}|${w.field}`)
+		)
+		expect([...PENDING].filter((entry) => !unmarked.has(entry))).toEqual([])
+	})
 })
