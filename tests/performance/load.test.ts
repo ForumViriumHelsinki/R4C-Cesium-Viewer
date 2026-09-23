@@ -45,12 +45,25 @@ const PERF_CONFIG = {
 
 	// Network and stress test thresholds
 	SLOW_NETWORK_TIMEOUT: process.env.CI ? 25000 : 15000,
-	SESSION_DURATION: process.env.CI ? 45000 : 30000,
+	// 50 map clicks with a responsiveness probe after each. The first CI run with
+	// the harness (run 35857022407) took about 42s: probe p50 568ms, because
+	// viewport-building streaming kept the main thread about 95% busy (long tasks
+	// 40.8s of the test). 60s is that plus about 40% headroom (#961).
+	SESSION_DURATION: process.env.CI ? 60000 : 30000,
 
 	// Warmup configuration
 	WARMUP_RUNS: 1, // Number of warmup runs before measurement
 	FPS_MEASUREMENT_DURATION: 2000, // Duration to measure FPS (ms)
 } as const
+
+/**
+ * Logs an asserted measurement next to its threshold (to the CI log and
+ * metrics.jsonl), so thresholds are recalibrated from recorded CI values.
+ */
+function recordThreshold(metric: string, value: number, threshold: number): void {
+	const test = expect.getState().currentTestName?.split(' > ').pop() ?? 'unknown'
+	recordMetric(test, { metric, value: Math.round(value * 10) / 10, threshold })
+}
 
 /**
  * Helper function to measure performance with warmup runs
@@ -147,6 +160,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			const loadTime = Date.now() - startTime
 
 			// Use CI-aware threshold
+			recordThreshold('loadTimeMs', loadTime, PERF_CONFIG.INITIAL_LOAD)
 			expect(loadTime).toBeLessThan(PERF_CONFIG.INITIAL_LOAD)
 		})
 
@@ -202,6 +216,12 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			})
 
 			// Assert CI-aware performance metrics
+			recordThreshold(
+				'domContentLoadedMs',
+				(metrics as any).domContentLoaded,
+				PERF_CONFIG.DOM_READY
+			)
+			recordThreshold('loadCompleteMs', (metrics as any).loadComplete, PERF_CONFIG.FULL_LOAD)
 			expect((metrics as any).domContentLoaded).toBeLessThan(PERF_CONFIG.DOM_READY)
 			expect((metrics as any).loadComplete).toBeLessThan(PERF_CONFIG.FULL_LOAD)
 		})
@@ -336,6 +356,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			const memoryGrowthMB = (finalHeapBytes - initialHeapBytes) / (1024 * 1024)
 
 			// Use CI-aware threshold
+			recordThreshold('memoryGrowthMB', memoryGrowthMB, PERF_CONFIG.MAX_MEMORY_INCREASE_MB)
 			expect(memoryGrowthMB).toBeLessThan(PERF_CONFIG.MAX_MEMORY_INCREASE_MB)
 			// Per-test timeout: page readiness plus 10 clicks under software rendering.
 		}, 75000)
@@ -355,6 +376,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			const responseTime = Date.now() - startTime
 
 			// Use CI-aware threshold
+			recordThreshold('responseTimeMs', responseTime, PERF_CONFIG.RAPID_INTERACTIONS_TIME)
 			expect(responseTime).toBeLessThan(PERF_CONFIG.RAPID_INTERACTIONS_TIME)
 
 			// Page should remain responsive
@@ -386,6 +408,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			})
 
 			const loadTime = Date.now() - startTime
+			recordThreshold('loadTimeMs', loadTime, PERF_CONFIG.SLOW_NETWORK_TIMEOUT)
 			expect(loadTime).toBeLessThan(PERF_CONFIG.SLOW_NETWORK_TIMEOUT)
 		})
 
@@ -521,6 +544,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			const totalTime = endTime - startTime
 
 			// Should handle concurrent requests within reasonable time
+			recordThreshold('totalTimeMs', totalTime, 10000)
 			expect(totalTime).toBeLessThan(10000)
 
 			// Check that API responses were received
@@ -561,6 +585,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			const sessionDuration = endTime - startTime
 
 			// Use CI-aware threshold
+			recordThreshold('sessionDurationMs', sessionDuration, PERF_CONFIG.SESSION_DURATION)
 			expect(sessionDuration).toBeLessThan(PERF_CONFIG.SESSION_DURATION)
 
 			// Application should still be responsive
@@ -571,7 +596,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			await clickMap(page, 400, 300)
 			// Per-test timeout: page readiness plus SESSION_DURATION and a margin, so the
 			// session's own threshold is what fails, not the test timeout.
-		}, 105000)
+		}, 120000)
 
 		it('should handle multiple browser tabs efficiently', async () => {
 			const tabs: Page[] = []
