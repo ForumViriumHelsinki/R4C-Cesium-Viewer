@@ -66,8 +66,7 @@ test.describe('Sidebar before the Cesium viewer exists (#951)', () => {
 			const content = page.locator('.sidebar-content')
 			await expect(hint).toBeVisible()
 			expect(chunkRequested, 'the Cesium chunk request must be the thing being held').toBe(true)
-			// Soft from here to the release, so a regression reports every symptom at once.
-			await expect.soft(content).toHaveAttribute('inert', '')
+			await expect(content).toHaveAttribute('inert', '')
 
 			/** Real mouse input at the element's centre; the browser decides who receives it. */
 			const mouseClick = async (target: ReturnType<typeof page.locator>) => {
@@ -93,10 +92,10 @@ test.describe('Sidebar before the Cesium viewer exists (#951)', () => {
 			await page.keyboard.press('Enter')
 
 			// Inert: the controls did not take the input, and nothing threw.
-			await expect.soft(searchInput).toHaveValue('')
+			await expect(searchInput).toHaveValue('')
 			await page.getByRole('tab', { name: /Layers/ }).click()
-			await expect.soft(landCover).not.toBeChecked()
-			await expect.soft(satellite).not.toHaveClass(/\bselected\b/)
+			await expect(landCover).not.toBeChecked()
+			await expect(satellite).not.toHaveClass(/\bselected\b/)
 			expect(errors, 'errors while the Cesium chunk was held').toEqual([])
 
 			releaseChunk()
