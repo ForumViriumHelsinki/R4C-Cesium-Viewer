@@ -90,7 +90,7 @@ Material Design Icons render as **inline SVG paths** via a custom Vuetify iconse
 
 When RRM is on, Cesium only re-renders when something changes (camera move, entity update, imagery load); when off, the scene re-renders every animation frame at ~60 FPS. On a 3D globe with terrain + buildings + WMS imagery the difference is roughly one CPU core and a hot dGPU — keep RRM on unless a specific feature genuinely needs continuous rendering, and explicitly call `viewer.scene.requestRender()` at any mutation site that would otherwise be visually invisible under RRM (existing camera/entity/imagery hooks already do this).
 
-The tab-visibility handler in `useViewerInitialization.js` turns request-render mode on while the tab is hidden. On return it restores `graphicsStore.requestRenderMode || isE2ETest`, the expression viewer creation uses, and requests one frame (#1018). `tests/unit/services/requestRenderModeWriters.test.js` fails if a file other than the graphics service or that composable writes `scene.requestRenderMode`, or if a write is neither `true` nor read from `graphicsStore`.
+The tab-visibility handler in `useViewerInitialization.js` turns request-render mode on while the tab is hidden. On return it restores `graphicsStore.requestRenderMode || isE2ETest`, the expression viewer creation uses, and requests one frame (#1018). `tests/unit/services/requestRenderModeWriters.test.js` fails if a file other than the graphics service or that composable writes `scene.requestRenderMode`, or if a write is neither `true` nor the `graphicsStore.requestRenderMode` value itself (optionally `|| isE2ETest`; a negated read fails).
 
 ## Bulk Entity Styling (grids, building sets)
 

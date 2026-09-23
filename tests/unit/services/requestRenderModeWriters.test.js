@@ -11,9 +11,11 @@
  * - it is in a file on the allowlist (the graphics service and the viewer
  *   composable), and
  * - its right-hand side is either the literal `true` (pausing is always safe)
- *   or an expression that reads graphicsStore.requestRenderMode.
+ *   or the store value graphicsStore.requestRenderMode, optionally
+ *   `|| isE2ETest`.
  *
- * A literal `false`, or any value that does not come from the store, fails.
+ * A literal `false`, a negated or otherwise transformed store read, or any
+ * value that does not come from the store fails.
  */
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -48,8 +50,15 @@ function findSceneWrites() {
 	return writes
 }
 
+/**
+ * The store value itself, optionally `|| isE2ETest` (the expression viewer
+ * creation uses). Anchored so a write that merely mentions the store, such as
+ * `!graphicsStore.requestRenderMode`, does not pass.
+ */
+const STORE_VALUE = /^(?:this\.)?graphicsStore\.requestRenderMode(?:\s*\|\|\s*isE2ETest)?$/
+
 /** @param {string} rhs */
-const isAllowedValue = (rhs) => rhs === 'true' || /graphicsStore\.requestRenderMode\b/.test(rhs)
+const isAllowedValue = (rhs) => rhs === 'true' || STORE_VALUE.test(rhs)
 
 describe('scene.requestRenderMode writers', () => {
 	const writes = findSceneWrites()
@@ -72,7 +81,7 @@ describe('scene.requestRenderMode writers', () => {
 		expect(outside).toEqual([])
 	})
 
-	it('every write is `true` or reads graphicsStore.requestRenderMode', () => {
+	it('every write is `true` or the graphicsStore.requestRenderMode value', () => {
 		const offending = writes
 			.filter((w) => !isAllowedValue(w.rhs))
 			.map((w) => `${w.file}:${w.line} ${w.target}.requestRenderMode = ${w.rhs}`)
