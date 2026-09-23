@@ -157,6 +157,16 @@ Container build/release use the org reusable workflows (`ForumViriumHelsinki/.gi
 
 Sentry build args (`SENTRY_AUTH_TOKEN`, `VITE_SENTRY_DSN`) reach the build via the reusable workflows' `secret-build-args` passthrough — secrets cannot flow through plain `inputs.build-args` on reusable-workflow callers.
 
+### Security Scan (`bun audit` gate)
+
+The Security Scan job runs `bun scripts/security/audit-gate.mjs` (locally: `just audit`). It is blocking and fails when:
+
+- `bun audit` reports an advisory that is not on `.github/audit-allowlist.json`;
+- an allowlist entry is malformed or past its `expires` date;
+- a `package.json` override floor (`^x.y.z`) is itself inside a vulnerable range, checked against the npm bulk advisory endpoint that `bun audit` also uses.
+
+Fix an advisory by raising a direct dependency or an override floor, then refresh the lockfile. `bun audit fix` (bun ≥1.4) moves transitive packages to the lowest safe version within their dependents' ranges. CI pins bun 1.3.14, so confirm the result with `mise exec bun@1.3.14 -- bun install --frozen-lockfile`. Allowlist an advisory only when no fixed version is reachable. Each entry needs the GHSA `id`, the `package`, a `reason` and an `expires` date (#947).
+
 ### Lighthouse CI
 
 `lighthouse.yml` runs `lhci collect` against `bun run preview`. Two hazards specific to this heavy CesiumJS app:
