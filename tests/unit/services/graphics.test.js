@@ -241,6 +241,24 @@ describe(
 			expect(viewer.scene.postProcessStages.ambientOcclusion.enabled).toBe(true)
 		})
 
+		it('applies flag values already set when the sync starts', async () => {
+			graphics.init(viewer)
+			stopSync()
+			featureFlagStore.setFlag('requestRenderMode', false)
+			featureFlagStore.setFlag('hdrRendering', true)
+			featureFlagStore.setFlag('ambientOcclusion', true)
+			await nextTick()
+			// No sync running: the flag changes have not reached the scene.
+			expect(viewer.scene.requestRenderMode).toBe(true)
+			expect(viewer.scene.highDynamicRange).toBe(false)
+
+			stopSync = useGraphicsFlagSync()
+			await nextTick()
+			expect(viewer.scene.requestRenderMode).toBe(false)
+			expect(viewer.scene.highDynamicRange).toBe(true)
+			expect(viewer.scene.postProcessStages.ambientOcclusion.enabled).toBe(true)
+		})
+
 		it('leaves HDR off when the hardware does not support it', async () => {
 			viewer.scene.highDynamicRangeSupported = false
 			featureFlagStore.setFlag('hdrRendering', true)
