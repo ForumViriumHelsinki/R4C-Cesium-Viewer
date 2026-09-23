@@ -571,6 +571,26 @@ mounted() {
 // Plus Composition API code elsewhere
 ```
 
+### Bind Store State With `storeToRefs`, Not `ref(store.field)`
+
+`ref(toggleStore.showTrees)` copies the value once, at setup. A later write from
+elsewhere (`smartReset()`, `goHome()`, another panel) never reaches the copy, so the
+switch and the store disagree (#967). Bind the store instead:
+
+```javascript
+// ✅ CORRECT: two-way binding; v-model writes the store, store writes reach the UI
+const { showTrees, landCover } = storeToRefs(toggleStore);
+```
+
+```javascript
+// ❌ WRONG: a snapshot that goes stale on the first external write
+const showTrees = ref(toggleStore.showTrees);
+```
+
+`tests/unit/lint/no-store-snapshot-refs.test.js` fails on `ref(<name>Store.<field>)`
+in `src/`. `StatisticalGridOptions.vue` is allowlisted because a watcher copies every
+store write back into its ref.
+
 ### Gate UI on `initialized` for Async-Fetched State
 
 When a store hydrates from an async source in `onMounted` (auth via `/oauth2/userinfo`, feature flags via OpenFeature, user profile, etc.), the initial reactive value is whatever the store defaults to — almost always the unauthenticated / disabled / empty case. Rendering UI on that default state during the in-flight round-trip produces a flash of the wrong affordance: a "Sign in" button briefly shown to an already-authenticated user, a feature toggle showing off before the override loads, a name field blank before the profile lands.

@@ -101,7 +101,8 @@
  * <MapControls />
  */
 
-import { computed, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, watch } from 'vue'
 import backgroundPreloader from '../services/backgroundPreloader.js'
 import Building from '../services/building.js'
 import Datasource from '../services/datasource.js'
@@ -126,22 +127,20 @@ const store = useGlobalStore()
 const loadingStore = useLoadingStore()
 
 /**
- * Reactive state for data layer toggles
- * Synchronized with toggleStore for persistence
+ * Layer toggles and building filters, bound to toggleStore in both directions.
+ * The switches write the store, and writes from elsewhere (smartReset, goHome,
+ * the Land Cover analysis panel) reach the switches (#967).
  */
-const showVegetation = ref(toggleStore.showVegetation)
-const showOtherNature = ref(toggleStore.showOtherNature)
-const showTrees = ref(toggleStore.showTrees)
-const landCover = ref(toggleStore.landCover)
-const ndvi = ref(toggleStore.ndvi)
-
-/**
- * Reactive state for building filter toggles
- * Synchronized with toggleStore for persistence
- */
-const hideNonSote = ref(toggleStore.hideNonSote)
-const hideNewBuildings = ref(toggleStore.hideNewBuildings)
-const hideLow = ref(toggleStore.hideLow)
+const {
+	showVegetation,
+	showOtherNature,
+	showTrees,
+	landCover,
+	ndvi,
+	hideNonSote,
+	hideNewBuildings,
+	hideLow,
+} = storeToRefs(toggleStore)
 
 /**
  * Computed properties for view-specific features
@@ -476,19 +475,6 @@ watch(
 	() => {
 		resetFilters()
 	}
-)
-
-/**
- * Synchronizes local landCover state with store changes
- *
- * Ensures the UI stays in sync with store state when changed externally.
- */
-watch(
-	() => toggleStore.landCover,
-	(newValue) => {
-		landCover.value = newValue
-	},
-	{ immediate: true }
 )
 
 onMounted(() => {
