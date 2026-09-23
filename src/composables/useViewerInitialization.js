@@ -57,6 +57,10 @@ export function useViewerInitialization() {
 	let Camera = null
 	let Graphics = null
 
+	// Graphics service instance for this viewer. Its graphicsStore watchers are
+	// created outside a component scope, so destroyViewer must release them.
+	let graphics = null
+
 	// Captured handler for cleanup — visibilitychange fires globally, so the listener
 	// must be removed when the viewer is torn down to avoid post-destroy scene access.
 	let visibilityChangeHandler = null
@@ -191,8 +195,10 @@ export function useViewerInitialization() {
 			logger.debug('[useViewerInitialization] 🧪 Test mode enabled - viewer exposed to window')
 		}
 
-		// Initialize graphics quality settings
-		const graphics = new Graphics()
+		// Initialize graphics quality settings. retryInit may call initViewer
+		// again, so release the previous instance's store watchers first.
+		graphics?.destroy()
+		graphics = new Graphics()
 		graphics.init(viewer.value)
 
 		viewer.value.imageryLayers.add(
@@ -237,6 +243,8 @@ export function useViewerInitialization() {
 			document.removeEventListener('visibilitychange', visibilityChangeHandler)
 			visibilityChangeHandler = null
 		}
+		graphics?.destroy()
+		graphics = null
 		if (viewer.value && !viewer.value.isDestroyed?.()) {
 			viewer.value.destroy()
 		}
