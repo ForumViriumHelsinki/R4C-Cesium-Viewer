@@ -112,6 +112,20 @@ describe('Flood WMS Service', () => {
 			)
 		})
 
+		it('should credit Syke (CC BY 4.0) unless another attribution is given', async () => {
+			const mockUrl = 'https://mock-flood-wms.example.com/wms?SERVICE=WMS'
+
+			await createFloodImageryLayer(mockUrl, 'flood:risk')
+			expect(WebMapServiceImageryProviderMock).toHaveBeenLastCalledWith(
+				expect.objectContaining({ credit: expect.stringMatching(/Syke.*CC BY 4\.0/) })
+			)
+
+			await createFloodImageryLayer(mockUrl, 'flood:risk', '© Example data provider')
+			expect(WebMapServiceImageryProviderMock).toHaveBeenLastCalledWith(
+				expect.objectContaining({ credit: '© Example data provider' })
+			)
+		})
+
 		it('should use GeographicTilingScheme for EPSG:4326', async () => {
 			const mockUrl = 'https://mock-flood-wms.example.com/wms?SERVICE=WMS'
 			const mockLayerName = 'flood:risk'
