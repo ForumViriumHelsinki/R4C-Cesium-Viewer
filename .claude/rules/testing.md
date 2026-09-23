@@ -383,6 +383,12 @@ viewer itself, and the CI path waits for the hint to detach. A spec that uses th
 plain `test` fixture and touches the sidebar must wait as well:
 `await page.locator('.viewer-loading-hint').waitFor({ state: 'detached' })`.
 
+If viewer initialisation fails (the Cesium chunk does not load, or the Viewer
+constructor throws), `globalStore.viewerInitFailed` is set and the hint is replaced
+by `.viewer-init-error` (`role="alert"`, "The map failed to load." and a Reload
+button). The loading hint detaches, but the tab content stays inert.
+`tests/unit/pages/ControlPanel.initFailure.test.js` covers both failure paths.
+
 jsdom implements no `inert` behaviour. `tests/unit/pages/ControlPanel.preinit.test.js`
 models it: it skips elements under `[inert]`, the same way a browser would.
 

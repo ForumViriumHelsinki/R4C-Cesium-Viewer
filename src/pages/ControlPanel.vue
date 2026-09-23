@@ -98,7 +98,22 @@
 
 			<!-- Tab content: inert until the Cesium viewer exists (#951) -->
 			<div
-				v-if="!viewerReady"
+				v-if="viewerInitFailed"
+				class="viewer-init-error"
+				role="alert"
+			>
+				<v-icon size="small">mdi-alert-circle</v-icon>
+				<span>The map failed to load.</span>
+				<v-btn
+					variant="text"
+					size="small"
+					@click="reloadPage"
+				>
+					Reload
+				</v-btn>
+			</div>
+			<div
+				v-else-if="!viewerReady"
 				class="viewer-loading-hint"
 				role="status"
 			>
@@ -301,6 +316,12 @@ const currentView = computed(() => globalStore.view)
  * one gate covers both the "module not loaded" and the "viewer still null" window.
  */
 const viewerReady = computed(() => Boolean(globalStore.cesiumViewer))
+/**
+ * Initialisation failed and the viewer will never arrive: replace the loading hint
+ * with a failure notice. The content stays inert; it cannot work without a viewer.
+ */
+const viewerInitFailed = computed(() => !viewerReady.value && globalStore.viewerInitFailed)
+const reloadPage = () => window.location.reload()
 /** @type {readonly ('search' | 'layers' | 'analysis' | 'details')[]} */
 const SIDEBAR_TABS = ['search', 'layers', 'analysis', 'details']
 
@@ -480,13 +501,18 @@ const closeVttFlood = () => {
 	opacity: 0.6;
 }
 
-.viewer-loading-hint {
+.viewer-loading-hint,
+.viewer-init-error {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	padding: 6px 16px 0;
 	font-size: 0.75rem;
 	color: rgba(var(--v-theme-on-surface), 0.6);
+}
+
+.viewer-init-error {
+	color: rgb(var(--v-theme-error));
 }
 .control-section {
 	padding: 16px;
