@@ -185,15 +185,24 @@ const mountTwice = async (Component) => {
 
 const chartSvgCounts = (ws) => ws.map((w) => w.element.querySelectorAll(CHART_SVG).length)
 
+// Plot.createTooltip gives the tooltip div this class.
+const tooltipCounts = (ws) => ws.map((w) => w.element.querySelectorAll('.tooltip').length)
+
 /**
- * Each instance holds exactly one chart, and a redraw (as on resize) replaces
- * it in the same container rather than stacking a second one.
+ * Each instance holds exactly one chart and its own tooltip(s), and a redraw
+ * (as on resize) replaces them in the same container rather than stacking a
+ * second copy.
+ *
+ * @param {import('@vue/test-utils').VueWrapper[]} ws - The two mounted instances
+ * @param {number} [tooltips] - Tooltips one instance creates per draw
  */
-const expectOwnContainers = async (ws) => {
+const expectOwnContainers = async (ws, tooltips = 1) => {
 	expect(chartSvgCounts(ws), 'first draw').toEqual([1, 1])
+	expect(tooltipCounts(ws), 'tooltips, first draw').toEqual([tooltips, tooltips])
 	for (const redraw of resize.callbacks) redraw()
 	await nextTick()
 	expect(chartSvgCounts(ws), 'after every instance redraws').toEqual([1, 1])
+	expect(tooltipCounts(ws), 'tooltips, after redraw').toEqual([tooltips, tooltips])
 }
 
 const prop = (value) => ({ _value: value })
@@ -223,7 +232,8 @@ describe('two chart instances draw into their own containers', { tags: ['@unit']
 		global.averageHeatExposure = 0.4
 		usePropsStore().buildingHeatExposure = 0.6
 
-		await expectOwnContainers(await mountTwice(BuildingHeatChart))
+		// BuildingHeatChart draws no tooltip.
+		await expectOwnContainers(await mountTwice(BuildingHeatChart), 0)
 	})
 
 	it('BuildingGridChart', async () => {
