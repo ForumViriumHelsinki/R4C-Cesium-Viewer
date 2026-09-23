@@ -236,9 +236,13 @@ const signOut = () => {
 	window.location.href = '/oauth2/sign_out'
 }
 
+// Envoy's OIDC filter gates every path on this host and implements only
+// /oauth2/callback and /oauth2/sign_out; there is no /oauth2/start (#994).
+// Reloading the current URL goes back through that filter, which starts the
+// Google login when the session is missing or expired and otherwise lets
+// userStore.fetchUserInfo() run again.
 const signIn = () => {
-	const rd = encodeURIComponent(window.location.pathname + window.location.search)
-	window.location.href = `/oauth2/start?rd=${rd || '%2F'}`
+	window.location.reload()
 }
 
 // ADR-008 escape hatch: ?ui=legacy is matched by the Envoy Gateway HTTPRoute,

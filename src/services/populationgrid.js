@@ -181,7 +181,7 @@ export default class Populationgrid {
 			try {
 				const entities = await this.datasourceService.loadGeoJsonDataSource(
 					0.1,
-					'assets/data/hsy_populationgrid.json',
+					'/assets/data/hsy_populationgrid.json',
 					'PopulationGrid'
 				)
 
