@@ -23,6 +23,8 @@
 | `propsStore.js`          | Property and building attribute data                                                     |
 | `urlStore.js`            | URL state management for deep linking                                                    |
 
+Cesium objects (viewer, entities, data sources, imagery layers) go into store state only through `markRaw`. Otherwise Pinia returns a reactive proxy, and Cesium's collections, which match by identity, cannot find the object to remove it (#1019: flood scenarios stacked on the map). `tests/unit/stores/cesiumStateMarkRaw.test.js` checks every write to the store fields that the Sentry `stateTransformer` in `src/main.js` strips as Cesium objects. A new Cesium-holding field belongs in that transformer too.
+
 ## Main Pages
 
 | Component          | Purpose                                                 |
