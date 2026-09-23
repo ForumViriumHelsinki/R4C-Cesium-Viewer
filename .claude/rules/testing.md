@@ -54,6 +54,17 @@ job's budget step fails when `bun run test:e2e --list` exceeds
 `E2E_TEST_CEILING` in `.github/workflows/test.yml`; raise it deliberately when
 adding specs.
 
+The End-to-End job is a `--shard=i/N` matrix (`shardIndex`/`shardTotal` in
+`test.yml`), because one worker with two retries does not fit the scoped set
+into one 15-minute job. The `chromium` project sets `fullyParallel: true` so
+Playwright shards by test rather than by file; with `workers: 1` it still runs
+one test at a time. Each shard's budget step also fails above
+`ceil(E2E_TEST_CEILING / shardTotal)` tests, and the contract test checks that
+the shards cover every `test:e2e` test exactly once within that share. To
+change the shard count, edit both matrix lists. To reproduce a CI shard
+locally, set `CI=true`: without it `cesiumDescribe` adds a `beforeAll` hook,
+and Playwright then groups that describe's tests differently across shards.
+
 ## Component Architecture for Testing
 
 ### Timeline Components by Navigation Level

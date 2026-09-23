@@ -142,6 +142,12 @@ export default defineConfig({
 			 * a11y matrix). Matching those specs here too ran them a fourth time in
 			 * the End-to-End job, which then hit its 15-minute timeout (#947). */
 			testIgnore: /tests\/e2e\/accessibility\//,
+			/* Makes each test its own unit for `--shard`, which the End-to-End CI
+			 * matrix uses. Without it Playwright shards whole files, and all 46
+			 * map-click-feedback.spec.ts tests land in one shard that cannot finish
+			 * inside the job timeout. It adds no concurrency: `workers: 1` above
+			 * still runs one test at a time. */
+			fullyParallel: true,
 		},
 
 		// Accessibility-focused projects with specific viewport testing

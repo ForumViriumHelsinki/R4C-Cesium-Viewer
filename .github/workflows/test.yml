@@ -201,7 +201,7 @@ jobs:
           NODE_ENV: test
 
   e2e-tests:
-    name: End-to-End Tests
+    name: End-to-End Tests (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     needs: [build, unit-tests]
     if: ${{ github.event.inputs.skip_e2e != 'true' }}
     runs-on: ubuntu-latest
@@ -212,6 +212,17 @@ jobs:
       # (no DB, no mock API). Skip specs tagged @requires-database since they
       # need real building entities / postal-code GeoJSON to pass. See #658.
       SKIP_REQUIRES_DATABASE: 'true'
+
+    strategy:
+      # One worker with two retries runs the scoped chromium set for longer
+      # than one 15-minute job (#947, #1008), so Playwright splits it by test
+      # (fullyParallel on the chromium project) across shards. A failing
+      # shard must not cancel the others. shardIndex must list 1..shardTotal
+      # exactly once; tests/unit/ci/playwrightProjects.test.js checks it.
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        shardTotal: [10]
 
     steps:
       - name: Checkout code
@@ -239,14 +250,28 @@ jobs:
         # Lists (does not run) what test:e2e collects and fails above a ceiling,
         # so a project-scoping regression shows up as a number here rather than
         # as a cancellation at the 15-minute job timeout (742 tests before #947).
+        # The timeout applies to each shard, so each shard also checks its own
+        # share against the ceiling divided across shards. That catches a shard
+        # that received a whole large file (fullyParallel dropped from the
+        # chromium project) while the total is still within the ceiling.
         # Raise E2E_TEST_CEILING deliberately when new specs are added.
         env:
           E2E_TEST_CEILING: '150'
+          SHARD_INDEX: ${{ matrix.shardIndex }}
+          SHARD_TOTAL: ${{ matrix.shardTotal }}
         run: |
-          count=$(bun run test:e2e --list | sed -n 's/^Total: \([0-9][0-9]*\) tests.*/\1/p')
+          total_tests() { sed -n 's/^Total: \([0-9][0-9]*\) tests.*/\1/p'; }
+          count=$(bun run test:e2e --list | total_tests)
           echo "test:e2e collects ${count:-an unknown number of} tests (ceiling ${E2E_TEST_CEILING})"
           if [ -z "$count" ] || [ "$count" -gt "$E2E_TEST_CEILING" ]; then
             echo "::error::test:e2e collects ${count:-an unknown number of} tests, above the ceiling of ${E2E_TEST_CEILING}. Check the --project scope in package.json and testIgnore in playwright.config.ts."
+            exit 1
+          fi
+          shard_ceiling=$(( (E2E_TEST_CEILING + SHARD_TOTAL - 1) / SHARD_TOTAL ))
+          shard_count=$(bun run test:e2e --list --shard="${SHARD_INDEX}/${SHARD_TOTAL}" | total_tests)
+          echo "shard ${SHARD_INDEX}/${SHARD_TOTAL} collects ${shard_count:-an unknown number of} tests (ceiling ${shard_ceiling})"
+          if [ -z "$shard_count" ] || [ "$shard_count" -gt "$shard_ceiling" ]; then
+            echo "::error::shard ${SHARD_INDEX}/${SHARD_TOTAL} collects ${shard_count:-an unknown number of} tests, above the per-shard ceiling of ${shard_ceiling}. Check fullyParallel on the chromium project in playwright.config.ts."
             exit 1
           fi
 
@@ -274,7 +299,7 @@ jobs:
           timeout: '30'
 
       - name: Run Playwright tests
-        run: bun run test:e2e
+        run: bun run test:e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Cleanup server process
         if: always()
@@ -284,7 +309,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-report-e2e
+          name: playwright-report-e2e-${{ matrix.shardIndex }}-of-${{ matrix.shardTotal }}
           path: playwright-report/
           retention-days: 7
 
