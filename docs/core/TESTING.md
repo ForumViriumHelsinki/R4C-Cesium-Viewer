@@ -113,6 +113,8 @@ npm run test:e2e -- --headed  # With browser UI
 npm run test:e2e -- --debug   # Debug mode
 ```
 
+`test:e2e` runs only the `chromium` Playwright project, which excludes `tests/e2e/accessibility/`. The accessibility specs run in the `accessibility-*` projects (`bun run test:accessibility:desktop`, `:tablet`, `:mobile`). See `.claude/rules/testing.md` § Playwright Projects.
+
 > **Mock API mode caveats:** when E2E tests run against the mock backend (`just dev-mock`), some endpoints return synthetic fixtures rather than full production-shaped data. See [Mock API Limitations](../GETTING_STARTED.md#mock-api-limitations) for the list of unsupported queries and the recommended fallback (`just dev` with a seeded DB) when a test exercises those code paths.
 
 ### 3a. Accessibility Tests (`tests/e2e/accessibility/`)

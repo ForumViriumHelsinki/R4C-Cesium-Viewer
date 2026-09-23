@@ -36,6 +36,24 @@ bunx playwright test --grep @wms
 
 Combine tags: `bunx playwright test --grep "@accessibility.*@smoke"`
 
+## Playwright Projects
+
+Each spec belongs to one kind of project (#947):
+
+| Project                                         | Collects                                                           | Run by                                                                                                 |
+| ----------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `chromium`                                      | every `*.spec.ts` except `tests/e2e/accessibility/` (`testIgnore`) | `bun run test:e2e` (CI End-to-End job), `just test-file` on a non-accessibility spec                   |
+| `accessibility-desktop` / `-tablet` / `-mobile` | `tests/e2e/accessibility/` at 1920×1080, 768×1024 and 375×667      | `bun run test:accessibility:<viewport>` (CI accessibility matrix), `just test-accessibility` (desktop) |
+| `Mobile Chrome`                                 | `tests/e2e/` except accessibility, Pixel 5                         | no CI job; only unscoped runs such as `bun run test:e2e:mock`                                          |
+
+`--project=chromium` on an accessibility spec therefore collects nothing; use
+`--project=accessibility-desktop`. `tests/unit/ci/playwrightProjects.test.js`
+fails if a spec is collected by both `chromium` and an `accessibility-*`
+project, or if `test:e2e` runs any project other than `chromium`. The End-to-End
+job's budget step fails when `bun run test:e2e --list` exceeds
+`E2E_TEST_CEILING` in `.github/workflows/test.yml`; raise it deliberately when
+adding specs.
+
 ## Component Architecture for Testing
 
 ### Timeline Components by Navigation Level
@@ -231,7 +249,7 @@ Locating a control by its `mdi-*` class is reliable. A brand-new icon must be re
 
 Most `tests/e2e/accessibility/*` specs are tagged `@requires-database` — they drill to postal-code / building levels that need seeded data, and the reset/back/compass controls only mount once data loads. Without a database they skip or fail, so **red accessibility/E2E checks locally (or on a config-only PR) are usually environmental, not a regression**. Notes:
 
-- DB-free subset: `just dev-mock` + `just test-e2e-mock` (sets `SKIP_REQUIRES_DATABASE=true`).
+- DB-free subset: `just dev-mock` + `bun run test:accessibility:mock` for the accessibility specs. `just test-e2e-mock` (sets `SKIP_REQUIRES_DATABASE=true`) runs the `chromium` project, which excludes them (see Playwright Projects).
 - `camera-controls.spec.ts` is `cesiumDescribe.skip`-ed at the source — it always reports 0/skipped.
 - Setting `window.globalStore.level` alone does **not** mount the postal-code view; the data load gates the render. Use `AccessibilityTestHelpers.drillToLevel(..., { method: 'store' })` for deterministic level changes.
 

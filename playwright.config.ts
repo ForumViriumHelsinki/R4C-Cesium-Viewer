@@ -138,6 +138,10 @@ export default defineConfig({
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
 			testMatch: /.*\.spec\.ts/,
+			/* The accessibility-* projects below own tests/e2e/accessibility (the CI
+			 * a11y matrix). Matching those specs here too ran them a fourth time in
+			 * the End-to-End job, which then hit its 15-minute timeout (#947). */
+			testIgnore: /tests\/e2e\/accessibility\//,
 		},
 
 		// Accessibility-focused projects with specific viewport testing

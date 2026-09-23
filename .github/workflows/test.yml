@@ -235,6 +235,21 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Check E2E test count budget
+        # Lists (does not run) what test:e2e collects and fails above a ceiling,
+        # so a project-scoping regression shows up as a number here rather than
+        # as a cancellation at the 15-minute job timeout (742 tests before #947).
+        # Raise E2E_TEST_CEILING deliberately when new specs are added.
+        env:
+          E2E_TEST_CEILING: '150'
+        run: |
+          count=$(bun run test:e2e --list | sed -n 's/^Total: \([0-9][0-9]*\) tests.*/\1/p')
+          echo "test:e2e collects ${count:-an unknown number of} tests (ceiling ${E2E_TEST_CEILING})"
+          if [ -z "$count" ] || [ "$count" -gt "$E2E_TEST_CEILING" ]; then
+            echo "::error::test:e2e collects ${count:-an unknown number of} tests, above the ceiling of ${E2E_TEST_CEILING}. Check the --project scope in package.json and testIgnore in playwright.config.ts."
+            exit 1
+          fi
+
       - name: Cache Playwright browsers
         uses: actions/cache@v5.0.5
         with:
