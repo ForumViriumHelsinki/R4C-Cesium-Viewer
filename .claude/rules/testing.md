@@ -280,7 +280,7 @@ cesiumTest('test name', async ({ cesiumPage }, testInfo) => {
 
 **`networkidle` never settles on the Cesium map.** The 3D globe streams tiles continuously, so `page.waitForLoadState('networkidle')` hangs until it times out. Use `'load'` instead. If you must bound a `networkidle` wait, cap it **below** the 10s test timeout (`TEST_TIMEOUTS.ELEMENT_SCROLL` = 3s) and `.catch(() => {})` so the catch actually fires.
 
-**Go through the harness (`tests/performance/harness.ts`).** Open pages with `openPage(browser)`, never `browser.newPage()`: the suite's `afterEach` closes them even when the test timed out, and then asserts no browser context is left open. Navigate with `gotoReady(page, url, timeout)`, which waits for `window.__viewer`, a sized `#cesiumContainer canvas` and no **active** global loading overlay (`.loading-overlay` is an eager `v-overlay` that is always in the DOM, so check `v-overlay--active`, not visibility). Contract tests in `tests/unit/testContracts/` fail on a raw `newPage`/`newContext` in `tests/performance/` and on any un-awaited Playwright action under `tests/` (#961).
+**Go through the harness (`tests/performance/harness.ts`).** Open pages with `openPage(browser)`, never `browser.newPage()`: the suite's `afterEach` closes them even when the test timed out, and then asserts no browser context is left open. Navigate with `gotoReady(page, url, timeout)`, which waits for `window.__viewer`, a sized `#cesiumContainer canvas` and no **active** global loading overlay (`.loading-overlay` is an eager `v-overlay` that is always in the DOM, so check `v-overlay--active`, not visibility). Contract tests in `tests/unit/testContracts/` fail on a raw `newPage`/`newContext` in `tests/performance/` and on an un-awaited page, locator, mouse or keyboard action (the `ACTIONS` list in `floatingPlaywrightActions.test.js`) under `tests/` (#961). Route-handler calls (`route.continue()`, `route.abort()`) are not in that list; return or await them.
 
 **Click the map with `clickMap(page, x, y)`, not `locator.click()`.** Under SwiftShader, the renderer the CI runner uses, the page's main thread spends almost all of its time in long tasks once the map is up: 43.1s of long tasks during the 43.4s extended-usage session in CI (run 35858081838), and 10.2s of 10.9s in a local SwiftShader run. On a real GPU (`--enable-gpu`, Apple M4 Pro) the same session logged one 66ms long task (2026-09). A locator click first waits for Playwright's visible/enabled/stable checks, each of which needs that thread, and it took seconds per click. `clickMap` dispatches `page.mouse.click` at canvas coordinates and records how long the browser took to acknowledge it; `probeResponsiveness(page)` records an empty `page.evaluate` round trip. `gotoReady` also hides the disclaimer dialog and scrims and sets `pointer-events: none` on the floating controls (nav drawer, camera/zoom/compass controls, compact timeline), so clicks at map coordinates reach the canvas.
 
@@ -295,7 +295,9 @@ it('…fps…', async (ctx) => {
 		const ext = gl?.getExtension('WEBGL_debug_renderer_info');
 		return ext ? (gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string) : '';
 	});
-	const fps = await measureFps(page);
+	// Frames per second from Cesium's scene.postRender, counted inside page.evaluate
+	// (load.test.ts inlines the counter; the harness does not export one).
+	const fps = await page.evaluate(countPostRenderFps, 2000);
 	recordMetric(ctx.task.name, { renderer, fps });
 	if (/swiftshader|llvmpipe|software/i.test(renderer)) {
 		ctx.skip();
