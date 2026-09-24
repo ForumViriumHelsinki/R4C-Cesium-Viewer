@@ -1,7 +1,7 @@
 <template>
 	<div
-		id="heatHistogramContainer"
 		ref="containerRef"
+		class="heat-histogram-container"
 	/>
 </template>
 
@@ -84,11 +84,11 @@ export default {
 		 * @param {d3.ScaleLinear} yScale - D3 scale for y-axis (bar heights)
 		 * @param {number} height - Chart height in pixels
 		 * @param {d3.Selection} tooltip - D3 tooltip element
-		 * @param {string} containerId - Container element ID for positioning
+		 * @param {HTMLElement | null} container - Chart container, for tooltip positioning
 		 * @param {Function} dataFormatter - Function to format tooltip content
 		 * @returns {void}
 		 */
-		const createBars = (svg, data, xScale, yScale, height, tooltip, containerId, dataFormatter) => {
+		const createBars = (svg, data, xScale, yScale, height, tooltip, container, dataFormatter) => {
 			svg
 				.selectAll('.bar')
 				.data(data)
@@ -103,7 +103,7 @@ export default {
 				.attr('fill', (d) => rgbColor(d)) // Assuming you have a function for coloring bars
 				.style('cursor', 'pointer')
 				.on('mouseover', (event, d) =>
-					plotService.handleMouseover(tooltip, containerId, event, d, dataFormatter)
+					plotService.handleMouseover(tooltip, container, event, d, dataFormatter)
 				)
 				.on('mouseout', () => plotService.handleMouseout(tooltip))
 				.on('click', (_event, d) => {
@@ -207,13 +207,13 @@ export default {
 			if (chartWidth.value === 0) return
 			const urbanHeatData = /** @type {number[]} */ (propsStore.heatHistogramData ?? [])
 
-			plotService.initializePlotContainerForGrid('heatHistogramContainer')
+			plotService.initializePlotContainerForGrid(containerRef.value)
 
 			const margin = { top: 30, right: 50, bottom: 34, left: 30 }
 			const width = chartWidth.value - margin.left - margin.right
 			const height = chartHeight.value - margin.top - margin.bottom
 
-			const svg = plotService.createSVGElement(margin, width, height, '#heatHistogramContainer')
+			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 
 			const minDataValue = (d3.min(urbanHeatData) ?? 0) - 0.02
 			const maxDataValue = (d3.max(urbanHeatData) ?? 0) + 0.02
@@ -230,7 +230,7 @@ export default {
 
 			plotService.setupAxes(svg, x, y, height)
 
-			const tooltip = plotService.createTooltip('#heatHistogramContainer')
+			const tooltip = plotService.createTooltip(containerRef.value)
 
 			if (urbanHeatData?.[0]?.toString().startsWith('0')) {
 				createBars(
@@ -240,7 +240,7 @@ export default {
 					y,
 					height,
 					tooltip,
-					'heatHistogramContainer',
+					containerRef.value,
 					(d) => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`
 				)
 				plotService.addTitle(
@@ -257,7 +257,7 @@ export default {
 					y,
 					height,
 					tooltip,
-					'heatHistogramContainer',
+					containerRef.value,
 					(d) =>
 						`Temperature in Celsius: ${d.x0}<br>Amount of buildings: ${d.length}<br>Left click highlights the building(s) on map`
 				)
@@ -276,7 +276,7 @@ export default {
 		 * @returns {void}
 		 */
 		const clearHistogram = () => {
-			d3.select('#heatHistogramContainer').select('svg').remove()
+			if (containerRef.value) d3.select(containerRef.value).select('svg').remove()
 		}
 
 		/**
@@ -317,7 +317,7 @@ export default {
 </script>
 
 <style scoped>
-#heatHistogramContainer {
+.heat-histogram-container {
 	width: 100%;
 	position: relative;
 	background-color: rgb(var(--v-theme-surface));

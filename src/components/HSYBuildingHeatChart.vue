@@ -16,7 +16,6 @@
 
 		<!-- Container for the HSY Building Chart -->
 		<div
-			id="hsyBuildingChartContainer"
 			ref="containerRef"
 			class="chart-container"
 		/>
@@ -86,7 +85,7 @@ export default {
 			const address = store.buildingAddress
 			const postinumero = store.postalcode
 
-			plotService.initializePlotContainer('hsyBuildingChartContainer')
+			plotService.initializePlotContainer(containerRef.value)
 
 			const postalCodeHeat = createPostalCodeTimeseries(postalcodeHeatTimeseries)
 
@@ -94,7 +93,7 @@ export default {
 			const width = chartWidth.value - margin.left - margin.right
 			const height = chartHeight.value - margin.top - margin.bottom
 
-			const svg = plotService.createSVGElement(margin, width, height, '#hsyBuildingChartContainer')
+			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 
 			const allDates = Array.from(
 				new Set(buildingHeatExposure.map((d) => d.date).concat(postalCodeHeat.map((d) => d.date)))
@@ -119,7 +118,7 @@ export default {
 				...postalCodeHeat.map((d) => ({ date: d.date, value: d.averageTemp, type: 'postalcode' })),
 			]
 
-			const tooltip = plotService.createTooltip('#hsyBuildingChartContainer')
+			const tooltip = plotService.createTooltip(containerRef.value)
 
 			createHSYBarsWithLabels(
 				svg,
@@ -197,7 +196,7 @@ export default {
 				.on('mouseover', (event, d) =>
 					plotService.handleMouseover(
 						tooltip,
-						'hsyBuildingChartContainer',
+						containerRef.value,
 						event,
 						d,
 						(data) => `${data.value.toFixed(2)} °C`

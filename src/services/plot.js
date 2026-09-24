@@ -2,6 +2,17 @@ import * as d3 from '@/utils/d3'
 import { useToggleStore } from '../stores/toggleStore.js'
 
 /**
+ * Charts pass their own container element (a template ref), so two instances
+ * of a chart each draw into their own container. An id string is still
+ * accepted for the charts that have not moved to refs.
+ *
+ * @param {string | HTMLElement | null | undefined} container - Element, or its id
+ * @returns {HTMLElement | null}
+ */
+const resolveContainer = (container) =>
+	typeof container === 'string' ? document.getElementById(container) : (container ?? null)
+
+/**
  * Plot Service
  * Provides D3.js-based plotting utilities for data visualization throughout the application.
  * Manages plot containers, SVG creation, scales, axes, tooltips, and interactive chart elements.
@@ -27,10 +38,10 @@ export default class Plot {
 	/**
 	 * Initializes container for plotting
 	 *
-	 * @param {string} containerId - The containerId
+	 * @param {string | HTMLElement | null} containerOrId - The container element, or its id
 	 */
-	initializePlotContainerForGrid(containerId) {
-		const container = document.getElementById(containerId)
+	initializePlotContainerForGrid(containerOrId) {
+		const container = resolveContainer(containerOrId)
 		if (!container) return
 		// Use textContent for safe clearing (prevents potential XSS)
 		container.textContent = ''
@@ -41,10 +52,10 @@ export default class Plot {
 	/**
 	 * Initializes container for plotting
 	 *
-	 * @param {string} containerId - The containerId
+	 * @param {string | HTMLElement | null} containerOrId - The container element, or its id
 	 */
-	initializePlotContainer(containerId) {
-		const container = document.getElementById(containerId)
+	initializePlotContainer(containerOrId) {
+		const container = resolveContainer(containerOrId)
 		if (!container) return
 		// Use textContent for safe clearing (prevents potential XSS)
 		container.textContent = ''
@@ -137,7 +148,7 @@ export default class Plot {
 
 	/**
 	 * Creates a styled tooltip div appended to the given container.
-	 * @param {string} container - CSS selector for the tooltip's parent element
+	 * @param {string | HTMLElement | null} container - The tooltip's parent element, or a CSS selector for it
 	 * @returns {import('@/utils/d3').Selection<HTMLDivElement, unknown, HTMLElement, any>} The tooltip selection
 	 */
 	createTooltip(container) {
@@ -167,8 +178,17 @@ export default class Plot {
 		// you can add that logic here.
 	}
 
-	handleMouseover(tooltip, containerId, event, d, dataFormatter) {
-		const container = document.getElementById(containerId)
+	/**
+	 * Shows the tooltip next to the pointer, positioned relative to the container.
+	 *
+	 * @param {*} tooltip - Tooltip selection from createTooltip
+	 * @param {string | HTMLElement | null} containerOrId - The chart container element, or its id
+	 * @param {MouseEvent} event - The pointer event
+	 * @param {*} d - The hovered datum
+	 * @param {Function} dataFormatter - Builds the tooltip HTML from the datum
+	 */
+	handleMouseover(tooltip, containerOrId, event, d, dataFormatter) {
+		const container = resolveContainer(containerOrId)
 		if (!container) return
 		const containerRect = container.getBoundingClientRect()
 		const xPos = event.pageX - containerRect.left

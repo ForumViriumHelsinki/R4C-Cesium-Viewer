@@ -43,7 +43,7 @@ test.describe('Data Visualization Components', () => {
 		await waitForMapViewTransition(page)
 
 		// Look for heat histogram
-		const heatHistogram = page.locator('#heatHistogramContainer, [data-testid="heat-histogram"]')
+		const heatHistogram = page.locator('.heat-histogram-container, [data-testid="heat-histogram"]')
 
 		const histogramCount = await heatHistogram.count()
 		if (histogramCount > 0) {
@@ -69,7 +69,7 @@ test.describe('Data Visualization Components', () => {
 
 		// Look for building charts
 		const buildingCharts = page.locator(
-			'#buildingGridChartContainer, [data-testid="building-chart"]'
+			'.building-grid-chart-container, [data-testid="building-chart"]'
 		)
 
 		if ((await buildingCharts.count()) > 0) {
