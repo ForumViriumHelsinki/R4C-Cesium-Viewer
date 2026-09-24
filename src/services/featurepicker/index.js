@@ -22,7 +22,6 @@ import CapitalRegion from '../capitalRegion.js'
 import ColdArea from '../coldarea.js'
 import Datasource from '../datasource.js'
 import ElementsDisplay from '../elementsDisplay.js'
-import { eventBus } from '../eventEmitter.js'
 import Helsinki from '../helsinki.js'
 import HSYBuilding from '../hsybuilding.js'
 import Plot from '../plot.js'
@@ -265,7 +264,6 @@ export default class FeaturePicker {
 	async handleBuildingFeature(properties) {
 		await handleBuildingFeatureCore(properties, {
 			store: this.store,
-			toggleStore: this.toggleStore,
 			buildingService: this.buildingService,
 			elementsDisplayService: this.elementsDisplayService,
 		})
@@ -298,15 +296,6 @@ export default class FeaturePicker {
 			})
 		}
 
-		// `null` clears the tree area (propsStore.treeArea is number|null); the
-		// store action's @param is documented as {number} only, so cast here.
-		this.propStore.setTreeArea(/** @type {number} */ (/** @type {unknown} */ (null)))
-		this.propStore.setHeatFloodVulnerability(id.properties ?? null)
-
-		if (id.properties.grid_id) {
-			eventBus.emit('createHeatFloodVulnerabilityChart')
-		}
-
 		// Handle building selection at postal code level
 		if (this.store.level === 'postalCode') {
 			// Assemble context in a variable so TS structural assignment (not
@@ -315,7 +304,6 @@ export default class FeaturePicker {
 			const postalCodeContext = {
 				store: this.store,
 				coldAreaService: this.coldAreaService,
-				toggleStore: this.toggleStore,
 				buildingService: this.buildingService,
 				elementsDisplayService: this.elementsDisplayService,
 			}

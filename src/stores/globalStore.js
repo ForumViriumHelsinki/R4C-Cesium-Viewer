@@ -36,12 +36,12 @@ import { markRaw } from 'vue'
  * @property {string|null} postalcode - Selected postal code (e.g., '00100')
  * @property {string|null} nameOfZone - Selected zone/neighborhood name
  * @property {number} averageHeatExposure - Average heat exposure for selected area (0-1)
- * @property {number} averageTreeArea - Average tree canopy area for selected area (m²)
  * @property {import('../constants/analysisRegistry.js').NavigationLevel} level - Navigation level ('start', 'postalCode', 'building')
  * @property {Object} minMaxKelvin - Min/max Kelvin temperatures by date for heat normalization
  * @property {string} heatDataDate - Selected date for heat exposure visualization (YYYY-MM-DD)
  * @property {Object|null} currentGridCell - Currently selected 250m grid cell entity
  * @property {Object|null} cesiumViewer - CesiumJS viewer instance reference
+ * @property {boolean} viewerInitFailed - Viewer initialisation failed, so cesiumViewer will stay null
  * @property {string|null} buildingAddress - Selected building address string
  * @property {Object|null} pickedEntity - Currently picked Cesium entity
  * @property {boolean} isLoading - Global loading indicator state
@@ -77,7 +77,6 @@ export const useGlobalStore = defineStore('global', {
 		/** @type {string|null} */
 		nameOfZone: null,
 		averageHeatExposure: 0,
-		averageTreeArea: 0,
 		level: /** @type {import('../constants/analysisRegistry.js').NavigationLevel} */ ('start'),
 		errorNotification: {
 			show: false,
@@ -101,6 +100,7 @@ export const useGlobalStore = defineStore('global', {
 		currentGridCell: null,
 		/** @type {Object|null} */
 		cesiumViewer: null,
+		viewerInitFailed: false,
 		/** @type {string|null} */
 		buildingAddress: null,
 		/** @type {Object|null} */
@@ -169,6 +169,14 @@ export const useGlobalStore = defineStore('global', {
 			this.cesiumViewer = viewer ? markRaw(viewer) : null
 		},
 		/**
+		 * Records that viewer initialisation failed (the Cesium chunk did not load, or
+		 * the Viewer constructor threw), so the UI can stop waiting for cesiumViewer.
+		 * @param {boolean} failed
+		 */
+		setViewerInitFailed(failed) {
+			this.viewerInitFailed = failed
+		},
+		/**
 		 * Sets the currently selected 250m population grid cell
 		 * Uses markRaw() to prevent Vue reactivity on Cesium entities.
 		 * @param {Object} currentGridCell - Cesium entity representing the grid cell
@@ -205,13 +213,6 @@ export const useGlobalStore = defineStore('global', {
 		 */
 		setAverageHeatExposure(averageHeatExposure) {
 			this.averageHeatExposure = averageHeatExposure
-		},
-		/**
-		 * Sets the average tree canopy area for the selected area
-		 * @param {number} averageTreeArea - Tree coverage in square meters
-		 */
-		setAverageTreeArea(averageTreeArea) {
-			this.averageTreeArea = averageTreeArea
 		},
 		/**
 		 * Sets the selected building address string

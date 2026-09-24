@@ -24,8 +24,6 @@ export type FeatureFlagName =
 	// Graphics & Performance
 	| 'hdrRendering'
 	| 'ambientOcclusion'
-	| 'msaaOptions'
-	| 'fxaaOptions'
 	| 'requestRenderMode'
 	| 'terrain3d'
 	| 'viewportStreaming'
@@ -156,24 +154,6 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		experimental: true,
 		requiresSupport: true,
 		fallbackDefault: false,
-	},
-	msaaOptions: {
-		goffId: 'r4c-msaa-options',
-		label: 'MSAA Anti-aliasing',
-		description: 'Multi-Sample Anti-Aliasing options',
-		category: 'graphics',
-		experimental: false,
-		requiresSupport: false,
-		fallbackDefault: true,
-	},
-	fxaaOptions: {
-		goffId: 'r4c-fxaa-options',
-		label: 'FXAA Anti-aliasing',
-		description: 'Fast Approximate Anti-Aliasing',
-		category: 'graphics',
-		experimental: false,
-		requiresSupport: false,
-		fallbackDefault: true,
 	},
 	requestRenderMode: {
 		goffId: 'r4c-request-render-mode',

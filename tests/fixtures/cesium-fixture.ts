@@ -518,6 +518,22 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 			// Remove blocking overlays and dialogs
 			await removeBlockingOverlays(page)
 
+			// The sidebar's tab content stays inert until the app's own viewer exists
+			// (ControlPanel.vue, #951). This path does not wait for real Cesium, so wait
+			// for that gate here: while it is closed, clicks retry until they time out and
+			// fill() types into nothing.
+			await page
+				.locator('.viewer-loading-hint')
+				.waitFor({ state: 'detached', timeout: 30000 })
+				.catch(() => console.log('Sidebar viewer gate still closed after 30s, continuing...'))
+			// The hint also detaches when viewer initialisation fails, and the content then
+			// stays inert. Log it, or the first sidebar click times out with no stated cause.
+			if ((await page.locator('.viewer-init-error').count()) > 0) {
+				console.log(
+					'Viewer initialisation failed (.viewer-init-error shown); sidebar stays inert, continuing...'
+				)
+			}
+
 			// Initialize mock viewer if not already created
 			await page.evaluate(() => {
 				if (!(window as any).viewer) {
@@ -699,23 +715,6 @@ export const cesiumTest = base.extend<CesiumFixtures>({
 
 		// Wait for app to be ready
 		await waitForAppReady(page, process.env.CI ? 60000 : 30000)
-
-		// Enable performance mode via graphics store
-		await page.evaluate(() => {
-			// Wait for store to be available and set performance preset
-			const checkStore = setInterval(() => {
-				if ((window as any).useGraphicsStore) {
-					const graphicsStore = (window as any).useGraphicsStore()
-					if (graphicsStore) {
-						graphicsStore.applyQualityPreset('performance')
-						console.log('[Test] Graphics store set to performance mode')
-						clearInterval(checkStore)
-					}
-				}
-			}, 100)
-			// Timeout after 5 seconds
-			setTimeout(() => clearInterval(checkStore), 5000)
-		})
 
 		// First, handle any Cesium error panels that may be blocking the UI
 		const cesiumErrorOkButton = page.locator('.cesium-widget-errorPanel button:has-text("OK")')

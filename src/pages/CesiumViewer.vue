@@ -63,7 +63,7 @@
 		</v-snackbar>
 		<!--
 			Runtime Data Loading Error Snackbar
-			Purpose: Non-critical async service failures (e.g., cold areas, sensors, surveys)
+			Purpose: Non-critical async service failures (e.g., cold areas, sensors)
 			Behavior: Auto-dismisses after 6 seconds, shown at bottom
 			Use case: Optional data failed to load, viewer remains functional
 		-->

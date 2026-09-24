@@ -219,7 +219,6 @@ FeaturePicker.handleFeatureWithProperties(entity)
     - At postal code level → handleBuildingFeature()
     ↓
 Updates Pinia store (level='building')
-EventBus emits 'showBuilding'
     ↓
 Navigation Complete → Check pendingNavigation
     ├─ If exists: globalStore.consumePendingNavigation() → process queued navigation
