@@ -2,8 +2,51 @@ name: Enforce Conventional Commits
 
 on:
   pull_request:
-    types: [opened, edited, synchronize]
+    types: [opened, edited, synchronize, reopened]
 
 jobs:
   conventional-commits:
     uses: ForumViriumHelsinki/.github/.github/workflows/reusable-enforce-conventional-commits.yml@main
+
+  # The job above checks only the title. This one parses the whole squash
+  # commit (title, PR number, PR body wrapped as GitHub wraps it) with
+  # release-please's own parser, because release-please silently drops a commit
+  # it cannot parse and the PR then cuts no release. See
+  # scripts/check-commit-message.mjs and .claude/rules/development.md.
+  #
+  # Cost: ubuntu-slim, a sparse checkout of two files and an npm install of one
+  # package (no bun install of the tree); roughly 15 to 25 s per run.
+  squash-message:
+    name: Squash commit parses
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the checker and package.json
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /scripts/check-commit-message.mjs
+            /package.json
+          sparse-checkout-cone-mode: false
+
+      # Installs only the parser, at the exact version package.json pins, into
+      # a directory of its own so npm does not see this repo's package.json.
+      - name: Install release-please's commit parser
+        run: |
+          set -euo pipefail
+          version=$(jq -er '.devDependencies["@conventional-commits/parser"]' package.json)
+          mkdir -p "$RUNNER_TEMP/check"
+          cp scripts/check-commit-message.mjs "$RUNNER_TEMP/check/"
+          npm install --prefix "$RUNNER_TEMP/check" --no-save --no-package-lock --ignore-scripts --no-audit --no-fund "@conventional-commits/parser@${version}"
+
+      # Title, body and number come from the event through env, never through
+      # ${{ }} in the script, so PR text cannot inject shell.
+      - name: Parse the squash commit message
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node "$RUNNER_TEMP/check/check-commit-message.mjs"
