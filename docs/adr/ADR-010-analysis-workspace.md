@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted (2026-09-24)
 
 ## Date
 
@@ -23,7 +23,7 @@ The following facts were checked at `a3c3269`:
 
 ## Decision
 
-Items 1 to 3 were decided with the maintainer during #987 triage on 2026-09-23. Items 4 to 7 follow from them, or are proposed here for review.
+Items 1 to 3 were decided with the maintainer during #987 triage on 2026-09-23. Items 4 to 7 follow from them, or were proposed here for review; the maintainer accepted all seven with this ADR on 2026-09-24.
 
 ### 1. The workspace is an in-page overlay
 
@@ -52,15 +52,15 @@ If the open cards mix couplings, one `writes` card is enough to put the workspac
 
 `tests/unit/constants/analysisRegistry.test.js` records, for each `placement`, whether the map stays visible beside it. The test fails when an entry uses a placement that is not classified, and when a `writes` or `tool` entry uses a placement that hides the map. The workspace placement has to be classified there before any entry can use it.
 
-### 5. Multiple cards tile in the workspace pane (proposed)
+### 5. Multiple cards tile in the workspace pane
 
 Open cards tile in the workspace pane, each with the ChartCard anatomy from ADR-009, and a card can take the whole pane. Each chart draws into its own ref (item 3), so two cards of the same chart do not interfere.
 
-### 6. Mobile is a single column (proposed)
+### 6. Mobile is a single column
 
 On `smAndDown` the workspace is one column. A `writes` card stacks under a map strip instead of covering the map, which also fixes the phone-drawer gap described under Context. `none` and `reads` cards may take the full screen.
 
-### 7. Floating map controls belong to the map pane (proposed)
+### 7. Floating map controls belong to the map pane
 
 The compass, zoom, rotate and timeline controls are positioned against the map pane rather than the viewport. They move with the split and cannot overlap the workspace. Layering between the workspace and the map controls comes from layout (siblings in separate panes), not from competing `z-index` values against the inline values that Vuetify writes.
 
