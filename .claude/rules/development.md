@@ -139,10 +139,14 @@ hook.)
 
 This repo is set to `squash_merge_commit_message = PR_BODY`, so the squash
 commit is the PR title plus ` (#<number>)`, a blank line, and the PR
-description. GitHub hard-wraps the description at 72 columns when it builds
-that commit, leaves fenced code blocks unwrapped, and drops the indentation of
-each line it wraps. Every squash commit from #964 to #1038 matches that model,
-apart from the `Co-authored-by` trailers GitHub appends.
+description. GitHub hard-wraps each description line longer than 72 characters
+when it builds that commit. It re-joins the line's words with single spaces,
+which drops the indentation and collapses runs of spaces and tabs, and it
+counts an emoji as one character. Code under a fence that starts in column 0 is
+left alone; a fence indented under a list item is wrapped like prose. The 199
+squash commits from #744 to #1043 all match the model in
+`scripts/check-commit-message.mjs`, apart from the `Co-authored-by` trailers
+GitHub appends.
 
 release-please (17.3.0, through the org reusable workflow) parses each commit
 with `@conventional-commits/parser` 0.4.1. The parser reads every body line as a
@@ -165,10 +169,11 @@ parse unwrapped:
 | `689630d` | #1037 | `unexpected token '(' at 29:45, valid tokens [)]`  | `` `backgroundMapStore.floodLayers.push(markRaw( `` |
 | `629a8d1` | #1010 | `unexpected token '\n' at 83:73, valid tokens [)]` | `<call>(`                                           |
 
-Fenced code blocks are the other usual source, since they are not wrapped and
-code lines start with calls. On 2026-09-15 a `js` fence holding a
-`localStorage.setItem(...)` line (`e156d1f`, #973, `'(' at 35:52`) killed the
-1.57.0 release.
+Fenced code blocks are the other usual source: under a column-0 fence nothing is
+wrapped, and code lines start with calls. Under an indented fence a long code
+line is wrapped and loses its indentation, so it can start with a call too. On
+2026-09-15 a `js` fence holding a `localStorage.setItem(...)` line (`e156d1f`,
+#973, `'(' at 35:52`) killed the 1.57.0 release.
 
 - **The `Squash commit parses` check** (`enforce-conventional-commits.yml`, on
   opened, edited, synchronize and reopened) runs
@@ -200,7 +205,9 @@ code lines start with calls. On 2026-09-15 a `js` fence holding a
   override.** release-please finds `BEGIN_COMMIT_OVERRIDE` as plain text
   anywhere in the description and parses whatever follows it instead of the
   commit, so a sentence that mentions it replaces the commit message. The check
-  reports this as a failure in the override section.
+  parses the same text, so it fails such a description unless the text after
+  the marker happens to be a conventional commit, and its output names the
+  override section as the cause.
 
 ## CI/CD
 

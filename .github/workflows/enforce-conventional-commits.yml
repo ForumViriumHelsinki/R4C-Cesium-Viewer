@@ -15,7 +15,7 @@ jobs:
   # scripts/check-commit-message.mjs and .claude/rules/development.md.
   #
   # Cost: ubuntu-slim, a sparse checkout of two files and an npm install of one
-  # package (no bun install of the tree); roughly 15 to 25 s per run.
+  # package (no bun install of the tree); 9 to 10 s per run on #1044.
   squash-message:
     name: Squash commit parses
     runs-on: ubuntu-slim

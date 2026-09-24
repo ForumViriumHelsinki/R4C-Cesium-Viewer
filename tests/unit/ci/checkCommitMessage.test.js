@@ -10,6 +10,9 @@
  * section, after the merge, and run 36005789211 then parsed every commit. #973
  * (e156d1f) is the fenced-code-block case recorded in .claude/rules/development.md.
  * #1003, #1007 and #1009 were parsed by run 35996129826 and are the controls.
+ * #864, #841 and #963 parse too; they pin the edges of the wrap model (an emoji
+ * and a too-wide first word, a run of spaces, a fence indented under a list
+ * item). Their bodies were not edited after merge.
  */
 import { execFileSync, spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
@@ -41,9 +44,9 @@ const withoutTrailers = (message) =>
 const label = (f) => `#${f.number} (${f.sha})`
 
 describe('fixtures', () => {
-	it('cover the four dropped commits, the fenced block and three controls', () => {
+	it('cover the four dropped commits, the fenced block, three controls and three wrap edges', () => {
 		expect(dropped.map((f) => f.number)).toEqual([1012, 1005, 1037, 1010, 973])
-		expect(parsed.map((f) => f.number)).toEqual([1009, 1007, 1003])
+		expect(parsed.map((f) => f.number)).toEqual([1009, 1007, 1003, 864, 841, 963])
 		expect(overridden.map((f) => f.number)).toEqual([1012, 1005, 1037, 1010])
 	})
 })
@@ -84,6 +87,42 @@ describe('buildSquashMessage', () => {
 	it('leaves fenced code blocks unwrapped', () => {
 		const code = `const x = ${'a + '.repeat(30)}1`
 		expect(wrapBody(['```js', code, '```'].join('\n'))).toBe(['```js', code, '```'].join('\n'))
+	})
+
+	it('wraps code under a fence indented below column 0, as it did in #963', () => {
+		const code = `  const x = ${'a + '.repeat(30)}1`
+		const wrapped = wrapBody(['  ```js', code, '  ```'].join('\n')).split('\n')
+		expect(wrapped.length).toBeGreaterThan(3)
+		expect(wrapped[1]).toMatch(/^const x = a \+/)
+	})
+
+	it('leaves a line of exactly 72 columns alone, indentation included, as in #874', () => {
+		const line = `  - ${'x'.repeat(68)}`
+		expect(line).toHaveLength(72)
+		expect(wrapBody(line)).toBe(line)
+	})
+
+	it('normalises CRLF line endings before wrapping', () => {
+		const body = `Intro.\r\n\r\n${'word '.repeat(20).trim()}\r\n`
+		expect(wrapBody(body)).toBe(wrapBody(body.replace(/\r\n/g, '\n')))
+		expect(wrapBody(body)).not.toContain('\r')
+	})
+
+	it('counts an emoji as one column, as in #864', () => {
+		// 72 code points, 73 UTF-16 code units: GitHub leaves it on one line.
+		const line = `🚦 ${'a'.repeat(66)} end`
+		expect([...line]).toHaveLength(72)
+		expect(wrapBody(line)).toBe(line)
+	})
+
+	it('collapses a run of spaces or a tab in a wrapped line, as in #841 and #963', () => {
+		const line = `${'a'.repeat(40)}  b\tc ${'d'.repeat(40)}`
+		expect(wrapBody(line).split('\n')).toEqual([`${'a'.repeat(40)} b c`, 'd'.repeat(40)])
+	})
+
+	it('puts an empty line before a first word wider than 72 columns, as in #864', () => {
+		const word = `<!--renovate-debug:${'A'.repeat(80)}-->`
+		expect(wrapBody(`text\n${word}`)).toBe(`text\n\n${word}`)
 	})
 
 	it('is the subject alone when the body is empty', () => {
@@ -143,6 +182,24 @@ describe('checkPullRequest', () => {
 		expect(parseErrors(`fix: x (#1)\n\n${body}`)).toEqual([])
 		const [error] = checkPullRequest({ title: 'fix: x', number: 1, body }).errors
 		expect(error.text).toBe('`useFoo(` is now called once.')
+	})
+
+	// Each of the next three passed when the model counted UTF-16 units, kept runs
+	// of spaces, or treated an indented fence as code: the call stayed mid-line.
+	it.each([
+		['after an emoji', `🚦 ${'a'.repeat(65)} call \`useFoo(\` is now called once.`],
+		['after a run of spaces', `${'a'.repeat(67)}  call \`useFoo(\` is now called once.`],
+	])('fails when the wrap moves an unclosed call to a line start %s', (_, body) => {
+		const [error] = checkPullRequest({ title: 'fix: x', number: 1, body }).errors
+		expect(error?.text).toBe('`useFoo(` is now called once.')
+	})
+
+	it('fails a long code line under an indented fence that starts with a call', () => {
+		const code =
+			'  setTimeout(() => refreshTheWholeViewport(viewer, cameraOptions), RETRY_DELAY_MS)'
+		const body = ['- Retry:', '', '  ```js', code, '  ```'].join('\n')
+		const [error] = checkPullRequest({ title: 'fix: x', number: 1, body }).errors
+		expect(error?.text).toMatch(/^setTimeout\(\(\) => /)
 	})
 
 	it('fails a title that is not a conventional commit', () => {

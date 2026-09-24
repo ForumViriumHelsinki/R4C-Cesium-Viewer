@@ -18,13 +18,16 @@
  *   each message. That call is the only step that throws; the rest walks the
  *   AST it returns, and footer re-parses are wrapped in try/catch.
  *
- * The squash commit is not the PR body verbatim. GitHub hard-wraps the body at
- * 72 columns, outside fenced code blocks, dropping the indentation of the lines
- * it wraps. Every squash commit from #964 to #1038 matches that model byte for
- * byte, apart from the Co-authored-by trailers GitHub appends (footers, which
- * cannot make the parse throw). The wrap is what broke #1005, #1010, #1012 and
- * #1037: their bodies parse as written, and fail only once a wrapped line starts
- * with a call such as `name(`.
+ * The squash commit is not the PR body verbatim. GitHub hard-wraps each body
+ * line longer than 72 characters (code points, so an emoji counts once) into
+ * words separated by single spaces, which drops the line's indentation and
+ * collapses runs of spaces and tabs. Lines inside a fenced code block whose
+ * fence starts in column 0 are left alone; an indented fence is wrapped like
+ * prose (#963). Every squash commit from #744 to #1043 matches that model byte
+ * for byte, apart from the Co-authored-by trailers GitHub appends (footers,
+ * which cannot make the parse throw). The wrap is what broke #1005, #1010, #1012
+ * and #1037: their bodies parse as written, and fail only once a wrapped line
+ * starts with a call such as `name(`.
  *
  * CLI: reads PR_TITLE, PR_BODY and PR_NUMBER from the environment, as the
  * "Squash commit parses" job passes them. To check PR 12 locally:
@@ -38,10 +41,15 @@ export const WRAP_WIDTH = 72
 export const SQUASH_SOURCE = 'the squash commit message'
 export const OVERRIDE_SOURCE = 'the BEGIN_COMMIT_OVERRIDE section'
 
-const FENCE = /^\s*(```|~~~)/
+// Only a fence in column 0 stops the wrap: #963 and #861 had fences indented
+// under a list item, and GitHub wrapped the code inside them.
+const FENCE = /^(```|~~~)/
 const NEWLINE = /\r\n|\r|\n/
 const CONVENTIONAL_PARAGRAPH =
 	/\r?\n\r?\n(?=(?:feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\(.*?\))?: )/
+
+/** Width in code points, as GitHub counts it: an emoji is one column, not two (#864). */
+const columns = (text) => [...text].length
 
 /**
  * Greedy word wrap of one line, as GitHub does it for squash commit bodies.
@@ -50,16 +58,17 @@ const CONVENTIONAL_PARAGRAPH =
  * @returns {string[]}
  */
 function wrapLine(line, width) {
-	if (line.length <= width) return [line]
+	if (columns(line) <= width) return [line]
 	const lines = []
 	let current = ''
-	for (const word of line.split(' ')) {
-		if (current === '') current = word
-		else if (current.length + 1 + word.length <= width) current += ` ${word}`
-		else {
+	// Runs of spaces and tabs separate words; the wrapped lines keep single spaces (#841, #963).
+	// The width test also runs for the first word, so a line whose first word alone is too
+	// wide gets an empty line before it (Renovate's `<!--renovate-debug:…-->` line, #864).
+	for (const word of line.split(/[ \t]+/).filter(Boolean)) {
+		if (columns(current) + 1 + columns(word) > width) {
 			lines.push(current)
 			current = word
-		}
+		} else current = current === '' ? word : `${current} ${word}`
 	}
 	lines.push(current)
 	return lines
@@ -67,7 +76,7 @@ function wrapLine(line, width) {
 
 /**
  * The PR body as it appears in the squash commit: CRLF normalised, lines
- * longer than `width` wrapped, fenced code blocks left alone.
+ * longer than `width` wrapped, code blocks under a column-0 fence left alone.
  * @param {string} body
  * @param {number} [width]
  * @returns {string}
