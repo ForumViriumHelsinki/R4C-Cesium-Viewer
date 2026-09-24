@@ -301,7 +301,10 @@ Key consequences:
   `.claude/rules/testing.md`) rather than depending on real polygon picks, and
   tag it so it can be skipped where a live camera is unavailable.
 
-#### Re-enablement plan (deferred follow-up)
+#### Re-enablement plan (done)
+
+Completed in #927 (`b66e911`): the suite now runs on all three accessibility
+viewports. The plan is kept below as a record.
 
 The suite stays `cesiumDescribe.skip(...)` in the PR that landed this strategy —
 re-enabling it is a larger change that touches every test and risks landing flaky

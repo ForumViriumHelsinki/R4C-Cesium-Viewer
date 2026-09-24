@@ -20,6 +20,7 @@
 import { expect } from '@playwright/test'
 import { VIEWPORTS } from '../../config/constants'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
+import { visibleErrorStates } from '../helpers/error-states'
 import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 // Drawer rendering fixed by 'eager' prop - view navigation fixes implemented
@@ -410,7 +411,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await expect(ndviToggle).not.toBeChecked()
 
 			// No error states should be present
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+			const errorElements = visibleErrorStates(cesiumPage)
 			const errorCount = await errorElements.count()
 			expect(errorCount).toBe(0)
 		})
@@ -740,7 +741,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await expect(ndviToggle).toBeChecked()
 
 			// No error states
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+			const errorElements = visibleErrorStates(cesiumPage)
 			const errorCount = await errorElements.count()
 			expect(errorCount).toBe(0)
 		})
@@ -819,7 +820,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await expect(ndviToggle).toBeChecked()
 
 			// Should not cause application errors
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+			const errorElements = visibleErrorStates(cesiumPage)
 			const errorCount = await errorElements.count()
 			expect(errorCount).toBe(0)
 
