@@ -13,6 +13,7 @@
  * @see {@link https://www.ogc.org/standards/wms|OGC WMS Standard}
  */
 
+import { markRaw } from 'vue'
 import { SYKE_ATTRIBUTION } from '../constants/floodScenarios.js'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -85,7 +86,10 @@ export const createFloodImageryLayer = async (url, layerName, credit = SYKE_ATTR
 		// the removed `readyPromise` API would resolve to `await undefined` anyway.
 		const addedLayer = viewer.imageryLayers.addImageryProvider(provider)
 		addedLayer.alpha = 1
-		backgroundMapStore.floodLayers.push(addedLayer)
+		// markRaw: Pinia would otherwise hand the layer back as a reactive proxy, and
+		// ImageryLayerCollection.contains()/remove() match by identity, so
+		// removeFloodLayers() could never find it and scenarios stacked (#1019).
+		backgroundMapStore.floodLayers.push(markRaw(addedLayer))
 	} catch (error) {
 		logger.error('Error creating WMS layer:', error)
 	}

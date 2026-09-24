@@ -23,6 +23,8 @@
 | `propsStore.js`          | Property and building attribute data                                                     |
 | `urlStore.js`            | URL state management for deep linking                                                    |
 
+Cesium objects (viewer, entities, data sources, imagery layers) go into store state only through `markRaw`. Otherwise Pinia returns a reactive proxy, and Cesium's collections, which match by identity, cannot find the object to remove it (#1019: flood scenarios stacked on the map). `tests/unit/stores/cesiumStateMarkRaw.test.js` checks every write to the store fields that the Sentry `stateTransformer` in `src/main.js` strips as Cesium objects. A new Cesium-holding field belongs in that transformer too.
+
 ## Main Pages
 
 | Component          | Purpose                                                 |
@@ -118,6 +120,21 @@ Canonical pattern: single synchronous loop wrapped in
 `suspendEvents()`/`resumeEvents()`, one `scene.requestRender()` at the end.
 For yield-needing huge passes, yield coarsely (hundreds of items) with a
 timeout-bounded idle callback — never per-N-features untimed.
+
+## Cesium Objects in Pinia State Must Be `markRaw`
+
+Pinia state is deeply reactive. A Cesium object put into it untouched (pushed into
+`backgroundMapStore.landcoverLayers`, say) is handed back as a reactive proxy, and
+Cesium's collections match by identity: `ImageryLayerCollection.contains()` and
+`remove()` run `indexOf` over a plain array. The proxy is never found, so nothing is
+removed. Measured on a build of `a3c3269`: land-cover imagery stayed on the map after
+the toggle went off (#967).
+
+Wrap the object when it goes in, as `globalStore.setCesiumViewer()` does for the
+viewer: `backgroundMapStore.landcoverLayers.push(markRaw(layer))`. Reads then return
+the raw object. Unit tests with an `imageryLayers.contains` mock that always returns
+`true` cannot catch this. `tests/unit/components/landcoverInvariant.test.js` uses a
+stand-in with Cesium's identity semantics.
 
 ## Reading Cesium Entity Properties
 

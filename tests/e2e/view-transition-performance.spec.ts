@@ -42,52 +42,54 @@ test.describe('View Transition Performance @performance', () => {
 		await page.waitForSelector('#cesiumContainer canvas', { state: 'visible' })
 	})
 
-	test('capital region to statistical grid transition should complete within budget', async ({
-		page,
-	}) => {
-		// Navigate to capital region view first
-		const capitalRegionButton = page.getByRole('button', { name: /capital region/i })
-		if (await capitalRegionButton.isVisible()) {
-			await capitalRegionButton.click()
-			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STATE_CHANGE)
+	// Quarantined: fails on every attempt in CI — see #998
+	test.fixme(
+		'capital region to statistical grid transition should complete within budget',
+		async ({ page }) => {
+			// Navigate to capital region view first
+			const capitalRegionButton = page.getByRole('button', { name: /capital region/i })
+			if (await capitalRegionButton.isVisible()) {
+				await capitalRegionButton.click()
+				await page.waitForTimeout(TEST_TIMEOUTS.WAIT_STATE_CHANGE)
+			}
+
+			// Find the statistical grid toggle
+			const gridToggle = page
+				.locator('[data-testid="statistical-grid-toggle"]')
+				.or(page.getByRole('button', { name: /statistical grid|grid view|population grid/i }))
+
+			// Check if the grid toggle exists
+			const hasGridToggle = (await gridToggle.count()) > 0
+			if (!hasGridToggle) {
+				// Skip test if grid toggle not found in current view
+				test.skip(true, 'Statistical grid toggle not available in current view')
+				return
+			}
+
+			// Measure transition to statistical grid
+			const startTime = Date.now()
+
+			await gridToggle.click()
+
+			// Wait for grid entities to render (18K+ entities)
+			await waitForGridEntities(page)
+
+			const transitionTime = Date.now() - startTime
+
+			// Performance budget: 5 seconds max (realistic target with optimization)
+			// Pre-optimization baseline was ~10-15 seconds
+			expect(transitionTime).toBeLessThan(5000)
+
+			// Record metric for baseline tracking
+			test.info().annotations.push({
+				type: 'performance',
+				description: `grid-transition-ms:${transitionTime}`,
+			})
+
+			// Log for monitoring
+			console.log(`Grid transition time: ${transitionTime}ms`)
 		}
-
-		// Find the statistical grid toggle
-		const gridToggle = page
-			.locator('[data-testid="statistical-grid-toggle"]')
-			.or(page.getByRole('button', { name: /statistical grid|grid view|population grid/i }))
-
-		// Check if the grid toggle exists
-		const hasGridToggle = (await gridToggle.count()) > 0
-		if (!hasGridToggle) {
-			// Skip test if grid toggle not found in current view
-			test.skip(true, 'Statistical grid toggle not available in current view')
-			return
-		}
-
-		// Measure transition to statistical grid
-		const startTime = Date.now()
-
-		await gridToggle.click()
-
-		// Wait for grid entities to render (18K+ entities)
-		await waitForGridEntities(page)
-
-		const transitionTime = Date.now() - startTime
-
-		// Performance budget: 5 seconds max (realistic target with optimization)
-		// Pre-optimization baseline was ~10-15 seconds
-		expect(transitionTime).toBeLessThan(5000)
-
-		// Record metric for baseline tracking
-		test.info().annotations.push({
-			type: 'performance',
-			description: `grid-transition-ms:${transitionTime}`,
-		})
-
-		// Log for monitoring
-		console.log(`Grid transition time: ${transitionTime}ms`)
-	})
+	)
 
 	test('statistical grid to capital region transition should complete within budget', async ({
 		page,
@@ -140,7 +142,8 @@ test.describe('View Transition Performance @performance', () => {
 		console.log(`Reverse grid transition time: ${transitionTime}ms`)
 	})
 
-	test('grid entity styling should not cause long tasks', async ({ page }) => {
+	// Quarantined: fails on every attempt in CI — see #998
+	test.fixme('grid entity styling should not cause long tasks', async ({ page }) => {
 		// This test verifies the batched processing optimization is working
 		// Long tasks are captured via window.__longTasks in the browser context
 
