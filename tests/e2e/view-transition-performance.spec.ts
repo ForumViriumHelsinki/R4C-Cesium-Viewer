@@ -91,58 +91,56 @@ test.describe('View Transition Performance @performance', () => {
 		}
 	)
 
-	// Quarantined: fails on every attempt in CI — see #998
-	test.fixme(
-		'statistical grid to capital region transition should complete within budget',
-		async ({ page }) => {
-			// First navigate to statistical grid view
-			const gridToggle = page
-				.locator('[data-testid="statistical-grid-toggle"]')
-				.or(page.getByRole('button', { name: /statistical grid|grid view|population grid/i }))
+	test('statistical grid to capital region transition should complete within budget', async ({
+		page,
+	}) => {
+		// First navigate to statistical grid view
+		const gridToggle = page
+			.locator('[data-testid="statistical-grid-toggle"]')
+			.or(page.getByRole('button', { name: /statistical grid|grid view|population grid/i }))
 
-			const hasGridToggle = (await gridToggle.count()) > 0
-			if (!hasGridToggle) {
-				test.skip(true, 'Statistical grid toggle not available in current view')
-				return
-			}
-
-			// Navigate to grid view first
-			await gridToggle.click()
-			await waitForGridEntities(page)
-
-			// Wait for grid to fully load
-			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
-
-			// Now measure transition back to capital region
-			const startTime = Date.now()
-
-			// Toggle off grid view or click capital region button
-			const capitalRegionButton = page.getByRole('button', { name: /capital region/i })
-			if (await capitalRegionButton.isVisible()) {
-				await capitalRegionButton.click()
-			} else {
-				// Try toggling off the grid
-				await gridToggle.click()
-			}
-
-			// Wait for transition to complete
-			await page.waitForLoadState('networkidle', { timeout: 15000 })
-
-			const transitionTime = Date.now() - startTime
-
-			// Performance budget: 3 seconds max for reverse transition
-			// Should be faster as we're removing entities, not styling them
-			expect(transitionTime).toBeLessThan(3000)
-
-			// Record metric
-			test.info().annotations.push({
-				type: 'performance',
-				description: `grid-reverse-transition-ms:${transitionTime}`,
-			})
-
-			console.log(`Reverse grid transition time: ${transitionTime}ms`)
+		const hasGridToggle = (await gridToggle.count()) > 0
+		if (!hasGridToggle) {
+			test.skip(true, 'Statistical grid toggle not available in current view')
+			return
 		}
-	)
+
+		// Navigate to grid view first
+		await gridToggle.click()
+		await waitForGridEntities(page)
+
+		// Wait for grid to fully load
+		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
+
+		// Now measure transition back to capital region
+		const startTime = Date.now()
+
+		// Toggle off grid view or click capital region button
+		const capitalRegionButton = page.getByRole('button', { name: /capital region/i })
+		if (await capitalRegionButton.isVisible()) {
+			await capitalRegionButton.click()
+		} else {
+			// Try toggling off the grid
+			await gridToggle.click()
+		}
+
+		// Wait for transition to complete
+		await page.waitForLoadState('networkidle', { timeout: 15000 })
+
+		const transitionTime = Date.now() - startTime
+
+		// Performance budget: 3 seconds max for reverse transition
+		// Should be faster as we're removing entities, not styling them
+		expect(transitionTime).toBeLessThan(3000)
+
+		// Record metric
+		test.info().annotations.push({
+			type: 'performance',
+			description: `grid-reverse-transition-ms:${transitionTime}`,
+		})
+
+		console.log(`Reverse grid transition time: ${transitionTime}ms`)
+	})
 
 	// Quarantined: fails on every attempt in CI — see #998
 	test.fixme('grid entity styling should not cause long tasks', async ({ page }) => {

@@ -64,42 +64,25 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 	})
 
 	cesiumTest.describe('View-Specific Panels', () => {
-		cesiumTest(
-			'should show Grid Options button only in Grid view',
-			async ({ cesiumPage }, testInfo) => {
-				// Desktop only: the tablet and mobile projects pass this test in CI.
-				// Quarantined: fails on every attempt in CI — see #998
-				cesiumTest.fixme(
-					testInfo.project.name === 'accessibility-desktop',
-					'Fails on every attempt in CI on desktop — see #998'
-				)
+		cesiumTest('should show Grid Options button only in Grid view', async ({ cesiumPage }) => {
+			// Grid Options is a map tool and renders in the Layers tab, next to the
+			// view-mode toggle.
+			const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
+			await layersTab.click()
 
-				// Grid Options is a map tool and renders in the Layers tab, next to the
-				// view-mode toggle.
-				const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
-				await layersTab.click()
+			// Not rendered in Capital Region view
+			await expect(cesiumPage.getByText('Grid Options')).toHaveCount(0)
 
-				// Not rendered in Capital Region view
-				await expect(cesiumPage.getByText('Grid Options')).toHaveCount(0)
+			// Switch to Grid view
+			await helpers.navigateToView('gridView')
 
-				// Switch to Grid view
-				await helpers.navigateToView('gridView')
-
-				// Now visible as a button in the Layers tab
-				await expect(cesiumPage.getByText('Grid Options')).toBeVisible()
-			}
-		)
+			// Now visible as a button in the Layers tab
+			await expect(cesiumPage.getByText('Grid Options')).toBeVisible()
+		})
 
 		cesiumTest(
 			'should show Climate Adaptation only in Grid view with heat index',
-			async ({ cesiumPage }, testInfo) => {
-				// Desktop only: the tablet and mobile projects pass this test in CI.
-				// Quarantined: fails on every attempt in CI — see #998
-				cesiumTest.fixme(
-					testInfo.project.name === 'accessibility-desktop',
-					'Fails on every attempt in CI on desktop — see #998'
-				)
-
+			async ({ cesiumPage }) => {
 				// Climate Adaptation is a map tool and renders in the Layers tab
 				const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
 				await layersTab.click()
@@ -186,36 +169,26 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 	})
 
 	cesiumTest.describe('Panel State Across View Switches', () => {
-		cesiumTest(
-			'should maintain sidebar sections during view switches',
-			async ({ cesiumPage }, testInfo) => {
-				// Desktop only: the tablet and mobile projects pass this test in CI.
-				// Quarantined: fails on every attempt in CI — see #998
-				cesiumTest.fixme(
-					testInfo.project.name === 'accessibility-desktop',
-					'Fails on every attempt in CI on desktop — see #998'
-				)
+		cesiumTest('should maintain sidebar sections during view switches', async ({ cesiumPage }) => {
+			// Verify universal sections visible (Search tab replaces the removed
+			// "Search & Navigate" heading — see Universal Sidebar Sections above)
+			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
+			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
 
-				// Verify universal sections visible (Search tab replaces the removed
-				// "Search & Navigate" heading — see Universal Sidebar Sections above)
-				await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-				await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
+			// Switch view
+			await helpers.navigateToView('gridView')
 
-				// Switch view
-				await helpers.navigateToView('gridView')
+			// Universal sections should remain visible
+			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
+			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
 
-				// Universal sections should remain visible
-				await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-				await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
+			// Switch back
+			await helpers.navigateToView('capitalRegionView')
 
-				// Switch back
-				await helpers.navigateToView('capitalRegionView')
-
-				// Still visible
-				await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-				await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
-			}
-		)
+			// Still visible
+			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
+			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
+		})
 	})
 
 	cesiumTest.describe('Accessibility Compliance', () => {
