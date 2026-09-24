@@ -75,12 +75,6 @@ test.describe('Data Visualization Components', () => {
 		if ((await buildingCharts.count()) > 0) {
 			await expect(buildingCharts.first()).toBeVisible()
 		}
-
-		// Check for vulnerability chart
-		const vulnChart = page.locator('[data-testid="vulnerability-chart"], .vulnerability-chart')
-		if ((await vulnChart.count()) > 0) {
-			await expect(vulnChart.first()).toBeVisible()
-		}
 	})
 
 	test('should handle socio-economics visualization', async ({ page }) => {

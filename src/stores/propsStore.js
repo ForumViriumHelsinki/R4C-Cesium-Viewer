@@ -5,10 +5,8 @@
  *
  * Managed data includes:
  * - Building analysis data (grid properties, heat exposure, time-series)
- * - Tree coverage analysis (area, entities, distance-to-building data)
  * - Visualization configurations (categorical/numerical selectors, scatter plots)
  * - Socioeconomic area selections
- * - Multi-index vulnerability data (heat/flood vulnerability)
  *
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
@@ -22,16 +20,10 @@ import { markRaw } from 'vue'
  *
  * @typedef {Object} PropsState
  * @property {Object|null} gridBuildingProps - 250m grid cell building properties
- * @property {number|null} treeArea - Total tree canopy area in square meters
  * @property {number|null} buildingHeatExposure - Selected building heat exposure index (0-1)
  * @property {Array|null} heatHistogramData - Heat exposure frequency distribution data
- * @property {Array|null} treeBuildingDistanceData - Tree proximity analysis data
- * @property {Map|null} treeAreasByBuildingId - Map of building IDs to tree area calculations (serializable)
- * @property {Array|null} treeData - Serializable tree data (kohde_id, p_ala_m2) for analysis
- * @property {Map|null} buildingData - Serializable building data (id -> {heatExposure, area_m2}) for analysis
  * @property {Array|null} postalcodeHeatTimeseries - Postal code heat time-series data
  * @property {Array|null} buildingHeatTimeseries - Building-level heat time-series data
- * @property {Object|null} heatFloodVulnerabilityEntity - Selected entity for vulnerability analysis
  * @property {Object|null} postalCodeData - Postal code boundary data source
  * @property {Object} categoricalSelect - Selected categorical attribute for charts
  * @property {Object} numericalSelect - Selected numerical attribute for charts
@@ -44,25 +36,13 @@ export const usePropsStore = defineStore('props', {
 		/** @type {Object|null} */
 		gridBuildingProps: null,
 		/** @type {number|null} */
-		treeArea: null,
-		/** @type {number|null} */
 		buildingHeatExposure: null,
 		/** @type {Array<Object>|null} */
 		heatHistogramData: null,
 		/** @type {Array<Object>|null} */
-		treeBuildingDistanceData: null,
-		/** @type {Map<string, number>|null} */
-		treeAreasByBuildingId: null,
-		/** @type {Array<Object>|null} */
-		treeData: null,
-		/** @type {Map<string, Object>|null} */
-		buildingData: null,
-		/** @type {Array<Object>|null} */
 		postalcodeHeatTimeseries: null,
 		/** @type {Array<Object>|null} */
 		buildingHeatTimeseries: null,
-		/** @type {Object|null} */
-		heatFloodVulnerabilityEntity: null,
 		/** @type {Object|null} */
 		postalCodeData: null,
 		/** @type {Array<Object>|null} */
@@ -124,27 +104,11 @@ export const usePropsStore = defineStore('props', {
 			this.postalCodeData = markRaw(data)
 		},
 		/**
-		 * Sets the selected entity for heat/flood vulnerability analysis
-		 * @param {Object} entity - Cesium entity with vulnerability properties
-		 * @note Uses markRaw to prevent Cesium entity from becoming reactive,
-		 *       which would cause DataCloneError in Web Workers
-		 */
-		setHeatFloodVulnerability(entity) {
-			this.heatFloodVulnerabilityEntity = markRaw(entity)
-		},
-		/**
 		 * Sets 250m grid cell building aggregation properties
 		 * @param {Object} props - Grid cell properties (building count, types, areas)
 		 */
 		setGridBuildingProps(props) {
 			this.gridBuildingProps = props
-		},
-		/**
-		 * Sets total tree canopy area for selected postal code or building
-		 * @param {number} area - Tree area in square meters
-		 */
-		setTreeArea(area) {
-			this.treeArea = area
 		},
 		/**
 		 * Sets heat exposure index for selected building
@@ -159,39 +123,6 @@ export const usePropsStore = defineStore('props', {
 		 */
 		setHeatHistogramData(data) {
 			this.heatHistogramData = data
-		},
-		/**
-		 * Sets tree-to-building distance analysis data
-		 * @param {Array<Object>} data - Distance analysis results
-		 */
-		setTreeBuildingDistanceData(data) {
-			this.treeBuildingDistanceData = data
-		},
-		/**
-		 * Sets tree area calculation results by building ID
-		 * @param {Map<string, number>} treeAreasMap - Map of building IDs to tree area values
-		 * @note Stores serializable Map instead of Cesium entities to prevent DataCloneError
-		 */
-		setTreeAreasByBuildingId(treeAreasMap) {
-			this.treeAreasByBuildingId = treeAreasMap
-		},
-		/**
-		 * Sets serializable tree data for analysis and charts
-		 * @param {Array<Object>} treeData - Array of {kohde_id, p_ala_m2}
-		 * @note This is the preferred method for storing tree data.
-		 *       Cesium entities should be managed via cesiumEntityManager service.
-		 */
-		setTreeData(treeData) {
-			this.treeData = treeData
-		},
-		/**
-		 * Sets serializable building data for analysis and charts
-		 * @param {Map<string, Object>} buildingData - Map of building_id -> {heatExposure, area_m2, hki_id}
-		 * @note This is the preferred method for storing building data.
-		 *       Cesium entities should be managed via cesiumEntityManager service.
-		 */
-		setBuildingData(buildingData) {
-			this.buildingData = buildingData
 		},
 		/**
 		 * Sets postal code-level heat exposure time-series data

@@ -111,7 +111,6 @@ FeaturePicker.handleFeatureWithProperties(entity)
     - At postal code level → handleBuildingFeature()
     ↓
 Updates Pinia store (level='building')
-EventBus emits 'showBuilding'
 ```
 
 **Critical Guards:**
@@ -384,6 +383,20 @@ vi.mock('@/composables/useChartSize.js', () => ({
 
 Mutation-check it: set the mocked width to 0 and confirm the test goes red.
 `tests/unit/components/SocioEconomicsChart.test.js` is the reference.
+
+## Static Contract Tests (`tests/unit/contracts/`)
+
+`sourceGraph.js` builds the module graph from `src/main.js` (imports, dynamic
+`import()`, worker `new URL(…, import.meta.url)`, and component tags, which
+`unplugin-vue-components` resolves with no import) and records every `eventBus`
+call. Two tests read it:
+
+- `moduleReachability.test.js` fails on a `src/` module that nothing reaches.
+  When you remove a component's last mount point, delete the component too, or
+  add it to `ALLOWED_UNREACHABLE` with the reason.
+- `eventBus-contract.test.js` fails on an emitted event with no listener, or a
+  listener with no emitter, in reachable code. Name events with string literals
+  so the scan can see them.
 
 ## Feature Flag Defaults Affect Test Assertions
 

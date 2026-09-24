@@ -90,18 +90,6 @@ export const useURLStore = defineStore('url', {
 			return `${state.pygeoapiBase}/coldarea/items?f=json&limit=100000&posno=${encodeURLParam(validated)}`
 		},
 		/**
-		 * Generates generic pygeoapi collection URL with optional limit
-		 * @param {Object} state - Pinia state
-		 * @returns {(collection: string, limit?: number) => string} Function accepting collection path and optional limit, returning collection URL
-		 * @example
-		 * collectionUrl(state)('/heatexposure', 5000) // Returns heatexposure collection URL
-		 */
-		collectionUrl:
-			(state) =>
-			(collection, limit = 35000) => {
-				return `${state.pygeoapiBase}${collection}/items?f=json&limit=${limit}`
-			},
-		/**
 		 * Generates URL for heat exposure index data (postal code level aggregates)
 		 *
 		 * Trimmed payload (#725 / R4C-CESIUM-VIEWER-1): only the three
@@ -231,19 +219,6 @@ export const useURLStore = defineStore('url', {
 			(postinumero, koodi, limit = 100000) => {
 				const validated = validatePostalCode(postinumero)
 				return `${state.pygeoapiBase}/tree/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}&koodi=${encodeURLParam(koodi)}`
-			},
-		/**
-		 * Generates URL for tree-to-building distance analysis by postal code
-		 * @param {Object} state - Pinia state
-		 * @returns {(postinumero: string, limit?: number) => string} Function accepting postal code and optional limit, returning distance URL
-		 * @example
-		 * treeBuildingDistance(state)('00100', 100000) // Tree distances for postal code 00100
-		 */
-		treeBuildingDistance:
-			(state) =>
-			(postinumero, limit = 100000) => {
-				const validated = validatePostalCode(postinumero)
-				return `${state.pygeoapiBase}/tree_building_distance/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}`
 			},
 		/**
 		 * Generates URL for urban heat exposure building data (Helsinki only)

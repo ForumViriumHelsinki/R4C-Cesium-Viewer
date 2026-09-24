@@ -253,15 +253,14 @@ export class BuildingStyler {
 	}
 
 	/**
-	 * Creates and emits events for building-specific data visualizations
-	 * Processes building heat timeseries data, tree coverage, and heat exposure values.
+	 * Stores building-specific chart data
+	 * Processes building heat timeseries data and heat exposure values.
 	 *
-	 * @param {number} treeArea - Nearby tree coverage area in square meters
 	 * @param {number} _avg_temp_c - Average surface temperature in Celsius (unused)
 	 * @param {Object} buildingProps - Building properties object containing heat and structural data
 	 * @returns {Promise<void>}
 	 */
-	async createBuildingCharts(treeArea, _avg_temp_c, buildingProps) {
+	async createBuildingCharts(_avg_temp_c, buildingProps) {
 		if (this.store.view === 'grid') {
 			this.propsStore.setGridBuildingProps(buildingProps)
 		}
@@ -271,11 +270,6 @@ export class BuildingStyler {
 			filterHeatTimeseries(buildingProps)
 			requestIdle(resolve)
 		})
-
-		// Set tree area if tree layer is visible and data exists
-		if (this.toggleStore.showTrees && treeArea) {
-			this.propsStore.setTreeArea(treeArea)
-		}
 
 		// Set heat exposure data based on view mode (Helsinki vs Capital Region)
 		if (this.toggleStore.helsinkiView) {

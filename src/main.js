@@ -70,11 +70,7 @@ pinia.use(
 		stateTransformer: (state, store) => {
 			// For propsStore, exclude Cesium entity/datasource properties that remain on the store
 			if (store.$id === 'props') {
-				const {
-					postalCodeData: _postalCodeData,
-					heatFloodVulnerabilityEntity: _heatFloodVulnerabilityEntity,
-					...serializable
-				} = state
+				const { postalCodeData: _postalCodeData, ...serializable } = state
 				return serializable
 			}
 
