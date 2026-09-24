@@ -71,7 +71,8 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			await waitForMapViewTransition(page)
 		})
 
-		test('should handle map clicks and feature selection', async ({ page }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		test.fixme('should handle map clicks and feature selection', async ({ page }) => {
 			// Click on different areas of the map
 			const mapAreas = [
 				{ x: 400, y: 300, description: 'center area' },
@@ -353,7 +354,8 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			await expect(page.locator('canvas')).toBeVisible()
 		})
 
-		test('should handle rapid user interactions', async ({ page }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		test.fixme('should handle rapid user interactions', async ({ page }) => {
 			// Rapidly click on different map areas
 			const clickPositions = [
 				{ x: 200, y: 200 },

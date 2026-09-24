@@ -99,7 +99,12 @@ function isProductionEnvironment(): boolean {
 	return false
 }
 
-test.describe('Cache Header Verification', () => {
+// Quarantined: fails on every attempt in CI — see #998. The whole group, because
+// none of its five tests can pass in CI: the End-to-End job serves `vite preview`,
+// which sends only `Cache-Control: no-cache` (not the nginx headers asserted
+// here), and HASHED_ASSET_PATTERN expects an 8-char hex hash while Rollup's
+// [hash] is base64url (e.g. index.CtLgTP61.1.58.0.js), so it matches nothing.
+test.describe.fixme('Cache Header Verification', () => {
 	test.beforeEach(async () => {
 		// Skip all cache header tests when running against dev server
 		if (!isProductionEnvironment()) {
