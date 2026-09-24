@@ -359,9 +359,6 @@ function checkHardwareSupport(flag: FeatureFlagWithName): boolean {
 	if (flag.name === 'ambientOcclusion') {
 		return graphicsStore?.ambientOcclusionSupported ?? false
 	}
-	if (flag.name === 'msaaOptions') {
-		return graphicsStore?.msaaSupported ?? false
-	}
 	return true
 }
 

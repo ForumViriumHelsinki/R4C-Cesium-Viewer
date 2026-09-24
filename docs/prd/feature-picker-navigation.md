@@ -442,15 +442,10 @@ The **FeaturePicker** service (`featurepicker.js`, 1070 lines) serves as the cen
 
 **FR-8.1: Building Level Events**
 
-- System SHALL emit `hideHelsinki` when switching to building in Helsinki view
-- System SHALL emit `hideCapitalRegion` when switching to building in Capital Region view
-- System SHALL emit `showBuilding` when building level activated
 - System SHALL emit `entityPrintEvent` on building selection for panel updates
 
 **FR-8.2: Grid Cell Events**
 
-- System SHALL emit `createHeatFloodVulnerabilityChart` when grid cell with vulnerability data selected
-- System SHALL set `heatFloodVulnerability` in propsStore from grid cell properties
 - System SHALL calculate bounding box for grid cell WFS queries
 
 **FR-8.3: Loading State Events**
@@ -598,7 +593,6 @@ User Click
   │           │
   │           └─> Building Detected (no posno, has building properties)
   │                 ├─> setLevel('building')
-  │                 ├─> emit('showBuilding')
   │                 └─> handleBuildingFeature()
   │                       └─> createBuildingCharts()
   │
@@ -628,7 +622,6 @@ User Click
    - Both success: Set level='postalCode', reset state
    - Data failure: Show error overlay with retry
    - Camera failure: Continue with data display
-8. Emit events for UI updates: `showCapitalRegion` or `showHelsinki`
 
 **Building Selection:**
 
@@ -637,9 +630,8 @@ User Click
 3. Find building address via `findAddressForBuilding()`
 4. Update building outline: yellow (20px) with pink flash (5s)
 5. Set level='building'
-6. Emit events: `hideHelsinki`/`hideCapitalRegion`, `showBuilding`
-7. Load building charts asynchronously
-8. Open building information panel
+6. Load building charts asynchronously
+7. Open building information panel
 
 **Viewport-Based Loading:**
 
@@ -691,8 +683,6 @@ User Click
 **Event Bus:**
 
 - `entityPrintEvent` - Entity selected, update print box
-- `showBuilding` / `hideHelsinki` / `hideCapitalRegion` - Level transitions
-- `createHeatFloodVulnerabilityChart` - Grid cell analysis
 
 ### Race Condition Handling
 
@@ -1056,7 +1046,6 @@ FeaturePicker (Core Orchestrator)
       avgheatexposure: number     // Normalized heat exposure [0-1]
     }
   ],
-  treeArea: number,               // Nearby tree canopy area (m²)
   _avg_temp_c: number,            // Current date average temperature
   _locationUnder40: Cartesian3    // Cold area location marker
 }

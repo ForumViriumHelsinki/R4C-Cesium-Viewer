@@ -21,7 +21,6 @@ const TEST_GRID_ID = 'grid_123'
 const TEST_BUILDING_ID = 'building_123'
 const TEST_POPULATION = 500
 const TEST_VULNERABILITY_SCORE = 0.75
-const TEST_TREE_AREA = 150
 const TEST_AVG_TEMP = 22.5
 
 // Mock all service dependencies
@@ -503,17 +502,13 @@ describe('FeaturePicker service', () => {
 
 	describe('handleFeatureWithProperties', () => {
 		let globalStore
-		let propsStore
 
 		beforeEach(() => {
 			globalStore = useGlobalStore()
-			propsStore = usePropsStore()
-			vi.spyOn(propsStore, 'setTreeArea')
-			vi.spyOn(propsStore, 'setHeatFloodVulnerability')
 			vi.spyOn(featurePicker, 'removeEntityByName')
 		})
 
-		it('should handle feature with grid_id and emit vulnerability chart event', () => {
+		it('should clear pick markers when a grid cell is picked', () => {
 			const mockId = {
 				properties: {
 					grid_id: { _value: TEST_GRID_ID },
@@ -533,13 +528,6 @@ describe('FeaturePicker service', () => {
 			}
 
 			featurePicker.handleFeatureWithProperties(mockId)
-
-			// Verify store updates
-			expect(propsStore.setTreeArea).toHaveBeenCalledWith(null)
-			expect(propsStore.setHeatFloodVulnerability).toHaveBeenCalledWith(mockId.properties)
-
-			// Verify event emission
-			expect(eventBus.emit).toHaveBeenCalledWith('createHeatFloodVulnerabilityChart')
 
 			// Verify cleanup
 			expect(featurePicker.removeEntityByName).toHaveBeenCalledWith('coldpoint')
@@ -588,13 +576,12 @@ describe('FeaturePicker service', () => {
 			expect(featurePicker.loadPostalCode).not.toHaveBeenCalled()
 		})
 
-		it('should handle building feature at postalCode level', () => {
+		it('should handle building feature at postalCode level', async () => {
 			globalStore.setLevel('postalCode')
 
 			const mockId = {
 				properties: {
 					_postinumero: { _value: TEST_POSTAL_CODE_1 },
-					treeArea: TEST_TREE_AREA,
 					_avg_temp_c: TEST_AVG_TEMP,
 					buildingId: { _value: TEST_BUILDING_ID },
 				},
@@ -614,8 +601,13 @@ describe('FeaturePicker service', () => {
 			// Should process building at postalCode level without errors
 			expect(() => featurePicker.handleFeatureWithProperties(mockId)).not.toThrow()
 
-			// Verify heat flood vulnerability entity is updated with properties
-			expect(propsStore.heatFloodVulnerabilityEntity).toEqual(mockId.properties)
+			// The building branch runs asynchronously and ends in the chart data
+			await vi.waitFor(() =>
+				expect(featurePicker.buildingService.createBuildingCharts).toHaveBeenCalledWith(
+					TEST_AVG_TEMP,
+					mockId.properties
+				)
+			)
 		})
 
 		it('should enrich existing buildings when population grid cell is clicked', () => {
@@ -662,17 +654,14 @@ describe('FeaturePicker service', () => {
 
 	describe('handleBuildingFeature', () => {
 		let globalStore
-		let toggleStore
 
 		beforeEach(() => {
 			globalStore = useGlobalStore()
-			toggleStore = useToggleStore()
 		})
 
 		it('should handle loading store import failure gracefully', async () => {
 			const mockProperties = {
 				_postinumero: { _value: TEST_POSTAL_CODE_1 },
-				treeArea: TEST_TREE_AREA,
 				_avg_temp_c: TEST_AVG_TEMP,
 			}
 
@@ -692,7 +681,6 @@ describe('FeaturePicker service', () => {
 		it('should handle createBuildingCharts error', async () => {
 			const mockProperties = {
 				_postinumero: { _value: TEST_POSTAL_CODE_1 },
-				treeArea: TEST_TREE_AREA,
 				_avg_temp_c: TEST_AVG_TEMP,
 			}
 
@@ -715,14 +703,11 @@ describe('FeaturePicker service', () => {
 			vi.restoreAllMocks()
 		})
 
-		it('should update application state and emit events correctly', async () => {
+		it('should update application state and create building charts', async () => {
 			const mockProperties = {
 				_postinumero: { _value: TEST_POSTAL_CODE_1 },
-				treeArea: TEST_TREE_AREA,
 				_avg_temp_c: TEST_AVG_TEMP,
 			}
-
-			toggleStore.helsinkiView = true
 
 			await featurePicker.handleBuildingFeature(mockProperties)
 
@@ -730,33 +715,12 @@ describe('FeaturePicker service', () => {
 			expect(globalStore.level).toBe('building')
 			expect(globalStore.postalcode).toBe(TEST_POSTAL_CODE_1)
 
-			// Verify events emitted
-			expect(eventBus.emit).toHaveBeenCalledWith('hideHelsinki')
-			expect(eventBus.emit).toHaveBeenCalledWith('showBuilding')
-
 			// Verify building service methods called
 			expect(featurePicker.buildingService.resetBuildingOutline).toHaveBeenCalled()
 			expect(featurePicker.buildingService.createBuildingCharts).toHaveBeenCalledWith(
-				TEST_TREE_AREA,
 				TEST_AVG_TEMP,
 				mockProperties
 			)
-		})
-
-		it('should emit hideCapitalRegion when not in Helsinki view', async () => {
-			const mockProperties = {
-				_postinumero: { _value: TEST_POSTAL_CODE_1 },
-				treeArea: TEST_TREE_AREA,
-				_avg_temp_c: TEST_AVG_TEMP,
-			}
-
-			toggleStore.helsinkiView = false
-
-			await featurePicker.handleBuildingFeature(mockProperties)
-
-			// Verify correct event for capital region view
-			expect(eventBus.emit).toHaveBeenCalledWith('hideCapitalRegion')
-			expect(eventBus.emit).toHaveBeenCalledWith('showBuilding')
 		})
 	})
 

@@ -330,7 +330,9 @@ export default {
 					)
 
 					if (pickedEntity?.id) {
-						void fetchBuildingInfo(pickedEntity.id)
+						fetchBuildingInfo(pickedEntity.id).catch((error) => {
+							logger.error('Failed to fetch building info for tooltip:', error)
+						})
 					} else {
 						showTooltip.value = false
 					}

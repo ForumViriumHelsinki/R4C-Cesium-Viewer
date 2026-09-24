@@ -124,6 +124,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import cacheService from '../services/cacheService'
+import logger from '../utils/logger.js'
 
 // Props
 const props = defineProps({
@@ -325,7 +326,9 @@ const startRefreshTimer = () => {
 
 	refreshTimer.value = setInterval(() => {
 		if (!refreshing.value) {
-			void refreshAll()
+			refreshAll().catch((error) => {
+				logger.error('Data source health refresh failed:', error)
+			})
 		}
 	}, props.refreshInterval)
 }

@@ -1,7 +1,7 @@
 <template>
 	<div
-		id="scatterPlotContainerHSY"
 		ref="containerRef"
+		class="hsy-scatter-plot-container"
 	/>
 </template>
 
@@ -36,7 +36,7 @@ export default {
 
 		// Function to add plot elements
 		const addPlotElements = (svg, heatData, xScale, yScale, colorScale) => {
-			const tooltip = plotService.createTooltip('#scatterPlotContainerHSY')
+			const tooltip = plotService.createTooltip(containerRef.value)
 
 			svg
 				.append('g')
@@ -52,7 +52,7 @@ export default {
 				.on('mouseover', (event, d) =>
 					plotService.handleMouseover(
 						tooltip,
-						'scatterPlotContainerHSY',
+						containerRef.value,
 						event,
 						d,
 						(
@@ -66,7 +66,7 @@ export default {
 		}
 
 		const clearHSYScatterPlot = () => {
-			d3.select('#scatterPlotContainerHSY').select('svg').remove()
+			if (containerRef.value) d3.select(containerRef.value).select('svg').remove()
 		}
 
 		const isSoteBuilding = (entity) => entity._properties._kayttarks._value === 'Yleinen rakennus'
@@ -126,7 +126,7 @@ export default {
 
 		const createHSYScatterPlot = (features) => {
 			clearHSYScatterPlot()
-			plotService.initializePlotContainer('scatterPlotContainerHSY')
+			plotService.initializePlotContainer(containerRef.value)
 
 			const { heatData, labelsWithAverage, values } = prepareDataForPlot(features)
 
@@ -136,7 +136,7 @@ export default {
 			const legendHeight = values.length * 40
 			const height = Math.max(chartHeight.value - margin.top - margin.bottom, legendHeight)
 
-			const svg = plotService.createSVGElement(margin, width, height, '#scatterPlotContainerHSY')
+			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 			const xScale = plotService.createScaleLinear(
 				d3.min(heatData, (d) => d.xData) - 1,
 				d3.max(heatData, (d) => d.xData) + 2,
@@ -300,7 +300,7 @@ export default {
 </script>
 
 <style scoped>
-#scatterPlotContainerHSY {
+.hsy-scatter-plot-container {
 	position: relative;
 	width: 100%;
 	background-color: rgb(var(--v-theme-surface));
