@@ -247,7 +247,8 @@ describe('Landcover Service', () => {
 			await createHSYImageryLayer()
 			const staleLayer = mockBackgroundStore.landcoverLayers[0]
 			// Something outside this module took the layer off the viewer without telling
-			// backgroundMapStore, as MapControls' NDVI exclusion does with removeAll().
+			// backgroundMapStore. No src caller does that now: switchOffNdvi() calls
+			// removeLandcover() before removeAll(), so the liveness check is a safeguard.
 			mockContains.mockImplementation((layer) => layer !== staleLayer)
 			mockAddImageryProvider.mockClear()
 
