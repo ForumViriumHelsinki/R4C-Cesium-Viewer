@@ -13,6 +13,16 @@
  */
 
 import { defineStore } from 'pinia'
+import { markRaw } from 'vue'
+
+/**
+ * Mark each Cesium layer raw before it enters state. Pinia would otherwise hand
+ * it back as a reactive proxy, and ImageryLayerCollection.contains()/remove()
+ * match by identity, so the layer could never be removed (#1019).
+ * @param {Array<Object>} layers - Cesium imagery layer objects
+ * @returns {Array<Object>}
+ */
+const markRawEach = (layers) => layers.map((layer) => markRaw(layer))
 
 /**
  * Background Map Pinia Store
@@ -47,21 +57,21 @@ export const useBackgroundMapStore = defineStore('backgroundMap', {
 		 * @param {Array<Object>} layers - Cesium imagery layer objects
 		 */
 		setFloodLayers(layers) {
-			this.floodLayers = layers
+			this.floodLayers = markRawEach(layers)
 		},
 		/**
 		 * Sets HSY landcover WMS layer references
 		 * @param {Array<Object>} layers - Cesium imagery layer objects
 		 */
 		setLandcoverLayers(layers) {
-			this.landcoverLayers = layers
+			this.landcoverLayers = markRawEach(layers)
 		},
 		/**
 		 * Sets NDVI TIFF imagery layer references
 		 * @param {Array<Object>} layers - Cesium imagery layer objects with TIFF providers
 		 */
 		setTiffLayers(layers) {
-			this.tiffLayers = layers
+			this.tiffLayers = markRawEach(layers)
 		},
 		/**
 		 * Sets the selected date for NDVI vegetation imagery
@@ -75,7 +85,7 @@ export const useBackgroundMapStore = defineStore('backgroundMap', {
 		 * @param {Object} layers - HSY WMS layer configuration object
 		 */
 		setHSYWMSLayers(layers) {
-			this.hSYWMSLayers = layers
+			this.hSYWMSLayers = layers ? markRaw(layers) : null
 		},
 		/**
 		 * Sets the selected HSY region area

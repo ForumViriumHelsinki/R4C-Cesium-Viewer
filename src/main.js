@@ -5,30 +5,9 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import App from './App.vue'
 import './version.js' // Log version info to console
-import { useBuildingStore } from './stores/buildingStore.js'
-import { useFeatureFlagStore } from './stores/featureFlagStore'
-import { useGlobalStore } from './stores/globalStore.js'
-import { useToggleStore } from './stores/toggleStore.js'
+import { E2E_STORE_HOOKS_ENABLED, exposeStoresForE2E } from './utils/e2eStoreHooks.js'
 import logger from './utils/logger.js'
 import { installPreloadErrorHandler } from './utils/preloadErrorHandler.js'
-
-/**
- * `window` augmented with the store instances and factory functions that the
- * E2E test harness reads. These are attached only in development/test builds
- * (see below); typed here so the assignments type-check without an ambient
- * `.d.ts`.
- *
- * @typedef {Window & {
- *   globalStore: ReturnType<typeof useGlobalStore>,
- *   useGlobalStore: () => ReturnType<typeof useGlobalStore>,
- *   buildingStore: ReturnType<typeof useBuildingStore>,
- *   useBuildingStore: () => ReturnType<typeof useBuildingStore>,
- *   toggleStore: ReturnType<typeof useToggleStore>,
- *   useToggleStore: () => ReturnType<typeof useToggleStore>,
- *   featureFlagStore: ReturnType<typeof useFeatureFlagStore>,
- *   useFeatureFlagStore: () => ReturnType<typeof useFeatureFlagStore>,
- * }} TestWindow
- */
 
 // Install the global vite:preloadError handler before any dynamic imports
 // can run, so stale-chunk failures after a deploy trigger a reload rather
@@ -175,30 +154,12 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 app.use(pinia)
 app.use(vuetify)
 
-// Expose store instances to window for E2E testing
-// Must be done BEFORE mounting so the store is available when components initialize
-if (import.meta.env.MODE === 'development' || import.meta.env.MODE === 'test') {
-	// Cast to the test-surface shape (see TestWindow typedef) rather than declaring
-	// an ambient .d.ts, since these properties are not on the standard Window type.
-	const testWindow = /** @type {TestWindow} */ (/** @type {unknown} */ (window))
-
-	// Initialize the stores and expose the instances
-	const globalStore = useGlobalStore()
-	testWindow.globalStore = globalStore
-	// Also expose the function for backwards compatibility
-	testWindow.useGlobalStore = () => globalStore
-
-	const buildingStore = useBuildingStore()
-	testWindow.buildingStore = buildingStore
-	testWindow.useBuildingStore = () => buildingStore
-
-	const toggleStore = useToggleStore()
-	testWindow.toggleStore = toggleStore
-	testWindow.useToggleStore = () => toggleStore
-
-	const featureFlagStore = useFeatureFlagStore()
-	testWindow.featureFlagStore = featureFlagStore
-	testWindow.useFeatureFlagStore = () => featureFlagStore
+// Expose store instances to window for the E2E harness (dev, Vitest, and any
+// VITE_E2E_TEST=true build). Must run BEFORE mounting so the stores are
+// available when components initialize. The static guard lets a normal
+// production build drop the call.
+if (E2E_STORE_HOOKS_ENABLED) {
+	exposeStoresForE2E()
 }
 
 app.mount('#app')

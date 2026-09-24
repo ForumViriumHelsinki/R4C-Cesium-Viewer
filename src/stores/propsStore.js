@@ -66,7 +66,8 @@ export const usePropsStore = defineStore('props', {
 		 * @deprecated This action appears misplaced in propsStore
 		 */
 		setHSYWMSLayers(layers) {
-			this.hSYWMSLayers = layers
+			// markRaw, like postalCodeData below: Cesium layers must keep their identity
+			this.hSYWMSLayers = layers ? markRaw(layers) : null
 		},
 		/**
 		 * Sets the selected socioeconomic area for analysis

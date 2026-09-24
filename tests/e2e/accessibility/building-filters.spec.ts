@@ -23,6 +23,7 @@
 
 import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
+import { visibleErrorStates } from '../helpers/error-states'
 import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 cesiumDescribe('Building Filters Accessibility', () => {
@@ -537,7 +538,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			await expect(tallBuildingsToggle).not.toBeChecked()
 
 			// No error states should be present
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+			const errorElements = visibleErrorStates(cesiumPage)
 			const errorCount = await errorElements.count()
 			expect(errorCount).toBe(0)
 		})
@@ -571,7 +572,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 				await expect(tallBuildingsToggle).toBeChecked()
 
 				// No error states
-				const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+				const errorElements = visibleErrorStates(cesiumPage)
 				const errorCount = await errorElements.count()
 				expect(errorCount).toBe(0)
 			}

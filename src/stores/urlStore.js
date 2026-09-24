@@ -22,6 +22,7 @@
  */
 
 import { defineStore } from 'pinia'
+import { findFloodScenario } from '@/constants/floodScenarios'
 import { encodeURLParam, validatePostalCode } from '@/utils/validators'
 
 /**
@@ -235,33 +236,15 @@ export const useURLStore = defineStore('url', {
 		/**
 		 * Generates SYKE flood map URL for a specific scenario
 		 * @param {Object} state - Pinia state
-		 * @returns {(scenario: string) => string|null} Function accepting scenario name and returning WMS URL or null if unknown
+		 * @returns {(scenario: string) => string|null} Function accepting a scenario id from
+		 *   constants/floodScenarios.js and returning its WMS URL, or null if unknown
 		 * @example
-		 * sykeFloodUrl(state)('HulevesitulvaVesisyvyysSade52mmMallinnettuAlue') // Returns stormwater 52mm flood URL
-		 * sykeFloodUrl(state)('coastal_flood_SSP585_2050_0020_with_protected') // Returns coastal flood SSP585 2050 URL
+		 * sykeFloodUrl(state)(STORMWATER_SCENARIOS[0].id) // Stormwater 52 mm/hour WMS URL
 		 */
 		sykeFloodUrl: (state) => (scenario) => {
 			const { geoserverBase, flood } = state.externalApis.syke
-
-			// Stormwater flood scenarios
-			if (scenario === 'HulevesitulvaVesisyvyysSade52mmMallinnettuAlue') {
-				return `${geoserverBase}${flood.stormwater52mm}`
-			}
-			if (scenario === 'HulevesitulvaVesisyvyysSade80mmMallinnettuAlue') {
-				return `${geoserverBase}${flood.stormwater80mm}`
-			}
-
-			// Combined coastal flood scenarios (all SSP pathways)
-			if (scenario === 'SSP585_re_with_SSP245_with_SSP126_with_current') {
-				return `${geoserverBase}${flood.coastalCombined}`
-			}
-
-			// Individual coastal flood scenarios
-			if (scenario.startsWith('coastal_flood_')) {
-				return `${geoserverBase}${flood.coastalBase}`
-			}
-
-			return null // Unknown scenario
+			const service = findFloodScenario(scenario)?.service
+			return service ? `${geoserverBase}${flood[service]}` : null
 		},
 		/**
 		 * Generates Helsinki WFS URL for building data by postal code
