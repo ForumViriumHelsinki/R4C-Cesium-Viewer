@@ -68,7 +68,11 @@ export default {
 		const hideColdAreas = () => {
 			toggleStore.setHideColdAreas(hideColdAreasChecked.value)
 			const dataSourceService = new Datasource()
-			void dataSourceService.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value)
+			dataSourceService
+				.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value)
+				.catch((error) => {
+					logger.error('Failed to toggle cold areas:', error)
+				})
 		}
 
 		const createHSYBuildingBarChart = () => {

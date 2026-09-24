@@ -268,6 +268,10 @@ featurePicker.loadPostalCode().catch((error) => {
 treeService.loadTrees().catch(logger.error);
 ```
 
+`tests/unit/lint/no-void-calls.test.js` fails on any `void <call>(` in `src/`,
+`void nextTick(` included. When the callee is synchronous, drop `void` rather than
+adding `.catch`.
+
 ### Replace `.catch(console.error)`
 
 ```javascript

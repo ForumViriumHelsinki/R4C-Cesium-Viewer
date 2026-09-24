@@ -323,15 +323,19 @@ const loadTrees = async () => {
 const loadOtherNature = () => {
 	toggleStore.setShowOtherNature(showOtherNature.value)
 
+	const logFailure = (error) => {
+		logger.error('Failed to update other nature layer:', error)
+	}
+
 	if (showOtherNature.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
 			const otherNatureService = new Othernature()
-			void otherNatureService.loadOtherNature()
+			otherNatureService.loadOtherNature().catch(logFailure)
 		} else {
-			void dataSourceService.changeDataSourceShowByName('OtherNature', true)
+			dataSourceService.changeDataSourceShowByName('OtherNature', true).catch(logFailure)
 		}
 	} else {
-		void dataSourceService.changeDataSourceShowByName('OtherNature', false)
+		dataSourceService.changeDataSourceShowByName('OtherNature', false).catch(logFailure)
 	}
 }
 
@@ -362,10 +366,14 @@ const toggleNDVI = () => {
 	toggleStore.setNDVI(ndvi.value)
 
 	if (ndvi.value) {
-		void changeTIFF()
+		changeTIFF().catch((error) => {
+			logger.error('Failed to add NDVI imagery:', error)
+		})
 		eventBus.emit('addNDVI')
 	} else {
-		void removeTIFF()
+		removeTIFF().catch((error) => {
+			logger.error('Failed to remove NDVI imagery:', error)
+		})
 	}
 }
 

@@ -11,6 +11,7 @@ import * as d3 from '@/utils/d3'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	setup() {
@@ -89,8 +90,10 @@ export default {
 			(treeArea) => {
 				if (treeArea) {
 					showChart.value = true
-					void nextTick(() => {
+					nextTick(() => {
 						createBuildingTreeBarChart()
+					}).catch((error) => {
+						logger.error('Failed to draw building tree chart:', error)
 					})
 				} else {
 					showChart.value = false

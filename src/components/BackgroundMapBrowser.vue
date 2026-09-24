@@ -632,7 +632,9 @@ export default {
 
 		// Initialize
 		onMounted(() => {
-			void loadHSYLayers()
+			loadHSYLayers().catch((error) => {
+				logger.error('Failed to load HSY layer catalogue:', error)
+			})
 		})
 
 		return {

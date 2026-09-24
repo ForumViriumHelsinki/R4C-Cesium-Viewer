@@ -70,7 +70,9 @@ export default class Helsinki {
 			'./assets/data/hki_po_clipped.json',
 			'PostCodes'
 		)
-		void this.loadHelsinkiGreenElements()
+		this.loadHelsinkiGreenElements().catch((error) => {
+			logger.error('[Helsinki] Failed to load green elements:', error)
+		})
 		eventBus.emit('showHelsinki')
 	}
 
