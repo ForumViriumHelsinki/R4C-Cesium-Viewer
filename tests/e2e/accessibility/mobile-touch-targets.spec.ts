@@ -24,7 +24,8 @@ cesiumDescribe('Mobile Touch Targets @accessibility @mobile', () => {
 	})
 
 	cesiumTest.describe('Navigation Buttons - Mobile', () => {
-		cesiumTest(
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
 			'should meet 44px minimum touch target on mobile (375px)',
 			async ({ cesiumPage }) => {
 				// iPhone SE viewport

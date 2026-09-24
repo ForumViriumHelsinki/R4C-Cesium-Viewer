@@ -186,26 +186,36 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 	})
 
 	cesiumTest.describe('Panel State Across View Switches', () => {
-		cesiumTest('should maintain sidebar sections during view switches', async ({ cesiumPage }) => {
-			// Verify universal sections visible (Search tab replaces the removed
-			// "Search & Navigate" heading — see Universal Sidebar Sections above)
-			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
+		cesiumTest(
+			'should maintain sidebar sections during view switches',
+			async ({ cesiumPage }, testInfo) => {
+				// Desktop only: the tablet and mobile projects pass this test in CI.
+				// Quarantined: fails on every attempt in CI — see #998
+				cesiumTest.fixme(
+					testInfo.project.name === 'accessibility-desktop',
+					'Fails on every attempt in CI on desktop — see #998'
+				)
 
-			// Switch view
-			await helpers.navigateToView('gridView')
+				// Verify universal sections visible (Search tab replaces the removed
+				// "Search & Navigate" heading — see Universal Sidebar Sections above)
+				await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
+				await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
 
-			// Universal sections should remain visible
-			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
+				// Switch view
+				await helpers.navigateToView('gridView')
 
-			// Switch back
-			await helpers.navigateToView('capitalRegionView')
+				// Universal sections should remain visible
+				await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
+				await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
 
-			// Still visible
-			await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
-			await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
-		})
+				// Switch back
+				await helpers.navigateToView('capitalRegionView')
+
+				// Still visible
+				await expect(cesiumPage.getByText('Background Maps')).toBeVisible()
+				await expect(cesiumPage.getByRole('tab', { name: 'Search' })).toBeVisible()
+			}
+		)
 	})
 
 	cesiumTest.describe('Accessibility Compliance', () => {

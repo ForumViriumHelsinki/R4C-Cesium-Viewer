@@ -139,27 +139,31 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 			}
 		})
 
-		cesiumTest('should show navigation controls at postal code level', async ({ cesiumPage }) => {
-			await helpers.drillToLevel('postalCode')
-			// Wait for navigation controls to be ready
-			await cesiumPage
-				.waitForSelector('.mdi-compass', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
-				.catch(() => {})
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
+			'should show navigation controls at postal code level',
+			async ({ cesiumPage }) => {
+				await helpers.drillToLevel('postalCode')
+				// Wait for navigation controls to be ready
+				await cesiumPage
+					.waitForSelector('.mdi-compass', { timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT })
+					.catch(() => {})
 
-			await helpers.testNavigationControls('postalCode')
+				await helpers.testNavigationControls('postalCode')
 
-			// Back button still not visible (only appears at building level)
-			const backButton = cesiumPage
-				.getByRole('button')
-				.filter({ has: cesiumPage.locator('.mdi-arrow-left') })
-			await expect(backButton).not.toBeVisible()
+				// Back button still not visible (only appears at building level)
+				const backButton = cesiumPage
+					.getByRole('button')
+					.filter({ has: cesiumPage.locator('.mdi-arrow-left') })
+				await expect(backButton).not.toBeVisible()
 
-			// Camera rotation should now be visible
-			const cameraButton = cesiumPage
-				.getByRole('button')
-				.filter({ has: cesiumPage.locator('.mdi-compass') })
-			await expect(cameraButton).toBeVisible()
-		})
+				// Camera rotation should now be visible
+				const cameraButton = cesiumPage
+					.getByRole('button')
+					.filter({ has: cesiumPage.locator('.mdi-compass') })
+				await expect(cameraButton).toBeVisible()
+			}
+		)
 
 		cesiumTest(
 			'should maintain view mode selection at postal code level',

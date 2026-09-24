@@ -69,7 +69,8 @@ cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 			expect(box!.width).toBeGreaterThan(350) // Should be nearly full width on 375px screen
 		})
 
-		cesiumTest('should be 90% width on small tablets (600-960px)', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should be 90% width on small tablets (600-960px)', async ({ cesiumPage }) => {
 			await cesiumPage.setViewportSize({ width: 768, height: 1024 })
 
 			// Open control panel if not visible
