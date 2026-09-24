@@ -49,16 +49,12 @@
 							None
 						</v-btn>
 						<v-btn
-							value="HulevesitulvaVesisyvyysSade52mmMallinnettuAlue"
+							v-for="scenario in stormwaterScenarios"
+							:key="scenario.id"
+							:value="scenario.id"
 							size="small"
 						>
-							52mm/hour
-						</v-btn>
-						<v-btn
-							value="HulevesitulvaVesisyvyysSade80mmMallinnettuAlue"
-							size="small"
-						>
-							80mm/hour
+							{{ scenario.label }}
 						</v-btn>
 					</v-btn-toggle>
 				</div>
@@ -66,6 +62,23 @@
 				<!-- Coastal Floods -->
 				<div class="flood-category">
 					<h6 class="flood-category-title">Coastal Flood Scenarios</h6>
+					<v-btn-toggle
+						v-model="coastalYear"
+						mandatory
+						density="compact"
+						variant="outlined"
+						class="flood-year-buttons"
+						aria-label="Coastal scenario year"
+					>
+						<v-btn
+							v-for="year in coastalYears"
+							:key="year"
+							:value="year"
+							size="small"
+						>
+							{{ year }}
+						</v-btn>
+					</v-btn-toggle>
 					<v-btn-toggle
 						v-model="selectedFloodLayer"
 						mandatory
@@ -79,28 +92,18 @@
 							None
 						</v-btn>
 						<v-btn
-							value="SSP585_re_with_SSP245_with_SSP126_with_current"
+							:value="combinedCoastalScenario.id"
 							size="small"
 						>
-							Combined
+							{{ combinedCoastalScenario.label }}
 						</v-btn>
 						<v-btn
-							value="coastal_flood_SSP126_2050_0020_with_protected"
+							v-for="scenario in coastalScenariosForYear"
+							:key="scenario.id"
+							:value="scenario.id"
 							size="small"
 						>
-							SSP126 2050
-						</v-btn>
-						<v-btn
-							value="coastal_flood_SSP245_2050_0020_with_protected"
-							size="small"
-						>
-							SSP245 2050
-						</v-btn>
-						<v-btn
-							value="coastal_flood_SSP585_2050_0020_with_protected"
-							size="small"
-						>
-							SSP585 2050
+							{{ scenario.label }}
 						</v-btn>
 					</v-btn-toggle>
 				</div>
@@ -125,6 +128,21 @@
 						<span class="legend-text">{{ item.text }}</span>
 					</div>
 				</div>
+				<p class="flood-attribution">
+					Open data by
+					<a
+						:href="sykeAttribution.sourceUrl"
+						target="_blank"
+						rel="noopener"
+						>{{ sykeAttribution.sourceName }}</a
+					>, licensed under
+					<a
+						:href="sykeAttribution.licenseUrl"
+						target="_blank"
+						rel="noopener"
+						>{{ sykeAttribution.licenseName }}</a
+					>.
+				</p>
 			</div>
 		</div>
 
@@ -278,6 +296,15 @@
 
 <script>
 import { computed, onMounted, ref, watch } from 'vue'
+import {
+	COASTAL_SCENARIOS,
+	COASTAL_YEARS,
+	COMBINED_COASTAL_SCENARIO,
+	coastalScenarioId,
+	floodLegendFor,
+	STORMWATER_SCENARIOS,
+	SYKE_ATTRIBUTION,
+} from '../constants/floodScenarios'
 import { getCesium } from '../services/cesiumProvider'
 import { createFloodImageryLayer, removeFloodLayers } from '../services/floodwms'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore'
@@ -379,44 +406,22 @@ export default {
 			}
 		}
 
-		// Flood risk maps
+		// Flood risk maps (scenario ids and legends: constants/floodScenarios.js)
 		const selectedFloodLayer = ref('none')
+		const coastalYear = ref(COASTAL_YEARS[0])
+		const coastalScenariosForYear = computed(() =>
+			COASTAL_SCENARIOS.filter((s) => s.year === coastalYear.value)
+		)
 
-		const floodLegends = {
-			stormwater: [
-				{ color: '#82CFFF', text: 'Water/sea area' },
-				{ color: '#4589FF', text: '0.1 m' },
-				{ color: '#0F62FE', text: '0.3 m' },
-				{ color: '#0059C9', text: '0.5 m' },
-				{ color: '#002A8E', text: '1 m' },
-				{ color: '#001141', text: '2+ m' },
-			],
-			coastal: [
-				{ color: '#7ecce6', text: 'Less than 0.5 m' },
-				{ color: '#5498cc', text: '0.5-1 m' },
-				{ color: '#2b66b3', text: '1-2 m' },
-				{ color: '#003399', text: '2-3 m' },
-				{ color: '#002673', text: 'More than 3 m' },
-				{ color: '#fddbc6', text: 'Flood-protected areas' },
-			],
-			combination: [
-				{ color: '#002a8e', text: 'Current situation (2020)' },
-				{ color: '#0f62fe', text: 'Year 2100, low = SSP1-2.6' },
-				{ color: '#b2192b', text: 'Year 2100, medium = SSP2-4.5' },
-				{ color: '#fde9dc', text: 'Year 2100, high = SSP5-8.5' },
-			],
-		}
-
-		const currentFloodLegend = computed(() => {
-			if (selectedFloodLayer.value?.startsWith('Hulevesitulva')) {
-				return floodLegends.stormwater
-			} else if (selectedFloodLayer.value === 'SSP585_re_with_SSP245_with_SSP126_with_current') {
-				return floodLegends.combination
-			} else if (selectedFloodLayer.value?.startsWith('coastal_flood')) {
-				return floodLegends.coastal
+		// Switching the year keeps the selected emission pathway
+		watch(coastalYear, (year) => {
+			const selected = COASTAL_SCENARIOS.find((s) => s.id === selectedFloodLayer.value)
+			if (selected && selected.year !== year) {
+				selectedFloodLayer.value = coastalScenarioId(selected.pathway, year)
 			}
-			return []
 		})
+
+		const currentFloodLegend = computed(() => floodLegendFor(selectedFloodLayer.value))
 
 		// Current selection tracking
 		const hasSelection = computed(() => {
@@ -430,15 +435,11 @@ export default {
 		const currentSelectionText = computed(() => {
 			if (selectedFloodLayer.value && selectedFloodLayer.value !== 'none') {
 				const floodMap = selectedFloodLayer.value
-				if (floodMap.startsWith('Hulevesitulva')) {
-					return floodMap.includes('52mm')
-						? 'Stormwater Flood: 52mm/hour'
-						: 'Stormwater Flood: 80mm/hour'
-				} else if (floodMap.startsWith('coastal_flood')) {
-					return 'Coastal Flood Scenario'
-				} else {
-					return 'Combined Flood Scenarios'
-				}
+				const stormwater = STORMWATER_SCENARIOS.find((s) => s.id === floodMap)
+				if (stormwater) return `Stormwater Flood: ${stormwater.label}`
+				const coastal = COASTAL_SCENARIOS.find((s) => s.id === floodMap)
+				if (coastal) return `Coastal Flood: ${coastal.pathway} ${coastal.year}`
+				return 'Combined Flood Scenarios'
 			}
 			if (selectedHSYLayer.value) {
 				const layer = hsyLayers.value.find((l) => l.name === selectedHSYLayer.value)
@@ -632,7 +633,9 @@ export default {
 
 		// Initialize
 		onMounted(() => {
-			void loadHSYLayers()
+			loadHSYLayers().catch((error) => {
+				logger.error('Failed to load HSY layer catalogue:', error)
+			})
 		})
 
 		return {
@@ -646,6 +649,12 @@ export default {
 			isLoadingHSY,
 			hsyLoadError,
 			selectedFloodLayer,
+			stormwaterScenarios: STORMWATER_SCENARIOS,
+			combinedCoastalScenario: COMBINED_COASTAL_SCENARIO,
+			coastalYears: COASTAL_YEARS,
+			coastalYear,
+			coastalScenariosForYear,
+			sykeAttribution: SYKE_ATTRIBUTION,
 			currentFloodLegend,
 			hasSelection,
 			currentSelectionText,
@@ -713,6 +722,20 @@ export default {
 
 .flood-buttons {
 	width: 100%;
+}
+
+.flood-year-buttons {
+	margin-bottom: 6px;
+}
+
+.flood-attribution {
+	font-size: 0.7rem;
+	margin: 8px 0 0;
+	color: rgba(var(--v-theme-on-surface), 0.7);
+}
+
+.flood-attribution a {
+	color: rgb(var(--v-theme-primary));
 }
 
 .flood-legend {

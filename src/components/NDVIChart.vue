@@ -40,6 +40,7 @@ import { useChartSize } from '../composables/useChartSize.js'
 import { getCesium } from '../services/cesiumProvider.js'
 import Datasource from '../services/datasource.js'
 import { usePropsStore } from '../stores/propsStore.js'
+import logger from '../utils/logger.js'
 
 export default {
 	props: {
@@ -143,7 +144,9 @@ export default {
 					const index = bins.indexOf(d) // Get the correct index
 					if (index !== -1) {
 						const rangeParts = labels[index].split('-').map(parseFloat)
-						void outlineByNDVI(rangeParts)
+						outlineByNDVI(rangeParts).catch((error) => {
+							logger.error('Failed to outline NDVI range:', error)
+						})
 					}
 				})
 

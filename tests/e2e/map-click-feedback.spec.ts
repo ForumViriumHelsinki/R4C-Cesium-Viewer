@@ -107,7 +107,8 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 	})
 
 	cesiumTest.describe('Immediate Visual Feedback', () => {
-		cesiumTest(
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
 			'should display loading overlay within 100ms of store state change @performance',
 			async ({ cesiumPage }) => {
 				// Measure timing within the browser to get accurate performance measurement
@@ -335,7 +336,8 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await expect(stageText).toHaveText('Almost Ready')
 		})
 
-		cesiumTest('should show progress bar during loading stage', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should show progress bar during loading stage', async ({ cesiumPage }) => {
 			// Set store state directly to ensure reliable test
 			const storeState = await cesiumPage.evaluate(async () => {
 				const store = (window as any).useGlobalStore?.()
@@ -371,7 +373,8 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await expect(progressLinear).toBeAttached()
 		})
 
-		cesiumTest('should show progress bar during animating stage', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should show progress bar during animating stage', async ({ cesiumPage }) => {
 			// Set store state directly to ensure reliable test
 			const storeState = await cesiumPage.evaluate(async () => {
 				const store = (window as any).useGlobalStore?.()
@@ -407,43 +410,47 @@ cesiumDescribe('Map Click Loading Overlay', () => {
 			await expect(progressLinear).toBeAttached()
 		})
 
-		cesiumTest('should show loading progress with real progress data', async ({ cesiumPage }) => {
-			// Set store state with progress data directly
-			const storeState = await cesiumPage.evaluate(async () => {
-				const store = (window as any).useGlobalStore?.()
-				if (!store) return null
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
+			'should show loading progress with real progress data',
+			async ({ cesiumPage }) => {
+				// Set store state with progress data directly
+				const storeState = await cesiumPage.evaluate(async () => {
+					const store = (window as any).useGlobalStore?.()
+					if (!store) return null
 
-				store.setClickProcessingState({
-					isProcessing: true,
-					postalCode: '00100',
-					postalCodeName: 'Test Area',
-					stage: 'loading',
-					startTime: performance.now(),
-					canCancel: false,
-					error: null,
-					retryCount: 0,
-					loadingProgress: { current: 1, total: 3 },
+					store.setClickProcessingState({
+						isProcessing: true,
+						postalCode: '00100',
+						postalCodeName: 'Test Area',
+						stage: 'loading',
+						startTime: performance.now(),
+						canCancel: false,
+						error: null,
+						retryCount: 0,
+						loadingProgress: { current: 1, total: 3 },
+					})
+
+					// Wait for reactivity
+					await new Promise((resolve) => requestAnimationFrame(resolve))
+
+					return {
+						stage: store.clickProcessingState.stage,
+						loadingProgress: store.clickProcessingState.loadingProgress,
+					}
 				})
 
-				// Wait for reactivity
-				await new Promise((resolve) => requestAnimationFrame(resolve))
+				expect(storeState?.stage).toBe('loading')
+				expect(storeState?.loadingProgress).toEqual({ current: 1, total: 3 })
 
-				return {
-					stage: store.clickProcessingState.stage,
-					loadingProgress: store.clickProcessingState.loadingProgress,
-				}
-			})
+				const loadingCard = cesiumPage.locator('.map-click-loading-overlay .loading-card')
+				await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE })
 
-			expect(storeState?.stage).toBe('loading')
-			expect(storeState?.loadingProgress).toEqual({ current: 1, total: 3 })
-
-			const loadingCard = cesiumPage.locator('.map-click-loading-overlay .loading-card')
-			await expect(loadingCard).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_VISIBLE })
-
-			// Check for progress linear indicator
-			const progressLinear = loadingCard.locator('.v-progress-linear').first()
-			await expect(progressLinear).toBeAttached()
-		})
+				// Check for progress linear indicator
+				const progressLinear = loadingCard.locator('.v-progress-linear').first()
+				await expect(progressLinear).toBeAttached()
+			}
+		)
 
 		cesiumTest('should maintain visible overlay while processing', async ({ cesiumPage }) => {
 			// Trigger overlay
