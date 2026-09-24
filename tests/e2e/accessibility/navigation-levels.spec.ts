@@ -11,6 +11,7 @@
 
 import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
+import { visibleErrorStates } from '../helpers/error-states'
 import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 cesiumDescribe('Navigation Levels Accessibility', () => {
@@ -558,7 +559,7 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 				)
 
 				// Application should not crash or show error states
-				const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+				const errorElements = visibleErrorStates(cesiumPage)
 				const errorCount = await errorElements.count()
 				expect(errorCount).toBe(0)
 
@@ -654,7 +655,7 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 			expect(foundNavigationElement).toBeTruthy()
 
 			// Should not cause errors
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+			const errorElements = visibleErrorStates(cesiumPage)
 			const errorCount = await errorElements.count()
 			expect(errorCount).toBe(0)
 		})

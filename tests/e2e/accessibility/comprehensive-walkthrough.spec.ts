@@ -11,6 +11,7 @@
 
 import { expect } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
+import { visibleErrorStates } from '../helpers/error-states'
 import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
@@ -347,7 +348,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 					).toBeTruthy()
 
 					// Verify no error states
-					const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+					const errorElements = visibleErrorStates(cesiumPage)
 					const errorCount = await errorElements.count()
 					expect(errorCount).toBe(0)
 				}
@@ -505,7 +506,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				.catch(() => {})
 
 			// Should not show error states
-			const errorElements = cesiumPage.locator('[class*="error"], [class*="Error"]')
+			const errorElements = visibleErrorStates(cesiumPage)
 			const errorCount = await errorElements.count()
 			expect(errorCount).toBe(0)
 
