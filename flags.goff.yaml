@@ -111,29 +111,15 @@ r4c-ambient-occlusion:
     - query: domain eq "forumvirium.fi"
       variation: enabled
 
-r4c-msaa-options:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: enabled
-
-r4c-fxaa-options:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: enabled
-
+# Performance optimization: only re-render when the scene changes.
+# Enabled for all — see R4C-Cesium-Viewer architecture.md ("keep RRM on
+# unless a specific feature needs continuous rendering").
 r4c-request-render-mode:
   variations:
     enabled: true
     disabled: false
   defaultRule:
-    variation: disabled
-  targeting:
-    - query: domain eq "forumvirium.fi"
-      variation: enabled
+    variation: enabled
 
 r4c-terrain-3d:
   variations:
