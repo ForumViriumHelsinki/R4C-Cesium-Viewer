@@ -275,7 +275,7 @@ typecheck:
 
 # Scan dependencies for known vulnerabilities (mirrors CI security-scan job)
 audit:
-    bun audit
+    bun scripts/security/audit-gate.mjs
 
 # Code quality gate (non-mutating, no tests)
 check: format-check lint typecheck
@@ -334,15 +334,22 @@ test-performance swgl="0" filter="":
         CI=true bun run test:performance
     fi
 
-# Run a single test file (fast iteration during test fixes)
+# Run a single test file (fast iteration during test fixes). Accessibility specs
+# belong to the accessibility-* projects; the chromium project excludes them (#947).
 [group: "testing"]
 test-file file *args:
-    VITE_E2E_TEST=true bunx playwright test "{{ file }}" --project=chromium --reporter=line {{ args }}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{ file }}" in
+        *e2e/accessibility/*) project=accessibility-desktop ;;
+        *) project=chromium ;;
+    esac
+    VITE_E2E_TEST=true bunx playwright test "{{ file }}" --project="$project" --reporter=line {{ args }}
 
-# Run all accessibility tests on chromium
+# Run all accessibility tests at the desktop viewport (the CI accessibility-desktop project)
 [group: "testing"]
 test-accessibility *args:
-    VITE_E2E_TEST=true bunx playwright test tests/e2e/accessibility/ --project=chromium --reporter=line {{ args }}
+    VITE_E2E_TEST=true bunx playwright test tests/e2e/accessibility/ --project=accessibility-desktop --reporter=line {{ args }}
 
 # Run accessibility tests across all CI viewports (desktop, tablet, mobile)
 [group: "testing"]
