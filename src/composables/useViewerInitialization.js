@@ -233,7 +233,10 @@ export function useViewerInitialization() {
 				viewer.value.scene.requestRenderMode = true
 				logger.debug('[useViewerInitialization] ⏸ Rendering paused (tab hidden)')
 			} else {
-				viewer.value.scene.requestRenderMode = false
+				// Restore the configured mode, using the same expression as viewer
+				// creation above. Forcing `false` here left continuous rendering on
+				// for the rest of the session after the first tab switch (#1018).
+				viewer.value.scene.requestRenderMode = graphicsStore.requestRenderMode || isE2ETest
 				viewer.value.scene.requestRender()
 				logger.debug('[useViewerInitialization] ▶ Rendering resumed (tab visible)')
 			}
