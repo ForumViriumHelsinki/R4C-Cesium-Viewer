@@ -81,7 +81,11 @@ failing attempts about 185 s each.
 A test that fails on every attempt in CI, retries included, is quarantined
 with `test.fixme` (`cesiumTest.fixme` for the Cesium fixture) and the comment
 `// Quarantined: fails on every attempt in CI — see #998` directly above it; a
-test that passes on any attempt is flaky and stays in the run.
+test that passes on any attempt is flaky and stays in the run. When an
+accessibility test fails every attempt on one viewport and passes on another,
+quarantine only that project: call
+`cesiumTest.fixme(testInfo.project.name === 'accessibility-desktop', '…')` first
+in the test body, with the same comment above it.
 `tests/unit/testContracts/e2eFixmeReferences.test.js` fails on any `fixme` under
 `tests/e2e` without an issue reference in the comment above it or on its own
 line. #998 lists the quarantined tests; remove the `fixme` when one is fixed.

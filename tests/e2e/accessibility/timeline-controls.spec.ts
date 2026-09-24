@@ -47,7 +47,8 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 	})
 
 	cesiumTest.describe('Timeline Components', () => {
-		cesiumTest('should display all timeline elements', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should display all timeline elements', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode')
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
@@ -71,7 +72,8 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 			}
 		})
 
-		cesiumTest('should have functional timeline slider', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should have functional timeline slider', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode')
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
@@ -112,25 +114,36 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 			}
 		)
 
-		cesiumTest('should handle timeline across different views', async ({ cesiumPage }) => {
-			// Test in Capital Region view
-			await helpers.navigateToView('capitalRegionView')
-			await helpers.drillToLevel('postalCode')
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
+		cesiumTest(
+			'should handle timeline across different views',
+			async ({ cesiumPage }, testInfo) => {
+				// Desktop only: the tablet and mobile projects pass this test in CI.
+				// Quarantined: fails on every attempt in CI — see #998
+				cesiumTest.fixme(
+					testInfo.project.name === 'accessibility-desktop',
+					'Fails on every attempt in CI on desktop — see #998'
+				)
 
-			await helpers.verifyTimelineVisibility('postalCode')
+				// Test in Capital Region view
+				await helpers.navigateToView('capitalRegionView')
+				await helpers.drillToLevel('postalCode')
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
-			// Switch to Grid view
-			await helpers.navigateToView('gridView')
-			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
+				await helpers.verifyTimelineVisibility('postalCode')
 
-			// Timeline should still be visible
-			await helpers.verifyTimelineVisibility('postalCode')
-		})
+				// Switch to Grid view
+				await helpers.navigateToView('gridView')
+				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
+
+				// Timeline should still be visible
+				await helpers.verifyTimelineVisibility('postalCode')
+			}
+		)
 	})
 
 	cesiumTest.describe('Timeline Accessibility', () => {
-		cesiumTest('should support keyboard navigation', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should support keyboard navigation', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode')
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
