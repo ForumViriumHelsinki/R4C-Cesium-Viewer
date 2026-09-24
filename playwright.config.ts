@@ -150,7 +150,14 @@ export default defineConfig({
 			fullyParallel: true,
 		},
 
-		// Accessibility-focused projects with specific viewport testing
+		// Accessibility-focused projects with specific viewport testing.
+		// fullyParallel makes each test its own unit for `--shard`, which the CI
+		// accessibility matrix splits every viewport into. Without it Playwright
+		// shards whole files: 9 files over 10 shards leaves a shard empty, and on
+		// desktop all 16 building-filters.spec.ts tests land in one shard, while
+		// main run 35996129152 got through only 7 of them (and two retries) in
+		// 14 minutes.
+		// `workers: 1` above still runs one test at a time.
 		{
 			name: 'accessibility-desktop',
 			use: {
@@ -158,6 +165,7 @@ export default defineConfig({
 				viewport: { width: 1920, height: 1080 },
 			},
 			testMatch: /tests\/e2e\/accessibility\/.*\.spec\.ts/,
+			fullyParallel: true,
 		},
 
 		{
@@ -167,6 +175,7 @@ export default defineConfig({
 				viewport: { width: 768, height: 1024 },
 			},
 			testMatch: /tests\/e2e\/accessibility\/.*\.spec\.ts/,
+			fullyParallel: true,
 		},
 
 		{
@@ -176,6 +185,7 @@ export default defineConfig({
 				viewport: { width: 375, height: 667 },
 			},
 			testMatch: /tests\/e2e\/accessibility\/.*\.spec\.ts/,
+			fullyParallel: true,
 		},
 
 		/* Mobile viewport using Chrome engine */
