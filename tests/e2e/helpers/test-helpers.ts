@@ -1183,11 +1183,14 @@ export class AccessibilityTestHelpers {
 			if (!hasFeaturePicker) {
 				console.log('[navigateViaStore] FeaturePicker not exposed on window, using store directly')
 
-				// Use window.globalStore which is exposed in dev/test mode (see main.js)
+				// Use window.globalStore, exposed in dev/test mode and in VITE_E2E_TEST=true
+				// builds (see src/utils/e2eStoreHooks.js)
 				await this.page.evaluate((pc) => {
 					const store = (window as any).globalStore
 					if (!store) {
-						throw new Error('globalStore not available on window (check main.js exposure)')
+						throw new Error(
+							'globalStore not available on window (check src/utils/e2eStoreHooks.js exposure)'
+						)
 					}
 
 					store.setLevel('postalCode')
@@ -1209,7 +1212,7 @@ export class AccessibilityTestHelpers {
 			const stateUpdated = await this.page
 				.waitForFunction(
 					(expectedPostalCode) => {
-						// Use window.globalStore which is exposed in dev/test mode
+						// Use window.globalStore (dev/test mode and VITE_E2E_TEST=true builds)
 						const store = (window as any).globalStore
 						if (!store) return false
 
@@ -1399,7 +1402,7 @@ export class AccessibilityTestHelpers {
 				const globalStore = (window as any).globalStore
 				if (!globalStore) {
 					throw new Error(
-						'globalStore not exposed on window. Run in dev/test mode (see src/main.js).'
+						'globalStore not exposed on window. Run a dev server or a VITE_E2E_TEST=true build (see src/utils/e2eStoreHooks.js).'
 					)
 				}
 
