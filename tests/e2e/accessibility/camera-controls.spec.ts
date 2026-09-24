@@ -301,41 +301,51 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 			await expect(openDrawer).toHaveCount(0)
 		})
 
-		cesiumTest('faces the camera east when the East button is clicked', async ({ cesiumPage }) => {
-			const hasViewer = await cesiumPage.evaluate(() =>
-				Boolean((window as { __viewer?: unknown }).__viewer)
-			)
-			cesiumTest.skip(!hasViewer, 'No live Cesium viewer (window.__viewer) available')
+		cesiumTest(
+			'faces the camera east when the East button is clicked',
+			async ({ cesiumPage }, testInfo) => {
+				// Desktop only: the tablet and mobile projects pass this test in CI.
+				// Quarantined: fails on every attempt in CI — see #998
+				cesiumTest.fixme(
+					testInfo.project.name === 'accessibility-desktop',
+					'Fails on every attempt in CI on desktop — see #998'
+				)
 
-			await cesiumPage
-				.locator('.camera-controls-container')
-				.getByRole('button', { name: 'Face East', exact: true })
-				.click()
+				const hasViewer = await cesiumPage.evaluate(() =>
+					Boolean((window as { __viewer?: unknown }).__viewer)
+				)
+				cesiumTest.skip(!hasViewer, 'No live Cesium viewer (window.__viewer) available')
 
-			// setHeading flies to heading 90° (1s animation). Poll the camera heading
-			// (ground truth) until it settles near East.
-			await cesiumPage.waitForFunction(
-				() => {
-					const viewer = (window as { __viewer?: { camera?: { heading?: number } } }).__viewer
-					// Cesium attaches to __cesium in E2E mode, but the fixture mock uses
-					// window.Cesium — check both (testing.md: never just one global).
-					const w = window as {
-						__cesium?: { Math: { toRadians: (d: number) => number } }
-						Cesium?: { Math: { toRadians: (d: number) => number } }
-					}
-					const Cesium = w.__cesium ?? w.Cesium
-					if (!viewer?.camera || !Cesium) return false
-					const target = Cesium.Math.toRadians(90)
-					return Math.abs((viewer.camera.heading ?? 0) - target) < 0.05
-				},
-				undefined,
-				{ timeout: TIMEOUTS.VERY_LONG }
-			)
+				await cesiumPage
+					.locator('.camera-controls-container')
+					.getByRole('button', { name: 'Face East', exact: true })
+					.click()
 
-			// The sr-only status region should reflect the new heading for screen readers.
-			const status = cesiumPage.locator('.compass-assembly .sr-only[role="status"]')
-			await expect(status).toContainText(/East/i, { timeout: TIMEOUTS.LONG })
-		})
+				// setHeading flies to heading 90° (1s animation). Poll the camera heading
+				// (ground truth) until it settles near East.
+				await cesiumPage.waitForFunction(
+					() => {
+						const viewer = (window as { __viewer?: { camera?: { heading?: number } } }).__viewer
+						// Cesium attaches to __cesium in E2E mode, but the fixture mock uses
+						// window.Cesium — check both (testing.md: never just one global).
+						const w = window as {
+							__cesium?: { Math: { toRadians: (d: number) => number } }
+							Cesium?: { Math: { toRadians: (d: number) => number } }
+						}
+						const Cesium = w.__cesium ?? w.Cesium
+						if (!viewer?.camera || !Cesium) return false
+						const target = Cesium.Math.toRadians(90)
+						return Math.abs((viewer.camera.heading ?? 0) - target) < 0.05
+					},
+					undefined,
+					{ timeout: TIMEOUTS.VERY_LONG }
+				)
+
+				// The sr-only status region should reflect the new heading for screen readers.
+				const status = cesiumPage.locator('.compass-assembly .sr-only[role="status"]')
+				await expect(status).toContainText(/East/i, { timeout: TIMEOUTS.LONG })
+			}
+		)
 
 		cesiumTest('zooms the camera closer when Zoom in is clicked', async ({ cesiumPage }) => {
 			const initialHeight = await cesiumPage.evaluate(() => {

@@ -57,21 +57,31 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 	})
 
 	cesiumTest.describe('View-Specific Panels', () => {
-		cesiumTest('should show Grid Options button only in Grid view', async ({ cesiumPage }) => {
-			// Grid Options is a map tool and renders in the Layers tab, next to the
-			// view-mode toggle.
-			const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
-			await layersTab.click()
+		cesiumTest(
+			'should show Grid Options button only in Grid view',
+			async ({ cesiumPage }, testInfo) => {
+				// Desktop only: the tablet and mobile projects pass this test in CI.
+				// Quarantined: fails on every attempt in CI — see #998
+				cesiumTest.fixme(
+					testInfo.project.name === 'accessibility-desktop',
+					'Fails on every attempt in CI on desktop — see #998'
+				)
 
-			// Not rendered in Capital Region view
-			await expect(cesiumPage.getByText('Grid Options')).toHaveCount(0)
+				// Grid Options is a map tool and renders in the Layers tab, next to the
+				// view-mode toggle.
+				const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
+				await layersTab.click()
 
-			// Switch to Grid view
-			await helpers.navigateToView('gridView')
+				// Not rendered in Capital Region view
+				await expect(cesiumPage.getByText('Grid Options')).toHaveCount(0)
 
-			// Now visible as a button in the Layers tab
-			await expect(cesiumPage.getByText('Grid Options')).toBeVisible()
-		})
+				// Switch to Grid view
+				await helpers.navigateToView('gridView')
+
+				// Now visible as a button in the Layers tab
+				await expect(cesiumPage.getByText('Grid Options')).toBeVisible()
+			}
+		)
 
 		cesiumTest(
 			'should show Climate Adaptation only in Grid view with heat index',

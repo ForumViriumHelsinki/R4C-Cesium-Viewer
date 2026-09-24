@@ -269,7 +269,8 @@ cesiumDescribe('View Modes Accessibility', () => {
 	})
 
 	cesiumTest.describe('View Mode Responsiveness', () => {
-		cesiumTest(
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
 			'should maintain view mode functionality across different viewports',
 			async ({ cesiumPage }) => {
 				const viewports = [

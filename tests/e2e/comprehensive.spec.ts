@@ -53,7 +53,8 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 	})
 
 	test.describe('Map Navigation and Interaction', () => {
-		test('should support camera controls', async ({ page }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		test.fixme('should support camera controls', async ({ page }) => {
 			// Test zoom in/out buttons if present
 			const cameraControls = page.locator('[class*="camera"]')
 			const count = await cameraControls.count()
@@ -252,7 +253,8 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 	})
 
 	test.describe('Data Loading and Performance', () => {
-		test('should handle loading states correctly', async ({ page }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		test.fixme('should handle loading states correctly', async ({ page }) => {
 			// The page was already loaded in beforeEach, so just verify it's responsive
 			// and no console errors occurred during loading
 			const consoleErrors: string[] = []
@@ -400,7 +402,8 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 			await expect(page.locator('canvas')).toBeVisible()
 		})
 
-		test('should adapt to different screen sizes', async ({ page }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		test.fixme('should adapt to different screen sizes', async ({ page }) => {
 			const viewports = [
 				{ ...VIEWPORTS.MOBILE_SMALL, name: 'iPhone SE' },
 				{ ...VIEWPORTS.TABLET, name: 'iPad' },

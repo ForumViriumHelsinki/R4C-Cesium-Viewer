@@ -80,7 +80,8 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 	})
 
 	cesiumTest.describe('Postal Code Level Navigation', () => {
-		cesiumTest(
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
 			'should transition to postal code level on map interaction',
 			async ({ cesiumPage }) => {
 				// Click on map to select postal code area

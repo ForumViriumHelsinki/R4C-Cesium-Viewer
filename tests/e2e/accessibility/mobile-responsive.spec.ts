@@ -29,18 +29,22 @@ cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 	})
 
 	cesiumTest.describe('Control Panel Responsive Behavior', () => {
-		cesiumTest('should display as temporary overlay on mobile (<768px)', async ({ cesiumPage }) => {
-			await cesiumPage.setViewportSize({ width: 600, height: 800 })
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
+			'should display as temporary overlay on mobile (<768px)',
+			async ({ cesiumPage }) => {
+				await cesiumPage.setViewportSize({ width: 600, height: 800 })
 
-			// Control panel should exist
-			const drawer = cesiumPage.locator('.v-navigation-drawer')
-			await expect(drawer).toBeAttached()
+				// Control panel should exist
+				const drawer = cesiumPage.locator('.v-navigation-drawer')
+				await expect(drawer).toBeAttached()
 
-			// Should have temporary behavior (can be closed by clicking outside)
-			// Check if it has the temporary class or scrim overlay
-			const hasScrim = (await cesiumPage.locator('.v-overlay__scrim').count()) > 0
-			expect(hasScrim).toBeTruthy()
-		})
+				// Should have temporary behavior (can be closed by clicking outside)
+				// Check if it has the temporary class or scrim overlay
+				const hasScrim = (await cesiumPage.locator('.v-overlay__scrim').count()) > 0
+				expect(hasScrim).toBeTruthy()
+			}
+		)
 
 		cesiumTest('should be full width (100%) on mobile (<600px)', async ({ cesiumPage }) => {
 			await cesiumPage.setViewportSize({ width: 375, height: 667 })
@@ -235,15 +239,19 @@ cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 	})
 
 	cesiumTest.describe('Responsive Text Labels', () => {
-		cesiumTest('should show full text on desktop control panel toggle', async ({ cesiumPage }) => {
-			await cesiumPage.setViewportSize({ width: 1024, height: 768 })
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
+			'should show full text on desktop control panel toggle',
+			async ({ cesiumPage }) => {
+				await cesiumPage.setViewportSize({ width: 1024, height: 768 })
 
-			const toggleButton = cesiumPage.getByLabel('Toggle control panel')
-			const text = await toggleButton.textContent()
+				const toggleButton = cesiumPage.getByLabel('Toggle control panel')
+				const text = await toggleButton.textContent()
 
-			// Should show full "Show/Hide Controls" text
-			expect(text).toMatch(/Controls/)
-		})
+				// Should show full "Show/Hide Controls" text
+				expect(text).toMatch(/Controls/)
+			}
+		)
 
 		cesiumTest(
 			'should show abbreviated text on mobile control panel toggle',

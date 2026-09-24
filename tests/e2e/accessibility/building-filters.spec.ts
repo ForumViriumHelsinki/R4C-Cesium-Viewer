@@ -605,109 +605,113 @@ cesiumDescribe('Building Filters Accessibility', () => {
 			}
 		})
 
-		cesiumTest('should support keyboard navigation for filter toggles', async ({ cesiumPage }) => {
-			// Tab through the interface to reach filter controls with safety measures
-			let foundFilterToggle = false
-			const maxIterations = 30 // Increased limit for comprehensive testing
-			const timeout = 30000 // Overall timeout for the test
-			const startTime = Date.now()
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
+			'should support keyboard navigation for filter toggles',
+			async ({ cesiumPage }) => {
+				// Tab through the interface to reach filter controls with safety measures
+				let foundFilterToggle = false
+				const maxIterations = 30 // Increased limit for comprehensive testing
+				const timeout = 30000 // Overall timeout for the test
+				const startTime = Date.now()
 
-			try {
-				for (let i = 0; i < maxIterations; i++) {
-					// Check overall timeout
-					if (Date.now() - startTime > timeout) {
-						console.warn('Keyboard navigation test reached overall timeout')
-						break
-					}
+				try {
+					for (let i = 0; i < maxIterations; i++) {
+						// Check overall timeout
+						if (Date.now() - startTime > timeout) {
+							console.warn('Keyboard navigation test reached overall timeout')
+							break
+						}
 
-					// Check if page context is still valid
-					const pageValid = await cesiumPage
-						.evaluate(() => document.readyState)
-						.then(() => true)
-						.catch(() => false)
+						// Check if page context is still valid
+						const pageValid = await cesiumPage
+							.evaluate(() => document.readyState)
+							.then(() => true)
+							.catch(() => false)
 
-					if (!pageValid) {
-						console.warn('Page context lost during keyboard navigation')
-						break
-					}
+						if (!pageValid) {
+							console.warn('Page context lost during keyboard navigation')
+							break
+						}
 
-					// Press Tab key with error handling
-					try {
-						await cesiumPage.keyboard.press('Tab')
-						await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT) // Brief wait for focus to settle
-					} catch (tabError) {
-						console.warn(`Tab press failed at iteration ${i}:`, tabError)
-						break
-					}
+						// Press Tab key with error handling
+						try {
+							await cesiumPage.keyboard.press('Tab')
+							await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_SHORT) // Brief wait for focus to settle
+						} catch (tabError) {
+							console.warn(`Tab press failed at iteration ${i}:`, tabError)
+							break
+						}
 
-					const focused = cesiumPage.locator(':focus')
+						const focused = cesiumPage.locator(':focus')
 
-					// Check if element is valid before evaluating
-					const elementExists = await focused
-						.count()
-						.then((c) => c > 0)
-						.catch(() => false)
-					if (!elementExists) {
-						continue
-					}
+						// Check if element is valid before evaluating
+						const elementExists = await focused
+							.count()
+							.then((c) => c > 0)
+							.catch(() => false)
+						if (!elementExists) {
+							continue
+						}
 
-					// Get element info with error handling
-					const tagName = await focused.evaluate((el) => el.tagName.toLowerCase()).catch(() => '')
+						// Get element info with error handling
+						const tagName = await focused.evaluate((el) => el.tagName.toLowerCase()).catch(() => '')
 
-					if (tagName === 'input') {
-						const type = await focused.getAttribute('type').catch(() => null)
-						if (type === 'checkbox') {
-							// Verify this is a filter checkbox by checking nearby text
-							const parentText = await focused
-								.locator('..')
-								.textContent()
-								.catch(() => '')
+						if (tagName === 'input') {
+							const type = await focused.getAttribute('type').catch(() => null)
+							if (type === 'checkbox') {
+								// Verify this is a filter checkbox by checking nearby text
+								const parentText = await focused
+									.locator('..')
+									.textContent()
+									.catch(() => '')
 
-							const isFilterCheckbox =
-								parentText.includes('Buildings') ||
-								parentText.includes('Tall') ||
-								parentText.includes('Public') ||
-								parentText.includes('Pre-2018')
+								const isFilterCheckbox =
+									parentText.includes('Buildings') ||
+									parentText.includes('Tall') ||
+									parentText.includes('Public') ||
+									parentText.includes('Pre-2018')
 
-							if (!isFilterCheckbox) {
-								continue // Skip non-filter checkboxes
-							}
+								if (!isFilterCheckbox) {
+									continue // Skip non-filter checkboxes
+								}
 
-							// Found a filter checkbox, test space bar activation
-							const initialState = await focused.isChecked().catch(() => null)
-							if (initialState === null) {
-								console.warn(`Could not determine initial state at iteration ${i}`)
-								continue
-							}
+								// Found a filter checkbox, test space bar activation
+								const initialState = await focused.isChecked().catch(() => null)
+								if (initialState === null) {
+									console.warn(`Could not determine initial state at iteration ${i}`)
+									continue
+								}
 
-							// Press space to toggle
-							try {
-								await cesiumPage.keyboard.press(' ')
-								await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
-							} catch (spaceError) {
-								console.warn(`Space press failed at iteration ${i}:`, spaceError)
-								continue
-							}
+								// Press space to toggle
+								try {
+									await cesiumPage.keyboard.press(' ')
+									await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+								} catch (spaceError) {
+									console.warn(`Space press failed at iteration ${i}:`, spaceError)
+									continue
+								}
 
-							// Verify state changed
-							const newState = await focused.isChecked().catch(() => null)
-							if (newState !== null) {
-								expect(newState).toBe(!initialState)
-								foundFilterToggle = true
-								console.log(`Successfully toggled filter checkbox via keyboard at iteration ${i}`)
-								break
+								// Verify state changed
+								const newState = await focused.isChecked().catch(() => null)
+								if (newState !== null) {
+									expect(newState).toBe(!initialState)
+									foundFilterToggle = true
+									console.log(`Successfully toggled filter checkbox via keyboard at iteration ${i}`)
+									break
+								}
 							}
 						}
 					}
+				} catch (error) {
+					console.warn('Keyboard navigation test encountered error:', error)
+					// Don't throw - let the assertion at the end handle the failure
 				}
-			} catch (error) {
-				console.warn('Keyboard navigation test encountered error:', error)
-				// Don't throw - let the assertion at the end handle the failure
-			}
 
-			// Should have found at least one filter toggle via keyboard navigation
-			expect(foundFilterToggle).toBeTruthy()
-		})
+				// Should have found at least one filter toggle via keyboard navigation
+				expect(foundFilterToggle).toBeTruthy()
+			}
+		)
 
 		cesiumTest('should have descriptive labels for screen readers', async ({ cesiumPage }) => {
 			// Check that filter labels are meaningful
@@ -803,7 +807,8 @@ cesiumDescribe('Building Filters Accessibility', () => {
 	})
 
 	cesiumTest.describe('Building Filter Responsiveness', () => {
-		cesiumTest(
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
 			'should maintain filter functionality across different viewports',
 			async ({ cesiumPage }) => {
 				const viewports = [

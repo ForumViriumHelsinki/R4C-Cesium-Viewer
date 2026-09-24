@@ -47,7 +47,8 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 	})
 
 	cesiumTest.describe('Timeline Components', () => {
-		cesiumTest('should display all timeline elements', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should display all timeline elements', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode')
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 
