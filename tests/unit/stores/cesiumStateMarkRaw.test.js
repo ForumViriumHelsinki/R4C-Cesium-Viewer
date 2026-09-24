@@ -25,10 +25,7 @@ const SOURCE_EXT = /\.(js|ts|vue)$/
  * Known violations owned by another open change. Keyed `file|field`; delete the
  * entry when that change lands.
  */
-const PENDING = new Set([
-	// #1016 wraps the land-cover push in markRaw.
-	'src/services/landcover.js|landcoverLayers',
-])
+const PENDING = new Set([])
 
 /**
  * Store fields holding Cesium objects: the keys each branch of Sentry's
