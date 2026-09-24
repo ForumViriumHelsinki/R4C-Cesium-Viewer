@@ -49,6 +49,25 @@ import { acquireHostSlot } from './hostConcurrencyLimiter.js'
 import progressiveLoader from './progressiveLoader.js'
 
 /**
+ * A JSON load received a 2xx response whose body is not JSON — typically the
+ * SPA catch-all's `index.html` answering an unmatched path, or an upstream
+ * error page (#994). Names the URL and content type instead of letting
+ * `response.json()` fail with a bare `SyntaxError`.
+ */
+export class UnexpectedContentTypeError extends Error {
+	/**
+	 * @param {string} url - Requested URL
+	 * @param {string} contentType - Received `content-type` header
+	 */
+	constructor(url, contentType) {
+		super(`Expected JSON from ${url} but received content-type "${contentType}"`)
+		this.name = 'UnexpectedContentTypeError'
+		this.url = url
+		this.contentType = contentType
+	}
+}
+
+/**
  * Layer loading configuration
  * @typedef {Object} LayerConfig
  * @property {string} layerId - Unique identifier for the layer (used for tracking and caching)
@@ -325,6 +344,14 @@ class UnifiedLoader {
 		if (PERF_STATS_ENABLED) {
 			const contentLength = Number(response.headers.get('content-length'))
 			perfStats.recordNetworkBytes(Number.isFinite(contentLength) ? contentLength : 0)
+		}
+
+		// Every branch except text/blob parses JSON. Reject a non-JSON body up
+		// front (see UnexpectedContentTypeError). A missing header is left to
+		// parse as before: the SPA catch-all always sends text/html.
+		const contentType = response.headers.get('content-type')
+		if (type !== 'text' && type !== 'blob' && contentType && !/json/i.test(contentType)) {
+			throw new UnexpectedContentTypeError(url, contentType)
 		}
 
 		// `response.json()/.text()/.blob()` stream the body from the network

@@ -65,7 +65,7 @@ export default class Helsinki {
 
 		await this.datasourceService.loadGeoJsonDataSource(
 			0.0,
-			'./assets/data/hki_po_clipped.json',
+			'/assets/data/hki_po_clipped.json',
 			'PostCodes'
 		)
 		this.loadHelsinkiGreenElements().catch((error) => {

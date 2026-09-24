@@ -278,10 +278,10 @@ export function useViewerInitialization() {
 		}
 
 		const hriCredit = new Cesium.Credit(
-			'<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="assets/images/hero_logo_50x25.png" title="assets/images/Helsinki Region Infoshare"/></a>'
+			'<a href="https://hri.fi/data/fi/dataset" target="_blank"><img src="/assets/images/hero_logo_50x25.png" title="Helsinki Region Infoshare"/></a>'
 		)
 		const statsCredit = new Cesium.Credit(
-			'<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>'
+			'<a href="https://www.stat.fi/org/avoindata/paikkatietoaineistot_en.html" target="_blank"><img src="/assets/images/tilastokeskus_en_75x25.png" title="Statistics Finland"/></a>'
 		)
 		store.cesiumViewer.creditDisplay.addStaticCredit(hriCredit)
 		store.cesiumViewer.creditDisplay.addStaticCredit(statsCredit)
@@ -302,7 +302,7 @@ export function useViewerInitialization() {
 
 		logger.debug('[useViewerInitialization] 📮 Loading postal codes...')
 		const dataSourceService = new Datasource()
-		await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes')
+		await dataSourceService.loadGeoJsonDataSource(0.2, '/assets/data/hsy_po.json', 'PostCodes')
 
 		const dataSource = await dataSourceService.getDataSourceByName('PostCodes')
 		const entities = dataSource?._entityCollection?._entities?._array || []

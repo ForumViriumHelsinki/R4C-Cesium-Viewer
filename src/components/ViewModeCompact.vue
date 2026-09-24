@@ -81,7 +81,7 @@ const setCapitalRegion = async () => {
 		await setLandcoverEnabled(false)
 	}
 	await dataSourceService.removeDataSourcesAndEntities()
-	await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes')
+	await dataSourceService.loadGeoJsonDataSource(0.2, '/assets/data/hsy_po.json', 'PostCodes')
 
 	if (store.postalcode) {
 		featurePicker.loadPostalCode().catch((error) => {
