@@ -103,9 +103,11 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-> `NearbyTreeArea.vue` is not mounted by any live component, so this last stage
-> of the pipeline does not run: the event is emitted and nothing listens.
-> Whether the tree chart was dropped deliberately is tracked in a GitHub issue.
+> The tree-distance stage (`setPropertiesAndEmitEvent`, the `newNearbyTreeDiagram`
+> event) and `NearbyTreeArea.vue` were removed in #981: the chart had not been
+> mounted since 2024-10 and the distance fetch ran only in the unreachable
+> Helsinki view. A Capital Region replacement is tracked in #996. The diagram
+> above records the pipeline as it was.
 
 ## Data Structure Inside Store (Non-Serializable)
 
@@ -230,6 +232,6 @@ Any of these operations trigger the error:
 | ------------------------------------------- | ----------------------------------- | -------------------- | ----------------------------------------------------------------- |
 | Non-serializable Cesium entities in store   | propsStore.setTreeEntities()        | DataCloneError       | Resolved (fields removed; entities live in `cesiumEntityManager`) |
 | Non-serializable Cesium datasource in store | propsStore.setBuildingsDatasource() | DataCloneError       | Resolved (fields removed; entities live in `cesiumEntityManager`) |
-| Unsafe private property access              | NearbyTreeArea.vue:204              | API breakage risk    | HIGH                                                              |
-| Mutating Cesium entity properties           | NearbyTreeArea.vue:240,299          | Data corruption risk | HIGH                                                              |
+| Unsafe private property access              | NearbyTreeArea.vue:204              | API breakage risk    | Resolved (component removed, #981)                                |
+| Mutating Cesium entity properties           | NearbyTreeArea.vue:240,299          | Data corruption risk | Resolved (component removed, #981)                                |
 | Unsafe private property access              | tree.js:300                         | API breakage risk    | HIGH                                                              |

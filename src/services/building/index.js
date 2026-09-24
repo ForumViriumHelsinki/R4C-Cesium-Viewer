@@ -137,14 +137,13 @@ export default class Building {
 	}
 
 	/**
-	 * Creates and emits events for building-specific data visualizations.
-	 * @param {number} treeArea - Nearby tree coverage area in square meters
+	 * Stores building-specific chart data.
 	 * @param {number} avg_temp_c - Average surface temperature in Celsius
 	 * @param {Object} buildingProps - Building properties object
 	 * @returns {Promise<void>}
 	 */
-	async createBuildingCharts(treeArea, avg_temp_c, buildingProps) {
-		return this._styler.createBuildingCharts(treeArea, avg_temp_c, buildingProps)
+	async createBuildingCharts(avg_temp_c, buildingProps) {
+		return this._styler.createBuildingCharts(avg_temp_c, buildingProps)
 	}
 
 	/**

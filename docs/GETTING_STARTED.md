@@ -382,6 +382,11 @@ npm run preview      # Preview production build
 npm run lint         # Run ESLint
 ```
 
+The dev and preview servers listen on `localhost` only, because their proxy
+injects the Digitransit API key. To test on another device on your network,
+opt in for that run with `bun run dev -- --host` (see
+`.claude/rules/development.md`, #969).
+
 ### Testing
 
 ```bash

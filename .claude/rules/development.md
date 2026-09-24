@@ -97,6 +97,24 @@ siblings via `gzip_static`. If a build artifact seems stale or doubled, check
 for orphaned `.gz` files. Brotli precompression is blocked on a
 brotli-capable nginx image — tracked in issue #876.
 
+## Dev and Preview Servers Bind to Loopback
+
+`bun run dev`, `bun run dev:test` and `bun run preview` listen on `localhost`
+only (#969). Both servers carry the `devProxy` table from `vite.config.js`, and
+its `/digitransit` entry adds `digitransit-subscription-key` to every request
+it forwards. Bound to all interfaces, that makes the machine a forward proxy
+that spends the key for anyone on the same network.
+
+- **Device testing** (a phone or tablet on the LAN): opt in for that one run
+  with `bun run dev -- --host`. Stop it when done.
+- **Do not add `--host` back** to a script, `lighthouserc.cjs`, or `server.host`
+  / `preview.host` in `vite.config.js`. `tests/unit/config/devServerLoopback.test.js`
+  fails if you do.
+- Every harness reaches the server at `http://localhost:<port>`: Playwright's
+  `webServer`, the CI health check, `just test-performance`,
+  `scripts/test-e2e-ci.mjs` and Lighthouse CI. On macOS Vite binds `[::1]`
+  only, so `http://127.0.0.1:<port>` is refused. Use `localhost`.
+
 ## Merge Commits Must Be Conventional
 
 The `conventional-pre-commit` hook validates **merge commits too** — git's
@@ -156,6 +174,16 @@ Container build/release use the org reusable workflows (`ForumViriumHelsinki/.gi
 - `lighthouse.yml` — performance monitoring on PRs
 
 Sentry build args (`SENTRY_AUTH_TOKEN`, `VITE_SENTRY_DSN`) reach the build via the reusable workflows' `secret-build-args` passthrough — secrets cannot flow through plain `inputs.build-args` on reusable-workflow callers.
+
+### Security Scan (`bun audit` gate)
+
+The Security Scan job runs `bun scripts/security/audit-gate.mjs` (locally: `just audit`). It is blocking and fails when:
+
+- `bun audit` reports an advisory that is not on `.github/audit-allowlist.json`;
+- an allowlist entry is malformed or past its `expires` date;
+- a `package.json` override floor (`^x.y.z`) is itself inside a vulnerable range, checked against the npm bulk advisory endpoint that `bun audit` also uses.
+
+Fix an advisory by raising a direct dependency or an override floor, then refresh the lockfile. `bun audit fix` (bun ≥1.4) moves transitive packages to the lowest safe version within their dependents' ranges. CI pins bun 1.3.14, so confirm the result with `mise exec bun@1.3.14 -- bun install --frozen-lockfile`. Allowlist an advisory only when no fixed version is reachable. Each entry needs the GHSA `id`, the `package`, a `reason` and an `expires` date (#947).
 
 ### Lighthouse CI
 
