@@ -222,6 +222,16 @@ describe('CLI', () => {
 		expect(result.stdout).toMatch(/^release-please parses the squash commit message/)
 	})
 
+	it('explains an override that a mention of the marker in prose switched on', () => {
+		const body = 'Recovery uses a BEGIN_COMMIT_OVERRIDE section in the description.'
+		const result = run({ PR_TITLE: 'docs: x', PR_NUMBER: '1', PR_BODY: body })
+		expect(result.status).toBe(1)
+		expect(result.stdout).toContain(
+			'::error::release-please cannot parse the BEGIN_COMMIT_OVERRIDE section at line 1:'
+		)
+		expect(result.stdout).toContain('a mention in prose counts')
+	})
+
 	it('exits 2 without a title or number', () => {
 		expect(run({ PR_BODY: 'x' }).status).toBe(2)
 	})

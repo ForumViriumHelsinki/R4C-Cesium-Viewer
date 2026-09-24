@@ -35,6 +35,8 @@ import { fileURLToPath } from 'node:url'
 import { parser } from '@conventional-commits/parser'
 
 export const WRAP_WIDTH = 72
+export const SQUASH_SOURCE = 'the squash commit message'
+export const OVERRIDE_SOURCE = 'the BEGIN_COMMIT_OVERRIDE section'
 
 const FENCE = /^\s*(```|~~~)/
 const NEWLINE = /\r\n|\r|\n/
@@ -163,7 +165,7 @@ export function parseErrors(message) {
  */
 export function checkPullRequest(pr) {
 	const override = commitOverride(pr.body)
-	const source = override ? 'the BEGIN_COMMIT_OVERRIDE section' : 'the squash commit message'
+	const source = override ? OVERRIDE_SOURCE : SQUASH_SOURCE
 	const message = override || buildSquashMessage(pr)
 	return { source, message, errors: parseErrors(message) }
 }
@@ -197,6 +199,12 @@ function main() {
 		for (let n = Math.max(1, line - 2); n <= Math.min(messageLines.length, line + 2); n++) {
 			console.log(`${n === line ? '>' : ' '} ${String(n).padStart(4)} | ${messageLines[n - 1]}`)
 		}
+	}
+	if (source === OVERRIDE_SOURCE) {
+		console.log(
+			'\nThe description contains BEGIN_COMMIT_OVERRIDE, so release-please parses the text after it\n' +
+				'instead of the commit. It matches the marker as plain text: a mention in prose counts.'
+		)
 	}
 	console.log(
 		[

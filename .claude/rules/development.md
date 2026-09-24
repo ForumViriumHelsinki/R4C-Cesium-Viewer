@@ -196,6 +196,11 @@ code lines start with calls. On 2026-09-15 a `js` fence holding a
   logged no parse errors and considered 52 commits, against 48 in run
   35996129826 earlier that day. A re-run without the section re-parses the
   same commit and fails the same way.
+- **Do not name the override marker in a description you do not mean as an
+  override.** release-please finds `BEGIN_COMMIT_OVERRIDE` as plain text
+  anywhere in the description and parses whatever follows it instead of the
+  commit, so a sentence that mentions it replaces the commit message. The check
+  reports this as a failure in the override section.
 
 ## CI/CD
 
