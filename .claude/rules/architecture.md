@@ -260,6 +260,13 @@ Cesium's 127 ms, ~half the memory, ~454 KB gz lazy chunk vs Cesium's 1.25 MB.
 - **Shared palette**: both renderers consume `src/utils/gridColorMapping.js`
   (extracted from `useGridStyling.js`, which re-exports it for existing
   consumers). Never fork the color mapping — fix it in one place.
+- **WMS tile-size parity** (#966): the deck `TileLayer` and its GetMap
+  width/height both use `WMS_TILE_SIZE` (512) from `src/utils/deckglWms.js`, the
+  same size every Cesium `WebMapServiceImageryProvider` requests. deck picks tile
+  zoom as `round(zoom + log2(512 / tileSize))`, so 256 loads one zoom level
+  deeper (4x the `/wms/proxy` requests), and a GetMap size that differs from the
+  tile size stretches or oversizes each image.
+  `tests/unit/utils/wmsTileSizeParity.test.js` checks all of these sites.
 
 ## Component Organization
 
