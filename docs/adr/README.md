@@ -15,6 +15,7 @@ This directory contains Architecture Decision Records for the R4C-Cesium-Viewer 
 | [ADR-007](./ADR-007-mock-api-development.md)           | Mock API for Database-Free Development                  | Accepted | 2025-08-01 |
 | [ADR-008](./ADR-008-legacy-version-gateway-routing.md) | Legacy v1.22.x via Envoy Gateway Routing                | Accepted | 2026-06-10 |
 | [ADR-009](./ADR-009-analysis-registry.md)              | Analysis Registry, ChartCard Contract, and Map Coupling | Accepted | 2026-09-16 |
+| [ADR-010](./ADR-010-analysis-workspace.md)             | Analysis Workspace as an In-Page Overlay                | Accepted | 2026-09-23 |
 
 ## ADR Status Lifecycle
 

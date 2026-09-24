@@ -45,8 +45,14 @@ describe('deckglWms', () => {
 			expect(params.get('crs')).toBe('EPSG:3857')
 			expect(params.get('layers')).toBe('asuminen_ja_maankaytto:maanpeite_vesi_2024')
 			expect(params.get('format')).toBe('image/png')
-			expect(params.get('width')).toBe('256')
 			expect(params.get('bbox')).toBe(mercatorBBoxString(bbox))
+		})
+
+		it('defaults to 512 px tiles, matching the Cesium WMS providers (#966)', () => {
+			const url = buildWmsGetMapUrl({ bbox, layers: 'x' })
+			const params = new URLSearchParams(url.split('?')[1])
+			expect(params.get('width')).toBe('512')
+			expect(params.get('height')).toBe('512')
 		})
 
 		it('honors a custom base URL and tile size', () => {
@@ -54,12 +60,12 @@ describe('deckglWms', () => {
 				bbox,
 				layers: 'x',
 				baseUrl: 'https://kartta.hsy.fi/geoserver/wms',
-				tileSize: 512,
+				tileSize: 256,
 			})
 			expect(url.startsWith('https://kartta.hsy.fi/geoserver/wms?')).toBe(true)
 			const params = new URLSearchParams(url.split('?')[1])
-			expect(params.get('width')).toBe('512')
-			expect(params.get('height')).toBe('512')
+			expect(params.get('width')).toBe('256')
+			expect(params.get('height')).toBe('256')
 		})
 	})
 })

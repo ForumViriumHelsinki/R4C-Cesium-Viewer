@@ -1,7 +1,7 @@
 <template>
 	<div
-		id="buildingGridChartContainer"
 		ref="containerRef"
+		class="building-grid-chart-container"
 	/>
 </template>
 
@@ -9,7 +9,6 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as d3 from '@/utils/d3'
 import { useChartSize } from '../composables/useChartSize.js'
-import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -19,7 +18,6 @@ export default {
 		const globalStore = useGlobalStore()
 		const propsStore = usePropsStore()
 		const plotService = new Plot()
-		const buildingContainerId = 'buildingGridChartContainer'
 		const containerRef = ref(/** @type {HTMLElement | null} */ (null))
 		const {
 			width: chartWidth,
@@ -35,7 +33,7 @@ export default {
 		const createBuildingGridChart = (buildingProps) => {
 			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
 			if (chartWidth.value === 0) return
-			plotService.initializePlotContainer(buildingContainerId)
+			plotService.initializePlotContainer(containerRef.value)
 			const margin = { top: 30, right: 40, bottom: 55, left: 40 }
 			const width = chartWidth.value - margin.left - margin.right
 			const height = chartHeight.value - margin.top - margin.bottom
@@ -52,7 +50,7 @@ export default {
 				{ label: '80-', value: buildingProps._pop_d_over80._value },
 			]
 
-			const svg = plotService.createSVGElement(margin, width, height, `#${buildingContainerId}`)
+			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 			const xScale = plotService.createScaleBand(
 				data.map((d) => d.label),
 				width
@@ -64,7 +62,7 @@ export default {
 			)
 
 			plotService.setupAxes(svg, xScale, yScale, height)
-			const tooltip = plotService.createTooltip(`#${buildingContainerId}`)
+			const tooltip = plotService.createTooltip(containerRef.value)
 
 			createBars(svg, data, xScale, yScale, height, tooltip, 0, 'steelblue')
 			svg
@@ -101,22 +99,13 @@ export default {
 				.on('mouseover', (event, d) =>
 					plotService.handleMouseover(
 						tooltip,
-						buildingContainerId,
+						containerRef.value,
 						event,
 						d,
 						(data) => `Age ${data.label}: ${(data.value * 100).toFixed(2)} %`
 					)
 				)
 				.on('mouseout', () => plotService.handleMouseout(tooltip))
-		}
-
-		/**
-		 * Hide the chart container using Vue ref (proper encapsulation)
-		 */
-		const hideChart = () => {
-			if (containerRef.value) {
-				containerRef.value.style.visibility = 'hidden'
-			}
 		}
 
 		watch(
@@ -132,13 +121,9 @@ export default {
 			if (propsStore.gridBuildingProps) {
 				createBuildingGridChart(propsStore.gridBuildingProps)
 			}
-			// Listen for hide event from parent (proper component encapsulation)
-			eventBus.on('hideBuildingGridChart', hideChart)
 		})
 
 		onBeforeUnmount(() => {
-			// mitt's on() returns undefined, so unsubscribe with the same handler
-			eventBus.off('hideBuildingGridChart', hideChart)
 			cleanup()
 		})
 
@@ -148,7 +133,7 @@ export default {
 </script>
 
 <style>
-#buildingGridChartContainer {
+.building-grid-chart-container {
 	position: relative;
 	width: 100%;
 }

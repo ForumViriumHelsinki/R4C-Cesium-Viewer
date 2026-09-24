@@ -2,8 +2,12 @@ FROM oven/bun:1 AS build
 
 ARG SENTRY_AUTH_TOKEN
 ARG VITE_SENTRY_DSN
+# Sentry `environment` tag. No default: only the image workflows pass
+# `production`, so a local docker build never reports as production (#995).
+ARG VITE_SENTRY_ENVIRONMENT
 ARG VITE_PYGEOAPI_HOST=pygeoapi.dataportal.fi
 ENV VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
+ENV VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT}
 ENV VITE_PYGEOAPI_HOST=${VITE_PYGEOAPI_HOST}
 
 WORKDIR /app

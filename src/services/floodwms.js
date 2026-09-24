@@ -13,6 +13,8 @@
  * @see {@link https://www.ogc.org/standards/wms|OGC WMS Standard}
  */
 
+import { markRaw } from 'vue'
+import { SYKE_ATTRIBUTION } from '../constants/floodScenarios.js'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import logger from '../utils/logger.js'
@@ -34,6 +36,8 @@ import { getCesium } from './cesiumProvider.js'
  *
  * @param {string} url - WMS service base URL (with or without query parameters)
  * @param {string} layerName - WMS layer name to request
+ * @param {string} [credit] - Data attribution shown in the Cesium credit display. Defaults to
+ *   the Syke CC BY 4.0 attribution, since every flood layer the app offers is SYKE open data.
  * @returns {Promise<void>}
  * @throws {Error} If WMS provider initialization fails
  *
@@ -45,7 +49,7 @@ import { getCesium } from './cesiumProvider.js'
  *
  * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/pull/340|PR #340 - WMS Tile Optimization}
  */
-export const createFloodImageryLayer = async (url, layerName) => {
+export const createFloodImageryLayer = async (url, layerName, credit = SYKE_ATTRIBUTION.credit) => {
 	const Cesium = getCesium()
 	const store = useGlobalStore()
 	const backgroundMapStore = useBackgroundMapStore()
@@ -69,6 +73,7 @@ export const createFloodImageryLayer = async (url, layerName) => {
 			maximumLevel: 18,
 			// Use geographic tiling scheme for EPSG:4326 (WGS84)
 			tilingScheme: new Cesium.GeographicTilingScheme(),
+			credit,
 		})
 
 		// Attach retry handler for transient network failures (ECONNRESET, etc.)
@@ -81,7 +86,10 @@ export const createFloodImageryLayer = async (url, layerName) => {
 		// the removed `readyPromise` API would resolve to `await undefined` anyway.
 		const addedLayer = viewer.imageryLayers.addImageryProvider(provider)
 		addedLayer.alpha = 1
-		backgroundMapStore.floodLayers.push(addedLayer)
+		// markRaw: Pinia would otherwise hand the layer back as a reactive proxy, and
+		// ImageryLayerCollection.contains()/remove() match by identity, so
+		// removeFloodLayers() could never find it and scenarios stacked (#1019).
+		backgroundMapStore.floodLayers.push(markRaw(addedLayer))
 	} catch (error) {
 		logger.error('Error creating WMS layer:', error)
 	}

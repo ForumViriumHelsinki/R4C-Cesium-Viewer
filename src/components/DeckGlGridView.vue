@@ -17,7 +17,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { usePropsStore } from '../stores/propsStore.js'
-import { buildWmsGetMapUrl } from '../utils/deckglWms.js'
+import { buildWmsGetMapUrl, WMS_TILE_SIZE } from '../utils/deckglWms.js'
 import { getGridFillColorRgba } from '../utils/gridColorMapping.js'
 import logger from '../utils/logger.js'
 
@@ -79,11 +79,17 @@ function buildLayers(grid, selectedIndex, layers, geoLayers) {
 		id: 'hsy-wms-underlay',
 		minZoom: 0,
 		maxZoom: 18,
-		tileSize: 256,
+		// Same size for the tile grid and the GetMap image; 512 matches the Cesium
+		// WMS providers (#966).
+		tileSize: WMS_TILE_SIZE,
 		// Per-tile WMS GetMap URL built from the tile's WGS84 bbox -> EPSG:3857.
 		getTileData: (tile) => {
 			const { west, south, east, north } = /** @type {any} */ (tile.bbox)
-			return buildWmsGetMapUrl({ bbox: { west, south, east, north }, layers: WMS_LAYERS })
+			return buildWmsGetMapUrl({
+				bbox: { west, south, east, north },
+				layers: WMS_LAYERS,
+				tileSize: WMS_TILE_SIZE,
+			})
 		},
 		renderSubLayers: (props) => {
 			const { west, south, east, north } = /** @type {any} */ (props.tile.bbox)

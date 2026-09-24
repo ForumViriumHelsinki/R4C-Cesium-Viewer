@@ -30,6 +30,10 @@ jobs:
     uses: ForumViriumHelsinki/.github/.github/workflows/reusable-container-build.yml@882fa37faa0f3eb78a3ae044d6906071f4613a6a # main
     with:
       image-name: ${{ needs.setup.outputs.image-name }}
+      # Tags Sentry events from this image as production (#995); every
+      # other build falls back to a non-production environment.
+      build-args: |
+        VITE_SENTRY_ENVIRONMENT=production
     secrets:
       secret-build-args: |
         SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}

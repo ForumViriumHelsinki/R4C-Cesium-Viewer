@@ -22,6 +22,7 @@
  */
 
 import { defineStore } from 'pinia'
+import { findFloodScenario } from '@/constants/floodScenarios'
 import { encodeURLParam, validatePostalCode } from '@/utils/validators'
 
 /**
@@ -88,18 +89,6 @@ export const useURLStore = defineStore('url', {
 			const validated = validatePostalCode(postinumero)
 			return `${state.pygeoapiBase}/coldarea/items?f=json&limit=100000&posno=${encodeURLParam(validated)}`
 		},
-		/**
-		 * Generates generic pygeoapi collection URL with optional limit
-		 * @param {Object} state - Pinia state
-		 * @returns {(collection: string, limit?: number) => string} Function accepting collection path and optional limit, returning collection URL
-		 * @example
-		 * collectionUrl(state)('/heatexposure', 5000) // Returns heatexposure collection URL
-		 */
-		collectionUrl:
-			(state) =>
-			(collection, limit = 35000) => {
-				return `${state.pygeoapiBase}${collection}/items?f=json&limit=${limit}`
-			},
 		/**
 		 * Generates URL for heat exposure index data (postal code level aggregates)
 		 *
@@ -232,19 +221,6 @@ export const useURLStore = defineStore('url', {
 				return `${state.pygeoapiBase}/tree/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}&koodi=${encodeURLParam(koodi)}`
 			},
 		/**
-		 * Generates URL for tree-to-building distance analysis by postal code
-		 * @param {Object} state - Pinia state
-		 * @returns {(postinumero: string, limit?: number) => string} Function accepting postal code and optional limit, returning distance URL
-		 * @example
-		 * treeBuildingDistance(state)('00100', 100000) // Tree distances for postal code 00100
-		 */
-		treeBuildingDistance:
-			(state) =>
-			(postinumero, limit = 100000) => {
-				const validated = validatePostalCode(postinumero)
-				return `${state.pygeoapiBase}/tree_building_distance/items?f=json&limit=${limit}&postinumero=${encodeURLParam(validated)}`
-			},
-		/**
 		 * Generates URL for urban heat exposure building data (Helsinki only)
 		 * @param {Object} state - Pinia state
 		 * @returns {(postinumero: string, limit?: number) => string} Function accepting postal code and optional limit, returning heat URL
@@ -260,33 +236,15 @@ export const useURLStore = defineStore('url', {
 		/**
 		 * Generates SYKE flood map URL for a specific scenario
 		 * @param {Object} state - Pinia state
-		 * @returns {(scenario: string) => string|null} Function accepting scenario name and returning WMS URL or null if unknown
+		 * @returns {(scenario: string) => string|null} Function accepting a scenario id from
+		 *   constants/floodScenarios.js and returning its WMS URL, or null if unknown
 		 * @example
-		 * sykeFloodUrl(state)('HulevesitulvaVesisyvyysSade52mmMallinnettuAlue') // Returns stormwater 52mm flood URL
-		 * sykeFloodUrl(state)('coastal_flood_SSP585_2050_0020_with_protected') // Returns coastal flood SSP585 2050 URL
+		 * sykeFloodUrl(state)(STORMWATER_SCENARIOS[0].id) // Stormwater 52 mm/hour WMS URL
 		 */
 		sykeFloodUrl: (state) => (scenario) => {
 			const { geoserverBase, flood } = state.externalApis.syke
-
-			// Stormwater flood scenarios
-			if (scenario === 'HulevesitulvaVesisyvyysSade52mmMallinnettuAlue') {
-				return `${geoserverBase}${flood.stormwater52mm}`
-			}
-			if (scenario === 'HulevesitulvaVesisyvyysSade80mmMallinnettuAlue') {
-				return `${geoserverBase}${flood.stormwater80mm}`
-			}
-
-			// Combined coastal flood scenarios (all SSP pathways)
-			if (scenario === 'SSP585_re_with_SSP245_with_SSP126_with_current') {
-				return `${geoserverBase}${flood.coastalCombined}`
-			}
-
-			// Individual coastal flood scenarios
-			if (scenario.startsWith('coastal_flood_')) {
-				return `${geoserverBase}${flood.coastalBase}`
-			}
-
-			return null // Unknown scenario
+			const service = findFloodScenario(scenario)?.service
+			return service ? `${geoserverBase}${flood[service]}` : null
 		},
 		/**
 		 * Generates Helsinki WFS URL for building data by postal code

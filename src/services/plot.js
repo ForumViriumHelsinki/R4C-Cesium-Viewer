@@ -1,13 +1,21 @@
 import * as d3 from '@/utils/d3'
-import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
-import { eventBus } from './eventEmitter.js'
+
+/**
+ * Charts pass their own container element (a template ref), so two instances
+ * of a chart each draw into their own container. An id string is still
+ * accepted for the charts that have not moved to refs.
+ *
+ * @param {string | HTMLElement | null | undefined} container - Element, or its id
+ * @returns {HTMLElement | null}
+ */
+const resolveContainer = (container) =>
+	typeof container === 'string' ? document.getElementById(container) : (container ?? null)
 
 /**
  * Plot Service
  * Provides D3.js-based plotting utilities for data visualization throughout the application.
  * Manages plot containers, SVG creation, scales, axes, tooltips, and interactive chart elements.
- * Handles visibility control for level-specific (postal code vs building) visualizations.
  *
  * Key capabilities:
  * - SVG element creation and initialization
@@ -15,7 +23,6 @@ import { eventBus } from './eventEmitter.js'
  * - Tooltip management for interactive charts
  * - Axis setup and configuration
  * - Plot container lifecycle management
- * - Tree bearing switch controls
  *
  * @class Plot
  * @see {@link https://d3js.org/|D3.js Documentation}
@@ -25,86 +32,16 @@ export default class Plot {
 	 * Creates a Plot service instance
 	 */
 	constructor() {
-		this.store = useGlobalStore()
 		this.toggleStore = useToggleStore()
-	}
-
-	/**
-	 * Shows all plots and select elements
-	 * Emits visibility events based on current view level (postalCode or building).
-	 *
-	 * @fires eventBus#showHelsinki - Emitted when showing Helsinki postal code view
-	 * @fires eventBus#showCapitalRegion - Emitted when showing Capital Region postal code view
-	 * @fires eventBus#showBuilding - Emitted when showing building level view
-	 */
-	showAllPlots() {
-		switch (this.store.level) {
-			case 'postalCode':
-				eventBus.emit(this.toggleStore.helsinkiView ? 'showHelsinki' : 'showCapitalRegion')
-				break
-			case 'building':
-				eventBus.emit('showBuilding')
-				break
-		}
-	}
-
-	/**
-	 * Hides all plots and select elements
-	 * Emits hide events based on current view level (postalCode or building).
-	 *
-	 * @fires eventBus#hideHelsinki - Emitted when hiding Helsinki postal code view
-	 * @fires eventBus#hideCapitalRegion - Emitted when hiding Capital Region postal code view
-	 * @fires eventBus#hideBuilding - Emitted when hiding building level view
-	 */
-	hideAllPlots() {
-		switch (this.store.level) {
-			case 'postalCode':
-				eventBus.emit(this.toggleStore.helsinkiView ? 'hideHelsinki' : 'hideCapitalRegion')
-				break
-			case 'building':
-				eventBus.emit('hideBuilding')
-				break
-		}
-	}
-
-	/**
-
-
-	/**
- * Toggle visibility of tree bearing switches
- *
- * @param {string} status - The desired visibility status ("visible" or "hidden")
- */
-	toggleBearingSwitchesVisibility(status) {
-		const switchContainers = ['All', 'South', 'West', 'East', 'North']
-
-		for (const direction of switchContainers) {
-			const switchContainer = document.getElementById(`bearing${direction}SwitchContainer`)
-			if (switchContainer) {
-				switchContainer.style.visibility = status
-			}
-		}
-	}
-
-	/**
-	 *
-	 */
-
-	updateTreeElements(status) {
-		const nearbyTreeAreaContainer = document.getElementById('nearbyTreeAreaContainer')
-		if (nearbyTreeAreaContainer) {
-			nearbyTreeAreaContainer.style.visibility = status
-		}
-		this.toggleBearingSwitchesVisibility(status)
 	}
 
 	/**
 	 * Initializes container for plotting
 	 *
-	 * @param {string} containerId - The containerId
+	 * @param {string | HTMLElement | null} containerOrId - The container element, or its id
 	 */
-	initializePlotContainerForGrid(containerId) {
-		const container = document.getElementById(containerId)
+	initializePlotContainerForGrid(containerOrId) {
+		const container = resolveContainer(containerOrId)
 		if (!container) return
 		// Use textContent for safe clearing (prevents potential XSS)
 		container.textContent = ''
@@ -115,10 +52,10 @@ export default class Plot {
 	/**
 	 * Initializes container for plotting
 	 *
-	 * @param {string} containerId - The containerId
+	 * @param {string | HTMLElement | null} containerOrId - The container element, or its id
 	 */
-	initializePlotContainer(containerId) {
-		const container = document.getElementById(containerId)
+	initializePlotContainer(containerOrId) {
+		const container = resolveContainer(containerOrId)
 		if (!container) return
 		// Use textContent for safe clearing (prevents potential XSS)
 		container.textContent = ''
@@ -211,7 +148,7 @@ export default class Plot {
 
 	/**
 	 * Creates a styled tooltip div appended to the given container.
-	 * @param {string} container - CSS selector for the tooltip's parent element
+	 * @param {string | HTMLElement | null} container - The tooltip's parent element, or a CSS selector for it
 	 * @returns {import('@/utils/d3').Selection<HTMLDivElement, unknown, HTMLElement, any>} The tooltip selection
 	 */
 	createTooltip(container) {
@@ -241,8 +178,17 @@ export default class Plot {
 		// you can add that logic here.
 	}
 
-	handleMouseover(tooltip, containerId, event, d, dataFormatter) {
-		const container = document.getElementById(containerId)
+	/**
+	 * Shows the tooltip next to the pointer, positioned relative to the container.
+	 *
+	 * @param {*} tooltip - Tooltip selection from createTooltip
+	 * @param {string | HTMLElement | null} containerOrId - The chart container element, or its id
+	 * @param {MouseEvent} event - The pointer event
+	 * @param {*} d - The hovered datum
+	 * @param {Function} dataFormatter - Builds the tooltip HTML from the datum
+	 */
+	handleMouseover(tooltip, containerOrId, event, d, dataFormatter) {
+		const container = resolveContainer(containerOrId)
 		if (!container) return
 		const containerRect = container.getBoundingClientRect()
 		const xPos = event.pageX - containerRect.left

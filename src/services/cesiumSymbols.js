@@ -17,8 +17,10 @@
  *
  * A symbol dropped from this list is caught by `vue-tsc` (TS2339 at each
  * `getCesium()` call site), which CI runs — except for symbols reached only
- * through the `window.__cesium` handle, which are untyped and would fail at
- * runtime.
+ * through the `window.__cesium` handle, which are untyped. Those are caught by
+ * `tests/unit/services/cesiumSymbols.test.js`, which collects every Cesium
+ * member read in `src/` and in the browser-run test code and fails if one is
+ * missing here (#817).
  *
  * @module cesiumSymbols
  */
@@ -50,7 +52,6 @@ export {
 	Math,
 	NearFarScalar,
 	OpenStreetMapImageryProvider,
-	PointGraphics,
 	PostProcessStageLibrary,
 	PropertyBag,
 	Rectangle,

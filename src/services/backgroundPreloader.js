@@ -74,33 +74,11 @@ class BackgroundPreloader {
 	 * Preload critical data that's likely to be needed
 	 */
 	async startCriticalPreload() {
-		const criticalData = [
-			{
-				key: 'postal-codes-helsinki',
-				url: '/paavo',
-				type: 'postal-codes',
-				priority: 'high',
-				description: 'Helsinki postal code boundaries',
-			},
-			{
-				key: 'heat-exposure-sample',
-				url: '/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=100',
-				type: 'heat-exposure',
-				priority: 'high',
-				description: 'Sample heat exposure data',
-			},
-			{
-				key: 'hsy-layer-info',
-				url: '/hsy-action?action_route=GetHierarchicalMapLayerGroups',
-				type: 'layer-info',
-				priority: 'medium',
-				description: 'HSY environmental layer information',
-			},
-		]
-
-		for (const data of criticalData) {
-			this.addToPreloadQueue(data)
-		}
+		// Only preload what a consumer reads: a cache key another module looks
+		// up, or the exact request a consumer makes. The /paavo, /hsy-action and
+		// heatexposure_optimized sample preloads were removed (#972) because
+		// nothing read their cache keys and every consumer fetched the same data
+		// itself. tests/unit/services/backgroundPreloader.test.js enforces this.
 
 		// Preload recent NDVI dates in background
 		// Use actual available dates instead of calculated dates

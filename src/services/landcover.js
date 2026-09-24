@@ -17,13 +17,16 @@
  * - Water (vesi)
  */
 
+import { markRaw } from 'vue'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
+import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
 import { getGlobalWMSRetryHandler } from '../utils/wmsRetryHandler.js'
 import { getCesium } from './cesiumProvider.js'
 import { isHostDegraded, recordFailure } from './hostCircuitBreaker.js'
+import Wms from './wms.js'
 
 /**
  * Imagery layer augmented with a stored error-listener remover so
@@ -89,29 +92,33 @@ export const createHSYImageryLayer = async (newLayers) => {
 
 	const backgroundMapStore = useBackgroundMapStore()
 
-	// Idempotency guard. Several independent controls (MapControls.vue,
-	// PostalCodeView.vue, views/Landcover.vue) each hold their own `landCover`
-	// boolean and add the default layer set without removing first, so enabling
-	// landcover from a second mounted control while it is already on used to
-	// stack a duplicate provider — doubling the per-tile /wms/proxy request
-	// count.
+	// Idempotency guard (#962). Two controls turn land cover on: the Layers tab
+	// switch (MapControls.vue) and the Land Cover analysis panel checkbox
+	// (LandcoverPanel.vue), both through setLandcoverEnabled(). Enabling it from one
+	// while the other already has it on used to stack a duplicate provider,
+	// doubling the per-tile /wms/proxy request count.
 	//
-	// The default path is a no-op when the default set is already loaded, not a
-	// remove-and-recreate: recreating would tear down the live provider and
-	// re-request every visible tile through /wms/proxy, which is the traffic
-	// this guard exists to remove. The one caller that needs the layers rebuilt
-	// is HSYYearSelect.vue, which calls removeLandcover() itself before
-	// re-calling this (backgroundMapStore.setHSYYear has no other caller), so
-	// the store is empty by the time the guard runs and the year refresh is
-	// unaffected.
+	// The default path is a no-op when the default set is already on the map, not
+	// a remove-and-recreate: recreating would tear down the live provider and
+	// re-request every visible tile through /wms/proxy, which is the traffic this
+	// guard exists to remove. The one caller that needs the layers rebuilt is
+	// HSYYearSelect.vue, which calls removeLandcover() itself before re-calling
+	// this, so the store is empty by the time the guard runs.
 	//
-	// Scoped to the default path: callers that pass an explicit layer list
-	// (HSYWMS.vue) already call removeLandcover() themselves. The `!newLayers`
-	// test matches the truthiness test used to pick `layersList` below, so
-	// null/'' take the default layer set *and* the guard rather than one
-	// without the other.
+	// "On the map" is checked, not assumed (#967): a tracked layer that something
+	// else took off the viewer (imageryLayers.removeAll()) is forgotten and the
+	// layer is rebuilt, so the switch never reads ON over an empty map.
+	//
+	// Scoped to the default path: a caller passing an explicit layer list manages
+	// its own layers. The `!newLayers` test matches the truthiness test used to
+	// pick `layersList` below, so null/'' take the default layer set *and* the
+	// guard rather than one without the other.
 	if (!newLayers && backgroundMapStore.landcoverLayers.length > 0) {
-		return
+		const onMap = backgroundMapStore.landcoverLayers.some((layer) =>
+			store.cesiumViewer?.imageryLayers?.contains(layer)
+		)
+		if (onMap) return
+		removeLandcover()
 	}
 
 	const layersList = newLayers ? newLayers : createLayersForHsyLandcover(backgroundMapStore)
@@ -161,7 +168,51 @@ export const createHSYImageryLayer = async (newLayers) => {
 		store.cesiumViewer.imageryLayers.addImageryProvider(provider)
 	)
 	addedLayer._removeErrorHandler = removeErrorListener
-	backgroundMapStore.landcoverLayers.push(addedLayer)
+	// markRaw: Pinia would otherwise hand the layer back as a reactive proxy, and
+	// ImageryLayerCollection.contains()/remove() match by identity, so
+	// removeLandcover() could never find it and the imagery stayed on the map
+	// after the toggle went off (#967).
+	backgroundMapStore.landcoverLayers.push(markRaw(addedLayer))
+}
+
+/**
+ * Switches NDVI off so land cover can be shown; the two are exclusive. Clears the
+ * NDVI imagery the way the Layers tab always has: every imagery layer is removed
+ * and the Helsinki base map is added back.
+ * @returns {void}
+ */
+const switchOffNdvi = () => {
+	const store = useGlobalStore()
+	const toggleStore = useToggleStore()
+
+	toggleStore.setNDVI(false)
+	// Forget tracked land-cover layers before removeAll() takes them off the viewer.
+	removeLandcover()
+	store.cesiumViewer.imageryLayers.removeAll()
+	store.cesiumViewer.imageryLayers.add(
+		new Wms().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
+	)
+}
+
+/**
+ * Turns land cover on or off. The one entry point for the Land Cover toggle, so
+ * toggleStore.landCover and the imagery on the map change together (#967).
+ * Turning it on switches NDVI off first.
+ *
+ * @param {boolean} enabled
+ * @returns {Promise<void>} rejects if the HSY imagery layer cannot be created
+ */
+export const setLandcoverEnabled = async (enabled) => {
+	const toggleStore = useToggleStore()
+
+	if (enabled && toggleStore.ndvi) switchOffNdvi()
+	toggleStore.setLandCover(enabled)
+
+	if (enabled) {
+		await createHSYImageryLayer()
+	} else {
+		removeLandcover()
+	}
 }
 
 /**

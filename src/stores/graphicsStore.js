@@ -1,7 +1,7 @@
 /**
  * @module stores/graphicsStore
  * Controls anti-aliasing (MSAA, FXAA), HDR, ambient occlusion, and render modes.
- * Provides hardware capability detection and preset quality profiles for optimized visualization.
+ * Provides hardware capability detection for optimized visualization.
  *
  * Graphics features:
  * - **MSAA**: Multi-sample anti-aliasing (1x, 2x, 4x, 8x samples) - Best quality, hardware-dependent
@@ -10,19 +10,16 @@
  * - **Ambient Occlusion**: Realistic shadowing in crevices
  * - **Request Render Mode**: On-demand rendering for battery/performance savings
  *
- * Quality presets:
- * - **Ultra**: MSAA 8x + HDR + AO (highest quality, demanding)
- * - **High**: MSAA 4x + AO (balanced quality/performance)
- * - **Medium**: MSAA 2x (good quality, moderate performance)
- * - **Low**: FXAA only (basic quality, good performance)
- * - **Performance**: All off + request render (maximum performance)
+ * HDR, ambient occlusion and request render mode are driven by the
+ * `hdrRendering`, `ambientOcclusion` and `requestRenderMode` feature flags
+ * (composables/useGraphicsFlagSync.js). MSAA stays at its 4x default and FXAA
+ * off; nothing in the app changes them.
  *
  * @see {@link https://cesium.com/|CesiumJS Documentation}
  * @see {@link https://pinia.vuejs.org/|Pinia Documentation}
  */
 
 import { defineStore } from 'pinia'
-import logger from '../utils/logger.js'
 
 /**
  * Graphics Pinia Store
@@ -128,51 +125,6 @@ export const useGraphicsStore = defineStore('graphics', {
 		 */
 		setRequestRenderMode(enabled) {
 			this.requestRenderMode = enabled
-		},
-
-		/**
-		 * Apply preset quality levels
-		 */
-		applyQualityPreset(preset) {
-			switch (preset) {
-				case 'ultra':
-					this.setMsaaSettings(true, 8)
-					this.setFxaaEnabled(false)
-					this.setHdrEnabled(true)
-					this.setAmbientOcclusionEnabled(true)
-					this.setRequestRenderMode(false)
-					break
-				case 'high':
-					this.setMsaaSettings(true, 4)
-					this.setFxaaEnabled(false)
-					this.setHdrEnabled(false)
-					this.setAmbientOcclusionEnabled(true)
-					this.setRequestRenderMode(false)
-					break
-				case 'medium':
-					this.setMsaaSettings(true, 2)
-					this.setFxaaEnabled(false)
-					this.setHdrEnabled(false)
-					this.setAmbientOcclusionEnabled(false)
-					this.setRequestRenderMode(false)
-					break
-				case 'low':
-					this.setMsaaSettings(false, 1)
-					this.setFxaaEnabled(true)
-					this.setHdrEnabled(false)
-					this.setAmbientOcclusionEnabled(false)
-					this.setRequestRenderMode(false)
-					break
-				case 'performance':
-					this.setMsaaSettings(false, 1)
-					this.setFxaaEnabled(false)
-					this.setHdrEnabled(false)
-					this.setAmbientOcclusionEnabled(false)
-					this.setRequestRenderMode(true)
-					break
-				default:
-					logger.warn(`Unknown quality preset: ${preset}`)
-			}
 		},
 	},
 })
