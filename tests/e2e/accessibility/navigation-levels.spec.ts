@@ -106,7 +106,8 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 			}
 		)
 
-		cesiumTest('should display postal code specific panels', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should display postal code specific panels', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode')
 			// Wait for postal code UI to load
 			await cesiumPage

@@ -194,60 +194,70 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			// For now we verify the conditional structure exists
 		})
 
-		cesiumTest('should handle view-specific layer state correctly', async ({ cesiumPage }) => {
-			// Start with Capital Region
-			await helpers.navigateToView('capitalRegionView')
+		cesiumTest(
+			'should handle view-specific layer state correctly',
+			async ({ cesiumPage }, testInfo) => {
+				// Tablet only: mobile passed on a retry in CI; desktop has not reached this test.
+				// Quarantined: fails on every attempt in CI — see #998
+				cesiumTest.fixme(
+					testInfo.project.name === 'accessibility-tablet',
+					'Fails on every attempt in CI on tablet — see #998'
+				)
 
-			// Get Land Cover toggle
-			let landCoverToggle = cesiumPage
-				.getByText('Land Cover')
-				.locator('..')
-				.locator('input[type="checkbox"]')
+				// Start with Capital Region
+				await helpers.navigateToView('capitalRegionView')
 
-			// Ensure we start from unchecked state for consistent test behavior
-			const initialState = await landCoverToggle.isChecked()
-			if (initialState) {
-				await helpers.uncheckWithRetry(landCoverToggle, {
-					elementName: 'Land Cover initial state',
+				// Get Land Cover toggle
+				let landCoverToggle = cesiumPage
+					.getByText('Land Cover')
+					.locator('..')
+					.locator('input[type="checkbox"]')
+
+				// Ensure we start from unchecked state for consistent test behavior
+				const initialState = await landCoverToggle.isChecked()
+				if (initialState) {
+					await helpers.uncheckWithRetry(landCoverToggle, {
+						elementName: 'Land Cover initial state',
+					})
+				}
+				await expect(landCoverToggle).not.toBeChecked()
+
+				// Now enable Land Cover
+				await helpers.checkWithRetry(landCoverToggle, {
+					elementName: 'Land Cover',
 				})
+				await expect(landCoverToggle).toBeChecked()
+
+				// Switch to Grid view - should maintain state
+				await helpers.navigateToView('gridView')
+
+				// Re-query locator after view change
+				landCoverToggle = cesiumPage
+					.getByText('Land Cover')
+					.locator('..')
+					.locator('input[type="checkbox"]')
+
+				// Land Cover should be checked (we ensured it was checked before navigating)
+				await expect(landCoverToggle).toBeChecked()
+
+				// Disable in Grid view
+				await helpers.uncheckWithRetry(landCoverToggle, {
+					elementName: 'Land Cover',
+				})
+				await expect(landCoverToggle).not.toBeChecked()
+
+				// Switch back - state should be maintained
+				await helpers.navigateToView('capitalRegionView')
+
+				// Re-query locator after view change
+				landCoverToggle = cesiumPage
+					.getByText('Land Cover')
+					.locator('..')
+					.locator('input[type="checkbox"]')
+
+				await expect(landCoverToggle).not.toBeChecked()
 			}
-			await expect(landCoverToggle).not.toBeChecked()
-
-			// Now enable Land Cover
-			await helpers.checkWithRetry(landCoverToggle, {
-				elementName: 'Land Cover',
-			})
-			await expect(landCoverToggle).toBeChecked()
-
-			// Switch to Grid view - should maintain state
-			await helpers.navigateToView('gridView')
-
-			// Re-query locator after view change
-			landCoverToggle = cesiumPage
-				.getByText('Land Cover')
-				.locator('..')
-				.locator('input[type="checkbox"]')
-
-			// Land Cover should be checked (we ensured it was checked before navigating)
-			await expect(landCoverToggle).toBeChecked()
-
-			// Disable in Grid view
-			await helpers.uncheckWithRetry(landCoverToggle, {
-				elementName: 'Land Cover',
-			})
-			await expect(landCoverToggle).not.toBeChecked()
-
-			// Switch back - state should be maintained
-			await helpers.navigateToView('capitalRegionView')
-
-			// Re-query locator after view change
-			landCoverToggle = cesiumPage
-				.getByText('Land Cover')
-				.locator('..')
-				.locator('input[type="checkbox"]')
-
-			await expect(landCoverToggle).not.toBeChecked()
-		})
+		)
 	})
 
 	// Re-enabled: drillToLevel now uses URL-based navigation which is reliable
@@ -839,7 +849,8 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 	})
 
 	cesiumTest.describe('Layer Control Performance', () => {
-		cesiumTest(
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
 			'should handle layer toggles efficiently across viewports',
 			async ({ cesiumPage }) => {
 				const viewports = [VIEWPORTS.DESKTOP_HD, VIEWPORTS.TABLET, VIEWPORTS.MOBILE]

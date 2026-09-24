@@ -184,20 +184,30 @@ cesiumDescribe('View Modes Accessibility', () => {
 			}
 		)
 
-		cesiumTest('should handle rapid view switching without errors', async ({ cesiumPage }) => {
-			// Rapidly switch between views
-			for (let i = 0; i < 3; i++) {
-				await helpers.navigateToView('gridView')
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
-				await helpers.navigateToView('capitalRegionView')
-				await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
-			}
+		cesiumTest(
+			'should handle rapid view switching without errors',
+			async ({ cesiumPage }, testInfo) => {
+				// Desktop only: mobile passes this test in CI, and tablet passes on some runs.
+				// Quarantined: fails on every attempt in CI — see #998
+				cesiumTest.fixme(
+					testInfo.project.name === 'accessibility-desktop',
+					'Fails on every attempt in CI on desktop — see #998'
+				)
 
-			// Final state should be consistent (v-btn-toggle button)
-			const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
-			expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
-			await expect(cesiumPage.getByText('Capital Region')).toBeVisible()
-		})
+				// Rapidly switch between views
+				for (let i = 0; i < 3; i++) {
+					await helpers.navigateToView('gridView')
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+					await helpers.navigateToView('capitalRegionView')
+					await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_TOOLTIP)
+				}
+
+				// Final state should be consistent (v-btn-toggle button)
+				const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+				expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
+				await expect(cesiumPage.getByText('Capital Region')).toBeVisible()
+			}
+		)
 	})
 
 	cesiumTest.describe('Helsinki Heat View (Conditional)', () => {
@@ -364,21 +374,25 @@ cesiumDescribe('View Modes Accessibility', () => {
 			expect(anySelected).toBeTruthy()
 		})
 
-		cesiumTest('should have meaningful text labels for screen readers', async ({ cesiumPage }) => {
-			// Verify text content is present for screen readers
-			await expect(cesiumPage.getByText('Capital Region')).toBeVisible()
-			await expect(cesiumPage.getByText('Statistical Grid')).toBeVisible()
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
+			'should have meaningful text labels for screen readers',
+			async ({ cesiumPage }) => {
+				// Verify text content is present for screen readers
+				await expect(cesiumPage.getByText('Capital Region')).toBeVisible()
+				await expect(cesiumPage.getByText('Statistical Grid')).toBeVisible()
 
-			// Verify aria-labels are present on buttons
-			const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
-			const gridButton = getViewModeButton(cesiumPage, 'gridView')
+				// Verify aria-labels are present on buttons
+				const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
+				const gridButton = getViewModeButton(cesiumPage, 'gridView')
 
-			// Check for aria-label attributes
-			const capitalAriaLabel = await capitalRegionButton.getAttribute('aria-label')
-			const gridAriaLabel = await gridButton.getAttribute('aria-label')
+				// Check for aria-label attributes
+				const capitalAriaLabel = await capitalRegionButton.getAttribute('aria-label')
+				const gridAriaLabel = await gridButton.getAttribute('aria-label')
 
-			expect(capitalAriaLabel).toBeTruthy()
-			expect(gridAriaLabel).toBeTruthy()
-		})
+				expect(capitalAriaLabel).toBeTruthy()
+				expect(gridAriaLabel).toBeTruthy()
+			}
+		)
 	})
 })

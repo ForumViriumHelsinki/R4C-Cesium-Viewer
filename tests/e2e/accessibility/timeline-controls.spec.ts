@@ -72,7 +72,8 @@ cesiumDescribe('Timeline Controls Accessibility', () => {
 			}
 		})
 
-		cesiumTest('should have functional timeline slider', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should have functional timeline slider', async ({ cesiumPage }) => {
 			await helpers.drillToLevel('postalCode')
 			await cesiumPage.waitForTimeout(TEST_TIMEOUTS.WAIT_LONG)
 

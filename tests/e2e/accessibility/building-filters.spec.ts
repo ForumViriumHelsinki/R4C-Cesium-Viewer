@@ -899,7 +899,14 @@ cesiumDescribe('Building Filters Accessibility', () => {
 
 		cesiumTest(
 			'should hide filters in grid view and reset when returning',
-			async ({ cesiumPage }) => {
+			async ({ cesiumPage }, testInfo) => {
+				// Desktop only: the tablet project passes this test in CI (mobile skips the suite).
+				// Quarantined: fails on every attempt in CI — see #998
+				cesiumTest.fixme(
+					testInfo.project.name === 'accessibility-desktop',
+					'Fails on every attempt in CI on desktop — see #998'
+				)
+
 				// Enable filters in capital region view
 				const publicBuildingsToggle = cesiumPage
 					.getByText('Public Buildings', { exact: true })

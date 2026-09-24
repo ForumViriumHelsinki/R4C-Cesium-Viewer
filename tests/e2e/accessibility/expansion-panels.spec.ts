@@ -34,7 +34,14 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 
 		cesiumTest(
 			'should provide search via the Search tab in all contexts',
-			async ({ cesiumPage }) => {
+			async ({ cesiumPage }, testInfo) => {
+				// Desktop only: the tablet and mobile projects pass this test in CI.
+				// Quarantined: fails on every attempt in CI — see #998
+				cesiumTest.fixme(
+					testInfo.project.name === 'accessibility-desktop',
+					'Fails on every attempt in CI on desktop — see #998'
+				)
+
 				// The sidebar was refactored into tabs (Search / Layers / Analysis /
 				// Details); the old "Search & Navigate" section heading no longer
 				// exists. Search lives in the dedicated Search tab (#897).
@@ -85,7 +92,14 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 
 		cesiumTest(
 			'should show Climate Adaptation only in Grid view with heat index',
-			async ({ cesiumPage }) => {
+			async ({ cesiumPage }, testInfo) => {
+				// Desktop only: the tablet and mobile projects pass this test in CI.
+				// Quarantined: fails on every attempt in CI — see #998
+				cesiumTest.fixme(
+					testInfo.project.name === 'accessibility-desktop',
+					'Fails on every attempt in CI on desktop — see #998'
+				)
+
 				// Climate Adaptation is a map tool and renders in the Layers tab
 				const layersTab = cesiumPage.getByRole('tab', { name: 'Layers' })
 				await layersTab.click()

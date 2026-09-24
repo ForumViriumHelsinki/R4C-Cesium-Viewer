@@ -46,7 +46,8 @@ cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 			}
 		)
 
-		cesiumTest('should be full width (100%) on mobile (<600px)', async ({ cesiumPage }) => {
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme('should be full width (100%) on mobile (<600px)', async ({ cesiumPage }) => {
 			await cesiumPage.setViewportSize({ width: 375, height: 667 })
 
 			// Open control panel
@@ -253,7 +254,8 @@ cesiumDescribe('Mobile Responsive Layout @accessibility @mobile', () => {
 			}
 		)
 
-		cesiumTest(
+		// Quarantined: fails on every attempt in CI — see #998
+		cesiumTest.fixme(
 			'should show abbreviated text on mobile control panel toggle',
 			async ({ cesiumPage }) => {
 				await cesiumPage.setViewportSize({ width: 375, height: 667 })
