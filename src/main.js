@@ -5,6 +5,7 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import App from './App.vue'
 import './version.js' // Log version info to console
+import { dropGoffRejectionEvent } from './services/featureFlagProvider'
 import { E2E_STORE_HOOKS_ENABLED, exposeStoresForE2E } from './utils/e2eStoreHooks.js'
 import logger from './utils/logger.js'
 import { installPreloadErrorHandler } from './utils/preloadErrorHandler.js'
@@ -141,6 +142,10 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 
 		// CPU profiling: 10% in production (minimal overhead), 100% in dev
 		profilesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+
+		// Drop GOFF background-reconnect rejections. The preventDefault() in the
+		// GOFF unhandledrejection listener does not stop Sentry's own handler (#956).
+		beforeSend: dropGoffRejectionEvent,
 	})
 
 	logger.debug('Sentry configuration:', {
