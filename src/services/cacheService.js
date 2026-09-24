@@ -270,7 +270,9 @@ class CacheService {
 
 				if (age > maxAgeToUse) {
 					// Data is expired, remove it
-					void this.removeData(key)
+					this.removeData(key).catch((error) => {
+						logger.error(`[CacheService] Failed to remove expired entry ${key}:`, error)
+					})
 					resolve({ result: null, size: 0 })
 					return
 				}

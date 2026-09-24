@@ -42,6 +42,7 @@ import { markRaw } from 'vue'
  * @property {string} heatDataDate - Selected date for heat exposure visualization (YYYY-MM-DD)
  * @property {Object|null} currentGridCell - Currently selected 250m grid cell entity
  * @property {Object|null} cesiumViewer - CesiumJS viewer instance reference
+ * @property {boolean} viewerInitFailed - Viewer initialisation failed, so cesiumViewer will stay null
  * @property {string|null} buildingAddress - Selected building address string
  * @property {Object|null} pickedEntity - Currently picked Cesium entity
  * @property {boolean} isLoading - Global loading indicator state
@@ -101,6 +102,7 @@ export const useGlobalStore = defineStore('global', {
 		currentGridCell: null,
 		/** @type {Object|null} */
 		cesiumViewer: null,
+		viewerInitFailed: false,
 		/** @type {string|null} */
 		buildingAddress: null,
 		/** @type {Object|null} */
@@ -167,6 +169,14 @@ export const useGlobalStore = defineStore('global', {
 		 */
 		setCesiumViewer(viewer) {
 			this.cesiumViewer = viewer ? markRaw(viewer) : null
+		},
+		/**
+		 * Records that viewer initialisation failed (the Cesium chunk did not load, or
+		 * the Viewer constructor threw), so the UI can stop waiting for cesiumViewer.
+		 * @param {boolean} failed
+		 */
+		setViewerInitFailed(failed) {
+			this.viewerInitFailed = failed
 		},
 		/**
 		 * Sets the currently selected 250m population grid cell

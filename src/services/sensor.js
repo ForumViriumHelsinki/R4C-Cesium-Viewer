@@ -48,10 +48,14 @@ export default class Vegetation {
 			const dataSource = new Cesium.GeoJsonDataSource()
 
 			// Load the GeoJSON data into the data source
-			void dataSource.load(data, {
-				markerColor: Cesium.Color.ORANGE, // Customize the marker color if desired
-				clampToGround: true, // Set to true to clamp entities to the ground
-			})
+			dataSource
+				.load(data, {
+					markerColor: Cesium.Color.ORANGE, // Customize the marker color if desired
+					clampToGround: true, // Set to true to clamp entities to the ground
+				})
+				.catch((error) => {
+					logger.error('Error parsing sensor GeoJSON:', error)
+				})
 
 			await this.addSensorDataSource(data)
 		} catch (error) {

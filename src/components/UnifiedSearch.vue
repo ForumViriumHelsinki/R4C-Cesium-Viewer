@@ -591,9 +591,11 @@ const focusOnPostalCode = (postalCode) => {
  */
 const selectFirstResult = () => {
 	if (addressResults.value.length > 0) {
-		void selectAddress(addressResults.value[0])
+		selectAddress(addressResults.value[0])
 	} else if (postalCodeResults.value.length > 0) {
-		void selectPostalCode(postalCodeResults.value[0])
+		selectPostalCode(postalCodeResults.value[0]).catch((error) => {
+			logger.error('Error selecting postal code:', error)
+		})
 	}
 }
 
@@ -627,7 +629,9 @@ const stopWatchView = watch(
 	() => globalStore.view,
 	() => {
 		if (searchQuery.value) {
-			void handleSearch()
+			handleSearch().catch((error) => {
+				logger.error('Search refresh after view change failed:', error)
+			})
 		}
 	}
 )

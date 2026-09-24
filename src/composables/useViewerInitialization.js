@@ -57,6 +57,10 @@ export function useViewerInitialization() {
 	let Camera = null
 	let Graphics = null
 
+	// Graphics service instance for this viewer. Its graphicsStore watchers are
+	// created outside a component scope, so destroyViewer must release them.
+	let graphics = null
+
 	// Captured handler for cleanup — visibilitychange fires globally, so the listener
 	// must be removed when the viewer is torn down to avoid post-destroy scene access.
 	let visibilityChangeHandler = null
@@ -107,6 +111,7 @@ export function useViewerInitialization() {
 					'Unable to load the 3D map viewer. Please check your internet connection and try again.'
 				errorSnackbar.value = true
 				store.setIsLoading(false)
+				store.setViewerInitFailed(true)
 				return
 			}
 		}
@@ -160,7 +165,15 @@ export function useViewerInitialization() {
 			}
 		}
 
-		viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions)
+		try {
+			viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions)
+		} catch (error) {
+			// CesiumWidget shows its own error panel and rethrows (e.g. no WebGL). The
+			// viewer will never be set, so tell the UI to stop waiting for it.
+			logger.error('Failed to construct the Cesium viewer:', error)
+			store.setViewerInitFailed(true)
+			throw error
+		}
 
 		// Count requestRender() calls for render-pressure attribution. Patched
 		// once per viewer instance (each new viewer gets a fresh scene); dev/E2E
@@ -191,8 +204,10 @@ export function useViewerInitialization() {
 			logger.debug('[useViewerInitialization] 🧪 Test mode enabled - viewer exposed to window')
 		}
 
-		// Initialize graphics quality settings
-		const graphics = new Graphics()
+		// Initialize graphics quality settings. retryInit may call initViewer
+		// again, so release the previous instance's store watchers first.
+		graphics?.destroy()
+		graphics = new Graphics()
 		graphics.init(viewer.value)
 
 		viewer.value.imageryLayers.add(
@@ -240,6 +255,8 @@ export function useViewerInitialization() {
 			document.removeEventListener('visibilitychange', visibilityChangeHandler)
 			visibilityChangeHandler = null
 		}
+		graphics?.destroy()
+		graphics = null
 		if (viewer.value && !viewer.value.isDestroyed?.()) {
 			viewer.value.destroy()
 		}
@@ -310,6 +327,7 @@ export function useViewerInitialization() {
 	const retryInit = async () => {
 		errorSnackbar.value = false
 		errorMessage.value = ''
+		store.setViewerInitFailed(false)
 		store.setIsLoading(true)
 		await initViewer()
 		store.setIsLoading(false)
