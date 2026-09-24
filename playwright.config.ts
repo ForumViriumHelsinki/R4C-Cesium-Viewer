@@ -155,7 +155,8 @@ export default defineConfig({
 		// accessibility matrix splits every viewport into. Without it Playwright
 		// shards whole files: 9 files over 10 shards leaves a shard empty, and on
 		// desktop all 16 building-filters.spec.ts tests land in one shard, while
-		// main run 35996129152 got through only 9 of them in 14 minutes.
+		// main run 35996129152 got through only 7 of them (and two retries) in
+		// 14 minutes.
 		// `workers: 1` above still runs one test at a time.
 		{
 			name: 'accessibility-desktop',
