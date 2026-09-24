@@ -275,7 +275,7 @@ typecheck:
 
 # Scan dependencies for known vulnerabilities (mirrors CI security-scan job)
 audit:
-    bun audit
+    bun scripts/security/audit-gate.mjs
 
 # Code quality gate (non-mutating, no tests)
 check: format-check lint typecheck
