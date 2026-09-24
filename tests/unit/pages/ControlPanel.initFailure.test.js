@@ -30,10 +30,12 @@ vi.mock('@/services/cesiumProvider', async () => vi.importActual('@/services/ces
 
 // The composable's five service modules (datasource, wms, featurepicker, camera,
 // graphics) all resolve to one stub; only viewer construction is under test.
+// destroyViewer() calls graphics.destroy(), which stops the graphicsStore watchers.
 vi.mock('@/utils/moduleLoader.js', () => ({
 	loadWithRetry: async () =>
 		class StubService {
 			init() {}
+			destroy() {}
 			createHelsinkiImageryLayer() {
 				return {}
 			}
