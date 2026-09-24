@@ -1,7 +1,7 @@
 <template>
 	<div
-		id="socioeonomicsContainer"
 		ref="containerRef"
+		class="socioeconomics-container"
 	/>
 </template>
 
@@ -158,7 +158,7 @@ export default {
 
 					plotService.handleMouseover(
 						tooltip,
-						'socioeonomicsContainer',
+						containerRef.value,
 						event,
 						d,
 						(data) => `Area: ${name}<br>Value: ${data.value}<br>${description}`
@@ -175,12 +175,12 @@ export default {
 
 		const createSocioEconomicsDiagram = (sosData, statsData) => {
 			if (sosData) {
-				plotService.initializePlotContainerForGrid('socioeonomicsContainer')
+				plotService.initializePlotContainerForGrid(containerRef.value)
 
 				const margin = { top: 60, right: 5, bottom: 50, left: 23 }
 				const width = chartWidth.value - margin.left - margin.right
 				const height = chartHeight.value - margin.top - margin.bottom
-				const svg = plotService.createSVGElement(margin, width, height, '#socioeonomicsContainer')
+				const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 
 				const xLabels = [
 					'Apartment Surface Heat',
@@ -237,7 +237,7 @@ export default {
 				setupAxes(svg, xScale, yScale, height)
 
 				const barData = yValues.map((value, index) => ({ value, label: xLabels[index] }))
-				const tooltip = plotService.createTooltip('#socioeonomicsContainer')
+				const tooltip = plotService.createTooltip(containerRef.value)
 				createBars(svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue', sosData.nimi)
 
 				if (hasCompareSeries) {
@@ -322,7 +322,7 @@ export default {
 </script>
 
 <style scoped>
-#socioeonomicsContainer {
+.socioeconomics-container {
 	position: relative;
 	width: 100%;
 	background-color: rgb(var(--v-theme-surface));

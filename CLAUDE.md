@@ -37,7 +37,7 @@ Database data persists across `just stop` and even `skaffold delete`. Only `just
 
 ### Build and Development (Bun)
 
-- `bun run dev` - Start development server (accessible at http://localhost:5173)
+- `bun run dev` - Start development server (accessible at http://localhost:5173; loopback only, `bun run dev -- --host` opts in to LAN access for device testing, #969)
 - `bun run build` - Build for production
 - `bun run preview` - Preview production build (http://localhost:4173)
 - `bun run lint` - Run Biome to check code quality
@@ -219,7 +219,6 @@ FeaturePicker.handleFeatureWithProperties(entity)
     - At postal code level → handleBuildingFeature()
     ↓
 Updates Pinia store (level='building')
-EventBus emits 'showBuilding'
     ↓
 Navigation Complete → Check pendingNavigation
     ├─ If exists: globalStore.consumePendingNavigation() → process queued navigation

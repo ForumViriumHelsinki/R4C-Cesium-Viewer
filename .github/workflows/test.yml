@@ -44,7 +44,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
@@ -72,7 +72,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
@@ -87,12 +87,13 @@ jobs:
   # (window.__viewer / window.__cesium hooks in useViewerInitialization.js)
   # so downstream e2e/accessibility/performance jobs get the same viewer
   # exposure that local `just test-e2e` relies on.
+  # No Sentry DSN: this bundle runs against the CI harness under vite preview,
+  # and its errors were reaching the production project tagged production (#995).
   build:
     name: Build Frontend
     runs-on: ubuntu-latest
     env:
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
       VITE_E2E_TEST: 'true'
     steps:
@@ -110,7 +111,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
@@ -148,7 +149,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
@@ -188,7 +189,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
@@ -201,7 +202,7 @@ jobs:
           NODE_ENV: test
 
   e2e-tests:
-    name: End-to-End Tests
+    name: End-to-End Tests (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     needs: [build, unit-tests]
     if: ${{ github.event.inputs.skip_e2e != 'true' }}
     runs-on: ubuntu-latest
@@ -212,6 +213,17 @@ jobs:
       # (no DB, no mock API). Skip specs tagged @requires-database since they
       # need real building entities / postal-code GeoJSON to pass. See #658.
       SKIP_REQUIRES_DATABASE: 'true'
+
+    strategy:
+      # One worker with two retries runs the scoped chromium set for longer
+      # than one 15-minute job (#947, #1008), so Playwright splits it by test
+      # (fullyParallel on the chromium project) across shards. A failing
+      # shard must not cancel the others. shardIndex must list 1..shardTotal
+      # exactly once; tests/unit/ci/playwrightProjects.test.js checks it.
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        shardTotal: [10]
 
     steps:
       - name: Checkout code
@@ -228,18 +240,47 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Check E2E test count budget
+        # Lists (does not run) what test:e2e collects and fails above a ceiling,
+        # so a project-scoping regression shows up as a number here rather than
+        # as a cancellation at the 15-minute job timeout (742 tests before #947).
+        # The timeout applies to each shard, so each shard also checks its own
+        # share against the ceiling divided across shards. That catches a shard
+        # that received a whole large file (fullyParallel dropped from the
+        # chromium project) while the total is still within the ceiling.
+        # Raise E2E_TEST_CEILING deliberately when new specs are added.
+        env:
+          E2E_TEST_CEILING: '150'
+          SHARD_INDEX: ${{ matrix.shardIndex }}
+          SHARD_TOTAL: ${{ matrix.shardTotal }}
+        run: |
+          total_tests() { sed -n 's/^Total: \([0-9][0-9]*\) tests.*/\1/p'; }
+          count=$(bun run test:e2e --list | total_tests)
+          echo "test:e2e collects ${count:-an unknown number of} tests (ceiling ${E2E_TEST_CEILING})"
+          if [ -z "$count" ] || [ "$count" -gt "$E2E_TEST_CEILING" ]; then
+            echo "::error::test:e2e collects ${count:-an unknown number of} tests, above the ceiling of ${E2E_TEST_CEILING}. Check the --project scope in package.json and testIgnore in playwright.config.ts."
+            exit 1
+          fi
+          shard_ceiling=$(( (E2E_TEST_CEILING + SHARD_TOTAL - 1) / SHARD_TOTAL ))
+          shard_count=$(bun run test:e2e --list --shard="${SHARD_INDEX}/${SHARD_TOTAL}" | total_tests)
+          echo "shard ${SHARD_INDEX}/${SHARD_TOTAL} collects ${shard_count:-an unknown number of} tests (ceiling ${shard_ceiling})"
+          if [ -z "$shard_count" ] || [ "$shard_count" -gt "$shard_ceiling" ]; then
+            echo "::error::shard ${SHARD_INDEX}/${SHARD_TOTAL} collects ${shard_count:-an unknown number of} tests, above the per-shard ceiling of ${shard_ceiling}. Check fullyParallel on the chromium project in playwright.config.ts."
+            exit 1
+          fi
+
       - name: Cache Playwright browsers
         uses: actions/cache@v5.0.5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
 
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps
@@ -259,7 +300,7 @@ jobs:
           timeout: '30'
 
       - name: Run Playwright tests
-        run: bun run test:e2e
+        run: bun run test:e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Cleanup server process
         if: always()
@@ -269,7 +310,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-report-e2e
+          name: playwright-report-e2e-${{ matrix.shardIndex }}-of-${{ matrix.shardTotal }}
           path: playwright-report/
           retention-days: 7
 
@@ -310,7 +351,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
@@ -321,7 +362,7 @@ jobs:
         uses: actions/cache@v5.0.5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
 
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps
@@ -361,11 +402,13 @@ jobs:
             test-results/
           retention-days: 7
 
+  # Runs on PRs as a non-required check (no ruleset lists it), as well as on
+  # pushes to main and manual runs (#961).
   performance-tests:
     name: Performance Tests
     needs: [build, unit-tests]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 25
     env:
       NODE_OPTIONS: '--max-old-space-size=2048'
 
@@ -384,7 +427,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
@@ -395,7 +438,7 @@ jobs:
         uses: actions/cache@v5.0.5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
 
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps
@@ -416,6 +459,12 @@ jobs:
 
       - name: Run performance tests
         run: bun run test:performance
+        env:
+          # Software GL, as in playwright.config.ts: the runner has no GPU.
+          PERF_TEST_CHROMIUM_ARGS: '--use-gl=angle --use-angle=swiftshader --disable-gpu --disable-dev-shm-usage --no-sandbox'
+          # The harness writes per-test metrics here, plus a screenshot and a
+          # Playwright trace for each failed test.
+          PERF_RESULTS_DIR: performance-results
 
       - name: Cleanup server process
         if: always()
@@ -423,6 +472,7 @@ jobs:
 
       - name: Upload performance results
         uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: performance-results
           path: performance-results/
@@ -448,7 +498,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
@@ -456,9 +506,11 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run bun audit
-        # Blocking gate restored (#815). All advisories resolved via direct
-        # bumps + transitive overrides; this fails CI if the count regresses.
-        run: bun audit
+        # Blocking gate (#815, #947). Fails on any advisory `bun audit` reports
+        # outside .github/audit-allowlist.json, on an expired or malformed
+        # allowlist entry, and on a package.json override floor that is itself
+        # vulnerable. See scripts/security/audit-gate.mjs.
+        run: bun scripts/security/audit-gate.mjs
 
   # Generate workflow summary after all jobs complete
   summary:
@@ -473,6 +525,7 @@ jobs:
         integration-tests,
         e2e-tests,
         accessibility-tests,
+        performance-tests,
         security-scan,
       ]
     if: always()
@@ -543,6 +596,15 @@ jobs:
             echo "- ⏭️ **Accessibility Tests**: Skipped" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ❌ **Accessibility Tests**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Performance Tests (not a required check)
+          if [ "${{ needs.performance-tests.result }}" == "success" ]; then
+            echo "- ✅ **Performance Tests**: Passed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.performance-tests.result }}" == "skipped" ]; then
+            echo "- ⏭️ **Performance Tests**: Skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ **Performance Tests**: Failed" >> $GITHUB_STEP_SUMMARY
           fi
 
           # Security Scan

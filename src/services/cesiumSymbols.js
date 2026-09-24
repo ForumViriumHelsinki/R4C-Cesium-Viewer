@@ -52,7 +52,6 @@ export {
 	Math,
 	NearFarScalar,
 	OpenStreetMapImageryProvider,
-	PointGraphics,
 	PostProcessStageLibrary,
 	PropertyBag,
 	Rectangle,

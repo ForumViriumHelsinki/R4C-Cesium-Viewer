@@ -113,6 +113,8 @@ npm run test:e2e -- --headed  # With browser UI
 npm run test:e2e -- --debug   # Debug mode
 ```
 
+`test:e2e` runs only the `chromium` Playwright project, which excludes `tests/e2e/accessibility/`. The accessibility specs run in the `accessibility-*` projects (`bun run test:accessibility:desktop`, `:tablet`, `:mobile`). See `.claude/rules/testing.md` § Playwright Projects.
+
 > **Mock API mode caveats:** when E2E tests run against the mock backend (`just dev-mock`), some endpoints return synthetic fixtures rather than full production-shaped data. See [Mock API Limitations](../GETTING_STARTED.md#mock-api-limitations) for the list of unsupported queries and the recommended fallback (`just dev` with a seeded DB) when a test exercises those code paths.
 
 ### 3a. Accessibility Tests (`tests/e2e/accessibility/`)
@@ -299,7 +301,10 @@ Key consequences:
   `.claude/rules/testing.md`) rather than depending on real polygon picks, and
   tag it so it can be skipped where a live camera is unavailable.
 
-#### Re-enablement plan (deferred follow-up)
+#### Re-enablement plan (done)
+
+Completed in #927 (`b66e911`): the suite now runs on all three accessibility
+viewports. The plan is kept below as a record.
 
 The suite stays `cesiumDescribe.skip(...)` in the PR that landed this strategy —
 re-enabling it is a larger change that touches every test and risks landing flaky
@@ -502,14 +507,15 @@ npm run test:ci
 
 The following environment variables are required for running tests in CI/CD:
 
-| Variable               | Description                   | Required For              | Example                     |
-| ---------------------- | ----------------------------- | ------------------------- | --------------------------- |
-| `NODE_ENV`             | Environment mode              | All tests                 | `test`                      |
-| `CI`                   | Indicates CI environment      | All tests                 | `true`                      |
-| `NODE_OPTIONS`         | Node.js runtime options       | All tests                 | `--max-old-space-size=4096` |
-| `SENTRY_AUTH_TOKEN`    | Sentry authentication token   | Build & Integration tests | `secret`                    |
-| `VITE_SENTRY_DSN`      | Sentry DSN for error tracking | Build & Integration tests | `https://...@sentry.io/...` |
-| `VITE_DIGITRANSIT_KEY` | Digitransit API key           | Build & Integration tests | `your-api-key`              |
+| Variable               | Description                 | Required For              | Example                     |
+| ---------------------- | --------------------------- | ------------------------- | --------------------------- |
+| `NODE_ENV`             | Environment mode            | All tests                 | `test`                      |
+| `CI`                   | Indicates CI environment    | All tests                 | `true`                      |
+| `NODE_OPTIONS`         | Node.js runtime options     | All tests                 | `--max-old-space-size=4096` |
+| `SENTRY_AUTH_TOKEN`    | Sentry authentication token | Build & Integration tests | `secret`                    |
+| `VITE_DIGITRANSIT_KEY` | Digitransit API key         | Build & Integration tests | `your-api-key`              |
+
+CI test and Lighthouse builds carry no `VITE_SENTRY_DSN`, so they send nothing to Sentry (#995). Only the container image workflows build with a DSN.
 
 **Setting up for local testing:**
 
@@ -520,7 +526,6 @@ NODE_ENV=test
 CI=true
 NODE_OPTIONS=--max-old-space-size=4096
 SENTRY_AUTH_TOKEN=your-token-here
-VITE_SENTRY_DSN=your-dsn-here
 VITE_DIGITRANSIT_KEY=your-key-here
 EOF
 
@@ -533,7 +538,7 @@ source .env.test
 These secrets must be configured in GitHub repository settings:
 
 - `SENTRY_AUTH_TOKEN` - Required for source map uploads
-- `SENTRY_DSN` - Error tracking endpoint
+- `VITE_SENTRY_DSN` - Error tracking endpoint, used only by the container image workflows
 - `DIGITRANSIT_KEY` - Transit data API access
 
 ## Test Data and Mocking

@@ -13,6 +13,7 @@
 
 import { expect, type Locator } from '@playwright/test'
 import { cesiumDescribe, cesiumTest } from '../../fixtures/cesium-fixture'
+import { visibleErrorStates } from '../helpers/error-states'
 import GridAwareTestHelpers, { TEST_TIMEOUTS } from '../helpers/grid-aware-helpers'
 
 /**
@@ -327,10 +328,10 @@ cesiumDescribe('View Modes Accessibility', () => {
 			const capitalRegionButton = getViewModeButton(cesiumPage, 'capitalRegionView')
 			expect(await isViewModeButtonSelected(capitalRegionButton)).toBeTruthy()
 
-			// Verify no application error states are visible
-			// Note: Vuetify uses CSS classes like "text-error" and "color-error" for theming,
-			// so we check for actual error indicators rather than class name substrings
-			const errorAlert = cesiumPage.locator('.v-alert[type="error"], .loading-error')
+			// Verify no application error states are visible. The previous probe,
+			// `.v-alert[type="error"], .loading-error`, could never match: VAlert renders
+			// no `type` attribute and no component uses `.loading-error`.
+			const errorAlert = visibleErrorStates(cesiumPage)
 			const errorAlertCount = await errorAlert.count()
 			expect(errorAlertCount).toBe(0)
 		})

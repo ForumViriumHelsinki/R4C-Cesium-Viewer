@@ -1,3 +1,4 @@
+import { watch } from 'vue'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
 import { requestIdle } from '../utils/idle.js'
@@ -29,7 +30,8 @@ export default class Graphics {
 		this.viewer = null
 		this.scene = null
 		this._supportDetected = false
-		this._unsubscribe = null
+		/** @type {Array<() => void>} */
+		this._stopWatchers = []
 	}
 
 	/**
@@ -182,47 +184,73 @@ export default class Graphics {
 	}
 
 	/**
-	 * Set up reactive watchers for graphics settings
+	 * Apply a runtime change of request render mode to the live scene
 	 */
-	setupWatchers() {
-		// Watch for MSAA changes — store stop fn so destroy() can release it
-		this._unsubscribe = this.graphicsStore.$subscribe((mutation, _state) => {
-			if (!this.viewer || this.viewer.isDestroyed?.()) return
-			if (!this.scene) return
-			// mutation.events may be undefined for single-change mutations
-			const events = Array.isArray(mutation.events) ? mutation.events : []
-
-			if (events.some((e) => ['msaaEnabled', 'msaaSamples'].includes(e.key))) {
-				this.applyMsaaSettings()
-			}
-			if (events.some((e) => e.key === 'fxaaEnabled')) {
-				this.applyFxaaSettings()
-			}
-			if (events.some((e) => e.key === 'hdrEnabled')) {
-				this.applyHdrSettings()
-			}
-			if (events.some((e) => e.key === 'ambientOcclusionEnabled')) {
-				this.applyAmbientOcclusionSettings()
-			}
-			if (events.some((e) => e.key === 'requestRenderMode')) {
-				this.scene.requestRenderMode = this.graphicsStore.requestRenderMode
-				if (!this.graphicsStore.requestRenderMode) {
-					// Kick the render loop back on immediately when turning RRM off
-					this.scene.requestRender()
-				}
-			}
-		})
+	applyRequestRenderModeChange() {
+		if (!this.scene) return
+		this.scene.requestRenderMode = this.graphicsStore.requestRenderMode
+		if (!this.graphicsStore.requestRenderMode) {
+			// Kick the render loop back on immediately when turning RRM off
+			this.scene.requestRender()
+		}
 	}
 
 	/**
-	 * Release the Pinia subscription so callbacks stop firing after teardown.
+	 * Set up reactive watchers for graphics settings.
+	 *
+	 * One watch() per store field. Pinia's `$subscribe` mutation payload cannot
+	 * be used to tell which field changed: `mutation.events` is debugger data
+	 * that Pinia only fills in development builds, and it is not an array for
+	 * direct mutations, which is how every graphicsStore setter writes (#983).
+	 */
+	setupWatchers() {
+		this.stopWatchers()
+
+		const whenLive = (apply) => () => {
+			if (!this.viewer || this.viewer.isDestroyed?.()) return
+			if (!this.scene) return
+			apply()
+		}
+
+		this._stopWatchers = [
+			watch(
+				[() => this.graphicsStore.msaaEnabled, () => this.graphicsStore.msaaSamples],
+				whenLive(() => this.applyMsaaSettings())
+			),
+			watch(
+				() => this.graphicsStore.fxaaEnabled,
+				whenLive(() => this.applyFxaaSettings())
+			),
+			watch(
+				() => this.graphicsStore.hdrEnabled,
+				whenLive(() => this.applyHdrSettings())
+			),
+			watch(
+				() => this.graphicsStore.ambientOcclusionEnabled,
+				whenLive(() => this.applyAmbientOcclusionSettings())
+			),
+			watch(
+				() => this.graphicsStore.requestRenderMode,
+				whenLive(() => this.applyRequestRenderModeChange())
+			),
+		]
+	}
+
+	/**
+	 * Stop the store watchers. They are created outside any component scope,
+	 * so Vue never stops them on its own.
+	 */
+	stopWatchers() {
+		for (const stop of this._stopWatchers) stop()
+		this._stopWatchers = []
+	}
+
+	/**
+	 * Release the store watchers so they stop firing after teardown.
 	 * Owner must call this from onBeforeUnmount / destroyViewer paths.
 	 */
 	destroy() {
-		if (this._unsubscribe) {
-			this._unsubscribe()
-			this._unsubscribe = null
-		}
+		this.stopWatchers()
 		this.viewer = null
 		this.scene = null
 	}

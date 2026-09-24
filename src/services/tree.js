@@ -1,18 +1,15 @@
 import { ALL_TREE_CODES } from '../constants/treeCodes.js'
-import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
-import { usePropsStore } from '../stores/propsStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import { processBatch } from '../utils/batchProcessor.js'
 import logger from '../utils/logger.js'
-import { cesiumEntityManager } from './cesiumEntityManager.js'
 import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
 
 /**
  * Tree Service
- * Manages tree coverage data loading, visualization, and cooling effect analysis.
+ * Manages tree coverage data loading and visualization.
  * Handles 4 tree height categories (2-10m, 10-15m, 15-20m, >20m) with coordinated
  * parallel loading and optimized batch processing.
  *
@@ -27,7 +24,6 @@ import unifiedLoader from './unifiedLoader.js'
  * - Adaptive batch processing for large datasets
  * - Color-coded visualization by tree height
  * - 3D tree extrusion based on average height
- * - Building cooling effect distance analysis
  * - Cache support for improved performance
  *
  * @class Tree
@@ -166,11 +162,6 @@ export default class Tree {
 				{ batchSize: adaptiveBatchSize }
 			)
 
-			// Handle Helsinki-specific tree distance data
-			if (this.store.view === 'helsinki') {
-				this.fetchAndAddTreeDistanceData(entities)
-			}
-
 			if (!metadata.fromCache) {
 				logger.debug(`✓ Processed ${processed} trees for height category ${koodi}`)
 			} else {
@@ -180,98 +171,6 @@ export default class Tree {
 			logger.error(`Error processing tree data for koodi ${koodi}:`, error?.message || error)
 			throw error
 		}
-	}
-
-	/**
-	 * Fetch tree distance data from the provided URL and create a new dataset for plot that presents the cooldown effect on trees on buildings
-	 *
-	 * @param {Object} entities - The postal code area tree entities
-	 */
-	fetchAndAddTreeDistanceData(entities) {
-		if (!entities) {
-			// Find the data source for buildings
-			const treeDataSource = this.datasourceService.getDataSourceByName('Trees')
-
-			// If the data source isn't found, exit the function
-			if (!treeDataSource) {
-				return
-			}
-
-			entities = treeDataSource.entities.values
-		}
-
-		const postalCode = this.store.postalcode
-
-		// Find the data source for buildings
-		const buildingsDataSource = this.datasourceService.getDataSourceByName(
-			`Buildings ${postalCode}`
-		)
-
-		// If the data source isn't found, exit the function
-		if (!buildingsDataSource || !postalCode) {
-			return
-		}
-
-		fetch(this.urlStore.treeBuildingDistance(postalCode))
-			.then((response) => response.json())
-			.then((data) => {
-				this.setPropertiesAndEmitEvent(data, entities, buildingsDataSource)
-			})
-			.catch((error) => {
-				// Log any errors encountered while fetching the data
-				logger.debug('Error fetching tree distance data:', error)
-			})
-	}
-
-	/**
-	 * Sets tree-building distance properties in store and emits visualization events
-	 * Updates props store with tree data and triggers UI updates for tree diagrams.
-	 * Extracts serializable data to prevent DataCloneError in Web Workers.
-	 *
-	 * @param {Object} data - Tree distance data from API
-	 * @param {Array<Cesium.Entity>} entities - Tree entities
-	 * @param {Cesium.DataSource} buildingsDataSource - Buildings data source
-	 * @fires eventBus#newNearbyTreeDiagram - Triggers tree proximity diagram update
-	 * @private
-	 */
-	setPropertiesAndEmitEvent(data, entities, buildingsDataSource) {
-		const propsStore = usePropsStore()
-
-		// Extract serializable tree data (prevents DataCloneError)
-		const treeData = entities.map((entity) => ({
-			kohde_id: entity.properties?.kohde_id?.getValue(),
-			p_ala_m2: entity.properties?.p_ala_m2?.getValue(),
-		}))
-
-		// Extract serializable building data (prevents DataCloneError)
-		const buildingData = new Map()
-		const buildingEntities = buildingsDataSource.entities.values
-		for (const entity of buildingEntities) {
-			const id = entity.properties?.id?.getValue() || entity.properties?.hki_id?.getValue()
-			if (id) {
-				buildingData.set(id, {
-					heatExposure: entity.properties?.avgheatexposuretobuilding?.getValue(),
-					area_m2: entity.properties?.area_m2?.getValue(),
-					hki_id: entity.properties?.hki_id?.getValue(),
-				})
-			}
-		}
-
-		// Store serializable data in Pinia (safe for Web Workers)
-		propsStore.setTreeBuildingDistanceData(data)
-		propsStore.setTreeData(treeData)
-		propsStore.setBuildingData(buildingData)
-
-		// Register entities in non-reactive manager for visual manipulation
-		cesiumEntityManager.registerTreeEntities(entities)
-		cesiumEntityManager.registerBuildingEntities(buildingEntities)
-		cesiumEntityManager.setBuildingsDataSource(buildingsDataSource)
-
-		logger.debug(
-			`[Tree Service] Stored ${treeData.length} tree data items, ${buildingData.size} building data items`
-		)
-
-		eventBus.emit('newNearbyTreeDiagram')
 	}
 
 	/**
