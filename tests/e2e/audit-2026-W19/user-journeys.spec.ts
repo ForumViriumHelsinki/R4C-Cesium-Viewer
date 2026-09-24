@@ -159,8 +159,9 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 			const latencyMs = settledAt - submittedAt
 			console.log(`[journey-2] drill-down latency: ${latencyMs}ms (US-19 #687 budget=5000ms)`)
 
-			// Structural — TimelineCompact must be present in DOM (CSS hides it
-			// below 1280px so we check attachment, not visibility).
+			// Structural — TimelineCompact must be present in DOM. It is mounted by
+			// v-if="showTimeline" (src/App.vue) and never CSS-hidden, so attachment
+			// is the narrower check (.claude/rules/testing.md).
 			await expect(
 				cesiumPage.locator('.timeline-compact'),
 				'TimelineCompact must be attached at postal-code level'
