@@ -307,14 +307,17 @@ lighthouse-local:
     LIGHTHOUSE=true bun run build
     bunx @lhci/cli@0.14.x collect --config=lighthouserc.cjs
 
-# swgl=1 forces software rendering (mimics the no-GPU runner; FPS test skips).
+# swgl=0 (default) runs Chromium on the local GPU, the only place the FPS
+# assertion runs. swgl=1 forces software rendering with the CI job's flags
+# (mimics the no-GPU runner; the FPS test logs its value and skips).
 # filter="substring" runs only matching tests (vitest -t) — use it when iterating on
 # one case, since a full pass rebuilds and replays every Cesium load.
 #   just test-performance                            # full suite, GPU
 #   just test-performance 1                          # full suite, software rendering
 #   just test-performance 1 "cache bundle assets"    # one test, software rendering
-# The CI Performance Tests job runs only on push-to-main (not PRs) — use this to
-# verify before merging. See .claude/rules/testing.md "Vitest-Driven Playwright Suites".
+# The CI Performance Tests job runs on PRs as a non-required check; use this to
+# iterate locally. Metrics and failure artifacts land in performance-results/.
+# See .claude/rules/testing.md "Vitest-Driven Playwright Suites".
 # Reproduce the CI perf run locally: build, serve the prod bundle on :4173, run the suite, tear down.
 [group: "testing"]
 test-performance swgl="0" filter="":
@@ -326,7 +329,10 @@ test-performance swgl="0" filter="":
     trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
     until curl -fsS -o /dev/null http://localhost:4173/ 2>/dev/null; do sleep 1; done
     if [ "{{ swgl }}" = "1" ]; then
-        export PERF_TEST_CHROMIUM_ARGS="--use-gl=swiftshader --disable-gpu"
+        export PERF_TEST_CHROMIUM_ARGS="--use-gl=angle --use-angle=swiftshader --disable-gpu --disable-dev-shm-usage --no-sandbox"
+    else
+        # Headless Chromium falls back to SwiftShader unless asked for the GPU.
+        export PERF_TEST_CHROMIUM_ARGS="--enable-gpu"
     fi
     if [ -n "{{ filter }}" ]; then
         CI=true bun run test:performance -t "{{ filter }}"
