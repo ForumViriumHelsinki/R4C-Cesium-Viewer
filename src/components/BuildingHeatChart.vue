@@ -1,7 +1,7 @@
 <template>
 	<div
-		id="buildingChartContainer"
 		ref="containerRef"
+		class="building-chart-container"
 	/>
 </template>
 
@@ -41,13 +41,13 @@ export default {
 			// Not laid out yet (e.g. a closed panel); the resize observer redraws later.
 			if (chartWidth.value === 0) return
 
-			plotService.initializePlotContainer('buildingChartContainer')
+			plotService.initializePlotContainer(containerRef.value)
 
 			const margin = { top: 40, right: 40, bottom: 30, left: 30 }
 			const width = chartWidth.value - margin.left - margin.right
 			const height = chartHeight.value - margin.top - margin.bottom
 
-			const svg = plotService.createSVGElement(margin, width, height, '#buildingChartContainer')
+			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 			const xScale = plotService.createScaleBand([address, postinumero], width)
 			const yScale = plotService.createScaleLinear(
 				0,
@@ -114,7 +114,7 @@ export default {
 </script>
 
 <style scoped>
-#buildingChartContainer {
+.building-chart-container {
 	position: relative;
 	width: 100%;
 }

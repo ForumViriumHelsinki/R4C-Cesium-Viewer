@@ -1,8 +1,8 @@
 <!-- Piechart.vue -->
 <template>
 	<div
-		id="pieChartContainer"
 		ref="containerRef"
+		class="pie-chart-container"
 	/>
 </template>
 
@@ -46,7 +46,7 @@ const createPieChart = () => {
 	const area = backgroundMapStore.hsySelectArea
 
 	const plotService = new Plot()
-	plotService.initializePlotContainerForGrid('pieChartContainer')
+	plotService.initializePlotContainerForGrid(containerRef.value)
 
 	// Assuming firstData and secondData are already fetched and processed
 	const labels = [
@@ -110,7 +110,7 @@ const createPieChart = () => {
 		secondData.map((value, index) => ({ value: value, label: labels[index], zone: area }))
 	)
 
-	const svg = plotService.createSVGElement(margin, width, height, '#pieChartContainer')
+	const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 
 	// Translate pies to be centered vertically and positioned horizontally
 	const xOffsetFirstPie = width / 4
@@ -118,7 +118,7 @@ const createPieChart = () => {
 	const yOffset = titleHeight + (height - titleHeight) / 2
 
 	// Initialize tooltip using the Plot service
-	const tooltip = plotService.createTooltip('#pieChartContainer')
+	const tooltip = plotService.createTooltip(containerRef.value)
 	createPie(
 		svg,
 		'.firstPie',
@@ -153,7 +153,7 @@ const createPieChart = () => {
 const clearPieChart = () => {
 	// Remove or clear the D3.js visualization
 	// Example:
-	d3.select('#pieChartContainer').select('svg').remove()
+	if (containerRef.value) d3.select(containerRef.value).select('svg').remove()
 }
 /**
  * Get total area of district properties by district data source name and district id and list of property keys
@@ -222,7 +222,7 @@ const createPie = (svg, name, data, colors, arc, xOffset, yOffset, tooltip, plot
 		.on('mouseover', (event, d) => {
 			plotService.handleMouseover(
 				tooltip,
-				'pieChartContainer',
+				containerRef.value,
 				event,
 				d,
 				(data) =>
@@ -249,7 +249,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-#pieChartContainer {
+.pie-chart-container {
 	position: relative;
 	width: 100%;
 	background-color: rgb(var(--v-theme-surface));

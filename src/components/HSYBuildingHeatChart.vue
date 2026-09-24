@@ -16,7 +16,6 @@
 
 		<!-- Container for the HSY Building Chart -->
 		<div
-			id="hsyBuildingChartContainer"
 			ref="containerRef"
 			class="chart-container"
 		/>
@@ -29,6 +28,7 @@
 </template>
 
 <script>
+import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useChartSize } from '../composables/useChartSize.js'
 import ColdArea from '../services/coldarea.js'
@@ -60,13 +60,18 @@ export default {
 			onResize: () => createHSYBuildingBarChart(),
 		})
 
-		const hideColdAreasChecked = ref(toggleStore.hideColdAreas)
+		// Bound to the store, not a copy of it, so the switch follows every write (#967).
+		const { hideColdAreas: hideColdAreasChecked } = storeToRefs(toggleStore)
 		const coldAreasLoaded = ref(false) // To track if cold areas are loaded
 
 		const hideColdAreas = () => {
 			toggleStore.setHideColdAreas(hideColdAreasChecked.value)
 			const dataSourceService = new Datasource()
-			void dataSourceService.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value)
+			dataSourceService
+				.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value)
+				.catch((error) => {
+					logger.error('Failed to toggle cold areas:', error)
+				})
 		}
 
 		const createHSYBuildingBarChart = () => {
@@ -80,7 +85,7 @@ export default {
 			const address = store.buildingAddress
 			const postinumero = store.postalcode
 
-			plotService.initializePlotContainer('hsyBuildingChartContainer')
+			plotService.initializePlotContainer(containerRef.value)
 
 			const postalCodeHeat = createPostalCodeTimeseries(postalcodeHeatTimeseries)
 
@@ -88,7 +93,7 @@ export default {
 			const width = chartWidth.value - margin.left - margin.right
 			const height = chartHeight.value - margin.top - margin.bottom
 
-			const svg = plotService.createSVGElement(margin, width, height, '#hsyBuildingChartContainer')
+			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 
 			const allDates = Array.from(
 				new Set(buildingHeatExposure.map((d) => d.date).concat(postalCodeHeat.map((d) => d.date)))
@@ -113,7 +118,7 @@ export default {
 				...postalCodeHeat.map((d) => ({ date: d.date, value: d.averageTemp, type: 'postalcode' })),
 			]
 
-			const tooltip = plotService.createTooltip('#hsyBuildingChartContainer')
+			const tooltip = plotService.createTooltip(containerRef.value)
 
 			createHSYBarsWithLabels(
 				svg,
@@ -191,7 +196,7 @@ export default {
 				.on('mouseover', (event, d) =>
 					plotService.handleMouseover(
 						tooltip,
-						'hsyBuildingChartContainer',
+						containerRef.value,
 						event,
 						d,
 						(data) => `${data.value.toFixed(2)} °C`

@@ -102,7 +102,7 @@ async function switchTerrainProvider(type: 'flat' | '3d') {
 
 #### TR-3: UI Integration
 
-Add toggle in `GraphicsQuality.vue` or `BackgroundMapBrowser.vue`:
+Add toggle in `BackgroundMapBrowser.vue` (`GraphicsQuality.vue`, the other candidate, had not been mounted since #210 and was removed under #983):
 
 ```vue
 <v-switch
@@ -120,8 +120,8 @@ Add toggle in `GraphicsQuality.vue` or `BackgroundMapBrowser.vue`:
    - Async terrain loading with error handling
    - Terrain switching method
 
-2. **Add UI toggle** - Modify `GraphicsQuality.vue`
-   - Add terrain switch under "Advanced Rendering" section
+2. **Add UI toggle** - Modify `BackgroundMapBrowser.vue`
+   - Add terrain switch
    - Connect to graphics store
 
 3. **Integrate feature flag** - Modify `useViewerInitialization.js`

@@ -13,10 +13,12 @@ module.exports = {
 		collect: {
 			// Build the production bundle and start preview server.
 			// Call vite directly rather than via `bun run preview`: the bun
-			// script wrapper prints its own "$ vite preview --host" banner first
+			// script wrapper prints its own "$ vite preview" banner first
 			// and buffers vite's "➜  Local:" line, which can shadow the ready
 			// pattern and trip startServerReadyTimeout before navigation starts.
-			startServerCommand: 'bunx vite preview --host --port 4173',
+			// No --host: lhci navigates to localhost, and the preview proxy
+			// injects the Digitransit key, so it stays on loopback (#969).
+			startServerCommand: 'bunx vite preview --port 4173',
 
 			// Pattern to detect when server is ready.
 			// Vite outputs: "➜  Local:   http://localhost:4173/" — match the

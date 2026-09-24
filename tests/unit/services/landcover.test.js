@@ -243,6 +243,26 @@ describe('Landcover Service', () => {
 			)
 		})
 
+		it('rebuilds when the tracked layer is no longer in the viewer (#967)', async () => {
+			await createHSYImageryLayer()
+			const staleLayer = mockBackgroundStore.landcoverLayers[0]
+			// Something outside this module took the layer off the viewer without telling
+			// backgroundMapStore. No src caller does that now: switchOffNdvi() calls
+			// removeLandcover() before removeAll(), so the liveness check is a safeguard.
+			mockContains.mockImplementation((layer) => layer !== staleLayer)
+			mockAddImageryProvider.mockClear()
+
+			await createHSYImageryLayer()
+
+			// Without the liveness check the guard trusts the stale entry and adds
+			// nothing, so the switch reads ON with no layer on the map.
+			expect(mockAddImageryProvider).toHaveBeenCalledTimes(1)
+			expect(mockBackgroundStore.landcoverLayers).toHaveLength(1)
+			expect(mockBackgroundStore.landcoverLayers[0]).not.toBe(staleLayer)
+			// The stale layer's tile-error listener is detached, not leaked.
+			expect(removeErrorListenerSpy).toHaveBeenCalledTimes(1)
+		})
+
 		it('rebuilds the default set after the caller removes it (year refresh)', async () => {
 			// HSYYearSelect.vue is the only setHSYYear caller and it calls
 			// removeLandcover() before re-invoking the default path, so the
