@@ -42,7 +42,7 @@
 import { computed } from 'vue'
 import Datasource from '../services/datasource.js'
 import FeaturePicker from '../services/featurepicker'
-import { removeLandcover } from '../services/landcover'
+import { setLandcoverEnabled } from '../services/landcover'
 import Tree from '../services/tree.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
@@ -77,7 +77,8 @@ const setCapitalRegion = async () => {
 	toggleStore.setGridView(false)
 	toggleStore.setGrid250m(false)
 	if (store.level === 'start') {
-		removeLandcover()
+		// Turn the toggle off with the layer, or the switch stays ON over no imagery (#967).
+		await setLandcoverEnabled(false)
 	}
 	await dataSourceService.removeDataSourcesAndEntities()
 	await dataSourceService.loadGeoJsonDataSource(0.2, './assets/data/hsy_po.json', 'PostCodes')

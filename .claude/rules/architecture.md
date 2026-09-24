@@ -121,6 +121,21 @@ Canonical pattern: single synchronous loop wrapped in
 For yield-needing huge passes, yield coarsely (hundreds of items) with a
 timeout-bounded idle callback — never per-N-features untimed.
 
+## Cesium Objects in Pinia State Must Be `markRaw`
+
+Pinia state is deeply reactive. A Cesium object put into it untouched (pushed into
+`backgroundMapStore.landcoverLayers`, say) is handed back as a reactive proxy, and
+Cesium's collections match by identity: `ImageryLayerCollection.contains()` and
+`remove()` run `indexOf` over a plain array. The proxy is never found, so nothing is
+removed. Measured on a build of `a3c3269`: land-cover imagery stayed on the map after
+the toggle went off (#967).
+
+Wrap the object when it goes in, as `globalStore.setCesiumViewer()` does for the
+viewer: `backgroundMapStore.landcoverLayers.push(markRaw(layer))`. Reads then return
+the raw object. Unit tests with an `imageryLayers.contains` mock that always returns
+`true` cannot catch this. `tests/unit/components/landcoverInvariant.test.js` uses a
+stand-in with Cesium's identity semantics.
+
 ## Reading Cesium Entity Properties
 
 Read GeoJSON entity properties through the **public** API:

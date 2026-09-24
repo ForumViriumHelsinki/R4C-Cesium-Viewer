@@ -107,6 +107,7 @@ export function useViewerInitialization() {
 					'Unable to load the 3D map viewer. Please check your internet connection and try again.'
 				errorSnackbar.value = true
 				store.setIsLoading(false)
+				store.setViewerInitFailed(true)
 				return
 			}
 		}
@@ -160,7 +161,15 @@ export function useViewerInitialization() {
 			}
 		}
 
-		viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions)
+		try {
+			viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions)
+		} catch (error) {
+			// CesiumWidget shows its own error panel and rethrows (e.g. no WebGL). The
+			// viewer will never be set, so tell the UI to stop waiting for it.
+			logger.error('Failed to construct the Cesium viewer:', error)
+			store.setViewerInitFailed(true)
+			throw error
+		}
 
 		// Count requestRender() calls for render-pressure attribution. Patched
 		// once per viewer instance (each new viewer gets a fresh scene); dev/E2E
@@ -307,6 +316,7 @@ export function useViewerInitialization() {
 	const retryInit = async () => {
 		errorSnackbar.value = false
 		errorMessage.value = ''
+		store.setViewerInitFailed(false)
 		store.setIsLoading(true)
 		await initViewer()
 		store.setIsLoading(false)
