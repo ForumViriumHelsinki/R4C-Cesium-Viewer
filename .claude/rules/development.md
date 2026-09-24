@@ -173,7 +173,7 @@ Container build/release use the org reusable workflows (`ForumViriumHelsinki/.gi
 - `release-please.yml` — manages releases and CHANGELOG via conventional commits
 - `lighthouse.yml` — performance monitoring on PRs
 
-Sentry build args (`SENTRY_AUTH_TOKEN`, `VITE_SENTRY_DSN`) reach the build via the reusable workflows' `secret-build-args` passthrough — secrets cannot flow through plain `inputs.build-args` on reusable-workflow callers.
+Sentry build args (`SENTRY_AUTH_TOKEN`, `VITE_SENTRY_DSN`) reach the build via the reusable workflows' `secret-build-args` passthrough — secrets cannot flow through plain `inputs.build-args` on reusable-workflow callers. The non-secret `VITE_SENTRY_ENVIRONMENT=production` goes through plain `build-args`, and the Dockerfile forwards it to Vite. It is the only way a build reports as `production`: `src/utils/sentryEnvironment.js` tags any other production-mode build `local` (#995). CI builds (`test.yml`, `lighthouse.yml`) carry no DSN and send nothing to Sentry. `tests/unit/utils/sentryEnvironment.test.js` fails if a workflow other than the two container workflows sets `VITE_SENTRY_DSN`.
 
 ### Security Scan (`bun audit` gate)
 

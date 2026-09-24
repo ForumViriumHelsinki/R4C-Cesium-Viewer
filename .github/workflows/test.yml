@@ -87,12 +87,13 @@ jobs:
   # (window.__viewer / window.__cesium hooks in useViewerInitialization.js)
   # so downstream e2e/accessibility/performance jobs get the same viewer
   # exposure that local `just test-e2e` relies on.
+  # No Sentry DSN: this bundle runs against the CI harness under vite preview,
+  # and its errors were reaching the production project tagged production (#995).
   build:
     name: Build Frontend
     runs-on: ubuntu-latest
     env:
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       VITE_DIGITRANSIT_KEY: ${{ secrets.DIGITRANSIT_KEY }}
       VITE_E2E_TEST: 'true'
     steps:

@@ -24,6 +24,10 @@ jobs:
     with:
       image-name: ${{ needs.setup.outputs.image-name }}
       tag-prefix: 'r4c-cesium-viewer-v'
+      # Used by the fallback rebuild only; the promoted :next image already
+      # carries it from container-build.yml (#995).
+      build-args: |
+        VITE_SENTRY_ENVIRONMENT=production
     secrets:
       secret-build-args: |
         SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}

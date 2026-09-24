@@ -507,14 +507,15 @@ npm run test:ci
 
 The following environment variables are required for running tests in CI/CD:
 
-| Variable               | Description                   | Required For              | Example                     |
-| ---------------------- | ----------------------------- | ------------------------- | --------------------------- |
-| `NODE_ENV`             | Environment mode              | All tests                 | `test`                      |
-| `CI`                   | Indicates CI environment      | All tests                 | `true`                      |
-| `NODE_OPTIONS`         | Node.js runtime options       | All tests                 | `--max-old-space-size=4096` |
-| `SENTRY_AUTH_TOKEN`    | Sentry authentication token   | Build & Integration tests | `secret`                    |
-| `VITE_SENTRY_DSN`      | Sentry DSN for error tracking | Build & Integration tests | `https://...@sentry.io/...` |
-| `VITE_DIGITRANSIT_KEY` | Digitransit API key           | Build & Integration tests | `your-api-key`              |
+| Variable               | Description                 | Required For              | Example                     |
+| ---------------------- | --------------------------- | ------------------------- | --------------------------- |
+| `NODE_ENV`             | Environment mode            | All tests                 | `test`                      |
+| `CI`                   | Indicates CI environment    | All tests                 | `true`                      |
+| `NODE_OPTIONS`         | Node.js runtime options     | All tests                 | `--max-old-space-size=4096` |
+| `SENTRY_AUTH_TOKEN`    | Sentry authentication token | Build & Integration tests | `secret`                    |
+| `VITE_DIGITRANSIT_KEY` | Digitransit API key         | Build & Integration tests | `your-api-key`              |
+
+CI test and Lighthouse builds carry no `VITE_SENTRY_DSN`, so they send nothing to Sentry (#995). Only the container image workflows build with a DSN.
 
 **Setting up for local testing:**
 
@@ -525,7 +526,6 @@ NODE_ENV=test
 CI=true
 NODE_OPTIONS=--max-old-space-size=4096
 SENTRY_AUTH_TOKEN=your-token-here
-VITE_SENTRY_DSN=your-dsn-here
 VITE_DIGITRANSIT_KEY=your-key-here
 EOF
 
@@ -538,7 +538,7 @@ source .env.test
 These secrets must be configured in GitHub repository settings:
 
 - `SENTRY_AUTH_TOKEN` - Required for source map uploads
-- `SENTRY_DSN` - Error tracking endpoint
+- `VITE_SENTRY_DSN` - Error tracking endpoint, used only by the container image workflows
 - `DIGITRANSIT_KEY` - Transit data API access
 
 ## Test Data and Mocking

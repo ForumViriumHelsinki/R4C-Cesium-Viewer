@@ -231,7 +231,8 @@ Check these discriminators before reopening such an issue:
 3. **Read the event's `url` tag first — it routes the verdict.** A
    `localhost:4173` event comes from one developer's `vite preview`, not from
    users, so it is a harness artefact either way and closing it needs no
-   further reading. What the request volume _means_ there depends on the
+   further reading. Since #995 such an event carries the `local` environment
+   instead of `production`, and CI builds send no events at all. What the request volume _means_ there depends on the
    `preview.proxy` block in `vite.config.js`, which has changed once and can
    change again — read it rather than assuming:
 
