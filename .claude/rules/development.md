@@ -97,6 +97,24 @@ siblings via `gzip_static`. If a build artifact seems stale or doubled, check
 for orphaned `.gz` files. Brotli precompression is blocked on a
 brotli-capable nginx image — tracked in issue #876.
 
+## Dev and Preview Servers Bind to Loopback
+
+`bun run dev`, `bun run dev:test` and `bun run preview` listen on `localhost`
+only (#969). Both servers carry the `devProxy` table from `vite.config.js`, and
+its `/digitransit` entry adds `digitransit-subscription-key` to every request
+it forwards. Bound to all interfaces, that makes the machine a forward proxy
+that spends the key for anyone on the same network.
+
+- **Device testing** (a phone or tablet on the LAN): opt in for that one run
+  with `bun run dev -- --host`. Stop it when done.
+- **Do not add `--host` back** to a script, `lighthouserc.cjs`, or `server.host`
+  / `preview.host` in `vite.config.js`. `tests/unit/config/devServerLoopback.test.js`
+  fails if you do.
+- Every harness reaches the server at `http://localhost:<port>`: Playwright's
+  `webServer`, the CI health check, `just test-performance`,
+  `scripts/test-e2e-ci.mjs` and Lighthouse CI. On macOS Vite binds `[::1]`
+  only, so `http://127.0.0.1:<port>` is refused. Use `localhost`.
+
 ## Merge Commits Must Be Conventional
 
 The `conventional-pre-commit` hook validates **merge commits too** — git's
