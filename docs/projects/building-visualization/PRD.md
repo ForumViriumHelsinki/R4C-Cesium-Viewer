@@ -617,7 +617,6 @@ class BuildingVisibilityManager {
 **Event Bus:**
 
 - `newHeatHistogram` - Update histogram after filter changes
-- `showCapitalRegion` - Trigger after building load
 - `entityPrintEvent` - Update info panel on selection
 
 ### Caching Strategy

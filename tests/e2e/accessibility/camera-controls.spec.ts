@@ -281,6 +281,26 @@ cesiumDescribe('Camera Controls Accessibility', () => {
 	cesiumTest.describe('Camera Reactivity', () => {
 		cesiumTest.use({ tag: ['@accessibility', '@e2e', '@cesium'] })
 
+		// Below Vuetify's `md` breakpoint (the mobile and tablet projects) the control
+		// panel is a temporary drawer that opens over the left edge of the map, where
+		// the camera controls sit, and it takes the clicks aimed at them (#947). Close
+		// it the way a user does, by clicking the scrim beside it. No-op on desktop,
+		// where the drawer is permanent and the controls are offset past it.
+		cesiumTest.beforeEach(async ({ cesiumPage }) => {
+			const openDrawer = cesiumPage.locator(
+				'.control-panel.v-navigation-drawer--temporary.v-navigation-drawer--active'
+			)
+			if ((await openDrawer.count()) === 0) return
+
+			const scrim = cesiumPage.locator('.v-navigation-drawer__scrim')
+			const box = await scrim.boundingBox()
+			expect(box, 'temporary drawer is open but has no scrim').toBeTruthy()
+			if (!box) return
+			// Click the scrim's right edge; the drawer covers its left side.
+			await scrim.click({ position: { x: box.width - 8, y: box.height / 2 } })
+			await expect(openDrawer).toHaveCount(0)
+		})
+
 		cesiumTest('faces the camera east when the East button is clicked', async ({ cesiumPage }) => {
 			const hasViewer = await cesiumPage.evaluate(() =>
 				Boolean((window as { __viewer?: unknown }).__viewer)

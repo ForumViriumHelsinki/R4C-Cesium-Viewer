@@ -23,6 +23,8 @@
 | `propsStore.js`          | Property and building attribute data                                                     |
 | `urlStore.js`            | URL state management for deep linking                                                    |
 
+Cesium objects (viewer, entities, data sources, imagery layers) go into store state only through `markRaw`. Otherwise Pinia returns a reactive proxy, and Cesium's collections, which match by identity, cannot find the object to remove it (#1019: flood scenarios stacked on the map). `tests/unit/stores/cesiumStateMarkRaw.test.js` checks every write to the store fields that the Sentry `stateTransformer` in `src/main.js` strips as Cesium objects. A new Cesium-holding field belongs in that transformer too.
+
 ## Main Pages
 
 | Component          | Purpose                                                 |
@@ -89,9 +91,13 @@ Material Design Icons render as **inline SVG paths** via a custom Vuetify iconse
 
 ## Cesium Render Mode
 
-`graphicsStore.requestRenderMode` defaults to `true` and is propagated to the live `viewer.scene.requestRenderMode` via the `r4c-request-render-mode` feature flag (wired in `App.vue` after `featureFlagStore.refreshFlags()`). The graphics service `$subscribe` watcher propagates later `graphicsStore` changes to the live scene. No mounted component currently calls the MSAA/FXAA/HDR/ambient-occlusion setters: `FeatureFlagsPanel.vue` toggles the graphics feature flags but not the store settings, and `GraphicsQuality.vue`, which did, is not mounted anywhere.
+`graphicsStore.requestRenderMode` defaults to `true` and seeds the viewer's `requestRenderMode` option at creation (`useViewerInitialization.js`). Feature flags drive the graphics settings: `src/composables/useGraphicsFlagSync.js`, started in `App.vue` setup, maps `requestRenderMode`, `hdrRendering` and `ambientOcclusion` onto `setRequestRenderMode`, `setHdrEnabled` and `setAmbientOcclusionEnabled`, and re-runs on every GOFF re-evaluation and FeatureFlagsPanel override. The HDR and AO bindings also re-run when hardware support is detected: those setters store `enabled && supported`, and support is detected on an idle callback after the viewer exists, usually after the flags have loaded. `r4c-request-render-mode` is enabled for everyone in GOFF (`flags.goff.yaml` and the infrastructure ConfigMap); keep it that way.
+
+The graphics service (`src/services/graphics.js`) keeps one `watch()` per `graphicsStore` field and re-applies that field to the live scene when it changes. Do not key this on Pinia `$subscribe`: `mutation.events` is debugger data that Pinia fills only in development builds, and it is not an array for direct mutations, which is how every graphicsStore setter writes (#983). The watchers are created outside any component scope, so `destroyViewer()` stops them through `Graphics.destroy()`. MSAA stays at 4x and FXAA off; no flag or UI changes them. `GraphicsQuality.vue` and the store's quality presets were removed under #983: the component had not been mounted since #210, and every preset but one turned RRM off.
 
 When RRM is on, Cesium only re-renders when something changes (camera move, entity update, imagery load); when off, the scene re-renders every animation frame at ~60 FPS. On a 3D globe with terrain + buildings + WMS imagery the difference is roughly one CPU core and a hot dGPU — keep RRM on unless a specific feature genuinely needs continuous rendering, and explicitly call `viewer.scene.requestRender()` at any mutation site that would otherwise be visually invisible under RRM (existing camera/entity/imagery hooks already do this).
+
+The tab-visibility handler in `useViewerInitialization.js` turns request-render mode on while the tab is hidden. On return it restores `graphicsStore.requestRenderMode || isE2ETest`, the expression viewer creation uses, and requests one frame (#1018). `tests/unit/services/requestRenderModeWriters.test.js` fails if a file other than the graphics service or that composable writes `scene.requestRenderMode`, or if a write is neither `true` nor the `graphicsStore.requestRenderMode` value itself (optionally `|| isE2ETest`; a negated read fails).
 
 ## Bulk Entity Styling (grids, building sets)
 
@@ -121,6 +127,21 @@ Canonical pattern: single synchronous loop wrapped in
 `suspendEvents()`/`resumeEvents()`, one `scene.requestRender()` at the end.
 For yield-needing huge passes, yield coarsely (hundreds of items) with a
 timeout-bounded idle callback — never per-N-features untimed.
+
+## Cesium Objects in Pinia State Must Be `markRaw`
+
+Pinia state is deeply reactive. A Cesium object put into it untouched (pushed into
+`backgroundMapStore.landcoverLayers`, say) is handed back as a reactive proxy, and
+Cesium's collections match by identity: `ImageryLayerCollection.contains()` and
+`remove()` run `indexOf` over a plain array. The proxy is never found, so nothing is
+removed. Measured on a build of `a3c3269`: land-cover imagery stayed on the map after
+the toggle went off (#967).
+
+Wrap the object when it goes in, as `globalStore.setCesiumViewer()` does for the
+viewer: `backgroundMapStore.landcoverLayers.push(markRaw(layer))`. Reads then return
+the raw object. Unit tests with an `imageryLayers.contains` mock that always returns
+`true` cannot catch this. `tests/unit/components/landcoverInvariant.test.js` uses a
+stand-in with Cesium's identity semantics.
 
 ## Reading Cesium Entity Properties
 

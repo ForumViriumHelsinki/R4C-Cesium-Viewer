@@ -28,7 +28,6 @@ describe('toggleStore', () => {
 			expect(store.hideColdAreas).toBe(false)
 			expect(store.landCover).toBe(false)
 			expect(store.switchView).toBe(false)
-			expect(store.surveyPlaces).toBe(false)
 			expect(store.capitalRegionCold).toBe(false)
 			expect(store.grid250m).toBe(false)
 			expect(store.ndvi).toBe(false)
@@ -39,7 +38,7 @@ describe('toggleStore', () => {
 			const store = useToggleStore()
 			const stateKeys = Object.keys(store.$state)
 
-			expect(stateKeys).toHaveLength(25)
+			expect(stateKeys).toHaveLength(24)
 		})
 	})
 
@@ -242,16 +241,6 @@ describe('toggleStore', () => {
 
 			store.setSwitchView(false)
 			expect(store.switchView).toBe(false)
-		})
-
-		it('should set Survey Places toggle', () => {
-			const store = useToggleStore()
-
-			store.setSurveyPlaces(true)
-			expect(store.surveyPlaces).toBe(true)
-
-			store.setSurveyPlaces(false)
-			expect(store.surveyPlaces).toBe(false)
 		})
 	})
 

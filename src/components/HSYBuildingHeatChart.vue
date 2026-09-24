@@ -28,6 +28,7 @@
 </template>
 
 <script>
+import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useChartSize } from '../composables/useChartSize.js'
 import ColdArea from '../services/coldarea.js'
@@ -59,13 +60,18 @@ export default {
 			onResize: () => createHSYBuildingBarChart(),
 		})
 
-		const hideColdAreasChecked = ref(toggleStore.hideColdAreas)
+		// Bound to the store, not a copy of it, so the switch follows every write (#967).
+		const { hideColdAreas: hideColdAreasChecked } = storeToRefs(toggleStore)
 		const coldAreasLoaded = ref(false) // To track if cold areas are loaded
 
 		const hideColdAreas = () => {
 			toggleStore.setHideColdAreas(hideColdAreasChecked.value)
 			const dataSourceService = new Datasource()
-			void dataSourceService.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value)
+			dataSourceService
+				.changeDataSourceShowByName('ColdAreas', !hideColdAreasChecked.value)
+				.catch((error) => {
+					logger.error('Failed to toggle cold areas:', error)
+				})
 		}
 
 		const createHSYBuildingBarChart = () => {

@@ -692,8 +692,6 @@ As a user, I want smooth performance when analyzing postal codes with thousands 
 
 - `newHeatHistogram`: Emitted when heat data changes → HeatHistogram rerenders
 - `updateScatterPlot`: Emitted when date changes → Scatter plot updates
-- `showHelsinki`/`showCapitalRegion`: Control plot visibility by region
-- `hideBuilding`: Hide building-level plots
 
 **IP3: CesiumJS Integration**
 

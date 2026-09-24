@@ -35,6 +35,7 @@ import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
 import Datasource from '../services/datasource.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { useGlobalStore } from '../stores/globalStore.js'
+import logger from '../utils/logger.js'
 
 const globalStore = useGlobalStore()
 const dataSourceService = new Datasource()
@@ -85,7 +86,9 @@ const updateViewAndPlots = () => {
 	const styleBuildings = /** @type {(e: unknown) => Promise<void>} */ (
 		buildingService.setHeatExposureToBuildings
 	)
-	void styleBuildings.call(buildingService, entities) // fire-and-forget
+	styleBuildings.call(buildingService, entities).catch((error) => {
+		logger.error('Failed to restyle buildings for the selected date:', error)
+	})
 
 	buildingService.updateHeatHistogramDataAfterFilter(entities)
 

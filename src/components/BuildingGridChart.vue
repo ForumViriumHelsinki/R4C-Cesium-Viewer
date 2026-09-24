@@ -9,7 +9,6 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as d3 from '@/utils/d3'
 import { useChartSize } from '../composables/useChartSize.js'
-import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -109,15 +108,6 @@ export default {
 				.on('mouseout', () => plotService.handleMouseout(tooltip))
 		}
 
-		/**
-		 * Hide the chart container using Vue ref (proper encapsulation)
-		 */
-		const hideChart = () => {
-			if (containerRef.value) {
-				containerRef.value.style.visibility = 'hidden'
-			}
-		}
-
 		watch(
 			() => propsStore.gridBuildingProps,
 			(gridBuilding) => {
@@ -131,13 +121,9 @@ export default {
 			if (propsStore.gridBuildingProps) {
 				createBuildingGridChart(propsStore.gridBuildingProps)
 			}
-			// Listen for hide event from parent (proper component encapsulation)
-			eventBus.on('hideBuildingGridChart', hideChart)
 		})
 
 		onBeforeUnmount(() => {
-			// mitt's on() returns undefined, so unsubscribe with the same handler
-			eventBus.off('hideBuildingGridChart', hideChart)
 			cleanup()
 		})
 
