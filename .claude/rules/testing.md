@@ -36,6 +36,45 @@ bunx playwright test --grep @wms
 
 Combine tags: `bunx playwright test --grep "@accessibility.*@smoke"`
 
+## Playwright Projects
+
+Each spec belongs to one kind of project (#947):
+
+| Project                                         | Collects                                                           | Run by                                                                                                 |
+| ----------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `chromium`                                      | every `*.spec.ts` except `tests/e2e/accessibility/` (`testIgnore`) | `bun run test:e2e` (CI End-to-End job), `just test-file` on a non-accessibility spec                   |
+| `accessibility-desktop` / `-tablet` / `-mobile` | `tests/e2e/accessibility/` at 1920×1080, 768×1024 and 375×667      | `bun run test:accessibility:<viewport>` (CI accessibility matrix), `just test-accessibility` (desktop) |
+| `Mobile Chrome`                                 | `tests/e2e/` except accessibility, Pixel 5                         | no CI job; only unscoped runs such as `bun run test:e2e:mock`                                          |
+
+`--project=chromium` on an accessibility spec therefore collects nothing; use
+`--project=accessibility-desktop`. `tests/unit/ci/playwrightProjects.test.js`
+fails if a spec is collected by both `chromium` and an `accessibility-*`
+project, or if `test:e2e` runs any project other than `chromium`. The End-to-End
+job's budget step fails when `bun run test:e2e --list` exceeds
+`E2E_TEST_CEILING` in `.github/workflows/test.yml`; raise it deliberately when
+adding specs.
+
+The End-to-End job is a `--shard=i/N` matrix (`shardIndex`/`shardTotal` in
+`test.yml`), because one worker with two retries does not fit the scoped set
+into one 15-minute job. The `chromium` project sets `fullyParallel: true` so
+Playwright shards by test rather than by file; with `workers: 1` it still runs
+one test at a time. Each shard's budget step also fails above
+`ceil(E2E_TEST_CEILING / shardTotal)` tests, and the contract test checks that
+the shards cover every `test:e2e` test exactly once within that share. To
+change the shard count, edit both matrix lists. To reproduce a CI shard
+locally, set `CI=true`: without it `cesiumDescribe` adds a `beforeAll` hook,
+and Playwright then groups that describe's tests differently across shards.
+
+A test that fails on every attempt in CI, retries included, is quarantined
+with `test.fixme` (`cesiumTest.fixme` for the Cesium fixture) and the comment
+`// Quarantined: fails on every attempt in CI — see #998` directly above it; a
+test that passes on any attempt is flaky and stays in the run.
+`tests/unit/testContracts/e2eFixmeReferences.test.js` fails on any `fixme` under
+`tests/e2e` without an issue reference in the comment above it or on its own
+line. #998 lists the quarantined tests; remove the `fixme` when one is fixed.
+`--list` still lists `fixme` tests, so the ceiling and the shard split do not
+change when a test is quarantined.
+
 ## Component Architecture for Testing
 
 ### Timeline Components by Navigation Level
@@ -72,7 +111,6 @@ FeaturePicker.handleFeatureWithProperties(entity)
     - At postal code level → handleBuildingFeature()
     ↓
 Updates Pinia store (level='building')
-EventBus emits 'showBuilding'
 ```
 
 **Critical Guards:**
@@ -83,15 +121,18 @@ EventBus emits 'showBuilding'
 
 ## Cesium & Store Global Variables
 
-The app exposes Cesium and Pinia state on `window` in E2E mode (`VITE_E2E_TEST=true`):
+The app exposes Cesium and Pinia state on `window` in any build with `VITE_E2E_TEST=true`, whatever its `MODE`. That includes the CI bundle, which Build Frontend makes with `vite build` (`MODE=production`) and `VITE_E2E_TEST=true`. Some hooks are also set on the dev server and under Vitest:
 
-| Variable             | Set by                       | Contains                                                                                                       |
-| -------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `window.__cesium`    | `useViewerInitialization.js` | Cesium module                                                                                                  |
-| `window.__viewer`    | `useViewerInitialization.js` | Cesium.Viewer instance                                                                                         |
-| `window.Cesium`      | NOT set by app               | Only set by CI mock fixture                                                                                    |
-| `window.globalStore` | `src/main.js`                | Live Pinia globalStore reference                                                                               |
-| `window.__perfStats` | `src/utils/perfStats.js`     | Perf counters (limiter queue-wait, cache hit/miss/bytes, requestRender count); `reset()` zeroes between trials |
+| Variable                                                                                                           | Set by                                            | Set when                                             | Contains                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `window.__cesium`                                                                                                  | `useViewerInitialization.js`                      | `VITE_E2E_TEST=true`                                 | Cesium module                                                                                                  |
+| `window.__viewer`                                                                                                  | `useViewerInitialization.js`                      | `VITE_E2E_TEST=true`                                 | Cesium.Viewer instance                                                                                         |
+| `window.__featurepicker`                                                                                           | `useViewerInitialization.js`                      | `VITE_E2E_TEST=true`                                 | `Featurepicker` class, for driving a real pick without canvas clicks                                           |
+| `window.globalStore`, `buildingStore`, `toggleStore`, `featureFlagStore` and a `use*Store()` getter returning each | `src/utils/e2eStoreHooks.js`, called by `main.js` | `VITE_E2E_TEST=true`, or `MODE` `development`/`test` | Live Pinia store instances                                                                                     |
+| `window.__perfStats`                                                                                               | `src/utils/perfStats.js`                          | `VITE_E2E_TEST=true`, or the dev server              | Perf counters (limiter queue-wait, cache hit/miss/bytes, requestRender count); `reset()` zeroes between trials |
+| `window.Cesium`                                                                                                    | NOT set by app                                    | -                                                    | Only set by CI mock fixture                                                                                    |
+
+A normal production build (the container image, no `VITE_E2E_TEST`) sets none of these. `tests/unit/utils/e2eStoreHooks.test.js` pins the store row in both directions. Other `window` reads in specs, such as `cesiumViewer`, `__PINIA__` and `useGraphicsStore`, are never set by the app (#998).
 
 Test helpers must check `window.__cesium || window.Cesium` — never just `window.Cesium`.
 
@@ -148,6 +189,10 @@ await helpers.drillToLevel('postalCode', '00100');
 // Store path — deterministic, faster, no Cesium dependency
 await helpers.drillToLevel('postalCode', '00100', { method: 'store' });
 ```
+
+## Error-State Probes
+
+To assert that no error UI is showing, use `visibleErrorStates(page)` from `tests/e2e/helpers/error-states.ts`. It names the error components (error `v-alert`/`v-snackbar`, `.v-input--error`, Cesium's error panel, the app's `.error-*` blocks). Never probe with a class substring such as `[class*="error"]`: Vuetify renders `color="error"` as a `bg-error`/`text-error` class on any component, and the compass North button carries it whenever the heading is north (#947). `tests/unit/testContracts/` fails on substring class probes for any theme colour and checks the selector against real Vuetify rendering.
 
 ## Canvas Selector
 
@@ -231,8 +276,8 @@ Locating a control by its `mdi-*` class is reliable. A brand-new icon must be re
 
 Most `tests/e2e/accessibility/*` specs are tagged `@requires-database` — they drill to postal-code / building levels that need seeded data, and the reset/back/compass controls only mount once data loads. Without a database they skip or fail, so **red accessibility/E2E checks locally (or on a config-only PR) are usually environmental, not a regression**. Notes:
 
-- DB-free subset: `just dev-mock` + `just test-e2e-mock` (sets `SKIP_REQUIRES_DATABASE=true`).
-- `camera-controls.spec.ts` is `cesiumDescribe.skip`-ed at the source — it always reports 0/skipped.
+- DB-free subset: `just dev-mock` + `bun run test:accessibility:mock` for the accessibility specs. `just test-e2e-mock` (sets `SKIP_REQUIRES_DATABASE=true`) runs the `chromium` project, which excludes them (see Playwright Projects).
+- `camera-controls.spec.ts` runs on all three viewports (re-enabled in #927). Below the `md` breakpoint (the mobile and tablet projects) the control panel is a temporary drawer that covers the camera controls and takes clicks aimed at them, so the Camera Reactivity tests close it by clicking its scrim first.
 - Setting `window.globalStore.level` alone does **not** mount the postal-code view; the data load gates the render. Use `AccessibilityTestHelpers.drillToLevel(..., { method: 'store' })` for deterministic level changes.
 
 ## Conditional Test Skip in Custom Fixtures
@@ -269,20 +314,24 @@ cesiumTest('test name', async ({ cesiumPage }, testInfo) => {
 
 `tests/performance/load.test.ts` is a **Vitest** suite that drives a real Chromium via the `playwright` Node library directly — it does **not** use the Playwright test runner or the `cesium-fixture`. That hybrid has gotchas the rest of the E2E suite (Playwright-runner specs) never hits. When editing or adding tests here:
 
-| Trap                 | Playwright-runner spec                | Vitest-driven suite                                                                                                                                                                         |
-| -------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Visibility assert    | `await expect(locator).toBeVisible()` | **No `toBeVisible` matcher** — use `expect(await locator.isVisible()).toBe(true)`                                                                                                           |
-| Memory / heap        | `page.metrics()`                      | **No `page.metrics()`** (Puppeteer-only) — `page.evaluate(() => (performance as any).memory?.usedJSHeapSize ?? 0)` (Chromium-only, works under SwiftShader)                                 |
-| Response timing      | `response.timing()`                   | **No `response.timing()`** (Puppeteer-only) — use `response.request().timing()` if ever needed                                                                                              |
-| Server               | `webServer` auto-starts               | **No auto-start** — a preview/dev server must already be running (`just test-performance` handles this)                                                                                     |
-| Modal dismissal      | `cesiumPage` fixture dismisses it     | **Must dismiss manually** — replicate `removeBlockingOverlays` (see below)                                                                                                                  |
-| Per-test time budget | spec timeout                          | bounded by the **global `testTimeout` (10s)** — a test whose own threshold (e.g. `SESSION_DURATION` 45s) exceeds it needs an explicit per-test timeout: `it('…', async () => { … }, 60000)` |
+| Trap                 | Playwright-runner spec                | Vitest-driven suite                                                                                                                                                                                                                          |
+| -------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visibility assert    | `await expect(locator).toBeVisible()` | **No `toBeVisible` matcher** — use `expect(await locator.isVisible()).toBe(true)`                                                                                                                                                            |
+| Memory / heap        | `page.metrics()`                      | **No `page.metrics()`** (Puppeteer-only) — `page.evaluate(() => (performance as any).memory?.usedJSHeapSize ?? 0)` (Chromium-only, works under SwiftShader)                                                                                  |
+| Response timing      | `response.timing()`                   | **No `response.timing()`** (Puppeteer-only) — use `response.request().timing()` if ever needed                                                                                                                                               |
+| Server               | `webServer` auto-starts               | **No auto-start** — a preview/dev server must already be running (`just test-performance` handles this)                                                                                                                                      |
+| Modal dismissal      | `cesiumPage` fixture dismisses it     | **Must dismiss manually** — `gotoReady()` in `tests/performance/harness.ts` does it (see below)                                                                                                                                              |
+| Per-test time budget | spec timeout                          | bounded by the **global `testTimeout` (10s)** — a test that loads the map or whose own threshold (e.g. `SESSION_DURATION`) exceeds it needs an explicit per-test timeout that covers page readiness too: `it('…', async () => { … }, 60000)` |
 
 **`networkidle` never settles on the Cesium map.** The 3D globe streams tiles continuously, so `page.waitForLoadState('networkidle')` hangs until it times out. Use `'load'` instead. If you must bound a `networkidle` wait, cap it **below** the 10s test timeout (`TEST_TIMEOUTS.ELEMENT_SCROLL` = 3s) and `.catch(() => {})` so the catch actually fires.
 
-**Floating map controls intercept canvas clicks.** Tests that `canvas.click()` at map coordinates collide with the nav drawer (`.control-panel`), camera/zoom/compass controls (`.camera-controls-container`, `.zoom-controls`, `.compass-assembly`), and the compact timeline — each swallows the click and Playwright retries for 30s. Inject a helper (mirroring `tests/fixtures/cesium-fixture.ts` `removeBlockingOverlays`) that removes the disclaimer dialog + scrims and sets `pointer-events: none` on those control containers, then call it after `waitForSelector('canvas')`.
+**Go through the harness (`tests/performance/harness.ts`).** Open pages with `openPage(browser)`, never `browser.newPage()`: the suite's `afterEach` closes them even when the test timed out, and then asserts no browser context is left open. Navigate with `gotoReady(page, url, timeout)`, which waits for `window.__viewer`, a sized `#cesiumContainer canvas` and no **active** global loading overlay (`.loading-overlay` is an eager `v-overlay` that is always in the DOM, so check `v-overlay--active`, not visibility). Contract tests in `tests/unit/testContracts/` fail on a raw `newPage`/`newContext` in `tests/performance/` and on an un-awaited page, locator, mouse or keyboard action (the `ACTIONS` list in `floatingPlaywrightActions.test.js`) under `tests/` (#961). Route-handler calls (`route.continue()`, `route.abort()`) are not in that list; return or await them.
 
-**Software-rendering skip.** Headless Chromium (CI **and** local headless) uses SwiftShader, so GPU-bound metrics like FPS aren't representative. Detect and `ctx.skip()` at runtime:
+**Click the map with `clickMap(page, x, y)`, not `locator.click()`.** Under SwiftShader, the renderer the CI runner uses, the page's main thread spends almost all of its time in long tasks once the map is up: 43.1s of long tasks during the 43.4s extended-usage session in CI (run 35858081838), and 10.2s of 10.9s in a local SwiftShader run. On a real GPU (`--enable-gpu`, Apple M4 Pro) the same session logged one 66ms long task (2026-09). A locator click first waits for Playwright's visible/enabled/stable checks, each of which needs that thread, and it took seconds per click. `clickMap` dispatches `page.mouse.click` at canvas coordinates and records how long the browser took to acknowledge it; `probeResponsiveness(page)` records an empty `page.evaluate` round trip. `gotoReady` also hides the disclaimer dialog and scrims and sets `pointer-events: none` on the floating controls (nav drawer, camera/zoom/compass controls, compact timeline), so clicks at map coordinates reach the canvas.
+
+**Informational output.** Each test's per-click latency, probe latency and long-task totals go to the log as `[perf] {…}` lines and to `$PERF_RESULTS_DIR/metrics.jsonl` (default `performance-results/`). A failed test also leaves a screenshot and a Playwright trace there. The CI job uploads the directory with `if: always()`. Keep timings informational unless a threshold was calibrated from these CI numbers.
+
+**Software-rendering skip.** Headless Chromium uses SwiftShader unless launched with `--enable-gpu`, and the CI runner has no GPU, so GPU-bound metrics like FPS aren't representative there. Measure anyway, record the value, then `ctx.skip()`; the assertion runs only on a real GPU, which means `just test-performance` locally (it passes `--enable-gpu`, #843):
 
 ```ts
 it('…fps…', async (ctx) => {
@@ -291,16 +340,19 @@ it('…fps…', async (ctx) => {
 		const ext = gl?.getExtension('WEBGL_debug_renderer_info');
 		return ext ? (gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string) : '';
 	});
+	// Frames per second from Cesium's scene.postRender, counted inside page.evaluate
+	// (load.test.ts inlines the counter; the harness does not export one).
+	const fps = await page.evaluate(countPostRenderFps, 2000);
+	recordMetric(ctx.task.name, { renderer, fps });
 	if (/swiftshader|llvmpipe|software/i.test(renderer)) {
-		await page.close();
 		ctx.skip();
 		return;
 	}
-	// …real-GPU measurement…
+	expect(fps).toBeGreaterThan(MIN_FPS);
 });
 ```
 
-The viewer is exposed as `window.__viewer` (double underscore, gated on `VITE_E2E_TEST`) — never `window.cesiumViewer`. The Performance Tests CI job runs **only on push-to-`main`, not on PRs**, and is not a merge gate, so a PR check won't catch breakage here — verify locally with `just test-performance`.
+The viewer is exposed as `window.__viewer` (double underscore, gated on `VITE_E2E_TEST`) — never `window.cesiumViewer`. The Performance Tests CI job runs on PRs as a **non-required** check (no ruleset lists it), on pushes to `main`, and on manual runs, with the SwiftShader flags from `playwright.config.ts` passed in `PERF_TEST_CHROMIUM_ARGS`. `just test-performance 1` reproduces it locally.
 
 ## No Wall-Clock Comparison Assertions in Unit Tests
 
@@ -331,6 +383,20 @@ vi.mock('@/composables/useChartSize.js', () => ({
 
 Mutation-check it: set the mocked width to 0 and confirm the test goes red.
 `tests/unit/components/SocioEconomicsChart.test.js` is the reference.
+
+## Static Contract Tests (`tests/unit/contracts/`)
+
+`sourceGraph.js` builds the module graph from `src/main.js` (imports, dynamic
+`import()`, worker `new URL(…, import.meta.url)`, and component tags, which
+`unplugin-vue-components` resolves with no import) and records every `eventBus`
+call. Two tests read it:
+
+- `moduleReachability.test.js` fails on a `src/` module that nothing reaches.
+  When you remove a component's last mount point, delete the component too, or
+  add it to `ALLOWED_UNREACHABLE` with the reason.
+- `eventBus-contract.test.js` fails on an emitted event with no listener, or a
+  listener with no emitter, in reachable code. Name events with string literals
+  so the scan can see them.
 
 ## Feature Flag Defaults Affect Test Assertions
 
@@ -365,6 +431,34 @@ Benefits:
 - The message string carries the issue link, so failures are self-explanatory.
 
 When the linked issue closes, **graduate the soft to a hard** `expect` so the next regression is loud. Don't leave soft assertions in place after their issue is fixed — they hide future regressions.
+
+## The Sidebar Is Inert Until the Viewer Exists
+
+`ControlPanel.vue` renders its tab content with `inert` and shows a
+`.viewer-loading-hint` ("Loading map…") until `globalStore.cesiumViewer` is set
+(#951). Tabs and the rail toggle stay usable. While the gate is closed:
+
+- `getByRole` still resolves the controls; Playwright's role engine ignores `inert`.
+- `click()` retries until the action timeout, because the browser delivers no
+  pointer events to an inert subtree.
+- `fill()` does not fail. Focus cannot enter the subtree, so the text goes nowhere
+  and the field stays empty.
+
+`cesiumTest` hands over a page with the gate open: the local path waits for the
+viewer itself, and the CI path waits for the hint to detach. A spec that uses the
+plain `test` fixture and touches the sidebar must wait as well:
+`await page.locator('.viewer-loading-hint').waitFor({ state: 'detached' })`.
+
+If viewer initialisation fails (the Cesium chunk does not load, or the Viewer
+constructor throws), `globalStore.viewerInitFailed` is set and the hint is replaced
+by `.viewer-init-error` (`role="alert"`, "The map failed to load." and a Reload
+button). The loading hint detaches, but the tab content stays inert.
+`cesiumTest`'s CI path then logs `Viewer initialisation failed` and hands over the
+page with the content still inert.
+`tests/unit/pages/ControlPanel.initFailure.test.js` covers both failure paths.
+
+jsdom implements no `inert` behaviour. `tests/unit/pages/ControlPanel.preinit.test.js`
+models it: it skips elements under `[inert]`, the same way a browser would.
 
 ## Navigation-Level Dependent UI Elements
 

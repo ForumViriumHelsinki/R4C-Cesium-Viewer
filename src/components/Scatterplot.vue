@@ -19,8 +19,8 @@
 			/>
 		</div>
 		<div
-			id="scatterPlotContainer"
 			ref="containerRef"
+			class="scatter-plot-container"
 		/>
 	</div>
 </template>
@@ -382,7 +382,8 @@ export default {
 		},
 
 		addPlotElements(svg, heatData, xScale, yScale, colorScale, numerical, categorical) {
-			const tooltip = this.plotService.createTooltip('#scatterPlotContainer')
+			const container = this.containerRef
+			const tooltip = this.plotService.createTooltip(container)
 			const buildingSerivce = new Building()
 
 			svg
@@ -399,7 +400,7 @@ export default {
 				.on('mouseover', (event, d) =>
 					this.plotService.handleMouseover(
 						tooltip,
-						'scatterPlotContainer',
+						container,
 						event,
 						d,
 						(data) =>
@@ -474,8 +475,7 @@ export default {
 		 */
 		createScatterPlot(features, categorical, numerical) {
 			// Setup the scatter plot container
-			this.plotService.initializePlotContainer('scatterPlotContainer')
-			this.plotService.showAllPlots()
+			this.initializePlotContainer()
 
 			// Prepare the data for the plot
 			const { heatData, labelsWithAverage, values } = this.prepareDataForPlot(
@@ -489,7 +489,7 @@ export default {
 			const height = this.chartSize.height.value - margin.top - margin.bottom
 
 			// Initialize the SVG element
-			const svg = this.plotService.createSVGElement(margin, width, height, '#scatterPlotContainer')
+			const svg = this.plotService.createSVGElement(margin, width, height, this.containerRef)
 
 			const xScale = this.plotService.createScaleLinear(
 				d3.min(heatData, (d) => d.xData) - 1,
@@ -536,7 +536,7 @@ export default {
 </script>
 
 <style scoped>
-#scatterPlotContainer {
+.scatter-plot-container {
 	position: relative;
 	width: 100%;
 	background-color: rgb(var(--v-theme-surface));

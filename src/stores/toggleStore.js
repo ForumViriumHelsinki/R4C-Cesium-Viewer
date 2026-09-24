@@ -36,7 +36,6 @@ import { defineStore } from 'pinia'
  * @property {boolean} hideColdAreas - Hide/show cooling zone visualizations
  * @property {boolean} landCover - Show/hide HSY landcover WMS layers
  * @property {boolean} switchView - Flag for view switching state
- * @property {boolean} surveyPlaces - Show/hide survey location markers
  * @property {boolean} capitalRegionCold - Show/hide Capital Region cold areas
  * @property {boolean} grid250m - Show/hide 250m population grid
  * @property {boolean} ndvi - Show/hide NDVI vegetation index imagery
@@ -61,7 +60,6 @@ export const useToggleStore = defineStore('toggle', {
 		hideColdAreas: false,
 		landCover: false,
 		switchView: false,
-		surveyPlaces: false,
 		capitalRegionCold: false,
 		grid250m: false,
 		ndvi: false,
@@ -230,13 +228,6 @@ export const useToggleStore = defineStore('toggle', {
 		 */
 		setSwitchView(switchView) {
 			this.switchView = switchView
-		},
-		/**
-		 * Toggle survey location marker visibility
-		 * @param {boolean} show - True to show survey places
-		 */
-		setSurveyPlaces(show) {
-			this.surveyPlaces = show
 		},
 		/**
 		 * Toggle viewport tile-based building loading mode

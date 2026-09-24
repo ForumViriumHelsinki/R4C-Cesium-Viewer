@@ -111,6 +111,7 @@ test.describe('Viewport Building Loading', () => {
 		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
 	})
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should load buildings in initial viewport',
 		{ tag: ['@e2e', '@viewport-loading'] },
@@ -137,6 +138,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should load buildings when panning to new area',
 		{ tag: ['@e2e', '@viewport-loading'] },
@@ -180,6 +182,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should preload buffer zone around viewport',
 		{ tag: ['@e2e', '@viewport-loading'] },
@@ -244,6 +247,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should handle zoom operations without losing buildings',
 		{ tag: ['@e2e', '@viewport-loading'] },
@@ -298,6 +302,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should respect tile memory limits',
 		{ tag: ['@e2e', '@viewport-loading', '@performance'] },
@@ -349,6 +354,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should load buildings faster than postal code loading',
 		{ tag: ['@e2e', '@viewport-loading', '@performance'] },
@@ -377,6 +383,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should hide distant tiles when panning away',
 		{ tag: ['@e2e', '@viewport-loading'] },
@@ -431,6 +438,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should debounce rapid camera movements',
 		{ tag: ['@e2e', '@viewport-loading', '@performance'] },
@@ -464,6 +472,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should integrate with existing postal code mode',
 		{ tag: ['@e2e', '@viewport-loading'] },
@@ -486,6 +495,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should handle tile loading errors gracefully',
 		{ tag: ['@e2e', '@viewport-loading'] },
@@ -528,6 +538,7 @@ test.describe('Viewport Building Loading', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should reuse cached tiles when revisiting areas',
 		{ tag: ['@e2e', '@viewport-loading', '@performance'] },
@@ -596,6 +607,7 @@ test.describe('Viewport Building Loading - Edge Cases', () => {
 		await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
 	})
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should handle camera looking into space (no ground)',
 		{ tag: ['@e2e', '@viewport-loading'] },
@@ -632,6 +644,7 @@ test.describe('Viewport Building Loading - Edge Cases', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should handle very high zoom levels',
 		{ tag: ['@e2e', '@viewport-loading'] },
@@ -670,6 +683,7 @@ test.describe('Viewport Building Loading - Edge Cases', () => {
 		}
 	)
 
+	// Fixme: ViewportBuildingLoader is not wired up (see file header) — see #998
 	test.fixme(
 		'should handle very low zoom levels (global view)',
 		{ tag: ['@e2e', '@viewport-loading'] },
