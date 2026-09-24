@@ -315,7 +315,7 @@ jobs:
           retention-days: 7
 
   accessibility-tests:
-    name: Accessibility Tests (${{ matrix.viewport }})
+    name: Accessibility Tests (${{ matrix.viewport }} ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     needs: [build, unit-tests]
     if: ${{ github.event.inputs.skip_accessibility != 'true' }}
     runs-on: ubuntu-latest
@@ -328,13 +328,19 @@ jobs:
       SKIP_REQUIRES_DATABASE: 'true'
 
     strategy:
-      # Don't cancel desktop+mobile when one viewport times out. The tablet
-      # cross-view navigation specs are slow/flaky on CI (tracked in #784); a
-      # single viewport's timeout should not erase the signal from the other
-      # two, which pass within budget.
+      # Each viewport collects 125 tests, and one worker with two retries ran
+      # them for longer than one 15-minute job: mobile reached test 49 before
+      # the timeout. So each viewport is split into shards by test
+      # (fullyParallel on the accessibility-* projects), as the End-to-End job
+      # is (#947). A failing or timed-out leg must not cancel the others (the
+      # tablet cross-view specs are slow and flaky, #784). -x now stops only
+      # the shard that hit the failure. shardIndex must list 1..shardTotal once;
+      # tests/unit/ci/playwrightProjects.test.js checks it.
       fail-fast: false
       matrix:
         viewport: [desktop, tablet, mobile]
+        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        shardTotal: [10]
 
     steps:
       - name: Checkout code
@@ -384,7 +390,7 @@ jobs:
       - name: Run accessibility tests
         # Removed shell timeout wrapper - using Playwright's built-in globalTimeout instead
         # This ensures proper cleanup and better error messages on timeout
-        run: bun run test:accessibility:${{ matrix.viewport }} -- -x --reporter=list,json --trace=on-first-retry
+        run: bun run test:accessibility:${{ matrix.viewport }} -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} -x --reporter=list,json --trace=on-first-retry
         env:
           PLAYWRIGHT_HTML_REPORT: playwright-report-${{ matrix.viewport }}
 
@@ -396,7 +402,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: accessibility-report-${{ matrix.viewport }}
+          name: accessibility-report-${{ matrix.viewport }}-${{ matrix.shardIndex }}-of-${{ matrix.shardTotal }}
           path: |
             playwright-report-${{ matrix.viewport }}/
             test-results/

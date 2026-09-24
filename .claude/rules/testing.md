@@ -65,6 +65,19 @@ change the shard count, edit both matrix lists. To reproduce a CI shard
 locally, set `CI=true`: without it `cesiumDescribe` adds a `beforeAll` hook,
 and Playwright then groups that describe's tests differently across shards.
 
+The accessibility job shards the same way, once per viewport: its matrix is
+`viewport` × `shardIndex`/`shardTotal`, the three `accessibility-*` projects set
+`fullyParallel: true`, and each leg runs
+`bun run test:accessibility:<viewport> -- --shard=i/N -x`, so `-x` stops only
+that shard. Each leg's check name and report artifact carry the viewport and
+shard. The contract test checks the matrix, the artifact names, the Test Summary
+dependency, and that each viewport's shards cover its tests exactly once with
+no shard above `ceil(tests / shardTotal)`. Playwright splits by test count in
+file order, not by duration, so a shard of slow tests can still overrun the
+timeout. On desktop, `building-filters.spec.ts` tests took a median 22-66 s per
+passing attempt in CI (2026-09-22 to 09-24), and the section-header test's
+failing attempts about 185 s each.
+
 A test that fails on every attempt in CI, retries included, is quarantined
 with `test.fixme` (`cesiumTest.fixme` for the Cesium fixture) and the comment
 `// Quarantined: fails on every attempt in CI — see #998` directly above it; a
