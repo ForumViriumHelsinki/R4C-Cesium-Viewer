@@ -371,6 +371,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 
 	// FIXME: Tests have various issues beyond navigation - needs investigation
 	// Navigation was fixed for postal code level, but these tests have other issues
+	// Pre-existing fixme, tracked for un-quarantine — see #998
 	cesiumTest.describe.fixme('Layer Toggle Interactions', () => {
 		cesiumTest('should handle rapid toggle switching without errors', async ({ cesiumPage }) => {
 			const ndviToggle = cesiumPage
@@ -533,6 +534,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 
 	// FIXME: Tests have various issues beyond navigation - needs investigation
 	// Navigation was fixed for postal code level, but these tests have other issues
+	// Pre-existing fixme, tracked for un-quarantine — see #998
 	cesiumTest.describe.fixme('Layer Control Styling and Accessibility', () => {
 		cesiumTest('should have consistent styling for all layer toggles', async ({ cesiumPage }) => {
 			// Navigate to context where multiple layers are visible
@@ -710,6 +712,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 
 	// FIXME: Tests have various issues beyond navigation - needs investigation
 	// Navigation was fixed for postal code level, but these tests have other issues
+	// Pre-existing fixme, tracked for un-quarantine — see #998
 	cesiumTest.describe.fixme('Layer Control Edge Cases', () => {
 		cesiumTest('should handle layer toggles during data loading', async ({ cesiumPage }) => {
 			// Intercept requests to simulate slow loading

@@ -65,6 +65,16 @@ change the shard count, edit both matrix lists. To reproduce a CI shard
 locally, set `CI=true`: without it `cesiumDescribe` adds a `beforeAll` hook,
 and Playwright then groups that describe's tests differently across shards.
 
+A test that fails on every attempt in CI, retries included, is quarantined
+with `test.fixme` (`cesiumTest.fixme` for the Cesium fixture) and the comment
+`// Quarantined: fails on every attempt in CI — see #998` directly above it; a
+test that passes on any attempt is flaky and stays in the run.
+`tests/unit/testContracts/e2eFixmeReferences.test.js` fails on any `fixme` under
+`tests/e2e` without an issue reference in the comment above it or on its own
+line. #998 lists the quarantined tests; remove the `fixme` when one is fixed.
+`--list` still lists `fixme` tests, so the ceiling and the shard split do not
+change when a test is quarantined.
+
 ## Component Architecture for Testing
 
 ### Timeline Components by Navigation Level
