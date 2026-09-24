@@ -278,14 +278,38 @@ export function isGoffRejection(reason: unknown): boolean {
 	return false
 }
 
+/**
+ * Sentry `beforeSend` hook: drop events whose original exception is a GOFF
+ * background rejection (see `isGoffRejection`). Wired into `Sentry.init` in
+ * `src/main.js`.
+ *
+ * This is the filter that keeps those rejections out of Sentry. Sentry's
+ * globalHandlers integration captures unhandled rejections through
+ * `window.onunhandledrejection` and never reads `event.defaultPrevented`, so
+ * the `preventDefault()` in `installGoffRejectionHandler` cannot (#956).
+ * Matching on `hint.originalException` also covers shape C: its Sentry
+ * message ("Object captured as promise rejection with keys: response,
+ * responseHeaders, statusCode") is identical to a Cesium `RequestErrorEvent`'s,
+ * so an `ignoreErrors` message pattern could not tell the two apart.
+ */
+export function dropGoffRejectionEvent<E>(
+	event: E,
+	hint: { originalException?: unknown } | undefined
+): E | null {
+	return isGoffRejection(hint?.originalException) ? null : event
+}
+
 let goffRejectionHandlerInstalled = false
 
 /**
- * Convert GOFF's background-reconnect unhandled rejections into a single
- * warning + Sentry breadcrumb, instead of letting them bubble up as
- * production errors. Idempotent; safe to call multiple times.
+ * Log GOFF's background-reconnect unhandled rejections as one warning plus a
+ * Sentry breadcrumb, and cancel the browser's own "Uncaught (in promise)"
+ * console report. This listener does not keep the rejections out of Sentry:
+ * Sentry captures them through `window.onunhandledrejection`, which ignores
+ * `defaultPrevented`. `dropGoffRejectionEvent`, the `beforeSend` hook, drops
+ * them (#956). Idempotent; safe to call multiple times. Exported for tests.
  */
-function installGoffRejectionHandler(): void {
+export function installGoffRejectionHandler(): void {
 	if (goffRejectionHandlerInstalled || typeof window === 'undefined') {
 		return
 	}
@@ -302,6 +326,7 @@ function installGoffRejectionHandler(): void {
 			message: 'GOFF background rejection',
 			data: { reason: message },
 		})
+		// Silences the browser console report only; see dropGoffRejectionEvent.
 		event.preventDefault()
 	})
 }

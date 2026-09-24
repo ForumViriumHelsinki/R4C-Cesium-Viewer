@@ -15,7 +15,6 @@ describe('globalStore', () => {
 			expect(store.postalcode).toBeNull()
 			expect(store.nameOfZone).toBeNull()
 			expect(store.averageHeatExposure).toBe(0)
-			expect(store.averageTreeArea).toBe(0)
 			expect(store.level).toBe('start')
 			expect(store.heatDataDate).toBe('2022-06-28')
 			expect(store.currentGridCell).toBeNull()
@@ -96,14 +95,6 @@ describe('globalStore', () => {
 
 			store.setAverageHeatExposure(testExposure)
 			expect(store.averageHeatExposure).toBe(testExposure)
-		})
-
-		it('should set average tree area', () => {
-			const store = useGlobalStore()
-			const testArea = 45.2
-
-			store.setAverageTreeArea(testArea)
-			expect(store.averageTreeArea).toBe(testArea)
 		})
 
 		it('should set building address', () => {
@@ -494,9 +485,6 @@ describe('globalStore', () => {
 
 			store.setAverageHeatExposure(Number.MAX_VALUE)
 			expect(store.averageHeatExposure).toBe(Number.MAX_VALUE)
-
-			store.setAverageTreeArea(-100)
-			expect(store.averageTreeArea).toBe(-100)
 		})
 
 		it('should handle empty strings', () => {

@@ -11,7 +11,6 @@ import Building from './building.js'
 import { cesiumEntityManager } from './cesiumEntityManager.js'
 import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
-import { eventBus } from './eventEmitter.js'
 import unifiedLoader from './unifiedLoader.js'
 import UrbanHeat from './urbanheat.js'
 
@@ -586,7 +585,7 @@ export default class HSYBuilding {
 
 		// calculateAverageExposure returns undefined when no buildings have heat
 		// data (count === 0). Default to an empty array so the .length logging and
-		// the heatExposureData[1] access in setBuildingPropsAndEmitEvent stay safe.
+		// the heatExposureData[1] access in setBuildingProps stay safe.
 		const heatExposureData = this.urbanHeatService.calculateAverageExposure(data.features) ?? []
 		const targetDate = this.store.heatDataDate
 
@@ -603,7 +602,7 @@ export default class HSYBuilding {
 			})
 			.filter((temp) => temp !== null) // Keep only valid temperature values
 
-		logger.debug('[HSYBuilding] 📊 Calling setBuildingPropsAndEmitEvent with data:', {
+		logger.debug('[HSYBuilding] 📊 Calling setBuildingProps with data:', {
 			entities: entities.length,
 			heatExposureData: heatExposureData.length,
 			avgTempCList: avgTempCList.length,
@@ -611,7 +610,7 @@ export default class HSYBuilding {
 			postalCode: postalCode,
 		})
 
-		setBuildingPropsAndEmitEvent(entities, heatExposureData, avgTempCList, data, postalCode)
+		setBuildingProps(entities, heatExposureData, avgTempCList, data, postalCode)
 	}
 
 	async setHSYBuildingAttributes(data, entities, postalCode) {
@@ -663,7 +662,7 @@ export default class HSYBuilding {
 }
 
 /**
- * Sets building properties in stores and emits Capital Region visibility event
+ * Sets building properties in stores
  * Updates scatter plot entities, heat timeseries, histogram data, and building features.
  *
  * @param {Array<Cesium.Entity>} entities - Building entities for scatter plot
@@ -671,17 +670,10 @@ export default class HSYBuilding {
  * @param {Array<number>} avg_temp_cList - Average temperature values for histogram
  * @param {Object} data - Raw building feature data
  * @param {string} postalCode - Postal code for the building features (for LRU cache tracking)
- * @fires eventBus#showCapitalRegion - Emitted when Capital Region data is loaded
  * @private
  */
-const setBuildingPropsAndEmitEvent = (
-	entities,
-	heatExposureData,
-	avg_temp_cList,
-	data,
-	postalCode
-) => {
-	logger.debug('[HSYBuilding] 💾 setBuildingPropsAndEmitEvent called with:', {
+const setBuildingProps = (entities, heatExposureData, avg_temp_cList, data, postalCode) => {
+	logger.debug('[HSYBuilding] 💾 setBuildingProps called with:', {
 		entities: entities.length,
 		heatExposureDataLength: heatExposureData.length,
 		avgTempCListLength: avg_temp_cList.length,
@@ -711,6 +703,4 @@ const setBuildingPropsAndEmitEvent = (
 		storeHasFeatures: Boolean(buildingStore.buildingFeatures),
 		storeFeaturesCount: buildingStore.buildingFeatures?.features?.length,
 	})
-
-	eventBus.emit('showCapitalRegion')
 }

@@ -268,6 +268,10 @@ featurePicker.loadPostalCode().catch((error) => {
 treeService.loadTrees().catch(logger.error);
 ```
 
+`tests/unit/lint/no-void-calls.test.js` fails on any `void <call>(` in `src/`,
+`void nextTick(` included. When the callee is synchronous, drop `void` rather than
+adding `.catch`.
+
 ### Replace `.catch(console.error)`
 
 ```javascript
@@ -570,6 +574,26 @@ mounted() {
 }
 // Plus Composition API code elsewhere
 ```
+
+### Bind Store State With `storeToRefs`, Not `ref(store.field)`
+
+`ref(toggleStore.showTrees)` copies the value once, at setup. A later write from
+elsewhere (`smartReset()`, `goHome()`, another panel) never reaches the copy, so the
+switch and the store disagree (#967). Bind the store instead:
+
+```javascript
+// ✅ CORRECT: two-way binding; v-model writes the store, store writes reach the UI
+const { showTrees, landCover } = storeToRefs(toggleStore);
+```
+
+```javascript
+// ❌ WRONG: a snapshot that goes stale on the first external write
+const showTrees = ref(toggleStore.showTrees);
+```
+
+`tests/unit/lint/no-store-snapshot-refs.test.js` fails on `ref(<name>Store.<field>)`
+in `src/`. `StatisticalGridOptions.vue` is allowlisted because a watcher copies every
+store write back into its ref.
 
 ### Gate UI on `initialized` for Async-Fetched State
 

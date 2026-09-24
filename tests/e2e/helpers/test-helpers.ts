@@ -1183,11 +1183,14 @@ export class AccessibilityTestHelpers {
 			if (!hasFeaturePicker) {
 				console.log('[navigateViaStore] FeaturePicker not exposed on window, using store directly')
 
-				// Use window.globalStore which is exposed in dev/test mode (see main.js)
+				// Use window.globalStore, exposed in dev/test mode and in VITE_E2E_TEST=true
+				// builds (see src/utils/e2eStoreHooks.js)
 				await this.page.evaluate((pc) => {
 					const store = (window as any).globalStore
 					if (!store) {
-						throw new Error('globalStore not available on window (check main.js exposure)')
+						throw new Error(
+							'globalStore not available on window (check src/utils/e2eStoreHooks.js exposure)'
+						)
 					}
 
 					store.setLevel('postalCode')
@@ -1209,7 +1212,7 @@ export class AccessibilityTestHelpers {
 			const stateUpdated = await this.page
 				.waitForFunction(
 					(expectedPostalCode) => {
-						// Use window.globalStore which is exposed in dev/test mode
+						// Use window.globalStore (dev/test mode and VITE_E2E_TEST=true builds)
 						const store = (window as any).globalStore
 						if (!store) return false
 
@@ -1399,7 +1402,7 @@ export class AccessibilityTestHelpers {
 				const globalStore = (window as any).globalStore
 				if (!globalStore) {
 					throw new Error(
-						'globalStore not exposed on window. Run in dev/test mode (see src/main.js).'
+						'globalStore not exposed on window. Run a dev server or a VITE_E2E_TEST=true build (see src/utils/e2eStoreHooks.js).'
 					)
 				}
 
@@ -1700,14 +1703,15 @@ export class AccessibilityTestHelpers {
 								})
 
 							// Wait for timeline component to fully initialize (critical for timeline tests)
-							// At postal code level, TimelineCompact renders but may be CSS-hidden on small viewports
+							// TimelineCompact is mounted by v-if="showTimeline" in src/App.vue at postal code and
+							// building level, and is laid out and visible at every viewport once mounted
 							await this.page
 								.waitForFunction(
 									() => {
 										const timeline = document.querySelector('.timeline-compact')
 										if (!timeline) return false
 										// Timeline exists in DOM - sufficient for postal code level activation
-										// Note: May be CSS-hidden (d-none d-lg-flex) on viewports < 1280px
+										// (presence is the whole gate: no display class or media query hides it)
 										return true
 									},
 									{ timeout: TEST_TIMEOUTS.ELEMENT_DATA_DEPENDENT }
@@ -2240,13 +2244,15 @@ export class AccessibilityTestHelpers {
 	/**
 	 * Verify timeline component for postal code and building levels
 	 * Note: Different timeline components exist at different levels:
-	 * - Postal code: TimelineCompact (.timeline-compact) - may be CSS-hidden on small viewports
+	 * - Postal code: TimelineCompact (.timeline-compact) - mounted by v-if="showTimeline" in
+	 *   src/App.vue, visible at every viewport once mounted
 	 * - Building: Full Timeline (#heatTimeseriesContainer) - requires opening "Building Heat Data" panel
 	 */
 	async verifyTimelineVisibility(currentLevel: string): Promise<void> {
 		if (currentLevel === 'postalCode') {
-			// At postal code level, TimelineCompact renders but may be CSS-hidden (d-none d-lg-flex on viewports < 1280px)
-			// Check for DOM presence, not visibility
+			// At postal code level TimelineCompact is present exactly when v-if="showTimeline" (src/App.vue)
+			// holds, and no display class or media query hides it, so presence is the narrower check
+			// (.claude/rules/testing.md)
 			const timelineCompact = this.page.locator('.timeline-compact')
 			await expect(timelineCompact).toBeAttached({ timeout: TEST_TIMEOUTS.ELEMENT_COMPLEX })
 

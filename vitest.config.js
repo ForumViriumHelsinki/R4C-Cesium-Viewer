@@ -33,7 +33,6 @@ export default defineConfig({
 			{ name: '@wms' },
 			{ name: '@coldarea' },
 			{ name: '@datasource' },
-			{ name: '@espooSurvey' },
 			{ name: '@sensor' },
 			{ name: '@traveltime' },
 		],

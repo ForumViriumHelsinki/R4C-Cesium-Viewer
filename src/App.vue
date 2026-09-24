@@ -145,6 +145,7 @@
 
 <script setup>
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, watch } from 'vue'
+import { useGraphicsFlagSync } from './composables/useGraphicsFlagSync.js'
 import { useSidebarOffset } from './composables/useSidebarOffset'
 
 // Lazy-loaded components
@@ -162,7 +163,6 @@ import { initializeFeatureFlags } from './services/featureFlagProvider'
 import { updateUrlWithNavigationState } from './services/postalCodeLoader'
 import { useFeatureFlagStore } from './stores/featureFlagStore'
 import { useGlobalStore } from './stores/globalStore.js'
-import { useGraphicsStore } from './stores/graphicsStore.js'
 import { useLoadingStore } from './stores/loadingStore.js'
 import { useServiceHealthStore } from './stores/serviceHealthStore.js'
 import { useToggleStore } from './stores/toggleStore.js'
@@ -173,9 +173,13 @@ const toggleStore = useToggleStore()
 const globalStore = useGlobalStore()
 const loadingStore = useLoadingStore()
 const featureFlagStore = useFeatureFlagStore()
-const graphicsStore = useGraphicsStore()
 const userStore = useUserStore()
 const serviceHealthStore = useServiceHealthStore()
+
+// The HDR, ambient-occlusion and request-render-mode flags drive graphicsStore
+// from here on, including later GOFF re-evaluations and FeatureFlagsPanel
+// overrides. The graphics service carries store changes to the live scene.
+useGraphicsFlagSync()
 
 const { sidebarOffset: timelineOffset } = useSidebarOffset(0)
 const { sidebarOffset: disclaimerOffset } = useSidebarOffset(12)
@@ -311,12 +315,6 @@ onMounted(async () => {
 
 		featureFlagStore.loadOverrides()
 		featureFlagStore.refreshFlags()
-
-		// Apply flag-driven graphics defaults. graphicsStore values flow into
-		// Cesium via useViewerInitialization (init-time) and the graphics
-		// service watcher (runtime); a later graphicsStore write overrides the
-		// flag — last write wins.
-		graphicsStore.setRequestRenderMode(featureFlagStore.isEnabled('requestRenderMode'))
 
 		if (featureFlagStore.isEnabled('backgroundPreload')) {
 			const { default: backgroundPreloader } = await import('./services/backgroundPreloader.js')

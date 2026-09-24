@@ -411,7 +411,7 @@ As a user, I want smooth performance when analyzing postal codes with thousands 
 
 **FR4.1 D3.js Heat Histogram**
 
-- Container: `#heatHistogramContainer` div, full width of its panel; height follows the SVG
+- Container: the component's own `.heat-histogram-container` div (a template ref, not a document-global id), full width of its panel; height follows the SVG
 - SVG dimensions (scalable `viewBox`, rendered at 100% width):
   - Width: container width measured by `useChartSize`, minus margins
   - Height: width / 1.2, minus margins
@@ -692,8 +692,6 @@ As a user, I want smooth performance when analyzing postal codes with thousands 
 
 - `newHeatHistogram`: Emitted when heat data changes → HeatHistogram rerenders
 - `updateScatterPlot`: Emitted when date changes → Scatter plot updates
-- `showHelsinki`/`showCapitalRegion`: Control plot visibility by region
-- `hideBuilding`: Hide building-level plots
 
 **IP3: CesiumJS Integration**
 
