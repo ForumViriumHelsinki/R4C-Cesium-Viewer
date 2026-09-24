@@ -105,6 +105,21 @@ describe('analysisRegistry', { tags: ['@unit'] }, () => {
 		])
 	})
 
+	it('opens writes and tool analyses only where the map stays visible (ADR-009, ADR-010)', () => {
+		// Whether the 3D map stays visible and clickable beside each placement on
+		// desktop. A placement missing here fails for every entry, so a new one
+		// (such as the ADR-010 workspace) has to be classified before use.
+		const MAP_VISIBLE = { inline: true, drawer: true, expansion: true }
+		for (const entry of ANALYSES) {
+			expect(Object.hasOwn(MAP_VISIBLE, entry.placement), `${entry.id}: ${entry.placement}`).toBe(
+				true
+			)
+			if (entry.mapCoupling === 'writes' || entry.mapCoupling === 'tool') {
+				expect(MAP_VISIBLE[entry.placement], `${entry.id} hides the map`).toBe(true)
+			}
+		}
+	})
+
 	it('lists map tools in the Layers tab and analyses in the Analysis tab', () => {
 		for (const entry of ANALYSES) {
 			expect(entry.tab).toBe(entry.mapCoupling === 'tool' ? 'layers' : 'analysis')
