@@ -79,8 +79,7 @@
  * - `Tree` - Tree data loading and visualization
  * - `Vegetation` - Vegetation area loading
  * - `Othernature` - Natural area loading
- * - `Wms` - WMS layer management
- * - `landcover` - HSY land cover layer management
+ * - `landcover` - HSY land cover layer and the NDVI exclusion (setLandcoverEnabled)
  * - `tiffImagery` - NDVI GeoTIFF layer management
  * - `backgroundPreloader` - Layer usage tracking for preloading
  *
@@ -101,17 +100,17 @@
  * <MapControls />
  */
 
-import { computed, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, watch } from 'vue'
 import backgroundPreloader from '../services/backgroundPreloader.js'
 import Building from '../services/building.js'
 import Datasource from '../services/datasource.js'
 import { eventBus } from '../services/eventEmitter.js'
-import { createHSYImageryLayer, removeLandcover } from '../services/landcover'
+import { removeLandcover, setLandcoverEnabled } from '../services/landcover'
 import Othernature from '../services/othernature.js'
 import { changeTIFF, removeTIFF } from '../services/tiffImagery.js'
 import Tree from '../services/tree.js'
 import Vegetation from '../services/vegetation'
-import Wms from '../services/wms.js'
 import { useGlobalStore } from '../stores/globalStore'
 import { useLoadingStore } from '../stores/loadingStore.js'
 import { useToggleStore } from '../stores/toggleStore'
@@ -126,22 +125,20 @@ const store = useGlobalStore()
 const loadingStore = useLoadingStore()
 
 /**
- * Reactive state for data layer toggles
- * Synchronized with toggleStore for persistence
+ * Layer toggles and building filters, bound to toggleStore in both directions.
+ * The switches write the store, and writes from elsewhere (smartReset, goHome,
+ * the Land Cover analysis panel) reach the switches (#967).
  */
-const showVegetation = ref(toggleStore.showVegetation)
-const showOtherNature = ref(toggleStore.showOtherNature)
-const showTrees = ref(toggleStore.showTrees)
-const landCover = ref(toggleStore.landCover)
-const ndvi = ref(toggleStore.ndvi)
-
-/**
- * Reactive state for building filter toggles
- * Synchronized with toggleStore for persistence
- */
-const hideNonSote = ref(toggleStore.hideNonSote)
-const hideNewBuildings = ref(toggleStore.hideNewBuildings)
-const hideLow = ref(toggleStore.hideLow)
+const {
+	showVegetation,
+	showOtherNature,
+	showTrees,
+	landCover,
+	ndvi,
+	hideNonSote,
+	hideNewBuildings,
+	hideLow,
+} = storeToRefs(toggleStore)
 
 /**
  * Computed properties for view-specific features
@@ -163,31 +160,15 @@ let buildingService = null
 let dataSourceService = null
 
 /**
- * Disables conflicting layer when a new layer is activated
- *
- * NDVI and Land Cover layers cannot be active simultaneously. This function
- * ensures only one is active at a time by disabling the conflicting layer
- * and cleaning up its imagery.
- *
- * @param {'ndvi' | 'landcover'} layer - The layer being activated
+ * Turns land cover on or off through the shared entry point, which also handles
+ * the NDVI exclusion and keeps the toggle and the imagery in step.
+ * @param {boolean} enabled
  * @returns {void}
  */
-const disableOtherLayer = (layer) => {
-	if (layer === 'ndvi') {
-		landCover.value = false
-		toggleStore.setLandCover(false)
-		// removeLandcover() reads its layers from backgroundMapStore internally and
-		// takes no arguments; the previous call passed a non-existent
-		// store.landcoverLayers (undefined) which was silently ignored.
-		removeLandcover()
-	} else if (layer === 'landcover') {
-		ndvi.value = false
-		toggleStore.setNDVI(false)
-		store.cesiumViewer.imageryLayers.removeAll()
-		store.cesiumViewer.imageryLayers.add(
-			new Wms().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-		)
-	}
+const applyLandCover = (enabled) => {
+	setLandcoverEnabled(enabled).catch((error) => {
+		logger.error('Failed to update land cover layer:', error)
+	})
 }
 
 /**
@@ -367,16 +348,7 @@ const loadOtherNature = () => {
  * @returns {void}
  */
 const addLandCover = () => {
-	if (landCover.value && ndvi.value) disableOtherLayer('landcover')
-
-	toggleStore.setLandCover(landCover.value)
-	if (landCover.value) {
-		createHSYImageryLayer().catch((error) => {
-			logger.error('Failed to create HSY landcover layer:', error)
-		})
-	} else {
-		removeLandcover()
-	}
+	applyLandCover(landCover.value)
 }
 
 /**
@@ -389,7 +361,7 @@ const addLandCover = () => {
  * @returns {void}
  */
 const toggleNDVI = () => {
-	if (ndvi.value && landCover.value) disableOtherLayer('ndvi')
+	if (ndvi.value && landCover.value) applyLandCover(false)
 
 	toggleStore.setNDVI(ndvi.value)
 
@@ -486,19 +458,6 @@ watch(
 	() => {
 		resetFilters()
 	}
-)
-
-/**
- * Synchronizes local landCover state with store changes
- *
- * Ensures the UI stays in sync with store state when changed externally.
- */
-watch(
-	() => toggleStore.landCover,
-	(newValue) => {
-		landCover.value = newValue
-	},
-	{ immediate: true }
 )
 
 onMounted(() => {
