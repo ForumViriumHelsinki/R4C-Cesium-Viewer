@@ -419,6 +419,34 @@ Benefits:
 
 When the linked issue closes, **graduate the soft to a hard** `expect` so the next regression is loud. Don't leave soft assertions in place after their issue is fixed — they hide future regressions.
 
+## The Sidebar Is Inert Until the Viewer Exists
+
+`ControlPanel.vue` renders its tab content with `inert` and shows a
+`.viewer-loading-hint` ("Loading map…") until `globalStore.cesiumViewer` is set
+(#951). Tabs and the rail toggle stay usable. While the gate is closed:
+
+- `getByRole` still resolves the controls; Playwright's role engine ignores `inert`.
+- `click()` retries until the action timeout, because the browser delivers no
+  pointer events to an inert subtree.
+- `fill()` does not fail. Focus cannot enter the subtree, so the text goes nowhere
+  and the field stays empty.
+
+`cesiumTest` hands over a page with the gate open: the local path waits for the
+viewer itself, and the CI path waits for the hint to detach. A spec that uses the
+plain `test` fixture and touches the sidebar must wait as well:
+`await page.locator('.viewer-loading-hint').waitFor({ state: 'detached' })`.
+
+If viewer initialisation fails (the Cesium chunk does not load, or the Viewer
+constructor throws), `globalStore.viewerInitFailed` is set and the hint is replaced
+by `.viewer-init-error` (`role="alert"`, "The map failed to load." and a Reload
+button). The loading hint detaches, but the tab content stays inert.
+`cesiumTest`'s CI path then logs `Viewer initialisation failed` and hands over the
+page with the content still inert.
+`tests/unit/pages/ControlPanel.initFailure.test.js` covers both failure paths.
+
+jsdom implements no `inert` behaviour. `tests/unit/pages/ControlPanel.preinit.test.js`
+models it: it skips elements under `[inert]`, the same way a browser would.
+
 ## Navigation-Level Dependent UI Elements
 
 Not all UI elements exist at all navigation levels:

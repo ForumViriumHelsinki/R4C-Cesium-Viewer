@@ -11,7 +11,7 @@
  * returned, assigned and chained calls are told apart from bare statements.
  */
 import { readdirSync, readFileSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, relative, sep } from 'node:path'
 import ts from 'typescript'
 import { describe, expect, it } from 'vitest'
 
@@ -107,10 +107,21 @@ function findFloatingActions(text, fileName = 'input.ts') {
 	return hits
 }
 
-function testSourceFiles() {
+// Vitest unit tests run in jsdom, where `el.click()` is the synchronous DOM
+// method, not a Playwright action. The exclusion holds only while no file
+// under tests/unit imports Playwright; the last case below checks that.
+const DOM_ONLY_DIR = 'unit'
+
+const PLAYWRIGHT_IMPORT = /from\s+['"](?:@playwright\/test|playwright(?:-core)?)['"]/
+
+function allTestSourceFiles() {
 	return readdirSync(TESTS_DIR, { recursive: true })
 		.filter((entry) => /\.(ts|js|mjs)$/.test(entry) && !entry.endsWith('.d.ts'))
 		.map((entry) => relative(ROOT, join(TESTS_DIR, entry)))
+}
+
+function testSourceFiles() {
+	return allTestSourceFiles().filter((file) => file.split(sep)[1] !== DOM_ONLY_DIR)
 }
 
 describe('test-suite contract: Playwright actions are awaited', () => {
@@ -132,7 +143,22 @@ describe('test-suite contract: Playwright actions are awaited', () => {
 	it('finds the test sources (guards against a vacuous pass)', () => {
 		const files = testSourceFiles()
 		expect(files).toContain('tests/performance/load.test.ts')
+		expect(files).not.toContain('tests/unit/testContracts/floatingPlaywrightActions.test.js')
 		expect(files.length).toBeGreaterThan(50)
+	})
+
+	it('no jsdom unit test under tests/unit imports Playwright', () => {
+		// Assembled so that this file's own text does not match the pattern.
+		const quoted = (name) => ['import x from ', `'${name}'`].join('')
+		expect(PLAYWRIGHT_IMPORT.test(quoted('@playwright/test'))).toBe(true)
+		expect(PLAYWRIGHT_IMPORT.test(quoted('playwright'))).toBe(true)
+		expect(PLAYWRIGHT_IMPORT.test(quoted('vitest'))).toBe(false)
+		const unitFiles = allTestSourceFiles().filter((file) => file.split(sep)[1] === DOM_ONLY_DIR)
+		expect(unitFiles.length).toBeGreaterThan(50)
+		const importing = unitFiles.filter((file) =>
+			PLAYWRIGHT_IMPORT.test(readFileSync(join(ROOT, file), 'utf8'))
+		)
+		expect(importing).toEqual([])
 	})
 
 	it('no Playwright action under tests/ is left floating', () => {
