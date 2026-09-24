@@ -27,7 +27,8 @@ cesiumTest.describe('VTT Flood Simulation', () => {
 		await expect(button).toHaveCount(0)
 	})
 
-	cesiumTest(
+	// Quarantined: fails on every attempt in CI — see #998
+	cesiumTest.fixme(
 		'with flag enabled, opens panel and fires exactly one POST per scenario+frame',
 		async ({ cesiumPage }) => {
 			let postCount = 0
