@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.59.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.58.0...r4c-cesium-viewer-v1.59.0) (2026-09-25)
+
+
+### Features
+
+* **flood:** add 2100 coastal scenarios and Syke attribution to the background map browser ([#1015](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1015)) ([893679f](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/893679f650c7bc1d6d8b5a10200477596a90e156))
+* **graphics:** drive graphics settings from feature flags and remove GraphicsQuality ([#1001](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1001)) ([2a3a937](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2a3a9372cae1c61dfc0e50b7bffeae44761504c0))
+
+
+### Bug Fixes
+
+* **auth:** route Sign in and runtime assets to paths that are served ([e7f70c9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/e7f70c90d346c41059d437b0dc8838060f89fb6e))
+* **cesium:** restore the configured request-render mode on tab return ([#1036](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1036)) ([6b476df](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6b476df257d0365227c0cce743134f60fb3dd796))
+* **control-panel:** keep the sidebar inert until the Cesium viewer is ready ([629a8d1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/629a8d161a499edb45274781d91b174f40dcc335))
+* **deps:** clear the bun audit advisory baseline ([#1004](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1004)) ([315d3ec](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/315d3ecd5ceb4cfd7fdddb94bafbc7fa1bc46dbd))
+* **dev:** bind vite dev and preview to loopback by default ([#1002](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1002)) ([521379a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/521379a07d569134327158165b0f7d7dd77a3a98))
+* **e2e:** expose the Pinia stores on window in VITE_E2E_TEST builds ([#1038](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1038)) ([4d0738e](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4d0738ef2788a1b22e15cf20d9a4c894d9f9b8d3))
+* **flood:** remove the previous flood layer when switching scenarios ([689630d](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/689630dbce31b9b848fc641f052e4f6bbefb97c3))
+* **graphics:** apply graphicsStore changes to the live Cesium scene ([#993](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/993)) ([ec0826b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ec0826bc96aedf6c895ac84d3970786f02b6f70e))
+* **landcover:** keep the Land Cover toggle and its imagery in sync ([#1016](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1016)) ([4fc3618](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4fc3618722f086ff607e495f9314a872486f2186))
+* **sentry:** drop GOFF background-reconnect rejections in beforeSend ([#1003](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1003)) ([71aa66c](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/71aa66ce9cd412806d9a4a604487b48012ab3610))
+* **sentry:** report production only from the image build; drop the DSN from CI ([#1006](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1006)) ([3683570](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3683570f820bb684efab6f377d719611aee63b85))
+
+
+### Performance Improvements
+
+* **deckgl:** request 512 px WMS tiles to match the Cesium path ([#1007](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1007)) ([6c68092](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6c6809280637a52f596ed28eccdd0f90d4297d59))
+* **preload:** remove background preloads that nothing reads ([4f671b5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/4f671b520b7cc3323eb0e282db363fd7685b104e))
+
 ## [1.58.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.57.0...r4c-cesium-viewer-v1.58.0) (2026-09-16)
 
 
