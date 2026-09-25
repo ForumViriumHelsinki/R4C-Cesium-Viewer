@@ -107,7 +107,7 @@ migrations:
       cpu: 200m
       memory: 256Mi
   image:
-    tag: 1.58.0
+    tag: 1.59.0
     repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
 # Routing is owned by the hand-authored HTTPRoute in the infrastructure repo
 # (cookie-based legacy/next selection on r4c.dataportal.fi exceeds what the
