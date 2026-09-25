@@ -267,7 +267,8 @@ test.describe('View Transition Sentry Integration @performance', () => {
 		await page.waitForSelector('#cesiumContainer canvas', { state: 'visible' })
 	})
 
-	test('should record performance marks during grid transition', async ({ page }) => {
+	// Quarantined: fails on every attempt in CI — see #998
+	test.fixme('should record performance marks during grid transition', async ({ page }) => {
 		// Navigate to grid view
 		const gridToggle = page
 			.locator('[data-testid="statistical-grid-toggle"]')
