@@ -1,3 +1,9 @@
+---
+paths:
+  - 'src/**'
+  - 'tests/unit/**'
+---
+
 # Code Quality
 
 ## CSS Theming (Dark Mode)

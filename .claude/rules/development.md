@@ -58,30 +58,6 @@ just stop      # Stop all services
 - `frontend-only`: Frontend only (assumes services running)
 - `e2e-with-prod-data`: E2E testing with cloned production data
 
-## Code Search Tools
-
-### ast-grep (Structural Search)
-
-Pattern-based code search using AST:
-
-```bash
-# Vue patterns
-ast-grep -p 'defineProps<$TYPE>()'                    # Find typed props
-ast-grep -p 'const $STORE = use$NAME()'               # Find Pinia store usage
-ast-grep -p 'watch($DEPS, ($$$) => { $$$ })'          # Find watchers
-
-# JavaScript patterns
-ast-grep -p 'async function $NAME($$$) { $$$ }'       # Find async functions
-ast-grep -p 'console.log($$$)'                        # Find console.log
-ast-grep -p 'await $PROMISE.catch($$$)'               # Find error handling
-```
-
-**When to use ast-grep:**
-
-- Finding specific code patterns across files
-- Identifying anti-patterns for refactoring
-- Searching for framework-specific constructs
-
 ## Building
 
 ```bash
@@ -137,77 +113,30 @@ hook.)
 
 ## A PR Description Becomes the Commit Body — release-please Must Parse It
 
-This repo is set to `squash_merge_commit_message = PR_BODY`, so the squash
-commit is the PR title plus ` (#<number>)`, a blank line, and the PR
-description. GitHub hard-wraps each description line longer than 72 characters
-when it builds that commit. It re-joins the line's words with single spaces,
-which drops the indentation and collapses runs of spaces and tabs, and it
-counts an emoji as one character. Code under a fence that starts in column 0 is
-left alone; a fence indented under a list item is wrapped like prose. The 199
-squash commits from #744 to #1043 all match the model in
-`scripts/check-commit-message.mjs`, apart from the `Co-authored-by` trailers
-GitHub appends.
+This repo squash-merges with `PR_BODY`, and GitHub hard-wraps the description at
+72 characters. release-please's parser throws on any body line whose first word runs
+into an unclosed `(` (`` `name( ``, `<call>(`, a fenced code line) and **silently
+skips the commit**: a `feat:`/`fix:` PR merges green and cuts no release. Mechanism
+and evidence: `docs/workflows/release-please-commit-parsing.md`.
 
-release-please (17.3.0, through the org reusable workflow) parses each commit
-with `@conventional-commits/parser` 0.4.1. The parser reads every body line as a
-possible `token(scope): value` footer, so it throws on a line whose first word
-runs straight into a `(` that does not close on that line, or that opens a
-second `(` before closing: `` `name( ``, `<call>(`, `a.push(b(c))`. release-please
-logs the throw at debug level and skips the commit, so a `feat:`/`fix:` PR
-merges green and cuts **no release**; the version and CHANGELOG never move. The
-org workflow's missed-release check reports it only as a run **warning**.
-
-Because of the wrap, the offending line usually does not start that way in the
-description as written: a call mid-sentence becomes the first word of a wrapped
-line. Run 35996129826 (2026-09-24) dropped four commits whose descriptions
-parse unwrapped:
-
-| Commit    | PR    | Parser error                                       | Wrapped line starts with                            |
-| --------- | ----- | -------------------------------------------------- | --------------------------------------------------- |
-| `e7f70c9` | #1012 | `unexpected token '\n' at 83:70, valid tokens [)]` | `` `loadGeoJsonDataSource( ``                       |
-| `4f671b5` | #1005 | `unexpected token '\n' at 56:33, valid tokens [)]` | `` `ndviTiffUrl( ``                                 |
-| `689630d` | #1037 | `unexpected token '(' at 29:45, valid tokens [)]`  | `` `backgroundMapStore.floodLayers.push(markRaw( `` |
-| `629a8d1` | #1010 | `unexpected token '\n' at 83:73, valid tokens [)]` | `<call>(`                                           |
-
-Fenced code blocks are the other usual source: under a column-0 fence nothing is
-wrapped, and code lines start with calls. Under an indented fence a long code
-line is wrapped and loses its indentation, so it can start with a call too. On
-2026-09-15 a `js` fence holding a `localStorage.setItem(...)` line (`e156d1f`,
-#973, `'(' at 35:52`) killed the 1.57.0 release.
-
-- **The `Squash commit parses` check** (`enforce-conventional-commits.yml`, on
-  opened, edited, synchronize and reopened) runs
-  `scripts/check-commit-message.mjs` on the PR title, number and description. It
-  builds the squash message as above, honours a `BEGIN_COMMIT_OVERRIDE` section,
-  and parses with the version pinned in `package.json`. When it fails it names
-  the line: reword that sentence, or add an override section. Line 1 is the
-  title. The `Fix PR title` job rewrites titles with the `GITHUB_TOKEN`, which
-  starts no new workflow run, so after such a rewrite edit the PR to re-run the
-  check. To check a PR locally:
+- **The `Squash commit parses` check** (`enforce-conventional-commits.yml`) runs
+  `scripts/check-commit-message.mjs` on the title and description and names the
+  failing line: reword that sentence, or add an override section. The `Fix PR title`
+  job's rewrite starts no new run, so edit the PR afterwards to re-run the check.
+  Locally:
   `PR_NUMBER=12 PR_TITLE="$(gh pr view 12 --json title -q .title)" PR_BODY="$(gh pr view 12 --json body -q .body)" node scripts/check-commit-message.mjs`.
 - **Prefer inline code to fenced blocks** in PR descriptions for this repo.
-- **Check after merging any `feat:`/`fix:`/`perf:`/`revert:` PR** that the
-  release PR picked it up:
-  `gh pr list -R ForumViriumHelsinki/R4C-Cesium-Viewer --state open --head release-please--branches--main--components--r4c-cesium-viewer`,
-  or the `autorelease: pending` label. `gh pr list --search 'chore(main): release'`
-  returns nothing even while the release PR is open (checked 2026-09-24, with
-  #1041 open). A dropped commit shows in the release-please log as
-  `commit could not be parsed`.
-- **Recovery**: add a `BEGIN_COMMIT_OVERRIDE` / `END_COMMIT_OVERRIDE` section
-  holding the conventional commit message to the merged PR's description, then
-  re-run release-please with `workflow_dispatch`. release-please reads the
-  section from the PR when it runs and parses it instead of the commit. On
-  2026-09-24 this recovered #1005, #1010, #1012 and #1037: run 36005789211
-  logged no parse errors and considered 52 commits, against 48 in run
-  35996129826 earlier that day. A re-run without the section re-parses the
-  same commit and fails the same way.
+- **Check after merging any `feat:`/`fix:`/`perf:`/`revert:` PR** that the release
+  PR picked it up:
+  `gh pr list -R ForumViriumHelsinki/R4C-Cesium-Viewer --state open --head release-please--branches--main--components--r4c-cesium-viewer`
+  (a `--search 'chore(main): release'` query returns nothing even while it is open).
+  A dropped commit logs `commit could not be parsed`.
+- **Recovery**: add a `BEGIN_COMMIT_OVERRIDE` / `END_COMMIT_OVERRIDE` section holding
+  the conventional commit message to the merged PR's description, then re-run
+  release-please with `workflow_dispatch`.
 - **Do not name the override marker in a description you do not mean as an
-  override.** release-please finds `BEGIN_COMMIT_OVERRIDE` as plain text
-  anywhere in the description and parses whatever follows it instead of the
-  commit, so a sentence that mentions it replaces the commit message. The check
-  parses the same text, so it fails such a description unless the text after
-  the marker happens to be a conventional commit, and its output names the
-  override section as the cause.
+  override.** release-please finds it as plain text anywhere in the description and
+  parses whatever follows it instead of the commit.
 
 ## CI/CD
 

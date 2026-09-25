@@ -1,3 +1,13 @@
+---
+paths:
+  - 'tests/**'
+  - 'playwright.config.ts'
+  - 'vitest.config.js'
+  - 'vitest.performance.config.js'
+  - '.github/workflows/test.yml'
+  - 'scripts/**'
+---
+
 # Testing
 
 ## Framework
