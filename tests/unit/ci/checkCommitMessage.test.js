@@ -8,7 +8,7 @@
  * of them (#1005, #1010, #1012, #1037); the error strings are copied from its
  * log. On 2026-09-24 those four PR bodies gained a BEGIN_COMMIT_OVERRIDE
  * section, after the merge, and run 36005789211 then parsed every commit. #973
- * (e156d1f) is the fenced-code-block case recorded in .claude/rules/development.md.
+ * (e156d1f) is the fenced-code-block case recorded in docs/workflows/release-please-commit-parsing.md.
  * #1003, #1007 and #1009 were parsed by run 35996129826 and are the controls.
  * #864, #841 and #963 parse too; they pin the edges of the wrap model (an emoji
  * and a too-wide first word, a run of spaces, a fence indented under a list

@@ -107,245 +107,30 @@ just stop      # Stop all services
 
 See `docs/DATABASE_CLONING.md` for production database cloning for E2E testing.
 
-## Architecture Overview
+## Architecture and Conventions
 
-This is a Vue 3 climate data visualization application using CesiumJS for 3D mapping and geospatial data display.
+Vue 3 climate-data viewer on CesiumJS (Pinia, Vuetify, D3, Playwright), drilling from
+Capital Region to postal code to building. The detail lives in `.claude/rules/`; most
+rules are path-scoped and load when you read or edit a matching file:
 
-### Core Technologies
+| Rule                                       | Covers                                                                            | Loads for                                                 |
+| ------------------------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `architecture.md`                          | Stores, services, navigation coordination, Cesium patterns, data sources          | `src/**`, `tests/**`, `vite.config.js`, `flags.goff.yaml` |
+| `testing.md`                               | Fixtures, Playwright projects/sharding, component selectors, Cesium test pitfalls | `tests/**`, test configs, `test.yml`, `scripts/**`        |
+| `code-quality.md`                          | Theming, listener cleanup, async errors, logging, store bindings                  | `src/**`, `tests/unit/**`                                 |
+| `security.md`                              | Postal-code validation, URL encoding, JSON parsing                                | `src/**`                                                  |
+| `nginx.md`                                 | nginx config, Dockerfile                                                          | `nginx/**`, `Dockerfile`, compose files                   |
+| `development.md`, `document-management.md` | Dev modes, commit/PR rules, CI; ADR/PRD/PRP placement                             | always                                                    |
 
-- **Vue 3** with Composition API
-- **Vite** for build tooling and development server
-- **CesiumJS** for 3D globe and mapping functionality
-- **Pinia** for state management
-- **Vuetify** for UI components
-- **D3.js** for data visualization charts
-- **Playwright** for end-to-end testing
-
-### Application Structure
-
-#### State Management (Pinia Stores)
-
-- `globalStore.js` - Main application state, view modes, current selections, click processing state with pending navigation coordination
-- `buildingStore.js` - Building-specific data and selection
-- `toggleStore.js` - UI toggle states, layer visibility, postal code navigation lifecycle hooks
-- `socioEconomicsStore.js` - Socioeconomic data visualization state
-- `heatExposureStore.js` - Heat exposure data and calculations
-- `backgroundMapStore.js` - Background map layer management
-- `propsStore.js` - Property and building attribute data
-- `urlStore.js` - URL state management for deep linking
-
-#### Main Pages
-
-- `CesiumViewer.vue` - Core 3D map interface using CesiumJS
-- `ControlPanel.vue` - Left sidebar: Search, Layers, Analysis and Details tabs
-
-#### Services Layer
-
-- `datasource.js` - Data source management for Cesium
-- `wms.js` - Web Map Service integration
-- `featurepicker.js` - Entity selection and picking
-- `camera.js` - Camera controls and positioning
-- `urbanheat.js` - Urban heat island data processing
-- `building.js` - Building data and 3D visualization
-- `populationgrid.js` - Population grid data handling
-
-### Key Features
-
-- Multi-scale visualization (Capital Region → Postal Code → Building)
-- Heat exposure analysis and visualization
-- Building energy efficiency and tree coverage analysis
-- Socioeconomic data overlays
-- Time-series data with temporal controls
-- 3D building visualization with detailed attributes
-
-### Development Proxy Configuration
-
-The application uses multiple proxy endpoints in development:
-
-- `/pygeoapi` - Finland's geo data portal
-- `/paavo` - Statistics Finland postal code data
-- `/wms/proxy` - HSY (Helsinki Region Environmental Services) map services
-- `/digitransit` - Public transport API
-- `/terrain-proxy` - Helsinki 3D terrain data
-
-### Data Sources
-
-Primary data from Helsinki Region Environmental Services (HSY), Statistics Finland, and various environmental monitoring systems for climate resilience research.
-
-## Component Architecture for Testing
-
-Understanding the component hierarchy is critical for writing effective tests.
-
-### Timeline Components by Navigation Level
-
-| Level       | Component         | Selector                   | Notes                                                                                              |
-| ----------- | ----------------- | -------------------------- | -------------------------------------------------------------------------------------------------- |
-| Start       | None              | -                          | No timeline at start level                                                                         |
-| Postal Code | `TimelineCompact` | `.timeline-compact`        | Rendered only when `level` is `postalCode` or `building` (`v-if="showTimeline"`); never CSS-hidden |
-| Building    | `Timeline`        | `#heatTimeseriesContainer` | Only renders when "Building Heat Data" button clicked                                              |
-
-**Key Insight:** `TimelineCompact` carries no Vuetify display utility class. Its presence is gated entirely by `v-if="showTimeline"` in `src/App.vue:116`, where `showTimeline` is `level === 'postalCode' || level === 'building'` (`src/App.vue:191`). The component's own scoped media queries (`src/components/TimelineCompact.vue:150` at `max-width: 960px` and `:163` at `max-width: 600px`) only shrink `min-width`/`max-width`/`gap` — neither sets `display: none`. So the element is either absent from the DOM or laid out and visible; there is no viewport at which it is present-but-hidden.
-
-`toBeAttached()` and `toBeVisible()` are therefore equivalent for this element. The existing specs use `state: 'attached'` / `toBeAttached()` and should keep doing so — it is the narrower assertion, and it matches the component's actual gate (`v-if`).
-
-### Building Selection Flow (FeaturePicker)
-
-The building click-to-selection flow follows this path:
-
-```
-User Click on Cesium Canvas
-    ↓
-CesiumViewer.vue click handler
-    - Filters drags (>5px movement threshold)
-    - Debounces rapid clicks (500ms minimum interval)
-    - Ignores clicks on control panel/timeline elements
-    ↓
-Check globalStore.clickProcessingState.isProcessing
-    ├─ If processing: Queue as pendingNavigation + cancel current load
-    │   - buildingService.cancelCurrentLoad()
-    │   - globalStore.setPendingNavigation({ postalCode, postalCodeName })
-    │   └─ Return (wait for current operation to complete)
-    └─ If not processing: Proceed with navigation
-    ↓
-FeaturePicker.processClick(event)
-    - Converts event coordinates to Cesium.Cartesian2
-    ↓
-FeaturePicker.pickEntity(windowPosition)
-    - GUARD: Checks canvas dimensions (width/height > 0)
-    - Uses viewer.scene.pick() to find entity
-    - FILTER: Only processes entities with `_polygon` property
-    ↓
-FeaturePicker.handleFeatureWithProperties(entity)
-    - At postal code level → handleBuildingFeature()
-    ↓
-Updates Pinia store (level='building')
-    ↓
-Navigation Complete → Check pendingNavigation
-    ├─ If exists: globalStore.consumePendingNavigation() → process queued navigation
-    └─ If not: Navigation complete
-```
-
-**Critical Guards in FeaturePicker:**
-
-1. Canvas must have valid dimensions (silently ignores clicks otherwise)
-2. Only polygon entities (with `_polygon` property) are selectable
-3. Entity must be a `Cesium.Entity` instance with properties
-
-### Navigation State Coordination
-
-The application uses a three-phase pattern for robust state switching during navigation:
-
-1. **Request Cancellation**: `BuildingLoader.cancelCurrentLoad()` aborts in-flight data loading requests
-   - Called when user clicks new postal code while current one is loading
-   - Prevents stale data from overwriting fresher navigation targets
-
-2. **Latest-Wins Navigation**: `globalStore.pendingNavigation` queues the most recent user click
-   - Actions: `setPendingNavigation()`, `clearPendingNavigation()`, `consumePendingNavigation()`
-   - Ensures rapid clicks always result in navigating to the last-clicked target
-
-3. **Visibility Coordination**: `toggleStore.onEnterPostalCode()`/`onExitPostalCode()` manage grid visibility
-   - `_previousGrid250m` tracks grid state before entering postal code
-   - Automatically hides grid when entering postal code, restores when exiting
-
-### Testing Cesium Interactions
-
-**Common Pitfalls:**
-
-1. **Canvas Dimension Guard**: Clicks are silently ignored if canvas dimensions are 0 (transient rendering states)
-2. **Building Entity Loading**: Buildings may not be loaded when tests attempt to click
-3. **Hardcoded Coordinates**: Static pixel positions don't guarantee hitting buildings
-
-**Best Practices for Building Selection Tests:**
-
-```typescript
-// 1. Wait for canvas to have valid dimensions
-await page.waitForFunction(() => {
-	const canvas = document.querySelector('#cesiumContainer canvas');
-	return canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0;
-});
-
-// 2. Wait for buildings to load in datasource
-await page.waitForFunction(() => {
-	const viewer = window.__viewer;
-	if (!viewer?.dataSources) return false;
-	const dataSources = viewer.dataSources._dataSources;
-	return dataSources.some(
-		(ds) => ds.name?.startsWith('Buildings ') && ds.entities?.values.length > 0
-	);
-});
-
-// 3. toBeAttached() is the narrower assertion; .timeline-compact is never CSS-hidden
-await expect(page.locator('.timeline-compact')).toBeAttached();
-```
-
-### UI Element Text Selectors (Case-Sensitive)
-
-Building level UI buttons use exact casing:
-
-- `"Building Heat Data"` (not "Building heat data")
-- `"Building Properties"` (not "Building properties")
-
-## Database Performance Optimizations
-
-The project includes comprehensive database optimizations implemented via dbmate migrations:
-
-**Performance Features:**
-
-- Spatial indexes (GIST) for all geometry columns
-- Composite indexes for common query patterns
-- Covering indexes for index-only scans
-- Materialized view management with automated refresh functions
-- Query-specific optimizations for building and tree data
-
-**New Migrations Added:**
-
-- `20250626114521_optimize_tree_f_performance.sql` - Tree data query optimization
-- `20250807114107_optimize_building_table_performance.sql` - Building table indexes
-- `20250807123455_add_spatial_indexes.sql` - Spatial query optimization
-- `20250807124619_setup_materialized_view_management.sql` - MV refresh automation
-- `20250808064619_optimize_materialized_view_indexes.sql` - MV query optimization
-
-## Available MCP Tools
-
-### Context7 Documentation Integration
-
-Claude has access to Context7 MCP for fetching up-to-date library documentation:
-
-- **Vue 3 Documentation** (`/vuejs/docs`) - Official Vue 3 docs with 1500+ code examples
-- **Vue Cesium** (`/zouyaoji/vue-cesium`) - Vue 3 components for CesiumJS with 800+ examples
-- **Vuetify** (`/vuetifyjs/vuetify`) - Vue component framework with 475+ examples
-- **Pinia** - State management documentation
-- **D3.js** - Data visualization library docs
-
-Use Context7 to access current best practices, API references, and code examples directly from official sources when implementing features or solving issues.
-
-### Language Server Protocol (LSP)
-
-Enhanced code analysis capabilities:
-
-- Real-time diagnostics and error detection
-- Code completion and IntelliSense
-- Hover information for functions and variables
-- Code actions and refactoring suggestions
+Database migrations are dbmate files in `db/migrations/`.
 
 ## Project-Specific Claude Resources
 
-### Slash Commands (`.claude/commands/`)
+Slash commands (`.claude/commands/`): `/test-focused [file]`, `/test-debug [file]`,
+`/stack-review`, `/dev-autofix`.
 
-Repeatable workflows available as slash commands:
-
-- `/test-focused [filename]` - Run single test file with fail-fast mode for rapid iteration
-- `/test-debug [filename]` - Launch Playwright UI mode for visual debugging
-- `/stack-review` - Comprehensive stack configuration review against latest best practices
-
-### Skills (`.claude/skills/`)
-
-Specialized knowledge repositories for common patterns:
-
-- `test-pattern-library.md` - Proven patterns for fixing Playwright test failures
-- `playwright-accessibility-testing.md` - Accessibility testing best practices
-- `cesium-performance-testing.md` - CesiumJS performance optimization patterns
-- `test-categorization.md` - Test organization and tag-based categorization
-- `bun-lock-management.md` - Keeping bun.lock in sync with package.json
-
-These skills are automatically available to Claude Code for reference when working on related tasks.
+`.claude/skills/*.md` are reference notes, not registered skills (Claude Code only
+loads `skills/<name>/SKILL.md`), so read them directly when relevant:
+`test-pattern-library.md` (fixing Playwright failures),
+`playwright-accessibility-testing.md`, `cesium-performance-testing.md`,
+`test-categorization.md` (tags), `bun-lock-management.md`.

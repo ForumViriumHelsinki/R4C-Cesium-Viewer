@@ -1,3 +1,11 @@
+---
+paths:
+  - 'src/**'
+  - 'tests/**'
+  - 'vite.config.js'
+  - 'flags.goff.yaml'
+---
+
 # Architecture
 
 ## Technology Stack
@@ -23,7 +31,7 @@
 | `propsStore.js`          | Property and building attribute data                                                     |
 | `urlStore.js`            | URL state management for deep linking                                                    |
 
-Cesium objects (viewer, entities, data sources, imagery layers) go into store state only through `markRaw`. Otherwise Pinia returns a reactive proxy, and Cesium's collections, which match by identity, cannot find the object to remove it (#1019: flood scenarios stacked on the map). `tests/unit/stores/cesiumStateMarkRaw.test.js` checks every write to the store fields that the Sentry `stateTransformer` in `src/main.js` strips as Cesium objects. A new Cesium-holding field belongs in that transformer too.
+Cesium objects go into store state only through `markRaw` — see "Cesium Objects in Pinia State Must Be `markRaw`" below.
 
 ## Main Pages
 
@@ -142,6 +150,11 @@ viewer: `backgroundMapStore.landcoverLayers.push(markRaw(layer))`. Reads then re
 the raw object. Unit tests with an `imageryLayers.contains` mock that always returns
 `true` cannot catch this. `tests/unit/components/landcoverInvariant.test.js` uses a
 stand-in with Cesium's identity semantics.
+
+The same bug stacked flood scenarios on the map (#1019). `tests/unit/stores/cesiumStateMarkRaw.test.js`
+checks every write to the store fields that the Sentry `stateTransformer` in `src/main.js`
+strips as Cesium objects (viewer, entities, data sources, imagery layers). A new
+Cesium-holding field belongs in that transformer too.
 
 ## Reading Cesium Entity Properties
 
@@ -268,47 +281,9 @@ Cesium's 127 ms, ~half the memory, ~454 KB gz lazy chunk vs Cesium's 1.25 MB.
   tile size stretches or oversizes each image.
   `tests/unit/utils/wmsTileSizeParity.test.js` checks all of these sites.
 
-## Component Organization
+Size limits and refactoring patterns are in `code-quality.md` (Component Size Limits).
 
-### Size Guidelines
-
-| Type          | Max Lines | Action if Exceeded                      |
-| ------------- | --------- | --------------------------------------- |
-| Vue Component | 400       | Extract composables or child components |
-| Service File  | 300       | Split into focused modules              |
-| Function      | 80        | Extract helper functions                |
-
-### Refactoring Patterns
-
-**Large Vue Components** → Extract composables:
-
-```
-src/composables/
-├── useViewportLoading.js  # Viewport streaming logic
-├── useCesiumEvents.js     # Event handling
-└── useCameraControls.js   # Camera state
-```
-
-**Large Service Files** → Split into modules:
-
-```
-src/services/building/
-├── index.js              # Re-exports
-├── buildingLoader.js     # Data fetching
-├── buildingFilter.js     # Filtering
-└── buildingStyler.js     # Styling
-```
-
-**Complex Components** → Extract children:
-
-```
-src/components/MapControls/
-├── MapControls.vue         # Parent
-├── DataLayerControls.vue   # Child
-└── VisualizationControls.vue # Child
-```
-
-### Utilities Directory
+## Utilities Directory
 
 Extract reusable logic to utilities:
 

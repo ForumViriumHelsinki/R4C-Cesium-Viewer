@@ -1,3 +1,8 @@
+---
+paths:
+  - 'src/**'
+---
+
 # Security
 
 ## Input Validation
