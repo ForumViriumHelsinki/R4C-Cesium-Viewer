@@ -27,7 +27,7 @@ jobs:
 
   build:
     needs: setup
-    uses: ForumViriumHelsinki/.github/.github/workflows/reusable-container-build.yml@882fa37faa0f3eb78a3ae044d6906071f4613a6a # main
+    uses: ForumViriumHelsinki/.github/.github/workflows/reusable-container-build.yml@d5f4bee8f9682f0d332720582a65790144c0ef8e # main
     with:
       image-name: ${{ needs.setup.outputs.image-name }}
       # Tags Sentry events from this image as production (#995); every
