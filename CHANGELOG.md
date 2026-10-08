@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.59.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.0...r4c-cesium-viewer-v1.59.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **vtt-flood:** camera framing, colour scale, performance and shareable links ([#1055](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1055)) ([260a996](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/260a99679b9e4aa7fef475654a66e63f21ee969c))
+
 ## [1.59.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.58.0...r4c-cesium-viewer-v1.59.0) (2026-09-25)
 
 
