@@ -100,20 +100,115 @@
 				v-for="dim in VTT_DIMENSIONS"
 				:key="dim.key"
 				:value="dim.key"
-				:label="`${dim.label} (${dim.unit})`"
+				:label="dim.unit ? `${dim.label} (${dim.unit})` : dim.label"
 			/>
 		</v-radio-group>
 
+		<p class="text-caption mb-1">Camera</p>
+		<!-- @click per button, not @update:model-value: a mandatory toggle does not
+		     re-emit for the active value, and re-clicking it re-frames the extent. -->
+		<v-btn-toggle
+			:model-value="cameraView"
+			mandatory
+			density="compact"
+			variant="outlined"
+			divided
+			class="mb-3"
+		>
+			<v-btn
+				value="oblique"
+				size="small"
+				aria-label="Oblique view of flood extent"
+				@click="onCameraView('oblique')"
+			>
+				Oblique
+			</v-btn>
+			<v-btn
+				value="topDown"
+				size="small"
+				aria-label="Top-down view of flood extent"
+				@click="onCameraView('topDown')"
+			>
+				Top-down
+			</v-btn>
+		</v-btn-toggle>
+
+		<div class="d-flex align-center justify-space-between mb-1">
+			<span
+				id="vtt-opacity-label"
+				class="text-caption"
+			>
+				Opacity
+			</span>
+			<span class="text-caption font-weight-medium">{{ opacityPercent }} %</span>
+		</div>
+		<v-slider
+			:model-value="store.opacity"
+			:min="VTT_OPACITY_MIN"
+			:max="VTT_OPACITY_MAX"
+			:step="VTT_OPACITY_STEP"
+			color="primary"
+			density="compact"
+			hide-details
+			aria-labelledby="vtt-opacity-label"
+			class="mb-2"
+			@update:model-value="onOpacityChange"
+		/>
+
 		<div
+			v-if="colorScale && colorScale.mode !== 'empty'"
 			class="vtt-legend mb-2"
 			role="img"
-			:aria-label="`Legend: blue indicates ${legendMin}, red indicates ${legendMax}`"
+			:aria-label="legendAriaLabel"
 		>
-			<div class="vtt-legend-bar" />
-			<div class="d-flex justify-space-between text-caption">
-				<span>{{ legendMin }} {{ activeDimensionUnit }}</span>
-				<span>{{ legendMax }} {{ activeDimensionUnit }}</span>
+			<template v-if="colorScale.mode === 'classes'">
+				<div
+					class="vtt-legend-bar"
+					:style="{ background: legendGradient ?? undefined }"
+				/>
+				<div class="vtt-legend-ticks text-caption">
+					<span
+						v-for="tick in legendTickList"
+						:key="tick.at"
+						class="vtt-legend-tick"
+						:style="tickStyle(tick)"
+					>
+						{{ tick.label }}
+					</span>
+				</div>
+			</template>
+			<div
+				v-else
+				class="d-flex align-center text-caption"
+			>
+				<span
+					class="vtt-legend-swatch mr-2"
+					:style="{ background: colorScale.classes[0].color }"
+				/>
+				{{ maskLabel }}
 			</div>
+			<div class="text-caption vtt-legend-caption">{{ legendCaption }}</div>
+			<div class="text-caption vtt-legend-caption">{{ hiddenCellsLabel }}</div>
+		</div>
+		<v-alert
+			v-else-if="emptyMessage"
+			type="info"
+			density="compact"
+			variant="tonal"
+			class="mb-2"
+		>
+			{{ emptyMessage }}
+		</v-alert>
+		<div
+			v-if="!activeDimensionUnit && (legendCaption || emptyMessage)"
+			class="text-caption vtt-legend-caption mb-2 vtt-unit-note"
+		>
+			Unit not confirmed by VTT, see
+			<a
+				:href="VTT_UNITS_ISSUE_URL"
+				target="_blank"
+				rel="noopener noreferrer"
+			>issue #1059</a>.
 		</div>
 
 		<v-progress-linear
@@ -143,13 +238,27 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, watch } from 'vue'
-import { VTT_DIMENSIONS, VTT_SCENARIOS } from '../constants/vttFlood'
-import { clearFlood, renderFlood } from '../services/vttFlood.js'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+	VTT_DEFAULT_CAMERA_VIEW,
+	VTT_DIMENSIONS,
+	VTT_OPACITY_MAX,
+	VTT_OPACITY_MIN,
+	VTT_OPACITY_STEP,
+	VTT_SCENARIOS,
+} from '../constants/vttFlood'
+import { clearFlood, hideFlood, renderFlood } from '../services/vttFlood.js'
+import { flyToFloodExtent } from '../services/vttFloodCamera.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useVttFloodStore } from '../stores/vttFloodStore'
 import logger from '../utils/logger.js'
+import {
+	buildColorScale,
+	formatLegendValue,
+	legendGradientCss,
+	legendTicks,
+} from '../utils/vttFloodColorScale.js'
 
 const emit = defineEmits(['close'])
 
@@ -177,19 +286,97 @@ const activeDimensionMeta = computed(
 )
 const activeDimensionUnit = computed(() => activeDimensionMeta.value.unit)
 
-function formatRange(value) {
-	if (!Number.isFinite(value)) return '—'
-	return Math.abs(value) >= 100 ? value.toFixed(0) : value.toFixed(2)
+/** The question to VTT about units and meanings of the cell properties. */
+const VTT_UNITS_ISSUE_URL = 'https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1059'
+
+/** `text` followed by the dimension's unit, or `text` alone when it is not confirmed. */
+function withUnit(text) {
+	return activeDimensionUnit.value ? `${text} ${activeDimensionUnit.value}` : text
 }
 
-const legendMin = computed(() => formatRange(store.activeRange.min))
-const legendMax = computed(() => formatRange(store.activeRange.max))
+// The one colour scale for this frame and dimension: the legend reads it and
+// renderFlood draws with it. Its classes come from the frame's own scenario and
+// source, so they cannot pair with a frame still showing from before a switch.
+const colorScale = computed(() => {
+	const frame = store.frame
+	if (!frame) return null
+	return buildColorScale(activeDimensionMeta.value, frame.values[store.dimension], frame)
+})
+
+const opacityPercent = computed(() => Math.round(store.opacity * 100))
+const legendGradient = computed(() =>
+	colorScale.value ? legendGradientCss(colorScale.value) : null
+)
+const legendTickList = computed(() => (colorScale.value ? legendTicks(colorScale.value) : []))
+
+/** Keep end labels inside the bar: shift each label left by its own position. */
+function tickStyle(tick) {
+	const pct = tick.at * 100
+	return { left: `${pct}%`, transform: `translateX(-${pct}%)` }
+}
+
+const legendCaption = computed(() => {
+	const scale = colorScale.value
+	const unit = activeDimensionUnit.value ? ` (${activeDimensionUnit.value})` : ''
+	if (!scale || scale.mode === 'empty') return ''
+	if (scale.mode === 'mask') return `All shown cells share one value${unit}`
+	if (scale.kind === 'fixed') return `Fixed classes${unit}`
+	return `Classes fixed for this scenario, about equal cell counts over its frames; values beyond the end labels (2nd and 98th percentile) join the end classes${unit}`
+})
+
+const hiddenCellsLabel = computed(() => {
+	const scale = colorScale.value
+	if (!scale || scale.hiddenCount === 0) return ''
+	const threshold = scale.hideBelow
+	const rule = Number.isFinite(threshold)
+		? withUnit(`≤ ${formatLegendValue(threshold)}`)
+		: 'without a value'
+	return `Cells ${rule} hidden (${scale.hiddenCount.toLocaleString('en-US')})`
+})
+
+const maskLabel = computed(() => {
+	const scale = colorScale.value
+	if (!scale || scale.mode !== 'mask') return ''
+	return `${withUnit(formatLegendValue(scale.value ?? 0))} (${scale.shownCount.toLocaleString('en-US')} cells)`
+})
+
+const legendAriaLabel = computed(() => {
+	const scale = colorScale.value
+	if (!scale || scale.mode === 'empty') return ''
+	if (scale.mode === 'mask') return `Legend: one colour for ${maskLabel.value}`
+	const ticks = legendTickList.value
+	return `Legend: ${scale.classes.length} colour classes from light to dark, ${withUnit(`${ticks[0]?.label} to ${ticks.at(-1)?.label}`)}`
+})
+
+const emptyMessage = computed(() => {
+	const scale = colorScale.value
+	const meta = activeDimensionMeta.value
+	if (!scale || scale.mode !== 'empty') return ''
+	if (scale.reason === 'no-variation') {
+		return `No variation in this frame: all ${scale.totalCount.toLocaleString('en-US')} cells are ${withUnit(formatLegendValue(scale.value ?? 0))}.`
+	}
+	if (scale.reason === 'all-hidden') {
+		return `No cells above ${withUnit(formatLegendValue(scale.threshold ?? 0))} in this frame.`
+	}
+	return `No ${meta.label.toLowerCase()} values in this frame.`
+})
+
+// Camera orientation is not stored: the camera itself is in the URL already
+// (lon/lat/alt/heading/pitch), and the toggle resets to oblique on reopen.
+const cameraView = ref(VTT_DEFAULT_CAMERA_VIEW)
+function onCameraView(view) {
+	cameraView.value = view
+	flyToFloodExtent({ viewer: globalStore.cesiumViewer, view })
+}
 
 function onScenarioChange(id) {
 	if (id) store.selectScenario(id)
 }
 function onDimensionChange(key) {
 	if (key) store.setDimension(key)
+}
+function onOpacityChange(value) {
+	store.setOpacity(Number(value))
 }
 function onFrameChange(value) {
 	store.setFrame(Number(value))
@@ -201,42 +388,60 @@ function onFrameInput(value) {
 	store.setFrame(clamped)
 }
 
-// Re-render whenever frame data or selected dimension changes. The component
-// owns Cesium calls; the store stays viewer-agnostic.
-const stopRenderWatcher = watch(
-	() => [store.frame, store.dimension],
-	async () => {
-		const viewer = globalStore.cesiumViewer
-		if (!viewer) return
-		const frame = store.frame
-		const dimension = store.dimension
-		if (!frame) {
-			await clearFlood({ viewer })
-			return
-		}
-		try {
-			await renderFlood({ viewer, frame, dimension })
-		} catch (error) {
-			logger.error('[FloodSimulationPanel] Render failed:', error)
-		}
+// Re-render whenever the frame, its colour scale (frame or dimension change) or
+// the opacity changes. The component owns Cesium calls; the store stays
+// viewer-agnostic. renderFlood is synchronous and restyles the existing layer,
+// so rapid changes cannot stack layers or queue rebuilds. A restyle writes all
+// 13k cells, so changes are coalesced into one render per animation frame: an
+// opacity drag fires many changes per frame.
+function renderCurrentFrame() {
+	const viewer = globalStore.cesiumViewer
+	if (!viewer) return
+	const frame = store.frame
+	if (!frame) {
+		// Between scenarios or after an error: hide, keep the geometry.
+		hideFlood({ viewer })
+		return
 	}
-)
+	try {
+		renderFlood({
+			viewer,
+			frame,
+			dimension: store.dimension,
+			opacity: store.opacity,
+			scale: colorScale.value ?? undefined,
+		})
+	} catch (error) {
+		logger.error('[FloodSimulationPanel] Render failed:', error)
+	}
+}
+
+let renderRequest = 0
+const stopRenderWatcher = watch([() => store.frame, colorScale, () => store.opacity], () => {
+	if (renderRequest) return
+	renderRequest = requestAnimationFrame(() => {
+		renderRequest = 0
+		renderCurrentFrame()
+	})
+})
 
 onMounted(() => {
-	// Always fetch on first mount so the initial frame appears without an
-	// extra click. Subsequent open/close cycles re-mount the component, which
-	// is fine — the store caches frame data and skips network if scenario+frame
-	// haven't changed (handled via _requestSeq dedup).
+	// Fetch on mount so the initial frame appears without an extra click.
 	store.fetchCurrentFrame()
 })
 
-onUnmounted(async () => {
+onUnmounted(() => {
+	// Stop the watchers and a pending render first so nothing re-creates the
+	// layer after it is cleared.
 	stopRenderWatcher()
 	stopSyntheticWatcher()
+	if (renderRequest) cancelAnimationFrame(renderRequest)
+	renderRequest = 0
+	// Destroy the layer to free its GPU buffers while the panel is closed. The
+	// store keeps its frame cache, so reopening costs a geometry rebuild (about
+	// 1.8 s measured on software GL, far less on a GPU) but no re-download.
 	const viewer = globalStore.cesiumViewer
-	if (viewer) {
-		await clearFlood({ viewer })
-	}
+	if (viewer) clearFlood({ viewer })
 	store.clear()
 })
 </script>
@@ -263,11 +468,28 @@ onUnmounted(async () => {
 .vtt-legend-bar {
 	height: 8px;
 	border-radius: 4px;
-	background: linear-gradient(
-		to right,
-		rgb(33, 102, 172),
-		rgb(178, 24, 43)
-	);
 	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.vtt-legend-ticks {
+	position: relative;
+	height: 1.25rem;
+}
+
+.vtt-legend-tick {
+	position: absolute;
+	white-space: nowrap;
+}
+
+.vtt-legend-swatch {
+	display: inline-block;
+	width: 16px;
+	height: 8px;
+	border-radius: 2px;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.vtt-legend-caption {
+	color: rgba(var(--v-theme-on-surface), 0.7);
 }
 </style>

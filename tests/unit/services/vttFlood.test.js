@@ -1,66 +1,50 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Cesium mock surfaces just enough API for renderFlood + clearFlood to exercise.
-const ColorMock = vi.fn(function (r, g, b, a) {
-	this.red = r ?? 1
-	this.green = g ?? 1
-	this.blue = b ?? 1
-	this.alpha = a ?? 1
-})
-ColorMock.BLUE = new ColorMock(0, 0, 1, 1)
-ColorMock.RED = new ColorMock(1, 0, 0, 1)
-ColorMock.BLACK = new ColorMock(0, 0, 0, 1)
-ColorMock.lerp = vi.fn((_a, _b, _r, result) => result ?? new ColorMock())
-
-const Cartesian3Mock = {
-	fromDegreesArray: vi.fn((arr) => arr.slice()),
-}
-
-const CustomDataSourceMock = vi.fn(function (name) {
-	this.name = name
-	const entities = []
-	this.entities = {
-		add: vi.fn((entity) => {
-			entities.push(entity)
-			return entity
-		}),
-		values: entities,
-	}
+// Real Cesium geometry classes (tests/setup.js mocks `cesium` globally); the
+// layer is never rendered here, so no WebGL is needed.
+vi.mock('@/services/cesiumProvider.js', async () => {
+	const Cesium = await vi.importActual('cesium')
+	return { getCesium: () => Cesium }
 })
 
-vi.mock('@/services/cesiumProvider.js', () => ({
-	getCesium: () => ({
-		Color: ColorMock,
-		Cartesian3: Cartesian3Mock,
-		CustomDataSource: CustomDataSourceMock,
-		ArcType: { GEODESIC: 'GEODESIC' },
-	}),
-}))
-
-import { VTT_FLOOD_LAYER_NAME } from '@/constants/vttFlood.ts'
-import { clearFlood, fetchSimulationFrame, renderFlood } from '@/services/vttFlood.js'
+import { VTT_DEFAULT_OPACITY, VTT_FLOOD_LAYER_NAME } from '@/constants/vttFlood.ts'
+import {
+	clearFlood,
+	compactFrame,
+	fetchSimulationFrame,
+	hideFlood,
+	internMesh,
+	meshesEqual,
+	renderFlood,
+} from '@/services/vttFlood.js'
+import { findFloodPrimitives } from '@/services/vttFloodPrimitive.js'
+import { buildColorScale } from '@/utils/vttFloodColorScale.js'
 
 function makeViewer() {
-	const sources = []
+	const list = []
 	return {
 		isDestroyed: () => false,
-		dataSources: {
-			_dataSources: sources,
-			// Production clearFlood() iterates via the public DataSourceCollection API
-			// (length + get(i)); back both with the same sources array.
-			get length() {
-				return sources.length
+		scene: {
+			requestRender: vi.fn(),
+			postRender: { addEventListener: vi.fn(() => () => {}) },
+			primitives: {
+				list,
+				get length() {
+					return list.length
+				},
+				get: (i) => list[i],
+				add: vi.fn((p) => {
+					list.push(p)
+					return p
+				}),
+				remove: vi.fn((p) => {
+					const i = list.indexOf(p)
+					if (i < 0) return false
+					list.splice(i, 1)
+					p.destroy?.()
+					return true
+				}),
 			},
-			get: (i) => sources[i],
-			add: vi.fn((ds) => {
-				sources.push(ds)
-				return ds
-			}),
-			remove: vi.fn((ds) => {
-				const i = sources.indexOf(ds)
-				if (i >= 0) sources.splice(i, 1)
-				return true
-			}),
 		},
 	}
 }
@@ -73,13 +57,23 @@ function makeFeature(props, ring) {
 	}
 }
 
-const SAMPLE_RING = [
-	[25.04, 60.18],
-	[25.041, 60.18],
-	[25.041, 60.181],
-	[25.04, 60.181],
-	[25.04, 60.18],
-]
+function cellRing(col) {
+	const w = 25.04 + col * 0.001
+	return [
+		[w, 60.16],
+		[w + 0.001, 60.16],
+		[w + 0.001, 60.161],
+		[w, 60.161],
+		[w, 60.16],
+	]
+}
+
+/** Compact frame of `depths.length` cells along a row, overland depth only. */
+function depthFrame(depths) {
+	return compactFrame(depths.map((d, i) => makeFeature({ overland_water_depth: d }, cellRing(i))))
+}
+
+const SAMPLE_RING = cellRing(0)
 
 describe('fetchSimulationFrame', () => {
 	beforeEach(() => {
@@ -102,7 +96,7 @@ describe('fetchSimulationFrame', () => {
 		expect(fetchSpy).not.toHaveBeenCalled()
 	})
 
-	it('returns features and computed propertyRanges on success', async () => {
+	it('returns the frame as typed arrays in feature order', async () => {
 		const payload = {
 			type: 'FeatureCollection',
 			features: [
@@ -122,7 +116,7 @@ describe('fetchSimulationFrame', () => {
 						transpiration: 0.7,
 						upper_storage_water_depth: 0.08,
 					},
-					SAMPLE_RING
+					cellRing(1)
 				),
 			],
 		}
@@ -131,9 +125,16 @@ describe('fetchSimulationFrame', () => {
 		)
 
 		const result = await fetchSimulationFrame({ scenarioId: '1', frameNumber: 12 })
-		expect(result.features).toHaveLength(2)
-		expect(result.propertyRanges.canopy_air_temperature).toEqual({ min: 290, max: 295 })
-		expect(result.propertyRanges.overland_water_depth).toEqual({ min: 0.1, max: 0.4 })
+		expect(result.mesh.cellCount).toBe(2)
+		expect(result.values.canopy_air_temperature).toBeInstanceOf(Float32Array)
+		expect(Array.from(result.values.canopy_air_temperature)).toEqual([290, 295])
+		expect(Array.from(result.values.overland_water_depth)).toEqual([
+			Math.fround(0.1),
+			Math.fround(0.4),
+		])
+		expect(result).not.toHaveProperty('features')
+		// The source selects the frame's colour classes (constants/vttFloodClassBreaks.ts).
+		expect(result).toMatchObject({ scenarioId: '1', synthetic: false })
 	})
 
 	it('throws on non-2xx response', async () => {
@@ -157,9 +158,10 @@ describe('fetchSimulationFrame', () => {
 		fetchSpy.mockClear()
 		const result = await fetchSimulationFrame({ scenarioId: '1', frameNumber: 12, synthetic: true })
 		expect(fetchSpy).not.toHaveBeenCalled()
-		expect(result.features.length).toBeGreaterThan(0)
-		const range = result.propertyRanges.overland_water_depth
-		expect(range.max).toBeGreaterThan(range.min)
+		expect(result.mesh.cellCount).toBeGreaterThan(0)
+		const depths = Array.from(result.values.overland_water_depth)
+		expect(Math.max(...depths)).toBeGreaterThan(Math.min(...depths))
+		expect(result).toMatchObject({ scenarioId: '1', synthetic: true })
 	})
 
 	it('propagates AbortError', async () => {
@@ -172,87 +174,203 @@ describe('fetchSimulationFrame', () => {
 	})
 })
 
+describe('compactFrame', () => {
+	it('keeps each ring without its closing vertex and marks non-numeric values NaN', () => {
+		const frame = compactFrame([
+			makeFeature({ transpiration: 0.2 }, SAMPLE_RING),
+			makeFeature({ transpiration: 'oops' }, cellRing(1)),
+			{ type: 'Feature', geometry: null, properties: { transpiration: 0.3 } },
+		])
+		expect(Array.from(frame.mesh.offsets)).toEqual([0, 4, 8, 8])
+		expect(Array.from(frame.mesh.coords.slice(0, 8))).toEqual(SAMPLE_RING.slice(0, 4).flat())
+		expect(frame.values.transpiration[0]).toBeCloseTo(0.2)
+		expect(Number.isNaN(frame.values.transpiration[1])).toBe(true)
+		expect(frame.values.transpiration[2]).toBeCloseTo(0.3)
+	})
+
+	it('accepts a bare ring as well as Polygon coordinates', () => {
+		const frame = compactFrame([
+			{ type: 'Feature', geometry: { coordinates: SAMPLE_RING }, properties: {} },
+		])
+		expect(Array.from(frame.mesh.offsets)).toEqual([0, 4])
+	})
+})
+
+describe('internMesh', () => {
+	it('shares an equal mesh and keeps a different one', () => {
+		const a = depthFrame([0.1, 0.2])
+		const b = depthFrame([0.3, 0.4])
+		const c = depthFrame([0.3, 0.4, 0.5])
+		expect(meshesEqual(a.mesh, b.mesh)).toBe(true)
+		expect(internMesh(b, a.mesh).mesh).toBe(a.mesh)
+		expect(internMesh(b, a.mesh).values).toBe(b.values)
+		expect(internMesh(c, a.mesh).mesh).toBe(c.mesh)
+		expect(internMesh(b, null)).toBe(b)
+	})
+})
+
 describe('renderFlood', () => {
-	beforeEach(() => {
-		CustomDataSourceMock.mockClear()
-		ColorMock.lerp.mockClear()
+	it('builds one flood layer and requests a render (requestRenderMode is on)', () => {
+		const viewer = makeViewer()
+		const { shown } = renderFlood({
+			viewer,
+			frame: depthFrame([0.1, 0.5, 1.0]),
+			dimension: 'overland_water_depth',
+		})
+		expect(shown).toBe(3)
+		expect(findFloodPrimitives(viewer)).toHaveLength(1)
+		expect(viewer.scene.requestRender).toHaveBeenCalled()
 	})
 
-	it('produces the expected entity count for a small fixture', async () => {
+	it('builds the geometry once across repeated frame, dimension and opacity changes', () => {
 		const viewer = makeViewer()
-		const frame = {
-			features: [
-				makeFeature({ overland_water_depth: 0.1 }, SAMPLE_RING),
-				makeFeature({ overland_water_depth: 0.5 }, SAMPLE_RING),
-				makeFeature({ overland_water_depth: 1.0 }, SAMPLE_RING),
-			],
-			propertyRanges: {
-				canopy_air_temperature: { min: 0, max: 0 },
-				overland_water_depth: { min: 0.1, max: 1.0 },
-				transpiration: { min: 0, max: 0 },
-				upper_storage_water_depth: { min: 0, max: 0 },
-			},
+		const first = depthFrame([0.1, 0.5, 1.0])
+		for (let n = 0; n < 5; n++) {
+			const next = internMesh(depthFrame([0.02 * n, 0.3, 0.6 + n]), first.mesh)
+			renderFlood({ viewer, frame: next, dimension: 'overland_water_depth', opacity: 0.2 + n / 10 })
+			renderFlood({ viewer, frame: next, dimension: 'transpiration' })
 		}
-		const created = await renderFlood({ viewer, frame, dimension: 'overland_water_depth' })
-		expect(created).toBe(3)
-		expect(viewer.dataSources._dataSources).toHaveLength(1)
-		expect(viewer.dataSources._dataSources[0].name).toBe(VTT_FLOOD_LAYER_NAME)
+		expect(viewer.scene.primitives.add).toHaveBeenCalledTimes(1)
+		expect(findFloodPrimitives(viewer)).toHaveLength(1)
 	})
 
-	it('handles empty features without crashing', async () => {
+	it('rebuilds when the mesh changes, leaving exactly one layer', () => {
 		const viewer = makeViewer()
-		const frame = {
-			features: [],
-			propertyRanges: {
-				canopy_air_temperature: { min: 0, max: 0 },
-				overland_water_depth: { min: 0, max: 0 },
-				transpiration: { min: 0, max: 0 },
-				upper_storage_water_depth: { min: 0, max: 0 },
+		renderFlood({ viewer, frame: depthFrame([0.1, 0.5]), dimension: 'overland_water_depth' })
+		const [old] = findFloodPrimitives(viewer)
+		renderFlood({ viewer, frame: depthFrame([0.1, 0.5, 0.9]), dimension: 'overland_water_depth' })
+
+		expect(old.isDestroyed()).toBe(true)
+		expect(findFloodPrimitives(viewer)).toHaveLength(1)
+	})
+
+	it('never leaves two layers when renders interleave', async () => {
+		const viewer = makeViewer()
+		// Two watcher runs racing in the same microtask checkpoint, each with a
+		// frame that has its own (unshared) mesh.
+		await Promise.all([
+			Promise.resolve().then(() =>
+				renderFlood({ viewer, frame: depthFrame([0.1, 0.5]), dimension: 'overland_water_depth' })
+			),
+			Promise.resolve().then(() =>
+				renderFlood({ viewer, frame: depthFrame([0.2, 0.6]), dimension: 'overland_water_depth' })
+			),
+		])
+		expect(findFloodPrimitives(viewer)).toHaveLength(1)
+		expect(viewer.scene.primitives.length).toBe(1)
+	})
+
+	it('removes a stray second flood layer', () => {
+		const viewer = makeViewer()
+		const frame = depthFrame([0.1, 0.5])
+		renderFlood({ viewer, frame, dimension: 'overland_water_depth' })
+		const [layer] = findFloodPrimitives(viewer)
+		// A second layer left behind, e.g. by a hot module reload.
+		const stray = Object.defineProperty({ destroy: vi.fn() }, 'vttLayerName', {
+			value: VTT_FLOOD_LAYER_NAME,
+		})
+		viewer.scene.primitives.list.push(stray)
+
+		renderFlood({ viewer, frame, dimension: 'overland_water_depth' })
+
+		expect(findFloodPrimitives(viewer)).toEqual([layer])
+		expect(stray.destroy).toHaveBeenCalled()
+	})
+
+	it('hides the layer for a frame with nothing to draw', () => {
+		const viewer = makeViewer()
+		const frame = compactFrame([0, 1, 2].map((i) => makeFeature({ transpiration: 0 }, cellRing(i))))
+		const { shown, scale } = renderFlood({ viewer, frame, dimension: 'transpiration' })
+		expect(shown).toBe(0)
+		expect(scale.mode).toBe('empty')
+		expect(findFloodPrimitives(viewer)[0].show).toBe(false)
+	})
+
+	it('uses the scale it is given, so the legend and the layer agree', () => {
+		const viewer = makeViewer()
+		const frame = depthFrame([0.02, 0.4, 1.2])
+		const scale = buildColorScale(
+			{
+				key: 'overland_water_depth',
+				hideBelow: 0.01,
+				palette: 'Blues',
+				scale: { kind: 'fixed', breaks: [0.01, 1] },
 			},
-		}
-		const created = await renderFlood({ viewer, frame, dimension: 'overland_water_depth' })
-		expect(created).toBe(0)
-	})
-
-	it('throws on unknown dimension', async () => {
-		const viewer = makeViewer()
-		const frame = { features: [], propertyRanges: {} }
-		await expect(renderFlood({ viewer, frame, dimension: 'not_a_real_dimension' })).rejects.toThrow(
-			/Invalid VTT dimension/
+			frame.values.overland_water_depth
 		)
+		const result = renderFlood({ viewer, frame, dimension: 'overland_water_depth', scale })
+		expect(result.scale).toBe(scale)
+		const [primitive] = findFloodPrimitives(viewer)
+		const alpha = Math.round(VTT_DEFAULT_OPACITY * 255)
+		const colors = primitive.geometryInstances.map((g) => Array.from(g.attributes.color.value))
+		expect(colors[0]).toEqual([...scale.classes[0].rgb, alpha])
+		expect(colors[2]).toEqual([...scale.classes[1].rgb, alpha])
 	})
 
-	it('skips features with non-numeric values silently', async () => {
+	it('hides dry and sub-threshold cells', () => {
 		const viewer = makeViewer()
-		const frame = {
-			features: [
-				makeFeature({ overland_water_depth: 0.5 }, SAMPLE_RING),
-				makeFeature({ overland_water_depth: 'oops' }, SAMPLE_RING),
-				makeFeature({ overland_water_depth: NaN }, SAMPLE_RING),
-			],
-			propertyRanges: {
-				canopy_air_temperature: { min: 0, max: 0 },
-				overland_water_depth: { min: 0.5, max: 0.5 },
-				transpiration: { min: 0, max: 0 },
-				upper_storage_water_depth: { min: 0, max: 0 },
-			},
-		}
-		const created = await renderFlood({ viewer, frame, dimension: 'overland_water_depth' })
-		expect(created).toBe(1)
+		const { shown, scale } = renderFlood({
+			viewer,
+			frame: depthFrame([0, 0.001, 0.02, 0.4]),
+			dimension: 'overland_water_depth',
+		})
+		expect(shown).toBe(2)
+		expect(scale.hiddenCount).toBe(2)
+		const [primitive] = findFloodPrimitives(viewer)
+		const show = primitive.geometryInstances.map((g) => g.attributes.show.value[0])
+		expect(show).toEqual([0, 0, 1, 1])
+	})
+
+	it('throws on unknown dimension', () => {
+		const viewer = makeViewer()
+		expect(() =>
+			renderFlood({ viewer, frame: depthFrame([0.1]), dimension: 'not_a_real_dimension' })
+		).toThrow(/Invalid VTT dimension/)
+	})
+
+	it('skips a missing viewer or frame', () => {
+		const frame = depthFrame([0.1])
+		expect(renderFlood({ viewer: null, frame, dimension: 'transpiration' })).toEqual({
+			shown: 0,
+			scale: null,
+		})
+		expect(renderFlood({ viewer: makeViewer(), frame: null, dimension: 'transpiration' })).toEqual({
+			shown: 0,
+			scale: null,
+		})
+	})
+})
+
+describe('hideFlood', () => {
+	it('hides the layer without destroying it', () => {
+		const viewer = makeViewer()
+		renderFlood({ viewer, frame: depthFrame([0.1, 0.5]), dimension: 'overland_water_depth' })
+		const [primitive] = findFloodPrimitives(viewer)
+		hideFlood({ viewer })
+		expect(primitive.show).toBe(false)
+		expect(primitive.isDestroyed()).toBe(false)
 	})
 })
 
 describe('clearFlood', () => {
-	it('removes only the VTT flood layer', async () => {
+	it('removes and destroys only the VTT flood layer', () => {
 		const viewer = makeViewer()
-		viewer.dataSources._dataSources.push({ name: VTT_FLOOD_LAYER_NAME })
-		viewer.dataSources._dataSources.push({ name: 'Buildings 00100' })
-		await clearFlood({ viewer })
-		expect(viewer.dataSources.remove).toHaveBeenCalledTimes(1)
+		const other = { destroy: vi.fn() }
+		viewer.scene.primitives.list.push(other)
+		renderFlood({ viewer, frame: depthFrame([0.1, 0.5]), dimension: 'overland_water_depth' })
+		const [primitive] = findFloodPrimitives(viewer)
+		viewer.scene.requestRender.mockClear()
+
+		clearFlood({ viewer })
+
+		expect(viewer.scene.primitives.list).toEqual([other])
+		expect(primitive.isDestroyed()).toBe(true)
+		expect(other.destroy).not.toHaveBeenCalled()
+		expect(viewer.scene.requestRender).toHaveBeenCalled()
 	})
 
-	it('is safe on a destroyed viewer', async () => {
-		await expect(clearFlood({ viewer: null })).resolves.toBeUndefined()
-		await expect(clearFlood({ viewer: { isDestroyed: () => true } })).resolves.toBeUndefined()
+	it('is safe on a destroyed viewer', () => {
+		expect(() => clearFlood({ viewer: null })).not.toThrow()
+		expect(() => clearFlood({ viewer: { isDestroyed: () => true } })).not.toThrow()
 	})
 })

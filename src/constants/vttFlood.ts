@@ -2,7 +2,8 @@
  * @module constants/vttFlood
  * Constants for the VTT R4C flood-simulation integration.
  *
- * Source of truth for scenarios, dimensions, frame budget, and camera target.
+ * Source of truth for scenarios, dimensions, frame budget, and the data extent
+ * the camera frames.
  * The VTT API returns one GeoJSON FeatureCollection per (scenario, frame); the
  * UI lets users page through frames and switch the property used for colour/
  * extrusion without re-fetching.
@@ -15,11 +16,34 @@ export interface VttScenario {
 	readonly description: string
 }
 
+/** d3-scale-chromatic sequential ramp used for a dimension's colour classes. */
+export type VttPalette = 'YlGn' | 'Blues'
+
+/**
+ * How a dimension's values map to colour classes.
+ *  - `fixed`: physical class breaks, stable across frames and scenarios. The
+ *    last class is open-ended (`[lastBreak, ∞)`).
+ *  - `scenario`: breaks fixed per scenario, read from constants/vttFloodClassBreaks.ts.
+ *    scripts/vtt-flood/derive-class-breaks.mjs pools the shown cells of
+ *    sampled frames and splits the domain between the two quantiles into up
+ *    to {@link VTT_COLOR_STEPS} equal-count classes (breaks tied on one value
+ *    merge). Outliers fall into the end classes instead of compressing
+ *    everything else, and the classes stay the same while scrubbing frames.
+ */
+export type VttScaleSpec =
+	| { readonly kind: 'fixed'; readonly breaks: readonly number[] }
+	| { readonly kind: 'scenario'; readonly lowerQuantile: number; readonly upperQuantile: number }
+
 export interface VttDimension {
 	/** Property name on returned GeoJSON Feature.properties. */
 	readonly key: string
 	readonly label: string
-	readonly unit: string
+	/** Unit of the values, or null where VTT has not confirmed it (#1059). */
+	readonly unit: string | null
+	readonly palette: VttPalette
+	/** Cells with a value at or below this are not drawn. */
+	readonly hideBelow: number
+	readonly scale: VttScaleSpec
 }
 
 /**
@@ -44,38 +68,198 @@ export const VTT_SCENARIOS: readonly VttScenario[] = [
 	},
 ] as const
 
-export const VTT_DIMENSIONS: readonly VttDimension[] = [
-	{ key: 'canopy_air_temperature', label: 'Canopy air temperature', unit: 'K' },
-	{ key: 'overland_water_depth', label: 'Overland water depth', unit: 'm' },
-	{ key: 'transpiration', label: 'Transpiration', unit: 'mm/h' },
-	{ key: 'upper_storage_water_depth', label: 'Upper storage water depth', unit: 'm' },
-] as const
-
-/** Frames available per scenario: 0..288 inclusive (12h × 2.5min steps + t0). */
-export const VTT_FRAME_COUNT = 289
-export const VTT_FRAME_INTERVAL_MINUTES = 2.5
-
-/** Maximum extrusion height for the highest normalized value, in metres. */
-export const VTT_MAX_EXTRUSION_M = 100
-
-/** Constant alpha applied to all rendered cells (per POC). */
-export const VTT_FILL_ALPHA = 0.8
+/**
+ * Overland water depth below this is not drawn: 1 cm is the usual dry/wet cut
+ * on flood maps. VTT frames carry a ~1 mm film over most cells (12,860 of
+ * 13,077 cells in scenario 2 frame 60) that would otherwise paint the whole
+ * extent.
+ */
+export const VTT_WET_DEPTH_THRESHOLD_M = 0.01
 
 /**
- * Camera target for the first time the panel is opened — Laajasalo, where the
- * simulation extent lives. Co-ordinates picked to centre on the southern
- * Helsinki islands without zooming so far in that the extent is clipped.
+ * Overland depth class breaks in metres: 1–5 cm, 5–10 cm, 10–30 cm, 30–50 cm,
+ * 50 cm–1 m, ≥ 1 m. Sampled VTT frames peak at 1.23–1.54 m.
  */
-export const LAAJASALO_CAMERA = {
-	longitude: 25.0419,
-	latitude: 60.1781,
-	/** Eye height in metres. */
-	height: 3500,
-	/** Heading (degrees, 0 = north). */
-	heading: 0,
-	/** Pitch in degrees (-90 = straight down). */
-	pitch: -55,
+export const VTT_DEPTH_CLASS_BREAKS_M = [
+	VTT_WET_DEPTH_THRESHOLD_M,
+	0.05,
+	0.1,
+	0.3,
+	0.5,
+	1.0,
+] as const
+
+/** Quantiles bounding a `scenario` colour domain (2nd–98th percentile). */
+export const VTT_ROBUST_LOWER_QUANTILE = 0.02
+export const VTT_ROBUST_UPPER_QUANTILE = 0.98
+
+const SCENARIO_SCALE: VttScaleSpec = {
+	kind: 'scenario',
+	lowerQuantile: VTT_ROBUST_LOWER_QUANTILE,
+	upperQuantile: VTT_ROBUST_UPPER_QUANTILE,
+}
+
+/**
+ * Transpiration is first: it is the default view and the radio list follows
+ * this order. Units VTT has not confirmed are null rather than guessed (#1059):
+ * transpiration never decreases in a cell, so it is not the rate 'mm/h' once
+ * claimed, and canopy_air_temperature is a constant 5 in every sampled real
+ * frame, which is not a plausible temperature in K. The depths are in metres.
+ *
+ * The water depths use Blues and the vegetation and canopy values YlGn.
+ */
+export const VTT_DIMENSIONS: readonly VttDimension[] = [
+	{
+		key: 'transpiration',
+		label: 'Transpiration',
+		unit: null,
+		palette: 'YlGn',
+		hideBelow: 0,
+		scale: SCENARIO_SCALE,
+	},
+	{
+		key: 'overland_water_depth',
+		label: 'Overland water depth',
+		unit: 'm',
+		palette: 'Blues',
+		hideBelow: VTT_WET_DEPTH_THRESHOLD_M,
+		scale: { kind: 'fixed', breaks: VTT_DEPTH_CLASS_BREAKS_M },
+	},
+	{
+		key: 'upper_storage_water_depth',
+		label: 'Upper storage water depth',
+		unit: 'm',
+		palette: 'Blues',
+		hideBelow: 0,
+		scale: SCENARIO_SCALE,
+	},
+	{
+		key: 'canopy_air_temperature',
+		label: 'Canopy air temperature',
+		unit: null,
+		palette: 'YlGn',
+		hideBelow: Number.NEGATIVE_INFINITY,
+		scale: SCENARIO_SCALE,
+	},
+] as const
+
+/**
+ * Dimension shown when the panel first opens. Named explicitly rather than
+ * taken from the list order so the URL-state code and the store share one
+ * default that survives reordering the radio list.
+ */
+export const VTT_DEFAULT_DIMENSION = 'transpiration'
+
+/**
+ * Frames per scenario: 0..287 inclusive (288 × 2.5 min = 12 h). Upstream
+ * returns 404 for frame 288 (mesh2d_out_288.geojson), measured 2026-10-08 for
+ * scenarios 1–3.
+ */
+export const VTT_FRAME_COUNT = 288
+export const VTT_FRAME_INTERVAL_MINUTES = 2.5
+
+/**
+ * Frame shown when the panel first opens, and when a link has no `vttframe`:
+ * +05:00. Frame 0 is the start of the storm and every dimension is constant
+ * there in scenarios 1–3, so it draws nothing. At frame 120, scenario 1 has
+ * 8,255 cells with transpiration > 0 and 2,447 cells deeper than 1 cm, and
+ * scenario 2 transpiration varies too; measured 2026-10-08.
+ */
+export const VTT_DEFAULT_FRAME = 120
+
+/**
+ * Extrusion height of the highest colour class, in metres: about one mesh cell
+ * (~100 m), so at the oblique camera pitch the tallest column hides ~1.4 cells
+ * behind it.
+ */
+export const VTT_MAX_EXTRUSION_M = 100
+
+/** Extrusion height of the lowest colour class, so it still reads as a column. */
+export const VTT_MIN_EXTRUSION_M = 2
+
+/** Number of equal-count colour classes in a `scenario` scale (fewer when values tie). */
+export const VTT_COLOR_STEPS = 8
+
+/**
+ * Part of each d3 colour ramp used, as [start, end] in 0..1. The near-white
+ * start of a ramp disappears over light imagery once translucent. Blues starts
+ * later than YlGn: its light end is paler and closer to the base map.
+ */
+export const VTT_PALETTE_T_RANGES: Readonly<Record<VttPalette, readonly [number, number]>> = {
+	YlGn: [0.25, 1],
+	Blues: [0.3, 1],
+}
+
+/**
+ * Frames kept in the store's client cache (least recently used evicted). A
+ * compact frame is ~210 KB (4 dimensions × 13,077 Float32 values; the mesh is
+ * shared), so 48 frames is ~10 MB. Scrubbing back over viewed frames or
+ * switching scenarios then needs no 6 MB re-fetch.
+ */
+export const VTT_FRAME_CACHE_SIZE = 48
+
+/** Fill opacity of flood cells: default and slider bounds. */
+export const VTT_DEFAULT_OPACITY = 0.55
+export const VTT_OPACITY_MIN = 0.1
+export const VTT_OPACITY_MAX = 1
+export const VTT_OPACITY_STEP = 0.05
+
+/**
+ * Bounding box of the VTT mesh in degrees: southern Laajasalo. Identical for
+ * scenarios 1–3; measured 2026-10-08 against /vtt-api frame 120.
+ */
+export const VTT_DATA_EXTENT = {
+	west: 25.03685,
+	south: 60.16116,
+	east: 25.06373,
+	north: 60.17409,
 } as const
+
+/** Centre of {@link VTT_DATA_EXTENT} (≈ 25.05029, 60.16763). */
+export const VTT_DATA_CENTER = {
+	longitude: (VTT_DATA_EXTENT.west + VTT_DATA_EXTENT.east) / 2,
+	latitude: (VTT_DATA_EXTENT.south + VTT_DATA_EXTENT.north) / 2,
+} as const
+
+export type VttCameraView = 'oblique' | 'topDown'
+
+/**
+ * Camera orientations around {@link VTT_DATA_EXTENT}, in degrees. The camera
+ * looks at the extent centre; heading is the view direction (0 = looking
+ * north, so the camera sits south of the data, over open water). Cesium fits
+ * the range to the extent.
+ *
+ * Oblique pitch -35 is also the app's default URL pitch. At -35 the tallest
+ * column ({@link VTT_MAX_EXTRUSION_M}) hides ~143 m (~1.4 cells) of ground
+ * behind it, so neighbouring heights stay comparable; the previous -55
+ * compressed relative heights to ~0.7× of that.
+ */
+export const VTT_CAMERA_VIEWS: Readonly<
+	Record<VttCameraView, { readonly heading: number; readonly pitch: number }>
+> = {
+	oblique: { heading: 0, pitch: -35 },
+	topDown: { heading: 0, pitch: -90 },
+}
+
+export const VTT_DEFAULT_CAMERA_VIEW: VttCameraView = 'oblique'
+
+/** Duration of the flight to the data extent, in seconds. */
+export const VTT_CAMERA_FLIGHT_SECONDS = 1.2
+
+/**
+ * Highest camera (ellipsoid height, metres) at which the extent counts as
+ * already framed, so opening the panel keeps the camera. In a 1400×900 window
+ * the fitted views put the eye at ~1.6 km (oblique) and ~2.8 km (top-down); a
+ * city-wide view that merely contains Laajasalo is far above this.
+ */
+export const VTT_FRAMED_MAX_HEIGHT_M = 5000
+
+/**
+ * Delay before panel state is written to the query string. Coalesces slider
+ * scrubbing into one history.replaceState call; browsers throttle bursts of
+ * replaceState.
+ */
+export const VTT_URL_UPDATE_DEBOUNCE_MS = 300
 
 /** Name prefix used for the VTT data source / primitive collection in Cesium. */
 export const VTT_FLOOD_LAYER_NAME = 'VTT-Flood-Simulation'
@@ -118,14 +302,15 @@ export function validateFrameNumber(frame: unknown): number {
 }
 
 /**
- * Format a frame index as a +HH:MM offset from t0.
+ * Format a frame index as its exact offset from t0: +HH:MM, with :SS appended
+ * when the offset is not a whole minute (odd frames, 2.5 min apart).
  *
  * @param frame - Frame index in 0..VTT_FRAME_COUNT-1.
- * @returns Formatted string like "+02:30".
+ * @returns Formatted string like "+02:30" or "+11:57:30".
  */
 export function formatFrameOffset(frame: number): string {
-	const minutes = Math.round(frame * VTT_FRAME_INTERVAL_MINUTES)
-	const hh = Math.floor(minutes / 60)
-	const mm = minutes % 60
-	return `+${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+	const seconds = Math.round(frame * VTT_FRAME_INTERVAL_MINUTES * 60)
+	const pad = (n: number) => String(n).padStart(2, '0')
+	const hhmm = `+${pad(Math.floor(seconds / 3600))}:${pad(Math.floor(seconds / 60) % 60)}`
+	return seconds % 60 === 0 ? hhmm : `${hhmm}:${pad(seconds % 60)}`
 }

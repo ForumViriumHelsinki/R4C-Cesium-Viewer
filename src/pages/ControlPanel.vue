@@ -273,10 +273,11 @@ import MapControls from '../components/MapControls.vue'
 import UnifiedSearch from '../components/UnifiedSearch.vue'
 import ViewModeCompact from '../components/ViewModeCompact.vue'
 import { useSidebarNavigation } from '../composables/useSidebarNavigation.js'
+import { useVttFloodUrlState } from '../composables/useVttFloodUrlState.js'
 import { ANALYSES, findAnalysis, isAnalysisAvailable } from '../constants/analysisRegistry.js'
 import { LAYOUT } from '../constants/layout.js'
-import { LAAJASALO_CAMERA } from '../constants/vttFlood'
-import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
+import { cesiumProvider } from '../services/cesiumProvider.js'
+import { flyToFloodExtent, isFloodExtentFramed } from '../services/vttFloodCamera.js'
 
 // Store and Service Imports
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
@@ -423,35 +424,35 @@ const handleDrawerUpdate = (val) => {
 
 // --- VTT Flood Simulation panel toggle ---
 const vttFloodOpen = ref(false)
-const vttFloodFlownTo = ref(false)
 
-const flyCameraToLaajasalo = () => {
+/**
+ * Frame the flood extent unless the camera already does. Runs on every open,
+ * not just the first: closing the panel removes the flood, and the data covers
+ * only ~1.5 km², so from anywhere else a reopened panel would show nothing.
+ */
+const frameVttFloodExtent = () => {
 	const viewer = globalStore.cesiumViewer
-	if (!viewer || viewer.isDestroyed?.()) return
-	if (!cesiumProvider.isInitialized()) return
-	const Cesium = getCesium()
-	viewer.camera.flyTo({
-		destination: Cesium.Cartesian3.fromDegrees(
-			LAAJASALO_CAMERA.longitude,
-			LAAJASALO_CAMERA.latitude,
-			LAAJASALO_CAMERA.height
-		),
-		orientation: {
-			heading: Cesium.Math.toRadians(LAAJASALO_CAMERA.heading),
-			pitch: Cesium.Math.toRadians(LAAJASALO_CAMERA.pitch),
-			roll: 0.0,
-		},
-		duration: 1.2,
-	})
+	if (!viewer || !cesiumProvider.isInitialized()) return
+	if (!isFloodExtentFramed(viewer)) flyToFloodExtent({ viewer })
 }
 
 const toggleVttFlood = () => {
 	vttFloodOpen.value = !vttFloodOpen.value
-	if (vttFloodOpen.value && !vttFloodFlownTo.value) {
-		flyCameraToLaajasalo()
-		vttFloodFlownTo.value = true
-	}
+	if (vttFloodOpen.value) frameVttFloodExtent()
 }
+
+// A shared link opens the panel on the Layers tab, which must be expanded for
+// the panel to mount. The link's own camera, restored by CesiumViewer, wins
+// over the default framing.
+useVttFloodUrlState({
+	isOpen: computed(() => vttFloodOpen.value && featureFlagStore.isEnabled('vttFloodSimulation')),
+	viewerReady,
+	onRestoreOpen: ({ skipFlight }) => {
+		toggleStore.openTab('layers')
+		vttFloodOpen.value = true
+		if (!skipFlight) frameVttFloodExtent()
+	},
+})
 
 const closeVttFlood = () => {
 	vttFloodOpen.value = false

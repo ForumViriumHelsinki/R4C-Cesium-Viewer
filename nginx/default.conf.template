@@ -653,6 +653,11 @@ server {
         proxy_cache_methods POST;
         proxy_cache_key "$request_uri";
 
+        # The upstream labels its ~6 MB GeoJSON frames application/octet-stream,
+        # which the server-level gzip_types list skips, so they went out
+        # uncompressed. This list replaces the inherited one for this location.
+        gzip_types application/octet-stream application/json application/geo+json;
+
         # The VTT POC can take seconds for a single frame; allow generous timeouts.
         proxy_connect_timeout 10s;
         proxy_send_timeout 60s;
