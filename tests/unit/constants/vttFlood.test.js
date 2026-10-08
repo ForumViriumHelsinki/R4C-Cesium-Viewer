@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+	formatFrameOffset,
 	VTT_CAMERA_VIEWS,
 	VTT_DATA_CENTER,
 	VTT_DATA_EXTENT,
@@ -26,6 +27,20 @@ describe('VTT frame range', () => {
 	it('rejects negative and fractional frames', () => {
 		expect(() => validateFrameNumber(-1)).toThrow(/Invalid VTT frame/)
 		expect(() => validateFrameNumber(1.5)).toThrow(/Invalid VTT frame/)
+	})
+})
+
+describe('formatFrameOffset', () => {
+	// Frames are 2.5 min apart, so odd frames fall on a half minute. Rounding
+	// to minutes labelled the last frame (11:57:30) "+11:58".
+	it.each([
+		[0, '+00:00'],
+		[1, '+00:02:30'],
+		[2, '+00:05'],
+		[120, '+05:00'],
+		[287, '+11:57:30'],
+	])('labels frame %i as %s', (frame, label) => {
+		expect(formatFrameOffset(frame)).toBe(label)
 	})
 })
 

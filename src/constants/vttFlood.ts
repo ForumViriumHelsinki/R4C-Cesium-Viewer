@@ -294,14 +294,15 @@ export function validateFrameNumber(frame: unknown): number {
 }
 
 /**
- * Format a frame index as a +HH:MM offset from t0.
+ * Format a frame index as its exact offset from t0: +HH:MM, with :SS appended
+ * when the offset is not a whole minute (odd frames, 2.5 min apart).
  *
  * @param frame - Frame index in 0..VTT_FRAME_COUNT-1.
- * @returns Formatted string like "+02:30".
+ * @returns Formatted string like "+02:30" or "+11:57:30".
  */
 export function formatFrameOffset(frame: number): string {
-	const minutes = Math.round(frame * VTT_FRAME_INTERVAL_MINUTES)
-	const hh = Math.floor(minutes / 60)
-	const mm = minutes % 60
-	return `+${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+	const seconds = Math.round(frame * VTT_FRAME_INTERVAL_MINUTES * 60)
+	const pad = (n: number) => String(n).padStart(2, '0')
+	const hhmm = `+${pad(Math.floor(seconds / 3600))}:${pad(Math.floor(seconds / 60) % 60)}`
+	return seconds % 60 === 0 ? hhmm : `${hhmm}:${pad(seconds % 60)}`
 }
