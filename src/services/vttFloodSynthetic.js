@@ -15,6 +15,7 @@
 
 import {
 	LAAJASALO_CAMERA,
+	VTT_FRAME_COUNT,
 	VTT_FRAME_INTERVAL_MINUTES,
 	validateFrameNumber,
 	validateScenarioId,
@@ -35,8 +36,8 @@ const DRAINAGE_RETENTION = 0.97
  */
 const SCENARIO_PROFILES = {
 	1: { totalMm: 80, stormFrames: 24 },
-	2: { totalMm: 30, stormFrames: 288 },
-	3: { totalMm: 40, stormFrames: 288 },
+	2: { totalMm: 30, stormFrames: VTT_FRAME_COUNT },
+	3: { totalMm: 40, stormFrames: VTT_FRAME_COUNT },
 }
 
 /** Low-lying spots where water collects: centre offsets in cells, radius in cells. */

@@ -142,8 +142,12 @@ export const VTT_DIMENSIONS: readonly VttDimension[] = [
  */
 export const VTT_DEFAULT_DIMENSION = 'transpiration'
 
-/** Frames available per scenario: 0..288 inclusive (12h × 2.5min steps + t0). */
-export const VTT_FRAME_COUNT = 289
+/**
+ * Frames per scenario: 0..287 inclusive (288 × 2.5 min = 12 h). Upstream
+ * returns 404 for frame 288 (mesh2d_out_288.geojson), measured 2026-10-08 for
+ * scenarios 1–3.
+ */
+export const VTT_FRAME_COUNT = 288
 export const VTT_FRAME_INTERVAL_MINUTES = 2.5
 
 /** Extrusion height of the highest colour class, in metres. */
