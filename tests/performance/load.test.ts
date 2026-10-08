@@ -369,8 +369,9 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 
 			// The heap keeps growing after gotoReady() while start-level data loads: a
 			// local probe measured about 30 MB/s on a GPU, levelling off near 1.7 GB
-			// after about 95s (#1039). A baseline taken during that growth measures the
-			// loading, not the clicks. Wait for it to settle; if it does not, skip.
+			// after about 95s (#1039; tracked as #1054). A baseline taken during that
+			// growth measures the loading, not the clicks. Wait for it to settle; if it
+			// does not, skip.
 			const settleStart = Date.now()
 			const startupHeapBytes = initialHeapBytes
 			let stableReadings = 0
