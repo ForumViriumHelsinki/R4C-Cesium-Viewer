@@ -582,8 +582,9 @@ cesiumDescribe('Navigation Levels Accessibility', () => {
 			{ tag: ['@requires-database'] },
 			async ({ cesiumPage }) => {
 				// Intercept requests to simulate slow loading
-				cesiumPage.route('**/*.json', (route) => {
-					setTimeout(() => route.continue(), 1000)
+				await cesiumPage.route('**/*.json', async (route) => {
+					await new Promise((resolve) => setTimeout(resolve, 1000))
+					await route.continue()
 				})
 
 				// Attempt navigation during loading

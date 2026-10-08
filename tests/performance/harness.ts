@@ -16,12 +16,23 @@
  *   are logged and written to PERF_RESULTS_DIR as informational output. On a
  *   failed test the page's screenshot and Playwright trace are saved there too.
  */
-import { appendFileSync, mkdirSync } from 'node:fs'
+import { appendFileSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Browser, Page } from 'playwright'
 
 /** Where metrics and failure artifacts go; the CI job uploads this directory. */
 const RESULTS_DIR = process.env.PERF_RESULTS_DIR ?? 'performance-results'
+
+const METRICS_FILE = join(RESULTS_DIR, 'metrics.jsonl')
+
+/**
+ * Deletes metrics.jsonl so each run starts a fresh file. recordMetric() appends,
+ * so without this local runs accumulate into one file (#1039). Called from the
+ * suite's globalSetup, once per `vitest run`.
+ */
+export function resetMetrics(): void {
+	rmSync(METRICS_FILE, { force: true })
+}
 
 /** The Cesium widget canvas. A bare `canvas` selector also matches other canvases. */
 export const MAP_CANVAS = '#cesiumContainer canvas'
@@ -195,7 +206,7 @@ export function recordMetric(test: string, data: Record<string, unknown>): void 
 	const line = JSON.stringify({ test, ...data })
 	console.log(`[perf] ${line}`)
 	mkdirSync(RESULTS_DIR, { recursive: true })
-	appendFileSync(join(RESULTS_DIR, 'metrics.jsonl'), `${line}\n`)
+	appendFileSync(METRICS_FILE, `${line}\n`)
 }
 
 /** Resolves to `fallback` if `promise` rejects or takes longer than `ms`. */

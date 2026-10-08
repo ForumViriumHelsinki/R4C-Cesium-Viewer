@@ -451,8 +451,9 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 	cesiumTest.describe('Performance and Reliability', { tag: ['@requires-database'] }, () => {
 		cesiumTest('should handle complete workflows under load', async ({ cesiumPage }) => {
 			// Simulate slower network
-			cesiumPage.route('**/*', (route) => {
-				setTimeout(() => route.continue(), 200)
+			await cesiumPage.route('**/*', async (route) => {
+				await new Promise((resolve) => setTimeout(resolve, 200))
+				await route.continue()
 			})
 
 			// Complete workflow with delays
@@ -489,12 +490,12 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 		cesiumTest('should recover gracefully from errors', async ({ cesiumPage }) => {
 			// Simulate some network failures
 			let failCount = 0
-			cesiumPage.route('**/*.json', (route) => {
+			await cesiumPage.route('**/*.json', async (route) => {
 				if (failCount < 2) {
 					failCount++
-					route.abort('failed')
+					await route.abort('failed')
 				} else {
-					route.continue()
+					await route.continue()
 				}
 			})
 

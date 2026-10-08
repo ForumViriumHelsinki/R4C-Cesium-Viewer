@@ -323,21 +323,46 @@ lighthouse-local:
 test-performance swgl="0" filter="":
     #!/usr/bin/env bash
     set -euo pipefail
+    # PERF_BASE_URL=http://localhost:<port> serves and tests on another port.
+    export PERF_BASE_URL="${PERF_BASE_URL:-http://localhost:4173}"
+    port="${PERF_BASE_URL##*:}"
+    port="${port%%/*}"
+    # Something already answering there would pass the health check below
+    # before the new preview has had a chance to fail.
+    if curl -fsS -o /dev/null "$PERF_BASE_URL/" 2>/dev/null; then
+        echo "A server already answers at $PERF_BASE_URL; stop it or set PERF_BASE_URL to a free port." >&2
+        exit 1
+    fi
     VITE_E2E_TEST=true bun run build
-    bun run preview >/tmp/r4c-perf-preview.log 2>&1 &
+    # --strictPort: fail rather than move to the next free port, which the
+    # health check below would never see.
+    bun run preview -- --port "$port" --strictPort >/tmp/r4c-perf-preview.log 2>&1 &
     PREVIEW_PID=$!
     trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
-    until curl -fsS -o /dev/null http://localhost:4173/ 2>/dev/null; do sleep 1; done
+    until curl -fsS -o /dev/null "$PERF_BASE_URL/" 2>/dev/null; do
+        # A preview that exited (port taken by a listener that is not an HTTP
+        # server, or a build/config error) would otherwise loop here forever.
+        if ! kill -0 "$PREVIEW_PID" 2>/dev/null; then
+            echo "bun run preview exited; see /tmp/r4c-perf-preview.log" >&2
+            cat /tmp/r4c-perf-preview.log >&2
+            exit 1
+        fi
+        sleep 1
+    done
     if [ "{{ swgl }}" = "1" ]; then
         export PERF_TEST_CHROMIUM_ARGS="--use-gl=angle --use-angle=swiftshader --disable-gpu --disable-dev-shm-usage --no-sandbox"
+        # Software rendering reproduces the CI job, so use its thresholds too.
+        export CI=true
     else
         # Headless Chromium falls back to SwiftShader unless asked for the GPU.
         export PERF_TEST_CHROMIUM_ARGS="--enable-gpu"
+        # No CI=true: a GPU run is held to the local thresholds (MIN_FPS 30, not
+        # CI's 15). PERF_BASE_URL points the suite at this preview.
     fi
     if [ -n "{{ filter }}" ]; then
-        CI=true bun run test:performance -t "{{ filter }}"
+        bun run test:performance -t "{{ filter }}"
     else
-        CI=true bun run test:performance
+        bun run test:performance
     fi
 
 # Run a single test file (fast iteration during test fixes). Accessibility specs
