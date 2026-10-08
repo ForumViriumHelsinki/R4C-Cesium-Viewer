@@ -67,6 +67,28 @@ function recordThreshold(metric: string, value: number, threshold: number): void
 	recordMetric(test, { metric, value: Math.round(value * 10) / 10, threshold })
 }
 
+const MB = 1024 * 1024
+
+// The memory test's baseline is taken once HEAP_SETTLE_READINGS consecutive GC'd
+// heap readings, HEAP_SETTLE_INTERVAL_MS apart, each differ from the previous one by
+// less than HEAP_SETTLE_BYTES, within HEAP_SETTLE_MS. A single matching pair can
+// fall between two loading bursts (a review run recorded -8 MB growth).
+const HEAP_SETTLE_MS = 20000
+const HEAP_SETTLE_INTERVAL_MS = 2000
+const HEAP_SETTLE_BYTES = 5 * MB
+const HEAP_SETTLE_READINGS = 2
+
+/** How long a test waits for a route handler to see a request (Node-side poll). */
+const ROUTE_WAIT_MS = 10000
+
+/** Polls `predicate` every 100 ms until it holds or `timeoutMs` passes. The caller asserts. */
+async function waitUntil(predicate: () => boolean, timeoutMs: number): Promise<void> {
+	const deadline = Date.now() + timeoutMs
+	while (!predicate() && Date.now() < deadline) {
+		await new Promise((resolve) => setTimeout(resolve, 100))
+	}
+}
+
 /**
  * Helper function to measure performance with warmup runs
  * Warmup runs eliminate cold start effects and JIT compilation noise
@@ -106,10 +128,16 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 		// PERF_TEST_CHROMIUM_ARGS sets the renderer. The CI job passes the software
 		// (SwiftShader) flags playwright.config.ts uses; `just test-performance 1`
 		// passes the same flags locally. Unset → the local GPU.
+		// --enable-precise-memory-info: without it performance.memory is bucketed
+		// (a probe read 793000000 bytes), so the memory test measured 0 MB growth
+		// whatever the app did (#1039). --expose-gc lets that test read retained
+		// memory after a full collection.
 		browser = await chromium.launch({
-			args: process.env.PERF_TEST_CHROMIUM_ARGS
-				? process.env.PERF_TEST_CHROMIUM_ARGS.split(/\s+/).filter(Boolean)
-				: [],
+			args: [
+				'--enable-precise-memory-info',
+				'--js-flags=--expose-gc',
+				...(process.env.PERF_TEST_CHROMIUM_ARGS ?? '').split(/\s+/).filter(Boolean),
+			],
 		})
 
 		// Verify server is responding before running tests
@@ -151,10 +179,11 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// Warmup run (not measured) - eliminates cold start effects
 			await page.goto(LOCALHOST_URL)
 			await page.waitForSelector(MAP_CANVAS, { state: 'visible' })
-			await page.reload()
 
-			// Measured run
+			// Measured run. The timer starts before reload(), which itself waits for
+			// the load event; started after it, the measurement missed that wait.
 			const startTime = Date.now()
+			await page.reload()
 			await page.waitForSelector(MAP_CANVAS, {
 				state: 'visible',
 				timeout: PERF_CONFIG.INITIAL_LOAD + 5000,
@@ -166,7 +195,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			expect(loadTime).toBeLessThan(PERF_CONFIG.INITIAL_LOAD)
 		})
 
-		it('should have good Core Web Vitals metrics', async () => {
+		it('should reach DOMContentLoaded and load within budget', async (ctx) => {
 			const page = await openPage(browser)
 
 			// Warmup run. Use 'load' rather than 'networkidle': this is a Cesium map
@@ -176,56 +205,36 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			await page.waitForLoadState('load')
 			await page.reload()
 
-			// Measured run
-			await page.waitForLoadState('load')
-
-			// Measure performance metrics
-			const metrics = await page.evaluate(() => {
-				return new Promise((resolve) => {
-					// Wait for performance observer to capture metrics
-					const observer = new PerformanceObserver((list) => {
-						const entries = list.getEntries()
-						const metrics: any = {}
-
-						entries.forEach((entry) => {
-							if (entry.entryType === 'navigation') {
-								const navEntry = entry as PerformanceNavigationTiming
-								metrics.domContentLoaded =
-									navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart
-								metrics.loadComplete = navEntry.loadEventEnd - navEntry.loadEventStart
-								metrics.firstContentfulPaint = navEntry.responseEnd - navEntry.fetchStart
-							}
-						})
-
-						resolve(metrics)
-					})
-
-					observer.observe({ entryTypes: ['navigation'] })
-
-					// Fallback in case observer doesn't fire
-					setTimeout(() => {
-						const navigation = performance.getEntriesByType(
-							'navigation'
-						)[0] as PerformanceNavigationTiming
-						resolve({
-							domContentLoaded:
-								navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
-							loadComplete: navigation.loadEventEnd - navigation.loadEventStart,
-							firstContentfulPaint: navigation.responseEnd - navigation.fetchStart,
-						})
-					}, 1000)
-				})
+			// Measured run. loadEventEnd is 0 until the load handlers have returned.
+			await page.waitForFunction(() => {
+				const [navigation] = performance.getEntriesByType('navigation')
+				return ((navigation as PerformanceNavigationTiming | undefined)?.loadEventEnd ?? 0) > 0
 			})
 
-			// Assert CI-aware performance metrics
-			recordThreshold(
-				'domContentLoadedMs',
-				(metrics as any).domContentLoaded,
-				PERF_CONFIG.DOM_READY
-			)
-			recordThreshold('loadCompleteMs', (metrics as any).loadComplete, PERF_CONFIG.FULL_LOAD)
-			expect((metrics as any).domContentLoaded).toBeLessThan(PERF_CONFIG.DOM_READY)
-			expect((metrics as any).loadComplete).toBeLessThan(PERF_CONFIG.FULL_LOAD)
+			// Milestones from navigation start (startTime 0), not the duration of the
+			// DOMContentLoaded and load event handlers, which is what this test used to
+			// assert (#1039). First contentful paint is recorded, not asserted.
+			const metrics = await page.evaluate(() => {
+				const navigation = performance.getEntriesByType(
+					'navigation'
+				)[0] as PerformanceNavigationTiming
+				const fcp = performance.getEntriesByName('first-contentful-paint')[0]
+				return {
+					domContentLoaded: navigation.domContentLoadedEventEnd,
+					loadComplete: navigation.loadEventEnd,
+					firstContentfulPaint: fcp ? fcp.startTime : null,
+				}
+			})
+
+			recordThreshold('domContentLoadedMs', metrics.domContentLoaded, PERF_CONFIG.DOM_READY)
+			recordThreshold('loadCompleteMs', metrics.loadComplete, PERF_CONFIG.FULL_LOAD)
+			recordMetric(ctx.task.name, {
+				metric: 'firstContentfulPaintMs',
+				value: metrics.firstContentfulPaint,
+			})
+			expect(metrics.domContentLoaded).toBeGreaterThan(0)
+			expect(metrics.domContentLoaded).toBeLessThan(PERF_CONFIG.DOM_READY)
+			expect(metrics.loadComplete).toBeLessThan(PERF_CONFIG.FULL_LOAD)
 		})
 
 		it('should handle resource loading efficiently', async () => {
@@ -333,17 +342,61 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			expect(fps).toBeGreaterThan(PERF_CONFIG.MIN_FPS)
 		}, 65000)
 
-		it('should handle memory usage efficiently', async () => {
+		it('should handle memory usage efficiently', async (ctx) => {
 			const page = await openPage(browser)
 			await gotoReady(page, LOCALHOST_URL, READY_TIMEOUT_MS)
 
 			// Read JS heap via Chromium's performance.memory (Playwright has no
-			// Puppeteer-style page.metrics()). performance.memory is Chromium-only and
-			// works under SwiftShader; returns 0 if unavailable so the test stays robust.
+			// Puppeteer-style page.metrics()). It is Chromium-only and works under
+			// SwiftShader. Each read runs a full GC first (--js-flags=--expose-gc), so
+			// it counts retained memory, not garbage awaiting collection.
 			const readHeapBytes = () =>
-				page.evaluate(() => (performance as any).memory?.usedJSHeapSize ?? 0)
+				page.evaluate(() => {
+					;(window as any).gc?.()
+					return (performance as any).memory?.usedJSHeapSize as number | undefined
+				})
 
-			const initialHeapBytes = await readHeapBytes()
+			// Without performance.memory there is nothing to measure: skip rather than
+			// compare 0 with 0.
+			let initialHeapBytes = await readHeapBytes()
+			if (initialHeapBytes === undefined) {
+				ctx.skip('performance.memory is unavailable in this browser')
+				return
+			}
+			// Bucketed values (whole 100 kB) mean --enable-precise-memory-info did not
+			// take effect; growth below the bucket size would read as 0.
+			expect(initialHeapBytes % 100_000, 'performance.memory is bucketed').not.toBe(0)
+
+			// The heap keeps growing after gotoReady() while start-level data loads: a
+			// local probe measured about 30 MB/s on a GPU, levelling off near 1.7 GB
+			// after about 95s (#1039; tracked as #1054). A baseline taken during that
+			// growth measures the loading, not the clicks. Wait for it to settle; if it
+			// does not, skip.
+			const settleStart = Date.now()
+			const startupHeapBytes = initialHeapBytes
+			let stableReadings = 0
+			while (stableReadings < HEAP_SETTLE_READINGS && Date.now() - settleStart < HEAP_SETTLE_MS) {
+				await page.waitForTimeout(HEAP_SETTLE_INTERVAL_MS)
+				const current = (await readHeapBytes()) ?? 0
+				stableReadings =
+					Math.abs(current - initialHeapBytes) < HEAP_SETTLE_BYTES ? stableReadings + 1 : 0
+				initialHeapBytes = current
+			}
+			const settled = stableReadings >= HEAP_SETTLE_READINGS
+			if (!settled) {
+				const growthMBPerS =
+					(initialHeapBytes - startupHeapBytes) / MB / ((Date.now() - settleStart) / 1000)
+				recordMetric(ctx.task.name, {
+					metric: 'startupHeapGrowthMBPerS',
+					value: Math.round(growthMBPerS * 10) / 10,
+					heapMB: Math.round(initialHeapBytes / MB),
+				})
+				ctx.skip(
+					`JS heap still growing ${growthMBPerS.toFixed(1)} MB/s after ${HEAP_SETTLE_MS / 1000}s ` +
+						'of start-level loading; growth over the clicks would measure that instead'
+				)
+				return
+			}
 
 			// Perform memory-intensive operations
 			for (let i = 0; i < 10; i++) {
@@ -352,16 +405,17 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			}
 
 			// Check memory after operations
-			const finalHeapBytes = await readHeapBytes()
+			const finalHeapBytes = (await readHeapBytes()) ?? 0
 
 			// Calculate memory growth in MB
-			const memoryGrowthMB = (finalHeapBytes - initialHeapBytes) / (1024 * 1024)
+			const memoryGrowthMB = (finalHeapBytes - initialHeapBytes) / MB
 
 			// Use CI-aware threshold
 			recordThreshold('memoryGrowthMB', memoryGrowthMB, PERF_CONFIG.MAX_MEMORY_INCREASE_MB)
 			expect(memoryGrowthMB).toBeLessThan(PERF_CONFIG.MAX_MEMORY_INCREASE_MB)
-			// Per-test timeout: page readiness plus 10 clicks under software rendering.
-		}, 75000)
+			// Per-test timeout: page readiness, the heap settle wait and 10 clicks under
+			// software rendering.
+		}, 95000)
 
 		it('should handle rapid user interactions without blocking', async () => {
 			const page = await openPage(browser)
@@ -439,8 +493,8 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// `App.vue` resolves several `defineAsyncComponent(() => import(...))` chunks
 			// and `await import(...)` services after mount, so the bundle-asset set is
 			// still growing when the canvas becomes visible — and it grows faster on the
-			// cached reload than on the cold load. Sampling at `waitForSelector('canvas')`
-			// would therefore compare two truncated, differently-truncated sets. Poll
+			// cached reload than on the cold load. Sampling as soon as the map canvas is
+			// visible would therefore compare two truncated, differently-truncated sets. Poll
 			// until the count is unchanged across two consecutive checks so both samples
 			// are complete and the cold-vs-reload comparison is over the same set.
 			const SETTLE_INTERVAL_MS = 500
@@ -502,13 +556,19 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// polls, and the global testTimeout is 10s.
 		}, 60000)
 
-		it('should handle concurrent API requests efficiently', async () => {
+		it('should handle concurrent API requests efficiently', async (ctx) => {
 			const page = await openPage(browser)
 			await gotoReady(page, LOCALHOST_URL, READY_TIMEOUT_MS)
 
+			// The app's data API is the same-origin /pygeoapi proxy (buildings and postal
+			// code data). It makes no /api/ or geoserver requests, so the filter this
+			// test used to have never matched and nothing below was asserted (#1039).
+			// The listener also sees background preloader traffic, so the count proves
+			// the proxy path carries API traffic during the test, not that the clicks
+			// caused it.
 			const apiResponses: any[] = []
 			page.on('response', (response) => {
-				if (response.url().includes('/api/') || response.url().includes('geoserver')) {
+				if (new URL(response.url()).pathname.startsWith('/pygeoapi/')) {
 					apiResponses.push({
 						url: response.url(),
 						status: response.status(),
@@ -549,12 +609,14 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			recordThreshold('totalTimeMs', totalTime, 10000)
 			expect(totalTime).toBeLessThan(10000)
 
-			// Check that API responses were received
-			if (apiResponses.length > 0) {
-				// Most API responses should be successful
-				const successfulResponses = apiResponses.filter((r) => r.status < 400)
-				expect(successfulResponses.length / apiResponses.length).toBeGreaterThan(0.8)
-			}
+			// The clicks must have produced API traffic, and most of it must succeed
+			const successfulResponses = apiResponses.filter((r) => r.status < 400)
+			recordMetric(ctx.task.name, {
+				apiResponses: apiResponses.length,
+				successful: successfulResponses.length,
+			})
+			expect(apiResponses.length, 'no /pygeoapi/ responses during the test').toBeGreaterThan(0)
+			expect(successfulResponses.length / apiResponses.length).toBeGreaterThan(0.8)
 			// Per-test timeout: page readiness plus the 10s interaction budget asserted above.
 		}, 60000)
 	})
@@ -629,18 +691,25 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// Per-test timeout: three sequential page loads plus the interactions.
 		}, 165000)
 
-		it('should recover from temporary network failures', async () => {
+		it('should recover from temporary network failures', async (ctx) => {
 			const page = await openPage(browser)
 			await gotoReady(page, LOCALHOST_URL, READY_TIMEOUT_MS)
 
-			// Simulate network failure for external requests
+			// Simulate a failing data API. The app's data requests go to the same-origin
+			// /pygeoapi proxy; it makes no /api/ requests, so the route this test used
+			// to register never fired (#1039). The counters prove the handler and proxy
+			// path fired; background preloader requests can satisfy them as well as the
+			// clicks can.
 			let networkDown = false
+			const handled = { aborted: 0, continued: 0 }
 
-			await page.route('**/api/**', (route) => {
+			await page.route('**/pygeoapi/**', async (route) => {
 				if (networkDown) {
-					route.abort('failed')
+					handled.aborted++
+					await route.abort('failed')
 				} else {
-					route.continue()
+					handled.continued++
+					await route.continue()
 				}
 			})
 
@@ -653,8 +722,11 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// Enable network failure
 			networkDown = true
 
-			// Try interaction during network failure
+			// Try interaction during network failure, and wait until a request has
+			// actually been failed
 			await clickMap(page, 500, 300)
+			await waitUntil(() => handled.aborted > 0, ROUTE_WAIT_MS)
+			expect(handled.aborted, 'no /pygeoapi/ request was failed').toBeGreaterThan(0)
 			// Wait for the application to handle the network error and take a new task
 			await probeResponsiveness(page)
 
@@ -664,16 +736,21 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 
 			// Restore network
 			networkDown = false
+			const continuedBeforeRestore = handled.continued
 
-			// Should recover and work normally
+			// Should recover: requests go through again
 			await clickMap(page, 300, 400)
-			await page
-				.waitForLoadState('networkidle', { timeout: TEST_TIMEOUTS.WAIT_LONG })
-				.catch(() => {})
+			await waitUntil(() => handled.continued > continuedBeforeRestore, ROUTE_WAIT_MS)
+			expect(
+				handled.continued,
+				'no /pygeoapi/ request went through after the network was restored'
+			).toBeGreaterThan(continuedBeforeRestore)
 
+			recordMetric(ctx.task.name, { ...handled })
 			// Vitest's expect has no Playwright toBeVisible matcher; use isVisible()
 			expect(await page.locator(MAP_CANVAS).isVisible()).toBe(true)
-			// Per-test timeout: page readiness plus two 3s networkidle waits and the clicks.
-		}, 75000)
+			// Per-test timeout: page readiness, one 3s networkidle wait, two route waits
+			// and the clicks.
+		}, 90000)
 	})
 })

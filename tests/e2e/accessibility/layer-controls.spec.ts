@@ -735,8 +735,9 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 	cesiumTest.describe.fixme('Layer Control Edge Cases', () => {
 		cesiumTest('should handle layer toggles during data loading', async ({ cesiumPage }) => {
 			// Intercept requests to simulate slow loading
-			cesiumPage.route('**/*.json', (route) => {
-				setTimeout(() => route.continue(), 1000)
+			await cesiumPage.route('**/*.json', async (route) => {
+				await new Promise((resolve) => setTimeout(resolve, 1000))
+				await route.continue()
 			})
 
 			// Try toggling during navigation/loading

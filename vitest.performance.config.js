@@ -21,5 +21,7 @@ export default {
 		environment: 'node',
 		setupFiles: [],
 		include: ['tests/performance/**/*.test.{js,ts}'],
+		// Starts metrics.jsonl afresh on every run instead of appending to the last one.
+		globalSetup: ['tests/performance/globalSetup.ts'],
 	},
 };

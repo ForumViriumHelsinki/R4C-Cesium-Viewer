@@ -321,9 +321,10 @@ cesiumDescribe('View Modes Accessibility', () => {
 	cesiumTest.describe('View Mode Data Loading', () => {
 		cesiumTest('should handle view switches during data loading states', async ({ cesiumPage }) => {
 			// Monitor network activity
-			cesiumPage.route('**/*', (route) => {
+			await cesiumPage.route('**/*', async (route) => {
 				// Add delay to simulate slow loading
-				setTimeout(() => route.continue(), 100)
+				await new Promise((resolve) => setTimeout(resolve, 100))
+				await route.continue()
 			})
 
 			// Switch views while data is loading

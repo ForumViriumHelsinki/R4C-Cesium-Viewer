@@ -311,8 +311,8 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 	test.describe('Error Handling and Edge Cases', () => {
 		test('should handle network failures gracefully', async ({ page }) => {
 			// Block specific API calls
-			await page.route('**/api/**', (route) => {
-				route.abort('failed')
+			await page.route('**/api/**', async (route) => {
+				await route.abort('failed')
 			})
 
 			// Application should still load basic interface
