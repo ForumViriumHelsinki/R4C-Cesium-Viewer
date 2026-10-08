@@ -15,8 +15,12 @@ import { defineStore } from 'pinia'
 import { markRaw } from 'vue'
 import {
 	formatFrameOffset,
+	VTT_DEFAULT_DIMENSION,
+	VTT_DEFAULT_OPACITY,
 	VTT_DIMENSIONS,
 	VTT_FRAME_COUNT,
+	VTT_OPACITY_MAX,
+	VTT_OPACITY_MIN,
 	VTT_SCENARIOS,
 	validateFrameNumber,
 	validateScenarioId,
@@ -41,6 +45,8 @@ interface VttFloodState {
 	scenarioId: string
 	frameNumber: number
 	dimension: string
+	/** Fill opacity of the flood cells, VTT_OPACITY_MIN..VTT_OPACITY_MAX. */
+	opacity: number
 	frame: VttFrameData | null
 	isLoading: boolean
 	error: string | null
@@ -55,7 +61,8 @@ export const useVttFloodStore = defineStore('vttFlood', {
 	state: (): VttFloodState => ({
 		scenarioId: VTT_SCENARIOS[0].id,
 		frameNumber: 0,
-		dimension: VTT_DIMENSIONS[0].key,
+		dimension: VTT_DEFAULT_DIMENSION,
+		opacity: VTT_DEFAULT_OPACITY,
 		frame: null,
 		isLoading: false,
 		error: null,
@@ -65,10 +72,6 @@ export const useVttFloodStore = defineStore('vttFlood', {
 	}),
 
 	getters: {
-		activeRange: (state): PropertyRange => {
-			if (!state.frame) return { min: 0, max: 0 }
-			return state.frame.propertyRanges[state.dimension] || { min: 0, max: 0 }
-		},
 		frameOffsetLabel: (state): string => formatFrameOffset(state.frameNumber),
 		frameCount: (): number => VTT_FRAME_COUNT,
 	},
@@ -99,6 +102,14 @@ export const useVttFloodStore = defineStore('vttFlood', {
 				return
 			}
 			this.dimension = key
+		},
+
+		setOpacity(value: number): void {
+			if (!Number.isFinite(value)) {
+				logger.warn(`[VTTFloodStore] Ignoring non-numeric opacity "${String(value)}"`)
+				return
+			}
+			this.opacity = Math.min(VTT_OPACITY_MAX, Math.max(VTT_OPACITY_MIN, value))
 		},
 
 		async fetchCurrentFrame(): Promise<void> {

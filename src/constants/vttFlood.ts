@@ -15,11 +15,30 @@ export interface VttScenario {
 	readonly description: string
 }
 
+/** d3-scale-chromatic sequential ramp used for a dimension's colour classes. */
+export type VttPalette = 'YlGnBu' | 'YlGn'
+
+/**
+ * How a dimension's values map to colour classes.
+ *  - `fixed`: physical class breaks, stable across frames and scenarios. The
+ *    last class is open-ended (`[lastBreak, ∞)`).
+ *  - `robust`: per-frame domain between two quantiles of the shown cells,
+ *    split into {@link VTT_COLOR_STEPS} equal-width classes. Outliers fall
+ *    into the end classes instead of compressing everything else.
+ */
+export type VttScaleSpec =
+	| { readonly kind: 'fixed'; readonly breaks: readonly number[] }
+	| { readonly kind: 'robust'; readonly lowerQuantile: number; readonly upperQuantile: number }
+
 export interface VttDimension {
 	/** Property name on returned GeoJSON Feature.properties. */
 	readonly key: string
 	readonly label: string
 	readonly unit: string
+	readonly palette: VttPalette
+	/** Cells with a value at or below this are not drawn. */
+	readonly hideBelow: number
+	readonly scale: VttScaleSpec
 }
 
 /**
@@ -44,22 +63,109 @@ export const VTT_SCENARIOS: readonly VttScenario[] = [
 	},
 ] as const
 
-export const VTT_DIMENSIONS: readonly VttDimension[] = [
-	{ key: 'canopy_air_temperature', label: 'Canopy air temperature', unit: 'K' },
-	{ key: 'overland_water_depth', label: 'Overland water depth', unit: 'm' },
-	{ key: 'transpiration', label: 'Transpiration', unit: 'mm/h' },
-	{ key: 'upper_storage_water_depth', label: 'Upper storage water depth', unit: 'm' },
+/**
+ * Overland water depth below this is not drawn: 1 cm is the usual dry/wet cut
+ * on flood maps. VTT frames carry a ~1 mm film over most cells (12,860 of
+ * 13,077 cells in scenario 2 frame 60) that would otherwise paint the whole
+ * extent.
+ */
+export const VTT_WET_DEPTH_THRESHOLD_M = 0.01
+
+/**
+ * Overland depth class breaks in metres: 1–5 cm, 5–10 cm, 10–30 cm, 30–50 cm,
+ * 50 cm–1 m, ≥ 1 m. Sampled VTT frames peak at 1.23–1.54 m.
+ */
+export const VTT_DEPTH_CLASS_BREAKS_M = [
+	VTT_WET_DEPTH_THRESHOLD_M,
+	0.05,
+	0.1,
+	0.3,
+	0.5,
+	1.0,
 ] as const
+
+/** Quantiles bounding a `robust` colour domain (2nd–98th percentile). */
+export const VTT_ROBUST_LOWER_QUANTILE = 0.02
+export const VTT_ROBUST_UPPER_QUANTILE = 0.98
+
+const ROBUST_SCALE: VttScaleSpec = {
+	kind: 'robust',
+	lowerQuantile: VTT_ROBUST_LOWER_QUANTILE,
+	upperQuantile: VTT_ROBUST_UPPER_QUANTILE,
+}
+
+/**
+ * Transpiration is first: it is the default view and the radio list follows
+ * this order. Unit labels are as received; VTT has not confirmed them
+ * (transpiration grows monotonically over frames, so it looks cumulative, and
+ * canopy_air_temperature is a constant 5 in every sampled real frame).
+ */
+export const VTT_DIMENSIONS: readonly VttDimension[] = [
+	{
+		key: 'transpiration',
+		label: 'Transpiration',
+		unit: 'mm/h',
+		palette: 'YlGn',
+		hideBelow: 0,
+		scale: ROBUST_SCALE,
+	},
+	{
+		key: 'overland_water_depth',
+		label: 'Overland water depth',
+		unit: 'm',
+		palette: 'YlGnBu',
+		hideBelow: VTT_WET_DEPTH_THRESHOLD_M,
+		scale: { kind: 'fixed', breaks: VTT_DEPTH_CLASS_BREAKS_M },
+	},
+	{
+		key: 'upper_storage_water_depth',
+		label: 'Upper storage water depth',
+		unit: 'm',
+		palette: 'YlGnBu',
+		hideBelow: 0,
+		scale: ROBUST_SCALE,
+	},
+	{
+		key: 'canopy_air_temperature',
+		label: 'Canopy air temperature',
+		unit: 'K',
+		palette: 'YlGn',
+		hideBelow: Number.NEGATIVE_INFINITY,
+		scale: ROBUST_SCALE,
+	},
+] as const
+
+/**
+ * Dimension shown when the panel first opens. Named explicitly rather than
+ * taken from the list order so the URL-state code and the store share one
+ * default that survives reordering the radio list.
+ */
+export const VTT_DEFAULT_DIMENSION = 'transpiration'
 
 /** Frames available per scenario: 0..288 inclusive (12h × 2.5min steps + t0). */
 export const VTT_FRAME_COUNT = 289
 export const VTT_FRAME_INTERVAL_MINUTES = 2.5
 
-/** Maximum extrusion height for the highest normalized value, in metres. */
+/** Extrusion height of the highest colour class, in metres. */
 export const VTT_MAX_EXTRUSION_M = 100
 
-/** Constant alpha applied to all rendered cells (per POC). */
-export const VTT_FILL_ALPHA = 0.8
+/** Extrusion height of the lowest colour class, so it still reads as a column. */
+export const VTT_MIN_EXTRUSION_M = 2
+
+/** Number of equal-width colour classes in a `robust` scale. */
+export const VTT_COLOR_STEPS = 8
+
+/**
+ * Part of each d3 colour ramp used, as [start, end] in 0..1. The near-white
+ * start of YlGn/YlGnBu disappears over light imagery once translucent.
+ */
+export const VTT_PALETTE_T_RANGE = [0.25, 1] as const
+
+/** Fill opacity of flood cells: default and slider bounds. */
+export const VTT_DEFAULT_OPACITY = 0.55
+export const VTT_OPACITY_MIN = 0.1
+export const VTT_OPACITY_MAX = 1
+export const VTT_OPACITY_STEP = 0.05
 
 /**
  * Camera target for the first time the panel is opened — Laajasalo, where the

@@ -104,17 +104,72 @@
 			/>
 		</v-radio-group>
 
+		<div class="d-flex align-center justify-space-between mb-1">
+			<span
+				id="vtt-opacity-label"
+				class="text-caption"
+			>
+				Opacity
+			</span>
+			<span class="text-caption font-weight-medium">{{ opacityPercent }} %</span>
+		</div>
+		<v-slider
+			:model-value="store.opacity"
+			:min="VTT_OPACITY_MIN"
+			:max="VTT_OPACITY_MAX"
+			:step="VTT_OPACITY_STEP"
+			color="primary"
+			density="compact"
+			hide-details
+			aria-labelledby="vtt-opacity-label"
+			class="mb-2"
+			@update:model-value="onOpacityChange"
+		/>
+
 		<div
+			v-if="colorScale && colorScale.mode !== 'empty'"
 			class="vtt-legend mb-2"
 			role="img"
-			:aria-label="`Legend: blue indicates ${legendMin}, red indicates ${legendMax}`"
+			:aria-label="legendAriaLabel"
 		>
-			<div class="vtt-legend-bar" />
-			<div class="d-flex justify-space-between text-caption">
-				<span>{{ legendMin }} {{ activeDimensionUnit }}</span>
-				<span>{{ legendMax }} {{ activeDimensionUnit }}</span>
+			<template v-if="colorScale.mode === 'classes'">
+				<div
+					class="vtt-legend-bar"
+					:style="{ background: legendGradient ?? undefined }"
+				/>
+				<div class="vtt-legend-ticks text-caption">
+					<span
+						v-for="tick in legendTickList"
+						:key="tick.label"
+						class="vtt-legend-tick"
+						:style="tickStyle(tick)"
+					>
+						{{ tick.label }}
+					</span>
+				</div>
+			</template>
+			<div
+				v-else
+				class="d-flex align-center text-caption"
+			>
+				<span
+					class="vtt-legend-swatch mr-2"
+					:style="{ background: colorScale.classes[0].color }"
+				/>
+				{{ maskLabel }}
 			</div>
+			<div class="text-caption vtt-legend-caption">{{ legendCaption }}</div>
+			<div class="text-caption vtt-legend-caption">{{ hiddenCellsLabel }}</div>
 		</div>
+		<v-alert
+			v-else-if="emptyMessage"
+			type="info"
+			density="compact"
+			variant="tonal"
+			class="mb-2"
+		>
+			{{ emptyMessage }}
+		</v-alert>
 
 		<v-progress-linear
 			v-if="store.isLoading"
@@ -144,12 +199,24 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, watch } from 'vue'
-import { VTT_DIMENSIONS, VTT_SCENARIOS } from '../constants/vttFlood'
-import { clearFlood, renderFlood } from '../services/vttFlood.js'
+import {
+	VTT_DIMENSIONS,
+	VTT_OPACITY_MAX,
+	VTT_OPACITY_MIN,
+	VTT_OPACITY_STEP,
+	VTT_SCENARIOS,
+} from '../constants/vttFlood'
+import { clearFlood, frameValues, renderFlood } from '../services/vttFlood.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useVttFloodStore } from '../stores/vttFloodStore'
 import logger from '../utils/logger.js'
+import {
+	buildColorScale,
+	formatLegendValue,
+	legendGradientCss,
+	legendTicks,
+} from '../utils/vttFloodColorScale.js'
 
 const emit = defineEmits(['close'])
 
@@ -177,19 +244,81 @@ const activeDimensionMeta = computed(
 )
 const activeDimensionUnit = computed(() => activeDimensionMeta.value.unit)
 
-function formatRange(value) {
-	if (!Number.isFinite(value)) return '—'
-	return Math.abs(value) >= 100 ? value.toFixed(0) : value.toFixed(2)
+// The one colour scale for this frame and dimension: the legend reads it and
+// renderFlood draws with it.
+const colorScale = computed(() => {
+	const frame = store.frame
+	if (!frame) return null
+	return buildColorScale(activeDimensionMeta.value, frameValues(frame, store.dimension))
+})
+
+const opacityPercent = computed(() => Math.round(store.opacity * 100))
+const legendGradient = computed(() =>
+	colorScale.value ? legendGradientCss(colorScale.value) : null
+)
+const legendTickList = computed(() => (colorScale.value ? legendTicks(colorScale.value) : []))
+
+/** Keep end labels inside the bar: shift each label left by its own position. */
+function tickStyle(tick) {
+	const pct = tick.at * 100
+	return { left: `${pct}%`, transform: `translateX(-${pct}%)` }
 }
 
-const legendMin = computed(() => formatRange(store.activeRange.min))
-const legendMax = computed(() => formatRange(store.activeRange.max))
+const legendCaption = computed(() => {
+	const scale = colorScale.value
+	const unit = activeDimensionUnit.value
+	if (!scale || scale.mode === 'empty') return ''
+	if (scale.mode === 'mask') return `All shown cells share one value (${unit})`
+	if (scale.kind === 'fixed') return `Fixed classes (${unit})`
+	return `Classes span the 2nd–98th percentile of shown cells in this frame (${unit})`
+})
+
+const hiddenCellsLabel = computed(() => {
+	const scale = colorScale.value
+	if (!scale || scale.hiddenCount === 0) return ''
+	const threshold = scale.hideBelow
+	const rule = Number.isFinite(threshold)
+		? `≤ ${formatLegendValue(threshold)} ${activeDimensionUnit.value}`
+		: 'without a value'
+	return `Cells ${rule} hidden (${scale.hiddenCount.toLocaleString('en-US')})`
+})
+
+const maskLabel = computed(() => {
+	const scale = colorScale.value
+	if (!scale || scale.mode !== 'mask') return ''
+	return `${formatLegendValue(scale.value ?? 0)} ${activeDimensionUnit.value} (${scale.shownCount.toLocaleString('en-US')} cells)`
+})
+
+const legendAriaLabel = computed(() => {
+	const scale = colorScale.value
+	const unit = activeDimensionUnit.value
+	if (!scale || scale.mode === 'empty') return ''
+	if (scale.mode === 'mask') return `Legend: one colour for ${maskLabel.value}`
+	const ticks = legendTickList.value
+	return `Legend: ${scale.classes.length} colour classes from light to dark, ${ticks[0]?.label} to ${ticks.at(-1)?.label} ${unit}`
+})
+
+const emptyMessage = computed(() => {
+	const scale = colorScale.value
+	const meta = activeDimensionMeta.value
+	if (!scale || scale.mode !== 'empty') return ''
+	if (scale.reason === 'no-variation') {
+		return `No variation in this frame: all ${scale.totalCount.toLocaleString('en-US')} cells are ${formatLegendValue(scale.value ?? 0)} ${meta.unit}.`
+	}
+	if (scale.reason === 'all-hidden') {
+		return `No cells above ${formatLegendValue(scale.threshold ?? 0)} ${meta.unit} in this frame.`
+	}
+	return `No ${meta.label.toLowerCase()} values in this frame.`
+})
 
 function onScenarioChange(id) {
 	if (id) store.selectScenario(id)
 }
 function onDimensionChange(key) {
 	if (key) store.setDimension(key)
+}
+function onOpacityChange(value) {
+	store.setOpacity(Number(value))
 }
 function onFrameChange(value) {
 	store.setFrame(Number(value))
@@ -201,26 +330,29 @@ function onFrameInput(value) {
 	store.setFrame(clamped)
 }
 
-// Re-render whenever frame data or selected dimension changes. The component
-// owns Cesium calls; the store stays viewer-agnostic.
-const stopRenderWatcher = watch(
-	() => [store.frame, store.dimension],
-	async () => {
-		const viewer = globalStore.cesiumViewer
-		if (!viewer) return
-		const frame = store.frame
-		const dimension = store.dimension
-		if (!frame) {
-			await clearFlood({ viewer })
-			return
-		}
-		try {
-			await renderFlood({ viewer, frame, dimension })
-		} catch (error) {
-			logger.error('[FloodSimulationPanel] Render failed:', error)
-		}
+// Re-render whenever the frame, its colour scale (frame or dimension change) or
+// the opacity changes. The component owns Cesium calls; the store stays
+// viewer-agnostic.
+const stopRenderWatcher = watch([() => store.frame, colorScale, () => store.opacity], async () => {
+	const viewer = globalStore.cesiumViewer
+	if (!viewer) return
+	const frame = store.frame
+	if (!frame) {
+		await clearFlood({ viewer })
+		return
 	}
-)
+	try {
+		await renderFlood({
+			viewer,
+			frame,
+			dimension: store.dimension,
+			opacity: store.opacity,
+			scale: colorScale.value ?? undefined,
+		})
+	} catch (error) {
+		logger.error('[FloodSimulationPanel] Render failed:', error)
+	}
+})
 
 onMounted(() => {
 	// Always fetch on first mount so the initial frame appears without an
@@ -263,11 +395,28 @@ onUnmounted(async () => {
 .vtt-legend-bar {
 	height: 8px;
 	border-radius: 4px;
-	background: linear-gradient(
-		to right,
-		rgb(33, 102, 172),
-		rgb(178, 24, 43)
-	);
 	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.vtt-legend-ticks {
+	position: relative;
+	height: 1.25rem;
+}
+
+.vtt-legend-tick {
+	position: absolute;
+	white-space: nowrap;
+}
+
+.vtt-legend-swatch {
+	display: inline-block;
+	width: 16px;
+	height: 8px;
+	border-radius: 2px;
+	border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.vtt-legend-caption {
+	color: rgba(var(--v-theme-on-surface), 0.7);
 }
 </style>

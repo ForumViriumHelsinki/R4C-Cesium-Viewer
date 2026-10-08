@@ -9,7 +9,8 @@
  *    the panel aborts an in-flight request rather than letting it overwrite
  *    fresher state.
  *  - {@link renderFlood} — draw the returned GeoJSON as extruded polygon
- *    entities with a blue→red gradient driven by the active dimension.
+ *    entities coloured and sized by the active dimension's colour classes
+ *    (utils/vttFloodColorScale.js).
  *  - {@link clearFlood} — remove the flood layer in one call.
  *
  * The service is stateless (no module-level mutable state): callers manage
@@ -18,14 +19,14 @@
 
 import {
 	VTT_API_PATH,
+	VTT_DEFAULT_OPACITY,
 	VTT_DIMENSIONS,
-	VTT_FILL_ALPHA,
 	VTT_FLOOD_LAYER_NAME,
-	VTT_MAX_EXTRUSION_M,
 	validateFrameNumber,
 	validateScenarioId,
 } from '../constants/vttFlood'
 import logger from '../utils/logger.js'
+import { buildColorScale, classExtrusion, classIndex } from '../utils/vttFloodColorScale.js'
 import { getCesium } from './cesiumProvider.js'
 import { generateSyntheticFrame } from './vttFloodSynthetic.js'
 
@@ -165,74 +166,94 @@ function extractRing(geometry) {
 }
 
 /**
- * Render the flood frame as a Cesium GeoJsonDataSource of extruded polygons,
- * coloured and sized by the active dimension.
+ * Values of one dimension in feature order; non-numeric values become NaN.
  *
- * Uses the existing GeoJsonDataSource pattern (consistent with
- * {@link DataSource#addDataSourceWithPolygonFix}) so the layer participates
- * in `changeDataSourceShowByName` / `removeDataSourcesByNamePrefix`.
+ * @param {{features: Array<Object>}} frame
+ * @param {string} dimension
+ * @returns {Float64Array}
+ */
+export function frameValues(frame, dimension) {
+	const out = new Float64Array(frame.features.length)
+	frame.features.forEach((feature, i) => {
+		const value = feature?.properties?.[dimension]
+		out[i] = typeof value === 'number' ? value : Number.NaN
+	})
+	return out
+}
+
+/**
+ * Render the flood frame as extruded polygon entities, coloured and sized by
+ * the active dimension's colour classes. Cells the scale hides (zero, below the
+ * wet threshold, non-numeric) get no entity.
  *
  * @param {Object} params
  * @param {Cesium.Viewer} params.viewer - Cesium viewer.
  * @param {{features: Array<Object>, propertyRanges: Record<string, {min: number, max: number}>}} params.frame
  *   Output of {@link fetchSimulationFrame}.
  * @param {string} params.dimension - Active dimension key (one of {@link VTT_DIMENSIONS}).
- * @returns {Promise<number>} Number of entities created.
+ * @param {number} [params.opacity] - Fill opacity 0..1.
+ * @param {import('../utils/vttFloodColorScale.js').VttColorScale} [params.scale] - Colour
+ *   scale for this frame and dimension; built here when omitted. Pass the one the
+ *   legend shows so both come from the same object.
+ * @returns {Promise<{created: number, scale: import('../utils/vttFloodColorScale.js').VttColorScale | null}>}
  */
 export async function renderFlood(
 	{
 		viewer,
 		frame,
 		dimension,
-	} = /** @type {{viewer: Cesium.Viewer, frame: {features: Array<Object>, propertyRanges: Record<string, {min: number, max: number}>}, dimension: string}} */ ({})
+		opacity = VTT_DEFAULT_OPACITY,
+		scale,
+	} = /** @type {{viewer: Cesium.Viewer, frame: {features: Array<Object>, propertyRanges: Record<string, {min: number, max: number}>}, dimension: string, opacity?: number, scale?: import('../utils/vttFloodColorScale.js').VttColorScale}} */ ({})
 ) {
 	if (!viewer || viewer.isDestroyed?.()) {
 		logger.warn('[VTTFlood] renderFlood: viewer not initialized; skipping')
-		return 0
+		return { created: 0, scale: null }
 	}
 	if (!frame || !Array.isArray(frame.features)) {
 		logger.warn('[VTTFlood] renderFlood: no frame data; skipping')
-		return 0
+		return { created: 0, scale: null }
 	}
-	if (!DIMENSION_KEYS.includes(dimension)) {
+	const meta = VTT_DIMENSIONS.find((d) => d.key === dimension)
+	if (!meta) {
 		throw new Error(`Invalid VTT dimension: "${dimension}"`)
 	}
 
 	const Cesium = getCesium()
 	await clearFlood({ viewer })
 
-	const range = frame.propertyRanges[dimension] || { min: 0, max: 0 }
-	const span = range.max - range.min
+	const values = frameValues(frame, dimension)
+	const colorScale = scale ?? buildColorScale(meta, values)
+	// One immutable Color per class (architecture.md: never share-and-mutate).
+	const alpha = Math.round(opacity * 255)
+	const materials = colorScale.classes.map((c) =>
+		Cesium.Color.fromBytes(c.rgb[0], c.rgb[1], c.rgb[2], alpha)
+	)
 	const dataSource = new Cesium.CustomDataSource(VTT_FLOOD_LAYER_NAME)
 
 	let created = 0
-	for (const feature of frame.features) {
+	dataSource.entities.suspendEvents()
+	frame.features.forEach((feature, i) => {
+		const idx = classIndex(colorScale, values[i])
+		if (idx < 0) return
 		const ring = extractRing(feature.geometry)
-		if (!ring) continue
-
-		const value = feature.properties?.[dimension]
-		if (typeof value !== 'number' || !Number.isFinite(value)) continue
-
-		const ratio = span === 0 ? 0 : Math.max(0, Math.min(1, (value - range.min) / span))
-		const color = Cesium.Color.lerp(Cesium.Color.BLUE, Cesium.Color.RED, ratio, new Cesium.Color())
-		color.alpha = VTT_FILL_ALPHA
-
+		if (!ring) return
 		dataSource.entities.add({
 			polygon: {
 				hierarchy: Cesium.Cartesian3.fromDegreesArray(ring),
-				extrudedHeight: ratio * VTT_MAX_EXTRUSION_M,
-				material: color,
-				outline: true,
-				outlineColor: Cesium.Color.BLACK,
+				extrudedHeight: classExtrusion(colorScale, idx),
+				material: materials[idx],
 				arcType: Cesium.ArcType.GEODESIC,
 			},
 		})
 		created++
-	}
+	})
+	dataSource.entities.resumeEvents()
 
 	viewer.dataSources.add(dataSource)
+	viewer.scene.requestRender()
 	logger.debug(`[VTTFlood] Rendered ${created} cells for dimension="${dimension}"`)
-	return created
+	return { created, scale: colorScale }
 }
 
 /**

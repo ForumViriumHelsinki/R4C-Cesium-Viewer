@@ -4,11 +4,11 @@
 //   import * as d3 from '@/utils/d3'
 //   d3.select(...), d3.scaleLinear(...), d3.histogram(...)
 
-export { bin as histogram, max, min } from 'd3-array'
+export { bin as histogram, max, min, quantileSorted } from 'd3-array'
 export { axisBottom, axisLeft } from 'd3-axis'
 export type { ScaleLinear } from 'd3-scale'
 export { scaleBand, scaleLinear, scaleOrdinal } from 'd3-scale'
-export { schemeCategory10 } from 'd3-scale-chromatic'
+export { interpolateYlGn, interpolateYlGnBu, schemeCategory10 } from 'd3-scale-chromatic'
 // Types referenced in JSDoc (`@param {d3.Selection}`, `{d3.ScaleLinear}`).
 export type { Selection } from 'd3-selection'
 export { select } from 'd3-selection'
