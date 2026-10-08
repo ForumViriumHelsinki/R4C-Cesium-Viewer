@@ -275,10 +275,11 @@ export function legendGradientCss(scale) {
 /**
  * Legend tick labels with their position along the bar (0..1). They depend
  * only on the classes, so they stay put while scrubbing frames.
- * Fixed scales label every class's lower bound. Scenario scales label class
- * boundaries at most {@link LEGEND_MAX_INTERVALS} intervals apart, the ends
- * prefixed with ≤ / ≥ because values outside the 2nd–98th percentile fold
- * into the end classes.
+ * Fixed scales label every class's lower bound, the last one open-ended.
+ * Scenario scales label class boundaries at most {@link LEGEND_MAX_INTERVALS}
+ * intervals apart. Their end labels carry no ≤ / ≥: at the panel's 301 px bar
+ * the prefix left a 1 px gap to the next label, so the panel caption says
+ * instead that values beyond the ends fall into the end classes.
  *
  * @param {VttColorScale} scale
  * @returns {Array<{label: string, at: number}>}
@@ -300,8 +301,7 @@ export function legendTicks(scale) {
 	// would repeat the label before it.
 	if (classes[n - 1].hi > classes[n - 1].lo || positions.at(-1) !== n - 1) positions.push(n)
 	return positions.map((j) => {
-		if (j === 0) return { label: `≤ ${formatLegendValue(classes[0].lo)}`, at: 0 }
-		if (j === n) return { label: `≥ ${formatLegendValue(classes[n - 1].hi)}`, at: 1 }
-		return { label: formatLegendValue(classes[j].lo), at: j / n }
+		const value = j === n ? classes[n - 1].hi : classes[j].lo
+		return { label: formatLegendValue(value), at: j / n }
 	})
 }

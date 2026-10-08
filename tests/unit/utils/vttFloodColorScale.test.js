@@ -376,13 +376,15 @@ describe('legend helpers', () => {
 		const late = legendTicks(buildColorScale(dim('transpiration'), transpirationFrame(0.178), S1))
 
 		expect(late).toEqual(early)
-		// Every second boundary of the eight classes, so labels do not overlap.
+		// Every second boundary of the eight classes, so labels do not overlap,
+		// and no ≤ / ≥ on the ends: in the panel's 301 px bar the prefix left a
+		// 1 px gap to the next label (measured headless, 2026-10-08).
 		expect(early).toEqual([
-			{ label: `≤ ${fmt(breaks[0])}`, at: 0 },
+			{ label: fmt(breaks[0]), at: 0 },
 			{ label: fmt(breaks[2]), at: 2 / 8 },
 			{ label: fmt(breaks[4]), at: 4 / 8 },
 			{ label: fmt(breaks[6]), at: 6 / 8 },
-			{ label: `≥ ${fmt(upper)}`, at: 1 },
+			{ label: fmt(upper), at: 1 },
 		])
 	})
 
@@ -394,7 +396,7 @@ describe('legend helpers', () => {
 			S1
 		)
 		expect(legendTicks(scale)).toEqual([
-			{ label: '≤ 0.0009', at: 0 },
+			{ label: '0.0009', at: 0 },
 			{ label: '0.001', at: 0.5 },
 		])
 	})
