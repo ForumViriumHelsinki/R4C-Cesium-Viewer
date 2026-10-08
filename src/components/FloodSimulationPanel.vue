@@ -373,8 +373,10 @@ function onFrameInput(value) {
 // Re-render whenever the frame, its colour scale (frame or dimension change) or
 // the opacity changes. The component owns Cesium calls; the store stays
 // viewer-agnostic. renderFlood is synchronous and restyles the existing layer,
-// so rapid changes cannot stack layers or queue rebuilds.
-const stopRenderWatcher = watch([() => store.frame, colorScale, () => store.opacity], () => {
+// so rapid changes cannot stack layers or queue rebuilds. A restyle writes all
+// 13k cells, so changes are coalesced into one render per animation frame: an
+// opacity drag fires many changes per frame.
+function renderCurrentFrame() {
 	const viewer = globalStore.cesiumViewer
 	if (!viewer) return
 	const frame = store.frame
@@ -394,6 +396,15 @@ const stopRenderWatcher = watch([() => store.frame, colorScale, () => store.opac
 	} catch (error) {
 		logger.error('[FloodSimulationPanel] Render failed:', error)
 	}
+}
+
+let renderRequest = 0
+const stopRenderWatcher = watch([() => store.frame, colorScale, () => store.opacity], () => {
+	if (renderRequest) return
+	renderRequest = requestAnimationFrame(() => {
+		renderRequest = 0
+		renderCurrentFrame()
+	})
 })
 
 onMounted(() => {
@@ -402,9 +413,12 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-	// Stop the watchers first so nothing re-creates the layer after it is cleared.
+	// Stop the watchers and a pending render first so nothing re-creates the
+	// layer after it is cleared.
 	stopRenderWatcher()
 	stopSyntheticWatcher()
+	if (renderRequest) cancelAnimationFrame(renderRequest)
+	renderRequest = 0
 	// Destroy the layer to free its GPU buffers while the panel is closed. The
 	// store keeps its frame cache, so reopening costs a geometry rebuild (about
 	// 1.8 s measured on software GL, far less on a GPU) but no re-download.
