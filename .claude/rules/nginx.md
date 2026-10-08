@@ -10,8 +10,11 @@ paths:
 Hard-won facts from PR #877 (delivery caching + HSY stale-on-error), each
 verified against nginx docs and empirically in the container. The config is
 an envsubst template — keep `${VAR}` placeholders intact, and remember the
-Kyverno read-only-rootfs constraint: anything nginx writes (proxy cache,
-temp paths) must live on the writable tmp emptyDir mount.
+Kyverno read-only-rootfs constraint: anything nginx writes must live on a
+writable mount. Temp paths use the emptyDir mounts (`/tmp`,
+`/var/cache/nginx`); both `proxy_cache_path` zones live on the StatefulSet's
+persistent disk at `/var/cache/nginx-proxy` (#1060), and their `max_size`
+values must together fit inside that disk.
 
 ## `add_header` in a location block suppresses ALL inherited headers
 
