@@ -23,6 +23,14 @@ const VTT_URL_KEYS = ['vtt', 'vttscenario', 'vttframe', 'vttdim', 'vttopacity']
 
 const urlParam = (page: Page, key: string) => new URL(page.url()).searchParams.get(key)
 
+/**
+ * The VTT proxy request. Match on the path: the client adds ?scenario=&frame=
+ * to the URL, and the glob this spec used (any host, then /vtt-api) does not
+ * match a URL with a query string (checked against Playwright 1.57), so it
+ * never intercepted a frame request.
+ */
+const isVttApi = (url: URL) => url.pathname === '/vtt-api'
+
 cesiumTest.describe('VTT Flood Simulation', () => {
 	cesiumTest.use({ tag: ['@e2e', '@feature-flag', '@vtt-flood'] })
 
@@ -39,7 +47,7 @@ cesiumTest.describe('VTT Flood Simulation', () => {
 			let postCount = 0
 
 			// Narrow route: only the VTT proxy, never localhost module requests.
-			await cesiumPage.route('**/vtt-api', (route) => {
+			await cesiumPage.route(isVttApi, (route) => {
 				if (route.request().method() !== 'POST') return route.continue()
 				postCount += 1
 				return route.fulfill({
@@ -109,15 +117,11 @@ cesiumTest.describe('VTT Flood Simulation', () => {
 		'a shared link reopens the panel with its scenario, frame and dimension',
 		async ({ cesiumPage }) => {
 			const requests: string[] = []
-			// Match on the path: the client adds ?scenario=&frame= to the proxy URL.
-			await cesiumPage.route(
-				(url) => url.pathname === '/vtt-api',
-				(route) => {
-					if (route.request().method() !== 'POST') return route.continue()
-					requests.push(route.request().url())
-					return route.fulfill({ status: 200, contentType: 'application/json', body: FIXTURE_BODY })
-				}
-			)
+			await cesiumPage.route(isVttApi, (route) => {
+				if (route.request().method() !== 'POST') return route.continue()
+				requests.push(route.request().url())
+				return route.fulfill({ status: 200, contentType: 'application/json', body: FIXTURE_BODY })
+			})
 			await cesiumPage.evaluate(() => {
 				localStorage.setItem('featureFlags', JSON.stringify({ vttFloodSimulation: true }))
 			})
