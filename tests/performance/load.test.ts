@@ -69,11 +69,14 @@ function recordThreshold(metric: string, value: number, threshold: number): void
 
 const MB = 1024 * 1024
 
-// The memory test's baseline is taken once two GC'd heap readings this far apart
-// differ by less than HEAP_SETTLE_BYTES, within HEAP_SETTLE_MS.
+// The memory test's baseline is taken once HEAP_SETTLE_READINGS consecutive GC'd
+// heap readings, HEAP_SETTLE_INTERVAL_MS apart, each differ from the previous one by
+// less than HEAP_SETTLE_BYTES, within HEAP_SETTLE_MS. A single matching pair can
+// fall between two loading bursts (a review run recorded -8 MB growth).
 const HEAP_SETTLE_MS = 20000
 const HEAP_SETTLE_INTERVAL_MS = 2000
 const HEAP_SETTLE_BYTES = 5 * MB
+const HEAP_SETTLE_READINGS = 2
 
 /** How long a test waits for a route handler to see a request (Node-side poll). */
 const ROUTE_WAIT_MS = 10000
@@ -370,13 +373,15 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// loading, not the clicks. Wait for it to settle; if it does not, skip.
 			const settleStart = Date.now()
 			const startupHeapBytes = initialHeapBytes
-			let settled = false
-			while (!settled && Date.now() - settleStart < HEAP_SETTLE_MS) {
+			let stableReadings = 0
+			while (stableReadings < HEAP_SETTLE_READINGS && Date.now() - settleStart < HEAP_SETTLE_MS) {
 				await page.waitForTimeout(HEAP_SETTLE_INTERVAL_MS)
 				const current = (await readHeapBytes()) ?? 0
-				settled = Math.abs(current - initialHeapBytes) < HEAP_SETTLE_BYTES
+				stableReadings =
+					Math.abs(current - initialHeapBytes) < HEAP_SETTLE_BYTES ? stableReadings + 1 : 0
 				initialHeapBytes = current
 			}
+			const settled = stableReadings >= HEAP_SETTLE_READINGS
 			if (!settled) {
 				const growthMBPerS =
 					(initialHeapBytes - startupHeapBytes) / MB / ((Date.now() - settleStart) / 1000)
@@ -557,6 +562,9 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// The app's data API is the same-origin /pygeoapi proxy (buildings and postal
 			// code data). It makes no /api/ or geoserver requests, so the filter this
 			// test used to have never matched and nothing below was asserted (#1039).
+			// The listener also sees background preloader traffic, so the count proves
+			// the proxy path carries API traffic during the test, not that the clicks
+			// caused it.
 			const apiResponses: any[] = []
 			page.on('response', (response) => {
 				if (new URL(response.url()).pathname.startsWith('/pygeoapi/')) {
@@ -688,7 +696,9 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 
 			// Simulate a failing data API. The app's data requests go to the same-origin
 			// /pygeoapi proxy; it makes no /api/ requests, so the route this test used
-			// to register never fired (#1039). The counters prove the handler did.
+			// to register never fired (#1039). The counters prove the handler and proxy
+			// path fired; background preloader requests can satisfy them as well as the
+			// clicks can.
 			let networkDown = false
 			const handled = { aborted: 0, continued: 0 }
 

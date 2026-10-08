@@ -319,6 +319,7 @@ lighthouse-local:
 # iterate locally. Metrics and failure artifacts land in performance-results/.
 # See .claude/rules/testing.md "Vitest-Driven Playwright Suites".
 # Reproduce the CI perf run locally: build, serve the prod bundle on :4173, run the suite, tear down.
+# PERF_BASE_URL=http://localhost:<port> serves and tests on another port (the port is required).
 [group: "testing"]
 test-performance swgl="0" filter="":
     #!/usr/bin/env bash
@@ -327,9 +328,12 @@ test-performance swgl="0" filter="":
     export PERF_BASE_URL="${PERF_BASE_URL:-http://localhost:4173}"
     port="${PERF_BASE_URL##*:}"
     port="${port%%/*}"
+    case "$port" in
+        ''|*[!0-9]*) echo "PERF_BASE_URL must include a port, e.g. http://localhost:4173 (got $PERF_BASE_URL)" >&2; exit 1 ;;
+    esac
     # Something already answering there would pass the health check below
     # before the new preview has had a chance to fail.
-    if curl -fsS -o /dev/null "$PERF_BASE_URL/" 2>/dev/null; then
+    if curl -fsS --max-time 2 -o /dev/null "$PERF_BASE_URL/" 2>/dev/null; then
         echo "A server already answers at $PERF_BASE_URL; stop it or set PERF_BASE_URL to a free port." >&2
         exit 1
     fi
@@ -339,7 +343,7 @@ test-performance swgl="0" filter="":
     bun run preview -- --port "$port" --strictPort >/tmp/r4c-perf-preview.log 2>&1 &
     PREVIEW_PID=$!
     trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
-    until curl -fsS -o /dev/null "$PERF_BASE_URL/" 2>/dev/null; do
+    until curl -fsS --max-time 2 -o /dev/null "$PERF_BASE_URL/" 2>/dev/null; do
         # A preview that exited (port taken by a listener that is not an HTTP
         # server, or a build/config error) would otherwise loop here forever.
         if ! kill -0 "$PREVIEW_PID" 2>/dev/null; then

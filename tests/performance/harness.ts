@@ -16,7 +16,7 @@
  *   are logged and written to PERF_RESULTS_DIR as informational output. On a
  *   failed test the page's screenshot and Playwright trace are saved there too.
  */
-import { appendFileSync, mkdirSync, rmSync } from 'node:fs'
+import { appendFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Browser, Page } from 'playwright'
 
@@ -26,12 +26,25 @@ const RESULTS_DIR = process.env.PERF_RESULTS_DIR ?? 'performance-results'
 const METRICS_FILE = join(RESULTS_DIR, 'metrics.jsonl')
 
 /**
- * Deletes metrics.jsonl so each run starts a fresh file. recordMetric() appends,
- * so without this local runs accumulate into one file (#1039). Called from the
- * suite's globalSetup, once per `vitest run`.
+ * Deletes the metrics, screenshots and traces a previous run left in RESULTS_DIR. recordMetric() appends, so without
+ * this local runs accumulate into one metrics.jsonl, and failure screenshots and
+ * traces from an earlier run would sit next to a passing run's metrics (#1039).
+ * Called from the suite's globalSetup, once per `vitest run`.
  */
 export function resetMetrics(): void {
-	rmSync(METRICS_FILE, { force: true })
+	// Only the files this harness writes: PERF_RESULTS_DIR is user-settable, so
+	// the directory itself may hold anything.
+	let entries: string[] = []
+	try {
+		entries = readdirSync(RESULTS_DIR)
+	} catch {
+		return
+	}
+	for (const name of entries) {
+		if (name === 'metrics.jsonl' || name.endsWith('.png') || name.endsWith('-trace.zip')) {
+			rmSync(join(RESULTS_DIR, name), { force: true })
+		}
+	}
 }
 
 /** The Cesium widget canvas. A bare `canvas` selector also matches other canvases. */
