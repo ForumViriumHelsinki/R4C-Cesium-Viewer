@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { isReactive } from 'vue'
 import {
 	VTT_DEFAULT_DIMENSION,
+	VTT_DEFAULT_FRAME,
 	VTT_DEFAULT_OPACITY,
 	VTT_FRAME_CACHE_SIZE,
 	VTT_OPACITY_MAX,
 	VTT_OPACITY_MIN,
+	validateFrameNumber,
 } from '@/constants/vttFlood.ts'
 
 const fetchSimulationFrame = vi.fn()
@@ -46,6 +48,15 @@ describe('vttFloodStore defaults and settings', () => {
 		expect(store.dimension).toBe('transpiration')
 	})
 
+	it('opens on a frame past the start of the storm, where the dimensions vary', () => {
+		// Frame 0 is constant in every dimension in scenarios 1–3, so opening
+		// there showed an empty map and a "no variation" notice.
+		const store = useVttFloodStore()
+		expect(store.frameNumber).toBe(VTT_DEFAULT_FRAME)
+		expect(VTT_DEFAULT_FRAME).toBeGreaterThan(0)
+		expect(validateFrameNumber(VTT_DEFAULT_FRAME)).toBe(VTT_DEFAULT_FRAME)
+	})
+
 	it('starts at the default opacity', () => {
 		expect(useVttFloodStore().opacity).toBe(VTT_DEFAULT_OPACITY)
 	})
@@ -83,7 +94,7 @@ describe('vttFloodStore frame cache', () => {
 
 		store.frameNumber = 5
 		await store.fetchCurrentFrame()
-		store.frameNumber = 0
+		store.frameNumber = VTT_DEFAULT_FRAME
 		await store.fetchCurrentFrame()
 
 		expect(fetchSimulationFrame).toHaveBeenCalledTimes(2)

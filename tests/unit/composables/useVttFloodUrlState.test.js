@@ -30,6 +30,7 @@ import {
 } from '@/composables/useVttFloodUrlState.js'
 import {
 	VTT_DEFAULT_DIMENSION,
+	VTT_DEFAULT_FRAME,
 	VTT_DEFAULT_OPACITY,
 	VTT_URL_UPDATE_DEBOUNCE_MS,
 } from '@/constants/vttFlood.ts'
@@ -215,7 +216,8 @@ describe('useVttFloodUrlState', () => {
 	}
 
 	it('waits for the flag before restoring, and leaves the link alone meanwhile', async () => {
-		setUrl('?vtt=1&vttscenario=2&vttframe=120&vttdim=overland_water_depth')
+		// A frame other than VTT_DEFAULT_FRAME, so the restore is observable.
+		setUrl('?vtt=1&vttscenario=2&vttframe=200&vttdim=overland_water_depth')
 		const { onRestoreOpen, api } = mount()
 		await settle(api)
 		expect(onRestoreOpen).not.toHaveBeenCalled()
@@ -227,7 +229,7 @@ describe('useVttFloodUrlState', () => {
 		expect(onRestoreOpen).toHaveBeenCalledTimes(1)
 		const store = useVttFloodStore()
 		expect(store.scenarioId).toBe('2')
-		expect(store.frameNumber).toBe(120)
+		expect(store.frameNumber).toBe(200)
 		expect(store.dimension).toBe('overland_water_depth')
 		expect(fetchSimulationFrame).not.toHaveBeenCalled()
 	})
@@ -296,7 +298,7 @@ describe('useVttFloodUrlState', () => {
 		expect(parseVttFloodUrlParams(window.location.search)).toEqual({
 			open: true,
 			scenarioId: '1',
-			frameNumber: 0,
+			frameNumber: VTT_DEFAULT_FRAME,
 			dimension: VTT_DEFAULT_DIMENSION,
 			opacity: VTT_DEFAULT_OPACITY,
 		})
@@ -373,7 +375,7 @@ describe('vttFloodStore.hydrateFromUrl', () => {
 		const store = useVttFloodStore()
 		store.hydrateFromUrl({ scenarioId: '9', frameNumber: 288, dimension: 'nope' })
 		expect(store.scenarioId).toBe('1')
-		expect(store.frameNumber).toBe(0)
+		expect(store.frameNumber).toBe(VTT_DEFAULT_FRAME)
 		expect(store.dimension).toBe(VTT_DEFAULT_DIMENSION)
 		store.hydrateFromUrl({ scenarioId: '9', frameNumber: 5 })
 		expect(store.frameNumber).toBe(5)

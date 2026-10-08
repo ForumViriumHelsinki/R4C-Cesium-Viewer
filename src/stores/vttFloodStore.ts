@@ -21,6 +21,7 @@ import { markRaw } from 'vue'
 import {
 	formatFrameOffset,
 	VTT_DEFAULT_DIMENSION,
+	VTT_DEFAULT_FRAME,
 	VTT_DEFAULT_OPACITY,
 	VTT_DIMENSIONS,
 	VTT_FRAME_CACHE_SIZE,
@@ -115,7 +116,7 @@ function validOrUndefined<T>(validate: (value: unknown) => T, value: unknown): T
 export const useVttFloodStore = defineStore('vttFlood', {
 	state: (): VttFloodState => ({
 		scenarioId: VTT_SCENARIOS[0].id,
-		frameNumber: 0,
+		frameNumber: VTT_DEFAULT_FRAME,
 		dimension: VTT_DEFAULT_DIMENSION,
 		opacity: VTT_DEFAULT_OPACITY,
 		frame: null,

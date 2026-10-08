@@ -153,6 +153,15 @@ export const VTT_FRAME_COUNT = 288
 export const VTT_FRAME_INTERVAL_MINUTES = 2.5
 
 /**
+ * Frame shown when the panel first opens, and when a link has no `vttframe`:
+ * +05:00. Frame 0 is the start of the storm and every dimension is constant
+ * there in scenarios 1–3, so it draws nothing. At frame 120, scenario 1 has
+ * 8,255 cells with transpiration > 0 and 2,447 cells deeper than 1 cm, and
+ * scenario 2 transpiration varies too; measured 2026-10-08.
+ */
+export const VTT_DEFAULT_FRAME = 120
+
+/**
  * Extrusion height of the highest colour class, in metres: about one mesh cell
  * (~100 m), so at the oblique camera pitch the tallest column hides ~1.4 cells
  * behind it.
