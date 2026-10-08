@@ -50,6 +50,14 @@ vi.mock('@/services/urbanheat.js', () => ({
 
 const cesiumMock = {
 	Rectangle: class {},
+	Cartesian2: class {
+		constructor(x, y) {
+			this.x = x
+			this.y = y
+		}
+	},
+	// The test viewer's pickEllipsoid returns a cartographic in radians already.
+	Cartographic: { fromCartesian: (position) => position },
 	Math: {
 		toDegrees: (radians) => (radians * 180) / Math.PI,
 		toRadians: (degrees) => (degrees * Math.PI) / 180,
@@ -68,11 +76,17 @@ const rad = (deg) => (deg * Math.PI) / 180
 function makeViewer(rect, camera) {
 	const viewer = {
 		isDestroyed: () => false,
-		scene: { globe: { ellipsoid: {} }, requestRender: vi.fn() },
+		scene: {
+			globe: { ellipsoid: {} },
+			canvas: { clientWidth: 1600, clientHeight: 1000 },
+			requestRender: vi.fn(),
+		},
 		camera: {
 			moveEnd: { addEventListener: vi.fn(), removeEventListener: vi.fn() },
 			positionCartographic: { longitude: 0, latitude: 0, height: 1500 },
 			computeViewRectangle: vi.fn(),
+			// Default: the centre ray misses, so ranking uses the camera position.
+			pickEllipsoid: vi.fn(() => undefined),
 		},
 	}
 	viewer.lookAt = (r, c) => {
@@ -158,6 +172,25 @@ describe('ViewportBuildingLoader tile cap (#1054)', () => {
 		const farCornerTile = `${Math.floor(25.05 / 0.01)}_${Math.floor(60.25 / 0.01)}`
 		expect(loader.loadedTiles.has(cameraTile)).toBe(true)
 		expect(loader.loadedTiles.has(farCornerTile)).toBe(false)
+	})
+
+	it('ranks around the ground point under the screen centre when a pitched camera sees it', async () => {
+		// The camera sits at the south edge; the screen centre looks north at 60.22.
+		const rect = { west: 24.85, south: 60.15, east: 25.05, north: 60.25 }
+		loader.viewer = makeViewer(rect, { lon: 24.955, lat: 60.151 })
+		const centre = { lon: 24.955, lat: 60.225 }
+		loader.viewer.camera.pickEllipsoid.mockReturnValue({
+			longitude: rad(centre.lon),
+			latitude: rad(centre.lat),
+		})
+
+		await loader.updateViewport()
+		await drain(loader)
+
+		const centreTile = `${Math.floor(centre.lon / 0.01)}_${Math.floor(centre.lat / 0.01)}`
+		const belowCameraTile = `${Math.floor(24.955 / 0.01)}_${Math.floor(60.151 / 0.01)}`
+		expect(loader.loadedTiles.has(centreTile)).toBe(true)
+		expect(loader.loadedTiles.has(belowCameraTile)).toBe(false)
 	})
 
 	it('evicts down to the cap after loads that finish once the viewport update has returned', async () => {

@@ -407,17 +407,12 @@ export default class ViewportBuildingLoader {
 
 			// A pitched camera's view rectangle reaches towards the horizon and can
 			// cover hundreds of tiles (960 at pitch -25 from 1,500 m). Required tiles
-			// are never evicted, so keep only the ones nearest the camera: otherwise
-			// the loader keeps adding DataSources past MAX_LOADED_TILES (#1054).
+			// are never evicted, so keep only the ones nearest the view centre:
+			// otherwise the loader keeps adding DataSources past MAX_LOADED_TILES (#1054).
 			const tilesInBounds = this.getTilesInBounds(bufferedBounds)
-			const cameraPosition = this.viewer.camera.positionCartographic
-			const Cesium = getCesium()
 			const requiredTileKeys = this.selectNearestTiles(
 				tilesInBounds,
-				{
-					lat: Cesium.Math.toDegrees(cameraPosition.latitude),
-					lon: Cesium.Math.toDegrees(cameraPosition.longitude),
-				},
+				this.getRankingPoint(),
 				CONFIG.MAX_LOADED_TILES
 			)
 			logger.debug(
@@ -522,6 +517,31 @@ export default class ViewportBuildingLoader {
 		}
 
 		return tileKeys
+	}
+
+	/**
+	 * Point the tile cap ranks tiles around: the ground under the canvas centre.
+	 *
+	 * The point directly below a pitched camera is off-screen, so ranking by it
+	 * spends part of the tile budget on tiles nobody can see. Falls back to the
+	 * camera position when the centre ray misses the ellipsoid (sky in view).
+	 *
+	 * @returns {{lat: number, lon: number}} Reference point in degrees
+	 */
+	getRankingPoint() {
+		const Cesium = getCesium()
+		const { camera, scene } = this.viewer
+		const centre = camera.pickEllipsoid(
+			new Cesium.Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2),
+			scene.globe.ellipsoid
+		)
+		const cartographic = centre
+			? Cesium.Cartographic.fromCartesian(centre)
+			: camera.positionCartographic
+		return {
+			lat: Cesium.Math.toDegrees(cartographic.latitude),
+			lon: Cesium.Math.toDegrees(cartographic.longitude),
+		}
 	}
 
 	/**
