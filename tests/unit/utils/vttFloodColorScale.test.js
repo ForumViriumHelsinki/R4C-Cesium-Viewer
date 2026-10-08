@@ -49,6 +49,41 @@ describe('buildColorScale', () => {
 		expect(classIndex(scale, 0)).toBe(-1)
 	})
 
+	it('gives no transpiration class more than 30% of the shown cells', () => {
+		// Real frames bunch most non-zero cells at 0.064–0.068 mm/h. Equal-width
+		// classes over p2–p98 put 67–84% of shown cells in the top class (scenario
+		// 1, frames 12–287); equal-count classes split the cluster.
+		const values = transpirationLike()
+		const scale = buildColorScale(dim('transpiration'), values)
+		const counts = new Array(scale.classes.length).fill(0)
+		for (const v of values) {
+			const i = classIndex(scale, v)
+			if (i >= 0) counts[i]++
+		}
+
+		expect(scale.classes).toHaveLength(VTT_COLOR_STEPS)
+		expect(Math.max(...counts) / scale.shownCount).toBeLessThanOrEqual(0.3)
+	})
+
+	it('merges class breaks that coincide on tied values', () => {
+		// Half the shown cells share one value, so several quantiles land on it.
+		const values = [
+			...new Array(100).fill(0.05),
+			...Array.from({ length: 100 }, (_, i) => (i + 1) / 1000),
+		]
+		const scale = buildColorScale(dim('transpiration'), values)
+
+		expect(scale.mode).toBe('classes')
+		expect(scale.classes.length).toBeLessThan(VTT_COLOR_STEPS)
+		for (let i = 1; i < scale.classes.length; i++) {
+			expect(scale.classes[i].lo).toBeGreaterThan(scale.classes[i - 1].lo)
+			expect(scale.classes[i].lo).toBe(scale.classes[i - 1].hi)
+		}
+		// The tied value is one class, not split across empty ones.
+		const tied = classIndex(scale, 0.05)
+		expect(values.filter((v) => v === 0.05).every((v) => classIndex(scale, v) === tied)).toBe(true)
+	})
+
 	it('reports a frame where every cell is equal as no-variation (frame 0, canopy = 5)', () => {
 		const scale = buildColorScale(dim('canopy_air_temperature'), new Array(50).fill(5))
 		expect(scale).toMatchObject({ mode: 'empty', reason: 'no-variation', value: 5, totalCount: 50 })

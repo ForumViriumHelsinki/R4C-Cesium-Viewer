@@ -17,7 +17,9 @@
  *    `all-hidden` (no cell passes the dimension's `hideBelow`).
  *  - `mask`: the shown cells share one value; one class.
  *  - `classes`: fixed physical breaks or a robust (quantile-bounded) domain
- *    split into equal-width classes.
+ *    split into equal-count classes. Equal-width classes put 67–84% of shown
+ *    transpiration cells in the top class on real frames, because most cells
+ *    sit in a narrow cluster near the maximum.
  */
 
 import {
@@ -146,9 +148,13 @@ export function buildColorScale(dimension, values) {
 		}
 	}
 
-	let lo = quantileSorted(sorted, spec.lowerQuantile) ?? shownMin
-	let hi = quantileSorted(sorted, spec.upperQuantile) ?? shownMax
+	let qLo = spec.lowerQuantile
+	let qHi = spec.upperQuantile
+	let lo = quantileSorted(sorted, qLo) ?? shownMin
+	let hi = quantileSorted(sorted, qHi) ?? shownMax
 	if (!(hi > lo)) {
+		qLo = 0
+		qHi = 1
 		lo = shownMin
 		hi = shownMax
 	}
@@ -162,11 +168,15 @@ export function buildColorScale(dimension, values) {
 		}
 	}
 
-	const width = (hi - lo) / VTT_COLOR_STEPS
-	const bounds = Array.from({ length: VTT_COLOR_STEPS }, (_, i) => [
-		lo + i * width,
-		i === VTT_COLOR_STEPS - 1 ? hi : lo + (i + 1) * width,
-	])
+	// Equal-count class starts: each class holds about the same share of the
+	// cells inside the domain. Starts that coincide (many cells tied on one
+	// value) merge, so a tie is one class rather than several empty ones.
+	const starts = [lo]
+	for (let i = 1; i < VTT_COLOR_STEPS; i++) {
+		const start = quantileSorted(sorted, qLo + ((qHi - qLo) * i) / VTT_COLOR_STEPS) ?? hi
+		if (start > starts[starts.length - 1]) starts.push(start)
+	}
+	const bounds = starts.map((start, i) => [start, starts[i + 1] ?? hi])
 	return {
 		...base,
 		...counts,

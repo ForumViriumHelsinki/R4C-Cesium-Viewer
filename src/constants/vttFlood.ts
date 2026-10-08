@@ -24,7 +24,8 @@ export type VttPalette = 'YlGnBu' | 'YlGn'
  *  - `fixed`: physical class breaks, stable across frames and scenarios. The
  *    last class is open-ended (`[lastBreak, ∞)`).
  *  - `robust`: per-frame domain between two quantiles of the shown cells,
- *    split into {@link VTT_COLOR_STEPS} equal-width classes. Outliers fall
+ *    split into up to {@link VTT_COLOR_STEPS} equal-count classes (breaks at
+ *    evenly spaced quantiles; breaks tied on one value merge). Outliers fall
  *    into the end classes instead of compressing everything else.
  */
 export type VttScaleSpec =
@@ -161,7 +162,7 @@ export const VTT_MAX_EXTRUSION_M = 100
 /** Extrusion height of the lowest colour class, so it still reads as a column. */
 export const VTT_MIN_EXTRUSION_M = 2
 
-/** Number of equal-width colour classes in a `robust` scale. */
+/** Number of equal-count colour classes in a `robust` scale (fewer when values tie). */
 export const VTT_COLOR_STEPS = 8
 
 /**

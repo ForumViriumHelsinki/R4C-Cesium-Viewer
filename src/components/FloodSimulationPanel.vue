@@ -301,7 +301,7 @@ const legendCaption = computed(() => {
 	if (!scale || scale.mode === 'empty') return ''
 	if (scale.mode === 'mask') return `All shown cells share one value (${unit})`
 	if (scale.kind === 'fixed') return `Fixed classes (${unit})`
-	return `Classes span the 2nd–98th percentile of shown cells in this frame (${unit})`
+	return `Each class holds about the same number of cells, 2nd–98th percentile of this frame (${unit})`
 })
 
 const hiddenCellsLabel = computed(() => {
