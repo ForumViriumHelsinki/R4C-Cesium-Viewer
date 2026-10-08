@@ -12,6 +12,7 @@
  */
 
 import { defineStore } from 'pinia'
+import { markRaw } from 'vue'
 import {
 	formatFrameOffset,
 	VTT_DIMENSIONS,
@@ -121,7 +122,9 @@ export const useVttFloodStore = defineStore('vttFlood', {
 					synthetic: useFeatureFlagStore().isEnabled('vttFloodSyntheticData'),
 				})
 				if (seq !== this._requestSeq) return // a newer call superseded us
-				this.frame = result
+				// markRaw: a frame is ~13k cells; deep reactivity would wrap every
+				// nested array in a proxy and slow each render pass ~10x.
+				this.frame = markRaw(result)
 			} catch (error) {
 				if (error instanceof DOMException && error.name === 'AbortError') {
 					logger.debug('[VTTFloodStore] Fetch aborted (newer request started)')

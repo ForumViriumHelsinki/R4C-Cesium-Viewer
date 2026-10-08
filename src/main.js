@@ -10,6 +10,7 @@ import { E2E_STORE_HOOKS_ENABLED, exposeStoresForE2E } from './utils/e2eStoreHoo
 import logger from './utils/logger.js'
 import { installPreloadErrorHandler } from './utils/preloadErrorHandler.js'
 import { resolveSentryEnvironment } from './utils/sentryEnvironment.js'
+import { sentryStateTransformer } from './utils/sentryStateTransformer.js'
 
 // Install the global vite:preloadError handler before any dynamic imports
 // can run, so stale-chunk failures after a deploy trigger a reload rather
@@ -66,42 +67,9 @@ const vuetify = createVuetify({
 const pinia = createPinia()
 pinia.use(
 	createSentryPiniaPlugin({
-		// Exclude Cesium objects from Sentry state capture to prevent DataCloneError
-		// Cesium objects contain non-serializable properties (functions, circular refs, getters)
-		// that cannot be cloned for postMessage() calls to Sentry servers
-		stateTransformer: (state, store) => {
-			// For propsStore, exclude Cesium entity/datasource properties that remain on the store
-			if (store.$id === 'props') {
-				const { postalCodeData: _postalCodeData, ...serializable } = state
-				return serializable
-			}
-
-			// For globalStore, exclude Cesium viewer and entity references
-			if (store.$id === 'global') {
-				const {
-					cesiumViewer: _cesiumViewer,
-					currentGridCell: _currentGridCell,
-					pickedEntity: _pickedEntity,
-					...serializable
-				} = state
-				return serializable
-			}
-
-			// For backgroundMapStore, exclude Cesium imagery layer objects
-			if (store.$id === 'backgroundMap') {
-				const {
-					floodLayers: _floodLayers,
-					landcoverLayers: _landcoverLayers,
-					tiffLayers: _tiffLayers,
-					hSYWMSLayers: _hSYWMSLayers,
-					...serializable
-				} = state
-				return serializable
-			}
-
-			// For all other stores, return state as-is
-			return state
-		},
+		// Strip Cesium objects (not serializable) and the VTT flood frame (large)
+		// from Sentry's Pinia state capture; see utils/sentryStateTransformer.js
+		stateTransformer: sentryStateTransformer,
 	})
 )
 

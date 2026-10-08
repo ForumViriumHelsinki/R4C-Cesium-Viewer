@@ -8,15 +8,18 @@
  * floodwms.js did this with the flood layer (#1019), landcover.js with the
  * land-cover layer (#967, fixed by #1016).
  *
- * Which store fields hold Cesium objects is read from src/main.js: Sentry's
- * Pinia stateTransformer already strips exactly those fields, because Cesium
- * objects cannot be serialized. Every write to one of those fields anywhere in
+ * Which store fields hold Cesium objects is read from
+ * src/utils/sentryStateTransformer.js: Sentry's Pinia stateTransformer already
+ * strips exactly those fields, because Cesium objects cannot be serialized. The
+ * VTT flood frame is on that list too (it is large, not circular) and must not
+ * be deep-reactive either. Every write to one of those fields anywhere in
  * src/ (assignment, or push/unshift/splice) must pass the value through
  * markRaw (or the store's markRawEach helper), or reset it to [] / null.
  */
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { SENTRY_EXCLUDED_STATE_FIELDS } from '@/utils/sentryStateTransformer.js'
 
 const SRC_DIR = 'src'
 const SOURCE_EXT = /\.(js|ts|vue)$/
@@ -28,17 +31,12 @@ const SOURCE_EXT = /\.(js|ts|vue)$/
 const PENDING = new Set([])
 
 /**
- * Store fields holding Cesium objects: the keys each branch of Sentry's
- * stateTransformer destructures out of `state` in src/main.js.
+ * Store fields holding Cesium objects (or, for vttFlood.frame, a whole
+ * simulation frame): the fields Sentry's Pinia stateTransformer strips.
  * @returns {string[]}
  */
 function cesiumStateFields() {
-	const main = readFileSync('src/main.js', 'utf8')
-	const fields = []
-	for (const block of main.matchAll(/store\.\$id === '\w+'\)\s*\{\s*const \{([^}]*)\} = state/g)) {
-		for (const key of block[1].matchAll(/(\w+):\s*_\w+/g)) fields.push(key[1])
-	}
-	return fields
+	return Object.values(SENTRY_EXCLUDED_STATE_FIELDS).flat()
 }
 
 /** Drop block comments and whole-line `//` comments, keeping line numbers. */
@@ -84,8 +82,14 @@ describe('Cesium objects in Pinia state', () => {
 	const fields = cesiumStateFields()
 	const writes = findWrites(fields)
 
-	it('reads the Cesium-holding store fields from main.js (guards against a vacuous pass)', () => {
-		for (const known of ['floodLayers', 'landcoverLayers', 'cesiumViewer', 'postalCodeData']) {
+	it('reads the Cesium-holding store fields from the Sentry transformer (guards against a vacuous pass)', () => {
+		for (const known of [
+			'floodLayers',
+			'landcoverLayers',
+			'cesiumViewer',
+			'postalCodeData',
+			'frame',
+		]) {
 			expect(fields).toContain(known)
 		}
 	})

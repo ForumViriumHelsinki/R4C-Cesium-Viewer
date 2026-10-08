@@ -1,0 +1,46 @@
+/**
+ * @module utils/sentryStateTransformer
+ * Pinia state filter for Sentry's Pinia plugin (`createSentryPiniaPlugin`).
+ *
+ * The plugin calls `stateTransformer(states)` with a single argument: a map of
+ * every store's state keyed by store id. It attaches the result to the scope
+ * context on every store action and to error events as JSON.
+ *
+ * {@link SENTRY_EXCLUDED_STATE_FIELDS} lists the store fields that must stay
+ * out of that capture:
+ *  - Cesium objects (viewer, entities, data sources, imagery layers) are
+ *    circular and not serializable.
+ *  - `vttFlood.frame` holds a whole VTT simulation frame (13k cells); copying
+ *    it into every Sentry event costs megabytes and >100 ms per event.
+ *
+ * The same list drives `tests/unit/stores/cesiumStateMarkRaw.test.js`: every
+ * write to one of these fields must go through `markRaw`, so none of them is
+ * ever deep-reactive.
+ */
+
+/** @type {Readonly<Record<string, readonly string[]>>} */
+export const SENTRY_EXCLUDED_STATE_FIELDS = Object.freeze({
+	props: Object.freeze(['postalCodeData']),
+	global: Object.freeze(['cesiumViewer', 'currentGridCell', 'pickedEntity']),
+	backgroundMap: Object.freeze(['floodLayers', 'landcoverLayers', 'tiffLayers', 'hSYWMSLayers']),
+	vttFlood: Object.freeze(['frame']),
+})
+
+/**
+ * Return a copy of the all-stores state map without the excluded fields.
+ * Store states are shallow-copied; the input is not mutated.
+ *
+ * @param {Record<string, unknown>} states - Store states keyed by store id.
+ * @returns {Record<string, unknown>}
+ */
+export function sentryStateTransformer(states) {
+	const result = { ...states }
+	for (const [storeId, fields] of Object.entries(SENTRY_EXCLUDED_STATE_FIELDS)) {
+		const state = states[storeId]
+		if (!state || typeof state !== 'object') continue
+		const copy = { ...state }
+		for (const field of fields) delete copy[field]
+		result[storeId] = copy
+	}
+	return result
+}
