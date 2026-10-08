@@ -273,8 +273,12 @@ export function useVttFloodUrlState({ isOpen, viewerReady, onRestoreOpen }) {
 				.catch((error) => logger.error('[useVttFloodUrlState] Restore failed:', error))
 				.finally(() => {
 					restored = true
-					// The panel opened during the restore, before writes were allowed.
+					if (disposed) return
+					// The open-watcher ignored the panel while the restore ran, so
+					// write its state now: open (the usual case), or closed again
+					// or never opened (a failed restore), which drops the link.
 					if (isOpen.value) scheduleWrite()
+					else writeVttFloodUrlParams(null)
 				})
 		},
 		{ immediate: true }

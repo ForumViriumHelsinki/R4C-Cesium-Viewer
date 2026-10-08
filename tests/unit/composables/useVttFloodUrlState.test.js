@@ -341,6 +341,49 @@ describe('useVttFloodUrlState', () => {
 		expect(window.location.search).toBe(`?${FOREIGN}`)
 	})
 
+	it('removes the parameters when the panel closes before the restore settles', async () => {
+		// The open-watcher ignores changes until the restore has settled, so the
+		// restore itself must clean up after a close that happened meanwhile.
+		setUrl(`?${FOREIGN}&vtt=1&vttframe=10`)
+		enableFlag()
+		const isOpen = ref(false)
+		const onRestoreOpen = vi.fn(() => {
+			isOpen.value = true
+			queueMicrotask(() => {
+				isOpen.value = false // the user closes the panel straight away
+			})
+		})
+		const scope = effectScope()
+		const api = scope.run(() =>
+			useVttFloodUrlState({ isOpen, viewerReady: ref(true), onRestoreOpen })
+		)
+		await settle(api)
+		expect(onRestoreOpen).toHaveBeenCalledTimes(1)
+		expect(isOpen.value).toBe(false)
+		expect(window.location.search).toBe(`?${FOREIGN}`)
+		scope.stop()
+	})
+
+	it('removes the parameters when the restore fails and the panel stays closed', async () => {
+		vi.spyOn(logger, 'error').mockImplementation(() => {})
+		setUrl(`?${FOREIGN}&vtt=1`)
+		enableFlag()
+		const scope = effectScope()
+		const api = scope.run(() =>
+			useVttFloodUrlState({
+				isOpen: ref(false),
+				viewerReady: ref(true),
+				onRestoreOpen: () => {
+					throw new Error('panel failed to open')
+				},
+			})
+		)
+		await settle(api)
+		expect(logger.error).toHaveBeenCalled()
+		expect(window.location.search).toBe(`?${FOREIGN}`)
+		scope.stop()
+	})
+
 	it('stops writing once its scope is disposed', async () => {
 		vi.useFakeTimers()
 		const { isOpen, scope, api } = mount()
