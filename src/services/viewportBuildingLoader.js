@@ -405,9 +405,19 @@ export default class ViewportBuildingLoader {
 
 			const bufferedBounds = this.expandBounds(viewportBounds, CONFIG.BUFFER_FACTOR)
 
-			// Calculate required tiles
-			const requiredTileKeys = this.getTilesInBounds(bufferedBounds)
-			logger.debug(`[ViewportBuildingLoader] Viewport requires ${requiredTileKeys.length} tiles`)
+			// A pitched camera's view rectangle reaches towards the horizon and can
+			// cover hundreds of tiles (960 at pitch -25 from 1,500 m). Required tiles
+			// are never evicted, so keep only the ones nearest the view centre:
+			// otherwise the loader keeps adding DataSources past MAX_LOADED_TILES (#1054).
+			const tilesInBounds = this.getTilesInBounds(bufferedBounds)
+			const requiredTileKeys = this.selectNearestTiles(
+				tilesInBounds,
+				this.getRankingPoint(),
+				CONFIG.MAX_LOADED_TILES
+			)
+			logger.debug(
+				`[ViewportBuildingLoader] Viewport requires ${requiredTileKeys.length} tiles (${tilesInBounds.length} in bounds)`
+			)
 
 			// Update visibility for loaded tiles
 			this.updateTileVisibility(requiredTileKeys)
@@ -510,6 +520,51 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
+	 * Point the tile cap ranks tiles around: the ground under the canvas centre.
+	 *
+	 * The point directly below a pitched camera is off-screen, so ranking by it
+	 * spends part of the tile budget on tiles nobody can see. Falls back to the
+	 * camera position when the centre ray misses the ellipsoid (sky in view).
+	 *
+	 * @returns {{lat: number, lon: number}} Reference point in degrees
+	 */
+	getRankingPoint() {
+		const Cesium = getCesium()
+		// Only called from updateViewport, which returns early without a live viewer
+		const { camera, scene } = /** @type {Cesium.Viewer} */ (this.viewer)
+		const centre = camera.pickEllipsoid(
+			new Cesium.Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2),
+			scene.globe.ellipsoid
+		)
+		const cartographic = centre
+			? Cesium.Cartographic.fromCartesian(centre)
+			: camera.positionCartographic
+		return {
+			lat: Cesium.Math.toDegrees(cartographic.latitude),
+			lon: Cesium.Math.toDegrees(cartographic.longitude),
+		}
+	}
+
+	/**
+	 * Keep at most `limit` tile keys, nearest the given point first.
+	 *
+	 * @param {string[]} tileKeys - Candidate tile keys
+	 * @param {{lat: number, lon: number}} point - Reference point in degrees
+	 * @param {number} limit - Maximum number of tiles to keep
+	 * @returns {string[]} The kept tile keys
+	 */
+	selectNearestTiles(tileKeys, point, limit) {
+		if (tileKeys.length <= limit) {
+			return tileKeys
+		}
+		return tileKeys
+			.map((key) => ({ key, distance: this.getDistanceFromCenter(key, point) }))
+			.sort((a, b) => a.distance - b.distance)
+			.slice(0, limit)
+			.map(({ key }) => key)
+	}
+
+	/**
 	 * Load tiles that are not yet loaded or loading
 	 * Respects concurrent loading limit and queues excess requests.
 	 * Uses center-out loading priority for better perceived performance.
@@ -522,6 +577,11 @@ export default class ViewportBuildingLoader {
 			(key) => !this.loadedTiles.has(key) && !this.loadingTiles.has(key)
 		)
 
+		// The queue holds only the current viewport's tiles. Appending kept the
+		// previous viewports' tiles queued and added a duplicate of every pending
+		// tile on each update (#1054).
+		this.loadingQueue = []
+
 		if (missingTiles.length === 0) {
 			return
 		}
@@ -531,7 +591,7 @@ export default class ViewportBuildingLoader {
 		if (!viewportBounds) {
 			logger.warn('[ViewportBuildingLoader] Cannot determine viewport center for priority sorting')
 			// Fall back to unsorted loading
-			this.loadingQueue.push(...missingTiles)
+			this.loadingQueue = missingTiles
 			await this.processLoadingQueue()
 			return
 		}
@@ -553,8 +613,7 @@ export default class ViewportBuildingLoader {
 			`[ViewportBuildingLoader] Loading ${missingTiles.length} tiles (center-out priority)`
 		)
 
-		// Add to queue and process
-		this.loadingQueue.push(...missingTiles)
+		this.loadingQueue = missingTiles
 		await this.processLoadingQueue()
 	}
 
@@ -600,6 +659,12 @@ export default class ViewportBuildingLoader {
 							})
 						}
 					}
+
+					// updateViewport's eviction pass runs before the loads it starts
+					// finish, so enforce the cap again now that this tile counts (#1054).
+					this.unloadDistantTiles([...this.visibleTiles]).catch((error) => {
+						logger.error('Failed to unload distant tiles after tile load:', error)
+					})
 
 					// Continue processing queue
 					this.processLoadingQueue().catch((error) => {
