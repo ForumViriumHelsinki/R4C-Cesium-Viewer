@@ -142,6 +142,11 @@ export const useVttFloodStore = defineStore('vttFlood', {
 			if (safe === this.scenarioId) return
 			this.scenarioId = safe
 			this.frame = null
+			// A scrub pending from the old scenario would fetch this frame again.
+			if (this._debounceTimer) {
+				clearTimeout(this._debounceTimer)
+				this._debounceTimer = null
+			}
 			this.fetchCurrentFrame()
 		},
 

@@ -143,6 +143,29 @@ describe('vttFloodStore frame cache', () => {
 		expect(store.frame).not.toBeNull()
 	})
 
+	it('drops a pending frame debounce when the scenario changes', async () => {
+		// The scenario switch fetches the new scenario's frame at once; the
+		// debounce armed by a scrub in the old scenario must not fetch it again.
+		vi.useFakeTimers()
+		// A real frame takes longer than the debounce to arrive; a debounced
+		// call while it is in flight aborts it and downloads it again.
+		fetchSimulationFrame.mockImplementation(
+			(params) => new Promise((resolve) => setTimeout(() => resolve(frameFor(params)), 1000))
+		)
+		try {
+			const store = useVttFloodStore()
+			store.setFrame(5)
+			store.selectScenario('2')
+			await vi.runAllTimersAsync()
+			expect(fetchSimulationFrame).toHaveBeenCalledTimes(1)
+			expect(fetchSimulationFrame).toHaveBeenCalledWith(
+				expect.objectContaining({ scenarioId: '2', frameNumber: 5 })
+			)
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
 	it('aborts an in-flight request when the panel closes', async () => {
 		let signal
 		fetchSimulationFrame.mockImplementation((params) => {
