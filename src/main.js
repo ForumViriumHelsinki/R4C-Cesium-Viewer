@@ -10,7 +10,7 @@ import { E2E_STORE_HOOKS_ENABLED, exposeStoresForE2E } from './utils/e2eStoreHoo
 import logger from './utils/logger.js'
 import { installPreloadErrorHandler } from './utils/preloadErrorHandler.js'
 import { resolveSentryEnvironment } from './utils/sentryEnvironment.js'
-import { sentryStateTransformer } from './utils/sentryStateTransformer.js'
+import { SENTRY_PINIA_PLUGIN_OPTIONS } from './utils/sentryStateTransformer.js'
 
 // Install the global vite:preloadError handler before any dynamic imports
 // can run, so stale-chunk failures after a deploy trigger a reload rather
@@ -65,13 +65,10 @@ const vuetify = createVuetify({
 })
 
 const pinia = createPinia()
-pinia.use(
-	createSentryPiniaPlugin({
-		// Strip Cesium objects (not serializable) and the VTT flood frame (large)
-		// from Sentry's Pinia state capture; see utils/sentryStateTransformer.js
-		stateTransformer: sentryStateTransformer,
-	})
-)
+// Strip Cesium objects (not serializable) and the VTT flood frame (large) from
+// Sentry's Pinia state capture, and attach no state JSON to error events; see
+// utils/sentryStateTransformer.js
+pinia.use(createSentryPiniaPlugin(SENTRY_PINIA_PLUGIN_OPTIONS))
 
 const app = createApp(App)
 

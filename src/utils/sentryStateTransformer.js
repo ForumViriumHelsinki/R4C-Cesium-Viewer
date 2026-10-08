@@ -1,10 +1,13 @@
 /**
  * @module utils/sentryStateTransformer
- * Pinia state filter for Sentry's Pinia plugin (`createSentryPiniaPlugin`).
+ * Pinia state filter and options for Sentry's Pinia plugin
+ * (`createSentryPiniaPlugin`, installed in main.js with
+ * {@link SENTRY_PINIA_PLUGIN_OPTIONS}).
  *
  * The plugin calls `stateTransformer(states)` with a single argument: a map of
- * every store's state keyed by store id. It attaches the result to the scope
- * context on every store action and to error events as JSON.
+ * every store's state keyed by store id. It sets the result as the scope
+ * context after every store action (and, unless `attachPiniaState` is false,
+ * attaches it to error events as JSON).
  *
  * {@link SENTRY_EXCLUDED_STATE_FIELDS} lists the store fields that must stay
  * out of that capture:
@@ -44,3 +47,20 @@ export function sentryStateTransformer(states) {
 	}
 	return result
 }
+
+/**
+ * Options main.js passes to `createSentryPiniaPlugin`.
+ *
+ * `attachPiniaState: false`: the plugin's event processor would otherwise
+ * JSON.stringify every store's state onto each sampled error event, on the
+ * main thread. While the transformer threw, that stringify always failed on
+ * the circular Cesium viewer and the plugin dropped the attachment, so no
+ * event ever carried it. With the filter working it can succeed and include
+ * bulk fields that are not excluded here, such as
+ * `buildingStore.buildingFeatures` (not measured). The scope context written
+ * after each action still carries the filtered state.
+ */
+export const SENTRY_PINIA_PLUGIN_OPTIONS = Object.freeze({
+	attachPiniaState: false,
+	stateTransformer: sentryStateTransformer,
+})
