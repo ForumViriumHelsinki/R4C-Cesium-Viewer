@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.59.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.1...r4c-cesium-viewer-v1.59.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **buildings:** bound the viewport tile working set to MAX_LOADED_TILES ([#1070](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1070)) ([b242cc6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b242cc619174e22538bfbfa390b6fbc5587290ad))
+
+
+### Performance Improvements
+
+* **status-badge:** probe data sources without downloading their bodies ([#1067](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1067)) ([a02a219](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a02a21993448d646b07d10e00af75b4eadb2a4f1))
+
 ## [1.59.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.0...r4c-cesium-viewer-v1.59.1) (2026-10-08)
 
 
