@@ -50,6 +50,7 @@ export {
 	GeometryAttribute,
 	GeometryInstance,
 	GeometryInstanceAttribute,
+	HeadingPitchRange,
 	HorizontalOrigin,
 	ImageryLayer,
 	ImageryLayerCollection,

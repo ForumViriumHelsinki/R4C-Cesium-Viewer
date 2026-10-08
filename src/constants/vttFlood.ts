@@ -2,7 +2,8 @@
  * @module constants/vttFlood
  * Constants for the VTT R4C flood-simulation integration.
  *
- * Source of truth for scenarios, dimensions, frame budget, and camera target.
+ * Source of truth for scenarios, dimensions, frame budget, and the data extent
+ * the camera frames.
  * The VTT API returns one GeoJSON FeatureCollection per (scenario, frame); the
  * UI lets users page through frames and switch the property used for colour/
  * extrusion without re-fetching.
@@ -150,7 +151,11 @@ export const VTT_DEFAULT_DIMENSION = 'transpiration'
 export const VTT_FRAME_COUNT = 288
 export const VTT_FRAME_INTERVAL_MINUTES = 2.5
 
-/** Extrusion height of the highest colour class, in metres. */
+/**
+ * Extrusion height of the highest colour class, in metres: about one mesh cell
+ * (~100 m), so at the oblique camera pitch the tallest column hides ~1.4 cells
+ * behind it.
+ */
 export const VTT_MAX_EXTRUSION_M = 100
 
 /** Extrusion height of the lowest colour class, so it still reads as a column. */
@@ -180,20 +185,54 @@ export const VTT_OPACITY_MAX = 1
 export const VTT_OPACITY_STEP = 0.05
 
 /**
- * Camera target for the first time the panel is opened — Laajasalo, where the
- * simulation extent lives. Co-ordinates picked to centre on the southern
- * Helsinki islands without zooming so far in that the extent is clipped.
+ * Bounding box of the VTT mesh in degrees: southern Laajasalo. Identical for
+ * scenarios 1–3; measured 2026-10-08 against /vtt-api frame 120.
  */
-export const LAAJASALO_CAMERA = {
-	longitude: 25.0419,
-	latitude: 60.1781,
-	/** Eye height in metres. */
-	height: 3500,
-	/** Heading (degrees, 0 = north). */
-	heading: 0,
-	/** Pitch in degrees (-90 = straight down). */
-	pitch: -55,
+export const VTT_DATA_EXTENT = {
+	west: 25.03685,
+	south: 60.16116,
+	east: 25.06373,
+	north: 60.17409,
 } as const
+
+/** Centre of {@link VTT_DATA_EXTENT} (≈ 25.05029, 60.16763). */
+export const VTT_DATA_CENTER = {
+	longitude: (VTT_DATA_EXTENT.west + VTT_DATA_EXTENT.east) / 2,
+	latitude: (VTT_DATA_EXTENT.south + VTT_DATA_EXTENT.north) / 2,
+} as const
+
+export type VttCameraView = 'oblique' | 'topDown'
+
+/**
+ * Camera orientations around {@link VTT_DATA_EXTENT}, in degrees. The camera
+ * looks at the extent centre; heading is the view direction (0 = looking
+ * north, so the camera sits south of the data, over open water). Cesium fits
+ * the range to the extent.
+ *
+ * Oblique pitch -35 is also the app's default URL pitch. At -35 the tallest
+ * column ({@link VTT_MAX_EXTRUSION_M}) hides ~143 m (~1.4 cells) of ground
+ * behind it, so neighbouring heights stay comparable; the previous -55
+ * compressed relative heights to ~0.7× of that.
+ */
+export const VTT_CAMERA_VIEWS: Readonly<
+	Record<VttCameraView, { readonly heading: number; readonly pitch: number }>
+> = {
+	oblique: { heading: 0, pitch: -35 },
+	topDown: { heading: 0, pitch: -90 },
+}
+
+export const VTT_DEFAULT_CAMERA_VIEW: VttCameraView = 'oblique'
+
+/** Duration of the flight to the data extent, in seconds. */
+export const VTT_CAMERA_FLIGHT_SECONDS = 1.2
+
+/**
+ * Highest camera (ellipsoid height, metres) at which the extent counts as
+ * already framed, so opening the panel keeps the camera. In a 1400×900 window
+ * the fitted views put the eye at ~1.6 km (oblique) and ~2.8 km (top-down); a
+ * city-wide view that merely contains Laajasalo is far above this.
+ */
+export const VTT_FRAMED_MAX_HEIGHT_M = 5000
 
 /** Name prefix used for the VTT data source / primitive collection in Cesium. */
 export const VTT_FLOOD_LAYER_NAME = 'VTT-Flood-Simulation'

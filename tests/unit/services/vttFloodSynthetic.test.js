@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { VTT_DIMENSIONS, VTT_FRAME_COUNT } from '@/constants/vttFlood.ts'
+import { VTT_DATA_EXTENT, VTT_DIMENSIONS, VTT_FRAME_COUNT } from '@/constants/vttFlood.ts'
 import { generateSyntheticFrame } from '@/services/vttFloodSynthetic.js'
 
 const maxDepth = (frame) =>
@@ -56,5 +56,26 @@ describe('generateSyntheticFrame', () => {
 		const one = maxDepth(generateSyntheticFrame({ scenarioId: '1', frameNumber: 24 }))
 		const three = maxDepth(generateSyntheticFrame({ scenarioId: '3', frameNumber: 24 }))
 		expect(one).not.toBe(three)
+	})
+})
+
+describe('synthetic grid placement', () => {
+	it('is centred inside the real VTT data extent', () => {
+		const frame = generateSyntheticFrame({ scenarioId: '1', frameNumber: 0 })
+		let lonSum = 0
+		let latSum = 0
+		let n = 0
+		for (const feature of frame.features) {
+			for (const [lon, lat] of feature.geometry.coordinates[0].slice(0, -1)) {
+				lonSum += lon
+				latSum += lat
+				n += 1
+			}
+		}
+		const { west, south, east, north } = VTT_DATA_EXTENT
+		expect(lonSum / n).toBeGreaterThan(west)
+		expect(lonSum / n).toBeLessThan(east)
+		expect(latSum / n).toBeGreaterThan(south)
+		expect(latSum / n).toBeLessThan(north)
 	})
 })

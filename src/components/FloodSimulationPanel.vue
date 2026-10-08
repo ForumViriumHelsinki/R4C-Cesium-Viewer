@@ -104,6 +104,35 @@
 			/>
 		</v-radio-group>
 
+		<p class="text-caption mb-1">Camera</p>
+		<!-- @click per button, not @update:model-value: a mandatory toggle does not
+		     re-emit for the active value, and re-clicking it re-frames the extent. -->
+		<v-btn-toggle
+			:model-value="cameraView"
+			mandatory
+			density="compact"
+			variant="outlined"
+			divided
+			class="mb-3"
+		>
+			<v-btn
+				value="oblique"
+				size="small"
+				aria-label="Oblique view of flood extent"
+				@click="onCameraView('oblique')"
+			>
+				Oblique
+			</v-btn>
+			<v-btn
+				value="topDown"
+				size="small"
+				aria-label="Top-down view of flood extent"
+				@click="onCameraView('topDown')"
+			>
+				Top-down
+			</v-btn>
+		</v-btn-toggle>
+
 		<div class="d-flex align-center justify-space-between mb-1">
 			<span
 				id="vtt-opacity-label"
@@ -198,8 +227,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
+	VTT_DEFAULT_CAMERA_VIEW,
 	VTT_DIMENSIONS,
 	VTT_OPACITY_MAX,
 	VTT_OPACITY_MIN,
@@ -207,6 +237,7 @@ import {
 	VTT_SCENARIOS,
 } from '../constants/vttFlood'
 import { clearFlood, hideFlood, renderFlood } from '../services/vttFlood.js'
+import { flyToFloodExtent } from '../services/vttFloodCamera.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useVttFloodStore } from '../stores/vttFloodStore'
@@ -310,6 +341,14 @@ const emptyMessage = computed(() => {
 	}
 	return `No ${meta.label.toLowerCase()} values in this frame.`
 })
+
+// Camera orientation is not stored: the camera itself is in the URL already
+// (lon/lat/alt/heading/pitch), and the toggle resets to oblique on reopen.
+const cameraView = ref(VTT_DEFAULT_CAMERA_VIEW)
+function onCameraView(view) {
+	cameraView.value = view
+	flyToFloodExtent({ viewer: globalStore.cesiumViewer, view })
+}
 
 function onScenarioChange(id) {
 	if (id) store.selectScenario(id)

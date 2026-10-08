@@ -14,7 +14,7 @@
  */
 
 import {
-	LAAJASALO_CAMERA,
+	VTT_DATA_CENTER,
 	VTT_FRAME_COUNT,
 	VTT_FRAME_INTERVAL_MINUTES,
 	validateFrameNumber,
@@ -120,8 +120,9 @@ export function generateSyntheticFrame(
 		safeFrame
 	)
 
-	const originLon = LAAJASALO_CAMERA.longitude - (GRID_COLS * CELL_LON) / 2
-	const originLat = LAAJASALO_CAMERA.latitude - (GRID_ROWS * CELL_LAT) / 2
+	// Centred on the real mesh, so the camera framing applies to synthetic frames too.
+	const originLon = VTT_DATA_CENTER.longitude - (GRID_COLS * CELL_LON) / 2
+	const originLat = VTT_DATA_CENTER.latitude - (GRID_ROWS * CELL_LAT) / 2
 	const rainSuppression = 1 - 0.8 * Math.min(1, intensityMmH / 20)
 	const wetness = Math.min(1, cumulativeMm / 40)
 
