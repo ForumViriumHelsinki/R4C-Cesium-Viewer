@@ -530,7 +530,8 @@ export default class ViewportBuildingLoader {
 	 */
 	getRankingPoint() {
 		const Cesium = getCesium()
-		const { camera, scene } = this.viewer
+		// Only called from updateViewport, which returns early without a live viewer
+		const { camera, scene } = /** @type {Cesium.Viewer} */ (this.viewer)
 		const centre = camera.pickEllipsoid(
 			new Cesium.Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2),
 			scene.globe.ellipsoid
