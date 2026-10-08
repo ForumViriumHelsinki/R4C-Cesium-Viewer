@@ -49,6 +49,14 @@ interface VttFrameData {
 	values: Record<string, Float32Array>
 }
 
+/** Panel state carried in a shared link (composables/useVttFloodUrlState.js). */
+export interface VttFloodUrlState {
+	scenarioId?: string
+	frameNumber?: number
+	dimension?: string
+	opacity?: number
+}
+
 interface VttFloodState {
 	scenarioId: string
 	frameNumber: number
@@ -90,6 +98,17 @@ function rememberFrame(cache: Map<string, VttFrameData>, key: string, frame: Vtt
 		const oldest = cache.keys().next().value
 		if (oldest === undefined) break
 		cache.delete(oldest)
+	}
+}
+
+/** The validated value, or undefined (with a warning) when absent or invalid. */
+function validOrUndefined<T>(validate: (value: unknown) => T, value: unknown): T | undefined {
+	if (value === undefined) return undefined
+	try {
+		return validate(value)
+	} catch (error) {
+		logger.warn('[VTTFloodStore] Ignoring invalid URL state:', (error as Error).message)
+		return undefined
 	}
 }
 
@@ -147,6 +166,25 @@ export const useVttFloodStore = defineStore('vttFlood', {
 				return
 			}
 			this.opacity = Math.min(VTT_OPACITY_MAX, Math.max(VTT_OPACITY_MIN, value))
+		},
+
+		/**
+		 * Apply panel state from a shared link without fetching. Called before the
+		 * panel opens, so its mount fetch is the only request, for the hydrated
+		 * frame. Values are re-validated; an invalid one is skipped with a warning.
+		 */
+		hydrateFromUrl(state: VttFloodUrlState): void {
+			if (this._debounceTimer) {
+				clearTimeout(this._debounceTimer)
+				this._debounceTimer = null
+			}
+			const scenarioId = validOrUndefined(validateScenarioId, state.scenarioId)
+			if (scenarioId !== undefined) this.scenarioId = scenarioId
+			const frameNumber = validOrUndefined(validateFrameNumber, state.frameNumber)
+			if (frameNumber !== undefined) this.frameNumber = frameNumber
+			if (state.dimension !== undefined) this.setDimension(state.dimension)
+			if (state.opacity !== undefined) this.setOpacity(state.opacity)
+			this.frame = null
 		},
 
 		async fetchCurrentFrame(): Promise<void> {

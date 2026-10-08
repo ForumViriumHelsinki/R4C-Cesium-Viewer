@@ -12,6 +12,10 @@
  * - level: Navigation level ('start', 'postalcode', 'building')
  * - postalcode: Selected postal code (e.g., '00100')
  * - date: Heat data date (e.g., '2022-06-28')
+ *
+ * The VTT flood panel owns vtt, vttscenario, vttframe, vttdim and vttopacity
+ * (composables/useVttFloodUrlState.js). Writers here and there must keep each
+ * other's parameters: read window.location.search and change only their own.
  */
 
 import { ref } from 'vue'

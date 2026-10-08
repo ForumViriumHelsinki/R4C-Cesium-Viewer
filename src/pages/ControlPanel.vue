@@ -273,6 +273,7 @@ import MapControls from '../components/MapControls.vue'
 import UnifiedSearch from '../components/UnifiedSearch.vue'
 import ViewModeCompact from '../components/ViewModeCompact.vue'
 import { useSidebarNavigation } from '../composables/useSidebarNavigation.js'
+import { useVttFloodUrlState } from '../composables/useVttFloodUrlState.js'
 import { ANALYSES, findAnalysis, isAnalysisAvailable } from '../constants/analysisRegistry.js'
 import { LAYOUT } from '../constants/layout.js'
 import { cesiumProvider } from '../services/cesiumProvider.js'
@@ -439,6 +440,19 @@ const toggleVttFlood = () => {
 	vttFloodOpen.value = !vttFloodOpen.value
 	if (vttFloodOpen.value) frameVttFloodExtent()
 }
+
+// A shared link opens the panel on the Layers tab, which must be expanded for
+// the panel to mount. The link's own camera, restored by CesiumViewer, wins
+// over the default framing.
+useVttFloodUrlState({
+	isOpen: computed(() => vttFloodOpen.value && featureFlagStore.isEnabled('vttFloodSimulation')),
+	viewerReady,
+	onRestoreOpen: ({ skipFlight }) => {
+		toggleStore.openTab('layers')
+		vttFloodOpen.value = true
+		if (!skipFlight) frameVttFloodExtent()
+	},
+})
 
 const closeVttFlood = () => {
 	vttFloodOpen.value = false

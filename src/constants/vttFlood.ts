@@ -234,6 +234,13 @@ export const VTT_CAMERA_FLIGHT_SECONDS = 1.2
  */
 export const VTT_FRAMED_MAX_HEIGHT_M = 5000
 
+/**
+ * Delay before panel state is written to the query string. Coalesces slider
+ * scrubbing into one history.replaceState call; browsers throttle bursts of
+ * replaceState.
+ */
+export const VTT_URL_UPDATE_DEBOUNCE_MS = 300
+
 /** Name prefix used for the VTT data source / primitive collection in Cesium. */
 export const VTT_FLOOD_LAYER_NAME = 'VTT-Flood-Simulation'
 
