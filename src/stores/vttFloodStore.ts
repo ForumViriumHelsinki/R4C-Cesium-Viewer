@@ -48,6 +48,9 @@ interface VttMesh {
 interface VttFrameData {
 	mesh: VttMesh
 	values: Record<string, Float32Array>
+	/** Source of the frame, which selects its colour classes. */
+	scenarioId?: string
+	synthetic?: boolean
 }
 
 /** Panel state carried in a shared link (composables/useVttFloodUrlState.js). */

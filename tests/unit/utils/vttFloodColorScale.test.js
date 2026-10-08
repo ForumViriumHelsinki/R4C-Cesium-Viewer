@@ -3,6 +3,10 @@
  * blue"). A linear min/max blue→red ramp over VTT's bimodal and heavy-tailed
  * distributions put almost every cell at one end. The distributions below are
  * shaped after production frames measured on 2026-10-08.
+ *
+ * Classes are fixed per scenario (constants/vttFloodClassBreaks.ts, generated
+ * by scripts/vtt-flood/derive-class-breaks.mjs), so legend labels and the
+ * colour of a value do not change while scrubbing frames.
  */
 import { describe, expect, it } from 'vitest'
 import {
@@ -12,8 +16,12 @@ import {
 	VTT_DIMENSIONS,
 	VTT_MAX_EXTRUSION_M,
 	VTT_MIN_EXTRUSION_M,
+	VTT_ROBUST_LOWER_QUANTILE,
+	VTT_ROBUST_UPPER_QUANTILE,
+	VTT_SCENARIOS,
 	VTT_WET_DEPTH_THRESHOLD_M,
 } from '@/constants/vttFlood.ts'
+import { VTT_CLASS_BREAKS, VTT_CLASS_BREAKS_DERIVATION } from '@/constants/vttFloodClassBreaks.ts'
 import {
 	buildColorScale,
 	classExtrusion,
@@ -22,75 +30,88 @@ import {
 	legendGradientCss,
 	legendTicks,
 } from '@/utils/vttFloodColorScale.js'
+import { equalCountBreaks } from '../../../scripts/vtt-flood/equalCountBreaks.mjs'
 
 const dim = (key) => VTT_DIMENSIONS.find((d) => d.key === key)
+const SCENARIO_DIMENSIONS = VTT_DIMENSIONS.filter((d) => d.scale.kind === 'scenario')
 
-/** Transpiration at scenario 1 frame 120: 37% zeros, the rest bunched near the top. */
-function transpirationLike() {
+/** Scenario 1 from the VTT API, the default scenario. */
+const S1 = { scenarioId: '1', synthetic: false }
+const S1_TRANSPIRATION = VTT_CLASS_BREAKS.vtt['1'].transpiration
+
+/**
+ * A transpiration frame: 370 zero cells, the rest spread up to `max`.
+ * Transpiration is cumulative, so an early frame tops out low and a late one
+ * high; Float32 like the frames the store holds.
+ */
+function transpirationFrame(max) {
 	const values = []
 	for (let i = 0; i < 370; i++) values.push(0)
-	for (let i = 0; i < 63; i++) values.push(0.005 + (0.055 * i) / 62) // tail 0.005..0.06
-	for (let i = 0; i < 567; i++) values.push(0.064 + (0.004 * i) / 566) // cluster 0.064..0.068
-	return values
+	for (let i = 0; i < 630; i++) values.push((max * (i + 1)) / 630)
+	return Float32Array.from(values)
 }
 
 describe('buildColorScale', () => {
-	it('spreads a bimodal transpiration frame over several classes and hides zero cells', () => {
-		const values = transpirationLike()
-		const scale = buildColorScale(dim('transpiration'), values)
+	it("uses the scenario's breaks and hides zero cells", () => {
+		const scale = buildColorScale(dim('transpiration'), transpirationFrame(0.17), S1)
 
-		expect(scale.mode).toBe('classes')
-		expect(scale.classes).toHaveLength(VTT_COLOR_STEPS)
+		expect(scale).toMatchObject({ mode: 'classes', kind: 'scenario' })
+		expect(scale.classes.map((c) => c.lo)).toEqual(S1_TRANSPIRATION.breaks)
+		expect(scale.classes.at(-1).hi).toBe(S1_TRANSPIRATION.upper)
 		expect(scale.hiddenCount).toBe(370)
 		expect(scale.shownCount).toBe(630)
-
-		const used = new Set(values.filter((v) => v > 0).map((v) => classIndex(scale, v)))
-		expect(used.size).toBeGreaterThan(VTT_COLOR_STEPS / 2)
 		expect(classIndex(scale, 0)).toBe(-1)
 	})
 
-	it('gives no transpiration class more than 30% of the shown cells', () => {
-		// Real frames bunch most non-zero cells at 0.064–0.068 mm/h. Equal-width
-		// classes over p2–p98 put 67–84% of shown cells in the top class (scenario
-		// 1, frames 12–287); equal-count classes split the cluster.
-		const values = transpirationLike()
-		const scale = buildColorScale(dim('transpiration'), values)
-		const counts = new Array(scale.classes.length).fill(0)
-		for (const v of values) {
-			const i = classIndex(scale, v)
-			if (i >= 0) counts[i]++
-		}
+	it('colours a value the same in every frame of a scenario', () => {
+		// Frame 24 of scenario 1 tops out at 0.0149, frame 287 at 0.178. With
+		// per-frame classes the same value moved classes as the frame changed.
+		const early = buildColorScale(dim('transpiration'), transpirationFrame(0.0149), S1)
+		const late = buildColorScale(dim('transpiration'), transpirationFrame(0.178), S1)
 
-		expect(scale.classes).toHaveLength(VTT_COLOR_STEPS)
-		expect(Math.max(...counts) / scale.shownCount).toBeLessThanOrEqual(0.3)
+		expect(late.classes).toEqual(early.classes)
+		for (const v of [0.002, 0.01, 0.0149, 0.03, 0.08, 0.15]) {
+			expect(classIndex(late, v)).toBe(classIndex(early, v))
+		}
 	})
 
-	it('merges class breaks that coincide on tied values', () => {
-		// Half the shown cells share one value, so several quantiles land on it.
-		const values = [
-			...new Array(100).fill(0.05),
-			...Array.from({ length: 100 }, (_, i) => (i + 1) / 1000),
-		]
-		const scale = buildColorScale(dim('transpiration'), values)
+	it('puts an early frame of a cumulative variable in the low classes', () => {
+		const values = transpirationFrame(0.0149)
+		const scale = buildColorScale(dim('transpiration'), values, S1)
+		const used = new Set(Array.from(values, (v) => classIndex(scale, v)))
+		used.delete(-1)
+		expect(Math.max(...used)).toBeLessThan(2)
+	})
 
-		expect(scale.mode).toBe('classes')
-		expect(scale.classes.length).toBeLessThan(VTT_COLOR_STEPS)
-		for (let i = 1; i < scale.classes.length; i++) {
-			expect(scale.classes[i].lo).toBeGreaterThan(scale.classes[i - 1].lo)
-			expect(scale.classes[i].lo).toBe(scale.classes[i - 1].hi)
-		}
-		// The tied value is one class, not split across empty ones.
-		const tied = classIndex(scale, 0.05)
-		expect(values.filter((v) => v === 0.05).every((v) => classIndex(scale, v) === tied)).toBe(true)
+	it('selects breaks by scenario and data source', () => {
+		const values = transpirationFrame(0.17)
+		const s3 = buildColorScale(dim('transpiration'), values, { scenarioId: '3', synthetic: false })
+		const synthetic = buildColorScale(dim('transpiration'), values, {
+			scenarioId: '1',
+			synthetic: true,
+		})
+
+		expect(s3.classes.map((c) => c.lo)).toEqual(VTT_CLASS_BREAKS.vtt['3'].transpiration.breaks)
+		expect(synthetic.classes.map((c) => c.lo)).toEqual(
+			VTT_CLASS_BREAKS.synthetic['1'].transpiration.breaks
+		)
+	})
+
+	it('fails fast when a scenario has no breaks', () => {
+		const values = transpirationFrame(0.17)
+		expect(() =>
+			buildColorScale(dim('transpiration'), values, { scenarioId: '9', synthetic: false })
+		).toThrow(/No vtt colour classes for scenario "9"/)
+		expect(() => buildColorScale(dim('transpiration'), values)).toThrow(/derive-class-breaks/)
 	})
 
 	it('reports a frame where every cell is equal as no-variation (frame 0, canopy = 5)', () => {
-		const scale = buildColorScale(dim('canopy_air_temperature'), new Array(50).fill(5))
+		const scale = buildColorScale(dim('canopy_air_temperature'), new Array(50).fill(5), S1)
 		expect(scale).toMatchObject({ mode: 'empty', reason: 'no-variation', value: 5, totalCount: 50 })
 	})
 
 	it('reports an all-zero frame as no-variation even when zeros are hidden', () => {
-		const scale = buildColorScale(dim('transpiration'), new Float32Array(20))
+		const scale = buildColorScale(dim('transpiration'), new Float32Array(20), S1)
 		expect(scale).toMatchObject({ mode: 'empty', reason: 'no-variation', value: 0 })
 	})
 
@@ -131,49 +152,66 @@ describe('buildColorScale', () => {
 		expect(scale.classes.at(-1).hi).toBe(Number.POSITIVE_INFINITY)
 	})
 
-	it('shows a two-valued upper storage frame as a single-colour mask', () => {
-		const values = [0, 0, 0.001, 0.001, 0.001, 0]
-		const scale = buildColorScale(dim('upper_storage_water_depth'), values)
+	it('separates the two upper storage depths of scenario 1 by class', () => {
+		// Scenario 1 frames hold 0 plus 0.001 m (frames 12–168) or 0.0009 m
+		// (frames 180–287); per-frame scales drew each as the same single colour.
+		const values = Float32Array.from([0, 0, 0.0009, 0.001, 0.001, 0])
+		const scale = buildColorScale(dim('upper_storage_water_depth'), values, S1)
 
-		expect(scale.mode).toBe('mask')
+		expect(scale.mode).toBe('classes')
 		expect(scale.shownCount).toBe(3)
-		expect(scale.classes).toHaveLength(1)
-		expect(classIndex(scale, 0.001)).toBe(0)
+		expect(classIndex(scale, Math.fround(0.0009))).toBe(0)
+		expect(classIndex(scale, Math.fround(0.001))).toBe(1)
 		expect(classIndex(scale, 0)).toBe(-1)
 	})
 
-	it('clips outliers into the end classes and flags it', () => {
-		const values = Array.from({ length: 200 }, (_, i) => 1 + i / 199)
-		values.push(1000) // one extreme cell
-		values.push(0.001)
-		const scale = buildColorScale(dim('transpiration'), values)
+	it('shows a scenario whose shown values were all equal as a single-colour mask', () => {
+		// No real scenario has such an entry today; a regenerated one could. The
+		// generated object is mutable at runtime, so swap one in for this test.
+		const set = VTT_CLASS_BREAKS.vtt['1']
+		const saved = set.upper_storage_water_depth
+		set.upper_storage_water_depth = { breaks: [0.001], upper: 0.001 }
+		try {
+			const scale = buildColorScale(
+				dim('upper_storage_water_depth'),
+				[0, 0, 0.001, 0.001, 0.001, 0],
+				S1
+			)
+			expect(scale).toMatchObject({ mode: 'mask', value: 0.001, shownCount: 3 })
+			expect(scale.classes).toHaveLength(1)
+			expect(classIndex(scale, 0.001)).toBe(0)
+			expect(classIndex(scale, 0)).toBe(-1)
+		} finally {
+			set.upper_storage_water_depth = saved
+		}
+	})
 
-		expect(scale.mode).toBe('classes')
+	it('folds values outside the breaks into the end classes and flags it', () => {
+		const values = [...transpirationFrame(0.17), 1000, 0.0001]
+		const scale = buildColorScale(dim('transpiration'), values, S1)
+
 		expect(scale.clippedHigh).toBe(true)
 		expect(scale.clippedLow).toBe(true)
-		expect(classIndex(scale, 1000)).toBe(VTT_COLOR_STEPS - 1)
-		expect(classIndex(scale, 0.001)).toBe(0)
-		// The outlier no longer stretches the domain: the middle of the bulk
-		// lands mid-scale instead of in the first class.
-		expect(classIndex(scale, 1.5)).toBeGreaterThan(1)
+		expect(classIndex(scale, 1000)).toBe(scale.classes.length - 1)
+		expect(classIndex(scale, 0.0001)).toBe(0)
 	})
 
 	it('ignores non-finite values', () => {
-		const scale = buildColorScale(dim('transpiration'), [Number.NaN, 0.1, 0.2, 0.3])
+		const scale = buildColorScale(dim('transpiration'), [Number.NaN, 0.01, 0.02, 0.03], S1)
 		expect(scale.mode).toBe('classes')
 		expect(scale.hiddenCount).toBe(1)
 		expect(classIndex(scale, Number.NaN)).toBe(-1)
 	})
 
 	it('reports an empty frame as no-data', () => {
-		expect(buildColorScale(dim('transpiration'), [])).toMatchObject({
+		expect(buildColorScale(dim('transpiration'), [], S1)).toMatchObject({
 			mode: 'empty',
 			reason: 'no-data',
 		})
 	})
 
 	it('gives every class an rgb colour string and matching bytes', () => {
-		const scale = buildColorScale(dim('transpiration'), transpirationLike())
+		const scale = buildColorScale(dim('transpiration'), transpirationFrame(0.17), S1)
 		for (const c of scale.classes) {
 			expect(c.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/)
 			expect(c.color).toBe(`rgb(${c.rgb[0]}, ${c.rgb[1]}, ${c.rgb[2]})`)
@@ -183,9 +221,111 @@ describe('buildColorScale', () => {
 	})
 })
 
+describe('equalCountBreaks (derivation of the scenario breaks)', () => {
+	const derive = (values) =>
+		equalCountBreaks(
+			Float64Array.from(values).sort(),
+			VTT_ROBUST_LOWER_QUANTILE,
+			VTT_ROBUST_UPPER_QUANTILE,
+			VTT_COLOR_STEPS
+		)
+
+	it('gives no class more than 30% of the pooled values of a cumulative variable', () => {
+		// Transpiration accumulates: each cell grows at its own rate, frame by
+		// frame. Pooled over the scenario's frames the classes hold about equal
+		// counts, even though an early frame alone sits in the lowest classes.
+		const pooled = []
+		for (let frame = 12; frame < 288; frame += 12) {
+			for (let cell = 0; cell < 500; cell++) {
+				const rate = 0.0004 + ((cell * 7919) % 500) / 500 / 1600
+				pooled.push(Math.round(rate * frame * 1e4) / 1e4) // 4 decimals, like VTT
+			}
+		}
+		const { breaks, upper } = derive(pooled)
+		const counts = new Array(breaks.length).fill(0)
+		for (const v of pooled) {
+			let i = 0
+			while (i + 1 < breaks.length && breaks[i + 1] <= v) i++
+			counts[i]++
+		}
+
+		expect(breaks).toHaveLength(VTT_COLOR_STEPS)
+		expect(upper).toBeGreaterThan(breaks.at(-1))
+		expect(Math.max(...counts) / pooled.length).toBeLessThanOrEqual(0.3)
+	})
+
+	it('merges class breaks that coincide on tied values', () => {
+		// Half the values share one value, so several quantiles land on it.
+		const values = [
+			...new Array(100).fill(0.05),
+			...Array.from({ length: 100 }, (_, i) => i / 1000),
+		]
+		const { breaks } = derive(values)
+
+		expect(breaks.length).toBeLessThan(VTT_COLOR_STEPS)
+		for (let i = 1; i < breaks.length; i++) expect(breaks[i]).toBeGreaterThan(breaks[i - 1])
+		expect(breaks).toContain(0.05)
+	})
+
+	it('widens the domain to min..max when the quantiles coincide', () => {
+		const values = [...new Array(99).fill(0.001), 0.0009]
+		expect(derive(values)).toEqual({ breaks: [0.0009, 0.001], upper: 0.001 })
+	})
+
+	it('returns one break for a constant dimension', () => {
+		expect(derive(new Array(10).fill(5))).toEqual({ breaks: [5], upper: 5 })
+	})
+})
+
+describe('VTT_CLASS_BREAKS (generated by scripts/vtt-flood/derive-class-breaks.mjs)', () => {
+	it('has strictly increasing breaks for every scenario and scenario-scale dimension', () => {
+		// buildColorScale throws for a missing entry, and classIndex's binary
+		// search needs ascending class bounds. Adding a scenario or dimension
+		// without regenerating fails here: run the script and commit its output.
+		for (const source of ['vtt', 'synthetic']) {
+			expect(Object.keys(VTT_CLASS_BREAKS[source]).sort()).toEqual(
+				VTT_SCENARIOS.map((s) => s.id).sort()
+			)
+			for (const scenario of VTT_SCENARIOS) {
+				for (const d of SCENARIO_DIMENSIONS) {
+					const entry = VTT_CLASS_BREAKS[source][scenario.id][d.key]
+					const where = `${source} scenario ${scenario.id} ${d.key}`
+					expect(entry, where).toBeDefined()
+					expect(entry.breaks.length, where).toBeGreaterThan(0)
+					expect(entry.breaks.every(Number.isFinite), where).toBe(true)
+					for (let i = 1; i < entry.breaks.length; i++) {
+						expect(entry.breaks[i], where).toBeGreaterThan(entry.breaks[i - 1])
+					}
+					expect(entry.upper, where).toBeGreaterThanOrEqual(entry.breaks.at(-1))
+				}
+			}
+		}
+	})
+
+	it('was derived with the current class count and quantiles', () => {
+		// Changing VTT_COLOR_STEPS or a dimension's quantiles leaves the breaks
+		// stale until the script is re-run.
+		expect(VTT_CLASS_BREAKS_DERIVATION.steps).toBe(VTT_COLOR_STEPS)
+		expect(VTT_CLASS_BREAKS_DERIVATION.quantiles).toEqual(
+			Object.fromEntries(
+				SCENARIO_DIMENSIONS.map((d) => [
+					d.key,
+					{ lowerQuantile: d.scale.lowerQuantile, upperQuantile: d.scale.upperQuantile },
+				])
+			)
+		)
+	})
+
+	it('splits real transpiration, the default view, into the full class count', () => {
+		for (const scenario of VTT_SCENARIOS) {
+			expect(VTT_CLASS_BREAKS.vtt[scenario.id].transpiration.breaks).toHaveLength(VTT_COLOR_STEPS)
+		}
+	})
+})
+
 describe('classExtrusion', () => {
 	it('rises monotonically from the minimum to the maximum extrusion', () => {
-		const scale = buildColorScale(dim('transpiration'), transpirationLike())
+		const scale = buildColorScale(dim('transpiration'), transpirationFrame(0.17), S1)
 		const heights = scale.classes.map((_, i) => classExtrusion(scale, i))
 
 		expect(heights[0]).toBeGreaterThanOrEqual(VTT_MIN_EXTRUSION_M)
@@ -193,8 +333,17 @@ describe('classExtrusion', () => {
 		for (let i = 1; i < heights.length; i++) expect(heights[i]).toBeGreaterThan(heights[i - 1])
 	})
 
+	it('gives a value the same height in every frame of a scenario', () => {
+		const early = buildColorScale(dim('transpiration'), transpirationFrame(0.0149), S1)
+		const late = buildColorScale(dim('transpiration'), transpirationFrame(0.178), S1)
+		const v = 0.012
+		expect(classExtrusion(late, classIndex(late, v))).toBe(
+			classExtrusion(early, classIndex(early, v))
+		)
+	})
+
 	it('uses the minimum extrusion for a mask', () => {
-		const scale = buildColorScale(dim('upper_storage_water_depth'), [0, 0.001, 0.001])
+		const scale = { mode: 'mask', classes: [{ lo: 1, hi: 1 }] }
 		expect(classExtrusion(scale, 0)).toBe(VTT_MIN_EXTRUSION_M)
 	})
 })
@@ -209,7 +358,7 @@ describe('legend helpers', () => {
 	})
 
 	it('has no gradient for an empty scale', () => {
-		expect(legendGradientCss(buildColorScale(dim('transpiration'), [5, 5]))).toBeNull()
+		expect(legendGradientCss(buildColorScale(dim('transpiration'), [5, 5], S1))).toBeNull()
 	})
 
 	it('labels fixed classes at every break, the last one open-ended', () => {
@@ -219,15 +368,34 @@ describe('legend helpers', () => {
 		expect(ticks[0].at).toBe(0)
 	})
 
-	it('labels a robust scale at both ends, marking clipped ends', () => {
-		const values = Array.from({ length: 200 }, (_, i) => 1 + i / 199)
-		values.push(1000)
-		const scale = buildColorScale(dim('transpiration'), values)
-		const ticks = legendTicks(scale)
-		expect(ticks).toHaveLength(2)
-		expect(ticks[0]).toMatchObject({ at: 0 })
-		expect(ticks[1]).toMatchObject({ at: 1 })
-		expect(ticks[1].label.startsWith('≥ ')).toBe(true)
+	it("labels a scenario scale from the scenario's breaks, the same in every frame", () => {
+		const { breaks, upper } = S1_TRANSPIRATION
+		const fmt = formatLegendValue
+		const early = legendTicks(buildColorScale(dim('transpiration'), transpirationFrame(0.0149), S1))
+		const late = legendTicks(buildColorScale(dim('transpiration'), transpirationFrame(0.178), S1))
+
+		expect(late).toEqual(early)
+		// Every second boundary of the eight classes, so labels do not overlap.
+		expect(early).toEqual([
+			{ label: `≤ ${fmt(breaks[0])}`, at: 0 },
+			{ label: fmt(breaks[2]), at: 2 / 8 },
+			{ label: fmt(breaks[4]), at: 4 / 8 },
+			{ label: fmt(breaks[6]), at: 6 / 8 },
+			{ label: `≥ ${fmt(upper)}`, at: 1 },
+		])
+	})
+
+	it('labels every boundary of a short scale, without repeating a single-value last class', () => {
+		// Scenario 1 upper storage: classes [0.0009, 0.001) and [0.001, 0.001].
+		const scale = buildColorScale(
+			dim('upper_storage_water_depth'),
+			Float32Array.from([0, 0.001]),
+			S1
+		)
+		expect(legendTicks(scale)).toEqual([
+			{ label: '≤ 0.0009', at: 0 },
+			{ label: '0.001', at: 0.5 },
+		])
 	})
 
 	it('formats values to three significant digits', () => {
@@ -246,7 +414,7 @@ describe('dimension constants', () => {
 	it('gives every dimension a palette and scale spec', () => {
 		for (const d of VTT_DIMENSIONS) {
 			expect(['YlGn', 'YlGnBu']).toContain(d.palette)
-			expect(['fixed', 'robust']).toContain(d.scale.kind)
+			expect(['fixed', 'scenario']).toContain(d.scale.kind)
 		}
 	})
 

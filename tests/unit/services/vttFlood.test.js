@@ -133,6 +133,8 @@ describe('fetchSimulationFrame', () => {
 			Math.fround(0.4),
 		])
 		expect(result).not.toHaveProperty('features')
+		// The source selects the frame's colour classes (constants/vttFloodClassBreaks.ts).
+		expect(result).toMatchObject({ scenarioId: '1', synthetic: false })
 	})
 
 	it('throws on non-2xx response', async () => {
@@ -159,6 +161,7 @@ describe('fetchSimulationFrame', () => {
 		expect(result.mesh.cellCount).toBeGreaterThan(0)
 		const depths = Array.from(result.values.overland_water_depth)
 		expect(Math.max(...depths)).toBeGreaterThan(Math.min(...depths))
+		expect(result).toMatchObject({ scenarioId: '1', synthetic: true })
 	})
 
 	it('propagates AbortError', async () => {

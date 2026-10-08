@@ -47,6 +47,9 @@ import { generateSyntheticFrame } from './vttFloodSynthetic.js'
  * @typedef {Object} VttFrame
  * @property {VttMesh} mesh
  * @property {Record<string, Float32Array>} values - NaN where a cell has no numeric value.
+ * @property {string} [scenarioId] - Set by {@link fetchSimulationFrame}; with
+ *   `synthetic` it selects the frame's colour classes.
+ * @property {boolean} [synthetic] - Set by {@link fetchSimulationFrame}.
  */
 
 const DIMENSION_KEYS = VTT_DIMENSIONS.map((d) => d.key)
@@ -147,7 +150,8 @@ export function internMesh(frame, known) {
  * @param {AbortSignal} [params.signal] - Optional AbortSignal for cancellation.
  * @param {boolean} [params.synthetic] - Return a locally generated frame
  *   instead of calling the VTT API (the `vttFloodSyntheticData` flag).
- * @returns {Promise<VttFrame>} The frame in compact form ({@link compactFrame}).
+ * @returns {Promise<VttFrame>} The frame in compact form ({@link compactFrame}),
+ *   tagged with its `scenarioId` and `synthetic` source.
  * @throws {Error} On invalid input, non-2xx response, or malformed payload.
  *   AbortError propagates as-is so callers can distinguish cancellation from
  *   real failures.
@@ -169,7 +173,7 @@ export async function fetchSimulationFrame(
 			scenarioId: safeScenario,
 			frameNumber: safeFrame,
 		})
-		return compactFrame(features)
+		return { ...compactFrame(features), scenarioId: safeScenario, synthetic: true }
 	}
 
 	const body = JSON.stringify({
@@ -206,7 +210,7 @@ export async function fetchSimulationFrame(
 		)
 	}
 
-	return compactFrame(payload.features)
+	return { ...compactFrame(payload.features), scenarioId: safeScenario, synthetic: false }
 }
 
 /**
@@ -272,7 +276,7 @@ export function renderFlood(
 	}
 
 	const values = frame.values[dimension]
-	const colorScale = scale ?? buildColorScale(meta, values)
+	const colorScale = scale ?? buildColorScale(meta, values, frame)
 	const style = styleFor(colorScale, values, opacity)
 
 	const [existing, ...strays] = findFloodPrimitives(viewer)

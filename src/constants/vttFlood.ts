@@ -23,14 +23,16 @@ export type VttPalette = 'YlGnBu' | 'YlGn'
  * How a dimension's values map to colour classes.
  *  - `fixed`: physical class breaks, stable across frames and scenarios. The
  *    last class is open-ended (`[lastBreak, ∞)`).
- *  - `robust`: per-frame domain between two quantiles of the shown cells,
- *    split into up to {@link VTT_COLOR_STEPS} equal-count classes (breaks at
- *    evenly spaced quantiles; breaks tied on one value merge). Outliers fall
- *    into the end classes instead of compressing everything else.
+ *  - `scenario`: breaks fixed per scenario, read from constants/vttFloodClassBreaks.ts.
+ *    scripts/vtt-flood/derive-class-breaks.mjs pools the shown cells of
+ *    sampled frames and splits the domain between the two quantiles into up
+ *    to {@link VTT_COLOR_STEPS} equal-count classes (breaks tied on one value
+ *    merge). Outliers fall into the end classes instead of compressing
+ *    everything else, and the classes stay the same while scrubbing frames.
  */
 export type VttScaleSpec =
 	| { readonly kind: 'fixed'; readonly breaks: readonly number[] }
-	| { readonly kind: 'robust'; readonly lowerQuantile: number; readonly upperQuantile: number }
+	| { readonly kind: 'scenario'; readonly lowerQuantile: number; readonly upperQuantile: number }
 
 export interface VttDimension {
 	/** Property name on returned GeoJSON Feature.properties. */
@@ -86,12 +88,12 @@ export const VTT_DEPTH_CLASS_BREAKS_M = [
 	1.0,
 ] as const
 
-/** Quantiles bounding a `robust` colour domain (2nd–98th percentile). */
+/** Quantiles bounding a `scenario` colour domain (2nd–98th percentile). */
 export const VTT_ROBUST_LOWER_QUANTILE = 0.02
 export const VTT_ROBUST_UPPER_QUANTILE = 0.98
 
-const ROBUST_SCALE: VttScaleSpec = {
-	kind: 'robust',
+const SCENARIO_SCALE: VttScaleSpec = {
+	kind: 'scenario',
 	lowerQuantile: VTT_ROBUST_LOWER_QUANTILE,
 	upperQuantile: VTT_ROBUST_UPPER_QUANTILE,
 }
@@ -109,7 +111,7 @@ export const VTT_DIMENSIONS: readonly VttDimension[] = [
 		unit: 'mm/h',
 		palette: 'YlGn',
 		hideBelow: 0,
-		scale: ROBUST_SCALE,
+		scale: SCENARIO_SCALE,
 	},
 	{
 		key: 'overland_water_depth',
@@ -125,7 +127,7 @@ export const VTT_DIMENSIONS: readonly VttDimension[] = [
 		unit: 'm',
 		palette: 'YlGnBu',
 		hideBelow: 0,
-		scale: ROBUST_SCALE,
+		scale: SCENARIO_SCALE,
 	},
 	{
 		key: 'canopy_air_temperature',
@@ -133,7 +135,7 @@ export const VTT_DIMENSIONS: readonly VttDimension[] = [
 		unit: 'K',
 		palette: 'YlGn',
 		hideBelow: Number.NEGATIVE_INFINITY,
-		scale: ROBUST_SCALE,
+		scale: SCENARIO_SCALE,
 	},
 ] as const
 
@@ -171,7 +173,7 @@ export const VTT_MAX_EXTRUSION_M = 100
 /** Extrusion height of the lowest colour class, so it still reads as a column. */
 export const VTT_MIN_EXTRUSION_M = 2
 
-/** Number of equal-count colour classes in a `robust` scale (fewer when values tie). */
+/** Number of equal-count colour classes in a `scenario` scale (fewer when values tie). */
 export const VTT_COLOR_STEPS = 8
 
 /**

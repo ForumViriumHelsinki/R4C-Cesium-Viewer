@@ -11,24 +11,30 @@
  * a tight cluster), heavy-tailed (overland depth) or two-valued (upper storage),
  * so a linear min/max ramp puts nearly every cell at one end.
  *
- * Scale modes:
- *  - `empty`: nothing to draw. `reason` is `no-data`, `no-variation` (every
- *    cell has the same value, e.g. frame 0; robust scales only) or
- *    `all-hidden` (no cell passes the dimension's `hideBelow`).
- *  - `mask`: the shown cells share one value; one class.
- *  - `classes`: fixed physical breaks or a robust (quantile-bounded) domain
- *    split into equal-count classes. Equal-width classes put 67–84% of shown
+ * Classes never depend on the frame being drawn, so a value keeps its colour
+ * and the legend keeps its labels while the user scrubs frames:
+ *  - `fixed` dimensions use physical breaks from constants/vttFlood.ts.
+ *  - `scenario` dimensions use the breaks derived per data source and scenario
+ *    in constants/vttFloodClassBreaks.ts: equal-count classes over the pooled
+ *    values of sampled frames. Equal-width classes put 67–84% of shown
  *    transpiration cells in the top class on real frames, because most cells
  *    sit in a narrow cluster near the maximum.
+ *
+ * Scale modes:
+ *  - `empty`: nothing to draw. `reason` is `no-data`, `no-variation` (every
+ *    cell has the same value, e.g. frame 0; scenario scales only) or
+ *    `all-hidden` (no cell passes the dimension's `hideBelow`).
+ *  - `mask`: every shown value in the scenario's sampled frames was the same; one class.
+ *  - `classes`: the dimension's fixed or scenario breaks.
  */
 
 import {
-	VTT_COLOR_STEPS,
 	VTT_MAX_EXTRUSION_M,
 	VTT_MIN_EXTRUSION_M,
 	VTT_PALETTE_T_RANGE,
 } from '../constants/vttFlood'
-import { interpolateYlGn, interpolateYlGnBu, quantileSorted } from './d3'
+import { VTT_CLASS_BREAKS } from '../constants/vttFloodClassBreaks'
+import { interpolateYlGn, interpolateYlGnBu } from './d3'
 
 /**
  * @typedef {Object} VttColorClass
@@ -44,7 +50,7 @@ import { interpolateYlGn, interpolateYlGnBu, quantileSorted } from './d3'
  * @property {'no-data'|'no-variation'|'all-hidden'} [reason] - `empty` only.
  * @property {number} [value] - The single value (`no-variation` and `mask`).
  * @property {number} [threshold] - The hiding threshold (`all-hidden` only).
- * @property {'fixed'|'robust'} [kind] - `classes` only.
+ * @property {'fixed'|'scenario'} [kind] - `classes` only.
  * @property {VttColorClass[]} classes - Empty when `mode` is `empty`.
  * @property {number} hideBelow - Values at or below this are hidden.
  * @property {boolean} clippedLow - Values below the first class were folded into it.
@@ -54,6 +60,15 @@ import { interpolateYlGn, interpolateYlGnBu, quantileSorted } from './d3'
  * @property {number} hiddenCount
  */
 
+/**
+ * Where a frame came from, which selects its scenario breaks. Frames from
+ * services/vttFlood.js fetchSimulationFrame carry both fields.
+ *
+ * @typedef {Object} VttFrameSource
+ * @property {string} [scenarioId]
+ * @property {boolean} [synthetic] - Generated locally (the `vttFloodSyntheticData` flag).
+ */
+
 const INTERPOLATORS = {
 	YlGn: interpolateYlGn,
 	YlGnBu: interpolateYlGnBu,
@@ -61,6 +76,9 @@ const INTERPOLATORS = {
 
 /** Position on the palette ramp (0..1 within VTT_PALETTE_T_RANGE) used for a mask. */
 const MASK_RAMP_POSITION = 0.75
+
+/** Most label intervals on a scenario legend; more ticks overlap in the panel. */
+const LEGEND_MAX_INTERVALS = 4
 
 const RGB_PATTERN = /^rgb\((\d+), (\d+), (\d+)\)$/
 
@@ -90,36 +108,64 @@ function makeClasses(palette, bounds) {
 }
 
 /**
+ * The derived breaks of one dimension for a frame's data source and scenario.
+ *
+ * @param {VttFrameSource | undefined} source
+ * @param {string} key - Dimension key.
+ * @returns {import('../constants/vttFloodClassBreaks').VttClassBreaks}
+ * @throws {Error} When no breaks were derived for it: scenarios are an
+ *   allow-list, so a missing entry means the generated module is stale.
+ */
+function scenarioClassBreaks(source, key) {
+	const set = source?.synthetic ? 'synthetic' : 'vtt'
+	const entry = VTT_CLASS_BREAKS[set][String(source?.scenarioId)]?.[key]
+	if (!entry) {
+		throw new Error(
+			`No ${set} colour classes for scenario "${source?.scenarioId}" dimension "${key}". Run bun scripts/vtt-flood/derive-class-breaks.mjs.`
+		)
+	}
+	return entry
+}
+
+/**
  * Build the colour scale for one dimension of one frame.
  *
  * @param {import('../constants/vttFlood').VttDimension} dimension
  * @param {ArrayLike<number>} values - One value per cell; non-finite values are hidden.
+ * @param {VttFrameSource} [source] - Required for `scenario` dimensions.
  * @returns {VttColorScale}
  */
-export function buildColorScale(dimension, values) {
+export function buildColorScale(dimension, values, source) {
 	const { hideBelow, palette, scale: spec } = dimension
 	const totalCount = values.length
 	const base = { hideBelow, clippedLow: false, clippedHigh: false, totalCount }
 
 	let min = Number.POSITIVE_INFINITY
 	let max = Number.NEGATIVE_INFINITY
-	const shown = []
+	let shownMin = Number.POSITIVE_INFINITY
+	let shownMax = Number.NEGATIVE_INFINITY
+	let shownCount = 0
 	for (let i = 0; i < values.length; i++) {
 		const v = values[i]
 		if (!Number.isFinite(v)) continue
 		if (v < min) min = v
 		if (v > max) max = v
-		if (v > hideBelow) shown.push(v)
+		if (v > hideBelow) {
+			shownCount++
+			if (v < shownMin) shownMin = v
+			if (v > shownMax) shownMax = v
+		}
 	}
-	const counts = { shownCount: shown.length, hiddenCount: totalCount - shown.length }
+	const counts = { shownCount, hiddenCount: totalCount - shownCount }
 
 	if (min > max) return { ...base, ...counts, mode: 'empty', reason: 'no-data', classes: [] }
-	// A uniform frame has no per-frame range to colour. Fixed physical classes
-	// still apply (a uniform 40 cm flood is drawn), so only robust scales stop here.
-	if (min === max && spec.kind === 'robust') {
+	// A uniform frame (frame 0, or canopy temperature, constant in every frame)
+	// has nothing to tell apart. Fixed physical classes still apply (a uniform
+	// 40 cm flood is drawn), so only scenario scales stop here.
+	if (min === max && spec.kind === 'scenario') {
 		return { ...base, ...counts, mode: 'empty', reason: 'no-variation', value: min, classes: [] }
 	}
-	if (shown.length === 0) {
+	if (shownCount === 0) {
 		return {
 			...base,
 			...counts,
@@ -129,10 +175,6 @@ export function buildColorScale(dimension, values) {
 			classes: [],
 		}
 	}
-
-	const sorted = Float64Array.from(shown).sort()
-	const shownMin = sorted[0]
-	const shownMax = sorted[sorted.length - 1]
 
 	if (spec.kind === 'fixed') {
 		const { breaks } = spec
@@ -148,43 +190,25 @@ export function buildColorScale(dimension, values) {
 		}
 	}
 
-	let qLo = spec.lowerQuantile
-	let qHi = spec.upperQuantile
-	let lo = quantileSorted(sorted, qLo) ?? shownMin
-	let hi = quantileSorted(sorted, qHi) ?? shownMax
-	if (!(hi > lo)) {
-		qLo = 0
-		qHi = 1
-		lo = shownMin
-		hi = shownMax
-	}
-	if (!(hi > lo)) {
+	const { breaks, upper } = scenarioClassBreaks(source, dimension.key)
+	if (breaks.length === 1 && upper === breaks[0]) {
 		return {
 			...base,
 			...counts,
 			mode: 'mask',
-			value: lo,
-			classes: [{ lo, hi: lo, ...paletteColor(palette, MASK_RAMP_POSITION) }],
+			value: upper,
+			classes: [{ lo: upper, hi: upper, ...paletteColor(palette, MASK_RAMP_POSITION) }],
 		}
 	}
-
-	// Equal-count class starts: each class holds about the same share of the
-	// cells inside the domain. Starts that coincide (many cells tied on one
-	// value) merge, so a tie is one class rather than several empty ones.
-	const starts = [lo]
-	for (let i = 1; i < VTT_COLOR_STEPS; i++) {
-		const start = quantileSorted(sorted, qLo + ((qHi - qLo) * i) / VTT_COLOR_STEPS) ?? hi
-		if (start > starts[starts.length - 1]) starts.push(start)
-	}
-	const bounds = starts.map((start, i) => [start, starts[i + 1] ?? hi])
+	const bounds = breaks.map((lo, i) => [lo, breaks[i + 1] ?? upper])
 	return {
 		...base,
 		...counts,
 		mode: 'classes',
-		kind: 'robust',
+		kind: 'scenario',
 		classes: makeClasses(palette, bounds),
-		clippedLow: shownMin < lo,
-		clippedHigh: shownMax > hi,
+		clippedLow: shownMin < breaks[0],
+		clippedHigh: shownMax > upper,
 	}
 }
 
@@ -249,9 +273,12 @@ export function legendGradientCss(scale) {
 }
 
 /**
- * Legend tick labels with their position along the bar (0..1).
- * Fixed scales label every class's lower bound; robust scales label both ends,
- * prefixed with ≤ / ≥ where values were clipped into the end class.
+ * Legend tick labels with their position along the bar (0..1). They depend
+ * only on the classes, so they stay put while scrubbing frames.
+ * Fixed scales label every class's lower bound. Scenario scales label class
+ * boundaries at most {@link LEGEND_MAX_INTERVALS} intervals apart, the ends
+ * prefixed with ≤ / ≥ because values outside the 2nd–98th percentile fold
+ * into the end classes.
  *
  * @param {VttColorScale} scale
  * @returns {Array<{label: string, at: number}>}
@@ -266,8 +293,15 @@ export function legendTicks(scale) {
 			at: i / n,
 		}))
 	}
-	return [
-		{ label: `${scale.clippedLow ? '≤ ' : ''}${formatLegendValue(classes[0].lo)}`, at: 0 },
-		{ label: `${scale.clippedHigh ? '≥ ' : ''}${formatLegendValue(classes[n - 1].hi)}`, at: 1 },
-	]
+	const stride = Math.ceil(n / LEGEND_MAX_INTERVALS)
+	const positions = []
+	for (let j = 0; j <= n - stride; j += stride) positions.push(j)
+	// The upper end, unless the last class holds a single value: its tick
+	// would repeat the label before it.
+	if (classes[n - 1].hi > classes[n - 1].lo || positions.at(-1) !== n - 1) positions.push(n)
+	return positions.map((j) => {
+		if (j === 0) return { label: `≤ ${formatLegendValue(classes[0].lo)}`, at: 0 }
+		if (j === n) return { label: `≥ ${formatLegendValue(classes[n - 1].hi)}`, at: 1 }
+		return { label: formatLegendValue(classes[j].lo), at: j / n }
+	})
 }

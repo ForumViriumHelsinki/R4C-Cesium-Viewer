@@ -169,7 +169,7 @@
 				<div class="vtt-legend-ticks text-caption">
 					<span
 						v-for="tick in legendTickList"
-						:key="tick.label"
+						:key="tick.at"
 						class="vtt-legend-tick"
 						:style="tickStyle(tick)"
 					>
@@ -276,11 +276,12 @@ const activeDimensionMeta = computed(
 const activeDimensionUnit = computed(() => activeDimensionMeta.value.unit)
 
 // The one colour scale for this frame and dimension: the legend reads it and
-// renderFlood draws with it.
+// renderFlood draws with it. Its classes come from the frame's own scenario and
+// source, so they cannot pair with a frame still showing from before a switch.
 const colorScale = computed(() => {
 	const frame = store.frame
 	if (!frame) return null
-	return buildColorScale(activeDimensionMeta.value, frame.values[store.dimension])
+	return buildColorScale(activeDimensionMeta.value, frame.values[store.dimension], frame)
 })
 
 const opacityPercent = computed(() => Math.round(store.opacity * 100))
@@ -301,7 +302,7 @@ const legendCaption = computed(() => {
 	if (!scale || scale.mode === 'empty') return ''
 	if (scale.mode === 'mask') return `All shown cells share one value (${unit})`
 	if (scale.kind === 'fixed') return `Fixed classes (${unit})`
-	return `Each class holds about the same number of cells, 2nd–98th percentile of this frame (${unit})`
+	return `Classes fixed for this scenario: about equal cell counts over its frames, 2nd–98th percentile (${unit})`
 })
 
 const hiddenCellsLabel = computed(() => {
