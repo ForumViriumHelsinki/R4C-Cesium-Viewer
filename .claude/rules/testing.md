@@ -251,6 +251,17 @@ page.route('**/*', (route) => {
 });
 ```
 
+**A `**/path` glob does not match the same path with a query string.** Measured with
+Playwright 1.57 (#1055): `page.route('**/vtt-api', …)` intercepted `/vtt-api` but not
+`/vtt-api?scenario=1&frame=120`, which the client actually sends. The unmatched request
+then goes to the real proxy and the test fails for a reason unrelated to the code under
+test. Match on the pathname with a predicate instead:
+
+```typescript
+const isVttApi = (url: URL) => url.pathname === '/vtt-api';
+await page.route(isVttApi, (route) => route.fulfill({ json: frame }));
+```
+
 ## Testing Cesium Interactions
 
 **Common Pitfalls:**

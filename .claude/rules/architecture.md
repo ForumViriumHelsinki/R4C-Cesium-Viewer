@@ -152,9 +152,17 @@ the raw object. Unit tests with an `imageryLayers.contains` mock that always ret
 stand-in with Cesium's identity semantics.
 
 The same bug stacked flood scenarios on the map (#1019). `tests/unit/stores/cesiumStateMarkRaw.test.js`
-checks every write to the store fields that the Sentry `stateTransformer` in `src/main.js`
-strips as Cesium objects (viewer, entities, data sources, imagery layers). A new
-Cesium-holding field belongs in that transformer too.
+checks every write to the store fields listed in `SENTRY_EXCLUDED_STATE_FIELDS`
+(`src/utils/sentryStateTransformer.js`). That list holds Cesium objects (viewer, entities,
+data sources, imagery layers) and bulk data (`vttFlood.frame`, `vttFlood._frameCache`).
+A new Cesium-holding or multi-MB field belongs in that list too.
+
+Sentry's `createSentryPiniaPlugin` calls `stateTransformer(states)` with **one** argument:
+every store's state keyed by store id. Until #1055 the transformer was written as
+`(state, store) => …` and branched on `store.$id`. `store` was always undefined, so the
+filter never ran and every action copied the full state into the Sentry scope.
+`tests/unit/utils/sentryStateTransformer.test.js` installs the real plugin and fails if
+`main.js` goes back to an inline two-argument transformer.
 
 ## Reading Cesium Entity Properties
 
