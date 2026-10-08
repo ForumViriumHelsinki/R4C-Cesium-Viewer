@@ -91,26 +91,36 @@ function outerRing(geometry) {
 export function compactFrame(features) {
 	const cellCount = features.length
 	const offsets = new Uint32Array(cellCount + 1)
-	/** @type {number[]} */
-	const coords = []
+	/** @type {Array<Array<Array<number>> | null>} */
+	const rings = new Array(cellCount)
 	/** @type {Record<string, Float32Array>} */
 	const values = {}
 	for (const key of DIMENSION_KEYS) values[key] = new Float32Array(cellCount)
 
-	features.forEach((feature, cell) => {
+	// Two passes, so coordinates go straight into a typed array of known size.
+	for (let cell = 0; cell < cellCount; cell++) {
+		const feature = features[cell]
 		const ring = outerRing(feature?.geometry)
-		if (ring) {
-			for (const [lon, lat] of ring) coords.push(lon, lat)
-		}
-		offsets[cell + 1] = coords.length / 2
+		rings[cell] = ring
+		offsets[cell + 1] = offsets[cell] + (ring ? ring.length : 0)
 		const props = feature?.properties
 		for (const key of DIMENSION_KEYS) {
 			const value = props?.[key]
 			values[key][cell] = typeof value === 'number' ? value : Number.NaN
 		}
-	})
+	}
+	const coords = new Float64Array(offsets[cellCount] * 2)
+	for (let cell = 0; cell < cellCount; cell++) {
+		const ring = rings[cell]
+		if (!ring) continue
+		let k = offsets[cell] * 2
+		for (let i = 0; i < ring.length; i++) {
+			coords[k++] = ring[i][0]
+			coords[k++] = ring[i][1]
+		}
+	}
 
-	return { mesh: { cellCount, offsets, coords: Float64Array.from(coords) }, values }
+	return { mesh: { cellCount, offsets, coords }, values }
 }
 
 /**
