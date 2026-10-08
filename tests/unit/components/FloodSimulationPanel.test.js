@@ -126,3 +126,32 @@ describe('FloodSimulationPanel rendering', { tags: ['@unit'] }, () => {
 		expect(renderFlood).not.toHaveBeenCalled()
 	})
 })
+
+describe('FloodSimulationPanel units', { tags: ['@unit'] }, () => {
+	// VTT has not confirmed the units of transpiration or canopy temperature
+	// (#1059): transpiration is cumulative, so it is not 'mm/h', and the
+	// canopy value is a constant 5, not a temperature in K.
+	it('shows no unit for unconfirmed dimensions, and keeps metres for the depths', async () => {
+		const wrapper = await mountPanel()
+		const labels = wrapper.findAll('.v-radio label').map((l) => l.text())
+		expect(labels).toEqual([
+			'Transpiration',
+			'Overland water depth (m)',
+			'Upper storage water depth (m)',
+			'Canopy air temperature',
+		])
+		wrapper.unmount()
+	})
+
+	it('links an unconfirmed unit to the question to VTT', async () => {
+		const wrapper = await mountPanel()
+		const note = wrapper.find('.vtt-unit-note')
+		expect(note.exists()).toBe(true)
+		expect(note.find('a').attributes('href')).toMatch(/\/issues\/1059$/)
+
+		useVttFloodStore().setDimension('overland_water_depth')
+		await nextTick()
+		expect(wrapper.find('.vtt-unit-note').exists()).toBe(false)
+		wrapper.unmount()
+	})
+})

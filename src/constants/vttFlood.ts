@@ -17,7 +17,7 @@ export interface VttScenario {
 }
 
 /** d3-scale-chromatic sequential ramp used for a dimension's colour classes. */
-export type VttPalette = 'YlGnBu' | 'YlGn'
+export type VttPalette = 'YlGn' | 'Blues'
 
 /**
  * How a dimension's values map to colour classes.
@@ -38,7 +38,8 @@ export interface VttDimension {
 	/** Property name on returned GeoJSON Feature.properties. */
 	readonly key: string
 	readonly label: string
-	readonly unit: string
+	/** Unit of the values, or null where VTT has not confirmed it (#1059). */
+	readonly unit: string | null
 	readonly palette: VttPalette
 	/** Cells with a value at or below this are not drawn. */
 	readonly hideBelow: number
@@ -100,15 +101,18 @@ const SCENARIO_SCALE: VttScaleSpec = {
 
 /**
  * Transpiration is first: it is the default view and the radio list follows
- * this order. Unit labels are as received; VTT has not confirmed them
- * (transpiration grows monotonically over frames, so it looks cumulative, and
- * canopy_air_temperature is a constant 5 in every sampled real frame).
+ * this order. Units VTT has not confirmed are null rather than guessed (#1059):
+ * transpiration never decreases in a cell, so it is not the rate 'mm/h' once
+ * claimed, and canopy_air_temperature is a constant 5 in every sampled real
+ * frame, which is not a plausible temperature in K. The depths are in metres.
+ *
+ * The water depths use Blues and the vegetation and canopy values YlGn.
  */
 export const VTT_DIMENSIONS: readonly VttDimension[] = [
 	{
 		key: 'transpiration',
 		label: 'Transpiration',
-		unit: 'mm/h',
+		unit: null,
 		palette: 'YlGn',
 		hideBelow: 0,
 		scale: SCENARIO_SCALE,
@@ -117,7 +121,7 @@ export const VTT_DIMENSIONS: readonly VttDimension[] = [
 		key: 'overland_water_depth',
 		label: 'Overland water depth',
 		unit: 'm',
-		palette: 'YlGnBu',
+		palette: 'Blues',
 		hideBelow: VTT_WET_DEPTH_THRESHOLD_M,
 		scale: { kind: 'fixed', breaks: VTT_DEPTH_CLASS_BREAKS_M },
 	},
@@ -125,14 +129,14 @@ export const VTT_DIMENSIONS: readonly VttDimension[] = [
 		key: 'upper_storage_water_depth',
 		label: 'Upper storage water depth',
 		unit: 'm',
-		palette: 'YlGnBu',
+		palette: 'Blues',
 		hideBelow: 0,
 		scale: SCENARIO_SCALE,
 	},
 	{
 		key: 'canopy_air_temperature',
 		label: 'Canopy air temperature',
-		unit: 'K',
+		unit: null,
 		palette: 'YlGn',
 		hideBelow: Number.NEGATIVE_INFINITY,
 		scale: SCENARIO_SCALE,
@@ -178,9 +182,13 @@ export const VTT_COLOR_STEPS = 8
 
 /**
  * Part of each d3 colour ramp used, as [start, end] in 0..1. The near-white
- * start of YlGn/YlGnBu disappears over light imagery once translucent.
+ * start of a ramp disappears over light imagery once translucent. Blues starts
+ * later than YlGn: its light end is paler and closer to the base map.
  */
-export const VTT_PALETTE_T_RANGE = [0.25, 1] as const
+export const VTT_PALETTE_T_RANGES: Readonly<Record<VttPalette, readonly [number, number]>> = {
+	YlGn: [0.25, 1],
+	Blues: [0.3, 1],
+}
 
 /**
  * Frames kept in the store's client cache (least recently used evicted). A

@@ -100,7 +100,7 @@
 				v-for="dim in VTT_DIMENSIONS"
 				:key="dim.key"
 				:value="dim.key"
-				:label="`${dim.label} (${dim.unit})`"
+				:label="dim.unit ? `${dim.label} (${dim.unit})` : dim.label"
 			/>
 		</v-radio-group>
 
@@ -199,6 +199,17 @@
 		>
 			{{ emptyMessage }}
 		</v-alert>
+		<div
+			v-if="!activeDimensionUnit && (legendCaption || emptyMessage)"
+			class="text-caption vtt-legend-caption mb-2 vtt-unit-note"
+		>
+			Unit not confirmed by VTT, see
+			<a
+				:href="VTT_UNITS_ISSUE_URL"
+				target="_blank"
+				rel="noopener noreferrer"
+			>issue #1059</a>.
+		</div>
 
 		<v-progress-linear
 			v-if="store.isLoading"
@@ -275,6 +286,14 @@ const activeDimensionMeta = computed(
 )
 const activeDimensionUnit = computed(() => activeDimensionMeta.value.unit)
 
+/** The question to VTT about units and meanings of the cell properties. */
+const VTT_UNITS_ISSUE_URL = 'https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1059'
+
+/** `text` followed by the dimension's unit, or `text` alone when it is not confirmed. */
+function withUnit(text) {
+	return activeDimensionUnit.value ? `${text} ${activeDimensionUnit.value}` : text
+}
+
 // The one colour scale for this frame and dimension: the legend reads it and
 // renderFlood draws with it. Its classes come from the frame's own scenario and
 // source, so they cannot pair with a frame still showing from before a switch.
@@ -298,11 +317,11 @@ function tickStyle(tick) {
 
 const legendCaption = computed(() => {
 	const scale = colorScale.value
-	const unit = activeDimensionUnit.value
+	const unit = activeDimensionUnit.value ? ` (${activeDimensionUnit.value})` : ''
 	if (!scale || scale.mode === 'empty') return ''
-	if (scale.mode === 'mask') return `All shown cells share one value (${unit})`
-	if (scale.kind === 'fixed') return `Fixed classes (${unit})`
-	return `Classes fixed for this scenario: about equal cell counts over its frames, 2nd–98th percentile (${unit})`
+	if (scale.mode === 'mask') return `All shown cells share one value${unit}`
+	if (scale.kind === 'fixed') return `Fixed classes${unit}`
+	return `Classes fixed for this scenario: about equal cell counts over its frames, 2nd–98th percentile${unit}`
 })
 
 const hiddenCellsLabel = computed(() => {
@@ -310,7 +329,7 @@ const hiddenCellsLabel = computed(() => {
 	if (!scale || scale.hiddenCount === 0) return ''
 	const threshold = scale.hideBelow
 	const rule = Number.isFinite(threshold)
-		? `≤ ${formatLegendValue(threshold)} ${activeDimensionUnit.value}`
+		? withUnit(`≤ ${formatLegendValue(threshold)}`)
 		: 'without a value'
 	return `Cells ${rule} hidden (${scale.hiddenCount.toLocaleString('en-US')})`
 })
@@ -318,16 +337,15 @@ const hiddenCellsLabel = computed(() => {
 const maskLabel = computed(() => {
 	const scale = colorScale.value
 	if (!scale || scale.mode !== 'mask') return ''
-	return `${formatLegendValue(scale.value ?? 0)} ${activeDimensionUnit.value} (${scale.shownCount.toLocaleString('en-US')} cells)`
+	return `${withUnit(formatLegendValue(scale.value ?? 0))} (${scale.shownCount.toLocaleString('en-US')} cells)`
 })
 
 const legendAriaLabel = computed(() => {
 	const scale = colorScale.value
-	const unit = activeDimensionUnit.value
 	if (!scale || scale.mode === 'empty') return ''
 	if (scale.mode === 'mask') return `Legend: one colour for ${maskLabel.value}`
 	const ticks = legendTickList.value
-	return `Legend: ${scale.classes.length} colour classes from light to dark, ${ticks[0]?.label} to ${ticks.at(-1)?.label} ${unit}`
+	return `Legend: ${scale.classes.length} colour classes from light to dark, ${withUnit(`${ticks[0]?.label} to ${ticks.at(-1)?.label}`)}`
 })
 
 const emptyMessage = computed(() => {
@@ -335,10 +353,10 @@ const emptyMessage = computed(() => {
 	const meta = activeDimensionMeta.value
 	if (!scale || scale.mode !== 'empty') return ''
 	if (scale.reason === 'no-variation') {
-		return `No variation in this frame: all ${scale.totalCount.toLocaleString('en-US')} cells are ${formatLegendValue(scale.value ?? 0)} ${meta.unit}.`
+		return `No variation in this frame: all ${scale.totalCount.toLocaleString('en-US')} cells are ${withUnit(formatLegendValue(scale.value ?? 0))}.`
 	}
 	if (scale.reason === 'all-hidden') {
-		return `No cells above ${formatLegendValue(scale.threshold ?? 0)} ${meta.unit} in this frame.`
+		return `No cells above ${withUnit(formatLegendValue(scale.threshold ?? 0))} in this frame.`
 	}
 	return `No ${meta.label.toLowerCase()} values in this frame.`
 })

@@ -293,7 +293,7 @@ describe('renderFlood', () => {
 			{
 				key: 'overland_water_depth',
 				hideBelow: 0.01,
-				palette: 'YlGnBu',
+				palette: 'Blues',
 				scale: { kind: 'fixed', breaks: [0.01, 1] },
 			},
 			frame.values.overland_water_depth

@@ -16,6 +16,7 @@ import {
 	VTT_DIMENSIONS,
 	VTT_MAX_EXTRUSION_M,
 	VTT_MIN_EXTRUSION_M,
+	VTT_PALETTE_T_RANGES,
 	VTT_ROBUST_LOWER_QUANTILE,
 	VTT_ROBUST_UPPER_QUANTILE,
 	VTT_SCENARIOS,
@@ -413,9 +414,26 @@ describe('dimension constants', () => {
 
 	it('gives every dimension a palette and scale spec', () => {
 		for (const d of VTT_DIMENSIONS) {
-			expect(['YlGn', 'YlGnBu']).toContain(d.palette)
+			expect(['YlGn', 'Blues']).toContain(d.palette)
 			expect(['fixed', 'scenario']).toContain(d.scale.kind)
 		}
+	})
+
+	it('draws water depths in blue and transpiration in green', () => {
+		// Lauri: green for flooding felt wrong. The lightest blue is clipped so the
+		// lowest class does not wash out over the pale base map.
+		const dominant = ([r, g, b]) => (b >= r && b >= g ? 'blue' : g >= r && g >= b ? 'green' : 'red')
+		const depth = buildColorScale(dim('overland_water_depth'), [0.02, 0.2, 1.4])
+		const storage = buildColorScale(
+			dim('upper_storage_water_depth'),
+			Float32Array.from([0, 0.0009, 0.001]),
+			S1
+		)
+		const transpiration = buildColorScale(dim('transpiration'), transpirationFrame(0.17), S1)
+
+		for (const c of [...depth.classes, ...storage.classes]) expect(dominant(c.rgb)).toBe('blue')
+		for (const c of transpiration.classes) expect(dominant(c.rgb)).toBe('green')
+		expect(VTT_PALETTE_T_RANGES[dim('overland_water_depth').palette][0]).toBeGreaterThanOrEqual(0.3)
 	})
 
 	it('has strictly ascending depth breaks starting at the wet threshold', () => {

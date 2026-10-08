@@ -31,10 +31,10 @@
 import {
 	VTT_MAX_EXTRUSION_M,
 	VTT_MIN_EXTRUSION_M,
-	VTT_PALETTE_T_RANGE,
+	VTT_PALETTE_T_RANGES,
 } from '../constants/vttFlood'
 import { VTT_CLASS_BREAKS } from '../constants/vttFloodClassBreaks'
-import { interpolateYlGn, interpolateYlGnBu } from './d3'
+import { interpolateBlues, interpolateYlGn } from './d3'
 
 /**
  * @typedef {Object} VttColorClass
@@ -71,10 +71,10 @@ import { interpolateYlGn, interpolateYlGnBu } from './d3'
 
 const INTERPOLATORS = {
 	YlGn: interpolateYlGn,
-	YlGnBu: interpolateYlGnBu,
+	Blues: interpolateBlues,
 }
 
-/** Position on the palette ramp (0..1 within VTT_PALETTE_T_RANGE) used for a mask. */
+/** Position on the palette ramp (0..1 within the palette's VTT_PALETTE_T_RANGES) used for a mask. */
 const MASK_RAMP_POSITION = 0.75
 
 /** Most label intervals on a scenario legend; more ticks overlap in the panel. */
@@ -84,13 +84,13 @@ const RGB_PATTERN = /^rgb\((\d+), (\d+), (\d+)\)$/
 
 /**
  * @param {string} palette
- * @param {number} position - 0..1 within VTT_PALETTE_T_RANGE.
+ * @param {number} position - 0..1 within the palette's VTT_PALETTE_T_RANGES entry.
  * @returns {{color: string, rgb: [number, number, number]}}
  */
 function paletteColor(palette, position) {
 	const interpolate = INTERPOLATORS[palette]
 	if (!interpolate) throw new Error(`Unknown VTT palette "${palette}"`)
-	const [t0, t1] = VTT_PALETTE_T_RANGE
+	const [t0, t1] = VTT_PALETTE_T_RANGES[palette]
 	const color = interpolate(t0 + position * (t1 - t0))
 	const match = RGB_PATTERN.exec(color)
 	if (!match) throw new Error(`Unexpected colour "${color}" from palette ${palette}`)
