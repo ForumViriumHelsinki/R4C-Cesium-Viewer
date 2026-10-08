@@ -15,6 +15,7 @@
  *    circular and not serializable.
  *  - `vttFlood.frame` holds a whole VTT simulation frame (13k cells); copying
  *    it into every Sentry event costs megabytes and >100 ms per event.
+ *    `vttFlood._frameCache` holds up to VTT_FRAME_CACHE_SIZE of them.
  *
  * The same list drives `tests/unit/stores/cesiumStateMarkRaw.test.js`: every
  * write to one of these fields must go through `markRaw`, so none of them is
@@ -26,7 +27,7 @@ export const SENTRY_EXCLUDED_STATE_FIELDS = Object.freeze({
 	props: Object.freeze(['postalCodeData']),
 	global: Object.freeze(['cesiumViewer', 'currentGridCell', 'pickedEntity']),
 	backgroundMap: Object.freeze(['floodLayers', 'landcoverLayers', 'tiffLayers', 'hSYWMSLayers']),
-	vttFlood: Object.freeze(['frame']),
+	vttFlood: Object.freeze(['frame', '_frameCache']),
 })
 
 /**

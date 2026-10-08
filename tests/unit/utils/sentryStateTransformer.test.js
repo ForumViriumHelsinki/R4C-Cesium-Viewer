@@ -34,7 +34,12 @@ function allStoreStates() {
 			hSYWMSLayers: [{}],
 			opacity: 1,
 		},
-		vttFlood: { frame: { values: {} }, scenarioId: '1', dimension: 'transpiration' },
+		vttFlood: {
+			frame: { values: {} },
+			_frameCache: new Map([['vtt:1:120', { values: {} }]]),
+			scenarioId: '1',
+			dimension: 'transpiration',
+		},
 		toggle: { showTrees: false },
 	}
 }
@@ -50,14 +55,17 @@ describe('sentryStateTransformer', () => {
 		expect(out.toggle).toEqual({ showTrees: false })
 	})
 
-	it('excludes the VTT flood frame', () => {
+	it('excludes the VTT flood frame and the frame cache', () => {
+		// The cache holds up to VTT_FRAME_CACHE_SIZE frames, ~10 MB of typed arrays.
 		expect(SENTRY_EXCLUDED_STATE_FIELDS.vttFlood).toContain('frame')
+		expect(SENTRY_EXCLUDED_STATE_FIELDS.vttFlood).toContain('_frameCache')
 	})
 
 	it('does not mutate the store states it is given', () => {
 		const states = allStoreStates()
 		sentryStateTransformer(states)
 		expect(states.vttFlood.frame).toBeDefined()
+		expect(states.vttFlood._frameCache).toBeDefined()
 		expect(states.global.cesiumViewer).toBeDefined()
 	})
 
@@ -97,7 +105,11 @@ describe('Sentry Pinia plugin options', () => {
 			state: () => ({ cesiumViewer: markRaw(viewer), level: 'start' }),
 		})
 		const useVttFlood = defineStore('vttFlood', {
-			state: () => ({ frame: markRaw({ values: { transpiration: [1, 2] } }), dimension: 'a' }),
+			state: () => ({
+				frame: markRaw({ values: { transpiration: [1, 2] } }),
+				_frameCache: markRaw(new Map([['vtt:1:120', { values: { transpiration: [1, 2] } }]])),
+				dimension: 'a',
+			}),
 			actions: {
 				setDimension(key) {
 					this.dimension = key
@@ -110,7 +122,7 @@ describe('Sentry Pinia plugin options', () => {
 		return { before, after: getGlobalScope().getScopeData().eventProcessors.length }
 	}
 
-	it('keeps the VTT frame and the Cesium viewer out of the scope context', () => {
+	it('keeps the VTT frame, its cache and the Cesium viewer out of the scope context', () => {
 		runVttFloodAction()
 		const { state } = getCurrentScope().getScopeData().contexts.state
 		expect(state.type).toBe('pinia')
