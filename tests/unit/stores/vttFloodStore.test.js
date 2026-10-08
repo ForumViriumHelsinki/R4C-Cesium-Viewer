@@ -131,11 +131,28 @@ describe('vttFloodStore frame cache', () => {
 		expect(fetchSimulationFrame).toHaveBeenCalledTimes(VTT_FRAME_CACHE_SIZE + 2)
 	})
 
-	it('empties the cache when the panel closes', async () => {
+	it('keeps the cache when the panel closes, so reopening needs no download', async () => {
+		// A real frame is ~6 MB of JSON, and upstream sends no-cache.
 		const store = useVttFloodStore()
 		await store.fetchCurrentFrame()
 		store.clear()
-		expect(store._frameCache.size).toBe(0)
 		expect(store.frame).toBeNull()
+
+		await store.fetchCurrentFrame() // the panel mounts again
+		expect(fetchSimulationFrame).toHaveBeenCalledTimes(1)
+		expect(store.frame).not.toBeNull()
+	})
+
+	it('aborts an in-flight request when the panel closes', async () => {
+		let signal
+		fetchSimulationFrame.mockImplementation((params) => {
+			signal = params.signal
+			return new Promise(() => {})
+		})
+		const store = useVttFloodStore()
+		store.fetchCurrentFrame()
+		store.clear()
+		expect(signal.aborted).toBe(true)
+		expect(store.isLoading).toBe(false)
 	})
 })

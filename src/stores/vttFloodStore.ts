@@ -242,6 +242,11 @@ export const useVttFloodStore = defineStore('vttFlood', {
 			}
 		},
 
+		/**
+		 * Stop loading and drop the current frame when the panel closes. The frame
+		 * cache is kept (bounded by VTT_FRAME_CACHE_SIZE, ~10 MB), so reopening
+		 * the panel does not download the ~6 MB frame again.
+		 */
 		clear(): void {
 			if (this._abortController) {
 				this._abortController.abort()
@@ -252,7 +257,6 @@ export const useVttFloodStore = defineStore('vttFlood', {
 				this._debounceTimer = null
 			}
 			this.frame = null
-			this._frameCache.clear()
 			this.error = null
 			this.isLoading = false
 		},
