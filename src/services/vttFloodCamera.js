@@ -75,6 +75,16 @@ export function flyToFloodExtent(
 			0
 		),
 		duration: VTT_CAMERA_FLIGHT_SECONDS,
+		// Cesium raises moveEnd once the camera has been unchanged for 500 ms,
+		// within a 1e-15 relative tolerance. Its camera.changed check reads
+		// camera.heading every frame, which renormalises camera.up; at the oblique
+		// view that value alternates by ~1e-15, so moveEnd never fired and the
+		// URL camera writer and viewport loader, which listen for it, did not run.
+		// Raising it here marks the end of the flight; the listeners debounce, so
+		// a second moveEnd from Cesium is harmless.
+		complete: () => {
+			if (!viewer.isDestroyed?.()) viewer.camera.moveEnd.raiseEvent()
+		},
 	})
 	return true
 }

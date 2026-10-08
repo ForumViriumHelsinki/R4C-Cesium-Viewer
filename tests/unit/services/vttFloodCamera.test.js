@@ -13,8 +13,8 @@ const RealCesium = await vi.importActual('cesium')
 
 function flightViewer() {
 	return {
-		isDestroyed: () => false,
-		camera: { flyToBoundingSphere: vi.fn() },
+		isDestroyed: vi.fn(() => false),
+		camera: { flyToBoundingSphere: vi.fn(), moveEnd: { raiseEvent: vi.fn() } },
 	}
 }
 
@@ -62,6 +62,30 @@ describe('flyToFloodExtent', () => {
 		flyToFloodExtent({ viewer, view: /** @type {any} */ ('__proto__') })
 		const [, options] = flight(viewer)
 		expect(deg(options.offset.pitch)).toBeCloseTo(-35, 6)
+	})
+
+	it('raises camera.moveEnd when the flight completes', () => {
+		// After the oblique flight Cesium's own moveEnd never fired (measured in
+		// Chromium, 2026-10-08): reading camera.heading every frame renormalises
+		// camera.up, which at heading 0 / pitch -35 alternates by ~1e-15, more
+		// than the 1e-15 relative tolerance Cesium uses to decide the camera has
+		// stopped. The URL camera writer and the viewport loader hang off
+		// moveEnd, so a link copied after opening the panel kept the old view.
+		const viewer = flightViewer()
+		flyToFloodExtent({ viewer })
+		const [, options] = flight(viewer)
+		expect(viewer.camera.moveEnd.raiseEvent).not.toHaveBeenCalled()
+		options.complete()
+		expect(viewer.camera.moveEnd.raiseEvent).toHaveBeenCalledTimes(1)
+	})
+
+	it('does not raise moveEnd if the viewer was destroyed during the flight', () => {
+		const viewer = flightViewer()
+		flyToFloodExtent({ viewer })
+		const [, options] = flight(viewer)
+		viewer.isDestroyed.mockReturnValue(true)
+		options.complete()
+		expect(viewer.camera.moveEnd.raiseEvent).not.toHaveBeenCalled()
 	})
 
 	it('does nothing without a live viewer', () => {
