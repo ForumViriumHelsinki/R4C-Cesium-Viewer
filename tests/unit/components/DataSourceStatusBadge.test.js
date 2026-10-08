@@ -207,19 +207,42 @@ describe('DataSourceStatusBadge', () => {
 		removeSpy.mockRestore()
 	})
 
-	it('starts no timer when unmounted during the first check', async () => {
-		let release
+	/** Holds every fetch pending until the test releases them all. */
+	const holdFetches = () => {
+		const releases = []
 		fetch.mockImplementation(
 			() =>
 				new Promise((resolve) => {
-					release = () => resolve(makeResponse())
+					releases.push(() => resolve(makeResponse()))
 				})
 		)
+		return async () => {
+			for (const release of releases) release()
+			await flushPromises()
+		}
+	}
+
+	it('starts no timer when unmounted during the first check', async () => {
+		const releaseAll = holdFetches()
 		wrapper = mountBadge()
+		await flushPromises()
+		expect(fetch).toHaveBeenCalledTimes(SOURCE_COUNT)
 		wrapper.unmount()
 		wrapper = undefined
-		release()
+		await releaseAll()
+		fetch.mockClear()
+
+		await vi.advanceTimersByTimeAsync(INTERVAL * 3)
+		expect(fetch).not.toHaveBeenCalled()
+	})
+
+	it('starts no timer when the tab is hidden during the first check', async () => {
+		const releaseAll = holdFetches()
+		wrapper = mountBadge()
 		await flushPromises()
+		expect(fetch).toHaveBeenCalledTimes(SOURCE_COUNT)
+		changeVisibility(true)
+		await releaseAll()
 		fetch.mockClear()
 
 		await vi.advanceTimersByTimeAsync(INTERVAL * 3)
