@@ -206,7 +206,7 @@ import {
 	VTT_OPACITY_STEP,
 	VTT_SCENARIOS,
 } from '../constants/vttFlood'
-import { clearFlood, frameValues, renderFlood } from '../services/vttFlood.js'
+import { clearFlood, hideFlood, renderFlood } from '../services/vttFlood.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useVttFloodStore } from '../stores/vttFloodStore'
@@ -249,7 +249,7 @@ const activeDimensionUnit = computed(() => activeDimensionMeta.value.unit)
 const colorScale = computed(() => {
 	const frame = store.frame
 	if (!frame) return null
-	return buildColorScale(activeDimensionMeta.value, frameValues(frame, store.dimension))
+	return buildColorScale(activeDimensionMeta.value, frame.values[store.dimension])
 })
 
 const opacityPercent = computed(() => Math.round(store.opacity * 100))
@@ -332,17 +332,19 @@ function onFrameInput(value) {
 
 // Re-render whenever the frame, its colour scale (frame or dimension change) or
 // the opacity changes. The component owns Cesium calls; the store stays
-// viewer-agnostic.
-const stopRenderWatcher = watch([() => store.frame, colorScale, () => store.opacity], async () => {
+// viewer-agnostic. renderFlood is synchronous and restyles the existing layer,
+// so rapid changes cannot stack layers or queue rebuilds.
+const stopRenderWatcher = watch([() => store.frame, colorScale, () => store.opacity], () => {
 	const viewer = globalStore.cesiumViewer
 	if (!viewer) return
 	const frame = store.frame
 	if (!frame) {
-		await clearFlood({ viewer })
+		// Between scenarios or after an error: hide, keep the geometry.
+		hideFlood({ viewer })
 		return
 	}
 	try {
-		await renderFlood({
+		renderFlood({
 			viewer,
 			frame,
 			dimension: store.dimension,
@@ -355,20 +357,16 @@ const stopRenderWatcher = watch([() => store.frame, colorScale, () => store.opac
 })
 
 onMounted(() => {
-	// Always fetch on first mount so the initial frame appears without an
-	// extra click. Subsequent open/close cycles re-mount the component, which
-	// is fine — the store caches frame data and skips network if scenario+frame
-	// haven't changed (handled via _requestSeq dedup).
+	// Fetch on mount so the initial frame appears without an extra click.
 	store.fetchCurrentFrame()
 })
 
-onUnmounted(async () => {
+onUnmounted(() => {
+	// Stop the watchers first so nothing re-creates the layer after it is cleared.
 	stopRenderWatcher()
 	stopSyntheticWatcher()
 	const viewer = globalStore.cesiumViewer
-	if (viewer) {
-		await clearFlood({ viewer })
-	}
+	if (viewer) clearFlood({ viewer })
 	store.clear()
 })
 </script>

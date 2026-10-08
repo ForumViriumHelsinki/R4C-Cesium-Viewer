@@ -71,14 +71,24 @@ cesiumTest.describe('VTT Flood Simulation', () => {
 			await cesiumPage.waitForTimeout(400)
 			expect(postCount).toBe(1)
 
-			// The data source name lands in the viewer's collection.
-			const hasLayer = await cesiumPage.evaluate(() => {
-				const viewer = (window as any).__viewer || (window as any).viewer
-				if (!viewer?.dataSources) return false
-				const sources = viewer.dataSources._dataSources || []
-				return sources.some((ds: { name?: string }) => ds.name === 'VTT-Flood-Simulation')
-			})
-			expect(hasLayer).toBe(true)
+			// The flood layer is one Primitive in scene.primitives, tagged with
+			// vttLayerName (services/vttFloodPrimitive.js).
+			const countFloodLayers = () =>
+				cesiumPage.evaluate(() => {
+					const viewer = (window as any).__viewer || (window as any).viewer
+					const primitives = viewer?.scene?.primitives
+					if (!primitives) return -1
+					let count = 0
+					for (let i = 0; i < primitives.length; i++) {
+						if (primitives.get(i)?.vttLayerName === 'VTT-Flood-Simulation') count += 1
+					}
+					return count
+				})
+			await expect.poll(countFloodLayers, { timeout: 5000 }).toBe(1)
+
+			// Closing the panel removes the layer.
+			await cesiumPage.getByRole('button', { name: /Close VTT flood simulation panel/i }).click()
+			await expect.poll(countFloodLayers, { timeout: 5000 }).toBe(0)
 		}
 	)
 })

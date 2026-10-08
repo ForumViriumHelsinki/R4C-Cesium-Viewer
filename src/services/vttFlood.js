@@ -2,70 +2,139 @@
  * @module services/vttFlood
  * Service layer for the VTT R4C flood simulation integration.
  *
- * Three responsibilities:
  *  - {@link fetchSimulationFrame} — POST to the VTT proxy for a (scenario, frame)
- *    pair, validating the payload before returning it. Implements the
- *    cancellable-request pattern via AbortController so navigation away from
- *    the panel aborts an in-flight request rather than letting it overwrite
- *    fresher state.
- *  - {@link renderFlood} — draw the returned GeoJSON as extruded polygon
- *    entities coloured and sized by the active dimension's colour classes
- *    (utils/vttFloodColorScale.js).
- *  - {@link clearFlood} — remove the flood layer in one call.
+ *    pair, validating the payload and converting it to a compact frame
+ *    ({@link compactFrame}). Cancellable via AbortController so navigation
+ *    away from the panel aborts an in-flight request rather than letting it
+ *    overwrite fresher state.
+ *  - {@link renderFlood} — draw a frame as extruded columns coloured and sized
+ *    by the active dimension's colour classes (utils/vttFloodColorScale.js).
+ *    The first frame builds the layer (services/vttFloodPrimitive.js); later
+ *    frames, dimensions and opacities only restyle it.
+ *  - {@link hideFlood} / {@link clearFlood} — hide the layer, or remove and
+ *    destroy it.
  *
- * The service is stateless (no module-level mutable state): callers manage
- * AbortControllers via the Pinia store and pass viewers explicitly.
+ * Callers manage AbortControllers via the Pinia store and pass viewers
+ * explicitly. The layer is found through the viewer, so at most one exists
+ * however renders interleave.
  */
 
 import {
 	VTT_API_PATH,
 	VTT_DEFAULT_OPACITY,
 	VTT_DIMENSIONS,
-	VTT_FLOOD_LAYER_NAME,
 	validateFrameNumber,
 	validateScenarioId,
 } from '../constants/vttFlood'
 import logger from '../utils/logger.js'
 import { buildColorScale, classExtrusion, classIndex } from '../utils/vttFloodColorScale.js'
-import { getCesium } from './cesiumProvider.js'
+import {
+	createFloodPrimitive,
+	destroyFloodPrimitive,
+	findFloodPrimitives,
+	floodPrimitiveMesh,
+	updateFloodPrimitive,
+} from './vttFloodPrimitive.js'
 import { generateSyntheticFrame } from './vttFloodSynthetic.js'
+
+/** @typedef {import('./vttFloodPrimitive.js').VttMesh} VttMesh */
+/** @typedef {import('../utils/vttFloodColorScale.js').VttColorScale} VttColorScale */
+
+/**
+ * A simulation frame without the GeoJSON object graph: cell geometry plus one
+ * typed array of values per dimension, in feature order.
+ *
+ * @typedef {Object} VttFrame
+ * @property {VttMesh} mesh
+ * @property {Record<string, Float32Array>} values - NaN where a cell has no numeric value.
+ */
 
 const DIMENSION_KEYS = VTT_DIMENSIONS.map((d) => d.key)
 
 /**
- * Computes per-property min/max across all features so dimension switching is
- * an O(0) re-render rather than re-fetch.
+ * Outer ring of a cell as [lon, lat] pairs without the closing vertex, or null
+ * on an unrecognised shape. Accepts a Polygon's coordinates ([[[lon,lat],...]])
+ * and a bare ring ([[lon,lat],...]) — the POC API has been seen emitting both.
+ *
+ * @param {Object} geometry - GeoJSON geometry object.
+ * @returns {Array<Array<number>>|null}
+ */
+function outerRing(geometry) {
+	let ring = geometry?.coordinates
+	while (Array.isArray(ring) && Array.isArray(ring[0]) && Array.isArray(ring[0][0])) {
+		ring = ring[0]
+	}
+	if (!Array.isArray(ring) || ring.length < 3) return null
+	for (const point of ring) {
+		if (!Array.isArray(point) || !Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
+			return null
+		}
+	}
+	const first = ring[0]
+	const last = ring[ring.length - 1]
+	const closed = first[0] === last[0] && first[1] === last[1]
+	const open = closed ? ring.slice(0, -1) : ring
+	return open.length >= 3 ? open : null
+}
+
+/**
+ * Convert GeoJSON features into a compact frame. Iterating the raw parsed
+ * payload once here keeps the 13k-feature object graph out of the store and
+ * out of every later render.
  *
  * @param {Array<Object>} features - GeoJSON features.
- * @returns {Record<string, {min: number, max: number}>}
+ * @returns {VttFrame}
  */
-function computePropertyRanges(features) {
-	/** @type {Record<string, {min: number, max: number}>} */
-	const ranges = {}
-	for (const key of DIMENSION_KEYS) {
-		ranges[key] = { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY }
-	}
-	for (const feature of features) {
+export function compactFrame(features) {
+	const cellCount = features.length
+	const offsets = new Uint32Array(cellCount + 1)
+	/** @type {number[]} */
+	const coords = []
+	/** @type {Record<string, Float32Array>} */
+	const values = {}
+	for (const key of DIMENSION_KEYS) values[key] = new Float32Array(cellCount)
+
+	features.forEach((feature, cell) => {
+		const ring = outerRing(feature?.geometry)
+		if (ring) {
+			for (const [lon, lat] of ring) coords.push(lon, lat)
+		}
+		offsets[cell + 1] = coords.length / 2
 		const props = feature?.properties
-		if (!props) continue
 		for (const key of DIMENSION_KEYS) {
-			const value = props[key]
-			if (typeof value !== 'number' || !Number.isFinite(value)) continue
-			if (value < ranges[key].min) ranges[key].min = value
-			if (value > ranges[key].max) ranges[key].max = value
+			const value = props?.[key]
+			values[key][cell] = typeof value === 'number' ? value : Number.NaN
 		}
-	}
-	// Replace untouched ranges (no numeric values) with {min: 0, max: 0} so
-	// downstream code can rely on numeric values without a NaN sentinel.
-	for (const key of DIMENSION_KEYS) {
-		if (
-			ranges[key].min === Number.POSITIVE_INFINITY ||
-			ranges[key].max === Number.NEGATIVE_INFINITY
-		) {
-			ranges[key] = { min: 0, max: 0 }
-		}
-	}
-	return ranges
+	})
+
+	return { mesh: { cellCount, offsets, coords: Float64Array.from(coords) }, values }
+}
+
+/**
+ * @param {VttMesh} a
+ * @param {VttMesh} b
+ * @returns {boolean} True when both meshes have identical cell geometry.
+ */
+export function meshesEqual(a, b) {
+	if (a === b) return true
+	if (a.cellCount !== b.cellCount || a.coords.length !== b.coords.length) return false
+	for (let i = 0; i < a.offsets.length; i++) if (a.offsets[i] !== b.offsets[i]) return false
+	for (let i = 0; i < a.coords.length; i++) if (a.coords[i] !== b.coords[i]) return false
+	return true
+}
+
+/**
+ * Share one mesh object between frames with the same geometry. Every VTT frame
+ * uses the same mesh, so the renderer can tell by identity whether the layer's
+ * geometry still fits, and cached frames hold one mesh between them.
+ *
+ * @param {VttFrame} frame
+ * @param {VttMesh|null|undefined} known - A mesh already in use.
+ * @returns {VttFrame} `frame`, with `mesh` replaced by `known` when equal.
+ */
+export function internMesh(frame, known) {
+	if (!known || frame.mesh === known || !meshesEqual(frame.mesh, known)) return frame
+	return { ...frame, mesh: known }
 }
 
 /**
@@ -78,7 +147,7 @@ function computePropertyRanges(features) {
  * @param {AbortSignal} [params.signal] - Optional AbortSignal for cancellation.
  * @param {boolean} [params.synthetic] - Return a locally generated frame
  *   instead of calling the VTT API (the `vttFloodSyntheticData` flag).
- * @returns {Promise<{features: Array<Object>, propertyRanges: Record<string, {min: number, max: number}>}>}
+ * @returns {Promise<VttFrame>} The frame in compact form ({@link compactFrame}).
  * @throws {Error} On invalid input, non-2xx response, or malformed payload.
  *   AbortError propagates as-is so callers can distinguish cancellation from
  *   real failures.
@@ -100,7 +169,7 @@ export async function fetchSimulationFrame(
 			scenarioId: safeScenario,
 			frameNumber: safeFrame,
 		})
-		return { features, propertyRanges: computePropertyRanges(features) }
+		return compactFrame(features)
 	}
 
 	const body = JSON.stringify({
@@ -137,142 +206,118 @@ export async function fetchSimulationFrame(
 		)
 	}
 
-	return {
-		features: payload.features,
-		propertyRanges: computePropertyRanges(payload.features),
-	}
+	return compactFrame(payload.features)
 }
 
 /**
- * Builds the polygon ring from a Feature's geometry.coordinates.
- * Accepts both [[lon,lat],...] (single ring) and [[[lon,lat],...]] (Polygon
- * outer ring) shapes — the POC API has been seen emitting both.
+ * Per-cell style for the flood primitive from a colour scale.
  *
- * @param {Object} geometry - GeoJSON geometry object.
- * @returns {Array<number>|null} Flat [lon, lat, lon, lat, ...] or null on
- *   unrecognised shape.
+ * @param {VttColorScale} scale
+ * @param {ArrayLike<number>} values
+ * @param {number} opacity - 0..1.
+ * @returns {import('./vttFloodPrimitive.js').VttFloodStyle & {shown: number}}
  */
-function extractRing(geometry) {
-	if (!geometry?.coordinates) return null
-	const coords = geometry.coordinates
-	// flat(Infinity) collapses single ring or nested rings to a flat list — the
-	// POC relies on this same trick.
-	const flat = coords.flat(Infinity)
-	if (!flat.length || flat.length % 2 !== 0) return null
-	for (const n of flat) {
-		if (typeof n !== 'number' || !Number.isFinite(n)) return null
+function styleFor(scale, values, opacity) {
+	const alpha = Math.round(opacity * 255)
+	// One RGBA value per class, shared by every cell in it.
+	const classColors = scale.classes.map(
+		(c) => new Uint8Array([c.rgb[0], c.rgb[1], c.rgb[2], alpha])
+	)
+	const classHeights = Float32Array.from(scale.classes, (_, i) => classExtrusion(scale, i))
+	const cellClass = new Int16Array(values.length)
+	let shown = 0
+	for (let cell = 0; cell < values.length; cell++) {
+		const idx = classIndex(scale, values[cell])
+		cellClass[cell] = idx
+		if (idx >= 0) shown++
 	}
-	return flat
+	return { cellClass, classColors, classHeights, shown }
 }
 
 /**
- * Values of one dimension in feature order; non-numeric values become NaN.
- *
- * @param {{features: Array<Object>}} frame
- * @param {string} dimension
- * @returns {Float64Array}
- */
-export function frameValues(frame, dimension) {
-	const out = new Float64Array(frame.features.length)
-	frame.features.forEach((feature, i) => {
-		const value = feature?.properties?.[dimension]
-		out[i] = typeof value === 'number' ? value : Number.NaN
-	})
-	return out
-}
-
-/**
- * Render the flood frame as extruded polygon entities, coloured and sized by
- * the active dimension's colour classes. Cells the scale hides (zero, below the
- * wet threshold, non-numeric) get no entity.
+ * Draw a frame. The first call (or a frame with a different mesh) builds the
+ * layer; later calls restyle it in place. Synchronous, and the layer is looked
+ * up through the viewer, so two renders can never leave two layers.
  *
  * @param {Object} params
- * @param {Cesium.Viewer} params.viewer - Cesium viewer.
- * @param {{features: Array<Object>, propertyRanges: Record<string, {min: number, max: number}>}} params.frame
- *   Output of {@link fetchSimulationFrame}.
+ * @param {any} params.viewer - Cesium viewer.
+ * @param {VttFrame} params.frame - Output of {@link fetchSimulationFrame}.
  * @param {string} params.dimension - Active dimension key (one of {@link VTT_DIMENSIONS}).
  * @param {number} [params.opacity] - Fill opacity 0..1.
- * @param {import('../utils/vttFloodColorScale.js').VttColorScale} [params.scale] - Colour
- *   scale for this frame and dimension; built here when omitted. Pass the one the
- *   legend shows so both come from the same object.
- * @returns {Promise<{created: number, scale: import('../utils/vttFloodColorScale.js').VttColorScale | null}>}
+ * @param {VttColorScale} [params.scale] - Colour scale for this frame and
+ *   dimension; built here when omitted. Pass the one the legend shows so both
+ *   come from the same object.
+ * @returns {{shown: number, scale: VttColorScale | null}}
  */
-export async function renderFlood(
+export function renderFlood(
 	{
 		viewer,
 		frame,
 		dimension,
 		opacity = VTT_DEFAULT_OPACITY,
 		scale,
-	} = /** @type {{viewer: Cesium.Viewer, frame: {features: Array<Object>, propertyRanges: Record<string, {min: number, max: number}>}, dimension: string, opacity?: number, scale?: import('../utils/vttFloodColorScale.js').VttColorScale}} */ ({})
+	} = /** @type {{viewer: any, frame: VttFrame, dimension: string, opacity?: number, scale?: VttColorScale}} */ ({})
 ) {
 	if (!viewer || viewer.isDestroyed?.()) {
 		logger.warn('[VTTFlood] renderFlood: viewer not initialized; skipping')
-		return { created: 0, scale: null }
+		return { shown: 0, scale: null }
 	}
-	if (!frame || !Array.isArray(frame.features)) {
+	if (!frame?.mesh || !frame.values) {
 		logger.warn('[VTTFlood] renderFlood: no frame data; skipping')
-		return { created: 0, scale: null }
+		return { shown: 0, scale: null }
 	}
 	const meta = VTT_DIMENSIONS.find((d) => d.key === dimension)
 	if (!meta) {
 		throw new Error(`Invalid VTT dimension: "${dimension}"`)
 	}
 
-	const Cesium = getCesium()
-	await clearFlood({ viewer })
-
-	const values = frameValues(frame, dimension)
+	const values = frame.values[dimension]
 	const colorScale = scale ?? buildColorScale(meta, values)
-	// One immutable Color per class (architecture.md: never share-and-mutate).
-	const alpha = Math.round(opacity * 255)
-	const materials = colorScale.classes.map((c) =>
-		Cesium.Color.fromBytes(c.rgb[0], c.rgb[1], c.rgb[2], alpha)
-	)
-	const dataSource = new Cesium.CustomDataSource(VTT_FLOOD_LAYER_NAME)
+	const style = styleFor(colorScale, values, opacity)
 
-	let created = 0
-	dataSource.entities.suspendEvents()
-	frame.features.forEach((feature, i) => {
-		const idx = classIndex(colorScale, values[i])
-		if (idx < 0) return
-		const ring = extractRing(feature.geometry)
-		if (!ring) return
-		dataSource.entities.add({
-			polygon: {
-				hierarchy: Cesium.Cartesian3.fromDegreesArray(ring),
-				extrudedHeight: classExtrusion(colorScale, idx),
-				material: materials[idx],
-				arcType: Cesium.ArcType.GEODESIC,
-			},
-		})
-		created++
-	})
-	dataSource.entities.resumeEvents()
+	const [existing, ...strays] = findFloodPrimitives(viewer)
+	for (const stray of strays) destroyFloodPrimitive({ viewer, primitive: stray })
 
-	viewer.dataSources.add(dataSource)
+	let primitive = existing
+	if (primitive && floodPrimitiveMesh(primitive) !== frame.mesh) {
+		destroyFloodPrimitive({ viewer, primitive })
+		primitive = undefined
+	}
+	if (primitive) {
+		updateFloodPrimitive({ viewer, primitive, style })
+	} else {
+		primitive = createFloodPrimitive({ viewer, mesh: frame.mesh, style })
+	}
+	primitive.show = style.shown > 0
 	viewer.scene.requestRender()
-	logger.debug(`[VTTFlood] Rendered ${created} cells for dimension="${dimension}"`)
-	return { created, scale: colorScale }
+
+	logger.debug(`[VTTFlood] Rendered ${style.shown} cells for dimension="${dimension}"`)
+	return { shown: style.shown, scale: colorScale }
 }
 
 /**
- * Remove the VTT flood layer from the viewer.
+ * Hide the flood layer without destroying it, e.g. while the next scenario
+ * loads, so showing it again needs no geometry rebuild.
  *
  * @param {Object} params
- * @param {Cesium.Viewer} params.viewer - Cesium viewer.
- * @returns {Promise<void>}
+ * @param {any} params.viewer - Cesium viewer.
  */
-export async function clearFlood({ viewer } = /** @type {{viewer: Cesium.Viewer}} */ ({})) {
-	if (!viewer || viewer.isDestroyed?.() || !viewer.dataSources) return
-	// Snapshot via the public DataSourceCollection API before mutating it.
-	const sources = /** @type {Array<Cesium.DataSource>} */ ([])
-	for (let i = 0; i < viewer.dataSources.length; i++) {
-		sources.push(viewer.dataSources.get(i))
-	}
-	for (const ds of sources) {
-		if (ds.name === VTT_FLOOD_LAYER_NAME) {
-			viewer.dataSources.remove(ds, true)
-		}
+export function hideFlood({ viewer } = /** @type {{viewer: any}} */ ({})) {
+	if (!viewer || viewer.isDestroyed?.()) return
+	const primitives = findFloodPrimitives(viewer)
+	for (const primitive of primitives) primitive.show = false
+	if (primitives.length > 0) viewer.scene.requestRender()
+}
+
+/**
+ * Remove the VTT flood layer from the viewer and destroy it.
+ *
+ * @param {Object} params
+ * @param {any} params.viewer - Cesium viewer.
+ */
+export function clearFlood({ viewer } = /** @type {{viewer: any}} */ ({})) {
+	if (!viewer || viewer.isDestroyed?.() || !viewer.scene?.primitives) return
+	for (const primitive of findFloodPrimitives(viewer)) {
+		destroyFloodPrimitive({ viewer, primitive })
 	}
 }

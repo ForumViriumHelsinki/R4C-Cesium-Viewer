@@ -2,11 +2,16 @@
  * @module stores/vttFloodStore
  * Pinia store coordinating the VTT R4C flood-simulation playback panel.
  *
- * The store owns the playback state (scenario, frame, dimension), cached frame
- * data, and request lifecycle (loading, error, AbortController). The
- * component layer watches store state and calls `vttFlood.renderFlood` /
- * `clearFlood` directly — this mirrors the buildingStore ↔ building/ services
- * separation already used elsewhere in the codebase.
+ * The store owns the playback state (scenario, frame, dimension, opacity), the
+ * current frame plus a small LRU cache of recent frames, and the request
+ * lifecycle (loading, error, AbortController). The component layer watches
+ * store state and calls `vttFlood.renderFlood` / `clearFlood` directly — this
+ * mirrors the buildingStore ↔ building/ services separation already used
+ * elsewhere in the codebase.
+ *
+ * Frames are stored compact (typed arrays, one shared mesh) and markRaw, so
+ * nothing in them is reactive or captured by Sentry (see
+ * utils/sentryStateTransformer.js).
  *
  * setFrame is debounced so scrubbing the slider doesn't burst-fire requests.
  */
@@ -18,6 +23,7 @@ import {
 	VTT_DEFAULT_DIMENSION,
 	VTT_DEFAULT_OPACITY,
 	VTT_DIMENSIONS,
+	VTT_FRAME_CACHE_SIZE,
 	VTT_FRAME_COUNT,
 	VTT_OPACITY_MAX,
 	VTT_OPACITY_MIN,
@@ -25,20 +31,22 @@ import {
 	validateFrameNumber,
 	validateScenarioId,
 } from '@/constants/vttFlood'
-import { fetchSimulationFrame } from '@/services/vttFlood'
+import { fetchSimulationFrame, internMesh } from '@/services/vttFlood'
 import { useFeatureFlagStore } from '@/stores/featureFlagStore'
 import logger from '@/utils/logger'
 
 const FRAME_DEBOUNCE_MS = 200
 
-interface PropertyRange {
-	min: number
-	max: number
+interface VttMesh {
+	cellCount: number
+	offsets: Uint32Array
+	coords: Float64Array
 }
 
+/** Compact frame from services/vttFlood.js compactFrame(). */
 interface VttFrameData {
-	features: Array<Record<string, unknown>>
-	propertyRanges: Record<string, PropertyRange>
+	mesh: VttMesh
+	values: Record<string, Float32Array>
 }
 
 interface VttFloodState {
@@ -48,6 +56,8 @@ interface VttFloodState {
 	/** Fill opacity of the flood cells, VTT_OPACITY_MIN..VTT_OPACITY_MAX. */
 	opacity: number
 	frame: VttFrameData | null
+	/** Recently loaded frames by cacheKey(), oldest first. markRaw. */
+	_frameCache: Map<string, VttFrameData>
 	isLoading: boolean
 	error: string | null
 	/** Generation counter — incremented for every fetchCurrentFrame call so
@@ -57,6 +67,32 @@ interface VttFloodState {
 	_debounceTimer: ReturnType<typeof setTimeout> | null
 }
 
+function cacheKey(synthetic: boolean, scenarioId: string, frameNumber: number): string {
+	return `${synthetic ? 'synthetic' : 'vtt'}:${scenarioId}:${frameNumber}`
+}
+
+/** The mesh of the newest frame held, to share with the next frame. */
+function latestMesh(
+	current: VttFrameData | null,
+	cache: Map<string, VttFrameData>
+): VttMesh | null {
+	if (current) return current.mesh
+	let newest: VttFrameData | null = null
+	for (const frame of cache.values()) newest = frame
+	return newest?.mesh ?? null
+}
+
+/** Insert or refresh a cache entry as most recently used; evict the oldest. */
+function rememberFrame(cache: Map<string, VttFrameData>, key: string, frame: VttFrameData): void {
+	cache.delete(key)
+	cache.set(key, frame)
+	while (cache.size > VTT_FRAME_CACHE_SIZE) {
+		const oldest = cache.keys().next().value
+		if (oldest === undefined) break
+		cache.delete(oldest)
+	}
+}
+
 export const useVttFloodStore = defineStore('vttFlood', {
 	state: (): VttFloodState => ({
 		scenarioId: VTT_SCENARIOS[0].id,
@@ -64,6 +100,7 @@ export const useVttFloodStore = defineStore('vttFlood', {
 		dimension: VTT_DEFAULT_DIMENSION,
 		opacity: VTT_DEFAULT_OPACITY,
 		frame: null,
+		_frameCache: markRaw(new Map()),
 		isLoading: false,
 		error: null,
 		_requestSeq: 0,
@@ -117,24 +154,36 @@ export const useVttFloodStore = defineStore('vttFlood', {
 			// fetch will reject with AbortError, which the catch below swallows.
 			if (this._abortController) {
 				this._abortController.abort()
+				this._abortController = null
 			}
-			const controller = new AbortController()
-			this._abortController = controller
 			this._requestSeq += 1
 			const seq = this._requestSeq
-
-			this.isLoading = true
 			this.error = null
+
+			const synthetic = useFeatureFlagStore().isEnabled('vttFloodSyntheticData')
+			const key = cacheKey(synthetic, this.scenarioId, this.frameNumber)
+			const cached = this._frameCache.get(key)
+			if (cached) {
+				rememberFrame(this._frameCache, key, cached) // mark most recently used
+				this.frame = markRaw(cached)
+				this.isLoading = false
+				return
+			}
+
+			const controller = new AbortController()
+			this._abortController = controller
+			this.isLoading = true
 			try {
-				const result = await fetchSimulationFrame({
+				const fetched = await fetchSimulationFrame({
 					scenarioId: this.scenarioId,
 					frameNumber: this.frameNumber,
 					signal: controller.signal,
-					synthetic: useFeatureFlagStore().isEnabled('vttFloodSyntheticData'),
+					synthetic,
 				})
 				if (seq !== this._requestSeq) return // a newer call superseded us
-				// markRaw: a frame is ~13k cells; deep reactivity would wrap every
-				// nested array in a proxy and slow each render pass ~10x.
+				// markRaw: a frame holds 13k cells; nothing in it should be reactive.
+				const result = markRaw(internMesh(fetched, latestMesh(this.frame, this._frameCache)))
+				rememberFrame(this._frameCache, key, result)
 				this.frame = markRaw(result)
 			} catch (error) {
 				if (error instanceof DOMException && error.name === 'AbortError') {
@@ -164,6 +213,7 @@ export const useVttFloodStore = defineStore('vttFlood', {
 				this._debounceTimer = null
 			}
 			this.frame = null
+			this._frameCache.clear()
 			this.error = null
 			this.isLoading = false
 		},

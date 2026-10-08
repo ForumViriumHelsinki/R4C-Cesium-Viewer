@@ -161,6 +161,14 @@ export const VTT_COLOR_STEPS = 8
  */
 export const VTT_PALETTE_T_RANGE = [0.25, 1] as const
 
+/**
+ * Frames kept in the store's client cache (least recently used evicted). A
+ * compact frame is ~210 KB (4 dimensions × 13,077 Float32 values; the mesh is
+ * shared), so 48 frames is ~10 MB. Scrubbing back over viewed frames or
+ * switching scenarios then needs no 6 MB re-fetch.
+ */
+export const VTT_FRAME_CACHE_SIZE = 48
+
 /** Fill opacity of flood cells: default and slider bounds. */
 export const VTT_DEFAULT_OPACITY = 0.55
 export const VTT_OPACITY_MIN = 0.1
