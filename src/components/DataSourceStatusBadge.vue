@@ -65,14 +65,6 @@
 
 						<span class="text-caption flex-grow-1">{{ source.name }}</span>
 
-						<v-icon
-							v-if="source.cached"
-							:size="12"
-							color="blue"
-						>
-							mdi-cached
-						</v-icon>
-
 						<span
 							v-if="source.responseTime"
 							class="text-caption response-time"
@@ -107,7 +99,6 @@
 				<v-spacer />
 
 				<v-btn
-					v-if="hasCachedData"
 					size="small"
 					variant="text"
 					color="warning"
@@ -140,60 +131,72 @@ const emit = defineEmits(['source-retry', 'cache-cleared'])
 // Local state
 const refreshing = ref(false)
 const refreshTimer = ref(/** @type {ReturnType<typeof setInterval> | null} */ (null))
+let unmounted = false
 
 /**
  * @typedef {object} DataSource
  * @property {string} id
  * @property {string} name
  * @property {string} url
+ * @property {'GET' | 'HEAD'} method
  * @property {string} status
  * @property {string} message
  * @property {boolean} loading
- * @property {boolean} cached
  * @property {number | null} responseTime
  */
 
-// Data sources to monitor
+// Data sources to monitor. Each probe is the smallest request that still
+// proves the upstream answers with JSON (#997): the badge reports
+// reachability, so it never reads or caches a response body.
+// - hsy-action has no small variant (the action returns the whole layer
+//   tree, ~317 KB), so it is probed with HEAD. kartta.hsy.fi answers HEAD
+//   with 200 application/json; the Vite proxy forwards HEAD unchanged, and
+//   nginx's cached /hsy-action location converts it to a cacheable GET
+//   upstream (proxy_cache_convert_head) and returns headers only.
+// - paavo takes WFS `count=1` (~5 KB instead of ~796 KB); both proxies keep
+//   the query string after their fixed WFS parameters.
+// - digitransit answers HEAD with 404, so it stays a keyed GET with `size=1`,
+//   the same request as nginx's /status/digitransit check.
 const dataSources = ref(
 	/** @type {DataSource[]} */ ([
 		{
 			id: 'pygeoapi',
 			name: 'PyGeoAPI',
 			url: '/pygeoapi/collections/heatexposure_optimized/items?f=json&limit=1',
+			method: 'GET',
 			status: 'unknown',
 			message: 'Not checked',
 			loading: false,
-			cached: false,
 			responseTime: null,
 		},
 		{
 			id: 'hsy-action',
 			name: 'HSY Environmental',
 			url: '/hsy-action?action_route=GetHierarchicalMapLayerGroups',
+			method: 'HEAD',
 			status: 'unknown',
 			message: 'Not checked',
 			loading: false,
-			cached: false,
 			responseTime: null,
 		},
 		{
 			id: 'paavo',
 			name: 'Statistics Finland',
-			url: '/paavo',
+			url: '/paavo?count=1',
+			method: 'GET',
 			status: 'unknown',
 			message: 'Not checked',
 			loading: false,
-			cached: false,
 			responseTime: null,
 		},
 		{
 			id: 'digitransit',
 			name: 'Digitransit API',
-			url: '/digitransit/geocoding/v1/search?text=Helsinki',
+			url: '/digitransit/geocoding/v1/search?text=Helsinki&size=1',
+			method: 'GET',
 			status: 'unknown',
 			message: 'Not checked',
 			loading: false,
-			cached: false,
 			responseTime: null,
 		},
 	])
@@ -204,7 +207,6 @@ const totalSources = computed(() => dataSources.value.length)
 const healthyCount = computed(() => dataSources.value.filter((s) => s.status === 'healthy').length)
 const hasErrors = computed(() => dataSources.value.some((s) => s.status === 'error'))
 const hasWarnings = computed(() => dataSources.value.some((s) => s.status === 'degraded'))
-const hasCachedData = computed(() => dataSources.value.some((s) => s.cached))
 
 const overallStatusColor = computed(() => {
 	if (hasErrors.value) return 'error'
@@ -250,6 +252,17 @@ const getResponseTimeClass = (responseTime) => {
 	return 'response-fast'
 }
 
+/**
+ * Release the response body without reading it. The status line and headers
+ * are all a reachability probe needs.
+ * @param {Response} response
+ */
+const discardBody = (response) => {
+	response.body?.cancel().catch((error) => {
+		logger.debug('Failed to cancel health probe body:', error)
+	})
+}
+
 const checkHealth = async (sourceId) => {
 	const source = dataSources.value.find((s) => s.id === sourceId)
 	if (!source) return
@@ -258,39 +271,30 @@ const checkHealth = async (sourceId) => {
 	const startTime = Date.now()
 
 	try {
-		const cacheKey = `health-${sourceId}`
-		const cached = await cacheService.getData(cacheKey, 5 * 60 * 1000)
-
-		if (cached) {
-			source.cached = true
-		}
-
 		const response = await fetch(source.url, {
-			method: 'GET',
+			method: source.method,
 			headers: { Accept: 'application/json' },
 		})
+		discardBody(response)
 
 		const responseTime = Date.now() - startTime
 		source.responseTime = responseTime
 
-		if (response.ok) {
-			const data = await response.json()
+		const contentType = response.headers.get('content-type') ?? ''
 
-			await cacheService.setData(cacheKey, data, {
-				type: source.id,
-				ttl: 5 * 60 * 1000,
-			})
-
-			if (responseTime > 5000) {
-				source.status = 'degraded'
-				source.message = `Slow response (${responseTime}ms)`
-			} else {
-				source.status = 'healthy'
-				source.message = `Responsive (${responseTime}ms)`
-			}
-		} else {
+		if (!response.ok) {
 			source.status = 'error'
 			source.message = `HTTP ${response.status}`
+		} else if (!contentType.toLowerCase().includes('json')) {
+			// A 2xx text/html answer is the SPA catch-all, not the upstream.
+			source.status = 'error'
+			source.message = `Unexpected content type (${contentType || 'missing'})`
+		} else if (responseTime > 5000) {
+			source.status = 'degraded'
+			source.message = `Slow response (${responseTime}ms)`
+		} else {
+			source.status = 'healthy'
+			source.message = `Responsive (${responseTime}ms)`
 		}
 	} catch (error) {
 		source.status = 'error'
@@ -311,38 +315,56 @@ const refreshAll = async () => {
 	}
 }
 
+const runBackgroundRefresh = () => {
+	if (refreshing.value) return
+	refreshAll().catch((error) => {
+		logger.error('Data source health refresh failed:', error)
+	})
+}
+
 const clearAllCache = async () => {
 	await cacheService.clearAll()
-
-	dataSources.value.forEach((source) => {
-		source.cached = false
-	})
-
 	emit('cache-cleared', 'all')
 }
 
-const startRefreshTimer = () => {
-	if (refreshTimer.value) clearInterval(refreshTimer.value)
+const stopRefreshTimer = () => {
+	if (refreshTimer.value) {
+		clearInterval(refreshTimer.value)
+		refreshTimer.value = null
+	}
+}
 
-	refreshTimer.value = setInterval(() => {
-		if (!refreshing.value) {
-			refreshAll().catch((error) => {
-				logger.error('Data source health refresh failed:', error)
-			})
-		}
-	}, props.refreshInterval)
+const startRefreshTimer = () => {
+	stopRefreshTimer()
+	refreshTimer.value = setInterval(runBackgroundRefresh, props.refreshInterval)
+}
+
+// No checks run while the tab is hidden; returning to it runs one check and
+// restarts the interval.
+const handleVisibilityChange = () => {
+	if (document.hidden) {
+		stopRefreshTimer()
+		return
+	}
+	runBackgroundRefresh()
+	startRefreshTimer()
 }
 
 // Lifecycle
 onMounted(async () => {
+	document.addEventListener('visibilitychange', handleVisibilityChange)
+	if (document.hidden) return
+
 	await refreshAll()
-	startRefreshTimer()
+	// The tab may have been hidden, or the component unmounted, while the
+	// first check was in flight.
+	if (!unmounted && !document.hidden) startRefreshTimer()
 })
 
 onUnmounted(() => {
-	if (refreshTimer.value) {
-		clearInterval(refreshTimer.value)
-	}
+	unmounted = true
+	document.removeEventListener('visibilitychange', handleVisibilityChange)
+	stopRefreshTimer()
 })
 </script>
 
