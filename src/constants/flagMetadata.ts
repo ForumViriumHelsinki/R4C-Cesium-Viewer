@@ -62,7 +62,12 @@ export interface FlagMetadata {
 	experimental: boolean
 	/** If true, requires hardware/browser support validation client-side */
 	requiresSupport: boolean
-	/** Default value when GOFF is unavailable (InMemoryProvider fallback) */
+	/**
+	 * Default value when GOFF is unavailable (InMemoryProvider fallback). Must
+	 * equal the flag's `defaultRule` in flags.goff.yaml, so a relay outage (and
+	 * CI, which has no relay) behaves like production for an anonymous user.
+	 * tests/unit/constants/flagFallbacks.test.js enforces this.
+	 */
 	fallbackDefault: boolean
 	/** Environment variable required for this flag to function */
 	configRequirement?: {
@@ -189,7 +194,7 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		category: 'graphics',
 		experimental: false,
 		requiresSupport: false,
-		fallbackDefault: true,
+		fallbackDefault: false,
 	},
 	deckglRenderer: {
 		goffId: 'r4c-deckgl-renderer',
@@ -286,7 +291,7 @@ export const FLAG_METADATA: FlagMetadataMap = {
 		category: 'ui',
 		experimental: false,
 		requiresSupport: false,
-		fallbackDefault: true,
+		fallbackDefault: false,
 	},
 	mapClickLoadingOverlay: {
 		goffId: 'r4c-map-click-loading-overlay',
