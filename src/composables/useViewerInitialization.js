@@ -10,6 +10,7 @@ import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
+import { applyLighthouseRenderProfile } from '../utils/lighthouseRenderProfile.js'
 import logger from '../utils/logger.js'
 import { loadWithRetry } from '../utils/moduleLoader.js'
 import { PERF_STATS_ENABLED, perfStats } from '../utils/perfStats.js'
@@ -185,6 +186,11 @@ export function useViewerInitialization() {
 				perfStats.recordRequestRender()
 				return originalRequestRender()
 			}
+		}
+
+		// Lighthouse CI build only: fixed render conditions (ADR-011).
+		if (import.meta.env.VITE_LIGHTHOUSE_BUILD === 'true') {
+			applyLighthouseRenderProfile(viewer.value)
 		}
 
 		store.setCesiumViewer(viewer.value)

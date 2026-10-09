@@ -124,6 +124,15 @@ jobs:
           echo "assert_code=$ASSERT_CODE" >> $GITHUB_OUTPUT
         continue-on-error: true
 
+      # Every run must have rendered with SwiftShader and Cesium capped at the
+      # Lighthouse frame rate (ADR-011); otherwise its performance numbers are
+      # not comparable with other runs. The outcome is enforced by the last
+      # step, so the results are still parsed, uploaded and commented first.
+      - name: Check render profile
+        id: render-profile
+        run: bun scripts/lighthouse/check-render-profile.mjs .lighthouseci
+        continue-on-error: true
+
       - name: Parse Lighthouse results
         id: parse-results
         run: |
@@ -156,35 +165,37 @@ jobs:
 
           echo "=== Results found in .lighthouseci/ ==="
 
-          # Get the latest run file (lhci collect creates lhr-*.json directly)
-          # Note: lhci collect doesn't create manifest.json, only autorun does
-          LATEST_RUN=$(ls -t .lighthouseci/lhr-*.json 2>/dev/null | head -1)
+          # Report the run with the median performance score (lhci collect
+          # writes one lhr-*.json per run and no manifest). Picking the latest
+          # file instead reported an arbitrary run while the PR comment said
+          # "median".
+          REPORT_RUN=$(for f in .lighthouseci/lhr-*.json; do [ -f "$f" ] && echo "$(jq -r '.categories.performance.score // 0' "$f") $f"; done | sort -n | awk '{ runs[NR] = $2 } END { if (NR) print runs[int((NR + 1) / 2)] }')
 
-          if [ -z "$LATEST_RUN" ]; then
+          if [ -z "$REPORT_RUN" ]; then
             echo "ERROR: No lhr-*.json files found in .lighthouseci/"
             echo "error_message=No Lighthouse report files found" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          echo "Parsing results from: $LATEST_RUN"
+          echo "Parsing results from: $REPORT_RUN"
 
           # Validate JSON file is readable
-          if ! jq empty "$LATEST_RUN" 2>/dev/null; then
-            echo "ERROR: Failed to parse JSON from $LATEST_RUN"
+          if ! jq empty "$REPORT_RUN" 2>/dev/null; then
+            echo "ERROR: Failed to parse JSON from $REPORT_RUN"
             echo "error_message=Failed to parse Lighthouse JSON report" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           # Extract key metrics using jq (with null handling)
-          PERFORMANCE=$(jq -r 'if .categories.performance.score then (.categories.performance.score * 100 | floor) else "error" end' "$LATEST_RUN")
-          ACCESSIBILITY=$(jq -r 'if .categories.accessibility.score then (.categories.accessibility.score * 100 | floor) else "error" end' "$LATEST_RUN")
-          BEST_PRACTICES=$(jq -r 'if .categories["best-practices"].score then (.categories["best-practices"].score * 100 | floor) else "error" end' "$LATEST_RUN")
-          SEO=$(jq -r 'if .categories.seo.score then (.categories.seo.score * 100 | floor) else "error" end' "$LATEST_RUN")
+          PERFORMANCE=$(jq -r 'if .categories.performance.score then (.categories.performance.score * 100 | floor) else "error" end' "$REPORT_RUN")
+          ACCESSIBILITY=$(jq -r 'if .categories.accessibility.score then (.categories.accessibility.score * 100 | floor) else "error" end' "$REPORT_RUN")
+          BEST_PRACTICES=$(jq -r 'if .categories["best-practices"].score then (.categories["best-practices"].score * 100 | floor) else "error" end' "$REPORT_RUN")
+          SEO=$(jq -r 'if .categories.seo.score then (.categories.seo.score * 100 | floor) else "error" end' "$REPORT_RUN")
 
           # Core Web Vitals (with null handling)
-          LCP=$(jq -r 'if .audits["largest-contentful-paint"].numericValue then (.audits["largest-contentful-paint"].numericValue / 1000 | . * 100 | floor / 100) else "error" end' "$LATEST_RUN")
-          TBT=$(jq -r 'if .audits["total-blocking-time"].numericValue then (.audits["total-blocking-time"].numericValue | floor) else "error" end' "$LATEST_RUN")
-          CLS=$(jq -r 'if .audits["cumulative-layout-shift"].numericValue then (.audits["cumulative-layout-shift"].numericValue | . * 1000 | floor / 1000) else "error" end' "$LATEST_RUN")
+          LCP=$(jq -r 'if .audits["largest-contentful-paint"].numericValue then (.audits["largest-contentful-paint"].numericValue / 1000 | . * 100 | floor / 100) else "error" end' "$REPORT_RUN")
+          TBT=$(jq -r 'if .audits["total-blocking-time"].numericValue then (.audits["total-blocking-time"].numericValue | floor) else "error" end' "$REPORT_RUN")
+          CLS=$(jq -r 'if .audits["cumulative-layout-shift"].numericValue then (.audits["cumulative-layout-shift"].numericValue | . * 1000 | floor / 1000) else "error" end' "$REPORT_RUN")
 
           echo "=== Parsed metrics ==="
           echo "Performance: $PERFORMANCE"
@@ -219,11 +230,21 @@ jobs:
       - name: Comment PR with results
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v9
+        env:
+          RENDER_PROFILE_OUTCOME: ${{ steps.render-profile.outcome }}
+          RENDERER: ${{ steps.render-profile.outputs.renderer }}
+          RENDER_FPS: ${{ steps.render-profile.outputs.fps }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const path = require('path');
+
+            // Render profile from the Check render profile step (ADR-011)
+            const renderProfile =
+              process.env.RENDER_PROFILE_OUTCOME === 'success'
+                ? `${process.env.RENDERER}, Cesium capped at ${process.env.RENDER_FPS} fps`
+                : `⚠️ check failed (${process.env.RENDERER || 'no render-profile mark'}); performance numbers are not comparable`;
 
             // Read Lighthouse output
             let output = '';
@@ -310,19 +331,20 @@ jobs:
             | LCP (Largest Contentful Paint) | ${lcp}s | < 4.0s |
             | TBT (Total Blocking Time) | ${tbt}ms | < 1000ms |
             | CLS (Cumulative Layout Shift) | ${cls} | < 0.1 |
+
+            **Render profile:** ${renderProfile}
             ${storageUrl}
 
             <details>
             <summary>About these scores</summary>
 
-            This project uses CesiumJS, a heavy 3D mapping library (~2-3MB core). Performance targets are calibrated for this use case:
+            The runner has no GPU, so WebGL runs on SwiftShader (CPU) and the Lighthouse build caps Cesium at a fixed frame rate ([ADR-011](https://github.com/${{ github.repository }}/blob/main/docs/adr/ADR-011-lighthouse-render-profile.md)). Performance numbers are a trend to compare against other CI runs, not what users with a GPU see. The run fails if the render profile differs.
 
-            - **Performance target: 50+** (CesiumJS initialization is resource-intensive)
-            - **Accessibility target: 90+** (strict requirement)
-            - **Best Practices target: 80+** (good practices maintained)
-            - **SEO target: 80+** (reasonable optimization)
+            - **Accessibility, Best Practices, SEO, CLS and byte/request budgets** are direct measurements.
+            - **Performance score, TBT, Speed Index and TTI** reflect the app's own main-thread work under the capped profile; a change between runs is the signal, not the absolute value.
+            - Targets are the assertions in \`lighthouserc.cjs\`.
 
-            Scores are calculated from 3 runs (median value). Results are stored for 7 days in temporary public storage.
+            All values come from the run with the median performance score of 3. Results are stored for 7 days in temporary public storage.
             </details>
             `;
 
@@ -369,6 +391,12 @@ jobs:
           if [ -n "$ERROR_MESSAGE" ]; then
             echo "::error::Lighthouse CI failed: $ERROR_MESSAGE"
             echo "Review the lighthouse-output.txt artifact for details"
+            exit 1
+          fi
+
+          # Fail if any run used another renderer or frame cap (ADR-011)
+          if [ "${{ steps.render-profile.outcome }}" != "success" ]; then
+            echo "::error::Lighthouse render profile check failed; the performance numbers are not comparable with other runs. See the 'Check render profile' step and docs/adr/ADR-011-lighthouse-render-profile.md"
             exit 1
           fi
 

@@ -66,10 +66,29 @@ module.exports = {
 					cpuSlowdownMultiplier: 1,
 				},
 
-				// Chrome flags for better CI performance
-				// --disable-dev-shm-usage is critical for preventing PROTOCOL_TIMEOUT
+				// Must be ONE space-separated string. lhci 0.15 builds the flag
+				// string as `chromeFlags + ' --headless=new'`, so an array is
+				// joined with commas into a single bogus switch and none of the
+				// flags apply; until 2026-10 none of these did. The unit test
+				// tests/unit/ci/lighthouseRenderProfile.test.js pins this.
+				//
+				// Render profile (ADR-011): force SwiftShader explicitly so every
+				// run, CI or local, renders WebGL the same way. Chrome is removing
+				// its automatic SwiftShader fallback, and without WebGL Cesium
+				// never starts and the score improves for the wrong reason.
+				// `--disable-gpu` is not used: on its own, current Chrome then has
+				// no WebGL at all. `--disable-gpu-compositing` keeps page
+				// compositing on the CPU; composited through SwiftShader, DOM
+				// paints queue behind Cesium's WebGL frames (local LCP 9 s vs
+				// 2.9 s). scripts/lighthouse/check-render-profile.mjs fails the
+				// run if the renderer is not SwiftShader.
+				//
+				// --disable-dev-shm-usage is meant to prevent PROTOCOL_TIMEOUT.
 				chromeFlags: [
-					'--disable-gpu',
+					'--use-gl=angle',
+					'--use-angle=swiftshader',
+					'--enable-unsafe-swiftshader',
+					'--disable-gpu-compositing',
 					'--no-sandbox',
 					'--disable-dev-shm-usage',
 					'--disable-background-timer-throttling',
@@ -85,7 +104,7 @@ module.exports = {
 					'--disable-sync',
 					'--disable-translate',
 					'--metrics-recording-only',
-				],
+				].join(' '),
 
 				// Block ONLY the heavy timeout-prone binaries that cause
 				// PROTOCOL_TIMEOUT. The DevTools Protocol times out (30s
