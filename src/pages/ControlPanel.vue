@@ -483,6 +483,12 @@ const closeVttFlood = () => {
 	font-size: 0.8rem;
 }
 
+/* The current level is a disabled item; Vuetify's disabled opacity left it at
+   2.29:1 contrast. */
+.sidebar-breadcrumbs :deep(.v-breadcrumbs-item--disabled) {
+	opacity: 1;
+}
+
 .sidebar-tabs :deep(.v-tab) {
 	min-width: 0;
 	padding: 4px 8px;
