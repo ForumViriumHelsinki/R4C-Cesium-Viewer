@@ -348,6 +348,12 @@ export default defineConfig(({ mode }) => {
 			'import.meta.env.VITE_GIT_COMMIT_DATE': JSON.stringify(gitInfo.commitDate),
 			'import.meta.env.VITE_GIT_BRANCH': JSON.stringify(gitInfo.branch),
 			'import.meta.env.VITE_BUILD_TIME': JSON.stringify(buildTime),
+			// Lighthouse CI build: caps Cesium's frame rate (ADR-011). Derived
+			// from LIGHTHOUSE so the source-map skip and the render profile can
+			// never be set apart.
+			'import.meta.env.VITE_LIGHTHOUSE_BUILD': JSON.stringify(
+				process.env.LIGHTHOUSE === 'true' ? 'true' : 'false'
+			),
 		},
 		resolve: {
 			alias: {

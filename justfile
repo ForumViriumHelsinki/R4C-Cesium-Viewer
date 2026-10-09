@@ -301,11 +301,12 @@ test-e2e *args:
 test-e2e-mock *args:
     VITE_E2E_TEST=true SKIP_REQUIRES_DATABASE=true bun run test:e2e {{ args }}
 
-# Reproduce the CI Lighthouse run locally (map-less build avoids PROTOCOL_TIMEOUT). See development.md.
+# Reproduce the CI Lighthouse run locally: source-map-less build (avoids PROTOCOL_TIMEOUT), SwiftShader, Cesium frame cap (ADR-011). See development.md.
 [group: "testing"]
 lighthouse-local:
     LIGHTHOUSE=true bun run build
     bunx @lhci/cli@0.15.0 collect --config=lighthouserc.cjs
+    bun scripts/lighthouse/check-render-profile.mjs .lighthouseci
 
 # swgl=0 (default) runs Chromium on the local GPU, the only place the FPS
 # assertion runs. swgl=1 forces software rendering with the CI job's flags
