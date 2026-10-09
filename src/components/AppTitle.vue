@@ -1,6 +1,7 @@
 <template>
 	<v-tooltip
 		location="bottom"
+		aria-label="Version information"
 	>
 		<template #activator="{ props }">
 			<div
@@ -91,7 +92,8 @@ const formattedBuildTime = computed(() => {
 
 .app-version {
 	font-size: 0.75rem;
-	color: rgba(var(--v-theme-on-surface), 0.5);
+	/* 0.6 keeps 4.5:1 on the toolbar; 0.5 measured 3.94:1 */
+	color: rgba(var(--v-theme-on-surface), 0.6);
 	font-family: 'Courier New', monospace;
 	line-height: 1.2;
 }
