@@ -6,8 +6,8 @@ services:
     ports:
       - '8080:80' # Expose the Vue app's port
     volumes:
-      - nginx_cache:/tmp/nginx_cache
-      - nginx_wms_cache:/tmp/nginx_wms_cache
+      - nginx_cache:/var/cache/nginx-proxy/global
+      - nginx_wms_cache:/var/cache/nginx-proxy/wms
     environment:
       NODE_ENV: 'development'
       # Create a .env file and set the key there.

@@ -1,5 +1,12 @@
-proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=global_cache:10m max_size=10g inactive=60m use_temp_path=off;
-proxy_cache_path /tmp/nginx_wms_cache levels=1:2 keys_zone=wms_cache:20m max_size=20g inactive=7d use_temp_path=off;
+# Both zones live on the StatefulSet's 10Gi persistent disk mounted at
+# /var/cache/nginx-proxy (deploy/values.yaml), so cached entries survive
+# KEDA's nightly scale-to-zero and rollouts (#1060). max_size totals 8g to
+# leave headroom on that disk. global_cache keeps inactive=60m: no location
+# using it sets a validity above 1h, so a longer inactive would only lengthen
+# how long stale copies of every proxied upstream can be served on error.
+# wms_cache keeps inactive=7d to match proxy_cache_valid 200 7d on its tiles.
+proxy_cache_path /var/cache/nginx-proxy/global levels=1:2 keys_zone=global_cache:10m max_size=2g inactive=60m use_temp_path=off;
+proxy_cache_path /var/cache/nginx-proxy/wms levels=1:2 keys_zone=wms_cache:20m max_size=6g inactive=7d use_temp_path=off;
 
 server {
     listen 80;

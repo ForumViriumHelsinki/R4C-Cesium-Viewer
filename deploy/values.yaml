@@ -106,6 +106,12 @@ migrations:
     requests:
       cpu: 200m
       memory: 256Mi
+  # The migration Job copies the top-level volumeMounts, including
+  # proxy-cache, but not volumeClaimTemplates. Without a volume of that name
+  # the API server rejects the Job and the PreSync hook fails the sync.
+  volumes:
+  - name: proxy-cache
+    emptyDir: {}
   image:
     tag: 1.59.2
     repository: ghcr.io/forumviriumhelsinki/r4c-cesium-viewer
@@ -159,6 +165,11 @@ env:
     secretKeyRef:
       name: r4c-cesium-viewer-goff # pragma: allowlist secret
       key: GOFF_API_KEY
+# StatefulSet, not Deployment, so the nginx proxy cache survives KEDA's
+# nightly scale-to-zero and every rollout on a persistent disk (#1060). One
+# replica on an RWO disk: a StatefulSet stops the old pod before starting the
+# new one, so the disk never has to attach to two nodes at once.
+workloadType: statefulset
 replicaCount: 1
 resources:
   limits:
@@ -177,6 +188,12 @@ securityContext:
   capabilities:
     drop:
     - ALL
+# A fresh persistent disk is root-owned; fsGroup makes it group-writable for
+# the nginx group (GID 101). OnRootMismatch skips the recursive chown of the
+# whole cache on every pod start once the ownership is already right.
+podSecurityContext:
+  fsGroup: 101
+  fsGroupChangePolicy: OnRootMismatch
 # Volumes required for nginx with readOnlyRootFilesystem
 volumes:
 - name: nginx-cache
@@ -196,6 +213,23 @@ volumeMounts:
   mountPath: /etc/nginx/conf.d
 - name: tmp
   mountPath: /tmp
+# proxy_cache_path for both zones in nginx/default.conf.template points here.
+# max_size there totals 8g, leaving headroom on the 10Gi disk for ext4's
+# reserved blocks and the cache manager's overshoot between sweeps.
+- name: proxy-cache
+  mountPath: /var/cache/nginx-proxy
+volumeClaimTemplates:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: proxy-cache
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    storageClassName: standard-rwo
+    resources:
+      requests:
+        storage: 10Gi
 keda:
   enabled: true
   minReplicaCount: 0
