@@ -20,6 +20,7 @@
 			v-if="view !== 'grid' && postalCode && featureFlagStore.isEnabled('treeCoverage')"
 			location="right"
 			max-width="200"
+			aria-label="Show individual trees in the selected postal code area"
 		>
 			<template #activator="{ props }">
 				<div
@@ -29,6 +30,7 @@
 				>
 					<v-switch
 						:model-value="showTrees"
+						aria-label="Trees"
 						color="green"
 						density="compact"
 						hide-details
@@ -64,6 +66,7 @@
 			v-if="helsinkiView"
 			location="right"
 			max-width="200"
+			aria-label="Display vegetation areas and green spaces"
 		>
 			<template #activator="{ props }">
 				<div
@@ -72,6 +75,7 @@
 				>
 					<v-switch
 						:model-value="showVegetation"
+						aria-label="Vegetation"
 						color="green"
 						density="compact"
 						hide-details
@@ -98,6 +102,7 @@
 			v-if="helsinkiView"
 			location="right"
 			max-width="200"
+			aria-label="Show parks, forests, and other natural areas"
 		>
 			<template #activator="{ props }">
 				<div
@@ -106,6 +111,7 @@
 				>
 					<v-switch
 						:model-value="showOtherNature"
+						aria-label="Other Nature"
 						color="green"
 						density="compact"
 						hide-details
@@ -122,6 +128,7 @@
 			v-if="!helsinkiView && featureFlagStore.isEnabled('landCover')"
 			location="right"
 			max-width="200"
+			aria-label="HSY land use classification showing different surface types"
 		>
 			<template #activator="{ props }">
 				<div
@@ -130,6 +137,7 @@
 				>
 					<v-switch
 						:model-value="landCover"
+						aria-label="Land Cover"
 						color="brown"
 						density="compact"
 						hide-details
@@ -146,6 +154,7 @@
 			v-if="featureFlagStore.isEnabled('ndvi')"
 			location="right"
 			max-width="200"
+			aria-label="Normalized Difference Vegetation Index - satellite-based vegetation density"
 		>
 			<template #activator="{ props }">
 				<div
@@ -154,6 +163,7 @@
 				>
 					<v-switch
 						:model-value="ndvi"
+						aria-label="NDVI"
 						color="green"
 						density="compact"
 						hide-details

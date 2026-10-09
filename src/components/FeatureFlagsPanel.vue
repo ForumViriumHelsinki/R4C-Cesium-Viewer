@@ -4,6 +4,7 @@
 		v-model="dialog"
 		eager
 		max-width="800"
+		aria-label="Feature flags"
 		scrollable
 	>
 		<template #activator="{ props }">
@@ -200,6 +201,7 @@
 		v-model="resetConfirmDialog"
 		eager
 		max-width="500"
+		aria-label="Reset all feature flags"
 	>
 		<v-card>
 			<v-card-title>Reset All Feature Flags</v-card-title>
@@ -231,6 +233,7 @@
 		v-model="importDialog"
 		eager
 		max-width="500"
+		aria-label="Import feature flag configuration"
 	>
 		<v-card>
 			<v-card-title>Import Configuration</v-card-title>
