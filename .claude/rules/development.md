@@ -149,6 +149,19 @@ Container build/release use the org reusable workflows (`ForumViriumHelsinki/.gi
 
 Sentry build args (`SENTRY_AUTH_TOKEN`, `VITE_SENTRY_DSN`) reach the build via the reusable workflows' `secret-build-args` passthrough — secrets cannot flow through plain `inputs.build-args` on reusable-workflow callers. The non-secret `VITE_SENTRY_ENVIRONMENT=production` goes through plain `build-args`, and the Dockerfile forwards it to Vite. It is the only way a build reports as `production`: `src/utils/sentryEnvironment.js` tags any other production-mode build `local` (#995). CI builds (`test.yml`, `lighthouse.yml`) carry no DSN and send nothing to Sentry. `tests/unit/utils/sentryEnvironment.test.js` fails if a workflow other than the two container workflows sets `VITE_SENTRY_DSN`.
 
+### Workflows That Push to PR Branches
+
+`auto-fix.yml` runs on `workflow_run` whenever Test Suite or Lighthouse CI fails on any branch other than `main`, and it pushes `fix(auto):` commits to that branch. While `main`'s own Test Suite is red, every PR's Test Suite fails too, so every PR gets an AI auto-fix run. During a run that opens, rebases or merges several PRs, those commits race the run's own pushes. Disable the workflow for the duration and re-enable it afterwards, with a tracker so the re-enable is not forgotten:
+
+    gh workflow disable auto-fix.yml
+    gh workflow enable auto-fix.yml
+
+That was done three times on 2026-09-23 and 2026-09-24 for the 24-PR issue round. `claude-review.yml` has been `disabled_manually` since 2026-03-19, so PRs get no Claude review. The file declares a trigger, but only the API state shows whether the workflow runs: `gh api repos/ForumViriumHelsinki/R4C-Cesium-Viewer/actions/workflows --paginate --jq '.workflows[] | "\(.state) \(.path)"'`.
+
+### Verifying a Release Reached `deploy/values.yaml`
+
+ArgoCD Image Updater writes two keys in `deploy/values.yaml`: `image.tag`, for the app, and `migrations.image.tag`. It does not always write both in one PR. 1.58.0 arrived in a single update (#990). 1.59.0 arrived as #1047, which bumped only `migrations.image.tag`, followed two minutes later by #1048, which bumped `image.tag`. Check the app key itself, `git show origin/main:deploy/values.yaml | awk '/^image:/{f=1} f && /^  tag:/{print; exit}'`. A match for the version anywhere in the file can come from the migrations key while the app still runs the old image.
+
 ### Security Scan (`bun audit` gate)
 
 The Security Scan job runs `bun scripts/security/audit-gate.mjs` (locally: `just audit`). It is blocking and fails when:
