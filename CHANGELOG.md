@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.59.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.4...r4c-cesium-viewer-v1.59.5) (2026-10-09)
+
+
+### Bug Fixes
+
+* **security:** raise override floors and refresh bun.lock with pinned Bun ([#1090](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1090)) ([b37ea8b](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b37ea8be1b811c975488eec01a636a03e3807beb))
+
 ## [1.59.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.3...r4c-cesium-viewer-v1.59.4) (2026-10-09)
 
 
