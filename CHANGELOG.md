@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.59.4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.3...r4c-cesium-viewer-v1.59.4) (2026-10-09)
+
+
+### Bug Fixes
+
+* **a11y:** name dialogs, tooltips and switches; raise low-contrast text ([#1085](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1085)) ([2f26328](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/2f2632848f44749441bf70dd5fb0e42a58557b4e))
+* **flags:** fall back to GOFF defaults when the relay is unreachable ([#1084](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1084)) ([deec6fb](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/deec6fbf0fb7946de8b9084b9493dc0435412ab1))
+
 ## [1.59.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.2...r4c-cesium-viewer-v1.59.3) (2026-10-09)
 
 
