@@ -305,7 +305,7 @@ test-e2e-mock *args:
 [group: "testing"]
 lighthouse-local:
     LIGHTHOUSE=true bun run build
-    bunx @lhci/cli@0.14.x collect --config=lighthouserc.cjs
+    bunx @lhci/cli@0.15.0 collect --config=lighthouserc.cjs
 
 # swgl=0 (default) runs Chromium on the local GPU, the only place the FPS
 # assertion runs. swgl=1 forces software rendering with the CI job's flags
