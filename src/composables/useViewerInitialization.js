@@ -13,6 +13,11 @@ import { usePropsStore } from '../stores/propsStore.js'
 import logger from '../utils/logger.js'
 import { loadWithRetry } from '../utils/moduleLoader.js'
 import { PERF_STATS_ENABLED, perfStats } from '../utils/perfStats.js'
+import {
+	chooseResolutionScale,
+	chooseTargetFrameRate,
+	webglRendererName,
+} from '../utils/softwareRenderer.js'
 
 /**
  * Vue 3 composable for Cesium viewer initialization
@@ -189,6 +194,25 @@ export function useViewerInitialization() {
 
 		store.setCesiumViewer(viewer.value)
 
+		// EXPERIMENT: cap the frame rate on CPU rasterizers, and expose what was
+		// chosen plus a frame counter for the measurement harness.
+		{
+			const renderer = webglRendererName(viewer.value.scene.context._gl)
+			const scale = chooseResolutionScale(window.location.search)
+			const fps = chooseTargetFrameRate(renderer, window.location.search)
+			viewer.value.resolutionScale = scale
+			if (fps !== undefined) viewer.value.targetFrameRate = fps
+			const probe = { renderer, scale, fps, frames: 0 }
+			viewer.value.scene.postRender.addEventListener(() => {
+				probe.frames++
+			})
+			const probeWindow = /** @type {any} */ (window)
+			probeWindow.__r4cRender = probe
+			logger.info(`[render] ${renderer} -> resolutionScale ${scale}, fps cap ${fps}`)
+			// Lighthouse records console errors, so this reveals its renderer.
+			console.error(`[r4c-renderer] ${renderer} | fps cap ${fps}`)
+		}
+
 		// Expose viewer to E2E test harness
 		if (isE2ETest) {
 			// `window` is augmented with __viewer/__cesium/__featurepicker only in E2E
@@ -209,6 +233,14 @@ export function useViewerInitialization() {
 		graphics?.destroy()
 		graphics = new Graphics()
 		graphics.init(viewer.value)
+
+		// EXPERIMENT: ?r4cMsaa=<samples> overrides MSAA after graphics.init
+		{
+			const msaa = Number(new URLSearchParams(window.location.search).get('r4cMsaa'))
+			if (msaa > 0) viewer.value.scene.msaaSamples = msaa
+			const probeWindow = /** @type {any} */ (window)
+			if (probeWindow.__r4cRender) probeWindow.__r4cRender.msaa = viewer.value.scene.msaaSamples
+		}
 
 		viewer.value.imageryLayers.add(
 			new WMS().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
