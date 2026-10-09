@@ -33,7 +33,13 @@ module.exports = {
 			startServerReadyTimeout: 60000,
 
 			// Test URL - preview server runs on port 4173 by default
-			url: ['http://localhost:4173/'],
+			// EXPERIMENT: one run per variant of the software-renderer frame cap
+			url: [
+				'http://localhost:4173/?r4cFps=60',
+				'http://localhost:4173/',
+				'http://localhost:4173/?r4cFps=0.5',
+				'http://localhost:4173/?r4cRenderScale=0.5',
+			],
 
 			// Number of runs for each URL
 			// 3 runs so Lighthouse reports the median, smoothing out the
@@ -41,7 +47,7 @@ module.exports = {
 			// PROTOCOL_TIMEOUT is now avoided by blocking only the heavy
 			// timeout-prone binaries (see blockedUrlPatterns below) rather
 			// than by collapsing to a single run.
-			numberOfRuns: 3,
+			numberOfRuns: 1,
 
 			// Max wait time for page load (ms) - CesiumJS is heavy
 			maxWaitForLoad: 90000,
