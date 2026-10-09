@@ -168,6 +168,7 @@
 					color="white"
 					indeterminate
 					class="mr-2"
+					aria-label="Loading"
 				/>
 				<span>{{ getCompactMessage() }}</span>
 			</div>
@@ -176,6 +177,7 @@
 				<v-btn
 					icon
 					size="small"
+					aria-label="Show loading details"
 					@click="showGlobalOverlay = true"
 				>
 					<v-icon size="16"> mdi-arrow-expand </v-icon>
@@ -188,6 +190,7 @@
 			v-model="showPerformanceDialog"
 			eager
 			max-width="500"
+			aria-label="Loading performance"
 		>
 			<v-card>
 				<v-card-title>Loading Performance</v-card-title>
