@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.59.3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.2...r4c-cesium-viewer-v1.59.3) (2026-10-09)
+
+
+### Performance Improvements
+
+* **deploy:** keep the nginx proxy cache on a persistent disk ([#1063](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1063)) ([85e67e7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/85e67e700412d307d2740bff39572e934f53dcb5))
+
 ## [1.59.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.1...r4c-cesium-viewer-v1.59.2) (2026-10-08)
 
 
