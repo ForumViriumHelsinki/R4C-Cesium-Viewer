@@ -22,6 +22,11 @@
 		<v-tooltip
 			location="right"
 			max-width="200"
+			:aria-label="
+				helsinkiView
+					? 'Show only social services and healthcare buildings'
+					: 'Show only public and municipal buildings'
+			"
 		>
 			<template #activator="{ props }">
 				<div
@@ -30,6 +35,7 @@
 				>
 					<v-switch
 						:model-value="hideNonSote"
+						:aria-label="helsinkiView ? 'Social & Healthcare' : 'Public Buildings'"
 						color="blue"
 						density="compact"
 						hide-details
@@ -54,6 +60,7 @@
 			v-if="helsinkiView"
 			location="right"
 			max-width="200"
+			aria-label="Show only buildings constructed before summer 2018"
 		>
 			<template #activator="{ props }">
 				<div
@@ -62,6 +69,7 @@
 				>
 					<v-switch
 						:model-value="hideNewBuildings"
+						aria-label="Pre-2018"
 						color="orange"
 						density="compact"
 						hide-details
@@ -77,6 +85,7 @@
 		<v-tooltip
 			location="right"
 			max-width="200"
+			aria-label="Show only tall buildings (filters out low-rise structures)"
 		>
 			<template #activator="{ props }">
 				<div
@@ -85,6 +94,7 @@
 				>
 					<v-switch
 						:model-value="hideLow"
+						aria-label="Tall Buildings"
 						color="purple"
 						density="compact"
 						hide-details

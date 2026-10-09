@@ -815,6 +815,11 @@ export default {
 	font-size: 0.75rem;
 }
 
+/* Vuetify's medium-emphasis subtitle measured 4.29:1 here, below 4.5:1 */
+.background-map-browser :deep(.v-list-item-subtitle) {
+	--v-list-item-subtitle-opacity: 0.75;
+}
+
 .more-results {
 	padding: 8px 16px;
 	text-align: center;
