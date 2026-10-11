@@ -280,7 +280,13 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 			// Filter out known benign console errors (like analytics or third-party issues)
 			const criticalErrors = consoleErrors.filter(
-				(e) => !e.includes('Failed to load resource') && !e.includes('analytics')
+				(e) =>
+					!e.includes('Failed to load resource') &&
+					!e.includes('analytics') &&
+					// The GOFF relay is unreachable in CI/preview builds; the app falls
+					// back to default flag values (#1084) but the SDK keeps retrying its
+					// WebSocket, logging one connection error per attempt.
+					!e.includes('/feature-flags/ws/')
 			)
 			expect(criticalErrors).toHaveLength(0)
 		})
