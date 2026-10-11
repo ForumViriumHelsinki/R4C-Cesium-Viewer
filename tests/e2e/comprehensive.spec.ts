@@ -310,19 +310,40 @@ test.describe('R4C Climate Visualization Comprehensive Tests', () => {
 
 	test.describe('Error Handling and Edge Cases', () => {
 		test('should handle network failures gracefully', async ({ page }) => {
-			// Block specific API calls
-			await page.route('**/api/**', async (route) => {
+			// The app's data goes through same-origin proxies: /pygeoapi (startups
+			// and lookups) and /helsinki-wms (tile traffic triggered by map
+			// interactions). It makes no /api/ requests, so aborting **/api/** never
+			// fired the handler and this asserted an app with a fully working network
+			// instead (#1068) — same vacuous pattern fixed in the load suite (#1039).
+			const abortedRequests: string[] = []
+			const abortDataRequests = async (route) => {
+				abortedRequests.push(route.request().url())
 				await route.abort('failed')
-			})
+			}
+			await page.route('**/pygeoapi/**', abortDataRequests)
+			await page.route('**/helsinki-wms*', abortDataRequests)
 
-			// Application should still load basic interface
+			// Application should still load basic interface with data requests failing
 			await expect(page.locator('canvas')).toBeVisible()
 			// Verify the app bar with title is still visible
 			await expect(page.getByText('Regions4Climate')).toBeVisible()
 
-			// User interactions should not crash the application
-			await clickOnMap(page, 400, 300)
+			// Trigger data requests through the proxy, then prove the handler actually
+			// aborted traffic so the test fails if the endpoint pattern stops matching.
+			// Right half of the canvas: the control drawer overlays clicks on the left
+			const positions = [
+				{ x: 700, y: 350 },
+				{ x: 900, y: 300 },
+				{ x: 850, y: 420 },
+			]
+			for (const pos of positions) {
+				await clickOnMap(page, pos.x, pos.y)
+			}
 			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_MEDIUM)
+			expect(
+				abortedRequests.length,
+				'no /pygeoapi/ or /helsinki-wms requests were aborted — the route patterns no longer match the data traffic'
+			).toBeGreaterThan(0)
 		})
 
 		test('should handle invalid user inputs', async ({ page }) => {
