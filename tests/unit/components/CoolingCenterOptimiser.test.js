@@ -138,7 +138,11 @@ describe('CoolingCenterOptimiser Component', () => {
 			name: '250m_grid',
 			entities: {
 				values: [
-					makeGridEntity('grid_001', TEST_COORDINATES.TEST_POINT_1.X, TEST_COORDINATES.TEST_POINT_1.Y),
+					makeGridEntity(
+						'grid_001',
+						TEST_COORDINATES.TEST_POINT_1.X,
+						TEST_COORDINATES.TEST_POINT_1.Y
+					),
 					makeGridEntity('grid_002', 1500, 2500),
 					makeGridEntity('grid_003', 2000, 3000),
 				],
