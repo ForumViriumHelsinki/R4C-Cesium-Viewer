@@ -84,7 +84,7 @@ export class BuildingFilter {
 
 				// Check hideNewBuildings filter
 				if (hideNewBuildings) {
-					const completionDate = entity.properties?._c_valmpvm?.getValue()
+					const completionDate = entity.properties?.c_valmpvm?.getValue()
 					if (completionDate && new Date(completionDate).getTime() >= cutoffDate) {
 						shouldHide = true
 					}
@@ -93,10 +93,10 @@ export class BuildingFilter {
 				// Check hideNonSote filter (social/healthcare buildings)
 				if (!shouldHide && hideNonSote) {
 					const kayttotark = helsinkiView
-						? entity.properties?._c_kayttark?.getValue()
-							? Number(entity.properties?._c_kayttark?.getValue())
+						? entity.properties?.c_kayttark?.getValue()
+							? Number(entity.properties?.c_kayttark?.getValue())
 							: null
-						: entity.properties?._kayttarks?.getValue()
+						: entity.properties?.kayttarks?.getValue()
 
 					const entityIsSoteBuilding = helsinkiView
 						? kayttotark && isSoteBuilding(kayttotark)
@@ -110,7 +110,7 @@ export class BuildingFilter {
 				// Check hideLow filter (buildings with <= 6 floors)
 				if (!shouldHide && hideLow) {
 					const floorCount =
-						entity.properties?.[helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']?.getValue()
+						entity.properties?.[helsinkiView ? 'i_kerrlkm' : 'kerrosten_lkm']?.getValue()
 					if (!floorCount || floorCount <= 6) {
 						shouldHide = true
 					}
@@ -174,7 +174,7 @@ export class BuildingFilter {
 		const targetDate = this.store.heatDataDate
 
 		const avg_temp = this.toggleStore.helsinkiView
-			? visibleEntities.map((entity) => entity.properties?._avgheatexposuretobuilding?._value)
+			? visibleEntities.map((entity) => entity.properties?.avgheatexposuretobuilding?.getValue())
 			: visibleEntities
 					.map((entity) => {
 						const heatTimeseries = entity.properties?.heat_timeseries?.getValue() || []
@@ -199,10 +199,10 @@ export class BuildingFilter {
 	 */
 	soteBuildings(entity) {
 		const kayttotark = this.toggleStore.helsinkiView
-			? entity.properties?._c_kayttark?._value
-				? Number(entity.properties?._c_kayttark?._value)
+			? entity.properties?.c_kayttark?.getValue()
+				? Number(entity.properties?.c_kayttark?.getValue())
 				: null
-			: entity.properties?._kayttarks?._value
+			: entity.properties?.kayttarks?.getValue()
 
 		entity.show = this.toggleStore.helsinkiView
 			? kayttotark && isSoteBuilding(kayttotark)
@@ -216,8 +216,9 @@ export class BuildingFilter {
 	 */
 	lowBuildings(entity) {
 		if (
-			entity.properties?.[this.toggleStore.helsinkiView ? '_i_kerrlkm' : '_kerrosten_lkm']
-				?._value <= 6
+			entity.properties?.[
+				this.toggleStore.helsinkiView ? 'i_kerrlkm' : 'kerrosten_lkm'
+			]?.getValue() <= 6
 		) {
 			entity.show = false
 		}
@@ -261,7 +262,7 @@ export class BuildingFilter {
 	 */
 	hideNonSoteBuilding(entity) {
 		if (this.toggleStore.hideNonSote) {
-			const kayttotark = entity._properties?._c_kayttark?._value
+			const kayttotark = entity.properties?.c_kayttark?.getValue()
 
 			if (!kayttotark || !isSoteBuilding(kayttotark)) {
 				logVisibilityChange(
@@ -282,7 +283,7 @@ export class BuildingFilter {
 	 * @param {Object} entity - Cesium entity
 	 */
 	hideLowBuilding(entity) {
-		const floorCount = Number(entity._properties?._i_kerrlkm?._value)
+		const floorCount = Number(entity.properties?.i_kerrlkm?.getValue())
 		if (this.toggleStore.hideLow && (!floorCount || floorCount < 7)) {
 			logVisibilityChange('entity', entity.id || 'building', entity.show, false, 'hideLowBuilding')
 			entity.show = false

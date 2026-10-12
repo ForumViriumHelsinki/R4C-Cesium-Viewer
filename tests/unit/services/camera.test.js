@@ -157,10 +157,10 @@ describe('Camera service', () => {
 
 	describe('switchTo2DView', () => {
 		const mockEntity = {
-			_properties: {
-				_posno: { _value: '12345' },
-				_center_x: { _value: 24.95 },
-				_center_y: { _value: 60.17 },
+			properties: {
+				posno: { getValue: () => '12345' },
+				center_x: { getValue: () => 24.95 },
+				center_y: { getValue: () => 60.17 },
 			},
 		}
 
@@ -202,10 +202,10 @@ describe('Camera service', () => {
 
 	describe('switchTo3DView', () => {
 		const mockEntity = {
-			_properties: {
-				_posno: { _value: '12345' },
-				_center_x: { _value: 24.95 },
-				_center_y: { _value: 60.17 },
+			properties: {
+				posno: { getValue: () => '12345' },
+				center_x: { getValue: () => 24.95 },
+				center_y: { getValue: () => 60.17 },
 			},
 		}
 

@@ -198,7 +198,7 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 			const mockEntities = [
 				{
 					properties: {
-						_measurement: {
+						measurement: {
 							getValue: () => ({
 								temp_air: 23.5,
 								rh_air: 65.2,
@@ -233,7 +233,7 @@ describe('Sensor Service - Error Handling', { tags: ['@unit', '@sensor'] }, () =
 			const mockEntities = [
 				{
 					properties: {
-						_measurement: {
+						measurement: {
 							getValue: () => null, // No measurement
 						},
 					},

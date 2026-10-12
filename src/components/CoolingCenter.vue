@@ -93,7 +93,7 @@ const handleMapClick = (clickEvent) => {
 
 	if (Cesium.defined(pickedObject) && pickedObject.id) {
 		const entity = pickedObject.id
-		if (entity._properties) {
+		if (entity.properties) {
 			addCoolingCenter(entity)
 		}
 		selectingGrid.value = false

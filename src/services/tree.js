@@ -150,7 +150,7 @@ export default class Tree {
 				entities,
 				(entity) => {
 					try {
-						const description = entity.properties?._kuvaus?._value
+						const description = entity.properties?.kuvaus?.getValue()
 						if (description) {
 							this.setTreePolygonMaterialColor(entity, description)
 						}
@@ -181,13 +181,13 @@ export default class Tree {
 	 */
 	setTreePolygonMaterialColor(entity, description) {
 		const Cesium = getCesium()
-		const height = entity._properties._korkeus_ka_m
+		const height = entity.properties.korkeus_ka_m
 
 		switch (description) {
 			case 'Puusto yli 20 m':
 				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.7)
 				if (height) {
-					extrudeTree(entity, entity._properties._korkeus_ka_m._value)
+					extrudeTree(entity, entity.properties.korkeus_ka_m.getValue())
 				} else {
 					extrudeTree(entity, 22.5)
 				}
@@ -195,7 +195,7 @@ export default class Tree {
 			case 'puusto, 15 m - 20 m':
 				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.6)
 				if (height) {
-					extrudeTree(entity, entity._properties._korkeus_ka_m._value)
+					extrudeTree(entity, entity.properties.korkeus_ka_m.getValue())
 				} else {
 					extrudeTree(entity, 17.5)
 				}
@@ -203,7 +203,7 @@ export default class Tree {
 			case 'puusto, 10 m - 15 m':
 				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.55)
 				if (height) {
-					extrudeTree(entity, entity._properties._korkeus_ka_m._value)
+					extrudeTree(entity, entity.properties.korkeus_ka_m.getValue())
 				} else {
 					extrudeTree(entity, 12.5)
 				}
@@ -211,7 +211,7 @@ export default class Tree {
 			case 'puusto, 2 m - 10 m':
 				entity.polygon.material = Cesium.Color.FORESTGREEN.withAlpha(0.5)
 				if (height) {
-					extrudeTree(entity, entity._properties._korkeus_ka_m._value)
+					extrudeTree(entity, entity.properties.korkeus_ka_m.getValue())
 				} else {
 					extrudeTree(entity, 6)
 				}

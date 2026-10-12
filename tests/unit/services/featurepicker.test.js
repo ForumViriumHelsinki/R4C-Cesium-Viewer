@@ -264,7 +264,7 @@ describe('FeaturePicker service', () => {
 				const mockEntity = Object.assign(new CesiumProvider.Entity(), {
 					_polygon: true,
 					properties: {
-						posno: { _value: TEST_POSTAL_CODE_1 },
+						posno: { getValue: () => TEST_POSTAL_CODE_1 },
 					},
 				})
 
@@ -297,7 +297,7 @@ describe('FeaturePicker service', () => {
 				const mockEntity = Object.assign(new CesiumProvider.Entity(), {
 					_polygon: true,
 					properties: {
-						posno: { _value: TEST_POSTAL_CODE_2 },
+						posno: { getValue: () => TEST_POSTAL_CODE_2 },
 					},
 				})
 
@@ -376,14 +376,14 @@ describe('FeaturePicker service', () => {
 				const directEntity = Object.assign(new CesiumProvider.Entity(), {
 					_polygon: true,
 					properties: {
-						posno: { _value: TEST_POSTAL_CODE_1 },
+						posno: { getValue: () => TEST_POSTAL_CODE_1 },
 					},
 				})
 
 				const primitiveEntity = Object.assign(new CesiumProvider.Entity(), {
 					_polygon: true,
 					properties: {
-						posno: { _value: TEST_POSTAL_CODE_2 },
+						posno: { getValue: () => TEST_POSTAL_CODE_2 },
 					},
 				})
 
@@ -511,15 +511,15 @@ describe('FeaturePicker service', () => {
 		it('should clear pick markers when a grid cell is picked', () => {
 			const mockId = {
 				properties: {
-					grid_id: { _value: TEST_GRID_ID },
-					vulnerability_score: { _value: TEST_VULNERABILITY_SCORE },
+					grid_id: { getValue: () => TEST_GRID_ID },
+					vulnerability_score: { getValue: () => TEST_VULNERABILITY_SCORE },
 				},
 				entityCollection: {
 					_entities: {
 						_array: [
 							{
-								_properties: {
-									_id: { _value: null },
+								properties: {
+									id: { getValue: () => null },
 								},
 							},
 						],
@@ -538,8 +538,8 @@ describe('FeaturePicker service', () => {
 			globalStore.setLevel('start')
 			const mockId = {
 				properties: {
-					posno: { _value: TEST_POSTAL_CODE_1 },
-					nimi: { _value: 'Helsinki Center' },
+					posno: { getValue: () => TEST_POSTAL_CODE_1 },
+					nimi: { getValue: () => 'Helsinki Center' },
 				},
 			}
 
@@ -564,7 +564,7 @@ describe('FeaturePicker service', () => {
 
 			const mockId = {
 				properties: {
-					posno: { _value: TEST_POSTAL_CODE_1 }, // Same postal code
+					posno: { getValue: () => TEST_POSTAL_CODE_1 }, // Same postal code
 				},
 			}
 
@@ -581,16 +581,16 @@ describe('FeaturePicker service', () => {
 
 			const mockId = {
 				properties: {
-					_postinumero: { _value: TEST_POSTAL_CODE_1 },
-					_avg_temp_c: TEST_AVG_TEMP,
-					buildingId: { _value: TEST_BUILDING_ID },
+					postinumero: { getValue: () => TEST_POSTAL_CODE_1 },
+					avg_temp_c: TEST_AVG_TEMP,
+					buildingId: { getValue: () => TEST_BUILDING_ID },
 				},
 				entityCollection: {
 					_entities: {
 						_array: [
 							{
-								_properties: {
-									_id: { _value: null },
+								properties: {
+									id: { getValue: () => null },
 								},
 							},
 						],
@@ -613,8 +613,8 @@ describe('FeaturePicker service', () => {
 		it('should enrich existing buildings when population grid cell is clicked', () => {
 			const mockId = {
 				properties: {
-					asukkaita: { _value: TEST_POPULATION },
-					index: { _value: 123 },
+					asukkaita: { getValue: () => TEST_POPULATION },
+					index: { getValue: () => 123 },
 				},
 				entityCollection: {
 					owner: { name: 'PopulationGrid' },
@@ -639,7 +639,7 @@ describe('FeaturePicker service', () => {
 
 			const mockId = {
 				properties: {
-					posno: { _value: TEST_POSTAL_CODE_1 },
+					posno: { getValue: () => TEST_POSTAL_CODE_1 },
 				},
 			}
 
@@ -661,8 +661,8 @@ describe('FeaturePicker service', () => {
 
 		it('should handle loading store import failure gracefully', async () => {
 			const mockProperties = {
-				_postinumero: { _value: TEST_POSTAL_CODE_1 },
-				_avg_temp_c: TEST_AVG_TEMP,
+				postinumero: { getValue: () => TEST_POSTAL_CODE_1 },
+				avg_temp_c: TEST_AVG_TEMP,
 			}
 
 			// Mock the dynamic import to fail
@@ -680,8 +680,8 @@ describe('FeaturePicker service', () => {
 
 		it('should handle createBuildingCharts error', async () => {
 			const mockProperties = {
-				_postinumero: { _value: TEST_POSTAL_CODE_1 },
-				_avg_temp_c: TEST_AVG_TEMP,
+				postinumero: { getValue: () => TEST_POSTAL_CODE_1 },
+				avg_temp_c: TEST_AVG_TEMP,
 			}
 
 			// Mock createBuildingCharts to throw an error
@@ -705,8 +705,8 @@ describe('FeaturePicker service', () => {
 
 		it('should update application state and create building charts', async () => {
 			const mockProperties = {
-				_postinumero: { _value: TEST_POSTAL_CODE_1 },
-				_avg_temp_c: TEST_AVG_TEMP,
+				postinumero: { getValue: () => TEST_POSTAL_CODE_1 },
+				avg_temp_c: TEST_AVG_TEMP,
 			}
 
 			await featurePicker.handleBuildingFeature(mockProperties)

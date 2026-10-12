@@ -269,8 +269,8 @@ export default class Camera {
 		const altitude = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_2D)
 		this.viewer.camera.flyTo({
 			destination: Cesium.Cartesian3.fromDegrees(
-				entity._properties._center_x._value,
-				entity._properties._center_y._value,
+				entity.properties.center_x.getValue(),
+				entity.properties.center_y.getValue(),
 				altitude
 			),
 			orientation: {
@@ -333,8 +333,8 @@ export default class Camera {
 		const altitude = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_3D)
 		this.currentFlight = this.viewer.camera.flyTo({
 			destination: Cesium.Cartesian3.fromDegrees(
-				entity._properties._center_x._value,
-				entity._properties._center_y._value - 0.025,
+				entity.properties.center_x.getValue(),
+				entity.properties.center_y.getValue() - 0.025,
 				altitude
 			),
 			orientation: {
@@ -542,7 +542,7 @@ export default class Camera {
 		}
 
 		// Verify entity has required center coordinates
-		if (!entity._properties._center_x || !entity._properties._center_y) {
+		if (!entity.properties.center_x || !entity.properties.center_y) {
 			logger.warn(`[Camera] Postal code ${postalCode} missing center coordinates`)
 			return
 		}
@@ -553,8 +553,8 @@ export default class Camera {
 		const altitude = computePostalCodeAltitude(entity, POSTAL_CODE_ZOOM.SCALE_FOCUS)
 		this.viewer.camera.flyTo({
 			destination: Cesium.Cartesian3.fromDegrees(
-				entity._properties._center_x._value,
-				entity._properties._center_y._value - 0.015,
+				entity.properties.center_x.getValue(),
+				entity.properties.center_y.getValue() - 0.015,
 				altitude
 			),
 			orientation: {

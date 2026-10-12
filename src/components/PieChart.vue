@@ -39,7 +39,7 @@ const createPieChart = () => {
 	if (chartWidth.value === 0) return
 	const datasource = propsStore.postalCodeData
 	// nameOfZone is stored as a plain string (already unwrapped from the Cesium
-	// property's ._value at the call site in featurepicker). Reading ._value here
+	// property at the call site in featurepicker). Reading .getValue() here
 	// was a bug that yielded undefined; use the value directly with a null guard.
 	const nameOfZone = globalStore.nameOfZone ?? ''
 	const year = backgroundMapStore.hsyYear
@@ -167,11 +167,11 @@ const clearPieChart = () => {
  */
 const getTotalAreaByNameAndPropertyKeys = (name, propertyKeys, year, datasource) =>
 	datasource._entityCollection._entities._array
-		.filter(({ _properties }) => _properties._nimi._value === name)
+		.filter(({ properties }) => properties.nimi?.getValue() === name)
 		.reduce(
-			(total, { _properties }) =>
+			(total, { properties }) =>
 				total +
-				propertyKeys.reduce((sum, key) => sum + (_properties[`${key}_${year}`]?._value || 0), 0),
+				propertyKeys.reduce((sum, key) => sum + (properties[`${key}_${year}`]?.getValue() || 0), 0),
 			0
 		)
 
