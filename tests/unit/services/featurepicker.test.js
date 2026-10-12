@@ -193,10 +193,8 @@ describe('FeaturePicker service', () => {
 
 		// Initialize postalCodeData to prevent null access errors
 		propsStore.postalCodeData = {
-			_entityCollection: {
-				_entities: {
-					_array: [],
-				},
+			entities: {
+				values: [],
 			},
 		}
 

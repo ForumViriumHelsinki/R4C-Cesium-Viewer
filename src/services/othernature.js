@@ -6,6 +6,25 @@ import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
 
+// Cached immutable colours, built on first use (Cesium loads lazily, so not at
+// import time). Assigning a new material instead of mutating the existing one
+// matters: GeoJsonDataSource shares one ColorMaterialProperty across every
+// polygon, and an in-place write skips definitionChanged. See "Bulk Entity
+// Styling" in .claude/rules/architecture.md.
+let categoryColors = null
+
+function getCategoryColor(category) {
+	if (!categoryColors) {
+		const Cesium = getCesium()
+		categoryColors = new Map([
+			['310', Cesium.Color.LIGHTGREY.withAlpha(0.5)],
+			['410', Cesium.Color.SANDYBROWN.withAlpha(0.5)],
+			['130', Cesium.Color.ROSYBROWN.withAlpha(0.5)],
+		])
+	}
+	return categoryColors.get(category)
+}
+
 /**
  * Other Nature Service
  * Manages miscellaneous natural surface layers (rock, sand, bare soil).
@@ -99,6 +118,8 @@ export default class Othernature {
 				}
 			}
 
+			this.viewer?.scene?.requestRender()
+
 			if (!metadata.fromCache) {
 				logger.debug(`✓ Processed ${entities.length} other nature entities`)
 			} else {
@@ -117,22 +138,13 @@ export default class Othernature {
 	 * @param {string} category - The category of the othernature entity
 	 */
 	setOtherNaturePolygonMaterialColor(entity, category) {
-		// Guard against null/undefined at each level of the property chain
-		if (!entity?._polygon?._material?._color) {
+		if (!entity?.polygon) {
 			return
 		}
 
-		const Cesium = getCesium()
-		switch (category) {
-			case '310':
-				entity._polygon._material._color._value = Cesium.Color.LIGHTGREY.withAlpha(0.5)
-				break
-			case '410':
-				entity._polygon._material._color._value = Cesium.Color.SANDYBROWN.withAlpha(0.5)
-				break
-			case '130':
-				entity._polygon._material._color._value = Cesium.Color.ROSYBROWN.withAlpha(0.5)
-				break
+		const color = getCategoryColor(category)
+		if (color) {
+			entity.polygon.material = color
 		}
 	}
 }

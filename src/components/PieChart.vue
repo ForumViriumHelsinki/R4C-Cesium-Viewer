@@ -166,7 +166,7 @@ const clearPieChart = () => {
  * @returns { Number } The total area
  */
 const getTotalAreaByNameAndPropertyKeys = (name, propertyKeys, year, datasource) =>
-	datasource._entityCollection._entities._array
+	datasource.entities.values
 		.filter(({ properties }) => properties.nimi?.getValue() === name)
 		.reduce(
 			(total, { properties }) =>
