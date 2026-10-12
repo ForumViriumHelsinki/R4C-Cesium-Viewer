@@ -970,7 +970,7 @@ export default class ViewportBuildingLoader {
 
 		if (polygon && properties?.avgheatexposuretobuilding) {
 			const Cesium = getCesium()
-			const heatExposureValue = properties.avgheatexposuretobuilding._value
+			const heatExposureValue = properties.avgheatexposuretobuilding.getValue()
 			polygon.material = new Cesium.ColorMaterialProperty(
 				new Cesium.Color(1, 1 - heatExposureValue, 0, heatExposureValue)
 			)
@@ -1018,7 +1018,7 @@ export default class ViewportBuildingLoader {
 			(entity) => {
 				if (entity.polygon) {
 					// HSY uses 'kerrosten_lkm' for floor count (not i_kerrlkm)
-					const floorCount = entity.properties?.kerrosten_lkm?._value
+					const floorCount = entity.properties?.kerrosten_lkm?.getValue()
 
 					// Set height based on floor count (3.2m per floor) or default
 					// Filter out invalid floor counts (>= 999 indicates data quality issue)
@@ -1029,7 +1029,7 @@ export default class ViewportBuildingLoader {
 					)
 
 					// Try to get heat exposure from heat_timeseries for the current date
-					const heatTimeseries = entity.properties?.heat_timeseries?._value
+					const heatTimeseries = entity.properties?.heat_timeseries?.getValue()
 					let heatExposure = null
 
 					if (Array.isArray(heatTimeseries) && heatTimeseries.length > 0) {
@@ -1041,7 +1041,7 @@ export default class ViewportBuildingLoader {
 
 					// Also check direct avgheatexposure property (mock data format)
 					if (heatExposure == null) {
-						heatExposure = entity.properties?.avgheatexposure?._value
+						heatExposure = entity.properties?.avgheatexposure?.getValue()
 					}
 
 					// Apply heat-based color if available, otherwise use default blue

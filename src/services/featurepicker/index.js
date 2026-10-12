@@ -314,8 +314,8 @@ export default class FeaturePicker {
 
 		// Handle postal code navigation
 		if (id.properties.posno) {
-			const newPostalCode = id.properties.posno._value
-			const postalCodeName = id.properties.nimi?._value || `Postal Code ${newPostalCode}`
+			const newPostalCode = id.properties.posno.getValue()
+			const postalCodeName = id.properties.nimi?.getValue() || `Postal Code ${newPostalCode}`
 
 			logger.debug('[FeaturePicker] Postal code detected:', newPostalCode)
 			logger.debug('[FeaturePicker] Current postal code:', this.store.postalcode)
@@ -362,7 +362,7 @@ export default class FeaturePicker {
 
 		// Handle travel time grid (detect via datasource ownership)
 		if (!id.properties.posno && id.entityCollection?.owner?.name === 'TravelTimeGrid') {
-			this.traveltimeService.loadTravelTimeData(id.properties.id._value).catch((error) => {
+			this.traveltimeService.loadTravelTimeData(id.properties.id.getValue()).catch((error) => {
 				logger.error('Failed to load travel time data:', error)
 			})
 			// markCurrentLocation is synchronous (returns void) — calling .catch on its

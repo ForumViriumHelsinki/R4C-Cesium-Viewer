@@ -37,11 +37,11 @@ export default {
 				entitiesArray.forEach((entity) => {
 					if (
 						entity &&
-						entity._properties &&
-						entity._properties._nimi &&
-						typeof entity._properties._nimi._value !== 'undefined'
+						entity.properties &&
+						entity.properties.nimi &&
+						typeof entity.properties.nimi.getValue() !== 'undefined'
 					) {
-						nimiValuesSet.add(entity._properties._nimi._value)
+						nimiValuesSet.add(entity.properties.nimi.getValue())
 					}
 				})
 			}

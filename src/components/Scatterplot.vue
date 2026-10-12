@@ -200,7 +200,7 @@ export default {
 		},
 
 		isSoteBuilding(entity) {
-			const kayttotark = Number(entity._properties.c_kayttark?._value)
+			const kayttotark = Number(entity.properties.c_kayttark?.getValue())
 
 			return (
 				!kayttotark ||
@@ -209,13 +209,13 @@ export default {
 		},
 
 		isLowBuilding(entity) {
-			const floorCount = Number(entity._properties.i_kerrlkm?._value)
+			const floorCount = Number(entity.properties.i_kerrlkm?.getValue())
 
 			return !floorCount || floorCount <= 6
 		},
 
 		isNewBuilding(entity) {
-			const c_valmpvm = new Date(entity._properties._c_valmpvm?._value)?.getTime()
+			const c_valmpvm = new Date(entity.properties.c_valmpvm?.getValue())?.getTime()
 			const cutoffDate = DATES.NEW_BUILDING_CUTOFF.getTime()
 
 			return !c_valmpvm || c_valmpvm >= cutoffDate
@@ -241,13 +241,13 @@ export default {
 		) {
 			// Check if entity has the required properties.
 			if (
-				entity._properties.avgheatexposuretobuilding &&
-				entity._properties[categoricalName] &&
-				entity._properties[numericalName] &&
-				entity._properties[categoricalName]._value
+				entity.properties.avgheatexposuretobuilding &&
+				entity.properties[categoricalName] &&
+				entity.properties[numericalName] &&
+				entity.properties[categoricalName].getValue()
 			) {
 				// Get the numerical value from the entity properties.
-				let numbericalValue = entity._properties[numericalName]._value
+				let numbericalValue = entity.properties[numericalName].getValue()
 
 				// If the numerical attribute is c_valmpvm, convert it to a number.
 				if (numericalName === 'c_valmpvm' && numbericalValue) {
@@ -255,16 +255,16 @@ export default {
 				}
 
 				if (
-					entity._properties._area_m2 &&
-					Number(entity._properties._area_m2._value) > 225 &&
-					entity._properties._id
+					entity.properties.area_m2 &&
+					Number(entity.properties.area_m2.getValue()) > 225 &&
+					entity.properties.id
 				) {
 					// Create an object with the required properties and add it to the urbanHeatDataAndMaterial array.
 					const element = {
-						heat: entity._properties.avgheatexposuretobuilding._value,
-						[categorical]: entity._properties[categoricalName]._value,
+						heat: entity.properties.avgheatexposuretobuilding.getValue(),
+						[categorical]: entity.properties[categoricalName].getValue(),
 						[numerical]: numbericalValue,
-						buildingId: entity._properties._id._value,
+						buildingId: entity.properties.id.getValue(),
 					}
 					urbanHeatDataAndMaterial.push(element)
 				}

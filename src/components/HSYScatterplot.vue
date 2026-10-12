@@ -69,35 +69,36 @@ export default {
 			if (containerRef.value) d3.select(containerRef.value).select('svg').remove()
 		}
 
-		const isSoteBuilding = (entity) => entity._properties._kayttarks._value === 'Yleinen rakennus'
+		const isSoteBuilding = (entity) => entity.properties.kayttarks.getValue() === 'Yleinen rakennus'
 
-		const isLowBuilding = (entity) => Number(entity._properties.kerrosten_lkm?._value) <= 6
+		const isLowBuilding = (entity) => Number(entity.properties.kerrosten_lkm?.getValue()) <= 6
 
 		const addDataForHSYScatterPlot = (urbanHeatDataAndMaterial, entity) => {
-			const props = entity._properties
+			const props = entity.properties
 			const targetDate = globalStore.heatDataDate
 
 			if (
-				props?.[propsStore.categoricalSelect.value]?._value &&
-				props?.[propsStore.numericalSelect.value]?._value
+				props?.[propsStore.categoricalSelect.value]?.getValue() &&
+				props?.[propsStore.numericalSelect.value]?.getValue()
 			) {
-				let numericalValue = props[propsStore.numericalSelect.value]._value
+				let numericalValue = props[propsStore.numericalSelect.value].getValue()
 
 				if (propsStore.numericalSelect.text === 'c_valmpvm' && numericalValue) {
 					numericalValue = new Date().getFullYear() - Number(numericalValue.slice(0, 4))
 				}
 
-				if (props?._area_m2?._value > 225 && numericalValue < 99999999 && numericalValue !== 0) {
-					const heatValue = props?._heat_timeseries?._value.find(
-						({ date }) => date === targetDate
-					)?.avg_temp_c
+				if (props?.area_m2?.getValue() > 225 && numericalValue < 99999999 && numericalValue !== 0) {
+					const heatValue = props?.heat_timeseries
+						?.getValue()
+						.find(({ date }) => date === targetDate)?.avg_temp_c
 
 					if (heatValue) {
 						urbanHeatDataAndMaterial.push({
 							heat: heatValue,
-							[propsStore.categoricalSelect.text]: props[propsStore.categoricalSelect.value]._value,
+							[propsStore.categoricalSelect.text]:
+								props[propsStore.categoricalSelect.value].getValue(),
 							[propsStore.numericalSelect.text]: numericalValue,
-							buildingId: props?._kiitun?._value,
+							buildingId: props?.kiitun?.getValue(),
 						})
 					}
 				}

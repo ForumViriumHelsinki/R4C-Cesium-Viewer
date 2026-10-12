@@ -102,19 +102,21 @@ export default class ColdArea {
 			const Cesium = getCesium()
 			this.elementsDisplayService.setColdAreasElementsDisplay('inline-block')
 			for (let i = 0; i < entities.length; i++) {
-				const entity =
-					/** @type {Cesium.Entity & { _properties?: Record<string, { _value?: any } | undefined> }} */ (
-						entities[i]
-					)
+				const entity = entities[i]
 
-				const heatexposure = entity._properties?._heatexposure
+				const heatexposure = entity.properties?.heatexposure
 				// Cesium's polygon graphics setters accept raw Color/number at
 				// runtime (coerced to ConstantProperty), but the published types
 				// declare them as Property/MaterialProperty — hence the cast.
 				const polygon = /** @type {any} */ (entity.polygon)
 
 				if (heatexposure && polygon) {
-					polygon.material = new Cesium.Color(1, 1 - heatexposure._value, 0, heatexposure._value)
+					polygon.material = new Cesium.Color(
+						1,
+						1 - heatexposure.getValue(),
+						0,
+						heatexposure.getValue()
+					)
 					polygon.outlineColor = Cesium.Color.BLACK
 					polygon.outlineWidth = 3
 				}
