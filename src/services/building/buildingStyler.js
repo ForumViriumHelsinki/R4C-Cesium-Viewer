@@ -66,22 +66,15 @@ function indexHeatTimeseriesByDate(heatTimeseries) {
 /**
  * Filters heat timeseries data by construction year cutoff
  * Removes historical data predating the building's construction year.
+ * Returns a new array; the input (the entity's own data) is left unchanged.
  *
- * @param {Object} buildingProps - Building properties object
- * @param {Object} buildingProps.kavu - Construction year property
- * @param {Object} buildingProps.heat_timeseries - Heat timeseries property
- * @private
+ * @param {Array<{date: string}>} heatTimeseries - Heat timeseries entries
+ * @param {*} constructionYear - Construction year (kavu); no filtering unless a number
+ * @returns {Array<{date: string}>} Entries from the construction year onwards
  */
-export const filterHeatTimeseries = (buildingProps) => {
-	if (buildingProps.kavu && typeof buildingProps.kavu.getValue() === 'number') {
-		const cutoffYear = buildingProps.kavu.getValue()
-		buildingProps.heat_timeseries._value = buildingProps.heat_timeseries
-			.getValue()
-			.filter((entry) => {
-				const entryYear = new Date(entry.date).getFullYear()
-				return entryYear >= cutoffYear
-			})
-	}
+export const filterHeatTimeseries = (heatTimeseries, constructionYear) => {
+	if (typeof constructionYear !== 'number') return heatTimeseries
+	return heatTimeseries.filter((entry) => new Date(entry.date).getFullYear() >= constructionYear)
 }
 
 /**
@@ -268,18 +261,20 @@ export class BuildingStyler {
 			this.propsStore.setGridBuildingProps(buildingProps)
 		}
 
-		// Process heat timeseries asynchronously to avoid blocking UI
-		await new Promise((resolve) => {
-			filterHeatTimeseries(buildingProps)
-			requestIdle(resolve)
-		})
+		// Yield to the browser before updating the charts
+		await new Promise((resolve) => requestIdle(resolve))
 
 		// Set heat exposure data based on view mode (Helsinki vs Capital Region)
 		if (this.toggleStore.helsinkiView) {
 			this.propsStore.setBuildingHeatExposure(buildingProps.avgheatexposuretobuilding.getValue())
 		} else if (!this.toggleStore.helsinkiView) {
 			if (buildingProps.heat_timeseries) {
-				this.propsStore.setBuildingHeatTimeseries(buildingProps.heat_timeseries.getValue())
+				this.propsStore.setBuildingHeatTimeseries(
+					filterHeatTimeseries(
+						buildingProps.heat_timeseries.getValue(),
+						buildingProps.kavu?.getValue()
+					)
+				)
 			}
 		} else {
 			this.propsStore.setGridBuildingProps(buildingProps)
