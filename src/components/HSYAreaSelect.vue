@@ -31,7 +31,7 @@ export default {
 
 		const extractNimiValues = (datasource) => {
 			const nimiValuesSet = new Set(/** @type {string[]} */ ([]))
-			const entitiesArray = datasource._entityCollection?._entities._array
+			const entitiesArray = datasource.entities?.values
 
 			if (Array.isArray(entitiesArray)) {
 				entitiesArray.forEach((entity) => {

@@ -363,7 +363,7 @@ describe('two chart instances draw into their own containers', { tags: ['@unit']
 			},
 		})
 		usePropsStore().postalCodeData = {
-			_entityCollection: { _entities: { _array: [zone('Kamppi'), zone('Askisto')] } },
+			entities: { values: [zone('Kamppi'), zone('Askisto')] },
 		}
 
 		const ws = await mountTwice(PieChart)
