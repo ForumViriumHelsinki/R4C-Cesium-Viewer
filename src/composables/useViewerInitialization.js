@@ -311,7 +311,7 @@ export function useViewerInitialization() {
 		await dataSourceService.loadGeoJsonDataSource(0.2, '/assets/data/hsy_po.json', 'PostCodes')
 
 		const dataSource = await dataSourceService.getDataSourceByName('PostCodes')
-		const entities = dataSource?._entityCollection?._entities?._array || []
+		const entities = dataSource?.entities?.values || []
 		logger.debug(
 			'[useViewerInitialization] ✅ Postal codes loaded, entities count:',
 			entities.length
