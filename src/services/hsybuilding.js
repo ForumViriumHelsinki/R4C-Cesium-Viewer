@@ -270,7 +270,7 @@ export default class HSYBuilding {
 
 	approximateAttributesForIntersectingBuildings(feature) {
 		try {
-			const cellProps = this.store.currentGridCell.properties
+			const cellProps = this.store.currentGridCell.properties?.getValue()
 			if (!feature.geometry) return
 
 			const featureBBox = turf.bbox(feature)
@@ -284,7 +284,7 @@ export default class HSYBuilding {
 
 			for (let i = 0; i < entities.length; i++) {
 				const entity = entities[i]
-				if (entity.properties?.index?.getValue() !== cellProps.index.getValue()) {
+				if (entity.properties?.index?.getValue() !== cellProps.index) {
 					const entityGeoJson = this.entityToGeoJson(entity)
 					if (entityGeoJson && turf.booleanIntersects(bboxPolygon, entityGeoJson)) {
 						gridProps.push(entityGeoJson.properties)
@@ -301,7 +301,7 @@ export default class HSYBuilding {
 	}
 
 	setGridAttributesForWithinBuilding(feature) {
-		const cellProps = this.store.currentGridCell.properties
+		const cellProps = this.store.currentGridCell.properties?.getValue()
 		if (!cellProps?.asukkaita) return
 
 		const asukkaita = cellProps.asukkaita
@@ -558,7 +558,7 @@ export default class HSYBuilding {
 
 			return /** @type {import('geojson').Feature} */ ({
 				type: 'Feature',
-				properties: entity.properties,
+				properties: entity.properties?.getValue() ?? {},
 				geometry: {
 					type: 'Polygon',
 					coordinates: [coordinates],
