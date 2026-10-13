@@ -27,9 +27,13 @@ env:
   CI: true
 
 jobs:
+  # Release-please and Image Updater PRs change only version strings and image
+  # tags of code main has already tested, so the root jobs below skip on them and
+  # every job that needs one skips with it. head_ref is empty outside PRs.
   # Lint check runs early and independently - fast feedback on code quality
   lint:
     name: Lint
+    if: ${{ !startsWith(github.head_ref, 'release-please--') && !startsWith(github.head_ref, 'image-updater-') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -58,6 +62,7 @@ jobs:
 
   typecheck:
     name: Typecheck
+    if: ${{ !startsWith(github.head_ref, 'release-please--') && !startsWith(github.head_ref, 'image-updater-') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -93,6 +98,7 @@ jobs:
   # and its errors were reaching the production project tagged production (#995).
   build:
     name: Build Frontend
+    if: ${{ !startsWith(github.head_ref, 'release-please--') && !startsWith(github.head_ref, 'image-updater-') }}
     runs-on: ubuntu-latest
     env:
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -132,6 +138,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests
+    if: ${{ !startsWith(github.head_ref, 'release-please--') && !startsWith(github.head_ref, 'image-updater-') }}
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: '--max-old-space-size=512'
@@ -491,6 +498,7 @@ jobs:
 
   security-scan:
     name: Security Scan
+    if: ${{ !startsWith(github.head_ref, 'release-please--') && !startsWith(github.head_ref, 'image-updater-') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
