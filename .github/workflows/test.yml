@@ -16,9 +16,11 @@ on:
         type: boolean
         default: false
 
-# Cancel in-progress runs for the same branch
+# Cancel in-progress runs for the same branch. The event name keeps the
+# nightly accessibility dispatch on main from cancelling, or being cancelled
+# by, a push run.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 env:
@@ -317,7 +319,10 @@ jobs:
   accessibility-tests:
     name: Accessibility Tests (${{ matrix.viewport }} ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     needs: [build, unit-tests]
-    if: ${{ github.event.inputs.skip_accessibility != 'true' }}
+    # Manual and nightly runs only: the 30-leg matrix cost ~2,900 Actions
+    # minutes a day on pushes and PRs. nightly-accessibility.yml dispatches this
+    # workflow on main when main has moved since the last dispatched run.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.skip_accessibility != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15 # Job-level timeout replaces shell timeout wrapper
     env:
