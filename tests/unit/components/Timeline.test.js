@@ -283,6 +283,12 @@ describe('Timeline Component', () => {
 			expect(wrapper.vm.selectedDate).toBe(date)
 		})
 
+		it('labels each stop with its two-digit year, not a month and day', () => {
+			// "Jul 15" for 2015-07-03 read as July 15th, so the row looked unsorted.
+			const labels = wrapper.findAll('.date-label').map((label) => label.text())
+			expect(labels).toEqual(["'15", "'16", "'18", "'19", "'20", "'21", "'22", "'23", "'24", "'25"])
+		})
+
 		it('should handle all date formats consistently', () => {
 			const dates = wrapper.vm.dates
 			const datePattern = /^\d{4}-\d{2}-\d{2}$/
