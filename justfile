@@ -301,6 +301,34 @@ test-e2e *args:
 test-e2e-mock *args:
     VITE_E2E_TEST=true SKIP_REQUIRES_DATABASE=true bun run test:e2e {{ args }}
 
+# Layout-overflow check of Analysis panels at desktop, tablet and mobile widths, against the mock API.
+# `just test-overflow` checks the panels this branch can affect; `all` runs every panel (~10 min);
+# a comma-separated list of registry ids runs those. See testing.md.
+[group: "testing"]
+test-overflow panels="changed":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{ panels }}" in
+        changed) targets=$(node scripts/overflow-targets.mjs) ;;
+        *) targets="{{ panels }}" ;;
+    esac
+    if [ -z "$targets" ]; then
+        echo -e "{{CHECK}} No Analysis panel reaches a file this branch changes; nothing to check."
+        exit 0
+    fi
+    echo -e "{{ARROW}} Panels: $targets"
+    just mock-generate
+    # vite picks the mock API at startup only if it is already running.
+    started=0
+    if ! pgrep -f "bun.*server.ts" > /dev/null; then
+        (cd {{MOCK_API_DIR}} && bun run start > /dev/null 2>&1 &)
+        started=1
+        sleep 2
+    fi
+    trap '[ "$started" = 1 ] && just mock-stop' EXIT
+    # One worker: parallel viewer loads on one dev server make Cesium init fail.
+    OVERFLOW_PANELS="$targets" bun run test:overflow
+
 # Reproduce the CI Lighthouse run locally: source-map-less build (avoids PROTOCOL_TIMEOUT), SwiftShader, Cesium frame cap (ADR-011). See development.md.
 [group: "testing"]
 lighthouse-local:

@@ -30,6 +30,7 @@ just stop        # Stop all services
 - `just test` - All tests
 - `just test-quick` - Unit tests only
 - `just test-e2e` - End-to-end tests
+- `just test-overflow` - Layout-overflow check of the Analysis panels this branch affects (`all` for every panel; see `.claude/rules/testing.md`)
 
 **Note:** E2E tests require `VITE_E2E_TEST=true` to expose the Cesium viewer to the test harness. Use `bun run dev:test` to start the dev server with this flag, or run tests via `just test-e2e` which handles this automatically.
 

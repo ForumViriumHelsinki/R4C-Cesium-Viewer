@@ -102,6 +102,49 @@ line. #998 lists the quarantined tests; remove the `fixme` when one is fixed.
 `--list` still lists `fixme` tests, so the ceiling and the shard split do not
 change when a test is quarantined.
 
+## Layout Overflow Check (`tests/e2e/layout/`)
+
+`panel-overflow.spec.ts` opens Analysis panels and fails when an element in the
+sidebar or the analysis drawer extends past the box that clips or scrolls it, or
+past the viewport (#1095, #1103). It runs in the `overflow-desktop`, `-tablet` and
+`-mobile` projects (1280, 768 and 375 px wide) against the mock API, never in
+`test:e2e` or the accessibility matrix, whose jobs have no backend.
+
+| Command                                              | Runs                                                   |
+| ---------------------------------------------------- | ------------------------------------------------------ |
+| `just test-overflow`                                 | Panels this branch can affect, at all three widths     |
+| `just test-overflow all`                             | Every registry panel at every level and view (~10 min) |
+| `just test-overflow climate-adaptation,grid-options` | Those registry ids                                     |
+
+`scripts/overflow-targets.mjs` picks the panels. It maps each registry entry's
+components to every module they reach (`reachableFrom` in
+`tests/unit/contracts/sourceGraph.js`) and keeps the entries that reach a changed
+file. Changes to the shared shell (`ControlPanel.vue`, `AnalysisPanel.vue`,
+`App.vue`, `main.js`, `src/styles/`, `src/plugins/`, dependencies, the check
+itself) select every panel; files no panel reaches select none.
+
+The **Panel Overflow** CI job runs the same selection on pull requests. It is
+informational: no ruleset requires it, and Test Summary lists its result but
+never fails on it.
+
+- **The spec uses the plain `test` fixture, not `cesiumTest`.** In CI
+  `cesiumTest` replaces Cesium with a mock; the check needs the panels the real
+  app renders.
+- **One page per viewport.** The viewer loads once in `beforeAll`; each case sets
+  level and view through `globalStore` and opens the panel by its registry label.
+  Most of a run is those three viewer loads. `just test-overflow` runs one
+  worker: three parallel loads on one dev server made Cesium initialisation fail.
+- **Layout waits poll for stability.** `waitForLayoutStable` in
+  `tests/e2e/helpers/overflow.ts` waits until the sidebar, drawer, active tab pane
+  and expansion panels stop moving. Vuetify's transitions leave no class that is
+  reliably present while they run and absent after.
+- **The detector exempts what overhangs by design**: slider thumbs, the collapsed
+  rail, and tab panes parked outside their window during a slide. A finding
+  inside any other element is a real overflow. `scanned` must be above zero, so
+  a closed sidebar cannot pass.
+- **The control test** injects the pre-#1095 400 px timeline width and expects a
+  finding. If it starts passing, the detector has stopped seeing overflows.
+
 ## Component Architecture for Testing
 
 ### Timeline Components by Navigation Level
