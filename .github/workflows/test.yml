@@ -42,7 +42,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2 # Pinned for reproducible builds
+          bun-version: 1.4.4 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
         uses: actions/cache@v5.1.0
@@ -71,7 +71,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2 # Pinned for reproducible builds
+          bun-version: 1.4.4 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
         uses: actions/cache@v5.1.0
@@ -111,7 +111,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2 # Pinned for reproducible builds
+          bun-version: 1.4.4 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
         uses: actions/cache@v5.1.0
@@ -150,7 +150,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2 # Pinned for reproducible builds
+          bun-version: 1.4.4 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
         uses: actions/cache@v5.1.0
@@ -190,7 +190,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2 # Pinned for reproducible builds
+          bun-version: 1.4.4 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
         uses: actions/cache@v5.1.0
@@ -241,7 +241,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2 # Pinned for reproducible builds
+          bun-version: 1.4.4 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
         uses: actions/cache@v5.1.0
@@ -361,7 +361,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2 # Pinned for reproducible builds
+          bun-version: 1.4.4 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
         uses: actions/cache@v5.1.0
@@ -437,7 +437,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2 # Pinned for reproducible builds
+          bun-version: 1.4.4 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
         uses: actions/cache@v5.1.0
@@ -509,7 +509,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2 # Pinned for reproducible builds
+          bun-version: 1.4.4 # Pinned for reproducible builds
 
       - name: Cache Bun dependencies
         uses: actions/cache@v5.1.0
