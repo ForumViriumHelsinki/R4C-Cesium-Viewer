@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.59.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.5...r4c-cesium-viewer-v1.59.6) (2026-10-13)
+
+
+### Bug Fixes
+
+* **address:** unwrap Cesium properties before sentinel check ([#1099](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1099)) ([726c187](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/726c1873825eb0b11eddc448b3853944e3c0b60d))
+* **cesium:** read entity properties via the public API and stop PropertyBag misuse ([#1102](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1102)) ([3e418a2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3e418a21b3f11e4fe96f22ac23a905be131b0ed2))
+* **othernature:** assign cached colours instead of mutating material in place ([#1109](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1109)) ([20c7655](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/20c7655c7a0c7cd4e07b56cea0c294f9528fa0fb))
+
 ## [1.59.5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.4...r4c-cesium-viewer-v1.59.5) (2026-10-11)
 
 
