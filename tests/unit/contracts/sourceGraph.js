@@ -166,18 +166,25 @@ let cached = null
  *   eventCalls: Array<{file: string, line: number, method: string, names: string[]}>
  * }} paths are relative to the repo root
  */
-export const buildSourceGraph = () => {
-	if (cached) return cached
+let scanned = null
+
+const scanSources = () => {
+	if (scanned) return scanned
 	const files = listSourceFiles(SRC)
 	const components = new Map(
 		files
 			.filter((f) => f.endsWith('.vue') && AUTO_COMPONENT_DIRS.some((d) => f.startsWith(d)))
 			.map((f) => [basename(f, '.vue'), f])
 	)
-	const scans = new Map(files.map((f) => [f, scanFile(f)]))
+	scanned = { files, components, scans: new Map(files.map((f) => [f, scanFile(f)])) }
+	return scanned
+}
 
+/** @param {string[]} roots absolute paths @returns {Set<string>} absolute paths */
+const walk = (roots) => {
+	const { components, scans } = scanSources()
 	const reachable = new Set()
-	const queue = [ENTRY]
+	const queue = [...roots]
 	while (queue.length > 0) {
 		const file = queue.pop()
 		if (reachable.has(file)) continue
@@ -193,6 +200,22 @@ export const buildSourceGraph = () => {
 			if (target) queue.push(target)
 		}
 	}
+	return reachable
+}
+
+/**
+ * Modules reachable from the given roots, e.g. the files a lazily loaded panel
+ * pulls in.
+ * @param {string[]} roots paths relative to the repo root
+ * @returns {Set<string>} paths relative to the repo root
+ */
+export const reachableFrom = (roots) =>
+	new Set([...walk(roots.map((r) => join(ROOT, r)))].map((f) => relative(ROOT, f)))
+
+export const buildSourceGraph = () => {
+	if (cached) return cached
+	const { files, scans } = scanSources()
+	const reachable = walk([ENTRY])
 
 	cached = {
 		files: files.map((f) => relative(ROOT, f)).sort(),
