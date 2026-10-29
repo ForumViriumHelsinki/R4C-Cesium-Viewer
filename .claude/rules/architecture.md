@@ -186,6 +186,26 @@ Prefer the public form because:
 When you migrate a read here, update its unit-test mock in the same change — see
 `testing.md` "Mocking Cesium Entity Properties".
 
+### Passing a `PropertyBag` to Code That Expects Plain Values
+
+When a helper or a GeoJSON feature takes properties as a plain object, pass
+`entity.properties.getValue()`, which returns a plain object of every property's
+value. Do not pass `entity.properties` itself. Its values are `ConstantProperty`
+wrappers, and nothing fails when they meet code that expects plain values:
+
+- A wrapper is always truthy, so `if (!props.asukkaita) return` does not skip a
+  wrapped `0`.
+- A wrapper is never `===` a number, so a sentinel check passes it through.
+- Arithmetic and string building coerce it through `toString()`, so they appear
+  to work: `cell.ika0_9 / cell.asukkaita` divides, and `String(wrapper)` prints
+  the value.
+
+Both bugs fixed this way showed wrong data with no error: the HSY sentinel
+`999999999` in building addresses (#1098), and `NaN` population shares for a
+zero-resident grid cell (#1101). The unit tests that pinned them build a real
+`Entity` with `await vi.importActual('cesium')`; a hand-written mock with plain
+values cannot reproduce either.
+
 ## Development Proxy Configuration
 
 Proxy endpoints in development (`vite.config.js`):
