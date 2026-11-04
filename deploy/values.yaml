@@ -28,7 +28,7 @@ serviceAccount:
 # Cloud SQL Proxy for both app and migrations
 initContainers:
 - name: cloud-sql-proxy
-  image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.19.0
+  image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.26.3
   restartPolicy: Always
   args:
   - '--structured-logs'
