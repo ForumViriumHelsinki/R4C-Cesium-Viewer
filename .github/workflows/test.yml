@@ -532,6 +532,108 @@ jobs:
         run: bun scripts/security/audit-gate.mjs
 
   # Generate workflow summary after all jobs complete
+  # Informational: no ruleset requires it, and Test Summary reports it without failing.
+  # Runs tests/e2e/layout only for the Analysis panels whose components reach a
+  # file the PR changes (scripts/overflow-targets.mjs); `just test-overflow all`
+  # runs every panel locally.
+  panel-overflow:
+    name: Panel Overflow
+    needs: [build]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NODE_OPTIONS: '--max-old-space-size=2048'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # the targets script diffs against the base branch
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2 # Pinned for reproducible builds
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v5.1.0
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Select panels
+        id: targets
+        run: node scripts/overflow-targets.mjs --base "origin/${{ github.base_ref }}" --github-output
+
+      - name: Report skip
+        if: steps.targets.outputs.panels == ''
+        run: echo "No Analysis panel reaches a file this PR changes; nothing to check."
+
+      - name: Cache Playwright browsers
+        if: steps.targets.outputs.panels != ''
+        uses: actions/cache@v5.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
+
+      - name: Install Playwright browsers
+        if: steps.targets.outputs.panels != ''
+        run: bunx playwright install --with-deps chromium
+
+      - name: Download build artifact
+        if: steps.targets.outputs.panels != ''
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - name: Start mock API
+        if: steps.targets.outputs.panels != ''
+        working-directory: mock-api
+        run: |
+          bun install --frozen-lockfile
+          bun run generate --density 50
+          nohup bun run start > ../mock-api.log 2>&1 &
+          timeout 30 bash -c 'until curl -s -o /dev/null http://localhost:5050; do sleep 1; done'
+
+      - name: Start frontend server
+        if: steps.targets.outputs.panels != ''
+        uses: ./.github/actions/start-server-with-healthcheck
+        with:
+          # vite.config.js reads this to proxy /pygeoapi to the mock API.
+          server-command: 'VITE_PYGEOAPI_HOST=localhost:5050 bun run preview'
+          server-url: 'http://localhost:4173'
+          timeout: '30'
+
+      - name: Run overflow check
+        if: steps.targets.outputs.panels != ''
+        run: bun run test:overflow
+        env:
+          OVERFLOW_PANELS: ${{ steps.targets.outputs.panels }}
+
+      - name: Cleanup server process
+        if: always() && steps.targets.outputs.panels != ''
+        run: ./.github/scripts/cleanup-server.sh
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v7
+        if: failure() && steps.targets.outputs.panels != ''
+        with:
+          name: playwright-report-panel-overflow
+          path: |
+            playwright-report/
+            test-results/
+            mock-api.log
+          retention-days: 7
+
   summary:
     name: Test Summary
     runs-on: ubuntu-latest
@@ -545,6 +647,7 @@ jobs:
         e2e-tests,
         accessibility-tests,
         performance-tests,
+        panel-overflow,
         security-scan,
       ]
     if: always()
@@ -624,6 +727,15 @@ jobs:
             echo "- ⏭️ **Performance Tests**: Skipped" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ❌ **Performance Tests**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Panel Overflow (informational; skipped on pushes)
+          if [ "${{ needs.panel-overflow.result }}" == "success" ]; then
+            echo "- ✅ **Panel Overflow**: Passed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.panel-overflow.result }}" == "skipped" ]; then
+            echo "- ⏭️ **Panel Overflow**: Skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ **Panel Overflow**: Failed (informational)" >> $GITHUB_STEP_SUMMARY
           fi
 
           # Security Scan

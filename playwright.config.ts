@@ -141,7 +141,7 @@ export default defineConfig({
 			/* The accessibility-* projects below own tests/e2e/accessibility (the CI
 			 * a11y matrix). Matching those specs here too ran them a fourth time in
 			 * the End-to-End job, which then hit its 15-minute timeout (#947). */
-			testIgnore: /tests\/e2e\/accessibility\//,
+			testIgnore: [/tests\/e2e\/accessibility\//, /tests\/e2e\/layout\//],
 			/* Makes each test its own unit for `--shard`, which the End-to-End CI
 			 * matrix uses. Without it Playwright shards whole files, and all 46
 			 * map-click-feedback.spec.ts tests land in one shard that cannot finish
@@ -192,8 +192,23 @@ export default defineConfig({
 		{
 			name: 'Mobile Chrome',
 			use: { ...devices['Pixel 5'] },
-			testMatch: /tests\/e2e\/(?!accessibility).*\.spec\.ts/,
+			testMatch: /tests\/e2e\/(?!accessibility|layout).*\.spec\.ts/,
 		},
+
+		// Layout-overflow check against the mock API (`just test-overflow`). Not
+		// part of test:e2e: the End-to-End job has no backend, so data-gated
+		// panels would not render there. OVERFLOW_PANELS narrows the panels.
+		...(
+			[
+				['desktop', 1280, 900],
+				['tablet', 768, 1024],
+				['mobile', 375, 667],
+			] as const
+		).map(([name, width, height]) => ({
+			name: `overflow-${name}`,
+			use: { ...devices['Desktop Chrome'], viewport: { width, height } },
+			testMatch: /tests\/e2e\/layout\/.*\.spec\.ts/,
+		})),
 	],
 
 	/* Run your local dev server before starting the tests */
