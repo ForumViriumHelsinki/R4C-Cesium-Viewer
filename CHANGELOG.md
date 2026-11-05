@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.6...r4c-cesium-viewer-v1.22.7) (2026-11-05)
+
+
+### Bug Fixes
+
+* **docker:** rebuild legacy 1.22.x on nginx:1.31 for the eMudhra trust-store fix ([#1128](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1128)) ([6772bd8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6772bd85e620377b8cb5ecce48960318c02862b3))
+
 ## [1.22.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.22.5...r4c-cesium-viewer-v1.22.6) (2026-04-15)
 
 
