@@ -13,7 +13,10 @@ COPY . .
 
 RUN npx vite build && npx vite optimize
 
-FROM nginx:1.27
+# nginx:1.27 is no longer rebuilt; its last image ships ca-certificates
+# 20230311 with the eMudhra-compromised roots (infrastructure#2628).
+# 1.31 ships the fixed Debian bundle (20250419+deb13u1).
+FROM nginx:1.31
 
 # Default PyGeoAPI host — overridden at runtime via deploy/values.yaml env
 ENV VITE_PYGEOAPI_HOST=pygeoapi.dataportal.fi
