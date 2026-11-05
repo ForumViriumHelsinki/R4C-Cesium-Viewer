@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.59.7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.6...r4c-cesium-viewer-v1.59.7) (2026-11-04)
+
+
+### Bug Fixes
+
+* **deploy:** run cloud-sql-proxy 2.26.3 (eMudhra CA bundle) ([#1125](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1125)) ([5448aa3](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/5448aa38dd2b1ebd58b69d2b1c746c98e014ea08))
+
 ## [1.59.6](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.5...r4c-cesium-viewer-v1.59.6) (2026-10-13)
 
 
