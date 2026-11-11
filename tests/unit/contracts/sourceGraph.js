@@ -159,13 +159,6 @@ const scanFile = (file) => {
 
 let cached = null
 
-/**
- * @returns {{
- *   files: string[],
- *   reachable: Set<string>,
- *   eventCalls: Array<{file: string, line: number, method: string, names: string[]}>
- * }} paths are relative to the repo root
- */
 let scanned = null
 
 const scanSources = () => {
@@ -212,6 +205,13 @@ const walk = (roots) => {
 export const reachableFrom = (roots) =>
 	new Set([...walk(roots.map((r) => join(ROOT, r)))].map((f) => relative(ROOT, f)))
 
+/**
+ * @returns {{
+ *   files: string[],
+ *   reachable: Set<string>,
+ *   eventCalls: Array<{file: string, line: number, method: string, names: string[]}>
+ * }} paths are relative to the repo root
+ */
 export const buildSourceGraph = () => {
 	if (cached) return cached
 	const { files, scans } = scanSources()

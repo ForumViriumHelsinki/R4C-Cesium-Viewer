@@ -326,6 +326,11 @@ test-overflow panels="changed":
         sleep 2
     fi
     trap '[ "$started" = 1 ] && just mock-stop' EXIT
+    # Playwright reuses a dev server already on 5173, and that server chose its
+    # pygeoapi target when it started (vite.config.js), maybe without the mock.
+    if curl -s -o /dev/null http://localhost:5173; then
+        echo -e "{{CROSS}} Reusing the dev server on :5173. If it started before the mock API, it serves production data: stop it and re-run."
+    fi
     # One worker: parallel viewer loads on one dev server make Cesium init fail.
     OVERFLOW_PANELS="$targets" bun run test:overflow
 

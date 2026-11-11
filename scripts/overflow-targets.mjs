@@ -6,7 +6,10 @@
  * Each panel in src/constants/analysisRegistry.js is mapped to every module its
  * components reach (tests/unit/contracts/sourceGraph.js). A changed file selects
  * the panels that reach it. A change to the shared shell (sidebar, analysis
- * drawer, theme, styles, dependencies, the check itself) selects every panel.
+ * drawer, theme, styles, dependencies, the check itself) selects every panel, as
+ * does a change to any component the shell renders that no panel reaches: the
+ * entry list and card every panel sits in, and the sidebar controls the
+ * detector also scans.
  *
  * Usage:
  *   node scripts/overflow-targets.mjs [--base <ref>] [--github-output]
@@ -17,11 +20,15 @@
  * writes `panels=<list>` to $GITHUB_OUTPUT.
  */
 import { execFileSync } from 'node:child_process'
-import { appendFileSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { appendFileSync, readFileSync, realpathSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { ROOT, reachableFrom } from '../tests/unit/contracts/sourceGraph.js'
 
 const REGISTRY = 'src/constants/analysisRegistry.js'
+
+/** Entry points of the sidebar and the analysis drawer. */
+export const SHELL_ROOTS = ['src/pages/ControlPanel.vue', 'src/components/AnalysisPanel.vue']
 
 /** Files every panel renders inside or is styled by. */
 export const SHARED_PATTERNS = [
@@ -30,6 +37,7 @@ export const SHARED_PATTERNS = [
 	/^src\/constants\/analysisRegistry\.js$/,
 	/^src\/main\.js$/,
 	/^src\/App\.vue$/,
+	/^src\/constants\/layout\.js$/,
 	/^src\/styles\//,
 	/^src\/plugins\//,
 	/^vite\.config\.js$/,
@@ -71,12 +79,26 @@ export const registryComponents = (source) => {
 }
 
 /**
+ * Components the shell reaches that no panel reaches. The shell also reaches
+ * every panel through the registry's lazy imports, so those are subtracted.
+ * @param {Set<string>} shellFiles files reachable from SHELL_ROOTS
+ * @param {Map<string, Set<string>>} panelFiles panel id → files it reaches
+ * @returns {Set<string>}
+ */
+export const shellComponents = (shellFiles, panelFiles) => {
+	const panelReached = new Set([...panelFiles.values()].flatMap((files) => [...files]))
+	return new Set([...shellFiles].filter((f) => f.endsWith('.vue') && !panelReached.has(f)))
+}
+
+/**
  * @param {string[]} changed paths relative to the repo root
  * @param {Map<string, Set<string>>} panelFiles panel id → files it reaches
+ * @param {Set<string>} [shell] shell components, from shellComponents
  * @returns {'all' | string[]}
  */
-export const selectPanels = (changed, panelFiles) => {
-	if (changed.some((file) => SHARED_PATTERNS.some((p) => p.test(file)))) return 'all'
+export const selectPanels = (changed, panelFiles, shell = new Set()) => {
+	if (changed.some((file) => shell.has(file) || SHARED_PATTERNS.some((p) => p.test(file))))
+		return 'all'
 	return [...panelFiles]
 		.filter(([, files]) => changed.some((file) => files.has(file)))
 		.map(([id]) => id)
@@ -99,7 +121,8 @@ const main = () => {
 	const base = baseIndex >= 0 ? args[baseIndex + 1] : 'origin/main'
 	const components = registryComponents(readFileSync(join(ROOT, REGISTRY), 'utf8'))
 	const panelFiles = new Map([...components].map(([id, files]) => [id, reachableFrom(files)]))
-	const selected = selectPanels(changedFiles(base), panelFiles)
+	const shell = shellComponents(reachableFrom(SHELL_ROOTS), panelFiles)
+	const selected = selectPanels(changedFiles(base), panelFiles, shell)
 	const value = selected === 'all' ? 'all' : selected.join(',')
 	console.log(value)
 	if (args.includes('--github-output') && process.env.GITHUB_OUTPUT) {
@@ -107,4 +130,14 @@ const main = () => {
 	}
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main()
+/**
+ * Whether the module at `moduleUrl` is the script node was started with.
+ * pathToFileURL percent-encodes the path as import.meta.url does, so a checkout
+ * path with spaces or other reserved characters still matches.
+ * @param {string} moduleUrl import.meta.url
+ * @param {string | undefined} scriptPath process.argv[1], symlinks resolved
+ */
+export const isMain = (moduleUrl, scriptPath) =>
+	Boolean(scriptPath) && moduleUrl === pathToFileURL(resolve(scriptPath)).href
+
+if (isMain(import.meta.url, process.argv[1] && realpathSync(process.argv[1]))) main()
