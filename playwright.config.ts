@@ -198,6 +198,8 @@ export default defineConfig({
 		// Layout-overflow check against the mock API (`just test-overflow`). Not
 		// part of test:e2e: the End-to-End job has no backend, so data-gated
 		// panels would not render there. OVERFLOW_PANELS narrows the panels.
+		// No retries: an overflow is deterministic, and each failed attempt
+		// restarts the worker and reloads the viewer in beforeAll (~1 min in CI).
 		...(
 			[
 				['desktop', 1280, 900],
@@ -208,6 +210,7 @@ export default defineConfig({
 			name: `overflow-${name}`,
 			use: { ...devices['Desktop Chrome'], viewport: { width, height } },
 			testMatch: /tests\/e2e\/layout\/.*\.spec\.ts/,
+			retries: 0,
 		})),
 	],
 

@@ -531,17 +531,23 @@ jobs:
         # vulnerable. See scripts/security/audit-gate.mjs.
         run: bun scripts/security/audit-gate.mjs
 
-  # Generate workflow summary after all jobs complete
   # Informational: no ruleset requires it, and Test Summary reports it without failing.
   # Runs tests/e2e/layout only for the Analysis panels whose components reach a
   # file the PR changes (scripts/overflow-targets.mjs); `just test-overflow all`
   # runs every panel locally.
+  # One leg per viewport: all three in one job took ~32 min for every panel even
+  # without retries. The job timeout sits above Playwright's 30-minute
+  # globalTimeout, so a slow leg ends with Playwright's report, not a cancellation.
   panel-overflow:
-    name: Panel Overflow
+    name: Panel Overflow (${{ matrix.viewport }})
     needs: [build]
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, tablet, mobile]
     env:
       NODE_OPTIONS: '--max-old-space-size=2048'
 
@@ -615,7 +621,7 @@ jobs:
 
       - name: Run overflow check
         if: steps.targets.outputs.panels != ''
-        run: bun run test:overflow
+        run: bunx playwright test --project=overflow-${{ matrix.viewport }}
         env:
           OVERFLOW_PANELS: ${{ steps.targets.outputs.panels }}
 
@@ -625,15 +631,17 @@ jobs:
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v7
-        if: failure() && steps.targets.outputs.panels != ''
+        # cancelled() too: a run stopped at the job timeout still leaves its partial report.
+        if: (failure() || cancelled()) && steps.targets.outputs.panels != ''
         with:
-          name: playwright-report-panel-overflow
+          name: playwright-report-panel-overflow-${{ matrix.viewport }}
           path: |
             playwright-report/
             test-results/
             mock-api.log
           retention-days: 7
 
+  # Generate workflow summary after all jobs complete
   summary:
     name: Test Summary
     runs-on: ubuntu-latest
