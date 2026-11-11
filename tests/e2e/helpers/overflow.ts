@@ -5,9 +5,16 @@
  * inside the sidebar or an open analysis drawer that extend past the nearest
  * ancestor that clips or scrolls them horizontally, or past the viewport.
  */
-import { expect, type Page } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 
 export type Overflow = { element: string; reason: string }
+
+/** The registry fields the helpers need to open and locate a panel. */
+export type PanelEntry = {
+	label: string
+	title?: string
+	placement: 'inline' | 'drawer' | 'expansion'
+}
 
 /**
  * Runs in the browser; must stay self-contained. `scanned` counts the on-screen
@@ -136,6 +143,7 @@ export async function setLevelAndView(
 /**
  * Opens a sidebar tab and waits until its pane has finished sliding in.
  * Clicks through the DOM: the disclaimer scrim would intercept a pointer click.
+ * @returns what was still moving when the stability wait gave up, or null
  */
 export async function openSidebarTab(page: Page, name: string) {
 	const tab = page
@@ -143,54 +151,133 @@ export async function openSidebarTab(page: Page, name: string) {
 		.first()
 	await tab.evaluate((el: HTMLElement) => el.click())
 	await expect(tab, `sidebar tab ${name} selected`).toHaveAttribute('aria-selected', 'true')
-	await waitForLayoutStable(page)
+	return noteUnsettled(`after opening the ${name} tab`, await waitForLayoutStable(page))
 }
+
+const ANIMATED = [
+	'.control-panel',
+	'.analysis-panel',
+	'.tab-window .v-window-item--active',
+	'.v-expansion-panel-text',
+]
 
 /**
  * Polls the boxes that animate (sidebar, analysis drawer, active tab pane,
  * expansion panels) until three samples 150 ms apart agree. Transitions in
  * Vuetify leave no single class to wait on, but they all move or resize these.
+ * @returns null once settled, or which boxes changed between the last two
+ *   samples when `timeout` ran out
  */
-async function waitForLayoutStable(page: Page, timeout = 10_000) {
-	const signature = () =>
-		page.evaluate(() =>
-			[
-				...document.querySelectorAll(
-					'.control-panel, .analysis-panel, .tab-window .v-window-item--active, .v-expansion-panel-text'
-				),
-			]
-				.map((el) => {
+async function waitForLayoutStable(page: Page, timeout = 10_000): Promise<string | null> {
+	const sample = () =>
+		page.evaluate(
+			(selectors) =>
+				[...document.querySelectorAll(selectors.join(', '))].map((el) => {
 					const r = el.getBoundingClientRect()
-					return `${Math.round(r.left)},${Math.round(r.right)},${Math.round(r.height)}`
-				})
-				.join('|')
+					const title = el
+						.closest('.v-expansion-panel')
+						?.querySelector('.v-expansion-panel-title')
+						?.textContent?.trim()
+					const name = selectors.find((s) => el.matches(s)) ?? el.tagName
+					return {
+						name: title ? `${name} "${title}"` : name,
+						box: `x ${Math.round(r.left)}–${Math.round(r.right)}, h ${Math.round(r.height)}`,
+					}
+				}),
+			ANIMATED
 		)
+	type Box = Awaited<ReturnType<typeof sample>>[number]
+	const changes = (a: Box[], b: Box[]) =>
+		a.length !== b.length
+			? [
+					`${b.length - a.length > 0 ? 'added' : 'removed'} ${Math.abs(b.length - a.length)} box(es)`,
+				]
+			: b.flatMap((box, i) =>
+					box.box === a[i].box ? [] : [`${box.name}: ${a[i].box} → ${box.box}`]
+				)
 	const deadline = Date.now() + timeout
-	let previous = await signature()
+	let previous = await sample()
+	let moved: string[] = []
 	let stable = 0
 	while (stable < 2) {
-		if (Date.now() > deadline)
-			throw new Error(`layout still moving after ${timeout} ms: ${previous}`)
+		if (Date.now() > deadline) return moved.join('; ')
 		await page.waitForTimeout(150)
-		const current = await signature()
-		stable = current === previous ? stable + 1 : 0
+		const current = await sample()
+		const delta = changes(previous, current)
+		if (delta.length > 0) moved = delta
+		stable = delta.length === 0 ? stable + 1 : 0
 		previous = current
+	}
+	return null
+}
+
+/**
+ * Records a stability timeout on the test as a `layout-unstable` annotation,
+ * so the case still scans and a red result means an overflow.
+ */
+function noteUnsettled(where: string, moved: string | null) {
+	if (moved === null) return null
+	const description = `layout still moving ${where}: ${moved}`
+	test.info().annotations.push({ type: 'layout-unstable', description })
+	console.warn(description)
+	return description
+}
+
+/**
+ * Asserts the surface a registry entry opens is on screen: the drawer inside
+ * the viewport with the entry's title and its component mounted, the inline
+ * card with its title and its component mounted, or the entry's expansion panel
+ * expanded. A mounted component can be legitimately empty (Climate Adaptation
+ * at start level), so none of these require the content to have a size.
+ */
+async function expectPanelShown(page: Page, entry: PanelEntry) {
+	const title = entry.title ?? entry.label // analysisTitle() in the registry
+	if (entry.placement === 'drawer') {
+		const drawer = page.locator('.analysis-panel')
+		await expect(drawer, `${title} drawer in the viewport`).toBeInViewport()
+		await expect(drawer.locator('.v-card-title'), `${title} drawer title`).toContainText(title)
+		await expect(
+			drawer.locator('.v-card-text > *').first(),
+			`${title} drawer content mounted`
+		).toBeAttached()
+	} else if (entry.placement === 'inline') {
+		const card = page.locator('.control-panel .chart-card', {
+			has: page.locator('.chart-card__header', { hasText: title }),
+		})
+		// The lazy component renders nothing until its chunk loads; the header
+		// renders at once. Attached, not visible: a chart with no data for the
+		// view (Building Heat Data in grid) mounts with an empty box.
+		await expect(
+			card.locator(':scope > :not(.chart-card__header)').first(),
+			`${title} inline card content mounted`
+		).toBeAttached()
+	} else {
+		const header = page.locator('.control-panel .v-expansion-panel-title', {
+			hasText: entry.label,
+		})
+		await expect(header.first(), `${entry.label} expansion panel expanded`).toHaveAttribute(
+			'aria-expanded',
+			'true'
+		)
 	}
 }
 
-/** Clicks a registry entry's button and waits for what it opens to settle. */
-export async function openPanel(page: Page, label: string) {
-	const button = page.locator('.control-panel button', { hasText: label }).first()
+/**
+ * Clicks a registry entry's button, asserts what it opens is on screen, and
+ * waits for it to settle.
+ * @returns what was still moving when the stability wait gave up, or null
+ */
+export async function openPanel(page: Page, entry: PanelEntry) {
+	const button = page.locator('.control-panel button', { hasText: entry.label }).first()
 	await button.waitFor({ state: 'visible', timeout: 10_000 })
 	// An expansion-panel header toggles; leave it open if a previous test opened it.
 	if ((await button.getAttribute('aria-expanded')) !== 'true') {
 		await button.evaluate((el: HTMLElement) => el.click())
 	}
 	// Lazy panels mount after their chunk loads, then animate open or slide in.
-	await page.waitForTimeout(500)
-	await waitForLayoutStable(page)
+	await expectPanelShown(page, entry)
+	return noteUnsettled(`after opening ${entry.label}`, await waitForLayoutStable(page))
 }
-
 /** Closes the analysis drawer and any open expansion panel. */
 export async function closePanels(page: Page) {
 	await page.evaluate(() => {

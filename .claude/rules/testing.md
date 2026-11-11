@@ -120,12 +120,16 @@ past the viewport (#1095, #1103). It runs in the `overflow-desktop`, `-tablet` a
 components to every module they reach (`reachableFrom` in
 `tests/unit/contracts/sourceGraph.js`) and keeps the entries that reach a changed
 file. Changes to the shared shell (`ControlPanel.vue`, `AnalysisPanel.vue`,
-`App.vue`, `main.js`, `src/styles/`, `src/plugins/`, dependencies, the check
-itself) select every panel; files no panel reaches select none.
+`App.vue`, `main.js`, `src/constants/layout.js`, `src/styles/`, `src/plugins/`,
+dependencies, the check itself) select every panel. So does a change to any
+component the shell reaches that no panel reaches, such as `AnalysisEntryList.vue`,
+`ChartCard.vue` and the Layers-tab controls. Other files no panel reaches select
+none.
 
-The **Panel Overflow** CI job runs the same selection on pull requests. It is
-informational: no ruleset requires it, and Test Summary lists its result but
-never fails on it.
+The **Panel Overflow** CI job runs the same selection on pull requests, one leg
+per viewport. It is informational: no ruleset requires it, and Test Summary lists
+its result but never fails on it. The overflow projects run without retries,
+since an overflow is deterministic and each failed attempt reloads the viewer.
 
 - **The spec uses the plain `test` fixture, not `cesiumTest`.** In CI
   `cesiumTest` replaces Cesium with a mock; the check needs the panels the real
@@ -134,10 +138,18 @@ never fails on it.
   level and view through `globalStore` and opens the panel by its registry label.
   Most of a run is those three viewer loads. `just test-overflow` runs one
   worker: three parallel loads on one dev server made Cesium initialisation fail.
+- **Each case asserts its panel opened before scanning**: the drawer in the
+  viewport with the entry's title and its component mounted, the inline card
+  with its title and its component mounted, or the entry's expansion panel
+  expanded. A mounted component may be empty (no data for that view), so size
+  is not required.
 - **Layout waits poll for stability.** `waitForLayoutStable` in
   `tests/e2e/helpers/overflow.ts` waits until the sidebar, drawer, active tab pane
   and expansion panels stop moving. Vuetify's transitions leave no class that is
-  reliably present while they run and absent after.
+  reliably present while they run and absent after. When the wait gives up, the
+  case gets a `layout-unstable` annotation naming the boxes that moved and scans
+  anyway, so a red case is an overflow; its failure message says the layout was
+  still moving.
 - **The detector exempts what overhangs by design**: slider thumbs, the collapsed
   rail, and tab panes parked outside their window during a slide. A finding
   inside any other element is a real overflow. `scanned` must be above zero, so

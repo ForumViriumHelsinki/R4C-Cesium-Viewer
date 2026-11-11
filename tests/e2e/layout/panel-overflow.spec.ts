@@ -8,7 +8,7 @@
  * computes it from a branch's changed files.
  */
 import { expect, type Page, test } from '@playwright/test'
-import { ANALYSES } from '../../../src/constants/analysisRegistry.js'
+import { ANALYSES, findAnalysis } from '../../../src/constants/analysisRegistry.js'
 import {
 	closePanels,
 	findOverflow,
@@ -52,11 +52,18 @@ test.describe('Analysis panel overflow @layout', () => {
 			for (const view of entry.views ?? ALL_VIEWS) {
 				test(`${entry.label} at ${level} / ${view}`, async () => {
 					await setLevelAndView(page, level, view)
-					await openSidebarTab(page, tabName(entry.tab))
-					await openPanel(page, entry.label)
+					// A stability timeout is annotated, not failed: the case still scans,
+					// and its overflow message says the layout was moving.
+					const unsettled = [
+						await openSidebarTab(page, tabName(entry.tab)),
+						await openPanel(page, entry),
+					].filter(Boolean)
 					const { scanned, overflows } = await page.evaluate(findOverflow)
 					expect(scanned, 'sidebar or analysis drawer on screen').toBeGreaterThan(0)
-					expect(overflows).toEqual([])
+					expect(
+						overflows,
+						unsettled.length > 0 ? `scanned while ${unsettled.join('; ')}` : 'overflows'
+					).toEqual([])
 				})
 			}
 		}
@@ -76,7 +83,9 @@ test.describe('overflow detector', () => {
 			content: '.timeline-section .timeline-card { min-width: 400px !important; }',
 		})
 		try {
-			await openPanel(page, 'Building Heat Data')
+			const buildingHeat = findAnalysis('building-heat')
+			if (!buildingHeat) throw new Error('building-heat is missing from the registry')
+			await openPanel(page, buildingHeat)
 			const { overflows } = await page.evaluate(findOverflow)
 			expect(overflows.map((f) => f.element)).toContainEqual(
 				expect.stringContaining('timeline-card')
