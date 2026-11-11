@@ -205,7 +205,7 @@ const expectOwnContainers = async (ws, tooltips = 1) => {
 	expect(tooltipCounts(ws), 'tooltips, after redraw').toEqual([tooltips, tooltips])
 }
 
-const prop = (value) => ({ _value: value })
+const prop = (value) => ({ getValue: () => value })
 
 // jsdom does no text layout; SocioEconomicsChart wraps axis labels with it.
 if (!('getComputedTextLength' in SVGElement.prototype)) {
@@ -240,7 +240,7 @@ describe('two chart instances draw into their own containers', { tags: ['@unit']
 		useGlobalStore().buildingAddress = 'Testikatu 1'
 		const keys = ['0_9', '10_19', '20_29', '30_39', '40_49', '50_59', '60_69', '70_79', 'over80']
 		usePropsStore().gridBuildingProps = Object.fromEntries(
-			keys.map((k, i) => [`_pop_d_${k}`, prop(0.05 + i / 100)])
+			keys.map((k, i) => [`pop_d_${k}`, prop(0.05 + i / 100)])
 		)
 
 		await expectOwnContainers(await mountTwice(BuildingGridChart))
@@ -282,12 +282,12 @@ describe('two chart instances draw into their own containers', { tags: ['@unit']
 		const date = useGlobalStore().heatDataDate
 		const props = usePropsStore()
 		const building = (id, area, temp) => ({
-			_properties: {
+			properties: {
 				[props.categoricalSelect.value]: prop('brick'),
 				[props.numericalSelect.value]: prop(area),
-				_area_m2: prop(area),
-				_heat_timeseries: prop([{ date, avg_temp_c: temp }]),
-				_kiitun: prop(id),
+				area_m2: prop(area),
+				heat_timeseries: prop([{ date, avg_temp_c: temp }]),
+				kiitun: prop(id),
 			},
 		})
 		entities.list = [building('a', 300, 28), building('b', 400, 30)]
@@ -298,12 +298,12 @@ describe('two chart instances draw into their own containers', { tags: ['@unit']
 	it('Scatterplot', async () => {
 		useToggleStore().helsinkiView = true
 		const building = (id, height, heat) => ({
-			_properties: {
+			properties: {
 				avgheatexposuretobuilding: prop(heat),
 				c_julkisivu: prop('brick'),
 				measured_height: prop(height),
-				_area_m2: prop(300),
-				_id: prop(id),
+				area_m2: prop(300),
+				id: prop(id),
 			},
 		})
 		entities.list = [building('a', 10, 0.4), building('b', 20, 0.6)]
@@ -355,8 +355,8 @@ describe('two chart instances draw into their own containers', { tags: ['@unit']
 		background.hsySelectArea = 'Askisto'
 		const year = background.hsyYear
 		const zone = (nimi) => ({
-			_properties: {
-				_nimi: prop(nimi),
+			properties: {
+				nimi: prop(nimi),
 				[`tree20_m2_${year}`]: prop(10),
 				[`water_m2_${year}`]: prop(20),
 				[`building_m2_${year}`]: prop(30),

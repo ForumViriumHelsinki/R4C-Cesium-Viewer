@@ -40,12 +40,12 @@ export async function handleBuildingFeature(properties, context) {
 	try {
 		// Update application state to building level
 		store.setLevel('building')
-		store.setPostalCode(properties._postinumero._value)
+		store.setPostalCode(properties.postinumero.getValue())
 		elementsDisplayService.setBuildingDisplay('none')
 		buildingService.resetBuildingOutline()
 
 		// Process building charts asynchronously
-		await buildingService.createBuildingCharts(properties._avg_temp_c, properties)
+		await buildingService.createBuildingCharts(properties.avg_temp_c, properties)
 	} catch (error) {
 		logger.error('Error handling building feature:', error?.message || error)
 	}
@@ -70,9 +70,9 @@ export async function processBuildingAtPostalCodeLevel(entity, context) {
 
 	store.setBuildingAddress(findAddressForBuilding(properties))
 
-	if (properties._locationUnder40) {
-		if (properties._locationUnder40._value) {
-			coldAreaService.addColdPoint(properties._locationUnder40._value)
+	if (properties.locationUnder40) {
+		if (properties.locationUnder40.getValue()) {
+			coldAreaService.addColdPoint(properties.locationUnder40.getValue())
 		}
 	}
 

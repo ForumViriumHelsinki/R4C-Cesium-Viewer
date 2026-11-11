@@ -70,7 +70,7 @@ export function isValidBuildingEntity(entity) {
 
 /**
  * Safely gets a property value from an entity's properties
- * Handles both _properties and properties formats, and the _value wrapper
+ * Handles both _properties and properties formats, and unwraps the Cesium property
  *
  * @param {Object|null|undefined} entity - Entity to get property from
  * @param {string} propertyName - Name of the property to retrieve
@@ -88,6 +88,5 @@ export function getPropertyValue(entity, propertyName) {
 		return undefined
 	}
 
-	// Cesium properties often have a _value wrapper
-	return prop._value
+	return prop.getValue()
 }

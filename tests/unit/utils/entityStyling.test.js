@@ -9,8 +9,8 @@ describe('entityStyling', () => {
 	describe('calculateBuildingHeight', () => {
 		it('should return measured_height when available', () => {
 			const properties = {
-				measured_height: { _value: 25.5 },
-				i_kerrlkm: { _value: 5 },
+				measured_height: { getValue: () => 25.5 },
+				i_kerrlkm: { getValue: () => 5 },
 			}
 
 			expect(calculateBuildingHeight(properties)).toBe(25.5)
@@ -18,7 +18,7 @@ describe('entityStyling', () => {
 
 		it('should calculate height from floor count when measured_height is missing', () => {
 			const properties = {
-				i_kerrlkm: { _value: 5 },
+				i_kerrlkm: { getValue: () => 5 },
 			}
 
 			// 5 floors * 3.2m per floor = 16.0m
@@ -41,7 +41,7 @@ describe('entityStyling', () => {
 
 		it('should handle zero floor count', () => {
 			const properties = {
-				i_kerrlkm: { _value: 0 },
+				i_kerrlkm: { getValue: () => 0 },
 			}
 
 			// Zero floors should return default height, not 0
@@ -51,7 +51,7 @@ describe('entityStyling', () => {
 		it('should handle negative measured_height by returning it as-is', () => {
 			// Edge case - implementation should handle this gracefully
 			const properties = {
-				measured_height: { _value: -5 },
+				measured_height: { getValue: () => -5 },
 			}
 
 			// Negative height is technically invalid but we return as-is for transparency
@@ -60,27 +60,27 @@ describe('entityStyling', () => {
 
 		it('should prefer measured_height over floor count', () => {
 			const properties = {
-				measured_height: { _value: 30 },
-				i_kerrlkm: { _value: 5 }, // Would be 16.0m
+				measured_height: { getValue: () => 30 },
+				i_kerrlkm: { getValue: () => 5 }, // Would be 16.0m
 			}
 
 			expect(calculateBuildingHeight(properties)).toBe(30)
 		})
 
-		it('should handle missing _value in measured_height', () => {
+		it('should handle measured_height with no value', () => {
 			const properties = {
-				measured_height: {}, // Has key but no _value
-				i_kerrlkm: { _value: 3 },
+				measured_height: { getValue: () => undefined }, // Has key but no value
+				i_kerrlkm: { getValue: () => 3 },
 			}
 
 			// Should fall back to floor count
 			expect(calculateBuildingHeight(properties)).toBeCloseTo(9.6) // 3 * 3.2
 		})
 
-		it('should handle null _value in measured_height', () => {
+		it('should handle null measured_height value', () => {
 			const properties = {
-				measured_height: { _value: null },
-				i_kerrlkm: { _value: 4 },
+				measured_height: { getValue: () => null },
+				i_kerrlkm: { getValue: () => 4 },
 			}
 
 			// Should fall back to floor count

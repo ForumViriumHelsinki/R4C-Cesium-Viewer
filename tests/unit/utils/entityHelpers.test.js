@@ -157,7 +157,7 @@ describe('entityHelpers', () => {
 		it('should return property value from _properties', () => {
 			const entity = {
 				_properties: {
-					c_kayttark: { _value: 123 },
+					c_kayttark: { getValue: () => 123 },
 				},
 			}
 			expect(getPropertyValue(entity, 'c_kayttark')).toBe(123)
@@ -166,7 +166,7 @@ describe('entityHelpers', () => {
 		it('should return property value from properties (without underscore)', () => {
 			const entity = {
 				properties: {
-					c_kayttark: { _value: 123 },
+					c_kayttark: { getValue: () => 123 },
 				},
 			}
 			expect(getPropertyValue(entity, 'c_kayttark')).toBe(123)
@@ -174,7 +174,7 @@ describe('entityHelpers', () => {
 
 		it('should return undefined for missing property', () => {
 			const entity = {
-				_properties: { foo: { _value: 'bar' } },
+				_properties: { foo: { getValue: () => 'bar' } },
 			}
 			expect(getPropertyValue(entity, 'nonexistent')).toBeUndefined()
 		})
@@ -188,10 +188,10 @@ describe('entityHelpers', () => {
 			expect(getPropertyValue(entity, 'foo')).toBeUndefined()
 		})
 
-		it('should return undefined if property exists but _value is missing', () => {
+		it('should return undefined if property exists but its value is undefined', () => {
 			const entity = {
 				_properties: {
-					c_kayttark: { notValue: 123 },
+					c_kayttark: { getValue: () => undefined },
 				},
 			}
 			expect(getPropertyValue(entity, 'c_kayttark')).toBeUndefined()
@@ -200,7 +200,7 @@ describe('entityHelpers', () => {
 		it('should handle property with underscore prefix', () => {
 			const entity = {
 				_properties: {
-					_c_valmpvm: { _value: '2020-01-01' },
+					_c_valmpvm: { getValue: () => '2020-01-01' },
 				},
 			}
 			expect(getPropertyValue(entity, '_c_valmpvm')).toBe('2020-01-01')

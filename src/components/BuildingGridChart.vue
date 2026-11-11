@@ -39,15 +39,15 @@ export default {
 			const height = chartHeight.value - margin.top - margin.bottom
 
 			const data = [
-				{ label: '0-9', value: buildingProps._pop_d_0_9._value },
-				{ label: '10-19', value: buildingProps._pop_d_10_19._value },
-				{ label: '20-29', value: buildingProps._pop_d_20_29._value },
-				{ label: '30-39', value: buildingProps._pop_d_30_39._value },
-				{ label: '40-49', value: buildingProps._pop_d_40_49._value },
-				{ label: '50-59', value: buildingProps._pop_d_50_59._value },
-				{ label: '60-69', value: buildingProps._pop_d_60_69._value },
-				{ label: '70-79', value: buildingProps._pop_d_70_79._value },
-				{ label: '80-', value: buildingProps._pop_d_over80._value },
+				{ label: '0-9', value: buildingProps.pop_d_0_9.getValue() },
+				{ label: '10-19', value: buildingProps.pop_d_10_19.getValue() },
+				{ label: '20-29', value: buildingProps.pop_d_20_29.getValue() },
+				{ label: '30-39', value: buildingProps.pop_d_30_39.getValue() },
+				{ label: '40-49', value: buildingProps.pop_d_40_49.getValue() },
+				{ label: '50-59', value: buildingProps.pop_d_50_59.getValue() },
+				{ label: '60-69', value: buildingProps.pop_d_60_69.getValue() },
+				{ label: '70-79', value: buildingProps.pop_d_70_79.getValue() },
+				{ label: '80-', value: buildingProps.pop_d_over80.getValue() },
 			]
 
 			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)

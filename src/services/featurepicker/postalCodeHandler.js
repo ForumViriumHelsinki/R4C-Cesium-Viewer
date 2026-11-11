@@ -71,7 +71,7 @@ export function getVisiblePostalCodes(viewportRect, postalCodeData) {
 		const intersection = Cesium.Rectangle.intersection(viewportRectangle, entityRectangle)
 
 		if (intersection) {
-			const postalCode = entity.properties.posno._value
+			const postalCode = entity.properties.posno.getValue()
 			visiblePostalCodes.push(postalCode)
 		}
 	}
