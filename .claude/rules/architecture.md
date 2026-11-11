@@ -201,8 +201,8 @@ wrappers, and nothing fails when they meet code that expects plain values:
   the value.
 
 Both bugs fixed this way showed wrong data with no error: the HSY sentinel
-`999999999` in building addresses (#1098), and `NaN` population shares for a
-zero-resident grid cell (#1101). The unit tests that pinned them build a real
+`999999999` in building addresses (issue #1098, fixed in #1099), and `NaN`
+population shares for a zero-resident grid cell (issue #1101, fixed in #1102). The unit tests that pinned them build a real
 `Entity` with `await vi.importActual('cesium')`; a hand-written mock with plain
 values cannot reproduce either.
 
