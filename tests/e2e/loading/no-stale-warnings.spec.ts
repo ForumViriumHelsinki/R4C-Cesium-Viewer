@@ -24,38 +24,34 @@ import { setupCesiumForCI, waitForAppReady } from '../helpers/cesium-helper'
 // Substring emitted by loadingStore.clearStaleLoading() when it clears a layer.
 const STALE_WARNING_NEEDLE = 'Clearing stale loading state'
 
-test(
-	'cold load emits no stale-loading cleanup warnings',
-	{ tag: ['@e2e'] },
-	async ({ page }) => {
-		const staleWarnings: string[] = []
+test('cold load emits no stale-loading cleanup warnings', { tag: ['@e2e'] }, async ({ page }) => {
+	const staleWarnings: string[] = []
 
-		// Attach the listener BEFORE navigation so the cold-load window is covered.
-		page.on('console', (msg) => {
-			const text = msg.text()
-			if (text.includes(STALE_WARNING_NEEDLE)) {
-				staleWarnings.push(text)
-			}
-		})
+	// Attach the listener BEFORE navigation so the cold-load window is covered.
+	page.on('console', (msg) => {
+		const text = msg.text()
+		if (text.includes(STALE_WARNING_NEEDLE)) {
+			staleWarnings.push(text)
+		}
+	})
 
-		await setupCesiumForCI(page)
-		await page.goto('/')
-		await page.waitForLoadState('domcontentloaded')
-		await dismissModalIfPresent(page, 'Explore Map')
-		await waitForAppReady(page, TEST_TIMEOUTS.CESIUM_READY).catch(() => {
-			// App-ready is best-effort here; the assertion is about the absence of
-			// warnings during the load window, not about a specific ready state.
-		})
+	await setupCesiumForCI(page)
+	await page.goto('/')
+	await page.waitForLoadState('domcontentloaded')
+	await dismissModalIfPresent(page, 'Explore Map')
+	await waitForAppReady(page, TEST_TIMEOUTS.CESIUM_READY).catch(() => {
+		// App-ready is best-effort here; the assertion is about the absence of
+		// warnings during the load window, not about a specific ready state.
+	})
 
-		// Idle past the window where the removed timer would have fired. In E2E
-		// mode the old timer used a 3s interval with a 5s staleness threshold, so
-		// ~8s comfortably spans at least one would-be sweep of any tile still
-		// in-flight from the cold load.
-		await page.waitForTimeout(8000)
+	// Idle past the window where the removed timer would have fired. In E2E
+	// mode the old timer used a 3s interval with a 5s staleness threshold, so
+	// ~8s comfortably spans at least one would-be sweep of any tile still
+	// in-flight from the cold load.
+	await page.waitForTimeout(8000)
 
-		expect(
-			staleWarnings,
-			`Expected zero stale-loading cleanup warnings, got:\n${staleWarnings.join('\n')}`
-		).toEqual([])
-	}
-)
+	expect(
+		staleWarnings,
+		`Expected zero stale-loading cleanup warnings, got:\n${staleWarnings.join('\n')}`
+	).toEqual([])
+})

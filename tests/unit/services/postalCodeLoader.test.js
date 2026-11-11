@@ -637,9 +637,9 @@ describe('postalCodeLoader service', () => {
 		it('should extract zone name from matching entity', async () => {
 			const setNameCallback = vi.fn()
 			mockGetByPostalCode.mockReturnValue({
-				_properties: {
-					_posno: { _value: '00100' },
-					_nimi: { _value: 'Helsinki Keskusta' },
+				properties: {
+					posno: { getValue: () => '00100' },
+					nimi: { getValue: () => 'Helsinki Keskusta' },
 				},
 			})
 
@@ -655,9 +655,9 @@ describe('postalCodeLoader service', () => {
 		it('should handle multiple entities and find matching postal code', async () => {
 			const setNameCallback = vi.fn()
 			mockGetByPostalCode.mockReturnValue({
-				_properties: {
-					_posno: { _value: '00100' },
-					_nimi: { _value: 'Target Area' },
+				properties: {
+					posno: { getValue: () => '00100' },
+					nimi: { getValue: () => 'Target Area' },
 				},
 			})
 
@@ -678,9 +678,9 @@ describe('postalCodeLoader service', () => {
 					_entities: {
 						_array: [
 							{
-								_properties: {
-									_posno: { _value: '00200' },
-									_nimi: { _value: 'Area 1' },
+								properties: {
+									posno: { getValue: () => '00200' },
+									nimi: { getValue: () => 'Area 1' },
 								},
 							},
 						],
@@ -722,13 +722,13 @@ describe('postalCodeLoader service', () => {
 				_entityCollection: {
 					_entities: {
 						_array: [
-							{}, // Entity without _properties
+							{}, // Entity without properties
 							{
-								_properties: null, // Entity with null properties
+								properties: null, // Entity with null properties
 							},
 							{
-								_properties: {
-									_posno: { _value: '00100' },
+								properties: {
+									posno: { getValue: () => '00100' },
 									// Missing _nimi
 								},
 							},
@@ -748,9 +748,9 @@ describe('postalCodeLoader service', () => {
 					_entities: {
 						_array: [
 							{
-								_properties: {
-									_posno: { _value: '00100' },
-									_nimi: { _value: undefined },
+								properties: {
+									posno: { getValue: () => '00100' },
+									nimi: { getValue: () => undefined },
 								},
 							},
 						],

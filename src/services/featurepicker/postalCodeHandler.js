@@ -23,13 +23,13 @@ export function getVisiblePostalCodes(viewportRect, postalCodeData) {
 		return []
 	}
 
-	if (!postalCodeData || !postalCodeData._entityCollection) {
+	if (!postalCodeData || !postalCodeData.entities) {
 		logger.warn('[PostalCodeHandler] Postal code data not loaded')
 		return []
 	}
 
 	const Cesium = getCesium()
-	const entities = postalCodeData._entityCollection._entities._array
+	const entities = postalCodeData.entities.values
 	const visiblePostalCodes = []
 
 	// Create Cesium Rectangle for viewport
@@ -71,7 +71,7 @@ export function getVisiblePostalCodes(viewportRect, postalCodeData) {
 		const intersection = Cesium.Rectangle.intersection(viewportRectangle, entityRectangle)
 
 		if (intersection) {
-			const postalCode = entity.properties.posno._value
+			const postalCode = entity.properties.posno.getValue()
 			visiblePostalCodes.push(postalCode)
 		}
 	}

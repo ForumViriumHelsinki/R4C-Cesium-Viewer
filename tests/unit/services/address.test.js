@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { findAddressForBuilding } from '@/services/address.js'
+
+// Real Cesium PropertyBag (tests/setup.js mocks `cesium` globally)
+const { PropertyBag } = await vi.importActual('cesium')
 
 describe('address service', () => {
 	describe('findAddressForBuilding', () => {
@@ -245,6 +248,48 @@ describe('address service', () => {
 			}
 
 			expect(findAddressForBuilding(properties)).toBe('[object Object] [object Object]')
+		})
+	})
+
+	// The building click handler passes entity.properties, a Cesium PropertyBag
+	// whose values are ConstantProperty wrappers rather than plain values.
+	describe('Cesium PropertyBag input', () => {
+		it('should skip the 999999999 sentinel inside a PropertyBag', () => {
+			const properties = new PropertyBag({
+				katu: 'Varikkotie',
+				osno1: 2,
+				oski1: 'b',
+				osno2: 999999999,
+				oski2: null,
+			})
+
+			expect(findAddressForBuilding(properties)).toBe('Varikkotie 2 b')
+		})
+
+		it('should skip a sentinel osno1 inside a PropertyBag', () => {
+			const properties = new PropertyBag({ katu: 'Varikkotie', osno1: 999999999 })
+
+			expect(findAddressForBuilding(properties)).toBe('Varikkotie')
+		})
+
+		it('should read katunimi_suomi and osoitenumero from a PropertyBag', () => {
+			const properties = new PropertyBag({
+				katunimi_suomi: 'Mannerheimintie',
+				osoitenumero: 15,
+			})
+
+			expect(findAddressForBuilding(properties)).toBe('Mannerheimintie 15')
+		})
+
+		it('should fall back to katu when katunimi_suomi is null in a PropertyBag', () => {
+			const properties = new PropertyBag({
+				katunimi_suomi: null,
+				katu: 'Varikkotie',
+				osno1: 3,
+				osno2: 999999999,
+			})
+
+			expect(findAddressForBuilding(properties)).toBe('Varikkotie 3')
 		})
 	})
 })

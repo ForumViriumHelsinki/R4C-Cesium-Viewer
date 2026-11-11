@@ -192,7 +192,7 @@ export default class Traveltime {
 			const entities = dataSource.entities.values
 
 			for (const entity of entities) {
-				const time = entity._properties._time._value
+				const time = entity.properties.time.getValue()
 
 				if (time) {
 					entity.label = {

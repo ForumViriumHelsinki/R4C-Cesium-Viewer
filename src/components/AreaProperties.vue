@@ -348,7 +348,7 @@ function formatValue(value) {
 // Extract all properties from entity
 const allProperties = computed(() => {
 	const entity = effectiveEntity.value
-	if (!entity?._properties) return []
+	if (!entity?.properties) return []
 
 	const props = []
 
@@ -365,11 +365,11 @@ const allProperties = computed(() => {
 	}
 
 	// Extract properties
-	const propertyNames = entity._properties._propertyNames || []
+	const propertyNames = entity.properties.propertyNames || []
 	propertyNames.forEach((key) => {
 		if (shouldExclude(key)) return
 
-		const rawValue = entity._properties[key]?._value
+		const rawValue = entity.properties[key]?.getValue()
 		if (rawValue === null || rawValue === undefined) return
 		if (typeof rawValue === 'object') return // Skip complex objects
 

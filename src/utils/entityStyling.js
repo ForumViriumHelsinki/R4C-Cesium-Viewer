@@ -34,17 +34,17 @@ export const FLOOR_HEIGHT = 3.2
  * 2. Floor count (i_kerrlkm) * FLOOR_HEIGHT - Estimated from number of floors
  * 3. DEFAULT_BUILDING_HEIGHT - Fallback when no data available
  *
- * @param {import('cesium').PropertyBag | { measured_height?: { _value?: number }, i_kerrlkm?: { _value?: number } }} [properties] - Entity properties object (a Cesium PropertyBag, or a plain object with the same shape).
+ * @param {import('cesium').PropertyBag | { measured_height?: { getValue(): number }, i_kerrlkm?: { getValue(): number } }} [properties] - Entity properties object (a Cesium PropertyBag, or a plain object with the same shape).
  * @returns {number} Building height in meters.
  *
  * @example
  * // With measured height
- * const height = calculateBuildingHeight({ measured_height: { _value: 25.5 } });
+ * const height = calculateBuildingHeight({ measured_height: { getValue: () => 25.5 } });
  * // Returns: 25.5
  *
  * @example
  * // With floor count
- * const height = calculateBuildingHeight({ i_kerrlkm: { _value: 5 } });
+ * const height = calculateBuildingHeight({ i_kerrlkm: { getValue: () => 5 } });
  * // Returns: 16.0 (5 * 3.2)
  *
  * @example
@@ -58,13 +58,13 @@ export function calculateBuildingHeight(properties) {
 	}
 
 	// Priority 1: Direct measured height
-	const measuredHeight = properties.measured_height?._value
+	const measuredHeight = properties.measured_height?.getValue()
 	if (measuredHeight != null) {
 		return measuredHeight
 	}
 
 	// Priority 2: Estimate from floor count
-	const floorCount = properties.i_kerrlkm?._value
+	const floorCount = properties.i_kerrlkm?.getValue()
 	if (floorCount != null && floorCount > 0) {
 		return floorCount * FLOOR_HEIGHT
 	}

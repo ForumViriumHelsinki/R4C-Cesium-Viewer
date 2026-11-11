@@ -1,0 +1,33 @@
+name: Nightly Accessibility
+
+# The accessibility matrix in test.yml runs only on workflow_dispatch. This
+# dispatches Test Suite on main once a night, and skips the night when main
+# has not moved since the last dispatched run (manual or nightly).
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  dispatch:
+    name: Dispatch Test Suite if main changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Compare main with the last dispatched run
+        run: |
+          head=$(gh api "repos/$GH_REPO/commits/main" --jq .sha)
+          last=$(gh run list --workflow test.yml --event workflow_dispatch --branch main --limit 1 --json headSha --jq '.[0].headSha // ""')
+          echo "main is ${head}; last dispatched Test Suite ran on ${last:-nothing}"
+          if [ "$head" = "$last" ]; then
+            echo "main unchanged since the last dispatched run; skipping." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh workflow run test.yml --ref main
+          echo "Dispatched Test Suite on main at ${head}." >> "$GITHUB_STEP_SUMMARY"

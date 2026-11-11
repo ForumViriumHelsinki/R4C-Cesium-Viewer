@@ -22,11 +22,11 @@ export const findAddressForBuilding = (properties) => {
 		}
 	} else if (isValidValue(katu)) {
 		address += String(katu).trim()
-		if (isValidValue(osno1) && osno1 !== 999999999) {
+		if (isValidValue(osno1) && !isMissingSentinel(osno1)) {
 			address += ` ${String(osno1).trim()}`
-			if (isValidValue(oski1) && oski1 !== 999999999) {
+			if (isValidValue(oski1) && !isMissingSentinel(oski1)) {
 				address += ` ${String(oski1).trim()}`
-				if (isValidValue(osno2) && osno2 !== 999999999) {
+				if (isValidValue(osno2) && !isMissingSentinel(osno2)) {
 					address += ` ${String(osno2).trim()}`
 				}
 			}
@@ -52,17 +52,43 @@ const removeNulls = (str) => {
 }
 
 /**
+ * HSY building register value for a missing house number or letter
+ * @private
+ */
+const MISSING_VALUE_SENTINEL = 999999999
+
+/**
+ * Checks for the HSY missing-value sentinel, as a number or a numeric string
+ *
+ * @param {*} value - Value to check
+ * @returns {boolean} True if the value is the sentinel
+ * @private
+ */
+const isMissingSentinel = (value) => Number(value) === MISSING_VALUE_SENTINEL
+
+/**
+ * Unwraps a Cesium property (e.g. ConstantProperty) to its plain value
+ *
+ * @param {*} value - Plain value or Cesium property
+ * @returns {*} The plain value
+ * @private
+ */
+const unwrap = (value) => (typeof value?.getValue === 'function' ? value.getValue() : value)
+
+/**
  * Retrieves property value from building properties object
  * Checks for both non-prefixed and underscore-prefixed property names.
  * Prefers non-prefixed version if both exist.
+ * Accepts plain GeoJSON properties or a Cesium PropertyBag (entity.properties),
+ * whose values are ConstantProperty wrappers.
  *
- * @param {Object} properties - Building properties object
+ * @param {Object} properties - Building properties object or Cesium PropertyBag
  * @param {string} key - Property key to look up
  * @returns {*} Property value, or undefined if not found
  * @private
  */
 const getProperty = (properties, key) => {
-	return properties[key] ?? properties[`_${key}`]
+	return unwrap(properties[key]) ?? unwrap(properties[`_${key}`])
 }
 
 /**

@@ -270,7 +270,7 @@ export default class HSYBuilding {
 
 	approximateAttributesForIntersectingBuildings(feature) {
 		try {
-			const cellProps = this.store.currentGridCell.properties
+			const cellProps = this.store.currentGridCell.properties?.getValue()
 			if (!feature.geometry) return
 
 			const featureBBox = turf.bbox(feature)
@@ -284,7 +284,7 @@ export default class HSYBuilding {
 
 			for (let i = 0; i < entities.length; i++) {
 				const entity = entities[i]
-				if (entity.properties?._index?._value !== cellProps._index._value) {
+				if (entity.properties?.index?.getValue() !== cellProps.index) {
 					const entityGeoJson = this.entityToGeoJson(entity)
 					if (entityGeoJson && turf.booleanIntersects(bboxPolygon, entityGeoJson)) {
 						gridProps.push(entityGeoJson.properties)
@@ -301,7 +301,7 @@ export default class HSYBuilding {
 	}
 
 	setGridAttributesForWithinBuilding(feature) {
-		const cellProps = this.store.currentGridCell.properties
+		const cellProps = this.store.currentGridCell.properties?.getValue()
 		if (!cellProps?.asukkaita) return
 
 		const asukkaita = cellProps.asukkaita
@@ -558,7 +558,7 @@ export default class HSYBuilding {
 
 			return /** @type {import('geojson').Feature} */ ({
 				type: 'Feature',
-				properties: entity.properties,
+				properties: entity.properties?.getValue() ?? {},
 				geometry: {
 					type: 'Polygon',
 					coordinates: [coordinates],
@@ -574,7 +574,7 @@ export default class HSYBuilding {
 		for (const entity of entities) {
 			if (!entity.polygon) continue
 
-			const floorCount = entity.properties?.kerrosten_lkm?._value
+			const floorCount = entity.properties?.kerrosten_lkm?.getValue()
 			entity.polygon.extrudedHeight =
 				floorCount != null && floorCount < 999 ? floorCount * 3.2 : 2.7
 		}
@@ -645,7 +645,7 @@ export default class HSYBuilding {
 	hideNonSoteBuilding(entity) {
 		if (!this.toggleStore.hideNonSote) return
 
-		const kayttotark = entity._properties?.kayttarks?._value
+		const kayttotark = entity.properties?.kayttarks?.getValue()
 		if (!kayttotark || kayttotark !== 'Yleinen rakennus') {
 			entity.show = false
 		}
@@ -654,7 +654,7 @@ export default class HSYBuilding {
 	hideLowBuilding(entity) {
 		if (!this.toggleStore.hideLow) return
 
-		const floorCount = Number(entity._properties?.kerrosten_lkm?._value)
+		const floorCount = Number(entity.properties?.kerrosten_lkm?.getValue())
 		if (!floorCount || floorCount < 7) {
 			entity.show = false
 		}

@@ -27,13 +27,13 @@ class PostalCodeIndex {
 	 * Builds the index from an array of postal code entities.
 	 * Call this when PostCodes data source is loaded.
 	 *
-	 * @param {Array<Object>} entities - Array of Cesium entities with _properties._posno
+	 * @param {Array<Object>} entities - Array of Cesium entities with a posno property
 	 */
 	buildIndex(entities) {
 		this.byPostalCode.clear()
 
 		for (const entity of entities) {
-			const posno = entity._properties?._posno?._value
+			const posno = entity.properties?.posno?.getValue()
 			if (posno) {
 				this.byPostalCode.set(posno, entity)
 			}
