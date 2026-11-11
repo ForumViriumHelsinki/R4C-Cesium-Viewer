@@ -232,6 +232,28 @@ describe('Playwright project contract', () => {
 	)
 
 	it(
+		'tests/e2e/layout runs only in the overflow-* projects, and they run nothing else',
+		() => {
+			// The overflow check needs the mock API; the End-to-End and accessibility
+			// jobs have no backend, so a layout spec collected there would fail.
+			const LAYOUT_DIR = 'e2e/layout/'
+			const entries = listTests([])
+			const layout = entries.filter((e) => e.file.startsWith(LAYOUT_DIR))
+			expect(layout.length, 'layout specs collected at all').toBeGreaterThan(0)
+			expect(unique(layout.map((e) => e.project))).toEqual([
+				'overflow-desktop',
+				'overflow-mobile',
+				'overflow-tablet',
+			])
+			const strays = entries.filter(
+				(e) => e.project.startsWith('overflow-') && !e.file.startsWith(LAYOUT_DIR)
+			)
+			expect(unique(strays.map((e) => `${e.project}: ${e.file}`))).toEqual([])
+		},
+		LIST_TIMEOUT_MS
+	)
+
+	it(
 		'the test:e2e script runs only the chromium project and no accessibility spec',
 		() => {
 			const entries = listTests(e2eScriptArgs())
