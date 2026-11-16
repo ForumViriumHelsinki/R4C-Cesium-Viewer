@@ -38,7 +38,20 @@ describe('toggleStore', () => {
 			const store = useToggleStore()
 			const stateKeys = Object.keys(store.$state)
 
-			expect(stateKeys).toHaveLength(24)
+			expect(stateKeys).toHaveLength(25)
+		})
+	})
+
+	describe('analysis panel', () => {
+		it('starts closed and follows setAnalysisPanelOpen', () => {
+			const store = useToggleStore()
+			expect(store.analysisPanelOpen).toBe(false)
+
+			store.setAnalysisPanelOpen(true)
+			expect(store.analysisPanelOpen).toBe(true)
+
+			store.setAnalysisPanelOpen(false)
+			expect(store.analysisPanelOpen).toBe(false)
 		})
 	})
 
