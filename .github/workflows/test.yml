@@ -544,7 +544,7 @@ jobs:
     name: Panel Overflow (${{ matrix.viewport }})
     needs: [build]
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned with e2e-tests: Playwright 1.57 lacks 26.04 support
     timeout-minutes: 40
     strategy:
       fail-fast: false
