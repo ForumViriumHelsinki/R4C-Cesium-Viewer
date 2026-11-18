@@ -393,7 +393,10 @@ const inlineEntry = computed(() =>
 	inlineAnalysis.value ? (findAnalysis(inlineAnalysis.value) ?? null) : null
 )
 // Right panel analysis (drawer), by registry id
-const rightPanelOpen = ref(false)
+const rightPanelOpen = computed({
+	get: () => toggleStore.analysisPanelOpen,
+	set: (open) => toggleStore.setAnalysisPanelOpen(open),
+})
 const rightPanelAnalysis = ref('')
 
 const showDetailsBadge = computed(
@@ -409,8 +412,12 @@ const openAnalysis = (entry) => {
 		inlineAnalysis.value = null
 		rightPanelAnalysis.value = entry.id
 		rightPanelOpen.value = true
-		// Auto-collapse left sidebar on narrow viewports to prevent map tunnel
-		if (!isMobile.value && window.innerWidth < LAYOUT.ANALYSIS_PANEL_COLLAPSE_SIDEBAR_BELOW) {
+		// On mobile both drawers overlay the map and the sidebar sits on top,
+		// so close it or the analysis panel opens hidden behind it.
+		if (isMobile.value) {
+			toggleStore.setSidebarMode('hidden')
+		} else if (window.innerWidth < LAYOUT.ANALYSIS_PANEL_COLLAPSE_SIDEBAR_BELOW) {
+			// Auto-collapse left sidebar on narrow viewports to prevent map tunnel
 			toggleStore.setSidebarMode('rail')
 		}
 	}
@@ -464,6 +471,26 @@ const closeVttFlood = () => {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
+	/* No width animation: the expanded content mounts on expand (v-if), and
+	   slide groups (tab bar, background-map chips) measured their overflow
+	   mid-animation at rail width, then kept showing scroll arrows. */
+	transition-property: box-shadow, transform, visibility;
+}
+
+/* Vuetify's content wrapper is a block with overflow: auto, so the breadcrumb,
+   tabs and tab content scrolled as one and the tabs left the screen on long
+   tabs. As a flex column, only .sidebar-content scrolls. */
+.control-panel :deep(.v-navigation-drawer__content) {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+/* The mobile (temporary) drawer overlays the map, so it must sit above the
+   floating map overlays (timeline bar, map controls: z-index 1100). Vuetify
+   sets z-index inline, hence !important. */
+.control-panel.v-navigation-drawer--temporary {
+	z-index: 1150 !important;
 }
 
 .sidebar-header {
@@ -499,9 +526,19 @@ const closeVttFlood = () => {
 	margin-top: 2px;
 }
 
+.sidebar-header,
+.sidebar-tabs,
+.viewer-loading-hint,
+.viewer-init-error {
+	/* v-tabs ships flex: 1 1 auto and would split the height with the content */
+	flex: 0 0 auto;
+}
+
 .sidebar-content {
 	flex: 1;
+	min-height: 0;
 	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .sidebar-content--waiting {
@@ -541,10 +578,6 @@ const closeVttFlood = () => {
 	font-weight: 500;
 	margin-bottom: 8px;
 	color: rgba(var(--v-theme-on-surface), 0.7);
-}
-
-.tab-window {
-	height: 100%;
 }
 
 .tab-content {

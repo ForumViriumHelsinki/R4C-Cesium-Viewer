@@ -176,9 +176,11 @@
 				variant="text"
 				size="small"
 				prepend-icon="mdi-target"
+				class="focus-current"
+				:title="`Focus on ${currentSelection.name}`"
 				@click="focusOnCurrent"
 			>
-				Focus on {{ currentSelection.name }}
+				<span class="focus-current__label">Focus on {{ currentSelection.name }}</span>
 			</v-btn>
 		</div>
 	</div>
@@ -698,6 +700,21 @@ onUnmounted(() => {
 .quick-actions {
 	margin-top: 8px;
 	text-align: center;
+}
+
+/* Long area names ran past both sidebar edges: v-btn content does not wrap. */
+.focus-current {
+	max-width: 100%;
+}
+
+.focus-current :deep(.v-btn__content) {
+	min-width: 0;
+}
+
+.focus-current__label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* Responsive adjustments */
