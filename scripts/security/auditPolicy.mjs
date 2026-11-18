@@ -64,17 +64,22 @@ export function checkAllowlist(allowlist, today) {
 /**
  * Override floors that are themselves vulnerable. `advisoriesByPackage` is the
  * npm bulk-advisory response for `{ [pkg]: [floor] }`, so any advisory listed
- * for a package applies to that package's floor.
+ * for a package applies to that package's floor. Advisories whose id is in
+ * `ignoreIds` (the active allowlist) are skipped: when no fixed release exists,
+ * no floor can clear them.
  * @param {Record<string, string>} floors package -> floor version
  * @param {Record<string, { url?: string, vulnerable_versions?: string }[]>} advisoriesByPackage
+ * @param {string[]} [ignoreIds] allowlisted GHSA ids
  * @returns {string[]}
  */
-export function vulnerableFloors(floors, advisoriesByPackage) {
+export function vulnerableFloors(floors, advisoriesByPackage, ignoreIds = []) {
+	const idOf = (a) => a.url?.split('/').pop() ?? '?'
+	const relevant = (pkg) => (advisoriesByPackage[pkg] ?? []).filter((a) => !ignoreIds.includes(idOf(a)))
 	return Object.entries(floors)
-		.filter(([pkg]) => (advisoriesByPackage[pkg] ?? []).length > 0)
+		.filter(([pkg]) => relevant(pkg).length > 0)
 		.map(([pkg, floor]) => {
-			const ids = advisoriesByPackage[pkg]
-				.map((a) => `${a.url?.split('/').pop() ?? '?'} (${a.vulnerable_versions ?? '?'})`)
+			const ids = relevant(pkg)
+				.map((a) => `${idOf(a)} (${a.vulnerable_versions ?? '?'})`)
 				.join(', ')
 			return `override floor ${pkg}@${floor} is inside a vulnerable range: ${ids}`
 		})
