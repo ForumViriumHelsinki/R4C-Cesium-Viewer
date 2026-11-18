@@ -1,5 +1,8 @@
 <template>
-	<div class="map-overlay-controls">
+	<div
+		class="map-overlay-controls"
+		:style="offsetStyle"
+	>
 		<v-btn
 			v-if="currentLevel !== 'start'"
 			icon
@@ -51,11 +54,24 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useDisplay } from 'vuetify'
+import { LAYOUT } from '../constants/layout.js'
 import { useGlobalStore } from '../stores/globalStore'
+import { useToggleStore } from '../stores/toggleStore'
 import FeatureFlagsPanel from './FeatureFlagsPanel.vue'
 
 const globalStore = useGlobalStore()
+const toggleStore = useToggleStore()
+const { smAndDown: isMobile } = useDisplay()
 const currentLevel = computed(() => globalStore.level)
+
+// Sit left of the open analysis drawer instead of on top of its charts. On
+// mobile the drawer is full width and covers the controls entirely.
+const offsetStyle = computed(() =>
+	toggleStore.analysisPanelOpen && !isMobile.value
+		? { right: `${LAYOUT.ANALYSIS_PANEL_WIDTH + 16}px` }
+		: undefined
+)
 
 const rotateCamera = async () => {
 	const { default: Camera } = await import('../services/camera')
