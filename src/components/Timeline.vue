@@ -153,21 +153,18 @@ export default {
 		const currentPropertyIndex = ref(dates.indexOf(selectedDate.value)) // Set default index
 
 		/**
-		 * Formats ISO date string to localized short format
+		 * Formats an ISO date string as a two-digit year label for the slider stops.
+		 *
+		 * Month plus two-digit year ("Jul 15") read as a day of the month, so the
+		 * row looked unsorted. The full date is shown in the header chip.
 		 *
 		 * @param {string} dateString - ISO date string (YYYY-MM-DD)
-		 * @returns {string} Formatted date (e.g., "Jun '22")
+		 * @returns {string} Two-digit year (e.g., "'22")
 		 *
 		 * @example
-		 * formatDate('2022-06-28') // Returns "Jun '22"
+		 * formatDate('2022-06-28') // Returns "'22"
 		 */
-		const formatDate = (dateString) => {
-			const date = new Date(dateString)
-			return date.toLocaleDateString('en-US', {
-				year: '2-digit',
-				month: 'short',
-			})
-		}
+		const formatDate = (dateString) => `'${dateString.slice(2, 4)}`
 
 		/**
 		 * Updates building heat exposure visualization and related plots
@@ -267,7 +264,12 @@ export default {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	gap: 8px;
 	margin-bottom: 12px;
+}
+
+.timeline-header :deep(.v-chip) {
+	flex-shrink: 0;
 }
 
 .timeline-title {
@@ -277,6 +279,7 @@ export default {
 	font-weight: 600;
 	margin: 0;
 	color: rgba(var(--v-theme-on-surface), 0.87);
+	min-width: 0;
 }
 
 .date-labels {

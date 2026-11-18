@@ -319,4 +319,16 @@ export default {
 	border-radius: 0 !important;
 	width: 100% !important;
 }
+
+/* The standalone card is 400px minimum and framed; in the panel it would
+   overflow the sidebar and nest a third card inside the section. */
+.timeline-section :deep(.timeline-card) {
+	min-width: 0;
+	max-width: none;
+	padding: 0;
+	background: transparent;
+	backdrop-filter: none;
+	border: none;
+	box-shadow: none;
+}
 </style>
