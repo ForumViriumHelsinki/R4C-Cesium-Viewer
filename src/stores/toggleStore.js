@@ -67,6 +67,8 @@ export const useToggleStore = defineStore('toggle', {
 		// Sidebar UI state
 		sidebarMode: 'expanded', // 'rail' | 'expanded' | 'hidden'
 		activeTab: 'layers', // 'search' | 'layers' | 'analysis' | 'details'
+		// Right-side AnalysisPanel drawer; floating map controls move clear of it
+		analysisPanelOpen: false,
 		// Internal state for visibility coordination
 		_previousGrid250m: false, // Tracks grid state before entering postal code
 	}),
@@ -278,6 +280,14 @@ export const useToggleStore = defineStore('toggle', {
 		 */
 		setSidebarMode(mode) {
 			this.sidebarMode = mode
+		},
+
+		/**
+		 * Open or close the right-side analysis drawer
+		 * @param {boolean} open
+		 */
+		setAnalysisPanelOpen(open) {
+			this.analysisPanelOpen = open
 		},
 
 		/**
