@@ -30,12 +30,12 @@ const response = await fetch(BULK_ADVISORY_URL, {
 if (!response.ok) {
 	throw new Error(`npm bulk advisory endpoint returned HTTP ${response.status}`)
 }
-const floorErrors = vulnerableFloors(floors, await response.json())
-console.log(`Checked ${Object.keys(floors).length} override floors against npm advisories.`)
-
 const today = new Date().toISOString().slice(0, 10)
 const allowlist = JSON.parse(readFileSync(ALLOWLIST_PATH, 'utf8'))
 const { errors: allowlistErrors, activeIds } = checkAllowlist(allowlist, today)
+
+const floorErrors = vulnerableFloors(floors, await response.json(), activeIds)
+console.log(`Checked ${Object.keys(floors).length} override floors against npm advisories.`)
 
 for (const error of [...floorErrors, ...allowlistErrors]) console.log(`::error::${error}`)
 

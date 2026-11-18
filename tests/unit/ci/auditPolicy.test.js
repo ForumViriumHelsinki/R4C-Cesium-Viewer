@@ -60,6 +60,28 @@ describe('vulnerableFloors', () => {
 		expect(vulnerableFloors({ undici: '7.29.0' }, {})).toEqual([])
 		expect(vulnerableFloors({ undici: '7.29.0' }, { undici: [] })).toEqual([])
 	})
+
+	it('skips allowlisted advisories but still reports the rest', () => {
+		const advisories = {
+			picomatch: [
+				{
+					url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+					vulnerable_versions: '<=4.0.7',
+				},
+			],
+			undici: [
+				{
+					url: 'https://github.com/advisories/GHSA-aaaa-bbbb-cccc',
+					vulnerable_versions: '<7.30.1',
+				},
+			],
+		}
+		const floors = { picomatch: '4.0.7', undici: '7.29.1' }
+		expect(vulnerableFloors(floors, advisories, ['GHSA-fc5q-39xc-vjpf'])).toEqual([
+			'override floor undici@7.29.1 is inside a vulnerable range: GHSA-aaaa-bbbb-cccc (<7.30.1)',
+		])
+		expect(vulnerableFloors(floors, advisories)).toHaveLength(2)
+	})
 })
 
 describe('checkAllowlist', () => {
