@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.59.8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.7...r4c-cesium-viewer-v1.59.8) (2026-11-17)
+
+
+### Bug Fixes
+
+* **sidebar:** keep tabs in view and stop panels overflowing ([827cfcd](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/827cfcda7d445c8871ab7641492663eeb49f604c))
+
 ## [1.59.7](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.6...r4c-cesium-viewer-v1.59.7) (2026-11-04)
 
 

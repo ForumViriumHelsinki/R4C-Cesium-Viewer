@@ -66,8 +66,10 @@ const activeComponent = computed(() => entry.value?.component(globalStore.view) 
 </script>
 
 <style scoped>
+/* Above the floating map overlays (z-index 1100) and the mobile sidebar.
+   Vuetify sets z-index inline, so without !important this never applied. */
 .analysis-panel {
-	z-index: 1200;
+	z-index: 1200 !important;
 }
 
 .v-btn:focus-visible {
