@@ -67,6 +67,12 @@ export function useViewerInitialization() {
 	// must be removed when the viewer is torn down to avoid post-destroy scene access.
 	let visibilityChangeHandler = null
 
+	// Set when the Cesium chunk or a service module failed to load. An in-app retry
+	// cannot recover from that: cesiumProvider caches the rejected import promise
+	// (#1040), and a browser may also keep the failed module fetch. retryInit then
+	// reloads the page instead, so the snackbar's Retry still works on this path.
+	let moduleLoadFailed = false
+
 	/**
 	 * Initializes the Cesium viewer with dynamic module loading.
 	 * Loads Cesium library and dependencies asynchronously to prevent blocking initial render.
@@ -109,6 +115,7 @@ export function useViewerInitialization() {
 				Graphics = GraphicsModule.default || GraphicsModule
 			} catch (error) {
 				logger.error('Failed to load Cesium library or service modules:', error)
+				moduleLoadFailed = true
 				errorMessage.value = VIEWER_INIT_MESSAGES.network
 				errorSnackbar.value = true
 				store.setIsLoading(false)
@@ -329,12 +336,18 @@ export function useViewerInitialization() {
 
 	/**
 	 * Retries viewer initialization after an error.
-	 * Clears error state and reloads Cesium viewer.
+	 * Clears error state and reloads Cesium viewer. After a module load failure it
+	 * reloads the page instead, because re-running initViewer would get the same
+	 * rejection back (#1040).
 	 *
 	 * @async
 	 * @returns {Promise<void>}
 	 */
 	const retryInit = async () => {
+		if (moduleLoadFailed) {
+			window.location.reload()
+			return
+		}
 		errorSnackbar.value = false
 		errorMessage.value = ''
 		store.setViewerInitFailed(false)

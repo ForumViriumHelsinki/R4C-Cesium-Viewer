@@ -40,7 +40,9 @@ export const VIEWPORT_BUILDINGS_FAILURE_MESSAGE = 'Unable to load buildings for 
 
 /**
  * Viewer initialisation failure. The top snackbar in CesiumViewer.vue owns this
- * failure and offers Retry; the sidebar only shows a passive hint.
+ * failure and offers Retry; the sidebar only shows a passive hint. After a module
+ * load failure (`network`) Retry reloads the page, because an in-app retry cannot
+ * re-import a failed chunk (#1040).
  */
 export const VIEWER_INIT_MESSAGES = Object.freeze({
 	title: 'Unable to load the map viewer',

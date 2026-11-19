@@ -28,7 +28,8 @@
 			Behavior: Persistent (no auto-dismiss, no Close), shown at top, includes retry button
 			Use case: Viewer failed to initialize (chunk load or Viewer construction), user cannot
 			proceed without retry. This snackbar is the one owner of the failure; the sidebar
-			only shows a passive hint pointing here (#1153).
+			only shows a passive hint pointing here (#1153). On the chunk-load path retryInit
+			reloads the page, since an in-app retry cannot re-import a failed chunk (#1040).
 		-->
 		<v-snackbar
 			v-model="errorSnackbar"

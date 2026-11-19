@@ -162,6 +162,39 @@ describe('ControlPanel when Cesium viewer initialisation fails', { tags: ['@unit
 		expectFailureNotice(VIEWER_INIT_MESSAGES.network)
 	})
 
+	it('Retry after a Cesium chunk failure reloads the page instead of re-importing', async () => {
+		// cesiumProvider caches the rejected import promise (#1040), so an in-app
+		// retry would get the same rejection back and the user would have no working
+		// recovery. Retry must reload the page on this path.
+		const reload = vi.fn()
+		vi.stubGlobal('location', { ...window.location, reload })
+		const initialize = vi
+			.spyOn(cesiumProvider, 'initialize')
+			.mockRejectedValue(new Error('Failed to fetch dynamically imported module'))
+		await viewerInit?.initViewer()
+		await settle()
+		expectFailureNotice(VIEWER_INIT_MESSAGES.network)
+
+		await viewerInit?.retryInit()
+		await settle()
+
+		expect(reload).toHaveBeenCalledTimes(1)
+		expect(initialize).toHaveBeenCalledTimes(1)
+	})
+
+	it('Retry after a construction failure retries in the app, without a reload', async () => {
+		const reload = vi.fn()
+		vi.stubGlobal('location', { ...window.location, reload })
+		provideCesium(fakeCesium(constructionError))
+		await expect(viewerInit?.initViewer()).rejects.toThrow()
+		await settle()
+
+		await viewerInit?.retryInit()
+		await settle()
+
+		expect(reload).not.toHaveBeenCalled()
+	})
+
 	it('the snackbar also owns a viewer construction failure (no WebGL)', async () => {
 		provideCesium(fakeCesium(constructionError))
 
