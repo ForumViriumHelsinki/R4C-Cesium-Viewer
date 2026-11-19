@@ -140,6 +140,31 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 			retry()
 			expect(setLandcoverEnabled).toHaveBeenLastCalledWith(true)
 		})
+
+		it('Layers tab: a Retry after the user switched land cover off does nothing', async () => {
+			vi.mocked(setLandcoverEnabled).mockRejectedValueOnce(new Error('HSY 504'))
+			await switchLayer('landCover', true)
+			const retry = expectLayerFailure('landcover')
+
+			useToggleStore().setLandCover(false)
+			retry()
+
+			expect(setLandcoverEnabled).toHaveBeenCalledTimes(1)
+		})
+
+		it('Analysis tab: a Retry after the user switched land cover off does nothing', async () => {
+			vi.mocked(setLandcoverEnabled).mockRejectedValueOnce(new Error('HSY 504'))
+			useToggleStore().setLandCover(true)
+			wrapper = shallowMount(LandcoverPanel)
+			wrapper.vm.toggleLandCover()
+			await flushPromises()
+			const retry = expectLayerFailure('landcover')
+
+			useToggleStore().setLandCover(false)
+			retry()
+
+			expect(setLandcoverEnabled).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	describe('NDVI', () => {
@@ -156,6 +181,8 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 		it('Analysis tab: a failed date change shows the same message with Retry', async () => {
 			vi.mocked(changeTIFF).mockRejectedValueOnce(new Error('TIFF 404'))
 			wrapper = shallowMount(NDVIPanel)
+			// The date select is disabled while NDVI is off.
+			useToggleStore().setNDVI(true)
 
 			await wrapper.vm.updateImage()
 			await flushPromises()
@@ -163,6 +190,31 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 			const retry = expectLayerFailure('ndvi')
 			retry()
 			expect(changeTIFF).toHaveBeenCalledTimes(2)
+		})
+
+		it('Layers tab: a Retry after the user switched NDVI off does not add the imagery', async () => {
+			vi.mocked(changeTIFF).mockRejectedValueOnce(new Error('TIFF 404'))
+			await switchLayer('ndvi', true)
+			const retry = expectLayerFailure('ndvi')
+
+			useToggleStore().setNDVI(false)
+			retry()
+
+			expect(changeTIFF).toHaveBeenCalledTimes(1)
+		})
+
+		it('Analysis tab: a Retry after the user switched NDVI off does not add the imagery', async () => {
+			vi.mocked(changeTIFF).mockRejectedValueOnce(new Error('TIFF 404'))
+			wrapper = shallowMount(NDVIPanel)
+			useToggleStore().setNDVI(true)
+			await wrapper.vm.updateImage()
+			await flushPromises()
+			const retry = expectLayerFailure('ndvi')
+
+			useToggleStore().setNDVI(false)
+			retry()
+
+			expect(changeTIFF).toHaveBeenCalledTimes(1)
 		})
 	})
 

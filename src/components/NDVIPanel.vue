@@ -48,7 +48,12 @@ const updateImage = async () => {
 const loadImagery = () => {
 	changeTIFF().catch((error) => {
 		logger.error('[NDVIPanel] Failed to load NDVI imagery:', error)
-		loadingStore.reportLayerFailure('ndvi', error, { retry: loadImagery })
+		loadingStore.reportLayerFailure('ndvi', error, {
+			// A Retry clicked after the user switched NDVI off must not add the imagery.
+			retry: () => {
+				if (toggleStore.ndvi) loadImagery()
+			},
+		})
 	})
 }
 

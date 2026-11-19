@@ -42,7 +42,12 @@ const { landCover: landcover } = storeToRefs(toggleStore)
 const applyLandCover = (enabled) => {
 	setLandcoverEnabled(enabled).catch((error) => {
 		logger.error('[LandcoverPanel] Failed to load HSY imagery layer:', error)
-		loadingStore.reportLayerFailure('landcover', error, { retry: () => applyLandCover(enabled) })
+		loadingStore.reportLayerFailure('landcover', error, {
+			// A Retry clicked after the user flipped the switch must not flip it back.
+			retry: () => {
+				if (toggleStore.landCover === enabled) applyLandCover(enabled)
+			},
+		})
 	})
 }
 const toggleLandCover = () => applyLandCover(landcover.value)

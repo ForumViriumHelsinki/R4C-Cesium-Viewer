@@ -168,7 +168,12 @@ let dataSourceService = null
 const applyLandCover = (enabled) => {
 	setLandcoverEnabled(enabled).catch((error) => {
 		logger.error('Failed to update land cover layer:', error)
-		loadingStore.reportLayerFailure('landcover', error, { retry: () => applyLandCover(enabled) })
+		loadingStore.reportLayerFailure('landcover', error, {
+			// A Retry clicked after the user flipped the switch must not flip it back.
+			retry: () => {
+				if (toggleStore.landCover === enabled) applyLandCover(enabled)
+			},
+		})
 	})
 }
 
@@ -355,7 +360,12 @@ const addLandCover = () => {
 const addNdviImagery = () => {
 	changeTIFF().catch((error) => {
 		logger.error('Failed to add NDVI imagery:', error)
-		loadingStore.reportLayerFailure('ndvi', error, { retry: addNdviImagery })
+		loadingStore.reportLayerFailure('ndvi', error, {
+			// A Retry clicked after the user switched NDVI off must not add the imagery.
+			retry: () => {
+				if (toggleStore.ndvi) addNdviImagery()
+			},
+		})
 	})
 }
 
