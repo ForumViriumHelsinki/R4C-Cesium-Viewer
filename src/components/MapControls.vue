@@ -252,43 +252,35 @@ const loadTrees = async () => {
 
 			try {
 				const treeService = new Tree()
+				const categories = [221, 222, 223, 224]
 
-				// Create a promise-based wrapper for the tree loading
-				const treeData = await new Promise((resolve, _reject) => {
-					const originalLoadTrees = treeService.loadTrees.bind(treeService)
+				// Progress messages per height category. They are cosmetic: the tree
+				// service has no progress callback, so completion and failure come from
+				// the awaited loadTrees() below. Before #1152 the load ran un-awaited
+				// inside a Promise that resolved on these timers, so a failure never
+				// reached the catch and the layer was reported as loaded.
+				const progressTimers = categories.map((category, index) =>
+					setTimeout(
+						() => {
+							loadingStore.updateLayerProgress(
+								'trees',
+								index + 1,
+								// FLAG: loadingStore.updateLayerProgress's `message = null` default makes
+								// its param infer as `null`; passing a real string message requires a cast
+								// until the store's type is widened to `string | null` (store edits are out of scope here).
+								/** @type {any} */ (`Loading trees: category ${category} (${index + 1}/4)`)
+							)
+						},
+						(index + 1) * 500
+					)
+				)
 
-					// Override the tree service to provide progress updates
-					let completedCategories = 0
-					const categories = [221, 222, 223, 224]
-
-					categories.forEach((category, index) => {
-						// This is a simplified approach - the actual implementation would need
-						// to modify the tree service to support progress callbacks
-						setTimeout(
-							() => {
-								completedCategories++
-								loadingStore.updateLayerProgress(
-									'trees',
-									completedCategories,
-									// FLAG: loadingStore.updateLayerProgress's `message = null` default makes
-									// its param infer as `null`; passing a real string message requires a cast
-									// until the store's type is widened to `string | null` (store edits are out of scope here).
-									/** @type {any} */ (
-										`Loading trees: category ${category} (${completedCategories}/4)`
-									)
-								)
-
-								if (completedCategories === 4) {
-									resolve({ categories, postalCode: store.postalcode })
-								}
-							},
-							(index + 1) * 500
-						) // Simulate progressive loading
-					})
-
-					// Call the original method
-					originalLoadTrees()
-				})
+				try {
+					await treeService.loadTrees()
+				} finally {
+					progressTimers.forEach(clearTimeout)
+				}
+				const treeData = { categories, postalCode: store.postalcode }
 
 				// Cache the loaded data
 				await loadingStore.cacheLayerData('trees', treeData, {

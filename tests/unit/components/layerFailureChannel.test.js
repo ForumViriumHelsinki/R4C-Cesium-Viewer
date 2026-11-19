@@ -20,10 +20,12 @@ import { LAYER_FAILURE_MESSAGES } from '@/constants/errorMessages.js'
 import { setLandcoverEnabled } from '@/services/landcover'
 import { changeTIFF } from '@/services/tiffImagery.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
+import { useLoadingStore } from '@/stores/loadingStore.js'
 import { useToggleStore } from '@/stores/toggleStore.js'
 
 const loaders = vi.hoisted(() => ({
 	otherNature: vi.fn(async () => {}),
+	trees: vi.fn(async () => {}),
 	vegetation: vi.fn(async () => {}),
 	statsGrid: vi.fn(async () => {}),
 }))
@@ -56,7 +58,11 @@ vi.mock('@/services/vegetation', () => ({
 		loadVegetation = loaders.vegetation
 	},
 }))
-vi.mock('@/services/tree.js', () => ({ default: class {} }))
+vi.mock('@/services/tree.js', () => ({
+	default: class {
+		loadTrees = loaders.trees
+	},
+}))
 vi.mock('@/services/wms.js', () => ({
 	default: class {
 		createHelsinkiImageryLayer = vi.fn(() => ({}))
@@ -93,6 +99,7 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 		vi.mocked(setLandcoverEnabled).mockReset().mockResolvedValue(undefined)
 		vi.mocked(changeTIFF).mockReset().mockResolvedValue(undefined)
 		loaders.otherNature.mockReset().mockResolvedValue(undefined)
+		loaders.trees.mockReset().mockResolvedValue(undefined)
 		loaders.vegetation.mockReset().mockResolvedValue(undefined)
 		loaders.statsGrid.mockReset().mockResolvedValue(undefined)
 	})
@@ -173,6 +180,27 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 			retry()
 			await flushPromises()
 			expect(loaders.otherNature).toHaveBeenCalledTimes(2)
+		})
+
+		it('trees: a failed load shows its message with Retry', async () => {
+			// The tree load used to run un-awaited inside a Promise that resolved on
+			// progress timers, so a rejection never reached the catch (#1152).
+			loaders.trees.mockRejectedValueOnce(new Error('pygeoapi 503'))
+
+			await switchLayer('showTrees', true)
+
+			const retry = expectLayerFailure('trees')
+			expect(useLoadingStore().layerLoading.trees).toBe(false)
+			retry()
+			await flushPromises()
+			expect(loaders.trees).toHaveBeenCalledTimes(2)
+		})
+
+		it('trees: a successful load reports no failure', async () => {
+			await switchLayer('showTrees', true)
+
+			expect(loaders.trees).toHaveBeenCalledTimes(1)
+			expect(useGlobalStore().errorNotification.show).toBe(false)
 		})
 
 		it('vegetation: a failed load shows its message with Retry', async () => {
