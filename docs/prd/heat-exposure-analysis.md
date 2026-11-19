@@ -245,7 +245,7 @@ As any user, I want to see a histogram of building heat exposure distribution so
 **Acceptance Criteria:**
 
 - D3.js histogram with 20 bins showing building count per heat range
-- X-axis shows heat exposure index (0-1) or temperature in Celsius
+- X-axis shows surface heat index (Landsat, 0-1) or surface temperature (°C)
 - Y-axis shows building count per bin
 - Bars color-coded matching map heat colors (warm gradient)
 - Histogram updates immediately when timeline date changes
@@ -491,7 +491,7 @@ As a user, I want smooth performance when analyzing postal codes with thousands 
 
 **FR6.2 Heat Attributes Added to Buildings**
 
-- `avgheatexposuretobuilding`: Average heat exposure index (0-1) or temperature (Celsius)
+- `avgheatexposuretobuilding`: surface heat index (Landsat, 0-1) or surface temperature (°C)
 - `distanceToUnder40`: Distance to nearest cooling zone (<40°C area)
 - `locationUnder40`: Boolean indicating if building in cooling zone
 - `year_of_construction`: Building construction year
