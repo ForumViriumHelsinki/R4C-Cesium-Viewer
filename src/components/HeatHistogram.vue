@@ -264,7 +264,7 @@ export default {
 				)
 				plotService.addTitleWithLink(
 					svg,
-					`${store.nameOfZone} ${store.heatDataDate} buildings <a href="https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature" target="_blank">surface temperature</a> in °C`,
+					`<a href="https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature" target="_blank">${METRIC_LABELS.SURFACE_TEMPERATURE}</a> of buildings in ${store.nameOfZone}, ${store.heatDataDate}`,
 					margin.left,
 					margin.top
 				)

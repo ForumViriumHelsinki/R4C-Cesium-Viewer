@@ -16,6 +16,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	BUILDING_ATTRIBUTE_LABELS,
 	INDEX_LABELS,
+	inSentence,
 	METRIC_LABELS,
 	PROPERTY_LABELS,
 	SOCIOECONOMIC_HEAT_INDICATORS,
@@ -80,30 +81,56 @@ const DEFINED_LABELS = [
 	]),
 ]
 
+/**
+ * Title phrasings retired by #1154 that are not a label themselves: "surface
+ * temperature in °C" (HSY scatter and histogram titles) is now `Surface temperature (°C)`.
+ */
+const RETIRED_PHRASES = [/temperature(?:\s*<\/a>)?\s+in\s+°C/i]
+
 /** @param {string} text */
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
+/** @param {string[]} forms */
+const anyOf = (forms) => `(?:${[...new Set(forms)].map(escapeRegExp).join('|')})`
+
 /**
- * Where a hardcoded label shows up: as a whole string literal (`'Floors'`), as
- * template text (`<h5>Heat Index</h5>`), or as the name in a `name: value` tooltip
- * or a row or sentence about the metric (`` `Heat exposure index: ${x}` ``,
- * `<td>Heat Index Reduction`, `Total Heat Vulnerability impact`).
+ * The name in a `name: value` tooltip or a row or sentence about the metric
+ * (`` `Heat exposure index: ${x}` ``, `<td>Heat Index Reduction`,
+ * `Total heat vulnerability impact`).
+ * @param {string} l regex alternation of the label's forms
+ */
+const inContext = (l) =>
+	new RegExp(
+		`(['"\`>]|<br>)[^'"\`<>{}\\n]*?\\b${l}(?=\\s*:|\\s+(?:[Rr]eduction|[Ss]hown|[Ww]ith|[Cc]omparison|[Ii]mpact)\\b)`
+	)
+
+/**
+ * Where a hardcoded label shows up. Each label is matched as written and in Title
+ * Case, so `'Heat Vulnerability'` counts as the defined `Heat vulnerability`.
  *
- * Each label is matched as written and in Title Case, so `'Heat Vulnerability'`
- * counts as the defined `Heat vulnerability`. Lower case is not matched: `'tenure'`
- * is the data key the `Tenure` label names, and `'postal code'` is a noun in a
- * sentence, not the `Postal code` field label.
+ * - A label of several words (`Surface heat index (Landsat)`, `Year built`) is
+ *   matched anywhere in the code: in a title, a table row, a description. Its
+ *   mid-sentence form (`inSentence`) is matched anywhere too when the label
+ *   carries a unit or qualifier (`(`, `°`, `%`), and otherwise only in a
+ *   `name: value` or `<name> impact` context, because `heat exposure` and
+ *   `postal code` are also ordinary nouns in log messages and prose.
+ * - A one-word label (`Floors`, `Tenure`) is matched only as a whole string
+ *   literal, as the whole text between tags, or in that context. Lower case is
+ *   not matched: `'tenure'` is the data key the `Tenure` label names.
  * @param {string} label
  */
 const labelPatterns = (label) => {
 	const titleCase = label.replace(/\b[a-z]/g, (c) => c.toUpperCase())
-	const l = `(?:${escapeRegExp(label)}|${escapeRegExp(titleCase)})`
+	const asWritten = anyOf([label, titleCase])
+	if (/\s|[(°%]/.test(label)) {
+		const distinctive = /[(°%]/.test(label)
+		const anywhere = distinctive ? anyOf([label, titleCase, inSentence(label)]) : asWritten
+		return [new RegExp(`(?<![\\w-])${anywhere}(?![\\w-])`), inContext(anyOf([inSentence(label)]))]
+	}
 	return [
-		new RegExp(`(['"\`])${l}\\1`),
-		new RegExp(`>\\s*${l}\\s*<`),
-		new RegExp(
-			`(['"\`>]|<br>)[^'"\`<>{}\\n]*?\\b${l}(?=\\s*:|\\s+(?:[Rr]eduction|[Ss]hown|[Ww]ith|[Cc]omparison|[Ii]mpact)\\b)`
-		),
+		new RegExp(`(['"\`])${asWritten}\\1`),
+		new RegExp(`>\\s*${asWritten}\\s*<`),
+		inContext(asWritten),
 	]
 }
 
@@ -143,6 +170,15 @@ describe('metric and attribute labels come from the shared module', { tags: ['@u
 			'<td>Surface Heat Index (Landsat) Reduction (This Turn)</td>',
 			"plotService.addTitle(svg, 'Heat Vulnerability', 0, 0)",
 			'<p>Total Heat Vulnerability impact: {{ impact }}</p>',
+			// Mid-string and mid-sentence forms of a multi-word label (review of #1154).
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: source text of a template literal, matched literally
+			'`Surface heat index (Landsat) of buildings in ${store.nameOfZone}`',
+			'<td>Surface heat index (Landsat) (Initial)</td>',
+			'<p>Total heat vulnerability impact: {{ impact }}</p>',
+			"description: 'Surface heat index (Landsat), 2023-06-28.',",
+			"'Grid cells are colored by surface heat index (Landsat): blue is cool'",
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: source text of a template literal, matched literally
+			'`<a href="https://example.org">Surface temperature (°C)</a> of buildings in ${zone}`',
 		]
 		for (const line of hardcoded) {
 			expect(findHardcoded('fixture', line, DEFINED_LABELS), line).not.toEqual([])
@@ -152,6 +188,11 @@ describe('metric and attribute labels come from the shared module', { tags: ['@u
 			'<h5>{{ METRIC_LABELS.HEAT_VULNERABILITY }}</h5>',
 			"// 'Floors' used to be hardcoded here",
 			'<!-- <h5>Heat vulnerability</h5> -->',
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: source text of a template literal, matched literally
+			'`${METRIC_LABELS.SURFACE_HEAT_INDEX} of buildings in ${store.nameOfZone}`',
+			// A multi-word label's lower-case form as an ordinary noun in prose or a log.
+			"description: 'Combined heat and flood vulnerability, colored by heat and height by flood.',",
+			"logger.warn('[AreaProperties] Failed to look up postal code entity:', error)",
 		]
 		expect(allowed.flatMap((line) => findHardcoded('fixture', line, DEFINED_LABELS))).toEqual([])
 		// A one-word label's data key is not a hardcoded label.
@@ -179,5 +220,28 @@ describe('metric and attribute labels come from the shared module', { tags: ['@u
 	it.each(LABEL_SITES)('%s uses none of the retired names', (site) => {
 		const text = readFileSync(join(ROOT, site), 'utf8')
 		expect(findHardcoded(site, text, RETIRED_NAMES)).toEqual([])
+	})
+
+	it('detects the retired title phrasings (control)', () => {
+		const retired = [
+			'\'Average surface temperature in °C <br> and <a href="#">Building attributes</a>\'',
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: source text of a template literal, matched literally
+			'`${zone} ${date} buildings <a href="#">surface temperature</a> in °C`',
+		]
+		for (const line of retired) {
+			expect(
+				RETIRED_PHRASES.some((phrase) => phrase.test(line)),
+				line
+			).toBe(true)
+		}
+		// A bare unit after a value is not a retired title.
+		// biome-ignore lint/suspicious/noTemplateCurlyInString: source text of a template literal, matched literally
+		const valueWithUnit = '`${data.value.toFixed(2)} °C`'
+		expect(RETIRED_PHRASES.some((phrase) => phrase.test(valueWithUnit))).toBe(false)
+	})
+
+	it.each(LABEL_SITES)('%s uses none of the retired title phrasings', (site) => {
+		const code = stripComments(readFileSync(join(ROOT, site), 'utf8'))
+		expect(RETIRED_PHRASES.filter((phrase) => phrase.test(code)).map(String)).toEqual([])
 	})
 })

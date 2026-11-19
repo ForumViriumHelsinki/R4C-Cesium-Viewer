@@ -157,7 +157,7 @@ export default {
 			createLegend(svg, width, margin, values, labelsWithAverage, colorScale)
 			plotService.addTitleWithLink(
 				svg,
-				'Average surface temperature in °C <br> and <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/buildings-in-the-helsinki-metropolitan-area/" target="_blank">Building attributes</a>',
+				`${METRIC_LABELS.SURFACE_TEMPERATURE} <br> and <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/buildings-in-the-helsinki-metropolitan-area/" target="_blank">building attributes</a>`,
 				margin.left,
 				margin.top + 3
 			)

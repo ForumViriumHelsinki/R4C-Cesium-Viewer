@@ -5,7 +5,7 @@
  */
 
 import { ref } from 'vue'
-import { INDEX_LABELS } from '../constants/metricLabels.js'
+import { INDEX_LABELS, inSentence, METRIC_LABELS } from '../constants/metricLabels.js'
 
 /**
  * Comprehensive list of social vulnerability indices with metadata
@@ -120,7 +120,7 @@ const indexOptions = ref([
 	{
 		text: INDEX_LABELS.avgheatexposure,
 		value: 'avgheatexposure',
-		description: 'Surface heat index (Landsat), 2023-06-28.',
+		description: `${METRIC_LABELS.SURFACE_HEAT_INDEX}, 2023-06-28.`,
 	},
 	{
 		text: INDEX_LABELS.combined_avgheatexposure,
@@ -131,8 +131,7 @@ const indexOptions = ref([
 	{
 		text: INDEX_LABELS.combined_heatindex_avgheatexposure,
 		value: 'combined_heatindex_avgheatexposure',
-		description:
-			'Heat vulnerability and surface heat index (Landsat) combined, colored by heat vulnerability and height by surface heat index.',
+		description: `${METRIC_LABELS.HEAT_VULNERABILITY} and ${inSentence(METRIC_LABELS.SURFACE_HEAT_INDEX)} combined, colored by heat vulnerability and height by surface heat index.`,
 	},
 	{
 		text: INDEX_LABELS.combined_heat_flood,
