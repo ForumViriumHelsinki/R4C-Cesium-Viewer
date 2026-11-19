@@ -17,6 +17,14 @@ import { defineConfig, devices } from '@playwright/test';
  * and CI (no backend) cannot satisfy them. See #658. */
 const grepInvert = process.env.SKIP_REQUIRES_DATABASE === 'true' ? /@requires-database/ : undefined;
 
+/* PLAYWRIGHT_GPU=1 (`just test-e2e-gpu`) runs Chromium on the local GPU instead
+ * of SwiftShader, so specs that assert a budget only on a hardware renderer
+ * (view-transition-performance.spec.ts) assert it. Headless Chromium falls back
+ * to SwiftShader unless asked for the GPU, hence --enable-gpu, as
+ * `just test-performance` passes it (#843, #1148). Default and CI: SwiftShader.
+ * tests/unit/ci/playwrightGpuSwitch.test.js pins both. */
+const useGpu = process.env.PLAYWRIGHT_GPU === '1';
+
 export default defineConfig({
 	testDir: './tests',
 	grepInvert,
@@ -86,11 +94,10 @@ export default defineConfig({
 		/* Browser launch options for WebGL/Cesium support (required for all environments) */
 		launchOptions: {
 			args: [
-				'--use-gl=angle',
-				'--use-angle=swiftshader',
+				...(useGpu ? ['--enable-gpu'] : ['--use-gl=angle', '--use-angle=swiftshader']),
 				...(process.env.CI
 					? [
-							'--disable-gpu',
+							...(useGpu ? [] : ['--disable-gpu']),
 							'--disable-dev-shm-usage',
 							'--no-sandbox',
 							'--disable-web-security',

@@ -2,13 +2,16 @@ import { type Browser, chromium, type Page } from 'playwright'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { TEST_TIMEOUTS } from '../e2e/helpers/test-helpers'
 import {
+	clickByLabel,
 	clickMap,
 	closeTrackedPages,
 	gotoReady,
+	isSoftwareRenderer,
 	MAP_CANVAS,
 	openPage,
 	probeResponsiveness,
 	recordMetric,
+	webglRenderer,
 } from './harness'
 
 // Localhost URL for performance tests.
@@ -77,6 +80,14 @@ const HEAP_SETTLE_MS = 20000
 const HEAP_SETTLE_INTERVAL_MS = 2000
 const HEAP_SETTLE_BYTES = 5 * MB
 const HEAP_SETTLE_READINGS = 2
+
+// Grid-to-capital-region transition budget, the one
+// tests/e2e/view-transition-performance.spec.ts asserts on a hardware renderer.
+// Asserted only on a real GPU; under SwiftShader it is recorded (#1148).
+const GRID_TO_CAPITAL_BUDGET_MS = 3000
+
+/** Bound on the grid load and on the transition back, so a hang fails with a message. */
+const GRID_LOAD_TIMEOUT_MS = 30000
 
 /** How long a test waits for a route handler to see a request (Node-side poll). */
 const ROUTE_WAIT_MS = 10000
@@ -442,6 +453,66 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// Per-test timeout: page readiness plus the interaction budget; the 10s
 			// global testTimeout covered neither.
 		}, 65000)
+	})
+
+	describe('View Transitions', () => {
+		it('should return from the statistical grid to the capital region within budget', async (ctx) => {
+			const page = await openPage(browser)
+			await gotoReady(page, LOCALHOST_URL, READY_TIMEOUT_MS)
+			const renderer = await webglRenderer(page)
+
+			// Enter grid view with the Layers tab's Grid button (the default tab) and
+			// wait for the grid's cells, then for the colour pass after them.
+			await clickByLabel(page, 'Statistical Grid view')
+			await page.waitForFunction(
+				() =>
+					(window as any).__viewer?.dataSources?._dataSources?.some(
+						(ds: any) => ds.name === '250m_grid' && ds.entities?.values?.length > 0
+					),
+				undefined,
+				{ timeout: GRID_LOAD_TIMEOUT_MS, polling: 250 }
+			)
+			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
+			await probeResponsiveness(page)
+
+			// Back to the capital region. ViewModeCompact removes every data source and
+			// reloads the postal-code areas, so the transition is done when the grid's
+			// data source is gone and PostCodes has entities again. The e2e version of
+			// this test waits for networkidle, which on this map does not mean done.
+			const start = Date.now()
+			await clickByLabel(page, 'Capital Region view')
+			await page.waitForFunction(
+				() => {
+					const sources: any[] = (window as any).__viewer?.dataSources?._dataSources ?? []
+					return (
+						!sources.some((ds) => ds.name === '250m_grid') &&
+						sources.some((ds) => ds.name === 'PostCodes' && ds.entities?.values?.length > 0)
+					)
+				},
+				undefined,
+				{ timeout: GRID_LOAD_TIMEOUT_MS, polling: 50 }
+			)
+			const transitionMs = Date.now() - start
+
+			const software = isSoftwareRenderer(renderer)
+			recordMetric(ctx.task.name, {
+				metric: 'gridToCapitalTransitionMs',
+				value: transitionMs,
+				threshold: GRID_TO_CAPITAL_BUDGET_MS,
+				renderer,
+				asserted: !software,
+			})
+			// Informational on a software renderer, as in the e2e spec (#1143): the CI
+			// runner has no GPU. The budget is asserted on a real GPU, which means
+			// `just test-performance` locally (#1148).
+			if (software) {
+				ctx.skip()
+				return
+			}
+			expect(transitionMs).toBeLessThan(GRID_TO_CAPITAL_BUDGET_MS)
+			// Per-test timeout: page readiness (45s CI budget), the grid load and the
+			// transition, each bounded by GRID_LOAD_TIMEOUT_MS, and the settle wait.
+		}, 120000)
 	})
 
 	describe('Network Performance', () => {

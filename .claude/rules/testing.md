@@ -102,6 +102,31 @@ line. #998 lists the quarantined tests; remove the `fixme` when one is fixed.
 `--list` still lists `fixme` tests, so the ceiling and the shard split do not
 change when a test is quarantined.
 
+## Playwright Renderer (SwiftShader by Default)
+
+`playwright.config.ts` launches every Chromium project with SwiftShader
+(`--use-gl=angle --use-angle=swiftshader`), locally and in CI, so a spec that
+asserts a budget only on a hardware renderer skips everywhere by default. The
+grid-to-capital transition in `tests/e2e/view-transition-performance.spec.ts`
+is one: it records its time and skips under SwiftShader (#1143).
+
+`PLAYWRIGHT_GPU=1` drops the SwiftShader flags and launches Chromium with
+`--enable-gpu`, the flag `just test-performance` uses (#843, #1148). Only the
+value `1` turns it on. `just test-e2e-gpu [args]` sets it for `bun run test:e2e`.
+Narrow it with `-g`: `test:e2e` already passes `tests/e2e`, and Playwright ORs
+path arguments, so a file name as the argument still runs the whole suite.
+
+```bash
+just test-e2e-gpu -g "statistical grid to capital region"
+```
+
+The runner has no GPU, so CI never sets it. A local GPU run reported
+`ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)` and
+reached the transition test's `expect()`. `tests/unit/ci/playwrightGpuSwitch.test.js`
+fails if the default stops being SwiftShader or the switch keeps a SwiftShader
+flag. The same budget is also measured in `tests/performance/` (see
+"Software-rendering skip" below).
+
 ## Layout Overflow Check (`tests/e2e/layout/`)
 
 `panel-overflow.spec.ts` opens Analysis panels and fails when an element in the
@@ -444,6 +469,17 @@ it('…fps…', async (ctx) => {
 	expect(fps).toBeGreaterThan(MIN_FPS);
 });
 ```
+
+The harness exports `webglRenderer(page)` and `isSoftwareRenderer(renderer)`, which
+also treats an empty renderer string as software. `should return from the statistical
+grid to the capital region within budget` uses them: it records
+`gridToCapitalTransitionMs` and asserts the 3 s budget only on a GPU (#1148). Its
+sidebar buttons are pressed with `clickByLabel(page, ariaLabel)`, a DOM click inside
+the page. Like `clickMap`, it skips the actionability waits, and it reaches controls
+under the floating panels that `gotoReady` made `pointer-events: none`. Its end
+condition is the grid's data source gone and `PostCodes` loaded again, not
+`networkidle`. Local runs (2026-11-19) recorded 195-244 ms on an Apple M4 Pro GPU
+and 600-609 ms under SwiftShader.
 
 The viewer is exposed as `window.__viewer` (double underscore, gated on `VITE_E2E_TEST`) — never `window.cesiumViewer`. The Performance Tests CI job runs on PRs as a **non-required** check (no ruleset lists it), on pushes to `main`, and on manual runs, with the SwiftShader flags from `playwright.config.ts` passed in `PERF_TEST_CHROMIUM_ARGS`. `just test-performance 1` reproduces it locally.
 

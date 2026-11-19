@@ -154,9 +154,13 @@ test.describe('View Transition Performance @performance', () => {
 
 		// Under software rendering the time is informational (#1143): the CI
 		// runner has no GPU, and SwiftShader runs measured 4993-5957 ms.
-		// Same convention as the GPU-bound metrics in tests/performance/.
+		// Same convention as the GPU-bound metrics in tests/performance/. The budget
+		// asserts under `just test-e2e-gpu` (PLAYWRIGHT_GPU=1, #1148).
 		if (isSoftwareRenderer(renderer)) {
-			test.skip(true, `Software renderer (${renderer}); transition time is informational`)
+			test.skip(
+				true,
+				`Software renderer (${renderer}); transition time is informational. Run just test-e2e-gpu to assert it`
+			)
 			return
 		}
 
