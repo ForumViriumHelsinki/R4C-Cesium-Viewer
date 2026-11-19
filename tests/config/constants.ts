@@ -6,7 +6,6 @@
  * - PERFORMANCE_THRESHOLDS: Load time budgets
  * - API_ENDPOINTS: Service URLs for request matching
  * - BUNDLE_SIZE_BUDGETS: JavaScript bundle size limits
- * - WEB_VITALS_BUDGETS: Core Web Vitals thresholds
  * - VIEWPORTS: Device screen dimensions for responsive testing
  *
  * @see {@link https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/blob/main/.claude/skills/test-categorization.md}
@@ -121,19 +120,6 @@ export const BUNDLE_SIZE_BUDGETS = {
 	MAX_MAIN_BUNDLE: 1000000, // 1MB budget for largest single bundle (excludes ~5MB Cesium)
 	MAX_TOTAL_MAIN_BUNDLE: 5000000, // 5MB total budget for all non-Cesium bundles (catches if Cesium gets accidentally bundled)
 	BYTES_PER_KIB: 1024, // Conversion factor for bytes to kibibytes (KiB)
-} as const
-
-/**
- * Web Vitals performance budgets (in milliseconds)
- * @example
- * expect(fcpTime).toBeLessThan(WEB_VITALS_BUDGETS.FCP_BUDGET);
- */
-export const WEB_VITALS_BUDGETS = {
-	FCP_BUDGET: 2000, // First Contentful Paint budget
-	LCP_BUDGET: 3000, // Largest Contentful Paint budget
-	DOM_INTERACTIVE_BUDGET: 5000, // DOM Interactive budget
-	LCP_OBSERVATION_TIMEOUT_CI: 3000, // LCP timeout in CI
-	LCP_OBSERVATION_TIMEOUT_LOCAL: 1500, // LCP timeout locally
 } as const
 
 /**

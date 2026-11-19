@@ -68,7 +68,6 @@ const viewer = window.__viewer; // Matches app code
 
 **Remaining cleanup (low priority):**
 
-- `tests/loading-performance.spec.ts` - 20 instances with `.catch()` handlers
 - `tests/performance/load.test.ts` - 5 instances with `.catch()` handlers
 - `tests/e2e/accessibility/*.spec.ts` - 10 instances with `.catch()` handlers
 - `tests/e2e/basic.spec.ts` - 1 instance with `.catch()` handler
@@ -165,7 +164,7 @@ CesiumJS continuously loads tiles in the background. **Network NEVER becomes tru
 
 - `tests/e2e/helpers/test-helpers.ts`: 6 instances (FIXED ✅)
 - `tests/e2e/helpers/cesium-helper.ts`: 1 instance (FIXED ✅)
-- `tests/loading-performance.spec.ts`: 20 instances (low priority - have `.catch()`)
+- `tests/loading-performance.spec.ts`: 20 instances (file removed in #1147)
 - `tests/performance/load.test.ts`: 5 instances (low priority - have `.catch()`)
 - `tests/e2e/basic.spec.ts`: 1 instance (low priority - has `.catch()`)
 - Various accessibility tests: 10 instances (low priority - have `.catch()`)
@@ -435,6 +434,8 @@ await page.waitForTimeout(500);
 
 **37 instances of `networkidle` waits remaining in test spec files:**
 
+`tests/loading-performance.spec.ts` (20) and `tests/r4c.spec.ts` (1) were removed in #1147, along with the other top-level `tests/*.spec.ts` files that `test:e2e` never ran.
+
 These instances are **intentionally left in place** for the following reasons:
 
 1. **Non-blocking behavior:** All instances have `.catch()` handlers that prevent test failures
@@ -444,11 +445,9 @@ These instances are **intentionally left in place** for the following reasons:
 
 **Distribution:**
 
-- `tests/loading-performance.spec.ts` - 20 instances (performance monitoring)
 - `tests/performance/load.test.ts` - 5 instances (load testing)
 - `tests/e2e/accessibility/*.spec.ts` - 10 instances (accessibility edge cases)
 - `tests/e2e/basic.spec.ts` - 1 instance (basic smoke test)
-- `tests/r4c.spec.ts` - 1 instance (integration test)
 
 **Example pattern (acceptable):**
 
