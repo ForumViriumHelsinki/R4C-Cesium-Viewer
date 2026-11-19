@@ -12,6 +12,7 @@
  * The config reads the environment when it is evaluated, so each case stubs
  * the variables and re-imports it.
  */
+import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const SWIFTSHADER_FLAGS = ['--use-gl=angle', '--use-angle=swiftshader']
@@ -49,9 +50,37 @@ describe('playwright.config.ts renderer', { tags: ['@unit'] }, () => {
 		}
 	})
 
+	it('PLAYWRIGHT_GPU=1 under CI also drops --disable-gpu', async () => {
+		const args = await launchArgs({ CI: 'true', PLAYWRIGHT_GPU: '1' })
+		expect(args).toContain('--enable-gpu')
+		for (const flag of [...SWIFTSHADER_FLAGS, '--disable-gpu']) {
+			expect(args).not.toContain(flag)
+		}
+	})
+
 	it('only the value 1 turns the switch on', async () => {
 		const args = await launchArgs({ CI: '', PLAYWRIGHT_GPU: 'true' })
 		expect(args).toEqual(expect.arrayContaining(SWIFTSHADER_FLAGS))
 		expect(args).not.toContain('--enable-gpu')
+	})
+})
+
+/**
+ * `just test-e2e-gpu -g "statistical grid to capital region"` must reach
+ * Playwright as one -g value. just splices an unquoted `{{ args }}` into the
+ * shell line, which splits the value into words: Playwright then greps for the
+ * first word and takes the others as path filters, so 6 tests ran instead of 1.
+ * With `set positional-arguments`, `"$@"` passes each argument intact.
+ */
+describe('just test-e2e-gpu', { tags: ['@unit'] }, () => {
+	const justfile = readFileSync('justfile', 'utf8')
+	const recipe = justfile.match(/^test-e2e-gpu \*args:\n((?:[ \t]+.*\n)+)/m)
+
+	it('passes its arguments to Playwright unsplit', () => {
+		expect(justfile).toMatch(/^set positional-arguments$/m)
+		expect(recipe, 'test-e2e-gpu recipe not found in justfile').not.toBeNull()
+		const body = recipe[1]
+		expect(body).toContain('bun run test:e2e "$@"')
+		expect(body).not.toMatch(/\{\{\s*args\s*\}\}/)
 	})
 })
