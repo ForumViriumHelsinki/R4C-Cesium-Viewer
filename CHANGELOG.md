@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.59.9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.8...r4c-cesium-viewer-v1.59.9) (2026-11-18)
+
+
+### Bug Fixes
+
+* **deps:** clear November security advisories ([#1139](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1139)) ([9c4d584](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9c4d58413269539c055662b82cb59a8c9426d9ed))
+* **timeline:** fit the embedded Heat Timeline and label stops by year ([#1096](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1096)) ([9c80312](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9c80312353832530932086d5f3d1109788a06e7c))
+
 ## [1.59.8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.7...r4c-cesium-viewer-v1.59.8) (2026-11-17)
 
 
