@@ -19,6 +19,20 @@ async function waitForGridEntities(page: Page) {
 	)
 }
 
+async function webglRenderer(page: Page): Promise<string> {
+	return page.evaluate(() => {
+		const gl = document.createElement('canvas').getContext('webgl')
+		const ext = gl?.getExtension('WEBGL_debug_renderer_info')
+		return ext ? (gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string) : ''
+	})
+}
+
+// An empty renderer string means the debug extension is unavailable; treat it
+// as software so an unknown renderer never enforces a GPU budget.
+function isSoftwareRenderer(renderer: string): boolean {
+	return renderer === '' || /swiftshader|llvmpipe|software/i.test(renderer)
+}
+
 /**
  * View Transition Performance Tests
  *
@@ -128,18 +142,27 @@ test.describe('View Transition Performance @performance', () => {
 		await page.waitForLoadState('networkidle', { timeout: 15000 })
 
 		const transitionTime = Date.now() - startTime
-
-		// Performance budget: 3 seconds max for reverse transition
-		// Should be faster as we're removing entities, not styling them
-		expect(transitionTime).toBeLessThan(3000)
+		const renderer = await webglRenderer(page)
 
 		// Record metric
 		test.info().annotations.push({
 			type: 'performance',
-			description: `grid-reverse-transition-ms:${transitionTime}`,
+			description: `grid-reverse-transition-ms:${transitionTime} renderer:${renderer}`,
 		})
 
-		console.log(`Reverse grid transition time: ${transitionTime}ms`)
+		console.log(`Reverse grid transition time: ${transitionTime}ms (${renderer})`)
+
+		// Under software rendering the time is informational (#1143): the CI
+		// runner has no GPU, and SwiftShader runs measured 4993-5957 ms.
+		// Same convention as the GPU-bound metrics in tests/performance/.
+		if (isSoftwareRenderer(renderer)) {
+			test.skip(true, `Software renderer (${renderer}); transition time is informational`)
+			return
+		}
+
+		// Performance budget: 3 seconds max for reverse transition
+		// Should be faster as we're removing entities, not styling them
+		expect(transitionTime).toBeLessThan(3000)
 	})
 
 	// Quarantined: fails on every attempt in CI — see #998
