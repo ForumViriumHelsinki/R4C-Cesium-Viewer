@@ -1,7 +1,8 @@
 /**
  * A layer failure reaches the same channel whichever tab switched the layer on
  * (#1152). Land cover and NDVI can be switched on from the Layers tab
- * (MapControls) and from their Analysis panels (LandcoverPanel, NDVIPanel); trees,
+ * (MapControls) and from their Analysis panels (LandcoverPanel with its year select,
+ * NDVIPanel); trees,
  * vegetation and other nature only from the Layers tab. Every one of them must end
  * in globalStore.showError with the layer's message from constants/errorMessages.js
  * and a Retry that re-runs the operation. The statistical grid loads when its view
@@ -12,12 +13,13 @@ import { flushPromises, shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import DataLayersControl from '@/components/controls/DataLayersControl.vue'
+import HSYYearSelect from '@/components/HSYYearSelect.vue'
 import LandcoverPanel from '@/components/LandcoverPanel.vue'
 import MapControls from '@/components/MapControls.vue'
 import NDVIPanel from '@/components/NDVIPanel.vue'
 import SosEco250mGrid from '@/components/SosEco250mGrid.vue'
 import { LAYER_FAILURE_MESSAGES } from '@/constants/errorMessages.js'
-import { setLandcoverEnabled } from '@/services/landcover'
+import { createHSYImageryLayer, setLandcoverEnabled } from '@/services/landcover'
 import { changeTIFF } from '@/services/tiffImagery.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
 import { useLoadingStore } from '@/stores/loadingStore.js'
@@ -97,6 +99,7 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 		setActivePinia(createPinia())
 		vi.spyOn(console, 'error').mockImplementation(() => {})
 		vi.mocked(setLandcoverEnabled).mockReset().mockResolvedValue(undefined)
+		vi.mocked(createHSYImageryLayer).mockReset().mockResolvedValue(undefined)
 		vi.mocked(changeTIFF).mockReset().mockResolvedValue(undefined)
 		loaders.otherNature.mockReset().mockResolvedValue(undefined)
 		loaders.trees.mockReset().mockResolvedValue(undefined)
@@ -139,6 +142,34 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 			const retry = expectLayerFailure('landcover')
 			retry()
 			expect(setLandcoverEnabled).toHaveBeenLastCalledWith(true)
+		})
+
+		it('Analysis tab: a failed year change shows the same message with Retry', async () => {
+			vi.mocked(createHSYImageryLayer).mockRejectedValueOnce(new Error('HSY 504'))
+			useToggleStore().setLandCover(true)
+			wrapper = shallowMount(HSYYearSelect)
+
+			wrapper.vm.selectedYear = 2018
+			await flushPromises()
+
+			const retry = expectLayerFailure('landcover')
+			retry()
+			await flushPromises()
+			expect(createHSYImageryLayer).toHaveBeenCalledTimes(2)
+		})
+
+		it('Analysis tab: a year-change Retry after land cover was switched off does nothing', async () => {
+			vi.mocked(createHSYImageryLayer).mockRejectedValueOnce(new Error('HSY 504'))
+			useToggleStore().setLandCover(true)
+			wrapper = shallowMount(HSYYearSelect)
+			wrapper.vm.selectedYear = 2018
+			await flushPromises()
+			const retry = expectLayerFailure('landcover')
+
+			useToggleStore().setLandCover(false)
+			retry()
+
+			expect(createHSYImageryLayer).toHaveBeenCalledTimes(1)
 		})
 
 		it('Layers tab: a Retry after the user switched land cover off does nothing', async () => {
