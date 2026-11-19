@@ -266,7 +266,7 @@ void treeService.loadTrees();
 // ✅ CORRECT: Proper error handling
 featurePicker.loadPostalCode().catch((error) => {
 	logger.error('Failed to load postal code:', error);
-	loadingStore.setError('Failed to load postal code data');
+	globalStore.showError('Unable to load postal code data. Please try again.', error.message);
 });
 
 // ✅ CORRECT: If truly fire-and-forget, document why
@@ -286,13 +286,27 @@ loadData().catch(console.error);
 ```
 
 ```javascript
-// ✅ CORRECT: Update UI state on error
-loadData().catch((error) => {
-	logger.error('Failed to load data:', error);
-	loadingStore.setLoadingError('dataKey', 'Failed to load data');
-	// Optionally: notify user, trigger retry, cleanup
-});
+// ✅ CORRECT: Update UI state on error and tell the user, with a Retry
+const loadTrees = () =>
+	treeService.loadTrees().catch((error) => {
+		logger.error('Failed to load trees:', error);
+		loadingStore.reportLayerFailure('trees', error, { retry: loadTrees });
+	});
 ```
+
+### User-Facing Errors: One Channel (#1152, #1153)
+
+- A failure the user triggered goes through `globalStore.showError(message, context, { severity, retry })`.
+  For a layer, call `loadingStore.reportLayerFailure(layer, error, { retry })`, which uses the layer's
+  message, so the Layers tab and an Analysis panel report the same failure the same way.
+  `loadingStore.setLayerError` alone stays quiet; unifiedLoader calls it for every failed or cancelled tile.
+- Copy lives in `src/constants/errorMessages.js`: sentence case, "Unable to load <thing>." plus the
+  consequence or next step. Never show `error.message`; pass it as `context`, which is logged.
+- Severity `error` (`mdi-alert-circle`) when an action failed, `warning` (`mdi-alert-circle-outline`)
+  when the app keeps working with less data.
+- No `alert()`. Empty results and limits are an inline tonal `v-alert`.
+- HSY imagery tile errors stay quiet and the `serviceHealthStore` snackbar stays HSY-gated
+  (architecture.md, HSY Outage Resilience Stack).
 
 ### Avoid Unnecessary Promise Constructors
 

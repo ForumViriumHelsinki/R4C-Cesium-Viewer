@@ -5,6 +5,7 @@
  */
 
 import { onBeforeUnmount, ref, watch } from 'vue'
+import { VIEWPORT_BUILDINGS_FAILURE_MESSAGE } from '../constants/errorMessages.js'
 import { VIEWPORT } from '../constants/viewport.js'
 import Datasource from '../services/datasource.js'
 import ViewportBuildingLoader from '../services/viewportBuildingLoader.js'
@@ -51,7 +52,7 @@ export function useViewportLoading(viewer, getCamera, getFeaturepicker) {
 
 	const isLoadingBuildings = ref(false)
 	const viewportLoadingProgress = ref({ current: 0, total: 0 })
-	const viewportLoadingError = ref(null)
+	const viewportLoadingError = ref(/** @type {string | null} */ (null))
 
 	// Persistent FeaturePicker instance for viewport-based loading
 	// Reusing the same instance maintains visiblePostalCodes state across camera moves
@@ -177,7 +178,8 @@ export function useViewportLoading(viewer, getCamera, getFeaturepicker) {
 			}
 		} catch (error) {
 			logger.error('[useViewportLoading] Error loading buildings:', error?.message || error)
-			viewportLoadingError.value = error?.message || 'Failed to load buildings'
+			// The technical detail is logged above; the indicator shows the shared copy (#1153).
+			viewportLoadingError.value = VIEWPORT_BUILDINGS_FAILURE_MESSAGE
 		} finally {
 			isLoadingBuildings.value = false
 		}

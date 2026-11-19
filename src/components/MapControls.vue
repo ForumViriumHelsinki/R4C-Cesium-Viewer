@@ -168,6 +168,7 @@ let dataSourceService = null
 const applyLandCover = (enabled) => {
 	setLandcoverEnabled(enabled).catch((error) => {
 		logger.error('Failed to update land cover layer:', error)
+		loadingStore.reportLayerFailure('landcover', error, { retry: () => applyLandCover(enabled) })
 	})
 }
 
@@ -197,7 +198,7 @@ const loadVegetation = async () => {
 				await vegetationService.loadVegetation()
 				loadingStore.completeLayerLoading('vegetation', true)
 			} catch (error) {
-				loadingStore.setLayerError('vegetation', error.message || 'Failed to load vegetation data')
+				loadingStore.reportLayerFailure('vegetation', error, { retry: loadVegetation })
 			}
 		} else {
 			dataSourceService.changeDataSourceShowByName('Vegetation', true)
@@ -301,7 +302,7 @@ const loadTrees = async () => {
 				// Track usage for background preloader
 				backgroundPreloader.trackLayerUsage('trees')
 			} catch (error) {
-				loadingStore.setLayerError('trees', error.message || 'Failed to load tree data')
+				loadingStore.reportLayerFailure('trees', error, { retry: loadTrees })
 			}
 		} else {
 			dataSourceService.changeDataSourceShowByName('Trees', true)
@@ -330,7 +331,10 @@ const loadOtherNature = () => {
 	if (showOtherNature.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
 			const otherNatureService = new Othernature()
-			otherNatureService.loadOtherNature().catch(logFailure)
+			otherNatureService.loadOtherNature().catch((error) => {
+				logFailure(error)
+				loadingStore.reportLayerFailure('otherNature', error, { retry: loadOtherNature })
+			})
 		} else {
 			dataSourceService.changeDataSourceShowByName('OtherNature', true).catch(logFailure)
 		}
@@ -352,6 +356,18 @@ const addLandCover = () => {
 }
 
 /**
+ * Adds the NDVI imagery for the selected date; a failure is reported the way
+ * NDVIPanel reports it (#1152).
+ * @returns {void}
+ */
+const addNdviImagery = () => {
+	changeTIFF().catch((error) => {
+		logger.error('Failed to add NDVI imagery:', error)
+		loadingStore.reportLayerFailure('ndvi', error, { retry: addNdviImagery })
+	})
+}
+
+/**
  * Toggles NDVI satellite imagery layer
  *
  * Normalized Difference Vegetation Index shows vegetation density from satellite data.
@@ -366,9 +382,7 @@ const toggleNDVI = () => {
 	toggleStore.setNDVI(ndvi.value)
 
 	if (ndvi.value) {
-		changeTIFF().catch((error) => {
-			logger.error('Failed to add NDVI imagery:', error)
-		})
+		addNdviImagery()
 		eventBus.emit('addNDVI')
 	} else {
 		removeTIFF().catch((error) => {

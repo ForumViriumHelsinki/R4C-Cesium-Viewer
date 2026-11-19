@@ -97,20 +97,14 @@
 			</v-tabs>
 
 			<!-- Tab content: inert until the Cesium viewer exists (#951) -->
+			<!-- Passive hint: the top snackbar in CesiumViewer owns the failure and its Retry (#1153) -->
 			<div
 				v-if="viewerInitFailed"
 				class="viewer-init-error"
-				role="alert"
+				role="status"
 			>
 				<v-icon size="small">mdi-alert-circle</v-icon>
-				<span>The map failed to load.</span>
-				<v-btn
-					variant="text"
-					size="small"
-					@click="reloadPage"
-				>
-					Reload
-				</v-btn>
+				<span>{{ VIEWER_INIT_MESSAGES.sidebarHint }}</span>
 			</div>
 			<div
 				v-else-if="!viewerReady"
@@ -275,6 +269,7 @@ import ViewModeCompact from '../components/ViewModeCompact.vue'
 import { useSidebarNavigation } from '../composables/useSidebarNavigation.js'
 import { useVttFloodUrlState } from '../composables/useVttFloodUrlState.js'
 import { ANALYSES, findAnalysis, isAnalysisAvailable } from '../constants/analysisRegistry.js'
+import { VIEWER_INIT_MESSAGES } from '../constants/errorMessages.js'
 import { LAYOUT } from '../constants/layout.js'
 import { cesiumProvider } from '../services/cesiumProvider.js'
 import { flyToFloodExtent, isFloodExtentFramed } from '../services/vttFloodCamera.js'
@@ -319,10 +314,10 @@ const currentView = computed(() => globalStore.view)
 const viewerReady = computed(() => Boolean(globalStore.cesiumViewer))
 /**
  * Initialisation failed and the viewer will never arrive: replace the loading hint
- * with a failure notice. The content stays inert; it cannot work without a viewer.
+ * with a passive failure hint. The top snackbar owns the failure and its Retry
+ * (#1153). The content stays inert; it cannot work without a viewer.
  */
 const viewerInitFailed = computed(() => !viewerReady.value && globalStore.viewerInitFailed)
-const reloadPage = () => window.location.reload()
 /** @type {readonly ('search' | 'layers' | 'analysis' | 'details')[]} */
 const SIDEBAR_TABS = ['search', 'layers', 'analysis', 'details']
 

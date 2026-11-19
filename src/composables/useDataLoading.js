@@ -5,6 +5,7 @@
  */
 
 import { onMounted } from 'vue'
+import { DEGRADED_DATA_MESSAGES } from '../constants/errorMessages.js'
 import cacheWarmer from '../services/cacheWarmer.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useHeatExposureStore } from '../stores/heatExposureStore.js'
@@ -41,25 +42,44 @@ export function useDataLoading(shouldAutoLoad = true) {
 	const heatExposureStore = useHeatExposureStore()
 
 	/**
+	 * Loads Paavo statistics. A failure degrades the app rather than stopping it,
+	 * so it is shown as a warning with a Retry (#1153).
+	 *
+	 * @returns {Promise<void>}
+	 */
+	const loadSocioeconomicData = () =>
+		socioEconomicsStore.loadPaavo().catch((error) => {
+			logger.error('[useDataLoading] Failed to load Paavo data:', error)
+			store.showError(DEGRADED_DATA_MESSAGES.socioeconomic, String(error?.message ?? error), {
+				severity: 'warning',
+				retry: loadSocioeconomicData,
+			})
+		})
+
+	/**
+	 * Loads heat exposure data; a failure is a warning with a Retry, as above.
+	 *
+	 * @returns {Promise<void>}
+	 */
+	const loadHeatExposureData = () =>
+		heatExposureStore.loadHeatExposure().catch((error) => {
+			logger.error('[useDataLoading] Failed to load heat exposure data:', error)
+			store.showError(DEGRADED_DATA_MESSAGES.heatExposure, String(error?.message ?? error), {
+				severity: 'warning',
+				retry: loadHeatExposureData,
+			})
+		})
+
+	/**
 	 * Loads external data sources (Paavo, heat exposure).
 	 * Runs in parallel with error handling for each source.
-	 * Failures are logged but don't block other data sources.
+	 * Failures are reported but don't block other data sources.
 	 *
 	 * @async
 	 * @returns {Promise<void>}
 	 */
 	const loadExternalData = async () => {
-		// Load external data in parallel, with error handling for each
-		await Promise.allSettled([
-			socioEconomicsStore.loadPaavo().catch((error) => {
-				logger.error('[useDataLoading] Failed to load Paavo data:', error)
-				store.showError('Failed to load socioeconomic data. Some features may be unavailable.')
-			}),
-			heatExposureStore.loadHeatExposure().catch((error) => {
-				logger.error('[useDataLoading] Failed to load heat exposure data:', error)
-				store.showError('Failed to load heat exposure data. Some features may be unavailable.')
-			}),
-		])
+		await Promise.allSettled([loadSocioeconomicData(), loadHeatExposureData()])
 
 		logger.debug('[useDataLoading] ✅ External data loading complete')
 	}

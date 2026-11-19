@@ -102,37 +102,6 @@
 						</div>
 					</div>
 
-					<!-- Error Messages -->
-					<div
-						v-if="hasErrors"
-						class="error-section"
-					>
-						<v-alert
-							v-for="(error, layer) in layerErrors"
-							:key="layer"
-							type="error"
-							density="compact"
-							variant="tonal"
-							class="mb-2"
-						>
-							<template #prepend>
-								<v-icon size="16"> mdi-alert-circle </v-icon>
-							</template>
-							<div class="error-content">
-								<strong>{{ formatLayerName(layer) }}</strong
-								>: {{ error }}
-								<v-btn
-									size="x-small"
-									variant="text"
-									color="error"
-									class="ml-2"
-									@click="retryLayer(layer)"
-								>
-									Retry
-								</v-btn>
-							</div>
-						</v-alert>
-					</div>
 				</v-card-text>
 
 				<!-- Performance Info (Debug) -->
@@ -260,19 +229,6 @@ const showCompactIndicator = computed(() => {
 const overallProgress = computed(() => loadingStore.overallProgress)
 const activeLoadingLayers = computed(() => loadingStore.activeLoadingLayers)
 
-const hasErrors = computed(() => {
-	return Object.keys(layerErrors.value).length > 0
-})
-
-const layerErrors = computed(() => {
-	return Object.keys(loadingStore.loadingErrors).reduce((errors, layer) => {
-		if (loadingStore.loadingErrors[layer]) {
-			errors[layer] = loadingStore.loadingErrors[layer]
-		}
-		return errors
-	}, {})
-})
-
 const performanceMetrics = computed(() => loadingStore.getPerformanceMetrics())
 
 // Methods
@@ -332,19 +288,10 @@ const getCompactMessage = () => {
 	return `Loading ${activeCount} layers...`
 }
 
-const retryLayer = (layer) => {
-	loadingStore.retryLayerLoading(layer)
-	// Emit event for parent component to handle actual retry
-	emit('retry-layer', layer)
-}
-
 const formatDuration = (ms) => {
 	if (ms < 1000) return `${ms}ms`
 	return `${(ms / 1000).toFixed(1)}s`
 }
-
-// Emits
-const emit = defineEmits(['retry-layer'])
 
 // Watch for loading changes to provide haptic feedback on mobile
 watch(
@@ -462,19 +409,6 @@ watch(
 	font-size: 0.8rem;
 	color: rgba(var(--v-theme-on-surface), 0.6);
 	font-style: italic;
-}
-
-.error-section {
-	margin-top: 16px;
-	padding-top: 16px;
-	border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
-}
-
-.error-content {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	width: 100%;
 }
 
 .compact-loading {

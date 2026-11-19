@@ -6,6 +6,7 @@
  */
 
 import { ref } from 'vue'
+import { VIEWER_INIT_MESSAGES } from '../constants/errorMessages.js'
 import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
@@ -108,8 +109,7 @@ export function useViewerInitialization() {
 				Graphics = GraphicsModule.default || GraphicsModule
 			} catch (error) {
 				logger.error('Failed to load Cesium library or service modules:', error)
-				errorMessage.value =
-					'Unable to load the 3D map viewer. Please check your internet connection and try again.'
+				errorMessage.value = VIEWER_INIT_MESSAGES.network
 				errorSnackbar.value = true
 				store.setIsLoading(false)
 				store.setViewerInitFailed(true)
@@ -170,8 +170,12 @@ export function useViewerInitialization() {
 			viewer.value = new Cesium.Viewer('cesiumContainer', viewerOptions)
 		} catch (error) {
 			// CesiumWidget shows its own error panel and rethrows (e.g. no WebGL). The
-			// viewer will never be set, so tell the UI to stop waiting for it.
+			// viewer will never be set, so tell the UI to stop waiting for it. The top
+			// snackbar owns the failure on this path too, with Retry (#1153).
 			logger.error('Failed to construct the Cesium viewer:', error)
+			errorMessage.value = VIEWER_INIT_MESSAGES.construction
+			errorSnackbar.value = true
+			store.setIsLoading(false)
 			store.setViewerInitFailed(true)
 			throw error
 		}
@@ -335,8 +339,14 @@ export function useViewerInitialization() {
 		errorMessage.value = ''
 		store.setViewerInitFailed(false)
 		store.setIsLoading(true)
-		await initViewer()
-		store.setIsLoading(false)
+		try {
+			await initViewer()
+		} catch {
+			// initViewer logged the failure and raised the snackbar again; the Retry
+			// button that called this has nothing else to do with the error.
+		} finally {
+			store.setIsLoading(false)
+		}
 	}
 
 	return {

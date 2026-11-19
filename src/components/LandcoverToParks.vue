@@ -11,6 +11,18 @@
 					convertible landcover areas.
 				</p>
 
+				<v-alert
+					v-if="emptyMessage"
+					type="info"
+					density="compact"
+					variant="tonal"
+					closable
+					class="mb-2"
+					@click:close="emptyMessage = ''"
+				>
+					{{ emptyMessage }}
+				</v-alert>
+
 				<v-row class="mt-2">
 					<v-col cols="6">
 						<v-btn
@@ -91,6 +103,7 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 import { useGridStyling } from '../composables/useGridStyling.js'
 import { useIndexData } from '../composables/useIndexData.js'
+import { PARKS_MESSAGES } from '../constants/errorMessages.js'
 import { getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore.js'
@@ -123,6 +136,8 @@ const { getIndexInfo } = useIndexData()
 
 const isSelectingGrid = ref(false)
 const isLoading = ref(false)
+/** Inline notice for a grid cell with nothing to convert (#1153: no alert()). */
+const emptyMessage = ref('')
 const dataSourceName = 'landcover_for_parks'
 const gridDataSourceName = '250m_grid'
 const selectedGridEntity = shallowRef(/** @type {Cesium.Entity|null} */ (null)) // Cesium Entity - use shallowRef to prevent deep reactivity
@@ -298,6 +313,7 @@ const applyDynamicStyling = (dataSource) => {
 }
 
 const loadLandcoverData = async (gridId) => {
+	emptyMessage.value = ''
 	const apiUrl = urlStore.landcoverToParks(gridId)
 	try {
 		const response = await fetch(apiUrl)
@@ -305,7 +321,7 @@ const loadLandcoverData = async (gridId) => {
 		const geojsonData = await response.json()
 
 		if (geojsonData.features.length === 0) {
-			alert(`No convertible landcover features found.`)
+			emptyMessage.value = PARKS_MESSAGES.noConvertibleLandcover
 			if (selectedGridEntity.value?.polygon && originalGridColor.value) {
 				selectedGridEntity.value.polygon.material = originalGridColor.value
 			}
@@ -325,7 +341,10 @@ const loadLandcoverData = async (gridId) => {
 		landcoverFeaturesLoaded.value = true
 	} catch (error) {
 		logger.error('Failed to load landcover data:', error)
-		alert('An error occurred while fetching landcover data.')
+		globalStore.showError(
+			PARKS_MESSAGES.landcoverFailure,
+			`Create Parks landcover fetch failed: ${error?.message ?? error}`
+		)
 	}
 }
 

@@ -5,6 +5,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import LandcoverToParks from '../../../src/components/LandcoverToParks.vue'
+import { PARKS_MESSAGES } from '../../../src/constants/errorMessages.js'
 
 // Factory function for creating Cesium mock
 const createCesiumMock = () => {
@@ -135,6 +136,7 @@ describe('LandcoverToParks Component', () => {
 					pick: vi.fn(),
 				},
 			},
+			showError: vi.fn(),
 		}
 
 		mockPropsStore = {
@@ -381,7 +383,8 @@ describe('LandcoverToParks Component', () => {
 			expect(url).toBe('/api/landcover/grid_123')
 		})
 
-		it('should handle empty landcover response gracefully', async () => {
+		// #1153: an empty result is an inline tonal notice, never a native alert().
+		it('shows an inline notice for an empty landcover response', async () => {
 			global.fetch = vi.fn(() =>
 				Promise.resolve({
 					ok: true,
@@ -392,12 +395,16 @@ describe('LandcoverToParks Component', () => {
 			global.alert = vi.fn()
 
 			await wrapper.vm.loadLandcoverData('grid_123')
+			await wrapper.vm.$nextTick()
 
-			expect(global.alert).toHaveBeenCalledWith('No convertible landcover features found.')
+			expect(global.alert).not.toHaveBeenCalled()
+			expect(wrapper.vm.emptyMessage).toBe(PARKS_MESSAGES.noConvertibleLandcover)
+			expect(wrapper.text()).toContain(PARKS_MESSAGES.noConvertibleLandcover)
 			expect(wrapper.vm.landcoverFeaturesLoaded).toBe(false)
 		})
 
-		it('should handle API errors gracefully', async () => {
+		// #1153: a fetch failure goes through the shared snackbar, never a native alert().
+		it('reports an API error through globalStore.showError', async () => {
 			global.fetch = vi.fn(() =>
 				Promise.resolve({
 					ok: false,
@@ -410,7 +417,11 @@ describe('LandcoverToParks Component', () => {
 
 			await wrapper.vm.loadLandcoverData('grid_123')
 
-			expect(global.alert).toHaveBeenCalledWith('An error occurred while fetching landcover data.')
+			expect(global.alert).not.toHaveBeenCalled()
+			expect(mockGlobalStore.showError).toHaveBeenCalledWith(
+				PARKS_MESSAGES.landcoverFailure,
+				expect.stringContaining('500')
+			)
 			expect(console.error).toHaveBeenCalled()
 		})
 	})

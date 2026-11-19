@@ -16,7 +16,8 @@ export const ERROR_STATE_SELECTOR = [
 	// v-alert type="error": flat variant renders bg-error, tonal renders text-error
 	'.v-alert.bg-error',
 	'.v-alert.text-error',
-	// v-snackbar color="error" (CesiumViewer.vue init and runtime error snackbars)
+	// v-snackbar color="error" (CesiumViewer.vue init snackbar, ErrorNotificationSnackbar.vue
+	// at severity error; severity warning renders bg-warning and is not an error state)
 	'.v-snackbar__wrapper.bg-error',
 	// v-text-field / v-select with a failed validation rule
 	'.v-input--error',
@@ -25,7 +26,6 @@ export const ERROR_STATE_SELECTOR = [
 	// App-specific error blocks, each rendered only in an error branch (v-if)
 	'.error-state', // BackgroundMapBrowser.vue: HSY layer list failed to load
 	'.error-text', // ViewportLoadingIndicator.vue: viewport load failed
-	'.error-section', // LoadingIndicator.vue: per-layer load errors
 	'.error-msg', // DataSourceStatusBadge.vue: a data source reports status 'error'
 ].join(', ')
 

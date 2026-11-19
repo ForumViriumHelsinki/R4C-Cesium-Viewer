@@ -101,7 +101,9 @@ onMounted(async () => {
 		loadingStore.completeLayerLoading('statsGrid', true)
 	} catch (error) {
 		logger.error('Error loading grid:', error)
-		loadingStore.setLayerError('statsGrid', error.message)
+		// Tell the user through the shared snackbar (#1152). No Retry: the load is
+		// tied to this component's mount, so re-entering the grid view retries it.
+		loadingStore.reportLayerFailure('statsGrid', error)
 	}
 })
 </script>
