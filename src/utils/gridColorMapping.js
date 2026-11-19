@@ -15,6 +15,8 @@
  * renderer in.
  */
 
+import { INDEX_LABELS } from '../constants/metricLabels.js'
+
 /** Heat vulnerability color scale (white -> dark red) */
 export const heatColors = [
 	{ color: '#ffffff', range: 'Incomplete data' },
@@ -77,8 +79,8 @@ export const indexToColorScheme = {
 	combined_heatindex_avgheatexposure: heatColors,
 	combined_heat_flood_green: heatColors,
 	both: bothColors,
-	avgheatexposure: [{ color: 'gradient', range: 'Heat Exposure' }],
-	combined_avgheatexposure: [{ color: 'gradient', range: 'Combined Heat Exposure' }],
+	avgheatexposure: [{ color: 'gradient', range: INDEX_LABELS.avgheatexposure }],
+	combined_avgheatexposure: [{ color: 'gradient', range: INDEX_LABELS.combined_avgheatexposure }],
 }
 
 /**

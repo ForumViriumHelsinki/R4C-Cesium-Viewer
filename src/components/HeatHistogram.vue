@@ -9,6 +9,7 @@
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import * as d3 from '@/utils/d3' // Import D3.js
 import { useChartSize } from '../composables/useChartSize.js'
+import { METRIC_LABELS } from '../constants/metricLabels.js'
 import Building from '../services/building.js'
 import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
@@ -241,11 +242,11 @@ export default {
 					height,
 					tooltip,
 					containerRef.value,
-					(d) => `Heat exposure index: ${d.x0}<br>Amount of buildings: ${d.length}`
+					(d) => `${METRIC_LABELS.SURFACE_HEAT_INDEX}: ${d.x0}<br>Amount of buildings: ${d.length}`
 				)
 				plotService.addTitle(
 					svg,
-					`Heat exposure to buildings in ${store.nameOfZone}`,
+					`${METRIC_LABELS.SURFACE_HEAT_INDEX} of buildings in ${store.nameOfZone}`,
 					width,
 					margin.top
 				)
@@ -259,7 +260,7 @@ export default {
 					tooltip,
 					containerRef.value,
 					(d) =>
-						`Temperature in Celsius: ${d.x0}<br>Amount of buildings: ${d.length}<br>Left click highlights the building(s) on map`
+						`${METRIC_LABELS.SURFACE_TEMPERATURE}: ${d.x0}<br>Amount of buildings: ${d.length}<br>Left click highlights the building(s) on map`
 				)
 				plotService.addTitleWithLink(
 					svg,

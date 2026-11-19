@@ -12,19 +12,21 @@
 
 <script>
 import { ref, watch } from 'vue'
+import { propertyLabel } from '../constants/metricLabels.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { usePropsStore } from '../stores/propsStore.js'
 
 export default {
 	setup() {
 		const propsStore = usePropsStore()
+		// Option names are the Details names for the same keys (#1156).
 		const categoricalOptions = [
-			{ text: 'Facade Material', value: 'julkisivu_s' },
-			{ text: 'Building Material', value: 'rakennusaine_s' },
-			{ text: 'Usage', value: 'kayttarks' },
-			{ text: 'Heating Method', value: 'lammitystapa_s' },
-			{ text: 'Heating Source', value: 'lammitysaine_s' },
-		]
+			'julkisivu_s',
+			'rakennusaine_s',
+			'kayttarks',
+			'lammitystapa_s',
+			'lammitysaine_s',
+		].map((value) => ({ text: propertyLabel(value), value }))
 
 		const selectedCategorical = ref('julkisivu_s')
 

@@ -8,6 +8,7 @@
 <script>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useChartSize } from '../composables/useChartSize.js'
+import { METRIC_LABELS } from '../constants/metricLabels.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -64,7 +65,8 @@ export default {
 
 			createBarsWithLabels(svg, data, xScale, yScale, height, colors)
 			plotService.setupAxes(svg, xScale, yScale, height)
-			plotService.addTitle(svg, 'Temperature Comparison', margin.left, margin.top - 10)
+			// The bars are 0-1 Landsat index values, not temperatures.
+			plotService.addTitle(svg, METRIC_LABELS.SURFACE_HEAT_INDEX, margin.left, margin.top - 10)
 		}
 
 		// Create bars and labels

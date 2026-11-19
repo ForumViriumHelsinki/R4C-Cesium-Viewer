@@ -417,7 +417,7 @@ As a user, I want smooth performance when analyzing postal codes with thousands 
   - Height: width / 1.2, minus margins
   - Margins: `{top: 30, right: 50, bottom: 34, left: 30}`
 - 20 bins calculated by D3 histogram with automatic domain
-- X-axis: Heat exposure index or temperature (Celsius)
+- X-axis: surface heat index (Landsat) or surface temperature (°C); names from `src/constants/metricLabels.js`
 - Y-axis: Building count per bin
 - Interactive tooltips on bar hover
 - Click handler for building highlighting
@@ -432,7 +432,7 @@ As a user, I want smooth performance when analyzing postal codes with thousands 
 **FR4.3 Interactive Features**
 
 - Hover tooltip shows:
-  - Heat range: "Heat exposure index: 0.45" or "Temperature in Celsius: 25.3"
+  - Heat range: "Surface heat index (Landsat): 0.45" or "Surface temperature (°C): 25.3"
   - Building count: "Amount of buildings: 127"
   - Click hint: "Left click highlights the building(s) on map"
 - Click triggers `buildingService.highlightBuildingsInViewer(d)`

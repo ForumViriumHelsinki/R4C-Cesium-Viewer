@@ -9,6 +9,10 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import * as d3 from '@/utils/d3' // Import D3.js
 import { useChartSize } from '../composables/useChartSize.js'
+import {
+	SOCIOECONOMIC_HEAT_INDICATORS,
+	SOCIOECONOMIC_INDICATORS,
+} from '../constants/metricLabels.js'
 import { eventBus } from '../services/eventEmitter.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -76,26 +80,6 @@ export default {
 			svg.append('g').call(d3.axisLeft(yScale))
 		}
 
-		const labelDescriptions = {
-			'Apartment Heat Exposure': 'Average heat exposure for apartments.',
-			'Apartment Cold Exposure':
-				'Average surface temperature of residential buildings during cold periods (Landsat data).',
-			'Apartment Surface Heat':
-				'Average surface temperature of residential buildings (Landsat data).',
-			'Children and Elderly %': 'Percentage of the population aged 0-12 and 65+.',
-			'Children %': 'Percentage of the population aged 0-12.',
-			'Elderly %': 'Percentage of the population aged 65 and over.',
-			'Unemployed rate':
-				'Percentage of the population that is unemployed. Higher values indicate higher unemployment rates.',
-			'Size of Apartments':
-				'Relative size of apartments. Higher values indicate smaller apartment sizes.',
-			'Basic Education %':
-				'Percentage of the population with only basic education. Higher values indicate lower education levels.',
-			Income: 'Relative income level in the area. Higher values indicate lower income levels.',
-			'Rentals %':
-				'Percentage of residential properties that are rented. Higher values indicate a higher proportion of rentals.',
-		}
-
 		const wrapText = (text, width) => {
 			text.each(
 				/** @this {SVGTextElement} */ function () {
@@ -153,8 +137,7 @@ export default {
 				.attr('height', (d) => height - yScale(d.value))
 				.attr('fill', barColor)
 				.on('mouseover', (event, d) => {
-					// Get the description for the label
-					const description = labelDescriptions[d.label] || d.label
+					const description = d.description
 
 					plotService.handleMouseover(
 						tooltip,
@@ -182,20 +165,15 @@ export default {
 				const height = chartHeight.value - margin.top - margin.bottom
 				const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
 
-				const xLabels = [
-					'Apartment Surface Heat',
-					'Children and Elderly %',
-					'Children %',
-					'Elderly %',
-					'Unemployed rate',
-					'Size of Apartments',
-					'Basic Education',
-					'Income',
-					'Rentals %',
+				// Each bar carries its label and description together, so no bar can lose
+				// its help text to a label typo (#1154).
+				const indicators = [
+					toggleStore.capitalRegionCold && !toggleStore.helsinkiView
+						? SOCIOECONOMIC_HEAT_INDICATORS.surfaceCold
+						: SOCIOECONOMIC_HEAT_INDICATORS.surfaceHeat,
+					...SOCIOECONOMIC_INDICATORS,
 				]
-
-				if (toggleStore.capitalRegionCold) xLabels[0] = 'Apartment Cold Exposure'
-				if (toggleStore.helsinkiView) xLabels[0] = 'Apartment Heat Exposure'
+				const xLabels = indicators.map(({ label }) => label)
 
 				const selectedNimi = propsStore.socioEconomics
 				const compareData = socioEconomicsStore.getDataByNimi(selectedNimi)
@@ -236,14 +214,14 @@ export default {
 				const yScale = plotService.createScaleLinear(0, d3.max(allYValues), [height, 0])
 				setupAxes(svg, xScale, yScale, height)
 
-				const barData = yValues.map((value, index) => ({ value, label: xLabels[index] }))
+				const barData = yValues.map((value, index) => ({ value, ...indicators[index] }))
 				const tooltip = plotService.createTooltip(containerRef.value)
 				createBars(svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue', sosData.nimi)
 
 				if (hasCompareSeries) {
 					const compareBarData = compareValues.map((value, index) => ({
 						value,
-						label: xLabels[index],
+						...indicators[index],
 					}))
 					const xOffsetForCompareData = xScale.bandwidth() / 2.5 // Adjust as needed for proper spacing
 					createBars(
