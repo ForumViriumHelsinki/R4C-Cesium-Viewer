@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.59.10](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.9...r4c-cesium-viewer-v1.59.10) (2026-11-19)
+
+
+### Bug Fixes
+
+* **test:** keep the grid-to-capital transition time informational on SwiftShader ([#1150](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1150)) ([3d12c70](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/3d12c70715eeea68425b6396c2a377b6b9a8623e))
+* **test:** let the WMS mock fallback pass requests to earlier mocks ([#1149](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1149)) ([eb4a8d4](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/eb4a8d46a1f7a630e1beb62243b8b8b41fd69957))
+
 ## [1.59.9](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.8...r4c-cesium-viewer-v1.59.9) (2026-11-18)
 
 
