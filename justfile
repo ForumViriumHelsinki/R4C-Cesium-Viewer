@@ -8,7 +8,6 @@
 #   just dev-full  - Everything in containers (slower, but closer to prod)
 
 set dotenv-load
-set positional-arguments
 
 # ==============================================================================
 # Configuration
@@ -299,11 +298,12 @@ test-e2e *args:
 # Budgets asserted only on a hardware renderer run here, e.g. the grid-to-capital
 # transition: `just test-e2e-gpu -g "statistical grid to capital region"`. Narrow with
 # -g: a path argument is OR'ed with test:e2e's tests/e2e and selects the whole suite.
-# "$@" (set positional-arguments) keeps a quoted -g value one argument; {{ args }}
+# "$@" ([positional-arguments]) keeps a quoted -g value one argument; {{ args }}
 # would split it into words. CI has no GPU and keeps SwiftShader. See testing.md
 # "Playwright Renderer".
 # Run E2E tests on the local GPU instead of SwiftShader (PLAYWRIGHT_GPU=1)
 [group: "testing"]
+[positional-arguments]
 test-e2e-gpu *args:
     PLAYWRIGHT_GPU=1 VITE_E2E_TEST=true bun run test:e2e "$@"
 

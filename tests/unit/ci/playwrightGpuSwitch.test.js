@@ -70,17 +70,24 @@ describe('playwright.config.ts renderer', { tags: ['@unit'] }, () => {
  * Playwright as one -g value. just splices an unquoted `{{ args }}` into the
  * shell line, which splits the value into words: Playwright then greps for the
  * first word and takes the others as path filters, so 6 tests ran instead of 1.
- * With `set positional-arguments`, `"$@"` passes each argument intact.
+ * With the recipe's `[positional-arguments]` attribute, `"$@"` passes each
+ * argument intact. The attribute is per recipe so no other recipe changes how
+ * it receives arguments.
  */
 describe('just test-e2e-gpu', { tags: ['@unit'] }, () => {
 	const justfile = readFileSync('justfile', 'utf8')
-	const recipe = justfile.match(/^test-e2e-gpu \*args:\n((?:[ \t]+.*\n)+)/m)
+	const recipe = justfile.match(/^((?:\[.*\]\n)*)test-e2e-gpu \*args:\n((?:[ \t]+.*\n)+)/m)
 
 	it('passes its arguments to Playwright unsplit', () => {
-		expect(justfile).toMatch(/^set positional-arguments$/m)
 		expect(recipe, 'test-e2e-gpu recipe not found in justfile').not.toBeNull()
-		const body = recipe[1]
+		const [, attributes, body] = recipe
+		expect(attributes).toMatch(/^\[positional-arguments\]$/m)
 		expect(body).toContain('bun run test:e2e "$@"')
 		expect(body).not.toMatch(/\{\{\s*args\s*\}\}/)
+	})
+
+	it('runs Playwright with the GPU switch on', () => {
+		expect(recipe, 'test-e2e-gpu recipe not found in justfile').not.toBeNull()
+		expect(recipe[2]).toMatch(/\bPLAYWRIGHT_GPU=1\b/)
 	})
 })
