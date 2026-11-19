@@ -13,8 +13,7 @@
 import type { Page, Response } from '@playwright/test'
 import { BUNDLE_SIZE_BUDGETS } from '../config/constants'
 import { expect, test } from '../fixtures/test-fixture'
-import { dismissModalIfPresent } from '../helpers/test-helpers'
-import { TEST_TIMEOUTS } from './helpers/test-helpers'
+import { dismissModalIfPresent, TEST_TIMEOUTS } from '../helpers/test-helpers'
 
 const KIB = BUNDLE_SIZE_BUDGETS.BYTES_PER_KIB
 /** Base-map tiles the start view requested before #340 (~600), and the ceiling after it. */
@@ -49,14 +48,16 @@ test.describe('Load-time budgets', { tag: ['@e2e', '@performance'] }, () => {
 			Promise.all(
 				list.map(async (r) => ({ url: new URL(r.url()).pathname, size: await responseSize(r) }))
 			)
-		const isCesium = (r: Response) => new URL(r.url()).pathname.toLowerCase().includes('cesium')
-		const cesium = await measure(responses.filter(isCesium))
-		const otherResponses = responses.filter((r) => !isCesium(r))
+		// /cesium-package/ holds Cesium's static worker scripts. They load whether or
+		// not the Cesium library is split out, so they are neither the Cesium chunk
+		// nor part of the app's own scripts, and are left out of both.
+		const path = (r: Response) => new URL(r.url()).pathname.toLowerCase()
+		const scripts = responses.filter((r) => !path(r).startsWith('/cesium-package/'))
+		const isCesium = (r: Response) => path(r).includes('cesium')
+		const cesium = await measure(scripts.filter(isCesium))
+		const otherResponses = scripts.filter((r) => !isCesium(r))
 
-		expect(
-			cesium.some(({ size }) => size > BUNDLE_SIZE_BUDGETS.MIN_CESIUM_CHUNK),
-			`a Cesium script over ${BUNDLE_SIZE_BUDGETS.MIN_CESIUM_CHUNK / KIB} KiB: ${JSON.stringify(cesium)}`
-		).toBe(true)
+		expect(cesium.length, 'a Cesium module loaded').toBeGreaterThan(0)
 		expect(otherResponses.length, 'non-Cesium scripts loaded').toBeGreaterThan(0)
 
 		// The size budgets describe a production build. The dev server serves
@@ -84,6 +85,18 @@ test.describe('Load-time budgets', { tag: ['@e2e', '@performance'] }, () => {
 			BUNDLE_SIZE_BUDGETS.MAX_MAIN_BUNDLE
 		)
 		expect(total, 'all non-Cesium scripts').toBeLessThan(BUNDLE_SIZE_BUDGETS.MAX_TOTAL_MAIN_BUNDLE)
+
+		// Cesium is a separate, lazily loaded chunk, and the entry module that
+		// index.html loads is not it.
+		expect(
+			cesium.some(({ size }) => size > BUNDLE_SIZE_BUDGETS.MIN_CESIUM_CHUNK),
+			`a Cesium chunk over ${BUNDLE_SIZE_BUDGETS.MIN_CESIUM_CHUNK / KIB} KiB: ${JSON.stringify(cesium)}`
+		).toBe(true)
+		const entry = await page.evaluate(
+			() => document.querySelector<HTMLScriptElement>('script[type="module"][src]')?.src ?? ''
+		)
+		expect(entry, 'entry module').not.toBe('')
+		expect(new URL(entry).pathname.toLowerCase(), 'entry module').not.toContain('cesium')
 	})
 
 	test('the start view requests a bounded number of Helsinki WMS tiles', async ({ page }) => {

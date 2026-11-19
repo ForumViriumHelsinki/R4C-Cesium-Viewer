@@ -7,8 +7,7 @@
  */
 
 import { expect, test } from '../fixtures/test-fixture'
-import { dismissModalIfPresent } from '../helpers/test-helpers'
-import { TEST_TIMEOUTS } from './helpers/test-helpers'
+import { dismissModalIfPresent, TEST_TIMEOUTS } from '../helpers/test-helpers'
 
 test.describe('App chrome', { tag: ['@e2e', '@ui'] }, () => {
 	test.beforeEach(async ({ page }) => {
