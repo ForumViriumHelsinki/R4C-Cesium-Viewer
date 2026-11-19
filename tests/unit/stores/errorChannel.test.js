@@ -52,6 +52,21 @@ describe('globalStore.showError severity and retry', { tags: ['@unit'] }, () => 
 		expect(store.errorNotification.retry).toBeNull()
 	})
 
+	it('retryError hides before retrying, so a retry that fails again is shown', () => {
+		const store = useGlobalStore()
+		const retry = vi.fn(() => {
+			store.showError('Unable to load Z. Please try again.', 'second failure', { retry })
+		})
+		store.showError('Unable to load Z. Please try again.', 'first failure', { retry })
+
+		store.retryError()
+
+		expect(retry).toHaveBeenCalledTimes(1)
+		expect(store.errorNotification.show).toBe(true)
+		expect(store.errorNotification.context).toBe('second failure')
+		expect(store.errorNotification.retry).toBe(retry)
+	})
+
 	it('hideError clears severity and retry', () => {
 		const store = useGlobalStore()
 		store.showError('m', '', { severity: 'warning', retry: vi.fn() })

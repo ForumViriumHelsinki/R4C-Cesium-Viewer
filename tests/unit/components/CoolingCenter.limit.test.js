@@ -37,12 +37,13 @@ describe('CoolingCenter limit notice', { tags: ['@unit'] }, () => {
 			dataSources: { getByName: () => [], add: vi.fn() },
 			screenSpaceEventHandler: { setInputAction: vi.fn(), removeInputAction: vi.fn() },
 		})
-		globalThis.alert = vi.fn()
+		vi.stubGlobal('alert', vi.fn())
 	})
 
 	afterEach(() => {
 		wrapper?.unmount()
 		wrapper = null
+		vi.unstubAllGlobals()
 	})
 
 	it('shows an inline notice when a grid cell already has five cooling centers', async () => {
@@ -60,5 +61,13 @@ describe('CoolingCenter limit notice', { tags: ['@unit'] }, () => {
 		expect(globalThis.alert).not.toHaveBeenCalled()
 		expect(wrapper.find('.v-alert').text()).toContain(COOLING_CENTER_MESSAGES.limitReached)
 		expect(mitigationStore.getCoolingCenterCount('g1')).toBe(5)
+	})
+})
+
+// Runs after the suite above (Vitest runs a file's tests in order): the alert stub
+// must not leak to later tests in the same worker.
+describe('CoolingCenter limit notice cleanup', { tags: ['@unit'] }, () => {
+	it('restores the global alert after the suite', () => {
+		expect(vi.isMockFunction(globalThis.alert)).toBe(false)
 	})
 })
