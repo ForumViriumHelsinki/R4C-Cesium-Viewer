@@ -70,14 +70,32 @@ export default {
 		}
 
 		const setupAxes = (svg, xScale, yScale, height) => {
-			svg
+			const xAxis = svg
 				.append('g')
 				.attr('transform', `translate(0, ${height})`)
 				.call(d3.axisBottom(xScale))
-				.selectAll('.tick text')
-				.call(wrapText, xScale.bandwidth()) // Wraps text if it's long
+			xAxis.selectAll('.tick text').call(wrapText, xScale.bandwidth()) // Wraps text if it's long
 
 			svg.append('g').call(d3.axisLeft(yScale))
+			return xAxis
+		}
+
+		/**
+		 * Grows the viewBox until the wrapped x-axis labels fit below the plot. A label
+		 * such as "Children and elderly (0-12, 65+) %" wraps to five or six lines in a
+		 * narrow band, more than the bottom margin holds, and the SVG clips the rest.
+		 * @param {any} xAxis - the x-axis selection from setupAxes
+		 * @param {number} height - plot height inside the margins
+		 * @param {{top: number}} margin
+		 */
+		const fitViewBoxToXAxis = (xAxis, height, margin) => {
+			const axis = xAxis.node?.()
+			const root = axis?.ownerSVGElement
+			if (!root || typeof axis.getBBox !== 'function') return
+			const box = axis.getBBox()
+			const needed = Math.ceil(margin.top + height + box.y + box.height + 2)
+			const [x, y, w, h] = root.getAttribute('viewBox').split(' ').map(Number)
+			if (needed > h) root.setAttribute('viewBox', `${x} ${y} ${w} ${needed}`)
 		}
 
 		const wrapText = (text, width) => {
@@ -212,7 +230,7 @@ export default {
 				const allYValues = yValues.concat(compareValues)
 				const xScale = plotService.createScaleBand(xLabels, width - 50)
 				const yScale = plotService.createScaleLinear(0, d3.max(allYValues), [height, 0])
-				setupAxes(svg, xScale, yScale, height)
+				fitViewBoxToXAxis(setupAxes(svg, xScale, yScale, height), height, margin)
 
 				const barData = yValues.map((value, index) => ({ value, ...indicators[index] }))
 				const tooltip = plotService.createTooltip(containerRef.value)
