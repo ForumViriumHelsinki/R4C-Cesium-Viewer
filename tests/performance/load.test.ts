@@ -478,7 +478,7 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// Back to the capital region. ViewModeCompact removes every data source and
 			// reloads the postal-code areas, so the transition is done when the grid's
 			// data source is gone and PostCodes has entities again. The e2e version of
-			// this test waits for networkidle, which on this map does not mean done.
+			// this test waits for the same condition; networkidle does not mean done here.
 			const start = Date.now()
 			await clickByLabel(page, 'Capital Region view')
 			await page.waitForFunction(

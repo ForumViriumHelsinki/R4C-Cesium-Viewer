@@ -114,7 +114,9 @@ is one: it records its time and skips under SwiftShader (#1143).
 `--enable-gpu`, the flag `just test-performance` uses (#843, #1148). Only the
 value `1` turns it on. `just test-e2e-gpu [args]` sets it for `bun run test:e2e`.
 Narrow it with `-g`: `test:e2e` already passes `tests/e2e`, and Playwright ORs
-path arguments, so a file name as the argument still runs the whole suite.
+path arguments, so a file name as the argument still runs the whole suite. The
+recipe passes its arguments as `"$@"`, so a quoted `-g` value stays one argument
+and the command below selects 1 test (`--list` to check):
 
 ```bash
 just test-e2e-gpu -g "statistical grid to capital region"
@@ -122,10 +124,14 @@ just test-e2e-gpu -g "statistical grid to capital region"
 
 The runner has no GPU, so CI never sets it. A local GPU run reported
 `ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)` and
-reached the transition test's `expect()`. `tests/unit/ci/playwrightGpuSwitch.test.js`
-fails if the default stops being SwiftShader or the switch keeps a SwiftShader
-flag. The same budget is also measured in `tests/performance/` (see
-"Software-rendering skip" below).
+measured 240 ms. The test's end condition is the grid's data source gone and
+`PostCodes` loaded again, as in `tests/performance/`: with the capital-region
+switch delayed by 4 s, the former `networkidle` end condition measured 33 ms and
+passed, and this one measured 4253 ms and failed (2026-11-19).
+`tests/unit/ci/playwrightGpuSwitch.test.js` fails if the default stops being
+SwiftShader, if the switch keeps a SwiftShader flag or, under `CI`,
+`--disable-gpu`, or if the recipe stops passing `"$@"`. The same budget is also
+measured in `tests/performance/` (see "Software-rendering skip" below).
 
 ## Layout Overflow Check (`tests/e2e/layout/`)
 
