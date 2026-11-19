@@ -63,6 +63,11 @@ cesiumTest('HSY Background maps', { tag: ['@e2e', '@wms'] }, async ({ cesiumPage
 	// Check that we have actual layer results (the search should filter the list)
 	const listItems = cesiumPage.locator('.hsy-layer-list .v-list-item')
 	await expect(listItems.first()).toBeVisible({ timeout: TEST_TIMEOUTS.ELEMENT_STANDARD })
+
+	// The layer list must come from the HSY_LAYER_GROUPS mock, not live HSY (#1142).
+	// Only the mock carries this title, so a mock bypassed by another route
+	// handler fails here even while HSY is up.
+	await expect(listItems.filter({ hasText: 'Kaupunginosat (City Districts)' })).toBeVisible()
 })
 
 cesiumTest('Building properties', { tag: ['@e2e', '@smoke'] }, async ({ cesiumPage }) => {
