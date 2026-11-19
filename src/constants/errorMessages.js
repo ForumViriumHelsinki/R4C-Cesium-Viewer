@@ -64,3 +64,9 @@ export const PARKS_MESSAGES = Object.freeze({
 export const COOLING_CENTER_MESSAGES = Object.freeze({
 	limitReached: 'This grid cell already has the maximum of 5 cooling centers.',
 })
+
+/** VTT flood simulation (FloodSimulationPanel.vue, via vttFloodStore.error). */
+export const VTT_FLOOD_MESSAGES = Object.freeze({
+	frameFailure:
+		'Unable to load the flood simulation for this frame. Change the frame or scenario to try again.',
+})

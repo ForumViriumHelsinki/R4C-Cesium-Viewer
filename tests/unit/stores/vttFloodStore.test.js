@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { isReactive } from 'vue'
+import { VTT_FLOOD_MESSAGES } from '@/constants/errorMessages.js'
 import {
 	VTT_DEFAULT_DIMENSION,
 	VTT_DEFAULT_FRAME,
@@ -176,6 +177,28 @@ describe('vttFloodStore frame cache', () => {
 		store.fetchCurrentFrame()
 		store.clear()
 		expect(signal.aborted).toBe(true)
+		expect(store.isLoading).toBe(false)
+	})
+})
+
+describe('vttFloodStore fetch failure', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		fetchSimulationFrame.mockReset()
+		vi.spyOn(console, 'error').mockImplementation(() => {})
+	})
+
+	it('shows the fixed failure message, never the raw error text (#1153)', async () => {
+		fetchSimulationFrame.mockRejectedValueOnce(
+			new Error('VTT flood API responded 503 Service Unavailable for scenario=1 frame=120')
+		)
+		const store = useVttFloodStore()
+
+		await store.fetchCurrentFrame()
+
+		expect(store.error).toBe(VTT_FLOOD_MESSAGES.frameFailure)
+		expect(store.error).not.toContain('503')
+		expect(store.frame).toBeNull()
 		expect(store.isLoading).toBe(false)
 	})
 })
