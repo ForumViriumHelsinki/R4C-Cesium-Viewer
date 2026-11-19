@@ -108,12 +108,19 @@ export async function setupWmsMocks(
 
 		// Fallback: Catch unmocked external tile/imagery requests
 		// Only intercept requests to external hosts — never intercept localhost (Vite dev server)
+		//
+		// Playwright runs the most recently registered handler first, so this
+		// catch-all sees every request before the mocks above. It must pass
+		// requests on with route.fallback(), which tries the next handler;
+		// route.continue() sends them straight to the network and bypassed the
+		// same-origin /hsy-action, /wms/layers, /wms/proxy and /helsinki-wms
+		// mocks (#1142).
 		page.route('**/*', (route) => {
 			const url = route.request().url()
 
 			// Never intercept local dev server requests
 			if (url.includes('localhost') || url.includes('127.0.0.1')) {
-				return route.continue()
+				return route.fallback()
 			}
 
 			const isTileRequest =
@@ -134,7 +141,7 @@ export async function setupWmsMocks(
 				})
 			}
 
-			return route.continue()
+			return route.fallback()
 		}),
 	])
 }
