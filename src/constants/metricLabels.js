@@ -68,6 +68,8 @@ export const INDEX_LABELS = Object.freeze({
 export const BUILDING_ATTRIBUTE_LABELS = Object.freeze({
 	HEIGHT: 'Height (m)',
 	YEAR_BUILT: 'Year built',
+	/** Helsinki's `c_valmpvm`: a full date, so not "Year built". */
+	COMPLETION_DATE: 'Completion date',
 	/** Years since construction; the Helsinki scatter plot derives it from `c_valmpvm`. */
 	AGE: 'Age (years)',
 	AREA: 'Area (m²)',
@@ -103,6 +105,7 @@ export const PROPERTY_LABELS = Object.freeze({
 	measured_height: A.HEIGHT,
 	kavu: A.YEAR_BUILT,
 	year_of_construction: A.YEAR_BUILT,
+	c_valmpvm: A.COMPLETION_DATE,
 	area_m2: A.AREA,
 	i_raktilav: A.VOLUME,
 	kerrosten_lkm: A.FLOORS,
@@ -114,6 +117,7 @@ export const PROPERTY_LABELS = Object.freeze({
 	c_julkisivu: A.FACADE_MATERIAL,
 	rakennusaine_s: A.BUILDING_MATERIAL,
 	c_rakeaine: A.BUILDING_MATERIAL,
+	tyyppi: A.BUILDING_TYPE,
 	kayttotarkoitus: A.BUILDING_USE,
 	kayttarks: A.BUILDING_USE,
 	lammitystapa_s: A.HEATING_METHOD,

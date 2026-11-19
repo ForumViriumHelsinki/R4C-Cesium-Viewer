@@ -11,6 +11,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CategoricalSelect from '@/components/CategoricalSelect.vue'
 import NumericalSelect from '@/components/NumericalSelect.vue'
+import { CATEGORICAL_OPTIONS, NUMERICAL_OPTIONS } from '@/components/Scatterplot.vue'
 import { useIndexData } from '@/composables/useIndexData.js'
 import {
 	BUILDING_ATTRIBUTE_LABELS,
@@ -126,6 +127,28 @@ describe('HSY scatter-plot selects', { tags: ['@unit'] }, () => {
 		for (const option of options) {
 			expect(option.text, option.value).toBe(PROPERTY_LABELS[option.value])
 		}
+	})
+})
+
+describe('Helsinki scatter-plot options', { tags: ['@unit'] }, () => {
+	it.each([
+		['numerical', NUMERICAL_OPTIONS],
+		['categorical', CATEGORICAL_OPTIONS],
+	])('name every %s attribute the way Details does', (_kind, options) => {
+		for (const option of options) {
+			// Details (AreaProperties.formatLabel) shows the key's PROPERTY_LABELS name,
+			// or an auto-formatted key such as "Tyyppi" when there is none (#1156).
+			expect(propertyLabel(option.value), option.value).toBeTruthy()
+			// The age axis is derived from the completion date, so it has its own name.
+			const expected =
+				option.value === 'c_valmpvm' ? BUILDING_ATTRIBUTE_LABELS.AGE : propertyLabel(option.value)
+			expect(option.title, option.value).toBe(expected)
+		}
+	})
+
+	it('names the Helsinki building type and completion date in Details', () => {
+		expect(propertyLabel('tyyppi')).toBe(BUILDING_ATTRIBUTE_LABELS.BUILDING_TYPE)
+		expect(propertyLabel('c_valmpvm')).toBe(BUILDING_ATTRIBUTE_LABELS.COMPLETION_DATE)
 	})
 })
 

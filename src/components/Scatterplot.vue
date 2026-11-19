@@ -49,22 +49,24 @@ import { useToggleStore } from '../stores/toggleStore.js'
  */
 const attributeOption = (value) => ({ title: propertyLabel(value), value })
 
-const NUMERICAL_OPTIONS = [
+export const NUMERICAL_OPTIONS = [
 	attributeOption('measured_height'),
-	// Plotted as years since construction (addDataForScatterPlot), not as the date itself.
+	// Plotted as years since construction (addDataForScatterPlot), not as the date
+	// itself, so it is named after the derived value; Details shows the date as
+	// propertyLabel('c_valmpvm').
 	{ title: BUILDING_ATTRIBUTE_LABELS.AGE, value: 'c_valmpvm' },
 	attributeOption('area_m2'),
 	attributeOption('i_raktilav'),
 ]
 
-const CATEGORICAL_OPTIONS = [
+export const CATEGORICAL_OPTIONS = [
 	attributeOption('c_julkisivu'),
 	attributeOption('c_rakeaine'),
 	attributeOption('roof_type'),
 	attributeOption('roof_median_color'),
 	attributeOption('roof_mode_color'),
 	attributeOption('kayttotarkoitus'),
-	{ title: BUILDING_ATTRIBUTE_LABELS.BUILDING_TYPE, value: 'tyyppi' },
+	attributeOption('tyyppi'),
 	attributeOption('c_lammtapa'),
 	attributeOption('c_poltaine'),
 ]
