@@ -39,16 +39,26 @@ describe('layer names outside the layer switch (#1155)', () => {
 		expect(offenders).toEqual([])
 	})
 
-	// The journey docs cite the E2E locators and the ADRs list the registry entries
-	// by label, so a renamed label leaves them describing controls that no longer
-	// exist. "NDVI Vegetation Index" is the feature flag's name, not the layer's.
-	it.each(['docs/adr', 'docs/blueprint/user-journeys'])('%s uses the current NDVI label', (dir) => {
-		const root = join(process.cwd(), dir)
-		const offenders = readdirSync(root)
+	// The journey docs cite the E2E locators and ADR-009 lists the current registry
+	// entries by label, so a renamed label leaves them describing controls that no
+	// longer exist. Other ADRs are dated records (ADR-010 lists facts "checked at
+	// a3c3269") and may quote an old label, so they are not checked.
+	// "NDVI Vegetation Index" is the feature flag's name, not the layer's.
+	const OLD_NDVI_LABEL = /NDVI Vegetation(?! Index)/
+	const usesOldLabel = (path) =>
+		OLD_NDVI_LABEL.test(readFileSync(join(process.cwd(), path), 'utf8'))
+
+	it('docs/blueprint/user-journeys uses the current NDVI label', () => {
+		const dir = 'docs/blueprint/user-journeys'
+		const offenders = readdirSync(join(process.cwd(), dir))
 			.filter((file) => file.endsWith('.md'))
-			.filter((file) => /NDVI Vegetation(?! Index)/.test(readFileSync(join(root, file), 'utf8')))
+			.filter((file) => usesOldLabel(join(dir, file)))
 
 		expect(offenders).toEqual([])
+	})
+
+	it('ADR-009 lists the registry entries by their current NDVI label', () => {
+		expect(usesOldLabel('docs/adr/ADR-009-analysis-registry.md')).toBe(false)
 	})
 
 	it('the conflict warning names both layers as their switches do', () => {

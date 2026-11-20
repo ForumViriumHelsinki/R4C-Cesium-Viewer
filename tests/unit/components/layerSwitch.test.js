@@ -23,6 +23,9 @@ import LandcoverPanel from '@/components/LandcoverPanel.vue'
 import NDVIPanel from '@/components/NDVIPanel.vue'
 import { findAnalysis } from '@/constants/analysisRegistry.js'
 import { LAYER_LABELS } from '@/constants/metricLabels.js'
+import { AVAILABLE_NDVI_DATES } from '@/constants/ndviDates.js'
+import { changeTIFF } from '@/services/tiffImagery.js'
+import { useBackgroundMapStore } from '@/stores/backgroundMapStore.js'
 import { useToggleStore } from '@/stores/toggleStore.js'
 
 // The services stand in for the map: each one only records the store write the real
@@ -183,5 +186,29 @@ describe('a layer is one control with one name', { tags: ['@unit'] }, () => {
 		await flip(switchFor(panel, LAYER_LABELS.NDVI).input, true)
 
 		expect(dateSelect().props('disabled')).toBe(false)
+	})
+
+	// changeTIFF reads backgroundMapStore.ndviDate when it runs, so the date chosen
+	// in the panel must reach the store for any switch to load it.
+	it('a date chosen in the NDVI panel is the date the next load uses', async () => {
+		const datesLoaded = []
+		vi.mocked(changeTIFF).mockImplementation(async () => {
+			datesLoaded.push(useBackgroundMapStore().ndviDate)
+		})
+		try {
+			const panel = mountPanel(LAYERS[1])
+			await flip(switchFor(panel, LAYER_LABELS.NDVI).input, true)
+			const otherDate = AVAILABLE_NDVI_DATES.find(
+				(date) => date !== useBackgroundMapStore().ndviDate
+			)
+
+			panel.findComponent({ name: 'VSelect' }).vm.$emit('update:modelValue', otherDate)
+			await flushPromises()
+
+			expect(useBackgroundMapStore().ndviDate).toBe(otherDate)
+			expect(datesLoaded.at(-1)).toBe(otherDate)
+		} finally {
+			vi.mocked(changeTIFF).mockImplementation(async () => {})
+		}
 	})
 })
