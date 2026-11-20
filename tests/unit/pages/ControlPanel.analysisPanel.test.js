@@ -22,7 +22,7 @@ const MOBILE_WIDTH = 390
 // Above LAYOUT.ANALYSIS_PANEL_COLLAPSE_SIDEBAR_BELOW, so the sidebar stays expanded.
 const WIDE_DESKTOP_WIDTH = 1600
 // The drawer analysis clicked below; its flag is switched on explicitly.
-const DRAWER_ANALYSIS = { label: 'NDVI Vegetation', flag: 'ndviAnalysis' }
+const DRAWER_ANALYSIS = { label: 'NDVI (Vegetation)', flag: 'ndviAnalysis' }
 
 /** @type {import('@vue/test-utils').VueWrapper | null} */
 let wrapper = null

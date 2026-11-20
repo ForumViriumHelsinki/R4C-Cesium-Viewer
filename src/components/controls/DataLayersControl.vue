@@ -123,57 +123,15 @@
 			<span>Show parks, forests, and other natural areas</span>
 		</v-tooltip>
 
-		<!-- HSY Land Cover -->
-		<v-tooltip
+		<!-- Land cover and NDVI: the same switch their Analysis panels show (#1155) -->
+		<LayerSwitch
 			v-if="!helsinkiView && featureFlagStore.isEnabled('landCover')"
-			location="right"
-			max-width="200"
-			aria-label="HSY land use classification showing different surface types"
-		>
-			<template #activator="{ props }">
-				<div
-					v-bind="props"
-					class="control-item"
-				>
-					<v-switch
-						:model-value="landCover"
-						aria-label="Land Cover"
-						color="brown"
-						density="compact"
-						hide-details
-						@update:model-value="$emit('update:landCover', $event)"
-					/>
-					<span class="control-label">Land Cover</span>
-				</div>
-			</template>
-			<span>HSY land use classification showing different surface types</span>
-		</v-tooltip>
-
-		<!-- NDVI -->
-		<v-tooltip
+			layer="landCover"
+		/>
+		<LayerSwitch
 			v-if="featureFlagStore.isEnabled('ndvi')"
-			location="right"
-			max-width="200"
-			aria-label="Normalized Difference Vegetation Index - satellite-based vegetation density"
-		>
-			<template #activator="{ props }">
-				<div
-					v-bind="props"
-					class="control-item"
-				>
-					<v-switch
-						:model-value="ndvi"
-						aria-label="NDVI"
-						color="green"
-						density="compact"
-						hide-details
-						@update:model-value="$emit('update:ndvi', $event)"
-					/>
-					<span class="control-label">NDVI</span>
-				</div>
-			</template>
-			<span>Normalized Difference Vegetation Index - satellite-based vegetation density</span>
-		</v-tooltip>
+			layer="ndvi"
+		/>
 	</div>
 </template>
 
@@ -184,13 +142,15 @@
  *
  * Provides switches for toggling various environmental and vegetation data layers.
  * Includes loading indicators, cache status icons, and view-specific layer visibility.
+ * Land cover and NDVI render LayerSwitch, which writes toggleStore itself, so the
+ * Layers tab and their Analysis panels show one control (#1155).
  *
  * **Props:**
  * - showTrees: Boolean - Trees layer visibility state
  * - showVegetation: Boolean - Vegetation layer visibility state
  * - showOtherNature: Boolean - Other nature layer visibility state
- * - landCover: Boolean - Land cover layer visibility state
- * - ndvi: Boolean - NDVI layer visibility state
+ * - landCover: Boolean - Land cover layer visibility state (for the reset button)
+ * - ndvi: Boolean - NDVI layer visibility state (for the reset button)
  * - helsinkiView: Boolean - Whether Helsinki-specific view is active
  * - view: String - Current view mode
  * - postalCode: String - Current postal code
@@ -199,16 +159,14 @@
  * - update:showTrees - Trees layer toggle changed
  * - update:showVegetation - Vegetation layer toggle changed
  * - update:showOtherNature - Other nature layer toggle changed
- * - update:landCover - Land cover layer toggle changed
- * - update:ndvi - NDVI layer toggle changed
  *
  * @example
  * <DataLayersControl
  *   v-model:show-trees="showTrees"
  *   v-model:show-vegetation="showVegetation"
  *   v-model:show-other-nature="showOtherNature"
- *   v-model:land-cover="landCover"
- *   v-model:ndvi="ndvi"
+ *   :land-cover="landCover"
+ *   :ndvi="ndvi"
  *   :helsinki-view="helsinkiView"
  *   :view="view"
  *   :postal-code="postalCode"
@@ -218,6 +176,7 @@
 import { computed } from 'vue'
 import { useFeatureFlagStore } from '../../stores/featureFlagStore'
 import { useLoadingStore } from '../../stores/loadingStore.js'
+import LayerSwitch from './LayerSwitch.vue'
 
 const featureFlagStore = useFeatureFlagStore()
 
@@ -256,14 +215,7 @@ const props = defineProps({
 	},
 })
 
-defineEmits([
-	'update:showTrees',
-	'update:showVegetation',
-	'update:showOtherNature',
-	'update:landCover',
-	'update:ndvi',
-	'reset:layers',
-])
+defineEmits(['update:showTrees', 'update:showVegetation', 'update:showOtherNature', 'reset:layers'])
 
 const hasActiveLayers = computed(
 	() =>

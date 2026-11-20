@@ -876,7 +876,7 @@ cesiumDescribe('Building Filters Accessibility', () => {
 
 				// Enable layer toggle — NDVI is also a Vuetify v-switch.
 				const ndviToggle = cesiumPage
-					.getByText('NDVI')
+					.getByText('NDVI (Vegetation)')
 					.locator('..')
 					.locator('input[type="checkbox"]')
 				await helpers.checkWithRetry(ndviToggle, {

@@ -2053,7 +2053,7 @@ export class AccessibilityTestHelpers {
 		}
 
 		// NDVI toggle is visible in all views (feature flag controlled)
-		await expect(this.page.getByText('NDVI', { exact: true })).toBeVisible()
+		await expect(this.page.getByRole('checkbox', { name: 'NDVI (Vegetation)' })).toBeVisible()
 
 		// Test postal code level panels
 		if (currentLevel === 'postalCode') {
@@ -2117,7 +2117,7 @@ export class AccessibilityTestHelpers {
 		}
 
 		// NDVI is universal
-		await this.testToggle('NDVI', true)
+		await this.testToggle('NDVI (Vegetation)', true)
 
 		// Test filter toggles
 		await this.testToggle('Public Buildings', true)
