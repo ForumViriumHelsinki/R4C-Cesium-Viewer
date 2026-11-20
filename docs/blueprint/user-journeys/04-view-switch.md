@@ -68,7 +68,7 @@ flowchart TD
 
 | Step                                    | Story | Assertion                                                                                | Test                                                      |
 | --------------------------------------- | ----- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| NDVI toggle present                     | US-13 | `getByText('NDVI', { exact: true })` visible                                             | `journey-4-view-switch` (new)                             |
+| NDVI toggle present                     | US-13 | `getByRole('checkbox', { name: 'NDVI (Vegetation)' })` visible                           | `journey-4-view-switch` (new)                             |
 | Land Cover toggle present               | US-13 | `getByText('Land Cover')` visible                                                        | `journey-4-view-switch`                                   |
 | Building filters present                | US-14 | `getByText('Public Buildings')` and `getByText('Tall Buildings')` visible                | `journey-4-view-switch`                                   |
 | Background Maps options                 | US-12 | "Default Map", "Satellite", "Terrain" entries visible                                    | `journey-4-view-switch`                                   |

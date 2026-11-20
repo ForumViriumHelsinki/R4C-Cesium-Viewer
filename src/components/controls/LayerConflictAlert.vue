@@ -9,7 +9,7 @@
 		<template #prepend>
 			<v-icon size="small"> mdi-alert </v-icon>
 		</template>
-		NDVI and Land Cover cannot be active simultaneously
+		{{ LAYER_LABELS.NDVI }} and {{ LAYER_LABELS.LAND_COVER }} cannot be active simultaneously
 	</v-alert>
 </template>
 
@@ -27,6 +27,8 @@
  * @example
  * <LayerConflictAlert :has-conflict="landCover && ndvi" />
  */
+
+import { LAYER_LABELS } from '../../constants/metricLabels.js'
 
 defineProps({
 	hasConflict: {

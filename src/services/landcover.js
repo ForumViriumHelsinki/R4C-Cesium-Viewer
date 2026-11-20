@@ -92,9 +92,10 @@ export const createHSYImageryLayer = async (newLayers) => {
 
 	const backgroundMapStore = useBackgroundMapStore()
 
-	// Idempotency guard (#962). Two controls turn land cover on: the Layers tab
-	// switch (MapControls.vue) and the Land Cover analysis panel checkbox
-	// (LandcoverPanel.vue), both through setLandcoverEnabled(). Enabling it from one
+	// Idempotency guard (#962). Two controls turn land cover on: the LayerSwitch in
+	// the Layers tab (DataLayersControl.vue) and the same switch in the Land Cover
+	// analysis panel (LandcoverPanel.vue), both through setLandcoverEnabled()
+	// (#1155). Enabling it from one
 	// while the other already has it on used to stack a duplicate provider,
 	// doubling the per-tile /wms/proxy request count.
 	//

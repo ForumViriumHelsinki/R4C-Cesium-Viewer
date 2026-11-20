@@ -186,6 +186,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { LAYER_LABELS } from '../constants/metricLabels.js'
 import { useLoadingStore } from '../stores/loadingStore'
 
 // Props
@@ -242,8 +243,8 @@ const formatLayerName = (layer) => {
 		otherNature: 'Nature Areas',
 		buildings: 'Buildings',
 		postalCodes: 'Postal Codes',
-		landcover: 'Land Cover',
-		ndvi: 'NDVI Data',
+		landcover: LAYER_LABELS.LAND_COVER,
+		ndvi: LAYER_LABELS.NDVI,
 		populationGrid: 'Population Grid',
 		heatData: 'Heat Data',
 	}
