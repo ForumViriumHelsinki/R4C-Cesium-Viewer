@@ -58,7 +58,7 @@
  * - **Trees**: Individual tree entities by height categories (postal code level)
  * - **Vegetation**: Vegetation areas and green spaces (Helsinki only)
  * - **Other Nature**: Parks, forests, natural areas (Helsinki only)
- * - **Land Cover**: HSY land use classification (Capital Region)
+ * - **Land Cover**: HSY land cover classification (Capital Region)
  * - **NDVI**: Normalized Difference Vegetation Index satellite imagery
  *
  * **Building Filters:**
