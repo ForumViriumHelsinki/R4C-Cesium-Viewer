@@ -31,6 +31,7 @@
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useChartSize } from '../composables/useChartSize.js'
+import { METRIC_LABELS } from '../constants/metricLabels.js'
 import ColdArea from '../services/coldarea.js'
 import Datasource from '../services/datasource.js'
 import Plot from '../services/plot.js'
@@ -131,7 +132,7 @@ export default {
 			)
 
 			plotService.setupAxes(svg, xScale, yScale, height)
-			plotService.addTitle(svg, 'Temperature in Celsius Comparison', margin.left, margin.top - 20)
+			plotService.addTitle(svg, METRIC_LABELS.SURFACE_TEMPERATURE, margin.left, margin.top - 20)
 
 			const legendData = [
 				{ name: address, color: 'orange' },

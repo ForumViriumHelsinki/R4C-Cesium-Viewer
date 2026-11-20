@@ -12,20 +12,22 @@
 
 <script>
 import { ref, watch } from 'vue'
+import { propertyLabel } from '../constants/metricLabels.js'
 import { eventBus } from '../services/eventEmitter.js'
 import { usePropsStore } from '../stores/propsStore.js'
 
 export default {
 	setup() {
 		const propsStore = usePropsStore()
+		// Option names are the Details names for the same keys (#1156).
 		const numericalOptions = [
-			{ text: 'Built', value: 'kavu' },
-			{ text: 'Area', value: 'area_m2' },
-			{ text: 'Floor Count', value: 'kerrosten_lkm' },
-			{ text: 'Floor Area', value: 'kerala' },
-			{ text: 'Total Area', value: 'korala' },
-			{ text: 'Apartments', value: 'asuntojen_lkm' },
-		]
+			'kavu',
+			'area_m2',
+			'kerrosten_lkm',
+			'kerala',
+			'korala',
+			'asuntojen_lkm',
+		].map((value) => ({ text: propertyLabel(value), value }))
 
 		const selectedNumerical = ref('area_m2') // default selection
 

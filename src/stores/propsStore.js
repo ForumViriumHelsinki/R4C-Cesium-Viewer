@@ -13,6 +13,7 @@
 
 import { defineStore } from 'pinia'
 import { markRaw } from 'vue'
+import { PROPERTY_LABELS } from '../constants/metricLabels.js'
 
 /**
  * Props Pinia Store
@@ -47,8 +48,15 @@ export const usePropsStore = defineStore('props', {
 		postalCodeData: null,
 		/** @type {Array<Object>|null} */
 		hSYWMSLayers: null,
-		categoricalSelect: { text: 'Facade Material', value: 'julkisivu_s' },
-		numericalSelect: { text: 'Area', value: 'area_m2' },
+		// Same names as the CategoricalSelect / NumericalSelect options (#1156).
+		categoricalSelect: /** @type {{ text: string, value: string }} */ ({
+			text: PROPERTY_LABELS.julkisivu_s,
+			value: 'julkisivu_s',
+		}),
+		numericalSelect: /** @type {{ text: string, value: string }} */ ({
+			text: PROPERTY_LABELS.area_m2,
+			value: 'area_m2',
+		}),
 		socioEconomics: 'Alppila - Vallila',
 		statsIndex: 'heat_index',
 	}),

@@ -30,6 +30,11 @@ import { ref } from 'vue'
 import * as d3 from '@/utils/d3' // Import D3.js
 import { useChartSize } from '../composables/useChartSize.js'
 import { DATES } from '../constants/dates.js'
+import {
+	BUILDING_ATTRIBUTE_LABELS,
+	METRIC_LABELS,
+	propertyLabel,
+} from '../constants/metricLabels.js'
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
 import { eventBus } from '../services/eventEmitter.js'
@@ -37,24 +42,33 @@ import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 
-/** Option `title`s are the attribute names shown in the tooltip and legend. */
-const NUMERICAL_OPTIONS = [
-	{ title: 'height', value: 'measured_height' },
-	{ title: 'age', value: 'c_valmpvm' },
-	{ title: 'area', value: 'area_m2' },
-	{ title: 'volume', value: 'i_raktilav' },
+/**
+ * Option `title`s are the attribute names shown in the tooltip and legend, the same
+ * names Details uses (#1156).
+ * @param {string} value - Entity property key
+ */
+const attributeOption = (value) => ({ title: propertyLabel(value), value })
+
+export const NUMERICAL_OPTIONS = [
+	attributeOption('measured_height'),
+	// Plotted as years since construction (addDataForScatterPlot), not as the date
+	// itself, so it is named after the derived value; Details shows the date as
+	// propertyLabel('c_valmpvm').
+	{ title: BUILDING_ATTRIBUTE_LABELS.AGE, value: 'c_valmpvm' },
+	attributeOption('area_m2'),
+	attributeOption('i_raktilav'),
 ]
 
-const CATEGORICAL_OPTIONS = [
-	{ title: 'facade material', value: 'c_julkisivu' },
-	{ title: 'building material', value: 'c_rakeaine' },
-	{ title: 'roof type', value: 'roof_type' },
-	{ title: 'roof median color', value: 'roof_median_color' },
-	{ title: 'roof mode color', value: 'roof_mode_color' },
-	{ title: 'usage', value: 'kayttotarkoitus' },
-	{ title: 'type', value: 'tyyppi' },
-	{ title: 'heating method', value: 'c_lammtapa' },
-	{ title: 'heating source', value: 'c_poltaine' },
+export const CATEGORICAL_OPTIONS = [
+	attributeOption('c_julkisivu'),
+	attributeOption('c_rakeaine'),
+	attributeOption('roof_type'),
+	attributeOption('roof_median_color'),
+	attributeOption('roof_mode_color'),
+	attributeOption('kayttotarkoitus'),
+	attributeOption('tyyppi'),
+	attributeOption('c_lammtapa'),
+	attributeOption('c_poltaine'),
 ]
 
 export default {
@@ -404,7 +418,7 @@ export default {
 						event,
 						d,
 						(data) =>
-							`${numerical}: ${data.xData}<br>heat exposure index: ${data.yData}<br>${categorical}: ${data.name}`
+							`${numerical}: ${data.xData}<br>${METRIC_LABELS.SURFACE_HEAT_INDEX}: ${data.yData}<br>${categorical}: ${data.name}`
 					)
 				)
 				.on('mouseout', () => this.plotService.handleMouseout(tooltip))
@@ -516,7 +530,7 @@ export default {
 
 			this.plotService.addTitle(
 				svg,
-				'Heat exposure index with building attributes',
+				`${METRIC_LABELS.SURFACE_HEAT_INDEX} with building attributes`,
 				margin.left,
 				margin.top - 8
 			)

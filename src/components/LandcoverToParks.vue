@@ -7,8 +7,8 @@
 			<v-card-title>Create Parks</v-card-title>
 			<v-card-text>
 				<p class="text-caption mb-4">
-					Grid cells are colored by heat index (Blue = Cool, Red = Hot). Select a cell to load
-					convertible landcover areas.
+					Grid cells are colored by {{ inSentence(SURFACE_HEAT_INDEX) }}: blue is cool, red is
+					hot. Select a cell to load convertible landcover areas.
 				</p>
 
 				<v-row class="mt-2">
@@ -48,35 +48,35 @@
 					>
 						<tbody>
 							<tr>
-								<td>{{ calculationResults.selectedIndexName }} (Initial)</td>
+								<td>{{ SURFACE_HEAT_INDEX }} (initial)</td>
 								<td>{{ calculationResults.initialIndex }}</td>
 							</tr>
 							<tr>
-								<td>Area Converted (This Turn)</td>
+								<td>Area converted (this turn)</td>
 								<td>{{ calculationResults.area }} ha</td>
 							</tr>
 							<tr>
-								<td>Neighbor Cells Cooled (This Turn)</td>
+								<td>Neighbor cells cooled (this turn)</td>
 								<td>{{ calculationResults.neighborsAffected }}</td>
 							</tr>
 							<tr>
-								<td>Heat Index Reduction (This Turn)</td>
+								<td>{{ SURFACE_HEAT_INDEX }} reduction (this turn)</td>
 								<td class="font-weight-bold text-green">
 									-{{ calculationResults.totalReduction }}
 								</td>
 							</tr>
 							<tr>
-								<td>{{ calculationResults.selectedIndexName }} (New Cumulative)</td>
+								<td>{{ SURFACE_HEAT_INDEX }} (new cumulative)</td>
 								<td class="font-weight-bold">
 									{{ calculationResults.newIndex }}
 								</td>
 							</tr>
 							<tr class="font-weight-bold">
-								<td>Cumulative Cooling Area</td>
+								<td>Cumulative cooling area</td>
 								<td>{{ calculationResults.cumulativeCoolingArea }} ha</td>
 							</tr>
 							<tr class="font-weight-bold text-green">
-								<td>Cumulative Heat Reduction</td>
+								<td>{{ SURFACE_HEAT_INDEX }} reduction (cumulative)</td>
 								<td>-{{ calculationResults.cumulativeHeatReduction }}</td>
 							</tr>
 						</tbody>
@@ -90,7 +90,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 import { useGridStyling } from '../composables/useGridStyling.js'
-import { useIndexData } from '../composables/useIndexData.js'
+import { inSentence, METRIC_LABELS } from '../constants/metricLabels.js'
 import { getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore.js'
@@ -106,7 +106,9 @@ const mitigationStore = useMitigationStore()
 const viewer = computed(() => globalStore.cesiumViewer)
 const statsIndex = computed(() => propsStore.statsIndex)
 const { updateGridColors: restoreGridColoring } = useGridStyling()
-const { getIndexInfo } = useIndexData()
+// The tool colors and reduces the grid's `final_avg_conditional`, the Landsat
+// surface heat index, whichever index the grid options select.
+const SURFACE_HEAT_INDEX = METRIC_LABELS.SURFACE_HEAT_INDEX
 
 /**
  * @typedef {Object} CalculationResults
@@ -114,7 +116,6 @@ const { getIndexInfo } = useIndexData()
  * @property {string} totalCoolingArea
  * @property {number} neighborsAffected
  * @property {string} totalReduction
- * @property {string} selectedIndexName
  * @property {string} initialIndex
  * @property {string} newIndex
  * @property {string} cumulativeCoolingArea
@@ -363,7 +364,6 @@ const turnToParks = () => {
 	if (gridDataSource) {
 		gridDataSource.entities.collectionChanged.removeEventListener(filterGridEntities)
 
-		const currentIndexInfo = getIndexInfo(statsIndex.value)
 		const sourceGridId = selectedEntity.properties?.grid_id?.getValue()
 
 		const results = mitigationStore.calculateParksEffect(selectedEntity, totalAreaConverted)
@@ -407,7 +407,6 @@ const turnToParks = () => {
 			totalCoolingArea: (results.totalCoolingArea / 10000).toFixed(2),
 			neighborsAffected: results.neighborsAffected,
 			totalReduction: actualTotalReduction.toFixed(3),
-			selectedIndexName: currentIndexInfo ? currentIndexInfo.text : statsIndex.value,
 			initialIndex: initialIndexForDisplay.toFixed(3),
 			newIndex: modifiedHeatIndices.value.get(sourceGridId).toFixed(3),
 			cumulativeCoolingArea: (mitigationStore.cumulativeCoolingArea / 10000).toFixed(2),
