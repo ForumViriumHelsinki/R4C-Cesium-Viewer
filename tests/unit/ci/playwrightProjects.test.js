@@ -264,6 +264,21 @@ describe('Playwright project contract', () => {
 		LIST_TIMEOUT_MS
 	)
 
+	it(
+		'every spec the chromium project collects is one the test:e2e script runs',
+		() => {
+			// test:e2e scopes the chromium project to tests/e2e, while the project
+			// itself matches every *.spec.ts under tests/. A spec outside tests/e2e
+			// is collected by unscoped runs (`--grep @wms`) but never by CI, and
+			// six such files went stale unnoticed (#1147).
+			const collected = unique(listTests(['--project=chromium']).map((e) => e.file))
+			const inE2e = new Set(listTests(e2eScriptArgs()).map((e) => e.file))
+			expect(inE2e.size, 'test:e2e collects specs at all').toBeGreaterThan(0)
+			expect(collected.filter((file) => !inE2e.has(file))).toEqual([])
+		},
+		LIST_TIMEOUT_MS
+	)
+
 	it('the End-to-End matrix runs every shard index exactly once', () => {
 		const { job, indices, total } = e2eShardMatrix()
 
