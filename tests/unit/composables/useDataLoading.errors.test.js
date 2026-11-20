@@ -3,13 +3,12 @@
  * in the shared copy, never as an error with the raw exception (#1153).
  */
 
+import { flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useDataLoading } from '@/composables/useDataLoading.js'
 import { DEGRADED_DATA_MESSAGES } from '@/constants/errorMessages.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
-import { useHeatExposureStore } from '@/stores/heatExposureStore.js'
-import { useSocioEconomicsStore } from '@/stores/socioEconomicsStore.js'
 
 vi.mock('@/services/cacheWarmer.js', () => ({ default: {} }))
 
@@ -20,17 +19,28 @@ describe('useDataLoading degraded-data reporting', { tags: ['@unit'] }, () => {
 		vi.spyOn(console, 'warn').mockImplementation(() => {})
 	})
 
+	afterEach(() => {
+		vi.unstubAllGlobals()
+		vi.restoreAllMocks()
+	})
+
+	// Only fetch is stubbed; the store actions run for real. The stores used to
+	// catch and log, so a spy that made the action reject passed while a real
+	// outage never reached the warning.
 	it.each([
-		['socioeconomic', 'loadPaavo'],
-		['heatExposure', 'loadHeatExposure'],
-	])('%s failure is a warning with the shared message and a working Retry', async (key, failing) => {
-		const loaders = {
-			loadPaavo: vi.spyOn(useSocioEconomicsStore(), 'loadPaavo').mockResolvedValue(undefined),
-			loadHeatExposure: vi
-				.spyOn(useHeatExposureStore(), 'loadHeatExposure')
-				.mockResolvedValue(undefined),
-		}
-		const loader = loaders[failing].mockRejectedValueOnce(new Error('HTTP 503 from upstream'))
+		['socioeconomic', (url) => url === '/paavo'],
+		['heatExposure', (url) => url.includes('/heatexposure_optimized/')],
+	])('%s failure is a warning with the shared message and a working Retry', async (key, isFailing) => {
+		const fetchMock = vi.fn(async (url) =>
+			isFailing(String(url))
+				? new Response('', { status: 503 })
+				: new Response(JSON.stringify({ features: [] }), {
+						status: 200,
+						headers: { 'content-type': 'application/json' },
+					})
+		)
+		vi.stubGlobal('fetch', fetchMock)
+		const failingCalls = () => fetchMock.mock.calls.filter(([url]) => isFailing(String(url)))
 
 		await useDataLoading(false).loadExternalData()
 
@@ -39,24 +49,19 @@ describe('useDataLoading degraded-data reporting', { tags: ['@unit'] }, () => {
 		expect(errorNotification.message).not.toContain('503')
 		expect(errorNotification.severity).toBe('warning')
 		expect(typeof errorNotification.retry).toBe('function')
+		expect(failingCalls()).toHaveLength(1)
 
 		useGlobalStore().retryError()
-		await Promise.resolve()
-		expect(loader).toHaveBeenCalledTimes(2)
+		await flushPromises()
+		expect(failingCalls()).toHaveLength(2)
 	})
 
-	// The stores used to catch and log, so the warning above never fired for a real
-	// outage. Only fetch is stubbed here; the store actions run for real.
 	it('a 503 from both upstreams reaches the warning through the real store actions', async () => {
 		const fetchMock = vi.fn(async () => new Response('', { status: 503 }))
 		vi.stubGlobal('fetch', fetchMock)
 		const showError = vi.spyOn(useGlobalStore(), 'showError')
 
-		try {
-			await useDataLoading(false).loadExternalData()
-		} finally {
-			vi.unstubAllGlobals()
-		}
+		await useDataLoading(false).loadExternalData()
 
 		expect(fetchMock).toHaveBeenCalledTimes(2)
 		const messages = showError.mock.calls.map(([message, , options]) => [

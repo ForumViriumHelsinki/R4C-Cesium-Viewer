@@ -7,6 +7,10 @@
  * in globalStore.showError with the layer's message from constants/errorMessages.js
  * and a Retry that re-runs the operation. The statistical grid loads when its view
  * mounts, so it reports through the same channel without a Retry.
+ *
+ * Trees and NDVI are tested in layerFailureRealLoaders.test.js with the real Tree
+ * service and changeTIFF: mocking those into rejecting passed while the real
+ * loaders swallowed every failure.
  */
 
 import { flushPromises, shallowMount } from '@vue/test-utils'
@@ -16,18 +20,14 @@ import DataLayersControl from '@/components/controls/DataLayersControl.vue'
 import HSYYearSelect from '@/components/HSYYearSelect.vue'
 import LandcoverPanel from '@/components/LandcoverPanel.vue'
 import MapControls from '@/components/MapControls.vue'
-import NDVIPanel from '@/components/NDVIPanel.vue'
 import SosEco250mGrid from '@/components/SosEco250mGrid.vue'
 import { LAYER_FAILURE_MESSAGES } from '@/constants/errorMessages.js'
 import { createHSYImageryLayer, setLandcoverEnabled } from '@/services/landcover'
-import { changeTIFF } from '@/services/tiffImagery.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
-import { useLoadingStore } from '@/stores/loadingStore.js'
 import { useToggleStore } from '@/stores/toggleStore.js'
 
 const loaders = vi.hoisted(() => ({
 	otherNature: vi.fn(async () => {}),
-	trees: vi.fn(async () => {}),
 	vegetation: vi.fn(async () => {}),
 	statsGrid: vi.fn(async () => {}),
 }))
@@ -60,21 +60,12 @@ vi.mock('@/services/vegetation', () => ({
 		loadVegetation = loaders.vegetation
 	},
 }))
-vi.mock('@/services/tree.js', () => ({
-	default: class {
-		loadTrees = loaders.trees
-	},
-}))
 vi.mock('@/services/wms.js', () => ({
 	default: class {
 		createHelsinkiImageryLayer = vi.fn(() => ({}))
 	},
 }))
 vi.mock('@/services/backgroundPreloader.js', () => ({ default: { trackLayerUsage: vi.fn() } }))
-vi.mock('@/services/tiffImagery.js', () => ({
-	changeTIFF: vi.fn(async () => {}),
-	removeTIFF: vi.fn(async () => {}),
-}))
 vi.mock('@/services/landcover', () => ({
 	createHSYImageryLayer: vi.fn(async () => {}),
 	removeLandcover: vi.fn(),
@@ -100,9 +91,7 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 		vi.spyOn(console, 'error').mockImplementation(() => {})
 		vi.mocked(setLandcoverEnabled).mockReset().mockResolvedValue(undefined)
 		vi.mocked(createHSYImageryLayer).mockReset().mockResolvedValue(undefined)
-		vi.mocked(changeTIFF).mockReset().mockResolvedValue(undefined)
 		loaders.otherNature.mockReset().mockResolvedValue(undefined)
-		loaders.trees.mockReset().mockResolvedValue(undefined)
 		loaders.vegetation.mockReset().mockResolvedValue(undefined)
 		loaders.statsGrid.mockReset().mockResolvedValue(undefined)
 	})
@@ -198,57 +187,6 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 		})
 	})
 
-	describe('NDVI', () => {
-		it('Layers tab: a failed switch-on shows the NDVI message with Retry', async () => {
-			vi.mocked(changeTIFF).mockRejectedValueOnce(new Error('TIFF 404'))
-
-			await switchLayer('ndvi', true)
-
-			const retry = expectLayerFailure('ndvi')
-			retry()
-			expect(changeTIFF).toHaveBeenCalledTimes(2)
-		})
-
-		it('Analysis tab: a failed date change shows the same message with Retry', async () => {
-			vi.mocked(changeTIFF).mockRejectedValueOnce(new Error('TIFF 404'))
-			wrapper = shallowMount(NDVIPanel)
-			// The date select is disabled while NDVI is off.
-			useToggleStore().setNDVI(true)
-
-			await wrapper.vm.updateImage()
-			await flushPromises()
-
-			const retry = expectLayerFailure('ndvi')
-			retry()
-			expect(changeTIFF).toHaveBeenCalledTimes(2)
-		})
-
-		it('Layers tab: a Retry after the user switched NDVI off does not add the imagery', async () => {
-			vi.mocked(changeTIFF).mockRejectedValueOnce(new Error('TIFF 404'))
-			await switchLayer('ndvi', true)
-			const retry = expectLayerFailure('ndvi')
-
-			useToggleStore().setNDVI(false)
-			retry()
-
-			expect(changeTIFF).toHaveBeenCalledTimes(1)
-		})
-
-		it('Analysis tab: a Retry after the user switched NDVI off does not add the imagery', async () => {
-			vi.mocked(changeTIFF).mockRejectedValueOnce(new Error('TIFF 404'))
-			wrapper = shallowMount(NDVIPanel)
-			useToggleStore().setNDVI(true)
-			await wrapper.vm.updateImage()
-			await flushPromises()
-			const retry = expectLayerFailure('ndvi')
-
-			useToggleStore().setNDVI(false)
-			retry()
-
-			expect(changeTIFF).toHaveBeenCalledTimes(1)
-		})
-	})
-
 	describe('Layers-tab-only layers', () => {
 		beforeEach(() => {
 			useGlobalStore().setPostalCode('00100')
@@ -263,27 +201,6 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 			retry()
 			await flushPromises()
 			expect(loaders.otherNature).toHaveBeenCalledTimes(2)
-		})
-
-		it('trees: a failed load shows its message with Retry', async () => {
-			// The tree load used to run un-awaited inside a Promise that resolved on
-			// progress timers, so a rejection never reached the catch (#1152).
-			loaders.trees.mockRejectedValueOnce(new Error('pygeoapi 503'))
-
-			await switchLayer('showTrees', true)
-
-			const retry = expectLayerFailure('trees')
-			expect(useLoadingStore().layerLoading.trees).toBe(false)
-			retry()
-			await flushPromises()
-			expect(loaders.trees).toHaveBeenCalledTimes(2)
-		})
-
-		it('trees: a successful load reports no failure', async () => {
-			await switchLayer('showTrees', true)
-
-			expect(loaders.trees).toHaveBeenCalledTimes(1)
-			expect(useGlobalStore().errorNotification.show).toBe(false)
 		})
 
 		it('vegetation: a failed load shows its message with Retry', async () => {
