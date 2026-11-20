@@ -4,7 +4,8 @@
  * into rejecting, so it passed while the real loaders swallowed every failure:
  * Tree.loadTrees counted loadLayers' `{ error }` values as successes, and
  * changeTIFF caught and only logged. Here only the network edge is stubbed:
- * unifiedLoader.loadLayer for trees, TIFFImageryProvider.fromUrl for NDVI.
+ * fetch for trees (so unifiedLoader and progressiveLoader run for real),
+ * TIFFImageryProvider.fromUrl for NDVI.
  */
 
 import { flushPromises, shallowMount } from '@vue/test-utils'
@@ -15,7 +16,6 @@ import DataLayersControl from '@/components/controls/DataLayersControl.vue'
 import MapControls from '@/components/MapControls.vue'
 import NDVIPanel from '@/components/NDVIPanel.vue'
 import { LAYER_FAILURE_MESSAGES } from '@/constants/errorMessages.js'
-import unifiedLoader from '@/services/unifiedLoader.js'
 import { useGlobalStore } from '@/stores/globalStore.js'
 import { useLoadingStore } from '@/stores/loadingStore.js'
 import { useToggleStore } from '@/stores/toggleStore.js'
@@ -72,13 +72,13 @@ describe('layer failures with the real loaders', { tags: ['@unit'] }, () => {
 	afterEach(() => {
 		wrapper?.unmount()
 		wrapper = null
+		vi.unstubAllGlobals()
 		vi.restoreAllMocks()
 	})
 
 	it('trees: an outage of every category shows the trees message and is not cached as loaded', async () => {
-		const loadLayer = vi
-			.spyOn(unifiedLoader, 'loadLayer')
-			.mockRejectedValue(new Error('HTTP 503 Service Unavailable'))
+		const fetchMock = vi.fn(async () => new Response('', { status: 503 }))
+		vi.stubGlobal('fetch', fetchMock)
 		useGlobalStore().setPostalCode('00100')
 		const loadingStore = useLoadingStore()
 		const cacheLayerData = vi.spyOn(loadingStore, 'cacheLayerData')
@@ -87,7 +87,7 @@ describe('layer failures with the real loaders', { tags: ['@unit'] }, () => {
 		wrapper.findComponent(DataLayersControl).vm.$emit('update:showTrees', true)
 		await flushPromises()
 
-		expect(loadLayer).toHaveBeenCalledTimes(4)
+		expect(fetchMock).toHaveBeenCalled()
 		expectLayerFailure('trees')
 		expect(cacheLayerData).not.toHaveBeenCalled()
 	})

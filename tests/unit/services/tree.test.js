@@ -25,13 +25,18 @@ describe('Tree.loadTrees failure reporting', { tags: ['@unit'] }, () => {
 		vi.spyOn(console, 'warn').mockImplementation(() => {})
 	})
 
-	it('rejects with the load error when every category fails', async () => {
-		const loadLayer = vi
-			.spyOn(unifiedLoader, 'loadLayer')
-			.mockRejectedValue(new Error('HTTP 503 Service Unavailable'))
+	// Only fetch is stubbed, so a catch added anywhere in unifiedLoader or
+	// progressiveLoader that swallowed the 503 would turn this green into red.
+	it('rejects with the load error when every category returns 503', async () => {
+		const fetchMock = vi.fn(async () => new Response('', { status: 503 }))
+		vi.stubGlobal('fetch', fetchMock)
 
-		await expect(new Tree().loadTrees()).rejects.toThrow('HTTP 503')
-		expect(loadLayer).toHaveBeenCalledTimes(4)
+		try {
+			await expect(new Tree().loadTrees()).rejects.toThrow('HTTP 503')
+		} finally {
+			vi.unstubAllGlobals()
+		}
+		expect(fetchMock).toHaveBeenCalled()
 	})
 
 	it('resolves when only some categories fail, so the loaded ones stay on the map', async () => {
