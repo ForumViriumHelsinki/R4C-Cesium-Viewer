@@ -39,6 +39,18 @@ describe('layer names outside the layer switch (#1155)', () => {
 		expect(offenders).toEqual([])
 	})
 
+	// The journey docs cite the E2E locators and the ADRs list the registry entries
+	// by label, so a renamed label leaves them describing controls that no longer
+	// exist. "NDVI Vegetation Index" is the feature flag's name, not the layer's.
+	it.each(['docs/adr', 'docs/blueprint/user-journeys'])('%s uses the current NDVI label', (dir) => {
+		const root = join(process.cwd(), dir)
+		const offenders = readdirSync(root)
+			.filter((file) => file.endsWith('.md'))
+			.filter((file) => /NDVI Vegetation(?! Index)/.test(readFileSync(join(root, file), 'utf8')))
+
+		expect(offenders).toEqual([])
+	})
+
 	it('the conflict warning names both layers as their switches do', () => {
 		const wrapper = mount(LayerConflictAlert, {
 			props: { hasConflict: true },

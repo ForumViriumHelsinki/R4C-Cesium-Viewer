@@ -61,7 +61,7 @@ Components remain `defineAsyncComponent` imports, per ADR-005.
 | `writes` | Its interactions change the map | Only where the map stays visible and clickable |
 | `tool`   | Explains or edits map layers    | Never away from the map                        |
 
-Current values: Socioeconomics `none`; Building Heat Data `reads`; Heat Distribution, Land Cover, Building Analysis and NDVI Vegetation `writes`; Grid Options and Climate Adaptation `tool`.
+Current values: Socioeconomics `none`; Building Heat Data `reads`; Heat Distribution, Land Cover, Building Analysis and NDVI (Vegetation) `writes`; Grid Options and Climate Adaptation `tool`.
 
 No full-page placement exists yet. `tests/unit/constants/analysisRegistry.test.js` classifies each placement by whether the map stays visible beside it, and fails for a `writes` or `tool` entry in one that hides the map. [ADR-010](./ADR-010-analysis-workspace.md) applies the rule to the analysis workspace.
 
