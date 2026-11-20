@@ -19,20 +19,23 @@
  * (`#ffffff` light, `#1e1e2e` dark). WCAG contrast, measured with the relative
  * luminance formula:
  *
- * | Role     | Colour    | vs white | vs #1e1e2e |
- * | -------- | --------- | -------- | ---------- |
- * | focus    | orange    | 1.97:1   | 8.31:1     |
- * | baseline | steelblue | 4.11:1   | 3.99:1     |
+ * | Role     | Colour                | vs white | vs #1e1e2e |
+ * | -------- | --------------------- | -------- | ---------- |
+ * | focus    | #d95f02 (dark orange) | 3.76:1   | 4.36:1     |
+ * | baseline | #4682b4 (steelblue)   | 4.11:1   | 3.99:1     |
  *
- * Orange is below the 3:1 that WCAG 1.4.11 asks of graphical objects against the
- * white plot area. Each bar is also identified by its axis label, value label or
- * tooltip, and by the legend. Changing a role's colour here changes it in every
- * chart.
+ * Both meet the 3:1 that WCAG 1.4.11 asks of graphical objects, on both
+ * surfaces; tests/unit/constants/chartColors.test.js checks it. The focus colour
+ * was CSS `orange` (1.97:1 on white) until #1162's review. The two roles differ
+ * by hue, not lightness (1.09:1 against each other): orange against blue stays
+ * apart for the common colour-vision deficiencies, and each bar is also named by
+ * its axis label, value label or tooltip, and by the legend. Changing a role's
+ * colour here changes it in every chart.
  */
 
 /** @typedef {keyof typeof CHART_SERIES_COLORS} ChartSeriesRole */
 
 export const CHART_SERIES_COLORS = Object.freeze({
-	focus: 'orange',
-	baseline: 'steelblue',
+	focus: '#d95f02',
+	baseline: '#4682b4',
 })
