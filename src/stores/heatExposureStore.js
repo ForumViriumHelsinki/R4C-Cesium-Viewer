@@ -79,6 +79,8 @@ export const useHeatExposureStore = defineStore('heatExposure', {
 				this.dataByPostcode = new Map(data.map((item) => [item.id, item]))
 			} catch (error) {
 				logger.error('Error fetching postal codedata:', error)
+				// useDataLoading reports it as a degraded-data warning with a Retry.
+				throw error
 			}
 		},
 

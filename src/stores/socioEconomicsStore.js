@@ -118,6 +118,8 @@ export const useSocioEconomicsStore = defineStore('socioEconomics', {
 				this.calculateRegionTotal()
 			} catch (error) {
 				logger.error('Error fetching Paavo data:', error)
+				// useDataLoading reports it as a degraded-data warning with a Retry.
+				throw error
 			}
 		},
 
