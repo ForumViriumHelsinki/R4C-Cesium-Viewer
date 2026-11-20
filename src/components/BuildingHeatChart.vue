@@ -50,7 +50,10 @@ export default {
 			const height = chartHeight.value - margin.top - margin.bottom
 
 			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
-			const xScale = plotService.createScaleBand([address, postinumero], width)
+			// The x-axis names each bar, so the baseline says it is the postal-code average,
+			// as HSYBuildingHeatChart's legend does.
+			const baselineName = `Average of ${postinumero}`
+			const xScale = plotService.createScaleBand([address, baselineName], width)
 			const yScale = plotService.createScaleLinear(
 				0,
 				Math.max(buildingHeatExposure, store.averageHeatExposure),
@@ -59,13 +62,12 @@ export default {
 
 			const data = [
 				{ name: address, value: buildingHeatExposure.toFixed(3) },
-				{ name: postinumero, value: store.averageHeatExposure.toFixed(3) },
+				{ name: baselineName, value: store.averageHeatExposure.toFixed(3) },
 			]
 
-			// The x-axis names each bar, so the axis is this chart's legend.
 			const colors = {
 				[address]: CHART_SERIES_COLORS.focus,
-				[postinumero]: CHART_SERIES_COLORS.baseline,
+				[baselineName]: CHART_SERIES_COLORS.baseline,
 			}
 
 			createBarsWithLabels(svg, data, xScale, yScale, height, colors)

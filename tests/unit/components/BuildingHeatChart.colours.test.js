@@ -65,7 +65,7 @@ describe('BuildingHeatChart — series colours', { tags: ['@unit'] }, () => {
 		const bars = svg.data.mock.calls[0][0]
 		const fill = svg.style.mock.calls.find(([name]) => name === 'fill')[1]
 
-		expect(bars.map((d) => d.name)).toEqual(['Testikatu 1', '00100'])
+		expect(bars.map((d) => d.name)).toEqual(['Testikatu 1', 'Average of 00100'])
 		expect(fill(bars[0])).toBe(CHART_SERIES_COLORS.focus)
 		expect(fill(bars[1])).toBe(CHART_SERIES_COLORS.baseline)
 	})
