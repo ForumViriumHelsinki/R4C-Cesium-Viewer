@@ -154,21 +154,11 @@ Available budgets:
 - `MAX_MAIN_BUNDLE` - 500KB budget for largest bundle
 - `BYTES_PER_KIB` - 1024 conversion factor
 
-#### 3. Web Vitals Budgets
+#### 3. Web Vitals
 
-```typescript
-import { WEB_VITALS_BUDGETS } from '../config/constants';
-
-// Usage in performance tests
-expect(fcpTime).toBeLessThan(WEB_VITALS_BUDGETS.FCP_MAX);
-expect(lcpTime).toBeLessThan(WEB_VITALS_BUDGETS.LCP_MAX);
-```
-
-Available budgets:
-
-- `FCP_MAX` - First Contentful Paint (2000ms)
-- `LCP_MAX` - Largest Contentful Paint (3000ms)
-- `DOM_INTERACTIVE_MAX` - DOM Interactive (5000ms)
+`WEB_VITALS_BUDGETS` was removed in #1147 with its only consumer. FCP and LCP are
+checked by the Lighthouse CI assertions in `lighthouserc.cjs`, and load timings by
+`tests/performance/load.test.ts` (informational on SwiftShader).
 
 #### 4. Viewports
 
@@ -342,7 +332,7 @@ test('Page loads', { tag: ['@e2e', '@performance', '@smoke'] }, async ({ page })
 	await page.goto('/');
 	await page.setViewportSize(VIEWPORTS.DESKTOP_HD);
 	const response = await page.waitForRequest(API_ENDPOINTS.WMS_PROXY);
-	expect(response.timing().responseEnd).toBeLessThan(WEB_VITALS_BUDGETS.LCP_MAX);
+	expect(response.timing().responseEnd).toBeLessThan(PERFORMANCE_THRESHOLDS.API_RESPONSE);
 });
 ```
 

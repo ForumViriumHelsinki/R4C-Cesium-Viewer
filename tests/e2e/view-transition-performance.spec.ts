@@ -19,6 +19,20 @@ async function waitForGridEntities(page: Page) {
 	)
 }
 
+async function waitForCapitalRegionReloaded(page: Page) {
+	await page.waitForFunction(
+		(gridNames: string[]) => {
+			const sources: any[] = (window as any).__viewer?.dataSources?._dataSources ?? []
+			return (
+				!sources.some((ds) => gridNames.includes(ds.name)) &&
+				sources.some((ds) => ds.name === 'PostCodes' && ds.entities?.values?.length > 0)
+			)
+		},
+		GRID_DATASOURCE_NAMES,
+		{ timeout: 30000, polling: 50 }
+	)
+}
+
 async function webglRenderer(page: Page): Promise<string> {
 	return page.evaluate(() => {
 		const gl = document.createElement('canvas').getContext('webgl')
@@ -138,8 +152,12 @@ test.describe('View Transition Performance @performance', () => {
 			await gridToggle.click()
 		}
 
-		// Wait for transition to complete
-		await page.waitForLoadState('networkidle', { timeout: 15000 })
+		// The transition is done when the grid's data source is gone and PostCodes
+		// has entities again, the end condition tests/performance/load.test.ts uses.
+		// networkidle settles before the PostCodes reload: with the switch delayed
+		// by 4 s, a networkidle end condition measured 33 ms and passed; this one
+		// measured 4253 ms and failed (Apple M4 Pro GPU, #1148).
+		await waitForCapitalRegionReloaded(page)
 
 		const transitionTime = Date.now() - startTime
 		const renderer = await webglRenderer(page)
@@ -154,9 +172,14 @@ test.describe('View Transition Performance @performance', () => {
 
 		// Under software rendering the time is informational (#1143): the CI
 		// runner has no GPU, and SwiftShader runs measured 4993-5957 ms.
-		// Same convention as the GPU-bound metrics in tests/performance/.
+		// Same convention as the GPU-bound metrics in tests/performance/. The budget
+		// asserts under `just test-e2e-gpu` (PLAYWRIGHT_GPU=1, #1148), and
+		// tests/performance/load.test.ts asserts it too.
 		if (isSoftwareRenderer(renderer)) {
-			test.skip(true, `Software renderer (${renderer}); transition time is informational`)
+			test.skip(
+				true,
+				`Software renderer (${renderer}); transition time is informational. Run just test-e2e-gpu to assert it`
+			)
 			return
 		}
 

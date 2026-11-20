@@ -5,143 +5,146 @@
  */
 
 import { ref } from 'vue'
+import { INDEX_LABELS, inSentence, METRIC_LABELS } from '../constants/metricLabels.js'
 
 /**
  * Comprehensive list of social vulnerability indices with metadata
  * Includes heat vulnerability, flood vulnerability, social factors, and combined indices.
- * Each index has a user-friendly label, unique value key, and detailed description.
+ * Each index has a user-friendly label (from `INDEX_LABELS`, shared with every
+ * other place that names the index), unique value key, and detailed description.
  *
  * Index categories:
  * - Primary vulnerabilities: heat_index, flood_index
  * - Component indices: sensitivity, exposure, preparedness, response, recovery
  * - Social factors: age, income, information, tenure, social networks, overcrowding
- * - Environmental: green space, Landsat surface heat
+ * - Environmental: green space, surface heat index (Landsat)
  * - Combined visualizations: Multi-factor composite indices
  *
  */
 const indexOptions = ref([
 	{
-		text: 'Heat Vulnerability',
+		text: INDEX_LABELS.heat_index,
 		value: 'heat_index',
 		description:
 			'Total social vulnerability to high temperatures. Includes factors like age, income, and housing conditions.',
 	},
 	{
-		text: 'Flood Vulnerability',
+		text: INDEX_LABELS.flood_index,
 		value: 'flood_index',
 		description:
 			'Total social vulnerability to flooding. Considers factors such as age, income, overcrowding, and green space.',
 	},
 	{
-		text: 'Sensitivity',
+		text: INDEX_LABELS.sensitivity,
 		value: 'sensitivity',
 		description:
 			'Sensitivity to flooding and high temperatures. Calculated from the percentage of people over 75 years old and the percentage of children aged 0-6 years.',
 	},
 	{
-		text: 'Flood Exposure',
+		text: INDEX_LABELS.flood_exposure,
 		value: 'flood_exposure',
 		description: 'Enhanced exposure to flooding. Based on green space coverage in the area.',
 	},
 	{
-		text: 'Flood Preparedness',
+		text: INDEX_LABELS.flood_prepare,
 		value: 'flood_prepare',
 		description:
 			'Ability to prepare for flooding. Includes indicators such as income, employment, social networks, and housing tenure.',
 	},
 	{
-		text: 'Flood Response',
+		text: INDEX_LABELS.flood_respond,
 		value: 'flood_respond',
 		description:
 			'Ability to respond to flooding. Includes access to emergency services, information, and economic stability.',
 	},
 	{
-		text: 'Flood Recovery',
+		text: INDEX_LABELS.flood_recover,
 		value: 'flood_recover',
 		description:
 			'Ability to recover after flooding. Takes into account economic factors, housing conditions, and social support networks.',
 	},
 	{
-		text: 'Heat Exposure',
+		text: INDEX_LABELS.heat_exposure,
 		value: 'heat_exposure',
 		description:
 			'Enhanced exposure to high temperatures. Based on factors like housing conditions and the amount of vegetation.',
 	},
 	{
-		text: 'Heat Preparedness',
+		text: INDEX_LABELS.heat_prepare,
 		value: 'heat_prepare',
 		description:
 			'Ability to prepare for high temperatures. Considers economic and social factors, as well as housing conditions.',
 	},
 	{
-		text: 'Heat Response',
+		text: INDEX_LABELS.heat_respond,
 		value: 'heat_respond',
 		description:
 			'Ability to respond to high temperatures. Similar factors as preparedness, focusing on response capabilities.',
 	},
 	{
-		text: 'Age',
+		text: INDEX_LABELS.age,
 		value: 'age',
 		description:
 			'Age-based vulnerability. Combines the percentage of young children (0-6 years old) and elderly people (over 75 years old).',
 	},
 	{
-		text: 'Information',
+		text: INDEX_LABELS.info,
 		value: 'info',
 		description:
 			'Information-based vulnerability. Calculated from the percentage of people with only basic education.',
 	},
 	{
-		text: 'Tenure',
+		text: INDEX_LABELS.tenure,
 		value: 'tenure',
 		description:
 			'Tenure-based vulnerability. Includes the percentage of rented households and those rented from ARA (The Housing Finance and Development Centre of Finland).',
 	},
 	{
-		text: 'Green Space',
+		text: INDEX_LABELS.green,
 		value: 'green',
 		description:
 			'Greenspace availability. Considers the percentage of water area, green space, low vegetation, and tree coverage in the land area.',
 	},
 	{
-		text: 'Social Networks',
+		text: INDEX_LABELS.social_networks,
 		value: 'social_networks',
 		description:
 			'Social network-based vulnerability. Includes the percentage of students, single-person households, and school-age children in the population.',
 	},
 	{
-		text: 'Overcrowding',
+		text: INDEX_LABELS.overcrowding,
 		value: 'overcrowding',
 		description:
 			'Overcrowding vulnerability. Based on the occupancy rate and the percentage of households with seven or more people.',
 	},
 	{
-		text: 'Landsat surface heat',
+		text: INDEX_LABELS.avgheatexposure,
 		value: 'avgheatexposure',
-		description: 'Landsat surface heat 2023-06-28 (not combined)',
+		description: `${METRIC_LABELS.SURFACE_HEAT_INDEX}, 2023-06-28.`,
 	},
 	{
-		text: 'Combined Landsat surface heat',
+		text: INDEX_LABELS.combined_avgheatexposure,
 		value: 'combined_avgheatexposure',
-		description: 'Combined Landsat surface heat  2023-06-28 and heat index',
+		description:
+			'Surface heat index (Landsat, 2023-06-28) and heat vulnerability combined, colored by surface heat index and height by heat vulnerability.',
 	},
 	{
-		text: 'Heat and Landsat surface heat combined',
+		text: INDEX_LABELS.combined_heatindex_avgheatexposure,
 		value: 'combined_heatindex_avgheatexposure',
-		description: 'Landsat surface heat and heat vulnerability combined',
+		description: `${METRIC_LABELS.HEAT_VULNERABILITY} and ${inSentence(METRIC_LABELS.SURFACE_HEAT_INDEX)} combined, colored by heat vulnerability and height by surface heat index.`,
 	},
 	{
-		text: 'Combined Indices (Heat/Flood)',
+		text: INDEX_LABELS.combined_heat_flood,
 		value: 'combined_heat_flood',
 		description: 'Combined heat and flood vulnerability, colored by heat and height by flood.',
 	},
 	{
-		text: 'Combined Indices (Flood/Heat)',
+		text: INDEX_LABELS.combined_flood_heat,
 		value: 'combined_flood_heat',
 		description: 'Combined heat and flood vulnerability, colored by flood and height by heat.',
 	},
 	{
-		text: 'Combined Indices (Heat/Flood/Green)',
+		text: INDEX_LABELS.combined_heat_flood_green,
 		value: 'combined_heat_flood_green',
 		description:
 			'Combined heat and flood vulnerability, colored by heat and flood, height by green space.',

@@ -144,6 +144,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { propertyLabel } from '../constants/metricLabels.js'
 import { eventBus } from '../services/eventEmitter'
 import { postalCodeIndex } from '../services/postalCodeIndex.js'
 import { useGlobalStore } from '../stores/globalStore'
@@ -249,17 +250,18 @@ const CATEGORIES = {
 	},
 }
 
-// Key properties to show in summary (by priority)
+// Key properties to show in summary (by priority). A key shown here is left out of
+// the rows below, so its chip carries the same name as its row would (formatLabel).
 const KEY_PROPERTY_CONFIG = {
-	posno: { label: 'Postal', icon: 'mdi-map-marker', color: 'primary' },
-	nimi: { label: 'Area', icon: null, color: 'default' },
-	avgheatexposuretobuilding: { label: 'Heat', icon: 'mdi-thermometer', color: 'warning' },
-	averageheatexposure: { label: 'Heat', icon: 'mdi-thermometer', color: 'warning' },
-	avg_temp_c: { label: 'Temp', icon: 'mdi-thermometer', color: 'error' },
-	asukkaita: { label: 'Pop', icon: 'mdi-account-group', color: 'info' },
-	area_m2: { label: 'Area', icon: 'mdi-vector-square', color: 'default' },
-	measured_height: { label: 'Height', icon: 'mdi-arrow-expand-vertical', color: 'default' },
-	i_kerrlkm: { label: 'Floors', icon: 'mdi-layers', color: 'default' },
+	posno: { icon: 'mdi-map-marker', color: 'primary' },
+	nimi: { icon: null, color: 'default' },
+	avgheatexposuretobuilding: { icon: 'mdi-thermometer', color: 'warning' },
+	averageheatexposure: { icon: 'mdi-thermometer', color: 'warning' },
+	avg_temp_c: { icon: 'mdi-thermometer', color: 'error' },
+	asukkaita: { icon: 'mdi-account-group', color: 'info' },
+	area_m2: { icon: 'mdi-vector-square', color: 'default' },
+	measured_height: { icon: 'mdi-arrow-expand-vertical', color: 'default' },
+	i_kerrlkm: { icon: 'mdi-layers', color: 'default' },
 }
 
 // Properties to exclude from display
@@ -298,33 +300,10 @@ function findCategory(key) {
 
 // Format property label for display
 function formatLabel(key) {
-	// Common abbreviation mappings
-	const labelMap = {
-		posno: 'Postal Code',
-		nimi: 'Name',
-		avgheatexposuretobuilding: 'Heat Exposure',
-		averageheatexposure: 'Heat Exposure',
-		avg_temp_c: 'Temperature (°C)',
-		measured_height: 'Height (m)',
-		i_kerrlkm: 'Floors',
-		kerrosten_lkm: 'Floors',
-		area_m2: 'Area (m²)',
-		asukkaita: 'Population',
-		katunimi_suomi: 'Street',
-		osoitenumero: 'Street No.',
-		year_of_construction: 'Year Built',
-		kayttotarkoitus: 'Building Use',
-		rakennusaine_s: 'Material',
-		tree_cover_m2: 'Tree Cover (m²)',
-		vegetation_m2: 'Vegetation (m²)',
-		water_m2: 'Water (m²)',
-		distancetounder40: 'Dist. to Cool Area',
-		p_ala_m2: 'Tree Area (m²)',
-		korkeus_ka_m: 'Tree Height (m)',
-		grid_id: 'Grid ID',
-	}
-
-	if (labelMap[key]) return labelMap[key]
+	// Shared with the charts and scatter-plot selects, so a name seen here can be
+	// found in Building Analysis (#1156).
+	const label = propertyLabel(key)
+	if (label) return label
 
 	// Auto-format: replace underscores, capitalize
 	return key
@@ -357,7 +336,7 @@ const allProperties = computed(() => {
 	if (entityId.length === 10) {
 		props.push({
 			key: 'vtj_prt',
-			label: 'Building ID',
+			label: formatLabel('vtj_prt'),
 			value: entityId,
 			displayValue: entityId,
 			category: 'location',
@@ -397,7 +376,6 @@ const keyProperties = computed(() => {
 			const config = KEY_PROPERTY_CONFIG[key]
 			result.push({
 				...prop,
-				label: config.label,
 				icon: config.icon,
 				color: config.color,
 			})

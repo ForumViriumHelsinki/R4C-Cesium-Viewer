@@ -9,6 +9,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue' // Import lifecycle hooks
 import * as d3 from '@/utils/d3'
 import { useChartSize } from '../composables/useChartSize.js'
+import { METRIC_LABELS } from '../constants/metricLabels.js'
 import Building from '../services/building.js'
 import { cesiumEntityManager } from '../services/cesiumEntityManager.js'
 import { eventBus } from '../services/eventEmitter.js'
@@ -57,7 +58,7 @@ export default {
 						d,
 						(
 							data
-						) => `${propsStore.numericalSelect.text}: ${data.xData.toFixed(2)}<br>Temperature: ${data.yData.toFixed(2)}°C<br>${propsStore.categoricalSelect.text}: ${data.name}
+						) => `${propsStore.numericalSelect.text}: ${data.xData.toFixed(2)}<br>${METRIC_LABELS.SURFACE_TEMPERATURE}: ${data.yData.toFixed(2)}<br>${propsStore.categoricalSelect.text}: ${data.name}
             <br>Left click highlights the building on map`
 					)
 				)
@@ -156,7 +157,7 @@ export default {
 			createLegend(svg, width, margin, values, labelsWithAverage, colorScale)
 			plotService.addTitleWithLink(
 				svg,
-				'Average surface temperature in °C <br> and <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/buildings-in-the-helsinki-metropolitan-area/" target="_blank">Building attributes</a>',
+				`${METRIC_LABELS.SURFACE_TEMPERATURE} <br> and <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/buildings-in-the-helsinki-metropolitan-area/" target="_blank">building attributes</a>`,
 				margin.left,
 				margin.top + 3
 			)

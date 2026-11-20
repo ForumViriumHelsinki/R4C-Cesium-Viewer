@@ -124,6 +124,49 @@ vi.mock('@/stores/socioEconomicsStore.js', () => ({
 }))
 
 import SocioEconomicsChart from '@/components/SocioEconomicsChart.vue'
+import {
+	SOCIOECONOMIC_HEAT_INDICATORS,
+	SOCIOECONOMIC_INDICATORS,
+} from '@/constants/metricLabels.js'
+import Plot from '@/services/plot.js'
+
+describe('SocioEconomicsChart — bar tooltips', { tags: ['@unit'] }, () => {
+	let wrapper
+
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		vi.mocked(Plot).mockClear()
+		heatExposureGetDataById.mockReturnValue(undefined)
+		socioEconomicsGetDataByNimi.mockReset()
+		socioEconomicsGetDataByNimi.mockReturnValue(undefined)
+	})
+
+	afterEach(() => {
+		if (wrapper) wrapper.unmount()
+	})
+
+	it("shows each bar's own description, Basic education % included (#1154)", () => {
+		wrapper = mount(SocioEconomicsChart, { attachTo: document.body })
+		const plot = vi.mocked(Plot).mock.instances[0]
+		const svg = vi.mocked(plot.createSVGElement).mock.results[0].value
+		// The bars are the data-bound array whose items carry a label and a value.
+		const bars = svg.data.mock.calls
+			.map(([data]) => data)
+			.find((data) => Array.isArray(data) && data.every((d) => 'label' in d && 'value' in d))
+		const onMouseover = svg.on.mock.calls.find(([event]) => event === 'mouseover')[1]
+
+		const expected = [SOCIOECONOMIC_HEAT_INDICATORS.surfaceHeat, ...SOCIOECONOMIC_INDICATORS]
+		expect(bars.map((d) => d.label)).toEqual(expected.map(({ label }) => label))
+		for (const [i, bar] of bars.entries()) {
+			onMouseover({}, bar)
+			const format = vi.mocked(plot.handleMouseover).mock.calls.at(-1)[4]
+			expect(format(bar), bar.label).toBe(
+				`Area: ${sosDataFixture.nimi}<br>Value: ${bar.value}<br>${expected[i].description}`
+			)
+		}
+		expect(bars.map((d) => d.label)).toContain('Basic education %')
+	})
+})
 
 describe('SocioEconomicsChart — undefined data guards', { tags: ['@unit'] }, () => {
 	let wrapper

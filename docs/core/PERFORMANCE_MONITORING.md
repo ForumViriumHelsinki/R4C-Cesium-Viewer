@@ -262,6 +262,7 @@ If tests are flagged incorrectly:
 - `PERFORMANCE_MONITORING`: Set to `"true"` to enable performance monitoring locally
 - `CI`: Automatically enables performance monitoring when set (GitHub Actions sets this)
 - `GITHUB_STEP_SUMMARY`: Used to generate GitHub Actions summary (automatically set in GHA)
+- `PLAYWRIGHT_GPU`: Set to `"1"` (`just test-e2e-gpu`) to run Chromium on the local GPU instead of SwiftShader, so GPU-gated budgets assert. See `.claude/rules/testing.md` "Playwright Renderer".
 
 ### Reporter Options
 

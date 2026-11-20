@@ -68,7 +68,6 @@ const viewer = window.__viewer; // Matches app code
 
 **Remaining cleanup (low priority):**
 
-- `tests/loading-performance.spec.ts` - 20 instances with `.catch()` handlers
 - `tests/performance/load.test.ts` - 5 instances with `.catch()` handlers
 - `tests/e2e/accessibility/*.spec.ts` - 10 instances with `.catch()` handlers
 - `tests/e2e/basic.spec.ts` - 1 instance with `.catch()` handler
@@ -165,7 +164,7 @@ CesiumJS continuously loads tiles in the background. **Network NEVER becomes tru
 
 - `tests/e2e/helpers/test-helpers.ts`: 6 instances (FIXED ✅)
 - `tests/e2e/helpers/cesium-helper.ts`: 1 instance (FIXED ✅)
-- `tests/loading-performance.spec.ts`: 20 instances (low priority - have `.catch()`)
+- `tests/loading-performance.spec.ts`: 20 instances (file removed in #1147)
 - `tests/performance/load.test.ts`: 5 instances (low priority - have `.catch()`)
 - `tests/e2e/basic.spec.ts`: 1 instance (low priority - has `.catch()`)
 - Various accessibility tests: 10 instances (low priority - have `.catch()`)
@@ -433,22 +432,16 @@ await page.waitForTimeout(500);
 
 ### Low Priority (Optional Cleanup)
 
-**37 instances of `networkidle` waits remaining in test spec files:**
+**`networkidle` waits remaining in test spec files:**
 
-These instances are **intentionally left in place** for the following reasons:
+`tests/loading-performance.spec.ts` (20) and `tests/r4c.spec.ts` (1) were removed in #1147, along with the other top-level `tests/*.spec.ts` files that `test:e2e` never ran. For the current count and files, run the verification command below.
+
+The remaining instances are **intentionally left in place** for the following reasons:
 
 1. **Non-blocking behavior:** All instances have `.catch()` handlers that prevent test failures
 2. **Performance testing context:** Many are in performance test files where network behavior is being measured
 3. **Edge case coverage:** Some test specific network scenarios where timeout + catch is acceptable
 4. **Low impact:** Since they have fallback handlers, they don't cause test failures or significant delays
-
-**Distribution:**
-
-- `tests/loading-performance.spec.ts` - 20 instances (performance monitoring)
-- `tests/performance/load.test.ts` - 5 instances (load testing)
-- `tests/e2e/accessibility/*.spec.ts` - 10 instances (accessibility edge cases)
-- `tests/e2e/basic.spec.ts` - 1 instance (basic smoke test)
-- `tests/r4c.spec.ts` - 1 instance (integration test)
 
 **Example pattern (acceptable):**
 
@@ -470,7 +463,7 @@ These instances can be replaced during routine maintenance or when touching thos
 # Check remaining networkidle usage in spec files (excluding helpers)
 rg "waitForLoadState.*networkidle" tests/ --type ts | grep -v helpers/
 
-# Expected: 37 instances, all with .catch() handlers
+# Each instance should be bounded by a timeout and a .catch() handler
 ```
 
 ---

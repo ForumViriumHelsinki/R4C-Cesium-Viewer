@@ -94,15 +94,6 @@ vi.mock('../../../src/composables/useGridStyling.js', () => ({
 	}),
 }))
 
-vi.mock('../../../src/composables/useIndexData.js', () => ({
-	useIndexData: () => ({
-		getIndexInfo: vi.fn(() => ({
-			text: 'Heat Index',
-			description: 'Test description',
-		})),
-	}),
-}))
-
 describe('LandcoverToParks Component', () => {
 	let wrapper
 	let vuetify
@@ -295,7 +286,6 @@ describe('LandcoverToParks Component', () => {
 				totalCoolingArea: '10.00',
 				neighborsAffected: 4,
 				totalReduction: '0.150',
-				selectedIndexName: 'Heat Index',
 				initialIndex: '0.500',
 				newIndex: '0.350',
 				cumulativeCoolingArea: '20.00',
@@ -314,8 +304,22 @@ describe('LandcoverToParks Component', () => {
 			// Check for specific values
 			const text = table.text()
 			expect(text).toContain('5.00 ha')
-			expect(text).toContain('Heat Index')
+			// The values are the grid's Landsat surface heat index (final_avg_conditional),
+			// so every row names that metric, whatever index the grid options select.
 			expect(text).toContain('-0.150')
+
+			// Row names are field labels, so sentence case throughout, qualifiers
+			// included (#1176).
+			const rowNames = rows.map((row) => row.find('td').text())
+			expect(rowNames).toEqual([
+				'Surface heat index (Landsat) (initial)',
+				'Area converted (this turn)',
+				'Neighbor cells cooled (this turn)',
+				'Surface heat index (Landsat) reduction (this turn)',
+				'Surface heat index (Landsat) (new cumulative)',
+				'Cumulative cooling area',
+				'Surface heat index (Landsat) reduction (cumulative)',
+			])
 		})
 
 		it('should highlight cumulative values in bold', async () => {
@@ -324,7 +328,6 @@ describe('LandcoverToParks Component', () => {
 				totalCoolingArea: '10.00',
 				neighborsAffected: 4,
 				totalReduction: '0.150',
-				selectedIndexName: 'Heat Index',
 				initialIndex: '0.500',
 				newIndex: '0.350',
 				cumulativeCoolingArea: '20.00',

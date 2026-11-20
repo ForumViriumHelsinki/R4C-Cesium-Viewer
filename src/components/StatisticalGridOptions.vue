@@ -34,7 +34,7 @@
 					<div class="combined-legend">
 						<div class="legend-section">
 							<div class="heat-legend">
-								<h5>Heat Index</h5>
+								<h5>{{ METRIC_LABELS.HEAT_VULNERABILITY }}</h5>
 								<div
 									v-for="item in indexToColorScheme.partialHeat"
 									:key="item.range"
@@ -48,7 +48,7 @@
 								</div>
 							</div>
 							<div class="flood-legend">
-								<h5>Flood Index</h5>
+								<h5>{{ METRIC_LABELS.FLOOD_VULNERABILITY }}</h5>
 								<div
 									v-for="item in indexToColorScheme.partialFlood"
 									:key="item.range"
@@ -80,8 +80,8 @@
 				</div>
 				<div class="extrusion-note">
 					<span
-						>Green Space Index shown by grid cell height visualisation, with a maximum height of
-						250m (least green).</span
+						>{{ METRIC_LABELS.GREEN_SPACE }} shown by grid cell height visualisation, with a
+						maximum height of 250m (least green).</span
 					>
 				</div>
 			</div>
@@ -152,6 +152,7 @@
 import { computed, ref, watch } from 'vue'
 import { indexToColorScheme } from '../composables/useGridStyling.js'
 import { useIndexData } from '../composables/useIndexData.js'
+import { METRIC_LABELS } from '../constants/metricLabels.js'
 import { usePropsStore } from '../stores/propsStore.js'
 
 const propsStore = usePropsStore()
@@ -172,17 +173,16 @@ const selectedIndexDescription = computed(() => {
 })
 
 const extrusionNote = computed(() => {
-	const notes = {
-		combined_avgheatexposure:
-			'Heat Index shown by grid cell height visualisation, with a maximum height of 250m.',
-		combined_heatindex_avgheatexposure:
-			'Normalised Landsat Surface heat shown by grid cell height visualisation, with a maximum height of 250m.',
-		combined_heat_flood:
-			'Flood Index shown by grid cell height visualisation, with a maximum height of 250m.',
-		combined_flood_heat:
-			'Heat Index shown by grid cell height visualisation, with a maximum height of 250m.',
-	}
-	return notes[localSelectedIndex.value] || null
+	/** Metric drawn as grid cell height, per combined index. */
+	const heightMetric = {
+		combined_avgheatexposure: METRIC_LABELS.HEAT_VULNERABILITY,
+		combined_heatindex_avgheatexposure: METRIC_LABELS.SURFACE_HEAT_INDEX,
+		combined_heat_flood: METRIC_LABELS.FLOOD_VULNERABILITY,
+		combined_flood_heat: METRIC_LABELS.HEAT_VULNERABILITY,
+	}[localSelectedIndex.value]
+	return heightMetric
+		? `${heightMetric} shown by grid cell height visualisation, with a maximum height of 250m.`
+		: null
 })
 
 // --- METHODS ---
