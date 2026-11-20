@@ -8,6 +8,7 @@
 <script>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useChartSize } from '../composables/useChartSize.js'
+import { CHART_SERIES_COLORS } from '../constants/chartColors.js'
 import { METRIC_LABELS } from '../constants/metricLabels.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -49,7 +50,10 @@ export default {
 			const height = chartHeight.value - margin.top - margin.bottom
 
 			const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
-			const xScale = plotService.createScaleBand([address, postinumero], width)
+			// The x-axis names each bar, so the baseline says it is the postal-code average,
+			// as HSYBuildingHeatChart's legend does.
+			const baselineName = `Average of ${postinumero}`
+			const xScale = plotService.createScaleBand([address, baselineName], width)
 			const yScale = plotService.createScaleLinear(
 				0,
 				Math.max(buildingHeatExposure, store.averageHeatExposure),
@@ -58,10 +62,13 @@ export default {
 
 			const data = [
 				{ name: address, value: buildingHeatExposure.toFixed(3) },
-				{ name: postinumero, value: store.averageHeatExposure.toFixed(3) },
+				{ name: baselineName, value: store.averageHeatExposure.toFixed(3) },
 			]
 
-			const colors = { [address]: 'orange', [postinumero]: 'steelblue' }
+			const colors = {
+				[address]: CHART_SERIES_COLORS.focus,
+				[baselineName]: CHART_SERIES_COLORS.baseline,
+			}
 
 			createBarsWithLabels(svg, data, xScale, yScale, height, colors)
 			plotService.setupAxes(svg, xScale, yScale, height)

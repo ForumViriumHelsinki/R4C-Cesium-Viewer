@@ -9,6 +9,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import * as d3 from '@/utils/d3' // Import D3.js
 import { useChartSize } from '../composables/useChartSize.js'
+import { CHART_SERIES_COLORS } from '../constants/chartColors.js'
 import {
 	SOCIOECONOMIC_HEAT_INDICATORS,
 	SOCIOECONOMIC_INDICATORS,
@@ -136,15 +137,16 @@ export default {
 			)
 		}
 
-		const createBars = (svg, data, xScale, yScale, height, tooltip, xOffset, barColor, name) => {
+		/** @param {import('../constants/chartColors.js').ChartSeriesRole} series */
+		const createBars = (svg, data, xScale, yScale, height, tooltip, xOffset, series, name) => {
 			const barWidth = xScale.bandwidth() / 2.5 // Make bars narrower
 
 			const bar = svg
-				.selectAll(`.bar.${barColor}`)
+				.selectAll(`.bar.${series}`)
 				.data(data)
 				.enter()
 				.append('g')
-				.attr('class', `bar ${barColor}`)
+				.attr('class', `bar ${series}`)
 				.attr('transform', (d) => `translate(${xScale(d.label) + xOffset}, 0)`) // Adjust position based on xOffset
 
 			bar
@@ -153,7 +155,7 @@ export default {
 				.attr('y', (d) => yScale(d.value))
 				.attr('width', barWidth) // Use the narrower width
 				.attr('height', (d) => height - yScale(d.value))
-				.attr('fill', barColor)
+				.attr('fill', CHART_SERIES_COLORS[series])
 				.on('mouseover', (event, d) => {
 					const description = d.description
 
@@ -178,7 +180,8 @@ export default {
 			if (sosData) {
 				plotService.initializePlotContainerForGrid(containerRef.value)
 
-				const margin = { top: 60, right: 5, bottom: 50, left: 23 }
+				// The top margin holds the title and, below it, the two-row legend.
+				const margin = { top: 88, right: 5, bottom: 50, left: 23 }
 				const width = chartWidth.value - margin.left - margin.right
 				const height = chartHeight.value - margin.top - margin.bottom
 				const svg = plotService.createSVGElement(margin, width, height, containerRef.value)
@@ -234,7 +237,11 @@ export default {
 
 				const barData = yValues.map((value, index) => ({ value, ...indicators[index] }))
 				const tooltip = plotService.createTooltip(containerRef.value)
-				createBars(svg, barData, xScale, yScale, height, tooltip, 0, 'lightblue', sosData.nimi)
+				// The current area is the focus and the chosen area its baseline, the
+				// roles the building charts give the building and its postal code (#1162).
+				createBars(svg, barData, xScale, yScale, height, tooltip, 0, 'focus', sosData.nimi)
+				/** @type {{ name: string, color: string }[]} */
+				const legendItems = [{ name: sosData.nimi, color: CHART_SERIES_COLORS.focus }]
 
 				if (hasCompareSeries) {
 					const compareBarData = compareValues.map((value, index) => ({
@@ -250,10 +257,13 @@ export default {
 						height,
 						tooltip,
 						xOffsetForCompareData,
-						'orange',
+						'baseline',
 						selectedNimi
 					)
+					legendItems.push({ name: selectedNimi, color: CHART_SERIES_COLORS.baseline })
 				}
+
+				plotService.addLegend(svg, legendItems, -margin.left, 44 - margin.top, 16)
 
 				plotService.addTitleWithLink(
 					svg,
