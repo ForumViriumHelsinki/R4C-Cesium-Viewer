@@ -8,6 +8,7 @@
 <script>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useChartSize } from '../composables/useChartSize.js'
+import { CHART_SERIES_COLORS } from '../constants/chartColors.js'
 import { METRIC_LABELS } from '../constants/metricLabels.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -61,7 +62,11 @@ export default {
 				{ name: postinumero, value: store.averageHeatExposure.toFixed(3) },
 			]
 
-			const colors = { [address]: 'orange', [postinumero]: 'steelblue' }
+			// The x-axis names each bar, so the axis is this chart's legend.
+			const colors = {
+				[address]: CHART_SERIES_COLORS.focus,
+				[postinumero]: CHART_SERIES_COLORS.baseline,
+			}
 
 			createBarsWithLabels(svg, data, xScale, yScale, height, colors)
 			plotService.setupAxes(svg, xScale, yScale, height)

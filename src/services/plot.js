@@ -98,6 +98,51 @@ export default class Plot {
 	}
 
 	/**
+	 * Adds a legend: one colour swatch and one name per series, stacked downwards.
+	 *
+	 * Charts that set a selection against a reference pass their series colours
+	 * from `CHART_SERIES_COLORS` (#1162). The legend goes in the top margin, on the
+	 * panel surface rather than the white plot area, so its text takes the
+	 * inherited text colour and stays readable in both themes.
+	 *
+	 * @param {*} svg - D3 selection of the chart's inner plot group
+	 * @param {{ name: string, color: string }[]} items - Series, top to bottom
+	 * @param {number} x - Left edge, in plot-group coordinates
+	 * @param {number} y - Top edge, in plot-group coordinates
+	 * @param {number} [rowHeight=20] - Vertical distance between rows
+	 */
+	addLegend(svg, items, x, y, rowHeight = 20) {
+		const legend = svg
+			.append('g')
+			.attr('class', 'chart-legend')
+			.attr('transform', `translate(${x}, ${y})`)
+
+		legend
+			.selectAll('.legend-item')
+			.data(items)
+			.enter()
+			.append('rect')
+			.attr('class', 'legend-item')
+			.attr('width', 10)
+			.attr('height', 10)
+			.attr('x', 0)
+			.attr('y', (_d, i) => i * rowHeight)
+			.attr('fill', (d) => d.color)
+
+		legend
+			.selectAll('.legend-text')
+			.data(items)
+			.enter()
+			.append('text')
+			.attr('class', 'legend-text')
+			.attr('x', 15)
+			.attr('y', (_d, i) => i * rowHeight + 9)
+			.attr('fill', 'currentColor')
+			.style('font-size', '12px')
+			.text((d) => d.name)
+	}
+
+	/**
 	 * Appends a scalable SVG to the container and returns its inner plot group.
 	 *
 	 * The SVG carries a `viewBox` in chart coordinates and renders at 100% of its

@@ -36,6 +36,7 @@ vi.mock('@/services/plot.js', () => {
 		this.handleMouseover = vi.fn()
 		this.handleMouseout = vi.fn()
 		this.addTitleWithLink = vi.fn()
+		this.addLegend = vi.fn()
 	})
 	return { default: Plot }
 })

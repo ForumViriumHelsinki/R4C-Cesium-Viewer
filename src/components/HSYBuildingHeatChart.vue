@@ -31,6 +31,7 @@
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useChartSize } from '../composables/useChartSize.js'
+import { CHART_SERIES_COLORS } from '../constants/chartColors.js'
 import { METRIC_LABELS } from '../constants/metricLabels.js'
 import ColdArea from '../services/coldarea.js'
 import Datasource from '../services/datasource.js'
@@ -127,43 +128,23 @@ export default {
 				xScale,
 				yScale,
 				height,
-				{ building: 'orange', postalcode: 'steelblue' },
+				{ building: CHART_SERIES_COLORS.focus, postalcode: CHART_SERIES_COLORS.baseline },
 				tooltip
 			)
 
 			plotService.setupAxes(svg, xScale, yScale, height)
 			plotService.addTitle(svg, METRIC_LABELS.SURFACE_TEMPERATURE, margin.left, margin.top - 20)
 
-			const legendData = [
-				{ name: address, color: 'orange' },
-				{ name: `Average of ${postinumero}`, color: 'steelblue' },
-			]
-			const legendX = margin.left + chartWidth.value / 2.5
-			const legendY = margin.top - 87
-
-			const legend = svg.append('g').attr('transform', `translate(${legendX}, ${legendY})`)
-
-			legend
-				.selectAll('.legend-item')
-				.data(legendData)
-				.enter()
-				.append('rect')
-				.attr('class', 'legend-item')
-				.attr('width', 10)
-				.attr('height', 10)
-				.attr('x', 0)
-				.attr('y', (_d, i) => i * 20)
-				.attr('fill', (d) => d.color)
-
-			legend
-				.selectAll('.legend-text')
-				.data(legendData)
-				.enter()
-				.append('text')
-				.attr('class', 'legend-text')
-				.attr('x', 15)
-				.attr('y', (_d, i) => i * 20 + 9)
-				.text((d) => d.name)
+			plotService.addLegend(
+				svg,
+				[
+					// d3 renders a null text as empty, the same as ''.
+					{ name: address ?? '', color: CHART_SERIES_COLORS.focus },
+					{ name: `Average of ${postinumero}`, color: CHART_SERIES_COLORS.baseline },
+				],
+				margin.left + chartWidth.value / 2.5,
+				margin.top - 87
+			)
 		}
 
 		const createHSYBarsWithLabels = (svg, data, xScale, yScale, height, colors, tooltip) => {

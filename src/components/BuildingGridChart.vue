@@ -9,6 +9,7 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as d3 from '@/utils/d3'
 import { useChartSize } from '../composables/useChartSize.js'
+import { CHART_SERIES_COLORS } from '../constants/chartColors.js'
 import Plot from '../services/plot.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
@@ -64,7 +65,8 @@ export default {
 			plotService.setupAxes(svg, xScale, yScale, height)
 			const tooltip = plotService.createTooltip(containerRef.value)
 
-			createBars(svg, data, xScale, yScale, height, tooltip, 0, 'steelblue')
+			// One series: the selected building, in the colour every chart gives it.
+			createBars(svg, data, xScale, yScale, height, tooltip, 0, 'focus')
 			svg
 				.append('g')
 				.attr('transform', `translate(0, ${height})`)
@@ -80,13 +82,14 @@ export default {
 			)
 		}
 
-		const createBars = (svg, data, xScale, yScale, height, tooltip, xOffset, barColor) => {
+		/** @param {import('../constants/chartColors.js').ChartSeriesRole} series */
+		const createBars = (svg, data, xScale, yScale, height, tooltip, xOffset, series) => {
 			const bar = svg
-				.selectAll(`.bar.${barColor}`)
+				.selectAll(`.bar.${series}`)
 				.data(data)
 				.enter()
 				.append('g')
-				.attr('class', `bar ${barColor}`)
+				.attr('class', `bar ${series}`)
 				.attr('transform', (d) => `translate(${xScale(d.label) + xOffset}, 0)`)
 
 			bar
@@ -95,7 +98,7 @@ export default {
 				.attr('y', (d) => yScale(d.value))
 				.attr('width', xScale.bandwidth())
 				.attr('height', (d) => height - yScale(d.value))
-				.attr('fill', barColor)
+				.attr('fill', CHART_SERIES_COLORS[series])
 				.on('mouseover', (event, d) =>
 					plotService.handleMouseover(
 						tooltip,
