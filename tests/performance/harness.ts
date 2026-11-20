@@ -190,6 +190,38 @@ export async function clickMap(page: Page, x: number, y: number): Promise<number
 }
 
 /**
+ * Clicks the control whose aria-label is `label` with a DOM click inside the
+ * page. Like clickMap(), it skips Playwright's actionability waits, which need
+ * the page's main thread; it also reaches controls under the floating panels
+ * that gotoReady() sets to `pointer-events: none`. Throws if no such control.
+ */
+export async function clickByLabel(page: Page, label: string): Promise<void> {
+	const clicked = await page.evaluate((ariaLabel) => {
+		const control = document.querySelector<HTMLElement>(`[aria-label="${ariaLabel}"]`)
+		control?.click()
+		return Boolean(control)
+	}, label)
+	if (!clicked) throw new Error(`no control with aria-label "${label}"`)
+}
+
+/** The page's WebGL renderer string, or '' when WEBGL_debug_renderer_info is unavailable. */
+export async function webglRenderer(page: Page): Promise<string> {
+	return page.evaluate(() => {
+		const gl = document.createElement('canvas').getContext('webgl')
+		const ext = gl?.getExtension('WEBGL_debug_renderer_info')
+		return ext ? (gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string) : ''
+	})
+}
+
+/**
+ * True for a software rasterizer. An empty string (renderer unknown) counts as
+ * software, so an unknown renderer never enforces a GPU budget.
+ */
+export function isSoftwareRenderer(renderer: string): boolean {
+	return renderer === '' || /swiftshader|llvmpipe|software/i.test(renderer)
+}
+
+/**
  * Round-trip time of an empty page.evaluate: how long the page's main thread
  * takes to get to a new task. This is the "page is not blocked" measurement.
  */
