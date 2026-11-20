@@ -10,6 +10,17 @@
 			>
 
 			<v-card-text>
+				<v-alert
+					v-if="limitMessage"
+					type="info"
+					density="compact"
+					variant="tonal"
+					closable
+					class="mb-2"
+					@click:close="limitMessage = ''"
+				>
+					{{ limitMessage }}
+				</v-alert>
 				<!-- Capacity Slider -->
 				<v-label class="mb-2"> Cooling Center Capacity </v-label>
 				<br />
@@ -55,6 +66,7 @@
 <script setup>
 import * as turf from '@turf/turf'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { COOLING_CENTER_MESSAGES } from '../constants/errorMessages.js'
 import { getCesium } from '../services/cesiumProvider.js'
 import DataSource from '../services/datasource.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -66,6 +78,8 @@ const mitigationStore = useMitigationStore()
 const viewer = computed(() => globalStore.cesiumViewer)
 const selectingGrid = ref(false)
 const selectedCapacity = ref(1000) // Default capacity for slider
+/** Inline notice when a grid cell is full (#1153: no alert()). */
+const limitMessage = ref('')
 let coolingCentersDataSource =
 	globalStore?.cesiumViewer.dataSources?.getByName('cooling_centers')[0]
 
@@ -80,6 +94,7 @@ const resetCoolingCenters = async () => {
 	await dataSourceService.removeDataSourcesByNamePrefix('cooling_centers')
 	await globalStore.cesiumViewer.dataSources.remove(coolingCentersDataSource)
 	mitigationStore.resetStore()
+	limitMessage.value = ''
 	coolingCentersDataSource = new Cesium.CustomDataSource('cooling_centers')
 	globalStore.cesiumViewer.dataSources.add(coolingCentersDataSource)
 }
@@ -139,9 +154,10 @@ const addCoolingCenter = (entity) => {
 	const Cesium = getCesium()
 	const gridId = entity.properties.grid_id?.getValue()
 	if (mitigationStore.getCoolingCenterCount(gridId) >= 5) {
-		alert('Maximum 5 cooling centers per grid reached!')
+		limitMessage.value = COOLING_CENTER_MESSAGES.limitReached
 		return
 	}
+	limitMessage.value = ''
 
 	const euref_x = entity.properties.euref_x?.getValue()
 	const euref_y = entity.properties.euref_y?.getValue()

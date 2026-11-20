@@ -25,8 +25,11 @@
 		<!--
 			Initialization Error Snackbar
 			Purpose: Critical Cesium library loading failures (e.g., network errors during startup)
-			Behavior: Persistent (no auto-dismiss), shown at top, includes retry button
-			Use case: Viewer failed to initialize, user cannot proceed without retry
+			Behavior: Persistent (no auto-dismiss, no Close), shown at top, includes retry button
+			Use case: Viewer failed to initialize (chunk load or Viewer construction), user cannot
+			proceed without retry. This snackbar is the one owner of the failure; the sidebar
+			only shows a passive hint pointing here (#1153). On the chunk-load path retryInit
+			reloads the page, since an in-app retry cannot re-import a failed chunk (#1040).
 		-->
 		<v-snackbar
 			v-model="errorSnackbar"
@@ -40,7 +43,7 @@
 			<div class="d-flex align-center">
 				<v-icon class="mr-2"> mdi-alert-circle </v-icon>
 				<div>
-					<div class="font-weight-bold">Failed to Load Map Viewer</div>
+					<div class="font-weight-bold">{{ VIEWER_INIT_MESSAGES.title }}</div>
 					<div class="text-caption">
 						{{ errorMessage }}
 					</div>
@@ -53,43 +56,14 @@
 				>
 					Retry
 				</v-btn>
-				<v-btn
-					variant="text"
-					@click="errorSnackbar = false"
-				>
-					Close
-				</v-btn>
 			</template>
 		</v-snackbar>
 		<!--
-			Runtime Data Loading Error Snackbar
-			Purpose: Non-critical async service failures (e.g., cold areas, sensors)
-			Behavior: Auto-dismisses after 6 seconds, shown at bottom
-			Use case: Optional data failed to load, viewer remains functional
+			Runtime Error Snackbar (globalStore.showError)
+			Purpose: user-triggered failures and degraded data, with optional Retry
+			Behavior: auto-dismisses, shown at bottom; colour and icon follow severity
 		-->
-		<v-snackbar
-			v-model="store.errorNotification.show"
-			:timeout="6000"
-			color="error"
-			location="bottom"
-			role="alert"
-			aria-live="assertive"
-		>
-			<div class="d-flex align-center">
-				<v-icon class="mr-2"> mdi-alert </v-icon>
-				<div>
-					{{ store.errorNotification.message }}
-				</div>
-			</div>
-			<template #actions>
-				<v-btn
-					variant="text"
-					@click="store.hideError()"
-				>
-					Close
-				</v-btn>
-			</template>
-		</v-snackbar>
+		<ErrorNotificationSnackbar />
 		<!--
 			Upstream Service Degradation Notice
 			Purpose: Inform the user when HSY map-data services are flaky/down
@@ -158,6 +132,7 @@
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
 import CameraControls from '../components/CameraControls.vue'
 import DisclaimerPopup from '../components/DisclaimerPopup.vue'
+import ErrorNotificationSnackbar from '../components/ErrorNotificationSnackbar.vue'
 import Loading from '../components/Loading.vue'
 import MapClickLoadingOverlay from '../components/MapClickLoadingOverlay.vue'
 import ViewportLoadingIndicator from '../components/ViewportLoadingIndicator.vue'
@@ -169,6 +144,7 @@ import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts.js'
 import { useUrlState } from '../composables/useUrlState.js'
 import { useViewerInitialization } from '../composables/useViewerInitialization.js'
 import { useViewportLoading } from '../composables/useViewportLoading.js'
+import { VIEWER_INIT_MESSAGES } from '../constants/errorMessages.js'
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -185,6 +161,7 @@ export default {
 		DisclaimerPopup,
 		CameraControls,
 		BuildingInformation,
+		ErrorNotificationSnackbar,
 		Loading,
 		MapClickLoadingOverlay,
 		ViewportLoadingIndicator,
@@ -400,6 +377,7 @@ export default {
 			showMapClickLoadingOverlay,
 			errorSnackbar,
 			errorMessage,
+			VIEWER_INIT_MESSAGES,
 			retryInit,
 			handleCancelAnimation,
 			handleRetryLoading,

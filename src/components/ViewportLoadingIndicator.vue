@@ -102,6 +102,7 @@
 
 <script setup>
 import { computed, onUnmounted, ref, watch } from 'vue'
+import { VIEWPORT_BUILDINGS_FAILURE_MESSAGE } from '../constants/errorMessages.js'
 import { useLoadingStore } from '../stores/loadingStore'
 
 // Props
@@ -154,7 +155,8 @@ const hasError = computed(() => {
 })
 
 const errorMessage = computed(() => {
-	return props.error || loadingStore.getLayerError('buildings') || 'Failed to load buildings'
+	// loadingErrors holds technical detail; never show it (#1153).
+	return props.error || VIEWPORT_BUILDINGS_FAILURE_MESSAGE
 })
 
 const showIndicator = computed(() => {

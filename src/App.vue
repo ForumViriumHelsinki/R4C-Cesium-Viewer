@@ -122,10 +122,10 @@
 			</v-slide-y-reverse-transition>
 
 			<!-- Loading Indicator -->
+			<!-- Layer failures go to globalStore.showError, not this indicator (#1152) -->
 			<LoadingIndicator
 				mode="both"
 				:show-performance-info="false"
-				@retry-layer="handleRetryLayer"
 			/>
 
 			<!-- Data Source Status Badge - bottom right -->
@@ -284,12 +284,6 @@ const smartReset = async () => {
 
 	const tooltip = /** @type {HTMLElement | null} */ (document.querySelector('.tooltip'))
 	if (tooltip) tooltip.style.display = 'none'
-}
-
-// Handle retry layer events from LoadingIndicator
-const handleRetryLayer = (layerName) => {
-	loadingStore.retryLayerLoading(layerName)
-	logger.debug(`Retrying layer: ${layerName}`)
 }
 
 const handleSourceRetry = (sourceId) => {

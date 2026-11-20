@@ -18,6 +18,7 @@
 
 import { defineStore } from 'pinia'
 import { markRaw } from 'vue'
+import { VTT_FLOOD_MESSAGES } from '@/constants/errorMessages.js'
 import {
 	formatFrameOffset,
 	VTT_DEFAULT_DIMENSION,
@@ -240,7 +241,8 @@ export const useVttFloodStore = defineStore('vttFlood', {
 				if (seq !== this._requestSeq) return
 				const message = error instanceof Error ? error.message : String(error)
 				logger.error('[VTTFloodStore] Failed to fetch frame:', message)
-				this.error = message
+				// The panel renders this; the technical detail stays in the log (#1153).
+				this.error = VTT_FLOOD_MESSAGES.frameFailure
 				this.frame = null
 			} finally {
 				if (seq === this._requestSeq) {

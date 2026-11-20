@@ -168,6 +168,12 @@ let dataSourceService = null
 const applyLandCover = (enabled) => {
 	setLandcoverEnabled(enabled).catch((error) => {
 		logger.error('Failed to update land cover layer:', error)
+		loadingStore.reportLayerFailure('landcover', error, {
+			// A Retry clicked after the user flipped the switch must not flip it back.
+			retry: () => {
+				if (toggleStore.landCover === enabled) applyLandCover(enabled)
+			},
+		})
 	})
 }
 
@@ -197,7 +203,7 @@ const loadVegetation = async () => {
 				await vegetationService.loadVegetation()
 				loadingStore.completeLayerLoading('vegetation', true)
 			} catch (error) {
-				loadingStore.setLayerError('vegetation', error.message || 'Failed to load vegetation data')
+				loadingStore.reportLayerFailure('vegetation', error, { retry: loadVegetation })
 			}
 		} else {
 			dataSourceService.changeDataSourceShowByName('Vegetation', true)
@@ -251,43 +257,35 @@ const loadTrees = async () => {
 
 			try {
 				const treeService = new Tree()
+				const categories = [221, 222, 223, 224]
 
-				// Create a promise-based wrapper for the tree loading
-				const treeData = await new Promise((resolve, _reject) => {
-					const originalLoadTrees = treeService.loadTrees.bind(treeService)
+				// Progress messages per height category. They are cosmetic: the tree
+				// service has no progress callback, so completion and failure come from
+				// the awaited loadTrees() below. Before #1152 the load ran un-awaited
+				// inside a Promise that resolved on these timers, so a failure never
+				// reached the catch and the layer was reported as loaded.
+				const progressTimers = categories.map((category, index) =>
+					setTimeout(
+						() => {
+							loadingStore.updateLayerProgress(
+								'trees',
+								index + 1,
+								// FLAG: loadingStore.updateLayerProgress's `message = null` default makes
+								// its param infer as `null`; passing a real string message requires a cast
+								// until the store's type is widened to `string | null` (store edits are out of scope here).
+								/** @type {any} */ (`Loading trees: category ${category} (${index + 1}/4)`)
+							)
+						},
+						(index + 1) * 500
+					)
+				)
 
-					// Override the tree service to provide progress updates
-					let completedCategories = 0
-					const categories = [221, 222, 223, 224]
-
-					categories.forEach((category, index) => {
-						// This is a simplified approach - the actual implementation would need
-						// to modify the tree service to support progress callbacks
-						setTimeout(
-							() => {
-								completedCategories++
-								loadingStore.updateLayerProgress(
-									'trees',
-									completedCategories,
-									// FLAG: loadingStore.updateLayerProgress's `message = null` default makes
-									// its param infer as `null`; passing a real string message requires a cast
-									// until the store's type is widened to `string | null` (store edits are out of scope here).
-									/** @type {any} */ (
-										`Loading trees: category ${category} (${completedCategories}/4)`
-									)
-								)
-
-								if (completedCategories === 4) {
-									resolve({ categories, postalCode: store.postalcode })
-								}
-							},
-							(index + 1) * 500
-						) // Simulate progressive loading
-					})
-
-					// Call the original method
-					originalLoadTrees()
-				})
+				try {
+					await treeService.loadTrees()
+				} finally {
+					progressTimers.forEach(clearTimeout)
+				}
+				const treeData = { categories, postalCode: store.postalcode }
 
 				// Cache the loaded data
 				await loadingStore.cacheLayerData('trees', treeData, {
@@ -301,7 +299,7 @@ const loadTrees = async () => {
 				// Track usage for background preloader
 				backgroundPreloader.trackLayerUsage('trees')
 			} catch (error) {
-				loadingStore.setLayerError('trees', error.message || 'Failed to load tree data')
+				loadingStore.reportLayerFailure('trees', error, { retry: loadTrees })
 			}
 		} else {
 			dataSourceService.changeDataSourceShowByName('Trees', true)
@@ -330,7 +328,10 @@ const loadOtherNature = () => {
 	if (showOtherNature.value) {
 		if (store.postalcode && !dataSourceService.getDataSourceByName('OtherNature')) {
 			const otherNatureService = new Othernature()
-			otherNatureService.loadOtherNature().catch(logFailure)
+			otherNatureService.loadOtherNature().catch((error) => {
+				logFailure(error)
+				loadingStore.reportLayerFailure('otherNature', error, { retry: loadOtherNature })
+			})
 		} else {
 			dataSourceService.changeDataSourceShowByName('OtherNature', true).catch(logFailure)
 		}
@@ -352,6 +353,23 @@ const addLandCover = () => {
 }
 
 /**
+ * Adds the NDVI imagery for the selected date; a failure is reported the way
+ * NDVIPanel reports it (#1152).
+ * @returns {void}
+ */
+const addNdviImagery = () => {
+	changeTIFF().catch((error) => {
+		logger.error('Failed to add NDVI imagery:', error)
+		loadingStore.reportLayerFailure('ndvi', error, {
+			// A Retry clicked after the user switched NDVI off must not add the imagery.
+			retry: () => {
+				if (toggleStore.ndvi) addNdviImagery()
+			},
+		})
+	})
+}
+
+/**
  * Toggles NDVI satellite imagery layer
  *
  * Normalized Difference Vegetation Index shows vegetation density from satellite data.
@@ -366,9 +384,7 @@ const toggleNDVI = () => {
 	toggleStore.setNDVI(ndvi.value)
 
 	if (ndvi.value) {
-		changeTIFF().catch((error) => {
-			logger.error('Failed to add NDVI imagery:', error)
-		})
+		addNdviImagery()
 		eventBus.emit('addNDVI')
 	} else {
 		removeTIFF().catch((error) => {

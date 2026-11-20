@@ -86,7 +86,13 @@ export default class Helsinki {
 		}
 
 		if (this.toggleStore.showTrees) {
-			await this.treeService.loadTrees()
+			// loadTrees rejects when every tree category fails (#1152). Catch it here
+			// so the other nature layer below still loads; the other navigation-time
+			// callers (buildingLoader, useSidebarNavigation, ViewModeCompact) log it
+			// the same way.
+			await this.treeService.loadTrees().catch((error) => {
+				logger.error('[Helsinki] Failed to load trees:', error)
+			})
 		}
 
 		if (this.toggleStore.showOtherNature) {

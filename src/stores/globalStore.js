@@ -66,6 +66,8 @@ import { markRaw } from 'vue'
  * @property {boolean} errorNotification.show - Whether error notification is visible
  * @property {string} errorNotification.message - User-friendly error message
  * @property {string} errorNotification.context - Technical context for debugging (logged to console)
+ * @property {'error'|'warning'} errorNotification.severity - `error` for a failed action, `warning` for degraded data
+ * @property {(() => void)|null} errorNotification.retry - Re-runs the failed operation; shown as a Retry button
  */
 import logger from '../utils/logger.js'
 
@@ -82,6 +84,8 @@ export const useGlobalStore = defineStore('global', {
 			show: false,
 			message: '',
 			context: '',
+			severity: /** @type {'error' | 'warning'} */ ('error'),
+			retry: /** @type {(() => void) | null} */ (null),
 		},
 		minMaxKelvin: {
 			'2015-07-03': { min: 285.7481384277, max: 323.753112793 },
@@ -378,21 +382,27 @@ export const useGlobalStore = defineStore('global', {
 			logger.debug('[GlobalStore] Previous view state restored')
 		},
 		/**
-		 * Shows a user-facing error notification
-		 * Displays error messages in the UI for network failures or data loading issues.
-		 * Technical context is logged to console for debugging purposes.
+		 * Shows a user-facing error notification: the one channel for user-triggered
+		 * failures (#1152, #1153). Technical context is logged to the console, never
+		 * shown. Copy for shared failures lives in `constants/errorMessages.js`.
 		 *
 		 * @param {string} message - User-friendly error message to display
 		 * @param {string} [context=''] - Technical context for debugging (logged to console)
+		 * @param {Object} [options]
+		 * @param {'error'|'warning'} [options.severity='error'] - `error` when an action failed,
+		 *   `warning` when the app keeps working with less data
+		 * @param {(() => void)|null} [options.retry=null] - Re-runs the failed operation; adds a Retry button
 		 *
 		 * @example
 		 * store.showError('Unable to load cold area data. Please try again.', 'Network error at /api/coldareas/00100');
 		 */
-		showError(message, context = '') {
+		showError(message, context = '', { severity = 'error', retry = null } = {}) {
 			this.errorNotification = {
 				show: true,
 				message,
 				context,
+				severity,
+				retry,
 			}
 
 			// Log technical context to console for developer debugging
@@ -409,7 +419,18 @@ export const useGlobalStore = defineStore('global', {
 				show: false,
 				message: '',
 				context: '',
+				severity: 'error',
+				retry: null,
 			}
+		},
+		/**
+		 * Runs the notification's retry action, after hiding the notification so a
+		 * second failure shows again.
+		 */
+		retryError() {
+			const { retry } = this.errorNotification
+			this.hideError()
+			retry?.()
 		},
 	},
 })

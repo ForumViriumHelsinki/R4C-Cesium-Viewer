@@ -393,6 +393,8 @@ describe('globalStore', () => {
 				show: false,
 				message: '',
 				context: '',
+				severity: 'error',
+				retry: null,
 			})
 		})
 

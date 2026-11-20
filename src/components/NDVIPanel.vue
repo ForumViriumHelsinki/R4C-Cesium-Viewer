@@ -25,14 +25,14 @@ import { AVAILABLE_NDVI_DATES, DEFAULT_NDVI_DATE } from '../constants/ndviDates.
 import { eventBus } from '../services/eventEmitter.js'
 import { changeTIFF } from '../services/tiffImagery.js'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
-import { useGlobalStore } from '../stores/globalStore.js'
+import { useLoadingStore } from '../stores/loadingStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
 import NDVIChart from './NDVIChart.vue'
 
 const toggleStore = useToggleStore()
 const backgroundMapStore = useBackgroundMapStore()
-const globalStore = useGlobalStore()
+const loadingStore = useLoadingStore()
 
 const { ndvi } = storeToRefs(toggleStore)
 
@@ -41,12 +41,19 @@ const availableDates = AVAILABLE_NDVI_DATES
 
 const updateImage = async () => {
 	backgroundMapStore.setNdviDate(selectedDate.value)
+	loadImagery()
+}
+
+// A failure is reported the way the Layers tab reports it (#1152).
+const loadImagery = () => {
 	changeTIFF().catch((error) => {
 		logger.error('[NDVIPanel] Failed to load NDVI imagery:', error)
-		globalStore.showError(
-			'Unable to load NDVI vegetation data. Please try again.',
-			`TIFF imagery load failed: ${error.message}`
-		)
+		loadingStore.reportLayerFailure('ndvi', error, {
+			// A Retry clicked after the user switched NDVI off must not add the imagery.
+			retry: () => {
+				if (toggleStore.ndvi) loadImagery()
+			},
+		})
 	})
 }
 

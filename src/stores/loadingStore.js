@@ -8,7 +8,8 @@
  * - **Cache integration**: Check cache status, age, and size for each layer
  * - **Data source health**: Track response times and availability of external APIs
  * - **Performance metrics**: Record load times for optimization analysis
- * - **Error tracking**: Detailed error messages per layer with retry support
+ * - **Error tracking**: Technical error detail per layer; reportLayerFailure() tells the
+ *   user through globalStore.showError (#1152)
  *
  * Managed layers:
  * - Vegetation layers (trees, vegetation, otherNature)
@@ -27,14 +28,18 @@
  */
 
 import { defineStore } from 'pinia'
+import {
+	GENERIC_LAYER_FAILURE_MESSAGE,
+	LAYER_FAILURE_MESSAGES,
+} from '../constants/errorMessages.js'
 import cacheService from '../services/cacheService.js'
-
 /**
  * Loading Pinia Store
  * Comprehensive loading state management with cache integration and health monitoring.
  * All methods already documented with JSDoc.
  */
 import logger from '../utils/logger.js'
+import { useGlobalStore } from './globalStore.js'
 
 export const useLoadingStore = defineStore('loading', {
 	state: () => ({
@@ -247,6 +252,30 @@ export const useLoadingStore = defineStore('loading', {
 			this.updateGlobalLoading()
 		},
 
+		/**
+		 * Records a failure of a layer the user switched on and tells the user,
+		 * through globalStore.showError, with the layer's message from
+		 * constants/errorMessages.js (#1152). Use this, not setLayerError, wherever
+		 * the user turned the layer on, so the failure is reported the same way from
+		 * every tab. setLayerError stays quiet: unifiedLoader calls it for every
+		 * failed or cancelled tile.
+		 *
+		 * @param {string} layerName - loadingStore layer name, e.g. 'trees', 'landcover'
+		 * @param {unknown} error - The caught error; logged as context, never shown
+		 * @param {Object} [options]
+		 * @param {(() => void)|null} [options.retry=null] - Re-runs the failed operation
+		 * @returns {void}
+		 */
+		reportLayerFailure(layerName, error, { retry = null } = {}) {
+			const detail = error instanceof Error ? error.message : String(error)
+			this.setLayerError(layerName, detail)
+			useGlobalStore().showError(
+				LAYER_FAILURE_MESSAGES[layerName] ?? GENERIC_LAYER_FAILURE_MESSAGE,
+				`Layer "${layerName}" failed: ${detail}`,
+				{ retry }
+			)
+		},
+
 		// Update global loading state based on individual layers
 		updateGlobalLoading() {
 			this.isLoading = this.hasActiveLoading
@@ -332,13 +361,6 @@ export const useLoadingStore = defineStore('loading', {
 			}
 
 			return clearedCount
-		},
-
-		// Retry loading a layer that failed
-		retryLayerLoading(layerName) {
-			delete this.loadingErrors[layerName]
-			this.loadingProgress[layerName].status = 'idle'
-			// The actual retry logic should be handled by the calling component
 		},
 
 		// Get performance metrics

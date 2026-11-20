@@ -23,7 +23,7 @@
 <script setup>
 import { storeToRefs } from 'pinia'
 import { setLandcoverEnabled } from '../services/landcover'
-import { useGlobalStore } from '../stores/globalStore.js'
+import { useLoadingStore } from '../stores/loadingStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import logger from '../utils/logger.js'
 import HSYAreaSelect from './HSYAreaSelect.vue'
@@ -31,22 +31,26 @@ import HSYYearSelect from './HSYYearSelect.vue'
 import PieChart from './PieChart.vue'
 
 const toggleStore = useToggleStore()
-const store = useGlobalStore()
+const loadingStore = useLoadingStore()
 const { landCover: landcover } = storeToRefs(toggleStore)
 
 // Same entry point as the Layers tab switch, so this checkbox also switches NDVI
 // off (#967). The old `imageryLayers.remove('avoindata:Karttasarja_PKS')` passed a
 // layer name, which ImageryLayerCollection.remove() cannot match, so it removed
 // nothing and is gone.
-const toggleLandCover = () => {
-	setLandcoverEnabled(landcover.value).catch((error) => {
+// A failure is reported the way the Layers tab reports it (#1152).
+const applyLandCover = (enabled) => {
+	setLandcoverEnabled(enabled).catch((error) => {
 		logger.error('[LandcoverPanel] Failed to load HSY imagery layer:', error)
-		store.showError(
-			'Unable to load land cover layer. Please try again.',
-			`HSY imagery layer failed: ${error.message}`
-		)
+		loadingStore.reportLayerFailure('landcover', error, {
+			// A Retry clicked after the user flipped the switch must not flip it back.
+			retry: () => {
+				if (toggleStore.landCover === enabled) applyLandCover(enabled)
+			},
+		})
 	})
 }
+const toggleLandCover = () => applyLandCover(landcover.value)
 </script>
 
 <style scoped>

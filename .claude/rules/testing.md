@@ -586,8 +586,10 @@ plain `test` fixture and touches the sidebar must wait as well:
 
 If viewer initialisation fails (the Cesium chunk does not load, or the Viewer
 constructor throws), `globalStore.viewerInitFailed` is set and the hint is replaced
-by `.viewer-init-error` (`role="alert"`, "The map failed to load." and a Reload
-button). The loading hint detaches, but the tab content stays inert.
+by `.viewer-init-error`, a passive `role="status"` hint with no button (#1153). The
+top snackbar in `CesiumViewer.vue` owns the failure on both paths and offers Retry.
+On the chunk-load path Retry reloads the page, because `cesiumProvider` caches the
+rejected import (#1040). The loading hint detaches, but the tab content stays inert.
 `cesiumTest`'s CI path then logs `Viewer initialisation failed` and hands over the
 page with the content still inert.
 `tests/unit/pages/ControlPanel.initFailure.test.js` covers both failure paths.
