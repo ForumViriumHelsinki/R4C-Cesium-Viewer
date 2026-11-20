@@ -491,7 +491,7 @@ As a user, I want smooth performance when analyzing postal codes with thousands 
 
 **FR6.2 Heat Attributes Added to Buildings**
 
-- `avgheatexposuretobuilding`: surface heat index (Landsat, 0-1) or surface temperature (°C)
+- `avgheatexposuretobuilding`: surface heat index (Landsat, 0-1); the capital-region °C value is `avg_temp_c`
 - `distanceToUnder40`: Distance to nearest cooling zone (<40°C area)
 - `locationUnder40`: Boolean indicating if building in cooling zone
 - `year_of_construction`: Building construction year
