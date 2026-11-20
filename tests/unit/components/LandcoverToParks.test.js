@@ -304,10 +304,20 @@ describe('LandcoverToParks Component', () => {
 			expect(text).toContain('5.00 ha')
 			// The values are the grid's Landsat surface heat index (final_avg_conditional),
 			// so every row names that metric, whatever index the grid options select.
-			expect(text).toContain('Surface heat index (Landsat) (Initial)')
-			expect(text).toContain('Surface heat index (Landsat) reduction (This Turn)')
-			expect(text).toContain('Surface heat index (Landsat) reduction (Cumulative)')
 			expect(text).toContain('-0.150')
+
+			// Row names are field labels, so sentence case throughout, qualifiers
+			// included (#1176).
+			const rowNames = rows.map((row) => row.find('td').text())
+			expect(rowNames).toEqual([
+				'Surface heat index (Landsat) (initial)',
+				'Area converted (this turn)',
+				'Neighbor cells cooled (this turn)',
+				'Surface heat index (Landsat) reduction (this turn)',
+				'Surface heat index (Landsat) (new cumulative)',
+				'Cumulative cooling area',
+				'Surface heat index (Landsat) reduction (cumulative)',
+			])
 		})
 
 		it('should highlight cumulative values in bold', async () => {

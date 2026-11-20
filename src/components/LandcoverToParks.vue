@@ -48,35 +48,35 @@
 					>
 						<tbody>
 							<tr>
-								<td>{{ SURFACE_HEAT_INDEX }} (Initial)</td>
+								<td>{{ SURFACE_HEAT_INDEX }} (initial)</td>
 								<td>{{ calculationResults.initialIndex }}</td>
 							</tr>
 							<tr>
-								<td>Area Converted (This Turn)</td>
+								<td>Area converted (this turn)</td>
 								<td>{{ calculationResults.area }} ha</td>
 							</tr>
 							<tr>
-								<td>Neighbor Cells Cooled (This Turn)</td>
+								<td>Neighbor cells cooled (this turn)</td>
 								<td>{{ calculationResults.neighborsAffected }}</td>
 							</tr>
 							<tr>
-								<td>{{ SURFACE_HEAT_INDEX }} reduction (This Turn)</td>
+								<td>{{ SURFACE_HEAT_INDEX }} reduction (this turn)</td>
 								<td class="font-weight-bold text-green">
 									-{{ calculationResults.totalReduction }}
 								</td>
 							</tr>
 							<tr>
-								<td>{{ SURFACE_HEAT_INDEX }} (New Cumulative)</td>
+								<td>{{ SURFACE_HEAT_INDEX }} (new cumulative)</td>
 								<td class="font-weight-bold">
 									{{ calculationResults.newIndex }}
 								</td>
 							</tr>
 							<tr class="font-weight-bold">
-								<td>Cumulative Cooling Area</td>
+								<td>Cumulative cooling area</td>
 								<td>{{ calculationResults.cumulativeCoolingArea }} ha</td>
 							</tr>
 							<tr class="font-weight-bold text-green">
-								<td>{{ SURFACE_HEAT_INDEX }} reduction (Cumulative)</td>
+								<td>{{ SURFACE_HEAT_INDEX }} reduction (cumulative)</td>
 								<td>-{{ calculationResults.cumulativeHeatReduction }}</td>
 							</tr>
 						</tbody>
