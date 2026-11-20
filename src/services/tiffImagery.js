@@ -144,6 +144,9 @@ export const changeTIFF = async () => {
 		}
 	} catch (error) {
 		logger.error('Error loading TIFF:', error)
+		// Callers (MapControls.addNdviImagery, NDVIPanel.loadImagery) report the
+		// failure with a Retry; swallowing it here left the user with no feedback.
+		throw error
 	}
 }
 

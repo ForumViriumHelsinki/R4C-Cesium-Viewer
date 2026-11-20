@@ -76,14 +76,30 @@ export default class Tree {
 			// Load all tree types in parallel using unified loader
 			const results = await unifiedLoader.loadLayers(loadingConfigs)
 
-			// Check results and log success/failures
-			const successful = results.filter((r) => r.status === 'fulfilled').length
-			const failed = results.length - successful
+			// loadLayers catches each layer's rejection and returns it as a fulfilled
+			// `{ error, config }` value, so a failed category is either a rejected
+			// result or a fulfilled one carrying `error`.
+			const failures = results.filter((r) => r.status === 'rejected' || r.value?.error)
+			const successful = results.length - failures.length
 
-			if (failed === 0) {
+			// Every category failed: nothing is on the map, so the caller must see a
+			// rejection (MapControls reports it with a Retry instead of caching an
+			// empty layer as loaded). A partial failure still shows the categories
+			// that loaded, so it resolves and is only logged.
+			if (failures.length === results.length) {
+				const first = failures[0]
+				const cause = first.status === 'rejected' ? first.reason : first.value.error
+				throw cause instanceof Error
+					? cause
+					: new Error(`All ${results.length} tree categories failed to load: ${cause}`)
+			}
+
+			if (failures.length === 0) {
 				logger.debug(`✓ All ${successful} tree height categories loaded successfully`)
 			} else {
-				logger.warn(`⚠ ${successful}/${results.length} tree categories loaded, ${failed} failed`)
+				logger.warn(
+					`⚠ ${successful}/${results.length} tree categories loaded, ${failures.length} failed`
+				)
 			}
 
 			return results
