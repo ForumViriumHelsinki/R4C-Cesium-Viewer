@@ -1,8 +1,8 @@
 /**
  * A layer failure reaches the same channel whichever tab switched the layer on
  * (#1152). Land cover and NDVI can be switched on from the Layers tab
- * (MapControls) and from their Analysis panels (LandcoverPanel with its year select,
- * NDVIPanel); trees,
+ * (DataLayersControl) and from their Analysis panels (LandcoverPanel with its year
+ * select, NDVIPanel), both through the same LayerSwitch (#1155); trees,
  * vegetation and other nature only from the Layers tab. Every one of them must end
  * in globalStore.showError with the layer's message from constants/errorMessages.js
  * and a Retry that re-runs the operation. The statistical grid loads when its view
@@ -13,9 +13,12 @@
  * loaders swallowed every failure.
  */
 
-import { flushPromises, shallowMount } from '@vue/test-utils'
+import { flushPromises, mount, shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
 import DataLayersControl from '@/components/controls/DataLayersControl.vue'
 import HSYYearSelect from '@/components/HSYYearSelect.vue'
 import LandcoverPanel from '@/components/LandcoverPanel.vue'
@@ -72,6 +75,18 @@ vi.mock('@/services/landcover', () => ({
 	setLandcoverEnabled: vi.fn(async () => {}),
 }))
 
+const vuetify = createVuetify({ components, directives })
+
+/**
+ * setLandcoverEnabled writes toggleStore.landCover before it awaits the HSY layer,
+ * so the store holds the requested state when the layer fails.
+ * @param {boolean} enabled
+ */
+const landcoverServiceFails = async (enabled) => {
+	useToggleStore().setLandCover(enabled)
+	throw new Error('HSY 504')
+}
+
 /** Asserts the snackbar shows `layer`'s message with a Retry, and returns the Retry. */
 const expectLayerFailure = (layer) => {
 	const { errorNotification } = useGlobalStore()
@@ -109,11 +124,42 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 		await flushPromises()
 	}
 
+	/** Flips a LayerSwitch in `host` the way the user does. */
+	const flipLayerSwitch = async (host, layer, value) => {
+		await host.find(`[data-layer="${layer}"] input[type="checkbox"]`).setValue(value)
+		await flushPromises()
+	}
+
+	/** The Layers tab group, as MapControls renders it. */
+	const mountLayersTab = () =>
+		mount(DataLayersControl, {
+			props: {
+				showTrees: false,
+				showVegetation: false,
+				showOtherNature: false,
+				landCover: false,
+				ndvi: false,
+				helsinkiView: false,
+				view: 'capitalRegion',
+				postalCode: null,
+			},
+			global: { plugins: [vuetify] },
+		})
+
+	const mountLandcoverPanel = () =>
+		mount(LandcoverPanel, {
+			global: {
+				plugins: [vuetify],
+				stubs: { HSYAreaSelect: true, HSYYearSelect: true, PieChart: true },
+			},
+		})
+
 	describe('land cover', () => {
 		it('Layers tab: a failed switch-on shows the land cover message with Retry', async () => {
-			vi.mocked(setLandcoverEnabled).mockRejectedValueOnce(new Error('HSY 504'))
+			vi.mocked(setLandcoverEnabled).mockImplementationOnce(landcoverServiceFails)
+			wrapper = mountLayersTab()
 
-			await switchLayer('landCover', true)
+			await flipLayerSwitch(wrapper, 'landCover', true)
 
 			const retry = expectLayerFailure('landcover')
 			retry()
@@ -121,12 +167,10 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 		})
 
 		it('Analysis tab: a failed switch-on shows the same message with Retry', async () => {
-			vi.mocked(setLandcoverEnabled).mockRejectedValueOnce(new Error('HSY 504'))
-			useToggleStore().setLandCover(true)
-			wrapper = shallowMount(LandcoverPanel)
+			vi.mocked(setLandcoverEnabled).mockImplementationOnce(landcoverServiceFails)
+			wrapper = mountLandcoverPanel()
 
-			wrapper.vm.toggleLandCover()
-			await flushPromises()
+			await flipLayerSwitch(wrapper, 'landCover', true)
 
 			const retry = expectLayerFailure('landcover')
 			retry()
@@ -162,8 +206,9 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 		})
 
 		it('Layers tab: a Retry after the user switched land cover off does nothing', async () => {
-			vi.mocked(setLandcoverEnabled).mockRejectedValueOnce(new Error('HSY 504'))
-			await switchLayer('landCover', true)
+			vi.mocked(setLandcoverEnabled).mockImplementationOnce(landcoverServiceFails)
+			wrapper = mountLayersTab()
+			await flipLayerSwitch(wrapper, 'landCover', true)
 			const retry = expectLayerFailure('landcover')
 
 			useToggleStore().setLandCover(false)
@@ -173,11 +218,9 @@ describe('layer failures reach one channel from every entry point', { tags: ['@u
 		})
 
 		it('Analysis tab: a Retry after the user switched land cover off does nothing', async () => {
-			vi.mocked(setLandcoverEnabled).mockRejectedValueOnce(new Error('HSY 504'))
-			useToggleStore().setLandCover(true)
-			wrapper = shallowMount(LandcoverPanel)
-			wrapper.vm.toggleLandCover()
-			await flushPromises()
+			vi.mocked(setLandcoverEnabled).mockImplementationOnce(landcoverServiceFails)
+			wrapper = mountLandcoverPanel()
+			await flipLayerSwitch(wrapper, 'landCover', true)
 			const retry = expectLayerFailure('landcover')
 
 			useToggleStore().setLandCover(false)

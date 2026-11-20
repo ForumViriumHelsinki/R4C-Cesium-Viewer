@@ -11,7 +11,7 @@
  * never removed.
  */
 
-import { flushPromises, mount, shallowMount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createVuetify } from 'vuetify'
@@ -20,7 +20,6 @@ import * as directives from 'vuetify/directives'
 import DataLayersControl from '@/components/controls/DataLayersControl.vue'
 import HSYYearSelect from '@/components/HSYYearSelect.vue'
 import LandcoverPanel from '@/components/LandcoverPanel.vue'
-import MapControls from '@/components/MapControls.vue'
 import ViewModeCompact from '@/components/ViewModeCompact.vue'
 import { createHSYImageryLayer } from '@/services/landcover.js'
 import { useBackgroundMapStore } from '@/stores/backgroundMapStore.js'
@@ -156,7 +155,7 @@ describe('land-cover toggle and imagery stay in sync', { tags: ['@unit'] }, () =
 		vi.clearAllMocks()
 	})
 
-	describe('LandcoverPanel checkbox', () => {
+	describe('LandcoverPanel switch', () => {
 		const mountPanel = () =>
 			track(
 				mount(LandcoverPanel, {
@@ -168,7 +167,7 @@ describe('land-cover toggle and imagery stay in sync', { tags: ['@unit'] }, () =
 			)
 		/** @param {import('@vue/test-utils').VueWrapper} wrapper @param {boolean} value */
 		const setChecked = async (wrapper, value) => {
-			await wrapper.find('input[type="checkbox"]').setValue(value)
+			await wrapper.find('[data-layer="landCover"] input[type="checkbox"]').setValue(value)
 			await flushPromises()
 		}
 
@@ -234,11 +233,26 @@ describe('land-cover toggle and imagery stay in sync', { tags: ['@unit'] }, () =
 		})
 	})
 
-	describe('MapControls switches', () => {
-		const mountControls = () => track(shallowMount(MapControls))
+	describe('Layers tab switches', () => {
+		const mountControls = () =>
+			track(
+				mount(DataLayersControl, {
+					props: {
+						showTrees: false,
+						showVegetation: false,
+						showOtherNature: false,
+						landCover: false,
+						ndvi: false,
+						helsinkiView: false,
+						view: 'capitalRegion',
+						postalCode: null,
+					},
+					global: { plugins: [vuetify] },
+				})
+			)
 		/** @param {import('@vue/test-utils').VueWrapper} controls @param {string} field @param {boolean} value */
 		const flip = async (controls, field, value) => {
-			controls.findComponent(DataLayersControl).vm.$emit(`update:${field}`, value)
+			await controls.find(`[data-layer="${field}"] input[type="checkbox"]`).setValue(value)
 			await flushPromises()
 		}
 

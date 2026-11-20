@@ -5,16 +5,14 @@
 			v-model:show-trees="showTrees"
 			v-model:show-vegetation="showVegetation"
 			v-model:show-other-nature="showOtherNature"
-			v-model:land-cover="landCover"
-			v-model:ndvi="ndvi"
+			:land-cover="landCover"
+			:ndvi="ndvi"
 			:helsinki-view="helsinkiView"
 			:view="view"
 			:postal-code="postalCode"
 			@update:show-trees="loadTrees"
 			@update:show-vegetation="loadVegetation"
 			@update:show-other-nature="loadOtherNature"
-			@update:land-cover="addLandCover"
-			@update:ndvi="toggleNDVI"
 			@reset:layers="resetLayers"
 		/>
 
@@ -79,18 +77,19 @@
  * - `Tree` - Tree data loading and visualization
  * - `Vegetation` - Vegetation area loading
  * - `Othernature` - Natural area loading
- * - `landcover` - HSY land cover layer and the NDVI exclusion (setLandcoverEnabled)
- * - `tiffImagery` - NDVI GeoTIFF layer management
+ * - `landcover` - HSY land cover layer removal on reset
+ * - `tiffImagery` - NDVI GeoTIFF layer removal on reset
  * - `backgroundPreloader` - Layer usage tracking for preloading
  *
  * **Event Emissions:**
  * - Listens: None
  * - Emits: 'updateScatterPlot' (via eventBus) - When building filters change
- * - Emits: 'addNDVI' (via eventBus) - When NDVI layer is enabled
  *
  * **Layer Conflicts:**
  * NDVI and Land Cover layers cannot be active simultaneously. When one is enabled,
- * the other is automatically disabled with proper cleanup.
+ * the other is automatically disabled with proper cleanup. Both are switched by
+ * LayerSwitch (controls/layerToggles.js), the control their Analysis panels show
+ * too (#1155).
  *
  * **Caching:**
  * Tree and vegetation data are cached per postal code for faster subsequent loads.
@@ -106,9 +105,9 @@ import backgroundPreloader from '../services/backgroundPreloader.js'
 import Building from '../services/building.js'
 import Datasource from '../services/datasource.js'
 import { eventBus } from '../services/eventEmitter.js'
-import { removeLandcover, setLandcoverEnabled } from '../services/landcover'
+import { removeLandcover } from '../services/landcover'
 import Othernature from '../services/othernature.js'
-import { changeTIFF, removeTIFF } from '../services/tiffImagery.js'
+import { removeTIFF } from '../services/tiffImagery.js'
 import Tree from '../services/tree.js'
 import Vegetation from '../services/vegetation'
 import { useGlobalStore } from '../stores/globalStore'
@@ -127,7 +126,9 @@ const loadingStore = useLoadingStore()
 /**
  * Layer toggles and building filters, bound to toggleStore in both directions.
  * The switches write the store, and writes from elsewhere (smartReset, goHome,
- * the Land Cover analysis panel) reach the switches (#967).
+ * the Land Cover analysis panel) reach the switches (#967). Land cover and NDVI
+ * are read here only for the conflict alert and the reset button: LayerSwitch
+ * switches them.
  */
 const {
 	showVegetation,
@@ -158,24 +159,6 @@ const hasLayerConflict = computed(() => {
 // Services
 let buildingService = null
 let dataSourceService = null
-
-/**
- * Turns land cover on or off through the shared entry point, which also handles
- * the NDVI exclusion and keeps the toggle and the imagery in step.
- * @param {boolean} enabled
- * @returns {void}
- */
-const applyLandCover = (enabled) => {
-	setLandcoverEnabled(enabled).catch((error) => {
-		logger.error('Failed to update land cover layer:', error)
-		loadingStore.reportLayerFailure('landcover', error, {
-			// A Retry clicked after the user flipped the switch must not flip it back.
-			retry: () => {
-				if (toggleStore.landCover === enabled) applyLandCover(enabled)
-			},
-		})
-	})
-}
 
 /**
  * Loads or toggles vegetation layer visibility
@@ -337,59 +320,6 @@ const loadOtherNature = () => {
 		}
 	} else {
 		dataSourceService.changeDataSourceShowByName('OtherNature', false).catch(logFailure)
-	}
-}
-
-/**
- * Toggles HSY land cover layer
- *
- * For Capital Region view. Shows land use classification with different
- * surface types. Automatically disables NDVI if active (conflict resolution).
- *
- * @returns {void}
- */
-const addLandCover = () => {
-	applyLandCover(landCover.value)
-}
-
-/**
- * Adds the NDVI imagery for the selected date; a failure is reported the way
- * NDVIPanel reports it (#1152).
- * @returns {void}
- */
-const addNdviImagery = () => {
-	changeTIFF().catch((error) => {
-		logger.error('Failed to add NDVI imagery:', error)
-		loadingStore.reportLayerFailure('ndvi', error, {
-			// A Retry clicked after the user switched NDVI off must not add the imagery.
-			retry: () => {
-				if (toggleStore.ndvi) addNdviImagery()
-			},
-		})
-	})
-}
-
-/**
- * Toggles NDVI satellite imagery layer
- *
- * Normalized Difference Vegetation Index shows vegetation density from satellite data.
- * Automatically disables Land Cover if active (conflict resolution).
- *
- * @fires eventBus#addNDVI
- * @returns {void}
- */
-const toggleNDVI = () => {
-	if (ndvi.value && landCover.value) applyLandCover(false)
-
-	toggleStore.setNDVI(ndvi.value)
-
-	if (ndvi.value) {
-		addNdviImagery()
-		eventBus.emit('addNDVI')
-	} else {
-		removeTIFF().catch((error) => {
-			logger.error('Failed to remove NDVI imagery:', error)
-		})
 	}
 }
 

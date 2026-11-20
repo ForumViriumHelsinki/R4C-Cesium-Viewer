@@ -8,10 +8,13 @@
  * TIFFImageryProvider.fromUrl for NDVI.
  */
 
-import { flushPromises, shallowMount } from '@vue/test-utils'
+import { flushPromises, mount, shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import TIFFImageryProvider from 'tiff-imagery-provider'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
 import DataLayersControl from '@/components/controls/DataLayersControl.vue'
 import MapControls from '@/components/MapControls.vue'
 import NDVIPanel from '@/components/NDVIPanel.vue'
@@ -56,6 +59,33 @@ const expectLayerFailure = (layer) => {
 	expect(errorNotification.severity).toBe('error')
 	expect(typeof errorNotification.retry).toBe('function')
 	return errorNotification.retry
+}
+
+const vuetify = createVuetify({ components, directives })
+
+/**
+ * Flips a layer's LayerSwitch the way the user does: in the Layers tab group, or in
+ * `host` when given (#1155).
+ */
+const flipLayerSwitch = async (layer, value, host = null) => {
+	const mounted =
+		host ??
+		mount(DataLayersControl, {
+			props: {
+				showTrees: false,
+				showVegetation: false,
+				showOtherNature: false,
+				landCover: false,
+				ndvi: false,
+				helsinkiView: false,
+				view: 'capitalRegion',
+				postalCode: null,
+			},
+			global: { plugins: [vuetify] },
+		})
+	await mounted.find(`[data-layer="${layer}"] input[type="checkbox"]`).setValue(value)
+	await flushPromises()
+	return mounted
 }
 
 /** Mounts MapControls and switches a Layers-tab control the way the user does. */
@@ -138,7 +168,7 @@ describe('layer failures with the real loaders', { tags: ['@unit'] }, () => {
 		})
 
 		it('Layers tab: a failed COG load shows the NDVI message', async () => {
-			wrapper = await switchLayer('ndvi', true)
+			wrapper = await flipLayerSwitch('ndvi', true)
 
 			expect(TIFFImageryProvider.fromUrl).toHaveBeenCalled()
 			expectLayerFailure('ndvi')
@@ -148,7 +178,7 @@ describe('layer failures with the real loaders', { tags: ['@unit'] }, () => {
 		// put the layer in changeTIFF's module-level cache, and later tests for the
 		// same date would read the cache instead of calling fromUrl.
 		it('Layers tab: Retry loads the COG again', async () => {
-			wrapper = await switchLayer('ndvi', true)
+			wrapper = await flipLayerSwitch('ndvi', true)
 			const retry = expectLayerFailure('ndvi')
 
 			retry()
@@ -158,7 +188,7 @@ describe('layer failures with the real loaders', { tags: ['@unit'] }, () => {
 		})
 
 		it('Layers tab: a Retry after the user switched NDVI off does not load the COG', async () => {
-			wrapper = await switchLayer('ndvi', true)
+			wrapper = await flipLayerSwitch('ndvi', true)
 			const retry = expectLayerFailure('ndvi')
 
 			useToggleStore().setNDVI(false)
@@ -194,6 +224,17 @@ describe('layer failures with the real loaders', { tags: ['@unit'] }, () => {
 			await flushPromises()
 
 			expect(TIFFImageryProvider.fromUrl).toHaveBeenCalledTimes(1)
+		})
+
+		it('Analysis tab: a failed switch-on from the panel shows the NDVI message', async () => {
+			const panel = mount(NDVIPanel, {
+				global: { plugins: [vuetify], stubs: { NDVIChart: true } },
+			})
+
+			wrapper = await flipLayerSwitch('ndvi', true, panel)
+
+			expect(TIFFImageryProvider.fromUrl).toHaveBeenCalledTimes(1)
+			expectLayerFailure('ndvi')
 		})
 
 		it('Analysis tab: a failed COG load shows the NDVI message', async () => {

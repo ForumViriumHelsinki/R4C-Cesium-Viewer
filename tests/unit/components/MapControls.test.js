@@ -64,6 +64,16 @@ const MIRRORED = [
 	['hideLow', 'setHideLow', BuildingFiltersControl],
 ]
 
+/**
+ * The switches MapControls writes back to the store. Land cover and NDVI are not
+ * among them: LayerSwitch writes those itself, from the Layers tab and the Analysis
+ * panels alike (#1155, tests/unit/components/layerSwitch.test.js). MapControls
+ * only reads them, for the conflict alert and the reset button.
+ */
+const WRITTEN_BY_MAP_CONTROLS = MIRRORED.filter(
+	([field]) => field !== 'landCover' && field !== 'ndvi'
+)
+
 describe('MapControls follows toggleStore', { tags: ['@unit'] }, () => {
 	/** @type {import('@vue/test-utils').VueWrapper | null} */
 	let wrapper = null
@@ -97,7 +107,7 @@ describe('MapControls follows toggleStore', { tags: ['@unit'] }, () => {
 	})
 
 	it.each(
-		MIRRORED
+		WRITTEN_BY_MAP_CONTROLS
 	)('%s: a switch change is written to the store', async (field, _setter, child) => {
 		const toggleStore = useToggleStore()
 		wrapper = shallowMount(MapControls)

@@ -3,6 +3,7 @@
 // offered, how it is presented, and which component renders it. See
 // docs/adr/ADR-009-analysis-registry.md.
 import { defineAsyncComponent } from 'vue'
+import { LAYER_LABELS } from './metricLabels.js'
 
 /**
  * Navigation level, as stored in `globalStore.level`. Note the camelCase
@@ -124,7 +125,8 @@ export const ANALYSES = Object.freeze([
 	{
 		id: 'landcover',
 		tab: 'analysis',
-		label: 'Land Cover',
+		// The layer's switch in Layers and in this panel has the same name (#1155).
+		label: LAYER_LABELS.LAND_COVER,
 		icon: 'mdi-leaf',
 		levels: ['postalCode'],
 		views: ['capitalRegion', 'grid'],
@@ -150,7 +152,7 @@ export const ANALYSES = Object.freeze([
 	{
 		id: 'ndvi-analysis',
 		tab: 'analysis',
-		label: 'NDVI Vegetation',
+		label: LAYER_LABELS.NDVI,
 		icon: 'mdi-leaf',
 		levels: ['postalCode'],
 		views: null,

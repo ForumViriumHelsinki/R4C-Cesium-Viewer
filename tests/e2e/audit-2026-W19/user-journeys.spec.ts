@@ -181,7 +181,7 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 				'US-07 #713 — Area Properties content must not be empty at postal-code level'
 			).not.toMatch(/\b0\s+properties\b/i)
 
-			// Heat Distribution / NDVI Vegetation / Building Analysis buttons
+			// Heat Distribution / NDVI (Vegetation) / Building Analysis buttons
 			// live on the Analysis tab. Switch tabs before asserting.
 			await cesiumPage.getByRole('tab', { name: 'Analysis' }).click()
 
@@ -191,10 +191,10 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 				'US-04 #712 — Heat Distribution button must be reachable from ControlPanel'
 			).toBeVisible()
 
-			// US-05 #712 — NDVI Vegetation button must be reachable (graduated to hard).
+			// US-05 #712 — NDVI (Vegetation) button must be reachable (graduated to hard).
 			await expect(
-				cesiumPage.getByRole('button', { name: 'NDVI Vegetation' }),
-				'US-05 #712 — NDVI Vegetation button must be reachable at postal-code level'
+				cesiumPage.getByRole('button', { name: 'NDVI (Vegetation)' }),
+				'US-05 #712 — NDVI (Vegetation) button must be reachable at postal-code level'
 			).toBeVisible()
 
 			// US-06 #712 — Building Analysis (scatter plot) button must be reachable (graduated to hard).
@@ -280,7 +280,7 @@ cesiumDescribe('Audit 2026-W19: user journeys', () => {
 
 			// US-13 — toggle presence at start level (Capital Region view).
 			await expect(
-				cesiumPage.getByText('NDVI', { exact: true }),
+				cesiumPage.getByRole('checkbox', { name: 'NDVI (Vegetation)' }),
 				'US-13 — NDVI toggle must be visible in Capital Region'
 			).toBeVisible()
 			await expect(

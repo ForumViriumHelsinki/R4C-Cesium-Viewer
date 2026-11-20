@@ -101,11 +101,11 @@ cesiumDescribe('Sidebar Panels Accessibility', () => {
 
 		cesiumTest('should show NDVI toggle in all views', async ({ cesiumPage }) => {
 			// NDVI toggle visible in Capital Region view
-			await expect(cesiumPage.getByText('NDVI', { exact: true })).toBeVisible()
+			await expect(cesiumPage.getByRole('checkbox', { name: 'NDVI (Vegetation)' })).toBeVisible()
 
 			// Switch to Grid view — NDVI toggle should still be visible
 			await helpers.navigateToView('gridView')
-			await expect(cesiumPage.getByText('NDVI', { exact: true })).toBeVisible()
+			await expect(cesiumPage.getByRole('checkbox', { name: 'NDVI (Vegetation)' })).toBeVisible()
 		})
 	})
 

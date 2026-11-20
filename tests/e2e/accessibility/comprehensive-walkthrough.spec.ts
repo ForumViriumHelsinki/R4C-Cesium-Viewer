@@ -190,7 +190,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 
 				// 2. Enable multiple layers
 				const ndviToggle = cesiumPage
-					.getByText('NDVI')
+					.getByText('NDVI (Vegetation)')
 					.locator('..')
 					.locator('input[type="checkbox"]')
 				const landCoverToggle = cesiumPage
@@ -260,7 +260,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				.catch(() => {})
 
 			const ndviToggle = cesiumPage
-				.getByText('NDVI')
+				.getByText('NDVI (Vegetation)')
 				.locator('..')
 				.locator('input[type="checkbox"]')
 			const tallBuildingsToggle = cesiumPage
@@ -471,7 +471,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 
 			// Enable features during slow loading
 			const ndviToggle = cesiumPage
-				.getByText('NDVI')
+				.getByText('NDVI (Vegetation)')
 				.locator('..')
 				.locator('input[type="checkbox"]')
 			await helpers.checkWithRetry(ndviToggle, { elementName: 'NDVI' })
@@ -540,7 +540,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 				'.mdi-compass',
 
 				// Layer controls
-				'NDVI',
+				'NDVI (Vegetation)',
 				'Land Cover',
 
 				// Filter controls
@@ -559,7 +559,7 @@ cesiumDescribe('Comprehensive Walkthrough Accessibility', () => {
 			// Test features at start level
 			await expect(cesiumPage.getByText('Capital Region Heat')).toBeVisible()
 			await expect(cesiumPage.getByText('Statistical Grid')).toBeVisible()
-			await expect(cesiumPage.getByText('NDVI')).toBeVisible()
+			await expect(cesiumPage.getByText('NDVI (Vegetation)')).toBeVisible()
 			await expect(cesiumPage.getByText('Land Cover')).toBeVisible()
 			await expect(cesiumPage.getByText('Public Buildings', { exact: true })).toBeVisible()
 			await expect(cesiumPage.getByText('Tall Buildings', { exact: true })).toBeVisible()

@@ -4,6 +4,9 @@
 		role="region"
 		aria-label="NDVI vegetation distribution"
 	>
+		<!-- The Layers tab switch itself (#1155), so the date select below is never
+		     disabled with no way to enable it. -->
+		<LayerSwitch layer="ndvi" />
 		<v-select
 			v-model="selectedDate"
 			:items="availableDates"
@@ -20,51 +23,35 @@
 
 <script setup>
 import { storeToRefs } from 'pinia'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { AVAILABLE_NDVI_DATES, DEFAULT_NDVI_DATE } from '../constants/ndviDates.js'
-import { eventBus } from '../services/eventEmitter.js'
-import { changeTIFF } from '../services/tiffImagery.js'
+import { computed, onMounted } from 'vue'
+import { AVAILABLE_NDVI_DATES } from '../constants/ndviDates.js'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
-import { useLoadingStore } from '../stores/loadingStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
-import logger from '../utils/logger.js'
+import LayerSwitch from './controls/LayerSwitch.vue'
+import { addNdviImagery } from './controls/layerToggles.js'
 import NDVIChart from './NDVIChart.vue'
 
 const toggleStore = useToggleStore()
 const backgroundMapStore = useBackgroundMapStore()
-const loadingStore = useLoadingStore()
 
 const { ndvi } = storeToRefs(toggleStore)
 
-const selectedDate = ref(DEFAULT_NDVI_DATE)
+/**
+ * The date the NDVI imagery shows. Bound to the store, so the switch (from this
+ * panel or the Layers tab) loads the date selected here.
+ */
+const selectedDate = computed({
+	get: () => backgroundMapStore.ndviDate,
+	set: (date) => backgroundMapStore.setNdviDate(date),
+})
 const availableDates = AVAILABLE_NDVI_DATES
 
-const updateImage = async () => {
-	backgroundMapStore.setNdviDate(selectedDate.value)
-	loadImagery()
-}
-
 // A failure is reported the way the Layers tab reports it (#1152).
-const loadImagery = () => {
-	changeTIFF().catch((error) => {
-		logger.error('[NDVIPanel] Failed to load NDVI imagery:', error)
-		loadingStore.reportLayerFailure('ndvi', error, {
-			// A Retry clicked after the user switched NDVI off must not add the imagery.
-			retry: () => {
-				if (toggleStore.ndvi) loadImagery()
-			},
-		})
-	})
+const updateImage = () => {
+	addNdviImagery()
 }
 
-onMounted(async () => {
-	eventBus.on('addNDVI', updateImage)
-	if (ndvi.value) {
-		await updateImage()
-	}
-})
-
-onBeforeUnmount(() => {
-	eventBus.off('addNDVI', updateImage)
+onMounted(() => {
+	if (ndvi.value) updateImage()
 })
 </script>

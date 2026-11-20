@@ -67,7 +67,7 @@ cesiumDescribe('View Modes Accessibility', () => {
 
 				// Verify layers specific to Capital Region
 				await expect(cesiumPage.getByText('Land Cover')).toBeVisible()
-				await expect(cesiumPage.getByText('NDVI')).toBeVisible()
+				await expect(cesiumPage.getByText('NDVI (Vegetation)')).toBeVisible()
 
 				// Verify Helsinki-specific layers are not visible
 				await expect(cesiumPage.getByText('Vegetation')).not.toBeVisible()

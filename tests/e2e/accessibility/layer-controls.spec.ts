@@ -40,11 +40,14 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.navigateToView('capitalRegionView')
 
 			// Scroll NDVI text into viewport before checking visibility
-			const ndviText = cesiumPage.getByText('NDVI')
+			const ndviText = cesiumPage.getByText('NDVI (Vegetation)')
 			await helpers.scrollIntoViewportWithRetry(ndviText, { elementName: 'NDVI text' })
 			await expect(ndviText).toBeVisible()
 
-			let ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+			let ndviToggle = cesiumPage
+				.getByText('NDVI (Vegetation)')
+				.locator('..')
+				.locator('input[type="checkbox"]')
 			await helpers.scrollIntoViewportWithRetry(ndviToggle, { elementName: 'NDVI toggle' })
 			await expect(ndviToggle).toBeVisible()
 
@@ -63,12 +66,15 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.navigateToView('gridView')
 
 			// Scroll NDVI into view after view change
-			const ndviTextGrid = cesiumPage.getByText('NDVI')
+			const ndviTextGrid = cesiumPage.getByText('NDVI (Vegetation)')
 			await helpers.scrollIntoViewportWithRetry(ndviTextGrid, { elementName: 'NDVI in grid view' })
 			await expect(ndviTextGrid).toBeVisible()
 
 			// Re-query the locator after view change to avoid stale element reference
-			ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+			ndviToggle = cesiumPage
+				.getByText('NDVI (Vegetation)')
+				.locator('..')
+				.locator('input[type="checkbox"]')
 
 			// NDVI should be functional in grid view too
 			await helpers.checkWithRetry(ndviToggle, {
@@ -80,7 +86,10 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 		cesiumTest('should maintain NDVI state across view changes', async ({ cesiumPage }) => {
 			// Start in Capital Region view (default state from fixture)
 			// Create locator for NDVI toggle
-			let ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+			let ndviToggle = cesiumPage
+				.getByText('NDVI (Vegetation)')
+				.locator('..')
+				.locator('input[type="checkbox"]')
 
 			// Check current state first to avoid redundant operations
 			const isChecked = await ndviToggle.isChecked()
@@ -93,7 +102,10 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.navigateToView('gridView')
 
 			// Re-query locator after view change
-			ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+			ndviToggle = cesiumPage
+				.getByText('NDVI (Vegetation)')
+				.locator('..')
+				.locator('input[type="checkbox"]')
 
 			// NDVI should maintain its state
 			await expect(ndviToggle).toBeChecked()
@@ -102,7 +114,10 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			await helpers.navigateToView('capitalRegionView')
 
 			// Re-query locator after view change
-			ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+			ndviToggle = cesiumPage
+				.getByText('NDVI (Vegetation)')
+				.locator('..')
+				.locator('input[type="checkbox"]')
 
 			await expect(ndviToggle).toBeChecked()
 		})
@@ -394,7 +409,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 	cesiumTest.describe.fixme('Layer Toggle Interactions', () => {
 		cesiumTest('should handle rapid toggle switching without errors', async ({ cesiumPage }) => {
 			const ndviToggle = cesiumPage
-				.getByText('NDVI')
+				.getByText('NDVI (Vegetation)')
 				.locator('..')
 				.locator('input[type="checkbox"]')
 
@@ -446,7 +461,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 
 			// Get available toggles
 			const ndviToggle = cesiumPage
-				.getByText('NDVI')
+				.getByText('NDVI (Vegetation)')
 				.locator('..')
 				.locator('input[type="checkbox"]')
 			const landCoverToggle = cesiumPage
@@ -489,7 +504,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			async ({ cesiumPage }) => {
 				// Enable NDVI and Land Cover
 				let ndviToggle = cesiumPage
-					.getByText('NDVI')
+					.getByText('NDVI (Vegetation)')
 					.locator('..')
 					.locator('input[type="checkbox"]')
 				let landCoverToggle = cesiumPage
@@ -520,7 +535,10 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 					.catch(() => {})
 
 				// Re-query locators after navigation
-				ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+				ndviToggle = cesiumPage
+					.getByText('NDVI (Vegetation)')
+					.locator('..')
+					.locator('input[type="checkbox"]')
 				landCoverToggle = cesiumPage
 					.getByText('Land Cover')
 					.locator('..')
@@ -538,7 +556,10 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 					.catch(() => {})
 
 				// Re-query locators after navigation
-				ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+				ndviToggle = cesiumPage
+					.getByText('NDVI (Vegetation)')
+					.locator('..')
+					.locator('input[type="checkbox"]')
 				landCoverToggle = cesiumPage
 					.getByText('Land Cover')
 					.locator('..')
@@ -658,7 +679,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 				.catch(() => {})
 
 			// Check that layer labels are descriptive
-			const layerLabels = ['NDVI', 'Land Cover', 'Trees']
+			const layerLabels = ['NDVI (Vegetation)', 'Land Cover', 'Trees']
 
 			for (const labelText of layerLabels) {
 				const label = cesiumPage.getByText(labelText)
@@ -676,7 +697,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			'should provide visual feedback for toggle state changes',
 			async ({ cesiumPage }) => {
 				const ndviToggle = cesiumPage
-					.getByText('NDVI')
+					.getByText('NDVI (Vegetation)')
 					.locator('..')
 					.locator('input[type="checkbox"]')
 
@@ -711,7 +732,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 
 				let sliderFound = false
 				for (const selector of sliderSelectors) {
-					const slider = cesiumPage.getByText('NDVI').locator('..').locator(selector)
+					const slider = cesiumPage.getByText('NDVI (Vegetation)').locator('..').locator(selector)
 
 					const exists = await slider.count().then((c) => c > 0)
 					if (exists) {
@@ -745,7 +766,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 
 			// Immediately try to toggle layers
 			const ndviToggle = cesiumPage
-				.getByText('NDVI')
+				.getByText('NDVI (Vegetation)')
 				.locator('..')
 				.locator('input[type="checkbox"]')
 
@@ -770,7 +791,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 			async ({ cesiumPage }) => {
 				// Enable some layers
 				let ndviToggle = cesiumPage
-					.getByText('NDVI')
+					.getByText('NDVI (Vegetation)')
 					.locator('..')
 					.locator('input[type="checkbox"]')
 				let landCoverToggle = cesiumPage
@@ -805,7 +826,10 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 					.catch(() => {})
 
 				// Re-query locators after reset
-				ndviToggle = cesiumPage.getByText('NDVI').locator('..').locator('input[type="checkbox"]')
+				ndviToggle = cesiumPage
+					.getByText('NDVI (Vegetation)')
+					.locator('..')
+					.locator('input[type="checkbox"]')
 				landCoverToggle = cesiumPage
 					.getByText('Land Cover')
 					.locator('..')
@@ -829,7 +853,7 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 		cesiumTest('should handle missing layer data gracefully', async ({ cesiumPage }) => {
 			// Toggle layers even if underlying data might be missing
 			const ndviToggle = cesiumPage
-				.getByText('NDVI')
+				.getByText('NDVI (Vegetation)')
 				.locator('..')
 				.locator('input[type="checkbox"]')
 
@@ -868,10 +892,10 @@ cesiumDescribe('Layer Controls Accessibility', () => {
 					)
 
 					// Layer controls should remain accessible
-					await expect(cesiumPage.getByText('NDVI')).toBeVisible()
+					await expect(cesiumPage.getByText('NDVI (Vegetation)')).toBeVisible()
 
 					const ndviToggle = cesiumPage
-						.getByText('NDVI')
+						.getByText('NDVI (Vegetation)')
 						.locator('..')
 						.locator('input[type="checkbox"]')
 

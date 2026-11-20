@@ -26,7 +26,8 @@ const legacyVisible = ({ level, view, flags, statsIndex, socioEconomicsReady }) 
 		if (socioEconomicsReady && on('socioeconomicViz')) out.push('Socioeconomics')
 		if (view !== 'helsinki' && on('landCover')) out.push('Land Cover')
 		if (on('buildingScatterPlot')) out.push('Building Analysis')
-		if (on('ndviAnalysis')) out.push('NDVI Vegetation')
+		// Renamed from 'NDVI Vegetation' to the NDVI switch's name in #1155.
+		if (on('ndviAnalysis')) out.push('NDVI (Vegetation)')
 	}
 	if (level === 'building') out.push('Building Heat Data')
 	const layers = []
@@ -98,7 +99,7 @@ describe('analysisRegistry', { tags: ['@unit'] }, () => {
 			'Socioeconomics',
 			'Land Cover',
 			'Building Analysis',
-			'NDVI Vegetation',
+			'NDVI (Vegetation)',
 			'Building Heat Data',
 			'Climate Adaptation',
 			'Grid Options',

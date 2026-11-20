@@ -144,7 +144,7 @@ const createPieChart = () => {
 	plotService.addTitleWithLink(
 		svg,
 		`Compare <a href="https://www.hsy.fi/en/environmental-information/open-data/avoin-data---sivut/helsinki-region-land-cover-dataset/"
-        	target="_blank">HSY landcover</a> in ${nameOfZone} to:`,
+        	target="_blank">HSY land cover</a> in ${nameOfZone} to:`,
 		margin.left,
 		margin.top
 	)

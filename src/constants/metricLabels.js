@@ -33,6 +33,19 @@ export const METRIC_LABELS = Object.freeze({
 	GREEN_SPACE: 'Green space',
 })
 
+/**
+ * Map layers that have both a Layers-tab switch and an Analysis entry (#1155). The
+ * switch (`LayerSwitch.vue`) and the Analysis button (`analysisRegistry.js`) both
+ * read the name from here, so the two entry points cannot drift apart again. E2E
+ * specs locate the switch and the button by these names.
+ */
+export const LAYER_LABELS = Object.freeze({
+	/** HSY land cover classification (`toggleStore.landCover`). */
+	LAND_COVER: 'Land Cover',
+	/** NDVI satellite imagery (`toggleStore.ndvi`). */
+	NDVI: 'NDVI (Vegetation)',
+})
+
 /** Statistical-grid index (`propsStore.statsIndex` value) → display name. */
 export const INDEX_LABELS = Object.freeze({
 	heat_index: METRIC_LABELS.HEAT_VULNERABILITY,
