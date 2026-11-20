@@ -304,6 +304,13 @@ const loadTrees = () =>
   consequence or next step. Never show `error.message`; pass it as `context`, which is logged.
 - Severity `error` (`mdi-alert-circle`) when an action failed, `warning` (`mdi-alert-circle-outline`)
   when the app keeps working with less data.
+- A loader a component reports for must reject when it fails: log, then rethrow. A loader that
+  catches and only logs makes the caller's `.catch` dead code. `Tree.loadTrees`, `changeTIFF`,
+  `loadPaavo` and `loadHeatExposure` all did; `loadTrees` now rejects when every category fails
+  (`unifiedLoader.loadLayers` returns a failed layer as a fulfilled `{ error }` value, not a
+  rejection). Test the channel with the real loader and only the network edge stubbed, as
+  `tests/unit/components/layerFailureRealLoaders.test.js` does; a test that mocks the loader into
+  rejecting passes either way.
 - No `alert()`. Empty results and limits are an inline tonal `v-alert`.
 - HSY imagery tile errors stay quiet and the `serviceHealthStore` snackbar stays HSY-gated
   (architecture.md, HSY Outage Resilience Stack).
