@@ -460,18 +460,43 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			const page = await openPage(browser)
 			await gotoReady(page, LOCALHOST_URL, READY_TIMEOUT_MS)
 			const renderer = await webglRenderer(page)
+			const software = isSoftwareRenderer(renderer)
+
+			// On a software renderer the whole test is informational. The CI runner
+			// (SwiftShader, 2 vCPU) can take longer than GRID_LOAD_TIMEOUT_MS to load
+			// the grid (the e2e version spent 49-51 s per attempt there on 2026-11-19),
+			// so a timeout is recorded and skipped instead of failing the job. On a real
+			// GPU a timeout is still a failure.
+			const skipOnSoftwareTimeout = (step: string) => (error: unknown) => {
+				if (!software) throw error
+				recordMetric(ctx.task.name, {
+					metric: 'gridToCapitalTransitionMs',
+					value: null,
+					timedOut: step,
+					threshold: GRID_TO_CAPITAL_BUDGET_MS,
+					renderer,
+					asserted: false,
+				})
+				return 'timed-out' as const
+			}
 
 			// Enter grid view with the Layers tab's Grid button (the default tab) and
 			// wait for the grid's cells, then for the colour pass after them.
 			await clickByLabel(page, 'Statistical Grid view')
-			await page.waitForFunction(
-				() =>
-					(window as any).__viewer?.dataSources?._dataSources?.some(
-						(ds: any) => ds.name === '250m_grid' && ds.entities?.values?.length > 0
-					),
-				undefined,
-				{ timeout: GRID_LOAD_TIMEOUT_MS, polling: 250 }
-			)
+			const gridLoad = await page
+				.waitForFunction(
+					() =>
+						(window as any).__viewer?.dataSources?._dataSources?.some(
+							(ds: any) => ds.name === '250m_grid' && ds.entities?.values?.length > 0
+						),
+					undefined,
+					{ timeout: GRID_LOAD_TIMEOUT_MS, polling: 250 }
+				)
+				.catch(skipOnSoftwareTimeout('grid load'))
+			if (gridLoad === 'timed-out') {
+				ctx.skip()
+				return
+			}
 			await page.waitForTimeout(TEST_TIMEOUTS.WAIT_DATA_LOAD)
 			await probeResponsiveness(page)
 
@@ -481,20 +506,25 @@ describe('Performance and Load Tests', { tags: ['@performance', '@integration'] 
 			// this test waits for the same condition; networkidle does not mean done here.
 			const start = Date.now()
 			await clickByLabel(page, 'Capital Region view')
-			await page.waitForFunction(
-				() => {
-					const sources: any[] = (window as any).__viewer?.dataSources?._dataSources ?? []
-					return (
-						!sources.some((ds) => ds.name === '250m_grid') &&
-						sources.some((ds) => ds.name === 'PostCodes' && ds.entities?.values?.length > 0)
-					)
-				},
-				undefined,
-				{ timeout: GRID_LOAD_TIMEOUT_MS, polling: 50 }
-			)
+			const transition = await page
+				.waitForFunction(
+					() => {
+						const sources: any[] = (window as any).__viewer?.dataSources?._dataSources ?? []
+						return (
+							!sources.some((ds) => ds.name === '250m_grid') &&
+							sources.some((ds) => ds.name === 'PostCodes' && ds.entities?.values?.length > 0)
+						)
+					},
+					undefined,
+					{ timeout: GRID_LOAD_TIMEOUT_MS, polling: 50 }
+				)
+				.catch(skipOnSoftwareTimeout('transition'))
+			if (transition === 'timed-out') {
+				ctx.skip()
+				return
+			}
 			const transitionMs = Date.now() - start
 
-			const software = isSoftwareRenderer(renderer)
 			recordMetric(ctx.task.name, {
 				metric: 'gridToCapitalTransitionMs',
 				value: transitionMs,
