@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.59.11](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.10...r4c-cesium-viewer-v1.59.11) (2026-11-21)
+
+
+### Bug Fixes
+
+* **test:** record a grid-to-capital timeout on SwiftShader instead of failing ([#1201](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1201)) ([63aaa14](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/63aaa14f2517e2eaa6b2478336997336da4562d1))
+* **ui:** give each metric and building attribute one display name ([#1192](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1192)) ([dc1f450](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/dc1f4504a73d3156dd34156aeabd79b1c330ad57))
+* **ui:** give the selected and reference series one colour in every chart ([#1197](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1197)) ([9c40293](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/9c40293c7befef336be8ed50d57db1d3680de995))
+* **ui:** make each map layer one switch with one name ([#1198](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1198)) ([642eb69](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/642eb69ef880442bb4c7d4d85dfa786fd8b09374))
+* **ui:** report user-triggered failures through one error channel ([#1191](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1191)) ([b3efdbc](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/b3efdbca9d3d480cf94ac4123c5d141d18f77c4a))
+
 ## [1.59.10](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.9...r4c-cesium-viewer-v1.59.10) (2026-11-19)
 
 
