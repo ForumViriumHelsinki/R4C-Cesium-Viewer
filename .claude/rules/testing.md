@@ -133,6 +133,17 @@ SwiftShader, if the switch keeps a SwiftShader flag or, under `CI`,
 `--disable-gpu`, or if the recipe stops passing `"$@"`. The same budget is also
 measured in `tests/performance/` (see "Software-rendering skip" below).
 
+## Running Playwright From Parallel Worktrees
+
+`playwright.config.ts` starts `bun run dev:test` on port 5173 with
+`reuseExistingServer: true`. When two worktrees run Playwright at once, the second
+run reuses the first worktree's dev server and tests that worktree's code, and
+reports it as its own. `just dev-mock` (5173 and the mock API on 5050), `just
+test-overflow` and `just test-performance` (4173) collide the same way. Serialize
+the runs, for example with a `mkdir` lock taken before and released (in a trap)
+after each run, and check that nothing listens on the port before starting. Each
+run then starts its own server from its own worktree.
+
 ## Layout Overflow Check (`tests/e2e/layout/`)
 
 `panel-overflow.spec.ts` opens Analysis panels and fails when an element in the
@@ -328,14 +339,25 @@ page.route('**/*', (route) => {
 page.route('**/*', (route) => {
 	const url = route.request().url();
 	if (url.includes('localhost') || url.includes('127.0.0.1')) {
-		return route.continue();
+		return route.fallback();
 	}
 	if (url.includes('/wms')) {
 		return route.fulfill({ body: TRANSPARENT_PNG });
 	}
-	return route.continue();
+	return route.fallback();
 });
 ```
+
+**A catch-all passes requests on with `route.fallback()`, never `route.continue()`.**
+Playwright runs the most recently registered handler first, so a catch-all
+registered after the specific mocks sees every request before them.
+`route.continue()` sends the request straight to the network and skips every
+other handler; `route.fallback()` hands it to the next one. Until #1149 the WMS
+catch-all used `continue()`, so the same-origin `/hsy-action`, `/wms/layers`,
+`/wms/proxy` and `/helsinki-wms` mocks never ran and the HSY test depended on live
+HSY. A mock fixture that is never served also goes unchecked: `TRANSPARENT_PNG`
+had been a corrupt PNG the whole time (`tests/unit/testContracts/pngFixture.test.js`
+now checks it). To prove a mock runs, assert something only the fixture contains.
 
 **A `**/path` glob does not match the same path with a query string.** Measured with
 Playwright 1.57 (#1055): `page.route('**/vtt-api', …)` intercepted `/vtt-api` but not
@@ -454,6 +476,8 @@ cesiumTest('test name', async ({ cesiumPage }, testInfo) => {
 **Click the map with `clickMap(page, x, y)`, not `locator.click()`.** Under SwiftShader, the renderer the CI runner uses, the page's main thread spends almost all of its time in long tasks once the map is up: 43.1s of long tasks during the 43.4s extended-usage session in CI (run 35858081838), and 10.2s of 10.9s in a local SwiftShader run. On a real GPU (`--enable-gpu`, Apple M4 Pro) the same session logged one 66ms long task (2026-09). A locator click first waits for Playwright's visible/enabled/stable checks, each of which needs that thread, and it took seconds per click. `clickMap` dispatches `page.mouse.click` at canvas coordinates and records how long the browser took to acknowledge it; `probeResponsiveness(page)` records an empty `page.evaluate` round trip. `gotoReady` also hides the disclaimer dialog and scrims and sets `pointer-events: none` on the floating controls (nav drawer, camera/zoom/compass controls, compact timeline), so clicks at map coordinates reach the canvas.
 
 **Informational output.** Each test's per-click latency, probe latency and long-task totals go to the log as `[perf] {…}` lines and to `$PERF_RESULTS_DIR/metrics.jsonl` (default `performance-results/`). A failed test also leaves a screenshot and a Playwright trace there. Each run first deletes the metrics file, screenshots and traces left by the previous one. The CI job uploads the directory with `if: always()`. Keep timings informational unless a threshold was calibrated from these CI numbers.
+
+**The CI runner is far slower than local SwiftShader.** The statistical grid loaded in under 1 s under local SwiftShader, but the e2e grid-to-capital test spent 49-51 s per attempt on the CI runner (SwiftShader, 2 vCPU, 2026-11-19), and the perf version timed out a 30 s grid-load wait there on `main` (#1201). A wait that a software-renderer run reaches before its skip must not fail the job on a timeout: record the timeout as the metric and skip, and keep timeouts failing only on a real GPU.
 
 **Software-rendering skip.** Headless Chromium uses SwiftShader unless launched with `--enable-gpu`, and the CI runner has no GPU, so GPU-bound metrics like FPS aren't representative there. Measure anyway, record the value, then `ctx.skip()`; the assertion runs only on a real GPU, which means `just test-performance` locally (it passes `--enable-gpu`, #843):
 
