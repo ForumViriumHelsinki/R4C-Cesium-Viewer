@@ -1,7 +1,7 @@
-# Next-frontend deployment — served at r4c.dataportal.fi behind Envoy Gateway
-# cookie routing (ADR-008, infrastructure#2001). The frozen legacy v1.22.6
-# Application pins its values source to a pre-rewrite commit and no longer
-# reads this file.
+# Frontend deployment served at r4c.dataportal.fi behind Envoy Gateway
+# (ADR-008, infrastructure#2001). ADR-008's frozen legacy v1.22.6 viewer is
+# retired; its Application pinned its values source to a pre-rewrite commit
+# and never read this file.
 #
 # Keeps fullnameOverride / serviceAccount.name "r4c-cesium-viewer-beta" from
 # the retired beta deployment: avoids Service/Deployment/SA collisions with
