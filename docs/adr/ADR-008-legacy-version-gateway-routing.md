@@ -2,8 +2,29 @@
 
 ## Status
 
+Deprecated (2026-11-25: legacy retired, see "Sunset" below). Previously
 Accepted (amended 2026-06-11: symmetric cookie scheme, 7-rule precedence
-structure, immediate beta retirement)
+structure, immediate beta retirement).
+
+## Sunset (2026-11-25)
+
+The legacy v1.22.x viewer is being retired. This repository no longer ships
+the "Switch to classic version" menu item, so the current frontend has no
+link to `/?ui=legacy`. The remaining pieces live in the infrastructure repo
+and are removed there (infrastructure#2001):
+
+- the `r4c-legacy` Application, Deployment and Service;
+- HTTPRoute rules 1, 2 and 5 (`switch-legacy`, `switch-legacy-nocookie`,
+  `cookie-legacy`). Until rule 5 is gone, a browser that still holds
+  `r4c_ui=legacy` keeps getting the frozen bundle for up to the cookie's
+  30-day `Max-Age`;
+- once legacy is gone, the cookie routing itself (rules 3, 4 and 6) has no
+  purpose and the route can collapse to the default rule.
+
+The `r4c-cesium-viewer-beta` release, Service and ServiceAccount names in
+`deploy/values.yaml` stay as they are: the HTTPRoute targets that Service
+by name and the ServiceAccount carries the Workload Identity binding, so a
+rename is a separate, coordinated change.
 
 ## Date
 
