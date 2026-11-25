@@ -1,4 +1,5 @@
 rasterio
+rio-cogeo
 numpy
 google-cloud-storage
 flask

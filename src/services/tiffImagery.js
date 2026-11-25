@@ -102,6 +102,9 @@ export const changeTIFF = async () => {
 					band: 1,
 					type: 'discrete',
 					useRealValue: true,
+					// NDVI is bounded to [-1, 1]. Without a domain the provider reads the
+					// whole raster on the main thread to find min and max (#1083).
+					domain: [-1, 1],
 					displayRange: [-1, 1],
 					colors: [
 						[-1.0, 'rgb(12, 12, 12)'],

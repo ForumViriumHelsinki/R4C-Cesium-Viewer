@@ -8,8 +8,8 @@
  * download at startup.
  *
  * (a) Every item startCriticalPreload() queues must be read by a consumer:
- *     its cache key appears in another src file, or its URL is built by the
- *     same builder the consumer calls (so the consumer's request can reuse it).
+ *     its cache key appears in another src file. The NDVI preload, which
+ *     relied on the browser HTTP cache instead, was removed (#1083).
  * (b) Every pygeoapi `/items` URL literal in src carries a narrowing
  *     parameter, so no request pulls a whole collection.
  */
@@ -49,40 +49,28 @@ const SOURCES = walk(SRC).map((path) => ({
 const isReadOutsidePreloader = (needle) =>
 	SOURCES.some(({ file, code }) => file !== PRELOADER && stripComments(code).includes(needle))
 
-// Items that no consumer reads by cache key, but whose request is the one
-// the consumer makes, so the browser HTTP cache can serve it.
-const SAME_REQUEST_AS_CONSUMER = {
-	// tiffImagery.js loads urlStore.ndviTiffUrl(date); the preload builds the
-	// same URL through the same getter.
-	ndvi: (item, urlStore) => item.url === urlStore.ndviTiffUrl(item.date),
-}
-
 describe('backgroundPreloader preloads feed a consumer (#972)', { tags: ['@unit'] }, () => {
 	let preloader
-	let urlStore
 
 	beforeEach(async () => {
 		setActivePinia(createPinia())
 		vi.resetModules()
 		;({ default: preloader } = await import('@/services/backgroundPreloader.js'))
-		const { useURLStore } = await import('@/stores/urlStore.js')
-		urlStore = useURLStore()
 		preloader.preloadQueue.clear()
 		vi.spyOn(preloader, 'processPreloadQueue').mockResolvedValue(undefined)
 	})
 
 	it('every critical preload is read by a consumer', async () => {
-		await preloader.startCriticalPreload()
-		const queued = [...preloader.preloadQueue.values()]
-
-		// Control: the queue is populated, so the check below is not vacuous.
-		expect(queued.length).toBeGreaterThan(0)
 		// Control: the search sees consumer code outside the preloader.
 		expect(isReadOutsidePreloader('ndviTiffUrl(')).toBe(true)
 
-		const unread = queued
+		await preloader.startCriticalPreload()
+
+		// Nothing is preloaded at startup since NDVI was dropped (#1083). A new
+		// item must be read by a consumer: its cache key appears outside the
+		// preloader.
+		const unread = [...preloader.preloadQueue.values()]
 			.filter((item) => !isReadOutsidePreloader(item.key))
-			.filter((item) => !SAME_REQUEST_AS_CONSUMER[item.type]?.(item, urlStore))
 			.map((item) => `${item.key} -> ${item.url}`)
 		expect(unread).toEqual([])
 	})
