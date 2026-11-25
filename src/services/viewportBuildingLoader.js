@@ -67,6 +67,20 @@ const CONFIG = {
 	CACHE_TTL: 60 * 60 * 1000,
 	/** Maximum camera altitude (meters) for building loading - prevents mass loading at region overview */
 	MAX_ALTITUDE_FOR_LOADING: 3000,
+	/** First retry delay for a failed tile load (ms); doubles per attempt */
+	RETRY_BASE_DELAY_MS: 2000,
+	/** Longest delay between tile load retries (ms) */
+	RETRY_MAX_DELAY_MS: 30000,
+	/** Retries per tile before waiting for the next camera move */
+	MAX_TILE_RETRIES: 4,
+}
+
+/** Thrown when a tile's response belongs to a view mode the user has left. */
+class StaleTileError extends Error {
+	constructor(tileKey) {
+		super(`Tile ${tileKey} was fetched for the previous view mode`)
+		this.name = 'StaleTileError'
+	}
 }
 
 /**
@@ -145,6 +159,16 @@ export default class ViewportBuildingLoader {
 		this.dataSourceRemovedHandler = null
 		/** @type {ReturnType<typeof setTimeout>|null} Pending reconcile after external removal */
 		this.reconcileTimeout = null
+
+		// Failed tile retries
+		/** @type {Map<string, number>} Consecutive failed loads per tile key */
+		this.tileFailureCounts = new Map()
+		/** @type {ReturnType<typeof setTimeout>|null} Pending retry of failed tiles */
+		this.retryTimeout = null
+		/** @type {number|null} When the pending retry fires (ms since epoch) */
+		this.retryDueAt = null
+		this.retryBaseDelayMs = CONFIG.RETRY_BASE_DELAY_MS
+		this.maxTileRetries = CONFIG.MAX_TILE_RETRIES
 
 		// Cesium scratch objects for performance (reuse to avoid GC)
 		// Initialized lazily after Cesium is loaded
@@ -369,6 +393,45 @@ export default class ViewportBuildingLoader {
 				logger.error('Failed to reload tiles removed externally:', error)
 			})
 		}, 0)
+	}
+
+	/**
+	 * Schedule another viewport update after a tile load failed.
+	 *
+	 * Without this a tile that failed after unifiedLoader's own retries (HTTP
+	 * 429 bursts, gateway timeouts, an open circuit breaker) stayed empty until
+	 * the next camera move. Cancelled loads are not retried: the code that
+	 * cancelled them decides what loads next. A tile from the previous view mode
+	 * is retried at once; other failures back off exponentially and stop after
+	 * `maxTileRetries`, leaving the next camera move to try again.
+	 *
+	 * @param {string} tileKey - Tile that failed
+	 * @param {unknown} error - The rejection
+	 * @private
+	 */
+	scheduleTileRetry(tileKey, error) {
+		const name = /** @type {{name?: string}} */ (error)?.name
+		if (name === 'AbortError') return
+
+		let delay = 0
+		if (name !== 'StaleTileError') {
+			const failures = (this.tileFailureCounts.get(tileKey) || 0) + 1
+			this.tileFailureCounts.set(tileKey, failures)
+			if (failures > this.maxTileRetries) return
+			delay = Math.min(CONFIG.RETRY_MAX_DELAY_MS, this.retryBaseDelayMs * 2 ** (failures - 1))
+		}
+
+		// One pending update retries every failed tile still in view; keep the
+		// earliest so a short delay is not held back by a longer one.
+		if (this.retryTimeout && delay >= (this.retryDueAt ?? 0) - Date.now()) return
+		if (this.retryTimeout) clearTimeout(this.retryTimeout)
+		this.retryDueAt = Date.now() + delay
+		this.retryTimeout = setTimeout(() => {
+			this.retryTimeout = null
+			this.updateViewport().catch((err) => {
+				logger.error('Failed to retry tile loads:', err)
+			})
+		}, delay)
 	}
 
 	/**
@@ -714,6 +777,7 @@ export default class ViewportBuildingLoader {
 					logger.error(`Failed to load tile ${tileKey}:`, error)
 					this.activeLoads--
 					this.loadingTiles.delete(tileKey)
+					this.scheduleTileRetry(tileKey, error)
 					// Continue processing queue even on error
 					this.processLoadingQueue().catch((err) => {
 						logger.error('Failed to continue processing loading queue after error:', err)
@@ -797,6 +861,13 @@ export default class ViewportBuildingLoader {
 					: Promise.resolve(null),
 			])
 
+			// The response is for the view mode the request was made in. If the user
+			// switched views meanwhile, its buildings would be styled and named for
+			// the wrong dataset; drop it so the tile loads again for the new view.
+			if (this.toggleStore.helsinkiView !== isHelsinkiView) {
+				throw new StaleTileError(tileKey)
+			}
+
 			// Clear stale heat data error if this fetch succeeded
 			if (heatDataPromise && heatResult !== null) {
 				this.loadingStore.clearLayerError('heatData')
@@ -818,6 +889,7 @@ export default class ViewportBuildingLoader {
 				loadedAt: Date.now(),
 				datasourceName: entityCount > 0 ? this.getTileDatasourceName(tileKey) : null,
 			})
+			this.tileFailureCounts.delete(tileKey)
 
 			logger.debug(`[ViewportBuildingLoader] ✅ Tile ${tileKey} loaded successfully`)
 		} catch (error) {
@@ -1476,6 +1548,11 @@ export default class ViewportBuildingLoader {
 			clearTimeout(this.reconcileTimeout)
 			this.reconcileTimeout = null
 		}
+		if (this.retryTimeout) {
+			clearTimeout(this.retryTimeout)
+			this.retryTimeout = null
+		}
+		this.tileFailureCounts.clear()
 		if (this.dataSourceRemovedHandler) {
 			this.viewer?.dataSources?.dataSourceRemoved?.removeEventListener(
 				this.dataSourceRemovedHandler

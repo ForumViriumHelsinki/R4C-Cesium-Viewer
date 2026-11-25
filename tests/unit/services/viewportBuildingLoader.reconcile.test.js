@@ -227,4 +227,85 @@ describe('ViewportBuildingLoader reconciles loadedTiles with the viewer', () => 
 
 		expect(loadLayer.mock.calls.length).toBe(callsBefore)
 	})
+	describe('failed tile loads', () => {
+		const abortError = () => new DOMException('Aborted', 'AbortError')
+
+		beforeEach(() => {
+			loader.retryBaseDelayMs = 0
+		})
+
+		it('retries a failed tile without waiting for the next camera move', async () => {
+			const failing = coveredTiles()[0]
+			let failed = false
+			loadLayer.mockImplementation(async ({ layerId }) => {
+				if (layerId.endsWith(failing) && !failed) {
+					failed = true
+					throw new Error('HTTP 429')
+				}
+				return featureCollection()
+			})
+
+			await loader.updateViewport()
+			await drain(loader)
+			await drain(loader)
+
+			expect(failed).toBe(true)
+			expect(loader.loadedTiles.has(failing)).toBe(true)
+			expect(dataSources.some((d) => d.name === `Buildings Viewport HSY ${failing}`)).toBe(true)
+		})
+
+		it('does not retry a cancelled tile load', async () => {
+			loadLayer.mockImplementation(async () => {
+				throw abortError()
+			})
+			await loader.updateViewport()
+			await drain(loader)
+			await drain(loader)
+
+			expect(loadLayer.mock.calls.length).toBe(coveredTiles().length)
+		})
+
+		it('gives up after a bounded number of retries', async () => {
+			const failing = coveredTiles()[0]
+			loadLayer.mockImplementation(async ({ layerId }) => {
+				if (layerId.endsWith(failing)) throw new Error('HTTP 504')
+				return featureCollection()
+			})
+			await loader.updateViewport()
+			for (let i = 0; i < 10; i++) await drain(loader)
+
+			const attempts = loadLayer.mock.calls.filter(([c]) => c.layerId.endsWith(failing)).length
+			expect(attempts).toBe(1 + loader.maxTileRetries)
+		})
+	})
+
+	it('discards a tile fetched for the other view mode and loads it again', async () => {
+		loader.retryBaseDelayMs = 0
+		const key = coveredTiles()[0]
+		let release
+		loadLayer.mockImplementation(async ({ layerId }) => {
+			if (layerId === `viewport_buildings_hsy_${key}`) {
+				await new Promise((resolve) => {
+					release = resolve
+				})
+			}
+			return featureCollection()
+		})
+
+		await loader.updateViewport()
+		await new Promise((resolve) => setTimeout(resolve, 0))
+		// Switch to the Helsinki view while the HSY fetch is in flight
+		loader.toggleStore.helsinkiView = true
+		loader.setHelsinkiBuildingsHeight = vi.fn(async () => {})
+		loader.setHeatExposureToBuildings = vi.fn(async () => {})
+		release()
+		await drain(loader)
+		await drain(loader)
+
+		expect(dataSources.some((d) => d.name === `Buildings Viewport HSY ${key}`)).toBe(false)
+		expect(dataSources.some((d) => d.name === `Buildings Viewport Helsinki ${key}`)).toBe(true)
+		expect(loadLayer.mock.calls.some(([c]) => c.layerId === `viewport_buildings_hki_${key}`)).toBe(
+			true
+		)
+	})
 })
