@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.59.12](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.11...r4c-cesium-viewer-v1.59.12) (2026-11-25)
+
+
+### Bug Fixes
+
+* **buildings:** reload viewport tiles whose DataSource was removed ([#1210](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1210)) ([c608935](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/c6089354bc68c12b3598696935d559469e0b7e10))
+
+
+### Performance Improvements
+
+* **buildings:** style viewport tiles before adding them to the viewer ([#1211](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1211)) ([de53cd5](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/de53cd5f7f65d007beee30db59eaee04e38a3270))
+
 ## [1.59.11](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.10...r4c-cesium-viewer-v1.59.11) (2026-11-21)
 
 
