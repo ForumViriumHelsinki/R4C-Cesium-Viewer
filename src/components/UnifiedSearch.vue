@@ -23,7 +23,7 @@
 						clearable
 						hide-details
 						class="search-field"
-						@keyup="handleSearch"
+						@update:model-value="handleSearch"
 						@keydown.enter="selectFirstResult"
 						@focus="showResults = true"
 					>
@@ -387,6 +387,9 @@ const isPostalCodeQuery = (query) => {
 /**
  * Handles search input changes
  *
+ * Runs on every model update, not on keyup: pasted or autofilled text fires
+ * no keyup and left the results closed.
+ *
  * Routes to address search for text queries, skips API call for postal code queries.
  * Shows results dropdown when query is long enough.
  *
@@ -394,7 +397,8 @@ const isPostalCodeQuery = (query) => {
  * @returns {Promise<void>}
  */
 const handleSearch = async () => {
-	if (searchQuery.value.length < 2) {
+	// The clear button sets the model to null.
+	if ((searchQuery.value ?? '').length < 2) {
 		showResults.value = false
 		return
 	}
