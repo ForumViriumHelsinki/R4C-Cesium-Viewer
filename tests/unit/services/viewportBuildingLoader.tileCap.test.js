@@ -174,23 +174,45 @@ describe('ViewportBuildingLoader tile cap (#1054)', () => {
 		expect(loader.loadedTiles.has(farCornerTile)).toBe(false)
 	})
 
-	it('ranks around the ground point under the screen centre when a pitched camera sees it', async () => {
-		// The camera sits at the south edge; the screen centre looks north at 60.22.
-		const rect = { west: 24.85, south: 60.15, east: 25.05, north: 60.25 }
-		loader.viewer = makeViewer(rect, { lon: 24.955, lat: 60.151 })
-		const centre = { lon: 24.955, lat: 60.225 }
-		loader.viewer.camera.pickEllipsoid.mockReturnValue({
-			longitude: rad(centre.lon),
-			latitude: rad(centre.lat),
+	it('selects tiles on the visible ground, nearest the camera first (#1214)', async () => {
+		// A pitched camera at 60.151 looking north. Its ground footprint is a
+		// trapezoid: 0.02° wide at the bottom of the screen (60.16), 0.3° wide at
+		// the top (60.30). The view rectangle is the trapezoid's bounding box.
+		const camera = { lon: 24.955, lat: 60.151 }
+		const rect = { west: 24.805, south: 60.16, east: 25.105, north: 60.3 }
+		loader.viewer = makeViewer(rect, camera)
+		const { clientWidth: w, clientHeight: h } = loader.viewer.scene.canvas
+		loader.viewer.camera.pickEllipsoid.mockImplementation(({ x, y }) => {
+			const t = 1 - y / h // 0 at the bottom edge, 1 at the top
+			const halfWidth = 0.01 + 0.14 * t
+			return {
+				longitude: rad(camera.lon + (x / w - 0.5) * 2 * halfWidth),
+				latitude: rad(60.16 + 0.14 * t),
+			}
 		})
+
+		const loadOrder = []
+		const loadTile = loader.loadTile.bind(loader)
+		loader.loadTile = (key) => {
+			loadOrder.push(key)
+			return loadTile(key)
+		}
 
 		await loader.updateViewport()
 		await drain(loader)
 
-		const centreTile = `${Math.floor(centre.lon / 0.01)}_${Math.floor(centre.lat / 0.01)}`
-		const belowCameraTile = `${Math.floor(24.955 / 0.01)}_${Math.floor(60.151 / 0.01)}`
-		expect(loader.loadedTiles.has(centreTile)).toBe(true)
-		expect(loader.loadedTiles.has(belowCameraTile)).toBe(false)
+		const tileAt = (lon, lat) => `${Math.floor(lon / 0.01)}_${Math.floor(lat / 0.01)}`
+		expect(loader.loadedTiles.size).toBe(MAX_LOADED_TILES)
+		// The ground at the bottom of the screen, which a disc around the
+		// screen-centre point (60.23) left out.
+		expect(loader.loadedTiles.has(tileAt(24.955, 60.165))).toBe(true)
+		// Inside the view rectangle but beside the footprint's narrow near end.
+		expect(loader.loadedTiles.has(tileAt(24.875, 60.165))).toBe(false)
+		expect(loader.loadedTiles.has(tileAt(25.035, 60.165))).toBe(false)
+		// Further along the view than the screen-centre disc reached.
+		expect(loader.loadedTiles.has(tileAt(24.955, 60.205))).toBe(true)
+		// The near tiles, which cover most of the screen, are fetched first.
+		expect(loadOrder.slice(0, 3)).toContain(tileAt(24.955, 60.165))
 	})
 
 	it('evicts down to the cap after loads that finish once the viewport update has returned', async () => {
